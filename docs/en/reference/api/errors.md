@@ -2,185 +2,136 @@
 
 ## What this document helps you do
 
-Use this reference for public API error codes, primary error precedence, idempotency replay, and stale-state behavior.
+Use this reference for active current MVP public error codes, primary-error precedence, blocked and dry-run behavior, idempotency replay, state conflict behavior, close blocker behavior, and user-facing label guidance.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server.
 
-For the active method-by-method mapping between request input, Core state owner, storage rows, idempotency basis, dry-run/failure side effects, response refs, related errors, and status/close blockers, use [MVP API: Active MVP transition matrix](mvp-api.md#active-mvp-transition-matrix).
-
 <a id="mvp-1-guarantee-and-status-taxonomy"></a>
 
-## MVP-1 guarantee and status taxonomy
+## MVP-1 Guarantee And Status Taxonomy
 
-This section is the single owner for MVP-1 public status/error condition names, user-facing message patterns, and agent behavior. The condition names below are display and routing names, not new `ErrorCode` enum values unless the `Public API path` column names a code. Security meaning for the guarantee level values is owned by [Security Reference: Honest guarantee display](../security.md#honest-guarantee-display).
+`guarantee_display.level` uses the exact values `cooperative`, `detective`, `preventive`, and `isolated`. Security meaning is owned by [Security Reference: Honest guarantee display](../security.md#honest-guarantee-display).
 
-`guarantee_display.level` uses the exact values `cooperative`, `detective`, `preventive`, and `isolated`.
+| Level | Active meaning |
+|---|---|
+| `cooperative` | Harness can check and record when the agent or tool follows the documented path. It is not OS permission, sandboxing, tamper-proof storage, or pre-execution blocking. |
+| `detective` | Harness or the connected surface can detect, record, or report an observable mismatch after or during the action. It is not prevention. |
+| `preventive` | A promoted profile has a proven control that blocks the covered operation before it happens. Use only when the exact operation and proof are named. |
+| `isolated` | A promoted profile has a documented and proven separation boundary for the claim. Name the boundary; do not infer broader authority from it. |
 
-| Level | MVP-1 display meaning | Agent rule |
+Active MVP behavior defaults to cooperative checks with limited detective reporting where the connected surface can honestly observe facts.
+
+| Condition | Public path | Agent rule |
 |---|---|---|
-| `cooperative` | Harness can check and record through the documented path when the agent or tool follows it. It is not OS permission, sandboxing, tamper-proof storage, or pre-execution blocking. | Use the Harness check, hold incompatible writes by instruction, and show the limit honestly. |
-| `detective` | Harness or the connected surface can detect, record, or report a mismatch when it becomes observable. It is not prevention. | Report what was detected and what remains unproven; do not claim the action was blocked before it happened. |
-| `preventive` | A promoted profile has a proven control that blocks the covered operation before it happens. | Use this label only when the exact covered operation and proof are named. |
-| `isolated` | A promoted profile has a documented and proven separation boundary for the claim being made. | Name the boundary; do not infer sensitive-action approval, evidence, final acceptance, residual-risk acceptance, close, or stronger authority from isolation alone. |
+| `core_unavailable` | `MCP_UNAVAILABLE` | Do not invent Harness state. Hold Harness-dependent writes and close until Core is reachable or the user explicitly chooses to proceed outside Harness. |
+| `local_access_denied` | `LOCAL_ACCESS_MISMATCH` or `CAPABILITY_INSUFFICIENT` | Do not guess local file or command facts. Use a capable local surface, repair the profile, narrow scope, or label input unverified. |
+| `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, stale `WRITE_AUTHORIZATION_INVALID` | Refresh current state, baseline, readable view, or pre-write check before relying on it. |
+| `unsupported_surface` | `CAPABILITY_INSUFFICIENT` or `VALIDATION_FAILED` | Reduce the request, move to a capable surface, or return a blocker. Do not emulate unsupported authority with prose. |
+| `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | Hold the affected action, show the mismatch, narrow to current scope, or request the specific user-owned scope judgment. |
+| `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | Ask or resolve the focused `UserJudgment`. Do not collapse product, technical, scope, sensitive approval, final acceptance, residual-risk acceptance, QA waiver, verification-risk acceptance, or cancellation into one broad approval. |
+| `missing_evidence` | `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING` | Show the affected claim, refs, evidence status, and smallest unblocker. Do not invent test results, artifact integrity, or evidence sufficiency. |
+| `close_blocked` | `CloseTaskResponse.close_state=blocked` plus the primary `ErrorCode` | Return structured blockers and next actions. Do not mark the Task terminal. |
+| `residual_risk_present` | `RESIDUAL_RISK_NOT_VISIBLE`, `DECISION_REQUIRED`, or `DECISION_UNRESOLVED` | Show the risk and ask `judgment_kind=residual_risk_acceptance` only when the active close or acceptance path requires it. |
 
-MVP-1 defaults to cooperative behavior with limited detective reporting where the active surface can observe the mismatch. The active reference `capability_profile` has `max_guarantee_level=detective`, `pre_tool_blocking_supported=false`, and `isolation_supported=false`; claims that require unsupported fields must lower the display or use `CAPABILITY_INSUFFICIENT` / structured blockers. Stronger labels require owner-promoted profile documentation and proof for the exact operation or boundary.
+<a id="error-taxonomy"></a>
 
-| Condition | Public API path | Short meaning | User-facing message pattern | Agent behavior | Blocks next / write / close | Agent must not invent |
-|---|---|---|---|---|---|---|
-| `core_unavailable` | `MCP_UNAVAILABLE`; diagnostic `MCP_SERVER_UNAVAILABLE` or `SURFACE_MCP_UNAVAILABLE` when known | Harness/Core authority cannot be reached. | "Harness/Core authority is unavailable, so I cannot confirm current Harness state. I can reconnect or diagnose; I can proceed outside Harness only if you explicitly choose that mode." | Fail closed for authority. Hold Harness-dependent writes and close. Reconnect, diagnose, or move to a capable surface. Proceed outside Harness only after the user explicitly chooses that mode. | Yes / yes / yes for Harness-authority-dependent action. | Task state, sensitive approval, user judgment, evidence, final acceptance, residual-risk acceptance, gate updates, projection freshness, or close readiness. |
-| `local_access_denied` | `LOCAL_ACCESS_MISMATCH` for off-profile local access; `CAPABILITY_INSUFFICIENT` when the current surface lacks required local access | Local file or system access is unavailable, denied, or outside the registered local profile. | "Local access is unavailable or denied, so I cannot inspect or change the requested local path from this surface." | Do not guess local state. Ask for a capable surface, repair the local profile, narrow to accessible paths, or continue only with clearly labeled unverified input. | If access is needed / yes / yes when close depends on that access or evidence. | File contents, command results, artifact bytes, evidence sufficiency, or successful local changes. |
-| `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, or stale `WRITE_AUTHORIZATION_INVALID` | The current state, baseline, authorization, or readable view may be out of date. | "Current Harness state or the status view may be out of date. I need to refresh before relying on it for this action." | Refresh current status/state, baseline, projection, or pre-write scope check. Treat stale context as pull-only until refreshed or reconciled. | State-dependent next actions / yes / yes when close depends on stale facts. | Current state, freshness, valid Write Authorization, evidence sufficiency, acceptance, residual-risk status, or close readiness. |
-| `unsupported_surface` | `CAPABILITY_INSUFFICIENT`; `VALIDATION_FAILED` when the request activates a stage/profile branch that is not active | The requested behavior is outside the current stage, profile, or connected surface capability. | "This behavior is outside the current Harness stage or surface, so I cannot treat it as available here." | Offer a supported fallback, reduce the request, or move to a capable/profile-promoted surface. Lower guarantee display when the missing capability is only display-relevant; block when the write, observation, capture, or claim depends on it. Do not emulate later-profile authority with prose or let product writes proceed silently. | If that behavior is required / if the write needs it / if close needs it. | Active stage support, surface capability, stronger guarantee level, evidence support, final acceptance, residual-risk acceptance, or close support. |
-| `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, or `BASELINE_STALE` | The proposed action or write is outside current scope or lacks a compatible scoped work boundary. | "This is outside the current scope. I can narrow the action or ask you to update the scope." | Hold the affected action. Show the mismatch, narrow to the current scope, or request the specific user-owned scope decision. | Affected next action / yes / yes when unresolved scope affects close. | Scope expansion, non-goal removal, Write Authorization, sensitive-action permission, or user judgment. |
-| `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, or `ACCEPTANCE_REQUIRED` | A user-owned judgment is needed or an existing judgment cannot be used. | "User judgment is needed before this can continue: `{required_judgment_kind}`." | Ask the focused judgment with choices, recommendation, rationale, uncertainty, affected refs, no-decision consequence, and why the agent cannot decide. Keep product, technical, scope, sensitive approval, final acceptance, residual-risk acceptance, cancellation, and any active/profile-gated QA waiver or verification-risk acceptance separate. | Dependent next action / when the write depends on it / yes when close depends on it. | The user's missing judgment, sensitive approval, final acceptance, residual-risk acceptance, cancellation, active/profile-gated QA waiver or verification-risk acceptance, or broad consent from vague text. |
-| `missing_evidence` | `EVIDENCE_INSUFFICIENT` or `ARTIFACT_MISSING` | Required Core-owned evidence summary or artifact support is absent, partial, stale, blocked, or insufficient. | "Evidence is insufficient for that claim." | Show `evidence_summary.status`, the affected claim, refs, and smallest unblocker; run or record the missing check when the agent can. | Evidence-dependent next action / only if evidence is a write precondition / yes when close depends on evidence. | Evidence, test results, artifact integrity, sufficiency, or close readiness. |
-| `close_blocked` | `CloseTaskResponse.close_state=blocked` with the primary `ErrorCode` selected by precedence | Work cannot be closed under the current contract. | "Close is blocked under the current contract." | Show blockers, related refs, required `judgment_kind` when a user judgment blocks close, and the smallest unblocker. Do not collapse evidence, final acceptance, residual-risk visibility, and residual-risk acceptance into one claim. | Next action becomes an unblocker / only if blocker requires a write / yes. | Closed terminal state, close readiness, final acceptance, residual-risk acceptance, or final report authority. |
-| `residual_risk_present` | Status condition; `RESIDUAL_RISK_NOT_VISIBLE` only when close-relevant risk has not been shown, and `DECISION_REQUIRED` or `DECISION_UNRESOLVED` when required residual-risk acceptance blocks final acceptance or close | Known remaining risk exists and must be displayed; some contexts require explicit residual-risk acceptance. | "Residual risk remains. I will show it explicitly; this may need separate residual-risk acceptance before close." | Display the risk, impact, refs, and whether residual-risk acceptance is required. Ask `judgment_kind=residual_risk_acceptance` only when the close or final-acceptance path requires it. | Risk-sensitive next action when relevant / only if risk changes scope or safety / yes when not visible or required residual-risk acceptance is missing. | No-risk status, hidden risk, accepted risk, final acceptance, or close readiness. |
-
-Design-quality validator findings do not become primary public errors merely because a validator ID exists. In active MVP, design-quality findings use the impact classes and routed actions owned by [Design Quality Policies](../design-quality-policies.md#impact-classes-and-allowed-routes). Public errors or close blockers appear only when the routed action reaches an existing Core/API path: missing scope, unresolved user judgment, missing required evidence, stale write/close context, Autonomy Boundary exceeded, or surface capability insufficient for the claimed guarantee. Broader domain-language, module/interface, TDD, stewardship, feedback-loop, full Manual QA, or detached-verification findings are candidate/advisory by default unless an active owner profile promotes the behavior.
-
-Core unavailable rule: if Harness/Core authority is unavailable, the agent must not invent task state, sensitive approval, user judgment, evidence, final acceptance, residual-risk acceptance, or close readiness. If the connected surface cannot access MCP, a cooperative surface must hold Harness-dependent writes and close rather than inventing state from chat, cached status, generated files, or projections. The agent may only report that authority is unavailable and proceed outside Harness if the user explicitly chooses that mode.
-
-## Error taxonomy
+## Error Taxonomy
 
 | Code | Meaning |
 |---|---|
-| `VALIDATION_FAILED` | Request payload, enum value, activation rule, or profile-specific schema validation failed before mutation. |
-| `STATE_CONFLICT` | `expected_state_version` is stale, lock ownership changed, or the same idempotency key was reused with a different payload. |
+| `VALIDATION_FAILED` | Payload shape, enum value, activation rule, or profile-specific validation failed before mutation. |
+| `STATE_CONFLICT` | `expected_state_version` is stale, state lock ownership changed, or the same idempotency key was reused with a different canonical request. |
 | `NO_ACTIVE_TASK` | A Task is required but none is active or addressed. |
-| `NO_ACTIVE_CHANGE_UNIT` | A write-capable operation has no active scoped Change Unit. |
-| `SCOPE_REQUIRED` | Scope confirmation is required before the requested write can proceed. |
-| `SCOPE_VIOLATION` | Intended paths, tools, commands, network, secrets, or categories exceed scope. |
-| `WRITE_AUTHORIZATION_REQUIRED` | A write-capable run is missing a required Write Authorization from `harness.prepare_write`. |
-| `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is missing, expired, stale, revoked, consumed (outside idempotent replay), or incompatible. |
-| `DECISION_REQUIRED` | Blocking user-owned judgment requires a user judgment request before the requested action can proceed. |
-| `DECISION_UNRESOLVED` | A relevant user judgment is pending, deferred without coverage, rejected, blocked, stale, or incompatible. |
+| `NO_ACTIVE_CHANGE_UNIT` | A write-capable or close-relevant operation has no active scoped Change Unit. |
+| `SCOPE_REQUIRED` | Scope confirmation is required before the requested write or action can proceed. |
+| `SCOPE_VIOLATION` | Intended or observed paths, tools, commands, network targets, secret access, or sensitive categories exceed active scope or stored `AuthorizedAttemptScope`. |
+| `WRITE_AUTHORIZATION_REQUIRED` | A write-capable Run is missing a required Write Authorization from `harness.prepare_write`. |
+| `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is missing, expired, stale, revoked, consumed outside replay, or incompatible. |
+| `DECISION_REQUIRED` | A blocking user-owned judgment must be requested before the action can proceed. |
+| `DECISION_UNRESOLVED` | A relevant user judgment is pending, deferred without coverage, rejected, blocked, stale, superseded, or incompatible. |
 | `AUTONOMY_BOUNDARY_EXCEEDED` | The intended operation exceeds the active Change Unit Autonomy Boundary. |
-| `APPROVAL_REQUIRED` | Sensitive action requires sensitive-action permission before proceeding. |
-| `APPROVAL_DENIED` | The relevant sensitive-action permission / Approval was denied. |
-| `APPROVAL_EXPIRED` | Sensitive-action permission / Approval expired or drifted from baseline/scope. |
-| `CAPABILITY_INSUFFICIENT` | The connected surface is valid but its `capability_profile` cannot honestly satisfy a required observation, capture, local access, blocking/isolation condition, guarantee claim, or active MVP behavior. |
+| `APPROVAL_REQUIRED` | Sensitive-action approval is required before proceeding. |
+| `APPROVAL_DENIED` | The relevant sensitive-action approval was denied. |
+| `APPROVAL_EXPIRED` | The relevant sensitive-action approval expired or drifted from scope/baseline. |
+| `CAPABILITY_INSUFFICIENT` | The surface is recognized but cannot satisfy a required observation, capture, local access, blocking/isolation condition, guarantee claim, or active behavior. |
 | `MCP_UNAVAILABLE` | Required MCP/Core access is unavailable, stale, or unreachable. |
-| `LOCAL_ACCESS_MISMATCH` | Core or an operator can classify the caller's local access mode as outside the registered local profile, or required local access is denied by that profile. |
+| `LOCAL_ACCESS_MISMATCH` | The reachable local caller/access path is outside the registered local profile or lacks required local access. |
 | `EVIDENCE_INSUFFICIENT` | Required evidence coverage is absent, partial, stale, or blocked. |
-| `ACCEPTANCE_REQUIRED` | Required final acceptance is pending or rejected. |
-| `PROJECTION_STALE` | A requested readable status/projection view is stale or failed; it is not a close blocker by itself in active MVP. |
+| `ACCEPTANCE_REQUIRED` | Required final acceptance is pending, rejected, or not compatible with the visible result basis. |
+| `PROJECTION_STALE` | A requested readable status/view is stale or failed. It is not Core state and is not a close blocker by itself. |
 | `RESIDUAL_RISK_NOT_VISIBLE` | Known close-relevant residual risk has not been made visible before final acceptance or close. |
-| `ARTIFACT_MISSING` | A referenced artifact file is missing or integrity check failed. |
+| `ARTIFACT_MISSING` | A referenced artifact is missing or failed integrity/metadata checks. |
 | `BASELINE_STALE` | Baseline no longer matches the repository state required by the operation. |
-| `VALIDATOR_FAILED` | Fallback when required validators or close/blocker checks failed, the finding's routed action is Core blocking, and no more specific typed code applies. Advisory or routed-candidate design-quality findings do not select this code by themselves. |
+| `VALIDATOR_FAILED` | Fallback when a required active validator or blocker check failed and no more specific typed code applies. |
 
-`WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are only for missing or invalid Write Authorization records. Scope problems still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed the stored `AuthorizedAttemptScope` or active scope. When the required comparison cannot be made because the connected surface cannot observe or attest a needed command, network, secret, capture, blocking, or isolation fact, use `CAPABILITY_INSUFFICIENT` or a tool-specific blocker instead of treating the fact as verified.
-
-When either error carries an invalid-authorization reason in `ToolError.details.authorization_reason`, the reason vocabulary is exactly:
+`ToolError.details.authorization_reason` uses exactly:
 
 ```text
 missing | expired | stale | revoked | consumed | incompatible
 ```
 
-Use `missing` when no authorization id/ref is supplied or the supplied ref cannot be resolved. Use `expired`, `stale`, `revoked`, `consumed`, or `incompatible` for a row that exists but cannot be consumed. No other reason values are valid.
+Use `WRITE_AUTHORIZATION_REQUIRED` with `authorization_reason=missing` when no required authorization is supplied. Use `WRITE_AUTHORIZATION_INVALID` for an existing authorization that cannot be consumed.
 
-`harness.record_run` maps write-authorization and observation failures to public errors this way:
-
-| `record_run` path | Primary public error | Required handling |
-|---|---|---|
-| Missing required authorization for a product-write Run | `WRITE_AUTHORIZATION_REQUIRED` with `authorization_reason=missing` when details include the reason | Reject before commit; create no Run, artifact, evidence summary, authorization consumption, event, replay row, or close-relevant state. |
-| Stale, expired, revoked, consumed, or incompatible authorization | `WRITE_AUTHORIZATION_INVALID` with the matching `authorization_reason` | Reject before commit and never mark the authorization consumed. |
-| Observed attempt outside the stored `AuthorizedAttemptScope` or active scope | `SCOPE_VIOLATION` | Report the mismatched path/tool/command/network/secret/sensitive-category class with display-safe details; do not treat the write as compatible. |
-| Unsupported observed field or insufficient surface capability for a required comparison | `CAPABILITY_INSUFFICIENT` | Narrow or block the claim; do not mark unobserved commands, network access, secret access, artifact capture, pre-tool blocking, or isolation facts as verified. |
-| Forbidden secret or artifact handling | `VALIDATION_FAILED` for invalid artifact input shape/source or forbidden raw secret payload before mutation; `SCOPE_VIOLATION` when observed secret/artifact handling exceeds authorized scope; `ARTIFACT_MISSING` when an existing committed artifact ref is missing or fails integrity/redaction metadata checks | Store no raw secrets, tokens, or full sensitive logs as evidence; when required evidence depends on the failed artifact/ref, keep evidence stale or blocked and keep close blocked. |
-
-MCP availability, local access/profile mismatch, and capability insufficiency are distinct:
-
-- `MCP_UNAVAILABLE`: Core cannot be reached or required MCP access is stale/unusable.
-- `LOCAL_ACCESS_MISMATCH`: a reachable local endpoint or caller path is off-profile, stale, weak, forwarded/tunneled, cross-user, unauthorized, or otherwise mismatched.
-- `CAPABILITY_INSUFFICIENT`: the caller is on a recognized surface/profile, but the profile cannot satisfy a required observation, capture, local access, blocking/isolation condition, validator, or guarantee claim. Unsupported `capability_profile` fields lower the display when possible and block the write, observation, or claim when required.
-
-## User-facing display labels
-
-These labels are display guidance, not new public error codes.
-
-| API condition | User-facing label | Smallest unblocker language |
-|---|---|---|
-| `VALIDATION_FAILED` | invalid request | Fix the payload, enum value, activation rule, or profile-specific field set before retrying. |
-| `STATE_CONFLICT` | state conflict | Refresh current status, then retry with the current state version or replay the original idempotent request. |
-| `MCP_UNAVAILABLE` | Core unavailable | Reconnect or diagnose Core access before claiming state changes, gate updates, projection repair, pre-write scope-check compatibility, or close. |
-| `LOCAL_ACCESS_MISMATCH` | local access denied or off-profile | Reconnect through the registered local surface/profile, repair the local binding/profile, or use a surface with the needed local access. |
-| `CAPABILITY_INSUFFICIENT` | unsupported or insufficient surface | Use a capable surface/profile, reduce the operation, or choose a path that does not need the missing capability. |
-| `NO_ACTIVE_TASK` | no active Task | Select or create a Task before using a Task-scoped action. |
-| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or stale pre-write scope check | Call or retry `harness.prepare_write` for the exact intended operation, current scope, and current state. |
-| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, update the Change Unit or baseline, or request the needed user judgment. |
-| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | judgment needed | Show the relevant user judgment prompt or pending outcome with `required_judgment_kind`, refs, and consequences. |
-| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | sensitive-action permission needed or not usable | Request, resolve, or renew a sensitive-action approval user judgment in minimum MVP-1. Committed Approval records are later-profile. |
-| `EVIDENCE_INSUFFICIENT` | evidence needed | Record or rerun the missing check, or show the specific evidence gap and smallest unblocker. |
-| `ACCEPTANCE_REQUIRED` | final acceptance needed | Request or resolve a `judgment_kind=final_acceptance` user judgment for the visible result basis. |
-| `RESIDUAL_RISK_NOT_VISIBLE` | residual risk not visible | Show the close-relevant risk before final acceptance or close; this is separate from residual-risk acceptance. |
-| `PROJECTION_STALE` | stale readable view | Refresh the readable status/projection view before relying on that display; do not treat it as canonical close state. |
-| `ARTIFACT_MISSING` | artifact issue | Reattach, regenerate, or replace the missing or failed artifact before relying on it. |
-| `VALIDATOR_FAILED` | check or blocker failed | Show the specific validator or blocker when available; use this fallback only when no typed blocker applies. |
+<a id="primary-error-code-precedence"></a>
 
 ## Primary Error Code Precedence
 
-Public tool responses carry one primary `ToolError.code` even when Core observes multiple blockers. When `ToolResponseBase.errors` is non-empty, `errors[0]` is the primary error selected by this precedence unless a tool subsection defines a narrower order. Secondary blockers may still appear in tool-specific fields, validator results, `ToolError.details`, and state summaries.
+When `ToolResponseBase.errors` is non-empty, `errors[0]` is the primary error selected by this order unless a method section defines a stricter order. Secondary blockers may still appear in method-specific fields and `ToolError.details`.
 
-| Precedence | Primary `ErrorCode` | Selection note |
-|---:|---|---|
-| 1 | `VALIDATION_FAILED` | Request payload, enum, activation, or profile-specific field validation failed before mutation. |
-| 2 | `STATE_CONFLICT` | Stale `expected_state_version`, state lock conflict, or idempotency key reused with a different payload. |
-| 3 | `MCP_UNAVAILABLE` | Required MCP access is unavailable, stale, or unreachable after Core/operator classification. |
-| 4 | `LOCAL_ACCESS_MISMATCH` | Reachable local caller/access mode is off-profile or unauthorized for the registered local profile. |
-| 5 | `NO_ACTIVE_TASK` | The operation requires a Task and none is active or addressed. |
-| 6 | `NO_ACTIVE_CHANGE_UNIT` | The operation is write-capable or close-relevant and no active scoped Change Unit applies. |
-| 7 | `BASELINE_STALE` | The requested operation depends on a stale baseline. |
-| 8 | `SCOPE_REQUIRED` | Scope must be confirmed before the requested operation can proceed. |
-| 9 | `SCOPE_VIOLATION` | Intended or observed paths, tools, commands, network, secrets, or categories exceed scope or the stored `AuthorizedAttemptScope`. |
-| 10 | `WRITE_AUTHORIZATION_REQUIRED` | A write-capable Run is missing a required Write Authorization. |
-| 11 | `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is missing, stale, expired, revoked, consumed (outside replay), or incompatible. |
-| 12 | `APPROVAL_DENIED` | Relevant sensitive-action permission was denied. |
-| 13 | `APPROVAL_EXPIRED` | Relevant sensitive-action permission expired or drifted. |
-| 14 | `APPROVAL_REQUIRED` | A sensitive change needs sensitive-action permission and no compatible grant exists. |
-| 15 | `DECISION_UNRESOLVED` | Existing relevant user judgment is pending, rejected, stale, or incompatible. |
-| 16 | `AUTONOMY_BOUNDARY_EXCEEDED` | Intended operation exceeds the active Autonomy Boundary. |
-| 17 | `DECISION_REQUIRED` | Blocking user-owned judgment needs a user judgment request. |
-| 18 | `CAPABILITY_INSUFFICIENT` | The connected surface cannot satisfy a required capability, observation, or enforcement condition. |
-| 19 | `EVIDENCE_INSUFFICIENT` | Required evidence coverage is absent, partial, stale, or blocked. |
-| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | Known close-relevant residual risk has not been made visible. |
-| 21 | `ACCEPTANCE_REQUIRED` | Required final acceptance is pending or rejected after residual-risk visibility is satisfied. |
-| 22 | `PROJECTION_STALE` | A requested readable status/projection view is stale or failed. |
-| 23 | `ARTIFACT_MISSING` | A referenced artifact file is missing or failed integrity checks. |
-| 24 | `VALIDATOR_FAILED` | Generic validator fallback selected only when no more specific typed blocker applies. |
+| Precedence | Primary `ErrorCode` |
+|---:|---|
+| 1 | `VALIDATION_FAILED` |
+| 2 | `STATE_CONFLICT` |
+| 3 | `MCP_UNAVAILABLE` |
+| 4 | `LOCAL_ACCESS_MISMATCH` |
+| 5 | `NO_ACTIVE_TASK` |
+| 6 | `NO_ACTIVE_CHANGE_UNIT` |
+| 7 | `BASELINE_STALE` |
+| 8 | `SCOPE_REQUIRED` |
+| 9 | `SCOPE_VIOLATION` |
+| 10 | `WRITE_AUTHORIZATION_REQUIRED` |
+| 11 | `WRITE_AUTHORIZATION_INVALID` |
+| 12 | `APPROVAL_DENIED` |
+| 13 | `APPROVAL_EXPIRED` |
+| 14 | `APPROVAL_REQUIRED` |
+| 15 | `DECISION_UNRESOLVED` |
+| 16 | `AUTONOMY_BOUNDARY_EXCEEDED` |
+| 17 | `DECISION_REQUIRED` |
+| 18 | `CAPABILITY_INSUFFICIENT` |
+| 19 | `EVIDENCE_INSUFFICIENT` |
+| 20 | `RESIDUAL_RISK_NOT_VISIBLE` |
+| 21 | `ACCEPTANCE_REQUIRED` |
+| 22 | `PROJECTION_STALE` |
+| 23 | `ARTIFACT_MISSING` |
+| 24 | `VALIDATOR_FAILED` |
 
-<a id="harnessclose_task-close-blockers"></a>
+<a id="blocked-and-dry-run-behavior"></a>
 
-## `harness.close_task` Close Blockers
+## Blocked And Dry-Run Behavior
 
-`harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above, and `CloseTaskResponse.blockers` must include observed close blockers as structured results in the same relative order. Prose-only status text, reports, Journey views, or agent summaries are not close-blocker results.
+A blocked response is not the same as a pre-commit failure. Core may commit a blocked response only where the method owner allows blocker recording. A committed blocked response may update `blockers`, events, state version, and idempotency replay, but it must not create the authority that the blocker says is missing.
 
-Evidence blockers use category `evidence` and normally primary `EVIDENCE_INSUFFICIENT` when required `evidence_summary.status` is `none`, `partial`, `stale`, or `blocked`. Artifact availability blockers use `artifact_availability` with `ARTIFACT_MISSING` when the evidence summary depends on missing, stale, blocked, or integrity-failed artifact refs.
+`dry_run=true` is always non-authoritative. It may validate and return diagnostics, candidate blockers, or a would-change summary, but it must not create or update current records, events, artifacts, evidence summaries, consumable Write Authorizations, close state, or committed replay rows. A subsequent non-dry-run call must be validated against current state.
 
-Unresolved user judgment blockers use `user_judgment` and must include `required_judgment_kind` when the missing kind is known. Active MVP close blockers use only the judgment kinds present in `CloseTaskResponse.blockers.required_judgment_kind`: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `final_acceptance`, `residual_risk_acceptance`, or `cancellation`. Final acceptance never resolves residual-risk acceptance, residual-risk acceptance never resolves final acceptance, sensitive approval never resolves product or technical decisions, and broad approval text resolves none of them unless the prompt, kind, affected object, scope, and recorded user intent match.
-
-Visible-but-unaccepted close-relevant risk is not returned as `RESIDUAL_RISK_NOT_VISIBLE`. If the requested close path requires residual-risk acceptance, public close/API responses use primary `DECISION_REQUIRED` when a `judgment_kind=residual_risk_acceptance` user judgment must be requested, or `DECISION_UNRESOLVED` when a relevant residual-risk acceptance user judgment exists but is pending, rejected, blocked, stale, deferred without coverage, or incompatible. The structured close blocker category must be `residual_risk_acceptance`, with `required_judgment_kind=residual_risk_acceptance` and refs to the relevant `blocker` and `user_judgment` records in MVP-1; rich `residual_risk` refs are later/profile-promoted.
-
-`PROJECTION_STALE` is a readable-view freshness error, not an active MVP close-blocker category. It may appear when a requested status/projection view is too stale or failed for display, but `CloseTaskResponse.blockers` must not include projection/report freshness unless a later/profile owner activates that extension.
+<a id="idempotency"></a>
 
 ## Idempotency
 
-Every committed state-changing tool call requires an `idempotency_key`. Idempotency keys are scoped to `(project_id, tool_name, idempotency_key)`. Repeating the same canonical request hash with the same key returns the original committed response. Reusing the same key with a different canonical request hash returns `STATE_CONFLICT`.
+Every committed state-changing method requires `idempotency_key`. Keys are scoped to `(project_id, tool_name, idempotency_key)`.
 
-`request_hash` is computed from canonical JSON encoded as UTF-8. The canonical input includes `tool_name`, the schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`. Core stores this hash in `tool_invocations` or an equivalent committed replay record with the original response.
+`request_hash` is computed from canonical JSON over the tool name, schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`.
 
-For state-changing tools, Core checks an existing committed replay row before treating the call as a new mutation attempt. A matching hash returns the original committed response without re-running current freshness checks, appending events, registering artifacts, enqueueing projections, or updating the replay row. A different hash returns `STATE_CONFLICT` and preserves the original replay row.
+If a committed replay row exists with the same key and same hash, Core returns the original committed response without re-running freshness checks, appending events, registering artifacts, consuming authorization, updating blockers, or changing the replay row. If the same key is reused with a different hash, Core returns `STATE_CONFLICT` and preserves the original replay row.
 
-`dry_run=true` never creates or updates the committed replay row. Repeating a dry-run request therefore revalidates against current state instead of returning an earlier dry-run response as authority. If a later non-dry-run call uses the same `idempotency_key`, only an existing committed replay row participates in replay; a previous dry-run response is not a committed response and cannot reserve the key.
+Dry-run calls and pre-commit failures do not create or reserve replay rows.
 
-When a key is reused with a different canonical request payload, `ToolError.details` may include the idempotency scope, stored/received request hashes or equivalent opaque comparison, and the fact that the caller must replay the original request or retry with a fresh key. Details must not expose sensitive request bodies.
+<a id="state-conflict-behavior"></a>
 
-## State conflict behavior
+## State Conflict Behavior
 
-For state-changing tools with no committed replay row for the supplied idempotency scope, Core resolves the primary Task before the freshness check. Resolution order is tool-specific `task_id`, then `ToolEnvelope.task_id`, then active Task resolution. Task-scoped mutations compare `expected_state_version` with `tasks.state_version`; project-scoped mutations with no resolved primary Task compare it with `project_state.state_version`. A mismatch returns `STATE_CONFLICT`. No current records, events, artifacts, projection jobs, or replay rows are created for that conflicting new attempt.
+For a new state-changing attempt with no committed replay row, Core resolves the primary Task before freshness checking. Resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task.
 
-`WriteAuthorization.basis_state_version` is the affected-scope version used as the compatibility basis for the allow decision. It is not necessarily the resulting `ToolResponseBase.state_version`.
+Task-scoped mutations compare `expected_state_version` with `tasks.state_version`. Project-scoped mutations with no resolved primary Task compare it with `project_state.state_version`. Mismatch returns `STATE_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, or replay rows.
 
 `STATE_CONFLICT.details` should include:
 
@@ -192,4 +143,39 @@ project_id: string
 task_id: string | null
 ```
 
-A stale `expected_state_version` is concurrency drift, not proof of caller identity. The caller must refresh before retrying; Core must not accept an older Task or project view merely because the caller supplied it.
+`WriteAuthorization.basis_state_version` is the compatibility basis for the allow decision. It is not necessarily the resulting `ToolResponseBase.state_version`.
+
+<a id="harnessclose_task-close-blockers"></a>
+
+## `harness.close_task` Close Blockers
+
+`CloseTaskResponse.blockers` must use structured `CloseBlocker` objects from [API Schema Core](schema-core.md#current-position-display-schemas). Prose-only status text, report text, rendered views, or agent summaries are not close-blocker results.
+
+Close blockers are ordered by the primary-error precedence when they map to public errors. Evidence blockers normally use `EVIDENCE_INSUFFICIENT`; artifact availability blockers use `ARTIFACT_MISSING`; unresolved user judgment blockers use `DECISION_REQUIRED` or `DECISION_UNRESOLVED`; sensitive-action permission blockers use the `APPROVAL_*` codes; scope blockers use the scope and baseline codes.
+
+Known close-relevant risk that has not been shown uses `RESIDUAL_RISK_NOT_VISIBLE`. Visible but unaccepted close-relevant risk is not hidden under that code: if residual-risk acceptance is required, the close blocker uses category `residual_risk_acceptance` and `required_judgment_kind=residual_risk_acceptance`, with `DECISION_REQUIRED` or `DECISION_UNRESOLVED`.
+
+`PROJECTION_STALE` is a readable-view freshness error, not an active close-blocker category by itself.
+
+## User-Facing Label Guidance
+
+These labels are display guidance, not new public error codes.
+
+| API condition | User-facing label | Smallest unblocker |
+|---|---|---|
+| `VALIDATION_FAILED` | invalid request | Fix the payload, enum value, activation rule, or field set before retrying. |
+| `STATE_CONFLICT` | state conflict | Refresh current status and retry with the current state version, or replay the original idempotent request. |
+| `MCP_UNAVAILABLE` | Core unavailable | Reconnect or diagnose Core access before claiming state changes, gate updates, write compatibility, or close. |
+| `LOCAL_ACCESS_MISMATCH` | local access denied or off-profile | Use the registered local surface/profile, repair local access, or move to a capable surface. |
+| `CAPABILITY_INSUFFICIENT` | unsupported or insufficient surface | Use a capable surface/profile, reduce the operation, or choose a path that does not require the missing capability. |
+| `NO_ACTIVE_TASK` | no active Task | Select or create a Task before a Task-scoped action. |
+| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, update the Change Unit or baseline, or request the needed user judgment. |
+| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or stale pre-write scope check | Call or retry `harness.prepare_write` for the exact operation, current scope, and current state. |
+| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | judgment needed | Show or resolve the focused `UserJudgment` with kind, refs, options, and consequences. |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | sensitive-action approval needed or not usable | Request, resolve, or renew a `judgment_kind=sensitive_approval` user judgment. |
+| `EVIDENCE_INSUFFICIENT` | evidence needed | Record or rerun the missing check, or show the evidence gap and smallest unblocker. |
+| `ACCEPTANCE_REQUIRED` | final acceptance needed | Request or resolve `judgment_kind=final_acceptance` for the visible result basis. |
+| `RESIDUAL_RISK_NOT_VISIBLE` | residual risk not visible | Show the close-relevant risk before final acceptance or close. |
+| `PROJECTION_STALE` | stale readable view | Refresh the readable view before relying on it; do not treat it as canonical close state. |
+| `ARTIFACT_MISSING` | artifact issue | Reattach, regenerate, or replace the missing or failed artifact before relying on it. |
+| `VALIDATOR_FAILED` | check or blocker failed | Show the specific validator or blocker when available; use this fallback only when no typed blocker applies. |
