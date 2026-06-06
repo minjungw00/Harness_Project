@@ -19,8 +19,8 @@ Exact field, enum value, lifecycle state, DDL, request/response shape, security 
 | Security asset, local access posture, trust boundary, threat/control category, guarantee-level 의미, 정직한 cooperative/detective/preventive/isolated 표현 | [보안 참조](security.md) |
 | 에이전트 통합, connector capability profile, 대체 동작, context push/pull, generated manifest, Role Lens behavior, 짧은 surface recipe | [Agent 통합 참조](agent-integration.md) |
 | Projection rule, 읽기용 보기, 권한 경계, freshness/failure behavior, managed block, 사람이 편집할 수 있는 section, active template body, template class, card body, template display shape, artifact-ref rendering | [Projection과 Template 참조](projection-and-templates.md) |
-| Conformance model, MVP behavior example, future fixture body shape, future runner/assertion semantics, fixture profile, suite metadata boundary, current-phase fixture status, Kernel Smoke authoring queue | [Conformance Fixtures 참조](conformance-fixtures.md) |
-| 활성 MVP 경로 밖의 향후 scenario family 목록, 승격 조건, suite-family label, catalog-only future candidate | [향후 Fixtures](../later/index.md#future-fixture-families) |
+| 현재 적합성 상태, 적합성의 의미, future fixture 형태, 주장 권한, 대표 예시, catalog-only future 경계, metrics 경계 | [적합성 참조](conformance.md) |
+| 활성 MVP 경로 밖의 이름만 남긴 future fixture family 후보 | [Later 후보 색인: Future fixture families](../later/index.md#future-fixture-families) |
 | Operations, diagnostic, staged operator surface, recovery/export/reconcile operation, artifact check, future conformance run entrypoint, docs-maintenance reporting profile | [운영과 Conformance 참조](operations-and-conformance.md) |
 | 런타임 경계 공간, Product Repository / Harness Server / Runtime Home 분리, Core-only canonical mutation authority, projection/status card의 파생 표시 경계, artifact storage boundary, recovery boundary, 현재 non-isolation claim | [런타임 경계 참조](runtime-boundaries.md) |
 | Design-quality policy, policy-to-validator mapping, stable validator ID, severity composition, waiver semantics, evidence expectation, design-quality close impact | [설계 품질 정책](design-quality-policies.md) |
@@ -37,7 +37,7 @@ Exact field, enum value, lifecycle state, DDL, request/response shape, security 
 - Storage 또는 DDL 질문: [Storage](storage.md)에서 시작합니다.
 - 보안 보장 질문: [보안 참조](security.md)에서 시작한 뒤, 대상 operation의 정확한 API, storage, Core, connector, operations, conformance owner를 함께 봅니다.
 - Projection 또는 template 질문: 파생 표시 규칙, 활성 현재 MVP 템플릿 본문, card shape, 최신성, 권한 경계는 [Projection과 Template 참조](projection-and-templates.md)를 봅니다.
-- 향후 보증, 운영, fixture catalog material: [보증 프로필](../later/index.md#assurance-candidates), [운영 프로필](../later/index.md#operations-candidates), [향후 Fixtures](../later/index.md#future-fixture-families)를 사용합니다. 담당 문서가 승격하기 전까지 이 경로는 MVP 구현 경로가 아닙니다.
+- 향후 보증, 운영, fixture catalog material: [보증 프로필](../later/index.md#assurance-candidates), [운영 프로필](../later/index.md#operations-candidates), [Later 후보 색인: Future fixture families](../later/index.md#future-fixture-families)를 사용합니다. 담당 문서가 승격하기 전까지 이 경로는 MVP 구현 경로가 아닙니다.
 
 ## Owner가 아닌 문서 규칙
 

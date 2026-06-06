@@ -22,7 +22,7 @@
 - SQLite DDL, storage layout, artifact storage, projection job storage. [Storage](storage.md)를 봅니다.
 - 설계 품질 정책 routing. [설계 품질 정책](design-quality-policies.md)을 봅니다.
 - 운영자 command 동작. [운영과 Conformance 참조](operations-and-conformance.md)를 봅니다.
-- Conformance fixture assertion 동작. [Conformance Fixtures 참조](conformance-fixtures.md)를 봅니다.
+- Conformance fixture assertion 동작. [적합성 참조](conformance.md)를 봅니다.
 - Connector 맥락 동작. [Agent 통합 참조](agent-integration.md)를 봅니다.
 - Later-profile 템플릿 본문. Active documentation이 아닙니다.
 

@@ -2,7 +2,7 @@
 
 This reference owns the security boundary language for the active Harness MVP plan. The repository is still documentation-only: no Harness Server/runtime implementation, Harness Runtime Home, executable conformance runner, or runtime security proof exists here today. This document describes the boundary future implementation must preserve; it is not evidence that controls are already implemented.
 
-Use this page when security wording, local-access posture, threat/control summaries, or guarantee labels need to stay honest. Use the exact owner documents for exact behavior: [Core Model Reference](core-model.md), [Runtime Boundaries Reference](runtime-boundaries.md), [Storage](storage.md), [Agent Integration Reference](agent-integration.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Operations And Conformance Reference](operations-and-conformance.md), and [Conformance Fixtures Reference](conformance-fixtures.md).
+Use this page when security wording, local-access posture, threat/control summaries, or guarantee labels need to stay honest. Use the exact owner documents for exact behavior: [Core Model Reference](core-model.md), [Runtime Boundaries Reference](runtime-boundaries.md), [Storage](storage.md), [Agent Integration Reference](agent-integration.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Operations And Conformance Reference](operations-and-conformance.md), and [Conformance Reference](conformance.md).
 
 ## 1. Owns / Does Not Own
 
@@ -23,7 +23,7 @@ This document does not own:
 - Product Repository / Harness Server / Harness Runtime Home separation, projection authority, artifact boundary, or recovery boundary; see [Runtime Boundaries Reference](runtime-boundaries.md)
 - connector `capability_profile` fields, generated manifests, fallback behavior, or surface recipes; see [Agent Integration Reference](agent-integration.md)
 - operator command semantics or diagnostic output; see [Operations And Conformance Reference](operations-and-conformance.md)
-- executable proof, fixture assertions, runner behavior, or conformance pass/fail; see [Conformance Fixtures Reference](conformance-fixtures.md)
+- executable proof, fixture assertions, runner behavior, or conformance pass/fail; see [Conformance Reference](conformance.md)
 
 ## 2. Current MVP Guarantee Level
 
@@ -156,6 +156,6 @@ Before adding or accepting a security claim, check the relevant owner:
 | Is this about Product Repository / Harness Server / Harness Runtime Home separation, projection authority, artifact boundary, or recovery boundary? | [Runtime Boundaries Reference](runtime-boundaries.md) |
 | Is this about a surface `capability_profile`, MCP availability from the surface, generated manifests, fallback, context push/pull, or guarantee display? | [Agent Integration Reference](agent-integration.md) |
 | Is this an operator diagnostic, recovery, export, artifact check, or conformance entrypoint? | [Operations And Conformance Reference](operations-and-conformance.md) |
-| Is this runtime proof, fixture assertion behavior, or pass/fail language? | [Conformance Fixtures Reference](conformance-fixtures.md) |
+| Is this runtime proof, fixture assertion behavior, or pass/fail language? | [Conformance Reference](conformance.md) |
 
 If the owner document does not define and prove a stronger control, use cooperative or detective wording, mark the claim unsupported, or state the non-claim explicitly. Do not turn future controls, operations-profile ideas, documentation checks, or conformance planning language into active MVP security guarantees.

@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to look up Harness operator procedures, conformance staging and future run entrypoint behavior, and the boundary between documentation checks, active MVP structured drafts, and future runtime conformance.
+Use this reference to look up Harness operator procedures, conformance staging and future run entrypoint behavior, and the boundary between documentation checks, representative behavior examples, and future runtime conformance.
 
 It is a lookup document for operators, implementers, conformance authors, and maintainers. It is not an onboarding path; first-time readers should start with [Start](../start.md) or Build docs and return here when they need exact operational or conformance semantics.
 
@@ -14,11 +14,11 @@ This is reference documentation for future operator and conformance behavior. Th
 - You need the conformance run entrypoint overview, staged suite boundary, or runtime/docs-maintenance separation.
 - You need to tell runtime Core fixture conformance apart from docs-only maintenance checks.
 - You are diagnosing an operations mismatch across state, artifacts, projections, MCP availability, or generated files.
-- You need future fixture body shape or assertion semantics; start here for the overview, then use [Conformance Fixtures Reference](conformance-fixtures.md). For compact future scenario-family inventory, use [Future Fixtures](../later/index.md#future-fixture-families).
+- You need future fixture shape or assertion authority; start here for the overview, then use [Conformance Reference](conformance.md). For names-only future fixture families, use [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families).
 
 ## Before you read
 
-Use [Conformance Fixtures Reference](conformance-fixtures.md) for the core conformance model, active structured fixture drafts, future fixture body shape, execution, assertion semantics, current-phase status, and Kernel Smoke authoring order. Use [Future Fixtures](../later/index.md#future-fixture-families) for compact future scenario-family inventory that is not stage-required by catalog listing alone. Use [Runtime Boundaries](runtime-boundaries.md) for Core mutation authority placement and runtime boundary spaces, [Security Reference](security.md) for security assets, trust boundaries, threats, and controls, [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md) for public tool schemas and replay behavior, [Storage](storage.md) for storage layout, and [Core Model Reference](core-model.md) for state transition semantics.
+Use [Conformance Reference](conformance.md) for current conformance status, what conformance means, what does not exist yet, future fixture shape, assertion authority, representative active examples, the catalog-only future boundary, and the metrics boundary. Use [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families) for names-only future fixture families that are not stage-required by listing alone. Use [Runtime Boundaries](runtime-boundaries.md) for Core mutation authority placement and runtime boundary spaces, [Security Reference](security.md) for security assets, trust boundaries, threats, and controls, [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md) for public tool schemas and replay behavior, [Storage](storage.md) for storage layout, and [Core Model Reference](core-model.md) for state transition semantics.
 
 ## Main idea
 
@@ -29,14 +29,14 @@ The important rule is that operations are surfaces over the same Core authority 
 Keep three layers separate:
 
 - Documentation checks are read-only editorial checks over Markdown docs: link integrity, terminology consistency, stage boundaries, security wording, user-language checks, owner-boundary drift, and English/Korean parity. They can produce documentation findings only.
-- Active MVP structured drafts describe the expected Engineering Checkpoint and MVP-1 behavior through future assertion fields. They are not executable fixtures yet, not generated runtime artifacts, and not current runtime pass/fail results.
+- Representative behavior examples describe expected Engineering Checkpoint and MVP-1 behavior through future assertion categories. They are not executable fixtures, not full fixture bodies, not generated runtime artifacts, and not current runtime pass/fail results.
 - Runtime conformance is future server implementation work. After runtime implementation exists and fixture suites are materialized, conformance will prove Harness behavior with executable fixtures. A passing fixture must drive a Core or operator request and compare captured response facts, Core state, storage rows, events, artifacts, blockers, errors, and forbidden side effects.
 
 Runtime suite pass/fail is executable-state-based. The runner decides a fixture result from the captured Core/API or operator result and the fixture expectation fields; scenario tables, comments, rendered status, Journey Card text, close prose, or agent summaries cannot substitute for that comparison.
 
 Rendered prose, status text, Journey Card text, close reports, or agent summaries can help a reader, but they cannot pass conformance by themselves. Runtime findings and close blockers must be asserted through structured Core/API results, owner-record refs, validator results, storage rows, events, artifacts, blockers, errors, forbidden-side-effect checks, or projection freshness when promoted, not as prose-only report text. Docs-maintenance findings use their own read-only report labels and remain outside runtime conformance.
 
-This document owns the operator-facing procedure and conformance overview for future implementation. [Conformance Fixtures Reference](conformance-fixtures.md) owns the core conformance model, exact structured fixture draft shape, assertion semantics, suite catalog metadata boundaries, future fixture profiles by behavior proved, active Kernel Smoke, MVP-1 user-loop, security/capability, and artifact/evidence behavior examples, and the reduced Kernel Smoke queue. [Future Fixtures](../later/index.md#future-fixture-families) owns compact future scenario-family inventory that stays catalog-only until promoted.
+This document owns the operator-facing procedure and conformance overview for future implementation. [Conformance Reference](conformance.md) owns the current conformance boundary, future fixture shape, assertion authority, representative active examples, catalog-only future boundary, and metrics boundary. [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families) owns names-only future fixture family candidates until an owner promotes a narrow behavior.
 
 ## Reference scope
 
@@ -46,13 +46,13 @@ This document owns:
 - operator diagnostic and runtime-effect boundaries
 - conformance staging and conformance run entrypoint overview
 - recover, reconcile, export, artifact-check, and docs-maintenance operator profiles
-- compatibility stubs for fixture-detail anchors moved to [Conformance Fixtures Reference](conformance-fixtures.md) or [Future Fixtures](../later/index.md#future-fixture-families)
+- the operator-facing boundary for future conformance runs and docs-maintenance reporting
 
 ## Not covered here
 
 This reference does not claim runtime implementation readiness. It defines stage-specific semantics for future implementation and conformance work.
 
-It also does not own conformance fixture body shape, fixture assertion semantics, compact future scenario inventory, public MCP schemas, SQLite DDL, projection template bodies, Start/Use workflow, or long-term analytics. Core fixture mechanics are owned by [Conformance Fixtures Reference](conformance-fixtures.md), and future scenario-family inventory is owned by [Future Fixtures](../later/index.md#future-fixture-families). Docs-maintenance rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks); this reference owns only the operator profile boundary below.
+It also does not own conformance fixture shape, assertion authority, future fixture family names, public MCP schemas, SQLite DDL, projection template bodies, Start/Use workflow, or long-term analytics. Conformance planning boundaries are owned by [Conformance Reference](conformance.md), and future fixture family names are owned by [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families). Docs-maintenance rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks); this reference owns only the operator profile boundary below.
 
 ## Contract map
 
@@ -60,9 +60,9 @@ It also does not own conformance fixture body shape, fixture assertion semantics
 |---|---|---|
 | Operator command semantics | [Operator entrypoints](#operator-entrypoints), then the command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), or [conformance run](#conformance-run) | Core state authority remains in [Core Model Reference](core-model.md), with authority placement in [Runtime Boundaries](runtime-boundaries.md). |
 | Operator diagnostics and runtime-effect boundaries | [Operator diagnostics report facts, not new state](#operator-diagnostics-report-facts-not-new-state), [Docs-maintenance profile](#docs-maintenance-profile), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule bodies stay in [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks). |
-| Fixture body shape and runner behavior | [Conformance Fixtures Reference: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format), [Conformance Execution](conformance-fixtures.md#conformance-execution), [Fixture Assertion Semantics](conformance-fixtures.md#fixture-assertion-semantics) | Public request schemas stay in [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md). Idempotency and state conflict behavior stay in [API Errors](api/errors.md). Storage seeding and row-effect details stay in [Storage](storage.md). |
-| Active behavior examples, future fixture authoring order, and future suite labels | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [Kernel Smoke Behavior Examples](conformance-fixtures.md#engineering-checkpoint-behavior-examples), [MVP-1 User Work Loop Behavior Examples](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples), [Security And Capability Behavior Examples](conformance-fixtures.md#security-and-capability-behavior-examples), [Artifact And Evidence Behavior Examples](conformance-fixtures.md#artifact-and-evidence-behavior-examples), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), and [Future Fixtures: Fixture Suites](../later/index.md#future-fixture-families) | Kernel gate and event names stay in [Core Model Reference](core-model.md). Future catalog suite labels are not early-stage requirements by listing alone. |
-| Future scenario inventory by concern | [Future Fixtures: Scenario Family Inventory](../later/index.md#future-fixture-families), then the matching inventory section | Catalog rows are not fixture bodies, public input examples, or current runtime conformance cases. |
+| Fixture shape and assertion authority | [Conformance Reference: Fixture Shape](conformance.md#4-fixture-shape) and [Assertion Authority](conformance.md#5-assertion-authority) | Public request schemas stay in [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md). Idempotency and state conflict behavior stay in [API Errors](api/errors.md). Storage row-effect details stay in [Storage](storage.md). |
+| Representative behavior examples and future family names | [Conformance staging](#conformance-staging), [Conformance Reference: Representative Active Examples](conformance.md#6-representative-active-examples), and [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families) | Examples are not fixture files, and future family names are not early-stage requirements by listing alone. |
+| Future family candidates by concern | [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families) | Catalog names are not fixture bodies, public input examples, or current runtime conformance cases. |
 | Artifact integrity, export, recover, and reconcile checks | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout and DDL stay in [Storage](storage.md). |
 | Security and threat-model diagnostic categories | [doctor](#doctor), [serve mcp](#serve-mcp), and [artifacts check](#artifacts-check) | Threat-model concepts stay in [Security Reference](security.md). API, storage, and kernel details stay with their owners. |
 
@@ -122,25 +122,17 @@ Status/next recommendations, Role Lens output, recommended playbooks, and operat
 
 ## Conformance staging
 
-Conformance will run incrementally after runtime implementation exists, but staged execution must not change the fixture body shape or reduce later reference conformance requirements. In the current documentation-only phase, this section is a future verification plan and must not be read as evidence that fixture files, a conformance runner, or runnable Harness Server conformance tests already exist.
+Conformance will run only after runtime implementation and fixture materialization exist. In the current documentation-only phase, this section is a future verification plan. It must not be read as evidence that fixture files, a conformance runner, generated conformance artifacts, or current Harness Server conformance tests are available.
 
-Build docs may provide doc-level planning review checks for the first implementation slice and stage exits. Those documentation checks help reviewers keep Engineering Checkpoint narrow, but they are not acceptance state, manual acceptance, fixture fields, suite metadata, public request schemas, storage rows, primary errors, generated conformance artifacts, or runner comparison modes. Future runtime pass/fail still comes only from executable fixtures that use the exact structured body shape and assertion semantics in [Conformance Fixtures Reference](conformance-fixtures.md).
+Build docs may provide planning review checks for the first implementation slice and stage exits. Those checks are not acceptance state, fixture fields, suite metadata, public request schemas, storage rows, primary errors, generated conformance artifacts, runner comparison modes, or runtime pass/fail results.
 
-Engineering Checkpoint is the first future internal authority-loop target, and Kernel Smoke is a future smoke-check label for the narrow checks that exercise that path after implementation begins. Build owns the stage exit criteria in [Engineering Checkpoint](../build/mvp-plan.md#first-internal-smoke-target); the exact future runtime fixture queue is owned by [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue). Once materialized, a minimal Kernel Smoke subset proves only the first internal Core authority path; it does not require a full conformance suite and does not claim MVP-1 User Work Loop, Assurance Profile, or operations conformance.
+Engineering Checkpoint is the first future internal authority-loop target. Kernel Smoke is only a future smoke-check authoring label under that target, not a stage and not a current runnable suite. The narrow future proof focuses on one local project/surface, one active Task or scoped boundary, `prepare_write`, Write Authorization where required, one compatible `record_run`, evidence/link visibility, status/blocker output, and a narrow close-blocker check.
 
-Reference-surface smoke expectations are part of that narrow Kernel Smoke authoring target, but they are not pass claims in this documentation-only phase. The expected active profile reports `surface_id=reference-local-mcp`, `mcp_available=true`, `max_guarantee_level=detective`, unsupported pre-tool blocking and isolation fields, and `conformance_smoke_status=planned_not_run` or an equivalent planned/not-run state until runtime fixtures are materialized and executed.
+MVP-1 User Work Loop conformance expands only to user-visible work-loop behavior. It should prove that ordinary requests become tracked work, user-owned judgments remain distinct, broad approval text does not substitute for specific judgments, evidence does not substitute for final acceptance or residual-risk acceptance, and close blockers remain visible. [Conformance Reference: Representative Active Examples](conformance.md#6-representative-active-examples) records the compact examples.
 
-MVP-1 User Work Loop uses the active user-value structured drafts in [Conformance Fixtures Reference](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples), plus the active [Security And Capability Behavior Examples](conformance-fixtures.md#security-and-capability-behavior-examples) and [Artifact And Evidence Behavior Examples](conformance-fixtures.md#artifact-and-evidence-behavior-examples) where those concerns affect the user loop. These drafts are not executable fixtures yet, and each future fixture must assert response facts, Core state, storage rows, events, artifact refs, blockers, errors, or forbidden side effects rather than rendered prose. MVP-1 is not a requirement to run the broad future catalog, full Manual QA, Eval systems, TDD trace, module map, interface contract, Journey/Spine projections, export/recover, dashboard/team/orchestration, or later advanced connector/security fixtures.
+Future family names in [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families) are catalog-only. They are not Engineering Checkpoint, MVP-1, Assurance Profile, Operations Profile, or Roadmap requirements unless an owner promotes a narrow behavior with exact contracts and proof expectations.
 
-The later conformance profiles follow the stage names in [MVP-1 User Work Loop](../build/mvp-plan.md#user-work-loop): Assurance Profile fixtures for Assurance Profile, and Operations Profile or promoted Roadmap fixtures for Operations Profile and promoted Roadmap candidates. Exact policy, API, storage, projection, connector, and fixture requirements stay in their Reference owners. Suite catalog metadata may group scenarios by suite, delivery stage, and tags for runner selection and reporting, but it is not passed to Core; future executable fixtures still assert through response facts, Core state, storage rows, events, artifacts, blockers, projections/freshness when promoted, errors, and forbidden side effects.
-
-Guard/freeze conformance in staged delivery asserts honest display and behavior at cooperative/detective levels: freeze requests can hold work, make the next action stricter, or cause `prepare_write` to return a structured blocker or hold when existing scope is incompatible; persistent owner-record changes must be asserted only when they happen through an existing Core state-changing path, User Judgment route, or owner-record update path. Guard displays report whether the current path is cooperative or detective and what violations can only be detected after the fact. Preventive `T4` guard fixtures and higher guarantee levels remain operations/future or Roadmap scope unless owner docs promote and prove a concrete covered operation with fixture-backed pre-tool blocking for the relevant reference surface. Isolated-profile conformance must name whether the boundary supports verification independence/stale-context control or stronger security isolation, and must not treat a worktree, fresh evaluator bundle, or process split as OS sandboxing or tamper-proof security unless that exact mechanism is proven.
-
-Browser QA Capture conformance is a Roadmap candidate, not a requirement of Engineering Checkpoint fixtures, MVP-1 User Work Loop fixtures, Assurance Profile fixtures, or Operations Profile / promoted Roadmap fixtures. Until promoted through the [Roadmap promotion criteria](../later/index.md#roadmap-candidates), it is non-authoritative capture support only. Future fixtures should prove declared `T6 QA Capture` behavior only after capability profile fields, redaction and secret/PII handling, browser test environment, artifact retention, capture artifact mapping, unsupported-surface fallback behavior, and no projection-as-canonical dependency are defined. Staged-delivery fixtures still prove Manual QA records, artifact refs, QA waiver behavior, acceptance boundaries, and close blockers without requiring automated browser capture.
-
-Connector and reference-surface smoke coverage follows the same staged rule. Engineering Checkpoint needs only enough reference-surface coverage to exercise the Kernel Smoke path named by the fixture owner: exact active `capability_profile` fields, honest guarantee display from those fields, `CAPABILITY_INSUFFICIENT` or structured blocked reasons when unsupported capabilities are required, and no product write silently continuing on an unsupported surface. Later profiles broaden this into connector honesty, generated-file drift reporting, manual artifact/verification/QA fallbacks, projection/card display, and the connector conformance scenarios owned by [Agent Integration Reference](agent-integration.md#connector-conformance-overview). Preventive `T4`, automated `T6`, remote/shared MCP exposure, hosted connector registries, cross-surface orchestration, and broad connector automation stay outside Engineering Checkpoint unless owner docs promote and prove a concrete reference path.
-
-Summary: Engineering Checkpoint conformance scope is the narrow Core authority loop: project/Task setup, one active Change Unit or scoped boundary, `prepare_write` plus Write Authorization, `record_run` plus evidence link, status/blocker output, and narrow close-blocker check. Later profiles add user-facing, assurance, and operations coverage without making the broad future catalog an early-stage requirement.
+Runtime fixture results, when they eventually exist, must be executable-state-based. Rendered prose, status text, Journey Card text, close report prose, generated summaries, or documentation-check labels cannot pass conformance by themselves.
 
 ## Docs-maintenance profile
 
@@ -559,7 +551,7 @@ Boundary:
 
 Diagnostic and reporting boundary: future Local Derived Metrics may appear in reports or operator diagnostics only as read-only derived displays until owner docs promote them. They do not create operational authority; see [Roadmap: Candidate Inventory](../later/index.md#roadmap-candidates) for the candidate boundary.
 
-The future fixture catalog row for this boundary is parked in [Future Fixtures: Operations Profile Catalog Entries](../later/index.md#future-fixture-families). This reference owns the operator behavior; the catalog row remains non-MVP and non-executable until promoted.
+The future fixture family name for this boundary is parked in [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families). This reference owns the operator behavior; the family name remains non-MVP and non-executable until promoted.
 
 ## artifacts check
 
@@ -607,119 +599,16 @@ Compact artifact check examples:
 
 ## conformance run
 
-Future `conformance run` is an operations-profile surface, normally Operations Profile or later after runtime suites are materialized. It will execute selected fixture suites or explicitly selected docs-only maintenance profiles. Runtime suites use the same Core entrypoints as MCP tools and operator commands, and pass/fail only when exact-shape fixtures compare captured response facts, Core state, storage rows, events, artifacts, blockers, projections/freshness when promoted, errors, and forbidden side effects. Docs-maintenance remains separate, read-only, and excluded from runtime fixture pass/fail and implementation readiness.
+Future `conformance run` is an operations-profile surface, normally Operations Profile or later after runtime suites are materialized. It will execute selected runtime fixture suites or explicitly selected docs-only maintenance profiles. Runtime suites use the same Core entrypoints as MCP tools and operator commands. Pass/fail is decided only by structured comparison over captured response facts, Core state, storage rows, stable events when promoted, artifacts, blockers, projection/freshness when promoted, errors, and forbidden side effects.
 
 ### Conformance Navigation Map
 
 | If you are looking for... | Go to |
 |---|---|
 | The `harness conformance run` entrypoint, runtime/docs-maintenance separation, and operator reporting boundary | This section, plus [Docs-maintenance profile](#docs-maintenance-profile) |
-| The exact structured fixture draft fields, runner loading/execution, and default comparison modes | [Conformance Fixtures Reference](conformance-fixtures.md#conformance-navigation-map) |
-| Suite intent and authoring order | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [Kernel Smoke Behavior Examples](conformance-fixtures.md#engineering-checkpoint-behavior-examples), [MVP-1 User Work Loop Behavior Examples](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples), [Security And Capability Behavior Examples](conformance-fixtures.md#security-and-capability-behavior-examples), [Artifact And Evidence Behavior Examples](conformance-fixtures.md#artifact-and-evidence-behavior-examples), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), and [Future Fixtures: Fixture Suites](../later/index.md#future-fixture-families) |
-| Future scenario inventory and catalog-only candidates | [Future Fixtures: Scenario Family Inventory](../later/index.md#future-fixture-families) |
+| Future fixture shape and assertion authority | [Conformance Reference: Fixture Shape](conformance.md#4-fixture-shape) and [Assertion Authority](conformance.md#5-assertion-authority) |
+| Representative active examples | [Conformance Reference: Representative Active Examples](conformance.md#6-representative-active-examples) |
+| Future family names and catalog-only candidates | [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families) |
+| Metrics boundary | [Conformance Reference: Metrics Boundary](conformance.md#8-metrics-boundary) |
 
-Operator boundary: this document owns the operator entrypoint, runtime/docs-maintenance profile separation, and conformance overview. [Conformance Fixtures Reference](conformance-fixtures.md) owns fixture body shape, assertion semantics, suite catalog metadata boundaries, fixture profiles, the active structured state-assertion behavior drafts, and the reduced Kernel Smoke queue. [Future Fixtures](../later/index.md#future-fixture-families) owns compact future scenario inventory and catalog-only candidates. When runtime conformance is materialized, runtime suite pass/fail remains executable-state-based; rendered prose alone cannot pass conformance.
-
-### Conformance Fixture Format
-
-Moved to [Conformance Fixtures Reference: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format). This stub preserves the old anchor; fixture body shape, canonical active value boundary, and `request.payload` public request schema boundary are owned there. Later-profile shorthand details stay in [Future Fixtures: Later-Profile Fixture Shorthand Notes](../later/index.md#future-fixture-families) until promoted.
-
-### Conformance Execution
-
-Moved to [Conformance Fixtures Reference: Conformance Execution](conformance-fixtures.md#conformance-execution). Runner isolation, loading, seeding, execution, capture, and comparison behavior are owned there.
-
-### Fixture Assertion Semantics
-
-Moved to [Conformance Fixtures Reference: Fixture Assertion Semantics](conformance-fixtures.md#fixture-assertion-semantics). Assertion modes for response facts, state changes, storage rows, events, artifacts, blockers, errors, validators, projection/freshness facts when promoted, and forbidden side effects are owned there.
-
-### Agency, Stewardship, Context, And Design-Quality Suites
-
-Moved to [Future Fixtures: Agency, Stewardship, Context, And Design-Quality Suites](../later/index.md#future-fixture-families). Suite responsibilities and read-only recommendation boundaries are catalog-only inventory until promoted.
-
-#### Catalog-Only Fixture Skeleton Guidance
-
-Moved to [Conformance Fixtures Reference: Catalog-Only Fixture Skeleton Guidance](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance). Catalog skeleton guidance is not an executable fixture body. Later-profile shorthand details stay in [Future Fixtures: Later-Profile Fixture Shorthand Notes](../later/index.md#future-fixture-families).
-
-#### Kernel Smoke Authoring Queue
-
-Moved to [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue). The queue remains fixture-authoring order, not fixture-body metadata.
-
-#### Intake And Decision Catalog Entries
-
-Moved to [Future Fixtures: Intake And Decision Catalog Entries](../later/index.md#future-fixture-families). Catalog rows remain scenario inventory until promoted by an owner.
-
-<a id="staged-fixture-coverage"></a>
-
-### Scenario Family Inventory
-
-Moved to [Future Fixtures: Scenario Family Inventory](../later/index.md#future-fixture-families). The old staged coverage map is now compact catalog inventory and is not a fixture checklist.
-
-<a id="fixture-example-map"></a>
-
-### Scenario Inventory Map
-
-Moved to [Future Fixtures: Scenario Family Inventory](../later/index.md#future-fixture-families). The old fixture example map is now compact catalog inventory, not executable examples.
-
-<a id="core-fixture-examples"></a>
-
-### Core Scenario Inventory
-
-Moved to [Future Fixtures: Core, Evidence, Verification, And Close Families](../later/index.md#future-fixture-families).
-
-<a id="agency-fixture-examples"></a>
-
-### Agency Scenario Inventory
-
-Moved to [Future Fixtures: Agency Catalog Entries](../later/index.md#future-fixture-families).
-
-<a id="connector-fixture-examples"></a>
-
-### Connector Scenario Inventory
-
-Moved to [Future Fixtures: Connector Catalog Entries](../later/index.md#future-fixture-families).
-
-#### Connector Agency Catalog Entries
-
-Moved to [Future Fixtures: Connector Agency Catalog Entries](../later/index.md#future-fixture-families).
-
-<a id="design-quality-fixture-examples"></a>
-
-### Design-Quality Scenario Inventory
-
-Moved to [Future Fixtures: Design-Quality And Stewardship Catalog Entries](../later/index.md#future-fixture-families).
-
-<a id="stewardship-fixture-examples"></a>
-
-### Stewardship Scenario Inventory
-
-Moved to [Future Fixtures: Design-Quality And Stewardship Catalog Entries](../later/index.md#future-fixture-families).
-
-#### Stewardship Catalog Entries
-
-Moved to [Future Fixtures: Stewardship Catalog Entries](../later/index.md#future-fixture-families).
-
-<a id="context-hygiene-fixture-examples"></a>
-
-### Context Hygiene Scenario Inventory
-
-Moved to [Future Fixtures: Context Hygiene Catalog Entries](../later/index.md#future-fixture-families).
-
-#### Context Hygiene Catalog Entries
-
-Moved to [Future Fixtures: Context Hygiene Catalog Entries](../later/index.md#future-fixture-families).
-
-#### Core, Projection, Reconcile, And Verification Boundary Catalog Entries
-
-Moved to [Future Fixtures: Core, Projection, Reconcile, And Verification Boundary Catalog Entries](../later/index.md#future-fixture-families).
-
-#### Roadmap Browser QA Capture Candidate Entries
-
-Moved to [Future Fixtures: Roadmap Browser QA Capture Candidate Entries](../later/index.md#future-fixture-families). These remain catalog-only future candidates unless owner docs promote and prove them.
-
-### Fixture Suites
-
-Moved to [Future Fixtures: Fixture Suites](../later/index.md#future-fixture-families). Suite labels are planning labels and not a required file set until promoted.
-
-### Metrics Boundary
-
-Moved to [Conformance Fixtures Reference: Metrics Boundary](conformance-fixtures.md#metrics-boundary). Long-term operational metrics remain derived analytics unless future owner docs promote them.
+Docs-maintenance remains separate, read-only, and excluded from runtime fixture pass/fail and implementation readiness. Operator reports may show docs-maintenance labels, but those labels are documentation-maintenance findings only.

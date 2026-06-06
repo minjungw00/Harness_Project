@@ -104,19 +104,20 @@ Rows here are planning candidates only. They are not MVP-1 requirements, active 
 <a id="future-fixture-families"></a>
 ## 8. Future Fixture Families
 
-| Candidate | Current status | Promotion requires | Active current MVP impact |
-|---|---|---|---|
-| future fixture families | Later candidate index only; full scenario scripts removed. | Exact fixture body, runner behavior, assertions, and owner contracts after promotion. | none |
-| Intake and decision routing | Future family candidate. | Core/API intake owner and user-judgment separation rules. | none |
-| Core, evidence, verification, and close | Future family candidate. | Core, API, evidence, verification, and close owner assertions over state and refs. | none |
-| Artifact redaction and export non-leakage | Future family candidate. | Artifact, redaction, storage, export, and security owner proof. | none |
-| Agency and user-judgment separation | Future family candidate. | User-judgment, Approval, acceptance, residual-risk, and Autonomy Boundary owner rules. | none |
-| Connector capability honesty | Future family candidate. | Agent Integration and Security owner capability profiles, fallback behavior, and guarantee proof. | none |
-| Design-quality and stewardship | Future family candidate. | Design-quality, domain, module, interface, and validator owners. | none |
-| Context hygiene and resume freshness | Future family candidate. | Agent Integration/context owner rules that keep retrieved context non-authoritative. | none |
-| Projection, reconcile, and verification boundary | Future family candidate. | Projection/Reconcile/Core/Eval owner rules. | none |
-| Operations diagnostics, export, recover, and handoff | Future family candidate. | Operations, Storage, Security, ArtifactRef, and conformance owners. | none |
-| Browser QA Capture | Roadmap fixture-family candidate. | Browser capture profile, redaction policy, artifact retention, fallback behavior, and proof that capture does not replace Manual QA or acceptance. | none |
+These are names only. They are catalog-only future candidates, not fixture bodies, scenario scripts, suite requirements, active API payloads, executable checks, current conformance results, or implementation tasks.
+
+| Future fixture family |
+|---|
+| Intake and decision routing |
+| Core, evidence, verification, and close |
+| Artifact redaction and export non-leakage |
+| Agency and user-judgment separation |
+| Connector capability honesty |
+| Design-quality and stewardship |
+| Context hygiene and resume freshness |
+| Projection, reconcile, and verification boundary |
+| Operations diagnostics, export, recover, and handoff |
+| Browser QA Capture |
 
 <a id="roadmap-candidates"></a>
 ## 9. Roadmap Candidates

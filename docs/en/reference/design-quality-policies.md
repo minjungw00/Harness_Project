@@ -20,7 +20,7 @@ This document does not define MCP schemas, SQLite DDL, state transition tables, 
 
 ## Before you read
 
-Use [Core Model Reference](core-model.md) for lifecycle, gates, and close semantics; [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md) for public request/response shapes and `ValidatorResult`; and [Conformance Fixtures Reference](conformance-fixtures.md#fixture-assertion-semantics) for fixture assertion semantics.
+Use [Core Model Reference](core-model.md) for lifecycle, gates, and close semantics; [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md) for public request/response shapes and `ValidatorResult`; and [Conformance Reference](conformance.md#5-assertion-authority) for assertion authority.
 
 ## Main idea
 

@@ -104,19 +104,20 @@
 <a id="future-fixture-families"></a>
 ## 8. Future fixture families
 
-| later 후보 | 현재 상태 | 승격 조건 | 현재 MVP 영향 |
-|---|---|---|---|
-| future fixture families | Later 후보 색인일 뿐입니다. Full scenario script는 삭제했습니다. | 승격 뒤 exact fixture body, runner behavior, assertion, owner contract가 필요합니다. | 없음 |
-| Intake and decision routing | Future family 후보입니다. | Core/API intake owner와 user-judgment separation rule이 필요합니다. | 없음 |
-| Core, evidence, verification, and close | Future family 후보입니다. | Core, API, evidence, verification, close owner가 state와 ref에 대한 assertion을 정의해야 합니다. | 없음 |
-| Artifact redaction and export non-leakage | Future family 후보입니다. | Artifact, redaction, storage, export, security owner proof가 필요합니다. | 없음 |
-| Agency and user-judgment separation | Future family 후보입니다. | User-judgment, Approval, acceptance, residual-risk, Autonomy Boundary owner rule이 필요합니다. | 없음 |
-| Connector capability honesty | Future family 후보입니다. | Agent Integration과 Security owner의 capability profile, fallback behavior, guarantee proof가 필요합니다. | 없음 |
-| Design-quality and stewardship | Future family 후보입니다. | Design-quality, domain, module, interface, validator owner가 필요합니다. | 없음 |
-| Context hygiene and resume freshness | Future family 후보입니다. | Retrieved context를 non-authoritative로 유지하는 Agent Integration/context owner rule이 필요합니다. | 없음 |
-| Projection, reconcile, and verification boundary | Future family 후보입니다. | Projection/Reconcile/Core/Eval owner rule이 필요합니다. | 없음 |
-| Operations diagnostics, export, recover, and handoff | Future family 후보입니다. | Operations, Storage, Security, ArtifactRef, conformance owner가 필요합니다. | 없음 |
-| Browser QA Capture | Roadmap fixture-family 후보입니다. | Browser capture profile, redaction policy, artifact retention, fallback behavior, 그리고 capture가 Manual QA나 acceptance를 대신하지 않는다는 proof가 필요합니다. | 없음 |
+이 section은 이름만 나열합니다. Catalog-only future candidate일 뿐이며 fixture body, scenario script, suite requirement, active API payload, executable check, current conformance result, implementation task가 아닙니다.
+
+| future fixture family |
+|---|
+| Intake and decision routing |
+| Core, evidence, verification, and close |
+| Artifact redaction and export non-leakage |
+| Agency and user-judgment separation |
+| Connector capability honesty |
+| Design-quality and stewardship |
+| Context hygiene and resume freshness |
+| Projection, reconcile, and verification boundary |
+| Operations diagnostics, export, recover, and handoff |
+| Browser QA Capture |
 
 <a id="roadmap-candidates"></a>
 ## 9. 로드맵 후보

@@ -20,7 +20,7 @@
 
 ## 읽기 전에
 
-Lifecycle, gate, close semantics는 [Core Model 참조](core-model.md)를 사용합니다. Public request/response shape와 `ValidatorResult`는 [MVP API](api/mvp-api.md)와 [API Schema Core](api/schema-core.md)를 사용하고, fixture assertion semantics는 [Conformance Fixtures 참조](conformance-fixtures.md#fixture-assertion-semantics)를 사용합니다.
+Lifecycle, gate, close semantics는 [Core Model 참조](core-model.md)를 사용합니다. Public request/response shape와 `ValidatorResult`는 [MVP API](api/mvp-api.md)와 [API Schema Core](api/schema-core.md)를 사용하고, assertion authority는 [적합성 참조](conformance.md#5-주장-권한)를 사용합니다.
 
 ## 핵심 생각
 

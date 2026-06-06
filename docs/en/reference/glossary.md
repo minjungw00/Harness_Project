@@ -122,8 +122,8 @@ Use the active delivery labels consistently.
 | Surface capability, guarantee display, connector behavior | [Agent Integration Reference](agent-integration.md) |
 | Security assets, trust boundaries, threat categories, high-risk control expectations, guarantee-level meanings | [Security Reference](security.md) |
 | Operator procedures, conformance run overview, docs-maintenance reporting | [Operations And Conformance Reference](operations-and-conformance.md) |
-| Core conformance model, fixture body shape, runner behavior, assertion semantics, fixture profiles, and reduced Kernel Smoke queue | [Conformance Fixtures Reference](conformance-fixtures.md) |
-| Compact future scenario-family inventory, promotion criteria, suite-family labels, and catalog-only future candidates | [Future Fixtures](../later/index.md#future-fixture-families) |
+| Current conformance status, future fixture shape, assertion authority, representative examples, catalog boundary, and metrics boundary | [Conformance Reference](conformance.md) |
+| Names-only future fixture family candidates | [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families) |
 
 ## Official Terms
 
@@ -389,7 +389,7 @@ The internal Change Unit-shaped expression of a safe next-work candidate when pr
 
 ### Fixture Assertion Semantics
 
-The conformance comparison rules that say how `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error` are matched against captured Core results. They are owned by [Conformance Fixtures Reference](conformance-fixtures.md#fixture-assertion-semantics), live outside the fixture body, and do not allow prose-only matching to pass a fixture.
+The conformance comparison boundary that says future checks must use structured assertions over captured Core/API/storage/artifact/error facts instead of prose-only matching. It is owned by [Conformance Reference: Assertion Authority](conformance.md#5-assertion-authority).
 
 ### Fresh Session
 

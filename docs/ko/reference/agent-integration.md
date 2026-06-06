@@ -27,7 +27,7 @@
 - Storage DDL, 지속 상태, artifact layout. [Storage](storage.md)를 봅니다.
 - Projection/template 권한과 active rendered template body. [Projection과 Template 참조](projection-and-templates.md)를 봅니다.
 - 위협 모델과 guarantee-level 의미. [보안 참조](security.md)를 봅니다.
-- 정확한 fixture format 또는 future runner behavior. [Conformance Fixtures 참조](conformance-fixtures.md)를 봅니다.
+- future fixture 형태 또는 주장 권한. [적합성 참조](conformance.md)를 봅니다.
 - Operator command와 diagnostic. [운영과 Conformance 참조](operations-and-conformance.md)를 봅니다.
 - 향후 커넥터 marketplace, 호스팅 에이전트 가정, broad connector ecosystem, 여러 접점 orchestration
 
@@ -246,4 +246,4 @@ Reference-surface check에는 다음이 포함됩니다.
 - unsupported capability에 대한 `CAPABILITY_INSUFFICIENT` 또는 동등한 blocked reason
 - 나중에 Core mutation path가 action을 기록하기 전까지 읽기 전용 recommendation
 
-정확한 fixture format은 [Conformance Fixtures 참조](conformance-fixtures.md)가 담당합니다. Operational command와 diagnostic은 [운영과 Conformance 참조](operations-and-conformance.md)가 담당합니다.
+Future fixture 형태와 주장 권한은 [적합성 참조](conformance.md)가 담당합니다. Operational command와 diagnostic은 [운영과 Conformance 참조](operations-and-conformance.md)가 담당합니다.

@@ -122,8 +122,8 @@ Active delivery label은 일관되게 씁니다.
 | Surface capability, guarantee display, connector behavior | [Agent 통합 참조](agent-integration.md) |
 | Security asset, trust boundary, threat category, high-risk control expectation, guarantee-level 의미 | [보안 참조](security.md) |
 | Operator procedure, conformance run overview, docs-maintenance 보고 | [운영과 Conformance 참조](operations-and-conformance.md) |
-| 핵심 적합성 모델, 정확한 fixture body, runner 동작, assertion semantics, fixture profile, 축소된 Kernel Smoke 작성 순서 | [Conformance Fixtures 참조](conformance-fixtures.md) |
-| 간결한 향후 scenario family 목록, 승격 조건, suite-family label, catalog-only future candidate | [향후 Fixtures](../later/index.md#future-fixture-families) |
+| 현재 적합성 상태, future fixture 형태, 주장 권한, 대표 예시, catalog 경계, metrics 경계 | [적합성 참조](conformance.md) |
+| 이름만 남긴 future fixture family 후보 | [Later 후보 색인: Future fixture families](../later/index.md#future-fixture-families) |
 
 ## 공식 용어
 
@@ -415,7 +415,7 @@ Run, Eval, 수동 QA 기록, validator, review display, operator diagnostic, con
 
 ### Fixture Assertion Semantics
 
-`expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, `expected_error`를 captured Core results와 어떻게 match하는지 정하는 conformance comparison rules입니다. [Conformance Fixtures 참조](conformance-fixtures.md#fixture-assertion-semantics)가 담당하며 fixture body 밖에 있고, prose-only matching으로 fixture를 pass시키는 것을 허용하지 않습니다.
+향후 check가 prose-only matching이 아니라 captured Core/API/storage/artifact/error fact에 대한 structured assertion을 사용해야 한다는 conformance comparison boundary입니다. [적합성 참조: 주장 권한](conformance.md#5-주장-권한)이 담당합니다.
 
 ### Fresh Session
 
