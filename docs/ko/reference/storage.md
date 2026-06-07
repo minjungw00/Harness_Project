@@ -124,7 +124,7 @@ Register, First Safe Change Unit Candidate 테이블을 만들지 않습니다. 
 요구하지 않습니다.
 
 최소 활성 구체화 정보도 이 기존 기록들에 저장합니다. 여기에는 현재 목표 요약,
-활성 범위 요약, 허용 경로 또는 영향 영역, 범위 밖 항목, 수락 기준, Autonomy Boundary,
+활성 범위 요약, 허용 경로 또는 영향 영역, 범위 밖 항목, 수락 기준, 자율성 경계,
 필요한 사용자 소유 판단, 필요할 때 막히는 질문 하나, 다음 안전한 행동 하나, 증거 기대
 또는 증거 공백, 닫기 차단 사유가 포함됩니다. 빠졌거나 알 수 없는 항목은 `unknown`,
 대기 중인 `user_judgments`, 증거 공백, `blockers`로 남깁니다. 저장소는 요청을 준비된 것처럼
@@ -236,7 +236,7 @@ Register, First Safe Change Unit Candidate 테이블을 만들지 않습니다. 
 | 프로젝트 등록 `status` | `active` | 기준 현재 MVP에는 등록된 active 프로젝트만 있습니다. 비활성화/등록 해제 동작은 담당 문서가 승격하기 전까지 later입니다. |
 | `surfaces.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` | API 호환성 확인을 위한 저장된 접점 태세입니다. 의미는 아래에 있으며 Schema Core와 같은 값입니다. |
 | `surfaces.status` | `active`, `disabled`, `stale`, `revoked` | 저장된 접점 행의 사용 가능성입니다. 의미는 아래에 있으며 Schema Core와 같은 값입니다. |
-| `change_units.status` | `proposed`, `active`, `replaced`, `closed` | 쓰기 호환성과 닫기 근거를 위한 저장소 소유 active Change Unit 생명주기입니다. |
+| `change_units.status` | `proposed`, `active`, `replaced`, `closed` | 쓰기 호환성과 닫기 근거를 위한 저장소 소유 활성 Change Unit 생명주기입니다. |
 | `write_authorizations.status` | `active`, `consumed`, `expired`, `stale`, `revoked` | 오래 남는 authorization 생명주기입니다. Schema Core가 같은 공개 요약 값을 노출하며, 저장소는 영속 방식과 전이 규칙을 담당합니다. |
 | `artifacts.status` | `available`, `missing`, `integrity_failed`, `unavailable` | 저장소가 소유하는 아티팩트 가용성 상태입니다. 가림 처리와 차단된 payload 처리는 `redaction_state`에 남습니다. |
 | `artifacts.redaction_state` | `none`, `redacted`, `secret_omitted`, `blocked` | Schema Core의 `ArtifactRef.redaction_state` 값을 지속 저장합니다. Hash와 size는 숨겨진 원본이 아니라 커밋된 안전한 바이트 또는 안전한 알림을 설명합니다. |
@@ -251,7 +251,7 @@ Register, First Safe Change Unit Candidate 테이블을 만들지 않습니다. 
 다시 정의하지 않습니다.
 
 `harness.intake` 이후에는 `harness.update_scope`가 활성 Task 범위 필드의 커밋된 갱신을 담당합니다.
-여기에는 목표 요약, 범위 경계, 비목표, 수락 기준, Autonomy Boundary, baseline 참조,
+여기에는 목표 요약, 범위 경계, 범위 밖 항목, 수락 기준, 자율성 경계, baseline 참조,
 `tasks.active_change_unit_id`가 포함됩니다. 이 메서드는 Task의 활성 `change_units` 행을
 만들거나 교체할 수 있습니다. `user_judgments`에 해결된 `scope_decision`이 있으면 관련
 참조로 연결할 수 있지만, `harness.record_user_judgment`가 활성 범위 필드나 Change Unit
@@ -277,7 +277,7 @@ Register, First Safe Change Unit Candidate 테이블을 만들지 않습니다. 
 - `active`는 호환되는 `harness.record_run`이 소비할 때만 `consumed`가 됩니다. 이때
   저장소는 `consumed_by_run_id`와 `consumed_at`을 설정합니다.
 - `active`는 `harness.update_scope` 또는 다른 담당 경로가 활성 Task, Change Unit,
-  baseline, 범위 경계, 수락 근거, Autonomy Boundary, 상태 버전을 바꿔 현재 근거와 더
+  baseline, 범위 경계, 수락 근거, 자율성 경계, 상태 버전을 바꿔 현재 근거와 더
   이상 맞지 않을 때 `stale`이 됩니다.
 - `active`는 소비하지 않고 authorization을 무효화하는 명시적 담당 경로를 통해서만
   `revoked`가 됩니다.
