@@ -4,7 +4,7 @@
 
 현재 MVP에서 쓰는 활성 공용 API 형태를 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 공통 응답, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization 요약, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP 값 집합, profile-gated 표시 값 이름, later 후보 값 이름의 경계를 다룹니다.
 
-이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP server가 구현되어 있다는 뜻이 아닙니다. 향후 schema 후보는 [Later 후보 색인](../../later/index.md#later-schema-candidates)에 남습니다.
+이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다. 향후 schema 후보는 [Later 후보 색인](../../later/index.md#later-schema-candidates)에 남습니다.
 
 ## 계약 위치 지도
 

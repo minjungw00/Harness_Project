@@ -4,7 +4,7 @@
 
 현재 MVP의 활성 API 표면을 확인할 때 이 참조를 사용합니다. 이 문서는 활성 메서드 목록과 메서드별 요청, 응답, 상태 효과, 저장소 담당 문서, 오류, 보안 경계를 담당합니다.
 
-이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 저장소에는 하네스 런타임이나 서버 구현이 없습니다. 향후 API/schema 후보는 활성 API 참조가 아니라 [Later 후보 색인](../../later/index.md)에 둡니다. Storage DDL과 전체 공용 schema body는 이 메서드 참조가 아닌 담당 문서가 담당합니다.
+이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 저장소에는 하네스 런타임이나 서버 구현이 없습니다. 향후 API/schema 후보는 활성 API 참조가 아니라 [Later 후보 색인](../../later/index.md)에 둡니다. Storage DDL과 전체 공용 스키마 본문은 이 메서드 참조가 아닌 담당 문서가 담당합니다.
 
 ## 핵심 생각
 
@@ -44,7 +44,7 @@ harness.close_task
 
 `dry_run=true`는 기준 권한이 아닙니다. 진단이나 would-change 결과를 반환할 수 있지만 current record, `task_events` row, artifact, 소비 가능한 Write Authorization, evidence summary, close state, idempotency replay row를 만들지 않습니다.
 
-Error code, primary error precedence, idempotency, stale-state behavior, close blocker ordering, 사용자 표시 오류 라벨은 [API Errors](errors.md)가 담당합니다. 공용 schema와 활성 값 집합은 [API Schema Core](schema-core.md)가 담당합니다.
+오류 코드, primary error 우선순위, idempotency, stale-state 동작, close blocker 순서, 사용자 표시 오류 라벨은 [API Errors](errors.md)가 담당합니다. 공용 schema와 활성 값 집합은 [API Schema Core](schema-core.md)가 담당합니다.
 
 <a id="harnessintake"></a>
 

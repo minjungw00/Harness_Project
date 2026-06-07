@@ -2,9 +2,9 @@
 
 ## 이 문서로 할 수 있는 일
 
-현재 MVP의 공개 오류 코드, primary-error precedence, blocked/dry-run 동작, idempotency replay, state conflict 동작, close blocker 동작, 사용자 표시 라벨 지침을 확인할 때 이 참조를 사용합니다.
+현재 MVP의 공개 오류 코드, primary-error 우선순위, blocked/dry-run 동작, idempotency replay, state conflict 동작, close blocker 동작, 사용자 표시 라벨 지침을 확인할 때 이 참조를 사용합니다.
 
-이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP server가 구현되어 있다는 뜻이 아닙니다.
+이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다.
 
 ## 현재 MVP 보장과 profile-gated 주장 경계
 
@@ -12,10 +12,10 @@
 
 지원되지 않는 profile-gated 보장을 요구하거나 표시해 달라는 요청은 주장 경계 오류입니다. 필요한 차단, 격리, 관찰, 증명 지원이 접점에 없으면 `CAPABILITY_INSUFFICIENT`를 사용합니다. 요청한 값이 활성 profile이나 요청 형태에서 유효하지 않으면 `VALIDATION_FAILED`를 사용합니다. 어떤 오류도 더 강한 보장이 존재한다는 증거가 아니며, 문서 전용인 현재 저장소에 런타임 강제가 있다는 뜻도 아닙니다.
 
-| Level 또는 이름 | 오류/상태 의미 |
+| 수준 또는 이름 | 오류/상태 의미 |
 |---|---|
-| `cooperative` | 에이전트나 tool이 문서화된 경로를 따를 때 하네스가 확인하고 기록할 수 있습니다. OS 권한, 샌드박스, 변조 방지 저장소, 실행 전 차단이 아닙니다. |
-| `detective` | 하네스 또는 연결된 surface가 관찰 가능한 mismatch를 action 중이나 이후에 감지, 기록, 보고할 수 있습니다. 예방이 아닙니다. |
+| `cooperative` | 에이전트나 도구가 문서화된 경로를 따를 때 하네스가 확인하고 기록할 수 있습니다. OS 권한, 샌드박스, 변조 방지 저장소, 실행 전 차단이 아닙니다. |
+| `detective` | 하네스 또는 연결된 surface가 관찰 가능한 불일치를 동작 중이나 이후에 감지, 기록, 보고할 수 있습니다. 예방이 아닙니다. |
 | `preventive` | profile-gated 표시 값 이름입니다. 대상 동작에 대한 승격된 도구 실행 전 차단 지원이 없으면 역량 부족 또는 검증 오류를 반환하고 표시 보장을 낮춥니다. |
 | `isolated` | profile-gated 표시 값 이름입니다. 이름 붙은 경계에 대한 승격된 격리 지원이 없으면 역량 부족 또는 검증 오류를 반환하고 표시 보장을 낮춥니다. |
 
