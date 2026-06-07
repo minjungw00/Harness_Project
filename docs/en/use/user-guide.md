@@ -95,7 +95,7 @@ If deferred: backend error mapping can continue, but final UI behavior, copy, sc
 Does not settle: login architecture, account recovery, final acceptance, or residual-risk acceptance.
 ```
 
-A broad reply such as "go ahead," "approved," or "looks good" applies only to the one active, clearly named judgment. It does not automatically grant sensitive-action approval, accept the final result, change scope, cancel the task, accept residual risk, or satisfy later/reserved QA waiver or verification-risk paths.
+A broad reply such as "go ahead," "approved," or "looks good" applies only to the one active, clearly named judgment. It does not automatically grant sensitive-action approval, accept the final result, change scope, cancel the task, accept residual risk, or satisfy any future later-path waiver.
 
 The compact active path is a judgment request through the `user_judgment` owner path. Full-format presentation such as `Decision Packet` remains later candidate material for complex judgments; it is not required for ordinary user decisions.
 
@@ -120,7 +120,7 @@ Approving a dependency install does not mean the dependency is the right archite
 
 After meaningful work, the agent should summarize what happened and what supports the claim. In owner terms, the active path may use `record_run` and evidence references when that path is available.
 
-Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, and inspection notes. If a future owner promotes Manual QA, its notes remain separate later-path material. The summary should say:
+Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, and inspection notes. If a future owner promotes a separate human-review path, its notes remain separate later-path material. The summary should say:
 
 - what ran or changed
 - what claim each item supports
@@ -128,7 +128,7 @@ Useful evidence can include changed paths, diffs, command output, test results, 
 - what evidence is missing, stale, redacted, omitted, blocked, or insufficient
 - what was not verified
 
-Evidence does not replace your judgment or final acceptance. Tests do not replace human inspection. If a future owner promotes Manual QA, tests do not satisfy that separate path. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
+Evidence does not replace your judgment or final acceptance. Tests do not replace human inspection or any future promoted review path. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
 
 ## 7. Review blockers before close
 
@@ -151,9 +151,9 @@ The agent should show:
 - residual risk visibility and acceptance need
 - the smallest unblocker
 
-Tests can pass while close is still blocked. A UI change can need human review, but the current MVP has no active Manual QA gate. A security-sensitive change can need a risk decision. Missing evidence remains a blocker until it is gathered or honestly reported as unresolved.
+Tests can pass while close is still blocked. A UI change can need human review even when no separate review gate is active. A security-sensitive change can need a risk decision. Missing evidence remains a blocker until it is gathered or honestly reported as unresolved.
 
-In owner terms, `close_task` returns blockers or a close result. In user terms, the agent should not claim close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved. Verification and QA gates are later candidates unless a future owner promotes them.
+In owner terms, `close_task` returns blockers or a close result. In user terms, the agent should not claim close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved. Additional quality gates are later candidates unless a future owner promotes them.
 
 Close can end as completed, cancelled, or superseded. A failed command, failed projection, missing artifact, evidence gap, or unresolved blocker should stay visible as the specific problem; it is not a generic failed Task result.
 
@@ -193,7 +193,7 @@ If an agent says something is blocked, read that as "we cannot honestly proceed 
 
 ## 10. Examples
 
-### Clarify a feature
+### Build a login feature
 
 ```text
 User: Build a login feature.
@@ -201,7 +201,7 @@ User: Build a login feature.
 Good agent behavior:
 - inspect existing auth routes, session handling, login UI, tests, and docs first;
 - separate scope, non-goals, facts, unknowns, and user-owned choices;
-- propose the smallest safe login slice.
+- propose the smallest safe login slice before writing.
 
 Visible shaped result:
 - Goal: add a basic email/password login path.
@@ -209,7 +209,15 @@ Visible shaped result:
 - Out of scope: account creation, password reset, social login, and production deployment.
 - Acceptance: existing users can sign in, failed login shows a chosen error treatment, and tests cover the touched path.
 - Blocking question: should failed login feedback be inline text or a toast?
-- Next safe action: after that answer, update the active scope and prepare the first write for the login form and related tests.
+- Next safe action: after that answer, update the active scope and check the intended login-form write.
+
+Harness routing after the request is clear:
+- `shaping`: turn "login feature" into the smallest useful goal, non-goals, acceptance, evidence expectation, and blocker.
+- `user-owned judgment`: ask the failed-login feedback choice instead of choosing silently.
+- `scope update`: apply the accepted slice before writing.
+- pre-write check / Write Authorization: check the intended login form, session, and test writes against the active scope.
+- `record_run`: summarize changed paths, tests, and missing evidence after meaningful action.
+- `close_task`: show evidence, blockers, final acceptance need, and any named residual risk before close.
 ```
 
 ### Make a plan concrete
@@ -228,40 +236,72 @@ Visible shaped result:
 - Out of scope: new design artifacts, broad roadmap rewrite, and implementation.
 - Evidence gap: no repository files or tests have been checked yet.
 - Blocking question: which user outcome should the first slice prove?
-- Next safe action: inspect the named owner docs or files, then update the active scope for the first Change Unit.
+- Next safe action: inspect the named owner docs or files, then update the active scope for the first implementable slice.
+
+Harness routing after the request is clear:
+- `shaping`: keep this as planning until the first writable slice is specific.
+- `user-owned judgment`: ask only the choice that changes that slice.
+- `scope update`: record the chosen slice when the user decides.
+- pre-write check / Write Authorization: wait until implementation paths are specific.
+- `record_run`: record inspections or checks only after they happen.
+- `close_task`: do not call the plan done if the first slice, evidence expectation, or close blocker is still unresolved.
 ```
 
-### Keep a tiny edit tiny
+### Only change files inside this scope
 
 ```text
-User: Fix only typos in this document.
+User: Only change files inside `src/auth` and its tests.
 
 Good agent behavior:
-- treat the scope as typo fixes only;
-- avoid wording, structure, terminology, and example changes;
-- report the changed file and a diff review for unintended meaning changes.
+- treat the listed paths as the allowed boundary;
+- inspect enough to know whether the requested fix fits that boundary;
+- ask before touching any path outside it.
+
+Harness routing after the request is clear:
+- `shaping`: convert the path instruction into scope and non-goals.
+- `user-owned judgment`: ask if the needed fix requires a path outside the boundary.
+- `scope update`: apply any accepted boundary change before relying on it.
+- pre-write check / Write Authorization: check intended writes against the allowed paths.
+- `record_run`: report changed paths and focused checks.
+- `close_task`: name out-of-scope needs or missing checks as blockers instead of hiding them.
 ```
 
 ### Split dependency choice from install approval
 
 ```text
-User: Add a chart library.
+User: This dependency choice needs my decision before you install anything.
 
 Good agent behavior:
+- inspect current charting/data-display needs first;
 - ask the technical judgment about whether a new dependency is the right direction;
-- ask a separate sensitive-action approval before installing or updating packages;
-- record evidence after the install and implementation checks.
+- ask a separate sensitive-action approval before installing or updating packages.
+
+Harness routing after the request is clear:
+- `shaping`: separate the product need from the dependency path.
+- `user-owned judgment`: record the technical decision about dependency direction.
+- `scope update`: update scope only if the accepted decision changes the work.
+- pre-write check / Write Authorization: check manifest or lockfile writes before package changes.
+- `record_run`: record install/check output after the approved action.
+- `close_task`: keep final acceptance and residual-risk acceptance separate from the dependency decision.
 ```
 
 ### Close honestly
 
 ```text
-User: Can we call this done?
+User: Check whether this change can be closed.
 
 Good agent behavior:
 - show scope, evidence, checks, human-review status when relevant, final acceptance need, and residual risk;
 - name blockers before close;
 - ask final acceptance and residual-risk acceptance separately when both are relevant.
+
+Harness routing after the request is clear:
+- `shaping`: confirm what result is being evaluated for close.
+- `user-owned judgment`: ask only unresolved final acceptance or named residual-risk questions.
+- `scope update`: update scope only if the close check reveals accepted scope drift.
+- pre-write check / Write Authorization: do not reuse stale write checks as close evidence.
+- `record_run`: rely on recorded actions and evidence summaries, or name the gap.
+- `close_task`: return blockers or a close result; broad "looks good" does not settle every judgment.
 ```
 
 For compact judgment prompt patterns, see [Judgment Examples](judgment-examples.md).

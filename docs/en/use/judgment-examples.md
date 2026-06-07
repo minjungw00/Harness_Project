@@ -72,56 +72,10 @@ Options:
 - Ask for a separate technical judgment before any install approval.
 
 Settles: permission for the named install/update action.
-Does not settle: whether the dependency is the right architecture, future installs, product writes outside scope, later/reserved QA waiver, later/reserved verification-risk acceptance, final acceptance, or residual-risk acceptance.
+Does not settle: whether the dependency is the right architecture, future installs, product writes outside scope, final acceptance, or residual-risk acceptance.
 ```
 
-## 4. QA Waiver
-
-Kind: `qa_waiver`
-
-Reserved path example. `qa_waiver` is not an active current MVP `UserJudgment.judgment_kind` value. It remains a later candidate in [Later Candidate Index](../later/index.md) until a future owner promotes a scoped Manual QA requirement and allows the user to perform it, waive it where allowed, or keep close blocked.
-
-```text
-Judgment needed: decide how to handle a promoted Manual QA requirement for the responsive login layout.
-
-Options:
-- Perform Manual QA now.
-- Waive Manual QA for this close and keep any visible residual risk separate.
-- Keep the task open and schedule QA before close.
-
-Recommendation: perform Manual QA for a user-facing login workflow. Waive only if the environment is unavailable and the change is low risk or time-bound.
-
-Uncertainty: small-screen layout, keyboard flow, screen-reader behavior, and visual polish have not been inspected by a person.
-
-If deferred: implementation can remain complete. The current MVP has no Manual QA gate; close is blocked only if a future promoted owner path makes this specific Manual QA requirement close-blocking.
-
-Settles: whether this promoted Manual QA requirement is performed, waived, or left blocking.
-Does not settle: evidence sufficiency, verification, final acceptance, or residual-risk acceptance.
-```
-
-## 5. Verification Risk Acceptance
-
-Kind: `verification_risk_acceptance`
-
-Reserved path example. `verification_risk_acceptance` is not an active current MVP `UserJudgment.judgment_kind` value. Use it only after a future owner path has promoted a specific verification requirement and that verification is missing, incomplete, stale, or waived through an allowed path. Without that promoted requirement, route the gap as ordinary evidence, residual risk, or a narrowed claim instead of implying a verification gate.
-
-```text
-Judgment needed: accept or reject the risk of missing browser verification.
-
-Context: automated unit tests passed, but browser verification is unavailable because the local browser surface is unavailable.
-
-Options:
-- Accept the verification risk and keep the limitation visible in close.
-- Do not accept; keep close blocked only if the promoted owner path made browser verification close-blocking.
-- Narrow the claim to code-level behavior only and leave UI behavior unclosed.
-
-Recommendation: do not accept the risk for a user-facing login flow unless timing or environment constraints are more important than close confidence.
-
-Settles: whether this named verification gap can be accepted as risk.
-Does not settle: final acceptance, Manual QA, evidence sufficiency for other claims, or residual-risk acceptance beyond this named risk.
-```
-
-## 6. Final Acceptance
+## 4. Final Acceptance
 
 Kind: `final_acceptance`
 
@@ -145,7 +99,7 @@ Settles: final acceptance of the typo-only result.
 Does not settle: residual risk, scope expansion, future editorial work, or acceptance of unrelated files.
 ```
 
-## 7. Residual Risk Acceptance
+## 5. Residual Risk Acceptance
 
 Kind: `residual_risk_acceptance`
 
@@ -166,10 +120,10 @@ Options:
 Recommendation: do not accept for a high-traffic login screen unless mobile review is temporarily impossible.
 
 Settles: acceptance of this named residual risk.
-Does not settle: final acceptance of the whole result, other residual risks, later/reserved QA waiver, or later/reserved verification-risk acceptance.
+Does not settle: final acceptance of the whole result or other residual risks.
 ```
 
-## 8. Cancellation Or Defer Decision
+## 6. Cancellation Or Defer Decision
 
 Kind: `cancellation` when stopping the task; otherwise no successful close judgment yet.
 

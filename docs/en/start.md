@@ -2,7 +2,7 @@
 
 ## What Harness Is
 
-Harness is a future local work-authority server for AI-assisted product work. Its job is to keep the fragile basis of a task out of chat-only memory: scope, user-owned judgment, evidence, verification expectations, close readiness, and residual risk.
+Harness is a future local work-authority server for AI-assisted product work. Its job is to keep the fragile basis of a task out of chat-only memory: scope, user-owned judgment, evidence, check expectations, close readiness, and residual risk.
 
 Users should be able to speak normally:
 
@@ -13,7 +13,7 @@ Show what I need to decide and what you can verify.
 Before you say it is done, show the evidence and residual risk.
 ```
 
-The agent can answer in the same ordinary language. When a request hides product, technical, QA, acceptance, or risk choices, Harness should make those choices visible. The agent should request and record needed judgments, not decide them silently.
+The agent can answer in the same ordinary language. When a request hides product, technical, human-review, acceptance, or risk choices, Harness should make those choices visible. The agent should request and record needed judgments, not decide them silently.
 
 This repository is documentation-only today. It describes intended future Harness behavior, but it does not contain a running Harness Server or runtime implementation.
 
@@ -66,7 +66,7 @@ The user owns goals, meaningful scope changes, product behavior, material techni
 
 The agent may recommend, compare options, inspect source, run checks, and explain consequences. It must not turn tool output, passing tests, generated summaries, or its own confidence into the user's judgment.
 
-Broad phrases such as "go ahead" or "looks good" should be applied only to the specific pending choice they reasonably answer. They do not automatically grant new sensitive-action permission, accept the finished work, accept known residual risk, or satisfy a later/reserved QA waiver path.
+Broad phrases such as "go ahead" or "looks good" should be applied only to the specific pending choice they reasonably answer. They do not automatically grant new sensitive-action permission, accept the finished work, accept known residual risk, or satisfy any future later-path waiver.
 
 ## What The Agent Can Do
 
@@ -80,7 +80,7 @@ When the agent cannot honestly proceed without a user-owned judgment, it should 
 
 Evidence is support for a claim. It can be a diff, test output, screenshot, log, source citation, review note, or artifact reference. Evidence should say what it supports and what it does not support.
 
-Evidence shows what the work did, but it does not replace the user's final acceptance. Evidence is not user judgment. Evidence is not automatically verification. A test pass is not Manual QA for copy, accessibility, visual layout, or the human experience. QA can support acceptance, but QA is not final acceptance.
+Evidence shows what the work did, but it does not replace the user's final acceptance. Evidence is not user judgment. Evidence is not automatically a complete check of the user experience. A test pass is not the same as human review of copy, accessibility, visual layout, or the lived flow. Review can support acceptance, but it is not final acceptance.
 
 If evidence is missing, stale, weak, or limited to the agent's own check, Harness should keep that visible instead of rounding it into "done."
 
@@ -88,7 +88,7 @@ If evidence is missing, stale, weak, or limited to the agent's own check, Harnes
 
 Close readiness answers a simple question: can this work honestly finish now, and what still blocks it?
 
-A close-ready task should show that scope stayed bounded, required user-owned judgments were handled, evidence supports the stated result, checks and known verification limits are clear, final acceptance is handled when required, known residual risk is visible when present, and any required residual-risk acceptance is recorded only when the user actually accepts the named risk. The current MVP does not add a verification gate or Manual QA gate. The user judges final acceptance and residual-risk acceptance separately.
+A close-ready task should show that scope stayed bounded, required user-owned judgments were handled, evidence supports the stated result, checks and known limits are clear, final acceptance is handled when required, known residual risk is visible when present, and any required residual-risk acceptance is recorded only when the user actually accepts the named risk. The current MVP does not add separate quality gates. The user judges final acceptance and residual-risk acceptance separately.
 
 If something is missing, close should name the smallest unblocker, such as a pending product decision, missing evidence, an unresolved check, unaccepted residual risk, or final acceptance that has not happened yet.
 
