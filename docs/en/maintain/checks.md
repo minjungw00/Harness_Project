@@ -17,7 +17,7 @@ These checks look for documentation drift:
 - user judgment routes that substitute for each other
 - projection-derived display wording that treats generated views as source authority
 - one-language-per-`doc_id` agent retrieval problems
-- stale rewrite history, resolved issue records, and old review prose
+- stale rewrite/history notes, closed issue records, and obsolete review prose
 
 ## 2. What This Does Not Prove
 
@@ -45,13 +45,13 @@ Pass when README and Maintain routes point only to:
 - `docs/*/maintain/translation-guide.md`
 - `docs/*/maintain/checks.md`
 
-Fail when active routing points to deleted files, stale route families, inactive migration records, wrong-language owners, old structure labels, or deep owner files instead of the compact owner index.
+Fail when active routing points to deleted files, stale route families, inactive migration records, wrong-language owners, stale structure labels, or deep owner files instead of the compact owner index.
 
 ## 4. Link And Anchor Check
 
-Inspect relative Markdown links, paired-language links, owner routes, heading anchors, old path names, deleted route names, and old structure labels.
+Inspect relative Markdown links, paired-language links, owner routes, heading anchors, stale path names, deleted route names, and stale structure labels.
 
-Pass when every active link resolves to a current file and current anchor. Fail when active docs point to a missing file, old heading, inactive migration record, wrong-language owner, stale route family, or old structure name.
+Pass when every active link resolves to a current file and current anchor. Fail when active docs point to a missing file, stale heading, inactive migration record, wrong-language owner, stale route family, or stale structure name.
 
 ## 5. Bilingual Semantic Parity Check
 
@@ -103,6 +103,6 @@ Pass when agent-facing docs retrieve only one language for a given `doc_id` duri
 
 ## 13. Stale Content Check
 
-Inspect Maintain docs and nearby routes for historical rewrite reviews, resolved issue records, old acceptance records, old delivery-label explanations, old stage label history, legacy alias history, later-candidate localization audit records, past translation problem records, past audit result narrative, and temporary migration plans.
+Inspect Maintain docs and nearby routes for historical rewrite reviews, closed issue records, obsolete acceptance records, obsolete delivery-label explanations, prior stage label history, obsolete alias history, later-candidate localization audit records, past translation problem records, past audit result narrative, and temporary migration plans.
 
-Pass when Maintain docs contain only living editing rules and current checks. Old stage label history may remain only as a minimal compatibility rule when a current owner needs it. Fail when old review prose is preserved as active guidance, issue-resolution or audit-result narrative remains, archive copies are created, or scratch migration files remain after the edit.
+Pass when Maintain docs contain only living editing rules and current checks. Prior stage label history may remain only as a minimal compatibility rule when a current owner needs it. Fail when obsolete review prose is preserved as active guidance, issue-resolution or audit-result narrative remains, archive copies are created, or scratch migration files remain after the edit.

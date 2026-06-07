@@ -26,7 +26,7 @@ Keep this as a small copy edit unless it becomes a product or technical decision
 
 The agent should translate that into visible working context: the current goal, what is in scope, what is out of scope, what is already known, what only you can decide, what can safely happen next, and what would block close.
 
-You do not need to say `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, or `task_events`. Those labels may appear only when they help explain a visible blocker, source reference, or owner contract.
+You do not need to say `Discovery`, `Change Unit`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, or `task_events`. Those labels may appear only when they help explain a visible blocker, source reference, or owner contract.
 
 ## 2. Clarify scope before write
 
@@ -93,7 +93,7 @@ Does not settle: login architecture, account recovery, final acceptance, or resi
 
 A broad reply such as "go ahead," "approved," or "looks good" applies only to the one active, clearly named judgment. It does not automatically grant sensitive-action approval, waive QA, accept verification risk, accept the final result, change scope, cancel the task, or accept residual risk.
 
-The compact active path is a judgment request through the `user_judgment` owner path. A full-format Decision Packet is later candidate presentation material for complex judgments; it is not required for ordinary user decisions.
+The compact active path is a judgment request through the `user_judgment` owner path. Full-format judgment presentation remains later candidate material for complex judgments; it is not required for ordinary user decisions.
 
 ## 5. Treat sensitive action approval separately
 

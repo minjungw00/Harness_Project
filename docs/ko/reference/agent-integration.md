@@ -158,7 +158,7 @@ Reference 자료 전체, 전체 스키마, 전체 DDL, Projection 본문 전체,
 - 불확실성 또는 빠진 증거
 - 에이전트 추천이 있다면 그 추천
 - 에이전트가 사용자 대신 결정하지 않는 것
-- 짧은 prompt인지(`presentation=short`), full Decision Packet 형식 표시인지(`presentation=full`)
+- 짧은 표시인지(`presentation=short`), 전체 형식인지(`presentation=full`)
 
 에이전트는 최종 수락, 민감 동작 승인, QA 면제 판단, 검증 위험 수락, 잔여 위험 수락을 사용자 대신 결정하면 안 됩니다. 사용자 소유 제품 판단, 중요한 기술 판단, 범위 확장 판단도 조용히 대신하면 안 됩니다. 넓은 의미의 "좋아" 또는 "계속해" 메시지는 필요한 판단 경로를 대신하지 않습니다.
 

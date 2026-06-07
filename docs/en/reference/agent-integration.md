@@ -158,7 +158,7 @@ A judgment request should preserve:
 - uncertainty or missing evidence
 - the agent recommendation, if any
 - what the agent is not deciding for the user
-- whether the prompt is compact (`presentation=short`) or a full Decision Packet style presentation (`presentation=full`)
+- whether the prompt is compact (`presentation=short`) or full-format (`presentation=full`)
 
 Agents must not decide final acceptance, sensitive-action approval, QA waiver, verification risk acceptance, or residual-risk acceptance for the user. They also must not silently make user-owned product decisions, material technical decisions, or scope-expansion decisions. A broad "looks good" or "continue" message does not substitute for any required judgment path.
 

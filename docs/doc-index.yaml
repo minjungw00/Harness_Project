@@ -56,7 +56,7 @@ docs:
       en: docs/en/use/judgment-examples.md
       ko: docs/ko/use/judgment-examples.md
     default_for_agent: en
-    owns: "Concrete examples for distinct user-owned judgment routes, the active focused judgment path, and the Decision Packet later-presentation boundary."
+    owns: "Concrete examples for distinct user-owned judgment routes, the active focused judgment path, and later-presentation boundaries."
     does_not_own: "Canonical UserJudgment schema, gate rules, or lifecycle authority."
 
   - doc_id: build.mvp-plan
@@ -206,7 +206,7 @@ docs:
       en: docs/en/later/index.md
       ko: docs/ko/later/index.md
     default_for_agent: en
-    owns: "Later candidate names and promotion boundaries only, including Decision Packet full-format presentation and future fixture families."
+    owns: "Later candidate names and promotion boundaries only, including full-format judgment presentation and future fixture families."
     does_not_own: "Active MVP requirements, active API/schema contracts, full template bodies, full fixture YAML, later schema bodies, or implementation readiness."
 
   - doc_id: maintain.authoring-guide

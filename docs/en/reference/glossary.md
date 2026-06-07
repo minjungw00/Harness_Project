@@ -29,7 +29,7 @@ Use these terms first in user-facing docs, prompts, and status summaries. Add ex
 | residual risk | Known remaining uncertainty, unchecked condition, limitation, or trade-off that matters to close. | [Core Model](core-model.md) |
 | residual-risk acceptance | A user-owned judgment accepting known residual risk. It is distinct from final acceptance, QA waiver, and verification-risk acceptance. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
 | close readiness | Whether work can honestly close now and what remains before it can close. | [Core Model](core-model.md) |
-| close blocker | A concrete reason progress, write, or close cannot proceed honestly until resolved or validly deferred. | [Core Model](core-model.md) |
+| close blocker | A concrete reason progress, write, or close cannot proceed honestly until fixed or validly deferred. | [Core Model](core-model.md) |
 | next safe action | The next action that can proceed without hiding unresolved scope, judgment, evidence, QA, verification, acceptance, or risk. | [API Schema Core](api/schema-core.md) |
 | authority boundary | The line between what creates Harness authority and what only informs it. Chat, projections, and reports are not authority. | [Runtime Boundaries](runtime-boundaries.md) |
 | derived display | User-visible output rendered from owner records, such as a status card or projection. It does not replace Core-owned state. | [Projection And Templates](projection-and-templates.md) |

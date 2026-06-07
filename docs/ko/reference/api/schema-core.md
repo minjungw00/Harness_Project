@@ -147,7 +147,7 @@ ArtifactRelationOwner:
   relation: string
 ```
 
-`uri`는 Harness storage를 통해 해소되며 보통 `harness-artifact://{project_id}/{artifact_id}`입니다. Raw secret, token, full sensitive log를 evidence로 저장하면 안 됩니다. Content가 redacted, omitted, blocked이면 `sha256`와 `size_bytes`는 hidden original이 아니라 committed safe bytes를 설명합니다.
+`uri`는 Harness storage를 통해 해석되며 보통 `harness-artifact://{project_id}/{artifact_id}`입니다. Raw secret, token, full sensitive log를 evidence로 저장하면 안 됩니다. Content가 redacted, omitted, blocked이면 `sha256`와 `size_bytes`는 hidden original이 아니라 committed safe bytes를 설명합니다.
 
 <a id="artifactinput"></a>
 

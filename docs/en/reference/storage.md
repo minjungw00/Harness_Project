@@ -234,7 +234,7 @@ example, blocked `prepare_write` responses do not create consumable
 ## 8. State versioning
 
 State clocks are scoped. Task-scoped mutations increment
-`tasks.state_version`. Project-scoped mutations with no Core-resolved primary
+`tasks.state_version`. Project-scoped mutations with no Core-selected primary
 Task increment `project_state.state_version`.
 
 State-changing API calls compare `ToolEnvelope.expected_state_version` against

@@ -122,18 +122,18 @@ schema를 복사하지 않습니다.
 |---|---|---|---|
 | Runtime Home identity | `registry.sqlite` | Local Runtime Home과 schema/storage profile을 식별합니다. | `runtime_home_id`, `schema_version`, `storage_profile`, `created_at`, `updated_at`. |
 | Project registration | `registry.sqlite` | Registered project를 project-local storage에 연결합니다. | `project_id`, `repo_root`, `project_home`, `display_name`, `status`, `created_at`, `updated_at`. |
-| `project.yaml` | Project directory | 정적 project configuration. | `project_id`, `repo_root`, 표시/config default. |
+| `project.yaml` | Project directory | 정적 project 설정입니다. | `project_id`, `repo_root`, 표시/config default. |
 | `project_state` | `state.sqlite` | Project-local state header, state clock, active Task pointer, default surface pointer를 저장합니다. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
 | `surfaces` | `state.sqlite` | `surface_id`, capability profile, local access posture, guarantee display에 필요한 registered local/reference surface fact를 저장합니다. | `surface_id`, `project_id`, `surface_kind`, `capability_profile_json`, `local_access_posture`, `guarantee_level`, `status`, `created_at`, `updated_at`. |
 | `tasks` | `state.sqlite` | 사용자 가치 단위, Task별 상태 clock, 현재 shaping 요약, lifecycle, result, close field를 저장합니다. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `result`, `summary`, shaping JSON columns, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
-| `change_units` | `state.sqlite` | Write compatibility와 close basis를 위한 current 또는 proposed scoped work boundary를 저장합니다. | `change_unit_id`, `task_id`, `scope_summary`, scope JSON columns, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
-| `user_judgments` | `state.sqlite` | Active `UserJudgment.judgment_kind` 값에 대한 사용자 소유 판단 기록. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, request/context JSON columns, `question`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
-| `write_authorizations` | `state.sqlite` | `dry_run=false`인 `prepare_write`가 `decision=allowed`일 때만 생성되는 durable single-use cooperative Write Authorization. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
-| `runs` | `state.sqlite` | Product write가 있었다면 compatible authorization consumption까지 포함하는 committed execution 또는 observation record. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, observed/evidence JSON columns, `created_at`, `completed_at`. |
-| `artifacts` | `state.sqlite`와 artifact store | Integrity, redaction, producer, retention, availability fact를 가진 registered durable evidence byte 또는 safe metadata. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
-| `artifact_links` | `state.sqlite` | Artifact가 지원하는 active Core/API record로 가는 담당 관계. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
-| `evidence_summaries` | `state.sqlite` | Status, run/evidence summary, blocker, close에 쓰는 compact evidence coverage와 gap record. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
-| `blockers` | `state.sqlite` | Next action, write compatibility, evidence gap, close readiness, recovery를 위한 structured blocker. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
+| `change_units` | `state.sqlite` | 쓰기 호환성과 닫기 근거를 위한 현재 또는 제안된 범위 있는 작업 경계를 저장합니다. | `change_unit_id`, `task_id`, `scope_summary`, scope JSON columns, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
+| `user_judgments` | `state.sqlite` | 활성 `UserJudgment.judgment_kind` 값에 대한 사용자 소유 판단 기록을 저장합니다. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, request/context JSON columns, `question`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
+| `write_authorizations` | `state.sqlite` | `dry_run=false`인 `prepare_write`에서 `decision=allowed`일 때만 만들어지는 지속성 있는 단일 사용 협력형 Write Authorization입니다. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
+| `runs` | `state.sqlite` | 제품 쓰기가 있었다면 호환 승인 소비까지 포함하는 확정된 실행 또는 관찰 기록입니다. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, observed/evidence JSON columns, `created_at`, `completed_at`. |
+| `artifacts` | `state.sqlite`와 artifact store | 무결성, 가림, 생산자, 보존, 가용성 사실을 가진 등록된 지속 증거 바이트 또는 안전한 메타데이터입니다. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
+| `artifact_links` | `state.sqlite` | Artifact와 그것이 뒷받침하는 active Core/API record 사이의 담당 관계를 저장합니다. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
+| `evidence_summaries` | `state.sqlite` | 상태, 실행/증거 요약, 차단 사유, 닫기에 쓰는 간결한 증거 범위와 공백 기록을 저장합니다. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
+| `blockers` | `state.sqlite` | 다음 행동, 쓰기 호환성, 증거 공백, 닫기 준비, 복구를 위한 구조화된 차단 사유를 저장합니다. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
 | `task_events` | `state.sqlite` | Committed Core mutation의 append-only audit와 ordering trail. | `event_id`, `task_id`, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `tool_invocations` | `state.sqlite` | `dry_run=false`인 state-changing tool response의 committed idempotency replay row. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
@@ -191,7 +191,7 @@ Artifact가 evidence-eligible하려면 storage가 아래 사실을 가져야 합
   record로 가는 담당 연결.
 
 `uri`는 보통 `harness-artifact://{project_id}/{artifact_id}` 형태로 Harness storage를 통해
-해소됩니다. Caller가 임의로 준 filesystem path가 아닙니다. Raw secret, token, full
+해석됩니다. 호출자가 임의로 준 filesystem path가 아닙니다. Raw secret, token, full
 sensitive log를 evidence byte로 저장하면 안 됩니다. 대신 redacted byte,
 `secret_omitted` 또는 `blocked` notice, safe handle, 담당 문서가 허용한 safe representation을
 저장합니다.
@@ -226,7 +226,7 @@ response는 consumable `write_authorizations`를 만들지 않습니다.
 ## 8. 상태 버전
 
 상태 버전은 scope별 clock입니다. Task-scoped mutation은 `tasks.state_version`을 올립니다.
-Core-resolved primary Task가 없는 project-scoped mutation은 `project_state.state_version`을
+Core가 찾은 primary Task가 없는 project-scoped mutation은 `project_state.state_version`을
 올립니다.
 
 State-changing API call은 commit 전에 `ToolEnvelope.expected_state_version`을 affected

@@ -208,7 +208,7 @@ Notes:
 
 Use `judgment-request` when the user owns a choice that affects progress, scope, sensitive-action permission, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation. This is the active MVP prompt shape for ordinary user-owned judgments.
 
-Implementation tier: active MVP user work-loop view. Full-format Decision Packet presentation is later candidate scope and remains only a candidate in [Later Template Candidates](../later/index.md#later-template-candidates).
+Implementation tier: active MVP user work-loop view. Full-format judgment presentation is later candidate scope and remains only a candidate in [Later Template Candidates](../later/index.md#later-template-candidates).
 
 Boundary: this template displays a pending or recorded `user_judgment`; it does not create the judgment record by itself, grant Write Authorization, perform QA or verification, create QA evidence, record final acceptance, accept residual risk, accept verification risk, or close a Task.
 

@@ -47,9 +47,9 @@ Documentation checks are manual maintenance aids. Their `PASS`, `WARN`, and `FAI
 
 ## Quality Rules / 품질 규칙
 
-Keep route tables on the compact structure above. Do not restore stale route families, historical rewrite notes, resolved review records, old cleanup notes, or temporary migration plans into active docs.
+Keep route tables on the compact structure above. Keep review history, cleanup notes, and temporary migration plans out of active docs.
 
-경로 표는 위의 현재 간결 구조만 가리켜야 합니다. 오래된 경로 묶음, 과거 재작성 기록, 해결된 리뷰 기록, 예전 정리 메모, 임시 마이그레이션 계획을 활성 문서로 되돌리지 않습니다.
+경로 표는 위의 현재 간결 구조만 가리켜야 합니다. 리뷰 이력, 정리 메모, 임시 마이그레이션 계획을 활성 문서에 넣지 않습니다.
 
 Do not list profile-gated values as default active MVP values. Do not describe later candidates as active requirements. Do not make unsupported security claims about prevention, isolation, sandboxing, tamper-proof storage, or default tool blocking.
 

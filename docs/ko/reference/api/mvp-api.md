@@ -40,7 +40,7 @@ harness.close_task
 
 모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)와 [`ToolResponseBase`](schema-core.md#common-response)를 사용합니다. 상태를 바꾸는 메서드는 non-null `idempotency_key`와 current `expected_state_version`을 요구합니다. `harness.status`는 read-only이며 `expected_state_version: null`을 사용할 수 있습니다.
 
-메서드에 tool-specific `task_id`가 있으면 Core는 tool-specific `task_id`, `ToolEnvelope.task_id`, active Task 순서로 primary Task를 찾습니다. Task-scoped mutation은 `expected_state_version`을 `tasks.state_version`과 비교합니다. Resolved Task가 없는 project-scoped mutation은 `project_state.state_version`과 비교합니다.
+메서드에 tool-specific `task_id`가 있으면 Core는 tool-specific `task_id`, `ToolEnvelope.task_id`, active Task 순서로 primary Task를 찾습니다. Task-scoped mutation은 `expected_state_version`을 `tasks.state_version`과 비교합니다. 선택된 Task가 없는 project-scoped mutation은 `project_state.state_version`과 비교합니다.
 
 `dry_run=true`는 기준 권한이 아닙니다. 진단이나 would-change 결과를 반환할 수 있지만 current record, `task_events` row, artifact, 소비 가능한 Write Authorization, evidence summary, close state, idempotency replay row를 만들지 않습니다.
 

@@ -34,7 +34,7 @@ Use [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain
 
 ## Quality Rules
 
-Do not finish a meaning-changing documentation edit with only one language updated. Do not restore stale route families, historical rewrite notes, resolved review records, old cleanup notes, or temporary migration plans into active docs.
+Do not finish a meaning-changing documentation edit with only one language updated. Keep review history, cleanup notes, and temporary migration plans out of active docs.
 
 Do not list profile-gated values as default active MVP values, describe later candidates as active requirements, or make unsupported preventive, isolation, sandboxing, tamper-proof, or default tool-blocking security claims.
 

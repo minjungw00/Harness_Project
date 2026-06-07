@@ -131,7 +131,7 @@ Dry-run calls and pre-commit failures do not create or reserve replay rows.
 
 For a new state-changing attempt with no committed replay row, Core resolves the primary Task before freshness checking. Resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task.
 
-Task-scoped mutations compare `expected_state_version` with `tasks.state_version`. Project-scoped mutations with no resolved primary Task compare it with `project_state.state_version`. Mismatch returns `STATE_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, or replay rows.
+Task-scoped mutations compare `expected_state_version` with `tasks.state_version`. Project-scoped mutations with no selected primary Task compare it with `project_state.state_version`. Mismatch returns `STATE_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, or replay rows.
 
 `STATE_CONFLICT.details` should include:
 

@@ -29,7 +29,7 @@ The table routes agents and implementers to the compact owner documents that cur
 | Conformance model, future fixture shape, assertion authority, and non-executable suite boundary | [conformance.md](conformance.md) |
 | Design-quality rules that affect active gates | [design-quality.md](design-quality.md) |
 | Official terms | [glossary.md](glossary.md) |
-| Later candidates, including Decision Packet full-format presentation and future fixture families | [../later/index.md](../later/index.md) |
+| Later candidates, including full-format judgment presentation and future fixture families | [../later/index.md](../later/index.md) |
 
 ## No Duplicate Injection
 

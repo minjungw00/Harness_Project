@@ -14,7 +14,7 @@ The repository is documentation-only today and remains in documentation review u
 - Prefer small batches. Report changed and deleted files.
 - Do not create commits unless the user explicitly asks.
 
-When old prose conflicts with the current product thesis, owner boundaries, Korean quality rules, active/later boundaries, or honest security wording, rewrite it. Preserve the durable rule, not the old section shape.
+When stale prose conflicts with the current product thesis, owner boundaries, Korean quality rules, active/later boundaries, or honest security wording, rewrite it. Preserve the durable rule, not the former section shape.
 
 ## 2. Compact Route Rule
 
@@ -32,7 +32,7 @@ README files and Maintain docs route only to the compact structure below:
 - `docs/*/maintain/translation-guide.md`
 - `docs/*/maintain/checks.md`
 
-Use [Reference Index](../reference/README.md) to choose exact contract owners. Do not turn reference subpages, old route families, migration notes, or historical review files into active route tables. If an old path appears, replace it with the compact route that now owns the reader need or delete the stale wording.
+Use [Reference Index](../reference/README.md) to choose exact contract owners. Do not turn reference subpages, stale route families, migration notes, or historical review files into active route tables. If a stale path appears, replace it with the compact route that now owns the reader need or delete the stale wording.
 
 Use [doc-index.yaml](../../doc-index.yaml) only as documentation retrieval metadata. It is not runtime configuration, implementation state, or permission to load both languages for one `doc_id`.
 
@@ -110,17 +110,17 @@ Do not leave English noun phrases in Korean prose unless they are exact identifi
 
 ## 9. Stale Content Deletion Rule
 
-Maintain docs should guide future editing. They should not preserve historical rewrite reviews, resolved issue records, old acceptance notes, old delivery-label explanations, legacy alias history, later-candidate localization audit records, past translation problem records, or scratch migration plans.
+Maintain docs should guide future editing. They should not preserve historical rewrite reviews, closed issue records, obsolete acceptance notes, obsolete delivery-label explanations, obsolete alias history, later-candidate localization audit records, past translation problem records, or scratch migration plans.
 
-When stale review history contains a still-useful rule, extract the rule and delete the historical framing. Do not keep past audit result narrative, issue-resolution records, or old acceptance prose as active maintain guidance.
+When stale review history contains a still-useful rule, extract the rule and delete the historical framing. Do not keep past audit result narrative, issue-resolution records, or obsolete acceptance prose as active maintain guidance.
 
-Use these durable triage categories when deciding what to do with old prose:
+Use these durable triage categories when deciding what to do with stale prose:
 
 | Category | Use when | Action |
 |---|---|---|
 | `preserve` | The text supports the product thesis, belongs to the right owner, and helps the reader. | Keep the meaning and polish if useful. |
 | `shrink` | The text is right but too long, repetitive, internal, or contract-heavy for its document family. | Keep only the reader-visible consequence and compact owner route. |
-| `move` | The text belongs in another owner or document family. | Move the meaning to that owner or route there, then remove the old copy. |
+| `move` | The text belongs in another owner or document family. | Move the meaning to that owner or route there, then remove the stale copy. |
 | `delete` | The text is obsolete, misleading, duplicative, historical, or conflicts with the product thesis, owner boundary, Korean quality rule, active/later boundary, or guarantee level. | Delete it. Do not keep it for continuity. |
 | `decision-needed` | The edit exposes a real unresolved choice about schema, state, API, active/later boundary, security guarantee, fixture semantics, terminology, or implementation readiness. | Route the decision to the owning document. Major server-coding decisions belong in [MVP Plan](../build/mvp-plan.md), not scattered TODOs. |
 
@@ -138,7 +138,7 @@ Delete temporary migration plans and scratch files before finishing.
 - [ ] User-owned judgment routes remain distinct.
 - [ ] Security wording matches the documented guarantee level and does not make unsupported preventive, isolation, sandboxing, tamper-proof, or default tool-blocking claims.
 - [ ] Links, anchors, README routes, and paired-language links resolve.
-- [ ] Deleted routes and old structure names are not used as active paths.
-- [ ] Stale rewrite history, resolved issue records, legacy alias history, and old review prose were deleted instead of archived.
+- [ ] Deleted routes and stale structure names are not used as active paths.
+- [ ] Stale rewrite history, closed issue records, obsolete alias history, and stale review prose were deleted instead of archived.
 - [ ] No temporary migration plan or scratch file remains.
-- [ ] Relevant checks in [Checks](checks.md) were run or reported as not run.
+- [ ] Relevant checks in [Checks](checks.md) were run or reported as skipped.

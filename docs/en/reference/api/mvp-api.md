@@ -40,7 +40,7 @@ harness.close_task
 
 All methods use [`ToolEnvelope`](schema-core.md#tool-envelope) and [`ToolResponseBase`](schema-core.md#common-response). State-changing methods require a non-null `idempotency_key` and a current `expected_state_version`. `harness.status` is read-only and may use `expected_state_version: null`.
 
-When a method has a tool-specific `task_id`, Core resolves the primary Task in this order: tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task. Task-scoped mutations compare `expected_state_version` with `tasks.state_version`; project-scoped mutations with no resolved Task compare it with `project_state.state_version`.
+When a method has a tool-specific `task_id`, Core resolves the primary Task in this order: tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task. Task-scoped mutations compare `expected_state_version` with `tasks.state_version`; project-scoped mutations with no selected Task compare it with `project_state.state_version`.
 
 `dry_run=true` is never authoritative. It may return diagnostics or a would-change result, but it creates no current record, `task_events` row, artifact, consumable Write Authorization, evidence summary, close state, or idempotency replay row.
 
