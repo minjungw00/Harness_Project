@@ -35,8 +35,8 @@ The active role is limited to these effects:
 - point to `CloseBlocker.category=scope`, `CloseBlocker.category=user_judgment`, `CloseBlocker.category=evidence`, or `CloseBlocker.category=artifact_availability` when the matching active owner path already requires that blocker
 - point to `CloseBlocker.category=residual_risk_visibility`, `CloseBlocker.category=residual_risk_acceptance`, `CloseBlocker.category=surface_capability`, or another already-active category only when that owner path truly applies
 - route one focused next action: ask one focused user judgment, request evidence, mark residual risk visible, show an advisory next action, or no action
-- keep user-owned product, material technical, scope, final-acceptance, residual-risk, and later/reserved QA waiver or verification-risk judgments distinct
-- keep evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness distinct
+- keep user-owned product, material technical, scope, final-acceptance, residual-risk, and cancellation judgments distinct
+- keep evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness distinct; verification and Manual QA are not active current MVP gates
 
 Design quality must not turn ordinary work into an open-ended planning loop. Full domain-language audits, full module/interface review, full TDD trace, full feedback-loop audit, full codebase-stewardship review, detailed Manual QA policy, detached verification, two-stage review displays, and steward policies are not active current MVP blockers unless another active owner path explicitly requires a narrow piece of that work.
 
@@ -78,7 +78,7 @@ Keep the judgment routes separate:
 
 - `final_acceptance` is the user's result judgment after the close basis is visible; it does not create evidence or accept residual risk.
 - `residual_risk_acceptance` accepts a named visible residual risk; it does not prove correctness or replace final acceptance.
-- `qa_waiver` and `verification_risk_acceptance` are later/reserved values. They are not active current MVP `UserJudgment.judgment_kind` values.
+- The only active current MVP `UserJudgment.judgment_kind` values are the seven values listed in [API Schema Core](api/schema-core.md#current-mvp-value-sets). Other future candidates stay in [Later](../later/index.md) until promoted.
 
 Broad approval, a friendly "looks good", or a general go-ahead must not be treated as any of these judgments unless the active owner path asked for that specific judgment.
 
@@ -90,11 +90,11 @@ Useful evidence references can include:
 
 - registered `ArtifactRef` values, Run refs, command/check summaries, or source refs
 - current state/version/freshness refs when stale context affects the close basis
-- user-judgment refs for product, technical, scope, final-acceptance, residual-risk, or later/reserved QA waiver and verification-risk decisions when promoted
+- user-judgment refs for product, technical, scope, final-acceptance, or residual-risk decisions
 - residual-risk refs when a known limitation remains visible at close
-- Manual QA or verification refs only when those owner paths are active or explicitly required
+- future Manual QA or verification refs only after those later owner paths are promoted
 
-Chat assertions, generic summaries, rendered projection prose, unregistered files, screenshots without an owner path, passing tests alone, later QA waiver, final acceptance, or residual-risk acceptance do not automatically satisfy required evidence. Required evidence can block close only through the Core evidence owner path. Non-required evidence gaps should be routed as `request evidence`, `show advisory next action`, or residual-risk visibility as appropriate.
+Chat assertions, generic summaries, rendered projection prose, unregistered files, screenshots without an owner path, passing tests alone, future waiver candidates, final acceptance, or residual-risk acceptance do not automatically satisfy required evidence. Required evidence can block close only through the Core evidence owner path. Non-required evidence gaps should be routed as `request evidence`, `show advisory next action`, or residual-risk visibility as appropriate.
 
 ## 7. Validator ID boundary
 

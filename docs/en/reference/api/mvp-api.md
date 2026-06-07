@@ -374,7 +374,7 @@ RecordUserJudgmentResponse:
 - **State effect:** A committed non-dry-run call updates `user_judgments.status`, records the request-level selected option, request note, and answer details, updates only covered blockers and judgment-dependent summaries, appends an event, and creates a replay row. It does not directly mutate active Task scope fields or the active Change Unit. If a resolved `scope_decision` means scope must change, the response's next action points to `harness.update_scope`. It creates no standalone accepted-risk row in active MVP.
 - **Errors:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
 - **Storage owner:** `user_judgments`, `blockers`, `task_events`, and `tool_invocations`.
-- **Security boundary:** Broad phrases such as "go ahead" or "looks good" do not become product decisions, sensitive-action approval, final acceptance, residual-risk acceptance, cancellation, scope expansion, or later/reserved QA waiver and verification-risk routes unless the pending judgment explicitly asked for that kind and the recorded answer matches it.
+- **Security boundary:** Broad phrases such as "go ahead" or "looks good" do not become product decisions, sensitive-action approval, final acceptance, residual-risk acceptance, cancellation, or scope expansion unless the pending active judgment explicitly asked for that kind and the recorded answer matches it. Later-only judgment candidates are not active MVP judgment kinds.
 
 <a id="harnessclose_task"></a>
 

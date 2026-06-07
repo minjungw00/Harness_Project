@@ -34,14 +34,14 @@
 |---|---|---|---|
 | 보증 강화 | 이후 후보 | 담당 문서가 관문, 대체 동작, 향후 승격에 필요한 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
 | Full Evidence Manifest | 이후 후보 | 증거 담당 문서가 아티팩트 참조, 가림, 닫기 영향, 향후 승격에 필요한 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
-| 수동 QA | 이후 후보 | 수동 QA 담당 문서가 면제 경로, 아티팩트 참조, 발견 사항, QA 관문 영향을 정해야 합니다. | 승격 전까지 없음 |
-| `qa_waiver` QA 면제 판단 | 이후 사용자 판단 후보 | 수동 QA와 사용자 판단 담당 문서가 정확한 `qa_waiver` 활성화, 허용 범위, 대체 불가 규칙, 잔여 위험 표시, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
-| `verification_gate` 검증 gate | 이후 후보 | Core/API/Eval 담당 문서가 정확한 `verification_gate` 필드, 필수 조건, 대체 동작, 증명 기대치, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
+| 수동 QA 작업 흐름과 `qa_gate` | 이후 후보 | 수동 QA 담당 문서가 작업 흐름 단계, 면제 경로, 아티팩트 참조, 발견 사항, 정확한 `qa_gate` 활성화, 수동 QA 관문 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
+| `qa_waiver` 수동 QA 면제 판단 | 이후 사용자 판단 후보 | 수동 QA와 사용자 판단 담당 문서가 정확한 `qa_waiver` 활성화, 허용 범위, 대체 불가 규칙, 잔여 위험 표시, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
+| `verification_gate` 검증 관문 | 이후 후보 | Core/API/Eval 담당 문서가 정확한 `verification_gate` 필드, 필수 조건, 대체 동작, 증명 기대치, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
 | `verification_risk_acceptance` 검증 위험 수락 | 이후 사용자 판단 후보 | 검증과 사용자 판단 담당 문서가 정확한 `verification_risk_acceptance` 활성화, 허용되는 위험 범위, 대체 불가 규칙, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
-| Eval / detached verification / 평가 작업 흐름 | 이후 후보 | Eval 담당 문서가 독립성 의미, 기준선 최신성, 아티팩트 무결성, 작업 흐름 영향, 보증 갱신 규칙을 정해야 합니다. | 승격 전까지 없음 |
+| Eval / 분리형 검증 / 평가 작업 흐름 | 이후 후보 | Eval 담당 문서가 독립성 의미, 기준선 최신성, 아티팩트 무결성, 작업 흐름 영향, 보증 갱신 규칙을 정해야 합니다. | 승격 전까지 없음 |
 | Full Decision Packet 형식과 `presentation=full` | 이후 후보 | 사용자 판단 담당 문서가 `presentation=full`과 전체 Decision Packet 형식을 켜되 둘 중 어느 것도 기본 현재 MVP 경로로 만들지 않아야 합니다. | 승격 전까지 없음 |
 | 상세 위험 검토와 잔여 위험 생명주기 | 이후 후보 | Core와 사용자 판단 담당 문서가 상세 위험 기록, 검토 흐름, 만료, 닫기 영향을 정해야 합니다. 간결한 잔여 위험 표시는 Core/API 담당 경로를 통해서만 active로 남습니다. | 승격 전까지 없음 |
-| 설계 정책 gate와 닫기 category 이름: `design_gate`, `design_policy` | 이름만 있음 | Core/API/설계 품질 담당 문서가 승격 전에 정확한 필드, 범주 값, 대체 동작, 닫기 대체 불가 규칙, 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
+| 설계 정책 관문과 닫기 category 이름: `design_gate`, `design_policy` | 이름만 있음 | Core/API/설계 품질 담당 문서가 승격 전에 정확한 필드, 범주 값, 대체 동작, 닫기 대체 불가 규칙, 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
 | 설계 정책 waiver | 이후 waiver 후보 | Core, 사용자 판단, QA/검증, 설계 품질 담당 문서가 허용 범위, 대체 불가 규칙, 잔여 위험 표시, 정확한 기록 동작을 정해야 합니다. | 승격 전까지 없음 |
 | 넓은 설계 정책 validator와 심각도 기반 차단 정책 | 이후 후보 | Validator와 설계 품질 담당 문서가 정확한 ID, 심각도 의미, 닫기 영향, 대체 동작, waiver 경계, fixture 증명 기대치를 정해야 합니다. | 승격 전까지 없음 |
 | 전체 설계 품질 정책 후보: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward policies | 이름만 있음 | 설계 품질 담당 문서가 정확한 범위, 정책 경계, 증거 기대치, 향후 승격에 필요한 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
@@ -83,7 +83,7 @@
 | 이후 스키마 확장 | 스키마 이름만 있음 | 승격된 담당 문서가 정확한 필드와 검증기를 활성 계약에 정의해야 합니다. | 승격 전까지 없음 |
 | 역량 조건부 `Write Authorization` 관찰 필드: `intended_commands`, `intended_network`, `intended_secret_scope`; 민감 관찰 범주 이름: `network_write`, `external_service_write`, `secret_access` | 필드와 값 이름만 있음 | 승격된 API/schema 담당 문서가 정확한 형태, 프로필 조건, 검증, 저장소, `record_run` 호환성 의미를 정의해야 합니다. 기준 `reference-local-mcp`는 활성 `AuthorizedAttemptScope`나 활성 `SensitiveCategory`에 이 필드와 값을 포함하지 않습니다. | 승격 전까지 없음 |
 | 이후 actor, producer, capture source 값: `evaluator`, `operator`, `capture_adapter` | 값 이름만 있음 | 승격된 Eval, 운영, 캡처, API/schema, 저장소 담당 문서가 정확한 요청 권한, 아티팩트 관계, 대체 동작, 증명 기대치를 정의해야 합니다. 현재 MVP의 활성 표에는 이 값이 없습니다. | 승격 전까지 없음 |
-| 이후 닫기와 보증 필드: `verifying`, `qa`, `completed_verified`, `detached_verified`, `design_gate`, `verification_gate`, `qa_gate`, 수동 QA gate, 설계 정책 차단 사유, 보증 차단 사유 | 필드 이름만 있음 | Core/API 담당 문서 활성화, 닫기 대체 불가 규칙, 정확한 활성 스키마 필드, 대체 동작, 증명 기대치가 필요합니다. | 승격 전까지 없음 |
+| 이후 닫기와 보증 필드: `verifying`, `qa`, `completed_verified`, `detached_verified`, `design_gate`, `verification_gate`, `qa_gate`, 수동 QA 관문, 설계 정책 차단 사유, 보증 차단 사유 | 필드 이름만 있음 | Core/API 담당 문서 활성화, 닫기 대체 불가 규칙, 정확한 활성 스키마 필드, 대체 동작, 증명 기대치가 필요합니다. | 승격 전까지 없음 |
 | 이후 next-action 값: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | 값 이름만 있음 | 대응 API 또는 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |
 | 추천 playbook과 판단 맥락 | 메타데이터 이름만 있음 | Agent Integration/API 담당 문서가 메타데이터를 읽기 전용으로 두고 상태를 만족시키지 못하게 해야 합니다. | 승격 전까지 없음 |
 | 이후 ref와 artifact 값: bundle, manifest, QA capture, export component, design, Eval, 수동 QA, TDD, projection, related refs | 값 이름만 있음 | ArtifactRef, StateRecordRef, Storage, 관련 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |
@@ -111,7 +111,7 @@
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
 | 대시보드, 호스팅 작업 흐름, 아티팩트 대시보드, 더 풍부한 카드와 시각화 | 이후 후보 | 파생 표시 담당 문서가 읽기 전용, 비권위 동작을 정해야 합니다. | 승격 전까지 없음 |
-| Verification Result Card와 더 풍부한 검증/QA 작업 흐름 | 이후 후보 | Projection/template, Core/API, Eval, 수동 QA 담당 문서가 원천 기록, 최신성, 대체 불가 규칙, 대체 동작, 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
+| Verification Result Card와 더 풍부한 검증 작업 흐름 | 이후 후보 | Projection/template, Core/API, Eval, 수동 QA 담당 문서가 원천 기록, 최신성, 대체 불가 규칙, 대체 동작, 수동 QA 경계, 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
 | 브라우저 캡처 자동화 | 이후 후보 | Capture 담당 문서가 가림/PII, 보존, 대체 동작, QA/수락 대체 불가 규칙을 정해야 합니다. | 승격 전까지 없음 |
 | 접점 간 검증 | 이후 후보 | Core/Eval 담당 문서가 반환 기록, 독립성, 지원되지 않는 접점의 대체 동작을 정해야 합니다. | 승격 전까지 없음 |
 | 더 넓은 커넥터, 커넥터 마켓플레이스, 호스팅 UI, 호스팅/원격 런타임 | 이후 후보 | 커넥터/API/보안 담당 문서와 향후 로컬 권위 경계 증명 기대치가 필요합니다. | 승격 전까지 없음 |

@@ -124,7 +124,7 @@ Do not translate active/later, security, or judgment boundaries into stronger cl
 - "profile-gated" means available only under the named profile, capability, connector mode, or future configuration. It is not a default active MVP value.
 - "later candidate" means deferred material. It is not an active requirement unless the owner promotes it with scope and proof expectations.
 - Cooperative or detective security wording must not become preventive, isolated, sandboxed, tamper-proof, or default tool-blocking wording in Korean.
-- Broad approval, final acceptance, residual-risk acceptance, and later/reserved QA waiver or verification-risk acceptance remain distinct judgment routes.
+- Broad approval, final acceptance, and residual-risk acceptance remain distinct. Later/reserved QA waiver or verification-risk acceptance terminology belongs to the Later Candidate Index until promoted and is not part of the active MVP judgment-kind list.
 
 ## 8. Bilingual Review Checklist
 

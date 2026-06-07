@@ -35,8 +35,8 @@
 - 해당 활성 담당 경로가 이미 차단을 요구할 때만 `CloseBlocker.category=scope`, `CloseBlocker.category=user_judgment`, `CloseBlocker.category=evidence`, `CloseBlocker.category=artifact_availability`를 가리킵니다.
 - 해당 담당 경로가 실제로 맞을 때만 `CloseBlocker.category=residual_risk_visibility`, `CloseBlocker.category=residual_risk_acceptance`, `CloseBlocker.category=surface_capability`, 또는 다른 이미 활성화된 범주를 가리킵니다.
 - 집중된 사용자 판단 하나 묻기, 증거 요청, 잔여 위험 표시, 조언성 다음 행동 표시, 또는 아무 행동 없음 중 하나로 라우팅합니다.
-- 사용자 소유 제품 판단, 중요한 기술 판단, 범위 판단, 최종 수락, 잔여 위험 판단, later/reserved QA 면제 또는 검증 위험 판단을 구분합니다.
-- 증거, 검증, 수동 QA, 최종 수락, 잔여 위험 표시, 잔여 위험 수락, 닫기 준비 상태를 구분합니다.
+- 사용자 소유 제품 판단, 중요한 기술 판단, 범위 판단, 최종 수락, 잔여 위험 판단, 취소 판단을 구분합니다.
+- 증거, 검증, 수동 QA, 최종 수락, 잔여 위험 표시, 잔여 위험 수락, 닫기 준비 상태를 구분합니다. 검증과 수동 QA는 현재 MVP의 활성 관문이 아닙니다.
 
 설계 품질은 평범한 작업을 끝없는 계획 반복으로 만들면 안 됩니다. 전체 도메인 언어 점검, 전체 모듈/인터페이스 검토, 전체 TDD 추적, 전체 피드백 루프 감사, 전체 `codebase_stewardship` 검토, 자세한 수동 QA 정책, 분리형 검증, 두 단계 검토 표시, steward 정책은 다른 활성 담당 경로가 좁은 일부를 명시적으로 요구하지 않는 한 현재 활성 MVP 차단 사유가 아닙니다.
 
@@ -78,7 +78,7 @@
 
 - `final_acceptance`는 닫기 근거가 보인 뒤 사용자가 결과를 판단하는 것입니다. 증거를 만들거나 잔여 위험을 수락하지 않습니다.
 - `residual_risk_acceptance`는 이름 붙은 보이는 잔여 위험을 수락합니다. 정확성을 증명하거나 최종 수락을 대신하지 않습니다.
-- `qa_waiver`와 `verification_risk_acceptance`는 later/reserved 값입니다. 현재 MVP의 활성 `UserJudgment.judgment_kind` 값이 아닙니다.
+- 현재 MVP의 활성 `UserJudgment.judgment_kind` 값은 [API Schema Core](api/schema-core.md#current-mvp-value-sets)에 있는 일곱 값뿐입니다. 그 밖의 향후 후보는 승격 전까지 [이후 후보 색인](../later/index.md)에 남습니다.
 
 넓은 승인, "looks good" 같은 말, 일반적인 go-ahead는 활성 담당 경로가 그 특정 판단을 물은 경우가 아니라면 위 판단으로 취급하면 안 됩니다.
 
@@ -90,11 +90,11 @@
 
 - 등록된 `ArtifactRef` 값, Run 참조, 명령/확인 요약, 출처 참조
 - 최신이 아닌 맥락이 닫기 근거에 영향을 줄 때 현재 상태/버전/최신성 참조
-- 제품, 기술, 범위, 최종 수락, 잔여 위험 판단, 그리고 승격된 later/reserved QA 면제와 검증 위험 판단에 대한 사용자 판단 참조
+- 제품, 기술, 범위, 최종 수락, 잔여 위험 판단에 대한 사용자 판단 참조
 - 알려진 한계가 닫기에서 보일 때 잔여 위험 참조
-- 해당 담당 경로가 활성 상태이거나 명시적으로 요구할 때만 수동 QA 또는 검증 참조
+- 향후 수동 QA 또는 검증 참조는 해당 이후 후보 담당 경로가 승격된 뒤에만 사용
 
-채팅 주장, 일반 요약, 렌더링된 Projection 문장, 등록되지 않은 파일, 담당 경로 없는 화면 캡처, 테스트 통과만 있는 상태, later QA 면제, 최종 수락, 잔여 위험 수락은 필요한 증거를 자동으로 충족하지 않습니다. 필요한 증거는 Core 증거 담당 경로를 통해서만 닫기를 차단할 수 있습니다. 필수가 아닌 증거 공백은 상황에 맞게 `request evidence`, `show advisory next action`, 또는 잔여 위험 표시로 라우팅해야 합니다.
+채팅 주장, 일반 요약, 렌더링된 Projection 문장, 등록되지 않은 파일, 담당 경로 없는 화면 캡처, 테스트 통과만 있는 상태, 향후 면제 후보, 최종 수락, 잔여 위험 수락은 필요한 증거를 자동으로 충족하지 않습니다. 필요한 증거는 Core 증거 담당 경로를 통해서만 닫기를 차단할 수 있습니다. 필수가 아닌 증거 공백은 상황에 맞게 `request evidence`, `show advisory next action`, 또는 잔여 위험 표시로 라우팅해야 합니다.
 
 ## 7. Validator ID 경계
 

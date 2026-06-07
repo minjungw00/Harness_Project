@@ -2,7 +2,7 @@
 
 This reference defines the future Harness Core authority model. It is source documentation only: this repository still has no Harness runtime or server implementation, and the current documentation is not implementation-complete unless the maintainer-owned status says so in [MVP Plan](../build/mvp-plan.md#documentation-acceptance-status).
 
-Core is the local authority record for task scope, user-owned judgment, evidence, verification expectation, close readiness, and residual risk. It has authority over Harness records and Harness state transitions. It does not grant OS permissions, sandbox arbitrary tools, make files tamper-proof, or provide isolation unless another owner documents and proves that exact mechanism.
+Core is the local authority record for task scope, user-owned judgment, evidence, non-gating verification expectations, close readiness, and residual risk. It has authority over Harness records and Harness state transitions. Verification and Manual QA are conceptual boundaries in the current MVP, not active gates unless a future owner promotes them. Core does not grant OS permissions, sandbox arbitrary tools, make files tamper-proof, or provide isolation unless another owner documents and proves that exact mechanism.
 
 ## 1. Owns / Does not own
 
@@ -12,7 +12,7 @@ This document owns:
 - Entity relationship semantics where they affect state, write compatibility, gate behavior, or close.
 - User-owned judgment boundaries and non-substitution rules.
 - Gate meaning, blocker meaning, lifecycle principles, and state-transition principles.
-- `update_scope`, `prepare_write`, Write Authorization, `record_run`, `close_task`, waivers, residual-risk visibility, and close honesty.
+- `update_scope`, `prepare_write`, Write Authorization, `record_run`, `close_task`, reserved waiver boundaries, residual-risk visibility, and close honesty.
 - Cross-owner authority links where Core, API, Storage, Projection, Security, and Later material must stay separate.
 
 This document does not own:
@@ -37,8 +37,8 @@ Exact API request fields and storage table definitions may be named here only by
 6. A Write Authorization is single-use for one compatible attempt. It is not reusable scope and not OS permission.
 7. `record_run` records what happened and consumes the compatible Write Authorization; it cannot retroactively authorize work that lacked scope, user judgment, sensitive-action approval, or Write Authorization.
 8. User-owned judgment cannot be replaced by agent inference, broad consent, generated prose, evidence, or projection text.
-9. Product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation are distinct active judgment routes. Later/reserved QA waiver and verification-risk acceptance routes must stay distinct if promoted.
-10. Evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness do not substitute for one another.
+9. Product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation are the only active current MVP judgment routes.
+10. Verification and Manual QA are not active current MVP gates; evidence, future verification or Manual QA routes, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness do not substitute for one another.
 11. `close_task` must return blockers instead of a successful close while close-relevant blockers remain; known residual risk must be visible before a successful close path depends on it.
 12. Active current MVP scope and later candidate material stay separate. A later candidate becomes active only when its owner promotes it with scope, fallback behavior, and proof expectations.
 
@@ -58,7 +58,7 @@ These entities define authority relationships, not storage tables or API bodies.
 - Residual-risk summary: the active compact visibility path for known remaining uncertainty, unchecked conditions, limits, or trade-offs. Rich residual-risk records are later candidate material until promoted.
 - Projection and templates: derived displays from Core state and refs. They do not become authority by being readable or edited.
 
-Discovery and requirement shaping persist through Task, `harness.update_scope`/Change Unit, and `user_judgment` owner paths. Separate shaping briefs, design displays, journey or reconcile records, rich risk records, Eval records, Manual QA records, and full evidence manifests are not active current MVP Core state unless an owner explicitly promotes them.
+Discovery and requirement shaping persist through Task, `harness.update_scope`/Change Unit, and `user_judgment` owner paths. Separate shaping briefs, design displays, journey or reconcile records, rich risk records, Eval records, future Manual QA records, and full evidence manifests are not active current MVP Core state unless an owner explicitly promotes them.
 
 The minimum active shaping information is the compact state needed to turn an ordinary request into one safe next step. It is not a new artifact. It is represented through:
 
@@ -71,7 +71,7 @@ If any required shaping item is unknown, stale, unavailable, or disputed, Core m
 
 <a id="finding-routing"></a>
 
-Findings from commands, Runs, reviews, validators, diagnostics, QA, or verification affect Core only when routed through an active owner path such as blocker, evidence summary, user judgment, `harness.update_scope`, or close blocker. A finding left in chat or report prose is not state.
+Findings from commands, Runs, reviews, validators, diagnostics, or future QA/verification workflows affect Core only when routed through an active owner path such as blocker, evidence summary, user judgment, `harness.update_scope`, or close blocker. A finding left in chat or report prose is not state.
 
 ## 4. User-owned judgment boundaries
 
@@ -87,7 +87,7 @@ Active current MVP judgment kinds stay distinct:
 - Residual-risk acceptance: acceptance of a named visible residual risk for the requested close.
 - Cancellation: stopping the Task without a successful result.
 
-Later/reserved judgment candidates stay conceptual until promoted by an owner and cataloged in [Later](../later/index.md): QA waiver for a policy-allowed Manual QA requirement, and verification-risk acceptance for the risk from missing or waived required verification. They are not active current MVP `UserJudgment.judgment_kind` values.
+Other judgment candidates stay catalog-only in [Later](../later/index.md) until a future owner promotes them. They are not active current MVP `UserJudgment.judgment_kind` values.
 
 Ambiguous consent is narrow. "Go ahead", "looks good", or similar broad approval cannot silently satisfy another judgment kind. One user reply may satisfy multiple judgment routes only when the prompt explicitly asked those distinct questions and Core records each compatible judgment with its affected object, scope, consequence, and close or write impact.
 
@@ -98,9 +98,9 @@ Recording a `judgment_kind=scope_decision` resolution preserves the user's scope
 Core must preserve these separations:
 
 - Chat, generated Markdown, projection prose, or report text does not substitute for Core state.
-- Evidence, logs, screenshots, artifacts, or test output do not substitute for final acceptance, Manual QA, verification, or residual-risk acceptance.
-- QA is not final acceptance; a later QA waiver would not be QA evidence or QA pass.
-- Later verification-risk acceptance would not be verification, detached verification, or assurance upgrade.
+- Evidence, logs, screenshots, artifacts, or test output do not substitute for final acceptance, future Manual QA, future verification, or residual-risk acceptance.
+- QA is not final acceptance; a future quality-review waiver path would not be QA evidence or a QA pass.
+- A future missing-check risk path would not be verification, detached verification, or assurance upgrade.
 - Sensitive-action approval does not decide product direction, technical direction, scope, correctness, evidence, QA, final acceptance, residual-risk acceptance, or Write Authorization.
 - Product judgment, technical judgment, and scope judgment do not substitute for one another.
 - Final acceptance does not create evidence, erase evidence gaps, satisfy QA, prove verification, grant sensitive-action approval, change scope, accept residual risk, or override blockers.
@@ -114,17 +114,17 @@ These rules apply even when a user-facing surface compresses the display. Compac
 Gates are Core compatibility dimensions for progress, write, run recording, and close. The active current MVP gate fields exposed in public schemas are only the fields owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets). A gate name in planning prose does not create an active schema field, storage record, validator, or close requirement.
 
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work.
-- <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. It does not replace sensitive-action approval, evidence, verification, QA, final acceptance, or residual-risk acceptance.
+- <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. It does not replace sensitive-action approval, evidence, future verification or QA routes, final acceptance, or residual-risk acceptance.
 - <a id="approval-gate"></a>Approval Gate: whether scoped sensitive-action approval is needed, pending, usable, denied, expired, or drifted. It is permission for the sensitive action only.
 - <a id="evidence-gate"></a>Evidence Gate: whether required close-relevant evidence is absent, partial, sufficient, stale, or blocked.
 - <a id="acceptance-gate"></a>Acceptance Gate: whether final acceptance is required and, if so, recorded after the close basis is visible.
 - <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, hold the action through the owner path, or produce a capability blocker rather than pretending verification or prevention happened.
 
-Reserved gate names:
+Reserved gate names stay catalog-only in [Later](../later/index.md) until promoted:
 
-- <a id="design-gate"></a>Design Gate is a later/reserved gate name. The active MVP has no `design_gate` public schema field and no independent design-policy close gate. Design-quality observations route through active owner paths such as product, technical, or scope judgment; evidence; residual-risk visibility; surface capability; or an already-active `CloseBlocker.category`.
-- <a id="verification-gate"></a>Verification Gate is a later/reserved gate name. The active MVP has no `verification_gate` public schema field and no detached verification workflow. A future owner must promote exact fields, requiredness, fallback behavior, and proof expectations before it affects active close semantics.
-- <a id="qa-gate"></a>QA Gate is a later/reserved gate name. The active MVP has no `qa_gate` public schema field and no Manual QA gate. A future owner must promote exact fields, waiver behavior, artifact handling, and proof expectations before it affects active close semantics.
+- <a id="design-gate"></a>Design Gate is a later/reserved gate name. The active MVP has no independent design-policy close gate. Design-quality observations route through active owner paths such as product, technical, or scope judgment; evidence; residual-risk visibility; surface capability; or an already-active `CloseBlocker.category`.
+- <a id="verification-gate"></a>Verification Gate is a later/reserved concept. The active MVP has no detached verification workflow and no verification close gate. A future owner must promote exact fields, requiredness, fallback behavior, and proof expectations before it affects active close semantics.
+- <a id="qa-gate"></a>QA Gate is a later/reserved concept. The active MVP has no Manual QA workflow and no Manual QA close gate. A future owner must promote exact fields, waiver behavior, artifact handling, and proof expectations before it affects active close semantics.
 
 Gate state exposure in public responses is owned by [API Schema Core](api/schema-core.md) and method owners. Core owns the compatibility meaning and the rule that stale gate summaries must be recomputed before write or close relies on them.
 
@@ -233,7 +233,7 @@ Close-related fields are separate contracts:
 | `Task.close_reason` | Persisted close detail: `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded`. |
 | `Task.result` | Coarse task outcome: `none`, `advice_only`, `completed`, `cancelled`, `superseded`. A failed Run, violation, blocked close, or evidence gap stays in Run status, `CloseBlocker`, evidence state, or current Task state, not a terminal Task result. |
 
-MVP close must keep later assurance and design-policy material out of active response semantics. `design_gate`, `CloseBlocker.category=design_policy`, `verification_gate`, `qa_gate`, detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
+MVP close must keep later assurance and design-policy material out of active response semantics. Design-policy gates, verification gates, QA gates, detached verification, verified-completion fields, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
 
 `close_task` must return blockers instead of pretending close is complete when required task/scope correctness, user-owned judgment, sensitive-action approval, Write Authorization or Run compatibility, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, cancellation/supersession handling, surface capability, baseline, or recovery conditions remain unresolved. A public response may choose one primary error, but secondary close blockers and refs must remain visible enough for the next safe action.
 
@@ -253,11 +253,7 @@ Invalid state combinations must become blockers, rejections, or repair paths. Th
 
 A waiver is a scoped exception to a named requirement where policy allows it. It must preserve what requirement was skipped, the affected Task and Change Unit, the reason, actor, timing, affected gate or close impact, expiry or required next action when needed, and any close-relevant residual risk.
 
-The current MVP has no standalone design-policy waiver. Potential later waiver or risk-acceptance paths remain narrow and inert until promoted:
-
-- Later design-policy waiver only if a future design-policy owner promotes exact scope, non-substitution, close impact, and recording behavior.
-- Later/reserved QA waiver only if a future owner promotes required Manual QA and policy allows waiver.
-- Later/reserved verification-risk acceptance only if a future owner promotes required verification and the user accepts the named risk of missing or waived verification.
+The current MVP has no standalone design-policy waiver, quality-review waiver, or missing-check risk-acceptance route. Potential later waiver or risk-acceptance paths remain narrow catalog material until promoted by an owner with exact scope, non-substitution rules, close impact, and recording behavior.
 
 Not allowed:
 
@@ -267,7 +263,7 @@ Not allowed:
 - Final acceptance waiver where acceptance is required.
 - Residual-risk visibility waiver.
 
-Decision deferral is not waiver. Later QA waiver is not QA pass. Later verification-risk acceptance is not verification. A waiver can unblock only the requirement it names and only through the owner path that permits it.
+Decision deferral is not waiver. A future quality-review waiver would not be a QA pass. A future missing-check risk acceptance would not be verification. A waiver can unblock only the requirement it names and only through the owner path that permits it.
 
 ## 14. Residual risk
 

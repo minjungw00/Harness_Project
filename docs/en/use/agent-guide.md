@@ -85,7 +85,7 @@ Use lifecycle labels narrowly when they help the agent choose the next action:
 
 <a id="5-request-user-judgment-narrowly"></a>
 
-The agent may recommend. The user decides product behavior, material technical direction, scope changes, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation. Any future human-review waiver or check-risk route remains separate if a future owner promotes it.
+The agent may recommend. The user decides product behavior, material technical direction, scope changes, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation. Other future judgment candidates belong to [Later](../later/index.md) and are not active judgment kinds.
 
 When using the active owner path, keep these `judgment_kind` values separate: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`.
 
@@ -95,7 +95,7 @@ Do not treat "yes," "approved," "looks good," "go ahead," or "continue" as a bun
 
 When a resolved `scope_decision` means the active scope should change, record the judgment resolution first, then use `harness.update_scope` as the next state-changing action. Do not treat the judgment record itself as an updated goal, non-goal list, acceptance criteria, Autonomy Boundary, baseline, or active work slice.
 
-Sensitive approval is permission for a named action. Final acceptance is judgment on the result. Residual-risk acceptance is judgment on a named residual risk. A future human-review waiver or check-risk route would be separate from all three. None substitutes for another.
+Sensitive approval is permission for a named action. Final acceptance is judgment on the result. Residual-risk acceptance is judgment on a named residual risk. Future judgment candidates would be separate from all three if promoted. None substitutes for another.
 
 ## 5. Do Not Claim Stronger Guarantees
 
@@ -159,7 +159,7 @@ For tracked work, show the close basis before asking for final acceptance or att
 - residual-risk visibility and acceptance status when relevant
 - close blockers and smallest unblocker
 
-The current MVP has no active design, verification, or QA close gate: no `design_gate`, `CloseBlocker.category=design_policy`, `verification_gate`, `qa_gate`, `qa_waiver`, or `verification_risk_acceptance` close requirement. If a future owner promotes one, route it as later material with its own active contract.
+The current MVP has no active design, verification, or QA close gate. Future design-policy, verification, Manual QA, waiver, or risk-acceptance close behavior stays in [Later](../later/index.md) until an owner promotes a separate active contract.
 
 Do not close from prose, tests alone, broad acceptance-like language, a generated projection, or a stale status summary. If blockers remain, lead with them and name the next safe action.
 

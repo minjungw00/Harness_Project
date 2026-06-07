@@ -34,7 +34,7 @@ Until that promotion, a name in this index creates no active behavior, API or sc
 |---|---|---|---|
 | assurance hardening | later candidate | Owner-scoped gates, fallback behavior, and proof-path expectations for future promotion. | none until promoted |
 | Full Evidence Manifest | later candidate | Evidence owner rules for artifact refs, redaction, close impact, and proof-path expectations for future promotion. | none until promoted |
-| Manual QA | later candidate | Manual QA owner policy for waivers, artifact refs, findings, and QA gate impact. | none until promoted |
+| Manual QA workflow and `qa_gate` | later candidate | Manual QA owner policy for workflow steps, waivers, artifact refs, findings, exact `qa_gate` activation, and QA gate close impact. | none until promoted |
 | QA waiver | later user-judgment candidate | Manual QA and user-judgment owner rules for exact `qa_waiver` activation, allowed scope, non-substitution, residual-risk visibility, and close impact. | none until promoted |
 | verification gate | later candidate | Core/API/Eval owner rules for exact `verification_gate` fields, requiredness, fallback behavior, proof expectations, and close impact. | none until promoted |
 | verification-risk acceptance | later user-judgment candidate | Verification and user-judgment owner rules for exact `verification_risk_acceptance` activation, allowed risk scope, non-substitution, and close impact. | none until promoted |
@@ -111,7 +111,7 @@ The long row below preserves future fixture family names only. It is not a curre
 | Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
 | Dashboard, hosted workflows, artifact dashboard, richer cards, richer visualizations | later candidate | Derived-display owner rules for read-only, non-authoritative behavior. | none until promoted |
-| Verification Result Cards and richer verification/QA workflows | later candidate | Projection/template, Core/API, Eval, and Manual QA owner rules for source records, freshness, non-substitution, fallback behavior, and proof-path expectations. | none until promoted |
+| Verification Result Cards and richer verification workflows | later candidate | Projection/template, Core/API, Eval, and Manual QA owner rules for source records, freshness, non-substitution, fallback behavior, QA boundaries, and proof-path expectations. | none until promoted |
 | Browser capture automation | later candidate | Capture owner rules for redaction/PII, retention, fallback behavior, and QA/acceptance non-substitution. | none until promoted |
 | Cross-surface verification | later candidate | Core/Eval owner rules for return records, independence, and unsupported-surface fallback. | none until promoted |
 | Broader connectors, connector marketplace, hosted UI, hosted/remote runtime | later candidate | Connector/API/security owners and future local-authority boundary proof expectation. | none until promoted |
