@@ -12,7 +12,7 @@ This document owns:
 - Entity relationship semantics where they affect state, write compatibility, gate behavior, or close.
 - User-owned judgment boundaries and non-substitution rules.
 - Gate meaning, blocker meaning, lifecycle principles, and state-transition principles.
-- `prepare_write`, Write Authorization, `record_run`, `close_task`, waivers, residual-risk visibility, and close honesty.
+- `update_scope`, `prepare_write`, Write Authorization, `record_run`, `close_task`, waivers, residual-risk visibility, and close honesty.
 - Cross-owner authority links where Core, API, Storage, Projection, Security, and Later material must stay separate.
 
 This document does not own:
@@ -32,23 +32,24 @@ Exact API request fields and storage table definitions may be named here only by
 1. Core-owned state is canonical for Harness operations; chat, reports, generated Markdown, status cards, projections, and template output are derived or contextual.
 2. Harness governs Harness records and state transitions, not OS permissions, arbitrary-tool control or sandboxing, tamper-proof storage, default pre-tool blocking, or security isolation.
 3. Product writes require explicit compatible scope before `prepare_write` can return an allowed compatibility result.
-4. A non-dry-run allowed `prepare_write` path is the only Core path that creates a consumable Write Authorization.
-5. A Write Authorization is single-use for one compatible attempt. It is not reusable scope and not OS permission.
-6. `record_run` records what happened and consumes the compatible Write Authorization; it cannot retroactively authorize work that lacked scope, user judgment, sensitive-action approval, or Write Authorization.
-7. User-owned judgment cannot be replaced by agent inference, broad consent, generated prose, evidence, or projection text.
-8. Product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation are distinct active judgment routes. Later/reserved QA waiver and verification-risk acceptance routes must stay distinct if promoted.
-9. Evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness do not substitute for one another.
-10. `close_task` must return blockers instead of a successful close while close-relevant blockers remain; known residual risk must be visible before a successful close path depends on it.
-11. Active current MVP scope and later candidate material stay separate. A later candidate becomes active only when its owner promotes it with scope, fallback behavior, and proof expectations.
+4. After intake, active Task scope and active Change Unit changes go through `harness.update_scope`; `scope_decision` user judgments may be linked as refs but do not mutate active scope by themselves.
+5. A non-dry-run allowed `prepare_write` path is the only Core path that creates a consumable Write Authorization.
+6. A Write Authorization is single-use for one compatible attempt. It is not reusable scope and not OS permission.
+7. `record_run` records what happened and consumes the compatible Write Authorization; it cannot retroactively authorize work that lacked scope, user judgment, sensitive-action approval, or Write Authorization.
+8. User-owned judgment cannot be replaced by agent inference, broad consent, generated prose, evidence, or projection text.
+9. Product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation are distinct active judgment routes. Later/reserved QA waiver and verification-risk acceptance routes must stay distinct if promoted.
+10. Evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness do not substitute for one another.
+11. `close_task` must return blockers instead of a successful close while close-relevant blockers remain; known residual risk must be visible before a successful close path depends on it.
+12. Active current MVP scope and later candidate material stay separate. A later candidate becomes active only when its owner promotes it with scope, fallback behavior, and proof expectations.
 
 ## 3. Entity model
 
 These entities define authority relationships, not storage tables or API bodies.
 
 - Task: the user-value unit whose state records current concrete mode, scope relationship, blockers, judgment needs, evidence status, close readiness, acceptance state, residual-risk state, and latest run relationship. The active concrete task-mode values are owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets); intake `auto` is classification input only, not Task state.
-- Change Unit: the active scoped work boundary for write-capable work. Product writes must be covered by a compatible active Change Unit.
+- Change Unit: the active scoped work boundary for write-capable work. Product writes must be covered by a compatible active Change Unit. After intake, `harness.update_scope` is the active path that may create or replace the active Change Unit.
 - <a id="autonomy-boundary"></a>Autonomy Boundary: the latitude an agent has inside a Change Unit. It is not scope, sensitive-action approval, evidence, final acceptance, or residual-risk acceptance.
-- `user_judgment`: the canonical record family for choices the user owns. It feeds decision compatibility but does not create evidence, Write Authorization, or close by itself.
+- `user_judgment`: the canonical record family for choices the user owns. It feeds decision compatibility but does not create evidence, Write Authorization, scope mutation, Change Unit mutation, or close by itself.
 - <a id="write-authorization"></a>Write Authorization: the durable single-use Core record created only by compatible non-dry-run `prepare_write`. Its lifecycle can be active, consumed, stale, expired, or revoked. `allowed` is a `prepare_write` decision, not a durable authorization status; `blocked` is not an authorization status.
 - Run: an execution or observation record. Product-write Runs must consume compatible active Write Authorization. Read-only or shaping-only Runs do not make later writes compatible.
 - Evidence summary: the active compact Core evidence path for close-relevant claims, Runs, blockers, user judgments, and `ArtifactRef` values. A full Evidence Manifest is not active unless an owner enables it.
@@ -57,11 +58,11 @@ These entities define authority relationships, not storage tables or API bodies.
 - Residual-risk summary: the active compact visibility path for known remaining uncertainty, unchecked conditions, limits, or trade-offs. Rich residual-risk records are later candidate material until promoted.
 - Projection and templates: derived displays from Core state and refs. They do not become authority by being readable or edited.
 
-Discovery and requirement shaping persist through Task, Change Unit, and `user_judgment` owner paths. Separate shaping briefs, design displays, journey or reconcile records, rich risk records, Eval records, Manual QA records, and full evidence manifests are not active current MVP Core state unless an owner explicitly promotes them.
+Discovery and requirement shaping persist through Task, `harness.update_scope`/Change Unit, and `user_judgment` owner paths. Separate shaping briefs, design displays, journey or reconcile records, rich risk records, Eval records, Manual QA records, and full evidence manifests are not active current MVP Core state unless an owner explicitly promotes them.
 
 <a id="finding-routing"></a>
 
-Findings from commands, Runs, reviews, validators, diagnostics, QA, or verification affect Core only when routed through an active owner path such as blocker, evidence summary, user judgment, Change Unit update, or close blocker. A finding left in chat or report prose is not state.
+Findings from commands, Runs, reviews, validators, diagnostics, QA, or verification affect Core only when routed through an active owner path such as blocker, evidence summary, user judgment, `harness.update_scope`, or close blocker. A finding left in chat or report prose is not state.
 
 ## 4. User-owned judgment boundaries
 
@@ -80,6 +81,8 @@ Active current MVP judgment kinds stay distinct:
 Later/reserved judgment candidates stay conceptual until promoted by an owner and cataloged in [Later](../later/index.md): QA waiver for a policy-allowed Manual QA requirement, and verification-risk acceptance for the risk from missing or waived required verification. They are not active current MVP `UserJudgment.judgment_kind` values.
 
 Ambiguous consent is narrow. "Go ahead", "looks good", or similar broad approval cannot silently satisfy another judgment kind. One user reply may satisfy multiple judgment routes only when the prompt explicitly asked those distinct questions and Core records each compatible judgment with its affected object, scope, consequence, and close or write impact.
+
+Recording a `judgment_kind=scope_decision` resolution preserves the user's scope choice. It does not directly update the active Task scope fields or active Change Unit; the next state-changing action for that effect is `harness.update_scope`, linked to the resolved judgment where relevant.
 
 ## 5. Non-substitution rules
 
@@ -125,7 +128,7 @@ The lifecycle is a Core state-transition discipline, not a display script. Activ
 - `Task.mode` is concrete task state. It can be `advisor`, `direct`, or `work`; `auto` is only an intake classification request and must be resolved before `tasks.mode` or `StateSummary.mode` is stored or displayed.
 - A Task can be shaped, made ready, executed, wait for user judgment, become blocked, complete, cancel, or be superseded only through owner paths.
 - Advice/read-only work must not produce product-file writes. Write-capable direct and tracked work must pass through compatible scope and the Write Authorization path.
-- A product write path moves through scope establishment, user-judgment and sensitive-action checks when applicable, `prepare_write`, one compatible product-write Run, `record_run`, evidence/blocker update, and `close_task`.
+- A product write path moves through scope establishment or `harness.update_scope`, user-judgment and sensitive-action checks when applicable, `prepare_write`, one compatible product-write Run, `record_run`, evidence/blocker update, and `close_task`.
 - `close_ready` is derived. It is not a lifecycle phase and does not move a Task to completed; only `close_task` can do that.
 - Idempotency replay must not duplicate state transitions, events, Write Authorizations, Runs, artifacts, evidence updates, or close effects.
 - Dry-run calls describe possible outcomes but create no authoritative state, no consumable Write Authorization, no artifact, no close state, and no replay row.
@@ -155,11 +158,23 @@ stateDiagram-v2
 
 <a id="stable-event-catalog"></a>
 
-Stable event names are append-only history labels for Core changes, not authority by themselves. The catalog should cover Task lifecycle updates, `prepare_write` decisions, Write Authorization creation/consumption/staling/expiry/revocation, Run recording, user judgment updates, gate recompute, evidence updates, blocker updates, residual-risk visibility or acceptance, close attempts, and close success, cancellation, or supersession. Waiver event names are reserved for owner-promoted later paths. Exact event payloads and persistence are owned by API and Storage.
+Stable event names are append-only history labels for Core changes, not authority by themselves. The catalog should cover Task lifecycle updates, scope updates, Change Unit replacement, `prepare_write` decisions, Write Authorization creation/consumption/staling/expiry/revocation, Run recording, user judgment updates, gate recompute, evidence updates, blocker updates, residual-risk visibility or acceptance, close attempts, and close success, cancellation, or supersession. Waiver event names are reserved for owner-promoted later paths. Exact event payloads and persistence are owned by API and Storage.
+
+<a id="update_scope"></a>
+
+## 8. update_scope authority
+
+`harness.update_scope` is the active Core path for changing an active Task's goal summary, scope boundary, non-goals, acceptance criteria, Autonomy Boundary, baseline reference, or active Change Unit after intake.
+
+It may create or replace the active Change Unit for the active Task. Replacing the active Change Unit makes the previous Change Unit no longer active for future write compatibility. If the scope, baseline, Autonomy Boundary, acceptance basis, or active Change Unit changes so an active Write Authorization no longer matches current Core state, Core marks that Write Authorization stale. Staling preserves the record for audit and replay; it is not consumption, expiry, revocation, or authorization reuse.
+
+`harness.update_scope` may link to relevant resolved `scope_decision` user judgments through reference fields. Those refs explain the user-owned basis for the change, but the `user_judgment` record does not mutate active scope by itself.
+
+`harness.update_scope` does not start a Task, resolve a user judgment, authorize a product write, consume a Write Authorization, record evidence, create final acceptance, accept residual risk, or close work.
 
 <a id="prepare_write"></a>
 
-## 8. prepare_write authority
+## 9. prepare_write authority
 
 `prepare_write` is the unique pre-write compatibility decision point for product-file writes. It checks the intended operation against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, sensitive-action approval, surface capability, and other active owner-path preconditions.
 
@@ -171,7 +186,7 @@ When MCP or the connected surface cannot perform the needed cooperative check, t
 
 <a id="record_run"></a>
 
-## 9. record_run authority
+## 10. record_run authority
 
 `record_run` records execution or observation. It is not a second chance to authorize a write.
 
@@ -183,7 +198,7 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 <a id="close_task"></a>
 
-## 10. close_task authority
+## 11. close_task authority
 
 `close_task` is the single completion decision point. Agent summaries, final reports, acceptance-looking chat, projections, Evals, QA notes, and evidence displays may inform close, but they do not close a Task by themselves.
 
@@ -206,7 +221,7 @@ Cancellation and supersession are honest terminal paths, not successful completi
 
 `harness.close_task` with `intent=supersede` moves the old Task to `lifecycle_phase=superseded`, `close_reason=superseded`, and `result=superseded`. If the superseded Task is `project_state.active_task_id`, Core must set `project_state.active_task_id` to `superseding_task_id` only when it names a valid open same-project Task; otherwise it must clear the active pointer. It must not leave the superseded Task active.
 
-## 11. Blockers
+## 12. Blockers
 
 Blockers are structured reasons a transition cannot proceed honestly. They can block progress, a write, Run recording, or close. They should name the affected Task or Change Unit when available, the category, the missing or incompatible condition, related refs, and the next safe action.
 
@@ -214,7 +229,7 @@ Common blocker categories include missing active Task, missing active scope, out
 
 Invalid state combinations must become blockers, rejections, or repair paths. They must not be papered over by projection prose, broad approval, a waiver that does not apply, or a close result that hides the conflict.
 
-## 12. Waivers
+## 13. Waivers
 
 A waiver is a scoped exception to a named requirement where policy allows it. It must preserve what requirement was skipped, the affected Task and Change Unit, the reason, actor, timing, affected gate or close impact, expiry or required next action when needed, and any close-relevant residual risk.
 
@@ -234,7 +249,7 @@ Not allowed:
 
 Decision deferral is not waiver. Later QA waiver is not QA pass. Later verification-risk acceptance is not verification. A waiver can unblock only the requirement it names and only through the owner path that permits it.
 
-## 13. Residual risk
+## 14. Residual risk
 
 Residual risk is known remaining uncertainty, an unchecked condition, limitation, or trade-off that matters to close. Known close-relevant residual risk must be visible before successful close. If close depends on accepting that risk, Core requires a compatible residual-risk acceptance `user_judgment` tied to the visible risk and related refs.
 
@@ -242,7 +257,7 @@ Residual-risk acceptance does not verify the work, satisfy evidence, satisfy QA,
 
 The active current path uses compact residual-risk summary, blockers, evidence refs, and `user_judgment` refs. Rich residual-risk records, review workflows, handoff reports, and later assurance displays remain later candidate material until promoted.
 
-## 14. Cross-owner links
+## 15. Cross-owner links
 
 Use these owners when Core authority touches another contract:
 

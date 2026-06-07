@@ -90,7 +90,7 @@ control, tamper-proof storage, or pre-execution blocking.
 ## 3. Active persisted records
 
 The active current MVP persists only the records needed by the active method set:
-`harness.intake`, `harness.status`, `harness.prepare_write`,
+`harness.intake`, `harness.update_scope`, `harness.status`, `harness.prepare_write`,
 `harness.record_run`, `harness.request_user_judgment`,
 `harness.record_user_judgment`, and `harness.close_task`.
 
@@ -145,6 +145,28 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | `task_events` | `state.sqlite` | Append-only audit and ordering trail for committed Core mutations. | `event_id`, `task_id`, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `tool_invocations` | `state.sqlite` | Committed idempotency replay row for non-dry-run state-changing tool responses. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
+After intake, `harness.update_scope` owns committed updates to active Task scope
+fields such as goal summary, scope boundary, non-goals, acceptance criteria,
+Autonomy Boundary, baseline reference, and `tasks.active_change_unit_id`. It may
+create or replace the active `change_units` row for the Task. A resolved
+`scope_decision` in `user_judgments` may be linked as a related ref, but
+`harness.record_user_judgment` does not directly update those active scope or
+Change Unit fields.
+
+At the storage contract level, `change_units.status` distinguishes only
+`proposed`, `active`, `replaced`, and `closed`. `proposed` may hold an intake or
+clarification candidate, `active` is the current write-compatibility and close
+basis for the Task, `replaced` is no longer the active basis after
+`harness.update_scope`, and `closed` is no longer active because the owning Task
+closed, cancelled, or was superseded. This is a storage value boundary, not full
+DDL or a migration recipe.
+
+When `harness.update_scope` changes the active scope, active Change Unit,
+baseline, or Autonomy Boundary, any active `write_authorizations` that no longer
+match the current basis are marked `status=stale`. Stale authorizations remain
+records but cannot be consumed by `harness.record_run`; the caller must get a
+fresh compatible `harness.prepare_write` result for the exact operation.
+
 `surfaces` is not a connector marketplace or broad connector ecosystem table.
 It is the active local/reference surface registration needed to interpret
 `surface_id`, capability, local access posture, and guarantee display.
@@ -177,8 +199,9 @@ the active records, including:
 
 - `surfaces.capability_profile_json`.
 - Task and Change Unit shaping columns such as `success_criteria_json`,
-  `non_goals_json`, `affected_areas_json`, `affected_path_candidates_json`,
-  `constraints_json`, and `autonomy_boundary_json`.
+  `acceptance_criteria_json`, `scope_boundary_json`, `non_goals_json`,
+  `affected_areas_json`, `affected_path_candidates_json`, `constraints_json`,
+  and `autonomy_boundary_json`.
 - `user_judgments` request, context, option, affected-ref, artifact-ref, and
   `resolution_json` columns.
 - `write_authorizations.attempt_scope_json`, which stores

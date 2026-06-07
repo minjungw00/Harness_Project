@@ -54,6 +54,7 @@
 | `Blocker` | 진행, 쓰기, 닫기 또는 요청된 다음 단계를 정직하게 계속할 수 없는 구조화된 이유입니다. | [Core Model](core-model.md) |
 | `Write Authorization` | 호환되는 non-dry-run `prepare_write`만 만드는 1회용 협력형 Core 기록입니다. OS 권한이나 격리가 아닙니다. | [Core Model](core-model.md) |
 | `Run` | 실행 또는 관찰을 남기는 커밋된 기록입니다. 제품 쓰기 `Run`은 호환되는 활성 `Write Authorization`을 소비해야 합니다. | [Core Model](core-model.md) |
+| `update_scope` | `harness.intake` 이후 활성 Task 범위와 활성 Change Unit을 갱신하는 Core 경로입니다. 공개 API 메서드는 `harness.update_scope`입니다. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
 | `prepare_write` | 제품 파일 쓰기를 위한 Core의 쓰기 전 호환성 판단 지점입니다. 공개 API 메서드는 `harness.prepare_write`입니다. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
 | `record_run` | 실행 또는 관찰을 기록하고 필요한 경우 호환되는 `Write Authorization`을 소비하는 Core 경로입니다. 공개 API 메서드는 `harness.record_run`입니다. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
 | `close_task` | Core의 완료 판단 지점입니다. 공개 API 메서드는 `harness.close_task`입니다. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
@@ -64,7 +65,7 @@
 
 | 식별자 | 짧은 설명 | 담당 경로 |
 |---|---|---|
-| 활성 MCP 메서드 | `harness.intake`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task`. | [MVP API](api/mvp-api.md) |
+| 활성 MCP 메서드 | `harness.intake`, `harness.update_scope`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task`. | [MVP API](api/mvp-api.md) |
 | `ToolEnvelope` / `ToolResponseBase` / `ToolError` / `EventRef` | 공통 호출 식별, 응답, 오류, 이벤트 참조 형태입니다. | [API Schema Core](api/schema-core.md) |
 | `StateSummary` / `StateRecordRef` / `NextActionSummary` / `GuaranteeDisplay` | 현재 상태, 담당 기록 참조, 다음 행동, 보장 표시 형태입니다. | [API Schema Core](api/schema-core.md) |
 | `ArtifactRef` / `ArtifactInput` | 공개 아티팩트 포인터와 `record_run`이 받을 수 있는 아티팩트 입력 형태입니다. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |

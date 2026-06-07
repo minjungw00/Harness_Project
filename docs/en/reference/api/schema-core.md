@@ -380,9 +380,9 @@ CloseBlocker:
   next_action: string
 
 NextActionSummary:
-  action_kind: ask_user | prepare_write | implement | request_acceptance | close_task | idle
+  action_kind: ask_user | update_scope | prepare_write | implement | request_acceptance | close_task | idle
   summary: string
-  required_tool: harness.intake | harness.status | harness.prepare_write | harness.record_run | harness.request_user_judgment | harness.record_user_judgment | harness.close_task | null
+  required_tool: harness.intake | harness.update_scope | harness.status | harness.prepare_write | harness.record_run | harness.request_user_judgment | harness.record_user_judgment | harness.close_task | null
   related_refs: StateRecordRef[]
   blocker_code: ErrorCode | null
 ```
@@ -396,7 +396,7 @@ NextActionSummary:
 `NextActionSummary` is defined in [Current-Position Display Schemas](#current-position-display-schemas). The active `action_kind` values are exactly:
 
 ```text
-ask_user | prepare_write | implement | request_acceptance | close_task | idle
+ask_user | update_scope | prepare_write | implement | request_acceptance | close_task | idle
 ```
 
 <a id="validatorresult"></a>
@@ -464,7 +464,7 @@ These values are valid without a promoted profile. Values not listed here are no
 
 | Field | Current MVP values |
 |---|---|
-| Active method set | `harness.intake`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
+| Active method set | `harness.intake`, `harness.update_scope`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
 | `IntakeRequest.requested_mode` | `advisor`, `direct`, `work`, `auto` |
 | `StateSummary.mode` and persisted `tasks.mode` | `advisor`, `direct`, `work` |
@@ -505,7 +505,7 @@ These values are valid without a promoted profile. Values not listed here are no
 | `ArtifactRef.redaction_state` | `none`, `redacted`, `secret_omitted`, `blocked` |
 | `CloseBlocker.category` | `task`, `open_run`, `scope`, `user_judgment`, `sensitive_approval`, `write_compatibility`, `baseline`, `surface_capability`, `evidence`, `artifact_availability`, `final_acceptance`, `residual_risk_visibility`, `residual_risk_acceptance`, `cancellation`, `supersession`, `recovery` |
 | `CloseBlocker.required_judgment_kind` | same values as `UserJudgment.judgment_kind`, plus `null` |
-| `NextActionSummary.action_kind` | `ask_user`, `prepare_write`, `implement`, `request_acceptance`, `close_task`, `idle` |
+| `NextActionSummary.action_kind` | `ask_user`, `update_scope`, `prepare_write`, `implement`, `request_acceptance`, `close_task`, `idle` |
 | `NextActionSummary.required_tool` | active method set values, plus `null` |
 | `GuaranteeDisplay.level` | `cooperative`, `detective` |
 | `ValidatorResult.validator_id` | `surface_capability_check` |

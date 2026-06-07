@@ -42,7 +42,7 @@ Canonical Harness state changes occur only through Core state-changing paths. Co
 
 Agents, MCP callers, CLI text, operator output, product files, projection Markdown, templates, status cards, artifact bytes, and chat transcripts do not mutate canonical Harness state by themselves. They can provide input or evidence candidates only when the relevant owner path accepts them.
 
-`prepare_write`, Write Authorization, `record_run`, and `close_task` remain Core/API-owned contracts. Write Authorization is a cooperative Harness record and check. It is not OS permission, sandbox enforcement, tamper-proof protection, physical pre-execution blocking, or a security-isolation mechanism.
+`harness.update_scope`, `prepare_write`, Write Authorization, `record_run`, and `close_task` remain Core/API-owned contracts. Write Authorization is a cooperative Harness record and check. It is not OS permission, sandbox enforcement, tamper-proof protection, physical pre-execution blocking, or a security-isolation mechanism.
 
 Exact state transitions, gate effects, row boundaries, idempotency behavior, and response shapes stay with [Core Model Reference](core-model.md), [Storage](storage.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
 

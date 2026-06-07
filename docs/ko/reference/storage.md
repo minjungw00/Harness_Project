@@ -84,7 +84,7 @@ Runtime Home 파일은 로컬 운영 제어 데이터이고 민감한 지원 데
 ## 3. 활성 영속 레코드
 
 현재 활성 MVP는 활성 메서드 집합에 필요한 레코드만 영속화합니다.
-`harness.intake`, `harness.status`, `harness.prepare_write`,
+`harness.intake`, `harness.update_scope`, `harness.status`, `harness.prepare_write`,
 `harness.record_run`, `harness.request_user_judgment`,
 `harness.record_user_judgment`, `harness.close_task`가 그 범위입니다.
 
@@ -139,6 +139,26 @@ Register, First Safe Change Unit Candidate 테이블을 만들지 않습니다. 
 | `task_events` | `state.sqlite` | 커밋된 Core 변경의 추가 전용 감사 및 순서 기록입니다. | `event_id`, `task_id`, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `tool_invocations` | `state.sqlite` | `dry_run=false`인 상태 변경 도구 응답에 대한 커밋된 멱등성 replay 행입니다. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
+`harness.intake` 이후에는 `harness.update_scope`가 활성 Task 범위 필드의 커밋된 갱신을 담당합니다.
+여기에는 목표 요약, 범위 경계, 비목표, 수락 기준, Autonomy Boundary, baseline 참조,
+`tasks.active_change_unit_id`가 포함됩니다. 이 메서드는 Task의 활성 `change_units` 행을
+만들거나 교체할 수 있습니다. `user_judgments`에 해결된 `scope_decision`이 있으면 관련
+참조로 연결할 수 있지만, `harness.record_user_judgment`가 활성 범위 필드나 Change Unit
+필드를 직접 바꾸지는 않습니다.
+
+저장소 계약 수준에서 `change_units.status`는 `proposed`, `active`, `replaced`, `closed`
+만 구분합니다. `proposed`는 `harness.intake`에서 나온 초기 후보나 구체화 후보를 담을 수 있고, `active`는 해당
+Task의 현재 쓰기 호환성과 닫기 근거입니다. `replaced`는 `harness.update_scope` 이후 더는
+활성 근거가 아니라는 뜻이고, `closed`는 담당 Task가 completed, cancelled, superseded
+상태가 되어 더는 활성 근거가 아니라는 뜻입니다. 이는 저장소 값 경계이지 전체 DDL이나
+마이그레이션 절차가 아닙니다.
+
+`harness.update_scope`가 활성 범위, 활성 Change Unit, baseline, Autonomy Boundary를 바꿔
+기존 활성 `write_authorizations`가 현재 근거와 더 이상 맞지 않으면 그 authorization을
+`status=stale`로 표시합니다. `stale` 상태인 Write Authorization은 기록으로 남지만 `harness.record_run`이
+소비할 수 없습니다. 호출자는 정확한 동작에 대해 호환되는 새 `harness.prepare_write`
+결과를 받아야 합니다.
+
 `surfaces`는 커넥터 marketplace나 넓은 커넥터 ecosystem 테이블이 아닙니다.
 `surface_id`, 기능, 로컬 접근 상태, 보장 표시를 해석하는 데 필요한
 active 로컬/참조 접점 등록입니다.
@@ -168,8 +188,9 @@ API 형태로 저장되는 JSON은 [MVP API](api/mvp-api.md)와
 예시는 다음과 같습니다.
 
 - `surfaces.capability_profile_json`.
-- `success_criteria_json`, `non_goals_json`, `affected_areas_json`,
-  `affected_path_candidates_json`, `constraints_json`, `autonomy_boundary_json` 같은
+- `success_criteria_json`, `acceptance_criteria_json`, `scope_boundary_json`,
+  `non_goals_json`, `affected_areas_json`, `affected_path_candidates_json`,
+  `constraints_json`, `autonomy_boundary_json` 같은
   Task와 Change Unit의 구체화 열.
 - `user_judgments`의 요청, 맥락, option, affected-ref, artifact-ref,
   `resolution_json` 열.

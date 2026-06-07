@@ -8,7 +8,7 @@
 
 ## 핵심 생각
 
-활성 MVP API는 사용자 작업 루프 하나를 위한 작은 로컬 MCP 접점입니다. 작업을 받아들이고, 상태를 보여 주고, 제품 파일 쓰기가 현재 Core 상태와 맞는지 확인하고, 실행과 증거 참조를 기록하고, 사용자 소유 판단을 묻고 기록하며, 활성 차단 사유가 허용할 때만 닫습니다.
+활성 MVP API는 사용자 작업 루프 하나를 위한 작은 로컬 MCP 접점입니다. 작업을 받아들이고, 활성 범위를 갱신하고, 상태를 보여 주고, 제품 파일 쓰기가 현재 Core 상태와 맞는지 확인하고, 실행과 증거 참조를 기록하고, 사용자 소유 판단을 묻고 기록하며, 활성 차단 사유가 허용할 때만 닫습니다.
 
 이 API는 OS 권한, 임의 도구 샌드박스, 변조 방지 파일, 도구 실행 전 차단, 보안 격리를 제공하지 않습니다. `harness.prepare_write`는 협력형 하네스 기록/확인만 반환합니다.
 
@@ -19,6 +19,7 @@
 | 메서드 | 활성 역할 |
 |---|---|
 | [`harness.intake`](#harnessintake) | 평소 사용자 작업을 시작, 재개, 분류합니다. |
+| [`harness.update_scope`](#harnessupdate_scope) | `harness.intake` 이후 활성 Task 범위와 활성 Change Unit을 갱신합니다. |
 | [`harness.status`](#harnessstatus) | 현재 상태 요약, 차단 사유, 대기 중인 판단, 증거 요약, 닫기 상태, 다음 안전한 행동을 반환합니다. |
 | [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 쓰기를 현재 범위, 상태, 민감 동작 승인, baseline, 접점 역량과 비교합니다. |
 | [`harness.record_run`](#harnessrecord_run) | shaping, direct, implementation 작업과 간결한 증거/아티팩트 참조를 기록합니다. |
@@ -40,8 +41,8 @@
 
 ## `harness.intake`
 
-- **담당:** Task 시작/재개/분류와 쓰기 가능한 작업의 초기 active scope boundary.
-- **담당하지 않음:** 제품 쓰기, 증거 충분성, 사용자 판단 해결, Write Authorization, 최종 수락, 잔여 위험 수락, 닫기.
+- **담당:** Task 시작/재개/분류와 쓰기 가능한 작업의 초기 범위 후보.
+- **담당하지 않음:** 이후 활성 범위 갱신, 이후 활성 Change Unit 갱신, 제품 쓰기, 증거 충분성, 사용자 판단 해결, Write Authorization, 최종 수락, 잔여 위험 수락, 닫기.
 - **호출 시점:** 평소 작업을 시작할 때, 또는 기존 active Task를 resume, supersede, reject해야 할 때.
 - **요청:**
 
@@ -74,10 +75,60 @@ IntakeResponse:
 
 `IntakeResponse.state.mode`는 확정된 구체적 `mode`를 보여 줍니다. `auto`가 될 수 없습니다. 이후 상태 요약도 `harness.intake` 요청 값을 그대로 보여 주지 않고 확정된 `mode`를 노출해야 합니다.
 
-- **상태 효과:** 커밋된 non-dry-run call은 `tasks`를 만들거나 재개하고, `project_state.active_task_id`를 설정하며, 쓰기 가능한 확정된 `direct` 또는 `work`에 초기 `change_units` row를 만들고, 차단 사유를 업데이트하고, event와 committed idempotency row를 만들 수 있습니다. 메서드 이름이 `lifecycle_phase=intake`를 만든다는 뜻은 아닙니다. 새로 만들거나 재개한 Task는 [API Schema Core](schema-core.md#current-mvp-value-sets)의 활성 `Task.lifecycle_phase` 값 집합을 사용해야 합니다. Dry-run과 커밋 전 실패는 이를 만들지 않습니다.
+- **상태 효과:** 커밋된 non-dry-run call은 `tasks`를 만들거나 재개하고, `project_state.active_task_id`를 설정하며, 쓰기 가능한 확정된 `direct` 또는 `work`에 초기 범위 후보를 `change_units`에 만들고, 차단 사유를 업데이트하고, event와 committed idempotency row를 만들 수 있습니다. 활성 목표, 범위 경계, 비목표, 수락 기준, 자율성 경계, baseline, 활성 Change Unit의 이후 변경은 `harness.update_scope`가 담당합니다. 메서드 이름이 `lifecycle_phase=intake`를 만든다는 뜻은 아닙니다. 새로 만들거나 재개한 Task는 [API Schema Core](schema-core.md#current-mvp-value-sets)의 활성 `Task.lifecycle_phase` 값 집합을 사용해야 합니다. Dry-run과 커밋 전 실패는 이를 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `project_state`, `tasks`, `change_units`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** `harness.intake`는 범위와 확정된 구체적 `mode`를 기록합니다. 로컬 접근, 민감 동작, 제품 쓰기, 더 강한 guarantee level을 승인하지 않습니다.
+
+<a id="harnessupdate_scope"></a>
+
+## `harness.update_scope`
+
+- **담당:** `harness.intake` 이후 활성 Task의 목표 요약, 범위 경계, 비목표, 수락 기준, 자율성 경계, baseline 참조, 활성 Change Unit 갱신.
+- **담당하지 않음:** Task 시작/분류, 사용자 판단 해결, 제품 쓰기, 증거, Write Authorization 생성, Run 기록, 최종 수락, 잔여 위험 수락, 닫기.
+- **호출 시점:** 구체화 결과로 활성 범위가 바뀔 때, 해결된 `judgment_kind=scope_decision`을 적용해야 할 때, 또는 쓰기 호환성을 확인하기 전에 활성 Change Unit이나 baseline을 만들거나 교체해야 할 때.
+- **요청:**
+
+```yaml
+UpdateScopeRequest:
+  envelope: ToolEnvelope
+  task_id: string
+  goal_summary: string | null
+  scope_boundary: string | null
+  non_goals: string[] | null
+  acceptance_criteria: string[] | null
+  autonomy_boundary: string | null
+  baseline_ref: string | null
+  change_unit:
+    operation: keep_active | create_active | replace_active
+    scope_summary: string | null
+    affected_paths: string[]
+    constraints: string[]
+  related_scope_decision_refs: StateRecordRef[]
+```
+
+최상위 범위 갱신 필드에서 `null`은 현재 값을 그대로 둔다는 뜻입니다. 빈 배열은 해당 목록을 빈 목록으로 교체합니다. `create_active`와 `replace_active`는 새 활성 경계를 세울 만큼 충분한 non-null Change Unit 범위를 제공해야 합니다.
+
+`related_scope_decision_refs`는 `judgment_kind=scope_decision`인 해결된 `user_judgment` 기록을 연결할 수 있습니다. 이 참조는 범위가 바뀐 이유를 설명합니다. 참조 자체가 범위를 바꾸지는 않습니다.
+
+- **응답:**
+
+```yaml
+UpdateScopeResponse:
+  base: ToolResponseBase
+  task_ref: StateRecordRef
+  change_unit_ref: StateRecordRef | null
+  linked_scope_decision_refs: StateRecordRef[]
+  stale_write_authorization_refs: StateRecordRef[]
+  blocker_refs: StateRecordRef[]
+  state: StateSummary
+  next_actions: NextActionSummary[]
+```
+
+- **상태 효과:** 커밋된 non-dry-run 호출은 활성 Task 구체화 필드, 활성 `change_units` 행 생성 또는 교체, `tasks.active_change_unit_id`, 관련 `scope_decision` 사용자 판단 참조 연결, 차단 사유, 이벤트, 커밋된 재실행 행을 업데이트할 수 있습니다. 갱신된 Task, Change Unit, baseline, 범위 경계, 비목표, 수락 기준, 자율성 경계가 활성 Write Authorization과 더 이상 맞지 않으면 Core는 해당 Write Authorization을 `status=stale`로 표시합니다. 소비하거나, 취소하거나, 만료시키거나, 조용히 재사용하지 않습니다. Dry-run과 커밋 전 실패는 현재 기록, 범위 변경, `stale` 처리된 Write Authorization, 이벤트, 아티팩트, 증거 요약, 재실행 행을 만들지 않습니다.
+- **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
+- **저장소 담당 문서:** `tasks`, `change_units`, `write_authorizations`, `blockers`, `task_events`, `tool_invocations`.
+- **보안 경계:** 범위 갱신은 하네스 기록만 바꿉니다. Write Authorization을 만들거나, OS 권한을 부여하거나, 민감 동작을 승인하거나, 증거를 기록하거나, 작업을 닫지 않습니다. 오래된 Write Authorization은 제품 쓰기를 기록하기 전에 `harness.prepare_write`로 새로 확인해야 합니다.
 
 <a id="harnessstatus"></a>
 
@@ -222,7 +273,7 @@ RecordRunResponse:
 ## `harness.request_user_judgment`
 
 - **담당:** 하나의 집중된 사용자 소유 판단에 대한 pending `UserJudgment` 생성.
-- **담당하지 않음:** 사용자의 답, 민감 동작 승인, Write Authorization, 증거, 최종 수락, 잔여 위험 수락, 닫기.
+- **담당하지 않음:** 사용자의 답, 활성 범위 변경, 활성 Change Unit 변경, 민감 동작 승인, Write Authorization, 증거, 최종 수락, 잔여 위험 수락, 닫기.
 - **호출 시점:** 진행, 쓰기 호환성, 수락, 위험 처리, 닫기가 기존 기록에서 추론할 수 없는 사용자 소유 판단에 의존할 때.
 - **요청:**
 
@@ -255,14 +306,14 @@ RequestUserJudgmentResponse:
 - **상태 효과:** 커밋된 non-dry-run 호출은 pending `user_judgments` 행 하나를 만들고, 영향을 받는 차단 사유를 연결하거나 업데이트할 수 있으며, 이벤트와 재실행 행을 만듭니다. 다른 메서드가 반환한 후보는 이 메서드가 커밋되기 전까지 대기 중인 판단이 아닙니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `user_judgments`, `blockers`, `task_events`, `tool_invocations`.
-- **보안 경계:** 이 요청은 질문을 표시합니다. `harness.record_user_judgment`가 맞는 답변을 기록하기 전에는 권한을 부여하거나 gate를 만족하지 않습니다.
+- **보안 경계:** 이 요청은 질문을 표시합니다. `harness.record_user_judgment`가 맞는 답변을 기록하기 전에는 권한을 부여하거나 gate를 만족하지 않습니다. `scope_decision` 답변도 활성 범위나 활성 Change Unit을 바꾸려면 `harness.update_scope`가 필요합니다.
 
 <a id="harnessrecord_user_judgment"></a>
 
 ## `harness.record_user_judgment`
 
 - **담당:** 기존 pending `UserJudgment`를 해결, 거절, 유예, 차단 상태로 기록.
-- **담당하지 않음:** Pending `judgment_kind`보다 넓은 결정, 제품 쓰기, 증거, Write Authorization, 닫기, 명시적으로 묻지 않은 다른 판단.
+- **담당하지 않음:** Pending `judgment_kind`보다 넓은 결정, 활성 범위 변경, 활성 Change Unit 변경, 제품 쓰기, 증거, Write Authorization, 닫기, 명시적으로 묻지 않은 다른 판단.
 - **호출 시점:** 사용자가 특정 pending `UserJudgment`에 답한 뒤.
 - **요청:**
 
@@ -286,11 +337,12 @@ RecordUserJudgmentResponse:
   user_judgment: UserJudgment
   updated_refs: StateRecordRef[]
   state: StateSummary
+  next_actions: NextActionSummary[]
 ```
 
-- **상태 효과:** 커밋된 non-dry-run 호출은 `user_judgments.status`를 업데이트하고, 답변을 기록하고, 관련 차단 사유와 영향받은 상태만 업데이트하며, 이벤트와 재실행 행을 만듭니다. 활성 MVP에서는 독립 accepted-risk 행을 만들지 않습니다.
+- **상태 효과:** 커밋된 non-dry-run 호출은 `user_judgments.status`를 업데이트하고, 답변을 기록하고, 관련 차단 사유와 판단에 의존하는 요약만 업데이트하며, 이벤트와 재실행 행을 만듭니다. 활성 Task 범위 필드나 활성 Change Unit은 직접 바꾸지 않습니다. 해결된 `scope_decision` 때문에 범위를 바꿔야 하면 응답의 다음 행동은 `harness.update_scope`를 가리킵니다. 활성 MVP에서는 독립 accepted-risk 행을 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
-- **저장소 담당 문서:** `user_judgments`, `blockers`, 영향을 받는 `tasks` 또는 `change_units`, `task_events`, `tool_invocations`.
+- **저장소 담당 문서:** `user_judgments`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** "go ahead"나 "looks good" 같은 넓은 말은 대기 중인 판단이 그 종류를 명시적으로 묻고 기록된 답변이 맞을 때만 제품 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소, 범위 확장, later/reserved QA 면제 판단과 검증 위험 수락 경로로 작동합니다.
 
 <a id="harnessclose_task"></a>

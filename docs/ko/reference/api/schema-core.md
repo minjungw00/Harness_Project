@@ -380,9 +380,9 @@ CloseBlocker:
   next_action: string
 
 NextActionSummary:
-  action_kind: ask_user | prepare_write | implement | request_acceptance | close_task | idle
+  action_kind: ask_user | update_scope | prepare_write | implement | request_acceptance | close_task | idle
   summary: string
-  required_tool: harness.intake | harness.status | harness.prepare_write | harness.record_run | harness.request_user_judgment | harness.record_user_judgment | harness.close_task | null
+  required_tool: harness.intake | harness.update_scope | harness.status | harness.prepare_write | harness.record_run | harness.request_user_judgment | harness.record_user_judgment | harness.close_task | null
   related_refs: StateRecordRef[]
   blocker_code: ErrorCode | null
 ```
@@ -396,7 +396,7 @@ NextActionSummary:
 `NextActionSummary`는 [현재 위치 표시 스키마](#current-position-display-schemas)에 정의되어 있습니다. 활성 `action_kind` 값은 정확히 다음과 같습니다.
 
 ```text
-ask_user | prepare_write | implement | request_acceptance | close_task | idle
+ask_user | update_scope | prepare_write | implement | request_acceptance | close_task | idle
 ```
 
 <a id="validatorresult"></a>
@@ -464,7 +464,7 @@ policy_override
 
 | 필드 | 현재 MVP 값 |
 |---|---|
-| 활성 메서드 집합 | `harness.intake`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
+| 활성 메서드 집합 | `harness.intake`, `harness.update_scope`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
 | `IntakeRequest.requested_mode` | `advisor`, `direct`, `work`, `auto` |
 | `StateSummary.mode`와 지속 저장되는 `tasks.mode` | `advisor`, `direct`, `work` |
@@ -505,7 +505,7 @@ policy_override
 | `ArtifactRef.redaction_state` | `none`, `redacted`, `secret_omitted`, `blocked` |
 | `CloseBlocker.category` | `task`, `open_run`, `scope`, `user_judgment`, `sensitive_approval`, `write_compatibility`, `baseline`, `surface_capability`, `evidence`, `artifact_availability`, `final_acceptance`, `residual_risk_visibility`, `residual_risk_acceptance`, `cancellation`, `supersession`, `recovery` |
 | `CloseBlocker.required_judgment_kind` | `UserJudgment.judgment_kind`와 같은 값, 그리고 `null` |
-| `NextActionSummary.action_kind` | `ask_user`, `prepare_write`, `implement`, `request_acceptance`, `close_task`, `idle` |
+| `NextActionSummary.action_kind` | `ask_user`, `update_scope`, `prepare_write`, `implement`, `request_acceptance`, `close_task`, `idle` |
 | `NextActionSummary.required_tool` | 활성 메서드 집합 값, 그리고 `null` |
 | `GuaranteeDisplay.level` | `cooperative`, `detective` |
 | `ValidatorResult.validator_id` | `surface_capability_check` |

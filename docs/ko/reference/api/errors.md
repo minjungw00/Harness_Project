@@ -25,9 +25,9 @@
 |---|---|---|
 | `core_unavailable` | `MCP_UNAVAILABLE` | 하네스 상태를 만들어 내지 않습니다. Core에 다시 닿거나 사용자가 하네스 밖 진행을 명시적으로 선택하기 전까지 하네스에 의존하는 쓰기와 닫기를 보류합니다. |
 | `local_access_denied` | `LOCAL_ACCESS_MISMATCH` 또는 `CAPABILITY_INSUFFICIENT` | 로컬 파일이나 명령 사실을 추측하지 않습니다. 가능한 로컬 접점을 쓰거나, 역량 등록을 고치거나, 범위를 줄이거나, 입력을 미검증으로 표시합니다. |
-| `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, 오래된 `WRITE_AUTHORIZATION_INVALID` | 의존하기 전에 현재 상태, baseline, 읽기용 상태 보기, 쓰기 전 확인을 새로 확인합니다. |
+| `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, 오래된 `WRITE_AUTHORIZATION_INVALID` | 의존하기 전에 현재 상태, baseline, 읽기용 상태 보기, 범위 갱신 결과, 쓰기 전 확인을 새로 확인합니다. |
 | `unsupported_surface` | `CAPABILITY_INSUFFICIENT` 또는 `VALIDATION_FAILED` | 요청을 줄이거나, 역량이 맞는 접점으로 옮기거나, 차단 사유를 반환합니다. 지원하지 않는 권한을 설명 문구로 흉내 내지 않습니다. |
-| `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 영향을 받는 행동을 보류하고, 불일치를 보여 주며, 현재 범위로 줄이거나 구체적인 사용자 소유 범위 판단을 요청합니다. |
+| `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 영향을 받는 행동을 보류하고, 불일치를 보여 주며, 현재 범위로 줄이거나 구체적인 사용자 소유 범위 판단을 요청하거나, 해결된 범위 변경을 `harness.update_scope`로 적용합니다. |
 | `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | 집중된 활성 `UserJudgment`를 묻거나 해결합니다. 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소 판단, later/reserved QA 면제 판단과 검증 위험 수락 경로를 넓은 승인 하나로 합치지 않습니다. |
 | `missing_evidence` | `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING` | 영향을 받는 주장, 참조, 증거 상태, 차단 해소에 필요한 최소 조치를 보여 줍니다. 테스트 결과, 아티팩트 무결성, 증거 충분성을 만들어 내지 않습니다. |
 | `close_blocked` | `CloseTaskResponse.close_state=blocked`와 기본 `ErrorCode` | 구조화된 차단 사유와 다음 행동을 반환합니다. Task를 종료 상태로 표시하지 않습니다. |
@@ -171,7 +171,7 @@ Run 실패, violation, Projection 실패, 아티팩트 무결성 실패, validat
 | `LOCAL_ACCESS_MISMATCH` | 로컬 접근 거부 또는 역량 불일치 | 등록된 로컬 접점을 사용하거나, 로컬 접근을 복구하거나, 역량이 있는 접점으로 옮깁니다. |
 | `CAPABILITY_INSUFFICIENT` | 지원되지 않거나 부족한 접점 | 역량이 있는 접점을 사용하거나, 동작을 줄이거나, 누락된 역량이 필요 없는 경로를 선택합니다. |
 | `NO_ACTIVE_TASK` | 활성 Task 없음 | Task 범위 동작 전에 Task를 선택하거나 생성합니다. |
-| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 범위, 경계, baseline 문제 | 범위를 확인하거나 좁히고, Change Unit이나 baseline을 업데이트하거나, 필요한 사용자 판단을 요청합니다. |
+| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 범위, 경계, baseline 문제 | 범위를 확인하거나 좁히고, 범위 변경이 유효하면 `harness.update_scope`로 Change Unit이나 baseline을 갱신하거나, 필요한 사용자 판단을 요청합니다. |
 | `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | 쓰기 전 범위 확인 없음 또는 오래됨 | 정확한 동작, 현재 범위, 현재 상태로 `harness.prepare_write`를 호출하거나 다시 시도합니다. |
 | `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | 판단 필요 | 종류, 참조, 선택지, 결과와 함께 집중된 `UserJudgment`를 보여 주거나 해결합니다. |
 | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | 민감 동작 승인 필요 또는 사용 불가 | `judgment_kind=sensitive_approval` 사용자 판단을 요청, 해결, 갱신합니다. |

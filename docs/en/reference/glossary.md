@@ -54,6 +54,7 @@ These terms orient readers to Core authority. Exact lifecycle, gate, close, waiv
 | `Blocker` | Structured reason progress, write, close, or another requested step cannot proceed honestly. | [Core Model](core-model.md) |
 | `Write Authorization` | Single-use cooperative Core record created only by compatible non-dry-run `prepare_write`. It is not OS permission or isolation. | [Core Model](core-model.md) |
 | `Run` | Committed execution or observation record. Product-write Runs must consume compatible active `Write Authorization`. | [Core Model](core-model.md) |
+| `update_scope` | Core path for updating active Task scope and the active Change Unit after intake. Public API method: `harness.update_scope`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
 | `prepare_write` | Core pre-write compatibility decision point for product-file writes. Public API method: `harness.prepare_write`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
 | `record_run` | Core path for recording execution or observation and consuming compatible `Write Authorization` when needed. Public API method: `harness.record_run`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
 | `close_task` | Core completion decision point. Public API method: `harness.close_task`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
@@ -64,7 +65,7 @@ Keep these identifiers exact in schemas, API docs, records, examples, file paths
 
 | Identifier | Short orientation | Owner route |
 |---|---|---|
-| Active MCP methods | `harness.intake`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task`. | [MVP API](api/mvp-api.md) |
+| Active MCP methods | `harness.intake`, `harness.update_scope`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task`. | [MVP API](api/mvp-api.md) |
 | `ToolEnvelope` / `ToolResponseBase` / `ToolError` / `EventRef` | Shared call identity, response, error, and event reference shapes. | [API Schema Core](api/schema-core.md) |
 | `StateSummary` / `StateRecordRef` / `NextActionSummary` / `GuaranteeDisplay` | Current-state, owner-ref, next-action, and guarantee-display shapes. | [API Schema Core](api/schema-core.md) |
 | `ArtifactRef` / `ArtifactInput` | Public artifact pointer and accepted `record_run` artifact input shapes. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |

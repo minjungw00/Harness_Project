@@ -1,6 +1,6 @@
 # Agent Guide
 
-Use this guide when writing or reviewing agent behavior for a future Harness-connected session. The agent's job is to turn ordinary user requests into careful work: infer the work shape, keep context small, preserve user-owned judgment, check scope before writes, record evidence after meaningful action, and close honestly.
+Use this guide when writing or reviewing agent behavior for a future Harness-connected session. The agent's job is to turn ordinary user requests into careful work: infer the work shape, keep context small, preserve user-owned judgment, update scope when it changes, check scope before writes, record evidence after meaningful action, and close honestly.
 
 This is Use documentation. It is not a connector contract, schema reference, template catalog, conformance fixture, or proof that this documentation-only repository already contains a Harness Server/runtime implementation. Exact connector behavior lives in [Agent Integration Reference](../reference/agent-integration.md). Exact state, write, run/evidence, close, API, and schema contracts live in the relevant Reference owners linked from the [Reference Index](../reference/README.md).
 
@@ -66,7 +66,7 @@ A focused clarification should show:
 - useful non-blocking questions parked for later
 - next safe action
 
-In the active MVP, clarification should update the active task summary, proposed or active `Change Unit` when product writes are near, and user-judgment candidates or records. Do not create separate active requirements for a committed `Discovery Brief`, `Question Queue`, `Assumption Register`, `First Safe Change Unit Candidate`, `Shared Design` record, full-format judgment presentation such as `Decision Packet`, or full design artifact.
+In the active MVP, clarification should update the active task summary, proposed or active `Change Unit` when product writes are near, and user-judgment candidates or records through the active owner paths. After intake, active scope and active Change Unit updates belong to `harness.update_scope`; `harness.record_user_judgment` records the user's answer and does not mutate scope directly. Do not create separate active requirements for a committed `Discovery Brief`, `Question Queue`, `Assumption Register`, `First Safe Change Unit Candidate`, `Shared Design` record, full-format judgment presentation such as `Decision Packet`, or full design artifact.
 
 ## 4. Do Not Decide User-Owned Judgments
 
@@ -79,6 +79,8 @@ When using the active owner path, keep these `judgment_kind` values separate: `p
 A judgment request should include the exact question, concise options, recommendation, rationale, uncertainty, consequence of deferral, affected scope, and what the answer does not settle. Ask one judgment at a time unless the user explicitly asks to review grouped options and the group still preserves separate answers.
 
 Do not treat "yes," "approved," "looks good," "go ahead," or "continue" as a bundle of every pending judgment. Map a short reply only when one active prompt made the kind, affected object, option, scope, user intent, consequences, and remaining open items unambiguous.
+
+When a resolved `scope_decision` means the active scope should change, record the judgment resolution first, then use `harness.update_scope` as the next state-changing action. Do not treat the judgment record itself as an updated goal, non-goal list, acceptance criteria, Autonomy Boundary, baseline, or active `Change Unit`.
 
 Sensitive approval is permission for a named action. Final acceptance is judgment on the result. Residual-risk acceptance is judgment on a named residual risk. A future QA waiver or verification-risk acceptance route would be separate from all three. None substitutes for another.
 
@@ -111,6 +113,8 @@ Do not claim write compatibility from a plan, stale chat context, broad user ent
 - smallest unblocker
 
 A compatible result means the intended write matches current Harness state and active surface capability. It is a single-use cooperative record for the stated boundary. If paths, commands, tools, network targets, secret scope, sensitive category, baseline, task, Change Unit, state, surface, related judgments, or guarantee level change, refresh the check or treat the claim as unverified/blocked.
+
+If the scope change is valid, update the active scope or active `Change Unit` through `harness.update_scope` before asking for a new pre-write check. Existing Write Authorizations that no longer match the updated scope must be treated as stale.
 
 ## 7. Record Run And Evidence After Meaningful Action
 

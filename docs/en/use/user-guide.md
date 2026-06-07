@@ -48,6 +48,8 @@ For anything larger than a tiny obvious edit, the agent should inspect available
 
 In a Harness-connected session, product writes go through a pre-write scope check. In owner terms, the active path is `prepare_write`; a compatible response may create a single-use cooperative Write Authorization record for the intended operation. That record says the intended write matches current Harness state and active surface capability. It is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that every tool was blocked before action.
 
+If you decide to change the goal, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline, or active work piece after intake, the agent should apply that as a separate scope update before relying on a write check. Existing pre-write checks that no longer match the updated scope become stale.
+
 ## 3. Separate facts from user judgment
 
 Facts are things the agent can inspect, verify, or cite. User judgments are choices you own.
@@ -58,7 +60,7 @@ Facts are things the agent can inspect, verify, or cite. User judgments are choi
 | Evidence | Show what supports a claim and what is missing. | Treat evidence as your decision or final acceptance. |
 | Product judgment | Ask you about product behavior, copy, UX, user flow, and accessibility trade-offs. | Pick a material product direction silently. |
 | Technical judgment | Ask you about architecture, dependency, migration, interface, security, privacy, retention, or compatibility choices that matter. | Hide a material technical decision as an implementation detail. |
-| Scope judgment | Ask before expanding scope or removing a non-goal. | Treat enthusiasm as permission to broaden the task. |
+| Scope judgment | Ask before expanding scope or removing a non-goal, then apply the accepted scope change through the active scope-update path. | Treat enthusiasm as permission to broaden the task or as write approval. |
 | Close judgment | Ask for final acceptance or residual-risk acceptance only when the close basis is visible. | Turn "looks good" into every pending judgment. |
 
 Harness preserves this boundary so the agent can recommend without replacing your judgment.

@@ -25,9 +25,9 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 |---|---|---|
 | `core_unavailable` | `MCP_UNAVAILABLE` | Do not invent Harness state. Hold Harness-dependent writes and close until Core is reachable or the user explicitly chooses to proceed outside Harness. |
 | `local_access_denied` | `LOCAL_ACCESS_MISMATCH` or `CAPABILITY_INSUFFICIENT` | Do not guess local file or command facts. Use a capable local surface, repair capability registration, narrow scope, or label input unverified. |
-| `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, stale `WRITE_AUTHORIZATION_INVALID` | Refresh current state, baseline, readable view, or pre-write check before relying on it. |
+| `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, stale `WRITE_AUTHORIZATION_INVALID` | Refresh current state, baseline, readable view, scope-update result, or pre-write check before relying on it. |
 | `unsupported_surface` | `CAPABILITY_INSUFFICIENT` or `VALIDATION_FAILED` | Reduce the request, move to a capable surface, or return a blocker. Do not emulate unsupported authority with prose. |
-| `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | Hold the affected action, show the mismatch, narrow to current scope, or request the specific user-owned scope judgment. |
+| `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | Hold the affected action, show the mismatch, narrow to current scope, request the specific user-owned scope judgment, or apply the resolved scope change through `harness.update_scope`. |
 | `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | Ask or resolve the focused active `UserJudgment`. Do not collapse product, technical, scope, sensitive approval, final acceptance, residual-risk acceptance, cancellation, or later/reserved QA waiver and verification-risk routes into one broad approval. |
 | `missing_evidence` | `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING` | Show the affected claim, refs, evidence status, and smallest unblocker. Do not invent test results, artifact integrity, or evidence sufficiency. |
 | `close_blocked` | `CloseTaskResponse.close_state=blocked` plus the primary `ErrorCode` | Return structured blockers and next actions. Do not mark the Task terminal. |
@@ -171,7 +171,7 @@ These labels are display guidance, not new public error codes.
 | `LOCAL_ACCESS_MISMATCH` | local access denied or off capability | Use the registered local surface, repair local access, or move to a capable surface. |
 | `CAPABILITY_INSUFFICIENT` | unsupported or insufficient surface | Use a capable surface, reduce the operation, or choose a path that does not require the missing capability. |
 | `NO_ACTIVE_TASK` | no active Task | Select or create a Task before a Task-scoped action. |
-| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, update the Change Unit or baseline, or request the needed user judgment. |
+| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, use `harness.update_scope` to update the Change Unit or baseline when the scope change is valid, or request the needed user judgment. |
 | `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or stale pre-write scope check | Call or retry `harness.prepare_write` for the exact operation, current scope, and current state. |
 | `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | judgment needed | Show or resolve the focused `UserJudgment` with kind, refs, options, and consequences. |
 | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | sensitive-action approval needed or not usable | Request, resolve, or renew a `judgment_kind=sensitive_approval` user judgment. |

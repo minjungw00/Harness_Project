@@ -8,7 +8,7 @@ This document describes future Harness Server behavior for planning and review. 
 
 ## Main Idea
 
-The active MVP API is a small local MCP surface for one user work loop. It can intake work, show status, check proposed product writes against current Core state, record runs and evidence refs, ask and record user-owned judgment, and close only when active blockers allow it.
+The active MVP API is a small local MCP surface for one user work loop. It can intake work, update active scope, show status, check proposed product writes against current Core state, record runs and evidence refs, ask and record user-owned judgment, and close only when active blockers allow it.
 
 The API does not provide OS permissions, arbitrary-tool sandboxing, tamper-proof files, pre-tool blocking, or security isolation. `harness.prepare_write` returns a cooperative Harness record/check only.
 
@@ -19,6 +19,7 @@ The exact active method-name value set is owned by [API Schema Core](schema-core
 | Method | Active role |
 |---|---|
 | [`harness.intake`](#harnessintake) | Start, resume, or classify ordinary user work. |
+| [`harness.update_scope`](#harnessupdate_scope) | Update active Task scope and the active Change Unit after intake. |
 | [`harness.status`](#harnessstatus) | Return current state summary, blockers, pending judgments, evidence summary, close state, and next safe actions. |
 | [`harness.prepare_write`](#harnessprepare_write) | Check a proposed product write against current scope, state, sensitive-action permission, baseline, and surface capability. |
 | [`harness.record_run`](#harnessrecord_run) | Record shaping, direct, or implementation work plus compact evidence and artifact refs. |
@@ -40,8 +41,8 @@ Error codes, primary error precedence, idempotency, stale-state behavior, close 
 
 ## `harness.intake`
 
-- **Owns:** Task start/resume/classification and the initial active scope boundary for write-capable work.
-- **Does not own:** Product writes, evidence sufficiency, user judgment resolution, Write Authorization, final acceptance, residual-risk acceptance, or close.
+- **Owns:** Task start/resume/classification and the initial scope candidate for write-capable work.
+- **Does not own:** Later active scope updates, later active Change Unit updates, product writes, evidence sufficiency, user judgment resolution, Write Authorization, final acceptance, residual-risk acceptance, or close.
 - **When to call:** At the beginning of ordinary work, or when the caller needs to resume, supersede, or reject an existing active Task.
 - **Request:**
 
@@ -74,10 +75,60 @@ IntakeResponse:
 
 `IntakeResponse.state.mode` exposes the resolved concrete mode. It must not be `auto`; later status summaries must also expose the resolved mode rather than the intake request value.
 
-- **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial `change_units` row for write-capable resolved `direct` or `work`, update blockers, append events, and create a committed idempotency row. The method name does not create `lifecycle_phase=intake`; created or resumed Tasks must use the active `Task.lifecycle_phase` value set from [API Schema Core](schema-core.md#current-mvp-value-sets). Dry-run and pre-commit failure create none of these.
+- **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial scope candidate in `change_units` for write-capable resolved `direct` or `work`, update blockers, append events, and create a committed idempotency row. Later changes to the active goal, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline, or active Change Unit belong to `harness.update_scope`. The method name does not create `lifecycle_phase=intake`; created or resumed Tasks must use the active `Task.lifecycle_phase` value set from [API Schema Core](schema-core.md#current-mvp-value-sets). Dry-run and pre-commit failure create none of these.
 - **Errors:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
 - **Storage owner:** `project_state`, `tasks`, `change_units`, `blockers`, `task_events`, and `tool_invocations`.
 - **Security boundary:** Intake records scope and the resolved concrete mode. It does not authorize local access, sensitive actions, product writes, or stronger guarantee levels.
+
+<a id="harnessupdate_scope"></a>
+
+## `harness.update_scope`
+
+- **Owns:** Updating an active Task's goal summary, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline reference, and active Change Unit after intake.
+- **Does not own:** Task start/classification, user judgment resolution, product writes, evidence, Write Authorization creation, Run recording, final acceptance, residual-risk acceptance, or close.
+- **When to call:** After clarification changes active scope, after a resolved `judgment_kind=scope_decision` needs to be applied, or when the active Change Unit or baseline must be created or replaced before write compatibility can be checked.
+- **Request:**
+
+```yaml
+UpdateScopeRequest:
+  envelope: ToolEnvelope
+  task_id: string
+  goal_summary: string | null
+  scope_boundary: string | null
+  non_goals: string[] | null
+  acceptance_criteria: string[] | null
+  autonomy_boundary: string | null
+  baseline_ref: string | null
+  change_unit:
+    operation: keep_active | create_active | replace_active
+    scope_summary: string | null
+    affected_paths: string[]
+    constraints: string[]
+  related_scope_decision_refs: StateRecordRef[]
+```
+
+For top-level scope update fields, `null` means leave the current value unchanged; an empty array replaces that list with an empty list. `create_active` and `replace_active` must provide enough non-null Change Unit scope to establish the new active boundary.
+
+`related_scope_decision_refs` may link relevant resolved `user_judgment` records whose `judgment_kind=scope_decision`. Those refs explain why the scope changed; they do not mutate scope by themselves.
+
+- **Response:**
+
+```yaml
+UpdateScopeResponse:
+  base: ToolResponseBase
+  task_ref: StateRecordRef
+  change_unit_ref: StateRecordRef | null
+  linked_scope_decision_refs: StateRecordRef[]
+  stale_write_authorization_refs: StateRecordRef[]
+  blocker_refs: StateRecordRef[]
+  state: StateSummary
+  next_actions: NextActionSummary[]
+```
+
+- **State effect:** A committed non-dry-run call may update active Task shaping fields, create or replace the active `change_units` row, update `tasks.active_change_unit_id`, link relevant `scope_decision` user-judgment refs, update blockers, append events, and create a committed replay row. When the updated Task, Change Unit, baseline, scope boundary, non-goals, acceptance criteria, or autonomy boundary no longer matches an active Write Authorization, Core marks that authorization `status=stale`; it does not consume, revoke, expire, or silently reuse it. Dry-run and pre-commit failure create no current record, scope change, stale authorization, event, artifact, evidence summary, or replay row.
+- **Errors:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
+- **Storage owner:** `tasks`, `change_units`, `write_authorizations`, `blockers`, `task_events`, and `tool_invocations`.
+- **Security boundary:** Scope updates change Harness records only. They do not create Write Authorization, grant OS permission, approve sensitive actions, record evidence, or close work. Any stale Write Authorization must be refreshed through `harness.prepare_write` before a product write can be recorded.
 
 <a id="harnessstatus"></a>
 
@@ -222,7 +273,7 @@ RecordRunResponse:
 ## `harness.request_user_judgment`
 
 - **Owns:** Creation of a pending `UserJudgment` for one focused user-owned decision.
-- **Does not own:** The user's answer, sensitive-action permission, Write Authorization, evidence, final acceptance, residual-risk acceptance, or close.
+- **Does not own:** The user's answer, active scope mutation, active Change Unit mutation, sensitive-action permission, Write Authorization, evidence, final acceptance, residual-risk acceptance, or close.
 - **When to call:** When progress, write compatibility, acceptance, risk handling, or close depends on a user-owned judgment that cannot be inferred from existing records.
 - **Request:**
 
@@ -255,14 +306,14 @@ RequestUserJudgmentResponse:
 - **State effect:** A committed non-dry-run call creates one pending `user_judgments` row, may link or update affected blockers, appends an event, and creates a replay row. A candidate returned by another method is not a pending judgment until this method commits.
 - **Errors:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `VALIDATOR_FAILED`.
 - **Storage owner:** `user_judgments`, `blockers`, `task_events`, and `tool_invocations`.
-- **Security boundary:** The request presents a question. It grants no permission and resolves no gate until `harness.record_user_judgment` records a matching answer.
+- **Security boundary:** The request presents a question. It grants no permission and resolves no gate until `harness.record_user_judgment` records a matching answer. A `scope_decision` answer still requires `harness.update_scope` before active scope or the active Change Unit changes.
 
 <a id="harnessrecord_user_judgment"></a>
 
 ## `harness.record_user_judgment`
 
 - **Owns:** Resolution, rejection, deferral, or blocking of an existing pending `UserJudgment`.
-- **Does not own:** A broader decision than the pending `judgment_kind`, product writes, evidence, Write Authorization, close, or any judgment not explicitly asked.
+- **Does not own:** A broader decision than the pending `judgment_kind`, active scope mutation, active Change Unit mutation, product writes, evidence, Write Authorization, close, or any judgment not explicitly asked.
 - **When to call:** After the user answers a specific pending `UserJudgment`.
 - **Request:**
 
@@ -286,11 +337,12 @@ RecordUserJudgmentResponse:
   user_judgment: UserJudgment
   updated_refs: StateRecordRef[]
   state: StateSummary
+  next_actions: NextActionSummary[]
 ```
 
-- **State effect:** A committed non-dry-run call updates `user_judgments.status`, records the answer, updates only covered blockers and affected state, appends an event, and creates a replay row. It creates no standalone accepted-risk row in active MVP.
+- **State effect:** A committed non-dry-run call updates `user_judgments.status`, records the answer, updates only covered blockers and judgment-dependent summaries, appends an event, and creates a replay row. It does not directly mutate active Task scope fields or the active Change Unit. If a resolved `scope_decision` means scope must change, the response's next action points to `harness.update_scope`. It creates no standalone accepted-risk row in active MVP.
 - **Errors:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
-- **Storage owner:** `user_judgments`, `blockers`, affected `tasks` or `change_units`, `task_events`, and `tool_invocations`.
+- **Storage owner:** `user_judgments`, `blockers`, `task_events`, and `tool_invocations`.
 - **Security boundary:** Broad phrases such as "go ahead" or "looks good" do not become product decisions, sensitive-action approval, final acceptance, residual-risk acceptance, cancellation, scope expansion, or later/reserved QA waiver and verification-risk routes unless the pending judgment explicitly asked for that kind and the recorded answer matches it.
 
 <a id="harnessclose_task"></a>
