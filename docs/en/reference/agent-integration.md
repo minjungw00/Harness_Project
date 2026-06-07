@@ -82,8 +82,8 @@ Profile-gated display value names:
 
 | Name | Connector display rule |
 |---|---|
-| `preventive` | Use only with a promoted profile. Name the fixture-proven hook, wrapper, permission layer, policy engine, or sidecar path and the exact operations it can block before execution. |
-| `isolated` | Use only with a promoted profile. Name the documented separation boundary. Do not imply OS sandboxing, permission isolation, or tamper-proof storage unless that exact mechanism is proven. |
+| `preventive` | Use only when a promoted profile explicitly supports the label. Name the fixture-proven hook, wrapper, permission layer, policy engine, or sidecar path and the exact operations it can block before execution. |
+| `isolated` | Use only when a promoted profile explicitly supports the label. Name the documented separation boundary. Do not imply OS sandboxing, permission isolation, or tamper-proof storage unless that exact mechanism is proven. |
 
 Agents must not choose `preventive` or `isolated` merely because a user requested stronger safety, asked for a guard/freeze/careful mode, or used stronger wording in chat. The connector must lower the displayed guarantee or return `CAPABILITY_INSUFFICIENT` when the active profile cannot prove the stronger claim.
 
