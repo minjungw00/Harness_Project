@@ -87,6 +87,8 @@ Harness preserves user-owned judgment. Product behavior, material technical dire
 
 Do not treat broad approval such as "go ahead" or "looks good" as a substitute for a specific judgment. Sensitive-action approval permits a named sensitive step only; it does not decide product behavior, architecture, final acceptance, or residual risk. Final acceptance does not create evidence, erase evidence gaps, or accept residual risk unless the residual-risk path asks for that judgment.
 
+When blocker wording combines more than one negative requirement, state each negative explicitly. For residual-risk close blockers, preserve the meaning as "not visible, or not accepted when required"; do not compress it into wording that can be read as "visible, or not accepted when required."
+
 User-facing docs should start with what the user can ask, what the agent should clarify, what is blocked, what evidence exists, what judgment is needed, and what close means. Introduce internal labels only after the visible user situation is clear.
 
 ## 7. Security Wording Rule
@@ -136,6 +138,7 @@ Delete temporary migration plans and scratch files before finishing.
 - [ ] Strict contracts remain in one owner; non-owner duplicates are summaries with compact owner routes.
 - [ ] Active/later boundaries are not blurred, and profile-gated values are not listed as default active MVP values.
 - [ ] User-owned judgment routes remain distinct.
+- [ ] Blocker conditions with multiple negative requirements state each negative explicitly, especially residual-risk close blocker wording.
 - [ ] Security wording matches the documented guarantee level and does not make unsupported preventive, isolation, sandboxing, tamper-proof, or default tool-blocking claims.
 - [ ] Links, anchors, README routes, and paired-language links resolve.
 - [ ] Deleted routes and stale structure names are not used as active paths.

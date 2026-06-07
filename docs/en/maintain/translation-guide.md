@@ -32,6 +32,8 @@ Preserve these exactly in both languages:
 
 Do not translate exact strings inside code blocks, schemas, API examples, file paths, or field lists. Localized display labels are rendering text, not canonical identifiers.
 
+Exact identifiers are canonical strings used by contracts, routes, schemas, storage, APIs, templates, or search. Explanatory prose is the surrounding reader-facing explanation. Copy exact identifiers unchanged, but translate or rewrite explanatory prose so Korean reads naturally.
+
 ## 4. Natural Korean Rule
 
 Korean documentation should be natural Korean technical prose.
@@ -39,7 +41,8 @@ Korean documentation should be natural Korean technical prose.
 - Prefer short, clear sentences.
 - Put the Korean concept first in user-facing prose.
 - Add the exact English identifier only when precision, search, or owner alignment needs it.
-- Do not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels.
+- Do not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels; translate explanatory noun phrases into Korean.
+- Do not compress English negative coordination in Korean in a way that reverses meaning. If the condition means "not visible, or not accepted when required," make both negative requirements explicit. Good: "보이지 않거나, 요구될 때 수락되지 않은 경우". Bad: "보이거나 수락되지 않은 경우".
 - Avoid Korean sentences made mostly of English nouns with Korean particles attached.
 - Keep exact identifiers exact even when the surrounding sentence is fully Korean.
 
@@ -130,9 +133,11 @@ Do not translate active/later, security, or judgment boundaries into stronger cl
 - [ ] Route tables point only to the compact structure and `docs/doc-index.yaml`.
 - [ ] Korean prose reads naturally to a Korean technical reader.
 - [ ] Exact identifiers, paths, API/schema names, enum values, error codes, table names, validator IDs, template names, and `doc_id` values are preserved.
+- [ ] Exact identifiers were copied unchanged, while explanatory prose was translated or rewritten as natural Korean.
 - [ ] Korean display labels are treated as localized display text, not schema identifiers.
 - [ ] User-facing Korean uses natural Korean before Harness labels when both are needed.
 - [ ] English noun phrases are not left in Korean prose unless they are exact identifiers or intentional Harness labels.
+- [ ] Korean translations do not compress negative coordination in a way that reverses meaning.
 - [ ] Non-owner duplicate contracts are summarized with compact owner routes instead of translated as full contract copies.
 - [ ] Link changes were made in both languages in the same batch.
 - [ ] Translation review was not described as runtime state, evidence, QA, acceptance, close readiness, runtime conformance, or implementation readiness.

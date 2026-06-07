@@ -11,10 +11,13 @@ These checks look for documentation drift:
 - compact route drift, stale route wording, broken links, anchors, and README routes
 - bilingual semantic parity problems
 - Korean prose that reads like a literal English translation
+- Korean negative coordination that reverses blocker meaning
+- exact identifier versus explanatory prose confusion
 - duplicate strict contracts outside their owner
 - active/later boundary drift and active/profile-gated value confusion
 - unsupported security claims that overstate the guarantee level
 - user judgment routes that substitute for each other
+- residual-risk close blocker wording that hides one of several negative requirements
 - projection-derived display wording that treats generated views as source authority
 - one-language-per-`doc_id` agent retrieval problems
 - stale rewrite/history notes, closed issue records, and obsolete review prose
@@ -57,13 +60,13 @@ Pass when every active link resolves to a current file and current anchor. Fail 
 
 Inspect `docs/en` and `docs/ko` for the same active file map, reader purpose, section coverage, owner routing, and exact identifiers.
 
-Pass when paired files preserve the same meaning while Korean remains natural. Fail when a Korean file omits active English meaning, translates an exact identifier, changes an owner route, or moves active material into later scope or later material into active scope.
+Pass when paired files preserve the same meaning while Korean remains natural. Fail when a Korean file omits active English meaning, translates an exact identifier, changes an owner route, compresses negative coordination so a blocker condition reverses meaning, or moves active material into later scope or later material into active scope.
 
 ## 6. Korean Natural Prose Check
 
 Inspect Korean explanatory prose, headings, examples, and maintain guidance.
 
-Pass when Korean reads as natural Korean technical documentation, keeps exact identifiers unchanged, and does not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels. Fail when Korean is a literal line-by-line English translation, preserves English noun phrases as prose, or changes meaning to follow English sentence order.
+Pass when Korean reads as natural Korean technical documentation, separates exact identifiers from explanatory prose, keeps exact identifiers unchanged, and does not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels. Fail when Korean is a literal line-by-line English translation, treats an explanatory English noun phrase as an identifier, preserves English noun phrases as prose, compresses negative coordination in a meaning-changing way, or changes meaning to follow English sentence order.
 
 ## 7. Owner-Boundary Check
 
@@ -89,19 +92,25 @@ Inspect judgment prompts, examples, close wording, approval wording, final accep
 
 Pass when product decisions, technical decisions, scope decisions, sensitive-action approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, and cancellation stay distinct. Fail when broad approval, sensitive-action approval, final acceptance, QA waiver, evidence, verification, or residual-risk acceptance silently substitutes for another route.
 
-## 11. Projection-Derived-Display Check
+## 11. Residual-Risk Close Blocker Wording Check
+
+Inspect residual-risk close blocker text, Korean translations of blocker conditions, and examples that combine visibility, acceptance, waiver, evidence, or required judgment.
+
+Pass when each negative requirement is stated explicitly and residual-risk close blockers preserve the meaning "not visible, or not accepted when required." Korean should use a clear form such as "보이지 않거나, 요구될 때 수락되지 않은 경우." Fail when wording can be read as "visible, or not accepted when required," including Korean compression such as "보이거나 수락되지 않은 경우," or when residual-risk acceptance substitutes for final acceptance, QA waiver, evidence, or verification.
+
+## 12. Projection-Derived-Display Check
 
 Inspect projection and template wording, generated-display examples, status cards, summaries, user-facing views, and diagrams.
 
 Pass when projections and rendered displays are described as derived views with freshness and owner boundaries. Fail when generated displays are treated as source-of-truth records, runtime state, evidence, QA, acceptance, close records, residual-risk records, Write Authorization, or permission to perform product/runtime writes.
 
-## 12. One-Language-Per-`doc_id` Agent Retrieval Check
+## 13. One-Language-Per-`doc_id` Agent Retrieval Check
 
 Inspect agent guidance, context-loading advice, README routes, Reference routes, and any always-on context examples.
 
 Pass when agent-facing docs retrieve only one language for a given `doc_id` during normal work, load paired languages only for translation or parity review, retrieve only the owner section needed for the next action, and keep always-on context compact. Fail when docs instruct agents to load both languages for the same `doc_id` by default, broad reference sets, full schemas, full templates, historical logs, generated artifacts, or stale migration records.
 
-## 13. Stale Content Check
+## 14. Stale Content Check
 
 Inspect Maintain docs and nearby routes for historical rewrite reviews, closed issue records, obsolete acceptance records, obsolete delivery-label explanations, prior stage label history, obsolete alias history, later-candidate localization audit records, past translation problem records, past audit result narrative, and temporary migration plans.
 
