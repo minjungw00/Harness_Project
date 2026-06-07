@@ -66,7 +66,7 @@ docs:
       en: docs/en/build/mvp-plan.md
       ko: docs/ko/build/mvp-plan.md
     default_for_agent: en
-    owns: "Implementation sequencing, current repository status, readiness decisions, and MVP planning boundaries."
+    owns: "Implementation sequencing, current repository status, readiness decisions, MVP planning boundaries, and active close-blocker scope."
     does_not_own: "Runtime records, generated artifacts, detailed schemas, DDL, or accepted implementation behavior."
 
   - doc_id: reference.index
@@ -116,8 +116,8 @@ docs:
       en: docs/en/reference/api/errors.md
       ko: docs/ko/reference/api/errors.md
     default_for_agent: en
-    owns: "Public error taxonomy, status taxonomy, error precedence, and blocked/dry-run behavior."
-    does_not_own: "Core gates, method payload schemas, storage records, or connector fallback rules."
+    owns: "Public error taxonomy, status taxonomy, error precedence, general blocked/dry-run response semantics, and idempotency error behavior."
+    does_not_own: "Core gates, method payload schemas, method-specific durable state effects such as `prepare_write` authorization creation, storage records, or connector fallback rules."
 
   - doc_id: reference.storage
     status: active
