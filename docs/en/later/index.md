@@ -85,6 +85,8 @@ Rows here are planning candidates only. They are not active MVP requirements, ac
 <a id="future-fixture-families"></a>
 ## 8. Future Fixture Families
 
+The long row below preserves future fixture family names only. It is not a current MVP requirement or an executable conformance suite.
+
 | Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
 | Intake and decision routing; Core, evidence, verification, and close; Artifact redaction and export non-leakage; Agency and user-judgment separation; Connector capability honesty; Design-quality and stewardship; Context hygiene and resume freshness; Projection, reconcile, and verification boundary; Operations diagnostics, export, recover, and handoff; Browser QA Capture | fixture family names only | Conformance owner assignment, exact fixture shape, assertions, payload/API/storage/error effects, and proof expectations. | none until promoted |
