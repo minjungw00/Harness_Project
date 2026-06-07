@@ -1,148 +1,118 @@
 # Later Candidate Index
 
-This is the single active index for later candidates and their promotion boundaries.
+This is the single active index for later candidates and promotion boundaries.
 
-Rows here are planning candidates only. They are not active MVP requirements, active API or schema contracts, fixture bodies, template bodies, runtime behavior, implementation tasks, generated artifacts, or acceptance evidence. Detailed body: none.
+Rows here are planning candidates only. They are not active MVP requirements, active API or schema contracts, fixture bodies, template bodies, runtime behavior, implementation tasks, generated artifacts, acceptance evidence, or permission to start runtime work. A candidate remains inert until explicitly promoted.
 
 <a id="boundary"></a>
 ## 1. Boundary
 
-| Boundary | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| Later candidate index | Active documentation index only. | A future owner must promote a narrow candidate before any detailed contract returns. | none |
-| Current repository phase | Documentation-only planning. | Documentation acceptance and a separate implementation-planning readiness decision before runtime work. | none |
-| Candidate authority | Candidate rows do not create Core state, evidence, verification, QA, final acceptance, residual-risk acceptance, close readiness, conformance, or security guarantees. | Owner records, exact contracts, and proof in the promoted owner path. | none |
-| Bilingual parity | English and Korean indexes carry the same candidate set and promotion boundary. | Same-batch paired updates for any meaning change. | none |
+| Later candidate index | documentation only | A future owner must promote a narrow candidate before any detailed contract returns. | documentation only |
+| Current repository phase | documentation-only planning | Documentation acceptance and a separate implementation-readiness decision in `docs/*/build/mvp-plan.md` before runtime work. | none |
+| Candidate authority | names only | Owner assignment plus exact API, schema, storage, security, conformance, or evidence effects in the promoted owner path. | none until promoted |
+| Bilingual parity | paired active docs | Same-batch semantic updates for English and Korean. | documentation only |
 
 <a id="promotion-rule"></a>
 ## 2. Promotion Rule
 
-| Rule | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| Owner decision | Candidate is parked before promotion. | A named future owner, narrow scope, fallback behavior, and explicit non-claims. | none |
-| Contract placement | No full later schema, template body, fixture body, or scenario script is active here. | Exact API, schema, storage, security, projection, fixture, template, and operator contracts in the appropriate owner document. | none |
-| Proof expectation | Candidate listing is not proof. | Fixture/conformance target or other owner-defined evidence for the exact promoted behavior. | none |
-| Non-substitution | Candidate output cannot replace Core state, user judgment, evidence, verification, Manual QA, final acceptance, residual-risk acceptance, or close readiness. | Core-owned records and owner-specific lifecycle rules must remain separate. | none |
-| Active-scope inflation check | Later material stays outside the first internal smoke target and active MVP by default. | Proof that the promoted candidate does not add unsupported requirements to earlier active scopes. | none |
+| Owner assignment | required before promotion | Named owner, narrow scope, non-goals, and fallback behavior. | none |
+| Contract placement | index boundary only | Exact API, schema, storage, projection, template, fixture, or operator contract in the owning active document. | none until promoted |
+| Security wording | no active guarantee here | Honest cooperative, detective, preventive, or isolated wording matched to a proven mechanism. | none until promoted |
+| Proof expectation | listing is not proof | Conformance target, fixture, evidence expectation, or other owner-defined proof for the promoted behavior. | none until promoted |
+| Active-scope inheritance | disabled by default | Proof that promotion does not add unsupported requirements to the active MVP or earlier smoke target. | must not affect active MVP |
+| Non-substitution | required boundary | Core state, user judgment, evidence, verification, Manual QA, final acceptance, residual-risk acceptance, and close readiness stay separate. | none |
 
 <a id="assurance-candidates"></a>
 ## 3. Assurance Candidates
 
-| Candidate | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| assurance hardening | Later candidate; detailed body removed. | Owner-scoped assurance behavior with exact gates, fallback behavior, and proof expectations. | none |
-| Evidence Manifest | Later candidate for detailed evidence coverage and gaps. | Evidence owner rules, artifact/ref handling, redaction behavior, and close impact. | none |
-| Manual QA | Later candidate for human QA records, findings, waivers, and QA gate impact. | Manual QA owner policy, waiver route, artifact refs, and close-blocker behavior. | none |
-| Eval / detached verification | Later candidate for independent verification result recording. | Eval owner path, independence semantics, baseline freshness, artifact integrity, and assurance update rules. | none |
-| Decision Packet full-format presentation | Later candidate for expanded user-judgment display. | User-judgment owner must enable `presentation=full` without making it the default MVP path. | none |
-| Risk review and residual-risk visibility | Later candidate for richer risk lifecycle display. | Core/user-judgment owner rules for visible risk, acceptance, expiry, and close impact. | none |
-| Full design-quality policy families | Names only: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, and steward policies. | A future owner must promote one narrow family with exact scope, fallback behavior, validator boundaries, waiver and evidence rules, and proof expectations. | none |
+| assurance hardening | later candidate | Owner-scoped gates, fallback behavior, and proof expectations. | none until promoted |
+| Evidence Manifest | later candidate | Evidence owner rules for artifact refs, redaction, close impact, and proof expectations. | none until promoted |
+| Manual QA | later candidate | Manual QA owner policy for waivers, artifact refs, findings, and QA gate impact. | none until promoted |
+| Eval / detached verification | later candidate | Eval owner rules for independence, baseline freshness, artifact integrity, and assurance updates. | none until promoted |
+| Decision Packet full-format presentation | later candidate | User-judgment owner activation of `presentation=full` without making it the default MVP path. | none until promoted |
+| Risk review and residual-risk visibility | later candidate | Core and user-judgment owner rules for risk visibility, acceptance, expiry, and close impact. | none until promoted |
+| Full design-quality policy families: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward policies | names only | Design-quality owner rules for exact scope, validator boundaries, waiver/evidence rules, and proof expectations. | none until promoted |
 
 <a id="operations-candidates"></a>
 ## 4. Operations Candidates
 
-| Candidate | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| operations hardening | Later candidate; detailed body removed; no active Reference owner. | Owner-scoped operations behavior with exact operator commands, diagnostics, fallback behavior, and proof expectations. | none |
-| Future local operator command family | Later candidate names only: `harness connect`, `harness serve mcp`, `harness doctor`, `harness projection refresh`, `harness reconcile`, `harness recover`, `harness export`, `harness artifacts check`, and `harness conformance run`. These names are illustrative and do not define command syntax, procedures, runtime behavior, or an active command catalog. | A promoted operations owner must define exact command scope, security posture, storage/API effects, reporting, fallback behavior, and proof expectations. | none |
-| Export | Later candidate for task bundles, redaction/omission notes, retained/unavailable artifacts, and integrity summaries. | Operations/export owner contracts, storage/artifact rules, redaction rules, and non-leakage proof. | none |
-| Release Handoff | Later candidate for report/export handoff only. | Handoff owner must keep deployment, merge, rollback, and production authority outside Harness unless separately promoted. | none |
-| Recovery and reconcile | Later candidate for lock, projection, artifact, and managed-output repair paths. | Operations, Storage, Projection, Reconcile, and Security owner rules. | none |
-| Operator readiness and `doctor` surfaces | Later candidate for local status, diagnostics, and next operator action. | Operations owner commands, capability checks, security posture wording, and unsupported-surface fallback. | none |
-| Projection refresh and freshness diagnostics | Later candidate for derived view health. | Projection owner behavior that keeps projections non-authoritative. | none |
-| Future conformance run entrypoint | Later candidate after runtime fixtures exist; not a current command or runner. | Exact runner, suite, assertion, request/response, storage/event/artifact/error, and reporting contracts. | none |
-
-Documentation checks note: `docs/*/maintain/checks.md` owns docs-maintenance checks. Do not move docs-maintenance guidance into operations candidates or runtime conformance. Active current MVP impact: none.
+| operations hardening | later candidate | Operations owner rules for commands, diagnostics, fallback behavior, security wording, and proof expectations. | none until promoted |
+| Future local operator command family: `harness connect`, `harness serve mcp`, `harness doctor`, `harness projection refresh`, `harness reconcile`, `harness recover`, `harness export`, `harness artifacts check`, `harness conformance run` | command names only | Operations owner rules for exact syntax, security posture, API/storage effects, reporting, fallback behavior, and proof expectations. | none until promoted |
+| Export | later candidate | Export owner contracts for storage/artifact handling, redaction, omissions, integrity, and non-leakage proof. | none until promoted |
+| Release Handoff | later candidate | Handoff owner rules that keep deployment, merge, rollback, and production authority external unless separately promoted. | none until promoted |
+| Recovery and reconcile | later candidate | Operations, Storage, Projection, Reconcile, and Security owner rules. | none until promoted |
+| Operator readiness and `doctor` surfaces | later candidate | Operations owner rules for diagnostics, capability checks, security posture, and unsupported-surface fallback. | none until promoted |
+| Projection refresh and freshness diagnostics | later candidate | Projection owner behavior that keeps projections non-authoritative. | none until promoted |
+| Future conformance run entrypoint | later candidate after runtime fixtures exist | Runner, suite, assertion, API/storage/event/artifact/error, and reporting contracts. | none until promoted |
 
 <a id="later-api-candidates"></a>
 ## 5. Later API Candidates
 
-| Candidate | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| `harness.next` | Later/compatibility read candidate. | Owner activation for a separate next-action payload; MVP continues using `harness.status.next_actions`. | none |
-| `harness.launch_verify` | Assurance candidate for detached verification launch or manual evaluator bundle. | Eval/verification owner path, capability handling, baseline freshness, and honest isolation wording. | none |
-| `harness.record_eval` | Assurance candidate for verification result recording. | Eval owner contract, independence validation, artifact refs, and gate/assurance update rules. | none |
-| `harness.record_manual_qa` | Assurance candidate for human QA outcome recording. | Manual QA owner contract, waiver route, artifacts, findings, and gate impact. | none |
-| Later read-only resources | Later candidate for policy, evidence-manifest, surface, report, bundle, journey, and design reads. | Resource-specific owner contracts and no mutation side effects. | none |
-| Later `harness.record_run` branches | Later candidate for verification input, feedback-loop updates, and TDD trace updates. | `record_run` owner activation and one-branch payload rules. | none |
-| Later user-judgment branches | Later candidate for waiver, reconcile, residual-risk, and richer acceptance visibility. | User-judgment owner activation with non-substitution rules. | none |
+| `harness.next` | method name only | Owner activation for a separate next-action payload; MVP keeps using `harness.status.next_actions`. | none until promoted |
+| `harness.launch_verify` | method name only | Eval/verification owner rules for capability handling, baseline freshness, and honest isolation wording. | none until promoted |
+| `harness.record_eval` | method name only | Eval owner contract for independence validation, artifact refs, and gate/assurance updates. | none until promoted |
+| `harness.record_manual_qa` | method name only | Manual QA owner contract for waiver route, artifacts, findings, and gate impact. | none until promoted |
+| Later read-only resources: policy, evidence-manifest, surface, report, bundle, journey, design | resource names only | Resource-specific owner contracts and no mutation side effects. | none until promoted |
+| Later `harness.record_run` branches: verification input, feedback-loop updates, TDD trace updates | branch names only | `record_run` owner activation and one-branch payload rules. | none until promoted |
+| Later user-judgment branches: waiver, reconcile, residual-risk, richer acceptance visibility | branch names only | User-judgment owner activation with non-substitution rules. | none until promoted |
 
 <a id="later-schema-candidates"></a>
 ## 6. Later Schema Candidates
 
-| Candidate | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| later schema extensions | Candidate only; full schema body removed. | A promoted owner must define exact fields and validators in the active owner contract. | none |
-| Later close and assurance fields | Candidate for `verifying`, `qa`, `completed_verified`, `detached_verified`, verification gate, QA gate, and assurance blockers. | Core/API owner activation with close non-substitution rules. | none |
-| Later next-action values | Candidate for `launch_verify`, `record_eval`, `record_manual_qa`, and `reconcile`. | Matching API or owner activation. | none |
-| Recommended playbooks and judgment context | Candidate for richer read-only routing metadata. | Agent Integration/API owner rules that prevent metadata from mutating or satisfying state. | none |
-| Later ref and artifact values | Candidate for bundle, manifest, QA capture, export component, design, Eval, Manual QA, TDD, projection, and related refs. | ArtifactRef, StateRecordRef, Storage, and owner activation. | none |
-| ValidatorResult later stable IDs | Candidate for design, autonomy, feedback-loop, TDD, stewardship, residual-risk, shared-design, manual-QA, and context-hygiene checks. | Validator owner contracts, stable IDs, severity, waiver, and fixture proof. | none |
-| Waiver, reconcile, and residual-risk branches | Candidate for richer user-judgment payloads. | User-judgment, Core, and close owner rules. | none |
+| later schema extensions | schema names only | Promoted owner defines exact fields and validators in the active owner contract. | none until promoted |
+| Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, verification gate, QA gate, assurance blockers | field names only | Core/API owner activation with close non-substitution rules. | none until promoted |
+| Later next-action values: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | value names only | Matching API or owner activation. | none until promoted |
+| Recommended playbooks and judgment context | metadata names only | Agent Integration/API owner rules that keep metadata read-only and non-satisfying. | none until promoted |
+| Later ref and artifact values: bundle, manifest, QA capture, export component, design, Eval, Manual QA, TDD, projection, related refs | value names only | ArtifactRef, StateRecordRef, Storage, and relevant owner activation. | none until promoted |
+| ValidatorResult later stable IDs: design, autonomy, feedback-loop, TDD, stewardship, residual-risk, shared-design, manual-QA, context-hygiene checks | ID names only | Validator owner contracts for stable IDs, severity, waiver, and fixture proof. | none until promoted |
+| Waiver, reconcile, and residual-risk branches | branch names only | User-judgment, Core, and close owner rules. | none until promoted |
 
 <a id="later-template-candidates"></a>
 ## 7. Later Template Candidates
 
-| Candidate | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| Decision Packet full-format presentation (`DEC`) | Later template candidate; detailed body removed. | User-judgment owner activation for complex/full presentation. | none |
-| `APR` | Later template candidate; detailed body removed. | Sensitive-action Approval owner path and non-substitution wording. | none |
-| Approval Card | Later template candidate; detailed body removed. | Approval display owner path. | none |
-| `RUN-SUMMARY` | Later template candidate; detailed body removed. | Evidence/run owner path and compact MVP summary fallback. | none |
-| `EVIDENCE-MANIFEST` | Later template candidate; detailed body removed. | Evidence Manifest owner path. | none |
-| `EVAL` | Later template candidate; detailed body removed. | Eval owner path and detached-verification proof. | none |
-| Verification Result Card | Later template candidate; detailed body removed. | Verification/Eval display owner path. | none |
-| `MANUAL-QA` | Later template candidate; detailed body removed. | Manual QA owner path. | none |
-| Manual QA Card | Later template candidate; detailed body removed. | Manual QA display owner path. | none |
-| `TASK` | Later template candidate; detailed body removed. | Later continuity/report owner path. | none |
-| `DIRECT-RESULT` | Later template candidate; detailed body removed. | Later direct-result report owner path. | none |
-| `JOURNEY-CARD` | Later template candidate; detailed body removed. | Journey/current-position diagnostic owner path. | none |
-| `DESIGN` | Later template candidate; detailed body removed. | Shared-design/design-quality owner path. | none |
-| `DOMAIN-LANGUAGE` | Later template candidate; detailed body removed. | Domain language owner path. | none |
-| `MODULE-MAP` | Later template candidate; detailed body removed. | Module map owner path. | none |
-| `INTERFACE-CONTRACT` | Later template candidate; detailed body removed. | Interface contract owner path. | none |
-| `TDD-TRACE` | Later template candidate; detailed body removed. | TDD/feedback-loop policy owner path. | none |
-| `EXPORT` | Later template candidate; detailed body removed. | Operations/export owner path. | none |
+| Decision Packet full-format presentation (`DEC`), `APR`, Approval Card, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, Verification Result Card, `MANUAL-QA`, Manual QA Card, `TASK`, `DIRECT-RESULT`, `JOURNEY-CARD`, `DESIGN`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, `EXPORT` | template names only | Template owner assignment, source records, fallback behavior, non-substitution rules, freshness behavior, and proof expectations. | none until promoted |
 
 <a id="future-fixture-families"></a>
 ## 8. Future Fixture Families
 
-These are names only. They are catalog-only future candidates, not fixture bodies, scenario scripts, suite requirements, active API payloads, executable checks, current conformance results, or implementation tasks.
-
-| Future fixture family |
-|---|
-| Intake and decision routing |
-| Core, evidence, verification, and close |
-| Artifact redaction and export non-leakage |
-| Agency and user-judgment separation |
-| Connector capability honesty |
-| Design-quality and stewardship |
-| Context hygiene and resume freshness |
-| Projection, reconcile, and verification boundary |
-| Operations diagnostics, export, recover, and handoff |
-| Browser QA Capture |
+| Candidate | Status | Promotion requires | Active MVP impact |
+|---|---|---|---|
+| Intake and decision routing; Core, evidence, verification, and close; Artifact redaction and export non-leakage; Agency and user-judgment separation; Connector capability honesty; Design-quality and stewardship; Context hygiene and resume freshness; Projection, reconcile, and verification boundary; Operations diagnostics, export, recover, and handoff; Browser QA Capture | fixture family names only | Conformance owner assignment, exact fixture shape, assertions, payload/API/storage/error effects, and proof expectations. | none until promoted |
 
 <a id="broad-future-candidates"></a>
 ## 9. Broad Future Candidates
 
-| Candidate | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| Dashboard, hosted workflows, artifact dashboard, richer cards, richer visualizations | Later candidate. | Read-only derived display rules; no authority, readiness, QA, verification, or acceptance effect. | none |
-| Browser capture automation | Later candidate. | Capture boundary, redaction/PII handling, artifact retention, fallback behavior, and QA/acceptance non-substitution. | none |
-| Cross-surface verification | Later candidate. | Core-owned return records, Eval independence semantics, and unsupported-surface fallback. | none |
-| Broader connectors, connector marketplace, hosted UI, hosted/remote runtime | Later candidate. | Connector/API/security owners and local-authority boundary proof. | none |
-| Native hooks, preventive guard expansion, advanced sidecar watcher | Later candidate. | Proven covered mechanism before any preventive, isolation, or arbitrary-tool-control claim. | none |
-| Context Index, local derived metrics, long-term metrics | Later candidate. | Read-only retrieval/diagnostic owners and no authority or close effect. | none |
-| Team workflows, permissions, shared capability sets, orchestration, parallel lanes | Later candidate. | Scope, authority, permission, and user-owned judgment owners. | none |
-| Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | Later candidate. | Separate owner scope; deployment and production authority remain external unless explicitly promoted. | none |
-| Advanced validators and language or interface checks | Later candidate. | Exact policy, validator IDs, severity, waiver, and fixture behavior. | none |
+| Dashboard, hosted workflows, artifact dashboard, richer cards, richer visualizations | later candidate | Derived-display owner rules for read-only, non-authoritative behavior. | none until promoted |
+| Browser capture automation | later candidate | Capture owner rules for redaction/PII, retention, fallback behavior, and QA/acceptance non-substitution. | none until promoted |
+| Cross-surface verification | later candidate | Core/Eval owner rules for return records, independence, and unsupported-surface fallback. | none until promoted |
+| Broader connectors, connector marketplace, hosted UI, hosted/remote runtime | later candidate | Connector/API/security owners and local-authority boundary proof. | none until promoted |
+| Native hooks, preventive guard expansion, advanced sidecar watcher | later candidate | Proven covered mechanism before any preventive, isolation, or arbitrary-tool-control claim. | none until promoted |
+| Context Index, local derived metrics, long-term metrics | later candidate | Read-only retrieval/diagnostic owners and no authority or close effect. | none until promoted |
+| Team workflows, permissions, shared capability sets, orchestration, parallel lanes | later candidate | Scope, authority, permission, and user-owned judgment owners. | none until promoted |
+| Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | later candidate | Separate owner scope; deployment and production authority remain external unless explicitly promoted. | none until promoted |
+| Advanced validators and language or interface checks | later candidate | Validator owner rules for exact IDs, severity, waiver, and fixture behavior. | none until promoted |
 
 <a id="explicitly-retired-material"></a>
 ## 10. Explicitly Retired Material
 
-| Candidate | Current status | Promotion requires | Active current MVP impact |
+| Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
-| Full future designs in Later pages | Retired from active documentation; detailed body removed. | Reintroduce only in a promoted owner document with narrow scope. | none |
-| Full later schema definitions | Retired from active documentation; detailed body removed. | Reintroduce only as a promoted owner schema after promotion. | none |
-| Full later template bodies | Retired from active documentation; detailed body removed. | Reintroduce only when a template owner activates the candidate and defines source records. | none |
-| Full YAML fixtures and scenario scripts | Retired from active documentation; detailed body removed. | Reintroduce only as exact-shape fixture material under conformance owners after promotion. | none |
+| Full later template bodies | Full later template bodies were removed. | Reintroduce only through a promoted template owner. | must not affect active MVP |
+| Full fixture YAML drafts | Full fixture YAML drafts were removed. | Reintroduce only through a promoted conformance owner. | must not affect active MVP |
+| Full later schema bodies | Full later schema bodies were removed. | Reintroduce only through a promoted schema/API/storage owner. | must not affect active MVP |
