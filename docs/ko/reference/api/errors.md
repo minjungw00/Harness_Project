@@ -157,6 +157,8 @@ task_id: string | null
 
 `PROJECTION_STALE`은 읽기용 보기 최신성 오류입니다. 그 자체로 활성 닫기 차단 사유 `category`가 아닙니다.
 
+Run 실패, violation, Projection 실패, 아티팩트 무결성 실패, validator 실패, 증거 공백, 차단 사유를 `Task.result=failed` 같은 종료 결과로 바꾸면 안 됩니다. 무엇이 막혔거나 무엇을 복구해야 하는지는 해당 status, 오류, 증거, 아티팩트, 차단 사유 기록에 남깁니다.
+
 ## 사용자 표시 라벨 지침
 
 아래 라벨은 표시 지침이지 새 공개 오류 코드가 아닙니다.

@@ -70,7 +70,7 @@ IntakeResponse:
   next_actions: NextActionSummary[]
 ```
 
-- **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial `change_units` row for write-capable `direct` or `work`, update blockers, append events, and create a committed idempotency row. Dry-run and pre-commit failure create none of these.
+- **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial `change_units` row for write-capable `direct` or `work`, update blockers, append events, and create a committed idempotency row. The method name does not create `lifecycle_phase=intake`; created or resumed Tasks must use the active `Task.lifecycle_phase` value set from [API Schema Core](schema-core.md#current-mvp-value-sets). Dry-run and pre-commit failure create none of these.
 - **Errors:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
 - **Storage owner:** `project_state`, `tasks`, `change_units`, `blockers`, `task_events`, and `tool_invocations`.
 - **Security boundary:** Intake records scope and mode. It does not authorize local access, sensitive actions, product writes, or stronger guarantee levels.
@@ -114,6 +114,7 @@ StatusResponse:
 ```
 
 - **State effect:** None. `harness.status` does not create `tool_invocations` replay rows.
+- **Close-state boundary:** `none` is allowed only on `StatusResponse.close_state` when no active close state is available. `CloseTaskResponse.close_state` uses `ready`, `blocked`, `closed`, `cancelled`, or `superseded`.
 - **Errors:** `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `NO_ACTIVE_TASK`, `PROJECTION_STALE` when a requested readable view is stale or failed.
 - **Storage owner:** Read-only over `project_state`, `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `evidence_summaries`, `artifacts`, `artifact_links`, and `blockers`.
 - **Security boundary:** Without a promoted profile, status displays only the current MVP `GuaranteeDisplay.level` values `cooperative` or `detective`. `preventive` and `isolated` may appear only as profile-gated display values supported by the schema and security owners. Stale status text, chat, rendered views, and cached summaries are not authority.
@@ -320,7 +321,9 @@ CloseTaskResponse:
   next_actions: NextActionSummary[]
 ```
 
-- **State effect:** `intent=check` is read-only. A committed non-dry-run terminal close updates `tasks.lifecycle_phase`, `tasks.result`, `tasks.closed_at`, affected `change_units`, blockers, project active-task state when needed, events, and replay. A blocked close may record blockers but must leave the Task open. Dry-run creates no close state or replay row.
+- **Close-field mapping:** A committed non-dry-run `intent=complete` sets `lifecycle_phase=completed` and `result=completed` with `close_reason=completed_self_checked` or `completed_with_risk_accepted`. `intent=cancel` sets `lifecycle_phase=cancelled`, `close_reason=cancelled`, and `result=cancelled`. `intent=supersede` sets the old Task to `lifecycle_phase=superseded`, `close_reason=superseded`, and `result=superseded`.
+- **Active-task pointer:** On committed `intent=supersede`, if the old Task is `project_state.active_task_id`, `superseding_task_id` must become `project_state.active_task_id` only when it names a valid open same-project Task; otherwise the active pointer must be cleared. The old superseded Task must not remain active.
+- **State effect:** `intent=check` is read-only. A committed non-dry-run terminal close updates `tasks.lifecycle_phase`, `tasks.close_reason`, `tasks.result`, `tasks.closed_at`, affected `change_units`, blockers, project active-task state when needed, events, and replay. A blocked close may record blockers but must leave the Task open. Dry-run creates no close state or replay row.
 - **Errors:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
 - **Storage owner:** `tasks`, `change_units`, `blockers`, `runs`, `evidence_summaries`, `artifacts`, `artifact_links`, `user_judgments`, `task_events`, and `tool_invocations`.
 - **Security boundary:** Close is a Core state transition, not a report. It cannot be inferred from chat, status text, final acceptance alone, residual-risk acceptance alone, evidence alone, or a rendered view.

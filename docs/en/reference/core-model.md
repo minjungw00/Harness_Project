@@ -120,6 +120,8 @@ Gate state exposure in public responses is owned by [API Schema Core](api/schema
 
 The lifecycle is a Core state-transition discipline, not a display script. Active fixture and schema owners may expose exact values, but the Core principles are:
 
+- `Task.lifecycle_phase` is the persisted lifecycle field. The active value set is `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, and `superseded`.
+- `completed`, `cancelled`, and `superseded` are terminal lifecycle values. `intake` is an API method/start handling step, not a persisted lifecycle phase.
 - A Task can be shaped, made ready, executed, wait for user judgment, become blocked, complete, cancel, or be superseded only through owner paths.
 - Advice/read-only work must not produce product-file writes. Write-capable direct and tracked work must pass through compatible scope and the Write Authorization path.
 - A product write path moves through scope establishment, user-judgment and sensitive-action checks when applicable, `prepare_write`, one compatible product-write Run, `record_run`, evidence/blocker update, and `close_task`.
@@ -127,9 +129,32 @@ The lifecycle is a Core state-transition discipline, not a display script. Activ
 - Idempotency replay must not duplicate state transitions, events, Write Authorizations, Runs, artifacts, evidence updates, or close effects.
 - Dry-run calls describe possible outcomes but create no authoritative state, no consumable Write Authorization, no artifact, no close state, and no replay row.
 
+```mermaid
+stateDiagram-v2
+    [*] --> shaping
+    shaping --> ready
+    ready --> executing
+    executing --> waiting_user
+    waiting_user --> ready
+    executing --> blocked
+    blocked --> ready
+    ready --> completed
+    executing --> completed
+    shaping --> cancelled
+    ready --> cancelled
+    executing --> cancelled
+    waiting_user --> cancelled
+    blocked --> cancelled
+    shaping --> superseded
+    ready --> superseded
+    executing --> superseded
+    waiting_user --> superseded
+    blocked --> superseded
+```
+
 <a id="stable-event-catalog"></a>
 
-Stable event names are append-only history labels for Core changes, not authority by themselves. The catalog should cover Task lifecycle updates, `prepare_write` decisions, Write Authorization creation/consumption/staling/expiry/revocation, Run recording, user judgment updates, gate recompute, evidence updates, blocker updates, residual-risk visibility or acceptance, close attempts, and close success or cancellation. Waiver event names are reserved for owner-promoted later paths. Exact event payloads and persistence are owned by API and Storage.
+Stable event names are append-only history labels for Core changes, not authority by themselves. The catalog should cover Task lifecycle updates, `prepare_write` decisions, Write Authorization creation/consumption/staling/expiry/revocation, Run recording, user judgment updates, gate recompute, evidence updates, blocker updates, residual-risk visibility or acceptance, close attempts, and close success, cancellation, or supersession. Waiver event names are reserved for owner-promoted later paths. Exact event payloads and persistence are owned by API and Storage.
 
 <a id="prepare_write"></a>
 
@@ -163,11 +188,22 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, Write Authorization and Run compatibility, baseline and surface capability when relevant, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, residual-risk visibility when close-relevant risk exists, residual-risk acceptance when the active close path requires acceptance, recovery constraints, and cancellation or supersession conflicts.
 
+Close-related fields are separate contracts:
+
+| Concept | Core meaning |
+|---|---|
+| `Task.lifecycle_phase` | Persisted lifecycle position: `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded`. |
+| `CloseTaskResponse.close_state` | Response-level close status: `ready`, `blocked`, `closed`, `cancelled`, `superseded`. It is not the persisted lifecycle field. |
+| `Task.close_reason` | Persisted close detail: `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded`. |
+| `Task.result` | Coarse task outcome: `none`, `advice_only`, `completed`, `cancelled`, `superseded`. It is not a Run status, validator result, evidence status, or blocker. |
+
 MVP close must keep later assurance and design-policy material out of active response semantics. `design_gate`, `CloseBlocker.category=design_policy`, `verification_gate`, `qa_gate`, detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
 
 `close_task` must return blockers instead of pretending close is complete when required task/scope correctness, user-owned judgment, sensitive-action approval, Write Authorization or Run compatibility, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, cancellation/supersession handling, surface capability, baseline, or recovery conditions remain unresolved. A public response may choose one primary error, but secondary close blockers and refs must remain visible enough for the next safe action.
 
 Cancellation and supersession are honest terminal paths, not successful completion. Risk-accepted close is successful close with named accepted risk; it is not verified close and not no-risk close.
+
+`harness.close_task` with `intent=supersede` moves the old Task to `lifecycle_phase=superseded`, `close_reason=superseded`, and `result=superseded`. If the superseded Task is `project_state.active_task_id`, Core must set `project_state.active_task_id` to `superseding_task_id` only when it names a valid open same-project Task; otherwise it must clear the active pointer. It must not leave the superseded Task active.
 
 ## 11. Blockers
 

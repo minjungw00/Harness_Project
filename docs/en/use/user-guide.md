@@ -151,6 +151,8 @@ Tests can pass while close is still blocked. A UI change can need human review, 
 
 In owner terms, `close_task` returns blockers or a close result. In user terms, the agent should not claim close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved. Verification and QA gates are later candidates unless a future owner promotes them.
 
+Close can end as completed, cancelled, or superseded. A failed command, failed projection, missing artifact, evidence gap, or unresolved blocker should stay visible as the specific problem; it is not a generic failed Task result.
+
 ## 8. Accept final result separately from residual risk
 
 Final acceptance means you accept the result you can see. Residual-risk acceptance means you accept a named residual risk that is still visible. They are separate judgments.

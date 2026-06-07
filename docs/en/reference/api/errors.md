@@ -157,6 +157,8 @@ Known close-relevant risk that has not been shown uses `RESIDUAL_RISK_NOT_VISIBL
 
 `PROJECTION_STALE` is a readable-view freshness error, not an active close-blocker category by itself.
 
+Run failures, violations, projection failures, artifact integrity failures, validator failures, evidence gaps, and blockers must not be converted into terminal `Task.result=failed`. Keep them in the typed status, error, evidence, artifact, or blocker record that explains what is blocked or must be repaired.
+
 ## User-Facing Label Guidance
 
 These labels are display guidance, not new public error codes.

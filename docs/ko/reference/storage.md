@@ -127,7 +127,7 @@ Register, First Safe Change Unit Candidate 테이블을 만들지 않습니다. 
 | `project.yaml` | 프로젝트 디렉터리 | 정적 프로젝트 설정입니다. | `project_id`, `repo_root`, 표시/설정 기본값. |
 | `project_state` | `state.sqlite` | 프로젝트별 로컬 상태 헤더, 상태 시계, 활성 Task 포인터, 기본 surface 포인터를 저장합니다. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
 | `surfaces` | `state.sqlite` | `surface_id`, 기능 프로필, 로컬 접근 상태, 보장 표시를 해석하는 데 필요한 등록된 로컬/참조 접점 사실을 저장합니다. | `surface_id`, `project_id`, `surface_kind`, `capability_profile_json`, `local_access_posture`, `guarantee_level`, `status`, `created_at`, `updated_at`. |
-| `tasks` | `state.sqlite` | 사용자 가치 단위, Task별 상태 시계, 현재 구체화 요약, 생명주기, 결과, 닫기 필드를 저장합니다. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `result`, `summary`, 구체화 JSON 열, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
+| `tasks` | `state.sqlite` | 사용자 가치 단위, Task별 상태 시계, 현재 구체화 요약, 생명주기, 결과, 닫기 필드를 저장합니다. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `close_reason`, `result`, `summary`, 구체화 JSON 열, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
 | `change_units` | `state.sqlite` | 쓰기 호환성과 닫기 근거를 위한 현재 또는 제안된 범위 있는 작업 경계를 저장합니다. | `change_unit_id`, `task_id`, `scope_summary`, 범위 JSON 열, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | `state.sqlite` | 활성 `UserJudgment.judgment_kind` 값에 대한 사용자 소유 판단 기록을 저장합니다. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, 요청/맥락 JSON 열, `question`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | `state.sqlite` | `dry_run=false`인 `prepare_write`에서 `decision=allowed`일 때만 만들어지는 지속성 있는 단일 사용 협력형 Write Authorization입니다. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
@@ -145,6 +145,14 @@ active 로컬/참조 접점 등록입니다.
 
 `display_label`은 active 저장소 식별 열이 아닙니다. 표시 라벨은
 `judgment_kind` 같은 안정 식별자와 locale에서 파생합니다.
+
+`tasks.lifecycle_phase`, `tasks.close_reason`, `tasks.result`는 서로 다른 Core
+개념을 저장합니다. `tasks.lifecycle_phase`에는 `intake`를 저장하면 안 됩니다.
+종료 생명주기 값은 `completed`, `cancelled`, `superseded`입니다. `tasks.result`에는
+`failed`를 저장하면 안 됩니다. 실패한 Run, Projection, 아티팩트, validator,
+증거 공백, 닫기 차단 사유는 각 담당 기록에 남습니다. 커밋된 supersession이 활성
+포인터를 바꿀 때 `project_state.active_task_id`는 `harness.close_task`의
+`superseding_task_id` 규칙을 따라야 하며, superseded된 Task를 계속 가리키면 안 됩니다.
 
 ## 5. JSON TEXT 열
 

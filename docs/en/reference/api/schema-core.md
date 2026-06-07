@@ -89,8 +89,8 @@ EventRef:
 ```yaml
 StateSummary:
   mode: advisor | direct | work
-  lifecycle_phase: intake | shaping | ready | executing | waiting_user | blocked | completed | cancelled
-  result: none | advice_only | passed | failed | cancelled
+  lifecycle_phase: shaping | ready | executing | waiting_user | blocked | completed | cancelled | superseded
+  result: none | advice_only | completed | cancelled | superseded
   close_reason: none | completed_self_checked | completed_with_risk_accepted | cancelled | superseded
   assurance_level: none | self_checked
   gates:
@@ -104,6 +104,8 @@ GuaranteeDisplay:
   level: cooperative | detective
   notes: string[]
 ```
+
+`StateSummary.lifecycle_phase` mirrors persisted `Task.lifecycle_phase`. `intake` is an API method and start-handling step, not a lifecycle value. `StateSummary.result` mirrors coarse `Task.result`; Run failure, violation, evidence gaps, and blockers remain in Run status, evidence state, blockers, or current Task state instead of becoming a terminal Task result.
 
 Rendered labels are not canonical schema values. `GuaranteeDisplay.level` is a display claim about the documented surface capability and proof level; it does not grant permission or state authority. The active MVP guarantee-display values are `cooperative` and `detective`. `preventive` and `isolated` are profile-gated display value names, not default active MVP guarantees.
 
@@ -457,9 +459,11 @@ These values are valid without a promoted profile. Values not listed here are no
 | Active method set | `harness.intake`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
 | `StateSummary.mode` | `advisor`, `direct`, `work` |
-| `StateSummary.lifecycle_phase` | `intake`, `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled` |
-| `StateSummary.result` | `none`, `advice_only`, `passed`, `failed`, `cancelled` |
+| `StateSummary.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` |
+| `StateSummary.result` | `none`, `advice_only`, `completed`, `cancelled`, `superseded` |
 | `StateSummary.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
+| `StatusResponse.close_state` | `none`, `ready`, `blocked`, `closed`, `cancelled`, `superseded` |
+| `CloseTaskResponse.close_state` | `ready`, `blocked`, `closed`, `cancelled`, `superseded` |
 | `StateSummary.assurance_level` | `none`, `self_checked` |
 | `StateSummary.gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
 | `StateSummary.gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |

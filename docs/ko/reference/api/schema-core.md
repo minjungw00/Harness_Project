@@ -89,8 +89,8 @@ EventRef:
 ```yaml
 StateSummary:
   mode: advisor | direct | work
-  lifecycle_phase: intake | shaping | ready | executing | waiting_user | blocked | completed | cancelled
-  result: none | advice_only | passed | failed | cancelled
+  lifecycle_phase: shaping | ready | executing | waiting_user | blocked | completed | cancelled | superseded
+  result: none | advice_only | completed | cancelled | superseded
   close_reason: none | completed_self_checked | completed_with_risk_accepted | cancelled | superseded
   assurance_level: none | self_checked
   gates:
@@ -104,6 +104,8 @@ GuaranteeDisplay:
   level: cooperative | detective
   notes: string[]
 ```
+
+`StateSummary.lifecycle_phase`는 지속 저장되는 `Task.lifecycle_phase`를 그대로 보여줍니다. `intake`는 API 메서드이자 시작 처리 단계이지 생명주기 값이 아닙니다. `StateSummary.result`는 굵은 `Task.result`를 보여줍니다. Run 실패, violation, 증거 공백, 차단 사유는 Run 상태, 증거 상태, 차단 사유, 현재 Task 상태에 남고 Task의 종료 결과가 되지 않습니다.
 
 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. `GuaranteeDisplay.level`은 문서화된 접점 역량과 증명 수준을 보여 주는 표시 주장입니다. 권한이나 상태 권한을 부여하지 않습니다. 현재 MVP의 활성 guarantee-display 값은 `cooperative`와 `detective`입니다. `preventive`와 `isolated`는 profile-gated 표시 값 이름이며 현재 MVP의 기본 보장이 아닙니다.
 
@@ -457,9 +459,11 @@ policy_override
 | 활성 메서드 집합 | `harness.intake`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
 | `StateSummary.mode` | `advisor`, `direct`, `work` |
-| `StateSummary.lifecycle_phase` | `intake`, `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled` |
-| `StateSummary.result` | `none`, `advice_only`, `passed`, `failed`, `cancelled` |
+| `StateSummary.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` |
+| `StateSummary.result` | `none`, `advice_only`, `completed`, `cancelled`, `superseded` |
 | `StateSummary.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
+| `StatusResponse.close_state` | `none`, `ready`, `blocked`, `closed`, `cancelled`, `superseded` |
+| `CloseTaskResponse.close_state` | `ready`, `blocked`, `closed`, `cancelled`, `superseded` |
 | `StateSummary.assurance_level` | `none`, `self_checked` |
 | `StateSummary.gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
 | `StateSummary.gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
