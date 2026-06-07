@@ -38,7 +38,10 @@
 | Eval / detached verification | later 후보 | Eval 담당 문서가 독립성 의미, 기준선 최신성, 아티팩트 무결성, 보증 갱신 규칙을 정해야 합니다. | 승격 전까지 없음 |
 | Decision Packet full-format presentation | later 후보 | 사용자 판단 담당 문서가 `presentation=full`을 켜되 기본 현재 MVP 경로로 만들지 않아야 합니다. | 승격 전까지 없음 |
 | Rich risk review and residual-risk lifecycle | later 후보 | Core와 사용자 판단 담당 문서가 상세 위험 기록, 검토 흐름, 만료, 닫기 영향을 정해야 합니다. 간결한 잔여 위험 표시는 Core/API 담당 경로를 통해서만 active로 남습니다. | 승격 전까지 없음 |
-| Full design-quality policy families: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward policies | 이름만 있음 | 설계 품질 담당 문서가 정확한 범위, 검증기 경계, 면제/증거 규칙, 향후 승격에 필요한 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
+| 설계 품질 gate와 닫기 category 이름: `design_gate`, `design_policy` | 이름만 있음 | Core/API/설계 품질 담당 문서가 승격 전에 정확한 필드, 범주 값, 대체 동작, 닫기 대체 불가 규칙, 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
+| 설계 정책 waiver | later waiver 후보 | Core, 사용자 판단, QA/검증, 설계 품질 담당 문서가 허용 범위, 대체 불가 규칙, 잔여 위험 표시, 정확한 기록 동작을 정해야 합니다. | 승격 전까지 없음 |
+| 넓은 설계 정책 validator와 심각도 기반 차단 정책 | later 후보 | Validator와 설계 품질 담당 문서가 정확한 ID, 심각도 의미, 닫기 영향, 대체 동작, waiver 경계, fixture 증명 기대치를 정해야 합니다. | 승격 전까지 없음 |
+| 전체 설계 품질 정책 후보: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward policies | 이름만 있음 | 설계 품질 담당 문서가 정확한 범위, 정책 경계, 증거 기대치, 향후 승격에 필요한 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
 
 <a id="operations-candidates"></a>
 ## 4. 운영 후보
@@ -72,11 +75,11 @@
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
 | later schema extensions | 스키마 이름만 있음 | 승격된 담당 문서가 정확한 필드와 검증기를 활성 계약에 정의해야 합니다. | 승격 전까지 없음 |
-| Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, `verification_gate`, `qa_gate`, 수동 QA gate, assurance blockers | 필드 이름만 있음 | Core/API 담당 문서 활성화, 닫기 대체 불가 규칙, 정확한 활성 스키마 필드, 대체 동작, 증명 기대치가 필요합니다. | 승격 전까지 없음 |
+| Later 닫기와 보증 필드: `verifying`, `qa`, `completed_verified`, `detached_verified`, `design_gate`, `verification_gate`, `qa_gate`, 수동 QA gate, 설계 정책 차단 사유, 보증 차단 사유 | 필드 이름만 있음 | Core/API 담당 문서 활성화, 닫기 대체 불가 규칙, 정확한 활성 스키마 필드, 대체 동작, 증명 기대치가 필요합니다. | 승격 전까지 없음 |
 | Later next-action values: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | 값 이름만 있음 | 대응 API 또는 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |
 | Recommended playbooks and judgment context | 메타데이터 이름만 있음 | Agent Integration/API 담당 문서가 메타데이터를 읽기 전용으로 두고 상태를 만족시키지 못하게 해야 합니다. | 승격 전까지 없음 |
 | Later ref and artifact values: bundle, manifest, QA capture, export component, design, Eval, 수동 QA, TDD, projection, related refs | 값 이름만 있음 | ArtifactRef, StateRecordRef, Storage, 관련 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |
-| ValidatorResult later stable IDs: design, autonomy, feedback-loop, TDD, stewardship, residual-risk, shared-design, manual-QA, context-hygiene checks | ID 이름만 있음 | Validator 담당 문서가 stable ID, 심각도, 면제, 향후 fixture 증명 기대치를 정해야 합니다. | 승격 전까지 없음 |
+| `ValidatorResult` later stable ID와 정책 계열: design, design-policy, autonomy, feedback-loop, TDD, stewardship, residual-risk, shared-design, manual-QA, context-hygiene checks | ID와 계열 이름만 있음 | Validator 담당 문서가 stable ID, 심각도, waiver 경계, 닫기 영향, 향후 fixture 증명 기대치를 정해야 합니다. | 승격 전까지 없음 |
 | Waiver, reconcile, and residual-risk branches | 분기 이름만 있음 | 사용자 판단, Core, 닫기 담당 문서 규칙이 필요합니다. | 승격 전까지 없음 |
 
 <a id="later-template-candidates"></a>
@@ -108,4 +111,4 @@
 | Context Index, local derived metrics, long-term metrics | later 후보 | 읽기 전용 검색/진단 담당 문서가 필요하며 권한이나 닫기 효과가 없어야 합니다. | 승격 전까지 없음 |
 | Team workflows, permissions, shared capability sets, orchestration, parallel lanes | later 후보 | 범위, 권한, 허가 체계, 사용자 소유 판단 담당 문서가 필요합니다. | 승격 전까지 없음 |
 | Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | later 후보 | 별도 담당 범위가 필요합니다. 명시적으로 승격하기 전까지 배포와 운영 환경 권한은 외부에 남습니다. | 승격 전까지 없음 |
-| Advanced validators and language or interface checks | later 후보 | Validator 담당 문서가 정확한 ID, 심각도, 면제, fixture 동작을 정해야 합니다. | 승격 전까지 없음 |
+| 고급 validator, 설계 정책 validator, 언어 또는 인터페이스 확인 | later 후보 | Validator 담당 문서가 정확한 ID, 심각도, waiver 경계, 닫기 영향, fixture 동작을 정해야 합니다. | 승격 전까지 없음 |

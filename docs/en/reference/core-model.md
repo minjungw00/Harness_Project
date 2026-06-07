@@ -104,13 +104,13 @@ Gates are Core compatibility dimensions for progress, write, run recording, and 
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work.
 - <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. It does not replace sensitive-action approval, evidence, verification, QA, final acceptance, or residual-risk acceptance.
 - <a id="approval-gate"></a>Approval Gate: whether scoped sensitive-action approval is needed, pending, usable, denied, expired, or drifted. It is permission for the sensitive action only.
-- <a id="design-gate"></a>Design Gate: whether an enabled design-quality finding routes into a Core-backed blocker. Broad design-quality catalogs are not default active MVP blockers.
 - <a id="evidence-gate"></a>Evidence Gate: whether required close-relevant evidence is absent, partial, sufficient, stale, or blocked.
 - <a id="acceptance-gate"></a>Acceptance Gate: whether final acceptance is required and, if so, recorded after the close basis is visible.
 - <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, hold the action through the owner path, or produce a capability blocker rather than pretending verification or prevention happened.
 
 Reserved gate names:
 
+- <a id="design-gate"></a>Design Gate is a later/reserved gate name. The active MVP has no `design_gate` public schema field and no independent design-policy close gate. Design-quality observations route through active owner paths such as product, technical, or scope judgment; evidence; residual-risk visibility; surface capability; or an already-active `CloseBlocker.category`.
 - <a id="verification-gate"></a>Verification Gate is a later/reserved gate name. The active MVP has no `verification_gate` public schema field and no detached verification workflow. A future owner must promote exact fields, requiredness, fallback behavior, and proof expectations before it affects active close semantics.
 - <a id="qa-gate"></a>QA Gate is a later/reserved gate name. The active MVP has no `qa_gate` public schema field and no Manual QA gate. A future owner must promote exact fields, waiver behavior, artifact handling, and proof expectations before it affects active close semantics.
 
@@ -135,7 +135,7 @@ Stable event names are append-only history labels for Core changes, not authorit
 
 ## 8. prepare_write authority
 
-`prepare_write` is the unique pre-write compatibility decision point for product-file writes. It checks the intended operation against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, sensitive-action approval, surface capability, and active design-policy preconditions.
+`prepare_write` is the unique pre-write compatibility decision point for product-file writes. It checks the intended operation against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, sensitive-action approval, surface capability, and other active owner-path preconditions.
 
 Only a compatible non-dry-run allowed path creates a consumable Write Authorization. Dry-run responses, `blocked`, `approval_required`, `decision_required`, and `state_conflict` remain response, blocker, or error states only. They must not create a consumable authorization row, replay row, evidence record, close state, or Harness write-compatibility record.
 
@@ -163,7 +163,7 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, Write Authorization and Run compatibility, baseline and surface capability when relevant, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, residual-risk visibility when close-relevant risk exists, residual-risk acceptance when the active close path requires acceptance, recovery constraints, and cancellation or supersession conflicts.
 
-MVP close must keep later assurance material out of active response semantics. `verification_gate`, `qa_gate`, detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
+MVP close must keep later assurance and design-policy material out of active response semantics. `design_gate`, `CloseBlocker.category=design_policy`, `verification_gate`, `qa_gate`, detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
 
 `close_task` must return blockers instead of pretending close is complete when required task/scope correctness, user-owned judgment, sensitive-action approval, Write Authorization or Run compatibility, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, cancellation/supersession handling, surface capability, baseline, or recovery conditions remain unresolved. A public response may choose one primary error, but secondary close blockers and refs must remain visible enough for the next safe action.
 
@@ -181,9 +181,9 @@ Invalid state combinations must become blockers, rejections, or repair paths. Th
 
 A waiver is a scoped exception to a named requirement where policy allows it. It must preserve what requirement was skipped, the affected Task and Change Unit, the reason, actor, timing, affected gate or close impact, expiry or required next action when needed, and any close-relevant residual risk.
 
-Allowed waiver paths are narrow:
+The current MVP has no standalone design-policy waiver. Potential later waiver or risk-acceptance paths remain narrow and inert until promoted:
 
-- Design-policy waiver only when the design policy owner allows it.
+- Later design-policy waiver only if a future design-policy owner promotes exact scope, non-substitution, close impact, and recording behavior.
 - Later/reserved QA waiver only if a future owner promotes required Manual QA and policy allows waiver.
 - Later/reserved verification-risk acceptance only if a future owner promotes required verification and the user accepts the named risk of missing or waived verification.
 

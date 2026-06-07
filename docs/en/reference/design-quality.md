@@ -2,16 +2,16 @@
 
 ## 1. Owns / Does not own
 
-This Reference page owns the active current MVP design-quality boundary: how design-quality findings may affect gates, close blockers, waivers, and evidence expectations without becoming Core invariants.
+This Reference page owns the active current MVP design-quality routing boundary: how design-quality observations identify product decisions, technical decisions, scope decisions, evidence gaps, residual-risk visibility issues, or close blockers that are already owned by active Core/API categories.
+
+It does not define an independent active gate, active `CloseBlocker.category`, active validator family, design-policy waiver route, severity-based blocking policy, evidence record, QA record, acceptance record, residual-risk record, or close authority.
 
 It owns:
 
-- the active design-quality role for current MVP close behavior
-- finding severity interpretation where it affects a visible blocker or next action
-- when a design-quality finding may become a Core-backed close blocker
-- the waiver boundary for design-quality expectations
-- evidence expectations for design-quality findings
-- the boundary between validator IDs, active close impact, and later policy catalogs
+- the active design-quality role as judgment-routing and documentation reference
+- how design-quality observations route to `judgment_kind=product_decision`, `judgment_kind=technical_decision`, and `judgment_kind=scope_decision`
+- how design-quality observations point to existing active blocker categories such as `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, or `surface_capability`
+- the boundary between design-quality observations, active `ValidatorResult.validator_id` values, and later design-policy catalogs
 
 It does not own:
 
@@ -19,87 +19,72 @@ It does not own:
 - MCP request/response schemas, `ValidatorResult`, public errors, or active/later schema values; see [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md)
 - SQLite DDL, persisted tables, validator-run storage, or artifact storage; see [Storage](storage.md)
 - projection template bodies, status cards, or rendered reports; see [Projection And Templates Reference](projection-and-templates.md)
-- full policy-to-validator mapping, steward policies, full review procedure, operations/reporting candidates, or future conformance catalogs
+- broad design-policy validators, design-policy waiver, severity-based active blocking policy, steward policies, full review procedure, operations/reporting candidates, or future conformance catalogs
 
 Documentation in this repository remains planning source material. It does not mean a Harness Server, runtime state, generated evidence, QA record, Acceptance record, residual-risk record, or close record exists here today.
 
 ## 2. Active current MVP design-quality role
 
-Active current MVP design quality is a narrow routing layer. It makes close-relevant quality findings visible, then routes each finding through an existing owner path. It does not create new Core state, new gates, new schemas, new validator result fields, or a separate design-review authority.
+Active current MVP design quality is a narrow reference and routing layer. It makes a quality concern legible, then sends the concern to an existing active owner path. It does not create new Core state, `StateSummary.gates.design_gate`, `CloseBlocker.category=design_policy`, new schemas, new validator result fields, active design-policy validators, design-policy waiver, or a separate design-review authority.
 
 The active role is limited to these effects:
 
-- flag a finding that affects scope, user-owned judgment, required evidence, stale close/write context, surface capability, guarantee honesty, or visible residual risk
-- route one focused next action: `ask one focused user judgment`, `request evidence`, `mark residual risk`, `show advisory next action`, or `no action`
-- route `block write` or `block close` only when the Core owner path already supports that blocker; the active MVP has no separate `design_policy` `CloseBlocker.category`
-- keep user-owned product, material technical, final-acceptance, residual-risk, and later/reserved QA waiver or verification-risk judgments distinct
+- identify a product behavior, UX, wording, release promise, or user-value choice as `judgment_kind=product_decision`
+- identify an architecture, dependency, migration, public-interface, compatibility, security/privacy, or material technical direction choice as `judgment_kind=technical_decision`
+- identify scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change as `judgment_kind=scope_decision`
+- point to `CloseBlocker.category=scope`, `CloseBlocker.category=user_judgment`, `CloseBlocker.category=evidence`, or `CloseBlocker.category=artifact_availability` when the matching active owner path already requires that blocker
+- point to `CloseBlocker.category=residual_risk_visibility`, `CloseBlocker.category=residual_risk_acceptance`, `CloseBlocker.category=surface_capability`, or another already-active category only when that owner path truly applies
+- route one focused next action: ask one focused user judgment, request evidence, mark residual risk visible, show an advisory next action, or no action
+- keep user-owned product, material technical, scope, final-acceptance, residual-risk, and later/reserved QA waiver or verification-risk judgments distinct
 - keep evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness distinct
 
 Design quality must not turn ordinary work into an open-ended planning loop. Full domain-language audits, full module/interface review, full TDD trace, full feedback-loop audit, full codebase-stewardship review, detailed Manual QA policy, detached verification, two-stage review displays, and steward policies are not active current MVP blockers unless another active owner path explicitly requires a narrow piece of that work.
 
-## 3. Finding severity
+## 3. Routing Rules
 
-`ValidatorResult.findings.severity` is owned by [API Schema Core](api/schema-core.md#validatorresult). Design Quality interprets severity only for the visible next action and possible close impact.
+A design-quality observation affects current MVP state only through an active owner path. The observation must name the active route it depends on:
 
-| Severity | Active current MVP meaning |
+| Concern | Active current MVP route |
 |---|---|
-| `info` | Useful context. It does not block write or close. |
-| `warning` | A concern the agent should show or route to one bounded next action. It does not block write or close by itself. |
-| `error` | A quality expectation is unmet. It may request evidence, ask one focused user judgment, mark residual risk, or show an advisory next action. It blocks close only when [When a finding blocks close](#when-a-finding-blocks-close) applies. |
-| `blocker` | A claimed blocker must name the active Core-backed blocker, gate, or API error path. Without that owner path, it must not be presented as a close blocker. |
+| Product behavior, UX, wording, release promise, or user value is undecided. | `judgment_kind=product_decision`; use `CloseBlocker.category=user_judgment` only when the active close path requires that judgment. |
+| Architecture, dependency, migration, public interface, compatibility, security/privacy, or material technical direction is undecided. | `judgment_kind=technical_decision`; use `CloseBlocker.category=user_judgment` only when the active close path requires that judgment. |
+| Scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change is needed. | `judgment_kind=scope_decision` or `CloseBlocker.category=scope`, depending on the owner path. |
+| A close-relevant claim lacks support. | `CloseBlocker.category=evidence`, `CloseBlocker.category=artifact_availability`, or an evidence request through the Core evidence owner path. |
+| A known limitation or unchecked condition matters to close. | Residual-risk visibility through `CloseBlocker.category=residual_risk_visibility`, and `CloseBlocker.category=residual_risk_acceptance` only when the active close path requires acceptance. |
+| The connected surface cannot honestly support the claimed operation or guarantee. | `CloseBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the capability owner path. |
 
-For the same affected concern, show the strongest valid active action and keep weaker findings visible. Separate concerns stay separate. A later catalog warning must not inherit blocker status from a different Core-backed concern.
+A design-quality label, policy name, severity value, validator ID, or review phrase does not create the route. If no active owner path applies, the current MVP result is advisory text or no action.
 
 <a id="when-a-finding-blocks-close"></a>
 ## 4. When a finding blocks close
 
-A design-quality finding blocks close only when all of these are true:
+A design-quality observation blocks close only when all of these are true:
 
 - it is tied to the active Task or Change Unit and the attempted close
-- it names an existing Core-backed close blocker category, gate, API error, or owner path from the active close-blocking set
-- it gives exactly one next action that can unblock, defer, waive where allowed, or mark residual risk
-- it fits one of the active current MVP blocker conditions below
-
-Active current MVP blocker conditions:
-
-| Condition | Owner path |
-|---|---|
-| Required user-owned judgment is unresolved. | `decision_gate`, `user_judgment`, and Core close semantics. |
-| Active scope is missing, incompatible, or exceeded for the close-relevant work. | Scope Gate, Change Unit, Autonomy Boundary, `prepare_write`, and close blockers. |
-| Required evidence is missing, unavailable, stale, or blocked. | Core evidence summary, artifact availability, and `EVIDENCE_INSUFFICIENT` paths. |
-| Stale context makes the close basis unsafe. | Core freshness, projection/source refs when used for the visible close basis, and reconcile/recovery owner paths. |
-| The surface cannot support the claimed operation or guarantee. | Capability boundary, `CAPABILITY_INSUFFICIENT`, and honest guarantee display owners. |
+- it names an existing active `CloseBlocker.category`, `judgment_kind`, API error, or owner path from the active close-blocking set
+- the named owner path would block close even if no design-quality label existed
+- it gives exactly one next action that can unblock, defer through the owning path, request the required evidence, or mark residual risk visible
+- it does not rely on `design_gate`, `CloseBlocker.category=design_policy`, a design-policy waiver, a broad policy catalog, or severity alone
 
 A finding does not block close merely because it mentions domain language, vertical slice shape, TDD, module/interface review, stewardship, Manual QA, detached verification, review stages, or a future policy family. Those may produce an advisory next action, an evidence request, a focused user judgment, or a residual-risk marker only when an active owner path needs that narrow action.
 
-When a design-quality finding affects close, the blocker must use one of the active `CloseBlocker.category` values owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets), such as `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `surface_capability`, `baseline`, `recovery`, `cancellation`, or `supersession`.
+When a design-quality observation affects close, the blocker must use one of the active `CloseBlocker.category` values owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets), such as `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `residual_risk_acceptance`, `surface_capability`, `baseline`, `recovery`, `cancellation`, or `supersession`.
 
-## 5. Waiver boundary
+## 5. No Current Design-Policy Waiver
 
-A design-quality waiver can affect only a design-quality expectation that the active owner path allows to be waived. It must be explicit, scoped to the affected Task/Change Unit or finding, and recorded through the relevant user-judgment or owner path when the decision belongs to the user.
-
-A design-quality waiver does not waive:
-
-- missing active scope or incompatible Write Authorization
-- sensitive-action approval
-- required evidence coverage or artifact availability
-- required final acceptance
-- required residual-risk visibility and, when the active close path requires it, residual-risk acceptance
-- verification independence
-- Core-owned close blockers
+The current MVP has no active design-quality waiver or design-policy waiver route. If an owner path allows a requirement to be deferred, accepted as risk, or resolved by user judgment, use that active owner path and its exact `judgment_kind`, blocker category, or evidence behavior.
 
 Keep the judgment routes separate:
 
-- `qa_waiver` is a later/reserved value. If promoted, it waives a scoped QA requirement only where the QA owner path allows it; it is not QA evidence or a passed QA result.
-- `verification_risk_acceptance` is a later/reserved value. If promoted, it accepts the risk of missing or waived verification; it does not create detached verification.
 - `final_acceptance` is the user's result judgment after the close basis is visible; it does not create evidence or accept residual risk.
 - `residual_risk_acceptance` accepts a named visible residual risk; it does not prove correctness or replace final acceptance.
+- `qa_waiver` and `verification_risk_acceptance` are later/reserved values. They are not active current MVP `UserJudgment.judgment_kind` values.
 
 Broad approval, a friendly "looks good", or a general go-ahead must not be treated as any of these judgments unless the active owner path asked for that specific judgment.
 
 ## 6. Evidence expectation
 
-Design-quality evidence expectations are narrow and close-relevant. A finding should ask for evidence only when the active owner path needs support for a claim that affects write safety, close readiness, user judgment, residual risk, or guarantee honesty.
+Design-quality observations may identify evidence gaps, but required evidence belongs to the Core evidence owner path. A finding should ask for evidence only when that active owner path needs support for a claim that affects write safety, close readiness, user judgment, residual risk, or guarantee honesty.
 
 Useful evidence references can include:
 
@@ -115,12 +100,12 @@ Chat assertions, generic summaries, rendered projection prose, unregistered file
 
 Validator IDs are reporting labels. They do not create Core invariants, gates, close blockers, waivers, evidence records, or user judgments.
 
-`ValidatorResult` shape and severity values are owned by [API Schema Core](api/schema-core.md#validatorresult). Later stable validator ID sets remain candidates in [Later Candidate Index: Later Schema Candidates](../later/index.md#later-schema-candidates) unless an owner promotes a narrow active contract.
+`ValidatorResult` shape and severity values are owned by [API Schema Core](api/schema-core.md#validatorresult). The active stable `ValidatorResult.validator_id` set is limited to the values in [API Schema Core: Current MVP Value Sets](api/schema-core.md#current-mvp-value-sets). If `surface_capability_check` is the only value listed there, it is the only active stable validator ID.
 
-This document does not publish a full policy-to-validator mapping. If a current or future validator result reports a design-quality finding, close impact still comes from [When a finding blocks close](#when-a-finding-blocks-close) and the relevant Core/API owner path, not from the validator ID alone.
+This document does not publish active design-policy validator IDs or a policy-to-validator mapping. Later stable validator ID sets remain candidates in [Later Candidate Index: Later Schema Candidates](../later/index.md#later-schema-candidates) unless an owner promotes a narrow active contract.
 
 ## 8. Later policy catalog boundary
 
-The full design-quality policy catalog is not active current MVP scope. Future policy families, steward policies, detailed review displays, operations/reporting candidates, full validator mappings, and future conformance fixtures stay in [Later Candidate Index](../later/index.md) until a named owner promotes a narrow behavior with scope, fallback behavior, exact contracts, and proof expectations.
+The full design-quality policy catalog is not active current MVP scope. Broad design-policy validators, design-policy waiver, severity-based active blocking policy, richer policy families, steward policies, detailed review displays, operations/reporting candidates, full validator mappings, and future conformance fixtures stay in [Later Candidate Index](../later/index.md) until a named owner promotes a narrow behavior with scope, fallback behavior, exact contracts, and proof expectations.
 
 Later candidates may keep names only. They must not be presented as active current MVP requirements, blockers, waiver rules, evidence expectations, validator mappings, fixture requirements, operations reports, or implementation tasks.

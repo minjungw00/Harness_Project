@@ -140,7 +140,7 @@ For tracked work, show the close basis before asking for final acceptance or att
 - residual-risk visibility and acceptance status when relevant
 - close blockers and smallest unblocker
 
-The current MVP has no active `verification_gate`, `qa_gate`, Manual QA gate, `qa_waiver`, or `verification_risk_acceptance` close requirement. If a future owner promotes one, route it as later material with its own active contract.
+The current MVP has no active `design_gate`, `CloseBlocker.category=design_policy`, `verification_gate`, `qa_gate`, Manual QA gate, `qa_waiver`, or `verification_risk_acceptance` close requirement. If a future owner promotes one, route it as later material with its own active contract.
 
 Do not close from prose, tests alone, broad acceptance-like language, a generated projection, or a stale status summary. If blockers remain, lead with them and name the next safe action.
 
@@ -149,6 +149,8 @@ Do not close from prose, tests alone, broad acceptance-like language, a generate
 Active MVP behavior should stay compact. Later candidate presentation formats may be named for contrast or routing, but they must not look like active requirements.
 
 Do not make full-format judgment presentation such as `Decision Packet`, standalone `DEC` projections, full Evidence Manifest display, detached verification, broad Manual QA catalogs, future conformance runners, operations hardening, or later candidates appear required for ordinary active MVP work.
+
+Design-quality concerns are not standalone current MVP gates or policy blockers. Route them through active judgment kinds, evidence gaps, residual-risk visibility, surface capability, scope, or another already-active close blocker only when that owner path truly applies.
 
 Use compact user-facing shapes first: status, focused judgment request, run/evidence summary, and close result. Reference exact contracts only when needed for a visible blocker, source ref, write check, evidence gap, close result, connector behavior, or implementation owner link.
 

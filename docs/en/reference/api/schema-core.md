@@ -97,7 +97,6 @@ StateSummary:
     scope_gate: not_required | required | pending | passed | failed | blocked
     decision_gate: not_required | required | pending | resolved | deferred | blocked
     approval_gate: not_required | required | pending | granted | denied | expired
-    design_gate: not_required | required | pending | passed | partial | waived | stale | blocked
     evidence_gate: not_required | none | partial | sufficient | stale | blocked
     acceptance_gate: not_required | required | pending | accepted | rejected
 
@@ -465,7 +464,6 @@ These values are valid without a promoted profile. Values not listed here are no
 | `StateSummary.gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
 | `StateSummary.gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
 | `StateSummary.gates.approval_gate` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired` |
-| `StateSummary.gates.design_gate` | `not_required`, `required`, `pending`, `passed`, `partial`, `waived`, `stale`, `blocked` |
 | `StateSummary.gates.evidence_gate` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
 | `StateSummary.gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
 | `StateRecordRef.record_kind` | `project`, `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` |
@@ -506,7 +504,7 @@ These values are valid without a promoted profile. Values not listed here are no
 
 For `GuaranteeDisplay.level`, `cooperative` is the default current MVP value. `detective` is also a current MVP value, but only where the active surface can honestly observe the relevant fact. Neither value means OS permission, arbitrary-tool sandboxing, tamper-proof storage, pre-tool blocking, or isolation.
 
-`qa_waiver` and `verification_risk_acceptance` are later/reserved user-judgment candidate names, not active current MVP `UserJudgment.judgment_kind` values. They remain catalog-only in [Later Candidate Index](../../later/index.md) until a future owner promotes exact active schema values, request behavior, fallback behavior, and proof expectations. The active `StateSummary.gates` object intentionally has no `verification_gate` or `qa_gate` field.
+`qa_waiver` and `verification_risk_acceptance` are later/reserved user-judgment candidate names, not active current MVP `UserJudgment.judgment_kind` values. They remain catalog-only in [Later Candidate Index](../../later/index.md) until a future owner promotes exact active schema values, request behavior, fallback behavior, and proof expectations. The active `StateSummary.gates` object intentionally has no `design_gate`, `verification_gate`, or `qa_gate` field.
 
 <a id="profile-gated-value-names"></a>
 
@@ -532,6 +530,7 @@ This active API reference intentionally does not define later schema bodies. A l
 | Source | Active API boundary |
 |---|---|
 | Later schema extensions | Candidate names only; no active request, response, shared schema, or enum member. |
-| Later verification and QA gates | Candidate names only; no active `verification_gate`, `qa_gate`, Manual QA gate, verification response field, or QA response field. |
+| Later design, verification, and QA gates | Candidate names only; no active `design_gate`, `verification_gate`, `qa_gate`, Manual QA gate, design-policy gate, verification response field, or QA response field. |
+| Later design-policy categories and validators | Candidate names only; no active `CloseBlocker.category=design_policy`, design-policy waiver, design-policy validator family, or severity-based close blocker. |
 | Later ref and artifact values | Candidate names only; no active `ArtifactRef`, `StateRecordRef`, storage, evidence, QA, export, or projection value. |
 | Later template, fixture, conformance, operation, export, and diagnostic names | Candidate names only; no active API payload, runtime operation, error family, conformance-runner behavior, or close effect. |

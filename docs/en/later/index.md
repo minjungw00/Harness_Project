@@ -38,7 +38,10 @@ Rows here are planning candidates only. They are not active MVP requirements, ac
 | Eval / detached verification | later candidate | Eval owner rules for independence, baseline freshness, artifact integrity, and assurance updates. | none until promoted |
 | Decision Packet full-format presentation | later candidate | User-judgment owner activation of `presentation=full` without making it the default MVP path. | none until promoted |
 | Rich risk review and residual-risk lifecycle | later candidate | Core and user-judgment owner rules for rich risk records, review workflow, expiry, and close impact. Compact residual-risk visibility remains active only through the Core/API owners. | none until promoted |
-| Full design-quality policy families: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward policies | names only | Design-quality owner rules for exact scope, validator boundaries, waiver/evidence rules, and proof-path expectations for future promotion. | none until promoted |
+| Design-quality gate and close category names: `design_gate`, `design_policy` | names only | Core/API/design-quality owner rules for exact fields, category values, fallback behavior, close non-substitution, and proof-path expectations before promotion. | none until promoted |
+| Design-policy waiver | later waiver candidate | Core, user-judgment, QA/verification, and design-quality owner rules for allowed scope, non-substitution, residual-risk visibility, and exact recording behavior. | none until promoted |
+| Broad design-policy validators and severity-based blocking policy | later candidate | Validator and design-quality owner rules for exact IDs, severity meaning, close impact, fallback behavior, waiver boundary, and fixture proof expectation. | none until promoted |
+| Full design-quality policy families: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward policies | names only | Design-quality owner rules for exact scope, policy boundaries, evidence expectations, and proof-path expectations for future promotion. | none until promoted |
 
 <a id="operations-candidates"></a>
 ## 4. Operations Candidates
@@ -72,11 +75,11 @@ Rows here are planning candidates only. They are not active MVP requirements, ac
 | Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
 | later schema extensions | schema names only | Promoted owner defines exact fields and validators in the active owner contract. | none until promoted |
-| Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, `verification_gate`, `qa_gate`, Manual QA gate, assurance blockers | field names only | Core/API owner activation with close non-substitution rules, exact active schema fields, fallback behavior, and proof expectations. | none until promoted |
+| Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, `design_gate`, `verification_gate`, `qa_gate`, Manual QA gate, design-policy blockers, assurance blockers | field names only | Core/API owner activation with close non-substitution rules, exact active schema fields, fallback behavior, and proof expectations. | none until promoted |
 | Later next-action values: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | value names only | Matching API or owner activation. | none until promoted |
 | Recommended playbooks and judgment context | metadata names only | Agent Integration/API owner rules that keep metadata read-only and non-satisfying. | none until promoted |
 | Later ref and artifact values: bundle, manifest, QA capture, export component, design, Eval, Manual QA, TDD, projection, related refs | value names only | ArtifactRef, StateRecordRef, Storage, and relevant owner activation. | none until promoted |
-| ValidatorResult later stable IDs: design, autonomy, feedback-loop, TDD, stewardship, residual-risk, shared-design, manual-QA, context-hygiene checks | ID names only | Validator owner contracts for stable IDs, severity, waiver, and future fixture proof expectation. | none until promoted |
+| ValidatorResult later stable IDs and policy families: design, design-policy, autonomy, feedback-loop, TDD, stewardship, residual-risk, shared-design, manual-QA, context-hygiene checks | ID and family names only | Validator owner contracts for stable IDs, severity, waiver boundary, close impact, and future fixture proof expectation. | none until promoted |
 | Waiver, reconcile, and residual-risk branches | branch names only | User-judgment, Core, and close owner rules. | none until promoted |
 
 <a id="later-template-candidates"></a>
@@ -108,4 +111,4 @@ The long row below preserves future fixture family names only. It is not a curre
 | Context Index, local derived metrics, long-term metrics | later candidate | Read-only retrieval/diagnostic owners and no authority or close effect. | none until promoted |
 | Team workflows, permissions, shared capability sets, orchestration, parallel lanes | later candidate | Scope, authority, permission, and user-owned judgment owners. | none until promoted |
 | Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | later candidate | Separate owner scope; deployment and production authority remain external unless explicitly promoted. | none until promoted |
-| Advanced validators and language or interface checks | later candidate | Validator owner rules for exact IDs, severity, waiver, and fixture behavior. | none until promoted |
+| Advanced validators, design-policy validators, and language or interface checks | later candidate | Validator owner rules for exact IDs, severity, waiver boundary, close impact, and fixture behavior. | none until promoted |
