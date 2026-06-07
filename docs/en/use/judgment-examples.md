@@ -10,7 +10,7 @@ Each example asks for one judgment, names what the answer settles, and names wha
 
 Kind: `product_decision`
 
-Use when user-visible behavior, copy, flow, UX, or accessibility trade-offs must be chosen before implementation or QA can finish.
+Use when user-visible behavior, copy, flow, UX, or accessibility trade-offs must be chosen before implementation or review can finish.
 
 ```text
 Judgment needed: choose the Save feedback pattern.
@@ -22,7 +22,7 @@ Options:
 
 Recommendation: toast for a non-blocking success confirmation; inline if the message is tied to a field or error.
 
-If deferred: save-state wiring can continue, but final UI behavior, screenshots, and human QA remain blocked.
+If deferred: save-state wiring can continue, but final UI behavior, screenshots, and human review remain blocked.
 
 Settles: Save feedback pattern.
 Does not settle: broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or pre-write scope check.
@@ -79,10 +79,10 @@ Does not settle: whether the dependency is the right architecture, future instal
 
 Kind: `qa_waiver`
 
-Use when Manual QA is expected by the active path, but the user may perform it, waive it where allowed, or keep close blocked.
+Reserved path example. `qa_waiver` is an active `UserJudgment.judgment_kind` value name, but the current MVP has no default Manual QA gate. Use this only when a promoted owner path has made a scoped Manual QA requirement active and allows the user to perform it, waive it where allowed, or keep close blocked.
 
 ```text
-Judgment needed: decide how to handle Manual QA for the responsive login layout.
+Judgment needed: decide how to handle a promoted Manual QA requirement for the responsive login layout.
 
 Options:
 - Perform Manual QA now.
@@ -93,9 +93,9 @@ Recommendation: perform Manual QA for a user-facing login workflow. Waive only i
 
 Uncertainty: small-screen layout, keyboard flow, screen-reader behavior, and visual polish have not been inspected by a person.
 
-If deferred: implementation can remain complete, but close stays blocked until Manual QA passes or an allowed waiver path is used.
+If deferred: implementation can remain complete, but close stays blocked only if the promoted owner path made this Manual QA requirement close-blocking.
 
-Settles: whether this Manual QA requirement is performed, waived, or left blocking.
+Settles: whether this promoted Manual QA requirement is performed, waived, or left blocking.
 Does not settle: evidence sufficiency, verification, final acceptance, or residual-risk acceptance.
 ```
 
@@ -103,7 +103,7 @@ Does not settle: evidence sufficiency, verification, final acceptance, or residu
 
 Kind: `verification_risk_acceptance`
 
-Use when verification is missing, incomplete, stale, or waived through an allowed path, and the user must decide whether to accept the resulting risk.
+Use only when an active owner path has made a specific verification requirement explicit and that verification is missing, incomplete, stale, or waived through an allowed path. Without that promoted requirement, route the gap as ordinary evidence, residual risk, or a narrowed claim instead of implying a verification gate.
 
 ```text
 Judgment needed: accept or reject the risk of missing browser verification.
@@ -112,7 +112,7 @@ Context: automated unit tests passed, but browser verification is unavailable be
 
 Options:
 - Accept the verification risk and keep the limitation visible in close.
-- Do not accept; keep close blocked until browser verification runs.
+- Do not accept; keep close blocked only if the promoted owner path made browser verification close-blocking.
 - Narrow the claim to code-level behavior only and leave UI behavior unclosed.
 
 Recommendation: do not accept the risk for a user-facing login flow unless timing or environment constraints are more important than close confidence.
@@ -152,18 +152,18 @@ Kind: `residual_risk_acceptance`
 Use when a named residual risk is visible and the active close path requires the user to accept or reject that risk.
 
 ```text
-Judgment needed: accept the residual risk that small-screen visual QA was not performed.
+Judgment needed: accept the residual risk that small-screen visual review was not performed.
 
 Risk: the login form may have layout or focus-order issues on narrow mobile screens.
 
-Evidence: desktop screenshot and unit tests exist; no mobile manual QA result exists.
+Evidence: desktop screenshot and unit tests exist; no mobile visual review result exists.
 
 Options:
 - Accept this named residual risk and close with the risk visible.
-- Do not accept; keep close blocked until mobile Manual QA is performed.
+- Do not accept; keep close blocked until the mobile visual review is performed or the close claim is narrowed.
 - Narrow the close claim to non-mobile behavior.
 
-Recommendation: do not accept for a high-traffic login screen unless mobile QA is temporarily impossible.
+Recommendation: do not accept for a high-traffic login screen unless mobile review is temporarily impossible.
 
 Settles: acceptance of this named residual risk.
 Does not settle: final acceptance of the whole result, other residual risks, QA waiver, or verification-risk acceptance.

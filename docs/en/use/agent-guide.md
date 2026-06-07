@@ -135,7 +135,7 @@ For tracked work, show the close basis before asking for final acceptance or att
 - scope match
 - evidence coverage or gap
 - verification status
-- Manual QA status or allowed waiver path when active
+- promoted Manual QA status or allowed waiver path when an owner made it active
 - sensitive-action approval status when relevant
 - final acceptance status when required
 - residual-risk visibility and acceptance status when relevant

@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-현재 MVP에서 쓰는 활성 공용 API 형태를 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 공통 응답, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization 요약, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP 값 집합, profile-gated 표시 값 이름, later 후보 값 이름의 경계를 다룹니다.
+현재 MVP에서 쓰는 활성 메서드 이름 집합, 공용 API 형태, 스키마 값 집합을 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 공통 응답, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization 요약, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP enum 값, profile-gated 표시 값 이름, later 후보 값 이름의 경계를 다룹니다.
 
 이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다. 향후 스키마 후보는 [Later 후보 색인](../../later/index.md#later-schema-candidates)에 남습니다.
 
@@ -10,7 +10,8 @@
 
 | 필요한 것 | 담당 문서 |
 |---|---|
-| 활성 method와 method 요청/응답 소유권 | [MVP API](mvp-api.md) |
+| 정확한 활성 메서드 이름 값 집합과 공용 스키마 값 집합 | 이 문서 |
+| 활성 메서드별 요청/응답 동작 | [MVP API](mvp-api.md) |
 | 공개 오류, 우선순위, 멱등성, 차단 응답, stale-state 동작 | [API Errors](errors.md) |
 | Core 상태 의미와 lifecycle 의미 | [Core Model 참조](../core-model.md) |
 | 저장소 테이블, JSON `TEXT`, enum hardening, artifact persistence | [Storage](../storage.md) |
@@ -24,10 +25,12 @@
 - `field: Type`은 필드가 필수이고 non-null이라는 뜻입니다.
 - `field: Type | null`은 필드가 필수이고 JSON `null`을 허용한다는 뜻입니다.
 - `Type[]`은 필드가 존재하고 배열을 담는다는 뜻입니다. 빈 배열은 `[]`로 씁니다.
-- `a | b | c`는 닫힌 활성 enum입니다.
+- `a | b | c`는 주변 섹션이 profile-gated 또는 reserved라고 명시하지 않는 한 해당 필드의 닫힌 활성 enum입니다.
 - 명시되지 않은 필드는 명시적인 확장 컨테이너 밖에서 거부됩니다.
 
 Storage validation은 별도 담당 문서 경계입니다. API payload와 API-shaped stored JSON은 먼저 이 API 참조로 검증합니다. DDL, storage-only JSON, 기본값, 잠금, 마이그레이션은 [Storage](../storage.md)가 담당합니다.
+
+[현재 MVP 값 집합](#current-mvp-value-sets)은 정확한 활성 메서드 이름 집합과 이 문서가 선언하는 활성 스키마 enum 값을 담당합니다. 메서드별 동작은 [MVP API](mvp-api.md)가 담당하고, 공개 `ErrorCode` 분류는 [API Errors](errors.md)가 담당합니다.
 
 <a id="tool-envelope"></a>
 
@@ -103,7 +106,7 @@ GuaranteeDisplay:
   notes: string[]
 ```
 
-화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. `GuaranteeDisplay.level`은 문서화된 접점 역량과 증명 수준을 보여 주는 표시 주장입니다. 권한이나 상태 권한을 부여하지 않습니다. 현재 MVP의 기본 guarantee-display 값은 `cooperative`와 `detective`입니다. `preventive`와 `isolated`는 profile-gated 표시 값이며 현재 MVP의 기본 보장이 아닙니다.
+화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. `GuaranteeDisplay.level`은 문서화된 접점 역량과 증명 수준을 보여 주는 표시 주장입니다. 권한이나 상태 권한을 부여하지 않습니다. 현재 MVP의 활성 guarantee-display 값은 `cooperative`와 `detective`입니다. `preventive`와 `isolated`는 profile-gated 표시 값 이름이며 현재 MVP의 기본 보장이 아닙니다.
 
 <a id="staterecordref"></a>
 
@@ -239,6 +242,8 @@ WriteAuthoritySummary:
 `EvidenceSummary`는 활성 간결 증거 기록입니다. 상세 증거 보고서, 별도 보증 결과, 최종 수락, 잔여 위험 수락, 렌더링된 보기가 아닙니다.
 
 `AuthorizedAttemptScope`는 `write_authorizations.attempt_scope_json`에 저장되고 나중에 `harness.record_run`에서 비교하는 정확한 범위입니다. `WriteAuthorizationSummary.status`는 오래 남는 authorization lifecycle입니다. `blocked`는 Write Authorization status가 아닙니다. 차단된 쓰기는 소비 가능한 authorization 없이 blocker를 반환합니다.
+
+`intended_commands`, `intended_network`, `intended_secret_scope`는 의도와 범위를 선언하는 필드입니다. 현재 MVP가 명령 실행, 네트워크 효과, 비밀값 접근, 차단, 격리를 관찰할 수 있다는 증거가 아닙니다. 관찰 지원은 profile 담당 문서 경계입니다. 지원되지 않는 관찰은 검증되지 않은 상태로 남기거나 역량 차단 사유가 되어야 하며, 활성 증거처럼 표시하면 안 됩니다.
 
 <a id="record-run-payloads"></a>
 
@@ -446,7 +451,7 @@ policy_override
 
 ## 현재 MVP 값 집합
 
-아래 값은 승격된 프로필 없이 사용할 수 있는 현재 MVP 값 집합입니다. 여기에 없는 값은 현재 MVP의 기본 활성 값이 아닙니다. 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다.
+아래 값은 승격된 프로필 없이 사용할 수 있는 현재 MVP 값 집합입니다. 여기에 없는 값은 현재 MVP의 기본 활성 값이 아닙니다. 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. 공개 `ErrorCode` 값은 이 표가 아니라 [API Errors](errors.md)가 담당합니다.
 
 | 필드 | 현재 MVP 값 |
 |---|---|
@@ -454,21 +459,54 @@ policy_override
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
 | `StateSummary.mode` | `advisor`, `direct`, `work` |
 | `StateSummary.lifecycle_phase` | `intake`, `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled` |
-| `UserJudgment.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
-| `UserJudgment.judgment_kind` | `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, `cancellation` |
+| `StateSummary.result` | `none`, `advice_only`, `passed`, `failed`, `cancelled` |
+| `StateSummary.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
+| `StateSummary.assurance_level` | `none`, `self_checked` |
+| `StateSummary.gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
+| `StateSummary.gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
+| `StateSummary.gates.approval_gate` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired` |
+| `StateSummary.gates.design_gate` | `not_required`, `required`, `pending`, `passed`, `partial`, `waived`, `stale`, `blocked` |
+| `StateSummary.gates.evidence_gate` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
+| `StateSummary.gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
+| `StateRecordRef.record_kind` | `project`, `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` |
+| `ArtifactRef.kind` | `diff`, `log`, `screenshot`, `checkpoint`, `other` |
+| `ArtifactRef.produced_by` | `lead_agent`, `evaluator`, `operator`, `harness` |
+| `ArtifactRef.retention_class` | `task`, `project`, `temporary` |
+| `ArtifactRelationOwner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
+| `ArtifactInput.source_kind` | `staged_file`, `capture_adapter`, `existing_artifact` |
+| `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
+| `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
+| `AuthorizedAttemptScope.intended_network.direction` | `read`, `write` |
+| `AuthorizedAttemptScope.intended_secret_scope.access_kind` | `read`, `write` |
+| `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
 | `WriteAuthorizationSummary.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
+| `WriteAuthoritySummary.approval_status` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired`, `unknown` |
 | `RunSummary.kind` | `shaping_update`, `implementation`, `direct` |
 | `RunSummary.status` | `completed`, `interrupted`, `blocked`, `violation` |
-| `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
-| `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
+| `UserJudgment.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
+| `UserJudgment.judgment_kind` | `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, `cancellation` |
+| `UserJudgment.presentation` | `short` |
+| `UserJudgment.required_for` | `next_action`, `write`, `run`, `close`, `acceptance`, `risk` |
+| `UserJudgmentCandidate.judgment_kind` | `UserJudgment.judgment_kind`와 같은 값 |
+| `UserJudgmentCandidate.presentation` | `short` |
+| `UserJudgmentCandidate.required_for` | `UserJudgment.required_for`와 같은 값 |
+| `UserJudgmentOption.meaning` | `approve`, `reject`, `defer`, `choose`, `cancel` |
 | `ArtifactRef.redaction_state` | `none`, `redacted`, `secret_omitted`, `blocked` |
 | `CloseBlocker.category` | `task`, `open_run`, `scope`, `user_judgment`, `sensitive_approval`, `design_policy`, `write_compatibility`, `baseline`, `surface_capability`, `evidence`, `artifact_availability`, `final_acceptance`, `residual_risk_visibility`, `residual_risk_acceptance`, `cancellation`, `supersession`, `recovery` |
+| `CloseBlocker.required_judgment_kind` | `UserJudgment.judgment_kind`와 같은 값, 그리고 `null` |
 | `NextActionSummary.action_kind` | `ask_user`, `prepare_write`, `implement`, `request_acceptance`, `close_task`, `idle` |
+| `NextActionSummary.required_tool` | 활성 메서드 집합 값, 그리고 `null` |
 | `GuaranteeDisplay.level` | `cooperative`, `detective` |
-| `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
+| `ValidatorResult.validator_id` | `surface_capability_check` |
+| `ValidatorResult.validator_kind` | `capability` |
+| `ValidatorResult.status` | `passed`, `warning`, `failed`, `blocked`, `skipped` |
 | `ValidatorResult.guarantee_level` | `cooperative`, `detective` |
+| `ValidatorResult.findings.severity` | `info`, `warning`, `error`, `blocker` |
+| 민감 범주 | `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `destructive_write`, `network_write`, `external_service_write`, `secret_access`, `production_config_change`, `ci_cd_change`, `infra_or_deployment_change`, `privacy_or_pii_change`, `data_export`, `telemetry_or_logging_change`, `license_or_compliance_change`, `billing_or_cost_change`, `model_or_prompt_policy_change`, `policy_override` |
 
 `GuaranteeDisplay.level`에서 `cooperative`는 현재 MVP의 기본값입니다. `detective`도 현재 MVP 값이지만, 활성 접점이 관련 사실을 정직하게 관찰할 수 있는 곳에서만 사용할 수 있습니다. 두 값 모두 OS 권한, 임의 도구 샌드박스, 변조 방지 저장소, 도구 실행 전 차단, 격리를 뜻하지 않습니다.
+
+`qa_waiver`와 `verification_risk_acceptance`는 집중된 사용자 소유 판단 경로를 위한 활성 사용자 판단 값 이름일 뿐입니다. Manual QA, 검증 관문, 분리형 검증, 전체 waiver 장치, QA/검증 기록군을 활성화하지 않습니다. 활성 `StateSummary.gates` 객체에는 의도적으로 `verification_gate`나 `qa_gate` 필드가 없습니다.
 
 <a id="profile-gated-value-names"></a>
 
@@ -489,10 +527,11 @@ profile-gated 표시 값 이름은 그 자체로 Write Authorization, 검증기,
 
 Later 후보 값 이름은 승격된 담당 문서가 정확한 활성 필드, 값 집합, validator, 대체 동작, 증명 기대치를 이 문서나 다른 활성 담당 문서에 추가하기 전까지 [Later 후보 색인](../../later/index.md#later-schema-candidates)에만 남는 목록 전용 이름입니다.
 
-이 활성 API 참조는 later schema body를 일부러 정의하지 않습니다. Later 후보 이름은 목록에 있다는 이유만으로 활성 enum member, schema field, storage value, public method, validator requirement, close blocker, guarantee value가 되지 않습니다.
+이 활성 API 참조는 later 스키마 본문을 일부러 정의하지 않습니다. Later 후보 이름은 목록에 있다는 이유만으로 활성 enum member, 스키마 필드, 저장소 값, 공개 메서드, validator 요구사항, 닫기 차단 사유, guarantee 값이 되지 않습니다.
 
 | 출처 | 활성 API 경계 |
 |---|---|
 | Later schema extensions | 후보 이름일 뿐이며 활성 요청, 응답, 공용 schema, enum member가 아닙니다. |
+| Later 검증/QA gate 후보 | 후보 이름일 뿐이며 활성 `verification_gate`, `qa_gate`, Manual QA gate, 검증 응답 필드, QA 응답 필드가 아닙니다. |
 | Later ref and artifact values | 후보 이름일 뿐이며 활성 `ArtifactRef`, `StateRecordRef`, storage, evidence, QA, export, projection 값이 아닙니다. |
 | Later template, fixture, conformance, operation, export, diagnostic names | 후보 이름일 뿐이며 활성 API payload, runtime operation, error family, conformance-runner behavior, close effect가 아닙니다. |

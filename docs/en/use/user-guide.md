@@ -86,7 +86,7 @@ Options:
 
 Recommendation: inline message. It stays visible and fits the form context.
 
-If deferred: backend error mapping can continue, but final UI behavior, copy, screenshots, and human QA remain blocked.
+If deferred: backend error mapping can continue, but final UI behavior, copy, screenshots, and human review remain unresolved.
 
 Does not settle: login architecture, account recovery, final acceptance, or residual-risk acceptance.
 ```
@@ -116,7 +116,7 @@ Approving a dependency install does not mean the dependency is the right archite
 
 After meaningful work, the agent should summarize what happened and what supports the claim. In owner terms, the active path may use `record_run` and evidence references when that path is available.
 
-Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, inspection notes, and human QA notes. The summary should say:
+Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, inspection notes, and, when a promoted owner path requires it, Manual QA notes. The summary should say:
 
 - what ran or changed
 - what claim each item supports
@@ -124,7 +124,7 @@ Useful evidence can include changed paths, diffs, command output, test results, 
 - what evidence is missing, stale, redacted, omitted, blocked, or insufficient
 - what was not verified
 
-Evidence does not replace your judgment or final acceptance. Tests do not replace human QA when human inspection is required. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
+Evidence does not replace your judgment or final acceptance. Tests do not replace human inspection; when a promoted owner path requires Manual QA, tests do not satisfy it. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
 
 ## 7. Review blockers before close
 
@@ -142,20 +142,20 @@ The agent should show:
 - changed paths or no-file result
 - evidence supporting important completion claims
 - checks and their status
-- human QA expectation and result, when relevant
+- human-review result, and any promoted Manual QA requirement when relevant
 - final acceptance need
 - residual risk visibility and acceptance need
 - the smallest unblocker
 
-Tests can pass while close is still blocked. A UI change can need human QA. A security-sensitive change can need a risk decision. Missing evidence remains a blocker until it is gathered, waived through an allowed path, or honestly reported as unresolved.
+Tests can pass while close is still blocked. A UI change can need human review; Manual QA is close-blocking only when a promoted owner path makes it required. A security-sensitive change can need a risk decision. Missing evidence remains a blocker until it is gathered, waived through an allowed path, or honestly reported as unresolved.
 
-In owner terms, `close_task` returns blockers or a close result. In user terms, the agent should not claim close while required scope, evidence, verification, QA, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved.
+In owner terms, `close_task` returns blockers or a close result. In user terms, the agent should not claim close while required scope, evidence, promoted verification or QA requirements, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved.
 
 ## 8. Accept final result separately from residual risk
 
 Final acceptance means you accept the result you can see. Residual-risk acceptance means you accept a named residual risk that is still visible. They are separate judgments.
 
-The agent should ask for final acceptance only after the close basis is visible: scope, result, evidence, checks, known gaps, QA status, and blockers. The prompt should name exactly what result you are accepting.
+The agent should ask for final acceptance only after the close basis is visible: scope, result, evidence, checks, known gaps, human-review or promoted Manual QA status, and blockers. The prompt should name exactly what result you are accepting.
 
 The agent should ask for residual-risk acceptance only when a known residual risk is visible and the active close path requires that judgment. The prompt should name the risk, affected area, consequence, evidence gap or uncertainty, and any safer alternative.
 
@@ -227,7 +227,7 @@ Good agent behavior:
 User: Can we call this done?
 
 Good agent behavior:
-- show scope, evidence, checks, QA status, final acceptance need, and residual risk;
+- show scope, evidence, checks, human-review or promoted Manual QA status, final acceptance need, and residual risk;
 - name blockers before close;
 - ask final acceptance and residual-risk acceptance separately when both are relevant.
 ```

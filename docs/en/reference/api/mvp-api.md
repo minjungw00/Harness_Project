@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to look up the active current MVP API surface. It owns the active method list and the method-level request, response, state effect, storage owner, error, and security boundary summaries.
+Use this reference to look up the active current MVP API surface. It owns method-level request, response, state effect, storage owner, error, and security boundary summaries for the active method-name value set owned by [API Schema Core](schema-core.md#current-mvp-value-sets).
 
 This document describes future Harness Server behavior for planning and review. No Harness runtime or server implementation exists in this repository today. Future API or schema candidates are cataloged in [Later Candidate Index](../../later/index.md), not in this active reference. Storage DDL and full shared schema bodies are owned outside this method reference.
 
@@ -12,19 +12,9 @@ The active MVP API is a small local MCP surface for one user work loop. It can i
 
 The API does not provide OS permissions, arbitrary-tool sandboxing, tamper-proof files, pre-tool blocking, or security isolation. `harness.prepare_write` returns a cooperative Harness record/check only.
 
-## Active MVP Method Set
+## Active MVP Method Behavior
 
-The active public method set is exactly these seven MCP methods:
-
-```text
-harness.intake
-harness.status
-harness.prepare_write
-harness.record_run
-harness.request_user_judgment
-harness.record_user_judgment
-harness.close_task
-```
+The exact active method-name value set is owned by [API Schema Core](schema-core.md#current-mvp-value-sets). This page owns the behavior of those current methods:
 
 | Method | Active role |
 |---|---|

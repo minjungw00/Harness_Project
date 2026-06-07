@@ -18,8 +18,8 @@
 | 계약 영역 | 담당 문서 |
 |---|---|
 | Core 권한, 작업 생명주기, 사용자 판단 경계, 최종 수락/잔여 위험 수락 대체 불가, gate, 닫기 차단 사유 | [core-model.md](core-model.md) |
-| `prepare_write`가 `Write Authorization`에 미치는 효과를 포함한 활성 공개 API 메서드 | [api/mvp-api.md](api/mvp-api.md) |
-| 공유 스키마, 봉투 구조, 활성 값 집합, 표시 라벨 경계, `GuaranteeDisplay.level` 값 | [api/schema-core.md](api/schema-core.md) |
+| `prepare_write`가 `Write Authorization`에 미치는 효과를 포함한 활성 공개 API 메서드별 동작 | [api/mvp-api.md](api/mvp-api.md) |
+| 정확한 활성 메서드 이름 집합, 공유 스키마, 봉투 구조, 활성 enum/값 집합, 표시 라벨 경계, `GuaranteeDisplay.level` 값 | [api/schema-core.md](api/schema-core.md) |
 | 공개 오류와 우선순위 | [api/errors.md](api/errors.md) |
 | 저장소, DDL, `write_authorizations` 같은 지속 행, 멱등성 | [storage.md](storage.md) |
 | 런타임 공간, 변경 권한, 비격리 / OS 샌드박싱 비보장 | [runtime-boundaries.md](runtime-boundaries.md) |
@@ -27,7 +27,7 @@
 | 에이전트 맥락, connector 동작, 접점 기능, 하나의 `doc_id`에는 한 언어만 싣는 검색 규칙 | [agent-integration.md](agent-integration.md) |
 | 파생 표시인 Projection/상태 카드, 렌더링된 라벨, 활성 템플릿 | [projection-and-templates.md](projection-and-templates.md) |
 | 적합성 모델, 향후 fixture 형식, 주장 권한, 실행 가능한 모음이 아니라는 경계 | [conformance.md](conformance.md) |
-| 활성 gate에 영향을 주는 설계 품질 규칙 | [design-quality.md](design-quality.md) |
+| 좁은 설계 품질 라우팅, 닫기 영향, waiver 경계, validator ID 경계 | [design-quality.md](design-quality.md) |
 | 공식 용어 | [glossary.md](glossary.md) |
 | 전체 형식 판단 표시와 향후 fixture 계열을 포함한 later 후보 | [../later/index.md](../later/index.md) |
 

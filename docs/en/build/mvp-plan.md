@@ -1,8 +1,8 @@
 # Build: MVP Plan
 
-Use this as the single Build entry point before server coding. It records repository status, the current MVP slice, excluded later material, the first smoke target, request-to-close planning, server-coding decisions, Reference owners, and documentation-planning exit criteria.
+Use this as the single Build entry point for pre-server documentation planning. It records repository status, the current MVP slice, excluded later material, the first smoke target, request-to-close planning, server-coding decisions that remain blocked, Reference owners, and documentation-planning exit criteria.
 
-Build docs are planning guidance only. They do not define exact schemas, DDL, API request/response shapes, storage tables, projection template bodies, fixture formats, or security guarantee claims. Those contracts stay with the Reference owners linked below.
+Build docs are planning guidance only. They do not define exact schemas, enum value sets, DDL, API request/response shapes, storage tables, projection template bodies, fixture formats, or security guarantee claims. Those contracts stay with the Reference owners linked below.
 
 <a id="documentation-acceptance-status"></a>
 ## Repository status
@@ -48,6 +48,8 @@ The active slice includes:
 - residual-risk visibility before close when close-relevant risk exists
 - compact derived outputs for the current user work loop, with projections treated as derived reads rather than authority
 
+Exact active method names and active schema value sets are owned by [API Schema Core](../reference/api/schema-core.md#current-mvp-value-sets). Method behavior, storage, Core transition meaning, and security wording remain with their Reference owners. This Build plan does not promote extra enum values, gates, storage records, validators, operations, or workflow candidates.
+
 Current MVP wording is cooperative with limited detective visibility. It must not claim OS-level permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, permission isolation, or security isolation.
 
 ## Excluded later material
@@ -55,10 +57,10 @@ Current MVP wording is cooperative with limited detective visibility. It must no
 The following material stays outside the active MVP unless an owner document promotes a narrow behavior with scope, fallback behavior, and proof-path expectations for future promotion:
 
 - Full Evidence Manifest, detailed evidence catalogs, persisted Journey Cards, detailed run reports, TDD Trace, Module Map, Interface Contract, Domain Language, export reports, rich templates, and later-profile templates
-- detached Eval, detached verification hardening, full Manual QA, full waiver machinery, rich approval lifecycle, rich residual-risk lifecycle, and broad stewardship or context-hygiene validators
+- detached Eval, detached verification hardening, verification gate, Manual QA gate, full Manual QA, full waiver machinery, rich approval lifecycle, rich residual-risk lifecycle, and broad stewardship or context-hygiene validators
 - dashboard, hosted UI, artifact dashboard, hosted connector registry, connector marketplace, broad connector ecosystem, cross-surface orchestration, team workflow, metrics, and automation candidates
 - active operations profile, doctor/readiness suites, recover/export flows, artifact integrity operations, release handoff, projection refresh/reconcile operations, broad operator coverage, conformance runner, executable fixture catalog, and generated conformance artifacts
-- preventive guard expansion, native hook expansion, broad isolated execution, permission isolation, deployment, canary, rollback, and production monitoring
+- command/network/secret observation as an active proof requirement, preventive guard expansion, native hook expansion, broad isolated execution, permission isolation, deployment, canary, rollback, and production monitoring
 
 Reference-schema presence does not expand the active MVP. Required fields apply only when the owning tool, record, or promoted later candidate is active or actually used.
 
@@ -107,7 +109,7 @@ Server coding must not begin until maintainers mark each row accepted, decided, 
 |---|---|---|
 | Implementation-planning readiness | Not maintainer-accepted. | Maintainers must accept that the compact documentation set is ready for the first runtime-batch plan, or name the blocker and affected scope. |
 | Core transition maintainer acceptance | Not maintainer-accepted for coding. | Active Task/scope, `user_judgment`, `prepare_write`, Write Authorization, `record_run`, blocker, status, compact evidence summary, residual-risk visibility, and `close_task` semantics must be maintainer-accepted for active MVP paths. |
-| Public API and schema maintainer acceptance | Not maintainer-accepted for coding. | The active MVP method set, API request/response shapes, shared schemas, resources, errors, idempotency/replay behavior, unavailable Core/MCP behavior, and later-candidate exclusions must be maintainer-accepted before affected tools or resources are coded. |
+| Public API and schema maintainer acceptance | Not maintainer-accepted for coding. | Method behavior, the Schema Core-owned active method-name value set, API request/response shapes, shared schemas, resources, errors, idempotency/replay behavior, unavailable Core/MCP behavior, and later-candidate exclusions must be maintainer-accepted before affected tools or resources are coded. |
 | Storage and runtime-home maintainer acceptance | Not maintainer-accepted for coding. | The minimal storage profile, runtime home layout, locks, artifact refs, migrations, replay/audit needs, and later-candidate storage boundary must be maintainer-accepted before DDL, runtime data files, or artifact storage are created. |
 | Security and local-access maintainer acceptance | Not maintainer-accepted for coding. | The local-only posture and cooperative/limited-detective security guarantee-claim wording must be maintainer-accepted before API/MCP exposure. MVP must not claim OS-level permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, permission isolation, or security isolation. |
 | Surface and compact-output maintainer acceptance | Not maintainer-accepted for coding. | The one reference `capability_profile`, compact user-facing views, compact agent-facing packet, freshness/unavailable behavior, and projection-as-derived-read boundary must be maintainer-accepted before display or connector code is implemented. |
@@ -118,9 +120,9 @@ Build summarizes sequence and scope only. Use these Reference owners for exact c
 
 | Need | Owner docs |
 |---|---|
-| Core authority, Task/scope lifecycle, user judgments, `prepare_write`, Write Authorization, `record_run`, blockers, status, evidence gates, residual risk, and `close_task` | [Core Model Reference](../reference/core-model.md). |
-| Active public API methods | [MVP API](../reference/api/mvp-api.md). |
-| Shared envelopes, refs, value sets, resources, and active schema shapes | [API Schema Core](../reference/api/schema-core.md). |
+| Core authority, Task/scope lifecycle, user judgments, `prepare_write`, Write Authorization, `record_run`, blockers, status, compact evidence meaning, residual risk, and `close_task` | [Core Model Reference](../reference/core-model.md). |
+| Method-level behavior for active public API methods | [MVP API](../reference/api/mvp-api.md). |
+| Exact active method-name set, shared envelopes, refs, enum value sets, resources, and active schema shapes | [API Schema Core](../reference/api/schema-core.md). |
 | Public errors, idempotency, replay, stale-state, and state-conflict behavior | [API Errors](../reference/api/errors.md). |
 | Storage layout, DDL, locks, migrations, artifact refs, and later-candidate storage boundaries | [Storage](../reference/storage.md). |
 | Security guarantee-claim wording, local-access posture, trust boundaries, and non-claims | [Security Reference](../reference/security.md). |
@@ -128,7 +130,7 @@ Build summarizes sequence and scope only. Use these Reference owners for exact c
 | Reference surface `capability_profile`, connector behavior, context surfaces, and fallback semantics | [Agent Integration Reference](../reference/agent-integration.md). |
 | Product Repository, Harness Server, Runtime Home, process boundaries, and non-isolation claims | [Runtime Boundaries Reference](../reference/runtime-boundaries.md). |
 | Future fixture shape, assertion authority, and conformance meaning without an executable runner | [Conformance Reference](../reference/conformance.md). |
-| Design-quality activation, close-blocking findings, waiver boundary, and validator IDs | [Design Quality](../reference/design-quality.md). |
+| Narrow design-quality routing, close-blocking findings, waiver boundary, and validator ID boundary | [Design Quality](../reference/design-quality.md). |
 | Official terminology | [Glossary Reference](../reference/glossary.md). |
 | Later candidates and promotion rule | [Later Candidate Index](../later/index.md). |
 

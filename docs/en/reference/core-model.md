@@ -18,6 +18,7 @@ This document owns:
 This document does not own:
 
 - Public MCP request or response shapes. Use [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
+- Exact active method-name, enum, and schema value sets. Use [API Schema Core](api/schema-core.md#current-mvp-value-sets).
 - Storage tables, DDL, runtime home layout, locks, migrations, or persisted JSON layout. Use [Storage](storage.md).
 - Rendered projection bodies or template text. Use [Projection And Templates Reference](projection-and-templates.md).
 - Connector capability profiles or surface recipes. Use [Agent Integration Reference](agent-integration.md).
@@ -96,19 +97,22 @@ Core must preserve these separations:
 
 These rules apply even when a user-facing surface compresses the display. Compact output can be friendly, but it must not collapse authority boundaries.
 
-## 6. Gates
+## 6. Active Gates And Reserved Gate Names
 
-Gates are Core compatibility dimensions for progress, write, run recording, and close. A gate can exist in the reference model without being required for every Task. The active owner path, user request, task type, policy, sensitivity, and explicit requirements decide requiredness.
+Gates are Core compatibility dimensions for progress, write, run recording, and close. The active current MVP gate fields exposed in public schemas are only the fields owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets). A gate name in planning prose does not create an active schema field, storage record, validator, or close requirement.
 
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work.
 - <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. It does not replace sensitive-action approval, evidence, verification, QA, final acceptance, or residual-risk acceptance.
 - <a id="approval-gate"></a>Approval Gate: whether scoped sensitive-action approval is needed, pending, usable, denied, expired, or drifted. It is permission for the sensitive action only.
 - <a id="design-gate"></a>Design Gate: whether an enabled design-quality finding routes into a Core-backed blocker. Broad design-quality catalogs are not default active MVP blockers.
 - <a id="evidence-gate"></a>Evidence Gate: whether required close-relevant evidence is absent, partial, sufficient, stale, or blocked.
-- <a id="verification-gate"></a>Verification Gate: whether required verification is satisfied, waived through the proper risk path, failed, pending, or blocked. Verification is required only when an active owner path makes it required.
-- <a id="qa-gate"></a>QA Gate: whether required Manual QA is satisfied, waived where allowed, failed, pending, or blocked. Manual QA is not produced by screenshots or automated checks alone.
 - <a id="acceptance-gate"></a>Acceptance Gate: whether final acceptance is required and, if so, recorded after the close basis is visible.
 - <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, hold the action through the owner path, or produce a capability blocker rather than pretending verification or prevention happened.
+
+Reserved gate names:
+
+- <a id="verification-gate"></a>Verification Gate is a later/reserved gate name. The active MVP has no `verification_gate` public schema field and no detached verification workflow. A future owner must promote exact fields, requiredness, fallback behavior, and proof expectations before it affects active close semantics.
+- <a id="qa-gate"></a>QA Gate is a later/reserved gate name. The active MVP has no `qa_gate` public schema field and no Manual QA gate. A future owner must promote exact fields, waiver behavior, artifact handling, and proof expectations before it affects active close semantics.
 
 Gate state exposure in public responses is owned by [API Schema Core](api/schema-core.md) and method owners. Core owns the compatibility meaning and the rule that stale gate summaries must be recomputed before write or close relies on them.
 
@@ -159,7 +163,7 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, active design-policy blockers, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, residual-risk visibility when close-relevant risk exists, and residual-risk acceptance when the active close path requires acceptance.
 
-MVP close must keep later assurance material out of active response semantics. Detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
+MVP close must keep later assurance material out of active response semantics. `verification_gate`, `qa_gate`, detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
 
 `close_task` must return blockers instead of pretending close is complete when required scope, judgment, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, or owner-defined safety conditions remain unresolved. A public response may choose one primary error, but secondary close blockers and refs must remain visible enough for the next safe action.
 
@@ -205,7 +209,7 @@ The active current path uses compact residual-risk summary, blockers, evidence r
 
 Use these owners when Core authority touches another contract:
 
-- Public API methods, request/response shapes, envelopes, state conflicts, and errors: [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
+- Public API method behavior, request/response shapes, active method-name and schema value sets, envelopes, state conflicts, and errors: [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
 - Storage tables, DDL, runtime home layout, locks, migrations, artifact storage, and enum hardening: [Storage](storage.md).
 - Projection freshness, readable views, managed blocks, human-editable sections, and active rendered template bodies: [Projection And Templates Reference](projection-and-templates.md).
 - Security guarantee language, cooperative/detective/preventive/isolated labels, and local access posture: [Security Reference](security.md).

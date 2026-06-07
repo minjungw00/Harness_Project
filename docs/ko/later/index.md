@@ -19,6 +19,7 @@
 |---|---|---|---|
 | 담당 문서 지정 | 승격 전 필요 | 이름 있는 담당 문서, 좁은 범위, 비목표, 대체 동작이 필요합니다. | 없음 |
 | 계약 위치 | 색인 경계만 있음 | 정확한 API, 스키마, 저장소, Projection, 템플릿, fixture, 운영자 명령 계약은 알맞은 활성 담당 문서에 둡니다. | 승격 전까지 없음 |
+| 활성 값 집합 담당 | 활성 담당 문서 경계 | 현재 활성 메서드 이름과 스키마 enum 값 집합은 `docs/*/reference/api/schema-core.md`에 둡니다. 여기에 적힌 later 이름은 그 값 집합을 넓히지 않습니다. | 없음 |
 | 보안 표현 | 이 문서에는 활성 보장 주장 없음 | 증명된 메커니즘에 맞는 협력형, 탐지형, 예방형, 격리형 표현이 필요합니다. | 승격 전까지 없음 |
 | 향후 증명 경로 기대치 | 후보 목록은 현재 런타임 증명이 아님 | 승격된 동작에 대한 적합성 목표, fixture, 증거 기대치, 또는 담당 문서가 정한 다른 증명 경로가 필요합니다. | 승격 전까지 없음 |
 | 활성 범위 상속 | 기본적으로 비활성 | 향후 담당 문서가 승격이 현재 MVP나 더 이른 smoke 목표에 근거 없는 요구사항을 더하지 않는다는 점을 증명해야 합니다. | 현재 MVP에 영향을 주면 안 됨 |
@@ -33,7 +34,7 @@
 | Manual QA | later 후보 | Manual QA 담당 문서가 면제 경로, 아티팩트 참조, 발견 사항, QA 관문 영향을 정해야 합니다. | 승격 전까지 없음 |
 | Eval / detached verification | later 후보 | Eval 담당 문서가 독립성 의미, 기준선 최신성, 아티팩트 무결성, 보증 갱신 규칙을 정해야 합니다. | 승격 전까지 없음 |
 | Decision Packet full-format presentation | later 후보 | 사용자 판단 담당 문서가 `presentation=full`을 켜되 기본 현재 MVP 경로로 만들지 않아야 합니다. | 승격 전까지 없음 |
-| Risk review and residual-risk visibility | later 후보 | Core와 사용자 판단 담당 문서가 위험 표시, 수락, 만료, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
+| Rich risk review and residual-risk lifecycle | later 후보 | Core와 사용자 판단 담당 문서가 상세 위험 기록, 검토 흐름, 만료, 닫기 영향을 정해야 합니다. 간결한 잔여 위험 표시는 Core/API 담당 경로를 통해서만 active로 남습니다. | 승격 전까지 없음 |
 | Full design-quality policy families: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward policies | 이름만 있음 | 설계 품질 담당 문서가 정확한 범위, 검증기 경계, 면제/증거 규칙, 향후 승격에 필요한 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
 
 <a id="operations-candidates"></a>
@@ -68,7 +69,7 @@
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
 | later schema extensions | 스키마 이름만 있음 | 승격된 담당 문서가 정확한 필드와 검증기를 활성 계약에 정의해야 합니다. | 승격 전까지 없음 |
-| Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, verification gate, QA gate, assurance blockers | 필드 이름만 있음 | Core/API 담당 문서 활성화와 닫기 대체 불가 규칙이 필요합니다. | 승격 전까지 없음 |
+| Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, `verification_gate`, `qa_gate`, Manual QA gate, assurance blockers | 필드 이름만 있음 | Core/API 담당 문서 활성화, 닫기 대체 불가 규칙, 정확한 활성 스키마 필드, 대체 동작, 증명 기대치가 필요합니다. | 승격 전까지 없음 |
 | Later next-action values: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | 값 이름만 있음 | 대응 API 또는 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |
 | Recommended playbooks and judgment context | 메타데이터 이름만 있음 | Agent Integration/API 담당 문서가 메타데이터를 읽기 전용으로 두고 상태를 만족시키지 못하게 해야 합니다. | 승격 전까지 없음 |
 | Later ref and artifact values: bundle, manifest, QA capture, export component, design, Eval, Manual QA, TDD, projection, related refs | 값 이름만 있음 | ArtifactRef, StateRecordRef, Storage, 관련 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |

@@ -18,8 +18,8 @@ The table routes agents and implementers to the compact owner documents that cur
 | Contract area | Owner document |
 |---|---|
 | Core authority, task lifecycle, user judgment boundaries, final/residual-risk non-substitution, gates, close blockers | [core-model.md](core-model.md) |
-| Active public API methods, including `prepare_write` authorization effects | [api/mvp-api.md](api/mvp-api.md) |
-| Shared schema, envelope, active value sets, rendered-label boundaries, and `GuaranteeDisplay.level` values | [api/schema-core.md](api/schema-core.md) |
+| Method-level behavior for active public API methods, including `prepare_write` authorization effects | [api/mvp-api.md](api/mvp-api.md) |
+| Exact active method-name set, shared schema, envelope, active enum/value sets, rendered-label boundaries, and `GuaranteeDisplay.level` values | [api/schema-core.md](api/schema-core.md) |
 | Public errors and precedence | [api/errors.md](api/errors.md) |
 | Storage, DDL, persisted rows such as `write_authorizations`, and idempotency | [storage.md](storage.md) |
 | Runtime spaces, mutation authority, and non-isolation / OS-sandboxing non-claims | [runtime-boundaries.md](runtime-boundaries.md) |
@@ -27,7 +27,7 @@ The table routes agents and implementers to the compact owner documents that cur
 | Agent context, connector behavior, surface capability, and one-language-per-`doc_id` retrieval | [agent-integration.md](agent-integration.md) |
 | Projections/status cards as derived display, rendered labels, active templates | [projection-and-templates.md](projection-and-templates.md) |
 | Conformance model, future fixture shape, assertion authority, and non-executable suite boundary | [conformance.md](conformance.md) |
-| Design-quality rules that affect active gates | [design-quality.md](design-quality.md) |
+| Narrow design-quality routing, close impact, waiver boundary, and validator ID boundary | [design-quality.md](design-quality.md) |
 | Official terms | [glossary.md](glossary.md) |
 | Later candidates, including full-format judgment presentation and future fixture families | [../later/index.md](../later/index.md) |
 

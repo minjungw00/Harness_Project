@@ -66,8 +66,8 @@ docs:
       en: docs/en/build/mvp-plan.md
       ko: docs/ko/build/mvp-plan.md
     default_for_agent: en
-    owns: "Implementation sequencing, current repository status, readiness decisions, MVP planning boundaries, and active close-blocker scope."
-    does_not_own: "Runtime records, generated artifacts, detailed schemas, DDL, or accepted implementation behavior."
+    owns: "Implementation sequencing, current repository status, readiness decisions, MVP planning boundaries, and active/later planning scope."
+    does_not_own: "Runtime records, generated artifacts, exact method-name sets, detailed schemas, enum value sets, DDL, or accepted implementation behavior."
 
   - doc_id: reference.index
     status: active
@@ -86,8 +86,8 @@ docs:
       en: docs/en/reference/core-model.md
       ko: docs/ko/reference/core-model.md
     default_for_agent: en
-    owns: "Core authority, task lifecycle, user judgment boundaries, final/residual-risk non-substitution, gates, close blockers, waivers, and residual risk."
-    does_not_own: "Wire schema detail, storage layout, public error precedence, connector recipes, or template bodies."
+    owns: "Core authority, task lifecycle, user judgment boundaries, final/residual-risk non-substitution, active gate meaning, reserved gate promotion boundary, close blockers, waivers, and residual risk."
+    does_not_own: "Wire schema detail, exact enum/value sets, storage layout, public error precedence, connector recipes, or template bodies."
 
   - doc_id: reference.api.mvp-api
     status: active
@@ -96,8 +96,8 @@ docs:
       en: docs/en/reference/api/mvp-api.md
       ko: docs/ko/reference/api/mvp-api.md
     default_for_agent: en
-    owns: "Active public API method set and method-level request/response behavior, including `prepare_write` authorization effects."
-    does_not_own: "Shared schema definitions, error precedence, storage DDL, or core lifecycle authority."
+    owns: "Method-level request/response behavior for the active public API methods, including `prepare_write` authorization effects."
+    does_not_own: "Exact active method-name value set, shared schema definitions, enum value sets, error precedence, storage DDL, or core lifecycle authority."
 
   - doc_id: reference.api.schema-core
     status: active
@@ -106,7 +106,7 @@ docs:
       en: docs/en/reference/api/schema-core.md
       ko: docs/ko/reference/api/schema-core.md
     default_for_agent: en
-    owns: "Shared API schemas, envelopes, common response shapes, active schema value sets, rendered-label boundaries, and profile-gated value names."
+    owns: "Exact active method-name set, shared API schemas, envelopes, common response shapes, active enum and schema value sets, rendered-label boundaries, and profile-gated value names."
     does_not_own: "Method-specific API behavior, persisted DDL, public error precedence, security guarantee claims, later schema bodies, or template bodies."
 
   - doc_id: reference.api.errors

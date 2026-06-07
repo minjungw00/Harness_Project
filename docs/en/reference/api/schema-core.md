@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference for active current MVP shared API shapes: the tool envelope, common response, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization summary, evidence summary, run summary, close blockers, next-action summary, current MVP value sets, profile-gated display value names, and later candidate value-name boundaries.
+Use this reference for the active current MVP method-name set, shared API shapes, and schema value sets: the tool envelope, common response, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization summary, evidence summary, run summary, close blockers, next-action summary, current MVP enum values, profile-gated display value names, and later candidate value-name boundaries.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server. Future schema candidates stay in [Later Candidate Index](../../later/index.md#later-schema-candidates).
 
@@ -10,7 +10,8 @@ This document describes future Harness Server behavior for planning and review. 
 
 | Need | Owner |
 |---|---|
-| Active methods and method request/response ownership | [MVP API](mvp-api.md) |
+| Exact active method-name value set and shared schema value sets | This document |
+| Method request/response behavior for active methods | [MVP API](mvp-api.md) |
 | Public errors, precedence, idempotency, blocked behavior, and stale-state behavior | [API Errors](errors.md) |
 | Core state semantics and lifecycle meaning | [Core Model Reference](../core-model.md) |
 | Storage tables, JSON `TEXT`, enum hardening, and artifact persistence | [Storage](../storage.md) |
@@ -24,10 +25,12 @@ The YAML-like blocks in this document are normative schema notation, not example
 - `field: Type` means the field is required and non-null.
 - `field: Type | null` means the field is required and may be JSON `null`.
 - `Type[]` means the field is present and contains an array; an empty array is written as `[]`.
-- `a | b | c` is a closed active enum.
+- `a | b | c` is a closed active enum for that field unless the surrounding section explicitly marks the value as profile-gated or reserved.
 - Unlisted fields are rejected outside an explicitly named extension container.
 
 Storage validation is a separate owner boundary. API payloads and API-shaped stored JSON validate against this API reference first; DDL, storage-only JSON, defaults, locks, and migrations validate against [Storage](../storage.md).
+
+The [Current MVP Value Sets](#current-mvp-value-sets) section owns the exact active method-name set and the active schema enum values declared by this document. Method-specific behavior remains with [MVP API](mvp-api.md), and public `ErrorCode` taxonomy remains with [API Errors](errors.md).
 
 <a id="tool-envelope"></a>
 
@@ -103,7 +106,7 @@ GuaranteeDisplay:
   notes: string[]
 ```
 
-Rendered labels are not canonical schema values. `GuaranteeDisplay.level` is a display claim about the documented surface capability and proof level; it does not grant permission or state authority. The default active MVP guarantee-display values are `cooperative` and `detective`. `preventive` and `isolated` are profile-gated display values, not default active MVP guarantees.
+Rendered labels are not canonical schema values. `GuaranteeDisplay.level` is a display claim about the documented surface capability and proof level; it does not grant permission or state authority. The active MVP guarantee-display values are `cooperative` and `detective`. `preventive` and `isolated` are profile-gated display value names, not default active MVP guarantees.
 
 <a id="staterecordref"></a>
 
@@ -239,6 +242,8 @@ WriteAuthoritySummary:
 `EvidenceSummary` is the compact active evidence record. It is not a detailed evidence report, separate assurance result, final acceptance, residual-risk acceptance, or rendered view.
 
 `AuthorizedAttemptScope` is the exact scope stored in `write_authorizations.attempt_scope_json` and later compared by `harness.record_run`. `WriteAuthorizationSummary.status` is the durable authorization lifecycle. `blocked` is not a Write Authorization status; blocked writes return blockers without a consumable authorization.
+
+`intended_commands`, `intended_network`, and `intended_secret_scope` are declared intent/scope descriptors. They are not proof that the active MVP can observe command execution, network effects, secret access, blocking, or isolation. Observation support is profile-owned; unsupported observations must remain unverified or become capability blockers rather than active evidence.
 
 <a id="record-run-payloads"></a>
 
@@ -446,7 +451,7 @@ policy_override
 
 ## Current MVP Value Sets
 
-These values are valid without a promoted profile. Values not listed here are not default active MVP values. Rendered labels are not canonical schema values.
+These values are valid without a promoted profile. Values not listed here are not default active MVP values. Rendered labels are not canonical schema values. Public `ErrorCode` values are owned by [API Errors](errors.md), not by this table.
 
 | Field | Current MVP values |
 |---|---|
@@ -454,21 +459,54 @@ These values are valid without a promoted profile. Values not listed here are no
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
 | `StateSummary.mode` | `advisor`, `direct`, `work` |
 | `StateSummary.lifecycle_phase` | `intake`, `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled` |
-| `UserJudgment.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
-| `UserJudgment.judgment_kind` | `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, `cancellation` |
+| `StateSummary.result` | `none`, `advice_only`, `passed`, `failed`, `cancelled` |
+| `StateSummary.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
+| `StateSummary.assurance_level` | `none`, `self_checked` |
+| `StateSummary.gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
+| `StateSummary.gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
+| `StateSummary.gates.approval_gate` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired` |
+| `StateSummary.gates.design_gate` | `not_required`, `required`, `pending`, `passed`, `partial`, `waived`, `stale`, `blocked` |
+| `StateSummary.gates.evidence_gate` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
+| `StateSummary.gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
+| `StateRecordRef.record_kind` | `project`, `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` |
+| `ArtifactRef.kind` | `diff`, `log`, `screenshot`, `checkpoint`, `other` |
+| `ArtifactRef.produced_by` | `lead_agent`, `evaluator`, `operator`, `harness` |
+| `ArtifactRef.retention_class` | `task`, `project`, `temporary` |
+| `ArtifactRelationOwner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
+| `ArtifactInput.source_kind` | `staged_file`, `capture_adapter`, `existing_artifact` |
+| `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
+| `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
+| `AuthorizedAttemptScope.intended_network.direction` | `read`, `write` |
+| `AuthorizedAttemptScope.intended_secret_scope.access_kind` | `read`, `write` |
+| `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
 | `WriteAuthorizationSummary.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
+| `WriteAuthoritySummary.approval_status` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired`, `unknown` |
 | `RunSummary.kind` | `shaping_update`, `implementation`, `direct` |
 | `RunSummary.status` | `completed`, `interrupted`, `blocked`, `violation` |
-| `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
-| `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
+| `UserJudgment.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
+| `UserJudgment.judgment_kind` | `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, `cancellation` |
+| `UserJudgment.presentation` | `short` |
+| `UserJudgment.required_for` | `next_action`, `write`, `run`, `close`, `acceptance`, `risk` |
+| `UserJudgmentCandidate.judgment_kind` | same values as `UserJudgment.judgment_kind` |
+| `UserJudgmentCandidate.presentation` | `short` |
+| `UserJudgmentCandidate.required_for` | same values as `UserJudgment.required_for` |
+| `UserJudgmentOption.meaning` | `approve`, `reject`, `defer`, `choose`, `cancel` |
 | `ArtifactRef.redaction_state` | `none`, `redacted`, `secret_omitted`, `blocked` |
 | `CloseBlocker.category` | `task`, `open_run`, `scope`, `user_judgment`, `sensitive_approval`, `design_policy`, `write_compatibility`, `baseline`, `surface_capability`, `evidence`, `artifact_availability`, `final_acceptance`, `residual_risk_visibility`, `residual_risk_acceptance`, `cancellation`, `supersession`, `recovery` |
+| `CloseBlocker.required_judgment_kind` | same values as `UserJudgment.judgment_kind`, plus `null` |
 | `NextActionSummary.action_kind` | `ask_user`, `prepare_write`, `implement`, `request_acceptance`, `close_task`, `idle` |
+| `NextActionSummary.required_tool` | active method set values, plus `null` |
 | `GuaranteeDisplay.level` | `cooperative`, `detective` |
-| `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
+| `ValidatorResult.validator_id` | `surface_capability_check` |
+| `ValidatorResult.validator_kind` | `capability` |
+| `ValidatorResult.status` | `passed`, `warning`, `failed`, `blocked`, `skipped` |
 | `ValidatorResult.guarantee_level` | `cooperative`, `detective` |
+| `ValidatorResult.findings.severity` | `info`, `warning`, `error`, `blocker` |
+| Sensitive categories | `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `destructive_write`, `network_write`, `external_service_write`, `secret_access`, `production_config_change`, `ci_cd_change`, `infra_or_deployment_change`, `privacy_or_pii_change`, `data_export`, `telemetry_or_logging_change`, `license_or_compliance_change`, `billing_or_cost_change`, `model_or_prompt_policy_change`, `policy_override` |
 
 For `GuaranteeDisplay.level`, `cooperative` is the default current MVP value. `detective` is also a current MVP value, but only where the active surface can honestly observe the relevant fact. Neither value means OS permission, arbitrary-tool sandboxing, tamper-proof storage, pre-tool blocking, or isolation.
+
+`qa_waiver` and `verification_risk_acceptance` are active user-judgment value names only for focused user-owned judgment routing. They do not activate Manual QA, a verification gate, detached verification, full waiver machinery, or any QA/verification record family. The active `StateSummary.gates` object intentionally has no `verification_gate` or `qa_gate` field.
 
 <a id="profile-gated-value-names"></a>
 
@@ -494,5 +532,6 @@ This active API reference intentionally does not define later schema bodies. A l
 | Source | Active API boundary |
 |---|---|
 | Later schema extensions | Candidate names only; no active request, response, shared schema, or enum member. |
+| Later verification and QA gates | Candidate names only; no active `verification_gate`, `qa_gate`, Manual QA gate, verification response field, or QA response field. |
 | Later ref and artifact values | Candidate names only; no active `ArtifactRef`, `StateRecordRef`, storage, evidence, QA, export, or projection value. |
 | Later template, fixture, conformance, operation, export, and diagnostic names | Candidate names only; no active API payload, runtime operation, error family, conformance-runner behavior, or close effect. |

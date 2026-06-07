@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-현재 MVP의 활성 API 표면을 확인할 때 이 참조를 사용합니다. 이 문서는 활성 메서드 목록과 메서드별 요청, 응답, 상태 효과, 저장소 담당 문서, 오류, 보안 경계를 담당합니다.
+현재 MVP의 활성 API 표면을 확인할 때 이 참조를 사용합니다. 이 문서는 [API Schema Core](schema-core.md#current-mvp-value-sets)가 담당하는 활성 메서드 이름 값 집합에 대해 메서드별 요청, 응답, 상태 효과, 저장소 담당 문서, 오류, 보안 경계를 담당합니다.
 
 이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 저장소에는 하네스 런타임이나 서버 구현이 없습니다. 향후 API/schema 후보는 활성 API 참조가 아니라 [Later 후보 색인](../../later/index.md)에 둡니다. Storage DDL과 전체 공용 스키마 본문은 이 메서드 참조가 아니라 해당 담당 문서가 담당합니다.
 
@@ -12,19 +12,9 @@
 
 이 API는 OS 권한, 임의 도구 샌드박스, 변조 방지 파일, 도구 실행 전 차단, 보안 격리를 제공하지 않습니다. `harness.prepare_write`는 협력형 하네스 기록/확인만 반환합니다.
 
-## 현재 MVP 메서드 집합
+## 현재 MVP 메서드 동작
 
-활성 공개 메서드 집합은 정확히 아래 일곱 MCP 메서드입니다.
-
-```text
-harness.intake
-harness.status
-harness.prepare_write
-harness.record_run
-harness.request_user_judgment
-harness.record_user_judgment
-harness.close_task
-```
+정확한 활성 메서드 이름 값 집합은 [API Schema Core](schema-core.md#current-mvp-value-sets)가 담당합니다. 이 문서는 그 현재 메서드들의 동작을 담당합니다.
 
 | 메서드 | 활성 역할 |
 |---|---|

@@ -19,6 +19,7 @@ Rows here are planning candidates only. They are not active MVP requirements, ac
 |---|---|---|---|
 | Owner assignment | required before promotion | Named owner, narrow scope, non-goals, and fallback behavior. | none |
 | Contract placement | index boundary only | Exact API, schema, storage, projection, template, fixture, or operator contract in the owning active document. | none until promoted |
+| Active value-set ownership | active owner boundary | Current active method-name and schema enum value sets live in `docs/*/reference/api/schema-core.md`; later names listed here do not extend those sets. | none |
 | Security wording | no active guarantee claim here | Honest cooperative, detective, preventive, or isolated wording matched to a proven mechanism. | none until promoted |
 | Future proof-path expectation | listing is not current runtime proof | Conformance target, fixture, evidence expectation, or other owner-defined proof path for the promoted behavior. | none until promoted |
 | Active-scope inheritance | disabled by default | Future owner proof that promotion does not add unsupported requirements to the active MVP or earlier smoke target. | must not affect active MVP |
@@ -33,7 +34,7 @@ Rows here are planning candidates only. They are not active MVP requirements, ac
 | Manual QA | later candidate | Manual QA owner policy for waivers, artifact refs, findings, and QA gate impact. | none until promoted |
 | Eval / detached verification | later candidate | Eval owner rules for independence, baseline freshness, artifact integrity, and assurance updates. | none until promoted |
 | Decision Packet full-format presentation | later candidate | User-judgment owner activation of `presentation=full` without making it the default MVP path. | none until promoted |
-| Risk review and residual-risk visibility | later candidate | Core and user-judgment owner rules for risk visibility, acceptance, expiry, and close impact. | none until promoted |
+| Rich risk review and residual-risk lifecycle | later candidate | Core and user-judgment owner rules for rich risk records, review workflow, expiry, and close impact. Compact residual-risk visibility remains active only through the Core/API owners. | none until promoted |
 | Full design-quality policy families: full `shared_design` policy, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward policies | names only | Design-quality owner rules for exact scope, validator boundaries, waiver/evidence rules, and proof-path expectations for future promotion. | none until promoted |
 
 <a id="operations-candidates"></a>
@@ -68,7 +69,7 @@ Rows here are planning candidates only. They are not active MVP requirements, ac
 | Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
 | later schema extensions | schema names only | Promoted owner defines exact fields and validators in the active owner contract. | none until promoted |
-| Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, verification gate, QA gate, assurance blockers | field names only | Core/API owner activation with close non-substitution rules. | none until promoted |
+| Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, `verification_gate`, `qa_gate`, Manual QA gate, assurance blockers | field names only | Core/API owner activation with close non-substitution rules, exact active schema fields, fallback behavior, and proof expectations. | none until promoted |
 | Later next-action values: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | value names only | Matching API or owner activation. | none until promoted |
 | Recommended playbooks and judgment context | metadata names only | Agent Integration/API owner rules that keep metadata read-only and non-satisfying. | none until promoted |
 | Later ref and artifact values: bundle, manifest, QA capture, export component, design, Eval, Manual QA, TDD, projection, related refs | value names only | ArtifactRef, StateRecordRef, Storage, and relevant owner activation. | none until promoted |
