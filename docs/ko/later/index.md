@@ -104,11 +104,3 @@
 | Team workflows, permissions, shared capability sets, orchestration, parallel lanes | later 후보 | 범위, 권한, 허가 체계, 사용자 소유 판단 담당 문서가 필요합니다. | 승격 전까지 없음 |
 | Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | later 후보 | 별도 담당 범위가 필요합니다. 명시적으로 승격하기 전까지 배포와 운영 환경 권한은 외부에 남습니다. | 승격 전까지 없음 |
 | Advanced validators and language or interface checks | later 후보 | Validator 담당 문서가 정확한 ID, 심각도, 면제, fixture 동작을 정해야 합니다. | 승격 전까지 없음 |
-
-## 10. 명시적으로 제거한 상세 자료
-
-| 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
-|---|---|---|---|
-| later template 전체 본문 | later template 전체 본문은 제거되었다. | 승격된 템플릿 담당 문서에서만 다시 정의한다. | 현재 MVP에 영향을 주면 안 됨 |
-| fixture YAML draft 전체 본문 | fixture YAML draft 전체 본문은 제거되었다. | 승격된 적합성 담당 문서에서만 다시 정의한다. | 현재 MVP에 영향을 주면 안 됨 |
-| later schema 전체 본문 | later schema 전체 본문은 제거되었다. | 승격된 스키마/API/저장소 담당 문서에서만 다시 정의한다. | 현재 MVP에 영향을 주면 안 됨 |

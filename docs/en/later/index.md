@@ -104,11 +104,3 @@ The long row below preserves future fixture family names only. It is not a curre
 | Team workflows, permissions, shared capability sets, orchestration, parallel lanes | later candidate | Scope, authority, permission, and user-owned judgment owners. | none until promoted |
 | Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | later candidate | Separate owner scope; deployment and production authority remain external unless explicitly promoted. | none until promoted |
 | Advanced validators and language or interface checks | later candidate | Validator owner rules for exact IDs, severity, waiver, and fixture behavior. | none until promoted |
-
-## 10. Explicitly Retired Material
-
-| Candidate | Status | Promotion requires | Active MVP impact |
-|---|---|---|---|
-| Full later template bodies | Full later template bodies were removed. | Reintroduce only through a promoted template owner. | must not affect active MVP |
-| Full fixture YAML drafts | Full fixture YAML drafts were removed. | Reintroduce only through a promoted conformance owner. | must not affect active MVP |
-| Full later schema bodies | Full later schema bodies were removed. | Reintroduce only through a promoted schema/API/storage owner. | must not affect active MVP |
