@@ -152,8 +152,8 @@ Boundary: this template is rendered display only. It is not Core state, not evid
 
 Source records:
 
-- current Task summary, work shape, and next safe action
-- current scope, non-goals, and active Change Unit summary when useful to the user
+- current Task summary, work shape, lifecycle phase, one blocking question when necessary, and next safe action
+- current scope, allowed paths or affected areas, non-goals, acceptance criteria, Autonomy Boundary, and active Change Unit summary when useful to the user
 - pending user judgments, rendered with user-readable labels
 - active blockers and the plain reason progress or close is held
 - current evidence summary, supporting refs, redaction or availability notes, and evidence gaps
@@ -181,9 +181,14 @@ Template:
 Display only: derived from Core state and refs; not Core state or a Write Authorization.
 
 Work: {work_shape}. {current_task_summary}
+Shaping state: {lifecycle_phase}; {shaping_state_reason|none}
 Scope: {scope_summary}
+Allowed paths/areas: {allowed_paths_or_affected_areas|unknown}
 Out of scope: {non_goals|none}
+Acceptance criteria: {acceptance_criteria|unknown}
+Autonomy boundary: {autonomy_boundary|default}
 Blocked because: {active_blocked_reason|none}
+Blocking question: {blocking_question|none}
 User must decide: {pending_user_judgments_with_localized_labels|none}
 Evidence: {evidence_status}. {known_evidence_summary|none}
 Evidence gaps: {evidence_gaps|none}
@@ -395,7 +400,7 @@ Source records:
 
 - task and active Change Unit refs
 - current state version and source refs
-- active scope and non-goals
+- active scope, allowed paths or affected areas, non-goals, acceptance criteria, and Autonomy Boundary
 - unresolved user judgments
 - active blockers
 - evidence gaps
@@ -409,6 +414,7 @@ Rendered sections:
 - task and change unit refs
 - state version and source refs
 - active scope
+- shaping summary
 - unresolved user judgments
 - blockers
 - next safe action
@@ -429,6 +435,11 @@ agent_context_packet:
   source_refs: {source_refs}
   freshness: {freshness_state}
   active_scope: {scope_summary}
+  allowed_paths_or_areas: {allowed_paths_or_affected_areas|unknown}
+  non_goals: {non_goals|none}
+  acceptance_criteria: {acceptance_criteria|unknown}
+  autonomy_boundary: {autonomy_boundary|default}
+  blocking_question: {blocking_question|none}
   unresolved_user_judgments: {pending_user_judgment_refs_with_kind_labels|none}
   blockers: {active_blockers|none}
   next_safe_action: {next_safe_action}

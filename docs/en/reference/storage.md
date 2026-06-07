@@ -121,6 +121,14 @@ Brief, Shared Design, Question Queue, Assumption Register, or First Safe Change
 Unit Candidate table. Evidence persists through compact evidence summaries and
 artifact refs, not through full Evidence Manifest storage.
 
+The minimum active shaping information is stored through those existing records:
+current goal summary, active scope summary, allowed paths or affected areas,
+non-goals, acceptance criteria, Autonomy Boundary, required user-owned
+judgments, one blocking question when necessary, one next safe action, evidence
+expectation or evidence gap, and close blockers. Missing or unknown pieces stay
+as `unknown`, pending `user_judgments`, evidence gaps, or `blockers`; storage
+must not create extra active planning tables to make the request appear ready.
+
 ## 4. Tables
 
 The table below names the active storage tables and the minimum storage role
@@ -133,8 +141,8 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | `project.yaml` | Project directory | Static project configuration. | `project_id`, `repo_root`, display/config defaults. |
 | `project_state` | `state.sqlite` | Project-local state header, state clock, active Task pointer, and default surface pointer. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
 | `surfaces` | `state.sqlite` | Registered local/reference surface facts for `surface_id`, capability profile, local access posture, and guarantee display. | `surface_id`, `project_id`, `surface_kind`, `capability_profile_json`, `local_access_posture`, `guarantee_level`, `status`, `created_at`, `updated_at`. |
-| `tasks` | `state.sqlite` | User-value work unit, task-scoped state clock, current shaping summary, lifecycle, result, and close fields. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `close_reason`, `result`, `summary`, shaping JSON columns, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
-| `change_units` | `state.sqlite` | Current or proposed scoped work boundary for write compatibility and close basis. | `change_unit_id`, `task_id`, `scope_summary`, scope JSON columns, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
+| `tasks` | `state.sqlite` | User-value work unit, task-scoped state clock, current shaping summary, lifecycle, result, next-action, and close fields. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `close_reason`, `result`, `summary`, shaping JSON columns, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
+| `change_units` | `state.sqlite` | Current or proposed scoped work boundary for write compatibility and close basis. | `change_unit_id`, `task_id`, `scope_summary`, scope JSON columns for allowed paths or affected areas, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | `state.sqlite` | User-owned judgment records for the active `UserJudgment.judgment_kind` values. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, request/context JSON columns, `question`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | `state.sqlite` | Durable single-use cooperative Write Authorization created only by non-dry-run `prepare_write` with `decision=allowed`. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
 | `runs` | `state.sqlite` | Committed execution or observation record, including compatible authorization consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, observed/evidence JSON columns, `created_at`, `completed_at`. |
@@ -211,6 +219,12 @@ the active records, including:
 - `blockers.owner_ref_json` and `blockers.related_refs_json`.
 - `task_events.payload_json`.
 - `tool_invocations.response_json`.
+
+Task and Change Unit shaping JSON stores compact summaries and bounded lists
+only. It must not store a standalone Discovery Brief, Question Queue,
+Assumption Register, full design artifact, generated projection body, evidence
+manifest body, QA record, acceptance record, residual-risk record, or close
+record under another name.
 
 Status-like `TEXT` values are closed owner value sets, not open strings. Active
 values are owned by Core/API owners and by the storage notes here. Defensive

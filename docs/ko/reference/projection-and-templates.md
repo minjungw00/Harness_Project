@@ -152,8 +152,8 @@ User Notes and Proposals:
 
 기준 기록:
 
-- 현재 Task 요약, 작업 모양, 다음 안전한 행동
-- 사용자가 이해하는 데 필요한 현재 범위, 하지 않을 일, 활성 Change Unit 요약
+- 현재 Task 요약, 작업 모양, lifecycle phase, 필요할 때 막히는 질문 하나, 다음 안전한 행동
+- 사용자가 이해하는 데 필요한 현재 범위, 허용 경로 또는 영향 영역, 범위 밖 항목, 수락 기준, Autonomy Boundary, 활성 Change Unit 요약
 - 사용자에게 읽히는 라벨로 렌더링한 대기 중인 판단
 - 진행 또는 닫기가 보류된 평이한 이유와 활성 차단 사유
 - 현재 증거 요약, 뒷받침 참조, 가림 처리 또는 가용성 메모, 증거 공백
@@ -181,9 +181,14 @@ User Notes and Proposals:
 표시 전용: Core 상태와 참조에서 파생된 보기이며 Core 상태나 쓰기 승인 기록이 아닙니다.
 
 작업: {work_shape}. {current_task_summary}
+구체화 상태: {lifecycle_phase}; {shaping_state_reason|none}
 범위: {scope_summary}
+허용 경로/영역: {allowed_paths_or_affected_areas|unknown}
 범위 밖: {non_goals|none}
+수락 기준: {acceptance_criteria|unknown}
+Autonomy Boundary: {autonomy_boundary|default}
 차단 사유: {active_blocked_reason|none}
+막히는 질문: {blocking_question|none}
 사용자가 결정할 것: {pending_user_judgments_with_localized_labels|none}
 증거: {evidence_status}. {known_evidence_summary|none}
 증거 공백: {evidence_gaps|none}
@@ -393,7 +398,7 @@ User Notes and Proposals:
 
 - Task와 활성 Change Unit 참조
 - 현재 상태 버전과 원천 참조
-- 활성 범위와 하지 않을 일
+- 활성 범위, 허용 경로 또는 영향 영역, 범위 밖 항목, 수락 기준, Autonomy Boundary
 - 해결되지 않은 사용자 판단
 - 활성 차단 사유
 - 증거 공백
@@ -407,6 +412,7 @@ User Notes and Proposals:
 - Task와 Change Unit 참조
 - 상태 버전과 원천 참조
 - 활성 범위
+- 구체화 요약
 - 해결되지 않은 사용자 판단
 - 차단 사유
 - 다음 안전한 행동
@@ -427,6 +433,11 @@ agent_context_packet:
   source_refs: {source_refs}
   freshness: {freshness_state}
   active_scope: {scope_summary}
+  allowed_paths_or_areas: {allowed_paths_or_affected_areas|unknown}
+  non_goals: {non_goals|none}
+  acceptance_criteria: {acceptance_criteria|unknown}
+  autonomy_boundary: {autonomy_boundary|default}
+  blocking_question: {blocking_question|none}
   unresolved_user_judgments: {pending_user_judgment_refs_with_kind_labels|none}
   blockers: {active_blockers|none}
   next_safe_action: {next_safe_action}

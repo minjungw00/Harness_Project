@@ -54,19 +54,32 @@ Inspect first. Check repository files, docs, tests, current Harness state, accep
 
 Ask only the question that changes the next safe action or a user-owned judgment. Do not turn agent-resolvable uncertainty into a questionnaire. Do not start broad implementation when the requirement is too ambiguous to be safe.
 
+Prefer one blocking question at a time. Non-blocking curiosity questions can be parked for later, but they are not active blockers and should not move the task to a waiting state.
+
 A focused clarification should show:
 
 - what you verified
 - current goal
-- proposed scope and non-goals
-- success criteria for the next slice
+- proposed or active scope, allowed paths or affected areas, and non-goals
+- acceptance criteria for the next slice
+- Autonomy Boundary
 - confirmed facts
 - remaining uncertainty
+- required user-owned judgments
 - the one blocking question, if any
 - useful non-blocking questions parked for later
+- evidence expectation or evidence gap
+- close blockers that are already visible
 - next safe action
 
 In the active MVP, clarification should update the active task summary, proposed or active `Change Unit` when product writes are near, and user-judgment candidates or records through the active owner paths. After intake, active scope and active Change Unit updates belong to `harness.update_scope`; `harness.record_user_judgment` records the user's answer and does not mutate scope directly. Do not create separate active requirements for a committed `Discovery Brief`, `Question Queue`, `Assumption Register`, `First Safe Change Unit Candidate`, `Shared Design` record, full-format judgment presentation such as `Decision Packet`, or full design artifact.
+
+Use lifecycle labels narrowly when they help the agent choose the next action:
+
+- `shaping`: the request is not yet writable; inspect more, narrow scope, or ask the one blocking question.
+- `waiting_user`: a specific user-owned judgment is required before the next safe action.
+- `ready`: there is enough active scope for the next action; for write-capable work, an active `Change Unit` exists and the path can move toward `prepare_write`.
+- `blocked`: a system, scope, capability, evidence, recovery, close, or other active blocker prevents progress.
 
 ## 4. Do Not Decide User-Owned Judgments
 

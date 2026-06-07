@@ -115,6 +115,13 @@ Register, First Safe Change Unit Candidate 테이블을 만들지 않습니다. 
 증거 요약과 아티팩트 참조를 통해 저장합니다. 전체 Evidence Manifest 저장소를
 요구하지 않습니다.
 
+최소 활성 구체화 정보도 이 기존 기록들에 저장합니다. 여기에는 현재 목표 요약,
+활성 범위 요약, 허용 경로 또는 영향 영역, 범위 밖 항목, 수락 기준, Autonomy Boundary,
+필요한 사용자 소유 판단, 필요할 때 막히는 질문 하나, 다음 안전한 행동 하나, 증거 기대
+또는 증거 공백, 닫기 차단 사유가 포함됩니다. 빠졌거나 알 수 없는 항목은 `unknown`,
+대기 중인 `user_judgments`, 증거 공백, `blockers`로 남깁니다. 저장소는 요청을 준비된 것처럼
+보이게 만들려고 별도 활성 계획 테이블을 만들면 안 됩니다.
+
 ## 4. 테이블
 
 아래 표는 active 저장소 테이블과 최소 저장 역할을 이름 붙입니다. 전체 DDL이 아니며 API
@@ -127,8 +134,8 @@ Register, First Safe Change Unit Candidate 테이블을 만들지 않습니다. 
 | `project.yaml` | 프로젝트 디렉터리 | 정적 프로젝트 설정입니다. | `project_id`, `repo_root`, 표시/설정 기본값. |
 | `project_state` | `state.sqlite` | 프로젝트별 로컬 상태 헤더, 상태 시계, 활성 Task 포인터, 기본 surface 포인터를 저장합니다. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
 | `surfaces` | `state.sqlite` | `surface_id`, 기능 프로필, 로컬 접근 상태, 보장 표시를 해석하는 데 필요한 등록된 로컬/참조 접점 사실을 저장합니다. | `surface_id`, `project_id`, `surface_kind`, `capability_profile_json`, `local_access_posture`, `guarantee_level`, `status`, `created_at`, `updated_at`. |
-| `tasks` | `state.sqlite` | 사용자 가치 단위, Task별 상태 시계, 현재 구체화 요약, 생명주기, 결과, 닫기 필드를 저장합니다. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `close_reason`, `result`, `summary`, 구체화 JSON 열, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
-| `change_units` | `state.sqlite` | 쓰기 호환성과 닫기 근거를 위한 현재 또는 제안된 범위 있는 작업 경계를 저장합니다. | `change_unit_id`, `task_id`, `scope_summary`, 범위 JSON 열, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
+| `tasks` | `state.sqlite` | 사용자 가치 단위, Task별 상태 시계, 현재 구체화 요약, 생명주기, 결과, 다음 행동, 닫기 필드를 저장합니다. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `close_reason`, `result`, `summary`, 구체화 JSON 열, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
+| `change_units` | `state.sqlite` | 쓰기 호환성과 닫기 근거를 위한 현재 또는 제안된 범위 있는 작업 경계를 저장합니다. | `change_unit_id`, `task_id`, `scope_summary`, 허용 경로 또는 영향 영역을 담는 범위 JSON 열, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | `state.sqlite` | 활성 `UserJudgment.judgment_kind` 값에 대한 사용자 소유 판단 기록을 저장합니다. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, 요청/맥락 JSON 열, `question`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | `state.sqlite` | `dry_run=false`인 `prepare_write`에서 `decision=allowed`일 때만 만들어지는 지속성 있는 단일 사용 협력형 Write Authorization입니다. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
 | `runs` | `state.sqlite` | 제품 쓰기가 있었다면 호환 승인 소비까지 포함하는 확정된 실행 또는 관찰 기록입니다. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, 관찰/증거 JSON 열, `created_at`, `completed_at`. |
@@ -200,6 +207,11 @@ API 형태로 저장되는 JSON은 [MVP API](api/mvp-api.md)와
 - `blockers.owner_ref_json`과 `blockers.related_refs_json`.
 - `task_events.payload_json`.
 - `tool_invocations.response_json`.
+
+Task와 Change Unit의 구체화 JSON은 간결한 요약과 경계 있는 목록만 저장합니다.
+별도의 Discovery Brief, Question Queue, Assumption Register, 전체 설계 아티팩트,
+생성된 Projection 본문, Evidence Manifest 본문, QA 기록, 수락 기록, 잔여 위험 기록,
+닫기 기록을 다른 이름으로 저장하면 안 됩니다.
 
 상태형 `TEXT` 값은 열린 문자열이 아니라 닫힌 담당 값 집합입니다. Active 값은
 Core/API 담당 문서와 이 문서의 저장소 설명이 담당합니다. 방어적 `CHECK` 제약이나

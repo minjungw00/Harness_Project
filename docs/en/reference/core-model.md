@@ -60,6 +60,15 @@ These entities define authority relationships, not storage tables or API bodies.
 
 Discovery and requirement shaping persist through Task, `harness.update_scope`/Change Unit, and `user_judgment` owner paths. Separate shaping briefs, design displays, journey or reconcile records, rich risk records, Eval records, Manual QA records, and full evidence manifests are not active current MVP Core state unless an owner explicitly promotes them.
 
+The minimum active shaping information is the compact state needed to turn an ordinary request into one safe next step. It is not a new artifact. It is represented through:
+
+- Task state for the current goal summary, task mode, lifecycle phase, one blocking question when necessary, one next safe action, and the active Change Unit pointer.
+- Task or Change Unit scope fields for the active scope summary, allowed paths or affected areas, non-goals, acceptance criteria, Autonomy Boundary, baseline reference, and constraints.
+- `user_judgment` records or candidates for required user-owned judgments.
+- Evidence summary and blocker records for evidence expectations, evidence gaps, active blockers, and close blockers.
+
+If any required shaping item is unknown, stale, unavailable, or disputed, Core must expose that as `unknown`, a pending user-owned judgment, a blocker, or the next safe action. It must not create a separate active `Discovery Brief`, `Question Queue`, `Assumption Register`, or similar committed planning artifact to make the request look writable.
+
 <a id="finding-routing"></a>
 
 Findings from commands, Runs, reviews, validators, diagnostics, QA, or verification affect Core only when routed through an active owner path such as blocker, evidence summary, user judgment, `harness.update_scope`, or close blocker. A finding left in chat or report prose is not state.
@@ -132,6 +141,13 @@ The lifecycle is a Core state-transition discipline, not a display script. Activ
 - `close_ready` is derived. It is not a lifecycle phase and does not move a Task to completed; only `close_task` can do that.
 - Idempotency replay must not duplicate state transitions, events, Write Authorizations, Runs, artifacts, evidence updates, or close effects.
 - Dry-run calls describe possible outcomes but create no authoritative state, no consumable Write Authorization, no artifact, no close state, and no replay row.
+
+Shaping lifecycle values have these active meanings:
+
+- `shaping`: the request is not yet writable. Core has a Task, but the minimum shaping information is still incomplete, ambiguous, stale, or not yet represented as an active Change Unit for write-capable work.
+- `waiting_user`: progress is waiting on a specific user-owned judgment before the next safe action. Non-blocking curiosity questions may be parked for later, but they are not active blockers and do not require `waiting_user`.
+- `ready`: the Task has enough current scope to proceed. For write-capable work, this means there is an active Change Unit and the next safe action may move toward `prepare_write`; it is still not Write Authorization.
+- `blocked`: a system, scope, capability, evidence, recovery, close, or other active blocker prevents honest progress until the named unblocker is addressed.
 
 ```mermaid
 stateDiagram-v2

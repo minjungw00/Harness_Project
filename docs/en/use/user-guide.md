@@ -201,8 +201,34 @@ User: Build a login feature.
 Good agent behavior:
 - inspect existing auth routes, session handling, login UI, tests, and docs first;
 - separate scope, non-goals, facts, unknowns, and user-owned choices;
-- ask one blocking product or technical judgment before writing;
 - propose the smallest safe login slice.
+
+Visible shaped result:
+- Goal: add a basic email/password login path.
+- Scope: login form, submit handling, session creation, and focused tests.
+- Out of scope: account creation, password reset, social login, and production deployment.
+- Acceptance: existing users can sign in, failed login shows a chosen error treatment, and tests cover the touched path.
+- Blocking question: should failed login feedback be inline text or a toast?
+- Next safe action: after that answer, update the active scope and prepare the first write for the login form and related tests.
+```
+
+### Make a plan concrete
+
+```text
+User: Make this plan more concrete before implementation.
+
+Good agent behavior:
+- read the plan and related docs before asking anything;
+- identify the first writable slice, non-goals, acceptance criteria, evidence expectation, and close blockers;
+- ask only the decision that changes the first safe slice.
+
+Visible shaped result:
+- Goal: turn the plan into one implementable first change.
+- Scope: clarify the current objective, affected areas, acceptance criteria, and evidence expectation.
+- Out of scope: new design artifacts, broad roadmap rewrite, and implementation.
+- Evidence gap: no repository files or tests have been checked yet.
+- Blocking question: which user outcome should the first slice prove?
+- Next safe action: inspect the named owner docs or files, then update the active scope for the first Change Unit.
 ```
 
 ### Keep a tiny edit tiny
