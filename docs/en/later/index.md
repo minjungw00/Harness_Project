@@ -4,7 +4,7 @@ This is the single active index for later candidates and promotion boundaries.
 
 Rows here are planning candidates only. They are not active MVP requirements, active API or schema contracts, fixture bodies, template bodies, runtime behavior, implementation tasks, generated artifacts, acceptance evidence, or permission to start runtime work. A candidate remains inert until explicitly promoted by an owner document.
 
-Until that promotion, a name in this index creates no active behavior, API or schema value, storage record, gate, validator, report, template, fixture, connector behavior, generated artifact, close effect, guarantee claim, or implementation task.
+Until that promotion, a name in this index creates no active behavior, API or schema value, storage record, gate, validator, report, template, fixture, connector behavior, generated artifact, close effect, guarantee claim, or implementation task. Names that look like methods, enum values, fields, validators, gates, templates, or commands are still inert until the promoted owner updates the active owner contract.
 
 ## 1. Boundary
 
@@ -21,7 +21,7 @@ Until that promotion, a name in this index creates no active behavior, API or sc
 |---|---|---|---|
 | Owner assignment | required before promotion | Named owner, narrow scope, non-goals, and fallback behavior. | none |
 | Contract placement | index boundary only | Exact API, schema, storage, projection, template, fixture, or operator contract in the owning active document. | none until promoted |
-| No active behavior before promotion | required boundary | The promoted owner document must name scope, fallback behavior, and proof expectations before a candidate affects runtime behavior, API/schema values, storage, close, templates, fixtures, reports, connector behavior, or guarantee display. | none until promoted |
+| No active behavior before promotion | required boundary | The promoted owner document must name scope, fallback behavior, and proof expectations before a candidate affects runtime behavior, API/schema values, storage, close, templates, fixtures, reports, connector behavior, or guarantee display. API/schema promotions must update the active Schema Core owner instead of relying on this index. | none until promoted |
 | Active value-set ownership | active owner boundary | Current active method-name and schema enum value sets live in `docs/*/reference/api/schema-core.md`; later names listed here do not extend those sets. | none |
 | Security wording | no active guarantee claim here | Honest cooperative, detective, preventive, or isolated wording matched to a proven mechanism. | none until promoted |
 | Future proof-path expectation | listing is not current runtime proof | Conformance target, fixture, evidence expectation, or other owner-defined proof path for the promoted behavior. | none until promoted |
@@ -81,7 +81,8 @@ Until that promotion, a name in this index creates no active behavior, API or sc
 | Candidate | Status | Promotion requires | Active MVP impact |
 |---|---|---|---|
 | later schema extensions | schema names only | Promoted owner defines exact fields and validators in the active owner contract. | none until promoted |
-| Capability-gated authorization observation fields: `intended_commands`, `intended_network`, `intended_secret_scope` | field names only | Promoted API/schema owner defines exact shapes, profile gates, validation, storage, and `record_run` compatibility semantics. Baseline `reference-local-mcp` does not include these fields in active `AuthorizedAttemptScope`. | none until promoted |
+| Capability-gated authorization observation fields: `intended_commands`, `intended_network`, `intended_secret_scope`; sensitive-observation category names: `network_write`, `external_service_write`, `secret_access` | field and value names only | Promoted API/schema owner defines exact shapes, profile gates, validation, storage, and `record_run` compatibility semantics. Baseline `reference-local-mcp` does not include these fields or values in active `AuthorizedAttemptScope` or active `SensitiveCategory`. | none until promoted |
+| Later actor, producer, and capture source values: `evaluator`, `operator`, `capture_adapter` | value names only | Promoted Eval, operations, capture, API/schema, and storage owners define exact request authority, artifact relation, fallback behavior, and proof expectations. Baseline current MVP active tables do not include these values. | none until promoted |
 | Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, `design_gate`, `verification_gate`, `qa_gate`, Manual QA gate, design-policy blockers, assurance blockers | field names only | Core/API owner activation with close non-substitution rules, exact active schema fields, fallback behavior, and proof expectations. | none until promoted |
 | Later next-action values: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | value names only | Matching API or owner activation. | none until promoted |
 | Recommended playbooks and judgment context | metadata names only | Agent Integration/API owner rules that keep metadata read-only and non-satisfying. | none until promoted |

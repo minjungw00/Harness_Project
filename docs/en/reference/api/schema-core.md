@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference for the active current MVP method-name set, shared API shapes, and schema value sets: the tool envelope, common response, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization summary, evidence summary, run summary, close blockers, next-action summary, current MVP enum values, profile-gated display value names, and later candidate value-name boundaries.
+Use this reference for the active current MVP method-name set, shared API shapes, and closed schema value sets: the tool envelope, common response, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization summary, evidence summary, run summary, close blockers, next-action summary, and current MVP enum values.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server. Future schema candidates stay in [Later Candidate Index](../../later/index.md#later-schema-candidates).
 
@@ -25,7 +25,8 @@ The YAML-like blocks in this document are normative schema notation, not example
 - `field: Type` means the field is required and non-null.
 - `field: Type | null` means the field is required and may be JSON `null`.
 - `Type[]` means the field is present and contains an array; an empty array is written as `[]`.
-- `a | b | c` is a closed active enum for that field unless the surrounding section explicitly marks the value as profile-gated or reserved.
+- `a | b | c` is a closed active enum for that field.
+- Later, reserved, or profile-gated names must not appear in active enum notation or active value tables. They stay in [Later Candidate Index](../../later/index.md) until promoted by an owner document.
 - Unlisted fields are rejected outside an explicitly named extension container.
 
 Storage validation is a separate owner boundary. API payloads and API-shaped stored JSON validate against this API reference first; DDL, storage-only JSON, defaults, locks, and migrations validate against [Storage](../storage.md).
@@ -46,7 +47,7 @@ ToolEnvelope:
   project_id: string
   task_id: string | null
   surface_id: string
-  actor_kind: user | lead_agent | evaluator | operator
+  actor_kind: user | lead_agent
   dry_run: boolean
 ```
 
@@ -141,7 +142,7 @@ Task mode values have these reader-facing meanings:
 
 `IntakeRequest.requested_mode=auto` is only an intake input asking the server to classify the request. The server must resolve it to exactly one of `advisor`, `direct`, or `work` before writing `tasks.mode`, producing `StateSummary.mode`, or returning intake/status summaries.
 
-Rendered labels are not canonical schema values. `GuaranteeDisplay.level` is a display claim about the documented surface capability and proof level; it does not grant permission or state authority. The active MVP guarantee-display values are `cooperative` and `detective`. `preventive` and `isolated` are profile-gated display value names, not default active MVP guarantees.
+Rendered labels are not canonical schema values. `GuaranteeDisplay.level` is a display claim about the documented surface capability and proof level; it does not grant permission or state authority. The active MVP guarantee-display values are only `cooperative` and `detective`. Stronger display names are later candidates, not current MVP schema values.
 
 <a id="staterecordref"></a>
 
@@ -174,7 +175,7 @@ ArtifactRef:
   run_id: string | null
   relation_owner: ArtifactRelationOwner
   created_at: string
-  produced_by: lead_agent | evaluator | operator | harness
+  produced_by: lead_agent | harness
   retention_class: task | project | temporary
 
 ArtifactRelationOwner:
@@ -191,15 +192,14 @@ ArtifactRelationOwner:
 
 ## ArtifactInput
 
-`ArtifactInput` is accepted by `harness.record_run` only as a staging, capture-adapter, or existing-artifact handle. It never grants arbitrary file read authority.
+`ArtifactInput` is accepted by `harness.record_run` only as a staged-file or existing-artifact handle. It never grants arbitrary file read authority.
 
 ```yaml
 ArtifactInput:
   artifact_input_id: string
-  source_kind: staged_file | capture_adapter | existing_artifact
+  source_kind: staged_file | existing_artifact
   relation: string
   staged_uri: string | null
-  capture_ref: string | null
   existing_artifact_ref: ArtifactRef | null
   display_name: string | null
   content_type: string
@@ -242,7 +242,7 @@ AuthorizedAttemptScope:
   intended_operation: string
   intended_paths: string[]
   product_file_write_intended: boolean
-  sensitive_categories: string[]
+  sensitive_categories: SensitiveCategory[]
   baseline_ref: string | null
   related_user_judgment_refs: StateRecordRef[]
   guarantee_level: cooperative | detective
@@ -267,7 +267,7 @@ WriteAuthoritySummary:
 
 `AuthorizedAttemptScope` is the exact scope stored in `write_authorizations.attempt_scope_json` and later compared by `harness.record_run`. `WriteAuthorizationSummary.status` is the durable authorization lifecycle. `blocked` is not a Write Authorization status; blocked writes return blockers without a consumable authorization.
 
-The current MVP `AuthorizedAttemptScope` is path-level for product writes. It records the intended product-file paths, sensitive categories, baseline, related user judgments, and the honest guarantee level. Command execution, network effects, secret access, tool observation, artifact capture, pre-tool blocking, and isolation are not active baseline authorization fields. Requests that require those unobservable guarantees must be rejected or blocked as validation or capability failures rather than represented as verified scope.
+The current MVP `AuthorizedAttemptScope` is path-level for product writes. It records the intended product-file paths, active sensitive categories, baseline, related user judgments, and the honest guarantee level. Command execution, network effects, secret access, tool observation, native artifact capture, pre-tool blocking, and isolation are not active baseline authorization fields. Requests that require those unobservable guarantees must be rejected or blocked as validation or capability failures rather than represented as verified scope.
 
 <a id="record-run-payloads"></a>
 
@@ -447,7 +447,7 @@ The active stable validator ID is `surface_capability_check`. Validator output c
 
 ## Sensitive Categories
 
-Sensitive categories explain why sensitive-action approval may be needed. They do not decide product, technical, scope, QA, verification, acceptance, residual-risk, or policy questions.
+Sensitive categories explain why sensitive-action approval may be needed for a product-file write. They do not decide product, technical, scope, QA, verification, acceptance, residual-risk, or policy questions. They also do not claim that Harness observed commands, network effects, or secret access. The active `SensitiveCategory` enum is:
 
 ```text
 auth_change
@@ -456,9 +456,6 @@ schema_change
 dependency_change
 public_api_change
 destructive_write
-network_write
-external_service_write
-secret_access
 production_config_change
 ci_cd_change
 infra_or_deployment_change
@@ -475,12 +472,12 @@ policy_override
 
 ## Current MVP Value Sets
 
-These values are valid without a promoted profile. Values not listed here are not default active MVP values. Rendered labels are not canonical schema values. Public `ErrorCode` values are owned by [API Errors](errors.md), not by this table.
+These values are valid without a promoted profile. Values not listed here are not default active MVP values. This table is the copyable current MVP value set for first validators. Rendered labels are not canonical schema values. Public `ErrorCode` values are owned by [API Errors](errors.md), not by this table.
 
 | Field | Current MVP values |
 |---|---|
 | Active method set | `harness.intake`, `harness.status`, `harness.update_scope`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
-| `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
+| `ToolEnvelope.actor_kind` | `user`, `lead_agent` |
 | Local API access classes | `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read` |
 | `surfaces.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |
 | `surfaces.status` | `active`, `disabled`, `stale`, `revoked` |
@@ -499,10 +496,10 @@ These values are valid without a promoted profile. Values not listed here are no
 | `StateSummary.gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
 | `StateRecordRef.record_kind` | `project`, `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` |
 | `ArtifactRef.kind` | `diff`, `log`, `screenshot`, `checkpoint`, `other` |
-| `ArtifactRef.produced_by` | `lead_agent`, `evaluator`, `operator`, `harness` |
+| `ArtifactRef.produced_by` | `lead_agent`, `harness` |
 | `ArtifactRef.retention_class` | `task`, `project`, `temporary` |
 | `ArtifactRelationOwner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
-| `ArtifactInput.source_kind` | `staged_file`, `capture_adapter`, `existing_artifact` |
+| `ArtifactInput.source_kind` | `staged_file`, `existing_artifact` |
 | `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
 | `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
 | `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
@@ -529,37 +526,14 @@ These values are valid without a promoted profile. Values not listed here are no
 | `ValidatorResult.status` | `passed`, `warning`, `failed`, `blocked`, `skipped` |
 | `ValidatorResult.guarantee_level` | `cooperative`, `detective` |
 | `ValidatorResult.findings.severity` | `info`, `warning`, `error`, `blocker` |
-| Sensitive categories | `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `destructive_write`, `network_write`, `external_service_write`, `secret_access`, `production_config_change`, `ci_cd_change`, `infra_or_deployment_change`, `privacy_or_pii_change`, `data_export`, `telemetry_or_logging_change`, `license_or_compliance_change`, `billing_or_cost_change`, `model_or_prompt_policy_change`, `policy_override` |
+| `SensitiveCategory` | `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `destructive_write`, `production_config_change`, `ci_cd_change`, `infra_or_deployment_change`, `privacy_or_pii_change`, `data_export`, `telemetry_or_logging_change`, `license_or_compliance_change`, `billing_or_cost_change`, `model_or_prompt_policy_change`, `policy_override` |
 
 For `GuaranteeDisplay.level`, `cooperative` is the default current MVP value. `detective` is also a current MVP value, but only where the active surface can honestly observe the relevant fact. Neither value means OS permission, arbitrary-tool sandboxing, tamper-proof storage, pre-tool blocking, or isolation.
 
-`qa_waiver` and `verification_risk_acceptance` are later/reserved user-judgment candidate names, not active current MVP `UserJudgment.judgment_kind` values. They remain catalog-only in [Later Candidate Index](../../later/index.md) until a future owner promotes exact active schema values, request behavior, fallback behavior, and proof expectations. The active `StateSummary.gates` object intentionally has no `design_gate`, `verification_gate`, or `qa_gate` field.
-
-<a id="profile-gated-value-names"></a>
-
-## Profile-Gated Value Names
-
-These names may appear only when a promoted profile explicitly supports the corresponding guarantee. They are not default active MVP guarantees. `preventive` and `isolated` are profile-gated display values, not default active MVP guarantees.
-
-| Field | Profile-gated value name | Requirement |
-|---|---|---|
-| `GuaranteeDisplay.level` | `preventive` | Requires explicit pre-tool blocking support for the covered operation, plus an owner-defined behavior, fallback, and proof path. |
-| `GuaranteeDisplay.level` | `isolated` | Requires explicit isolation support for the covered boundary, plus a named boundary, owner-defined behavior, fallback, and proof path. |
-
-Profile-gated display value names do not expand Write Authorization, validator, storage, or error behavior by themselves. Unsupported requests to use or display them remain capability or validation failures; they are not evidence that the stronger guarantee exists.
+Schema Core intentionally does not reserve inactive enum members inside active tables. User-judgment kinds, gate fields, validator IDs, actor/source values, stronger guarantee labels, command/network/secret observation names, and API methods not listed in this section are inactive until promoted by an owner document and added to the relevant active owner contract.
 
 <a id="later-candidate-value-names"></a>
 
 ## Later Candidate Value Names
 
-Later candidate value names stay catalog-only in [Later Candidate Index](../../later/index.md#later-schema-candidates) until a promoted owner adds exact active fields, value sets, validators, fallback behavior, and proof expectations here or in another active owner document.
-
-This active API reference intentionally does not define later schema bodies. A later candidate name is not an active enum member, schema field, storage value, public method, validator requirement, close blocker, or guarantee value merely because it is cataloged for future work.
-
-| Source | Active API boundary |
-|---|---|
-| Later schema extensions | Candidate names only; no active request, response, shared schema, or enum member. |
-| Later design, verification, and QA gates | Candidate names only; no active `design_gate`, `verification_gate`, `qa_gate`, Manual QA gate, design-policy gate, verification response field, or QA response field. |
-| Later design-policy categories and validators | Candidate names only; no active `CloseBlocker.category=design_policy`, design-policy waiver, design-policy validator family, or severity-based close blocker. |
-| Later ref and artifact values | Candidate names only; no active `ArtifactRef`, `StateRecordRef`, storage, evidence, QA, export, or projection value. |
-| Later template, fixture, conformance, operation, export, and diagnostic names | Candidate names only; no active API payload, runtime operation, error family, conformance-runner behavior, or close effect. |
+Later candidate value names stay catalog-only in [Later Candidate Index](../../later/index.md#later-schema-candidates) until a promoted owner adds exact active fields, value sets, validators, fallback behavior, and proof expectations here or in another active owner document. This active API reference intentionally does not define later schema bodies.

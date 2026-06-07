@@ -4,7 +4,7 @@
 
 아래 행은 계획 후보일 뿐입니다. 현재 MVP 요구사항, 활성 API 또는 스키마 계약, fixture 전체 본문, 템플릿 전체 본문, 런타임 동작, 구현 작업, 생성 산출물, 수락 증거, 런타임 작업 시작 허가가 아닙니다. 후보는 담당 문서가 명시적으로 승격하기 전까지 동작하지 않습니다.
 
-그 승격 전까지 이 색인에 이름이 있다는 사실은 활성 동작, API 또는 스키마 값, 저장소 기록, gate, validator, report, template, fixture, 커넥터 동작, 생성 산출물, 닫기 효과, 보장 주장, 구현 작업을 만들지 않습니다. 이것이 이 문서의 active/later 경계입니다.
+그 승격 전까지 이 색인에 이름이 있다는 사실은 활성 동작, API 또는 스키마 값, 저장소 기록, gate, validator, report, template, fixture, 커넥터 동작, 생성 산출물, 닫기 효과, 보장 주장, 구현 작업을 만들지 않습니다. 메서드, enum 값, 필드, validator, gate, template, 명령처럼 보이는 이름도 승격된 담당 문서가 활성 담당 계약을 고치기 전까지는 동작하지 않습니다. 이것이 이 문서의 active/later 경계입니다.
 
 ## 1. 경계
 
@@ -21,7 +21,7 @@
 |---|---|---|---|
 | 담당 문서 지정 | 승격 전 필요 | 이름 있는 담당 문서, 좁은 범위, 비목표, 대체 동작이 필요합니다. | 없음 |
 | 계약 위치 | 색인 경계만 있음 | 정확한 API, 스키마, 저장소, Projection, 템플릿, fixture, 운영자 명령 계약은 알맞은 활성 담당 문서에 둡니다. | 승격 전까지 없음 |
-| 승격 전 활성 동작 없음 | 필요한 경계 | 승격된 담당 문서가 범위, 대체 동작, 증명 기대를 이름 붙이기 전에는 어떤 후보도 런타임 동작, API/스키마 값, 저장소, 닫기, 템플릿, fixture, report, 커넥터 동작, 보장 표시에 영향을 주지 않습니다. | 승격 전까지 없음 |
+| 승격 전 활성 동작 없음 | 필요한 경계 | 승격된 담당 문서가 범위, 대체 동작, 증명 기대를 이름 붙이기 전에는 어떤 후보도 런타임 동작, API/스키마 값, 저장소, 닫기, 템플릿, fixture, report, 커넥터 동작, 보장 표시에 영향을 주지 않습니다. API/schema 승격은 이 색인에 기대지 말고 활성 Schema Core 담당 문서를 고쳐야 합니다. | 승격 전까지 없음 |
 | 활성 값 집합 담당 | 활성 담당 문서 경계 | 현재 활성 메서드 이름과 스키마 enum 값 집합은 `docs/*/reference/api/schema-core.md`에 둡니다. 여기에 적힌 이후 이름은 그 값 집합을 넓히지 않습니다. | 없음 |
 | 보안 표현 | 이 문서에는 활성 보장 주장 없음 | 증명된 메커니즘에 맞는 협력형, 탐지형, 예방형, 격리형 표현이 필요합니다. | 승격 전까지 없음 |
 | 향후 증명 경로 기대치 | 후보 목록은 현재 런타임 증명이 아님 | 승격된 동작에 대한 적합성 목표, fixture, 증거 기대치, 또는 담당 문서가 정한 다른 증명 경로가 필요합니다. | 승격 전까지 없음 |
@@ -35,9 +35,9 @@
 | 보증 강화 | 이후 후보 | 담당 문서가 관문, 대체 동작, 향후 승격에 필요한 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
 | Full Evidence Manifest | 이후 후보 | 증거 담당 문서가 아티팩트 참조, 가림, 닫기 영향, 향후 승격에 필요한 증명 경로 기대치를 정해야 합니다. | 승격 전까지 없음 |
 | 수동 QA | 이후 후보 | 수동 QA 담당 문서가 면제 경로, 아티팩트 참조, 발견 사항, QA 관문 영향을 정해야 합니다. | 승격 전까지 없음 |
-| QA waiver | 이후 사용자 판단 후보 | 수동 QA와 사용자 판단 담당 문서가 정확한 `qa_waiver` 활성화, 허용 범위, 대체 불가 규칙, 잔여 위험 표시, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
-| verification gate | 이후 후보 | Core/API/Eval 담당 문서가 정확한 `verification_gate` 필드, 필수 조건, 대체 동작, 증명 기대치, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
-| verification-risk acceptance | 이후 사용자 판단 후보 | 검증과 사용자 판단 담당 문서가 정확한 `verification_risk_acceptance` 활성화, 허용되는 위험 범위, 대체 불가 규칙, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
+| `qa_waiver` QA 면제 판단 | 이후 사용자 판단 후보 | 수동 QA와 사용자 판단 담당 문서가 정확한 `qa_waiver` 활성화, 허용 범위, 대체 불가 규칙, 잔여 위험 표시, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
+| `verification_gate` 검증 gate | 이후 후보 | Core/API/Eval 담당 문서가 정확한 `verification_gate` 필드, 필수 조건, 대체 동작, 증명 기대치, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
+| `verification_risk_acceptance` 검증 위험 수락 | 이후 사용자 판단 후보 | 검증과 사용자 판단 담당 문서가 정확한 `verification_risk_acceptance` 활성화, 허용되는 위험 범위, 대체 불가 규칙, 닫기 영향을 정해야 합니다. | 승격 전까지 없음 |
 | Eval / detached verification / 평가 작업 흐름 | 이후 후보 | Eval 담당 문서가 독립성 의미, 기준선 최신성, 아티팩트 무결성, 작업 흐름 영향, 보증 갱신 규칙을 정해야 합니다. | 승격 전까지 없음 |
 | Full Decision Packet 형식과 `presentation=full` | 이후 후보 | 사용자 판단 담당 문서가 `presentation=full`과 전체 Decision Packet 형식을 켜되 둘 중 어느 것도 기본 현재 MVP 경로로 만들지 않아야 합니다. | 승격 전까지 없음 |
 | 상세 위험 검토와 잔여 위험 생명주기 | 이후 후보 | Core와 사용자 판단 담당 문서가 상세 위험 기록, 검토 흐름, 만료, 닫기 영향을 정해야 합니다. 간결한 잔여 위험 표시는 Core/API 담당 경로를 통해서만 active로 남습니다. | 승격 전까지 없음 |
@@ -81,7 +81,8 @@
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
 | 이후 스키마 확장 | 스키마 이름만 있음 | 승격된 담당 문서가 정확한 필드와 검증기를 활성 계약에 정의해야 합니다. | 승격 전까지 없음 |
-| 역량 조건부 `Write Authorization` 관찰 필드: `intended_commands`, `intended_network`, `intended_secret_scope` | 필드 이름만 있음 | 승격된 API/schema 담당 문서가 정확한 형태, 프로필 조건, 검증, 저장소, `record_run` 호환성 의미를 정의해야 합니다. 기준 `reference-local-mcp`는 활성 `AuthorizedAttemptScope`에 이 필드를 포함하지 않습니다. | 승격 전까지 없음 |
+| 역량 조건부 `Write Authorization` 관찰 필드: `intended_commands`, `intended_network`, `intended_secret_scope`; 민감 관찰 범주 이름: `network_write`, `external_service_write`, `secret_access` | 필드와 값 이름만 있음 | 승격된 API/schema 담당 문서가 정확한 형태, 프로필 조건, 검증, 저장소, `record_run` 호환성 의미를 정의해야 합니다. 기준 `reference-local-mcp`는 활성 `AuthorizedAttemptScope`나 활성 `SensitiveCategory`에 이 필드와 값을 포함하지 않습니다. | 승격 전까지 없음 |
+| 이후 actor, producer, capture source 값: `evaluator`, `operator`, `capture_adapter` | 값 이름만 있음 | 승격된 Eval, 운영, 캡처, API/schema, 저장소 담당 문서가 정확한 요청 권한, 아티팩트 관계, 대체 동작, 증명 기대치를 정의해야 합니다. 현재 MVP의 활성 표에는 이 값이 없습니다. | 승격 전까지 없음 |
 | 이후 닫기와 보증 필드: `verifying`, `qa`, `completed_verified`, `detached_verified`, `design_gate`, `verification_gate`, `qa_gate`, 수동 QA gate, 설계 정책 차단 사유, 보증 차단 사유 | 필드 이름만 있음 | Core/API 담당 문서 활성화, 닫기 대체 불가 규칙, 정확한 활성 스키마 필드, 대체 동작, 증명 기대치가 필요합니다. | 승격 전까지 없음 |
 | 이후 next-action 값: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | 값 이름만 있음 | 대응 API 또는 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |
 | 추천 playbook과 판단 맥락 | 메타데이터 이름만 있음 | Agent Integration/API 담당 문서가 메타데이터를 읽기 전용으로 두고 상태를 만족시키지 못하게 해야 합니다. | 승격 전까지 없음 |

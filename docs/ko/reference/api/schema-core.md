@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-현재 MVP에서 쓰는 활성 메서드 이름 집합, 공용 API 형태, 스키마 값 집합을 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 공통 응답, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization 요약, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP enum 값, profile-gated 표시 값 이름, later 후보 값 이름의 경계를 다룹니다.
+현재 MVP에서 쓰는 활성 메서드 이름 집합, 공용 API 형태, 닫힌 스키마 값 집합을 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 공통 응답, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization 요약, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP enum 값을 다룹니다.
 
 이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다. 향후 스키마 후보는 [Later 후보 색인](../../later/index.md#later-schema-candidates)에 남습니다.
 
@@ -25,7 +25,8 @@
 - `field: Type`은 필드가 필수이고 non-null이라는 뜻입니다.
 - `field: Type | null`은 필드가 필수이고 JSON `null`을 허용한다는 뜻입니다.
 - `Type[]`은 필드가 존재하고 배열을 담는다는 뜻입니다. 빈 배열은 `[]`로 씁니다.
-- `a | b | c`는 주변 섹션이 profile-gated 또는 reserved라고 명시하지 않는 한 해당 필드의 닫힌 활성 enum입니다.
+- `a | b | c`는 해당 필드의 닫힌 활성 enum입니다.
+- later, reserved, profile-gated 이름은 활성 enum 표기나 활성 값 표에 넣지 않습니다. 담당 문서가 승격하기 전까지 [Later 후보 색인](../../later/index.md)에 남깁니다.
 - 명시되지 않은 필드는 명시적인 확장 컨테이너 밖에서 거부됩니다.
 
 Storage validation은 별도 담당 문서 경계입니다. API payload와 API-shaped stored JSON은 먼저 이 API 참조로 검증합니다. DDL, storage-only JSON, 기본값, 잠금, 마이그레이션은 [Storage](../storage.md)가 담당합니다.
@@ -46,7 +47,7 @@ ToolEnvelope:
   project_id: string
   task_id: string | null
   surface_id: string
-  actor_kind: user | lead_agent | evaluator | operator
+  actor_kind: user | lead_agent
   dry_run: boolean
 ```
 
@@ -141,7 +142,7 @@ Task `mode` 값은 독자에게 다음 뜻으로 설명됩니다.
 
 `IntakeRequest.requested_mode=auto`는 `harness.intake` 입력에서만 쓰는 분류 요청입니다. 서버는 `tasks.mode`를 저장하거나 `StateSummary.mode`를 만들거나 `harness.intake`/`harness.status` 요약을 반환하기 전에 이를 `advisor`, `direct`, `work` 중 정확히 하나로 확정해야 합니다.
 
-화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. `GuaranteeDisplay.level`은 문서화된 접점 역량과 증명 수준을 보여 주는 표시 주장입니다. 권한이나 상태 권한을 부여하지 않습니다. 현재 MVP의 활성 guarantee-display 값은 `cooperative`와 `detective`입니다. `preventive`와 `isolated`는 profile-gated 표시 값 이름이며 현재 MVP의 기본 보장이 아닙니다.
+화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. `GuaranteeDisplay.level`은 문서화된 접점 역량과 증명 수준을 보여 주는 표시 주장입니다. 권한이나 상태 권한을 부여하지 않습니다. 현재 MVP의 활성 `GuaranteeDisplay.level` 값은 `cooperative`와 `detective`뿐입니다. 더 강한 표시 이름은 이후 후보이며 현재 MVP 스키마 값이 아닙니다.
 
 <a id="staterecordref"></a>
 
@@ -174,7 +175,7 @@ ArtifactRef:
   run_id: string | null
   relation_owner: ArtifactRelationOwner
   created_at: string
-  produced_by: lead_agent | evaluator | operator | harness
+  produced_by: lead_agent | harness
   retention_class: task | project | temporary
 
 ArtifactRelationOwner:
@@ -191,15 +192,14 @@ ArtifactRelationOwner:
 
 ## ArtifactInput
 
-`ArtifactInput`은 `harness.record_run`에서 staging, capture-adapter, existing-artifact 핸들로만 받습니다. 임의 파일 읽기 권한을 부여하지 않습니다.
+`ArtifactInput`은 `harness.record_run`에서 `staged_file` 또는 `existing_artifact` 핸들로만 받습니다. 임의 파일 읽기 권한을 부여하지 않습니다.
 
 ```yaml
 ArtifactInput:
   artifact_input_id: string
-  source_kind: staged_file | capture_adapter | existing_artifact
+  source_kind: staged_file | existing_artifact
   relation: string
   staged_uri: string | null
-  capture_ref: string | null
   existing_artifact_ref: ArtifactRef | null
   display_name: string | null
   content_type: string
@@ -242,7 +242,7 @@ AuthorizedAttemptScope:
   intended_operation: string
   intended_paths: string[]
   product_file_write_intended: boolean
-  sensitive_categories: string[]
+  sensitive_categories: SensitiveCategory[]
   baseline_ref: string | null
   related_user_judgment_refs: StateRecordRef[]
   guarantee_level: cooperative | detective
@@ -267,7 +267,7 @@ WriteAuthoritySummary:
 
 `AuthorizedAttemptScope`는 `write_authorizations.attempt_scope_json`에 저장되고 나중에 `harness.record_run`에서 비교하는 정확한 범위입니다. `WriteAuthorizationSummary.status`는 오래 남는 authorization 생명주기입니다. `blocked`는 Write Authorization status가 아닙니다. 차단된 쓰기는 소비 가능한 authorization 없이 blocker를 반환합니다.
 
-현재 MVP의 `AuthorizedAttemptScope`는 제품 파일 쓰기를 경로 수준으로 다룹니다. 의도한 제품 파일 경로, 민감 범주, baseline, 관련 사용자 판단, 정직한 보장 수준만 기록합니다. 명령 실행, 네트워크 효과, 비밀값 접근, 도구 관찰, 아티팩트 캡처, 도구 실행 전 차단, 격리는 현재 기준 `AuthorizedAttemptScope` 필드가 아닙니다. 이런 관찰할 수 없는 보장을 요구하는 요청은 검증 오류나 역량 부족으로 거절하거나 차단해야 하며, 검증된 범위처럼 기록하면 안 됩니다.
+현재 MVP의 `AuthorizedAttemptScope`는 제품 파일 쓰기를 경로 수준으로 다룹니다. 의도한 제품 파일 경로, 활성 민감 범주, baseline, 관련 사용자 판단, 정직한 보장 수준만 기록합니다. 명령 실행, 네트워크 효과, 비밀값 접근, 도구 관찰, 네이티브 아티팩트 캡처, 도구 실행 전 차단, 격리는 현재 기준 `AuthorizedAttemptScope` 필드가 아닙니다. 이런 관찰할 수 없는 보장을 요구하는 요청은 검증 오류나 역량 부족으로 거절하거나 차단해야 하며, 검증된 범위처럼 기록하면 안 됩니다.
 
 <a id="record-run-payloads"></a>
 
@@ -447,7 +447,7 @@ ValidatorResult:
 
 ## 민감 범주
 
-민감 범주는 왜 민감 동작 승인이 필요할 수 있는지 설명합니다. 제품 판단, 기술 판단, 범위 판단, QA, 검증, 수락, 잔여 위험, 정책 질문을 결정하지 않습니다.
+민감 범주는 제품 파일 쓰기에 왜 민감 동작 승인이 필요할 수 있는지 설명합니다. 제품 판단, 기술 판단, 범위 판단, QA, 검증, 수락, 잔여 위험, 정책 질문을 결정하지 않습니다. 또한 하네스가 명령, 네트워크 효과, 비밀값 접근을 관찰했다는 뜻도 아닙니다. 활성 `SensitiveCategory` enum은 다음과 같습니다.
 
 ```text
 auth_change
@@ -456,9 +456,6 @@ schema_change
 dependency_change
 public_api_change
 destructive_write
-network_write
-external_service_write
-secret_access
 production_config_change
 ci_cd_change
 infra_or_deployment_change
@@ -475,12 +472,12 @@ policy_override
 
 ## 현재 MVP 값 집합
 
-아래 값은 승격된 프로필 없이 사용할 수 있는 현재 MVP 값 집합입니다. 여기에 없는 값은 현재 MVP의 기본 활성 값이 아닙니다. 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. 공개 `ErrorCode` 값은 이 표가 아니라 [API Errors](errors.md)가 담당합니다.
+아래 값은 승격된 프로필 없이 사용할 수 있는 현재 MVP 값 집합입니다. 여기에 없는 값은 현재 MVP의 기본 활성 값이 아닙니다. 이 표는 첫 validator가 복사해 쓸 수 있는 현재 MVP 값 집합입니다. 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. 공개 `ErrorCode` 값은 이 표가 아니라 [API Errors](errors.md)가 담당합니다.
 
 | 필드 | 현재 MVP 값 |
 |---|---|
 | 활성 메서드 집합 | `harness.intake`, `harness.status`, `harness.update_scope`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
-| `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
+| `ToolEnvelope.actor_kind` | `user`, `lead_agent` |
 | 로컬 API 접근 분류 | `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read` |
 | `surfaces.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |
 | `surfaces.status` | `active`, `disabled`, `stale`, `revoked` |
@@ -499,10 +496,10 @@ policy_override
 | `StateSummary.gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
 | `StateRecordRef.record_kind` | `project`, `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` |
 | `ArtifactRef.kind` | `diff`, `log`, `screenshot`, `checkpoint`, `other` |
-| `ArtifactRef.produced_by` | `lead_agent`, `evaluator`, `operator`, `harness` |
+| `ArtifactRef.produced_by` | `lead_agent`, `harness` |
 | `ArtifactRef.retention_class` | `task`, `project`, `temporary` |
 | `ArtifactRelationOwner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
-| `ArtifactInput.source_kind` | `staged_file`, `capture_adapter`, `existing_artifact` |
+| `ArtifactInput.source_kind` | `staged_file`, `existing_artifact` |
 | `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
 | `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
 | `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
@@ -529,37 +526,14 @@ policy_override
 | `ValidatorResult.status` | `passed`, `warning`, `failed`, `blocked`, `skipped` |
 | `ValidatorResult.guarantee_level` | `cooperative`, `detective` |
 | `ValidatorResult.findings.severity` | `info`, `warning`, `error`, `blocker` |
-| 민감 범주 | `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `destructive_write`, `network_write`, `external_service_write`, `secret_access`, `production_config_change`, `ci_cd_change`, `infra_or_deployment_change`, `privacy_or_pii_change`, `data_export`, `telemetry_or_logging_change`, `license_or_compliance_change`, `billing_or_cost_change`, `model_or_prompt_policy_change`, `policy_override` |
+| `SensitiveCategory` | `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `destructive_write`, `production_config_change`, `ci_cd_change`, `infra_or_deployment_change`, `privacy_or_pii_change`, `data_export`, `telemetry_or_logging_change`, `license_or_compliance_change`, `billing_or_cost_change`, `model_or_prompt_policy_change`, `policy_override` |
 
 `GuaranteeDisplay.level`에서 `cooperative`는 현재 MVP의 기본값입니다. `detective`도 현재 MVP 값이지만, 활성 접점이 관련 사실을 정직하게 관찰할 수 있는 곳에서만 사용할 수 있습니다. 두 값 모두 OS 권한, 임의 도구 샌드박스, 변조 방지 저장소, 도구 실행 전 차단, 격리를 뜻하지 않습니다.
 
-`qa_waiver`와 `verification_risk_acceptance`는 later/reserved 사용자 판단 후보 이름입니다. 현재 MVP의 활성 `UserJudgment.judgment_kind` 값이 아닙니다. 향후 담당 문서가 정확한 활성 스키마 값, 요청 동작, 대체 동작, 증명 기대치를 승격하기 전까지 [Later 후보 색인](../../later/index.md)에만 남습니다. 활성 `StateSummary.gates` 객체에는 의도적으로 `design_gate`, `verification_gate`, `qa_gate` 필드가 없습니다.
-
-<a id="profile-gated-value-names"></a>
-
-## profile-gated 값 이름
-
-아래 이름은 승격된 프로필이 해당 보장을 명시적으로 지원할 때만 나타날 수 있습니다. 현재 MVP의 기본 보장이 아닙니다. `preventive`와 `isolated`는 profile-gated 표시 값이며 현재 MVP의 기본 보장이 아닙니다.
-
-| 필드 | profile-gated 값 이름 | 요구사항 |
-|---|---|---|
-| `GuaranteeDisplay.level` | `preventive` | 대상 동작에 대한 명시적 도구 실행 전 차단 지원이 필요합니다. 또한 담당 문서가 동작, 대체 동작, 증명 경로를 정의해야 합니다. |
-| `GuaranteeDisplay.level` | `isolated` | 대상 경계에 대한 명시적 격리 지원이 필요합니다. 또한 이름 붙은 경계, 담당 문서가 정의한 동작, 대체 동작, 증명 경로가 있어야 합니다. |
-
-profile-gated 표시 값 이름은 그 자체로 Write Authorization, 검증기, 저장소, 오류 동작을 넓히지 않습니다. 지원되지 않는 값의 사용 또는 표시 요청은 역량 부족 또는 검증 실패로 남습니다. 더 강한 보장이 존재한다는 증거가 아닙니다.
+Schema Core는 활성 표 안에 비활성 enum 값을 예약하지 않습니다. 이 섹션에 없는 사용자 판단 종류, gate 필드, validator ID, actor/source 값, 더 강한 보장 라벨, 명령/네트워크/비밀값 관찰 이름, API 메서드는 담당 문서가 승격하고 관련 활성 담당 계약에 추가하기 전까지 비활성입니다.
 
 <a id="later-candidate-value-names"></a>
 
 ## Later 후보 값 이름
 
-Later 후보 값 이름은 승격된 담당 문서가 정확한 활성 필드, 값 집합, validator, 대체 동작, 증명 기대치를 이 문서나 다른 활성 담당 문서에 추가하기 전까지 [Later 후보 색인](../../later/index.md#later-schema-candidates)에만 남는 목록 전용 이름입니다.
-
-이 활성 API 참조는 later 스키마 본문을 일부러 정의하지 않습니다. Later 후보 이름은 목록에 있다는 이유만으로 활성 enum member, 스키마 필드, 저장소 값, 공개 메서드, validator 요구사항, 닫기 차단 사유, guarantee 값이 되지 않습니다.
-
-| 출처 | 활성 API 경계 |
-|---|---|
-| Later schema extensions | 후보 이름일 뿐이며 활성 요청, 응답, 공용 schema, enum member가 아닙니다. |
-| Later 설계/검증/QA gate 후보 | 후보 이름일 뿐이며 활성 `design_gate`, `verification_gate`, `qa_gate`, 수동 QA gate, 설계 정책 gate, 검증 응답 필드, QA 응답 필드가 아닙니다. |
-| Later 설계 정책 범주와 validator | 후보 이름일 뿐이며 활성 `CloseBlocker.category=design_policy`, 설계 정책 waiver, 설계 정책 validator 계열, 심각도 기반 닫기 차단 사유가 아닙니다. |
-| Later ref and artifact values | 후보 이름일 뿐이며 활성 `ArtifactRef`, `StateRecordRef`, storage, evidence, QA, export, projection 값이 아닙니다. |
-| Later template, fixture, conformance, operation, export, diagnostic names | 후보 이름일 뿐이며 활성 API payload, runtime operation, error family, conformance-runner behavior, close effect가 아닙니다. |
+Later 후보 값 이름은 승격된 담당 문서가 정확한 활성 필드, 값 집합, validator, 대체 동작, 증명 기대치를 이 문서나 다른 활성 담당 문서에 추가하기 전까지 [Later 후보 색인](../../later/index.md#later-schema-candidates)에만 남는 목록 전용 이름입니다. 이 활성 API 참조는 later 스키마 본문을 일부러 정의하지 않습니다.
