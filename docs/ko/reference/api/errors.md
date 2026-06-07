@@ -63,7 +63,7 @@
 | `RESIDUAL_RISK_NOT_VISIBLE` | 닫기에 영향을 주는 알려진 잔여 위험이 최종 수락 또는 닫기 전에 보이지 않았습니다. |
 | `ARTIFACT_MISSING` | 참조한 아티팩트가 없거나 무결성/메타데이터 확인에 실패했습니다. |
 | `BASELINE_STALE` | 동작에 필요한 저장소 상태와 baseline이 더 이상 맞지 않습니다. |
-| `VALIDATOR_FAILED` | 필수 활성 validator 또는 차단 사유 확인이 실패했고, 더 구체적인 타입 코드가 없을 때 쓰는 대체 코드입니다. |
+| `VALIDATOR_FAILED` | 필수 활성 validator 또는 차단 사유 확인이 실패했고, 더 구체적인 타입 코드가 없을 때 쓰는 대체 코드입니다. 현재 MVP에서 설계 정책 오류가 아닙니다. 설계 품질 우려는 활성 판단, 차단 사유, 증거, 역량, 잔여 위험 경로로 라우팅되거나 조언으로 남아야 합니다. |
 
 `ToolError.details.authorization_reason`은 정확히 다음 값만 사용합니다.
 
@@ -185,4 +185,4 @@ Run 실패, violation, Projection 실패, 아티팩트 무결성 실패, validat
 | `RESIDUAL_RISK_NOT_VISIBLE` | 잔여 위험이 보이지 않음 | 최종 수락 또는 닫기 전에 닫기 관련 잔여 위험을 보여 줍니다. |
 | `PROJECTION_STALE` | 읽기용 보기 오래됨 | 그 보기를 새로 고친 뒤 의존합니다. 기준 닫기 상태로 취급하지 않습니다. |
 | `ARTIFACT_MISSING` | 아티팩트 문제 | 누락되었거나 실패한 아티팩트를 다시 첨부, 다시 생성, 교체한 뒤 의존합니다. |
-| `VALIDATOR_FAILED` | 확인 또는 차단 사유 실패 | 특정 validator 또는 차단 사유를 보여 줍니다. 타입 있는 차단 사유가 없을 때만 이 대체 코드를 사용합니다. |
+| `VALIDATOR_FAILED` | 확인 또는 차단 사유 실패 | 특정 validator 또는 차단 사유를 보여 줍니다. 타입 있는 차단 사유가 없을 때만 이 대체 코드를 사용합니다. 설계 정책 차단 사유로 사용하면 안 됩니다. |

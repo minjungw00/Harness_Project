@@ -63,7 +63,7 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | `RESIDUAL_RISK_NOT_VISIBLE` | Known close-relevant residual risk has not been made visible before final acceptance or close. |
 | `ARTIFACT_MISSING` | A referenced artifact is missing or failed integrity/metadata checks. |
 | `BASELINE_STALE` | Baseline no longer matches the repository state required by the operation. |
-| `VALIDATOR_FAILED` | Fallback when a required active validator or blocker check failed and no more specific typed code applies. |
+| `VALIDATOR_FAILED` | Fallback when a required active validator or blocker check failed and no more specific typed code applies. In the current MVP, this is not a design-policy error. Design-quality concerns must route through an active judgment, blocker, evidence, capability, or residual-risk path, or remain advisory. |
 
 `ToolError.details.authorization_reason` uses exactly:
 
@@ -185,4 +185,4 @@ These labels are display guidance, not new public error codes.
 | `RESIDUAL_RISK_NOT_VISIBLE` | residual risk not visible | Show the close-relevant risk before final acceptance or close. |
 | `PROJECTION_STALE` | stale readable view | Refresh the readable view before relying on it; do not treat it as canonical close state. |
 | `ARTIFACT_MISSING` | artifact issue | Reattach, regenerate, or replace the missing or failed artifact before relying on it. |
-| `VALIDATOR_FAILED` | check or blocker failed | Show the specific validator or blocker when available; use this fallback only when no typed blocker applies. |
+| `VALIDATOR_FAILED` | check or blocker failed | Show the specific validator or blocker when available; use this fallback only when no typed blocker applies. Do not use it as a design-policy blocker. |

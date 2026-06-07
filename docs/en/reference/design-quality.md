@@ -2,13 +2,13 @@
 
 ## 1. Owns / Does not own
 
-This Reference page owns the active current MVP design-quality routing boundary: how design-quality observations identify product decisions, technical decisions, scope decisions, evidence gaps, residual-risk visibility issues, or close blockers that are already owned by active Core/API categories.
+This Reference page owns the active current MVP design-quality routing boundary as a judgment-routing and evidence/scope reference: how design-quality observations identify product decisions, technical decisions, scope decisions, evidence gaps, residual-risk visibility issues, or close blockers that are already owned by active Core/API categories.
 
 It does not define an independent active gate, active `CloseBlocker.category`, active validator family, design-policy waiver route, severity-based blocking policy, evidence record, QA record, acceptance record, residual-risk record, or close authority.
 
 It owns:
 
-- the active design-quality role as judgment-routing and documentation reference
+- the active design-quality role as judgment-routing and evidence/scope reference
 - how design-quality observations route to `judgment_kind=product_decision`, `judgment_kind=technical_decision`, and `judgment_kind=scope_decision`
 - how design-quality observations point to existing active blocker categories such as `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, or `surface_capability`
 - the boundary between design-quality observations, active `ValidatorResult.validator_id` values, and later design-policy catalogs
@@ -25,7 +25,7 @@ Documentation in this repository remains planning source material. It does not m
 
 ## 2. Active current MVP design-quality role
 
-Active current MVP design quality is a narrow reference and routing layer. It makes a quality concern legible, then sends the concern to an existing active owner path. It does not create new Core state, `StateSummary.gates.design_gate`, `CloseBlocker.category=design_policy`, new schemas, new validator result fields, active design-policy validators, design-policy waiver, or a separate design-review authority.
+Active current MVP design quality is a narrow judgment-routing and evidence/scope reference layer. It makes a quality concern legible, then sends the concern to an existing active owner path. It does not create new Core state, `StateSummary.gates.design_gate`, `CloseBlocker.category=design_policy`, new schemas, new validator result fields, active design-policy validators, design-policy waiver, or a separate design-review authority.
 
 The active role is limited to these effects:
 

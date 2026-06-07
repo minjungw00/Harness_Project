@@ -2,13 +2,13 @@
 
 ## 1. 담당하는 것 / 담당하지 않는 것
 
-이 참조 문서는 현재 활성 MVP의 설계 품질 라우팅 경계를 담당합니다. 설계 품질에서 보인 관찰 사항이 제품 판단, 기술 판단, 범위 판단, 증거 공백, 잔여 위험 표시 문제, 또는 이미 활성 Core/API 범주가 담당하는 닫기 차단 사유인지 식별하는 방법을 다룹니다.
+이 참조 문서는 현재 활성 MVP의 설계 품질 라우팅 경계를 판단 라우팅, 증거 참조, 범위 참조로 담당합니다. 설계 품질에서 보인 관찰 사항이 제품 판단, 기술 판단, 범위 판단, 증거 공백, 잔여 위험 표시 문제, 또는 이미 활성 Core/API 범주가 담당하는 닫기 차단 사유인지 식별하는 방법을 다룹니다.
 
 이 문서는 독립적인 활성 gate, 활성 `CloseBlocker.category`, 활성 validator 계열, 설계 정책 면제 경로, 심각도 기반 차단 정책, 증거 기록, QA 기록, 수락 기록, 잔여 위험 기록, 닫기 권한을 정의하지 않습니다.
 
 이 문서가 담당합니다.
 
-- 현재 MVP에서 판단 라우팅과 문서 참조로 쓰이는 설계 품질 역할
+- 현재 MVP에서 판단 라우팅, 증거 참조, 범위 참조로 쓰이는 설계 품질 역할
 - 설계 품질 관찰 사항을 `judgment_kind=product_decision`, `judgment_kind=technical_decision`, `judgment_kind=scope_decision`으로 보내는 기준
 - 설계 품질 관찰 사항을 `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `surface_capability` 같은 기존 활성 차단 사유 범주로 연결하는 기준
 - 설계 품질 관찰 사항, 활성 `ValidatorResult.validator_id` 값, later 설계 정책 후보 사이의 경계
@@ -25,7 +25,7 @@
 
 ## 2. 현재 활성 MVP 설계 품질 역할
 
-현재 활성 MVP에서 설계 품질은 좁은 참조와 라우팅 층입니다. 품질 관련 우려를 이해할 수 있게 만들고, 그 우려를 기존 활성 담당 경로로 보냅니다. 새 Core 상태, `StateSummary.gates.design_gate`, `CloseBlocker.category=design_policy`, 새 스키마, 새 `ValidatorResult` 필드, 활성 설계 정책 validator, 설계 정책 waiver, 별도 설계 검토 권한을 만들지 않습니다.
+현재 활성 MVP에서 설계 품질은 판단 라우팅을 하고 증거와 범위를 참조하는 좁은 층입니다. 품질 관련 우려를 이해할 수 있게 만들고, 그 우려를 기존 활성 담당 경로로 보냅니다. 새 Core 상태, `StateSummary.gates.design_gate`, `CloseBlocker.category=design_policy`, 새 스키마, 새 `ValidatorResult` 필드, 활성 설계 정책 validator, 설계 정책 waiver, 별도 설계 검토 권한을 만들지 않습니다.
 
 활성 역할은 아래 영향으로 제한됩니다.
 

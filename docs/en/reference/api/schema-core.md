@@ -441,7 +441,7 @@ ValidatorResult:
   suggested_next_action: string | null
 ```
 
-The active stable validator ID is `surface_capability_check`. Validator output can affect blockers, fallback behavior, and guarantee display. It does not create Write Authorization, user judgment, evidence, final acceptance, residual-risk acceptance, or close.
+The active stable validator ID is `surface_capability_check`. Validator output can affect blockers, fallback behavior, and guarantee display only through the active owner path named by the result, such as `CloseBlocker.category=surface_capability` when capability is truly the issue. A `status=blocked` result or `findings.severity=blocker` is not a design-policy blocker, does not activate `design_gate` or `design_policy`, and does not block close by severity alone. It does not create Write Authorization, user judgment, evidence, final acceptance, residual-risk acceptance, or close.
 
 <a id="sensitive-categories"></a>
 
