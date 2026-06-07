@@ -17,7 +17,7 @@
 
 이 문서가 담당하지 않는 것:
 
-- Core 상태, lifecycle, gate, `prepare_write`, `record_run`, `close_task`, 사용자 판단 상태 변경. [Core Model 참조](core-model.md)를 봅니다.
+- Core 상태, 생명주기, gate, `prepare_write`, `record_run`, `close_task`, 사용자 판단 상태 변경. [Core Model 참조](core-model.md)를 봅니다.
 - 공개 MCP 요청/응답 스키마, `ProjectionKind`, `ArtifactRef`, 오류 형태. [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md)를 봅니다.
 - SQLite DDL, 저장소 배치, 아티팩트 저장소, Projection 작업 저장소. [Storage](storage.md)를 봅니다.
 - 설계 품질의 닫기 영향 경계. [설계 품질](design-quality.md)을 봅니다.
@@ -34,7 +34,7 @@ Core가 소유한 상태와 등록된 아티팩트 참조가 기준입니다. Pr
 
 표시 라벨은 기준 스키마 값이 아닙니다. 사용자에게 보이는 판단 유형 같은 지역화 라벨은 `judgment_kind`와 locale 같은 기준 필드에서 렌더링됩니다. 호환성 또는 응답 전용 출력에 `display_label`이 나타나도 표시 문구일 뿐입니다. enum 값, 저장소 값, API 필드 담당자, 스키마 범주처럼 다루면 안 됩니다.
 
-사용자가 Projection을 편집해도 그 내용은 입력일 뿐입니다. reconcile과 Core 상태 변경 작업 같은 명시적 담당 경로를 거쳐야 상태가 될 수 있습니다. 관리 텍스트, front matter, 표시된 상태, 아티팩트 참조, 닫기 상태, 최종 수락 상태, 잔여 위험 상태, 템플릿 텍스트를 직접 고쳐도 담당 경로로 기록된 상태가 되지 않습니다.
+사용자가 Projection을 편집해도 그 내용은 입력일 뿐입니다. reconcile과 Core 상태 변경 작업 같은 명시적 담당 경로를 거쳐야 상태가 될 수 있습니다. 관리 텍스트, 전면 메타데이터(front matter), 표시된 상태, 아티팩트 참조, 닫기 상태, 최종 수락 상태, 잔여 위험 상태, 템플릿 텍스트를 직접 고쳐도 담당 경로로 기록된 상태가 되지 않습니다.
 
 ## Projection은 파생 표시
 
@@ -75,8 +75,8 @@ User Notes and Proposals:
 사람은 아래 항목을 직접 상태로 편집할 수 없습니다.
 
 - 관리 블록 내용
-- `source_state_version` 같은 front matter 필드
-- gate 값, lifecycle 단계, 결과, 닫기 이유, 닫기 상태, assurance 수준
+- `source_state_version` 같은 전면 메타데이터(front matter) 필드
+- gate 값, 생명주기 단계, 결과, 닫기 이유, 닫기 상태, 보증 수준
 - 사용자 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 닫기 표시 문구, later/reserved QA 면제 판단과 검증 위험 수락 표시 문구
 - 아티팩트 식별 정보, `sha256`, `size_bytes`, `content_type`, `redaction_state`, 아티팩트 가용성
 - 상태 카드, 에이전트 맥락 패킷, 생성된 보고서, 템플릿 본문
@@ -152,7 +152,7 @@ User Notes and Proposals:
 
 기준 기록:
 
-- 현재 Task 요약, 작업 모양, lifecycle phase, 필요할 때 막히는 질문 하나, 다음 안전한 행동
+- 현재 Task 요약, 작업 모양, 생명주기 단계, 필요할 때 막히는 질문 하나, 다음 안전한 행동
 - 사용자가 이해하는 데 필요한 현재 범위, 허용 경로 또는 영향 영역, 범위 밖 항목, 수락 기준, Autonomy Boundary, 활성 Change Unit 요약
 - 사용자에게 읽히는 라벨로 렌더링한 대기 중인 판단
 - 진행 또는 닫기가 보류된 평이한 이유와 활성 차단 사유

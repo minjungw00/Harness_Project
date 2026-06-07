@@ -88,11 +88,11 @@
 
 유용한 증거 참조는 다음을 포함할 수 있습니다.
 
-- 등록된 `ArtifactRef` 값, Run ref, command/check summary, source ref
-- 최신이 아닌 맥락이 닫기 근거에 영향을 줄 때 current state/version/freshness ref
-- 제품, 기술, 범위, 최종 수락, 잔여 위험 판단, 그리고 승격된 later/reserved QA 면제와 검증 위험 판단에 대한 user-judgment ref
-- 알려진 한계가 닫기에서 보일 때 residual-risk ref
-- 해당 담당 경로가 활성 상태이거나 명시적으로 요구할 때만 수동 QA 또는 검증 ref
+- 등록된 `ArtifactRef` 값, Run 참조, 명령/확인 요약, 출처 참조
+- 최신이 아닌 맥락이 닫기 근거에 영향을 줄 때 현재 상태/버전/최신성 참조
+- 제품, 기술, 범위, 최종 수락, 잔여 위험 판단, 그리고 승격된 later/reserved QA 면제와 검증 위험 판단에 대한 사용자 판단 참조
+- 알려진 한계가 닫기에서 보일 때 잔여 위험 참조
+- 해당 담당 경로가 활성 상태이거나 명시적으로 요구할 때만 수동 QA 또는 검증 참조
 
 채팅 주장, 일반 요약, 렌더링된 Projection 문장, 등록되지 않은 파일, 담당 경로 없는 화면 캡처, 테스트 통과만 있는 상태, later QA 면제, 최종 수락, 잔여 위험 수락은 필요한 증거를 자동으로 충족하지 않습니다. 필요한 증거는 Core 증거 담당 경로를 통해서만 닫기를 차단할 수 있습니다. 필수가 아닌 증거 공백은 상황에 맞게 `request evidence`, `show advisory next action`, 또는 잔여 위험 표시로 라우팅해야 합니다.
 

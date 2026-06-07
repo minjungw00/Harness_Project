@@ -250,7 +250,7 @@ conformance_smoke_status: planned_not_run
 
 기준 접점 점검에는 다음이 포함됩니다.
 
-- active Task가 있을 때와 없을 때의 상태
+- 활성 Task가 있을 때와 없을 때의 상태
 - Use 절차가 요구할 때 중요한 이어가기 전 간결한 현재 위치 상태
 - 실제 `capability_profile` 필드에서 파생된 보장 표시 수준
 - `capability_profile`이 그 표시 주장을 뒷받침하지 못하면 `preventive` 또는 `isolated` 주장 없음
