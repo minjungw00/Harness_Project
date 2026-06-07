@@ -13,7 +13,7 @@ Show what I need to decide and what you can verify.
 Before you say it is done, show the evidence and residual risk.
 ```
 
-The agent can answer in the same ordinary language. When a request hides product, technical, QA, acceptance, or risk choices, Harness should make those choices visible instead of letting the agent infer them silently.
+The agent can answer in the same ordinary language. When a request hides product, technical, QA, acceptance, or risk choices, Harness should make those choices visible. The agent should request and record needed judgments, not decide them silently.
 
 This repository is documentation-only today. It describes intended future Harness behavior, but it does not contain a running Harness Server or runtime implementation.
 
@@ -39,7 +39,7 @@ A user might ask:
 Add remember-me behavior to login, but clarify the plan before changing files.
 ```
 
-A useful agent response does not start by choosing hidden product and security behavior. It names a narrow goal, likely non-goals, the facts it can inspect, and the choices the user still owns:
+A useful agent response does not start by choosing hidden product and security behavior. It names a narrow goal, likely non-goals, the facts it can inspect, and the judgments the user still owns:
 
 ```text
 Goal I heard:
@@ -80,7 +80,7 @@ When the agent cannot honestly proceed without a user-owned judgment, it should 
 
 Evidence is support for a claim. It can be a diff, test output, screenshot, log, source citation, review note, or artifact reference. Evidence should say what it supports and what it does not support.
 
-Evidence is not final acceptance. Evidence is not user judgment. Evidence is not automatically verification. A test pass is not Manual QA for copy, accessibility, visual layout, or the human experience. QA can support acceptance, but QA is not final acceptance.
+Evidence shows what the work did, but it does not replace the user's final acceptance. Evidence is not user judgment. Evidence is not automatically verification. A test pass is not Manual QA for copy, accessibility, visual layout, or the human experience. QA can support acceptance, but QA is not final acceptance.
 
 If evidence is missing, stale, weak, or limited to the agent's own check, Harness should keep that visible instead of rounding it into "done."
 
@@ -88,7 +88,7 @@ If evidence is missing, stale, weak, or limited to the agent's own check, Harnes
 
 Close readiness answers a simple question: can this work honestly finish now, and what still blocks it?
 
-A close-ready task should show that scope stayed bounded, required user-owned judgments were handled, evidence supports the stated result, checks or verification expectations are clear, required QA is passed or explicitly waived where allowed, final acceptance is handled when required, known residual risk is visible when present, and any required residual-risk acceptance is recorded only when the user actually accepts the named risk.
+A close-ready task should show that scope stayed bounded, required user-owned judgments were handled, evidence supports the stated result, checks or verification expectations are clear, required QA is passed or explicitly waived where allowed, final acceptance is handled when required, known residual risk is visible when present, and any required residual-risk acceptance is recorded only when the user actually accepts the named risk. The user judges final acceptance and residual-risk acceptance separately.
 
 If something is missing, close should name the smallest unblocker, such as a pending product decision, missing evidence, deferred QA, unaccepted residual risk, or final acceptance that has not happened yet.
 

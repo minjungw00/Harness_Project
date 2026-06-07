@@ -55,7 +55,7 @@ Do not route README or Maintain guidance outside this compact structure. Use `do
 ## Documentation Redesign Compass
 
 - The repository is in documentation review/redesign only; these edits do not start runtime/server implementation.
-- The redesign may change terminology, the delivery/later-candidate model, schema structure, projection structure, security wording, and document organization.
+- The redesign may change terminology, the delivery/later candidate model, schema structure, projection structure, security wording, and document organization.
 - Rewrite, move, merge, shrink, or delete old prose when it conflicts with the product thesis, owner boundaries, Korean quality rules, active/later boundaries, or implementation feasibility.
 - Remove stale improvement goals, resolved review records, old cleanup notes, legacy history, migration notes, and one-language-primacy guidance from active docs.
 - Do not list profile-gated values as default active MVP values, and do not describe later candidates as active MVP requirements.
@@ -68,7 +68,7 @@ Do not route README or Maintain guidance outside this compact structure. Use `do
 
 - When Harness is connected, no startup phrase is required. Infer Harness use from task shape; users do not need to say "Harness" or know internal labels.
 - Product/runtime writes are out of scope in this repo phase. In Harness-connected product work outside this repository, product writes require compatible `prepare_write` / Write Authorization where applicable.
-- User-owned product, material technical, QA/waiver, acceptance, and residual-risk judgment routes through the documented `user_judgment` / owner path. Decision Packet is only an optional full-format presentation.
-- Sensitive-action approval, work acceptance, residual-risk acceptance, waiver, and reconciliation remain distinct. Broad approval does not substitute for any of them.
-- Guard, freeze, and careful-mode wording must match the actual guarantee level. Cooperative or detective surfaces can hold by instruction or detect after action; only proven preventive profiles should claim pre-execution blocking.
+- User-owned product, material technical, QA/waiver, final acceptance, and residual-risk judgment routes through the documented `user_judgment` / owner path. Decision Packet is only an optional full-format later presentation.
+- Sensitive-action approval, final acceptance, residual-risk acceptance, waiver, and reconciliation remain distinct. Broad approval does not substitute for any of them.
+- Guard, freeze, and careful-mode wording must match the actual guarantee level. Cooperative or detective surfaces can hold by instruction or detect after action; only documented preventive mechanisms should claim pre-execution blocking.
 - Do not imply early Harness provides OS-level permissions, arbitrary-tool sandboxing, tamper-proof local files, pre-tool blocking, or security isolation unless the exact mechanism being claimed is documented and proven for the covered operation.

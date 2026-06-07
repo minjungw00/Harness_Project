@@ -93,7 +93,7 @@ Does not settle: login architecture, account recovery, final acceptance, or resi
 
 A broad reply such as "go ahead," "approved," or "looks good" applies only to the one active, clearly named judgment. It does not automatically grant sensitive-action approval, waive QA, accept verification risk, accept the final result, change scope, cancel the task, or accept residual risk.
 
-The compact active path is a judgment request through the `user_judgment` owner path. Full-format judgment presentation remains later candidate material for complex judgments; it is not required for ordinary user decisions.
+The compact active path is a judgment request through the `user_judgment` owner path. Full-format presentation such as `Decision Packet` remains later candidate material for complex judgments; it is not required for ordinary user decisions.
 
 ## 5. Treat sensitive action approval separately
 
@@ -124,7 +124,7 @@ Useful evidence can include changed paths, diffs, command output, test results, 
 - what evidence is missing, stale, redacted, omitted, blocked, or insufficient
 - what was not verified
 
-Evidence does not replace your judgment. Tests do not replace human QA when human inspection is required. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
+Evidence does not replace your judgment or final acceptance. Tests do not replace human QA when human inspection is required. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
 
 ## 7. Review blockers before close
 

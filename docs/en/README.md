@@ -18,7 +18,7 @@ This entry point routes only to the compact active structure plus the route inde
 | User-owned judgment examples | [Judgment Examples](use/judgment-examples.md) |
 | Current MVP plan and implementation-readiness decisions | [MVP Plan](build/mvp-plan.md) |
 | Exact contract owner index | [Reference Index](reference/README.md) |
-| Deferred material | [Later Index](later/index.md) |
+| Later candidates | [Later Index](later/index.md) |
 | Documentation authoring rules | [Authoring Guide](maintain/authoring-guide.md) |
 | Translation and semantic-parity rules | [Translation Guide](maintain/translation-guide.md) |
 | Manual documentation checks | [Checks](maintain/checks.md) |
@@ -28,7 +28,7 @@ This entry point routes only to the compact active structure plus the route inde
 
 Start with [Start](start.md), then use [User Guide](use/user-guide.md) or [Agent Guide](use/agent-guide.md) depending on the task. Use [MVP Plan](build/mvp-plan.md) for the current MVP scope and server-coding readiness decisions. Use [Reference Index](reference/README.md) to choose the single owner for exact schemas, API behavior, storage, state transitions, security wording, projection/template rules, conformance meaning, integration behavior, and terminology.
 
-Use [Later Index](later/index.md) only for material outside the active MVP path. Later material does not become active delivery unless the relevant owner promotes it with scope and proof expectations.
+Use [Later Index](later/index.md) only for material outside the active MVP path. Later candidate material does not become active delivery unless the relevant owner promotes it with scope and proof expectations.
 
 Use [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain/translation-guide.md), and [Checks](maintain/checks.md) for documentation work. Checks are manual maintenance aids; their labels do not create runtime conformance, final acceptance, close readiness, implementation readiness, or permission to start server coding.
 

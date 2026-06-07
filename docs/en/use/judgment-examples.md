@@ -2,7 +2,7 @@
 
 Use this compact catalog after the [User Guide](user-guide.md) when a task is blocked by a choice the agent should not make alone. These examples show active judgment-request behavior, not runtime records, generated evidence, acceptance records, or conformance outputs from this documentation repository.
 
-The active user path is a focused judgment request through `user_judgment`. Full-format judgment presentation is later candidate material for complex judgments. Users should not need a special label to answer ordinary prompts.
+The active user path is a focused judgment request through `user_judgment`. Full-format presentation such as `Decision Packet` is later candidate material for complex judgments. Users should not need a special label to answer ordinary prompts.
 
 Each example asks for one judgment, names what the answer settles, and names what it does not settle.
 
