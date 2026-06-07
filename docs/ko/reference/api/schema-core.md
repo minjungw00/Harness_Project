@@ -340,6 +340,8 @@ UserJudgmentResolution:
 
 `judgment_kind`는 기준 판단 종류 필드입니다. 렌더링된 라벨과 지역화된 라벨은 스키마 값이 아닙니다. `presentation=short`가 활성 MVP presentation입니다. 확장 표시 본문은 활성 API 스키마가 아닙니다.
 
+`UserJudgmentResolution.selected_option_id`와 `UserJudgmentResolution.note`는 기준 요청 필드인 `RecordUserJudgmentRequest.selected_option_id`와 `RecordUserJudgmentRequest.note`에서 저장된 복사본입니다. `RecordUserJudgmentPayload`는 판단 종류별 답변 세부정보만 담으며 선택지 식별자나 요청 메모를 반복하면 안 됩니다.
+
 <a id="userjudgmentcandidate"></a>
 
 ## UserJudgmentCandidate
@@ -359,11 +361,9 @@ UserJudgmentCandidate:
 
 ```yaml
 RecordUserJudgmentPayload:
-  selected_option_id: string
   approval_scope: AuthorizedAttemptScope | null
   accepted_result_refs: StateRecordRef[]
   cancellation_reason: string | null
-  note: string | null
 ```
 
 `judgment_kind=sensitive_approval`에서는 `approval_scope`가 대기 중인 판단과 맞아야 합니다. `final_acceptance`에서는 `accepted_result_refs`가 보이는 근거를 이름 붙입니다. `cancellation`에서는 `cancellation_reason`이 필요합니다.

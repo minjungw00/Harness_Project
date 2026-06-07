@@ -356,6 +356,8 @@ RecordUserJudgmentRequest:
   accepted_risks: AcceptedRiskInput[]
 ```
 
+`selected_option_id`와 `note`는 요청 수준의 기준 필드입니다. `answer`는 둘 중 어느 것도 반복하지 않고 `RecordUserJudgmentPayload`의 판단 종류별 답변 세부정보만 담습니다.
+
 - **응답:**
 
 ```yaml
@@ -368,7 +370,7 @@ RecordUserJudgmentResponse:
   next_actions: NextActionSummary[]
 ```
 
-- **상태 효과:** 커밋된 non-dry-run 호출은 `user_judgments.status`를 업데이트하고, 답변을 기록하고, 관련 차단 사유와 판단에 의존하는 요약만 업데이트하며, 이벤트와 재실행 행을 만듭니다. 활성 Task 범위 필드나 활성 Change Unit은 직접 바꾸지 않습니다. 해결된 `scope_decision` 때문에 범위를 바꿔야 하면 응답의 다음 행동은 `harness.update_scope`를 가리킵니다. 활성 MVP에서는 독립적인 위험 수락 행을 만들지 않습니다.
+- **상태 효과:** 커밋된 non-dry-run 호출은 `user_judgments.status`를 업데이트하고, 요청 수준의 `selected_option_id`, 요청 메모, 답변 세부정보를 기록하고, 관련 차단 사유와 판단에 의존하는 요약만 업데이트하며, 이벤트와 재실행 행을 만듭니다. 활성 Task 범위 필드나 활성 Change Unit은 직접 바꾸지 않습니다. 해결된 `scope_decision` 때문에 범위를 바꿔야 하면 응답의 다음 행동은 `harness.update_scope`를 가리킵니다. 활성 MVP에서는 독립적인 위험 수락 행을 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `user_judgments`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** "go ahead"나 "looks good" 같은 넓은 말은 대기 중인 판단이 그 종류를 명시적으로 묻고 기록된 답변이 맞을 때만 제품 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소, 범위 확장, later/reserved QA 면제 판단과 검증 위험 수락 경로로 작동합니다.

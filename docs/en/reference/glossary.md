@@ -73,7 +73,7 @@ Keep these identifiers exact in schemas, API docs, records, examples, file paths
 | `AuthorizedAttemptScope` | Stored scope of one allowed write attempt. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
 | `WriteAuthorizationSummary` / `WriteAuthoritySummary` | Public summaries for one `Write Authorization` and the current write-authority position. | [API Schema Core](api/schema-core.md) |
 | `RunSummary` / `ObservedChanges` | Public run result and observed-change summary shapes. | [API Schema Core](api/schema-core.md) |
-| `UserJudgment` / `UserJudgmentCandidate` / `RecordUserJudgmentPayload` / `AcceptedRiskInput` | Judgment request, candidate, resolution, and residual-risk acceptance input shapes. | [API Schema Core](api/schema-core.md) |
+| `UserJudgment` / `UserJudgmentCandidate` / `UserJudgmentResolution` / `RecordUserJudgmentPayload` / `AcceptedRiskInput` | Judgment request, candidate, stored resolution, answer detail, and residual-risk acceptance input shapes. | [API Schema Core](api/schema-core.md) |
 | `judgment_kind` | Canonical user judgment kind field. Keep values exact; do not replace them with localized labels. | [API Schema Core](api/schema-core.md) |
 | `presentation` | Active compact prompt/detail field. `short` is active; `full` belongs to later full-format presentation. | [API Schema Core](api/schema-core.md), [Later](../later/index.md) |
 | `CloseTaskResponse.close_state` | Response-level close status from `harness.close_task`, separate from persisted `Task.lifecycle_phase`. | [MVP API](api/mvp-api.md) |

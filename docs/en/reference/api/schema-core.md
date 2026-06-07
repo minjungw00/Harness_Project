@@ -340,6 +340,8 @@ UserJudgmentResolution:
 
 `judgment_kind` is the canonical decision-type field. Rendered labels, including localized labels, are not schema values. `presentation=short` is the active MVP presentation. Expanded presentation bodies are not active API schema.
 
+`UserJudgmentResolution.selected_option_id` and `UserJudgmentResolution.note` are stored copies of the canonical request-level `RecordUserJudgmentRequest.selected_option_id` and `RecordUserJudgmentRequest.note` fields. `RecordUserJudgmentPayload` carries decision-specific answer details and must not repeat the option selection or request note.
+
 <a id="userjudgmentcandidate"></a>
 
 ## UserJudgmentCandidate
@@ -359,11 +361,9 @@ A candidate is not a committed `user_judgment` row. It has no `StateRecordRef`, 
 
 ```yaml
 RecordUserJudgmentPayload:
-  selected_option_id: string
   approval_scope: AuthorizedAttemptScope | null
   accepted_result_refs: StateRecordRef[]
   cancellation_reason: string | null
-  note: string | null
 ```
 
 For `judgment_kind=sensitive_approval`, `approval_scope` must match the pending judgment. For `final_acceptance`, `accepted_result_refs` names the visible basis being accepted. For `cancellation`, `cancellation_reason` is required.

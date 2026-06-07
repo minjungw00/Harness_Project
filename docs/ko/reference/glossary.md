@@ -73,7 +73,7 @@
 | `AuthorizedAttemptScope` | 허용된 쓰기 시도 하나의 저장된 범위입니다. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
 | `WriteAuthorizationSummary` / `WriteAuthoritySummary` | `Write Authorization` 하나와 현재 쓰기 권한 위치를 보여주는 공개 요약입니다. | [API Schema Core](api/schema-core.md) |
 | `RunSummary` / `ObservedChanges` | 공개 실행 결과와 관찰된 변경 요약 형태입니다. | [API Schema Core](api/schema-core.md) |
-| `UserJudgment` / `UserJudgmentCandidate` / `RecordUserJudgmentPayload` / `AcceptedRiskInput` | 판단 요청, 후보, 해결 기록, 잔여 위험 수락 입력 형태입니다. | [API Schema Core](api/schema-core.md) |
+| `UserJudgment` / `UserJudgmentCandidate` / `UserJudgmentResolution` / `RecordUserJudgmentPayload` / `AcceptedRiskInput` | 판단 요청, 후보, 저장된 해결 기록, 답변 세부정보, 잔여 위험 수락 입력 형태입니다. | [API Schema Core](api/schema-core.md) |
 | `judgment_kind` | 사용자 판단 종류의 기준 필드입니다. 값은 정확히 유지하고 지역화된 라벨로 바꾸지 않습니다. | [API Schema Core](api/schema-core.md) |
 | `presentation` | 활성 간결한 프롬프트/세부 표시 필드입니다. `short`는 active이고 `full`은 later 전체 형식 표시입니다. | [API Schema Core](api/schema-core.md), [Later](../later/index.md) |
 | `CloseTaskResponse.close_state` | `harness.close_task`가 돌려주는 응답 수준의 닫기 상태입니다. 지속 저장되는 `Task.lifecycle_phase`와는 별도입니다. | [MVP API](api/mvp-api.md) |
