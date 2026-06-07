@@ -56,7 +56,7 @@ docs:
       en: docs/en/use/judgment-examples.md
       ko: docs/ko/use/judgment-examples.md
     default_for_agent: en
-    owns: "Concrete examples for distinct user-owned judgment routes."
+    owns: "Concrete examples for distinct user-owned judgment routes, the active focused judgment path, and the Decision Packet later-presentation boundary."
     does_not_own: "Canonical UserJudgment schema, gate rules, or lifecycle authority."
 
   - doc_id: build.mvp-plan
@@ -76,7 +76,7 @@ docs:
       en: docs/en/reference/README.md
       ko: docs/ko/reference/README.md
     default_for_agent: en
-    owns: "Reference owner routing and no-duplicate-injection guidance."
+    owns: "Reference owner routing for exact contract questions and no-duplicate-injection guidance."
     does_not_own: "Detailed schemas, DDL, transition tables, templates, errors, or security guarantees."
 
   - doc_id: reference.core-model
@@ -86,7 +86,7 @@ docs:
       en: docs/en/reference/core-model.md
       ko: docs/ko/reference/core-model.md
     default_for_agent: en
-    owns: "Core authority, task lifecycle, user judgment boundaries, gates, close blockers, waivers, and residual risk."
+    owns: "Core authority, task lifecycle, user judgment boundaries, final/residual-risk non-substitution, gates, close blockers, waivers, and residual risk."
     does_not_own: "Wire schema detail, storage layout, public error precedence, connector recipes, or template bodies."
 
   - doc_id: reference.api.mvp-api
@@ -96,7 +96,7 @@ docs:
       en: docs/en/reference/api/mvp-api.md
       ko: docs/ko/reference/api/mvp-api.md
     default_for_agent: en
-    owns: "Active public API method set and method-level request/response behavior."
+    owns: "Active public API method set and method-level request/response behavior, including `prepare_write` authorization effects."
     does_not_own: "Shared schema definitions, error precedence, storage DDL, or core lifecycle authority."
 
   - doc_id: reference.api.schema-core
@@ -106,7 +106,7 @@ docs:
       en: docs/en/reference/api/schema-core.md
       ko: docs/ko/reference/api/schema-core.md
     default_for_agent: en
-    owns: "Shared API schemas, envelopes, common response shapes, active schema value sets, and profile-gated value names."
+    owns: "Shared API schemas, envelopes, common response shapes, active schema value sets, rendered-label boundaries, and profile-gated value names."
     does_not_own: "Method-specific API behavior, persisted DDL, public error precedence, security guarantee claims, later schema bodies, or template bodies."
 
   - doc_id: reference.api.errors
@@ -126,7 +126,7 @@ docs:
       en: docs/en/reference/storage.md
       ko: docs/ko/reference/storage.md
     default_for_agent: en
-    owns: "Storage layout, DDL, persisted records, locks, artifact references, idempotency, and migrations."
+    owns: "Storage layout, DDL, persisted records such as `write_authorizations`, locks, artifact references, idempotency, and migrations."
     does_not_own: "API wire schema, security guarantees, projection templates, or generated runtime data."
 
   - doc_id: reference.runtime-boundaries
@@ -136,7 +136,7 @@ docs:
       en: docs/en/reference/runtime-boundaries.md
       ko: docs/ko/reference/runtime-boundaries.md
     default_for_agent: en
-    owns: "Product Repository, Harness Server, Runtime Home, mutation authority, and non-isolation boundaries."
+    owns: "Product Repository, Harness Server, Runtime Home, mutation authority, and non-isolation / OS-sandboxing non-claim boundaries."
     does_not_own: "Security controls, API schemas, storage DDL, or implementation deployment steps."
 
   - doc_id: reference.security
@@ -146,7 +146,7 @@ docs:
       en: docs/en/reference/security.md
       ko: docs/ko/reference/security.md
     default_for_agent: en
-    owns: "Security assets, trust boundaries, explicit current MVP non-claims, guarantee wording boundary, and profile-gated security display boundary."
+    owns: "Security assets, trust boundaries, OS-sandboxing non-claims, guarantee wording boundary, and profile-gated security display boundary."
     does_not_own: "API schemas, storage DDL, connector context budgets, exact profile fields, or OS-level enforcement."
 
   - doc_id: reference.agent-integration
@@ -166,7 +166,7 @@ docs:
       en: docs/en/reference/projection-and-templates.md
       ko: docs/ko/reference/projection-and-templates.md
     default_for_agent: en
-    owns: "Derived display boundaries, projection rules, template bodies, freshness, and managed-block behavior."
+    owns: "Derived display boundaries, projection/status-card non-authority, rendered display labels, template bodies, freshness, and managed-block behavior."
     does_not_own: "Source-of-truth state, storage authority, API method contracts, or evidence authority."
 
   - doc_id: reference.conformance
@@ -176,7 +176,7 @@ docs:
       en: docs/en/reference/conformance.md
       ko: docs/ko/reference/conformance.md
     default_for_agent: en
-    owns: "Conformance meaning, future fixture shape, assertion authority, and representative examples."
+    owns: "Conformance meaning, future fixture shape, assertion authority, non-executable suite boundaries, and representative examples."
     does_not_own: "Executable runners, runtime conformance reports, active implementation output, or API schemas."
 
   - doc_id: reference.design-quality
@@ -206,7 +206,7 @@ docs:
       en: docs/en/later/index.md
       ko: docs/ko/later/index.md
     default_for_agent: en
-    owns: "Later candidate names and promotion boundaries only."
+    owns: "Later candidate names and promotion boundaries only, including Decision Packet full-format presentation and future fixture families."
     does_not_own: "Active MVP requirements, active API/schema contracts, full template bodies, full fixture YAML, later schema bodies, or implementation readiness."
 
   - doc_id: maintain.authoring-guide
