@@ -105,7 +105,15 @@ GuaranteeDisplay:
   notes: string[]
 ```
 
-`StateSummary.lifecycle_phase`는 지속 저장되는 `Task.lifecycle_phase`를 그대로 보여줍니다. `intake`는 API 메서드이자 시작 처리 단계이지 생명주기 값이 아닙니다. `StateSummary.result`는 굵은 `Task.result`를 보여줍니다. Run 실패, violation, 증거 공백, 차단 사유는 Run 상태, 증거 상태, 차단 사유, 현재 Task 상태에 남고 Task의 종료 결과가 되지 않습니다.
+`StateSummary.mode`는 지속 저장되는 `tasks.mode`를 그대로 보여 주며 항상 구체적 Task `mode`입니다. `auto`는 저장되는 `mode`, 표시되는 Task `mode`, 상태 요약의 `mode`가 아닙니다. `StateSummary.lifecycle_phase`는 지속 저장되는 `Task.lifecycle_phase`를 그대로 보여줍니다. `intake`는 API 메서드이자 시작 처리 단계이지 생명주기 값이 아닙니다. `StateSummary.result`는 굵은 `Task.result`를 보여줍니다. Run 실패, violation, 증거 공백, 차단 사유는 Run 상태, 증거 상태, 차단 사유, 현재 Task 상태에 남고 Task의 종료 결과가 되지 않습니다.
+
+Task `mode` 값은 독자에게 다음 뜻으로 설명됩니다.
+
+- `advisor`: 제품 쓰기 없는 조언, 검토, 계획.
+- `direct`: 작은 직접 변경.
+- `work`: 추적되는 작업.
+
+`IntakeRequest.requested_mode=auto`는 `harness.intake` 입력에서만 쓰는 분류 요청입니다. 서버는 `tasks.mode`를 저장하거나 `StateSummary.mode`를 만들거나 `harness.intake`/`harness.status` 요약을 반환하기 전에 이를 `advisor`, `direct`, `work` 중 정확히 하나로 확정해야 합니다.
 
 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. `GuaranteeDisplay.level`은 문서화된 접점 역량과 증명 수준을 보여 주는 표시 주장입니다. 권한이나 상태 권한을 부여하지 않습니다. 현재 MVP의 활성 guarantee-display 값은 `cooperative`와 `detective`입니다. `preventive`와 `isolated`는 profile-gated 표시 값 이름이며 현재 MVP의 기본 보장이 아닙니다.
 
@@ -458,7 +466,8 @@ policy_override
 |---|---|
 | 활성 메서드 집합 | `harness.intake`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
-| `StateSummary.mode` | `advisor`, `direct`, `work` |
+| `IntakeRequest.requested_mode` | `advisor`, `direct`, `work`, `auto` |
+| `StateSummary.mode`와 지속 저장되는 `tasks.mode` | `advisor`, `direct`, `work` |
 | `StateSummary.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` |
 | `StateSummary.result` | `none`, `advice_only`, `completed`, `cancelled`, `superseded` |
 | `StateSummary.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |

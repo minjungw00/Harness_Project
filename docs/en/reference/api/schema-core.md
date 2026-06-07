@@ -105,7 +105,15 @@ GuaranteeDisplay:
   notes: string[]
 ```
 
-`StateSummary.lifecycle_phase` mirrors persisted `Task.lifecycle_phase`. `intake` is an API method and start-handling step, not a lifecycle value. `StateSummary.result` mirrors coarse `Task.result`; Run failure, violation, evidence gaps, and blockers remain in Run status, evidence state, blockers, or current Task state instead of becoming a terminal Task result.
+`StateSummary.mode` mirrors persisted `tasks.mode` and is always a concrete task mode. `auto` is not a stored mode, displayed task mode, or status-summary mode. `StateSummary.lifecycle_phase` mirrors persisted `Task.lifecycle_phase`. `intake` is an API method and start-handling step, not a lifecycle value. `StateSummary.result` mirrors coarse `Task.result`; Run failure, violation, evidence gaps, and blockers remain in Run status, evidence state, blockers, or current Task state instead of becoming a terminal Task result.
+
+Task mode values have these reader-facing meanings:
+
+- `advisor`: advice, review, or planning without product writes.
+- `direct`: small direct change.
+- `work`: tracked work.
+
+`IntakeRequest.requested_mode=auto` is only an intake input asking the server to classify the request. The server must resolve it to exactly one of `advisor`, `direct`, or `work` before writing `tasks.mode`, producing `StateSummary.mode`, or returning intake/status summaries.
 
 Rendered labels are not canonical schema values. `GuaranteeDisplay.level` is a display claim about the documented surface capability and proof level; it does not grant permission or state authority. The active MVP guarantee-display values are `cooperative` and `detective`. `preventive` and `isolated` are profile-gated display value names, not default active MVP guarantees.
 
@@ -458,7 +466,8 @@ These values are valid without a promoted profile. Values not listed here are no
 |---|---|
 | Active method set | `harness.intake`, `harness.status`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent`, `evaluator`, `operator` |
-| `StateSummary.mode` | `advisor`, `direct`, `work` |
+| `IntakeRequest.requested_mode` | `advisor`, `direct`, `work`, `auto` |
+| `StateSummary.mode` and persisted `tasks.mode` | `advisor`, `direct`, `work` |
 | `StateSummary.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` |
 | `StateSummary.result` | `none`, `advice_only`, `completed`, `cancelled`, `superseded` |
 | `StateSummary.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |

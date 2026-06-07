@@ -26,6 +26,8 @@ Keep this as a small copy edit unless it becomes a product or technical decision
 
 The agent should translate that into visible working context: the current goal, what is in scope, what is out of scope, what is already known, what only you can decide, what can safely happen next, and what would block close.
 
+Harness may classify ordinary requests as advice/review/planning without product writes, a small direct change, or tracked work. You do not need to choose or say `advisor`, `direct`, `work`, or `auto`; `auto` is only an API input that asks for classification, not a task label shown to you.
+
 You do not need to say `Discovery`, `Change Unit`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, or `task_events`. Those labels may appear only when they help explain a visible blocker, source reference, or owner contract.
 
 ## 2. Clarify scope before write

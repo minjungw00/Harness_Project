@@ -10,6 +10,8 @@ Do not require a startup phrase. Users do not need to say "Harness," `Discovery`
 
 Infer Harness use from the request and current state. Use the Harness path when the work involves scope risk, product writes, user-owned judgment, sensitive action approval, evidence, verification, QA, final acceptance, residual risk, or close readiness.
 
+For ordinary-language intake, `requested_mode=auto` means ask Harness to classify the request. The response or status `mode` is the resolved task mode; never treat `auto` as the active, stored, or displayed mode. The concrete modes map to the work shapes below: `advisor` for read/advice, `direct` for small change, and `work` for tracked work.
+
 Classify the work before choosing procedure weight:
 
 | Work shape | Use when | Behavior |

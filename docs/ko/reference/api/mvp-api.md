@@ -59,6 +59,8 @@ IntakeRequest:
   initial_context_refs: StateRecordRef[]
 ```
 
+`requested_mode`는 호출자가 `harness.intake`에서 요청하는 `mode`입니다. `advisor`는 제품 쓰기 없는 조언, 검토, 계획을 뜻합니다. `direct`는 작은 직접 변경을 뜻합니다. `work`는 추적되는 작업을 뜻합니다. `auto`는 입력 전용입니다. 서버가 `user_request`를 분류해 Task 상태를 저장하거나 표시하기 전에 `advisor`, `direct`, `work` 중 정확히 하나의 구체적 `mode`로 확정하라는 요청입니다.
+
 - **응답:**
 
 ```yaml
@@ -70,10 +72,12 @@ IntakeResponse:
   next_actions: NextActionSummary[]
 ```
 
-- **상태 효과:** 커밋된 non-dry-run call은 `tasks`를 만들거나 재개하고, `project_state.active_task_id`를 설정하며, 쓰기 가능한 `direct` 또는 `work`에 초기 `change_units` row를 만들고, 차단 사유를 업데이트하고, event와 committed idempotency row를 만들 수 있습니다. 메서드 이름이 `lifecycle_phase=intake`를 만든다는 뜻은 아닙니다. 새로 만들거나 재개한 Task는 [API Schema Core](schema-core.md#current-mvp-value-sets)의 활성 `Task.lifecycle_phase` 값 집합을 사용해야 합니다. Dry-run과 커밋 전 실패는 이를 만들지 않습니다.
+`IntakeResponse.state.mode`는 확정된 구체적 `mode`를 보여 줍니다. `auto`가 될 수 없습니다. 이후 상태 요약도 `harness.intake` 요청 값을 그대로 보여 주지 않고 확정된 `mode`를 노출해야 합니다.
+
+- **상태 효과:** 커밋된 non-dry-run call은 `tasks`를 만들거나 재개하고, `project_state.active_task_id`를 설정하며, 쓰기 가능한 확정된 `direct` 또는 `work`에 초기 `change_units` row를 만들고, 차단 사유를 업데이트하고, event와 committed idempotency row를 만들 수 있습니다. 메서드 이름이 `lifecycle_phase=intake`를 만든다는 뜻은 아닙니다. 새로 만들거나 재개한 Task는 [API Schema Core](schema-core.md#current-mvp-value-sets)의 활성 `Task.lifecycle_phase` 값 집합을 사용해야 합니다. Dry-run과 커밋 전 실패는 이를 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `project_state`, `tasks`, `change_units`, `blockers`, `task_events`, `tool_invocations`.
-- **보안 경계:** Intake는 범위와 `mode`를 기록합니다. 로컬 접근, 민감 동작, 제품 쓰기, 더 강한 guarantee level을 승인하지 않습니다.
+- **보안 경계:** `harness.intake`는 범위와 확정된 구체적 `mode`를 기록합니다. 로컬 접근, 민감 동작, 제품 쓰기, 더 강한 guarantee level을 승인하지 않습니다.
 
 <a id="harnessstatus"></a>
 

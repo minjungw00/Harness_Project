@@ -45,7 +45,7 @@ Exact API request fields and storage table definitions may be named here only by
 
 These entities define authority relationships, not storage tables or API bodies.
 
-- Task: the user-value unit whose state records current mode, scope relationship, blockers, judgment needs, evidence status, close readiness, acceptance state, residual-risk state, and latest run relationship.
+- Task: the user-value unit whose state records current concrete mode, scope relationship, blockers, judgment needs, evidence status, close readiness, acceptance state, residual-risk state, and latest run relationship. The active concrete task-mode values are owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets); intake `auto` is classification input only, not Task state.
 - Change Unit: the active scoped work boundary for write-capable work. Product writes must be covered by a compatible active Change Unit.
 - <a id="autonomy-boundary"></a>Autonomy Boundary: the latitude an agent has inside a Change Unit. It is not scope, sensitive-action approval, evidence, final acceptance, or residual-risk acceptance.
 - `user_judgment`: the canonical record family for choices the user owns. It feeds decision compatibility but does not create evidence, Write Authorization, or close by itself.
@@ -122,6 +122,7 @@ The lifecycle is a Core state-transition discipline, not a display script. Activ
 
 - `Task.lifecycle_phase` is the persisted lifecycle field. The active value set is `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, and `superseded`.
 - `completed`, `cancelled`, and `superseded` are terminal lifecycle values. `intake` is an API method/start handling step, not a persisted lifecycle phase.
+- `Task.mode` is concrete task state. It can be `advisor`, `direct`, or `work`; `auto` is only an intake classification request and must be resolved before `tasks.mode` or `StateSummary.mode` is stored or displayed.
 - A Task can be shaped, made ready, executed, wait for user judgment, become blocked, complete, cancel, or be superseded only through owner paths.
 - Advice/read-only work must not produce product-file writes. Write-capable direct and tracked work must pass through compatible scope and the Write Authorization path.
 - A product write path moves through scope establishment, user-judgment and sensitive-action checks when applicable, `prepare_write`, one compatible product-write Run, `record_run`, evidence/blocker update, and `close_task`.

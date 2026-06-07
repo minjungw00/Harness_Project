@@ -59,6 +59,8 @@ IntakeRequest:
   initial_context_refs: StateRecordRef[]
 ```
 
+`requested_mode` is the caller's requested intake mode. `advisor` means advice, review, or planning without product writes. `direct` means a small direct change. `work` means tracked work. `auto` is input-only: it asks the server to classify `user_request` and resolve the Task to exactly one concrete mode, `advisor`, `direct`, or `work`, before persisting or displaying Task state.
+
 - **Response:**
 
 ```yaml
@@ -70,10 +72,12 @@ IntakeResponse:
   next_actions: NextActionSummary[]
 ```
 
-- **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial `change_units` row for write-capable `direct` or `work`, update blockers, append events, and create a committed idempotency row. The method name does not create `lifecycle_phase=intake`; created or resumed Tasks must use the active `Task.lifecycle_phase` value set from [API Schema Core](schema-core.md#current-mvp-value-sets). Dry-run and pre-commit failure create none of these.
+`IntakeResponse.state.mode` exposes the resolved concrete mode. It must not be `auto`; later status summaries must also expose the resolved mode rather than the intake request value.
+
+- **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial `change_units` row for write-capable resolved `direct` or `work`, update blockers, append events, and create a committed idempotency row. The method name does not create `lifecycle_phase=intake`; created or resumed Tasks must use the active `Task.lifecycle_phase` value set from [API Schema Core](schema-core.md#current-mvp-value-sets). Dry-run and pre-commit failure create none of these.
 - **Errors:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
 - **Storage owner:** `project_state`, `tasks`, `change_units`, `blockers`, `task_events`, and `tool_invocations`.
-- **Security boundary:** Intake records scope and mode. It does not authorize local access, sensitive actions, product writes, or stronger guarantee levels.
+- **Security boundary:** Intake records scope and the resolved concrete mode. It does not authorize local access, sensitive actions, product writes, or stronger guarantee levels.
 
 <a id="harnessstatus"></a>
 
