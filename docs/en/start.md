@@ -88,7 +88,7 @@ If evidence is missing, stale, weak, or limited to the agent's own check, Harnes
 
 Close readiness answers a simple question: can this work honestly finish now, and what still blocks it?
 
-A close-ready task should show that scope stayed bounded, required user-owned judgments were handled, evidence supports the stated result, checks or verification expectations are clear, required QA is passed or explicitly waived where allowed, final acceptance is handled when required, and known residual risk is visible and accepted only when the user actually accepts it.
+A close-ready task should show that scope stayed bounded, required user-owned judgments were handled, evidence supports the stated result, checks or verification expectations are clear, required QA is passed or explicitly waived where allowed, final acceptance is handled when required, known residual risk is visible when present, and any required residual-risk acceptance is recorded only when the user actually accepts the named risk.
 
 If something is missing, close should name the smallest unblocker, such as a pending product decision, missing evidence, deferred QA, unaccepted residual risk, or final acceptance that has not happened yet.
 

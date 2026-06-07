@@ -59,7 +59,7 @@
 | `EVIDENCE_INSUFFICIENT` | Required evidence coverage가 absent, partial, stale, blocked입니다. |
 | `ACCEPTANCE_REQUIRED` | Required final acceptance가 pending, rejected, 또는 visible result basis와 incompatible입니다. |
 | `PROJECTION_STALE` | Requested readable status/view가 stale 또는 failed입니다. Core state가 아니며 그 자체로 close blocker가 아닙니다. |
-| `RESIDUAL_RISK_NOT_VISIBLE` | Known close-relevant residual risk가 final acceptance 또는 close 전에 visible하지 않습니다. |
+| `RESIDUAL_RISK_NOT_VISIBLE` | 닫기에 영향을 주는 알려진 잔여 위험이 최종 수락 또는 close 전에 보이지 않았습니다. |
 | `ARTIFACT_MISSING` | Referenced artifact가 missing이거나 integrity/metadata check에 실패했습니다. |
 | `BASELINE_STALE` | Operation이 요구하는 repository state와 baseline이 더 이상 맞지 않습니다. |
 | `VALIDATOR_FAILED` | Required active validator 또는 blocker check가 failed되었고 더 specific한 typed code가 없을 때 쓰는 fallback입니다. |
@@ -153,7 +153,7 @@ task_id: string | null
 
 Close blocker는 public error와 매핑될 때 primary-error precedence에 따라 정렬합니다. Evidence blocker는 보통 `EVIDENCE_INSUFFICIENT`를 사용합니다. Artifact availability blocker는 `ARTIFACT_MISSING`을 사용합니다. 해결되지 않은 user judgment blocker는 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 사용합니다. 민감 동작 승인 blocker는 `APPROVAL_*` code를 사용합니다. Scope blocker는 scope와 baseline code를 사용합니다.
 
-알려진 close-relevant risk가 아직 보이지 않으면 `RESIDUAL_RISK_NOT_VISIBLE`를 사용합니다. Visible하지만 accepted되지 않은 close-relevant risk는 이 code 아래 숨기지 않습니다. Residual-risk acceptance가 필요하면 close blocker는 category `residual_risk_acceptance`와 `required_judgment_kind=residual_risk_acceptance`를 사용하고, `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 반환합니다.
+닫기에 영향을 주는 알려진 잔여 위험이 아직 보이지 않으면 `RESIDUAL_RISK_NOT_VISIBLE`를 사용합니다. 보이지만 수락되지 않은 닫기 관련 잔여 위험은 이 code 아래 숨기지 않습니다. 잔여 위험 수락이 필요하면 close blocker는 category `residual_risk_acceptance`와 `required_judgment_kind=residual_risk_acceptance`를 사용하고, `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 반환합니다.
 
 `PROJECTION_STALE`은 readable-view freshness 오류입니다. 그 자체로 active close-blocker category가 아닙니다.
 

@@ -157,7 +157,7 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 `close_task` is the single completion decision point. Agent summaries, final reports, acceptance-looking chat, projections, Evals, QA notes, and evidence displays may inform close, but they do not close a Task by themselves.
 
-For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, active design-policy blockers, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, and residual-risk visibility or acceptance when applicable.
+For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, active design-policy blockers, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, residual-risk visibility when close-relevant risk exists, and residual-risk acceptance when the active close path requires acceptance.
 
 MVP close must keep later assurance material out of active response semantics. Detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
 

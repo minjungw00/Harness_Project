@@ -82,7 +82,7 @@ A design-quality waiver does not waive:
 - sensitive-action approval
 - required evidence coverage or artifact availability
 - required final acceptance
-- required residual-risk visibility or residual-risk acceptance
+- required residual-risk visibility and, when the active close path requires it, residual-risk acceptance
 - verification independence
 - Core-owned close blockers
 
