@@ -449,6 +449,6 @@ Notes:
 
 Later candidate template bodies are not active documentation and are not stored in this reference. Later template candidate names may appear only in [Later Template Candidates](../later/index.md#later-template-candidates), without bodies.
 
-A later candidate listing does not create an active MVP requirement, active `ProjectionKind`, schema contract, runtime behavior, template body, generated projection, evidence, verification, QA, final acceptance, residual-risk acceptance, close readiness, implementation task, or acceptance evidence.
+A later candidate listing does not create a current MVP requirement, active `ProjectionKind`, schema contract, runtime behavior, template body, generated Projection, evidence, verification, QA, final acceptance, residual-risk acceptance, close readiness, implementation task, or acceptance evidence.
 
-To promote a later template, a future owner must define a narrow scope, source records, fallback behavior, non-substitution rules, freshness behavior, proof expectations, and exact owner placement. Until then, active current MVP output remains limited to the five templates in this document.
+To promote a later template, a future owner document must define a narrow scope, source records, fallback behavior, non-substitution rules, freshness behavior, proof expectations, and exact owner placement. Until then, active current MVP output remains limited to the five templates in this document.
