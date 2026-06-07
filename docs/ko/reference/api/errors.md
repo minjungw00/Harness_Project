@@ -1,4 +1,4 @@
-# API Errors
+# API 오류
 
 ## 이 문서로 할 수 있는 일
 
@@ -111,7 +111,7 @@ Required authorization이 supplied되지 않았으면 `authorization_reason=miss
 
 ## Blocked와 dry-run 동작
 
-Blocked response는 pre-commit failure와 다릅니다. Method owner가 blocker recording을 허용하는 경우에만 Core가 blocked response를 commit할 수 있습니다. 커밋된 blocked response는 `blockers`, events, state version, idempotency replay를 업데이트할 수 있지만, blocker가 missing이라고 말하는 authority를 만들면 안 됩니다.
+Blocked response는 pre-commit failure와 다릅니다. 메서드 담당 문서가 blocker recording을 허용하는 경우에만 Core가 blocked response를 commit할 수 있습니다. 커밋된 blocked response는 `blockers`, events, state version, idempotency replay를 업데이트할 수 있지만, blocker가 missing이라고 말하는 authority를 만들면 안 됩니다.
 
 `dry_run=true`는 항상 기준 권한이 아닙니다. Validate하고 diagnostic, candidate blocker, would-change summary를 반환할 수 있지만 current record, event, artifact, evidence summary, consumable Write Authorization, close state, committed replay row를 만들거나 업데이트하면 안 됩니다. 이후 non-dry-run call은 current state를 기준으로 다시 validate해야 합니다.
 

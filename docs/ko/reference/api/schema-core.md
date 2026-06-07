@@ -13,7 +13,7 @@
 | 활성 method와 method 요청/응답 소유권 | [MVP API](mvp-api.md) |
 | 공개 오류, 우선순위, idempotency, 차단 응답, stale-state 동작 | [API Errors](errors.md) |
 | Core 상태 의미와 lifecycle 의미 | [Core Model 참조](../core-model.md) |
-| Storage table, JSON `TEXT`, enum hardening, artifact persistence | [Storage](../storage.md) |
+| 저장소 테이블, JSON `TEXT`, enum hardening, artifact persistence | [Storage](../storage.md) |
 | 보안 보장 의미 | [보안 참조](../security.md) |
 | 향후 API/schema 후보 | [Later 후보 색인](../../later/index.md#later-schema-candidates) |
 
@@ -242,7 +242,7 @@ WriteAuthoritySummary:
 
 `EvidenceSummary`는 활성 compact evidence record입니다. 상세 증거 보고서, 별도 보증 결과, 최종 수락, 잔여 위험 수락, 렌더링된 보기가 아닙니다.
 
-`AuthorizedAttemptScope`는 `write_authorizations.attempt_scope_json`에 저장되고 나중에 `harness.record_run`에서 비교하는 exact scope입니다. `WriteAuthorizationSummary.status`는 durable authorization lifecycle입니다. `blocked`는 Write Authorization status가 아닙니다. 차단된 쓰기는 consumable authorization 없이 blocker를 반환합니다.
+`AuthorizedAttemptScope`는 `write_authorizations.attempt_scope_json`에 저장되고 나중에 `harness.record_run`에서 비교하는 exact scope입니다. `WriteAuthorizationSummary.status`는 durable authorization lifecycle입니다. `blocked`는 Write Authorization status가 아닙니다. 차단된 쓰기는 소비 가능한 authorization 없이 blocker를 반환합니다.
 
 <a id="record-run-payloads"></a>
 
@@ -268,7 +268,7 @@ RunSummary:
   completed_at: string
 ```
 
-`status=completed`만 normal owner ref를 통해 evidence를 뒷받침할 수 있습니다. `interrupted`, `blocked`, `violation`은 audit/recovery fact이며 evidence, final acceptance, residual-risk acceptance, close를 스스로 충족하지 않습니다.
+`status=completed`만 정상 담당 ref를 통해 evidence를 뒷받침할 수 있습니다. `interrupted`, `blocked`, `violation`은 audit/recovery fact이며 evidence, final acceptance, residual-risk acceptance, close를 스스로 충족하지 않습니다.
 
 <a id="userjudgment"></a>
 
@@ -416,7 +416,7 @@ ValidatorResult:
   suggested_next_action: string | null
 ```
 
-활성 stable validator ID는 `surface_capability_check`입니다. Validator output은 blocker, fallback behavior, guarantee display에 영향을 줄 수 있습니다. Write Authorization, user judgment, evidence, final acceptance, residual-risk acceptance, close를 만들지 않습니다.
+활성 stable validator ID는 `surface_capability_check`입니다. Validator output은 blocker, 대체 동작, guarantee display에 영향을 줄 수 있습니다. Write Authorization, user judgment, evidence, final acceptance, residual-risk acceptance, close를 만들지 않습니다.
 
 <a id="sensitive-categories"></a>
 

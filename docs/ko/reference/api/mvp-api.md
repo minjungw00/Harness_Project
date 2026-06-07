@@ -4,7 +4,7 @@
 
 현재 MVP의 활성 API 표면을 확인할 때 이 참조를 사용합니다. 이 문서는 활성 메서드 목록과 메서드별 요청, 응답, 상태 효과, 저장소 담당 문서, 오류, 보안 경계를 담당합니다.
 
-이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 저장소에는 하네스 런타임이나 서버 구현이 없습니다. 향후 API/schema 후보는 활성 API 참조가 아니라 [Later 후보 색인](../../later/index.md)에 둡니다. Storage DDL과 전체 공용 schema body는 이 메서드 참조가 아닌 담당 문서가 소유합니다.
+이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 저장소에는 하네스 런타임이나 서버 구현이 없습니다. 향후 API/schema 후보는 활성 API 참조가 아니라 [Later 후보 색인](../../later/index.md)에 둡니다. Storage DDL과 전체 공용 schema body는 이 메서드 참조가 아닌 담당 문서가 담당합니다.
 
 ## 핵심 생각
 
@@ -42,7 +42,7 @@ harness.close_task
 
 메서드에 tool-specific `task_id`가 있으면 Core는 tool-specific `task_id`, `ToolEnvelope.task_id`, active Task 순서로 primary Task를 찾습니다. Task-scoped mutation은 `expected_state_version`을 `tasks.state_version`과 비교합니다. Resolved Task가 없는 project-scoped mutation은 `project_state.state_version`과 비교합니다.
 
-`dry_run=true`는 기준 권한이 아닙니다. 진단이나 would-change 결과를 반환할 수 있지만 current record, `task_events` row, artifact, consumable Write Authorization, evidence summary, close state, idempotency replay row를 만들지 않습니다.
+`dry_run=true`는 기준 권한이 아닙니다. 진단이나 would-change 결과를 반환할 수 있지만 current record, `task_events` row, artifact, 소비 가능한 Write Authorization, evidence summary, close state, idempotency replay row를 만들지 않습니다.
 
 Error code, primary error precedence, idempotency, stale-state behavior, close blocker ordering, 사용자 표시 오류 라벨은 [API Errors](errors.md)가 담당합니다. 공용 schema와 활성 값 집합은 [API Schema Core](schema-core.md)가 담당합니다.
 
@@ -176,7 +176,7 @@ PrepareWriteResponse:
   guarantee_display: GuaranteeDisplay
 ```
 
-- **상태 효과:** 커밋된 non-dry-run `decision=allowed`는 `write_authorizations.status=active` row 하나와 replay row를 만듭니다. 커밋된 blocked response는 blocker를 업데이트할 수 있지만 consumable authorization을 만들면 안 됩니다. Dry-run과 pre-commit failure는 current record, authorization, blocker row, event, artifact, evidence summary, replay row를 만들지 않습니다.
+- **상태 효과:** 커밋된 non-dry-run `decision=allowed`는 `write_authorizations.status=active` row 하나와 replay row를 만듭니다. 커밋된 blocked response는 blocker를 업데이트할 수 있지만 소비 가능한 authorization을 만들면 안 됩니다. Dry-run과 pre-commit failure는 current record, authorization, blocker row, event, artifact, evidence summary, replay row를 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `write_authorizations`, `blockers`, `tasks` 또는 `project_state` version clock, `task_events`, `tool_invocations`.
 - **보안 경계:** `decision=allowed`는 이 attempt가 하네스 기록과 compatible하다는 뜻입니다. 운영체제가 incompatible write를 막거나 임의 도구가 격리된다는 뜻이 아닙니다.
