@@ -36,7 +36,7 @@ The [Current MVP Value Sets](#current-mvp-value-sets) section owns the exact act
 
 ## Tool Envelope
 
-Every public tool request carries `ToolEnvelope`. State-changing tools require a non-null `idempotency_key` and a current `expected_state_version`. `harness.status` is read-only and may set `expected_state_version` to `null`.
+Every public tool request carries `ToolEnvelope`. Committed non-dry-run state-changing tools require a non-null `idempotency_key` and a current `expected_state_version`. `harness.status`, `harness.close_task intent=check`, and dry-run calls may set `idempotency_key` and `expected_state_version` to `null`. Method-level state effects are owned by [MVP API](mvp-api.md#active-mvp-method-behavior).
 
 ```yaml
 ToolEnvelope:
@@ -108,7 +108,7 @@ EventRef:
   state_version: integer
 ```
 
-`ToolResponseBase.state_version` is the resulting affected-scope version for a committed mutation, or the current readable/would-be affected version for read-only and dry-run responses. `dry_run=true` creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, or idempotency replay rows.
+`ToolResponseBase.state_version` is the resulting affected-scope version for a committed mutation, or the current readable/would-be affected version for read-only and dry-run responses. Read-only responses may include computed blockers or close blockers without storing them. `dry_run=true` creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, or idempotency replay rows.
 
 ## State Summary
 

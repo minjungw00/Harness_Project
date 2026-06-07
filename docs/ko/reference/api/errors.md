@@ -112,7 +112,9 @@ missing | expired | stale | revoked | consumed | incompatible
 
 ## 차단 응답과 `dry_run` 동작
 
-차단 응답은 커밋 전 실패와 다릅니다. 메서드 담당 문서가 차단 사유 기록을 허용하는 경우에만 Core가 차단 응답을 커밋할 수 있습니다. 커밋된 차단 응답은 `blockers`, 이벤트, 상태 버전, 멱등 재실행을 업데이트할 수 있지만, 차단 사유가 없다고 말하는 권한을 만들면 안 됩니다.
+차단 응답은 커밋 전 실패와 다릅니다. 메서드 담당 문서가 차단 사유 기록을 허용하는 경우에만 Core가 차단 응답을 커밋할 수 있습니다. 커밋된 차단 응답은 `blockers`, 이벤트, 상태 버전, 멱등 재실행을 업데이트할 수 있지만, 차단 사유가 없거나 부족하다고 지적한 권한을 만들면 안 됩니다.
+
+`harness.status`와 `harness.close_task intent=check`를 포함한 읽기 전용 호출은 차단 사유나 닫기 차단 사유를 계산해 반환할 수 있습니다. 그 차단 사유는 응답 필드일 뿐입니다. Core는 읽기를 이유로 차단 사유를 저장하거나, 이벤트를 추가하거나, 멱등 재실행 행을 만들거나, 상태 버전을 올리면 안 됩니다.
 
 `dry_run=true`는 항상 기준 권한이 아닙니다. 검증하고 진단, 후보 차단 사유, 변경 예상 요약을 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, 소비 가능한 Write Authorization, 닫기 상태, 커밋된 재실행 행을 만들거나 업데이트하면 안 됩니다. 이후 비 `dry_run` 호출은 현재 상태를 기준으로 다시 검증해야 합니다.
 
@@ -120,7 +122,7 @@ missing | expired | stale | revoked | consumed | incompatible
 
 ## 멱등성
 
-커밋되는 상태 변경 메서드는 모두 `idempotency_key`를 요구합니다. 키는 `(project_id, tool_name, idempotency_key)` 범위를 가집니다.
+커밋되는 상태 변경 메서드는 모두 `idempotency_key`를 요구합니다. 읽기 전용 호출은 재실행 행을 만들지 않고 키를 예약하지도 않습니다. 키는 `(project_id, tool_name, idempotency_key)` 범위를 가집니다.
 
 `request_hash`는 도구 이름, 스키마 정규화된 요청 본문, 그리고 `request_id`와 `idempotency_key`를 제외한 모든 `ToolEnvelope` 필드에 대한 정규 JSON에서 계산합니다.
 

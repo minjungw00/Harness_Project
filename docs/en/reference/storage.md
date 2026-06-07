@@ -481,14 +481,18 @@ unique key is `(project_id, tool_name, idempotency_key)`; `request_hash` is the
 conflict discriminator stored in that row.
 
 Dry runs, malformed requests, pre-commit validation failures, pre-commit state
-conflicts, and rejected `record_run` attempts that create no mutation do not
-create current rows, `task_events`, artifacts, evidence summaries, Write
-Authorizations, close state, or `tool_invocations` replay rows.
+conflicts, read-only calls such as `harness.status` and
+`harness.close_task intent=check`, and rejected `record_run` attempts that
+create no mutation do not create current rows, `task_events`, artifacts,
+evidence summaries, Write Authorizations, close state, or `tool_invocations`
+replay rows.
 
 A blocked response may persist only the blocker or other mutation the method
 owner allows. It must not create the authority the blocker says is missing. For
 example, blocked `prepare_write` responses do not create consumable
-`write_authorizations`.
+`write_authorizations`. When the API owner allows a committed blocked response
+to persist a blocker or other current-row mutation, that response is a committed
+non-dry-run mutation for event, replay-row, and state-version purposes.
 
 ## 8. State versioning
 
@@ -502,10 +506,11 @@ the affected scope before committing. The response `ToolResponseBase.state_versi
 is the resulting affected-scope version for a committed mutation, or the current
 readable/would-be affected version for read-only and dry-run responses.
 
-`harness.status`, dry-run calls, malformed requests, pre-commit validation
-failures, pre-commit state conflicts, and idempotent replay do not increment a
-state clock. A committed blocked response increments the affected clock only when
-the method owner allows Core to persist a blocker or other current-row mutation.
+`harness.status`, `harness.close_task intent=check`, dry-run calls, malformed
+requests, pre-commit validation failures, pre-commit state conflicts, and
+idempotent replay do not increment a state clock. A committed blocked response
+increments the affected clock only when the method owner allows Core to persist
+a blocker or other current-row mutation.
 
 Task-level and project-level scopes must not be conflated. When Core resolves or
 creates a primary Task for a mutation, freshness and the response state version

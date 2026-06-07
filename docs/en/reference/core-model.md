@@ -194,7 +194,7 @@ It may create or replace the active Change Unit for the active Task. Replacing t
 
 `prepare_write` is the unique pre-write compatibility decision point for product-file writes. In the current MVP it checks a path-level intended operation against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, sensitive-action approval, surface capability, and other active owner-path preconditions.
 
-Only a compatible non-dry-run allowed path creates a consumable Write Authorization. Dry-run responses, `blocked`, `approval_required`, `decision_required`, and `state_conflict` remain response, blocker, or error states only. They must not create a consumable authorization row, replay row, evidence record, close state, or Harness write-compatibility record.
+Only a compatible non-dry-run allowed path creates a consumable Write Authorization. Dry-run responses and `state_conflict` create no replay row, evidence record, close state, or Harness write-compatibility record. A committed `blocked`, `approval_required`, or `decision_required` response may persist method-owned blockers, events, replay, and state-version effects only as allowed by the API method matrix, but it must not create a consumable authorization row, evidence record, close state, or Harness write-compatibility record.
 
 Write Authorization is a cooperative Harness record. It can tell a connected agent or surface that the intended write is compatible with current Harness state; it does not grant OS permission, enforce a sandbox, prevent arbitrary tools, make storage tamper-proof, or isolate the operation.
 

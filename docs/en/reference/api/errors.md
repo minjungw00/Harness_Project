@@ -114,13 +114,15 @@ When `ToolResponseBase.errors` is non-empty, `errors[0]` is the primary error se
 
 A blocked response is not the same as a pre-commit failure. Core may commit a blocked response only where the method owner allows blocker recording. A committed blocked response may update `blockers`, events, state version, and idempotency replay, but it must not create the authority that the blocker says is missing.
 
+Read-only calls, including `harness.status` and `harness.close_task intent=check`, may compute and return blockers or close blockers. Those blockers are response fields only: Core must not store them, append events, create idempotency replay rows, or increment state version for the read.
+
 `dry_run=true` is always non-authoritative. It may validate and return diagnostics, candidate blockers, or a would-change summary, but it must not create or update current records, events, artifacts, evidence summaries, consumable Write Authorizations, close state, or committed replay rows. A subsequent non-dry-run call must be validated against current state.
 
 <a id="idempotency"></a>
 
 ## Idempotency
 
-Every committed state-changing method requires `idempotency_key`. Keys are scoped to `(project_id, tool_name, idempotency_key)`.
+Every committed state-changing method requires `idempotency_key`. Read-only calls do not create replay rows and do not reserve keys. Keys are scoped to `(project_id, tool_name, idempotency_key)`.
 
 `request_hash` is computed from canonical JSON over the tool name, schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`.
 
