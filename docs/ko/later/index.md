@@ -8,10 +8,10 @@
 
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
-| Later 후보 색인 | 문서상 후보일 뿐임 | 세부 계약이 돌아오려면 향후 담당 문서가 좁은 후보를 먼저 승격해야 합니다. | 문서상 후보일 뿐임 |
+| Later 후보 색인 | 문서 전용 | 세부 계약이 돌아오려면 향후 담당 문서가 좁은 후보를 먼저 승격해야 합니다. | 문서 전용 |
 | 현재 저장소 단계 | 문서 전용 계획 | 런타임 작업 전 `docs/*/build/mvp-plan.md`의 문서 수락과 별도 구현 준비 결정이 필요합니다. | 없음 |
-| 후보 권한 | 이름만 있는 후보 | 승격된 담당 문서에서 담당 문서 지정과 API, schema, storage, 보안, 적합성, 증거에 생기는 정확한 효과를 정해야 합니다. | 승격 전까지 없음 |
-| 한영 문서 동시 유지 | 대응 active 문서 | 의미가 바뀌면 영어와 한국어를 같은 작업 묶음에서 함께 고칩니다. | 문서상 후보일 뿐임 |
+| 후보 권한 | 이름만 있는 후보 | 승격된 담당 문서가 담당 문서 지정과 API, schema, storage, 보안, 적합성, 증거에 생기는 정확한 효과를 정해야 합니다. | 승격 전까지 없음 |
+| 한영 문서 동시 유지 | 대응 active 문서 | 의미가 바뀌면 영어와 한국어를 같은 작업 묶음에서 함께 고칩니다. | 문서 전용 |
 
 ## 2. 승격 규칙
 
@@ -54,26 +54,26 @@
 
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
-| `harness.next` | method 이름만 있음 | 별도 next-action payload를 위한 담당 문서 활성화가 필요합니다. MVP는 계속 `harness.status.next_actions`를 씁니다. | 승격 전까지 없음 |
-| `harness.launch_verify` | method 이름만 있음 | Eval/검증 담당 문서가 capability 처리, 기준선 최신성, 정직한 격리 표현을 정해야 합니다. | 승격 전까지 없음 |
-| `harness.record_eval` | method 이름만 있음 | Eval 담당 문서가 독립성 검증, artifact ref, gate/보증 갱신을 정해야 합니다. | 승격 전까지 없음 |
-| `harness.record_manual_qa` | method 이름만 있음 | Manual QA 담당 문서가 waiver 경로, artifact, finding, gate 영향을 정해야 합니다. | 승격 전까지 없음 |
-| Later read-only resources: policy, evidence-manifest, surface, report, bundle, journey, design | resource 이름만 있음 | 각 resource 담당 문서가 읽기 전용 계약과 변경 부작용 없음을 정해야 합니다. | 승격 전까지 없음 |
-| Later `harness.record_run` branches: verification input, feedback-loop updates, TDD trace updates | branch 이름만 있음 | `record_run` 담당 문서 활성화와 한 branch payload 규칙이 필요합니다. | 승격 전까지 없음 |
-| Later user-judgment branches: waiver, reconcile, residual-risk, richer acceptance visibility | branch 이름만 있음 | 사용자 판단 담당 문서 활성화와 대체 불가 규칙이 필요합니다. | 승격 전까지 없음 |
+| `harness.next` | 메서드 이름만 있음 | 별도 next-action payload를 위한 담당 문서 활성화가 필요합니다. MVP는 계속 `harness.status.next_actions`를 씁니다. | 승격 전까지 없음 |
+| `harness.launch_verify` | 메서드 이름만 있음 | Eval/검증 담당 문서가 capability 처리, 기준선 최신성, 정직한 격리 표현을 정해야 합니다. | 승격 전까지 없음 |
+| `harness.record_eval` | 메서드 이름만 있음 | Eval 담당 문서가 독립성 검증, artifact ref, gate/보증 갱신을 정해야 합니다. | 승격 전까지 없음 |
+| `harness.record_manual_qa` | 메서드 이름만 있음 | Manual QA 담당 문서가 waiver 경로, artifact, finding, gate 영향을 정해야 합니다. | 승격 전까지 없음 |
+| Later read-only resources: policy, evidence-manifest, surface, report, bundle, journey, design | 리소스 이름만 있음 | 각 리소스 담당 문서가 읽기 전용 계약과 변경 부작용 없음을 정해야 합니다. | 승격 전까지 없음 |
+| Later `harness.record_run` branches: verification input, feedback-loop updates, TDD trace updates | 분기 이름만 있음 | `record_run` 담당 문서 활성화와 한 branch payload 규칙이 필요합니다. | 승격 전까지 없음 |
+| Later user-judgment branches: waiver, reconcile, residual-risk, richer acceptance visibility | 분기 이름만 있음 | 사용자 판단 담당 문서 활성화와 대체 불가 규칙이 필요합니다. | 승격 전까지 없음 |
 
 <a id="later-schema-candidates"></a>
 ## 6. Later schema 후보
 
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
-| later schema extensions | schema 이름만 있음 | 승격된 담당 문서가 정확한 field와 validator를 active 계약에 정의해야 합니다. | 승격 전까지 없음 |
+| later schema extensions | 스키마 이름만 있음 | 승격된 담당 문서가 정확한 field와 validator를 active 계약에 정의해야 합니다. | 승격 전까지 없음 |
 | Later close and assurance fields: `verifying`, `qa`, `completed_verified`, `detached_verified`, verification gate, QA gate, assurance blockers | field 이름만 있음 | Core/API 담당 문서 활성화와 닫기 대체 불가 규칙이 필요합니다. | 승격 전까지 없음 |
 | Later next-action values: `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile` | value 이름만 있음 | 대응 API 또는 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |
-| Recommended playbooks and judgment context | metadata 이름만 있음 | Agent Integration/API 담당 문서가 metadata를 읽기 전용으로 두고 state를 만족시키지 못하게 해야 합니다. | 승격 전까지 없음 |
+| Recommended playbooks and judgment context | 메타데이터 이름만 있음 | Agent Integration/API 담당 문서가 metadata를 읽기 전용으로 두고 state를 만족시키지 못하게 해야 합니다. | 승격 전까지 없음 |
 | Later ref and artifact values: bundle, manifest, QA capture, export component, design, Eval, Manual QA, TDD, projection, related refs | value 이름만 있음 | ArtifactRef, StateRecordRef, Storage, 관련 담당 문서 활성화가 필요합니다. | 승격 전까지 없음 |
 | ValidatorResult later stable IDs: design, autonomy, feedback-loop, TDD, stewardship, residual-risk, shared-design, manual-QA, context-hygiene checks | ID 이름만 있음 | Validator 담당 문서가 stable ID, severity, waiver, fixture 증명을 정해야 합니다. | 승격 전까지 없음 |
-| Waiver, reconcile, and residual-risk branches | branch 이름만 있음 | 사용자 판단, Core, 닫기 담당 문서 규칙이 필요합니다. | 승격 전까지 없음 |
+| Waiver, reconcile, and residual-risk branches | 분기 이름만 있음 | 사용자 판단, Core, 닫기 담당 문서 규칙이 필요합니다. | 승격 전까지 없음 |
 
 <a id="later-template-candidates"></a>
 ## 7. Later template 후보
@@ -107,6 +107,6 @@
 
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
-| later template 전체 본문 | later template 전체 본문은 제거되었다. | 승격된 template 담당 문서에서만 다시 정의한다. | 현재 MVP에 영향을 주면 안 됨 |
-| fixture YAML draft 전체 본문 | fixture YAML draft 전체 본문은 제거되었다. | 승격된 적합성 담당 문서에서만 다시 정의한다. | 현재 MVP에 영향을 주면 안 됨 |
-| later schema 전체 본문 | later schema 전체 본문은 제거되었다. | 승격된 schema/API/storage 담당 문서에서만 다시 정의한다. | 현재 MVP에 영향을 주면 안 됨 |
+| later template 전체 본문 | later template 전체 본문은 제거했습니다. | 승격된 template 담당 문서에서만 다시 정의합니다. | 현재 MVP에 영향을 주면 안 됨 |
+| fixture YAML draft 전체 본문 | fixture YAML draft 전체 본문은 제거했습니다. | 승격된 적합성 담당 문서에서만 다시 정의합니다. | 현재 MVP에 영향을 주면 안 됨 |
+| later schema 전체 본문 | later schema 전체 본문은 제거했습니다. | 승격된 schema/API/storage 담당 문서에서만 다시 정의합니다. | 현재 MVP에 영향을 주면 안 됨 |

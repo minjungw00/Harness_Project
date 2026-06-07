@@ -133,7 +133,7 @@ StatusResponse:
 ## `harness.prepare_write`
 
 - **담당:** 협력형 쓰기 전 범위 확인과 proposed attempt가 compatible할 때 durable single-use Write Authorization.
-- **담당하지 않음:** OS 권한, 샌드박스, 변조 방지 enforcement, 도구 실행 전 차단, 사용자 판단 생성, 증거 충분성, run recording, 닫기.
+- **담당하지 않음:** OS 권한, 샌드박스, 변조 방지 강제, 도구 실행 전 차단, 사용자 판단 생성, 증거 충분성, run recording, 닫기.
 - **호출 시점:** 제품 파일 쓰기 또는 쓰기 가능한 동작 직전에, 현재 Task, Change Unit, baseline, 민감 동작 승인, 접점 역량과 맞는지 확인해야 할 때.
 - **요청:**
 

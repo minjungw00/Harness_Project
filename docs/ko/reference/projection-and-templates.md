@@ -122,7 +122,7 @@ human edit -> reconcile candidate -> explicit reconcile outcome -> Core state-ch
 - omission, redaction, blocking note
 - ref가 중요한 짧은 이유
 
-`secret_omitted`, `blocked`, unavailable, redacted artifact body를 Markdown에 펼치지 않습니다. Metadata나 주변 문장으로 생략된 원본 값을 재구성하지 않습니다.
+`secret_omitted`, `blocked`, unavailable, redacted 상태의 artifact body를 Markdown에 펼치지 않습니다. Metadata나 주변 문장으로 생략된 원본 값을 재구성하지 않습니다.
 
 표시된 `ArtifactRef`는 등록된 artifact record를 가리키는 포인터입니다. 그 자체가 증거 충분성, 검증, QA, 최종 수락, 잔여 위험 수락, 닫기 준비 상태는 아닙니다. Claim에 필요한 담당 관계, integrity metadata, redaction state, availability가 빠졌으면 공백을 보여줍니다.
 
