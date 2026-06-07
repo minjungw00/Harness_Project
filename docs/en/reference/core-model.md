@@ -200,9 +200,9 @@ Only a compatible non-dry-run allowed path creates a consumable Write Authorizat
 
 Write Authorization is a cooperative Harness record. It can tell a connected agent or surface that the intended write is compatible with current Harness state; it does not grant OS permission, enforce a sandbox, prevent arbitrary tools, make storage tamper-proof, or isolate the operation.
 
-When MCP or the connected surface cannot perform the needed cooperative check, the honest result is a hold, blocker, degraded guarantee display, or capability error. Preventive or isolated wording is allowed only when the documented surface proves that exact boundary for the covered operation.
+When MCP or the connected surface cannot perform the needed cooperative check, the honest result is a hold, blocker, degraded guarantee display, or capability error. Preventive or isolated wording is later/profile-gated and stays unavailable unless a future owner promotes and proves that exact boundary for the covered operation.
 
-Current-MVP `prepare_write` must reject or block requests that require command observation, network observation, secret-access observation, artifact capture, pre-tool blocking, or isolation that the active surface cannot provide. Use the public API validation or capability errors owned by [API Errors](api/errors.md); do not encode unsupported observations into an active Write Authorization.
+Current-MVP `prepare_write` must reject or block requests that require command observation, network observation, secret-access observation, artifact capture, pre-tool blocking, or isolation that the active surface cannot provide. Use `CAPABILITY_INSUFFICIENT` when a recognized active surface lacks the requested capability, and `VALIDATION_FAILED` when the request shape or requested guarantee is invalid for the active profile. Do not encode unsupported observations into an active Write Authorization.
 
 <a id="record_run"></a>
 
@@ -210,7 +210,7 @@ Current-MVP `prepare_write` must reject or block requests that require command o
 
 `record_run` records execution or observation. It is not a second chance to authorize a write.
 
-For a product-write Run, Core must load a compatible active Write Authorization, compare the observed changed paths against the stored path-level authorized attempt and current state to the extent the surface can honestly observe it, and consume the authorization exactly once when compatible. Missing, stale, expired, revoked, consumed, incompatible, or insufficiently observable authorization cannot be recorded as successful consumption. Command, network, secret-access, artifact-capture, blocking, or isolation compatibility must not be marked verified under the baseline profile.
+For a product-write Run, Core must load a compatible active Write Authorization, compare the observed changed paths against the stored path-level authorized attempt and current state to the extent the surface can honestly observe it, and consume the authorization exactly once when compatible. Missing, stale, expired, revoked, consumed, incompatible, or insufficiently observable authorization cannot be recorded as successful consumption. Under the baseline `reference-local-mcp` profile, the `detective` label is justified only by changed-path observation. Command, network, secret-access, artifact-capture, blocking, or isolation compatibility must not be marked verified under the baseline profile.
 
 `record_run` may register or link `ArtifactRef` values only through owner-approved artifact paths. Raw secrets, tokens, forbidden sensitive logs, arbitrary caller paths, or untrusted bytes must be rejected, redacted, represented as omitted/blocked, or routed through an approved safe handle rather than stored to make evidence look complete.
 

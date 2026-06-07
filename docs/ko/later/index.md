@@ -81,6 +81,7 @@
 | 후보 | 상태 | 승격 조건 | 현재 MVP 영향 |
 |---|---|---|---|
 | 이후 스키마 확장 | 스키마 이름만 있음 | 승격된 담당 문서가 정확한 필드와 검증기를 활성 계약에 정의해야 합니다. | 승격 전까지 없음 |
+| 역량 프로필 지원 필드: `command_observation_supported`, `network_observation_supported`, `secret_access_observation_supported`, `artifact_capture_supported`, `pre_tool_blocking_supported`, `isolation_supported` | 필드 이름만 있음 | 승격된 Agent Integration, API/schema, Security, Storage, Conformance 담당 문서가 정확한 프로필 형태, 대상 동작, 대체 동작, 검증, 저장소, 오류, 증명 기대치를 정의해야 합니다. 기준 `reference-local-mcp`는 활성 프로필에서 이 필드를 생략하며 해당 역량을 지원하지 않는 것으로 다룹니다. | 승격 전까지 없음 |
 | 역량 조건부 `Write Authorization` 관찰 필드: `intended_commands`, `intended_network`, `intended_secret_scope`; 민감 관찰 범주 이름: `network_write`, `external_service_write`, `secret_access` | 필드와 값 이름만 있음 | 승격된 API/schema 담당 문서가 정확한 형태, 프로필 조건, 검증, 저장소, `record_run` 호환성 의미를 정의해야 합니다. 기준 `reference-local-mcp`는 활성 `AuthorizedAttemptScope`나 활성 `SensitiveCategory`에 이 필드와 값을 포함하지 않습니다. | 승격 전까지 없음 |
 | 이후 actor, producer, capture source 값: `evaluator`, `operator`, `capture_adapter` | 값 이름만 있음 | 승격된 Eval, 운영, 캡처, API/schema, 저장소 담당 문서가 정확한 요청 권한, 아티팩트 관계, 대체 동작, 증명 기대치를 정의해야 합니다. 현재 MVP의 활성 표에는 이 값이 없습니다. | 승격 전까지 없음 |
 | 이후 닫기와 보증 필드: `verifying`, `qa`, `completed_verified`, `detached_verified`, `design_gate`, `verification_gate`, `qa_gate`, 수동 QA 관문, 설계 정책 차단 사유, 보증 차단 사유 | 필드 이름만 있음 | Core/API 담당 문서 활성화, 닫기 대체 불가 규칙, 정확한 활성 스키마 필드, 대체 동작, 증명 기대치가 필요합니다. | 승격 전까지 없음 |

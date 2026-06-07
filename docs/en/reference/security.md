@@ -9,7 +9,7 @@ Use this page when security wording, local-access posture, threat/control summar
 This document owns:
 
 - security asset categories and trust-boundary categories
-- the meaning of `cooperative`, `detective`, and profile-gated `preventive` / `isolated` as security guarantee labels
+- the meaning of `cooperative`, `detective`, and the current-MVP non-claim boundary for later/profile-gated `preventive` / `isolated` labels
 - the rule that security display must match the proven control
 - the current MVP security non-claims
 - the threat/control summary that keeps Core authority, user-owned judgment, evidence, storage, connectors, and projections distinct
@@ -31,11 +31,11 @@ This document does not own:
 
 The current MVP guarantee level is cooperative by default, with limited detective behavior only where the active reference surface can honestly observe the relevant fact. The active reference surface is represented by a registered `capability_profile`; that profile constrains guarantee display and capability blockers, but it does not create write compatibility or a Write Authorization.
 
-For the current MVP value set, `cooperative` and `detective` are the only default `GuaranteeDisplay.level` values. `preventive` and `isolated` are profile-gated display value names only. They require a promoted profile and proof for the covered operation or boundary; they are not default active MVP guarantees.
+For the current MVP value set, `cooperative` and `detective` are the only `GuaranteeDisplay.level` values. `preventive` and `isolated` are later/profile-gated display names in [Later Candidate Index](../later/index.md), not current MVP schema values or active guarantees.
 
 `allowed` means compatible with current Harness state, owner records, and the active surface capability. It does not mean the operating system permits the action. `blocked` means the Harness protocol, state, owner record, or capability check says the path must not proceed. It does not mean a process was physically stopped before execution.
 
-The reference `capability_profile` has no default preventive or isolated posture. Profile support must be explicit; agents and connectors must not infer stronger guarantee labels from user intent. When `pre_tool_blocking_supported=false`, the MVP must not display `preventive` for product/runtime/code writes. When `isolation_supported=false`, the MVP must not display `isolated` or imply a security-isolation boundary. A user request for stronger safety, a guard/freeze/careful-mode label, or a future profile idea does not promote the profile.
+The reference `capability_profile` has no preventive or isolated posture. Agents and connectors must not infer stronger guarantee labels from user intent, guard/freeze/careful-mode wording, or future profile ideas. Future support fields, covered operations, fallback behavior, errors, and proof paths belong to [Later Candidate Index](../later/index.md) until promoted by an owner document.
 
 Write Authorization is a single-use cooperative Harness record created only by the compatible non-dry-run `prepare_write` path and consumed by compatible `record_run`. It is a Harness record/check, not OS permission, sandboxing, tamper-proof enforcement, physical pre-tool blocking, or isolation.
 
@@ -130,25 +130,17 @@ Examples of detective behavior in the current MVP plan:
 
 Detective behavior must say what was observed and what remains unverified. For baseline product-write compatibility, the `detective` label is justified only by changed-path observation. Unsupported command, network, secret, artifact-capture, blocking, isolation, or external-system effects must not be reported as passed merely because nearby Harness checks succeeded.
 
-## 9. Preventive Claims Rule
+## 9. Later Preventive Boundary
 
-A preventive claim is allowed only when all of these are true:
+Preventive profiles are later/profile-gated material. The current MVP has no default pre-tool blocking profile and no active `preventive` guarantee. Do not describe `prepare_write`, Write Authorization, `allowed`, `blocked`, file locks, hashes, status cards, projections, documentation checks, fixture drafts, guard wording, freeze wording, or careful-mode wording as pre-execution blocking. Future preventive profile fields, covered operations, fallback behavior, errors, and proof expectations stay in [Later Candidate Index](../later/index.md) until promoted.
 
-- the exact covered operation is named
-- the mechanism that blocks before execution is named, such as a hook, wrapper, permission layer, policy engine, sidecar, or equivalent
-- the owner document for that operation defines the behavior and fallback
-- executable proof exists for that exact path
-- the displayed `capability_profile` supports `preventive` for that operation
+## 10. Later Isolation Boundary
 
-The current MVP has no default preventive claim. Do not describe `prepare_write`, Write Authorization, `allowed`, `blocked`, file locks, hashes, status cards, projections, documentation checks, fixture drafts, guard wording, freeze wording, or careful-mode wording as pre-execution blocking unless the exact preventive path above exists.
+Isolated profiles are later/profile-gated material. The current MVP has no default `isolated` guarantee and no active security-isolation boundary.
 
-## 10. Isolation Claims Rule
+A separate worktree, fresh session, fresh evaluator bundle, or separate process may support freshness, verification independence, or blast-radius reduction. It is not automatically OS sandboxing, permission isolation, tamper-proof storage, or security isolation.
 
-An isolation claim is allowed only when the security boundary is named and proven for the claim being made. A valid claim must say what is isolated from what, by which mechanism, for which operation, and under which owner/proof path.
-
-A separate worktree, fresh session, fresh evaluator bundle, or separate process may support freshness, verification independence, or blast-radius reduction. It is not automatically OS sandboxing, permission isolation, tamper-proof storage, or security isolation. The current MVP has no default security isolation claim.
-
-Do not use `isolated` merely because files are local, a bundle is fresh, a connector has a friendly mode name, a tool runs in another directory, or a document says to be careful.
+Do not use `isolated` merely because files are local, a bundle is fresh, a connector has a friendly mode name, a tool runs in another directory, or a document says to be careful. Future isolation profile fields, boundaries, covered operations, fallback behavior, errors, and proof expectations stay in [Later Candidate Index](../later/index.md) until promoted.
 
 ## 11. Cross-Owner Checks
 

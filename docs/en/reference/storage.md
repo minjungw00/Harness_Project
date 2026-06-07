@@ -401,11 +401,12 @@ safe metadata. Storage implements it through `artifacts` plus `artifact_links`;
 see [API Schema Core: ArtifactRef](api/schema-core.md#artifactref).
 
 Artifact registration accepts only the owner-documented `ArtifactInput`
-sources: `staged_file`, `capture_adapter`, or `existing_artifact`. A staged or
-captured handle must be resolved by the owner path before storage commits the
-artifact row. An `existing_artifact` input must name an already registered
+sources: `staged_file` or `existing_artifact`. A staged handle must be
+resolved by the owner path before storage commits the artifact row. An
+`existing_artifact` input must name an already registered
 `ArtifactRef` that belongs to the same project and has a compatible owner
-relation. Caller-supplied raw filesystem paths are not registration authority.
+relation. Caller-supplied raw filesystem paths and native capture-adapter
+outputs are not registration authority in the baseline profile.
 
 An artifact is evidence-eligible only when storage has:
 

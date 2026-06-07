@@ -374,12 +374,13 @@ Core/API 담당 문서와 이 문서의 저장소 설명이 담당합니다. 방
 저장소는 `artifacts`와 `artifact_links`로 이를 구현합니다. 자세한 형태는
 [API Schema Core: ArtifactRef](api/schema-core.md#artifactref)를 봅니다.
 
-아티팩트 등록은 담당 문서가 문서화한 `ArtifactInput` 출처인 `staged_file`,
-`capture_adapter`, `existing_artifact`만 받습니다. 스테이징 또는 캡처 핸들은
-저장소가 아티팩트 행을 커밋하기 전에 담당 경로가 해석해야 합니다.
+아티팩트 등록은 담당 문서가 문서화한 `ArtifactInput` 출처인 `staged_file` 또는
+`existing_artifact`만 받습니다. 스테이징 핸들은 저장소가 아티팩트 행을 커밋하기
+전에 담당 경로가 해석해야 합니다.
 `existing_artifact` 입력은 이미 등록된 `ArtifactRef`를 가리켜야 하며, 같은 프로젝트에
 속하고 호환되는 담당 관계를 가져야 합니다. 호출자가 임의로 준 파일시스템 경로는
-등록 권한이 아닙니다.
+등록 권한이 아니며, 접점 자체 캡처 어댑터 출력도 기준 프로필에서는 등록 권한이
+아닙니다.
 
 아티팩트가 증거로 쓰일 수 있으려면 저장소가 아래 사실을 가져야 합니다.
 
