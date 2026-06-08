@@ -46,11 +46,11 @@ Before product files change, the agent should make the working scope plain:
 
 For anything larger than a tiny obvious edit, the agent should inspect available files, tests, docs, current Harness state, and accepted judgments before asking you. If the answer is discoverable, the agent should discover it. If the work is still too vague to implement safely, the agent should name the ambiguity and ask the one question that changes the next safe action.
 
-You may see a compact readiness view called `ShapingReadiness`. It is not a form you must fill out and not a persistent Discovery Brief, Question Queue, or Assumption Register. It is the agent's current view of whether the goal summary, non-goals, affected area or paths, acceptance criteria, autonomy boundary, first Change Unit, user-owned blockers, and next safe action are known enough for the first safe step. Unknowns should remain visible, but they should not hold up the first safe Change Unit when they do not affect it.
+You may see a compact readiness view called `ShapingReadiness`. It is not a form you must fill out and not a persistent Discovery Brief, Question Queue, or Assumption Register. It is the agent's current view of whether the goal summary, non-goals, affected area or paths, acceptance criteria, what the agent may decide on its own, the smallest work item for this change, user-owned blockers, and next safe action are known enough for the first safe step. Unknowns should remain visible, but they should not hold up that smallest work item when they do not affect it.
 
 In a Harness-connected session, product writes go through a pre-write scope check. In owner terms, the active method is `harness.prepare_write`. A compatible result says the intended write matches current Harness state and active surface capability for the named operation. It is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that every tool was blocked before action.
 
-If you decide to change the goal, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline, or active work piece after `harness.intake`, the agent should apply that through `harness.update_scope` before relying on a write check. Existing pre-write checks that no longer match the updated scope become stale.
+If you decide to change the goal, scope boundary, non-goals, acceptance criteria, what the agent may decide on its own, baseline, or active work piece after `harness.intake`, the agent should apply that through `harness.update_scope` before relying on a write check. Existing pre-write checks that no longer match the updated scope become stale.
 
 ## 3. Separate facts from user judgment
 
@@ -135,7 +135,7 @@ Useful evidence can include changed paths, diffs, command output, test results, 
 
 Evidence does not replace your judgment or final acceptance. Tests do not replace user-visible inspection or any future promoted review path. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
 
-For tracked work, the evidence summary should distinguish required close evidence from optional support. In current MVP terms, evidence is sufficient only when every required coverage item is supported or not applicable. Unsupported, partial, stale, blocked, or missing required evidence remains a close blocker. A usable artifact can support a claim, but artifact availability by itself is not evidence sufficiency.
+For tracked work, the evidence summary should distinguish required close evidence from optional support. In current MVP terms, evidence is sufficient only when every required coverage item is supported or not applicable. Unsupported, partial, stale, blocked, or missing required evidence remains a reason the work cannot be closed yet. A usable artifact can support a claim, but artifact availability by itself is not evidence sufficiency.
 
 ## 7. Review blockers before close
 
@@ -160,7 +160,7 @@ The agent should show:
 
 Tests can pass while close is still blocked. A UI change can still have a visible inspection gap. A security-sensitive change can need a risk decision. Missing required evidence remains a blocker until it is gathered, marked not applicable through the active evidence path, or honestly reported as unresolved.
 
-In owner terms, `harness.close_task` returns blockers or a close result. A close check is read-only: it can show whether close would be blocked, but it should not change Task state. In user terms, the agent should not claim completed close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved. Separate quality routes are later candidates unless a future owner promotes them.
+In owner terms, `harness.close_task` returns blockers or a close result. A close check is read-only: it can show whether close would be blocked, but it should not change Task state. In user terms, the agent should not claim completed close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or reasons the work cannot be closed yet remain unresolved. Separate quality routes are later candidates unless a future owner promotes them.
 
 Close can end as completed, cancelled, or superseded, but those are different outcomes. Completed close requires the required evidence first, then required final acceptance, and then residual-risk acceptance only when a visible close-affecting risk requires it. Cancelled and superseded are honest terminal outcomes, not successful completion, and they do not require evidence sufficiency, final acceptance, or residual-risk acceptance. A failed command, failed derived view, missing artifact, evidence gap, or unresolved blocker should stay visible as the specific problem; it is not a generic failed Task result.
 
@@ -176,11 +176,11 @@ The agent should ask for residual-risk acceptance only when a known residual ris
 
 "Looks good" may be final acceptance only when the agent has clearly asked for final acceptance of a named result. It is not residual-risk acceptance unless the risk was named and the prompt asked for that judgment.
 
-## 9. Read current MVP guarantees honestly
+## 9. Read what current MVP can verify honestly
 
 Early Harness behavior is cooperative by default. Limited detective reporting applies only to supported observable facts after the relevant capability check has passed, unless a specific owner-documented mechanism proves more.
 
-| Guarantee level | What it means | What it does not mean |
+| What Harness can verify | What it means | What it does not mean |
 |---|---|---|
 | Cooperative | The agent is instructed to hold, ask, refresh, or proceed through the Harness record path. | Harness is not automatically stopping every tool at the OS level. |
 | Detective | Harness or a surface can report a mismatch after observing a supported fact and passing the relevant capability check. | The action was not necessarily blocked before it happened, and unsupported command, network, secret, or native-capture effects were not verified. |
@@ -217,7 +217,7 @@ Visible shaped result:
 - Scope: login form, submit handling, session creation, and focused tests.
 - Out of scope: account creation, password reset, social login, and production deployment.
 - Acceptance: existing users can sign in, failed login shows a chosen error treatment, and tests cover the touched path.
-- Readiness: goal, non-goals, affected areas, acceptance, and next action are known; failed-login feedback is the named product blocker before the first Change Unit.
+- Readiness: goal, non-goals, affected areas, acceptance, and next action are known; failed-login feedback is the named product blocker before the smallest work item for this change starts.
 - Blocking question: should failed login feedback be inline text or a toast?
 - Next safe action: after that answer, update the active scope and check the intended login-form write.
 
@@ -238,14 +238,14 @@ User: Make this plan more concrete before implementation.
 
 Good agent behavior:
 - read the plan and related docs before asking anything;
-- identify whether the goal, non-goals, affected areas or paths, acceptance criteria, autonomy boundary, first Change Unit, user-owned blockers, and next safe action are known;
-- ask only the decision that changes the first safe Change Unit or next safe action.
+- identify whether the goal, non-goals, affected areas or paths, acceptance criteria, what the agent may decide on its own, the smallest work item for this change, user-owned blockers, and next safe action are known;
+- ask only the decision that changes the smallest safe work item or next safe action.
 
 Visible shaped result:
 - Goal: turn the plan into one implementable first change.
 - Scope: clarify the current objective, affected areas, acceptance criteria, and evidence expectation.
 - Out of scope: new standalone artifacts, broad roadmap rewrite, and implementation.
-- Readiness: affected docs are known, but the first Change Unit is not known until the user outcome is chosen; no persistent planning artifact is created.
+- Readiness: affected docs are known, but the smallest work item for this change is not known until the user outcome is chosen; no persistent planning artifact is created.
 - Evidence gap: no repository files or tests have been checked yet.
 - Blocking question: which user outcome should the first slice prove?
 - Next safe action: inspect the named owner docs or files, then update the active scope for the first implementable slice.
@@ -257,7 +257,7 @@ Harness routing after the ordinary request is clear:
 - `harness.update_scope`: apply the chosen slice before write-capable work.
 - `harness.prepare_write`: wait until implementation paths are specific.
 - `harness.record_run`: record inspections or checks only after they happen.
-- `harness.close_task`: do not call the plan done if the first slice, evidence expectation, or close blocker is still unresolved.
+- `harness.close_task`: do not call the plan done if the first slice, evidence expectation, or reason the plan cannot be closed yet is still unresolved.
 ```
 
 ### Only change files inside this scope

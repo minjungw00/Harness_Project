@@ -36,9 +36,9 @@ Always-on context should fit on one screen and support the next action. Include 
 - active blockers
 - latest pre-write scope result, if any
 - evidence summary and gaps
-- close blockers
+- reasons close is blocked
 - residual-risk status
-- guarantee level or unavailable/capability condition
+- what Harness can verify, or unavailable/capability condition
 - source refs and freshness
 - one next safe action
 
@@ -64,23 +64,23 @@ A focused clarification should show:
 - current goal
 - proposed or active scope, allowed paths or affected areas, and non-goals
 - acceptance criteria for the next slice
-- Autonomy Boundary
+- what the agent may decide on its own
 - confirmed facts
 - remaining uncertainty
 - required user-owned judgments
 - the one blocking question, if any
 - useful non-blocking questions parked for later
 - evidence expectation or evidence gap
-- close blockers that are already visible
+- reasons close is already blocked
 - next safe action
 
-Use the schema-owned `ShapingReadiness` view for that display. In user-facing terms, it should show whether the goal summary, non-goals, affected areas or paths, acceptance criteria, Autonomy Boundary, first Change Unit, user-owned blockers, and next safe action are currently known. An unknown item blocks only when it affects the first safe Change Unit or the next safe action.
+Use the schema-owned `ShapingReadiness` view for that display. In user-facing terms, it should show whether the goal summary, non-goals, affected areas or paths, acceptance criteria, what the agent may decide on its own, the smallest work item for this change, user-owned blockers, and next safe action are currently known. An unknown item blocks only when it affects that smallest safe work item or the next safe action.
 
-Before creating the first Change Unit for write-capable work, name the blocker type if the blocker belongs to the user: `product_decision`, `technical_decision`, `scope_decision`, or `sensitive_approval`. If the blocker is agent-resolvable or surface/system-owned, name the inspection, refresh, narrowing, or capability step instead of asking the user.
+Before naming the smallest work item for this change in write-capable work, name the blocker type if the blocker belongs to the user: `product_decision`, `technical_decision`, `scope_decision`, or `sensitive_approval`. If the blocker is agent-resolvable or surface/system-owned, name the inspection, refresh, narrowing, or capability step instead of asking the user.
 
 In the active MVP, clarification should update the active task summary, the proposed or active work slice when product writes are near, and user-judgment candidates or records through the active owner paths. Start with `harness.intake`; ask blocking user-owned choices through `harness.request_user_judgment`; record answers through `harness.record_user_judgment`; and apply accepted scope or work-slice changes through `harness.update_scope`. Do not create separate active requirements for committed planning briefs, question queues, assumption registers, standalone detailed artifacts, or full-format judgment presentations.
 
-Do not let shaping become an open-ended planning loop. Once the first safe Change Unit and next safe action are concrete enough, move to the owner path that applies the state. Remaining ambiguity can stay visible without blocking progress when it does not affect that first safe Change Unit.
+Do not let shaping become an open-ended planning loop. Once the smallest safe work item and next safe action are concrete enough, move to the owner path that applies the state. Remaining ambiguity can stay visible without blocking progress when it does not affect that work item.
 
 Use lifecycle labels narrowly when they help the agent choose the next action:
 
@@ -103,7 +103,7 @@ A judgment request should include the exact question, concise options, recommend
 
 Do not treat "yes," "approved," "looks good," "go ahead," or "continue" as a bundle of every pending judgment. Map a short reply only when one active prompt made the kind, affected object, option, scope, user intent, consequences, and remaining open items unambiguous.
 
-When a resolved `scope_decision` means the active scope should change, record the judgment resolution first, then use `harness.update_scope` as the next state-changing action. Do not treat the judgment record itself as an updated goal, non-goal list, acceptance criteria, Autonomy Boundary, baseline, or active work slice.
+When a resolved `scope_decision` means the active scope should change, record the judgment resolution first, then use `harness.update_scope` as the next state-changing action. Do not treat the judgment record itself as an updated goal, non-goal list, acceptance criteria, what the agent may decide on its own, baseline, or active work slice.
 
 Sensitive approval is permission for a named action and is recorded with `SensitiveActionScope`. It may cover a command, dependency change, host, network access, secret handle, deployment, destructive action, system access, product-file write, or other scoped action, but it is not path-level Write Authorization and does not prove observation or blocking. Final acceptance is judgment on the result. Residual-risk acceptance is judgment on a named residual risk. Future judgment candidates would be separate from all three if promoted. None substitutes for another.
 
@@ -132,10 +132,10 @@ Do not claim write compatibility from a plan, stale chat context, broad user ent
 - scope match or mismatch
 - pending user judgments or sensitive approvals
 - stale state, stale baseline, or unavailable authority
-- current guarantee level or unavailable/capability condition
+- what Harness can verify, or unavailable/capability condition
 - smallest unblocker
 
-A compatible result means the intended product-file write matches current Harness state and active surface capability. It is a single-use cooperative result for the stated path-level boundary. If intended product-file paths, product-write sensitive category, baseline, task, work slice, state, surface, related judgments, or guarantee level change, refresh the check or treat the claim as unverified/blocked. Command, dependency, host, network, secret-access, deployment, destructive-action, and system-access facts remain separate `SensitiveActionScope` or capability issues unless a future owner promotes observation support.
+A compatible result means the intended product-file write matches current Harness state and active surface capability. It is a single-use cooperative result for the stated path-level boundary. If intended product-file paths, product-write sensitive category, baseline, task, work slice, state, surface, related judgments, or the set of things Harness can verify changes, refresh the check or treat the claim as unverified/blocked. Command, dependency, host, network, secret-access, deployment, destructive-action, and system-access facts remain separate `SensitiveActionScope` or capability issues unless a future owner promotes observation support.
 
 If the scope change is valid, update the active scope or active work slice through `harness.update_scope` before asking for a new pre-write check. Existing pre-write results that no longer match the updated scope must be treated as stale.
 
@@ -171,7 +171,7 @@ For tracked work, show the close basis before asking for final acceptance or att
 - sensitive-action approval status when relevant
 - final acceptance status when required
 - residual-risk visibility and acceptance status when relevant
-- close blockers and smallest unblocker
+- reasons the work cannot be closed yet and smallest unblocker
 
 Use `harness.close_task intent=check` for a read-only close check. Use `intent=complete` only after the complete blocker order has passed: Task validity, Run state, scope and `completion_policy`, unresolved judgments and approvals, write and baseline compatibility, surface capability, required evidence, artifact availability, final acceptance when required, residual-risk visibility, residual-risk acceptance when required, and recovery constraints. Evidence comes before final acceptance and residual-risk acceptance; those judgments cannot fill an evidence gap.
 
@@ -187,9 +187,9 @@ Active MVP behavior should stay compact. Later candidate presentation formats ma
 
 Do not make full-format judgment presentations, standalone derived views, full evidence displays, detached later-path checks, broad review catalogs, future conformance runners, operations hardening, or later candidates appear required for ordinary active MVP work.
 
-Quality concerns are not standalone current MVP requirements or close blockers. Route them through active judgment kinds, evidence gaps, residual-risk visibility, surface capability, scope, or another already-active close blocker only when that owner path truly applies.
+Quality concerns are not standalone current MVP requirements or reasons the work cannot be closed yet. Route them through active judgment kinds, evidence gaps, residual-risk visibility, surface capability, scope, or another already-active reason the work cannot be closed yet only when that owner path truly applies.
 
-Use compact user-facing shapes first: status, focused judgment request, run/evidence summary, and close result. Reference exact contracts only when needed for a visible blocker, source ref, write check, evidence gap, close result, connector behavior, or implementation owner link.
+Use compact user-facing shapes first: status, focused judgment request, what was checked, and close result. Reference exact contracts only when needed for a visible blocker, source ref, write check, evidence gap, close result, connector behavior, or implementation owner link.
 
 ## 10. Load One Language Version Per doc_id
 

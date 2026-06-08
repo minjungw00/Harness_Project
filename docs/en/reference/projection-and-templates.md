@@ -40,7 +40,7 @@ There is no active MVP reconcile queue, editable projection intake path, project
 
 ## Projection is derived display
 
-Projection is a read-time derived view from current Core-owned records and registered `ArtifactRef` metadata. It helps humans and agents read current work, source refs, blockers, evidence gaps, close blockers, freshness, and the next safe action. It is not a second state store.
+Projection is a read-time derived view from current Core-owned records and registered `ArtifactRef` metadata. It helps humans and agents read current work, source refs, blockers, evidence gaps, reasons close is blocked, freshness, and the next safe action. It is not a second state store.
 
 The active MVP Projection set is exactly:
 
@@ -94,7 +94,7 @@ The active current MVP template set is exactly:
 | User-facing | `close-result` | [Close Result body](#close-result-body) |
 | Agent-facing | `agent-context-packet` | [Agent Context Packet body](#agent-context-packet-body) |
 
-The four user-facing outputs use ordinary language, source refs, and freshness only where they help the user decide, understand a blocker, inspect evidence, or understand close. They should not dump schemas, DDL, event logs, full artifacts, full report bodies, full evidence catalogs, or future catalogs.
+The four user-facing outputs use ordinary language, source refs, and freshness only where they help the user decide, understand a blocker, inspect evidence, or understand close. They render plain labels such as current stage, what the agent may decide on its own, what Harness can verify, and reason this cannot be closed yet. They should not dump schemas, DDL, event logs, full artifacts, full report bodies, full evidence catalogs, or future catalogs.
 
 The agent-facing packet is a separate audience. It carries only current, next-action-relevant refs, blockers, evidence gaps, close blockers, guarantee display level, and one next safe action. It is not user prose and is not authority.
 
@@ -108,14 +108,14 @@ Boundary: this template is rendered display only. It is not Core state, not evid
 
 Source records:
 
-- current Task summary, work shape, lifecycle phase, one blocking question when necessary, and next safe action
-- current scope, allowed paths or affected areas, non-goals, acceptance criteria, Autonomy Boundary, and active Change Unit summary when useful to the user
+- current Task summary, work shape, current stage, one blocking question when necessary, and next safe action
+- current scope, allowed paths or affected areas, non-goals, acceptance criteria, what the agent may decide on its own, and the smallest work item for this change when useful to the user
 - pending user judgments, rendered with user-readable labels
 - active blockers and the plain reason progress or close is held
-- current evidence summary, supporting refs, redaction or availability notes, and evidence gaps
-- close blockers, final-acceptance need, residual-risk visibility, and residual-risk acceptance status when relevant
+- what was checked, supporting refs, redaction or availability notes, and evidence gaps
+- reasons this cannot be closed yet, final-acceptance need, residual-risk visibility, and residual-risk acceptance status when relevant
 - design-quality routed action only when it changes the visible next step
-- guarantee display level or unavailable capability status
+- what Harness can verify, or unavailable capability status
 - short source refs, render time, and freshness state
 
 Rendered sections:
@@ -137,23 +137,24 @@ Template:
 Display only: derived from Core state and refs; not Core state or a Write Authorization.
 
 Work: {work_shape}. {current_task_summary}
-Shaping state: {lifecycle_phase}; {shaping_state_reason|none}
+Current stage: {current_stage}; {current_stage_reason|none}
 Scope: {scope_summary}
 Allowed paths/areas: {allowed_paths_or_affected_areas|unknown}
 Out of scope: {non_goals|none}
 Acceptance criteria: {acceptance_criteria|unknown}
-Autonomy boundary: {autonomy_boundary|default}
+What the agent may decide on its own: {agent_decision_boundary|default}
 Blocked because: {active_blocked_reason|none}
 Blocking question: {blocking_question|none}
 User must decide: {pending_user_judgments_with_localized_labels|none}
-Evidence: {evidence_status}. {known_evidence_summary|none}
+Evidence summary: {evidence_status}. {evidence_summary|none}
 Evidence gaps: {evidence_gaps|none}
 Checks: {check_summary|none}
-Close: {close_readiness_summary}; blockers={close_blockers|none}
+Close: {close_readiness_summary}
+Reason this cannot be closed yet: {reasons_this_cannot_be_closed_yet|none}
 Design quality action: {design_quality_routed_action|none}
 Residual risk: {residual_risk_visibility|none}
 Next safe action: {next_safe_action}
-Guarantee display: {guarantee_level_or_unavailable}; {guarantee_note}
+What Harness can verify: {harness_verification_level_or_unavailable}; {harness_verification_note}
 Sources/freshness: {source_freshness_summary}
 ````
 
@@ -161,7 +162,7 @@ Notes:
 
 - Keep this card readable for a user who does not know Harness internals.
 - When a field has no source record, render `none`, `unknown`, `not_required`, or an explicit blocker instead of inventing state.
-- Always render the guarantee display line. For active MVP default behavior, the note should say cooperative hold, or detective reporting only when a supported observable fact and passed capability check justify that limit. If Core/MCP is unavailable, render the unavailable condition instead of a stale or guessed guarantee display value.
+- Always render the "What Harness can verify" line. For active MVP default behavior, the note should say cooperative hold, or detective reporting only when a supported observable fact and passed capability check justify that limit. If Core/MCP is unavailable, render the unavailable condition instead of a stale or guessed verification value.
 - Design-quality content should fit one line: the current routed action and, when blocking, the single next action.
 - Agent-only refs and action-boundary details belong in [Agent Context Packet body](#agent-context-packet-body). Put a ref in the status card only when it helps the user decide, understand a blocker, or inspect source freshness.
 
@@ -178,7 +179,7 @@ Source records:
 - pending or recorded `user_judgment`
 - `judgment_kind`, `presentation`, and the locale-derived rendered judgment label
 - exact question, rationale, recommendation, uncertainty, and no-decision consequence
-- affected Task, Change Unit, write scope, close scope, sensitive-action scope, criteria, or other affected object
+- affected Task, smallest work item for this change, write scope, close scope, sensitive-action scope, criteria, or other affected object
 - options or selected outcome
 - consequences, what the agent is not deciding, and why the agent cannot decide on the user's behalf
 - minimal source refs needed to identify the affected work
@@ -259,18 +260,18 @@ Rendered sections:
 Template:
 
 ````text
-Run/evidence summary
+What was checked
 Display only: refs and summaries; not evidence, verification, QA, final acceptance, residual-risk acceptance, or close.
 
-Action: {run_or_action_summary}
+Action or change: {run_or_action_summary}
 Changed paths: {changed_paths|none}
 Checks: {checks_run_or_reason_not_run}
 Write check: {write_check_summary|no product write}
-Evidence: {evidence_status}. {evidence_summary}
-Evidence refs: {evidence_refs|none}
-Artifact refs: {artifact_ref_summary|none}
+Evidence summary: {evidence_status}. {evidence_summary}
+Supporting evidence refs: {evidence_refs|none}
+Supporting artifact refs: {artifact_ref_summary|none}
 Redaction or availability: {redaction_availability_summary|none}
-Supports: {supported_claims_or_criteria|none}
+What this supports: {supported_claims_or_criteria|none}
 Still missing or stale: {evidence_gaps_or_stale_inputs|none}
 Next safe evidence action: {next_evidence_action|none}
 Sources/freshness: {source_freshness_summary}
@@ -284,7 +285,7 @@ Notes:
 
 ## Close Result body
 
-Use `close-result` when the user needs a compact close-readiness, close-blocker, or close-outcome display. It keeps acceptance, residual risk, evidence, artifact availability, self-check basis, and blockers separate.
+Use `close-result` when the user needs a compact close-readiness display, the reason this cannot be closed yet, or a close-outcome display. It keeps acceptance, residual risk, evidence, artifact availability, self-check basis, and blockers separate.
 
 Implementation tier: active MVP user work-loop view. Detailed continuity, release-handoff, or export reports are later candidate scope.
 
@@ -300,7 +301,7 @@ Source records:
 - final-acceptance user judgment refs when required
 - residual-risk visibility and residual-risk acceptance refs when relevant
 - design-quality routed actions when they affect close, limited to the active MVP blocking set unless a later profile is active
-- close availability, close blockers, and smallest unblockers
+- close availability, reasons this cannot be closed yet, and smallest unblockers
 - source state version, freshness, and capability status
 
 Rendered sections:
@@ -330,8 +331,8 @@ Sensitive-action permission: {sensitive_permission_status|not_needed}
 Design quality action: {design_quality_close_action|none}
 Residual risk: {residual_risk_visibility}
 Residual risk acceptance: {residual_risk_acceptance_status|not_needed}
-Why close is blocked: {close_blockers|none}
-Smallest unblocker: {smallest_unblocker|none}
+Reason this cannot be closed yet: {reasons_this_cannot_be_closed_yet|none}
+Smallest thing that would unblock close: {smallest_unblocker|none}
 Close basis or reason: {close_reason|not_applicable}
 Next safe action: {next_safe_action|none}
 Sources/freshness: {source_freshness_summary}
@@ -354,9 +355,9 @@ Boundary: this packet is support context only. It cannot authorize writes, satis
 
 Source records:
 
-- task and active Change Unit refs
+- task and active `change_unit_ref`
 - current state version and source refs
-- active scope, allowed paths or affected areas, non-goals, acceptance criteria, and Autonomy Boundary
+- active scope, allowed paths or affected areas, non-goals, acceptance criteria, and `autonomy_boundary`
 - unresolved user judgments
 - active blockers
 - evidence gaps
@@ -367,7 +368,7 @@ Source records:
 
 Rendered sections:
 
-- task and change unit refs
+- task and `change_unit_ref`
 - state version and source refs
 - active scope
 - shaping summary
@@ -408,6 +409,7 @@ agent_context_packet:
 Notes:
 
 - Keep the packet one screen or less. It carries only current, next-action-relevant state.
+- This agent-facing packet may keep machine-readable field names such as `change_unit_ref`, `autonomy_boundary`, `close_blockers`, and `guarantee_level`; do not reuse those names as labels in user-facing cards.
 - Do not include full schemas, full reference docs, full event logs, registered artifact file bodies, full report bodies, full templates, unrelated templates, full design-quality catalogs, or future catalog material by default.
 - If the next action needs a fuller owner section, the agent should pull that owner section on demand instead of embedding it in the packet.
 - The `guarantee_level` field is the required guarantee display context. If Core/MCP is unavailable, set it to the unavailable/capability condition and treat Harness-dependent state, write, evidence, acceptance, residual-risk, and close claims as unavailable until refreshed.

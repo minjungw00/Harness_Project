@@ -14,7 +14,7 @@
 
 README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-index.yaml](../../doc-index.yaml)만 가리켜야 합니다. 깊은 담당 문서 경로를 경로 표에 직접 추가하지 말고 [참조 색인](../reference/README.md)에서 정확한 계약 담당 문서를 고릅니다.
 
-에이전트는 일반 작업에서 하나의 `doc_id`에 한 언어만 불러옵니다. 번역이나 의미 일치 검토에 비교가 꼭 필요할 때만 두 언어를 함께 봅니다. 프롬프트에는 현재 작업, 담당 문서의 필요한 부분, 범위와 범위 밖, 사용자 판단 대기 사항, 차단 사유, 다음 안전한 행동, 증거 공백, 닫기 차단 사유, 잔여 위험, 보장 수준, 출처 최신성만 작게 둡니다.
+에이전트는 일반 작업에서 하나의 `doc_id`에 한 언어만 불러옵니다. 번역이나 의미 일치 검토에 비교가 꼭 필요할 때만 두 언어를 함께 봅니다. 프롬프트에는 현재 작업, 담당 문서의 필요한 부분, 범위와 범위 밖, 사용자 판단 대기 사항, 차단 사유, 다음 안전한 행동, 증거 공백, 닫기를 막는 이유, 잔여 위험, 하네스가 확인할 수 있는 수준, 출처 최신성만 작게 둡니다.
 
 ## 3. 보존할 정확한 식별자
 
@@ -80,13 +80,18 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | final acceptance | 최종 수락 |
 | residual risk | 잔여 위험 |
 | close readiness | 닫기 가능 여부 또는 닫기 준비 상태 |
-| close blocker | 닫기 차단 사유 |
+| CloseBlocker or close blocker in user-facing display | 닫기를 막는 이유 |
+| `lifecycle_phase` in user-facing display | 현재 단계 |
+| Autonomy Boundary in user-facing display | 에이전트가 스스로 판단해도 되는 범위 |
+| `guarantee_level` in user-facing display | 하네스가 확인할 수 있는 수준 |
+| Change Unit in user-facing display | 이번에 바꿀 가장 작은 작업 단위 |
+| EvidenceSummary in user-facing display | 확인 근거 요약 또는 확인한 것 |
 | next safe action | 다음 안전한 행동 |
 | derived view or projection in user prose | 상태 보기, 요약, 상태 카드 |
 | pre-write scope check | 쓰기 전 범위 확인 |
 | sensitive-action approval | 민감 동작 승인 |
 
-`Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, `task_events`는 정확한 하네스 라벨이 차단 사유, 기록, API, 템플릿, 담당 문서 경로를 이해하는 데 도움이 될 때만 씁니다.
+`Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, `task_events`는 정확한 하네스 라벨이 내부 차단 사유, 기록, API, 템플릿, 담당 문서 경로를 이해하는 데 도움이 될 때만 씁니다. 사용자용 카드와 예시에는 위의 평이한 표시 문구를 우선합니다.
 
 ## 6. 내부 식별자 용어
 

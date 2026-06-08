@@ -14,7 +14,7 @@ When meaning changes, update English and Korean in the same batch. When Korean e
 
 Route tables in README and Maintain docs should point only to the compact structure and [doc-index.yaml](../../doc-index.yaml). Use [Reference Index](../reference/README.md) to choose exact contract owners instead of adding deep owner paths to route tables.
 
-Agents should load only one language for the same `doc_id` during normal work. Load both languages only when the task is translation or semantic-parity review and the comparison is necessary. Keep the prompt focused on the current task, owner section, scope/non-goals, pending user judgments, blockers, next safe actions, evidence gaps, close blockers, residual risk, guarantee level, and source freshness.
+Agents should load only one language for the same `doc_id` during normal work. Load both languages only when the task is translation or semantic-parity review and the comparison is necessary. Keep the prompt focused on the current task, owner section, scope/non-goals, pending user judgments, blockers, next safe actions, evidence gaps, reasons close is blocked, residual risk, what Harness can verify, and source freshness.
 
 ## 3. Exact Identifiers To Preserve
 
@@ -79,14 +79,19 @@ For Korean user-facing prose, prefer these ordinary terms:
 | Manual QA | 수동 QA |
 | final acceptance | 최종 수락 |
 | residual risk | 잔여 위험 |
-| close readiness | 닫기 가능 여부 or 닫기 준비 상태 |
-| close blocker | 닫기 차단 사유 |
+| close readiness | 닫기 가능 여부 또는 닫기 준비 상태 |
+| CloseBlocker or close blocker in user-facing display | 닫기를 막는 이유 |
+| `lifecycle_phase` in user-facing display | 현재 단계 |
+| Autonomy Boundary in user-facing display | 에이전트가 스스로 판단해도 되는 범위 |
+| `guarantee_level` in user-facing display | 하네스가 확인할 수 있는 수준 |
+| Change Unit in user-facing display | 이번에 바꿀 가장 작은 작업 단위 |
+| EvidenceSummary in user-facing display | 확인 근거 요약 또는 확인한 것 |
 | next safe action | 다음 안전한 행동 |
-| derived view or projection in user prose | 상태 보기, 요약, or 상태 카드 |
+| derived view or projection in user prose | 상태 보기, 요약, 또는 상태 카드 |
 | pre-write scope check | 쓰기 전 범위 확인 |
 | sensitive-action approval | 민감 동작 승인 |
 
-Use `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, and `task_events` only when the exact Harness label helps the reader follow a blocker, record, API, template, or owner route.
+Use `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, and `task_events` only when the exact Harness label helps the reader follow an internal blocker, record, API, template, or owner route. In user-facing cards and examples, prefer the plain display wording above.
 
 ## 6. Internal Identifier Terminology
 
