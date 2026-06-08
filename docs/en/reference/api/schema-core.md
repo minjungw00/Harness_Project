@@ -313,6 +313,8 @@ StagedArtifactHandle:
   handle_id: string
   project_id: string
   task_id: string
+  created_by_surface_id: string
+  created_by_surface_instance_id: string
   sha256: string
   size_bytes: integer
   content_type: string
@@ -322,7 +324,9 @@ StagedArtifactHandle:
 
 Exactly one source field must match `source_kind`: `staged_artifact_handle` for `staged_artifact`, or `existing_artifact_ref` for `existing_artifact`. A missing source field, a source field that does not match `source_kind`, or both source fields present is a request-shape validation failure. A staged handle must be scoped to the same `project_id` and `task_id`, carry `content_type`, `sha256`, `size_bytes`, `redaction_state`, and `expires_at`, and be unexpired and unconsumed when `harness.record_run` uses it. Expired, mismatched, already-consumed, or cross-task handles are rejected before mutation and must remain distinguishable in public error details.
 
-`harness.stage_artifact` may create a temporary `StagedArtifactHandle`, but it is not a Core state transition by itself. It creates no evidence, satisfies no gate, updates no evidence summary, and cannot make `harness.close_task` pass. `harness.record_run` is the only active path that can consume a valid staged handle and promote it to a persistent `ArtifactRef`; that promotion is authorized by `run_recording` plus same-project, same-Task, unexpired, unconsumed, integrity-compatible handle checks.
+`created_by_surface_id` and `created_by_surface_instance_id` are server-recorded provenance fields. `harness.stage_artifact` records them from the successful request's `VerifiedSurfaceContext`; the caller does not choose them in `StageArtifactRequest`, and a user-provided object with those fields is not proof of authority. When `ArtifactInput` submits a `StagedArtifactHandle` back to `harness.record_run`, the server resolves it against the storage-owned staging record and requires the current verified `surface_instance_id` to match `created_by_surface_instance_id`. The active MVP does not support cross-surface staged artifact handoff. A handle with the right shape is still rejected when `project_id`, `task_id`, `created_by_surface_instance_id`, expiration, consumed status, `sha256`, or `size_bytes` do not match the stored staged artifact and request expectations.
+
+`harness.stage_artifact` may create a temporary `StagedArtifactHandle`, but it is not a Core state transition by itself. It creates no evidence, satisfies no gate, updates no evidence summary, and cannot make `harness.close_task` pass. `StagedArtifactHandle` is not a bearer token that any local caller may use. `harness.record_run` is the only active path that can consume a valid staged handle and promote it to a persistent `ArtifactRef`; that promotion is authorized by `run_recording` plus same-project, same-Task, same verified surface instance, unexpired, unconsumed, integrity-compatible handle checks. Projection files, generated Markdown, chat text, Product Repository files, and agent memory cannot create or refresh staged-handle provenance.
 
 Raw file paths, raw logs, arbitrary local path strings, `captured_artifact`, captured handles, native artifact capture, raw capture-adapter outputs, raw secrets, tokens, and full sensitive logs are outside the active MVP and are rejected as artifact authority before mutation. New artifact bytes enter the active MVP only through `harness.stage_artifact`; existing bytes are reused only through a compatible `existing_artifact_ref`.
 

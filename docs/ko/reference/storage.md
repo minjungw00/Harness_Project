@@ -130,8 +130,9 @@ Runtime Home 파일은 로컬 운영 제어 데이터이고 민감한 지원 데
 활성 임시 저장 경계는 `artifact_staging` 또는 동등한 저장소 소유 스테이징
 기록과 `artifacts/tmp/` 아래 안전한 임시 바이트 또는 알림입니다. 이 경계는
 `harness.stage_artifact`가 나중에 `harness.record_run`으로 승격할 수 있는, 범위가
-정해지고 만료되며 한 번만 소비되는 핸들을 만들기 위한 용도입니다. 지속 `ArtifactRef`,
-증거 권한, Core 변경 기록, 이벤트 출처, 재실행 행, 상태 버전 출처가 아닙니다.
+정해지고 만료되며 한 번만 소비되고 서버가 기록한 생성 접점 출처 기록을 가진 핸들을
+만들기 위한 용도입니다. 지속 `ArtifactRef`, 증거 권한, Core 변경 기록, 이벤트 출처,
+재실행 행, 상태 버전 출처가 아닙니다.
 
 그 밖의 영속 테이블 계열이나 임시 핸들 계열은 현재 MVP 범위가 아닙니다.
 요구사항 구체화는 `tasks`, `change_units`, `user_judgments`, `evidence_summaries`,
@@ -169,7 +170,7 @@ Projection은 현재 MVP에서 별도 테이블 계열로 영속하지 않습니
 | `user_judgments` | `state.sqlite` | 활성 `UserJudgment.judgment_kind` 값에 대한 사용자 소유 판단 기록을 저장하며, 필요하면 별도 민감 동작 승인 범위도 저장합니다. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, 요청/맥락 JSON 열, `question`, `sensitive_action_scope_json`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | `state.sqlite` | `dry_run=false`인 `prepare_write`에서 `decision=allowed`일 때만 만들어지는 지속성 있는 단일 사용 협력형 Write Authorization입니다. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
 | `runs` | `state.sqlite` | 제품 쓰기가 있었다면 호환 승인 소비까지 포함하는 확정된 실행 또는 관찰 기록입니다. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, 관찰/증거 JSON 열, `created_at`, `completed_at`. |
-| `artifact_staging` | `state.sqlite`와 `artifacts/tmp/` | `harness.stage_artifact`가 만들고 나중에 `harness.record_run`이 한 번만 소비할 수 있는 임시 안전 바이트 또는 안전한 알림입니다. 지속 `ArtifactRef`도 아니고 증거 권한도 아닙니다. | `handle_id`, `project_id`, `task_id`, `surface_id`, `display_name`, `relation_hint`, `tmp_uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `status`, `consumed_by_run_id`, `promoted_artifact_id`, `expires_at`, `created_at`, `consumed_at`. |
+| `artifact_staging` | `state.sqlite`와 `artifacts/tmp/` | `harness.stage_artifact`가 만들고 나중에 `harness.record_run`이 한 번만 소비할 수 있는 임시 안전 바이트 또는 안전한 알림입니다. 지속 `ArtifactRef`도 아니고 증거 권한도 아닙니다. | `handle_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `display_name`, `relation_hint`, `tmp_uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `status`, `consumed_by_run_id`, `promoted_artifact_id`, `expires_at`, `created_at`, `consumed_at`. |
 | `artifacts` | `state.sqlite`와 아티팩트 저장소 | 아티팩트 무결성, 가림, 생산자, 보존, 가용성 사실을 가진 등록된 영속 증거 바이트 또는 안전한 메타데이터입니다. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | `state.sqlite` | 아티팩트와 그것이 뒷받침하는 활성 Core/API 레코드 사이의 담당 관계를 저장합니다. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
 | `evidence_summaries` | `state.sqlite` | 상태, 실행/증거 요약, 차단 사유, 닫기에 쓰는 간결한 증거 범위와 공백 기록을 저장합니다. Task 또는 Change Unit의 `CompletionPolicy`를 기준으로 평가하며, 정책 자체를 소유하지 않습니다. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
@@ -487,22 +488,29 @@ Core/API 담당 문서와 이 문서의 저장소 설명이 담당합니다. 방
 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP의 등록 권한이 아닙니다.
 
 임시 스테이징은 아티팩트 권한이 아닙니다. `artifact_staging` 또는 동등한 저장소 소유
-스테이징 기록은 최소한 `handle_id`, `project_id`, `task_id`, `sha256`,
-`size_bytes`, `content_type`, `redaction_state`, `status`, `expires_at`과
-`consumed_by_run_id`, `promoted_artifact_id`, `consumed_at` 같은 소비 사실을 추적해야
-합니다. `harness.stage_artifact`는 안전한 바이트 또는 안전한 알림을 `artifacts/tmp/`
+스테이징 기록은 최소한 `handle_id`, `project_id`, `task_id`, `created_by_surface_id`,
+`created_by_surface_instance_id`, `sha256`, `size_bytes`, `content_type`,
+`redaction_state`, `status`, `expires_at`과 `consumed_by_run_id`,
+`promoted_artifact_id`, `consumed_at` 같은 소비 사실을 추적해야 합니다.
+`created_by_surface_*` 필드는 서버가 성공한 `harness.stage_artifact` 요청의
+`VerifiedSurfaceContext`에서 기록합니다. 호출자가 권한 주장으로 제출하는 값이 아니며,
+제출된 handle의 모양만 믿지 말고 staging 행과 대조해야 합니다. `harness.stage_artifact`는 안전한 바이트 또는 안전한 알림을 `artifacts/tmp/`
 아래에 쓰고 임시 스테이징 행을 만들 수 있지만 `artifacts` 행, `artifact_links` 행,
 `evidence_summaries` 행, `task_events` 행, `tool_invocations` 재실행 행,
 `project_state.state_version` 증가를 만들지 않습니다.
 
 만료되지 않았고 같은 프로젝트/같은 Task에 속하며 `artifact_staging.status=staged`인
 핸들을 소비해 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 호환되는
-`harness.record_run`뿐입니다. 소비 트랜잭션은 스테이징 핸들을 `consumed`로 표시하고,
-소비한 Run과 승격된 아티팩트 id를 설정하고, 지속 `artifacts` 행과 필요한
+`harness.record_run`뿐입니다. 또한 현재 확인된 `surface_instance_id`가
+`created_by_surface_instance_id`와 일치해야 합니다. 현재 MVP는 접점 간(cross-surface)
+staged artifact handoff를 지원하지 않으며, `StagedArtifactHandle`은 어떤 로컬 호출자나
+사용할 수 있는 bearer token이 아닙니다. 소비 트랜잭션은 스테이징 핸들을 `consumed`로
+표시하고, 소비한 Run과 승격된 아티팩트 id를 설정하고, 지속 `artifacts` 행과 필요한
 `artifact_links`를 커밋하며, 메서드 담당 문서가 허용한 범위에서만 증거 범위를
 갱신해야 합니다. 만료되었거나, 범위가 맞지 않거나, 이미 소비되었거나, discarded
-상태이거나, 무결성 기대와 호환되지 않거나, 다른 Task의 스테이징 핸들은 변경 전에
-거부해야 하며 증거 충분성으로 숨기면 안 됩니다.
+상태이거나, cross-surface이거나, `created_by_surface_instance_id`/`sha256`/`size_bytes`가 맞지 않거나, 무결성 기대와 호환되지 않거나, 다른 Task의 스테이징 핸들은 변경 전에
+거부해야 하며 증거 충분성으로 숨기면 안 됩니다. Projection 파일, 생성된 Markdown,
+대화 텍스트, Product Repository 파일, 에이전트 기억은 staged handle의 출처 기록을 만들 수 없습니다.
 
 `existing_artifact`를 등록할 때는 가용성, 무결성 사실, `redaction_state`, 담당 관계가
 새 용도와 계속 호환될 때만 기존 아티팩트 행을 재사용합니다. 새 담당 관계를 위해

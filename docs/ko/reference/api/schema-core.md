@@ -313,6 +313,8 @@ StagedArtifactHandle:
   handle_id: string
   project_id: string
   task_id: string
+  created_by_surface_id: string
+  created_by_surface_instance_id: string
   sha256: string
   size_bytes: integer
   content_type: string
@@ -322,7 +324,9 @@ StagedArtifactHandle:
 
 `source_kind`에 맞는 출처 필드 하나만 있어야 합니다. `staged_artifact`에는 `staged_artifact_handle`, `existing_artifact`에는 `existing_artifact_ref`가 필요합니다. 출처 필드가 빠졌거나, `source_kind`와 맞지 않거나, 두 출처 필드가 모두 있으면 요청 형태 검증 실패입니다. 스테이징 핸들은 같은 `project_id`와 `task_id` 범위에 있어야 하고 `content_type`, `sha256`, `size_bytes`, `redaction_state`, `expires_at`을 가져야 하며, `harness.record_run`이 사용할 때 만료되지 않았고 아직 소비되지 않았어야 합니다. 만료된 핸들, 범위가 맞지 않는 핸들, 이미 소비된 핸들, 다른 Task의 핸들은 변경 전에 거부되며 공개 오류 세부정보에서 서로 구분되어야 합니다.
 
-`harness.stage_artifact`는 임시 `StagedArtifactHandle`을 만들 수 있지만 그 자체로 Core 상태 전이가 아닙니다. 증거를 만들지 않고, gate를 만족하지 않고, 증거 요약을 갱신하지 않으며, `harness.close_task`가 통과하게 만들 수도 없습니다. 유효한 staged handle을 소비해 persistent `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`뿐입니다. 그 승격은 `run_recording`과 같은 프로젝트, 같은 Task, 미만료, 미소비, 무결성 호환 handle 확인으로 승인됩니다.
+`created_by_surface_id`와 `created_by_surface_instance_id`는 서버가 기록하는 출처 기록 필드입니다. `harness.stage_artifact`가 성공하면 서버는 해당 요청의 `VerifiedSurfaceContext`에서 이 값을 기록합니다. 호출자는 `StageArtifactRequest`에서 이 값을 고르지 않으며, 에이전트나 사용자가 같은 모양의 객체를 제출해도 그것은 권한 주장이 아닙니다. `ArtifactInput`이 `StagedArtifactHandle`을 `harness.record_run`에 다시 제출하면 서버는 저장소가 소유한 staging 기록과 대조하고, 현재 확인된 `surface_instance_id`가 `created_by_surface_instance_id`와 같을 때만 승격을 허용합니다. 현재 MVP는 접점 간(cross-surface) staged artifact handoff를 지원하지 않습니다. 모양이 맞는 handle이라도 `project_id`, `task_id`, `created_by_surface_instance_id`, 만료 여부, 소비 상태, `sha256`, `size_bytes`가 저장된 staged artifact와 요청 기대에 맞지 않으면 거부됩니다.
+
+`harness.stage_artifact`는 임시 `StagedArtifactHandle`을 만들 수 있지만 그 자체로 Core 상태 전이가 아닙니다. 증거를 만들지 않고, gate를 만족하지 않고, 증거 요약을 갱신하지 않으며, `harness.close_task`가 통과하게 만들 수도 없습니다. `StagedArtifactHandle`은 어떤 로컬 호출자나 사용할 수 있는 bearer token이 아닙니다. 유효한 staged handle을 소비해 persistent `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`뿐입니다. 그 승격은 `run_recording`과 같은 프로젝트, 같은 Task, 같은 확인된 접점 인스턴스, 미만료, 미소비, 무결성 호환 handle 확인으로 승인됩니다. Projection 파일, 생성된 Markdown, 대화 텍스트, Product Repository 파일, 에이전트 기억은 staged handle의 출처 기록을 만들거나 새로 고칠 수 없습니다.
 
 원시 파일 경로, 원시 로그, 임의 로컬 경로 문자열, `captured_artifact`, 캡처 핸들, 접점 자체 아티팩트 캡처, 원시 캡처 어댑터 출력, 원시 비밀값, 토큰, 민감한 전체 로그는 현재 MVP 밖이며 변경 전에 아티팩트 권한으로 거부됩니다. 새 아티팩트 바이트는 `harness.stage_artifact`를 통해서만 현재 MVP에 들어오고, 기존 바이트는 호환되는 `existing_artifact_ref`를 통해서만 재사용합니다.
 

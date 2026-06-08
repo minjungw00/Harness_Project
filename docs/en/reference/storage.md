@@ -139,9 +139,10 @@ The active Core persisted records are:
 The active temporary storage boundary is `artifact_staging` or an equivalent
 storage-owned staging manifest, together with safe temporary bytes or notices
 under `artifacts/tmp/`. It exists only to let `harness.stage_artifact` produce a
-scoped, expiring, single-consumption handle for later `harness.record_run`
-promotion. It is not a persistent `ArtifactRef`, evidence authority, a Core
-mutation record, an event source, a replay row, or a state-version source.
+scoped, expiring, single-consumption handle with server-recorded creation
+surface provenance for later `harness.record_run` promotion. It is not a
+persistent `ArtifactRef`, evidence authority, a Core mutation record, an event
+source, a replay row, or a state-version source.
 
 No other persisted table family or temporary handle family is active current MVP
 scope. Requirement shaping persists through `tasks`, `change_units`,
@@ -182,7 +183,7 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | `user_judgments` | `state.sqlite` | User-owned judgment records for the active `UserJudgment.judgment_kind` values, including separate sensitive-action approval scope when relevant. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, request/context JSON columns, `question`, `sensitive_action_scope_json`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | `state.sqlite` | Durable single-use cooperative Write Authorization created only by non-dry-run `prepare_write` with `decision=allowed`. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
 | `runs` | `state.sqlite` | Committed execution or observation record, including compatible authorization consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, observed/evidence JSON columns, `created_at`, `completed_at`. |
-| `artifact_staging` | `state.sqlite` plus `artifacts/tmp/` | Temporary staged safe bytes or safe notices created by `harness.stage_artifact` for later single-use `harness.record_run` consumption. It is not a persistent `ArtifactRef` and not evidence authority. | `handle_id`, `project_id`, `task_id`, `surface_id`, `display_name`, `relation_hint`, `tmp_uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `status`, `consumed_by_run_id`, `promoted_artifact_id`, `expires_at`, `created_at`, `consumed_at`. |
+| `artifact_staging` | `state.sqlite` plus `artifacts/tmp/` | Temporary staged safe bytes or safe notices created by `harness.stage_artifact` for later single-use `harness.record_run` consumption. It is not a persistent `ArtifactRef` and not evidence authority. | `handle_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `display_name`, `relation_hint`, `tmp_uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `status`, `consumed_by_run_id`, `promoted_artifact_id`, `expires_at`, `created_at`, `consumed_at`. |
 | `artifacts` | `state.sqlite` plus artifact store | Registered durable evidence bytes or safe metadata with integrity, redaction, producer, retention, and availability facts. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | `state.sqlite` | Owner relation from an artifact to the active Core/API record it supports. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
 | `evidence_summaries` | `state.sqlite` | Compact evidence coverage and gap record used by status, run/evidence summaries, blockers, and close. It is evaluated against the Task or Change Unit `CompletionPolicy`; it does not own that policy. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
@@ -532,9 +533,14 @@ MVP.
 
 Temporary staging is not artifact authority. `artifact_staging` or an
 equivalent storage-owned staging manifest must track at least `handle_id`,
-`project_id`, `task_id`, `sha256`, `size_bytes`, `content_type`,
+`project_id`, `task_id`, `created_by_surface_id`,
+`created_by_surface_instance_id`, `sha256`, `size_bytes`, `content_type`,
 `redaction_state`, `status`, `expires_at`, and consumption facts such as
-`consumed_by_run_id`, `promoted_artifact_id`, and `consumed_at`.
+`consumed_by_run_id`, `promoted_artifact_id`, and `consumed_at`. The
+`created_by_surface_*` fields are recorded by the server from the successful
+`harness.stage_artifact` request's `VerifiedSurfaceContext`; they are not
+caller-provided authority claims and must be checked against the staging row,
+not trusted merely because a submitted handle has the right shape.
 `harness.stage_artifact` may write safe bytes or a safe notice under
 `artifacts/tmp/` and create the temporary staging row, but it creates no
 `artifacts` row, no `artifact_links` row, no `evidence_summaries` row, no
@@ -543,12 +549,19 @@ equivalent storage-owned staging manifest must track at least `handle_id`,
 
 Only a compatible `harness.record_run` may consume an unexpired same-project
 same-Task handle with `artifact_staging.status=staged` and promote it to a
-persistent `ArtifactRef`. The consuming transaction must mark the staging handle
-`consumed`, set the consuming Run and promoted artifact ids, commit the durable
-`artifacts` row and required `artifact_links`, and update evidence coverage only
-as allowed by the method owner. Expired, mismatched, already-consumed,
-discarded, integrity-incompatible, or cross-task staging handles must be
-rejected before mutation and must not be hidden as evidence sufficiency.
+persistent `ArtifactRef`, and only when the current verified
+`surface_instance_id` matches `created_by_surface_instance_id`. The active MVP
+does not support cross-surface staged artifact handoff, and
+`StagedArtifactHandle` is not a bearer token that any local caller may use. The
+consuming transaction must mark the staging handle `consumed`, set the consuming
+Run and promoted artifact ids, commit the durable `artifacts` row and required
+`artifact_links`, and update evidence coverage only as allowed by the method
+owner. Expired, mismatched, already-consumed, discarded, cross-surface,
+wrong-`created_by_surface_instance_id`, wrong-`sha256`, wrong-`size_bytes`,
+integrity-incompatible, or cross-task staging handles must be rejected before
+mutation and must not be hidden as evidence sufficiency. Projection files,
+generated Markdown, chat text, Product Repository files, and agent memory
+cannot create staged-handle provenance.
 
 Registering an `existing_artifact` reuses the registered artifact row only when
 its availability, integrity facts, redaction state, and owner relation remain
