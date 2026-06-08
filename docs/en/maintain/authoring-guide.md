@@ -1,6 +1,6 @@
 # Authoring Guide
 
-Use this guide before changing Harness documentation. It is a living editing rulebook for documentation work only. It does not authorize Harness Server/runtime implementation, product-repository writes, generated operational files, runtime state, projections, evidence records, QA records, acceptance records, close records, residual-risk records, executable fixtures, or conformance runners.
+Use this guide before changing Harness documentation. It is a living editing rulebook for documentation work only. It does not authorize Harness Server/runtime implementation, product-repository writes, generated operational files, runtime state, projections, evidence records, QA records, acceptance records, close records, residual risk records, executable fixtures, or conformance runners.
 
 The repository is documentation-only today and remains in documentation review unless the maintainer handoff owner says otherwise in [MVP Plan](../build/mvp-plan.md). Treat the docs as source material for a future Harness Server, not as accepted implementation-ready runtime behavior.
 
@@ -83,11 +83,11 @@ If an active schema or DDL block contains inactive values, fix the owner boundar
 
 ## 6. User Judgment Boundary
 
-Harness preserves user-owned judgment. Product behavior, material technical direction, scope expansion, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation are distinct active judgment routes. Later/reserved QA waiver and verification-risk acceptance routes must stay distinct when mentioned or promoted.
+Harness preserves user-owned judgment. Product behavior, material technical direction, scope expansion, sensitive-action approval, final acceptance, residual risk acceptance, and cancellation are distinct active judgment routes. Later/reserved QA waiver and verification-risk acceptance routes must stay distinct when mentioned or promoted.
 
-Do not treat broad approval such as "go ahead" or "looks good" as a substitute for a specific judgment. Sensitive-action approval permits a named sensitive step only; it does not decide product behavior, architecture, final acceptance, or residual risk. Final acceptance does not create evidence, erase evidence gaps, or accept residual risk unless the residual-risk path asks for that judgment.
+Do not treat broad approval such as "go ahead" or "looks good" as a substitute for a specific judgment. Sensitive-action approval permits a named sensitive step only; it does not decide product behavior, architecture, final acceptance, or residual risk. Final acceptance does not create evidence, erase evidence gaps, or accept residual risk unless the residual risk path asks for that judgment.
 
-When blocker wording combines more than one negative requirement, state each negative explicitly. For residual-risk close blockers, preserve the meaning as "not visible, or not accepted when required"; do not drop the visibility negative or otherwise compress the condition into an ambiguous form.
+When blocker wording combines more than one negative requirement, state each negative explicitly. For residual risk close blockers, preserve the meaning as "not visible, or not accepted when required"; do not drop the visibility negative or otherwise compress the condition into an ambiguous form.
 
 User-facing docs should start with what the user can ask, what the agent should clarify, what is blocked, what evidence exists, what judgment is needed, and what close means. Introduce internal labels only after the visible user situation is clear.
 
@@ -108,7 +108,11 @@ Do not make unsupported preventive, isolation, sandboxing, tamper-proof, or defa
 
 Korean documentation must read as natural Korean technical prose, not line-by-line English. Put the Korean concept first in user-facing prose, add exact English identifiers only when precision or search needs them, and preserve identifiers exactly.
 
-Do not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels. Use the terms in [Translation Guide](translation-guide.md) and the Korean guide pair, including "한영 문서 동시 유지", "의미 일치", "줄 단위 번역 아님", "에이전트 중복 주입 금지", "현재 MVP", "담당 문서", and "profile-gated 값" where they fit.
+User-facing Korean should use natural Korean labels, not raw enum names, unless the raw enum or status value is the subject. Schema fields, method names, enum values, code identifiers, file paths, validator IDs, and error codes stay exact English in schema and code-like contexts.
+
+Do not leave English noun phrases in Korean prose merely because the English source used them. If the phrase is explanatory rather than an exact identifier or intentional Harness label, translate the concept into Korean. Do not translate the same concept differently across files; update [Translation Guide](translation-guide.md) or the glossary when a new shared term is needed.
+
+Use the terms in [Translation Guide](translation-guide.md) and the Korean guide pair, including "한영 문서 동시 유지", "의미 일치", "줄 단위 번역 아님", "에이전트 중복 주입 금지", "현재 MVP", "담당 문서", "사용자 소유 판단", "최종 수락", "잔여 위험 수락", "협력형 보장", "탐지형 보장", and "profile-gated 값" where they fit.
 
 ## 9. Stale Content Deletion Rule
 
@@ -132,13 +136,14 @@ Delete temporary migration plans and scratch files before finishing.
 
 - [ ] The edit stayed documentation-only.
 - [ ] English and Korean paired files preserve the same meaning and active file coverage.
-- [ ] Korean prose is natural Korean, not line-by-line English.
+- [ ] Korean prose is natural Korean, not line-by-line English, and user-facing Korean uses natural labels instead of raw enum names unless the raw value is being explained.
 - [ ] Exact identifiers, file paths, schema/API names, enum values, error codes, table names, validator IDs, and template names are preserved.
+- [ ] The same concept uses the same Korean term across files, and English noun phrases were not left in Korean prose unless they are exact identifiers or intentional Harness labels.
 - [ ] README and Maintain routes point only to the compact route structure and `docs/doc-index.yaml`.
 - [ ] Strict contracts remain in one owner; non-owner duplicates are summaries with compact owner routes.
 - [ ] Active/later boundaries are not blurred, and profile-gated values are not listed as default active MVP values.
 - [ ] User-owned judgment routes remain distinct.
-- [ ] Blocker conditions with multiple negative requirements state each negative explicitly, especially residual-risk close blocker wording.
+- [ ] Blocker conditions with multiple negative requirements state each negative explicitly, especially residual risk close blocker wording.
 - [ ] Security wording matches the documented guarantee level and does not make unsupported preventive, isolation, sandboxing, tamper-proof, or default tool-blocking claims.
 - [ ] Links, anchors, README routes, and paired-language links resolve.
 - [ ] Deleted routes and stale structure names are not used as active paths.

@@ -34,6 +34,8 @@ Do not translate exact strings inside code blocks, schemas, API examples, file p
 
 Exact identifiers are canonical strings used by contracts, routes, schemas, storage, APIs, templates, or search. Explanatory prose is the surrounding reader-facing explanation. Copy exact identifiers unchanged, but translate or rewrite explanatory prose so Korean reads naturally.
 
+In Korean user-facing prose, raw enum names and schema values are not display labels unless the raw value itself is the subject. Use a natural Korean label first, and add the exact English value only when the reader needs contract precision or searchability.
+
 ## 4. Natural Korean Rule
 
 Korean documentation should be natural Korean technical prose.
@@ -41,7 +43,9 @@ Korean documentation should be natural Korean technical prose.
 - Prefer short, clear sentences.
 - Put the Korean concept first in user-facing prose.
 - Add the exact English identifier only when precision, search, or owner alignment needs it.
-- Do not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels; translate explanatory noun phrases into Korean.
+- Use the same Korean wording for the same concept across files. When a concept needs a new Korean term, update the glossary or this guide before spreading variants.
+- Do not leave English noun phrases in Korean prose merely because the English source used them. Unless the phrase is an exact identifier or intentional Harness label, translate the concept into Korean.
+- Prefer natural Korean display labels over raw enum or status values in user-facing text, unless the exact raw value is being explained.
 - Do not compress English negative coordination in Korean in a way that reverses meaning. If the condition means "not visible, or not accepted when required," make both negative requirements explicit and do not drop the first negative requirement.
 - Avoid Korean sentences made mostly of English nouns with Korean particles attached.
 - Keep exact identifiers exact even when the surrounding sentence is fully Korean.
@@ -51,6 +55,8 @@ Good Korean may rearrange the English sentence, split or combine clauses, and ch
 ## 5. User-Facing Terminology
 
 For Korean user-facing prose, prefer these ordinary terms:
+
+Use one Korean expression consistently for one concept. Schema fields, method names, enum values, and code identifiers remain exact English in schemas and code-like examples; the Korean wording below is for prose and rendered labels.
 
 | Concept | Korean wording |
 |---|---|
@@ -79,6 +85,7 @@ For Korean user-facing prose, prefer these ordinary terms:
 | Manual QA | 수동 QA |
 | final acceptance | 최종 수락 |
 | residual risk | 잔여 위험 |
+| residual risk acceptance | 잔여 위험 수락 |
 | close readiness | 닫기 가능 여부 또는 닫기 준비 상태 |
 | CloseBlocker or close blocker in user-facing display | 닫기를 막는 이유 |
 | `lifecycle_phase` in user-facing display | 현재 단계 |
@@ -90,6 +97,26 @@ For Korean user-facing prose, prefer these ordinary terms:
 | derived view or projection in user prose | 상태 보기, 요약, 또는 상태 카드 |
 | pre-write scope check | 쓰기 전 범위 확인 |
 | sensitive-action approval | 민감 동작 승인 |
+| verified surface context | 확인된 접점 맥락 |
+| local surface registration | 로컬 접점 등록 |
+| sensitive action scope | 민감 동작 범위 |
+| staged artifact handle | 스테이징된 아티팩트 핸들 |
+| completion policy | 완료 정책 |
+| shaping readiness | 구체화 준비 상태 |
+| project-wide state_version | 프로젝트 전체 `state_version` |
+| artifact input | 아티팩트 입력 |
+| evidence coverage item | 증거 범위 항목 |
+| cooperative guarantee | 협력형 보장 |
+| detective guarantee | 탐지형 보장 |
+| Discovery Brief as a persistent artifact | 영속 아티팩트로서의 Discovery Brief |
+| Question Queue | 질문 큐 |
+| Assumption Register | 가정 기록부 |
+| persistent projection job | 지속 저장되는 상태 보기 작업 |
+| projection reconcile | 상태 보기 조정 |
+| managed block drift repair | 관리 블록 불일치 복구 |
+| native artifact capture | 접점 자체 아티팩트 캡처 |
+| task-scoped state clock | Task 범위 상태 시계 |
+| `captured_artifact` | `captured_artifact` 값 이름. 산문에서는 이후 전용 캡처된 아티팩트 값이라고 설명 |
 
 Use `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, and `task_events` only when the exact Harness label helps the reader follow an internal blocker, record, API, template, or owner route. In user-facing cards and examples, prefer the plain display wording above.
 
@@ -118,7 +145,16 @@ Common examples:
 | `record_run` | 실행/확인 기록 API/action identifier |
 | `close_task` | 닫기 확인 API/action identifier |
 | `ArtifactRef` | 아티팩트 참조 스키마 |
-| `ProjectionKind` | Projection 종류 식별자 |
+| `ArtifactInput` | 아티팩트 입력 스키마 |
+| `StagedArtifactHandle` | 스테이징된 아티팩트 핸들 |
+| `EvidenceCoverageItem` | 증거 범위 항목 |
+| `CompletionPolicy` | 완료 정책 스키마 |
+| `ShapingReadiness` | 구체화 준비 상태 파생 보기 |
+| `LocalSurfaceRegistration` | 로컬 접점 등록 사실 |
+| `VerifiedSurfaceContext` | 확인된 접점 맥락 |
+| `SensitiveActionScope` | 민감 동작 범위 스키마 |
+| `project_state.state_version` | 프로젝트 전체 상태 시계 |
+| `ProjectionKind` | 상태 보기 종류 식별자 |
 
 Korean labels such as `제품 판단`, `기술 판단`, and `범위 판단` may appear in prose or rendered examples. They must not replace canonical values such as `product_decision`, `technical_decision`, `scope_decision`, or `judgment_kind`.
 
@@ -129,7 +165,7 @@ Do not translate active/later, security, or judgment boundaries into stronger cl
 - "profile-gated" means available only under the named profile, capability, connector mode, or future configuration. It is not a default active MVP value.
 - "later candidate" means deferred material. It is not an active requirement unless the owner promotes it with scope and proof expectations.
 - Cooperative or detective security wording must not become preventive, isolated, sandboxed, tamper-proof, or default tool-blocking wording in Korean.
-- Broad approval, final acceptance, and residual-risk acceptance remain distinct. Later/reserved QA waiver or verification-risk acceptance terminology belongs to the Later Candidate Index until promoted and is not part of the active MVP judgment-kind list.
+- Broad approval, final acceptance, and residual risk acceptance remain distinct. Later/reserved QA waiver or verification-risk acceptance terminology belongs to the Later Candidate Index until promoted and is not part of the active MVP judgment-kind list.
 
 ## 8. Bilingual Review Checklist
 

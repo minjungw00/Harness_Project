@@ -34,6 +34,8 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 
 정확한 식별자는 계약, 경로, 스키마, 저장소, API, 템플릿, 검색에서 그대로 쓰는 기준 문자열입니다. 설명 문장은 그 주변에서 독자에게 의미를 전달하는 문장입니다. 정확한 식별자는 그대로 복사하되, 설명 문장은 자연스러운 한국어로 번역하거나 다시 씁니다.
 
+한국어 사용자 대상 문장에서는 enum 이름과 스키마 값을 그대로 표시 라벨처럼 쓰지 않습니다. 원문 값 자체를 설명하는 문맥일 때만 그대로 쓰고, 보통은 자연스러운 한국어 라벨을 먼저 둔 뒤 계약 정확도나 검색이 필요할 때 정확한 영어 값을 덧붙입니다.
+
 ## 4. 자연스러운 한국어 규칙
 
 한국어 문서는 자연스러운 한국어 기술 문장으로 씁니다.
@@ -41,7 +43,9 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 - 짧고 분명한 문장을 선호합니다.
 - 사용자 대상 문장에서는 한국어 개념을 먼저 둡니다.
 - 정확도, 검색, 담당 문서 연결에 필요할 때만 정확한 영어 식별자를 붙입니다.
-- 정확한 식별자나 의도적인 하네스 라벨이 아니라면 한국어 문장에 영어 명사구를 그대로 남기지 않습니다. 설명 성격의 영어 명사구는 한국어로 옮깁니다.
+- 같은 개념은 파일이 달라도 같은 한국어 표현으로 씁니다. 새 한국어 용어가 필요하면 여러 변형을 흩뿌리기 전에 용어집이나 이 가이드를 먼저 갱신합니다.
+- 영어 원문에 있었다는 이유만으로 한국어 문장에 영어 명사구를 남기지 않습니다. 정확한 식별자나 의도적인 하네스 라벨이 아니라면 설명 성격의 영어 명사구는 한국어 개념으로 옮깁니다.
+- 사용자 대상 문장에서는 enum 값이나 상태 값을 그대로 쓰기보다 자연스러운 한국어 표시 라벨을 우선합니다. 정확한 원문 값을 설명하는 문맥에서만 그 값을 주어로 둡니다.
 - 영어의 부정 병렬 구조를 한국어에서 압축해 의미가 뒤집히게 만들지 않습니다. 조건의 뜻이 "보이지 않거나, 요구될 때 수락되지 않은 경우"라면 각 부정을 드러내고, 앞 요구사항의 부정을 생략한 표현은 쓰지 않습니다.
 - 영어 명사에 한국어 조사만 붙인 문장이 대부분인 형태를 피합니다.
 - 주변 문장이 완전한 한국어여도 정확한 식별자는 그대로 둡니다.
@@ -51,6 +55,8 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 ## 5. 사용자용 용어
 
 한국어 사용자 대상 문장에서는 아래 표현을 우선합니다.
+
+한 개념에는 한 가지 한국어 표현을 일관되게 씁니다. 스키마 필드, 메서드 이름, enum 값, 코드 식별자는 스키마와 코드 형태 예시에서 정확한 영어로 유지하고, 아래 한국어 표현은 산문과 렌더링 라벨에 씁니다.
 
 | 영어 표현 | 한국어 표현 |
 |---|---|
@@ -79,6 +85,7 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | Manual QA | 수동 QA |
 | final acceptance | 최종 수락 |
 | residual risk | 잔여 위험 |
+| residual risk acceptance | 잔여 위험 수락 |
 | close readiness | 닫기 가능 여부 또는 닫기 준비 상태 |
 | CloseBlocker or close blocker in user-facing display | 닫기를 막는 이유 |
 | `lifecycle_phase` in user-facing display | 현재 단계 |
@@ -90,6 +97,26 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | derived view or projection in user prose | 상태 보기, 요약, 상태 카드 |
 | pre-write scope check | 쓰기 전 범위 확인 |
 | sensitive-action approval | 민감 동작 승인 |
+| verified surface context | 확인된 접점 맥락 |
+| local surface registration | 로컬 접점 등록 |
+| sensitive action scope | 민감 동작 범위 |
+| staged artifact handle | 스테이징된 아티팩트 핸들 |
+| completion policy | 완료 정책 |
+| shaping readiness | 구체화 준비 상태 |
+| project-wide state_version | 프로젝트 전체 `state_version` |
+| artifact input | 아티팩트 입력 |
+| evidence coverage item | 증거 범위 항목 |
+| cooperative guarantee | 협력형 보장 |
+| detective guarantee | 탐지형 보장 |
+| Discovery Brief as a persistent artifact | 영속 아티팩트로서의 Discovery Brief |
+| Question Queue | 질문 큐 |
+| Assumption Register | 가정 기록부 |
+| persistent projection job | 지속 저장되는 상태 보기 작업 |
+| projection reconcile | 상태 보기 조정 |
+| managed block drift repair | 관리 블록 불일치 복구 |
+| native artifact capture | 접점 자체 아티팩트 캡처 |
+| task-scoped state clock | Task 범위 상태 시계 |
+| `captured_artifact` | `captured_artifact` 값 이름. 산문에서는 이후 전용 캡처된 아티팩트 값이라고 설명 |
 
 `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, `task_events`는 정확한 하네스 라벨이 내부 차단 사유, 기록, API, 템플릿, 담당 문서 경로를 이해하는 데 도움이 될 때만 씁니다. 사용자용 카드와 예시에는 위의 평이한 표시 문구를 우선합니다.
 
@@ -118,6 +145,15 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | `record_run` | 실행/확인 기록 API/동작 식별자 |
 | `close_task` | 닫기 확인 API/동작 식별자 |
 | `ArtifactRef` | 아티팩트 참조 스키마 |
+| `ArtifactInput` | 아티팩트 입력 스키마 |
+| `StagedArtifactHandle` | 스테이징된 아티팩트 핸들 |
+| `EvidenceCoverageItem` | 증거 범위 항목 |
+| `CompletionPolicy` | 완료 정책 스키마 |
+| `ShapingReadiness` | 구체화 준비 상태 파생 보기 |
+| `LocalSurfaceRegistration` | 로컬 접점 등록 사실 |
+| `VerifiedSurfaceContext` | 확인된 접점 맥락 |
+| `SensitiveActionScope` | 민감 동작 범위 스키마 |
+| `project_state.state_version` | 프로젝트 전체 상태 시계 |
 | `ProjectionKind` | 상태 보기 종류 식별자 |
 
 `제품 판단`, `기술 판단`, `범위 판단` 같은 한국어 라벨은 문장이나 렌더링 예시에 나타날 수 있습니다. 하지만 `product_decision`, `technical_decision`, `scope_decision`, `judgment_kind` 같은 기준 값을 대신하면 안 됩니다.
