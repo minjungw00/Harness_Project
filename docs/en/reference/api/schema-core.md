@@ -77,7 +77,7 @@ LocalSurfaceRegistration:
   last_verified_at: string | null
 ```
 
-`VerifiedSurfaceContext` is derived by the server for a concrete request and access class. It is not a request payload, not a Markdown assertion, and not an agent-memory fact. The server derives it from the local transport/session/binding and the stored `LocalSurfaceRegistration`.
+`VerifiedSurfaceContext` is derived by the server for one concrete request and one access class. `VerifiedSurfaceContext.access_class` is a single request-level value in the active MVP; one public API request is not modeled as requiring multiple `access_class` values. It is not a request payload, not a Markdown assertion, and not an agent-memory fact. The server derives it from the local transport/session/binding and the stored `LocalSurfaceRegistration`.
 
 ```yaml
 VerifiedSurfaceContext:
@@ -109,7 +109,18 @@ VerifiedSurfaceContext:
 | `stale` | The surface registration or capability posture must be refreshed before current API access can rely on it. |
 | `revoked` | The surface registration is no longer valid for current API access. |
 
-The active local API access-class labels are `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, and `artifact_read`. `artifact_registration` covers `harness.stage_artifact` and the `ArtifactInput[]` values that `harness.record_run` may consume. Method-level conditions for these classes are owned by [MVP API](mvp-api.md#shared-request-rules); public error selection is owned by [API Errors](errors.md). `VerifiedSurfaceContext.failure_reason=unavailable`, `mismatch` or `revoked`, and `insufficient_capability` must remain distinguishable so callers can receive `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, and `CAPABILITY_INSUFFICIENT` respectively.
+The active local API access-class labels are `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, and `artifact_read`.
+
+| `access_class` | Active request-level use |
+|---|---|
+| `read_status` | Derived state, status, projection, and read-only close-check reads. |
+| `core_mutation` | Core state mutation not otherwise specialized, including task creation, scope update, user-judgment recording, and mutating close paths. |
+| `write_authorization` | `harness.prepare_write` path-level product-file write authorization preparation. |
+| `run_recording` | `harness.record_run`: recording a run result, consuming a compatible Write Authorization when needed, linking existing artifacts, and promoting eligible staged artifacts. |
+| `artifact_registration` | `harness.stage_artifact`: staging new artifact bytes or a safe notice into a temporary `StagedArtifactHandle`. |
+| `artifact_read` | Artifact body/content reads from registered `ArtifactRef` records through an owner path. |
+
+`ArtifactInput[]` is payload validated by `harness.record_run`; it does not change that request's `access_class` from `run_recording`. Staged artifact promotion is governed by the `run_recording` request plus staged-handle validity checks, while artifact body reads remain separate and use `artifact_read`. Method-level conditions for these classes are owned by [MVP API](mvp-api.md#shared-request-rules); public error selection is owned by [API Errors](errors.md). `VerifiedSurfaceContext.failure_reason=unavailable`, `mismatch` or `revoked`, and `insufficient_capability` must remain distinguishable so callers can receive `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, and `CAPABILITY_INSUFFICIENT` respectively.
 
 <a id="capability-profile-value-sets"></a>
 
@@ -265,7 +276,7 @@ ArtifactRelationOwner:
 
 ## ArtifactInput
 
-`ArtifactInput` is accepted by `harness.record_run` only as a documented `StagedArtifactHandle` from the active `harness.stage_artifact` utility or as an existing registered `ArtifactRef`. It never grants arbitrary file read authority. `harness.stage_artifact` is the active MVP staging utility for new artifact bytes, not native artifact capture and not a general filesystem-read API.
+`ArtifactInput` is accepted by `harness.record_run` only as a documented `StagedArtifactHandle` from the active `harness.stage_artifact` utility or as an existing registered `ArtifactRef`. `ArtifactInput[]` is consumed under the `run_recording` request access class; it does not add a second access class to `record_run`. It never grants arbitrary file read authority. `harness.stage_artifact` is the active MVP staging utility for new artifact bytes, not native artifact capture and not a general filesystem-read API.
 
 ```yaml
 ArtifactInput:
@@ -311,7 +322,7 @@ StagedArtifactHandle:
 
 Exactly one source field must match `source_kind`: `staged_artifact_handle` for `staged_artifact`, or `existing_artifact_ref` for `existing_artifact`. A missing source field, a source field that does not match `source_kind`, or both source fields present is a request-shape validation failure. A staged handle must be scoped to the same `project_id` and `task_id`, carry `content_type`, `sha256`, `size_bytes`, `redaction_state`, and `expires_at`, and be unexpired and unconsumed when `harness.record_run` uses it. Expired, mismatched, already-consumed, or cross-task handles are rejected before mutation and must remain distinguishable in public error details.
 
-`harness.stage_artifact` may create a temporary `StagedArtifactHandle`, but it is not a Core state transition by itself. It creates no evidence, satisfies no gate, updates no evidence summary, and cannot make `harness.close_task` pass. `harness.record_run` is the only active path that can consume a valid staged handle and promote it to a persistent `ArtifactRef`.
+`harness.stage_artifact` may create a temporary `StagedArtifactHandle`, but it is not a Core state transition by itself. It creates no evidence, satisfies no gate, updates no evidence summary, and cannot make `harness.close_task` pass. `harness.record_run` is the only active path that can consume a valid staged handle and promote it to a persistent `ArtifactRef`; that promotion is authorized by `run_recording` plus same-project, same-Task, unexpired, unconsumed, integrity-compatible handle checks.
 
 Raw file paths, raw logs, arbitrary local path strings, `captured_artifact`, captured handles, native artifact capture, raw capture-adapter outputs, raw secrets, tokens, and full sensitive logs are outside the active MVP and are rejected as artifact authority before mutation. New artifact bytes enter the active MVP only through `harness.stage_artifact`; existing bytes are reused only through a compatible `existing_artifact_ref`.
 
