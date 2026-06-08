@@ -26,7 +26,10 @@ These checks look for documentation drift:
 - state-clock wording that exposes both task-scoped and project-scoped `state_version` as public conflict clocks
 - projection reconcile wording that treats `reconcile` as an active Core state mutation path
 - final acceptance or residual-risk acceptance wording that substitutes for missing required evidence
-- user-facing templates that expose internal enum or schema terms unnecessarily
+- user-facing documentation or templates that expose internal enum, schema, or error-code terms unnecessarily
+- public error-code wording that uses `STATE_CONFLICT` or any public state-version conflict code other than `STATE_VERSION_CONFLICT`
+- `access_class`, `record_run`, `run_recording`, `artifact_registration`, `stage_artifact`, `existing_artifact`, and staged artifact promotion wording that blurs active MVP contracts
+- staged handle provenance or scope validation wording that maps validation failure to `LOCAL_ACCESS_MISMATCH` or `CAPABILITY_INSUFFICIENT` instead of `VALIDATION_FAILED`
 - one-language-per-`doc_id` agent retrieval problems
 - stale rewrite/history notes, closed issue records, and obsolete review prose
 
@@ -124,13 +127,31 @@ Inspect `state_version`, `project_state.state_version`, `tasks.state_version`, t
 
 Pass when active MVP public conflict wording uses the project-wide `project_state.state_version` basis unless an owner explicitly promotes another clock, and when project-wide mismatch uses the single public `ErrorCode` `STATE_VERSION_CONFLICT`. Fail when active MVP text exposes both task-scoped and project-scoped `state_version` as public conflict clocks, asks clients or agents to choose between them, treats `tasks.state_version` as an active public conflict/concurrency basis, or uses `STATE_CONFLICT` as a public error code, synonym, deprecated alias, alternate spelling, or storage-layer public error name.
 
-## 15. User-Facing Template Internal-Term Check
+## 15. User-Facing Internal-Term Check
 
-Inspect user-facing templates, status cards, examples, close summaries, judgment prompts, Korean renderings, and English renderings.
+Inspect public user-facing documentation, templates, status cards, examples, close summaries, judgment prompts, Korean renderings, English renderings, error displays, and enum displays.
 
-Pass when templates use reader-facing display wording and expose exact enum or schema terms only when the contract value itself is being explained. Fail when a user-facing template unnecessarily exposes internal terms such as `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, `guarantee_level`, raw enum values, schema field names, or internal blocker categories instead of natural display text.
+Pass when user-facing docs and templates use reader-facing display wording and expose exact enum, schema, or error-code terms only when the contract value itself is being explained. Fail when user-facing documentation or templates unnecessarily expose internal terms such as `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, `guarantee_level`, raw enum values, schema field names, internal error codes, or internal blocker categories instead of natural display text.
 
-## 16. Stale Content Check
+## 16. Active MVP API And Artifact Contract Check
+
+Inspect public `ErrorCode` lists and examples, `access_class` request wording, `record_run`, `stage_artifact`, `run_recording`, `artifact_registration`, staged artifact promotion wording, `existing_artifact`, and staged handle provenance or scope validation failure mapping.
+
+Pass when public error codes follow the API Errors document, active state-version conflict uses only `STATE_VERSION_CONFLICT`, active MVP prose describes one method-level verified `access_class` per request, `record_run` uses `run_recording`, `stage_artifact` uses `artifact_registration`, staged artifact promotion validates handle provenance and scope before linking, staged handle provenance or scope validation failure maps to `VALIDATION_FAILED`, and artifact lifecycle prose separates staging, promotion, persistent artifact linking, and artifact body read.
+
+Fail when any of these conditions appear in active MVP documentation:
+
+- `STATE_CONFLICT` is used as a public `ErrorCode`.
+- A state version conflict public error is described with any value other than `STATE_VERSION_CONFLICT`.
+- A single request is described as carrying multiple active `access_class` values, or `access_class` is described as something other than method-level verified request context.
+- `artifact_registration` is described as including `record_run`.
+- `record_run` is described as requiring both `run_recording` and `artifact_registration`.
+- Staged artifact promotion appears allowed by `handle_id` alone, without provenance and scope validation.
+- Staged handle provenance or scope validation failure is mapped to `LOCAL_ACCESS_MISMATCH`.
+- Staged handle provenance or scope validation failure is mapped to `CAPABILITY_INSUFFICIENT`.
+- `existing_artifact` is described as registering new artifact body bytes.
+
+## 17. Stale Content Check
 
 Inspect Maintain docs and nearby routes for historical rewrite reviews, closed issue records, obsolete acceptance records, obsolete delivery-label explanations, prior stage label history, obsolete alias history, later-candidate localization audit records, past translation problem records, past audit result narrative, and temporary migration plans.
 

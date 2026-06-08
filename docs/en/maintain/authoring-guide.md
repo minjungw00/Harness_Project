@@ -67,6 +67,15 @@ Use this owner routing:
 | Official terminology | [Reference Index](../reference/README.md) |
 | Implementation sequencing and maintainer readiness/status decisions | [MVP Plan](../build/mvp-plan.md) |
 
+Use these principles whenever writing active MVP API, access, error, or artifact prose:
+
+- Public error codes are governed by the API Errors document selected through [Reference Index](../reference/README.md). Do not invent public error synonyms in Maintain, Use, Start, or examples.
+- `access_class` describes the method-level verified request context. The active MVP uses one `access_class` value per request; do not describe per-artifact or mixed `access_class` values inside one request unless an owner promotes a later shape.
+- Artifact lifecycle descriptions must distinguish staging through `stage_artifact` / `artifact_registration`, promotion from a staged handle after provenance and scope validation, persistent artifact linking, and artifact body read. `existing_artifact` links an existing persistent artifact; it does not register new artifact body bytes.
+- `record_run` uses the `run_recording` path. Do not describe `record_run` as requiring both `run_recording` and `artifact_registration`, and do not place `record_run` inside `artifact_registration`.
+- Staged handle provenance or scope validation failure maps to `VALIDATION_FAILED`, not `LOCAL_ACCESS_MISMATCH` or `CAPABILITY_INSUFFICIENT`.
+- Active MVP public state-version conflict uses `STATE_VERSION_CONFLICT`. Do not use `STATE_CONFLICT` as a public `ErrorCode` alias, synonym, deprecated name, alternate spelling, or storage-layer public error name.
+
 When a non-owner repeats a contract, update the owner if needed, then replace the duplicate with a short consequence and compact owner route.
 
 ## 5. Active/Later Boundary
@@ -101,7 +110,7 @@ Fail any wording that lets final acceptance or residual risk acceptance substitu
 
 When blocker wording combines more than one negative requirement, state each negative explicitly. For residual risk close blockers, preserve the meaning as "not visible, or not accepted when required"; do not drop the visibility negative or otherwise compress the condition into an ambiguous form.
 
-User-facing docs and templates should start with what the user can ask, what the agent should clarify, what is blocked, what evidence exists, what judgment is needed, and what close means. Introduce internal labels only after the visible user situation is clear. Fail a user-facing template when it exposes internal enum or schema terms such as `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, `guarantee_level`, or raw enum values where natural display wording would be enough.
+User-facing docs and templates should start with what the user can ask, what the agent should clarify, what is blocked, what evidence exists, what judgment is needed, and what close means. Introduce internal labels only after the visible user situation is clear. Fail user-facing documentation or templates when they expose internal enum, schema, or error-code terms such as `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, `guarantee_level`, internal error codes, or raw enum values where natural display wording would be enough.
 
 ## 7. Security Wording Rule
 
@@ -123,6 +132,8 @@ Fail any text that displays or claims a `detective` guarantee without passed cap
 ## 8. Korean Quality Rule
 
 Korean documentation must read as natural Korean technical prose, not line-by-line English. Put the Korean concept first in user-facing prose, add exact English identifiers only when precision or search needs them, and preserve identifiers exactly.
+
+For contract checks and authoring principles, Korean prose must explain the concept naturally while preserving exact identifiers such as API method names, schema fields, enum values, and error codes.
 
 User-facing Korean should use natural Korean labels, not raw enum names, unless the raw enum or status value is the subject. Schema fields, method names, enum values, code identifiers, file paths, validator IDs, and error codes stay exact English in schema and code-like contexts.
 
