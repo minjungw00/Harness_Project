@@ -269,6 +269,8 @@ Autonomy Boundary: {autonomy_boundary|default}
 - "yes, do it", "진행해", "좋아" 같은 채팅 문구는 범위, `judgment_kind`, 영향받는 대상, 기록된 사용자 의도가 대기 중인 판단과 맞을 때만 해당 gate를 만족합니다.
 - 표시되는 `유형` 라벨은 `judgment_kind`와 사용자 locale에서 렌더링합니다. 이 라벨은 표시 문구일 뿐이며, 기준 판단 범주는 `judgment_kind`입니다.
 
+<a id="실행증거-요약-본문"></a>
+
 ## 실행/증거 요약 본문
 
 조언, 실행, 확인, 변경 뒤 무엇이 일어났고 현재 주장에 어떤 증거가 생겼는지 최소한으로 보여줘야 할 때 `run-evidence-summary`를 사용합니다.
