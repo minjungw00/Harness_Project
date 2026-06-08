@@ -160,7 +160,7 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | `evidence_summaries` | `state.sqlite` | Compact evidence coverage and gap record used by status, run/evidence summaries, blockers, and close. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
 | `blockers` | `state.sqlite` | Structured blocker for next action, write compatibility, evidence gaps, close readiness, or recovery. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
 | `task_events` | `state.sqlite` | Append-only audit and ordering trail for committed Core mutations. | `event_id`, `project_id`, `task_id`, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
-| `tool_invocations` | `state.sqlite` | Committed idempotency replay row for non-dry-run state-changing tool responses. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
+| `tool_invocations` | `state.sqlite` | Committed replay row for non-dry-run state-changing tool responses. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
 ### First schema integrity contract
 
@@ -529,20 +529,21 @@ responses. Keys are scoped as described by [API Errors: Idempotency](api/errors.
 If the same key and request hash are replayed, Core returns the original
 committed response without appending events, registering artifacts, consuming
 authorization, or changing state again. If the key is reused with a different
-request hash, Core returns the API-owned state conflict behavior. The storage
-unique key is `(project_id, tool_name, idempotency_key)`; `request_hash` is the
-conflict discriminator stored in that row.
+request hash, Core returns `STATE_CONFLICT` as defined by
+[API Errors](api/errors.md#state-conflict-behavior). The storage unique key is
+`(project_id, tool_name, idempotency_key)`; `request_hash` is the conflict
+discriminator stored in that row.
 
 Dry runs, malformed requests, pre-commit validation failures, pre-commit state
 conflicts, read-only calls such as `harness.status` and
 `harness.close_task intent=check`, and rejected `record_run` attempts that
 create no mutation do not create current rows, `task_events`, artifacts,
 evidence summaries, Write Authorizations, close state, or `tool_invocations`
-replay rows.
+replay rows or state-version increments.
 
-A blocked response may persist only the blocker or other mutation the method
-owner allows. It must not create the authority the blocker says is missing. For
-example, blocked `prepare_write` responses do not create consumable
+A blocked response may persist only the blocker or other mutation the API
+method-state-effect matrix allows. It must not create the authority the blocker
+says is missing. For example, blocked `prepare_write` responses do not create consumable
 `write_authorizations`. When the API owner allows a committed blocked response
 to persist a blocker or other current-row mutation, that response is a committed
 non-dry-run mutation for event, replay-row, and state-version purposes.

@@ -112,11 +112,11 @@ missing | expired | stale | revoked | consumed | incompatible
 
 ## 차단 응답과 `dry_run` 동작
 
-차단 응답은 커밋 전 실패와 다릅니다. 메서드 담당 문서가 차단 사유 기록을 허용하는 경우에만 Core가 차단 응답을 커밋할 수 있습니다. 커밋된 차단 응답은 `blockers`, 이벤트, 상태 버전, 멱등 재실행을 업데이트할 수 있지만, 차단 사유가 없거나 부족하다고 지적한 권한을 만들면 안 됩니다.
+차단 응답은 커밋 전 실패와 다릅니다. [현재 MVP API](mvp-api.md#active-mvp-method-behavior)의 메서드별 상태 효과 표가 커밋된 차단 응답을 명시적으로 허용하는 경우에만 Core가 차단 응답을 커밋할 수 있습니다. 커밋된 차단 응답은 `blockers`, 이벤트, 상태 버전, `tool_invocations` 재실행을 업데이트할 수 있지만, 차단 사유가 없거나 부족하다고 지적한 권한을 만들면 안 됩니다.
 
-`harness.status`와 `harness.close_task intent=check`를 포함한 읽기 전용 호출은 차단 사유나 닫기 차단 사유를 계산해 반환할 수 있습니다. 그 차단 사유는 응답 필드일 뿐입니다. Core는 읽기를 이유로 차단 사유를 저장하거나, 이벤트를 추가하거나, 멱등 재실행 행을 만들거나, 상태 버전을 올리면 안 됩니다.
+`harness.status`와 `harness.close_task intent=check`를 포함한 읽기 전용 호출은 차단 사유나 닫기 차단 사유를 계산해 반환할 수 있습니다. 그 차단 사유는 응답 필드일 뿐입니다. Core는 읽기를 이유로 차단 사유를 저장하거나, 이벤트를 추가하거나, `tool_invocations` 재실행 행을 만들거나, 상태 버전을 올리면 안 됩니다.
 
-`dry_run=true`는 항상 기준 권한이 아닙니다. 검증하고 진단, 후보 차단 사유, 변경 예상 요약을 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, 소비 가능한 Write Authorization, 닫기 상태, 커밋된 재실행 행을 만들거나 업데이트하면 안 됩니다. 이후 비 `dry_run` 호출은 현재 상태를 기준으로 다시 검증해야 합니다.
+`dry_run=true`는 항상 기준 권한이 아닙니다. 검증하고 진단, 후보 차단 사유, 변경 예상 요약을 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 커밋된 `tool_invocations` 재실행 행, 상태 버전 증가를 만들거나 업데이트하면 안 됩니다. 이후 비 `dry_run` 호출은 현재 상태를 기준으로 다시 검증해야 합니다.
 
 <a id="idempotency"></a>
 
@@ -126,7 +126,7 @@ missing | expired | stale | revoked | consumed | incompatible
 
 `request_hash`는 도구 이름, 스키마 정규화된 요청 본문, 그리고 `request_id`와 `idempotency_key`를 제외한 모든 `ToolEnvelope` 필드에 대한 정규 JSON에서 계산합니다.
 
-같은 키와 같은 hash를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 등록, 권한 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 키를 다른 hash로 재사용하면 Core는 `STATE_CONFLICT`를 반환하고 원래 재실행 행을 보존합니다.
+같은 키와 같은 요청 해시를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 등록, 권한 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 키를 다른 요청 해시로 재사용하면 Core는 `STATE_CONFLICT`를 반환하고 원래 재실행 행을 보존합니다.
 
 `dry_run` 호출과 커밋 전 실패는 재실행 행을 만들거나 예약하지 않습니다.
 
@@ -136,7 +136,7 @@ missing | expired | stale | revoked | consumed | incompatible
 
 커밋된 재실행 행이 없는 새 상태 변경 시도에서 Core는 최신성 확인 전에 기본 Task를 찾습니다. 해석 순서는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task입니다.
 
-Task 범위 변경은 `expected_state_version`을 `tasks.state_version`과 비교합니다. 찾은 기본 Task가 없는 프로젝트 범위 변경은 `project_state.state_version`과 비교합니다. 불일치하면 `STATE_CONFLICT`를 반환하고 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행을 만들지 않습니다.
+Task 범위 변경은 `expected_state_version`을 `tasks.state_version`과 비교합니다. 찾은 기본 Task가 없는 프로젝트 범위 변경은 `project_state.state_version`과 비교합니다. 불일치하면 `STATE_CONFLICT`를 반환하고 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
 `STATE_CONFLICT.details`에는 다음 값을 담아야 합니다.
 

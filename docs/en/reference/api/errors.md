@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference for active current MVP public error codes, primary-error precedence, blocked and dry-run behavior, idempotency replay, state conflict behavior, close blocker behavior, and user-facing label guidance.
+Use this reference for active current MVP public error codes, primary-error precedence, blocked and dry-run behavior, `tool_invocations` replay, state conflict behavior, close blocker behavior, and user-facing label guidance.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server.
 
@@ -112,11 +112,11 @@ When `ToolResponseBase.errors` is non-empty, `errors[0]` is the primary error se
 
 ## Blocked And Dry-Run Behavior
 
-A blocked response is not the same as a pre-commit failure. Core may commit a blocked response only where the method owner allows blocker recording. A committed blocked response may update `blockers`, events, state version, and idempotency replay, but it must not create the authority that the blocker says is missing.
+A blocked response is not the same as a pre-commit failure. Core may commit a blocked response only where the method-state-effect matrix in [MVP API](mvp-api.md#active-mvp-method-behavior) explicitly allows a committed blocked response. A committed blocked response may update `blockers`, events, state version, and `tool_invocations` replay, but it must not create the authority that the blocker says is missing.
 
-Read-only calls, including `harness.status` and `harness.close_task intent=check`, may compute and return blockers or close blockers. Those blockers are response fields only: Core must not store them, append events, create idempotency replay rows, or increment state version for the read.
+Read-only calls, including `harness.status` and `harness.close_task intent=check`, may compute and return blockers or close blockers. Those blockers are response fields only: Core must not store them, append events, create `tool_invocations` replay rows, or increment state version for the read.
 
-`dry_run=true` is always non-authoritative. It may validate and return diagnostics, candidate blockers, or a would-change summary, but it must not create or update current records, events, artifacts, evidence summaries, consumable Write Authorizations, close state, or committed replay rows. A subsequent non-dry-run call must be validated against current state.
+`dry_run=true` is always non-authoritative. It may validate and return diagnostics, candidate blockers, or a would-change summary, but it must not create or update current records, events, artifacts, evidence summaries, Write Authorizations, close state, committed `tool_invocations` replay rows, or state-version increments. A subsequent non-dry-run call must be validated against current state.
 
 <a id="idempotency"></a>
 
@@ -126,7 +126,7 @@ Every committed state-changing method requires `idempotency_key`. Read-only call
 
 `request_hash` is computed from canonical JSON over the tool name, schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`.
 
-If a committed replay row exists with the same key and same hash, Core returns the original committed response without re-running freshness checks, appending events, registering artifacts, consuming authorization, updating blockers, or changing the replay row. If the same key is reused with a different hash, Core returns `STATE_CONFLICT` and preserves the original replay row.
+If a committed replay row exists with the same key and same request hash, Core returns the original committed response without re-running freshness checks, appending events, registering artifacts, consuming authorization, updating blockers, or changing the replay row. If the same key is reused with a different request hash, Core returns `STATE_CONFLICT` and preserves the original replay row.
 
 Dry-run calls and pre-commit failures do not create or reserve replay rows.
 
@@ -136,7 +136,7 @@ Dry-run calls and pre-commit failures do not create or reserve replay rows.
 
 For a new state-changing attempt with no committed replay row, Core resolves the primary Task before freshness checking. Resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task.
 
-Task-scoped mutations compare `expected_state_version` with `tasks.state_version`. Project-scoped mutations with no selected primary Task compare it with `project_state.state_version`. Mismatch returns `STATE_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, or replay rows.
+Task-scoped mutations compare `expected_state_version` with `tasks.state_version`. Project-scoped mutations with no selected primary Task compare it with `project_state.state_version`. Mismatch returns `STATE_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, replay rows, or state-version increments.
 
 `STATE_CONFLICT.details` should include:
 

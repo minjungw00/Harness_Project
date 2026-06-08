@@ -37,7 +37,7 @@ Storage validation은 별도 담당 문서 경계입니다. API payload와 API-s
 
 ## ToolEnvelope 봉투
 
-모든 공개 도구 요청은 `ToolEnvelope`를 가집니다. 커밋되는 non-dry-run 상태 변경 도구는 non-null `idempotency_key`와 현재 `expected_state_version`을 요구합니다. `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key`와 `expected_state_version`을 `null`로 둘 수 있습니다. 메서드별 상태 효과는 [현재 MVP API](mvp-api.md#active-mvp-method-behavior)가 담당합니다.
+모든 공개 도구 요청은 `ToolEnvelope`를 가집니다. 커밋되는 non-dry-run 상태 변경 도구는 non-null `idempotency_key`와 현재 `expected_state_version`을 요구합니다. `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key`와 `expected_state_version`을 `null`로 둘 수 있습니다. 읽기 전용 호출은 멱등 키를 요구하거나 예약하지 않습니다. 메서드별 상태 효과는 [현재 MVP API](mvp-api.md#active-mvp-method-behavior)가 담당합니다.
 
 ```yaml
 ToolEnvelope:
@@ -109,7 +109,7 @@ EventRef:
   state_version: integer
 ```
 
-`ToolResponseBase.state_version`은 커밋된 상태 변경에서는 영향을 받은 범위의 결과 버전이고, 읽기 전용과 `dry_run` 응답에서는 현재 읽을 수 있는 버전 또는 영향을 받을 버전입니다. 읽기 전용 응답은 계산된 차단 사유나 닫기 차단 사유를 저장하지 않고 포함할 수 있습니다. `dry_run=true`는 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 멱등 재실행 행을 만들지 않습니다.
+`ToolResponseBase.state_version`은 커밋된 상태 변경에서는 영향을 받은 범위의 결과 버전이고, 읽기 전용과 `dry_run` 응답에서는 현재 읽을 수 있는 버전 또는 영향을 받을 버전입니다. 읽기 전용 응답은 계산된 차단 사유나 닫기 차단 사유를 저장하지 않고 포함할 수 있습니다. `dry_run=true`는 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, `tool_invocations` 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
 ## StateSummary
 
