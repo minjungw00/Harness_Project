@@ -10,7 +10,7 @@
 
 ## 1. 경계
 
-대조 기준으로, 현재 MVP 경계는 [MVP 계획](../build/mvp-plan.md)에 닫힌 목록으로 정해져 있습니다. 그 목록에는 평소 말 입력과 Task 생성, `update_scope`, 사용자 판단 기록, 민감 동작 승인 기록, 경로 수준 `prepare_write`와 Write Authorization, `record_run`, `ArtifactInput.source_kind=staged_artifact`와 `harness.stage_artifact`를 통한 스테이징된 아티팩트 등록, `EvidenceSummary`, `close_task` 차단 사유 계산, 읽는 시점의 상태/Projection, 등록된 로컬 접점 접근, 협력형 보장, 관련 활성 역량 확인이 실제로 통과한 뒤의 탐지형 보장만 포함됩니다. 이 페이지의 어떤 항목도 그 목록을 넓히지 않습니다.
+대조 기준으로, 현재 MVP 경계는 [MVP 계획](../build/mvp-plan.md)에 닫힌 목록으로 정해져 있습니다. 그 목록에는 평소 말 입력과 Task 생성, `update_scope`, 사용자 판단 기록, 민감 동작 승인 기록, 경로 수준 `prepare_write`와 Write Authorization, `record_run`, `ArtifactInput.source_kind=staged_artifact`와 `harness.stage_artifact`를 통한 아티팩트 스테이징, 호환되는 `record_run` 경로를 통한 등록, `EvidenceSummary`, `close_task` 차단 사유 계산, 읽는 시점의 상태/Projection, 등록된 로컬 접점 접근, 협력형 보장, 관련 활성 역량 확인이 실제로 통과한 뒤의 탐지형 보장만 포함됩니다. 이 페이지의 어떤 항목도 그 목록을 넓히지 않습니다.
 
 | 후보 | 상태 | 승격 경계 | 현재 MVP 영향 |
 |---|---|---|---|

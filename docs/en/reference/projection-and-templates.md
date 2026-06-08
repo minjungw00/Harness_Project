@@ -331,7 +331,7 @@ Rendered sections:
 Template:
 
 ````text
-Close status: {ready|blocked|closed|not requested}
+Close status: {ready|blocked|closed|cancelled|superseded|not requested}
 Display only: Core close state and owner refs remain authoritative.
 
 Scope: {scope_summary}

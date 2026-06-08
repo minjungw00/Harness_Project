@@ -10,7 +10,7 @@ Promotion must require explicit owner-document changes, not just mention in this
 
 ## 1. Boundary
 
-For contrast, the active MVP boundary is closed in [MVP Plan](../build/mvp-plan.md). It includes only plain-language intake and Task creation, `update_scope`, user judgment recording, sensitive approval recording, path-level `prepare_write` and Write Authorization, `record_run`, staged artifact registration through `harness.stage_artifact` with `ArtifactInput.source_kind=staged_artifact`, `EvidenceSummary`, `close_task` blocker calculation, read-time status/projection, registered local surface access, cooperative guarantees, and detective guarantees only after the relevant active capability check has actually passed. Nothing on this page expands that list.
+For contrast, the active MVP boundary is closed in [MVP Plan](../build/mvp-plan.md). It includes only plain-language intake and Task creation, `update_scope`, user judgment recording, sensitive approval recording, path-level `prepare_write` and Write Authorization, `record_run`, artifact staging through `harness.stage_artifact` with `ArtifactInput.source_kind=staged_artifact`, registration only through the compatible `record_run` path, `EvidenceSummary`, `close_task` blocker calculation, read-time status/projection, registered local surface access, cooperative guarantees, and detective guarantees only after the relevant active capability check has actually passed. Nothing on this page expands that list.
 
 | Candidate | Status | Promotion boundary | Active MVP impact |
 |---|---|---|---|
