@@ -46,6 +46,7 @@ Korean documentation should be natural Korean technical prose.
 - Use the same Korean wording for the same concept across files. When a concept needs a new Korean term, update the glossary or this guide before spreading variants.
 - Do not leave English noun phrases in Korean prose merely because the English source used them. Unless the phrase is an exact identifier or intentional Harness label, translate the concept into Korean.
 - Prefer natural Korean display labels over raw enum or status values in user-facing text, unless the exact raw value is being explained.
+- In user-facing templates, render schema and enum concepts as natural display text unless the exact contract value is the subject.
 - Do not compress English negative coordination in Korean in a way that reverses meaning. If the condition means "not visible, or not accepted when required," make both negative requirements explicit and do not drop the first negative requirement.
 - Avoid Korean sentences made mostly of English nouns with Korean particles attached.
 - Keep exact identifiers exact even when the surrounding sentence is fully Korean.
@@ -104,10 +105,13 @@ Use one Korean expression consistently for one concept. Schema fields, method na
 | completion policy | 완료 정책 |
 | shaping readiness | 구체화 준비 상태 |
 | project-wide state_version | 프로젝트 전체 `state_version` |
+| task-scoped state_version | Task 범위 `state_version` |
+| public conflict clock | 공개 충돌 시계 |
 | artifact input | 아티팩트 입력 |
 | evidence coverage item | 증거 범위 항목 |
 | cooperative guarantee | 협력형 보장 |
 | detective guarantee | 탐지형 보장 |
+| surface identifier in user prose | 접점 식별자. 권한 증거처럼 쓰지 않음 |
 | Discovery Brief as a persistent artifact | 영속 아티팩트로서의 Discovery Brief |
 | Question Queue | 질문 큐 |
 | Assumption Register | 가정 기록부 |
@@ -153,8 +157,14 @@ Common examples:
 | `LocalSurfaceRegistration` | 로컬 접점 등록 사실 |
 | `VerifiedSurfaceContext` | 확인된 접점 맥락 |
 | `SensitiveActionScope` | 민감 동작 범위 스키마 |
+| `AuthorizedAttemptScope` | 제품 파일 쓰기 시도 범위 스키마 |
+| `surface_id` | 접점 식별자 값. 권한, 접근, 바인딩, 역량의 증거가 아님 |
+| `state_version` | 상태 버전 필드명. 공개 충돌 기준은 담당 문서가 정함 |
 | `project_state.state_version` | 프로젝트 전체 상태 시계 |
+| `tasks.state_version` | Task 범위 상태 시계. 현재 MVP 공개 충돌 기준으로 쓰지 않음 |
 | `ProjectionKind` | 상태 보기 종류 식별자 |
+| `detective` | 보장 수준 값. 산문에서는 탐지형 보장이라고 설명 |
+| `EvidenceSummary` | 확인 근거 요약 스키마 또는 표시 개념 |
 
 Korean labels such as `제품 판단`, `기술 판단`, and `범위 판단` may appear in prose or rendered examples. They must not replace canonical values such as `product_decision`, `technical_decision`, `scope_decision`, or `judgment_kind`.
 
@@ -166,6 +176,14 @@ Do not translate active/later, security, or judgment boundaries into stronger cl
 - "later candidate" means deferred material. It is not an active requirement unless the owner promotes it with scope and proof expectations.
 - Cooperative or detective security wording must not become preventive, isolated, sandboxed, tamper-proof, or default tool-blocking wording in Korean.
 - Broad approval, final acceptance, and residual risk acceptance remain distinct. Later/reserved QA waiver or verification-risk acceptance terminology belongs to the Later Candidate Index until promoted and is not part of the active MVP judgment-kind list.
+- `surface_id` is an identifier, not proof of authority, local access, binding, or capability. Do not translate it into Korean wording that sounds like permission or verification has already succeeded.
+- `captured_artifact` remains a later-only captured-artifact value until promoted. Do not describe it in Korean as an active artifact input path.
+- `sensitive_approval` / `SensitiveActionScope` is separate from product-file `AuthorizedAttemptScope` and Write Authorization.
+- `detective` requires passed capability verification for the covered observable scope. Without that passed check, use cooperative or capability-limited wording.
+- Active MVP public conflict wording uses project-wide `project_state.state_version` unless an owner promotes another clock. Do not expose both task-scoped and project-scoped `state_version` as public conflict clocks.
+- Projection reconcile and `reconcile` stay later-only unless promoted, and must not become a Core state mutation path through translation.
+- Final acceptance and residual risk acceptance do not fill missing required evidence.
+- User-facing templates should not expose internal enum or schema terms such as `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, or `guarantee_level` unless the contract value itself is being explained.
 
 ## 8. Bilingual Review Checklist
 
@@ -178,7 +196,10 @@ Do not translate active/later, security, or judgment boundaries into stronger cl
 - [ ] Korean display labels are treated as localized display text, not schema identifiers.
 - [ ] User-facing Korean uses natural Korean before Harness labels when both are needed.
 - [ ] English noun phrases are not left in Korean prose unless they are exact identifiers or intentional Harness labels.
+- [ ] Korean prose does not preserve English sentence order or literal translation where natural Korean explanation is required.
 - [ ] Korean translations do not compress negative coordination in a way that reverses meaning.
 - [ ] Non-owner duplicate contracts are summarized with compact owner routes instead of translated as full contract copies.
+- [ ] Later-only concepts remain marked later-only, and reference docs do not imply that later-only features are active MVP requirements.
+- [ ] User-facing templates use natural display wording instead of unnecessary internal enum or schema terms.
 - [ ] Link changes were made in both languages in the same batch.
 - [ ] Translation review was not described as runtime state, evidence, QA, acceptance, close readiness, runtime conformance, or implementation readiness.

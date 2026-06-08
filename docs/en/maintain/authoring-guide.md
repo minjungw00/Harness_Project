@@ -81,15 +81,27 @@ Do not describe later candidates as active MVP requirements, required defaults, 
 
 If an active schema or DDL block contains inactive values, fix the owner boundary rather than relying on nearby prose to explain that those values are not active.
 
+Treat active/later ambiguity as a contract failure, not a style issue:
+
+- Later-only concepts must be marked later-only at the point of use unless an owner has promoted them into the active MVP.
+- Reference docs must not imply that later-only features are required for active MVP implementation merely because the reference page names them.
+- Active MVP text fails when it describes `captured_artifact` as an active artifact input path. New artifact bytes use the active staged-artifact path unless an owner promotes another path.
+- Active MVP text fails when it uses both task-scoped and project-scoped `state_version` as public conflict clocks. The public active conflict basis is the project-wide `project_state.state_version` unless an owner promotes another clock.
+- Active MVP text fails when it treats `reconcile` or projection reconcile as a Core state mutation path. Projection reconcile is later-only unless promoted, and projections remain derived displays.
+
 ## 6. User Judgment Boundary
 
 Harness preserves user-owned judgment. Product behavior, material technical direction, scope expansion, sensitive-action approval, final acceptance, residual risk acceptance, and cancellation are distinct active judgment routes. Later/reserved QA waiver and verification-risk acceptance routes must stay distinct when mentioned or promoted.
 
 Do not treat broad approval such as "go ahead" or "looks good" as a substitute for a specific judgment. Sensitive-action approval permits a named sensitive step only; it does not decide product behavior, architecture, final acceptance, or residual risk. Final acceptance does not create evidence, erase evidence gaps, or accept residual risk unless the residual risk path asks for that judgment.
 
+Fail any wording that treats `sensitive_approval` or `SensitiveActionScope` as equivalent to product-file `AuthorizedAttemptScope`, Write Authorization, or path authority. `sensitive_approval` is a user judgment for a named sensitive action; `AuthorizedAttemptScope` is the product-file write-attempt scope owned by the write path.
+
+Fail any wording that lets final acceptance or residual risk acceptance substitute for missing required evidence. Evidence must exist through the evidence owner path before those judgments can accept a result basis or a named risk.
+
 When blocker wording combines more than one negative requirement, state each negative explicitly. For residual risk close blockers, preserve the meaning as "not visible, or not accepted when required"; do not drop the visibility negative or otherwise compress the condition into an ambiguous form.
 
-User-facing docs should start with what the user can ask, what the agent should clarify, what is blocked, what evidence exists, what judgment is needed, and what close means. Introduce internal labels only after the visible user situation is clear.
+User-facing docs and templates should start with what the user can ask, what the agent should clarify, what is blocked, what evidence exists, what judgment is needed, and what close means. Introduce internal labels only after the visible user situation is clear. Fail a user-facing template when it exposes internal enum or schema terms such as `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, `guarantee_level`, or raw enum values where natural display wording would be enough.
 
 ## 7. Security Wording Rule
 
@@ -104,6 +116,10 @@ Do not imply early Harness provides OS permissions, arbitrary-tool sandboxing, t
 
 Do not make unsupported preventive, isolation, sandboxing, tamper-proof, or default tool-blocking claims in user-facing summaries, examples, checklists, or diagrams. A short, honest cooperative claim, or a capability-backed detective claim, is better than a stronger claim the current owner cannot prove.
 
+Fail any text that treats `surface_id` as proof of authority, local access, binding, or capability. A copied `surface_id` is only an identifier; authority and capability claims require the registered surface context and passed owner checks.
+
+Fail any text that displays or claims a `detective` guarantee without passed capability verification for the covered observable scope.
+
 ## 8. Korean Quality Rule
 
 Korean documentation must read as natural Korean technical prose, not line-by-line English. Put the Korean concept first in user-facing prose, add exact English identifiers only when precision or search needs them, and preserve identifiers exactly.
@@ -111,6 +127,8 @@ Korean documentation must read as natural Korean technical prose, not line-by-li
 User-facing Korean should use natural Korean labels, not raw enum names, unless the raw enum or status value is the subject. Schema fields, method names, enum values, code identifiers, file paths, validator IDs, and error codes stay exact English in schema and code-like contexts.
 
 Do not leave English noun phrases in Korean prose merely because the English source used them. If the phrase is explanatory rather than an exact identifier or intentional Harness label, translate the concept into Korean. Do not translate the same concept differently across files; update [Translation Guide](translation-guide.md) or the glossary when a new shared term is needed.
+
+Treat Korean that preserves English prose, English sentence order, or literal translation where natural Korean explanation is required as a failed edit. Exact identifiers stay exact; explanatory prose must be Korean.
 
 Use the terms in [Translation Guide](translation-guide.md) and the Korean guide pair, including "한영 문서 동시 유지", "의미 일치", "줄 단위 번역 아님", "에이전트 중복 주입 금지", "현재 MVP", "담당 문서", "사용자 소유 판단", "최종 수락", "잔여 위험 수락", "협력형 보장", "탐지형 보장", and "profile-gated 값" where they fit.
 
@@ -142,9 +160,15 @@ Delete temporary migration plans and scratch files before finishing.
 - [ ] README and Maintain routes point only to the compact route structure and `docs/doc-index.yaml`.
 - [ ] Strict contracts remain in one owner; non-owner duplicates are summaries with compact owner routes.
 - [ ] Active/later boundaries are not blurred, and profile-gated values are not listed as default active MVP values.
+- [ ] Later-only concepts are explicitly marked later-only where they appear, and reference docs do not make later-only features look required for active MVP implementation.
+- [ ] Active MVP text does not promote `captured_artifact`, projection reconcile, task-scoped public conflict clocks, or other later-only paths by implication.
 - [ ] User-owned judgment routes remain distinct.
+- [ ] `sensitive_approval` / `SensitiveActionScope` is not collapsed into `AuthorizedAttemptScope`, Write Authorization, final acceptance, residual-risk acceptance, evidence, or artifact authority.
+- [ ] Final acceptance and residual risk acceptance do not substitute for missing required evidence.
 - [ ] Blocker conditions with multiple negative requirements state each negative explicitly, especially residual risk close blocker wording.
 - [ ] Security wording matches the documented guarantee level and does not make unsupported preventive, isolation, sandboxing, tamper-proof, or default tool-blocking claims.
+- [ ] `surface_id` is not treated as proof of authority, and `detective` is not displayed or claimed without passed capability verification.
+- [ ] User-facing templates do not expose internal enum or schema terms unnecessarily.
 - [ ] Links, anchors, README routes, and paired-language links resolve.
 - [ ] Deleted routes and stale structure names are not used as active paths.
 - [ ] Stale rewrite history, closed issue records, obsolete alias history, and stale review prose were deleted instead of archived.

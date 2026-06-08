@@ -15,10 +15,18 @@ These checks look for documentation drift:
 - exact identifier versus explanatory prose confusion
 - duplicate strict contracts outside their owner
 - active/later boundary drift and active/profile-gated value confusion
+- later-only concepts that are not marked later-only, or reference docs that imply later-only features are active MVP requirements
 - unsupported security claims that overstate the guarantee level
+- `surface_id` wording that treats an identifier as proof of authority, access, binding, or capability
+- active artifact-input wording that promotes `captured_artifact`
 - user judgment routes that substitute for each other
+- `sensitive_approval` / `SensitiveActionScope` wording that collapses into `AuthorizedAttemptScope`
 - residual-risk close blocker wording that hides one of several negative requirements
 - projection-derived display wording that treats generated views as source authority
+- state-clock wording that exposes both task-scoped and project-scoped `state_version` as public conflict clocks
+- projection reconcile wording that treats `reconcile` as an active Core state mutation path
+- final acceptance or residual-risk acceptance wording that substitutes for missing required evidence
+- user-facing templates that expose internal enum or schema terms unnecessarily
 - one-language-per-`doc_id` agent retrieval problems
 - stale rewrite/history notes, closed issue records, and obsolete review prose
 
@@ -66,7 +74,7 @@ Pass when paired files preserve the same meaning while Korean remains natural. F
 
 Inspect Korean explanatory prose, headings, examples, and maintain guidance.
 
-Pass when Korean reads as natural Korean technical documentation, separates exact identifiers from explanatory prose, keeps exact identifiers unchanged, and does not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels. Fail when Korean is a literal line-by-line English translation, treats an explanatory English noun phrase as an identifier, preserves English noun phrases as prose, compresses negative coordination in a meaning-changing way, or changes meaning to follow English sentence order.
+Pass when Korean reads as natural Korean technical documentation, separates exact identifiers from explanatory prose, keeps exact identifiers unchanged, and does not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels. Fail when Korean is a literal line-by-line English translation, preserves English prose where natural Korean explanation is required, treats an explanatory English noun phrase as an identifier, preserves English noun phrases as prose, compresses negative coordination in a meaning-changing way, or changes meaning to follow English sentence order.
 
 ## 7. Owner-Boundary Check
 
@@ -76,21 +84,21 @@ Pass when each strict contract is defined in one owner and non-owner docs use a 
 
 ## 8. Active/Profile-Gated Value Check
 
-Inspect active schemas, API docs, DDL, Build scope wording, Later docs, later candidates, profile/capability tables, connector modes, and examples.
+Inspect active schemas, API docs, DDL, Build scope wording, Reference docs, Later docs, later candidates, profile/capability tables, connector modes, artifact-input wording, and examples.
 
-Pass when default active blocks contain only active MVP material, profile-gated values are clearly labeled and owned, and later candidates stay in the Later index or promoted owners. Fail when later enum values, methods, tables, commands, templates, assurance behavior, operations behavior, fixture families, or profile-gated values are presented as default active requirements.
+Pass when default active blocks contain only active MVP material, profile-gated values are clearly labeled and owned, later-only concepts are marked later-only at the point of use, and later candidates stay in the Later index or promoted owners. Fail when later enum values, methods, tables, commands, templates, assurance behavior, operations behavior, fixture families, or profile-gated values are presented as default active requirements. Fail when Reference docs imply that later-only features are required for active MVP implementation. Fail when active MVP text describes `captured_artifact` as an active artifact input path.
 
 ## 9. Unsupported Security Claim Check
 
-Inspect claims using cooperative, detective, preventive, isolated, guard, freeze, careful-mode, sandbox, permission, blocking, tamper-proof, or isolation language.
+Inspect claims using cooperative, detective, preventive, isolated, guard, freeze, careful-mode, sandbox, permission, blocking, tamper-proof, isolation, `surface_id`, capability, local access, or surface binding language.
 
-Pass when the claim matches the documented guarantee level and names the owner/proof path for preventive or isolated behavior. Fail when cooperative or detective behavior is described as OS permission, arbitrary-tool sandboxing, tamper-proof storage, universal pre-tool blocking, or security isolation without a proven owner path.
+Pass when the claim matches the documented guarantee level, `detective` display is backed by passed capability verification for the covered observable scope, and the text names the owner/proof path for preventive or isolated behavior. Fail when cooperative or detective behavior is described as OS permission, arbitrary-tool sandboxing, tamper-proof storage, universal pre-tool blocking, or security isolation without a proven owner path. Fail when a copied `surface_id` is treated as proof of authority, access, binding, or capability. Fail when any text displays or claims a `detective` guarantee without passed capability verification.
 
 ## 10. User Judgment Boundary Check
 
-Inspect judgment prompts, examples, close wording, approval wording, final acceptance wording, residual-risk wording, and any later/reserved QA waiver or verification-risk wording.
+Inspect judgment prompts, examples, close wording, approval wording, final acceptance wording, residual-risk wording, evidence wording, `SensitiveActionScope`, `AuthorizedAttemptScope`, and any later/reserved QA waiver or verification-risk wording.
 
-Pass when product decisions, technical decisions, scope decisions, sensitive-action approval, final acceptance, residual-risk acceptance, cancellation, and later/reserved QA waiver or verification-risk acceptance stay distinct. Fail when broad approval, sensitive-action approval, final acceptance, later QA waiver, evidence, verification, or residual-risk acceptance silently substitutes for another route.
+Pass when product decisions, technical decisions, scope decisions, sensitive-action approval, final acceptance, residual-risk acceptance, cancellation, and later/reserved QA waiver or verification-risk acceptance stay distinct. Pass when `sensitive_approval` / `SensitiveActionScope` stays separate from product-file `AuthorizedAttemptScope` and Write Authorization. Fail when broad approval, sensitive-action approval, final acceptance, later QA waiver, evidence, verification, or residual-risk acceptance silently substitutes for another route. Fail when final acceptance or residual-risk acceptance substitutes for missing required evidence.
 
 ## 11. Residual-Risk Close Blocker Wording Check
 
@@ -100,9 +108,9 @@ Pass when each negative requirement is stated explicitly and residual-risk close
 
 ## 12. Projection-Derived-Display Check
 
-Inspect projection and template wording, generated-display examples, status cards, summaries, user-facing views, and diagrams.
+Inspect projection and template wording, generated-display examples, status cards, summaries, user-facing views, diagrams, projection reconcile wording, and `reconcile` references.
 
-Pass when projections and rendered displays are described as derived views with freshness and owner boundaries. Fail when generated displays are treated as source-of-truth records, runtime state, evidence, QA, acceptance, close records, residual-risk records, Write Authorization, or permission to perform product/runtime writes.
+Pass when projections and rendered displays are described as derived views with freshness and owner boundaries, and projection reconcile remains later-only unless an owner has promoted it. Fail when generated displays are treated as source-of-truth records, runtime state, evidence, QA, acceptance, close records, residual-risk records, Write Authorization, or permission to perform product/runtime writes. Fail when active MVP text treats projection reconcile or `reconcile` as a Core state mutation path.
 
 ## 13. One-Language-Per-`doc_id` Agent Retrieval Check
 
@@ -110,7 +118,19 @@ Inspect agent guidance, context-loading advice, README routes, Reference routes,
 
 Pass when agent-facing docs retrieve only one language for a given `doc_id` during normal work, load paired languages only for translation or parity review, retrieve only the owner section needed for the next action, and keep always-on context compact. Fail when docs instruct agents to load both languages for the same `doc_id` by default, broad reference sets, full schemas, full templates, historical logs, generated artifacts, or stale migration records.
 
-## 14. Stale Content Check
+## 14. State-Version Conflict Clock Check
+
+Inspect `state_version`, `project_state.state_version`, `tasks.state_version`, task-scoped state clocks, project-scoped state clocks, conflict wording, concurrency wording, and public API examples.
+
+Pass when active MVP public conflict wording uses the project-wide `project_state.state_version` basis unless an owner explicitly promotes another clock. Fail when active MVP text exposes both task-scoped and project-scoped `state_version` as public conflict clocks, asks clients or agents to choose between them, or treats `tasks.state_version` as an active public conflict/concurrency basis.
+
+## 15. User-Facing Template Internal-Term Check
+
+Inspect user-facing templates, status cards, examples, close summaries, judgment prompts, Korean renderings, and English renderings.
+
+Pass when templates use reader-facing display wording and expose exact enum or schema terms only when the contract value itself is being explained. Fail when a user-facing template unnecessarily exposes internal terms such as `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, `guarantee_level`, raw enum values, schema field names, or internal blocker categories instead of natural display text.
+
+## 16. Stale Content Check
 
 Inspect Maintain docs and nearby routes for historical rewrite reviews, closed issue records, obsolete acceptance records, obsolete delivery-label explanations, prior stage label history, obsolete alias history, later-candidate localization audit records, past translation problem records, past audit result narrative, and temporary migration plans.
 
