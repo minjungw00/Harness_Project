@@ -309,7 +309,7 @@ StagedArtifactHandle:
   expires_at: string
 ```
 
-`source_kind`에 맞는 출처 필드 하나만 있어야 합니다. `staged_artifact`에는 `staged_artifact_handle`, `existing_artifact`에는 `existing_artifact_ref`가 필요합니다. 스테이징 핸들은 같은 `project_id`와 `task_id` 범위에 있어야 하고 `content_type`, `sha256`, `size_bytes`, `redaction_state`, `expires_at`을 가져야 하며, `harness.record_run`이 사용할 때 만료되지 않았고 아직 소비되지 않았어야 합니다. 만료된 핸들, 범위가 맞지 않는 핸들, 이미 소비된 핸들, 다른 Task의 핸들은 변경 전에 거부됩니다.
+`source_kind`에 맞는 출처 필드 하나만 있어야 합니다. `staged_artifact`에는 `staged_artifact_handle`, `existing_artifact`에는 `existing_artifact_ref`가 필요합니다. 출처 필드가 빠졌거나, `source_kind`와 맞지 않거나, 두 출처 필드가 모두 있으면 요청 형태 검증 실패입니다. 스테이징 핸들은 같은 `project_id`와 `task_id` 범위에 있어야 하고 `content_type`, `sha256`, `size_bytes`, `redaction_state`, `expires_at`을 가져야 하며, `harness.record_run`이 사용할 때 만료되지 않았고 아직 소비되지 않았어야 합니다. 만료된 핸들, 범위가 맞지 않는 핸들, 이미 소비된 핸들, 다른 Task의 핸들은 변경 전에 거부되며 공개 오류 세부정보에서 서로 구분되어야 합니다.
 
 `harness.stage_artifact`는 임시 `StagedArtifactHandle`을 만들 수 있지만 그 자체로 Core 상태 전이가 아닙니다. 증거를 만들지 않고, gate를 만족하지 않고, 증거 요약을 갱신하지 않으며, `harness.close_task`가 통과하게 만들 수도 없습니다. 유효한 스테이징 핸들을 소비해 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`뿐입니다.
 

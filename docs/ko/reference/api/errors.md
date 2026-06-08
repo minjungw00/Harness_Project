@@ -26,7 +26,7 @@
 | `core_or_surface_unavailable` | `MCP_UNAVAILABLE` | 하네스 상태를 만들어 내지 않습니다. Core와 필요한 접점 경로에 다시 닿거나 사용자가 하네스 밖 진행을 명시적으로 선택하기 전까지 하네스에 의존하는 쓰기, 아티팩트 본문 읽기, 닫기를 보류합니다. `VerifiedSurfaceContext.failure_reason=unavailable`에 해당합니다. |
 | `local_access_mismatch` | `LOCAL_ACCESS_MISMATCH` | 로컬 파일이나 명령 사실을 추측하지 않고 복사된 `surface_id`를 신뢰하지 않습니다. 등록된 로컬 transport/session/binding을 쓰거나, 담당 경로로 로컬 접근 등록을 고치거나, 입력을 미검증으로 표시합니다. `failure_reason=mismatch` 또는 `revoked`에 해당합니다. |
 | `missing_capability` | `CAPABILITY_INSUFFICIENT` | 역량이 맞는 접점을 쓰거나, 동작을 줄이거나, 빠진 관찰, 캡처, 로컬 접근 분류, 차단/격리 주장, 활성 동작이 필요 없는 경로를 선택합니다. 기준 `reference-local-mcp`에서 명령, 네트워크, 비밀값 접근, 접점 자체 아티팩트 캡처, 도구 실행 전 차단, 격리 보장을 요구하는 요청은 요청 형태가 잘못된 경우가 아니라면 이 경로에 속합니다. `failure_reason=insufficient_capability`에 해당합니다. |
-| `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, 오래된 `WRITE_AUTHORIZATION_INVALID` | 의존하기 전에 현재 상태, baseline, 읽기용 상태 보기, 범위 갱신 결과, 쓰기 전 확인을 새로 확인합니다. |
+| `stale_state` | `STATE_VERSION_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, 오래된 `WRITE_AUTHORIZATION_INVALID` | 의존하기 전에 현재 상태, baseline, 읽기용 상태 보기, 범위 갱신 결과, 쓰기 전 확인을 새로 확인합니다. |
 | `unsupported_surface` | `CAPABILITY_INSUFFICIENT` 또는 `VALIDATION_FAILED` | 요청을 줄이거나, 역량이 맞는 접점으로 옮기거나, 차단 사유를 반환합니다. 지원하지 않는 권한을 설명 문구로 흉내 내지 않습니다. |
 | `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 영향을 받는 행동을 보류하고, 불일치를 보여 주며, 현재 범위로 줄이거나 구체적인 사용자 소유 범위 판단을 요청하거나, 해결된 범위 변경을 `harness.update_scope`로 적용합니다. |
 | `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | 집중된 활성 `UserJudgment`를 묻거나 해결합니다. 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소 판단, later/reserved QA 면제 판단과 검증 위험 수락 경로를 넓은 승인 하나로 합치지 않습니다. |
@@ -41,7 +41,7 @@
 | 코드 | 의미 |
 |---|---|
 | `VALIDATION_FAILED` | 요청 본문 형태, enum 값, 활성화 규칙, 프로필별 검증이 변경 전에 실패했습니다. |
-| `STATE_CONFLICT` | `expected_state_version`이 `project_state.state_version` 기준으로 오래되었거나, 상태 잠금 소유권이 바뀌었거나, 같은 멱등 키를 다른 정규화된 요청으로 다시 사용했습니다. |
+| `STATE_VERSION_CONFLICT` | `expected_state_version`이 `project_state.state_version` 기준으로 오래되었거나, 상태 잠금 소유권이 바뀌었거나, 같은 멱등 키를 다른 정규화된 요청으로 다시 사용했습니다. |
 | `NO_ACTIVE_TASK` | Task가 필요하지만 활성 Task나 지정된 Task가 없습니다. |
 | `NO_ACTIVE_CHANGE_UNIT` | 쓰기를 할 수 있거나 닫기와 관련된 동작에 활성 범위 지정 Change Unit이 없습니다. |
 | `SCOPE_REQUIRED` | 요청한 쓰기나 동작 전에 범위 확인이 필요합니다. |
@@ -61,7 +61,7 @@
 | `ACCEPTANCE_REQUIRED` | 필요한 최종 수락이 대기 중이거나, 거부되었거나, 표시된 결과 근거와 호환되지 않습니다. |
 | `PROJECTION_STALE` | 요청한 읽기용 상태/보기가 오래되었거나 실패했습니다. Core 상태가 아니며 그 자체로 닫기 차단 사유가 아닙니다. |
 | `RESIDUAL_RISK_NOT_VISIBLE` | 닫기에 영향을 주는 알려진 잔여 위험이 최종 수락 또는 닫기 전에 보이지 않았습니다. |
-| `ARTIFACT_MISSING` | 참조한 아티팩트가 없거나, 사용할 수 없거나, 닫기 근거로 쓸 수 없거나, 무결성/메타데이터 확인에 실패했습니다. |
+| `ARTIFACT_MISSING` | 참조한 아티팩트나 스테이징 아티팩트 핸들이 없거나, 만료되었거나, 이미 소비되었거나, 범위가 맞지 않거나, 사용할 수 없거나, 닫기 근거로 쓸 수 없거나, 무결성/메타데이터 확인에 실패했습니다. |
 | `BASELINE_STALE` | 동작에 필요한 저장소 상태와 baseline이 더 이상 맞지 않습니다. |
 | `VALIDATOR_FAILED` | 필수 활성 validator 또는 차단 사유 확인이 실패했고, 더 구체적인 타입 코드가 없을 때 쓰는 대체 코드입니다. 현재 MVP에서 설계 정책 오류가 아닙니다. 설계 품질 우려는 활성 판단, 차단 사유, 증거, 역량, 잔여 위험 경로로 라우팅되거나 조언으로 남아야 합니다. |
 
@@ -72,6 +72,14 @@ missing | expired | stale | revoked | consumed | incompatible
 ```
 
 필요한 권한이 제공되지 않았으면 `authorization_reason=missing`과 함께 `WRITE_AUTHORIZATION_REQUIRED`를 사용합니다. 기존 권한을 소비할 수 없으면 `WRITE_AUTHORIZATION_INVALID`를 사용합니다.
+
+`ToolError.details.staging_handle_reason`은 정확히 다음 값만 사용합니다.
+
+```text
+missing | expired | consumed | mismatch | incompatible
+```
+
+`ArtifactInput.source_kind`와 출처 필드가 스키마 형태에 맞지 않으면 `VALIDATION_FAILED`를 사용합니다. 형태는 맞지만 스테이징 핸들이 없거나, 만료되었거나, 이미 소비되었거나, 다른 프로젝트/Task 범위이거나, 기대한 hash, size, content type, artifact relation과 맞지 않으면 `ARTIFACT_MISSING`와 `staging_handle_reason`을 함께 사용합니다. 스테이징 핸들 오류는 그 자체로 증거 부족이 아니며, 등록된 로컬 접점 검증도 실패한 경우가 아니라면 `LOCAL_ACCESS_MISMATCH`로 보고하면 안 됩니다.
 
 로컬 접근 관련 코드는 좁게 쓰고 서로 구분합니다. `MCP_UNAVAILABLE`은 MCP/Core 또는 접점 도달 가능성 자체를 사용할 수 없을 때 쓰며, `VerifiedSurfaceContext.failure_reason=unavailable`을 포함합니다. `LOCAL_ACCESS_MISMATCH`는 도달 가능한 로컬 transport/session/binding이 등록된 프로젝트 접점과 맞지 않거나 로컬 접근이 철회되었을 때 쓰며, `failure_reason=mismatch` 또는 `revoked`를 포함합니다. `CAPABILITY_INSUFFICIENT`는 인식된 활성 접점이 요청한 접근 분류나 보장 주장에 필요한 역량을 갖추지 못했을 때 쓰며, `failure_reason=insufficient_capability`을 포함합니다. `surface_id`만으로는 이 오류 중 어느 것도 해결되지 않습니다. 이 공개 경로 대신 접점별 `UNAUTHORIZED` code를 만들지 않습니다.
 
@@ -84,7 +92,7 @@ missing | expired | stale | revoked | consumed | incompatible
 | 우선순위 | 기본 `ErrorCode` |
 |---:|---|
 | 1 | `VALIDATION_FAILED` |
-| 2 | `STATE_CONFLICT` |
+| 2 | `STATE_VERSION_CONFLICT` |
 | 3 | `MCP_UNAVAILABLE` |
 | 4 | `LOCAL_ACCESS_MISMATCH` |
 | 5 | `NO_ACTIVE_TASK` |
@@ -126,19 +134,19 @@ missing | expired | stale | revoked | consumed | incompatible
 
 `request_hash`는 도구 이름, 스키마 정규화된 요청 본문, 그리고 `request_id`와 `idempotency_key`를 제외한 모든 `ToolEnvelope` 필드에 대한 정규 JSON에서 계산합니다.
 
-같은 키와 같은 요청 해시를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 등록, 권한 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 키를 다른 요청 해시로 재사용하면 Core는 `STATE_CONFLICT`를 반환하고 원래 재실행 행을 보존합니다.
+같은 키와 같은 요청 해시를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 등록, 권한 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 키를 다른 요청 해시로 재사용하면 Core는 `STATE_VERSION_CONFLICT`를 반환하고 원래 재실행 행을 보존합니다.
 
 `dry_run` 호출과 커밋 전 실패는 재실행 행을 만들거나 예약하지 않습니다.
 
 <a id="state-conflict-behavior"></a>
 
-## 상태 충돌 처리
+## 상태 버전 충돌 처리
 
 커밋된 재실행 행이 없는 새 상태 변경 시도에서 Core는 담당 기록을 고르기 위해 최신성 확인 전에 기본 Task를 찾을 수 있습니다. 해석 순서는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task입니다. 이 해석은 별도 상태 시계를 고르지 않습니다.
 
-새 non-dry-run 상태 변경은 모두 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. 불일치하면 `STATE_CONFLICT`를 반환하고 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들지 않습니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
+새 non-dry-run 상태 변경은 모두 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. 불일치하면 `STATE_VERSION_CONFLICT`를 반환하고 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들지 않습니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
 
-`STATE_CONFLICT.details`에는 다음 값을 담아야 합니다.
+`STATE_VERSION_CONFLICT.details`에는 다음 값을 담아야 합니다.
 
 ```yaml
 state_clock: project_state.state_version
@@ -157,15 +165,15 @@ task_id: string | null
 [MVP 계획](../../build/mvp-plan.md#첫-내부-스모크-목표)의 첫 내부 문서 스모크 목표는 활성 공개 오류와 활성 `CloseBlocker.category` 값만 사용해야 합니다. 스모크 전용 코드를 만들지 않고, 완전한 적합성 테스트 모음이나 구현 계획을 정의하지 않습니다.
 
 - 등록된 접점 검증은 Core가 등록된 접점에 맞는 `VerifiedSurfaceContext`를 파생할 때만 오류 없이 성공합니다. 실패는 `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`를 사용합니다. 복사된 `surface_id`는 접근이나 역량의 증거가 아닙니다.
-- 프로젝트 전체 상태 충돌은 `ToolEnvelope.expected_state_version`이 `project_state.state_version`보다 오래되었을 때 `STATE_CONFLICT`를 사용합니다. 실패한 시도는 기록, 이벤트, 아티팩트, 증거, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들면 안 됩니다.
+- 프로젝트 전체 상태 충돌은 `ToolEnvelope.expected_state_version`이 `project_state.state_version`보다 오래되었을 때 `STATE_VERSION_CONFLICT`를 사용합니다. 실패한 시도는 기록, 이벤트, 아티팩트, 증거, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들면 안 됩니다.
 - `ShapingReadiness` 공백은 담당 경로에 따라 `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, 또는 구조화된 차단 사유로 드러날 수 있습니다. 읽기 전용 상태나 준비 상태 읽기는 상태를 바꾸지 않습니다.
 - `prepare_write decision=allowed`는 담당 범위의 1회용 Write Authorization을 만듭니다. `decision=blocked`는 적용되는 범위, baseline, 역량, 검증, 판단 코드를 사용합니다. `decision=approval_required`는 `APPROVAL_*` 경로를 사용하며 소비 가능한 Write Authorization을 만들면 안 됩니다.
 - `SensitiveActionScope`는 `judgment_kind=sensitive_approval`에 속합니다. 민감 동작 승인 오류는 `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`를 사용합니다. 이 승인은 Write Authorization, 최종 수락, 잔여 위험 수락, 증거, 아티팩트 권한을 대신하지 않습니다.
-- `harness.stage_artifact` 성공은 임시 핸들만 만들고 Core 변경을 만들지 않습니다. 유효한 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`입니다. 유효하지 않거나 사용할 수 없는 아티팩트 조건은 담당 검증/아티팩트 경로를 사용하며 증거 충분성으로 숨기면 안 됩니다.
+- `harness.stage_artifact` 성공은 임시 핸들만 만들고 Core 변경을 만들지 않습니다. 유효한 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`입니다. 출처 필드 형태가 잘못되면 `VALIDATION_FAILED`를 사용하고, 없거나 만료되었거나 이미 소비되었거나 범위가 맞지 않거나 사용할 수 없거나 호환되지 않는 스테이징 핸들은 `staging_handle_reason`을 담은 `ARTIFACT_MISSING`을 사용합니다. 이런 조건을 증거 충분성으로 숨기면 안 됩니다.
 - `harness.record_run`은 호환되는 Write Authorization을 정확히 한 번 소비합니다. Write Authorization이 없으면 `WRITE_AUTHORIZATION_REQUIRED`를 사용합니다. 오래됨, 만료, 철회, 이미 소비됨, 비호환 상태이면 `WRITE_AUTHORIZATION_INVALID`를 사용합니다. 승인 범위 밖 관찰 시도는 적용되는 범위 또는 Write Authorization 관련 코드를 사용합니다.
 - `close_task intent=check`는 차단 사유를 반환하더라도 읽기 전용입니다. `close_task intent=complete`는 구조화된 차단 사유와 함께 `CloseTaskResponse.close_state=blocked`를 반환하거나, 담당 문서가 정의한 complete 차단 사유가 없을 때만 `close_state=closed`를 반환합니다.
 - 닫기 스모크 범위는 증거 차단 사유의 `EVIDENCE_INSUFFICIENT`, 아티팩트 사용 불가 또는 누락 차단 사유의 `ARTIFACT_MISSING`, 최종 수락 차단 사유의 `ACCEPTANCE_REQUIRED`, 보이지만 수락되지 않은 잔여 위험에 대한 `category=residual_risk_acceptance`와 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 포함해야 합니다. `RESIDUAL_RISK_NOT_VISIBLE`은 아직 보이지 않은 위험에만 둡니다.
-- `close_task intent=supersede`가 유효하지 않으면 supersession, 생명주기, 로컬 접근, 상태 충돌, 복구 차단 사유를 사용합니다. 증거 충분성, 최종 수락, 잔여 위험 수락을 요구하면 안 됩니다. 유효한 supersede가 생명주기와 `project_state.active_task_id`를 함께 바꾸는 경우에도 하나의 프로젝트 전체 상태 변경입니다.
+- `close_task intent=supersede`가 유효하지 않으면 supersession, 생명주기, 로컬 접근, 상태 버전 충돌, 복구 차단 사유를 사용합니다. 증거 충분성, 최종 수락, 잔여 위험 수락을 요구하면 안 됩니다. 유효한 supersede가 생명주기와 `project_state.active_task_id`를 함께 바꾸는 경우에도 하나의 프로젝트 전체 상태 변경입니다.
 
 <a id="harnessclose_task-close-blockers"></a>
 
@@ -190,7 +198,7 @@ Run 실패, violation, Projection 실패, 아티팩트 무결성 실패, validat
 | API 조건 | 사용자 표시 라벨 | 차단 해소에 필요한 최소 조치 |
 |---|---|---|
 | `VALIDATION_FAILED` | 잘못된 요청 | 다시 시도하기 전에 요청 본문, enum 값, 활성화 규칙, 필드 집합을 고칩니다. |
-| `STATE_CONFLICT` | 상태 충돌 | 현재 상태를 새로 고치고 현재 상태 버전으로 다시 시도하거나 원래 멱등 요청을 재실행합니다. |
+| `STATE_VERSION_CONFLICT` | 상태 버전 충돌 | 현재 상태를 새로 고치고 현재 상태 버전으로 다시 시도하거나 원래 멱등 요청을 재실행합니다. |
 | `MCP_UNAVAILABLE` | Core 또는 접점 사용 불가 | 상태 변경, gate 업데이트, 쓰기 호환성, 아티팩트 본문 접근, 닫기를 주장하기 전에 MCP/Core와 접점 도달 가능성을 다시 연결하거나 진단합니다. |
 | `LOCAL_ACCESS_MISMATCH` | 로컬 접근 불일치 | 하네스 상태에 의존하기 전에 등록된 로컬 transport/session/binding을 사용하거나 담당 경로로 로컬 접근 등록을 고칩니다. |
 | `CAPABILITY_INSUFFICIENT` | 지원되지 않거나 부족한 접점 | 역량이 있는 접점을 사용하거나, 동작을 줄이거나, 누락된 역량이 필요 없는 경로를 선택합니다. |

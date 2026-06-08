@@ -309,7 +309,7 @@ StagedArtifactHandle:
   expires_at: string
 ```
 
-Exactly one source field must match `source_kind`: `staged_artifact_handle` for `staged_artifact`, or `existing_artifact_ref` for `existing_artifact`. A staged handle must be scoped to the same `project_id` and `task_id`, carry `content_type`, `sha256`, `size_bytes`, `redaction_state`, and `expires_at`, and be unexpired and unconsumed when `harness.record_run` uses it. Expired, mismatched, already-consumed, or cross-task handles are rejected before mutation.
+Exactly one source field must match `source_kind`: `staged_artifact_handle` for `staged_artifact`, or `existing_artifact_ref` for `existing_artifact`. A missing source field, a source field that does not match `source_kind`, or both source fields present is a request-shape validation failure. A staged handle must be scoped to the same `project_id` and `task_id`, carry `content_type`, `sha256`, `size_bytes`, `redaction_state`, and `expires_at`, and be unexpired and unconsumed when `harness.record_run` uses it. Expired, mismatched, already-consumed, or cross-task handles are rejected before mutation and must remain distinguishable in public error details.
 
 `harness.stage_artifact` may create a temporary `StagedArtifactHandle`, but it is not a Core state transition by itself. It creates no evidence, satisfies no gate, updates no evidence summary, and cannot make `harness.close_task` pass. `harness.record_run` is the only active path that can consume a valid staged handle and promote it to a persistent `ArtifactRef`.
 

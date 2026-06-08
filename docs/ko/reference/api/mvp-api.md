@@ -67,7 +67,7 @@ non-dry-run 상태 변경을 뜻합니다. 버전 증가는 항상 프로젝트 
 
 `dry_run=true`는 기준 권한이 아닙니다. 진단, 후보 차단 사유, 변경 예상 결과를 반환할 수 있지만 현재 기록, `task_events` 행, 지속 `ArtifactRef`, Write Authorization, 증거 요약, 닫기 상태, `tool_invocations` 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
-`tool_invocations` 재실행 행은 커밋된 non-dry-run 상태 변경만 만듭니다. 같은 `idempotency_key`와 같은 요청 해시의 재실행은 기존 커밋 응답을 반환합니다. 같은 키를 다른 요청 해시와 함께 쓰면 `STATE_CONFLICT`를 반환합니다. `dry_run` 호출과 커밋 전 실패는 재실행 행을 만들거나 예약하지 않습니다.
+`tool_invocations` 재실행 행은 커밋된 non-dry-run 상태 변경만 만듭니다. 같은 `idempotency_key`와 같은 요청 해시의 재실행은 기존 커밋 응답을 반환합니다. 같은 키를 다른 요청 해시와 함께 쓰면 `STATE_VERSION_CONFLICT`를 반환합니다. `dry_run` 호출과 커밋 전 실패는 재실행 행을 만들거나 예약하지 않습니다.
 
 오류 코드, 기본 오류 우선순위, 멱등성, 오래된 상태 처리, 닫기 차단 사유 순서, 사용자 표시 오류 라벨은 [API Errors](errors.md)가 담당합니다. 공용 스키마와 활성 값 집합은 [API Schema Core](schema-core.md)가 담당합니다.
 
@@ -125,7 +125,7 @@ IntakeResponse:
 `IntakeResponse.state.mode`는 확정된 구체적 `mode`를 보여 줍니다. `auto`가 될 수 없습니다. 이후 상태 요약도 `harness.intake` 요청 값을 그대로 보여 주지 않고 확정된 `mode`를 노출해야 합니다. `IntakeResponse.state.shaping_readiness`는 현재 다음 안전한 행동에 대한 파생 준비 상태 보기를 보여줍니다.
 
 - **상태 효과:** 커밋된 non-dry-run 호출은 `tasks`를 만들거나 재개하고, `project_state.active_task_id`를 설정하며, 쓰기 가능한 확정된 `direct` 또는 `work`에 초기 범위 후보를 `change_units`에 만들고, 차단 사유를 업데이트하고, 이벤트와 커밋된 `tool_invocations` 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 요청이 아직 쓰기 가능한 상태가 아니라면 Task는 `lifecycle_phase=shaping`으로 남거나 그 상태가 되고, 현재 목표 요약, 알려진 범위와 범위 밖 항목, 영향 영역 또는 경로, 수락 기준, 자율성 경계, 첫 Change Unit 상태, 다음 안전한 행동을 막는 사용자 소유 blocker 범주가 있을 때 그 범주, 다음 안전한 행동 하나를 활성 Task, Change Unit, 사용자 판단, 증거, 차단 사유 필드로 표현합니다. 요청이 이미 쓰기 가능한 작업으로 충분히 구체적이면 `harness.intake`가 준비 경로에 필요한 초기 범위를 만들 수 있지만, 첫 제품 쓰기는 여전히 `harness.prepare_write`가 필요합니다. 활성 목표, 범위 경계, 범위 밖 항목, 수락 기준, 자율성 경계, baseline, 활성 Change Unit의 이후 변경은 `harness.update_scope`가 담당합니다. 메서드 이름은 지속 저장되는 생명주기 값이 아닙니다. 새로 만들거나 재개한 Task는 [API Schema Core](schema-core.md#current-mvp-value-sets)의 활성 `Task.lifecycle_phase` 값 집합을 사용해야 합니다. `dry_run`과 커밋 전 실패는 이를 만들지 않고 `state_version`도 올리지 않습니다.
-- **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
+- **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `project_state`, `tasks`, `change_units`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** `harness.intake`는 범위와 확정된 구체적 `mode`를 기록합니다. 로컬 접근, 민감 동작, 제품 쓰기, 더 강한 보장 수준을 승인하지 않습니다.
 
@@ -177,7 +177,7 @@ UpdateScopeResponse:
 
 - **상태 효과:** 커밋된 non-dry-run 호출은 활성 Task 구체화 필드, 활성 `change_units` 행 생성 또는 교체, `tasks.active_change_unit_id`, 관련 `scope_decision` 사용자 판단 참조 연결, 차단 사유, 이벤트, 커밋된 재실행 행을 업데이트하고 `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 이 갱신은 현재 목표 요약, 활성 범위 요약, 허용 경로 또는 영향 영역, 범위 밖 항목, 수락 기준, 자율성 경계, 필요한 사용자 소유 판단, 막히는 질문이 있다면 그 질문, 다음 안전한 행동, 증거 기대 또는 증거 공백, 닫기 차단 사유가 담당 상태에 표현됐을 때 모호한 요청을 쓰기 가능한 첫 Change Unit으로 바꾸는 활성 경로입니다. 프로젝트 전체 상태 버전이나 갱신된 Task, Change Unit, baseline, 범위 경계, 범위 밖 항목, 수락 기준, 자율성 경계가 활성 Write Authorization과 더 이상 맞지 않으면 Core는 해당 Write Authorization을 `status=stale`로 표시합니다. 소비하거나, 취소하거나, 만료시키거나, 조용히 재사용하지 않습니다. `dry_run`과 커밋 전 실패는 현재 기록, 범위 변경, `stale` 처리된 Write Authorization, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 - **준비 상태 규칙:** `harness.update_scope`는 `state.shaping_readiness`가 첫 안전한 Change Unit과 다음 안전한 행동을 정직하게 보여줄 수 있거나, 남은 `false` 준비 항목이 그 첫 안전한 Change Unit에 영향을 주지 않는다는 점을 보여줄 수 있을 때만 첫 활성 Change Unit을 만들거나 교체할 수 있습니다. 막고 있는 사용자 소유 문제가 남아 있다면 응답은 그 필요한 판단이 `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval` 중 무엇인지 식별해야 하며, 모호함이라는 넓은 말 뒤에 숨기면 안 됩니다.
-- **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
+- **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `tasks`, `change_units`, `write_authorizations`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** 범위 갱신은 하네스 기록만 바꿉니다. Write Authorization을 만들거나, OS 권한을 부여하거나, 민감 동작을 승인하거나, 증거를 기록하거나, 작업을 닫지 않습니다. 오래된 Write Authorization은 제품 쓰기를 기록하기 전에 `harness.prepare_write`로 새로 확인해야 합니다.
 
@@ -252,7 +252,7 @@ PrepareWriteRequest:
 ```yaml
 PrepareWriteResponse:
   base: ToolResponseBase
-  decision: allowed | blocked | approval_required | decision_required | state_conflict
+  decision: allowed | blocked | approval_required | decision_required | state_version_conflict
   state: StateSummary | null
   write_authorization_ref: StateRecordRef | null
   write_authorization: WriteAuthorizationSummary | null
@@ -264,7 +264,7 @@ PrepareWriteResponse:
 ```
 
 - **상태 효과:** 커밋된 non-dry-run `decision=allowed`는 활성 경로 수준 `AuthorizedAttemptScope`에 대해 `write_authorizations.status=active` 행 하나를 만들고, 이벤트를 추가하고, 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올립니다. 커밋된 `blocked`, `approval_required`, `decision_required` 응답은 차단 사유를 업데이트하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 소비 가능한 Write Authorization은 만들면 안 됩니다. `dry_run`과 커밋 전 실패는 현재 기록, Write Authorization, `blockers` 행, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
-- **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
+- **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `write_authorizations`, `blockers`, `project_state` 상태 시계, `task_events`, `tool_invocations`.
 - **보안 경계:** `decision=allowed`는 이 경로 수준 제품 파일 쓰기 시도가 하네스 기록과 호환된다는 뜻입니다. 운영체제가 호환되지 않는 쓰기를 막거나 임의 도구가 격리된다는 뜻이 아닙니다. 활성 `PrepareWriteRequest`는 위에 적은 제품 쓰기 경로 수준 필드만 포함하며 명령, 의존성, 호스트, 네트워크, 비밀값, 배포, 파괴적 동작, 시스템 접근의 승인 범위를 인코딩하지 않습니다. 그런 승인은 `judgment_kind=sensitive_approval`을 통해 `SensitiveActionScope`로 별도 기록됩니다. 현재 MVP 요청이 명령, 네트워크, 비밀값 접근, 아티팩트 캡처, 도구 실행 전 차단, 격리, 검증되지 않은 변경 경로 탐지 보장을 요구하면 활성 접점에 역량이 없거나 `changed_path_detection_verification=failed` 또는 `stale`일 때 `CAPABILITY_INSUFFICIENT`를 반환하고, 요청 형태나 요구한 보장이 활성 프로필에 유효하지 않으면 `VALIDATION_FAILED`를 반환해야 합니다. `changed_path_detection_verification=not_run` 또는 예전 `planned_not_run` 문구는 `detective`를 정당화하지 못하므로, 더 강한 보장을 요구하지 않는 요청은 `cooperative` 표시를 사용해야 합니다.
 
@@ -314,7 +314,7 @@ StageArtifactResponse:
 - **담당:** Run 기록, 호환되는 Write Authorization 소비, 아티팩트 등록, 간결한 증거 요약 업데이트, Run 관련 차단 사유.
 - **담당하지 않음:** 새 범위, 사용자 판단 해결, 최종 수락, 잔여 위험 수락, 별도 보증 기록, 닫기.
 - **호출 시점:** 구체화 작업, 직접 답변/결과, 구현 작업이 끝난 뒤. 제품 쓰기 Run은 `harness.prepare_write`가 반환한 호환되는 활성 Write Authorization을 제공해야 합니다.
-- **아티팩트 입력:** 새 아티팩트 바이트는 `harness.stage_artifact`가 만든 유효한 `StagedArtifactHandle`을 통해서만 들어옵니다. 기존 바이트는 호환되는 `existing_artifact_ref`를 통해서만 재사용할 수 있습니다. 만료된 핸들, 범위가 맞지 않는 핸들, 이미 소비된 핸들, 다른 Task의 핸들은 변경 전에 거부됩니다.
+- **아티팩트 입력:** 새 아티팩트 바이트는 `harness.stage_artifact`가 만든 유효한 `StagedArtifactHandle`을 통해서만 들어옵니다. 기존 바이트는 호환되는 `existing_artifact_ref`를 통해서만 재사용할 수 있습니다. `source_kind`와 출처 필드 형태가 맞지 않으면 `VALIDATION_FAILED`로 거부합니다. 없거나, 만료되었거나, 이미 소비되었거나, 범위가 맞지 않거나, 다른 프로젝트/Task에 속하거나, 무결성 기대와 호환되지 않는 스테이징 핸들은 변경 전에 `ARTIFACT_MISSING`과 구체적인 `ToolError.details.staging_handle_reason`으로 거부합니다.
 - **증거 업데이트:** 각 `EvidenceCoverageItem`은 `claim`, `required_for_close`, `coverage_state`, 뒷받침 참조 또는 공백 참조를 이름 붙여야 합니다. 필수 닫기 증거 항목은 Task 또는 Change Unit의 `CompletionPolicy`에서 정합니다. `record_run`은 간결한 증거 항목을 갱신할 수 있지만 Task를 닫거나 최종 수락 또는 잔여 위험 수락을 만들지 않습니다.
 - **요청:**
 
@@ -346,7 +346,7 @@ RecordRunResponse:
 ```
 
 - **상태 효과:** 호환되는 커밋 호출은 `runs`를 만들고, 유효한 스테이징 핸들을 지속 `artifacts`로 승격하고, `artifact_links`를 추가하고, `evidence_summaries`를 만들고, Run 관련 차단 사유를 업데이트하고, `write_authorizations.status=active`를 소비하고, 이벤트와 커밋된 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 제품 쓰기 Run은 현재 `project_state.state_version`이 Write Authorization의 프로젝트 전체 `basis_state_version`과 맞고, 관찰된 변경 경로가 저장된 승인 시도와 호환될 때만 활성 Write Authorization을 소비합니다. 거부된 호출과 커밋 전 실패는 Run 생성, 아티팩트 등록, 스테이징 핸들 소비, 증거 업데이트, 유효하지 않은 Write Authorization 소비, 이벤트 추가, 재실행 행 생성, `state_version` 증가를 하면 안 됩니다.
-- **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`.
+- **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `runs`, `write_authorizations`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** Run은 접점이 관찰한 사실을 기록할 수 있습니다. 기준 `reference-local-mcp` 프로필에서 제품 쓰기 호환성은 `changed_path_detection_verification=passed` 뒤 관찰된 변경 경로에 대해서만 탐지형이며, 그 검증된 변경 경로 범위 안으로 제한됩니다. `not_run`, 예전 `planned_not_run` 문구, `failed`, `stale`은 `detective` Run 표시의 근거가 될 수 없습니다. 실패했거나 오래된 필수 확인은 `CAPABILITY_INSUFFICIENT`를 반환해야 하고, 더 강한 주장을 요구하지 않는 메서드 경로는 `cooperative`로 낮춰야 합니다. 활성 접점이 관찰할 수 없는 명령 실행, 네트워크 활동, 비밀값 접근, 아티팩트 캡처, 차단, 격리 사실을 API가 검증됨으로 표시하면 안 됩니다.
 
@@ -386,7 +386,7 @@ RequestUserJudgmentResponse:
 ```
 
 - **상태 효과:** 커밋된 non-dry-run 호출은 대기 중인 `user_judgments` 행 하나를 만들고, 영향을 받는 차단 사유를 연결하거나 업데이트할 수 있으며, 이벤트와 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올립니다. 다른 메서드가 반환한 후보는 이 메서드가 커밋되기 전까지 대기 중인 판단이 아닙니다. `dry_run`과 커밋 전 실패는 대기 중인 판단, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
-- **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `VALIDATOR_FAILED`.
+- **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `user_judgments`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** 이 요청은 질문을 표시합니다. `harness.record_user_judgment`가 맞는 답변을 기록하기 전에는 권한을 부여하거나 관문을 만족하지 않습니다. `scope_decision` 답변도 활성 범위나 활성 Change Unit을 바꾸려면 `harness.update_scope`가 필요합니다.
 
@@ -425,7 +425,7 @@ RecordUserJudgmentResponse:
 ```
 
 - **상태 효과:** 커밋된 non-dry-run 호출은 `user_judgments.status`를 업데이트하고, 요청 수준의 `selected_option_id`, 요청 메모, 답변 세부정보를 기록하고, 관련 차단 사유와 판단에 의존하는 요약만 업데이트하며, 이벤트와 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올립니다. 활성 Task 범위 필드나 활성 Change Unit은 직접 바꾸지 않습니다. 해결된 `scope_decision` 때문에 범위를 바꿔야 하면 응답의 다음 행동은 `harness.update_scope`를 가리킵니다. 활성 MVP에서는 독립적인 위험 수락 행을 만들지 않습니다. `dry_run`과 커밋 전 실패는 판단 해결, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
-- **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
+- **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `user_judgments`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** "go ahead"나 "looks good" 같은 넓은 말은 대기 중인 활성 판단이 그 종류를 명시적으로 묻고 기록된 답변이 맞을 때만 제품 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소, 범위 확장으로 작동합니다. `judgment_kind=sensitive_approval`에서는 답변이 `AuthorizedAttemptScope`가 아니라 `RecordUserJudgmentPayload.sensitive_action_scope`를 기록합니다. 의도한 명령, 의존성 변경, 네트워크 접근, 비밀값 접근, 배포, 파괴적 동작, 시스템 접근, 제품 파일 쓰기를 승인해도, 활성 접점이 그 정확한 동작에 대해 검증된 역량을 갖지 않는 한 하네스가 이를 관찰, 차단, 강제, 샌드박스 처리, 격리했다는 뜻이 아닙니다. 이후 후보에만 있는 판단 값은 현재 MVP의 활성 판단 종류가 아닙니다.
 
@@ -472,6 +472,25 @@ CloseTaskResponse:
 | `cancel` | 종료 취소이며 성공 완료가 아닙니다. 유효한 Task 식별자, 유효한 생명주기, 호환되는 로컬 접근, 전이를 막는 복구 제약이 없음을 요구합니다. 증거 충분성, 최종 수락, 잔여 위험 수락은 요구하지 않습니다. `close_reason`이 `null`이 아니면 `cancelled`여야 하며, 커밋된 행은 `close_reason=cancelled`, `result=cancelled`를 저장합니다. |
 | `supersede` | 종료 대체이며 성공 완료가 아닙니다. cancellation과 같은 식별자, 생명주기, 로컬 접근, 복구 확인을 요구하고, 활성 포인터를 옮길 때는 같은 프로젝트의 유효한 열린 `superseding_task_id`도 필요합니다. 증거 충분성, 최종 수락, 잔여 위험 수락은 요구하지 않습니다. `close_reason`이 `null`이 아니면 `superseded`여야 하며, 커밋된 행은 `close_reason=superseded`, `result=superseded`를 저장합니다. |
 
+`intent=complete`에서는 API 응답이 Core의 순서 있는 차단 사유 행렬을 `CloseTaskResponse.blockers`로 반영합니다. 처음 실패한 행이 기본 닫기 차단 근거가 됩니다. 뒤 행의 차단 사유도 보조 차단 사유로 함께 보일 수 있지만, 뒤 행이 앞 행을 만족시키거나 숨길 수는 없습니다.
+
+| 순서 | `CloseBlocker.category` | 일반적인 공개 오류 경로 |
+|---:|---|---|
+| 1 | `task` | Task 식별자 오류, 프로젝트 불일치, 종료된 생명주기, 불가능한 complete 전이에는 `NO_ACTIVE_TASK` 또는 `VALIDATION_FAILED`를 사용합니다. |
+| 2 | `open_run` | 열린 Run, interrupted/violation Run, 호환되지 않거나 복구되지 않은 Run이 닫기 근거를 막고 더 구체적인 타입 코드가 없으면 `VALIDATOR_FAILED`를 사용합니다. |
+| 3 | `scope` | 활성 범위, Change Unit, 수락 기준, `CompletionPolicy`가 없거나 오래됐거나 호환되지 않으면 `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `BASELINE_STALE`를 사용합니다. |
+| 4 | `user_judgment` | 필요한 비민감 사용자 소유 판단이 해결되지 않았으면 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 사용합니다. |
+| 5 | `sensitive_approval` | 필요한 `sensitive_approval`이 없거나, 거부되었거나, 만료되었거나, 오래됐거나, 호환되지 않으면 `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`를 사용합니다. |
+| 6 | `write_compatibility` | 필요한 Write Authorization, 제품 쓰기 Run, 경로, baseline, 관찰된 쓰기가 없거나 호환되지 않으면 `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `BASELINE_STALE`를 사용합니다. |
+| 7 | `baseline` 또는 `surface_capability` | baseline이나 확인된 로컬 접점이 닫기 주장이나 필요한 보장 표시를 정직하게 뒷받침할 수 없으면 `BASELINE_STALE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`를 사용합니다. |
+| 8 | `evidence` | 활성 `CompletionPolicy` 기준으로 필수 증거가 없거나, 부분적이거나, 오래됐거나, 막혔거나, 충분하지 않으면 `EVIDENCE_INSUFFICIENT`를 사용합니다. |
+| 9 | `artifact_availability` | 닫기 관련 `ArtifactRef`가 없거나, 사용할 수 없거나, 무결성에 실패했거나, 허용된 안전 알림을 넘어서 차단되었거나, 쓸 수 없으면 `ARTIFACT_MISSING`을 사용합니다. |
+| 10 | `final_acceptance` | 필요한 `final_acceptance`가 없거나, 거절되었거나, 오래됐거나, 보이는 닫기 근거와 연결되지 않았으면 `ACCEPTANCE_REQUIRED`를 사용합니다. |
+| 11 | `residual_risk_visibility` | 닫기에 영향을 주는 알려진 잔여 위험이 사용자가 판단할 만큼 보이지 않으면 `RESIDUAL_RISK_NOT_VISIBLE`를 사용합니다. |
+| 12 | `residual_risk_acceptance` | 보이는 닫기 관련 잔여 위험에 아직 호환되는 `residual_risk_acceptance`가 필요하면 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 사용합니다. |
+| 13 | `recovery` | 재실행, 복구, 손상, 로컬 접근, 해결되지 않은 차단 상태, 그 밖의 수리 제약을 먼저 처리해야 하면 `STATE_VERSION_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`를 사용합니다. |
+| 14 | 없음 | 차단 사유가 없으면 complete 전이를 커밋합니다. 하나라도 남아 있으면 `close_state=blocked`를 반환하고 Task를 열린 상태로 둡니다. |
+
 `intent=complete`에서 Core는 닫기 근거로 `close_reason`을 파생합니다. `completed_self_checked`는 필수 증거가 충분하고, 필요한 `final_acceptance`가 해결되었고, 닫기에 영향을 주는 `residual_risk_acceptance`가 필요하지 않다는 뜻입니다. `completed_with_risk_accepted`는 필수 증거가 충분하고, 필요한 `final_acceptance`가 해결되었고, 닫기에 영향을 주는 보이는 잔여 위험에 대해 호환되는 `residual_risk_acceptance`가 있다는 뜻입니다. 요청에 들어온 `close_reason`은 파생 결과와 맞아야 합니다. 맞지 않는 조합은 완료, 취소, 대체를 섞지 말고 검증 실패로 처리합니다.
 
 `close_task`의 증거 충분성은 `EvidenceSummary.completion_policy`와 `EvidenceSummary.coverage_items`에서 파생됩니다. `completion_policy.evidence_required=true`이면 `required_for_close=true`인 모든 `EvidenceCoverageItem`의 `coverage_state`가 `supported` 또는 `not_applicable`일 때만 `EvidenceSummary.status=sufficient`를 유효하게 볼 수 있습니다. 필수 항목 중 하나라도 `unsupported`, `partial`, `stale`, `blocked`이거나 필수 항목이 `coverage_items` 집합에서 빠져 있으면 `close_task`는 `close_state=blocked`와 증거 닫기 차단 사유를 반환해야 하며, 주 오류로 `EVIDENCE_INSUFFICIENT`를 사용할 수 있습니다. 아티팩트 가용성은 별도입니다. 닫기 관련 아티팩트가 없거나, 사용할 수 없거나, 무결성에 실패했거나, 닫기 근거로 쓸 수 없으면 증거 기록의 형태가 맞더라도 `ARTIFACT_MISSING` 또는 `artifact_availability` 닫기 차단 사유가 생길 수 있습니다.
@@ -480,6 +499,6 @@ CloseTaskResponse:
 
 - **활성 Task 포인터:** 커밋된 `intent=supersede`에서 이전 Task가 `project_state.active_task_id`라면, `superseding_task_id`가 같은 프로젝트의 유효한 열린 Task를 가리킬 때만 그 값을 `project_state.active_task_id`로 삼아야 합니다. 그렇지 않으면 활성 포인터를 비워야 합니다. superseded된 이전 Task를 active로 남기면 안 됩니다. 이 호출이 Task 생명주기와 `project_state.active_task_id`를 함께 바꾸더라도 하나의 상태 변경이며 프로젝트 전체 버전 증가는 한 번만 일어납니다.
 - **상태 효과:** `intent=check`는 읽기 전용입니다. 커밋된 non-dry-run 최종 닫기는 `tasks.lifecycle_phase`, `tasks.close_reason`, `tasks.result`, `tasks.closed_at`, 영향을 받는 `change_units`, 차단 사유, 필요한 경우 프로젝트 활성 Task 상태, 이벤트, 재실행, `project_state.state_version`을 정확히 한 번 업데이트합니다. 커밋된 차단된 닫기 시도는 차단 사유를 기록하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 Task는 열린 상태로 둬야 합니다. `dry_run`과 커밋 전 실패는 닫기 상태, `blockers` 행, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
-- **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
+- **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `tasks`, `change_units`, `blockers`, `runs`, `evidence_summaries`, `artifacts`, `artifact_links`, `user_judgments`, `task_events`, `tool_invocations`.
 - **보안 경계:** Close는 Core 상태 전이이며 보고서가 아닙니다. 대화, 상태 텍스트, 최종 수락만 있는 상태, 잔여 위험 수락만 있는 상태, 증거만 있는 상태, 렌더링된 보기에서 추론하면 안 됩니다.

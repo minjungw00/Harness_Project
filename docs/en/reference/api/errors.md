@@ -26,7 +26,7 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | `core_or_surface_unavailable` | `MCP_UNAVAILABLE` | Do not invent Harness state. Hold Harness-dependent writes, artifact body reads, and close until Core and the required surface path are reachable, or until the user explicitly chooses to proceed outside Harness. This corresponds to `VerifiedSurfaceContext.failure_reason=unavailable`. |
 | `local_access_mismatch` | `LOCAL_ACCESS_MISMATCH` | Do not guess local file or command facts and do not trust a copied `surface_id`. Use the registered local transport/session/binding, repair local access registration through the owner path, or label input unverified. This corresponds to `failure_reason=mismatch` or `revoked`. |
 | `missing_capability` | `CAPABILITY_INSUFFICIENT` | Use a capable surface, reduce the operation, or choose a path that does not require the missing observation, capture, local access class, blocking/isolation claim, or active behavior. Baseline `reference-local-mcp` requests that require command, network, secret-access, native artifact-capture, pre-tool-blocking, or isolation guarantees belong here unless the payload shape is invalid. This corresponds to `failure_reason=insufficient_capability`. |
-| `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, stale `WRITE_AUTHORIZATION_INVALID` | Refresh current state, baseline, readable view, scope-update result, or pre-write check before relying on it. |
+| `stale_state` | `STATE_VERSION_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, stale `WRITE_AUTHORIZATION_INVALID` | Refresh current state, baseline, readable view, scope-update result, or pre-write check before relying on it. |
 | `unsupported_surface` | `CAPABILITY_INSUFFICIENT` or `VALIDATION_FAILED` | Reduce the request, move to a capable surface, or return a blocker. Do not emulate unsupported authority with prose. |
 | `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | Hold the affected action, show the mismatch, narrow to current scope, request the specific user-owned scope judgment, or apply the resolved scope change through `harness.update_scope`. |
 | `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | Ask or resolve the focused active `UserJudgment`. Do not collapse product, technical, scope, sensitive approval, final acceptance, residual-risk acceptance, cancellation, or later/reserved QA waiver and verification-risk routes into one broad approval. |
@@ -41,7 +41,7 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | Code | Meaning |
 |---|---|
 | `VALIDATION_FAILED` | Payload shape, enum value, activation rule, or profile-specific validation failed before mutation. |
-| `STATE_CONFLICT` | `expected_state_version` is stale against `project_state.state_version`, state lock ownership changed, or the same idempotency key was reused with a different canonical request. |
+| `STATE_VERSION_CONFLICT` | `expected_state_version` is stale against `project_state.state_version`, state lock ownership changed, or the same idempotency key was reused with a different canonical request. |
 | `NO_ACTIVE_TASK` | A Task is required but none is active or addressed. |
 | `NO_ACTIVE_CHANGE_UNIT` | A write-capable or close-relevant operation has no active scoped Change Unit. |
 | `SCOPE_REQUIRED` | Scope confirmation is required before the requested write or action can proceed. |
@@ -61,7 +61,7 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | `ACCEPTANCE_REQUIRED` | Required final acceptance is pending, rejected, or not compatible with the visible result basis. |
 | `PROJECTION_STALE` | A requested readable status/view is stale or failed. It is not Core state and is not a close blocker by itself. |
 | `RESIDUAL_RISK_NOT_VISIBLE` | Known close-relevant residual risk has not been made visible before final acceptance or close. |
-| `ARTIFACT_MISSING` | A referenced artifact is missing, unavailable, unusable for the close basis, or failed integrity/metadata checks. |
+| `ARTIFACT_MISSING` | A referenced artifact or staged artifact handle is missing, expired, consumed, mismatched, unavailable, unusable for the close basis, or failed integrity/metadata checks. |
 | `BASELINE_STALE` | Baseline no longer matches the repository state required by the operation. |
 | `VALIDATOR_FAILED` | Fallback when a required active validator or blocker check failed and no more specific typed code applies. In the current MVP, this is not a design-policy error. Design-quality concerns must route through an active judgment, blocker, evidence, capability, or residual-risk path, or remain advisory. |
 
@@ -72,6 +72,14 @@ missing | expired | stale | revoked | consumed | incompatible
 ```
 
 Use `WRITE_AUTHORIZATION_REQUIRED` with `authorization_reason=missing` when no required authorization is supplied. Use `WRITE_AUTHORIZATION_INVALID` for an existing authorization that cannot be consumed.
+
+`ToolError.details.staging_handle_reason` uses exactly:
+
+```text
+missing | expired | consumed | mismatch | incompatible
+```
+
+Use `VALIDATION_FAILED` when `ArtifactInput.source_kind` and its source fields do not match the schema shape. Use `ARTIFACT_MISSING` with `staging_handle_reason` when a syntactically valid staged handle is missing, expired, already consumed, scoped to the wrong project or Task, or incompatible with the expected hash, size, content type, or artifact relation. A staged-handle error is not evidence insufficiency by itself, and it must not be reported as `LOCAL_ACCESS_MISMATCH` unless the registered local surface verification also failed.
 
 Use the local-access codes narrowly and keep them distinguishable. `MCP_UNAVAILABLE` is for unavailable MCP/Core or surface reachability itself, including `VerifiedSurfaceContext.failure_reason=unavailable`. `LOCAL_ACCESS_MISMATCH` is for a reachable local transport/session/binding that does not match the registered project surface, or for revoked local access, including `failure_reason=mismatch` or `revoked`. `CAPABILITY_INSUFFICIENT` is for a recognized active surface that lacks the capability needed by the requested access class or guarantee claim, including `failure_reason=insufficient_capability`. `surface_id` alone never resolves any of these errors. Do not substitute a surface-specific `UNAUTHORIZED` code for these public paths.
 
@@ -84,7 +92,7 @@ When `ToolResponseBase.errors` is non-empty, `errors[0]` is the primary error se
 | Precedence | Primary `ErrorCode` |
 |---:|---|
 | 1 | `VALIDATION_FAILED` |
-| 2 | `STATE_CONFLICT` |
+| 2 | `STATE_VERSION_CONFLICT` |
 | 3 | `MCP_UNAVAILABLE` |
 | 4 | `LOCAL_ACCESS_MISMATCH` |
 | 5 | `NO_ACTIVE_TASK` |
@@ -126,19 +134,19 @@ Every committed state-changing method requires `idempotency_key`. Read-only call
 
 `request_hash` is computed from canonical JSON over the tool name, schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`.
 
-If a committed replay row exists with the same key and same request hash, Core returns the original committed response without re-running freshness checks, appending events, registering artifacts, consuming authorization, updating blockers, or changing the replay row. If the same key is reused with a different request hash, Core returns `STATE_CONFLICT` and preserves the original replay row.
+If a committed replay row exists with the same key and same request hash, Core returns the original committed response without re-running freshness checks, appending events, registering artifacts, consuming authorization, updating blockers, or changing the replay row. If the same key is reused with a different request hash, Core returns `STATE_VERSION_CONFLICT` and preserves the original replay row.
 
 Dry-run calls and pre-commit failures do not create or reserve replay rows.
 
 <a id="state-conflict-behavior"></a>
 
-## State Conflict Behavior
+## State Version Conflict Behavior
 
 For a new state-changing attempt with no committed replay row, Core may resolve the primary Task before freshness checking so it can select owner records. Resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task. That resolution does not select a separate state clock.
 
-Every fresh non-dry-run state mutation compares `ToolEnvelope.expected_state_version` with the current project-wide `project_state.state_version`. Mismatch returns `STATE_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, replay rows, or state-version increments. `tasks.state_version` is not an active conflict or concurrency basis.
+Every fresh non-dry-run state mutation compares `ToolEnvelope.expected_state_version` with the current project-wide `project_state.state_version`. Mismatch returns `STATE_VERSION_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, replay rows, or state-version increments. `tasks.state_version` is not an active conflict or concurrency basis.
 
-`STATE_CONFLICT.details` should include:
+`STATE_VERSION_CONFLICT.details` should include:
 
 ```yaml
 state_clock: project_state.state_version
@@ -157,15 +165,15 @@ task_id: string | null
 The first internal documentation smoke target in [MVP Plan](../../build/mvp-plan.md#first-internal-smoke-target) must use only active public errors and active `CloseBlocker.category` values. It does not define smoke-only codes, a complete conformance suite, or an implementation plan.
 
 - Registered surface verification succeeds without an error only when Core derives a compatible `VerifiedSurfaceContext` for the registered surface. Failure uses `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, or `CAPABILITY_INSUFFICIENT`; a copied `surface_id` is not proof of access or capability.
-- Project-wide state conflict uses `STATE_CONFLICT` when `ToolEnvelope.expected_state_version` is stale against `project_state.state_version`. The failed attempt must not create records, events, artifacts, evidence, Write Authorization, close state, replay rows, or a state-version increment.
+- Project-wide state conflict uses `STATE_VERSION_CONFLICT` when `ToolEnvelope.expected_state_version` is stale against `project_state.state_version`. The failed attempt must not create records, events, artifacts, evidence, Write Authorization, close state, replay rows, or a state-version increment.
 - A shaping readiness gap may surface `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, or a structured blocker, depending on the owner path. Read-only status or readiness reads do not mutate state.
 - `prepare_write decision=allowed` creates the owner-scoped single-use Write Authorization. `decision=blocked` uses the applicable scope, baseline, capability, validation, or decision code. `decision=approval_required` uses the `APPROVAL_*` path and must not create a consumable Write Authorization.
 - `SensitiveActionScope` belongs to `judgment_kind=sensitive_approval`. Sensitive approval errors use `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED`; that approval does not replace Write Authorization, final acceptance, residual-risk acceptance, evidence, or artifact authority.
-- `harness.stage_artifact` success creates only a temporary handle and no Core mutation. `harness.record_run` is the active path that can promote a valid staged handle to persistent `ArtifactRef`; invalid or unavailable artifact conditions use the owner validation/artifact path and must not be hidden as evidence sufficiency.
+- `harness.stage_artifact` success creates only a temporary handle and no Core mutation. `harness.record_run` is the active path that can promote a valid staged handle to persistent `ArtifactRef`; invalid source-field shape uses `VALIDATION_FAILED`, while missing, expired, consumed, mismatched, unavailable, or incompatible staged handles use `ARTIFACT_MISSING` with `staging_handle_reason` and must not be hidden as evidence sufficiency.
 - `harness.record_run` consumes a compatible Write Authorization exactly once. Missing authorization uses `WRITE_AUTHORIZATION_REQUIRED`; stale, expired, revoked, consumed, or incompatible authorization uses `WRITE_AUTHORIZATION_INVALID`; observed-outside-authorized-scope attempts use the applicable scope or authorization code.
 - `close_task intent=check` is read-only even when it returns blockers. `close_task intent=complete` returns `CloseTaskResponse.close_state=blocked` with structured blockers or `close_state=closed` only when no owner-defined complete blocker remains.
 - Close smoke coverage must include `EVIDENCE_INSUFFICIENT` for evidence blockers, `ARTIFACT_MISSING` for artifact unavailable or missing blockers, `ACCEPTANCE_REQUIRED` for final acceptance blockers, and `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `category=residual_risk_acceptance` for visible but unaccepted residual risk. `RESIDUAL_RISK_NOT_VISIBLE` is reserved for risk that has not been shown.
-- `close_task intent=supersede` uses supersession, lifecycle, local-access, state-conflict, or recovery blockers when invalid. It must not require evidence sufficiency, final acceptance, or residual-risk acceptance, and a valid supersede that updates lifecycle plus `project_state.active_task_id` is one project-wide state mutation.
+- `close_task intent=supersede` uses supersession, lifecycle, local-access, state-version conflict, or recovery blockers when invalid. It must not require evidence sufficiency, final acceptance, or residual-risk acceptance, and a valid supersede that updates lifecycle plus `project_state.active_task_id` is one project-wide state mutation.
 
 <a id="harnessclose_task-close-blockers"></a>
 
@@ -190,7 +198,7 @@ These labels are display guidance, not new public error codes.
 | API condition | User-facing label | Smallest unblocker |
 |---|---|---|
 | `VALIDATION_FAILED` | invalid request | Fix the payload, enum value, activation rule, or field set before retrying. |
-| `STATE_CONFLICT` | state conflict | Refresh current status and retry with the current state version, or replay the original idempotent request. |
+| `STATE_VERSION_CONFLICT` | state version conflict | Refresh current status and retry with the current state version, or replay the original idempotent request. |
 | `MCP_UNAVAILABLE` | Core or surface unavailable | Reconnect or diagnose MCP/Core and surface reachability before claiming state changes, gate updates, write compatibility, artifact body access, or close. |
 | `LOCAL_ACCESS_MISMATCH` | local access mismatch | Use the registered local transport/session/binding or repair local access registration through the owner path before relying on Harness state. |
 | `CAPABILITY_INSUFFICIENT` | unsupported or insufficient surface | Use a capable surface, reduce the operation, or choose a path that does not require the missing capability. |
