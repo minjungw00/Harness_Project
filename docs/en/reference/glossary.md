@@ -20,7 +20,7 @@ Use these terms first in user-facing docs, prompts, and status summaries. Add ex
 | product judgment | A user-owned choice about product behavior, copy, flow, UX, or user value. | [Core Model](core-model.md) |
 | technical judgment | A user-owned choice about architecture, dependency, migration, interface, security/privacy, or material technical direction. | [Core Model](core-model.md) |
 | scope judgment | A user-owned choice about scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change. | [Core Model](core-model.md) |
-| sensitive-action approval | User permission for one named sensitive step inside a bounded scope. It is not final acceptance or broad approval. | [Core Model](core-model.md) |
+| sensitive-action approval | User permission for one named sensitive step inside a bounded `SensitiveActionScope`. It is not path-level Write Authorization, final acceptance, residual-risk acceptance, or broad approval. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
 | evidence | Durable support for a claim about the work, such as changed paths, diffs, logs, screenshots, inspection notes, or artifact refs. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
 | verification | Recorded correctness checking when an owner path requires it. It does not replace evidence, QA, final acceptance, or residual-risk acceptance. | [Core Model](core-model.md) |
 | Manual QA | Human quality review when the surface requires judgment that automated checks or evidence cannot provide. | [Core Model](core-model.md), [Later](../later/index.md) |
@@ -52,7 +52,7 @@ These terms orient readers to Core authority. Exact lifecycle, gate, close, waiv
 | `user_judgment` | Canonical record family for user-owned choices. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
 | `Gate` | Core compatibility dimension for progress, write, run recording, or close. Requiredness depends on the active owner path. | [Core Model](core-model.md) |
 | `Blocker` | Structured reason progress, write, close, or another requested step cannot proceed honestly. | [Core Model](core-model.md) |
-| `Write Authorization` | Single-use cooperative Core record created only by compatible non-dry-run `prepare_write`. It is not OS permission or isolation. | [Core Model](core-model.md) |
+| `Write Authorization` | Single-use cooperative Core record created only by compatible non-dry-run `prepare_write` for a product-file write attempt. It is not sensitive-action approval, OS permission, or isolation. | [Core Model](core-model.md) |
 | `Run` | Committed execution or observation record. Product-write Runs must consume compatible active `Write Authorization`. | [Core Model](core-model.md) |
 | `update_scope` | Core path for updating active Task scope and the active Change Unit after intake. Public API method: `harness.update_scope`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
 | `prepare_write` | Core pre-write compatibility decision point for product-file writes. Public API method: `harness.prepare_write`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
@@ -70,7 +70,8 @@ Keep these identifiers exact in schemas, API docs, records, examples, file paths
 | `StateSummary` / `StateRecordRef` / `NextActionSummary` / `GuaranteeDisplay` | Current-state, owner-ref, next-action, and guarantee-display shapes. | [API Schema Core](api/schema-core.md) |
 | `ArtifactRef` / `ArtifactInput` | Public artifact pointer and accepted `record_run` artifact input shapes. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
 | `EvidenceSummary` / `EvidenceCoverageItem` | Compact evidence status and per-claim coverage shapes. | [API Schema Core](api/schema-core.md) |
-| `AuthorizedAttemptScope` | Stored scope of one allowed write attempt. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
+| `AuthorizedAttemptScope` | Stored path-level scope of one allowed product-file write attempt. It is not the approval scope for commands, dependencies, hosts, network access, secrets, deployments, destructive actions, or system access. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
+| `SensitiveActionScope` | Stored scope for `judgment_kind=sensitive_approval`, including the named sensitive action and honest capability claim. It is separate from `AuthorizedAttemptScope`. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
 | `WriteAuthorizationSummary` / `WriteAuthoritySummary` | Public summaries for one `Write Authorization` and the current write-authority position. | [API Schema Core](api/schema-core.md) |
 | `RunSummary` / `ObservedChanges` | Public run result and observed-change summary shapes. | [API Schema Core](api/schema-core.md) |
 | `UserJudgment` / `UserJudgmentCandidate` / `UserJudgmentResolution` / `RecordUserJudgmentPayload` / `AcceptedRiskInput` | Judgment request, candidate, stored resolution, answer detail, and residual-risk acceptance input shapes. | [API Schema Core](api/schema-core.md) |

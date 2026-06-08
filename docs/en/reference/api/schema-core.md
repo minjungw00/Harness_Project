@@ -279,6 +279,20 @@ AuthorizedAttemptScope:
   related_user_judgment_refs: StateRecordRef[]
   guarantee_level: cooperative | detective
 
+SensitiveActionScope:
+  sensitive_action_id: string
+  action_kind: product_file_write | dependency_change | destructive_command | network_access | secret_access | deployment | system_access | other
+  named_action: string
+  command_or_tool: string | null
+  intended_paths: string[]
+  hosts: string[]
+  dependencies: string[]
+  secret_handles: string[]
+  time_window: string | null
+  scope_limit: string
+  not_authorized: string[]
+  capability_claim: cooperative_only | observed_by_surface | not_observable
+
 WriteAuthorizationSummary:
   write_authorization_id: string
   attempt_scope: AuthorizedAttemptScope
@@ -299,7 +313,11 @@ WriteAuthoritySummary:
 
 `AuthorizedAttemptScope` is the exact scope stored in `write_authorizations.attempt_scope_json` and later compared by `harness.record_run`. `AuthorizedAttemptScope.basis_state_version` is the project-wide `project_state.state_version` used when `prepare_write` prepared the authorization. `WriteAuthorizationSummary.status` is the durable authorization lifecycle. `blocked` is not a Write Authorization status; blocked writes return blockers without a consumable authorization.
 
-The current MVP `AuthorizedAttemptScope` is path-level for product writes. It records the intended product-file paths, active sensitive categories, baseline, related user judgments, and the honest guarantee level. Command execution, network effects, secret access, tool observation, native artifact capture, pre-tool blocking, and isolation are not active baseline authorization fields. Requests that require those unobservable guarantees must be rejected or blocked as validation or capability failures rather than represented as verified scope.
+The current MVP `AuthorizedAttemptScope` is only for product-file write attempts. It records the intended product paths, Change Unit, project-wide basis state version, baseline, related user judgment refs, product-write sensitive categories, and honest guarantee level for the path-level write compatibility check. Command execution, dependency installation, network effects, secret access, deployment, destructive action, system access, tool observation, native artifact capture, pre-tool blocking, and isolation are not `AuthorizedAttemptScope` fields. Requests that require those unobservable guarantees must be rejected or blocked as validation or capability failures rather than represented as verified write scope.
+
+`SensitiveActionScope` is the separate scope recorded for `judgment_kind=sensitive_approval`. It can describe permission for an intended command, dependency change, network access, secret access, deployment, destructive action, system access, product-file write, or other named sensitive action. Its `capability_claim` records only what the active surface can honestly claim about the action: `cooperative_only`, `observed_by_surface`, or `not_observable`. A sensitive approval does not mean Harness can observe, block, enforce, sandbox, or isolate the action unless a verified capability for that exact operation says so.
+
+`WriteAuthoritySummary.approval_status` reports the status of any required separate sensitive-action approval. It is not the `WriteAuthorizationSummary.status` lifecycle and does not turn `SensitiveActionScope` into `AuthorizedAttemptScope`.
 
 <a id="record-run-payloads"></a>
 
@@ -393,12 +411,12 @@ A candidate is not a committed `user_judgment` row. It has no `StateRecordRef`, 
 
 ```yaml
 RecordUserJudgmentPayload:
-  approval_scope: AuthorizedAttemptScope | null
+  sensitive_action_scope: SensitiveActionScope | null
   accepted_result_refs: StateRecordRef[]
   cancellation_reason: string | null
 ```
 
-For `judgment_kind=sensitive_approval`, `approval_scope` must match the pending judgment. For `final_acceptance`, `accepted_result_refs` names the visible basis being accepted. For `cancellation`, `cancellation_reason` is required.
+For `judgment_kind=sensitive_approval`, `sensitive_action_scope` must match the pending judgment. Sensitive approval must not directly store `AuthorizedAttemptScope` as its approval scope; product-file Write Authorization remains a separate `prepare_write`/`record_run` contract. For `final_acceptance`, `accepted_result_refs` names the visible basis being accepted. For `cancellation`, `cancellation_reason` is required.
 
 <a id="acceptedriskinput"></a>
 
@@ -479,7 +497,7 @@ The active stable validator ID is `surface_capability_check`. Validator output c
 
 ## Sensitive Categories
 
-Sensitive categories explain why sensitive-action approval may be needed for a product-file write. They do not decide product, technical, scope, QA, verification, acceptance, residual-risk, or policy questions. They also do not claim that Harness observed commands, network effects, or secret access. The active `SensitiveCategory` enum is:
+Sensitive categories explain why sensitive-action approval may be needed for a product-file write. They are product-write classifications inside `AuthorizedAttemptScope`, not the approval scope for commands, hosts, dependencies, secret handles, deployments, destructive actions, or system access. They do not decide product, technical, scope, QA, verification, acceptance, residual-risk, or policy questions. They also do not claim that Harness observed commands, network effects, or secret access. The active `SensitiveCategory` enum is:
 
 ```text
 auth_change
@@ -537,6 +555,8 @@ These values are active current MVP schema values. Method-level capability and a
 | `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
 | `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
 | `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
+| `SensitiveActionScope.action_kind` | `product_file_write`, `dependency_change`, `destructive_command`, `network_access`, `secret_access`, `deployment`, `system_access`, `other` |
+| `SensitiveActionScope.capability_claim` | `cooperative_only`, `observed_by_surface`, `not_observable` |
 | `WriteAuthorizationSummary.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
 | `WriteAuthoritySummary.approval_status` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired`, `unknown` |
 | `RunSummary.kind` | `shaping_update`, `implementation`, `direct` |
@@ -564,7 +584,7 @@ These values are active current MVP schema values. Method-level capability and a
 
 For `GuaranteeDisplay.level`, `cooperative` is the default current MVP value. `detective` is also a current MVP value, but only where the active surface can honestly observe the relevant fact and the relevant capability check has actually passed. Neither value means OS permission, arbitrary-tool sandboxing, tamper-proof storage, pre-tool blocking, or isolation.
 
-Schema Core intentionally does not reserve inactive enum members inside active tables. User-judgment kinds, gate fields, validator IDs, actor/source values such as `captured_artifact`, stronger guarantee labels, command/network/secret observation names, and API methods not listed in this section are inactive until promoted by an owner document and added to the relevant active owner contract.
+Schema Core intentionally does not reserve inactive enum members inside active tables. User-judgment kinds, gate fields, validator IDs, actor/source values such as `captured_artifact`, stronger guarantee labels, command/network/secret observation or blocking fields not listed here, and API methods not listed in this section are inactive until promoted by an owner document and added to the relevant active owner contract.
 
 <a id="later-candidate-value-names"></a>
 

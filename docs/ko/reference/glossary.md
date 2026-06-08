@@ -20,7 +20,7 @@
 | 제품 판단 | 제품 동작, 문구, 흐름, UX, 사용자 가치에 대한 사용자가 소유하는 판단입니다. | [Core Model](core-model.md) |
 | 기술 판단 | 아키텍처, 의존성, 마이그레이션, 인터페이스, 보안/개인정보, 중요한 기술 방향에 대한 사용자가 소유하는 판단입니다. | [Core Model](core-model.md) |
 | 범위 판단 | 범위 확장, 비목표 제거, `Change Unit` 경계, `Autonomy Boundary` 변경에 대한 사용자가 소유하는 판단입니다. | [Core Model](core-model.md) |
-| 민감 동작 승인 | 경계가 정해진 범위 안에서 이름 붙은 민감한 단계 하나를 진행해도 된다는 사용자 권한 부여입니다. 최종 수락이나 넓은 동의가 아닙니다. | [Core Model](core-model.md) |
+| 민감 동작 승인 | 경계가 정해진 `SensitiveActionScope` 안에서 이름 붙은 민감한 단계 하나를 진행해도 된다는 사용자 권한 부여입니다. 경로 수준 Write Authorization, 최종 수락, 잔여 위험 수락, 넓은 동의가 아닙니다. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
 | 증거 | 작업에 대한 주장을 뒷받침하는 오래 남는 자료입니다. 변경 경로, 변경 차이, 로그, 스크린샷, 검사 메모, `ArtifactRef`가 될 수 있습니다. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
 | 검증 | 담당 경로가 요구할 때 기록되는 정확성 확인입니다. 증거, QA, 최종 수락, 잔여 위험 수락을 대신하지 않습니다. | [Core Model](core-model.md) |
 | 수동 QA | 자동 확인이나 증거만으로는 부족하고 사람이 직접 판단해야 하는 품질 확인입니다. | [Core Model](core-model.md), [Later](../later/index.md) |
@@ -52,7 +52,7 @@
 | `user_judgment` | 사용자가 소유하는 판단을 위한 기준 기록 계열입니다. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
 | `Gate` | 진행, 쓰기, 실행 기록, 닫기에 대한 Core 호환성 축입니다. 필요한지는 활성 담당 경로가 정합니다. | [Core Model](core-model.md) |
 | `Blocker` | 진행, 쓰기, 닫기 또는 요청된 다음 단계를 정직하게 계속할 수 없는 구조화된 이유입니다. | [Core Model](core-model.md) |
-| `Write Authorization` | 호환되는 non-dry-run `prepare_write`만 만드는 1회용 협력형 Core 기록입니다. OS 권한이나 격리가 아닙니다. | [Core Model](core-model.md) |
+| `Write Authorization` | 제품 파일 쓰기 시도에 대해 호환되는 non-dry-run `prepare_write`만 만드는 1회용 협력형 Core 기록입니다. 민감 동작 승인, OS 권한, 격리가 아닙니다. | [Core Model](core-model.md) |
 | `Run` | 실행 또는 관찰을 남기는 커밋된 기록입니다. 제품 쓰기 `Run`은 호환되는 활성 `Write Authorization`을 소비해야 합니다. | [Core Model](core-model.md) |
 | `update_scope` | `harness.intake` 이후 활성 Task 범위와 활성 Change Unit을 갱신하는 Core 경로입니다. 공개 API 메서드는 `harness.update_scope`입니다. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
 | `prepare_write` | 제품 파일 쓰기를 위한 Core의 쓰기 전 호환성 판단 지점입니다. 공개 API 메서드는 `harness.prepare_write`입니다. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
@@ -70,7 +70,8 @@
 | `StateSummary` / `StateRecordRef` / `NextActionSummary` / `GuaranteeDisplay` | 현재 상태, 담당 기록 참조, 다음 행동, 보장 표시 형태입니다. | [API Schema Core](api/schema-core.md) |
 | `ArtifactRef` / `ArtifactInput` | 공개 아티팩트 포인터와 `record_run`이 받을 수 있는 아티팩트 입력 형태입니다. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
 | `EvidenceSummary` / `EvidenceCoverageItem` | 간결한 증거 상태와 주장별 범위 형태입니다. | [API Schema Core](api/schema-core.md) |
-| `AuthorizedAttemptScope` | 허용된 쓰기 시도 하나의 저장된 범위입니다. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
+| `AuthorizedAttemptScope` | 허용된 제품 파일 쓰기 시도 하나의 경로 수준 저장 범위입니다. 명령, 의존성, 호스트, 네트워크 접근, 비밀값, 배포, 파괴적 동작, 시스템 접근의 승인 범위가 아닙니다. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
+| `SensitiveActionScope` | `judgment_kind=sensitive_approval`에 쓰는 저장 범위입니다. 이름 붙은 민감 동작과 정직한 역량 주장을 담으며 `AuthorizedAttemptScope`와 별개입니다. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
 | `WriteAuthorizationSummary` / `WriteAuthoritySummary` | `Write Authorization` 하나와 현재 쓰기 권한 위치를 보여주는 공개 요약입니다. | [API Schema Core](api/schema-core.md) |
 | `RunSummary` / `ObservedChanges` | 공개 실행 결과와 관찰된 변경 요약 형태입니다. | [API Schema Core](api/schema-core.md) |
 | `UserJudgment` / `UserJudgmentCandidate` / `UserJudgmentResolution` / `RecordUserJudgmentPayload` / `AcceptedRiskInput` | 판단 요청, 후보, 저장된 해결 기록, 답변 세부정보, 잔여 위험 수락 입력 형태입니다. | [API Schema Core](api/schema-core.md) |

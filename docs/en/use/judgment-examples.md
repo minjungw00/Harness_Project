@@ -86,8 +86,8 @@ Use when the user must permit one named sensitive action. Keep this separate fro
 Judgment needed: approve one dependency install/update action for this task.
 
 Covered if approved:
-- install the named dependency and version
-- update the named dependency manifest and lockfile
+- run the named package-manager command for the named dependency and version
+- include the named dependency manifest and lockfile only as intended paths inside this `SensitiveActionScope`
 - use the approval only within this task and approval window
 
 Options:
@@ -96,7 +96,7 @@ Options:
 - Ask for a separate technical judgment before any install approval.
 
 Settles: permission for the named install/update action.
-Does not settle: whether the dependency is the right architecture, future installs, product writes outside scope, final acceptance, or residual-risk acceptance.
+Does not settle: whether the dependency is the right architecture, future installs, product-file Write Authorization for manifest or lockfile changes, product writes outside scope, final acceptance, or residual-risk acceptance.
 ```
 
 ## 5. Final Acceptance

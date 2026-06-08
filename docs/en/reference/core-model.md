@@ -83,7 +83,7 @@ The only active current MVP values for `UserJudgment.judgment_kind` are:
 - `product_decision`: product behavior, UX, wording, release-facing promise, or user value.
 - `technical_decision`: architecture, dependency, migration, public interface, compatibility, security/privacy, or material technical direction.
 - `scope_decision`: scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change.
-- `sensitive_approval`: permission for a named sensitive step inside a bounded scope.
+- `sensitive_approval`: permission for a named sensitive step inside a bounded `SensitiveActionScope`.
 - `final_acceptance`: the user's result judgment when the path requires acceptance.
 - `residual_risk_acceptance`: acceptance of a named visible residual risk for the requested close.
 - `cancellation`: stopping the Task without a successful result.
@@ -103,6 +103,7 @@ Core must preserve these separations:
 - QA is not final acceptance; a future quality-review waiver path would not be QA evidence or a QA pass.
 - A future missing-check risk path would not be verification, detached verification, or assurance upgrade.
 - Sensitive-action approval does not decide product direction, technical direction, scope, correctness, evidence, QA, final acceptance, residual-risk acceptance, or Write Authorization.
+- Write Authorization and `AuthorizedAttemptScope` are only for path-level product-file write attempts; they do not approve commands, dependency changes, hosts, network access, secret access, deployments, destructive actions, or system access.
 - Product judgment, technical judgment, and scope judgment do not substitute for one another.
 - Final acceptance does not create evidence, erase evidence gaps, satisfy QA, prove verification, grant sensitive-action approval, change scope, accept residual risk, or override blockers.
 - Residual-risk acceptance does not verify work, make a no-risk close, satisfy evidence, satisfy QA, or imply final acceptance.
@@ -116,7 +117,7 @@ Gates are Core compatibility summaries for progress, write, Run recording, and c
 
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work. Its active status values are `not_required`, `required`, `pending`, `passed`, `failed`, and `blocked`.
 - <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. Its active status values are `not_required`, `required`, `pending`, `resolved`, `deferred`, and `blocked`. It does not replace sensitive-action approval, evidence, future verification or QA routes, final acceptance, or residual-risk acceptance.
-- <a id="approval-gate"></a>Approval Gate: whether scoped sensitive-action approval is required, pending, granted, denied, or expired. Its active status values are `not_required`, `required`, `pending`, `granted`, `denied`, and `expired`. It is permission for the sensitive action only.
+- <a id="approval-gate"></a>Approval Gate: whether scoped sensitive-action approval is required, pending, granted, denied, or expired. Its active status values are `not_required`, `required`, `pending`, `granted`, `denied`, and `expired`. It is permission for the `SensitiveActionScope` only, not product-file Write Authorization, final acceptance, or residual-risk acceptance.
 - <a id="evidence-gate"></a>Evidence Gate: whether close-relevant evidence is not required, missing, partial, sufficient, stale, or blocked. Its active status values are `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`.
 - <a id="acceptance-gate"></a>Acceptance Gate: whether final acceptance is not required, required, pending, accepted, or rejected after the close basis is visible. Its active status values are `not_required`, `required`, `pending`, `accepted`, and `rejected`.
 - <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, hold the action through the owner path, or produce `CloseBlocker.category=surface_capability` rather than pretending verification or prevention happened.
@@ -197,7 +198,7 @@ Stale Write Authorization detection uses the project-wide `project_state.state_v
 
 ## 9. prepare_write authority
 
-`prepare_write` is the unique pre-write compatibility decision point for product-file writes. In the current MVP it checks a path-level intended operation against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, sensitive-action approval, surface capability, and other active owner-path preconditions.
+`prepare_write` is the unique pre-write compatibility decision point for product-file writes. In the current MVP it checks a path-level intended product-file write against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, any required separate sensitive-action approval, surface capability, and other active owner-path preconditions.
 
 Only a compatible non-dry-run allowed path creates a consumable Write Authorization, and that authorization stores the current project-wide `project_state.state_version` as `basis_state_version`. Dry-run responses and `state_conflict` create no replay row, evidence record, close state, or Harness write-compatibility record. A committed `blocked`, `approval_required`, or `decision_required` response may persist method-owned blockers, events, replay, and project-wide state-version effects only as allowed by the API method matrix, but it must not create a consumable authorization row, evidence record, close state, or Harness write-compatibility record.
 
@@ -205,7 +206,7 @@ Write Authorization is a cooperative Harness record. It can tell a connected age
 
 When MCP or the connected surface cannot perform the needed cooperative check, the honest result is a hold, blocker, degraded guarantee display, or capability error. Preventive or isolated wording is later/profile-gated and stays unavailable unless a future owner promotes and proves that exact boundary for the covered operation.
 
-Current-MVP `prepare_write` must reject or block requests that require command observation, network observation, secret-access observation, artifact capture, pre-tool blocking, or isolation that the active surface cannot provide. Use `CAPABILITY_INSUFFICIENT` when a recognized active surface lacks the requested capability, and `VALIDATION_FAILED` when the request shape or requested guarantee is invalid for the active profile. Do not encode unsupported observations into an active Write Authorization.
+Current-MVP `prepare_write` must reject or block requests that require command observation, network observation, secret-access observation, artifact capture, pre-tool blocking, or isolation that the active surface cannot provide. Use `CAPABILITY_INSUFFICIENT` when a recognized active surface lacks the requested capability, and `VALIDATION_FAILED` when the request shape or requested guarantee is invalid for the active profile. Do not encode `SensitiveActionScope` details or unsupported observations into an active Write Authorization.
 
 <a id="record_run"></a>
 

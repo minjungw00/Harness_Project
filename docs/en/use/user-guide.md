@@ -101,7 +101,7 @@ The compact active path asks through `harness.request_user_judgment` and records
 
 ## 5. Treat sensitive action approval separately
 
-Sensitive action approval is permission for a named action, not approval of the whole plan.
+Sensitive action approval is permission for a named action, not approval of the whole plan. In schema terms, it is recorded as `SensitiveActionScope`; path-level product-file Write Authorization is a separate check.
 
 Examples include installing or updating dependencies, running commands with destructive potential, touching secrets, accessing restricted systems, deploying, sending network requests outside the current scope, or making a change with privacy/security impact.
 
@@ -115,6 +115,8 @@ A good sensitive-action prompt should name:
 - what the approval does not settle
 
 Approving a dependency install does not mean the dependency is the right architecture. Approving a deployment command does not mean the product result is accepted. Approving secret access does not accept residual risk. Each of those needs its own judgment when relevant.
+
+Approving a command, dependency change, host, network access, secret handle, deployment, destructive action, or system access also does not mean Harness can observe or block that action. Current MVP wording should say only what the active surface can honestly confirm.
 
 ## 6. Record evidence after meaningful action
 
@@ -282,9 +284,9 @@ Good agent behavior:
 Harness routing after the ordinary request is clear:
 - `harness.intake`: separate the product need from the dependency path.
 - `harness.request_user_judgment`: ask the `technical_decision` about dependency direction, then ask separate `sensitive_approval` before installing.
-- `harness.record_user_judgment`: record each answer as its own judgment.
+- `harness.record_user_judgment`: record each answer as its own judgment; the install approval uses `SensitiveActionScope`, not path-level Write Authorization.
 - `harness.update_scope`: update scope only if the accepted decision changes the work.
-- `harness.prepare_write`: check manifest or lockfile writes before package changes.
+- `harness.prepare_write`: check manifest or lockfile product-file writes separately before changing those files.
 - `harness.record_run`: record install/check output after the approved action.
 - `harness.close_task`: keep final acceptance and residual-risk acceptance separate from the dependency decision.
 ```

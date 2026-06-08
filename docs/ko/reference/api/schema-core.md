@@ -279,6 +279,20 @@ AuthorizedAttemptScope:
   related_user_judgment_refs: StateRecordRef[]
   guarantee_level: cooperative | detective
 
+SensitiveActionScope:
+  sensitive_action_id: string
+  action_kind: product_file_write | dependency_change | destructive_command | network_access | secret_access | deployment | system_access | other
+  named_action: string
+  command_or_tool: string | null
+  intended_paths: string[]
+  hosts: string[]
+  dependencies: string[]
+  secret_handles: string[]
+  time_window: string | null
+  scope_limit: string
+  not_authorized: string[]
+  capability_claim: cooperative_only | observed_by_surface | not_observable
+
 WriteAuthorizationSummary:
   write_authorization_id: string
   attempt_scope: AuthorizedAttemptScope
@@ -299,7 +313,11 @@ WriteAuthoritySummary:
 
 `AuthorizedAttemptScope`는 `write_authorizations.attempt_scope_json`에 저장되고 나중에 `harness.record_run`에서 비교하는 정확한 범위입니다. `AuthorizedAttemptScope.basis_state_version`은 `prepare_write`가 권한을 준비할 때 사용한 프로젝트 전체 `project_state.state_version`입니다. `WriteAuthorizationSummary.status`는 오래 남는 Write Authorization 생명주기입니다. `blocked`는 Write Authorization의 `status`가 아닙니다. 차단된 쓰기는 소비 가능한 Write Authorization 없이 차단 사유를 반환합니다.
 
-현재 MVP의 `AuthorizedAttemptScope`는 제품 파일 쓰기를 경로 수준으로 다룹니다. 의도한 제품 파일 경로, 활성 민감 범주, baseline, 관련 사용자 판단, 정직한 보장 수준만 기록합니다. 명령 실행, 네트워크 효과, 비밀값 접근, 도구 관찰, 네이티브 아티팩트 캡처, 도구 실행 전 차단, 격리는 현재 기준 `AuthorizedAttemptScope` 필드가 아닙니다. 이런 관찰할 수 없는 보장을 요구하는 요청은 검증 오류나 역량 부족으로 거절하거나 차단해야 하며, 검증된 범위처럼 기록하면 안 됩니다.
+현재 MVP의 `AuthorizedAttemptScope`는 제품 파일 쓰기 시도에만 쓰입니다. 의도한 제품 경로, Change Unit, 프로젝트 전체 기준 상태 버전, baseline, 관련 사용자 판단 참조, 제품 쓰기 민감 범주, 경로 수준 쓰기 호환성 확인의 정직한 보장 수준을 기록합니다. 명령 실행, 의존성 설치, 네트워크 효과, 비밀값 접근, 배포, 파괴적 동작, 시스템 접근, 도구 관찰, 네이티브 아티팩트 캡처, 도구 실행 전 차단, 격리는 `AuthorizedAttemptScope` 필드가 아닙니다. 이런 관찰할 수 없는 보장을 요구하는 요청은 검증 오류나 역량 부족으로 거절하거나 차단해야 하며, 검증된 쓰기 범위처럼 기록하면 안 됩니다.
+
+`SensitiveActionScope`는 `judgment_kind=sensitive_approval`에 대해 별도로 기록되는 민감 동작 승인 범위입니다. 의도한 명령, 의존성 변경, 네트워크 접근, 비밀값 접근, 배포, 파괴적 동작, 시스템 접근, 제품 파일 쓰기, 그 밖의 이름 붙은 민감 동작을 설명할 수 있습니다. `capability_claim`은 활성 접점이 그 동작에 대해 정직하게 주장할 수 있는 수준만 기록합니다. 값은 `cooperative_only`, `observed_by_surface`, `not_observable`입니다. 민감 동작 승인은 그 정확한 동작에 대한 검증된 역량이 따로 있지 않은 한 하네스가 동작을 관찰, 차단, 강제, 샌드박스 처리, 격리할 수 있다는 뜻이 아닙니다.
+
+`WriteAuthoritySummary.approval_status`는 필요한 별도 민감 동작 승인 상태를 보여줍니다. `WriteAuthorizationSummary.status` 생명주기가 아니며, `SensitiveActionScope`를 `AuthorizedAttemptScope`로 바꾸지도 않습니다.
 
 <a id="record-run-payloads"></a>
 
@@ -393,12 +411,12 @@ UserJudgmentCandidate:
 
 ```yaml
 RecordUserJudgmentPayload:
-  approval_scope: AuthorizedAttemptScope | null
+  sensitive_action_scope: SensitiveActionScope | null
   accepted_result_refs: StateRecordRef[]
   cancellation_reason: string | null
 ```
 
-`judgment_kind=sensitive_approval`에서는 `approval_scope`가 대기 중인 판단과 맞아야 합니다. `final_acceptance`에서는 `accepted_result_refs`가 보이는 근거를 이름 붙입니다. `cancellation`에서는 `cancellation_reason`이 필요합니다.
+`judgment_kind=sensitive_approval`에서는 `sensitive_action_scope`가 대기 중인 판단과 맞아야 합니다. 민감 동작 승인은 `AuthorizedAttemptScope`를 승인 범위로 직접 저장하면 안 됩니다. 제품 파일 Write Authorization은 별도의 `prepare_write`/`record_run` 계약으로 남습니다. `final_acceptance`에서는 `accepted_result_refs`가 보이는 근거를 이름 붙입니다. `cancellation`에서는 `cancellation_reason`이 필요합니다.
 
 <a id="acceptedriskinput"></a>
 
@@ -479,7 +497,7 @@ ValidatorResult:
 
 ## 민감 범주
 
-민감 범주는 제품 파일 쓰기에 왜 민감 동작 승인이 필요할 수 있는지 설명합니다. 제품 판단, 기술 판단, 범위 판단, QA, 검증, 수락, 잔여 위험, 정책 질문을 결정하지 않습니다. 또한 하네스가 명령, 네트워크 효과, 비밀값 접근을 관찰했다는 뜻도 아닙니다. 활성 `SensitiveCategory` enum은 다음과 같습니다.
+민감 범주는 제품 파일 쓰기에 왜 민감 동작 승인이 필요할 수 있는지 설명합니다. `AuthorizedAttemptScope` 안의 제품 쓰기 분류일 뿐이며, 명령, 호스트, 의존성, 비밀값 핸들, 배포, 파괴적 동작, 시스템 접근의 승인 범위가 아닙니다. 제품 판단, 기술 판단, 범위 판단, QA, 검증, 수락, 잔여 위험, 정책 질문을 결정하지 않습니다. 또한 하네스가 명령, 네트워크 효과, 비밀값 접근을 관찰했다는 뜻도 아닙니다. 활성 `SensitiveCategory` enum은 다음과 같습니다.
 
 ```text
 auth_change
@@ -537,6 +555,8 @@ policy_override
 | `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
 | `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
 | `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
+| `SensitiveActionScope.action_kind` | `product_file_write`, `dependency_change`, `destructive_command`, `network_access`, `secret_access`, `deployment`, `system_access`, `other` |
+| `SensitiveActionScope.capability_claim` | `cooperative_only`, `observed_by_surface`, `not_observable` |
 | `WriteAuthorizationSummary.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
 | `WriteAuthoritySummary.approval_status` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired`, `unknown` |
 | `RunSummary.kind` | `shaping_update`, `implementation`, `direct` |
@@ -564,7 +584,7 @@ policy_override
 
 `GuaranteeDisplay.level`에서 `cooperative`는 현재 MVP의 기본값입니다. `detective`도 현재 MVP 값이지만, 활성 접점이 관련 사실을 정직하게 관찰할 수 있고 관련 역량 확인이 실제로 통과한 곳에서만 사용할 수 있습니다. 두 값 모두 OS 권한, 임의 도구 샌드박스, 변조 방지 저장소, 도구 실행 전 차단, 격리를 뜻하지 않습니다.
 
-Schema Core는 활성 표 안에 비활성 enum 값을 예약하지 않습니다. 이 섹션에 없는 사용자 판단 종류, gate 필드, validator ID, `captured_artifact` 같은 actor/source 값, 더 강한 보장 라벨, 명령/네트워크/비밀값 관찰 이름, API 메서드는 담당 문서가 승격하고 관련 활성 담당 계약에 추가하기 전까지 비활성입니다.
+Schema Core는 활성 표 안에 비활성 enum 값을 예약하지 않습니다. 이 섹션에 없는 사용자 판단 종류, gate 필드, validator ID, `captured_artifact` 같은 actor/source 값, 더 강한 보장 라벨, 여기에 없는 명령/네트워크/비밀값 관찰 또는 차단 필드, API 메서드는 담당 문서가 승격하고 관련 활성 담당 계약에 추가하기 전까지 비활성입니다.
 
 <a id="later-candidate-value-names"></a>
 

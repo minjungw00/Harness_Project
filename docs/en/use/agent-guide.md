@@ -95,7 +95,7 @@ Do not treat "yes," "approved," "looks good," "go ahead," or "continue" as a bun
 
 When a resolved `scope_decision` means the active scope should change, record the judgment resolution first, then use `harness.update_scope` as the next state-changing action. Do not treat the judgment record itself as an updated goal, non-goal list, acceptance criteria, Autonomy Boundary, baseline, or active work slice.
 
-Sensitive approval is permission for a named action. Final acceptance is judgment on the result. Residual-risk acceptance is judgment on a named residual risk. Future judgment candidates would be separate from all three if promoted. None substitutes for another.
+Sensitive approval is permission for a named action and is recorded with `SensitiveActionScope`. It may cover a command, dependency change, host, network access, secret handle, deployment, destructive action, system access, product-file write, or other scoped action, but it is not path-level Write Authorization and does not prove observation or blocking. Final acceptance is judgment on the result. Residual-risk acceptance is judgment on a named residual risk. Future judgment candidates would be separate from all three if promoted. None substitutes for another.
 
 ## 5. Do Not Claim Stronger Guarantees
 
@@ -125,7 +125,7 @@ Do not claim write compatibility from a plan, stale chat context, broad user ent
 - current guarantee level or unavailable/capability condition
 - smallest unblocker
 
-A compatible result means the intended write matches current Harness state and active surface capability. It is a single-use cooperative result for the stated path-level boundary. If intended product-file paths, sensitive category, baseline, task, work slice, state, surface, related judgments, or guarantee level change, refresh the check or treat the claim as unverified/blocked. Command, network, and secret-access facts remain separate capability or sensitive-action issues unless a future owner promotes observation support.
+A compatible result means the intended product-file write matches current Harness state and active surface capability. It is a single-use cooperative result for the stated path-level boundary. If intended product-file paths, product-write sensitive category, baseline, task, work slice, state, surface, related judgments, or guarantee level change, refresh the check or treat the claim as unverified/blocked. Command, dependency, host, network, secret-access, deployment, destructive-action, and system-access facts remain separate `SensitiveActionScope` or capability issues unless a future owner promotes observation support.
 
 If the scope change is valid, update the active scope or active work slice through `harness.update_scope` before asking for a new pre-write check. Existing pre-write results that no longer match the updated scope must be treated as stale.
 

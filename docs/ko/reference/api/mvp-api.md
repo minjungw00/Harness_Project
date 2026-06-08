@@ -25,7 +25,7 @@
 | [`harness.intake`](#harnessintake) | 평소 사용자 작업을 시작, 재개, 분류합니다. |
 | [`harness.status`](#harnessstatus) | 현재 상태 요약, 차단 사유, 대기 중인 판단, 증거 요약, 닫기 상태, 다음 안전한 행동을 반환합니다. |
 | [`harness.update_scope`](#harnessupdate_scope) | `harness.intake` 이후 활성 Task 범위와 활성 Change Unit을 갱신합니다. |
-| [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 쓰기를 현재 범위, 상태, 민감 동작 승인, baseline, 접점 역량과 비교합니다. |
+| [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 파일 쓰기를 현재 범위, 상태, 필요한 별도 민감 동작 승인, baseline, 접점 역량과 비교합니다. |
 | [`harness.record_run`](#harnessrecord_run) | shaping, direct, implementation 작업과 간결한 증거/아티팩트 참조를 기록합니다. |
 | [`harness.request_user_judgment`](#harnessrequest_user_judgment) | 대기 중인 사용자 소유 판단 요청 하나를 만듭니다. |
 | [`harness.record_user_judgment`](#harnessrecord_user_judgment) | 기존 대기 중인 `UserJudgment`에 대한 사용자의 답을 기록합니다. |
@@ -75,7 +75,7 @@ non-dry-run 상태 변경을 뜻합니다. 버전 증가는 항상 프로젝트 
 |---|---|---|
 | `read_status` | `harness.status`, 읽기 전용 상태 리소스, `harness.close_task intent=check` 같은 읽기 전용 닫기 확인. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 요청한 읽기에 필요한 Core/접점 도달 가능성, 보호된 Core 세부정보에는 `VerifiedSurfaceContext.access_class=read_status`, Task 범위 읽기라면 호환되는 `task_id`가 필요합니다. 상태 읽기는 표시해도 안전한 가용성 또는 불일치 진단을 반환할 수 있지만, 오래된 텍스트에서 상태를 만들어 내거나 로컬 접근을 확인할 수 없을 때 보호되어야 할 Core 세부정보를 노출하면 안 됩니다. |
 | `core_mutation` | `harness.intake`, `harness.update_scope`, `harness.request_user_judgment`, `harness.record_user_judgment`, 상태를 끝내는 `harness.close_task` intent. | `read_status` 조건에 더해 `VerifiedSurfaceContext.access_class=core_mutation`, `verified=true`, non-dry-run 커밋에는 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`, 적용되는 경우 호환되는 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 담당 기록이 필요합니다. |
-| `write_authorization` | `harness.prepare_write`. | `VerifiedSurfaceContext.access_class=write_authorization`, `verified=true`에 더해 의도한 attempt에 필요한 활성 Task/Change Unit 호환성, 범위, baseline, 민감 동작, 역량 확인이 필요합니다. |
+| `write_authorization` | `harness.prepare_write`. | `VerifiedSurfaceContext.access_class=write_authorization`, `verified=true`에 더해 의도한 제품 파일 쓰기 시도에 필요한 활성 Task/Change Unit 호환성, 범위, baseline, 필요한 별도 민감 동작 승인 호환성, 역량 확인이 필요합니다. |
 | `run_recording` | `harness.record_run`. | `VerifiedSurfaceContext.access_class=run_recording`, `verified=true`에 더해 호환되는 `task_id`, `change_unit_id`, `baseline_ref`, 관찰된 시도 사실, 그리고 제품 쓰기를 기록하는 Run이면 소비 가능한 활성 Write Authorization이 필요합니다. |
 | `artifact_registration` | `harness.record_run`이 받는 `ArtifactInput[]`. | `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`에 더해 활성 `stage_artifact` 유틸리티가 만든 문서화된 `staged_file` 핸들 또는 호환되는 `existing_artifact` 참조만 받을 수 있습니다. 호출자가 임의로 준 파일시스템 경로, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP의 등록 권한으로 인정하지 않습니다. |
 | `artifact_read` | 등록된 `ArtifactRef`에서 담당 경로가 노출하는 로컬 아티팩트 메타데이터 또는 본문 읽기. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 등록된 `ArtifactRef`, 호환되는 `project_id`/`task_id`, 필요한 가림/가용성 확인, `artifact_links`의 일치하는 담당 관계가 필요합니다. 아티팩트 본문 읽기에는 추가로 `VerifiedSurfaceContext.access_class=artifact_read`와 `verified=true`가 필요합니다. 원시 아티팩트 경로 읽기는 기본으로 허용되지 않습니다. |
@@ -226,8 +226,8 @@ StatusResponse:
 ## `harness.prepare_write`
 
 - **담당:** 협력형 쓰기 전 범위 확인과 제안된 시도가 호환될 때 오래 남는 1회용 Write Authorization.
-- **담당하지 않음:** OS 권한, 샌드박스, 변조 방지 강제, 도구 실행 전 차단, 사용자 판단 생성, 증거 충분성, Run 기록, 닫기.
-- **호출 시점:** 제품 파일 쓰기 또는 쓰기 가능한 동작 직전에, 현재 Task, Change Unit, baseline, 민감 동작 승인, 접점 역량과 맞는지 확인해야 할 때.
+- **담당하지 않음:** 민감 동작 승인 생성이나 기록, OS 권한, 샌드박스, 변조 방지 강제, 도구 실행 전 차단, 사용자 판단 생성, 증거 충분성, Run 기록, 닫기.
+- **호출 시점:** 제품 파일 쓰기 직전에, 현재 Task, Change Unit, baseline, 관련 사용자 판단, 필요한 민감 동작 승인, 접점 역량과 맞는지 확인해야 할 때.
 - **요청:**
 
 ```yaml
@@ -261,7 +261,7 @@ PrepareWriteResponse:
 - **상태 효과:** 커밋된 non-dry-run `decision=allowed`는 활성 경로 수준 `AuthorizedAttemptScope`에 대해 `write_authorizations.status=active` 행 하나를 만들고, 이벤트를 추가하고, 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올립니다. 커밋된 `blocked`, `approval_required`, `decision_required` 응답은 차단 사유를 업데이트하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 소비 가능한 Write Authorization은 만들면 안 됩니다. `dry_run`과 커밋 전 실패는 현재 기록, Write Authorization, `blockers` 행, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `write_authorizations`, `blockers`, `project_state` 상태 시계, `task_events`, `tool_invocations`.
-- **보안 경계:** `decision=allowed`는 이 경로 수준 제품 쓰기 시도가 하네스 기록과 호환된다는 뜻입니다. 운영체제가 호환되지 않는 쓰기를 막거나 임의 도구가 격리된다는 뜻이 아닙니다. 현재 MVP 요청이 명령, 네트워크, 비밀값 접근, 아티팩트 캡처, 도구 실행 전 차단, 격리에 대한 보장을 요구하면 활성 접점에 역량이 없을 때 `CAPABILITY_INSUFFICIENT`를 반환하고, 요청 형태나 요구한 보장이 활성 프로필에 유효하지 않으면 `VALIDATION_FAILED`를 반환해야 합니다. 활성 `PrepareWriteRequest`는 위에 적은 경로 수준 필드만 포함하며 명령, 네트워크, 비밀값 관찰 범위를 인코딩하지 않습니다.
+- **보안 경계:** `decision=allowed`는 이 경로 수준 제품 파일 쓰기 시도가 하네스 기록과 호환된다는 뜻입니다. 운영체제가 호환되지 않는 쓰기를 막거나 임의 도구가 격리된다는 뜻이 아닙니다. 활성 `PrepareWriteRequest`는 위에 적은 제품 쓰기 경로 수준 필드만 포함하며 명령, 의존성, 호스트, 네트워크, 비밀값, 배포, 파괴적 동작, 시스템 접근의 승인 범위를 인코딩하지 않습니다. 그런 승인은 `judgment_kind=sensitive_approval`을 통해 `SensitiveActionScope`로 별도 기록됩니다. 현재 MVP 요청이 명령, 네트워크, 비밀값 접근, 아티팩트 캡처, 도구 실행 전 차단, 격리에 대한 보장을 요구하면 활성 접점에 역량이 없을 때 `CAPABILITY_INSUFFICIENT`를 반환하고, 요청 형태나 요구한 보장이 활성 프로필에 유효하지 않으면 `VALIDATION_FAILED`를 반환해야 합니다.
 
 <a id="harnessrecord_run"></a>
 
@@ -381,7 +381,7 @@ RecordUserJudgmentResponse:
 - **상태 효과:** 커밋된 non-dry-run 호출은 `user_judgments.status`를 업데이트하고, 요청 수준의 `selected_option_id`, 요청 메모, 답변 세부정보를 기록하고, 관련 차단 사유와 판단에 의존하는 요약만 업데이트하며, 이벤트와 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올립니다. 활성 Task 범위 필드나 활성 Change Unit은 직접 바꾸지 않습니다. 해결된 `scope_decision` 때문에 범위를 바꿔야 하면 응답의 다음 행동은 `harness.update_scope`를 가리킵니다. 활성 MVP에서는 독립적인 위험 수락 행을 만들지 않습니다. `dry_run`과 커밋 전 실패는 판단 해결, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `user_judgments`, `blockers`, `task_events`, `tool_invocations`.
-- **보안 경계:** "go ahead"나 "looks good" 같은 넓은 말은 대기 중인 활성 판단이 그 종류를 명시적으로 묻고 기록된 답변이 맞을 때만 제품 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소, 범위 확장으로 작동합니다. 이후 후보에만 있는 판단 값은 현재 MVP의 활성 판단 종류가 아닙니다.
+- **보안 경계:** "go ahead"나 "looks good" 같은 넓은 말은 대기 중인 활성 판단이 그 종류를 명시적으로 묻고 기록된 답변이 맞을 때만 제품 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소, 범위 확장으로 작동합니다. `judgment_kind=sensitive_approval`에서는 답변이 `AuthorizedAttemptScope`가 아니라 `RecordUserJudgmentPayload.sensitive_action_scope`를 기록합니다. 의도한 명령, 의존성 변경, 네트워크 접근, 비밀값 접근, 배포, 파괴적 동작, 시스템 접근, 제품 파일 쓰기를 승인해도, 활성 접점이 그 정확한 동작에 대해 검증된 역량을 갖지 않는 한 하네스가 이를 관찰, 차단, 강제, 샌드박스 처리, 격리했다는 뜻이 아닙니다. 이후 후보에만 있는 판단 값은 현재 MVP의 활성 판단 종류가 아닙니다.
 
 <a id="harnessclose_task"></a>
 
