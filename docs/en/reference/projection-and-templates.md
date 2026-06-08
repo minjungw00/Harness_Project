@@ -351,34 +351,43 @@ Use `agent-context-packet` when an agent needs compact, current context for the 
 
 Implementation tier: active MVP support view. It can be returned as a structured payload or prompt-sized text. It is not a required persisted Markdown projection.
 
-Boundary: this packet is support context only. It cannot authorize writes, satisfy gates, create evidence, grant approval, record final acceptance, accept residual risk, create close readiness, or close a Task.
+Boundary: this packet is support context only. It cannot authorize writes, satisfy gates, create evidence, grant sensitive-action approval, record final acceptance, accept residual risk, create close readiness, or close a Task. It is not a Core state input; generated status cards, projections, rendered templates, chat summaries, and packet fields must not be fed back as owner state.
 
 Source records:
 
-- task and active `change_unit_ref`
-- current state version and source refs
+- display-safe verified surface status, including whether mutation access or artifact body access is currently available
+- project-wide `state_version` and source refs
+- active Task and active Change Unit summaries
 - active scope, allowed paths or affected areas, non-goals, acceptance criteria, and `autonomy_boundary`
+- `ShapingReadiness` gaps that affect the next safe action
 - unresolved user judgments
+- active `SensitiveActionScope` summary when relevant
+- Write Authorization summary when relevant
+- staged artifact handle status and registered `ArtifactRef` status when relevant
+- `EvidenceSummary` status and refs, or evidence gaps
 - active blockers
-- evidence gaps
 - close blockers
 - residual-risk summary if active
-- guarantee display level or unavailable capability status
+- guarantee display condition, especially whether the current claim is `cooperative`, verified-scope `detective`, or unavailable/capability-limited
 - exactly one next safe action
 
 Rendered sections:
 
-- task and `change_unit_ref`
-- state version and source refs
+- verified surface status
+- project-wide `state_version` and source refs
+- active Task and active Change Unit
 - active scope
-- shaping summary
+- shaping readiness gaps
 - unresolved user judgments
+- active sensitive-action scope
+- Write Authorization
+- staged and registered artifacts
+- evidence summary or gaps
 - blockers
 - next safe action
-- evidence gaps
 - close blockers
 - residual-risk summary
-- guarantee display level
+- guarantee display condition
 
 Template:
 
@@ -386,9 +395,17 @@ Template:
 agent_context_packet:
   display_only: true
   authority: none; use current Core state for authority
+  verified_surface:
+    surface_status: {surface_status|unavailable}
+    local_access_posture: {local_access_posture|unknown}
+    verified_context: {VerifiedSurfaceContext_status_or_failure_reason}
+    mutation_access: {available|blocked|unavailable}
+    artifact_body_access: {available|blocked|unavailable}
   task_ref: {task_ref}
+  active_task: {active_task_summary|none}
   change_unit_ref: {change_unit_ref|none}
-  state_version: {source_state_version}
+  active_change_unit: {active_change_unit_summary|none}
+  state_version: {project_wide_state_version}
   source_refs: {source_refs}
   freshness: {freshness_state}
   active_scope: {scope_summary}
@@ -396,23 +413,36 @@ agent_context_packet:
   non_goals: {non_goals|none}
   acceptance_criteria: {acceptance_criteria|unknown}
   autonomy_boundary: {autonomy_boundary|default}
+  shaping_readiness_gaps: {gaps_affecting_next_safe_action|none}
   blocking_question: {blocking_question|none}
   unresolved_user_judgments: {pending_user_judgment_refs_with_kind_labels|none}
+  active_sensitive_action_scope: {SensitiveActionScope_summary|not_relevant}
+  write_authorization: {WriteAuthorizationSummary_status_and_scope|not_needed}
+  artifacts:
+    staged: {StagedArtifactHandle_status_refs|none}
+    registered: {ArtifactRef_status_refs|none}
+  evidence_summary: {EvidenceSummary_status_refs_and_required_coverage|not_required}
+  evidence_gaps: {evidence_gaps|none}
   blockers: {active_blockers|none}
   next_safe_action: {next_safe_action}
-  evidence_gaps: {evidence_gaps|none}
   close_blockers: {close_blockers|none}
   residual_risk_summary: {residual_risk_summary_if_active|none}
-  guarantee_level: {guarantee_level_or_unavailable}
+  guarantee_display:
+    level: {cooperative|detective}
+    unavailable_or_capability_condition: {condition|none}
+    condition: {cooperative_basis_or_passed_capability_scope}
 ````
 
 Notes:
 
 - Keep the packet one screen or less. It carries only current, next-action-relevant state.
-- This agent-facing packet may keep machine-readable field names such as `change_unit_ref`, `autonomy_boundary`, `close_blockers`, and `guarantee_level`; do not reuse those names as labels in user-facing cards.
+- `state_version` is the project-wide Core/API state version, not a task-local clock.
+- `verified_surface` is display-safe current access context. It does not refresh `LocalSurfaceRegistration`, grant authority, or prove physical blocking.
+- This agent-facing packet may keep machine-readable field names such as `change_unit_ref`, `autonomy_boundary`, `close_blockers`, `SensitiveActionScope`, `WriteAuthorizationSummary`, and `EvidenceSummary`; do not reuse those names as labels in user-facing cards.
 - Do not include full schemas, full reference docs, full event logs, registered artifact file bodies, full report bodies, full templates, unrelated templates, full design-quality catalogs, or future catalog material by default.
 - If the next action needs a fuller owner section, the agent should pull that owner section on demand instead of embedding it in the packet.
-- The `guarantee_level` field is the required guarantee display context. If Core/MCP is unavailable, set it to the unavailable/capability condition and treat Harness-dependent state, write, evidence, acceptance, residual-risk, and close claims as unavailable until refreshed.
+- The `guarantee_display` field is required context. If Core/MCP is unavailable, do not invent a `GuaranteeDisplay.level`; set the unavailable/capability condition and treat Harness-dependent state, write, evidence, acceptance, residual-risk, and close claims as unavailable until refreshed. Use `detective` only when the relevant capability verification has passed and only for the verified observable scope.
+- New artifact bytes enter active MVP through `harness.stage_artifact` and remain staged until the owner `harness.record_run` path consumes them. Do not render `captured_artifact`, native capture, raw paths, raw logs, or capture-adapter output as active artifact authority.
 
 ## Later template boundary
 

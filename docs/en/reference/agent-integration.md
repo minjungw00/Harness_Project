@@ -108,19 +108,34 @@ Token savings must not hide user-owned judgments, scope limits, blockers, safety
 
 Always-on context should fit on one screen or less. Include only current, actionable state:
 
-- current Task summary, or explicit `none` / `unknown`
+- verified surface status: `surface_status`, `local_access_posture`, whether the current request has a server-derived `VerifiedSurfaceContext`, and whether mutation access or artifact body access is currently available
+- project-wide `state_version` observed from the current Core/API response
+- active Task summary, or explicit `none` / `unknown`
+- active Change Unit summary, or explicit `none` / `unknown`
 - work shape
+- shaping readiness gaps that affect the next safe action
 - scope and non-goals
 - pending user judgments
+- active `SensitiveActionScope` summary when a named sensitive action is relevant
+- Write Authorization summary when product-file writes are near or a previous authorization may be stale, consumed, expired, or revoked
+- staged artifact handle status and registered `ArtifactRef` status when evidence or artifact registration is relevant
+- `EvidenceSummary` status and refs, or evidence gaps
 - active blockers
 - next safe actions
-- evidence gaps
 - close blockers
 - residual-risk summary
-- guarantee display level, or the unavailable/capability condition when Core or required MCP cannot answer
+- guarantee display condition: `cooperative` by default, `detective` only when the relevant capability check has passed and only for the verified scope, or the unavailable/capability condition when Core or required MCP cannot answer
 - source refs and freshness
 
-Do not put full reference material, full schemas, full DDL, full projection text, complete artifact bodies, unrelated templates, future catalogs, stale or unrelated task history, or full logs in always-on context.
+Keep these as summaries and refs, not embedded owner records. Do not put full reference material, full schemas, full DDL, full projection text, complete artifact bodies, unrelated templates, future catalogs, stale or unrelated task history, or full logs in always-on context.
+
+Agent-facing rules at this boundary:
+
+- Do not claim unsupported capabilities, stronger guarantee levels, OS permissions, sandboxing, tamper-proof storage, pre-tool blocking, or isolation.
+- Do not describe `detective` status unless the relevant capability verification is `passed`; for the baseline profile, that is only verified changed-path detection scope.
+- Use `harness.stage_artifact` for new artifact bytes in the active MVP, then route registration through the owner `harness.record_run` path. Do not use `captured_artifact`, native capture, raw paths, raw logs, or capture-adapter output as active artifact authority.
+- Do not treat generated status cards, projections, rendered templates, chat summaries, or `agent-context-packet` fields as Core state inputs. Refresh from the owner Core/API path before mutation or close claims.
+- Ask users plain-language questions. Do not require Harness vocabulary when a focused ordinary question can capture the needed user-owned judgment.
 
 ## 6. Phase-Relevant Context Selection
 
@@ -132,6 +147,7 @@ Use the narrowest context that answers the next question.
 | Planning / clarification | Current repo/docs/state refs and [Agent Guide: Clarify without endless planning loops](../use/agent-guide.md#4-clarify-without-endless-planning-loops). |
 | Write preparation | Current scope/state, [Agent Guide: Check scope before product writes](../use/agent-guide.md#6-check-scope-before-product-writes), and only the `prepare_write` owner sections needed for the intended write. |
 | Execution / run recording | Current write authorization, run/evidence refs, and [Agent Guide: Record evidence after meaningful action](../use/agent-guide.md#7-record-evidence-after-meaningful-action). |
+| Artifact staging / registration | Current verified surface status, staged-handle status, registered `ArtifactRef` refs, redaction/availability summary, and only the artifact owner section needed for the next `harness.stage_artifact` or `harness.record_run` action. |
 | Evidence review | Current evidence refs, artifact refs, freshness facts, missing evidence, and the exact evidence or projection owner section only when needed. |
 | Close readiness | Current owner records, blockers, residual-risk summary, and [Agent Guide: Close work honestly](../use/agent-guide.md#10-close-work-honestly). |
 | User judgment request | Current judgment refs or candidates, consequences, uncertainty, and [Agent Guide: Request user judgment narrowly](../use/agent-guide.md#5-request-user-judgment-narrowly). |
@@ -205,6 +221,7 @@ surface_status: active
 local_access_posture: registered_local
 surface_verification: server-derived VerifiedSurfaceContext required for mutations and artifact body reads
 context_strategy: compact always-on context plus phase-relevant owner pulls
+context_packet_focus: verified surface, project-wide state_version, active Task/Change Unit, shaping gaps, user judgments, sensitive scope, write authorization, artifact status, evidence gaps, close blockers, honest guarantee display, one next action
 write_behavior: cooperative prepare_write discipline before product writes
 run_behavior: record_run with summary and owner-registered artifact refs
 capture_boundary:

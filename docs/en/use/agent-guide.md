@@ -28,21 +28,27 @@ Escalate from small change to tracked work when you find scope drift, a new publ
 
 Always-on context should fit on one screen and support the next action. Include only:
 
-- current task summary
+- verified surface status and whether mutation access or artifact body access is currently available
+- project-wide `state_version`
+- current Task and active Change Unit summary
 - work shape
+- shaping readiness gaps that affect the next safe action
 - active scope and non-goals
 - relevant allowed paths, tools, commands, or operation class
 - pending user judgments
+- active `SensitiveActionScope` summary when a named sensitive action is relevant
+- Write Authorization summary when product-file writes are near or an existing authorization may no longer match current state
+- staged artifact handle status and registered `ArtifactRef` status when evidence or artifact registration is relevant
 - active blockers
 - latest pre-write scope result, if any
-- evidence summary and gaps
+- `EvidenceSummary` status and gaps
 - reasons close is blocked
 - residual-risk status
-- what Harness can verify, or unavailable/capability condition
+- what Harness can verify: `cooperative` by default, `detective` only after the relevant capability verification has passed for the verified scope, or unavailable/capability condition
 - source refs and freshness
 - one next safe action
 
-Do not inject full schemas, full DDL, full template bodies, full logs, full artifact contents, paired bilingual docs, unrelated reference sections, future catalog material, or generated readable views into every prompt. Pull exact owner sections only when the next action needs them.
+Keep those items as summaries and refs. Do not inject full schemas, full DDL, full template bodies, full logs, full artifact contents, paired bilingual docs, unrelated reference sections, future catalog material, or generated readable views into every prompt. Pull exact owner sections only when the next action needs them.
 
 Status output should lead with the primary blocker and the smallest unblocker. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to solve something the agent can safely inspect, refresh, retry, narrow, or record.
 
@@ -120,6 +126,8 @@ Use guarantee wording carefully:
 
 If Core or Harness authority is unavailable, do not invent task state, write compatibility, user judgment, sensitive-action approval, evidence, final acceptance, residual-risk acceptance, readable-view freshness, or close readiness. Reconnect, diagnose, move to a capable surface, narrow the task, or continue outside Harness only if the user explicitly chooses that mode.
 
+Do not describe `detective` status just because a surface name, status card, chat summary, or user phrase sounds careful. Use it only after the relevant capability verification has passed and only for the covered observable fact. Otherwise describe the behavior as cooperative or unavailable/capability-limited.
+
 ## 6. Prepare Write Only When Scope Is Clear
 
 <a id="6-check-scope-before-product-writes"></a>
@@ -148,6 +156,8 @@ After meaningful execution, checks, reviews, or artifact-producing work, summari
 Use refs and short summaries by default. Pull full artifact bodies only when the next action needs them and redaction rules allow it. Do not treat arbitrary absolute paths, raw secrets, tokens, full sensitive logs, screenshots alone, generated summaries, or chat text as sufficient evidence.
 
 Evidence display should say what ran or changed, which claim it supports, which refs or artifacts support it, what passed or failed, and what is missing, stale, redacted, omitted, blocked, or insufficient.
+
+When new artifact bytes matter, use the active `harness.stage_artifact` path to create a temporary staged handle and let the owner `harness.record_run` path consume it before treating it as a registered `ArtifactRef`. Do not use `captured_artifact`, native artifact capture, raw local paths, raw logs, or capture-adapter output as active artifact authority.
 
 For tracked work, derive the evidence summary from the active `CompletionPolicy`. Mark each close-relevant claim as required or optional. Do not mark evidence sufficient while any required item is unsupported, partial, stale, blocked, or missing; return or surface an evidence blocker instead. Keep artifact availability separate from sufficiency: an available `ArtifactRef` supports a claim only when the evidence coverage links it to that claim.
 
