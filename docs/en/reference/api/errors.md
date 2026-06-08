@@ -23,9 +23,9 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 
 | Condition | Public path | Agent rule |
 |---|---|---|
-| `core_or_surface_unavailable` | `MCP_UNAVAILABLE` | Do not invent Harness state. Hold Harness-dependent writes and close until Core and the required surface path are reachable, or until the user explicitly chooses to proceed outside Harness. |
-| `local_access_mismatch` | `LOCAL_ACCESS_MISMATCH` | Do not guess local file or command facts. Use the registered local caller/path/posture, repair local access registration, or label input unverified. |
-| `missing_capability` | `CAPABILITY_INSUFFICIENT` | Use a capable surface, reduce the operation, or choose a path that does not require the missing observation, capture, local access class, blocking/isolation claim, or active behavior. Baseline `reference-local-mcp` requests that require command, network, secret-access, native artifact-capture, pre-tool-blocking, or isolation guarantees belong here unless the payload shape is invalid. |
+| `core_or_surface_unavailable` | `MCP_UNAVAILABLE` | Do not invent Harness state. Hold Harness-dependent writes, artifact body reads, and close until Core and the required surface path are reachable, or until the user explicitly chooses to proceed outside Harness. This corresponds to `VerifiedSurfaceContext.failure_reason=unavailable`. |
+| `local_access_mismatch` | `LOCAL_ACCESS_MISMATCH` | Do not guess local file or command facts and do not trust a copied `surface_id`. Use the registered local transport/session/binding, repair local access registration through the owner path, or label input unverified. This corresponds to `failure_reason=mismatch` or `revoked`. |
+| `missing_capability` | `CAPABILITY_INSUFFICIENT` | Use a capable surface, reduce the operation, or choose a path that does not require the missing observation, capture, local access class, blocking/isolation claim, or active behavior. Baseline `reference-local-mcp` requests that require command, network, secret-access, native artifact-capture, pre-tool-blocking, or isolation guarantees belong here unless the payload shape is invalid. This corresponds to `failure_reason=insufficient_capability`. |
 | `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, stale `WRITE_AUTHORIZATION_INVALID` | Refresh current state, baseline, readable view, scope-update result, or pre-write check before relying on it. |
 | `unsupported_surface` | `CAPABILITY_INSUFFICIENT` or `VALIDATION_FAILED` | Reduce the request, move to a capable surface, or return a blocker. Do not emulate unsupported authority with prose. |
 | `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | Hold the affected action, show the mismatch, narrow to current scope, request the specific user-owned scope judgment, or apply the resolved scope change through `harness.update_scope`. |
@@ -55,8 +55,8 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | `APPROVAL_DENIED` | The relevant sensitive-action approval was denied. |
 | `APPROVAL_EXPIRED` | The relevant sensitive-action approval expired or drifted from scope/baseline. |
 | `CAPABILITY_INSUFFICIENT` | The surface is recognized but cannot satisfy a required access class, observation, capture, blocking/isolation condition, guarantee claim, or active behavior. |
-| `MCP_UNAVAILABLE` | Required MCP/Core or surface reachability itself is unavailable or unreachable. |
-| `LOCAL_ACCESS_MISMATCH` | Registered local access expectations do not match the reachable caller, path, posture, or `surface_id`/project pairing, or that local access was revoked. |
+| `MCP_UNAVAILABLE` | Required MCP/Core or surface reachability itself is unavailable or unreachable, so the server cannot derive a usable local surface context. |
+| `LOCAL_ACCESS_MISMATCH` | Registered local access expectations do not match the reachable transport/session/binding, `surface_id`/project/surface-instance pairing, or local access was revoked. |
 | `EVIDENCE_INSUFFICIENT` | Required evidence coverage is absent, partial, stale, or blocked. |
 | `ACCEPTANCE_REQUIRED` | Required final acceptance is pending, rejected, or not compatible with the visible result basis. |
 | `PROJECTION_STALE` | A requested readable status/view is stale or failed. It is not Core state and is not a close blocker by itself. |
@@ -73,7 +73,7 @@ missing | expired | stale | revoked | consumed | incompatible
 
 Use `WRITE_AUTHORIZATION_REQUIRED` with `authorization_reason=missing` when no required authorization is supplied. Use `WRITE_AUTHORIZATION_INVALID` for an existing authorization that cannot be consumed.
 
-Use the local-access codes narrowly. `LOCAL_ACCESS_MISMATCH` is for a reachable caller, path, or posture that does not match the registered project surface, including revoked local access. `CAPABILITY_INSUFFICIENT` is for a recognized active surface that lacks the capability needed by the requested access class or guarantee claim. `MCP_UNAVAILABLE` is for unavailable MCP/Core or surface reachability itself. Do not substitute a surface-specific `UNAUTHORIZED` code for these public paths.
+Use the local-access codes narrowly and keep them distinguishable. `MCP_UNAVAILABLE` is for unavailable MCP/Core or surface reachability itself, including `VerifiedSurfaceContext.failure_reason=unavailable`. `LOCAL_ACCESS_MISMATCH` is for a reachable local transport/session/binding that does not match the registered project surface, or for revoked local access, including `failure_reason=mismatch` or `revoked`. `CAPABILITY_INSUFFICIENT` is for a recognized active surface that lacks the capability needed by the requested access class or guarantee claim, including `failure_reason=insufficient_capability`. `surface_id` alone never resolves any of these errors. Do not substitute a surface-specific `UNAUTHORIZED` code for these public paths.
 
 <a id="primary-error-code-precedence"></a>
 
@@ -172,8 +172,8 @@ These labels are display guidance, not new public error codes.
 |---|---|---|
 | `VALIDATION_FAILED` | invalid request | Fix the payload, enum value, activation rule, or field set before retrying. |
 | `STATE_CONFLICT` | state conflict | Refresh current status and retry with the current state version, or replay the original idempotent request. |
-| `MCP_UNAVAILABLE` | Core or surface unavailable | Reconnect or diagnose MCP/Core and surface reachability before claiming state changes, gate updates, write compatibility, or close. |
-| `LOCAL_ACCESS_MISMATCH` | local access mismatch | Use the registered local caller/path/posture or repair local access registration before relying on Harness state. |
+| `MCP_UNAVAILABLE` | Core or surface unavailable | Reconnect or diagnose MCP/Core and surface reachability before claiming state changes, gate updates, write compatibility, artifact body access, or close. |
+| `LOCAL_ACCESS_MISMATCH` | local access mismatch | Use the registered local transport/session/binding or repair local access registration through the owner path before relying on Harness state. |
 | `CAPABILITY_INSUFFICIENT` | unsupported or insufficient surface | Use a capable surface, reduce the operation, or choose a path that does not require the missing capability. |
 | `NO_ACTIVE_TASK` | no active Task | Select or create a Task before a Task-scoped action. |
 | `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, use `harness.update_scope` to update the Change Unit or baseline when the scope change is valid, or request the needed user judgment. |

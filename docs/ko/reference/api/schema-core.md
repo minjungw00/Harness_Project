@@ -11,6 +11,7 @@
 | 필요한 것 | 담당 문서 |
 |---|---|
 | 정확한 활성 메서드 이름 값 집합과 공용 스키마 값 집합 | 이 문서 |
+| `ToolEnvelope.surface_id`, `LocalSurfaceRegistration`, `VerifiedSurfaceContext`, 로컬 접점 접근 값 집합 | 이 문서 |
 | 활성 메서드별 요청/응답 동작 | [MVP API](mvp-api.md) |
 | 공개 오류, 우선순위, 멱등성, 차단 응답, 오래된 상태 동작 | [API Errors](errors.md) |
 | Core 상태 의미와 lifecycle 의미 | [Core Model 참조](../core-model.md) |
@@ -51,7 +52,7 @@ ToolEnvelope:
   dry_run: boolean
 ```
 
-Envelope 필드는 호출 경로를 정하고 감사 추적에 쓰입니다. `surface_id`는 역량, 쓰기 권한, 로컬 접근, 사용자 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 닫기를 부여하지 않습니다.
+Envelope 필드는 호출 경로를 정하고 감사 추적에 쓰입니다. `ToolEnvelope.surface_id`는 필수이지만 선택자일 뿐입니다. API 담당 문서가 그 접점에 의존하려면 서버가 확인한 로컬 접점 맥락과 맞아야 합니다. `surface_id`만으로 호출자 권한은 증명되지 않으며, 역량, 쓰기 권한, 로컬 접근, 사용자 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 아티팩트 접근, 닫기를 부여하지 않습니다.
 
 <a id="local-surface-access-values"></a>
 
@@ -59,16 +60,47 @@ Envelope 필드는 호출 경로를 정하고 감사 추적에 쓰입니다. `su
 
 로컬 접점 접근 값은 하네스 API 호환성을 설명하는 값입니다. OS 권한, 샌드박스 경계, 변조 방지 보장, 보편적 도구 실행 전 차단, 격리를 뜻하지 않습니다.
 
-`surfaces.local_access_posture`는 닫힌 현재 MVP 값 집합입니다.
+`LocalSurfaceRegistration`은 한 프로젝트 안의 로컬 접점 등록 사실을 나타내는 개념 스키마입니다. 저장소는 이를 등록 데이터로 보관하지만, 도구 요청이 이 값을 보냈다는 이유만으로 권한으로 받아들이지 않습니다. Product Repository 파일, Projection, 생성된 Markdown, 대화 텍스트, 에이전트 기억은 접점 등록을 만들거나, 바꾸거나, 새로 고칠 수 없습니다.
+
+```yaml
+LocalSurfaceRegistration:
+  project_id: string
+  surface_id: string
+  surface_instance_id: string
+  transport_kind: local_mcp_stdio | local_http
+  transport_binding_fingerprint: string
+  access_secret_hash: string | null
+  capability_profile_hash: string
+  status: active | disabled | stale | revoked
+  local_access_posture: registered_local | unavailable | mismatch | revoked
+  registered_at: string
+  last_verified_at: string | null
+```
+
+`VerifiedSurfaceContext`는 서버가 구체적인 요청과 접근 분류에 대해 파생하는 맥락입니다. 요청 본문이 아니고, Markdown 주장도 아니며, 에이전트 기억의 사실도 아닙니다. 서버는 로컬 transport/session/binding과 저장된 `LocalSurfaceRegistration`에서 이 값을 도출합니다.
+
+```yaml
+VerifiedSurfaceContext:
+  project_id: string
+  surface_id: string
+  surface_instance_id: string
+  access_class: read_status | core_mutation | write_authorization | run_recording | artifact_registration | artifact_read
+  verified: boolean
+  failure_reason: unavailable | mismatch | revoked | insufficient_capability | null
+```
+
+`registered_local`은 성공한 로컬 등록과 확인의 결과로 생기는 태세입니다. 자유 입력 라벨, 호출자 주장, 생성 파일 표식, 권한 우회 값이 아닙니다. `surface_id`는 같은 프로젝트의 등록을 선택해야 하며, 상태 변경 API 접근이나 아티팩트 본문 읽기가 진행되려면 확인된 맥락이 그 등록과 맞아야 합니다.
+
+`LocalSurfaceRegistration.local_access_posture`는 닫힌 현재 MVP 값 집합입니다.
 
 | 값 | 의미 |
 |---|---|
-| `registered_local` | 호출자/전송 경로가 이 프로젝트에 등록된 로컬 접점 태세와 맞아, API 담당 문서가 요청한 접근 분류를 평가할 수 있습니다. |
+| `registered_local` | 최근 서버 확인에서 로컬 transport/session/binding이 이 프로젝트의 등록된 로컬 접점과 맞아, API 담당 문서가 접근 분류를 평가할 수 있습니다. |
 | `unavailable` | 필요한 MCP/Core 또는 접점 도달 가능성을 현재 확인할 수 없습니다. |
-| `mismatch` | 도달 가능한 호출자/전송 경로가 프로젝트에 등록된 로컬 접점 태세와 맞지 않습니다. |
+| `mismatch` | 도달 가능한 로컬 transport/session/binding이 프로젝트에 등록된 로컬 접점 binding과 맞지 않습니다. |
 | `revoked` | 등록된 접점의 로컬 접근이 명시적으로 철회되었으며, 새로 유효한 등록이 대체하기 전까지 쓰면 안 됩니다. |
 
-`surfaces.status`는 닫힌 현재 MVP 값 집합입니다.
+`LocalSurfaceRegistration.status`는 닫힌 현재 MVP 값 집합입니다.
 
 | 값 | 의미 |
 |---|---|
@@ -77,7 +109,7 @@ Envelope 필드는 호출 경로를 정하고 감사 추적에 쓰입니다. `su
 | `stale` | 현재 API 접근에서 이 접점에 의존하기 전에 접점 등록 또는 역량 태세를 새로 고쳐야 합니다. |
 | `revoked` | 접점 등록이 현재 API 접근에 더 이상 유효하지 않습니다. |
 
-활성 로컬 API 접근 분류 라벨은 `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read`입니다. 이 분류의 메서드별 조건은 [현재 MVP API](mvp-api.md#shared-request-rules)가 담당하고, 공개 오류 선택은 [API Errors](errors.md)가 담당합니다.
+활성 로컬 API 접근 분류 라벨은 `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read`입니다. 이 분류의 메서드별 조건은 [현재 MVP API](mvp-api.md#shared-request-rules)가 담당하고, 공개 오류 선택은 [API Errors](errors.md)가 담당합니다. `VerifiedSurfaceContext.failure_reason=unavailable`, `mismatch` 또는 `revoked`, `insufficient_capability`는 각각 `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`로 구분되어야 합니다.
 
 <a id="common-response"></a>
 
@@ -479,8 +511,10 @@ policy_override
 | 활성 메서드 집합 | `harness.intake`, `harness.status`, `harness.update_scope`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent` |
 | 로컬 API 접근 분류 | `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read` |
-| `surfaces.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |
-| `surfaces.status` | `active`, `disabled`, `stale`, `revoked` |
+| `LocalSurfaceRegistration.transport_kind` | `local_mcp_stdio`, `local_http` |
+| `LocalSurfaceRegistration.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |
+| `LocalSurfaceRegistration.status` | `active`, `disabled`, `stale`, `revoked` |
+| `VerifiedSurfaceContext.failure_reason` | `unavailable`, `mismatch`, `revoked`, `insufficient_capability`, `null` |
 | `IntakeRequest.requested_mode` | `advisor`, `direct`, `work`, `auto` |
 | `StateSummary.mode`와 지속 저장되는 `tasks.mode` | `advisor`, `direct`, `work` |
 | `Task.lifecycle_phase`와 `StateSummary.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` |

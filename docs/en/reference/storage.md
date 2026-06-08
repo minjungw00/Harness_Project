@@ -149,7 +149,7 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | Project registration | `registry.sqlite` | Map a registered project to its project-local storage. | `project_id`, `repo_root`, `project_home`, `display_name`, `status`, `created_at`, `updated_at`. |
 | `project.yaml` | Project directory | Static project configuration. | `project_id`, `repo_root`, display/config defaults. |
 | `project_state` | `state.sqlite` | Project-local state header, state clock, active Task pointer, and default surface pointer. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
-| `surfaces` | `state.sqlite` | Registered local/reference surface facts for `surface_id`, capability profile, local access posture, and guarantee display. | `surface_id`, `project_id`, `surface_kind`, `capability_profile_json`, `local_access_posture`, `guarantee_level`, `status`, `created_at`, `updated_at`. |
+| `surfaces` | `state.sqlite` | Stored `LocalSurfaceRegistration` facts used to verify a local surface context for API access. The row is registration data, not live proof that the current caller is trusted. | `project_id`, `surface_id`, `surface_instance_id`, `transport_kind`, `transport_binding_fingerprint`, `access_secret_hash`, `capability_profile_hash`, `capability_profile_json`, `status`, `local_access_posture`, `registered_at`, `last_verified_at`, `updated_at`. |
 | `tasks` | `state.sqlite` | User-value work unit, task-scoped state clock, current shaping summary, lifecycle, result, next-action, and close fields. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `close_reason`, `result`, `summary`, shaping JSON columns, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
 | `change_units` | `state.sqlite` | Current or proposed scoped work boundary for write compatibility and close basis. | `change_unit_id`, `task_id`, `scope_summary`, scope JSON columns for allowed paths or affected areas, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | `state.sqlite` | User-owned judgment records for the active `UserJudgment.judgment_kind` values. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, request/context JSON columns, `question`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
@@ -178,16 +178,19 @@ method effect, the owner documents must be corrected before DDL is accepted.
 Required identity and uniqueness constraints:
 
 - Active tables use opaque stable ids as primary keys or equivalent unique
-  keys: `project_id`, `surface_id`, `task_id`, `change_unit_id`,
-  `user_judgment_id`, `write_authorization_id`, `run_id`, `artifact_id`,
-  `artifact_link_id`, `evidence_summary_id`, `blocker_id`, `event_id`, and
-  `invocation_id`.
+  keys: `project_id`, `surface_id`, `surface_instance_id`, `task_id`,
+  `change_unit_id`, `user_judgment_id`, `write_authorization_id`, `run_id`,
+  `artifact_id`, `artifact_link_id`, `evidence_summary_id`, `blocker_id`,
+  `event_id`, and `invocation_id`.
 - Runtime Home identity stores one `runtime_home_id` for the Runtime Home.
 - Project registration requires unique `project_id`, unique `project_home`, and
   one active registration for a `repo_root` unless a future owner defines
   multi-registration behavior.
 - `project_state.project_id` is one row per registered project.
-- `surfaces` requires a unique `(project_id, surface_id)`.
+- `surfaces` requires a unique `(project_id, surface_id)`. The stored
+  `surface_instance_id` identifies the registered local instance selected by
+  that surface row; it must match the server-derived verified context before a
+  request may rely on the surface.
 - `tasks` requires a unique `(project_id, task_id)`.
 - `change_units` requires unique `(task_id, change_unit_id)` and at most one
   `status=active` Change Unit per Task.
@@ -271,8 +274,9 @@ body. Unknown values fail before commit.
 | Field | Current MVP values | Storage rule |
 |---|---|---|
 | Project registration `status` | `active` | Only registered active projects are in the baseline current MVP. Disable/unregister behavior is later until promoted. |
-| `surfaces.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` | Stored surface posture for API compatibility checks; meanings are below and mirrored by Schema Core. |
-| `surfaces.status` | `active`, `disabled`, `stale`, `revoked` | Stored surface row usability; meanings are below and mirrored by Schema Core. |
+| `surfaces.transport_kind` | `local_mcp_stdio`, `local_http` | Stored local transport category for registration matching. It is not a socket or protocol setup specification. |
+| `surfaces.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` | Stored registration posture for API compatibility checks; meanings are below and mirror `LocalSurfaceRegistration.local_access_posture` in Schema Core. |
+| `surfaces.status` | `active`, `disabled`, `stale`, `revoked` | Stored surface registration usability; meanings are below and mirror `LocalSurfaceRegistration.status` in Schema Core. |
 | `tasks.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` | Persisted Task lifecycle. `intake` is not a stored value; `superseded` is terminal. |
 | `tasks.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` | Persisted close detail, separate from lifecycle and result. |
 | `tasks.result` | `none`, `advice_only`, `completed`, `cancelled`, `superseded` | Persisted coarse outcome. Failed Runs, violations, blocked closes, and evidence gaps stay in their owning records. |
@@ -336,16 +340,28 @@ Change Unit fields.
   create no consumable `write_authorizations` row.
 
 `surfaces` is not a connector marketplace or broad connector ecosystem table.
-It is the active local/reference surface registration needed to interpret
-`surface_id`, capability, local access posture, and guarantee display.
+It stores the active `LocalSurfaceRegistration` facts needed to interpret
+`surface_id`, surface instance identity, local transport binding, capability
+profile hash, local access posture, and registration status.
+
+The `surfaces` row is necessary but not sufficient for API trust. It records the
+registration basis; the server must still derive a per-request
+`VerifiedSurfaceContext` from the local transport/session/binding before a
+mutating API call commits or an artifact body is read. `ToolEnvelope.surface_id`
+selects the row to compare against. It does not prove authority by itself.
+
+Product Repository files, projections, generated Markdown, chat text, and agent
+memory cannot create, modify, or refresh a `surfaces` row. A registration
+refresh changes stored registration facts only through the owner path that
+verifies the local surface context and writes current registration state.
 
 `surfaces.local_access_posture` is a closed current MVP value set:
 
 | Value | Storage meaning |
 |---|---|
-| `registered_local` | The stored surface registration can be used as the registered local posture for current API compatibility checks. |
+| `registered_local` | A successful local registration or verification established that this stored surface registration can be considered registered-local for current API compatibility checks. |
 | `unavailable` | Required MCP/Core or surface reachability cannot currently be established from this registration. |
-| `mismatch` | The observed caller or transport does not match the stored registered local posture. |
+| `mismatch` | The observed caller or transport binding does not match the stored registered local surface registration. |
 | `revoked` | Local access for this registration was explicitly revoked and cannot be used. |
 
 `surfaces.status` is a closed current MVP value set:
@@ -357,7 +373,7 @@ It is the active local/reference surface registration needed to interpret
 | `stale` | The row requires refresh before current API access can rely on it. |
 | `revoked` | The surface registration is no longer valid for current API access. |
 
-Unknown `surfaces.local_access_posture` or `surfaces.status` values are invalid. State-changing API calls require `surfaces.status=active` and `surfaces.local_access_posture=registered_local` before commit. Read-only status paths may return display-safe diagnostics for unavailable, mismatched, stale, disabled, or revoked surfaces, but they must not turn those diagnostics into Core state or expose artifact content.
+Unknown `surfaces.transport_kind`, `surfaces.local_access_posture`, or `surfaces.status` values are invalid. State-changing API calls require a same-project `surfaces` row with `status=active` and a server-derived `VerifiedSurfaceContext.verified=true` for the requested access class before commit. Artifact body reads require the same verified context for `access_class=artifact_read`. Read-only status paths may return display-safe diagnostics for unavailable, mismatched, stale, disabled, revoked, or insufficient-capability surfaces, but they must not turn those diagnostics into Core state or expose artifact content.
 
 `display_label` is not an active storage identity column. Display labels are
 derived from stable identifiers such as `judgment_kind` and locale.

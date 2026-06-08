@@ -11,6 +11,7 @@ This document describes future Harness Server behavior for planning and review. 
 | Need | Owner |
 |---|---|
 | Exact active method-name value set and shared schema value sets | This document |
+| `ToolEnvelope.surface_id`, `LocalSurfaceRegistration`, `VerifiedSurfaceContext`, and local surface access value sets | This document |
 | Method request/response behavior for active methods | [MVP API](mvp-api.md) |
 | Public errors, precedence, idempotency, blocked behavior, and stale-state behavior | [API Errors](errors.md) |
 | Core state semantics and lifecycle meaning | [Core Model Reference](../core-model.md) |
@@ -51,7 +52,7 @@ ToolEnvelope:
   dry_run: boolean
 ```
 
-Envelope fields route and audit the call. `surface_id` does not grant capability, write authority, local access, user judgment, sensitive-action permission, final acceptance, residual-risk acceptance, or close.
+Envelope fields route and audit the call. `ToolEnvelope.surface_id` is required, but it is only a selector. It must match a server-verified local surface context before an API owner can rely on it. `surface_id` does not prove caller authority and does not grant capability, write authority, local access, user judgment, sensitive-action permission, final acceptance, residual-risk acceptance, artifact access, or close.
 
 <a id="local-surface-access-values"></a>
 
@@ -59,16 +60,47 @@ Envelope fields route and audit the call. `surface_id` does not grant capability
 
 Local surface access values describe Harness API compatibility. They are not OS permissions, sandbox boundaries, tamper-proof guarantees, universal pre-tool blocking, or isolation.
 
-`surfaces.local_access_posture` is a closed current MVP value set:
+`LocalSurfaceRegistration` is the conceptual registration fact for one local surface in one project. It is persisted by storage as registration data, not accepted from a tool request as authority. Product Repository files, projections, generated Markdown, chat text, and agent memory cannot create, modify, or refresh a surface registration.
+
+```yaml
+LocalSurfaceRegistration:
+  project_id: string
+  surface_id: string
+  surface_instance_id: string
+  transport_kind: local_mcp_stdio | local_http
+  transport_binding_fingerprint: string
+  access_secret_hash: string | null
+  capability_profile_hash: string
+  status: active | disabled | stale | revoked
+  local_access_posture: registered_local | unavailable | mismatch | revoked
+  registered_at: string
+  last_verified_at: string | null
+```
+
+`VerifiedSurfaceContext` is derived by the server for a concrete request and access class. It is not a request payload, not a Markdown assertion, and not an agent-memory fact. The server derives it from the local transport/session/binding and the stored `LocalSurfaceRegistration`.
+
+```yaml
+VerifiedSurfaceContext:
+  project_id: string
+  surface_id: string
+  surface_instance_id: string
+  access_class: read_status | core_mutation | write_authorization | run_recording | artifact_registration | artifact_read
+  verified: boolean
+  failure_reason: unavailable | mismatch | revoked | insufficient_capability | null
+```
+
+`registered_local` is a posture resulting from successful local registration and verification. It is not a free-form label, caller claim, generated-file marker, or permission override. `surface_id` must select a same-project registration, and the verified context must match that registration before mutating API access or artifact body reads can proceed.
+
+`LocalSurfaceRegistration.local_access_posture` is a closed current MVP value set:
 
 | Value | Meaning |
 |---|---|
-| `registered_local` | The caller/transport matches the registered local surface posture for this project closely enough for the API owner to evaluate the requested access class. |
+| `registered_local` | A recent server verification matched the local transport/session/binding to the registered local surface for this project closely enough for API owners to evaluate access classes. |
 | `unavailable` | Required MCP/Core or surface reachability cannot currently be established. |
-| `mismatch` | A reachable caller/transport does not match the registered local surface posture for the project. |
+| `mismatch` | A reachable local transport/session/binding does not match the registered local surface binding for the project. |
 | `revoked` | Local access for the registered surface was explicitly revoked and must not be used until a new valid registration replaces it. |
 
-`surfaces.status` is a closed current MVP value set:
+`LocalSurfaceRegistration.status` is a closed current MVP value set:
 
 | Value | Meaning |
 |---|---|
@@ -77,7 +109,7 @@ Local surface access values describe Harness API compatibility. They are not OS 
 | `stale` | The surface registration or capability posture must be refreshed before current API access can rely on it. |
 | `revoked` | The surface registration is no longer valid for current API access. |
 
-The active local API access-class labels are `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, and `artifact_read`. Method-level conditions for these classes are owned by [MVP API](mvp-api.md#shared-request-rules); public error selection is owned by [API Errors](errors.md).
+The active local API access-class labels are `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, and `artifact_read`. Method-level conditions for these classes are owned by [MVP API](mvp-api.md#shared-request-rules); public error selection is owned by [API Errors](errors.md). `VerifiedSurfaceContext.failure_reason=unavailable`, `mismatch` or `revoked`, and `insufficient_capability` must remain distinguishable so callers can receive `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, and `CAPABILITY_INSUFFICIENT` respectively.
 
 <a id="common-response"></a>
 
@@ -479,8 +511,10 @@ These values are active current MVP schema values. Method-level capability and a
 | Active method set | `harness.intake`, `harness.status`, `harness.update_scope`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent` |
 | Local API access classes | `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read` |
-| `surfaces.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |
-| `surfaces.status` | `active`, `disabled`, `stale`, `revoked` |
+| `LocalSurfaceRegistration.transport_kind` | `local_mcp_stdio`, `local_http` |
+| `LocalSurfaceRegistration.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |
+| `LocalSurfaceRegistration.status` | `active`, `disabled`, `stale`, `revoked` |
+| `VerifiedSurfaceContext.failure_reason` | `unavailable`, `mismatch`, `revoked`, `insufficient_capability`, `null` |
 | `IntakeRequest.requested_mode` | `advisor`, `direct`, `work`, `auto` |
 | `StateSummary.mode` and persisted `tasks.mode` | `advisor`, `direct`, `work` |
 | `Task.lifecycle_phase` and `StateSummary.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` |

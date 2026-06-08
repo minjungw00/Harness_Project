@@ -39,7 +39,7 @@ Role Lens behavior, when present, is read-only posture guidance. A lens may reco
 
 Surface name is not capability. A connector must use a `capability_profile` scoped to the actual host, version/configuration, workspace policy, MCP posture, active `stage_artifact` staging path, and any future promoted capture, guard, or separation boundary in use.
 
-A `capability_profile` is not a Write Authorization and does not create write compatibility or bypass active Task scope, active Change Unit scope, `prepare_write`, single-use cooperative Write Authorization, `record_run`, or Core close rules. Capability affects blocked reasons, fallback behavior, validator results, and guarantee display. `allowed` and `blocked` are Harness compatibility outcomes, not physical blocking outcomes, in the baseline profile. Runtime boundaries remain authority and storage boundaries, not OS isolation boundaries.
+A `capability_profile` is not a Write Authorization and does not create write compatibility or bypass active Task scope, active Change Unit scope, `prepare_write`, single-use cooperative Write Authorization, `record_run`, or Core close rules. `surface_id` is also not authority proof; it is a selector that must match the server-derived `VerifiedSurfaceContext` for the current local transport/session/binding. Capability affects blocked reasons, fallback behavior, validator results, and guarantee display. `allowed` and `blocked` are Harness compatibility outcomes, not physical blocking outcomes, in the baseline profile. Runtime boundaries remain authority and storage boundaries, not OS isolation boundaries.
 
 The active reference profile is intentionally small:
 
@@ -68,11 +68,11 @@ capability_profile:
 
 Exact public tool and resource contracts belong to the API owners. The connector may summarize the available subset, but it should not duplicate full method schemas in prompt context.
 
-`surface_status`, `local_access_posture`, and `supported_access_classes` report the connector's current API compatibility posture. `surface_status` must mirror stored `surfaces.status`; none of these fields grant authority by themselves. Current access-class labels and surface value sets are owned by [API Schema Core](api/schema-core.md#local-surface-access-values), and minimum request conditions are owned by [MVP API](api/mvp-api.md#shared-request-rules). In the reference profile, `artifact_read` means registered `ArtifactRef` reads through the owner path only; `raw_artifact_path_read_supported=false` means a local filesystem path under the artifact store is not enough to read artifact bytes. For `artifact_registration`, `stage_artifact` can provide a documented staged handle. `captured_artifact` handles and native artifact capture require future owner-documented support, which the active baseline profile does not have.
+`surface_status`, `local_access_posture`, and `supported_access_classes` report the connector's current API compatibility posture. `surface_status` must mirror stored `LocalSurfaceRegistration.status`; none of these fields grant authority by themselves. The server verifies the current local surface from transport/session/binding facts, not from connector prose, generated files, chat text, Product Repository files, or agent memory. Current access-class labels, `LocalSurfaceRegistration`, and `VerifiedSurfaceContext` are owned by [API Schema Core](api/schema-core.md#local-surface-access-values), and minimum request conditions are owned by [MVP API](api/mvp-api.md#shared-request-rules). In the reference profile, `artifact_read` means registered `ArtifactRef` reads through the owner path only; artifact body reads require a verified local surface, and `raw_artifact_path_read_supported=false` means a local filesystem path under the artifact store is not enough to read artifact bytes. For `artifact_registration`, `stage_artifact` can provide a documented staged handle. `captured_artifact` handles and native artifact capture require future owner-documented support, which the active baseline profile does not have.
 
 The baseline `reference-local-mcp` profile has no command observation, network observation, secret-access observation, native artifact capture, pre-tool blocking, or isolation capability. Those capability fields and profile types are later/profile-gated material in [Later Candidate Index](../later/index.md); absence from the active profile means unsupported, not unknown or implicitly available.
 
-Refresh the profile when the surface version, MCP configuration, permissions, workspace policy, generated files, managed blocks, `stage_artifact` path, redaction policy, artifact retention, local access posture, or conformance basis changes. Hook, native capture, pre-tool blocking, and isolation support remain later/profile-gated until promoted.
+Refresh the profile when the surface version, MCP configuration, permissions, workspace policy, generated files, managed blocks, `stage_artifact` path, redaction policy, artifact retention, local access posture, or conformance basis changes. Profile refresh does not refresh `LocalSurfaceRegistration` by itself; registration changes require the server owner path that verifies the current local surface context. Hook, native capture, pre-tool blocking, and isolation support remain later/profile-gated until promoted.
 
 Generated rules, skills, MCP snippets, adapter files, and managed blocks need a connector manifest. The manifest records generated paths, managed block ids and hashes, MCP exposure posture, display-safe handles, profile freshness, drift, and fallback behavior. It must not store raw tokens, secrets, private config values, blocked payload bytes, or canonical Task state.
 
@@ -176,11 +176,13 @@ Fallbacks are described by guarantee display level and risk, not by surface bran
 | Detective | Harness can observe supported facts after action, after the relevant capability check has passed. | Mark state stale, partial, blocked, or failed and require an active owner action, fresh evidence, or a future promoted reconcile/repair path. |
 | Capability insufficient | A requested write, capture, guard, isolation, or guarantee claim depends on an unsupported capability or profile-gated claim. | Return `CAPABILITY_INSUFFICIENT` or a structured blocked reason; lower the displayed `guarantee_display.level` value. |
 | MCP unavailable | The surface or call path cannot reach the current Core authority path. | Use stable public `MCP_UNAVAILABLE` behavior and do not claim state mutation. |
-| Local access mismatch | The caller, path, or posture is outside the registered local profile, or local access was revoked. | Use `LOCAL_ACCESS_MISMATCH` with display-safe diagnostics; do not introduce a surface-specific `UNAUTHORIZED` code. |
+| Local access mismatch | The current transport/session/binding does not match the registered local surface context, or local access was revoked. | Use `LOCAL_ACCESS_MISMATCH` with display-safe diagnostics; do not introduce a surface-specific `UNAUTHORIZED` code and do not trust a copied `surface_id`. |
 
 `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE` are diagnostic conditions. `MCP_UNAVAILABLE` remains the stable public availability code.
 
 While Core is unreachable, do not invent Core state, Write Authorization, gate status, approvals, evidence, final acceptance, residual-risk acceptance, projection repair, or close readiness from chat memory, generated files, cached projections, stale status text, or operator prose.
+
+While local surface verification is unavailable or mismatched, do not create, modify, or refresh surface registration from Product Repository files, projections, generated Markdown, chat text, or agent memory. Hold mutating API claims and artifact body reads until the server can derive a matching `VerifiedSurfaceContext`.
 
 Projection staleness is separate from Core state. If the connector can read current Core state directly, it may continue from that state. Actions that depend on stale projections must refresh from current Core state; reconcile is a later candidate unless a future owner promotes that path.
 
@@ -210,6 +212,7 @@ target_profile: reference-local-mcp
 mcp_posture: local-only registered project, or owner-approved alternative
 surface_status: active
 local_access_posture: registered_local
+surface_verification: server-derived VerifiedSurfaceContext required for mutations and artifact body reads
 context_strategy: compact always-on context plus phase-relevant owner pulls
 write_behavior: cooperative prepare_write discipline before product writes
 run_behavior: record_run with summary and owner-registered artifact refs
