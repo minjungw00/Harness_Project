@@ -82,6 +82,8 @@ Do not expand `secret_omitted`, `blocked`, unavailable, or redacted artifact bod
 
 A displayed `ArtifactRef` is a pointer to a registered artifact record. It is not, by itself, evidence sufficiency, verification, QA, final acceptance, residual-risk acceptance, or close readiness. If the ref lacks owner relation, integrity metadata, redaction state, or availability needed for the claim, show the gap.
 
+Temporary staged artifact data is different from a registered `ArtifactRef`. User-facing renderings may say that an attachment is staged, expiring, or waiting to be recorded, but they must not call it persistent evidence until a compatible `harness.record_run` consumes the staged handle and links the registered artifact to a claim. Raw file paths, copied local paths, raw logs, or "the screenshot is at this path" text are not artifact authority in the active MVP.
+
 ## Active current MVP template set
 
 The active current MVP template set is exactly:
@@ -95,6 +97,8 @@ The active current MVP template set is exactly:
 | Agent-facing | `agent-context-packet` | [Agent Context Packet body](#agent-context-packet-body) |
 
 The four user-facing outputs use ordinary language, source refs, and freshness only where they help the user decide, understand a blocker, inspect evidence, or understand close. They render plain labels such as current stage, what the agent may decide on its own, what Harness can verify, and reason this cannot be closed yet. They should not dump schemas, DDL, event logs, full artifacts, full report bodies, full evidence catalogs, or future catalogs.
+
+User-facing outputs should not require Harness vocabulary such as persistent discovery artifacts, Change Unit, `EvidenceSummary`, or `CloseBlocker`. Render the ordinary consequence first: what is known, what the user must decide, what is approved for this action only, what evidence exists or is missing, what risk remains visible, and what blocks closure. Exact schema names may appear only when the output is explicitly explaining the reference model or rendering an agent-facing packet.
 
 The agent-facing packet is a separate audience. It carries only current, next-action-relevant refs, blockers, evidence gaps, close blockers, guarantee display level, and one next safe action. It is not user prose and is not authority.
 
@@ -211,6 +215,9 @@ Recommendation: {recommendation|none}
 Why this matters: {rationale}
 What is uncertain: {uncertainty}
 Affected work: {affected_scope_summary}
+Sensitive action scope: {sensitive_action_scope_plain_summary|not_applicable}
+Explicitly not authorized: {sensitive_action_not_authorized|not_applicable}
+Capability claim: {sensitive_action_capability_claim|not_applicable}
 If you do not decide: {no_decision_consequence}
 What I will not decide for you: {not_deciding}
 Why I need your answer: {why_agent_cannot_decide}
@@ -225,6 +232,7 @@ Notes:
 - Do not merge sensitive approval, product decision, technical decision, scope decision, final acceptance, residual-risk acceptance, cancellation, or later/reserved QA waiver and verification-risk routes into one broad approval prompt.
 - Chat phrases such as "yes, do it" satisfy a gate only when the scope, `judgment_kind`, affected object, and recorded user intent match the pending judgment.
 - The displayed `Type` label is rendered from `judgment_kind` and the user's locale. It is display text only; the canonical judgment category remains `judgment_kind`.
+- For sensitive-action approval, render the plain summary from the active scope fields: named action, command or tool, intended paths, hosts, dependencies, secret handles, time window, scope limit, explicitly unauthorized actions, and honest capability claim. These lines are `not_applicable` for other judgment kinds.
 
 <a id="run--evidence-summary-body"></a>
 
@@ -241,7 +249,7 @@ Source records:
 - Run refs and command/check summaries
 - changed paths or no-file outcome
 - consumed Write Authorization ref, no-write basis, or attempted invalid authorization context when relevant
-- evidence refs, artifact refs, redaction, and availability notes
+- evidence refs, staged artifact status, registered artifact refs, redaction, and availability notes
 - completion claims, acceptance criteria, or close-relevant claims supported by the evidence
 - evidence gaps, stale inputs, or unresolved support
 - next safe evidence action
@@ -252,6 +260,8 @@ Rendered sections:
 - changed paths
 - checks
 - evidence refs
+- staged attachments
+- registered artifacts
 - supported claims
 - gaps or stale support
 - redaction and availability
@@ -269,7 +279,8 @@ Checks: {checks_run_or_reason_not_run}
 Write check: {write_check_summary|no product write}
 Evidence summary: {evidence_status}. {evidence_summary}
 Supporting evidence refs: {evidence_refs|none}
-Supporting artifact refs: {artifact_ref_summary|none}
+Staged attachments: {staged_artifact_summary|none}
+Registered artifact refs: {artifact_ref_summary|none}
 Redaction or availability: {redaction_availability_summary|none}
 What this supports: {supported_claims_or_criteria|none}
 Still missing or stale: {evidence_gaps_or_stale_inputs|none}
@@ -280,6 +291,7 @@ Sources/freshness: {source_freshness_summary}
 Notes:
 
 - Evidence sufficiency is coverage, not volume. If a claim has no current supporting ref, or a critical artifact ref lacks owner relation, integrity metadata, redaction state, or availability, show the gap and current evidence status instead of treating a long artifact list or report prose as sufficient support.
+- Staged attachments are temporary input staging only. Show them separately from registered artifact refs, and do not count staged data as persistent evidence until run recording consumes it and links the registered artifact to a claim.
 - Only a compatible consumed Write Authorization may be displayed as the product-write compatibility record for a product-write Run. Attempted invalid authorization refs may be shown only as violation/audit or validator-finding context, and they must not be rendered as a consumed Write Authorization or completion evidence.
 - Keep this summary intentionally smaller than a full evidence report. Show the evidence refs and visible gaps needed for the user's next decision; do not expand full artifact inventories or raw artifact bodies.
 
@@ -341,6 +353,8 @@ Sources/freshness: {source_freshness_summary}
 Notes:
 
 - Do not collapse evidence summary, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, blockers, design-quality routed actions, and readable-view freshness into one "done" line.
+- Final acceptance and residual-risk acceptance must remain separate display lines. A broad "looks good" may appear as final acceptance only when it resolves a pending final-acceptance request for a named result, and it is not residual-risk acceptance unless the named risk was asked and recorded.
+- Residual-risk acceptance does not repair missing required evidence or missing close-relevant artifact availability. Keep the evidence or artifact blocker visible until the owner path resolves it.
 - Active MVP `close-result` output shows only active MVP close semantics; later assurance and detailed QA rows stay in later candidate scope.
 - If close is blocked, name the primary blocker and the single next action, and keep secondary blockers visible only when they affect the next path.
 - If the readable close view is stale or failed, fetch a current Core close result instead of closing from this template's prose.

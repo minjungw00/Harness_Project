@@ -10,10 +10,13 @@ You should be able to ask for careful work in everyday terms:
 
 ```text
 Help me make this plan concrete before implementation.
+Ask what you need before changing files.
 Ask me before deciding product behavior.
 Before changing files, tell me what you expect to touch.
+Show me what is still blocking the first safe change.
 Show what you verified before calling it done.
-Tell me what still blocks close.
+Record that I approve installing this dependency for this task only.
+Close this only if the evidence is sufficient; otherwise tell me what blocks closure.
 ```
 
 You can set scope the same way:
@@ -46,7 +49,7 @@ Before product files change, the agent should make the working scope plain:
 
 For anything larger than a tiny obvious edit, the agent should inspect available files, tests, docs, current Harness state, and accepted judgments before asking you. If the answer is discoverable, the agent should discover it. If the work is still too vague to implement safely, the agent should name the ambiguity and ask the one question that changes the next safe action.
 
-You may see a compact readiness view called `ShapingReadiness`. It is not a form you must fill out and not a persistent Discovery Brief, Question Queue, or Assumption Register. It is the agent's current view of whether the goal summary, non-goals, affected area or paths, acceptance criteria, what the agent may decide on its own, the smallest work item for this change, user-owned blockers, and next safe action are known enough for the first safe step. Unknowns should remain visible, but they should not hold up that smallest work item when they do not affect it.
+You may see a compact readiness view called `ShapingReadiness`. It is not a form you must fill out and not a persistent planning artifact. It is the agent's current view of whether the goal summary, non-goals, affected area or paths, acceptance criteria, what the agent may decide on its own, the smallest work item for this change, user-owned blockers, and next safe action are known enough for the first safe step. Unknowns should remain visible, but they should not hold up that smallest work item when they do not affect it.
 
 In a Harness-connected session, product writes go through a pre-write scope check. In owner terms, the active method is `harness.prepare_write`. A compatible result says the intended write matches current Harness state and active surface capability for the named operation. It is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that every tool was blocked before action.
 
@@ -112,8 +115,15 @@ A good sensitive-action prompt should name:
 
 - the exact action
 - the reason it is needed
-- the scope and time window
-- what command, tool, host, dependency, secret, or path is covered
+- the command or tool, if any
+- intended paths, if any
+- hosts or network destinations, if any
+- dependencies and versions, if any
+- secret handles, never raw secret values
+- the time window
+- the scope limit, such as "this task only"
+- actions that are explicitly not authorized
+- the honest capability claim, such as whether Harness can only record the approval cooperatively, whether the surface can observe the action, or whether the action is not observable
 - what safer alternative exists, if any
 - what the approval does not settle
 
@@ -134,6 +144,8 @@ Useful evidence can include changed paths, diffs, command output, test results, 
 - what was not verified
 
 Evidence does not replace your judgment or final acceptance. Tests do not replace user-visible inspection or any future promoted review path. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
+
+Large diffs, logs, screenshots, and similar support may be staged first and registered later. At the user level, this means a temporary staged attachment is not persistent evidence yet. It becomes persistent evidence support only when a compatible run recording consumes it and links the registered artifact to a claim. A raw file path, copied local path, or "the log is over there" claim is not evidence authority by itself.
 
 For tracked work, the evidence summary should distinguish required close evidence from optional support. In current MVP terms, evidence is sufficient only when every required coverage item is supported or not applicable. Unsupported, partial, stale, blocked, or missing required evidence remains a reason the work cannot be closed yet. A usable artifact can support a claim, but artifact availability by itself is not evidence sufficiency.
 
@@ -158,7 +170,7 @@ The agent should show:
 - residual risk visibility and acceptance need
 - the smallest unblocker
 
-Tests can pass while close is still blocked. A UI change can still have a visible inspection gap. A security-sensitive change can need a risk decision. Missing required evidence remains a blocker until it is gathered, marked not applicable through the active evidence path, or honestly reported as unresolved.
+Tests can pass while close is still blocked. A UI change can still have a visible inspection gap. A security-sensitive change can need a risk decision. Missing required evidence remains a blocker until it is gathered, recorded as not applicable with a clear reason, or honestly reported as unresolved.
 
 In owner terms, `harness.close_task` returns blockers or a close result. A close check is read-only: it can show whether close would be blocked, but it should not change Task state. In user terms, the agent should not claim completed close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or reasons the work cannot be closed yet remain unresolved. Separate quality routes are later candidates unless a future owner promotes them.
 
@@ -219,22 +231,20 @@ Visible shaped result:
 - Acceptance: existing users can sign in, failed login shows a chosen error treatment, and tests cover the touched path.
 - Readiness: goal, non-goals, affected areas, acceptance, and next action are known; failed-login feedback is the named product blocker before the smallest work item for this change starts.
 - Blocking question: should failed login feedback be inline text or a toast?
-- Next safe action: after that answer, update the active scope and check the intended login-form write.
+- Next safe action: after that answer, update the visible scope and check the intended login-form write.
 
-Harness routing after the ordinary request is clear:
-- `harness.intake`: turn "login feature" into the smallest useful goal, non-goals, acceptance, evidence expectation, and blocker.
-- `harness.request_user_judgment`: ask the failed-login feedback choice instead of choosing silently.
-- `harness.record_user_judgment`: record the answer to that one product choice.
-- `harness.update_scope`: apply the accepted slice before writing.
-- `harness.prepare_write`: check the intended login form, session, and test writes against the active scope.
-- `harness.record_run`: summarize changed paths, tests, and missing evidence after meaningful action.
-- `harness.close_task`: show evidence, blockers, final acceptance need, and any named residual risk before close.
+Reference alignment after the request is clear:
+- the visible scope is shaped before product files change;
+- the failed-login feedback choice is a user-owned product judgment;
+- the intended login-form, session, and test writes need a compatible pre-write scope check;
+- changed paths, checks, and missing support are recorded after meaningful action;
+- close is not complete until required evidence, final acceptance, and any required residual-risk decision are handled separately.
 ```
 
 ### Make a plan concrete
 
 ```text
-User: Make this plan more concrete before implementation.
+User: Help me make this plan concrete before implementation.
 
 Good agent behavior:
 - read the plan and related docs before asking anything;
@@ -248,76 +258,113 @@ Visible shaped result:
 - Readiness: affected docs are known, but the smallest work item for this change is not known until the user outcome is chosen; no persistent planning artifact is created.
 - Evidence gap: no repository files or tests have been checked yet.
 - Blocking question: which user outcome should the first slice prove?
-- Next safe action: inspect the named owner docs or files, then update the active scope for the first implementable slice.
+- Next safe action: inspect the named owner docs or files, then update the visible scope for the first implementable slice.
 
-Harness routing after the ordinary request is clear:
-- `harness.intake`: keep this as planning until the first implementable slice is specific.
-- `harness.request_user_judgment`: ask only the choice that changes that slice.
-- `harness.record_user_judgment`: record the chosen user outcome when the user decides.
-- `harness.update_scope`: apply the chosen slice before write-capable work.
-- `harness.prepare_write`: wait until implementation paths are specific.
-- `harness.record_run`: record inspections or checks only after they happen.
-- `harness.close_task`: do not call the plan done if the first slice, evidence expectation, or reason the plan cannot be closed yet is still unresolved.
+Reference alignment after the request is clear:
+- planning can stay read-only until the first implementable slice is specific;
+- user-owned choices are asked one at a time;
+- no temporary planning document is required just to shape the work;
+- inspections or checks count as evidence only after they actually happen;
+- the plan should not be called done if the first slice, evidence expectation, or reason closure is blocked remains unresolved.
 ```
 
 ### Only change files inside this scope
 
 ```text
-User: Only change files inside `src/auth` and its tests.
+User: Ask what you need before changing files, and only change files inside `src/auth` and its tests.
 
 Good agent behavior:
 - treat the listed paths as the allowed boundary;
 - inspect enough to know whether the requested fix fits that boundary;
 - ask before touching any path outside it.
 
-Harness routing after the ordinary request is clear:
-- `harness.intake`: convert the path instruction into scope and non-goals.
-- `harness.request_user_judgment`: ask if the needed fix requires a path outside the boundary.
-- `harness.record_user_judgment`: record the user's scope answer.
-- `harness.update_scope`: apply any accepted boundary change before relying on it.
-- `harness.prepare_write`: check intended writes against the allowed paths.
-- `harness.record_run`: report changed paths and focused checks.
-- `harness.close_task`: name out-of-scope needs or missing checks as blockers instead of hiding them.
+Visible result:
+- Scope: `src/auth` and its tests only.
+- Out of scope: shared session helpers, routing files, migrations, and package changes unless the user expands scope.
+- Blocking question if needed: the fix appears to need `src/session/sessionStore.ts`; should this task include that one file, or should I return a follow-up?
+- Next safe action: inspect the named files, then check the intended write against the accepted path boundary.
+
+Reference alignment after the request is clear:
+- scope expansion is a separate user-owned judgment;
+- accepted scope changes must be applied before a write check relies on them;
+- missing out-of-scope work or missing checks remain visible blockers.
 ```
 
 ### Split dependency choice from install approval
 
 ```text
-User: This dependency choice needs my decision before you install anything.
+User: Record that I approve installing `@example/charts@2.4.1` for this task only.
 
 Good agent behavior:
-- inspect current charting/data-display needs first;
-- ask the technical judgment about whether a new dependency is the right direction;
-- ask a separate sensitive-action approval before installing or updating packages.
+- confirm whether the dependency direction has already been accepted or still needs a technical judgment;
+- record only the named install permission if that is the pending question;
+- still check manifest and lockfile writes separately before changing product files.
 
-Harness routing after the ordinary request is clear:
-- `harness.intake`: separate the product need from the dependency path.
-- `harness.request_user_judgment`: ask the `technical_decision` about dependency direction, then ask separate `sensitive_approval` before installing.
-- `harness.record_user_judgment`: record each answer as its own judgment; the install approval uses `SensitiveActionScope`, not path-level Write Authorization.
-- `harness.update_scope`: update scope only if the accepted decision changes the work.
-- `harness.prepare_write`: check manifest or lockfile product-file writes separately before changing those files.
-- `harness.record_run`: record install/check output after the approved action.
-- `harness.close_task`: keep final acceptance and residual-risk acceptance separate from the dependency decision.
+Visible approval scope:
+- Action: install one named dependency version for this task.
+- Command/tool: the named package-manager command the agent intends to run.
+- Intended paths: dependency manifest and lockfile only.
+- Hosts: the package registry host needed for the install.
+- Dependencies: `@example/charts@2.4.1` only.
+- Secret handles: none, unless a named registry credential handle is required.
+- Time window: this task and approval window only.
+- Scope limit: no future installs or upgrades.
+- Explicitly not authorized: unrelated packages, production deploy, secret printing, broad network requests, or product behavior decisions.
+- Capability claim: approval is recorded cooperatively unless the active surface can honestly observe the exact action.
+
+Reference alignment after the request is clear:
+- dependency direction, sensitive-action approval, path-level write compatibility, final acceptance, and residual-risk acceptance are separate;
+- installing the package does not prove the dependency was the right design;
+- install output can support evidence only after the approved action is recorded.
+```
+
+### Attach evidence without making paths authority
+
+```text
+User: Add the test output and screenshot as evidence for this task.
+
+Good agent behavior:
+- avoid treating a raw local path as evidence authority;
+- stage safe artifact bytes or a safe notice when the artifact path is available;
+- record the run so staged data can become a registered artifact linked to the claim;
+- show what each artifact supports and what still is not verified.
+
+Visible evidence summary:
+- Changed paths: `src/auth/login.ts`, `src/auth/login.test.ts`.
+- Checks: login tests passed; accessibility check not run.
+- Supporting artifacts: registered test log and screenshot, with redaction and availability shown.
+- What this supports: existing users can sign in; failed login path is covered by tests.
+- Still missing: no user-visible accessibility inspection yet.
+- Next safe evidence action: run or record the missing inspection, or keep it visible as a blocker if required for close.
+
+Reference alignment after the request is clear:
+- staged artifact data is temporary until run recording consumes it;
+- a registered artifact can support evidence only when linked to the relevant claim;
+- artifact availability and evidence sufficiency remain separate.
 ```
 
 ### Close honestly
 
 ```text
-User: Check whether this change can be closed.
+User: Close this only if the evidence is sufficient; otherwise tell me what blocks closure.
 
 Good agent behavior:
 - show scope, evidence, checks, user-visible inspection status when relevant, final acceptance need, and residual risk;
 - name blockers before close;
 - ask final acceptance and residual-risk acceptance separately when both are relevant.
 
-Harness routing after the ordinary request is clear:
-- `harness.intake`: confirm what result is being evaluated for close.
-- `harness.request_user_judgment`: ask only unresolved `final_acceptance` or named `residual_risk_acceptance` questions.
-- `harness.record_user_judgment`: record those answers separately when the user gives them.
-- `harness.update_scope`: update scope only if the close check reveals accepted scope drift.
-- `harness.prepare_write`: do not reuse stale write checks as close evidence.
-- `harness.record_run`: rely on recorded actions and evidence summaries, or name the gap.
-- `harness.close_task`: use `intent=check` for a read-only close check, `intent=complete` only when required evidence and judgments are resolved, and `intent=cancel` or `intent=supersede` only as terminal non-completion outcomes; broad "looks good" does not settle every judgment.
+Possible close display:
+- Evidence: partial. Required screenshot is registered, but the required test result is missing.
+- Final acceptance: not requested yet because required evidence is still missing.
+- Residual risk: password reset remains out of scope; risk acceptance may be needed only after the close basis is visible.
+- Reason this cannot be closed yet: required test evidence is missing.
+- Smallest unblocker: record the test result or record why that required item does not apply.
+
+Reference alignment after the request is clear:
+- a read-only close check can report blockers without closing the task;
+- completed close requires required evidence before final acceptance and any required residual-risk acceptance;
+- residual-risk acceptance does not fix missing evidence;
+- "looks good" counts as final acceptance only when the agent clearly asked for final acceptance of a named result.
 ```
 
 For compact judgment prompt patterns, see [Judgment Examples](judgment-examples.md).

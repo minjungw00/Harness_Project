@@ -86,9 +86,16 @@ Use when the user must permit one named sensitive action. Keep this separate fro
 Judgment needed: approve one dependency install/update action for this task.
 
 Covered if approved:
-- run the named package-manager command for the named dependency and version
-- include the named dependency manifest and lockfile only as intended paths inside this `SensitiveActionScope`
-- use the approval only within this task and approval window
+- Action: install or update one named dependency version.
+- Command/tool: run the named package-manager command only.
+- Intended paths: dependency manifest and lockfile only.
+- Hosts: the named package registry host only.
+- Dependencies: the named dependency and version only.
+- Secret handles: the named registry credential handle, or none.
+- Time window: this task and approval window only.
+- Scope limit: no future installs, upgrades, or broad package changes.
+- Explicitly not authorized: unrelated dependencies, production deploy, secret printing, broad network requests, or product behavior decisions.
+- Capability claim: record this as cooperative approval unless the active surface can honestly observe the exact action.
 
 Options:
 - Approve this scoped install/update action.
@@ -96,7 +103,7 @@ Options:
 - Ask for a separate technical judgment before any install approval.
 
 Settles: permission for the named install/update action.
-Does not settle: whether the dependency is the right architecture, future installs, product-file Write Authorization for manifest or lockfile changes, product writes outside scope, final acceptance, or residual-risk acceptance.
+Does not settle: whether the dependency is the right architecture, future installs, product-file Write Authorization for manifest or lockfile changes, product writes outside scope, evidence sufficiency, final acceptance, or residual-risk acceptance.
 ```
 
 ## 5. Final Acceptance
@@ -120,7 +127,7 @@ Options:
 - Keep the task open for broader review.
 
 Settles: final acceptance of the typo-only result.
-Does not settle: residual risk, scope expansion, future editorial work, or acceptance of unrelated files.
+Does not settle: residual risk, missing required evidence, scope expansion, future editorial work, or acceptance of unrelated files. A plain "looks good" counts only if this exact final-acceptance question was pending.
 ```
 
 ## 6. Residual Risk Acceptance
@@ -144,7 +151,7 @@ Options:
 Recommendation: accept only if this task was intentionally limited to the login slice and account recovery will be handled separately.
 
 Settles: acceptance of this named residual risk.
-Does not settle: final acceptance of the whole result or other residual risks.
+Does not settle: final acceptance of the whole result, other residual risks, or missing required evidence.
 ```
 
 ## 7. Cancellation Or Defer Decision
@@ -181,7 +188,7 @@ No user judgment needed: choose a tiny local variable name while implementing th
 Known scope:
 - The user accepted the failed-login feedback pattern.
 - The user accepted the login authentication direction.
-- The affected file and behavior are already inside the active Change Unit.
+- The affected file and behavior are already inside the accepted work boundary.
 
 Agent-owned detail:
 - Rename `tmp` to `normalizedEmail` because it follows project style and clarifies an internal value.
