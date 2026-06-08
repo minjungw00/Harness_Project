@@ -60,12 +60,13 @@ Facts are things the agent can inspect, verify, or cite. User judgments are choi
 |---|---|---|
 | Repository facts | Read files, tests, docs, config, history, or current state when available. | Ask you to restate facts it can safely inspect. |
 | Evidence | Show what supports a claim and what is missing. | Treat evidence as your decision or final acceptance. |
-| Product judgment | Ask you about product behavior, copy, UX, user flow, and accessibility trade-offs. | Pick a material product direction silently. |
-| Technical judgment | Ask you about architecture, dependency, migration, interface, security, privacy, retention, or compatibility choices that matter. | Hide a material technical decision as an implementation detail. |
+| Product judgment | Ask you about user-visible behavior, messages, UX, user flow, accessibility, and product trade-offs. | Pick a material product direction silently. |
+| Technical judgment | Ask you about architecture, dependency or external service, authentication, migration, public interface, security, privacy, retention, compatibility, or costly-to-reverse technical choices that matter. | Hide a material technical decision as an implementation detail. |
 | Scope judgment | Ask before expanding scope or removing a non-goal, then apply the accepted scope change through `harness.update_scope`. | Treat enthusiasm as permission to broaden the task or as write approval. |
 | Close judgment | Ask for final acceptance or residual-risk acceptance only when the close basis is visible. | Turn "looks good" into every pending judgment. |
+| Agent-owned implementation detail | Usually decide small refactors, local naming, test file organization, internal cleanup, or details already fixed by accepted scope and acceptance criteria. | Ask for approval on every tiny local variable name, or use "implementation detail" to hide a costly direction change. |
 
-Harness preserves this boundary so the agent can recommend without replacing your judgment.
+Harness preserves this boundary so the agent can recommend and keep moving on ordinary implementation details without replacing your judgment.
 
 ## 4. Ask one narrow judgment at a time
 
@@ -86,11 +87,11 @@ Example:
 Judgment needed: choose failed-login feedback.
 
 Options:
-- Inline message near the form.
+- Existing UI message layer near the form.
 - Toast after failed submit.
 - Modal that interrupts the flow.
 
-Recommendation: inline message. It stays visible and fits the form context.
+Recommendation: existing UI message layer. It stays visible and fits the form context.
 
 If deferred: backend error mapping can continue, but final UI behavior, copy, screenshots, and user-visible inspection remain unresolved.
 

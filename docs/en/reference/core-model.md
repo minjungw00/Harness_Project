@@ -93,8 +93,8 @@ User-owned judgment is the boundary where Harness must ask or preserve the user'
 
 The only active current MVP values for `UserJudgment.judgment_kind` are:
 
-- `product_decision`: product behavior, UX, wording, release-facing promise, or user value.
-- `technical_decision`: architecture, dependency, migration, public interface, compatibility, security/privacy, or material technical direction.
+- `product_decision`: user-visible product behavior, user flow, messages, UX, accessibility, release-facing promise, product trade-off, or user value.
+- `technical_decision`: architecture, dependency or external service introduction, authentication direction, migration, public interface, compatibility-breaking direction, data retention, privacy, security, or other material, irreversible, or costly-to-reverse technical direction.
 - `scope_decision`: scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change.
 - `sensitive_approval`: permission for a named sensitive step inside a bounded `SensitiveActionScope`.
 - `final_acceptance`: the user's result judgment when the path requires acceptance.
@@ -102,6 +102,8 @@ The only active current MVP values for `UserJudgment.judgment_kind` are:
 - `cancellation`: stopping the Task without a successful result.
 
 Other judgment candidates stay catalog-only in [Later](../later/index.md) until a future owner promotes them. They are not active current MVP `UserJudgment.judgment_kind` values.
+
+Not every implementation detail is a user-owned judgment. Inside accepted scope and acceptance criteria, the agent may usually decide small refactors that do not change product behavior or technical direction, names that follow existing project style, test file organization details, internal cleanup that does not change accepted scope, and implementation details already determined by the accepted scope and acceptance criteria. This latitude is not a new permission system and does not let the agent silently choose product behavior, expand scope, introduce a new dependency or external service, change authentication/security/privacy/retention direction, break compatibility, or choose an irreversible or costly-to-reverse technical path.
 
 Ambiguous consent is narrow. "Go ahead", "looks good", or similar broad approval cannot silently satisfy another judgment kind. One user reply may satisfy multiple judgment routes only when the prompt explicitly asked those distinct questions and Core records each compatible judgment with its affected object, scope, consequence, and close or write impact.
 

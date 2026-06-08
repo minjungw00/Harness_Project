@@ -17,9 +17,10 @@ Use these terms first in user-facing docs, prompts, and status summaries. Add ex
 | work piece | A small scoped portion of work. Internal references may call write-capable scoped work a `Change Unit`. | [Core Model](core-model.md) |
 | user-owned judgment | A choice Harness must preserve for the user instead of inferring from agent judgment, evidence, display text, or broad consent. | [Core Model](core-model.md) |
 | judgment request | A focused prompt asking the user to make one user-owned judgment. API references use `UserJudgment`. | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md) |
-| product judgment | A user-owned choice about product behavior, copy, flow, UX, or user value. | [Core Model](core-model.md) |
-| technical judgment | A user-owned choice about architecture, dependency, migration, interface, security/privacy, or material technical direction. | [Core Model](core-model.md) |
+| product judgment | A user-owned choice about user-visible product behavior, messages, flow, UX, accessibility, product trade-offs, or user value. | [Core Model](core-model.md) |
+| technical judgment | A user-owned choice about architecture, dependency or external service, authentication, migration, interface, security/privacy/retention, compatibility, or material, irreversible, or costly-to-reverse technical direction. | [Core Model](core-model.md) |
 | scope judgment | A user-owned choice about scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change. | [Core Model](core-model.md) |
+| agent-owned implementation detail | A small implementation choice the agent may usually decide inside accepted scope when it does not change product behavior, scope, or material technical direction. | [Core Model](core-model.md) |
 | sensitive-action approval | User permission for one named sensitive step inside a bounded `SensitiveActionScope`. It is not path-level Write Authorization, final acceptance, residual-risk acceptance, or broad approval. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
 | evidence | Durable support for a claim about the work, such as changed paths, diffs, logs, screenshots, inspection notes, or artifact refs. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
 | verification | Recorded correctness checking when an owner path requires it. It does not replace evidence, QA, final acceptance, or residual-risk acceptance. | [Core Model](core-model.md) |

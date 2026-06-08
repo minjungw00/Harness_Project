@@ -17,9 +17,10 @@
 | 작업 조각 | 작게 나눈 작업 범위입니다. 내부 참조에서는 쓰기 가능한 범위 단위를 `Change Unit`이라고 부를 수 있습니다. | [Core Model](core-model.md) |
 | 사용자가 소유하는 판단 | 에이전트 추론, 증거, 표시 문구, 넓은 동의에서 추론하지 않고 사용자의 선택으로 보존해야 하는 판단입니다. | [Core Model](core-model.md) |
 | 판단 요청 | 사용자가 소유하는 판단 하나를 묻는 집중된 질문입니다. API 참조에서는 `UserJudgment`를 씁니다. | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md) |
-| 제품 판단 | 제품 동작, 문구, 흐름, UX, 사용자 가치에 대한 사용자가 소유하는 판단입니다. | [Core Model](core-model.md) |
-| 기술 판단 | 아키텍처, 의존성, 마이그레이션, 인터페이스, 보안/개인정보, 중요한 기술 방향에 대한 사용자가 소유하는 판단입니다. | [Core Model](core-model.md) |
+| 제품 판단 | 사용자에게 보이는 제품 동작, 메시지, 흐름, UX, 접근성, 제품상 절충, 사용자 가치에 대한 사용자가 소유하는 판단입니다. | [Core Model](core-model.md) |
+| 기술 판단 | 아키텍처, 의존성이나 외부 서비스, 인증, 마이그레이션, 인터페이스, 보안/개인정보/보관, 호환성, 중요하거나 되돌리기 어렵거나 비용이 큰 기술 방향에 대한 사용자가 소유하는 판단입니다. | [Core Model](core-model.md) |
 | 범위 판단 | 범위 확장, 비목표 제거, `Change Unit` 경계, `Autonomy Boundary` 변경에 대한 사용자가 소유하는 판단입니다. | [Core Model](core-model.md) |
+| 에이전트가 맡는 구현 세부사항 | 받아들인 범위 안에서 제품 동작, 범위, 중요한 기술 방향을 바꾸지 않을 때 에이전트가 보통 결정할 수 있는 작은 구현 선택입니다. | [Core Model](core-model.md) |
 | 민감 동작 승인 | 경계가 정해진 `SensitiveActionScope` 안에서 이름 붙은 민감한 단계 하나를 진행해도 된다는 사용자 권한 부여입니다. 경로 수준 Write Authorization, 최종 수락, 잔여 위험 수락, 넓은 동의가 아닙니다. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
 | 증거 | 작업에 대한 주장을 뒷받침하는 오래 남는 자료입니다. 변경 경로, 변경 차이, 로그, 스크린샷, 검사 메모, `ArtifactRef`가 될 수 있습니다. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
 | 검증 | 담당 경로가 요구할 때 기록되는 정확성 확인입니다. 증거, QA, 최종 수락, 잔여 위험 수락을 대신하지 않습니다. | [Core Model](core-model.md) |

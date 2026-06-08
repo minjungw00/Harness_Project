@@ -93,7 +93,9 @@ Use lifecycle labels narrowly when they help the agent choose the next action:
 
 <a id="5-request-user-judgment-narrowly"></a>
 
-The agent may recommend. The user decides product behavior, material technical direction, scope changes, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation. Other future judgment candidates belong to [Later](../later/index.md) and are not active judgment kinds.
+The agent may recommend. The user decides user-visible product behavior; user flow, messages, UX, accessibility, or product trade-offs; scope expansion or explicit non-goal removal; data retention, privacy, security, or authentication choices; new dependency or external service introduction; migration, public interface, or compatibility-breaking direction; irreversible or costly-to-reverse technical choices; sensitive-action approval; final acceptance; residual-risk acceptance; and cancellation. Other future judgment candidates belong to [Later](../later/index.md) and are not active judgment kinds.
+
+Inside accepted scope, the agent may usually decide implementation details that do not change product behavior, scope, or material technical direction. Examples include a tiny local variable name that follows project style, test file organization details, small behavior-preserving refactors, internal cleanup, and code details already forced by accepted scope and acceptance criteria. Escalate back to user judgment when an implementation detail becomes product-visible, changes the accepted direction, introduces a new dependency or service, affects security/privacy/retention/authentication, breaks compatibility, or becomes irreversible or costly to reverse.
 
 When using the active owner path, keep these `judgment_kind` values separate: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`.
 

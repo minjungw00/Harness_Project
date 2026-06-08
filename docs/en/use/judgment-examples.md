@@ -1,26 +1,26 @@
 # Judgment Examples
 
-Use this compact catalog after the [User Guide](user-guide.md) when a task is blocked by a choice the agent should not make alone. These examples show active judgment-request behavior, not runtime records, generated evidence, acceptance records, or conformance outputs from this documentation repository.
+Use this compact catalog after the [User Guide](user-guide.md) when a task is blocked by a choice the agent should not make alone. It also includes one counterexample for details the agent may usually decide inside accepted scope. These examples show active judgment-request behavior and judgment-boundary guidance, not runtime records, generated evidence, acceptance records, or conformance outputs from this documentation repository.
 
 The active user path is focused: ask with `harness.request_user_judgment` when a choice blocks work, and record the answer with `harness.record_user_judgment` when the user answers. Users should not need a special label to answer ordinary prompts.
 
-Each example asks for one judgment, names what the answer settles, and names what it does not settle.
+Each judgment example asks for one judgment, names what the answer settles, and names what it does not settle. The implementation-detail example names why no `UserJudgment` is needed.
 
 ## 1. Product Choice
 
 Kind: `product_decision`
 
-Use when user-visible behavior, copy, flow, UX, or accessibility trade-offs must be chosen before implementation or review can finish.
+Use when user-visible behavior, copy, flow, messages, UX, or accessibility trade-offs must be chosen before implementation or review can finish.
 
 ```text
 Judgment needed: choose the Save feedback pattern.
 
 Options:
-- Inline message near the saved form.
+- Existing UI message layer near the saved form.
 - Toast that confirms the save without blocking the flow.
 - Modal that interrupts the flow.
 
-Recommendation: toast for a non-blocking success confirmation; inline if the message is tied to a field or error.
+Recommendation: toast for a non-blocking success confirmation; the existing UI message layer if the message is tied to a field or error.
 
 If deferred: save-state wiring can continue, but final UI behavior, screenshots, and user-visible inspection remain blocked.
 
@@ -32,17 +32,17 @@ Does not settle: broader settings workflow, localization strategy, final accepta
 
 Kind: `technical_decision`
 
-Use when architecture, dependency, migration, interface, security, privacy, retention, or compatibility choices materially affect the work.
+Use when architecture, dependency or external service introduction, authentication direction, migration, public interface, security, privacy, retention, or compatibility choices materially affect the work.
 
 ```text
 Judgment needed: choose the login session direction.
 
 Options:
-- Server-side session cookie for first-party web login.
-- Client-handled JWT or bearer token.
-- OAuth/OIDC identity provider with a local session or token strategy.
+- Server-side session auth for first-party web login.
+- Token auth with a client-handled JWT or bearer token.
+- Social login through an OAuth/OIDC provider with a local session or token strategy.
 
-Recommendation: inspect the current auth model first. If this is a first-party web app without external identity-provider requirements, server-side session cookie is likely the conservative default.
+Recommendation: inspect the current auth model first. If this is a first-party web app without external identity-provider requirements, server-side session auth is likely the conservative default.
 
 Uncertainty: current clients, revocation needs, SSO requirements, deployment constraints, and migration cost.
 
@@ -167,4 +167,31 @@ If deferred: the agent may keep notes on inspected facts and blockers, but must 
 
 Settles: whether the current task stops, waits, or narrows.
 Does not settle: product direction, technical direction, sensitive-action approval, final acceptance, residual-risk acceptance, or close readiness for a completed result.
+```
+
+## 8. Usually Agent-Owned Implementation Detail
+
+Kind: usually no `UserJudgment` when already inside accepted scope.
+
+Use this distinction when the detail follows accepted scope and acceptance criteria and does not change product behavior, technical direction, scope, sensitive-action need, final acceptance, or residual risk.
+
+```text
+No user judgment needed: choose a tiny local variable name while implementing the accepted login slice.
+
+Known scope:
+- The user accepted the failed-login feedback pattern.
+- The user accepted the login authentication direction.
+- The affected file and behavior are already inside the active Change Unit.
+
+Agent-owned detail:
+- Rename `tmp` to `normalizedEmail` because it follows project style and clarifies an internal value.
+- Keep the test in the existing nearby test file because that is the local organization pattern.
+
+Escalate instead if:
+- the naming or cleanup changes user-visible copy or behavior
+- the refactor changes public interfaces, auth direction, privacy/security/retention behavior, or compatibility
+- the work needs a new dependency, external service, migration, sensitive action, scope expansion, or costly-to-reverse technical choice
+
+Settles: nothing in `UserJudgment`; this is ordinary agent implementation latitude.
+Does not settle: product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, or residual-risk acceptance.
 ```
