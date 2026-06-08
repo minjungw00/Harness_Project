@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-현재 MVP에서 쓰는 활성 메서드 이름 집합, 공용 API 형태, 닫힌 스키마 값 집합을 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 공통 응답, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization 요약, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP enum 값을 다룹니다.
+현재 MVP에서 쓰는 활성 메서드 이름 집합, 공용 API 형태, 닫힌 스키마 값 집합을 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 공통 응답, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization 요약, `CompletionPolicy`, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP enum 값을 다룹니다.
 
 이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다. 향후 스키마 후보는 [이후 후보 색인](../../later/index.md#later-schema-candidates)에 남습니다.
 
@@ -279,8 +279,16 @@ StagedArtifactHandle:
 ## 증거와 쓰기 전 범위 스키마
 
 ```yaml
+CompletionPolicy:
+  evidence_required: boolean
+  final_acceptance_required: boolean
+  residual_risk_acceptance_required_when_visible: boolean
+  product_write_completion: boolean
+  user_visible_result: boolean
+
 EvidenceCoverageItem:
-  claim_or_criterion: string
+  claim: string
+  required_for_close: boolean
   coverage_state: supported | unsupported | partial | not_applicable | stale | blocked
   supporting_state_refs: StateRecordRef[]
   supporting_artifact_refs: ArtifactRef[]
@@ -291,6 +299,7 @@ EvidenceSummary:
   evidence_summary_ref: StateRecordRef | null
   task_id: string
   change_unit_id: string | null
+  completion_policy: CompletionPolicy
   status: not_required | none | partial | sufficient | stale | blocked
   coverage_items: EvidenceCoverageItem[]
   supporting_run_refs: StateRecordRef[]
@@ -342,7 +351,13 @@ WriteAuthoritySummary:
   guarantee_display: GuaranteeDisplay
 ```
 
-`EvidenceSummary`는 활성 간결 증거 기록입니다. 상세 증거 보고서, 별도 보증 결과, 최종 수락, 잔여 위험 수락, 렌더링된 보기가 아닙니다.
+`CompletionPolicy`는 Task 또는 Change Unit의 활성 닫기 정책을 간결하게 담습니다. 해당 닫기 경로에서 증거, 최종 수락, 보이는 잔여 위험의 수락, 제품 쓰기 완료, 사용자에게 보이는 결과가 필요한지 이름 붙입니다. QA gate, verification gate, 전체 Evidence Manifest, 별도 보증 흐름을 추가하는 허가가 아닙니다.
+
+`EvidenceSummary`는 그 `CompletionPolicy`에 묶인 현재 MVP의 간결한 증거 기록입니다. 증거 충분성은 막연한 산문 판단이 아닙니다. `completion_policy.evidence_required=false`이면 증거 상태는 `not_required`여야 합니다. `EvidenceSummary.status=sufficient`는 `required_for_close=true`인 모든 `EvidenceCoverageItem`이 존재하고 `coverage_state=supported` 또는 `not_applicable`일 때만 허용됩니다. 필수 `EvidenceCoverageItem` 중 하나라도 `unsupported`, `partial`, `stale`, `blocked`이면 `harness.close_task`는 닫기 차단 사유를 보고해야 합니다. 필수 증거가 통째로 빠졌다면 그 필수 항목을 `unsupported` 또는 `blocked` `EvidenceCoverageItem`이나 `gap_blocker_refs`로 표현해야 하며, 항목을 생략해서 숨기면 안 됩니다.
+
+선택 증거 항목은 `required_for_close=false`로 명시할 수 있습니다. 선택 공백은 보이게 남아도 `EvidenceSummary.status=sufficient`를 막지 않을 수 있지만, 현재 MVP 요약이 작더라도 필수/선택 구분은 명시해야 합니다.
+
+아티팩트 가용성과 증거 충분성은 관련되어 있지만 별개의 조건입니다. 등록되어 사용할 수 있는 `ArtifactRef`가 있어도 `EvidenceCoverageItem`이 그 아티팩트를 주장에 연결하지 않으면 증거가 충분해지지 않습니다. 필수 `EvidenceCoverageItem`이 빠졌거나, 필수 항목이 없거나 사용할 수 없거나 무결성에 실패했거나 닫기 근거로 쓸 수 없는 아티팩트에 의존하면 충분할 수 없으며, `close_task`는 `CloseBlocker.category=artifact_availability`도 보고할 수 있습니다. 최종 수락과 잔여 위험 수락은 빠진 필수 증거를 대신할 수 없고, 증거도 최종 수락이나 잔여 위험 수락을 만들 수 없습니다.
 
 `AuthorizedAttemptScope`는 `write_authorizations.attempt_scope_json`에 저장되고 나중에 `harness.record_run`에서 비교하는 정확한 범위입니다. `AuthorizedAttemptScope.basis_state_version`은 `prepare_write`가 권한을 준비할 때 사용한 프로젝트 전체 `project_state.state_version`입니다. `WriteAuthorizationSummary.status`는 오래 남는 Write Authorization 생명주기입니다. `blocked`는 Write Authorization의 `status`가 아닙니다. 차단된 쓰기는 소비 가능한 Write Authorization 없이 차단 사유를 반환합니다.
 

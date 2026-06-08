@@ -132,6 +132,8 @@ Useful evidence can include changed paths, diffs, command output, test results, 
 
 Evidence does not replace your judgment or final acceptance. Tests do not replace user-visible inspection or any future promoted review path. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
 
+For tracked work, the evidence summary should distinguish required close evidence from optional support. In current MVP terms, evidence is sufficient only when every required coverage item is supported or not applicable. Unsupported, partial, stale, blocked, or missing required evidence remains a close blocker. A usable artifact can support a claim, but artifact availability by itself is not evidence sufficiency.
+
 ## 7. Review blockers before close
 
 Before larger work is called done, ask:
@@ -153,7 +155,7 @@ The agent should show:
 - residual risk visibility and acceptance need
 - the smallest unblocker
 
-Tests can pass while close is still blocked. A UI change can still have a visible inspection gap. A security-sensitive change can need a risk decision. Missing evidence remains a blocker until it is gathered or honestly reported as unresolved.
+Tests can pass while close is still blocked. A UI change can still have a visible inspection gap. A security-sensitive change can need a risk decision. Missing required evidence remains a blocker until it is gathered, marked not applicable through the active evidence path, or honestly reported as unresolved.
 
 In owner terms, `harness.close_task` returns blockers or a close result. In user terms, the agent should not claim close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved. Separate quality routes are later candidates unless a future owner promotes them.
 
@@ -162,6 +164,8 @@ Close can end as completed, cancelled, or superseded. A failed command, failed d
 ## 8. Accept final result separately from residual risk
 
 Final acceptance means you accept the result you can see. Residual-risk acceptance means you accept a named residual risk that is still visible. They are separate judgments.
+
+Neither judgment substitutes for missing required evidence. If required evidence is unsupported, partial, stale, blocked, or missing, the task still needs an evidence unblocker even if you accept the visible result or accept a named residual risk.
 
 The agent should ask for final acceptance only after the close basis is visible: scope, result, evidence, checks, known gaps, user-visible inspection status when relevant, and blockers. The prompt should name exactly what result you are accepting.
 

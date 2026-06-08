@@ -312,6 +312,7 @@ StageArtifactResponse:
 - **Does not own:** New scope, user judgment resolution, final acceptance, residual-risk acceptance, separate assurance records, or close.
 - **When to call:** After shaping work, a direct answer/result, or implementation work. Product-write runs must provide a compatible active Write Authorization from `harness.prepare_write`.
 - **Artifact inputs:** New artifact bytes must enter through a valid `StagedArtifactHandle` created by `harness.stage_artifact`; existing bytes may be reused only through a compatible `existing_artifact_ref`. Expired, mismatched, already-consumed, or cross-task staging handles are rejected before mutation.
+- **Evidence updates:** Each `EvidenceCoverageItem` must name the `claim`, whether it is `required_for_close`, its `coverage_state`, and any supporting or gap refs. Required close coverage is determined by the Task or Change Unit `CompletionPolicy`; `record_run` may update compact evidence coverage, but it does not close the Task or create final acceptance or residual-risk acceptance.
 - **Request:**
 
 ```yaml
@@ -458,6 +459,10 @@ CloseTaskResponse:
 ```
 
 Close concepts stay separate. `Task.lifecycle_phase` is the persisted lifecycle field; active values are `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, and `superseded`. `CloseTaskResponse.close_state` is response-level close status with values `ready`, `blocked`, `closed`, `cancelled`, and `superseded`. `Task.close_reason` stores close detail as `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, or `superseded`. `Task.result` stores only the coarse outcome `none`, `advice_only`, `completed`, `cancelled`, or `superseded`; unsuccessful Runs, violations, blocked closes, and evidence gaps remain in Run status, `CloseBlocker`, evidence state, or current Task state.
+
+Evidence sufficiency for `close_task` is derived from `EvidenceSummary.completion_policy` and `EvidenceSummary.coverage_items`. If `completion_policy.evidence_required=true`, `close_task` may treat `EvidenceSummary.status=sufficient` as valid only when every `EvidenceCoverageItem` with `required_for_close=true` has `coverage_state=supported` or `not_applicable`. If any required item is `unsupported`, `partial`, `stale`, or `blocked`, or if a required item is absent from the coverage set, `close_task` must return `close_state=blocked` with an evidence close blocker and may use `EVIDENCE_INSUFFICIENT` as the primary error. Artifact availability remains separate: missing, unavailable, integrity-failed, or unusable close-relevant artifacts can produce `ARTIFACT_MISSING` or an `artifact_availability` close blocker even when the evidence record is otherwise well formed.
+
+Final acceptance and residual-risk acceptance are checked only after the close basis is visible. They cannot override an evidence close blocker, cannot turn an unsupported required coverage item into sufficient evidence, and cannot substitute for a missing required `ArtifactRef` or `StateRecordRef`.
 
 The diagram below is a compact aid for the active `close_task` decision flow. `ready` and `blocked` are response-level `CloseTaskResponse.close_state` results before a terminal lifecycle update; `completed`, `cancelled`, and `superseded` are terminal `Task.lifecycle_phase` values.
 

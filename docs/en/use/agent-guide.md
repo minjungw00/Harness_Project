@@ -139,6 +139,8 @@ Use refs and short summaries by default. Pull full artifact bodies only when the
 
 Evidence display should say what ran or changed, which claim it supports, which refs or artifacts support it, what passed or failed, and what is missing, stale, redacted, omitted, blocked, or insufficient.
 
+For tracked work, derive the evidence summary from the active `CompletionPolicy`. Mark each close-relevant claim as required or optional. Do not mark evidence sufficient while any required item is unsupported, partial, stale, blocked, or missing; return or surface an evidence blocker instead. Keep artifact availability separate from sufficiency: an available `ArtifactRef` supports a claim only when the evidence coverage links it to that claim.
+
 Evidence does not automatically satisfy final acceptance, residual-risk acceptance, close, or any future promoted quality path.
 
 ## 8. Do Not Close When Blockers Remain
@@ -152,7 +154,9 @@ For small work, a close-like result can be brief: request, scope, changed files 
 For tracked work, show the close basis before asking for final acceptance or attempting close:
 
 - scope match
+- completion policy and required evidence coverage
 - evidence coverage or gap
+- close-relevant artifact availability
 - checks run and known check limits
 - sensitive-action approval status when relevant
 - final acceptance status when required
@@ -161,7 +165,7 @@ For tracked work, show the close basis before asking for final acceptance or att
 
 The current MVP has no extra active close requirement for separate quality review or broad quality-risk acceptance. Those separate quality routes stay in [Later](../later/index.md) until an owner promotes a separate active contract.
 
-Do not close from prose, tests alone, broad acceptance-like language, a generated readable view, or a stale status summary. If blockers remain, lead with them and name the next safe action.
+Do not close from prose, tests alone, broad acceptance-like language, residual-risk acceptance, a generated readable view, or a stale status summary. Final acceptance and residual-risk acceptance cannot override missing required evidence. If blockers remain, lead with them and name the next safe action.
 
 ## 9. Respect The Active/Later Boundary
 

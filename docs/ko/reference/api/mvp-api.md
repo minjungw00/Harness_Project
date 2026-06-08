@@ -312,6 +312,7 @@ StageArtifactResponse:
 - **담당하지 않음:** 새 범위, 사용자 판단 해결, 최종 수락, 잔여 위험 수락, 별도 보증 기록, 닫기.
 - **호출 시점:** 구체화 작업, 직접 답변/결과, 구현 작업이 끝난 뒤. 제품 쓰기 Run은 `harness.prepare_write`가 반환한 호환되는 활성 Write Authorization을 제공해야 합니다.
 - **아티팩트 입력:** 새 아티팩트 바이트는 `harness.stage_artifact`가 만든 유효한 `StagedArtifactHandle`을 통해서만 들어옵니다. 기존 바이트는 호환되는 `existing_artifact_ref`를 통해서만 재사용할 수 있습니다. 만료된 핸들, 범위가 맞지 않는 핸들, 이미 소비된 핸들, 다른 Task의 핸들은 변경 전에 거부됩니다.
+- **증거 업데이트:** 각 `EvidenceCoverageItem`은 `claim`, `required_for_close`, `coverage_state`, 뒷받침 참조 또는 공백 참조를 이름 붙여야 합니다. 필수 닫기 증거 항목은 Task 또는 Change Unit의 `CompletionPolicy`에서 정합니다. `record_run`은 간결한 증거 항목을 갱신할 수 있지만 Task를 닫거나 최종 수락 또는 잔여 위험 수락을 만들지 않습니다.
 - **요청:**
 
 ```yaml
@@ -458,6 +459,10 @@ CloseTaskResponse:
 ```
 
 닫기 관련 개념은 서로 분리됩니다. `Task.lifecycle_phase`는 지속 저장되는 생명주기 필드이며 활성 값은 `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded`입니다. `CloseTaskResponse.close_state`는 응답 수준의 닫기 상태이며 값은 `ready`, `blocked`, `closed`, `cancelled`, `superseded`입니다. `Task.close_reason`은 닫기 세부 사유를 `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` 중 하나로 저장합니다. `Task.result`는 `none`, `advice_only`, `completed`, `cancelled`, `superseded` 중 하나의 굵은 결과만 저장합니다. 성공하지 못한 Run, violation, 차단된 닫기, 증거 공백은 Run 상태, `CloseBlocker`, 증거 상태, 현재 Task 상태에 남깁니다.
+
+`close_task`의 증거 충분성은 `EvidenceSummary.completion_policy`와 `EvidenceSummary.coverage_items`에서 파생됩니다. `completion_policy.evidence_required=true`이면 `required_for_close=true`인 모든 `EvidenceCoverageItem`의 `coverage_state`가 `supported` 또는 `not_applicable`일 때만 `EvidenceSummary.status=sufficient`를 유효하게 볼 수 있습니다. 필수 항목 중 하나라도 `unsupported`, `partial`, `stale`, `blocked`이거나 필수 항목이 `coverage_items` 집합에서 빠져 있으면 `close_task`는 `close_state=blocked`와 증거 닫기 차단 사유를 반환해야 하며, 주 오류로 `EVIDENCE_INSUFFICIENT`를 사용할 수 있습니다. 아티팩트 가용성은 별도입니다. 닫기 관련 아티팩트가 없거나, 사용할 수 없거나, 무결성에 실패했거나, 닫기 근거로 쓸 수 없으면 증거 기록의 형태가 맞더라도 `ARTIFACT_MISSING` 또는 `artifact_availability` 닫기 차단 사유가 생길 수 있습니다.
+
+최종 수락과 잔여 위험 수락은 닫기 근거가 보인 뒤 별도로 확인합니다. 이 판단들은 증거 닫기 차단 사유를 덮어쓰지 못하고, 뒷받침되지 않은 필수 `EvidenceCoverageItem`을 충분한 증거로 바꾸지 못하며, 빠진 필수 `ArtifactRef`나 `StateRecordRef`를 대신하지 못합니다.
 
 아래 그림은 활성 `close_task` 판단 흐름을 간단히 보여 주는 보조 자료입니다. `ready`와 `blocked`는 종료 생명주기 업데이트 전에 반환되는 응답 수준의 `CloseTaskResponse.close_state` 결과이고, `completed`, `cancelled`, `superseded`는 종료 `Task.lifecycle_phase` 값입니다.
 

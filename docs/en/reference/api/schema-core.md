@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference for the active current MVP method-name set, shared API shapes, and closed schema value sets: the tool envelope, common response, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization summary, evidence summary, run summary, close blockers, next-action summary, and current MVP enum values.
+Use this reference for the active current MVP method-name set, shared API shapes, and closed schema value sets: the tool envelope, common response, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization summary, `CompletionPolicy`, evidence summary, run summary, close blockers, next-action summary, and current MVP enum values.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server. Future schema candidates stay in [Later Candidate Index](../../later/index.md#later-schema-candidates).
 
@@ -279,8 +279,16 @@ Raw file paths, raw logs, arbitrary local path strings, `captured_artifact`, cap
 ## Evidence And Pre-Write Scope Schemas
 
 ```yaml
+CompletionPolicy:
+  evidence_required: boolean
+  final_acceptance_required: boolean
+  residual_risk_acceptance_required_when_visible: boolean
+  product_write_completion: boolean
+  user_visible_result: boolean
+
 EvidenceCoverageItem:
-  claim_or_criterion: string
+  claim: string
+  required_for_close: boolean
   coverage_state: supported | unsupported | partial | not_applicable | stale | blocked
   supporting_state_refs: StateRecordRef[]
   supporting_artifact_refs: ArtifactRef[]
@@ -291,6 +299,7 @@ EvidenceSummary:
   evidence_summary_ref: StateRecordRef | null
   task_id: string
   change_unit_id: string | null
+  completion_policy: CompletionPolicy
   status: not_required | none | partial | sufficient | stale | blocked
   coverage_items: EvidenceCoverageItem[]
   supporting_run_refs: StateRecordRef[]
@@ -342,7 +351,13 @@ WriteAuthoritySummary:
   guarantee_display: GuaranteeDisplay
 ```
 
-`EvidenceSummary` is the compact active evidence record. It is not a detailed evidence report, separate assurance result, final acceptance, residual-risk acceptance, or rendered view.
+`CompletionPolicy` is the compact active close policy for a Task or Change Unit. It names whether evidence, final acceptance, residual-risk acceptance when visible, product-write completion, and a user-visible result are required for that close path. It is not a QA gate, verification gate, full Evidence Manifest, or permission to add separate assurance workflows.
+
+`EvidenceSummary` is the compact active evidence record tied to that `CompletionPolicy`. Evidence sufficiency is not a vague prose judgment. When `completion_policy.evidence_required=false`, the evidence status should be `not_required`. `EvidenceSummary.status=sufficient` is allowed only when every `EvidenceCoverageItem` with `required_for_close=true` is present and has `coverage_state=supported` or `not_applicable`. If any required coverage item is `unsupported`, `partial`, `stale`, or `blocked`, `harness.close_task` must report a close blocker. If required evidence is missing entirely, the required item must be represented as an unsupported or blocked coverage item or through `gap_blocker_refs`; it cannot be hidden by omitting the item.
+
+Optional coverage may remain explicit with `required_for_close=false`. Optional gaps can be visible without preventing `EvidenceSummary.status=sufficient`, but the required/optional distinction must be explicit even when the MVP summary is small.
+
+Artifact availability and evidence sufficiency are related but distinct. A registered available `ArtifactRef` does not make evidence sufficient unless a coverage item links it to the claim. A required coverage item that links to a missing, unavailable, integrity-failed, or unusable artifact cannot be sufficient, and `close_task` may also report `CloseBlocker.category=artifact_availability`. Final acceptance and residual-risk acceptance cannot substitute for missing required evidence, and evidence cannot create final acceptance or residual-risk acceptance.
 
 `AuthorizedAttemptScope` is the exact scope stored in `write_authorizations.attempt_scope_json` and later compared by `harness.record_run`. `AuthorizedAttemptScope.basis_state_version` is the project-wide `project_state.state_version` used when `prepare_write` prepared the authorization. `WriteAuthorizationSummary.status` is the durable authorization lifecycle. `blocked` is not a Write Authorization status; blocked writes return blockers without a consumable authorization.
 

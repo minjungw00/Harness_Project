@@ -132,14 +132,16 @@ No other persisted table family is active current MVP scope. Requirement
 shaping persists through `tasks`, `change_units`, `user_judgments`,
 `evidence_summaries`, and `blockers`; it is not a separate committed Discovery
 Brief, Shared Design, Question Queue, Assumption Register, or First Safe Change
-Unit Candidate table. Evidence persists through compact evidence summaries and
-artifact refs, not through full Evidence Manifest storage.
+Unit Candidate table. Evidence persists through compact evidence summaries,
+completion policy, required coverage items, and artifact refs, not through full
+Evidence Manifest storage.
 
 The minimum active shaping information is stored through those existing records:
 current goal summary, active scope summary, allowed paths or affected areas,
 non-goals, acceptance criteria, Autonomy Boundary, required user-owned
-judgments, one blocking question when necessary, one next safe action, evidence
-expectation or evidence gap, and close blockers. Missing or unknown pieces stay
+judgments, one blocking question when necessary, one next safe action,
+completion policy, required evidence expectation or evidence gap, and close
+blockers. Missing or unknown pieces stay
 as `unknown`, pending `user_judgments`, evidence gaps, or `blockers`; storage
 must not create extra active planning tables to make the request appear ready.
 
@@ -162,7 +164,7 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | `runs` | `state.sqlite` | Committed execution or observation record, including compatible authorization consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, observed/evidence JSON columns, `created_at`, `completed_at`. |
 | `artifacts` | `state.sqlite` plus artifact store | Registered durable evidence bytes or safe metadata with integrity, redaction, producer, retention, and availability facts. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | `state.sqlite` | Owner relation from an artifact to the active Core/API record it supports. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
-| `evidence_summaries` | `state.sqlite` | Compact evidence coverage and gap record used by status, run/evidence summaries, blockers, and close. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
+| `evidence_summaries` | `state.sqlite` | Compact evidence coverage, completion policy, and gap record used by status, run/evidence summaries, blockers, and close. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `completion_policy_json`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
 | `blockers` | `state.sqlite` | Structured blocker for next action, write compatibility, evidence gaps, close readiness, or recovery. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
 | `task_events` | `state.sqlite` | Append-only audit and ordering trail for committed Core mutations. | `event_id`, `project_id`, `task_id`, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `tool_invocations` | `state.sqlite` | Committed replay row for non-dry-run state-changing tool responses. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
@@ -424,7 +426,7 @@ the active records, including:
 - `write_authorizations.attempt_scope_json`, which stores
   `AuthorizedAttemptScope`.
 - `runs` observed-attempt and evidence-update JSON columns.
-- `evidence_summaries.coverage_items_json` and supporting/gap ref arrays.
+- `evidence_summaries.completion_policy_json`, `coverage_items_json`, and supporting/gap ref arrays.
 - `blockers.owner_ref_json` and `blockers.related_refs_json`.
 - `task_events.payload_json`.
 - `tool_invocations.response_json`.
@@ -434,6 +436,17 @@ only. It must not store a standalone Discovery Brief, Question Queue,
 Assumption Register, full design artifact, generated projection body, evidence
 manifest body, QA record, acceptance record, residual-risk record, or close
 record under another name.
+
+`evidence_summaries.completion_policy_json` stores the compact
+`CompletionPolicy` for the Task or Change Unit. `coverage_items_json` stores
+bounded `EvidenceCoverageItem` entries with explicit `claim`,
+`required_for_close`, `coverage_state`, and validated supporting or gap refs.
+Storage must reject coverage JSON that omits the required/optional distinction,
+uses unknown coverage states, or names refs outside the compatible project/task
+scope. When `completion_policy_json.evidence_required=true`, the stored summary
+must leave enough information for `harness.close_task` to derive an evidence
+blocker whenever a required coverage item is unsupported, partial, stale,
+blocked, or missing.
 
 Status-like `TEXT` values are closed owner value sets, not open strings. Active
 values are owned by Core/API owners and by the storage notes here. Defensive
@@ -485,6 +498,14 @@ An artifact is evidence-eligible only when storage has:
 - an availability `status`,
 - and an owner link to an active record such as `task`, `change_unit`, `run`,
   `user_judgment`, `evidence_summary`, or `blocker`.
+
+Evidence eligibility, artifact availability, and evidence sufficiency remain
+separate. An `artifacts.status=available` row with a valid owner link can
+support a coverage item, but it does not make `EvidenceSummary.status=sufficient`
+unless the required coverage item links that artifact to the claim and the item
+is `supported` or `not_applicable`. Missing, unavailable, integrity-failed, or
+otherwise unusable artifacts stay artifact-availability problems and can also
+keep required evidence coverage from being sufficient.
 
 `artifacts.status` is an availability state:
 

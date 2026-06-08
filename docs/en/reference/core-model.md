@@ -53,7 +53,7 @@ These entities define authority relationships, not storage tables or API bodies.
 - `user_judgment`: the canonical record family for choices the user owns. It feeds decision compatibility but does not create evidence, Write Authorization, scope mutation, Change Unit mutation, or close by itself.
 - <a id="write-authorization"></a>Write Authorization: the durable single-use Core record created only by compatible non-dry-run `prepare_write`. Its `basis_state_version` is the project-wide `project_state.state_version` used when the authorization was prepared. Its lifecycle can be active, consumed, stale, expired, or revoked. `allowed` is a `prepare_write` decision, not a durable authorization status; `blocked` is not an authorization status.
 - Run: an execution or observation record. Product-write Runs must consume compatible active Write Authorization. Read-only or shaping-only Runs do not make later writes compatible.
-- Evidence summary: the active compact Core evidence path for close-relevant claims, Runs, blockers, user judgments, and `ArtifactRef` values. A full Evidence Manifest is not active unless an owner enables it.
+- Evidence summary: the active compact Core evidence path for close-relevant claims, Runs, blockers, user judgments, `CompletionPolicy`, required coverage items, and `ArtifactRef` values. A full Evidence Manifest is not active unless an owner enables it.
 - `ArtifactRef`: the durable evidence reference shape owned by API/Storage. Core treats it as evidence-eligible only when it is registered, integrity-aware, redaction-aware, and linked to an owner record.
 - Blocker: a structured reason progress, write, or close cannot proceed honestly.
 - Residual-risk summary: the active compact visibility path for known remaining uncertainty, unchecked conditions, limits, or trade-offs. Rich residual-risk records are later candidate material until promoted.
@@ -100,6 +100,7 @@ Core must preserve these separations:
 
 - Chat, generated Markdown, projection prose, or report text does not substitute for Core state.
 - Evidence, logs, screenshots, artifacts, or test output do not substitute for final acceptance, future Manual QA, future verification, or residual-risk acceptance.
+- Final acceptance and residual-risk acceptance do not substitute for missing required evidence. Required evidence coverage is evaluated through `CompletionPolicy`, `EvidenceSummary`, and `EvidenceCoverageItem.required_for_close`.
 - QA is not final acceptance; a future quality-review waiver path would not be QA evidence or a QA pass.
 - A future missing-check risk path would not be verification, detached verification, or assurance upgrade.
 - Sensitive-action approval does not decide product direction, technical direction, scope, correctness, evidence, QA, final acceptance, residual-risk acceptance, or Write Authorization.
@@ -118,7 +119,7 @@ Gates are Core compatibility summaries for progress, write, Run recording, and c
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work. Its active status values are `not_required`, `required`, `pending`, `passed`, `failed`, and `blocked`.
 - <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. Its active status values are `not_required`, `required`, `pending`, `resolved`, `deferred`, and `blocked`. It does not replace sensitive-action approval, evidence, future verification or QA routes, final acceptance, or residual-risk acceptance.
 - <a id="approval-gate"></a>Approval Gate: whether scoped sensitive-action approval is required, pending, granted, denied, or expired. Its active status values are `not_required`, `required`, `pending`, `granted`, `denied`, and `expired`. It is permission for the `SensitiveActionScope` only, not product-file Write Authorization, final acceptance, or residual-risk acceptance.
-- <a id="evidence-gate"></a>Evidence Gate: whether close-relevant evidence is not required, missing, partial, sufficient, stale, or blocked. Its active status values are `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`.
+- <a id="evidence-gate"></a>Evidence Gate: whether close-relevant evidence is not required, missing, partial, sufficient, stale, or blocked. Its active status values are `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`. Evidence sufficiency is derived from the Task or Change Unit `CompletionPolicy` and required `EvidenceCoverageItem` rows: every `required_for_close=true` item must be `supported` or `not_applicable` before the gate can be `sufficient`.
 - <a id="acceptance-gate"></a>Acceptance Gate: whether final acceptance is not required, required, pending, accepted, or rejected after the close basis is visible. Its active status values are `not_required`, `required`, `pending`, `accepted`, and `rejected`.
 - <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, hold the action through the owner path, or produce `CloseBlocker.category=surface_capability` rather than pretending verification or prevention happened.
 
@@ -226,7 +227,9 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 `close_task` is the single completion decision point. Agent summaries, final reports, acceptance-looking chat, projections, Evals, QA notes, and evidence displays may inform close, but they do not close a Task by themselves.
 
-For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, Write Authorization and Run compatibility, baseline and surface capability when relevant, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, residual-risk visibility when close-relevant risk exists, residual-risk acceptance when the active close path requires acceptance, recovery constraints, and cancellation or supersession conflicts.
+For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, Write Authorization and Run compatibility, baseline and surface capability when relevant, the active `CompletionPolicy`, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, residual-risk visibility when close-relevant risk exists, residual-risk acceptance when the active close path requires acceptance, recovery constraints, and cancellation or supersession conflicts.
+
+Required evidence sufficiency is deterministic. When `CompletionPolicy.evidence_required=true`, `EvidenceSummary.status=sufficient` is valid only if every `EvidenceCoverageItem` with `required_for_close=true` is `supported` or `not_applicable`. Any required item that is `unsupported`, `partial`, `stale`, or `blocked`, or any omitted required item that leaves the coverage set incomplete, must produce a close blocker. Artifact availability is checked separately: an artifact can be available without making evidence sufficient, and missing or unusable close-relevant artifacts can create `artifact_availability` blockers in addition to evidence blockers.
 
 A committed terminal close is one public state mutation. `harness.close_task intent=supersede` may update both the old Task lifecycle/result fields and `project_state.active_task_id`, but it still increments `project_state.state_version` exactly once.
 
@@ -263,7 +266,7 @@ Close readiness uses only the active `CloseBlocker.category` values owned by [AP
 | `write_compatibility` | Required Write Authorization or product-write Run compatibility is missing, stale, invalid, consumed, or incompatible. |
 | `baseline` | The baseline needed for compatibility or close is stale, missing, or mismatched. |
 | `surface_capability` | The connected surface cannot honestly support the required active capability or guarantee display. |
-| `evidence` | Required evidence summary is `none`, `partial`, `stale`, or `blocked` instead of sufficient for the close path. |
+| `evidence` | Required evidence coverage is missing or a required `EvidenceCoverageItem` is `unsupported`, `partial`, `stale`, or `blocked` instead of `supported` or `not_applicable` for the close path. |
 | `artifact_availability` | A close-relevant artifact is missing, unavailable, integrity-failed, or cannot support close after required redaction handling. |
 | `final_acceptance` | Required final acceptance is missing, rejected, stale, or not tied to the visible close basis. |
 | `residual_risk_visibility` | Close-relevant residual risk is not visible enough for the user to judge. |
