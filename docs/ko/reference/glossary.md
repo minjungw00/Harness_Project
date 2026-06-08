@@ -96,7 +96,7 @@ Storage 용어는 향후 하네스 기록이 어디에 사는지 알려줍니다
 | JSON `TEXT` 열 | Core/API/storage 검증 이후 담당 문서 형태를 따르는 JSON을 저장하는 SQLite `TEXT` 열입니다. 임의 JSON 컨테이너가 아닙니다. | [Storage](storage.md) |
 | 아티팩트 저장 연결 | `artifacts`와 `artifact_links`는 증거 바이트나 안전한 메타데이터를 등록하고 담당 기록과 연결합니다. 연결 자체가 `Gate`를 만족하지는 않습니다. | [Storage](storage.md) |
 | 이벤트/재실행 저장 | `task_events`는 커밋된 변경 감사 추적 기록이고, `tool_invocations`는 커밋된 멱등성 재실행 행입니다. | [Storage](storage.md) |
-| 상태 버전과 해시 | `state_version`, `project_state.state_version`, `tasks.state_version`, `tree_hash`, `request_hash`는 오래된 상태, 기준선, 멱등성 확인을 지원합니다. | [Storage](storage.md), [API Errors](api/errors.md) |
+| 상태 버전과 해시 | `project_state.state_version`은 현재 MVP의 단일 공개 상태 시계입니다. `tree_hash`는 baseline 확인을 돕고, `request_hash`는 멱등성 충돌 확인을 돕습니다. `tasks.state_version`은 활성 상태 시계 기준이 아닙니다. | [Storage](storage.md), [API Errors](api/errors.md) |
 
 ## 보안 보장 용어
 

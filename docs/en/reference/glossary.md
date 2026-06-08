@@ -96,7 +96,7 @@ Storage terms identify where future Harness records live. Exact table roles, JSO
 | JSON `TEXT` columns | SQLite `TEXT` columns that store owner-shaped JSON after Core/API/storage validation. They are not arbitrary JSON containers. | [Storage](storage.md) |
 | artifact storage links | `artifacts` and `artifact_links` register evidence bytes or safe metadata and connect them to owner records. Links do not satisfy gates by themselves. | [Storage](storage.md) |
 | event and replay storage | `task_events` is the committed mutation audit trail; `tool_invocations` stores committed idempotency replay rows. | [Storage](storage.md) |
-| state clocks and hashes | `state_version`, `project_state.state_version`, `tasks.state_version`, `tree_hash`, and `request_hash` support stale-state, baseline, and idempotency checks. | [Storage](storage.md), [API Errors](api/errors.md) |
+| state version and hashes | `project_state.state_version` is the single public current MVP state clock. `tree_hash` supports baseline checks, and `request_hash` supports idempotency conflict checks. `tasks.state_version` is not an active state-clock basis. | [Storage](storage.md), [API Errors](api/errors.md) |
 
 ## Security guarantee terms
 

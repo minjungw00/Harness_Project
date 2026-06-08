@@ -41,7 +41,7 @@
 | 코드 | 의미 |
 |---|---|
 | `VALIDATION_FAILED` | 요청 본문 형태, enum 값, 활성화 규칙, 프로필별 검증이 변경 전에 실패했습니다. |
-| `STATE_CONFLICT` | `expected_state_version`이 오래되었거나, 상태 잠금 소유권이 바뀌었거나, 같은 멱등 키를 다른 정규화된 요청으로 다시 사용했습니다. |
+| `STATE_CONFLICT` | `expected_state_version`이 `project_state.state_version` 기준으로 오래되었거나, 상태 잠금 소유권이 바뀌었거나, 같은 멱등 키를 다른 정규화된 요청으로 다시 사용했습니다. |
 | `NO_ACTIVE_TASK` | Task가 필요하지만 활성 Task나 지정된 Task가 없습니다. |
 | `NO_ACTIVE_CHANGE_UNIT` | 쓰기를 할 수 있거나 닫기와 관련된 동작에 활성 범위 지정 Change Unit이 없습니다. |
 | `SCOPE_REQUIRED` | 요청한 쓰기나 동작 전에 범위 확인이 필요합니다. |
@@ -134,21 +134,21 @@ missing | expired | stale | revoked | consumed | incompatible
 
 ## 상태 충돌 처리
 
-커밋된 재실행 행이 없는 새 상태 변경 시도에서 Core는 최신성 확인 전에 기본 Task를 찾습니다. 해석 순서는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task입니다.
+커밋된 재실행 행이 없는 새 상태 변경 시도에서 Core는 담당 기록을 고르기 위해 최신성 확인 전에 기본 Task를 찾을 수 있습니다. 해석 순서는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task입니다. 이 해석은 별도 상태 시계를 고르지 않습니다.
 
-Task 범위 변경은 `expected_state_version`을 `tasks.state_version`과 비교합니다. 찾은 기본 Task가 없는 프로젝트 범위 변경은 `project_state.state_version`과 비교합니다. 불일치하면 `STATE_CONFLICT`를 반환하고 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들지 않습니다.
+새 non-dry-run 상태 변경은 모두 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. 불일치하면 `STATE_CONFLICT`를 반환하고 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들지 않습니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
 
 `STATE_CONFLICT.details`에는 다음 값을 담아야 합니다.
 
 ```yaml
-scope: task | project
+state_clock: project_state.state_version
 current_state_version: integer
 expected_state_version: integer
 project_id: string
 task_id: string | null
 ```
 
-`WriteAuthorization.basis_state_version`은 허용 결정의 호환성 근거입니다. 반드시 결과 `ToolResponseBase.state_version`과 같지는 않습니다.
+`WriteAuthorization.basis_state_version`은 허용 결정에 쓰는 프로젝트 전체 호환성 근거입니다. 오래된 Write Authorization인지 판단할 때는 이 값을 현재 `project_state.state_version`과 비교하며, Task별 시계는 참여하지 않습니다.
 
 <a id="harnessclose_task-close-blockers"></a>
 

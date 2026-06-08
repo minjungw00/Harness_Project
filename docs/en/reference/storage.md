@@ -148,9 +148,9 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | Runtime Home identity | `registry.sqlite` | Identify the local Runtime Home and schema/storage profile. | `runtime_home_id`, `schema_version`, `storage_profile`, `created_at`, `updated_at`. |
 | Project registration | `registry.sqlite` | Map a registered project to its project-local storage. | `project_id`, `repo_root`, `project_home`, `display_name`, `status`, `created_at`, `updated_at`. |
 | `project.yaml` | Project directory | Static project configuration. | `project_id`, `repo_root`, display/config defaults. |
-| `project_state` | `state.sqlite` | Project-local state header, state clock, active Task pointer, and default surface pointer. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
+| `project_state` | `state.sqlite` | Project-local state header, single public project-wide state clock, active Task pointer, and default surface pointer. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
 | `surfaces` | `state.sqlite` | Stored `LocalSurfaceRegistration` facts used to verify a local surface context for API access. The row is registration data, not live proof that the current caller is trusted. | `project_id`, `surface_id`, `surface_instance_id`, `transport_kind`, `transport_binding_fingerprint`, `access_secret_hash`, `capability_profile_hash`, `capability_profile_json`, `status`, `local_access_posture`, `registered_at`, `last_verified_at`, `updated_at`. |
-| `tasks` | `state.sqlite` | User-value work unit, task-scoped state clock, current shaping summary, lifecycle, result, next-action, and close fields. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `close_reason`, `result`, `summary`, shaping JSON columns, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
+| `tasks` | `state.sqlite` | User-value work unit, current shaping summary, lifecycle, result, next-action, and close fields. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `close_reason`, `result`, `summary`, shaping JSON columns, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `created_at`, `updated_at`, `closed_at`. |
 | `change_units` | `state.sqlite` | Current or proposed scoped work boundary for write compatibility and close basis. | `change_unit_id`, `task_id`, `scope_summary`, scope JSON columns for allowed paths or affected areas, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | `state.sqlite` | User-owned judgment records for the active `UserJudgment.judgment_kind` values. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, request/context JSON columns, `question`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | `state.sqlite` | Durable single-use cooperative Write Authorization created only by non-dry-run `prepare_write` with `decision=allowed`. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
@@ -532,7 +532,7 @@ path. Idempotent replay, dry-run, malformed requests, and pre-commit failures do
 not append events.
 
 For a new committed non-dry-run mutation, current-row writes, the
-`task_events` append, the affected state-version increment, and the
+`task_events` append, the project-wide state-version increment, and the
 `tool_invocations` replay-row insert must commit atomically. If any part fails,
 the transaction must leave no partial authority row, event, artifact
 registration, authorization consumption, evidence update, close effect, or replay
@@ -564,47 +564,53 @@ non-dry-run mutation for event, replay-row, and state-version purposes.
 
 ## 8. State versioning
 
-State clocks are scoped. A committed state-changing call increments the affected
-scope's state clock exactly once. Task-scoped mutations increment
-`tasks.state_version`. Project-scoped mutations with no Core-selected primary
-Task increment `project_state.state_version`.
+The active current MVP has one public state clock:
+`project_state.state_version`. It is project-wide and is the only active
+authorization, conflict, freshness, and concurrency basis for public API
+mutations. Task routing still matters for ownership, blockers, close state,
+evidence, and user judgments, but it does not select a separate state clock.
 
-`project_state.state_version` is not a global counter for every Task mutation.
-It is the project-scope clock for mutations with no Core-selected primary Task.
-`tasks.state_version` is the Task-scope clock for one Task and its owned rows.
-The active current MVP chooses exactly one affected clock for a public mutation;
-multi-scope freshness requiring more than one `expected_state_version` is later
-until an owner promotes it.
+Fresh non-dry-run state-changing API calls compare
+`ToolEnvelope.expected_state_version` with the current
+`project_state.state_version` before commit. A mismatch returns
+`STATE_CONFLICT` and creates no current records, events, artifacts, evidence
+summaries, Write Authorizations, close state, replay rows, or state-version
+increments. No active current MVP call requires or accepts more than one public
+`expected_state_version`.
 
-State-changing API calls compare `ToolEnvelope.expected_state_version` against
-the affected scope before committing. The response `ToolResponseBase.state_version`
-is the resulting affected-scope version for a committed mutation, or the current
-readable/would-be affected version for read-only and dry-run responses.
+Every committed non-dry-run mutation increments
+`project_state.state_version` by exactly 1. This includes committed blocked
+responses when the method owner allows Core to persist a blocker or another
+current-row mutation. A single public call may update Task lifecycle fields and
+project-level fields together, such as `harness.close_task intent=supersede`
+updating both `tasks.lifecycle_phase` and `project_state.active_task_id`, but it
+is still one mutation and creates exactly one project-wide version increment.
 
 `harness.status`, `harness.close_task intent=check`, dry-run calls, malformed
 requests, pre-commit validation failures, pre-commit state conflicts, and
-idempotent replay do not increment a state clock. A committed blocked response
-increments the affected clock only when the method owner allows Core to persist
-a blocker or other current-row mutation.
+idempotent replay do not increment `project_state.state_version`.
+`ToolResponseBase.state_version` always returns the project-wide version: the
+resulting version after a committed mutation, or the current project-wide
+version observed for read-only and dry-run responses.
 
-Task-level and project-level scopes must not be conflated. When Core resolves or
-creates a primary Task for a mutation, freshness and the response state version
-use that Task's `tasks.state_version`. When no primary Task exists for the
-mutation, freshness and the response state version use
-`project_state.state_version`. A future owner must define explicit multi-scope
-version behavior before a single public call can require more than one
-`expected_state_version`.
+The active first schema should omit `tasks.state_version`. If an implementation
+encounters a legacy or prototype `tasks.state_version` column, that value is
+inactive metadata only. It must not be used as an authorization,
+`STATE_CONFLICT`, stale-state, Write Authorization, idempotency, lock, or
+concurrency basis.
 
-`write_authorizations.basis_state_version` stores the state version used when
-Core allowed the attempt. `write_authorizations.attempt_scope_json` stores the
-authorized attempt boundary that `record_run` later compares against observed
-facts. The top-level `task_id`, `change_unit_id`, `surface_id`, and
-`basis_state_version` columns are query fields; the stored attempt scope remains
-the compatibility boundary.
+`write_authorizations.basis_state_version` stores the project-wide
+`project_state.state_version` used when Core prepared the authorization.
+Stale Write Authorization detection compares that stored value with the current
+project-wide state version, not with any Task-local clock.
+`write_authorizations.attempt_scope_json` stores the authorized attempt boundary
+that `record_run` later compares against observed facts. The top-level
+`task_id`, `change_unit_id`, `surface_id`, and `basis_state_version` columns are
+query fields; the stored attempt scope remains the compatibility boundary.
 
-`tool_invocations.basis_state_version` stores the affected-scope version used as
-the compatibility basis before the committed mutation. `task_events.state_version`
-stores the resulting affected-scope version for the committed event.
+`tool_invocations.basis_state_version` stores the project-wide state version
+observed by the call before the committed mutation. `task_events.state_version`
+stores the resulting project-wide version after the committed event.
 
 ## 9. Lock policy
 

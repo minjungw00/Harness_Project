@@ -49,7 +49,7 @@ Authoritative future assertions may use:
 
 - response facts returned by public owner APIs
 - Core-owned Task, Change Unit, user judgment, Write Authorization, Run or evidence summary, blocker, close, and residual-risk state
-- Storage-owned row effects, idempotency/replay facts, state-version facts, and artifact-integrity facts when artifacts are in scope
+- Storage-owned row effects, idempotency/replay facts, project-wide `project_state.state_version` facts, and artifact-integrity facts when artifacts are in scope
 - stable `task_events` only after the Core owner promotes event names
 - primary `ErrorCode`, structured blocker fields, and guarantee-display facts that match the API, Core, Security, and Agent Integration owners
 - absence assertions for forbidden side effects, such as no durable authorization, no Run row, no artifact mutation, or no close-state change
@@ -64,8 +64,9 @@ These are compact behavior references only. They are not fixture files, full YAM
 
 | Example | Behavior | Future assertion focus |
 |---|---|---|
+| `MVP-ACTIVE-project-state-version-single-clock` | Every committed non-dry-run mutation uses the single project-wide `project_state.state_version`; `tasks.state_version` is not an active conflict or concurrency basis. | Fresh mutations compare `ToolEnvelope.expected_state_version` with `project_state.state_version`; committed mutations increment that value by exactly 1; `ToolResponseBase.state_version`, `tool_invocations.basis_state_version`, and `task_events.state_version` use the project-wide model, including `close_task intent=supersede` when it updates both Task lifecycle and `project_state.active_task_id`. |
 | `MVP-ACTIVE-prepare-write-blocked-or-dry-run-no-durable-authorization` | A blocked or dry-run `prepare_write` does not create durable authorization. | The response has no consumable Write Authorization; `write_authorizations` has no inserted active row; no Run, artifact, evidence, close, final-acceptance, or residual-risk state changes. |
-| `MVP-ACTIVE-prepare-write-committed-scoped-authorization` | A committed allowed `prepare_write` records a scoped single-use Write Authorization. | Response authorization scope, Core state, and `write_authorizations.attempt_scope_json` agree on Task, Change Unit, state version, surface, intended product-file paths, sensitive categories, baseline refs, related judgments, and guarantee display level. |
+| `MVP-ACTIVE-prepare-write-committed-scoped-authorization` | A committed allowed `prepare_write` records a scoped single-use Write Authorization. | Response authorization scope, Core state, and `write_authorizations.attempt_scope_json` agree on Task, Change Unit, project-wide `basis_state_version`, surface, intended product-file paths, sensitive categories, baseline refs, related judgments, and guarantee display level. |
 | `MVP-ACTIVE-close-task-blocks-missing-acceptance-or-risk-condition` | `close_task` blocks when required final acceptance is missing. It also blocks when close-relevant residual risk is not visible at the required level, or when that risk is not accepted when the active close path requires acceptance. | Response blockers use owner categories and `required_judgment_kind` where applicable; Task is not completed; close state does not substitute for missing acceptance or risk acceptance; evidence, final acceptance, and residual-risk state remain separate. |
 
 ## 7. Catalog-only future boundary

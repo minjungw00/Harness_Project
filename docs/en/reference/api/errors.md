@@ -41,7 +41,7 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | Code | Meaning |
 |---|---|
 | `VALIDATION_FAILED` | Payload shape, enum value, activation rule, or profile-specific validation failed before mutation. |
-| `STATE_CONFLICT` | `expected_state_version` is stale, state lock ownership changed, or the same idempotency key was reused with a different canonical request. |
+| `STATE_CONFLICT` | `expected_state_version` is stale against `project_state.state_version`, state lock ownership changed, or the same idempotency key was reused with a different canonical request. |
 | `NO_ACTIVE_TASK` | A Task is required but none is active or addressed. |
 | `NO_ACTIVE_CHANGE_UNIT` | A write-capable or close-relevant operation has no active scoped Change Unit. |
 | `SCOPE_REQUIRED` | Scope confirmation is required before the requested write or action can proceed. |
@@ -134,21 +134,21 @@ Dry-run calls and pre-commit failures do not create or reserve replay rows.
 
 ## State Conflict Behavior
 
-For a new state-changing attempt with no committed replay row, Core resolves the primary Task before freshness checking. Resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task.
+For a new state-changing attempt with no committed replay row, Core may resolve the primary Task before freshness checking so it can select owner records. Resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task. That resolution does not select a separate state clock.
 
-Task-scoped mutations compare `expected_state_version` with `tasks.state_version`. Project-scoped mutations with no selected primary Task compare it with `project_state.state_version`. Mismatch returns `STATE_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, replay rows, or state-version increments.
+Every fresh non-dry-run state mutation compares `ToolEnvelope.expected_state_version` with the current project-wide `project_state.state_version`. Mismatch returns `STATE_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, replay rows, or state-version increments. `tasks.state_version` is not an active conflict or concurrency basis.
 
 `STATE_CONFLICT.details` should include:
 
 ```yaml
-scope: task | project
+state_clock: project_state.state_version
 current_state_version: integer
 expected_state_version: integer
 project_id: string
 task_id: string | null
 ```
 
-`WriteAuthorization.basis_state_version` is the compatibility basis for the allow decision. It is not necessarily the resulting `ToolResponseBase.state_version`.
+`WriteAuthorization.basis_state_version` is the project-wide compatibility basis for the allow decision. Stale Write Authorization detection compares it with current `project_state.state_version`; no Task-local clock participates.
 
 <a id="harnessclose_task-close-blockers"></a>
 

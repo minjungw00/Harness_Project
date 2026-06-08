@@ -38,7 +38,7 @@ The [Current MVP Value Sets](#current-mvp-value-sets) section owns the exact act
 
 ## Tool Envelope
 
-Every public tool request carries `ToolEnvelope`. Committed non-dry-run state-changing tools require a non-null `idempotency_key` and a current `expected_state_version`. `harness.status`, `harness.close_task intent=check`, and dry-run calls may set `idempotency_key` and `expected_state_version` to `null`. Read-only calls do not require or reserve idempotency keys. Method-level state effects are owned by [MVP API](mvp-api.md#active-mvp-method-behavior).
+Every public tool request carries `ToolEnvelope`. Committed non-dry-run state-changing tools require a non-null `idempotency_key` and a current project-wide `expected_state_version` matching `project_state.state_version`. `harness.status`, `harness.close_task intent=check`, and dry-run calls may set `idempotency_key` and `expected_state_version` to `null`. Read-only calls do not require or reserve idempotency keys. Method-level state effects are owned by [MVP API](mvp-api.md#active-mvp-method-behavior).
 
 ```yaml
 ToolEnvelope:
@@ -141,7 +141,7 @@ EventRef:
   state_version: integer
 ```
 
-`ToolResponseBase.state_version` is the resulting affected-scope version for a committed mutation, or the current readable/would-be affected version for read-only and dry-run responses. Read-only responses may include computed blockers or close blockers without storing them. `dry_run=true` creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, `tool_invocations` replay rows, or state-version increments.
+`ToolResponseBase.state_version` is always the project-wide version: the resulting `project_state.state_version` after a committed mutation, or the current project-wide version observed for read-only and dry-run responses. Read-only responses may include computed blockers or close blockers without storing them. `dry_run=true` creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, `tool_invocations` replay rows, or state-version increments.
 
 ## State Summary
 
@@ -297,7 +297,7 @@ WriteAuthoritySummary:
 
 `EvidenceSummary` is the compact active evidence record. It is not a detailed evidence report, separate assurance result, final acceptance, residual-risk acceptance, or rendered view.
 
-`AuthorizedAttemptScope` is the exact scope stored in `write_authorizations.attempt_scope_json` and later compared by `harness.record_run`. `WriteAuthorizationSummary.status` is the durable authorization lifecycle. `blocked` is not a Write Authorization status; blocked writes return blockers without a consumable authorization.
+`AuthorizedAttemptScope` is the exact scope stored in `write_authorizations.attempt_scope_json` and later compared by `harness.record_run`. `AuthorizedAttemptScope.basis_state_version` is the project-wide `project_state.state_version` used when `prepare_write` prepared the authorization. `WriteAuthorizationSummary.status` is the durable authorization lifecycle. `blocked` is not a Write Authorization status; blocked writes return blockers without a consumable authorization.
 
 The current MVP `AuthorizedAttemptScope` is path-level for product writes. It records the intended product-file paths, active sensitive categories, baseline, related user judgments, and the honest guarantee level. Command execution, network effects, secret access, tool observation, native artifact capture, pre-tool blocking, and isolation are not active baseline authorization fields. Requests that require those unobservable guarantees must be rejected or blocked as validation or capability failures rather than represented as verified scope.
 

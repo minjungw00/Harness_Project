@@ -40,7 +40,8 @@ Exact API request fields and storage table definitions may be named here only by
 9. The only active current MVP judgment routes are `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`.
 10. Verification and Manual QA are not active current MVP gates; evidence, future verification or Manual QA routes, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness do not substitute for one another.
 11. `close_task` must return blockers instead of a successful close while close-relevant blockers remain; known residual risk must be visible before a successful close path depends on it.
-12. Active current MVP scope and later candidate material stay separate. A later candidate becomes active only when its owner promotes it with scope, fallback behavior, and proof expectations.
+12. The active current MVP has one public state clock, `project_state.state_version`. It is the only state-version basis for public mutation freshness, conflict detection, Write Authorization compatibility, and replay facts; Task identity does not select a Task-local clock.
+13. Active current MVP scope and later candidate material stay separate. A later candidate becomes active only when its owner promotes it with scope, fallback behavior, and proof expectations.
 
 ## 3. Entity model
 
@@ -50,7 +51,7 @@ These entities define authority relationships, not storage tables or API bodies.
 - Change Unit: the active scoped work boundary for write-capable work. Product writes must be covered by a compatible active Change Unit. After intake, `harness.update_scope` is the active path that may create or replace the active Change Unit.
 - <a id="autonomy-boundary"></a>Autonomy Boundary: the latitude an agent has inside a Change Unit. It is not scope, sensitive-action approval, evidence, final acceptance, or residual-risk acceptance.
 - `user_judgment`: the canonical record family for choices the user owns. It feeds decision compatibility but does not create evidence, Write Authorization, scope mutation, Change Unit mutation, or close by itself.
-- <a id="write-authorization"></a>Write Authorization: the durable single-use Core record created only by compatible non-dry-run `prepare_write`. Its lifecycle can be active, consumed, stale, expired, or revoked. `allowed` is a `prepare_write` decision, not a durable authorization status; `blocked` is not an authorization status.
+- <a id="write-authorization"></a>Write Authorization: the durable single-use Core record created only by compatible non-dry-run `prepare_write`. Its `basis_state_version` is the project-wide `project_state.state_version` used when the authorization was prepared. Its lifecycle can be active, consumed, stale, expired, or revoked. `allowed` is a `prepare_write` decision, not a durable authorization status; `blocked` is not an authorization status.
 - Run: an execution or observation record. Product-write Runs must consume compatible active Write Authorization. Read-only or shaping-only Runs do not make later writes compatible.
 - Evidence summary: the active compact Core evidence path for close-relevant claims, Runs, blockers, user judgments, and `ArtifactRef` values. A full Evidence Manifest is not active unless an owner enables it.
 - `ArtifactRef`: the durable evidence reference shape owned by API/Storage. Core treats it as evidence-eligible only when it is registered, integrity-aware, redaction-aware, and linked to an owner record.
@@ -186,6 +187,8 @@ Stable event names are append-only history labels for Core changes, not authorit
 
 It may create or replace the active Change Unit for the active Task. Replacing the active Change Unit makes the previous Change Unit no longer active for future write compatibility. If the scope, baseline, Autonomy Boundary, acceptance basis, or active Change Unit changes so an active Write Authorization no longer matches current Core state, Core marks that Write Authorization stale. Staling preserves the record for audit and replay; it is not consumption, expiry, revocation, or authorization reuse.
 
+Stale Write Authorization detection uses the project-wide `project_state.state_version` stored in `write_authorizations.basis_state_version`. `tasks.state_version` is not an active authorization, conflict, or concurrency basis.
+
 `harness.update_scope` may link to relevant resolved `scope_decision` user judgments through reference fields. Those refs explain the user-owned basis for the change, but the `user_judgment` record does not mutate active scope by itself.
 
 `harness.update_scope` does not start a Task, resolve a user judgment, authorize a product write, consume a Write Authorization, record evidence, create final acceptance, accept residual risk, or close work.
@@ -196,7 +199,7 @@ It may create or replace the active Change Unit for the active Task. Replacing t
 
 `prepare_write` is the unique pre-write compatibility decision point for product-file writes. In the current MVP it checks a path-level intended operation against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, sensitive-action approval, surface capability, and other active owner-path preconditions.
 
-Only a compatible non-dry-run allowed path creates a consumable Write Authorization. Dry-run responses and `state_conflict` create no replay row, evidence record, close state, or Harness write-compatibility record. A committed `blocked`, `approval_required`, or `decision_required` response may persist method-owned blockers, events, replay, and state-version effects only as allowed by the API method matrix, but it must not create a consumable authorization row, evidence record, close state, or Harness write-compatibility record.
+Only a compatible non-dry-run allowed path creates a consumable Write Authorization, and that authorization stores the current project-wide `project_state.state_version` as `basis_state_version`. Dry-run responses and `state_conflict` create no replay row, evidence record, close state, or Harness write-compatibility record. A committed `blocked`, `approval_required`, or `decision_required` response may persist method-owned blockers, events, replay, and project-wide state-version effects only as allowed by the API method matrix, but it must not create a consumable authorization row, evidence record, close state, or Harness write-compatibility record.
 
 Write Authorization is a cooperative Harness record. It can tell a connected agent or surface that the intended write is compatible with current Harness state; it does not grant OS permission, enforce a sandbox, prevent arbitrary tools, make storage tamper-proof, or isolate the operation.
 
@@ -210,7 +213,7 @@ Current-MVP `prepare_write` must reject or block requests that require command o
 
 `record_run` records execution or observation. It is not a second chance to authorize a write.
 
-For a product-write Run, Core must load a compatible active Write Authorization, compare the observed changed paths against the stored path-level authorized attempt and current state to the extent the surface can honestly observe it, and consume the authorization exactly once when compatible. Missing, stale, expired, revoked, consumed, incompatible, or insufficiently observable authorization cannot be recorded as successful consumption. Under the baseline `reference-local-mcp` profile, the `detective` label is justified only by changed-path observation after the relevant capability check has passed. Command, network, secret-access, artifact-capture, blocking, or isolation compatibility must not be marked verified under the baseline profile.
+For a product-write Run, Core must load a compatible active Write Authorization, compare the current `project_state.state_version` and observed changed paths against the stored project-wide `basis_state_version` and path-level authorized attempt to the extent the surface can honestly observe it, and consume the authorization exactly once when compatible. Missing, stale, expired, revoked, consumed, incompatible, or insufficiently observable authorization cannot be recorded as successful consumption. Under the baseline `reference-local-mcp` profile, the `detective` label is justified only by changed-path observation after the relevant capability check has passed. Command, network, secret-access, artifact-capture, blocking, or isolation compatibility must not be marked verified under the baseline profile.
 
 `record_run` may register or link `ArtifactRef` values only through owner-approved artifact paths. Raw secrets, tokens, forbidden sensitive logs, arbitrary caller paths, or untrusted bytes must be rejected, redacted, represented as omitted/blocked, or routed through an approved safe handle rather than stored to make evidence look complete.
 
@@ -223,6 +226,8 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 `close_task` is the single completion decision point. Agent summaries, final reports, acceptance-looking chat, projections, Evals, QA notes, and evidence displays may inform close, but they do not close a Task by themselves.
 
 For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, Write Authorization and Run compatibility, baseline and surface capability when relevant, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, residual-risk visibility when close-relevant risk exists, residual-risk acceptance when the active close path requires acceptance, recovery constraints, and cancellation or supersession conflicts.
+
+A committed terminal close is one public state mutation. `harness.close_task intent=supersede` may update both the old Task lifecycle/result fields and `project_state.active_task_id`, but it still increments `project_state.state_version` exactly once.
 
 Close-related fields are separate contracts:
 
