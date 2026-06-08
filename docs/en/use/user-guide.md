@@ -28,7 +28,7 @@ The agent should translate that into visible working context: the current goal, 
 
 Harness may classify ordinary requests as advice/review/planning without product writes, a small direct change, or tracked work. You do not need to choose or say `advisor`, `direct`, `work`, or `auto`; `auto` is only an API input that asks for classification, not a task label shown to you.
 
-You do not need to say `Discovery`, `Change Unit`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, or `task_events`. Those labels may appear only when they help explain a visible blocker, source reference, or owner contract.
+You do not need internal Harness labels or API method names before work can begin. The agent can explain exact routing only after the natural request is clear.
 
 ## 2. Clarify scope before write
 
@@ -46,9 +46,9 @@ Before product files change, the agent should make the working scope plain:
 
 For anything larger than a tiny obvious edit, the agent should inspect available files, tests, docs, current Harness state, and accepted judgments before asking you. If the answer is discoverable, the agent should discover it. If the work is still too vague to implement safely, the agent should name the ambiguity and ask the one question that changes the next safe action.
 
-In a Harness-connected session, product writes go through a pre-write scope check. In owner terms, the active path is `prepare_write`; a compatible response may create a single-use cooperative Write Authorization record for the intended operation. That record says the intended write matches current Harness state and active surface capability. It is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that every tool was blocked before action.
+In a Harness-connected session, product writes go through a pre-write scope check. In owner terms, the active method is `harness.prepare_write`. A compatible result says the intended write matches current Harness state and active surface capability for the named operation. It is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that every tool was blocked before action.
 
-If you decide to change the goal, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline, or active work piece after intake, the agent should apply that as a separate scope update before relying on a write check. Existing pre-write checks that no longer match the updated scope become stale.
+If you decide to change the goal, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline, or active work piece after `harness.intake`, the agent should apply that through `harness.update_scope` before relying on a write check. Existing pre-write checks that no longer match the updated scope become stale.
 
 ## 3. Separate facts from user judgment
 
@@ -60,7 +60,7 @@ Facts are things the agent can inspect, verify, or cite. User judgments are choi
 | Evidence | Show what supports a claim and what is missing. | Treat evidence as your decision or final acceptance. |
 | Product judgment | Ask you about product behavior, copy, UX, user flow, and accessibility trade-offs. | Pick a material product direction silently. |
 | Technical judgment | Ask you about architecture, dependency, migration, interface, security, privacy, retention, or compatibility choices that matter. | Hide a material technical decision as an implementation detail. |
-| Scope judgment | Ask before expanding scope or removing a non-goal, then apply the accepted scope change through the active scope-update path. | Treat enthusiasm as permission to broaden the task or as write approval. |
+| Scope judgment | Ask before expanding scope or removing a non-goal, then apply the accepted scope change through `harness.update_scope`. | Treat enthusiasm as permission to broaden the task or as write approval. |
 | Close judgment | Ask for final acceptance or residual-risk acceptance only when the close basis is visible. | Turn "looks good" into every pending judgment. |
 
 Harness preserves this boundary so the agent can recommend without replacing your judgment.
@@ -90,14 +90,14 @@ Options:
 
 Recommendation: inline message. It stays visible and fits the form context.
 
-If deferred: backend error mapping can continue, but final UI behavior, copy, screenshots, and human review remain unresolved.
+If deferred: backend error mapping can continue, but final UI behavior, copy, screenshots, and user-visible inspection remain unresolved.
 
 Does not settle: login architecture, account recovery, final acceptance, or residual-risk acceptance.
 ```
 
-A broad reply such as "go ahead," "approved," or "looks good" applies only to the one active, clearly named judgment. It does not automatically grant sensitive-action approval, accept the final result, change scope, cancel the task, accept residual risk, or satisfy any future later-path waiver.
+A broad reply such as "go ahead," "approved," or "looks good" applies only to the one active, clearly named judgment. It does not automatically grant sensitive-action approval, accept the final result, change scope, cancel the task, accept residual risk, or settle another future judgment candidate.
 
-The compact active path is a judgment request through the `user_judgment` owner path. Full-format presentation such as `Decision Packet` remains later candidate material for complex judgments; it is not required for ordinary user decisions.
+The compact active path asks through `harness.request_user_judgment` and records the answer through `harness.record_user_judgment` when a judgment is needed. Ordinary decisions do not require a special presentation format.
 
 ## 5. Treat sensitive action approval separately
 
@@ -118,9 +118,9 @@ Approving a dependency install does not mean the dependency is the right archite
 
 ## 6. Record evidence after meaningful action
 
-After meaningful work, the agent should summarize what happened and what supports the claim. In owner terms, the active path may use `record_run` and evidence references when that path is available.
+After meaningful work, the agent should summarize what happened and what supports the claim. In owner terms, the active path may use `harness.record_run` and evidence references when that path is available.
 
-Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, and inspection notes. If a future owner promotes a separate human-review path, its notes remain separate later-path material. The summary should say:
+Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, and inspection notes. If a future owner promotes a separate user-visible inspection path, its notes remain separate later-path material. The summary should say:
 
 - what ran or changed
 - what claim each item supports
@@ -128,7 +128,7 @@ Useful evidence can include changed paths, diffs, command output, test results, 
 - what evidence is missing, stale, redacted, omitted, blocked, or insufficient
 - what was not verified
 
-Evidence does not replace your judgment or final acceptance. Tests do not replace human inspection or any future promoted review path. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
+Evidence does not replace your judgment or final acceptance. Tests do not replace user-visible inspection or any future promoted review path. A screenshot does not prove accessibility. A generated summary does not become operational truth. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles.
 
 ## 7. Review blockers before close
 
@@ -146,22 +146,22 @@ The agent should show:
 - changed paths or no-file result
 - evidence supporting important completion claims
 - checks and their status
-- human-review result when relevant
+- user-visible inspection result when relevant
 - final acceptance need
 - residual risk visibility and acceptance need
 - the smallest unblocker
 
-Tests can pass while close is still blocked. A UI change can need human review even when no separate review gate is active. A security-sensitive change can need a risk decision. Missing evidence remains a blocker until it is gathered or honestly reported as unresolved.
+Tests can pass while close is still blocked. A UI change can still have a visible inspection gap. A security-sensitive change can need a risk decision. Missing evidence remains a blocker until it is gathered or honestly reported as unresolved.
 
-In owner terms, `close_task` returns blockers or a close result. In user terms, the agent should not claim close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved. Additional quality gates are later candidates unless a future owner promotes them.
+In owner terms, `harness.close_task` returns blockers or a close result. In user terms, the agent should not claim close while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved. Separate quality routes are later candidates unless a future owner promotes them.
 
-Close can end as completed, cancelled, or superseded. A failed command, failed projection, missing artifact, evidence gap, or unresolved blocker should stay visible as the specific problem; it is not a generic failed Task result.
+Close can end as completed, cancelled, or superseded. A failed command, failed derived view, missing artifact, evidence gap, or unresolved blocker should stay visible as the specific problem; it is not a generic failed Task result.
 
 ## 8. Accept final result separately from residual risk
 
 Final acceptance means you accept the result you can see. Residual-risk acceptance means you accept a named residual risk that is still visible. They are separate judgments.
 
-The agent should ask for final acceptance only after the close basis is visible: scope, result, evidence, checks, known gaps, human-review status when relevant, and blockers. The prompt should name exactly what result you are accepting.
+The agent should ask for final acceptance only after the close basis is visible: scope, result, evidence, checks, known gaps, user-visible inspection status when relevant, and blockers. The prompt should name exactly what result you are accepting.
 
 The agent should ask for residual-risk acceptance only when a known residual risk is visible and the active close path requires that judgment. The prompt should name the risk, affected area, consequence, evidence gap or uncertainty, and any safer alternative.
 
@@ -211,13 +211,14 @@ Visible shaped result:
 - Blocking question: should failed login feedback be inline text or a toast?
 - Next safe action: after that answer, update the active scope and check the intended login-form write.
 
-Harness routing after the request is clear:
-- `shaping`: turn "login feature" into the smallest useful goal, non-goals, acceptance, evidence expectation, and blocker.
-- `user-owned judgment`: ask the failed-login feedback choice instead of choosing silently.
-- `scope update`: apply the accepted slice before writing.
-- pre-write check / Write Authorization: check the intended login form, session, and test writes against the active scope.
-- `record_run`: summarize changed paths, tests, and missing evidence after meaningful action.
-- `close_task`: show evidence, blockers, final acceptance need, and any named residual risk before close.
+Harness routing after the ordinary request is clear:
+- `harness.intake`: turn "login feature" into the smallest useful goal, non-goals, acceptance, evidence expectation, and blocker.
+- `harness.request_user_judgment`: ask the failed-login feedback choice instead of choosing silently.
+- `harness.record_user_judgment`: record the answer to that one product choice.
+- `harness.update_scope`: apply the accepted slice before writing.
+- `harness.prepare_write`: check the intended login form, session, and test writes against the active scope.
+- `harness.record_run`: summarize changed paths, tests, and missing evidence after meaningful action.
+- `harness.close_task`: show evidence, blockers, final acceptance need, and any named residual risk before close.
 ```
 
 ### Make a plan concrete
@@ -233,18 +234,19 @@ Good agent behavior:
 Visible shaped result:
 - Goal: turn the plan into one implementable first change.
 - Scope: clarify the current objective, affected areas, acceptance criteria, and evidence expectation.
-- Out of scope: new design artifacts, broad roadmap rewrite, and implementation.
+- Out of scope: new standalone artifacts, broad roadmap rewrite, and implementation.
 - Evidence gap: no repository files or tests have been checked yet.
 - Blocking question: which user outcome should the first slice prove?
 - Next safe action: inspect the named owner docs or files, then update the active scope for the first implementable slice.
 
-Harness routing after the request is clear:
-- `shaping`: keep this as planning until the first writable slice is specific.
-- `user-owned judgment`: ask only the choice that changes that slice.
-- `scope update`: record the chosen slice when the user decides.
-- pre-write check / Write Authorization: wait until implementation paths are specific.
-- `record_run`: record inspections or checks only after they happen.
-- `close_task`: do not call the plan done if the first slice, evidence expectation, or close blocker is still unresolved.
+Harness routing after the ordinary request is clear:
+- `harness.intake`: keep this as planning until the first implementable slice is specific.
+- `harness.request_user_judgment`: ask only the choice that changes that slice.
+- `harness.record_user_judgment`: record the chosen user outcome when the user decides.
+- `harness.update_scope`: apply the chosen slice before write-capable work.
+- `harness.prepare_write`: wait until implementation paths are specific.
+- `harness.record_run`: record inspections or checks only after they happen.
+- `harness.close_task`: do not call the plan done if the first slice, evidence expectation, or close blocker is still unresolved.
 ```
 
 ### Only change files inside this scope
@@ -257,13 +259,14 @@ Good agent behavior:
 - inspect enough to know whether the requested fix fits that boundary;
 - ask before touching any path outside it.
 
-Harness routing after the request is clear:
-- `shaping`: convert the path instruction into scope and non-goals.
-- `user-owned judgment`: ask if the needed fix requires a path outside the boundary.
-- `scope update`: apply any accepted boundary change before relying on it.
-- pre-write check / Write Authorization: check intended writes against the allowed paths.
-- `record_run`: report changed paths and focused checks.
-- `close_task`: name out-of-scope needs or missing checks as blockers instead of hiding them.
+Harness routing after the ordinary request is clear:
+- `harness.intake`: convert the path instruction into scope and non-goals.
+- `harness.request_user_judgment`: ask if the needed fix requires a path outside the boundary.
+- `harness.record_user_judgment`: record the user's scope answer.
+- `harness.update_scope`: apply any accepted boundary change before relying on it.
+- `harness.prepare_write`: check intended writes against the allowed paths.
+- `harness.record_run`: report changed paths and focused checks.
+- `harness.close_task`: name out-of-scope needs or missing checks as blockers instead of hiding them.
 ```
 
 ### Split dependency choice from install approval
@@ -276,13 +279,14 @@ Good agent behavior:
 - ask the technical judgment about whether a new dependency is the right direction;
 - ask a separate sensitive-action approval before installing or updating packages.
 
-Harness routing after the request is clear:
-- `shaping`: separate the product need from the dependency path.
-- `user-owned judgment`: record the technical decision about dependency direction.
-- `scope update`: update scope only if the accepted decision changes the work.
-- pre-write check / Write Authorization: check manifest or lockfile writes before package changes.
-- `record_run`: record install/check output after the approved action.
-- `close_task`: keep final acceptance and residual-risk acceptance separate from the dependency decision.
+Harness routing after the ordinary request is clear:
+- `harness.intake`: separate the product need from the dependency path.
+- `harness.request_user_judgment`: ask the `technical_decision` about dependency direction, then ask separate `sensitive_approval` before installing.
+- `harness.record_user_judgment`: record each answer as its own judgment.
+- `harness.update_scope`: update scope only if the accepted decision changes the work.
+- `harness.prepare_write`: check manifest or lockfile writes before package changes.
+- `harness.record_run`: record install/check output after the approved action.
+- `harness.close_task`: keep final acceptance and residual-risk acceptance separate from the dependency decision.
 ```
 
 ### Close honestly
@@ -291,17 +295,18 @@ Harness routing after the request is clear:
 User: Check whether this change can be closed.
 
 Good agent behavior:
-- show scope, evidence, checks, human-review status when relevant, final acceptance need, and residual risk;
+- show scope, evidence, checks, user-visible inspection status when relevant, final acceptance need, and residual risk;
 - name blockers before close;
 - ask final acceptance and residual-risk acceptance separately when both are relevant.
 
-Harness routing after the request is clear:
-- `shaping`: confirm what result is being evaluated for close.
-- `user-owned judgment`: ask only unresolved final acceptance or named residual-risk questions.
-- `scope update`: update scope only if the close check reveals accepted scope drift.
-- pre-write check / Write Authorization: do not reuse stale write checks as close evidence.
-- `record_run`: rely on recorded actions and evidence summaries, or name the gap.
-- `close_task`: return blockers or a close result; broad "looks good" does not settle every judgment.
+Harness routing after the ordinary request is clear:
+- `harness.intake`: confirm what result is being evaluated for close.
+- `harness.request_user_judgment`: ask only unresolved `final_acceptance` or named `residual_risk_acceptance` questions.
+- `harness.record_user_judgment`: record those answers separately when the user gives them.
+- `harness.update_scope`: update scope only if the close check reveals accepted scope drift.
+- `harness.prepare_write`: do not reuse stale write checks as close evidence.
+- `harness.record_run`: rely on recorded actions and evidence summaries, or name the gap.
+- `harness.close_task`: return blockers or a close result; broad "looks good" does not settle every judgment.
 ```
 
 For compact judgment prompt patterns, see [Judgment Examples](judgment-examples.md).

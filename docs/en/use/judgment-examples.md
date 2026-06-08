@@ -2,7 +2,7 @@
 
 Use this compact catalog after the [User Guide](user-guide.md) when a task is blocked by a choice the agent should not make alone. These examples show active judgment-request behavior, not runtime records, generated evidence, acceptance records, or conformance outputs from this documentation repository.
 
-The active user path is a focused judgment request through `user_judgment`. Full-format presentation such as `Decision Packet` is later candidate material for complex judgments. Users should not need a special label to answer ordinary prompts.
+The active user path is focused: ask with `harness.request_user_judgment` when a choice blocks work, and record the answer with `harness.record_user_judgment` when the user answers. Users should not need a special label to answer ordinary prompts.
 
 Each example asks for one judgment, names what the answer settles, and names what it does not settle.
 
@@ -22,10 +22,10 @@ Options:
 
 Recommendation: toast for a non-blocking success confirmation; inline if the message is tied to a field or error.
 
-If deferred: save-state wiring can continue, but final UI behavior, screenshots, and human review remain blocked.
+If deferred: save-state wiring can continue, but final UI behavior, screenshots, and user-visible inspection remain blocked.
 
 Settles: Save feedback pattern.
-Does not settle: broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or pre-write scope check.
+Does not settle: broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or `harness.prepare_write`.
 ```
 
 ## 2. Technical Choice
@@ -52,7 +52,31 @@ Settles: session architecture direction.
 Does not settle: failed-login UX, rate limits, audit logging, final acceptance, or dependency install approval.
 ```
 
-## 3. Sensitive Action Approval
+## 3. Scope Choice
+
+Kind: `scope_decision`
+
+Use when the next safe action would expand scope, remove a non-goal, or touch a path the user has excluded.
+
+```text
+Judgment needed: decide whether to expand scope beyond `src/auth`.
+
+Observed: the fix appears to require a shared session helper in `src/session`.
+
+Options:
+- Keep the original `src/auth` boundary and report the helper change as blocked.
+- Expand scope to include the named helper file in `src/session`.
+- Narrow this task to read-only investigation and return with a concrete follow-up.
+
+Recommendation: expand only to the named helper file if the helper change is required for the login fix and no unrelated session behavior changes.
+
+If deferred: inspection can continue, but product-file writes outside `src/auth` stay blocked.
+
+Settles: whether this task may include the named `src/session` helper path.
+Does not settle: login architecture, sensitive-action approval, final acceptance, residual-risk acceptance, or `harness.prepare_write`.
+```
+
+## 4. Sensitive Action Approval
 
 Kind: `sensitive_approval`
 
@@ -75,7 +99,7 @@ Settles: permission for the named install/update action.
 Does not settle: whether the dependency is the right architecture, future installs, product writes outside scope, final acceptance, or residual-risk acceptance.
 ```
 
-## 4. Final Acceptance
+## 5. Final Acceptance
 
 Kind: `final_acceptance`
 
@@ -99,31 +123,31 @@ Settles: final acceptance of the typo-only result.
 Does not settle: residual risk, scope expansion, future editorial work, or acceptance of unrelated files.
 ```
 
-## 5. Residual Risk Acceptance
+## 6. Residual Risk Acceptance
 
 Kind: `residual_risk_acceptance`
 
 Use when a named residual risk is visible and the active close path requires the user to accept or reject that risk.
 
 ```text
-Judgment needed: accept the residual risk that small-screen visual review was not performed.
+Judgment needed: accept the residual risk that password reset remains out of scope for this login slice.
 
-Risk: the login form may have layout or focus-order issues on narrow mobile screens.
+Risk: users who forget their password still cannot recover access through this change.
 
-Evidence: desktop screenshot and unit tests exist; no mobile visual review result exists.
+Evidence: scope and non-goals exclude password reset; the close claim covers sign-in for existing users with known credentials.
 
 Options:
 - Accept this named residual risk and close with the risk visible.
-- Do not accept; keep close blocked until the mobile visual review is performed or the close claim is narrowed.
-- Narrow the close claim to non-mobile behavior.
+- Do not accept; keep close blocked until password reset is added or the close claim is narrowed.
+- Narrow the close claim to email/password sign-in only.
 
-Recommendation: do not accept for a high-traffic login screen unless mobile review is temporarily impossible.
+Recommendation: accept only if this task was intentionally limited to the login slice and account recovery will be handled separately.
 
 Settles: acceptance of this named residual risk.
 Does not settle: final acceptance of the whole result or other residual risks.
 ```
 
-## 6. Cancellation Or Defer Decision
+## 7. Cancellation Or Defer Decision
 
 Kind: `cancellation` when stopping the task; otherwise no successful close judgment yet.
 
