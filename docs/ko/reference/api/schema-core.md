@@ -192,14 +192,15 @@ ArtifactRelationOwner:
 
 ## ArtifactInput
 
-`ArtifactInput`은 `harness.record_run`에서 `staged_file` 또는 `existing_artifact` 핸들로만 받습니다. 임의 파일 읽기 권한을 부여하지 않습니다.
+`ArtifactInput`은 `harness.record_run`에서 문서화된 스테이징, 캡처, 기존 아티팩트 핸들로만 받습니다. 임의 파일 읽기 권한을 부여하지 않습니다. 캡처 핸들은 문서화된 캡처 경로에서 담당 경로가 발급한 불투명 핸들이어야 하며, 호출자가 임의로 준 원시 캡처 어댑터 출력이 아닙니다.
 
 ```yaml
 ArtifactInput:
   artifact_input_id: string
-  source_kind: staged_file | existing_artifact
+  source_kind: staged_file | captured_artifact | existing_artifact
   relation: string
   staged_uri: string | null
+  captured_handle: string | null
   existing_artifact_ref: ArtifactRef | null
   display_name: string | null
   content_type: string
@@ -207,7 +208,7 @@ ArtifactInput:
   expected_size_bytes: integer | null
 ```
 
-`source_kind`에 맞는 출처 필드 하나만 있어야 합니다. 잘못된 출처 형태, 호출자가 임의로 준 경로, 원시 비밀값, 토큰, 민감한 전체 로그는 변경 전에 거부됩니다.
+`source_kind`에 맞는 출처 필드 하나만 있어야 합니다. `captured_artifact`에는 문서화된 캡처 핸들 경로가 필요하고, 활성 접점이 그 핸들을 제시할 수 있어야 합니다. 기준 `reference-local-mcp` 프로필에는 접점 자체 캡처 역량이 없습니다. 잘못된 출처 형태, 호출자가 임의로 준 경로, 원시 캡처 어댑터 출력, 원시 비밀값, 토큰, 민감한 전체 로그는 변경 전에 거부됩니다.
 
 <a id="evidence-and-pre-write-scope-schemas"></a>
 
@@ -472,7 +473,7 @@ policy_override
 
 ## 현재 MVP 값 집합
 
-아래 값은 승격된 프로필 없이 사용할 수 있는 현재 MVP 값 집합입니다. 여기에 없는 값은 현재 MVP의 기본 활성 값이 아닙니다. 이 표는 첫 validator가 복사해 쓸 수 있는 현재 MVP 값 집합입니다. 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. 공개 `ErrorCode` 값은 이 표가 아니라 [API Errors](errors.md)가 담당합니다.
+아래 값은 활성 현재 MVP 스키마 값입니다. 메서드별 역량과 접근 분류 확인은 구체적인 요청에서 어떤 값을 거부할 수 있습니다. 여기에 없는 값은 활성 현재 MVP 값이 아닙니다. 이 표는 첫 validator가 복사해 쓸 수 있는 현재 MVP 값 집합입니다. 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. 공개 `ErrorCode` 값은 이 표가 아니라 [API Errors](errors.md)가 담당합니다.
 
 | 필드 | 현재 MVP 값 |
 |---|---|
@@ -499,7 +500,7 @@ policy_override
 | `ArtifactRef.produced_by` | `lead_agent`, `harness` |
 | `ArtifactRef.retention_class` | `task`, `project`, `temporary` |
 | `ArtifactRelationOwner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
-| `ArtifactInput.source_kind` | `staged_file`, `existing_artifact` |
+| `ArtifactInput.source_kind` | `staged_file`, `captured_artifact`, `existing_artifact` |
 | `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
 | `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
 | `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |

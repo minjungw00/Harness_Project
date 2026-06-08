@@ -26,7 +26,7 @@ The MVP boundary does not require a service fleet or detailed process split. It 
 
 The Harness Server / Installation is not the Product Repository and not the Harness Runtime Home. It may read product files, write product files only through the user's chosen work surface and the documented cooperative Harness checks, and persist Harness records only through Runtime Home storage paths owned by [Storage](storage.md).
 
-Local tool/resource reachability is an entry path, not authorization. A caller must present a `surface_id` registered to the same `project_id`, the registered `surfaces.status` must be `active`, and state-changing API access requires `surfaces.local_access_posture=registered_local`. Exact access classes and public errors are owned by [MVP API](api/mvp-api.md#shared-request-rules) and [API Errors](api/errors.md).
+Local tool/resource reachability is an entry path, not authorization. A caller must present a `surface_id` registered to the same `project_id`, the registered `surfaces.status` must be `active`, and state-changing API access requires `surfaces.local_access_posture=registered_local`. When applicable, `project_id`, `surface_id`, `task_id`, and `expected_state_version` must be compatible, and the active surface must have the required access-class capability. Exact access classes and public errors are owned by [MVP API](api/mvp-api.md#shared-request-rules) and [API Errors](api/errors.md).
 
 ## 3. Harness Runtime Home
 
@@ -64,6 +64,8 @@ Raw paths, caller claims, chat text, Markdown prose, unregistered files, and art
 
 Artifact reads use the same authority boundary. A raw artifact-store path is not granted to local callers by default. Reading artifact metadata or bytes requires a registered `ArtifactRef`, compatible project/task context, a matching owner relation, and redaction/availability checks owned by [Storage](storage.md) and [API Schema Core](api/schema-core.md#artifactref).
 
+Artifact registration uses only owner-documented staged, captured, or existing handles. A captured handle still requires a documented captured-handle path and active surface support for presenting that handle; a raw local path, copied file, or raw capture-adapter output is not registration authority by itself.
+
 Artifacts can support evidence, verification, QA, final-acceptance visibility, residual-risk visibility, and close-readiness display. They do not prove success, approve work, accept risk, or close work without the separate owner records and user-owned judgments required by Core.
 
 ## 7. Recovery boundary
@@ -78,6 +80,6 @@ Recovery cannot infer successful implementation from chat, generated Markdown, s
 
 The current MVP boundary is cooperative and detective unless a future owner promotes and proves a stronger mechanism for a named operation. It does not claim OS-level permissions, arbitrary-tool sandboxing, permission enforcement, tamper-proof storage, universal pre-tool blocking, or security isolation. `preventive` and `isolated` are not current MVP defaults; they remain profile-gated display values owned by the relevant Reference owners.
 
-Local-only MCP reachability is not authorization. A reachable caller still needs valid Core/API state, project/task/surface compatibility, `surfaces.status=active`, local access posture compatibility, state-version compatibility, and the active surface capability. `allowed` means compatible with Harness state and active surface capability. `blocked` means the Harness owner path or capability check says the action should not proceed. Neither word means physical prevention unless a proven preventive mechanism names that exact covered operation.
+Local-only MCP reachability is not authorization. A reachable caller still needs valid Core/API state, project/task/surface compatibility, `surfaces.status=active`, local access posture compatibility, state-version compatibility, and the active surface capability. `MCP_UNAVAILABLE` means reachability itself is unavailable; `LOCAL_ACCESS_MISMATCH` means the registered local caller/path/posture expectation does not match; `CAPABILITY_INSUFFICIENT` means the recognized surface lacks a required capability. `allowed` means compatible with Harness state and active surface capability. `blocked` means the Harness owner path or capability check says the action should not proceed. Neither word means physical prevention unless a proven preventive mechanism names that exact covered operation.
 
 No surface name, connector recipe, friendly mode label, projection, template, status card, artifact, or documentation check upgrades the guarantee level. Stronger preventive or isolated claims require a documented mechanism, covered operation, owner, and proof path in the relevant Reference owners.

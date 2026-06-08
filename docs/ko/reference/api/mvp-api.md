@@ -61,7 +61,7 @@
 
 오류 코드, 기본 오류 우선순위, 멱등성, stale-state 동작, 닫기 차단 사유 순서, 사용자 표시 오류 라벨은 [API Errors](errors.md)가 담당합니다. 공용 스키마와 활성 값 집합은 [API Schema Core](schema-core.md)가 담당합니다.
 
-로컬 접근 분류는 하네스 API 호환성 분류이지 OS 권한 분류가 아닙니다. 모든 분류는 `surface_id`가 같은 `project_id`에 등록된 `surfaces` 행을 가리켜야 하며, API가 그 접점에 의존하려면 `surfaces.status=active`여야 합니다. 상태를 바꾸는 분류는 `surfaces.local_access_posture=registered_local`도 요구합니다.
+로컬 접근 분류는 하네스 API 호환성 분류이지 OS 권한 분류가 아닙니다. 모든 분류는 `surface_id`가 같은 `project_id`에 등록된 `surfaces` 행을 가리켜야 하며, API가 그 접점에 의존하려면 `surfaces.status=active`여야 합니다. 상태를 바꾸는 분류는 `surfaces.local_access_posture=registered_local`도 요구합니다. 적용되는 경우 `project_id`, `surface_id`, `task_id`, `expected_state_version`은 보호된 상태 읽기에 의존하거나 변경을 커밋하기 전에 서로 호환되어야 합니다.
 
 | 접근 분류 | 포함하는 동작 | 최소 접근 조건 |
 |---|---|---|
@@ -69,10 +69,10 @@
 | `core_mutation` | `harness.intake`, `harness.update_scope`, `harness.request_user_judgment`, `harness.record_user_judgment`, 상태를 끝내는 `harness.close_task` intent. | `read_status` 조건에 더해 `surfaces.local_access_posture=registered_local`, non-dry-run 커밋에는 non-null `idempotency_key`와 현재 `expected_state_version`, 적용되는 경우 호환되는 `project_id`, `surface_id`, `task_id`, 담당 기록이 필요합니다. |
 | `write_authorization` | `harness.prepare_write`. | `core_mutation` 조건에 더해 의도한 attempt에 필요한 활성 Task/Change Unit 호환성, 범위, baseline, 민감 동작, 역량 확인이 필요합니다. |
 | `run_recording` | `harness.record_run`. | `core_mutation` 조건에 더해 호환되는 `task_id`, `change_unit_id`, `baseline_ref`, 관찰된 시도 사실, 그리고 제품 쓰기를 기록하는 Run이면 소비 가능한 활성 Write Authorization이 필요합니다. |
-| `artifact_registration` | `harness.record_run`이 받는 `ArtifactInput[]`. | `run_recording` 조건에 더해 문서화된 `staged_file` 또는 `existing_artifact` 핸들만 받을 수 있습니다. 호출자가 임의로 준 파일시스템 경로, 원시 비밀값, 토큰, 민감한 전체 로그, 접점 자체 캡처 어댑터 출력은 기준 프로필의 등록 권한으로 인정하지 않습니다. |
+| `artifact_registration` | `harness.record_run`이 받는 `ArtifactInput[]`. | `run_recording` 조건에 더해 문서화된 `staged_file`, `captured_artifact`, `existing_artifact` 핸들만 받을 수 있습니다. `captured_artifact`에는 문서화된 캡처 핸들 경로가 필요하고, 활성 접점이 그 핸들을 제시할 수 있어야 합니다. 호출자가 임의로 준 파일시스템 경로, 원시 비밀값, 토큰, 민감한 전체 로그, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 기준 프로필의 등록 권한으로 인정하지 않습니다. |
 | `artifact_read` | 등록된 `ArtifactRef`에서 담당 경로가 노출하는 로컬 아티팩트 메타데이터 또는 본문 읽기. | 같은 프로젝트에 등록된 `surface_id`, `surfaces.status=active`, 본문 읽기에는 `surfaces.local_access_posture=registered_local`, 등록된 `ArtifactRef`, 호환되는 `project_id`/`task_id`, 필요한 가림/가용성 확인, `artifact_links`의 일치하는 담당 관계가 필요합니다. 원시 아티팩트 경로 읽기는 기본으로 허용되지 않습니다. |
 
-필요한 MCP/Core 또는 접점 도달 가능성이 없으면 `MCP_UNAVAILABLE`을 사용합니다. 도달 가능한 호출자나 전송 경로가 등록된 로컬 태세 밖이면 `LOCAL_ACCESS_MISMATCH`를 사용합니다. 접점은 인식되었지만 접근 분류, 관찰, 캡처, 차단/격리 주장, 활성 동작에 필요한 역량이 없으면 `CAPABILITY_INSUFFICIENT`를 사용합니다.
+필요한 MCP/Core 또는 접점 도달 가능성 자체가 없으면 `MCP_UNAVAILABLE`을 사용합니다. 등록된 로컬 접근 기대가 도달 가능한 호출자, 경로, 태세와 맞지 않거나 로컬 접근이 철회되었으면 `LOCAL_ACCESS_MISMATCH`를 사용합니다. 접점은 인식되었지만 접근 분류, 관찰, 캡처, 차단/격리 주장, 활성 동작에 필요한 역량이 없으면 `CAPABILITY_INSUFFICIENT`를 사용합니다.
 
 <a id="harnessintake"></a>
 

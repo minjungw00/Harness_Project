@@ -192,14 +192,15 @@ ArtifactRelationOwner:
 
 ## ArtifactInput
 
-`ArtifactInput` is accepted by `harness.record_run` only as a staged-file or existing-artifact handle. It never grants arbitrary file read authority.
+`ArtifactInput` is accepted by `harness.record_run` only as a documented staged, captured, or existing handle. It never grants arbitrary file read authority. A captured handle is an opaque owner-issued handle from a documented capture path, not a caller-supplied raw capture-adapter output.
 
 ```yaml
 ArtifactInput:
   artifact_input_id: string
-  source_kind: staged_file | existing_artifact
+  source_kind: staged_file | captured_artifact | existing_artifact
   relation: string
   staged_uri: string | null
+  captured_handle: string | null
   existing_artifact_ref: ArtifactRef | null
   display_name: string | null
   content_type: string
@@ -207,7 +208,7 @@ ArtifactInput:
   expected_size_bytes: integer | null
 ```
 
-Exactly one source field must match `source_kind`. Invalid source shapes, caller-supplied arbitrary paths, raw secrets, tokens, and full sensitive logs are rejected before mutation.
+Exactly one source field must match `source_kind`. `captured_artifact` requires an owner-documented captured-handle path and active surface support for presenting that handle; the baseline `reference-local-mcp` profile has no native capture capability. Invalid source shapes, caller-supplied arbitrary paths, raw capture-adapter outputs, raw secrets, tokens, and full sensitive logs are rejected before mutation.
 
 <a id="evidence-and-pre-write-scope-schemas"></a>
 
@@ -472,7 +473,7 @@ policy_override
 
 ## Current MVP Value Sets
 
-These values are valid without a promoted profile. Values not listed here are not default active MVP values. This table is the copyable current MVP value set for first validators. Rendered labels are not canonical schema values. Public `ErrorCode` values are owned by [API Errors](errors.md), not by this table.
+These values are active current MVP schema values. Method-level capability and access-class checks may still reject a value in a concrete request. Values not listed here are not active current MVP values. This table is the copyable current MVP value set for first validators. Rendered labels are not canonical schema values. Public `ErrorCode` values are owned by [API Errors](errors.md), not by this table.
 
 | Field | Current MVP values |
 |---|---|
@@ -499,7 +500,7 @@ These values are valid without a promoted profile. Values not listed here are no
 | `ArtifactRef.produced_by` | `lead_agent`, `harness` |
 | `ArtifactRef.retention_class` | `task`, `project`, `temporary` |
 | `ArtifactRelationOwner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
-| `ArtifactInput.source_kind` | `staged_file`, `existing_artifact` |
+| `ArtifactInput.source_kind` | `staged_file`, `captured_artifact`, `existing_artifact` |
 | `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
 | `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
 | `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |

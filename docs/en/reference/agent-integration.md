@@ -68,7 +68,7 @@ capability_profile:
 
 Exact public tool and resource contracts belong to the API owners. The connector may summarize the available subset, but it should not duplicate full method schemas in prompt context.
 
-`surface_status`, `local_access_posture`, and `supported_access_classes` report the connector's current API compatibility posture. They do not grant authority by themselves. Current access-class labels and surface value sets are owned by [API Schema Core](api/schema-core.md#local-surface-access-values), and minimum request conditions are owned by [MVP API](api/mvp-api.md#shared-request-rules). In the reference profile, `artifact_read` means registered `ArtifactRef` reads through the owner path only; `raw_artifact_path_read_supported=false` means a local filesystem path under the artifact store is not enough to read artifact bytes.
+`surface_status`, `local_access_posture`, and `supported_access_classes` report the connector's current API compatibility posture. `surface_status` must mirror stored `surfaces.status`; none of these fields grant authority by themselves. Current access-class labels and surface value sets are owned by [API Schema Core](api/schema-core.md#local-surface-access-values), and minimum request conditions are owned by [MVP API](api/mvp-api.md#shared-request-rules). In the reference profile, `artifact_read` means registered `ArtifactRef` reads through the owner path only; `raw_artifact_path_read_supported=false` means a local filesystem path under the artifact store is not enough to read artifact bytes. For `artifact_registration`, manual attachment can provide a documented staged handle; `captured_artifact` handles require owner-documented captured-handle support, which the baseline profile does not have.
 
 The baseline `reference-local-mcp` profile has no command observation, network observation, secret-access observation, native artifact capture, pre-tool blocking, or isolation capability. Those capability fields and profile types are later/profile-gated material in [Later Candidate Index](../later/index.md); absence from the active profile means unsupported, not unknown or implicitly available.
 
@@ -176,7 +176,7 @@ Fallbacks are described by guarantee display level and risk, not by surface bran
 | Detective | Harness can observe supported facts after action. | Mark state stale, partial, blocked, or failed and require repair, reconcile, or fresh evidence. |
 | Capability insufficient | A requested write, capture, guard, isolation, or guarantee claim depends on an unsupported capability or profile-gated claim. | Return `CAPABILITY_INSUFFICIENT` or a structured blocked reason; lower the displayed `guarantee_display.level` value. |
 | MCP unavailable | The surface or call path cannot reach the current Core authority path. | Use stable public `MCP_UNAVAILABLE` behavior and do not claim state mutation. |
-| Local access mismatch | The caller or transport is outside the registered local profile, or local access was revoked. | Use `LOCAL_ACCESS_MISMATCH` with display-safe diagnostics; do not introduce a surface-specific `UNAUTHORIZED` code. |
+| Local access mismatch | The caller, path, or posture is outside the registered local profile, or local access was revoked. | Use `LOCAL_ACCESS_MISMATCH` with display-safe diagnostics; do not introduce a surface-specific `UNAUTHORIZED` code. |
 
 `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE` are diagnostic conditions. `MCP_UNAVAILABLE` remains the stable public availability code.
 
