@@ -18,7 +18,7 @@ The table routes agents and implementers to the compact owner documents that cur
 | Contract area | Owner document |
 |---|---|
 | Core authority, task lifecycle, user judgment boundaries, final/residual-risk non-substitution, gates, close blockers | [core-model.md](core-model.md) |
-| Method-level behavior for active public API methods, including `prepare_write` authorization effects | [api/mvp-api.md](api/mvp-api.md) |
+| Method-level behavior for active public API methods, including `harness.update_scope` scope updates and `harness.prepare_write` authorization effects | [api/mvp-api.md](api/mvp-api.md) |
 | Exact active method-name set, shared schema, envelope, active enum/value sets, rendered-label boundaries, and `GuaranteeDisplay.level` values | [api/schema-core.md](api/schema-core.md) |
 | Public errors and precedence | [api/errors.md](api/errors.md) |
 | Storage, DDL, persisted rows such as `write_authorizations`, and idempotency | [storage.md](storage.md) |

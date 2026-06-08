@@ -8,6 +8,7 @@ retrieval_rule:
   default_agent_language: en
   allow_korean_when_user_context_is_korean: true
   paired_docs_must_not_be_loaded_together: true
+  paired_docs_exception: translation_or_semantic_parity_review_only
 docs:
   - doc_id: docs.index
     status: active
@@ -96,7 +97,7 @@ docs:
       en: docs/en/reference/api/mvp-api.md
       ko: docs/ko/reference/api/mvp-api.md
     default_for_agent: en
-    owns: "Method-level request/response behavior for the active public API methods, including `prepare_write` authorization effects."
+    owns: "Method-level request/response behavior for the active public API methods, including `harness.update_scope` scope updates and `harness.prepare_write` authorization effects."
     does_not_own: "Exact active method-name value set, shared schema definitions, enum value sets, error precedence, storage DDL, or core lifecycle authority."
 
   - doc_id: reference.api.schema-core

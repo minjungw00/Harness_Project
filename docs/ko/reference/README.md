@@ -18,7 +18,7 @@
 | 계약 영역 | 담당 문서 |
 |---|---|
 | Core 권한, 작업 생명주기, 사용자 판단 경계, 최종 수락/잔여 위험 수락 대체 불가, gate, 닫기 차단 사유 | [core-model.md](core-model.md) |
-| `prepare_write`가 `Write Authorization`에 미치는 효과를 포함한 활성 공개 API 메서드별 동작 | [api/mvp-api.md](api/mvp-api.md) |
+| `harness.update_scope` 범위 갱신과 `harness.prepare_write`가 `Write Authorization`에 미치는 효과를 포함한 활성 공개 API 메서드별 동작 | [api/mvp-api.md](api/mvp-api.md) |
 | 정확한 활성 메서드 이름 집합, 공유 스키마, 봉투 구조, 활성 enum/값 집합, 표시 라벨 경계, `GuaranteeDisplay.level` 값 | [api/schema-core.md](api/schema-core.md) |
 | 공개 오류와 우선순위 | [api/errors.md](api/errors.md) |
 | 저장소, DDL, `write_authorizations` 같은 지속 행, 멱등성 | [storage.md](storage.md) |
