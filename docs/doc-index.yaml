@@ -77,7 +77,7 @@ docs:
       en: docs/en/reference/README.md
       ko: docs/ko/reference/README.md
     default_for_agent: en
-    owns: "Reference owner routing for exact contract questions, including active MVP boundary, verified local surface access, project-wide `state_version`, scope schemas, staged artifacts, evidence/close/projection/security/judgment/shaping owners, later-only routing, and maintain-route pointers."
+    owns: "Reference owner routing for exact contract questions, including active MVP boundary, public `ErrorCode` and `STATE_VERSION_CONFLICT` owners, verified local surface access, request-level `VerifiedSurfaceContext.access_class`, `run_recording`, `artifact_registration`, `artifact_read`, project-wide `project_state.state_version`, staged artifacts, `StagedArtifactHandle` promotion, persistent `existing_artifact` / `ArtifactRef` linking, artifact body reads, evidence/close/projection/security/judgment/shaping owners, later-only routing, and maintain-route pointers."
     does_not_own: "Detailed schemas, DDL, transition tables, templates, errors, retrieval guidance, security guarantees, or implementation readiness."
 
   - doc_id: reference.core-model
@@ -97,7 +97,7 @@ docs:
       en: docs/en/reference/api/mvp-api.md
       ko: docs/ko/reference/api/mvp-api.md
     default_for_agent: en
-    owns: "Method-level request/response behavior for active public API methods, including verified local surface request conditions, `harness.update_scope`, `harness.prepare_write` authorization effects, `harness.stage_artifact`, `harness.record_run`, and `harness.close_task` behavior."
+    owns: "Method-level request/response behavior for active public API methods, including verified local surface request conditions, request-level `VerifiedSurfaceContext.access_class`, `harness.update_scope`, `harness.prepare_write` authorization effects, `harness.stage_artifact` with `artifact_registration`, `harness.record_run` with `run_recording`, staged artifact promotion behavior, artifact body reads with `artifact_read`, and `harness.close_task` behavior."
     does_not_own: "Exact active method-name value set, shared schema definitions, enum value sets, error precedence, storage DDL, or core lifecycle authority."
 
   - doc_id: reference.api.schema-core
@@ -107,7 +107,7 @@ docs:
       en: docs/en/reference/api/schema-core.md
       ko: docs/ko/reference/api/schema-core.md
     default_for_agent: en
-    owns: "Exact active method-name set, shared API schemas, envelopes, common response shapes, `ToolEnvelope.expected_state_version`, `LocalSurfaceRegistration`, `VerifiedSurfaceContext`, `StagedArtifactHandle`, `ArtifactInput`, `CompletionPolicy`, `EvidenceSummary`, `SensitiveActionScope`, product-file `AuthorizedAttemptScope`, `ShapingReadiness`, close blocker schemas, active enum and schema value sets, rendered-label boundaries, and profile-gated value names."
+    owns: "Exact active method-name set, shared API schemas, envelopes, common response shapes, `ToolEnvelope.expected_state_version`, `LocalSurfaceRegistration`, `VerifiedSurfaceContext.access_class`, active access-class values including `run_recording`, `artifact_registration`, and `artifact_read`, `StagedArtifactHandle`, `ArtifactInput` including `existing_artifact`, `CompletionPolicy`, `EvidenceSummary`, `SensitiveActionScope`, product-file `AuthorizedAttemptScope`, `ShapingReadiness`, close blocker schemas, active enum and schema value sets, rendered-label boundaries, and profile-gated value names."
     does_not_own: "Method-specific API behavior, persisted DDL, public error precedence, security guarantee claims, later schema bodies, or template bodies."
 
   - doc_id: reference.api.errors
@@ -117,7 +117,7 @@ docs:
       en: docs/en/reference/api/errors.md
       ko: docs/ko/reference/api/errors.md
     default_for_agent: en
-    owns: "Public error taxonomy, status taxonomy, error precedence, local surface errors, `STATE_VERSION_CONFLICT`, general blocked/dry-run response semantics, `close_task` blocker error mapping, and idempotency error behavior."
+    owns: "Public `ErrorCode` contract, status taxonomy, error precedence, local surface errors, `STATE_VERSION_CONFLICT`, general blocked/dry-run response semantics, `close_task` blocker error mapping, and idempotency error behavior."
     does_not_own: "Core gates, method payload schemas, method-specific durable state effects such as `prepare_write` authorization creation, storage records, or connector fallback rules."
 
   - doc_id: reference.storage
@@ -127,7 +127,7 @@ docs:
       en: docs/en/reference/storage.md
       ko: docs/ko/reference/storage.md
     default_for_agent: en
-    owns: "Storage layout, DDL, `project_state.state_version` as the single public project-wide state clock, persisted records such as `surfaces`, `write_authorizations`, staged artifact storage, evidence summary rows, locks, artifact references, idempotency, and migrations."
+    owns: "Storage layout, DDL, `project_state.state_version` as the single public project-wide state clock, persisted records such as `surfaces`, `write_authorizations`, staged artifact storage, staged artifact promotion persistence, persistent `existing_artifact` / `ArtifactRef` linking, artifact body-read storage eligibility, evidence summary rows, locks, artifact references, idempotency, and migrations."
     does_not_own: "API wire schema, security guarantees, projection templates, or generated runtime data."
 
   - doc_id: reference.runtime-boundaries
@@ -237,5 +237,5 @@ docs:
       en: docs/en/maintain/checks.md
       ko: docs/ko/maintain/checks.md
     default_for_agent: en
-    owns: "Documentation checks for links, bilingual maps, owner boundaries, retrieval, and stale content."
+    owns: "Documentation checks for links, bilingual maps, owner boundaries, retrieval, stale content, public error-code consistency, `access_class` consistency, and artifact lifecycle consistency."
     does_not_own: "Runtime proof, server conformance, generated QA, acceptance, or implementation completeness."
