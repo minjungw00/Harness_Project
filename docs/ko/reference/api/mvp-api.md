@@ -62,6 +62,7 @@ non-dry-run 상태 변경을 뜻합니다. 버전 증가는 항상 프로젝트 
 모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다. 커밋되는 non-dry-run 상태 변경 호출은 [`ToolResponseBase`](schema-core.md#common-response)를 사용하며 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`을 요구합니다. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key: null`과 `expected_state_version: null`을 사용할 수 있습니다. `harness.stage_artifact`는 임시 `StagedArtifactHandle`만 만들며 Core 상태 전이가 아니고 재실행 행이나 `project_state.state_version` 증가를 만들지 않습니다.
 
 메서드에 도구별 `task_id`가 있으면 Core는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task 순서로 주 Task를 찾습니다. 이 해석은 담당 기록을 고르는 일이며 별도 상태 시계를 고르지 않습니다. 새 non-dry-run 상태 변경은 모두 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 `project_state.state_version`과 비교합니다.
+값이 맞지 않으면 `STATE_VERSION_CONFLICT`를 반환합니다. 어떤 메서드도 별도 공개 오래된 상태 오류나 저장소 계층 별칭을 정의하지 않습니다.
 
 읽기 전용 호출은 차단 사유, 닫기 차단 사유, 다음 행동, 진단을 계산해 반환할 수 있습니다. 하지만 그 값은 응답 필드일 뿐입니다. 차단 사유를 저장하거나, `task_events`를 추가하거나, `tool_invocations` 재실행 행을 만들거나, `state_version`을 올리면 안 됩니다.
 
@@ -252,7 +253,7 @@ PrepareWriteRequest:
 ```yaml
 PrepareWriteResponse:
   base: ToolResponseBase
-  decision: allowed | blocked | approval_required | decision_required | state_version_conflict
+  decision: allowed | blocked | approval_required | decision_required
   state: StateSummary | null
   write_authorization_ref: StateRecordRef | null
   write_authorization: WriteAuthorizationSummary | null
@@ -264,6 +265,7 @@ PrepareWriteResponse:
 ```
 
 - **상태 효과:** 커밋된 non-dry-run `decision=allowed`는 활성 경로 수준 `AuthorizedAttemptScope`에 대해 `write_authorizations.status=active` 행 하나를 만들고, 이벤트를 추가하고, 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올립니다. 커밋된 `blocked`, `approval_required`, `decision_required` 응답은 차단 사유를 업데이트하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 소비 가능한 Write Authorization은 만들면 안 됩니다. `dry_run`과 커밋 전 실패는 현재 기록, Write Authorization, `blockers` 행, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
+- **상태 버전 충돌:** 프로젝트 전체 상태 버전 불일치는 `ToolResponseBase.errors`에 담기는 커밋 전 `STATE_VERSION_CONFLICT`입니다. `PrepareWriteResponse.decision` 값이 아니며, Write Authorization이나 차단 사유 커밋을 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `write_authorizations`, `blockers`, `project_state` 상태 시계, `task_events`, `tool_invocations`.
 - **보안 경계:** `decision=allowed`는 이 경로 수준 제품 파일 쓰기 시도가 하네스 기록과 호환된다는 뜻입니다. 운영체제가 호환되지 않는 쓰기를 막거나 임의 도구가 격리된다는 뜻이 아닙니다. 활성 `PrepareWriteRequest`는 위에 적은 제품 쓰기 경로 수준 필드만 포함하며 명령, 의존성, 호스트, 네트워크, 비밀값, 배포, 파괴적 동작, 시스템 접근의 승인 범위를 인코딩하지 않습니다. 그런 승인은 `judgment_kind=sensitive_approval`을 통해 `SensitiveActionScope`로 별도 기록됩니다. 현재 MVP 요청이 명령, 네트워크, 비밀값 접근, 아티팩트 캡처, 도구 실행 전 차단, 격리, 검증되지 않은 변경 경로 탐지 보장을 요구하면 활성 접점에 역량이 없거나 `changed_path_detection_verification=failed` 또는 `stale`일 때 `CAPABILITY_INSUFFICIENT`를 반환하고, 요청 형태나 요구한 보장이 활성 프로필에 유효하지 않으면 `VALIDATION_FAILED`를 반환해야 합니다. `changed_path_detection_verification=not_run` 또는 예전 `planned_not_run` 문구는 `detective`를 정당화하지 못하므로, 더 강한 보장을 요구하지 않는 요청은 `cooperative` 표시를 사용해야 합니다.
@@ -345,7 +347,7 @@ RecordRunResponse:
   state: StateSummary
 ```
 
-- **상태 효과:** 호환되는 커밋 호출은 `runs`를 만들고, 유효한 `artifact_staging` 핸들을 소비하고, 그 스테이징 핸들을 지속 `artifacts`로 승격하고, `artifact_links`를 추가하고, `evidence_summaries`를 만들고, Run 관련 차단 사유를 업데이트하고, `write_authorizations.status=active`를 소비하고, 이벤트와 커밋된 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 제품 쓰기 Run은 현재 `project_state.state_version`이 Write Authorization의 프로젝트 전체 `basis_state_version`과 맞고, 관찰된 변경 경로가 저장된 승인 시도와 호환될 때만 활성 Write Authorization을 소비합니다. 거부된 호출과 커밋 전 실패는 Run 생성, 아티팩트 등록, 스테이징 핸들 소비 또는 갱신, 증거 업데이트, 유효하지 않은 Write Authorization 소비, 이벤트 추가, 재실행 행 생성, `state_version` 증가를 하면 안 됩니다.
+- **상태 효과:** 호환되는 커밋 호출은 `runs`를 만들고, 유효한 `artifact_staging` 핸들을 소비하고, 그 스테이징 핸들을 지속 `artifacts`로 승격하고, `artifact_links`를 추가하고, `evidence_summaries`를 만들고, Run 관련 차단 사유를 업데이트하고, `write_authorizations.status=active`를 소비하고, 이벤트와 커밋된 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 제품 쓰기 Run은 현재 `project_state.state_version`이 Write Authorization의 프로젝트 전체 `basis_state_version`과 맞고, 관찰된 변경 경로가 저장된 승인 시도와 호환될 때만 활성 Write Authorization을 소비합니다. 권한의 근거 버전이 현재 `project_state.state_version`과 더 이상 맞지 않으면 그 시도는 소비 전에 `STATE_VERSION_CONFLICT`를 반환합니다. 거부된 호출과 커밋 전 실패는 Run 생성, 아티팩트 등록, 스테이징 핸들 소비 또는 갱신, 증거 업데이트, 유효하지 않은 Write Authorization 소비, 이벤트 추가, 재실행 행 생성, `state_version` 증가를 하면 안 됩니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `runs`, `write_authorizations`, `artifact_staging`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers`, `task_events`, `tool_invocations`.
 - **보안 경계:** Run은 접점이 관찰한 사실을 기록할 수 있습니다. 기준 `reference-local-mcp` 프로필에서 제품 쓰기 호환성은 `changed_path_detection_verification=passed` 뒤 관찰된 변경 경로에 대해서만 탐지형이며, 그 검증된 변경 경로 범위 안으로 제한됩니다. `not_run`, 예전 `planned_not_run` 문구, `failed`, `stale`은 `detective` Run 표시의 근거가 될 수 없습니다. 실패했거나 오래된 필수 확인은 `CAPABILITY_INSUFFICIENT`를 반환해야 하고, 더 강한 주장을 요구하지 않는 메서드 경로는 `cooperative`로 낮춰야 합니다. 활성 접점이 관찰할 수 없는 명령 실행, 네트워크 활동, 비밀값 접근, 아티팩트 캡처, 차단, 격리 사실을 API가 검증됨으로 표시하면 안 됩니다.
@@ -481,7 +483,7 @@ CloseTaskResponse:
 | 3 | `scope` | 활성 범위, Change Unit, 수락 기준, `CompletionPolicy`가 없거나 오래됐거나 호환되지 않으면 `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `BASELINE_STALE`를 사용합니다. |
 | 4 | `user_judgment` | 필요한 비민감 사용자 소유 판단이 해결되지 않았으면 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 사용합니다. |
 | 5 | `sensitive_approval` | 필요한 `sensitive_approval`이 없거나, 거부되었거나, 만료되었거나, 오래됐거나, 호환되지 않으면 `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`를 사용합니다. |
-| 6 | `write_compatibility` | 필요한 Write Authorization, 제품 쓰기 Run, 경로, baseline, 관찰된 쓰기가 없거나 호환되지 않으면 `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `BASELINE_STALE`를 사용합니다. |
+| 6 | `write_compatibility` | 프로젝트 전체 버전 불일치, 필요한 Write Authorization, 제품 쓰기 Run, 경로, baseline, 관찰된 쓰기가 없거나 호환되지 않으면 `STATE_VERSION_CONFLICT`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `BASELINE_STALE`를 사용합니다. |
 | 7 | `baseline` 또는 `surface_capability` | baseline이나 확인된 로컬 접점이 닫기 주장이나 필요한 보장 표시를 정직하게 뒷받침할 수 없으면 `BASELINE_STALE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`를 사용합니다. |
 | 8 | `evidence` | 활성 `CompletionPolicy` 기준으로 필수 증거가 없거나, 부분적이거나, 오래됐거나, 막혔거나, 충분하지 않으면 `EVIDENCE_INSUFFICIENT`를 사용합니다. |
 | 9 | `artifact_availability` | 닫기 관련 `ArtifactRef`가 없거나, 사용할 수 없거나, 무결성에 실패했거나, 허용된 안전 알림을 넘어서 차단되었거나, 쓸 수 없으면 `ARTIFACT_MISSING`을 사용합니다. |

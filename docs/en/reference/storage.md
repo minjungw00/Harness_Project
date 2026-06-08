@@ -653,13 +653,13 @@ responses. Keys are scoped as described by [API Errors: Idempotency](api/errors.
 If the same key and request hash are replayed, Core returns the original
 committed response without appending events, registering artifacts, consuming
 authorization, or changing state again. If the key is reused with a different
-request hash, Core returns `STATE_CONFLICT` as defined by
+request hash, Core returns `STATE_VERSION_CONFLICT` as defined by
 [API Errors](api/errors.md#state-conflict-behavior). The storage unique key is
 `(project_id, tool_name, idempotency_key)`; `request_hash` is the conflict
 discriminator stored in that row.
 
 Dry runs, malformed requests, pre-commit validation failures, pre-commit state
-conflicts, read-only calls such as `harness.status` and
+version conflicts, read-only calls such as `harness.status` and
 `harness.close_task intent=check`, and rejected `record_run` attempts that
 create no mutation do not create current rows, consume or update
 `artifact_staging` handles, append `task_events`, register artifacts, update
@@ -684,10 +684,13 @@ evidence, and user judgments, but it does not select a separate state clock.
 Fresh non-dry-run state-changing API calls compare
 `ToolEnvelope.expected_state_version` with the current
 `project_state.state_version` before commit. A mismatch returns
-`STATE_CONFLICT` and creates no current records, events, artifacts, evidence
-summaries, Write Authorizations, close state, replay rows, or state-version
-increments. No active current MVP call requires or accepts more than one public
-`expected_state_version`.
+`STATE_VERSION_CONFLICT` and creates no current records, events, artifacts,
+evidence summaries, Write Authorizations, close state, replay rows, or
+state-version increments. `STATE_VERSION_CONFLICT` is the only active current
+MVP public `ErrorCode` for project-wide state-version mismatch; `STATE_CONFLICT`
+is not an active public code, alias, deprecated spelling, or storage-layer
+public error name. No active current MVP call requires or accepts more than one
+public `expected_state_version`.
 
 Every committed non-dry-run mutation increments
 `project_state.state_version` by exactly 1. This includes committed blocked
@@ -698,7 +701,7 @@ updating both `tasks.lifecycle_phase` and `project_state.active_task_id`, but it
 is still one mutation and creates exactly one project-wide version increment.
 
 `harness.status`, `harness.close_task intent=check`, dry-run calls, malformed
-requests, pre-commit validation failures, pre-commit state conflicts, and
+requests, pre-commit validation failures, pre-commit state-version conflicts, and
 idempotent replay do not increment `project_state.state_version`.
 `ToolResponseBase.state_version` always returns the project-wide version: the
 resulting version after a committed mutation, or the current project-wide
@@ -707,13 +710,17 @@ version observed for read-only and dry-run responses.
 The active first schema should omit `tasks.state_version`. If an implementation
 encounters a legacy or prototype `tasks.state_version` column, that value is
 inactive metadata only. It must not be used as an authorization,
-`STATE_CONFLICT`, stale-state, Write Authorization, idempotency, lock, or
+`STATE_VERSION_CONFLICT`, stale-state, Write Authorization, idempotency, lock, or
 concurrency basis.
 
 `write_authorizations.basis_state_version` stores the project-wide
 `project_state.state_version` used when Core prepared the authorization.
 Stale Write Authorization detection compares that stored value with the current
-project-wide state version, not with any Task-local clock.
+project-wide state version, not with any Task-local clock. When that mismatch
+is surfaced through the public API, the public error is `STATE_VERSION_CONFLICT`.
+Storage examples may describe stale state or version mismatch, but storage does
+not define a different public error name or expose internal database exception
+names.
 `write_authorizations.attempt_scope_json` stores the authorized attempt boundary
 that `record_run` later compares against observed facts. The top-level
 `task_id`, `change_unit_id`, `surface_id`, and `basis_state_version` columns are

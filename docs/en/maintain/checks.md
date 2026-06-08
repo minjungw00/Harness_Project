@@ -120,9 +120,9 @@ Pass when agent-facing docs retrieve only one language for a given `doc_id` duri
 
 ## 14. State-Version Conflict Clock Check
 
-Inspect `state_version`, `project_state.state_version`, `tasks.state_version`, task-scoped state clocks, project-scoped state clocks, conflict wording, concurrency wording, and public API examples.
+Inspect `state_version`, `project_state.state_version`, `tasks.state_version`, task-scoped state clocks, project-scoped state clocks, conflict wording, concurrency wording, public `ErrorCode` lists, and public API examples.
 
-Pass when active MVP public conflict wording uses the project-wide `project_state.state_version` basis unless an owner explicitly promotes another clock. Fail when active MVP text exposes both task-scoped and project-scoped `state_version` as public conflict clocks, asks clients or agents to choose between them, or treats `tasks.state_version` as an active public conflict/concurrency basis.
+Pass when active MVP public conflict wording uses the project-wide `project_state.state_version` basis unless an owner explicitly promotes another clock, and when project-wide mismatch uses the single public `ErrorCode` `STATE_VERSION_CONFLICT`. Fail when active MVP text exposes both task-scoped and project-scoped `state_version` as public conflict clocks, asks clients or agents to choose between them, treats `tasks.state_version` as an active public conflict/concurrency basis, or uses `STATE_CONFLICT` as a public error code, synonym, deprecated alias, alternate spelling, or storage-layer public error name.
 
 ## 15. User-Facing Template Internal-Term Check
 

@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference for active current MVP public error codes, primary-error precedence, blocked and dry-run behavior, `tool_invocations` replay, state conflict behavior, documentation smoke-target error coverage, close blocker behavior, and user-facing label guidance.
+Use this reference for active current MVP public error codes, primary-error precedence, blocked and dry-run behavior, `tool_invocations` replay, state-version conflict behavior, documentation smoke-target error coverage, close blocker behavior, and user-facing label guidance.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server.
 
@@ -26,7 +26,7 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | `core_or_surface_unavailable` | `MCP_UNAVAILABLE` | Do not invent Harness state. Hold Harness-dependent writes, artifact body reads, and close until Core and the required surface path are reachable, or until the user explicitly chooses to proceed outside Harness. This corresponds to `VerifiedSurfaceContext.failure_reason=unavailable`. |
 | `local_access_mismatch` | `LOCAL_ACCESS_MISMATCH` | Do not guess local file or command facts and do not trust a copied `surface_id`. Use the registered local transport/session/binding, repair local access registration through the owner path, or label input unverified. This corresponds to `failure_reason=mismatch` or `revoked`. |
 | `missing_capability` | `CAPABILITY_INSUFFICIENT` | Use a capable surface, reduce the operation, or choose a path that does not require the missing observation, capture, local access class, blocking/isolation claim, or active behavior. Baseline `reference-local-mcp` requests that require command, network, secret-access, native artifact-capture, pre-tool-blocking, or isolation guarantees belong here unless the payload shape is invalid. This corresponds to `failure_reason=insufficient_capability`. |
-| `stale_state` | `STATE_VERSION_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, stale `WRITE_AUTHORIZATION_INVALID` | Refresh current state, baseline, readable view, scope-update result, or pre-write check before relying on it. |
+| `stale_state` | `STATE_VERSION_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE` | Refresh current state, baseline, readable view, scope-update result, or pre-write check before relying on it. A Write Authorization whose project-wide basis is stale uses `STATE_VERSION_CONFLICT`. |
 | `unsupported_surface` | `CAPABILITY_INSUFFICIENT` or `VALIDATION_FAILED` | Reduce the request, move to a capable surface, or return a blocker. Do not emulate unsupported authority with prose. |
 | `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | Hold the affected action, show the mismatch, narrow to current scope, request the specific user-owned scope judgment, or apply the resolved scope change through `harness.update_scope`. |
 | `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | Ask or resolve the focused active `UserJudgment`. Do not collapse product, technical, scope, sensitive approval, final acceptance, residual-risk acceptance, cancellation, or later/reserved QA waiver and verification-risk routes into one broad approval. |
@@ -41,13 +41,13 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | Code | Meaning |
 |---|---|
 | `VALIDATION_FAILED` | Payload shape, enum value, activation rule, or profile-specific validation failed before mutation. |
-| `STATE_VERSION_CONFLICT` | `expected_state_version` is stale against `project_state.state_version`, state lock ownership changed, or the same idempotency key was reused with a different canonical request. |
+| `STATE_VERSION_CONFLICT` | `ToolEnvelope.expected_state_version` does not match current `project_state.state_version`, a Write Authorization is stale because its project-wide `basis_state_version` no longer matches current `project_state.state_version`, or the same idempotency key was reused with a different canonical request. |
 | `NO_ACTIVE_TASK` | A Task is required but none is active or addressed. |
 | `NO_ACTIVE_CHANGE_UNIT` | A write-capable or close-relevant operation has no active scoped Change Unit. |
 | `SCOPE_REQUIRED` | Scope confirmation is required before the requested write or action can proceed. |
 | `SCOPE_VIOLATION` | Intended or observed product-file paths or sensitive categories exceed active scope or stored `AuthorizedAttemptScope`. |
 | `WRITE_AUTHORIZATION_REQUIRED` | A write-capable Run is missing a required Write Authorization from `harness.prepare_write`. |
-| `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is missing, expired, stale, revoked, consumed outside replay, or incompatible. |
+| `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization exists but is expired, revoked, consumed outside replay, or incompatible for a non-version reason. |
 | `DECISION_REQUIRED` | A blocking user-owned judgment must be requested before the action can proceed. |
 | `DECISION_UNRESOLVED` | A relevant user judgment is pending, deferred without coverage, rejected, blocked, stale, superseded, or incompatible. |
 | `AUTONOMY_BOUNDARY_EXCEEDED` | The intended operation exceeds the active Change Unit Autonomy Boundary. |
@@ -71,7 +71,8 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 missing | expired | stale | revoked | consumed | incompatible
 ```
 
-Use `WRITE_AUTHORIZATION_REQUIRED` with `authorization_reason=missing` when no required authorization is supplied. Use `WRITE_AUTHORIZATION_INVALID` for an existing authorization that cannot be consumed.
+Use `WRITE_AUTHORIZATION_REQUIRED` with `authorization_reason=missing` when no required authorization is supplied. Use `WRITE_AUTHORIZATION_INVALID` with `authorization_reason=expired`, `revoked`, `consumed`, or `incompatible` when an existing authorization cannot be consumed for a non-version reason.
+Use `STATE_VERSION_CONFLICT` with `authorization_reason=stale` when the supplied Write Authorization is stale because its project-wide `basis_state_version` does not match current `project_state.state_version`.
 
 `ToolError.details.staging_handle_reason` uses exactly:
 
@@ -146,6 +147,8 @@ For a new state-changing attempt with no committed replay row, Core may resolve 
 
 Every fresh non-dry-run state mutation compares `ToolEnvelope.expected_state_version` with the current project-wide `project_state.state_version`. Mismatch returns `STATE_VERSION_CONFLICT` and creates no current records, events, artifacts, evidence summaries, Write Authorizations, close state, replay rows, or state-version increments. `tasks.state_version` is not an active conflict or concurrency basis.
 
+`STATE_VERSION_CONFLICT` is the only active current MVP public `ErrorCode` for project-wide state-version mismatch. `STATE_CONFLICT` is not an active public code, alias, deprecated spelling, alternate storage-layer public error name, or internal exception name to expose.
+
 `STATE_VERSION_CONFLICT.details` should include:
 
 ```yaml
@@ -156,7 +159,7 @@ project_id: string
 task_id: string | null
 ```
 
-`WriteAuthorization.basis_state_version` is the project-wide compatibility basis for the allow decision. Stale Write Authorization detection compares it with current `project_state.state_version`; no Task-local clock participates.
+`WriteAuthorization.basis_state_version` is the project-wide compatibility basis for the allow decision. Stale Write Authorization detection compares it with current `project_state.state_version`; no Task-local clock participates. When that comparison fails, the public error is `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`.
 
 <a id="documentation-smoke-error-coverage"></a>
 
@@ -165,12 +168,12 @@ task_id: string | null
 The first internal documentation smoke target in [MVP Plan](../../build/mvp-plan.md#first-internal-smoke-target) must use only active public errors and active `CloseBlocker.category` values. It does not define smoke-only codes, a complete conformance suite, or an implementation plan.
 
 - Registered surface verification succeeds without an error only when Core derives a compatible `VerifiedSurfaceContext` for the registered surface. Failure uses `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, or `CAPABILITY_INSUFFICIENT`; a copied `surface_id` is not proof of access or capability.
-- Project-wide state conflict uses `STATE_VERSION_CONFLICT` when `ToolEnvelope.expected_state_version` is stale against `project_state.state_version`. The failed attempt must not create records, events, artifacts, evidence, Write Authorization, close state, replay rows, or a state-version increment.
+- Project-wide state-version conflict uses `STATE_VERSION_CONFLICT` when `ToolEnvelope.expected_state_version` is stale against `project_state.state_version`. The failed attempt must not create records, events, artifacts, evidence, Write Authorization, close state, replay rows, or a state-version increment.
 - A shaping readiness gap may surface `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, or a structured blocker, depending on the owner path. Read-only status or readiness reads do not mutate state.
 - `prepare_write decision=allowed` creates the owner-scoped single-use Write Authorization. `decision=blocked` uses the applicable scope, baseline, capability, validation, or decision code. `decision=approval_required` uses the `APPROVAL_*` path and must not create a consumable Write Authorization.
 - `SensitiveActionScope` belongs to `judgment_kind=sensitive_approval`. Sensitive approval errors use `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED`; that approval does not replace Write Authorization, final acceptance, residual-risk acceptance, evidence, or artifact authority.
 - `harness.stage_artifact` success creates only a temporary handle and no Core mutation. `harness.record_run` is the active path that can promote a valid staged handle to persistent `ArtifactRef`; invalid source-field shape uses `VALIDATION_FAILED`, while missing, expired, consumed, mismatched, unavailable, or incompatible staged handles use `ARTIFACT_MISSING` with `staging_handle_reason` and must not be hidden as evidence sufficiency.
-- `harness.record_run` consumes a compatible Write Authorization exactly once. Missing authorization uses `WRITE_AUTHORIZATION_REQUIRED`; stale, expired, revoked, consumed, or incompatible authorization uses `WRITE_AUTHORIZATION_INVALID`; observed-outside-authorized-scope attempts use the applicable scope or authorization code.
+- `harness.record_run` consumes a compatible Write Authorization exactly once. Missing authorization uses `WRITE_AUTHORIZATION_REQUIRED`. A project-wide stale authorization basis uses `STATE_VERSION_CONFLICT`. Expired, revoked, consumed, or non-version-incompatible authorization uses `WRITE_AUTHORIZATION_INVALID`; observed-outside-authorized-scope attempts use the applicable scope or authorization code.
 - `close_task intent=check` is read-only even when it returns blockers. `close_task intent=complete` returns `CloseTaskResponse.close_state=blocked` with structured blockers or `close_state=closed` only when no owner-defined complete blocker remains.
 - Close smoke coverage must include `EVIDENCE_INSUFFICIENT` for evidence blockers, `ARTIFACT_MISSING` for artifact unavailable or missing blockers, `ACCEPTANCE_REQUIRED` for final acceptance blockers, and `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `category=residual_risk_acceptance` for visible but unaccepted residual risk. `RESIDUAL_RISK_NOT_VISIBLE` is reserved for risk that has not been shown.
 - `close_task intent=supersede` uses supersession, lifecycle, local-access, state-version conflict, or recovery blockers when invalid. It must not require evidence sufficiency, final acceptance, or residual-risk acceptance, and a valid supersede that updates lifecycle plus `project_state.active_task_id` is one project-wide state mutation.
@@ -204,7 +207,7 @@ These labels are display guidance, not new public error codes.
 | `CAPABILITY_INSUFFICIENT` | unsupported or insufficient surface | Use a capable surface, reduce the operation, or choose a path that does not require the missing capability. |
 | `NO_ACTIVE_TASK` | no active Task | Select or create a Task before a Task-scoped action. |
 | `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, use `harness.update_scope` to update the Change Unit or baseline when the scope change is valid, or request the needed user judgment. |
-| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or stale pre-write scope check | Call or retry `harness.prepare_write` for the exact operation, current scope, and current state. |
+| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or unusable pre-write scope check | Call or retry `harness.prepare_write` for the exact operation, current scope, and current state. Project-wide state-version drift is shown as `STATE_VERSION_CONFLICT`. |
 | `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | judgment needed | Show or resolve the focused `UserJudgment` with kind, refs, options, and consequences. |
 | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | sensitive-action approval needed or not usable | Request, resolve, or renew a `judgment_kind=sensitive_approval` user judgment. |
 | `EVIDENCE_INSUFFICIENT` | evidence needed | Record or rerun the missing check, or show the evidence gap and smallest unblocker. |
