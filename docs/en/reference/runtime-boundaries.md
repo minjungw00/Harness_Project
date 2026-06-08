@@ -12,7 +12,7 @@ Use [Core Model Reference](core-model.md), [Storage](storage.md), [MVP API](api/
 
 The Product Repository is the user's product workspace. Product source files, tests, repository-level agent rules, and product documentation live there. Product work happens there through the user's normal tools and agent actions.
 
-Product Repository files are not canonical Harness state. A product file can be an input, a changed work target, or product-owned truth about the product, but it does not become Harness operational authority merely because it is near Harness.
+Product Repository files are not canonical Harness state. A product file can be an input, a changed work target, or product-owned truth about the product, but it does not become Harness operational authority merely because it is near Harness. Product Repository files, generated Markdown, projections, chat text, and agent memory cannot create or refresh Harness authority or local surface registration.
 
 The active MVP does not require generated projection files in the Product Repository. A surface may show compact readable outputs such as `status-card`, `judgment-request`, `run-evidence-summary`, `close-result`, or `agent-context-packet`, but those outputs are read-time derived display, not Core-owned state. Editing a rendered projection, Markdown status card, or generated document in the Product Repository does not mutate Harness state; a desired state change must enter through the normal natural-language or active API flow. Editable projection areas, managed Markdown blocks, reconcile queues, persistent projection jobs, and drift repair remain later candidates until promoted by their owners.
 
@@ -46,7 +46,7 @@ Agents, MCP callers, CLI text, operator output, product files, projection Markdo
 
 `harness.update_scope`, `prepare_write`, Write Authorization, `record_run`, and `close_task` remain Core/API-owned contracts. Write Authorization is a cooperative Harness record and check. It is not OS permission, sandbox enforcement, tamper-proof protection, physical pre-execution blocking, or a security-isolation mechanism.
 
-`harness.stage_artifact` is a local artifact utility, not a Core mutation authority. It can create a temporary `StagedArtifactHandle`, but it does not create canonical evidence, satisfy gates, register a persistent `ArtifactRef`, or affect close readiness until a compatible Core/API path consumes it.
+`harness.stage_artifact` is a local artifact utility, not a Core mutation authority. It can create a temporary `StagedArtifactHandle`, but it does not create canonical evidence, satisfy gates, register a persistent `ArtifactRef`, or affect close readiness until a compatible Core/API path consumes it. It stages caller-provided safe bytes or safe notices; it is not proof that arbitrary local files are safe, authorized, or observed by Harness.
 
 Exact state transitions, gate effects, row boundaries, idempotency behavior, and response shapes stay with [Core Model Reference](core-model.md), [Storage](storage.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
 
@@ -66,7 +66,7 @@ Raw paths, caller claims, chat text, Markdown prose, unregistered files, and art
 
 Artifact reads use the same authority boundary. A raw artifact-store path is not granted to local callers by default. Reading artifact metadata or bytes requires a registered `ArtifactRef`, compatible project/task context, a matching owner relation, and redaction/availability checks owned by [Storage](storage.md) and [API Schema Core](api/schema-core.md#artifactref). Artifact body reads additionally require a server-verified local surface context for `access_class=artifact_read`; a copied `surface_id`, generated Markdown claim, or Product Repository file cannot authorize access to artifact bytes.
 
-Artifact registration uses only owner-documented `StagedArtifactHandle` values from the active `harness.stage_artifact` utility or compatible existing `ArtifactRef` values. New artifact bytes enter the active MVP only through staging; existing bytes are reused only through `existing_artifact` references. A raw local path, raw log, arbitrary local path string, copied file, `captured_artifact` handle, raw capture-adapter output, or native capture claim is not registration authority in the active MVP.
+Artifact registration uses only owner-documented `StagedArtifactHandle` values from the active `harness.stage_artifact` utility or compatible existing `ArtifactRef` values. New artifact bytes enter the active MVP only through input staging; existing bytes are reused only through `existing_artifact` references. A raw local path, raw log, arbitrary local path string, copied file, `captured_artifact` handle, raw capture-adapter output, native capture claim, or claim that a local file is safe is not registration authority in the active MVP.
 
 Artifacts can support evidence, verification, QA, final-acceptance visibility, residual-risk visibility, and close-readiness display. They do not prove success, approve work, accept risk, or close work without the separate owner records and user-owned judgments required by Core.
 

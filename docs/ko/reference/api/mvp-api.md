@@ -26,7 +26,7 @@
 | [`harness.status`](#harnessstatus) | 현재 상태 요약, 차단 사유, 대기 중인 판단, 증거 요약, 닫기 상태, 다음 안전한 행동을 반환합니다. |
 | [`harness.update_scope`](#harnessupdate_scope) | `harness.intake` 이후 활성 Task 범위와 활성 Change Unit을 갱신합니다. |
 | [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 파일 쓰기를 현재 범위, 상태, 필요한 별도 민감 동작 승인, baseline, 접점 역량과 비교합니다. |
-| [`harness.stage_artifact`](#harnessstage_artifact) | 안전한 아티팩트 바이트 또는 안전한 알림을 나중에 `record_run`이 승격할 수 있는 임시 핸들로 스테이징합니다. |
+| [`harness.stage_artifact`](#harnessstage_artifact) | 호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림을 나중에 `record_run`이 승격할 수 있는 임시 핸들로 스테이징합니다. |
 | [`harness.record_run`](#harnessrecord_run) | shaping, direct, implementation 작업과 간결한 증거/아티팩트 참조를 기록합니다. |
 | [`harness.request_user_judgment`](#harnessrequest_user_judgment) | 대기 중인 사용자 소유 판단 요청 하나를 만듭니다. |
 | [`harness.record_user_judgment`](#harnessrecord_user_judgment) | 기존 대기 중인 `UserJudgment`에 대한 사용자의 답을 기록합니다. |
@@ -81,7 +81,7 @@ non-dry-run 상태 변경을 뜻합니다. 버전 증가는 항상 프로젝트 
 | `core_mutation` | `harness.intake`, `harness.update_scope`, `harness.request_user_judgment`, `harness.record_user_judgment`, 상태를 끝내는 `harness.close_task` intent. | `read_status` 조건에 더해 `VerifiedSurfaceContext.access_class=core_mutation`, `verified=true`, non-dry-run 커밋에는 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`, 적용되는 경우 호환되는 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 담당 기록이 필요합니다. |
 | `write_authorization` | `harness.prepare_write`. | `VerifiedSurfaceContext.access_class=write_authorization`, `verified=true`에 더해 의도한 제품 파일 쓰기 시도에 필요한 활성 Task/Change Unit 호환성, 범위, baseline, 필요한 별도 민감 동작 승인 호환성, 역량 확인이 필요합니다. |
 | `run_recording` | `harness.record_run`. | `VerifiedSurfaceContext.access_class=run_recording`, `verified=true`에 더해 호환되는 `task_id`, `change_unit_id`, `baseline_ref`, 관찰된 시도 사실, 그리고 제품 쓰기를 기록하는 Run이면 소비 가능한 활성 Write Authorization이 필요합니다. |
-| `artifact_registration` | `harness.stage_artifact`와 `harness.record_run`이 받는 `ArtifactInput[]`. | `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, 호환되는 `project_id`/`task_id`, 스테이징 경로에 대한 `manual_artifact_attachment_supported=true`가 필요합니다. `harness.stage_artifact`는 `content_type`, `redaction_state`, 제공된 경우 기대 무결성 힌트를 가진 안전한 바이트 또는 안전한 알림만 받습니다. `harness.record_run`은 만료되지 않았고 같은 프로젝트/같은 Task에 속하며 아직 소비되지 않은 `StagedArtifactHandle`을 가진 `source_kind=staged_artifact`, 또는 호환되는 `existing_artifact_ref`를 가진 `source_kind=existing_artifact`만 받습니다. 호출자가 임의로 준 파일시스템 경로, 임의 로컬 경로 문자열, 권한 주장으로서의 원시 로그, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP의 등록 권한으로 인정하지 않습니다. |
+| `artifact_registration` | `harness.stage_artifact`와 `harness.record_run`이 받는 `ArtifactInput[]`. | `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, 호환되는 `project_id`/`task_id`, 스테이징 경로에 대한 `manual_artifact_attachment_supported=true`가 필요합니다. `harness.stage_artifact`는 `content_type`, `redaction_state`, 제공된 경우 기대 무결성 힌트를 가진, 호출자가 제공한 안전한 바이트 또는 안전한 알림만 받습니다. 이는 입력 스테이징이지 임의 로컬 파일이 안전하거나 허가되었다는 증명이 아닙니다. `harness.record_run`은 만료되지 않았고 같은 프로젝트/같은 Task에 속하며 아직 소비되지 않은 `StagedArtifactHandle`을 가진 `source_kind=staged_artifact`, 또는 호환되는 `existing_artifact_ref`를 가진 `source_kind=existing_artifact`만 받습니다. 호출자가 임의로 준 파일시스템 경로, 임의 로컬 경로 문자열, 권한 주장으로서의 원시 로그, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP의 등록 권한으로 인정하지 않습니다. |
 | `artifact_read` | 등록된 `ArtifactRef`에서 담당 경로가 노출하는 로컬 아티팩트 메타데이터 또는 본문 읽기. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 등록된 `ArtifactRef`, 호환되는 `project_id`/`task_id`, 필요한 가림/가용성 확인, `artifact_links`의 일치하는 담당 관계가 필요합니다. 아티팩트 본문 읽기에는 추가로 `VerifiedSurfaceContext.access_class=artifact_read`와 `verified=true`가 필요합니다. 원시 아티팩트 경로 읽기는 기본으로 허용되지 않습니다. |
 
 필요한 MCP/Core 또는 접점 도달 가능성 자체가 없으면 `VerifiedSurfaceContext.failure_reason=unavailable`에 해당하므로 `MCP_UNAVAILABLE`을 사용합니다. 등록된 로컬 접근 기대가 도달 가능한 transport/session/binding과 맞지 않거나 로컬 접근이 철회되었으면 `failure_reason=mismatch` 또는 `revoked`에 해당하므로 `LOCAL_ACCESS_MISMATCH`를 사용합니다. 접점은 인식되었지만 접근 분류, 관찰, 캡처, 차단/격리 주장, 변경 경로 탐지 주장, 활성 동작에 필요한 역량이 없으면 `failure_reason=insufficient_capability`에 해당하므로 `CAPABILITY_INSUFFICIENT`를 사용합니다. 기준 변경 경로 탐지에서 `changed_path_detection_verification=failed` 또는 `stale`이면 그 역량이 필요한 메서드는 `CAPABILITY_INSUFFICIENT`를 반환해야 합니다. `not_run` 또는 예전 `planned_not_run` 문구는 `detective` 라벨의 근거가 될 수 없습니다.
@@ -272,7 +272,7 @@ PrepareWriteResponse:
 
 ## `harness.stage_artifact`
 
-- **담당:** 한 프로젝트와 Task에 속한 안전한 아티팩트 바이트 또는 안전한 알림의 임시 스테이징.
+- **담당:** 한 프로젝트와 Task에 속한, 호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림의 임시 입력 스테이징.
 - **담당하지 않음:** Core 상태 전이, 증거 생성, 증거 충분성, gate 만족, 아티팩트 등록, 최종 수락, 잔여 위험 수락, 닫기.
 - **호출 시점:** 새 아티팩트 바이트를 `ArtifactInput.source_kind=staged_artifact`로 `harness.record_run`에 넘겨야 할 때, `harness.record_run` 전에 호출합니다.
 - **요청:**
@@ -305,7 +305,7 @@ StageArtifactResponse:
 - **상태 효과:** 성공한 호출은 `artifact_staging` 또는 동등한 저장소 소유 스테이징 기록이 뒷받침하고 `project_id`와 `task_id`에 묶이며 `content_type`, `sha256`, `size_bytes`, `redaction_state`, `expires_at`을 가진 임시 `StagedArtifactHandle`만 만듭니다. Core 기록, 지속 `ArtifactRef`, 증거 요약, 차단 사유, 이벤트, `tool_invocations` 재실행 행, 닫기 효과, `project_state.state_version` 증가를 만들지 않습니다. 그 핸들을 소비해 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`뿐입니다.
 - **오류:** `VALIDATION_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`.
 - **저장소 담당 문서:** `artifact_staging` 또는 동등한 저장소 소유 스테이징 기록과 `artifacts/tmp/` 아래 임시 바이트 또는 알림. 지속 `artifacts`와 `artifact_links`는 나중에 호환되는 `harness.record_run`만 만듭니다.
-- **보안 경계:** 요청은 안전한 바이트 또는 안전한 알림을 전달할 뿐, 임의 파일 권한을 전달하지 않습니다. 원시 파일 경로, 권한 주장으로서의 원시 로그, 임의 로컬 경로 문자열, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP 아티팩트 권한으로 거부됩니다. `manual_artifact_attachment_supported=true`는 이 스테이징 경로를 사용할 수 있다는 뜻입니다. `native_artifact_capture_supported=false`는 현재 MVP가 수동 아티팩트 스테이징과 담당 경로 등록으로 남아 있으며 접점 자체 아티팩트 캡처가 아니라는 뜻입니다.
+- **보안 경계:** 요청은 호출자가 제공한 안전한 바이트 또는 안전한 알림을 전달할 뿐, 임의 파일 권한이나 로컬 파일이 안전하거나 허가되었거나 하네스가 관찰했다는 증명을 전달하지 않습니다. 원시 파일 경로, 권한 주장으로서의 원시 로그, 임의 로컬 경로 문자열, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP 아티팩트 권한으로 거부됩니다. `manual_artifact_attachment_supported=true`는 이 스테이징 경로를 사용할 수 있다는 뜻입니다. `native_artifact_capture_supported=false`는 현재 MVP가 수동 아티팩트 스테이징과 담당 경로 등록으로 남아 있으며 접점 자체 아티팩트 캡처가 아니라는 뜻입니다.
 
 <a id="harnessrecord_run"></a>
 
@@ -314,7 +314,7 @@ StageArtifactResponse:
 - **담당:** Run 기록, 호환되는 Write Authorization 소비, 아티팩트 등록, 간결한 증거 요약 업데이트, Run 관련 차단 사유.
 - **담당하지 않음:** 새 범위, 사용자 판단 해결, 최종 수락, 잔여 위험 수락, 별도 보증 기록, 닫기.
 - **호출 시점:** 구체화 작업, 직접 답변/결과, 구현 작업이 끝난 뒤. 제품 쓰기 Run은 `harness.prepare_write`가 반환한 호환되는 활성 Write Authorization을 제공해야 합니다.
-- **아티팩트 입력:** 새 아티팩트 바이트는 `harness.stage_artifact`가 만든 유효한 `StagedArtifactHandle`을 통해서만 들어옵니다. 기존 바이트는 호환되는 `existing_artifact_ref`를 통해서만 재사용할 수 있습니다. `source_kind`와 출처 필드 형태가 맞지 않으면 `VALIDATION_FAILED`로 거부합니다. 없거나, 만료되었거나, 이미 소비되었거나, 범위가 맞지 않거나, 다른 프로젝트/Task에 속하거나, 무결성 기대와 호환되지 않는 스테이징 핸들은 변경 전에 `ARTIFACT_MISSING`과 구체적인 `ToolError.details.staging_handle_reason`으로 거부합니다.
+- **아티팩트 입력:** 새 아티팩트 바이트는 `harness.stage_artifact`가 만든 유효한 `StagedArtifactHandle`을 통해서만 들어옵니다. 이 핸들은 입력 스테이징을 기록할 뿐, 접점 자체 캡처나 임의 로컬 파일 권한이 아닙니다. 기존 바이트는 호환되는 `existing_artifact_ref`를 통해서만 재사용할 수 있습니다. `source_kind`와 출처 필드 형태가 맞지 않으면 `VALIDATION_FAILED`로 거부합니다. 없거나, 만료되었거나, 이미 소비되었거나, 범위가 맞지 않거나, 다른 프로젝트/Task에 속하거나, 무결성 기대와 호환되지 않는 스테이징 핸들은 변경 전에 `ARTIFACT_MISSING`과 구체적인 `ToolError.details.staging_handle_reason`으로 거부합니다.
 - **증거 업데이트:** 각 `EvidenceCoverageItem`은 `claim`, `required_for_close`, `coverage_state`, 뒷받침 참조 또는 공백 참조를 이름 붙여야 합니다. 필수 닫기 증거 항목은 Task 또는 Change Unit의 `CompletionPolicy`에서 정합니다. `record_run`은 간결한 증거 항목을 갱신할 수 있지만 Task를 닫거나 최종 수락 또는 잔여 위험 수락을 만들지 않습니다.
 - **요청:**
 
