@@ -50,7 +50,7 @@ Always-on context should fit on one screen and support the next action. Include 
 
 Keep those items as summaries and refs. Do not inject full schemas, full DDL, full template bodies, full logs, full artifact contents, paired bilingual docs, unrelated reference sections, future catalog material, or generated readable views into every prompt. Pull exact owner sections only when the next action needs them.
 
-Status output should lead with the primary blocker and the smallest unblocker. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to solve something the agent can safely inspect, refresh, retry, narrow, or record.
+Status output should lead with the primary blocker and the next action that would unblock it. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to solve something the agent can safely inspect, refresh, retry, narrow, or record.
 
 ## 3. Ask Focused Questions
 
@@ -68,7 +68,7 @@ A focused clarification should show:
 
 - what you verified
 - current goal
-- proposed or active scope, allowed paths or affected areas, and non-goals
+- candidate or active scope, allowed paths or affected areas, and non-goals
 - acceptance criteria for the next slice
 - what the agent may decide on its own
 - confirmed facts
@@ -80,13 +80,13 @@ A focused clarification should show:
 - reasons close is already blocked
 - next safe action
 
-Use the schema-owned `ShapingReadiness` view for that display. In user-facing terms, it should show whether the goal summary, non-goals, affected areas or paths, acceptance criteria, what the agent may decide on its own, the smallest work item for this change, user-owned blockers, and next safe action are currently known. An unknown item blocks only when it affects that smallest safe work item or the next safe action.
+Use the schema-owned `ShapingReadiness` view for that display. In user-facing terms, it should show whether the goal summary, non-goals, affected areas or paths, acceptance criteria, what the agent may decide on its own, the first safe work item for this change, user-owned blockers, and next safe action are currently known. An unknown item blocks only when it affects that first safe work item or the next safe action.
 
-Before naming the smallest work item for this change in write-capable work, name the blocker type if the blocker belongs to the user: `product_decision`, `technical_decision`, `scope_decision`, or `sensitive_approval`. If the blocker is agent-resolvable or surface/system-owned, name the inspection, refresh, narrowing, or capability step instead of asking the user.
+Before naming the first safe work item for this change in write-capable work, name the blocker type if the blocker belongs to the user: `product_decision`, `technical_decision`, `scope_decision`, or `sensitive_approval`. If the blocker is agent-resolvable or surface/system-owned, name the inspection, refresh, narrowing, or capability step instead of asking the user.
 
-In the active MVP, clarification should update the active task summary, the proposed or active work slice when product writes are near, and user-judgment candidates or records through the active owner paths. Start with `harness.intake`; ask blocking user-owned choices through `harness.request_user_judgment`; record answers through `harness.record_user_judgment`; and apply accepted scope or work-slice changes through `harness.update_scope`. Do not create separate active requirements for committed planning briefs, question queues, assumption registers, standalone detailed artifacts, or full-format judgment presentations.
+In the active MVP, clarification should update the active task summary, the candidate or active work slice when product writes are near, and user-judgment candidates or records through the active owner paths. Start with `harness.intake`; ask blocking user-owned choices through `harness.request_user_judgment`; record answers through `harness.record_user_judgment`; and apply accepted scope or work-slice changes through `harness.update_scope`. Do not create separate active requirements for committed planning briefs, question queues, assumption registers, standalone detailed artifacts, or full-format judgment presentations.
 
-Do not let shaping become an open-ended planning loop. Once the smallest safe work item and next safe action are concrete enough, move to the owner path that applies the state. Remaining ambiguity can stay visible without blocking progress when it does not affect that work item.
+Do not let shaping become an open-ended planning loop. Once the first safe work item and next safe action are concrete enough, move to the owner path that applies the state. Remaining ambiguity can stay visible without blocking progress when it does not affect that work item.
 
 Use lifecycle labels narrowly when they help the agent choose the next action:
 
@@ -99,13 +99,13 @@ Use lifecycle labels narrowly when they help the agent choose the next action:
 
 <a id="5-request-user-judgment-narrowly"></a>
 
-The agent may recommend. The user decides user-visible product behavior; user flow, messages, UX, accessibility, or product trade-offs; scope expansion or explicit non-goal removal; data retention, privacy, security, or authentication choices; new dependency or external service introduction; migration, public interface, or compatibility-breaking direction; irreversible or costly-to-reverse technical choices; sensitive-action approval; final acceptance; residual-risk acceptance; and cancellation. Other future judgment candidates belong to [Later](../later/index.md) and are not active judgment kinds.
+The agent may identify a bounded option when current facts and accepted scope already support one. The user decides user-visible product behavior; user flow, messages, UX, accessibility, or product trade-offs; scope expansion or explicit non-goal removal; data retention, privacy, security, or authentication choices; new dependency or external service introduction; migration, public interface, or compatibility-breaking direction; irreversible or costly-to-reverse technical choices; sensitive-action approval; final acceptance; residual-risk acceptance; and cancellation. Other future judgment candidates belong to [Later](../later/index.md) and are not active judgment kinds.
 
 Inside accepted scope, the agent may usually decide implementation details that do not change product behavior, scope, or material technical direction. Examples include a tiny local variable name that follows project style, test file organization details, small behavior-preserving refactors, internal cleanup, and code details already forced by accepted scope and acceptance criteria. Escalate back to user judgment when an implementation detail becomes product-visible, changes the accepted direction, introduces a new dependency or service, affects security/privacy/retention/authentication, breaks compatibility, or becomes irreversible or costly to reverse.
 
 When using the active owner path, keep these `judgment_kind` values separate: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`.
 
-A judgment request should include the exact question, concise options, recommendation, rationale, uncertainty, consequence of deferral, affected scope, and what the answer does not settle. Ask one judgment at a time unless the user explicitly asks to review grouped options and the group still preserves separate answers.
+A judgment request should include the exact question, concise options, a bounded option when current facts already support one, rationale, uncertainty, consequence of deferral, affected scope, and what the answer does not settle. Ask one judgment at a time unless the user explicitly asks to review grouped options and the group still preserves separate answers.
 
 Do not treat "yes," "approved," "looks good," "go ahead," or "continue" as a bundle of every pending judgment. Map a short reply only when one active prompt made the kind, affected object, option, scope, user intent, consequences, and remaining open items unambiguous.
 
@@ -141,7 +141,7 @@ Do not claim write compatibility from a plan, stale chat context, broad user ent
 - pending user judgments or sensitive approvals
 - stale state, stale baseline, or unavailable authority
 - what Harness can verify, or unavailable/capability condition
-- smallest unblocker
+- next action that would unblock the write check
 
 A compatible result means the intended product-file write matches current Harness state and active surface capability. It is a single-use cooperative result for the stated path-level boundary. If intended product-file paths, product-write sensitive category, baseline, task, work slice, state, surface, related judgments, or the set of things Harness can verify changes, refresh the check or treat the claim as unverified/blocked. Command, dependency, host, network, secret-access, deployment, destructive-action, and system-access facts remain separate `SensitiveActionScope` or capability issues unless a future owner promotes observation support.
 
@@ -181,7 +181,7 @@ For tracked work, show the close basis before asking for final acceptance or att
 - sensitive-action approval status when relevant
 - final acceptance status when required
 - residual-risk visibility and acceptance status when relevant
-- reasons the work cannot be closed yet and smallest unblocker
+- reasons the work cannot be closed yet and the next close-unblocking action
 
 Use `harness.close_task intent=check` for a read-only close check. Use `intent=complete` only after the complete blocker order has passed: Task validity, Run state, scope and `completion_policy`, unresolved judgments and approvals, write and baseline compatibility, surface capability, required evidence, artifact availability, final acceptance when required, residual-risk visibility, residual-risk acceptance when required, and recovery constraints. Evidence comes before final acceptance and residual-risk acceptance; those judgments cannot fill an evidence gap.
 

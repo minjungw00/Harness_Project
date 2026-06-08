@@ -38,7 +38,7 @@ You do not need internal Harness labels or API method names before work can begi
 Before product files change, the agent should make the working scope plain:
 
 - what you asked for and what the current goal is
-- the smallest useful result
+- the smallest scope for this change
 - what may change
 - what is out of bounds
 - likely paths, commands, tools, or external actions
@@ -49,7 +49,7 @@ Before product files change, the agent should make the working scope plain:
 
 For anything larger than a tiny obvious edit, the agent should inspect available files, tests, docs, current Harness state, and accepted judgments before asking you. If the answer is discoverable, the agent should discover it. If the work is still too vague to implement safely, the agent should name the ambiguity and ask the one question that changes the next safe action.
 
-You may see a compact readiness view called `ShapingReadiness`. It is not a form you must fill out and not a persistent planning artifact. It is the agent's current view of whether the goal summary, non-goals, affected area or paths, acceptance criteria, what the agent may decide on its own, the smallest work item for this change, user-owned blockers, and next safe action are known enough for the first safe step. Unknowns should remain visible, but they should not hold up that smallest work item when they do not affect it.
+You may see a compact readiness view called `ShapingReadiness`. It is not a form you must fill out and not a persistent planning artifact. It is the agent's current view of whether the goal summary, non-goals, affected area or paths, acceptance criteria, what the agent may decide on its own, the first safe work item for this change, user-owned blockers, and next safe action are known enough for the first safe step. Unknowns should remain visible, but they should not hold up that first safe work item when they do not affect it.
 
 In a Harness-connected session, product writes go through a pre-write scope check. In owner terms, the active method is `harness.prepare_write`. A compatible result says the intended write matches current Harness state and active surface capability for the named operation. It is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that every tool was blocked before action.
 
@@ -69,7 +69,7 @@ Facts are things the agent can inspect, verify, or cite. User judgments are choi
 | Close judgment | Ask for final acceptance or residual-risk acceptance only when the close basis is visible. | Turn "looks good" into every pending judgment. |
 | Agent-owned implementation detail | Usually decide small refactors, local naming, test file organization, internal cleanup, or details already fixed by accepted scope and acceptance criteria. | Ask for approval on every tiny local variable name, or use "implementation detail" to hide a costly direction change. |
 
-Harness preserves this boundary so the agent can recommend and keep moving on ordinary implementation details without replacing your judgment.
+Harness preserves this boundary so the agent can keep moving on ordinary implementation details already inside the accepted scope without replacing your judgment.
 
 ## 4. Ask one narrow judgment at a time
 
@@ -77,8 +77,8 @@ A useful judgment request asks for one decision and fits on one screen when poss
 
 - the exact decision
 - realistic options
-- a recommendation when helpful
-- why the recommendation is reasonable
+- a bounded option when the current facts already support one
+- why that option fits the current scope and evidence
 - uncertainty
 - what can continue if you defer
 - what remains blocked
@@ -94,7 +94,7 @@ Options:
 - Toast after failed submit.
 - Modal that interrupts the flow.
 
-Recommendation: existing UI message layer. It stays visible and fits the form context.
+Current bounded option: existing UI message layer. It stays visible and fits the form context.
 
 If deferred: backend error mapping can continue, but final UI behavior, copy, screenshots, and user-visible inspection remain unresolved.
 
@@ -124,7 +124,7 @@ A good sensitive-action prompt should name:
 - the scope limit, such as "this task only"
 - actions that are explicitly not authorized
 - the honest capability claim, such as whether Harness can only record the approval cooperatively, whether the surface can observe the action, or whether the action is not observable
-- what safer alternative exists, if any
+- any safer bounded action already known, if one exists
 - what the approval does not settle
 
 Approving a dependency install does not mean the dependency is the right architecture. Approving a deployment command does not mean the product result is accepted. Approving secret access does not accept residual risk. Each of those needs its own judgment when relevant.
@@ -168,7 +168,7 @@ The agent should show:
 - user-visible inspection result when relevant
 - final acceptance need
 - residual risk visibility and acceptance need
-- the smallest unblocker
+- the next action that would unblock close
 
 Tests can pass while close is still blocked. A UI change can still have a visible inspection gap. A security-sensitive change can need a risk decision. Missing required evidence remains a blocker until it is gathered, recorded as not applicable with a clear reason, or honestly reported as unresolved.
 
@@ -184,7 +184,7 @@ Neither judgment substitutes for missing required evidence. If required evidence
 
 The agent should ask for final acceptance only after the close basis is visible: scope, result, evidence, checks, known gaps, user-visible inspection status when relevant, and blockers. The prompt should name exactly what result you are accepting.
 
-The agent should ask for residual-risk acceptance only when a known residual risk is visible and the active close path requires that judgment. The prompt should name the risk, affected area, consequence, evidence gap or uncertainty, and any safer alternative.
+The agent should ask for residual-risk acceptance only when a known residual risk is visible and the active close path requires that judgment. The prompt should name the risk, affected area, consequence, evidence gap or uncertainty, and any safer bounded action already known.
 
 "Looks good" may be final acceptance only when the agent has clearly asked for final acceptance of a named result. It is not residual-risk acceptance unless the risk was named and the prompt asked for that judgment.
 
@@ -222,14 +222,14 @@ User: Build a login feature.
 Good agent behavior:
 - inspect existing auth routes, session handling, login UI, tests, and docs first;
 - separate scope, non-goals, facts, unknowns, and user-owned choices;
-- propose the smallest safe login slice before writing.
+- name the first safe login work item before writing.
 
 Visible shaped result:
 - Goal: add a basic email/password login path.
 - Scope: login form, submit handling, session creation, and focused tests.
 - Out of scope: account creation, password reset, social login, and production deployment.
 - Acceptance: existing users can sign in, failed login shows a chosen error treatment, and tests cover the touched path.
-- Readiness: goal, non-goals, affected areas, acceptance, and next action are known; failed-login feedback is the named product blocker before the smallest work item for this change starts.
+- Readiness: goal, non-goals, affected areas, acceptance, and next action are known; failed-login feedback is the named product blocker before the first safe work item for this change starts.
 - Blocking question: should failed login feedback be inline text or a toast?
 - Next safe action: after that answer, update the visible scope and check the intended login-form write.
 
@@ -248,14 +248,14 @@ User: Help me make this plan concrete before implementation.
 
 Good agent behavior:
 - read the plan and related docs before asking anything;
-- identify whether the goal, non-goals, affected areas or paths, acceptance criteria, what the agent may decide on its own, the smallest work item for this change, user-owned blockers, and next safe action are known;
-- ask only the decision that changes the smallest safe work item or next safe action.
+- identify whether the goal, non-goals, affected areas or paths, acceptance criteria, what the agent may decide on its own, the first safe work item for this change, user-owned blockers, and next safe action are known;
+- ask only the decision that changes the first safe work item or next safe action.
 
 Visible shaped result:
 - Goal: turn the plan into one implementable first change.
 - Scope: clarify the current objective, affected areas, acceptance criteria, and evidence expectation.
 - Out of scope: new standalone artifacts, broad roadmap rewrite, and implementation.
-- Readiness: affected docs are known, but the smallest work item for this change is not known until the user outcome is chosen; no persistent planning artifact is created.
+- Readiness: affected docs are known, but the first safe work item for this change is not known until the user outcome is chosen; no persistent planning artifact is created.
 - Evidence gap: no repository files or tests have been checked yet.
 - Blocking question: which user outcome should the first slice prove?
 - Next safe action: inspect the named owner docs or files, then update the visible scope for the first implementable slice.
@@ -358,7 +358,7 @@ Possible close display:
 - Final acceptance: not requested yet because required evidence is still missing.
 - Residual risk: password reset remains out of scope; risk acceptance may be needed only after the close basis is visible.
 - Reason this cannot be closed yet: required test evidence is missing.
-- Smallest unblocker: record the test result or record why that required item does not apply.
+- Next close-unblocking action: record the test result or record why that required item does not apply.
 
 Reference alignment after the request is clear:
 - a read-only close check can report blockers without closing the task;

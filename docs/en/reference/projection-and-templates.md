@@ -113,7 +113,7 @@ Boundary: this template is rendered display only. It is not Core state, not evid
 Source records:
 
 - current Task summary, work shape, current stage, one blocking question when necessary, and next safe action
-- current scope, allowed paths or affected areas, non-goals, acceptance criteria, what the agent may decide on its own, and the smallest work item for this change when useful to the user
+- current scope, allowed paths or affected areas, non-goals, acceptance criteria, what the agent may decide on its own, and the first safe work item for this change when useful to the user
 - pending user judgments, rendered with user-readable labels
 - active blockers and the plain reason progress or close is held
 - what was checked, supporting refs, redaction or availability notes, and evidence gaps
@@ -182,8 +182,8 @@ Source records:
 
 - pending or recorded `user_judgment`
 - `judgment_kind`, `presentation`, and the locale-derived rendered judgment label
-- exact question, rationale, recommendation, uncertainty, and no-decision consequence
-- affected Task, smallest work item for this change, write scope, close scope, sensitive-action scope, criteria, or other affected object
+- exact question, rationale, bounded option when one is already supported, uncertainty, and no-decision consequence
+- affected Task, first safe work item for this change, write scope, close scope, sensitive-action scope, criteria, or other affected object
 - options or selected outcome
 - consequences, what the agent is not deciding, and why the agent cannot decide on the user's behalf
 - minimal source refs needed to identify the affected work
@@ -195,7 +195,7 @@ Rendered sections:
 - localized judgment type
 - exact question
 - choices or selected outcome
-- recommendation and rationale
+- bounded option and rationale
 - uncertainty
 - affected work
 - no-decision consequence
@@ -211,7 +211,7 @@ Judgment request: {short_title}
 Type: {localized_label_from_judgment_kind}
 Question: {question}
 Choices: {choices_or_selected_outcome}
-Recommendation: {recommendation|none}
+Current bounded option: {bounded_option|none}
 Why this matters: {rationale}
 What is uncertain: {uncertainty}
 Affected work: {affected_scope_summary}
@@ -313,7 +313,7 @@ Source records:
 - final-acceptance user judgment refs when required
 - residual-risk visibility and residual-risk acceptance refs when relevant
 - design-quality routed actions when they affect close, limited to the active MVP blocking set unless a later profile is active
-- close availability, reasons this cannot be closed yet, and smallest unblockers
+- close availability, reasons this cannot be closed yet, and next actions that would unblock close
 - source state version, freshness, and capability status
 
 Rendered sections:
@@ -344,7 +344,7 @@ Design quality action: {design_quality_close_action|none}
 Residual risk: {residual_risk_visibility}
 Residual risk acceptance: {residual_risk_acceptance_status|not_needed}
 Reason this cannot be closed yet: {reasons_this_cannot_be_closed_yet|none}
-Smallest thing that would unblock close: {smallest_unblocker|none}
+Next close-unblocking action: {smallest_unblocker|none}
 Close basis or reason: {close_reason|not_applicable}
 Next safe action: {next_safe_action|none}
 Sources/freshness: {source_freshness_summary}
