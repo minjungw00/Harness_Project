@@ -148,7 +148,7 @@ capability_profile:
 
 ## 응답 분기
 
-모든 공개 도구 응답은 정확히 하나의 응답 분기입니다. 메서드별 성공 필드는 `ToolResultBase`를 바탕으로 한 실제 메서드 결과 분기에만 붙습니다. 거절 응답과 `dry_run` 응답은 쓰기 결정, 실행 요약, 스테이징된 아티팩트 핸들 같은 성공 전용 필드를 만들어 내면 안 됩니다.
+모든 공개 도구 응답은 정확히 하나의 응답 분기입니다. 호출자가 `dry_run=true`를 보냈다는 사실만으로 `ToolDryRunResponse` 분기가 선택되지는 않습니다. 메서드별 성공 필드는 `ToolResultBase`를 바탕으로 한 메서드별 `MethodResult` 분기에만 붙습니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 쓰기 결정, 실행 요약, 스테이징된 아티팩트 핸들 같은 성공 전용 필드를 만들어 내면 안 됩니다.
 
 ```yaml
 ToolResultBase:
@@ -223,19 +223,19 @@ EventRef:
   state_version: integer
 ```
 
-`ToolResultBase`는 실제 메서드 결과의 기반입니다. `state_version`은 프로젝트 전체 버전입니다. 커밋된 Core 상태 변경에서는 커밋 뒤의 `project_state.state_version`이고, 읽기 전용 결과와 임시 스테이징 결과에서는 응답이 관찰한 현재 프로젝트 전체 버전입니다. `effect_kind=staging_created`는 `harness.stage_artifact`가 임시 스테이징된 아티팩트 핸들을 만들었다는 뜻입니다. Core 상태 전이, 이벤트, 재실행 행, `state_version` 증가가 아닙니다.
+`ToolResultBase`는 실제 메서드 결과의 기반입니다. `ToolResultBase.dry_run`은 `true`일 수 있지만, 호출자가 `dry_run=true`를 보냈고 선택 동작이 읽기 전용이라 응답이 여전히 실제 `MethodResult`인 경우로 제한됩니다. 이때 응답은 메서드별 `MethodResult`로 남고 `response_kind=result`, `effect_kind=read_only`를 사용합니다. 현재 MVP 예시는 `harness.status`와 `harness.close_task`의 `intent=check`입니다. Core 상태를 커밋하거나 스테이징을 생성하는 실제 메서드 결과는 `dry_run=false`를 사용합니다. 그런 선택 동작의 유효한 `dry_run=true` 미리보기는 `ToolDryRunResponse`를 쓰기 때문입니다. `state_version`은 프로젝트 전체 버전입니다. 커밋된 Core 상태 변경에서는 커밋 뒤의 `project_state.state_version`이고, 읽기 전용 결과와 임시 스테이징 결과에서는 응답이 관찰한 현재 프로젝트 전체 버전입니다. `effect_kind=staging_created`는 `harness.stage_artifact`가 임시 스테이징된 아티팩트 핸들을 만들었다는 뜻입니다. Core 상태 전이, 이벤트, 재실행 행, `state_version` 증가가 아닙니다.
 
-`ToolRejectedResponse`는 `STATE_VERSION_CONFLICT`, 요청 검증 실패, Core 또는 로컬 MCP 접점 사용 불가, 로컬 접근 실패, 역량 부족, 유효하지 않은 스테이징된 아티팩트 핸들 같은 커밋 전 실패 응답입니다. 이 분기는 `effect_kind=no_effect`이고, 메서드별 성공 필드를 담지 않으며, 상태 효과가 없습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태, `tool_invocations` 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다. `ToolRejectedResponse.errors`는 항상 비어 있지 않습니다. `ToolRejectedResponse.events`는 항상 `[]`입니다.
+`ToolRejectedResponse`는 `STATE_VERSION_CONFLICT`, 요청 검증 실패, Core 또는 로컬 MCP 접점 사용 불가, 로컬 접근 실패, 역량 부족, 유효하지 않은 스테이징된 아티팩트 핸들 같은 커밋 전 실패에 대한 거절 응답입니다. 이 응답은 `dry_run` 플래그와 무관하게 우선합니다. 요청이 Core 커밋이나 스테이징 부작용 전에 실패하면 `ToolRejectedResponse`를 반환하며, 메서드별 `MethodResult`나 `ToolDryRunResponse`를 반환하지 않습니다. 이 분기는 `effect_kind=no_effect`이고, 메서드별 결과 전용 필드를 담으면 안 되며, 상태 효과가 없습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태, `tool_invocations` 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다. `ToolRejectedResponse.errors`는 항상 비어 있지 않습니다. `ToolRejectedResponse.events`는 항상 `[]`입니다.
 
 `ToolRejectedResponse.state_version`은 Core가 거절 전에 현재 프로젝트 상태를 읽을 수 있었다면 관찰한 프로젝트 전체 `project_state.state_version`입니다. Core나 로컬 MCP 접점이 프로젝트 상태를 읽기 전에 사용할 수 없었다면 `state_version`은 `null`일 수 있습니다.
 
-`ToolDryRunResponse`는 `dry_run=true` 요청의 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있을 때만 반환합니다. 이 분기는 `effect_kind=no_effect`, `events=[]`이며 메서드별 성공 필드를 담지 않고 상태 효과도 없습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, 스테이징된 핸들 생성 또는 소비, Write Authorization 생성 또는 소비, 닫기 상태, `tool_invocations` 재실행 행, `state_version` 증가를 만들지 않습니다. `ToolDryRunResponse.errors`는 `[]`이고, 미리 볼 수 있는 예상 오류는 `DryRunSummary.would_errors`에 둡니다.
+`ToolDryRunResponse`는 모든 `dry_run=true` 요청의 응답이 아닙니다. 선택된 동작이 `dry_run=false`로 실행됐다면 Core 커밋이나 저장소 소유 스테이징 부작용을 만들 수 있고, 요청 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 `dry_run=true` 요청에 대한 미리보기 응답입니다. 선택 동작이 읽기 전용이면 `dry_run=true`여도 메서드별 `MethodResult`로 응답하고 `ToolResultBase.dry_run=true`, `effect_kind=read_only`를 사용합니다. `ToolDryRunResponse`는 `effect_kind=no_effect`, `events=[]`이며 메서드별 결과 전용 필드를 담지 않고 상태 효과도 없습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, 스테이징된 핸들 생성 또는 소비, Write Authorization 생성 또는 소비, 닫기 상태, `tool_invocations` 재실행 행, `state_version` 증가를 만들지 않습니다. `ToolDryRunResponse.errors`는 `[]`이고, 미리 볼 수 있는 예상 오류는 `DryRunSummary.would_errors`에 둡니다.
 
-`dry_run=true` 요청 자체가 미리보기를 만들기 전에 요청 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다.
+`dry_run=true` 요청 자체가 읽기 전용 결과나 `ToolDryRunResponse` 미리보기를 만들기 전에 요청 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다.
 
 `DryRunSummary`는 미리보기 정보일 뿐입니다. `PlannedEffect` 항목은 예상 효과의 기록 종류, 효과, 설명을 담습니다. 아직 존재하지 않는 기록에 대한 실제 생성 ref를 담지 않으며 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, 이벤트 참조, 아티팩트 참조, 권한을 만들어 내면 안 됩니다.
 
-`ToolError`는 공개 오류 식별자, 재시도 안내, 구조화된 세부정보를 유지합니다. `EventRef`는 실제 이벤트 참조가 있는 결과 분기에만 나타납니다. 거절 응답과 dry-run 응답은 항상 `events=[]`를 씁니다.
+`ToolError`는 공개 오류 식별자, 재시도 안내, 구조화된 세부정보를 유지합니다. `EventRef`는 실제 이벤트 참조가 있는 결과 분기에만 나타납니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 항상 `events=[]`를 씁니다.
 
 <a id="state-summary"></a>
 
