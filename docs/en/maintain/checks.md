@@ -34,9 +34,12 @@ These checks look for documentation drift:
 - `dry_run=true` wording that treats every valid dry-run request as `ToolDryRunResponse` or requires `ToolDryRunResponse` for a read-only selected intent
 - mixed intent method wording that chooses response branches by method name instead of the selected intent's state effect
 - `harness.close_task intent=check` with `dry_run=true` wording that creates `task_events`, replay rows, close-state mutations, Write Authorization changes, staged-handle consumption, or `state_version` increments
-- blocker-like schema wording that blurs current-MVP type ownership among `ToolRejectedResponse.errors` / `ToolError`, `PrepareWriteResult.write_decision_reasons` / `WriteDecisionReason`, `CloseTaskResult.blockers` / `CloseBlocker`, and `DryRunSummary.would_blockers` / `PlannedBlocker`
-- `prepare_write` wording that reuses `CloseBlocker`, creates `close_state`, runs the close matrix, or stores close-matrix blockers
-- `STATE_VERSION_CONFLICT` wording that treats the pre-commit failure as `WriteDecisionReason.code`, `CloseBlocker.code`, or `PlannedBlocker.code`
+- blocker-like schema wording that blurs current-MVP type ownership among `ToolRejectedResponse.errors` / `ToolError`, `PrepareWriteResult.write_decision_reasons` / `WriteDecisionReason`, `StatusResult.close_blockers` and `CloseTaskResult.blockers` / `CloseReadinessBlocker`, and `DryRunSummary.would_blockers` / `PlannedBlocker`
+- `CloseBlocker` wording that reintroduces it as an active contract type
+- `CloseReadinessBlocker` wording that treats the data shape as a storage row, persistence signal, automatic state effect, or source of `task_events`, replay rows, `close_state` mutations, Write Authorization changes, staged-handle consumption, artifact effects, evidence updates, or `state_version` increments
+- `prepare_write` wording that reuses `CloseBlocker`, requires `CloseReadinessBlocker[]`, creates `close_state`, runs close-readiness evaluation, or stores close-readiness blockers
+- `DryRunSummary.would_blockers` wording that requires `CloseReadinessBlocker[]` or `CloseBlocker[]` instead of `PlannedBlocker[]`, or uses `source_kind=close_matrix` where `source_kind=close_readiness` is the active preview source kind
+- `STATE_VERSION_CONFLICT` wording that treats the pre-commit failure as `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`
 - `close_task` wording that turns preflight `STATE_VERSION_CONFLICT`, stale `WriteAuthorization.basis_state_version`, or `idempotency_key` request-hash conflict into committed close blockers
 - one-language-per-`doc_id` agent retrieval problems
 - stale rewrite/history notes, closed issue records, and obsolete review prose
@@ -139,7 +142,7 @@ Pass when active MVP public conflict wording uses the project-wide `project_stat
 
 Inspect public user-facing documentation, templates, status cards, examples, close summaries, judgment prompts, Korean renderings, English renderings, error displays, and enum displays.
 
-Pass when user-facing docs and templates use reader-facing display wording and expose exact enum, schema, or error-code terms only when the contract value itself is being explained. Fail when user-facing documentation or templates unnecessarily expose internal terms such as `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, `guarantee_level`, raw enum values, schema field names, internal error codes, or internal blocker categories instead of natural display text.
+Pass when user-facing docs and templates use reader-facing display wording and expose exact enum, schema, or error-code terms only when the contract value itself is being explained. Fail when user-facing documentation or templates unnecessarily expose internal terms such as `EvidenceSummary`, `CloseReadinessBlocker.category`, `judgment_kind`, `guarantee_level`, raw enum values, schema field names, internal error codes, or internal blocker categories instead of natural display text.
 
 ## 16. Active MVP API And Artifact Contract Check
 
@@ -184,36 +187,41 @@ Fail when any of these conditions appear in active MVP documentation:
 
 ## 18. Blocker-Type Ownership Check
 
-Inspect API schemas, method response shapes, response examples, dry-run prose, `prepare_write` prose, close-matrix prose, storage effects, and authoring guidance.
+Inspect API schemas, method response shapes, response examples, dry-run prose, `prepare_write` prose, close-readiness prose, storage effects, and authoring guidance.
 
-Pass when blocker-like fields preserve current-MVP type ownership: pre-commit failures use `ToolRejectedResponse.errors: ToolError[]`; `PrepareWriteResult.write_decision_reasons` uses `WriteDecisionReason[]` for `prepare_write` decision reasons; `CloseTaskResult.blockers` uses `CloseBlocker[]` only for `close_task` close-matrix blockers after a valid close-matrix evaluation; and `DryRunSummary.would_blockers` uses `PlannedBlocker[]` for dry-run expected blockers. Pass when any new blocker-like field declares its owning method or owning response branch before examples or summaries use it.
+Pass when blocker-like fields preserve current-MVP type ownership: pre-commit failures use `ToolRejectedResponse.errors: ToolError[]`; `PrepareWriteResult.write_decision_reasons` uses `WriteDecisionReason[]` for `prepare_write` decision reasons; `StatusResult.close_blockers` and `CloseTaskResult.blockers` use `CloseReadinessBlocker[]` for close-readiness findings; and `DryRunSummary.would_blockers` uses `PlannedBlocker[]` for dry-run expected blockers. Pass when every blocker-like response field documents its source, response branch, persistence behavior, and forbidden `ErrorCode` values. Pass when any new blocker-like field declares its owning method or owning response branch before examples or summaries use it.
 
 Fail when any of these conditions appear in active MVP documentation:
 
-- `PrepareWriteResult` requires or returns `CloseBlocker[]`.
-- `prepare_write` decision reasons are described as `CloseBlocker`.
-- `DryRunSummary.would_blockers` is described as `CloseBlocker[]` or as returning real `CloseBlocker` objects.
-- `CloseBlocker` is described as a common blocker, generic blocker, shared blocker type, or general error container.
+- `CloseBlocker` is reintroduced as an active contract type, common blocker, generic blocker, shared blocker type, close-readiness type, close-task result type, or general error container.
+- `CloseReadinessBlocker` is described as a storage row, persistence signal, automatic state effect, replay-row marker, `close_state` mutation trigger, Write Authorization signal, artifact effect, evidence update, or `state_version` signal.
+- `StatusResult.close_blockers` is described as creating `task_events`, replay rows, `close_state` mutations, Write Authorization changes, staged-handle consumption, artifact effects, evidence updates, or `project_state.state_version` increments.
+- `CloseTaskResult` from `intent=check` is described as storing blockers, committing close results, creating replay rows, appending `task_events`, mutating `close_state`, changing Write Authorization, consuming staged handles, changing artifacts, updating evidence, or incrementing `project_state.state_version`.
+- `PrepareWriteResult` requires or returns `CloseReadinessBlocker[]`.
+- `PrepareWriteResult` uses `CloseBlocker`.
+- `prepare_write` decision reasons are described as `CloseReadinessBlocker` or `CloseBlocker`.
+- `DryRunSummary.would_blockers` is described as `CloseReadinessBlocker[]`, `CloseBlocker[]`, real `CloseReadinessBlocker` objects, or real `CloseBlocker` objects.
 - `STATE_VERSION_CONFLICT` is used as `WriteDecisionReason.code`.
-- `STATE_VERSION_CONFLICT` is used as `CloseBlocker.code`.
+- `STATE_VERSION_CONFLICT` is used as `CloseReadinessBlocker.code`.
 - `STATE_VERSION_CONFLICT` is used as `PlannedBlocker.code`.
-- `prepare_write` is described as creating `close_state`, running the close matrix, storing close-matrix blockers, or creating or storing `CloseBlocker`.
-- `CloseBlocker` is reused outside `close_task` without explicitly changing the `close_task`-only contract everywhere it is owned or referenced.
+- `source_kind=close_matrix` is used where the active dry-run close-readiness preview source kind should be `source_kind=close_readiness`.
+- `prepare_write` is described as creating `close_state`, running close-readiness evaluation, storing close-readiness blockers, or creating or storing `CloseReadinessBlocker` or `CloseBlocker`.
 
 ## 19. `close_task` Preflight And Blocked-Close Check
 
-Inspect `close_task` prose, response examples, error lists, close blocker matrices, write-compatibility wording, recovery wording, storage effects, smoke examples, and authoring guidance.
+Inspect `close_task` prose, response examples, error lists, close-readiness evaluation wording, write-compatibility wording, recovery wording, storage effects, smoke examples, and authoring guidance.
 
-Pass when `close_task` defines preflight rejection before the close matrix, preflight rejection returns `ToolRejectedResponse`, and semantic close matrix blockers return `CloseTaskResult(close_state=blocked)` only after a valid matrix evaluation. Pass when `STATE_VERSION_CONFLICT` is documented only as a `ToolRejectedResponse` preflight error, stale `WriteAuthorization.basis_state_version` is preflight rejection before consumption, and `idempotency_key` reuse with a different request hash is preflight rejection that preserves the existing replay row.
+Pass when `close_task` defines preflight rejection before close-readiness evaluation, preflight rejection returns `ToolRejectedResponse`, and semantic close-readiness findings return `CloseTaskResult(close_state=blocked)` only after a valid close-readiness evaluation and only with effects allowed by the response branch and method state-effect table. Pass when `intent=check` blockers are response-only read-only evaluation data, not stored blockers or committed close results. Pass when `STATE_VERSION_CONFLICT` is documented only as a `ToolRejectedResponse` preflight error, stale `WriteAuthorization.basis_state_version` is preflight rejection before consumption, and `idempotency_key` reuse with a different request hash is preflight rejection that preserves the existing replay row.
 
 Fail when any of these conditions appear in active MVP documentation:
 
-- `STATE_VERSION_CONFLICT` is used as `CloseBlocker.code`.
+- `STATE_VERSION_CONFLICT` is used as `CloseReadinessBlocker.code`.
 - `STATE_VERSION_CONFLICT` is described as `CloseTaskResult(close_state=blocked).errors[0]`, the primary error of `CloseTaskResult(close_state=blocked)`, or the primary error for any committed blocked close result.
 - `STATE_VERSION_CONFLICT` is described as a committed blocked close result rather than a `ToolRejectedResponse`.
 - Stale `WriteAuthorization.basis_state_version` is described as a committed `write_compatibility` blocker.
 - `idempotency_key` reuse with a different request hash is described as a `recovery` blocker.
-- Close preflight rejection is described as creating a `CloseBlocker`, `task_event`, `task_events` append, replay row, `tool_invocations.response_json`, `close_state` mutation, Write Authorization creation or consumption, staged-handle consumption, artifact promotion or link, evidence update, or `project_state.state_version` increment.
+- `close_task intent=check` blockers are described as stored blockers or committed close results.
+- Close preflight rejection is described as creating a `CloseReadinessBlocker`, `CloseBlocker`, `task_event`, `task_events` append, replay row, `tool_invocations.response_json`, `close_state` mutation, Write Authorization creation or consumption, staged-handle consumption, artifact promotion or link, evidence update, or `project_state.state_version` increment.
 - The same state effects are assigned to `ToolRejectedResponse` and committed blocked `CloseTaskResult`.
 
 ## 20. Stale Content Check

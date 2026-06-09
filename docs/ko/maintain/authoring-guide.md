@@ -78,10 +78,13 @@ README와 유지보수 문서는 아래 현재 간결 구조만 경로로 안내
 - 새 공개 메서드 응답은 메서드가 엄격한 읽기 전용이고 계약에서 `ToolDryRunResponse`를 명시적으로 생략하는 경우가 아니라면 `MethodResult | ToolDryRunResponse | ToolRejectedResponse`로 씁니다. 담당 문서에서는 `PrepareWriteResult`, `StageArtifactResult`, `RecordRunResult`, `CloseTaskResult`처럼 구체적인 실제 메서드 결과 이름을 사용합니다.
 - 공개 메서드가 읽기 전용 intent와 상태 효과가 있는 intent를 모두 가진 혼합 intent 메서드라면, 메서드 이름만이 아니라 선택된 intent의 상태 효과로 응답 분기를 설명합니다. `dry_run=true`가 읽기 전용 선택 동작에 적용되면 `base.dry_run=true`, `effect_kind=read_only`인 메서드별 `MethodResult`를 반환할 수 있습니다. 상태 효과가 있는 선택 동작의 유효한 `dry_run` 미리보기는 `ToolDryRunResponse`를 사용합니다.
 - 메서드별 결과 필드는 메서드별 `MethodResult` 분기에만 둡니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `close_state` 같은 결과 전용 필드를 요구하면 안 되며, `dry_run` 문구는 아직 존재하지 않는 기록의 생성된 ref를 요구하면 안 됩니다. 거절 응답과 `ToolDryRunResponse` 분기는 `effect_kind=no_effect`입니다. 재실행 행 없음, 상태 버전 증가 없음, 스테이징된 핸들 소비 없음, Write Authorization 생성 없음, Write Authorization 소비 없음이 유지되어야 합니다.
-- 차단 사유처럼 보이는 필드는 타입 소유권을 밝혀야 합니다. 현재 MVP의 타입 소유권은 커밋 전 실패에 `ToolRejectedResponse.errors: ToolError[]`, `prepare_write` 판단 사유에 `PrepareWriteResult.write_decision_reasons: WriteDecisionReason[]`, `close_task`의 닫기 차단 사유 행렬 결과에 `CloseTaskResult.blockers: CloseBlocker[]`, dry-run 예상 차단 사유에 `DryRunSummary.would_blockers: PlannedBlocker[]`를 쓰는 것입니다. 새 차단 사유형 필드는 예시에 쓰기 전에 담당 메서드나 담당 응답 분기를 선언해야 합니다. `close_task` 전용 계약이 담당 문서와 참조 지점 전체에서 명시적으로 바뀌지 않는 한 `CloseBlocker`를 `close_task` 밖에서 재사용하지 않습니다.
-- `close_task` 작성 지침은 닫기 차단 사유 행렬보다 먼저 사전 확인 거절을 정의해야 합니다. 사전 확인 거절은 `ToolRejectedResponse` 거절 응답을 반환합니다. 닫기 차단 사유 행렬의 의미적 차단 사유는 사전 확인이 성공하고 행렬이 차단 사유를 찾은 뒤에만 `CloseTaskResult(close_state=blocked)`로 반환합니다.
-- 커밋 전 실패 `ErrorCode` 값을 `CloseBlocker.code`와 섞지 않습니다. `STATE_VERSION_CONFLICT`, 오래된 `WriteAuthorization.basis_state_version`, 다른 `request_hash`로 `idempotency_key`를 재사용한 경우는 사전 확인 거절이며, 커밋된 `write_compatibility` 또는 `recovery` 차단 사유가 아닙니다.
-- `ToolRejectedResponse`와 커밋된 닫기 차단 결과인 `CloseTaskResult`에 같은 상태 효과를 배정하지 않습니다. 닫기 사전 확인의 `ToolRejectedResponse` 거절 응답은 `CloseBlocker` 없음, `task_event` 없음, `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 생성 없음, Write Authorization 소비 없음, 스테이징된 핸들 소비 없음, 아티팩트 승격 또는 연결 없음, 증거 업데이트 없음, 상태 버전 증가 없음(`project_state.state_version` 증가 없음)입니다. 커밋된 닫기 차단 결과인 `CloseTaskResult`는 `close_task` 담당 계약이 허용한 효과만 가질 수 있습니다.
+- 데이터 구조와 상태 효과를 같은 타입명에 묶지 않습니다. 상태 효과는 응답 branch와 메서드 상태 효과 표가 결정합니다.
+- 차단 사유처럼 보이는 응답 필드는 타입 소유권을 밝혀야 하며 `source`, 응답 branch, 영속 저장 동작, 금지된 `ErrorCode` 값을 문서화해야 합니다. 현재 MVP의 타입 소유권은 커밋 전 실패에 `ToolRejectedResponse.errors: ToolError[]`, `prepare_write` 판단 사유에 `PrepareWriteResult.write_decision_reasons: WriteDecisionReason[]`, close 가능성 평가 발견 사항에 `StatusResult.close_blockers: CloseReadinessBlocker[]`와 `CloseTaskResult.blockers: CloseReadinessBlocker[]`, dry-run 예상 차단 사유에 `DryRunSummary.would_blockers: PlannedBlocker[]`를 쓰는 것입니다. 새 차단 사유형 필드는 예시에 쓰기 전에 담당 메서드나 담당 응답 branch를 선언해야 합니다.
+- `CloseBlocker`는 활성 계약 타입으로 되살리면 안 됩니다. `prepare_write`, `close_task`, dry-run 미리보기, 저장소, 예시, 일반 차단 사유 설명에 쓰지 않습니다.
+- `CloseReadinessBlocker`는 읽기 전용 branch와 커밋된 결과 branch 모두에 나타날 수 있지만, 효과는 branch가 결정합니다. `StatusResult.close_blockers`는 읽기 전용 관찰입니다. `intent=check`에서 나온 `CloseTaskResult`는 읽기 전용 평가입니다. 커밋된 `intent=complete`에서 나온 `CloseTaskResult(close_state=blocked)`는 메서드 상태 효과 표가 허용할 때만 커밋된 닫기 차단 결과입니다.
+- `CloseReadinessBlocker`를 저장 행, 영속 저장 신호, 자동 상태 효과로 설명하면 안 됩니다. `StatusResult.close_blockers`는 `task_events`, `replay row`, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 효과, 증거 업데이트, `project_state.state_version` 증가를 만들면 안 됩니다. `close_task intent=check` 차단 사유는 저장된 차단 사유도 아니고 커밋된 닫기 결과도 아닙니다.
+- `close_task` 작성 지침은 close 가능성 평가보다 먼저 사전 확인 거절을 정의해야 합니다. 사전 확인 거절은 `ToolRejectedResponse` 거절 응답을 반환합니다. close 가능성 평가 발견 사항은 사전 확인이 성공하고 응답 branch와 메서드 상태 효과 표가 그 결과를 허용한 뒤에만 `CloseTaskResult(close_state=blocked)`로 반환합니다. 커밋 전 실패 `ErrorCode` 값을 `CloseReadinessBlocker.code`와 섞지 않습니다. `STATE_VERSION_CONFLICT`, 오래된 `WriteAuthorization.basis_state_version`, 다른 `request_hash`로 `idempotency_key`를 재사용한 경우는 사전 확인 거절이며, 커밋된 `write_compatibility` 또는 `recovery` 차단 사유가 아닙니다.
+- `PrepareWriteResult`는 `CloseReadinessBlocker[]`를 요구하면 안 되고 `CloseBlocker`를 쓰면 안 됩니다. `DryRunSummary.would_blockers`는 `PlannedBlocker[]`로 유지해야 하며 `CloseReadinessBlocker[]`나 `CloseBlocker[]`를 요구하면 안 됩니다. close 가능성 평가의 dry-run 미리보기 발견 사항은 `source_kind=close_readiness`를 사용하고 `source_kind=close_matrix`를 쓰지 않습니다. `STATE_VERSION_CONFLICT`는 `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`가 될 수 없습니다.
 
 담당 문서 밖에서 계약이 반복되면 먼저 담당 문서를 확인합니다. 필요하면 담당 문서를 고친 뒤, 중복 문구는 짧은 결과 설명과 허용된 담당 경로로 바꿉니다.
 
@@ -117,7 +120,7 @@ active/later 모호성은 문체 문제가 아니라 계약 실패로 봅니다.
 
 차단 사유 문구에 부정 요구사항이 둘 이상이면 각 부정을 명시합니다. 잔여 위험 닫기 차단 사유는 "보이지 않거나, 요구될 때 수락되지 않은 경우"라는 뜻으로 씁니다. 앞 요구사항의 부정이 빠져 의미가 뒤집히는 압축 표현을 쓰지 않습니다.
 
-사용자 대상 문서와 템플릿은 사용자가 무엇을 요청할 수 있는지, 에이전트가 무엇을 구체화해야 하는지, 무엇이 막혔는지, 어떤 증거가 있는지, 어떤 판단이 필요한지, 닫기가 무엇을 뜻하는지에서 시작합니다. 내부 라벨은 사용자가 보는 상황이 먼저 분명해진 뒤에만 소개합니다. 사용자 대상 문서나 템플릿이 자연스러운 표시 문구로 충분한 자리에서 `EvidenceSummary`, `CloseBlocker.category`, `judgment_kind`, `guarantee_level` 같은 내부 enum, 스키마 용어, 내부 오류 코드를 그대로 노출하면 실패입니다.
+사용자 대상 문서와 템플릿은 사용자가 무엇을 요청할 수 있는지, 에이전트가 무엇을 구체화해야 하는지, 무엇이 막혔는지, 어떤 증거가 있는지, 어떤 판단이 필요한지, 닫기가 무엇을 뜻하는지에서 시작합니다. 내부 라벨은 사용자가 보는 상황이 먼저 분명해진 뒤에만 소개합니다. 사용자 대상 문서나 템플릿이 자연스러운 표시 문구로 충분한 자리에서 `EvidenceSummary`, `CloseReadinessBlocker.category`, `judgment_kind`, `guarantee_level` 같은 내부 enum, 스키마 용어, 내부 오류 코드를 그대로 노출하면 실패입니다.
 
 ## 7. 보안 표현 규칙
 
@@ -184,7 +187,7 @@ active/later 모호성은 문체 문제가 아니라 계약 실패로 봅니다.
 - [ ] `sensitive_approval` / `SensitiveActionScope`가 `AuthorizedAttemptScope`, Write Authorization, 최종 수락, 잔여 위험 수락, 증거, 아티팩트 권한과 섞이지 않았습니다.
 - [ ] 최종 수락과 잔여 위험 수락이 빠진 필수 증거를 대신하지 않습니다.
 - [ ] 여러 부정 요구사항이 있는 차단 조건은 각 부정을 명시했고, 특히 잔여 위험 닫기 차단 사유의 의미가 보존되었습니다.
-- [ ] 차단 사유형 필드가 현재 타입 소유권을 지킵니다. 커밋 전 실패는 `ToolRejectedResponse.errors`, `prepare_write` 판단 사유는 `WriteDecisionReason`, 닫기 차단 사유 행렬 결과는 `CloseBlocker`, dry-run 예상 차단 사유는 `PlannedBlocker`를 씁니다.
+- [ ] 차단 사유형 필드가 현재 타입 소유권을 지킵니다. 커밋 전 실패는 `ToolRejectedResponse.errors`, `prepare_write` 판단 사유는 `WriteDecisionReason`, close 가능성 평가 발견 사항은 `CloseReadinessBlocker`, dry-run 예상 차단 사유는 `PlannedBlocker`를 쓰며, `CloseBlocker`를 활성 계약 타입으로 되살리지 않았습니다.
 - [ ] 보안 표현이 문서화된 보장 수준과 맞고 근거 없는 예방형, 격리, 샌드박스, 변조 방지, 기본 도구 차단 주장을 만들지 않았습니다.
 - [ ] `surface_id`를 권한 증거처럼 쓰지 않았고, 역량 확인이 통과하지 않은 범위에 `detective`를 표시하거나 주장하지 않았습니다.
 - [ ] 사용자 대상 템플릿이 내부 enum이나 스키마 용어를 불필요하게 노출하지 않았습니다.
