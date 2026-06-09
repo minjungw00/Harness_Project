@@ -35,7 +35,7 @@
 - 혼합 intent 메서드의 응답 분기를 선택된 intent의 상태 효과가 아니라 메서드 이름만으로 고르는 문구
 - `harness.close_task intent=check`와 `dry_run=true`가 함께 있을 때 `task_events`, 재실행 행, 닫기 상태 변경, Write Authorization 변경, 스테이징된 핸들 소비, `state_version` 증가를 만든다고 쓰는 문구
 - `ToolRejectedResponse.errors` / `ToolError`, `PrepareWriteResult.write_decision_reasons` / `WriteDecisionReason`, `CloseTaskResult.blockers` / `CloseBlocker`, `DryRunSummary.would_blockers` / `PlannedBlocker` 사이의 현재 MVP 타입 소유권을 흐리는 차단 사유형 스키마 문구
-- `prepare_write`가 `CloseBlocker`를 재사용하거나, `close_state`를 만들거나, `close matrix`(닫기 차단 사유 행렬)를 실행하거나, 닫기 차단 사유 행렬 기록을 저장한다고 쓰는 문구
+- `prepare_write`가 `CloseBlocker`를 재사용하거나, `close_state`를 만들거나, 닫기 차단 사유 행렬을 실행하거나, 닫기 차단 사유 행렬 기록을 저장한다고 쓰는 문구
 - `STATE_VERSION_CONFLICT`라는 커밋 전 실패를 `WriteDecisionReason.code`, `CloseBlocker.code`, 또는 `PlannedBlocker.code`로 다루는 문구
 - `close_task` 문구가 사전 확인의 `STATE_VERSION_CONFLICT`, 오래된 `WriteAuthorization.basis_state_version`, 또는 `idempotency_key`의 `request_hash` 충돌을 커밋된 닫기 차단 사유로 바꾸는 문제
 - 하나의 `doc_id`에 두 언어를 함께 싣는 에이전트 검색 문제
@@ -197,7 +197,7 @@ API 스키마, 메서드 응답 형태, 응답 예시, dry-run 문구, `prepare_
 - `STATE_VERSION_CONFLICT`를 `WriteDecisionReason.code`로 사용합니다.
 - `STATE_VERSION_CONFLICT`를 `CloseBlocker.code`로 사용합니다.
 - `STATE_VERSION_CONFLICT`를 `PlannedBlocker.code`로 사용합니다.
-- `prepare_write`가 `close_state`를 만들거나, `close matrix`(닫기 차단 사유 행렬)를 실행하거나, 닫기 차단 사유 행렬 기록을 저장하거나, `CloseBlocker`를 만들거나 저장한다고 설명합니다.
+- `prepare_write`가 `close_state`를 만들거나, 닫기 차단 사유 행렬을 실행하거나, 닫기 차단 사유 행렬 기록을 저장하거나, `CloseBlocker`를 만들거나 저장한다고 설명합니다.
 - `close_task` 전용 계약이 담당 문서와 참조 지점 전체에서 명시적으로 바뀌지 않았는데 `CloseBlocker`를 `close_task` 밖에서 재사용합니다.
 
 ## 19. `close_task` 사전 확인과 커밋된 닫기 차단 결과 점검

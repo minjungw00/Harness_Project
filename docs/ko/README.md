@@ -34,7 +34,7 @@
 
 참조 색인은 공개 `ErrorCode` 계약과 `STATE_VERSION_CONFLICT`, 프로젝트 전체 `project_state.state_version`, 요청 수준 `VerifiedSurfaceContext.access_class`, `run_recording`, `artifact_registration`, `artifact_read`, `harness.record_run`, `harness.stage_artifact`, `StagedArtifactHandle` 승격, `existing_artifact` / `ArtifactRef` 영속 연결, 별도 아티팩트 본문 읽기, 확인된 로컬 접점 접근, `SensitiveActionScope`, 제품 파일 쓰기 범위인 `AuthorizedAttemptScope`, `CompletionPolicy`, `EvidenceSummary`, `close_task` 닫기 차단 사유 행렬의 차단 사유, 읽기 전용 Projection, 역량 프로필, 탐지형 보장 조건, 사용자 소유 판단, 구체화 준비 상태의 활성 담당 문서로 안내합니다. 문서 작업 중 오류 코드, `access_class`, 아티팩트 생명주기 일관성은 문서 점검에서 확인합니다.
 
-닫기와 최신성 질문에서는 `STATE_VERSION_CONFLICT`, 커밋 전 실패 오류, 차단 사유 코드 제외 규칙은 API Errors가, `harness.close_task` 응답 분기와 닫기 차단 사유 행렬 계약은 MVP API가, prepare_write 판단 평가와 닫기 차단 사유 행렬 평가의 분리는 Core Model이, 거절된 닫기 효과와 커밋된 차단 닫기 효과의 차이는 Storage가 담당합니다. `CloseBlocker`는 `close_task` 닫기 차단 사유 행렬 타입이며, `prepare_write`나 dry-run 미리보기의 일반 차단 사유 타입이 아닙니다.
+닫기와 최신성 질문에서는 `STATE_VERSION_CONFLICT`, 커밋 전 실패 오류, 차단 사유 코드 제외 규칙은 API Errors가, `harness.close_task` 응답 분기와 닫기 차단 사유 행렬 계약은 MVP API가, `prepare_write` 판단 평가와 닫기 차단 사유 행렬 평가의 분리는 Core Model이, 거절된 닫기 효과와 커밋된 차단 닫기 효과의 차이는 Storage가 담당합니다. `CloseBlocker`는 `close_task` 닫기 차단 사유 행렬 타입이며, `prepare_write`나 dry-run 미리보기의 일반 차단 사유 타입이 아닙니다.
 
 현재 MVP 경로 밖의 자료는 [이후 후보 색인](later/index.md)에서 봅니다. 이후 후보 자료는 관련 담당 문서가 범위와 증명 기대를 함께 승격하기 전까지 활성 전달 범위가 아닙니다.
 

@@ -313,8 +313,8 @@ PrepareWriteResult:
 
 - **응답 분기 계약:** 커밋 전 실패는 `ToolRejectedResponse` 거절 응답을 반환합니다. 유효한 `dry_run` 미리보기는 `ToolDryRunResponse`를 반환합니다. 실제 메서드 결과는 `PrepareWriteResult`를 반환합니다.
 - **prepare_write 판단 사유:** `PrepareWriteResult.write_decision_reasons`는 prepare_write 판단 사유, 즉 write decision 이유를 담습니다. `decision=allowed`이면 `[]`입니다. `decision=blocked`, `decision=approval_required`, `decision=decision_required`이면 비어 있으면 안 됩니다. 이 사유는 `WriteDecisionReason` 값이며, `CloseBlocker`도 아니고 닫기 차단 사유 행렬 결과도 아닙니다.
-- **닫기 경계:** `harness.prepare_write`는 `CloseBlocker`를 만들지 않고, `close_state`를 바꾸지 않고, close matrix를 실행하지 않고, `close_task` 재실행 행을 만들지 않습니다.
-- **커밋 전 거절 경계:** 오래된 상태, 오래된 authorization basis, 멱등성 `request_hash` 충돌, 요청 검증 실패, 로컬 접근 실패, 판단 평가 전 Core 사용 불가는 `ToolRejectedResponse` 거절 응답 경우입니다. `write_decision_reasons`가 아닙니다.
+- **닫기 경계:** `harness.prepare_write`는 `CloseBlocker`를 만들지 않고, `close_state`를 바꾸지 않고, 닫기 차단 사유 행렬을 실행하지 않고, `close_task` 재실행 행을 만들지 않습니다.
+- **커밋 전 거절 경계:** 오래된 상태, 오래된 Write Authorization 근거 버전, 멱등성 `request_hash` 충돌, 요청 검증 실패, 로컬 접근 실패, 판단 평가 전 Core 사용 불가는 `ToolRejectedResponse` 거절 응답 경우입니다. `write_decision_reasons`가 아닙니다.
 - **상태 효과:** 커밋된 `dry_run=false` `decision=allowed`는 활성 경로 수준 `AuthorizedAttemptScope`에 대해 `write_authorizations.status=active` 행 하나를 만들고, 이벤트를 추가하고, 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올립니다. 커밋된 `blocked`, `approval_required`, `decision_required` 응답은 write decision 이유 상태를 갱신하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 소비 가능한 Write Authorization은 만들면 안 됩니다. `dry_run`과 커밋 전 실패는 현재 기록, Write Authorization, write decision 이유 갱신, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 - **커밋된 차단 결정:** `decision=blocked`, `decision=approval_required`, `decision=decision_required`는 메서드별 상태 효과 표가 차단 커밋을 허용할 때만 커밋된 `PrepareWriteResult` 값입니다. 커밋 전 거절을 대신하지 않으며, 사유는 `write_decision_reasons`로 반환합니다.
 - **상태 버전 충돌:** 프로젝트 전체 상태 버전 불일치는 항상 `ToolRejectedResponse.errors`에 담기는 커밋 전 `STATE_VERSION_CONFLICT`입니다. `PrepareWriteResult.decision` 값이 아니며, Write Authorization이나 write decision 이유 커밋을 만들지 않습니다.

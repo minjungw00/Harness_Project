@@ -218,13 +218,13 @@ flowchart TD
 
 `prepare_write`는 제품 파일 쓰기를 위한 유일한 쓰기 전 호환성 판단 지점입니다. 현재 MVP에서는 경로 수준의 의도한 제품 파일 쓰기를 활성 Task, Change Unit, 범위, baseline, 자율성 경계, 필요한 사용자 소유 판단, 필요한 별도 민감 동작 승인, 접점 역량, 그 밖의 활성 담당 경로 선행조건과 비교합니다.
 
-`prepare_write`는 먼저 사전 확인 거절과 write decision 평가를 분리합니다. 요청 검증 실패, 오래된 프로젝트 전체 상태, 로컬 접근 실패, Core 사용 불가, 멱등성 `request_hash` 충돌, 또는 write decision 평가 전에 드러난 다른 커밋 전 실패는 `effect_kind=no_effect`인 `ToolRejectedResponse` 거절 응답을 반환합니다. 이 분기의 `STATE_VERSION_CONFLICT`는 `PrepareWriteResult.decision` 값이 아니며, Write Authorization, `WriteDecisionReason`, 재실행 행, 증거 기록, `close_state` 변경, `close matrix`(닫기 차단 사유 행렬) 효과, 상태 버전 증가를 만들지 않습니다.
+`prepare_write`는 먼저 사전 확인 거절과 `prepare_write` 판단 평가를 분리합니다. 요청 검증 실패, 오래된 프로젝트 전체 상태, 로컬 접근 실패, Core 사용 불가, 멱등성 `request_hash` 충돌, 또는 `prepare_write` 판단 평가 전에 드러난 다른 커밋 전 실패는 `effect_kind=no_effect`인 `ToolRejectedResponse` 거절 응답을 반환합니다. 이 분기의 `STATE_VERSION_CONFLICT`는 `PrepareWriteResult.decision` 값이 아니며, Write Authorization, `WriteDecisionReason`, 재실행 행, 증거 기록, `close_state` 변경, 닫기 차단 사유 행렬 효과, 상태 버전 증가를 만들지 않습니다.
 
-사전 확인이 성공하면 write decision 평가는 `PrepareWriteResult`를 반환합니다. 호환되는 `dry_run=false` `decision=allowed` 결과는 `effect_kind=core_committed`인 Core 커밋 `MethodResult`입니다. 현재 API 계약에 따라 호환되는 활성 Write Authorization을 만들거나 반환하며, 현재 프로젝트 전체 `project_state.state_version`을 권한 근거로 사용합니다.
+사전 확인이 성공하면 `prepare_write` 판단 평가는 `PrepareWriteResult`를 반환합니다. 호환되는 `dry_run=false` `decision=allowed` 결과는 `effect_kind=core_committed`인 Core 커밋 `MethodResult`입니다. 현재 API 계약에 따라 호환되는 활성 Write Authorization을 만들거나 반환하며, 현재 프로젝트 전체 `project_state.state_version`을 권한 근거로 사용합니다.
 
-`decision=blocked`, `decision=approval_required`, `decision=decision_required`는 Core가 메서드 상태 효과 계약에 따라 해당 write decision을 커밋할 때만 `PrepareWriteResult`로 반환됩니다. 이 `decision=allowed`가 아닌 결과는 `write_decision_reasons: WriteDecisionReason[]`로 prepare_write 판단 사유를 설명합니다. API 메서드 표가 허용한 이벤트, 재실행, prepare_write 판단 사유, 프로젝트 전체 상태 버전 효과만 가질 수 있으며, 소비 가능한 Write Authorization, 증거 기록, `close_state` 변경, `CloseBlocker`, `close matrix`(닫기 차단 사유 행렬) 실행, 커밋된 닫기 결과를 만들면 안 됩니다.
+`decision=blocked`, `decision=approval_required`, `decision=decision_required`는 Core가 메서드 상태 효과 계약에 따라 해당 `prepare_write` 판단을 커밋할 때만 `PrepareWriteResult`로 반환됩니다. 이 `decision=allowed`가 아닌 결과는 `write_decision_reasons: WriteDecisionReason[]`로 prepare_write 판단 사유를 설명합니다. API 메서드 표가 허용한 이벤트, 재실행, prepare_write 판단 사유, 프로젝트 전체 상태 버전 효과만 가질 수 있으며, 소비 가능한 Write Authorization, 증거 기록, `close_state` 변경, `CloseBlocker`, 닫기 차단 사유 행렬 실행, 커밋된 닫기 결과를 만들면 안 됩니다.
 
-`WriteDecisionReason`은 `prepare_write` 판단 출력을 설명합니다. `CloseBlocker`는 `close_task`의 `close matrix`(닫기 차단 사유 행렬)에서 나온 커밋된 닫기 차단 결과를 설명합니다. 두 타입은 서로 바꿔 쓸 수 없습니다. `prepare_write`는 `CloseBlocker`를 쓰지 않고, `close_task` 닫기 차단 사유는 `WriteDecisionReason`을 쓰지 않습니다.
+`WriteDecisionReason`은 `prepare_write` 판단 출력을 설명합니다. `CloseBlocker`는 `close_task` 닫기 차단 사유 행렬에서 나온 커밋된 닫기 차단 결과를 설명합니다. 두 타입은 서로 바꿔 쓸 수 없습니다. `prepare_write`는 `CloseBlocker`를 쓰지 않고, `close_task` 닫기 차단 사유는 `WriteDecisionReason`을 쓰지 않습니다.
 
 이 상태 효과가 있는 메서드의 유효한 `dry_run=true` 호출은 `ToolDryRunResponse`를 반환합니다. `dry_run=false` 경로를 미리 보여 줄 수 있지만 Write Authorization을 만들지 않고 실제 `write_authorization_ref`를 반환하지 않습니다. 이 미리보기의 예상 prepare_write 판단 사유는 `DryRunSummary.would_blockers`의 `PlannedBlocker` 항목으로만 표현하며, 실제 `WriteDecisionReason`이나 `CloseBlocker` 객체가 아닙니다.
 

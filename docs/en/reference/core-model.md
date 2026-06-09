@@ -226,7 +226,7 @@ When preflight succeeds, write decision evaluation returns `PrepareWriteResult`.
 
 `WriteDecisionReason` explains `prepare_write` decision output. `CloseBlocker` explains `close_task` close-matrix blocked output. These types are not interchangeable. `prepare_write` never uses `CloseBlocker`, and `close_task` close blockers never use `WriteDecisionReason`.
 
-A valid `dry_run=true` call for this state-effecting method returns `ToolDryRunResponse`; it may preview the non-dry-run path, but it creates no Write Authorization and returns no real `write_authorization_ref`. Expected write decision blockers in that preview are `PlannedBlocker` entries in `DryRunSummary.would_blockers`, not real `WriteDecisionReason` or `CloseBlocker` objects.
+A valid `dry_run=true` call for this state-effecting method returns `ToolDryRunResponse`; it may preview the non-dry-run path, but it creates no Write Authorization and returns no real `write_authorization_ref`. Expected `prepare_write` decision reasons in that preview are represented as `PlannedBlocker` entries in `DryRunSummary.would_blockers`, not real `WriteDecisionReason` or `CloseBlocker` objects.
 
 Write Authorization is a cooperative Harness record. It can tell a connected agent or surface that the intended write is compatible with current Harness state; it does not grant OS permission, enforce a sandbox, prevent arbitrary tools, make storage tamper-proof, or isolate the operation.
 

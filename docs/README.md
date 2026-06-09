@@ -55,7 +55,7 @@ The Reference Index routes active owner documents for the public `ErrorCode` con
 
 For close/freshness questions, Reference routes `STATE_VERSION_CONFLICT`, pre-commit failure errors, and blocker-code exclusions to API Errors; `harness.close_task` response branches and the close matrix contract to MVP API; write decision evaluation versus close matrix evaluation to Core Model; and rejected close effects versus committed blocked close effects to Storage. `CloseBlocker` is a `close_task` close-matrix type, not the generic blocker type for `prepare_write` or dry-run preview.
 
-닫기와 최신성 질문에서는 `STATE_VERSION_CONFLICT`, 커밋 전 실패 오류, 차단 사유 코드 제외 규칙은 API Errors가, `harness.close_task` 응답 분기와 닫기 차단 사유 행렬 계약은 MVP API가, prepare_write 판단 평가와 닫기 차단 사유 행렬 평가의 분리는 Core Model이, 거절된 닫기 효과와 커밋된 차단 닫기 효과의 차이는 Storage가 담당합니다. `CloseBlocker`는 `close_task` 닫기 차단 사유 행렬 타입이며, `prepare_write`나 dry-run 미리보기의 일반 차단 사유 타입이 아닙니다.
+닫기와 최신성 질문에서는 `STATE_VERSION_CONFLICT`, 커밋 전 실패 오류, 차단 사유 코드 제외 규칙은 API Errors가, `harness.close_task` 응답 분기와 닫기 차단 사유 행렬 계약은 MVP API가, `prepare_write` 판단 평가와 닫기 차단 사유 행렬 평가의 분리는 Core Model이, 거절된 닫기 효과와 커밋된 차단 닫기 효과의 차이는 Storage가 담당합니다. `CloseBlocker`는 `close_task` 닫기 차단 사유 행렬 타입이며, `prepare_write`나 dry-run 미리보기의 일반 차단 사유 타입이 아닙니다.
 
 ## Active MVP Boundary / 현재 MVP 경계
 

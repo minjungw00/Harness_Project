@@ -789,9 +789,9 @@ blocker record, no artifact effect, no evidence update, no staged-handle
 consumption, and no `project_state.state_version` increment.
 
 A valid dry-run `prepare_write` returns `ToolDryRunResponse` and creates no
-replay row or state/storage effects. Expected write decision blockers are
-preview-only `PlannedBlocker` entries, not stored `WriteDecisionReason` objects
-and not `CloseBlocker` records.
+replay row or state/storage effects. Expected `prepare_write` decision reasons
+are represented as preview-only `PlannedBlocker` entries, not stored
+`WriteDecisionReason` objects and not `CloseBlocker` records.
 
 ### `close_task` storage effects
 
