@@ -69,7 +69,7 @@ The minimum active shaping information is the compact state needed to turn an or
 - Task state for the current goal summary, task mode, lifecycle phase, one blocking question when necessary, one next safe action, and the active Change Unit pointer.
 - Task or Change Unit scope fields for the active scope summary, allowed paths or affected areas, non-goals, acceptance criteria, Autonomy Boundary, baseline reference, and constraints.
 - `user_judgment` records or candidates for required user-owned judgments.
-- Evidence summary and blocker records for evidence expectations, evidence gaps, active blockers, and close blockers.
+- Evidence summary and blocker records for evidence expectations, evidence gaps, active blockers, and close-readiness findings.
 
 If any required shaping item is unknown, stale, unavailable, or disputed, Core must expose that as `unknown`, a pending user-owned judgment, a blocker, or the next safe action. It must not create a separate active `Discovery Brief`, `Question Queue`, `Assumption Register`, or similar committed planning artifact to make the request look writable.
 
@@ -87,7 +87,7 @@ Shaping is not an open-ended planning loop. Once the readiness view shows enough
 
 <a id="finding-routing"></a>
 
-Findings from commands, Runs, reviews, validators, diagnostics, or future QA/verification workflows affect Core only when routed through an active owner path such as blocker, evidence summary, user judgment, `harness.update_scope`, or close blocker. A finding left in chat or report prose is not state.
+Findings from commands, Runs, reviews, validators, diagnostics, or future QA/verification workflows affect Core only when routed through an active owner path such as blocker, evidence summary, user judgment, `harness.update_scope`, or close-readiness finding. A finding left in chat or report prose is not state.
 
 ## 4. User-owned judgment boundaries
 
@@ -131,18 +131,18 @@ These rules apply even when a user-facing surface compresses the display. Compac
 
 ## 6. Active Gates And Reserved Gate Names
 
-Gates are Core compatibility summaries for progress, write, Run recording, and close. In the current MVP, the only active gate status fields exposed in public schemas are the `StateSummary.gates.*` fields owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets). A gate name in planning prose does not create an active schema field, storage record, validator, close blocker category, or close requirement.
+Gates are Core compatibility summaries for progress, write, Run recording, and close. In the current MVP, the only active gate status fields exposed in public schemas are the `StateSummary.gates.*` fields owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets). A gate name in planning prose does not create an active schema field, storage record, validator, close-readiness blocker category, or close requirement.
 
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work. Its active status values are `not_required`, `required`, `pending`, `passed`, `failed`, and `blocked`.
 - <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. Its active status values are `not_required`, `required`, `pending`, `resolved`, `deferred`, and `blocked`. It does not replace sensitive-action approval, evidence, future verification or QA routes, final acceptance, or residual-risk acceptance.
 - <a id="approval-gate"></a>Approval Gate: whether scoped sensitive-action approval is required, pending, granted, denied, or expired. Its active status values are `not_required`, `required`, `pending`, `granted`, `denied`, and `expired`. It is permission for the `SensitiveActionScope` only, not product-file Write Authorization, final acceptance, or residual-risk acceptance.
 - <a id="evidence-gate"></a>Evidence Gate: whether close-relevant evidence is not required, missing, partial, sufficient, stale, or blocked. Its active status values are `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`. Evidence sufficiency is derived from the Task or Change Unit `CompletionPolicy` and required `EvidenceCoverageItem` rows: every `required_for_close=true` item must be `supported` or `not_applicable` before the gate can be `sufficient`.
 - <a id="acceptance-gate"></a>Acceptance Gate: whether final acceptance is not required, required, pending, accepted, or rejected after the close basis is visible. Its active status values are `not_required`, `required`, `pending`, `accepted`, and `rejected`.
-- <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, hold the action through the owner path, or produce `CloseBlocker.category=surface_capability` rather than pretending verification or prevention happened.
+- <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, hold the action through the owner path, or produce `CloseReadinessBlocker.category=surface_capability` rather than pretending verification or prevention happened.
 
 Reserved gate names stay catalog-only in [Later](../later/index.md) until promoted:
 
-- <a id="design-gate"></a>Design Gate is a later/reserved gate name. Design Quality is not an active current MVP gate, and the active MVP has no independent design-policy close gate. Design-quality observations affect close only when they fit an active owner path such as product, technical, or scope judgment; evidence; residual-risk visibility; surface capability; or an active `CloseBlocker.category`.
+- <a id="design-gate"></a>Design Gate is a later/reserved gate name. Design Quality is not an active current MVP gate, and the active MVP has no independent design-policy close gate. Design-quality observations affect close only when they fit an active owner path such as product, technical, or scope judgment; evidence; residual-risk visibility; surface capability; or an active `CloseReadinessBlocker.category`.
 - <a id="verification-gate"></a>Verification Gate is a later/reserved concept. The active MVP has no detached verification workflow and no verification close gate. A future owner must promote exact fields, requiredness, fallback behavior, and proof expectations before it affects active close semantics.
 - <a id="qa-gate"></a>QA Gate is a later/reserved concept. The active MVP has no Manual QA workflow and no Manual QA close gate. A future owner must promote exact fields, waiver behavior, artifact handling, and proof expectations before it affects active close semantics.
 
@@ -218,15 +218,15 @@ Stale Write Authorization detection uses the project-wide `project_state.state_v
 
 `prepare_write` is the unique pre-write compatibility decision point for product-file writes. In the current MVP it checks a path-level intended product-file write against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, any required separate sensitive-action approval, surface capability, and other active owner-path preconditions.
 
-`prepare_write` first separates preflight rejection from write decision evaluation. Request validation failure, stale project-wide state, local access failure, Core unavailability, idempotency request-hash conflict, or any other failure before write decision evaluation returns `ToolRejectedResponse` with `effect_kind=no_effect`. `STATE_VERSION_CONFLICT` in that branch is not a `PrepareWriteResult.decision` value and creates no Write Authorization, `WriteDecisionReason`, replay row, evidence record, `close_state` mutation, close matrix effect, or state-version increment.
+`prepare_write` first separates preflight rejection from write decision evaluation. Request validation failure, stale project-wide state, local access failure, Core unavailability, idempotency request-hash conflict, or any other failure before write decision evaluation returns `ToolRejectedResponse` with `effect_kind=no_effect`. `STATE_VERSION_CONFLICT` in that branch is not a `PrepareWriteResult.decision` value and creates no Write Authorization, `WriteDecisionReason`, replay row, evidence record, `close_state` mutation, close readiness evaluation, `CloseReadinessBlocker`, or state-version increment.
 
 When preflight succeeds, write decision evaluation returns `PrepareWriteResult`. A compatible non-dry-run `decision=allowed` result is a Core committed `MethodResult` with `effect_kind=core_committed`; according to the current API contract it creates or returns a compatible active Write Authorization and uses the current project-wide `project_state.state_version` as the authorization basis.
 
-`decision=blocked`, `decision=approval_required`, and `decision=decision_required` return `PrepareWriteResult` only when Core commits that write decision under the method state-effect contract. Those non-allowed results explain the prepare_write decision output through `write_decision_reasons: WriteDecisionReason[]`. They may have only the event, replay, write-decision reason, and project-wide state-version effects allowed by the API method matrix, and they must not create a consumable Write Authorization, evidence record, `close_state` mutation, `CloseBlocker`, close matrix execution, or committed close result.
+`decision=blocked`, `decision=approval_required`, and `decision=decision_required` return `PrepareWriteResult` only when Core commits that write decision under the method state-effect contract. Those non-allowed results explain the prepare_write decision output through `write_decision_reasons: WriteDecisionReason[]`. They may have only the event, replay, write-decision reason, and project-wide state-version effects allowed by the API method table, and they must not create a consumable Write Authorization, evidence record, `close_state` mutation, `CloseReadinessBlocker`, close readiness evaluation, or committed close result.
 
-`WriteDecisionReason` explains `prepare_write` decision output. `CloseBlocker` explains `close_task` close-matrix blocked output. These types are not interchangeable. `prepare_write` never uses `CloseBlocker`, and `close_task` close blockers never use `WriteDecisionReason`.
+`WriteDecisionReason` explains `prepare_write` decision output. `CloseReadinessBlocker` is the data shape for close-readiness findings returned through `StatusResult.close_blockers` or `CloseTaskResult.blockers`. These types are not interchangeable. `prepare_write` uses `WriteDecisionReason[]` only for prepare-write decision reasons and never uses `CloseReadinessBlocker`; close-readiness findings never use `WriteDecisionReason`.
 
-A valid `dry_run=true` call for this state-effecting method returns `ToolDryRunResponse`; it may preview the non-dry-run path, but it creates no Write Authorization and returns no real `write_authorization_ref`. Expected `prepare_write` decision reasons in that preview are represented as `PlannedBlocker` entries in `DryRunSummary.would_blockers`, not real `WriteDecisionReason` or `CloseBlocker` objects.
+A valid `dry_run=true` call for this state-effecting method returns `ToolDryRunResponse`; it may preview the non-dry-run path, but it creates no Write Authorization and returns no real `write_authorization_ref`. Expected `prepare_write` decision reasons in that preview are represented as `PlannedBlocker` entries in `DryRunSummary.would_blockers`, not real `WriteDecisionReason` or `CloseReadinessBlocker` objects.
 
 Write Authorization is a cooperative Harness record. It can tell a connected agent or surface that the intended write is compatible with current Harness state; it does not grant OS permission, enforce a sandbox, prevent arbitrary tools, make storage tamper-proof, or isolate the operation.
 
@@ -254,30 +254,40 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 `close_task` is the single completion decision point. Agent summaries, final reports, acceptance-looking chat, projections, Evals, QA notes, and evidence displays may inform close, but they do not close a Task by themselves.
 
-`close_task` first performs close preflight rejection checks. These checks happen before any `CloseBlocker` creation, close matrix evaluation, replay row creation, Write Authorization consumption, or staged handle consumption. A preflight failure returns `ToolRejectedResponse` with `effect_kind=no_effect`; it is not `CloseTaskResult` and not `CloseTaskResult(close_state=blocked)`. Close preflight rejection checks include:
+Close readiness evaluation is the Core evaluation of whether the current Task can close based on current Core state. It may produce close-readiness findings represented by `CloseReadinessBlocker`. `CloseReadinessBlocker` is only a data shape: its presence does not by itself mean persistence, storage effects, `close_state` mutation, replay row creation, event creation, artifact effects, Write Authorization changes, staged-handle consumption, evidence updates, or `project_state.state_version` increments. The response branch and method state-effect table determine effects.
+
+Close readiness evaluation can surface through different call paths:
+
+- `harness.status` may observe close readiness read-only. `StatusResult.close_blockers: CloseReadinessBlocker[]` is response-only observation data and creates no storage or state effects.
+- `harness.close_task intent=check` evaluates close readiness read-only. It returns `CloseTaskResult.blockers: CloseReadinessBlocker[]`; with `dry_run=true`, it is still `CloseTaskResult` with `base.dry_run=true` and `effect_kind=read_only`. It creates no storage or state effects.
+- `harness.close_task intent=complete` performs close preflight first, then close readiness evaluation. If blockers remain, it returns `CloseTaskResult(close_state=blocked)` with `CloseTaskResult.blockers: CloseReadinessBlocker[]`. Committed effects occur only when this response branch and the method state-effect table allow them.
+- `harness.close_task intent=complete`, `intent=cancel`, or `intent=supersede` with `dry_run=true` returns `ToolDryRunResponse` when the request is otherwise valid and previewable. Expected close-readiness findings are preview-only `PlannedBlocker` entries in `DryRunSummary.would_blockers` with `source_kind=close_readiness`, not actual `CloseReadinessBlocker` objects.
+- `prepare_write` does not run close readiness evaluation, does not mutate `close_state`, and does not use `CloseReadinessBlocker`. It uses `PrepareWriteResult.write_decision_reasons: WriteDecisionReason[]` for prepare-write decision reasons.
+
+`close_task` first performs close preflight rejection checks. These checks happen before any close readiness evaluation, replay row creation, Write Authorization consumption, or staged handle consumption. A preflight failure returns `ToolRejectedResponse` with `effect_kind=no_effect`; it is not `CloseTaskResult` and not `CloseTaskResult(close_state=blocked)`. Close preflight rejection checks include:
 
 - `expected_state_version` mismatch against current `project_state.state_version`.
-- `idempotency_key` reuse with a different request hash.
+- `idempotency_key` reuse with a different `request_hash`.
 - Stale `WriteAuthorization.basis_state_version` against current `project_state.state_version`.
-- Core state cannot be read before close matrix evaluation.
+- Core state cannot be read before close readiness evaluation.
 - Request identity failure before a valid Project/Task can be selected.
-- Local access or capability failure before close matrix evaluation.
+- Local access or capability failure before close readiness evaluation.
 
-All close preflight rejections have no state effect: no `CloseBlocker`, no `task_event` or `task_events` append, no replay row, no `tool_invocations.response_json`, no `close_state` mutation, no Write Authorization creation or consumption, no staged handle consumption, no artifact promotion or link, no evidence summary update, and no `project_state.state_version` increment. `STATE_VERSION_CONFLICT` belongs only to preflight rejection for `close_task`; it must not appear as `CloseBlocker.code`, in the `write_compatibility` or `recovery` matrix rows, or in any committed blocked close result.
+All close preflight rejections have no state effect: no `CloseReadinessBlocker`, no `task_event` or `task_events` append, no replay row, no `tool_invocations.response_json`, no `close_state` mutation, no Write Authorization creation or consumption, no staged handle consumption, no artifact promotion or link, no evidence summary update, and no `project_state.state_version` increment. `STATE_VERSION_CONFLICT` belongs only in `ToolRejectedResponse.errors` for `close_task`; it must not appear as `CloseReadinessBlocker.code`, in `CloseTaskResult(close_state=blocked).errors[0]`, or in any committed blocked close result.
 
-After preflight succeeds, `intent=check` is a read-only close-matrix evaluation. It may compute the current complete-readiness matrix, close blockers, evidence summary, artifact refs, and next actions for the response only. If the request also has `dry_run=true`, the response branch remains `CloseTaskResult` with `base.dry_run=true` and `base.effect_kind=read_only`. Both forms have no state effect: no `close_state` mutation, no `task_events`, no replay row, no artifact update or staged-handle consumption, no Write Authorization creation or consumption, and no `project_state.state_version` increment.
+After preflight succeeds, `intent=check` is a read-only close readiness evaluation. It may compute current close readiness, `CloseTaskResult.blockers: CloseReadinessBlocker[]`, evidence summary, artifact refs, and next actions for the response only. If the request also has `dry_run=true`, the response branch remains `CloseTaskResult` with `base.dry_run=true` and `base.effect_kind=read_only`. Both forms have no state effect: no `close_state` mutation, no `task_events`, no replay row, no artifact update or staged-handle consumption, no Write Authorization creation or consumption, and no `project_state.state_version` increment.
 
-After preflight succeeds, `intent=complete` uses the deterministic complete close matrix. Core may collect more than one blocker, but the response order and primary close-blocker basis follow this matrix:
+After preflight succeeds, `intent=complete` uses the deterministic complete close readiness evaluation. Core may collect more than one `CloseReadinessBlocker`, but the response order and primary close-readiness basis follow this order:
 
-| Order | Check | Blocking result when the check fails |
+| Order | Check | Close-readiness result when the check fails |
 |---:|---|---|
-| 1 | Selected Task lifecycle validity | `task` blocker when the selected same-project Task is already terminal or cannot enter a complete transition. Missing, unreadable, or wrong-project Project/Task identity is preflight rejection, not a close blocker. |
+| 1 | Selected Task lifecycle validity | `task` blocker when the selected same-project Task is already terminal or cannot enter a complete transition. Missing, unreadable, or wrong-project Project/Task identity is preflight rejection, not a `CloseReadinessBlocker`. |
 | 2 | Open, interrupted, or violation Run check | `open_run` blocker when a Run remains open, interrupted, in violation, incompatible, or otherwise unrepaired for the close basis. |
 | 3 | Scope, Change Unit, and `completion_policy` check | `scope` blocker when active scope, active Change Unit, acceptance criteria, or the applicable `CompletionPolicy` is missing, stale, or incompatible. |
 | 4 | Unresolved user-owned judgment check | `user_judgment` blocker when a required product, technical, scope, or other non-sensitive active user-owned judgment is pending, deferred without coverage, rejected, blocked, stale, superseded, or incompatible. |
 | 5 | Unresolved sensitive approval check | `sensitive_approval` blocker when required sensitive-action approval is missing, denied, expired, stale, or incompatible. |
 | 6 | Write Authorization and Run compatibility check | `write_compatibility` blocker only for current-state semantic incompatibility after freshness is established: missing, unavailable, invalid, already consumed, scope-incompatible, path-incompatible, baseline-incompatible, or observed-write-incompatible authorization/run conditions. Stale `WriteAuthorization.basis_state_version` is preflight rejection, not this row. |
-| 7 | Baseline and surface capability check | `baseline` or `surface_capability` blocker when, after local access preflight succeeds, the baseline or verified local surface capability cannot honestly support the close claim or required guarantee display. Current local access failure is preflight rejection, not a close blocker. |
+| 7 | Baseline and surface capability check | `baseline` or `surface_capability` blocker when, after local access preflight succeeds, the baseline or verified local surface capability cannot honestly support the close claim or required guarantee display. Current local access failure is preflight rejection, not a `CloseReadinessBlocker`. |
 | 8 | Evidence sufficiency check | `evidence` blocker when required evidence is insufficient under the active `CompletionPolicy`. |
 | 9 | Artifact availability check | `artifact_availability` blocker when a close-relevant `ArtifactRef` is missing, unavailable, integrity-failed, blocked beyond the allowed safe notice, or otherwise unusable. |
 | 10 | Final acceptance check | `final_acceptance` blocker when `CompletionPolicy.final_acceptance_required=true` and compatible `final_acceptance` is missing, rejected, stale, or not tied to the visible close basis. |
@@ -286,17 +296,17 @@ After preflight succeeds, `intent=complete` uses the deterministic complete clos
 | 13 | Recovery constraint check | `recovery` blocker when current state can be read, preflight has succeeded, and unresolved repair or recovery state, corruption, unresolved blocker state, or another repair constraint must be handled before close. Idempotency request hash conflict and state-version conflict are preflight rejections, not recovery blockers. |
 | 14 | Close transition or blocked response | If no blocker remains, commit the complete transition; otherwise return `CloseTaskResult.close_state=blocked` and leave the Task open. |
 
-The matrix never lets a later check satisfy an earlier one. Final acceptance and residual-risk acceptance cannot replace required evidence, cannot make an unsupported `EvidenceCoverageItem` sufficient, and cannot substitute for a required artifact or state ref.
+The evaluation order never lets a later check satisfy an earlier one. Final acceptance and residual-risk acceptance cannot replace required evidence, cannot make an unsupported `EvidenceCoverageItem` sufficient, and cannot substitute for a required artifact or state ref.
 
-Idempotency request hash conflict, stale `expected_state_version`, and stale `WriteAuthorization.basis_state_version` are outside the complete close matrix. They are preflight rejections, not semantic close blockers.
+Idempotency `request_hash` conflict, stale `expected_state_version`, and stale `WriteAuthorization.basis_state_version` are outside complete close readiness evaluation. They are preflight rejections, not semantic close-readiness findings.
 
-Required evidence sufficiency is deterministic. When `CompletionPolicy.evidence_required=true`, `EvidenceSummary.status=sufficient` is valid only if every `EvidenceCoverageItem` with `required_for_close=true` is present and has `coverage_state=supported` or `not_applicable`. Any required item that is `unsupported`, `partial`, `stale`, or `blocked`, or any omitted required item that leaves the coverage set incomplete, must produce an `evidence` close blocker. Artifact availability is checked separately: an artifact can be available without making evidence sufficient, and missing or unusable close-relevant artifacts can create `artifact_availability` blockers in addition to evidence blockers.
+Required evidence sufficiency is deterministic. When `CompletionPolicy.evidence_required=true`, `EvidenceSummary.status=sufficient` is valid only if every `EvidenceCoverageItem` with `required_for_close=true` is present and has `coverage_state=supported` or `not_applicable`. Any required item that is `unsupported`, `partial`, `stale`, or `blocked`, or any omitted required item that leaves the coverage set incomplete, must produce an `evidence` close-readiness finding. Artifact availability is checked separately: an artifact can be available without making evidence sufficient, and missing or unusable close-relevant artifacts can create `artifact_availability` blockers in addition to evidence blockers.
 
 After preflight succeeds, `intent=cancel` and `intent=supersede` evaluate only transition checks for that terminal path. They are not successful completion and do not require evidence sufficiency, final acceptance, or residual-risk acceptance. Their semantic blockers are limited to conditions that make the terminal transition invalid, such as the selected Task lifecycle, cancellation or supersession conflict, unresolved recovery constraints, and for `intent=supersede`, a missing or invalid open same-project `superseding_task_id` when the active pointer would move.
 
-After preflight succeeds, `dry_run=true` on `intent=complete`, `intent=cancel`, or `intent=supersede` returns `ToolDryRunResponse` when the request is otherwise valid and previewable. The preview may describe terminal or committed blocked close effects, expected close blockers, and next actions through `PlannedBlocker` entries in `DryRunSummary.would_blockers`, but it does not return real `CloseBlocker` objects and does not change Task lifecycle, close fields, blockers, events, replay rows, artifacts, staged-handle consumption, Write Authorization creation or consumption, or `project_state.state_version`.
+After preflight succeeds, `dry_run=true` on `intent=complete`, `intent=cancel`, or `intent=supersede` returns `ToolDryRunResponse` when the request is otherwise valid and previewable. The preview may describe terminal or committed blocked close effects, expected close-readiness findings, and next actions through `PlannedBlocker` entries in `DryRunSummary.would_blockers` with `source_kind=close_readiness`, but it does not return actual `CloseReadinessBlocker` objects and does not change Task lifecycle, close fields, blockers, events, replay rows, artifacts, staged-handle consumption, Write Authorization creation or consumption, or `project_state.state_version`.
 
-For `dry_run=false` state-changing close intents after preflight succeeds, Core either commits the terminal transition or returns a committed blocked close result allowed by the method state-effect contract. `CloseTaskResult(close_state=blocked)` is only for committed close blockers, meaning semantic blockers found after preflight succeeds. It is not the response for stale state, stale authorization basis, idempotency request hash conflict, unreadable Core state, request identity failure, or local access/capability failure before matrix evaluation. A committed blocked close leaves the Task open.
+For `dry_run=false` state-changing close intents after preflight succeeds, Core either commits the terminal transition or returns a committed blocked close result allowed by the method state-effect contract. `CloseTaskResult(close_state=blocked)` returns `blockers: CloseReadinessBlocker[]` only for semantic close-readiness findings discovered after preflight succeeds. It is not the response for stale state, stale authorization basis, idempotency `request_hash` conflict, unreadable Core state, request identity failure, or local access/capability failure before close readiness evaluation. A committed blocked close leaves the Task open.
 
 A committed terminal close is one public state mutation. `harness.close_task intent=supersede` may update both the old Task lifecycle/result fields and `project_state.active_task_id`, but it still increments `project_state.state_version` exactly once.
 
@@ -307,7 +317,7 @@ Close-related fields are separate contracts:
 | `Task.lifecycle_phase` | Persisted lifecycle position: `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded`. |
 | `CloseTaskResult.close_state` | Response-level close status: `ready`, `blocked`, `closed`, `cancelled`, `superseded`. It is not the persisted lifecycle field. |
 | `Task.close_reason` | Persisted close detail: `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded`. |
-| `Task.result` | Coarse task outcome: `none`, `advice_only`, `completed`, `cancelled`, `superseded`. A failed Run, violation, blocked close, or evidence gap stays in Run status, `CloseBlocker`, evidence state, or current Task state, not a terminal Task result. |
+| `Task.result` | Coarse task outcome: `none`, `advice_only`, `completed`, `cancelled`, `superseded`. A failed Run, violation, blocked close, or evidence gap stays in Run status, close-readiness blocker state, evidence state, or current Task state, not a terminal Task result. |
 
 `close_reason` is derived from the validated terminal transition. A request-supplied value, when present, must match the requested `intent` and the derived close basis; otherwise the request fails validation rather than mixing close modes.
 
@@ -320,7 +330,7 @@ Close-related fields are separate contracts:
 
 MVP close must keep later assurance and design-policy material out of active response semantics. Design-policy gates, verification gates, QA gates, detached verification, verified-completion fields, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
 
-`close_task` must return blockers instead of pretending close is complete when required task/scope correctness, user-owned judgment, sensitive-action approval, Write Authorization or Run compatibility, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, cancellation/supersession handling, surface capability, baseline, or recovery conditions remain unresolved. A public response may choose one primary error, but secondary close blockers and refs must remain visible enough for the next safe action.
+`close_task` must return blockers instead of pretending close is complete when required task/scope correctness, user-owned judgment, sensitive-action approval, Write Authorization or Run compatibility, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, cancellation/supersession handling, surface capability, baseline, or recovery conditions remain unresolved. A public response may choose one primary error, but secondary close-readiness findings and refs must remain visible enough for the next safe action.
 
 `harness.close_task` with `intent=supersede` moves the old Task to `lifecycle_phase=superseded`, `close_reason=superseded`, and `result=superseded`. If the superseded Task is `project_state.active_task_id`, Core must set `project_state.active_task_id` to `superseding_task_id` only when it names a valid open same-project Task; otherwise it must clear the active pointer. It must not leave the superseded Task active.
 
@@ -328,7 +338,7 @@ MVP close must keep later assurance and design-policy material out of active res
 
 Blockers are structured reasons a transition cannot proceed honestly. They can block progress, a write, Run recording, or close. They should name the affected Task or Change Unit when available, the active category, the missing or incompatible condition, related refs, and the next safe action.
 
-Close readiness uses only the active `CloseBlocker.category` values owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets):
+Close readiness uses only the active `CloseReadinessBlocker.category` values owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets):
 
 | Active category | Core meaning |
 |---|---|
@@ -349,7 +359,7 @@ Close readiness uses only the active `CloseBlocker.category` values owned by [AP
 | `supersession` | Supersession intent, replacement Task validity, or active-task pointer handling conflicts with the requested transition. |
 | `recovery` | Unresolved repair or recovery state that remains after current state is readable and preflight succeeds. It does not cover idempotency request hash conflict or state-version conflict. |
 
-Conceptual issues such as design quality, future verification, future Manual QA, waiver handling, or Autonomy Boundary mismatch must map to one of those active categories when they are close-relevant. They do not create extra current MVP close blocker categories or independent close gates.
+Conceptual issues such as design quality, future verification, future Manual QA, waiver handling, or Autonomy Boundary mismatch must map to one of those active categories when they are close-relevant. They do not create extra current MVP close-readiness blocker categories or independent close gates.
 
 Invalid state combinations must become blockers, rejections, or repair paths. They must not be papered over by projection prose, broad approval, a waiver that does not apply, or a close result that hides the conflict.
 
