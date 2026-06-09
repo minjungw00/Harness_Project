@@ -191,7 +191,7 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | `evidence_summaries` | `state.sqlite` | Compact evidence coverage and gap record used by status, run/evidence summaries, blockers, and close. It is evaluated against the Task or Change Unit `CompletionPolicy`; it does not own that policy. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
 | `blockers` | `state.sqlite` | Structured blocker for next action, write compatibility, evidence gaps, close readiness, or recovery. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
 | `task_events` | `state.sqlite` | Append-only audit and ordering trail for committed Core mutations. | `event_id`, `project_id`, `task_id`, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
-| `tool_invocations` | `state.sqlite` | Replay row only for committed non-dry-run Core `MethodResult` responses whose method state-effect row creates replay. Rejected, dry-run, read-only, and staging-created responses are not stored here. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
+| `tool_invocations` | `state.sqlite` | Replay row only for committed non-dry-run Core `MethodResult` responses whose method state-effect row creates replay. `ToolRejectedResponse`, `ToolDryRunResponse`, read-only results, and staging-created responses are not stored here; this includes `CloseTaskResult` for `harness.close_task intent=check` with `dry_run=true`. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
 ### First schema integrity contract
 
@@ -331,7 +331,7 @@ body. Unknown values fail before commit.
 | `artifacts.redaction_state` | `none`, `redacted`, `secret_omitted`, `blocked` | Persisted `ArtifactRef.redaction_state` values from Schema Core. Hash and size describe the committed safe bytes or safe notice, not a hidden original. |
 | `artifact_links.owner_record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | Persisted owner relation discriminator. Values mirror `ArtifactRelationOwner.record_kind`; storage owns same-project/same-Task owner lookup and relation validation. |
 | `blockers.status` | `active`, `resolved`, `superseded` | Storage-owned blocker row state. Public close blocker shapes remain API-owned. |
-| `tool_invocations.status` | `committed` | A replay row exists only for a committed non-dry-run Core `MethodResult` response whose method state-effect row creates replay. `ToolRejectedResponse`, `ToolDryRunResponse`, read-only results, and successful `StageArtifactResult` staging results have no replay row. |
+| `tool_invocations.status` | `committed` | A replay row exists only for a committed non-dry-run Core `MethodResult` response whose method state-effect row creates replay. `ToolRejectedResponse`, `ToolDryRunResponse`, read-only results, and successful `StageArtifactResult` staging results have no replay row. `harness.close_task intent=check` with `dry_run=true` is a read-only result, not `ToolDryRunResponse`. |
 
 Other persisted status-like API fields, including `tasks.mode`, `runs.kind`,
 `runs.status`, `user_judgments.status`, and `evidence_summaries.status`, validate
@@ -493,7 +493,10 @@ blocked result is stored only when the API method state-effect table permits the
 blocked commit and the response is a committed `MethodResult`. Storage must not
 store `ToolRejectedResponse`, `ToolDryRunResponse`, read-only `MethodResult`
 results, or successful `StageArtifactResult` staging results in
-`tool_invocations.response_json`.
+`tool_invocations.response_json`. `CloseTaskResult` returned by
+`harness.close_task intent=check`, including when the request has
+`dry_run=true`, is a read-only `MethodResult` with `effect_kind=read_only` and
+is not replay-stored.
 
 Task and Change Unit shaping JSON stores compact summaries and bounded lists
 only. It must not store a standalone Discovery Brief, Question Queue,
@@ -709,17 +712,38 @@ discriminator stored in that row.
 
 `ToolRejectedResponse`, `ToolDryRunResponse`, read-only results, and successful
 `StageArtifactResult` staging results are not stored in `tool_invocations`.
-Dry runs, malformed requests, pre-commit validation failures, pre-commit state
-version conflicts, read-only calls such as `harness.status` and
-`harness.close_task intent=check`, and rejected `record_run` attempts that
-create no mutation do not create current rows, change `artifact_staging.status`,
-set `consumed_by_run_id` or `promoted_artifact_id`, append `task_events`,
-promote or link artifacts, update evidence summaries, create or consume Write
-Authorizations, change `write_authorizations.status`, change close state, create
-`tool_invocations` replay rows, or increment state versions. Successful
+Read-only calls such as `harness.status` and `harness.close_task intent=check`,
+malformed requests, pre-commit validation failures, pre-commit state-version
+conflicts, `ToolDryRunResponse` previews, and rejected `record_run` attempts
+that create no mutation do not create current rows, change
+`artifact_staging.status`, set `consumed_by_run_id` or `promoted_artifact_id`,
+append `task_events`, promote or link artifacts, update evidence summaries,
+create or consume Write Authorizations, change `write_authorizations.status`,
+change close state, create `tool_invocations` replay rows, or increment state
+versions. Successful
 `harness.stage_artifact` is limited to the storage-owned temporary staging
 contract above; that staging side effect is not a Core current row, event,
 replay row, or state-version increment.
+
+### Read-only result storage effects
+
+Read-only results are response-only and not replay rows. `harness.status` and
+`harness.close_task intent=check` may compute blockers, close blockers, evidence
+summaries, artifact refs, diagnostics, and next actions for the response, but
+storage must not persist those computed values merely because the read occurred.
+
+`harness.close_task intent=check` returns `CloseTaskResult` with
+`base.effect_kind=read_only`. When the same selected operation is called with
+`dry_run=true`, it still returns `CloseTaskResult` with `base.dry_run=true` and
+`base.effect_kind=read_only`; it is not `ToolDryRunResponse`.
+
+Both `harness.close_task intent=check` forms have no storage effect: no
+`tool_invocations` replay row, no `task_event`, no close-state update, no
+artifact update or artifact link, no staged-handle consumption, no Write
+Authorization creation or consumption, and no `project_state.state_version`
+increment. `tool_invocations.response_json` stores only committed non-dry-run
+Core `MethodResult` responses whose method state-effect row creates replay, so
+read-only results are not stored as replay rows.
 
 A blocked response may persist only the blocker or other mutation the API
 method-state-effect matrix allows. It must not create the authority the blocker
@@ -756,12 +780,14 @@ project-level fields together, such as `harness.close_task intent=supersede`
 updating both `tasks.lifecycle_phase` and `project_state.active_task_id`, but it
 is still one mutation and creates exactly one project-wide version increment.
 
-`harness.status`, `harness.close_task intent=check`, dry-run calls, malformed
-requests, pre-commit validation failures, pre-commit state-version conflicts, and
+`harness.status`, `harness.close_task intent=check`, the same check with
+`dry_run=true`, `ToolDryRunResponse` preview calls, malformed requests,
+pre-commit validation failures, pre-commit state-version conflicts, and
 idempotent replay do not increment `project_state.state_version`.
 Response-branch `state_version` values always use the project-wide version: the
 resulting version after a committed mutation, or the current project-wide
-version observed for read-only, dry-run, and temporary staging responses.
+version observed for read-only results, `ToolDryRunResponse` previews, and
+temporary staging responses.
 
 The active first schema should omit `tasks.state_version`. If an implementation
 encounters a legacy or prototype `tasks.state_version` column, that value is
