@@ -236,7 +236,7 @@ Current-MVP `prepare_write` must reject or block requests that require command o
 
 `record_run` records execution or observation. It is not a second chance to authorize a write.
 
-For a compatible committed Run, `record_run` returns `RecordRunResult` as a Core committed `MethodResult` with `effect_kind=core_committed`. For a product-write Run, Core must load a compatible active Write Authorization, compare the current `project_state.state_version` and observed changed paths against `WriteAuthorization.basis_state_version` and the path-level authorized attempt to the extent the surface can honestly observe it, and consume the Write Authorization exactly once when compatible. A stale project-wide authorization basis returns `ToolRejectedResponse` with `STATE_VERSION_CONFLICT` before consumption. Missing, expired, revoked, consumed, incompatible, or insufficiently observable authorization cannot be recorded as successful consumption. Under the baseline `reference-local-mcp` profile, the `detective` label is justified only by changed-path observation after the relevant capability check has passed. Command, network, secret-access, artifact-capture, blocking, or isolation compatibility must not be marked verified under the baseline profile.
+For a compatible committed Run, `record_run` returns `RecordRunResult` as a Core committed `MethodResult` with `effect_kind=core_committed`. For a product-write Run, Core must load a compatible active Write Authorization, compare the current `project_state.state_version` and observed changed paths against `WriteAuthorization.basis_state_version` and the path-level authorized attempt to the extent the surface can honestly observe it, and consume the Write Authorization exactly once when compatible. A stale project-wide authorization basis returns `ToolRejectedResponse` with `STATE_VERSION_CONFLICT` before consumption, and the Write Authorization remains unconsumed. Missing, expired, revoked, consumed, incompatible, or insufficiently observable authorization cannot be recorded as successful consumption. Under the baseline `reference-local-mcp` profile, the `detective` label is justified only by changed-path observation after the relevant capability check has passed. Command, network, secret-access, artifact-capture, blocking, or isolation compatibility must not be marked verified under the baseline profile.
 
 `record_run` may promote staged artifacts or link persisted `ArtifactRef` values only through owner-approved artifact paths. Invalid staged handles return `ToolRejectedResponse` with the public validation path before promotion or consumption. Raw secrets, tokens, forbidden sensitive logs, arbitrary caller paths, or untrusted bytes must be rejected, redacted, represented as omitted/blocked, or routed through an approved safe handle rather than stored to make evidence look complete.
 
@@ -250,34 +250,49 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 `close_task` is the single completion decision point. Agent summaries, final reports, acceptance-looking chat, projections, Evals, QA notes, and evidence displays may inform close, but they do not close a Task by themselves.
 
-`intent=complete` uses a deterministic blocker calculation. Core may collect more than one blocker, but the response order and primary close-blocker basis follow this matrix:
+`close_task` first performs close preflight rejection checks. These checks happen before any `CloseBlocker` creation, close matrix evaluation, replay row creation, Write Authorization consumption, or staged handle consumption. A preflight failure returns `ToolRejectedResponse` with `effect_kind=no_effect`; it is not `CloseTaskResult` and not `CloseTaskResult(close_state=blocked)`. Close preflight rejection checks include:
+
+- `expected_state_version` mismatch against current `project_state.state_version`.
+- `idempotency_key` reuse with a different request hash.
+- Stale `WriteAuthorization.basis_state_version` against current `project_state.state_version`.
+- Core state cannot be read before close matrix evaluation.
+- Request identity failure before a valid Project/Task can be selected.
+- Local access or capability failure before close matrix evaluation.
+
+All close preflight rejections have no state effect: no `CloseBlocker`, no `task_event` or `task_events` append, no `tool_invocations` replay row, no `close_state` mutation, no Write Authorization consumption, no staged handle consumption, no artifact effect, no evidence summary update, and no `project_state.state_version` increment. `STATE_VERSION_CONFLICT` belongs only to preflight rejection for `close_task`; it must not appear as `CloseBlocker.code`, in the `write_compatibility` or `recovery` matrix rows, or in any committed blocked close result.
+
+After preflight succeeds, `intent=check` is a read-only close-matrix evaluation. It may compute the current complete-readiness matrix, close blockers, evidence summary, artifact refs, and next actions for the response only. If the request also has `dry_run=true`, the response branch remains `CloseTaskResult` with `base.dry_run=true` and `base.effect_kind=read_only`. Both forms have no state effect: no `close_state` mutation, no `task_events`, no replay row, no artifact update or staged-handle consumption, no Write Authorization creation or consumption, and no `project_state.state_version` increment.
+
+After preflight succeeds, `intent=complete` uses the deterministic complete close matrix. Core may collect more than one blocker, but the response order and primary close-blocker basis follow this matrix:
 
 | Order | Check | Blocking result when the check fails |
 |---:|---|---|
-| 1 | Task existence and lifecycle validity | `task` blocker when the Task is missing, belongs to a different project, is already terminal, or cannot enter a complete transition. |
+| 1 | Selected Task lifecycle validity | `task` blocker when the selected same-project Task is already terminal or cannot enter a complete transition. Missing, unreadable, or wrong-project Project/Task identity is preflight rejection, not a close blocker. |
 | 2 | Open, interrupted, or violation Run check | `open_run` blocker when a Run remains open, interrupted, in violation, incompatible, or otherwise unrepaired for the close basis. |
 | 3 | Scope, Change Unit, and `completion_policy` check | `scope` blocker when active scope, active Change Unit, acceptance criteria, or the applicable `CompletionPolicy` is missing, stale, or incompatible. |
 | 4 | Unresolved user-owned judgment check | `user_judgment` blocker when a required product, technical, scope, or other non-sensitive active user-owned judgment is pending, deferred without coverage, rejected, blocked, stale, superseded, or incompatible. |
 | 5 | Unresolved sensitive approval check | `sensitive_approval` blocker when required sensitive-action approval is missing, denied, expired, stale, or incompatible. |
-| 6 | Write Authorization and Run compatibility check | `write_compatibility` blocker when a required Write Authorization or product-write Run is missing, stale, invalid, consumed by the wrong Run, or incompatible with the active Change Unit, paths, baseline, or observed write. |
-| 7 | Baseline and surface capability check | `baseline` or `surface_capability` blocker when the baseline or registered local surface cannot honestly support the close claim or required guarantee display. |
+| 6 | Write Authorization and Run compatibility check | `write_compatibility` blocker only for current-state semantic incompatibility after freshness is established: missing, unavailable, invalid, already consumed, scope-incompatible, path-incompatible, baseline-incompatible, or observed-write-incompatible authorization/run conditions. Stale `WriteAuthorization.basis_state_version` is preflight rejection, not this row. |
+| 7 | Baseline and surface capability check | `baseline` or `surface_capability` blocker when, after local access preflight succeeds, the baseline or verified local surface capability cannot honestly support the close claim or required guarantee display. Current local access failure is preflight rejection, not a close blocker. |
 | 8 | Evidence sufficiency check | `evidence` blocker when required evidence is insufficient under the active `CompletionPolicy`. |
 | 9 | Artifact availability check | `artifact_availability` blocker when a close-relevant `ArtifactRef` is missing, unavailable, integrity-failed, blocked beyond the allowed safe notice, or otherwise unusable. |
 | 10 | Final acceptance check | `final_acceptance` blocker when `CompletionPolicy.final_acceptance_required=true` and compatible `final_acceptance` is missing, rejected, stale, or not tied to the visible close basis. |
 | 11 | Residual risk visibility check | `residual_risk_visibility` blocker when close-affecting residual risk is known but not visible enough for the user to judge. |
 | 12 | Residual risk acceptance check | `residual_risk_acceptance` blocker when a close-affecting visible residual risk requires compatible `residual_risk_acceptance` and that acceptance is missing, rejected, stale, or incompatible. |
-| 13 | Recovery constraint check | `recovery` blocker when replay, corruption, local access recovery, unresolved blocker state, or another repair constraint must be addressed before close. |
+| 13 | Recovery constraint check | `recovery` blocker when current state can be read, preflight has succeeded, and unresolved repair or recovery state, corruption, unresolved blocker state, or another repair constraint must be handled before close. Idempotency request hash conflict and state-version conflict are preflight rejections, not recovery blockers. |
 | 14 | Close transition or blocked response | If no blocker remains, commit the complete transition; otherwise return `CloseTaskResponse.close_state=blocked` and leave the Task open. |
 
 The matrix never lets a later check satisfy an earlier one. Final acceptance and residual-risk acceptance cannot replace required evidence, cannot make an unsupported `EvidenceCoverageItem` sufficient, and cannot substitute for a required artifact or state ref.
 
+Idempotency request hash conflict, stale `expected_state_version`, and stale `WriteAuthorization.basis_state_version` are outside the complete close matrix. They are preflight rejections, not semantic close blockers.
+
 Required evidence sufficiency is deterministic. When `CompletionPolicy.evidence_required=true`, `EvidenceSummary.status=sufficient` is valid only if every `EvidenceCoverageItem` with `required_for_close=true` is present and has `coverage_state=supported` or `not_applicable`. Any required item that is `unsupported`, `partial`, `stale`, or `blocked`, or any omitted required item that leaves the coverage set incomplete, must produce an `evidence` close blocker. Artifact availability is checked separately: an artifact can be available without making evidence sufficient, and missing or unusable close-relevant artifacts can create `artifact_availability` blockers in addition to evidence blockers.
 
-`intent=check` is a read-only close-matrix evaluation. It may compute the current complete-readiness matrix, close blockers, evidence summary, artifact refs, and next actions for the response. If the request also has `dry_run=true`, the response branch remains `CloseTaskResult` with `base.dry_run=true` and `base.effect_kind=read_only`. Both forms have no state effect: no `close_state` mutation, no `task_events`, no replay row, no artifact update or staged-handle consumption, no Write Authorization creation or consumption, and no `project_state.state_version` increment.
+After preflight succeeds, `intent=cancel` and `intent=supersede` evaluate only transition checks for that terminal path. They are not successful completion and do not require evidence sufficiency, final acceptance, or residual-risk acceptance. Their semantic blockers are limited to conditions that make the terminal transition invalid, such as the selected Task lifecycle, cancellation or supersession conflict, unresolved recovery constraints, and for `intent=supersede`, a missing or invalid open same-project `superseding_task_id` when the active pointer would move.
 
-Branch identity is part of close authority. A read-only check returns `CloseTaskResult` as a read-only `MethodResult` with `effect_kind=read_only`; `intent=check` must not return `ToolDryRunResponse`, including when `dry_run=true`. A committed blocked close result, including a committed blocked `intent=complete`, returns `CloseTaskResult` with `close_state=blocked` only when Core commits the close-matrix result under the method state-effect contract; the Task remains open. A pre-commit failure before any close-matrix or terminal-close commit returns `ToolRejectedResponse` with `effect_kind=no_effect`, not a success-shaped `CloseTaskResult`. `ToolDryRunResponse` is limited to valid dry-run previews of state-changing close intents: `intent=complete`, `intent=cancel`, and `intent=supersede`. Those mutation dry-run previews may preview terminal or committed blocked close effects, but they do not change Task lifecycle, close fields, blockers, events, replay rows, artifacts, staged-handle consumption, Write Authorization creation or consumption, or `project_state.state_version`.
+After preflight succeeds, `dry_run=true` on `intent=complete`, `intent=cancel`, or `intent=supersede` returns `ToolDryRunResponse` when the request is otherwise valid and previewable. The preview may describe terminal or committed blocked close effects, candidate close blockers, and next actions, but it does not change Task lifecycle, close fields, blockers, events, replay rows, artifacts, staged-handle consumption, Write Authorization creation or consumption, or `project_state.state_version`.
 
-`intent=cancel` and `intent=supersede` are terminal paths, but they are not successful completion. They do not require evidence sufficiency, final acceptance, or residual-risk acceptance. They still require valid task identity, valid lifecycle, compatible local access, and a transition that does not hide unresolved recovery constraints. `intent=supersede` also requires `superseding_task_id` to name a valid open same-project Task before that Task can become active.
+For `dry_run=false` state-changing close intents after preflight succeeds, Core either commits the terminal transition or returns a committed blocked close result allowed by the method state-effect contract. `CloseTaskResult(close_state=blocked)` is only for committed close blockers, meaning semantic blockers found after preflight succeeds. It is not the response for stale state, stale authorization basis, idempotency request hash conflict, unreadable Core state, request identity failure, or local access/capability failure before matrix evaluation. A committed blocked close leaves the Task open.
 
 A committed terminal close is one public state mutation. `harness.close_task intent=supersede` may update both the old Task lifecycle/result fields and `project_state.active_task_id`, but it still increments `project_state.state_version` exactly once.
 
@@ -313,12 +328,12 @@ Close readiness uses only the active `CloseBlocker.category` values owned by [AP
 
 | Active category | Core meaning |
 |---|---|
-| `task` | Missing, incompatible, already terminal, or otherwise unusable Task state. |
+| `task` | After Project/Task identity preflight succeeds, the selected Task is incompatible, already terminal, or otherwise unusable for the requested transition. |
 | `open_run` | A Run is still open, unsafe, incompatible, or not recorded in a way close can rely on. |
 | `scope` | Missing active scope, out-of-scope work, or an active Change Unit mismatch. |
 | `user_judgment` | A required product, technical, scope, or other active user-owned judgment is unresolved. |
 | `sensitive_approval` | A required sensitive-action approval is missing, denied, expired, or incompatible with the attempted action. |
-| `write_compatibility` | Required Write Authorization or product-write Run compatibility is missing, stale, invalid, consumed, or incompatible. |
+| `write_compatibility` | Current-state semantic incompatibility after freshness is established: required Write Authorization or product-write Run compatibility is missing, unavailable, invalid, already consumed, or incompatible with scope, path, baseline, or observed write. It does not cover stale `WriteAuthorization.basis_state_version`. |
 | `baseline` | The baseline needed for compatibility or close is stale, missing, or mismatched. |
 | `surface_capability` | The connected surface cannot honestly support the required active capability or guarantee display. |
 | `evidence` | Required evidence coverage is missing or a required `EvidenceCoverageItem` is `unsupported`, `partial`, `stale`, or `blocked` instead of `supported` or `not_applicable` for the close path. |
@@ -328,7 +343,7 @@ Close readiness uses only the active `CloseBlocker.category` values owned by [AP
 | `residual_risk_acceptance` | A visible close-relevant residual risk still requires compatible user acceptance. |
 | `cancellation` | Cancellation intent or cancellation state is incompatible with the requested transition. |
 | `supersession` | Supersession intent, replacement Task validity, or active-task pointer handling conflicts with the requested transition. |
-| `recovery` | Recovery, replay, corruption, local access, or other repair constraints must be addressed before the transition. |
+| `recovery` | Unresolved repair or recovery state that remains after current state is readable and preflight succeeds. It does not cover idempotency request hash conflict or state-version conflict. |
 
 Conceptual issues such as design quality, future verification, future Manual QA, waiver handling, or Autonomy Boundary mismatch must map to one of those active categories when they are close-relevant. They do not create extra current MVP close blocker categories or independent close gates.
 
