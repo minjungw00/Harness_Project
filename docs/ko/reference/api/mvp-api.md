@@ -45,7 +45,7 @@
 | `harness.intake` | 상태 변경 | 예. 커밋하지 않음 | `dry_run=false`에는 필요 | `dry_run=false`에는 필요 | 예. 이 메서드가 쓰기 준비 경로 대신 구체화/차단 사유 상태를 커밋할 때 | 예. 커밋 시 | 예. 첫 커밋 시 | 예. 커밋 시 |
 | `harness.status` | 읽기 전용 | 예. 읽기 전용 결과 반환 | 필요 없음 | 필요 없음. `null` 가능 | 아니요. 차단 사유는 계산된 응답 필드일 뿐입니다. | 아니요 | 아니요 | 아니요 |
 | `harness.update_scope` | 상태 변경 | 예. 커밋하지 않음 | `dry_run=false`에는 필요 | `dry_run=false`에는 필요 | 예. 메서드가 소유한 차단 사유 또는 현재 행 갱신에 한정합니다. 충족되지 않은 선행조건이 범위 권한을 만들지는 않습니다. | 예. 커밋 시 | 예. 첫 커밋 시 | 예. 커밋 시 |
-| `harness.prepare_write` | 상태 변경 | 예. 커밋하지 않음 | `dry_run=false`에는 필요 | `dry_run=false`에는 필요 | 예. 커밋된 `blocked`, `approval_required`, `decision_required` 차단 사유 갱신에 한정합니다. 소비 가능한 Write Authorization은 만들지 않습니다. | 예. 커밋된 `allowed` 또는 커밋된 차단 사유 갱신 시 | 예. 커밋된 `allowed` 또는 커밋된 차단 사유 갱신의 첫 커밋 시 | 예. 커밋된 `allowed` 또는 커밋된 차단 사유 갱신 시 |
+| `harness.prepare_write` | 상태 변경 | 예. 커밋하지 않음 | `dry_run=false`에는 필요 | `dry_run=false`에는 필요 | 예. 커밋된 `blocked`, `approval_required`, `decision_required` write decision 이유 갱신에 한정합니다. 소비 가능한 Write Authorization은 만들지 않습니다. | 예. 커밋된 `allowed` 또는 커밋된 write decision 이유 갱신 시 | 예. 커밋된 `allowed` 또는 커밋된 write decision 이유 갱신의 첫 커밋 시 | 예. 커밋된 `allowed` 또는 커밋된 write decision 이유 갱신 시 |
 | `harness.stage_artifact` | 임시 아티팩트 유틸리티. Core 상태 변경 아님 | 예. 스테이징 미리보기 | 필요 없음 | 필요 없음. `null` 가능 | 아니요. 유효하지 않은 스테이징 요청은 Core 변경 없이 실패합니다. | 아니요 | 아니요 | 아니요 |
 | `harness.record_run` | 상태 변경 | 예. 커밋하지 않음 | `dry_run=false`에는 필요 | `dry_run=false`에는 필요 | 예. 호환되는 Run 또는 Run 관련 차단 사유 상태를 기록할 때만 허용합니다. 거부된 시도는 커밋 전 실패입니다. | 예. 커밋 시 | 예. 첫 커밋 시 | 예. 커밋 시 |
 | `harness.request_user_judgment` | 상태 변경 | 예. 커밋하지 않음 | `dry_run=false`에는 필요 | `dry_run=false`에는 필요 | 별도 차단 응답 커밋은 없습니다. 대기 중인 판단 경로를 커밋하거나 커밋 전 실패가 됩니다. | 예. 커밋 시 | 예. 첫 커밋 시 | 예. 커밋 시 |
@@ -306,14 +306,18 @@ PrepareWriteResult:
   write_authorization: WriteAuthorizationSummary | null
   authorization_effect: none | would_create | created | returned
   active_user_judgment_refs: StateRecordRef[]
-  blocked_reasons: CloseBlocker[]
+  write_decision_reasons: WriteDecisionReason[]
   user_judgment_candidate: UserJudgmentCandidate | null
   guarantee_display: GuaranteeDisplay
 ```
 
-- **상태 효과:** 커밋된 `dry_run=false` `decision=allowed`는 활성 경로 수준 `AuthorizedAttemptScope`에 대해 `write_authorizations.status=active` 행 하나를 만들고, 이벤트를 추가하고, 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올립니다. 커밋된 `blocked`, `approval_required`, `decision_required` 응답은 차단 사유를 업데이트하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 소비 가능한 Write Authorization은 만들면 안 됩니다. `dry_run`과 커밋 전 실패는 현재 기록, Write Authorization, `blockers` 행, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
-- **커밋된 차단 결정:** `decision=blocked`, `decision=approval_required`, `decision=decision_required`는 메서드별 상태 효과 표가 차단 커밋을 허용할 때만 커밋된 `PrepareWriteResult` 값입니다. 커밋 전 거절을 대신하지 않습니다.
-- **상태 버전 충돌:** 프로젝트 전체 상태 버전 불일치는 항상 `ToolRejectedResponse.errors`에 담기는 커밋 전 `STATE_VERSION_CONFLICT`입니다. `PrepareWriteResult.decision` 값이 아니며, Write Authorization이나 차단 사유 커밋을 만들지 않습니다.
+- **응답 분기 계약:** 커밋 전 실패는 `ToolRejectedResponse` 거절 응답을 반환합니다. 유효한 `dry_run` 미리보기는 `ToolDryRunResponse`를 반환합니다. 실제 메서드 결과는 `PrepareWriteResult`를 반환합니다.
+- **prepare_write 판단 사유:** `PrepareWriteResult.write_decision_reasons`는 prepare_write 판단 사유, 즉 write decision 이유를 담습니다. `decision=allowed`이면 `[]`입니다. `decision=blocked`, `decision=approval_required`, `decision=decision_required`이면 비어 있으면 안 됩니다. 이 사유는 `WriteDecisionReason` 값이며, `CloseBlocker`도 아니고 닫기 차단 사유 행렬 결과도 아닙니다.
+- **닫기 경계:** `harness.prepare_write`는 `CloseBlocker`를 만들지 않고, `close_state`를 바꾸지 않고, close matrix를 실행하지 않고, `close_task` 재실행 행을 만들지 않습니다.
+- **커밋 전 거절 경계:** 오래된 상태, 오래된 authorization basis, 멱등성 `request_hash` 충돌, 요청 검증 실패, 로컬 접근 실패, 판단 평가 전 Core 사용 불가는 `ToolRejectedResponse` 거절 응답 경우입니다. `write_decision_reasons`가 아닙니다.
+- **상태 효과:** 커밋된 `dry_run=false` `decision=allowed`는 활성 경로 수준 `AuthorizedAttemptScope`에 대해 `write_authorizations.status=active` 행 하나를 만들고, 이벤트를 추가하고, 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올립니다. 커밋된 `blocked`, `approval_required`, `decision_required` 응답은 write decision 이유 상태를 갱신하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 소비 가능한 Write Authorization은 만들면 안 됩니다. `dry_run`과 커밋 전 실패는 현재 기록, Write Authorization, write decision 이유 갱신, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
+- **커밋된 차단 결정:** `decision=blocked`, `decision=approval_required`, `decision=decision_required`는 메서드별 상태 효과 표가 차단 커밋을 허용할 때만 커밋된 `PrepareWriteResult` 값입니다. 커밋 전 거절을 대신하지 않으며, 사유는 `write_decision_reasons`로 반환합니다.
+- **상태 버전 충돌:** 프로젝트 전체 상태 버전 불일치는 항상 `ToolRejectedResponse.errors`에 담기는 커밋 전 `STATE_VERSION_CONFLICT`입니다. `PrepareWriteResult.decision` 값이 아니며, Write Authorization이나 write decision 이유 커밋을 만들지 않습니다.
 - **`dry_run` 분기:** 이 상태 효과가 있는 메서드에서는 요청이 그 외에는 유효하고 미리보기 가능할 때 `dry_run=true`가 `ToolDryRunResponse`를 반환합니다. `DryRunSummary`는 `dry_run=false` 경로가 Write Authorization을 만들지, 기존 권한을 사용할지, 만들지 않을지를 미리 보여 줄 수 있습니다. 하지만 소비 가능한 Write Authorization을 만들지 않고 실제 `write_authorization_ref`를 반환하면 안 됩니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `write_authorizations`, `blockers`, `project_state` 상태 시계, `task_events`, `tool_invocations`.
