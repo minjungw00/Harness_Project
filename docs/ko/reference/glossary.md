@@ -30,7 +30,7 @@
 | 잔여 위험 | 닫기에 영향을 주는 알려진 남은 불확실성, 확인하지 못한 조건, 한계, 절충입니다. | [Core Model](core-model.md) |
 | 잔여 위험 수락 | 활성 닫기 경로가 요구할 때 알려진 잔여 위험을 받아들이는 사용자 소유 판단입니다. 최종 수락, later/reserved QA 면제 판단, 검증 위험 수락과 구분됩니다. 정확한 스키마 값은 `residual_risk_acceptance`로 유지합니다. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
 | 닫기 가능 여부 | 작업을 지금 정직하게 닫을 수 있는지와 닫기 전에 남은 일을 보여주는 상태입니다. | [Core Model](core-model.md) |
-| 닫기 차단 사유 | 진행, 쓰기, 닫기를 정직하게 계속할 수 없게 하는 구체적인 이유입니다. 해결하거나 유효하게 미뤄야 합니다. | [Core Model](core-model.md) |
+| 닫기 차단 사유 | 닫기 가능 여부를 평가한 뒤에도 남는 닫기 전용의 구체적인 이유입니다. 닫기 전에 해결하거나 유효하게 미뤄야 합니다. | [Core Model](core-model.md) |
 | 다음 안전한 행동 | 해결되지 않은 범위, 판단, 증거, QA, 검증, 수락, 위험을 숨기지 않고 진행할 수 있는 다음 행동입니다. | [API Schema Core](api/schema-core.md) |
 | 권한 경계 | 무엇이 하네스 권한을 만들고 무엇이 정보로만 쓰이는지를 나누는 선입니다. 채팅, 상태 보기, 보고서는 권한이 아닙니다. | [런타임 경계](runtime-boundaries.md) |
 | 파생 표시 | 상태 카드나 상태 보기처럼 담당 기록에서 렌더링된 사용자 표시입니다. Core가 소유한 상태를 대체하지 않습니다. | [상태 보기와 템플릿](projection-and-templates.md) |
@@ -73,6 +73,7 @@
 | `ToolRejectedResponse` | 커밋 전 실패에 쓰는 응답 분기입니다. `response_kind=rejected`, `effect_kind=no_effect`를 가지며 메서드별 결과 필드를 담지 않습니다. 재실행 행 없음, 상태 버전 증가 없음, 스테이징된 핸들 소비 없음, Write Authorization 생성 또는 소비 없음이 이 분기의 규칙입니다. | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
 | `ToolDryRunResponse` | 선택된 동작이 Core 커밋이나 저장소 소유 스테이징 부작용을 만들 수 있을 때 쓰는 유효한 `dry_run` 미리보기 응답입니다. 모든 `dry_run=true` 요청의 응답이 아닙니다. `response_kind=dry_run`, `effect_kind=no_effect`를 가지며 메서드별 결과 필드를 담지 않습니다. 아직 존재하지 않는 기록의 실제 생성 ref, 재실행 행, 상태 버전 증가, 스테이징된 핸들 소비, Write Authorization 생성 또는 소비를 만들지 않습니다. | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [MVP API](api/mvp-api.md) |
 | `ToolError` | 공개 오류 식별자, 재시도 안내, 구조화된 세부정보를 담는 공통 오류 형태입니다. 정확한 공개 코드와 우선순위는 API Errors가 담당합니다. | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
+| `STATE_VERSION_CONFLICT` | 현재 MVP에서 프로젝트 전체 최신성 충돌과 멱등성 충돌에 쓰는 공개 `ErrorCode`입니다. 오래된 `project_state.state_version` 기대값이나 멱등성 request hash 충돌이 여기에 속합니다. `effect_kind=no_effect`(상태 효과 없음)인 `ToolRejectedResponse` 거절 응답으로 반환되며, 커밋된 닫기 차단 사유가 아니고 `CloseBlocker.code`가 될 수 없습니다. | [API Errors](api/errors.md), [Storage](storage.md) |
 | `EventRef` | 실제 커밋 이벤트가 있는 결과 분기에서 쓰는 공통 이벤트 참조 형태입니다. `ToolRejectedResponse`와 `ToolDryRunResponse` 분기는 `events=[]`를 씁니다. | [API Schema Core](api/schema-core.md) |
 | `response_kind` | 응답 분기를 구분하는 필드입니다. 활성 값은 실제 메서드 결과, 거절 응답, `dry_run` 미리보기를 나눕니다. | [API Schema Core](api/schema-core.md) |
 | `effect_kind` | 응답의 상태 효과를 분류하는 필드입니다. 활성 값은 읽기 전용 결과, Core 커밋, 임시 스테이징, 상태 효과 없음 분기를 나눕니다. 선택 동작이 읽기 전용이면 `effect_kind=read_only`가 `dry_run=true`와 함께 나타날 수 있습니다. 메서드별 상태 효과는 MVP API가 담당합니다. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md) |
@@ -94,7 +95,7 @@
 | `judgment_kind` | 사용자 판단 종류의 기준 필드입니다. 값은 정확히 유지하고 지역화된 라벨로 바꾸지 않습니다. | [API Schema Core](api/schema-core.md) |
 | `presentation` | 활성 간결한 프롬프트/세부 표시 필드입니다. `short`는 활성이고 `full`은 이후 전체 형식 표시입니다. | [API Schema Core](api/schema-core.md), [Later](../later/index.md) |
 | `CloseTaskResponse.close_state` | `harness.close_task`가 돌려주는 응답 수준의 닫기 상태입니다. 값은 `ready`, `blocked`, `closed`, `cancelled`, `superseded`입니다. 지속 저장되는 `Task.lifecycle_phase`와는 별도입니다. | [MVP API](api/mvp-api.md) |
-| `CloseBlocker` | 구조화된 닫기/진행 차단 결과입니다. 산문 보고 문구만으로는 차단 결과가 아닙니다. | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
+| `CloseBlocker` | 닫기 차단 사유 행렬이 닫기 가능 여부를 평가할 만큼 실행된 뒤 만들어지는 구조화된 의미적 닫기 차단 사유입니다. 커밋된 의미 차단 사유를 나타내며, 닫기 사전 확인의 커밋 전 실패나 거절 응답에 쓰지 않습니다. `STATE_VERSION_CONFLICT`는 `CloseBlocker.code`가 될 수 없습니다. | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Core Model](core-model.md) |
 | `ValidatorResult` | 구조화된 validator 출력입니다. 활성 안정 validator ID: `surface_capability_check`. | [API Schema Core](api/schema-core.md) |
 | 민감 범주 | `auth_change`, `destructive_write`, `privacy_or_pii_change`, `data_export`, `policy_override` 같은 정확한 값입니다. | [API Schema Core](api/schema-core.md) |
 | 공개 오류 코드 | `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `PROJECTION_STALE` 같은 안정적인 공개 오류입니다. | [API Errors](api/errors.md) |

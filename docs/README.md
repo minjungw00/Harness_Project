@@ -53,6 +53,10 @@ The Reference Index routes active owner documents for the public `ErrorCode` con
 
 참조 색인은 공개 `ErrorCode` 계약과 `STATE_VERSION_CONFLICT`, 프로젝트 전체 `project_state.state_version`, 요청 수준 `VerifiedSurfaceContext.access_class`, `run_recording`, `artifact_registration`, `artifact_read`, `harness.record_run`, `harness.stage_artifact`, `StagedArtifactHandle` 승격, `existing_artifact` / `ArtifactRef` 영속 연결, 별도 아티팩트 본문 읽기, 확인된 로컬 접점 접근, `SensitiveActionScope`, 제품 파일 쓰기 범위인 `AuthorizedAttemptScope`, `CompletionPolicy`, `EvidenceSummary`, `close_task` 차단 사유, 읽기 전용 Projection, 역량 프로필, 탐지형 보장 조건, 사용자 소유 판단, 구체화 준비 상태, 오류 코드와 `access_class` 일관성 문서 점검, 번역 규칙의 활성 담당 문서로 안내합니다.
 
+For close/freshness questions, Reference routes `STATE_VERSION_CONFLICT` and preflight rejection to API Errors, `harness.close_task` response branches and the close matrix contract to MVP API, close matrix ordering and semantic `CloseBlocker` meaning to Core Model, and rejected close effects versus committed blocked close effects to Storage.
+
+닫기와 최신성 질문에서는 `STATE_VERSION_CONFLICT`와 사전 확인 거절 의미는 API Errors가, `harness.close_task` 응답 분기와 닫기 차단 사유 행렬 계약은 MVP API가, 닫기 차단 사유 행렬 순서와 의미적 `CloseBlocker` 뜻은 Core Model이, 거절된 닫기 효과와 커밋된 차단 닫기 효과의 차이는 Storage가 담당합니다.
+
 ## Active MVP Boundary / 현재 MVP 경계
 
 The active MVP is closed to plain-language intake and Task creation, `harness.update_scope`, user judgment recording, sensitive approval recording, path-level `harness.prepare_write` and Write Authorization, `harness.record_run` with `access_class=run_recording`, artifact staging through `harness.stage_artifact` with `access_class=artifact_registration`, staged artifact promotion after `StagedArtifactHandle` provenance and scope validation, persistent `existing_artifact` / `ArtifactRef` linking, separate artifact body reads with `access_class=artifact_read`, `EvidenceSummary`, `harness.close_task` blocker calculation, read-time read-only status/projection output, verified local surface access through a registered surface, cooperative guarantee display, and detective guarantee display only after the relevant capability check has passed.
