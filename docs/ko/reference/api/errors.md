@@ -137,7 +137,9 @@ artifact_input_error:
 
 `harness.status`와 `harness.close_task intent=check`를 포함한 읽기 전용 호출은 차단 사유나 닫기 차단 사유를 계산해 반환할 수 있습니다. 그 차단 사유는 응답 필드일 뿐입니다. Core는 읽기를 이유로 차단 사유를 저장하거나, 이벤트를 추가하거나, `tool_invocations` 재실행 행을 만들거나, 상태 버전을 올리면 안 됩니다.
 
-`dry_run=true`는 항상 기준 권한이 아닙니다. 검증하고 진단, 후보 차단 사유, 변경 예상 요약을 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 커밋된 `tool_invocations` 재실행 행, 상태 버전 증가를 만들거나 업데이트하면 안 됩니다. 이후 비 `dry_run` 호출은 현재 상태를 기준으로 다시 검증해야 합니다.
+`dry_run=true`는 항상 기준 권한이 아닙니다. 요청 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 dry run은 `ToolDryRunResponse`와 `DryRunSummary`를 반환합니다. 진단, 후보 차단 사유, `DryRunSummary.would_errors`, `DryRunSummary.next_actions`, 설명용 `PlannedEffect` 예상 효과를 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 커밋된 `tool_invocations` 재실행 행, 상태 버전 증가를 만들거나 업데이트하면 안 됩니다. `PlannedEffect`는 미리보기 정보일 뿐이며 아직 존재하지 않는 기록의 가짜 생성 ref를 담으면 안 됩니다.
+
+`dry_run=true` 요청 자체가 미리보기 생성 전에 요청 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다. 이후 비 `dry_run` 호출은 현재 상태를 기준으로 다시 검증해야 합니다.
 
 <a id="idempotency"></a>
 

@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference for the active current MVP method-name set, shared API shapes, and closed schema value sets: the tool envelope, response branches, `ArtifactRef`, `StateRecordRef`, `ShapingReadiness`, `UserJudgment`, Write Authorization summary, `CompletionPolicy`, evidence summary, run summary, close blockers, next-action summary, and current MVP enum values.
+Use this reference for the active current MVP method-name set, shared API shapes, and closed schema value sets: the tool envelope, response branches, `DryRunSummary`, `PlannedEffect`, `ArtifactRef`, `StateRecordRef`, `ShapingReadiness`, `UserJudgment`, Write Authorization summary, `CompletionPolicy`, evidence summary, run summary, close blockers, next-action summary, and current MVP enum values.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server. Future schema candidates stay in [Later Candidate Index](../../later/index.md#later-schema-candidates).
 
@@ -191,12 +191,23 @@ ToolDryRunResponse:
   events: []
   dry_run_summary: DryRunSummary
 
+ActiveMethodName: harness.intake | harness.status | harness.update_scope | harness.prepare_write | harness.stage_artifact | harness.record_run | harness.request_user_judgment | harness.record_user_judgment | harness.close_task
+
 DryRunSummary:
-  method: string
-  summary: string
-  would_create: string[]
-  would_update: string[]
-  would_return: string[]
+  method: ActiveMethodName
+  would_commit: boolean
+  would_effect_kind: core_committed | staging_created | no_effect
+  primary_would_result: string | null
+  would_create: PlannedEffect[]
+  would_update: PlannedEffect[]
+  would_blockers: CloseBlocker[]
+  would_errors: ToolError[]
+  next_actions: NextActionSummary[]
+
+PlannedEffect:
+  record_kind: task | change_unit | run | write_authorization | user_judgment | evidence_summary | blocker | artifact_staging | artifact | artifact_link
+  effect: create | update | consume | promote | link | close | mark_blocked
+  description: string
 
 ToolError:
   code: ErrorCode
@@ -218,7 +229,11 @@ EventRef:
 
 For `ToolRejectedResponse.state_version`, if Core could read the current project state before rejecting, the value is the observed project-wide `project_state.state_version`. If Core or the local MCP surface is unavailable before project state can be read, `state_version` may be `null`.
 
-`ToolDryRunResponse` is the response for a `dry_run=true` call that reports what the method would validate or change without committing it. It has `effect_kind=no_effect`, `events=[]`, and no method-specific success fields. It creates no current record, event, artifact, evidence summary, Write Authorization, close state, `tool_invocations` replay row, or `state_version` increment. `DryRunSummary` names would-create, would-update, or would-return items only as explanatory dry-run output; those strings are not created records, event refs, artifact refs, or authority.
+`ToolDryRunResponse` is returned only for a valid `dry_run=true` call whose request shape, local access verification, capability verification, and reachable state/preconditions can be evaluated enough to produce a preview. It has `effect_kind=no_effect`, `events=[]`, and no method-specific success fields. It creates no current record, event, artifact, evidence summary, Write Authorization, close state, `tool_invocations` replay row, or `state_version` increment. `ToolDryRunResponse.errors` is `[]`; previewed would-be failures belong in `DryRunSummary.would_errors`.
+
+If a `dry_run=true` request itself fails validation, local access verification, capability verification, or state lookup before Core can produce a preview, the response is `ToolRejectedResponse` with `dry_run=true` and `effect_kind=no_effect`.
+
+`DryRunSummary` is descriptive preview data only. `PlannedEffect` items identify the kind of record and effect that would be attempted, plus a human-readable description. They do not contain real generated refs for records that do not exist yet, and they must not invent `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, event refs, artifact refs, or authority.
 
 `ToolError` keeps public error identity, retry guidance, and structured details. `EventRef` appears only in result branches that actually have event refs; rejected and dry-run branches always use `events=[]`.
 
@@ -371,7 +386,7 @@ Exactly one source field must match `source_kind`: `staged_artifact_handle` for 
 
 `created_by_surface_id` and `created_by_surface_instance_id` are server-recorded provenance fields. `harness.stage_artifact` records them from the successful request's `VerifiedSurfaceContext`; the caller does not choose them in `StageArtifactRequest`, and a user-provided object with those fields is not proof of authority. When `ArtifactInput` submits a `StagedArtifactHandle` back to `harness.record_run`, the server resolves it against the storage-owned staging record and requires the current verified `surface_id` and `surface_instance_id` to match `created_by_surface_id` and `created_by_surface_instance_id`. The active MVP does not support cross-surface staged artifact handoff. A handle with the right shape is still rejected when `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, expiration, consumed status, `sha256`, `size_bytes`, or `redaction_state` do not match the stored staged artifact and request expectations.
 
-`StageArtifactResult` is the successful result branch for `harness.stage_artifact`; its `base.response_kind` is `result` and its `base.effect_kind` is `staging_created`. Validation failure, local surface failure, capability failure, or any request that cannot safely create a staged handle returns `ToolRejectedResponse` and does not include `staged_artifact_handle`. A dry run returns `ToolDryRunResponse` and also does not include `staged_artifact_handle`.
+`StageArtifactResult` is the successful result branch for `harness.stage_artifact`; its `base.response_kind` is `result` and its `base.effect_kind` is `staging_created`. Validation failure, local surface failure, capability failure, or any request that cannot safely create a staged handle returns `ToolRejectedResponse` and does not include `staged_artifact_handle`. A valid dry run returns `ToolDryRunResponse` and also does not include `staged_artifact_handle`.
 
 `harness.stage_artifact` may create a temporary `StagedArtifactHandle`, but it is not a Core state transition by itself. It creates no evidence, satisfies no gate, updates no evidence summary, and cannot make `harness.close_task` pass. `StagedArtifactHandle` is not a bearer token that any local caller may use. `harness.record_run` is the only active path that can consume a valid staged handle and promote it to a persistent `ArtifactRef`; that promotion is authorized by `run_recording` plus same-project, same-Task, server-recorded `created_by_surface_id` / `created_by_surface_instance_id` against current verified `surface_id` / `surface_instance_id`, unexpired, unconsumed, integrity-compatible handle checks. Projection files, generated Markdown, chat text, Product Repository files, and agent memory cannot create or refresh staged-handle provenance.
 
@@ -680,9 +695,13 @@ These values are active current MVP schema values. Method-level capability and a
 | Field | Current MVP values |
 |---|---|
 | Active method set | `harness.intake`, `harness.status`, `harness.update_scope`, `harness.prepare_write`, `harness.stage_artifact`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
+| `ActiveMethodName` and `DryRunSummary.method` | same values as the active method set |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent` |
 | `response_kind` | `result`, `rejected`, `dry_run` |
 | `effect_kind` | `read_only`, `core_committed`, `staging_created`, `no_effect` |
+| `DryRunSummary.would_effect_kind` | `core_committed`, `staging_created`, `no_effect` |
+| `PlannedEffect.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker`, `artifact_staging`, `artifact`, `artifact_link` |
+| `PlannedEffect.effect` | `create`, `update`, `consume`, `promote`, `link`, `close`, `mark_blocked` |
 | Local API access classes | `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read` |
 | `LocalSurfaceRegistration.transport_kind` | `local_mcp_stdio`, `local_http` |
 | `LocalSurfaceRegistration.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |

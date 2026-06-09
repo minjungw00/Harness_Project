@@ -137,7 +137,9 @@ A blocked response is not the same as a pre-commit failure. Core may commit a bl
 
 Read-only calls, including `harness.status` and `harness.close_task intent=check`, may compute and return blockers or close blockers. Those blockers are response fields only: Core must not store them, append events, create `tool_invocations` replay rows, or increment state version for the read.
 
-`dry_run=true` is always non-authoritative. It may validate and return diagnostics, candidate blockers, or a would-change summary, but it must not create or update current records, events, artifacts, evidence summaries, Write Authorizations, close state, committed `tool_invocations` replay rows, or state-version increments. A subsequent non-dry-run call must be validated against current state.
+`dry_run=true` is always non-authoritative. A valid dry-run call whose request shape, local access verification, capability verification, and reachable state/preconditions can be evaluated enough to produce a preview returns `ToolDryRunResponse` with `DryRunSummary`. It may return diagnostics, candidate blockers, `DryRunSummary.would_errors`, `DryRunSummary.next_actions`, and descriptive `PlannedEffect` preview data, but it must not create or update current records, events, artifacts, evidence summaries, Write Authorizations, close state, committed `tool_invocations` replay rows, or state-version increments. `PlannedEffect` is descriptive only and must not contain fake generated refs for records that do not exist.
+
+If a `dry_run=true` request itself fails validation, local access verification, capability verification, or state lookup before a preview can be produced, the response is `ToolRejectedResponse` with `dry_run=true` and `effect_kind=no_effect`. A subsequent non-dry-run call must be validated against current state.
 
 <a id="idempotency"></a>
 

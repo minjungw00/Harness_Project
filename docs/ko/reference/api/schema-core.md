@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-현재 MVP에서 쓰는 활성 메서드 이름 집합, 공용 API 형태, 닫힌 스키마 값 집합을 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 응답 분기, `ArtifactRef`, `StateRecordRef`, `ShapingReadiness`, `UserJudgment`, Write Authorization 요약, `CompletionPolicy`, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP enum 값을 다룹니다.
+현재 MVP에서 쓰는 활성 메서드 이름 집합, 공용 API 형태, 닫힌 스키마 값 집합을 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 응답 분기, `DryRunSummary`, `PlannedEffect`, `ArtifactRef`, `StateRecordRef`, `ShapingReadiness`, `UserJudgment`, Write Authorization 요약, `CompletionPolicy`, 증거 요약, 실행 요약, 닫기 차단 사유, 다음 행동 요약, 현재 MVP enum 값을 다룹니다.
 
 이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다. 향후 스키마 후보는 [이후 후보 색인](../../later/index.md#later-schema-candidates)에 남습니다.
 
@@ -191,12 +191,23 @@ ToolDryRunResponse:
   events: []
   dry_run_summary: DryRunSummary
 
+ActiveMethodName: harness.intake | harness.status | harness.update_scope | harness.prepare_write | harness.stage_artifact | harness.record_run | harness.request_user_judgment | harness.record_user_judgment | harness.close_task
+
 DryRunSummary:
-  method: string
-  summary: string
-  would_create: string[]
-  would_update: string[]
-  would_return: string[]
+  method: ActiveMethodName
+  would_commit: boolean
+  would_effect_kind: core_committed | staging_created | no_effect
+  primary_would_result: string | null
+  would_create: PlannedEffect[]
+  would_update: PlannedEffect[]
+  would_blockers: CloseBlocker[]
+  would_errors: ToolError[]
+  next_actions: NextActionSummary[]
+
+PlannedEffect:
+  record_kind: task | change_unit | run | write_authorization | user_judgment | evidence_summary | blocker | artifact_staging | artifact | artifact_link
+  effect: create | update | consume | promote | link | close | mark_blocked
+  description: string
 
 ToolError:
   code: ErrorCode
@@ -218,7 +229,11 @@ EventRef:
 
 `ToolRejectedResponse.state_version`은 Core가 거절 전에 현재 프로젝트 상태를 읽을 수 있었다면 관찰한 프로젝트 전체 `project_state.state_version`입니다. Core나 로컬 MCP 접점이 프로젝트 상태를 읽기 전에 사용할 수 없었다면 `state_version`은 `null`일 수 있습니다.
 
-`ToolDryRunResponse`는 `dry_run=true` 호출이 커밋 없이 메서드가 무엇을 검증하거나 바꿀지를 보고할 때 쓰는 응답입니다. 이 분기는 `effect_kind=no_effect`, `events=[]`이며 메서드별 성공 필드를 담지 않습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, `tool_invocations` 재실행 행, `state_version` 증가를 만들지 않습니다. `DryRunSummary`의 `would_create`, `would_update`, `would_return` 항목은 `dry_run` 설명 문자열일 뿐입니다. 실제 생성된 기록, 이벤트 참조, 아티팩트 참조, 권한이 아닙니다.
+`ToolDryRunResponse`는 `dry_run=true` 요청의 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있을 때만 반환합니다. 이 분기는 `effect_kind=no_effect`, `events=[]`이며 메서드별 성공 필드를 담지 않습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, `tool_invocations` 재실행 행, `state_version` 증가를 만들지 않습니다. `ToolDryRunResponse.errors`는 `[]`이고, 미리 볼 수 있는 예상 오류는 `DryRunSummary.would_errors`에 둡니다.
+
+`dry_run=true` 요청 자체가 미리보기를 만들기 전에 요청 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다.
+
+`DryRunSummary`는 미리보기 정보일 뿐입니다. `PlannedEffect` 항목은 예상 효과의 기록 종류, 효과, 설명을 담습니다. 아직 존재하지 않는 기록에 대한 실제 생성 ref를 담지 않으며 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, 이벤트 참조, 아티팩트 참조, 권한을 만들어 내면 안 됩니다.
 
 `ToolError`는 공개 오류 식별자, 재시도 안내, 구조화된 세부정보를 유지합니다. `EventRef`는 실제 이벤트 참조가 있는 결과 분기에만 나타납니다. 거절 응답과 dry-run 응답은 항상 `events=[]`를 씁니다.
 
@@ -371,7 +386,7 @@ StagedArtifactHandle:
 
 `created_by_surface_id`와 `created_by_surface_instance_id`는 서버가 기록하는 출처 기록 필드입니다. `harness.stage_artifact`가 성공하면 서버는 해당 요청의 `VerifiedSurfaceContext`에서 이 값을 기록합니다. 호출자는 `StageArtifactRequest`에서 이 값을 고르지 않으며, 에이전트나 사용자가 같은 모양의 객체를 제출해도 그것은 권한 주장이 아닙니다. `ArtifactInput`이 `StagedArtifactHandle`을 `harness.record_run`에 다시 제출하면 서버는 저장소가 소유한 staging 기록과 대조하고, 현재 확인된 `surface_id`와 `surface_instance_id`가 `created_by_surface_id`와 `created_by_surface_instance_id`와 같을 때만 승격을 허용합니다. 현재 MVP는 접점 간(cross-surface) staged artifact handoff를 지원하지 않습니다. 모양이 맞는 handle이라도 `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, 만료 여부, 소비 상태, `sha256`, `size_bytes`, `redaction_state`가 저장된 staged artifact와 요청 기대에 맞지 않으면 거부됩니다.
 
-`StageArtifactResult`는 `harness.stage_artifact`의 성공 결과 분기입니다. `base.response_kind`는 `result`이고 `base.effect_kind`는 `staging_created`입니다. 검증 실패, 로컬 접점 실패, 역량 부족, 안전하게 스테이징된 아티팩트 핸들을 만들 수 없는 요청은 `ToolRejectedResponse`를 반환하며 `staged_artifact_handle`을 포함하지 않습니다. `dry_run` 호출은 `ToolDryRunResponse`를 반환하며 이때도 `staged_artifact_handle`을 포함하지 않습니다.
+`StageArtifactResult`는 `harness.stage_artifact`의 성공 결과 분기입니다. `base.response_kind`는 `result`이고 `base.effect_kind`는 `staging_created`입니다. 검증 실패, 로컬 접점 실패, 역량 부족, 안전하게 스테이징된 아티팩트 핸들을 만들 수 없는 요청은 `ToolRejectedResponse`를 반환하며 `staged_artifact_handle`을 포함하지 않습니다. 유효한 `dry_run` 호출은 `ToolDryRunResponse`를 반환하며 이때도 `staged_artifact_handle`을 포함하지 않습니다.
 
 `harness.stage_artifact`는 임시 `StagedArtifactHandle`을 만들 수 있지만 그 자체로 Core 상태 전이가 아닙니다. 증거를 만들지 않고, gate를 만족하지 않고, 증거 요약을 갱신하지 않으며, `harness.close_task`가 통과하게 만들 수도 없습니다. `StagedArtifactHandle`은 어떤 로컬 호출자나 사용할 수 있는 bearer token이 아닙니다. 유효한 스테이징된 핸들을 소비해 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`뿐입니다. 그 승격은 `run_recording`과 같은 프로젝트, 같은 Task, 서버 기록 `created_by_surface_id` / `created_by_surface_instance_id`와 현재 확인된 `surface_id` / `surface_instance_id`, 미만료, 미소비, 무결성 호환 handle 확인으로 승인됩니다. Projection 파일, 생성된 Markdown, 대화 텍스트, Product Repository 파일, 에이전트 기억은 스테이징된 핸들의 출처 기록을 만들거나 새로 고칠 수 없습니다.
 
@@ -680,9 +695,13 @@ policy_override
 | 필드 | 현재 MVP 값 |
 |---|---|
 | 활성 메서드 집합 | `harness.intake`, `harness.status`, `harness.update_scope`, `harness.prepare_write`, `harness.stage_artifact`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
+| `ActiveMethodName`과 `DryRunSummary.method` | 활성 메서드 집합과 같은 값 |
 | `ToolEnvelope.actor_kind` | `user`, `lead_agent` |
 | `response_kind` | `result`, `rejected`, `dry_run` |
 | `effect_kind` | `read_only`, `core_committed`, `staging_created`, `no_effect` |
+| `DryRunSummary.would_effect_kind` | `core_committed`, `staging_created`, `no_effect` |
+| `PlannedEffect.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker`, `artifact_staging`, `artifact`, `artifact_link` |
+| `PlannedEffect.effect` | `create`, `update`, `consume`, `promote`, `link`, `close`, `mark_blocked` |
 | 로컬 API 접근 분류 | `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read` |
 | `LocalSurfaceRegistration.transport_kind` | `local_mcp_stdio`, `local_http` |
 | `LocalSurfaceRegistration.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |
