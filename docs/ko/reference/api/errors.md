@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-현재 MVP의 공개 오류 코드, 기본 오류 우선순위, 차단 응답과 `dry_run` 동작, 멱등 재실행, 상태 버전 충돌 처리, 문서 스모크 목표의 오류 범위, 닫기 차단 사유 동작, 사용자 표시 라벨 지침을 확인할 때 이 참조를 사용합니다.
+현재 MVP의 공개 오류 코드, 주 오류 우선순위, 차단 응답과 `dry_run` 동작, 멱등 재실행, 상태 버전 충돌 처리, 문서 스모크 목표의 오류 범위, 닫기 차단 사유 동작, 사용자 표시 라벨 지침을 확인할 때 이 참조를 사용합니다.
 
 이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다.
 
@@ -31,7 +31,7 @@
 | `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 영향을 받는 행동을 보류하고, 불일치를 보여 주며, 현재 범위로 줄이거나 구체적인 사용자 소유 범위 판단을 요청하거나, 해결된 범위 변경을 `harness.update_scope`로 적용합니다. |
 | `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | 집중된 활성 `UserJudgment`를 묻거나 해결합니다. 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소 판단, later/reserved QA 면제 판단과 검증 위험 수락 경로를 넓은 승인 하나로 합치지 않습니다. |
 | `missing_evidence` | `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING` | 영향을 받는 주장, 참조, 증거 상태, 아티팩트 가용성, 차단 해소에 필요한 최소 조치를 보여 줍니다. 테스트 결과, 아티팩트 무결성, 증거 충분성을 만들어 내지 않습니다. |
-| `close_blocked` | `CloseTaskResponse.close_state=blocked`와 기본 `ErrorCode` | 구조화된 차단 사유와 다음 행동을 반환합니다. Task를 종료 상태로 표시하지 않습니다. |
+| `close_blocked` | `CloseTaskResponse.close_state=blocked`와 주 `ErrorCode` | 구조화된 차단 사유와 다음 행동을 반환합니다. Task를 종료 상태로 표시하지 않습니다. |
 | `residual_risk_present` | `RESIDUAL_RISK_NOT_VISIBLE`, `DECISION_REQUIRED`, 또는 `DECISION_UNRESOLVED` | 잔여 위험을 보여 주고, 활성 닫기 또는 수락 경로가 요구할 때만 `judgment_kind=residual_risk_acceptance`를 묻습니다. |
 
 <a id="error-taxonomy"></a>
@@ -41,7 +41,7 @@
 | 코드 | 의미 |
 |---|---|
 | `VALIDATION_FAILED` | 요청 본문 형태, enum 값, 활성화 규칙, 프로필별 검증, 또는 `record_run` `ArtifactInput` 검증이 변경 전에 실패했습니다. |
-| `STATE_VERSION_CONFLICT` | `ToolEnvelope.expected_state_version`이 현재 `project_state.state_version`과 맞지 않거나, Write Authorization의 프로젝트 전체 `basis_state_version`이 현재 `project_state.state_version`과 더 이상 맞지 않거나, 같은 멱등 키를 다른 정규화된 요청으로 다시 사용했습니다. |
+| `STATE_VERSION_CONFLICT` | 커밋 전 실패로 처리되는 오래된 상태입니다. `ToolEnvelope.expected_state_version`이 현재 `project_state.state_version`과 맞지 않거나, Write Authorization의 프로젝트 전체 `basis_state_version`이 현재 `project_state.state_version`과 더 이상 맞지 않거나, 같은 멱등 키를 다른 정규화된 요청으로 다시 사용했습니다. |
 | `NO_ACTIVE_TASK` | Task가 필요하지만 활성 Task나 지정된 Task가 없습니다. |
 | `NO_ACTIVE_CHANGE_UNIT` | 쓰기를 할 수 있거나 닫기와 관련된 동작에 활성 범위 지정 Change Unit이 없습니다. |
 | `SCOPE_REQUIRED` | 요청한 쓰기나 동작 전에 범위 확인이 필요합니다. |
@@ -74,7 +74,7 @@ missing | expired | stale | revoked | consumed | incompatible
 필요한 권한이 제공되지 않았으면 `authorization_reason=missing`과 함께 `WRITE_AUTHORIZATION_REQUIRED`를 사용합니다. 기존 권한을 버전 불일치가 아닌 이유로 소비할 수 없으면 `authorization_reason=expired`, `revoked`, `consumed`, `incompatible` 중 맞는 값과 함께 `WRITE_AUTHORIZATION_INVALID`를 사용합니다.
 제공된 Write Authorization이 프로젝트 전체 `basis_state_version`과 현재 `project_state.state_version`의 불일치 때문에 오래된 경우에는 `authorization_reason=stale`과 함께 `STATE_VERSION_CONFLICT`를 사용합니다.
 
-`ArtifactInput.source_kind`와 출처 필드가 스키마 형태에 맞지 않으면 `VALIDATION_FAILED`를 사용합니다. `ArtifactInput.source_kind=staged_artifact`의 스테이징된 핸들 검증 실패도 공개 `VALIDATION_FAILED`를 사용하고, `ToolError.details.artifact_input_error`에 구조화된 세부정보를 둡니다. 스테이징된 핸들 검증 실패마다 새 top-level 공개 오류 코드를 만들지 않습니다.
+`ArtifactInput.source_kind`와 출처 필드가 스키마 형태에 맞지 않으면 `VALIDATION_FAILED`를 사용합니다. `harness.record_run` 중 유효하지 않은 스테이징된 핸들 검증은 커밋 전 실패이며 `ToolRejectedResponse`를 반환합니다. `ArtifactInput.source_kind=staged_artifact`의 스테이징된 핸들 검증 실패도 공개 `VALIDATION_FAILED`를 사용하고, `ToolError.details.artifact_input_error`에 구조화된 세부정보를 둡니다. 스테이징된 핸들 검증 실패마다 새 top-level 공개 오류 코드를 만들지 않습니다.
 
 `ToolError.details.artifact_input_error`는 입력 id와 구체적인 사유를 담아야 합니다. 활성 세부 사유 집합에는 아래 값이 포함됩니다.
 
@@ -94,15 +94,15 @@ artifact_input_error:
 
 스테이징된 핸들 검증은 저장된 `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, 만료 여부, 소비 상태, `sha256`, `size_bytes`, `redaction_state`를 다룹니다. `redaction_state`가 맞지 않는 경우에는 메시지나 추가 detail 필드에서 그 필드를 이름 붙이되 공개 코드는 `VALIDATION_FAILED`로 유지합니다. 스테이징된 핸들의 출처나 범위가 맞지 않는 것은 검증 오류이지 요청 수준 로컬 접근 실패가 아닙니다. 스테이징된 핸들 출처 불일치에 `LOCAL_ACCESS_MISMATCH`를 쓰지 않습니다. `LOCAL_ACCESS_MISMATCH`는 요청 접점 검증 실패에만 씁니다. 스테이징된 핸들 범위나 출처 불일치에 `CAPABILITY_INSUFFICIENT`도 쓰지 않습니다. `CAPABILITY_INSUFFICIENT`는 확인된 접점 역량이 없거나 부족할 때만 씁니다. `ARTIFACT_MISSING`은 참조된 지속 아티팩트와 닫기 관련 아티팩트 가용성에 남겨 두며 스테이징된 핸들 검증에는 쓰지 않습니다.
 
-로컬 접근 관련 코드는 좁게 쓰고 서로 구분합니다. `MCP_UNAVAILABLE`은 MCP/Core 또는 접점 도달 가능성 자체를 사용할 수 없을 때 쓰며, `VerifiedSurfaceContext.failure_reason=unavailable`을 포함합니다. `LOCAL_ACCESS_MISMATCH`는 도달 가능한 로컬 transport/session/binding이 등록된 프로젝트 접점과 맞지 않거나 로컬 접근이 철회되었을 때 쓰며, `failure_reason=mismatch` 또는 `revoked`를 포함합니다. `CAPABILITY_INSUFFICIENT`는 인식된 활성 접점이 요청한 접근 분류나 보장 주장에 필요한 역량을 갖추지 못했을 때 쓰며, `failure_reason=insufficient_capability`을 포함합니다. `surface_id`만으로는 이 오류 중 어느 것도 해결되지 않습니다. 이 공개 경로 대신 접점별 `UNAUTHORIZED` code를 만들지 않습니다.
+로컬 접근 관련 코드는 좁게 쓰고 서로 구분합니다. `MCP_UNAVAILABLE`은 MCP/Core 또는 접점 도달 가능성 자체를 사용할 수 없을 때 쓰며, `VerifiedSurfaceContext.failure_reason=unavailable`을 포함합니다. 이 거절 전에 Core 상태를 읽을 수 없으면 `ToolRejectedResponse.state_version`은 `null`일 수 있습니다. 상태를 읽었다면 관찰한 프로젝트 전체 `project_state.state_version`을 담아야 합니다. `LOCAL_ACCESS_MISMATCH`는 도달 가능한 로컬 transport/session/binding이 등록된 프로젝트 접점과 맞지 않거나 로컬 접근이 철회되었을 때 쓰며, `failure_reason=mismatch` 또는 `revoked`를 포함합니다. `CAPABILITY_INSUFFICIENT`는 인식된 활성 접점이 요청한 접근 분류나 보장 주장에 필요한 역량을 갖추지 못했을 때 쓰며, `failure_reason=insufficient_capability`을 포함합니다. `surface_id`만으로는 이 오류 중 어느 것도 해결되지 않습니다. 이 공개 경로 대신 접점별 `UNAUTHORIZED` code를 만들지 않습니다.
 
 <a id="primary-error-code-precedence"></a>
 
-## 기본 `ErrorCode` 우선순위
+## 주 오류 코드 우선순위
 
-`ToolResponseBase.errors`가 비어 있지 않으면 메서드 섹션이 더 좁은 순서를 정의하지 않는 한 `errors[0]`이 아래 순서로 선택된 기본 오류입니다. 보조 차단 사유는 메서드별 필드와 `ToolError.details`에 남을 수 있습니다.
+오류를 담는 응답 분기의 `errors`가 비어 있지 않으면 메서드 섹션이 더 좁은 순서를 정의하지 않는 한 `errors[0]`이 아래 순서로 선택된 주 공개 코드입니다. `ToolRejectedResponse`에서는 `ToolRejectedResponse.errors[0]`이 주 거절 코드입니다. 커밋된 차단 결과나 진단을 담은 결과에서는 `MethodResult.base.errors[0]`이 주 공개 코드입니다. 보조 차단 사유는 메서드별 필드와 `ToolError.details`에 남을 수 있습니다. 유효한 `ToolDryRunResponse`는 `errors=[]`를 유지하며, 미리 볼 수 있는 예상 실패는 `DryRunSummary.would_errors`에 둡니다.
 
-| 우선순위 | 기본 `ErrorCode` |
+| 우선순위 | 주 `ErrorCode` |
 |---:|---|
 | 1 | `VALIDATION_FAILED` |
 | 2 | `STATE_VERSION_CONFLICT` |
@@ -133,11 +133,15 @@ artifact_input_error:
 
 ## 차단 응답과 `dry_run` 동작
 
-차단 응답은 커밋 전 실패와 다릅니다. [현재 MVP API](mvp-api.md#active-mvp-method-behavior)의 메서드별 상태 효과 표가 커밋된 차단 응답을 명시적으로 허용하는 경우에만 Core가 차단 응답을 커밋할 수 있습니다. 커밋된 차단 응답은 `blockers`, 이벤트, 상태 버전, `tool_invocations` 재실행을 업데이트할 수 있지만, 차단 사유가 없거나 부족하다고 지적한 권한을 만들면 안 됩니다.
+모든 공개 응답은 정확히 하나의 응답 분기입니다. 분기는 `ToolRejectedResponse`, `ToolResultBase`를 바탕으로 한 메서드별 `MethodResult`, 또는 `ToolDryRunResponse` 중 하나입니다. 어떤 분기를 쓰는지는 표시 방식이 아니라 계약입니다.
+
+`ToolRejectedResponse`는 `STATE_VERSION_CONFLICT`, 요청 검증 실패, 스테이징된 핸들 검증 실패 같은 커밋 전 실패에 쓰는 거절 응답입니다. `response_kind=rejected`, `effect_kind=no_effect`를 가지며 메서드별 결과 객체가 없습니다. `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `close_state` 같은 결과 전용 필드를 포함하면 안 됩니다. 거절 응답은 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, `tool_invocations` 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다.
+
+커밋된 차단 응답은 `ToolRejectedResponse`가 아닙니다. [현재 MVP API](mvp-api.md#active-mvp-method-behavior)의 메서드별 상태 효과 계약이 커밋된 차단 결과를 허용할 때만 `PrepareWriteResult`나 `CloseTaskResult` 같은 메서드별 결과 스키마 안에서 반환합니다. 커밋된 차단 결과는 `base.response_kind=result`를 가지며, 그 메서드가 허용한 차단 사유나 상태 효과만 커밋할 수 있습니다. `blockers`, 이벤트, 프로젝트 전체 `state_version`, `tool_invocations` 재실행 행을 업데이트할 수 있지만, 차단 사유가 없거나 부족하다고 지적한 권한을 만들면 안 됩니다.
 
 `harness.status`와 `harness.close_task intent=check`를 포함한 읽기 전용 호출은 차단 사유나 닫기 차단 사유를 계산해 반환할 수 있습니다. 그 차단 사유는 응답 필드일 뿐입니다. Core는 읽기를 이유로 차단 사유를 저장하거나, 이벤트를 추가하거나, `tool_invocations` 재실행 행을 만들거나, 상태 버전을 올리면 안 됩니다.
 
-`dry_run=true`는 항상 기준 권한이 아닙니다. 요청 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 dry run은 `ToolDryRunResponse`와 `DryRunSummary`를 반환합니다. 진단, 후보 차단 사유, `DryRunSummary.would_errors`, `DryRunSummary.next_actions`, 설명용 `PlannedEffect` 예상 효과를 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 커밋된 `tool_invocations` 재실행 행, 상태 버전 증가를 만들거나 업데이트하면 안 됩니다. `PlannedEffect`는 미리보기 정보일 뿐이며 아직 존재하지 않는 기록의 가짜 생성 ref를 담으면 안 됩니다.
+`ToolDryRunResponse`는 유효한 dry-run 미리보기 응답 분기입니다. `dry_run=true`는 항상 기준 권한이 아닙니다. 요청 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 dry run은 `ToolDryRunResponse`와 `DryRunSummary`를 반환합니다. 진단, 후보 차단 사유, `DryRunSummary.would_errors`, `DryRunSummary.next_actions`, 설명용 `PlannedEffect` 예상 효과를 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 커밋된 `tool_invocations` 재실행 행, 스테이징된 핸들, 스테이징된 핸들 소비, 상태 버전 증가를 만들거나 업데이트하면 안 됩니다. 또한 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref` 같은 메서드별 결과 전용 필드나 실제 생성 참조를 포함하면 안 됩니다. `PlannedEffect`는 미리보기 정보일 뿐이며 아직 존재하지 않는 기록의 가짜 생성 ref를 담으면 안 됩니다.
 
 `dry_run=true` 요청 자체가 미리보기 생성 전에 요청 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다. 이후 비 `dry_run` 호출은 현재 상태를 기준으로 다시 검증해야 합니다.
 
@@ -149,9 +153,9 @@ artifact_input_error:
 
 `request_hash`는 도구 이름, 스키마 정규화된 요청 본문, 그리고 `request_id`와 `idempotency_key`를 제외한 모든 `ToolEnvelope` 필드에 대한 정규 JSON에서 계산합니다.
 
-같은 키와 같은 요청 해시를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 승격/연결, 권한 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 키를 다른 요청 해시로 재사용하면 Core는 `STATE_VERSION_CONFLICT`를 반환하고 원래 재실행 행을 보존합니다.
+재실행 행을 만드는 상태 효과의 커밋된 non-dry-run `MethodResult` 응답만 재실행 행에 저장합니다. 같은 키와 같은 요청 해시를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 승격/연결, 권한 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 키를 다른 요청 해시로 재사용하면 Core는 기존 재실행 행을 보존하고 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다.
 
-`dry_run` 호출과 커밋 전 실패는 재실행 행을 만들거나 예약하지 않습니다.
+`ToolRejectedResponse`와 `ToolDryRunResponse`는 재실행 행을 만들거나 예약하지 않습니다.
 
 <a id="state-conflict-behavior"></a>
 
@@ -159,7 +163,7 @@ artifact_input_error:
 
 커밋된 재실행 행이 없는 새 상태 변경 시도에서 Core는 담당 기록을 고르기 위해 최신성 확인 전에 기본 Task를 찾을 수 있습니다. 해석 순서는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task입니다. 이 해석은 별도 상태 시계를 고르지 않습니다.
 
-새 non-dry-run 상태 변경은 모두 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. 불일치하면 `STATE_VERSION_CONFLICT`를 반환하고 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들지 않습니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
+새 non-dry-run 상태 변경은 모두 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. 오래된 `expected_state_version`은 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다. 메서드별 결과가 아니며 절대 `PrepareWriteResult.decision` 값이 아닙니다. 이 커밋 전 실패는 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
 
 프로젝트 전체 상태 버전 불일치에 쓰는 현재 MVP의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다. 이 불일치에 대해 다른 공개 코드, 별칭, 폐기된 표기, 저장소 계층의 다른 공개 오류 이름, 내부 예외 이름을 노출하지 않습니다.
 
@@ -173,7 +177,7 @@ project_id: string
 task_id: string | null
 ```
 
-`WriteAuthorization.basis_state_version`은 허용 결정에 쓰는 프로젝트 전체 호환성 근거입니다. 오래된 Write Authorization인지 판단할 때는 이 값을 현재 `project_state.state_version`과 비교하며, Task별 시계는 참여하지 않습니다. 이 비교가 실패하면 공개 오류는 `WRITE_AUTHORIZATION_INVALID`가 아니라 `STATE_VERSION_CONFLICT`입니다.
+`WriteAuthorization.basis_state_version`은 허용 결정에 쓰는 프로젝트 전체 호환성 근거입니다. 오래된 Write Authorization인지 판단할 때는 이 값을 현재 `project_state.state_version`과 비교하며, Task별 시계는 참여하지 않습니다. `harness.record_run`이 소비 전에 제공된 Write Authorization이 오래됐다고 판단하면 응답은 `WRITE_AUTHORIZATION_INVALID`가 아니라 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`이고, 그 Write Authorization은 소비되지 않습니다.
 
 <a id="documentation-smoke-error-coverage"></a>
 
@@ -182,11 +186,11 @@ task_id: string | null
 [MVP 계획](../../build/mvp-plan.md#첫-내부-스모크-목표)의 첫 내부 문서 스모크 목표는 활성 공개 오류와 활성 `CloseBlocker.category` 값만 사용해야 합니다. 스모크 전용 코드를 만들지 않고, 완전한 적합성 테스트 모음이나 구현 계획을 정의하지 않습니다.
 
 - 등록된 접점 검증은 Core가 등록된 접점에 맞는 `VerifiedSurfaceContext`를 파생할 때만 오류 없이 성공합니다. 실패는 `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`를 사용합니다. 복사된 `surface_id`는 접근이나 역량의 증거가 아닙니다.
-- 프로젝트 전체 상태 버전 충돌은 `ToolEnvelope.expected_state_version`이 `project_state.state_version`보다 오래되었을 때 `STATE_VERSION_CONFLICT`를 사용합니다. 실패한 시도는 기록, 이벤트, 아티팩트, 증거, Write Authorization, 닫기 상태, 재실행 행, 상태 버전 증가를 만들면 안 됩니다.
+- 프로젝트 전체 상태 버전 충돌은 `ToolEnvelope.expected_state_version`이 `project_state.state_version`보다 오래되었을 때 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다. 실패한 시도는 기록, 이벤트, 아티팩트, 증거, Write Authorization, 닫기 상태, 재실행 행, 스테이징된 핸들 소비, 상태 버전 증가를 만들면 안 됩니다.
 - `ShapingReadiness` 공백은 담당 경로에 따라 `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, 또는 구조화된 차단 사유로 드러날 수 있습니다. 읽기 전용 상태나 준비 상태 읽기는 상태를 바꾸지 않습니다.
-- `prepare_write decision=allowed`는 담당 범위의 1회용 Write Authorization을 만듭니다. `decision=blocked`는 적용되는 범위, baseline, 역량, 검증, 판단 코드를 사용합니다. `decision=approval_required`는 `APPROVAL_*` 경로를 사용하며 소비 가능한 Write Authorization을 만들면 안 됩니다.
+- `prepare_write decision=allowed`는 담당 범위의 1회용 Write Authorization을 만듭니다. `decision=blocked`와 `decision=approval_required`는 메서드별 상태 효과 표가 차단 커밋을 허용할 때만 커밋된 `PrepareWriteResult` 값이며, 소비 가능한 Write Authorization을 만들면 안 됩니다. `STATE_VERSION_CONFLICT`와 요청 검증 실패는 `ToolRejectedResponse` 분기이고 절대 `PrepareWriteResult.decision` 값이 아닙니다.
 - `SensitiveActionScope`는 `judgment_kind=sensitive_approval`에 속합니다. 민감 동작 승인 오류는 `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`를 사용합니다. 이 승인은 Write Authorization, 최종 수락, 잔여 위험 수락, 증거, 아티팩트 권한을 대신하지 않습니다.
-- `harness.stage_artifact` 성공은 임시 핸들만 만들고 Core 변경을 만들지 않습니다. 유효한 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`입니다. 출처 필드 형태가 잘못되었거나 스테이징된 핸들 검증이 실패하면 `artifact_input_error` detail을 담은 `VALIDATION_FAILED`를 사용합니다. 이런 조건을 증거 충분성, 로컬 접근 불일치, 역량 부족으로 숨기면 안 됩니다.
+- `harness.stage_artifact` 성공은 임시 핸들만 만들고 Core 변경을 만들지 않습니다. 유효한 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`입니다. 출처 필드 형태가 잘못되었거나 스테이징된 핸들 검증이 실패하면, 실제 실패가 요청 수준 로컬 접근이나 역량 확인이 아닌 한 `artifact_input_error` detail을 담은 `VALIDATION_FAILED`의 `ToolRejectedResponse`를 반환합니다. 이런 조건을 증거 충분성, 로컬 접근 불일치, 역량 부족으로 숨기면 안 됩니다.
 - `harness.record_run`은 호환되는 Write Authorization을 정확히 한 번 소비합니다. Write Authorization이 없으면 `WRITE_AUTHORIZATION_REQUIRED`를 사용합니다. 프로젝트 전체 근거 버전이 오래된 Write Authorization은 `STATE_VERSION_CONFLICT`를 사용합니다. 만료, 철회, 이미 소비됨, 버전 불일치가 아닌 비호환 상태이면 `WRITE_AUTHORIZATION_INVALID`를 사용합니다. 승인 범위 밖 관찰 시도는 적용되는 범위 또는 Write Authorization 관련 코드를 사용합니다.
 - `close_task intent=check`는 차단 사유를 반환하더라도 읽기 전용입니다. `close_task intent=complete`는 구조화된 차단 사유와 함께 `CloseTaskResponse.close_state=blocked`를 반환하거나, 담당 문서가 정의한 complete 차단 사유가 없을 때만 `close_state=closed`를 반환합니다.
 - 닫기 스모크 범위는 증거 차단 사유의 `EVIDENCE_INSUFFICIENT`, 아티팩트 사용 불가 또는 누락 차단 사유의 `ARTIFACT_MISSING`, 최종 수락 차단 사유의 `ACCEPTANCE_REQUIRED`, 보이지만 수락되지 않은 잔여 위험에 대한 `category=residual_risk_acceptance`와 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 포함해야 합니다. `RESIDUAL_RISK_NOT_VISIBLE`은 아직 보이지 않은 위험에만 둡니다.
@@ -198,7 +202,7 @@ task_id: string | null
 
 `CloseTaskResponse.blockers`는 [API Schema Core](schema-core.md#current-position-display-schemas)의 구조화된 `CloseBlocker` 객체를 사용해야 합니다. 설명 문구만 있는 상태 텍스트, 보고서 텍스트, 렌더링된 보기, 에이전트 요약은 닫기 차단 사유 결과가 아닙니다.
 
-`harness.close_task intent=complete`의 닫기 차단 사유는 [Core Model](../core-model.md#close_task)의 결정적 행렬 순서로 정렬합니다. 공개 오류 우선순위는 메서드가 기본 `ErrorCode` 하나를 골라야 할 때 여전히 쓰이지만, complete 차단 행렬의 순서를 바꾸거나 앞선 차단 사유를 뒤의 수락/위험 확인 아래 숨기면 안 됩니다. 증거 차단 사유는 보통 `EVIDENCE_INSUFFICIENT`를 사용합니다. 사용할 수 없거나 누락된 닫기 관련 아티팩트를 포함한 아티팩트 가용성 차단 사유는 `ARTIFACT_MISSING`을 사용합니다. 해결되지 않은 사용자 판단 차단 사유는 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 사용합니다. 민감 동작 승인 차단 사유는 `APPROVAL_*` 코드를 사용합니다. 범위 차단 사유는 범위와 baseline 코드를 사용합니다.
+`harness.close_task intent=complete`의 닫기 차단 사유는 [Core Model](../core-model.md#close_task)의 결정적 행렬 순서로 정렬합니다. 공개 오류 우선순위는 메서드가 주 `ErrorCode` 하나를 골라야 할 때 여전히 쓰이지만, complete 차단 행렬의 순서를 바꾸거나 앞선 차단 사유를 뒤의 수락/위험 확인 아래 숨기면 안 됩니다. 증거 차단 사유는 보통 `EVIDENCE_INSUFFICIENT`를 사용합니다. 사용할 수 없거나 누락된 닫기 관련 아티팩트를 포함한 아티팩트 가용성 차단 사유는 `ARTIFACT_MISSING`을 사용합니다. 해결되지 않은 사용자 판단 차단 사유는 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 사용합니다. 민감 동작 승인 차단 사유는 `APPROVAL_*` 코드를 사용합니다. 범위 차단 사유는 범위와 baseline 코드를 사용합니다.
 
 `intent=cancel`과 `intent=supersede`는 성공 완료가 아닙니다. 이 intent의 차단 응답은 Task 식별자나 생명주기, 로컬 접근, 복구 제약, cancellation 충돌, supersession 유효성처럼 해당 종료 전이를 무효로 만드는 조건으로 제한합니다. 증거 충분성, 최종 수락, 잔여 위험 수락을 요구하면 안 되며, 그런 누락 조건을 cancellation이나 supersession의 차단 사유로 쓰면 안 됩니다.
 
