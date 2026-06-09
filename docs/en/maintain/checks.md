@@ -31,6 +31,9 @@ These checks look for documentation drift:
 - `access_class`, `record_run`, `run_recording`, `artifact_registration`, `stage_artifact`, `existing_artifact`, and staged artifact promotion wording that blurs active MVP contracts
 - staged handle provenance or scope validation wording that maps validation failure to `LOCAL_ACCESS_MISMATCH` or `CAPABILITY_INSUFFICIENT` instead of `VALIDATION_FAILED`
 - response-branch wording that leaks method-result-only fields into `ToolRejectedResponse` or generated refs and side effects into `dry_run` responses
+- `dry_run=true` wording that treats every valid dry-run request as `ToolDryRunResponse` or requires `ToolDryRunResponse` for a read-only selected intent
+- mixed intent method wording that chooses response branches by method name instead of the selected intent's state effect
+- `harness.close_task intent=check` with `dry_run=true` wording that creates `task_events`, replay rows, close-state mutations, Write Authorization changes, staged-handle consumption, or `state_version` increments
 - one-language-per-`doc_id` agent retrieval problems
 - stale rewrite/history notes, closed issue records, and obsolete review prose
 
@@ -156,16 +159,24 @@ Fail when any of these conditions appear in active MVP documentation:
 
 Inspect public response unions, method-specific result branches, rejected-response prose, `dry_run` prose, examples, representative conformance rows, and smoke-target wording.
 
-Pass when public method responses are written as a method-specific `MethodResult` branch, `ToolDryRunResponse` when the method has a distinct dry-run branch, or `ToolRejectedResponse`; strictly read-only methods may omit `ToolDryRunResponse` only by explicit contract. Method-specific fields appear only on the method result branch, valid dry runs contain only preview data and no generated refs, and rejected or dry-run responses have `effect_kind=no_effect`: no replay row, no state-version increment, no staged-handle consumption, and no Write Authorization creation or consumption.
+Pass when public method responses are written as a method-specific `MethodResult` branch, `ToolDryRunResponse` when the selected operation has a distinct state-effecting dry-run preview branch, or `ToolRejectedResponse`; strictly read-only methods may omit `ToolDryRunResponse` only by explicit contract. For mixed intent methods, branch selection must follow the selected intent's state effect, not the method name alone. A selected read-only operation with `dry_run=true` may return the method-specific `MethodResult` with `base.dry_run=true` and `effect_kind=read_only`; method-specific fields appear only on that method result branch.
+
+Pass when `harness.close_task intent=check` with `dry_run=true` is documented as `CloseTaskResult` with `base.dry_run=true` and `effect_kind=read_only`, and as creating no `task_events`, replay rows, close-state mutations, Write Authorization changes, staged-handle consumption, or `state_version` increments. Pass when `harness.close_task intent=complete`, `intent=cancel`, or `intent=supersede` with `dry_run=true` is documented as `ToolDryRunResponse` when otherwise valid and previewable. Pass when pre-commit failure with `dry_run=true` is documented as `ToolRejectedResponse`.
+
+Valid `ToolDryRunResponse` branches contain only preview data and no generated refs. `ToolRejectedResponse` and `ToolDryRunResponse` have `effect_kind=no_effect`: no replay row, no state-version increment, no staged-handle consumption, and no Write Authorization creation or consumption.
 
 Fail when any of these conditions appear in active MVP documentation:
 
+- `dry_run=true` is described as always returning `ToolDryRunResponse`.
+- `ToolDryRunResponse` is required for a selected read-only operation, including `harness.close_task intent=check` with `dry_run=true`.
+- A mixed intent method chooses response branches by method name instead of by the selected intent's state effect.
+- `harness.close_task intent=check` with `dry_run=true` is described as creating `task_events`, replay rows, close-state mutations, Write Authorization changes, staged-handle consumption, or `state_version` increments.
 - `ToolRejectedResponse` is described as requiring method-specific result-only fields such as `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, or `close_state`.
 - `dry_run`, `ToolDryRunResponse`, or `DryRunSummary` is described as requiring real generated refs, including generated `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, event refs, artifact refs, or authority for records that do not exist.
 - `STATE_VERSION_CONFLICT` is described as a `PrepareWriteResult.decision` value instead of a public `ErrorCode` on `ToolRejectedResponse`.
 - `StageArtifactResponse` failure is described as requiring `staged_artifact_handle`.
 - `RecordRunResponse` rejection is described as requiring `run_summary`.
-- Rejected responses or dry-run responses are described as creating replay rows, events, `state_version` increments, staged-handle consumption, artifact promotion, or Write Authorization creation or consumption.
+- `ToolRejectedResponse`, `ToolDryRunResponse`, or read-only `dry_run` `MethodResult` branches are described as creating replay rows, events, `state_version` increments, staged-handle consumption, artifact promotion, or Write Authorization creation or consumption.
 
 ## 18. Stale Content Check
 
