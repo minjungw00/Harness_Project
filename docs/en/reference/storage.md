@@ -118,6 +118,16 @@ but it creates only temporary storage-owned staging bytes or notices plus an
 `task_events`, `tool_invocations` replay rows, or
 `project_state.state_version` increments.
 
+Storage separates data shape from persistence. `CloseReadinessBlocker` is a
+close-readiness data shape, not a storage row, event, replay-row marker,
+`close_state` mutation, Write Authorization signal, artifact or evidence
+effect, or state-version signal. The presence of `CloseReadinessBlocker[]` in a
+response does not by itself imply `task_events`, replay rows, `close_state`
+mutation, Write Authorization changes, staged-handle consumption, artifact
+effects, evidence updates, or `project_state.state_version` increments.
+State/storage effects are determined by the response branch and the method
+state-effect table.
+
 The active Core persisted records are:
 
 - Runtime Home identity in `registry.sqlite`.
@@ -164,7 +174,7 @@ current goal summary, active scope summary, allowed paths or affected areas,
 non-goals, acceptance criteria, Autonomy Boundary, required user-owned
 judgments, one blocking question when necessary, one next safe action,
 `CompletionPolicy`, required evidence expectation or evidence gap, and close
-blockers. Missing or unknown pieces stay
+readiness. Missing or unknown pieces stay
 as `unknown`, pending `user_judgments`, evidence gaps, or `blockers`; storage
 must not create extra active planning tables to make the request appear ready.
 
@@ -189,7 +199,7 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | `artifacts` | `state.sqlite` plus artifact store | Registered durable evidence bytes or safe metadata with integrity, redaction, producer, retention, and availability facts. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | `state.sqlite` | Owner relation from an artifact to the active Core/API record it supports. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
 | `evidence_summaries` | `state.sqlite` | Compact evidence coverage and gap record used by status, run/evidence summaries, blockers, and close. It is evaluated against the Task or Change Unit `CompletionPolicy`; it does not own that policy. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
-| `blockers` | `state.sqlite` | Structured blocker state for next action, write compatibility, evidence gaps, close readiness, or recovery. Close-matrix blocker rows committed by `close_task`, when allowed by that method contract, are `CloseBlocker`-related. `prepare_write` `write_decision_reasons` are response/replay payload decision reasons, not close blocker rows. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
+| `blockers` | `state.sqlite` | Structured blocker state for next action, write compatibility, evidence gaps, close readiness, or recovery. Close-readiness blocker state committed by `close_task` exists only when that method contract allows committed blocked close effects; `CloseReadinessBlocker` is the API data shape and is not itself a row or persistence signal. `prepare_write` `write_decision_reasons` are response/replay payload decision reasons, not close-readiness blocker rows. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
 | `task_events` | `state.sqlite` | Append-only audit and ordering trail for committed Core mutations. | `event_id`, `project_id`, `task_id`, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `tool_invocations` | `state.sqlite` | Replay row only for committed non-dry-run Core `MethodResult` responses whose method state-effect row creates replay. `ToolRejectedResponse`, `ToolDryRunResponse`, read-only results, and staging-created responses are not stored here; this includes `CloseTaskResult` for `harness.close_task intent=check` with `dry_run=true`. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
@@ -384,8 +394,9 @@ Change Unit fields.
 - Blocked, dry-run, malformed, or pre-commit failed `prepare_write` attempts
   create no consumable `write_authorizations` row. A committed non-allowed
   `PrepareWriteResult` may carry `write_decision_reasons` in its
-  response/replay payload, but those reasons are not `CloseBlocker` records and
-  are not close-state blocker storage.
+  response/replay payload, but those reasons are `WriteDecisionReason[]`, not
+  `CloseReadinessBlocker[]`, not close-readiness blocker rows, and not
+  `close_state` mutation.
 
 `SensitiveActionScope` storage is distinct from `write_authorizations`.
 For `judgment_kind=sensitive_approval`, `user_judgments` stores the approved or
@@ -491,25 +502,30 @@ the active records, including:
 - `tool_invocations.response_json`.
 
 `tool_invocations.response_json` stores only the exact committed non-dry-run
-Core `MethodResult` response for a replay-row-creating state effect. A committed
-blocked result is stored only when the API method state-effect table permits the
-blocked commit and the response is a committed `MethodResult`.
+Core `MethodResult` response for a replay-row-creating state effect. It does
+not store `StatusResult`, `ToolRejectedResponse`, `ToolDryRunResponse`,
+read-only `MethodResult` results, or successful `StageArtifactResult` staging
+results. A committed blocked result is stored only when the API method
+state-effect table permits the blocked commit and the response is a committed
+`MethodResult`.
+
 For committed `PrepareWriteResult` responses with `decision=blocked`,
 `decision=approval_required`, or `decision=decision_required`,
-`tool_invocations.response_json` may include `write_decision_reasons` as the
-current API contract permits. Those `WriteDecisionReason` values are
-prepare_write decision reasons in the response/replay payload, not
-`CloseBlocker` records; `prepare_write` does not mutate `close_state`, does not
-run the close matrix, and does not create close matrix blocker records.
-`CloseTaskResult(close_state=blocked)` is stored only when it is a committed
-blocked close result from a valid close matrix evaluation. Storage must not
-store `ToolRejectedResponse`, `ToolDryRunResponse`, read-only `MethodResult`
-results, or successful `StageArtifactResult` staging results in
-`tool_invocations.response_json`. `ToolRejectedResponse` with
-`STATE_VERSION_CONFLICT` is not replay-stored. `CloseTaskResult` returned by
-`harness.close_task intent=check`, including when the request has
-`dry_run=true`, is a read-only `MethodResult` with `effect_kind=read_only` and
-is not replay-stored.
+`tool_invocations.response_json` may include
+`write_decision_reasons: WriteDecisionReason[]` as the current API contract
+permits. Those values are prepare_write decision reasons in the
+response/replay payload, not close-readiness blockers; `prepare_write` does not
+mutate `close_state`, does not run close-readiness evaluation, and does not
+create `CloseReadinessBlocker` storage.
+
+`CloseTaskResult(close_state=blocked)` is replay-stored only when it is a
+committed non-dry-run Core `MethodResult` from a valid close-readiness
+evaluation and the method state-effect table permits the committed blocked
+effect. `CloseTaskResult` returned by `harness.close_task intent=check`,
+including when the request has `dry_run=true`, is a read-only `MethodResult`
+with `effect_kind=read_only` and is not replay-stored. `ToolRejectedResponse`
+with `STATE_VERSION_CONFLICT` is not replay-stored and creates no
+`CloseReadinessBlocker`.
 
 Task and Change Unit shaping JSON stores compact summaries and bounded lists
 only. It must not store a standalone Discovery Brief, Question Queue,
@@ -741,24 +757,40 @@ versions. Successful
 contract above; that staging side effect is not a Core current row, event,
 replay row, or state-version increment.
 
+A valid `ToolDryRunResponse` preview may include
+`DryRunSummary.would_blockers: PlannedBlocker[]`. Those `PlannedBlocker[]`
+entries are preview data only. They create no `task_event`, `task_events`
+append, replay row, `tool_invocations.response_json`, `close_state` mutation,
+Write Authorization change, staged-handle creation or consumption, artifact
+effect, evidence update, `CloseReadinessBlocker` storage, or
+`project_state.state_version` increment.
+
 ### Read-only result storage effects
 
 Read-only results are response-only and not replay rows. `harness.status` and
-`harness.close_task intent=check` may compute blockers, close blockers, evidence
-summaries, artifact refs, diagnostics, and next actions for the response, but
-storage must not persist those computed values merely because the read occurred.
+`harness.close_task intent=check` may compute blockers,
+`CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and
+next actions for the response, but storage must not persist those computed
+values merely because the read occurred.
+
+`harness.status` with `close_blockers: CloseReadinessBlocker[]` is a read-only
+observation. It creates no `task_event`, `task_events` append, replay row,
+`tool_invocations.response_json`, `close_state` mutation, Write Authorization
+change, staged-handle consumption, artifact effect, evidence update, or
+`project_state.state_version` increment.
 
 `harness.close_task intent=check` returns `CloseTaskResult` with
 `base.effect_kind=read_only`. When the same selected operation is called with
 `dry_run=true`, it still returns `CloseTaskResult` with `base.dry_run=true` and
 `base.effect_kind=read_only`; it is not `ToolDryRunResponse`.
 
-Both `harness.close_task intent=check` forms have no storage effect: no
-`tool_invocations` replay row, no `task_events`, no close-state update, no
-artifact update or artifact link, no staged-handle consumption, no Write
-Authorization creation or consumption, and no `project_state.state_version`
-increment. `tool_invocations.response_json` stores only committed non-dry-run
-Core `MethodResult` responses whose method state-effect row creates replay, so
+Both `harness.close_task intent=check` forms, with or without
+`blockers: CloseReadinessBlocker[]`, are read-only. They create no `task_event`,
+`task_events` append, replay row, `tool_invocations.response_json`,
+`close_state` mutation, Write Authorization change, staged-handle consumption,
+artifact effect, evidence update, or `project_state.state_version` increment.
+`tool_invocations.response_json` stores only committed non-dry-run Core
+`MethodResult` responses whose method state-effect row creates replay, so
 read-only results are not stored as replay rows.
 
 ### `prepare_write` storage effects
@@ -773,25 +805,25 @@ A committed non-dry-run `PrepareWriteResult` with `decision=blocked`,
 `decision=approval_required`, or `decision=decision_required` may include
 `write_decision_reasons: WriteDecisionReason[]` in the response and replay
 payload when the method state-effect contract permits committing that decision.
-Those reasons are prepare_write decision reasons, not `CloseBlocker` records and
-not close matrix blocker records. This branch must not create a consumable Write
-Authorization, mutate `close_state`, run the close matrix, create
-`CloseBlocker`, create close matrix blocker records, update evidence, touch
-artifacts, consume staged handles, or perform `close_task` effects. It may have
-only the event, replay-row, write-decision-reason payload, and
-`project_state.state_version` effects allowed by the method contract.
+Those reasons are prepare_write decision reasons, not close-readiness blockers,
+not `CloseReadinessBlocker[]`, and not close-readiness blocker records. This
+branch must not create a consumable Write Authorization, mutate `close_state`,
+run close-readiness evaluation, create `CloseReadinessBlocker` storage, update
+evidence, touch artifacts, consume staged handles, or perform `close_task`
+effects. It may have only the event, replay-row, write-decision-reason payload,
+and `project_state.state_version` effects allowed by the method contract.
 
 A rejected `prepare_write` returns `ToolRejectedResponse` with
 `effect_kind=no_effect`. It creates no replay row, no
 `tool_invocations.response_json`, no event, no Write Authorization creation or
-consumption, no `close_state` mutation, no `CloseBlocker`, no close matrix
-blocker record, no artifact effect, no evidence update, no staged-handle
-consumption, and no `project_state.state_version` increment.
+consumption, no `close_state` mutation, no `CloseReadinessBlocker`, no
+close-readiness blocker record, no artifact effect, no evidence update, no
+staged-handle consumption, and no `project_state.state_version` increment.
 
 A valid dry-run `prepare_write` returns `ToolDryRunResponse` and creates no
 replay row or state/storage effects. Expected `prepare_write` decision reasons
 are represented as preview-only `PlannedBlocker` entries, not stored
-`WriteDecisionReason` objects and not `CloseBlocker` records.
+`WriteDecisionReason` objects and not `CloseReadinessBlocker` storage.
 
 ### `close_task` storage effects
 
@@ -803,29 +835,33 @@ it is not `CloseTaskResult` and not
 Close preflight rejection includes an `expected_state_version` mismatch,
 `idempotency_key` reuse with a different request hash, stale
 `WriteAuthorization.basis_state_version`, Core state unreadability before close
-matrix evaluation, request identity failure before a valid Project or Task can
-be selected, local access or capability failure before close matrix evaluation,
-or validation failure before close matrix execution. That rejected call creates no
-`CloseBlocker`, no `task_event` or `task_events` append, no
+readiness evaluation, request identity failure before a valid Project or Task can
+be selected, local access or capability failure before close readiness
+evaluation, or validation failure before close readiness evaluation. That
+rejected call creates no `CloseReadinessBlocker`, no `task_event` or
+`task_events` append, no
 `tool_invocations` row, no `tool_invocations.response_json`, no replay row, no
 `close_state` mutation, no artifact promotion or link, no staged handle
 consumption, no evidence summary update, no Write Authorization creation or
 consumption, and no `project_state.state_version` increment.
 
 `CloseTaskResult(close_state=blocked)` is storage-effective only when the close
-matrix has run and the `harness.close_task` method contract permits committing
-the blocked result. It may create only the `CloseBlocker`, `task_events`,
-replay-row, and `project_state.state_version` effects explicitly allowed by the
-API/storage contract, and it must leave the Task open. It must not be used for
-`STATE_VERSION_CONFLICT`; that code belongs to the preflight
-`ToolRejectedResponse` branch and is not stored as replay.
+readiness evaluation has run and the `harness.close_task` method contract
+permits committing the blocked result. It may include
+`blockers: CloseReadinessBlocker[]` and may create only the blocker-state,
+`task_events`, replay-row, and `project_state.state_version` effects explicitly
+allowed by the API/storage contract. The presence of `CloseReadinessBlocker`
+alone does not imply persistence, and the Task must remain open. This branch
+must not be used for `STATE_VERSION_CONFLICT`; that code belongs to the
+preflight `ToolRejectedResponse` branch and is not stored as replay.
 
 Committed blocked results must follow the owning method shape. A non-allowed
 committed `PrepareWriteResult` uses `write_decision_reasons` in the
-response/replay payload; storage must not turn those reasons into `CloseBlocker`
-or close matrix blocker records. A committed blocked `CloseTaskResult` uses
-`CloseBlocker` and may create only the close-task blocker, event, replay-row,
-and `project_state.state_version` effects explicitly allowed by the method
+response/replay payload; storage must not turn those reasons into
+`CloseReadinessBlocker` values or close-readiness blocker records. A committed
+blocked `CloseTaskResult` uses `CloseReadinessBlocker[]` as response data and
+may create only the close-task blocker-state, event, replay-row, and
+`project_state.state_version` effects explicitly allowed by the method
 contract. No committed blocked result may create the authority it says is
 missing; blocked `prepare_write` creates no consumable `write_authorizations`.
 
@@ -840,12 +876,14 @@ evidence, and user judgments, but it does not select a separate state clock.
 Fresh non-dry-run state-changing API calls compare
 `ToolEnvelope.expected_state_version` with the current
 `project_state.state_version` before commit. A mismatch returns
-`STATE_VERSION_CONFLICT` and creates no current records, events, artifacts,
-evidence summaries, Write Authorization creation or consumption, close state, replay rows, or
-state-version increments. `STATE_VERSION_CONFLICT` is the only active current
-MVP public `ErrorCode` for project-wide state-version mismatch; no alternate
-public code, alias, deprecated spelling, or storage-layer public error name is
-exposed for that mismatch. No active current MVP call requires or accepts more than one
+`STATE_VERSION_CONFLICT` only in `ToolRejectedResponse.errors` and creates no
+`CloseReadinessBlocker`, current record, `task_event` or `task_events` append,
+artifact, evidence summary, Write Authorization creation or consumption,
+`close_state` mutation, replay row, or `project_state.state_version`
+increment. `STATE_VERSION_CONFLICT` is the only active current MVP public
+`ErrorCode` for project-wide state-version mismatch; no alternate public code,
+alias, deprecated spelling, or storage-layer public error name is exposed for
+that mismatch. No active current MVP call requires or accepts more than one
 public `expected_state_version`.
 
 Every committed non-dry-run mutation increments
