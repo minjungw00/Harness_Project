@@ -135,13 +135,13 @@ artifact_input_error:
 
 모든 공개 응답은 정확히 하나의 응답 분기입니다. 분기는 `ToolRejectedResponse`, `ToolResultBase`를 바탕으로 한 메서드별 `MethodResult`, 또는 `ToolDryRunResponse` 중 하나입니다. 어떤 분기를 쓰는지는 표시 방식이 아니라 계약입니다.
 
-`ToolRejectedResponse`는 `STATE_VERSION_CONFLICT`, 요청 검증 실패, 스테이징된 핸들 검증 실패 같은 커밋 전 실패에 쓰는 거절 응답입니다. `response_kind=rejected`, `effect_kind=no_effect`를 가지며 메서드별 결과 객체가 없습니다. `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `close_state` 같은 결과 전용 필드를 포함하면 안 됩니다. 거절 응답은 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, `tool_invocations` 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다.
+`ToolRejectedResponse`는 `STATE_VERSION_CONFLICT`, 요청 검증 실패, 스테이징된 핸들 검증 실패 같은 커밋 전 실패에 쓰는 거절 응답입니다. `response_kind=rejected`, `effect_kind=no_effect`를 가지며 메서드별 결과 객체가 없습니다. `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `close_state` 같은 결과 전용 필드를 포함하면 안 됩니다. 거절 응답은 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태, `tool_invocations` 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다.
 
 커밋된 차단 응답은 `ToolRejectedResponse`가 아닙니다. [현재 MVP API](mvp-api.md#active-mvp-method-behavior)의 메서드별 상태 효과 계약이 커밋된 차단 결과를 허용할 때만 `PrepareWriteResult`나 `CloseTaskResult` 같은 메서드별 결과 스키마 안에서 반환합니다. 커밋된 차단 결과는 `base.response_kind=result`를 가지며, 그 메서드가 허용한 차단 사유나 상태 효과만 커밋할 수 있습니다. `blockers`, 이벤트, 프로젝트 전체 `state_version`, `tool_invocations` 재실행 행을 업데이트할 수 있지만, 차단 사유가 없거나 부족하다고 지적한 권한을 만들면 안 됩니다.
 
 `harness.status`와 `harness.close_task intent=check`를 포함한 읽기 전용 호출은 차단 사유나 닫기 차단 사유를 계산해 반환할 수 있습니다. 그 차단 사유는 응답 필드일 뿐입니다. Core는 읽기를 이유로 차단 사유를 저장하거나, 이벤트를 추가하거나, `tool_invocations` 재실행 행을 만들거나, 상태 버전을 올리면 안 됩니다.
 
-`ToolDryRunResponse`는 유효한 dry-run 미리보기 응답 분기입니다. `dry_run=true`는 항상 기준 권한이 아닙니다. 요청 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 dry run은 `ToolDryRunResponse`와 `DryRunSummary`를 반환합니다. 진단, 후보 차단 사유, `DryRunSummary.would_errors`, `DryRunSummary.next_actions`, 설명용 `PlannedEffect` 예상 효과를 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 커밋된 `tool_invocations` 재실행 행, 스테이징된 핸들, 스테이징된 핸들 소비, 상태 버전 증가를 만들거나 업데이트하면 안 됩니다. 또한 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref` 같은 메서드별 결과 전용 필드나 실제 생성 참조를 포함하면 안 됩니다. `PlannedEffect`는 미리보기 정보일 뿐이며 아직 존재하지 않는 기록의 가짜 생성 ref를 담으면 안 됩니다.
+`ToolDryRunResponse`는 유효한 dry-run 미리보기 응답 분기입니다. `dry_run=true`는 항상 권한 근거가 아닙니다. 요청 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 dry run은 `ToolDryRunResponse`와 `DryRunSummary`를 반환합니다. 진단, 후보 차단 사유, `DryRunSummary.would_errors`, `DryRunSummary.next_actions`, 설명용 `PlannedEffect` 예상 효과를 반환할 수 있지만 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태, 커밋된 `tool_invocations` 재실행 행, 스테이징된 핸들 생성 또는 소비, 상태 버전 증가를 만들거나 업데이트하면 안 됩니다. 또한 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref` 같은 메서드별 결과 전용 필드나 실제 생성 참조를 포함하면 안 됩니다. `PlannedEffect`는 미리보기 정보일 뿐이며 아직 존재하지 않는 기록의 가짜 생성 ref를 담으면 안 됩니다.
 
 `dry_run=true` 요청 자체가 미리보기 생성 전에 요청 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다. 이후 비 `dry_run` 호출은 현재 상태를 기준으로 다시 검증해야 합니다.
 
@@ -153,7 +153,7 @@ artifact_input_error:
 
 `request_hash`는 도구 이름, 스키마 정규화된 요청 본문, 그리고 `request_id`와 `idempotency_key`를 제외한 모든 `ToolEnvelope` 필드에 대한 정규 JSON에서 계산합니다.
 
-재실행 행을 만드는 상태 효과의 커밋된 non-dry-run `MethodResult` 응답만 재실행 행에 저장합니다. 같은 키와 같은 요청 해시를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 승격/연결, 권한 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 키를 다른 요청 해시로 재사용하면 Core는 기존 재실행 행을 보존하고 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다.
+재실행 행을 만드는 상태 효과의 커밋된 non-dry-run `MethodResult` 응답만 재실행 행에 저장합니다. 같은 키와 같은 요청 해시를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 승격/연결, Write Authorization 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 키를 다른 요청 해시로 재사용하면 Core는 기존 재실행 행을 보존하고 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다.
 
 `ToolRejectedResponse`와 `ToolDryRunResponse`는 재실행 행을 만들거나 예약하지 않습니다.
 
@@ -163,7 +163,7 @@ artifact_input_error:
 
 커밋된 재실행 행이 없는 새 상태 변경 시도에서 Core는 담당 기록을 고르기 위해 최신성 확인 전에 기본 Task를 찾을 수 있습니다. 해석 순서는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task입니다. 이 해석은 별도 상태 시계를 고르지 않습니다.
 
-새 non-dry-run 상태 변경은 모두 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. 오래된 `expected_state_version`은 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다. 메서드별 결과가 아니며 절대 `PrepareWriteResult.decision` 값이 아닙니다. 이 커밋 전 실패는 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization, 닫기 상태, 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
+새 non-dry-run 상태 변경은 모두 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. 오래된 `expected_state_version`은 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다. 메서드별 결과가 아니며 절대 `PrepareWriteResult.decision` 값이 아닙니다. 이 커밋 전 실패는 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태, 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
 
 프로젝트 전체 상태 버전 불일치에 쓰는 현재 MVP의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다. 이 불일치에 대해 다른 공개 코드, 별칭, 폐기된 표기, 저장소 계층의 다른 공개 오류 이름, 내부 예외 이름을 노출하지 않습니다.
 
@@ -186,7 +186,7 @@ task_id: string | null
 [MVP 계획](../../build/mvp-plan.md#첫-내부-스모크-목표)의 첫 내부 문서 스모크 목표는 활성 공개 오류와 활성 `CloseBlocker.category` 값만 사용해야 합니다. 스모크 전용 코드를 만들지 않고, 완전한 적합성 테스트 모음이나 구현 계획을 정의하지 않습니다.
 
 - 등록된 접점 검증은 Core가 등록된 접점에 맞는 `VerifiedSurfaceContext`를 파생할 때만 오류 없이 성공합니다. 실패는 `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`를 사용합니다. 복사된 `surface_id`는 접근이나 역량의 증거가 아닙니다.
-- 프로젝트 전체 상태 버전 충돌은 `ToolEnvelope.expected_state_version`이 `project_state.state_version`보다 오래되었을 때 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다. 실패한 시도는 기록, 이벤트, 아티팩트, 증거, Write Authorization, 닫기 상태, 재실행 행, 스테이징된 핸들 소비, 상태 버전 증가를 만들면 안 됩니다.
+- 프로젝트 전체 상태 버전 충돌은 `ToolEnvelope.expected_state_version`이 `project_state.state_version`보다 오래되었을 때 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다. 실패한 시도는 기록, 이벤트, 아티팩트, 증거, Write Authorization 생성 또는 소비, 닫기 상태, 재실행 행, 스테이징된 핸들 소비, 상태 버전 증가를 만들면 안 됩니다.
 - `ShapingReadiness` 공백은 담당 경로에 따라 `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, 또는 구조화된 차단 사유로 드러날 수 있습니다. 읽기 전용 상태나 준비 상태 읽기는 상태를 바꾸지 않습니다.
 - `prepare_write decision=allowed`는 담당 범위의 1회용 Write Authorization을 만듭니다. `decision=blocked`와 `decision=approval_required`는 메서드별 상태 효과 표가 차단 커밋을 허용할 때만 커밋된 `PrepareWriteResult` 값이며, 소비 가능한 Write Authorization을 만들면 안 됩니다. `STATE_VERSION_CONFLICT`와 요청 검증 실패는 `ToolRejectedResponse` 분기이고 절대 `PrepareWriteResult.decision` 값이 아닙니다.
 - `SensitiveActionScope`는 `judgment_kind=sensitive_approval`에 속합니다. 민감 동작 승인 오류는 `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`를 사용합니다. 이 승인은 Write Authorization, 최종 수락, 잔여 위험 수락, 증거, 아티팩트 권한을 대신하지 않습니다.

@@ -156,7 +156,7 @@ Fail when any of these conditions appear in active MVP documentation:
 
 Inspect public response unions, method-specific result branches, rejected-response prose, `dry_run` prose, examples, representative conformance rows, and smoke-target wording.
 
-Pass when public method responses are written as a method-specific `MethodResult` branch, `ToolDryRunResponse` when the method has a distinct dry-run branch, or `ToolRejectedResponse`; strictly read-only methods may omit `ToolDryRunResponse` only by explicit contract. Method-specific fields appear only on the method result branch, valid dry runs contain only preview data and no generated refs, and rejected or dry-run responses have no state effect.
+Pass when public method responses are written as a method-specific `MethodResult` branch, `ToolDryRunResponse` when the method has a distinct dry-run branch, or `ToolRejectedResponse`; strictly read-only methods may omit `ToolDryRunResponse` only by explicit contract. Method-specific fields appear only on the method result branch, valid dry runs contain only preview data and no generated refs, and rejected or dry-run responses have `effect_kind=no_effect`: no replay row, no state-version increment, no staged-handle consumption, and no Write Authorization creation or consumption.
 
 Fail when any of these conditions appear in active MVP documentation:
 
@@ -165,7 +165,7 @@ Fail when any of these conditions appear in active MVP documentation:
 - `STATE_VERSION_CONFLICT` is described as a `PrepareWriteResult.decision` value instead of a public `ErrorCode` on `ToolRejectedResponse`.
 - `StageArtifactResponse` failure is described as requiring `staged_artifact_handle`.
 - `RecordRunResponse` rejection is described as requiring `run_summary`.
-- Rejected responses or dry-run responses are described as creating replay rows, events, `state_version` increments, staged-handle consumption, artifact promotion, or Write Authorization consumption.
+- Rejected responses or dry-run responses are described as creating replay rows, events, `state_version` increments, staged-handle consumption, artifact promotion, or Write Authorization creation or consumption.
 
 ## 18. Stale Content Check
 

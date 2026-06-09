@@ -184,7 +184,7 @@ they serve. It is not full DDL and does not duplicate API schemas.
 | `change_units` | `state.sqlite` | Current or proposed scoped work boundary for write compatibility, Change Unit-level `CompletionPolicy`, and close basis. | `change_unit_id`, `task_id`, `scope_summary`, scope JSON columns for allowed paths or affected areas, `baseline_ref`, `autonomy_boundary_json`, `completion_policy_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | `state.sqlite` | User-owned judgment records for the active `UserJudgment.judgment_kind` values, including separate sensitive-action approval scope when relevant. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, request/context JSON columns, `question`, `sensitive_action_scope_json`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | `state.sqlite` | Durable single-use cooperative Write Authorization created only by non-dry-run `prepare_write` with `decision=allowed`. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
-| `runs` | `state.sqlite` | Committed execution or observation record, including compatible authorization consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, observed/evidence JSON columns, `created_at`, `completed_at`. |
+| `runs` | `state.sqlite` | Committed execution or observation record, including compatible Write Authorization consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, observed/evidence JSON columns, `created_at`, `completed_at`. |
 | `artifact_staging` | `state.sqlite` plus `artifacts/tmp/` | Temporary staged safe bytes or safe notices created by `harness.stage_artifact` for later single-use `harness.record_run` consumption. It is not a persistent `ArtifactRef` and not evidence authority. | `handle_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `display_name`, `relation_hint`, `tmp_uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `status`, `consumed_by_run_id`, `promoted_artifact_id`, `expires_at`, `created_at`, `consumed_at`. |
 | `artifacts` | `state.sqlite` plus artifact store | Registered durable evidence bytes or safe metadata with integrity, redaction, producer, retention, and availability facts. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | `state.sqlite` | Owner relation from an artifact to the active Core/API record it supports. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
@@ -693,7 +693,7 @@ promotion/linking, evidence update, Write Authorization consumption, event
 append, replay-row insert, and exactly one `project_state.state_version`
 increment are part of that same transaction. If any part fails, the transaction
 must leave no partial authority row, staging consumption, persistent artifact
-promotion/linking, authorization consumption, evidence update, event, close
+promotion/linking, Write Authorization consumption, evidence update, event, close
 effect, replay row, or state-version increment.
 
 `tool_invocations` stores exact replay only for committed non-dry-run Core
@@ -701,7 +701,7 @@ effect, replay row, or state-version increment.
 scoped as described by [API Errors: Idempotency](api/errors.md#idempotency).
 If the same key and request hash are replayed, Core returns the original
 committed response without appending events, promoting or linking artifacts, consuming
-authorization, or changing state again. If the key is reused with a different
+Write Authorization, or changing state again. If the key is reused with a different
 request hash, Core returns `STATE_VERSION_CONFLICT` as defined by
 [API Errors](api/errors.md#state-conflict-behavior). The storage unique key is
 `(project_id, tool_name, idempotency_key)`; `request_hash` is the conflict
@@ -714,7 +714,7 @@ version conflicts, read-only calls such as `harness.status` and
 `harness.close_task intent=check`, and rejected `record_run` attempts that
 create no mutation do not create current rows, change `artifact_staging.status`,
 set `consumed_by_run_id` or `promoted_artifact_id`, append `task_events`,
-promote or link artifacts, update evidence summaries, create Write
+promote or link artifacts, update evidence summaries, create or consume Write
 Authorizations, change `write_authorizations.status`, change close state, create
 `tool_invocations` replay rows, or increment state versions. Successful
 `harness.stage_artifact` is limited to the storage-owned temporary staging
@@ -741,7 +741,7 @@ Fresh non-dry-run state-changing API calls compare
 `ToolEnvelope.expected_state_version` with the current
 `project_state.state_version` before commit. A mismatch returns
 `STATE_VERSION_CONFLICT` and creates no current records, events, artifacts,
-evidence summaries, Write Authorizations, close state, replay rows, or
+evidence summaries, Write Authorization creation or consumption, close state, replay rows, or
 state-version increments. `STATE_VERSION_CONFLICT` is the only active current
 MVP public `ErrorCode` for project-wide state-version mismatch; no alternate
 public code, alias, deprecated spelling, or storage-layer public error name is
@@ -759,7 +759,7 @@ is still one mutation and creates exactly one project-wide version increment.
 `harness.status`, `harness.close_task intent=check`, dry-run calls, malformed
 requests, pre-commit validation failures, pre-commit state-version conflicts, and
 idempotent replay do not increment `project_state.state_version`.
-`ToolResponseBase.state_version` always returns the project-wide version: the
+Response-branch `state_version` values always use the project-wide version: the
 resulting version after a committed mutation, or the current project-wide
 version observed for read-only, dry-run, and temporary staging responses.
 
