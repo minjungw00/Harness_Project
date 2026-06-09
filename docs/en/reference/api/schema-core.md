@@ -618,7 +618,9 @@ NextActionSummary:
   blocker_code: ErrorCode | null
 ```
 
-`CloseBlocker` is a structured blocker result. Prose-only status text, reports, or rendered views are not blocker results. For `harness.close_task intent=complete`, Core calculates blocker categories in the deterministic order owned by [Core Model](../core-model.md#close_task). `cancellation` and `supersession` categories describe conflicts with those terminal intents; they are not successful-completion evidence and must not be mixed with `completed_self_checked` or `completed_with_risk_accepted`.
+`CloseBlocker` is a structured blocker result returned after the close matrix has run successfully enough to evaluate close eligibility. It is not a container for pre-commit failures. Request validation failures, stale state, `idempotency_key` reuse with a different request hash, stale `WriteAuthorization.basis_state_version`, local access or capability failures, unreadable Core state, or missing project or Task identity before close-matrix execution return `ToolRejectedResponse` with `effect_kind=no_effect`; they must not be encoded as `CloseBlocker`. `STATE_VERSION_CONFLICT` must not be used as `CloseBlocker.code`.
+
+Prose-only status text, reports, or rendered views are not blocker results. For `harness.close_task intent=complete`, Core calculates blocker categories in the deterministic order owned by [Core Model](../core-model.md#close_task). `cancellation` and `supersession` categories describe conflicts with those terminal intents; they are not successful-completion evidence and must not be mixed with `completed_self_checked` or `completed_with_risk_accepted`.
 
 <a id="nextactionsummary"></a>
 

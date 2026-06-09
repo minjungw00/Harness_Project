@@ -31,7 +31,7 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | Hold the affected action, show the mismatch, narrow to current scope, request the specific user-owned scope judgment, or apply the resolved scope change through `harness.update_scope`. |
 | `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | Ask or resolve the focused active `UserJudgment`. Do not collapse product, technical, scope, sensitive approval, final acceptance, residual-risk acceptance, cancellation, or later/reserved QA waiver and verification-risk routes into one broad approval. |
 | `missing_evidence` | `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING` | Show the affected claim, refs, evidence status, artifact availability, and smallest unblocker. Do not invent test results, artifact integrity, or evidence sufficiency. |
-| `close_blocked` | `CloseTaskResponse.close_state=blocked` plus the primary `ErrorCode` | Return structured blockers and next actions. Do not mark the Task terminal. |
+| `close_blocked` | `CloseTaskResponse.close_state=blocked` plus the primary `ErrorCode` | Return structured blockers and next actions after a valid close matrix evaluation. Preflight failures return `ToolRejectedResponse`; do not mark the Task terminal. |
 | `residual_risk_present` | `RESIDUAL_RISK_NOT_VISIBLE`, `DECISION_REQUIRED`, or `DECISION_UNRESOLVED` | Show the risk and ask `judgment_kind=residual_risk_acceptance` only when the active close or acceptance path requires it. |
 
 <a id="error-taxonomy"></a>
@@ -219,6 +219,20 @@ The first internal documentation smoke target in [MVP Plan](../../build/mvp-plan
 ## `harness.close_task` Close Blockers
 
 `CloseTaskResponse.blockers` must use structured `CloseBlocker` objects from [API Schema Core](schema-core.md#current-position-display-schemas). Prose-only status text, report text, rendered views, or agent summaries are not close-blocker results.
+
+`harness.close_task` has a close preflight rejection boundary before close matrix execution. These conditions must return `ToolRejectedResponse` and must not return `CloseTaskResult(close_state=blocked)`:
+
+- `expected_state_version` mismatch with current `project_state.state_version`.
+- `idempotency_key` reuse with a different request hash.
+- Stale `WriteAuthorization.basis_state_version`.
+- Request shape validation failure before close matrix execution.
+- Local access or capability failure before close matrix execution.
+- Core state cannot be read before close matrix execution.
+- Project or Task identity cannot be established before close matrix execution.
+
+Close preflight rejection has `effect_kind=no_effect`. It creates no `CloseBlocker`, no `task_event`, no `tool_invocations` replay row, no `close_state` mutation, no artifact promotion or link, no staged handle consumption, no evidence summary update, no Write Authorization creation or consumption, and no `project_state.state_version` increment. `STATE_VERSION_CONFLICT` is a pre-commit rejection error only and must never be `CloseBlocker.code`.
+
+Only semantic blockers found by a valid close matrix evaluation may return `CloseTaskResult(close_state=blocked)` with committed close blockers. Valid dry-run previews of state-effecting close intents still return `ToolDryRunResponse`; preflight failures remain `ToolRejectedResponse` even when `dry_run=true`.
 
 For `harness.close_task intent=complete`, close blockers are ordered by the deterministic matrix in [Core Model](../core-model.md#close_task). Public error precedence still selects between public `ErrorCode` values when a method needs one primary error, but it must not reorder the complete blocker matrix or hide earlier blockers behind later acceptance or risk checks. Evidence blockers normally use `EVIDENCE_INSUFFICIENT`; artifact availability blockers, including unavailable or missing close-relevant artifacts, use `ARTIFACT_MISSING`; unresolved user judgment blockers use `DECISION_REQUIRED` or `DECISION_UNRESOLVED`; sensitive-action permission blockers use the `APPROVAL_*` codes; scope blockers use the scope and baseline codes.
 

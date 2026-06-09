@@ -618,7 +618,9 @@ NextActionSummary:
   blocker_code: ErrorCode | null
 ```
 
-`CloseBlocker`는 구조화된 차단 결과입니다. 산문으로만 된 상태 텍스트, 보고서, 렌더링된 보기는 차단 결과가 아닙니다. `harness.close_task intent=complete`에서는 [Core Model](../core-model.md#close_task)이 담당하는 결정적 순서로 차단 범주를 계산합니다. `cancellation`과 `supersession` 범주는 해당 종료 intent와의 충돌을 설명합니다. 성공 완료 증거가 아니며 `completed_self_checked` 또는 `completed_with_risk_accepted`와 섞으면 안 됩니다.
+`CloseBlocker`는 닫기 차단 사유 행렬이 닫기 가능 여부를 평가할 만큼 유효하게 실행된 뒤 반환되는 구조화된 차단 결과입니다. 커밋 전 실패를 담는 곳이 아닙니다. 요청 검증 실패, 오래된 상태, 다른 request hash로 `idempotency_key`를 재사용한 경우, 오래된 `WriteAuthorization.basis_state_version`, 로컬 접근 또는 역량 실패, 닫기 차단 사유 행렬 실행 전 Core 상태를 읽을 수 없는 경우, Project 또는 Task 식별자를 확정할 수 없는 경우는 `effect_kind=no_effect`인 `ToolRejectedResponse`를 반환해야 하며 `CloseBlocker`로 인코딩하면 안 됩니다. `STATE_VERSION_CONFLICT`는 `CloseBlocker.code`로 사용하면 안 됩니다.
+
+산문으로만 된 상태 텍스트, 보고서, 렌더링된 보기는 차단 결과가 아닙니다. `harness.close_task intent=complete`에서는 [Core Model](../core-model.md#close_task)이 담당하는 결정적 순서로 차단 범주를 계산합니다. `cancellation`과 `supersession` 범주는 해당 종료 intent와의 충돌을 설명합니다. 성공 완료 증거가 아니며 `completed_self_checked` 또는 `completed_with_risk_accepted`와 섞으면 안 됩니다.
 
 <a id="nextactionsummary"></a>
 

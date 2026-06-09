@@ -31,7 +31,7 @@
 | `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 영향을 받는 행동을 보류하고, 불일치를 보여 주며, 현재 범위로 줄이거나 구체적인 사용자 소유 범위 판단을 요청하거나, 해결된 범위 변경을 `harness.update_scope`로 적용합니다. |
 | `missing_judgment` | `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `ACCEPTANCE_REQUIRED` | 집중된 활성 `UserJudgment`를 묻거나 해결합니다. 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소 판단, later/reserved QA 면제 판단과 검증 위험 수락 경로를 넓은 승인 하나로 합치지 않습니다. |
 | `missing_evidence` | `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING` | 영향을 받는 주장, 참조, 증거 상태, 아티팩트 가용성, 차단 해소에 필요한 최소 조치를 보여 줍니다. 테스트 결과, 아티팩트 무결성, 증거 충분성을 만들어 내지 않습니다. |
-| `close_blocked` | `CloseTaskResponse.close_state=blocked`와 주 `ErrorCode` | 구조화된 차단 사유와 다음 행동을 반환합니다. Task를 종료 상태로 표시하지 않습니다. |
+| `close_blocked` | `CloseTaskResponse.close_state=blocked`와 주 `ErrorCode` | 유효한 닫기 차단 사유 행렬 평가 뒤 구조화된 차단 사유와 다음 행동을 반환합니다. 행렬 전 거절은 `ToolRejectedResponse`를 반환하며, Task를 종료 상태로 표시하지 않습니다. |
 | `residual_risk_present` | `RESIDUAL_RISK_NOT_VISIBLE`, `DECISION_REQUIRED`, 또는 `DECISION_UNRESOLVED` | 잔여 위험을 보여 주고, 활성 닫기 또는 수락 경로가 요구할 때만 `judgment_kind=residual_risk_acceptance`를 묻습니다. |
 
 <a id="error-taxonomy"></a>
@@ -219,6 +219,20 @@ task_id: string | null
 ## `harness.close_task` 닫기 차단 사유
 
 `CloseTaskResponse.blockers`는 [API Schema Core](schema-core.md#current-position-display-schemas)의 구조화된 `CloseBlocker` 객체를 사용해야 합니다. 설명 문구만 있는 상태 텍스트, 보고서 텍스트, 렌더링된 보기, 에이전트 요약은 닫기 차단 사유 결과가 아닙니다.
+
+`harness.close_task`에는 닫기 차단 사유 행렬 실행 전의 커밋 전 거절 경계가 있습니다. 아래 조건은 반드시 `ToolRejectedResponse`를 반환해야 하며 `CloseTaskResult(close_state=blocked)`를 반환하면 안 됩니다.
+
+- `expected_state_version`이 현재 `project_state.state_version`과 맞지 않는 경우.
+- 같은 `idempotency_key`를 다른 request hash로 재사용한 경우.
+- `WriteAuthorization.basis_state_version`이 오래된 경우.
+- 닫기 차단 사유 행렬 실행 전 요청 형태 검증이 실패한 경우.
+- 닫기 차단 사유 행렬 실행 전 로컬 접근 또는 역량 확인이 실패한 경우.
+- 닫기 차단 사유 행렬 실행 전 Core 상태를 읽을 수 없는 경우.
+- 닫기 차단 사유 행렬 실행 전 Project 또는 Task 식별자를 확정할 수 없는 경우.
+
+닫기 행렬 전 거절 응답은 `effect_kind=no_effect`입니다. `CloseBlocker` 없음, `task_event` 없음, `tool_invocations` 재실행 행 없음, `close_state` 변경 없음, 아티팩트 승격 또는 연결 없음, 스테이징된 핸들 소비 없음, 증거 요약 갱신 없음, Write Authorization 생성 또는 소비 없음, `project_state.state_version` 증가 없음이 적용됩니다. `STATE_VERSION_CONFLICT`는 커밋 전 거절 오류일 뿐이며 절대 `CloseBlocker.code`가 될 수 없습니다.
+
+유효한 닫기 차단 사유 행렬 평가에서 발견한 의미 차단 사유만 `CloseTaskResult(close_state=blocked)`와 커밋된 닫기 차단 결과로 반환할 수 있습니다. 상태 효과가 있는 `intent=complete`, `intent=cancel`, `intent=supersede`의 유효한 `dry_run` 미리보기는 계속 `ToolDryRunResponse`를 반환합니다. 커밋 전 실패는 `dry_run=true`여도 `ToolRejectedResponse`입니다.
 
 `harness.close_task intent=complete`의 닫기 차단 사유는 [Core Model](../core-model.md#close_task)의 결정적 행렬 순서로 정렬합니다. 공개 오류 우선순위는 메서드가 주 `ErrorCode` 하나를 골라야 할 때 여전히 쓰이지만, complete 차단 행렬의 순서를 바꾸거나 앞선 차단 사유를 뒤의 수락/위험 확인 아래 숨기면 안 됩니다. 증거 차단 사유는 보통 `EVIDENCE_INSUFFICIENT`를 사용합니다. 사용할 수 없거나 누락된 닫기 관련 아티팩트를 포함한 아티팩트 가용성 차단 사유는 `ARTIFACT_MISSING`을 사용합니다. 해결되지 않은 사용자 판단 차단 사유는 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 사용합니다. 민감 동작 승인 차단 사유는 `APPROVAL_*` 코드를 사용합니다. 범위 차단 사유는 범위와 baseline 코드를 사용합니다.
 
