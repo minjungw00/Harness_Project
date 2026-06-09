@@ -76,7 +76,7 @@
 
 `ToolRejectedResponse`는 커밋 전 실패에 사용합니다. 예를 들어 오래된 `expected_state_version` / `STATE_VERSION_CONFLICT`, 요청 검증 실패, 유효하지 않은 스테이징된 아티팩트 핸들, MCP/Core 또는 로컬 접점 사용 불가, 로컬 접점 불일치, 역량 부족, 그 밖에 메서드 커밋 전에 실패하는 경우가 여기에 속합니다. 이 응답은 `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, `close_state` 같은 메서드별 결과 전용 필드를 담지 않습니다.
 
-`ToolDryRunResponse`는 선택된 동작에 상태 효과나 저장소 소유 스테이징 효과가 있고 Core가 요청 형태, 로컬 접근, 역량, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 `dry_run=true` 호출에 사용합니다. 이 응답은 `effect_kind=no_effect`이고 상태 효과 없음이며, 메서드별 결과 전용 필드나 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref` 같은 실제 생성 참조를 담지 않습니다. 미리보기의 예상 차단 사유는 `PlannedBlocker` 항목으로만 표현하며, 저장된 `WriteDecisionReason`이나 `CloseBlocker` 객체가 아닙니다. `dry_run` 요청이 읽기 전용 결과나 미리보기 생성 전에 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다.
+`ToolDryRunResponse`는 선택된 동작에 상태 효과나 저장소 소유 스테이징 효과가 있고 Core가 요청 형태, 로컬 접근, 역량, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 `dry_run=true` 호출에 사용합니다. 이 응답은 `effect_kind=no_effect`이고 상태 효과 없음이며, 메서드별 결과 전용 필드나 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref` 같은 실제 생성 참조를 담지 않습니다. 미리보기의 예상 차단 사유는 `DryRunSummary.would_blockers: PlannedBlocker[]` 항목으로만 표현하며, 저장된 `WriteDecisionReason`이나 실제 `CloseReadinessBlocker` 객체가 아닙니다. `dry_run` 요청이 읽기 전용 결과나 미리보기 생성 전에 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다.
 
 명시적인 읽기 전용 예시는 다음과 같습니다. `harness.status`에 `dry_run=true`를 보내면 `base.dry_run=true`, `base.effect_kind=read_only`인 `StatusResult`를 반환합니다. `harness.close_task`에 `intent=check`와 `dry_run=true`를 보내면 `base.dry_run=true`, `base.effect_kind=read_only`인 `CloseTaskResult`를 반환합니다. 반대로 `harness.close_task`에 `intent=complete`, `intent=cancel`, 또는 `intent=supersede`와 `dry_run=true`를 보내고 요청이 그 외에는 유효하며 미리보기 가능하면 `ToolDryRunResponse`를 반환합니다.
 
@@ -84,6 +84,8 @@
 
 메서드에 도구별 `task_id`가 있으면 Core는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task 순서로 주 Task를 찾습니다. 이 해석은 담당 기록을 고르는 일이며 별도 상태 시계를 고르지 않습니다. 새 `dry_run=false` 상태 변경은 모두 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 `project_state.state_version`과 비교합니다.
 값이 맞지 않으면 `STATE_VERSION_CONFLICT`를 반환합니다. 어떤 메서드도 별도 공개 오래된 상태 오류나 저장소 계층 별칭을 정의하지 않습니다.
+
+`STATE_VERSION_CONFLICT`는 `ToolRejectedResponse.errors`에만 나타납니다. `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`가 될 수 없습니다.
 
 읽기 전용 호출은 차단 사유, 닫기 차단 사유, 다음 행동, 진단을 계산해 반환할 수 있습니다. 하지만 그 값은 응답 필드일 뿐입니다. 차단 사유를 저장하거나, `task_events`를 추가하거나, `tool_invocations` 재실행 행을 만들거나, `state_version`을 올리거나, 닫기 상태를 바꾸거나, 아티팩트를 만들거나 갱신하거나 연결하거나, 스테이징된 핸들을 소비하거나, Write Authorization을 만들거나 소비하면 안 됩니다.
 
@@ -257,11 +259,11 @@ StatusResult:
   evidence_summary: EvidenceSummary | null
   blocker_refs: StateRecordRef[]
   close_state: ready | blocked | closed | cancelled | superseded | none
-  close_blockers: CloseBlocker[]
+  close_blockers: CloseReadinessBlocker[]
   guarantee_display: GuaranteeDisplay
 ```
 
-- **상태 효과:** 없습니다. `harness.status`는 응답에 차단 사유, 닫기 차단 사유, 다음 행동, 진단을 계산해 담을 수 있지만 이를 저장하지 않고, 이벤트를 추가하지 않고, `tool_invocations` 재실행 행을 만들지 않으며, `state_version`을 올리지 않고, 닫기 상태를 바꾸지 않고, 아티팩트를 만들거나 갱신하거나 연결하지 않고, 스테이징된 핸들을 소비하지 않고, Write Authorization을 만들거나 소비하지 않습니다. `dry_run=true`이면 공통 읽기 전용 분기 규칙에 따라 같은 읽기 전용 `StatusResult` 형태를 반환하고 `base.dry_run=true`, `base.effect_kind=read_only`를 사용합니다.
+- **상태 효과:** 없습니다. `include.close=true`일 때 `harness.status`는 현재 close 가능성 평가를 읽기 전용으로 수행할 수 있습니다. `StatusResult.close_blockers`는 `CloseReadinessBlocker[]`를 담습니다. 이 항목은 읽기 전용 관찰이며 저장된 `close_task` 결과가 아닙니다. `harness.status`는 `task_event`, `task_events` 추가, 재실행 행, `tool_invocations.response_json`, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 효과, 증거 업데이트, `project_state.state_version` 증가를 만들지 않습니다. `dry_run=true`이면 공통 읽기 전용 분기 규칙에 따라 같은 읽기 전용 `StatusResult` 형태를 반환하고 `base.dry_run=true`, `base.effect_kind=read_only`를 사용합니다.
 - **구체화 표시:** 상태는 현재 생명주기 위치를 정직하게 보여줘야 합니다. `shaping`은 요청이 아직 쓰기 가능한 상태가 아니라는 뜻입니다. `waiting_user`는 다음 안전한 행동 전에 사용자 소유 판단 하나가 필요하다는 뜻입니다. `ready`는 쓰기 가능한 작업에 활성 Change Unit이 있고 쓰기 전 확인으로 이동할 수 있다는 뜻입니다. `blocked`는 활성 차단 사유가 진행을 막는다는 뜻입니다. `StateSummary.shaping_readiness`는 현재 알려진 준비 항목을 보여줘야 합니다. 목표 요약, 범위 밖 항목, 영향 영역 또는 경로, 수락 기준, 자율성 경계, 첫 Change Unit, 이름 붙은 사용자 소유 blocker, 다음 안전한 행동입니다. 읽기 전용 작업도 다음 읽기 전용 행동을 할 만큼 준비될 수 있지만, 이것이 쓰기 호환성을 뜻하지는 않습니다. 응답은 질문이 정말 막고 있을 때 막히는 질문 하나와 주된 다음 안전한 행동 하나를 우선해야 합니다. 참고용 호기심 질문은 차단 사유가 아닙니다.
 - **닫기 상태 경계:** 활성 닫기 상태가 없을 때만 `StatusResult.close_state`에 `none`을 사용할 수 있습니다. `CloseTaskResult.close_state`는 `ready`, `blocked`, `closed`, `cancelled`, `superseded`만 사용합니다.
 - **오류:** `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `NO_ACTIVE_TASK`, 요청한 읽기용 보기가 오래됐거나 사용할 수 없으면 `PROJECTION_STALE`.
@@ -312,8 +314,8 @@ PrepareWriteResult:
 ```
 
 - **응답 분기 계약:** 커밋 전 실패는 `ToolRejectedResponse` 거절 응답을 반환합니다. 유효한 `dry_run` 미리보기는 `ToolDryRunResponse`를 반환합니다. 실제 메서드 결과는 `PrepareWriteResult`를 반환합니다.
-- **prepare_write 판단 사유:** `PrepareWriteResult.write_decision_reasons`는 prepare_write 판단 사유, 즉 write decision 이유를 담습니다. `decision=allowed`이면 `[]`입니다. `decision=blocked`, `decision=approval_required`, `decision=decision_required`이면 비어 있으면 안 됩니다. 이 사유는 `WriteDecisionReason` 값이며, `CloseBlocker`도 아니고 닫기 차단 사유 행렬 결과도 아닙니다.
-- **닫기 경계:** `harness.prepare_write`는 `CloseBlocker`를 만들지 않고, `close_state`를 바꾸지 않고, 닫기 차단 사유 행렬을 실행하지 않고, `close_task` 재실행 행을 만들지 않습니다.
+- **prepare_write 판단 사유:** `PrepareWriteResult.write_decision_reasons`는 prepare_write 판단 사유를 담습니다. `decision=allowed`이면 `[]`입니다. `decision=blocked`, `decision=approval_required`, `decision=decision_required`이면 비어 있으면 안 됩니다. 이 사유는 `WriteDecisionReason` 값이며, close 가능성 평가의 닫기 차단 사유도 아니고 close 가능성 평가 결과도 아닙니다.
+- **닫기 경계:** `harness.prepare_write`는 close 가능성 평가의 닫기 차단 사유를 만들지 않고, `close_state`를 바꾸지 않고, close 가능성 평가를 실행하지 않고, `close_task` 재실행 행을 만들지 않습니다.
 - **커밋 전 거절 경계:** 오래된 상태, 오래된 Write Authorization 근거 버전, 멱등성 `request_hash` 충돌, 요청 검증 실패, 로컬 접근 실패, 판단 평가 전 Core 사용 불가는 `ToolRejectedResponse` 거절 응답 경우입니다. `write_decision_reasons`가 아닙니다.
 - **상태 효과:** 커밋된 `dry_run=false` `decision=allowed`는 활성 경로 수준 `AuthorizedAttemptScope`에 대해 `write_authorizations.status=active` 행 하나를 만들고, 이벤트를 추가하고, 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올립니다. 커밋된 `blocked`, `approval_required`, `decision_required` 응답은 write decision 이유 상태를 갱신하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 소비 가능한 Write Authorization은 만들면 안 됩니다. `dry_run`과 커밋 전 실패는 현재 기록, Write Authorization, write decision 이유 갱신, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 - **커밋된 차단 결정:** `decision=blocked`, `decision=approval_required`, `decision=decision_required`는 메서드별 상태 효과 표가 차단 커밋을 허용할 때만 커밋된 `PrepareWriteResult` 값입니다. 커밋 전 거절을 대신하지 않으며, 사유는 `write_decision_reasons`로 반환합니다.
@@ -554,36 +556,36 @@ CloseTaskResult:
   base: ToolResultBase
   close_state: ready | blocked | closed | cancelled | superseded
   state: StateSummary
-  blockers: CloseBlocker[]
+  blockers: CloseReadinessBlocker[]
   evidence_summary: EvidenceSummary | null
   artifact_refs: ArtifactRef[]
   next_actions: NextActionSummary[]
 ```
 
-Core는 닫기 차단 사유 행렬 실행이나 종료 닫기 커밋 전에 `close_task` 사전 확인을 먼저 수행합니다. 이 단계에서는 요청 검증, 로컬 접근, 선택한 intent에서 요구되거나 제공된 `expected_state_version`의 최신성, 재실행 행을 만들 수 있는 intent의 `idempotency_key` 재실행 조회와 `request_hash` 호환성, Project/Task 식별 정보, 닫기와 관련된 `WriteAuthorization.basis_state_version`이 현재 `project_state.state_version`과 맞는지 확인합니다. 사전 확인 실패는 `effect_kind=no_effect`인 `ToolRejectedResponse` 거절 응답을 반환하며 `CloseTaskResult`가 아닙니다. 이 커밋 전 실패는 `CloseBlocker` 없음, `task_event` 또는 `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 생성 없음, Write Authorization 소비 없음, 스테이징된 핸들 소비 없음, 아티팩트 승격 또는 연결 없음, 증거 업데이트 없음, 상태 버전 증가 없음(`project_state.state_version` 증가 없음)입니다. `STATE_VERSION_CONFLICT`는 `harness.close_task`에서 이 사전 확인의 `ToolRejectedResponse` 오류로만 사용할 수 있으며 절대 `CloseBlocker.code`가 될 수 없습니다.
+Core는 close 가능성 평가나 종료 닫기 커밋 전에 `close_task` 사전 확인을 먼저 수행합니다. 이 단계에서는 요청 검증, 로컬 접근, 선택한 intent에서 요구되거나 제공된 `expected_state_version`의 최신성, 재실행 행을 만들 수 있는 intent의 `idempotency_key` 재실행 조회와 `request_hash` 호환성, Project/Task 식별 정보, 닫기와 관련된 `WriteAuthorization.basis_state_version`이 현재 `project_state.state_version`과 맞는지 확인합니다. 사전 확인 실패는 `effect_kind=no_effect`인 `ToolRejectedResponse` 거절 응답을 반환하며 `CloseTaskResult`가 아닙니다. 이 커밋 전 실패는 `CloseTaskResult.blockers`를 반환하지 않고, `task_event` 또는 `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 변경 없음, 스테이징된 핸들 소비 없음, 아티팩트 효과 없음, 증거 업데이트 없음, `project_state.state_version` 증가 없음입니다. `STATE_VERSION_CONFLICT`는 `harness.close_task`에서 이 사전 확인의 `ToolRejectedResponse.errors` 오류로만 사용할 수 있으며 절대 `CloseReadinessBlocker.code`가 될 수 없습니다.
 
 `CloseTaskResponse`의 응답 분기는 아래처럼 사용합니다.
 
-- `ToolRejectedResponse`: 닫기 차단 사유 행렬 실행 전 실패.
-- `CloseTaskResult(close_state=blocked)`: 유효한 닫기 차단 사유 행렬 실행에서 의미적 차단 사유를 찾아 커밋한 결과.
+- `ToolRejectedResponse`: close 가능성 평가 전 실패.
+- `CloseTaskResult(close_state=blocked)`: 유효한 close 가능성 평가에서 남은 닫기 차단 사유를 `CloseTaskResult.blockers: CloseReadinessBlocker[]`로 반환하는 결과. 커밋된 닫기 차단 효과는 이 응답 branch와 메서드 상태 효과 표가 허용할 때만 생깁니다.
 - `CloseTaskResult(close_state=closed/cancelled/superseded)`: 성공적으로 커밋된 종료 전이.
 - `effect_kind=read_only`인 `CloseTaskResult`: `intent=check`, `dry_run=true` 포함.
 - `ToolDryRunResponse`: `intent=complete`, `intent=cancel`, `intent=supersede`의 유효한 `dry_run` 미리보기.
 
-닫기 관련 개념은 서로 분리됩니다. `Task.lifecycle_phase`는 지속 저장되는 생명주기 필드이며 활성 값은 `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded`입니다. `CloseTaskResult.close_state`는 응답 수준의 닫기 상태이며 값은 `ready`, `blocked`, `closed`, `cancelled`, `superseded`입니다. `Task.close_reason`은 닫기 세부 사유를 `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` 중 하나로 저장합니다. `Task.result`는 `none`, `advice_only`, `completed`, `cancelled`, `superseded` 중 하나의 굵은 결과만 저장합니다. 성공하지 못한 Run, violation, 차단된 닫기, 증거 공백은 Run 상태, `CloseBlocker`, 증거 상태, 현재 Task 상태에 남깁니다.
+닫기 관련 개념은 서로 분리됩니다. `Task.lifecycle_phase`는 지속 저장되는 생명주기 필드이며 활성 값은 `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded`입니다. `CloseTaskResult.close_state`는 응답 수준의 닫기 상태이며 값은 `ready`, `blocked`, `closed`, `cancelled`, `superseded`입니다. `Task.close_reason`은 닫기 세부 사유를 `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` 중 하나로 저장합니다. `Task.result`는 `none`, `advice_only`, `completed`, `cancelled`, `superseded` 중 하나의 굵은 결과만 저장합니다. 성공하지 못한 Run, violation, 차단된 닫기, 증거 공백은 Run 상태, close 가능성 평가의 발견 사항이나 차단 사유 상태, 증거 상태, 현재 Task 상태에 남깁니다.
 
 `intent`가 API 동작을 결정합니다.
 
 | `intent` | API 동작 |
 |---|---|
-| `check` | 항상 읽기 전용입니다. `base.effect_kind=read_only`인 `CloseTaskResult`를 반환합니다. `dry_run=true`는 응답 분기를 바꾸지 않으며, 이 경우에도 `base.dry_run=true`, `base.effect_kind=read_only`인 `CloseTaskResult`를 반환합니다. 닫기 준비 상태와 차단 사유는 응답에만 계산합니다. 상태 효과 없음: `task_events` 없음, 재실행 행 없음, `project_state.state_version` 증가 없음, `close_state` 변경 없음, 아티팩트 생성·갱신·연결 없음, 스테이징된 핸들 소비 없음, Write Authorization 생성 없음, Write Authorization 소비 없음입니다. `close_reason`은 `null`이어야 합니다. |
-| `complete` | `close_task` 사전 확인이 성공한 뒤 [Core Model](../core-model.md#close_task)의 순서 있는 `complete` 차단 사유 행렬을 실행합니다. 차단 사유가 없으면 `lifecycle_phase=completed`, `result=completed`, 파생된 `close_reason`을 저장합니다. 차단된 complete 시도가 차단 사유 상태를 커밋하면 `close_state=blocked`인 `CloseTaskResult`를 반환합니다. |
+| `check` | 항상 읽기 전용 close 가능성 평가입니다. `base.effect_kind=read_only`인 `CloseTaskResult`를 반환하며, `CloseTaskResult.blockers`는 `CloseReadinessBlocker[]`입니다. `dry_run=true`가 있어도 응답은 `base.dry_run=true`, `effect_kind=read_only`인 `CloseTaskResult`로 유지되며 `ToolDryRunResponse`가 아닙니다. 닫기 준비 상태와 차단 사유는 응답에만 계산합니다. 상태 효과 없음: `task_event` 없음, `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 변경 없음, 스테이징된 핸들 소비 없음, 아티팩트 효과 없음, 증거 업데이트 없음, `project_state.state_version` 증가 없음입니다. `close_reason`은 `null`이어야 합니다. |
+| `complete` | `close_task` 사전 확인이 성공한 뒤 [Core Model](../core-model.md#close_task)의 순서 있는 `complete` close 가능성 평가를 실행합니다. 차단 사유가 없으면 `lifecycle_phase=completed`, `result=completed`, 파생된 `close_reason`을 저장합니다. 닫기 차단 사유가 남아 있으면 응답은 `blockers: CloseReadinessBlocker[]`를 담은 `CloseTaskResult(close_state=blocked)`입니다. 이 응답은 응답 branch와 메서드 상태 효과 표가 허용할 때만 커밋된 닫기 차단 효과를 가지며, `CloseReadinessBlocker`가 있다는 사실만으로 저장 효과를 뜻하지 않는다. |
 | `cancel` | 종료 취소이며 성공 완료가 아닙니다. 유효한 Task 식별자, 유효한 생명주기, 호환되는 로컬 접근, 전이를 막는 복구 제약이 없음을 요구합니다. 증거 충분성, 최종 수락, 잔여 위험 수락은 요구하지 않습니다. `close_reason`이 `null`이 아니면 `cancelled`여야 하며, 커밋된 행은 `close_reason=cancelled`, `result=cancelled`를 저장합니다. |
 | `supersede` | 종료 대체이며 성공 완료가 아닙니다. cancellation과 같은 식별자, 생명주기, 로컬 접근, 복구 확인을 요구하고, 활성 포인터를 옮길 때는 같은 프로젝트의 유효한 열린 `superseding_task_id`도 필요합니다. 증거 충분성, 최종 수락, 잔여 위험 수락은 요구하지 않습니다. `close_reason`이 `null`이 아니면 `superseded`여야 하며, 커밋된 행은 `close_reason=superseded`, `result=superseded`를 저장합니다. |
 
-`intent=complete`에서는 `close_task` 사전 확인이 성공한 뒤 API 응답이 Core의 순서 있는 닫기 차단 사유 행렬을 `CloseTaskResult.blockers`로 반영합니다. 처음 실패한 행이 기본 닫기 차단 근거가 됩니다. 뒤 행의 차단 사유도 보조 차단 사유로 함께 보일 수 있지만, 뒤 행이 앞 행을 만족시키거나 숨길 수는 없습니다.
+`intent=complete`에서는 `close_task` 사전 확인이 성공한 뒤 API 응답이 Core의 순서 있는 close 가능성 평가를 `CloseTaskResult.blockers: CloseReadinessBlocker[]`로 반영합니다. 처음 실패한 행이 기본 닫기 차단 근거가 됩니다. 뒤 행의 차단 사유도 보조 차단 사유로 함께 보일 수 있지만, 뒤 행이 앞 행을 만족시키거나 숨길 수는 없습니다.
 
-| 순서 | `CloseBlocker.category` | 일반적인 공개 오류 경로 |
+| 순서 | `CloseReadinessBlocker.category` | 일반적인 공개 오류 경로 |
 |---:|---|---|
 | 1 | `task` | 사전 확인이 같은 프로젝트의 Task를 확정한 뒤, 그 Task의 생명주기나 현재 상태가 complete 전이에 들어갈 수 없으면 `VALIDATION_FAILED`를 사용합니다. Project/Task 식별 정보가 없거나, 읽을 수 없거나, 다른 프로젝트에 속하면 커밋 전 실패이며 닫기 차단 사유가 아닙니다. |
 | 2 | `open_run` | 열린 Run, interrupted/violation Run, 호환되지 않거나 복구되지 않은 Run이 닫기 근거를 막고 더 구체적인 타입 코드가 없으면 `VALIDATOR_FAILED`를 사용합니다. |
@@ -600,7 +602,7 @@ Core는 닫기 차단 사유 행렬 실행이나 종료 닫기 커밋 전에 `cl
 | 13 | `recovery` | 현재 상태를 읽을 수 있고 사전 확인 단계의 최신성 또는 멱등성 충돌이 없을 때, 재실행, 복구, 손상, 해결되지 않은 차단 상태, 그 밖의 수리 제약을 닫기 전에 처리해야 하면 `VALIDATOR_FAILED`를 사용합니다. `idempotency_key`의 `request_hash` 충돌을 다루지 않습니다. |
 | 14 | 없음 | 차단 사유가 없으면 complete 전이를 커밋합니다. 하나라도 남아 있으면 `close_state=blocked`를 반환하고 Task를 열린 상태로 둡니다. |
 
-`STATE_VERSION_CONFLICT`는 complete 닫기 차단 사유 행렬 밖에 있습니다. `write_compatibility`, `recovery`, 어떤 `CloseBlocker.code`에서도 공개 오류 경로로 쓰지 않습니다. 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, `idempotency_key`의 `request_hash` 충돌은 모두 `ToolRejectedResponse` 사전 확인 경우일 뿐입니다.
+`STATE_VERSION_CONFLICT`는 complete close 가능성 평가 밖에 있습니다. `write_compatibility`, `recovery`, 어떤 `CloseReadinessBlocker.code`에서도 공개 오류 경로로 쓰지 않습니다. 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, `idempotency_key`의 `request_hash` 충돌은 모두 `ToolRejectedResponse` 사전 확인 경우일 뿐입니다.
 
 `intent=complete`에서 Core는 닫기 근거로 `close_reason`을 파생합니다. `completed_self_checked`는 필수 증거가 충분하고, 필요한 `final_acceptance`가 해결되었고, 닫기에 영향을 주는 `residual_risk_acceptance`가 필요하지 않다는 뜻입니다. `completed_with_risk_accepted`는 필수 증거가 충분하고, 필요한 `final_acceptance`가 해결되었고, 닫기에 영향을 주는 보이는 잔여 위험에 대해 호환되는 `residual_risk_acceptance`가 있다는 뜻입니다. 요청에 들어온 `close_reason`은 파생 결과와 맞아야 합니다. 맞지 않는 조합은 완료, 취소, 대체를 섞지 말고 검증 실패로 처리합니다.
 
@@ -609,8 +611,8 @@ Core는 닫기 차단 사유 행렬 실행이나 종료 닫기 커밋 전에 `cl
 최종 수락과 잔여 위험 수락은 필수 증거와 닫기 관련 아티팩트가 통과한 뒤 확인합니다. 이 판단들은 증거 닫기 차단 사유를 덮어쓰지 못하고, 뒷받침되지 않은 필수 `EvidenceCoverageItem`을 충분한 증거로 바꾸지 못하며, 빠진 필수 `ArtifactRef`나 `StateRecordRef`를 대신하지 못합니다.
 
 - **활성 Task 포인터:** 커밋된 `intent=supersede`에서 이전 Task가 `project_state.active_task_id`라면, `superseding_task_id`가 같은 프로젝트의 유효한 열린 Task를 가리킬 때만 그 값을 `project_state.active_task_id`로 삼아야 합니다. 그렇지 않으면 활성 포인터를 비워야 합니다. superseded된 이전 Task를 active로 남기면 안 됩니다. 이 호출이 Task 생명주기와 `project_state.active_task_id`를 함께 바꾸더라도 하나의 상태 변경이며 프로젝트 전체 버전 증가는 한 번만 일어납니다.
-- **상태 효과:** `intent=check`는 `dry_run=true`가 있어도 항상 읽기 전용입니다. `task_events` 없음, 재실행 행 없음, `project_state.state_version` 증가 없음, `close_state` 변경 없음, 아티팩트 갱신 없음, 스테이징된 핸들 소비 없음, Write Authorization 생성 없음, Write Authorization 소비 없음입니다. 커밋된 `dry_run=false` 최종 닫기는 `tasks.lifecycle_phase`, `tasks.close_reason`, `tasks.result`, `tasks.closed_at`, 영향을 받는 `change_units`, 차단 사유, 필요한 경우 프로젝트 활성 Task 상태, 이벤트, 재실행, `project_state.state_version`을 정확히 한 번 업데이트합니다. 커밋된 닫기 차단 결과인 `CloseTaskResult`는 메서드 계약이 허용한 차단 사유, 이벤트, 재실행 행, `project_state.state_version` 효과만 만들 수 있고 Task는 열린 상태로 둬야 합니다. `close_task` 사전 확인 거절은 `effect_kind=no_effect`인 `ToolRejectedResponse` 거절 응답을 반환하며 `CloseBlocker` 없음, `task_event` 또는 `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 생성 없음, Write Authorization 소비 없음, 스테이징된 핸들 소비 없음, 아티팩트 승격 또는 연결 없음, 증거 업데이트 없음, 상태 버전 증가 없음(`project_state.state_version` 증가 없음)입니다.
-- **`dry_run` 분기와 응답 선택:** `harness.close_task`는 혼합 intent 메서드이므로 메서드 이름이 아니라 선택된 intent의 상태 효과로 응답 분기를 고릅니다. `intent=check`와 `dry_run=true`는 `base.dry_run=true`, `base.effect_kind=read_only`인 `CloseTaskResult`를 반환하며 `ToolDryRunResponse`를 반환하면 안 됩니다. `intent=complete`, `intent=cancel`, `intent=supersede`와 `dry_run=true`는 요청이 그 외에는 유효하며 미리보기 가능하면 `ToolDryRunResponse`를 반환합니다. `DryRunSummary`는 종료 또는 차단된 닫기 예상 효과, dry-run 예상 차단 사유, 다음 행동을 미리 보여 줄 수 있습니다. close_task 상태 변경 intent의 예상 닫기 차단 사유는 `DryRunSummary.would_blockers`의 `PlannedBlocker` 항목으로만 표현하며 `source_kind=close_matrix`를 사용합니다. 이 미리보기는 실제 `CloseBlocker`를 저장하거나 반환하지 않습니다. 닫기 상태, Task 생명주기, 차단 사유, 이벤트, 재실행 행, 아티팩트 생성·갱신·연결, 스테이징된 핸들 소비, Write Authorization 생성 또는 소비, `state_version`을 바꾸지 않습니다.
+- **상태 효과:** `intent=check`는 `dry_run=true`가 있어도 항상 읽기 전용입니다. `task_event` 없음, `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `project_state.state_version` 증가 없음, `close_state` 변경 없음, 아티팩트 효과 없음, 스테이징된 핸들 소비 없음, Write Authorization 변경 없음입니다. 커밋된 `dry_run=false` 최종 닫기는 `tasks.lifecycle_phase`, `tasks.close_reason`, `tasks.result`, `tasks.closed_at`, 영향을 받는 `change_units`, 차단 사유, 필요한 경우 프로젝트 활성 Task 상태, 이벤트, 재실행, `project_state.state_version`을 정확히 한 번 업데이트합니다. 커밋된 닫기 차단 결과인 `CloseTaskResult`는 메서드 계약이 허용한 차단 사유 상태, 이벤트, 재실행 행, `project_state.state_version` 효과만 만들 수 있고 Task는 열린 상태로 둬야 합니다. `CloseReadinessBlocker`가 있다는 사실만으로 저장 효과를 뜻하지 않는다. `close_task` 사전 확인 거절은 `effect_kind=no_effect`인 `ToolRejectedResponse` 거절 응답을 반환하며 `CloseTaskResult.blockers`를 반환하지 않고, `task_event` 또는 `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 변경 없음, 스테이징된 핸들 소비 없음, 아티팩트 효과 없음, 증거 업데이트 없음, `project_state.state_version` 증가 없음입니다.
+- **`dry_run` 분기와 응답 선택:** `harness.close_task`는 혼합 intent 메서드이므로 메서드 이름이 아니라 선택된 intent의 상태 효과로 응답 분기를 고릅니다. `intent=check`와 `dry_run=true`는 `base.dry_run=true`, `base.effect_kind=read_only`인 `CloseTaskResult`를 반환하며 `ToolDryRunResponse`를 반환하면 안 됩니다. `intent=complete`, `intent=cancel`, `intent=supersede`와 `dry_run=true`는 요청이 그 외에는 유효하며 미리보기 가능하면 `ToolDryRunResponse`를 반환합니다. `DryRunSummary`는 종료 또는 차단된 닫기 예상 효과, close 가능성 평가 발견 사항, 다음 행동을 미리 보여 줄 수 있습니다. `intent=complete`, `intent=cancel`, `intent=supersede`에 대한 close_task dry-run 미리보기의 예상 닫기 차단 사유는 `DryRunSummary.would_blockers`의 `PlannedBlocker` 항목으로만 표현하며 `source_kind=close_readiness`를 사용하고, `CloseReadinessBlocker`로 표현하지 않습니다. 이 미리보기는 닫기 상태, Task 생명주기, 차단 사유, 이벤트, 재실행 행, 아티팩트 생성·갱신·연결, 스테이징된 핸들 소비, Write Authorization 생성 또는 소비, `state_version`을 바꾸지 않습니다.
 - **오류:** `STATE_VERSION_CONFLICT`가 이 메서드 목록에 남아 있는 것은 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, `idempotency_key`의 `request_hash` 충돌 같은 `ToolRejectedResponse` 사전 확인 오류로만 허용된다는 뜻입니다. 커밋된 닫기 차단 결과의 오류가 아닙니다. 그 밖의 메서드 오류에는 `VALIDATION_FAILED`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `ARTIFACT_MISSING`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATOR_FAILED`가 있습니다.
 - **저장소 담당 문서:** `tasks`, `change_units`, `blockers`, `runs`, `evidence_summaries`, `artifacts`, `artifact_links`, `user_judgments`, `task_events`, `tool_invocations`.
 - **보안 경계:** Close는 Core 상태 전이이며 보고서가 아닙니다. 대화, 상태 텍스트, 최종 수락만 있는 상태, 잔여 위험 수락만 있는 상태, 증거만 있는 상태, 렌더링된 보기에서 추론하면 안 됩니다.
