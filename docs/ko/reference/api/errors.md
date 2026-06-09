@@ -6,6 +6,21 @@
 
 이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다.
 
+## 오류와 차단 사유의 담당 구조
+
+아래 네 구조는 서로 다른 계약입니다.
+
+| 구조 | 담당 의미 |
+|---|---|
+| `ToolError` | `errors` 배열에 담는 공개 오류 세부정보입니다. `ToolRejectedResponse.errors`는 커밋 전 실패 코드가 들어가는 유일한 자리입니다. 커밋, 스테이징 부수 효과, 재실행 행, 닫기 차단 사유 행렬 평가, 상태 버전 증가 전에 요청을 거절할 때 이 구조를 씁니다. |
+| `WriteDecisionReason` | `prepare_write`가 커밋한 판단 사유입니다. `PrepareWriteResult.write_decision_reasons`에 담기며 `decision=blocked`, `decision=approval_required`, `decision=decision_required`를 설명합니다. |
+| `CloseBlocker` | `close_task`가 커밋한 닫기 차단 사유 행렬의 차단 사유입니다. `close_task` 사전 확인이 성공하고 닫기 차단 사유 행렬이 의미 차단 사유를 찾은 뒤 `CloseTaskResult(close_state=blocked).blockers`에 담깁니다. |
+| `PlannedBlocker` | `DryRunSummary.would_blockers`에만 담는 dry-run 예상 차단 사유입니다. 저장되지 않으며 커밋된 판단 사유나 커밋된 닫기 차단 결과가 아닙니다. |
+
+이 네 구조는 서로 대신 쓰지 않습니다. `prepare_write decision=blocked`, `decision=approval_required`, `decision=decision_required`는 `CloseBlocker`가 아니라 `WriteDecisionReason`을 사용합니다. `close_task close_state=blocked`는 `WriteDecisionReason`이 아니라 `CloseBlocker`를 사용합니다. dry-run 미리보기는 `CloseBlocker`나 `WriteDecisionReason`이 아니라 `PlannedBlocker`를 사용합니다. 커밋 전 실패는 어떤 차단 사유 타입도 쓰지 않고 `ToolRejectedResponse.errors: ToolError[]` 거절 응답을 사용합니다.
+
+`STATE_VERSION_CONFLICT`는 `ToolRejectedResponse.errors`에만 나타납니다. `WriteDecisionReason.code`, `CloseBlocker.code`, `PlannedBlocker.code`, 또는 `MethodResult.decision` 값이 될 수 없습니다. `VALIDATION_FAILED`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK` 같은 커밋 전 실패 코드도 요청 거절을 뜻할 때는 차단 사유 코드로 쓰지 않습니다. 이 코드는 `ToolRejectedResponse.errors`에 남고 응답은 `effect_kind=no_effect`입니다.
+
 ## 현재 MVP 보장 표시와 profile-gated 주장 경계
 
 `guarantee_display.level`은 승격된 프로필이 profile-gated 표시 값을 명시적으로 지원하지 않는 한 현재 MVP 값인 `cooperative`와 `detective`를 사용합니다. 보안 의미는 [보안 참조: 정직한 보장 표시](../security.md#정직한-guarantee-display)가 담당하고, 정확한 값 집합 경계는 [API Schema Core](schema-core.md#current-mvp-value-sets)가 담당합니다.
@@ -102,7 +117,7 @@ artifact_input_error:
 
 오류를 담는 응답 분기의 `errors`가 비어 있지 않으면 메서드 섹션이 더 좁은 순서를 정의하지 않는 한 `errors[0]`이 아래 순서로 선택된 주 공개 코드입니다. `ToolRejectedResponse`에서는 `ToolRejectedResponse.errors[0]`이 주 거절 코드입니다. 커밋된 차단 결과나 진단을 담은 결과에서는 `MethodResult.base.errors[0]`이 주 공개 코드입니다. 보조 차단 사유는 메서드별 필드와 `ToolError.details`에 남을 수 있습니다. 유효한 `ToolDryRunResponse`는 `errors=[]`를 유지하며, 미리 볼 수 있는 예상 실패는 `DryRunSummary.would_errors`에 둡니다.
 
-`STATE_VERSION_CONFLICT`는 이 우선순위 표에서 `ToolRejectedResponse` 분기에만 나타납니다. `MethodResult.base.errors[0]`, `CloseTaskResult(close_state=blocked).errors[0]`, 또는 커밋된 닫기 차단 결과의 주 오류로 선택하면 안 됩니다.
+`STATE_VERSION_CONFLICT`는 이 우선순위 표에서 `ToolRejectedResponse.errors`에만 나타납니다. `MethodResult.base.errors[0]`, `CloseTaskResult(close_state=blocked).errors[0]`, 또는 커밋된 닫기 차단 결과의 주 오류로 선택하면 안 됩니다.
 
 | 우선순위 | 주 `ErrorCode` |
 |---:|---|
@@ -150,6 +165,8 @@ artifact_input_error:
 
 커밋된 차단 응답은 `ToolRejectedResponse`가 아닙니다. [현재 MVP API](mvp-api.md#active-mvp-method-behavior)의 메서드별 상태 효과 계약이 커밋된 차단 결과를 허용할 때만 `PrepareWriteResult`나 `CloseTaskResult` 같은 메서드별 결과 스키마 안에서 반환합니다. 커밋된 차단 결과는 `base.response_kind=result`를 가지며, 그 메서드가 허용한 차단 사유나 상태 효과만 커밋할 수 있습니다. `blockers`, 이벤트, 프로젝트 전체 `state_version`, `tool_invocations` 재실행 행을 업데이트할 수 있지만, 차단 사유가 없거나 부족하다고 지적한 권한을 만들면 안 됩니다.
 
+`PrepareWriteResult`에서 커밋된 `decision=blocked`, `decision=approval_required`, `decision=decision_required`는 `write_decision_reasons: WriteDecisionReason[]`를 사용합니다. `CloseBlocker`를 반환하거나 저장하지 않고 `close_state`를 바꾸지 않습니다. `CloseTaskResult(close_state=blocked)`의 커밋된 닫기 차단 결과는 `blockers: CloseBlocker[]`를 사용하며 `WriteDecisionReason`을 사용하지 않습니다. 두 커밋 결과에 도달하기 전의 요청 거절은 `ToolRejectedResponse.errors`를 사용합니다.
+
 `harness.status`와 `harness.close_task intent=check`를 포함한 읽기 전용 호출은 차단 사유나 닫기 차단 사유를 계산해 반환할 수 있습니다. 그 차단 사유는 응답 필드일 뿐입니다. Core는 읽기를 이유로 차단 사유를 저장하거나, 이벤트를 추가하거나, `tool_invocations` 재실행 행을 만들거나, 상태 버전을 올리면 안 됩니다. 요청이 그 외에는 유효하면 이런 호출은 `dry_run=true`여도 메서드별 결과 분기를 반환합니다.
 
 `ToolDryRunResponse`는 상태 효과가 있는 선택 동작이나 저장소 소유 스테이징 동작의 유효한 `dry_run` 미리보기에만 쓰는 응답 분기입니다. `dry_run=true`는 권한 근거가 아닙니다. 요청 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 `dry_run` 호출은 `ToolDryRunResponse`와 `DryRunSummary`를 반환합니다. 상태 효과 없음: 진단, `DryRunSummary.would_errors`, `DryRunSummary.next_actions`, 설명용 `PlannedEffect` 예상 효과, 그리고 `DryRunSummary.would_blockers: PlannedBlocker[]` 형태의 후보 차단 사유만 반환할 수 있습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태, 커밋된 `tool_invocations` 재실행 행, 스테이징된 핸들 생성 또는 소비, 상태 버전 증가를 만들거나 업데이트하면 안 됩니다. 실제 `WriteDecisionReason`이나 실제 `CloseBlocker`를 저장하거나 반환하면 안 되며, `PlannedBlocker.code`는 `STATE_VERSION_CONFLICT`가 될 수 없습니다. 또한 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref` 같은 메서드별 결과 전용 필드나 실제 생성 참조를 포함하면 안 됩니다. `PlannedEffect`는 미리보기 정보일 뿐이며 아직 존재하지 않는 기록의 가짜 생성 ref를 담으면 안 됩니다. `DryRunSummary.would_errors`는 미리보기 가능한 진단만 담고, 요청을 거절해야 하는 커밋 전 실패 결과를 담지 않습니다.
@@ -189,9 +206,11 @@ artifact_input_error:
 
 커밋된 재실행 행이 없는 새 상태 변경 시도에서 Core는 담당 기록을 고르기 위해 최신성 확인 전에 기본 Task를 찾을 수 있습니다. 해석 순서는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task입니다. 이 해석은 별도 상태 시계를 고르지 않습니다. 새 `dry_run=false` 상태 변경은 모두 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. `dry_run=true` 요청이 오래된 `expected_state_version`을 제공해도 읽기 전용 결과나 `ToolDryRunResponse` 미리보기 전에 같은 커밋 전 거절이 적용됩니다.
 
-`STATE_VERSION_CONFLICT`는 메서드별 결과도 아니고 dry-run 미리보기 정보도 아닙니다. `MethodResult.decision` 값이 아니고, `CloseTaskResult.close_state`가 아니며, `CloseBlocker.code`도 아니고, `PlannedBlocker.code`도 아닙니다. 또한 `CloseTaskResult(close_state=blocked).errors[0]`이나 커밋된 닫기 차단 결과의 주 오류로 쓰면 안 됩니다. 커밋된 `CloseTaskResult(close_state=blocked)`에서는 `errors[0]`과 `blockers[*].code`가 닫기 차단 사유 행렬 실행 뒤 발견한 의미 차단 사유만 설명할 수 있습니다. 커밋 전 실패 코드는 그 자리에 넣지 않습니다.
+`STATE_VERSION_CONFLICT`는 메서드별 결과도 아니고 dry-run 미리보기 정보도 아닙니다. `ToolRejectedResponse.errors`에만 나타납니다. `MethodResult.decision` 값이 아니고, `WriteDecisionReason.code`도 아니며, `CloseTaskResult.close_state`, `CloseBlocker.code`, `PlannedBlocker.code`도 아닙니다. 또한 `CloseTaskResult(close_state=blocked).errors[0]`이나 커밋된 닫기 차단 결과의 주 오류로 쓰면 안 됩니다. 커밋된 `CloseTaskResult(close_state=blocked)`에서는 `errors[0]`과 `blockers[*].code`가 닫기 차단 사유 행렬 실행 뒤 발견한 의미 차단 사유만 설명할 수 있습니다. 커밋 전 실패 코드는 그 자리에 넣지 않습니다.
 
 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, `idempotency_key`의 `request_hash` 충돌은 `ToolDryRunResponse`가 아니라 `ToolRejectedResponse` 거절 응답을 반환합니다. 이 조건들은 `DryRunSummary.would_errors`나 `DryRunSummary.would_blockers`에 넣으면 안 됩니다.
+
+`VALIDATION_FAILED`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`가 커밋 전 요청 거절을 뜻하면 그 코드는 `ToolRejectedResponse.errors`에 속하며 `WriteDecisionReason.code`, `CloseBlocker.code`, `PlannedBlocker.code`로 옮기면 안 됩니다. 같은 공개 코드가 커밋된 의미 결과를 설명할 수 있는 경우는 메서드 담당 문서가 커밋된 `MethodResult`를 명시적으로 반환할 때뿐입니다. 요청 거절은 그 경우와 분리합니다.
 
 이 거절 응답은 현재 기록, `task_events`, 재실행 행, 아티팩트, 스테이징된 핸들 소비, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태 변경, `state_version` 증가를 만들지 않습니다. 상태 효과 없음이 적용됩니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
 
@@ -222,7 +241,7 @@ task_id: string | null
 - 등록된 접점 검증은 Core가 등록된 접점에 맞는 `VerifiedSurfaceContext`를 파생할 때만 오류 없이 성공합니다. 실패는 `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`를 사용합니다. 복사된 `surface_id`는 접근이나 역량의 증거가 아닙니다.
 - 프로젝트 전체 상태 버전 충돌은 `ToolEnvelope.expected_state_version`이 `project_state.state_version`보다 오래되었을 때 `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse`를 반환합니다. 실패한 시도는 기록, 이벤트, 아티팩트, 증거, Write Authorization 생성 또는 소비, 닫기 상태, 재실행 행, 스테이징된 핸들 소비, 상태 버전 증가를 만들면 안 됩니다.
 - `ShapingReadiness` 공백은 담당 경로에 따라 `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, 또는 구조화된 차단 사유로 드러날 수 있습니다. 읽기 전용 상태나 준비 상태 읽기는 상태를 바꾸지 않습니다.
-- `prepare_write decision=allowed`는 담당 범위의 1회용 Write Authorization을 만듭니다. `decision=blocked`와 `decision=approval_required`는 메서드별 상태 효과 표가 차단 커밋을 허용할 때만 커밋된 `PrepareWriteResult` 값이며, 소비 가능한 Write Authorization을 만들면 안 됩니다. `STATE_VERSION_CONFLICT`와 요청 검증 실패는 `ToolRejectedResponse` 분기이고 절대 `PrepareWriteResult.decision` 값이 아닙니다.
+- `prepare_write decision=allowed`는 담당 범위의 1회용 Write Authorization을 만듭니다. `decision=blocked`, `decision=approval_required`, `decision=decision_required`는 메서드별 상태 효과 표가 차단 커밋을 허용할 때만 커밋된 `PrepareWriteResult` 값입니다. 사유는 `CloseBlocker`가 아니라 `write_decision_reasons`의 `WriteDecisionReason` 항목입니다. 소비 가능한 Write Authorization을 만들면 안 됩니다. `STATE_VERSION_CONFLICT`와 요청 검증 실패는 `ToolRejectedResponse.errors` 분기이고 절대 `PrepareWriteResult.decision` 값이 아닙니다.
 - `SensitiveActionScope`는 `judgment_kind=sensitive_approval`에 속합니다. 민감 동작 승인 오류는 `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`를 사용합니다. 이 승인은 Write Authorization, 최종 수락, 잔여 위험 수락, 증거, 아티팩트 권한을 대신하지 않습니다.
 - `harness.stage_artifact` 성공은 임시 핸들만 만들고 Core 변경을 만들지 않습니다. 유효한 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`입니다. 출처 필드 형태가 잘못되었거나 스테이징된 핸들 검증이 실패하면, 실제 실패가 요청 수준 로컬 접근이나 역량 확인이 아닌 한 `artifact_input_error` detail을 담은 `VALIDATION_FAILED`의 `ToolRejectedResponse`를 반환합니다. 이런 조건을 증거 충분성, 로컬 접근 불일치, 역량 부족으로 숨기면 안 됩니다.
 - `harness.record_run`은 호환되는 Write Authorization을 정확히 한 번 소비합니다. Write Authorization이 없으면 `WRITE_AUTHORIZATION_REQUIRED`를 사용합니다. 프로젝트 전체 근거 버전이 오래된 Write Authorization은 `STATE_VERSION_CONFLICT`를 사용합니다. 만료, 철회, 이미 소비됨, 버전 불일치가 아닌 비호환 상태이면 `WRITE_AUTHORIZATION_INVALID`를 사용합니다. 승인 범위 밖 관찰 시도는 적용되는 범위 또는 Write Authorization 관련 코드를 사용합니다.
