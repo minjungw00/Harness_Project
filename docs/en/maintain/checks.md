@@ -34,6 +34,7 @@ These checks look for documentation drift:
 - `dry_run=true` wording that treats every valid dry-run request as `ToolDryRunResponse` or requires `ToolDryRunResponse` for a read-only selected intent
 - mixed intent method wording that chooses response branches by method name instead of the selected intent's state effect
 - `harness.close_task intent=check` with `dry_run=true` wording that creates `task_events`, replay rows, close-state mutations, Write Authorization changes, staged-handle consumption, or `state_version` increments
+- `close_task` wording that turns preflight `STATE_VERSION_CONFLICT`, stale `WriteAuthorization.basis_state_version`, or `idempotency_key` request-hash conflict into committed close blockers
 - one-language-per-`doc_id` agent retrieval problems
 - stale rewrite/history notes, closed issue records, and obsolete review prose
 
@@ -178,7 +179,23 @@ Fail when any of these conditions appear in active MVP documentation:
 - `RecordRunResponse` rejection is described as requiring `run_summary`.
 - `ToolRejectedResponse`, `ToolDryRunResponse`, or read-only `dry_run` `MethodResult` branches are described as creating replay rows, events, `state_version` increments, staged-handle consumption, artifact promotion, or Write Authorization creation or consumption.
 
-## 18. Stale Content Check
+## 18. `close_task` Preflight And Blocked-Close Check
+
+Inspect `close_task` prose, response examples, error lists, close blocker matrices, write-compatibility wording, recovery wording, storage effects, smoke examples, and authoring guidance.
+
+Pass when `close_task` defines preflight rejection before the close matrix, preflight rejection returns `ToolRejectedResponse`, and semantic close matrix blockers return `CloseTaskResult(close_state=blocked)` only after a valid matrix evaluation. Pass when `STATE_VERSION_CONFLICT` is documented only as a `ToolRejectedResponse` preflight error, stale `WriteAuthorization.basis_state_version` is preflight rejection before consumption, and `idempotency_key` reuse with a different request hash is preflight rejection that preserves the existing replay row.
+
+Fail when any of these conditions appear in active MVP documentation:
+
+- `STATE_VERSION_CONFLICT` is used as `CloseBlocker.code`.
+- `STATE_VERSION_CONFLICT` is described as `CloseTaskResult(close_state=blocked).errors[0]`, the primary error of `CloseTaskResult(close_state=blocked)`, or the primary error for any committed blocked close result.
+- `STATE_VERSION_CONFLICT` is described as a committed blocked close result rather than a `ToolRejectedResponse`.
+- Stale `WriteAuthorization.basis_state_version` is described as a committed `write_compatibility` blocker.
+- `idempotency_key` reuse with a different request hash is described as a `recovery` blocker.
+- Close preflight rejection is described as creating a `CloseBlocker`, `task_event`, `task_events` append, `tool_invocations` replay row, replay row, `close_state` mutation, Write Authorization consumption, staged-handle consumption, artifact effect, evidence update, or `state_version` increment.
+- The same state effects are assigned to `ToolRejectedResponse` and committed blocked `CloseTaskResult`.
+
+## 19. Stale Content Check
 
 Inspect Maintain docs and nearby routes for historical rewrite reviews, closed issue records, obsolete acceptance records, obsolete delivery-label explanations, prior stage label history, obsolete alias history, later-candidate localization audit records, past translation problem records, past audit result narrative, and temporary migration plans.
 
