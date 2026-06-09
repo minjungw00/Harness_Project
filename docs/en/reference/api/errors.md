@@ -41,7 +41,7 @@ Active MVP behavior defaults to cooperative checks with limited detective report
 | Code | Meaning |
 |---|---|
 | `VALIDATION_FAILED` | Payload shape, enum value, activation rule, profile-specific validation, or `record_run` `ArtifactInput` validation failed before mutation. |
-| `STATE_VERSION_CONFLICT` | Pre-commit stale-state rejection: `ToolEnvelope.expected_state_version` does not match current `project_state.state_version`, a Write Authorization is stale because its project-wide `basis_state_version` no longer matches current `project_state.state_version`, or the same idempotency key was reused with a different canonical request. |
+| `STATE_VERSION_CONFLICT` | Project-wide pre-commit freshness or idempotency conflict. It is returned only as `ToolRejectedResponse` with `effect_kind=no_effect` when `ToolEnvelope.expected_state_version` is stale, `WriteAuthorization.basis_state_version` is stale before consumption, or the same `idempotency_key` is reused with a different request hash. |
 | `NO_ACTIVE_TASK` | A Task is required but none is active or addressed. |
 | `NO_ACTIVE_CHANGE_UNIT` | A write-capable or close-relevant operation has no active scoped Change Unit. |
 | `SCOPE_REQUIRED` | Scope confirmation is required before the requested write or action can proceed. |
@@ -72,7 +72,7 @@ missing | expired | stale | revoked | consumed | incompatible
 ```
 
 Use `WRITE_AUTHORIZATION_REQUIRED` with `authorization_reason=missing` when no required authorization is supplied. Use `WRITE_AUTHORIZATION_INVALID` with `authorization_reason=expired`, `revoked`, `consumed`, or `incompatible` when an existing authorization cannot be consumed for a non-version reason.
-Use `STATE_VERSION_CONFLICT` with `authorization_reason=stale` when the supplied Write Authorization is stale because its project-wide `basis_state_version` does not match current `project_state.state_version`.
+Use `STATE_VERSION_CONFLICT` with `authorization_reason=stale` when the supplied Write Authorization is stale because its project-wide `basis_state_version` does not match current `project_state.state_version`. This is a `ToolRejectedResponse` with `effect_kind=no_effect`; it is not a committed `write_compatibility` `CloseBlocker`, and the Write Authorization is not consumed.
 
 Use `VALIDATION_FAILED` when `ArtifactInput.source_kind` and its source fields do not match the schema shape. During `harness.record_run`, invalid staged-handle validation is a pre-commit failure that returns `ToolRejectedResponse`. Staged-handle validation failures for `ArtifactInput.source_kind=staged_artifact` also use public `VALIDATION_FAILED`, with structured detail in `ToolError.details.artifact_input_error`. Do not introduce new top-level public error codes for each staged-handle validation failure.
 
@@ -101,6 +101,8 @@ Use the local-access codes narrowly and keep them distinguishable. `MCP_UNAVAILA
 ## Primary Error Code Precedence
 
 When an error-bearing response branch has non-empty `errors`, `errors[0]` is the primary public code selected by this order unless a method section defines a stricter order. For `ToolRejectedResponse`, `ToolRejectedResponse.errors[0]` is the primary rejection code. For a committed blocked result or a result with diagnostics, `MethodResult.base.errors[0]` is the primary public code. Secondary blockers may still appear in method-specific fields and `ToolError.details`. Valid `ToolDryRunResponse` branches keep `errors=[]`; previewed would-be failures belong in `DryRunSummary.would_errors`.
+
+`STATE_VERSION_CONFLICT` appears in this precedence table only for the `ToolRejectedResponse` branch. It must not be selected as `MethodResult.base.errors[0]`, `CloseTaskResult(close_state=blocked).errors[0]`, or the primary error for any committed blocked close result.
 
 | Precedence | Primary `ErrorCode` |
 |---:|---|
@@ -171,7 +173,7 @@ Every committed state-changing method requires `idempotency_key`. Read-only call
 
 `request_hash` is computed from canonical JSON over the tool name, schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`.
 
-Only committed non-dry-run `MethodResult` responses for replay-row-creating state effects are stored in replay rows. If a committed replay row exists with the same key and same request hash, Core returns the original committed response without re-running freshness checks, appending events, promoting or linking artifacts, consuming Write Authorization, updating blockers, or changing the replay row. If the same key is reused with a different request hash, Core preserves the existing replay row and returns `ToolRejectedResponse` with `STATE_VERSION_CONFLICT`.
+Only committed non-dry-run `MethodResult` responses for replay-row-creating state effects are stored in replay rows. If a committed replay row exists with the same key and same request hash, Core returns the original committed response without re-running freshness checks, appending events, promoting or linking artifacts, consuming Write Authorization, updating blockers, or changing the replay row. If the same `idempotency_key` is reused with a different request hash, Core preserves the existing replay row and returns `ToolRejectedResponse` with `STATE_VERSION_CONFLICT` and `effect_kind=no_effect`; no new replay row is created or reserved.
 
 `ToolRejectedResponse` and `ToolDryRunResponse` do not create or reserve replay rows.
 
@@ -179,13 +181,25 @@ Only committed non-dry-run `MethodResult` responses for replay-row-creating stat
 
 ## State Version Conflict Behavior
 
-For a new state-changing attempt with no committed replay row, Core may resolve the primary Task before freshness checking so it can select owner records. Resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task. That resolution does not select a separate state clock.
+`STATE_VERSION_CONFLICT` has one active current MVP meaning: a project-wide pre-commit freshness or idempotency conflict. The response branch is always `ToolRejectedResponse` with `effect_kind=no_effect`. It covers exactly these current MVP cases:
 
-Every fresh non-dry-run state mutation compares `ToolEnvelope.expected_state_version` with the current project-wide `project_state.state_version`. A stale `expected_state_version` returns `ToolRejectedResponse` with `STATE_VERSION_CONFLICT`; it is not a method-specific result and is never a `PrepareWriteResult.decision` value. If a `dry_run=true` request supplies a stale `expected_state_version`, the same pre-commit rejection applies before any read-only result or dry-run preview. The pre-commit failure creates no current records, `task_events`, replay rows, artifacts, staged-handle consumption, evidence summaries, Write Authorization creation or consumption, close-state mutation, or `state_version` increment. `tasks.state_version` is not an active conflict or concurrency basis.
+- `ToolEnvelope.expected_state_version` is stale against current `project_state.state_version`.
+- `WriteAuthorization.basis_state_version` is stale against current `project_state.state_version` before the authorization is consumed.
+- The same `idempotency_key` is reused with a different request hash.
 
-`STATE_VERSION_CONFLICT` is the only active current MVP public `ErrorCode` for project-wide state-version mismatch. Do not expose another public code, alias, deprecated spelling, alternate storage-layer public error name, or internal exception name for that mismatch.
+For a new state-changing attempt with no committed replay row, Core may resolve the primary Task before freshness checking so it can select owner records. Resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task. That resolution does not select a separate state clock. Every fresh non-dry-run state mutation compares `ToolEnvelope.expected_state_version` with the current project-wide `project_state.state_version` before commit. If a `dry_run=true` request supplies a stale `expected_state_version`, the same pre-commit rejection applies before any read-only result or dry-run preview.
 
-`STATE_VERSION_CONFLICT.details` should include:
+`STATE_VERSION_CONFLICT` is not a method-specific result. It is not a `MethodResult.decision` value, not `CloseTaskResult.close_state`, not `CloseBlocker.code`, and not `CloseTaskResult(close_state=blocked).errors[0]` or the primary error for a committed blocked close result. A committed `CloseTaskResult(close_state=blocked)` may use `errors[0]` and `blockers[*].code` only for semantic close blockers found after the close matrix runs; pre-commit failure codes must not be placed there.
+
+The rejection creates no current records, `task_events`, replay rows, artifacts, staged-handle consumption, evidence summaries, Write Authorization creation or consumption, close-state mutation, or `state_version` increment. `tasks.state_version` is not an active conflict or concurrency basis.
+
+When the conflict is `idempotency_key` reuse with a different request hash, Core preserves the existing replay row. It does not create, reserve, fork, or overwrite a replay row for the rejected request.
+
+When the conflict is stale `WriteAuthorization.basis_state_version`, Core returns the rejection before consumption. This condition is not `WRITE_AUTHORIZATION_INVALID`, is not a committed `write_compatibility` `CloseBlocker`, and leaves the Write Authorization unconsumed.
+
+`STATE_VERSION_CONFLICT` is the only active current MVP public `ErrorCode` for project-wide state-version mismatch and idempotency request-hash conflict. Do not expose another public code, alias, deprecated spelling, alternate storage-layer public error name, or internal exception name for that mismatch.
+
+For stale `ToolEnvelope.expected_state_version`, `STATE_VERSION_CONFLICT.details` should include:
 
 ```yaml
 state_clock: project_state.state_version
@@ -195,7 +209,7 @@ project_id: string
 task_id: string | null
 ```
 
-`WriteAuthorization.basis_state_version` is the project-wide compatibility basis for the allow decision. Stale Write Authorization detection compares it with current `project_state.state_version`; no Task-local clock participates. If `harness.record_run` finds the supplied Write Authorization stale before consumption, the response is `ToolRejectedResponse` with `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`, and the authorization is not consumed.
+For idempotency conflicts, `STATE_VERSION_CONFLICT.details` should identify the `idempotency_key` and request hash mismatch without exposing sensitive request bodies. For stale `WriteAuthorization.basis_state_version`, details should identify the stale authorization basis and current `project_state.state_version`.
 
 <a id="documentation-smoke-error-coverage"></a>
 
@@ -212,7 +226,7 @@ The first internal documentation smoke target in [MVP Plan](../../build/mvp-plan
 - `harness.record_run` consumes a compatible Write Authorization exactly once. Missing authorization uses `WRITE_AUTHORIZATION_REQUIRED`. A project-wide stale authorization basis uses `STATE_VERSION_CONFLICT`. Expired, revoked, consumed, or non-version-incompatible authorization uses `WRITE_AUTHORIZATION_INVALID`; observed-outside-authorized-scope attempts use the applicable scope or authorization code.
 - `close_task intent=check` is read-only even when it returns blockers. `close_task intent=complete` returns `CloseTaskResponse.close_state=blocked` with structured blockers or `close_state=closed` only when no owner-defined complete blocker remains.
 - Close smoke coverage must include `EVIDENCE_INSUFFICIENT` for evidence blockers, `ARTIFACT_MISSING` for artifact unavailable or missing blockers, `ACCEPTANCE_REQUIRED` for final acceptance blockers, and `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `category=residual_risk_acceptance` for visible but unaccepted residual risk. `RESIDUAL_RISK_NOT_VISIBLE` is reserved for risk that has not been shown.
-- `close_task intent=supersede` uses supersession, lifecycle, local-access, state-version conflict, or recovery blockers when invalid. It must not require evidence sufficiency, final acceptance, or residual-risk acceptance, and a valid supersede that updates lifecycle plus `project_state.active_task_id` is one project-wide state mutation.
+- `close_task intent=supersede` uses supersession, lifecycle, local-access, or recovery blockers when the terminal transition itself is invalid. Stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, and `idempotency_key` request-hash conflict are `ToolRejectedResponse` cases, not committed blockers. A valid supersede must not require evidence sufficiency, final acceptance, or residual-risk acceptance, and a valid supersede that updates lifecycle plus `project_state.active_task_id` is one project-wide state mutation.
 
 <a id="harnessclose_task-close-blockers"></a>
 
@@ -232,7 +246,7 @@ The first internal documentation smoke target in [MVP Plan](../../build/mvp-plan
 
 Close preflight rejection has `effect_kind=no_effect`. It creates no `CloseBlocker`, no `task_event`, no `tool_invocations` replay row, no `close_state` mutation, no artifact promotion or link, no staged handle consumption, no evidence summary update, no Write Authorization creation or consumption, and no `project_state.state_version` increment. `STATE_VERSION_CONFLICT` is a pre-commit rejection error only and must never be `CloseBlocker.code`.
 
-Only semantic blockers found by a valid close matrix evaluation may return `CloseTaskResult(close_state=blocked)` with committed close blockers. Valid dry-run previews of state-effecting close intents still return `ToolDryRunResponse`; preflight failures remain `ToolRejectedResponse` even when `dry_run=true`.
+Only semantic blockers found by a valid close matrix evaluation may return `CloseTaskResult(close_state=blocked)` with committed close blockers. For those committed blocked close results, `CloseTaskResult(close_state=blocked).errors[0]` and `blockers[*].code` describe semantic close blockers found after the matrix runs. Pre-commit failure codes must not be placed there; `STATE_VERSION_CONFLICT` is outside committed blocked close results. Valid dry-run previews of state-effecting close intents still return `ToolDryRunResponse`; preflight failures remain `ToolRejectedResponse` even when `dry_run=true`.
 
 For `harness.close_task intent=complete`, close blockers are ordered by the deterministic matrix in [Core Model](../core-model.md#close_task). Public error precedence still selects between public `ErrorCode` values when a method needs one primary error, but it must not reorder the complete blocker matrix or hide earlier blockers behind later acceptance or risk checks. Evidence blockers normally use `EVIDENCE_INSUFFICIENT`; artifact availability blockers, including unavailable or missing close-relevant artifacts, use `ARTIFACT_MISSING`; unresolved user judgment blockers use `DECISION_REQUIRED` or `DECISION_UNRESOLVED`; sensitive-action permission blockers use the `APPROVAL_*` codes; scope blockers use the scope and baseline codes.
 
