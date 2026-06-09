@@ -59,7 +59,17 @@ non-dry-run 상태 변경을 뜻합니다. 버전 증가는 항상 프로젝트 
 
 ## 공통 요청 규칙
 
-모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다. 커밋되는 non-dry-run 상태 변경 호출은 [`ToolResponseBase`](schema-core.md#common-response)를 사용하며 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`을 요구합니다. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key: null`과 `expected_state_version: null`을 사용할 수 있습니다. `harness.stage_artifact`는 임시 `StagedArtifactHandle`만 만들며 Core 상태 전이가 아니고 재실행 행이나 `project_state.state_version` 증가를 만들지 않습니다.
+모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다. 공개 메서드 응답은 항상 `MethodResult`, `ToolDryRunResponse`, `ToolRejectedResponse` 중 정확히 하나의 분기입니다. 여기서 `MethodResult`는 실제 읽기 전용 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드별 상태 효과 표가 허용하는 커밋된 차단 결과를 담는 메서드별 결과 스키마입니다. 메서드 결과는 `response_kind=result`인 [`ToolResultBase`](schema-core.md#common-response)를 사용합니다. 거절 응답과 `dry_run` 응답은 [API Schema Core](schema-core.md#common-response)의 공용 응답 스키마를 쓰며, 메서드별 결과 전용 필드를 물려받지 않습니다.
+
+커밋되는 non-dry-run 상태 변경 호출은 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`을 요구합니다. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key: null`과 `expected_state_version: null`을 사용할 수 있습니다. `harness.stage_artifact`는 저장소가 소유하는 임시 스테이징만 만들며, Core 상태 전이가 아니고 재실행 행이나 `project_state.state_version` 증가를 만들지 않습니다.
+
+응답 분기와 상태 효과는 이렇게 대응합니다. 읽기 전용 결과는 `effect_kind=read_only`인 `MethodResult`입니다. Core 커밋 결과는 `effect_kind=core_committed`인 `MethodResult`입니다. 성공한 `harness.stage_artifact` 스테이징 결과는 `effect_kind=staging_created`인 `StageArtifactResult`입니다. 커밋 전 실패는 `response_kind=rejected`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다. 유효한 `dry_run`은 `response_kind=dry_run`, `effect_kind=no_effect`인 `ToolDryRunResponse`입니다.
+
+`ToolRejectedResponse`는 커밋 전 실패에 사용합니다. 예를 들어 오래된 `expected_state_version` / `STATE_VERSION_CONFLICT`, 요청 검증 실패, 유효하지 않은 스테이징된 아티팩트 핸들, MCP/Core 또는 로컬 접점 사용 불가, 로컬 접점 불일치, 역량 부족, 그 밖에 메서드 커밋 전에 실패하는 경우가 여기에 속합니다. 이 응답은 `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, `close_state` 같은 메서드별 결과 전용 필드를 담지 않습니다.
+
+`ToolDryRunResponse`는 유효한 `dry_run=true` 호출에 사용합니다. 이 응답은 상태 효과 없음이며, 메서드별 결과 전용 필드나 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref` 같은 실제 생성 참조를 담지 않습니다.
+
+커밋된 차단 결과와 거절 응답은 다릅니다. `harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 메서드별 상태 효과 표가 차단 커밋을 허용할 때 `MethodResult`입니다. 오래된 `expected_state_version`, 검증 실패, 잘못된 스테이징된 아티팩트 핸들, 사용할 수 없는 로컬 접점, 그와 비슷한 커밋 전 실패는 `ToolRejectedResponse`입니다.
 
 메서드에 도구별 `task_id`가 있으면 Core는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task 순서로 주 Task를 찾습니다. 이 해석은 담당 기록을 고르는 일이며 별도 상태 시계를 고르지 않습니다. 새 non-dry-run 상태 변경은 모두 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 `project_state.state_version`과 비교합니다.
 값이 맞지 않으면 `STATE_VERSION_CONFLICT`를 반환합니다. 어떤 메서드도 별도 공개 오래된 상태 오류나 저장소 계층 별칭을 정의하지 않습니다.
@@ -115,15 +125,17 @@ IntakeRequest:
 - **응답:**
 
 ```yaml
-IntakeResponse:
-  base: ToolResponseBase
+IntakeResponse: IntakeResult | ToolRejectedResponse | ToolDryRunResponse
+
+IntakeResult:
+  base: ToolResultBase
   task_ref: StateRecordRef
   change_unit_ref: StateRecordRef | null
   state: StateSummary
   next_actions: NextActionSummary[]
 ```
 
-`IntakeResponse.state.mode`는 확정된 구체적 `mode`를 보여 줍니다. `auto`가 될 수 없습니다. 이후 상태 요약도 `harness.intake` 요청 값을 그대로 보여 주지 않고 확정된 `mode`를 노출해야 합니다. `IntakeResponse.state.shaping_readiness`는 현재 다음 안전한 행동에 대한 파생 준비 상태 보기를 보여줍니다.
+`IntakeResult.state.mode`는 확정된 구체적 `mode`를 보여 줍니다. `auto`가 될 수 없습니다. 이후 상태 요약도 `harness.intake` 요청 값을 그대로 보여 주지 않고 확정된 `mode`를 노출해야 합니다. `IntakeResult.state.shaping_readiness`는 현재 다음 안전한 행동에 대한 파생 준비 상태 보기를 보여줍니다.
 
 - **상태 효과:** 커밋된 non-dry-run 호출은 `tasks`를 만들거나 재개하고, `project_state.active_task_id`를 설정하며, 쓰기 가능한 확정된 `direct` 또는 `work`에 초기 범위 후보를 `change_units`에 만들고, 차단 사유를 업데이트하고, 이벤트와 커밋된 `tool_invocations` 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 요청이 아직 쓰기 가능한 상태가 아니라면 Task는 `lifecycle_phase=shaping`으로 남거나 그 상태가 되고, 현재 목표 요약, 알려진 범위와 범위 밖 항목, 영향 영역 또는 경로, 수락 기준, 자율성 경계, 첫 Change Unit 상태, 다음 안전한 행동을 막는 사용자 소유 blocker 범주가 있을 때 그 범주, 다음 안전한 행동 하나를 활성 Task, Change Unit, 사용자 판단, 증거, 차단 사유 필드로 표현합니다. 요청이 이미 쓰기 가능한 작업으로 충분히 구체적이면 `harness.intake`가 준비 경로에 필요한 초기 범위를 만들 수 있지만, 첫 제품 쓰기는 여전히 `harness.prepare_write`가 필요합니다. 활성 목표, 범위 경계, 범위 밖 항목, 수락 기준, 자율성 경계, baseline, 활성 Change Unit의 이후 변경은 `harness.update_scope`가 담당합니다. 메서드 이름은 지속 저장되는 생명주기 값이 아닙니다. 새로 만들거나 재개한 Task는 [API Schema Core](schema-core.md#current-mvp-value-sets)의 활성 `Task.lifecycle_phase` 값 집합을 사용해야 합니다. `dry_run`과 커밋 전 실패는 이를 만들지 않고 `state_version`도 올리지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
@@ -165,8 +177,10 @@ UpdateScopeRequest:
 - **응답:**
 
 ```yaml
-UpdateScopeResponse:
-  base: ToolResponseBase
+UpdateScopeResponse: UpdateScopeResult | ToolRejectedResponse | ToolDryRunResponse
+
+UpdateScopeResult:
+  base: ToolResultBase
   task_ref: StateRecordRef
   change_unit_ref: StateRecordRef | null
   linked_scope_decision_refs: StateRecordRef[]
@@ -206,8 +220,10 @@ StatusRequest:
 - **응답:**
 
 ```yaml
-StatusResponse:
-  base: ToolResponseBase
+StatusResponse: StatusResult | ToolRejectedResponse | ToolDryRunResponse
+
+StatusResult:
+  base: ToolResultBase
   active_task: StateSummary | null
   status_card: string
   next_actions: NextActionSummary[]
@@ -222,7 +238,7 @@ StatusResponse:
 
 - **상태 효과:** 없습니다. `harness.status`는 응답에 차단 사유, 닫기 차단 사유, 다음 행동, 진단을 계산해 담을 수 있지만 이를 저장하지 않고, 이벤트를 추가하지 않고, `tool_invocations` 재실행 행을 만들지 않으며, `state_version`을 올리지 않습니다.
 - **구체화 표시:** 상태는 현재 생명주기 위치를 정직하게 보여줘야 합니다. `shaping`은 요청이 아직 쓰기 가능한 상태가 아니라는 뜻입니다. `waiting_user`는 다음 안전한 행동 전에 사용자 소유 판단 하나가 필요하다는 뜻입니다. `ready`는 쓰기 가능한 작업에 활성 Change Unit이 있고 쓰기 전 확인으로 이동할 수 있다는 뜻입니다. `blocked`는 활성 차단 사유가 진행을 막는다는 뜻입니다. `StateSummary.shaping_readiness`는 현재 알려진 준비 항목을 보여줘야 합니다. 목표 요약, 범위 밖 항목, 영향 영역 또는 경로, 수락 기준, 자율성 경계, 첫 Change Unit, 이름 붙은 사용자 소유 blocker, 다음 안전한 행동입니다. 읽기 전용 작업도 다음 읽기 전용 행동을 할 만큼 준비될 수 있지만, 이것이 쓰기 호환성을 뜻하지는 않습니다. 응답은 질문이 정말 막고 있을 때 막히는 질문 하나와 주된 다음 안전한 행동 하나를 우선해야 합니다. 참고용 호기심 질문은 차단 사유가 아닙니다.
-- **닫기 상태 경계:** 활성 닫기 상태가 없을 때만 `StatusResponse.close_state`에 `none`을 사용할 수 있습니다. `CloseTaskResponse.close_state`는 `ready`, `blocked`, `closed`, `cancelled`, `superseded`만 사용합니다.
+- **닫기 상태 경계:** 활성 닫기 상태가 없을 때만 `StatusResult.close_state`에 `none`을 사용할 수 있습니다. `CloseTaskResult.close_state`는 `ready`, `blocked`, `closed`, `cancelled`, `superseded`만 사용합니다.
 - **오류:** `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `NO_ACTIVE_TASK`, 요청한 읽기용 보기가 오래됐거나 사용할 수 없으면 `PROJECTION_STALE`.
 - **저장소 담당 문서:** `project_state`, `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `evidence_summaries`, `artifacts`, `artifact_links`, `blockers`를 읽기 전용으로 읽습니다.
 - **보안 경계:** 승격된 프로필이 없으면 `harness.status`는 현재 MVP `GuaranteeDisplay.level` 값인 `cooperative` 또는 `detective`만 표시합니다. 기본값은 `cooperative`입니다. `detective`는 활성 접점이 관련 사실을 정직하게 관찰할 수 있고 관련 역량 확인이 통과했을 때만 표시할 수 있습니다. `reference-local-mcp`에서는 `changed_path_detection_verification=passed`이고 검증된 변경 경로 탐지 범위 안일 때만 가능합니다. `not_run`, 예전 `planned_not_run` 문구, `failed`, `stale`이면 요청이 그 미지원 역량을 꼭 요구하지 않는 한 표시를 `cooperative`로 낮춥니다. 그 역량을 요구하는 요청이면 `CAPABILITY_INSUFFICIENT`를 반환합니다. `preventive`와 `isolated`는 later/profile-gated 표시 이름이며 현재 MVP 스키마 값이 아닙니다. 최신이 아닌 상태 텍스트, 대화, 렌더링된 보기, 캐시된 요약은 권한 근거가 아닙니다.
@@ -251,8 +267,10 @@ PrepareWriteRequest:
 - **응답:**
 
 ```yaml
-PrepareWriteResponse:
-  base: ToolResponseBase
+PrepareWriteResponse: PrepareWriteResult | ToolRejectedResponse | ToolDryRunResponse
+
+PrepareWriteResult:
+  base: ToolResultBase
   decision: allowed | blocked | approval_required | decision_required
   state: StateSummary | null
   write_authorization_ref: StateRecordRef | null
@@ -265,7 +283,7 @@ PrepareWriteResponse:
 ```
 
 - **상태 효과:** 커밋된 non-dry-run `decision=allowed`는 활성 경로 수준 `AuthorizedAttemptScope`에 대해 `write_authorizations.status=active` 행 하나를 만들고, 이벤트를 추가하고, 재실행 행을 만들며, `project_state.state_version`을 정확히 한 번 올립니다. 커밋된 `blocked`, `approval_required`, `decision_required` 응답은 차단 사유를 업데이트하고, 이벤트를 추가하고, 재실행 행을 만들고, `project_state.state_version`을 정확히 한 번 올릴 수 있습니다. 하지만 소비 가능한 Write Authorization은 만들면 안 됩니다. `dry_run`과 커밋 전 실패는 현재 기록, Write Authorization, `blockers` 행, 이벤트, 아티팩트, 증거 요약, 재실행 행, 상태 버전 증가를 만들지 않습니다.
-- **상태 버전 충돌:** 프로젝트 전체 상태 버전 불일치는 `ToolResponseBase.errors`에 담기는 커밋 전 `STATE_VERSION_CONFLICT`입니다. `PrepareWriteResponse.decision` 값이 아니며, Write Authorization이나 차단 사유 커밋을 만들지 않습니다.
+- **상태 버전 충돌:** 프로젝트 전체 상태 버전 불일치는 `ToolRejectedResponse.errors`에 담기는 커밋 전 `STATE_VERSION_CONFLICT`입니다. `PrepareWriteResult.decision` 값이 아니며, Write Authorization이나 차단 사유 커밋을 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
 - **저장소 담당 문서:** `write_authorizations`, `blockers`, `project_state` 상태 시계, `task_events`, `tool_invocations`.
 - **보안 경계:** `decision=allowed`는 이 경로 수준 제품 파일 쓰기 시도가 하네스 기록과 호환된다는 뜻입니다. 운영체제가 호환되지 않는 쓰기를 막거나 임의 도구가 격리된다는 뜻이 아닙니다. 활성 `PrepareWriteRequest`는 위에 적은 제품 쓰기 경로 수준 필드만 포함하며 명령, 의존성, 호스트, 네트워크, 비밀값, 배포, 파괴적 동작, 시스템 접근의 승인 범위를 인코딩하지 않습니다. 그런 승인은 `judgment_kind=sensitive_approval`을 통해 `SensitiveActionScope`로 별도 기록됩니다. 현재 MVP 요청이 명령, 네트워크, 비밀값 접근, 아티팩트 캡처, 도구 실행 전 차단, 격리, 검증되지 않은 변경 경로 탐지 보장을 요구하면 활성 접점에 역량이 없거나 `changed_path_detection_verification=failed` 또는 `stale`일 때 `CAPABILITY_INSUFFICIENT`를 반환하고, 요청 형태나 요구한 보장이 활성 프로필에 유효하지 않으면 `VALIDATION_FAILED`를 반환해야 합니다. `changed_path_detection_verification=not_run` 또는 예전 `planned_not_run` 문구는 `detective`를 정당화하지 못하므로, 더 강한 보장을 요구하지 않는 요청은 `cooperative` 표시를 사용해야 합니다.
@@ -295,13 +313,12 @@ StageArtifactRequest:
 - **응답:**
 
 ```yaml
-StageArtifactResponse:
-  request_id: string
-  project_id: string
-  task_id: string
+StageArtifactResponse: StageArtifactResult | ToolRejectedResponse | ToolDryRunResponse
+
+StageArtifactResult:
+  base: ToolResultBase
   staged_artifact_handle: StagedArtifactHandle
   expires_at: string
-  errors: ToolError[]
 ```
 
 - **상태 효과:** 성공한 호출은 `artifact_staging` 또는 동등한 저장소 소유 staging 기록이 뒷받침하고 `project_id`와 `task_id`에 묶이며 서버가 기록한 `created_by_surface_id`, `created_by_surface_instance_id`, 그리고 `content_type`, `sha256`, `size_bytes`, `redaction_state`, `expires_at`을 가진 임시 `StagedArtifactHandle`만 만듭니다. 출처 기록 필드는 성공한 요청의 `VerifiedSurfaceContext`에서 기록되며, 사용자나 에이전트가 권한 주장으로 제출하는 값이 아닙니다. Core 기록, 지속 `ArtifactRef`, 증거 요약, 차단 사유, 이벤트, `tool_invocations` 재실행 행, 닫기 효과, `project_state.state_version` 증가를 만들지 않습니다. 이후 호환되는 `harness.record_run` 요청이 `access_class=run_recording`으로 handle을 소비해 지속 `ArtifactRef`로 승격할 수 있는 유일한 활성 경로입니다.
@@ -350,8 +367,10 @@ RecordRunRequest:
 - **응답:**
 
 ```yaml
-RecordRunResponse:
-  base: ToolResponseBase
+RecordRunResponse: RecordRunResult | ToolRejectedResponse | ToolDryRunResponse
+
+RecordRunResult:
+  base: ToolResultBase
   run_summary: RunSummary
   registered_artifacts: ArtifactRef[]
   evidence_summary: EvidenceSummary | null
@@ -391,8 +410,10 @@ RequestUserJudgmentRequest:
 - **응답:**
 
 ```yaml
-RequestUserJudgmentResponse:
-  base: ToolResponseBase
+RequestUserJudgmentResponse: RequestUserJudgmentResult | ToolRejectedResponse | ToolDryRunResponse
+
+RequestUserJudgmentResult:
+  base: ToolResultBase
   user_judgment_ref: StateRecordRef
   user_judgment: UserJudgment
   blocker_refs: StateRecordRef[]
@@ -429,8 +450,10 @@ RecordUserJudgmentRequest:
 - **응답:**
 
 ```yaml
-RecordUserJudgmentResponse:
-  base: ToolResponseBase
+RecordUserJudgmentResponse: RecordUserJudgmentResult | ToolRejectedResponse | ToolDryRunResponse
+
+RecordUserJudgmentResult:
+  base: ToolResultBase
   user_judgment_ref: StateRecordRef
   user_judgment: UserJudgment
   updated_refs: StateRecordRef[]
@@ -465,8 +488,10 @@ CloseTaskRequest:
 - **응답:**
 
 ```yaml
-CloseTaskResponse:
-  base: ToolResponseBase
+CloseTaskResponse: CloseTaskResult | ToolRejectedResponse | ToolDryRunResponse
+
+CloseTaskResult:
+  base: ToolResultBase
   close_state: ready | blocked | closed | cancelled | superseded
   state: StateSummary
   blockers: CloseBlocker[]
@@ -475,7 +500,7 @@ CloseTaskResponse:
   next_actions: NextActionSummary[]
 ```
 
-닫기 관련 개념은 서로 분리됩니다. `Task.lifecycle_phase`는 지속 저장되는 생명주기 필드이며 활성 값은 `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded`입니다. `CloseTaskResponse.close_state`는 응답 수준의 닫기 상태이며 값은 `ready`, `blocked`, `closed`, `cancelled`, `superseded`입니다. `Task.close_reason`은 닫기 세부 사유를 `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` 중 하나로 저장합니다. `Task.result`는 `none`, `advice_only`, `completed`, `cancelled`, `superseded` 중 하나의 굵은 결과만 저장합니다. 성공하지 못한 Run, violation, 차단된 닫기, 증거 공백은 Run 상태, `CloseBlocker`, 증거 상태, 현재 Task 상태에 남깁니다.
+닫기 관련 개념은 서로 분리됩니다. `Task.lifecycle_phase`는 지속 저장되는 생명주기 필드이며 활성 값은 `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded`입니다. `CloseTaskResult.close_state`는 응답 수준의 닫기 상태이며 값은 `ready`, `blocked`, `closed`, `cancelled`, `superseded`입니다. `Task.close_reason`은 닫기 세부 사유를 `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` 중 하나로 저장합니다. `Task.result`는 `none`, `advice_only`, `completed`, `cancelled`, `superseded` 중 하나의 굵은 결과만 저장합니다. 성공하지 못한 Run, violation, 차단된 닫기, 증거 공백은 Run 상태, `CloseBlocker`, 증거 상태, 현재 Task 상태에 남깁니다.
 
 `intent`가 API 동작을 결정합니다.
 
@@ -486,7 +511,7 @@ CloseTaskResponse:
 | `cancel` | 종료 취소이며 성공 완료가 아닙니다. 유효한 Task 식별자, 유효한 생명주기, 호환되는 로컬 접근, 전이를 막는 복구 제약이 없음을 요구합니다. 증거 충분성, 최종 수락, 잔여 위험 수락은 요구하지 않습니다. `close_reason`이 `null`이 아니면 `cancelled`여야 하며, 커밋된 행은 `close_reason=cancelled`, `result=cancelled`를 저장합니다. |
 | `supersede` | 종료 대체이며 성공 완료가 아닙니다. cancellation과 같은 식별자, 생명주기, 로컬 접근, 복구 확인을 요구하고, 활성 포인터를 옮길 때는 같은 프로젝트의 유효한 열린 `superseding_task_id`도 필요합니다. 증거 충분성, 최종 수락, 잔여 위험 수락은 요구하지 않습니다. `close_reason`이 `null`이 아니면 `superseded`여야 하며, 커밋된 행은 `close_reason=superseded`, `result=superseded`를 저장합니다. |
 
-`intent=complete`에서는 API 응답이 Core의 순서 있는 차단 사유 행렬을 `CloseTaskResponse.blockers`로 반영합니다. 처음 실패한 행이 기본 닫기 차단 근거가 됩니다. 뒤 행의 차단 사유도 보조 차단 사유로 함께 보일 수 있지만, 뒤 행이 앞 행을 만족시키거나 숨길 수는 없습니다.
+`intent=complete`에서는 API 응답이 Core의 순서 있는 차단 사유 행렬을 `CloseTaskResult.blockers`로 반영합니다. 처음 실패한 행이 기본 닫기 차단 근거가 됩니다. 뒤 행의 차단 사유도 보조 차단 사유로 함께 보일 수 있지만, 뒤 행이 앞 행을 만족시키거나 숨길 수는 없습니다.
 
 | 순서 | `CloseBlocker.category` | 일반적인 공개 오류 경로 |
 |---:|---|---|

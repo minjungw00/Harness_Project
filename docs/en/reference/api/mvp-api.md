@@ -59,7 +59,17 @@ effects only in rows whose "Committed blocked response allowed" cell says yes.
 
 ## Shared Request Rules
 
-All methods use [`ToolEnvelope`](schema-core.md#tool-envelope). Committed non-dry-run state-changing calls use [`ToolResponseBase`](schema-core.md#common-response) and require a non-null `idempotency_key` and a current project-wide `expected_state_version`. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, and dry-run calls may use `idempotency_key: null` and `expected_state_version: null`. `harness.stage_artifact` creates only a temporary `StagedArtifactHandle`; it is not a Core state transition and does not create a replay row or increment `project_state.state_version`.
+All methods use [`ToolEnvelope`](schema-core.md#tool-envelope). Each public method response is exactly one branch: `MethodResult`, `ToolDryRunResponse`, or `ToolRejectedResponse`. `MethodResult` names the concrete method-specific result schema for actual read results, successful staging results, Core committed results, or committed blocked results when the method state-effect table allows that blocked commit. Method results use [`ToolResultBase`](schema-core.md#common-response) with `response_kind=result`; rejected and dry-run branches use the shared response schemas from [API Schema Core](schema-core.md#common-response) and do not inherit method-specific result-only fields.
+
+Committed non-dry-run state-changing calls require a non-null `idempotency_key` and a current project-wide `expected_state_version`. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, and dry-run calls may use `idempotency_key: null` and `expected_state_version: null`. `harness.stage_artifact` creates only storage-owned temporary staging; it is not a Core state transition and does not create a replay row or increment `project_state.state_version`.
+
+Response branches map to state effect this way: a read-only result is `MethodResult` with `effect_kind=read_only`; a Core committed result is `MethodResult` with `effect_kind=core_committed`; successful `harness.stage_artifact` staging is `StageArtifactResult` with `effect_kind=staging_created`; a pre-commit failure is `ToolRejectedResponse` with `response_kind=rejected` and `effect_kind=no_effect`; a valid dry run is `ToolDryRunResponse` with `response_kind=dry_run` and `effect_kind=no_effect`.
+
+`ToolRejectedResponse` is used for pre-commit failures, including stale `expected_state_version` / `STATE_VERSION_CONFLICT`, request validation failure, invalid staged artifact handle, unavailable MCP/Core or local surface, local surface mismatch, capability failure, and similar failures before a method commit. It does not include method-specific result-only fields such as `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, or `close_state`.
+
+`ToolDryRunResponse` is used for valid `dry_run=true` calls. It has no state effect and does not include method-specific result-only fields or real generated refs such as `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, or `user_judgment_ref`.
+
+Committed blocked outcomes are distinct from rejected responses. A committed blocked `harness.prepare_write` or `harness.close_task` outcome is a `MethodResult` when the method state-effect table allows the blocked commit. Stale `expected_state_version`, validation failure, bad staged handle, unavailable local surface, and similar pre-commit failures are `ToolRejectedResponse`.
 
 When a method has a tool-specific `task_id`, Core resolves the primary Task in this order: tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task. That resolution selects owner records; it does not select a separate state clock. Every fresh non-dry-run state mutation compares `ToolEnvelope.expected_state_version` with the current `project_state.state_version` before commit.
 Mismatch returns `STATE_VERSION_CONFLICT`; no method defines a separate public stale-state error or storage-layer alias.
@@ -115,15 +125,17 @@ IntakeRequest:
 - **Response:**
 
 ```yaml
-IntakeResponse:
-  base: ToolResponseBase
+IntakeResponse: IntakeResult | ToolRejectedResponse | ToolDryRunResponse
+
+IntakeResult:
+  base: ToolResultBase
   task_ref: StateRecordRef
   change_unit_ref: StateRecordRef | null
   state: StateSummary
   next_actions: NextActionSummary[]
 ```
 
-`IntakeResponse.state.mode` exposes the resolved concrete mode. It must not be `auto`; later status summaries must also expose the resolved mode rather than the intake request value. `IntakeResponse.state.shaping_readiness` exposes the derived readiness view for the current next safe action.
+`IntakeResult.state.mode` exposes the resolved concrete mode. It must not be `auto`; later status summaries must also expose the resolved mode rather than the intake request value. `IntakeResult.state.shaping_readiness` exposes the derived readiness view for the current next safe action.
 
 - **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial scope candidate in `change_units` for write-capable resolved `direct` or `work`, update blockers, append events, create a committed replay row, and increment `project_state.state_version` exactly once. If the request is still not writable, the Task remains or becomes `lifecycle_phase=shaping` with the current goal summary, known scope/non-goals, affected areas or paths, acceptance criteria, Autonomy Boundary, first Change Unit status, named user-owned blocker category when one blocks the next safe action, and one next safe action represented through active Task, Change Unit, user-judgment, evidence, or blocker fields. If the request is already concrete enough for write-capable work, intake may establish enough initial scope for a ready path, but the first product write still requires `harness.prepare_write`. Later changes to the active goal, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline, or active Change Unit belong to `harness.update_scope`. The method name is not a persisted lifecycle value; created or resumed Tasks must use the active `Task.lifecycle_phase` value set from [API Schema Core](schema-core.md#current-mvp-value-sets). `dry_run` and pre-commit failure create none of these and do not increment `state_version`.
 - **Errors:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
@@ -165,8 +177,10 @@ For top-level scope update fields, `null` means leave the current value unchange
 - **Response:**
 
 ```yaml
-UpdateScopeResponse:
-  base: ToolResponseBase
+UpdateScopeResponse: UpdateScopeResult | ToolRejectedResponse | ToolDryRunResponse
+
+UpdateScopeResult:
+  base: ToolResultBase
   task_ref: StateRecordRef
   change_unit_ref: StateRecordRef | null
   linked_scope_decision_refs: StateRecordRef[]
@@ -206,8 +220,10 @@ StatusRequest:
 - **Response:**
 
 ```yaml
-StatusResponse:
-  base: ToolResponseBase
+StatusResponse: StatusResult | ToolRejectedResponse | ToolDryRunResponse
+
+StatusResult:
+  base: ToolResultBase
   active_task: StateSummary | null
   status_card: string
   next_actions: NextActionSummary[]
@@ -222,7 +238,7 @@ StatusResponse:
 
 - **State effect:** None. `harness.status` may compute blockers, close blockers, next actions, and diagnostics for the response, but it does not store them, append events, create `tool_invocations` replay rows, or increment `state_version`.
 - **Shaping display:** Status must expose the current lifecycle position honestly. `shaping` means the request is not yet writable, `waiting_user` means one user-owned judgment is required before the next safe action, `ready` means write-capable work has an active Change Unit and can move toward pre-write checking, and `blocked` means an active blocker prevents progress. `StateSummary.shaping_readiness` must show which readiness items are known now: goal summary, non-goals, affected areas or paths, acceptance criteria, Autonomy Boundary, first Change Unit, named user-owned blockers, and next safe action. Read-only work may be ready for its next read-only action, but that does not imply write compatibility. The response should prefer one primary next safe action and one blocking question when a question is truly blocking; non-blocking curiosity questions do not become blockers.
-- **Close-state boundary:** `none` is allowed only on `StatusResponse.close_state` when no active close state is available. `CloseTaskResponse.close_state` uses `ready`, `blocked`, `closed`, `cancelled`, or `superseded`.
+- **Close-state boundary:** `none` is allowed only on `StatusResult.close_state` when no active close state is available. `CloseTaskResult.close_state` uses `ready`, `blocked`, `closed`, `cancelled`, or `superseded`.
 - **Errors:** `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, `NO_ACTIVE_TASK`, `PROJECTION_STALE` when a requested readable view is stale or unavailable.
 - **Storage owner:** Read-only over `project_state`, `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `evidence_summaries`, `artifacts`, `artifact_links`, and `blockers`.
 - **Security boundary:** Without a promoted profile, status displays only the current MVP `GuaranteeDisplay.level` values `cooperative` or `detective`. `cooperative` is the default. `detective` may be displayed only when the active surface can honestly observe the relevant fact and the relevant capability check has passed; for `reference-local-mcp`, that means `changed_path_detection_verification=passed` and only within verified changed-path detection scope. `not_run`, legacy `planned_not_run` wording, `failed`, or `stale` must downgrade the display to `cooperative` unless the request specifically requires the unsupported capability, in which case the method returns `CAPABILITY_INSUFFICIENT`. `preventive` and `isolated` are later/profile-gated display names and are not current MVP schema values. Stale status text, chat, rendered views, and cached summaries are not authority.
@@ -251,8 +267,10 @@ PrepareWriteRequest:
 - **Response:**
 
 ```yaml
-PrepareWriteResponse:
-  base: ToolResponseBase
+PrepareWriteResponse: PrepareWriteResult | ToolRejectedResponse | ToolDryRunResponse
+
+PrepareWriteResult:
+  base: ToolResultBase
   decision: allowed | blocked | approval_required | decision_required
   state: StateSummary | null
   write_authorization_ref: StateRecordRef | null
@@ -265,7 +283,7 @@ PrepareWriteResponse:
 ```
 
 - **State effect:** A committed non-dry-run `decision=allowed` creates exactly one `write_authorizations.status=active` row for the active path-level `AuthorizedAttemptScope`, appends an event, creates a replay row, and increments `project_state.state_version` exactly once. A committed `blocked`, `approval_required`, or `decision_required` response may update blockers, append an event, create a replay row, and increment `project_state.state_version` exactly once, but it must not create a consumable authorization. `dry_run` and pre-commit failure create no current record, authorization, blocker row, event, artifact, evidence summary, replay row, or state-version increment.
-- **State-version conflict:** A project-wide state-version mismatch is a pre-commit `STATE_VERSION_CONFLICT` in `ToolResponseBase.errors`, not a `PrepareWriteResponse.decision` value, and it creates no Write Authorization or blocker commit.
+- **State-version conflict:** A project-wide state-version mismatch is a pre-commit `STATE_VERSION_CONFLICT` in `ToolRejectedResponse.errors`, not a `PrepareWriteResult.decision` value, and it creates no Write Authorization or blocker commit.
 - **Errors:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `BASELINE_STALE`, `VALIDATOR_FAILED`.
 - **Storage owner:** `write_authorizations`, `blockers`, `project_state` state clock, `task_events`, and `tool_invocations`.
 - **Security boundary:** `decision=allowed` means compatible with Harness records for this path-level product-file write attempt. It does not mean the operating system will block incompatible writes or that arbitrary tools are isolated. The active `PrepareWriteRequest` contains only the product-write path-level fields listed above and does not encode command, dependency, host, network, secret, deployment, destructive-action, or system-access approval scope. Those approvals are recorded separately as `SensitiveActionScope` through `judgment_kind=sensitive_approval`. Current-MVP requests that require command, network, secret-access, artifact-capture, pre-tool-blocking, isolation, or unverified changed-path detection guarantees must return `CAPABILITY_INSUFFICIENT` when the active surface lacks the capability or has `changed_path_detection_verification=failed` or `stale`, or `VALIDATION_FAILED` when the request shape or requested guarantee is invalid for the active profile. `changed_path_detection_verification=not_run` or legacy `planned_not_run` wording cannot justify `detective`; the method must use a `cooperative` display unless the request requires the stronger guarantee.
@@ -295,13 +313,12 @@ StageArtifactRequest:
 - **Response:**
 
 ```yaml
-StageArtifactResponse:
-  request_id: string
-  project_id: string
-  task_id: string
+StageArtifactResponse: StageArtifactResult | ToolRejectedResponse | ToolDryRunResponse
+
+StageArtifactResult:
+  base: ToolResultBase
   staged_artifact_handle: StagedArtifactHandle
   expires_at: string
-  errors: ToolError[]
 ```
 
 - **State effect:** A successful call creates only a temporary `StagedArtifactHandle` backed by `artifact_staging` or an equivalent storage-owned staging manifest, scoped to `project_id` and `task_id`, with server-recorded `created_by_surface_id` and `created_by_surface_instance_id`, plus `content_type`, `sha256`, `size_bytes`, `redaction_state`, and `expires_at`. The provenance fields are recorded from the successful request's `VerifiedSurfaceContext`, not supplied by the user as authority claims. It creates no Core record, persistent `ArtifactRef`, evidence summary, blocker, event, `tool_invocations` replay row, close effect, or `project_state.state_version` increment. A later compatible `harness.record_run` request, using `access_class=run_recording`, is the only active path that can consume the handle and promote it to a persistent `ArtifactRef`.
@@ -350,8 +367,10 @@ RecordRunRequest:
 - **Response:**
 
 ```yaml
-RecordRunResponse:
-  base: ToolResponseBase
+RecordRunResponse: RecordRunResult | ToolRejectedResponse | ToolDryRunResponse
+
+RecordRunResult:
+  base: ToolResultBase
   run_summary: RunSummary
   registered_artifacts: ArtifactRef[]
   evidence_summary: EvidenceSummary | null
@@ -391,8 +410,10 @@ RequestUserJudgmentRequest:
 - **Response:**
 
 ```yaml
-RequestUserJudgmentResponse:
-  base: ToolResponseBase
+RequestUserJudgmentResponse: RequestUserJudgmentResult | ToolRejectedResponse | ToolDryRunResponse
+
+RequestUserJudgmentResult:
+  base: ToolResultBase
   user_judgment_ref: StateRecordRef
   user_judgment: UserJudgment
   blocker_refs: StateRecordRef[]
@@ -429,8 +450,10 @@ RecordUserJudgmentRequest:
 - **Response:**
 
 ```yaml
-RecordUserJudgmentResponse:
-  base: ToolResponseBase
+RecordUserJudgmentResponse: RecordUserJudgmentResult | ToolRejectedResponse | ToolDryRunResponse
+
+RecordUserJudgmentResult:
+  base: ToolResultBase
   user_judgment_ref: StateRecordRef
   user_judgment: UserJudgment
   updated_refs: StateRecordRef[]
@@ -465,8 +488,10 @@ CloseTaskRequest:
 - **Response:**
 
 ```yaml
-CloseTaskResponse:
-  base: ToolResponseBase
+CloseTaskResponse: CloseTaskResult | ToolRejectedResponse | ToolDryRunResponse
+
+CloseTaskResult:
+  base: ToolResultBase
   close_state: ready | blocked | closed | cancelled | superseded
   state: StateSummary
   blockers: CloseBlocker[]
@@ -475,7 +500,7 @@ CloseTaskResponse:
   next_actions: NextActionSummary[]
 ```
 
-Close concepts stay separate. `Task.lifecycle_phase` is the persisted lifecycle field; active values are `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, and `superseded`. `CloseTaskResponse.close_state` is response-level close status with values `ready`, `blocked`, `closed`, `cancelled`, and `superseded`. `Task.close_reason` stores close detail as `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, or `superseded`. `Task.result` stores only the coarse outcome `none`, `advice_only`, `completed`, `cancelled`, or `superseded`; unsuccessful Runs, violations, blocked closes, and evidence gaps remain in Run status, `CloseBlocker`, evidence state, or current Task state.
+Close concepts stay separate. `Task.lifecycle_phase` is the persisted lifecycle field; active values are `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, and `superseded`. `CloseTaskResult.close_state` is response-level close status with values `ready`, `blocked`, `closed`, `cancelled`, and `superseded`. `Task.close_reason` stores close detail as `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, or `superseded`. `Task.result` stores only the coarse outcome `none`, `advice_only`, `completed`, `cancelled`, or `superseded`; unsuccessful Runs, violations, blocked closes, and evidence gaps remain in Run status, `CloseBlocker`, evidence state, or current Task state.
 
 `intent` determines the API behavior:
 
@@ -486,7 +511,7 @@ Close concepts stay separate. `Task.lifecycle_phase` is the persisted lifecycle 
 | `cancel` | Terminal cancellation, not successful completion. Requires valid task identity, valid lifecycle, compatible local access, and no recovery constraint that prevents the transition. It does not require evidence sufficiency, final acceptance, or residual-risk acceptance. If `close_reason` is non-null it must be `cancelled`; the committed row stores `close_reason=cancelled` and `result=cancelled`. |
 | `supersede` | Terminal replacement, not successful completion. Requires the same identity, lifecycle, local-access, and recovery checks as cancellation, plus a valid open same-project `superseding_task_id` when the active pointer will move. It does not require evidence sufficiency, final acceptance, or residual-risk acceptance. If `close_reason` is non-null it must be `superseded`; the committed row stores `close_reason=superseded` and `result=superseded`. |
 
-For `intent=complete`, the API response reflects the ordered Core blocker matrix through `CloseTaskResponse.blockers`. The first unsatisfied row supplies the primary close-blocker basis; later rows may still appear as secondary blockers, but they cannot satisfy or hide earlier rows.
+For `intent=complete`, the API response reflects the ordered Core blocker matrix through `CloseTaskResult.blockers`. The first unsatisfied row supplies the primary close-blocker basis; later rows may still appear as secondary blockers, but they cannot satisfy or hide earlier rows.
 
 | Order | `CloseBlocker.category` | Typical public error path |
 |---:|---|---|
