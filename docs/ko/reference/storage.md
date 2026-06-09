@@ -659,7 +659,7 @@ Write Authorization을 소비하거나, 상태를 다시 바꾸지 않고 원래
 `consumed_by_run_id`나 `promoted_artifact_id`를 설정하거나, `task_events`를 추가하거나,
 아티팩트를 승격/연결하거나, 증거 요약을 갱신하거나, Write Authorization을 만들거나
 소비하거나, `write_authorizations.status`를 바꾸거나, 닫기 상태를 바꾸거나,
-`tool_invocations` 행 또는 `tool_invocations.response_json`을 만들거나, replay row를
+`tool_invocations` 행 또는 `tool_invocations.response_json`을 만들거나, 재실행 행을
 만들거나, 상태 버전을 올리면 안 됩니다. 성공한 `harness.stage_artifact`는
 위의 저장소 소유 임시 스테이징 계약으로만 제한됩니다. 그 스테이징 부수 효과는 Core
 현재 행, 이벤트, 재실행 행, 상태 버전 증가가 아닙니다.

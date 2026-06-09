@@ -41,7 +41,7 @@
 | 코드 | 의미 |
 |---|---|
 | `VALIDATION_FAILED` | 요청 본문 형태, enum 값, 활성화 규칙, 프로필별 검증, 또는 `record_run` `ArtifactInput` 검증이 변경 전에 실패했습니다. |
-| `STATE_VERSION_CONFLICT` | 프로젝트 전체 최신성 또는 멱등성에 대한 커밋 전 실패입니다. `ToolEnvelope.expected_state_version`이 오래됐거나, 소비 전 `WriteAuthorization.basis_state_version`이 오래됐거나, 같은 `idempotency_key`가 다른 request hash와 함께 재사용될 때만 `effect_kind=no_effect`인 `ToolRejectedResponse`로 반환합니다. |
+| `STATE_VERSION_CONFLICT` | 프로젝트 전체 최신성 또는 멱등성에 대한 커밋 전 실패입니다. `ToolEnvelope.expected_state_version`이 오래됐거나, 소비 전 `WriteAuthorization.basis_state_version`이 오래됐거나, 같은 `idempotency_key`가 다른 `request_hash`와 함께 재사용될 때만 `effect_kind=no_effect`인 `ToolRejectedResponse`로 반환합니다. |
 | `NO_ACTIVE_TASK` | Task가 필요하지만 활성 Task나 지정된 Task가 없습니다. |
 | `NO_ACTIVE_CHANGE_UNIT` | 쓰기를 할 수 있거나 닫기와 관련된 동작에 활성 범위 지정 Change Unit이 없습니다. |
 | `SCOPE_REQUIRED` | 요청한 쓰기나 동작 전에 범위 확인이 필요합니다. |
@@ -173,7 +173,7 @@ artifact_input_error:
 
 `request_hash`는 도구 이름, 스키마 정규화된 요청 본문, 그리고 `request_id`와 `idempotency_key`를 제외한 모든 `ToolEnvelope` 필드에 대한 정규 JSON에서 계산합니다.
 
-재실행 행(replay row)을 만드는 상태 효과의 커밋된 `dry_run=false` `MethodResult` 응답만 재실행 행에 저장합니다. 같은 키와 같은 요청 해시를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 승격/연결, Write Authorization 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 `idempotency_key`를 다른 request hash로 재사용하면 Core는 기존 재실행 행을 보존하고 `STATE_VERSION_CONFLICT`와 `effect_kind=no_effect`를 담은 `ToolRejectedResponse`를 반환합니다. 새 재실행 행은 만들거나 예약하지 않습니다.
+재실행 행을 만드는 상태 효과의 커밋된 `dry_run=false` `MethodResult` 응답만 재실행 행에 저장합니다. 같은 키와 같은 `request_hash`를 가진 커밋된 재실행 행이 있으면 Core는 최신성 확인을 다시 실행하거나 이벤트 추가, 아티팩트 승격/연결, Write Authorization 소비, 차단 사유 업데이트, 재실행 행 변경을 하지 않고 원래 커밋된 응답을 반환합니다. 같은 `idempotency_key`를 다른 `request_hash`로 재사용하면 Core는 기존 재실행 행을 보존하고 `STATE_VERSION_CONFLICT`와 `effect_kind=no_effect`를 담은 `ToolRejectedResponse`를 반환합니다. 새 재실행 행은 만들거나 예약하지 않습니다.
 
 `ToolRejectedResponse`와 `ToolDryRunResponse`는 재실행 행을 만들거나 예약하지 않습니다.
 
@@ -185,7 +185,7 @@ artifact_input_error:
 
 - `ToolEnvelope.expected_state_version`이 현재 `project_state.state_version`보다 오래된 경우.
 - 소비 전 `WriteAuthorization.basis_state_version`이 현재 `project_state.state_version`보다 오래된 경우.
-- 같은 `idempotency_key`가 다른 request hash와 함께 재사용된 경우.
+- 같은 `idempotency_key`가 다른 `request_hash`와 함께 재사용된 경우.
 
 커밋된 재실행 행이 없는 새 상태 변경 시도에서 Core는 담당 기록을 고르기 위해 최신성 확인 전에 기본 Task를 찾을 수 있습니다. 해석 순서는 도구별 `task_id`, `ToolEnvelope.task_id`, 활성 Task입니다. 이 해석은 별도 상태 시계를 고르지 않습니다. 새 `dry_run=false` 상태 변경은 모두 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 프로젝트 전체 `project_state.state_version`과 비교합니다. `dry_run=true` 요청이 오래된 `expected_state_version`을 제공해도 읽기 전용 결과나 `ToolDryRunResponse` 미리보기 전에 같은 커밋 전 거절이 적용됩니다.
 
@@ -193,11 +193,11 @@ artifact_input_error:
 
 이 거절 응답은 현재 기록, `task_events`, 재실행 행, 아티팩트, 스테이징된 핸들 소비, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태 변경, `state_version` 증가를 만들지 않습니다. 상태 효과 없음이 적용됩니다. `tasks.state_version`은 활성 충돌 기준이나 동시성 기준이 아닙니다.
 
-같은 `idempotency_key`가 다른 request hash와 함께 재사용된 충돌에서는 기존 재실행 행을 보존합니다. 거절된 요청을 위해 재실행 행을 만들거나, 예약하거나, 갈라 놓거나, 덮어쓰지 않습니다.
+같은 `idempotency_key`가 다른 `request_hash`와 함께 재사용된 충돌에서는 기존 재실행 행을 보존합니다. 거절된 요청을 위해 재실행 행을 만들거나, 예약하거나, 갈라 놓거나, 덮어쓰지 않습니다.
 
 `WriteAuthorization.basis_state_version`이 오래된 충돌에서는 소비 전에 거절 응답을 반환합니다. 이 조건은 `WRITE_AUTHORIZATION_INVALID`가 아니고, 커밋된 `write_compatibility` `CloseBlocker`가 아니며, Write Authorization 소비 없음이 적용됩니다.
 
-프로젝트 전체 상태 버전 불일치와 멱등성 request hash 충돌에 쓰는 현재 MVP의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다. 이 불일치에 대해 다른 공개 코드, 별칭, 폐기된 표기, 저장소 계층의 다른 공개 오류 이름, 내부 예외 이름을 노출하지 않습니다.
+프로젝트 전체 상태 버전 불일치와 멱등성 `request_hash` 충돌에 쓰는 현재 MVP의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다. 이 불일치에 대해 다른 공개 코드, 별칭, 폐기된 표기, 저장소 계층의 다른 공개 오류 이름, 내부 예외 이름을 노출하지 않습니다.
 
 오래된 `ToolEnvelope.expected_state_version`의 `STATE_VERSION_CONFLICT.details`에는 다음 값을 담아야 합니다.
 
@@ -209,7 +209,7 @@ project_id: string
 task_id: string | null
 ```
 
-멱등성 충돌의 `STATE_VERSION_CONFLICT.details`는 민감한 요청 본문을 노출하지 않고 `idempotency_key`와 request hash 불일치를 식별해야 합니다. 오래된 `WriteAuthorization.basis_state_version`의 세부정보는 오래된 권한 근거 버전과 현재 `project_state.state_version`을 식별해야 합니다.
+멱등성 충돌의 `STATE_VERSION_CONFLICT.details`는 민감한 요청 본문을 노출하지 않고 `idempotency_key`와 `request_hash` 불일치를 식별해야 합니다. 오래된 `WriteAuthorization.basis_state_version`의 세부정보는 오래된 권한 근거 버전과 현재 `project_state.state_version`을 식별해야 합니다.
 
 <a id="documentation-smoke-error-coverage"></a>
 
@@ -226,7 +226,7 @@ task_id: string | null
 - `harness.record_run`은 호환되는 Write Authorization을 정확히 한 번 소비합니다. Write Authorization이 없으면 `WRITE_AUTHORIZATION_REQUIRED`를 사용합니다. 프로젝트 전체 근거 버전이 오래된 Write Authorization은 `STATE_VERSION_CONFLICT`를 사용합니다. 만료, 철회, 이미 소비됨, 버전 불일치가 아닌 비호환 상태이면 `WRITE_AUTHORIZATION_INVALID`를 사용합니다. 승인 범위 밖 관찰 시도는 적용되는 범위 또는 Write Authorization 관련 코드를 사용합니다.
 - `close_task intent=check`는 차단 사유를 반환하더라도 읽기 전용입니다. `close_task intent=complete`는 구조화된 차단 사유와 함께 `CloseTaskResponse.close_state=blocked`를 반환하거나, 담당 문서가 정의한 complete 차단 사유가 없을 때만 `close_state=closed`를 반환합니다.
 - 닫기 스모크 범위는 증거 차단 사유의 `EVIDENCE_INSUFFICIENT`, 아티팩트 사용 불가 또는 누락 차단 사유의 `ARTIFACT_MISSING`, 최종 수락 차단 사유의 `ACCEPTANCE_REQUIRED`, 보이지만 수락되지 않은 잔여 위험에 대한 `category=residual_risk_acceptance`와 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 포함해야 합니다. `RESIDUAL_RISK_NOT_VISIBLE`은 아직 보이지 않은 위험에만 둡니다.
-- `close_task intent=supersede`가 유효하지 않으면 supersession, 생명주기, 로컬 접근, 복구 차단 사유를 사용합니다. 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, `idempotency_key` request hash 충돌은 `ToolRejectedResponse` 경우이며 커밋된 차단 사유가 아닙니다. 증거 충분성, 최종 수락, 잔여 위험 수락을 요구하면 안 됩니다. 유효한 supersede가 생명주기와 `project_state.active_task_id`를 함께 바꾸는 경우에도 하나의 프로젝트 전체 상태 변경입니다.
+- `close_task intent=supersede`가 유효하지 않으면 supersession, 생명주기, 로컬 접근, 복구 차단 사유를 사용합니다. 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, `idempotency_key`의 `request_hash` 충돌은 `ToolRejectedResponse` 경우이며 커밋된 차단 사유가 아닙니다. 증거 충분성, 최종 수락, 잔여 위험 수락을 요구하면 안 됩니다. 유효한 supersede가 생명주기와 `project_state.active_task_id`를 함께 바꾸는 경우에도 하나의 프로젝트 전체 상태 변경입니다.
 
 <a id="harnessclose_task-close-blockers"></a>
 
@@ -237,7 +237,7 @@ task_id: string | null
 `harness.close_task`에는 닫기 차단 사유 행렬 실행 전의 커밋 전 거절 경계가 있습니다. 아래 조건은 반드시 `ToolRejectedResponse`를 반환해야 하며 `CloseTaskResult(close_state=blocked)`를 반환하면 안 됩니다.
 
 - `expected_state_version`이 현재 `project_state.state_version`과 맞지 않는 경우.
-- 같은 `idempotency_key`를 다른 request hash로 재사용한 경우.
+- 같은 `idempotency_key`를 다른 `request_hash`로 재사용한 경우.
 - `WriteAuthorization.basis_state_version`이 오래된 경우.
 - 닫기 차단 사유 행렬 실행 전 요청 형태 검증이 실패한 경우.
 - 닫기 차단 사유 행렬 실행 전 로컬 접근 또는 역량 확인이 실패한 경우.
