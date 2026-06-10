@@ -1,31 +1,95 @@
 # 저장소 버전 관리
 
-이 문서는 현재 MVP 저장소의 상태 버전, 멱등성, 잠금, 마이그레이션 의미를 담당합니다. 문서 원천 자료일 뿐이며 마이그레이션을 실행하거나 런타임 잠금을 만들지 않습니다.
+이 문서는 현재 MVP 저장소 원천 설계의 상태 버전, 멱등성, 이벤트 의미, 잠금, 마이그레이션 의미를 담당합니다. 문서 원천 자료일 뿐이며 마이그레이션을 실행하거나 런타임 잠금을 만들거나 런타임 상태를 만들지 않습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
 이 문서가 담당합니다.
 
-- 공개 프로젝트 전체 `project_state.state_version` 충돌 기준
-- 저장소 의미 수준의 상태 버전 증가 규칙
-- 멱등성과 요청 해시 재실행 의미
-- 잠금 정책
-- 마이그레이션 의미와 active/later 마이그레이션 경계
+- 공개 프로젝트 전체 `project_state.state_version` 충돌 기준.
+- 저장소 의미 수준의 상태 버전 증가 규칙.
+- 멱등성과 요청 해시 재실행 의미.
+- `task_events`의 이벤트 의미.
+- 잠금 정책.
+- 마이그레이션 의미와 active/later 마이그레이션 경계.
 
 이 문서는 담당하지 않습니다.
 
-- 기록 형태나 DDL: [저장소 기록](storage-records.md)
+- 기록 배치나 DDL: [저장소 기록](storage-records.md)
 - 어떤 메서드 분기가 효과를 만드는지: [저장 효과](storage-effects.md), [MVP API](api/mvp-api.md)
-- 공개 오류 코드와 우선순위: [API Errors](api/errors.md)
+- 공개 오류 코드와 우선순위: [API 오류](api/errors.md)
+- 아티팩트 생명주기: [아티팩트 저장소](storage-artifacts.md)
 - 런타임 배포나 운영 명령
 
-## 경계
+## 프로젝트 전체 상태 시계
 
-현재 MVP의 공개 충돌 시계는 담당 문서가 범위와 증명 기대를 갖춰 다른 시계를 승격하기 전까지 프로젝트 전체 기준입니다. Task 범위 시계는 담당 문서가 승격하기 전까지 비공개 또는 이후 경계에만 둘 수 있습니다.
+현재 MVP에는 공개 상태 시계가 하나만 있습니다. 바로 `project_state.state_version`입니다. 이 값은 프로젝트 전체에 적용되며, 공개 API 변경에서 승인, 충돌, 최신성, 동시성 판단에 쓰는 유일한 활성 기준입니다. Task 라우팅은 여전히 담당 Task, 차단 사유, 닫기 상태, 증거, 사용자 판단을 찾는 데 중요하지만 별도 상태 시계를 고르지는 않습니다.
+
+새 `dry_run=false` 상태 변경 API 호출은 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 `project_state.state_version`과 비교합니다. 값이 맞지 않으면 `STATE_VERSION_CONFLICT`를 `ToolRejectedResponse.errors`에만 담아 반환합니다. 이 거절 응답은 `CloseReadinessBlocker`, 현재 기록, `task_event` 또는 `task_events` 추가, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, `close_state` 변경, 재실행 행, `project_state.state_version` 증가를 만들지 않습니다.
+
+프로젝트 전체 상태 버전 불일치에 쓰는 현재 MVP의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다. 이 불일치에 대해 다른 공개 코드, 별칭, 폐기된 표기, 저장소 계층의 공개 오류 이름을 노출하지 않습니다. 현재 MVP의 공개 호출은 둘 이상의 공개 `expected_state_version`을 요구하거나 받지 않습니다.
+
+커밋된 모든 `dry_run=false` 상태 변경은 `project_state.state_version`을 정확히 1 올립니다. 메서드 담당 문서가 차단 사유나 다른 현재 행 변경 저장을 허용한 커밋된 차단 응답도 같은 규칙을 따릅니다. 하나의 공개 호출이 Task 생명주기 필드와 프로젝트 수준 필드를 함께 바꿀 수 있습니다. 예를 들어 `harness.close_task intent=supersede`가 `tasks.lifecycle_phase`와 `project_state.active_task_id`를 함께 바꾸더라도 여전히 하나의 상태 변경이며 프로젝트 전체 버전 증가는 정확히 한 번만 일어납니다.
+
+`harness.status`, `harness.close_task intent=check`, `dry_run=true`인 같은 check, `ToolDryRunResponse` 미리보기 호출, 잘못된 요청, 커밋 전 검증 실패, 커밋 전 상태 버전 충돌, 멱등 재실행은 `project_state.state_version`을 올리지 않습니다.
+
+응답 분기의 `state_version` 값은 항상 프로젝트 전체 버전을 사용합니다. 커밋된 상태 변경에서는 커밋 뒤 결과 버전이고, 읽기 전용 결과, `ToolDryRunResponse` 미리보기, 임시 스테이징 응답에서는 그 응답이 관찰한 현재 프로젝트 전체 버전입니다.
+
+활성 첫 스키마에서는 `tasks.state_version`을 생략해야 합니다. 구현이 레거시 또는 프로토타입 `tasks.state_version` 열을 만나더라도 그 값은 비활성 메타데이터일 뿐입니다. 승인, `STATE_VERSION_CONFLICT`, 오래된 상태 판단, Write Authorization, 멱등성, 잠금, 동시성 기준으로 쓰면 안 됩니다.
+
+`write_authorizations.basis_state_version`은 Core가 권한을 준비할 때 사용한 프로젝트 전체 `project_state.state_version`을 저장합니다. 오래된 Write Authorization인지 판단할 때는 이 저장값을 현재 프로젝트 전체 상태 버전과 비교합니다. Task별 시계와 비교하지 않습니다. 그 불일치를 공개 API로 드러낼 때는 `STATE_VERSION_CONFLICT`를 사용합니다. 호출은 소비 전에 거절되며, 다른 현재 계약이 명시적으로 말하지 않는 한 Write Authorization 상태를 바꾸면 안 됩니다.
+
+`tool_invocations.basis_state_version`은 호출이 커밋 전 관찰한 프로젝트 전체 상태 버전을 저장합니다. `task_events.state_version`은 커밋된 이벤트 뒤의 결과 프로젝트 전체 버전을 저장합니다.
+
+## 이벤트 의미
+
+`task_events`는 커밋된 Core 변경을 순서대로 기록합니다. 감사와 순서 기록이지 일반 운영에서 현재 상태를 재구성하는 기본 출처가 아닙니다. `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers` 같은 현재 행이 현재 상태로 남습니다.
+
+`task_events`는 일반적인 현재 MVP 운영에서 추가 전용입니다. 이벤트가 커밋된 뒤에는 Core가 그 행을 갱신하거나 삭제해 기록을 바꾸면 안 됩니다. 수정이나 복구는 담당 경로를 통한 새 이벤트와 현재 행 갱신으로 기록합니다. 멱등 재실행, dry-run, 잘못된 요청, 커밋 전 실패는 이벤트를 추가하지 않습니다.
+
+새 커밋된 `dry_run=false` 변경에서는 현재 행 쓰기, `task_events` 추가, 프로젝트 전체 상태 버전 증가, `tool_invocations` 재실행 행 삽입이 하나의 트랜잭션으로 커밋되어야 합니다. `harness.record_run`에서는 `artifact_staging`의 스테이징 핸들 소비, 아티팩트 승격/연결, 증거 업데이트, Write Authorization 소비, 이벤트 추가, 재실행 행 삽입, `project_state.state_version` 정확히 한 번 증가가 같은 트랜잭션에 속합니다. 어느 하나라도 실패하면 부분적인 권한 행, 스테이징 소비, 지속 아티팩트 승격/연결, Write Authorization 소비, 증거 업데이트, 이벤트, 닫기 효과, 재실행 행, 상태 버전 증가가 남지 않아야 합니다.
+
+## 멱등성과 재실행
+
+`tool_invocations`는 API 메서드별 상태 효과 행이 재실행 행 생성을 허용한, 커밋된 `dry_run=false` Core `MethodResult` 응답의 정확한 재실행만 저장합니다. `ToolRejectedResponse`, `ToolDryRunResponse`, 읽기 전용 결과, 성공한 `StageArtifactResult` 스테이징 결과는 저장하지 않으며, 이런 분기는 재실행 행을 만들거나 예약하지 않습니다.
+
+저장소 고유 키는 `(project_id, tool_name, idempotency_key)`입니다. `request_hash`는 그 행에 저장하는 충돌 판별자입니다. `request_hash`를 두 번째 고유 키에 넣어 같은 멱등 키가 여러 커밋 응답으로 갈라질 수 있게 만들면 안 됩니다.
+
+같은 키와 요청 해시가 재실행되면 Core는 이벤트를 추가하거나, 아티팩트를 승격/연결하거나, Write Authorization을 소비하거나, 상태를 다시 바꾸지 않고 원래 커밋된 응답을 반환합니다. 같은 키가 다른 요청 해시로 재사용되면 Core는 [API 오류](api/errors.md#state-conflict-behavior)가 정의한 `STATE_VERSION_CONFLICT`를 반환합니다.
+
+`tool_invocations.response_json`은 재실행 행을 만드는 상태 효과가 있는 커밋된 `dry_run=false` Core `MethodResult` 응답만 정확히 저장합니다. `StatusResult`, `ToolRejectedResponse`, `ToolDryRunResponse`, 읽기 전용 `MethodResult`, 성공한 `StageArtifactResult` 스테이징 결과는 저장하지 않습니다.
+
+## 잠금 정책
+
+Runtime 변경은 Core가 소유한 상태 변경 경로를 통해 직렬화합니다. 일반 SQLite 트랜잭션과 필요한 경우 프로세스/프로젝트 잠금을 사용합니다. 권한 배치는 [런타임 경계](runtime-boundaries.md)가 담당합니다.
+
+현재 MVP는 `persistent_locks` 테이블을 요구하지 않습니다. 영속 잠금/복구 메타데이터는 담당 문서가 승격하기 전까지 이후 운영 자료입니다.
+
+잠금은 동시 상태 쓰기를 보호합니다. OS 샌드박스, 아티팩트 무결성 강제, 변조 방지 저장소, 권한 격리, 도구 실행 전 차단을 제공하지 않습니다.
+
+## 마이그레이션 경계
+
+이 저장소에는 마이그레이션 실행기가 없고 마이그레이션할 런타임 데이터도 없습니다. 이 문서는 기존 런타임 데이터를 마이그레이션하는 단계를 정의하지 않습니다. 런타임 구현 전에는 유지보수자가 실제 DDL, 마이그레이션 메커니즘, 저장소 프로필, 제약 강화 동작을 별도로 수락해야 합니다.
+
+현재 마이그레이션 경계는 다음과 같습니다.
+
+- Runtime Home 메타데이터와 `project_state`, 또는 유지보수자가 수락한 동등한 메커니즘에 스키마/프로필 버전을 저장합니다.
+- 향후 마이그레이션은 수락되기 전에 출발 버전, 대상 버전, 저장소 프로필, 담당 문서, 되돌림 또는 복구 기대치를 선언해야 합니다.
+- 향후 마이그레이션은 `registry.sqlite` 또는 `state.sqlite` 하나를 기준으로 트랜잭션 안에서 실행해야 하며, 런타임 구현 전에 중단 상태 복구 규칙을 분명히 가져야 합니다.
+- 커밋 전과 제약 강화 전에 담당 형태 JSON을 검증합니다.
+- 담당 문서가 소유한 알 수 없는 상태 또는 enum 값은 담당 문서가 정의하기 전까지 유효하지 않은 값으로 취급합니다.
+- null 허용 필드, 외래 키, enum 검사, JSON 검증을 강화할 때는 기존 행을 먼저 검증하거나 담당 문서가 정의한 복구 상태로 라우팅해야 합니다.
+- `task_events.event_seq`를 유지한다면 그 순서를 보존합니다.
+- 아티팩트 해시와 담당 연결을 보존하거나 영향을 받은 참조를 복구 대상으로 유효하지 않게 표시합니다.
+- 커밋된 `tool_invocations` 재실행 행을 보존해 마이그레이션 뒤 멱등성이 갈라지지 않게 합니다.
+- 상태 카드, 간결한 상태 보기, Projection 최신성, 닫기 준비 상태, 보고서 문장은 현재 기록에서 읽는 시점에 파생합니다. 마이그레이션 권한, 복구 입력, 저장소 변경 경로가 아닙니다.
+
+이 문서는 비활성 DDL 묶음, 마이그레이션 카탈로그, 프로필별 마이그레이션 세부사항을 의도적으로 제외합니다.
 
 ## 관련 담당 문서
 
-- [API Errors](api/errors.md): `STATE_VERSION_CONFLICT` 같은 공개 충돌 오류.
+- [API 오류](api/errors.md): `STATE_VERSION_CONFLICT` 같은 공개 충돌 오류.
 - [저장 효과](storage-effects.md): 어떤 분기가 상태를 올리거나 올리지 않는지.
 - [저장소 기록](storage-records.md): 버전 관리나 재실행 데이터를 저장하는 열.
+- [아티팩트 저장소](storage-artifacts.md): 아티팩트 생명주기와 보존 경계.
 - [런타임 경계](runtime-boundaries.md): Runtime Home 분리.

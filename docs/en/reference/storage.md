@@ -1,30 +1,26 @@
-# Storage Reference Routing
+# Storage
 
-This page remains only as a compatibility route for older links. It is not a canonical owner for storage contracts under the split ownership model.
+This page is a short router for the storage document family. It is documentation source material only; it does not create a Harness Server, Runtime Home, database, artifact store, migration runner, generated projection, runtime state, or implementation-complete DDL in this repository.
 
-## Owns / Does not own
+## What The Family Owns
 
-This page owns:
+The storage family owns where future Harness records persist, what committed records mean as storage authority, how method branches affect persistence, how artifacts move from temporary staging to persistent references, and how project-wide versioning, idempotency, locks, and migrations behave at the storage layer.
 
-- routing from older `storage.md` links to the current storage owner documents
-- a reminder that documentation edits must not create runtime storage
+Storage is authority only for rows or artifact records committed by Core and validated against the owning Core, API, artifact, and storage contracts. Chat, generated Markdown, status cards, projections, connector output, operator output, and report prose are not storage authority.
 
-This page does not own:
+## What It Does Not Own
 
-- storage records or DDL; see [Storage Records](storage-records.md)
-- storage effects; see [Storage Effects](storage-effects.md)
-- artifact storage lifecycle; see [Artifact Storage](storage-artifacts.md)
-- state versioning, idempotency, locks, or migrations; see [Storage Versioning](storage-versioning.md)
-- API schemas, method behavior, security claims, or runtime deployment
+Storage documents do not own API request or response shapes, public error precedence, method behavior, Core lifecycle meaning, security guarantees, Runtime Home deployment, or permission claims. Use [MVP API](api/mvp-api.md), the API schema owners, [Core Model](core-model.md), [API Errors](api/errors.md), [Security](security.md), and [Runtime Boundaries](runtime-boundaries.md) for those contracts.
+
+API data shape and persistence effect are separate. A response field such as `CloseReadinessBlocker[]`, `ArtifactRef`, or `StagedArtifactHandle` describes API data; it does not by itself prove that a row was written, an artifact was promoted, a handle was consumed, or `project_state.state_version` changed.
 
 ## Storage Owner Routes
 
 | Need | Owner |
 |---|---|
-| Persistent records, DDL, record-column meaning, storage-owned JSON | [Storage Records](storage-records.md) |
-| Method-to-storage effects and no-effect branches | [Storage Effects](storage-effects.md) |
-| Staged artifacts, promotion, persistent linking, body-read eligibility, retention, integrity | [Artifact Storage](storage-artifacts.md) |
-| Project-wide `state_version`, idempotency, locks, migrations | [Storage Versioning](storage-versioning.md) |
-| Runtime Home separation | [Runtime Boundaries](runtime-boundaries.md) |
+| Runtime Home layout, local store assumptions, persisted record categories, table overview, storage-owned JSON, record-level active/later exclusions | [Storage Records](storage-records.md) |
+| Read-only effects, dry-run effects, rejected no-effect branches, committed blocked effects, method-by-method persistence effects | [Storage Effects](storage-effects.md) |
+| Staged artifacts, `ArtifactRef`, existing artifact links, staged-handle promotion, artifact body-read boundaries, retention, integrity | [Artifact Storage](storage-artifacts.md) |
+| `project_state.state_version`, idempotency and replay rows, event meaning, locks, migrations | [Storage Versioning](storage-versioning.md) |
 
 Storage owners describe future Harness Runtime Home records only. This documentation repository is not a Runtime Home and must not contain generated runtime state.

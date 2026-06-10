@@ -55,10 +55,12 @@
 
 | 질문 | 담당 문서 |
 |---|---|
+| 저장소 문서 묶음은 어디서 시작하나요? | [저장소](storage.md)를 먼저 보고, 아래의 구체적인 저장소 담당 문서로 이동합니다 |
+| Runtime Home 배치, 로컬 저장소 가정, 테이블 개요는 어디가 담당하나요? | [저장소 기록](storage-records.md), [런타임 경계](runtime-boundaries.md) |
 | `CloseReadinessBlocker`는 저장소 행인가요? | [API 상태 스키마](api/schema-state.md), [저장 효과](storage-effects.md), [저장소 기록](storage-records.md) |
 | 아티팩트 스테이징은 증거를 만드나요? | [MVP API](api/mvp-api.md), [저장 효과](storage-effects.md), [아티팩트 저장소](storage-artifacts.md), [Core 모델](core-model.md) |
 | 아티팩트 승격은 어느 문서가 담당하나요? | [아티팩트 저장소](storage-artifacts.md), [MVP API](api/mvp-api.md), [저장 효과](storage-effects.md) |
-| 스테이징된 핸들 검증과 아티팩트 본문 읽기 가능성은 어디가 담당하나요? | [아티팩트 저장소](storage-artifacts.md), [API 아티팩트 스키마](api/schema-artifacts.md) |
+| 스테이징 핸들 검증과 아티팩트 본문 읽기 자격은 어디가 담당하나요? | [아티팩트 저장소](storage-artifacts.md), [API 아티팩트 스키마](api/schema-artifacts.md) |
 | 멱등성, 상태 시계, 잠금, 마이그레이션은 어디가 담당하나요? | [저장소 버전 관리](storage-versioning.md), [API 오류](api/errors.md) |
 
 ## 보안과 런타임 담당 문서

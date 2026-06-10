@@ -572,13 +572,16 @@ docs:
       en: docs/en/reference/storage.md
       ko: docs/ko/reference/storage.md
     default_for_agent: en
-    primary_role: storage_compatibility_router
+    primary_role: storage_family_router
     canonical_for:
       - older_storage_link_routing
       - split_storage_owner_lookup
+      - storage_family_owner_routing
+      - api_shape_vs_persistence_effect_distinction
     owns:
       - compatibility routing from older storage links
       - routes to split storage owners
+      - short distinction between API data shape and persistence effects
     does_not_own:
       - storage records
       - storage effects
@@ -587,6 +590,8 @@ docs:
       - locks
       - migrations
       - DDL
+      - API schemas
+      - method behavior
     related_docs:
       - reference.storage-records
       - reference.storage-effects
@@ -602,13 +607,21 @@ docs:
     default_for_agent: en
     primary_role: storage_record_owner
     canonical_for:
-      - persistent_record_shapes
+      - runtime_home_layout
+      - local_store_assumptions
+      - persistent_record_layouts
+      - persisted_record_categories
+      - table_overview
       - storage_ddl_ownership
       - record_column_meaning
       - storage_owned_json_fields
       - record_level_active_later_exclusions
     owns:
+      - Runtime Home layout assumptions
+      - local store assumptions
       - persistent record families
+      - persisted record categories
+      - storage table overview
       - DDL ownership
       - record-column meaning
       - storage-owned JSON placement
@@ -620,7 +633,8 @@ docs:
       - idempotency
       - locks
       - migrations
-      - API wire schemas
+      - API request/response schemas
+      - method behavior
     related_docs:
       - reference.storage-effects
       - reference.storage-artifacts
@@ -637,21 +651,26 @@ docs:
     primary_role: storage_effect_owner
     canonical_for:
       - method_storage_effects
+      - method_by_method_storage_effects
       - no_effect_boundaries
+      - dry_run_storage_effects
       - committed_blocked_storage_effects
       - read_only_storage_boundaries
     owns:
       - storage effects for method branches
+      - method-by-method storage effects
       - no-effect boundaries
+      - dry-run storage boundaries
       - committed blocked response storage consequences
       - read-only storage boundaries
     does_not_own:
-      - record shapes
+      - record layout
       - artifact lifecycle
       - idempotency
       - locks
       - migrations
       - API schemas
+      - method behavior
     related_docs:
       - reference.api.mvp-api
       - reference.storage-records
@@ -669,6 +688,7 @@ docs:
     canonical_for:
       - artifact_storage_lifecycle
       - artifact_staging
+      - staged_handle_validation
       - artifact_promotion
       - artifact_linking
       - artifact_body_read_eligibility
@@ -676,6 +696,7 @@ docs:
     owns:
       - artifact storage lifecycle
       - artifact staging
+      - staged-handle validation
       - artifact promotion
       - persistent artifact linking
       - body-read eligibility
@@ -703,17 +724,19 @@ docs:
     canonical_for:
       - state_versioning
       - idempotency
+      - event_meaning
       - locks
       - migrations
       - project_state_version_clock
     owns:
       - state versioning
       - idempotency semantics
+      - event meaning for `task_events`
       - lock semantics
       - migration semantics
       - project-wide `state_version` storage boundary
     does_not_own:
-      - record shapes
+      - record layout
       - method branch selection
       - public error precedence
       - runtime operations

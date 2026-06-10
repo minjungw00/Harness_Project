@@ -55,6 +55,8 @@ These documents are source material for a future Harness Server. They do not mea
 
 | Question | Owner document(s) |
 |---|---|
+| Where should I start for the storage document family? | [Storage](storage.md), then the specific storage owner below |
+| Which document owns Runtime Home layout, local store assumptions, and table overview? | [Storage Records](storage-records.md), [Runtime Boundaries](runtime-boundaries.md) |
 | Is `CloseReadinessBlocker` a storage row? | [API State Schemas](api/schema-state.md), [Storage Effects](storage-effects.md), [Storage Records](storage-records.md) |
 | Does artifact staging create evidence? | [MVP API](api/mvp-api.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), [Core Model](core-model.md) |
 | Which document owns artifact promotion? | [Artifact Storage](storage-artifacts.md), [MVP API](api/mvp-api.md), [Storage Effects](storage-effects.md) |
