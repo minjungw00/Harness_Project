@@ -26,15 +26,15 @@ For the canonical current scope, see [Active MVP scope](docs/en/reference/active
 
 - 실행 중인 하네스 인스턴스, 런타임 구현, Harness Runtime Home, 생성된 런타임 상태, 운영 아티팩트, 실행 가능한 fixture, 적합성 실행기.
 
-## Start reading / 읽기 시작하기
+## Start reading / 읽기 경로
 
-| Need / 필요 | Link / 링크 |
+| Reader / 독자 | Path / 경로 |
 |---|---|
-| Documentation home / 문서 홈 | [docs/README.md](docs/README.md) |
-| English start / 영어 시작 문서 | [docs/en/start.md](docs/en/start.md) |
-| Korean start / 한국어 시작 문서 | [docs/ko/start.md](docs/ko/start.md) |
-| English MVP scope owner / 영어 현재 MVP 범위 담당 문서 | [docs/en/reference/active-mvp-scope.md](docs/en/reference/active-mvp-scope.md) |
-| Korean MVP scope owner / 한국어 현재 MVP 범위 담당 문서 | [docs/ko/reference/active-mvp-scope.md](docs/ko/reference/active-mvp-scope.md) |
+| New user / 처음 읽는 사용자 | [README.md](README.md) -> [docs/README.md](docs/README.md) -> [docs/en/start.md](docs/en/start.md) -> [docs/en/use/user-guide.md](docs/en/use/user-guide.md), or [docs/ko/start.md](docs/ko/start.md) -> [docs/ko/use/user-guide.md](docs/ko/use/user-guide.md) |
+| Working user / 작업 중인 사용자 | [docs/en/use/user-guide.md](docs/en/use/user-guide.md) -> [docs/en/use/judgment-examples.md](docs/en/use/judgment-examples.md) -> [docs/en/reference/active-mvp-scope.md](docs/en/reference/active-mvp-scope.md), or [docs/ko/use/user-guide.md](docs/ko/use/user-guide.md) -> [docs/ko/use/judgment-examples.md](docs/ko/use/judgment-examples.md) -> [docs/ko/reference/active-mvp-scope.md](docs/ko/reference/active-mvp-scope.md) |
+| Agent author/operator / 에이전트 작성자·운영자 | [AGENTS.md](AGENTS.md) -> [docs/doc-index.yaml](docs/doc-index.yaml) -> [docs/en/use/agent-guide.md](docs/en/use/agent-guide.md) -> [docs/en/reference/agent-integration.md](docs/en/reference/agent-integration.md), or [docs/ko/use/agent-guide.md](docs/ko/use/agent-guide.md) -> [docs/ko/reference/agent-integration.md](docs/ko/reference/agent-integration.md) |
+| Implementer / 구현 담당자 | [docs/en/reference/README.md](docs/en/reference/README.md) -> active scope -> API methods -> schema owners -> storage effects, or [docs/ko/reference/README.md](docs/ko/reference/README.md) -> 현재 MVP 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
+| Maintainer / 유지보수자 | [docs/en/maintain/authoring-guide.md](docs/en/maintain/authoring-guide.md) -> translation guide -> checks -> doc-index -> terminology map, or [docs/ko/maintain/authoring-guide.md](docs/ko/maintain/authoring-guide.md) -> 번역 가이드 -> 점검 -> doc-index -> 용어 지도 |
 
 ## Documentation rules / 문서 규칙
 

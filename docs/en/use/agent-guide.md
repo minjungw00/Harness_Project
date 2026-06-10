@@ -239,3 +239,11 @@ For ordinary Harness session context, do not load both English and Korean paired
 Bilingual documentation maintenance is different: use the authoring and translation guides, compare paired files deliberately, and keep semantic parity. Do not turn that maintenance workflow into ordinary always-on agent context.
 
 When the task is Korean-facing, preserve exact identifiers such as API names, schema fields, enum values, file paths, error codes, table names, and validator IDs. Write natural Korean in user-facing output instead of English nouns with Korean particles.
+
+## Where to go next
+
+Agent authors and operators should use this path:
+
+[AGENTS.md](../../../AGENTS.md) -> [doc-index.yaml](../../doc-index.yaml) -> this guide -> [Agent Integration Reference](../reference/agent-integration.md).
+
+Use [Surface Recipes](surface-recipes.md) for CLI, IDE/editor, chat, and local MCP presentation choices. Use the [Reference Index](../reference/README.md) only when the next action needs an exact owner contract.

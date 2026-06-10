@@ -4,6 +4,12 @@ Use this compact catalog after the [User Guide](user-guide.md) when a task is bl
 
 Each example separates the user's decision from agent action, the Harness record, and the implication Harness must avoid. The examples are intentionally brief; contract details stay in the linked owner documents.
 
+## Where to go next
+
+Working users can read these examples after the [User Guide](user-guide.md), then check [Active MVP Scope](../reference/active-mvp-scope.md) when they need to know whether a behavior is active, profile-gated, or later-only.
+
+Use per-example reference links only when you need the exact owner. Do not start a user-facing task by asking the user to read schema internals.
+
 ## Product choice
 
 User decides:

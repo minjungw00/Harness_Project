@@ -221,28 +221,17 @@
 - 하네스만으로 정확성, 완전성, 접근성, 개인정보 보호, 보안, 운영 안전성이 증명된다고 주장하기.
 - "하네스가 기록했다"를 "사용자가 받아들였다"로 바꾸기.
 
-## 정확한 계약을 읽을 곳
+## 다음 읽기 경로
 
-이 가이드는 사용자용 작업 흐름입니다. 정확한 메서드 동작, 스키마 형태, 저장 효과, 오류 동작, 보안 표현, 닫기 준비 상태 규칙이 필요할 때는 아래 담당 문서를 봅니다.
+이 가이드는 사용자용 작업 흐름입니다. 내부 스키마 세부사항부터 열지 말고 독자 역할에 맞는 경로로 이어 갑니다.
 
-사용자가 결정하는 것:
-- 주장에 의존하기 전에 평이한 흐름만 보면 되는지, 정확한 계약까지 봐야 하는지.
-- 어떤 계약 질문에 답해야 하는지.
+| 독자 | 경로 |
+|---|---|
+| 작업 중인 사용자 | [판단 예시](judgment-examples.md) -> [현재 MVP 범위](../reference/active-mvp-scope.md) |
+| 에이전트 작성자·운영자 | [에이전트 가이드](agent-guide.md) -> [에이전트 통합 참조](../reference/agent-integration.md) |
+| 구현 담당자 | [참조 색인](../reference/README.md) -> 현재 MVP 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
+| 문서 유지보수자 | [작성 가이드](../maintain/authoring-guide.md) -> [번역 가이드](../maintain/translation-guide.md) -> [점검](../maintain/checks.md) |
 
-하네스가 기록하는 것:
-- 문서를 읽는 것만으로는 새 런타임 상태를 만들지 않습니다.
-- 계약 세부사항은 이 가이드가 아니라 담당 문서가 정의한 향후 런타임 경로로만 기록됩니다.
+정확한 메서드 동작, 스키마 형태, 저장 효과, 오류 동작, 보안 표현, 닫기 준비 상태 규칙이 필요할 때는 [참조 색인](../reference/README.md)에서 담당 문서를 고릅니다. 이 사용자 가이드를 API 계약처럼 다루거나 자세한 계약 규칙을 사용자용 경로에 다시 복사하지 않습니다.
 
-에이전트가 하면 안 되는 것:
-- 이 사용자 가이드를 API 계약처럼 다루기.
-- 자세한 스키마, 저장소, 보안, 닫기 준비 상태 규칙을 사용자용 경로에 다시 복사하기.
-- 이 문서들이 이 저장소에서 런타임이나 서버 구현이 시작됐다는 뜻이라고 말하기.
-
-담당 문서:
-- 먼저 [참조 문서 색인](../reference/README.md)에서 담당 문서를 고릅니다.
-- 현재 MVP 범위와 문서 전용 경계: [현재 MVP 범위](../reference/active-mvp-scope.md), [MVP 계획](../build/mvp-plan.md), [런타임 경계](../reference/runtime-boundaries.md).
-- Core 권한, 비대체 규칙, 사용자 판단, 증거 의미, 최종 수락, 잔여 위험, 닫기 순서: [Core 모델](../reference/core-model.md).
-- 작업 시작, 범위 갱신, 상태 검토, 쓰기 승인, 아티팩트 스테이징, 실행/증거 기록, 사용자 판단, 닫기 시도를 포함한 활성 API 메서드 동작: [MVP API](../reference/api/mvp-api.md).
-- 정확한 상태, 아티팩트, 판단, 값 집합, 오류 계약: [API 상태 스키마](../reference/api/schema-state.md), [API 아티팩트 스키마](../reference/api/schema-artifacts.md), [API 판단 스키마](../reference/api/schema-judgment.md), [API 값 집합](../reference/api/schema-value-sets.md), [API 오류](../reference/api/errors.md).
-- 아티팩트 저장소와 메서드별 저장 효과: [아티팩트 저장소](../reference/storage-artifacts.md), [저장 효과](../reference/storage-effects.md).
-- 보안 주장과 비보장: [보안](../reference/security.md).
+문서를 읽는 것만으로 런타임 상태, 증거, 수락, 닫기 기록이 생기거나 이 저장소에서 런타임/서버 구현이 시작됐다는 뜻이 되지는 않습니다.

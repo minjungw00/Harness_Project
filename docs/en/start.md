@@ -157,11 +157,14 @@ Later candidates are not active requirements until an owner promotes them. If a 
 
 The current MVP guarantee boundary is modest. For canonical guarantee levels and security non-claims, see [Security](reference/security.md); for owner routing, use the [Reference Index](reference/README.md).
 
-## Where to read next
+## Where to go next
 
-- [User Guide](use/user-guide.md) for practical user and agent behavior.
-- [Agent Guide](use/agent-guide.md) for agent-facing session guidance.
-- [Active MVP Scope](reference/active-mvp-scope.md) for what is currently in and out of scope.
-- [MVP Plan](build/mvp-plan.md) for repository status, handoff, and future implementation readiness boundaries.
-- [Reference Index](reference/README.md) only when you need exact future contracts.
-- [Authoring Guide](maintain/authoring-guide.md) before editing documentation.
+| Reader | Path |
+|---|---|
+| New user | [User Guide](use/user-guide.md) |
+| Working user | [User Guide](use/user-guide.md) -> [Judgment Examples](use/judgment-examples.md) -> [Active MVP Scope](reference/active-mvp-scope.md) |
+| Agent author/operator | [Agent Guide](use/agent-guide.md) -> [Agent Integration Reference](reference/agent-integration.md) |
+| Implementer | [Reference Index](reference/README.md) -> active scope -> API methods -> schema owners -> storage effects |
+| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) -> [Translation Guide](maintain/translation-guide.md) -> [Checks](maintain/checks.md) |
+
+Use the Reference Index when you need exact owner documents. New users should not need to start with API schemas to understand the product.

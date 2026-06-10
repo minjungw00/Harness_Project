@@ -39,6 +39,14 @@ Use the compact active routes:
 
 [docs/doc-index.yaml](../../doc-index.yaml) owns retrieval and routing metadata. It is not runtime configuration and not a contract owner. [docs/terminology-map.yaml](../../terminology-map.yaml) owns bilingual terminology controls when it exists. It does not own API, storage, schema, security, projection, or runtime behavior.
 
+### Maintainer Reading Path
+
+Use this path for documentation maintenance:
+
+[Authoring Guide](authoring-guide.md) -> [Translation Guide](translation-guide.md) -> [Checks](checks.md) -> [doc-index.yaml](../../doc-index.yaml) -> [Terminology Map](../../terminology-map.yaml).
+
+The maintain path helps editors choose inputs and owners. It does not create runtime state, implementation readiness, acceptance, evidence, close records, or permission to start server coding.
+
 ## 2. Canonical owner rule
 
 One concept, one canonical owner. A canonical owner is the one document allowed to define the normative meaning of a product concept, contract, schema family, storage effect, security guarantee, route, or terminology rule.

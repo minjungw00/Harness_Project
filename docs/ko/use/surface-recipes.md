@@ -99,3 +99,7 @@ IDE/editor 통합은 에이전트가 절차를 지키도록 도울 수 있습니
 - [보안](../reference/security.md): 보장 표현과 비보장.
 - [런타임 경계](../reference/runtime-boundaries.md): Product Repository, Harness Server, Runtime Home 분리.
 - [현재 MVP 범위](../reference/active-mvp-scope.md): 활성, 프로필 조건부, 이후 후보 경계.
+
+## 다음 읽기 경로
+
+일반 에이전트 행동은 [에이전트 가이드](agent-guide.md)를 보고, 정확한 커넥터 담당 계약은 [에이전트 통합 참조](../reference/agent-integration.md)를 봅니다. 구현 담당자는 이 레시피를 API나 스키마 계약처럼 쓰지 말고 [참조 색인](../reference/README.md)에서 담당 문서 경로를 이어 갑니다.

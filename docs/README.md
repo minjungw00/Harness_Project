@@ -15,13 +15,13 @@ English and Korean are both active documentation languages. Choose the language 
 
 ## Choose a reading path / 읽기 경로 선택
 
-| Reader             | English                               | Korean                                |
-| ------------------ | ------------------------------------- | ------------------------------------- |
-| New user           | `docs/en/start.md`                    | `docs/ko/start.md`                    |
-| Working user       | `docs/en/use/user-guide.md`           | `docs/ko/use/user-guide.md`           |
-| Agent behavior     | `docs/en/use/agent-guide.md`          | `docs/ko/use/agent-guide.md`          |
-| Technical contract | `docs/en/reference/README.md`         | `docs/ko/reference/README.md`         |
-| Maintenance        | `docs/en/maintain/authoring-guide.md` | `docs/ko/maintain/authoring-guide.md` |
+| Reader / 독자 | English path | Korean path |
+|---|---|---|
+| New user / 처음 읽는 사용자 | [`start.md`](en/start.md) -> [`user-guide.md`](en/use/user-guide.md) | [`start.md`](ko/start.md) -> [`user-guide.md`](ko/use/user-guide.md) |
+| Working user / 작업 중인 사용자 | [`user-guide.md`](en/use/user-guide.md) -> [`judgment-examples.md`](en/use/judgment-examples.md) -> [`active-mvp-scope.md`](en/reference/active-mvp-scope.md) | [`user-guide.md`](ko/use/user-guide.md) -> [`judgment-examples.md`](ko/use/judgment-examples.md) -> [`active-mvp-scope.md`](ko/reference/active-mvp-scope.md) |
+| Agent author/operator / 에이전트 작성자·운영자 | [`AGENTS.md`](../AGENTS.md) -> [`doc-index.yaml`](doc-index.yaml) -> [`agent-guide.md`](en/use/agent-guide.md) -> [`agent-integration.md`](en/reference/agent-integration.md) | [`AGENTS.md`](../AGENTS.md) -> [`doc-index.yaml`](doc-index.yaml) -> [`agent-guide.md`](ko/use/agent-guide.md) -> [`agent-integration.md`](ko/reference/agent-integration.md) |
+| Implementer / 구현 담당자 | [`reference/README.md`](en/reference/README.md) -> active scope -> API methods -> schema owners -> storage effects | [`reference/README.md`](ko/reference/README.md) -> 현재 MVP 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
+| Maintainer / 유지보수자 | [`authoring-guide.md`](en/maintain/authoring-guide.md) -> translation guide -> checks -> doc-index -> terminology map | [`authoring-guide.md`](ko/maintain/authoring-guide.md) -> 번역 가이드 -> 점검 -> doc-index -> 용어 지도 |
 
 ## Reference owner routing / 참조 담당 문서 찾기
 

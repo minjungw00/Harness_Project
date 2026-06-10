@@ -226,28 +226,17 @@ The agent must not:
 - Claim Harness proves correctness, completeness, accessibility, privacy, security, or production safety by itself.
 - Turn "Harness recorded this" into "the user accepted this."
 
-## Where to read the exact contract
+## Where to go next
 
-This guide is the user-facing workflow. Use the reference owners below when you need exact method behavior, schema shape, storage effect, error behavior, security wording, or close-readiness rules.
+This guide is the user-facing workflow. Continue by role instead of starting with internal schema details.
 
-You decide:
-- Whether you need the plain workflow or the exact contract before relying on a claim.
-- Which contract question you are trying to answer.
+| Reader | Path |
+|---|---|
+| Working user | [Judgment Examples](judgment-examples.md) -> [Active MVP Scope](../reference/active-mvp-scope.md) |
+| Agent author/operator | [Agent Guide](agent-guide.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
+| Implementer | [Reference Index](../reference/README.md) -> active scope -> API methods -> schema owners -> storage effects |
+| Documentation maintainer | [Authoring Guide](../maintain/authoring-guide.md) -> [Translation Guide](../maintain/translation-guide.md) -> [Checks](../maintain/checks.md) |
 
-Harness records:
-- No new runtime state just because you read the docs.
-- Contract details only through the future runtime paths defined by the owner documents, not through this guide.
+Use the [Reference Index](../reference/README.md) when you need exact method behavior, schema shape, storage effect, error behavior, security wording, or close-readiness rules. Do not treat this user guide as the API contract, and do not copy detailed contract rules back into the user-facing path.
 
-The agent must not:
-- Treat this user guide as the API contract.
-- Copy detailed schema, storage, security, or close-readiness rules back into the user-facing path.
-- Claim these docs mean runtime/server implementation has started in this repository.
-
-Contract owners:
-- Start at the [Reference Index](../reference/README.md) to choose the owner.
-- Current MVP scope and documentation-only boundary: [Active MVP Scope](../reference/active-mvp-scope.md), [MVP Plan](../build/mvp-plan.md), and [Runtime Boundaries](../reference/runtime-boundaries.md).
-- Core authority, non-substitution rules, user judgment, evidence meaning, final acceptance, residual risk, and close order: [Core Model](../reference/core-model.md).
-- Active API method behavior, including intake, scope update, status review, write approval, artifact staging, run/evidence recording, user judgment, and close attempts: [MVP API](../reference/api/mvp-api.md).
-- Exact state, artifact, judgment, value-set, and error contracts: [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), [API Value Sets](../reference/api/schema-value-sets.md), and [API Errors](../reference/api/errors.md).
-- Artifact storage and method storage effects: [Artifact Storage](../reference/storage-artifacts.md) and [Storage Effects](../reference/storage-effects.md).
-- Security claims and non-claims: [Security](../reference/security.md).
+Reading these docs does not create runtime state, evidence, acceptance, close records, or proof that runtime/server implementation has started in this repository.

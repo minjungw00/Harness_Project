@@ -12,6 +12,19 @@
 - 번역이나 의미 일치 검토가 아니라면 같은 `doc_id`의 영어/한국어 대응 문서를 한 프롬프트에 함께 넣지 않습니다.
 - 정확한 식별자는 backtick으로 보존하고, 의미는 담당 문서가 정하게 둡니다.
 
+## 구현 담당자 읽기 경로
+
+제품 경계에서 정확한 담당 문서로 들어갈 때는 아래 순서를 사용합니다.
+
+| 단계 | 담당 문서 경로 |
+|---|---|
+| 현재 MVP 범위 | [현재 MVP 범위](active-mvp-scope.md) |
+| API 메서드 | [MVP API](api/mvp-api.md) |
+| 스키마 담당 문서 | [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 아티팩트 스키마](api/schema-artifacts.md), [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md), [API 오류](api/errors.md) |
+| 저장 효과 | [저장 효과](storage-effects.md)를 먼저 보고, 필요한 경우 [저장소 기록](storage-records.md), [아티팩트 저장소](storage-artifacts.md), [저장소 버전 관리](storage-versioning.md)로 들어갑니다 |
+
+이 경로는 정확한 담당 문서가 필요한 구현 담당자와 검토자를 위한 것입니다. 처음 읽는 사용자와 작업 중인 사용자는 [시작하기](../start.md)와 [사용자 가이드](../use/user-guide.md)에서 시작합니다.
+
 ## 현재 범위
 
 | 질문 | 담당 문서 |

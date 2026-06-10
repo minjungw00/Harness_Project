@@ -99,3 +99,7 @@ Do not bury the user in schema fields, logs, generated projections, or long hist
 - [Security](../reference/security.md): guarantee wording and non-claims.
 - [Runtime Boundaries](../reference/runtime-boundaries.md): Product Repository, Harness Server, and Runtime Home separation.
 - [Active MVP Scope](../reference/active-mvp-scope.md): active, profile-gated, and later-candidate boundaries.
+
+## Where to go next
+
+Use [Agent Guide](agent-guide.md) for general agent behavior, then [Agent Integration Reference](../reference/agent-integration.md) for exact connector ownership. Implementers should continue through the [Reference Index](../reference/README.md) rather than treating these recipes as API or schema contracts.

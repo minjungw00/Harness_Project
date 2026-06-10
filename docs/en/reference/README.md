@@ -12,6 +12,19 @@ These documents are source material for a future Harness Server. They do not mea
 - Do not load paired English and Korean docs for the same `doc_id` in one prompt unless the task is translation or semantic-parity review.
 - Preserve exact identifiers in backticks and let the owner document decide their meaning.
 
+## Implementer Path
+
+Use this order when moving from product boundary to exact contract owners:
+
+| Step | Owner route |
+|---|---|
+| Active scope | [Active MVP Scope](active-mvp-scope.md) |
+| API methods | [MVP API](api/mvp-api.md) |
+| Schema owners | [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), [API Judgment Schemas](api/schema-judgment.md), [API Value Sets](api/schema-value-sets.md), [API Errors](api/errors.md) |
+| Storage effects | [Storage Effects](storage-effects.md), then [Storage Records](storage-records.md), [Artifact Storage](storage-artifacts.md), or [Storage Versioning](storage-versioning.md) when that narrower owner applies |
+
+This route is for implementers and reviewers who need exact owners. New and working users should begin with [Start](../start.md) and the [User Guide](../use/user-guide.md).
+
 ## Current scope
 
 | Question | Owner document(s) |
