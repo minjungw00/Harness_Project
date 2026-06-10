@@ -15,7 +15,7 @@ Before you say it is done, show the evidence and residual risk.
 
 The agent can answer in the same ordinary language. When a request hides product, technical, user-visible inspection, acceptance, or risk choices, Harness should make those choices visible. The agent should request and record needed judgments, not decide them silently.
 
-This repository is documentation-only today. It describes intended future Harness behavior, but it does not contain a running Harness Server or runtime implementation.
+This repository is documentation-only. It is source material for a future Harness Server, not a running server or runtime implementation.
 
 ## What Harness Is Not
 
@@ -23,7 +23,7 @@ Harness is not a prompt pack, chat script, MCP itself, API wrapper, workflow eng
 
 Harness also is not an operating-system permission system, arbitrary-tool sandbox, tamper-proof store, default pre-tool blocker, or security-isolation boundary. It can record and display authority boundaries, but it must not claim enforcement that the current MVP does not provide.
 
-Readable views, templates, status cards, and summaries are derived display. They help people read Harness state, but they are not the Core authority record just because they are well written or manually edited.
+Readable views, templates, status cards, and summaries are derived display. They help people read Harness state, but they do not become the authority record just because they are well written or manually edited.
 
 ## The Problem It Solves
 
@@ -88,22 +88,27 @@ If evidence is missing, stale, weak, or limited to the agent's own check, Harnes
 
 Close readiness answers a simple question: can this work honestly finish now, and what still blocks it?
 
-A close-ready task should show that scope stayed bounded, required user-owned judgments were handled, evidence supports the stated result, checks and known limits are clear, final acceptance is handled when required, known residual risk is visible when present, and any required residual-risk acceptance is recorded only when the user actually accepts the named risk. The current MVP does not add separate quality close requirements. The user judges final acceptance and residual-risk acceptance separately.
+A first reader can treat close readiness as a check for missing authority: bounded scope, handled user-owned judgments, evidence for the claim, clear checks and limits, final acceptance when required, and named residual risk when present. The detailed current behavior belongs in [Active MVP Scope](reference/active-mvp-scope.md) and the Reference owners it links to.
 
 If something is missing, close should name the smallest unblocker, such as a pending product decision, missing evidence, an unresolved check, unaccepted residual risk, or final acceptance that has not happened yet.
 
+## Current MVP Scope
+
+The current MVP is intentionally narrow. Detailed included and excluded scope is owned by [Active MVP Scope](reference/active-mvp-scope.md); this page only summarizes the reader-facing idea.
+
+Later candidates are not active requirements until an owner promotes them. If a detail is not in current scope, treat it as deferred even when it appears in examples or future-looking notes.
+
 ## Current MVP Guarantee Boundary
 
-The current MVP guarantee boundary is intentionally modest. Read MVP wording as cooperative guidance by default, with limited detective visibility only for supported observable facts after the relevant capability check has passed, unless a specific future mechanism is named, implemented, and proven.
+The current MVP guarantee boundary is modest. Read MVP wording as cooperative guidance unless a specific owner documents a stronger mechanism.
 
-In the current MVP, Harness does not claim OS-level permissions, arbitrary-tool isolation, tamper-proof local files, default pre-tool blocking, or broad security isolation. A `harness.prepare_write` result is a cooperative scope check, not an operating-system permission or sandbox.
-
-Preventive or isolated claims need a documented mechanism and proof path for the covered operation. Until then, Harness should say what it can record, guide, display, or detect without overstating what it can block.
+Harness can record, guide, display, and report supported findings. It does not claim OS-level permissions, arbitrary-tool sandboxing, tamper-proof local files, default pre-tool blocking, or broad security isolation. For the detailed boundary, use [Active MVP Scope](reference/active-mvp-scope.md) and the [Reference Index](reference/README.md).
 
 ## Where To Read Next
 
 - [User Guide](use/user-guide.md) for practical user and agent behavior.
 - [Agent Guide](use/agent-guide.md) for agent-facing session guidance.
+- [Active MVP Scope](reference/active-mvp-scope.md) for what is currently in and out of scope.
 - [MVP Plan](build/mvp-plan.md) for repository status, handoff, and future implementation readiness boundaries.
 - [Reference Index](reference/README.md) only when you need exact future contracts.
 - [Authoring Guide](maintain/authoring-guide.md) before editing documentation.
