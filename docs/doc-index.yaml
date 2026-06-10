@@ -1148,16 +1148,21 @@ docs:
     default_for_agent: en
     primary_role: later_candidate_index
     canonical_for:
+      - later_category_model
+      - later_category_routing
       - later_candidate_names
       - promotion_boundaries
       - deferred_feature_catalog
       - profile_gated_candidate_routing
     owns:
+      - later candidate category model
       - later candidate names
       - promotion boundaries
-      - deferred assurance candidates
-      - deferred operations candidates
-      - deferred API, schema, template, and fixture candidates
+      - deferred security-and-assurance candidates
+      - deferred artifacts-and-evidence candidates
+      - deferred connectors-and-surfaces candidates
+      - deferred policy-and-conformance candidates
+      - deferred workflow-and-collaboration candidates
     does_not_own:
       - active MVP requirements
       - active API contracts

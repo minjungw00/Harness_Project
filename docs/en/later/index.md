@@ -1,12 +1,28 @@
 # Later candidate index
 
-This page owns the future candidate list only. It does not define current MVP behavior, implementation tasks, runtime permission, active API contracts, active storage effects, or active security guarantees.
+This index is the router and summary for inactive later candidates. Until detailed candidates move into category files, it keeps the category model, candidate names, and promotion boundaries visible in one place.
 
 For current scope, see [Active MVP Scope](../reference/active-mvp-scope.md).
 
-Mention here is not promotion. A candidate becomes active only after the current scope and the relevant owner documents are updated in the same documentation-only batch.
+This page does not define current MVP behavior, implementation tasks, runtime permission, active API contracts, active storage effects, active security guarantees, or permission to start runtime/server coding.
+
+Mention here or in a future category file is not promotion. A candidate becomes active only after the current scope and the relevant owner documents are updated in the same documentation-only batch. Category files are for inactive later candidates; they are not active MVP contract owners.
 
 Profile-gated values are distinct from later candidates. A value is profile-gated only when the active scope and its owner document name the profile and the supported value set. Values on this page remain later candidates until that promotion happens.
+
+## Future category model
+
+Detailed later candidates should move into these category files in a later documentation-only edit. This index remains the router and short summary.
+
+| Category | What belongs here | What does not belong here | Future details file path |
+|---|---|---|---|
+| `security-and-assurance` | Preventive controls, isolation labels, stronger verification, and assurance claims. | Native artifact capture, connector surface design, team workflow, or executable fixture catalogs unless the candidate is about an assurance claim. | `docs/en/later/security-and-assurance.md` |
+| `artifacts-and-evidence` | Native artifact capture, richer evidence, and artifact body policies. | Security control claims, connector surface design, validator policy catalogs, or collaboration lifecycle. | `docs/en/later/artifacts-and-evidence.md` |
+| `connectors-and-surfaces` | IDE, CLI, chat, MCP, and remote connector candidates. | Runtime security guarantees, artifact body policies, validator catalogs, or team lifecycle. | `docs/en/later/connectors-and-surfaces.md` |
+| `policy-and-conformance` | Policy catalog, validators, and executable conformance fixture candidates. | Product connector surfaces, artifact capture details, multi-user workflow, or assurance controls unless the candidate is expressed as policy or conformance. | `docs/en/later/policy-and-conformance.md` |
+| `workflow-and-collaboration` | Multi-user flow, collaboration, and advanced lifecycle candidates. | Surface connector mechanics, artifact body storage, security guarantees, or validator catalogs. | `docs/en/later/workflow-and-collaboration.md` |
+
+The detailed candidates below are the current unsplit list. They remain inactive later candidates and may move into the category files above in a future documentation-only batch.
 
 <a id="assurance-candidates"></a>
 ## Assurance candidates
