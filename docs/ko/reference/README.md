@@ -1,46 +1,93 @@
-# 참조 색인
+# 참조 문서 색인
 
-정확한 하네스 계획 계약의 담당 문서를 고를 때 이 색인을 사용합니다. 이 README는 경로를 안내할 뿐이며 스키마, DDL, 상태 효과, 보안 보장, 템플릿 본문, 현재 MVP 범위를 정의하지 않습니다.
+이 색인은 "이 질문의 담당 문서는 어디인가?"에 답하기 위한 문서입니다. 이 README는 담당 문서로 안내할 뿐, API 계약, schema, 저장 효과, 보안 보장, 현재 MVP 범위를 정의하지 않습니다.
 
-이 문서들은 향후 하네스 서버를 위한 원천 자료입니다. 이 저장소에 서버/런타임 구현, Harness Runtime Home, 런타임 상태, 생성된 상태 보기, 실행 가능한 fixture, 구현 완료 동작이 있다는 뜻이 아닙니다.
+이 문서들은 향후 하네스 서버를 위한 원천 자료입니다. 이 저장소에 런타임 구현, 런타임 상태, 생성된 아티팩트, 상태 보기, 증거 기록, QA 기록, 수락 기록, 닫기 기록, 적합성 결과가 있다는 뜻이 아닙니다.
 
 ## 읽기 규칙
 
-- 지금 확인할 계약에 맞는 담당 문서 하나를 고릅니다.
-- 참조 문서 전체를 기본으로 읽지 않습니다.
-- 번역이나 의미 일치 검토가 필요한 경우가 아니라면 같은 담당 문서의 영어/한국어 대응 문서를 한 프롬프트에 함께 넣지 않습니다.
-- 담당 문서가 아닌 곳에서 계약이 반복되면 먼저 담당 문서를 고치고, 중복 문구는 짧은 결과 설명과 이 색인 경로로 바꿉니다.
+- 먼저 답해야 할 질문을 고르고, 그 질문에 맞는 담당 문서만 엽니다.
+- 계약 세부사항은 담당 문서에 둡니다. 이 색인에 필드 목록, 응답 분기, DDL, 값 집합, 보장 수준을 길게 적고 싶어진다면 담당 문서로 옮기고 여기에는 경로만 남깁니다.
+- 한영 문서나 용어 의미가 바뀌는 편집은 같은 작업 묶음에서 영어/한국어 담당 문서를 함께 맞춥니다.
+- 번역이나 의미 일치 검토가 아니라면 같은 `doc_id`의 영어/한국어 대응 문서를 한 프롬프트에 함께 넣지 않습니다.
+- 정확한 식별자는 backtick으로 보존하고, 의미는 담당 문서가 정하게 둡니다.
 
-## 기준 담당 문서
+## 현재 범위
 
-| 계약 영역 | 담당 문서 |
+| 질문 | 담당 문서 |
 |---|---|
-| 상세 현재 MVP 범위, 제외 항목, 보장 경계 | [active-mvp-scope.md](active-mvp-scope.md) |
-| Core 제품 개념과 사용자 소유 판단 | [core-model.md](core-model.md) |
-| API 메서드 동작 | [api/mvp-api.md](api/mvp-api.md) |
-| 공통 API 봉투와 응답 분기 | [api/schema-core.md](api/schema-core.md) |
-| API 상태 스키마 | [api/schema-state.md](api/schema-state.md) |
-| API 아티팩트 스키마 | [api/schema-artifacts.md](api/schema-artifacts.md) |
-| API 판단 스키마 | [api/schema-judgment.md](api/schema-judgment.md) |
-| API 값 집합과 enum 형태 값 | [api/schema-value-sets.md](api/schema-value-sets.md) |
-| 공개 API 오류 | [api/errors.md](api/errors.md) |
-| 저장소 기록 | [storage-records.md](storage-records.md) |
-| 저장 효과 | [storage-effects.md](storage-effects.md) |
-| 아티팩트 저장소 생명주기 | [storage-artifacts.md](storage-artifacts.md) |
-| 상태 버전, 멱등성, 잠금, 마이그레이션 | [storage-versioning.md](storage-versioning.md) |
-| 런타임, 저장소, 서버 경계 | [runtime-boundaries.md](runtime-boundaries.md) |
-| 보안 주장과 비보장 | [security.md](security.md) |
-| 에이전트 커넥터 참조 | [agent-integration.md](agent-integration.md) |
-| 접점별 사용법 | [../use/surface-recipes.md](../use/surface-recipes.md) |
-| 상태 보기 권한 | [projection-and-templates.md](projection-and-templates.md) |
-| 템플릿 본문 | [template-bodies.md](template-bodies.md) |
-| 이후 후보 | [../later/index.md](../later/index.md) |
-| 용어 | [glossary.md](glossary.md), [번역 가이드](../maintain/translation-guide.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
-| 문서 작성 규칙 | [작성 가이드](../maintain/authoring-guide.md) |
-| 문서 점검 | [문서 점검](../maintain/checks.md) |
+| 현재 MVP에 무엇이 포함되나요? | [현재 MVP 범위](active-mvp-scope.md) |
+| 어떤 기능이 현재 활성인지, 프로필로 제한되는지, 이후 후보인지 어디서 확인하나요? | [현재 MVP 범위](active-mvp-scope.md), [API 값 집합](api/schema-value-sets.md), [이후 후보 색인](../later/index.md) |
+| 이 저장소에서 런타임이나 서버 구현이 시작되었는지는 어디서 확인하나요? | [MVP 계획](../build/mvp-plan.md), [현재 MVP 범위](active-mvp-scope.md) |
+| 문서 전용 경계는 어디에 있나요? | [현재 MVP 범위](active-mvp-scope.md), [런타임 경계](runtime-boundaries.md) |
+| 구현 준비 상태나 유지보수자 인계 상태는 어디서 보나요? | [MVP 계획](../build/mvp-plan.md) |
 
-## 담당 문서가 아닌 곳의 경로 규칙
+## 담당 문서 찾기
 
-README, Start, Use, Build, Maintain, route/index 문서는 독자에게 보이는 결과를 짧게 요약할 수 있지만 기술 계약의 두 번째 기준 문서가 되면 안 됩니다. 이 색인이나 여기서 고른 담당 문서로 연결해야 합니다.
+| 질문 | 담당 문서 |
+|---|---|
+| Core 권한, Task 상태, 증거, 잔여 위험, 비대체 규칙은 어디가 담당하나요? | [Core 모델](core-model.md) |
+| API 메서드 동작은 어디가 담당하나요? | [MVP API](api/mvp-api.md) |
+| 공통 API 응답 분기와 요청 래퍼는 어디가 담당하나요? | [API Schema Core](api/schema-core.md) |
+| 공개 오류 코드와 오류 우선순위는 어디가 담당하나요? | [API 오류](api/errors.md) |
+| 저장소 기록이나 DDL은 어디가 담당하나요? | [저장소 기록](storage-records.md) |
+| 메서드별 저장 효과는 어디가 담당하나요? | [저장 효과](storage-effects.md) |
+| 보안 주장과 비보장은 어디가 담당하나요? | [보안](security.md) |
+| 제품 용어는 어디가 담당하나요? | [용어집](glossary.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
+| 읽기 가능한 상태 보기 권한은 어디가 담당하나요? | [상태 보기와 템플릿](projection-and-templates.md) |
+| 템플릿 본문은 어디가 담당하나요? | [템플릿 본문](template-bodies.md) |
 
-[storage.md](storage.md)처럼 오래된 링크를 위해 남는 넓은 호환 문서는 분리된 담당 문서가 있을 때 경로 안내만 담당합니다.
+## API와 schema 담당 문서
+
+| 질문 | 담당 문서 |
+|---|---|
+| `harness.prepare_write`는 무엇을 반환하나요? | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Core 모델](core-model.md) |
+| `ToolRejectedResponse`는 어디에 정의되어 있나요? | [API Schema Core](api/schema-core.md), [API 오류](api/errors.md) |
+| `STATE_VERSION_CONFLICT`는 언제 적용되나요? | [API 오류](api/errors.md), [MVP API](api/mvp-api.md), [저장소 버전 관리](storage-versioning.md) |
+| 활성 메서드 이름, `response_kind`, `effect_kind`, enum 형태 API 값은 어디가 담당하나요? | [API 값 집합](api/schema-value-sets.md) |
+| 접근 등급은 어디에 정의되어 있나요? | [API 값 집합](api/schema-value-sets.md), [MVP API](api/mvp-api.md), [보안](security.md) |
+| `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, `ValidatorResult` 구조는 어디가 담당하나요? | [API 상태 스키마](api/schema-state.md) |
+| `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle` 구조는 어디가 담당하나요? | [API 아티팩트 스키마](api/schema-artifacts.md) |
+| `UserJudgment`, `SensitiveActionScope`, 수락된 위험 입력 구조는 어디가 담당하나요? | [API 판단 스키마](api/schema-judgment.md) |
+
+## 저장소 담당 문서
+
+| 질문 | 담당 문서 |
+|---|---|
+| `CloseReadinessBlocker`는 저장소 행인가요? | [API 상태 스키마](api/schema-state.md), [저장 효과](storage-effects.md), [저장소 기록](storage-records.md) |
+| 아티팩트 스테이징은 증거를 만드나요? | [MVP API](api/mvp-api.md), [저장 효과](storage-effects.md), [아티팩트 저장소](storage-artifacts.md), [Core 모델](core-model.md) |
+| 아티팩트 승격은 어느 문서가 담당하나요? | [아티팩트 저장소](storage-artifacts.md), [MVP API](api/mvp-api.md), [저장 효과](storage-effects.md) |
+| 스테이징된 핸들 검증과 아티팩트 본문 읽기 가능성은 어디가 담당하나요? | [아티팩트 저장소](storage-artifacts.md), [API 아티팩트 스키마](api/schema-artifacts.md) |
+| 멱등성, 상태 시계, 잠금, 마이그레이션은 어디가 담당하나요? | [저장소 버전 관리](storage-versioning.md), [API 오류](api/errors.md) |
+
+## 보안과 런타임 담당 문서
+
+| 질문 | 담당 문서 |
+|---|---|
+| 현재 MVP가 OS 수준 샌드박싱을 제공하나요? | [보안](security.md), [런타임 경계](runtime-boundaries.md), [현재 MVP 범위](active-mvp-scope.md) |
+| 협력형, 탐지형, 예방형, 격리형 보장 표현은 어디가 담당하나요? | [보안](security.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
+| Product Repository, Harness Server, Harness Runtime Home의 분리는 어디가 담당하나요? | [런타임 경계](runtime-boundaries.md) |
+| 로컬 커넥터 동작과 접점 역량 표현은 어디가 담당하나요? | [에이전트 통합](agent-integration.md), [MVP API](api/mvp-api.md), [보안](security.md) |
+| 보안 관련 공개 오류 경로는 어디가 담당하나요? | [API 오류](api/errors.md), [보안](security.md) |
+
+## 사용자 판단과 닫기 준비 상태 담당 문서
+
+| 질문 | 담당 문서 |
+|---|---|
+| 사용자 소유 판단과 비대체 규칙은 어디가 담당하나요? | [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md) |
+| 민감 동작 승인 경계는 어디가 담당하나요? | [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md), [보안](security.md) |
+| 닫기 준비 상태와 정직한 닫기 의미는 어디가 담당하나요? | [Core 모델](core-model.md), [MVP API](api/mvp-api.md), [API 오류](api/errors.md) |
+| 닫기 차단 사유 구조와 닫기 오류 경로는 어디가 담당하나요? | [API 상태 스키마](api/schema-state.md), [API 오류](api/errors.md) |
+| 최종 수락과 잔여 위험 수락 경계는 어디가 담당하나요? | [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md) |
+| 압축된 증거 요약의 의미는 어디가 담당하나요? | [Core 모델](core-model.md), [API 상태 스키마](api/schema-state.md), [MVP API](api/mvp-api.md) |
+
+## 이후 후보와 유지보수 문서
+
+| 질문 | 담당 문서 |
+|---|---|
+| 이후 후보는 어디에 추가해야 하나요? | [이후 후보 색인](../later/index.md) |
+| 이후 후보가 활성 기능이 되려면 어떤 문서가 더 바뀌어야 하나요? | [이후 후보 색인](../later/index.md), [현재 MVP 범위](active-mvp-scope.md) |
+| 한국어 용어는 어디서 통제하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [번역 가이드](../maintain/translation-guide.md), [용어집](glossary.md) |
+| 문서 작성 규칙은 어디에 있나요? | [작성 가이드](../maintain/authoring-guide.md) |
+| 문서 점검은 어디에 있나요? | [문서 점검](../maintain/checks.md) |
+| 검색과 경로 메타데이터는 어디에서 관리하나요? | [docs/doc-index.yaml](../../doc-index.yaml) |
