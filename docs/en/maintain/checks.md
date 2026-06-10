@@ -101,6 +101,28 @@ Fix:
 - Restore the stable anchor with a hidden HTML anchor.
 - Keep the visible heading natural and update links that should follow the new heading.
 
+### CHK-LINK-003: route documents expose owner gaps
+
+Owner:
+- [Authoring Guide](authoring-guide.md)
+- [Reference Index](../reference/README.md)
+- [doc-index.yaml](../../doc-index.yaml)
+
+Check:
+- Inspect changed route documents, README files, indexes, and `doc-index.yaml` entries for questions whose exact canonical owner is missing or unclear.
+- Confirm route text points to a current owner when one exists.
+- Confirm a missing owner is exposed as a documentation gap instead of being hidden behind broad route prose, Maintain guidance, or copied contract detail.
+
+Failure:
+- A route document answers a contract question without a current canonical owner.
+- A route sends readers to a broad index or Maintain page when the question needs an owner that does not yet exist.
+- `doc-index.yaml` names a default owner that cannot answer the routed question.
+
+Fix:
+- Retarget the route to the exact owner selected from the Reference Index.
+- If no current owner exists, state the owner gap and route to the closest real owner, [Later Candidate Index](../later/index.md), or [MVP Plan](../build/mvp-plan.md) as appropriate.
+- Create or designate a real owner only in the same paired documentation batch that defines the owner boundary.
+
 ## 4. Bilingual semantic parity checks
 
 ### CHK-PARITY-001: English and Korean meaning parity
@@ -138,6 +160,26 @@ Failure:
 Fix:
 - Restore the exact identifier.
 - Add a plain-language explanation next to the identifier when needed.
+
+### CHK-PARITY-003: Korean reference structure preservation
+
+Owner:
+- [Korean Translation Guide](../../ko/maintain/translation-guide.md)
+- [Korean Authoring Guide](../../ko/maintain/authoring-guide.md)
+- [Authoring Guide](authoring-guide.md)
+
+Check:
+- For Korean reference edits, compare conditions, results, exceptions, non-claims, owner links, and close-readiness consequences as meaning units.
+- Confirm Korean prose may differ in line count and sentence order but still keeps important caveats and owner boundaries visible.
+- Inspect dense Korean paragraphs for merged rules that hide a condition, exception, or non-claim.
+
+Failure:
+- Korean text preserves the broad topic but collapses separate condition/result/exception or non-claim structure.
+- A Korean paragraph makes an owner boundary, active/later boundary, security non-claim, or close-readiness consequence harder to detect than in the paired meaning unit.
+
+Fix:
+- Split the Korean prose into natural paragraphs or bullets that preserve the meaning units.
+- Keep exact identifiers unchanged and preserve semantic parity without forcing line-by-line translation.
 
 ## 5. Terminology checks
 
@@ -217,6 +259,29 @@ Fix:
 - Move normative detail to the canonical owner if it is missing there.
 - Replace README detail with navigation text and an owner link.
 
+### CHK-OWNER-003: value-set names versus semantic ownership
+
+Owner:
+- [Authoring Guide](authoring-guide.md)
+- [Reference Index](../reference/README.md)
+- [Active MVP Scope](../reference/active-mvp-scope.md)
+- [API Value Sets](../reference/api/schema-value-sets.md)
+
+Check:
+- For status values, enum-like values, profile-gated values, reserved values, access classes, guarantee labels, blocker categories, and display values, identify both the value-set owner and the semantic owner.
+- Confirm the value-set owner is used for exact names and validation placement only.
+- Confirm active behavior, current availability, guarantee level, and reader consequence come from the semantic owner.
+
+Failure:
+- A value name is treated as active behavior or an active guarantee merely because it appears in a schema, example, storage note, route page, or later-candidate list.
+- A value-set owner is used to define security, storage, close-readiness, user-judgment, template, or runtime semantics that belong elsewhere.
+- Reserved or profile-gated values appear without their reserved/profile-gated status at the point of use.
+
+Fix:
+- Reword the statement as reserved, profile-gated, deferred, or vocabulary-only until the semantic owner says the behavior is active.
+- Link to the semantic owner for meaning and current availability.
+- If no semantic owner exists, expose the owner gap instead of inferring behavior from the value name.
+
 ## 7. Active/later boundary checks
 
 ### CHK-SCOPE-001: active/later leakage
@@ -252,6 +317,28 @@ Failure:
 Fix:
 - Reword as planning documentation.
 - Route readiness decisions to the MVP Plan.
+
+### CHK-SCOPE-003: later promotion owner wording
+
+Owner:
+- [Later Candidate Index](../later/index.md)
+- [Active MVP Scope](../reference/active-mvp-scope.md)
+- [Authoring Guide](authoring-guide.md)
+
+Check:
+- Inspect later-candidate promotion requirements for owner names and owner paths.
+- Confirm existing current owners are linked when the promotion requirement depends on a current owner.
+- Confirm non-existing or future owners are described as owners to create or designate at promotion time, not as current active owner documents.
+
+Failure:
+- Promotion wording names a non-existing owner as if it were already an active owner document.
+- A later candidate sounds active because its promotion checklist uses current-owner language without the active scope owner.
+- Promotion wording omits the need to update active scope and paired English/Korean docs when meaning changes.
+
+Fix:
+- Reword the checklist as promotion-time owner creation/designation or owner update.
+- Link existing current owners only when they actually exist.
+- If promoting the candidate, update active scope, the relevant owners, routes, checks, and paired-language docs in the same documentation-only batch.
 
 ## 8. API contract reference checks
 

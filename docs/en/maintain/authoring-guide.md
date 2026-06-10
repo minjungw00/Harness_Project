@@ -64,11 +64,26 @@ Use these owner routes before repeating details:
 | Public error codes and error routing | [Errors](../reference/api/errors.md) |
 | Storage effects | [Storage Effects](../reference/storage-effects.md) |
 | Security guarantees and access-boundary wording | [Security](../reference/security.md) |
+| Projection authority and rendered template bodies | [Projection Authority Reference](../reference/projection-and-templates.md), [Template Bodies](../reference/template-bodies.md) |
+| Surface usage recipes and connector boundaries | [Surface Recipes](../use/surface-recipes.md), [Agent Integration](../reference/agent-integration.md) |
 | Product definitions | [Glossary](../reference/glossary.md) |
+| Later candidates and promotion boundaries | [Later Candidate Index](../later/index.md), [Active MVP Scope](../reference/active-mvp-scope.md) |
 | Translation and bilingual terminology practice | [Translation Guide](translation-guide.md) and [Terminology Map](../../terminology-map.yaml) |
 | Documentation retrieval routes | [doc-index.yaml](../../doc-index.yaml) |
 
 Maintain docs own authoring rules and checks. They must not become secondary sources of truth for API, storage, schema, security, access class, close-readiness, projection, runtime, or product contracts.
+
+### Stabilization rules after restructuring
+
+A value name can exist in a schema, example, storage note, route page, or later-candidate list without the current MVP providing that behavior. Treat the name as vocabulary or reserved surface area until [Active MVP Scope](../reference/active-mvp-scope.md) and the semantic owner both say the behavior is active.
+
+Reserved and profile-gated values are not active guarantees. Mark them at the point of use and avoid default, required, supported, enforced, preventive, detective, accepted, verified, or close-ready wording unless the active owner says the profile and behavior are available.
+
+Value-set owner documents define exact value names, validation placement, and enum-like vocabulary. Semantic owner documents define what the value means, whether it is currently available, what guarantee level it carries, and what reader consequence follows. If a value-set entry and a semantic owner appear to disagree, do not infer behavior from the value name. Fix the owner gap or route the reader to the correct owner.
+
+Later-candidate promotion requirements may name the kinds of owners that must change at promotion time. They must not name a non-existing owner as if it were already a current active owner document. If no current owner exists, say that promotion requires creating or designating that owner at promotion time, then updating active scope, schemas, API behavior, storage, templates, checks, and paired-language docs as applicable.
+
+Route documents must expose canonical owner gaps rather than hide them. If a README, index, Start page, Use page, Later page, or `doc-index.yaml` route cannot point to a current owner for the question, do not fill the gap with route prose. Say what is missing, route to the closest real owner or deferred owner, and leave the normative definition out of the route document.
 
 ## 3. When to edit an existing owner
 
@@ -119,6 +134,8 @@ English and Korean docs are both active. Do not finish a meaning-changing batch 
 
 Korean docs must not be literal translations. Maintain semantic parity by meaning unit while allowing natural Korean sentence order, paragraph rhythm, and terminology. Preserve exact identifiers in both languages, including file paths, `doc_id` values, API method names, schema fields, enum values, table names, validator IDs, and error codes.
 
+Korean reference docs must preserve structural meaning units, not just broad topic coverage. Conditions, results, exceptions, non-claims, owner links, and close-readiness consequences must remain visible as separate meaning units when the English owner uses that structure. Matching line counts are not required, but do not collapse important structure into dense paragraphs that hide a caveat or owner boundary.
+
 Use [Translation Guide](translation-guide.md) and [Terminology Map](../../terminology-map.yaml) for bilingual wording. During normal agent work, load only one language for the same `doc_id`; load both only for translation, parity review, or a bilingual edit where comparison is necessary.
 
 ## 9. Link and anchor rules
@@ -137,8 +154,14 @@ Do not route active documentation through stale legacy paths. If an old path app
 - [ ] Each concept still has one canonical owner.
 - [ ] README, route, and maintain documents use short summaries plus owner links instead of copied contract explanations.
 - [ ] API, storage, schema, security, access-boundary, and close-readiness details live in the appropriate Reference owner.
+- [ ] Value names are not treated as current MVP behavior merely because they exist in schemas, examples, storage notes, or later-candidate lists.
+- [ ] Reserved and profile-gated values are labeled where used and are not described as active guarantees.
+- [ ] Value-set owners define names; semantic owners define meaning, current availability, guarantees, and reader consequences.
+- [ ] Later-candidate promotion wording does not present non-existing owners as current active owner documents.
+- [ ] Route documents expose canonical owner gaps instead of hiding them with broad route text.
 - [ ] Meaning-changing edits were made in both English and Korean.
 - [ ] Korean prose is natural, not a literal translation, and exact identifiers are preserved.
+- [ ] Korean reference docs preserve condition, result, exception, non-claim, and owner-link structure by meaning unit.
 - [ ] User-facing docs avoid internal schema names unless necessary.
 - [ ] Reference docs keep schema names and other exact identifiers in backticks.
 - [ ] Long paragraphs were split into condition/result/exception/owner-link blocks where useful.
