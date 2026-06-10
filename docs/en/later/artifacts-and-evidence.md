@@ -39,69 +39,75 @@ It does not own security control claims, connector mechanics, validator catalogs
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active evidence, artifact, or close-readiness requirements.
-- Promotion focus: evidence owners, schema owners, storage effects, and conformance checks if manifest-level evidence becomes normative.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="export"></a>
 ### Export
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active export behavior, export artifacts, or redaction guarantees.
-- Promotion focus: export owners, artifact owners, storage effects, and conformance checks if export becomes normative.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="export-and-handoff-formats"></a>
 ### Export and handoff formats
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active file formats, bundle contracts, or provenance requirements.
-- Promotion focus: export owners, handoff owners, storage effects, and conformance checks for any promoted format.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-actor-producer-and-capture-source-values"></a>
 ### Later actor, producer, and capture source values
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `evaluator`, `operator`, or `capture_adapter`.
-- Promotion focus: schema owners, API behavior, storage effects, and conformance checks for any promoted actor, producer, or capture-source value.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="native-artifact-capture"></a>
 ### Native artifact capture
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active API requirements.
-- Promotion focus: schema owners, API behavior, storage effects, and conformance checks if Harness captures artifact data directly rather than only staging references.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="read-only-playbook-and-judgment-context-metadata"></a>
 ### Read-only playbook and judgment context metadata
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active read-only metadata requirements or satisfy any judgment by itself.
-- Promotion focus: agent-integration owners, API behavior, schema owners, and conformance checks for any promoted read-only context metadata.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-reference-and-artifact-value-families"></a>
 ### Later reference and artifact value families
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate later bundle, manifest, QA capture, export component, design, Eval, Manual QA, TDD, projection, or related-reference value families.
-- Promotion focus: artifact owners, schema owners, storage effects, and conformance checks for any promoted value family.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-template-names"></a>
 ### Later template names
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `DEC`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `MANUAL-QA`, `TASK`, `DIRECT-RESULT`, `JOURNEY-CARD`, `DESIGN`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, or `EXPORT` templates.
-- Promotion focus: template owners, source-record owners, API behavior, and conformance checks for any promoted template name or display body.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="browser-capture-automation"></a>
 ### Browser capture automation
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active browser capture, retention, redaction, QA, or acceptance behavior.
-- Promotion focus: capture owners, security owners, storage effects, and conformance checks if browser capture becomes normative evidence material.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 ## Promotion rule
 
-Promotion is not a local edit to this file. A candidate becomes active only when current active scope and the relevant current owner documents are updated in the same documentation-only batch.
+Promotion is not a local edit to this file.
 
-If no current owner exists for the promoted behavior, the promotion batch must create or designate that owner before defining active API, storage, security, UI, or conformance requirements.
+Update the relevant current owner, or create a new owner document during promotion.
+
+This candidate entry is not itself an active owner document.
+
+Promotion-time owner updates do not create active requirements before promotion.
+
+A candidate becomes active only when current active scope and the relevant current owner document, or the new owner document created during promotion, are updated in the same documentation-only batch.
 
 ## Active-scope non-effect
 

@@ -10,7 +10,7 @@ Every candidate here is future-facing. The candidate details are documentation s
 
 This document does not define current MVP security guarantees, active access classes, active API methods, storage effects, UI behavior, connector behavior, executable conformance, or implementation readiness.
 
-It also does not decide that a stronger guarantee is possible. Any preventive, detective, isolation, redaction, observation, or blocking claim must be re-owned by the current security and active-scope owners during promotion.
+It also does not decide that a stronger guarantee is possible. If any preventive, detective, isolation, redaction, observation, or blocking claim is promoted, update the relevant current owner, or create a new owner document during promotion.
 
 ## Category boundary
 
@@ -40,76 +40,82 @@ It does not own native artifact capture as a storage mechanism, connector surfac
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active gates, validators, or close-readiness requirements.
-- Promotion focus: assurance owners, schema owners, API behavior, and conformance checks if stronger assurance becomes normative.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="operations-hardening"></a>
 ### Operations hardening
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active operator commands, diagnostics, or security guarantees.
-- Promotion focus: operations owners, security wording, API behavior, and conformance checks if local-operation hardening becomes normative.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="stronger-local-capability-profiles"></a>
 ### Stronger local capability profiles
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active preventive, isolated, observation, capture, pre-tool blocking, or isolation guarantees.
-- Promotion focus: agent-integration owners, security owners, schema owners, and conformance checks for any promoted capability profile.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="command-network-and-secret-access-observation"></a>
 ### Command, network, and secret-access observation
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active command observation, network observation, or secret-access observation authority.
-- Promotion focus: agent-integration owners, security owners, API behavior, and conformance checks for any promoted observation claim.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="command-network-and-secret-pre-tool-blocking"></a>
 ### Command, network, and secret pre-tool blocking
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active preventive blocking, isolation, or arbitrary-tool-control guarantees.
-- Promotion focus: security owners, agent-integration owners, API behavior, and conformance checks for any promoted blocking claim.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="capability-gated-prepare-write-and-record-run-observation"></a>
 ### Capability-gated `prepare_write` and `record_run` observation
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active command, network, or secret-access observation for `prepare_write` or `record_run`.
-- Promotion focus: API behavior, security owners, schema owners, and conformance checks for any promoted observation branch.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="capability-profile-support-fields"></a>
 ### Capability-profile support fields
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `command_observation_supported`, `network_observation_supported`, `secret_access_observation_supported`, `artifact_capture_supported`, `pre_tool_blocking_supported`, or `isolation_supported`.
-- Promotion focus: schema owners, agent-integration owners, security owners, and conformance checks for any supported profile field.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="capability-gated-authorization-observation-fields"></a>
 ### Capability-gated authorization observation fields
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `intended_commands`, `intended_network`, `intended_secret_scope`, `network_write`, `external_service_write`, or `secret_access`.
-- Promotion focus: schema owners, API behavior, security owners, and conformance checks for any promoted observation field.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-close-and-assurance-fields"></a>
 ### Later close and assurance fields
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `verifying`, `qa`, `completed_verified`, `detached_verified`, `design_gate`, `verification_gate`, `qa_gate`, Manual QA gate fields, design-policy blockers, or assurance blockers.
-- Promotion focus: schema owners, core owners, API behavior, and conformance checks for any promoted close or assurance field.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="native-hooks-and-advanced-sidecar-watcher"></a>
 ### Native hooks and advanced sidecar watcher
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active preventive guard expansion, native hook, sidecar watcher, or arbitrary-tool-control guarantees.
-- Promotion focus: security owners, agent-integration owners, API behavior, and conformance checks for any promoted hook or watcher claim.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 ## Promotion rule
 
-Promotion is not a local edit to this file. A candidate becomes active only when current active scope and the relevant current owner documents are updated in the same documentation-only batch.
+Promotion is not a local edit to this file.
 
-If no current owner exists for the promoted behavior, the promotion batch must create or designate that owner before defining active API, storage, security, UI, or conformance requirements.
+Update the relevant current owner, or create a new owner document during promotion.
+
+This candidate entry is not itself an active owner document.
+
+Promotion-time owner updates do not create active requirements before promotion.
+
+A candidate becomes active only when current active scope and the relevant current owner document, or the new owner document created during promotion, are updated in the same documentation-only batch.
 
 ## Active-scope non-effect
 

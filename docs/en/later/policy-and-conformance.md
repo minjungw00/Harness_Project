@@ -42,90 +42,96 @@ It does not own product connector surfaces, artifact capture mechanics, multi-us
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active QA workflow, gate, waiver, or close-readiness requirements.
-- Promotion focus: Manual QA owners, schema owners, API behavior, and conformance checks for any promoted gate.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="manual-qa-waiver-qa-waiver"></a>
 ### Manual QA waiver `qa_waiver`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active waiver route or substitute for user-owned judgment.
-- Promotion focus: user-judgment owners, schema owners, API behavior, and conformance checks for any promoted Manual QA waiver route.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="verification-gate-verification-gate"></a>
 ### Verification gate `verification_gate`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active verification gate fields or close-readiness requirements.
-- Promotion focus: verification owners, schema owners, API behavior, and conformance checks for any promoted verification gate.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="design-gates-and-policy-blockers"></a>
 ### Design gates and policy blockers
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active design gate fields, blocker categories, or close-readiness requirements.
-- Promotion focus: design-quality owners, schema owners, API behavior, and conformance checks for any promoted `design_gate` or `design_policy` behavior.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="design-policy-waiver"></a>
 ### Design-policy waiver
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active design-policy waiver route.
-- Promotion focus: user-judgment owners, design-quality owners, schema owners, and conformance checks for any promoted design-policy waiver.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="broad-design-validators-and-severity-based-blocking"></a>
 ### Broad design validators and severity-based blocking
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active validator IDs, severity meanings, or blocking policy.
-- Promotion focus: validator owners, design-quality owners, schema owners, and conformance checks for any promoted severity-based blocking model.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="full-design-quality-policy-families"></a>
 ### Full design-quality policy families
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `shared_design`, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, `manual_qa`, `two_stage_review_display`, detached-verification policy, or steward policy families.
-- Promotion focus: design-quality owners, validator owners, schema owners, and conformance checks for any promoted policy family.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="future-conformance-run-entrypoint"></a>
 ### Future conformance run entrypoint
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active conformance runner, executable fixture suite, or reporting contract.
-- Promotion focus: conformance owners, API behavior, storage effects, error behavior, and security wording for any promoted conformance run entrypoint.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-schema-extensions"></a>
 ### Later schema extensions
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active fields, enum values, or validators.
-- Promotion focus: schema owners, API behavior, storage effects, and conformance checks for any promoted cross-cutting schema extension.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="validatorresult-stable-ids-and-policy-families"></a>
 ### `ValidatorResult` stable IDs and policy families
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active validator IDs, policy families, severity meanings, or waiver behavior.
-- Promotion focus: validator owners, schema owners, API behavior, and conformance checks for any promoted stable validator vocabulary.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="future-fixture-families"></a>
 ### Future fixture families
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create executable fixtures, conformance suites, assertions, or report formats.
-- Promotion focus: conformance owners, API behavior, storage effects, and error behavior for any promoted fixture family.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="advanced-validators-and-interface-checks"></a>
 ### Advanced validators and interface checks
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active advanced validators, design-policy validators, language checks, or interface checks.
-- Promotion focus: validator owners, design-quality owners, schema owners, and conformance checks for any promoted advanced validator.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 ## Promotion rule
 
-Promotion is not a local edit to this file. A candidate becomes active only when current active scope and the relevant current owner documents are updated in the same documentation-only batch.
+Promotion is not a local edit to this file.
 
-If no current owner exists for the promoted behavior, the promotion batch must create or designate that owner before defining active API, storage, security, UI, or conformance requirements.
+Update the relevant current owner, or create a new owner document during promotion.
+
+This candidate entry is not itself an active owner document.
+
+Promotion-time owner updates do not create active requirements before promotion.
+
+A candidate becomes active only when current active scope and the relevant current owner document, or the new owner document created during promotion, are updated in the same documentation-only batch.
 
 ## Active-scope non-effect
 

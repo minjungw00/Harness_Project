@@ -10,7 +10,7 @@ Every candidate here is future-facing. The candidate details are documentation s
 
 This document does not define current MVP API methods, security guarantees, artifact body policies, validator catalogs, conformance fixtures, hosted services, remote runtime behavior, or implementation readiness.
 
-It also does not make a `surface_id`, connector name, dashboard, hosted workflow, or read-only resource into authority. Any promoted connector or surface must be re-owned by active scope and the relevant current owner documents.
+It also does not make a `surface_id`, connector name, dashboard, hosted workflow, or read-only resource into authority. If one of these candidates is promoted, update the relevant current owner, or create a new owner document during promotion.
 
 ## Category boundary
 
@@ -38,62 +38,68 @@ It does not own runtime security claims, artifact capture storage, policy catalo
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `harness connect`, `harness serve mcp`, `harness doctor`, `harness projection refresh`, `harness reconcile`, `harness recover`, `harness export`, `harness artifacts check`, or `harness conformance run`.
-- Promotion focus: operations owners, API behavior, storage effects, and conformance checks for any promoted command surface.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="operator-readiness-and-doctor-surfaces"></a>
 ### Operator readiness and `doctor` surfaces
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active readiness checks or `doctor` diagnostics.
-- Promotion focus: operations owners, security wording, API behavior, and conformance checks for any promoted readiness surface.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="projection-refresh-and-freshness-diagnostics"></a>
 ### Projection refresh and freshness diagnostics
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active projection refresh commands, freshness diagnostics, or state-changing projection behavior.
-- Promotion focus: projection owners, API behavior, storage effects, and conformance checks for any promoted refresh or freshness surface.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-read-only-resources"></a>
 ### Later read-only resources
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate read-only resources such as `policy`, `evidence-manifest`, `surface`, `report`, `bundle`, `journey`, or `design`.
-- Promotion focus: API behavior, resource owners, schema owners, and conformance checks for any promoted read-only resource.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="dashboard-and-hosted-workflows"></a>
 ### Dashboard and hosted workflows
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active dashboard, hosted workflow, artifact dashboard, card, or visualization requirements.
-- Promotion focus: derived-display owners, API behavior, storage effects, and conformance checks for any promoted dashboard or hosted surface.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="cross-surface-verification"></a>
 ### Cross-surface verification
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active cross-surface verification authority.
-- Promotion focus: Eval owners, API behavior, security wording, and conformance checks for any promoted cross-surface verification display.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="broader-connectors-and-hosted-runtime"></a>
 ### Broader connectors and hosted runtime
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active connector marketplace, hosted UI, hosted runtime, or remote runtime requirements.
-- Promotion focus: connector owners, API behavior, security owners, and conformance checks for any promoted connector or hosted-runtime surface.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="connector-conformance-ecosystem"></a>
 ### Connector conformance ecosystem
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active connector assertions, suite formats, reports, or marketplace claims.
-- Promotion focus: connector owners, conformance owners, security owners, and API behavior for any promoted connector-facing compatibility claim.
+- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 ## Promotion rule
 
-Promotion is not a local edit to this file. A candidate becomes active only when current active scope and the relevant current owner documents are updated in the same documentation-only batch.
+Promotion is not a local edit to this file.
 
-If no current owner exists for the promoted behavior, the promotion batch must create or designate that owner before defining active API, storage, security, UI, or conformance requirements.
+Update the relevant current owner, or create a new owner document during promotion.
+
+This candidate entry is not itself an active owner document.
+
+Promotion-time owner updates do not create active requirements before promotion.
+
+A candidate becomes active only when current active scope and the relevant current owner document, or the new owner document created during promotion, are updated in the same documentation-only batch.
 
 ## Active-scope non-effect
 
