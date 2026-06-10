@@ -1,6 +1,6 @@
 # Later candidate index
 
-This index is the router and summary for inactive later candidates. Until detailed candidates move into category files, it keeps the category model, candidate names, and promotion boundaries visible in one place.
+This index is the router and summary for inactive later candidates. Category files own grouped later-candidate buckets. Until detailed candidates fully move into those files, this index keeps the remaining candidate names and promotion boundaries visible in one place.
 
 For current scope, see [Active MVP Scope](../reference/active-mvp-scope.md).
 
@@ -12,9 +12,9 @@ Profile-gated values are distinct from later candidates. A value is profile-gate
 
 ## Future category model
 
-Detailed later candidates should move into these category files in a later documentation-only edit. This index remains the router and short summary.
+The category files below own grouped inactive later candidates. Detailed legacy entries can move into them in later documentation-only edits. This index remains the router and short summary.
 
-| Category | What belongs here | What does not belong here | Future details file path |
+| Category | What belongs here | What does not belong here | Category file path |
 |---|---|---|---|
 | `security-and-assurance` | Preventive controls, isolation labels, stronger verification, and assurance claims. | Native artifact capture, connector surface design, team workflow, or executable fixture catalogs unless the candidate is about an assurance claim. | `docs/en/later/security-and-assurance.md` |
 | `artifacts-and-evidence` | Native artifact capture, richer evidence, and artifact body policies. | Security control claims, connector surface design, validator policy catalogs, or collaboration lifecycle. | `docs/en/later/artifacts-and-evidence.md` |
@@ -22,7 +22,7 @@ Detailed later candidates should move into these category files in a later docum
 | `policy-and-conformance` | Policy catalog, validators, and executable conformance fixture candidates. | Product connector surfaces, artifact capture details, multi-user workflow, or assurance controls unless the candidate is expressed as policy or conformance. | `docs/en/later/policy-and-conformance.md` |
 | `workflow-and-collaboration` | Multi-user flow, collaboration, and advanced lifecycle candidates. | Surface connector mechanics, artifact body storage, security guarantees, or validator catalogs. | `docs/en/later/workflow-and-collaboration.md` |
 
-The detailed candidates below are the current unsplit list. They remain inactive later candidates and may move into the category files above in a future documentation-only batch.
+The detailed candidates below are the remaining unsplit list retained for continuity. They remain inactive later candidates and may move into the category files above in a future documentation-only batch.
 
 <a id="assurance-candidates"></a>
 ## Assurance candidates
