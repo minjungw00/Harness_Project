@@ -1,101 +1,108 @@
-# Build: MVP Plan
+# Build: MVP plan
 
-Use this as the Build entry point for pre-server documentation planning. It records repository status, implementation-readiness decisions, first smoke-target intent, and documentation-planning exit criteria.
-
-Build docs are planning guidance only. They do not define exact MVP scope, schemas, enum value sets, DDL, API request/response shapes, storage tables, projection template bodies, fixture formats, or security guarantee claims. Those contracts stay with the owners linked from [Reference Index](../reference/README.md).
+This page is the Build handoff for planning the first Harness Server implementation batch. It records readiness posture, assumptions, sequencing, smoke-target intent, and exit criteria. It does not define canonical product scope, API behavior, schemas, storage effects, or security guarantees.
 
 <a id="documentation-acceptance-status"></a>
-## Repository Status
+## Repository status
 
-This repository is documentation-only and remains in documentation review. It is source material for a future Harness Server; it is not a Harness Server implementation, Harness Runtime Home, Product Repository, runtime record store, or implementation-complete behavior.
+Maintainer handoff status: **not accepted for server coding**.
 
-Server coding must not begin until maintainers resolve, accept, or explicitly defer the implementation-blocking decisions in [Implementation Decisions Before Server Coding](#implementation-decisions-before-server-coding) with named scope impact.
+This repository is still documentation-only. It is source material for a future Harness Server, not a Harness Server implementation, Harness Runtime Home, Product Repository, runtime record store, generated projection store, evidence store, QA record, acceptance record, or close record.
 
-## What Exists Now
+The active documentation set has paired English and Korean Start, Use, Build, Reference, Later, and Maintain routes. Canonical contracts live in Reference owners; this Build plan only explains how implementation planning should proceed once maintainers are ready to start a server build.
 
-- Paired English and Korean planning docs in the Start, Use, Build, Reference, Later, and Maintain structure.
-- Canonical Reference owner documents for current MVP scope, Core, API, storage, runtime boundaries, security, agent integration, projection authority, template bodies, conformance, design quality, and terminology.
-- One Later candidate index for material outside the active MVP.
-- `docs/doc-index.yaml` for bilingual retrieval routing and one-language-per-`doc_id` context discipline.
-- This Build plan as the implementation-readiness entry point.
+Server coding must not begin from this repository until the decisions in [Decisions before server coding](#decisions-before-server-coding) have been accepted, resolved, or explicitly deferred with named scope impact.
 
-## What Does Not Exist Now
+## Planning assumptions
 
-- Server/runtime implementation.
-- Executable conformance runner.
-- Generated runtime reports.
-- Runtime state or generated projections.
-- OS-level permission control.
-- Arbitrary-tool sandboxing.
-- Tamper-proof storage.
-- Default pre-tool blocking.
-- Active operations profile.
+- The current task is implementation planning, not runtime implementation.
+- Active MVP scope is owned by [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md); this plan does not repeat the scope list.
+- API method behavior is owned by [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md); this plan does not repeat request, response, branch, or error behavior.
+- Shared schema terms, including close readiness reference terms, are owned by [`../reference/api/schema-core.md`](../reference/api/schema-core.md).
+- Storage effects are owned by [`../reference/storage-effects.md`](../reference/storage-effects.md); this plan does not define tables, migrations, artifact lifecycle, or state effects.
+- Security claims are owned by [`../reference/security.md`](../reference/security.md), and runtime-home/access boundaries are owned by [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md).
+- Later candidates remain outside the current MVP unless maintainers promote them through the appropriate owner documents.
 
-## Current MVP Scope
+## Implementation sequence
 
-The canonical current MVP scope is [Active MVP Scope](../reference/active-mvp-scope.md). Build does not restate the scope list. If scope wording changes, update the scope owner first, then keep this plan as the readiness and sequencing route.
+Use this sequence for the first implementation plan after maintainer handoff:
 
-## Excluded Later Material
+1. Confirm the current MVP boundary in [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md).
+2. Choose the smallest server slice that can exercise one ordinary user work loop without relying on later candidates.
+3. Map each planned server surface to its Reference owner before designing code structure.
+4. Implement contract-neutral scaffolding only after the API, schema, storage, security, and runtime-boundary owners are accepted for that slice.
+5. Add durable storage behavior only from [`../reference/storage-effects.md`](../reference/storage-effects.md).
+6. Add API/tool behavior only from [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md) and shared schemas from [`../reference/api/schema-core.md`](../reference/api/schema-core.md).
+7. Add status/display behavior as derived reads of owner-defined state, not as independent authority.
+8. Keep acceptance, residual-risk acceptance, evidence, verification, and close readiness distinct in implementation tasks.
 
-Later candidates and promotion boundaries are owned by [Later Candidate Index](../later/index.md). Build may name later exclusions only to explain readiness impact; it must not define later candidate contracts or promote them into the active MVP.
+This sequence is intentionally small. If a step needs contract detail, update or accept the owning Reference document instead of expanding this Build plan.
 
 <a id="first-internal-smoke-target"></a>
-## First Internal Smoke Target
+## First internal smoke target
 
-The first internal smoke target is a documentation smoke target. It is not the product MVP, not a complete conformance suite, and not an implementation plan.
+The first internal smoke target should check that the first server slice can carry one ordinary task from intake to close-readiness evaluation using only accepted current MVP contracts.
 
-The target should exercise the owner boundaries that are riskiest for the first future runtime batch: current MVP scope, Core transitions, API response branches, storage effects, artifact staging and promotion, user-owned judgment, close readiness, security guarantee wording, connector fallback, and derived display authority.
+The smoke target should cover these planning checkpoints:
 
-Exact smoke examples, fixture shapes, public errors, schemas, state effects, and storage consequences must come from the canonical owners. This plan records why a smoke target is needed; it does not create executable fixtures, generated reports, runtime state, or implementation permission.
+- task intake or resume from ordinary user language
+- current MVP scope classification through the scope owner
+- user-owned judgment kept separate from Core-owned state
+- evidence and verification expectations referenced without fabricating records
+- close readiness reported from the schema/API owners
+- storage writes limited to accepted storage effects
+- status output shown as derived, freshness-aware information
+- unavailable or unsupported authority reported plainly
 
-## User Work Loop
-
-The user work loop should start or resume ordinary work without requiring the user to know Harness internal labels. It should clarify what the user wants, what the repository or future Harness state can support, what remains uncertain, and what judgment the user still owns.
-
-The next safe action must remain visible. If Core, MCP, or a reference surface cannot support a claim, status must say so instead of fabricating authority.
-
-## Request-To-Close Planning Route
-
-Use [Reference Index](../reference/README.md) to choose the exact owner for each request-to-close contract. Build keeps only the planning sequence:
-
-1. Shape or resume a Task from ordinary language.
-2. Record scope and user-owned judgment through owner-defined paths.
-3. Check product-write compatibility before product writes.
-4. Record runs and durable evidence references through owner-defined paths.
-5. Show status and compact output as derived reads.
-6. Check close readiness while keeping evidence, final acceptance, residual-risk acceptance, and later QA/verification candidates distinct.
-
-`compatible`, `blocked`, and `allowed` are future Harness record-compatibility results. They do not mean physical OS blocking, arbitrary-tool prevention, sandbox isolation, or permission isolation unless a future promoted mechanism proves that exact behavior.
+This target is not a conformance suite, not a fixture specification, and not proof that Harness is implemented. Exact examples, method calls, schemas, storage behavior, and error behavior belong to the Reference owners.
 
 <a id="implementation-decisions-before-server-coding"></a>
-## Implementation Decisions Before Server Coding
+## Decisions before server coding
 
-Server coding must not begin until maintainers mark each row accepted, decided, or deferred with explicit scope impact.
+Maintainers must record one of these outcomes for each item before implementation begins: accepted for the first server slice, blocked with named impact, or deferred with named impact.
 
-| Decision item | Current status | What must be decided before coding |
-|---|---|---|
-| Implementation-planning readiness | Not maintainer-accepted. | Maintainers must accept that the compact documentation set is ready for the first runtime-batch plan, or name the blocker and affected scope. |
-| Current MVP scope acceptance | Not maintainer-accepted for coding. | Maintainers must accept the [Active MVP Scope](../reference/active-mvp-scope.md) boundary or name unresolved scope impact. |
-| Core and user-judgment acceptance | Not maintainer-accepted for coding. | Core transition meaning and user-owned judgment boundaries must be maintainer-accepted for active MVP paths. |
-| Public API and schema acceptance | Not maintainer-accepted for coding. | Method behavior, common envelope/response branches, state/artifact/judgment schemas, value sets, public errors, idempotency/replay behavior, and unavailable Core/MCP behavior must be maintainer-accepted before affected tools or resources are coded. |
-| Storage and runtime-home acceptance | Not maintainer-accepted for coding. | Storage records, storage effects, artifact lifecycle, versioning, locks, migrations, and Runtime Home boundaries must be maintainer-accepted before DDL, runtime data files, or artifact storage are created. |
-| Security and local-access acceptance | Not maintainer-accepted for coding. | Local-only posture, cooperative/limited-detective guarantee wording, and non-claims must be maintainer-accepted before API/MCP exposure. |
-| Surface and compact-output acceptance | Not maintainer-accepted for coding. | Connector behavior, surface recipes, compact display boundaries, freshness/unavailable behavior, projection authority, and template bodies must be maintainer-accepted before display or connector code is implemented. |
+| Decision item | Required outcome before coding |
+|---|---|
+| Build handoff | Maintainers confirm this page is the active Build entry point for implementation planning. |
+| Current MVP scope | Maintainers accept the boundary in [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md), or name the unresolved scope impact. |
+| API and shared schema | Maintainers accept the relevant slice of [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md) and [`../reference/api/schema-core.md`](../reference/api/schema-core.md). |
+| Storage effects | Maintainers accept the relevant slice of [`../reference/storage-effects.md`](../reference/storage-effects.md) before any runtime storage files, DDL, or artifact storage are created. |
+| Security and runtime boundaries | Maintainers accept the relevant claims and non-claims in [`../reference/security.md`](../reference/security.md) and [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md). |
+| Smoke target | Maintainers accept the first internal smoke target as an implementation-planning target, not as a conformance claim. |
+| Deferred material | Maintainers confirm no later candidate is required for the first server slice unless it has been promoted by its owner. |
 
-## Reference Owners
+## Documentation-only boundary
 
-Use [Reference Index](../reference/README.md) for the canonical owner map. Build does not duplicate the owner table because the index is the routing source of truth.
+Edits in this repository do not create runtime behavior. Do not add server code, runtime state, generated operational files, generated projections, evidence records, QA records, acceptance records, close records, residual-risk records, executable fixtures, or conformance runner output here.
 
-## Exit Criteria For Documentation Planning
+Path allowlists, batch boundaries, owner links, and planning sequence are documentation-maintenance controls. They are not Harness runtime permissions, write authorizations, sandbox guarantees, or proof of enforcement.
 
-Documentation planning can exit only when maintainers explicitly confirm:
+Passing this plan's exit criteria only means the documentation is ready to guide a future implementation batch. It does not implement Harness, prove runtime conformance, or authorize product-repository writes.
 
-- this Build plan is the active Build entry point
-- implementation-readiness decisions above have a maintainer decision, acceptance, or deferral with named scope impact
-- the current MVP scope owner is accepted, or remaining boundary issues have named scope impact
-- Reference owners agree on the active Core, API, storage, runtime-boundary, security, agent-integration, projection, template, conformance, design-quality, terminology, and later-candidate boundaries needed for the active MVP
-- English and Korean Build pages preserve the same implementation decisions
-- no later-candidate material is presented as required for the active MVP
-- documentation remains source material only, with no server/runtime code, generated runtime state, executable fixture, conformance result, generated runtime report, or product implementation output created here
+## Reference owners
 
-Passing these documentation-planning criteria does not implement Harness, prove runtime conformance, or close any future product work.
+Use these owners instead of repeating contracts in this Build plan:
+
+| Topic | Owner |
+|---|---|
+| Current MVP scope | [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md) |
+| API method behavior | [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md) |
+| Shared core schemas | [`../reference/api/schema-core.md`](../reference/api/schema-core.md) |
+| Storage effects | [`../reference/storage-effects.md`](../reference/storage-effects.md) |
+| Security guarantees and non-claims | [`../reference/security.md`](../reference/security.md) |
+| Runtime-home and access boundaries | [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md) |
+
+For neighboring Reference pages and navigation, use [`../reference/README.md`](../reference/README.md).
+
+## Exit criteria
+
+Implementation planning can exit only when:
+
+- maintainers mark this Build plan accepted as the implementation-planning entry point
+- each item in [Decisions before server coding](#decisions-before-server-coding) has an accepted, blocked, or deferred outcome with named impact
+- the first server slice can be described using owner links instead of duplicated contract text
+- English and Korean Build pages preserve the same reader purpose, owner routing, and handoff status
+- no later candidate is presented as a current MVP requirement
+- no temporary planning files, generated runtime records, executable fixtures, conformance results, or product implementation outputs remain in this repository
+
+After these criteria are met, the next step is a maintainer-approved implementation batch outside this documentation-only edit. Until then, the repository remains planning material.
