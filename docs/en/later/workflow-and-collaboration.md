@@ -1,13 +1,13 @@
-# Later: Workflow and Collaboration
+# Later: Workflow and collaboration
 
-## What this document owns
+<a id="what-this-document-owns"></a>
+## Owns / Does not own
 
 This document owns inactive later candidates about richer task shaping, next-action flow, verification and evaluation workflow, user-judgment branches, risk review, release handoff, reconciliation, team orchestration, and collaboration lifecycle. It keeps workflow and collaboration candidates grouped so [Later Candidate Index](index.md) can remain a router and short summary.
 
 Every candidate here is future-facing. The candidate details are documentation source material only and do not create current workflow, API, storage, UI, or collaboration requirements.
 
-## What this document does not own
-
+<a id="what-this-document-does-not-own"></a>
 This document does not define current MVP API behavior, task lifecycle, close-readiness behavior, acceptance behavior, residual-risk acceptance, team permissions, release automation, storage effects, security guarantees, conformance behavior, or implementation readiness.
 
 It also does not make any later judgment branch a substitute for user-owned judgment. Sensitive-action approval, final acceptance, residual-risk acceptance, waiver, reconciliation, and verification-risk acceptance remain distinct unless a promotion batch updates the relevant current owner, or creates a new owner document during promotion.

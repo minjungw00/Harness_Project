@@ -1,13 +1,13 @@
-# Later: Security and Assurance
+# Later: Security and assurance
 
-## What this document owns
+<a id="what-this-document-owns"></a>
+## Owns / Does not own
 
 This document owns inactive later candidates about stronger security posture, assurance claims, capability labels, observation, blocking, and verification confidence. It keeps those candidates grouped so [Later Candidate Index](index.md) can remain a router and short summary.
 
 Every candidate here is future-facing. The candidate details are documentation source material only and do not activate runtime behavior.
 
-## What this document does not own
-
+<a id="what-this-document-does-not-own"></a>
 This document does not define current MVP security guarantees, active access classes, active API methods, storage effects, UI behavior, connector behavior, executable conformance, or implementation readiness.
 
 It also does not decide that a stronger guarantee is possible. If any preventive, detective, isolation, redaction, observation, or blocking claim is promoted, update the relevant current owner, or create a new owner document during promotion.

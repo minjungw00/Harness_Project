@@ -42,7 +42,7 @@ StateRecordRef:
 
 `record_kind` values are owned by [record and reference values](schema-value-sets.md#record-and-reference-values). Storage table names and DDL stay in [Storage Records](../storage-records.md).
 
-## StateSummary
+## `StateSummary`
 
 `StateSummary` is the compact current-position state returned by active methods that need to show the current Task path.
 
@@ -86,7 +86,7 @@ TaskLifecycleState:
 
 Active values for `lifecycle_phase`, `close_reason`, and `result` are owned by [task lifecycle values](schema-value-sets.md#task-lifecycle-values). The product meaning of lifecycle areas is owned by [Core Model task lifecycle](../core-model.md#6-task-lifecycle).
 
-## ShapingReadiness
+## `ShapingReadiness`
 
 `ShapingReadiness` is a derived API view over Task, Change Unit, pending judgments, evidence summary, blockers, and next-action state. It shows whether the current owner state is concrete enough for the next safe action.
 

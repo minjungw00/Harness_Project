@@ -30,7 +30,7 @@ Judgment schemas preserve the structure of a user-owned choice. They do not let 
 
 `UserJudgmentCandidate` is not a pending judgment. A pending `UserJudgment` exists only after `harness.request_user_judgment` commits. A recorded answer resolves only the specific pending judgment and its `judgment_kind`; it does not silently update active scope, create evidence, create Write Authorization, accept residual risk, or close a Task.
 
-## UserJudgment
+## `UserJudgment`
 
 ```yaml
 UserJudgment:
@@ -54,7 +54,7 @@ UserJudgment:
 
 `judgment_kind`, `status`, `presentation`, and `required_for` values are owned by [judgment values](schema-value-sets.md#judgment-values). Product meaning is owned by [Core Model user-owned judgment](../core-model.md#4-user-owned-judgment).
 
-## UserJudgmentCandidate
+## `UserJudgmentCandidate`
 
 `UserJudgmentCandidate` is a proposed focused question returned by another method when the next safe path requires user-owned judgment. It is displayable, but it is not durable until `harness.request_user_judgment` commits it.
 
@@ -112,7 +112,7 @@ RecordUserJudgmentPayload:
 
 `selected_option_id` and `note` are request-level and resolution-level fields. `RecordUserJudgmentPayload` must not repeat them. Exactly one decision-specific payload branch should be populated for the active `judgment_kind` unless a method owner explicitly allows a narrower structure.
 
-## SensitiveActionScope
+## `SensitiveActionScope`
 
 `SensitiveActionScope` describes the named sensitive step the user is asked to approve. It is not `AuthorizedAttemptScope`, not Write Authorization, and not security authority; see [Security](../security.md).
 
@@ -131,7 +131,7 @@ SensitiveActionScope:
 
 Sensitive-action approval can be required before write compatibility, run recording, or close, but it does not replace the `harness.prepare_write` path for product-file writes.
 
-## AcceptedRiskInput
+## `AcceptedRiskInput`
 
 `AcceptedRiskInput` names a visible residual risk the user may accept for the judgment being recorded.
 

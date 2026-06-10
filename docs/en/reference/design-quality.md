@@ -126,7 +126,7 @@ Validator IDs are reporting labels. They do not create Core invariants, gates, c
 
 `ValidatorResult` shape is owned by [API State Schemas](api/schema-state.md). Severity-like values and the active stable `ValidatorResult.validator_id` set are owned by [API Value Sets](api/schema-value-sets.md).
 
-This document does not publish active design-policy validator IDs or a policy-to-validator mapping. Later stable validator ID sets remain candidates in [Later Candidate Index: Later Schema Candidates](../later/index.md#later-schema-candidates) unless an owner promotes a narrow active contract.
+This document does not publish active design-policy validator IDs or a policy-to-validator mapping. Later stable validator ID sets remain candidates in [Later policy and conformance: `ValidatorResult` stable IDs and policy families](../later/policy-and-conformance.md#validatorresult-stable-ids-and-policy-families) unless an owner promotes a narrow active contract.
 
 ## 8. Later policy catalog boundary
 

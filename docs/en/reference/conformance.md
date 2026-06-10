@@ -109,7 +109,7 @@ These scenario IDs are compact documentation criteria for future fixture plannin
 
 ## 7. Catalog-only future boundary
 
-Future fixture families belong in [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families). That index keeps names only as later candidates, and this page does not reproduce the catalog.
+Future fixture families belong in [Later policy and conformance: future fixture families](../later/policy-and-conformance.md#future-fixture-families). The later-candidate index keeps names only as later candidates, and this page does not reproduce the catalog.
 
 Future-family names are not scenario scripts, fixture bodies, active API payload examples, runner or reporting requirements, active MVP scope, implementation tasks, current results, or current runtime proof. A future owner must promote a narrow behavior with scope, fallback behavior, exact contracts, and proof-path expectations before executable fixture material exists.
 

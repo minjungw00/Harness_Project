@@ -1,13 +1,13 @@
-# Later: Connectors and Surfaces
+# Later: Connectors and surfaces
 
-## What this document owns
+<a id="what-this-document-owns"></a>
+## Owns / Does not own
 
 This document owns inactive later candidates about future IDE, CLI, chat, MCP, hosted, remote, dashboard, and connector-facing surfaces. It keeps connector and surface candidates grouped so [Later Candidate Index](index.md) can remain a router and short summary.
 
 Every candidate here is future-facing. The candidate details are documentation source material only and do not create current surface support, connector authority, hosted runtime behavior, or UI requirements.
 
-## What this document does not own
-
+<a id="what-this-document-does-not-own"></a>
 This document does not define current MVP API methods, security guarantees, artifact body policies, validator catalogs, conformance fixtures, hosted services, remote runtime behavior, or implementation readiness.
 
 It also does not make a `surface_id`, connector name, dashboard, hosted workflow, or read-only resource into authority. If one of these candidates is promoted, update the relevant current owner, or create a new owner document during promotion.

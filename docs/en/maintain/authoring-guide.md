@@ -39,7 +39,7 @@ Use the compact active routes:
 
 [docs/doc-index.yaml](../../doc-index.yaml) owns retrieval and routing metadata. It is not runtime configuration and not a contract owner. [docs/terminology-map.yaml](../../terminology-map.yaml) owns bilingual terminology controls when it exists. It does not own API, storage, schema, security, projection, or runtime behavior.
 
-### Maintainer Reading Path
+### Maintainer reading path
 
 Use this path for documentation maintenance:
 

@@ -1,13 +1,13 @@
-# Later: Artifacts and Evidence
+# Later: Artifacts and evidence
 
-## What this document owns
+<a id="what-this-document-owns"></a>
+## Owns / Does not own
 
 This document owns inactive later candidates about richer evidence, native artifact capture, artifact body policy, exportable evidence packages, browser capture, and evidence-related display or template expansion. It keeps artifact and evidence candidates grouped so [Later Candidate Index](index.md) can remain a router and short summary.
 
 Every candidate here is future-facing. The candidate details are documentation source material only and do not create current evidence, artifact, storage, or close-readiness behavior.
 
-## What this document does not own
-
+<a id="what-this-document-does-not-own"></a>
 This document does not define current MVP artifact storage behavior, active artifact body reads, evidence sufficiency, active API methods, storage effects, UI behavior, security guarantees, or conformance requirements.
 
 It also does not make artifact capture equivalent to evidence acceptance. Promotion must preserve the distinction between Core-owned state, artifacts, user-owned judgment, verification, acceptance, and residual risk.

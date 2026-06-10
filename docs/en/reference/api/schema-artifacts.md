@@ -26,7 +26,7 @@ This document does not own:
 
 Artifact schemas never make a caller-supplied path authoritative. They describe the request and response shapes used by the artifact owner paths; validation, staging, promotion, linking, and body-read eligibility stay with [MVP API](mvp-api.md) and [Artifact Storage](../storage-artifacts.md).
 
-## ArtifactRef
+## `ArtifactRef`
 
 `ArtifactRef` is the public pointer to a persistent artifact that has already been registered by an owner path.
 
@@ -49,7 +49,7 @@ ArtifactRef:
 
 `ArtifactRef` is a reference and metadata shape. It does not make artifact body content readable by default and does not prove that the content is sufficient evidence for close.
 
-## StagedArtifactHandle
+## `StagedArtifactHandle`
 
 `StagedArtifactHandle` is a temporary handle returned by successful `harness.stage_artifact`. It represents storage-owned temporary staging, not a persistent artifact.
 
@@ -70,7 +70,7 @@ StagedArtifactHandle:
 
 The caller does not submit `created_by_surface_id` or `created_by_surface_instance_id` as authority claims. Staged-handle lifecycle, provenance validation, expiry, and promotion are owned by [Artifact Storage](../storage-artifacts.md).
 
-## ArtifactInput
+## `ArtifactInput`
 
 `ArtifactInput` is used by methods that link artifacts into run or evidence output.
 

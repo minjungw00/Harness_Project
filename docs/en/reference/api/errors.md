@@ -36,7 +36,7 @@ This document does not own:
 
 <a id="error-taxonomy"></a>
 
-## Public ErrorCode table
+## Public `ErrorCode` table
 
 | ErrorCode | Used in | Meaning | State change | May be blocker code? |
 | --- | --- | --- | --- | --- |
@@ -180,7 +180,7 @@ Blocked result means the method may have returned an operation-specific blocked 
 
 <a id="harnessclose_task-close-blockers"></a>
 
-## close_task blocker mapping
+## `close_task` blocker mapping
 
 | `close_task` situation | Response path | Public-code rule |
 |---|---|---|

@@ -33,7 +33,7 @@ Schema blocks in this page are planning notation, not generated code. They descr
 `string | null` means the field is present and may be null. `Type[]` means an array of that type. Field value sets are listed in [API Value Sets](schema-value-sets.md) unless this page says the field is free-form text or an opaque identifier.
 
 <a id="tool-envelope"></a>
-## ToolEnvelope
+## `ToolEnvelope`
 
 `ToolEnvelope` is the common request envelope used by public methods unless [MVP API](mvp-api.md) gives a narrower method-specific request rule.
 

@@ -1,13 +1,13 @@
-# Later: Policy and Conformance
+# Later: Policy and conformance
 
-## What this document owns
+<a id="what-this-document-owns"></a>
+## Owns / Does not own
 
 This document owns inactive later candidates about policy families, validators, gates, waivers, severity-based blocking, executable fixture families, and conformance entrypoints. It keeps policy and conformance candidates grouped so [Later Candidate Index](index.md) can remain a router and short summary.
 
 Every candidate here is future-facing. The candidate details are documentation source material only and do not create current validator, gate, waiver, fixture, or conformance behavior.
 
-## What this document does not own
-
+<a id="what-this-document-does-not-own"></a>
 This document does not define current MVP close-readiness requirements, active validators, active blocker categories, active waiver routes, executable fixture suites, conformance reports, API behavior, storage effects, security guarantees, or implementation readiness.
 
 It also does not collapse policy, QA, verification, acceptance, waiver, and residual-risk judgment into one approval path. Those boundaries must be preserved during any promotion.

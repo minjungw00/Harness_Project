@@ -12,7 +12,7 @@ These documents are source material for a future Harness Server. They do not mea
 - Do not load paired English and Korean docs for the same `doc_id` in one prompt unless the task is translation or semantic-parity review.
 - Preserve exact identifiers in backticks and let the owner document decide their meaning.
 
-## Implementer Path
+## Implementer path
 
 Use this order when moving from product boundary to exact contract owners:
 
