@@ -1156,14 +1156,12 @@ docs:
       - profile_gated_candidate_routing
     owns:
       - later candidate category model
-      - later candidate names
-      - promotion boundaries
-      - deferred security-and-assurance candidates
-      - deferred artifacts-and-evidence candidates
-      - deferred connectors-and-surfaces candidates
-      - deferred policy-and-conformance candidates
-      - deferred workflow-and-collaboration candidates
+      - later category routing
+      - short later candidate summaries
+      - index-level promotion boundaries
+      - profile-gated candidate routing
     does_not_own:
+      - category-specific inactive candidate details
       - active MVP requirements
       - active API contracts
       - active schema contracts
@@ -1171,10 +1169,183 @@ docs:
       - fixture YAML
       - implementation readiness
     related_docs:
+      - later.security-and-assurance
+      - later.artifacts-and-evidence
+      - later.connectors-and-surfaces
+      - later.policy-and-conformance
+      - later.workflow-and-collaboration
       - reference.active-mvp-scope
       - build.mvp-plan
       - reference.template-bodies
       - reference.conformance
+
+  - doc_id: later.security-and-assurance
+    status: later
+    family: later
+    paths:
+      en: docs/en/later/security-and-assurance.md
+      ko: docs/ko/later/security-and-assurance.md
+    default_for_agent: en
+    primary_role: later_candidate_category
+    canonical_for:
+      - inactive_security_and_assurance_candidate_descriptions
+      - stronger_assurance_candidate_grouping
+      - capability_profile_hardening_candidate_grouping
+      - promotion_time_security_documentation_requirements
+    owns:
+      - inactive later-candidate descriptions for security and assurance
+      - inactive later-candidate descriptions for stronger capability profiles
+      - inactive later-candidate descriptions for observation and blocking claims
+      - promotion-time documentation requirements for security and assurance candidates
+    does_not_own:
+      - active security guarantees
+      - active API requirements
+      - active storage requirements
+      - active UI requirements
+      - active conformance requirements
+      - implementation readiness
+    related_docs:
+      - later.index
+      - reference.security
+      - reference.active-mvp-scope
+      - reference.agent-integration
+      - reference.runtime-boundaries
+      - reference.api.schema-value-sets
+
+  - doc_id: later.artifacts-and-evidence
+    status: later
+    family: later
+    paths:
+      en: docs/en/later/artifacts-and-evidence.md
+      ko: docs/ko/later/artifacts-and-evidence.md
+    default_for_agent: en
+    primary_role: later_candidate_category
+    canonical_for:
+      - inactive_artifacts_and_evidence_candidate_descriptions
+      - richer_evidence_candidate_grouping
+      - artifact_capture_candidate_grouping
+      - promotion_time_artifact_evidence_documentation_requirements
+    owns:
+      - inactive later-candidate descriptions for artifacts and evidence
+      - inactive later-candidate descriptions for native artifact capture
+      - inactive later-candidate descriptions for exportable evidence packages
+      - promotion-time documentation requirements for artifact and evidence candidates
+    does_not_own:
+      - active artifact storage behavior
+      - active evidence sufficiency requirements
+      - active API requirements
+      - active storage requirements
+      - active security guarantees
+      - active conformance requirements
+    related_docs:
+      - later.index
+      - reference.active-mvp-scope
+      - reference.core-model
+      - reference.api.schema-artifacts
+      - reference.storage-artifacts
+      - reference.storage-effects
+      - reference.template-bodies
+
+  - doc_id: later.connectors-and-surfaces
+    status: later
+    family: later
+    paths:
+      en: docs/en/later/connectors-and-surfaces.md
+      ko: docs/ko/later/connectors-and-surfaces.md
+    default_for_agent: en
+    primary_role: later_candidate_category
+    canonical_for:
+      - inactive_connectors_and_surfaces_candidate_descriptions
+      - future_surface_candidate_grouping
+      - connector_ecosystem_candidate_grouping
+      - promotion_time_connector_surface_documentation_requirements
+    owns:
+      - inactive later-candidate descriptions for connectors and surfaces
+      - inactive later-candidate descriptions for dashboard and hosted surfaces
+      - inactive later-candidate descriptions for connector ecosystems
+      - promotion-time documentation requirements for connector and surface candidates
+    does_not_own:
+      - active connector behavior
+      - active surface support requirements
+      - active API requirements
+      - active security guarantees
+      - active artifact body policies
+      - active conformance requirements
+    related_docs:
+      - later.index
+      - reference.active-mvp-scope
+      - use.surface-recipes
+      - reference.agent-integration
+      - reference.api.mvp-api
+      - reference.projection-and-templates
+      - reference.conformance
+
+  - doc_id: later.policy-and-conformance
+    status: later
+    family: later
+    paths:
+      en: docs/en/later/policy-and-conformance.md
+      ko: docs/ko/later/policy-and-conformance.md
+    default_for_agent: en
+    primary_role: later_candidate_category
+    canonical_for:
+      - inactive_policy_and_conformance_candidate_descriptions
+      - future_validator_candidate_grouping
+      - future_gate_waiver_candidate_grouping
+      - promotion_time_policy_conformance_documentation_requirements
+    owns:
+      - inactive later-candidate descriptions for policy and conformance
+      - inactive later-candidate descriptions for validators, gates, and waivers
+      - inactive later-candidate descriptions for executable fixture families
+      - promotion-time documentation requirements for policy and conformance candidates
+    does_not_own:
+      - active close-readiness requirements
+      - active validator requirements
+      - active waiver routes
+      - active fixture suites
+      - active API requirements
+      - active storage requirements
+    related_docs:
+      - later.index
+      - reference.active-mvp-scope
+      - reference.core-model
+      - reference.design-quality
+      - reference.conformance
+      - reference.api.schema-state
+      - reference.api.schema-value-sets
+
+  - doc_id: later.workflow-and-collaboration
+    status: later
+    family: later
+    paths:
+      en: docs/en/later/workflow-and-collaboration.md
+      ko: docs/ko/later/workflow-and-collaboration.md
+    default_for_agent: en
+    primary_role: later_candidate_category
+    canonical_for:
+      - inactive_workflow_and_collaboration_candidate_descriptions
+      - future_judgment_flow_candidate_grouping
+      - team_workflow_candidate_grouping
+      - promotion_time_workflow_collaboration_documentation_requirements
+    owns:
+      - inactive later-candidate descriptions for workflow and collaboration
+      - inactive later-candidate descriptions for richer judgment flows
+      - inactive later-candidate descriptions for team workflow and release handoff
+      - promotion-time documentation requirements for workflow and collaboration candidates
+    does_not_own:
+      - active API behavior
+      - active task lifecycle behavior
+      - active close-readiness behavior
+      - active acceptance behavior
+      - active storage requirements
+      - active security guarantees
+    related_docs:
+      - later.index
+      - reference.active-mvp-scope
+      - reference.core-model
+      - reference.api.mvp-api
+      - reference.api.schema-judgment
+      - reference.projection-and-templates
 
   - doc_id: maintain.authoring-guide
     status: maintain
