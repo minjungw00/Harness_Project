@@ -17,7 +17,7 @@
 이 문서는 담당하지 않습니다.
 
 - 상태 카드, 판단 요청, 실행/증거 요약, 닫기 결과, 에이전트 맥락 패킷 본문: [템플릿 본문](template-bodies.md)
-- 원천 Core 상태: [Core Model](core-model.md)
+- 원천 Core 상태: [Core 모델](core-model.md)
 - 저장소 기록이나 상태 보기 저장소 후보: 저장소 담당 문서와 [이후 후보 색인](../later/index.md)
 - 공개 API 스키마: API 스키마 담당 문서
 - 커넥터 동작: [에이전트 통합](agent-integration.md)
@@ -77,7 +77,7 @@ Core가 소유한 상태, 사용자 판단 기록, 닫기 기록, 잔여 위험 
 ## 관련 담당 문서
 
 - [템플릿 본문](template-bodies.md): 정확한 렌더링 본문 기대치.
-- [Core Model](core-model.md): Core 권한, 사용자 판단, 닫기 준비 상태, 최종 수락, 잔여 위험 경계.
+- [Core 모델](core-model.md): Core 권한, 사용자 판단, 닫기 준비 상태, 최종 수락, 잔여 위험 경계.
 - [API 상태 스키마](api/schema-state.md): 표시가 사용하는 상태 형태 데이터.
 - [API 판단 스키마](api/schema-judgment.md): 사용자 판단과 수락된 위험 입력 형태.
 - [API 아티팩트 스키마](api/schema-artifacts.md): `ArtifactRef` 표시 입력.

@@ -86,7 +86,7 @@ ToolDryRunResponse:
 
 ## `dry_run` 요약 형태
 
-`DryRunSummary`, `PlannedEffect`, `PlannedBlocker`는 공통 `dry_run` 분기 보조 형태입니다. 모두 설명용 미리보기 데이터일 뿐입니다. 기록을 만들거나, ref를 예약하거나, 핸들을 소비하거나, 재실행 행을 만들거나, `state_version`을 올리지 않습니다.
+`DryRunSummary`, `PlannedEffect`, `PlannedBlocker`는 공통 `dry_run` 분기 보조 형태입니다. 모두 설명용 미리보기 데이터일 뿐입니다. 기록을 만들거나, 참조를 예약하거나, 핸들을 소비하거나, 재실행 행을 만들거나, `state_version`을 올리지 않습니다.
 
 ```yaml
 DryRunSummary:

@@ -68,7 +68,7 @@ StagedArtifactHandle:
   consumed: boolean
 ```
 
-호출자는 `created_by_surface_id`나 `created_by_surface_instance_id`를 권한 주장으로 제출하지 않습니다. 이 값들은 스테이징 요청의 확인된 로컬 접점 맥락에서 서버가 기록합니다. 스테이징된 핸들은 범위가 정해져 있고, 만료되며, 한 번만 소비됩니다. 어떤 로컬 호출자나 사용할 수 있는 bearer token이 아니며, 호환되는 `harness.record_run` 승격이 지속 `ArtifactRef`를 만들기 전까지 증거 권한도 아닙니다.
+호출자는 `created_by_surface_id`나 `created_by_surface_instance_id`를 권한 주장으로 제출하지 않습니다. 이 값들은 스테이징 요청의 확인된 로컬 접점 맥락에서 서버가 기록합니다. 스테이징된 핸들은 범위가 정해져 있고, 만료되며, 한 번만 소비됩니다. 어떤 로컬 호출자나 사용할 수 있는 베어러 토큰이 아니며, 호환되는 `harness.record_run` 승격이 지속 `ArtifactRef`를 만들기 전까지 증거 권한도 아닙니다.
 
 ## `ArtifactInput`
 

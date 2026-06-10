@@ -1,6 +1,6 @@
 # 아티팩트 저장소
 
-이 문서는 현재 MVP 원천 설계의 아티팩트 저장 생명주기를 담당합니다. 문서 원천 자료일 뿐이며 아티팩트 본문 바이트, 아티팩트 디렉터리, 런타임 저장소, 증거 기록, QA 기록, 수락 기록, 닫기 기록을 만들지 않습니다.
+이 문서는 현재 MVP 원천 설계의 아티팩트 저장 생명주기를 담당합니다. 문서 원천 자료일 뿐이며 아티팩트 바이트, 아티팩트 디렉터리, 런타임 저장소, 증거 기록, QA 기록, 수락 기록, 닫기 기록을 만들지 않습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -51,7 +51,7 @@
 
 ## 승격
 
-호환되는 `harness.record_run`만 `artifact_staging.status=staged`인, 만료되지 않은 같은 프로젝트 같은 Task 핸들을 소비해 지속 `ArtifactRef`로 승격할 수 있습니다. 현재 확인된 `surface_id`와 `surface_instance_id`는 `created_by_surface_id`, `created_by_surface_instance_id`와 일치해야 합니다. 현재 MVP에는 접점 간 스테이징 핸들 인계가 없고, `StagedArtifactHandle`은 어떤 로컬 호출자나 사용할 수 있는 bearer token이 아닙니다.
+호환되는 `harness.record_run`만 `artifact_staging.status=staged`인, 만료되지 않은 같은 프로젝트 같은 Task 핸들을 소비해 지속 `ArtifactRef`로 승격할 수 있습니다. 현재 확인된 `surface_id`와 `surface_instance_id`는 `created_by_surface_id`, `created_by_surface_instance_id`와 일치해야 합니다. 현재 MVP에는 접점 간 스테이징 핸들 인계가 없고, `StagedArtifactHandle`은 어떤 로컬 호출자나 사용할 수 있는 베어러 토큰이 아닙니다.
 
 소비 트랜잭션은 저장된 `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, 만료 여부, 소비 상태, `sha256`, `size_bytes`, `redaction_state`를 검증해야 합니다. 검증된 스테이징 핸들만 승격하고, 승격된 핸들을 `consumed`로 표시하며, 소비한 Run과 승격된 아티팩트 id를 설정하고, 지속 `artifacts` 행과 필요한 `artifact_links`를 커밋하며, 메서드 담당 문서가 허용한 경우에만 증거 범위를 갱신해야 합니다.
 
@@ -103,7 +103,7 @@
 
 아티팩트 본문 읽기는 스테이징 핸들 승격과 별개입니다. 원시 아티팩트 경로 읽기는 기본으로 부여되지 않습니다.
 
-아티팩트 메타데이터 또는 본문을 읽으려면 등록된 `ArtifactRef`, 일치하는 같은 프로젝트 `task_id`, 필요한 `artifact_links` 담당 관계, 호출자 접근 등급에 필요한 가림 처리/가용성 상태, `access_class=artifact_read`에 대한 API/보안 담당 문서 요구사항이 필요합니다. 아티팩트 저장소 아래 로컬 경로, 아티팩트 `uri`, 스테이징 경로, 복사된 파일만으로는 아티팩트 본문 바이트를 읽거나 신뢰하기에 충분하지 않습니다.
+아티팩트 메타데이터 또는 본문을 읽으려면 등록된 `ArtifactRef`, 일치하는 같은 프로젝트 `task_id`, 필요한 `artifact_links` 담당 관계, 호출자 접근 등급에 필요한 가림 처리/가용성 상태, `access_class=artifact_read`에 대한 API/보안 담당 문서 요구사항이 필요합니다. 아티팩트 저장소 아래 로컬 경로, 아티팩트 `uri`, 스테이징 경로, 복사된 파일만으로는 아티팩트 바이트를 읽거나 신뢰하기에 충분하지 않습니다.
 
 ## 보존 경계
 

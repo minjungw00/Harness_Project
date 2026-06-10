@@ -23,11 +23,11 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 보증 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
-### Full Evidence Manifest
+### 전체 Evidence Manifest
 
 상태:
 - 이후 후보
@@ -39,9 +39,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 증거 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### Discovery Brief, Question Queue, Assumption Register
 
@@ -55,9 +55,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - Core 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 수동 QA 작업 흐름과 `qa_gate`
 
@@ -71,9 +71,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 수동 QA 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 수동 QA 면제 `qa_waiver`
 
@@ -87,9 +87,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 사용자 소유 판단 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 검증 관문 `verification_gate`
 
@@ -103,9 +103,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 검증 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 검증 위험 수락 `verification_risk_acceptance`
 
@@ -119,9 +119,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 사용자 소유 판단 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### Eval과 분리형 검증 작업 흐름
 
@@ -135,11 +135,11 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - Eval 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
-### Full Decision Packet과 `presentation=full`
+### 전체 Decision Packet과 `presentation=full`
 
 상태:
 - 이후 후보
@@ -153,7 +153,7 @@
 - 사용자 소유 판단 담당 문서 갱신
 - 템플릿 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 상세 위험 검토와 잔여 위험 생명주기
 
@@ -168,8 +168,8 @@
 - 현재 범위 문서 갱신
 - Core 담당 문서 갱신
 - 사용자 소유 판단 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### 설계 관문과 정책 차단 사유: `design_gate`, `design_policy`
 
@@ -183,9 +183,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 설계 품질 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 설계 정책 면제
 
@@ -200,8 +200,8 @@
 - 현재 범위 문서 갱신
 - 사용자 소유 판단 담당 문서 갱신
 - 설계 품질 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### 넓은 설계 검증기와 심각도 기반 차단
 
@@ -216,8 +216,8 @@
 - 현재 범위 문서 갱신
 - Validator 담당 문서 갱신
 - 설계 품질 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### 전체 설계 품질 정책 계열
 
@@ -232,8 +232,8 @@
 - 현재 범위 문서 갱신
 - 설계 품질 담당 문서 갱신
 - Validator 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 <a id="operations-candidates"></a>
 ## 운영 후보
@@ -252,7 +252,7 @@
 - 운영 담당 문서 갱신
 - 보안 표현 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 향후 로컬 운영자 명령 묶음
 
@@ -268,7 +268,7 @@
 - 운영 담당 문서 갱신
 - API 동작 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 내보내기
 
@@ -284,9 +284,9 @@
 - 내보내기 담당 문서 갱신
 - 아티팩트 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
-### Release Handoff
+### 릴리스 인계
 
 상태:
 - 이후 후보
@@ -300,7 +300,7 @@
 - 인계 담당 문서 갱신
 - 보안 표현 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 내보내기와 인계 형식
 
@@ -316,7 +316,7 @@
 - 내보내기 담당 문서 갱신
 - 인계 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 복구와 reconcile
 
@@ -332,7 +332,7 @@
 - 운영 담당 문서 갱신
 - 저장 효과 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 운영자 준비 상태와 `doctor` 접점
 
@@ -348,7 +348,7 @@
 - 운영 담당 문서 갱신
 - 보안 표현 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 상태 보기 새로고침과 최신성 진단
 
@@ -364,7 +364,7 @@
 - 상태 보기 담당 문서 갱신
 - API 동작 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 영속 상태 보기 작업
 
@@ -380,7 +380,7 @@
 - 상태 보기 담당 문서 갱신
 - 저장 효과 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 상태 보기 reconcile과 편집 가능한 상태 보기 영역
 
@@ -396,7 +396,7 @@
 - 상태 보기 담당 문서 갱신
 - Core 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 더 강한 로컬 역량 프로필
 
@@ -409,10 +409,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Agent Integration 담당 문서 갱신
+- 에이전트 통합 담당 문서 갱신
 - 보안 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### 명령, 네트워크, 비밀값 접근 관찰
 
@@ -425,10 +425,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Agent Integration 담당 문서 갱신
+- 에이전트 통합 담당 문서 갱신
 - 보안 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 명령, 네트워크, 비밀값 도구 실행 전 차단
 
@@ -442,9 +442,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 보안 담당 문서 갱신
-- Agent Integration 담당 문서 갱신
+- 에이전트 통합 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 향후 적합성 실행 진입점
 
@@ -476,9 +476,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - API 동작 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### `harness.launch_verify`
 
@@ -494,7 +494,7 @@
 - API 동작 문서 갱신
 - 검증 담당 문서 갱신
 - 보안 표현 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### `harness.record_eval`
 
@@ -509,8 +509,8 @@
 - 현재 범위 문서 갱신
 - API 동작 문서 갱신
 - Eval 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### `harness.record_manual_qa`
 
@@ -525,8 +525,8 @@
 - 현재 범위 문서 갱신
 - API 동작 문서 갱신
 - 수동 QA 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### 이후 읽기 전용 리소스
 
@@ -541,8 +541,8 @@
 - 현재 범위 문서 갱신
 - API 동작 문서 갱신
 - 리소스 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### 이후 `harness.record_run` 분기
 
@@ -556,9 +556,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - API 동작 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 역량 조건부 `prepare_write`와 `record_run` 관찰
 
@@ -573,8 +573,8 @@
 - 현재 범위 문서 갱신
 - API 동작 문서 갱신
 - 보안 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### 이후 사용자 판단 분기
 
@@ -588,14 +588,14 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 사용자 소유 판단 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 <a id="later-schema-candidates"></a>
-## 이후 Schema 후보
+## 이후 스키마 후보
 
-### 이후 Schema 확장
+### 이후 스키마 확장
 
 상태:
 - 이후 후보
@@ -606,10 +606,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 역량 프로필 지원 필드
 
@@ -622,10 +622,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Schema 담당 문서 갱신
-- Agent Integration 담당 문서 갱신
+- 스키마 담당 문서 갱신
+- 에이전트 통합 담당 문서 갱신
 - 보안 담당 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 역량 조건부 권한 관찰 필드
 
@@ -638,10 +638,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
 - 보안 담당 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 이후 행위자, 생산자, 캡처 출처 값
 
@@ -654,10 +654,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 네이티브 아티팩트 캡처
 
@@ -670,10 +670,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 이후 닫기와 보증 필드
 
@@ -686,10 +686,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - Core 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 이후 다음 행동 값
 
@@ -702,10 +702,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
 - 사용자 안내 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 읽기 전용 플레이북과 판단 맥락 메타데이터
 
@@ -718,10 +718,10 @@
 
 승격 조건:
 - 현재 범위 문서 갱신
-- Agent Integration 담당 문서 갱신
+- 에이전트 통합 담당 문서 갱신
 - API 동작 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 ### 이후 참조와 아티팩트 값 계열
 
@@ -735,9 +735,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 아티팩트 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### `ValidatorResult` 안정 ID와 정책 계열
 
@@ -751,9 +751,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - Validator 담당 문서 갱신
-- Schema 담당 문서 갱신
+- 스키마 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 면제, reconcile, 잔여 위험 분기
 
@@ -768,8 +768,8 @@
 - 현재 범위 문서 갱신
 - 사용자 소유 판단 담당 문서 갱신
 - Core 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신
 
 <a id="later-template-candidates"></a>
 ## 이후 템플릿 후보
@@ -788,7 +788,7 @@
 - 템플릿 담당 문서 갱신
 - 원천 기록 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 <a id="future-fixture-families"></a>
 ## 향후 fixture 계열
@@ -825,7 +825,7 @@
 - 파생 표시 담당 문서 갱신
 - API 동작 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### Verification Result Cards와 더 풍부한 검증 작업 흐름
 
@@ -841,7 +841,7 @@
 - 검증 담당 문서 갱신
 - 템플릿 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 브라우저 캡처 자동화
 
@@ -857,7 +857,7 @@
 - 캡처 담당 문서 갱신
 - 보안 담당 문서 갱신
 - 저장 효과 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 접점 간 검증
 
@@ -873,7 +873,7 @@
 - Eval 담당 문서 갱신
 - API 동작 문서 갱신
 - 보안 표현 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 더 넓은 커넥터와 호스팅 런타임
 
@@ -889,7 +889,7 @@
 - 커넥터 담당 문서 갱신
 - API 동작 문서 갱신
 - 보안 담당 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 커넥터 적합성 생태계
 
@@ -919,9 +919,9 @@
 승격 조건:
 - 현재 범위 문서 갱신
 - 보안 담당 문서 갱신
-- Agent Integration 담당 문서 갱신
+- 에이전트 통합 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### Context Index와 파생 지표
 
@@ -937,7 +937,7 @@
 - 검색 담당 문서 갱신
 - 저장 효과 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 팀 작업 흐름과 오케스트레이션
 
@@ -953,7 +953,7 @@
 - 범위 담당 문서 갱신
 - 권한 담당 문서 갱신
 - 사용자 소유 판단 담당 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 고급 릴리스와 배포 자동화
 
@@ -969,7 +969,7 @@
 - 릴리스 담당 문서 갱신
 - 보안 담당 문서 갱신
 - API 동작 문서 갱신
-- Conformance fixture 갱신
+- 적합성 fixture 갱신
 
 ### 고급 검증기와 인터페이스 확인
 
@@ -984,5 +984,5 @@
 - 현재 범위 문서 갱신
 - Validator 담당 문서 갱신
 - 설계 품질 담당 문서 갱신
-- Schema 담당 문서 갱신
-- Conformance fixture 갱신
+- 스키마 담당 문서 갱신
+- 적합성 fixture 갱신

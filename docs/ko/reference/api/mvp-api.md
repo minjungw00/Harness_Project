@@ -27,7 +27,7 @@
 | [`harness.update_scope`](#harnessupdate_scope) | `harness.intake` 이후 활성 Task 범위와 활성 Change Unit을 갱신합니다. |
 | [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 파일 쓰기를 현재 범위, 상태, 필요한 별도 민감 동작 승인, baseline, 접점 역량과 비교합니다. |
 | [`harness.stage_artifact`](#harnessstage_artifact) | 호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림을 나중에 `record_run`이 승격할 수 있는 임시 스테이징 핸들로 스테이징합니다. |
-| [`harness.record_run`](#harnessrecord_run) | shaping, direct, implementation 작업과 간결한 증거/아티팩트 참조를 기록합니다. |
+| [`harness.record_run`](#harnessrecord_run) | `shaping_update`, `direct`, `implementation` 종류의 작업과 간결한 증거/아티팩트 참조를 기록합니다. |
 | [`harness.request_user_judgment`](#harnessrequest_user_judgment) | 대기 중인 사용자 소유 판단 요청 하나를 만듭니다. |
 | [`harness.record_user_judgment`](#harnessrecord_user_judgment) | 기존 대기 중인 `UserJudgment`에 대한 사용자의 답을 기록합니다. |
 | [`harness.close_task`](#harnessclose_task) | 닫기 준비 상태를 확인하고, 차단 사유가 허용할 때만 `complete`, `cancel`, `supersede` intent를 처리합니다. |
@@ -62,7 +62,7 @@
 
 아래 예시는 간결한 분기 예시이지 전체 스키마 정의가 아닙니다. 최소 요청 예시는 해당 메서드의 유효한 호출을 구성하는 데 필요한 필드를 포함합니다. 대표 응답 예시는 분기 이해에 중요한 필드를 보여 주며, 설명 중인 동작에 영향을 주지 않는 스키마 담당 중첩 필드는 생략할 수 있습니다. 전체 형태는 연결된 스키마 담당 문서를 사용합니다.
 
-커밋되는 `dry_run=false` 상태 변경 호출은 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`을 요구합니다. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key: null`과 `expected_state_version: null`을 사용할 수 있습니다. `harness.stage_artifact`는 저장소가 소유하는 임시 스테이징만 만들며, Core 상태 전이가 아니고 재실행 행이나 `project_state.state_version` 증가를 만들지 않습니다.
+커밋되는 `dry_run=false` 상태 변경 호출은 `null`이 아닌 `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`을 요구합니다. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key: null`과 `expected_state_version: null`을 사용할 수 있습니다. `harness.stage_artifact`는 저장소가 소유하는 임시 스테이징만 만들며, Core 상태 전이가 아니고 재실행 행이나 `project_state.state_version` 증가를 만들지 않습니다.
 
 응답 분기 선택은 규범적이며 아래 우선순위를 따릅니다.
 
@@ -98,16 +98,16 @@
 
 로컬 접근 등급은 하네스 API 호환성 등급이지 OS 권한 등급이 아닙니다. `ToolEnvelope.surface_id`는 모든 공개 요청에 필요하지만 선택자일 뿐입니다. 권한 증명이 아니며, API가 그 접점을 신뢰하려면 서버가 도출한 `VerifiedSurfaceContext`와 일치해야 합니다. 활성 `access_class` 값은 [API 값 집합](schema-value-sets.md#access-class-values)이 담당합니다. 서버는 사용자 산문, 생성된 Markdown, Product Repository 파일, Projection, 대화 텍스트, 에이전트 기억이 아니라 로컬 전송/세션/바인딩과 저장된 `LocalSurfaceRegistration`에서 `VerifiedSurfaceContext`를 도출합니다. 같은 서버 도출 context만 스테이징 핸들의 `created_by_surface_id`와 `created_by_surface_instance_id` 출처 기록의 근거입니다.
 
-모든 접근 등급은 API가 접점에 의존하기 전에 `surface_id`가 같은 프로젝트의 `status=active`인 `LocalSurfaceRegistration`을 선택해야 합니다. 각 공개 API 요청에는 요청 수준 `VerifiedSurfaceContext.access_class`가 정확히 하나 있습니다. `ArtifactInput[]` 같은 중첩 payload는 두 번째 접근 등급을 추가하지 않습니다. 모든 상태 변경 API는 커밋 전에 해당 메서드 접근 등급에 대해 `VerifiedSurfaceContext.verified=true`가 필요합니다. 아티팩트 본문 읽기도 `access_class=artifact_read`에 대해 `VerifiedSurfaceContext.verified=true`가 필요합니다. 적용되는 경우 보호된 읽기가 Core 세부정보를 노출하거나 상태 변경이 커밋되기 전에 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 현재 프로젝트 전체 `expected_state_version`이 서로 호환되어야 합니다.
+모든 접근 등급은 API가 접점에 의존하기 전에 `surface_id`가 같은 프로젝트의 `status=active`인 `LocalSurfaceRegistration`을 선택해야 합니다. 각 공개 API 요청에는 요청 수준 `VerifiedSurfaceContext.access_class`가 정확히 하나 있습니다. `ArtifactInput[]` 같은 중첩 페이로드는 두 번째 접근 등급을 추가하지 않습니다. 모든 상태 변경 API는 커밋 전에 해당 메서드 접근 등급에 대해 `VerifiedSurfaceContext.verified=true`가 필요합니다. 아티팩트 본문 읽기도 `access_class=artifact_read`에 대해 `VerifiedSurfaceContext.verified=true`가 필요합니다. 적용되는 경우 보호된 읽기가 Core 세부정보를 노출하거나 상태 변경이 커밋되기 전에 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 현재 프로젝트 전체 `expected_state_version`이 서로 호환되어야 합니다.
 
 | 접근 등급 | 적용 범위 | 최소 접근 조건 |
 |---|---|---|
 | `read_status` | `harness.status`, 읽기 전용 상태 리소스, `harness.close_task intent=check` 같은 읽기 전용 상태/Projection 메서드. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 요청한 읽기에 필요한 Core/접점 도달 가능성, 보호된 Core 세부정보에는 `VerifiedSurfaceContext.access_class=read_status`, Task 범위 읽기라면 호환되는 `task_id`가 필요합니다. 상태 읽기는 표시해도 안전한 가용성 또는 불일치 진단을 반환할 수 있지만, 오래된 텍스트에서 상태를 만들어 내거나 로컬 접근을 확인할 수 없을 때 보호되어야 할 Core 세부정보를 노출하면 안 됩니다. |
-| `core_mutation` | 별도 분류가 없는 Core 상태 변경입니다. `harness.intake`를 통한 Task 생성, `harness.update_scope`, `harness.request_user_judgment`, `harness.record_user_judgment`, 상태를 바꾸는 `harness.close_task`가 여기에 속합니다. | `read_status` 조건에 더해 `VerifiedSurfaceContext.access_class=core_mutation`, `verified=true`, `dry_run=false` 커밋에는 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`, 적용되는 경우 호환되는 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 담당 기록이 필요합니다. |
+| `core_mutation` | 별도 분류가 없는 Core 상태 변경입니다. `harness.intake`를 통한 Task 생성, `harness.update_scope`, `harness.request_user_judgment`, `harness.record_user_judgment`, 상태를 바꾸는 `harness.close_task`가 여기에 속합니다. | `read_status` 조건에 더해 `VerifiedSurfaceContext.access_class=core_mutation`, `verified=true`, `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`, 적용되는 경우 호환되는 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 담당 기록이 필요합니다. |
 | `write_authorization` | `harness.prepare_write`. | `VerifiedSurfaceContext.access_class=write_authorization`, `verified=true`에 더해 의도한 제품 파일 쓰기 시도에 필요한 활성 Task/Change Unit 호환성, 범위, baseline, 필요한 별도 민감 동작 승인 호환성, 역량 확인이 필요합니다. |
 | `run_recording` | `harness.record_run`만 해당합니다. | `VerifiedSurfaceContext.access_class=run_recording`, `verified=true`에 더해 호환되는 `task_id`, `change_unit_id`, `baseline_ref`, 관찰된 시도 사실, 그리고 제품 쓰기를 기록하는 Run이면 소비 가능한 활성 쓰기 승인(`Write Authorization`)이 필요합니다. 같은 `run_recording` 요청이 실행 결과 기록, 필요할 때 호환되는 쓰기 승인 소비, 호환되는 기존 아티팩트 연결, 스테이징 핸들 유효성 확인 뒤 적격 `staged_artifact` 승격을 다룹니다. 승격에는 현재 확인된 `surface_id`와 `surface_instance_id`가 스테이징 핸들에 서버가 기록한 `created_by_surface_id`와 `created_by_surface_instance_id`와 일치해야 합니다. 현재 MVP에는 접점 간 스테이징 핸들 인계가 없습니다. `ArtifactInput[]`에 `source_kind=staged_artifact`가 있어도 `harness.record_run`은 `artifact_registration`을 요구하지 않습니다. |
 | `artifact_registration` | `harness.stage_artifact`만 해당합니다. | `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, 호환되는 `project_id`/`task_id`, 새 아티팩트 바이트나 안전 공지를 임시 `StagedArtifactHandle`로 스테이징하기 위한 `manual_artifact_attachment_supported=true`가 필요합니다. 성공하면 서버는 `VerifiedSurfaceContext`에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다. 호출자는 이 필드를 권한 주장으로 제출하지 않습니다. 이는 입력 스테이징이지 지속 `ArtifactRef` 승격이 아니고, 임의 로컬 파일이 안전하거나 허가되었다는 증명도 아니며, `harness.record_run`의 두 번째 접근 분류도 아닙니다. 호출자가 임의로 준 파일시스템 경로, 임의 로컬 경로 문자열, 권한 주장으로서의 원시 로그, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP의 아티팩트 권한으로 인정하지 않습니다. |
-| `artifact_read` | 담당 경로가 노출한 등록된 `ArtifactRef` 기록의 아티팩트 본문 읽기. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 등록된 `ArtifactRef`, 호환되는 `project_id`/`task_id`, 필요한 redaction과 availability 확인, `artifact_links`의 일치하는 담당 관계가 필요합니다. 아티팩트 본문/content 읽기는 `VerifiedSurfaceContext.access_class=artifact_read`와 `verified=true`가 필요합니다. 아티팩트 본문 읽기는 스테이징 핸들 승격과 별개이며, 원시 아티팩트 경로 읽기는 기본으로 부여되지 않습니다. |
+| `artifact_read` | 담당 경로가 노출한 등록된 `ArtifactRef` 기록의 아티팩트 본문 읽기. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 등록된 `ArtifactRef`, 호환되는 `project_id`/`task_id`, 필요한 redaction과 availability 확인, `artifact_links`의 일치하는 담당 관계가 필요합니다. 아티팩트 본문 읽기는 `VerifiedSurfaceContext.access_class=artifact_read`와 `verified=true`가 필요합니다. 아티팩트 본문 읽기는 스테이징 핸들 승격과 별개이며, 원시 아티팩트 경로 읽기는 기본으로 부여되지 않습니다. |
 
 필요한 MCP/Core 또는 접점 도달 가능성 자체가 없으면 `VerifiedSurfaceContext.failure_reason=unavailable`에 대응하는 `MCP_UNAVAILABLE`을 사용합니다. 등록된 로컬 접근 기대가 도달 가능한 전송/세션/바인딩과 맞지 않거나 로컬 접근이 취소되었으면 `failure_reason=mismatch` 또는 `revoked`에 대응하는 `LOCAL_ACCESS_MISMATCH`를 사용합니다. 접점은 인식되지만 접근 등급, 관찰, 캡처, 차단/격리 주장, 변경 경로 탐지 주장, 활성 동작에 필요한 역량이 없으면 `failure_reason=insufficient_capability`에 대응하는 `CAPABILITY_INSUFFICIENT`를 사용합니다. baseline 변경 경로 탐지에서 메서드가 그 역량을 요구하는 경우 `changed_path_detection_verification=failed` 또는 `stale`은 `CAPABILITY_INSUFFICIENT`를 만들어야 합니다. `not_run` 또는 legacy `planned_not_run`은 `detective` 라벨을 뒷받침할 수 없습니다.
 
@@ -121,7 +121,7 @@
 
 ### 필수 입력
 
-- `ToolEnvelope`: `project_id`, `surface_id`, `request_id`, `dry_run`이 필요하며, `dry_run=false` 커밋에는 non-null `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
+- `ToolEnvelope`: `project_id`, `surface_id`, `request_id`, `dry_run`이 필요하며, `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `user_request`, `requested_mode`, `resume_policy`.
 - 알고 있는 `acceptance_criteria`, `constraints.allowed_paths`, `constraints.non_goals`, `constraints.sensitive_categories`, `initial_context_refs`. 없으면 빈 배열을 사용합니다.
 
@@ -244,7 +244,7 @@ next_actions:
 
 ### 필수 입력
 
-- `ToolEnvelope`: `dry_run=false` 커밋에는 non-null `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
+- `ToolEnvelope`: `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `task_id`.
 - 바꿀 상위 범위 필드. `null`은 현재 값을 유지한다는 뜻이고, 빈 배열은 해당 목록을 빈 목록으로 교체합니다.
 - `change_unit.operation`과 그 작업에 필요한 필드.
@@ -503,7 +503,7 @@ guarantee_display:
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
 - 상태, 닫기 준비 상태 형태, 증거 요약, 보장 표시: [API 상태 스키마](schema-state.md).
 - 활성 값과 접근 등급: [API 값 집합](schema-value-sets.md).
-- 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`harness.close_task` 닫기 준비 상태 평가 차단 사유](errors.md#harnessclose_task-close-blockers).
+- 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`harness.close_task` 닫기 준비 상태 평가와 닫기 차단 사유](errors.md#harnessclose_task-close-blockers).
 - 저장 효과: [저장 효과](../storage-effects.md).
 
 <a id="harnessprepare_write"></a>
@@ -516,7 +516,7 @@ guarantee_display:
 
 ### 필수 입력
 
-- `ToolEnvelope`: `dry_run=false` 커밋에는 non-null `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
+- `ToolEnvelope`: `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `task_id`와 `change_unit_id`. 담당 해석이 활성 Task와 활성 Change Unit을 모호하지 않게 사용할 수 있을 때만 `null`을 사용할 수 있습니다.
 - `intended_operation`, `intended_paths`, `product_file_write_intended`, `sensitive_categories`, `baseline_ref`.
 
@@ -530,7 +530,7 @@ guarantee_display:
 
 ### 성공 결과
 
-`base.response_kind=result`, `base.effect_kind=core_committed`인 `PrepareWriteResult`를 반환합니다. `decision=allowed`이면 `write_authorization_ref`와 `write_authorization`이 non-null이고, `authorization_effect`는 새 커밋에서 `created`, 멱등 재실행에서 `returned`입니다.
+`base.response_kind=result`, `base.effect_kind=core_committed`인 `PrepareWriteResult`를 반환합니다. `decision=allowed`이면 `write_authorization_ref`와 `write_authorization`이 `null`이 아니고, `authorization_effect`는 새 커밋에서 `created`, 멱등 재실행에서 `returned`입니다.
 
 ### 차단 결과
 
@@ -735,11 +735,11 @@ expires_at: "2026-06-10T12:30:00Z"
 
 ### 목적
 
-shaping 작업, 직접 답변/결과, implementation 작업을 기록합니다. 또한 간결한 증거 범위를 갱신하고, 제품 쓰기를 기록할 때 호환되는 쓰기 승인을 소비하며, 기존 아티팩트를 연결하고, 허용되는 경우 적격 스테이징 핸들을 지속 `ArtifactRef`로 승격합니다.
+`shaping_update`, `direct`, `implementation` 종류의 작업을 기록합니다. 또한 간결한 증거 범위를 갱신하고, 제품 쓰기를 기록할 때 호환되는 쓰기 승인을 소비하며, 기존 아티팩트를 연결하고, 허용되는 경우 적격 스테이징 핸들을 지속 `ArtifactRef`로 승격합니다.
 
 ### 필수 입력
 
-- `ToolEnvelope`: `dry_run=false` 커밋에는 non-null `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
+- `ToolEnvelope`: `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`.
 - 제품 쓰기 Run은 `harness.prepare_write`가 만든 호환되는 활성 쓰기 승인이 필요합니다.
 - 새 아티팩트 바이트는 이미 유효한 `StagedArtifactHandle`로 표현되어 있어야 합니다. `record_run`은 새 바이트를 스테이징하지 않습니다.
@@ -889,7 +889,7 @@ state:
 
 ### 필수 입력
 
-- `ToolEnvelope`: `dry_run=false` 커밋에는 non-null `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
+- `ToolEnvelope`: `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `question`, `options`, `context`, `affected_refs`, `required_for`, `expires_at`.
 - 사용자가 정확한 사안을 판단할 수 있도록 초점이 분명한 질문, 이해 가능한 선택지, 충분한 맥락.
 
@@ -1020,7 +1020,7 @@ state:
 ### 담당 문서 링크
 
 - 요청 래퍼, 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
-- `UserJudgment`, 선택지, 맥락, 답변 payload: [API 판단 스키마](schema-judgment.md).
+- `UserJudgment`, 선택지, 맥락, 답변 페이로드: [API 판단 스키마](schema-judgment.md).
 - 상태 참조와 요약: [API 상태 스키마](schema-state.md).
 - 판단 종류와 활성 값: [API 값 집합](schema-value-sets.md).
 - 사용자 소유 판단과 비대체 규칙: [Core 모델](../core-model.md).
@@ -1036,9 +1036,9 @@ state:
 
 ### 필수 입력
 
-- `ToolEnvelope`: `dry_run=false` 커밋에는 non-null `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
+- `ToolEnvelope`: `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `user_judgment_id`, 일치하는 `judgment_kind`, `selected_option_id`, `answer`, `note`, `accepted_risks`.
-- `answer`에는 대기 중인 `judgment_kind`에 맞는 결정별 payload branch만 담아야 합니다. `selected_option_id`와 `note`는 요청 수준에 남습니다.
+- `answer`에는 대기 중인 `judgment_kind`에 맞는 결정별 페이로드 분기만 담아야 합니다. `selected_option_id`와 `note`는 요청 수준에 남습니다.
 
 ### 접근 요구사항
 
@@ -1058,7 +1058,7 @@ state:
 
 ### 거절 결과
 
-오래된 `expected_state_version`, 알 수 없거나 pending이 아닌 판단, `judgment_kind` 불일치, 유효하지 않은 선택지, 유효하지 않은 답변 payload, 만료되었거나 호환되지 않는 승인, 로컬 접근 실패, validator 실패는 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
+오래된 `expected_state_version`, 알 수 없거나 `pending`이 아닌 판단, `judgment_kind` 불일치, 유효하지 않은 선택지, 유효하지 않은 답변 페이로드, 만료되었거나 호환되지 않는 승인, 로컬 접근 실패, validator 실패는 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ### `dry_run` 동작
 
@@ -1066,7 +1066,7 @@ state:
 
 ### 저장 효과
 
-커밋 시 `user_judgments`를 갱신하고, 포함된 `blockers`와 판단 의존 요약을 갱신할 수 있으며, `task_events`를 추가하고, `tool_invocations`를 만들고, 프로젝트 상태 시계를 갱신합니다. 현재 MVP에서는 독립적인 accepted-risk 행을 만들지 않습니다. 저장 효과 의미는 [저장 효과](../storage-effects.md)가 담당합니다.
+커밋 시 `user_judgments`를 갱신하고, 포함된 `blockers`와 판단 의존 요약을 갱신할 수 있으며, `task_events`를 추가하고, `tool_invocations`를 만들고, 프로젝트 상태 시계를 갱신합니다. 현재 MVP에서는 수락된 위험 전용 행을 만들지 않습니다. 저장 효과 의미는 [저장 효과](../storage-effects.md)가 담당합니다.
 
 ### 최소 유효 요청
 
@@ -1184,7 +1184,7 @@ next_actions:
 
 - `ToolEnvelope`: `project_id`, `surface_id`, `request_id`, `dry_run`이 필요합니다.
 - `task_id`, `intent`, `close_reason`, `superseding_task_id`, `user_note`.
-- `intent=complete`, `intent=cancel`, `intent=supersede`와 `dry_run=false`에는 non-null `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
+- `intent=complete`, `intent=cancel`, `intent=supersede`와 `dry_run=false`에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `intent=check`에서는 `idempotency_key`와 `expected_state_version`이 `null`일 수 있고, `close_reason`은 `null`이어야 합니다.
 
 ### 접근 요구사항
@@ -1279,5 +1279,5 @@ next_actions:
 - 닫기 준비 상태 형태, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`: [API 상태 스키마](schema-state.md).
 - 닫기 상태, 생명주기, 닫기 이유, 차단 사유 값: [API 값 집합](schema-value-sets.md).
 - complete 닫기 준비 상태 순서와 정직한 닫기: [Core 모델](../core-model.md#close_task).
-- 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`harness.close_task` 닫기 준비 상태 평가 차단 사유](errors.md#harnessclose_task-close-blockers).
+- 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`harness.close_task` 닫기 준비 상태 평가와 닫기 차단 사유](errors.md#harnessclose_task-close-blockers).
 - 저장 효과와 상태 버전 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

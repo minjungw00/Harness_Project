@@ -53,7 +53,7 @@
 
 커밋된 차단 결과와 거절 응답은 다릅니다. `harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 [MVP API](api/mvp-api.md)가 차단 커밋을 허용할 때만 `MethodResult`입니다.
 
-`decision=blocked`, `decision=approval_required`, `decision=decision_required`인 커밋된 `dry_run=false` `PrepareWriteResult`는 메서드 상태 효과 계약이 그 판단 커밋을 허용할 때 응답과 재실행 페이로드에 `write_decision_reasons: WriteDecisionReason[]`를 담을 수 있습니다. 이 사유는 `prepare_write` 판단 사유이지 닫기 준비 상태 차단 사유도 아니고 `CloseReadinessBlocker[]`도 아니며 닫기 준비 상태 차단 사유 기록도 아닙니다. 이 분기는 소비 가능한 Write Authorization을 만들지 않고, `close_state`를 바꾸지 않고, 닫기 준비 상태 평가를 실행하지 않고, `CloseReadinessBlocker` 저장을 만들지 않으며, 증거를 갱신하거나, 아티팩트를 바꾸거나, 스테이징 핸들을 소비하거나, `close_task` 효과를 수행하면 안 됩니다.
+`decision=blocked`, `decision=approval_required`, `decision=decision_required`인 커밋된 `dry_run=false` `PrepareWriteResult`는 메서드 상태 효과 계약이 그 판단 커밋을 허용할 때 응답과 재실행 페이로드에 `write_decision_reasons: WriteDecisionReason[]`를 담을 수 있습니다. 이 사유는 `prepare_write` 판단 사유이지 닫기 준비 상태 평가 결과나 `CloseReadinessBlocker[]`가 아니며, 닫기 차단 사유 기록도 아닙니다. 이 분기는 소비 가능한 Write Authorization을 만들지 않고, `close_state`를 바꾸지 않고, 닫기 준비 상태 평가를 실행하지 않고, `CloseReadinessBlocker` 저장을 만들지 않으며, 증거를 갱신하거나, 아티팩트를 바꾸거나, 스테이징 핸들을 소비하거나, `close_task` 효과를 수행하면 안 됩니다.
 
 `CloseTaskResult(close_state=blocked)`는 닫기 준비 상태 평가가 실행되었고 `harness.close_task` 메서드 계약이 차단 결과 커밋을 허용할 때만 저장 효과가 있습니다. `blockers: CloseReadinessBlocker[]`를 포함할 수 있고, API/저장소 계약이 명시적으로 허용한 차단 사유 상태, `task_events`, 재실행 행, `project_state.state_version` 효과만 만들 수 있습니다. Task는 열린 상태로 남습니다. `STATE_VERSION_CONFLICT`에는 이 분기를 사용하면 안 됩니다. 그 코드는 사전 확인의 `ToolRejectedResponse` 분기에 속하며 재실행으로 저장하지 않습니다.
 

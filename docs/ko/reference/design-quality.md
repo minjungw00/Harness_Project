@@ -16,8 +16,8 @@
 
 이 문서는 담당하지 않습니다.
 
-- Core 생명주기, 관문, 차단 사유, `prepare_write`, `close_task`, Write Authorization, 최종 수락, 잔여 위험 수락, 대체 불가능 규칙. [Core Model 참조](core-model.md)를 봅니다.
-- MCP 요청/응답 스키마, `ValidatorResult`, `UserJudgment`, `AcceptedRiskInput`, 공개 오류, 현재/이후 스키마 값. [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API 판단 스키마](api/schema-judgment.md), [API Errors](api/errors.md)를 봅니다.
+- Core 생명주기, 관문, 차단 사유, `prepare_write`, `close_task`, Write Authorization, 최종 수락, 잔여 위험 수락, 대체 불가능 규칙. [Core 모델 참조](core-model.md)를 봅니다.
+- MCP 요청/응답 스키마, `ValidatorResult`, `UserJudgment`, `AcceptedRiskInput`, 공개 오류, 현재/이후 스키마 값. [MVP API](api/mvp-api.md), [API 코어 스키마](api/schema-core.md), [API 판단 스키마](api/schema-judgment.md), [API 오류](api/errors.md)를 봅니다.
 - SQLite DDL과 지속 테이블. [저장소 기록](storage-records.md)을 봅니다.
 - 검증기 실행 저장 효과. [저장 효과](storage-effects.md)를 봅니다.
 - 아티팩트 저장소. [아티팩트 저장소](storage-artifacts.md)를 봅니다.

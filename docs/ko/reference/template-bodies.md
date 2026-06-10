@@ -14,7 +14,7 @@
 이 문서는 담당하지 않습니다.
 
 - 상태 보기 권한, 최신성, 읽기 전용 파생 표시 규칙: [상태 보기 권한 참조](projection-and-templates.md)
-- 원천 상태나 저장소: [Core Model](core-model.md)과 저장소 담당 문서
+- 원천 상태나 저장소: [Core 모델](core-model.md)과 저장소 담당 문서
 - API 스키마나 값 집합: API 스키마 담당 문서
 - 이후 템플릿 후보: [이후 후보 색인](../later/index.md)
 
@@ -80,7 +80,7 @@
 ### 담당 문서 링크
 
 - [상태 보기 권한 참조](projection-and-templates.md): 읽기 전용 표시와 최신성 경계.
-- [Core Model](core-model.md): Core 권한과 닫기 준비 상태 의미.
+- [Core 모델](core-model.md): Core 권한과 닫기 준비 상태 의미.
 - [API 상태 스키마](api/schema-state.md): 상태 형태 표시 입력.
 - [API 판단 스키마](api/schema-judgment.md): 사용자 판단 참조.
 - [API 아티팩트 스키마](api/schema-artifacts.md): `ArtifactRef` 표시 입력.
@@ -126,7 +126,7 @@
 
 ### 담당 문서 링크
 
-- [Core Model](core-model.md): 사용자 소유 판단과 비대체 규칙.
+- [Core 모델](core-model.md): 사용자 소유 판단과 비대체 규칙.
 - [MVP API](api/mvp-api.md): 판단 요청과 기록 메서드 동작.
 - [API 판단 스키마](api/schema-judgment.md): `UserJudgment`, `SensitiveActionScope`, 수락된 위험 형태.
 - [보안](security.md): 민감 동작 승인 경계.
@@ -179,7 +179,7 @@
 
 ### 담당 문서 링크
 
-- [Core Model](core-model.md): 증거 의미와 비대체 규칙.
+- [Core 모델](core-model.md): 증거 의미와 비대체 규칙.
 - [MVP API](api/mvp-api.md): 실행/증거 메서드 동작.
 - [API 상태 스키마](api/schema-state.md): 증거 요약과 `ValidatorResult` 형태 표시 데이터.
 - [API 아티팩트 스키마](api/schema-artifacts.md)와 [아티팩트 저장소](storage-artifacts.md): 아티팩트 참조, 가용성, 본문 읽기 자격.
@@ -227,7 +227,7 @@
 
 ### 담당 문서 링크
 
-- [Core Model](core-model.md): 닫기 준비 상태, 정직한 닫기, 최종 수락, 잔여 위험 경계.
+- [Core 모델](core-model.md): 닫기 준비 상태, 정직한 닫기, 최종 수락, 잔여 위험 경계.
 - [MVP API](api/mvp-api.md): `harness.close_task` 동작.
 - [API 상태 스키마](api/schema-state.md): `CloseReadinessBlocker`.
 - [API 판단 스키마](api/schema-judgment.md): 최종 수락과 수락된 위험 입력 형태.
@@ -276,6 +276,6 @@
 
 - [에이전트 통합](agent-integration.md): 커넥터 맥락 규율과 역량 맥락.
 - [상태 보기 권한 참조](projection-and-templates.md): 읽기 전용 표시와 최신성 경계.
-- [Core Model](core-model.md): 권한, 사용자 소유 판단, 닫기 준비 상태, 잔여 위험 경계.
+- [Core 모델](core-model.md): 권한, 사용자 소유 판단, 닫기 준비 상태, 잔여 위험 경계.
 - [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [API 아티팩트 스키마](api/schema-artifacts.md): 패킷 입력 형태.
 - [보안](security.md): 보장 표현.

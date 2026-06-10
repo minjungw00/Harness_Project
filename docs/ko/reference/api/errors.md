@@ -131,7 +131,7 @@
 | 차단 경로 | 결과 데이터 | 오류 코드 규칙 |
 |---|---|---|
 | `decision=blocked`, `decision=approval_required`, `decision=decision_required`인 `PrepareWriteResult` | `write_decision_reasons: WriteDecisionReason[]` | 메서드 담당 판단 사유를 사용합니다. `CloseReadinessBlocker`를 반환하지 않습니다. |
-| 유효한 닫기 준비 상태 평가 뒤의 `CloseTaskResult(close_state=blocked)` | `blockers: CloseReadinessBlocker[]` | 닫기 준비 상태 차단 사유 매핑을 사용합니다. `STATE_VERSION_CONFLICT`를 쓰면 안 됩니다. |
+| 유효한 닫기 준비 상태 평가 뒤의 `CloseTaskResult(close_state=blocked)` | `blockers: CloseReadinessBlocker[]` | 닫기 차단 사유 매핑을 사용합니다. `STATE_VERSION_CONFLICT`를 쓰면 안 됩니다. |
 | `StatusResult.close_blockers`와 `harness.close_task intent=check` | 읽기 전용 `CloseReadinessBlocker` 관찰 데이터 | 읽기 때문에 저장된 차단 사유나 상태 버전 증가가 생기지 않습니다. |
 
 차단 결과는 메서드가 동작별 차단 결과를 반환했을 수 있다는 뜻입니다. 공개 전송 또는 스키마 오류가 아닙니다. 커밋된 차단 결과와 상태 효과는 [MVP API](mvp-api.md)와 [저장 효과](../storage-effects.md)가 허용해야 합니다.
@@ -184,7 +184,7 @@
 |---|---|---|
 | 닫기 준비 상태 평가 전 사전 확인 실패입니다. 오래된 상태, 오래된 Write Authorization 근거, 멱등성 충돌, 검증 실패, 로컬 접근 실패, 역량 실패, Core 상태 읽기 실패, Project/Task 식별 실패가 포함됩니다. | `ToolRejectedResponse.errors[]` | `STATE_VERSION_CONFLICT`와 다른 커밋 전 오류는 거부 응답에 남습니다. `CloseReadinessBlocker` 항목을 반환하지 않습니다. |
 | 유효한 읽기인 `intent=check`입니다. | 읽기 전용 `CloseTaskResult` | `CloseReadinessBlocker` 관찰 데이터를 반환할 수 있습니다. 저장된 차단 사유와 상태 버전 증가가 없습니다. |
-| 유효한 평가에서 닫기 준비 상태 차단 사유를 찾은 `intent=complete`입니다. | `CloseTaskResult(close_state=blocked)` | `CloseReadinessBlocker[]`를 반환할 수 있습니다. `STATE_VERSION_CONFLICT`는 금지됩니다. |
+| 유효한 평가에서 닫기 차단 사유를 찾은 `intent=complete`입니다. | `CloseTaskResult(close_state=blocked)` | `CloseReadinessBlocker[]`를 반환할 수 있습니다. `STATE_VERSION_CONFLICT`는 금지됩니다. |
 | 담당 문서가 정의한 complete 차단 사유가 더 없어진 `intent=complete`입니다. | `CloseTaskResult(close_state=closed)` | 닫기 차단 사유가 없습니다. |
 | 종료 전이가 유효하지 않은 `intent=cancel` 또는 `intent=supersede`입니다. | 메서드 담당 결과 또는 거부 경로 | 차단 사유는 전이 유효성으로 제한합니다. 취소나 대체에 증거 충분성, 최종 수락, 잔여 위험 수락을 요구하지 않습니다. |
 
