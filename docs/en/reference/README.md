@@ -1,48 +1,46 @@
 # Reference Index
 
-Use Reference when you need the owner document for an exact Harness planning contract. It is an index for future Harness Server review, not a first-read tutorial and not the implementation plan.
+Use this index to choose the single canonical owner for an exact Harness planning contract. This README routes; it does not define schemas, DDL, state effects, security guarantees, template bodies, or active MVP scope.
 
-These documents describe future Harness Server contracts under current documentation review. They do not mean a server/runtime, Harness Runtime Home, generated projection system, conformance runner, runtime data, or implementation-complete behavior exists in this repository today.
+These documents remain source material for a future Harness Server. They do not mean this repository contains a server/runtime implementation, Harness Runtime Home, runtime state, generated projections, executable fixtures, or implementation-complete behavior.
 
 ## Reading Rules
 
-- Do not load all Reference docs by default. Pick the one owner document for the question in front of you, then follow links only when that owner delegates a stricter detail.
-- Do not load English and Korean paired docs for the same owner in the same prompt. Choose the working language for the task, and keep bilingual comparison to a separate, targeted check.
-- Keep this README as an index. Do not copy contract details here.
-- Keep the active/later boundary with the active owner documents and [Later Candidate Index](../later/index.md).
+- Pick one owner document for the contract question in front of you.
+- Do not load all Reference docs by default.
+- Do not load paired English and Korean docs for the same owner in one prompt unless the task is translation or semantic-parity review.
+- If a non-owner repeats a contract, update the owner first, then replace the duplicate with a short consequence and a route here.
 
-## Active MVP Boundary
+## Canonical Owners
 
-The current active MVP is closed in [MVP Plan](../build/mvp-plan.md). It includes ordinary-language intake and Task creation, `harness.update_scope`, user judgment recording, sensitive approval recording, path-level `harness.prepare_write` and Write Authorization, `harness.record_run` with `access_class=run_recording`, artifact staging through `harness.stage_artifact` with `access_class=artifact_registration`, staged artifact promotion after `StagedArtifactHandle` provenance and scope validation, persistent `existing_artifact` / `ArtifactRef` linking, separate artifact body reads with `access_class=artifact_read`, compact `EvidenceSummary`, `harness.close_task` blocker calculation, read-time read-only status/projection output, verified local surface access through a registered surface, cooperative guarantee display, and detective guarantee display only after the relevant capability check has actually passed.
-
-For dry-run response branch selection, use [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md), and [API Errors](api/errors.md). `ToolDryRunResponse` is a valid dry-run preview response for selected operations that could otherwise create a Core commit or staging side effect; it is not the response for every `dry_run=true` request. Read-only selections such as `harness.status dry_run=true` and `harness.close_task intent=check dry_run=true` return actual method results, `StatusResult` or `CloseTaskResult`, with `base.dry_run=true` and `effect_kind=read_only`.
-
-Everything else is later-only unless the owning Reference document explicitly promotes it with scope, fallback behavior, and proof expectations. That includes `captured_artifact`, native artifact capture, projection reconcile, persistent projection jobs, managed block drift repair, full Evidence Manifest, `qa_gate`, `verification_gate`, command execution observation, network observation, secret access observation, command/network/secret pre-tool blocking, Question Queue, Assumption Register, and Discovery Brief as a persistent artifact. Use [Later Candidate Index](../later/index.md) for later-only names and promotion boundaries.
-
-## Owner Routing
-
-The table routes agents and implementers to the compact owner documents that currently exist.
-
-| Contract area | Owner document |
+| Contract area | Canonical owner |
 |---|---|
-| Active MVP boundary, excluded later material, implementation sequencing, and maintainer readiness decisions | [MVP Plan](../build/mvp-plan.md) |
-| Core authority, task lifecycle, `ShapingReadiness` meaning, user-owned product/technical/scope/sensitive/final/residual-risk/cancellation judgment boundaries, final/residual-risk non-substitution, active gate meaning, `CompletionPolicy` close effect, `EvidenceSummary` close effect, separation between `prepare_write` write decision evaluation and `close_task` close readiness evaluation, close-readiness evaluation ordering, semantic close-readiness finding meaning for `CloseReadinessBlocker` including `write_compatibility` and `recovery`, waivers, and residual risk | [core-model.md](core-model.md) |
-| Method-level behavior for active public API methods, method-specific response unions and `MethodResult` branches, method state effects, verified local surface request conditions, request-level `VerifiedSurfaceContext.access_class`, `harness.update_scope`, `harness.prepare_write` authorization effects and `PrepareWriteResult.write_decision_reasons`, `harness.stage_artifact` with `artifact_registration`, `harness.record_run` with `run_recording`, staged artifact promotion, artifact body reads with `artifact_read`, `harness.status` response fields including `StatusResult.close_blockers`, `harness.close_task` response branches and `CloseTaskResult.blockers`, and dry-run response fields | [api/mvp-api.md](api/mvp-api.md) |
-| Exact active method-name set, `ToolEnvelope.expected_state_version`, common response branches including `ToolResultBase`, `ToolRejectedResponse`, and `ToolDryRunResponse`, shared `ToolError` and `EventRef` shapes, blocker-like schema type ownership and data-shape/effect separation for `ToolError`, `WriteDecisionReason`, `CloseReadinessBlocker`, and `PlannedBlocker`, `response_kind`, `effect_kind`, `LocalSurfaceRegistration`, `VerifiedSurfaceContext.access_class`, active access-class values including `run_recording`, `artifact_registration`, and `artifact_read`, `StagedArtifactHandle`, `ArtifactInput` including `existing_artifact`, `CompletionPolicy`, `EvidenceSummary`, `SensitiveActionScope`, product-file `AuthorizedAttemptScope`, `ShapingReadiness` fields, active enum/value sets, rendered-label boundaries, and `GuaranteeDisplay.level` values | [api/schema-core.md](api/schema-core.md) |
-| Public `ErrorCode` contract, error precedence, local surface errors, `STATE_VERSION_CONFLICT`, preflight rejection meaning, pre-commit failure errors in `ToolRejectedResponse.errors: ToolError[]`, rejected/blocked/dry-run error boundaries, forbidden blocker-code rules for `WriteDecisionReason`, `CloseReadinessBlocker`, and `PlannedBlocker`, committed blocked result boundaries, and public error mapping for `close_task` blockers | [api/errors.md](api/errors.md) |
-| Storage, DDL, `project_state.state_version` as the single public project-wide state clock, `surfaces`, `write_authorizations`, staged artifact storage, staged artifact promotion persistence, persistent `existing_artifact` / `ArtifactRef` linking, artifact body-read storage eligibility, persisted evidence-summary rows, idempotency, effect differences between read-only observation, dry-run preview, and committed blocked result, data-shape/persistence separation for close-readiness findings, and migrations | [storage.md](storage.md) |
-| Runtime spaces, mutation authority, Product Repository / Harness Server / Runtime Home separation, and non-isolation / OS-sandboxing non-claims | [runtime-boundaries.md](runtime-boundaries.md) |
-| Security guarantees, cooperative/detective wording, capability-backed detective gating, OS-sandboxing non-claims, sensitive-action permission versus product-file write scope, and profile-gated `preventive` / `isolated` labels | [security.md](security.md) |
-| Agent context, connector behavior, `capability_profile`, verified surface context in agent packets, detective display gating from capability checks, fallback semantics, surface recipes, and one-language-per-`doc_id` retrieval | [agent-integration.md](agent-integration.md) |
-| Read-only projections/status cards as derived display, projection authority boundaries, rendered labels, active templates, freshness wording, and the boundary that projection reconcile, persistent projection jobs, and managed block drift repair are later-only | [projection-and-templates.md](projection-and-templates.md) |
-| Conformance model, future fixture shape, assertion authority, active smoke-target examples, capability honesty assertions, and non-executable suite boundary | [conformance.md](conformance.md) |
-| Narrow design-quality routing, close impact, waiver boundary, and validator ID boundary | [design-quality.md](design-quality.md) |
-| Official terms | [glossary.md](glossary.md) |
-| Later-only concepts and promotion boundaries, including `captured_artifact`, native artifact capture, projection reconcile, persistent projection jobs, managed block drift repair, full Evidence Manifest, `qa_gate`, `verification_gate`, full-format judgment presentation, future fixture families, and future operations | [../later/index.md](../later/index.md) |
-| Documentation authoring rules, owner-boundary hygiene, active/later checks, Korean quality, semantic parity, maintain checks for public error-code, access-class, and artifact-lifecycle consistency, and translation rules | [Authoring Guide](../maintain/authoring-guide.md), [Translation Guide](../maintain/translation-guide.md), and [Checks](../maintain/checks.md) |
+| Current MVP scope | [active-mvp-scope.md](active-mvp-scope.md) |
+| Core product concepts and user-owned judgment | [core-model.md](core-model.md) |
+| API method behavior | [api/mvp-api.md](api/mvp-api.md) |
+| Common API envelope and response branches | [api/schema-core.md](api/schema-core.md) |
+| API state schemas | [api/schema-state.md](api/schema-state.md) |
+| API artifact schemas | [api/schema-artifacts.md](api/schema-artifacts.md) |
+| API judgment schemas | [api/schema-judgment.md](api/schema-judgment.md) |
+| API value sets and enum-like values | [api/schema-value-sets.md](api/schema-value-sets.md) |
+| Public API errors | [api/errors.md](api/errors.md) |
+| Storage records | [storage-records.md](storage-records.md) |
+| Storage effects | [storage-effects.md](storage-effects.md) |
+| Artifact storage lifecycle | [storage-artifacts.md](storage-artifacts.md) |
+| State versioning, idempotency, locks, and migrations | [storage-versioning.md](storage-versioning.md) |
+| Runtime, repository, and server boundaries | [runtime-boundaries.md](runtime-boundaries.md) |
+| Security claims and non-claims | [security.md](security.md) |
+| Agent connector reference | [agent-integration.md](agent-integration.md) |
+| Surface-specific usage recipes | [../use/surface-recipes.md](../use/surface-recipes.md) |
+| Projection authority | [projection-and-templates.md](projection-and-templates.md) |
+| Template bodies | [template-bodies.md](template-bodies.md) |
+| Later candidates | [../later/index.md](../later/index.md) |
+| Terminology | [glossary.md](glossary.md), [Translation Guide](../maintain/translation-guide.md), and [docs/terminology-map.yaml](../../terminology-map.yaml) |
+| Documentation authoring rules | [Authoring Guide](../maintain/authoring-guide.md) |
+| Documentation checks | [Checks](../maintain/checks.md) |
 
-## No Duplicate Injection
+## Non-Owner Routing
 
-Non-owner docs may summarize the reader-visible consequence and link to the owner. They should not paste schemas, DDL, enum tables, transition tables, template bodies, fixture assertions, public error precedence, security guarantees, or glossary definitions.
+README, Start, Use, Build, Maintain, and route/index documents may summarize reader-visible consequences, but they must not become secondary sources of truth for technical contracts. They should route to this index or to the canonical owner selected from it.
 
-Documentation authoring, translation, review, link hygiene, owner-boundary drift, and docs-maintenance checks belong to [Authoring Guide](../maintain/authoring-guide.md), [Translation Guide](../maintain/translation-guide.md), and [Checks](../maintain/checks.md). Implementation sequencing and maintainer status decisions belong to [MVP Plan](../build/mvp-plan.md).
+Broad compatibility pages that remain for older links, such as [storage.md](storage.md), are routing aids only when a split owner exists.

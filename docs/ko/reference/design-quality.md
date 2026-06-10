@@ -17,8 +17,11 @@
 
 - Core 생명주기, 관문, 차단 사유, `prepare_write`, `close_task`, Write Authorization, 최종 수락, 잔여 위험 수락, 대체 불가능 규칙. [Core Model 참조](core-model.md)를 봅니다.
 - MCP 요청/응답 스키마, `ValidatorResult`, 공개 오류, active/later 스키마 값. [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md)를 봅니다.
-- SQLite DDL, 지속 테이블, validator-run 저장소, 아티팩트 저장소. [Storage](storage.md)를 봅니다.
-- 상태 보기 템플릿 본문, 상태 카드, 렌더링된 보고서. [Projection과 Template 참조](projection-and-templates.md)를 봅니다.
+- SQLite DDL과 지속 테이블. [저장소 기록](storage-records.md)을 봅니다.
+- validator-run 저장 효과. [저장 효과](storage-effects.md)를 봅니다.
+- 아티팩트 저장소. [아티팩트 저장소](storage-artifacts.md)를 봅니다.
+- 상태 보기 권한. [Projection과 템플릿 참조](projection-and-templates.md)를 봅니다.
+- 템플릿 본문, 상태 카드, 렌더링된 보고서. [템플릿 본문](template-bodies.md)을 봅니다.
 - 넓은 설계 정책 validator, 설계 정책 waiver, 심각도 기반 활성 차단 정책, steward 정책, 전체 검토 절차, 운영/보고 후보, 향후 적합성 목록.
 
 이 저장소의 문서는 계획용 자료입니다. 지금 이 저장소에 하네스 서버, 런타임 상태, 생성된 증거, QA 기록, 수락 기록, 잔여 위험 기록, 닫기 기록이 있다는 뜻이 아닙니다.
@@ -68,7 +71,7 @@
 
 발견 사항이 도메인 언어, 세로 조각 형태, TDD, 모듈/인터페이스 검토, stewardship, 수동 QA, 분리형 검증, 검토 단계, 향후 정책 후보를 언급한다는 이유만으로 닫기를 차단하지 않습니다. 활성 담당 경로가 좁은 행동을 필요로 할 때만 조언성 다음 행동, 증거 요청, 집중된 사용자 판단, 잔여 위험 표시로 이어질 수 있습니다.
 
-설계 품질 관찰 사항이 닫기에 영향을 주더라도 close 가능성 평가의 닫기 차단 사유는 [API Schema Core](api/schema-core.md#current-mvp-value-sets)가 담당하는 활성 `CloseReadinessBlocker.category` 값 중 하나를 사용해야 합니다. 예를 들면 `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `residual_risk_acceptance`, `surface_capability`, `baseline`, `recovery`, `cancellation`, `supersession`입니다.
+설계 품질 관찰 사항이 닫기에 영향을 주더라도 닫기 준비 상태 평가의 닫기 차단 사유는 [API 값 집합](api/schema-value-sets.md)이 담당하는 활성 `CloseReadinessBlocker.category` 값을 사용해야 합니다.
 
 ## 5. 현재 설계 정책 waiver 없음
 
@@ -78,7 +81,7 @@
 
 - `final_acceptance`는 닫기 근거가 보인 뒤 사용자가 결과를 판단하는 것입니다. 증거를 만들거나 잔여 위험을 수락하지 않습니다.
 - `residual_risk_acceptance`는 이름 붙은 보이는 잔여 위험을 수락합니다. 정확성을 증명하거나 최종 수락을 대신하지 않습니다.
-- 현재 MVP의 활성 `UserJudgment.judgment_kind` 값은 [API Schema Core](api/schema-core.md#current-mvp-value-sets)에 있는 일곱 값뿐입니다. 그 밖의 향후 후보는 승격 전까지 [이후 후보 색인](../later/index.md)에 남습니다.
+- 현재 MVP의 활성 `UserJudgment.judgment_kind` 값은 [API 값 집합](api/schema-value-sets.md)이 담당합니다. 그 밖의 향후 후보는 승격 전까지 [이후 후보 색인](../later/index.md)에 남습니다.
 
 넓은 승인, "looks good" 같은 말, 일반적인 진행 승인은 활성 담당 경로가 그 특정 판단을 물은 경우가 아니라면 위 판단으로 취급하면 안 됩니다.
 
@@ -100,7 +103,7 @@
 
 Validator ID는 보고용 라벨입니다. Core 불변조건, gate, 닫기 차단 사유, 면제, 증거 기록, 사용자 판단을 만들지 않습니다.
 
-`ValidatorResult` 형태와 `severity` 값은 [API Schema Core](api/schema-core.md#validatorresult)가 담당합니다. 활성 안정 `ValidatorResult.validator_id` 집합은 [API Schema Core: 현재 MVP 값 집합](api/schema-core.md#current-mvp-value-sets)에 있는 값으로 제한됩니다. 그 표에 `surface_capability_check`만 있다면 그것이 유일한 활성 안정 validator ID입니다.
+`ValidatorResult` 형태는 [API 상태 스키마](api/schema-state.md)가 담당합니다. `severity` 형태 값과 활성 안정 `ValidatorResult.validator_id` 집합은 [API 값 집합](api/schema-value-sets.md)이 담당합니다.
 
 이 문서는 활성 설계 정책 validator ID나 정책-검증기 매핑을 제공하지 않습니다. 이후 안정 validator ID 집합은 담당 문서가 좁은 활성 계약으로 승격하기 전까지 [이후 후보 색인: 이후 스키마 후보](../later/index.md#later-schema-candidates)의 후보로 남습니다.
 

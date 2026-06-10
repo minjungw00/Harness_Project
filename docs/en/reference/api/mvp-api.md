@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to look up the active current MVP API surface. It owns method-level request, response, state effect, storage owner, error, and security boundary summaries for the active method-name value set owned by [API Schema Core](schema-core.md#current-mvp-value-sets).
+Use this reference to look up the active current MVP API surface. It owns method-level request, response, state effect, storage owner, error, and security boundary summaries for the active method-name value set owned by [API Value Sets](schema-value-sets.md).
 
 This document describes future Harness Server behavior for planning and review. No Harness runtime or server implementation exists in this repository today. Future API or schema candidates are cataloged in [Later Candidate Index](../../later/index.md), not in this active reference. Storage DDL and full shared schema bodies are owned outside this method reference.
 
@@ -18,7 +18,7 @@ Requirement shaping uses the active Task, Change Unit, `user_judgment`, evidence
 
 ## Active MVP Method Behavior
 
-The exact active method-name value set is owned by [API Schema Core](schema-core.md#current-mvp-value-sets). This page owns the behavior of those current methods:
+The exact active method-name value set is owned by [API Value Sets](schema-value-sets.md). This page owns the behavior of those current methods:
 
 | Method | Active role |
 |---|---|
@@ -93,7 +93,7 @@ Read-only calls may compute and return blockers, close blockers, next actions, a
 
 Only committed non-dry-run mutations create `tool_invocations` replay rows. A replay with the same `idempotency_key` and same request hash returns the existing committed response. The same key with a different request hash returns `STATE_VERSION_CONFLICT`. `dry_run` calls and pre-commit failures do not create or reserve replay rows.
 
-Error codes, primary error precedence, idempotency, stale-state behavior, close blocker ordering, and user-facing error labels are owned by [API Errors](errors.md). Shared schemas and active value sets are owned by [API Schema Core](schema-core.md).
+Error codes, primary error precedence, idempotency, stale-state behavior, close blocker ordering, and user-facing error labels are owned by [API Errors](errors.md). Common envelopes and response branches are owned by [API Schema Core](schema-core.md); state, artifact, judgment, and value-set schemas are owned by the split API schema owners.
 
 Local access classes are Harness API compatibility classes, not OS permission classes. `ToolEnvelope.surface_id` is required for every public request, but it is only a selector. It is not an authority proof and must match a server-derived [`VerifiedSurfaceContext`](schema-core.md#local-surface-access-values) before the API can rely on the surface. The server derives `VerifiedSurfaceContext` from the local transport/session/binding and the stored `LocalSurfaceRegistration`, not from user prose, generated Markdown, Product Repository files, projections, chat text, or agent memory. The same server-derived context is the only source for staged-handle `created_by_surface_id` and `created_by_surface_instance_id` provenance.
 
@@ -155,7 +155,7 @@ IntakeResult:
 `IntakeResult.state.mode` exposes the resolved concrete mode. It must not be `auto`; later status summaries must also expose the resolved mode rather than the intake request value. `IntakeResult.state.shaping_readiness` exposes the derived readiness view for the current next safe action.
 For this state-effecting method, `dry_run=true` returns `ToolDryRunResponse` when the request is otherwise valid and previewable; its `DryRunSummary` may describe the Task or Change Unit that would be created, updated, or resumed through `PlannedEffect` entries, but it does not create a Task or Change Unit and does not return a real `task_ref` or `change_unit_ref`.
 
-- **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial scope candidate in `change_units` for write-capable resolved `direct` or `work`, update blockers, append events, create a committed replay row, and increment `project_state.state_version` exactly once. If the request is still not writable, the Task remains or becomes `lifecycle_phase=shaping` with the current goal summary, known scope/non-goals, affected areas or paths, acceptance criteria, Autonomy Boundary, first Change Unit status, named user-owned blocker category when one blocks the next safe action, and one next safe action represented through active Task, Change Unit, user-judgment, evidence, or blocker fields. If the request is already concrete enough for write-capable work, intake may establish enough initial scope for a ready path, but the first product write still requires `harness.prepare_write`. Later changes to the active goal, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline, or active Change Unit belong to `harness.update_scope`. The method name is not a persisted lifecycle value; created or resumed Tasks must use the active `Task.lifecycle_phase` value set from [API Schema Core](schema-core.md#current-mvp-value-sets). `dry_run` and pre-commit failure create none of these and do not increment `state_version`.
+- **State effect:** A committed non-dry-run call may create or resume `tasks`, set `project_state.active_task_id`, create an initial scope candidate in `change_units` for write-capable resolved `direct` or `work`, update blockers, append events, create a committed replay row, and increment `project_state.state_version` exactly once. If the request is still not writable, the Task remains or becomes `lifecycle_phase=shaping` with the current goal summary, known scope/non-goals, affected areas or paths, acceptance criteria, Autonomy Boundary, first Change Unit status, named user-owned blocker category when one blocks the next safe action, and one next safe action represented through active Task, Change Unit, user-judgment, evidence, or blocker fields. If the request is already concrete enough for write-capable work, intake may establish enough initial scope for a ready path, but the first product write still requires `harness.prepare_write`. Later changes to the active goal, scope boundary, non-goals, acceptance criteria, autonomy boundary, baseline, or active Change Unit belong to `harness.update_scope`. The method name is not a persisted lifecycle value; created or resumed Tasks must use the active `Task.lifecycle_phase` value set from [API Value Sets](schema-value-sets.md). `dry_run` and pre-commit failure create none of these and do not increment `state_version`.
 - **Errors:** `VALIDATION_FAILED`, `STATE_VERSION_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `NO_ACTIVE_TASK`, `VALIDATOR_FAILED`.
 - **Storage owner:** `project_state`, `tasks`, `change_units`, `blockers`, `task_events`, and `tool_invocations`.
 - **Security boundary:** Intake records scope and the resolved concrete mode. It does not authorize local access, sensitive actions, product writes, or stronger guarantee levels.

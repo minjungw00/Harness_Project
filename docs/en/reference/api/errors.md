@@ -31,7 +31,7 @@ These structures must not be substituted for one another. `prepare_write decisio
 
 ## Current MVP Guarantee Display And Profile-Gated Claim Taxonomy
 
-`guarantee_display.level` uses the current MVP values `cooperative` and `detective` unless a promoted profile explicitly supports a profile-gated display value. Security meaning is owned by [Security Reference: Honest guarantee display](../security.md#honest-guarantee-display), and the exact value-set boundary is owned by [API Schema Core](schema-core.md#current-mvp-value-sets).
+`guarantee_display.level` uses the current MVP values `cooperative` and `detective` unless a promoted profile explicitly supports a profile-gated display value. Security meaning is owned by [Security Reference: Honest guarantee display](../security.md#honest-guarantee-display), and the exact value-set boundary is owned by [API Value Sets](schema-value-sets.md).
 
 Requesting or displaying a profile-gated guarantee display value without profile support is a claim-boundary error, not evidence that the guarantee claim is supported. Use `CAPABILITY_INSUFFICIENT` when the surface lacks the needed blocking, isolation, observation, or proof-path support, including command, network, or secret-access observation. Use `VALIDATION_FAILED` when the requested value is not valid for the active profile or request shape. Neither error implies current runtime enforcement in this documentation-only repository.
 
@@ -261,7 +261,7 @@ The first internal documentation smoke target in [MVP Plan](../../build/mvp-plan
 
 ## `harness.close_task` Close Readiness Blockers
 
-`CloseTaskResult.blockers` must use structured `CloseReadinessBlocker` objects from [API Schema Core](schema-core.md#current-position-display-schemas). `CloseReadinessBlocker` is a data shape for close-readiness findings; it does not itself mean a stored blocker or any state effect. Prose-only status text, report text, rendered views, or agent summaries are not close-readiness blocker results.
+`CloseTaskResult.blockers` must use structured `CloseReadinessBlocker` objects from [API State Schemas](schema-state.md). `CloseReadinessBlocker` is a data shape for close-readiness findings; it does not itself mean a stored blocker or any state effect. Prose-only status text, report text, rendered views, or agent summaries are not close-readiness blocker results.
 
 `harness.close_task` has a close preflight rejection boundary before close-readiness evaluation. These conditions must return `ToolRejectedResponse` and must not return `CloseTaskResult(close_state=blocked)`:
 

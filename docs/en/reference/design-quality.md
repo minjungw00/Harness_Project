@@ -17,8 +17,11 @@ It does not own:
 
 - Core lifecycle, gates, blockers, `prepare_write`, `close_task`, Write Authorization, final acceptance, residual-risk acceptance, or non-substitution rules; see [Core Model Reference](core-model.md)
 - MCP request/response schemas, `ValidatorResult`, public errors, or active/later schema values; see [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md)
-- SQLite DDL, persisted tables, validator-run storage, or artifact storage; see [Storage](storage.md)
-- projection template bodies, status cards, or rendered reports; see [Projection And Templates Reference](projection-and-templates.md)
+- SQLite DDL and persisted tables; see [Storage Records](storage-records.md)
+- validator-run storage effects; see [Storage Effects](storage-effects.md)
+- artifact storage; see [Artifact Storage](storage-artifacts.md)
+- projection authority; see [Projection And Templates Reference](projection-and-templates.md)
+- template bodies, status cards, or rendered reports; see [Template Bodies](template-bodies.md)
 - broad design-policy validators, design-policy waiver, severity-based active blocking policy, steward policies, full review procedure, operations/reporting candidates, or future conformance catalogs
 
 Documentation in this repository remains planning source material. It does not mean a Harness Server, runtime state, generated evidence, QA record, Acceptance record, residual-risk record, or close record exists here today.
@@ -68,7 +71,7 @@ A design-quality observation blocks close only when all of these are true:
 
 A finding does not block close merely because it mentions domain language, vertical slice shape, TDD, module/interface review, stewardship, Manual QA, detached verification, review stages, or a future policy family. Those may produce an advisory next action, an evidence request, a focused user judgment, or a residual-risk marker only when an active owner path needs that narrow action.
 
-When a design-quality observation affects close, the close-readiness finding must use one of the active `CloseReadinessBlocker.category` values owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets), such as `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `residual_risk_acceptance`, `surface_capability`, `baseline`, `recovery`, `cancellation`, or `supersession`.
+When a design-quality observation affects close, the close-readiness finding must use an active `CloseReadinessBlocker.category` value owned by [API Value Sets](api/schema-value-sets.md).
 
 ## 5. No Current Design-Policy Waiver
 
@@ -78,7 +81,7 @@ Keep the judgment routes separate:
 
 - `final_acceptance` is the user's result judgment after the close basis is visible; it does not create evidence or accept residual risk.
 - `residual_risk_acceptance` accepts a named visible residual risk; it does not prove correctness or replace final acceptance.
-- The only active current MVP `UserJudgment.judgment_kind` values are the seven values listed in [API Schema Core](api/schema-core.md#current-mvp-value-sets). Other future candidates stay in [Later](../later/index.md) until promoted.
+- Active current MVP `UserJudgment.judgment_kind` values are owned by [API Value Sets](api/schema-value-sets.md). Other future candidates stay in [Later](../later/index.md) until promoted.
 
 Broad approval, a friendly "looks good", or a general go-ahead must not be treated as any of these judgments unless the active owner path asked for that specific judgment.
 
@@ -100,7 +103,7 @@ Chat assertions, generic summaries, rendered projection prose, unregistered file
 
 Validator IDs are reporting labels. They do not create Core invariants, gates, close blockers, waivers, evidence records, or user judgments.
 
-`ValidatorResult` shape and severity values are owned by [API Schema Core](api/schema-core.md#validatorresult). The active stable `ValidatorResult.validator_id` set is limited to the values in [API Schema Core: Current MVP Value Sets](api/schema-core.md#current-mvp-value-sets). If `surface_capability_check` is the only value listed there, it is the only active stable validator ID.
+`ValidatorResult` shape is owned by [API State Schemas](api/schema-state.md). Severity-like values and the active stable `ValidatorResult.validator_id` set are owned by [API Value Sets](api/schema-value-sets.md).
 
 This document does not publish active design-policy validator IDs or a policy-to-validator mapping. Later stable validator ID sets remain candidates in [Later Candidate Index: Later Schema Candidates](../later/index.md#later-schema-candidates) unless an owner promotes a narrow active contract.
 

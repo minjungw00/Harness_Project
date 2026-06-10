@@ -1,804 +1,127 @@
 # API Schema Core
 
-## 이 문서로 할 수 있는 일
+이 문서는 현재 MVP의 공통 API envelope와 응답 분기 스키마를 담당합니다. 문서 원천 자료일 뿐이며 메서드 동작, 저장 효과, 아티팩트 생명주기, 사용자 판단 의미, 활성 값 집합을 정의하지 않습니다.
 
-현재 MVP에서 쓰는 활성 메서드 이름 집합, 공용 API 형태, 닫힌 스키마 값 집합을 확인할 때 이 참조를 사용합니다. `ToolEnvelope`, 응답 분기, `DryRunSummary`, `PlannedEffect`, `PlannedBlocker`, `ArtifactRef`, `StateRecordRef`, `ShapingReadiness`, `UserJudgment`, Write Authorization 요약, `WriteDecisionReason`, `CompletionPolicy`, 증거 요약, 실행 요약, close 가능성 평가의 닫기 차단 사유, 다음 행동 요약, 현재 MVP enum 값을 다룹니다.
+## 담당하는 것 / 담당하지 않는 것
 
-이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 현재 문서 저장소에 MCP 서버가 구현되어 있다는 뜻이 아닙니다. 향후 스키마 후보는 [이후 후보 색인](../../later/index.md#later-schema-candidates)에 남습니다.
+이 문서가 담당합니다.
 
-## 계약 위치 지도
+- `ToolEnvelope`
+- 공통 응답 분기 구조
+- `ToolResultBase`
+- `ToolRejectedResponse`
+- `ToolDryRunResponse`
+- 공통 응답 메타데이터 필드와 분기 구분
+- 응답 분기를 보조하는 공통 `ToolError`와 `EventRef` 형태
 
-| 필요한 것 | 담당 문서 |
-|---|---|
-| 정확한 활성 메서드 이름 값 집합과 공용 스키마 값 집합 | 이 문서 |
-| `ToolEnvelope.surface_id`, `LocalSurfaceRegistration`, `VerifiedSurfaceContext`, 로컬 접점 접근 값 집합, 보장 표시에 쓰이는 `capability_profile` 값 집합 | 이 문서 |
-| 활성 메서드별 요청/응답 동작 | [MVP API](mvp-api.md) |
-| 공개 오류, 우선순위, 멱등성, 차단 응답, 오래된 상태 동작 | [API Errors](errors.md) |
-| Core 상태 의미, 구체화 준비 상태 의미, lifecycle 의미 | [Core Model 참조](../core-model.md) |
-| 저장소 테이블, JSON `TEXT`, enum hardening, artifact persistence | [Storage](../storage.md) |
-| 보안 보장 의미 | [보안 참조](../security.md) |
-| 향후 API/스키마 후보 | [이후 후보 색인](../../later/index.md#later-schema-candidates) |
+이 문서는 담당하지 않습니다.
+
+- 메서드 동작: [MVP API](mvp-api.md)
+- API 상태 스키마: [API 상태 스키마](schema-state.md)
+- API 아티팩트 스키마: [API 아티팩트 스키마](schema-artifacts.md)
+- API 판단 스키마: [API 판단 스키마](schema-judgment.md)
+- API 값 집합과 enum 형태 값: [API 값 집합](schema-value-sets.md)
+- 공개 오류 코드와 우선순위: [API Errors](errors.md)
+- 저장소 기록과 효과: [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md)
 
 ## 스키마 표기 규칙
 
-이 문서의 YAML 형식 표기는 예시라고 표시하지 않는 한 규범 스키마 표기입니다.
-
-- `field: Type`은 그 필드를 선언한 객체나 응답 공용체 분기 안에서 필드가 필수이고 non-null이라는 뜻입니다. 한 응답 분기에서 필수인 필드는 다른 분기에도 그 필드가 선언되어 있을 때만 필수입니다.
-- `field: Type | null`은 필드가 필수이고 JSON `null`을 허용한다는 뜻입니다.
-- `Type[]`은 필드가 존재하고 배열을 담는다는 뜻입니다. 빈 배열은 `[]`로 씁니다.
-- `a | b | c`는 해당 필드의 닫힌 활성 enum입니다.
-- later, reserved, profile-gated 이름은 활성 enum 표기나 활성 값 표에 넣지 않습니다. 담당 문서가 승격하기 전까지 [이후 후보 색인](../../later/index.md)에 남깁니다.
-- 명시되지 않은 필드는 명시적인 확장 컨테이너 밖에서 거부됩니다.
-
-저장소 검증은 별도 담당 문서 경계입니다. API 페이로드와 API 형태로 저장되는 JSON은 먼저 이 API 참조로 검증합니다. DDL, 저장소 전용 JSON, 기본값, 잠금, 마이그레이션은 [Storage](../storage.md)가 담당합니다.
-
-[현재 MVP 값 집합](#current-mvp-value-sets)은 정확한 활성 메서드 이름 집합과 이 문서가 선언하는 활성 스키마 enum 값을 담당합니다. 메서드별 동작은 [MVP API](mvp-api.md)가 담당하고, 공개 `ErrorCode` 분류는 [API Errors](errors.md)가 담당합니다.
+이 문서의 스키마 블록은 계획 표기입니다. 생성된 코드가 아니라 향후 API 계약 형태를 설명합니다.
 
 <a id="tool-envelope"></a>
+## ToolEnvelope
 
-## ToolEnvelope 봉투
-
-모든 공개 도구 요청은 `ToolEnvelope`를 가집니다. 커밋되는 `dry_run=false` 상태 변경 도구는 non-null `idempotency_key`와 현재 프로젝트 전체 `project_state.state_version`에 맞는 `expected_state_version`을 요구합니다. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key`와 `expected_state_version`을 `null`로 둘 수 있습니다. `harness.stage_artifact`는 임시 스테이징 핸들만 만들며 Core 상태 전이가 아닙니다. 읽기 전용 호출은 멱등 키를 요구하거나 예약하지 않습니다. 메서드별 상태 효과는 [현재 MVP API](mvp-api.md#active-mvp-method-behavior)가 담당합니다.
+`ToolEnvelope`는 메서드 담당 문서가 다르게 말하지 않는 한 공개 메서드가 사용하는 공통 요청 envelope입니다.
 
 ```yaml
 ToolEnvelope:
+  project_id: string
+  actor_kind: string
+  surface_id: string
   request_id: string
   idempotency_key: string | null
   expected_state_version: integer | null
-  project_id: string
-  task_id: string | null
-  surface_id: string
-  actor_kind: user | lead_agent
   dry_run: boolean
+  locale: string | null
 ```
 
-Envelope 필드는 호출 경로를 정하고 감사 추적에 쓰입니다. `ToolEnvelope.surface_id`는 필수이지만 선택자일 뿐입니다. API 담당 문서가 그 접점에 의존하려면 서버가 확인한 로컬 접점 맥락과 맞아야 합니다. `surface_id`만으로 호출자 권한은 증명되지 않으며, 역량, 쓰기 권한, 로컬 접근, 사용자 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 아티팩트 접근, 닫기를 부여하지 않습니다.
-
-<a id="local-surface-access-values"></a>
-
-## 로컬 접점 접근 값
-
-로컬 접점 접근 값은 하네스 API 호환성을 설명하는 값입니다. OS 권한, 샌드박스 경계, 변조 방지 보장, 보편적 도구 실행 전 차단, 격리를 뜻하지 않습니다.
-
-`LocalSurfaceRegistration`은 한 프로젝트 안의 로컬 접점 등록 사실을 나타내는 개념 스키마입니다. 저장소는 이를 등록 데이터로 보관하지만, 도구 요청이 이 값을 보냈다는 이유만으로 권한으로 받아들이지 않습니다. Product Repository 파일, Projection, 생성된 Markdown, 대화 텍스트, 에이전트 기억은 접점 등록을 만들거나, 바꾸거나, 새로 고칠 수 없습니다.
-
-```yaml
-LocalSurfaceRegistration:
-  project_id: string
-  surface_id: string
-  surface_instance_id: string
-  transport_kind: local_mcp_stdio | local_http
-  transport_binding_fingerprint: string
-  access_secret_hash: string | null
-  capability_profile_hash: string
-  status: active | disabled | stale | revoked
-  local_access_posture: registered_local | unavailable | mismatch | revoked
-  registered_at: string
-  last_verified_at: string | null
-```
-
-`VerifiedSurfaceContext`는 서버가 요청 하나와 접근 분류 하나에 대해 파생하는 맥락입니다. 현재 MVP에서 `VerifiedSurfaceContext.access_class`는 공개 API 요청 하나에 붙는 단일 값입니다. 요청 하나가 여러 `access_class` 값을 동시에 요구하는 모델은 쓰지 않습니다. 요청 본문이 아니고, Markdown 주장도 아니며, 에이전트 기억의 사실도 아닙니다. 서버는 로컬 transport/session/binding과 저장된 `LocalSurfaceRegistration`에서 이 값을 도출합니다.
-
-```yaml
-VerifiedSurfaceContext:
-  project_id: string
-  surface_id: string
-  surface_instance_id: string
-  access_class: read_status | core_mutation | write_authorization | run_recording | artifact_registration | artifact_read
-  verified: boolean
-  failure_reason: unavailable | mismatch | revoked | insufficient_capability | null
-```
-
-`registered_local`은 성공한 로컬 등록과 확인의 결과로 생기는 태세입니다. 자유 입력 라벨, 호출자 주장, 생성 파일 표식, 권한 우회 값이 아닙니다. `surface_id`는 같은 프로젝트의 등록을 선택해야 하며, 상태 변경 API 접근이나 아티팩트 본문 읽기가 진행되려면 확인된 맥락이 그 등록과 맞아야 합니다.
-
-`LocalSurfaceRegistration.local_access_posture`는 닫힌 현재 MVP 값 집합입니다.
-
-| 값 | 의미 |
-|---|---|
-| `registered_local` | 최근 서버 확인에서 로컬 transport/session/binding이 이 프로젝트의 등록된 로컬 접점과 맞아, API 담당 문서가 접근 분류를 평가할 수 있습니다. |
-| `unavailable` | 필요한 MCP/Core 또는 접점 도달 가능성을 현재 확인할 수 없습니다. |
-| `mismatch` | 도달 가능한 로컬 transport/session/binding이 프로젝트에 등록된 로컬 접점 binding과 맞지 않습니다. |
-| `revoked` | 등록된 접점의 로컬 접근이 명시적으로 철회되었으며, 새로 유효한 등록이 대체하기 전까지 쓰면 안 됩니다. |
-
-`LocalSurfaceRegistration.status`는 닫힌 현재 MVP 값 집합입니다.
-
-| 값 | 의미 |
-|---|---|
-| `active` | 등록된 접점을 현재 API 접근 확인에 사용할 수 있습니다. |
-| `disabled` | 접점 기록은 남아 있지만 현재 API 접근에 쓰면 안 됩니다. |
-| `stale` | 현재 API 접근에서 이 접점에 의존하기 전에 접점 등록 또는 역량 태세를 새로 고쳐야 합니다. |
-| `revoked` | 접점 등록이 현재 API 접근에 더 이상 유효하지 않습니다. |
-
-활성 로컬 API 접근 분류 라벨은 `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read`입니다.
-
-| `access_class` | 활성 요청 수준 용도 |
-|---|---|
-| `read_status` | 파생 상태, 상태 보기, Projection, 읽기 전용 닫기 확인을 읽습니다. |
-| `core_mutation` | 별도 분류가 없는 Core 상태 변경입니다. Task 생성, 범위 갱신, 사용자 판단 기록, 상태를 바꾸는 닫기 경로가 여기에 속합니다. |
-| `write_authorization` | `harness.prepare_write`가 경로 수준 제품 파일 쓰기 Write Authorization을 준비합니다. |
-| `run_recording` | `harness.record_run`이 실행 결과를 기록하고, 필요할 때 호환되는 Write Authorization을 소비하며, 기존 artifact를 연결하고, 적격 staged artifact를 승격합니다. |
-| `artifact_registration` | `harness.stage_artifact`가 새 아티팩트 바이트 또는 안전 공지를 임시 `StagedArtifactHandle`로 staging합니다. |
-| `artifact_read` | 담당 경로를 통해 지속 `ArtifactRef`의 아티팩트 본문을 읽습니다. |
-
-`ArtifactInput[]`은 `harness.record_run`이 검증하는 payload입니다. 이 값이 있다고 해서 그 요청의 `access_class`가 `run_recording`에서 바뀌지 않습니다. 새 아티팩트 바이트를 staging하는 행위와 `record_run` 중 검증된 스테이징된 핸들을 지속 `ArtifactRef`로 승격하는 행위는 분리됩니다. `staged_artifact` 승격은 `run_recording` 요청과 스테이징된 핸들 유효성 확인으로 다루며, 아티팩트 본문 읽기는 별도 `artifact_read`를 씁니다. 이 분류의 메서드별 조건은 [현재 MVP API](mvp-api.md#shared-request-rules)가 담당하고, 공개 오류 선택은 [API Errors](errors.md)가 담당합니다. `VerifiedSurfaceContext.failure_reason=unavailable`, `mismatch` 또는 `revoked`, `insufficient_capability`는 각각 `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`로 구분되어야 합니다.
-
-<a id="capability-profile-value-sets"></a>
-
-## Capability Profile 값 집합
-
-Agent 통합 참조는 `capability_profile` 필드 의미, 갱신 규칙, 커넥터 대체 동작, 접점별 메모를 담당합니다. Schema Core는 그 프로필과 `GuaranteeDisplay`가 쓰는 활성 값 집합을 담당합니다.
-
-```yaml
-capability_profile:
-  surface_id: reference-local-mcp
-  surface_status: active
-  local_access_posture: registered_local
-  cooperative_prepare_write_supported: true
-  changed_path_detection_supported: true
-  changed_path_detection_verification: not_run | passed | failed | stale
-  manual_artifact_attachment_supported: true
-  native_artifact_capture_supported: false
-  guarantee_level_default: cooperative
-  guarantee_level_max_when_verified: detective
-```
-
-`changed_path_detection_verification=passed`만 `detective` 표시를 뒷받침할 수 있으며, 그 경우에도 검증된 변경 경로 탐지 범위 안으로 제한됩니다. `not_run`, 예전 `planned_not_run` 문구, `failed`, `stale`은 통과 상태가 아닙니다. `native_artifact_capture_supported=false`는 활성 아티팩트 경로가 `harness.stage_artifact` 스테이징과 담당 경로 승격/연결로 제한된다는 뜻입니다. `captured_artifact`나 접점 자체 캡처 권한을 추가하지 않습니다.
+envelope 필드의 정확한 활성 값은 [API 값 집합](schema-value-sets.md)이 담당합니다. 메서드별 요청 본문과 필수/선택 동작은 [MVP API](mvp-api.md)가 담당합니다.
 
 <a id="common-response"></a>
+## 공통 응답 분기
 
-## 응답 분기
+공개 메서드 응답은 정확히 하나의 분기를 사용합니다.
 
-모든 공개 도구 응답은 정확히 하나의 응답 분기입니다. 호출자가 `dry_run=true`를 보냈다는 사실만으로 `ToolDryRunResponse` 분기가 선택되지는 않습니다. 메서드별 성공 필드는 `ToolResultBase`를 바탕으로 한 메서드별 `MethodResult` 분기에만 붙습니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 쓰기 결정, 실행 요약, 스테이징된 아티팩트 핸들 같은 성공 전용 필드를 만들어 내면 안 됩니다.
+- 메서드별 `MethodResult`
+- `ToolRejectedResponse`
+- 선택된 상태 효과 동작에 유효한 미리보기 분기가 있을 때의 `ToolDryRunResponse`
 
 ```yaml
 ToolResultBase:
-  request_id: string
-  idempotency_key: string | null
-  project_id: string
-  task_id: string | null
-  state_version: integer
+  response_kind: string
+  effect_kind: string
   dry_run: boolean
-  response_kind: result
-  effect_kind: read_only | core_committed | staging_created | no_effect
-  errors: ToolError[]
-  validator_results: ValidatorResult[]
+  state_version: integer | null
   events: EventRef[]
 
 ToolRejectedResponse:
-  request_id: string
-  idempotency_key: string | null
-  project_id: string
-  task_id: string | null
-  state_version: integer | null
-  dry_run: boolean
-  response_kind: rejected
-  effect_kind: no_effect
+  base: ToolResultBase
   errors: ToolError[]
-  validator_results: ValidatorResult[]
-  events: []
 
 ToolDryRunResponse:
-  request_id: string
-  idempotency_key: string | null
-  project_id: string
-  task_id: string | null
-  state_version: integer | null
-  dry_run: true
-  response_kind: dry_run
-  effect_kind: no_effect
-  errors: ToolError[]
-  validator_results: ValidatorResult[]
-  events: []
-  dry_run_summary: DryRunSummary
+  base: ToolResultBase
+  preview: object
+```
 
-ActiveMethodName: harness.intake | harness.status | harness.update_scope | harness.prepare_write | harness.stage_artifact | harness.record_run | harness.request_user_judgment | harness.record_user_judgment | harness.close_task
+메서드별 결과 필드는 그 메서드 결과 분기에만 둡니다. 거절 응답과 dry-run 미리보기 응답은 성공한 메서드의 결과 전용 필드를 요구하지 않습니다.
 
-DryRunSummary:
-  method: ActiveMethodName
-  would_commit: boolean
-  would_effect_kind: core_committed | staging_created | no_effect
-  primary_would_result: string | null
-  would_create: PlannedEffect[]
-  would_update: PlannedEffect[]
-  would_blockers: PlannedBlocker[]
-  would_errors: ToolError[]
-  next_actions: NextActionSummary[]
+## 공통 보조 형태
 
-PlannedBlocker:
-  source_kind: write_decision | close_readiness
-  category: string
-  code: ErrorCode
-  description: string
-
-PlannedEffect:
-  record_kind: task | change_unit | run | write_authorization | user_judgment | evidence_summary | blocker | artifact_staging | artifact | artifact_link
-  effect: create | update | consume | promote | link | close | mark_blocked
-  description: string
-
+```yaml
 ToolError:
-  code: ErrorCode
+  code: string
   message: string
   retryable: boolean
-  details: object
+  details: object | null
 
 EventRef:
   event_id: string
-  event_seq: integer
-  event_type: string
-  task_id: string | null
-  state_version: integer
+  event_kind: string
 ```
 
-`ToolResultBase`는 실제 메서드 결과의 기반입니다. `ToolResultBase.dry_run`은 `true`일 수 있지만, 호출자가 `dry_run=true`를 보냈고 선택 동작이 읽기 전용이라 응답이 여전히 실제 `MethodResult`인 경우로 제한됩니다. 이때 응답은 메서드별 `MethodResult`로 남고 `response_kind=result`, `effect_kind=read_only`를 사용합니다. 현재 MVP 예시는 `harness.status`와 `harness.close_task`의 `intent=check`입니다. Core 상태를 커밋하거나 스테이징을 생성하는 실제 메서드 결과는 `dry_run=false`를 사용합니다. 그런 선택 동작의 유효한 `dry_run=true` 미리보기는 `ToolDryRunResponse`를 쓰기 때문입니다. `state_version`은 프로젝트 전체 버전입니다. 커밋된 Core 상태 변경에서는 커밋 뒤의 `project_state.state_version`이고, 읽기 전용 결과와 임시 스테이징 결과에서는 응답이 관찰한 현재 프로젝트 전체 버전입니다. `effect_kind=staging_created`는 `harness.stage_artifact`가 임시 스테이징된 아티팩트 핸들을 만들었다는 뜻입니다. Core 상태 전이, 이벤트, 재실행 행, `state_version` 증가가 아닙니다.
+공개 `ErrorCode` 값과 우선순위는 [API Errors](errors.md)가 담당합니다. 활성 `response_kind`, `effect_kind`, 그 밖의 enum 형태 값은 [API 값 집합](schema-value-sets.md)이 담당합니다.
 
-`ToolRejectedResponse`는 `STATE_VERSION_CONFLICT`, 요청 검증 실패, Core 또는 로컬 MCP 접점 사용 불가, 로컬 접근 실패, 역량 부족, 유효하지 않은 스테이징된 아티팩트 핸들 같은 커밋 전 실패에 대한 거절 응답입니다. 이 응답은 `dry_run` 플래그와 무관하게 우선합니다. 요청이 Core 커밋이나 스테이징 부작용 전에 실패하면 `ToolRejectedResponse`를 반환하며, 메서드별 `MethodResult`나 `ToolDryRunResponse`를 반환하지 않습니다. 이 분기는 `effect_kind=no_effect`이고, 메서드별 결과 전용 필드를 담으면 안 되며, 상태 효과가 없습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, 닫기 상태, `tool_invocations` 재실행 행, 스테이징된 핸들 소비, `state_version` 증가를 만들지 않습니다. `ToolRejectedResponse.errors`는 항상 비어 있지 않습니다. `ToolRejectedResponse.events`는 항상 `[]`입니다.
+<a id="local-surface-access-values"></a>
+## 로컬 접점 맥락
 
-`ToolRejectedResponse.state_version`은 Core가 거절 전에 현재 프로젝트 상태를 읽을 수 있었다면 관찰한 프로젝트 전체 `project_state.state_version`입니다. Core나 로컬 MCP 접점이 프로젝트 상태를 읽기 전에 사용할 수 없었다면 `state_version`은 `null`일 수 있습니다.
+공통 로컬 접점 맥락 필드는 요청/응답 계약에 속하지만 활성 값과 커넥터 동작은 분리되어 있습니다.
 
-`ToolDryRunResponse`는 모든 `dry_run=true` 요청의 응답이 아닙니다. 선택된 동작이 `dry_run=false`로 실행됐다면 Core 커밋이나 저장소 소유 스테이징 부작용을 만들 수 있고, 요청 형태, 로컬 접근 확인, 역량 확인, 조회 가능한 상태와 선행조건을 미리보기로 만들 만큼 평가할 수 있는 유효한 `dry_run=true` 요청에 대한 미리보기 응답입니다. 선택 동작이 읽기 전용이면 `dry_run=true`여도 메서드별 `MethodResult`로 응답하고 `ToolResultBase.dry_run=true`, `effect_kind=read_only`를 사용합니다. `ToolDryRunResponse`는 `effect_kind=no_effect`, `events=[]`이며 메서드별 결과 전용 필드를 담지 않고 상태 효과도 없습니다. 현재 기록, 이벤트, 아티팩트, 증거 요약, 스테이징된 핸들 생성 또는 소비, Write Authorization 생성 또는 소비, 닫기 상태, `tool_invocations` 재실행 행, `state_version` 증가를 만들지 않습니다. `WriteDecisionReason`을 저장하지 않고, `CloseReadinessBlocker`를 저장하지 않으며, 예상 차단 사유는 `PlannedBlocker` 미리보기 항목으로만 반환합니다. `ToolDryRunResponse.errors`는 `[]`이고, 미리보기 가능한 진단은 `DryRunSummary.would_errors`에 둡니다.
-
-`dry_run=true` 요청 자체가 읽기 전용 결과나 `ToolDryRunResponse` 미리보기를 만들기 전에 요청 검증, 로컬 접근 확인, 역량 확인, 상태 조회에서 실패하면 응답은 `dry_run=true`, `effect_kind=no_effect`인 `ToolRejectedResponse`입니다.
-
-`DryRunSummary`는 미리보기 정보일 뿐입니다. `PlannedEffect` 항목은 예상 효과의 기록 종류, 효과, 설명을 담습니다. 아직 존재하지 않는 기록에 대한 실제 생성 ref를 담지 않으며 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, 이벤트 참조, 아티팩트 참조, 권한을 만들어 내면 안 됩니다. `DryRunSummary.would_blockers`는 항상 `PlannedBlocker[]`입니다. dry-run 미리보기는 실제 `WriteDecisionReason`이나 실제 `CloseReadinessBlocker` 객체를 반환하지 않습니다.
-
-`PlannedBlocker`는 `DryRunSummary.would_blockers`에만 쓰는 dry-run 예상 차단 사유입니다. 저장되지 않고, `WriteDecisionReason`도 아니며, `CloseReadinessBlocker`도 아닙니다. `prepare_write` 미리보기 발견 사항에는 `source_kind=write_decision`을 쓰고, close 가능성 평가 미리보기 발견 사항에는 `source_kind=close_readiness`를 씁니다. 상태 효과나 저장소 효과를 암시하지 않습니다. 현재 기록 없음, 이벤트 없음, 재실행 행 없음, `close_state` 변경 없음, Write Authorization 생성 또는 소비 없음, 스테이징된 핸들 생성 또는 소비 없음, 아티팩트 효과 없음, 증거 업데이트 없음, `state_version` 증가 없음입니다. `STATE_VERSION_CONFLICT`는 `ToolRejectedResponse.errors`에만 나타나며 `PlannedBlocker.code`로 사용하면 안 됩니다. 오래된 상태는 미리보기 데이터가 아니라 커밋 전 실패이며 `ToolRejectedResponse` 거절 응답으로 반환합니다.
-
-`ToolError`는 공개 오류 식별자, 재시도 안내, 구조화된 세부정보를 유지합니다. `EventRef`는 실제 이벤트 참조가 있는 결과 분기에만 나타납니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 항상 `events=[]`를 씁니다.
+- [API 값 집합](schema-value-sets.md)이 활성 `access_class`와 관련 값을 담당합니다.
+- [MVP API](mvp-api.md)가 메서드 요청 조건을 담당합니다.
+- [에이전트 통합](../agent-integration.md)이 커넥터 동작을 담당합니다.
+- [보안](../security.md)이 보장 주장과 비보장을 담당합니다.
 
 <a id="state-summary"></a>
+## 상태 스키마 경로
 
-## StateSummary
-
-```yaml
-StateSummary:
-  mode: advisor | direct | work
-  lifecycle_phase: shaping | ready | executing | waiting_user | blocked | completed | cancelled | superseded
-  result: none | advice_only | completed | cancelled | superseded
-  close_reason: none | completed_self_checked | completed_with_risk_accepted | cancelled | superseded
-  assurance_level: none | self_checked
-  shaping_readiness: ShapingReadiness
-  gates:
-    scope_gate: not_required | required | pending | passed | failed | blocked
-    decision_gate: not_required | required | pending | resolved | deferred | blocked
-    approval_gate: not_required | required | pending | granted | denied | expired
-    evidence_gate: not_required | none | partial | sufficient | stale | blocked
-    acceptance_gate: not_required | required | pending | accepted | rejected
-
-GuaranteeDisplay:
-  level: cooperative | detective
-  notes: string[]
-
-ShapingReadiness:
-  goal_summary_known: boolean
-  non_goals_known: boolean
-  affected_area_or_paths_known: boolean
-  acceptance_criteria_known: boolean
-  autonomy_boundary_known: boolean
-  first_change_unit_known: boolean
-  user_owned_blockers_named: boolean
-  next_safe_action_known: boolean
-```
-
-`StateSummary.mode`는 지속 저장되는 `tasks.mode`를 그대로 보여 주며 항상 구체적 Task `mode`입니다. `auto`는 저장되는 `mode`, 표시되는 Task `mode`, 상태 요약의 `mode`가 아닙니다. `StateSummary.lifecycle_phase`는 지속 저장되는 `Task.lifecycle_phase`를 그대로 보여줍니다. `intake`는 API 메서드이자 시작 처리 단계이지 생명주기 값이 아닙니다. 종료 `lifecycle_phase` 값은 `completed`, `cancelled`, `superseded`입니다. 특히 `superseded`는 Task가 다른 Task나 경로로 대체되어 다시 활성 작업으로 돌아가지 않는다는 뜻입니다. `StateSummary.close_reason`은 지속 저장되는 `Task.close_reason`을 그대로 보여줍니다. `StateSummary.result`는 큰 단위의 `Task.result`를 보여줍니다. 실패한 Run, `violation`, 차단된 닫기, 증거 공백, 차단 사유는 `RunSummary.status`, close 가능성 평가의 닫기 차단 사유, 증거 상태, 차단 사유 상태, 현재 Task 상태를 통해 보이며 Task의 종료 결과가 되지 않습니다. 이 문서의 `passed`와 `failed`는 `StateSummary.gates.*` 또는 `ValidatorResult.status` 값일 때만 활성이며 `Task.result` 값이 아닙니다.
-
-`StateSummary.shaping_readiness`는 활성 상태에서 파생한 보기입니다. 현재 Task 상태, 활성 또는 제안된 Change Unit 상태, 대기 중인 `UserJudgment` 후보나 기록, 차단 사유, 증거 요약, 다음 행동 상태에서 계산합니다. 지속 저장되는 Task 필드가 아니고, 별도 `StateRecordRef.record_kind`도 아니며, 커밋된 `Discovery Brief`, `Question Queue`, `Assumption Register` 같은 계획 아티팩트도 아닙니다. `false` 필드는 계속 보이지만, 알 수 없거나 오래된 항목이 첫 안전한 Change Unit 또는 다음 안전한 행동에 영향을 줄 때만 막는 조건입니다.
-
-쓰기 가능한 작업에서 첫 Change Unit을 만들기 전 `user_owned_blockers_named=true`는 막고 있는 사용자 소유 문제가 `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval` 중 하나로 식별되었거나, 다음 안전한 행동에 사용자 소유 blocker가 현재 필요하지 않다는 뜻입니다. `next_safe_action_known=true`는 응답이 확인, `harness.request_user_judgment`, `harness.update_scope`, `harness.prepare_write` 같은 다음 담당 경로 행동을 이름 붙일 수 있다는 뜻입니다.
-
-`Task.close_reason` 값은 서로 바꿔 쓸 수 있는 라벨이 아닙니다. `completed_self_checked`는 필수 증거가 충분하고, 필요한 `final_acceptance`가 해결되었고, 닫기에 영향을 주는 `residual_risk_acceptance`가 필요하지 않다는 뜻입니다. `completed_with_risk_accepted`는 필수 증거가 충분하고, 필요한 `final_acceptance`가 해결되었고, 닫기에 영향을 주는 보이는 잔여 위험에 대해 호환되는 `residual_risk_acceptance`가 있다는 뜻입니다. `cancelled`와 `superseded`는 종료 상태이지만 성공 완료가 아니며 `CompletionPolicy`의 증거, 최종 수락, 잔여 위험 수락 요구를 만족시키지 않습니다.
-
-Task `mode` 값은 독자에게 다음 뜻으로 설명됩니다.
-
-- `advisor`: 제품 쓰기 없는 조언, 검토, 계획.
-- `direct`: 작은 직접 변경.
-- `work`: 추적되는 작업.
-
-`IntakeRequest.requested_mode=auto`는 `harness.intake` 입력에서만 쓰는 분류 요청입니다. 서버는 `tasks.mode`를 저장하거나 `StateSummary.mode`를 만들거나 `harness.intake`/`harness.status` 요약을 반환하기 전에 이를 `advisor`, `direct`, `work` 중 정확히 하나로 확정해야 합니다.
-
-화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. `GuaranteeDisplay.level`은 문서화된 접점 역량과 증명 수준을 보여 주는 표시 주장입니다. 권한이나 상태 권한을 부여하지 않습니다. 현재 MVP의 활성 `GuaranteeDisplay.level` 값은 `cooperative`와 `detective`뿐입니다. 기본값은 `cooperative`입니다. `detective`는 관련 활성 역량 확인이 통과했을 때만 표시할 수 있습니다. 기준 `reference-local-mcp` 프로필에서는 `changed_path_detection_verification=passed`이고 검증된 변경 경로 탐지 범위 안일 때만 가능합니다. 더 강한 표시 이름은 이후 후보이며 현재 MVP 스키마 값이 아닙니다.
-
-<a id="staterecordref"></a>
-
-## StateRecordRef
-
-```yaml
-StateRecordRef:
-  record_kind: project | task | change_unit | run | write_authorization | user_judgment | evidence_summary | blocker
-  record_id: string
-```
-
-지속 보관되는 증거 바이트는 `StateRecordRef`가 아니라 `ArtifactRef`를 사용합니다. 현재 MVP의 활성 사용자 소유 판단은 맞는 `UserJudgment.judgment_kind`를 가진 `record_kind=user_judgment`로 표현합니다.
+`StateSummary`, `StateRecordRef`, `ShapingReadiness`는 [API 상태 스키마](schema-state.md)가 담당합니다.
 
 <a id="artifactref"></a>
+## 아티팩트 스키마 경로
 
-## ArtifactRef
-
-`ArtifactRef`는 하네스 저장소에 지속 저장된 증거 파일을 가리킵니다. 호출자가 임의로 준 경로가 아닙니다.
-
-```yaml
-ArtifactRef:
-  artifact_id: string
-  kind: diff | log | screenshot | checkpoint | other
-  uri: string
-  sha256: string
-  size_bytes: integer
-  content_type: string
-  redaction_state: none | redacted | secret_omitted | blocked
-  task_id: string
-  run_id: string | null
-  relation_owner: ArtifactRelationOwner
-  created_at: string
-  produced_by: lead_agent | harness
-  retention_class: task | project | temporary
-
-ArtifactRelationOwner:
-  task_id: string
-  run_id: string | null
-  record_kind: task | change_unit | run | user_judgment | evidence_summary | blocker
-  record_id: string
-  relation: string
-```
-
-`uri`는 하네스 저장소를 통해 해석되며 보통 `harness-artifact://{project_id}/{artifact_id}`입니다. 원시 비밀값, 토큰, 민감한 전체 로그를 증거로 저장하면 안 됩니다. 본문이 `redacted`, `omitted`, `blocked` 상태라면 `sha256`와 `size_bytes`는 숨겨진 원본이 아니라 커밋된 안전한 바이트를 설명합니다.
-
-<a id="artifactinput"></a>
-
-## ArtifactInput
-
-`ArtifactInput`은 `harness.record_run`에서 활성 `harness.stage_artifact` 유틸리티가 만든 문서화된 `StagedArtifactHandle`이나 이미 지속된 `ArtifactRef`로만 받습니다. `ArtifactInput[]`은 `run_recording` 요청 접근 분류 아래에서 소비되며, `record_run`에 두 번째 접근 분류를 더하지 않습니다. 임의 파일 읽기 권한을 부여하지 않고, `record_run`은 아티팩트 본문을 읽지 않습니다. 아티팩트 본문 읽기는 `VerifiedSurfaceContext.access_class=artifact_read`가 필요한 별도 담당 경로를 사용합니다. `harness.stage_artifact`는 새 아티팩트 바이트를 위한 현재 MVP staging 유틸리티이지 접점 자체 아티팩트 캡처나 일반 파일시스템 읽기 API가 아닙니다.
-
-```yaml
-ArtifactInput:
-  artifact_input_id: string
-  source_kind: staged_artifact | existing_artifact
-  relation: string
-  staged_artifact_handle: StagedArtifactHandle | null
-  existing_artifact_ref: ArtifactRef | null
-  display_name: string | null
-  content_type: string
-  expected_sha256: string | null
-  expected_size_bytes: integer | null
-
-StageArtifactRequest:
-  envelope: ToolEnvelope
-  task_id: string
-  display_name: string
-  content_type: string
-  redaction_state: none | redacted | secret_omitted | blocked
-  safe_bytes_or_notice: bytes | string
-  expected_sha256: string | null
-  expected_size_bytes: integer | null
-  relation_hint: string | null
-
-StageArtifactResponse: StageArtifactResult | ToolRejectedResponse | ToolDryRunResponse
-
-StageArtifactResult:
-  base: ToolResultBase
-  staged_artifact_handle: StagedArtifactHandle
-  expires_at: string
-
-StagedArtifactHandle:
-  handle_id: string
-  project_id: string
-  task_id: string
-  created_by_surface_id: string
-  created_by_surface_instance_id: string
-  sha256: string
-  size_bytes: integer
-  content_type: string
-  redaction_state: none | redacted | secret_omitted | blocked
-  expires_at: string
-```
-
-`source_kind`에 맞는 출처 필드 하나만 있어야 합니다. `staged_artifact`에는 `staged_artifact_handle`, `existing_artifact`에는 `existing_artifact_ref`가 필요합니다. 출처 필드가 빠졌거나, `source_kind`와 맞지 않거나, 두 출처 필드가 모두 있으면 요청 형태 검증 실패입니다. 스테이징 핸들은 같은 `project_id`와 `task_id` 범위에 있어야 하고 `content_type`, `sha256`, `size_bytes`, `redaction_state`, `expires_at`을 가져야 하며, `harness.record_run`이 사용할 때 만료되지 않았고 아직 소비되지 않았어야 합니다. 스테이징된 핸들 검증은 저장소가 소유한 `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, 만료 여부, 소비 상태, `sha256`, `size_bytes`, `redaction_state`를 대조합니다. 실패하면 공개 `VALIDATION_FAILED`와 `ToolError.details.artifact_input_error`를 사용합니다.
-
-`created_by_surface_id`와 `created_by_surface_instance_id`는 서버가 기록하는 출처 기록 필드입니다. `harness.stage_artifact`가 성공하면 서버는 해당 요청의 `VerifiedSurfaceContext`에서 이 값을 기록합니다. 호출자는 `StageArtifactRequest`에서 이 값을 고르지 않으며, 에이전트나 사용자가 같은 모양의 객체를 제출해도 그것은 권한 주장이 아닙니다. `ArtifactInput`이 `StagedArtifactHandle`을 `harness.record_run`에 다시 제출하면 서버는 저장소가 소유한 staging 기록과 대조하고, 현재 확인된 `surface_id`와 `surface_instance_id`가 `created_by_surface_id`와 `created_by_surface_instance_id`와 같을 때만 승격을 허용합니다. 현재 MVP는 접점 간(cross-surface) staged artifact handoff를 지원하지 않습니다. 모양이 맞는 handle이라도 `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, 만료 여부, 소비 상태, `sha256`, `size_bytes`, `redaction_state`가 저장된 staged artifact와 요청 기대에 맞지 않으면 거부됩니다.
-
-`StageArtifactResult`는 `harness.stage_artifact`의 성공 결과 분기입니다. `base.response_kind`는 `result`이고 `base.effect_kind`는 `staging_created`입니다. 검증 실패, 로컬 접점 실패, 역량 부족, 안전하게 스테이징된 아티팩트 핸들을 만들 수 없는 요청은 `ToolRejectedResponse`를 반환하며 `staged_artifact_handle`을 포함하지 않습니다. 유효한 `dry_run` 호출은 `ToolDryRunResponse`를 반환하며 이때도 `staged_artifact_handle`을 포함하지 않습니다.
-
-`harness.stage_artifact`는 임시 `StagedArtifactHandle`을 만들 수 있지만 그 자체로 Core 상태 전이가 아닙니다. 증거를 만들지 않고, gate를 만족하지 않고, 증거 요약을 갱신하지 않으며, `harness.close_task`가 통과하게 만들 수도 없습니다. `StagedArtifactHandle`은 어떤 로컬 호출자나 사용할 수 있는 bearer token이 아닙니다. 유효한 스테이징된 핸들을 소비해 지속 `ArtifactRef`로 승격할 수 있는 활성 경로는 `harness.record_run`뿐입니다. 그 승격은 `run_recording`과 같은 프로젝트, 같은 Task, 서버 기록 `created_by_surface_id` / `created_by_surface_instance_id`와 현재 확인된 `surface_id` / `surface_instance_id`, 미만료, 미소비, 무결성 호환 handle 확인으로 승인됩니다. Projection 파일, 생성된 Markdown, 대화 텍스트, Product Repository 파일, 에이전트 기억은 스테이징된 핸들의 출처 기록을 만들거나 새로 고칠 수 없습니다.
-
-원시 파일 경로, 원시 로그, 임의 로컬 경로 문자열, `captured_artifact`, 캡처 핸들, 접점 자체 아티팩트 캡처, 원시 캡처 어댑터 출력, 원시 비밀값, 토큰, 민감한 전체 로그는 현재 MVP 밖이며 변경 전에 아티팩트 권한으로 거부됩니다. 새 아티팩트 바이트는 `harness.stage_artifact`를 통해서만 현재 MVP에 들어옵니다. `existing_artifact`는 같은 프로젝트와 허용된 Task 범위에서 유효한 이전 지속 `ArtifactRef`를 연결할 뿐입니다. 새 아티팩트 바이트로 가는 경로가 아니며 새 아티팩트 본문을 등록하지 않습니다.
-
-<a id="evidence-and-pre-write-scope-schemas"></a>
-
-## 증거와 쓰기 전 범위 스키마
-
-```yaml
-CompletionPolicy:
-  evidence_required: boolean
-  final_acceptance_required: boolean
-  residual_risk_acceptance_required_when_visible: boolean
-  product_write_completion: boolean
-  user_visible_result: boolean
-
-EvidenceCoverageItem:
-  claim: string
-  required_for_close: boolean
-  coverage_state: supported | unsupported | partial | not_applicable | stale | blocked
-  supporting_state_refs: StateRecordRef[]
-  supporting_artifact_refs: ArtifactRef[]
-  gap_blocker_refs: StateRecordRef[]
-  note: string | null
-
-EvidenceSummary:
-  evidence_summary_ref: StateRecordRef | null
-  task_id: string
-  change_unit_id: string | null
-  completion_policy: CompletionPolicy
-  status: not_required | none | partial | sufficient | stale | blocked
-  coverage_items: EvidenceCoverageItem[]
-  supporting_run_refs: StateRecordRef[]
-  supporting_artifact_refs: ArtifactRef[]
-  gap_blocker_refs: StateRecordRef[]
-  summary: string
-  updated_at: string
-
-AuthorizedAttemptScope:
-  task_id: string
-  change_unit_id: string
-  basis_state_version: integer
-  surface_id: string
-  intended_operation: string
-  intended_paths: string[]
-  product_file_write_intended: boolean
-  sensitive_categories: SensitiveCategory[]
-  baseline_ref: string | null
-  related_user_judgment_refs: StateRecordRef[]
-  guarantee_level: cooperative | detective
-
-SensitiveActionScope:
-  sensitive_action_id: string
-  action_kind: product_file_write | dependency_change | destructive_command | network_access | secret_access | deployment | system_access | other
-  named_action: string
-  command_or_tool: string | null
-  intended_paths: string[]
-  hosts: string[]
-  dependencies: string[]
-  secret_handles: string[]
-  time_window: string | null
-  scope_limit: string
-  not_authorized: string[]
-  capability_claim: cooperative_only | observed_by_surface | not_observable
-
-WriteAuthorizationSummary:
-  write_authorization_id: string
-  attempt_scope: AuthorizedAttemptScope
-  status: active | consumed | expired | stale | revoked
-  consumed_by_run_id: string | null
-  created_at: string
-  consumed_at: string | null
-
-WriteAuthoritySummary:
-  active_change_unit_ref: StateRecordRef | null
-  write_authorization_ref: StateRecordRef | null
-  active_authorized_attempt_scope: AuthorizedAttemptScope | null
-  approval_status: not_required | required | pending | granted | denied | expired | unknown
-  guarantee_display: GuaranteeDisplay
-
-WriteDecisionReason:
-  category: scope | baseline | write_authority | user_judgment | validator | evidence
-  code: ErrorCode
-  message: string
-  related_refs: StateRecordRef[]
-  next_actions: NextActionSummary[]
-```
-
-`CompletionPolicy`는 Task 또는 Change Unit에서 `close_task intent=complete`에 쓰는 활성 닫기 정책을 간결하게 담습니다. 해당 완료 경로에서 증거, 최종 수락, 보이는 잔여 위험의 수락, 제품 쓰기 완료, 사용자에게 보이는 결과가 필요한지 이름 붙입니다. `intent=cancel`과 `intent=supersede`는 성공 완료가 아니며 이 정책을 만족시키지 않습니다. `CompletionPolicy`는 QA gate, verification gate, 전체 Evidence Manifest, 별도 보증 흐름을 추가하는 허가가 아닙니다.
-
-`EvidenceSummary`는 그 `CompletionPolicy`에 묶인 현재 MVP의 간결한 증거 기록입니다. 증거 충분성은 막연한 산문 판단이 아닙니다. `completion_policy.evidence_required=false`이면 증거 상태는 `not_required`여야 합니다. `EvidenceSummary.status=sufficient`는 `required_for_close=true`인 모든 `EvidenceCoverageItem`이 존재하고 `coverage_state=supported` 또는 `not_applicable`일 때만 허용됩니다. 필수 `EvidenceCoverageItem` 중 하나라도 `unsupported`, `partial`, `stale`, `blocked`이면 `harness.close_task`는 닫기 차단 사유를 보고해야 합니다. 필수 증거가 통째로 빠졌다면 그 필수 항목을 `unsupported` 또는 `blocked` `EvidenceCoverageItem`이나 `gap_blocker_refs`로 표현해야 하며, 항목을 생략해서 숨기면 안 됩니다.
-
-선택 증거 항목은 `required_for_close=false`로 명시할 수 있습니다. 선택 공백은 보이게 남아도 `EvidenceSummary.status=sufficient`를 막지 않을 수 있지만, 현재 MVP 요약이 작더라도 필수/선택 구분은 명시해야 합니다.
-
-아티팩트 가용성과 증거 충분성은 관련되어 있지만 별개의 조건입니다. 지속되어 사용할 수 있는 `ArtifactRef`가 있어도 `EvidenceCoverageItem`이 그 아티팩트를 주장에 연결하지 않으면 증거가 충분해지지 않습니다. 필수 `EvidenceCoverageItem`이 빠졌거나, 필수 항목이 없거나 사용할 수 없거나 무결성에 실패했거나 닫기 근거로 쓸 수 없는 아티팩트에 의존하면 충분할 수 없으며, `close_task`는 `CloseReadinessBlocker.category=artifact_availability`도 보고할 수 있습니다. 최종 수락과 잔여 위험 수락은 빠진 필수 증거를 대신할 수 없고, 증거도 최종 수락이나 잔여 위험 수락을 만들 수 없습니다.
-
-`AuthorizedAttemptScope`는 `write_authorizations.attempt_scope_json`에 저장되고 나중에 `harness.record_run`에서 비교하는 정확한 범위입니다. `AuthorizedAttemptScope.basis_state_version`은 `prepare_write`가 권한을 준비할 때 사용한 프로젝트 전체 `project_state.state_version`입니다. `WriteAuthorizationSummary.status`는 오래 남는 Write Authorization 생명주기입니다. `blocked`는 Write Authorization의 `status`가 아닙니다. 차단된 쓰기는 소비 가능한 Write Authorization 없이 차단 사유를 반환합니다.
-
-현재 MVP의 `AuthorizedAttemptScope`는 제품 파일 쓰기 시도에만 쓰입니다. 의도한 제품 경로, Change Unit, 프로젝트 전체 기준 상태 버전, baseline, 관련 사용자 판단 참조, 제품 쓰기 민감 범주, 경로 수준 쓰기 호환성 확인의 정직한 보장 수준을 기록합니다. 명령 실행, 의존성 설치, 네트워크 효과, 비밀값 접근, 배포, 파괴적 동작, 시스템 접근, 도구 관찰, 네이티브 아티팩트 캡처, 도구 실행 전 차단, 격리는 `AuthorizedAttemptScope` 필드가 아닙니다. 이런 관찰할 수 없는 보장을 요구하는 요청은 검증 오류나 역량 부족으로 거절하거나 차단해야 하며, 검증된 쓰기 범위처럼 기록하면 안 됩니다.
-
-`SensitiveActionScope`는 `judgment_kind=sensitive_approval`에 대해 별도로 기록되는 민감 동작 승인 범위입니다. 의도한 명령, 의존성 변경, 네트워크 접근, 비밀값 접근, 배포, 파괴적 동작, 시스템 접근, 제품 파일 쓰기, 그 밖의 이름 붙은 민감 동작을 설명할 수 있습니다. `capability_claim`은 활성 접점이 그 동작에 대해 정직하게 주장할 수 있는 수준만 기록합니다. 값은 `cooperative_only`, `observed_by_surface`, `not_observable`입니다. 민감 동작 승인은 그 정확한 동작에 대한 검증된 역량이 따로 있지 않은 한 하네스가 동작을 관찰, 차단, 강제, 샌드박스 처리, 격리할 수 있다는 뜻이 아닙니다.
-
-`WriteAuthoritySummary.approval_status`는 필요한 별도 민감 동작 승인 상태를 보여줍니다. `WriteAuthorizationSummary.status` 생명주기가 아니며, `SensitiveActionScope`를 `AuthorizedAttemptScope`로 바꾸지도 않습니다.
-
-`PrepareWriteResult.write_decision_reasons`는 `WriteDecisionReason[]`입니다. 각 `WriteDecisionReason`은 `harness.prepare_write`가 `decision=blocked`, `decision=approval_required`, `decision=decision_required`를 반환한 prepare_write 판단 사유를 설명합니다. close 가능성 평가와 독립적이고, `close_state`를 만들지 않으며, `CloseReadinessBlocker`를 만들지 않습니다. 커밋 전 실패에는 쓰지 않습니다. 커밋 전 실패는 `ToolRejectedResponse.errors: ToolError[]` 거절 응답으로 반환합니다.
-
-다음 커밋 전 실패 코드는 `WriteDecisionReason.code`로 사용하면 안 됩니다. `STATE_VERSION_CONFLICT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `VALIDATION_FAILED`, `NO_ACTIVE_TASK`.
-
-<a id="record-run-payloads"></a>
-
-## record_run 페이로드
-
-```yaml
-ObservedChanges:
-  product_write: boolean
-  changed_paths: string[]
-  no_product_changes: boolean
-  summary: string
-
-RunSummary:
-  run_ref: StateRecordRef
-  kind: shaping_update | implementation | direct
-  status: completed | interrupted | blocked | violation
-  product_write: boolean
-  write_authorization_ref: StateRecordRef | null
-  evidence_summary_ref: StateRecordRef | null
-  artifact_refs: ArtifactRef[]
-  summary: string
-  started_at: string | null
-  completed_at: string
-```
-
-`status=completed`만 정상 담당 참조를 통해 증거를 뒷받침할 수 있습니다. `interrupted`, `blocked`, `violation`은 감사/복구 사실이며 증거, 최종 수락, 잔여 위험 수락, 닫기를 스스로 충족하지 않습니다.
-
-<a id="userjudgment"></a>
-
-## UserJudgment
-
-```yaml
-UserJudgment:
-  user_judgment_id: string
-  task_id: string
-  change_unit_id: string | null
-  status: proposed | pending_user | resolved | deferred | rejected | blocked | superseded
-  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | final_acceptance | residual_risk_acceptance | cancellation
-  presentation: short
-  question: string
-  options: UserJudgmentOption[]
-  context: UserJudgmentContext
-  affected_refs: StateRecordRef[]
-  required_for: next_action | write | run | close | acceptance | risk
-  resolution: UserJudgmentResolution | null
-  expires_at: string | null
-  created_at: string
-  updated_at: string
-  resolved_at: string | null
-
-UserJudgmentOption:
-  option_id: string
-  label: string
-  meaning: approve | reject | defer | choose | cancel
-  consequence: string
-
-UserJudgmentContext:
-  why_now: string
-  source_refs: StateRecordRef[]
-  evidence_summary_ref: StateRecordRef | null
-  what_user_is_judging: string
-  why_agent_cannot_decide: string
-  no_decision_consequence: string
-
-UserJudgmentResolution:
-  selected_option_id: string
-  answer: RecordUserJudgmentPayload
-  note: string | null
-```
-
-`judgment_kind`는 기준 판단 종류 필드입니다. 렌더링된 라벨과 지역화된 라벨은 스키마 값이 아닙니다. `presentation=short`가 현재 MVP의 활성 `presentation` 값입니다. 확장 표시 본문은 활성 API 스키마가 아닙니다.
-
-`UserJudgmentResolution.selected_option_id`와 `UserJudgmentResolution.note`는 기준 요청 필드인 `RecordUserJudgmentRequest.selected_option_id`와 `RecordUserJudgmentRequest.note`에서 저장된 복사본입니다. `RecordUserJudgmentPayload`는 판단 종류별 답변 세부정보만 담으며 선택지 식별자나 요청 메모를 반복하면 안 됩니다.
-
-<a id="userjudgmentcandidate"></a>
-
-## UserJudgmentCandidate
-
-```yaml
-UserJudgmentCandidate:
-  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | final_acceptance | residual_risk_acceptance | cancellation
-  presentation: short
-  question: string
-  options: UserJudgmentOption[]
-  context: UserJudgmentContext
-  affected_refs: StateRecordRef[]
-  required_for: next_action | write | run | close | acceptance | risk
-```
-
-후보는 커밋된 `user_judgment` 행이 아닙니다. `StateRecordRef`가 없고 gate를 충족하지 않으며 민감 동작 승인, 최종 수락, 잔여 위험 수락, 증거, Write Authorization, 닫기 상태를 만들지 않습니다.
-
-```yaml
-RecordUserJudgmentPayload:
-  sensitive_action_scope: SensitiveActionScope | null
-  accepted_result_refs: StateRecordRef[]
-  cancellation_reason: string | null
-```
-
-`judgment_kind=sensitive_approval`에서는 `sensitive_action_scope`가 대기 중인 판단과 맞아야 합니다. 민감 동작 승인은 `AuthorizedAttemptScope`를 승인 범위로 직접 저장하면 안 됩니다. 제품 파일 Write Authorization은 별도의 `prepare_write`/`record_run` 계약으로 남습니다. `final_acceptance`에서는 `accepted_result_refs`가 보이는 근거를 이름 붙입니다. `cancellation`에서는 `cancellation_reason`이 필요합니다.
-
-<a id="acceptedriskinput"></a>
-
-## AcceptedRiskInput
-
-```yaml
-AcceptedRiskInput:
-  visible_risk_ref: StateRecordRef
-  accepted: boolean
-  user_note: string | null
-```
-
-`AcceptedRiskInput`은 `judgment_kind=residual_risk_acceptance`에서만 유효합니다. `visible_risk_ref`는 같은 Task의 보이는 닫기 관련 `blocker`를 가리켜야 합니다. 독립적인 잔여 위험 기록을 만들지 않습니다.
+`ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle`은 [API 아티팩트 스키마](schema-artifacts.md)가 담당합니다.
 
 <a id="current-position-display-schemas"></a>
+## 현재 위치 표시 스키마 경로
 
-## 현재 위치 표시 스키마
-
-```yaml
-CloseReadinessBlocker:
-  category: task | open_run | scope | user_judgment | sensitive_approval | write_compatibility | baseline | surface_capability | evidence | artifact_availability | final_acceptance | residual_risk_visibility | residual_risk_acceptance | cancellation | supersession | recovery
-  code: ErrorCode
-  message: string
-  related_refs: StateRecordRef[]
-  next_actions: NextActionSummary[]
-
-NextActionSummary:
-  action_kind: ask_user | update_scope | prepare_write | implement | request_acceptance | close_task | idle
-  summary: string
-  required_tool: harness.intake | harness.status | harness.update_scope | harness.prepare_write | harness.stage_artifact | harness.record_run | harness.request_user_judgment | harness.record_user_judgment | harness.close_task | null
-  related_refs: StateRecordRef[]
-  blocker_code: ErrorCode | null
-```
-
-`CloseReadinessBlocker`는 현재 Task 상태로 close 가능성을 평가할 때 발견한 닫기 차단 사유의 데이터 구조입니다. 이 타입 자체는 저장 효과를 뜻하지 않으며, `task_events`, 재실행 행, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 효과, 증거 업데이트, `project_state.state_version` 증가를 만들지 않습니다. 상태 효과는 응답 branch와 메서드 상태 효과 표가 결정합니다. `CloseReadinessBlocker`가 있다는 사실만으로 상태 효과가 생기지 않습니다.
-
-활성 사용 위치는 `StatusResult.close_blockers: CloseReadinessBlocker[]`와 `CloseTaskResult.blockers: CloseReadinessBlocker[]`뿐입니다. `StatusResult.close_blockers`는 close 가능성 평가에서 나온 읽기 전용 관찰입니다. `CloseTaskResult.blockers`는 선택된 `close_task` intent와 메서드 상태 효과 표가 허용할 때 읽기 전용 닫기 확인이나 커밋된 닫기 차단 결과에 나타날 수 있습니다.
-
-`PrepareWriteResult`는 `CloseReadinessBlocker`를 쓰면 안 됩니다. `prepare_write` 판단 사유에는 `WriteDecisionReason`을 유지합니다. `DryRunSummary.would_blockers`는 `CloseReadinessBlocker`를 쓰면 안 되며, dry-run 예상 차단 사유에는 계속 `PlannedBlocker[]`를 씁니다. `ToolRejectedResponse.errors`는 `CloseReadinessBlocker`를 쓰면 안 되며, 커밋 전 실패에는 `ToolError[]`를 쓰는 거절 응답을 유지합니다. 커밋 전 실패는 `CloseReadinessBlocker`로 인코딩하면 안 됩니다.
-
-`STATE_VERSION_CONFLICT`는 `ToolRejectedResponse.errors`에만 나타납니다. `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`가 될 수 없습니다.
-
-산문으로만 된 상태 텍스트, 보고서, 렌더링된 보기는 차단 결과가 아닙니다. `harness.close_task intent=complete`에서는 [Core Model](../core-model.md#close_task)이 담당하는 결정적 순서로 닫기 차단 사유 범주를 계산합니다. `cancellation`과 `supersession` 범주는 해당 종료 intent와의 충돌을 설명합니다. 성공 완료 증거가 아니며 `completed_self_checked` 또는 `completed_with_risk_accepted`와 섞으면 안 됩니다.
-
-<a id="nextactionsummary"></a>
-
-## NextActionSummary
-
-`NextActionSummary`는 [현재 위치 표시 스키마](#current-position-display-schemas)에 정의되어 있습니다. 활성 `action_kind` 값은 정확히 다음과 같습니다.
-
-```text
-ask_user | update_scope | prepare_write | implement | request_acceptance | close_task | idle
-```
+닫기 준비 상태와 다음 행동 데이터 형태를 포함한 현재 위치 표시 스키마는 [API 상태 스키마](schema-state.md)가 담당합니다.
 
 <a id="validatorresult"></a>
+## ValidatorResult 경로
 
-## ValidatorResult
-
-```yaml
-ValidatorResult:
-  validator_id: surface_capability_check
-  validator_kind: capability
-  status: passed | warning | failed | blocked | skipped
-  guarantee_level: cooperative | detective
-  checked_at: string
-  target:
-    task_id: string | null
-    change_unit_id: string | null
-    run_id: string | null
-    artifact_id: string | null
-  summary: string
-  findings:
-    - code: string
-      severity: info | warning | error | blocker
-      message: string
-      path: string | null
-      artifact_ref: ArtifactRef | null
-  blocked_reasons: string[]
-  suggested_next_action: string | null
-```
-
-활성 안정 validator ID는 `surface_capability_check`입니다. `ValidatorResult` 출력은 결과가 이름 붙인 활성 담당 경로를 통해서만 차단 사유, 대체 동작, 보장 표시에 영향을 줄 수 있습니다. 예를 들어 역량이 실제 문제일 때 `CloseReadinessBlocker.category=surface_capability`로 이어질 수 있습니다. `status=blocked` 결과나 `findings.severity=blocker`는 설계 정책 차단 사유가 아니며, `design_gate`나 `design_policy`를 활성화하지 않고, 심각도만으로 닫기를 차단하지 않습니다. Write Authorization, 사용자 판단, 증거, 최종 수락, 잔여 위험 수락, 닫기를 만들지 않습니다.
-
-`ValidatorResult.blocked_reasons`는 검증기 상태가 `blocked`인 이유를 설명하는 검증기 내부 텍스트입니다. `prepare_write` 응답 필드가 아니며, `PrepareWriteResult.write_decision_reasons`, `DryRunSummary.would_blockers`, `CloseTaskResult.blockers`도 아닙니다.
-
-`ValidatorResult.status=passed`만 `detective` 표시에 쓰이는 검증된 역량 상태를 뒷받침할 수 있습니다. `skipped`, `warning`, `failed`, `blocked`는 더 강한 라벨의 근거가 아닙니다. 변경 경로 탐지에서는 프로필 수준의 `changed_path_detection_verification` 값이 반드시 `passed`여야 합니다. `not_run`, 예전 `planned_not_run` 문구, `failed`, `stale`이면 메서드에 따라 표시를 `cooperative`로 유지하거나 `CAPABILITY_INSUFFICIENT`를 반환해야 합니다.
-
-<a id="sensitive-categories"></a>
-
-## 민감 범주
-
-민감 범주는 제품 파일 쓰기에 왜 민감 동작 승인이 필요할 수 있는지 설명합니다. `AuthorizedAttemptScope` 안의 제품 쓰기 분류일 뿐이며, 명령, 호스트, 의존성, 비밀값 핸들, 배포, 파괴적 동작, 시스템 접근의 승인 범위가 아닙니다. 제품 판단, 기술 판단, 범위 판단, QA, 검증, 수락, 잔여 위험, 정책 질문을 결정하지 않습니다. 또한 하네스가 명령, 네트워크 효과, 비밀값 접근을 관찰했다는 뜻도 아닙니다. 활성 `SensitiveCategory` enum은 다음과 같습니다.
-
-```text
-auth_change
-permission_model_change
-schema_change
-dependency_change
-public_api_change
-destructive_write
-production_config_change
-ci_cd_change
-infra_or_deployment_change
-privacy_or_pii_change
-data_export
-telemetry_or_logging_change
-license_or_compliance_change
-billing_or_cost_change
-model_or_prompt_policy_change
-policy_override
-```
+`ValidatorResult` 형태는 [API 상태 스키마](schema-state.md)가 담당합니다. 활성 validator ID와 severity 형태 값은 [API 값 집합](schema-value-sets.md)이 담당합니다.
 
 <a id="current-mvp-value-sets"></a>
+## 현재 MVP 값 집합 경로
 
-## 현재 MVP 값 집합
-
-아래 값은 현재 MVP의 활성 스키마 값입니다. 메서드별 역량과 접근 분류 확인은 구체적인 요청에서 어떤 값을 거부할 수 있습니다. 여기에 없는 값은 현재 MVP의 활성 값이 아닙니다. 이 표는 첫 validator 구현이 참조할 수 있는 현재 MVP 값 집합입니다. 화면에 표시되는 라벨은 기준 스키마 값이 아닙니다. 공개 `ErrorCode` 값은 이 표가 아니라 [API Errors](errors.md)가 담당합니다.
-
-| 필드 | 현재 MVP 값 |
-|---|---|
-| 활성 메서드 집합 | `harness.intake`, `harness.status`, `harness.update_scope`, `harness.prepare_write`, `harness.stage_artifact`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task` |
-| `ActiveMethodName`과 `DryRunSummary.method` | 활성 메서드 집합과 같은 값 |
-| `ToolEnvelope.actor_kind` | `user`, `lead_agent` |
-| `response_kind` | `result`, `rejected`, `dry_run` |
-| `effect_kind` | `read_only`, `core_committed`, `staging_created`, `no_effect` |
-| `DryRunSummary.would_effect_kind` | `core_committed`, `staging_created`, `no_effect` |
-| `PlannedBlocker.source_kind` | `write_decision`, `close_readiness` |
-| `PlannedEffect.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker`, `artifact_staging`, `artifact`, `artifact_link` |
-| `PlannedEffect.effect` | `create`, `update`, `consume`, `promote`, `link`, `close`, `mark_blocked` |
-| 로컬 API 접근 분류 | `read_status`, `core_mutation`, `write_authorization`, `run_recording`, `artifact_registration`, `artifact_read` |
-| `LocalSurfaceRegistration.transport_kind` | `local_mcp_stdio`, `local_http` |
-| `LocalSurfaceRegistration.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` |
-| `LocalSurfaceRegistration.status` | `active`, `disabled`, `stale`, `revoked` |
-| `VerifiedSurfaceContext.failure_reason` | `unavailable`, `mismatch`, `revoked`, `insufficient_capability`, `null` |
-| `capability_profile.surface_id` | `reference-local-mcp` |
-| `capability_profile.surface_status` | `LocalSurfaceRegistration.status`와 같은 값 |
-| `capability_profile.local_access_posture` | `LocalSurfaceRegistration.local_access_posture`와 같은 값 |
-| `capability_profile.changed_path_detection_verification` | `not_run`, `passed`, `failed`, `stale` |
-| `capability_profile.guarantee_level_default` | `cooperative` |
-| `capability_profile.guarantee_level_max_when_verified` | `detective` |
-| `IntakeRequest.requested_mode` | `advisor`, `direct`, `work`, `auto` |
-| `StateSummary.mode`와 지속 저장되는 `tasks.mode` | `advisor`, `direct`, `work` |
-| `Task.lifecycle_phase`와 `StateSummary.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` |
-| `Task.result`와 `StateSummary.result` | `none`, `advice_only`, `completed`, `cancelled`, `superseded` |
-| `Task.close_reason`과 `StateSummary.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
-| `StatusResponse.close_state` | `none`, `ready`, `blocked`, `closed`, `cancelled`, `superseded` |
-| `CloseTaskResult.close_state` | `ready`, `blocked`, `closed`, `cancelled`, `superseded` |
-| `CloseTaskRequest.intent` | `check`, `complete`, `cancel`, `supersede` |
-| `CloseTaskRequest.close_reason` | `Task.close_reason`과 같은 값, 그리고 `null`. 메서드 동작이 각 `intent`에서 유효한 값을 정합니다. |
-| `StateSummary.assurance_level` | `none`, `self_checked` |
-| `StateSummary.gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
-| `StateSummary.gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
-| `StateSummary.gates.approval_gate` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired` |
-| `StateSummary.gates.evidence_gate` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
-| `StateSummary.gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
-| `StateRecordRef.record_kind` | `project`, `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` |
-| `ArtifactRef.kind` | `diff`, `log`, `screenshot`, `checkpoint`, `other` |
-| `ArtifactRef.produced_by` | `lead_agent`, `harness` |
-| `ArtifactRef.retention_class` | `task`, `project`, `temporary` |
-| `ArtifactRelationOwner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
-| `ArtifactInput.source_kind` | `staged_artifact`, `existing_artifact` |
-| `EvidenceCoverageItem.coverage_state` | `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked` |
-| `EvidenceSummary.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
-| `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
-| `SensitiveActionScope.action_kind` | `product_file_write`, `dependency_change`, `destructive_command`, `network_access`, `secret_access`, `deployment`, `system_access`, `other` |
-| `SensitiveActionScope.capability_claim` | `cooperative_only`, `observed_by_surface`, `not_observable` |
-| `WriteAuthorizationSummary.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
-| `WriteAuthoritySummary.approval_status` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired`, `unknown` |
-| `WriteDecisionReason.category` | `scope`, `baseline`, `write_authority`, `user_judgment`, `validator`, `evidence` |
-| `RunSummary.kind` | `shaping_update`, `implementation`, `direct` |
-| `RunSummary.status` | `completed`, `interrupted`, `blocked`, `violation` |
-| `UserJudgment.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
-| `UserJudgment.judgment_kind` | `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `final_acceptance`, `residual_risk_acceptance`, `cancellation` |
-| `UserJudgment.presentation` | `short` |
-| `UserJudgment.required_for` | `next_action`, `write`, `run`, `close`, `acceptance`, `risk` |
-| `UserJudgmentCandidate.judgment_kind` | `UserJudgment.judgment_kind`와 같은 값 |
-| `UserJudgmentCandidate.presentation` | `short` |
-| `UserJudgmentCandidate.required_for` | `UserJudgment.required_for`와 같은 값 |
-| `UserJudgmentOption.meaning` | `approve`, `reject`, `defer`, `choose`, `cancel` |
-| `ArtifactRef.redaction_state` | `none`, `redacted`, `secret_omitted`, `blocked` |
-| `CloseReadinessBlocker.category` | `task`, `open_run`, `scope`, `user_judgment`, `sensitive_approval`, `write_compatibility`, `baseline`, `surface_capability`, `evidence`, `artifact_availability`, `final_acceptance`, `residual_risk_visibility`, `residual_risk_acceptance`, `cancellation`, `supersession`, `recovery` |
-| `NextActionSummary.action_kind` | `ask_user`, `update_scope`, `prepare_write`, `implement`, `request_acceptance`, `close_task`, `idle` |
-| `NextActionSummary.required_tool` | 활성 메서드 집합 값, 그리고 `null` |
-| `GuaranteeDisplay.level` | `cooperative`, `detective` |
-| `ValidatorResult.validator_id` | `surface_capability_check` |
-| `ValidatorResult.validator_kind` | `capability` |
-| `ValidatorResult.status` | `passed`, `warning`, `failed`, `blocked`, `skipped` |
-| `ValidatorResult.guarantee_level` | `cooperative`, `detective` |
-| `ValidatorResult.findings.severity` | `info`, `warning`, `error`, `blocker` |
-| `SensitiveCategory` | `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `destructive_write`, `production_config_change`, `ci_cd_change`, `infra_or_deployment_change`, `privacy_or_pii_change`, `data_export`, `telemetry_or_logging_change`, `license_or_compliance_change`, `billing_or_cost_change`, `model_or_prompt_policy_change`, `policy_override` |
-
-`GuaranteeDisplay.level`에서 `cooperative`는 현재 MVP의 기본값입니다. `detective`도 현재 MVP 값이지만, 활성 접점이 관련 사실을 정직하게 관찰할 수 있고 관련 역량 확인이 실제로 통과한 곳에서만 사용할 수 있습니다. 기준 프로필에서는 `changed_path_detection_verification=passed`가 필요하며 검증된 변경 경로 탐지 범위로 제한됩니다. 두 값 모두 OS 권한, 임의 도구 샌드박스, 변조 방지 저장소, 도구 실행 전 차단, 격리를 뜻하지 않습니다.
-
-Schema Core는 활성 표 안에 비활성 enum 값을 예약하지 않습니다. 이 섹션에 없는 사용자 판단 종류, gate 필드, validator ID, `captured_artifact` 같은 actor/source 값, 더 강한 보장 라벨, 여기에 없는 명령/네트워크/비밀값 관찰 또는 차단 필드, API 메서드는 담당 문서가 승격하고 관련 활성 담당 계약에 추가하기 전까지 비활성입니다.
-
-<a id="later-candidate-value-names"></a>
-
-## 이후 후보 값 이름
-
-이후 후보 값 이름은 승격된 담당 문서가 정확한 활성 필드, 값 집합, validator, 대체 동작, 증명 기대치를 이 문서나 다른 활성 담당 문서에 추가하기 전까지 [이후 후보 색인](../../later/index.md#later-schema-candidates)에만 남는 목록 전용 이름입니다. 이 활성 API 참조는 이후 후보 스키마 본문을 일부러 정의하지 않습니다.
+활성 메서드 이름, API enum 형태 값, profile-gated 값 경계는 [API 값 집합](schema-value-sets.md)이 담당합니다. 이 앵커는 오래된 링크를 위해서만 남아 있습니다.

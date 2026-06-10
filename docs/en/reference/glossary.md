@@ -1,175 +1,83 @@
 # Glossary Reference
 
-Use this glossary to check Harness terms, capitalization, exact identifiers, and owner routing. It is source documentation for planned Harness behavior only; this repository is documentation-only unless [MVP Plan](../build/mvp-plan.md) says otherwise.
+This document owns official terminology for Harness documentation. It defines terms for readers and translators; it does not define exact schemas, value sets, DDL, storage effects, security mechanisms, API behavior, or implementation sequencing.
 
-The glossary defines names and routing, not full contracts. Core behavior, API schemas, storage DDL, security guarantees, projection templates, connector behavior, conformance fixtures, and later candidate contracts stay in their owner documents.
+## Owns / Does not own
 
-## Public terms
+This document owns:
 
-Use these terms first in user-facing docs, prompts, and status summaries. Add exact Harness identifiers only when they clarify a blocker, boundary, source reference, or owner route.
+- official English terminology for product, Core, API, storage, security, agent, projection, and later-candidate concepts
+- term-level meaning for documentation prose
+- links from terms to canonical technical owners
 
-| Public term | Meaning | Owner route |
+This document does not own:
+
+- exact API field shapes or enum-like values; see API schema owners and [API Value Sets](api/schema-value-sets.md)
+- public error codes; see [API Errors](api/errors.md)
+- storage records, effects, artifacts, versioning, locks, or migrations; see storage owners through [Reference Index](README.md)
+- template bodies; see [Template Bodies](template-bodies.md)
+- implementation readiness; see [MVP Plan](../build/mvp-plan.md)
+
+## Product Terms
+
+| Term | Meaning | Owner |
 |---|---|---|
-| work / task | The thing the user wants completed, answered, investigated, or decided. Use `Task` only for the internal record. | [Core Model](core-model.md) |
-| scope | What may change, what is out of scope, and where the agent should stop before continuing. | [Core Model](core-model.md) |
-| out of scope | A file, behavior, decision, claim, or action excluded from the current scope. | [Core Model](core-model.md) |
-| requirement clarification | Plain-language shaping before implementation planning or write-capable work. Internal references may call this `Discovery`. | [Core Model](core-model.md) |
-| work piece | A small scoped portion of work. Internal references may call write-capable scoped work a `Change Unit`. | [Core Model](core-model.md) |
-| user-owned judgment | A choice Harness must preserve for the user instead of inferring from agent judgment, evidence, display text, broad consent, or another judgment route. | [Core Model](core-model.md) |
-| judgment request | A focused prompt asking the user to make one user-owned judgment. API references use `UserJudgment`. | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md) |
-| product judgment | A user-owned choice about user-visible product behavior, messages, flow, UX, accessibility, product trade-offs, or user value. | [Core Model](core-model.md) |
-| technical judgment | A user-owned choice about architecture, dependency or external service, authentication, migration, interface, security/privacy/retention, compatibility, or material, irreversible, or costly-to-reverse technical direction. | [Core Model](core-model.md) |
-| scope judgment | A user-owned choice about scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change. | [Core Model](core-model.md) |
-| agent-owned implementation detail | A small implementation choice the agent may usually decide inside accepted scope when it does not change product behavior, scope, or material technical direction. | [Core Model](core-model.md) |
-| sensitive-action approval | User permission for one named sensitive step inside a bounded `SensitiveActionScope`. It is not path-level Write Authorization, final acceptance, residual risk acceptance, or broad approval. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
-| evidence | Durable support for a claim about the work, such as changed paths, diffs, logs, screenshots, inspection notes, or artifact refs. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| verification | Recorded correctness checking when an owner path requires it. It does not replace evidence, QA, final acceptance, or residual risk acceptance. | [Core Model](core-model.md) |
-| Manual QA | Human quality review when the surface requires judgment that automated checks or evidence cannot provide. | [Core Model](core-model.md), [Later](../later/index.md) |
-| QA waiver | A later/reserved user-owned judgment candidate to waive or limit a QA expectation if a future owner path allows it. It does not create evidence or final acceptance. | [Later](../later/index.md), [Core Model](core-model.md) |
-| final acceptance | The user's result judgment when the active close path requires acceptance. It does not approve sensitive actions, create evidence, erase evidence gaps, or accept residual risk by itself. | [Core Model](core-model.md) |
-| residual risk | Known remaining uncertainty, unchecked condition, limitation, or trade-off that matters to close. | [Core Model](core-model.md) |
-| residual risk acceptance | A user-owned judgment accepting known residual risk when the active close path requires it. It is distinct from final acceptance and later/reserved QA waiver or verification-risk acceptance. Exact schema values remain `residual_risk_acceptance`. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
-| close readiness | Whether work can honestly close now and what remains before it can close. | [Core Model](core-model.md) |
-| close blocker | A close-specific reason that remains after close eligibility has been evaluated. Fix or validly defer the condition before close. | [Core Model](core-model.md) |
-| next safe action | The next action that can proceed without hiding unresolved scope, judgment, evidence, QA, verification, acceptance, or risk. | [API Schema Core](api/schema-core.md) |
-| authority boundary | The line between what creates Harness authority and what only informs it. Chat, projections, and reports are not authority. | [Runtime Boundaries](runtime-boundaries.md) |
-| derived display | User-visible output rendered from owner records, such as a status card or projection. It does not replace Core-owned state. | [Projection And Templates](projection-and-templates.md) |
-| current MVP | The active planned MVP reference scope, not proof that runtime/server implementation exists. | [MVP Plan](../build/mvp-plan.md) |
-| later candidate | Future material outside active MVP scope until an owner promotes it with scope, fallback behavior, and proof expectations. | [Later Candidate Index](../later/index.md) |
+| Harness | Planned local work-authority server for AI-assisted product work. | [Active MVP Scope](active-mvp-scope.md), [Runtime Boundaries](runtime-boundaries.md) |
+| Product Repository | The user's project workspace. Product files are not Harness runtime state. | [Runtime Boundaries](runtime-boundaries.md) |
+| Harness Runtime Home | Future operational data space for Harness records and artifacts. This documentation repo is not one. | [Runtime Boundaries](runtime-boundaries.md), storage owners |
+| current MVP | The active product scope boundary for the first planned local work loop. | [Active MVP Scope](active-mvp-scope.md) |
+| later candidate | Deferred material that is not active until an owner promotes it. | [Later Candidate Index](../later/index.md) |
 
-## Core terms
+## Core Terms
 
-These terms orient readers to Core authority. Exact lifecycle, gate, close, waiver, and non-substitution semantics live in [Core Model Reference](core-model.md).
-
-| Core term | Short orientation | Owner route |
+| Term | Meaning | Owner |
 |---|---|---|
-| Core-owned state | Committed owner records and `state.sqlite.task_events` that serve as Harness operational authority. | [Core Model](core-model.md), [Storage](storage.md) |
-| `Task` | Internal unit for the user's work, state, blockers, evidence status, close readiness, and result. | [Core Model](core-model.md) |
-| `Task.lifecycle_phase` | Persisted Task lifecycle field. Values: `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded`. `intake` is not a value, and `superseded` is terminal. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| `Task.close_reason` | Persisted close-reason detail. Values: `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded`. It is separate from lifecycle and coarse result. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| `Task.result` | Coarse Task outcome. Values: `none`, `advice_only`, `completed`, `cancelled`, `superseded`. `passed` and `failed` are not terminal Task results. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| `Change Unit` | Active scoped work boundary for write-capable work. It does not authorize a write by itself. | [Core Model](core-model.md) |
-| `Autonomy Boundary` | Choices the agent may make inside an active `Change Unit` without asking again. It is not scope grant, approval, or write authority. | [Core Model](core-model.md) |
-| `user_judgment` | Canonical record family for user-owned choices. | [Core Model](core-model.md), [API Schema Core](api/schema-core.md) |
-| `Gate` | Core compatibility dimension for progress, write, run recording, or close. Requiredness depends on the active owner path. | [Core Model](core-model.md) |
-| `Blocker` | Structured reason progress, write, close, or another requested step cannot proceed honestly. | [Core Model](core-model.md) |
-| `Write Authorization` | Single-use cooperative Core record created only by compatible non-dry-run `prepare_write` for a product-file write attempt. It is not sensitive-action approval, OS permission, or isolation. | [Core Model](core-model.md) |
-| `Run` | Committed execution or observation record. Product-write Runs must consume compatible active `Write Authorization`. | [Core Model](core-model.md) |
-| `update_scope` | Core path for updating active Task scope and the active Change Unit after intake. Public API method: `harness.update_scope`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
-| `prepare_write` | Core pre-write compatibility decision point for product-file writes. Public API method: `harness.prepare_write`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
-| `record_run` | Core path for recording execution or observation and consuming compatible `Write Authorization` when needed. Public API method: `harness.record_run`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
-| `close_task` | Core completion decision point. Public API method: `harness.close_task`. | [Core Model](core-model.md), [MVP API](api/mvp-api.md) |
+| Core-owned state | Harness-owned records that carry work authority. | [Core Model](core-model.md), storage owners |
+| user-owned judgment | A decision Harness must ask or preserve instead of inferring. | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md) |
+| sensitive-action approval | User judgment for a named sensitive action; not Write Authorization or final acceptance. | [Core Model](core-model.md), [Security](security.md) |
+| final acceptance | User judgment that accepts a result when the owner path requires it. | [Core Model](core-model.md) |
+| residual-risk acceptance | User judgment that accepts a visible residual risk when required. | [Core Model](core-model.md) |
+| close readiness | Whether the current work can be closed honestly, including remaining blockers. | [Core Model](core-model.md), [API State Schemas](api/schema-state.md) |
 
-## API/schema identifiers
+## API And Schema Terms
 
-Keep these identifiers exact in schemas, API docs, records, examples, file paths, diagnostic output, and code-like prose. Meanings and value sets are owned by [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
-
-| Identifier | Short orientation | Owner route |
+| Term | Meaning | Owner |
 |---|---|---|
-| Active MCP methods | `harness.intake`, `harness.status`, `harness.update_scope`, `harness.prepare_write`, `harness.stage_artifact`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.close_task`. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md) |
-| `ToolEnvelope` | Shared request envelope for public tool calls. | [API Schema Core](api/schema-core.md) |
-| `ToolResultBase` | Shared base for actual method results. Concrete read-only results, committed Core results, successful staging results, and permitted committed blocked results build on it. A selected read-only operation may use `ToolResultBase.dry_run=true` with `effect_kind=read_only` while remaining an actual method result. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md) |
-| `MethodResult` | A method-specific result branch built on `ToolResultBase`, such as `StatusResult`, `PrepareWriteResult`, or `CloseTaskResult`. A selected read-only operation may return a `MethodResult` with `base.dry_run=true` and `effect_kind=read_only`; for example, `harness.status dry_run=true` returns `StatusResult`, and `harness.close_task intent=check dry_run=true` returns `CloseTaskResult`. A committed blocked response is a `MethodResult`, not `ToolRejectedResponse`, when the method state-effect table permits that committed blocked result. | [MVP API](api/mvp-api.md), [API Errors](api/errors.md) |
-| `ToolRejectedResponse` | No-effect rejection response branch for pre-commit failures. It carries non-empty `ToolRejectedResponse.errors: ToolError[]`, has `response_kind=rejected` and `effect_kind=no_effect`, and has no method-specific result fields, replay row, state-version increment, staged-handle consumption, Write Authorization creation or consumption, close state mutation, or other response effects. | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
-| `ToolDryRunResponse` | Valid dry-run preview response for a selected operation that could otherwise create a Core commit or storage-owned staging side effect. It is not the response for every `dry_run=true` request. It has `response_kind=dry_run`, `effect_kind=no_effect`, no method-specific result fields, no generated real refs for records that do not exist, no replay row, no state-version increment, no staged-handle consumption, and no Write Authorization creation or consumption. | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [MVP API](api/mvp-api.md) |
-| `ToolError` | Public error information carried by `ToolRejectedResponse.errors` for pre-commit failures. It keeps error identity, retry guidance, and structured details; exact public codes and precedence are owned by API Errors. | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
-| `WriteDecisionReason` | `prepare_write` decision reason returned in `PrepareWriteResult.write_decision_reasons` when `decision=blocked`, `decision=approval_required`, or `decision=decision_required`. It explains `prepare_write` decision outcomes; it is not a pre-commit failure, not a close-readiness finding, and not dry-run preview data. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md), [Core Model](core-model.md) |
-| `CloseReadinessBlocker` | Data shape for close-readiness findings discovered while evaluating close eligibility. Active use sites are `StatusResult.close_blockers` and `CloseTaskResult.blockers`; the type itself does not mean persistence, storage, `close_state` mutation, or any state effect. It is not used by `prepare_write`, `DryRunSummary.would_blockers`, or `ToolRejectedResponse.errors`; `STATE_VERSION_CONFLICT` must not be `CloseReadinessBlocker.code`. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md), [API Errors](api/errors.md), [Core Model](core-model.md), [Storage](storage.md) |
-| `PlannedBlocker` | Dry-run preview data used only in `DryRunSummary.would_blockers` for expected blockers. It is not stored, not a `WriteDecisionReason`, not a `CloseReadinessBlocker`, and not a committed blocker result. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md), [API Errors](api/errors.md) |
-| `STATE_VERSION_CONFLICT` | Current MVP public `ErrorCode` for project-wide freshness and idempotency conflicts, including stale `project_state.state_version` expectations, stale `WriteAuthorization.basis_state_version` before consumption, and idempotency request-hash conflicts. It is returned only in `ToolRejectedResponse` with `effect_kind=no_effect`; it is not `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`. | [API Errors](api/errors.md), [Storage](storage.md) |
-| `EventRef` | Shared event reference shape for result branches that actually have committed events. `ToolRejectedResponse` and `ToolDryRunResponse` branches use `events=[]`. | [API Schema Core](api/schema-core.md) |
-| `response_kind` | Response branch discriminator. Active values distinguish real method results, rejected responses, and dry-run previews. | [API Schema Core](api/schema-core.md) |
-| `effect_kind` | Response effect classifier. Active values distinguish read-only results, Core commits, temporary staging, and no-effect branches; `effect_kind=read_only` may coexist with `dry_run=true` when the selected operation is read-only. Method-specific state effects are owned by MVP API. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md) |
-| `LocalSurfaceRegistration` | Stored same-project local surface registration fact. It is not caller authority and is not refreshed by Product Repository files, projections, chat, or agent memory. | [API Schema Core](api/schema-core.md), [Storage](storage.md), [Agent Integration](agent-integration.md) |
-| `VerifiedSurfaceContext` | Server-derived verification for one concrete request and access class. It is not a request payload, Markdown assertion, generated-file marker, or agent-memory fact. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md), [Agent Integration](agent-integration.md) |
-| `StateSummary` / `StateRecordRef` / `NextActionSummary` / `GuaranteeDisplay` | Current-state, owner-ref, next-action, and guarantee-display shapes. | [API Schema Core](api/schema-core.md) |
-| `ShapingReadiness` | Derived active-state view of whether the goal, non-goals, affected area or paths, acceptance criteria, Autonomy Boundary, first Change Unit, user-owned blockers, and next safe action are known enough. It is not a persistent planning artifact. | [API Schema Core](api/schema-core.md) |
-| `CompletionPolicy` | Compact active close policy for a Task or Change Unit. It names required evidence, final acceptance, residual risk acceptance when visible, product-write completion, and user-visible result expectations. It is not a QA gate, verification gate, full Evidence Manifest, or separate assurance workflow. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
-| `ArtifactRef` | Public pointer to a persisted artifact. A persisted artifact supports evidence only when the relevant evidence coverage links it to a claim. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| `ArtifactInput` | `harness.record_run` input shape for either a valid `StagedArtifactHandle` or a compatible existing `ArtifactRef`. It does not grant arbitrary file read authority or native artifact capture. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| `StagedArtifactHandle` | Temporary same-project, same-Task handle created by `harness.stage_artifact`. It is not Core state, evidence, gate satisfaction, or a persistent `ArtifactRef` until a compatible `harness.record_run` consumes it. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md), [Storage](storage.md) |
-| `EvidenceSummary` | Compact active evidence status tied to the active `CompletionPolicy`. | [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| `EvidenceCoverageItem` | Per-claim coverage item that states whether a claim is required for close, its support state, and supporting or gap refs. Missing required evidence must stay visible instead of being omitted. | [API Schema Core](api/schema-core.md) |
-| `AuthorizedAttemptScope` | Stored path-level scope of one allowed product-file write attempt. It is not the approval scope for commands, dependencies, hosts, network access, secrets, deployments, destructive actions, or system access. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
-| `SensitiveActionScope` | Stored scope for `judgment_kind=sensitive_approval`, including the named sensitive action and honest capability claim. It is separate from `AuthorizedAttemptScope` and does not prove Harness can observe, block, sandbox, or isolate the action. | [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
-| `WriteAuthorizationSummary` / `WriteAuthoritySummary` | Public summaries for one `Write Authorization` and the current write-authority position. | [API Schema Core](api/schema-core.md) |
-| `RunSummary` / `ObservedChanges` | Public run result and observed-change summary shapes. | [API Schema Core](api/schema-core.md) |
-| `UserJudgment` / `UserJudgmentCandidate` / `UserJudgmentResolution` / `RecordUserJudgmentPayload` / `AcceptedRiskInput` | Judgment request, candidate, stored resolution, answer detail, and residual risk acceptance input shapes. | [API Schema Core](api/schema-core.md) |
-| `judgment_kind` | Canonical user judgment kind field. Keep values exact; do not replace them with localized labels. | [API Schema Core](api/schema-core.md) |
-| `presentation` | Active compact prompt/detail field. `short` is active; `full` belongs to later full-format presentation. | [API Schema Core](api/schema-core.md), [Later](../later/index.md) |
-| `CloseTaskResult.close_state` | Response-level close status from `harness.close_task`. Values: `ready`, `blocked`, `closed`, `cancelled`, `superseded`. It is separate from persisted `Task.lifecycle_phase`. | [MVP API](api/mvp-api.md) |
-| `ValidatorResult` | Structured validator output. Active stable validator ID: `surface_capability_check`. | [API Schema Core](api/schema-core.md) |
-| sensitive categories | Exact values such as `auth_change`, `destructive_write`, `privacy_or_pii_change`, `data_export`, and `policy_override`. | [API Schema Core](api/schema-core.md) |
-| public error codes | Stable public errors such as `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `CAPABILITY_INSUFFICIENT`, and `PROJECTION_STALE`. | [API Errors](api/errors.md) |
+| `ToolEnvelope` | Common request envelope for public methods. | [API Schema Core](api/schema-core.md) |
+| response branch | One of a method result, `ToolRejectedResponse`, or `ToolDryRunResponse`. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md) |
+| `ErrorCode` | Public API error identity. | [API Errors](api/errors.md) |
+| `StateSummary` | API state-shaped summary. | [API State Schemas](api/schema-state.md) |
+| `UserJudgment` | API shape for user-owned judgment records or candidates. | [API Judgment Schemas](api/schema-judgment.md) |
+| `ArtifactRef` | Public pointer to a persisted artifact. | [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md) |
+| API value set | Canonical list of active enum-like API values. | [API Value Sets](api/schema-value-sets.md) |
 
-## Storage terms
+## Storage Terms
 
-Storage terms identify where future Harness records live. Exact table roles, JSON `TEXT` rules, state clocks, locks, migrations, and artifact handling are owned by [Storage](storage.md).
-
-| Storage term | Short orientation | Owner route |
+| Term | Meaning | Owner |
 |---|---|---|
-| Product Repository | The user's product workspace. Product files are not Harness operational authority merely because they are nearby. | [Runtime Boundaries](runtime-boundaries.md) |
-| Harness Server / Installation | Future local Harness control-plane program. It is not a general OS sandbox or permission system. | [Runtime Boundaries](runtime-boundaries.md) |
-| Harness Runtime Home | Per-user/per-installation operational data home for registry, project state, and artifacts. | [Runtime Boundaries](runtime-boundaries.md), [Storage](storage.md) |
-| runtime identity files | `registry.sqlite`, `project.yaml`, and `state.sqlite` identify the runtime home, static project configuration, and project-local Core state. | [Storage](storage.md) |
-| active storage records | Active table names include `project_state`, `surfaces`, `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers`, `task_events`, and `tool_invocations`. | [Storage](storage.md) |
-| JSON `TEXT` columns | SQLite `TEXT` columns that store owner-shaped JSON after Core/API/storage validation. They are not arbitrary JSON containers. | [Storage](storage.md) |
-| artifact storage links | `artifacts` and `artifact_links` register evidence bytes or safe metadata and connect them to owner records. Links do not satisfy gates by themselves. | [Storage](storage.md) |
-| event and replay storage | `task_events` is the committed mutation audit trail; `tool_invocations` stores committed idempotency replay rows. | [Storage](storage.md) |
-| project-wide state_version / `project_state.state_version` | The single public current MVP state clock and the only active authorization, conflict, freshness, and concurrency basis for public API mutations. `tasks.state_version` and task-scoped state clocks are not active bases. `tree_hash` supports baseline checks, and `request_hash` supports idempotency conflict checks. | [Storage](storage.md), [API Errors](api/errors.md) |
+| storage record | Future persisted Harness record shape. | [Storage Records](storage-records.md) |
+| storage effect | Whether a method branch changes storage or has no effect. | [Storage Effects](storage-effects.md) |
+| artifact storage lifecycle | Staging, promotion, persistent linking, body-read eligibility, retention, and integrity. | [Artifact Storage](storage-artifacts.md) |
+| state versioning | Public state clock, idempotency, locks, and migration semantics. | [Storage Versioning](storage-versioning.md) |
 
-## Security guarantee terms
+## Security And Agent Terms
 
-Security wording must match the control the owner docs define and prove. Exact guarantee meanings and non-claims are owned by [Security Reference](security.md).
-
-| Security term | Meaning | Owner route |
+| Term | Meaning | Owner |
 |---|---|---|
-| cooperative guarantee / `cooperative` | Harness can guide, record, compare, or refuse Harness state-changing paths when the connected surface follows the procedure. It is not hard blocking, OS permission, sandboxing, tamper-proof enforcement, or isolation. | [Security](security.md), [Agent Integration](agent-integration.md) |
-| detective guarantee / `detective` | Harness can detect, record, or report supported facts after an action or when they become observable, but in the active MVP only after the relevant capability check has passed. It is not prevention. | [Security](security.md), [Agent Integration](agent-integration.md) |
-| `preventive` | A claim that a named mechanism can block a covered operation before execution. The current MVP has no default preventive claim. | [Security](security.md) |
-| `isolated` | A claim that a named and proven separation boundary isolates one thing from another for a covered operation. The current MVP has no default isolation claim. | [Security](security.md), [Runtime Boundaries](runtime-boundaries.md) |
-| honest guarantee display | User-visible guarantee text must match `capability_profile` facts and owner-proof level. Unsupported stronger claims must be lowered or blocked. | [Security](security.md), [API Errors](api/errors.md) |
-| explicit non-claims / trust boundary | The current MVP does not provide OS-level permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, or security isolation. | [Security](security.md), [Runtime Boundaries](runtime-boundaries.md) |
+| cooperative guarantee | Harness can guide, record, compare, or refuse owner-defined Harness state-changing paths when the surface follows the procedure. | [Security](security.md) |
+| detective guarantee | Harness can report supported observable facts only after the relevant capability check has passed. | [Security](security.md), [Agent Integration](agent-integration.md) |
+| `surface_id` | Surface identifier, not proof of authority by itself. | [Agent Integration](agent-integration.md), [Security](security.md) |
+| `capability_profile` | Connector-owned description of supported surface capabilities. | [Agent Integration](agent-integration.md) |
+| surface recipe | Practical usage guidance for a named surface. | [Surface Recipes](../use/surface-recipes.md) |
 
-## Agent/context terms
+## Projection And Template Terms
 
-Agent and connector terms explain how a surface should use owner records with low context cost. Exact connector behavior is owned by [Agent Integration Reference](agent-integration.md).
-
-| Agent/context term | Short orientation | Owner route |
+| Term | Meaning | Owner |
 |---|---|---|
-| agent surface / `surface_id` | Connected environment and API caller identifier. Surface name or `surface_id` alone does not grant capability or authority. | [Agent Integration](agent-integration.md) |
-| `capability_profile` | Declared and refreshed facts about what the surface can actually do, including MCP posture, observation, capture, guard, and isolation support. | [Agent Integration](agent-integration.md), [Security](security.md) |
-| connector manifest | Connector-managed path, snippet, managed block hash, profile freshness, drift, and fallback summary. | [Agent Integration](agent-integration.md) |
-| always-on context | One-screen current context: task summary, scope, pending judgments, blockers, next safe actions, evidence gaps, close blockers, residual risk, guarantee level, and fresh refs. | [Agent Integration](agent-integration.md) |
-| phase-relevant context / push-pull | Push compact current context; pull only the owner sections needed for the next action. | [Agent Integration](agent-integration.md), [Reference Index](README.md) |
-| Role Lens | Read-only posture guidance. Role Lens output has no authority until an owner path records the action. | [Agent Integration](agent-integration.md) |
-| reference local MCP surface | Active reference integration profile `reference-local-mcp`, with cooperative behavior and limited detective behavior only where supported and after the relevant capability check has passed. | [Agent Integration](agent-integration.md) |
-| fallback behavior | Connector response when Core, MCP, projections, local access, or capability is unavailable or insufficient. | [Agent Integration](agent-integration.md), [API Errors](api/errors.md) |
+| projection | Read-only derived display or support context from owner records. | [Projection And Templates](projection-and-templates.md) |
+| rendered label | User-visible display text, not a canonical schema value. | [Projection And Templates](projection-and-templates.md), [Template Bodies](template-bodies.md) |
+| template body | Exact rendered text owned separately from projection authority. | [Template Bodies](template-bodies.md) |
 
-## Later terms
+## Translation Owners
 
-Later terms are candidates or delivery labels. They are not active API/schema/storage contracts, fixture bodies, runtime behavior, generated artifacts, or current MVP requirements unless an owner promotes them.
-
-| Later term | Current status | Owner route |
-|---|---|---|
-| Context Index | Later read-only retrieval support. It cannot authorize writes, satisfy gates, accept risk, or close work. | [Later](../later/index.md) |
-| Journey Card / Journey Spine | Later continuity display. It can help orientation when enabled and fresh, but it is not Core-owned state. | [Later](../later/index.md) |
-| Browser QA Capture | Later capture support candidate. It is not Manual QA, final acceptance, or detached verification by itself. | [Later](../later/index.md) |
-| Discovery Brief as a persistent artifact | Later shaping candidate. Active MVP shaping stays in Task, Change Unit, `user_judgment`, evidence summary, blockers, and next safe action, not a standalone persistent brief. | [Later](../later/index.md), [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| Question Queue | Later shaping candidate. Active MVP may surface a focused user judgment or blocker, but it does not create a persistent question queue. | [Later](../later/index.md), [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| Assumption Register | Later shaping candidate. Active MVP may keep bounded assumptions in owner-shaped Task or Change Unit fields, but it does not create a persistent assumption register. | [Later](../later/index.md), [API Schema Core](api/schema-core.md), [Storage](storage.md) |
-| persistent projection job | Later projection/storage candidate. Active MVP uses read-time compact status or projection displays and has no active persistent projection jobs. | [Later](../later/index.md), [Projection And Templates](projection-and-templates.md), [Storage](storage.md) |
-| projection reconcile | Later operations/projection candidate. Human-edited projections, generated Markdown, reconcile queues, and projection-derived state changes are not active authority until promoted by owners. | [Later](../later/index.md), [Projection And Templates](projection-and-templates.md) |
-| managed block drift repair | Later connector/projection repair candidate. Active MVP does not require managed blocks, generated-file manifests, drift repair, or projection repair. | [Later](../later/index.md), [Agent Integration](agent-integration.md) |
-| native artifact capture | Later capability candidate. Active MVP artifact intake is manual staging through `harness.stage_artifact` plus owner promotion/linking, not surface-native capture. | [Later](../later/index.md), [Agent Integration](agent-integration.md), [API Schema Core](api/schema-core.md) |
-| `captured_artifact` | Later value name only. Active MVP rejects `captured_artifact` handles and captured handles as artifact authority before mutation. | [Later](../later/index.md), [API Schema Core](api/schema-core.md) |
-| task-scoped state clock | Outside active MVP. The current MVP has one public project-wide state clock, `project_state.state_version`; Task routing does not select a separate public clock. | [Storage](storage.md), [API Schema Core](api/schema-core.md) |
-
-## Retired / compatibility terms
-
-Keep these only where they prevent confusion with compatibility labels. Do not use them as primary concepts in new active docs.
-
-| Term | Compatibility note | Current route |
-|---|---|---|
-| Decision Packet | Full-format later presentation for user judgment. It is not a required active user-path format. | [API Schema Core](api/schema-core.md), [Later](../later/index.md) |
-| `MVP-1` | Older label for the current active MVP scope. Use it only where compatibility explanation is needed; prefer current MVP in active docs. | [MVP Plan](../build/mvp-plan.md) |
+Korean terminology policy is shared with [Translation Guide](../maintain/translation-guide.md) and [docs/terminology-map.yaml](../../terminology-map.yaml). Exact identifiers remain unchanged across languages.

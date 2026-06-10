@@ -17,8 +17,8 @@ docs:
       en: docs/en/README.md
       ko: docs/ko/README.md
     default_for_agent: en
-    owns: "Language-specific documentation entry points, current route overview, reader guidance, compact pointers to Reference, Later, Maintain, and route metadata, plus high-level routing for public API response branch owners, blocker-like owner routing for `ToolError`, `WriteDecisionReason`, `CloseReadinessBlocker`, and `PlannedBlocker`, data shape and response effects separation, close/freshness owner routing for close readiness, pre-commit failure, preflight rejection, `STATE_VERSION_CONFLICT`, `prepare_write`, `close_task`, and the dry-run branch-selection reminder that `StatusResult`/`CloseTaskResult` read-only results are distinct from `ToolDryRunResponse` dry-run preview responses."
-    does_not_own: "Product thesis, exact contracts, implementation readiness, or detailed owner routing."
+    owns: "Language-specific entry routing only."
+    does_not_own: "Technical contracts, active MVP scope, API/storage/security details, or implementation readiness."
 
   - doc_id: start
     status: active
@@ -27,8 +27,8 @@ docs:
       en: docs/en/start.md
       ko: docs/ko/start.md
     default_for_agent: en
-    owns: "First-read product thesis, user/agent/evidence/close concepts, and current guarantee boundary."
-    does_not_own: "Exact API, schema, storage, security, conformance, or implementation-readiness contracts."
+    owns: "First-read product orientation."
+    does_not_own: "Exact contracts or implementation readiness."
 
   - doc_id: use.user-guide
     status: active
@@ -37,8 +37,8 @@ docs:
       en: docs/en/use/user-guide.md
       ko: docs/ko/use/user-guide.md
     default_for_agent: en
-    owns: "User-facing work loop guidance, judgment separation, evidence review, and close expectations."
-    does_not_own: "Internal state transitions, API shapes, storage records, or connector behavior."
+    owns: "User-facing workflow guidance."
+    does_not_own: "Internal contracts, schemas, storage, or connector behavior."
 
   - doc_id: use.agent-guide
     status: active
@@ -47,8 +47,8 @@ docs:
       en: docs/en/use/agent-guide.md
       ko: docs/ko/use/agent-guide.md
     default_for_agent: en
-    owns: "Agent operating guidance, context discipline, user-judgment handling, and active/later caution."
-    does_not_own: "Public API contracts, connector conformance detail, storage, or security guarantees."
+    owns: "Agent operating guidance and context discipline."
+    does_not_own: "Connector reference contracts, API schemas, storage, or security guarantees."
 
   - doc_id: use.judgment-examples
     status: active
@@ -57,8 +57,18 @@ docs:
       en: docs/en/use/judgment-examples.md
       ko: docs/ko/use/judgment-examples.md
     default_for_agent: en
-    owns: "Concrete examples for distinct user-owned judgment routes, the active focused judgment path, and later-presentation boundaries."
-    does_not_own: "Canonical UserJudgment schema, gate rules, or lifecycle authority."
+    owns: "Examples for distinct user-owned judgment situations."
+    does_not_own: "Canonical judgment schemas, values, or Core authority."
+
+  - doc_id: use.surface-recipes
+    status: active
+    family: use
+    paths:
+      en: docs/en/use/surface-recipes.md
+      ko: docs/ko/use/surface-recipes.md
+    default_for_agent: en
+    owns: "Surface-specific usage recipes."
+    does_not_own: "Connector contracts, API schemas, storage effects, or security guarantees."
 
   - doc_id: build.mvp-plan
     status: active
@@ -67,8 +77,8 @@ docs:
       en: docs/en/build/mvp-plan.md
       ko: docs/ko/build/mvp-plan.md
     default_for_agent: en
-    owns: "Implementation sequencing, current repository status, readiness decisions, the closed active MVP boundary, shaping readiness planning scope, first smoke target, and active/later planning exclusions."
-    does_not_own: "Runtime records, generated artifacts, exact method-name sets, detailed schemas, enum value sets, DDL, or accepted implementation behavior."
+    owns: "Implementation-readiness planning, maintainer decisions, and build handoff status."
+    does_not_own: "Current MVP scope contracts, exact schemas, API behavior, storage, security claims, or accepted implementation behavior."
 
   - doc_id: reference.index
     status: active
@@ -77,8 +87,18 @@ docs:
       en: docs/en/reference/README.md
       ko: docs/ko/reference/README.md
     default_for_agent: en
-    owns: "Reference owner routing for exact contract questions, including active MVP boundary, public API response branch routing for `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`, `MethodResult`, `response_kind`, `effect_kind`, and read-only `dry_run=true` examples such as `StatusResult` and `CloseTaskResult`, public `ErrorCode`, `STATE_VERSION_CONFLICT`, pre-commit failure, preflight rejection, blocker-like ownership for `ToolError`, `WriteDecisionReason`, `CloseReadinessBlocker`, and `PlannedBlocker`, data shape and response effects separation, `prepare_write`, `close_task`, close readiness, `write_compatibility`, and `recovery` owners, dry-run preview routing, verified local surface access, request-level `VerifiedSurfaceContext.access_class`, `run_recording`, `artifact_registration`, `artifact_read`, project-wide `project_state.state_version`, staged artifacts, `StagedArtifactHandle` promotion, persistent `existing_artifact` / `ArtifactRef` linking, artifact body reads, evidence/close/projection/security/judgment/shaping owners, later-only routing, and maintain-route pointers."
-    does_not_own: "Detailed schemas, DDL, transition tables, templates, errors, retrieval guidance, security guarantees, or implementation readiness."
+    owns: "Reference owner routing."
+    does_not_own: "Detailed contracts, schemas, DDL, templates, security guarantees, or implementation readiness."
+
+  - doc_id: reference.active-mvp-scope
+    status: active
+    family: reference
+    paths:
+      en: docs/en/reference/active-mvp-scope.md
+      ko: docs/ko/reference/active-mvp-scope.md
+    default_for_agent: en
+    owns: "Current MVP scope boundary and scope-level active/later split."
+    does_not_own: "Implementation readiness, method behavior, schemas, storage, security guarantees, or later candidate details."
 
   - doc_id: reference.core-model
     status: active
@@ -87,8 +107,8 @@ docs:
       en: docs/en/reference/core-model.md
       ko: docs/ko/reference/core-model.md
     default_for_agent: en
-    owns: "Core authority, task lifecycle, `ShapingReadiness` meaning, user judgment boundaries, final/residual-risk non-substitution, active gate meaning, `CompletionPolicy` and `EvidenceSummary` close effects, reserved gate promotion boundary, separation between `prepare_write` write decision evaluation and `close_task` close readiness evaluation, close-readiness evaluation ordering, semantic `CloseReadinessBlocker` close-readiness finding meaning, `write_compatibility` and `recovery` close blocker rows, waivers, and residual risk."
-    does_not_own: "Wire schema detail, exact enum/value sets, storage layout, public error precedence, connector recipes, or template bodies."
+    owns: "Core product concepts, authority model, lifecycle meaning, close readiness meaning, and user-owned judgment boundaries."
+    does_not_own: "Wire schemas, exact value sets, storage layout, public error precedence, connector recipes, or template bodies."
 
   - doc_id: reference.api.mvp-api
     status: active
@@ -97,8 +117,8 @@ docs:
       en: docs/en/reference/api/mvp-api.md
       ko: docs/ko/reference/api/mvp-api.md
     default_for_agent: en
-    owns: "Method-level request/response behavior for active public API methods, method-specific response unions and `MethodResult` branches, method state effects including committed blocked results when allowed, verified local surface request conditions, request-level `VerifiedSurfaceContext.access_class`, `harness.update_scope`, `harness.prepare_write` authorization effects and `PrepareWriteResult.write_decision_reasons: WriteDecisionReason[]`, `harness.stage_artifact` with `artifact_registration`, `harness.record_run` with `run_recording`, staged artifact promotion behavior, artifact body reads with `artifact_read`, `harness.status` response fields including `StatusResult.close_blockers: CloseReadinessBlocker[]`, `harness.close_task` response branches and `CloseTaskResult.blockers: CloseReadinessBlocker[]`, close readiness response fields, and dry-run preview response selection for `DryRunSummary.would_blockers: PlannedBlocker[]`."
-    does_not_own: "Exact active method-name value set, shared schema definitions, enum value sets, error precedence, storage DDL, or core lifecycle authority."
+    owns: "API method behavior for active public methods."
+    does_not_own: "Common envelopes, shared schemas, active value sets, public error precedence, or storage effects."
 
   - doc_id: reference.api.schema-core
     status: active
@@ -107,8 +127,48 @@ docs:
       en: docs/en/reference/api/schema-core.md
       ko: docs/ko/reference/api/schema-core.md
     default_for_agent: en
-    owns: "Exact active method-name set, shared API schemas, envelopes, common response branches including `ToolResultBase`, `ToolRejectedResponse`, and `ToolDryRunResponse`, shared `ToolError` and `EventRef` shapes, `response_kind`, `effect_kind`, `ToolEnvelope.expected_state_version`, `LocalSurfaceRegistration`, `VerifiedSurfaceContext.access_class`, active access-class values including `run_recording`, `artifact_registration`, and `artifact_read`, `StagedArtifactHandle`, `ArtifactInput` including `existing_artifact`, `CompletionPolicy`, `EvidenceSummary`, `SensitiveActionScope`, product-file `AuthorizedAttemptScope`, `ShapingReadiness`, blocker-like schema ownership and data-shape/effect separation for `ToolError`, `WriteDecisionReason`, `CloseReadinessBlocker`, and `PlannedBlocker`, `DryRunSummary.would_blockers`, active enum and schema value sets, rendered-label boundaries, and profile-gated value names."
-    does_not_own: "Method-specific API behavior, persisted DDL, public error precedence, security guarantee claims, later schema bodies, or template bodies."
+    owns: "Common API envelope and common response branch schemas."
+    does_not_own: "State schemas, artifact schemas, judgment schemas, value sets, method behavior, public errors, or storage effects."
+
+  - doc_id: reference.api.schema-state
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/schema-state.md
+      ko: docs/ko/reference/api/schema-state.md
+    default_for_agent: en
+    owns: "API state schemas and current-position display data shapes."
+    does_not_own: "Response branches, value sets, method effects, or storage persistence."
+
+  - doc_id: reference.api.schema-artifacts
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/schema-artifacts.md
+      ko: docs/ko/reference/api/schema-artifacts.md
+    default_for_agent: en
+    owns: "API artifact schemas."
+    does_not_own: "Artifact storage lifecycle, method behavior, value sets, or security claims."
+
+  - doc_id: reference.api.schema-judgment
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/schema-judgment.md
+      ko: docs/ko/reference/api/schema-judgment.md
+    default_for_agent: en
+    owns: "API judgment schemas."
+    does_not_own: "Core judgment meaning, method behavior, active judgment values, or close effects."
+
+  - doc_id: reference.api.schema-value-sets
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/schema-value-sets.md
+      ko: docs/ko/reference/api/schema-value-sets.md
+    default_for_agent: en
+    owns: "API value sets and enum-like values."
+    does_not_own: "Public ErrorCode values, field shapes, method behavior, or later candidate promotion."
 
   - doc_id: reference.api.errors
     status: active
@@ -117,18 +177,58 @@ docs:
       en: docs/en/reference/api/errors.md
       ko: docs/ko/reference/api/errors.md
     default_for_agent: en
-    owns: "Public `ErrorCode` contract, status taxonomy, error precedence, `ToolError` public error use, local surface errors, `STATE_VERSION_CONFLICT`, preflight rejection meaning, `ToolRejectedResponse` pre-commit failure boundaries, `ToolDryRunResponse` dry-run preview boundaries, read-only `dry_run=true` `MethodResult` behavior, forbidden blocker-code rules that keep `STATE_VERSION_CONFLICT` out of `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, and `PlannedBlocker.code`, committed blocked `MethodResult` boundaries, `close_task` blocker error mapping, and idempotency error behavior."
-    does_not_own: "Core gates, method payload schemas, method-specific durable state effects such as `prepare_write` authorization creation, storage records, or connector fallback rules."
+    owns: "Public API errors, error precedence, and public error mapping."
+    does_not_own: "Core gate meaning, method payload schemas, durable storage effects, or connector fallback rules."
 
-  - doc_id: reference.storage
+  - doc_id: reference.storage-routing
     status: active
     family: reference
     paths:
       en: docs/en/reference/storage.md
       ko: docs/ko/reference/storage.md
     default_for_agent: en
-    owns: "Storage layout, DDL, `project_state.state_version` as the single public project-wide state clock, persisted records such as `surfaces`, `write_authorizations`, staged artifact storage, staged artifact promotion persistence, persistent `existing_artifact` / `ArtifactRef` linking, artifact body-read storage eligibility, evidence summary rows, locks, artifact references, idempotency, effect differences between read-only observation, dry-run preview, and committed blocked result, data-shape/persistence separation for close-readiness findings, `prepare_write` reason versus `close_task` blocker storage effects, and migrations."
-    does_not_own: "API wire schema, security guarantees, projection templates, or generated runtime data."
+    owns: "Compatibility routing from older storage links to split storage owners."
+    does_not_own: "Storage records, effects, artifacts, versioning, locks, migrations, or DDL."
+
+  - doc_id: reference.storage-records
+    status: active
+    family: reference
+    paths:
+      en: docs/en/reference/storage-records.md
+      ko: docs/ko/reference/storage-records.md
+    default_for_agent: en
+    owns: "Storage records, DDL ownership, record-column meaning, and storage-owned JSON placement."
+    does_not_own: "Method storage effects, artifact lifecycle, versioning, locks, migrations, or API schemas."
+
+  - doc_id: reference.storage-effects
+    status: active
+    family: reference
+    paths:
+      en: docs/en/reference/storage-effects.md
+      ko: docs/ko/reference/storage-effects.md
+    default_for_agent: en
+    owns: "Storage effects for method branches and no-effect boundaries."
+    does_not_own: "Record shapes, artifact lifecycle, idempotency, locks, migrations, or API schemas."
+
+  - doc_id: reference.storage-artifacts
+    status: active
+    family: reference
+    paths:
+      en: docs/en/reference/storage-artifacts.md
+      ko: docs/ko/reference/storage-artifacts.md
+    default_for_agent: en
+    owns: "Artifact storage lifecycle, staging, promotion, persistent linking, body-read eligibility, retention, and integrity boundaries."
+    does_not_own: "API artifact schemas, method behavior, general DDL, or security claims."
+
+  - doc_id: reference.storage-versioning
+    status: active
+    family: reference
+    paths:
+      en: docs/en/reference/storage-versioning.md
+      ko: docs/ko/reference/storage-versioning.md
+    default_for_agent: en
+    owns: "State versioning, idempotency, locks, and migration semantics."
+    does_not_own: "Record shapes, method branch selection, public error precedence, or runtime operations."
 
   - doc_id: reference.runtime-boundaries
     status: active
@@ -137,8 +237,8 @@ docs:
       en: docs/en/reference/runtime-boundaries.md
       ko: docs/ko/reference/runtime-boundaries.md
     default_for_agent: en
-    owns: "Product Repository, Harness Server, Runtime Home, mutation authority, and non-isolation / OS-sandboxing non-claim boundaries."
-    does_not_own: "Security controls, API schemas, storage DDL, or implementation deployment steps."
+    owns: "Runtime, repository, server, and non-isolation boundaries."
+    does_not_own: "Security controls, API schemas, storage DDL, or deployment steps."
 
   - doc_id: reference.security
     status: active
@@ -147,8 +247,8 @@ docs:
       en: docs/en/reference/security.md
       ko: docs/ko/reference/security.md
     default_for_agent: en
-    owns: "Security assets, trust boundaries, explicit current MVP non-claims, cooperative/detective guarantee wording boundaries, capability-backed detective gating, sensitive-action permission versus product-file write scope, and profile-gated security display boundaries."
-    does_not_own: "API schemas, storage DDL, connector context budgets, exact profile fields, or OS-level enforcement."
+    owns: "Security claims, non-claims, trust boundaries, and guarantee wording."
+    does_not_own: "API schemas, storage DDL, connector context budgets, or OS-level enforcement."
 
   - doc_id: reference.agent-integration
     status: active
@@ -157,8 +257,8 @@ docs:
       en: docs/en/reference/agent-integration.md
       ko: docs/ko/reference/agent-integration.md
     default_for_agent: en
-    owns: "Agent connector behavior, `capability_profile`, verified surface context in agent packets, detective display gating from capability checks, one-language-per-`doc_id` retrieval guidance, context push/pull guidance, fallback semantics, surface recipes, and agent guarantee wording limits."
-    does_not_own: "Core state authority, public API schemas, storage layout, security guarantee meanings, or security proof."
+    owns: "Agent connector reference, capability profile meaning, context discipline, and fallback semantics."
+    does_not_own: "Surface recipes, Core state authority, API schemas, storage, security guarantee meanings, or template bodies."
 
   - doc_id: reference.projection-and-templates
     status: active
@@ -167,8 +267,18 @@ docs:
       en: docs/en/reference/projection-and-templates.md
       ko: docs/ko/reference/projection-and-templates.md
     default_for_agent: en
-    owns: "Read-only derived display boundaries, projection/status-card non-authority, rendered display labels, template bodies, freshness, and later-only boundary for projection reconcile, persistent projection jobs, and managed block drift repair."
-    does_not_own: "Source-of-truth state, storage authority, API method contracts, evidence authority, or active projection mutation paths."
+    owns: "Projection authority, derived-display boundaries, freshness, rendered-label boundaries, and later projection boundaries."
+    does_not_own: "Template bodies, source-of-truth state, storage authority, API schemas, or connector behavior."
+
+  - doc_id: reference.template-bodies
+    status: active
+    family: reference
+    paths:
+      en: docs/en/reference/template-bodies.md
+      ko: docs/ko/reference/template-bodies.md
+    default_for_agent: en
+    owns: "Exact active template bodies and rendered wording boundaries."
+    does_not_own: "Projection authority, source-of-truth state, API schemas, or later template candidates."
 
   - doc_id: reference.conformance
     status: active
@@ -177,7 +287,7 @@ docs:
       en: docs/en/reference/conformance.md
       ko: docs/ko/reference/conformance.md
     default_for_agent: en
-    owns: "Conformance meaning, future fixture shape, assertion authority, active smoke-target examples, capability honesty assertions, non-executable suite boundaries, and representative examples."
+    owns: "Conformance meaning, future fixture shape, assertion authority, and non-executable suite boundary."
     does_not_own: "Executable runners, runtime conformance reports, active implementation output, or API schemas."
 
   - doc_id: reference.design-quality
@@ -187,7 +297,7 @@ docs:
       en: docs/en/reference/design-quality.md
       ko: docs/ko/reference/design-quality.md
     default_for_agent: en
-    owns: "Design-quality activation, finding severity, close-blocking behavior, waiver boundary, and validator ID boundary."
+    owns: "Design-quality activation, finding severity, close impact, waiver boundary, and validator ID boundary."
     does_not_own: "Broad product design choices, core gate definitions, storage DDL, or conformance runner output."
 
   - doc_id: reference.glossary
@@ -197,8 +307,17 @@ docs:
       en: docs/en/reference/glossary.md
       ko: docs/ko/reference/glossary.md
     default_for_agent: en
-    owns: "Official terminology for public, core, API/schema, storage, security, agent, and later terms, including active MVP methods, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`, `MethodResult`, `StatusResult`, `PrepareWriteResult`, `CloseTaskResult`, `ToolError`, `STATE_VERSION_CONFLICT`, `WriteDecisionReason`, `CloseReadinessBlocker`, `PlannedBlocker`, `DryRunSummary`, `prepare_write`, `close_task`, close readiness, data shape, response effects, dry-run preview, pre-commit failure, preflight rejection, `write_compatibility`, `recovery`, `EventRef`, `response_kind`, `dry_run`, `effect_kind`, `effect_kind=no_effect`, and `effect_kind=read_only`."
+    owns: "Official terminology definitions."
     does_not_own: "Contract details, schemas, DDL, transition rules, or implementation sequencing."
+
+  - doc_id: terminology.map
+    status: active
+    family: reference
+    paths:
+      shared: docs/terminology-map.yaml
+    default_for_agent: shared
+    owns: "Stable English/Korean term mappings for documentation maintenance."
+    does_not_own: "Product, API, storage, security, projection, runtime, or template contracts."
 
   - doc_id: later.index
     status: later
@@ -207,8 +326,8 @@ docs:
       en: docs/en/later/index.md
       ko: docs/ko/later/index.md
     default_for_agent: en
-    owns: "Later candidate names and promotion boundaries only, including `captured_artifact`, native artifact capture, projection reconcile, persistent projection jobs, managed block drift repair, full Evidence Manifest, `qa_gate`, `verification_gate`, observation, full-format judgment presentation, future operations, and future fixture families."
-    does_not_own: "Active MVP requirements, active API/schema contracts, full template bodies, full fixture YAML, later schema bodies, or implementation readiness."
+    owns: "Later candidate names and promotion boundaries."
+    does_not_own: "Active MVP requirements, active API/schema contracts, template bodies, fixture YAML, or implementation readiness."
 
   - doc_id: maintain.authoring-guide
     status: maintain
@@ -217,8 +336,8 @@ docs:
       en: docs/en/maintain/authoring-guide.md
       ko: docs/ko/maintain/authoring-guide.md
     default_for_agent: en
-    owns: "Documentation editing rules, owner-boundary discipline, active/later hygiene, and stale-content deletion."
-    does_not_own: "Harness runtime contracts, generated records, API schemas, or implementation approval."
+    owns: "Documentation authoring rules and owner-boundary discipline."
+    does_not_own: "Harness runtime contracts, generated records, API schemas, storage, security, or implementation approval."
 
   - doc_id: maintain.translation-guide
     status: maintain
@@ -237,5 +356,5 @@ docs:
       en: docs/en/maintain/checks.md
       ko: docs/ko/maintain/checks.md
     default_for_agent: en
-    owns: "Documentation checks for links, bilingual maps, owner boundaries, retrieval, stale content, public error-code consistency, `access_class` consistency, and artifact lifecycle consistency."
+    owns: "Documentation checks for route, owner-boundary, bilingual, stale-content, and quality drift."
     does_not_own: "Runtime proof, server conformance, generated QA, acceptance, or implementation completeness."

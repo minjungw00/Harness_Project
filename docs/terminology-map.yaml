@@ -1,0 +1,54 @@
+title: "Terminology Map"
+documentation_metadata_only: true
+runtime_config: false
+owns:
+  - "Stable English/Korean term mappings used across Harness documentation."
+  - "Cross-language terminology notes that support semantic parity."
+  - "Search-friendly canonical term keys for documentation maintenance."
+does_not_own:
+  - "Product, API, storage, security, projection, or runtime contracts."
+  - "Rendered UI copy when an exact template body owner defines the wording."
+  - "Runtime localization configuration."
+related_owners:
+  glossary:
+    en: docs/en/reference/glossary.md
+    ko: docs/ko/reference/glossary.md
+  translation_guide:
+    en: docs/en/maintain/translation-guide.md
+    ko: docs/ko/maintain/translation-guide.md
+  template_bodies:
+    en: docs/en/reference/template-bodies.md
+    ko: docs/ko/reference/template-bodies.md
+terms:
+  current_mvp:
+    en: "current MVP"
+    ko: "현재 MVP"
+  owner_document:
+    en: "owner document"
+    ko: "담당 문서"
+  semantic_parity:
+    en: "semantic parity"
+    ko: "의미 일치"
+  not_line_parity:
+    en: "not line parity"
+    ko: "줄 단위 번역 아님"
+  user_owned_judgment:
+    en: "user-owned judgment"
+    ko: "사용자 소유 판단"
+  close_readiness:
+    en: "close readiness"
+    ko: "닫기 준비 상태"
+    note: "Use 닫기 준비 상태 in reference-facing Korean prose."
+  artifact:
+    en: "artifact"
+    ko: "아티팩트"
+    note: "Use 아티팩트 in prose; preserve identifiers such as `ArtifactRef`."
+  cooperative_guarantee:
+    en: "cooperative guarantee"
+    ko: "협력형 보장"
+  detective_guarantee:
+    en: "detective guarantee"
+    ko: "탐지형 보장"
+  profile_gated_value:
+    en: "profile-gated value"
+    ko: "profile-gated 값"

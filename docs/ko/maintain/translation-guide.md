@@ -87,7 +87,7 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | final acceptance | 최종 수락 |
 | residual risk | 잔여 위험 |
 | residual risk acceptance | 잔여 위험 수락 |
-| close readiness | 닫기 가능 여부 또는 닫기 준비 상태 |
+| close readiness | 닫기 준비 상태 |
 | close blocker in user-facing display | 닫기를 막는 이유 |
 | `lifecycle_phase` in user-facing display | 현재 단계 |
 | Autonomy Boundary in user-facing display | 에이전트가 스스로 판단해도 되는 범위 |

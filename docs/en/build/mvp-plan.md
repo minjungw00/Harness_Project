@@ -1,167 +1,100 @@
 # Build: MVP Plan
 
-Use this as the single Build entry point for pre-server documentation planning. It records repository status, the current MVP slice, excluded later material, the first smoke target, request-to-close planning, server-coding decisions that remain blocked, Reference owners, and documentation-planning exit criteria.
+Use this as the Build entry point for pre-server documentation planning. It records repository status, implementation-readiness decisions, first smoke-target intent, and documentation-planning exit criteria.
 
-Build docs are planning guidance only. They do not define exact schemas, enum value sets, DDL, API request/response shapes, storage tables, projection template bodies, fixture formats, or security guarantee claims. Those contracts stay with the Reference owners linked below.
+Build docs are planning guidance only. They do not define exact MVP scope, schemas, enum value sets, DDL, API request/response shapes, storage tables, projection template bodies, fixture formats, or security guarantee claims. Those contracts stay with the owners linked from [Reference Index](../reference/README.md).
 
 <a id="documentation-acceptance-status"></a>
-## Repository status
+## Repository Status
 
 This repository is documentation-only and remains in documentation review. It is source material for a future Harness Server; it is not a Harness Server implementation, Harness Runtime Home, Product Repository, runtime record store, or implementation-complete behavior.
 
-Server coding must not begin until maintainers resolve, accept, or explicitly defer the implementation-blocking decisions in [Implementation decisions before server coding](#implementation-decisions-before-server-coding) with named scope impact.
+Server coding must not begin until maintainers resolve, accept, or explicitly defer the implementation-blocking decisions in [Implementation Decisions Before Server Coding](#implementation-decisions-before-server-coding) with named scope impact.
 
-## What exists now
+## What Exists Now
 
-- Paired English and Korean planning docs in the compact Start, Use, Build, Reference, Later, and Maintain structure.
-- Reference owner documents for Core, API, storage, security, projection/templates, agent integration, runtime boundaries, conformance, design quality, and glossary contracts.
+- Paired English and Korean planning docs in the Start, Use, Build, Reference, Later, and Maintain structure.
+- Canonical Reference owner documents for current MVP scope, Core, API, storage, runtime boundaries, security, agent integration, projection authority, template bodies, conformance, design quality, and terminology.
 - One Later candidate index for material outside the active MVP.
 - `docs/doc-index.yaml` for bilingual retrieval routing and one-language-per-`doc_id` context discipline.
-- This Build plan as the central implementation-planning entry point.
+- This Build plan as the implementation-readiness entry point.
 
-## What does not exist now
+## What Does Not Exist Now
 
 - Server/runtime implementation.
 - Executable conformance runner.
 - Generated runtime reports.
+- Runtime state or generated projections.
 - OS-level permission control.
 - Arbitrary-tool sandboxing.
 - Tamper-proof storage.
 - Default pre-tool blocking.
 - Active operations profile.
 
-## Active MVP slice
+## Current MVP Scope
 
-The active MVP is the smallest user work loop that proves the product thesis: Harness is a local authority record for user-owned scope, judgments, write authorization, evidence, artifacts, residual risk, and closure state. It is not a prompt pack and not an enforcement sandbox.
+The canonical current MVP scope is [Active MVP Scope](../reference/active-mvp-scope.md). Build does not restate the scope list. If scope wording changes, update the scope owner first, then keep this plan as the readiness and sequencing route.
 
-The current active MVP scope list is deliberately closed. It includes only:
+## Excluded Later Material
 
-- plain-language intake and Task creation through `harness.intake`
-- active scope and Change Unit updates through `harness.update_scope`
-- derived `ShapingReadiness` display over active Task, Change Unit, user judgment, blocker, evidence, and next-action state
-- user-owned judgment requests and recorded answers through `harness.request_user_judgment` and `harness.record_user_judgment`
-- sensitive-action approval recording as the active `sensitive_approval` judgment path
-- path-level `harness.prepare_write` and single-use Write Authorization for product-file writes
-- `harness.record_run` for shaping, direct, and implementation Runs
-- artifact staging through the active `harness.stage_artifact` utility with `ArtifactInput.source_kind=staged_artifact`, and persistent artifact promotion or linking only through compatible `record_run` artifact inputs
-- compact `EvidenceSummary`
-- `harness.close_task` blocker calculation for close/cancel/supersede requests, without adding richer assurance close behavior
-- read-time `harness.status` and compact read-time projection/status outputs
-- registered local surface access for the reference local MCP surface, including `surface_id=reference-local-mcp`
-- cooperative guarantee display
-- detective guarantee display only when `changed_path_detection_verification=passed`, and only within verified changed-path detection scope
+Later candidates and promotion boundaries are owned by [Later Candidate Index](../later/index.md). Build may name later exclusions only to explain readiness impact; it must not define later candidate contracts or promote them into the active MVP.
 
-These items cover ordinary-language intake, status, scope updates, write compatibility, artifact staging, persistent artifact promotion/linking, run recording, user judgments, and close checks only through their active owners. Exact active method names and active schema value sets are owned by [API Schema Core](../reference/api/schema-core.md#current-mvp-value-sets). Method behavior, storage, Core transition meaning, and security wording remain with their Reference owners. This Build plan does not promote extra enum values, extra gates, extra storage records, validators beyond `surface_capability_check`, operations, richer evidence formats, QA paths, Eval paths, connector ecosystems, export/handoff formats, projection jobs, reconcile workflows, or workflow candidates.
+<a id="first-internal-smoke-target"></a>
+## First Internal Smoke Target
 
-`harness.stage_artifact` is the active MVP staging utility for turning caller-provided safe artifact bytes or a safe notice into a temporary `StagedArtifactHandle` that a compatible `record_run` may consume and promote. It is not a Core state transition by itself and does not create evidence, satisfy gates, promote a persistent `ArtifactRef`, or make `close_task` pass. New artifact bytes enter the active MVP only through this staging path; existing bytes are reused only through compatible `existing_artifact` references. Raw file paths, raw logs, and arbitrary local path strings are not artifact authority. This Build plan names the utility only to fix the active boundary; detailed API and schema work belongs to the API and storage owners.
+The first internal smoke target is a documentation smoke target. It is not the product MVP, not a complete conformance suite, and not an implementation plan.
 
-Current MVP wording is cooperative by default. Detective wording is allowed only for facts supported by the registered local surface and a passed capability check. For the baseline `reference-local-mcp` profile, that means `changed_path_detection_verification=passed`, and only for the verified changed-path detection scope. `not_run`, legacy `planned_not_run` wording, `failed`, and `stale` do not justify `detective`; they require a `cooperative` display or `CAPABILITY_INSUFFICIENT`, depending on the method. The MVP must not claim OS-level permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, permission isolation, security isolation, native artifact capture, command execution observation, network observation, or secret access observation.
+The target should exercise the owner boundaries that are riskiest for the first future runtime batch: current MVP scope, Core transitions, API response branches, storage effects, artifact staging and promotion, user-owned judgment, close readiness, security guarantee wording, connector fallback, and derived display authority.
 
-## Excluded later material
+Exact smoke examples, fixture shapes, public errors, schemas, state effects, and storage consequences must come from the canonical owners. This plan records why a smoke target is needed; it does not create executable fixtures, generated reports, runtime state, or implementation permission.
 
-The following material stays outside the active MVP unless an owner document promotes a narrow behavior with scope, fallback behavior, and proof-path expectations for future promotion:
+## User Work Loop
 
-- `verification_gate`, Manual QA workflow, `qa_waiver`, `verification_risk_acceptance`, `design_gate`, `design_policy`, broader validators beyond `surface_capability_check`, detached Eval, evaluation workflows, full Manual QA, full waiver machinery, rich approval lifecycle, and rich residual-risk lifecycle
-- Full Evidence Manifest, detailed evidence catalogs, persisted Journey Cards, Discovery Brief as a persistent artifact, Question Queue, Assumption Register, detailed run reports, full Decision Packet format, TDD Trace, Module Map, Interface Contract, Domain Language, rich templates, and later-profile templates. The active `ShapingReadiness` view does not promote any of these persistent planning artifacts.
-- `harness.record_manual_qa`, `harness.launch_verify`, `harness.record_eval`, later `record_run` branches, later user-judgment branches, later next-action values, later schema fields, later artifact/ref values, `captured_artifact`, and any active `ArtifactInput.source_kind` beyond `staged_artifact` and `existing_artifact`
-- command execution observation, network observation, secret access observation, command/network/secret observation as an active proof requirement, command/network/secret observation schema values, preventive or isolated profiles, command/network/secret pre-tool blocking, preventive guard expansion, native hook expansion, broad isolated execution, permission isolation, and stronger local capability profiles
-- dashboard, hosted UI, artifact dashboard, hosted connector registry, connector marketplace, broad connector ecosystem, connector conformance ecosystem, cross-surface orchestration, team workflow, metrics, and automation candidates
-- captured artifact handles, native artifact capture, active operations profile, doctor/readiness suites, recover/export flows, export/handoff formats, artifact integrity operations, release handoff, persistent projection jobs, projection refresh/reconcile operations, managed block drift repair, broad operator coverage, conformance runner, executable fixture catalog, generated conformance artifacts, deployment, canary, rollback, and production monitoring
+The user work loop should start or resume ordinary work without requiring the user to know Harness internal labels. It should clarify what the user wants, what the repository or future Harness state can support, what remains uncertain, and what judgment the user still owns.
 
-Reference-schema presence does not expand the active MVP. Required fields apply only when the owning tool, record, or promoted later candidate is active or actually used.
+The next safe action must remain visible. If Core, MCP, or a reference surface cannot support a claim, status must say so instead of fabricating authority.
 
-## First internal smoke target
+## Request-To-Close Planning Route
 
-The first internal smoke target is a documentation smoke target. It is not the product MVP, not a complete conformance suite, and not an implementation plan. It is the compact owner-aligned target future maintainers should use to ensure the high-risk active MVP contracts are exercised instead of avoided before the user-facing loop is broadened.
+Use [Reference Index](../reference/README.md) to choose the exact owner for each request-to-close contract. Build keeps only the planning sequence:
 
-It should touch these active contract risks:
+1. Shape or resume a Task from ordinary language.
+2. Record scope and user-owned judgment through owner-defined paths.
+3. Check product-write compatibility before product writes.
+4. Record runs and durable evidence references through owner-defined paths.
+5. Show status and compact output as derived reads.
+6. Check close readiness while keeping evidence, final acceptance, residual-risk acceptance, and later QA/verification candidates distinct.
 
-- registered local surface verification success and failure for `surface_id=reference-local-mcp`, including one reference `capability_profile`, supported `changed_path_detection_verification`, `native_artifact_capture_supported=false`, `guarantee_level_default=cooperative`, and `guarantee_level_max_when_verified=detective`, plus unavailable, mismatched, or insufficient-capability surface failure without trusting a copied `surface_id`
-- one active Task and one active Change Unit or owner-approved scope boundary, with a `ShapingReadiness` gap returning an active blocker or pending user-owned judgment instead of creating a Discovery Brief, Question Queue, Assumption Register, or other persistent planning artifact
-- stale `harness.prepare_write` `expected_state_version` pre-commit failure: a stale `ToolEnvelope.expected_state_version` returns `ToolRejectedResponse` with `errors[0].code=STATE_VERSION_CONFLICT`, has no `decision`, no `write_decision_reasons`, no `WriteDecisionReason`, no `CloseReadinessBlocker`, no `PlannedBlocker`, and no state/storage effects. It creates or consumes no Write Authorization, stores no prepare-write decision reason, runs no close-readiness evaluation, creates no close-readiness blocker, appends no `task_event` or `task_events`, creates no replay row, mutates no `close_state`, and does not increment `project_state.state_version`; `tasks.state_version` is not used as the active conflict basis
-- valid blocked `harness.prepare_write` behavior: the response is `PrepareWriteResult` with `decision=blocked`, and `write_decision_reasons: WriteDecisionReason[]` is non-empty. Those prepare-write decision reasons are not `CloseReadinessBlocker` values, do not run close-readiness evaluation, do not mutate `close_state`, and do not create a consumable Write Authorization. If the same first-smoke batch covers `decision=approval_required` or `decision=decision_required`, those outcomes also return `PrepareWriteResult` with non-empty `write_decision_reasons`, no `CloseReadinessBlocker`, no close-readiness evaluation, no `close_state` mutation, and no consumable Write Authorization
-- `SensitiveActionScope` recording through the active `sensitive_approval` user-judgment path, kept separate from path-level `AuthorizedAttemptScope` and Write Authorization
-- failed `harness.stage_artifact` response shape: validation, local-surface, capability, or safe-staging failure returns `ToolRejectedResponse`, includes no `staged_artifact_handle`, and creates no staging record
-- successful `harness.stage_artifact` behavior: the response is `StageArtifactResult` with `effect_kind=staging_created`, creates only the owner-defined temporary staging side effect, and creates no Core `project_state.state_version` increment or `tool_invocations` replay row
-- `harness.record_run` with an invalid staged handle returns `ToolRejectedResponse` with no `run_summary`, no artifact promotion, no staged handle consumption, no Write Authorization consumption, no `tool_invocations` replay row, and no `project_state.state_version` increment
-- valid `harness.record_run` consumes one valid staged handle and promotes it to a persistent `ArtifactRef` after project, Task, server-recorded `created_by_surface_id` / `created_by_surface_instance_id`, expiration, consumed status, `sha256`, and `size_bytes` validation, then links the resulting artifact/evidence refs through the owner path
-- Write Authorization one-time consumption by a compatible product-write `record_run`, including `ToolRejectedResponse` with `errors[0].code=STATE_VERSION_CONFLICT` before consumption for a stale project-wide authorization basis, and blocked or rejected handling for missing, expired, revoked, consumed, incompatible, or observed-outside-authorized-scope attempts without creating completion evidence
-- `dry_run=true` for otherwise valid and previewable state-effecting selected operations returns `ToolDryRunResponse`; `DryRunSummary.would_blockers: PlannedBlocker[]` contains preview-only expected blockers, and each `PlannedBlocker` uses `source_kind=write_decision` or `source_kind=close_readiness`. The dry-run preview does not store real `WriteDecisionReason` or `CloseReadinessBlocker` objects, creates no actual generated refs or method-specific success fields such as `run_summary`, `staged_artifact_handle`, or `write_authorization_ref`, and creates no `task_event` or `task_events`, no replay row, no `close_state` mutation, no Write Authorization creation or consumption, no staged handle consumption, and no `project_state.state_version` increment
-- close-readiness findings for insufficient evidence, artifact unavailable or missing, required final acceptance, and visible but unaccepted residual risk use separate `CloseReadinessBlocker` findings and leave the Task open while blockers remain
-- first smoke coverage for `harness.status` when close readiness is requested: the response is `StatusResult` with `close_blockers: CloseReadinessBlocker[]` and `effect_kind=read_only`. The close blockers are read-only observations, with no `task_event`, no `task_events` append, no replay row, no `close_state` mutation, and no `project_state.state_version` increment
-- first smoke coverage for `harness.close_task` with `intent=check` and `dry_run=true` as a read-only result branch, not dry-run preview coverage: the response is `CloseTaskResult` with `base.dry_run=true`, `effect_kind=read_only`, and `blockers: CloseReadinessBlocker[]`, and is not `ToolDryRunResponse`. It is a read-only close-readiness evaluation and creates no `task_event` or `task_events`, no replay row, no `tool_invocations.response_json`, no `close_state` mutation, no Write Authorization change, no staged handle consumption, no `project_state.state_version` increment, no blocker storage, and no artifact promotion or linking
-- first internal smoke coverage for `close_task intent=complete` with stale `expected_state_version`: the response is `ToolRejectedResponse` with `effect_kind=no_effect` and `errors[0].code=STATE_VERSION_CONFLICT`, not `CloseTaskResult`; it creates no `WriteDecisionReason`, no `CloseReadinessBlocker`, no `PlannedBlocker`, no `task_event` or `task_events` append, no replay row, no `tool_invocations.response_json`, no `close_state` mutation, no Write Authorization creation or consumption, no staged-handle consumption, no artifact promotion or link, no evidence update, and no `project_state.state_version` increment
-- first internal smoke coverage for `close_task intent=complete` with stale `WriteAuthorization.basis_state_version`: the response is `ToolRejectedResponse` with `effect_kind=no_effect` and `errors[0].code=STATE_VERSION_CONFLICT`, not `CloseTaskResult`; it creates no `WriteDecisionReason`, no `CloseReadinessBlocker`, no `PlannedBlocker`, no `task_event` or `task_events` append, no replay row, no `tool_invocations.response_json`, no `close_state` mutation, no Write Authorization creation or consumption, no staged-handle consumption, no artifact promotion or link, no evidence update, and no `project_state.state_version` increment
-- first internal smoke coverage for `close_task intent=complete` with a semantic `write_compatibility` blocker after freshness preflight succeeds: the response is `CloseTaskResult` with `close_state=blocked`, and `blockers: CloseReadinessBlocker[]`; for the `write_compatibility` blocker, `CloseReadinessBlocker.code` is not `STATE_VERSION_CONFLICT`. Committed blocked effects are limited to the blocker-state, `task_events`, replay row, and `project_state.state_version` effects explicitly allowed by the API/storage contract, and the Task remains open
-- `close_task intent=complete` returning `close_state=closed` only when the owner-defined complete path has no blockers; stale state and stale authorization basis must stay in the `ToolRejectedResponse` preflight rejection branch, not in `CloseTaskResult(close_state=blocked)`
-- `close_task intent=supersede` updating the old Task lifecycle/result and the `project_state.active_task_id` pointer under one project-wide `state_version` mutation when valid, or returning the applicable supersession blocker without requiring evidence sufficiency, final acceptance, or residual-risk acceptance
-
-This smoke target may use an owner-valid setup or seed path instead of ordinary-language intake. It does not require or rely on later features: generated runtime reports, full projection rendering, persistent projection jobs, projection reconcile, managed block drift repair, a dashboard, hosted UI, active operations profile, executable fixtures, native artifact capture, broad connector support, full Evidence Manifest, Manual QA, Eval, verification gate, design gate, or a conformance runner.
-
-## User work loop
-
-The user work loop starts or resumes ordinary work without requiring the user to know Harness internal labels. The loop should clarify what the user wants, what the repository or Harness state can support, what remains uncertain, and what judgment the user still owns.
-
-MVP shaping persists only through active Task, scope/Change Unit, and user judgment owner paths. Shaping itself does not create separate committed planning, evidence, acceptance, residual-risk, or close records unless the relevant owner path explicitly records that item.
-
-The active readiness display is `ShapingReadiness`, a derived view over the current Task, Change Unit, user judgment, blocker, evidence, and next-action state. It should help the agent know whether the goal summary, non-goals, affected areas or paths, acceptance criteria, Autonomy Boundary, first Change Unit, named user-owned blockers, and next safe action are concrete enough. It is not a persistent planning artifact and must not become an open-ended planning loop.
-
-The next safe action must remain visible. If Core, MCP, or the reference surface cannot support a claim, status must say so instead of fabricating authority.
-
-## Request-to-close path
-
-1. The user asks for work in ordinary language.
-2. Harness shapes or resumes a Task, summarizes scope and non-goals, exposes `ShapingReadiness`, and asks for minimal user judgment only when the user owns the decision and the answer changes the next safe action.
-3. Before a product write, the agent or surface calls `prepare_write`; compatible work receives the owner-defined Write Authorization result, and incompatible work returns a blocker or owner-defined error.
-4. Before persistent artifact promotion, the active `harness.stage_artifact` utility creates a temporary `StagedArtifactHandle`; after the write or direct work, `record_run` records what happened and is the only active path that can consume the handle and link persisted artifact/evidence refs or the compact evidence summary path.
-5. Status and compact outputs show current scope, pending judgments, evidence gaps, blockers, next safe action, guarantee display level, and residual-risk visibility as derived reads from Core records.
-6. `close_task` calculates close blockers for the owner-defined active path. MVP close keeps final acceptance, residual-risk acceptance, evidence sufficiency, and later verification/QA candidates distinct without adding a current verification or Manual QA gate.
-
-`compatible`, `blocked`, and `allowed` are Harness record-compatibility results. They do not mean physical OS blocking, arbitrary-tool prevention, sandbox isolation, or permission isolation unless a future promoted mechanism proves that exact behavior.
+`compatible`, `blocked`, and `allowed` are future Harness record-compatibility results. They do not mean physical OS blocking, arbitrary-tool prevention, sandbox isolation, or permission isolation unless a future promoted mechanism proves that exact behavior.
 
 <a id="implementation-decisions-before-server-coding"></a>
-## Implementation decisions before server coding
+## Implementation Decisions Before Server Coding
 
 Server coding must not begin until maintainers mark each row accepted, decided, or deferred with explicit scope impact.
 
 | Decision item | Current status | What must be decided before coding |
 |---|---|---|
 | Implementation-planning readiness | Not maintainer-accepted. | Maintainers must accept that the compact documentation set is ready for the first runtime-batch plan, or name the blocker and affected scope. |
-| Core transition maintainer acceptance | Not maintainer-accepted for coding. | Active Task/scope, `ShapingReadiness`, `user_judgment`, sensitive approval, `prepare_write`, Write Authorization, `record_run`, artifact staging and persistent artifact promotion/linking, blocker, status, compact evidence summary, residual-risk visibility, and `close_task` semantics must be maintainer-accepted for active MVP paths. |
-| Public API and schema maintainer acceptance | Not maintainer-accepted for coding. | Method behavior, the Schema Core-owned active method-name value set, API request/response shapes including `ShapingReadiness`, shared schemas, resources, errors, idempotency/replay behavior, unavailable Core/MCP behavior, and later-candidate exclusions must be maintainer-accepted before affected tools or resources are coded. |
-| Storage and runtime-home maintainer acceptance | Not maintainer-accepted for coding. | The minimal storage profile, runtime home layout, locks, artifact refs, migrations, replay/audit needs, and later-candidate storage boundary must be maintainer-accepted before DDL, runtime data files, or artifact storage are created. |
-| Security and local-access maintainer acceptance | Not maintainer-accepted for coding. | The local-only posture and cooperative/limited-detective security guarantee-claim wording must be maintainer-accepted before API/MCP exposure. Detective claims require `changed_path_detection_verification=passed` for the relevant changed-path scope; `not_run`, legacy `planned_not_run`, `failed`, and `stale` are not sufficient. MVP must not claim OS-level permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, permission isolation, security isolation, native artifact capture, command execution observation, network observation, or secret access observation. |
-| Surface and compact-output maintainer acceptance | Not maintainer-accepted for coding. | The one reference `capability_profile`, compact user-facing views, compact agent-facing packet, freshness/unavailable behavior, and projection-as-derived-read boundary must be maintainer-accepted before display or connector code is implemented. |
+| Current MVP scope acceptance | Not maintainer-accepted for coding. | Maintainers must accept the [Active MVP Scope](../reference/active-mvp-scope.md) boundary or name unresolved scope impact. |
+| Core and user-judgment acceptance | Not maintainer-accepted for coding. | Core transition meaning and user-owned judgment boundaries must be maintainer-accepted for active MVP paths. |
+| Public API and schema acceptance | Not maintainer-accepted for coding. | Method behavior, common envelope/response branches, state/artifact/judgment schemas, value sets, public errors, idempotency/replay behavior, and unavailable Core/MCP behavior must be maintainer-accepted before affected tools or resources are coded. |
+| Storage and runtime-home acceptance | Not maintainer-accepted for coding. | Storage records, storage effects, artifact lifecycle, versioning, locks, migrations, and Runtime Home boundaries must be maintainer-accepted before DDL, runtime data files, or artifact storage are created. |
+| Security and local-access acceptance | Not maintainer-accepted for coding. | Local-only posture, cooperative/limited-detective guarantee wording, and non-claims must be maintainer-accepted before API/MCP exposure. |
+| Surface and compact-output acceptance | Not maintainer-accepted for coding. | Connector behavior, surface recipes, compact display boundaries, freshness/unavailable behavior, projection authority, and template bodies must be maintainer-accepted before display or connector code is implemented. |
 
-## Reference owners
+## Reference Owners
 
-Build summarizes sequence and scope only. Use these Reference owners for exact contracts:
+Use [Reference Index](../reference/README.md) for the canonical owner map. Build does not duplicate the owner table because the index is the routing source of truth.
 
-| Need | Owner docs |
-|---|---|
-| Core authority, Task/scope lifecycle, `ShapingReadiness` meaning, user judgments, `prepare_write`, Write Authorization, `record_run`, blockers, status, compact evidence meaning, residual risk, and `close_task` | [Core Model Reference](../reference/core-model.md). |
-| Method-level behavior for active public API methods | [MVP API](../reference/api/mvp-api.md). |
-| Exact active method-name set, shared envelopes, refs, `ShapingReadiness`, enum value sets, resources, and active schema shapes | [API Schema Core](../reference/api/schema-core.md). |
-| Public errors, idempotency, replay, stale-state, and state-version-conflict behavior | [API Errors](../reference/api/errors.md). |
-| Storage layout, DDL, locks, migrations, artifact refs, and later-candidate storage boundaries | [Storage](../reference/storage.md). |
-| Security guarantee-claim wording, local-access posture, trust boundaries, and non-claims | [Security Reference](../reference/security.md). |
-| Compact derived views, projection authority boundaries, freshness, and active template ownership | [Projection And Templates Reference](../reference/projection-and-templates.md). |
-| Reference surface `capability_profile`, connector behavior, context surfaces, and fallback semantics | [Agent Integration Reference](../reference/agent-integration.md). |
-| Product Repository, Harness Server, Runtime Home, process boundaries, and non-isolation claims | [Runtime Boundaries Reference](../reference/runtime-boundaries.md). |
-| Future fixture shape, assertion authority, and conformance meaning without an executable runner | [Conformance Reference](../reference/conformance.md). |
-| Design-quality later-candidate boundaries and non-promotion of design-policy validator families | [Design Quality](../reference/design-quality.md). |
-| Official terminology | [Glossary Reference](../reference/glossary.md). |
-| Later candidates and promotion rule | [Later Candidate Index](../later/index.md). |
-
-## Exit criteria for documentation planning
+## Exit Criteria For Documentation Planning
 
 Documentation planning can exit only when maintainers explicitly confirm:
 
 - this Build plan is the active Build entry point
-- the active MVP boundary and excluded later material are maintainer-accepted, or any remaining boundary issue has a named scope impact
-- every server-coding decision above has a maintainer decision, acceptance, or deferral with named scope impact
-- Reference owners agree on the active Core, API, storage, security, projection/template, agent-integration, runtime-boundary, conformance, design-quality non-promotion, and glossary boundaries needed for the active MVP
-- English and Korean Build pages preserve the same implementation decisions and active MVP boundary
+- implementation-readiness decisions above have a maintainer decision, acceptance, or deferral with named scope impact
+- the current MVP scope owner is accepted, or remaining boundary issues have named scope impact
+- Reference owners agree on the active Core, API, storage, runtime-boundary, security, agent-integration, projection, template, conformance, design-quality, terminology, and later-candidate boundaries needed for the active MVP
+- English and Korean Build pages preserve the same implementation decisions
 - no later-candidate material is presented as required for the active MVP
 - documentation remains source material only, with no server/runtime code, generated runtime state, executable fixture, conformance result, generated runtime report, or product implementation output created here
 

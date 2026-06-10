@@ -19,10 +19,10 @@ This document owns:
 This document does not own:
 
 - Public MCP request or response shapes. Use [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
-- Exact active method-name, enum, and schema value sets. Use [API Schema Core](api/schema-core.md#current-mvp-value-sets).
-- Storage tables, DDL, runtime home layout, locks, migrations, or persisted JSON layout. Use [Storage](storage.md).
-- Rendered projection bodies or template text. Use [Projection And Templates Reference](projection-and-templates.md).
-- Connector capability profiles or surface recipes. Use [Agent Integration Reference](agent-integration.md).
+- Exact active method-name and enum-like value sets. Use [API Value Sets](api/schema-value-sets.md).
+- Storage tables, DDL, runtime home layout, locks, migrations, or persisted JSON layout. Use [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md).
+- Rendered projection bodies or template text. Use [Projection And Templates Reference](projection-and-templates.md) for authority and [Template Bodies](template-bodies.md) for exact bodies.
+- Connector capability profiles or surface recipes. Use [Agent Integration Reference](agent-integration.md) and [Surface Recipes](../use/surface-recipes.md).
 - Security guarantee vocabulary beyond Core authority consequences. Use [Security Reference](security.md).
 - Later candidate catalogs. Use [Later](../later/index.md) until an owner promotes material into active scope.
 
@@ -50,7 +50,7 @@ Core uses the API response-effect vocabulary consistently. `MethodResult` means 
 
 These entities define authority relationships, not storage tables or API bodies.
 
-- Task: the user-value unit whose state records current concrete mode, scope relationship, blockers, judgment needs, evidence status, close readiness, acceptance state, residual-risk state, and latest run relationship. The active concrete task-mode values are owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets); intake `auto` is classification input only, not Task state.
+- Task: the user-value unit whose state records current concrete mode, scope relationship, blockers, judgment needs, evidence status, close readiness, acceptance state, residual-risk state, and latest run relationship. The active concrete task-mode values are owned by [API Value Sets](api/schema-value-sets.md); intake `auto` is classification input only, not Task state.
 - Change Unit: the active scoped work boundary for write-capable work. Product writes must be covered by a compatible active Change Unit. After intake, `harness.update_scope` is the active path that may create or replace the active Change Unit.
 - <a id="autonomy-boundary"></a>Autonomy Boundary: the latitude an agent has inside a Change Unit. It is not scope, sensitive-action approval, evidence, final acceptance, or residual-risk acceptance.
 - `user_judgment`: the canonical record family for choices the user owns. It feeds decision compatibility but does not create evidence, Write Authorization, scope mutation, Change Unit mutation, or close by itself.
@@ -73,7 +73,7 @@ The minimum active shaping information is the compact state needed to turn an or
 
 If any required shaping item is unknown, stale, unavailable, or disputed, Core must expose that as `unknown`, a pending user-owned judgment, a blocker, or the next safe action. It must not create a separate active `Discovery Brief`, `Question Queue`, `Assumption Register`, or similar committed planning artifact to make the request look writable.
 
-`ShapingReadiness` is the compact derived view of that active state. It is computed from the current Task, active or proposed Change Unit, pending `user_judgment` candidates or records, evidence summary, blockers, and next-action state. It is not persisted as a separate record and is not a license to create a persistent planning artifact. Exact API field names are owned by [API Schema Core](api/schema-core.md#state-summary).
+`ShapingReadiness` is the compact derived view of that active state. It is computed from the current Task, active or proposed Change Unit, pending `user_judgment` candidates or records, evidence summary, blockers, and next-action state. It is not persisted as a separate record and is not a license to create a persistent planning artifact. Exact API field names are owned by [API State Schemas](api/schema-state.md).
 
 The readiness meaning covers whether the current owner state knows the goal summary, non-goals, affected areas or paths, acceptance criteria, Autonomy Boundary, first Change Unit, user-owned blockers, and next safe action.
 
@@ -91,7 +91,7 @@ Findings from commands, Runs, reviews, validators, diagnostics, or future QA/ver
 
 ## 4. User-owned judgment boundaries
 
-User-owned judgment is the boundary where Harness must ask or preserve the user's choice instead of inferring it. The exact `UserJudgment` schema and API fields live in [API Schema Core](api/schema-core.md) and [MVP API](api/mvp-api.md); this section owns the meaning of the boundaries.
+User-owned judgment is the boundary where Harness must ask or preserve the user's choice instead of inferring it. The exact `UserJudgment` schema and API fields live in [API Judgment Schemas](api/schema-judgment.md) and [MVP API](api/mvp-api.md); this section owns the meaning of the boundaries.
 
 The only active current MVP values for `UserJudgment.judgment_kind` are:
 
@@ -131,7 +131,7 @@ These rules apply even when a user-facing surface compresses the display. Compac
 
 ## 6. Active Gates And Reserved Gate Names
 
-Gates are Core compatibility summaries for progress, write, Run recording, and close. In the current MVP, the only active gate status fields exposed in public schemas are the `StateSummary.gates.*` fields owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets). A gate name in planning prose does not create an active schema field, storage record, validator, close-readiness blocker category, or close requirement.
+Gates are Core compatibility summaries for progress, write, Run recording, and close. In the current MVP, active gate status fields exposed in public schemas are owned by [API State Schemas](api/schema-state.md) and their values by [API Value Sets](api/schema-value-sets.md). A gate name in planning prose does not create an active schema field, storage record, validator, close-readiness blocker category, or close requirement.
 
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work. Its active status values are `not_required`, `required`, `pending`, `passed`, `failed`, and `blocked`.
 - <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. Its active status values are `not_required`, `required`, `pending`, `resolved`, `deferred`, and `blocked`. It does not replace sensitive-action approval, evidence, future verification or QA routes, final acceptance, or residual-risk acceptance.
@@ -146,7 +146,7 @@ Reserved gate names stay catalog-only in [Later](../later/index.md) until promot
 - <a id="verification-gate"></a>Verification Gate is a later/reserved concept. The active MVP has no detached verification workflow and no verification close gate. A future owner must promote exact fields, requiredness, fallback behavior, and proof expectations before it affects active close semantics.
 - <a id="qa-gate"></a>QA Gate is a later/reserved concept. The active MVP has no Manual QA workflow and no Manual QA close gate. A future owner must promote exact fields, waiver behavior, artifact handling, and proof expectations before it affects active close semantics.
 
-Gate state exposure in public responses is owned by [API Schema Core](api/schema-core.md) and method owners. Core owns the compatibility meaning and the rule that stale gate summaries must be recomputed before write or close relies on them.
+Gate state exposure in public responses is owned by [API State Schemas](api/schema-state.md), [API Value Sets](api/schema-value-sets.md), and method owners. Core owns the compatibility meaning and the rule that stale gate summaries must be recomputed before write or close relies on them.
 
 ## 7. Task lifecycle
 
@@ -338,7 +338,7 @@ MVP close must keep later assurance and design-policy material out of active res
 
 Blockers are structured reasons a transition cannot proceed honestly. They can block progress, a write, Run recording, or close. They should name the affected Task or Change Unit when available, the active category, the missing or incompatible condition, related refs, and the next safe action.
 
-Close readiness uses only the active `CloseReadinessBlocker.category` values owned by [API Schema Core](api/schema-core.md#current-mvp-value-sets):
+Close readiness uses only the active `CloseReadinessBlocker.category` values owned by [API Value Sets](api/schema-value-sets.md):
 
 | Active category | Core meaning |
 |---|---|
@@ -392,8 +392,8 @@ The active current path uses compact residual-risk summary, blockers, evidence r
 Use these owners when Core authority touches another contract:
 
 - Public API method behavior, request/response shapes, active method-name and schema value sets, envelopes, state-version conflicts, and errors: [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
-- Storage tables, DDL, runtime home layout, locks, migrations, artifact storage, and enum hardening: [Storage](storage.md).
-- Projection freshness, read-time readable views, read-only display boundaries, the active Projection set, and active rendered template bodies: [Projection And Templates Reference](projection-and-templates.md).
+- Storage tables, DDL, runtime home layout, locks, migrations, artifact storage, and enum hardening: [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md).
+- Projection freshness, read-time readable views, and read-only display boundaries: [Projection And Templates Reference](projection-and-templates.md). Exact active rendered template bodies: [Template Bodies](template-bodies.md).
 - Security guarantee language, cooperative/detective/preventive/isolated labels, and local access posture: [Security Reference](security.md).
 - Runtime boundary placement and Core-only mutation authority: [Runtime Boundaries Reference](runtime-boundaries.md).
 - Design-quality boundary and non-gate routing: [Design Quality](design-quality.md).

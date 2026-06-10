@@ -1,87 +1,41 @@
 # 런타임 경계 참조
 
-이 참조 문서는 향후 Harness Server 계획에서 사용하는 활성 런타임 경계를 작게 정의합니다. 어느 공간이 제품 파일을 소유하는지, 어느 공간이 하네스 권한 확인을 실행하는지, 어느 공간이 Core가 소유한 기준 상태를 지속 보관하는지, 무엇이 파생 표시나 아티팩트 보조 자료로 남는지 설명합니다.
+이 문서는 Product Repository, Harness Server, Harness Runtime Home 사이의 경계 모델을 담당합니다. 문서 원천 자료일 뿐이며 이 저장소에는 Harness Server/runtime 구현, Runtime Home, 생성된 상태 보기 시스템, 적합성 실행기, 런타임 데이터가 없습니다.
 
-런타임 경계는 권한 경계와 저장 위치 경계이지 OS 수준 격리 경계가 아닙니다. 이 경계는 누가 하네스 권한을 만들 수 있는지, Core가 소유한 기록과 아티팩트를 어디에 보관하는지, 무엇이 파생 표시로 남는지를 나눕니다. 프로세스 격리, 샌드박스, 권한 강제, 임의 도구 통제, 변조 방지 저장소, 보안 격리를 뜻하지 않습니다.
+## 담당하는 것 / 담당하지 않는 것
 
-이 문서는 원천 문서입니다. 지금 이 저장소에는 Harness Server/runtime 구현, Harness Runtime Home, 생성된 Projection 시스템, 적합성 실행기, 런타임 데이터가 없습니다. 현재 저장소 단계와 인계 상태는 [MVP 계획](../build/mvp-plan.md#문서-수락-상태)이 담당합니다.
+이 문서가 담당합니다.
 
-정확한 계약은 [Core Model 참조](core-model.md), [Storage](storage.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Projection과 Template 참조](projection-and-templates.md), [보안 참조](security.md), [Agent 통합 참조](agent-integration.md)를 사용합니다. 이 문서는 작은 경계 모델만 담당합니다.
+- Product Repository / Harness Server / Harness Runtime Home 분리
+- 제품 파일, 하네스 기록, 렌더링된 표시 사이의 변경 권한 경계
+- 비격리와 OS 샌드박싱 비보장
+- 생성된 표시와 Product Repository 텍스트가 하네스 권한을 만들지 않는다는 규칙
 
-## 1. Product Repository
+이 문서는 담당하지 않습니다.
 
-Product Repository는 사용자의 실제 제품 작업 공간입니다. 제품 소스 파일, 테스트, 저장소 수준 에이전트 규칙, 제품 문서가 여기에 있습니다. 제품 작업은 사용자가 선택한 일반 도구와 에이전트 행동을 통해 이 공간에서 일어납니다.
+- 저장소 기록, 효과, 아티팩트, 버전 관리, 잠금, 마이그레이션: [참조 색인](README.md)의 저장소 담당 문서
+- 공개 API 스키마나 메서드 동작: [참조 색인](README.md)의 API 담당 문서
+- 보안 보장 의미: [보안](security.md)
+- 상태 보기 권한: [Projection과 템플릿](projection-and-templates.md)
 
-Product Repository의 파일은 하네스 기준 상태가 아닙니다. 제품 파일은 입력이거나 변경 대상이거나 제품 내용에 대해 제품 저장소가 소유하는 사실일 수 있습니다. 하지만 하네스 근처에 있다는 이유만으로 하네스 운영 권한이 되지는 않습니다. Product Repository 경로와 staged artifact storage는 서로 다른 신뢰 도메인입니다. Product Repository 파일, 생성된 Markdown, Projection, 대화 텍스트, 에이전트 기억은 staged handle을 만들거나, 하네스 권한이나 로컬 접점 등록을 새로 고치거나, staged artifact 승격 권한을 부여할 수 없습니다.
+## Product Repository
 
-현재 MVP는 Product Repository 안에 생성된 Projection 파일을 요구하지 않습니다. 접점은 `status-card`, `judgment-request`, `run-evidence-summary`, `close-result`, `agent-context-packet` 같은 작은 읽기용 출력을 보여줄 수 있습니다. 하지만 이 출력은 읽는 시점에 파생되는 표시이지 Core가 소유한 상태가 아닙니다. Product Repository에서 렌더링된 Projection, Markdown `status-card`, 생성된 문서를 편집해도 하네스 상태가 바뀌지 않습니다. 상태 변경을 원하면 일반 자연어 요청이나 활성 API 흐름으로 들어와야 합니다. 편집 가능한 Projection 영역, managed block 형식의 Markdown, reconcile queue, 영속 Projection 작업, drift 복구는 담당 문서가 승격하기 전까지 이후 후보입니다.
+Product Repository는 사용자의 프로젝트 작업 공간입니다. 제품 파일은 향후 하네스 확인의 입력이 될 수 있지만, Product Repository 내용은 하네스 상태도 아니고 Runtime Home도 아니며 하네스 권한 증거도 아닙니다.
 
-이 문서 저장소도 사용자의 Product Repository가 아닙니다. 이 저장소는 문서 전용 계획 저장소입니다. 문서 수락과 별도의 구현 계획 준비 결정 이후에 향후 Harness Server 소스 저장소가 되는 것을 목표로 합니다.
+## Harness Server
 
-## 2. Harness Server / Installation
+향후 Harness Server는 하네스 기록과 API 동작을 중재할 수 있습니다. 이 저장소에는 아직 구현되어 있지 않습니다. 문서 편집은 서버 코드를 만들지 않고 제품/런타임 쓰기를 승인하지 않습니다.
 
-Harness Server / Installation은 향후 로컬 하네스 프로그램 경계입니다. 로컬 도구/리소스 호출을 받고, Core가 소유한 권한 확인을 실행하며, Core를 통해 상태 변경 조치를 기록합니다. 활성 담당 경로가 요구할 때 validator를 호출하고, 아티팩트를 등록하며, Projection 지원이 범위에 있을 때 파생 표시를 렌더링합니다.
+## Harness Runtime Home
 
-MVP 경계는 여러 서비스나 자세한 프로세스 분리를 요구하지 않습니다. 하나의 로컬 프로세스와도 호환됩니다. 중요한 것은 권한 경계와 저장 위치 경계를 분명히 유지하는 것입니다. 호출자는 요청하고, Core는 호환되는 상태 변경을 평가하고 기록하며, 저장소는 지속 보관하고, 표시는 기록된 상태에서 파생됩니다.
+Harness Runtime Home은 향후 사용자별 또는 설치별 운영 데이터 공간입니다. 정확한 저장소 기록, 경로, 아티팩트, 잠금, 마이그레이션, 버전 관리는 분리된 저장소 담당 문서가 맡습니다. 이 문서 저장소는 Runtime Home이 아닙니다.
 
-Harness Server / Installation은 Product Repository도 아니고 Harness Runtime Home도 아닙니다. 제품 파일을 읽을 수 있고, 사용자가 선택한 작업 접점과 문서화된 협력형 하네스 확인을 통해서만 제품 파일을 쓸 수 있습니다. 하네스 기록은 [Storage](storage.md)가 담당하는 Runtime Home 저장 경로를 통해서만 지속 보관합니다.
+## 변경 권한 경계
 
-로컬 도구/리소스 도달 가능성은 진입 경로일 뿐 권한 부여가 아닙니다. `ToolEnvelope.surface_id`는 필수이지만 같은 프로젝트의 `LocalSurfaceRegistration`을 고르는 선택자일 뿐입니다. Harness Server는 상태 변경 API 접근이나 아티팩트 본문 읽기가 그 접점에 의존하기 전에 로컬 transport/session/binding에서 맞는 `VerifiedSurfaceContext`를 파생해야 합니다. 현재 MVP는 공개 API 요청 하나마다 요청 수준 `VerifiedSurfaceContext.access_class` 하나만 사용합니다. payload 내용이 두 번째 접근 분류를 만들지 않습니다. 등록 상태는 `status=active`여야 합니다. 적용되는 경우 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, `expected_state_version`이 호환되어야 하고, 활성 접점에 필요한 접근 분류 역량이 있어야 합니다. 정확한 접근 분류와 공개 오류는 [현재 MVP API](api/mvp-api.md#shared-request-rules)와 [API Errors](api/errors.md)가 담당합니다.
+Core가 소유한 하네스 기록은 담당 문서가 정한 경로로만 바뀔 수 있습니다. Product Repository 편집, 생성된 Markdown, 렌더링된 상태 보기, 대화 텍스트, 커넥터 설명, 에이전트 기억은 하네스 기록을 직접 바꾸지 않습니다.
 
-## 3. Harness Runtime Home
+아티팩트 본문 읽기와 아티팩트 승격에는 API, 저장소, 로컬 접점, 보안 담당 문서가 정한 경계가 모두 맞아야 합니다. 복사된 `surface_id`, 표시된 `ArtifactRef`, 렌더링된 상태 보기는 그 자체로 권한이 아닙니다.
 
-Harness Runtime Home은 사용자별 또는 설치별 운영 데이터 공간입니다. 짧게 Runtime Home이라고도 부릅니다. 기준 위치와 정확한 배치는 [Storage](storage.md)가 담당합니다. 향후 일반적인 내용에는 프로젝트 등록 데이터, 프로젝트 설정, `state.sqlite`, 아티팩트 저장소가 포함됩니다.
+## 비격리 경계
 
-하네스 기준 상태는 Runtime Home 저장소에 지속 보관되는 Core 소유 현재 기록에 있습니다. `state.sqlite.task_events`는 상태 저장소 안의 감사와 순서 이력을 기록합니다. 별도 표시 로그도 아니고 현재 기록을 대체하지도 않습니다.
-
-Harness Runtime Home은 대화 기록이 사라지거나 Product Repository의 Projection이 오래되어도 하네스 운영 의미를 복구할 수 있을 만큼 충분해야 합니다. Projection 지원이 있으면 Product Repository의 표시는 상태 기록과 아티팩트 참조에서 다시 만들 수 있습니다. 표시는 그 기록을 대체할 수 없습니다.
-
-Runtime Home의 파일은 비공개 로컬 제어 데이터로 취급해야 합니다. 하지만 하네스는 운영체제 권한을 강제하거나, 파일을 변조 방지 상태로 만들거나, 임의의 로컬 도구로부터 파일을 스스로 격리한다고 주장하지 않습니다. Runtime Home 안에서도 `harness.stage_artifact`가 쓰는 임시 staging 영역과 persistent artifact storage는 저장 역할이 다릅니다. staged byte는 적격 담당 경로가 승격하기 전까지 등록된 artifact 본문이 아닙니다.
-
-## 4. Core 변경 권한
-
-하네스 기준 상태 변경은 Core 상태 변경 경로에서만 일어납니다. Core는 범위, 사용자 소유 판단, 증거와 아티팩트 참조, 검증과 QA 기대, 최종 수락, 잔여 위험 상태, 닫기 준비 상태에 대한 하네스 기록 권한을 소유합니다.
-
-에이전트, MCP 호출자, CLI 텍스트, 운영자 출력, 제품 파일, Projection Markdown, 템플릿, 상태 카드, 아티팩트 바이트, 대화 기록은 그 자체로 기준 상태를 변경하지 않습니다. 로컬 접점 등록을 만들거나, 바꾸거나, 새로 고치지도 못합니다. 관련 담당 경로가 받아들일 때만 입력 또는 증거 후보가 될 수 있습니다.
-
-`harness.update_scope`, `prepare_write`, Write Authorization, `record_run`, `close_task`는 Core/API가 소유하는 계약입니다. Write Authorization은 협력형 하네스 기록과 확인입니다. OS 권한, 샌드박스 강제, 변조 방지 보호, 실행 전 물리적 차단, 보안 격리 메커니즘이 아닙니다.
-
-`harness.stage_artifact`는 로컬 artifact 유틸리티이지 Core 변경 권한이 아닙니다. `access_class=artifact_registration`을 사용해 새 artifact bytes 또는 안전한 알림을 임시 staging 영역에 staging하고 임시 `StagedArtifactHandle`을 만들 수 있지만, 기준 증거를 만들거나, gate를 만족하거나, persistent `ArtifactRef`로 승격하거나, 닫기 준비 상태에 영향을 주지 않습니다. 서버가 파생한 `VerifiedSurfaceContext`에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다. 이 출처 기록 필드는 사용자나 에이전트가 제출하는 권한 주장이 아닙니다. staging은 임의 로컬 파일이 안전하거나 허가되었거나 하네스가 관찰했다는 증명이 아닙니다. `StagedArtifactHandle`은 서버가 검증하는 참조이지 독립 권한 토큰이나 임의 지속 아티팩트 권한이 아닙니다. persistent artifact 승격은 이후 호환되는 `harness.record_run` 요청이 `access_class=run_recording`으로 project, task, 서버가 기록한 `created_by_surface_id` / `created_by_surface_instance_id`와 현재 확인된 `surface_id` / `surface_instance_id`, 만료 여부, 소비 상태, checksum, size를 검증하거나 호환되는 기존 `ArtifactRef`를 연결할 때만 일어납니다.
-
-정확한 상태 전이, 관문 영향, 행 경계, 멱등성 동작, 응답 형태는 [Core Model 참조](core-model.md), [Storage](storage.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md)에 남습니다.
-
-## 5. Projection 파생 경계
-
-Projection, 템플릿, 상태 카드, 생성된 Markdown, 읽기 전용 상태 리소스는 읽는 시점에 파생되는 표시입니다. 현재 Core가 소유한 상태 기록과 지속 아티팩트 참조에서 렌더링됩니다. 최신성, 실패, 차단 사유, 다음 행동 정보를 담을 수 있지만, 그 정보도 담당 기록을 보여주는 표시일 뿐 두 번째 권한 근거가 아닙니다.
-
-Projection은 `stale`, `missing`, `failed` 상태일 수 있고 사람이 직접 고쳤을 수도 있습니다. 이런 조건은 그 자체로 하네스 기준 상태를 바꾸지 않습니다. 오래되었거나 실패한 Projection은 보이는 차단 사유나 최신성 경고를 만들 수 있습니다. 하지만 Core가 소유한 상태를 되돌리거나, 증거를 충족하거나, 검증 또는 QA를 통과시키거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, Task를 닫지 않습니다.
-
-렌더링된 Projection, Markdown `status-card`, 생성된 문서, managed block, front matter 필드를 편집하는 것은 Core 변경 경로가 아닙니다. 사용자가 상태 변경을 원하면 담당 자연어/API 경로로 요청해야 합니다. 현재 MVP에는 reconcile queue, 영속 Projection 작업, managed block drift repair가 없습니다.
-
-## 6. Artifact 저장 경계
-
-아티팩트 경계는 지속 보관되는 증거 보조 자료와 기준 상태를 분리합니다. 아티팩트 저장소는 지속 증거 바이트 또는 안전한 메타데이터 알림을 보관할 수 있습니다. 하네스에서 권한을 갖는 의미는 지속 `ArtifactRef`, 담당 관계, 무결성 메타데이터, 가림/가용성 상태, 관련 Core 기록에서 나옵니다.
-
-원시 경로, 호출자 주장, 대화 텍스트, Markdown 문장, 등록되지 않은 파일, 담당 관계가 없는 아티팩트 바이트는 그 자체로 충분한 증거가 아닙니다. 필요한 아티팩트 메타데이터가 `missing`, `stale`, `redacted`, `unavailable`, `blocked` 상태이거나 무결성 확인에 실패하면 Core 소유 증거와 닫기 준비 상태 기록은 그 조건을 반영해야 합니다.
-
-아티팩트 읽기도 같은 권한 경계를 사용합니다. 원시 아티팩트 저장소 경로는 로컬 호출자에게 기본으로 허용되지 않습니다. 아티팩트 메타데이터나 바이트를 읽으려면 지속 `ArtifactRef`, 호환되는 project/task 맥락, 일치하는 담당 관계, [Storage](storage.md)와 [API Schema Core](api/schema-core.md#artifactref)가 담당하는 가림/가용성 확인이 필요합니다. 아티팩트 본문 읽기는 추가로 `access_class=artifact_read`에 대한 서버 확인 로컬 접점 맥락을 요구합니다. 이는 `record_run` 중 staged artifact 승격과 별개입니다. 민감 동작 승인과 Write Authorization은 artifact 본문 읽기를 허용하지 않습니다. 복사된 `surface_id`, Projection 파일, 생성된 Markdown 주장, 대화 텍스트, Product Repository 파일, 에이전트 기억은 아티팩트 바이트 접근을 승인하거나, staged handle을 만들거나, 접점 권한을 새로 고치거나, staged handle의 출처 기록을 만들거나, 승격 권한을 부여하지 못합니다.
-
-새 artifact bytes는 `access_class=artifact_registration`을 쓰는 `harness.stage_artifact` 입력 staging을 통해서만 현재 MVP에 들어오며, 그 결과는 서버가 기록한 생성 접점 출처 기록을 가진 담당 문서의 `StagedArtifactHandle`입니다. `record_run`은 새 bytes를 staging하지 않고 `artifact_registration`을 요구하지 않습니다. `access_class=run_recording` 아래에서 project, task, 서버가 기록한 `created_by_surface_id` / `created_by_surface_instance_id`와 현재 확인된 `surface_id` / `surface_instance_id`, 만료 여부, 소비 상태, checksum, size 검증이 모두 통과할 때만 적격 staged handle을 검증해 persistent `ArtifactRef`로 승격하거나, 호환되는 `existing_artifact` 참조를 연결할 수 있을 뿐입니다. 현재 MVP는 접점 간(cross-surface) staged artifact handoff를 지원하지 않고, `StagedArtifactHandle`은 서버가 검증하는 참조이지 어떤 로컬 호출자나 사용할 수 있는 독립 권한 토큰이나 bearer token이 아닙니다. 원시 로컬 경로, 원시 로그, 임의 로컬 경로 문자열, 복사된 파일, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장, 로컬 파일이 안전하다는 주장은 현재 MVP의 artifact 권한이 아닙니다.
-
-아티팩트는 증거, 검증, QA, 최종 수락 표시, 잔여 위험 표시, 닫기 준비 상태 표시를 뒷받침할 수 있습니다. 그러나 Core가 요구하는 별도 담당 기록과 사용자 소유 판단 없이 성공을 증명하거나, 작업을 승인하거나, 위험을 수락하거나, 작업을 닫지 않습니다.
-
-## 7. Recovery 경계
-
-복구는 같은 권한 모델 안에 머뭅니다. 복구는 Runtime Home 상태 기록, `state.sqlite.task_events`, 아티팩트 참조, 무결성 메타데이터, Projection 최신성 사실을 사용해 무엇이 `stale`, `interrupted`, `missing`, `inconsistent`인지 분류할 수 있습니다.
-
-복구는 파생 표시를 다시 만들거나, 아티팩트 참조를 다시 스캔하거나 담당 경로로 아티팩트 복구를 라우팅하거나, 의존하는 증거나 보기를 `stale` 또는 `blocked`로 표시하거나, 담당 계약이 허용하는 경우 최신이 아닌 작업 기록을 `interrupted`로 처리할 수 있습니다. 필요한 사용자 판단이나 Core 작업으로 라우팅할 수도 있습니다. 두 번째 상태 모델을 만들면 안 됩니다.
-
-복구는 대화, 생성된 Markdown, `stale` Projection, 내보낸 텍스트, 운영자 콘솔 출력, 스테이징 경로, 복구 아티팩트에서 성공한 구현을 추론할 수 없습니다. 복구 자체로 증거를 충족하거나, 검증 또는 QA를 통과시키거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, Task를 닫지 않습니다.
-
-## 8. 현재 MVP가 격리하지 않는 것
-
-현재 MVP 경계는 기본적으로 협력형이며, 탐지형 동작은 관련 역량 확인이 통과한 뒤 관찰 가능한 지원 사실에만 적용됩니다. 향후 담당 문서가 이름 붙인 동작에 대해 더 강한 메커니즘을 승격하고 증명하기 전까지 운영체제 수준 권한, 임의 도구 샌드박스, 권한 강제, 변조 방지 저장소, 보편적 도구 실행 전 차단, 보안 격리를 주장하지 않습니다. `preventive`와 `isolated`는 현재 MVP 기본값이 아니며, 관련 참조 담당 문서가 관리하는 profile-gated 표시 값으로 남습니다.
-
-로컬 전용 MCP 도달 가능성은 권한 부여가 아닙니다. 닿을 수 있는 호출자도 유효한 Core/API 상태, project/task/surface 호환성, 활성 `LocalSurfaceRegistration`, 맞는 `VerifiedSurfaceContext`, 상태 버전 호환성, 활성 접점 역량이 필요합니다. `MCP_UNAVAILABLE`은 도달 가능성 자체가 없다는 뜻이고, `LOCAL_ACCESS_MISMATCH`는 등록된 로컬 transport/session/binding 기대가 맞지 않거나 로컬 접근이 철회되었다는 뜻이며, `CAPABILITY_INSUFFICIENT`는 인식된 접점에 필요한 역량이 없다는 뜻입니다. `allowed`는 하네스 상태와 활성 접점 역량에 맞는다는 뜻입니다. `blocked`는 하네스 담당 경로 또는 역량 확인상 진행하면 안 된다는 뜻입니다. 증명된 `preventive` 메커니즘이 정확한 대상 동작을 이름 붙이지 않는 한 두 단어 모두 물리적 차단을 뜻하지 않습니다.
-
-접점 이름, 커넥터 구성 메모, 친근한 모드 라벨, Projection, 템플릿, 상태 카드, 아티팩트, 문서 점검은 보장 수준을 올려 주지 않습니다. 더 강한 `preventive` 또는 `isolated` 주장은 관련 참조 담당 문서에서 문서화한 메커니즘, 대상 동작, 담당 문서, 증명 경로가 필요합니다.
+현재 문서는 OS 수준 권한 제어, 임의 도구 샌드박스, 변조 방지 저장소, 기본 도구 실행 전 차단, 보안 격리, 권한 격리를 주장하지 않습니다. 그런 주장은 승격된 담당 문서가 문서화한 메커니즘과 증명 경로가 있어야 합니다.
