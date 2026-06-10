@@ -24,8 +24,6 @@ Escalate from small change to tracked work when you find scope drift, a new publ
 
 ## 2. Keep Context Small
 
-<a id="8-report-status-for-the-users-next-decision"></a>
-
 Always-on context should fit on one screen and support the next action. Include only:
 
 - verified surface status and whether mutation access or artifact body access is currently available
@@ -50,11 +48,13 @@ Always-on context should fit on one screen and support the next action. Include 
 
 Keep those items as summaries and refs. Do not inject full schemas, full DDL, full template bodies, full logs, full artifact contents, paired bilingual docs, unrelated reference sections, future catalog material, or generated readable views into every prompt. Pull exact owner sections only when the next action needs them.
 
+<a id="8-report-status-for-the-users-next-decision"></a>
+### Report Status For The User's Next Decision
+
 Status output should lead with the primary blocker and the next action that would unblock it. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to solve something the agent can safely inspect, refresh, retry, narrow, or record.
 
-## 3. Ask Focused Questions
-
 <a id="4-clarify-without-endless-planning-loops"></a>
+## 3. Clarify With Focused Questions
 
 Inspect first. Check repository files, docs, tests, current Harness state, accepted judgments, and relevant artifacts before asking the user. If a source is stale or unavailable, say that instead of treating it as authority. Do not ask the user to know or translate Harness labels before ordinary work can begin.
 
@@ -97,13 +97,14 @@ Use lifecycle labels narrowly when they help the agent choose the next action:
 
 ## 4. Do Not Decide User-Owned Judgments
 
-<a id="5-request-user-judgment-narrowly"></a>
-
 The agent may identify a bounded option when current facts and accepted scope already support one. The user decides user-visible product behavior; user flow, messages, UX, accessibility, or product trade-offs; scope expansion or explicit non-goal removal; data retention, privacy, security, or authentication choices; new dependency or external service introduction; migration, public interface, or compatibility-breaking direction; irreversible or costly-to-reverse technical choices; sensitive-action approval; final acceptance; residual-risk acceptance; and cancellation. Other future judgment candidates belong to [Later](../later/index.md) and are not active judgment kinds.
 
 Inside accepted scope, the agent may usually decide implementation details that do not change product behavior, scope, or material technical direction. Examples include a tiny local variable name that follows project style, test file organization details, small behavior-preserving refactors, internal cleanup, and code details already forced by accepted scope and acceptance criteria. Escalate back to user judgment when an implementation detail becomes product-visible, changes the accepted direction, introduces a new dependency or service, affects security/privacy/retention/authentication, breaks compatibility, or becomes irreversible or costly to reverse.
 
 When using the active owner path, keep these `judgment_kind` values separate: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`.
+
+<a id="5-request-user-judgment-narrowly"></a>
+### Request User Judgment Narrowly
 
 A judgment request should include the exact question, concise options, a bounded option when current facts already support one, rationale, uncertainty, consequence of deferral, affected scope, and what the answer does not settle. Ask one judgment at a time unless the user explicitly asks to review grouped options and the group still preserves separate answers.
 
@@ -128,9 +129,8 @@ If Core or Harness authority is unavailable, do not invent task state, write com
 
 Do not describe `detective` status just because a surface name, status card, chat summary, or user phrase sounds careful. Use it only after the relevant capability verification has passed and only for the covered observable fact. Otherwise describe the behavior as cooperative or unavailable/capability-limited.
 
-## 6. Prepare Write Only When Scope Is Clear
-
 <a id="6-check-scope-before-product-writes"></a>
+## 6. Prepare Write Only When Scope Is Clear
 
 Before product/code/file writes in Harness-connected work, use a pre-write scope check only after the intended operation is specific enough to evaluate. In owner terms this is the `harness.prepare_write` path.
 
@@ -147,9 +147,8 @@ A compatible result means the intended product-file write matches current Harnes
 
 If the scope change is valid, update the active scope or active work slice through `harness.update_scope` before asking for a new pre-write check. Existing pre-write results that no longer match the updated scope must be treated as stale.
 
-## 7. Record Run And Evidence After Meaningful Action
-
 <a id="7-record-evidence-after-meaningful-action"></a>
+## 7. Record Run And Evidence After Meaningful Action
 
 After meaningful execution, checks, reviews, or artifact-producing work, summarize what happened and what supports each claim. In owner terms this may use `harness.record_run` and evidence refs when that path is active.
 
@@ -163,9 +162,8 @@ For tracked work, derive the evidence summary from the active `CompletionPolicy`
 
 Evidence does not automatically satisfy final acceptance, residual-risk acceptance, close, or any future promoted quality path.
 
-## 8. Do Not Close When Blockers Remain
-
 <a id="10-close-work-honestly"></a>
+## 8. Handle Close Readiness Honestly
 
 Close only when the active path can support the close claim. In owner terms, `harness.close_task` should return blockers or a close result.
 
