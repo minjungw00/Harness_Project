@@ -40,6 +40,14 @@ question_routes:
       canonical_owner_doc_id: reference.security
       default_path: docs/en/reference/security.md
       route_note: "Security claims, guarantee wording, and explicit security non-claims."
+    - question: "What does `isolated` guarantee mean, and is it active in the current MVP?"
+      canonical_owner_doc_id: reference.security
+      default_path: docs/en/reference/security.md
+      route_note: "`isolated` guarantee boundary, active/non-active status, and current isolation non-claims."
+    - question: "Where are guarantee label values such as `isolated` listed?"
+      canonical_owner_doc_id: reference.api.schema-value-sets
+      default_path: docs/en/reference/api/schema-value-sets.md
+      route_note: "Guarantee label value names only; guarantee semantics and isolation claims route to Security."
     - question: "Where are access classes defined?"
       canonical_owner_doc_id: reference.api.schema-value-sets
       default_path: docs/en/reference/api/schema-value-sets.md
@@ -562,8 +570,8 @@ docs:
       - effect_kind_values
       - access_class_values
       - status_values
-      - guarantee_level_values
-      - profile_gated_reserved_values
+      - guarantee_label_values
+      - reserved_profile_gated_value_names
     owns:
       - API value sets
       - enum-like active values
@@ -571,17 +579,21 @@ docs:
       - active `response_kind` and `effect_kind` values
       - active `access_class` values
       - status and phase values
-      - profile-gated value boundaries
+      - guarantee label values
+      - reserved/profile-gated value names
     does_not_own:
       - public `ErrorCode` values
       - field shapes
       - method behavior
       - later candidate promotion
       - storage status semantics
+      - active guarantee semantics
+      - security isolation claims
     related_docs:
       - reference.api.mvp-api
       - reference.api.schema-core
       - reference.api.errors
+      - reference.security
       - later.index
 
   - doc_id: reference.api.errors
@@ -842,13 +854,25 @@ docs:
       - security_claims
       - security_non_claims
       - trust_boundaries
+      - guarantee_semantics
       - guarantee_wording
+      - cooperative_guarantee
+      - detective_guarantee
+      - preventive_guarantee
+      - isolated_guarantee_boundary
+      - current_isolation_non_claim
       - sensitive_action_boundary
     owns:
       - security claims
       - explicit security non-claims
       - trust boundaries
+      - guarantee semantics
       - guarantee wording
+      - "`cooperative` guarantee semantics"
+      - "`detective` guarantee semantics"
+      - "`preventive` guarantee semantics"
+      - "`isolated` guarantee boundary"
+      - current non-claim for isolation
       - sensitive-action security boundary
     does_not_own:
       - API schemas
@@ -859,6 +883,7 @@ docs:
     related_docs:
       - reference.runtime-boundaries
       - reference.agent-integration
+      - reference.api.schema-value-sets
       - reference.api.mvp-api
       - use.surface-recipes
 
