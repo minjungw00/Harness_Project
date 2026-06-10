@@ -145,7 +145,7 @@ Close readiness is the Core evaluation concept for whether the current Task can 
 
 `CloseReadinessBlocker` is not the concept itself. It is a state-shaped API data representation for blocking reasons, owned by [API State Schemas](api/schema-state.md) and [API Value Sets](api/schema-value-sets.md). Method behavior, response branches, persistence, and public errors are owned by [MVP API](api/mvp-api.md), [Storage Effects](storage-effects.md), and [API Errors](api/errors.md).
 
-For a complete close attempt, Core evaluates blockers in this conceptual order. Later rows do not satisfy earlier rows.
+For an `intent=complete` close attempt, Core evaluates blockers in this conceptual order. Later rows do not satisfy earlier rows.
 
 | Order | Check area | Close-readiness meaning |
 |---:|---|---|

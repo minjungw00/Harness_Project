@@ -336,7 +336,7 @@ Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 활성 Tas
 
 ### 접근 요구사항
 
-보호된 Core 세부정보를 반환하려면 같은 프로젝트의 활성 로컬 접점과 `VerifiedSurfaceContext.access_class=read_status`가 필요합니다. 오래된 Projection, 대화 요약, 생성된 Markdown 파일, 캐시된 텍스트는 상태 권한 근거가 아닙니다.
+보호된 Core 세부정보를 반환하려면 같은 프로젝트의 활성 로컬 접점과 `VerifiedSurfaceContext.access_class=read_status`가 필요합니다. 오래된 상태 보기, 대화 요약, 생성된 Markdown 파일, 캐시된 텍스트는 상태 권한 근거가 아닙니다.
 
 ### 상태 버전 동작
 
@@ -352,7 +352,7 @@ Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 활성 Tas
 
 ### 거절 결과
 
-Core 사용 불가, 로컬 접근 불일치, 요청한 보호 세부정보에 대한 역량 부족, Task 범위 읽기에 필요한 활성 Task 없음, 요청한 Projection이 stale 또는 사용 불가인 경우처럼 읽기를 안전하게 제공할 수 없으면 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
+Core 사용 불가, 로컬 접근 불일치, 요청한 보호 세부정보에 대한 역량 부족, Task 범위 읽기에 필요한 활성 Task 없음, 요청한 상태 보기가 stale 또는 사용 불가인 경우처럼 읽기를 안전하게 제공할 수 없으면 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ### `dry_run` 동작
 
@@ -576,7 +576,7 @@ guarantee_display:
 
 ### 목적
 
-호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림을 같은 프로젝트와 Task에 대한 임시 `StagedArtifactHandle`로 스테이징합니다. 스테이징은 입력 준비일 뿐입니다. 그 자체로 기준 증거, 지속 `ArtifactRef`, gate 충족, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 만들지 않습니다.
+호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림을 같은 프로젝트와 Task에 대한 임시 `StagedArtifactHandle`로 스테이징합니다. 스테이징은 입력 준비일 뿐입니다. 그 자체로 기준 증거, 지속 `ArtifactRef`, 관문 충족, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 만들지 않습니다.
 
 ### 필수 입력
 

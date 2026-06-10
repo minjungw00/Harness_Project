@@ -18,7 +18,7 @@ API 데이터 형태와 저장 효과는 별개입니다. `CloseReadinessBlocker
 
 | 필요 | 담당 문서 |
 |---|---|
-| Runtime Home 배치, 로컬 저장소 가정, 지속 기록 범주, 테이블 개요, 저장소 소유 JSON, 기록 수준 active/later 제외 | [저장소 기록](storage-records.md) |
+| Runtime Home 배치, 로컬 저장소 가정, 지속 기록 범주, 테이블 개요, 저장소 소유 JSON, 기록 수준 현재/이후 제외 | [저장소 기록](storage-records.md) |
 | 읽기 전용 효과, dry-run 효과, 거절된 효과 없음 분기, 커밋된 차단 효과, 메서드별 지속 저장 효과 | [저장 효과](storage-effects.md) |
 | 아티팩트 스테이징, `ArtifactRef`, 기존 아티팩트 연결, 스테이징 핸들 승격, 아티팩트 본문 읽기 경계, 보존, 무결성 | [아티팩트 저장소](storage-artifacts.md) |
 | `project_state.state_version`, 멱등성과 재실행 행, 이벤트 의미, 잠금, 마이그레이션 | [저장소 버전 관리](storage-versioning.md) |

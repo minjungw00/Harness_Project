@@ -413,7 +413,7 @@ incompatible
 | `isolated` | profile-gated `GuaranteeDisplay.level`입니다. 승격된 격리 메커니즘과 증명 경로가 필요합니다. |
 | `captured_artifact`와 접점 자체 캡처 이름 | 활성 `ArtifactInput.source_kind`로는 예약 또는 거절됩니다. 활성 아티팩트 입력은 `staged_artifact` 또는 `existing_artifact`를 사용합니다. |
 | 접점 간 스테이징된 아티팩트 handoff | 활성 기능이 아닙니다. 스테이징된 아티팩트 승격에는 서버가 기록한 접점 출처가 일치해야 합니다. |
-| QA waiver와 검증 위험 판단 종류 | 이후 후보입니다. 활성 `judgment_kind` 값이 아닙니다. |
+| QA 면제와 검증 위험 판단 종류 | 이후 후보입니다. 활성 `judgment_kind` 값이 아닙니다. |
 | `design_policy` 차단 사유 범주 | 스키마와 닫기 준비 상태 담당 문서가 승격하기 전까지 이후 또는 비활성 값입니다. |
 
 ## 관련 담당 문서

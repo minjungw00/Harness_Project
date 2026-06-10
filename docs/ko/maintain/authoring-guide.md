@@ -42,7 +42,7 @@
 
 | 주제 | 담당 문서 |
 |---|---|
-| 현재 MVP 경계와 active/later 상태 | [현재 MVP 범위](../reference/active-mvp-scope.md) |
+| 현재 MVP 경계와 현재/이후 상태 | [현재 MVP 범위](../reference/active-mvp-scope.md) |
 | API 메서드 계약 | [MVP API](../reference/api/mvp-api.md) |
 | 공통 API 요청 래퍼와 응답 분기 | [API 코어 스키마](../reference/api/schema-core.md) |
 | 상태, 아티팩트, 판단, API 값 집합 스키마 | [API 상태 스키마](../reference/api/schema-state.md), [API 아티팩트 스키마](../reference/api/schema-artifacts.md), [API 판단 스키마](../reference/api/schema-judgment.md), [API 값 집합](../reference/api/schema-value-sets.md) |
