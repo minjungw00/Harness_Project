@@ -20,17 +20,42 @@ related_owners:
 identifier_preservation:
   rule: "Preserve exact identifiers unchanged in English and Korean. Use backticks in prose when the value is code-like, schema-like, or a product label that must be searched exactly."
   identifiers:
+    - "Task"
+    - "task_id"
+    - "active_task_id"
+    - "scope"
+    - "scope_decision"
+    - "UserJudgment"
+    - "user_judgment"
+    - "judgment_kind"
     - "CloseReadinessBlocker"
+    - "CloseReadinessBlocker.code"
     - "ArtifactRef"
     - "ArtifactInput"
     - "StagedArtifactHandle"
+    - "artifact_id"
+    - "staged_artifact_handle"
     - "ProjectionKind"
     - "ToolEnvelope"
+    - "ToolRejectedResponse"
+    - "ToolDryRunResponse"
+    - "DryRunSummary"
+    - "PlannedBlocker"
+    - "ToolError"
+    - "ErrorCode"
     - "SensitiveActionScope"
     - "AuthorizedAttemptScope"
     - "surface_id"
+    - "surface_instance_id"
+    - "VerifiedSurfaceContext"
+    - "VerifiedSurfaceContext.access_class"
+    - "access_class"
     - "state_version"
+    - "Task.lifecycle_phase"
+    - "artifact_staging.status"
   product_labels:
+    - "Product Repository"
+    - "Harness Runtime Home"
     - "Projection"
     - "Write Authorization"
     - "Evidence Manifest"
@@ -53,7 +78,169 @@ avoid:
       use: "`ToolEnvelope` 요청 래퍼"
     - phrase: "lifecycle 의미"
       use: "생명주기 의미, 또는 산문이 더 자연스러울 때는 생명주기의 뜻"
+    - phrase: "surface 정보"
+      use: "접점 정보, 또는 필드 이름이면 `surface_id`"
+    - phrase: "close blocker를 확인한다"
+      use: "닫기 차단 사유를 확인한다"
+    - phrase: "스코프"
+      use: "범위"
 terms:
+  harness:
+    category: "product_concept"
+    en: "Harness"
+    ko_reference: "하네스"
+    ko_user: "하네스"
+    owner_documents:
+      en:
+        - "docs/en/reference/active-mvp-scope.md"
+        - "docs/en/reference/runtime-boundaries.md"
+      ko:
+        - "docs/ko/reference/active-mvp-scope.md"
+        - "docs/ko/reference/runtime-boundaries.md"
+  product_repository:
+    category: "product_label"
+    en: "Product Repository"
+    ko_reference: "Product Repository"
+    ko_user: "제품 저장소"
+    preserve_as_label:
+      - "Product Repository"
+    owner_documents:
+      en:
+        - "docs/en/reference/runtime-boundaries.md"
+      ko:
+        - "docs/ko/reference/runtime-boundaries.md"
+  harness_runtime_home:
+    category: "product_label"
+    en: "Harness Runtime Home"
+    ko_reference: "Harness Runtime Home"
+    ko_user: "런타임 홈"
+    preserve_as_label:
+      - "Harness Runtime Home"
+    owner_documents:
+      en:
+        - "docs/en/reference/runtime-boundaries.md"
+      ko:
+        - "docs/ko/reference/runtime-boundaries.md"
+  documentation_only:
+    category: "general_prose"
+    en: "documentation-only"
+    ko_reference: "문서 전용"
+    ko_user: "문서 전용"
+    owner_documents:
+      en:
+        - "docs/en/maintain/authoring-guide.md"
+        - "docs/en/reference/runtime-boundaries.md"
+        - "docs/en/build/mvp-plan.md"
+      ko:
+        - "docs/ko/maintain/authoring-guide.md"
+        - "docs/ko/reference/runtime-boundaries.md"
+        - "docs/ko/build/mvp-plan.md"
+    notes:
+      - "Documentation-only work does not implement runtime behavior or create generated runtime records."
+  active_mvp:
+    category: "product_concept"
+    en: "active MVP"
+    ko_reference: "현재 MVP"
+    ko_user: "현재 MVP"
+    aliases_en:
+      - "current MVP"
+    owner_documents:
+      en:
+        - "docs/en/reference/active-mvp-scope.md"
+        - "docs/en/reference/api/schema-value-sets.md"
+      ko:
+        - "docs/ko/reference/active-mvp-scope.md"
+        - "docs/ko/reference/api/schema-value-sets.md"
+    notes:
+      - "Do not describe later candidates as active MVP requirements."
+  later_candidate:
+    category: "product_concept"
+    en: "later candidate"
+    ko_reference: "이후 후보"
+    ko_user: "이후 후보"
+    owner_documents:
+      en:
+        - "docs/en/later/index.md"
+        - "docs/en/reference/active-mvp-scope.md"
+      ko:
+        - "docs/ko/later/index.md"
+        - "docs/ko/reference/active-mvp-scope.md"
+    notes:
+      - "A later candidate is deferred material until an owner promotes it."
+  owner_document:
+    category: "product_concept"
+    en: "owner document"
+    ko_reference: "담당 문서"
+    ko_user: "담당 문서"
+    owner_documents:
+      en:
+        - "docs/en/maintain/authoring-guide.md"
+        - "docs/en/reference/README.md"
+      ko:
+        - "docs/ko/maintain/authoring-guide.md"
+        - "docs/ko/reference/README.md"
+    notes:
+      - "Use for the canonical documentation owner of a contract or term."
+  task:
+    category: "product_concept"
+    en: "Task"
+    ko_reference: "`Task`"
+    ko_user: "작업"
+    preserve_as_identifier:
+      - "Task"
+      - "task_id"
+      - "active_task_id"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/schema-state.md"
+        - "docs/en/reference/api/schema-value-sets.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/schema-state.md"
+        - "docs/ko/reference/api/schema-value-sets.md"
+    notes:
+      - "Preserve `Task` when naming the Harness entity."
+      - "Use 작업 only when exact entity identity is not needed."
+  scope:
+    category: "product_concept"
+    en: "scope"
+    ko_reference: "범위"
+    ko_user: "범위"
+    preserve_as_identifier:
+      - "scope"
+      - "scope_decision"
+      - "AuthorizedAttemptScope"
+      - "SensitiveActionScope"
+    avoid_ko:
+      - "스코프"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/mvp-api.md"
+        - "docs/en/reference/api/schema-judgment.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/mvp-api.md"
+        - "docs/ko/reference/api/schema-judgment.md"
+  user_owned_judgment:
+    category: "product_concept"
+    en: "user-owned judgment"
+    ko_reference: "사용자 소유 판단"
+    ko_user: "사용자 판단"
+    preserve_as_identifier:
+      - "user_judgment"
+      - "UserJudgment"
+      - "judgment_kind"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/schema-judgment.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/schema-judgment.md"
+    notes:
+      - "Keep distinct from final acceptance, residual-risk acceptance, sensitive-action approval, scope changes, and Write Authorization."
   close_readiness:
     category: "product_concept"
     en: "close readiness"
@@ -64,6 +251,15 @@ terms:
     avoid_ko:
       - "close 가능성 평가"
       - "닫기 가능성 평가"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/mvp-api.md"
+        - "docs/en/reference/api/errors.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/mvp-api.md"
+        - "docs/ko/reference/api/errors.md"
     notes:
       - "`close readiness` is the evaluation concept, not the blocker schema."
       - "Use 닫기 준비 상태 in reference-facing Korean and 닫기 가능 여부 in user-facing Korean."
@@ -72,6 +268,22 @@ terms:
     en: "close readiness evaluation"
     ko_reference: "닫기 준비 상태 평가"
     ko_user: "닫기 준비 상태 평가"
+    preserve_as_identifier:
+      - "harness.close_task"
+      - "CloseTaskResult"
+      - "CloseReadinessBlocker"
+    avoid_ko:
+      - "close 가능성 평가"
+      - "닫기 가능성 평가"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/mvp-api.md"
+        - "docs/en/reference/api/errors.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/mvp-api.md"
+        - "docs/ko/reference/api/errors.md"
     notes:
       - "Do not translate this as 가능성 평가."
   close_blocker:
@@ -79,34 +291,70 @@ terms:
     en: "close blocker"
     ko_reference: "닫기 차단 사유"
     ko_user: "닫기 차단 사유"
+    preserve_as_identifier:
+      - "close_blockers"
+      - "CloseReadinessBlocker"
+    avoid_ko:
+      - "close blocker를 확인한다"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/schema-state.md"
+        - "docs/en/reference/api/errors.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/schema-state.md"
+        - "docs/ko/reference/api/errors.md"
     notes:
       - "Use this for a reason that prevents honest close readiness."
   close_readiness_blocker:
     category: "identifier"
     en: "CloseReadinessBlocker"
     preserve_identifier: true
+    ko_reference: "`CloseReadinessBlocker`"
+    ko_user: "닫기 차단 사유"
     ko_explanation: "닫기 차단 사유 스키마"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/schema-state.md"
+        - "docs/en/reference/api/schema-value-sets.md"
+        - "docs/en/reference/api/errors.md"
+      ko:
+        - "docs/ko/reference/api/schema-state.md"
+        - "docs/ko/reference/api/schema-value-sets.md"
+        - "docs/ko/reference/api/errors.md"
     notes:
       - "Never translate the identifier itself."
+      - "Do not use it as a prepare-write reason or as the entire close-readiness concept."
   blocker:
     category: "general_prose"
     en: "blocker"
-    ko: "차단 사유"
+    ko_reference: "차단 사유"
+    ko_user: "차단 사유"
     notes:
       - "Use close blocker / 닫기 차단 사유 when the blocker specifically comes from close readiness."
   artifact:
     category: "product_concept"
     en: "artifact"
-    ko: "아티팩트"
+    ko_reference: "아티팩트"
+    ko_user: "아티팩트"
     preserve_as_identifier:
       - "ArtifactRef"
       - "ArtifactInput"
       - "StagedArtifactHandle"
+      - "artifact_id"
     avoid_ko:
       - "artifact 저장"
       - "artifact bytes"
       - "staged handle"
       - "checksum, size 검증"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/schema-artifacts.md"
+        - "docs/en/reference/storage-artifacts.md"
+      ko:
+        - "docs/ko/reference/api/schema-artifacts.md"
+        - "docs/ko/reference/storage-artifacts.md"
     notes:
       - "Use 아티팩트 in Korean prose."
       - "Preserve artifact schema identifiers exactly."
@@ -114,112 +362,285 @@ terms:
     category: "identifier"
     en: "ArtifactRef"
     preserve_identifier: true
+    ko_reference: "`ArtifactRef`"
+    ko_user: "아티팩트 참조"
     ko_explanation: "아티팩트 참조 스키마"
+    preserve_as_identifier:
+      - "ArtifactRef"
+      - "existing_artifact_ref"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/schema-artifacts.md"
+        - "docs/en/reference/storage-artifacts.md"
+      ko:
+        - "docs/ko/reference/api/schema-artifacts.md"
+        - "docs/ko/reference/storage-artifacts.md"
   artifact_input:
     category: "identifier"
     en: "ArtifactInput"
     preserve_identifier: true
+    ko_reference: "`ArtifactInput`"
+    ko_user: "아티팩트 입력"
     ko_explanation: "아티팩트 입력 스키마"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/schema-artifacts.md"
+      ko:
+        - "docs/ko/reference/api/schema-artifacts.md"
   staged_artifact_handle:
     category: "identifier"
     en: "StagedArtifactHandle"
     preserve_identifier: true
+    ko_reference: "`StagedArtifactHandle`"
+    ko_user: "스테이징된 아티팩트 핸들"
     ko_explanation: "스테이징된 아티팩트 핸들"
+    preserve_as_identifier:
+      - "StagedArtifactHandle"
+      - "staged_artifact_handle"
+    avoid_ko:
+      - "staged handle"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/schema-artifacts.md"
+        - "docs/en/reference/storage-artifacts.md"
+      ko:
+        - "docs/ko/reference/api/schema-artifacts.md"
+        - "docs/ko/reference/storage-artifacts.md"
   projection:
     category: "product_concept"
     en: "projection"
-    ko_user: "상태 보기"
     ko_reference: "상태 보기"
+    ko_user: "상태 보기"
     ko_reference_first_reference: "`Projection`(읽기 전용 상태 보기)"
+    preserve_as_identifier:
+      - "Projection"
+      - "ProjectionKind"
+    owner_documents:
+      en:
+        - "docs/en/reference/projection-and-templates.md"
+        - "docs/en/reference/template-bodies.md"
+      ko:
+        - "docs/ko/reference/projection-and-templates.md"
+        - "docs/ko/reference/template-bodies.md"
     notes:
       - "Use 상태 보기 in user-facing prose."
       - "Use `Projection`(읽기 전용 상태 보기) on first reference in reference prose when the exact Harness label helps."
   surface:
     category: "product_concept"
     en: "surface"
-    ko: "접점"
+    ko_reference: "접점"
+    ko_user: "접점"
+    preserve_as_identifier:
+      - "surface_id"
+      - "surface_instance_id"
+      - "VerifiedSurfaceContext"
+    avoid_ko:
+      - "surface 정보"
+    owner_documents:
+      en:
+        - "docs/en/reference/agent-integration.md"
+        - "docs/en/reference/security.md"
+      ko:
+        - "docs/ko/reference/agent-integration.md"
+        - "docs/ko/reference/security.md"
     notes:
       - "Do not make surface wording sound like proof of authority, access, binding, or capability."
   runtime:
     category: "product_concept"
     en: "runtime"
-    ko: "런타임"
+    ko_reference: "런타임"
+    ko_user: "런타임"
+    preserve_as_identifier:
+      - "Harness Runtime Home"
+    owner_documents:
+      en:
+        - "docs/en/reference/runtime-boundaries.md"
+        - "docs/en/reference/security.md"
+      ko:
+        - "docs/ko/reference/runtime-boundaries.md"
+        - "docs/ko/reference/security.md"
     notes:
       - "This documentation repository is not a Harness runtime or Runtime Home."
   lifecycle:
     category: "general_prose"
     en: "lifecycle"
-    ko: "생명주기"
+    ko_reference: "생명주기"
+    ko_user: "생명주기"
+    preserve_as_identifier:
+      - "Task.lifecycle_phase"
+      - "artifact_staging.status"
     avoid_ko:
       - "lifecycle 의미"
-  user_owned_judgment:
-    category: "product_concept"
-    en: "user-owned judgment"
-    ko: "사용자 소유 판단"
-  sensitive_approval:
-    category: "product_concept"
-    en: "sensitive approval"
-    en_preferred_prose: "sensitive-action approval"
-    ko: "민감 동작 승인"
-    preserve_as_identifier:
-      - "sensitive_approval"
-      - "SensitiveActionScope"
-    notes:
-      - "Keep sensitive approval distinct from final acceptance, residual-risk acceptance, and Write Authorization."
   write_authorization:
     category: "product_label"
     en: "write authorization"
     en_label: "Write Authorization"
-    ko: "쓰기 권한 부여"
+    ko_reference: "쓰기 권한 부여"
+    ko_user: "쓰기 권한 부여"
     preserve_as_label:
       - "Write Authorization"
+    preserve_as_identifier:
+      - "AuthorizedAttemptScope"
+      - "WriteAuthorization.basis_state_version"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/security.md"
+        - "docs/en/reference/api/mvp-api.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/security.md"
+        - "docs/ko/reference/api/mvp-api.md"
     notes:
-      - "Use the exact label when naming the Harness concept; do not treat sensitive-action approval as Write Authorization."
+      - "Use the exact label when naming the Harness concept."
+      - "Do not treat sensitive-action approval as Write Authorization."
+  sensitive_approval:
+    category: "product_concept"
+    en: "sensitive approval"
+    en_preferred_prose: "sensitive-action approval"
+    ko_reference: "민감 동작 승인"
+    ko_user: "민감 동작 승인"
+    preserve_as_identifier:
+      - "sensitive_approval"
+      - "SensitiveActionScope"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/schema-judgment.md"
+        - "docs/en/reference/security.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/schema-judgment.md"
+        - "docs/ko/reference/security.md"
+    notes:
+      - "Keep sensitive approval distinct from final acceptance, residual-risk acceptance, and Write Authorization."
   access_class:
     category: "product_concept"
     en: "access class"
-    ko: "접근 등급"
+    ko_reference: "접근 등급"
+    ko_user: "접근 등급"
+    preserve_as_identifier:
+      - "access_class"
+      - "VerifiedSurfaceContext.access_class"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/schema-value-sets.md"
+        - "docs/en/reference/api/mvp-api.md"
+        - "docs/en/reference/security.md"
+      ko:
+        - "docs/ko/reference/api/schema-value-sets.md"
+        - "docs/ko/reference/api/mvp-api.md"
+        - "docs/ko/reference/security.md"
   cooperative_guarantee:
     category: "product_concept"
     en: "cooperative guarantee"
-    ko: "협력형 보장"
+    ko_reference: "협력형 보장"
+    ko_user: "협력형 보장"
+    preserve_as_identifier:
+      - "cooperative"
+    owner_documents:
+      en:
+        - "docs/en/reference/security.md"
+      ko:
+        - "docs/ko/reference/security.md"
     notes:
       - "Do not strengthen cooperative wording into detective or preventive wording."
   detective_guarantee:
     category: "product_concept"
     en: "detective guarantee"
-    ko: "탐지형 보장"
+    ko_reference: "탐지형 보장"
+    ko_user: "탐지형 보장"
+    preserve_as_identifier:
+      - "detective"
+    owner_documents:
+      en:
+        - "docs/en/reference/security.md"
+        - "docs/en/reference/agent-integration.md"
+      ko:
+        - "docs/ko/reference/security.md"
+        - "docs/ko/reference/agent-integration.md"
     notes:
       - "Use only when the documented observable scope and capability check support it."
   preventive_guarantee:
     category: "product_concept"
     en: "preventive guarantee"
-    ko: "예방형 보장"
+    ko_reference: "예방형 보장"
+    ko_user: "예방형 보장"
+    preserve_as_identifier:
+      - "preventive"
+    owner_documents:
+      en:
+        - "docs/en/reference/security.md"
+        - "docs/en/later/index.md"
+      ko:
+        - "docs/ko/reference/security.md"
+        - "docs/ko/later/index.md"
     notes:
       - "Use only when the exact preventive mechanism and proof path are documented."
-  active_mvp:
-    category: "product_concept"
-    en: "active MVP"
-    ko: "현재 MVP"
-    aliases_en:
-      - "current MVP"
+  dry_run:
+    category: "api_concept"
+    en: "dry-run"
+    ko_reference: "dry-run 미리보기"
+    ko_user: "미리보기"
+    preserve_as_identifier:
+      - "dry_run"
+      - "ToolDryRunResponse"
+      - "DryRunSummary"
+      - "PlannedBlocker"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/schema-core.md"
+        - "docs/en/reference/api/mvp-api.md"
+        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/storage-effects.md"
+      ko:
+        - "docs/ko/reference/api/schema-core.md"
+        - "docs/ko/reference/api/mvp-api.md"
+        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/storage-effects.md"
     notes:
-      - "Do not describe later candidates as active MVP requirements."
-  later_candidate:
-    category: "product_concept"
-    en: "later candidate"
-    ko: "이후 후보"
+      - "Dry-run preview is not committed state or stored blocker state."
+      - "Preview blockers are `PlannedBlocker`, not `CloseReadinessBlocker`."
+  blocked_result:
+    category: "api_concept"
+    en: "blocked result"
+    ko_reference: "차단 결과"
+    ko_user: "차단 결과"
+    preserve_as_identifier:
+      - "CloseTaskResult(close_state=blocked)"
+      - "decision=blocked"
+      - "WriteDecisionReason"
+      - "CloseReadinessBlocker"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/api/mvp-api.md"
+        - "docs/en/reference/storage-effects.md"
+      ko:
+        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/api/mvp-api.md"
+        - "docs/ko/reference/storage-effects.md"
     notes:
-      - "A later candidate is deferred material until an owner promotes it."
-  documentation_only:
-    category: "general_prose"
-    en: "documentation-only"
-    ko: "문서 전용"
+      - "A blocked result is not a public transport or schema rejection."
+      - "`STATE_VERSION_CONFLICT` is a rejected response error, not a blocked-result code."
+  rejected_response:
+    category: "api_concept"
+    en: "rejected response"
+    ko_reference: "거부 응답"
+    ko_user: "거부 응답"
+    preserve_as_identifier:
+      - "ToolRejectedResponse"
+      - "ToolError"
+      - "ErrorCode"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/schema-core.md"
+        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/storage-effects.md"
+      ko:
+        - "docs/ko/reference/api/schema-core.md"
+        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/storage-effects.md"
     notes:
-      - "Documentation-only work does not implement runtime behavior or create generated runtime records."
-  owner_document:
-    category: "product_concept"
-    en: "owner document"
-    ko: "담당 문서"
-    notes:
-      - "Use for the canonical documentation owner of a contract or term."
+      - "Rejected response means the method did not proceed to the committed operation."
+      - "Do not use rejected responses as close blockers or committed blocked results."
