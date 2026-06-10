@@ -21,23 +21,89 @@
 - 아티팩트 생명주기: [아티팩트 저장소](storage-artifacts.md)
 - 런타임 배포나 운영 명령
 
+## 구조 안내
+
+이 문서는 조건, 결과, 예외, 비주장을 분리해 설명합니다. 저장 효과를 API 스키마 형태나 사용자 표시 문구와 혼동하지 마세요.
+
 ## 프로젝트 전체 상태 시계
 
-현재 MVP에는 공개 상태 시계가 하나만 있습니다. 바로 `project_state.state_version`입니다. 이 값은 프로젝트 전체에 적용되며, 공개 API 변경에서 승인, 충돌, 최신성, 동시성 판단에 쓰는 유일한 활성 기준입니다. Task 라우팅은 여전히 담당 Task, 차단 사유, 닫기 상태, 증거, 사용자 판단을 찾는 데 중요하지만 별도 상태 시계를 고르지는 않습니다.
+### 기준
 
-새 `dry_run=false` 상태 변경 API 호출은 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 `project_state.state_version`과 비교합니다. 값이 맞지 않으면 `STATE_VERSION_CONFLICT`를 `ToolRejectedResponse.errors`에만 담아 반환합니다. 이 거절 응답은 `CloseReadinessBlocker`, 현재 기록, `task_event` 또는 `task_events` 추가, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비, `close_state` 변경, 재실행 행, `project_state.state_version` 증가를 만들지 않습니다.
+현재 MVP에는 공개 상태 시계가 하나만 있습니다. 바로 `project_state.state_version`입니다. 이 값은 프로젝트 전체에 적용되며, 공개 API 변경에서 승인, 충돌, 최신성, 동시성 판단에 쓰는 유일한 활성 기준입니다.
 
-프로젝트 전체 상태 버전 불일치에 쓰는 현재 MVP의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다. 이 불일치에 대해 다른 공개 코드, 별칭, 폐기된 표기, 저장소 계층의 공개 오류 이름을 노출하지 않습니다. 현재 MVP의 공개 호출은 둘 이상의 공개 `expected_state_version`을 요구하거나 받지 않습니다.
+Task 라우팅은 담당 Task, 차단 사유, 닫기 상태, 증거, 사용자 판단을 찾는 데 중요합니다. 하지만 별도 상태 시계를 고르지는 않습니다.
 
-커밋된 모든 `dry_run=false` 상태 변경은 `project_state.state_version`을 정확히 1 올립니다. 메서드 담당 문서가 차단 사유나 다른 현재 행 변경 저장을 허용한 커밋된 차단 응답도 같은 규칙을 따릅니다. 하나의 공개 호출이 Task 생명주기 필드와 프로젝트 수준 필드를 함께 바꿀 수 있습니다. 예를 들어 `harness.close_task intent=supersede`가 `tasks.lifecycle_phase`와 `project_state.active_task_id`를 함께 바꾸더라도 여전히 하나의 상태 변경이며 프로젝트 전체 버전 증가는 정확히 한 번만 일어납니다.
+### 충돌 조건
 
-`harness.status`, `harness.close_task intent=check`, `dry_run=true`인 같은 check, `ToolDryRunResponse` 미리보기 호출, 잘못된 요청, 커밋 전 검증 실패, 커밋 전 상태 버전 충돌, 멱등 재실행은 `project_state.state_version`을 올리지 않습니다.
+새 `dry_run=false` 상태 변경 API 호출은 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 `project_state.state_version`과 비교합니다.
 
-응답 분기의 `state_version` 값은 항상 프로젝트 전체 버전을 사용합니다. 커밋된 상태 변경에서는 커밋 뒤 결과 버전이고, 읽기 전용 결과, `ToolDryRunResponse` 미리보기, 임시 스테이징 응답에서는 그 응답이 관찰한 현재 프로젝트 전체 버전입니다.
+값이 맞지 않으면 `STATE_VERSION_CONFLICT`를 `ToolRejectedResponse.errors`에만 담아 반환합니다.
 
-활성 첫 스키마에서는 `tasks.state_version`을 생략해야 합니다. 구현이 레거시 또는 프로토타입 `tasks.state_version` 열을 만나더라도 그 값은 비활성 메타데이터일 뿐입니다. 승인, `STATE_VERSION_CONFLICT`, 오래된 상태 판단, Write Authorization, 멱등성, 잠금, 동시성 기준으로 쓰면 안 됩니다.
+### 충돌 때 저장되지 않는 것
 
-`write_authorizations.basis_state_version`은 Core가 권한을 준비할 때 사용한 프로젝트 전체 `project_state.state_version`을 저장합니다. 오래된 Write Authorization인지 판단할 때는 이 저장값을 현재 프로젝트 전체 상태 버전과 비교합니다. Task별 시계와 비교하지 않습니다. 그 불일치를 공개 API로 드러낼 때는 `STATE_VERSION_CONFLICT`를 사용합니다. 호출은 소비 전에 거절되며, 다른 현재 계약이 명시적으로 말하지 않는 한 Write Authorization 상태를 바꾸면 안 됩니다.
+상태 버전 충돌 거절 응답은 아래 항목을 만들거나 바꾸지 않습니다.
+
+- `CloseReadinessBlocker`.
+- 현재 기록.
+- `task_event` 또는 `task_events` 추가.
+- 아티팩트.
+- 증거 요약.
+- Write Authorization 생성 또는 소비.
+- `close_state` 변경.
+- 재실행 행.
+- `project_state.state_version` 증가.
+
+### 공개 오류 경계
+
+프로젝트 전체 상태 버전 불일치에 쓰는 현재 MVP의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다. 이 불일치에 대해 다른 공개 코드, 별칭, 폐기된 표기, 저장소 계층의 공개 오류 이름을 노출하지 않습니다.
+
+현재 MVP의 공개 호출은 둘 이상의 공개 `expected_state_version`을 요구하거나 받지 않습니다.
+
+### 상태 버전 증가 조건
+
+커밋된 모든 `dry_run=false` 상태 변경은 `project_state.state_version`을 정확히 1 올립니다. 메서드 담당 문서가 차단 사유나 다른 현재 행 변경 저장을 허용한 커밋된 차단 응답도 같은 규칙을 따릅니다.
+
+하나의 공개 호출이 Task 생명주기 필드와 프로젝트 수준 필드를 함께 바꿀 수 있습니다. 예를 들어 `harness.close_task intent=supersede`가 `tasks.lifecycle_phase`와 `project_state.active_task_id`를 함께 바꾸더라도 여전히 하나의 상태 변경이며 프로젝트 전체 버전 증가는 정확히 한 번만 일어납니다.
+
+### 증가하지 않는 예외
+
+아래 분기는 `project_state.state_version`을 올리지 않습니다.
+
+- `harness.status`.
+- `harness.close_task intent=check`.
+- `dry_run=true`인 같은 check.
+- `ToolDryRunResponse` 미리보기 호출.
+- 잘못된 요청.
+- 커밋 전 검증 실패.
+- 커밋 전 상태 버전 충돌.
+- 멱등 재실행.
+
+### 응답의 `state_version`
+
+응답 분기의 `state_version` 값은 항상 프로젝트 전체 버전을 사용합니다.
+
+- 커밋된 상태 변경에서는 커밋 뒤 결과 버전입니다.
+- 읽기 전용 결과, `ToolDryRunResponse` 미리보기, 임시 스테이징 응답에서는 그 응답이 관찰한 현재 프로젝트 전체 버전입니다.
+
+### 비주장: Task별 상태 시계
+
+활성 첫 스키마에서는 `tasks.state_version`을 생략해야 합니다. 구현이 레거시 또는 프로토타입 `tasks.state_version` 열을 만나더라도 그 값은 비활성 메타데이터일 뿐입니다.
+
+`tasks.state_version`은 아래 기준으로 쓰면 안 됩니다.
+
+- 승인.
+- `STATE_VERSION_CONFLICT`.
+- 오래된 상태 판단.
+- Write Authorization.
+- 멱등성.
+- 잠금.
+- 동시성.
+
+### 관련 저장 필드
+
+`write_authorizations.basis_state_version`은 Core가 권한을 준비할 때 사용한 프로젝트 전체 `project_state.state_version`을 저장합니다. 오래된 Write Authorization인지 판단할 때는 이 저장값을 현재 프로젝트 전체 상태 버전과 비교합니다. Task별 시계와 비교하지 않습니다.
+
+그 불일치를 공개 API로 드러낼 때는 `STATE_VERSION_CONFLICT`를 사용합니다. 호출은 소비 전에 거절되며, 다른 현재 계약이 명시적으로 말하지 않는 한 Write Authorization 상태를 바꾸면 안 됩니다.
 
 `tool_invocations.basis_state_version`은 호출이 커밋 전 관찰한 프로젝트 전체 상태 버전을 저장합니다. `task_events.state_version`은 커밋된 이벤트 뒤의 결과 프로젝트 전체 버전을 저장합니다.
 
@@ -47,17 +113,70 @@
 
 `task_events`는 일반적인 현재 MVP 운영에서 추가 전용입니다. 이벤트가 커밋된 뒤에는 Core가 그 행을 갱신하거나 삭제해 기록을 바꾸면 안 됩니다. 수정이나 복구는 담당 경로를 통한 새 이벤트와 현재 행 갱신으로 기록합니다. 멱등 재실행, dry-run, 잘못된 요청, 커밋 전 실패는 이벤트를 추가하지 않습니다.
 
-새 커밋된 `dry_run=false` 변경에서는 현재 행 쓰기, `task_events` 추가, 프로젝트 전체 상태 버전 증가, `tool_invocations` 재실행 행 삽입이 하나의 트랜잭션으로 커밋되어야 합니다. `harness.record_run`에서는 `artifact_staging`의 스테이징 핸들 소비, 아티팩트 승격/연결, 증거 업데이트, Write Authorization 소비, 이벤트 추가, 재실행 행 삽입, `project_state.state_version` 정확히 한 번 증가가 같은 트랜잭션에 속합니다. 어느 하나라도 실패하면 부분적인 권한 행, 스테이징 소비, 지속 아티팩트 승격/연결, Write Authorization 소비, 증거 업데이트, 이벤트, 닫기 효과, 재실행 행, 상태 버전 증가가 남지 않아야 합니다.
+새 커밋된 `dry_run=false` 변경에서는 아래 효과가 하나의 트랜잭션으로 커밋되어야 합니다.
+
+- 현재 행 쓰기.
+- `task_events` 추가.
+- 프로젝트 전체 상태 버전 증가.
+- `tool_invocations` 재실행 행 삽입.
+
+`harness.record_run`에서는 같은 트랜잭션에 아래 효과도 포함됩니다.
+
+- `artifact_staging`의 스테이징 핸들 소비.
+- 아티팩트 승격 또는 연결.
+- 증거 업데이트.
+- Write Authorization 소비.
+- 이벤트 추가.
+- 재실행 행 삽입.
+- `project_state.state_version` 정확히 한 번 증가.
+
+어느 하나라도 실패하면 아래 부분 결과가 남지 않아야 합니다.
+
+- 부분적인 권한 행.
+- 스테이징 소비.
+- 지속 아티팩트 승격 또는 연결.
+- Write Authorization 소비.
+- 증거 업데이트.
+- 이벤트.
+- 닫기 효과.
+- 재실행 행.
+- 상태 버전 증가.
 
 ## 멱등성과 재실행
 
-`tool_invocations`는 API 메서드별 상태 효과 행이 재실행 행 생성을 허용한, 커밋된 `dry_run=false` Core `MethodResult` 응답의 정확한 재실행만 저장합니다. `ToolRejectedResponse`, `ToolDryRunResponse`, 읽기 전용 결과, 성공한 `StageArtifactResult` 스테이징 결과는 저장하지 않으며, 이런 분기는 재실행 행을 만들거나 예약하지 않습니다.
+### 조건과 저장되는 것
 
-저장소 고유 키는 `(project_id, tool_name, idempotency_key)`입니다. `request_hash`는 그 행에 저장하는 충돌 판별자입니다. `request_hash`를 두 번째 고유 키에 넣어 같은 멱등 키가 여러 커밋 응답으로 갈라질 수 있게 만들면 안 됩니다.
+`tool_invocations`는 API 메서드별 상태 효과 행이 재실행 행 생성을 허용한, 커밋된 `dry_run=false` Core `MethodResult` 응답의 정확한 재실행만 저장합니다.
 
-같은 키와 요청 해시가 재실행되면 Core는 이벤트를 추가하거나, 아티팩트를 승격/연결하거나, Write Authorization을 소비하거나, 상태를 다시 바꾸지 않고 원래 커밋된 응답을 반환합니다. 같은 키가 다른 요청 해시로 재사용되면 Core는 [상태 버전 충돌](api/errors.md#state-conflict-behavior)이 정의한 `STATE_VERSION_CONFLICT`를 반환합니다.
+저장소 고유 키는 `(project_id, tool_name, idempotency_key)`입니다. `request_hash`는 그 행에 저장하는 충돌 판별자입니다.
 
-`tool_invocations.response_json`은 재실행 행을 만드는 상태 효과가 있는 커밋된 `dry_run=false` Core `MethodResult` 응답만 정확히 저장합니다. `StatusResult`, `ToolRejectedResponse`, `ToolDryRunResponse`, 읽기 전용 `MethodResult`, 성공한 `StageArtifactResult` 스테이징 결과는 저장하지 않습니다.
+`tool_invocations.response_json`은 재실행 행을 만드는 상태 효과가 있는 커밋된 `dry_run=false` Core `MethodResult` 응답만 정확히 저장합니다.
+
+### 저장되지 않는 것
+
+아래 분기는 저장하지 않으며, 재실행 행을 만들거나 예약하지 않습니다.
+
+- `ToolRejectedResponse`.
+- `ToolDryRunResponse`.
+- 읽기 전용 결과.
+- 읽기 전용 `MethodResult`.
+- `StatusResult`.
+- 성공한 `StageArtifactResult` 스테이징 결과.
+
+### 재실행 결과
+
+같은 키와 요청 해시가 재실행되면 Core는 원래 커밋된 응답을 반환합니다. 이때 아래 항목을 다시 만들거나 바꾸지 않습니다.
+
+- 이벤트.
+- 아티팩트 승격 또는 연결.
+- Write Authorization 소비.
+- 상태 변경.
+
+같은 키가 다른 요청 해시로 재사용되면 Core는 [상태 버전 충돌](api/errors.md#state-conflict-behavior)이 정의한 `STATE_VERSION_CONFLICT`를 반환합니다.
+
+### 비주장
+
+`request_hash`를 두 번째 고유 키에 넣어 같은 멱등 키가 여러 커밋 응답으로 갈라질 수 있게 만들면 안 됩니다.
 
 ## 잠금 정책
 

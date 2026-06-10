@@ -20,6 +20,10 @@
 - API 메서드 동작: [MVP API](api/mvp-api.md)
 - 공개 오류 코드 우선순위: [API 오류](api/errors.md)
 
+## 구조 안내
+
+이 문서는 조건, 저장되는 것, 저장되지 않는 것, 상태 버전 영향, 예외를 분리해 설명합니다. 저장 효과를 API 스키마 형태나 사용자 표시 문구와 혼동하지 마세요.
+
 ## 형태와 효과의 구분
 
 응답 데이터 형태와 저장 효과는 별개입니다. `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, `ArtifactRef`, `StagedArtifactHandle`은 API 데이터 형태입니다. 응답에 이 값들이 있다는 사실만으로 지속 저장, 아티팩트 승격, 스테이징 핸들 소비, 재실행 저장, 닫기 상태 변경, `project_state.state_version` 증가가 증명되지 않습니다.
@@ -37,25 +41,137 @@
 
 ## 효과 없음 분기
 
-잘못된 요청, 커밋 전 검증 실패, 보호된 동작이 진행되기 전의 로컬 접근 실패, 역량 실패, 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌, 거절된 아티팩트 입력은 효과 없음 분기를 반환합니다. 현재 행을 만들거나, `task_events`를 추가하거나, `tool_invocations.response_json`을 쓰거나, 재실행 행을 만들거나, 증거 요약을 갱신하거나, 닫기 상태를 바꾸거나, Write Authorization을 만들거나 소비하거나, `artifact_staging.status`를 바꾸거나, `consumed_by_run_id` 또는 `promoted_artifact_id`를 설정하거나, 아티팩트를 승격/연결하거나, `project_state.state_version`을 올리면 안 됩니다.
+### 조건
 
-유효한 dry-run 미리보기는 `DryRunSummary.would_blockers: PlannedBlocker[]` 또는 계획된 효과를 포함할 수 있습니다. 이 미리보기 항목은 `task_event` 없음, `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 변경 없음, 스테이징 핸들 생성 또는 소비 없음, 아티팩트 효과 없음, 증거 업데이트 없음, `CloseReadinessBlocker` 저장 없음, `project_state.state_version` 증가 없음입니다.
+아래 분기는 효과 없음 분기를 반환합니다.
+
+- 잘못된 요청.
+- 커밋 전 검증 실패.
+- 보호된 동작이 진행되기 전의 로컬 접근 실패.
+- 역량 실패.
+- 오래된 `expected_state_version`.
+- 오래된 `WriteAuthorization.basis_state_version`.
+- 멱등 요청 해시 충돌.
+- 거절된 아티팩트 입력.
+
+### 저장되는 것
+
+효과 없음 분기에서는 아무 지속 기록도 저장하지 않습니다.
+
+### 저장되지 않는 것
+
+효과 없음 분기는 아래 항목을 만들거나 바꾸면 안 됩니다.
+
+- 현재 행.
+- `task_events` 추가.
+- `tool_invocations.response_json`.
+- 재실행 행.
+- 증거 요약.
+- 닫기 상태.
+- Write Authorization 생성 또는 소비.
+- `artifact_staging.status`.
+- `consumed_by_run_id` 또는 `promoted_artifact_id`.
+- 아티팩트 승격 또는 연결.
+
+### 상태 버전 영향
+
+효과 없음 분기는 `project_state.state_version`을 올리면 안 됩니다.
+
+### 예외: 유효한 dry-run 미리보기
+
+유효한 dry-run 미리보기는 `DryRunSummary.would_blockers: PlannedBlocker[]` 또는 계획된 효과를 포함할 수 있습니다. 이 항목은 미리보기 데이터일 뿐입니다.
+
+유효한 dry-run 미리보기는 아래 항목을 만들지 않습니다.
+
+- `task_event` 또는 `task_events` 추가.
+- 재실행 행 또는 `tool_invocations.response_json`.
+- `close_state` 변경.
+- Write Authorization 변경.
+- 스테이징 핸들 생성 또는 소비.
+- 아티팩트 효과.
+- 증거 업데이트.
+- `CloseReadinessBlocker` 저장.
+- `project_state.state_version` 증가.
 
 ## 읽기 전용 효과
 
-읽기 전용 결과는 응답에만 남으며 재실행 행이 아닙니다. `harness.status`와 `harness.close_task intent=check`는 응답을 위해 차단 사유, `CloseReadinessBlocker[]`, 증거 요약, 아티팩트 참조, 진단, 다음 행동을 계산할 수 있습니다. 하지만 읽기가 일어났다는 이유만으로 그 계산값을 저장하면 안 됩니다.
+### 조건
 
-`harness.status`가 `close_blockers: CloseReadinessBlocker[]`를 반환하는 경우도 읽기 전용 관찰입니다. `task_event` 없음, `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 변경 없음, 스테이징 핸들 소비 없음, 아티팩트 효과 없음, 증거 업데이트 없음, `project_state.state_version` 증가 없음입니다.
+`harness.status`와 `harness.close_task intent=check`는 읽기 전용 결과입니다. 이 결과는 응답을 위해 차단 사유, `CloseReadinessBlocker[]`, 증거 요약, 아티팩트 참조, 진단, 다음 행동을 계산할 수 있습니다.
+
+### 저장되는 것
+
+읽기 전용 결과는 응답에만 남습니다. 재실행 행으로 저장하지 않습니다.
+
+### 저장되지 않는 것
+
+읽기가 일어났다는 이유만으로 계산값을 저장하면 안 됩니다. `harness.status`가 `close_blockers: CloseReadinessBlocker[]`를 반환하는 경우도 읽기 전용 관찰입니다.
+
+읽기 전용 결과는 아래 항목을 만들거나 바꾸지 않습니다.
+
+- `task_event` 또는 `task_events` 추가.
+- 재실행 행 또는 `tool_invocations.response_json`.
+- `close_state` 변경.
+- Write Authorization 변경.
+- 스테이징 핸들 소비.
+- 아티팩트 효과.
+- 증거 업데이트.
+
+### 상태 버전 영향
+
+읽기 전용 결과는 `project_state.state_version`을 올리지 않습니다.
+
+### 관련 담당 문서
 
 `harness.close_task intent=check`의 응답 분기는 [`harness.close_task`](api/mvp-api.md#harnessclose_task)가 담당합니다. 이 저장 효과 문서는 `dry_run=true`이거나 `blockers: CloseReadinessBlocker[]`를 포함하더라도 그 점검이 읽기 전용이라는 점만 담당합니다.
 
 ## 커밋된 차단 효과
 
-커밋된 차단 결과와 거절 응답은 다릅니다. `harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 [MVP API](api/mvp-api.md)가 차단 커밋을 허용할 때만 `MethodResult`입니다.
+커밋된 차단 결과와 거절 응답은 다릅니다.
 
-`decision=blocked`, `decision=approval_required`, `decision=decision_required`인 커밋된 `dry_run=false` `PrepareWriteResult`는 메서드 상태 효과 계약이 그 판단 커밋을 허용할 때 응답과 재실행 페이로드에 `write_decision_reasons: WriteDecisionReason[]`를 담을 수 있습니다. 이 사유는 `prepare_write` 판단 사유이지 닫기 준비 상태 평가 결과나 `CloseReadinessBlocker[]`가 아니며, 닫기 차단 사유 기록도 아닙니다. 이 분기는 소비 가능한 Write Authorization을 만들지 않고, `close_state`를 바꾸지 않고, 닫기 준비 상태 평가를 실행하지 않고, `CloseReadinessBlocker` 저장을 만들지 않으며, 증거를 갱신하거나, 아티팩트를 바꾸거나, 스테이징 핸들을 소비하거나, `close_task` 효과를 수행하면 안 됩니다.
+### 조건
 
-`CloseTaskResult(close_state=blocked)`는 닫기 준비 상태 평가가 실행되었고 `harness.close_task` 메서드 계약이 차단 결과 커밋을 허용할 때만 저장 효과가 있습니다. `blockers: CloseReadinessBlocker[]`를 포함할 수 있고, API/저장소 계약이 명시적으로 허용한 차단 사유 상태, `task_events`, 재실행 행, `project_state.state_version` 효과만 만들 수 있습니다. Task는 열린 상태로 남습니다. `STATE_VERSION_CONFLICT`에는 이 분기를 사용하면 안 됩니다. 그 코드는 사전 확인의 `ToolRejectedResponse` 분기에 속하며 재실행으로 저장하지 않습니다.
+`harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 [MVP API](api/mvp-api.md)가 차단 커밋을 허용할 때만 `MethodResult`입니다.
+
+### `prepare_write`에서 저장되는 것
+
+`decision=blocked`, `decision=approval_required`, `decision=decision_required`인 커밋된 `dry_run=false` `PrepareWriteResult`는 메서드 상태 효과 계약이 그 판단 커밋을 허용할 때 응답과 재실행 페이로드에 `write_decision_reasons: WriteDecisionReason[]`를 담을 수 있습니다.
+
+### `prepare_write`의 비주장
+
+이 사유는 `prepare_write` 판단 사유입니다. 아래 항목이 아닙니다.
+
+- 닫기 준비 상태 평가 결과.
+- `CloseReadinessBlocker[]`.
+- 닫기 차단 사유 기록.
+
+### `prepare_write`에서 저장되지 않는 것
+
+이 분기는 아래 항목을 만들거나 실행하면 안 됩니다.
+
+- 소비 가능한 Write Authorization.
+- `close_state` 변경.
+- 닫기 준비 상태 평가.
+- `CloseReadinessBlocker` 저장.
+- 증거 갱신.
+- 아티팩트 변경.
+- 스테이징 핸들 소비.
+- `close_task` 효과.
+
+### `close_task`에서 저장되는 것
+
+`CloseTaskResult(close_state=blocked)`는 닫기 준비 상태 평가가 실행되었고 `harness.close_task` 메서드 계약이 차단 결과 커밋을 허용할 때만 저장 효과가 있습니다. `blockers: CloseReadinessBlocker[]`를 포함할 수 있고, API/저장소 계약이 명시적으로 허용한 아래 효과만 만들 수 있습니다.
+
+- 차단 사유 상태.
+- `task_events`.
+- 재실행 행.
+- `project_state.state_version` 영향.
+
+### 예외와 상태 버전 영향
+
+Task는 열린 상태로 남습니다. 커밋된 차단 효과가 허용되어 실제로 커밋되는 경우에만 `project_state.state_version` 영향이 생깁니다.
+
+`STATE_VERSION_CONFLICT`에는 이 분기를 사용하면 안 됩니다. 그 코드는 사전 확인의 `ToolRejectedResponse` 분기에 속하며 재실행으로 저장하지 않습니다.
 
 ## 메서드별 효과
 
