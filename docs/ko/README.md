@@ -2,14 +2,18 @@
 
 이 문서는 하네스 한국어 문서의 진입점입니다. 독자가 알맞은 문서로 이동하도록 안내하며, 기술 계약을 직접 정의하지 않습니다.
 
-## 읽기 경로
+## 역할별 읽기 경로
 
-| 독자 | 경로 |
-|---|---|
-| 처음 읽는 사용자 | [시작하기](start.md) -> [사용자 가이드](use/user-guide.md) |
-| 작업 중인 사용자 | [사용자 가이드](use/user-guide.md) -> [판단 예시](use/judgment-examples.md) -> [현재 MVP 범위](reference/active-mvp-scope.md) |
-| 에이전트 작성자·운영자 | [AGENTS.md](../../AGENTS.md) -> [doc-index.yaml](../doc-index.yaml) -> [에이전트 가이드](use/agent-guide.md) -> [에이전트 통합 참조](reference/agent-integration.md) |
-| 구현 담당자 | [참조 색인](reference/README.md) -> 현재 MVP 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
-| 문서 유지보수자 | [작성 가이드](maintain/authoring-guide.md) -> [번역 가이드](maintain/translation-guide.md) -> [점검](maintain/checks.md) -> [doc-index.yaml](../doc-index.yaml) -> [용어 지도](../terminology-map.yaml) |
+- 처음 읽는 사용자: [시작하기](start.md)에서 큰 그림을 본 뒤 [사용자 가이드](use/user-guide.md)로 이어 갑니다.
+- 작업 중인 사용자: [사용자 가이드](use/user-guide.md), [판단 예시](use/judgment-examples.md), [현재 MVP 범위](reference/active-mvp-scope.md)를 함께 봅니다.
+- 에이전트 작성자·운영자: [AGENTS.md](../../AGENTS.md)를 먼저 읽고, [doc-index.yaml](../doc-index.yaml), [에이전트 가이드](use/agent-guide.md), [에이전트 통합 참조](reference/agent-integration.md)로 이동합니다.
+- 구현 담당자: [현재 MVP 범위](reference/active-mvp-scope.md)를 먼저 확인한 뒤 [참조 색인](reference/README.md)에서 정확한 계약 담당 문서를 찾습니다.
+- 문서 유지보수자: [작성 가이드](maintain/authoring-guide.md), [점검](maintain/checks.md), [번역 가이드](maintain/translation-guide.md), [doc-index.yaml](../doc-index.yaml), [용어 지도](../terminology-map.yaml)를 사용합니다.
 
-처음 읽는 사용자와 작업 중인 사용자는 사용자용 경로에서 시작합니다. 정확한 담당 문서가 필요할 때 [참조 색인](reference/README.md)을 사용하고, 이 README를 스키마나 API 지름길로 만들지 않습니다.
+## 현재 범위
+
+[현재 MVP 범위](reference/active-mvp-scope.md)는 현재 MVP에 포함되는 것과 제외되는 것을 확인하는 시작점입니다. 이후 후보는 이 담당 문서가 승격되었다고 말하기 전까지 현재 요구사항이 아닙니다.
+
+## 참조 계약
+
+API, 저장소, 보안, 스키마, 상태 보기, 닫기 준비 상태의 정확한 담당 문서가 필요하면 [참조 색인](reference/README.md)을 사용합니다. 이 README는 계약을 복사하지 않고 경로 안내만 담당합니다.
