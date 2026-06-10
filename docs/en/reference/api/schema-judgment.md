@@ -52,7 +52,7 @@ UserJudgment:
   resolved_at: string | null
 ```
 
-`judgment_kind`, `status`, `presentation`, and `required_for` values are owned by [API Value Sets](schema-value-sets.md#judgment-values). Product meaning is owned by [Core Model](../core-model.md#4-user-owned-judgment).
+`judgment_kind`, `status`, `presentation`, and `required_for` values are owned by [judgment values](schema-value-sets.md#judgment-values). Product meaning is owned by [Core Model user-owned judgment](../core-model.md#4-user-owned-judgment).
 
 ## UserJudgmentCandidate
 

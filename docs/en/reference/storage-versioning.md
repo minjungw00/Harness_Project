@@ -82,7 +82,7 @@ If any part fails, the transaction must leave no partial:
 
 The storage unique key is `(project_id, tool_name, idempotency_key)`. `request_hash` is the conflict discriminator stored in that row. `request_hash` must not be added to a second uniqueness key that would allow the same idempotency key to fork into multiple committed responses.
 
-If the same key and request hash are replayed, Core returns the original committed response without appending events, promoting or linking artifacts, consuming Write Authorization, or changing state again. If the key is reused with a different request hash, Core returns `STATE_VERSION_CONFLICT` as defined by [API Errors](api/errors.md#state-conflict-behavior).
+If the same key and request hash are replayed, Core returns the original committed response without appending events, promoting or linking artifacts, consuming Write Authorization, or changing state again. If the key is reused with a different request hash, Core returns `STATE_VERSION_CONFLICT` as defined by [state version conflict](api/errors.md#state-conflict-behavior).
 
 `tool_invocations.response_json` stores only the exact committed non-dry-run Core `MethodResult` response for a replay-row-creating state effect. It does not store `StatusResult`, `ToolRejectedResponse`, `ToolDryRunResponse`, read-only `MethodResult` results, or successful `StageArtifactResult` staging results.
 

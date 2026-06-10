@@ -67,7 +67,7 @@ staging_created
 no_effect
 ```
 
-`response_kind` and `effect_kind` are branch metadata values. Branch selection and state effects are owned by [MVP API](mvp-api.md#shared-request-rules). Public error semantics for rejected branches are owned by [API Errors](errors.md).
+`response_kind` and `effect_kind` are branch metadata values. Branch selection and state effects are owned by [shared request rules](mvp-api.md#shared-request-rules). Public error semantics for rejected branches are owned by [API Errors](errors.md).
 
 <a id="access-class-values"></a>
 ## Access class values
@@ -83,7 +83,7 @@ no_effect
 | `artifact_registration` | `harness.stage_artifact`. |
 | `artifact_read` | Artifact body reads when an owner path exposes them. |
 
-Access classes are Harness API compatibility classes, not OS permission classes. Local surface verification behavior stays in [MVP API](mvp-api.md#shared-request-rules), [Agent Integration](../agent-integration.md), and [Security](../security.md).
+Access classes are Harness API compatibility classes, not OS permission classes. Local surface verification behavior stays in [shared request rules](mvp-api.md#shared-request-rules), [Agent Integration](../agent-integration.md), and [Security](../security.md).
 
 <a id="record-and-reference-values"></a>
 ## Record and reference values
@@ -401,7 +401,7 @@ consumed
 incompatible
 ```
 
-`ToolError.details.artifact_input_error.reason` uses the staged-handle reason values listed in [API Errors](errors.md#error-taxonomy). [API Errors](errors.md) owns what each public error code and detail reason means.
+`ToolError.details.artifact_input_error.reason` uses the staged-handle reason values listed in the [public `ErrorCode` table](errors.md#error-taxonomy). [API Errors](errors.md) owns what each public error code and detail reason means.
 
 ## Profile-gated and reserved values
 

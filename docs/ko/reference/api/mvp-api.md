@@ -32,23 +32,23 @@
 | [`harness.record_user_judgment`](#harnessrecord_user_judgment) | 기존 대기 중인 `UserJudgment`에 대한 사용자의 답을 기록합니다. |
 | [`harness.close_task`](#harnessclose_task) | 닫기 준비 상태를 확인하고, 차단 사유가 허용할 때만 `complete`, `cancel`, `supersede` intent를 처리합니다. |
 
-이 문서는 메서드 역할과 메서드별 결과 동작을 이름 붙입니다. 분기, 저장 효과, `dry_run`, 재실행, 상태 버전 규칙의 canonical 설명은 [API 코어 스키마](schema-core.md), [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md)를 확인하세요.
+이 문서는 메서드 역할과 메서드별 결과 동작을 이름 붙입니다. 분기, 저장 효과, `dry_run`, 재실행, 상태 버전 규칙의 기준 설명은 [API 코어 스키마](schema-core.md), [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md)를 확인하세요.
 
 <a id="shared-request-rules"></a>
 
 ## 공통 요청 규칙
 
-모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다. 각 공개 메서드 응답은 정확히 하나의 응답 분기입니다. 구체적인 메서드별 `MethodResult`, `ToolRejectedResponse`, 또는 `ToolDryRunResponse` 중 하나입니다. 메서드 결과 스키마는 실제 읽기 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드 상태 효과 표가 허용하는 커밋된 차단 결과에 대해 구체적인 결과를 이름 붙입니다. 메서드 결과는 `response_kind=result`인 [`ToolResultBase`](schema-core.md#common-response)를 사용합니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 [API 코어 스키마](schema-core.md#common-response)의 공통 응답 스키마를 사용하며 메서드별 result 전용 필드를 상속하지 않습니다.
+모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다. 각 공개 메서드 응답은 정확히 하나의 응답 분기입니다. 구체적인 메서드별 `MethodResult`, `ToolRejectedResponse`, 또는 `ToolDryRunResponse` 중 하나입니다. 메서드 결과 스키마는 실제 읽기 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드 상태 효과 표가 허용하는 커밋된 차단 결과에 대해 구체적인 결과를 이름 붙입니다. 메서드 결과는 `response_kind=result`인 [`ToolResultBase`](schema-core.md#common-response)를 사용합니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 [공통 응답 분기](schema-core.md#common-response)의 스키마를 사용하며 메서드별 result 전용 필드를 상속하지 않습니다.
 
 아래 예시는 간결한 분기 예시이지 전체 스키마 정의가 아닙니다. 최소 요청 예시는 해당 메서드의 유효한 호출을 구성하는 데 필요한 필드를 포함합니다. 대표 응답 예시는 분기 이해에 중요한 필드를 보여 주며, 설명 중인 동작에 영향을 주지 않는 스키마 담당 중첩 필드는 생략할 수 있습니다. 전체 형태는 연결된 스키마 담당 문서를 사용합니다.
 
 커밋되는 `dry_run=false` 상태 변경 호출에는 `null`이 아닌 `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`이 필요합니다. 읽기 전용 호출, 유효한 dry-run 미리보기, 스테이징 유틸리티 호출의 예외는 각 담당 문서가 정의합니다.
 
-응답 분기 선택은 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 저장과 재실행 효과는 [저장 효과](../storage-effects.md)와 [저장소 버전 관리](../storage-versioning.md)가 담당합니다. 공개 오류, 오래된 상태 우선순위, 닫기 차단 사유 경로는 [API 오류](errors.md)가 담당합니다.
+응답 분기 선택은 [공통 응답 분기](schema-core.md#common-response)가 담당합니다. 저장과 재실행 효과는 [저장 효과](../storage-effects.md)와 [저장소 버전 관리](../storage-versioning.md)가 담당합니다. 공개 오류, 오래된 상태 우선순위, 닫기 차단 사유 경로는 [API 오류](errors.md)가 담당합니다.
 
 메서드에 도구별 `task_id`가 있으면 Core는 메서드 필드, `ToolEnvelope.task_id`, 활성 Task 순서로 기본 Task를 해석합니다. 이 해석은 담당 기록을 고르는 것이지 별도 상태 시계를 만들지 않습니다.
 
-로컬 접근 등급은 하네스 API 호환성 등급이지 OS 권한 등급이 아닙니다. 활성 `access_class` 값은 [API 값 집합](schema-value-sets.md#접근-등급-값)이 담당합니다. 커넥터 도출과 역량 태세는 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
+로컬 접근 등급은 하네스 API 호환성 등급이지 OS 권한 등급이 아닙니다. 활성 `access_class` 값은 [접근 등급 값](schema-value-sets.md#접근-등급-값)이 담당합니다. 커넥터 도출과 역량 태세는 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
 
 각 공개 API 요청에는 요청 수준 접근 등급이 정확히 하나 있습니다. `ArtifactInput[]` 같은 중첩 페이로드는 두 번째 접근 등급을 추가하지 않습니다. 아티팩트 스테이징, 승격, 본문 읽기 경계는 [API 아티팩트 스키마](schema-artifacts.md)와 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
@@ -169,7 +169,7 @@ next_actions:
 
 ### 담당 문서 링크
 
-- 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md#tool-envelope), [공통 응답 분기](schema-core.md#common-response).
+- 요청 래퍼와 응답 분기: [`ToolEnvelope`](schema-core.md#tool-envelope), [공통 응답 분기](schema-core.md#common-response).
 - 상태 참조, `StateSummary`, `ShapingReadiness`, 다음 행동: [API 상태 스키마](schema-state.md).
 - 활성 메서드 이름, 모드 값, `resume_policy`, `response_kind`, `effect_kind`, 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류와 상태 버전 충돌: [API 오류](errors.md).
@@ -444,7 +444,7 @@ guarantee_display:
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
 - 상태, 닫기 준비 상태 형태, 증거 요약, 보장 표시: [API 상태 스키마](schema-state.md).
 - 활성 값과 접근 등급: [API 값 집합](schema-value-sets.md).
-- 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`harness.close_task` 닫기 준비 상태 평가와 닫기 차단 사유](errors.md#harnessclose_task-close-blockers).
+- 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers).
 - 저장 효과: [저장 효과](../storage-effects.md).
 
 <a id="harnessprepare_write"></a>
@@ -1219,6 +1219,6 @@ next_actions:
 - 요청 래퍼, 공통 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - 닫기 준비 상태 형태, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`: [API 상태 스키마](schema-state.md).
 - 닫기 상태, 생명주기, 닫기 이유, 차단 사유 값: [API 값 집합](schema-value-sets.md).
-- complete 닫기 준비 상태 순서와 정직한 닫기: [Core 모델](../core-model.md#close_task).
-- 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`harness.close_task` 닫기 준비 상태 평가와 닫기 차단 사유](errors.md#harnessclose_task-close-blockers).
+- complete 닫기 준비 상태 순서와 정직한 닫기: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
+- 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers).
 - 저장 효과와 상태 버전 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

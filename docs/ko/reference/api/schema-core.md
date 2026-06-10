@@ -50,7 +50,7 @@ ToolEnvelope:
   locale: string | null
 ```
 
-`task_id`는 요청 수준의 선택적 Task 선택자입니다. 메서드별 `task_id` 필드가 있으면 [MVP API](mvp-api.md#공통-요청-규칙)가 설명하는 대로 그 필드가 우선합니다. `expected_state_version`은 상태 변경 메서드가 쓰는 프로젝트 전체 상태 시계를 가리킵니다. 충돌 동작은 [API 오류](errors.md#state-conflict-behavior)와 [저장소 버전 관리](../storage-versioning.md)가 담당합니다.
+`task_id`는 요청 수준의 선택적 Task 선택자입니다. 메서드별 `task_id` 필드가 있으면 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 설명하는 대로 그 필드가 우선합니다. `expected_state_version`은 상태 변경 메서드가 쓰는 프로젝트 전체 상태 시계를 가리킵니다. 충돌 동작은 [상태 버전 충돌](errors.md#state-conflict-behavior)과 [저장소 버전 관리](../storage-versioning.md)가 담당합니다.
 
 <a id="common-response"></a>
 ## 공통 응답 분기
@@ -82,7 +82,7 @@ ToolDryRunResponse:
 
 메서드별 결과 필드는 그 메서드 결과 분기에만 둡니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, `close_state` 같은 결과 전용 필드를 담지 않습니다.
 
-활성 `response_kind`와 `effect_kind` 값은 [API 값 집합](schema-value-sets.md#응답과-효과-값)이 담당합니다. 분기 선택과 상태 효과는 [MVP API](mvp-api.md#공통-요청-규칙)가 담당합니다. 공개 오류 우선순위는 [API 오류](errors.md)가 담당합니다.
+활성 `response_kind`와 `effect_kind` 값은 [응답과 효과 값](schema-value-sets.md#응답과-효과-값)이 담당합니다. 분기 선택과 상태 효과는 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 담당합니다. 공개 오류 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ## `dry_run` 요약 형태
 
@@ -109,7 +109,7 @@ PlannedBlocker:
   related_refs: StateRecordRef[]
 ```
 
-`NextActionSummary`와 `StateRecordRef`는 [API 상태 스키마](schema-state.md)가 담당합니다. `PlannedBlocker.source_kind` 값은 [API 값 집합](schema-value-sets.md#상태와-차단-사유-값)이 담당합니다. `ToolError.code`에 쓰는 공개 `ErrorCode` 값은 [API 오류](errors.md)가 담당합니다.
+`NextActionSummary`와 `StateRecordRef`는 [API 상태 스키마](schema-state.md)가 담당합니다. `PlannedBlocker.source_kind` 값은 [상태와 차단 사유 값](schema-value-sets.md#상태와-차단-사유-값)이 담당합니다. `ToolError.code`에 쓰는 공개 `ErrorCode` 값은 [API 오류](errors.md)가 담당합니다.
 
 ## 공통 보조 형태
 

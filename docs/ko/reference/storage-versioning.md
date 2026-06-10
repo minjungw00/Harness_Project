@@ -55,7 +55,7 @@
 
 저장소 고유 키는 `(project_id, tool_name, idempotency_key)`입니다. `request_hash`는 그 행에 저장하는 충돌 판별자입니다. `request_hash`를 두 번째 고유 키에 넣어 같은 멱등 키가 여러 커밋 응답으로 갈라질 수 있게 만들면 안 됩니다.
 
-같은 키와 요청 해시가 재실행되면 Core는 이벤트를 추가하거나, 아티팩트를 승격/연결하거나, Write Authorization을 소비하거나, 상태를 다시 바꾸지 않고 원래 커밋된 응답을 반환합니다. 같은 키가 다른 요청 해시로 재사용되면 Core는 [API 오류](api/errors.md#state-conflict-behavior)가 정의한 `STATE_VERSION_CONFLICT`를 반환합니다.
+같은 키와 요청 해시가 재실행되면 Core는 이벤트를 추가하거나, 아티팩트를 승격/연결하거나, Write Authorization을 소비하거나, 상태를 다시 바꾸지 않고 원래 커밋된 응답을 반환합니다. 같은 키가 다른 요청 해시로 재사용되면 Core는 [상태 버전 충돌](api/errors.md#state-conflict-behavior)이 정의한 `STATE_VERSION_CONFLICT`를 반환합니다.
 
 `tool_invocations.response_json`은 재실행 행을 만드는 상태 효과가 있는 커밋된 `dry_run=false` Core `MethodResult` 응답만 정확히 저장합니다. `StatusResult`, `ToolRejectedResponse`, `ToolDryRunResponse`, 읽기 전용 `MethodResult`, 성공한 `StageArtifactResult` 스테이징 결과는 저장하지 않습니다.
 

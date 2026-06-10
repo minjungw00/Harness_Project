@@ -33,8 +33,7 @@
 `ErrorCode` 값은 공개 API 식별자입니다. 차단 사유 코드는 동작별 결과 값입니다. 공개 `ErrorCode`는 기준 메서드나 스키마 담당 문서가 명시적으로 허용하지 않는 한 차단 사유 코드로 재사용하면 안 됩니다.
 
 <a id="error-taxonomy"></a>
-
-## Public `ErrorCode` 표
+## 공개 `ErrorCode` 표
 
 | `ErrorCode` | 사용 위치 | 의미 | 상태 변경 | 차단 사유 코드 가능 여부 |
 | --- | --- | --- | --- | --- |
@@ -149,8 +148,7 @@
 
 <a id="idempotency"></a>
 <a id="state-conflict-behavior"></a>
-
-## State version conflict
+## 상태 버전 충돌
 
 | 충돌 조건 | 공개 코드 | 응답 경로 | 차단 사유 사용 |
 |---|---|---|---|
@@ -201,7 +199,7 @@
 | 읽기용 보기 최신성 문제입니다. | `PROJECTION_STALE`; 그 자체로 닫기 차단 사유가 아닙니다. |
 | 프로젝트 전체 상태나 Write Authorization 근거 버전이 오래되었습니다. | `ToolRejectedResponse.errors[]`의 `STATE_VERSION_CONFLICT`; 절대 닫기 차단 사유가 아닙니다. |
 
-닫기 준비 상태 순서는 [Core 모델](../core-model.md#close_task)이 담당합니다. 메서드 동작은 [MVP API](mvp-api.md#harnessclose_task)가 담당합니다. `CloseReadinessBlocker` 형태와 범주는 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)이 담당합니다.
+닫기 준비 상태 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 메서드 동작은 [`harness.close_task`](mvp-api.md#harnessclose_task)가 담당합니다. `CloseReadinessBlocker` 형태와 범주는 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)이 담당합니다.
 
 ## 사용자 표시 라벨
 
@@ -240,6 +238,6 @@
 | `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`, 아티팩트 입력 형태 | [API 아티팩트 스키마](schema-artifacts.md)입니다. |
 | 스테이징된 아티팩트 핸들 저장소 검증과 아티팩트 승격 생명주기 | [아티팩트 저장소](../storage-artifacts.md)입니다. |
 | 사용자 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락 형태 | [API 판단 스키마](schema-judgment.md)와 [Core 모델](../core-model.md)입니다. |
-| 닫기 준비 상태 순서와 비대체 규칙 | [Core 모델](../core-model.md#close_task)입니다. |
+| 닫기 준비 상태 순서와 비대체 규칙 | [Core 모델의 닫기 준비 상태](../core-model.md#close_task)입니다. |
 | 저장 효과, 재실행 행, 상태 시계, DDL | [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md), [저장소 기록](../storage-records.md)입니다. |
 | 보안 보장 표현과 접근 경계 주장 | [보안](../security.md)입니다. |

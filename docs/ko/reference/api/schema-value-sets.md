@@ -67,7 +67,7 @@ staging_created
 no_effect
 ```
 
-`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 분기 선택과 상태 효과는 [MVP API](mvp-api.md#공통-요청-규칙)가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류](errors.md)가 담당합니다.
+`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 분기 선택과 상태 효과는 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류](errors.md)가 담당합니다.
 
 <a id="access-class-values"></a>
 ## 접근 등급 값
@@ -83,7 +83,7 @@ no_effect
 | `artifact_registration` | `harness.stage_artifact`. |
 | `artifact_read` | 담당 경로가 노출하는 아티팩트 본문 읽기. |
 
-접근 등급은 하네스 API 호환성 분류이지 OS 권한 분류가 아닙니다. 로컬 접점 확인 동작은 [MVP API](mvp-api.md#공통-요청-규칙), [에이전트 통합](../agent-integration.md), [보안](../security.md)에 남습니다.
+접근 등급은 하네스 API 호환성 분류이지 OS 권한 분류가 아닙니다. 로컬 접점 확인 동작은 [공통 요청 규칙](mvp-api.md#공통-요청-규칙), [에이전트 통합](../agent-integration.md), [보안](../security.md)에 남습니다.
 
 <a id="record-and-reference-values"></a>
 ## 기록과 참조 값
@@ -401,7 +401,7 @@ consumed
 incompatible
 ```
 
-`ToolError.details.artifact_input_error.reason`은 [API 오류](errors.md#error-taxonomy)에 있는 스테이징된 핸들 사유 값을 사용합니다. 각 공개 오류 코드와 detail 사유의 의미는 [API 오류](errors.md)가 담당합니다.
+`ToolError.details.artifact_input_error.reason`은 [공개 `ErrorCode` 표](errors.md#error-taxonomy)에 있는 스테이징된 핸들 사유 값을 사용합니다. 각 공개 오류 코드와 detail 사유의 의미는 [API 오류](errors.md)가 담당합니다.
 
 ## Profile-gated 및 예약 값
 

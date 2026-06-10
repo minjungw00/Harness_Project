@@ -6,12 +6,12 @@ This repository is documentation-only and still in documentation review. It cont
 
 This document owns documentation-level conformance meaning, candidate future fixture shape, assertion authority boundaries, and a compact scenario index. It does not define API branches, storage effects, access classes, artifact promotion, security guarantees, or close-readiness behavior.
 
-For the canonical current scope, see [Active MVP scope](active-mvp-scope.md). Current phase and handoff status remain owned by [MVP Plan](../build/mvp-plan.md#documentation-acceptance-status).
+For the canonical current scope, see [Active MVP scope](active-mvp-scope.md). Current phase and handoff status remain owned by [MVP Plan repository status](../build/mvp-plan.md#documentation-acceptance-status).
 
 | Item | Current status | Owner | Executable now? |
 |---|---|---|---|
 | current documentation criteria | active reference criteria | `docs/en/reference/conformance.md` | no runtime execution |
-| planned internal smoke target | planned/documented | [MVP Plan](../build/mvp-plan.md#first-internal-smoke-target) | no |
+| planned internal smoke target | planned/documented | [MVP Plan first internal smoke target](../build/mvp-plan.md#first-internal-smoke-target) | no |
 | future fixture shape | candidate format | this document | no |
 | future executable fixtures | not implemented | future runner and owner-promoted fixtures | no |
 | later conformance reporting | later candidate | [Later Candidate Index](../later/index.md) | no |

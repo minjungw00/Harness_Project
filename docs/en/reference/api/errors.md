@@ -203,7 +203,7 @@ Blocked result means the method may have returned an operation-specific blocked 
 | Readable view freshness issue | `PROJECTION_STALE`; not a close blocker by itself |
 | Stale project-wide state or stale Write Authorization basis | `STATE_VERSION_CONFLICT` in `ToolRejectedResponse.errors[]`; never a close blocker |
 
-Close-readiness order is owned by [Core Model](../core-model.md#close_task). Method behavior is owned by [MVP API](mvp-api.md#harnessclose_task). `CloseReadinessBlocker` shape and categories are owned by [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
+Close-readiness order is owned by [Core Model close readiness](../core-model.md#close_task). Method behavior is owned by [`harness.close_task`](mvp-api.md#harnessclose_task). `CloseReadinessBlocker` shape and categories are owned by [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
 
 ## User-facing labels
 
@@ -242,6 +242,6 @@ User-facing labels may differ from public error identifiers. Labels are display 
 | `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`, and artifact input shape | [API Artifact Schemas](schema-artifacts.md). |
 | Staged-handle storage validation and artifact promotion lifecycle | [Artifact Storage](../storage-artifacts.md). |
 | User judgments, sensitive-action approval, final acceptance, and residual-risk acceptance shapes | [API Judgment Schemas](schema-judgment.md) and [Core Model](../core-model.md). |
-| Close-readiness order and non-substitution rules | [Core Model](../core-model.md#close_task). |
+| Close-readiness order and non-substitution rules | [Core Model close readiness](../core-model.md#close_task). |
 | Storage effects, replay rows, state clocks, and DDL | [Storage Effects](../storage-effects.md), [Storage Versioning](../storage-versioning.md), and [Storage Records](../storage-records.md). |
 | Security guarantee wording and access-boundary claims | [Security](../security.md). |

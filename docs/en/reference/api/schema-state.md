@@ -40,7 +40,7 @@ StateRecordRef:
   state_version: integer | null
 ```
 
-`record_kind` values are owned by [API Value Sets](schema-value-sets.md#record-and-reference-values). Storage table names and DDL stay in [Storage Records](../storage-records.md).
+`record_kind` values are owned by [record and reference values](schema-value-sets.md#record-and-reference-values). Storage table names and DDL stay in [Storage Records](../storage-records.md).
 
 ## StateSummary
 
@@ -84,7 +84,7 @@ TaskLifecycleState:
   closed_at: string | null
 ```
 
-Active values for `lifecycle_phase`, `close_reason`, and `result` are owned by [API Value Sets](schema-value-sets.md#task-lifecycle-values). The product meaning of lifecycle areas is owned by [Core Model](../core-model.md#6-task-lifecycle).
+Active values for `lifecycle_phase`, `close_reason`, and `result` are owned by [task lifecycle values](schema-value-sets.md#task-lifecycle-values). The product meaning of lifecycle areas is owned by [Core Model task lifecycle](../core-model.md#6-task-lifecycle).
 
 ## ShapingReadiness
 
@@ -143,7 +143,7 @@ WriteDecisionReason:
   related_refs: StateRecordRef[]
 ```
 
-`WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`; it is not a close-readiness blocker. The active categories and reason values are owned by [API Value Sets](schema-value-sets.md#state-and-blocker-values). Public error code meaning stays in [API Errors](errors.md).
+`WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`; it is not a close-readiness blocker. The active categories and reason values are owned by [state and blocker values](schema-value-sets.md#state-and-blocker-values). Public error code meaning stays in [API Errors](errors.md).
 
 ## Evidence and run snapshot shapes
 
@@ -181,7 +181,7 @@ ObservedChanges:
   baseline_ref: string | null
 ```
 
-`ArtifactRef` is owned by [API Artifact Schemas](schema-artifacts.md). Evidence sufficiency meaning is owned by [Core Model](../core-model.md#9-evidence-and-run-authority) and method behavior is owned by [MVP API](mvp-api.md).
+`ArtifactRef` is owned by [API Artifact Schemas](schema-artifacts.md). Evidence sufficiency meaning is owned by [Core Model evidence and run authority](../core-model.md#9-evidence-and-run-authority) and method behavior is owned by [MVP API](mvp-api.md).
 
 ## Close readiness and validation shapes
 
@@ -206,7 +206,7 @@ GuaranteeDisplay:
   capability_refs: StateRecordRef[]
 ```
 
-`CloseReadinessBlocker` is a data shape for close-readiness findings. It is not the whole close-readiness concept and it does not itself imply persistence. Complete close-readiness order is owned by [Core Model](../core-model.md#close_task). Response branch behavior and committed blocked outcomes are owned by [MVP API](mvp-api.md#harnessclose_task). Public error routing is owned by [API Errors](errors.md#harnessclose_task-close-blockers).
+`CloseReadinessBlocker` is a data shape for close-readiness findings. It is not the whole close-readiness concept and it does not itself imply persistence. Complete close-readiness order is owned by [Core Model close readiness](../core-model.md#close_task). Response branch behavior and committed blocked outcomes are owned by [`harness.close_task`](mvp-api.md#harnessclose_task). Public error routing is owned by [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers).
 
 Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values are owned by [API Value Sets](schema-value-sets.md). Security guarantee meaning is owned by [Security](../security.md).
 

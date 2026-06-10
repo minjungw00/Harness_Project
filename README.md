@@ -8,7 +8,7 @@ This repository is documentation-only. It contains planning source material for 
 
 For the canonical current scope, see [Active MVP scope](docs/en/reference/active-mvp-scope.md).
 
-현재 범위의 canonical 설명은 [현재 MVP 범위 참조](docs/ko/reference/active-mvp-scope.md)를 확인하세요.
+현재 범위의 기준 설명은 [현재 MVP 범위 참조](docs/ko/reference/active-mvp-scope.md)를 확인하세요.
 
 ## What this repository contains / 이 저장소에 있는 것
 

@@ -40,7 +40,7 @@ StateRecordRef:
   state_version: integer | null
 ```
 
-`record_kind` 값은 [API 값 집합](schema-value-sets.md#기록과-참조-값)이 담당합니다. 저장소 테이블 이름과 DDL은 [저장소 기록](../storage-records.md)에 남습니다.
+`record_kind` 값은 [기록과 참조 값](schema-value-sets.md#기록과-참조-값)이 담당합니다. 저장소 테이블 이름과 DDL은 [저장소 기록](../storage-records.md)에 남습니다.
 
 ## `StateSummary`
 
@@ -84,7 +84,7 @@ TaskLifecycleState:
   closed_at: string | null
 ```
 
-`lifecycle_phase`, `close_reason`, `result`의 활성 값은 [API 값 집합](schema-value-sets.md#task-생명주기-값)이 담당합니다. 생명주기 영역의 제품 의미는 [Core 모델](../core-model.md#6-task-생명주기)이 담당합니다.
+`lifecycle_phase`, `close_reason`, `result`의 활성 값은 [Task 생명주기 값](schema-value-sets.md#task-생명주기-값)이 담당합니다. 생명주기 영역의 제품 의미는 [Core 모델의 Task 생명주기](../core-model.md#6-task-생명주기)가 담당합니다.
 
 ## `ShapingReadiness`
 
@@ -143,7 +143,7 @@ WriteDecisionReason:
   related_refs: StateRecordRef[]
 ```
 
-`WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다. 닫기 준비 상태의 차단 사유가 아닙니다. 활성 범주와 사유 값은 [API 값 집합](schema-value-sets.md#상태와-차단-사유-값)이 담당합니다. 공개 오류 코드의 의미는 [API 오류](errors.md)에 남습니다.
+`WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다. 닫기 준비 상태의 차단 사유가 아닙니다. 활성 범주와 사유 값은 [상태와 차단 사유 값](schema-value-sets.md#상태와-차단-사유-값)이 담당합니다. 공개 오류 코드의 의미는 [API 오류](errors.md)에 남습니다.
 
 ## 증거와 Run 스냅샷 형태
 
@@ -181,7 +181,7 @@ ObservedChanges:
   baseline_ref: string | null
 ```
 
-`ArtifactRef`는 [API 아티팩트 스키마](schema-artifacts.md)가 담당합니다. 증거 충분성의 의미는 [Core 모델](../core-model.md#9-실행과-증거의-권한)이 담당하고, 메서드 동작은 [MVP API](mvp-api.md)가 담당합니다.
+`ArtifactRef`는 [API 아티팩트 스키마](schema-artifacts.md)가 담당합니다. 증거 충분성의 의미는 [Core 모델의 실행과 증거의 권한](../core-model.md#9-실행과-증거의-권한)이 담당하고, 메서드 동작은 [MVP API](mvp-api.md)가 담당합니다.
 
 ## 닫기 준비 상태와 검증 형태
 
@@ -206,7 +206,7 @@ GuaranteeDisplay:
   capability_refs: StateRecordRef[]
 ```
 
-`CloseReadinessBlocker`는 닫기 준비 상태 발견 사항을 표현하는 데이터 형태입니다. 닫기 준비 상태 개념 전체가 아니며 그 자체로 지속 저장을 뜻하지도 않습니다. `complete` 닫기 준비 상태 순서는 [Core 모델](../core-model.md#close_task)이 담당합니다. 응답 분기 동작과 커밋된 차단 결과는 [MVP API](mvp-api.md#harnessclose_task)가 담당합니다. 공개 오류 경로는 [API 오류](errors.md#harnessclose_task-close-blockers)가 담당합니다.
+`CloseReadinessBlocker`는 닫기 준비 상태 발견 사항을 표현하는 데이터 형태입니다. 닫기 준비 상태 개념 전체가 아니며 그 자체로 지속 저장을 뜻하지도 않습니다. `complete` 닫기 준비 상태 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 응답 분기 동작과 커밋된 차단 결과는 [`harness.close_task`](mvp-api.md#harnessclose_task)가 담당합니다. 공개 오류 경로는 [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers)이 담당합니다.
 
 활성 `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값은 [API 값 집합](schema-value-sets.md)이 담당합니다. 보안 보장 의미는 [보안](../security.md)이 담당합니다.
 

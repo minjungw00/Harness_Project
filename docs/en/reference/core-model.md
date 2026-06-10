@@ -138,9 +138,8 @@ Verification and Manual QA are conceptual boundaries in the current MVP, not act
 
 Evidence records must be read at their recorded scope. A passing test log supports the test it names; a screenshot supports the visible state it captures; an artifact supports only the content and integrity facts represented by the artifact owners. Evidence must not be inflated into proof of broader correctness.
 
-## 10. Close readiness
-
 <a id="close_task"></a>
+## 10. Close readiness
 
 Close readiness is the Core evaluation concept for whether the current Task can close honestly. It considers current Core state, active scope, required user-owned judgments, sensitive-action approval, write/run compatibility, evidence, artifacts, final acceptance, residual risk, and recovery constraints.
 

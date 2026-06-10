@@ -52,7 +52,7 @@ UserJudgment:
   resolved_at: string | null
 ```
 
-`judgment_kind`, `status`, `presentation`, `required_for` 값은 [API 값 집합](schema-value-sets.md#판단-값)이 담당합니다. 제품 의미는 [Core 모델](../core-model.md#4-사용자-소유-판단)이 담당합니다.
+`judgment_kind`, `status`, `presentation`, `required_for` 값은 [판단 값](schema-value-sets.md#판단-값)이 담당합니다. 제품 의미는 [Core 모델의 사용자 소유 판단](../core-model.md#4-사용자-소유-판단)이 담당합니다.
 
 ## `UserJudgmentCandidate`
 

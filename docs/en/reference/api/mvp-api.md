@@ -45,17 +45,17 @@ This page names the method role and method-specific result behavior. For the can
 
 ## Shared request rules
 
-All methods use [`ToolEnvelope`](schema-core.md#tool-envelope). Each public method response is exactly one response branch: the concrete method-specific `MethodResult`, `ToolRejectedResponse`, or `ToolDryRunResponse`. The method result schema names the concrete result for actual read results, successful staging results, Core committed results, or committed blocked results when the method state-effect table allows that blocked commit. Method results use [`ToolResultBase`](schema-core.md#common-response) with `response_kind=result`; `ToolRejectedResponse` and `ToolDryRunResponse` use the shared response schemas from [API Schema Core](schema-core.md#common-response) and do not inherit method-specific result-only fields.
+All methods use [`ToolEnvelope`](schema-core.md#tool-envelope). Each public method response is exactly one response branch: the concrete method-specific `MethodResult`, `ToolRejectedResponse`, or `ToolDryRunResponse`. The method result schema names the concrete result for actual read results, successful staging results, Core committed results, or committed blocked results when the method state-effect table allows that blocked commit. Method results use [`ToolResultBase`](schema-core.md#common-response) with `response_kind=result`; `ToolRejectedResponse` and `ToolDryRunResponse` use the shared response schemas from [common response branches](schema-core.md#common-response) and do not inherit method-specific result-only fields.
 
 Examples below are compact branch examples, not full schema definitions. Minimal request examples include the fields needed to construct a valid call for that method. Representative response examples show branch-critical fields and may omit schema-owned nested fields that do not affect the behavior being illustrated; use the linked schema owners for complete shapes.
 
 Committed non-dry-run state-changing calls require a non-null `idempotency_key` and a current project-wide `expected_state_version`; read-only calls, valid dry-run previews, and staging utility calls use the exceptions defined by their owners.
 
-Response branch selection is owned by [API Schema Core](schema-core.md#common-response). Storage and replay effects are owned by [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md). Public errors, stale-state precedence, and close blocker routing are owned by [API Errors](errors.md).
+Response branch selection is owned by [common response branches](schema-core.md#common-response). Storage and replay effects are owned by [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md). Public errors, stale-state precedence, and close blocker routing are owned by [API Errors](errors.md).
 
 When a method has a tool-specific `task_id`, Core resolves the primary Task from the method field before `ToolEnvelope.task_id` and then the active Task. That resolution selects owner records; it does not create a separate state clock.
 
-Local access classes are Harness API compatibility classes, not OS permission classes. Active `access_class` values are owned by [API Value Sets](schema-value-sets.md#access-class-values); connector derivation and capability posture are owned by [Agent Integration](../agent-integration.md) and [Security](../security.md).
+Local access classes are Harness API compatibility classes, not OS permission classes. Active `access_class` values are owned by [access class values](schema-value-sets.md#access-class-values); connector derivation and capability posture are owned by [Agent Integration](../agent-integration.md) and [Security](../security.md).
 
 Each public API request has exactly one request-level access class. Nested payloads such as `ArtifactInput[]` do not add a second access class; artifact staging, promotion, and body-read boundaries are owned by [API Artifact Schemas](schema-artifacts.md) and [Artifact Storage](../storage-artifacts.md).
 
@@ -176,7 +176,7 @@ next_actions:
 
 ### Owner links
 
-- Request envelope and response branches: [API Schema Core](schema-core.md#tool-envelope) and [Common Response Branches](schema-core.md#common-response).
+- Request envelope and response branches: [`ToolEnvelope`](schema-core.md#tool-envelope) and [common response branches](schema-core.md#common-response).
 - State refs, `StateSummary`, `ShapingReadiness`, and next actions: [API State Schemas](schema-state.md).
 - Active method names, mode values, `resume_policy`, `response_kind`, `effect_kind`, and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors and state-version conflicts: [API Errors](errors.md).
@@ -451,7 +451,7 @@ guarantee_display:
 - Request envelope and response branches: [API Schema Core](schema-core.md).
 - Status state, close-readiness shapes, evidence summaries, and guarantee display: [API State Schemas](schema-state.md).
 - Active values and access classes: [API Value Sets](schema-value-sets.md).
-- Public errors and close blocker routing: [API Errors](errors.md) and [`harness.close_task` Close Readiness Blockers](errors.md#harnessclose_task-close-blockers).
+- Public errors and close blocker routing: [API Errors](errors.md) and [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers).
 - Persistence effects: [Storage Effects](../storage-effects.md).
 
 <a id="harnessprepare_write"></a>
@@ -1226,6 +1226,6 @@ next_actions:
 - Request envelope, common response branches, and dry-run summaries: [API Schema Core](schema-core.md).
 - Close-readiness shapes, `CloseReadinessBlocker`, `EvidenceSummary`, and `StateSummary`: [API State Schemas](schema-state.md).
 - Close state, lifecycle, close reason, and blocker values: [API Value Sets](schema-value-sets.md).
-- Complete close-readiness order and close honesty: [Core Model](../core-model.md#close_task).
-- Public errors and close blocker routing: [API Errors](errors.md) and [`harness.close_task` Close Readiness Blockers](errors.md#harnessclose_task-close-blockers).
+- Complete close-readiness order and close honesty: [Core Model close readiness](../core-model.md#close_task).
+- Public errors and close blocker routing: [API Errors](errors.md) and [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers).
 - Persistence effects and state-version behavior: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).
