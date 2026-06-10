@@ -15,7 +15,7 @@ These documents remain source material for a future Harness Server. They do not 
 
 | Contract area | Canonical owner |
 |---|---|
-| Current MVP scope | [active-mvp-scope.md](active-mvp-scope.md) |
+| Detailed current MVP scope, exclusions, and guarantee boundary | [active-mvp-scope.md](active-mvp-scope.md) |
 | Core product concepts and user-owned judgment | [core-model.md](core-model.md) |
 | API method behavior | [api/mvp-api.md](api/mvp-api.md) |
 | Common API envelope and response branches | [api/schema-core.md](api/schema-core.md) |

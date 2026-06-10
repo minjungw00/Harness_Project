@@ -15,7 +15,7 @@
 
 | 계약 영역 | 담당 문서 |
 |---|---|
-| 현재 MVP 범위 | [active-mvp-scope.md](active-mvp-scope.md) |
+| 상세 현재 MVP 범위, 제외 항목, 보장 경계 | [active-mvp-scope.md](active-mvp-scope.md) |
 | Core 제품 개념과 사용자 소유 판단 | [core-model.md](core-model.md) |
 | API 메서드 동작 | [api/mvp-api.md](api/mvp-api.md) |
 | 공통 API 봉투와 응답 분기 | [api/schema-core.md](api/schema-core.md) |

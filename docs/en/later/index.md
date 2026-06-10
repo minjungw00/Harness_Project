@@ -10,7 +10,7 @@ Promotion must require explicit owner-document changes, not just mention in this
 
 ## 1. Boundary
 
-For contrast, the active MVP boundary is closed in [MVP Plan](../build/mvp-plan.md). It includes only plain-language intake and Task creation, `update_scope`, user judgment recording, sensitive approval recording, path-level `prepare_write` and Write Authorization, `record_run` with `access_class=run_recording`, artifact staging through `harness.stage_artifact` with `access_class=artifact_registration`, `ArtifactInput.source_kind=staged_artifact` during staged artifact promotion after `StagedArtifactHandle` provenance and scope validation, `existing_artifact` refs for already persisted `ArtifactRef` records, separate artifact body reads with `access_class=artifact_read`, `EvidenceSummary`, `close_task` blocker calculation, read-time status/projection, registered local surface access, cooperative guarantees, and detective guarantees only after the relevant active capability check has actually passed. Nothing on this page expands that list.
+For contrast, the detailed active MVP boundary is owned by [Active MVP Scope](../reference/active-mvp-scope.md). This page names deferred candidates only; nothing here expands current MVP scope or creates an active requirement.
 
 | Candidate | Status | Promotion boundary | Active MVP impact |
 |---|---|---|---|

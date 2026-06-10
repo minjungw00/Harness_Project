@@ -241,10 +241,12 @@ docs:
       - current_mvp_scope
       - active_later_scope_boundary
       - scope_level_exclusions
+      - current_mvp_guarantee_boundary
     owns:
-      - current MVP scope boundary
+      - detailed current MVP scope boundary
       - scope-level active/later split
-      - active document set expectations
+      - profile-gated and later-candidate scope boundaries
+      - current MVP guarantee boundary
       - out-of-scope material until promoted
     does_not_own:
       - implementation readiness
