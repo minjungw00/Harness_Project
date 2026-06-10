@@ -9,6 +9,49 @@ retrieval_rule:
   allow_korean_when_user_context_is_korean: true
   paired_docs_must_not_be_loaded_together: true
   paired_docs_exception: translation_or_semantic_parity_review_only
+question_routes:
+  purpose: Route high-signal agent questions to one canonical owner without loading neighboring contracts.
+  routes:
+    - question: "Where is the current MVP scope defined?"
+      canonical_owner_doc_id: reference.active-mvp-scope
+      default_path: docs/en/reference/active-mvp-scope.md
+      route_note: "Current MVP scope and active/later boundary."
+    - question: "Is `STATE_VERSION_CONFLICT` a blocker code?"
+      canonical_owner_doc_id: reference.api.errors
+      default_path: docs/en/reference/api/errors.md
+      route_note: "Public error-code routing and blocker-code exclusions."
+    - question: "Is `CloseReadinessBlocker` a storage row?"
+      canonical_owner_doc_id: reference.storage-records
+      default_path: docs/en/reference/storage-records.md
+      route_note: "Storage row and DDL ownership; schema meaning remains with API State Schemas."
+    - question: "When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`?"
+      canonical_owner_doc_id: reference.api.mvp-api
+      default_path: docs/en/reference/api/mvp-api.md
+      route_note: "Method branch selection for `harness.close_task`."
+    - question: "Does artifact staging create evidence?"
+      canonical_owner_doc_id: reference.storage-effects
+      default_path: docs/en/reference/storage-effects.md
+      route_note: "Method storage effects and no-evidence staging boundary."
+    - question: "Which document owns artifact promotion?"
+      canonical_owner_doc_id: reference.storage-artifacts
+      default_path: docs/en/reference/storage-artifacts.md
+      route_note: "Artifact staging, validation, promotion, linking, and body-read lifecycle."
+    - question: "Does the current MVP provide OS sandboxing?"
+      canonical_owner_doc_id: reference.security
+      default_path: docs/en/reference/security.md
+      route_note: "Security claims, guarantee wording, and explicit security non-claims."
+    - question: "Where are access classes defined?"
+      canonical_owner_doc_id: reference.api.schema-value-sets
+      default_path: docs/en/reference/api/schema-value-sets.md
+      route_note: "Active `access_class` values."
+    - question: 'How should "close readiness" be written in Korean?'
+      canonical_owner_doc_id: terminology.map
+      default_path: docs/terminology-map.yaml
+      route_note: "Bilingual terminology mapping and Korean wording control."
+    - question: "Where should later candidates be documented?"
+      canonical_owner_doc_id: later.index
+      default_path: docs/en/later/index.md
+      route_note: "Deferred candidate names and promotion boundaries."
 docs:
   - doc_id: docs.index
     status: active

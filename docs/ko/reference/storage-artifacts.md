@@ -36,7 +36,9 @@
 
 `created_by_surface_*` 필드는 성공한 `harness.stage_artifact` 요청의 `VerifiedSurfaceContext`에서 서버가 기록합니다. 호출자가 제출한 권한 주장이 아니며, 제출된 핸들의 형태가 맞다는 이유만으로 믿지 말고 스테이징 행과 비교해야 합니다.
 
-성공한 `harness.stage_artifact`는 `base.effect_kind=staging_created`인 `StageArtifactResult`를 반환합니다. `artifacts/tmp/` 아래 안전한 바이트 또는 안전한 알림을 쓰고 임시 스테이징 행을 만들 수 있습니다. Core 기록, `artifacts` 행, `artifact_links` 행, `evidence_summaries` 행, `task_events` 행, `tool_invocations` 재실행 행, `project_state.state_version` 증가를 만들지 않습니다.
+성공한 `harness.stage_artifact`는 `base.effect_kind=staging_created`인 `StageArtifactResult`를 반환합니다. `artifacts/tmp/` 아래 안전한 바이트 또는 안전한 알림을 쓰고 임시 스테이징 행을 만들 수 있습니다.
+
+스테이징은 임시 아티팩트 저장만 수행합니다. 증거 생성, 재실행 행, 상태 버전 증가 같은 메서드 효과 질문은 [저장 효과](storage-effects.md)가 담당합니다.
 
 `artifact_staging.status`는 저장소 소유 임시 핸들 생명주기입니다.
 

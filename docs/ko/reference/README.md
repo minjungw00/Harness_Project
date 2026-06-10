@@ -29,7 +29,7 @@
 
 | 질문 | 담당 문서 |
 |---|---|
-| 현재 MVP에 무엇이 포함되나요? | [현재 MVP 범위](active-mvp-scope.md) |
+| 현재 MVP 범위는 어디에 정의되어 있나요? | [현재 MVP 범위](active-mvp-scope.md) |
 | 어떤 기능이 현재 활성인지, 프로필로 제한되는지, 이후 후보인지 어디서 확인하나요? | [현재 MVP 범위](active-mvp-scope.md), [API 값 집합](api/schema-value-sets.md), [이후 후보 색인](../later/index.md) |
 | 이 저장소에서 런타임이나 서버 구현이 시작되었는지는 어디서 확인하나요? | [MVP 계획](../build/mvp-plan.md), [현재 MVP 범위](active-mvp-scope.md) |
 | 문서 전용 경계는 어디에 있나요? | [현재 MVP 범위](active-mvp-scope.md), [런타임 경계](runtime-boundaries.md) |
@@ -56,9 +56,10 @@
 |---|---|
 | `harness.prepare_write`는 무엇을 반환하나요? | [MVP API](api/mvp-api.md), [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [Core 모델](core-model.md) |
 | `ToolRejectedResponse`는 어디에 정의되어 있나요? | [API 코어 스키마](api/schema-core.md), [API 오류](api/errors.md) |
-| `STATE_VERSION_CONFLICT`는 언제 적용되나요? | [API 오류](api/errors.md), [MVP API](api/mvp-api.md), [저장소 버전 관리](storage-versioning.md) |
+| `STATE_VERSION_CONFLICT`는 차단 사유 코드인가요? | [API 오류](api/errors.md) |
+| `dry_run=true`인 `harness.close_task`가 언제 `ToolDryRunResponse`가 아닌 결과를 반환하나요? | [MVP API](api/mvp-api.md) |
 | 활성 메서드 이름, `response_kind`, `effect_kind`, enum 형태 API 값은 어디가 담당하나요? | [API 값 집합](api/schema-value-sets.md) |
-| 접근 등급은 어디에 정의되어 있나요? | [API 값 집합](api/schema-value-sets.md), [MVP API](api/mvp-api.md), [보안](security.md) |
+| 접근 등급은 어디에 정의되어 있나요? | [API 값 집합](api/schema-value-sets.md) |
 | `DryRunSummary`, `PlannedEffect`, `PlannedBlocker` 같은 `dry_run` 미리보기 구조는 어디에 정의되어 있나요? | [API 코어 스키마](api/schema-core.md), [API 값 집합](api/schema-value-sets.md) |
 | `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, `ValidatorResult` 구조는 어디가 담당하나요? | [API 상태 스키마](api/schema-state.md) |
 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle` 구조는 어디가 담당하나요? | [API 아티팩트 스키마](api/schema-artifacts.md) |
@@ -70,9 +71,9 @@
 |---|---|
 | 저장소 문서 묶음은 어디서 시작하나요? | [저장소](storage.md)를 먼저 보고, 아래의 구체적인 저장소 담당 문서로 이동합니다 |
 | Runtime Home 배치, 로컬 저장소 가정, 테이블 개요는 어디가 담당하나요? | [저장소 기록](storage-records.md), [런타임 경계](runtime-boundaries.md) |
-| `CloseReadinessBlocker`는 저장소 행인가요? | [API 상태 스키마](api/schema-state.md), [저장 효과](storage-effects.md), [저장소 기록](storage-records.md) |
-| 아티팩트 스테이징은 증거를 만드나요? | [MVP API](api/mvp-api.md), [저장 효과](storage-effects.md), [아티팩트 저장소](storage-artifacts.md), [Core 모델](core-model.md) |
-| 아티팩트 승격은 어느 문서가 담당하나요? | [아티팩트 저장소](storage-artifacts.md), [MVP API](api/mvp-api.md), [저장 효과](storage-effects.md) |
+| `CloseReadinessBlocker`는 저장소 행인가요? | [저장소 기록](storage-records.md) |
+| 아티팩트 스테이징은 증거를 만드나요? | [저장 효과](storage-effects.md) |
+| 아티팩트 승격은 어느 담당 문서가 맡나요? | [아티팩트 저장소](storage-artifacts.md) |
 | 스테이징 핸들 검증과 아티팩트 본문 읽기 자격은 어디가 담당하나요? | [아티팩트 저장소](storage-artifacts.md), [API 아티팩트 스키마](api/schema-artifacts.md) |
 | 멱등성, 상태 시계, 잠금, 마이그레이션은 어디가 담당하나요? | [저장소 버전 관리](storage-versioning.md), [API 오류](api/errors.md) |
 
@@ -80,7 +81,7 @@
 
 | 질문 | 담당 문서 |
 |---|---|
-| 현재 MVP가 OS 수준 샌드박싱을 제공하나요? | [보안](security.md), [런타임 경계](runtime-boundaries.md), [현재 MVP 범위](active-mvp-scope.md) |
+| 현재 MVP가 OS 수준 샌드박싱을 제공하나요? | [보안](security.md) |
 | 협력형, 탐지형, 예방형, 격리형 보장 표현은 어디가 담당하나요? | [보안](security.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
 | Product Repository, Harness Server, Harness Runtime Home의 분리는 어디가 담당하나요? | [런타임 경계](runtime-boundaries.md) |
 | 로컬 커넥터 동작, 역량 맥락, 확인된 접점 경계는 어디가 담당하나요? | [에이전트 통합](agent-integration.md), [MVP API](api/mvp-api.md), [보안](security.md) |
@@ -102,8 +103,9 @@
 
 | 질문 | 담당 문서 |
 |---|---|
-| 이후 후보는 어디에 추가해야 하나요? | [이후 후보 색인](../later/index.md) |
+| 이후 후보는 어디에 문서화해야 하나요? | [이후 후보 색인](../later/index.md) |
 | 이후 후보가 활성 기능이 되려면 어떤 문서가 더 바뀌어야 하나요? | [이후 후보 색인](../later/index.md), [현재 MVP 범위](active-mvp-scope.md) |
+| "close readiness"를 한국어 참조 문서에서 "닫기 준비 상태"로 쓰는 기준은 어디가 담당하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml) |
 | 한국어 용어는 어디서 통제하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [번역 가이드](../maintain/translation-guide.md), [용어집](glossary.md) |
 | 문서 작성 규칙은 어디에 있나요? | [작성 가이드](../maintain/authoring-guide.md) |
 | 문서 점검은 어디에 있나요? | [문서 점검](../maintain/checks.md) |

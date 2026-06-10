@@ -40,6 +40,8 @@ Do not route README or Maintain guidance outside this compact structure.
 
 Use `docs/*/reference/README.md` to choose exact contract owners instead of turning reference subpages into top-level routes. If an old path appears during review, replace it with the current compact route or delete the stale route wording.
 
+Use `docs/doc-index.yaml` as the stable machine-readable route table. When it has an exact question route, load the listed default owner first and pull related documents only if that owner sends you there.
+
 ## Bilingual documentation rules
 
 - English and Korean docs are both active. Neither language is an archive, appendix, or translation-only copy.

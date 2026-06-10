@@ -91,7 +91,7 @@ Storage must not persist those computed values merely because the read occurred.
 - evidence update
 - `project_state.state_version` increment
 
-`harness.close_task intent=check` returns `CloseTaskResult` with `base.effect_kind=read_only`. When the same selected operation is called with `dry_run=true`, it still returns `CloseTaskResult` with `base.dry_run=true` and `base.effect_kind=read_only`; it is not `ToolDryRunResponse`. Both forms are read-only, even when they include `blockers: CloseReadinessBlocker[]`.
+For `harness.close_task intent=check`, the response branch is owned by [`harness.close_task`](api/mvp-api.md#harnessclose_task). This storage page only asserts that the check remains read-only, including with `dry_run=true` and with `blockers: CloseReadinessBlocker[]`.
 
 ## Committed blocked effects
 

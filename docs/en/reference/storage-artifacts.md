@@ -51,15 +51,7 @@ A future server records the `created_by_surface_*` fields from the successful `h
 
 A successful `harness.stage_artifact` returns `StageArtifactResult` with `base.effect_kind=staging_created`. It may write safe bytes or a safe notice under `artifacts/tmp/` and create the temporary staging row.
 
-It creates no:
-
-- Core record
-- `artifacts` row
-- `artifact_links` row
-- `evidence_summaries` row
-- `task_events` row
-- `tool_invocations` replay row
-- `project_state.state_version` increment
+Staging creates only temporary artifact storage. Method-effect questions such as evidence creation, replay rows, and state-version increments are owned by [Storage Effects](storage-effects.md).
 
 `artifact_staging.status` is a storage-owned temporary handle lifecycle:
 

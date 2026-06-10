@@ -47,7 +47,7 @@
 
 `harness.status`가 `close_blockers: CloseReadinessBlocker[]`를 반환하는 경우도 읽기 전용 관찰입니다. `task_event` 없음, `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 변경 없음, 스테이징 핸들 소비 없음, 아티팩트 효과 없음, 증거 업데이트 없음, `project_state.state_version` 증가 없음입니다.
 
-`harness.close_task intent=check`는 `base.effect_kind=read_only`인 `CloseTaskResult`를 반환합니다. 같은 선택 동작에 `dry_run=true`가 있어도 응답은 `base.dry_run=true`, `base.effect_kind=read_only`인 `CloseTaskResult`로 유지됩니다. `ToolDryRunResponse`가 아닙니다. `blockers: CloseReadinessBlocker[]`를 포함하더라도 두 형태 모두 읽기 전용입니다.
+`harness.close_task intent=check`의 응답 분기는 [`harness.close_task`](api/mvp-api.md#harnessclose_task)가 담당합니다. 이 저장 효과 문서는 `dry_run=true`이거나 `blockers: CloseReadinessBlocker[]`를 포함하더라도 그 점검이 읽기 전용이라는 점만 담당합니다.
 
 ## 커밋된 차단 효과
 
