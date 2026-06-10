@@ -405,12 +405,12 @@ incompatible
 
 ## Profile-gated 및 예약 값
 
-아래 이름들은 현재 MVP의 기본 활성 값이 아닙니다.
+아래 이름들은 현재 MVP의 기본 활성 값이 아닙니다. 표에 이름이 있다는 사실은 value-set 경계만 나타내며, 동작이나 보장을 활성화하지 않습니다.
 
 | 이름 | 경계 |
 |---|---|
 | `preventive` | profile-gated `GuaranteeDisplay.level`입니다. 승격된 예방 메커니즘과 증명 경로가 필요합니다. |
-| `isolated` | profile-gated `GuaranteeDisplay.level`입니다. 승격된 격리 메커니즘과 증명 경로가 필요합니다. |
+| `isolated` | later 또는 `profile-gated` 값으로 예약된 `GuaranteeDisplay.level` 보장 라벨입니다. 이 문서는 value-set 항목만 담당하며, 현재 격리 보장을 부여하거나 정의하지 않습니다. 보장 의미는 [`../security.md`](../security.md), 현재 MVP에서의 사용 가능 여부는 [`../active-mvp-scope.md`](../active-mvp-scope.md)를 확인하세요. |
 | `captured_artifact`와 접점 자체 캡처 이름 | 활성 `ArtifactInput.source_kind`로는 예약 또는 거절됩니다. 활성 아티팩트 입력은 `staged_artifact` 또는 `existing_artifact`를 사용합니다. |
 | 접점 간 스테이징된 아티팩트 handoff | 활성 기능이 아닙니다. 스테이징된 아티팩트 승격에는 서버가 기록한 접점 출처가 일치해야 합니다. |
 | QA 면제와 검증 위험 판단 종류 | 이후 후보입니다. 활성 `judgment_kind` 값이 아닙니다. |
