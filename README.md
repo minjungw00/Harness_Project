@@ -1,4 +1,4 @@
-# Harness Project / 하네스 프로젝트
+# Harness project / 하네스 프로젝트
 
 ## Repository status / 저장소 상태
 

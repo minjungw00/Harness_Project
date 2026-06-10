@@ -1,4 +1,4 @@
-# API Value Sets
+# API value sets
 
 This document owns active API value sets and enum-like public values for the current MVP. It is documentation source material only and does not widen active scope by naming later candidates.
 
@@ -29,7 +29,7 @@ Only values listed here as active are active API values. Profile-gated values mu
 Rendered labels are display text. They do not replace the canonical values listed in this document.
 
 <a id="method-name-values"></a>
-## Method Name Values
+## Method name values
 
 The active public method-name set is:
 
@@ -48,7 +48,7 @@ harness.close_task
 Method behavior is owned by [MVP API](mvp-api.md). Method names are not Task lifecycle values.
 
 <a id="response-and-effect-values"></a>
-## Response and Effect Values
+## Response and effect values
 
 `ToolResultBase.response_kind` uses:
 
@@ -70,7 +70,7 @@ no_effect
 `response_kind` and `effect_kind` are branch metadata values. Branch selection and state effects are owned by [MVP API](mvp-api.md#shared-request-rules). Public error semantics for rejected branches are owned by [API Errors](errors.md).
 
 <a id="access-class-values"></a>
-## Access Class Values
+## Access class values
 
 `VerifiedSurfaceContext.access_class` uses exactly one request-level value per public API request:
 
@@ -86,7 +86,7 @@ no_effect
 Access classes are Harness API compatibility classes, not OS permission classes. Local surface verification behavior stays in [MVP API](mvp-api.md#shared-request-rules), [Agent Integration](../agent-integration.md), and [Security](../security.md).
 
 <a id="record-and-reference-values"></a>
-## Record and Reference Values
+## Record and reference values
 
 `StateRecordRef.record_kind` uses:
 
@@ -107,7 +107,7 @@ local_surface_registration
 These values identify persisted Core or local-surface record kinds in API references. They do not replace storage table names, DDL, or method-specific ownership rules.
 
 <a id="task-lifecycle-values"></a>
-## Task Lifecycle Values
+## Task lifecycle values
 
 `StateSummary.mode` and persisted resolved Task mode use:
 
@@ -166,7 +166,7 @@ superseded
 
 Run failures, violations, blocked closes, and evidence gaps are not terminal `Task.result` values.
 
-## Method-Local Values
+## Method-local values
 
 `resume_policy` for `harness.intake` uses:
 
@@ -213,7 +213,7 @@ direct
 ```
 
 <a id="state-and-blocker-values"></a>
-## State and Blocker Values
+## State and blocker values
 
 `PlannedBlocker.source_kind` uses:
 
@@ -298,7 +298,7 @@ not_run
 Legacy `planned_not_run` is not an active value and cannot justify `detective`.
 
 <a id="artifact-values"></a>
-## Artifact Values
+## Artifact values
 
 `ArtifactInput.source_kind` uses:
 
@@ -342,7 +342,7 @@ unusable
 Artifact storage lifecycle and body-read eligibility are owned by [Artifact Storage](../storage-artifacts.md).
 
 <a id="judgment-values"></a>
-## Judgment Values
+## Judgment values
 
 `judgment_kind` uses:
 
@@ -388,7 +388,7 @@ incompatible
 
 `UserJudgmentOption.option_id` is scoped to the judgment and is not a global value set. Rendered option labels are display text only.
 
-## Error Detail Helper Values
+## Error detail helper values
 
 `ToolError.details.authorization_reason` uses:
 
@@ -403,7 +403,7 @@ incompatible
 
 `ToolError.details.artifact_input_error.reason` uses the staged-handle reason values listed in [API Errors](errors.md#error-taxonomy). [API Errors](errors.md) owns what each public error code and detail reason means.
 
-## Profile-Gated and Reserved Values
+## Profile-gated and reserved values
 
 These names are not default active MVP values:
 
@@ -412,11 +412,11 @@ These names are not default active MVP values:
 | `preventive` | Profile-gated `GuaranteeDisplay.level`; requires a promoted preventive mechanism and proof path. |
 | `isolated` | Profile-gated `GuaranteeDisplay.level`; requires a promoted isolation mechanism and proof path. |
 | `captured_artifact` and native capture names | Reserved or rejected for active `ArtifactInput.source_kind`; active artifact intake uses `staged_artifact` or `existing_artifact`. |
-| cross-surface staged artifact handoff | Not active; staged promotion requires matching server-recorded surface provenance. |
+| cross-surface staged artifact handoff | Not active; staged promotion requires matching recorded surface provenance. |
 | QA waiver and verification-risk judgment kinds | Later candidates; not active `judgment_kind` values. |
 | `design_policy` blocker category | Later or inactive unless promoted by a schema and close-readiness owner. |
 
-## Related Owners
+## Related owners
 
 - [Active MVP Scope](../active-mvp-scope.md) for whether a value belongs in the current MVP.
 - [API Errors](errors.md) for public error codes and precedence.

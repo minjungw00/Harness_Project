@@ -6,17 +6,24 @@ Use this reference to look up the active current MVP API surface. It owns method
 
 This document describes future Harness Server behavior for planning and review. No Harness runtime or server implementation exists in this repository today. Future API or schema candidates are cataloged in [Later Candidate Index](../../later/index.md), not in this active reference. Storage DDL and full shared schema bodies are owned outside this method reference.
 
-## Main Idea
+## Main idea
 
 The active MVP API is a small local MCP surface for one user work loop. It can intake work, show status, update active scope, check proposed product writes against current Core state, record runs and evidence refs, ask and record user-owned judgment, and close only when active blockers allow it.
 
 The API does not provide OS permissions, arbitrary-tool sandboxing, tamper-proof files, pre-tool blocking, or security isolation. `harness.prepare_write` returns a cooperative Harness record/check only.
 
-Requirement shaping uses the active Task, Change Unit, `user_judgment`, evidence summary, blocker paths, next actions, and the derived `ShapingReadiness` view. The API must not introduce separate active Discovery Brief, Question Queue, Assumption Register, or similar committed planning artifacts to move from a vague request to a safe first Change Unit.
+The specification requires requirement shaping to use the active Task, Change Unit, `user_judgment`, evidence summary, blocker paths, next actions, and the derived `ShapingReadiness` view.
+
+The API must not introduce separate active committed planning artifacts to move from a vague request to a safe first Change Unit, including:
+
+- Discovery Brief
+- Question Queue
+- Assumption Register
+- similar committed planning artifacts
 
 <a id="active-mvp-method-behavior"></a>
 
-## Active MVP Method Behavior
+## Active MVP method behavior
 
 The exact active method-name value set is owned by [API Value Sets](schema-value-sets.md). This page owns the behavior of those current methods:
 
@@ -57,7 +64,7 @@ effects only in rows whose "Committed blocked response allowed" cell says yes.
 
 <a id="shared-request-rules"></a>
 
-## Shared Request Rules
+## Shared request rules
 
 All methods use [`ToolEnvelope`](schema-core.md#tool-envelope). Each public method response is exactly one response branch: the concrete method-specific `MethodResult`, `ToolRejectedResponse`, or `ToolDryRunResponse`. The method result schema names the concrete result for actual read results, successful staging results, Core committed results, or committed blocked results when the method state-effect table allows that blocked commit. Method results use [`ToolResultBase`](schema-core.md#common-response) with `response_kind=result`; `ToolRejectedResponse` and `ToolDryRunResponse` use the shared response schemas from [API Schema Core](schema-core.md#common-response) and do not inherit method-specific result-only fields.
 
@@ -74,9 +81,27 @@ Response branch selection is normative and follows this precedence:
 
 Mixed-intent methods choose the response branch by the selected intent's state effect, not by the method name alone. For `harness.close_task`, `intent=check` is read-only, while `intent=complete`, `intent=cancel`, and `intent=supersede` are state-effecting intents.
 
-Response branches map to state effect this way: a read-only result is `MethodResult` with `effect_kind=read_only`; a Core committed result is `MethodResult` with `effect_kind=core_committed`; successful `harness.stage_artifact` staging is `StageArtifactResult` with `effect_kind=staging_created`; a pre-commit failure is `ToolRejectedResponse` with `response_kind=rejected` and `effect_kind=no_effect`; a valid dry run of a selected state-effecting or staging operation is `ToolDryRunResponse` with `response_kind=dry_run` and `effect_kind=no_effect`.
+Response branches map to state effect this way:
 
-`ToolRejectedResponse` is used for pre-commit failures, including stale `expected_state_version` / `STATE_VERSION_CONFLICT`, request validation failure, invalid staged artifact handle, unavailable MCP/Core or local surface, local surface mismatch, capability failure, and similar failures before a method commit. It does not include method-specific result-only fields such as `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, or `close_state`.
+| Response branch | State-effect meaning |
+|---|---|
+| Read-only result | `MethodResult` with `effect_kind=read_only`. |
+| Core committed result | `MethodResult` with `effect_kind=core_committed`. |
+| Successful `harness.stage_artifact` staging | `StageArtifactResult` with `effect_kind=staging_created`. |
+| Pre-commit failure | `ToolRejectedResponse` with `response_kind=rejected` and `effect_kind=no_effect`. |
+| Valid dry run of a selected state-effecting or staging operation | `ToolDryRunResponse` with `response_kind=dry_run` and `effect_kind=no_effect`. |
+
+`ToolRejectedResponse` is used for pre-commit failures, including:
+
+- stale `expected_state_version` / `STATE_VERSION_CONFLICT`
+- request validation failure
+- invalid staged artifact handle
+- unavailable MCP/Core or local surface
+- local surface mismatch
+- capability failure
+- similar failures before a method commit
+
+It does not include method-specific result-only fields such as `decision`, `task_ref`, `run_summary`, `staged_artifact_handle`, or `close_state`.
 
 `ToolDryRunResponse` is used for valid `dry_run=true` calls when the selected operation has a state effect or storage-owned staging effect and Core can evaluate the request shape, local access, capabilities, and reachable state/preconditions enough to produce a preview. It has `effect_kind=no_effect`, no state effect, and no method-specific result-only fields or real generated refs such as `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, or `user_judgment_ref`. Expected blockers in the preview are `DryRunSummary.would_blockers: PlannedBlocker[]` entries only, not stored `WriteDecisionReason` or real `CloseReadinessBlocker` objects. If a dry-run request fails validation, local access verification, capability verification, or state lookup before a read-only result or preview can be produced, the response is `ToolRejectedResponse` with `dry_run=true` and `effect_kind=no_effect`.
 
@@ -91,13 +116,38 @@ Mismatch returns `STATE_VERSION_CONFLICT`; no method defines a separate public s
 
 Read-only calls may compute and return blockers, close blockers, next actions, and diagnostics, but those values are response fields only. They must not store blockers, append `task_events`, create `tool_invocations` replay rows, increment `state_version`, mutate close state, create, update, or link artifacts, consume staged handles, or create or consume Write Authorizations.
 
-`dry_run=true` is never authoritative. A valid dry run for a selected state-effecting or staging operation returns `ToolDryRunResponse.dry_run_summary` with descriptive `PlannedEffect` preview data, `PlannedBlocker` candidate blockers, previewable would-be diagnostics, and next actions. It creates no current record, `task_events` row, persistent artifact, staged handle, Write Authorization creation or consumption, evidence summary, close state, `tool_invocations` replay row, or state-version increment, and its preview descriptions must not contain fake refs for records that do not exist.
+`dry_run=true` is never authoritative. A valid dry run for a selected state-effecting or staging operation returns `ToolDryRunResponse.dry_run_summary` with descriptive `PlannedEffect` preview data, `PlannedBlocker` candidate blockers, previewable would-be diagnostics, and next actions.
+
+It creates no:
+
+- current record
+- `task_events` row
+- persistent artifact
+- staged handle
+- Write Authorization creation or consumption
+- evidence summary
+- close state
+- `tool_invocations` replay row
+- state-version increment
+
+Preview descriptions must not contain fake refs for records that do not exist.
 
 Only committed non-dry-run mutations create `tool_invocations` replay rows. A replay with the same `idempotency_key` and same request hash returns the existing committed response. The same key with a different request hash returns `STATE_VERSION_CONFLICT`. `dry_run` calls and pre-commit failures do not create or reserve replay rows.
 
 Error codes, primary error precedence, idempotency, stale-state behavior, close blocker ordering, and user-facing error labels are owned by [API Errors](errors.md). Common envelopes and response branches are owned by [API Schema Core](schema-core.md); state, artifact, judgment, and value-set schemas are owned by the split API schema owners.
 
-Local access classes are Harness API compatibility classes, not OS permission classes. `ToolEnvelope.surface_id` is required for every public request, but it is only a selector. It is not an authority proof and must match a server-derived `VerifiedSurfaceContext` before the API can rely on the surface; active `access_class` values are owned by [API Value Sets](schema-value-sets.md#access-class-values). The server derives `VerifiedSurfaceContext` from the local transport/session/binding and the stored `LocalSurfaceRegistration`, not from user prose, generated Markdown, Product Repository files, projections, chat text, or agent memory. The same server-derived context is the only source for staged-handle `created_by_surface_id` and `created_by_surface_instance_id` provenance.
+Local access classes are Harness API compatibility classes, not OS permission classes. `ToolEnvelope.surface_id` is required for every public request, but it is only a selector. It is not an authority proof and must match `VerifiedSurfaceContext` derived by a future server before the API can rely on the surface; active `access_class` values are owned by [API Value Sets](schema-value-sets.md#access-class-values).
+
+A future server derives `VerifiedSurfaceContext` from the local transport/session/binding and the stored `LocalSurfaceRegistration`, not from:
+
+- user prose
+- generated Markdown
+- Product Repository files
+- projections
+- chat text
+- agent memory
+
+The same context, derived by a future server, is the only source for staged-handle `created_by_surface_id` and `created_by_surface_instance_id` provenance.
 
 Every access class requires `surface_id` to select a same-project `LocalSurfaceRegistration` with `status=active` before the API can rely on that surface. Each public API request has exactly one request-level `VerifiedSurfaceContext.access_class`; nested payloads such as `ArtifactInput[]` do not add a second access class. Every mutating API requires `VerifiedSurfaceContext.verified=true` for the method's access class before commit. Artifact body reads also require `VerifiedSurfaceContext.verified=true` for `access_class=artifact_read`. When applicable, `project_id`, `surface_id`, `surface_instance_id`, `task_id`, and current project-wide `expected_state_version` must be mutually compatible before a protected read exposes Core details or a mutation commits.
 
@@ -106,8 +156,8 @@ Every access class requires `surface_id` to select a same-project `LocalSurfaceR
 | `read_status` | Read-only status/projection methods, including `harness.status`, read-only status resources, and `harness.close_task intent=check`. | Same-project `LocalSurfaceRegistration`, `status=active`, Core/surface reachability for the requested read, `VerifiedSurfaceContext.access_class=read_status` for protected Core detail, and compatible `task_id` when a Task-scoped read is requested. A status read may return display-safe availability or mismatch diagnostics, but it must not invent state from stale text or expose protected Core detail when local access cannot be verified. |
 | `core_mutation` | Core state mutation not otherwise specialized: task creation through `harness.intake`, `harness.update_scope`, `harness.request_user_judgment`, `harness.record_user_judgment`, and `harness.close_task` when it mutates state. | `read_status` conditions plus `VerifiedSurfaceContext.access_class=core_mutation`, `verified=true`, non-null `idempotency_key` and current project-wide `expected_state_version` for non-dry-run commits, and compatible `project_id`, `surface_id`, `surface_instance_id`, `task_id`, and owner records when applicable. |
 | `write_authorization` | `harness.prepare_write`. | `VerifiedSurfaceContext.access_class=write_authorization`, `verified=true`, plus active Task/Change Unit compatibility, scope, baseline, required separate sensitive-action approval compatibility, and capability checks required for the intended product-file write attempt. |
-| `run_recording` | `harness.record_run` only. | `VerifiedSurfaceContext.access_class=run_recording`, `verified=true`, plus compatible `task_id`, `change_unit_id`, `baseline_ref`, observed attempt facts, and a consumable active Write Authorization when the run records a product write. The same `run_recording` request covers recording the result, consuming a compatible Write Authorization when needed, linking compatible existing artifacts, and promoting eligible staged artifacts after staged-handle validity checks. Promotion also requires the current verified `surface_id` and `surface_instance_id` to match the staged handle's server-recorded `created_by_surface_id` and `created_by_surface_instance_id`; the active MVP has no cross-surface staged artifact handoff. `harness.record_run` does not require `artifact_registration`, even when `ArtifactInput[]` contains `source_kind=staged_artifact`. |
-| `artifact_registration` | `harness.stage_artifact` only. | `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, compatible `project_id`/`task_id`, and `manual_artifact_attachment_supported=true` for staging new artifact bytes or a safe notice into a temporary `StagedArtifactHandle`. On success, the server records `created_by_surface_id` and `created_by_surface_instance_id` from `VerifiedSurfaceContext`; the caller does not submit those fields as authority. This is input staging, not persistent `ArtifactRef` promotion, not proof that arbitrary local files are safe or authorized, and not a second access class for `harness.record_run`. Caller-supplied raw filesystem paths, arbitrary local path strings, raw logs as authority claims, raw secrets, tokens, full sensitive logs, `captured_artifact` handles, raw capture-adapter outputs, and native capture claims are not accepted as artifact authority in the active MVP. |
+| `run_recording` | `harness.record_run` only. | `VerifiedSurfaceContext.access_class=run_recording`, `verified=true`, plus compatible `task_id`, `change_unit_id`, `baseline_ref`, observed attempt facts, and a consumable active Write Authorization when the run records a product write. The same `run_recording` request covers recording the result, consuming a compatible Write Authorization when needed, linking compatible existing artifacts, and promoting eligible staged artifacts after staged-handle validity checks. Promotion also requires the current verified `surface_id` and `surface_instance_id` to match the staged handle's recorded `created_by_surface_id` and `created_by_surface_instance_id`; the active MVP has no cross-surface staged artifact handoff. `harness.record_run` does not require `artifact_registration`, even when `ArtifactInput[]` contains `source_kind=staged_artifact`. |
+| `artifact_registration` | `harness.stage_artifact` only. | `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, compatible `project_id`/`task_id`, and `manual_artifact_attachment_supported=true` for staging new artifact bytes or a safe notice into a temporary `StagedArtifactHandle`. On success, a future server records `created_by_surface_id` and `created_by_surface_instance_id` from `VerifiedSurfaceContext`; the caller does not submit those fields as authority. This is input staging, not persistent `ArtifactRef` promotion, not proof that arbitrary local files are safe or authorized, and not a second access class for `harness.record_run`. Caller-supplied raw filesystem paths, arbitrary local path strings, raw logs as authority claims, raw secrets, tokens, full sensitive logs, `captured_artifact` handles, raw capture-adapter outputs, and native capture claims are not accepted as artifact authority in the active MVP. |
 | `artifact_read` | Artifact body reads from registered `ArtifactRef` records when an owner path exposes them. | Same-project `LocalSurfaceRegistration`, `status=active`, a registered `ArtifactRef`, compatible `project_id`/`task_id`, required redaction and availability checks, and a matching owner relation in `artifact_links`. Artifact body/content reads require `VerifiedSurfaceContext.access_class=artifact_read` and `verified=true`. Artifact body read is separate from staged artifact promotion, and raw artifact path reads are not granted by default. |
 
 Use `MCP_UNAVAILABLE` when required MCP/Core or surface reachability itself is unavailable, corresponding to `VerifiedSurfaceContext.failure_reason=unavailable`. Use `LOCAL_ACCESS_MISMATCH` when registered local access expectations do not match the reachable transport/session/binding or when local access was revoked, corresponding to `failure_reason=mismatch` or `revoked`. Use `CAPABILITY_INSUFFICIENT` when the surface is recognized but lacks the capability required for the access class, observation, capture, blocking/isolation claim, changed-path detection claim, or active behavior, corresponding to `failure_reason=insufficient_capability`. For baseline changed-path detection, `changed_path_detection_verification=failed` or `stale` must produce `CAPABILITY_INSUFFICIENT` when the method requires that capability; `not_run` or legacy `planned_not_run` cannot support a `detective` label.
@@ -645,7 +695,7 @@ Stage caller-provided safe artifact bytes or a safe notice into a temporary `Sta
 
 ### Access requirements
 
-Requires `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, compatible `project_id` and `task_id`, and `manual_artifact_attachment_supported=true`. The server records `created_by_surface_id` and `created_by_surface_instance_id` from the verified local surface; the caller does not provide those as authority.
+Requires `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, compatible `project_id` and `task_id`, and `manual_artifact_attachment_supported=true`. A future server records `created_by_surface_id` and `created_by_surface_instance_id` from the verified local surface; the caller does not provide those as authority.
 
 ### State version behavior
 
@@ -747,7 +797,7 @@ Record shaping work, a direct answer/result, or implementation work; update comp
 
 ### Access requirements
 
-Requires `VerifiedSurfaceContext.access_class=run_recording` and `verified=true`. `ArtifactInput[]` does not add `artifact_registration`. For `source_kind=staged_artifact`, the current verified `surface_id` and `surface_instance_id` must match the staged handle's server-recorded provenance; the active MVP has no cross-surface staged artifact handoff.
+Requires `VerifiedSurfaceContext.access_class=run_recording` and `verified=true`. `ArtifactInput[]` does not add `artifact_registration`. For `source_kind=staged_artifact`, the current verified `surface_id` and `surface_instance_id` must match the staged handle's recorded provenance; the active MVP has no cross-surface staged artifact handoff.
 
 ### State version behavior
 

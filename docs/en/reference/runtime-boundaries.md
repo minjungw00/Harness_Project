@@ -4,7 +4,7 @@ This document owns the boundary between Product Repository, Harness Server or in
 
 Documentation files are not runtime state. A Markdown file in this repository may describe a future Harness rule, but it is not a Harness record, generated artifact, projection, acceptance record, evidence record, or operational file.
 
-## Owns / does not own
+## Owns / Does not own
 
 This document owns:
 
@@ -30,13 +30,13 @@ Harness documentation must keep these locations distinct:
 | Harness Server or installation | The future server process, package, or installed application location. | It may mediate Harness APIs and records, but the install location is not automatically where runtime data lives. |
 | Harness Runtime Home | The future operational data space for Harness records, local store metadata, and artifact storage. | It is runtime data space, not the Product Repository and not proof of OS-level security. |
 
-## Product Repository
+## Product repository
 
 The Product Repository is the user's project workspace. Product files may be input to future Harness checks or user-owned judgments, but Product Repository content is not Harness state, not generated Harness output, and not proof of Harness authority.
 
 A Product Repository is not automatically the Harness Runtime Home. If a future implementation allows project-local Harness metadata, the storage and runtime owners must still define what that metadata is, how it is validated, and why it does not turn ordinary product files into Harness records.
 
-## Harness Server or installation
+## Harness server or installation
 
 The future Harness Server would mediate Harness records and API behavior. A server installation location is where server code, packages, configuration, or application resources may live in a future implementation.
 
@@ -44,7 +44,7 @@ The installation location and the runtime data location must not be conflated. I
 
 This repository does not contain a Harness Server implementation. Documentation edits do not create server code, start runtime behavior, or authorize product/runtime writes.
 
-## Harness Runtime Home
+## Harness runtime home
 
 Harness Runtime Home is the future per-user or per-installation operational data space. It may contain Harness-owned records, local store metadata, staged or persisted artifact data, locks, migrations, and other operational data only as defined by the storage/runtime owners.
 

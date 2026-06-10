@@ -1,4 +1,4 @@
-# Judgment Examples
+# Judgment examples
 
 Use this compact catalog after the [User Guide](user-guide.md) when a task is blocked by a choice the agent should not make alone. The examples show judgment-boundary guidance for a future Harness-connected session. They are not runtime records, generated evidence, acceptance records, close records, or conformance outputs from this documentation repository.
 

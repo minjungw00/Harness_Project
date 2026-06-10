@@ -1,8 +1,8 @@
-# Storage Versioning
+# Storage versioning
 
 This document owns state versioning, idempotency, event meaning, locks, and migration semantics for current MVP storage source design. It is documentation source material only and does not run migrations, create runtime locks, or create runtime state.
 
-## Owns / Does Not Own
+## Owns / Does not own
 
 This document owns:
 
@@ -21,7 +21,7 @@ This document does not own:
 - artifact lifecycle; see [Artifact Storage](storage-artifacts.md)
 - runtime deployment or operational commands
 
-## Project-Wide State Clock
+## Project-wide state clock
 
 The active current MVP has one public state clock: `project_state.state_version`. It is project-wide and is the only active authorization, conflict, freshness, and concurrency basis for public API mutations. Task routing still matters for ownership, blockers, close state, evidence, and user judgments, but it does not select a separate state clock.
 
@@ -41,15 +41,42 @@ The active first schema should omit `tasks.state_version`. If an implementation 
 
 `tool_invocations.basis_state_version` stores the project-wide state version observed by the call before the committed mutation. `task_events.state_version` stores the resulting project-wide version after the committed event.
 
-## Event Meaning
+## Event meaning
 
 `task_events` records committed Core mutations in order. It is an audit and ordering trail, not the normal source used to reconstruct current state during ordinary operation. Current rows such as `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, and `blockers` remain the current state.
 
 `task_events` is append-only for ordinary active MVP operation. After an event is committed, Core must not update or delete that row to change history. Corrections or repairs are recorded by new events and current-row updates through the owner path. Idempotent replay, dry-run, malformed requests, and pre-commit failures do not append events.
 
-For a new committed non-dry-run mutation, current-row writes, the `task_events` append, the project-wide state-version increment, and the `tool_invocations` replay-row insert must commit atomically. For `harness.record_run`, staged-handle consumption in `artifact_staging`, artifact promotion/linking, evidence update, Write Authorization consumption, event append, replay-row insert, and exactly one `project_state.state_version` increment are part of that same transaction. If any part fails, the transaction must leave no partial authority row, staging consumption, persistent artifact promotion/linking, Write Authorization consumption, evidence update, event, close effect, replay row, or state-version increment.
+For a new committed non-dry-run mutation, these effects must commit atomically:
 
-## Idempotency And Replay
+- current-row writes
+- `task_events` append
+- project-wide state-version increment
+- `tool_invocations` replay-row insert
+
+For `harness.record_run`, the same transaction also includes:
+
+- staged-handle consumption in `artifact_staging`
+- artifact promotion/linking
+- evidence update
+- Write Authorization consumption
+- event append
+- replay-row insert
+- exactly one `project_state.state_version` increment
+
+If any part fails, the transaction must leave no partial:
+
+- authority row
+- staging consumption
+- persistent artifact promotion/linking
+- Write Authorization consumption
+- evidence update
+- event
+- close effect
+- replay row
+- state-version increment
+
+## Idempotency and replay
 
 `tool_invocations` stores exact replay only for committed non-dry-run Core `MethodResult` responses whose method state-effect row creates replay. It does not store `ToolRejectedResponse`, `ToolDryRunResponse`, read-only results, or successful `StageArtifactResult` staging results, and those branches never create or reserve replay rows.
 
@@ -59,7 +86,7 @@ If the same key and request hash are replayed, Core returns the original committ
 
 `tool_invocations.response_json` stores only the exact committed non-dry-run Core `MethodResult` response for a replay-row-creating state effect. It does not store `StatusResult`, `ToolRejectedResponse`, `ToolDryRunResponse`, read-only `MethodResult` results, or successful `StageArtifactResult` staging results.
 
-## Lock Policy
+## Lock policy
 
 Runtime mutations serialize through Core-owned state-changing paths, with ordinary SQLite transactions and a process/project lock if needed. Authority placement is owned by [Runtime Boundaries](runtime-boundaries.md).
 
@@ -67,7 +94,7 @@ The active current MVP does not require a `persistent_locks` table. Durable lock
 
 Locks protect concurrent state writes. They do not provide OS sandboxing, artifact-integrity enforcement, tamper-proof storage, permission isolation, or pre-tool blocking.
 
-## Migration Boundary
+## Migration boundary
 
 No migration runner exists in this repository, and no runtime data exists to migrate. This document does not define migration steps for existing runtime data. Before runtime implementation, maintainers must separately accept the actual DDL, migration mechanism, storage profile, and tightening behavior.
 
@@ -86,7 +113,7 @@ The active migration boundary is:
 
 This document intentionally excludes inactive DDL bundles, migration catalogs, and profile-specific migration details.
 
-## Related Owners
+## Related owners
 
 - [API Errors](api/errors.md) for public conflict errors such as `STATE_VERSION_CONFLICT`.
 - [Storage Effects](storage-effects.md) for branches that increment or do not increment state.

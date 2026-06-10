@@ -1,8 +1,8 @@
-# Storage Effects
+# Storage effects
 
 This document owns method-to-storage effect semantics for the current MVP source design. It is documentation source material only and does not execute or simulate Harness runtime procedures.
 
-## Owns / Does Not Own
+## Owns / Does not own
 
 This document owns:
 
@@ -20,7 +20,7 @@ This document does not own:
 - API method behavior; see [MVP API](api/mvp-api.md)
 - public error code precedence; see [API Errors](api/errors.md)
 
-## Shape Versus Effect
+## Shape versus effect
 
 Response data shape and storage effect are separate. `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, `ArtifactRef`, and `StagedArtifactHandle` are API data shapes. Their presence in a response does not by itself prove persistence, artifact promotion, staged-handle consumption, replay storage, close-state mutation, or `project_state.state_version` increment.
 
@@ -35,29 +35,97 @@ Effects come from the selected method behavior and response branch:
 | Core committed `MethodResult` | May mutate current rows, append `task_events`, create replay rows, and increment `project_state.state_version` exactly once as allowed by the method owner. |
 | Committed blocked `MethodResult` | May persist only the blocker-state, event, replay-row, and state-version effects explicitly allowed by the method owner. It must not create the missing authority it reports. |
 
-## No-Effect Branches
+## No-effect branches
 
-Malformed requests, validation failures before commit, local access failures before a protected operation can proceed, capability failures, stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, idempotency request-hash conflicts, and rejected artifact inputs return no-effect branches. They must not create current rows, append `task_events`, write `tool_invocations.response_json`, create replay rows, update evidence summaries, mutate close state, create or consume Write Authorizations, change `artifact_staging.status`, set `consumed_by_run_id` or `promoted_artifact_id`, promote or link artifacts, or increment `project_state.state_version`.
+These failures return no-effect branches:
 
-Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker[]` or planned effects. Those preview entries create no `task_event`, `task_events` append, replay row, `tool_invocations.response_json`, `close_state` mutation, Write Authorization change, staged-handle creation or consumption, artifact effect, evidence update, `CloseReadinessBlocker` storage, or `project_state.state_version` increment.
+- malformed requests
+- validation failures before commit
+- local access failures before a protected operation can proceed
+- capability failures
+- stale `expected_state_version`
+- stale `WriteAuthorization.basis_state_version`
+- idempotency request-hash conflicts
+- rejected artifact inputs
 
-## Read-Only Effects
+No-effect branches must not:
 
-Read-only results are response-only and not replay rows. `harness.status` and `harness.close_task intent=check` may compute blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response, but storage must not persist those computed values merely because the read occurred.
+- create current rows
+- append `task_events`
+- write `tool_invocations.response_json`
+- create replay rows
+- update evidence summaries
+- mutate close state
+- create or consume Write Authorizations
+- change `artifact_staging.status`
+- set `consumed_by_run_id` or `promoted_artifact_id`
+- promote or link artifacts
+- increment `project_state.state_version`
 
-`harness.status` with `close_blockers: CloseReadinessBlocker[]` is a read-only observation. It creates no `task_event`, `task_events` append, replay row, `tool_invocations.response_json`, `close_state` mutation, Write Authorization change, staged-handle consumption, artifact effect, evidence update, or `project_state.state_version` increment.
+Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker[]` or planned effects. Those preview entries do not create:
+
+- `task_event` or `task_events` append
+- replay row or `tool_invocations.response_json`
+- `close_state` mutation
+- Write Authorization change
+- staged-handle creation or consumption
+- artifact effect
+- evidence update
+- `CloseReadinessBlocker` storage
+- `project_state.state_version` increment
+
+## Read-only effects
+
+Read-only results are response-only and not replay rows. `harness.status` and `harness.close_task intent=check` may compute blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response.
+
+Storage must not persist those computed values merely because the read occurred.
+
+`harness.status` with `close_blockers: CloseReadinessBlocker[]` is a read-only observation. It does not create:
+
+- `task_event` or `task_events` append
+- replay row or `tool_invocations.response_json`
+- `close_state` mutation
+- Write Authorization change
+- staged-handle consumption
+- artifact effect
+- evidence update
+- `project_state.state_version` increment
 
 `harness.close_task intent=check` returns `CloseTaskResult` with `base.effect_kind=read_only`. When the same selected operation is called with `dry_run=true`, it still returns `CloseTaskResult` with `base.dry_run=true` and `base.effect_kind=read_only`; it is not `ToolDryRunResponse`. Both forms are read-only, even when they include `blockers: CloseReadinessBlocker[]`.
 
-## Committed Blocked Effects
+## Committed blocked effects
 
 Committed blocked outcomes are distinct from rejected responses. A committed blocked `harness.prepare_write` or `harness.close_task` outcome is a `MethodResult` only when [MVP API](api/mvp-api.md) allows the blocked commit.
 
-A committed non-dry-run `PrepareWriteResult` with `decision=blocked`, `decision=approval_required`, or `decision=decision_required` may include `write_decision_reasons: WriteDecisionReason[]` in the response and replay payload when the method state-effect contract permits committing that decision. Those reasons are prepare-write decision reasons, not close-readiness blockers, not `CloseReadinessBlocker[]`, and not close-readiness blocker records. This branch must not create a consumable Write Authorization, mutate `close_state`, run close-readiness evaluation, create `CloseReadinessBlocker` storage, update evidence, touch artifacts, consume staged handles, or perform `close_task` effects.
+A committed non-dry-run `PrepareWriteResult` with `decision=blocked`, `decision=approval_required`, or `decision=decision_required` may include `write_decision_reasons: WriteDecisionReason[]` in the response and replay payload when the method state-effect contract permits committing that decision.
 
-`CloseTaskResult(close_state=blocked)` is storage-effective only when close readiness evaluation has run and the `harness.close_task` method contract permits committing the blocked result. It may include `blockers: CloseReadinessBlocker[]` and may create only the blocker-state, `task_events`, replay-row, and `project_state.state_version` effects explicitly allowed by the API/storage contract. The Task remains open. This branch must not be used for `STATE_VERSION_CONFLICT`; that code belongs to the preflight `ToolRejectedResponse` branch and is not stored as replay.
+Those reasons are prepare-write decision reasons. They are not:
 
-## Method Effects
+- close-readiness blockers
+- `CloseReadinessBlocker[]`
+- close-readiness blocker records
+
+This branch must not:
+
+- create a consumable Write Authorization
+- mutate `close_state`
+- run close-readiness evaluation
+- create `CloseReadinessBlocker` storage
+- update evidence
+- touch artifacts
+- consume staged handles
+- perform `close_task` effects
+
+`CloseTaskResult(close_state=blocked)` is storage-effective only when close readiness evaluation has run and the `harness.close_task` method contract permits committing the blocked result. It may include `blockers: CloseReadinessBlocker[]` and may create only the effects explicitly allowed by the API/storage contract:
+
+- blocker state
+- `task_events`
+- replay row
+- `project_state.state_version`
+
+The Task remains open. This branch must not be used for `STATE_VERSION_CONFLICT`; that code belongs to the preflight `ToolRejectedResponse` branch and is not stored as replay.
+
+## Method effects
 
 This table summarizes persistence effects. Method behavior and response unions remain owned by [MVP API](api/mvp-api.md).
 
@@ -76,7 +144,7 @@ This table summarizes persistence effects. Method behavior and response unions r
 | `harness.close_task intent=cancel` | May cancel the Task, or commit blockers that invalidate cancellation itself while the Task remains open; appends events, creates replay row, and increments state once on commit. | Valid `dry_run=true` returns `ToolDryRunResponse`; preflight failures have no effect. Cancellation is not evidence sufficiency. |
 | `harness.close_task intent=supersede` | May supersede the Task and update `project_state.active_task_id` in the same mutation, or commit blockers that invalidate supersession itself; appends events, creates replay row, and increments state once on commit. | Valid `dry_run=true` returns `ToolDryRunResponse`; preflight failures have no effect. Supersession is not evidence sufficiency. |
 
-## Related Owners
+## Related owners
 
 - [MVP API](api/mvp-api.md) for selected method behavior and response unions.
 - [API Errors](api/errors.md) for rejected-response public errors.

@@ -1,4 +1,4 @@
-# API State Schemas
+# API state schemas
 
 This document owns API state-shaped schemas for the current MVP. It is documentation source material only and does not create runtime state, generated projections, storage rows, or state effects.
 
@@ -27,7 +27,7 @@ This document does not own:
 
 State schemas describe API data shapes. A state-shaped field does not by itself create persistence, a Core transition, replay rows, `task_events`, artifact effects, Write Authorization effects, or a `state_version` increment. The selected response branch and method behavior define those effects.
 
-## State References
+## State references
 
 `StateRecordRef` is the common public reference shape for Core-owned records that appear in API responses. It is a pointer, not an embedded storage row.
 
@@ -72,7 +72,7 @@ StateSummary:
 
 `StateSummary` may summarize stored Core state, computed read-only status, and close-readiness observations. It does not decide whether a method committed. That decision comes from the response branch and [MVP API](mvp-api.md).
 
-## Task Lifecycle State
+## Task lifecycle state
 
 `TaskLifecycleState` is the API shape for Task lifecycle fields that may appear inside `StateSummary` or close results.
 
@@ -112,7 +112,7 @@ ShapingGap:
 
 Missing readiness can route to a blocker, a pending or candidate user judgment, or an update-scope next action. It does not create separate active Discovery Brief, Question Queue, Assumption Register, or generated planning artifact.
 
-## Current-Position Display Shapes
+## Current-position display shapes
 
 ```yaml
 NextActionSummary:
@@ -145,7 +145,7 @@ WriteDecisionReason:
 
 `WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`; it is not a close-readiness blocker. The active categories and reason values are owned by [API Value Sets](schema-value-sets.md#state-and-blocker-values). Public error code meaning stays in [API Errors](errors.md).
 
-## Evidence and Run Snapshot Shapes
+## Evidence and run snapshot shapes
 
 ```yaml
 EvidenceSummary:
@@ -183,7 +183,7 @@ ObservedChanges:
 
 `ArtifactRef` is owned by [API Artifact Schemas](schema-artifacts.md). Evidence sufficiency meaning is owned by [Core Model](../core-model.md#9-evidence-and-run-authority) and method behavior is owned by [MVP API](mvp-api.md).
 
-## Close Readiness and Validation Shapes
+## Close readiness and validation shapes
 
 ```yaml
 CloseReadinessBlocker:
@@ -210,7 +210,7 @@ GuaranteeDisplay:
 
 Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values are owned by [API Value Sets](schema-value-sets.md). Security guarantee meaning is owned by [Security](../security.md).
 
-## Related Owners
+## Related owners
 
 - [API Schema Core](schema-core.md) for `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, and `ToolDryRunResponse`.
 - [API Value Sets](schema-value-sets.md) for exact values used by state fields.

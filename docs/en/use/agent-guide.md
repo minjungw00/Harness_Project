@@ -1,10 +1,10 @@
-# Agent Guide
+# Agent guide
 
 Use this guide when writing or reviewing agent behavior for a future Harness-connected session. The agent's job is to turn ordinary user requests into careful work: infer the work shape, keep context small, preserve user-owned judgment, update scope when it changes, check scope before writes, record evidence after meaningful action, and close honestly.
 
 This is Use documentation. It is not a connector contract, schema reference, template catalog, conformance fixture, or proof that this documentation-only repository already contains a Harness Server/runtime implementation. Exact connector behavior lives in [Agent Integration Reference](../reference/agent-integration.md). CLI, IDE/editor, chat, and local MCP recipes live in [Surface Recipes](surface-recipes.md). Exact state, write, run/evidence, close, API, and schema contracts live in the relevant Reference owners linked from the [Reference Index](../reference/README.md).
 
-## 1. Infer Harness Use From Task Shape
+## 1. Infer Harness use from task shape
 
 Do not require a startup phrase. Users do not need to say "Harness," know internal Harness labels, or name API methods before ordinary work can begin.
 
@@ -22,7 +22,7 @@ Classify the work before choosing procedure weight:
 
 Escalate from small change to tracked work when you find scope drift, a new public interface, security/privacy impact, destructive risk, dependency or migration choice, user-visible inspection expectation, evidence/check limit, final acceptance need, residual risk, or another user-owned judgment.
 
-## 2. Keep Context Small
+## 2. Keep context small
 
 Always-on context should fit on one screen and support the next action. Include only:
 
@@ -49,12 +49,12 @@ Always-on context should fit on one screen and support the next action. Include 
 Keep those items as summaries and refs. Do not inject full schemas, full DDL, full template bodies, full logs, full artifact contents, paired bilingual docs, unrelated reference sections, future catalog material, or generated readable views into every prompt. Pull exact owner sections only when the next action needs them.
 
 <a id="8-report-status-for-the-users-next-decision"></a>
-### Report Status For The User's Next Decision
+### Report status for the user's next decision
 
 Status output should lead with the primary blocker and the next action that would unblock it. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to solve something the agent can safely inspect, refresh, retry, narrow, or record.
 
 <a id="4-clarify-without-endless-planning-loops"></a>
-## 3. Clarify With Focused Questions
+## 3. Clarify with focused questions
 
 Inspect first. Check repository files, docs, tests, current Harness state, accepted judgments, and relevant artifacts before asking the user. If a source is stale or unavailable, say that instead of treating it as authority. Do not ask the user to know or translate Harness labels before ordinary work can begin.
 
@@ -95,16 +95,47 @@ Use lifecycle labels narrowly when they help the agent choose the next action:
 - `ready`: there is enough active scope for the next action; for write-capable work, the active work slice is specific enough to move toward the pre-write scope check (`harness.prepare_write` in owner terms).
 - `blocked`: a system, scope, capability, evidence, recovery, close, or other active blocker prevents progress.
 
-## 4. Do Not Decide User-Owned Judgments
+## 4. Do not decide user-owned judgments
 
-The agent may identify a bounded option when current facts and accepted scope already support one. The user decides user-visible product behavior; user flow, messages, UX, accessibility, or product trade-offs; scope expansion or explicit non-goal removal; data retention, privacy, security, or authentication choices; new dependency or external service introduction; migration, public interface, or compatibility-breaking direction; irreversible or costly-to-reverse technical choices; sensitive-action approval; final acceptance; residual-risk acceptance; and cancellation. Other future judgment candidates belong to [Later](../later/index.md) and are not active judgment kinds.
+The agent may identify a bounded option when current facts and accepted scope already support one.
 
-Inside accepted scope, the agent may usually decide implementation details that do not change product behavior, scope, or material technical direction. Examples include a tiny local variable name that follows project style, test file organization details, small behavior-preserving refactors, internal cleanup, and code details already forced by accepted scope and acceptance criteria. Escalate back to user judgment when an implementation detail becomes product-visible, changes the accepted direction, introduces a new dependency or service, affects security/privacy/retention/authentication, breaks compatibility, or becomes irreversible or costly to reverse.
+The user decides:
+
+- user-visible product behavior
+- user flow, messages, UX, accessibility, or product trade-offs
+- scope expansion or explicit non-goal removal
+- data retention, privacy, security, or authentication choices
+- new dependency or external service introduction
+- migration, public interface, or compatibility-breaking direction
+- irreversible or costly-to-reverse technical choices
+- sensitive-action approval
+- final acceptance
+- residual-risk acceptance
+- cancellation
+
+Other future judgment candidates belong to [Later](../later/index.md) and are not active judgment kinds.
+
+Inside accepted scope, the agent may usually decide implementation details that do not change product behavior, scope, or material technical direction. Examples include:
+
+- a tiny local variable name that follows project style
+- test file organization details
+- small behavior-preserving refactors
+- internal cleanup
+- code details already forced by accepted scope and acceptance criteria
+
+Escalate back to user judgment when an implementation detail:
+
+- becomes product-visible
+- changes the accepted direction
+- introduces a new dependency or service
+- affects security, privacy, retention, or authentication
+- breaks compatibility
+- becomes irreversible or costly to reverse
 
 When using the active owner path, keep these `judgment_kind` values separate: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`.
 
 <a id="5-request-user-judgment-narrowly"></a>
-### Request User Judgment Narrowly
+### Request user judgment narrowly
 
 A judgment request should include the exact question, concise options, a bounded option when current facts already support one, rationale, uncertainty, consequence of deferral, affected scope, and what the answer does not settle. Ask one judgment at a time unless the user explicitly asks to review grouped options and the group still preserves separate answers.
 
@@ -112,9 +143,24 @@ Do not treat "yes," "approved," "looks good," "go ahead," or "continue" as a bun
 
 When a resolved `scope_decision` means the active scope should change, record the judgment resolution first, then use `harness.update_scope` as the next state-changing action. Do not treat the judgment record itself as an updated goal, non-goal list, acceptance criteria, what the agent may decide on its own, baseline, or active work slice.
 
-Sensitive approval is permission for a named action and is recorded with `SensitiveActionScope`. It may cover a command, dependency change, host, network access, secret handle, deployment, destructive action, system access, product-file write, or other scoped action, but it is not path-level Write Authorization and does not prove observation or blocking. Final acceptance is judgment on the result. Residual-risk acceptance is judgment on a named residual risk. Future judgment candidates would be separate from all three if promoted. None substitutes for another.
+Sensitive approval is permission for a named action and is recorded with `SensitiveActionScope`. It may cover:
 
-## 5. Do Not Claim Stronger Guarantees
+- a command
+- a dependency change
+- a host
+- network access
+- a secret handle
+- deployment
+- a destructive action
+- system access
+- a product-file write
+- another scoped action
+
+Sensitive approval is not path-level Write Authorization and does not prove observation or blocking.
+
+Final acceptance is judgment on the result. Residual-risk acceptance is judgment on a named residual risk. Future judgment candidates would be separate from all three if promoted. None substitutes for another.
+
+## 5. Do not claim stronger guarantees
 
 Harness authority is authority over Harness records and state transitions. It is not OS permission control, arbitrary-tool sandboxing, tamper-proof storage, universal pre-tool blocking, or security isolation unless the exact mechanism and covered operation are documented and proven.
 
@@ -130,7 +176,7 @@ If Core or Harness authority is unavailable, do not invent task state, write com
 Do not describe `detective` status just because a surface name, status card, chat summary, or user phrase sounds careful. Use it only after the relevant capability verification has passed and only for the covered observable fact. Otherwise describe the behavior as cooperative or unavailable/capability-limited.
 
 <a id="6-check-scope-before-product-writes"></a>
-## 6. Prepare Write Only When Scope Is Clear
+## 6. Prepare write only when scope is clear
 
 Before product/code/file writes in Harness-connected work, use a pre-write scope check only after the intended operation is specific enough to evaluate. In owner terms this is the `harness.prepare_write` path.
 
@@ -148,7 +194,7 @@ A compatible result means the intended product-file write matches current Harnes
 If the scope change is valid, update the active scope or active work slice through `harness.update_scope` before asking for a new pre-write check. Existing pre-write results that no longer match the updated scope must be treated as stale.
 
 <a id="7-record-evidence-after-meaningful-action"></a>
-## 7. Record Run And Evidence After Meaningful Action
+## 7. Record run and evidence after meaningful action
 
 After meaningful execution, checks, reviews, or artifact-producing work, summarize what happened and what supports each claim. In owner terms this may use `harness.record_run` and evidence refs when that path is active.
 
@@ -163,7 +209,7 @@ For tracked work, derive the evidence summary from the active `CompletionPolicy`
 Evidence does not automatically satisfy final acceptance, residual-risk acceptance, close, or any future promoted quality path.
 
 <a id="10-close-work-honestly"></a>
-## 8. Handle Close Readiness Honestly
+## 8. Handle close readiness honestly
 
 Close only when the active path can support the close claim. In owner terms, `harness.close_task` should return blockers or a close result.
 
@@ -181,7 +227,24 @@ For tracked work, show the close basis before asking for final acceptance or att
 - residual-risk visibility and acceptance status when relevant
 - reasons the work cannot be closed yet and the next close-unblocking action
 
-Use `harness.close_task intent=check` for a read-only close check. Use `intent=complete` only after the complete blocker order has passed: Task validity, Run state, scope and `completion_policy`, unresolved judgments and approvals, write and baseline compatibility, surface capability, required evidence, artifact availability, final acceptance when required, residual-risk visibility, residual-risk acceptance when required, and recovery constraints. Evidence comes before final acceptance and residual-risk acceptance; those judgments cannot fill an evidence gap.
+Use `harness.close_task intent=check` for a read-only close check.
+
+Use `intent=complete` only after the complete blocker order has passed:
+
+- Task validity
+- Run state
+- scope and `completion_policy`
+- unresolved judgments and approvals
+- write and baseline compatibility
+- surface capability
+- required evidence
+- artifact availability
+- final acceptance when required
+- residual-risk visibility
+- residual-risk acceptance when required
+- recovery constraints
+
+Evidence comes before final acceptance and residual-risk acceptance; those judgments cannot fill an evidence gap.
 
 Use `intent=cancel` or `intent=supersede` only when the user is ending or replacing the Task rather than completing it. These paths still need valid Task identity, lifecycle, local access, recovery compatibility, and a valid superseding Task when applicable, but they do not require evidence sufficiency, final acceptance, or residual-risk acceptance.
 
@@ -189,7 +252,7 @@ The current MVP has no extra active close requirement for separate quality revie
 
 Do not close from prose, tests alone, broad acceptance-like language, residual-risk acceptance, a generated readable view, or a stale status summary. Final acceptance and residual-risk acceptance cannot override missing required evidence. If blockers remain, lead with them and name the next safe action.
 
-## 9. Respect The Active/Later Boundary
+## 9. Respect the active/later boundary
 
 Active MVP behavior should stay compact. Later candidate presentation formats may be named for contrast or routing, but they must not look like active requirements.
 
@@ -199,7 +262,7 @@ Quality concerns are not standalone current MVP requirements or reasons the work
 
 Use compact user-facing shapes first: status, focused judgment request, what was checked, and close result. Reference exact contracts only when needed for a visible blocker, source ref, write check, evidence gap, close result, connector behavior, or implementation owner link.
 
-## 10. Load One Language Version Per doc_id
+## 10. Load one language version per doc_id
 
 For ordinary Harness session context, do not load both English and Korean paired docs for the same `doc_id` into one prompt. Choose the language needed for the current user or task, and cite the paired doc path only when parity matters.
 

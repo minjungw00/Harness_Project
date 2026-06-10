@@ -1,10 +1,10 @@
-# Projection Authority Reference
+# Projection authority reference
 
 This document owns projection authority and read-only derived-display boundaries. Exact rendered body expectations live in [Template Bodies](template-bodies.md).
 
 This is documentation source material only. It is not a runtime projection, runtime state, generated artifact, evidence record, QA record, final-acceptance record, residual-risk record, close record, or implementation-ready server plan.
 
-## Owns / Does Not Own
+## Owns / Does not own
 
 This document owns:
 
@@ -22,13 +22,13 @@ This document does not own:
 - public API schemas; see API schema owners
 - connector behavior; see [Agent Integration](agent-integration.md)
 
-## Authority Boundary
+## Authority boundary
 
 Core-owned state, user-owned judgment records, close records, residual-risk records, storage rows, and persisted `ArtifactRef` records are the authority. Projections are derived display only. They are not owner state. A projection, status card, Markdown report, rendered template, chat message, connector output, or agent context packet is display or support context only.
 
 Rendered output may quote owner values, summarize owner records, or link to owner records. It is not a second state store and is not authority just because it is well written, manually edited, copied into a Product Repository, or injected into an agent context.
 
-## Rendered Display Cannot
+## Rendered display cannot
 
 A rendered label, status badge, Markdown section, projection, template body, chat summary, connector output, or agent context packet cannot by itself:
 
@@ -42,13 +42,13 @@ A rendered label, status badge, Markdown section, projection, template body, cha
 
 If an owner record exists for one of those outcomes, the display may show or link to it. The display text is not the reason the outcome exists.
 
-## Derived Display And Source State
+## Derived display and source state
 
 Projection output is computed from current owner records at read time unless a future owner promotes a persisted projection job. It may help a person read scope, evidence gaps, blockers, freshness, next safe action, residual risk, and current guarantee wording.
 
 Generated display must preserve omission, redaction, blocked-artifact, and unavailable notes without reconstructing hidden source values. A display that cannot read required owner state must show that condition instead of inventing a friendly-looking status.
 
-## Freshness And Source-State Boundary
+## Freshness and source-state boundary
 
 Projected output must keep its source boundary visible enough for the reader to judge it:
 
@@ -58,7 +58,7 @@ Projected output must keep its source boundary visible enough for the reader to 
 - Link back to the relevant owner when a reader needs the authority record.
 - Treat hand-edited or stale display as display to discard or recompute, not as Core repair input.
 
-## Template Body Owner
+## Template body owner
 
 [Template Bodies](template-bodies.md) owns the body expectations for:
 
@@ -70,11 +70,11 @@ Projected output must keep its source boundary visible enough for the reader to 
 
 This document may link to that owner, but it must not redefine those body sections.
 
-## Later Boundary
+## Later boundary
 
 The current MVP has no active reconcile queue, editable projection input path, projection-to-Core repair path, persistent projection job, or managed block drift repair. Those remain later candidates until promoted with scope, fallback behavior, non-substitution rules, and proof expectations.
 
-## Related Owners
+## Related owners
 
 - [Template Bodies](template-bodies.md) for exact rendered body expectations.
 - [Core Model](core-model.md) for Core authority, user-owned judgment, close readiness, final acceptance, and residual-risk boundaries.

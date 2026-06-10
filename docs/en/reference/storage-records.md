@@ -1,8 +1,8 @@
-# Storage Records
+# Storage records
 
 This document owns persistent storage record layout for the current MVP source design. It is documentation source material only and does not create a runtime database, generated records, migration files, or implementation-complete DDL in this repository.
 
-## Owns / Does Not Own
+## Owns / Does not own
 
 This document owns:
 
@@ -21,7 +21,7 @@ This document does not own:
 - API method behavior; see [MVP API](api/mvp-api.md)
 - runtime/repository/server boundaries; see [Runtime Boundaries](runtime-boundaries.md)
 
-## Runtime Home Layout
+## Runtime home layout
 
 Harness uses one local Runtime Home and one project-local state database per registered project. The default reference root is `~/.harness`; an implementation may choose an equivalent configured root.
 
@@ -55,7 +55,7 @@ Runtime Home identity must not depend only on a filesystem path. A copied or mov
 
 Runtime Home files are local operational control data and may contain sensitive support data. Broad read access can expose secrets, PII, tokens, logs, screenshots, diffs, and artifact content. Broad write access is a tampering and evidence-poisoning risk. File permissions, owner checks, hashes, and diagnostics are defensive checks; they do not create OS-level sandboxing, arbitrary-tool control, tamper-proof storage, or pre-execution blocking.
 
-## Persisted Record Categories
+## Persisted record categories
 
 The active current MVP persists only the Core records needed by the active state-changing method set: `harness.intake`, `harness.update_scope`, `harness.prepare_write`, `harness.record_run`, `harness.request_user_judgment`, `harness.record_user_judgment`, and state-changing `harness.close_task` intents. `harness.status` and `harness.close_task intent=check` are read-only.
 
@@ -78,7 +78,7 @@ The active Core persisted records are:
 - `task_events`.
 - `tool_invocations`.
 
-The active temporary storage boundary is `artifact_staging` or an equivalent storage-owned staging manifest, together with safe temporary bytes or notices under `artifacts/tmp/`. It exists only to let `harness.stage_artifact` produce a scoped, expiring, single-consumption handle with server-recorded creation surface provenance for later `harness.record_run` promotion. It is not a persistent `ArtifactRef`, evidence authority, a Core mutation record, an event source, a replay row, or a state-version source.
+The active temporary storage boundary is `artifact_staging` or an equivalent storage-owned staging manifest, together with safe temporary bytes or notices under `artifacts/tmp/`. It exists only to let `harness.stage_artifact` produce a scoped, expiring, single-consumption handle with recorded creation surface provenance for later `harness.record_run` promotion. It is not a persistent `ArtifactRef`, evidence authority, a Core mutation record, an event source, a replay row, or a state-version source.
 
 No other persisted table family or temporary handle family is active current MVP scope. Requirement shaping persists through `tasks`, `change_units`, `user_judgments`, `evidence_summaries`, and `blockers`; it is not a separate committed Discovery Brief, Shared Design, Question Queue, Assumption Register, or First Safe Change Unit Candidate table. Evidence persists through compact evidence summaries, `CompletionPolicy` on the Task or Change Unit, required coverage items, and artifact refs, not through full Evidence Manifest storage.
 
@@ -86,7 +86,7 @@ Projection has no active persisted table family. `status-card`, `judgment-reques
 
 The minimum active shaping information is stored through existing records: current goal summary, active scope summary, allowed paths or affected areas, non-goals, acceptance criteria, Autonomy Boundary, required user-owned judgments, one blocking question when necessary, one next safe action, `CompletionPolicy`, required evidence expectation or evidence gap, and close readiness. Missing or unknown pieces stay as `unknown`, pending `user_judgments`, evidence gaps, or `blockers`; storage must not create extra active planning tables to make the request appear ready.
 
-## Table Overview
+## Table overview
 
 This table names active storage tables and the minimum storage role they serve. It is not full DDL and does not duplicate API schemas.
 
@@ -110,7 +110,7 @@ This table names active storage tables and the minimum storage role they serve. 
 | `task_events` | `state.sqlite` | Append-only audit and ordering trail for committed Core mutations. | `event_id`, `project_id`, `task_id`, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `tool_invocations` | `state.sqlite` | Replay row only for committed non-dry-run Core `MethodResult` responses whose method state-effect row creates replay. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
-## First Schema Integrity Contract
+## First schema integrity contract
 
 This section is a first-implementation storage contract for future SQLite schema design. It is not full DDL, a migration file, or proof that runtime implementation has started.
 
@@ -147,7 +147,7 @@ Ordinary active MVP Core operations do not hard-delete authority rows. They move
 
 Unconsumed or expired `artifact_staging` rows and `artifacts/tmp/` staging bytes or notices may be marked `expired` or `discarded`, and temporary bytes may be cleaned before registration, because they are not evidence authority. Once an `artifacts` row is committed, retention purge, project teardown, or destructive cleanup is outside ordinary active MVP mutation behavior and needs an owner-defined path.
 
-## Storage-Owned Values And JSON
+## Storage-owned values and JSON
 
 Closed current MVP storage value sets are table-level persistence constraints. Rows that mirror API schema values must match the API schema owner exactly; rows marked storage-owned define storage behavior that is not a public API schema body. Unknown values fail before commit.
 
@@ -186,7 +186,7 @@ Active JSON `TEXT` columns are limited to compact owner-shaped data needed by th
 
 Task and Change Unit shaping JSON stores compact summaries and bounded lists only. It must not store a standalone Discovery Brief, Question Queue, Assumption Register, full design artifact, generated projection body, evidence manifest body, QA record, acceptance record, residual-risk record, or close record under another name.
 
-## Active / Later Boundary
+## Active / later boundary
 
 Profile-gated later storage is outside the active current MVP unless an owner document promotes a narrow behavior with scope, fallback behavior, and proof-path expectations. Reference-schema presence alone does not make storage active.
 
@@ -194,7 +194,7 @@ The active current MVP excludes storage for projection jobs, durable projection 
 
 Active status, close readiness, run/evidence summaries, next actions, readable cards, `agent-context-packet`, and guarantee display are read-time derived views over active persisted records. They may be stale, absent, failed, or recomputed without changing storage authority.
 
-## Related Owners
+## Related owners
 
 - [Storage Effects](storage-effects.md) for which methods create, update, observe, or leave records untouched.
 - [Artifact Storage](storage-artifacts.md) for artifact-specific storage lifecycle.

@@ -1,4 +1,4 @@
-# User Guide
+# User guide
 
 Harness is meant to let you work in ordinary language while keeping decision boundaries visible. You decide the work and the risky calls. Harness records scope, evidence, approvals, user judgment, and close basis. The agent must not present inference as if it were your decision.
 
@@ -85,7 +85,14 @@ The agent must not:
 
 ## Approving a write
 
-A write approval is bounded permission for a named write attempt. It is not approval of the whole plan, not final acceptance, not residual-risk acceptance, and not a guarantee that Harness can stop every tool before it acts.
+A write approval is bounded permission for a named write attempt.
+
+It is not:
+
+- approval of the whole plan
+- final acceptance
+- residual-risk acceptance
+- a guarantee that Harness can stop every tool before it acts
 
 You decide:
 - The specific write or set of writes you are allowing.

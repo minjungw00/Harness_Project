@@ -1,4 +1,4 @@
-# API Judgment Schemas
+# API judgment schemas
 
 This document owns API schemas for user-owned judgment in the current MVP. It is documentation source material only and does not record user decisions by itself.
 
@@ -70,7 +70,7 @@ UserJudgmentCandidate:
   expires_at: string | null
 ```
 
-## Option and Context Shapes
+## Option and context shapes
 
 ```yaml
 UserJudgmentOption:
@@ -90,7 +90,7 @@ UserJudgmentContext:
 
 `option_id` is scoped to the judgment. Rendered labels are display text, not canonical schema values.
 
-## Resolution and Answer Payload
+## Resolution and answer payload
 
 ```yaml
 UserJudgmentResolution:
@@ -146,7 +146,7 @@ AcceptedRiskInput:
 
 Accepted risk is scoped to the named visible risk and the requested judgment. It is not verification, evidence sufficiency, QA, final acceptance, or proof that the result has no risk.
 
-## Related Owners
+## Related owners
 
 - [Core Model](../core-model.md) for user-owned judgment meaning and non-substitution rules.
 - [MVP API](mvp-api.md) for `harness.request_user_judgment` and `harness.record_user_judgment`.

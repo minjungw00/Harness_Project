@@ -1,8 +1,8 @@
-# Glossary Reference
+# Glossary reference
 
 This document owns official terminology for Harness documentation. It defines prose meaning, Korean terminology choices, identifier preservation, expressions to avoid, and owner routing for product terms. It does not define exact schemas, value sets, DDL, storage effects, security mechanisms, API behavior, or implementation sequencing.
 
-## Owns / Does Not Own
+## Owns / Does not own
 
 This document owns:
 
@@ -20,7 +20,7 @@ This document does not own:
 - template bodies; see [Template Bodies](template-bodies.md)
 - implementation readiness; see [MVP Plan](../build/mvp-plan.md)
 
-## Terminology Control Table
+## Terminology control table
 
 Use this table with [docs/terminology-map.yaml](../../terminology-map.yaml). The glossary gives reader meaning and owner routing; the map is the machine-readable control file. Preserve exact identifiers in backticks in both languages.
 
@@ -57,6 +57,6 @@ Use this table with [docs/terminology-map.yaml](../../terminology-map.yaml). The
 | rejected response | A `ToolRejectedResponse` branch for failures before the method proceeds to the committed operation. | 거부 응답 | 거부 응답 | `ToolRejectedResponse`, `ToolError`, `ErrorCode` | blocked result, close blocker, committed outcome | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Storage Effects](storage-effects.md) |
 | lifecycle | The allowed phase progression for a concept such as a Task or artifact handle. | 생명주기 | 생명주기 | `Task.lifecycle_phase`, `artifact_staging.status` | lifecycle 의미 | Concept-specific owner: [Core Model](core-model.md), [API Value Sets](api/schema-value-sets.md), [Artifact Storage](storage-artifacts.md) |
 
-## Terminology Control
+## Terminology control
 
 [docs/terminology-map.yaml](../../terminology-map.yaml) is the canonical machine-readable terminology control file for bilingual term choices, identifier preservation, and mixed-language expressions to avoid. Keep this glossary and the terminology map aligned in the same documentation-only batch whenever terminology changes.

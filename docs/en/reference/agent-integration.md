@@ -1,4 +1,4 @@
-# Agent Integration Reference
+# Agent integration reference
 
 This document owns agent connector behavior and capability-context boundaries for the current documentation set. It does not own surface-specific usage recipes; those live in [Surface Recipes](../use/surface-recipes.md).
 
@@ -25,7 +25,7 @@ This document does not own:
 - Product Repository, Harness Server, and Runtime Home separation; see [Runtime Boundaries](runtime-boundaries.md)
 - exact template bodies; see [Template Bodies](template-bodies.md)
 
-## Connector Boundary
+## Connector boundary
 
 Connectors carry context between Harness and an agent surface. A connector description, generated file, chat text, Product Repository file, projection, or agent memory does not prove authority by itself. Local surface authority depends on the registered and verified surface context defined by the API and security owners.
 
@@ -41,13 +41,13 @@ Profile-gated behavior remains inactive until the active-scope and owner documen
 
 ## `VerifiedSurfaceContext`
 
-`VerifiedSurfaceContext` is the server-derived result of matching a request's selected `surface_id` to registered local surface facts, transport/session/binding evidence, access class, and capability posture. The exact request envelope and access-class values belong to [MVP API](api/mvp-api.md) and [API Value Sets](api/schema-value-sets.md).
+`VerifiedSurfaceContext` is the result a future server derives by matching a request's selected `surface_id` to registered local surface facts, transport/session/binding evidence, access class, and capability posture. The exact request envelope and access-class values belong to [MVP API](api/mvp-api.md) and [API Value Sets](api/schema-value-sets.md).
 
 The connector may pass `surface_id` as a selector, but it does not get to assert `verified=true`. A public API request has exactly one request-level `VerifiedSurfaceContext.access_class`; nested payloads such as artifact inputs do not add a second request access class. Protected reads and mutations can rely on a surface only when the API owner says the verified context is compatible with the method.
 
-Server-recorded provenance such as staged artifact `created_by_surface_id` and `created_by_surface_instance_id` comes from `VerifiedSurfaceContext`, not from caller prose. Copied identifiers, generated Markdown, chat text, projection text, and agent memory are not substitutes for the verified context.
+In a future server, staged artifact provenance such as `created_by_surface_id` and `created_by_surface_instance_id` comes from `VerifiedSurfaceContext`, not from caller prose. Copied identifiers, generated Markdown, chat text, projection text, and agent memory are not substitutes for the verified context.
 
-## Guarantee Display Gating
+## Guarantee display gating
 
 Guarantee display starts at the current documented level: cooperative by default. A connector may display `detective` only for the named surface, capability, and observed scope after the relevant capability verification has passed and the security owner allows that wording.
 
@@ -55,15 +55,29 @@ If Core, MCP, local access, changed-path detection, artifact access, or another 
 
 The guarantee vocabulary and non-claims belong to [Security](security.md). Current MVP scope and profile-gated boundaries belong to [Active MVP Scope](active-mvp-scope.md).
 
-## Context Push And Pull
+## Context push and pull
 
-A connector may push compact agent context when it is fresh enough for the next action. Keep the packet to current task summary, active scope and non-goals, relevant surface status, `state_version`, pending user-owned judgments, blockers, next safe action, evidence gaps, artifact availability summary, close readiness, residual-risk status, guarantee level, source refs, and freshness.
+A connector may push compact agent context when it is fresh enough for the next action. Keep the packet to:
+
+- current task summary
+- active scope and non-goals
+- relevant surface status
+- `state_version`
+- pending user-owned judgments
+- blockers
+- next safe action
+- evidence gaps
+- artifact availability summary
+- close readiness
+- residual-risk status
+- guarantee level
+- source refs and freshness
 
 A connector should pull exact owner sections only when the next action needs them. Do not push full schemas, DDL, template bodies, historical logs, generated artifacts, full artifact contents, unrelated reference sections, future catalog material, or both languages for the same `doc_id` unless bilingual maintenance requires semantic-parity review.
 
 If a pushed context packet becomes stale, disconnected, or incompatible with the current surface, the connector should ask the owner path for a refreshed result or show the stale condition before the agent relies on it.
 
-## Fallback Semantics
+## Fallback semantics
 
 When Core, MCP, projection data, local access, artifact access, or a capability is unavailable or insufficient, connector behavior should expose that limitation and route the next safe action to the relevant owner instead of fabricating authority.
 
@@ -75,7 +89,7 @@ Use owner-defined failure meanings. Typical routing is:
 
 Fallback should be honest and small: reconnect or diagnose, move to a capable surface, narrow the operation, refresh state, request the missing user-owned judgment, or continue outside Harness only when the user explicitly chooses that mode.
 
-## Connector Conformance Boundary
+## Connector conformance boundary
 
 Connector conformance means preserving owner-defined results and not strengthening them. A conforming connector:
 
@@ -88,7 +102,7 @@ Connector conformance means preserving owner-defined results and not strengtheni
 
 This boundary is a documentation contract for future connector behavior. It is not an executable conformance runner and does not create generated conformance output.
 
-## Related Owners
+## Related owners
 
 - [Surface Recipes](../use/surface-recipes.md) for practical surface-specific usage.
 - [API Schema Core](api/schema-core.md) and [API Value Sets](api/schema-value-sets.md) for common API context fields and values.

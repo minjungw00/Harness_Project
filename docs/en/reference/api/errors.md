@@ -2,7 +2,9 @@
 
 This document describes future Harness Server behavior for planning and review. It does not mean this documentation repository implements an MCP server or any runtime behavior.
 
-## What this document owns
+## Owns / Does not own
+
+This document owns:
 
 | This document owns | Boundary |
 |---|---|
@@ -12,7 +14,7 @@ This document describes future Harness Server behavior for planning and review. 
 | `STATE_VERSION_CONFLICT` | Public stale-state and idempotency-conflict behavior. It is a public error code, not a blocker code. |
 | User-facing labels | Display guidance for public errors. Labels do not replace public identifiers. |
 
-## What this document does not own
+This document does not own:
 
 | Not owned here | Owner |
 |---|---|

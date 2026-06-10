@@ -1,8 +1,8 @@
-# Template Bodies
+# Template bodies
 
 This document owns active current MVP rendered body expectations for status cards, judgment requests, run/evidence summaries, close results, and agent context packets. It is documentation source material only and does not generate projection files, runtime artifacts, QA records, acceptance records, or close records.
 
-## Owns / Does Not Own
+## Owns / Does not own
 
 This document owns:
 

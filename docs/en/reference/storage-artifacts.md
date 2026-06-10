@@ -1,8 +1,8 @@
-# Artifact Storage
+# Artifact storage
 
 This document owns the artifact storage lifecycle for the current MVP source design. It is documentation source material only and does not create artifact bytes, artifact directories, runtime storage, evidence records, QA records, acceptance records, or close records.
 
-## Owns / Does Not Own
+## Owns / Does not own
 
 This document owns:
 
@@ -20,7 +20,7 @@ This document does not own:
 - generic method storage effects; see [Storage Effects](storage-effects.md)
 - local-access security claims; see [Security](security.md) and [Runtime Boundaries](runtime-boundaries.md)
 
-## Lifecycle Boundary
+## Lifecycle boundary
 
 Artifact storage distinguishes staging, promotion, persistent linking, and body reads.
 
@@ -32,11 +32,34 @@ Caller-supplied raw filesystem paths, arbitrary local path strings, raw logs as 
 
 ## Staging
 
-Temporary staging is not artifact authority. `artifact_staging` or an equivalent storage-owned staging manifest tracks at least `handle_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `status`, `expires_at`, and consumption facts such as `consumed_by_run_id`, `promoted_artifact_id`, and `consumed_at`.
+Temporary staging is not artifact authority. `artifact_staging` or an equivalent storage-owned staging manifest tracks at least:
 
-The `created_by_surface_*` fields are recorded by the server from the successful `harness.stage_artifact` request's `VerifiedSurfaceContext`. They are not caller-provided authority claims and must be checked against the staging row, not trusted merely because a submitted handle has the right shape.
+- `handle_id`
+- `project_id`
+- `task_id`
+- `created_by_surface_id`
+- `created_by_surface_instance_id`
+- `sha256`
+- `size_bytes`
+- `content_type`
+- `redaction_state`
+- `status`
+- `expires_at`
+- consumption facts such as `consumed_by_run_id`, `promoted_artifact_id`, and `consumed_at`
 
-A successful `harness.stage_artifact` returns `StageArtifactResult` with `base.effect_kind=staging_created`. It may write safe bytes or a safe notice under `artifacts/tmp/` and create the temporary staging row. It creates no Core record, no `artifacts` row, no `artifact_links` row, no `evidence_summaries` row, no `task_events` row, no `tool_invocations` replay row, and no `project_state.state_version` increment.
+A future server records the `created_by_surface_*` fields from the successful `harness.stage_artifact` request's `VerifiedSurfaceContext`. They are not caller-provided authority claims and must be checked against the staging row, not trusted merely because a submitted handle has the right shape.
+
+A successful `harness.stage_artifact` returns `StageArtifactResult` with `base.effect_kind=staging_created`. It may write safe bytes or a safe notice under `artifacts/tmp/` and create the temporary staging row.
+
+It creates no:
+
+- Core record
+- `artifacts` row
+- `artifact_links` row
+- `evidence_summaries` row
+- `task_events` row
+- `tool_invocations` replay row
+- `project_state.state_version` increment
 
 `artifact_staging.status` is a storage-owned temporary handle lifecycle:
 
@@ -53,19 +76,68 @@ Only `staged` is consumable. Terminal values cannot return to `staged`.
 
 Only a compatible `harness.record_run` may consume an unexpired same-project same-Task handle with `artifact_staging.status=staged` and promote it to a persistent `ArtifactRef`. The current verified `surface_id` and `surface_instance_id` must match `created_by_surface_id` and `created_by_surface_instance_id`. The active MVP does not support cross-surface staged artifact handoff, and `StagedArtifactHandle` is not a bearer token that any local caller may use.
 
-The consuming transaction must validate stored `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, expiration, consumed status, `sha256`, `size_bytes`, and `redaction_state`; promote only validated staged handles; mark promoted handles `consumed`; set the consuming Run and promoted artifact ids; commit the durable `artifacts` row and required `artifact_links`; and update evidence coverage only as allowed by the method owner.
+The consuming transaction must:
 
-Missing, expired, mismatched, already-consumed, discarded, cross-surface, wrong-`created_by_surface_id`, wrong-`created_by_surface_instance_id`, wrong-`sha256`, wrong-`size_bytes`, wrong-`redaction_state`, integrity-incompatible, or cross-task staging handles must be rejected before mutation with API-owned validation error routing. They must not be hidden as evidence sufficiency, local access mismatch, or capability insufficiency.
+- validate stored `project_id`, `task_id`, `created_by_surface_id`, and `created_by_surface_instance_id`
+- validate expiration and consumed status
+- validate `sha256`, `size_bytes`, and `redaction_state`
+- promote only validated staged handles
+- mark promoted handles `consumed`
+- set the consuming Run and promoted artifact ids
+- commit the durable `artifacts` row and required `artifact_links`
+- update evidence coverage only as allowed by the method owner
 
-For `harness.record_run`, storage effects follow the API-owned validation order: request-level `VerifiedSurfaceContext.access_class=run_recording`, project-wide `ToolEnvelope.expected_state_version`, referenced Task and Change Unit, compatible Write Authorization when product file writes are recorded, staged-handle validation, staged-handle field checks, staged promotion, staged consumption, existing-artifact link validation, and no artifact body read. If any validation in this sequence fails before commit, storage must not change `artifact_staging.status`, `consumed_by_run_id`, `promoted_artifact_id`, `artifacts`, `artifact_links`, `evidence_summaries`, `write_authorizations.status`, `task_events`, `tool_invocations`, or `project_state.state_version`.
+These staging handles must be rejected before mutation with API-owned validation error routing:
 
-## Existing Artifacts
+- missing
+- expired
+- mismatched
+- already consumed
+- discarded
+- cross-surface
+- wrong `created_by_surface_id`
+- wrong `created_by_surface_instance_id`
+- wrong `sha256`
+- wrong `size_bytes`
+- wrong `redaction_state`
+- integrity-incompatible
+- cross-task
+
+They must not be hidden as evidence sufficiency, local access mismatch, or capability insufficiency.
+
+For `harness.record_run`, storage effects follow this API-owned validation order:
+
+1. request-level `VerifiedSurfaceContext.access_class=run_recording`
+2. project-wide `ToolEnvelope.expected_state_version`
+3. referenced Task and Change Unit
+4. compatible Write Authorization when product-file writes are recorded
+5. staged-handle validation
+6. staged-handle field checks
+7. staged promotion
+8. staged consumption
+9. existing-artifact link validation
+10. no artifact body read
+
+If any validation in this sequence fails before commit, storage must not change:
+
+- `artifact_staging.status`
+- `consumed_by_run_id`
+- `promoted_artifact_id`
+- `artifacts`
+- `artifact_links`
+- `evidence_summaries`
+- `write_authorizations.status`
+- `task_events`
+- `tool_invocations`
+- `project_state.state_version`
+
+## Existing artifacts
 
 Using an `existing_artifact` reuses the persisted artifact row only when its availability, integrity facts, redaction state, same-project identity, and allowed Task scope remain compatible with the new use. It may add a new `artifact_links` row for the new owner relation, subject to uniqueness and same-project/same-Task rules.
 
 `existing_artifact` must not clone bytes, register a new artifact body, skip integrity checks, or use a raw artifact path as authority.
 
-## Evidence Eligibility
+## Evidence eligibility
 
 An artifact is evidence-eligible only when storage has:
 
@@ -82,7 +154,7 @@ Artifact owner relation integrity is required even though `artifact_links` is a 
 
 An artifact link does not create the owner record, satisfy a gate by itself, prove evidence sufficiency, perform QA, create final acceptance, accept residual risk, or close a Task.
 
-## Availability, Redaction, And Integrity
+## Availability, redaction, and integrity
 
 `artifacts.status` is an availability state:
 
@@ -99,19 +171,19 @@ An artifact link does not create the owner record, satisfy a gate by itself, pro
 
 `uri` resolves through Harness storage, normally as `harness-artifact://{project_id}/{artifact_id}`. It is not a caller-supplied arbitrary filesystem path. Raw secrets, tokens, and full sensitive logs must not be stored as evidence bytes. Store redacted bytes, `secret_omitted` or `blocked` notices, safe handles, or other owner-approved safe representations instead.
 
-## Body Reads
+## Body reads
 
 Artifact body reads are separate from staged artifact promotion. Raw artifact path reads are not granted by default.
 
 Artifact metadata or content reads require a registered `ArtifactRef`, the matching same-project `task_id`, the required `artifact_links` owner relation, the redaction/availability state needed by the caller's access class, and the API/security owner requirements for `access_class=artifact_read`. A local path under the artifact store, an artifact `uri`, a staged path, or a copied file is not enough by itself to read or rely on artifact bytes.
 
-## Retention Boundary
+## Retention boundary
 
 Unconsumed or expired `artifact_staging` rows and `artifacts/tmp/` staging bytes or notices may be marked `expired` or `discarded`, and temporary bytes may be cleaned before registration, because they are not evidence authority.
 
 Once an `artifacts` row is committed, retention purge, project teardown, or destructive cleanup is outside ordinary active MVP mutation behavior and needs an owner-defined path. A future retention or migration path must preserve artifact hashes, owner links, events, and replay rows, or mark affected refs invalid for recovery. It must not silently delete evidence support that current records still name.
 
-## Related Owners
+## Related owners
 
 - [API Artifact Schemas](api/schema-artifacts.md) for `ArtifactRef`, `ArtifactInput`, and `StagedArtifactHandle` shapes.
 - [MVP API](api/mvp-api.md) for `harness.stage_artifact`, `harness.record_run`, and artifact read behavior.

@@ -1,4 +1,4 @@
-# API Schema Core
+# API schema core
 
 This document owns the common API envelope and response-branch schemas for the current MVP. It is documentation source material only and does not define method behavior, storage effects, state snapshots, artifact lifecycle, user-judgment meaning, public error semantics, or active value sets.
 
@@ -26,7 +26,7 @@ This document does not own:
 - public error codes, precedence, or error semantics; see [API Errors](errors.md)
 - storage records or effects; see [Storage Records](../storage-records.md) and [Storage Effects](../storage-effects.md)
 
-## Schema Notation
+## Schema notation
 
 Schema blocks in this page are planning notation, not generated code. They describe future API contract shape only.
 
@@ -53,7 +53,7 @@ ToolEnvelope:
 `task_id` is an optional request-level Task selector. Method-specific `task_id` fields, when present, take precedence as described by [MVP API](mvp-api.md#shared-request-rules). `expected_state_version` names the project-wide state clock used by state-changing methods; conflict behavior is owned by [API Errors](errors.md#state-conflict-behavior) and [Storage Versioning](../storage-versioning.md).
 
 <a id="common-response"></a>
-## Common Response Branches
+## Common response branches
 
 Every public method response uses exactly one branch:
 
@@ -84,7 +84,7 @@ Method-specific result fields belong only to the method result branch. `ToolReje
 
 The active `response_kind` and `effect_kind` values are owned by [API Value Sets](schema-value-sets.md#response-and-effect-values). Branch selection and state effects are owned by [MVP API](mvp-api.md#shared-request-rules). Public error precedence is owned by [API Errors](errors.md).
 
-## Dry-Run Summary Shapes
+## Dry-run summary shapes
 
 `DryRunSummary`, `PlannedEffect`, and `PlannedBlocker` are common dry-run branch support shapes. They are descriptive preview data only. They do not create records, reserve refs, consume handles, create replay rows, or increment `state_version`.
 
@@ -111,7 +111,7 @@ PlannedBlocker:
 
 `NextActionSummary` and `StateRecordRef` are owned by [API State Schemas](schema-state.md). `PlannedBlocker.source_kind` values are owned by [API Value Sets](schema-value-sets.md#state-and-blocker-values). Public `ErrorCode` values used in `ToolError.code` are owned by [API Errors](errors.md).
 
-## Shared Support Shapes
+## Shared support shapes
 
 ```yaml
 ToolError:

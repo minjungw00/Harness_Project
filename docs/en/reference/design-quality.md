@@ -1,4 +1,4 @@
-# Design Quality
+# Design quality
 
 ## 1. Owns / Does not own
 
@@ -59,7 +59,7 @@ Active design quality does not create new Core state, `StateSummary.gates.design
 
 Design quality must not turn ordinary work into an open-ended planning loop. Full domain-language audits, full module/interface review, full TDD trace, full feedback-loop audit, full codebase-stewardship review, detailed Manual QA policy, detached verification, two-stage review displays, and steward policies are not active current MVP blockers unless another active owner path explicitly requires a narrow piece of that work.
 
-## 3. Routing Rules
+## 3. Routing rules
 
 A design-quality observation affects current MVP state only through an active owner path. The observation must name the active route it depends on:
 
@@ -89,7 +89,7 @@ A finding does not block close merely because it mentions domain language, verti
 
 When a design-quality observation affects close, the close-readiness finding must use an active `CloseReadinessBlocker.category` value owned by [API Value Sets](api/schema-value-sets.md).
 
-## 5. No Current Design-Policy Waiver
+## 5. No current design-policy waiver
 
 The current MVP has no active design-quality waiver or design-policy waiver route. If an owner path allows a requirement to be deferred, accepted as risk, or resolved by user judgment, use that active owner path and its exact `judgment_kind`, blocker category, or evidence behavior.
 

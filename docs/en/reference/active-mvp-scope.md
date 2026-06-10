@@ -2,17 +2,27 @@
 
 This reference is the canonical owner for detailed current MVP scope in the Harness planning documentation.
 
-## What this document owns
+## Owns / Does not own
 
-This document owns the current MVP capability boundary, the included and excluded scope at the product-scope level, the profile-gated and later-candidate boundary as it affects active scope, and the scope-level guarantee and non-claim wording that other documents should summarize instead of repeating.
+This document owns:
+
+- the current MVP capability boundary
+- included and excluded product-scope items
+- the profile-gated and later-candidate boundary where it affects active scope
+- scope-level guarantee and non-claim wording that other documents should summarize instead of repeating
+
+This document does not own:
+
+- implementation readiness, server-coding handoff, maintainer acceptance status, or build sequencing; see [MVP Plan](../build/mvp-plan.md)
+- API method behavior
+- schema fields
+- storage effects
+- security proof
+- template bodies
+- connector behavior
+- later-candidate details
 
 Use this page when deciding whether a capability is part of the current MVP. Other route, build, README, later, and reference documents should link here for the detailed scope list.
-
-## What this document does not own
-
-This document does not own implementation readiness, server-coding handoff, maintainer acceptance status, or build sequencing; those belong in [MVP Plan](../build/mvp-plan.md).
-
-It also does not own API method behavior, schema fields, storage effects, security proof, template bodies, connector behavior, or later-candidate details. Those details belong to the owner documents linked below.
 
 ## Current repository status
 
@@ -22,7 +32,17 @@ The repository is not the user's Product Repository and not a Harness Runtime Ho
 
 ## Included in the active MVP
 
-The current MVP scope is limited to plain-language intake and Task creation, scope updates, status and close-readiness review, prepare-write authorization, local surface registration, artifact staging, run and evidence recording, focused user judgment capture, and close attempts.
+The current MVP scope is limited to:
+
+- plain-language intake and Task creation
+- scope updates
+- status and close-readiness review
+- prepare-write authorization
+- local surface registration
+- artifact staging
+- run and evidence recording
+- focused user judgment capture
+- close attempts
 
 The included scope is:
 
@@ -42,11 +62,42 @@ Read-time status or derived display is active only as part of status and close-r
 
 ## Excluded from the active MVP
 
-The active MVP is not an OS permission control system. It is not a sandbox. It is not tamper-proof storage. It is not a full security isolation layer. It is not a runtime implementation while this repository remains documentation-only. Later candidates do not create active requirements.
+The active MVP is not:
 
-The active MVP excludes native artifact capture, `captured_artifact`, projection reconcile, persistent projection jobs, managed block drift repair, full `Evidence Manifest`, Manual QA workflow, `qa_gate`, `verification_gate`, command observation, network observation, secret access observation, command/network/secret pre-tool blocking, preventive guarantees, isolated guarantees, hosted dashboards, connector marketplaces, export or handoff formats, executable fixture runners, generated conformance artifacts, and operations profiles.
+- an OS permission control system
+- a sandbox
+- tamper-proof storage
+- a full security isolation layer
+- a runtime implementation while this repository remains documentation-only
 
-Approving a command, dependency change, host, network access, secret handle, deployment, destructive action, or system access does not mean Harness can observe or block that action in the current MVP.
+Later candidates do not create active requirements.
+
+The active MVP excludes:
+
+- native artifact capture and `captured_artifact`
+- projection reconcile, persistent projection jobs, and managed block drift repair
+- full `Evidence Manifest`
+- Manual QA workflow, `qa_gate`, and `verification_gate`
+- command, network, and secret access observation
+- command/network/secret pre-tool blocking
+- preventive or isolated guarantees
+- hosted dashboards
+- connector marketplaces
+- export or handoff formats
+- executable fixture runners
+- generated conformance artifacts
+- operations profiles
+
+Approving any of these actions does not mean Harness can observe or block that action in the current MVP:
+
+- command
+- dependency change
+- host
+- network access
+- secret handle
+- deployment
+- destructive action
+- system access
 
 ## Profile-gated values
 

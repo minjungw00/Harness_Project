@@ -4,7 +4,7 @@ This reference defines the future Harness Core authority model as documentation 
 
 Core is the local authority record for task scope, user-owned judgment, evidence, verification expectations, close readiness, and residual risk. It owns the product meaning of those boundaries. It does not grant OS permissions, sandbox arbitrary tools, make files tamper-proof, or provide isolation unless another owner documents and proves that exact mechanism.
 
-## 1. Owns / does not own
+## 1. Owns / Does not own
 
 | This document owns | This document does not own |
 |---|---|

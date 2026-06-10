@@ -1,4 +1,4 @@
-# API Artifact Schemas
+# API artifact schemas
 
 This document owns API artifact-shaped schemas for the current MVP. It is documentation source material only and does not grant local file access, create artifact bytes, create storage rows, or prove evidence sufficiency.
 
@@ -68,7 +68,7 @@ StagedArtifactHandle:
   consumed: boolean
 ```
 
-The caller does not submit `created_by_surface_id` or `created_by_surface_instance_id` as authority claims. They are server-recorded from the verified local surface context of the staging request. A staged handle is scoped, expiring, and single-consumption. It is not a bearer token for any local caller and is not evidence authority until a compatible `harness.record_run` promotion creates a persistent `ArtifactRef`.
+The caller does not submit `created_by_surface_id` or `created_by_surface_instance_id` as authority claims. A future server records those fields from the verified local surface context of the staging request. A staged handle is scoped, expiring, and single-consumption. It is not a bearer token for any local caller and is not evidence authority until a compatible `harness.record_run` promotion creates a persistent `ArtifactRef`.
 
 ## ArtifactInput
 
@@ -96,20 +96,20 @@ Exactly one source field is active for each input:
 
 `captured_artifact`, native capture handles, raw capture-adapter output, raw filesystem paths, arbitrary local path strings, and raw logs as authority claims are not active MVP `ArtifactInput` sources.
 
-## Access Constraints By Reference
+## Access constraints by reference
 
 Artifact-shaped references are checked through owner paths:
 
 - `harness.stage_artifact` uses `access_class=artifact_registration` and creates only a temporary `StagedArtifactHandle`.
 - `harness.record_run` uses `access_class=run_recording`, even when `ArtifactInput[]` contains `source_kind=staged_artifact`.
-- Staged promotion requires the current verified `surface_id` and `surface_instance_id` to match the staged handle's server-recorded `created_by_surface_id` and `created_by_surface_instance_id`.
+- Staged promotion requires the current verified `surface_id` and `surface_instance_id` to match the staged handle's recorded `created_by_surface_id` and `created_by_surface_instance_id`.
 - `existing_artifact` requires a persistent `ArtifactRef` that is valid for the same project and allowed Task scope.
 - Artifact body reads are separate from staging and promotion; they require `access_class=artifact_read` and the artifact-body owner path.
 - `ArtifactInput[]` does not add a second request-level access class to a public API request.
 
 Invalid source-field shape and staged-handle validation failures return through `ToolRejectedResponse` with public error semantics owned by [API Errors](errors.md). Staged-handle storage validation and promotion lifecycle are owned by [Artifact Storage](../storage-artifacts.md).
 
-## Related Owners
+## Related owners
 
 - [MVP API](mvp-api.md) for artifact-related method behavior.
 - [Artifact Storage](../storage-artifacts.md) for staging, promotion, persistent linking, and body-read lifecycle.

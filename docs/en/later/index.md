@@ -1,4 +1,4 @@
-# Later Candidate Index
+# Later candidate index
 
 This page owns the future candidate list only. It does not define current MVP behavior, implementation tasks, runtime permission, active API contracts, active storage effects, or active security guarantees.
 
@@ -9,7 +9,7 @@ Mention here is not promotion. A candidate becomes active only after the current
 Profile-gated values are distinct from later candidates. A value is profile-gated only when the active scope and its owner document name the profile and the supported value set. Values on this page remain later candidates until that promotion happens.
 
 <a id="assurance-candidates"></a>
-## Assurance Candidates
+## Assurance candidates
 
 ### Assurance hardening
 
@@ -27,7 +27,7 @@ Promotion requires:
 - API behavior update
 - Conformance fixture update
 
-### Full Evidence Manifest
+### Full evidence manifest
 
 Status:
 - Later candidate
@@ -43,7 +43,7 @@ Promotion requires:
 - Storage effect update
 - Conformance fixture update
 
-### Discovery Brief, Question Queue, and Assumption Register
+### Discovery brief, question queue, and assumption register
 
 Status:
 - Later candidate
@@ -139,7 +139,7 @@ Promotion requires:
 - API behavior update
 - Conformance fixture update
 
-### Full Decision Packet and `presentation=full`
+### Full decision packet and `presentation=full`
 
 Status:
 - Later candidate
@@ -236,7 +236,7 @@ Promotion requires:
 - Conformance fixture update
 
 <a id="operations-candidates"></a>
-## Operations Candidates
+## Operations candidates
 
 ### Operations hardening
 
@@ -286,7 +286,7 @@ Promotion requires:
 - Storage effect update
 - Conformance fixture update
 
-### Release Handoff
+### Release handoff
 
 Status:
 - Later candidate
@@ -462,7 +462,7 @@ Promotion requires:
 - Storage effect update
 - Security wording update
 
-## Later API Candidates
+## Later API candidates
 
 ### `harness.next`
 
@@ -593,7 +593,7 @@ Promotion requires:
 - Conformance fixture update
 
 <a id="later-schema-candidates"></a>
-## Later Schema Candidates
+## Later schema candidates
 
 ### Later schema extensions
 
@@ -772,7 +772,7 @@ Promotion requires:
 - Conformance fixture update
 
 <a id="later-template-candidates"></a>
-## Later Template Candidates
+## Later template candidates
 
 ### Later template names
 
@@ -791,7 +791,7 @@ Promotion requires:
 - Conformance fixture update
 
 <a id="future-fixture-families"></a>
-## Future Fixture Families
+## Future fixture families
 
 ### Future fixture families
 
@@ -809,7 +809,7 @@ Promotion requires:
 - Storage effect update
 - Error behavior update
 
-## Broad Future Candidates
+## Broad future candidates
 
 ### Dashboard and hosted workflows
 
@@ -827,7 +827,7 @@ Promotion requires:
 - Storage effect update
 - Conformance fixture update
 
-### Verification Result Cards and richer verification workflows
+### Verification result cards and richer verification workflows
 
 Status:
 - Later candidate
@@ -923,7 +923,7 @@ Promotion requires:
 - API behavior update
 - Conformance fixture update
 
-### Context Index and derived metrics
+### Context index and derived metrics
 
 Status:
 - Later candidate

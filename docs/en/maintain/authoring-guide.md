@@ -1,6 +1,21 @@
 # Authoring guide
 
-Use this guide when changing Harness documentation. It is an authoring and documentation-architecture guide only. It does not authorize Harness Server/runtime implementation, product-repository writes, generated operational files, runtime state, projections, evidence records, QA records, acceptance records, close records, residual-risk records, executable fixtures, or conformance runners.
+Use this guide when changing Harness documentation. It is an authoring and documentation-architecture guide only.
+
+It does not authorize:
+
+- Harness Server/runtime implementation
+- product-repository writes
+- generated operational files
+- runtime state
+- projections
+- evidence records
+- QA records
+- acceptance records
+- close records
+- residual-risk records
+- executable fixtures
+- conformance runners
 
 This repository remains documentation-only unless the maintainer handoff owner says otherwise in [MVP Plan](../build/mvp-plan.md). Treat the docs as source material for a future Harness Server, not as accepted implementation-ready runtime behavior.
 

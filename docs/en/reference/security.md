@@ -2,7 +2,7 @@
 
 Use this page when security wording, local-access posture, trust boundaries, or guarantee levels need to stay honest. This is documentation source material for a future Harness Server. It does not implement security controls, runtime state, generated artifacts, or operational monitoring.
 
-## 1. Owns / does not own
+## 1. Owns / Does not own
 
 | This document owns | This document does not own |
 |---|---|
@@ -31,15 +31,15 @@ In this documentation-only repository, "available in current MVP" means the spec
 
 The current MVP does not claim:
 
-- No OS-level sandbox.
-- No OS permission enforcement.
-- No tamper-proof storage.
-- No guaranteed full filesystem monitoring.
-- No complete prevention of malicious agent behavior.
-- No stronger guarantee than the registered surface/profile supports.
-- No universal pre-tool blocking.
-- No command, network, or secret observation by default.
-- No native artifact capture as an active guarantee.
+- OS-level sandboxing
+- OS permission enforcement
+- tamper-proof storage
+- guaranteed full filesystem monitoring
+- complete prevention of malicious agent behavior
+- a stronger guarantee than the registered surface/profile supports
+- universal pre-tool blocking
+- command, network, or secret observation by default
+- native artifact capture as an active guarantee
 
 ## 4. Capability-gated detective claims
 
