@@ -70,7 +70,8 @@ These documents are source material for a future Harness Server. They do not mea
 | Does the active MVP provide OS sandboxing? | [Security](security.md), [Runtime Boundaries](runtime-boundaries.md), [Active MVP Scope](active-mvp-scope.md) |
 | Which document owns cooperative, detective, preventive, and isolated guarantee wording? | [Security](security.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
 | Which document owns Product Repository, Harness Server, and Harness Runtime Home separation? | [Runtime Boundaries](runtime-boundaries.md) |
-| Which document owns local connector behavior and surface capability posture? | [Agent Integration](agent-integration.md), [MVP API](api/mvp-api.md), [Security](security.md) |
+| Which document owns local connector behavior, capability context, and verified surface boundaries? | [Agent Integration](agent-integration.md), [MVP API](api/mvp-api.md), [Security](security.md) |
+| Which document owns CLI, IDE/editor, chat, and local MCP usage recipes? | [Surface Recipes](../use/surface-recipes.md) |
 | Which document owns public security-related error mapping? | [API Errors](api/errors.md), [Security](security.md) |
 
 ## User judgment and close-readiness owners

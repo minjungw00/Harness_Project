@@ -157,12 +157,20 @@ docs:
       - surface_specific_usage_recipes
       - user_visible_surface_workflows
       - connector_recipe_routing
+      - cli_surface_recipe
+      - ide_editor_surface_recipe
+      - chat_surface_recipe
+      - local_mcp_surface_recipe
+      - surface_failure_reporting
     owns:
       - surface-specific usage recipes
       - user-visible steps for supported surfaces
       - practical recipe routing to connector owners
+      - failure and status summary patterns for named surfaces
     does_not_own:
       - connector contracts
+      - VerifiedSurfaceContext meaning
+      - connector conformance boundaries
       - API schemas
       - storage effects
       - security guarantee definitions
@@ -171,6 +179,7 @@ docs:
       - reference.agent-integration
       - reference.security
       - reference.api.mvp-api
+      - reference.api.errors
 
   - doc_id: build.mvp-plan
     status: active
@@ -821,17 +830,26 @@ docs:
     canonical_for:
       - agent_connector_reference
       - capability_profile_meaning
+      - verified_surface_context_boundary
+      - guarantee_display_gating
+      - connector_context_push_pull
       - connector_context_discipline
       - connector_fallback_semantics
+      - connector_conformance_boundary
       - mcp_unavailable_diagnostics
     owns:
       - agent connector reference
       - capability profile meaning
+      - VerifiedSurfaceContext connector boundary
+      - guarantee display gating from capability context
+      - context push/pull guidance
       - context discipline for connectors
       - connector fallback semantics
+      - connector conformance boundary
       - MCP availability diagnostic routing
     does_not_own:
-      - surface recipes
+      - CLI, IDE/editor, chat, or local MCP surface recipes
+      - surface failure and status summary recipes
       - Core state authority
       - API schemas
       - storage contracts
@@ -841,6 +859,8 @@ docs:
       - use.agent-guide
       - use.surface-recipes
       - reference.security
+      - reference.runtime-boundaries
+      - reference.api.mvp-api
       - reference.api.errors
 
   - doc_id: reference.projection-and-templates

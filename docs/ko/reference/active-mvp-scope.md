@@ -32,7 +32,7 @@ API 메서드 동작, 스키마 필드, 저장 효과, 보안 증명, 템플릿 
 | 범위 업데이트 | 활성 범위 업데이트 경로로 Task와 Change Unit 범위를 갱신할 수 있습니다. | [MVP API](api/mvp-api.md), [Core Model](core-model.md) |
 | 상태와 닫기 준비 상태 확인 | 생성된 상태 보기나 런타임 아티팩트를 만들지 않고 현재 상태, 증거 충분성, 알려진 차단 사유, 닫기 준비 상태를 읽을 수 있습니다. | [API 상태 스키마](api/schema-state.md), [오류](api/errors.md), [Projection과 템플릿](projection-and-templates.md) |
 | 쓰기 준비 승인 | `harness.prepare_write`는 호환되는 제품 파일 쓰기 시도에 대해 담당 범위의 1회용 `Write Authorization`을 만들 수 있습니다. | [MVP API](api/mvp-api.md), [저장 효과](storage-effects.md), [보안](security.md) |
-| 로컬 접점 등록 | 등록된 로컬 접점은 현재 범위 확인에 필요한 활성 접점과 지원 역량을 식별할 수 있습니다. | [에이전트 통합](agent-integration.md), [접점별 사용법](../use/surface-recipes.md), [보안](security.md) |
+| 로컬 접점 등록 | 등록된 로컬 접점은 현재 범위 확인에 필요한 활성 접점과 지원 역량을 식별할 수 있습니다. | [에이전트 통합](agent-integration.md), [접점별 사용 레시피](../use/surface-recipes.md), [보안](security.md) |
 | 아티팩트 스테이징 | 새 아티팩트 본문 바이트는 활성 스테이징 경로로만 현재 범위에 들어오고, 기존 아티팩트는 호환되는 지속 아티팩트 참조를 통해서만 연결됩니다. | [API 아티팩트 스키마](api/schema-artifacts.md), [아티팩트 저장소](storage-artifacts.md), [저장 효과](storage-effects.md) |
 | 실행 및 증거 기록 | 활성 작업의 Run과 간결한 증거 요약을 기록할 수 있으며, 아티팩트 담당 문서가 허용할 때 호환되는 아티팩트 승격이나 연결도 함께 다룰 수 있습니다. | [MVP API](api/mvp-api.md), [저장 효과](storage-effects.md), [Core Model](core-model.md) |
 | 집중된 사용자 판단 기록 | 활성 판단 경로로 사용자 소유 판단을 요청하고 기록할 수 있습니다. 판단 담당 문서가 허용하는 경우 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소도 여기에 포함됩니다. | [Core Model](core-model.md), [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md) |
@@ -86,7 +86,7 @@ API 메서드 동작, 스키마 필드, 저장 효과, 보안 증명, 템플릿 
 | 저장소 기록, 효과, 아티팩트 생명주기, 버전 관리, 잠금 | [저장소 기록](storage-records.md), [저장 효과](storage-effects.md), [아티팩트 저장소](storage-artifacts.md), [저장소 버전 관리](storage-versioning.md) |
 | 런타임, 저장소, 서버 경계 | [런타임 경계](runtime-boundaries.md) |
 | 보안 주장과 비보장 | [보안](security.md) |
-| 접점과 커넥터 동작 | [에이전트 통합](agent-integration.md), [접점별 사용법](../use/surface-recipes.md) |
+| 접점과 커넥터 동작 | [에이전트 통합](agent-integration.md), [접점별 사용 레시피](../use/surface-recipes.md) |
 | 상태 보기 권한과 템플릿 본문 | [Projection과 템플릿](projection-and-templates.md), [템플릿 본문](template-bodies.md) |
 | 이후 후보와 승격 경계 | [이후 후보 색인](../later/index.md) |
 | 제품 용어 | [용어집](glossary.md), [번역 가이드](../maintain/translation-guide.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |

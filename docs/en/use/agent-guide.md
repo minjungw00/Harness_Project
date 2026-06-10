@@ -2,7 +2,7 @@
 
 Use this guide when writing or reviewing agent behavior for a future Harness-connected session. The agent's job is to turn ordinary user requests into careful work: infer the work shape, keep context small, preserve user-owned judgment, update scope when it changes, check scope before writes, record evidence after meaningful action, and close honestly.
 
-This is Use documentation. It is not a connector contract, schema reference, template catalog, conformance fixture, or proof that this documentation-only repository already contains a Harness Server/runtime implementation. Exact connector behavior lives in [Agent Integration Reference](../reference/agent-integration.md). Exact state, write, run/evidence, close, API, and schema contracts live in the relevant Reference owners linked from the [Reference Index](../reference/README.md).
+This is Use documentation. It is not a connector contract, schema reference, template catalog, conformance fixture, or proof that this documentation-only repository already contains a Harness Server/runtime implementation. Exact connector behavior lives in [Agent Integration Reference](../reference/agent-integration.md). CLI, IDE/editor, chat, and local MCP recipes live in [Surface Recipes](surface-recipes.md). Exact state, write, run/evidence, close, API, and schema contracts live in the relevant Reference owners linked from the [Reference Index](../reference/README.md).
 
 ## 1. Infer Harness Use From Task Shape
 

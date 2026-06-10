@@ -70,7 +70,8 @@
 | 현재 MVP가 OS 수준 샌드박싱을 제공하나요? | [보안](security.md), [런타임 경계](runtime-boundaries.md), [현재 MVP 범위](active-mvp-scope.md) |
 | 협력형, 탐지형, 예방형, 격리형 보장 표현은 어디가 담당하나요? | [보안](security.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
 | Product Repository, Harness Server, Harness Runtime Home의 분리는 어디가 담당하나요? | [런타임 경계](runtime-boundaries.md) |
-| 로컬 커넥터 동작과 접점 역량 표현은 어디가 담당하나요? | [에이전트 통합](agent-integration.md), [MVP API](api/mvp-api.md), [보안](security.md) |
+| 로컬 커넥터 동작, 역량 맥락, 확인된 접점 경계는 어디가 담당하나요? | [에이전트 통합](agent-integration.md), [MVP API](api/mvp-api.md), [보안](security.md) |
+| CLI, IDE/editor, 채팅, 로컬 MCP 사용 레시피는 어디가 담당하나요? | [접점별 사용 레시피](../use/surface-recipes.md) |
 | 보안 관련 공개 오류 경로는 어디가 담당하나요? | [API 오류](api/errors.md), [보안](security.md) |
 
 ## 사용자 판단과 닫기 준비 상태 담당 문서

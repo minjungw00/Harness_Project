@@ -80,7 +80,7 @@
 | 접점 | 하네스가 쓰이거나 관찰되는 사용자, 에이전트, 도구, 커넥터 맥락입니다. | [에이전트 통합](agent-integration.md), [보안](security.md) |
 | `surface_id` | 접점 식별자입니다. 그 자체로 권한 증거가 아닙니다. | [에이전트 통합](agent-integration.md), [보안](security.md) |
 | `capability_profile` | 접점이 지원하는 역량을 설명하는 커넥터 담당 정보입니다. | [에이전트 통합](agent-integration.md) |
-| 접점별 사용법 | 이름 붙은 접점에서 쓰는 실무 안내입니다. | [접점별 사용법](../use/surface-recipes.md) |
+| 접점별 사용 레시피 | 이름 붙은 접점에서 쓰는 실무 안내입니다. | [접점별 사용 레시피](../use/surface-recipes.md) |
 
 ## 상태 보기와 템플릿 용어
 
