@@ -110,10 +110,10 @@ Runtime Home 파일은 로컬 운영 제어 데이터이고 민감한 지원 데
 만들지 않습니다.
 
 저장소는 데이터 구조와 영속 저장을 분리합니다. `CloseReadinessBlocker`는 close 가능성
-평가에서 쓰는 데이터 구조이지 저장 행, 이벤트, replay row 표시,
+평가에서 쓰는 데이터 구조이지 저장 행, 이벤트, 재실행 행 표시,
 `close_state` 변경, Write Authorization 신호, 아티팩트 또는 증거 효과, 상태 버전
 신호가 아닙니다. 응답에 `CloseReadinessBlocker[]`가 있다는 사실만으로
-`task_events`, replay row, `close_state` 변경, Write Authorization 변경,
+`task_events`, 재실행 행, `close_state` 변경, Write Authorization 변경,
 스테이징된 핸들 소비, 아티팩트 효과, 증거 업데이트, `project_state.state_version`
 증가가 생기지 않습니다. 상태/저장 효과는 응답 분기와 메서드 상태 효과 표가
 결정합니다.
@@ -797,7 +797,7 @@ API/저장소 계약이 명시적으로 허용한 차단 사유 상태, `task_ev
 값이 맞지 않으면 `STATE_VERSION_CONFLICT`를 `ToolRejectedResponse.errors`에만 담아
 반환합니다. 이 거절 응답은 `CloseReadinessBlocker`, 현재 기록, `task_event` 또는
 `task_events` 추가, 아티팩트, 증거 요약, Write Authorization 생성 또는 소비,
-`close_state` 변경, replay row, `project_state.state_version` 증가를 만들지 않습니다.
+`close_state` 변경, 재실행 행, `project_state.state_version` 증가를 만들지 않습니다.
 프로젝트 전체 상태 버전 불일치에 쓰는 현재 MVP의 유일한 공개 `ErrorCode`는
 `STATE_VERSION_CONFLICT`입니다. 이 불일치에 대해 다른 공개 코드, 별칭, 폐기된 표기,
 저장소 계층의 공개 오류 이름을 노출하지 않습니다. 현재 MVP의 공개 호출은 둘 이상의 공개

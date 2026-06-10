@@ -281,7 +281,7 @@ task_id: string | null
 
 `intent=cancel`과 `intent=supersede`는 성공 완료가 아닙니다. 이 intent의 차단 응답은 Task 식별자나 생명주기, 로컬 접근, 복구 제약, cancellation 충돌, supersession 유효성처럼 해당 종료 전이를 무효로 만드는 조건으로 제한합니다. 증거 충분성, 최종 수락, 잔여 위험 수락을 요구하면 안 되며, 그런 누락 조건을 cancellation이나 supersession의 차단 사유로 쓰면 안 됩니다.
 
-닫기에 영향을 주는 알려진 잔여 위험이 아직 보이지 않으면 `RESIDUAL_RISK_NOT_VISIBLE`를 사용합니다. 보이지만 수락되지 않은 닫기 관련 잔여 위험은 이 코드 아래 숨기지 않습니다. 잔여 위험 수락이 필요하면 닫기 차단 사유는 `category=residual_risk_acceptance`와 `required_judgment_kind=residual_risk_acceptance`를 사용하고, `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 반환합니다.
+닫기에 영향을 주는 알려진 잔여 위험이 아직 보이지 않으면 `RESIDUAL_RISK_NOT_VISIBLE`를 사용합니다. 보이지만 수락되지 않은 닫기 관련 잔여 위험은 이 코드 아래 숨기지 않습니다. 잔여 위험 수락이 필요하면 닫기 차단 사유는 `category=residual_risk_acceptance`와 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`를 사용하고, 다음 행동은 `judgment_kind=residual_risk_acceptance` 경로로 안내합니다.
 
 `PROJECTION_STALE`은 읽기용 보기 최신성 오류입니다. 그 자체로 활성 닫기 차단 사유 `category`가 아닙니다.
 

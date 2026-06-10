@@ -281,7 +281,7 @@ For `harness.close_task intent=complete`, close-readiness blockers are ordered b
 
 `intent=cancel` and `intent=supersede` are not successful completion. Their blocked responses are limited to the conditions that make that terminal transition invalid, such as task identity or lifecycle, local access, recovery constraints, cancellation conflict, and supersession validity. They must not require evidence sufficiency, final acceptance, or residual-risk acceptance and must not use those missing conditions as blockers for cancellation or supersession.
 
-Known close-relevant risk that has not been shown uses `RESIDUAL_RISK_NOT_VISIBLE`. Visible but unaccepted close-relevant risk is not hidden under that code: if residual-risk acceptance is required, the close blocker uses category `residual_risk_acceptance` and `required_judgment_kind=residual_risk_acceptance`, with `DECISION_REQUIRED` or `DECISION_UNRESOLVED`.
+Known close-relevant risk that has not been shown uses `RESIDUAL_RISK_NOT_VISIBLE`. Visible but unaccepted close-relevant risk is not hidden under that code: if residual-risk acceptance is required, the close blocker uses category `residual_risk_acceptance` with `DECISION_REQUIRED` or `DECISION_UNRESOLVED`, and the next action routes through `judgment_kind=residual_risk_acceptance`.
 
 `PROJECTION_STALE` is a readable-view freshness error, not an active close-blocker category by itself.
 

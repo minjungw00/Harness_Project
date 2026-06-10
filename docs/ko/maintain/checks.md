@@ -36,7 +36,7 @@
 - `harness.close_task intent=check`와 `dry_run=true`가 함께 있을 때 `task_events`, 재실행 행, 닫기 상태 변경, Write Authorization 변경, 스테이징된 핸들 소비, `state_version` 증가를 만든다고 쓰는 문구
 - `ToolRejectedResponse.errors` / `ToolError`, `PrepareWriteResult.write_decision_reasons` / `WriteDecisionReason`, `StatusResult.close_blockers`와 `CloseTaskResult.blockers` / `CloseReadinessBlocker`, `DryRunSummary.would_blockers` / `PlannedBlocker` 사이의 현재 MVP 타입 소유권을 흐리는 차단 사유형 스키마 문구
 - `CloseBlocker`를 활성 계약 타입으로 되살리는 문구
-- `CloseReadinessBlocker` 데이터 구조를 저장 행, 영속 저장 신호, 자동 상태 효과, 또는 `task_events`, `replay row`, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 효과, 증거 업데이트, `state_version` 증가의 원인처럼 설명하는 문구
+- `CloseReadinessBlocker` 데이터 구조를 저장 행, 영속 저장 신호, 자동 상태 효과, 또는 `task_events`, 재실행 행, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 효과, 증거 업데이트, `state_version` 증가의 원인처럼 설명하는 문구
 - `prepare_write`가 `CloseBlocker`를 재사용하거나, `CloseReadinessBlocker[]`를 요구하거나, `close_state`를 만들거나, close 가능성 평가를 실행하거나, close 가능성 평가의 닫기 차단 사유를 저장한다고 쓰는 문구
 - `DryRunSummary.would_blockers`가 `PlannedBlocker[]` 대신 `CloseReadinessBlocker[]` 또는 `CloseBlocker[]`를 요구한다고 쓰거나, 활성 미리보기 출처 값인 `source_kind=close_readiness`를 써야 하는 곳에 `source_kind=close_matrix`를 쓰는 문구
 - `STATE_VERSION_CONFLICT`라는 커밋 전 실패를 `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, 또는 `PlannedBlocker.code`로 다루는 문구
@@ -194,9 +194,9 @@ API 스키마, 메서드 응답 형태, 응답 예시, dry-run 문구, `prepare_
 현재 MVP 문서에 아래 문구가 보이면 실패입니다.
 
 - `CloseBlocker`를 활성 계약 타입, 공통 차단 사유, 범용 차단 타입, 공유 차단 타입, close 가능성 평가 타입, `close_task` 결과 타입, 또는 일반 오류 컨테이너로 되살립니다.
-- `CloseReadinessBlocker`를 저장 행, 영속 저장 신호, 자동 상태 효과, `replay row` 표시, `close_state` 변경 트리거, Write Authorization 신호, 아티팩트 효과, 증거 업데이트, `state_version` 신호처럼 설명합니다.
-- `StatusResult.close_blockers`가 `task_events`, `replay row`, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 효과, 증거 업데이트, `project_state.state_version` 증가를 만든다고 설명합니다.
-- `intent=check`에서 반환된 `CloseTaskResult`를 저장된 차단 사유나 커밋된 닫기 결과로 설명하거나, `replay row`, `task_events`, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 변경, 증거 업데이트, `project_state.state_version` 증가를 만든다고 설명합니다.
+- `CloseReadinessBlocker`를 저장 행, 영속 저장 신호, 자동 상태 효과, 재실행 행 표시, `close_state` 변경 트리거, Write Authorization 신호, 아티팩트 효과, 증거 업데이트, `state_version` 신호처럼 설명합니다.
+- `StatusResult.close_blockers`가 `task_events`, 재실행 행, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 효과, 증거 업데이트, `project_state.state_version` 증가를 만든다고 설명합니다.
+- `intent=check`에서 반환된 `CloseTaskResult`를 저장된 차단 사유나 커밋된 닫기 결과로 설명하거나, 재실행 행, `task_events`, `close_state` 변경, Write Authorization 변경, 스테이징된 핸들 소비, 아티팩트 변경, 증거 업데이트, `project_state.state_version` 증가를 만든다고 설명합니다.
 - `PrepareWriteResult`가 `CloseReadinessBlocker[]`를 요구하거나 반환한다고 설명합니다.
 - `PrepareWriteResult`가 `CloseBlocker`를 사용한다고 설명합니다.
 - `prepare_write` 판단 사유를 `CloseReadinessBlocker` 또는 `CloseBlocker`라고 설명합니다.
@@ -211,7 +211,7 @@ API 스키마, 메서드 응답 형태, 응답 예시, dry-run 문구, `prepare_
 
 `close_task` 설명, 응답 예시, 오류 목록, close 가능성 평가 문구, `write_compatibility` 문구, `recovery` 문구, 저장 효과, 스모크 예시, 작성 지침을 봅니다.
 
-`close_task`가 close 가능성 평가보다 먼저 사전 확인 거절을 정의하고, 사전 확인 거절이 `ToolRejectedResponse` 거절 응답을 반환하며, 의미적 close 가능성 평가 발견 사항은 유효한 close 가능성 평가 뒤에만 `CloseTaskResult(close_state=blocked)`로 반환되고 응답 branch와 메서드 상태 효과 표가 허용한 효과만 가진다고 쓰면 통과입니다. `intent=check`의 차단 사유는 응답에만 담기는 읽기 전용 평가 데이터이지 저장된 차단 사유나 커밋된 닫기 결과가 아니어야 합니다. `STATE_VERSION_CONFLICT`가 `ToolRejectedResponse` 사전 확인 오류로만 문서화되고, 오래된 `WriteAuthorization.basis_state_version`은 소비 전 거절이며, 다른 `request_hash`로 `idempotency_key`를 재사용한 경우는 기존 `replay row`를 보존하는 사전 확인 거절로 남아 있으면 통과입니다.
+`close_task`가 close 가능성 평가보다 먼저 사전 확인 거절을 정의하고, 사전 확인 거절이 `ToolRejectedResponse` 거절 응답을 반환하며, 의미적 close 가능성 평가 발견 사항은 유효한 close 가능성 평가 뒤에만 `CloseTaskResult(close_state=blocked)`로 반환되고 응답 branch와 메서드 상태 효과 표가 허용한 효과만 가진다고 쓰면 통과입니다. `intent=check`의 차단 사유는 응답에만 담기는 읽기 전용 평가 데이터이지 저장된 차단 사유나 커밋된 닫기 결과가 아니어야 합니다. `STATE_VERSION_CONFLICT`가 `ToolRejectedResponse` 사전 확인 오류로만 문서화되고, 오래된 `WriteAuthorization.basis_state_version`은 소비 전 거절이며, 다른 `request_hash`로 `idempotency_key`를 재사용한 경우는 기존 재실행 행을 보존하는 사전 확인 거절로 남아 있으면 통과입니다.
 
 현재 MVP 문서에 아래 문구가 보이면 실패입니다.
 
@@ -221,7 +221,7 @@ API 스키마, 메서드 응답 형태, 응답 예시, dry-run 문구, `prepare_
 - 오래된 `WriteAuthorization.basis_state_version`을 커밋된 `write_compatibility` 차단 사유로 설명합니다.
 - 다른 `request_hash`로 `idempotency_key`를 재사용한 경우를 `recovery` 차단 사유로 설명합니다.
 - `close_task intent=check` 차단 사유를 저장된 차단 사유나 커밋된 닫기 결과로 설명합니다.
-- 닫기 사전 확인 거절이 `CloseReadinessBlocker`, `CloseBlocker`, `task_event`, `task_events` 추가, `replay row`, `tool_invocations.response_json`, `close_state` 변경, Write Authorization 생성, Write Authorization 소비, 스테이징된 핸들 소비, 아티팩트 승격 또는 연결, 증거 업데이트, 또는 상태 버전 증가(`project_state.state_version` 증가)를 만든다고 설명합니다.
+- 닫기 사전 확인 거절이 `CloseReadinessBlocker`, `CloseBlocker`, `task_event`, `task_events` 추가, 재실행 행, `tool_invocations.response_json`, `close_state` 변경, Write Authorization 생성, Write Authorization 소비, 스테이징된 핸들 소비, 아티팩트 승격 또는 연결, 증거 업데이트, 또는 상태 버전 증가(`project_state.state_version` 증가)를 만든다고 설명합니다.
 - `ToolRejectedResponse`와 커밋된 닫기 차단 결과인 `CloseTaskResult`에 같은 상태 효과를 배정합니다.
 
 ## 20. 오래된 내용 점검
