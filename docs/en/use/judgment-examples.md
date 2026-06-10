@@ -1,204 +1,250 @@
 # Judgment Examples
 
-Use this compact catalog after the [User Guide](user-guide.md) when a task is blocked by a choice the agent should not make alone. It also includes one counterexample for details the agent may usually decide inside accepted scope. These examples show active judgment-request behavior and judgment-boundary guidance, not runtime records, generated evidence, acceptance records, or conformance outputs from this documentation repository.
+Use this compact catalog after the [User Guide](user-guide.md) when a task is blocked by a choice the agent should not make alone. The examples show judgment-boundary guidance for a future Harness-connected session. They are not runtime records, generated evidence, acceptance records, close records, or conformance outputs from this documentation repository.
 
-The active user path is focused: ask with `harness.request_user_judgment` when a choice blocks work, and record the answer with `harness.record_user_judgment` when the user answers. Users should not need a special label to answer ordinary prompts.
+Each example separates the user's decision from agent action, the Harness record, and the implication Harness must avoid. The examples are intentionally brief; contract details stay in the linked owner documents.
 
-Each judgment example asks for one judgment, names what the answer settles, and names what it does not settle. The implementation-detail example names why no `UserJudgment` is needed.
+## Product choice
 
-## 1. Product Choice
+User decides:
+- Which user-visible save feedback pattern to use: inline message, toast, or modal.
+- Whether the chosen behavior fits the product tone, flow, accessibility expectation, and user-facing trade-off.
 
-Kind: `product_decision`
+Agent may do:
+- Inspect the existing UI pattern and recommend the option that best fits current product behavior.
+- Explain consequences, such as a modal interrupting flow or a toast leaving the form unobstructed.
 
-Use when user-visible behavior, copy, flow, messages, UX, or accessibility trade-offs must be chosen before implementation or review can finish.
+Harness records:
+- The specific product choice and any user-stated basis for that choice.
+- The fact that this answer resolves only the named product decision.
 
-```text
-Judgment needed: choose the Save feedback pattern.
+Harness must not imply:
+- The agent inferred product intent from surrounding code without asking.
+- The product choice also grants final acceptance, residual-risk acceptance, sensitive-action approval, scope expansion, or write permission.
 
-Options:
-- Existing UI message layer near the saved form.
-- Toast that confirms the save without blocking the flow.
-- Modal that interrupts the flow.
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [API Judgment Schemas](../reference/api/schema-judgment.md)
 
-Decision basis: toast keeps success feedback non-blocking; the existing UI message layer fits messages tied to a field or error.
+## Technical choice
 
-If deferred: save-state wiring can continue, but final UI behavior, screenshots, and user-visible inspection remain blocked.
+User decides:
+- Which material technical direction to take when architecture, dependency, authentication, migration, security, privacy, retention, or compatibility is at stake.
+- Whether the cost and reversibility of the choice fit the task.
 
-Settles: Save feedback pattern.
-Does not settle: broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or `harness.prepare_write`.
-```
+Agent may do:
+- Inspect the current design and narrow the options to a recommendation with trade-offs.
+- Continue read-only investigation while the technical direction is unresolved.
 
-## 2. Technical Choice
+Harness records:
+- The named technical decision and its scope.
+- The fact that the decision does not settle separate product, scope, approval, acceptance, or residual-risk questions.
 
-Kind: `technical_decision`
+Harness must not imply:
+- The agent can turn a strong recommendation into user-owned technical judgment.
+- A technical choice approves dependency installation, product-file writes, or future migrations by itself.
 
-Use when architecture, dependency or external service introduction, authentication direction, migration, public interface, security, privacy, retention, or compatibility choices materially affect the work.
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [Agent Guide](agent-guide.md)
 
-```text
-Judgment needed: choose the login session direction.
+## Scope change
 
-Options:
-- Server-side session auth for first-party web login.
-- Token auth with a client-handled JWT or bearer token.
-- Social login through an OAuth/OIDC provider with a local session or token strategy.
+User decides:
+- Whether the task may expand beyond the accepted boundary, such as adding one named helper path outside `src/auth`.
+- Whether to keep the original scope, expand it narrowly, or convert the work to read-only investigation.
 
-Required basis before choosing: inspect the current auth model first. If this is a first-party web app without external identity-provider requirements, server-side session auth is likely the conservative default.
+Agent may do:
+- Name the exact path or behavior that appears necessary and explain why the current boundary blocks it.
+- Continue inspection inside accepted scope while writes outside scope remain blocked.
 
-Uncertainty: current clients, revocation needs, SSO requirements, deployment constraints, and migration cost.
+Harness records:
+- The user's scope decision and the exact added or rejected boundary.
+- Any remaining blocker if the task cannot proceed within the accepted scope.
 
-If deferred: current auth code can be inspected and a narrow slice can be proposed, but storage, token lifetime, middleware behavior, and provider integration should not be committed.
+Harness must not imply:
+- Scope expansion was inferred from implementation convenience.
+- Scope change also creates sensitive-action approval, final acceptance, residual-risk acceptance, or product-file write authorization.
 
-Settles: session architecture direction.
-Does not settle: failed-login UX, rate limits, audit logging, final acceptance, or dependency install approval.
-```
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [MVP API](../reference/api/mvp-api.md)
 
-## 3. Scope Choice
+## Sensitive approval
 
-Kind: `scope_decision`
+User decides:
+- Whether to permit one named sensitive action, such as a specific dependency install or destructive command.
+- The action's command/tool, intended paths, host, dependency or target, secret handle if any, and time window.
 
-Use when the next safe action would expand scope, remove a non-goal, or touch a path the user has excluded.
+Agent may do:
+- Present the smallest useful approval request and a no-sensitive-action fallback when one exists.
+- Stop or choose a safer path if the user denies or narrows the approval.
 
-```text
-Judgment needed: decide whether to expand scope beyond `src/auth`.
+Harness records:
+- The scoped sensitive-action approval, denial, or deferral.
+- The honest capability claim for what the active surface can observe or enforce.
 
-Observed: the fix appears to require a shared session helper in `src/session`.
+Harness must not imply:
+- Sensitive approval is OS permission, sandboxing, arbitrary-tool blocking, product-file write authorization, final acceptance, or residual-risk acceptance.
+- A broad "go ahead" approves unrelated installs, future upgrades, deploys, secret printing, or product decisions.
 
-Options:
-- Keep the original `src/auth` boundary and report the helper change as blocked.
-- Expand scope to include the named helper file in `src/session`.
-- Narrow this task to read-only investigation and return with a concrete follow-up.
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [API Judgment Schemas](../reference/api/schema-judgment.md)
+- [Security](../reference/security.md)
 
-Safe boundary if expanded: include only the named helper file when that change is required for the login fix and no unrelated session behavior changes.
+## Evidence sufficiency
 
-If deferred: inspection can continue, but product-file writes outside `src/auth` stay blocked.
+User decides:
+- Whether to add missing evidence, narrow the claim, keep the task open, or stop.
+- Which visible result the evidence should support when the claim is ambiguous.
 
-Settles: whether this task may include the named `src/session` helper path.
-Does not settle: login architecture, sensitive-action approval, final acceptance, residual-risk acceptance, or `harness.prepare_write`.
-```
+Agent may do:
+- Identify missing or stale evidence and explain what claim cannot be supported yet.
+- Attach or reference eligible artifacts only through the active owner path.
 
-## 4. Sensitive Action Approval
+Harness records:
+- Evidence references, supported or missing coverage, and evidence gaps from the owner path.
+- Close-relevant evidence blockers when required coverage is absent, stale, or unusable.
 
-Kind: `sensitive_approval`
+Harness must not imply:
+- Agent confidence, passing tests alone, a chat summary, or a user's broad approval proves evidence sufficiency.
+- Artifact availability by itself creates evidence, final acceptance, residual-risk acceptance, QA, or close readiness.
 
-Use when the user must permit one named sensitive action. Keep this separate from the technical decision to adopt the result.
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [API State Schemas](../reference/api/schema-state.md)
+- [Artifact Storage](../reference/storage-artifacts.md)
 
-```text
-Judgment needed: approve one dependency install/update action for this task.
+## Final acceptance
 
-Covered if approved:
-- Action: install or update one named dependency version.
-- Command/tool: run the named package-manager command only.
-- Intended paths: dependency manifest and lockfile only.
-- Hosts: the named package registry host only.
-- Dependencies: the named dependency and version only.
-- Secret handles: the named registry credential handle, or none.
-- Time window: this task and approval window only.
-- Scope limit: no future installs, upgrades, or broad package changes.
-- Explicitly not authorized: unrelated dependencies, production deploy, secret printing, broad network requests, or product behavior decisions.
-- Capability claim: record this as cooperative approval unless the active surface can honestly observe the exact action.
+User decides:
+- Whether the visible completed result is accepted.
+- Whether to reject the result, name required changes, or keep the task open for broader review.
 
-Options:
-- Approve this scoped install/update action.
-- Deny and continue with a no-new-dependency path if one exists.
-- Ask for a separate technical judgment before any install approval.
+Agent may do:
+- Present the completed scope, changed files or no-file outcome, checks, known gaps, and residual-risk visibility.
+- Ask for final acceptance only when the result basis is visible enough for the user to judge.
 
-Settles: permission for the named install/update action.
-Does not settle: whether the dependency is the right architecture, future installs, product-file Write Authorization for manifest or lockfile changes, product writes outside scope, evidence sufficiency, final acceptance, or residual-risk acceptance.
-```
+Harness records:
+- The final-acceptance answer for the named result.
+- The basis that was visible when the user accepted or rejected the result.
 
-## 5. Final Acceptance
+Harness must not imply:
+- "Looks good" is final acceptance unless that exact final-acceptance question was pending.
+- Final acceptance supplies missing evidence, accepts residual risk, expands scope, or accepts unrelated files.
 
-Kind: `final_acceptance`
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [API Judgment Schemas](../reference/api/schema-judgment.md)
 
-Use when the visible close basis is available and the user needs to accept the finished result.
+## Residual risk acceptance
 
-```text
-Judgment needed: accept the completed typo-only documentation edit.
+User decides:
+- Whether to accept one named visible residual risk, such as password reset remaining out of scope for a login slice.
+- Whether to reject the risk, add work to remove it, or narrow the close claim.
 
-Visible basis:
-- Scope: typo fixes only in the named file.
-- Evidence: diff review shows no wording, structure, terminology, or example changes.
-- Checks: link text and identifiers unchanged.
-- Known gaps: no broader editorial review was requested.
+Agent may do:
+- Explain the risk, affected area, consequence, and why it remains.
+- Offer alternatives that remove, reduce, or make the risk visible without accepting it.
 
-Options:
-- Accept the result.
-- Do not accept; name what should change.
-- Keep the task open for broader review.
+Harness records:
+- The user's answer for that specific residual risk.
+- The risk scope and consequence that were visible at the time of the answer.
 
-Settles: final acceptance of the typo-only result.
-Does not settle: residual risk, missing required evidence, scope expansion, future editorial work, or acceptance of unrelated files. A plain "looks good" counts only if this exact final-acceptance question was pending.
-```
+Harness must not imply:
+- Residual-risk acceptance is final acceptance, evidence sufficiency, verification, QA, or proof that no risk remains.
+- Acceptance of one risk accepts other risks or hides the risk from close reporting.
 
-## 6. Residual Risk Acceptance
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [API Judgment Schemas](../reference/api/schema-judgment.md)
 
-Kind: `residual_risk_acceptance`
+## Close readiness review
 
-Use when a named residual risk is visible and the active close path requires the user to accept or reject that risk.
+User decides:
+- Whether to ask for a close-readiness review, handle blockers, provide required final acceptance, or accept a named residual risk when asked.
+- Whether the task should remain open, narrow its claim, cancel, or proceed toward close.
 
-```text
-Judgment needed: accept the residual risk that password reset remains out of scope for this login slice.
+Agent may do:
+- Summarize changed scope, evidence, checks, known blockers, visible residual risk, and next safe action.
+- Ask only the missing judgment that changes close readiness.
 
-Risk: users who forget their password still cannot recover access through this change.
+Harness records:
+- Current close-readiness findings and close blockers from the owner path.
+- A close result only when the active close path permits it and required blockers are resolved.
 
-Evidence: scope and non-goals exclude password reset; the close claim covers sign-in for existing users with known credentials.
+Harness must not imply:
+- A status summary, passing checks, final acceptance alone, residual-risk acceptance alone, or chat text closes the task.
+- A read-only close-readiness review creates generated evidence, acceptance, residual-risk acceptance, or runtime state in this documentation repository.
 
-Options:
-- Accept this named residual risk and close with the risk visible.
-- Do not accept; keep close blocked until password reset is added or the close claim is narrowed.
-- Narrow the close claim to email/password sign-in only.
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [MVP API](../reference/api/mvp-api.md)
+- [API Errors](../reference/api/errors.md)
 
-Required basis for acceptance: accept only if this task was intentionally limited to the login slice and account recovery will be handled separately.
+## Cancellation or defer decision
 
-Settles: acceptance of this named residual risk.
-Does not settle: final acceptance of the whole result, other residual risks, or missing required evidence.
-```
+User decides:
+- Whether to cancel the current task, defer the blocking choice, or narrow the task to read-only investigation.
+- Whether stopping means no successful result or only a pause before later work.
 
-## 7. Cancellation Or Defer Decision
+Agent may do:
+- Preserve inspected facts and blockers without claiming implementation completion.
+- Return with a concrete follow-up when the work is narrowed or deferred.
 
-Kind: `cancellation` when stopping the task; otherwise no successful close judgment yet.
+Harness records:
+- The cancellation, deferral, or narrowed-task decision when the owner path allows it.
+- That no successful close judgment has been made unless a separate close path later succeeds.
 
-Use when the user decides to stop, pause, or defer instead of choosing an implementation path or accepting close.
+Harness must not imply:
+- Cancellation or deferral is product direction, technical direction, evidence sufficiency, final acceptance, residual-risk acceptance, or close readiness for a completed result.
 
-```text
-Judgment needed: cancel or defer the login task.
+Reference links:
+- [Core Model](../reference/core-model.md)
+- [MVP API](../reference/api/mvp-api.md)
 
-Options:
-- Cancel the task with no successful result.
-- Defer the technical choice and keep the task open.
-- Narrow the task to read-only investigation and return later.
+## Usually agent-owned implementation detail
 
-Safe boundary if deferred: defer rather than cancel only when the goal still matters but the architecture choice is not ready.
+User decides:
+- No new user judgment is needed when the detail stays inside accepted scope and acceptance criteria.
+- Prior accepted product, technical, and scope decisions remain the boundary.
 
-If deferred: the agent may keep notes on inspected facts and blockers, but must not claim implementation completion or final acceptance.
+Agent may do:
+- Choose ordinary local details such as a clearer variable name or the existing nearby test location.
+- Escalate only if the detail changes user-visible behavior, public interfaces, privacy/security behavior, dependencies, scope, sensitive action, acceptance, or residual risk.
 
-Settles: whether the current task stops, waits, or narrows.
-Does not settle: product direction, technical direction, sensitive-action approval, final acceptance, residual-risk acceptance, or close readiness for a completed result.
-```
+Harness records:
+- No new `UserJudgment` for ordinary implementation latitude.
+- Any later escalation only if the detail crosses a user-owned boundary.
 
-## 8. Usually Agent-Owned Implementation Detail
+Harness must not imply:
+- Every implementation detail needs a user decision.
+- Agent-owned latitude can change product behavior, scope, sensitive actions, acceptance, or residual risk without asking.
 
-Kind: usually no `UserJudgment` when already inside accepted scope.
+Reference links:
+- [Agent Guide](agent-guide.md)
+- [Core Model](../reference/core-model.md)
 
-Use this distinction when the detail follows accepted scope and acceptance criteria and does not change product behavior, technical direction, scope, sensitive-action need, final acceptance, or residual risk.
+## Design quality finding waiver
 
-```text
-No user judgment needed: choose a tiny local variable name while implementing the accepted login slice.
+User decides:
+- Whether to fix the design-quality finding, treat it as advisory, narrow scope, provide evidence, or route a named risk through an active residual-risk path.
+- The user does not decide an active design-quality waiver in the current MVP because that waiver route is not active.
 
-Known scope:
-- The user accepted the failed-login feedback pattern.
-- The user accepted the login authentication direction.
-- The affected file and behavior are already inside the accepted work boundary.
+Agent may do:
+- State the finding, the active owner path it affects, and the next safe action.
+- Route the issue to product judgment, scope change, evidence, residual-risk visibility, or no action when the active owners support that route.
 
-Agent-owned detail:
-- Rename `tmp` to `normalizedEmail` because it follows project style and clarifies an internal value.
-- Keep the test in the existing nearby test file because that is the local organization pattern.
+Harness records:
+- The active owner-path decision or blocker, if one exists.
+- No separate design-quality waiver record in the current MVP.
 
-Escalate instead if:
-- the naming or cleanup changes user-visible copy or behavior
-- the refactor changes public interfaces, auth direction, privacy/security/retention behavior, or compatibility
-- the work needs a new dependency, external service, migration, sensitive action, scope expansion, or costly-to-reverse technical choice
+Harness must not imply:
+- A design-quality finding creates its own active gate, validator family, close blocker category, waiver route, QA result, evidence record, acceptance record, or close authority.
+- A future design-policy waiver candidate can be used as an active MVP waiver.
 
-Settles: nothing in `UserJudgment`; this is ordinary agent implementation latitude.
-Does not settle: product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, or residual-risk acceptance.
-```
+Reference links:
+- [Design Quality](../reference/design-quality.md)
+- [Core Model](../reference/core-model.md)
+- [Later Candidate Index](../later/index.md)
