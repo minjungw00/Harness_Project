@@ -1,8 +1,8 @@
 # Harness documentation / 하네스 문서
 
-This directory is the active bilingual documentation set for Harness planning. It routes readers and agents to the right owner documents; it is not a contract reference, runtime state, generated output, or implementation record.
+This directory is the active bilingual documentation router for Harness planning. Use it to choose a language and a first reading path. Contract details stay in the owner documents.
 
-이 디렉터리는 하네스 계획을 위한 현재 한영 문서 세트입니다. 이 문서는 사람과 에이전트가 알맞은 담당 문서를 찾도록 안내합니다. 계약 참조 문서, 런타임 상태, 생성 결과, 구현 기록이 아닙니다.
+이 디렉터리는 하네스 계획 문서의 현재 한영 경로 안내입니다. 언어와 첫 읽기 경로를 고르는 데 사용합니다. 계약 세부사항은 담당 문서에서 확인합니다.
 
 ## Choose a language / 언어 선택
 
@@ -13,26 +13,38 @@ English and Korean are both active documentation languages. Choose the language 
 - English: [`docs/en/start.md`](en/start.md)
 - 한국어: [`docs/ko/start.md`](ko/start.md)
 
-## Choose a reading path / 읽기 경로 선택
+## English reading paths
 
-| Reader / 독자 | English path | Korean path |
-|---|---|---|
-| New user / 처음 읽는 사용자 | [`start.md`](en/start.md) -> [`user-guide.md`](en/use/user-guide.md) | [`start.md`](ko/start.md) -> [`user-guide.md`](ko/use/user-guide.md) |
-| Working user / 작업 중인 사용자 | [`user-guide.md`](en/use/user-guide.md) -> [`judgment-examples.md`](en/use/judgment-examples.md) -> [`active-mvp-scope.md`](en/reference/active-mvp-scope.md) | [`user-guide.md`](ko/use/user-guide.md) -> [`judgment-examples.md`](ko/use/judgment-examples.md) -> [`active-mvp-scope.md`](ko/reference/active-mvp-scope.md) |
-| Agent author/operator / 에이전트 작성자·운영자 | [`AGENTS.md`](../AGENTS.md) -> [`doc-index.yaml`](doc-index.yaml) -> [`agent-guide.md`](en/use/agent-guide.md) -> [`agent-integration.md`](en/reference/agent-integration.md) | [`AGENTS.md`](../AGENTS.md) -> [`doc-index.yaml`](doc-index.yaml) -> [`agent-guide.md`](ko/use/agent-guide.md) -> [`agent-integration.md`](ko/reference/agent-integration.md) |
-| Implementer / 구현 담당자 | [`reference/README.md`](en/reference/README.md) -> active scope -> API methods -> schema owners -> storage effects | [`reference/README.md`](ko/reference/README.md) -> 현재 MVP 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
-| Maintainer / 유지보수자 | [`authoring-guide.md`](en/maintain/authoring-guide.md) -> translation guide -> checks -> doc-index -> terminology map | [`authoring-guide.md`](ko/maintain/authoring-guide.md) -> 번역 가이드 -> 점검 -> doc-index -> 용어 지도 |
+Use these routes for first-hop navigation. Follow the linked pages to the exact owner when you need more detail.
+
+- New user: [`docs/en/start.md`](en/start.md) -> [`docs/en/use/user-guide.md`](en/use/user-guide.md)
+- Working user: [`docs/en/use/user-guide.md`](en/use/user-guide.md) -> [`docs/en/reference/active-mvp-scope.md`](en/reference/active-mvp-scope.md)
+- Agent behavior: [`docs/en/use/agent-guide.md`](en/use/agent-guide.md) -> [`docs/doc-index.yaml`](doc-index.yaml)
+- Technical contract: [`docs/en/reference/README.md`](en/reference/README.md) -> [`docs/doc-index.yaml`](doc-index.yaml)
+- Maintenance: [`docs/en/maintain/authoring-guide.md`](en/maintain/authoring-guide.md) -> [`docs/en/maintain/translation-guide.md`](en/maintain/translation-guide.md) -> [`docs/terminology-map.yaml`](terminology-map.yaml)
+- Current scope: [`docs/en/reference/active-mvp-scope.md`](en/reference/active-mvp-scope.md)
+
+## 한국어 읽기 경로
+
+아래 경로는 처음 이동할 문서를 고르는 안내입니다. 더 자세한 기준이 필요하면 연결된 문서에서 담당 문서로 이동합니다.
+
+- 처음 읽는 사용자: [`docs/ko/start.md`](ko/start.md) -> [`docs/ko/use/user-guide.md`](ko/use/user-guide.md)
+- 작업 중인 사용자: [`docs/ko/use/user-guide.md`](ko/use/user-guide.md) -> [`docs/ko/reference/active-mvp-scope.md`](ko/reference/active-mvp-scope.md)
+- 에이전트 동작: [`docs/ko/use/agent-guide.md`](ko/use/agent-guide.md) -> [`docs/doc-index.yaml`](doc-index.yaml)
+- 기술 계약: [`docs/ko/reference/README.md`](ko/reference/README.md) -> [`docs/doc-index.yaml`](doc-index.yaml)
+- 유지보수: [`docs/ko/maintain/authoring-guide.md`](ko/maintain/authoring-guide.md) -> [`docs/ko/maintain/translation-guide.md`](ko/maintain/translation-guide.md) -> [`docs/terminology-map.yaml`](terminology-map.yaml)
+- 현재 범위: [`docs/ko/reference/active-mvp-scope.md`](ko/reference/active-mvp-scope.md)
 
 ## Reference owner routing / 참조 담당 문서 찾기
 
-Use the reference README to find the canonical owner for API, schema, storage, security, scope, and other contract details. This router intentionally does not repeat those contracts.
+Use the reference README to find owners for API, schema, storage, security, scope, and other contract areas. Use `docs/doc-index.yaml` when an agent or maintainer needs stable `doc_id` routing. This README intentionally does not repeat API schemas, storage effects, active MVP details, or security contracts.
 
-API, 스키마, 저장소, 보안, 범위, 그 밖의 계약 세부사항은 참조 README에서 담당 문서를 찾아 읽습니다. 이 안내 문서는 그런 계약 내용을 반복하지 않습니다.
+API, 스키마, 저장소, 보안, 범위, 그 밖의 계약 영역은 참조 README에서 담당 문서를 찾아 읽습니다. 에이전트나 유지보수자가 안정적인 `doc_id` 경로가 필요할 때는 `docs/doc-index.yaml`을 사용합니다. 이 README는 API 스키마, 저장 효과, 현재 MVP 세부사항, 보안 계약을 반복하지 않습니다.
 
 - English reference index: [`docs/en/reference/README.md`](en/reference/README.md)
 - Korean reference index: [`docs/ko/reference/README.md`](ko/reference/README.md)
-- Active MVP scope: [`docs/en/reference/active-mvp-scope.md`](en/reference/active-mvp-scope.md), [`docs/ko/reference/active-mvp-scope.md`](ko/reference/active-mvp-scope.md)
-- LLM owner routing metadata: [`docs/doc-index.yaml`](doc-index.yaml)
+- Current MVP scope route: [`docs/en/reference/active-mvp-scope.md`](en/reference/active-mvp-scope.md), [`docs/ko/reference/active-mvp-scope.md`](ko/reference/active-mvp-scope.md)
+- Owner routing metadata: [`docs/doc-index.yaml`](doc-index.yaml)
 - Bilingual terminology controls: [`docs/terminology-map.yaml`](terminology-map.yaml)
 
 ## Maintenance documents / 유지보수 문서
@@ -46,9 +58,10 @@ Use maintain documents for documentation editing rules, bilingual practice, and 
 - English translation guide: [`docs/en/maintain/translation-guide.md`](en/maintain/translation-guide.md)
 - Korean translation guide: [`docs/ko/maintain/translation-guide.md`](ko/maintain/translation-guide.md)
 - Documentation checks: [`docs/en/maintain/checks.md`](en/maintain/checks.md), [`docs/ko/maintain/checks.md`](ko/maintain/checks.md)
+- Terminology map: [`docs/terminology-map.yaml`](terminology-map.yaml)
 
 ## Agent retrieval rule / 에이전트 검색 규칙
 
-Agents should read only one language version of the same `doc_id` unless they are checking translation parity. Use [`docs/doc-index.yaml`](doc-index.yaml) to choose the owner route before loading reference content.
+Agents should use [`docs/doc-index.yaml`](doc-index.yaml) before loading reference content. Read only one language version of the same `doc_id` unless checking translation parity.
 
-에이전트는 번역 의미 일치를 확인하는 경우가 아니라면 같은 `doc_id`의 한 언어 버전만 읽어야 합니다. 참조 내용을 불러오기 전에 [`docs/doc-index.yaml`](doc-index.yaml)에서 담당 경로를 먼저 고릅니다.
+에이전트는 참조 내용을 불러오기 전에 [`docs/doc-index.yaml`](doc-index.yaml)에서 담당 경로를 먼저 고릅니다. 번역 의미 일치를 확인하는 경우가 아니라면 같은 `doc_id`의 한 언어 버전만 읽습니다.
