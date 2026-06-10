@@ -2,6 +2,10 @@
 
 Use this guide when editing English and Korean Harness documentation together. It is a living bilingual editing guide, not a history of the redesign and not a runtime conformance or implementation-readiness record.
 
+## Terminology Control File
+
+[docs/terminology-map.yaml](../../terminology-map.yaml) is the canonical machine-readable terminology control file. Use it before adding or changing bilingual terms; it records recommended English/Korean prose terms, identifiers to preserve, and mixed-language Korean expressions to avoid.
+
 ## 1. Semantic Parity, Not Line Parity
 
 English and Korean docs are both active. Neither language is an archive, appendix, or translation-only copy. The paired docs share one meaning, and the edit should leave both languages aligned.
@@ -68,7 +72,10 @@ Use one Korean expression consistently for one concept. Schema fields, method na
 | semantic parity | 의미 일치 |
 | not line parity | 줄 단위 번역 아님 |
 | no duplicate agent injection | 에이전트 중복 주입 금지 |
+| documentation-only | 문서 전용 |
 | owner document | 담당 문서 |
+| active MVP | 현재 MVP |
+| later candidate | 이후 후보 |
 | current MVP | 현재 MVP |
 | profile-gated value | profile-gated 값 |
 | active/later boundary | active/later 경계 |
@@ -87,17 +94,29 @@ Use one Korean expression consistently for one concept. Schema fields, method na
 | final acceptance | 최종 수락 |
 | residual risk | 잔여 위험 |
 | residual risk acceptance | 잔여 위험 수락 |
-| close readiness | 닫기 가능 여부 또는 닫기 준비 상태 |
-| close blocker in user-facing display | 닫기를 막는 이유 |
+| blocker | 차단 사유 |
+| close readiness in reference-facing prose | 닫기 준비 상태 |
+| close readiness in user-facing prose | 닫기 가능 여부 |
+| close readiness evaluation | 닫기 준비 상태 평가 |
+| close blocker | 닫기 차단 사유 |
 | `lifecycle_phase` in user-facing display | 현재 단계 |
 | Autonomy Boundary in user-facing display | 에이전트가 스스로 판단해도 되는 범위 |
 | `guarantee_level` in user-facing display | 하네스가 확인할 수 있는 수준 |
 | Change Unit in user-facing display | 이번에 바꿀 가장 작은 작업 단위 |
 | EvidenceSummary in user-facing display | 확인 근거 요약 또는 확인한 것 |
 | next safe action | 다음 안전한 행동 |
-| derived view or projection in user prose | 상태 보기, 요약, 또는 상태 카드 |
+| artifact | 아티팩트 |
+| projection in user-facing prose | 상태 보기 |
+| Projection on first reference in reference prose | `Projection`(읽기 전용 상태 보기) |
+| surface | 접점 |
+| runtime | 런타임 |
+| lifecycle | 생명주기 |
 | pre-write scope check | 쓰기 전 범위 확인 |
+| sensitive approval | 민감 동작 승인 |
 | sensitive-action approval | 민감 동작 승인 |
+| write authorization in prose | 쓰기 권한 부여 |
+| Write Authorization label | `Write Authorization` |
+| access class | 접근 등급 |
 | verified surface context | 확인된 접점 맥락 |
 | local surface registration | 로컬 접점 등록 |
 | sensitive action scope | 민감 동작 범위 |
@@ -111,6 +130,7 @@ Use one Korean expression consistently for one concept. Schema fields, method na
 | evidence coverage item | 증거 범위 항목 |
 | cooperative guarantee | 협력형 보장 |
 | detective guarantee | 탐지형 보장 |
+| preventive guarantee | 예방형 보장 |
 | surface identifier in user prose | 접점 식별자. 권한 증거처럼 쓰지 않음 |
 | Discovery Brief as a persistent artifact | 영속 아티팩트로서의 Discovery Brief |
 | Question Queue | 질문 큐 |
@@ -121,6 +141,8 @@ Use one Korean expression consistently for one concept. Schema fields, method na
 | native artifact capture | 접점 자체 아티팩트 캡처 |
 | task-scoped state clock | Task 범위 상태 시계 |
 | `captured_artifact` | `captured_artifact` 값 이름. 산문에서는 이후 전용 캡처된 아티팩트 값이라고 설명 |
+
+Avoid mixed Korean/English phrasing that the terminology map rejects: "close 가능성 평가", "닫기 가능성 평가", "artifact 저장", "artifact bytes", "staged handle", "checksum, size 검증", "ToolEnvelope 봉투", and "lifecycle 의미".
 
 Use `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, and `task_events` only when the exact Harness label helps the reader follow an internal blocker, record, API, template, or owner route. In user-facing cards and examples, prefer the plain display wording above.
 
@@ -148,6 +170,7 @@ Common examples:
 | `prepare_write` | 쓰기 전 범위 확인을 다루는 API/action identifier |
 | `record_run` | 실행/확인 기록 API/action identifier |
 | `close_task` | 닫기 확인 API/action identifier |
+| `CloseReadinessBlocker` | 닫기 차단 사유 스키마 |
 | `ArtifactRef` | 아티팩트 참조 스키마 |
 | `ArtifactInput` | 아티팩트 입력 스키마 |
 | `StagedArtifactHandle` | 스테이징된 아티팩트 핸들 |

@@ -2,6 +2,10 @@
 
 영어와 한국어 하네스 문서를 함께 고칠 때 이 번역 가이드를 사용합니다. 이 문서는 살아 있는 이중 언어 편집 규칙입니다. 재설계 이력도 아니고, 런타임 적합성이나 구현 준비 상태 기록도 아닙니다.
 
+## 용어 통제 파일
+
+[docs/terminology-map.yaml](../../terminology-map.yaml)은 기준 기계 판독 용어 통제 파일입니다. 한영 용어를 추가하거나 바꾸기 전에 이 파일을 확인합니다. 이 파일은 권장 영어/한국어 산문 용어, 보존할 식별자, 피해야 할 한국어 혼합 표현을 기록합니다.
+
 ## 1. 의미 일치, 줄 단위 번역 아님
 
 영어와 한국어 문서는 모두 활성 문서입니다. 어느 한쪽도 보관본, 부록, 번역 전용 사본이 아닙니다. 대응 문서는 하나의 의미를 공유해야 하며, 편집 뒤에는 양쪽 언어가 같은 뜻으로 정렬되어 있어야 합니다.
@@ -14,7 +18,7 @@
 
 README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-index.yaml](../../doc-index.yaml)만 가리켜야 합니다. 깊은 담당 문서 경로를 경로 표에 직접 추가하지 말고 [참조 색인](../reference/README.md)에서 정확한 계약 담당 문서를 고릅니다.
 
-에이전트는 일반 작업에서 하나의 `doc_id`에 한 언어만 불러옵니다. 번역이나 의미 일치 검토에 비교가 꼭 필요할 때만 두 언어를 함께 봅니다. 프롬프트에는 현재 작업, 담당 문서의 필요한 부분, 범위와 범위 밖, 사용자 판단 대기 사항, 차단 사유, 다음 안전한 행동, 증거 공백, 닫기를 막는 이유, 잔여 위험, 하네스가 확인할 수 있는 수준, 출처 최신성만 작게 둡니다.
+에이전트는 일반 작업에서 하나의 `doc_id`에 한 언어만 불러옵니다. 번역이나 의미 일치 검토에 비교가 꼭 필요할 때만 두 언어를 함께 봅니다. 프롬프트에는 현재 작업, 담당 문서의 필요한 부분, 범위와 범위 밖, 사용자 판단 대기 사항, 차단 사유, 다음 안전한 행동, 증거 공백, 닫기 차단 사유, 잔여 위험, 하네스가 확인할 수 있는 수준, 출처 최신성만 작게 둡니다.
 
 ## 3. 보존할 정확한 식별자
 
@@ -68,7 +72,10 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | semantic parity | 의미 일치 |
 | not line parity | 줄 단위 번역 아님 |
 | no duplicate agent injection | 에이전트 중복 주입 금지 |
+| documentation-only | 문서 전용 |
 | owner document | 담당 문서 |
+| active MVP | 현재 MVP |
+| later candidate | 이후 후보 |
 | current MVP | 현재 MVP |
 | profile-gated value | profile-gated 값 |
 | active/later boundary | active/later 경계 |
@@ -87,17 +94,29 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | final acceptance | 최종 수락 |
 | residual risk | 잔여 위험 |
 | residual risk acceptance | 잔여 위험 수락 |
-| close readiness | 닫기 준비 상태 |
-| close blocker in user-facing display | 닫기를 막는 이유 |
+| blocker | 차단 사유 |
+| close readiness in reference-facing prose | 닫기 준비 상태 |
+| close readiness in user-facing prose | 닫기 가능 여부 |
+| close readiness evaluation | 닫기 준비 상태 평가 |
+| close blocker | 닫기 차단 사유 |
 | `lifecycle_phase` in user-facing display | 현재 단계 |
 | Autonomy Boundary in user-facing display | 에이전트가 스스로 판단해도 되는 범위 |
 | `guarantee_level` in user-facing display | 하네스가 확인할 수 있는 수준 |
 | Change Unit in user-facing display | 이번에 바꿀 가장 작은 작업 단위 |
 | EvidenceSummary in user-facing display | 확인 근거 요약 또는 확인한 것 |
 | next safe action | 다음 안전한 행동 |
-| derived view or projection in user prose | 상태 보기, 요약, 상태 카드 |
+| artifact | 아티팩트 |
+| projection in user-facing prose | 상태 보기 |
+| Projection on first reference in reference prose | `Projection`(읽기 전용 상태 보기) |
+| surface | 접점 |
+| runtime | 런타임 |
+| lifecycle | 생명주기 |
 | pre-write scope check | 쓰기 전 범위 확인 |
+| sensitive approval | 민감 동작 승인 |
 | sensitive-action approval | 민감 동작 승인 |
+| write authorization in prose | 쓰기 권한 부여 |
+| Write Authorization label | `Write Authorization` |
+| access class | 접근 등급 |
 | verified surface context | 확인된 접점 맥락 |
 | local surface registration | 로컬 접점 등록 |
 | sensitive action scope | 민감 동작 범위 |
@@ -111,6 +130,7 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | evidence coverage item | 증거 범위 항목 |
 | cooperative guarantee | 협력형 보장 |
 | detective guarantee | 탐지형 보장 |
+| preventive guarantee | 예방형 보장 |
 | surface identifier in user prose | 접점 식별자. 권한 증거처럼 쓰지 않음 |
 | Discovery Brief as a persistent artifact | 영속 아티팩트로서의 Discovery Brief |
 | Question Queue | 질문 큐 |
@@ -121,6 +141,8 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | native artifact capture | 접점 자체 아티팩트 캡처 |
 | task-scoped state clock | Task 범위 상태 시계 |
 | `captured_artifact` | `captured_artifact` 값 이름. 산문에서는 이후 전용 캡처된 아티팩트 값이라고 설명 |
+
+용어 지도에서 금지한 혼합 표현은 쓰지 않습니다. 예: "close 가능성 평가", "닫기 가능성 평가", "artifact 저장", "artifact bytes", "staged handle", "checksum, size 검증", "ToolEnvelope 봉투", "lifecycle 의미".
 
 `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, `task_events`는 정확한 하네스 라벨이 내부 차단 사유, 기록, API, 템플릿, 담당 문서 경로를 이해하는 데 도움이 될 때만 씁니다. 사용자용 카드와 예시에는 위의 평이한 표시 문구를 우선합니다.
 
@@ -148,6 +170,7 @@ README와 유지보수 문서의 경로 표는 현재 간결 구조와 [doc-inde
 | `prepare_write` | 쓰기 전 범위 확인을 다루는 API/동작 식별자 |
 | `record_run` | 실행/확인 기록 API/동작 식별자 |
 | `close_task` | 닫기 확인 API/동작 식별자 |
+| `CloseReadinessBlocker` | 닫기 차단 사유 스키마 |
 | `ArtifactRef` | 아티팩트 참조 스키마 |
 | `ArtifactInput` | 아티팩트 입력 스키마 |
 | `StagedArtifactHandle` | 스테이징된 아티팩트 핸들 |

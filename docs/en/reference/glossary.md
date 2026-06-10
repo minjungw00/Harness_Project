@@ -25,6 +25,7 @@ This document does not own:
 | Harness | Planned local work-authority server for AI-assisted product work. | [Active MVP Scope](active-mvp-scope.md), [Runtime Boundaries](runtime-boundaries.md) |
 | Product Repository | The user's project workspace. Product files are not Harness runtime state. | [Runtime Boundaries](runtime-boundaries.md) |
 | Harness Runtime Home | Future operational data space for Harness records and artifacts. This documentation repo is not one. | [Runtime Boundaries](runtime-boundaries.md), storage owners |
+| documentation-only | The current repository and edit scope are documentation work only; they do not authorize runtime implementation or generated runtime records. | [Authoring Guide](../maintain/authoring-guide.md) |
 | current MVP | The active product scope boundary for the first planned local work loop. | [Active MVP Scope](active-mvp-scope.md) |
 | later candidate | Deferred material that is not active until an owner promotes it. | [Later Candidate Index](../later/index.md) |
 
@@ -38,6 +39,9 @@ This document does not own:
 | final acceptance | User judgment that accepts a result when the owner path requires it. | [Core Model](core-model.md) |
 | residual-risk acceptance | User judgment that accepts a visible residual risk when required. | [Core Model](core-model.md) |
 | close readiness | Whether the current work can be closed honestly, including remaining blockers. | [Core Model](core-model.md), [API State Schemas](api/schema-state.md) |
+| close readiness evaluation | The check that derives close readiness and any remaining close blockers. | [Core Model](core-model.md), [API State Schemas](api/schema-state.md) |
+| close blocker | A reason the work cannot be closed honestly until the owner path addresses it. | [Core Model](core-model.md), [API State Schemas](api/schema-state.md) |
+| blocker | A general reason work cannot proceed or close; use close blocker when the reason comes from close readiness. | Owner for the blocked concept |
 
 ## API And Schema Terms
 
@@ -48,7 +52,10 @@ This document does not own:
 | `ErrorCode` | Public API error identity. | [API Errors](api/errors.md) |
 | `StateSummary` | API state-shaped summary. | [API State Schemas](api/schema-state.md) |
 | `UserJudgment` | API shape for user-owned judgment records or candidates. | [API Judgment Schemas](api/schema-judgment.md) |
+| `CloseReadinessBlocker` | API schema identifier for a close blocker. | [API State Schemas](api/schema-state.md) |
 | `ArtifactRef` | Public pointer to a persisted artifact. | [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md) |
+| `ArtifactInput` | API schema identifier for an artifact input. | [API Artifact Schemas](api/schema-artifacts.md) |
+| `StagedArtifactHandle` | API schema identifier for a staged artifact handle. | [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md) |
 | API value set | Canonical list of active enum-like API values. | [API Value Sets](api/schema-value-sets.md) |
 
 ## Storage Terms
@@ -57,6 +64,7 @@ This document does not own:
 |---|---|---|
 | storage record | Future persisted Harness record shape. | [Storage Records](storage-records.md) |
 | storage effect | Whether a method branch changes storage or has no effect. | [Storage Effects](storage-effects.md) |
+| artifact | Harness-associated material tracked through the artifact owners; exact storage behavior belongs to artifact contracts. | [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md) |
 | artifact storage lifecycle | Staging, promotion, persistent linking, body-read eligibility, retention, and integrity. | [Artifact Storage](storage-artifacts.md) |
 | state versioning | Public state clock, idempotency, locks, and migration semantics. | [Storage Versioning](storage-versioning.md) |
 
@@ -66,6 +74,10 @@ This document does not own:
 |---|---|---|
 | cooperative guarantee | Harness can guide, record, compare, or refuse owner-defined Harness state-changing paths when the surface follows the procedure. | [Security](security.md) |
 | detective guarantee | Harness can report supported observable facts only after the relevant capability check has passed. | [Security](security.md), [Agent Integration](agent-integration.md) |
+| preventive guarantee | Harness can prevent an action only when the exact preventive mechanism and proof path are documented. | [Security](security.md) |
+| write authorization | Named authorization for product-file write scope; not the same as sensitive-action approval. | [Security](security.md), [Core Model](core-model.md) |
+| access class | Classification used by owners to describe access expectations or boundaries. | [Security](security.md), [Agent Integration](agent-integration.md) |
+| surface | A user, agent, tool, or connector context where Harness is used or observed. | [Agent Integration](agent-integration.md), [Security](security.md) |
 | `surface_id` | Surface identifier, not proof of authority by itself. | [Agent Integration](agent-integration.md), [Security](security.md) |
 | `capability_profile` | Connector-owned description of supported surface capabilities. | [Agent Integration](agent-integration.md) |
 | surface recipe | Practical usage guidance for a named surface. | [Surface Recipes](../use/surface-recipes.md) |
@@ -78,6 +90,6 @@ This document does not own:
 | rendered label | User-visible display text, not a canonical schema value. | [Projection And Templates](projection-and-templates.md), [Template Bodies](template-bodies.md) |
 | template body | Exact rendered text owned separately from projection authority. | [Template Bodies](template-bodies.md) |
 
-## Translation Owners
+## Terminology Control
 
-Korean terminology policy is shared with [Translation Guide](../maintain/translation-guide.md) and [docs/terminology-map.yaml](../../terminology-map.yaml). Exact identifiers remain unchanged across languages.
+[docs/terminology-map.yaml](../../terminology-map.yaml) is the canonical machine-readable terminology control file for bilingual term choices, identifier preservation, and mixed-language expressions to avoid. This glossary explains reader-facing meaning; keep it aligned with the map when terminology changes.

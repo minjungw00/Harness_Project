@@ -1,54 +1,225 @@
+version: 1
 title: "Terminology Map"
 documentation_metadata_only: true
 runtime_config: false
-owns:
-  - "Stable English/Korean term mappings used across Harness documentation."
-  - "Cross-language terminology notes that support semantic parity."
-  - "Search-friendly canonical term keys for documentation maintenance."
+canonical_for:
+  - "Recommended English and Korean terminology for Harness documentation."
+  - "Identifier preservation rules for bilingual documentation."
+  - "Mixed-language Korean expressions to avoid during human or LLM editing."
 does_not_own:
   - "Product, API, storage, security, projection, or runtime contracts."
   - "Rendered UI copy when an exact template body owner defines the wording."
   - "Runtime localization configuration."
 related_owners:
   glossary:
-    en: docs/en/reference/glossary.md
-    ko: docs/ko/reference/glossary.md
+    en: "docs/en/reference/glossary.md"
+    ko: "docs/ko/reference/glossary.md"
   translation_guide:
-    en: docs/en/maintain/translation-guide.md
-    ko: docs/ko/maintain/translation-guide.md
-  template_bodies:
-    en: docs/en/reference/template-bodies.md
-    ko: docs/ko/reference/template-bodies.md
+    en: "docs/en/maintain/translation-guide.md"
+    ko: "docs/ko/maintain/translation-guide.md"
+identifier_preservation:
+  rule: "Preserve exact identifiers unchanged in English and Korean. Use backticks in prose when the value is code-like, schema-like, or a product label that must be searched exactly."
+  identifiers:
+    - "CloseReadinessBlocker"
+    - "ArtifactRef"
+    - "ArtifactInput"
+    - "StagedArtifactHandle"
+    - "ProjectionKind"
+    - "ToolEnvelope"
+    - "SensitiveActionScope"
+    - "AuthorizedAttemptScope"
+    - "surface_id"
+    - "state_version"
+  product_labels:
+    - "Projection"
+    - "Write Authorization"
+    - "Evidence Manifest"
+    - "Decision Packet"
+avoid:
+  ko:
+    - phrase: "close 가능성 평가"
+      use: "닫기 준비 상태 평가"
+    - phrase: "닫기 가능성 평가"
+      use: "닫기 준비 상태 평가"
+    - phrase: "artifact 저장"
+      use: "아티팩트 저장소, 또는 동작을 뜻할 때는 아티팩트를 저장"
+    - phrase: "artifact bytes"
+      use: "아티팩트 본문 바이트"
+    - phrase: "staged handle"
+      use: "스테이징된 아티팩트 핸들, 또는 식별자를 뜻할 때는 `StagedArtifactHandle`"
+    - phrase: "checksum, size 검증"
+      use: "체크섬과 크기 검증"
+    - phrase: "ToolEnvelope 봉투"
+      use: "`ToolEnvelope` 요청 래퍼"
+    - phrase: "lifecycle 의미"
+      use: "생명주기 의미, 또는 산문이 더 자연스러울 때는 생명주기의 뜻"
 terms:
-  current_mvp:
-    en: "current MVP"
-    ko: "현재 MVP"
-  owner_document:
-    en: "owner document"
-    ko: "담당 문서"
-  semantic_parity:
-    en: "semantic parity"
-    ko: "의미 일치"
-  not_line_parity:
-    en: "not line parity"
-    ko: "줄 단위 번역 아님"
-  user_owned_judgment:
-    en: "user-owned judgment"
-    ko: "사용자 소유 판단"
   close_readiness:
+    category: "product_concept"
     en: "close readiness"
-    ko: "닫기 준비 상태"
-    note: "Use 닫기 준비 상태 in reference-facing Korean prose."
+    ko_reference: "닫기 준비 상태"
+    ko_user: "닫기 가능 여부"
+    preserve_as_identifier:
+      - "CloseReadinessBlocker"
+    avoid_ko:
+      - "close 가능성 평가"
+      - "닫기 가능성 평가"
+    notes:
+      - "`close readiness` is the evaluation concept, not the blocker schema."
+      - "Use 닫기 준비 상태 in reference-facing Korean and 닫기 가능 여부 in user-facing Korean."
+  close_readiness_evaluation:
+    category: "product_concept"
+    en: "close readiness evaluation"
+    ko_reference: "닫기 준비 상태 평가"
+    ko_user: "닫기 준비 상태 평가"
+    notes:
+      - "Do not translate this as 가능성 평가."
+  close_blocker:
+    category: "product_concept"
+    en: "close blocker"
+    ko_reference: "닫기 차단 사유"
+    ko_user: "닫기 차단 사유"
+    notes:
+      - "Use this for a reason that prevents honest close readiness."
+  close_readiness_blocker:
+    category: "identifier"
+    en: "CloseReadinessBlocker"
+    preserve_identifier: true
+    ko_explanation: "닫기 차단 사유 스키마"
+    notes:
+      - "Never translate the identifier itself."
+  blocker:
+    category: "general_prose"
+    en: "blocker"
+    ko: "차단 사유"
+    notes:
+      - "Use close blocker / 닫기 차단 사유 when the blocker specifically comes from close readiness."
   artifact:
+    category: "product_concept"
     en: "artifact"
     ko: "아티팩트"
-    note: "Use 아티팩트 in prose; preserve identifiers such as `ArtifactRef`."
+    preserve_as_identifier:
+      - "ArtifactRef"
+      - "ArtifactInput"
+      - "StagedArtifactHandle"
+    avoid_ko:
+      - "artifact 저장"
+      - "artifact bytes"
+      - "staged handle"
+      - "checksum, size 검증"
+    notes:
+      - "Use 아티팩트 in Korean prose."
+      - "Preserve artifact schema identifiers exactly."
+  artifact_ref:
+    category: "identifier"
+    en: "ArtifactRef"
+    preserve_identifier: true
+    ko_explanation: "아티팩트 참조 스키마"
+  artifact_input:
+    category: "identifier"
+    en: "ArtifactInput"
+    preserve_identifier: true
+    ko_explanation: "아티팩트 입력 스키마"
+  staged_artifact_handle:
+    category: "identifier"
+    en: "StagedArtifactHandle"
+    preserve_identifier: true
+    ko_explanation: "스테이징된 아티팩트 핸들"
+  projection:
+    category: "product_concept"
+    en: "projection"
+    ko_user: "상태 보기"
+    ko_reference: "상태 보기"
+    ko_reference_first_reference: "`Projection`(읽기 전용 상태 보기)"
+    notes:
+      - "Use 상태 보기 in user-facing prose."
+      - "Use `Projection`(읽기 전용 상태 보기) on first reference in reference prose when the exact Harness label helps."
+  surface:
+    category: "product_concept"
+    en: "surface"
+    ko: "접점"
+    notes:
+      - "Do not make surface wording sound like proof of authority, access, binding, or capability."
+  runtime:
+    category: "product_concept"
+    en: "runtime"
+    ko: "런타임"
+    notes:
+      - "This documentation repository is not a Harness runtime or Runtime Home."
+  lifecycle:
+    category: "general_prose"
+    en: "lifecycle"
+    ko: "생명주기"
+    avoid_ko:
+      - "lifecycle 의미"
+  user_owned_judgment:
+    category: "product_concept"
+    en: "user-owned judgment"
+    ko: "사용자 소유 판단"
+  sensitive_approval:
+    category: "product_concept"
+    en: "sensitive approval"
+    en_preferred_prose: "sensitive-action approval"
+    ko: "민감 동작 승인"
+    preserve_as_identifier:
+      - "sensitive_approval"
+      - "SensitiveActionScope"
+    notes:
+      - "Keep sensitive approval distinct from final acceptance, residual-risk acceptance, and Write Authorization."
+  write_authorization:
+    category: "product_label"
+    en: "write authorization"
+    en_label: "Write Authorization"
+    ko: "쓰기 권한 부여"
+    preserve_as_label:
+      - "Write Authorization"
+    notes:
+      - "Use the exact label when naming the Harness concept; do not treat sensitive-action approval as Write Authorization."
+  access_class:
+    category: "product_concept"
+    en: "access class"
+    ko: "접근 등급"
   cooperative_guarantee:
+    category: "product_concept"
     en: "cooperative guarantee"
     ko: "협력형 보장"
+    notes:
+      - "Do not strengthen cooperative wording into detective or preventive wording."
   detective_guarantee:
+    category: "product_concept"
     en: "detective guarantee"
     ko: "탐지형 보장"
-  profile_gated_value:
-    en: "profile-gated value"
-    ko: "profile-gated 값"
+    notes:
+      - "Use only when the documented observable scope and capability check support it."
+  preventive_guarantee:
+    category: "product_concept"
+    en: "preventive guarantee"
+    ko: "예방형 보장"
+    notes:
+      - "Use only when the exact preventive mechanism and proof path are documented."
+  active_mvp:
+    category: "product_concept"
+    en: "active MVP"
+    ko: "현재 MVP"
+    aliases_en:
+      - "current MVP"
+    notes:
+      - "Do not describe later candidates as active MVP requirements."
+  later_candidate:
+    category: "product_concept"
+    en: "later candidate"
+    ko: "이후 후보"
+    notes:
+      - "A later candidate is deferred material until an owner promotes it."
+  documentation_only:
+    category: "general_prose"
+    en: "documentation-only"
+    ko: "문서 전용"
+    notes:
+      - "Documentation-only work does not implement runtime behavior or create generated runtime records."
+  owner_document:
+    category: "product_concept"
+    en: "owner document"
+    ko: "담당 문서"
+    notes:
+      - "Use for the canonical documentation owner of a contract or term."
