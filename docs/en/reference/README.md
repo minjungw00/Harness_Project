@@ -41,11 +41,12 @@ These documents are source material for a future Harness Server. They do not mea
 
 | Question | Owner document(s) |
 |---|---|
-| What does `harness.prepare_write` return? | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Core Model](core-model.md) |
+| What does `harness.prepare_write` return? | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), [Core Model](core-model.md) |
 | Where is `ToolRejectedResponse` defined? | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
 | When does `STATE_VERSION_CONFLICT` apply? | [API Errors](api/errors.md), [MVP API](api/mvp-api.md), [Storage Versioning](storage-versioning.md) |
 | Which document owns active method names, `response_kind`, `effect_kind`, and enum-like API values? | [API Value Sets](api/schema-value-sets.md) |
 | Where are access classes defined? | [API Value Sets](api/schema-value-sets.md), [MVP API](api/mvp-api.md), [Security](security.md) |
+| Where are dry-run preview structures such as `DryRunSummary`, `PlannedEffect`, and `PlannedBlocker` defined? | [API Schema Core](api/schema-core.md), [API Value Sets](api/schema-value-sets.md) |
 | Which document owns `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, and `ValidatorResult` shapes? | [API State Schemas](api/schema-state.md) |
 | Which document owns `ArtifactRef`, `ArtifactInput`, and `StagedArtifactHandle` shapes? | [API Artifact Schemas](api/schema-artifacts.md) |
 | Which document owns `UserJudgment`, `SensitiveActionScope`, and accepted-risk input shapes? | [API Judgment Schemas](api/schema-judgment.md) |

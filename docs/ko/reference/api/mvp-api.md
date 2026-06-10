@@ -59,7 +59,7 @@
 
 ## 공통 요청 규칙
 
-모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다. 공개 메서드 응답은 항상 정확히 하나의 응답 분기입니다. 분기는 구체적인 메서드별 `MethodResult`, `ToolRejectedResponse`, `ToolDryRunResponse` 중 하나입니다. 메서드 결과 스키마는 실제 읽기 전용 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드별 상태 효과 표가 허용하는 커밋된 차단 결과를 담습니다. 메서드 결과는 `response_kind=result`인 [`ToolResultBase`](schema-core.md#common-response)를 사용합니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 [API Schema Core](schema-core.md#common-response)의 공용 응답 스키마를 쓰며, 메서드별 결과 전용 필드를 물려받지 않습니다.
+모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다. 공개 메서드 응답은 항상 정확히 하나의 응답 분기입니다. 분기는 구체적인 메서드별 `MethodResult`, `ToolRejectedResponse`, `ToolDryRunResponse` 중 하나입니다. 메서드 결과 스키마는 실제 읽기 전용 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드별 상태 효과 표가 허용하는 커밋된 차단 결과를 담습니다. 메서드 결과는 `response_kind=result`인 [`ToolResultBase`](schema-core.md#common-response)를 사용합니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 [API 코어 스키마](schema-core.md#common-response)의 공용 응답 스키마를 쓰며, 메서드별 결과 전용 필드를 물려받지 않습니다.
 
 커밋되는 `dry_run=false` 상태 변경 호출은 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`을 요구합니다. `harness.stage_artifact`, `harness.status`, `harness.close_task intent=check`, `dry_run` 호출은 `idempotency_key: null`과 `expected_state_version: null`을 사용할 수 있습니다. `harness.stage_artifact`는 저장소가 소유하는 임시 스테이징만 만들며, Core 상태 전이가 아니고 재실행 행이나 `project_state.state_version` 증가를 만들지 않습니다.
 
@@ -93,20 +93,20 @@
 
 `tool_invocations` 재실행 행은 커밋된 `dry_run=false` 상태 변경만 만듭니다. 같은 `idempotency_key`와 같은 요청 해시의 재실행은 기존 커밋 응답을 반환합니다. 같은 키를 다른 요청 해시와 함께 쓰면 `STATE_VERSION_CONFLICT`를 반환합니다. `dry_run` 호출과 커밋 전 실패는 재실행 행을 만들거나 예약하지 않습니다.
 
-오류 코드, 기본 오류 우선순위, 멱등성, 오래된 상태 처리, 닫기 차단 사유 순서, 사용자 표시 오류 라벨은 [API Errors](errors.md)가 담당합니다. 공통 envelope와 응답 분기는 [API Schema Core](schema-core.md)가 담당하고, 상태/아티팩트/판단/값 집합 스키마는 분리된 API 스키마 담당 문서가 맡습니다.
+오류 코드, 기본 오류 우선순위, 멱등성, 오래된 상태 처리, 닫기 차단 사유 순서, 사용자 표시 오류 라벨은 [API 오류](errors.md)가 담당합니다. 공통 요청 래퍼와 응답 분기는 [API 코어 스키마](schema-core.md)가 담당하고, 상태/아티팩트/판단/값 집합 스키마는 분리된 API 스키마 담당 문서가 맡습니다.
 
-로컬 접근 분류는 하네스 API 호환성 분류이지 OS 권한 분류가 아닙니다. 모든 공개 요청에는 `ToolEnvelope.surface_id`가 필요하지만, 이 값은 선택자일 뿐입니다. 권한 증명이 아니며, API가 그 접점에 의존하려면 서버가 파생한 [`VerifiedSurfaceContext`](schema-core.md#local-surface-access-values)와 맞아야 합니다. 서버는 `VerifiedSurfaceContext`를 로컬 transport/session/binding과 저장된 `LocalSurfaceRegistration`에서 도출합니다. 사용자 문장, 생성된 Markdown, Product Repository 파일, Projection, 대화 텍스트, 에이전트 기억에서 도출하지 않습니다. 스테이징된 핸들의 `created_by_surface_id`와 `created_by_surface_instance_id` 출처 기록도 이 서버 파생 맥락에서만 나옵니다.
+로컬 접근 분류는 하네스 API 호환성 분류이지 OS 권한 분류가 아닙니다. 모든 공개 요청에는 `ToolEnvelope.surface_id`가 필요하지만, 이 값은 선택자일 뿐입니다. 권한 증명이 아니며, API가 그 접점에 의존하려면 서버가 파생한 `VerifiedSurfaceContext`와 맞아야 합니다. 활성 `access_class` 값은 [API 값 집합](schema-value-sets.md#접근-등급-값)이 담당합니다. 서버는 `VerifiedSurfaceContext`를 로컬 transport/session/binding과 저장된 `LocalSurfaceRegistration`에서 도출합니다. 사용자 문장, 생성된 Markdown, Product Repository 파일, Projection, 대화 텍스트, 에이전트 기억에서 도출하지 않습니다. 스테이징된 핸들의 `created_by_surface_id`와 `created_by_surface_instance_id` 출처 기록도 이 서버 파생 맥락에서만 나옵니다.
 
-모든 접근 분류는 `surface_id`가 같은 프로젝트의 `LocalSurfaceRegistration`을 선택하고, API가 그 접점에 의존하려면 등록 상태가 `status=active`여야 합니다. 공개 API 요청 하나에는 요청 수준 `VerifiedSurfaceContext.access_class`가 정확히 하나만 있습니다. `ArtifactInput[]` 같은 내부 payload가 두 번째 접근 분류를 더하지 않습니다. 모든 상태 변경 API는 커밋 전에 해당 메서드 접근 분류의 `VerifiedSurfaceContext.verified=true`를 요구합니다. 아티팩트 본문 읽기도 `access_class=artifact_read`에 대해 `VerifiedSurfaceContext.verified=true`가 필요합니다. 적용되는 경우 보호된 Core 세부정보를 읽거나 변경을 커밋하기 전에 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 현재 프로젝트 전체 `expected_state_version`이 서로 호환되어야 합니다.
+모든 접근 분류는 `surface_id`가 같은 프로젝트의 `LocalSurfaceRegistration`을 선택하고, API가 그 접점에 의존하려면 등록 상태가 `status=active`여야 합니다. 공개 API 요청 하나에는 요청 수준 `VerifiedSurfaceContext.access_class`가 정확히 하나만 있습니다. `ArtifactInput[]` 같은 내부 요청 본문이 두 번째 접근 분류를 더하지 않습니다. 모든 상태 변경 API는 커밋 전에 해당 메서드 접근 분류의 `VerifiedSurfaceContext.verified=true`를 요구합니다. 아티팩트 본문 읽기도 `access_class=artifact_read`에 대해 `VerifiedSurfaceContext.verified=true`가 필요합니다. 적용되는 경우 보호된 Core 세부정보를 읽거나 변경을 커밋하기 전에 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 현재 프로젝트 전체 `expected_state_version`이 서로 호환되어야 합니다.
 
 | 접근 분류 | 포함하는 동작 | 최소 접근 조건 |
 |---|---|---|
 | `read_status` | `harness.status`, 읽기 전용 상태 리소스, `harness.close_task intent=check` 같은 읽기 전용 상태/Projection 메서드. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 요청한 읽기에 필요한 Core/접점 도달 가능성, 보호된 Core 세부정보에는 `VerifiedSurfaceContext.access_class=read_status`, Task 범위 읽기라면 호환되는 `task_id`가 필요합니다. 상태 읽기는 표시해도 안전한 가용성 또는 불일치 진단을 반환할 수 있지만, 오래된 텍스트에서 상태를 만들어 내거나 로컬 접근을 확인할 수 없을 때 보호되어야 할 Core 세부정보를 노출하면 안 됩니다. |
 | `core_mutation` | 별도 분류가 없는 Core 상태 변경입니다. `harness.intake`를 통한 Task 생성, `harness.update_scope`, `harness.request_user_judgment`, `harness.record_user_judgment`, 상태를 바꾸는 `harness.close_task`가 여기에 속합니다. | `read_status` 조건에 더해 `VerifiedSurfaceContext.access_class=core_mutation`, `verified=true`, `dry_run=false` 커밋에는 non-null `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`, 적용되는 경우 호환되는 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, 담당 기록이 필요합니다. |
 | `write_authorization` | `harness.prepare_write`. | `VerifiedSurfaceContext.access_class=write_authorization`, `verified=true`에 더해 의도한 제품 파일 쓰기 시도에 필요한 활성 Task/Change Unit 호환성, 범위, baseline, 필요한 별도 민감 동작 승인 호환성, 역량 확인이 필요합니다. |
-| `run_recording` | `harness.record_run`만 해당합니다. | `VerifiedSurfaceContext.access_class=run_recording`, `verified=true`에 더해 호환되는 `task_id`, `change_unit_id`, `baseline_ref`, 관찰된 시도 사실, 그리고 제품 쓰기를 기록하는 Run이면 소비 가능한 활성 Write Authorization이 필요합니다. 같은 `run_recording` 요청이 실행 결과 기록, 필요할 때 호환되는 Write Authorization 소비, 호환되는 기존 artifact 연결, 스테이징된 핸들 유효성 확인 뒤 적격 `staged_artifact` 승격을 다룹니다. 승격에는 현재 확인된 `surface_id`와 `surface_instance_id`가 스테이징된 핸들에 서버가 기록한 `created_by_surface_id`와 `created_by_surface_instance_id`와 일치해야 합니다. 현재 MVP에는 접점 간(cross-surface) staged artifact handoff가 없습니다. `ArtifactInput[]`에 `source_kind=staged_artifact`가 있어도 `harness.record_run`은 `artifact_registration`을 요구하지 않습니다. |
-| `artifact_registration` | `harness.stage_artifact`만 해당합니다. | `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, 호환되는 `project_id`/`task_id`, 새 아티팩트 바이트나 안전 공지를 임시 `StagedArtifactHandle`로 staging하기 위한 `manual_artifact_attachment_supported=true`가 필요합니다. 성공하면 서버는 `VerifiedSurfaceContext`에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다. 호출자는 이 필드를 권한 주장으로 제출하지 않습니다. 이는 입력 staging이지 지속 `ArtifactRef` 승격이 아니고, 임의 로컬 파일이 안전하거나 허가되었다는 증명도 아니며, `harness.record_run`의 두 번째 접근 분류도 아닙니다. 호출자가 임의로 준 파일시스템 경로, 임의 로컬 경로 문자열, 권한 주장으로서의 원시 로그, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP의 아티팩트 권한으로 인정하지 않습니다. |
-| `artifact_read` | 담당 경로가 노출하는 지속 `ArtifactRef`의 아티팩트 본문 읽기. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 지속 `ArtifactRef`, 호환되는 `project_id`/`task_id`, 필요한 가림/가용성 확인, `artifact_links`의 일치하는 담당 관계가 필요합니다. 아티팩트 본문 읽기에는 `VerifiedSurfaceContext.access_class=artifact_read`와 `verified=true`가 필요합니다. 아티팩트 본문 읽기는 staged artifact 승격과 별개이며, 원시 artifact 경로 읽기는 기본으로 허용되지 않습니다. |
+| `run_recording` | `harness.record_run`만 해당합니다. | `VerifiedSurfaceContext.access_class=run_recording`, `verified=true`에 더해 호환되는 `task_id`, `change_unit_id`, `baseline_ref`, 관찰된 시도 사실, 그리고 제품 쓰기를 기록하는 Run이면 소비 가능한 활성 Write Authorization이 필요합니다. 같은 `run_recording` 요청이 실행 결과 기록, 필요할 때 호환되는 Write Authorization 소비, 호환되는 기존 아티팩트 연결, 스테이징된 핸들 유효성 확인 뒤 적격 `staged_artifact` 승격을 다룹니다. 승격에는 현재 확인된 `surface_id`와 `surface_instance_id`가 스테이징된 핸들에 서버가 기록한 `created_by_surface_id`와 `created_by_surface_instance_id`와 일치해야 합니다. 현재 MVP에는 접점 간 스테이징된 아티팩트 인계가 없습니다. `ArtifactInput[]`에 `source_kind=staged_artifact`가 있어도 `harness.record_run`은 `artifact_registration`을 요구하지 않습니다. |
+| `artifact_registration` | `harness.stage_artifact`만 해당합니다. | `VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, 호환되는 `project_id`/`task_id`, 새 아티팩트 바이트나 안전 공지를 임시 `StagedArtifactHandle`로 스테이징하기 위한 `manual_artifact_attachment_supported=true`가 필요합니다. 성공하면 서버는 `VerifiedSurfaceContext`에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다. 호출자는 이 필드를 권한 주장으로 제출하지 않습니다. 이는 입력 스테이징이지 지속 `ArtifactRef` 승격이 아니고, 임의 로컬 파일이 안전하거나 허가되었다는 증명도 아니며, `harness.record_run`의 두 번째 접근 분류도 아닙니다. 호출자가 임의로 준 파일시스템 경로, 임의 로컬 경로 문자열, 권한 주장으로서의 원시 로그, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP의 아티팩트 권한으로 인정하지 않습니다. |
+| `artifact_read` | 담당 경로가 노출하는 지속 `ArtifactRef`의 아티팩트 본문 읽기. | 같은 프로젝트의 `LocalSurfaceRegistration`, `status=active`, 지속 `ArtifactRef`, 호환되는 `project_id`/`task_id`, 필요한 가림/가용성 확인, `artifact_links`의 일치하는 담당 관계가 필요합니다. 아티팩트 본문 읽기에는 `VerifiedSurfaceContext.access_class=artifact_read`와 `verified=true`가 필요합니다. 아티팩트 본문 읽기는 `staged_artifact` 승격과 별개이며, 원시 아티팩트 경로 읽기는 기본으로 허용되지 않습니다. |
 
 필요한 MCP/Core 또는 접점 도달 가능성 자체가 없으면 `VerifiedSurfaceContext.failure_reason=unavailable`에 해당하므로 `MCP_UNAVAILABLE`을 사용합니다. 등록된 로컬 접근 기대가 도달 가능한 transport/session/binding과 맞지 않거나 로컬 접근이 철회되었으면 `failure_reason=mismatch` 또는 `revoked`에 해당하므로 `LOCAL_ACCESS_MISMATCH`를 사용합니다. 접점은 인식되었지만 접근 분류, 관찰, 캡처, 차단/격리 주장, 변경 경로 탐지 주장, 활성 동작에 필요한 역량이 없으면 `failure_reason=insufficient_capability`에 해당하므로 `CAPABILITY_INSUFFICIENT`를 사용합니다. 기준 변경 경로 탐지에서 `changed_path_detection_verification=failed` 또는 `stale`이면 그 역량이 필요한 메서드는 `CAPABILITY_INSUFFICIENT`를 반환해야 합니다. `not_run` 또는 예전 `planned_not_run` 문구는 `detective` 라벨의 근거가 될 수 없습니다.
 
@@ -329,7 +329,7 @@ PrepareWriteResult:
 
 ## `harness.stage_artifact`
 
-- **담당:** `access_class=artifact_registration` 아래에서 한 프로젝트와 Task에 속한, 호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림의 임시 입력 staging.
+- **담당:** `access_class=artifact_registration` 아래에서 한 프로젝트와 Task에 속한, 호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림의 임시 입력 스테이징.
 - **담당하지 않음:** Core 상태 전이, 증거 생성, 증거 충분성, gate 만족, 지속 `ArtifactRef` 승격, 최종 수락, 잔여 위험 수락, 닫기.
 - **호출 시점:** 새 아티팩트 바이트를 나중에 `ArtifactInput.source_kind=staged_artifact`로 쓰기 위한 임시 `StagedArtifactHandle`로 만들어야 할 때 `harness.record_run` 전에 호출합니다.
 - **요청:**
@@ -365,7 +365,7 @@ StageArtifactResult:
 - **상태 효과:** 성공한 `dry_run=false` 호출은 `base.effect_kind=staging_created`인 `StageArtifactResult`를 반환하고, `artifact_staging` 또는 동등한 저장소 소유 스테이징 기록이 뒷받침하며 `project_id`와 `task_id`에 묶인 임시 `StagedArtifactHandle`만 만듭니다. 이 핸들은 서버가 기록한 `created_by_surface_id`, `created_by_surface_instance_id`, 그리고 `content_type`, `sha256`, `size_bytes`, `redaction_state`, `expires_at`을 가집니다. 출처 기록 필드는 성공한 요청의 `VerifiedSurfaceContext`에서 기록되며, 사용자나 에이전트가 권한 주장으로 제출하는 값이 아닙니다. Core 기록, 지속 `ArtifactRef`, 증거 요약, 차단 사유, 이벤트, `tool_invocations` 재실행 행, 닫기 효과, `project_state.state_version` 증가를 만들지 않습니다. 이후 호환되는 `harness.record_run` 요청이 `access_class=run_recording`으로 핸들을 소비해 지속 `ArtifactRef`로 승격할 수 있는 유일한 활성 경로입니다.
 - **`dry_run` 분기:** 이 스테이징 메서드에서는 요청이 그 외에는 유효하고 미리보기 가능할 때 `dry_run=true`가 `ToolDryRunResponse`를 반환합니다. `DryRunSummary`는 `artifact_staging` 예상 효과를 보여 줄 수 있지만 저장소 스테이징, 임시 바이트 또는 알림, `StagedArtifactHandle`, `staged_artifact_handle` 결과 필드를 만들지 않습니다.
 - **오류:** `VALIDATION_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`.
-- **저장소 담당 문서:** `artifact_staging` 또는 동등한 저장소 소유 staging 기록과 `artifacts/tmp/` 아래 임시 bytes 또는 알림. 지속 `artifacts`와 `artifact_links`는 이후 호환되는 `run_recording`의 `harness.record_run`만 만듭니다.
+- **저장소 담당 문서:** `artifact_staging` 또는 동등한 저장소 소유 스테이징 기록과 `artifacts/tmp/` 아래 임시 바이트 또는 알림. 지속 `artifacts`와 `artifact_links`는 이후 호환되는 `run_recording`의 `harness.record_run`만 만듭니다.
 - **보안 경계:** 요청은 호출자가 제공한 안전한 바이트 또는 안전한 알림을 전달할 뿐, 임의 파일 권한이나 로컬 파일이 안전하거나 허가되었거나 하네스가 관찰했다는 증명을 전달하지 않습니다. 원시 파일 경로, 권한 주장으로서의 원시 로그, 임의 로컬 경로 문자열, 원시 비밀값, 토큰, 민감한 전체 로그, `captured_artifact` 핸들, 원시 캡처 어댑터 출력, 접점 자체 캡처 주장은 현재 MVP 아티팩트 권한으로 거부됩니다. `manual_artifact_attachment_supported=true`는 이 스테이징 경로를 사용할 수 있다는 뜻입니다. `native_artifact_capture_supported=false`는 현재 MVP가 수동 아티팩트 스테이징과 담당 경로 승격/연결로 남아 있으며 접점 자체 아티팩트 캡처가 아니라는 뜻입니다.
 
 <a id="harnessrecord_run"></a>
@@ -373,16 +373,16 @@ StageArtifactResult:
 ## `harness.record_run`
 
 - **담당:** `access_class=run_recording` 아래의 Run 기록, 호환되는 Write Authorization 소비, 기존 아티팩트 연결, 적격 `staged_artifact` 승격, 간결한 증거 요약 업데이트, Run 관련 차단 사유.
-- **담당하지 않음:** 새 아티팩트 바이트 staging, `access_class=artifact_registration`, 새 범위, 사용자 판단 해결, 최종 수락, 잔여 위험 수락, 별도 보증 기록, 아티팩트 본문 읽기, 닫기.
+- **담당하지 않음:** 새 아티팩트 바이트 스테이징, `access_class=artifact_registration`, 새 범위, 사용자 판단 해결, 최종 수락, 잔여 위험 수락, 별도 보증 기록, 아티팩트 본문 읽기, 닫기.
 - **호출 시점:** 구체화 작업, 직접 답변/결과, 구현 작업이 끝난 뒤. 제품 쓰기 Run은 `harness.prepare_write`가 반환한 호환되는 활성 Write Authorization을 제공해야 합니다.
-- **접근 분류:** 항상 `VerifiedSurfaceContext.access_class=run_recording`을 요구하며, 요청 접근 분류는 이것 하나뿐입니다. `ArtifactInput[]`은 `artifact_registration`을 더하지 않습니다. `record_run` 중 `staged_artifact` 승격은 `run_recording`과 스테이징된 핸들 유효성 확인으로 승인됩니다. 현재 확인된 `surface_id`와 `surface_instance_id`는 스테이징된 핸들에 서버가 기록한 `created_by_surface_id`와 `created_by_surface_instance_id`와 일치해야 하며, 현재 MVP는 접점 간(cross-surface) staged artifact handoff를 지원하지 않습니다.
-- **ArtifactInput:** 새 아티팩트 바이트는 이미 `harness.stage_artifact`가 만든 유효한 `StagedArtifactHandle`로 표현되어 있어야 합니다. `record_run`은 새 바이트를 스테이징하지 않습니다. 이 핸들은 입력 staging과 서버가 기록한 접점 출처 기록을 담을 뿐, 접점 자체 캡처, 임의 로컬 파일 권한, 어떤 로컬 호출자나 사용할 수 있는 bearer token이 아닙니다. `existing_artifact`는 새 아티팩트 바이트로 가는 경로가 아니며 새 아티팩트 본문을 등록하지 않습니다. 같은 프로젝트와 허용된 Task 범위에 맞는 이전 지속 `ArtifactRef`를 Run 증거에 연결할 때만 사용할 수 있습니다. `source_kind`와 출처 필드 형태가 맞지 않으면 `VALIDATION_FAILED`로 거부합니다. 스테이징된 핸들 유효성 확인 실패도 `ToolError.details.artifact_input_error`를 담은 `VALIDATION_FAILED`입니다. 요청 수준 로컬 접점 검증 자체가 실패한 경우가 아니라면 `LOCAL_ACCESS_MISMATCH`가 아니며, 검증된 접점 역량이 빠진 경우가 아니라면 `CAPABILITY_INSUFFICIENT`도 아닙니다. Projection 파일, 생성된 Markdown, 대화 텍스트, Product Repository 파일, 에이전트 기억은 필요한 스테이징된 핸들 출처 기록을 만들 수 없습니다.
+- **접근 분류:** 항상 `VerifiedSurfaceContext.access_class=run_recording`을 요구하며, 요청 접근 분류는 이것 하나뿐입니다. `ArtifactInput[]`은 `artifact_registration`을 더하지 않습니다. `record_run` 중 `staged_artifact` 승격은 `run_recording`과 스테이징된 핸들 유효성 확인으로 승인됩니다. 현재 확인된 `surface_id`와 `surface_instance_id`는 스테이징된 핸들에 서버가 기록한 `created_by_surface_id`와 `created_by_surface_instance_id`와 일치해야 하며, 현재 MVP는 접점 간 스테이징된 아티팩트 인계를 지원하지 않습니다.
+- **ArtifactInput:** 새 아티팩트 바이트는 이미 `harness.stage_artifact`가 만든 유효한 `StagedArtifactHandle`로 표현되어 있어야 합니다. `record_run`은 새 바이트를 스테이징하지 않습니다. 이 핸들은 입력 스테이징과 서버가 기록한 접점 출처 기록을 담을 뿐, 접점 자체 캡처, 임의 로컬 파일 권한, 어떤 로컬 호출자나 사용할 수 있는 bearer token이 아닙니다. `existing_artifact`는 새 아티팩트 바이트로 가는 경로가 아니며 새 아티팩트 본문을 등록하지 않습니다. 같은 프로젝트와 허용된 Task 범위에 맞는 이전 지속 `ArtifactRef`를 Run 증거에 연결할 때만 사용할 수 있습니다. `source_kind`와 출처 필드 형태가 맞지 않으면 `VALIDATION_FAILED`로 거부합니다. 스테이징된 핸들 유효성 확인 실패도 `ToolError.details.artifact_input_error`를 담은 `VALIDATION_FAILED`입니다. 요청 수준 로컬 접점 검증 자체가 실패한 경우가 아니라면 `LOCAL_ACCESS_MISMATCH`가 아니며, 검증된 접점 역량이 빠진 경우가 아니라면 `CAPABILITY_INSUFFICIENT`도 아닙니다. Projection 파일, 생성된 Markdown, 대화 텍스트, Product Repository 파일, 에이전트 기억은 필요한 스테이징된 핸들 출처 기록을 만들 수 없습니다.
 - **ArtifactInput 검증 순서:** `record_run`은 커밋 응답을 만들기 전에 아래 순서를 결정적으로 적용합니다.
   1. 요청이 `VerifiedSurfaceContext.verified=true`이고 `VerifiedSurfaceContext.access_class=run_recording`인지 확인합니다.
   2. `ToolEnvelope.expected_state_version`을 현재 `project_state.state_version`과 비교합니다.
   3. 참조된 Task와 Change Unit을 검증합니다.
   4. Run에 제품 파일 쓰기가 포함되면 호환되는 Write Authorization을 검증합니다.
-  5. `ArtifactInput.source_kind=staged_artifact`인 각 입력에 대해 제출된 스테이징된 핸들을 저장소 소유 staging 상태와 대조합니다.
+  5. `ArtifactInput.source_kind=staged_artifact`인 각 입력에 대해 제출된 스테이징된 핸들을 저장소 소유 스테이징 상태와 대조합니다.
   6. 스테이징된 핸들의 `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, 만료 여부, 소비 상태, `sha256`, `size_bytes`, `redaction_state`를 검증합니다.
   7. 검증된 스테이징된 핸들만 지속 `ArtifactRef`로 승격합니다.
   8. 승격된 스테이징된 핸들을 같은 커밋 트랜잭션에서 `consumed`로 표시합니다.
@@ -567,7 +567,7 @@ Core는 닫기 준비 상태 평가나 종료 닫기 커밋 전에 `close_task` 
 `CloseTaskResponse`의 응답 분기는 아래처럼 사용합니다.
 
 - `ToolRejectedResponse`: 닫기 준비 상태 평가 전 실패.
-- `CloseTaskResult(close_state=blocked)`: 유효한 닫기 준비 상태 평가에서 남은 닫기 차단 사유를 `CloseTaskResult.blockers: CloseReadinessBlocker[]`로 반환하는 결과. 커밋된 닫기 차단 효과는 이 응답 branch와 메서드 상태 효과 표가 허용할 때만 생깁니다.
+- `CloseTaskResult(close_state=blocked)`: 유효한 닫기 준비 상태 평가에서 남은 닫기 차단 사유를 `CloseTaskResult.blockers: CloseReadinessBlocker[]`로 반환하는 결과. 커밋된 닫기 차단 효과는 이 응답 분기와 메서드 상태 효과 표가 허용할 때만 생깁니다.
 - `CloseTaskResult(close_state=closed/cancelled/superseded)`: 성공적으로 커밋된 종료 전이.
 - `effect_kind=read_only`인 `CloseTaskResult`: `intent=check`, `dry_run=true` 포함.
 - `ToolDryRunResponse`: `intent=complete`, `intent=cancel`, `intent=supersede`의 유효한 `dry_run` 미리보기.
@@ -579,7 +579,7 @@ Core는 닫기 준비 상태 평가나 종료 닫기 커밋 전에 `close_task` 
 | `intent` | API 동작 |
 |---|---|
 | `check` | 항상 읽기 전용 닫기 준비 상태 평가입니다. `base.effect_kind=read_only`인 `CloseTaskResult`를 반환하며, `CloseTaskResult.blockers`는 `CloseReadinessBlocker[]`입니다. `dry_run=true`가 있어도 응답은 `base.dry_run=true`, `effect_kind=read_only`인 `CloseTaskResult`로 유지되며 `ToolDryRunResponse`가 아닙니다. 닫기 준비 상태와 차단 사유는 응답에만 계산합니다. 상태 효과 없음: `task_event` 없음, `task_events` 추가 없음, 재실행 행 없음, `tool_invocations.response_json` 없음, `close_state` 변경 없음, Write Authorization 변경 없음, 스테이징된 핸들 소비 없음, 아티팩트 효과 없음, 증거 업데이트 없음, `project_state.state_version` 증가 없음입니다. `close_reason`은 `null`이어야 합니다. |
-| `complete` | `close_task` 사전 확인이 성공한 뒤 [Core Model](../core-model.md#close_task)의 순서 있는 `complete` 닫기 준비 상태 평가를 실행합니다. 차단 사유가 없으면 `lifecycle_phase=completed`, `result=completed`, 파생된 `close_reason`을 저장합니다. 닫기 차단 사유가 남아 있으면 응답은 `blockers: CloseReadinessBlocker[]`를 담은 `CloseTaskResult(close_state=blocked)`입니다. 이 응답은 응답 branch와 메서드 상태 효과 표가 허용할 때만 커밋된 닫기 차단 효과를 가지며, `CloseReadinessBlocker`가 있다는 사실만으로 저장 효과를 뜻하지 않습니다. |
+| `complete` | `close_task` 사전 확인이 성공한 뒤 [Core 모델](../core-model.md#close_task)의 순서 있는 `complete` 닫기 준비 상태 평가를 실행합니다. 차단 사유가 없으면 `lifecycle_phase=completed`, `result=completed`, 파생된 `close_reason`을 저장합니다. 닫기 차단 사유가 남아 있으면 응답은 `blockers: CloseReadinessBlocker[]`를 담은 `CloseTaskResult(close_state=blocked)`입니다. 이 응답은 응답 분기와 메서드 상태 효과 표가 허용할 때만 커밋된 닫기 차단 효과를 가지며, `CloseReadinessBlocker`가 있다는 사실만으로 저장 효과를 뜻하지 않습니다. |
 | `cancel` | 종료 취소이며 성공 완료가 아닙니다. 유효한 Task 식별자, 유효한 생명주기, 호환되는 로컬 접근, 전이를 막는 복구 제약이 없음을 요구합니다. 증거 충분성, 최종 수락, 잔여 위험 수락은 요구하지 않습니다. `close_reason`이 `null`이 아니면 `cancelled`여야 하며, 커밋된 행은 `close_reason=cancelled`, `result=cancelled`를 저장합니다. |
 | `supersede` | 종료 대체이며 성공 완료가 아닙니다. cancellation과 같은 식별자, 생명주기, 로컬 접근, 복구 확인을 요구하고, 활성 포인터를 옮길 때는 같은 프로젝트의 유효한 열린 `superseding_task_id`도 필요합니다. 증거 충분성, 최종 수락, 잔여 위험 수락은 요구하지 않습니다. `close_reason`이 `null`이 아니면 `superseded`여야 하며, 커밋된 행은 `close_reason=superseded`, `result=superseded`를 저장합니다. |
 

@@ -36,7 +36,8 @@ Use these owner routes before repeating details:
 |---|---|
 | Current MVP boundary and active/later status | [Active MVP Scope](../reference/active-mvp-scope.md) |
 | API method contracts | [MVP API](../reference/api/mvp-api.md) |
-| Shared core schemas and close readiness reference terms | [Core Schema](../reference/api/schema-core.md) |
+| Common API envelopes and response branches | [API Schema Core](../reference/api/schema-core.md) |
+| State, artifact, judgment, and API value-set schemas | [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), [API Value Sets](../reference/api/schema-value-sets.md) |
 | Public error codes and error routing | [Errors](../reference/api/errors.md) |
 | Storage effects | [Storage Effects](../reference/storage-effects.md) |
 | Security guarantees and access-boundary wording | [Security](../reference/security.md) |

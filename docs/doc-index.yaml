@@ -338,22 +338,34 @@ docs:
     default_for_agent: en
     primary_role: common_api_schema_owner
     canonical_for:
+      - schema_notation_conventions
       - tool_envelope
+      - common_method_result_branch_model
       - common_response_branches
+      - tool_result_base
+      - tool_rejected_response
+      - tool_dry_run_response
       - shared_support_shapes
-      - local_surface_context_schema
-      - validator_result_route
+      - tool_error
+      - event_ref
+      - response_kind_field
+      - effect_kind_field
     owns:
+      - schema notation conventions
       - common API envelope
+      - common method result branch model
       - common response branch schemas
       - shared support shapes
-      - local surface context schema
-      - routes to split schema owners
+      - "`ToolError`"
+      - "`EventRef`"
+      - common `response_kind` and `effect_kind` fields
     does_not_own:
       - state schemas
       - artifact schemas
       - judgment schemas
       - value sets
+      - access class values
+      - local surface verification behavior
       - method behavior
       - public errors
       - storage effects
@@ -374,13 +386,28 @@ docs:
     primary_role: api_state_schema_owner
     canonical_for:
       - state_summary_schema
+      - state_record_ref_schema
+      - task_lifecycle_state_api_shape
+      - state_snapshot_reference_structures
+      - shaping_readiness_schema
       - current_position_display_schema
       - close_state_display_schema
       - task_state_api_shapes
+      - close_readiness_blocker_schema
+      - validator_result_schema
+      - evidence_summary_api_shape
+      - write_authority_summary_shape
     owns:
       - API state schemas
+      - "`StateSummary`"
+      - "`StateRecordRef`"
+      - task lifecycle state API shape
+      - state snapshot and reference structures
+      - "`ShapingReadiness`"
       - current-position display data shapes
       - task and close state API shapes
+      - "`CloseReadinessBlocker`"
+      - "`ValidatorResult`"
     does_not_own:
       - common response branches
       - value sets
@@ -405,12 +432,16 @@ docs:
       - artifact_ref_schema
       - artifact_input_schema
       - staged_artifact_handle_schema
+      - staged_vs_existing_artifact_input_distinction
+      - artifact_reference_access_constraints
       - artifact_link_api_shapes
     owns:
       - API artifact schemas
       - "`ArtifactRef`"
       - "`ArtifactInput`"
       - "`StagedArtifactHandle`"
+      - staged versus existing artifact input distinctions
+      - artifact-related access constraints by reference
       - artifact link API shapes
     does_not_own:
       - artifact storage lifecycle
@@ -434,15 +465,23 @@ docs:
     primary_role: api_judgment_schema_owner
     canonical_for:
       - user_judgment_schema
+      - user_judgment_candidate_schema
+      - sensitive_action_scope_schema
+      - accepted_risk_input_schema
       - judgment_request_schema
       - judgment_response_schema
       - judgment_display_shapes
+      - user_owned_judgment_schema_semantics
     owns:
       - API judgment schemas
       - "`UserJudgment`"
+      - "`UserJudgmentCandidate`"
+      - "`SensitiveActionScope`"
+      - "`AcceptedRiskInput`"
       - judgment request shapes
       - judgment response shapes
       - judgment display shapes
+      - user-owned judgment schema semantics
     does_not_own:
       - Core judgment meaning
       - method behavior
@@ -467,12 +506,18 @@ docs:
       - active_api_value_sets
       - enum_like_values
       - method_name_values
+      - response_kind_values
+      - effect_kind_values
+      - access_class_values
       - status_values
       - guarantee_level_values
+      - profile_gated_reserved_values
     owns:
       - API value sets
       - enum-like active values
       - active public method names
+      - active `response_kind` and `effect_kind` values
+      - active `access_class` values
       - status and phase values
       - profile-gated value boundaries
     does_not_own:

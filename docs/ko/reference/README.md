@@ -1,6 +1,6 @@
 # 참조 문서 색인
 
-이 색인은 "이 질문의 담당 문서는 어디인가?"에 답하기 위한 문서입니다. 이 README는 담당 문서로 안내할 뿐, API 계약, schema, 저장 효과, 보안 보장, 현재 MVP 범위를 정의하지 않습니다.
+이 색인은 "이 질문의 담당 문서는 어디인가?"에 답하기 위한 문서입니다. 이 README는 담당 문서로 안내할 뿐, API 계약, 스키마, 저장 효과, 보안 보장, 현재 MVP 범위를 정의하지 않습니다.
 
 이 문서들은 향후 하네스 서버를 위한 원천 자료입니다. 이 저장소에 런타임 구현, 런타임 상태, 생성된 아티팩트, 상태 보기, 증거 기록, QA 기록, 수락 기록, 닫기 기록, 적합성 결과가 있다는 뜻이 아닙니다.
 
@@ -28,7 +28,7 @@
 |---|---|
 | Core 권한, Task 상태, 증거, 잔여 위험, 비대체 규칙은 어디가 담당하나요? | [Core 모델](core-model.md) |
 | API 메서드 동작은 어디가 담당하나요? | [MVP API](api/mvp-api.md) |
-| 공통 API 응답 분기와 요청 래퍼는 어디가 담당하나요? | [API Schema Core](api/schema-core.md) |
+| 공통 API 응답 분기와 요청 래퍼는 어디가 담당하나요? | [API 코어 스키마](api/schema-core.md) |
 | 공개 오류 코드와 오류 우선순위는 어디가 담당하나요? | [API 오류](api/errors.md) |
 | 저장소 기록이나 DDL은 어디가 담당하나요? | [저장소 기록](storage-records.md) |
 | 메서드별 저장 효과는 어디가 담당하나요? | [저장 효과](storage-effects.md) |
@@ -37,15 +37,16 @@
 | 읽기 가능한 상태 보기 권한은 어디가 담당하나요? | [상태 보기와 템플릿](projection-and-templates.md) |
 | 템플릿 본문은 어디가 담당하나요? | [템플릿 본문](template-bodies.md) |
 
-## API와 schema 담당 문서
+## API와 스키마 담당 문서
 
 | 질문 | 담당 문서 |
 |---|---|
-| `harness.prepare_write`는 무엇을 반환하나요? | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Core 모델](core-model.md) |
-| `ToolRejectedResponse`는 어디에 정의되어 있나요? | [API Schema Core](api/schema-core.md), [API 오류](api/errors.md) |
+| `harness.prepare_write`는 무엇을 반환하나요? | [MVP API](api/mvp-api.md), [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [Core 모델](core-model.md) |
+| `ToolRejectedResponse`는 어디에 정의되어 있나요? | [API 코어 스키마](api/schema-core.md), [API 오류](api/errors.md) |
 | `STATE_VERSION_CONFLICT`는 언제 적용되나요? | [API 오류](api/errors.md), [MVP API](api/mvp-api.md), [저장소 버전 관리](storage-versioning.md) |
 | 활성 메서드 이름, `response_kind`, `effect_kind`, enum 형태 API 값은 어디가 담당하나요? | [API 값 집합](api/schema-value-sets.md) |
 | 접근 등급은 어디에 정의되어 있나요? | [API 값 집합](api/schema-value-sets.md), [MVP API](api/mvp-api.md), [보안](security.md) |
+| `DryRunSummary`, `PlannedEffect`, `PlannedBlocker` 같은 `dry_run` 미리보기 구조는 어디에 정의되어 있나요? | [API 코어 스키마](api/schema-core.md), [API 값 집합](api/schema-value-sets.md) |
 | `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, `ValidatorResult` 구조는 어디가 담당하나요? | [API 상태 스키마](api/schema-state.md) |
 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle` 구조는 어디가 담당하나요? | [API 아티팩트 스키마](api/schema-artifacts.md) |
 | `UserJudgment`, `SensitiveActionScope`, 수락된 위험 입력 구조는 어디가 담당하나요? | [API 판단 스키마](api/schema-judgment.md) |
