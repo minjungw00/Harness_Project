@@ -121,7 +121,7 @@
 | 이후 후보는 현재 요구사항인가요? | [이후 후보 색인](../later/index.md), [현재 MVP 범위](active-mvp-scope.md) |
 | 승격 시점의 담당 문서 갱신은 무슨 뜻인가요? | [용어집](glossary.md), [이후 후보 색인](../later/index.md) |
 | 이후 후보가 활성 기능이 되려면 어떤 문서가 더 바뀌어야 하나요? | [이후 후보 색인](../later/index.md), [현재 MVP 범위](active-mvp-scope.md) |
-| "Complete close-readiness order"는 한국어로 어떻게 써야 하나요? | [용어집](glossary.md), [번역 가이드](../maintain/translation-guide.md), [API 값 집합](api/schema-value-sets.md) |
+| "Full close-readiness evaluation order"는 한국어로 어떻게 써야 하나요? | [용어집](glossary.md), [번역 가이드](../maintain/translation-guide.md), [API 값 집합](api/schema-value-sets.md) |
 | "close readiness"를 한국어 참조 문서에서 "닫기 준비 상태"로 쓰는 기준은 어디가 담당하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [용어집](glossary.md), [번역 가이드](../maintain/translation-guide.md) |
 | 한국어 닫기 준비 상태 용어는 어떻게 써야 하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [용어집](glossary.md), [번역 가이드](../maintain/translation-guide.md) |
 | 닫기 준비 상태 한국어 용어는 어디서 통제하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [용어집](glossary.md), [번역 가이드](../maintain/translation-guide.md) |

@@ -122,7 +122,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Is a later candidate an active requirement? | [Later Candidate Index](../later/index.md), [Active MVP Scope](active-mvp-scope.md) |
 | What does promotion-time owner update mean? | [Glossary](glossary.md), [Later Candidate Index](../later/index.md) |
 | What else must change before a later candidate becomes active? | [Later Candidate Index](../later/index.md), [Active MVP Scope](active-mvp-scope.md) |
-| How should "Complete close-readiness order" be written in Korean? | [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md), [API Value Sets](api/schema-value-sets.md) |
+| How should "Full close-readiness evaluation order" be written in Korean? | [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md), [API Value Sets](api/schema-value-sets.md) |
 | How should "close readiness" be written in Korean? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md) |
 | How should Korean close readiness terminology be written? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md) |
 | Where is close readiness Korean terminology controlled? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md) |

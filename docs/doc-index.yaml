@@ -49,13 +49,13 @@ question_routes:
       canonical_owner_doc_id: reference.api.mvp-api
       default_path: docs/en/reference/api/mvp-api.md
       route_note: "Method branch selection for `harness.close_task`."
-    - question: 'How should "Complete close-readiness order" be written in Korean?'
+    - question: 'How should "Full close-readiness evaluation order" be written in Korean?'
       canonical_owner_doc_id: reference.glossary
       default_path: docs/en/reference/glossary.md
       supporting_owner_doc_ids:
         - maintain.translation-guide
         - reference.api.schema-value-sets
-      route_note: "Use `전체 닫기 준비 상태 평가 순서` when `Complete` means full; use API Value Sets only when `complete` is the intent value."
+      route_note: "Use `전체 닫기 준비 상태 평가 순서` for the full close-readiness evaluation order; use API Value Sets only when `complete` is the intent value."
     - question: "Does artifact staging create evidence?"
       canonical_owner_doc_id: reference.storage-artifacts
       default_path: docs/en/reference/storage-artifacts.md

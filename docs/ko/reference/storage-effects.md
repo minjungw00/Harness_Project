@@ -7,7 +7,7 @@
 이 문서가 담당합니다.
 
 - 읽기 전용, `dry_run`, 거절 응답, 스테이징 생성, Core 커밋, 커밋된 차단 결과의 저장 효과 구분.
-- 각 분기가 담당 기록, `task_events`, 재실행 행, `project_state.state_version`, 스테이징 핸들, 아티팩트 승격, `Write Authorization`을 바꿀 수 있는지 여부.
+- 각 분기가 담당 기록, `task_events`, 재실행 행, `project_state.state_version`, 스테이징 핸들 생성 또는 소비, 아티팩트 승격, `Write Authorization`을 바꿀 수 있는지 여부.
 - 차단 사유형 응답 데이터가 지속 저장되는 경계.
 - 거절 응답과 유효한 `dry_run` 미리보기의 효과 없음 보장.
 
@@ -34,7 +34,7 @@
 | 거절 응답 (`ToolRejectedResponse`) | 없음 | 없음 | 없음 | 사전 확인 거절은 요청된 커밋 동작을 수행하지 않습니다. |
 | `dry_run` 미리보기 (`ToolDryRunResponse`) | 없음 | 없음 | 없음 | 쓰기 효과를 지속하지 않습니다. 계획된 효과와 차단 사유는 미리보기 데이터입니다. |
 | 스테이징 생성 (`StageArtifactResult`, `effect_kind=staging_created`) | Core 담당 기록 없음 | 없음 | 없음 | 저장소 소유 임시 스테이징만 만들 수 있습니다. 지속 `ArtifactRef`는 만들지 않습니다. |
-| 커밋된 차단 결과 (`MethodResult`) | 메서드 담당 문서가 허용한 기록만 가능 | 허용된 경우만 가능 | 허용된 커밋인 경우만 가능 | 보고한 부족 권한 자체를 만들면 안 됩니다. |
+| 커밋된 차단 결과 (`MethodResult`) | 메서드 담당 문서가 허용한 기록만 가능 | 허용된 경우만 가능 | 허용된 커밋인 경우만 가능 | 보고한 부족한 권한이나 근거를 그 분기에서 만들어 내면 안 됩니다. |
 | 성공 결과(상태 변경 커밋) | 메서드 담당 문서가 허용한 기록 가능 | 허용된 경우 가능 | 커밋당 정확히 한 번 | 성공한 상태 변경은 `project_state.state_version`을 올립니다. |
 
 ## 효과가 없는 분기
