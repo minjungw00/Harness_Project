@@ -259,6 +259,26 @@ Fix:
 - Move normative detail to the canonical owner if it is missing there.
 - Replace README detail with navigation text and an owner link.
 
+### CHK-README-ROUTE-LENGTH: README route length
+
+Owner:
+- [Reference Index](../reference/README.md)
+- [Authoring Guide](authoring-guide.md)
+- [doc-index.yaml](../../doc-index.yaml)
+
+Check:
+- Inspect changed README files, route sections, Start pages, Use pages, Later indexes, and Maintain route lists for scannability.
+- Confirm route lists stay short enough to choose the next owner without carrying contract tables, long owner summaries, or technical branch detail.
+- Confirm long or specialized routing needs are delegated to `doc-index.yaml`, the Reference Index, or the canonical owner.
+
+Failure:
+- A route list becomes hard to scan because it tries to enumerate every contract detail, owner subcase, status value, schema branch, storage effect, or security guarantee.
+- A reader could use the README route section as a substitute for the canonical owner.
+
+Fix:
+- Shorten the route to reader purpose, expected result, and owner links.
+- Move or keep technical detail in the canonical owner and use `doc-index.yaml` for retrieval metadata.
+
 ### CHK-OWNER-003: value-set names versus semantic ownership
 
 Owner:
@@ -340,6 +360,26 @@ Fix:
 - Link existing current owners only when they actually exist.
 - If promoting the candidate, update active scope, the relevant owners, routes, checks, and paired-language docs in the same documentation-only batch.
 
+### CHK-LATER-OWNER-PLACEHOLDER: later owner placeholders
+
+Owner:
+- [Later Candidate Index](../later/index.md)
+- [Active MVP Scope](../reference/active-mvp-scope.md)
+- [Authoring Guide](authoring-guide.md)
+
+Check:
+- Inspect later-candidate requirements for future owner names, owner-type labels, and placeholders.
+- Confirm wording such as "Assurance owner update" is clear that the owner is created, designated, or updated at promotion time when no current owner exists.
+- Confirm placeholder wording does not send readers to a missing current owner.
+
+Failure:
+- A future owner placeholder is named as if it were an existing current owner.
+- A phrase like "Assurance owner update" appears without clarifying promotion-time owner creation, designation, or update.
+
+Fix:
+- Use standard promotion-time owner wording.
+- Link only existing current owners; otherwise state that promotion requires creating or designating the owner before active wording can be used.
+
 ## 8. API contract reference checks
 
 ### CHK-API-001: API summaries point to owners
@@ -416,6 +456,26 @@ Fix:
 - Delete generated runtime-like output.
 - Reword the documentation as planning source material and link to the storage or runtime-boundary owner.
 
+### CHK-KO-STRUCT-STORAGE: Korean storage structure
+
+Owner:
+- [Korean Storage Records](../../ko/reference/storage-records.md), [Korean Storage Effects](../../ko/reference/storage-effects.md), [Korean Artifact Storage](../../ko/reference/storage-artifacts.md), [Korean Storage Versioning](../../ko/reference/storage-versioning.md)
+- [Storage Records](../reference/storage-records.md), [Storage Effects](../reference/storage-effects.md), [Artifact Storage](../reference/storage-artifacts.md), [Storage Versioning](../reference/storage-versioning.md)
+- [Korean Translation Guide](../../ko/maintain/translation-guide.md)
+
+Check:
+- For Korean storage reference edits, compare the paired English storage source docs by meaning unit.
+- Confirm conditions, effects, exceptions, non-claims, and owner links remain visibly separate in Korean.
+- Inspect dense Korean paragraphs for merged storage rules that hide a condition, exception, or non-claim.
+
+Failure:
+- Important storage conditions, effects, exceptions, or non-claims are collapsed into dense Korean paragraphs.
+- Korean prose preserves the broad topic but makes the storage boundary harder to review than the paired English meaning unit.
+
+Fix:
+- Rewrite the Korean storage prose using natural paragraphs, lists, or tables that keep the meaning units visible.
+- Keep exact identifiers unchanged and link to the storage owners instead of duplicating contract detail in Maintain guidance.
+
 ## 10. Security-claim checks
 
 ### CHK-SEC-001: security non-claim clarity
@@ -453,6 +513,24 @@ Failure:
 Fix:
 - Reword the statement as identification, routing, or documented guidance as appropriate.
 - Link to the security or connector owner.
+
+### CHK-GUARANTEE-ISOLATED: `isolated` guarantee wording
+
+Owner:
+- [Security](../reference/security.md)
+- [Active MVP Scope](../reference/active-mvp-scope.md)
+- [API Value Sets](../reference/api/schema-value-sets.md)
+
+Check:
+- Confirm `isolated` routes to Security for guarantee semantics.
+- Confirm `isolated` is not described as an active current-MVP guarantee merely because it appears in value sets, examples, route text, or later-candidate material.
+
+Failure:
+- Any prose says or implies current active isolation, default isolation, enforced isolation, or current-MVP `isolated` guarantee behavior without owner support.
+
+Fix:
+- Clarify the reserved or profile-gated status at the point of use.
+- Link to Security for semantics, Active MVP Scope for current availability, and API Value Sets for the value name.
 
 ## 11. User-facing readability checks
 
@@ -530,7 +608,27 @@ Fix:
 - Reword retrieval guidance to one language per `doc_id`.
 - Add the paired document only for parity-specific checks.
 
-## 13. Final review report format
+## 13. Editorial style checks
+
+### CHK-EN-HEADING-CASE: English heading case
+
+Owner:
+- [Authoring Guide](authoring-guide.md)
+- [Checks](checks.md)
+
+Check:
+- Inspect changed English section headings for sentence case.
+- Preserve exact identifiers, product labels, acronyms, and code literals when their casing is meaningful.
+- After heading changes, check inbound links and paired-language route links when relevant.
+
+Failure:
+- English headings drift into title case, inconsistent capitalization, or identifier casing changes that reduce searchability.
+
+Fix:
+- Rewrite headings in sentence case while preserving exact identifiers and acronyms.
+- Update anchors or inbound links only when the heading change requires it.
+
+## 14. Final review report format
 
 ### CHK-REPORT-001: final review report format
 
