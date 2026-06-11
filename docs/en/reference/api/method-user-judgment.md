@@ -323,7 +323,17 @@ user_judgment:
   status: pending
   presentation: short
   question: "Is the account export confirmation copy sufficient for account data export that may include personal data?"
-  options: []
+  options:
+    - option_id: accept
+      label: "Sufficient"
+      description: "Record the user's judgment that the account export confirmation copy is sufficient."
+      consequence: "Close readiness can evaluate the product decision as resolved."
+      is_default: true
+    - option_id: revise
+      label: "Revise"
+      description: "Keep the Task open for revised account export confirmation copy."
+      consequence: "Close remains blocked on the product decision."
+      is_default: false
   context:
     summary: "The account export confirmation copy tells the user that the export may include personal data before download."
     related_refs: []
@@ -331,7 +341,12 @@ user_judgment:
     visible_risks: []
     constraints:
       - "Current Task constraints apply"
-  affected_refs: []
+  affected_refs:
+    - record_kind: task
+      record_id: task_456
+      project_id: proj_123
+      task_id: task_456
+      state_version: 21
   required_for: close
   resolution: null
   expires_at: null
@@ -372,14 +387,30 @@ user_judgment:
   status: resolved
   presentation: short
   question: "Is the account export confirmation copy sufficient for account data export that may include personal data?"
-  options: []
+  options:
+    - option_id: accept
+      label: "Sufficient"
+      description: "Record the user's judgment that the account export confirmation copy is sufficient."
+      consequence: "Close readiness can evaluate the product decision as resolved."
+      is_default: true
+    - option_id: revise
+      label: "Revise"
+      description: "Keep the Task open for revised account export confirmation copy."
+      consequence: "Close remains blocked on the product decision."
+      is_default: false
   context:
     summary: "The account export confirmation copy tells the user that the export may include personal data before download."
     related_refs: []
     artifact_refs: []
     visible_risks: []
-    constraints: []
-  affected_refs: []
+    constraints:
+      - "Current Task constraints apply"
+  affected_refs:
+    - record_kind: task
+      record_id: task_456
+      project_id: proj_123
+      task_id: task_456
+      state_version: 21
   required_for: close
   resolution:
     selected_option_id: accept

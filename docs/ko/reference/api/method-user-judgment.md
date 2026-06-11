@@ -227,12 +227,12 @@ params:
     - option_id: accept
       label: "충분함"
       description: "계정 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
-      consequence: "닫기 준비 상태 평가에서 제품 판단을 해결된 것으로 볼 수 있습니다."
+      consequence: "닫기 준비 상태가 제품 판단을 해결된 것으로 평가할 수 있습니다."
       is_default: true
     - option_id: revise
-      label: "수정"
-      description: "계정 내보내기 확인 문구 수정을 위해 Task를 열어 둡니다."
-      consequence: "제품 판단 때문에 닫기가 계속 차단됩니다."
+      label: "수정 필요"
+      description: "수정된 계정 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
+      consequence: "제품 판단이 남아 있어 닫기가 계속 차단됩니다."
       is_default: false
   context:
     summary: "계정 내보내기 확인 문구는 다운로드 전에 계정 데이터 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
@@ -316,7 +316,17 @@ user_judgment:
   status: pending
   presentation: short
   question: "계정 데이터 내보내기에 개인정보가 포함될 수 있음을 알리는 계정 내보내기 확인 문구가 충분합니까?"
-  options: []
+  options:
+    - option_id: accept
+      label: "충분함"
+      description: "계정 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
+      consequence: "닫기 준비 상태가 제품 판단을 해결된 것으로 평가할 수 있습니다."
+      is_default: true
+    - option_id: revise
+      label: "수정 필요"
+      description: "수정된 계정 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
+      consequence: "제품 판단이 남아 있어 닫기가 계속 차단됩니다."
+      is_default: false
   context:
     summary: "계정 내보내기 확인 문구는 다운로드 전에 계정 데이터 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
     related_refs: []
@@ -324,7 +334,12 @@ user_judgment:
     visible_risks: []
     constraints:
       - "현재 Task 제약이 적용됩니다"
-  affected_refs: []
+  affected_refs:
+    - record_kind: task
+      record_id: task_456
+      project_id: proj_123
+      task_id: task_456
+      state_version: 21
   required_for: close
   resolution: null
   expires_at: null
@@ -365,14 +380,30 @@ user_judgment:
   status: resolved
   presentation: short
   question: "계정 데이터 내보내기에 개인정보가 포함될 수 있음을 알리는 계정 내보내기 확인 문구가 충분합니까?"
-  options: []
+  options:
+    - option_id: accept
+      label: "충분함"
+      description: "계정 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
+      consequence: "닫기 준비 상태가 제품 판단을 해결된 것으로 평가할 수 있습니다."
+      is_default: true
+    - option_id: revise
+      label: "수정 필요"
+      description: "수정된 계정 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
+      consequence: "제품 판단이 남아 있어 닫기가 계속 차단됩니다."
+      is_default: false
   context:
     summary: "계정 내보내기 확인 문구는 다운로드 전에 계정 데이터 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
-    constraints: []
-  affected_refs: []
+    constraints:
+      - "현재 Task 제약이 적용됩니다"
+  affected_refs:
+    - record_kind: task
+      record_id: task_456
+      project_id: proj_123
+      task_id: task_456
+      state_version: 21
   required_for: close
   resolution:
     selected_option_id: accept
