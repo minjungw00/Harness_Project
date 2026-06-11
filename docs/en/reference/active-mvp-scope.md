@@ -8,7 +8,7 @@ This document owns:
 
 - the current MVP capability boundary
 - included and excluded product-scope items
-- the profile-gated and later-candidate boundary where it affects active scope
+- the reserved-value, profile-gated, and later-candidate boundary where it affects active scope
 - scope-level guarantee and non-claim wording that other documents should summarize instead of repeating
 
 This document does not own:
@@ -84,9 +84,9 @@ The active MVP excludes:
 
 Approving a sensitive action does not create active observation or blocking unless an owner promotes that capability. Security and observation boundaries belong to [Security](security.md) and the relevant later-candidate owners.
 
-## Profile-gated values
+## Reserved and profile-gated values
 
-Some value names may be reserved or profile-gated without being active user-visible capabilities. Reserved or profile-gated guarantee labels do not expand the current MVP scope. Their appearance in examples, schemas, or later-candidate tables does not activate behavior, make a guarantee available, or make the value a default current-MVP value.
+Some value names may be reserved values or profile-gated values without being active user-visible capabilities. Reserved or profile-gated guarantee labels do not expand the current MVP scope. Their appearance in examples, schemas, or later-candidate tables does not activate behavior, make a guarantee available, or make the value a default current-MVP value.
 
 Exact guarantee label value entries belong to [API Value Sets](api/schema-value-sets.md). Guarantee semantics, including non-claims for `isolated`, belong to [Security](security.md).
 
