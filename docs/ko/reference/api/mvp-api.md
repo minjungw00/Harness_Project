@@ -203,11 +203,11 @@ params:
   requested_mode: auto
   resume_policy: create_new
   initial_scope:
-    boundary: "계정 내보내기 흐름과 해당 테스트만."
+    boundary: "계정 데이터 내보내기 흐름과 계정 내보내기 확인 테스트만."
     non_goals:
       - "계정 삭제 동작 변경"
     acceptance_criteria:
-      - "다운로드 전에 계정 내보내기 확인이 필요하다."
+      - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
   initial_context_refs: []
 ```
 
@@ -247,11 +247,11 @@ state:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 내보내기 흐름과 해당 테스트만."
+  scope_summary: "계정 데이터 내보내기 흐름과 계정 내보내기 확인 테스트만."
   non_goals:
     - "계정 삭제 동작 변경"
   acceptance_criteria:
-    - "다운로드 전에 계정 내보내기 확인이 필요하다."
+    - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
   active_change_unit_ref: null
   blocker_refs: []
 next_actions:
@@ -370,20 +370,20 @@ params:
     locale: ko-KR
   task_id: task_456
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_boundary: "포함 범위: 계정 데이터 내보내기 확인 UI를 추가한다. 계정 내보내기 테스트를 갱신한다."
+  scope_boundary: "계정 데이터 내보내기 명시적 확인 단계를 추가한다. 계정 내보내기 확인 테스트를 갱신한다."
   non_goals:
     - "계정 삭제 동작"
     - "청구 내보내기 동작"
   acceptance_criteria:
-    - "계정 데이터 내보내기 전에 명시적 확인이 필요하다."
-  autonomy_boundary: "계정 데이터 내보내기 확인 UI와 계정 내보내기 테스트 범위 안에서만 작업한다."
+    - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
+  autonomy_boundary: "계정 데이터 내보내기 명시적 확인 단계와 계정 내보내기 확인 테스트 범위 안에서만 작업한다."
   baseline_ref: baseline_account_export_001
   change_unit:
     operation: create_active
-    scope_summary: "계정 데이터 내보내기 확인 UI를 추가하고 계정 내보내기 테스트를 갱신한다."
+    scope_summary: "계정 데이터 내보내기 명시적 확인 단계를 추가하고 계정 내보내기 확인 테스트를 갱신한다."
     affected_areas:
-      - "계정 데이터 내보내기 확인 UI"
-      - "계정 내보내기 테스트"
+      - "계정 데이터 내보내기 명시적 확인 단계"
+      - "계정 내보내기 확인 테스트"
     affected_paths:
       - src/account/export.ts
       - src/account/export-confirmation.ts
@@ -438,7 +438,7 @@ state:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 데이터 내보내기 확인 UI를 추가한다. 계정 내보내기 테스트를 갱신한다."
+  scope_summary: "계정 데이터 내보내기 명시적 확인 단계를 추가한다. 계정 내보내기 확인 테스트를 갱신한다."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
@@ -579,17 +579,17 @@ active_task:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 데이터 내보내기 확인 UI를 추가하고 계정 내보내기 테스트를 갱신한다."
+  scope_summary: "계정 데이터 내보내기 명시적 확인 단계를 추가하고 계정 내보내기 확인 테스트를 갱신한다."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
     state_version: 19
-status_summary: "계정 내보내기 확인 테스트가 기록되었습니다. 확인 문구에 대한 사용자 수락은 아직 대기 중입니다."
+status_summary: "계정 내보내기 확인 테스트가 기록되었습니다. 계정 데이터 내보내기 명시적 확인 단계 문구에 대한 사용자 수락은 아직 대기 중입니다."
 next_actions:
   - action: harness.request_user_judgment
-    reason: "닫기 전에 계정 내보내기 확인 문구에 대한 사용자 판단을 요청합니다."
+    reason: "닫기 전에 계정 데이터 내보내기 명시적 확인 단계 문구에 대한 사용자 판단을 요청합니다."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary:
@@ -612,7 +612,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "사용자가 계정 내보내기 확인 문구를 아직 수락하지 않았습니다."
+      message: "사용자가 계정 데이터 내보내기 명시적 확인 단계 문구를 아직 수락하지 않았습니다."
 guarantee_display:
   level: cooperative
   notes:
@@ -734,7 +734,7 @@ params:
     locale: ko-KR
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "계정 내보내기 확인 흐름 갱신"
+  intended_operation: "계정 데이터 내보내기 명시적 확인 단계 갱신"
   intended_paths:
     - src/account/export.ts
     - src/account/export-confirmation.ts
@@ -746,7 +746,7 @@ params:
 
 ### 대표 응답
 
-필요한 명시적 승인이 이미 있을 때의 허용 분기(`PrepareWriteResult`, `decision=allowed`):
+필요한 승인이 이미 있을 때의 허용 분기(`PrepareWriteResult`, `decision=allowed`):
 
 ```yaml
 base:
@@ -791,7 +791,7 @@ guarantee_display:
     - "쓰기 승인(`Write Authorization`)은 하네스 호환성 기록이며 OS 권한이 아닙니다."
 ```
 
-명시적 승인이 없을 때의 승인 필요 분기 발췌:
+승인이 없을 때의 승인 필요 분기 발췌:
 
 ```yaml
 decision: approval_required
@@ -800,7 +800,7 @@ write_authorization: null
 authorization_effect: none
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 명시적 승인이 필요합니다."
+    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 명시적 확인 단계에 대한 승인이 필요합니다."
 ```
 
 ### 담당 문서 링크
@@ -906,7 +906,7 @@ write_decision_reasons:
 artifact:
   kind: test_log
   name: account_export_confirmation_test.log
-  description: "계정 내보내기 확인 동작 테스트 출력."
+  description: "계정 내보내기 확인 테스트 출력."
 staged_artifact_handle: staged_artifact_account_export_test_log_001
 ```
 
@@ -929,7 +929,7 @@ params:
   display_name: "account_export_confirmation_test.log"
   content_type: text/plain
   redaction_state: none
-  safe_bytes_or_notice: "계정 내보내기 확인 동작 테스트 출력."
+  safe_bytes_or_notice: "계정 내보내기 확인 테스트 출력."
   expected_sha256: null
   expected_size_bytes: null
   relation_hint: "test_log"
@@ -1366,7 +1366,7 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분합니까?"
   options:
     - option_id: accept
       label: "충분함"
@@ -1379,7 +1379,7 @@ params:
       consequence: "제품 판단 때문에 닫기가 계속 차단됩니다."
       is_default: false
   context:
-    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분한지는 사용자가 판단해야 합니다."
+    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분한지는 사용자가 판단해야 합니다."
     related_refs: []
     artifact_refs:
       - artifact_id: artifact_account_export_confirmation_copy_001
@@ -1440,10 +1440,10 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분합니까?"
   options: []
   context:
-    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분한지는 사용자가 판단해야 합니다."
+    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분한지는 사용자가 판단해야 합니다."
     related_refs: []
     artifact_refs:
       - artifact_id: artifact_account_export_confirmation_copy_001
@@ -1628,10 +1628,10 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분합니까?"
   options: []
   context:
-    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분한지는 사용자가 판단해야 합니다."
+    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분한지는 사용자가 판단해야 합니다."
     related_refs: []
     artifact_refs:
       - artifact_id: artifact_account_export_confirmation_copy_001
@@ -1793,14 +1793,14 @@ next_actions:
 
 리터럴 `intent=complete`는 완료 의도를 고르는 API 값입니다. 전체 닫기 준비 상태 평가 순서를 뜻하는 산문 표현이 아닙니다.
 
-계정 내보내기 확인 시나리오에서 성공한 닫기 준비 상태 관찰 예시는 아래와 같습니다.
+계정 데이터 내보내기 명시적 확인 단계 시나리오에서 성공한 닫기 준비 상태 관찰 예시는 아래와 같습니다.
 
 ```yaml
 close_readiness:
   ready: true
   evidence:
     - "계정 내보내기 확인 테스트가 통과했습니다."
-    - "사용자가 확인 문구를 수락했습니다."
+    - "사용자가 계정 데이터 내보내기 명시적 확인 단계 문구를 수락했습니다."
 ```
 
 같은 시나리오에서 차단된 닫기 준비 상태 관찰 예시는 아래와 같습니다.
@@ -1810,7 +1810,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "사용자가 계정 내보내기 확인 문구를 아직 수락하지 않았습니다."
+      message: "사용자가 계정 데이터 내보내기 명시적 확인 단계 문구를 아직 수락하지 않았습니다."
 ```
 
 ### 최소 유효 요청
@@ -1859,7 +1859,7 @@ state:
 blockers:
   - category: user_judgment
     code: missing_user_judgment
-    message: "사용자가 계정 내보내기 확인 문구를 아직 수락하지 않았습니다."
+    message: "사용자가 계정 데이터 내보내기 명시적 확인 단계 문구를 아직 수락하지 않았습니다."
     related_refs: []
 evidence_summary:
   status: sufficient
@@ -1879,7 +1879,7 @@ evidence_summary:
 artifact_refs: []
 next_actions:
   - action: harness.request_user_judgment
-    reason: "닫기를 시도하기 전에 계정 내보내기 확인 문구에 대한 사용자 판단을 요청한다."
+    reason: "닫기를 시도하기 전에 계정 데이터 내보내기 명시적 확인 단계 문구에 대한 사용자 판단을 요청한다."
 ```
 
 ### 담당 문서 링크

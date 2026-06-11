@@ -126,7 +126,7 @@ params:
     non_goals:
       - "Changing account deletion behavior"
     acceptance_criteria:
-      - "Account export requires explicit confirmation before download."
+      - "Account data export requires an explicit confirmation step before download."
   initial_context_refs: []
 ```
 
@@ -170,7 +170,7 @@ state:
   non_goals:
     - "Changing account deletion behavior"
   acceptance_criteria:
-    - "Account export requires explicit confirmation before download."
+    - "Account data export requires an explicit confirmation step before download."
   active_change_unit_ref: null
   blocker_refs: []
 next_actions:
@@ -247,20 +247,20 @@ params:
     locale: en-US
   task_id: task_456
   goal_summary: "Add explicit confirmation before account data export."
-  scope_boundary: "Add confirmation UI for account data export. Update account export tests."
+  scope_boundary: "Add an explicit confirmation step for account data export. Update account export confirmation tests."
   non_goals:
     - "Account deletion behavior"
     - "Billing export behavior"
   acceptance_criteria:
-    - "Account data export requires explicit confirmation before download."
-  autonomy_boundary: "Stay within account data export confirmation UI and account export tests."
+    - "Account data export requires an explicit confirmation step before download."
+  autonomy_boundary: "Stay within the account data export explicit confirmation step and account export confirmation tests."
   baseline_ref: baseline_account_export_001
   change_unit:
     operation: create_active
-    scope_summary: "Add confirmation UI for account data export and update account export tests."
+    scope_summary: "Add an explicit confirmation step for account data export and update account export confirmation tests."
     affected_areas:
-      - "Account data export confirmation UI"
-      - "Account export tests"
+      - "Account data export explicit confirmation step"
+      - "Account export confirmation tests"
     affected_paths:
       - src/account/export.ts
       - src/account/export-confirmation.ts
@@ -315,7 +315,7 @@ state:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Add confirmation UI for account data export. Update account export tests."
+  scope_summary: "Add an explicit confirmation step for account data export. Update account export confirmation tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
@@ -428,17 +428,17 @@ active_task:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Add confirmation UI for account data export and update account export tests."
+  scope_summary: "Add an explicit confirmation step for account data export and update account export confirmation tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
     state_version: 19
-status_summary: "Account export confirmation tests are recorded. User acceptance of the confirmation copy is still pending."
+status_summary: "Account export confirmation tests are recorded. User acceptance of the account data export explicit confirmation copy is still pending."
 next_actions:
   - action: harness.request_user_judgment
-    reason: "Ask the user to accept the account export confirmation copy before close."
+    reason: "Ask the user to accept the account data export explicit confirmation copy before close."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary:
@@ -461,7 +461,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "The user has not accepted the account export confirmation copy."
+      message: "The user has not accepted the account data export explicit confirmation copy."
 guarantee_display:
   level: cooperative
   notes:
@@ -535,7 +535,7 @@ params:
     locale: en-US
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "update account export confirmation flow"
+  intended_operation: "update account data export explicit confirmation step"
   intended_paths:
     - src/account/export.ts
     - src/account/export-confirmation.ts
@@ -547,7 +547,7 @@ params:
 
 ### Representative response
 
-Allowed branch after the needed explicit approval is already present (`PrepareWriteResult`, `decision=allowed`):
+Allowed branch after the needed approval is already present (`PrepareWriteResult`, `decision=allowed`):
 
 ```yaml
 base:
@@ -592,7 +592,7 @@ guarantee_display:
     - "Write Authorization is a Harness compatibility record, not OS permission."
 ```
 
-Approval-required branch excerpt when explicit approval is missing:
+Approval-required branch excerpt when approval is missing:
 
 ```yaml
 decision: approval_required
@@ -601,7 +601,7 @@ write_authorization: null
 authorization_effect: none
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "Account data export may include personal data and needs explicit approval."
+    message: "Account data export may include personal data and needs approval for the explicit confirmation step."
 ```
 
 ### Owner links
@@ -662,7 +662,7 @@ The staged artifact is stable product test output. The temporary handle can late
 artifact:
   kind: test_log
   name: account_export_confirmation_test.log
-  description: "Test output for account export confirmation behavior."
+  description: "Test output for account export confirmation tests."
 staged_artifact_handle: staged_artifact_account_export_test_log_001
 ```
 
@@ -685,7 +685,7 @@ params:
   display_name: "account_export_confirmation_test.log"
   content_type: text/plain
   redaction_state: none
-  safe_bytes_or_notice: "Test output for account export confirmation behavior."
+  safe_bytes_or_notice: "Test output for account export confirmation tests."
   expected_sha256: null
   expected_size_bytes: null
   relation_hint: "test_log"
@@ -1036,20 +1036,20 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the explicit confirmation copy sufficient for account data export that may include personal data?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user's judgment that the confirmation copy is sufficient."
+      description: "Record the user's judgment that the explicit confirmation copy is sufficient."
       consequence: "Close readiness can evaluate the product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised confirmation copy."
+      description: "Keep the Task open for revised explicit confirmation copy."
       consequence: "Close remains blocked on the product decision."
       is_default: false
   context:
-    summary: "The user must judge whether the confirmation copy is sufficient for account data export that may include personal data."
+    summary: "The user must judge whether the explicit confirmation copy is sufficient for account data export that may include personal data."
     related_refs: []
     artifact_refs:
       - artifact_id: artifact_account_export_confirmation_copy_001
@@ -1110,10 +1110,10 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the explicit confirmation copy sufficient for account data export that may include personal data?"
   options: []
   context:
-    summary: "The user must judge whether the confirmation copy is sufficient for account data export that may include personal data."
+    summary: "The user must judge whether the explicit confirmation copy is sufficient for account data export that may include personal data."
     related_refs: []
     artifact_refs:
       - artifact_id: artifact_account_export_confirmation_copy_001
@@ -1260,10 +1260,10 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the explicit confirmation copy sufficient for account data export that may include personal data?"
   options: []
   context:
-    summary: "The user must judge whether the confirmation copy is sufficient for account data export that may include personal data."
+    summary: "The user must judge whether the explicit confirmation copy is sufficient for account data export that may include personal data."
     related_refs: []
     artifact_refs:
       - artifact_id: artifact_account_export_confirmation_copy_001
@@ -1371,14 +1371,14 @@ Returns `ToolRejectedResponse` for close preflight failures before close-readine
 
 The literal `intent=complete` selects the completion intent. It is not shorthand for the full close-readiness evaluation order.
 
-Successful close-readiness observation for the account export confirmation scenario:
+Successful close-readiness observation for the account data export explicit confirmation step scenario:
 
 ```yaml
 close_readiness:
   ready: true
   evidence:
     - "Account export confirmation tests passed."
-    - "User accepted the confirmation copy."
+    - "User accepted the account data export explicit confirmation copy."
 ```
 
 Blocked close-readiness observation for the same scenario:
@@ -1388,7 +1388,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "The user has not accepted the account export confirmation copy."
+      message: "The user has not accepted the account data export explicit confirmation copy."
 ```
 
 ### Minimal valid request
@@ -1437,7 +1437,7 @@ state:
 blockers:
   - category: user_judgment
     code: missing_user_judgment
-    message: "The user has not accepted the account export confirmation copy."
+    message: "The user has not accepted the account data export explicit confirmation copy."
     related_refs: []
 evidence_summary:
   status: sufficient
@@ -1457,7 +1457,7 @@ evidence_summary:
 artifact_refs: []
 next_actions:
   - action: harness.request_user_judgment
-    reason: "Ask the user to accept the account export confirmation copy before attempting close."
+    reason: "Ask the user to accept the account data export explicit confirmation copy before attempting close."
 ```
 
 ### Owner links

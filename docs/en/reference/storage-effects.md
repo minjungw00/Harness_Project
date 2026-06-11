@@ -102,7 +102,7 @@ A committed non-dry-run `PrepareWriteResult` with `decision=blocked`, `decision=
 Example account export write-decision data:
 
 ```yaml
-intended_operation: "update account export confirmation flow"
+intended_operation: "update account data export explicit confirmation step"
 affected_paths:
   - src/account/export.ts
   - src/account/export-confirmation.ts
@@ -110,7 +110,7 @@ affected_paths:
 decision: approval_required
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "Account data export may include personal data and needs explicit approval."
+    message: "Account data export may include personal data and needs approval for the explicit confirmation step."
 ```
 
 Those reasons are prepare-write decision reasons. They are not:
@@ -237,13 +237,13 @@ Committed `dry_run=false` with `decision=allowed` may:
 
 Committed non-allowed decisions may persist only allowed decision-state and replay effects.
 
-For an account export confirmation flow, a persisted write decision may record only the approval requirement:
+For the account data export explicit confirmation step, a persisted write decision may record only the approval requirement:
 
 ```yaml
 decision: approval_required
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "Account data export may include personal data and needs explicit approval."
+    message: "Account data export may include personal data and needs approval for the explicit confirmation step."
 ```
 
 No-effect branches:

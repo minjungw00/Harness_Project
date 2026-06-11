@@ -57,7 +57,7 @@ Example staged artifact data:
 artifact:
   kind: test_log
   name: account_export_confirmation_test.log
-  description: "Test output for account export confirmation behavior."
+  description: "Test output for account export confirmation tests."
 staged_artifact_handle: staged_artifact_account_export_test_log_001
 ```
 
