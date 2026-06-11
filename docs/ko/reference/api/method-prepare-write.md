@@ -7,7 +7,7 @@
 이 문서는 현재 MVP에서 `harness.prepare_write` 메서드가 담당하는 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 계정 데이터 내보내기 확인 예시의 최소 요청과 대표 응답
+- 계정 내보내기 확인 예시의 최소 요청과 대표 응답
 - 저장 담당 문서가 기록 단위 세부사항을 정의하기 전의 메서드 수준 저장 효과 기대치
 
 ## 담당하지 않는 것
@@ -115,7 +115,7 @@
 
 ## 최소 유효 요청
 
-이 예시는 개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 `personal_data_export`를 `sensitive_categories`의 예시 값으로 사용합니다. 이 메서드 예시는 `personal_data_export`를 새 활성 값으로 정의하지 않고, 민감 범주의 전체 값 집합도 정의하지 않습니다.
+이 예시는 개인정보가 포함될 수 있는 계정 내보내기에 대해 `personal_data_export`를 `sensitive_categories`의 예시 값으로 사용합니다. 이 메서드 예시는 `personal_data_export`를 새 활성 값으로 정의하지 않고, 민감 범주의 전체 값 집합도 정의하지 않습니다.
 
 ```yaml
 method: harness.prepare_write
@@ -199,7 +199,7 @@ write_authorization: null
 authorization_effect: none
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 Write Authorization 전에 별도의 민감 동작 승인이 필요합니다."
+    message: "계정 내보내기에는 개인정보가 포함될 수 있으므로 Write Authorization 전에 별도의 민감 동작 승인이 필요합니다."
 ```
 
 ## 담당 문서 링크

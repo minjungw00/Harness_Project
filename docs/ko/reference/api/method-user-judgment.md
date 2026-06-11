@@ -5,7 +5,7 @@
 이 문서는 현재 MVP에서 `harness.request_user_judgment`와 `harness.record_user_judgment` 메서드가 담당하는 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 계정 데이터 내보내기 확인 예시의 최소 요청과 대표 응답
+- 계정 내보내기 확인 예시의 최소 요청과 대표 응답
 - 대기 중인 사용자 판단을 만드는 동작과 사용자의 답을 기록하는 동작의 메서드 경계
 
 ## 담당하지 않는 것
@@ -222,20 +222,20 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
+  question: "개인정보가 포함될 수 있는 계정 내보내기 확인 문구가 충분합니까?"
   options:
     - option_id: accept
       label: "충분함"
-      description: "확인 문구가 충분하다는 사용자 판단을 기록합니다."
+      description: "계정 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
       consequence: "닫기 준비 상태 평가에서 제품 판단을 해결된 것으로 볼 수 있습니다."
       is_default: true
     - option_id: revise
       label: "수정"
-      description: "확인 문구 수정을 위해 Task를 열어 둡니다."
+      description: "계정 내보내기 확인 문구 수정을 위해 Task를 열어 둡니다."
       consequence: "제품 판단 때문에 닫기가 계속 차단됩니다."
       is_default: false
   context:
-    summary: "확인 문구는 다운로드 전에 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
+    summary: "계정 내보내기 확인 문구는 다운로드 전에 개인정보 포함 가능성을 사용자에게 알립니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
@@ -274,7 +274,7 @@ params:
     product_decision:
       judgment:
         decision: accepted
-        rationale: "확인 문구가 내보내기에 개인정보가 포함될 수 있음을 명확히 알립니다."
+        rationale: "계정 내보내기 확인 문구가 개인정보 포함 가능성을 명확히 알립니다."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
@@ -315,10 +315,10 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
+  question: "개인정보가 포함될 수 있는 계정 내보내기 확인 문구가 충분합니까?"
   options: []
   context:
-    summary: "확인 문구는 다운로드 전에 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
+    summary: "계정 내보내기 확인 문구는 다운로드 전에 개인정보 포함 가능성을 사용자에게 알립니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
@@ -364,10 +364,10 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
+  question: "개인정보가 포함될 수 있는 계정 내보내기 확인 문구가 충분합니까?"
   options: []
   context:
-    summary: "확인 문구는 다운로드 전에 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
+    summary: "계정 내보내기 확인 문구는 다운로드 전에 개인정보 포함 가능성을 사용자에게 알립니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
@@ -380,7 +380,7 @@ user_judgment:
       product_decision:
         judgment:
           decision: accepted
-          rationale: "확인 문구가 내보내기에 개인정보가 포함될 수 있음을 명확히 알립니다."
+          rationale: "계정 내보내기 확인 문구가 개인정보 포함 가능성을 명확히 알립니다."
     note: null
     accepted_risks: []
     resolved_by_actor_kind: user

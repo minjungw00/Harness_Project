@@ -133,18 +133,18 @@ active_task:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "계정 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 내보내기 명시적 확인 단계를 추가하고 계정 내보내기 확인 테스트를 갱신한다."
+  goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
+  scope_summary: "계정 내보내기 확인 단계를 추가하고 계정 내보내기 확인 테스트를 갱신한다."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
     state_version: 21
-status_summary: "계정 내보내기 확인 테스트가 기록되었습니다. 계정 내보내기 명시적 확인 단계 문구에 대한 사용자 수락은 아직 대기 중입니다."
+status_summary: "계정 내보내기 확인 테스트가 기록되었습니다. 계정 내보내기 확인 문구에 대한 사용자 수락은 아직 대기 중입니다."
 next_actions:
   - action: harness.request_user_judgment
-    reason: "닫기 전에 계정 내보내기 명시적 확인 단계 문구를 수락해 달라고 사용자에게 요청합니다."
+    reason: "닫기 전에 계정 내보내기 확인 문구를 수락해 달라고 사용자에게 요청합니다."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary:
@@ -167,7 +167,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "사용자가 계정 내보내기 명시적 확인 단계 문구를 아직 수락하지 않았습니다."
+      message: "사용자가 계정 내보내기 확인 문구를 아직 수락하지 않았습니다."
 guarantee_display:
   level: cooperative
   notes:
