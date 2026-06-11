@@ -7,7 +7,7 @@
 이 문서는 현재 MVP에서 `harness.intake` 메서드가 담당하는 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 계정 데이터 내보내기 확인 예시의 최소 요청과 대표 응답
+- 계정 데이터 내보내기 확인 예시의 요청 필드와 대표 응답
 - 저장 담당 문서가 기록 단위 세부사항을 정의하기 전의 메서드 수준 저장 효과 기대치
 
 ## 담당하지 않는 것
@@ -93,31 +93,18 @@
 
 커밋 시 `harness.intake`가 담당하는 Task 또는 Change Unit 상태를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당하고, 저장 기록 형태는 [저장소 기록](../storage-records.md)이 담당합니다.
 
-## 최소 유효 요청
+## 시나리오 요청 예시
 
 ```yaml
 method: harness.intake
 params:
-  envelope:
-    project_id: proj_123
-    task_id: null
-    actor_kind: agent
-    surface_id: surface_local
-    request_id: req_intake_001
-    idempotency_key: idem_intake_001
-    expected_state_version: 17
-    dry_run: false
-    locale: ko-KR
   plain_language_request: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  requested_mode: auto
-  resume_policy: create_new
   initial_scope:
-    boundary: "계정 데이터 내보내기 흐름과 계정 데이터 내보내기 확인 테스트만."
+    boundary: "계정 내보내기 흐름과 해당 테스트만."
     non_goals:
       - "계정 삭제 동작"
     acceptance_criteria:
-      - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
-  initial_context_refs: []
+      - "다운로드 전에 계정 내보내기 확인이 필요하다."
 ```
 
 ## 대표 응답
@@ -155,12 +142,12 @@ state:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 데이터 내보내기 흐름과 계정 데이터 내보내기 확인 테스트만."
+  goal_summary: "계정 데이터 내보내기 확인"
+  scope_summary: "계정 내보내기 흐름과 해당 테스트만."
   non_goals:
     - "계정 삭제 동작"
   acceptance_criteria:
-    - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
+    - "다운로드 전에 계정 내보내기 확인이 필요하다."
   active_change_unit_ref: null
   blocker_refs: []
 next_actions:

@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.intake`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account data export confirmation scenario
+- the scenario request fields and representative response for the shared account data export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -118,31 +118,18 @@ Branch shape is owned by [API Schema Core](schema-core.md); no-effect persistenc
 
 On commit, the method may persist intake-owned Task or Change Unit state. Exact storage effects are owned by [Storage Effects](../storage-effects.md), and storage record shapes are owned by [Storage Records](../storage-records.md).
 
-## Minimal valid request
+## Scenario request example
 
 ```yaml
 method: harness.intake
 params:
-  envelope:
-    project_id: proj_123
-    task_id: null
-    actor_kind: agent
-    surface_id: surface_local
-    request_id: req_intake_001
-    idempotency_key: idem_intake_001
-    expected_state_version: 17
-    dry_run: false
-    locale: en-US
   plain_language_request: "Add explicit confirmation before account data export."
-  requested_mode: auto
-  resume_policy: create_new
   initial_scope:
-    boundary: "Only the account data export flow and its tests."
+    boundary: "Only the account export flow and its tests."
     non_goals:
-      - "Account deletion behavior"
+      - "Changing account deletion behavior"
     acceptance_criteria:
-      - "Account data export requires an explicit confirmation step before download."
-  initial_context_refs: []
+      - "Account export requires explicit confirmation before download."
 ```
 
 ## Representative response
@@ -180,12 +167,12 @@ state:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Only the account data export flow and its tests."
+  goal_summary: "Account data export confirmation"
+  scope_summary: "Only the account export flow and its tests."
   non_goals:
-    - "Account deletion behavior"
+    - "Changing account deletion behavior"
   acceptance_criteria:
-    - "Account data export requires an explicit confirmation step before download."
+    - "Account export requires explicit confirmation before download."
   active_change_unit_ref: null
   blocker_refs: []
 next_actions:
