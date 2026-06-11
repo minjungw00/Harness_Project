@@ -43,6 +43,38 @@ question_routes:
       supporting_owner_doc_ids:
         - maintain.checks
       route_note: "API examples must use durable product or user scenarios, not documentation maintenance, refactoring, route cleanup, section restructuring, or migration."
+    - question: "`harness.intake` behavior"
+      canonical_owner_doc_id: reference.api.method-intake
+      default_path: docs/en/reference/api/method-intake.md
+      route_note: "`harness.intake` method behavior."
+    - question: "`harness.update_scope` behavior"
+      canonical_owner_doc_id: reference.api.method-update-scope
+      default_path: docs/en/reference/api/method-update-scope.md
+      route_note: "`harness.update_scope` method behavior."
+    - question: "`harness.status` behavior"
+      canonical_owner_doc_id: reference.api.method-status
+      default_path: docs/en/reference/api/method-status.md
+      route_note: "`harness.status` method behavior."
+    - question: "`harness.prepare_write` behavior"
+      canonical_owner_doc_id: reference.api.method-prepare-write
+      default_path: docs/en/reference/api/method-prepare-write.md
+      route_note: "`harness.prepare_write` method behavior."
+    - question: "`harness.stage_artifact` behavior"
+      canonical_owner_doc_id: reference.api.method-stage-artifact
+      default_path: docs/en/reference/api/method-stage-artifact.md
+      route_note: "`harness.stage_artifact` method behavior."
+    - question: "`harness.record_run` behavior"
+      canonical_owner_doc_id: reference.api.method-record-run
+      default_path: docs/en/reference/api/method-record-run.md
+      route_note: "`harness.record_run` method behavior."
+    - question: "user judgment methods"
+      canonical_owner_doc_id: reference.api.method-user-judgment
+      default_path: docs/en/reference/api/method-user-judgment.md
+      route_note: "User judgment method behavior for `harness.request_user_judgment` and `harness.record_user_judgment`."
+    - question: "`harness.close_task` behavior"
+      canonical_owner_doc_id: reference.api.method-close-task
+      default_path: docs/en/reference/api/method-close-task.md
+      route_note: "`harness.close_task` method behavior."
     - question: "Is `STATE_VERSION_CONFLICT` a blocker code?"
       canonical_owner_doc_id: reference.api.errors
       default_path: docs/en/reference/api/errors.md
@@ -633,13 +665,16 @@ docs:
       - storage-effect owner links for methods
       - representative API example scenario used by this method reference
     does_not_own:
+      - full per-method behavior details
       - method-specific request behavior
       - method-specific response behavior
       - method-specific result examples
       - common response envelopes
+      - schema field definitions
       - shared schema bodies
       - active value sets
-      - public error precedence
+      - public error-code semantics
+      - storage effect details
       - storage DDL
       - artifact storage lifecycle
     related_docs:

@@ -42,7 +42,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Question | Owner document(s) |
 |---|---|
 | Which document owns Core authority, Task state, evidence, residual risk, and non-substitution rules? | [Core Model](core-model.md) |
-| Which document owns API method behavior? | [MVP API router](api/mvp-api.md), then the method owner document listed there |
+| Which document owns API method behavior? | Method owner documents listed in the API method owners table; [MVP API router](api/mvp-api.md) owns the active method list and owner routing |
 | Which document owns shared API response branches and envelopes? | [API Schema Core](api/schema-core.md) |
 | Which document owns public error codes and error precedence? | [API Errors](api/errors.md) |
 | Which document owns storage records or DDL? | [Storage Records](storage-records.md) |
@@ -76,16 +76,16 @@ This route is for implementers and reviewers who need exact owners. New and work
 
 ## API method owners
 
-| Method or family | Owner document |
+| Question | Owner document |
 |---|---|
-| `harness.intake` | [Intake method](api/method-intake.md) |
-| `harness.update_scope` | [Update-scope method](api/method-update-scope.md) |
-| `harness.status` | [Status method](api/method-status.md) |
-| `harness.prepare_write` | [Prepare-write method](api/method-prepare-write.md) |
-| `harness.stage_artifact` | [Stage-artifact method](api/method-stage-artifact.md) |
-| `harness.record_run` | [Record-run method](api/method-record-run.md) |
-| `harness.request_user_judgment`, `harness.record_user_judgment` | [User-judgment methods](api/method-user-judgment.md) |
-| `harness.close_task` | [Close-task method](api/method-close-task.md) |
+| `harness.intake` behavior | [Intake method](api/method-intake.md) |
+| `harness.update_scope` behavior | [Update-scope method](api/method-update-scope.md) |
+| `harness.status` behavior | [Status method](api/method-status.md) |
+| `harness.prepare_write` behavior | [Prepare-write method](api/method-prepare-write.md) |
+| `harness.stage_artifact` behavior | [Stage-artifact method](api/method-stage-artifact.md) |
+| `harness.record_run` behavior | [Record-run method](api/method-record-run.md) |
+| user judgment methods | [User-judgment methods](api/method-user-judgment.md) |
+| `harness.close_task` behavior | [Close-task method](api/method-close-task.md) |
 
 ## Storage owners
 

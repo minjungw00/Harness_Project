@@ -42,8 +42,8 @@
 | 질문 | 담당 문서 |
 |---|---|
 | Core 권한, Task 상태, 증거, 잔여 위험, 비대체 규칙은 어디가 담당하나요? | [Core 모델](core-model.md) |
-| API 메서드 동작은 어디가 담당하나요? | [MVP API 경로 문서](api/mvp-api.md)를 먼저 보고, 그 안의 메서드 담당 문서로 이동합니다 |
-| 공통 API 응답 분기와 요청 래퍼는 어디가 담당하나요? | [API 코어 스키마](api/schema-core.md) |
+| API method 동작은 어느 담당 문서가 맡나요? | 아래 API 메서드 담당 문서 표의 메서드 담당 문서가 맡습니다. [MVP API 경로 문서](api/mvp-api.md)는 활성 메서드 목록과 담당 문서 경로를 맡습니다 |
+| 공통 API 응답 branch와 요청 래퍼는 어느 담당 문서가 맡나요? | [API 코어 스키마](api/schema-core.md) |
 | 공개 오류 코드와 오류 우선순위는 어디가 담당하나요? | [API 오류](api/errors.md) |
 | 저장소 기록이나 DDL은 어디가 담당하나요? | [저장소 기록](storage-records.md) |
 | 저장 효과는 어느 담당 문서가 맡나요? | [저장 효과](storage-effects.md) |
@@ -76,16 +76,16 @@
 
 ## API 메서드 담당 문서
 
-| 메서드 또는 묶음 | 담당 문서 |
+| 질문 | 담당 문서 |
 |---|---|
-| `harness.intake` | [접수 메서드](api/method-intake.md) |
-| `harness.update_scope` | [범위 갱신 메서드](api/method-update-scope.md) |
-| `harness.status` | [상태 메서드](api/method-status.md) |
-| `harness.prepare_write` | [쓰기 준비 메서드](api/method-prepare-write.md) |
-| `harness.stage_artifact` | [아티팩트 스테이징 메서드](api/method-stage-artifact.md) |
-| `harness.record_run` | [실행 기록 메서드](api/method-record-run.md) |
-| `harness.request_user_judgment`, `harness.record_user_judgment` | [사용자 판단 메서드](api/method-user-judgment.md) |
-| `harness.close_task` | [Task 닫기 메서드](api/method-close-task.md) |
+| `harness.intake` method 동작 | [접수 메서드](api/method-intake.md) |
+| `harness.update_scope` method 동작 | [범위 갱신 메서드](api/method-update-scope.md) |
+| `harness.status` method 동작 | [상태 메서드](api/method-status.md) |
+| `harness.prepare_write` method 동작 | [쓰기 준비 메서드](api/method-prepare-write.md) |
+| `harness.stage_artifact` method 동작 | [아티팩트 스테이징 메서드](api/method-stage-artifact.md) |
+| `harness.record_run` method 동작 | [실행 기록 메서드](api/method-record-run.md) |
+| 사용자 소유 판단 method 동작 | [사용자 판단 메서드](api/method-user-judgment.md) |
+| `harness.close_task` method 동작 | [Task 닫기 메서드](api/method-close-task.md) |
 
 ## 저장소 담당 문서
 

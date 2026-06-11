@@ -15,10 +15,11 @@ This document is the stable route document for the active MVP API method family.
 
 This document does not own:
 
-- method-specific required inputs, access requirements, result fields, dry-run behavior, or representative request and response bodies
-- common API envelope or response schema bodies
+- full per-method behavior details, including method-specific required inputs, access requirements, result fields, dry-run behavior, or representative request and response bodies
+- common API envelope bodies, response branch schema bodies, or schema field definitions
 - state, artifact, judgment, value-set, or error schema definitions
-- storage DDL, storage record layouts, artifact lifecycle, state-version storage rules, or security guarantees
+- storage-effect details, storage DDL, storage record layouts, artifact lifecycle, state-version storage rules, or security guarantees
+- public error-code semantics
 - future or later-candidate API methods
 
 ## API method family boundary
@@ -36,8 +37,8 @@ The exact active method-name value set is owned by [API Value Sets](schema-value
 | Method | Active role | Owner |
 |---|---|---|
 | <a id="harnessintake"></a>`harness.intake` | Start, resume, or classify ordinary user work. | [Intake method](method-intake.md) |
-| <a id="harnessstatus"></a>`harness.status` | Return current state summary, blockers, pending judgments, evidence summary, close state, and next safe actions. | [Status method](method-status.md) |
 | <a id="harnessupdate_scope"></a>`harness.update_scope` | Update active Task scope and the active Change Unit after intake. | [Update-scope method](method-update-scope.md) |
+| <a id="harnessstatus"></a>`harness.status` | Return current state summary, blockers, pending judgments, evidence summary, close state, and next safe actions. | [Status method](method-status.md) |
 | <a id="harnessprepare_write"></a>`harness.prepare_write` | Check a proposed product-file write against current scope, state, required separate sensitive-action approval, baseline, and surface capability. | [Prepare-write method](method-prepare-write.md) |
 | <a id="harnessstage_artifact"></a>`harness.stage_artifact` | Stage caller-provided safe artifact bytes or a safe notice as a temporary handle for later `record_run` promotion. | [Stage-artifact method](method-stage-artifact.md) |
 | <a id="harnessrecord_run"></a>`harness.record_run` | Record shaping, direct, or implementation work plus compact evidence and artifact refs. | [Record-run method](method-record-run.md) |
@@ -47,16 +48,18 @@ The exact active method-name value set is owned by [API Value Sets](schema-value
 
 ## Method owner routing table
 
+Use this table for method behavior questions. Shared response branches, schema fields, storage effects, and public errors route to the owner links below.
+
 | Question | Owner |
 |---|---|
-| Intake behavior, mode resolution, initial scope candidate, and `IntakeResult` examples | [Intake method](method-intake.md) |
-| Active scope changes, Change Unit changes, stale Write Authorization consequences, and `UpdateScopeResult` examples | [Update-scope method](method-update-scope.md) |
-| Read-only status behavior, included summaries, and `StatusResult` examples | [Status method](method-status.md) |
-| Write compatibility checks, Write Authorization creation or non-allow decisions, and `PrepareWriteResult` examples | [Prepare-write method](method-prepare-write.md) |
-| Temporary artifact staging behavior and `StageArtifactResult` examples | [Stage-artifact method](method-stage-artifact.md) |
-| Run recording, evidence updates, artifact promotion, and `RecordRunResult` examples | [Record-run method](method-record-run.md) |
-| Creating or resolving user-owned judgment requests and related examples | [User-judgment methods](method-user-judgment.md) |
-| Close-readiness checks, close blockers, terminal close mutations, and `CloseTaskResult` examples | [Close-task method](method-close-task.md) |
+| `harness.intake` behavior | [Intake method](method-intake.md) |
+| `harness.update_scope` behavior | [Update-scope method](method-update-scope.md) |
+| `harness.status` behavior | [Status method](method-status.md) |
+| `harness.prepare_write` behavior | [Prepare-write method](method-prepare-write.md) |
+| `harness.stage_artifact` behavior | [Stage-artifact method](method-stage-artifact.md) |
+| `harness.record_run` behavior | [Record-run method](method-record-run.md) |
+| user judgment methods | [User-judgment methods](method-user-judgment.md) |
+| `harness.close_task` behavior | [Close-task method](method-close-task.md) |
 
 <a id="shared-request-rules"></a>
 
