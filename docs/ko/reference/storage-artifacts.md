@@ -135,8 +135,9 @@
 artifact:
   kind: test_log
   name: account_export_confirmation_test.log
-  description: "계정 데이터 내보내기 확인 테스트 출력."
+  description: "계정 내보내기 확인 동작 테스트 출력."
 staged_artifact_handle: staged_artifact_account_export_test_log_001
+expires_at: "<future-expiration-timestamp>"
 ```
 
 규칙:

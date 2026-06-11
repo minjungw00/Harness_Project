@@ -7,7 +7,7 @@
 이 문서는 현재 MVP에서 `harness.stage_artifact` 메서드가 담당하는 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 계정 데이터 내보내기 확인 예시의 최소 요청과 대표 응답
+- 계정 내보내기 확인 예시의 최소 요청과 대표 응답
 - 저장 담당 문서가 기록 단위 세부사항을 정의하기 전의 메서드 수준 저장 효과 기대치
 
 ## 담당하지 않는 것
@@ -108,8 +108,9 @@
 artifact:
   kind: test_log
   name: account_export_confirmation_test.log
-  description: "계정 데이터 내보내기 확인 테스트 출력."
+  description: "계정 내보내기 확인 동작 테스트 출력."
 staged_artifact_handle: staged_artifact_account_export_test_log_001
+expires_at: "<future-expiration-timestamp>"
 ```
 
 ## 최소 유효 요청
@@ -131,7 +132,7 @@ params:
   display_name: "account_export_confirmation_test.log"
   content_type: text/plain
   redaction_state: none
-  safe_bytes_or_notice: "계정 데이터 내보내기 확인 테스트 출력."
+  safe_bytes_or_notice: "계정 내보내기 확인 동작 테스트 출력."
   expected_sha256: null
   expected_size_bytes: null
   relation_hint: "test_log"
@@ -156,11 +157,11 @@ staged_artifact_handle:
   created_by_surface_instance_id: surface_instance_01
   content_type: text/plain
   sha256: sha256:example
-  size_bytes: 65
+  size_bytes: 51
   redaction_state: none
-  expires_at: "2099-01-01T12:30:00Z"
+  expires_at: "<future-expiration-timestamp>"
   consumed: false
-expires_at: "2099-01-01T12:30:00Z"
+expires_at: "<future-expiration-timestamp>"
 ```
 
 ## 담당 문서 링크

@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.stage_artifact`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account data export confirmation scenario
+- the minimal request and representative response for the shared account export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -120,8 +120,9 @@ The staged artifact is stable product test output. The temporary handle can late
 artifact:
   kind: test_log
   name: account_export_confirmation_test.log
-  description: "Test output for account data export confirmation tests."
+  description: "Test output for account export confirmation behavior."
 staged_artifact_handle: staged_artifact_account_export_test_log_001
+expires_at: "<future-expiration-timestamp>"
 ```
 
 ## Minimal valid request
@@ -143,7 +144,7 @@ params:
   display_name: "account_export_confirmation_test.log"
   content_type: text/plain
   redaction_state: none
-  safe_bytes_or_notice: "Test output for account data export confirmation tests."
+  safe_bytes_or_notice: "Test output for account export confirmation behavior."
   expected_sha256: null
   expected_size_bytes: null
   relation_hint: "test_log"
@@ -168,11 +169,11 @@ staged_artifact_handle:
   created_by_surface_instance_id: surface_instance_01
   content_type: text/plain
   sha256: sha256:example
-  size_bytes: 65
+  size_bytes: 53
   redaction_state: none
-  expires_at: "2099-01-01T12:30:00Z"
+  expires_at: "<future-expiration-timestamp>"
   consumed: false
-expires_at: "2099-01-01T12:30:00Z"
+expires_at: "<future-expiration-timestamp>"
 ```
 
 ## Owner links
