@@ -115,7 +115,7 @@ Examples below:
 
 Shared sample task:
 
-- The examples use a durable account export confirmation task: add explicit confirmation before account data export, update account data export confirmation tests, and record account export confirmation test output as representative run/evidence data.
+- The examples use a durable account data export confirmation task: add explicit confirmation before account data export, update account data export confirmation tests, and record account data export confirmation test output as representative run/evidence data.
 - Maintenance rules for replacing or reviewing API examples live in [Authoring Guide](../../maintain/authoring-guide.md) and [Checks](../../maintain/checks.md).
 
 Committed non-dry-run state-changing calls require:

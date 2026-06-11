@@ -217,7 +217,7 @@ Not allowed:
 - consuming staged handles
 - applying `close_task` effects
 
-Example account export write-decision data:
+Example account data export write-decision data:
 
 ```yaml
 intended_operation: "update account data export explicit confirmation step"
@@ -463,7 +463,7 @@ Rejected attempts do not change:
 - staging rows
 - artifacts
 
-For an account export confirmation test run, a committed `harness.record_run` may record the run, promote the staged test log, and update evidence:
+For an account data export confirmation test run, a committed `harness.record_run` may record the run, promote the staged test log, and update evidence:
 
 ```yaml
 command: "npm test -- account-export"

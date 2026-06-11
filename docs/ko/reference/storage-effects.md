@@ -181,6 +181,25 @@
 - `CloseReadinessBlocker` 저장.
 - `project_state.state_version` 증가.
 
+## 읽기 전용 효과
+
+읽기 전용 결과는 응답으로만 반환되며 재실행 행이 아닙니다. `harness.status`와 `harness.close_task intent=check`는 응답을 위해 차단 사유, `CloseReadinessBlocker[]`, 증거 요약, 아티팩트 참조, 진단, 다음 행동을 계산할 수 있습니다.
+
+저장소는 읽기가 일어났다는 이유만으로 그 계산값을 지속 저장하면 안 됩니다.
+
+`harness.status`의 `close_blockers: CloseReadinessBlocker[]`는 읽기 전용 관찰입니다. 이 결과는 아래 항목을 만들지 않습니다.
+
+- `task_event` 또는 `task_events` 추가
+- 재실행 행 또는 `tool_invocations.response_json`
+- `close_state` 변경
+- `Write Authorization` 변경
+- 스테이징 핸들 소비
+- 아티팩트 효과
+- 증거 업데이트
+- `project_state.state_version` 증가
+
+`harness.close_task intent=check`의 응답 분기는 [`harness.close_task`](api/mvp-api.md#harnessclose_task)가 담당합니다. 이 저장 효과 문서는 `dry_run=true`이거나 `blockers: CloseReadinessBlocker[]`를 포함하더라도 그 점검이 읽기 전용이라는 점만 담당합니다.
+
 ## 커밋된 차단 결과의 저장 효과
 
 커밋된 차단 결과는 거절 응답과 다릅니다. `harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 [MVP API](api/mvp-api.md)가 차단 커밋을 허용할 때만 `MethodResult`입니다.
@@ -455,11 +474,11 @@ write_decision_reasons:
 - 스테이징 행.
 - 아티팩트.
 
-계정 내보내기 확인 테스트 실행에서는 커밋된 `harness.record_run`이 실행을 기록하고, 스테이징된 테스트 로그를 승격하고, 증거를 갱신할 수 있습니다.
+계정 데이터 내보내기 확인 테스트 실행에서는 커밋된 `harness.record_run`이 실행을 기록하고, 스테이징된 테스트 로그를 승격하고, 증거를 갱신할 수 있습니다.
 
 ```yaml
 command: "npm test -- account-export"
-summary: "계정 내보내기 확인 테스트가 통과했습니다."
+summary: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
 artifacts:
   - staged_artifact_account_export_test_log_001
 run_ref: run_account_export_tests_001
@@ -620,141 +639,6 @@ run_ref: run_account_export_tests_001
 
 - [MVP API의 `harness.close_task`](api/mvp-api.md#harnessclose_task)
 - [저장소 버전 관리](storage-versioning.md)
-
-## `state_version` 영향
-
-`project_state.state_version`은 상태 효과가 허용된 커밋에서만 증가합니다. 성공한 상태 변경은 커밋당 정확히 한 번 증가하고, 커밋된 차단 결과는 메서드 담당 문서가 `state_version` 효과를 허용할 때만 증가할 수 있습니다.
-
-요약 표는 분기별 영향을 보여 주고, 세부 블록은 조건과 저장 효과를 분리합니다.
-
-| 분기 | 영향 | 세부사항 |
-|---|---|---|
-| 읽기 전용 결과 | 증가하지 않음 | [읽기 전용 결과](#state-version-read-only-result) |
-| `ToolRejectedResponse` | 증가하지 않음 | [`ToolRejectedResponse`](#state-version-toolrejectedresponse) |
-| 유효한 `ToolDryRunResponse` | 증가하지 않음 | [유효한 `dry_run` 미리보기](#state-version-valid-dry-run-preview) |
-| `StageArtifactResult`, `effect_kind=staging_created` | 증가하지 않음 | [스테이징 생성 결과](#state-version-staging-created-result) |
-| 커밋된 차단 결과 | 메서드별 | [커밋된 차단 결과](#state-version-committed-blocked-result) |
-| 성공한 상태 변경 | 한 번 증가 | [성공한 상태 변경](#state-version-successful-mutation) |
-
-<a id="state-version-read-only-result"></a>
-**읽기 전용 결과**
-
-조건:
-
-- 응답이 읽기 전용 결과입니다.
-
-허용되는 효과:
-
-- 응답 데이터 반환.
-
-허용되지 않는 효과:
-
-- `project_state.state_version` 증가.
-
-<a id="state-version-toolrejectedresponse"></a>
-**`ToolRejectedResponse`**
-
-조건:
-
-- 요청이 커밋 전에 거절됩니다.
-
-허용되는 효과:
-
-- 거절 응답 반환.
-
-허용되지 않는 효과:
-
-- `project_state.state_version` 증가.
-- 담당 기록 변경.
-
-<a id="state-version-valid-dry-run-preview"></a>
-**유효한 `dry_run` 미리보기**
-
-조건:
-
-- 유효한 `ToolDryRunResponse` 미리보기입니다.
-
-허용되는 효과:
-
-- 계획된 효과를 응답으로 설명.
-
-허용되지 않는 효과:
-
-- `project_state.state_version` 증가.
-- 담당 기록 변경.
-
-<a id="state-version-staging-created-result"></a>
-**스테이징 생성 결과**
-
-조건:
-
-- `StageArtifactResult`가 `effect_kind=staging_created`로 반환됩니다.
-
-허용되는 효과:
-
-- 저장소 소유 임시 스테이징.
-
-허용되지 않는 효과:
-
-- `project_state.state_version` 증가.
-
-예외:
-
-- 임시 스테이징은 Core 상태 변경이 아닙니다.
-
-<a id="state-version-committed-blocked-result"></a>
-**커밋된 차단 결과**
-
-조건:
-
-- 메서드 담당 문서가 차단 결과 커밋을 허용합니다.
-
-허용되는 효과:
-
-- 메서드 담당 문서가 차단 결과 커밋과 `state_version` 효과를 허용할 때만 증가할 수 있습니다.
-
-허용되지 않는 효과:
-
-- 메서드 담당 문서가 허용하지 않은 `state_version` 증가.
-
-<a id="state-version-successful-mutation"></a>
-**성공한 상태 변경**
-
-조건:
-
-- 상태 변경이 성공적으로 커밋됩니다.
-
-허용되는 효과:
-
-- `project_state.state_version`이 커밋당 정확히 한 번 증가합니다.
-
-`state_version`이 오래된 경우는 커밋된 차단 결과가 아닙니다. 오래된 `expected_state_version` 또는 오래된 `WriteAuthorization.basis_state_version`은 사전 확인의 `ToolRejectedResponse` 분기에 속하며 저장 효과가 없습니다.
-
-## 저장 효과가 아닌 것
-
-아래 값이 응답에 있다는 사실만으로 저장 효과가 증명되지 않습니다.
-
-- `CloseReadinessBlocker`.
-- `WriteDecisionReason`.
-- `PlannedBlocker`.
-- `ArtifactRef`.
-- `StagedArtifactHandle`.
-- `DryRunSummary.would_blockers`.
-- 계획된 효과 설명.
-
-특히 아래 추론은 하지 않습니다.
-
-- 응답에 `CloseReadinessBlocker[]`가 있으므로 닫기 차단 사유 기록이 저장되었다.
-- 응답에 `ArtifactRef`가 있으므로 아티팩트가 승격되었다.
-- 응답에 `StagedArtifactHandle`이 있으므로 스테이징 핸들이 소비되었다.
-- `dry_run` 응답에 계획된 효과가 있으므로 담당 기록이 바뀌었다.
-- 읽기 전용 결과가 차단 사유나 증거 요약을 계산했으므로 그 계산값이 지속 저장되었다.
-
-읽기 전용 결과는 응답을 위해 차단 사유, `CloseReadinessBlocker[]`, 증거 요약, 아티팩트 참조, 진단, 다음 행동을 계산할 수 있습니다. 읽기가 일어났다는 이유만으로 그 계산값을 저장하면 안 됩니다.
-
-`harness.status`의 `close_blockers: CloseReadinessBlocker[]`는 읽기 전용 관찰입니다. 이 결과는 `task_events`, 재실행 행, `tool_invocations.response_json`, `close_state`, `Write Authorization`, 스테이징 핸들, 아티팩트, 증거 요약, `project_state.state_version`을 바꾸지 않습니다.
-
-`harness.close_task intent=check`의 응답 분기는 [`harness.close_task`](api/mvp-api.md#harnessclose_task)가 담당합니다. 이 문서는 `dry_run=true`이거나 `blockers: CloseReadinessBlocker[]`를 포함하더라도 그 점검이 읽기 전용이라는 점만 담당합니다.
 
 ## 관련 담당 문서
 

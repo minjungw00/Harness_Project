@@ -145,7 +145,7 @@ Maintain docs should sound like editing instructions. They can name owner paths 
 
 Examples in reference and API documentation should use stable product or user scenarios. They should remain useful after the current edit context is forgotten.
 
-The current API reference sample task is: add explicit confirmation before account data export, update account data export confirmation tests, and record account export confirmation test output as representative run/evidence data. If a documentation batch replaces this sample task, update the API examples, paired Korean examples, checks, and routes together.
+The current API reference sample task is: add explicit confirmation before account data export, update account data export confirmation tests, and record account data export confirmation test output as representative run/evidence data. If a documentation batch replaces this sample task, update the API examples, paired Korean examples, checks, and routes together.
 
 API examples are not allowed to use the current documentation edit as the scenario.
 

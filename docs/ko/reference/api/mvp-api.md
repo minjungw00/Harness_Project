@@ -601,7 +601,7 @@ active_task:
 status_summary: "계정 데이터 내보내기 확인 테스트가 기록되었습니다. 계정 데이터 내보내기 명시적 확인 단계 문구에 대한 사용자 수락은 아직 대기 중입니다."
 next_actions:
   - action: harness.request_user_judgment
-    reason: "닫기 전에 계정 데이터 내보내기 명시적 확인 단계 문구에 대한 사용자 판단을 요청합니다."
+    reason: "닫기 전에 계정 데이터 내보내기 명시적 확인 단계 문구를 수락해 달라고 사용자에게 요청합니다."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary:
@@ -1900,7 +1900,7 @@ evidence_summary:
 artifact_refs: []
 next_actions:
   - action: harness.request_user_judgment
-    reason: "닫기를 시도하기 전에 계정 데이터 내보내기 명시적 확인 단계 문구에 대한 사용자 판단을 요청한다."
+    reason: "닫기를 시도하기 전에 계정 데이터 내보내기 명시적 확인 단계 문구를 수락해 달라고 사용자에게 요청한다."
 ```
 
 ### 담당 문서 링크

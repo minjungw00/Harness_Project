@@ -189,7 +189,7 @@ Owner:
 
 Check:
 - Confirm API and Reference examples use stable product or user scenarios.
-- For current MVP API examples, confirm they use the shared account export confirmation sample task unless the documentation batch intentionally replaces that sample across the API examples, paired Korean examples, checks, and routes.
+- For current MVP API examples, confirm they use the shared account data export confirmation sample task unless the documentation batch intentionally replaces that sample across the API examples, paired Korean examples, checks, and routes.
 - Confirm examples do not use the current documentation edit, refactor, review, migration, or section restructuring as their scenario.
 - Confirm documentation paths are used as example payload only when the document is specifically about documentation maintenance.
 - Confirm example wording does not narrate the current edit or review process instead of a product or user scenario.
@@ -205,7 +205,7 @@ Failure:
 
 Fix:
 - Replace the example with a durable product or user scenario.
-- Use the shared account export confirmation sample task, or replace the sample consistently across the API examples, paired Korean examples, checks, and routes.
+- Use the shared account data export confirmation sample task, or replace the sample consistently across the API examples, paired Korean examples, checks, and routes.
 - Keep file paths only when the document is explicitly about documentation maintenance.
 - Remove process-only wording and make the scenario durable.
 - Update paired English and Korean examples by meaning unit.
