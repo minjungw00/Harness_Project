@@ -46,6 +46,13 @@ When `docs/doc-index.yaml` lists an exact owner for the question or concept, loa
 
 One concept should have one canonical owner. Edit the owner when the change affects normative meaning, including active MVP scope, API behavior, schemas, storage effects, security wording, access boundaries, close readiness, product terminology, or later-candidate promotion rules.
 
+API routing shortcut:
+
+- `docs/*/reference/api/mvp-api.md` owns the active public API method list and method owner routing, not detailed method behavior.
+- Route method behavior to the method-specific owners: `api/method-intake.md`, `api/method-update-scope.md`, `api/method-status.md`, `api/method-prepare-write.md`, `api/method-stage-artifact.md`, `api/method-record-run.md`, `api/method-user-judgment.md`, and `api/method-close-task.md`.
+- Route response branch schemas and nested API shapes to the schema owner documents: `api/schema-core.md`, `api/schema-state.md`, `api/schema-artifacts.md`, `api/schema-judgment.md`, and `api/schema-value-sets.md`.
+- Route method storage effects to `docs/*/reference/storage-effects.md` first, then to narrower storage owners when needed.
+
 If an entry route, README, or maintain document cannot point to a current owner, do not fill the gap with duplicate contract prose. Name the owner gap or route to the closest current owner.
 
 ## Language selection

@@ -44,6 +44,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Which document owns Core authority, Task state, evidence, residual risk, and non-substitution rules? | [Core Model](core-model.md) |
 | Which document owns API method behavior? | Method owner documents listed in the API method owners table; [MVP API router](api/mvp-api.md) owns the active method list and owner routing |
 | Which document owns shared API response branches and envelopes? | [API Schema Core](api/schema-core.md) |
+| Which document owns method response branch schemas and nested response shapes? | [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), [API Judgment Schemas](api/schema-judgment.md), [API Value Sets](api/schema-value-sets.md) |
 | Which document owns public error codes and error precedence? | [API Errors](api/errors.md) |
 | Which document owns storage records or DDL? | [Storage Records](storage-records.md) |
 | Which document owns storage effects? | [Storage Effects](storage-effects.md) |
@@ -60,6 +61,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 |---|---|
 | What is the sample task used in API examples? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md), [MVP API](api/mvp-api.md) |
 | Can API examples use documentation maintenance as the scenario? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
+| Where is the active API method list? | [MVP API router](api/mvp-api.md); exact method-name values are in [API Value Sets](api/schema-value-sets.md) |
 | What does `harness.prepare_write` return? | [Prepare-write method](api/method-prepare-write.md), [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), [Core Model](core-model.md) |
 | Where is `ToolRejectedResponse` defined? | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
 | Is `STATE_VERSION_CONFLICT` a blocker code? | [API Errors](api/errors.md) |

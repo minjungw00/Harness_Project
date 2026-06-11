@@ -32,7 +32,7 @@ The API returns cooperative Harness record and check behavior only. Security non
 
 ## Active MVP API method list
 
-The exact active method-name value set is owned by [API Value Sets](schema-value-sets.md). The active methods route to these owner documents:
+This document owns the active public method list and owner routing. The exact active method-name value set is owned by [API Value Sets](schema-value-sets.md). The active methods route to these owner documents:
 
 | Method | Active role | Owner |
 |---|---|---|
@@ -48,7 +48,7 @@ The exact active method-name value set is owned by [API Value Sets](schema-value
 
 ## Method owner routing table
 
-Use this table for method behavior questions. Shared response branches, schema fields, storage effects, and public errors route to the owner links below.
+Use this table for method behavior questions. Shared response branch schemas, nested schema fields, storage effects, and public errors route to the owner links below.
 
 | Question | Owner |
 |---|---|
