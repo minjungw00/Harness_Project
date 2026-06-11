@@ -52,13 +52,22 @@
 
 모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다.
 
-응답 분기 규칙:
+각 공개 메서드 응답은 정확히 하나의 응답 분기를 가집니다.
 
-- 각 공개 메서드 응답은 정확히 하나의 응답 분기입니다.
-- 가능한 분기는 구체적인 메서드별 `MethodResult`, `ToolRejectedResponse`, `ToolDryRunResponse` 중 하나입니다.
-- 메서드 결과 스키마는 실제 읽기 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드 상태 효과 표가 허용하는 커밋된 차단 결과를 이름 붙입니다.
-- 메서드 결과는 `response_kind=result`인 [`ToolResultBase`](schema-core.md#common-response)를 사용합니다.
-- `ToolRejectedResponse`와 `ToolDryRunResponse`는 [공통 응답 분기](schema-core.md#common-response)의 스키마를 사용하며 메서드별 result 전용 필드를 상속하지 않습니다.
+- 구체적인 메서드별 `MethodResult`
+- `ToolRejectedResponse`
+- `ToolDryRunResponse`
+
+메서드 결과:
+
+- [`ToolResultBase`](schema-core.md#common-response)를 사용합니다.
+- `response_kind=result`를 설정합니다.
+- 실제 읽기 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드 상태 효과 표가 허용하는 커밋된 차단 결과를 이름 붙입니다.
+
+`ToolRejectedResponse`와 `ToolDryRunResponse`:
+
+- [공통 응답 분기](schema-core.md#common-response)의 스키마를 사용합니다.
+- 메서드별 result 전용 필드를 상속하지 않습니다.
 
 예시 읽기 규칙:
 
@@ -677,11 +686,20 @@ guarantee_display:
 
 ### 성공 결과
 
-`base.response_kind=result`, `base.effect_kind=core_committed`인 `PrepareWriteResult`를 반환합니다. `decision=allowed`이면 `write_authorization_ref`와 `write_authorization`이 `null`이 아니고, `authorization_effect`는 새 커밋에서 `created`, 멱등 재실행에서 `returned`입니다.
+`PrepareWriteResult`를 반환합니다.
+
+- `base.response_kind=result`
+- `base.effect_kind=core_committed`
+
+`decision=allowed`일 때:
+
+- `write_authorization_ref`는 `null`이 아닙니다.
+- `write_authorization`은 `null`이 아닙니다.
+- `authorization_effect`는 새 커밋에서 `created`, 멱등 재실행에서 `returned`입니다.
 
 ### 차단 결과
 
-커밋된 차단 결정은 `decision=blocked`, `decision=approval_required`, `decision=decision_required`를 가진 `PrepareWriteResult`입니다.
+커밋된 차단 결정은 아래 `decision` 값 중 하나를 가진 `PrepareWriteResult`입니다.
 
 조건:
 
