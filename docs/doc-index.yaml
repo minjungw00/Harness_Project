@@ -18,7 +18,7 @@ question_routes:
       supporting_owner_doc_ids:
         - docs.doc-index
       route_note: "Read repository phase and documentation-only rules first, then use `docs/doc-index.yaml` for exact owner lookup."
-    - question: "Where is exact owner routing maintained after `AGENTS.md`?"
+    - question: "Where is retrieval or route metadata maintained?"
       canonical_owner_doc_id: docs.doc-index
       default_path: docs/doc-index.yaml
       route_note: "Machine-readable route metadata for `doc_id`, owner family, canonical ownership, related documents, and language paths."
@@ -52,7 +52,7 @@ question_routes:
       canonical_owner_doc_id: reference.security
       default_path: docs/en/reference/security.md
       route_note: "Security claims, guarantee wording, and explicit security non-claims."
-    - question: "What does `isolated` guarantee mean, and is it active in the current MVP?"
+    - question: "Which document owns `isolated` guarantee semantics?"
       canonical_owner_doc_id: reference.security
       default_path: docs/en/reference/security.md
       supporting_owner_doc_ids:
@@ -68,7 +68,7 @@ question_routes:
       canonical_owner_doc_id: reference.security
       default_path: docs/en/reference/security.md
       route_note: "Security owns guarantee semantics and guarantee wording for `cooperative`, `detective`, `preventive`, and `isolated`."
-    - question: "Where are guarantee label values such as `isolated` listed?"
+    - question: "Which document owns guarantee label values?"
       canonical_owner_doc_id: reference.api.schema-value-sets
       default_path: docs/en/reference/api/schema-value-sets.md
       route_note: "Guarantee label value names only; guarantee semantics and isolation claims route to Security."
@@ -179,8 +179,69 @@ docs:
       - terminology definitions
     related_docs:
       - agents.root
+      - readme.root
+      - docs.root-index
       - reference.index
       - maintain.authoring-guide
+
+  - doc_id: readme.root
+    status: active
+    family: index
+    paths:
+      shared: README.md
+    default_for_agent: shared
+    primary_role: repository_entry_route
+    canonical_for:
+      - repository_entry_navigation
+      - repository_status_summary
+      - top_level_documentation_routes
+    owns:
+      - repository-level entry routing
+      - documentation-only repository status summary
+      - top-level documentation start links
+    does_not_own:
+      - technical contracts
+      - active MVP scope
+      - API behavior
+      - storage effects
+      - security guarantees
+      - implementation readiness
+    related_docs:
+      - agents.root
+      - docs.root-index
+      - docs.index
+      - reference.active-mvp-scope
+
+  - doc_id: docs.root-index
+    status: active
+    family: index
+    paths:
+      shared: docs/README.md
+    default_for_agent: shared
+    primary_role: bilingual_docs_directory_route
+    canonical_for:
+      - docs_directory_language_selection
+      - bilingual_documentation_entry_routing
+      - first_hop_documentation_navigation
+    owns:
+      - docs-directory language selection
+      - bilingual first-hop documentation navigation
+      - route links to language-specific documentation indexes
+    does_not_own:
+      - technical contracts
+      - active MVP scope
+      - API behavior
+      - storage effects
+      - security guarantees
+      - implementation readiness
+    related_docs:
+      - readme.root
+      - docs.index
+      - docs.doc-index
+      - start
+      - reference.index
+      - maintain.authoring-guide
+      - terminology.map
 
   - doc_id: docs.index
     status: active
@@ -204,6 +265,8 @@ docs:
       - security details
       - implementation readiness
     related_docs:
+      - readme.root
+      - docs.root-index
       - start
       - reference.index
       - maintain.authoring-guide

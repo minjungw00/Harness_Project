@@ -365,7 +365,7 @@ params:
     dry_run: false
     locale: ko-KR
   task_id: task_456
-  goal_summary: "활성 MVP API 메서드 참조 섹션 재구성"
+  goal_summary: "현재 MVP API 메서드 참조 섹션 재구성"
   scope_boundary: "docs/en/reference/api/mvp-api.md와 docs/ko/reference/api/mvp-api.md만."
   non_goals:
     - "런타임 API 코드 구현"
@@ -429,7 +429,7 @@ state:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "활성 MVP API 메서드 참조 섹션 재구성"
+  goal_summary: "현재 MVP API 메서드 참조 섹션 재구성"
   scope_summary: "대응되는 MVP API 참조 문서만."
   active_change_unit_ref:
     record_kind: change_unit
@@ -570,7 +570,7 @@ active_task:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "활성 MVP API 메서드 참조 섹션 재구성"
+  goal_summary: "현재 MVP API 메서드 참조 섹션 재구성"
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001

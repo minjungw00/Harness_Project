@@ -27,7 +27,7 @@
 - `project_state.state_version`, 멱등성, 이벤트 의미, 잠금, 마이그레이션: [저장소 버전 관리](storage-versioning.md)
 - API 스키마가 정의하는 요청 또는 응답 형태: [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 아티팩트 스키마](api/schema-artifacts.md)와 다른 API 스키마 담당 문서
 - API 메서드 동작: [MVP API](api/mvp-api.md)
-- 런타임/저장소/서버 경계: [런타임 경계](runtime-boundaries.md)
+- 런타임/제품 저장소/서버 경계: [런타임 경계](runtime-boundaries.md)
 
 <a id="runtime-home에-속하는-것"></a>
 ## 런타임 홈에 속하는 것

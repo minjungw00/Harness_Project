@@ -84,7 +84,7 @@ API 메서드 동작, 스키마 필드, 저장 효과, 보안 증명, 템플릿 
 | API 스키마와 값 집합 | [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 아티팩트 스키마](api/schema-artifacts.md), [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md) |
 | 공개 오류와 닫기 차단 사유 경로 | [오류](api/errors.md) |
 | 저장소 기록, 효과, 아티팩트 생명주기, 버전 관리, 잠금 | [저장소 기록](storage-records.md), [저장 효과](storage-effects.md), [아티팩트 저장소](storage-artifacts.md), [저장소 버전 관리](storage-versioning.md) |
-| 런타임, 저장소, 서버 경계 | [런타임 경계](runtime-boundaries.md) |
+| 런타임, 제품 저장소, 서버 경계 | [런타임 경계](runtime-boundaries.md) |
 | 보안 주장과 비주장 | [보안](security.md) |
 | 접점과 커넥터 동작 | [에이전트 통합](agent-integration.md), [접점별 사용 레시피](../use/surface-recipes.md) |
 | 상태 보기 권한과 원천 상태/최신성 경계 | [상태 보기 권한 참조](projection-and-templates.md) |
