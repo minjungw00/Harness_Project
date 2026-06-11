@@ -17,7 +17,7 @@
 | 여기서 담당하지 않는 것 | 담당 문서 |
 |---|---|
 | 메서드 요청 본문 스키마, 응답 필드 형태, 공통 요청/응답 래퍼 | [API 코어 스키마](schema-core.md), [MVP API](mvp-api.md), 분리된 API 스키마 담당 문서입니다. |
-| Core의 게이트 의미, 사용자 판단 경계, 닫기 준비 상태 순서 | [Core 모델](../core-model.md)과 [MVP API](mvp-api.md)입니다. |
+| Core의 게이트 의미, 사용자 판단 경계, 전체 닫기 준비 상태 평가 순서 | [Core 모델](../core-model.md)과 [MVP API](mvp-api.md)입니다. |
 | `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 값 집합 필드 정의 | [API 상태 스키마](schema-state.md), [API 코어 스키마](schema-core.md), [API 값 집합](schema-value-sets.md)입니다. |
 | 저장소 행, 재실행 행, DDL, 잠금, 마이그레이션, 저장 효과 | [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md)입니다. |
 | 보안 보장 표현과 접근 경계 주장 | [보안](../security.md)입니다. |
@@ -183,7 +183,7 @@
 | 닫기 준비 상태 평가 전 사전 확인 실패입니다. 오래된 상태, 오래된 Write Authorization 근거, 멱등성 충돌, 검증 실패, 로컬 접근 실패, 역량 실패, Core 상태 읽기 실패, Project/Task 식별 실패가 포함됩니다. | `ToolRejectedResponse.errors[]` | `STATE_VERSION_CONFLICT`와 다른 커밋 전 오류는 거부 응답에 남습니다. `CloseReadinessBlocker` 항목을 반환하지 않습니다. |
 | 유효한 읽기인 `intent=check`입니다. | 읽기 전용 `CloseTaskResult` | `CloseReadinessBlocker` 관찰 데이터를 반환할 수 있습니다. 저장된 차단 사유와 상태 버전 증가가 없습니다. |
 | 유효한 평가에서 닫기 차단 사유를 찾은 `intent=complete`입니다. | `CloseTaskResult(close_state=blocked)` | `CloseReadinessBlocker[]`를 반환할 수 있습니다. `STATE_VERSION_CONFLICT`는 금지됩니다. |
-| 담당 문서가 정의한 complete 차단 사유가 더 없어진 `intent=complete`입니다. | `CloseTaskResult(close_state=closed)` | 닫기 차단 사유가 없습니다. |
+| `intent=complete`에 대해 담당 문서가 정의한 닫기 차단 사유가 더 없습니다. | `CloseTaskResult(close_state=closed)` | 닫기 차단 사유가 없습니다. |
 | 종료 전이가 유효하지 않은 `intent=cancel` 또는 `intent=supersede`입니다. | 메서드 담당 결과 또는 거부 경로 | 차단 사유는 전이 유효성으로 제한합니다. 취소나 대체에 증거 충분성, 최종 수락, 잔여 위험 수락을 요구하지 않습니다. |
 
 | 닫기 준비 상태 발견 사항 | 공개 코드 매핑 |
@@ -199,7 +199,7 @@
 | 읽기용 보기 최신성 문제입니다. | `PROJECTION_STALE`; 그 자체로 닫기 차단 사유가 아닙니다. |
 | 프로젝트 전체 상태나 Write Authorization 근거 버전이 오래되었습니다. | `ToolRejectedResponse.errors[]`의 `STATE_VERSION_CONFLICT`; 절대 닫기 차단 사유가 아닙니다. |
 
-닫기 준비 상태 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 메서드 동작은 [`harness.close_task`](mvp-api.md#harnessclose_task)가 담당합니다. `CloseReadinessBlocker` 형태와 범주는 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)이 담당합니다.
+전체 닫기 준비 상태 평가 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 메서드 동작은 [`harness.close_task`](mvp-api.md#harnessclose_task)가 담당합니다. `CloseReadinessBlocker` 형태와 범주는 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)이 담당합니다.
 
 ## 사용자 표시 라벨
 
@@ -238,6 +238,6 @@
 | `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`, 아티팩트 입력 형태 | [API 아티팩트 스키마](schema-artifacts.md)입니다. |
 | 스테이징된 아티팩트 핸들 저장소 검증과 아티팩트 승격 생명주기 | [아티팩트 저장소](../storage-artifacts.md)입니다. |
 | 사용자 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락 형태 | [API 판단 스키마](schema-judgment.md)와 [Core 모델](../core-model.md)입니다. |
-| 닫기 준비 상태 순서와 비대체 규칙 | [Core 모델의 닫기 준비 상태](../core-model.md#close_task)입니다. |
+| 전체 닫기 준비 상태 평가 순서와 비대체 규칙 | [Core 모델의 닫기 준비 상태](../core-model.md#close_task)입니다. |
 | 저장 효과, 재실행 행, 상태 시계, DDL | [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md), [저장소 기록](../storage-records.md)입니다. |
 | 보안 보장 표현과 접근 경계 주장 | [보안](../security.md)입니다. |

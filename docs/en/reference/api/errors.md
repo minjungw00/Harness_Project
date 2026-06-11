@@ -19,7 +19,7 @@ This document does not own:
 | Not owned here | Owner |
 |---|---|
 | Method payload schemas, response field shapes, and common envelopes | [API Schema Core](schema-core.md), [MVP API](mvp-api.md), and the split API schema owners. |
-| Core gate semantics, user-judgment boundaries, and close-readiness ordering | [Core Model](../core-model.md) and [MVP API](mvp-api.md). |
+| Core gate semantics, user-judgment boundaries, and full close-readiness evaluation order | [Core Model](../core-model.md) and [MVP API](mvp-api.md). |
 | `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and value-set field definitions | [API State Schemas](schema-state.md), [API Schema Core](schema-core.md), and [API Value Sets](schema-value-sets.md). |
 | Storage rows, replay rows, DDL, locks, migrations, and storage effects | [Storage Records](../storage-records.md), [Storage Effects](../storage-effects.md), and [Storage Versioning](../storage-versioning.md). |
 | Security guarantee wording and access-boundary claims | [Security](../security.md). |
@@ -187,7 +187,7 @@ Blocked result means the method may have returned an operation-specific blocked 
 | Preflight failure before close-readiness evaluation, including stale state, stale Write Authorization basis, idempotency conflict, validation failure, local-access failure, capability failure, unreadable Core state, or unresolved project/Task identity. | `ToolRejectedResponse.errors[]` | `STATE_VERSION_CONFLICT` and other pre-commit errors stay in the rejected response. No `CloseReadinessBlocker` entries. |
 | `intent=check` with a valid read. | `CloseTaskResult` read-only result | May return `CloseReadinessBlocker` observation data. No stored blocker and no state-version increment. |
 | `intent=complete` with a valid evaluation that finds close-readiness blockers. | `CloseTaskResult(close_state=blocked)` | May return `CloseReadinessBlocker[]`; `STATE_VERSION_CONFLICT` is forbidden. |
-| `intent=complete` with no owner-defined complete blocker remaining. | `CloseTaskResult(close_state=closed)` | No close blockers. |
+| `intent=complete` with no remaining owner-defined close blockers. | `CloseTaskResult(close_state=closed)` | No close blockers. |
 | `intent=cancel` or `intent=supersede` with an invalid terminal transition. | Method-owned result or rejection path | Blockers are limited to transition validity. Do not require evidence sufficiency, final acceptance, or residual-risk acceptance for cancellation or supersession. |
 
 | Close-readiness finding | Public code mapping |
@@ -203,7 +203,7 @@ Blocked result means the method may have returned an operation-specific blocked 
 | Readable view freshness issue | `PROJECTION_STALE`; not a close blocker by itself |
 | Stale project-wide state or stale Write Authorization basis | `STATE_VERSION_CONFLICT` in `ToolRejectedResponse.errors[]`; never a close blocker |
 
-Close-readiness order is owned by [Core Model close readiness](../core-model.md#close_task). Method behavior is owned by [`harness.close_task`](mvp-api.md#harnessclose_task). `CloseReadinessBlocker` shape and categories are owned by [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
+Full close-readiness evaluation order is owned by [Core Model close readiness](../core-model.md#close_task). Method behavior is owned by [`harness.close_task`](mvp-api.md#harnessclose_task). `CloseReadinessBlocker` shape and categories are owned by [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
 
 ## User-facing labels
 
@@ -242,6 +242,6 @@ User-facing labels may differ from public error identifiers. Labels are display 
 | `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`, and artifact input shape | [API Artifact Schemas](schema-artifacts.md). |
 | Staged-handle storage validation and artifact promotion lifecycle | [Artifact Storage](../storage-artifacts.md). |
 | User judgments, sensitive-action approval, final acceptance, and residual-risk acceptance shapes | [API Judgment Schemas](schema-judgment.md) and [Core Model](../core-model.md). |
-| Close-readiness order and non-substitution rules | [Core Model close readiness](../core-model.md#close_task). |
+| Full close-readiness evaluation order and non-substitution rules | [Core Model close readiness](../core-model.md#close_task). |
 | Storage effects, replay rows, state clocks, and DDL | [Storage Effects](../storage-effects.md), [Storage Versioning](../storage-versioning.md), and [Storage Records](../storage-records.md). |
 | Security guarantee wording and access-boundary claims | [Security](../security.md). |

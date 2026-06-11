@@ -1218,25 +1218,25 @@ params:
   change_unit_id: cu_001
   judgment_kind: final_acceptance
   presentation: short
-  question: "문서 전용 API 참조 재구성을 완료로 수락하시겠습니까?"
+  question: "표시된 결과 근거를 최종 수락하시겠습니까?"
   options:
     - option_id: accept
       label: "수락"
-      description: "이 문서 작업의 최종 수락을 기록합니다."
+      description: "현재 Task의 최종 수락을 기록합니다."
       consequence: "닫기 준비 상태 평가에서 최종 수락을 충족된 것으로 볼 수 있습니다."
       is_default: true
     - option_id: revise
       label: "수정"
-      description: "추가 문서 편집을 위해 작업을 열어 둡니다."
+      description: "추가 변경을 위해 Task를 열어 둡니다."
       consequence: "최종 수락 때문에 닫기가 계속 차단됩니다."
       is_default: false
   context:
-    summary: "대응되는 MVP API 메서드 섹션을 재구성했습니다."
+    summary: "요청된 변경을 최종 수락할 수 있습니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "문서 전용 저장소"
+      - "현재 Task 제약이 적용됩니다"
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -1274,15 +1274,15 @@ user_judgment:
   judgment_kind: final_acceptance
   status: pending
   presentation: short
-  question: "문서 전용 API 참조 재구성을 완료로 수락하시겠습니까?"
+  question: "표시된 결과 근거를 최종 수락하시겠습니까?"
   options: []
   context:
-    summary: "대응되는 MVP API 메서드 섹션을 재구성했습니다."
+    summary: "요청된 변경을 최종 수락할 수 있습니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "문서 전용 저장소"
+      - "현재 Task 제약이 적용됩니다"
   affected_refs: []
   required_for: close
   resolution: null
@@ -1409,7 +1409,7 @@ params:
     sensitive_action_scope: null
     final_acceptance:
       accepted: true
-      basis: "문서 전용 API 참조 갱신을 검토했습니다."
+      basis: "표시된 결과 근거를 검토했습니다."
     residual_risk_acceptance: null
     cancellation: null
   note: "수락합니다."
@@ -1443,10 +1443,10 @@ user_judgment:
   judgment_kind: final_acceptance
   status: resolved
   presentation: short
-  question: "문서 전용 API 참조 재구성을 완료로 수락하시겠습니까?"
+  question: "표시된 결과 근거를 최종 수락하시겠습니까?"
   options: []
   context:
-    summary: "대응되는 MVP API 메서드 섹션을 재구성했습니다."
+    summary: "요청된 변경을 최종 수락할 수 있습니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
@@ -1640,7 +1640,7 @@ evidence_summary:
 artifact_refs: []
 next_actions:
   - action: harness.record_run
-    reason: "완료를 시도하기 전에 증거를 기록한다."
+    reason: "닫기를 시도하기 전에 증거를 기록한다."
 ```
 
 ### 담당 문서 링크

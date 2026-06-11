@@ -47,7 +47,7 @@ This page names the method role and method-specific result behavior. For the can
 
 All methods use [`ToolEnvelope`](schema-core.md#tool-envelope). Each public method response is exactly one response branch: the concrete method-specific `MethodResult`, `ToolRejectedResponse`, or `ToolDryRunResponse`. The method result schema names the concrete result for actual read results, successful staging results, Core committed results, or committed blocked results when the method state-effect table allows that blocked commit. Method results use [`ToolResultBase`](schema-core.md#common-response) with `response_kind=result`; `ToolRejectedResponse` and `ToolDryRunResponse` use the shared response schemas from [common response branches](schema-core.md#common-response) and do not inherit method-specific result-only fields.
 
-Examples below are compact branch examples, not full schema definitions. Minimal request examples include the fields needed to construct a valid call for that method. Representative response examples show branch-critical fields and may omit schema-owned nested fields that do not affect the behavior being illustrated; use the linked schema owners for complete shapes.
+Examples below are compact branch examples, not full schema definitions. Minimal request examples include the fields needed to construct a valid call for that method. Representative response examples show branch-critical fields and may omit schema-owned nested fields that do not affect the behavior being illustrated; use the linked schema owners for full schema shapes.
 
 Committed non-dry-run state-changing calls require a non-null `idempotency_key` and a current project-wide `expected_state_version`; read-only calls, valid dry-run previews, and staging utility calls use the exceptions defined by their owners.
 
@@ -888,25 +888,25 @@ params:
   change_unit_id: cu_001
   judgment_kind: final_acceptance
   presentation: short
-  question: "Do you accept the documentation-only API reference restructuring as complete?"
+  question: "Do you accept the visible result basis?"
   options:
     - option_id: accept
       label: "Accept"
-      description: "Record final acceptance for this documentation task."
+      description: "Record final acceptance for this Task."
       consequence: "Close readiness can evaluate final acceptance as satisfied."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the task open for more documentation edits."
+      description: "Keep the Task open for more changes."
       consequence: "Close remains blocked on final acceptance."
       is_default: false
   context:
-    summary: "The paired MVP API method sections were restructured."
+    summary: "The requested changes are ready for final acceptance."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Documentation-only repository"
+      - "Current Task constraints apply"
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -944,15 +944,15 @@ user_judgment:
   judgment_kind: final_acceptance
   status: pending
   presentation: short
-  question: "Do you accept the documentation-only API reference restructuring as complete?"
+  question: "Do you accept the visible result basis?"
   options: []
   context:
-    summary: "The paired MVP API method sections were restructured."
+    summary: "The requested changes are ready for final acceptance."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Documentation-only repository"
+      - "Current Task constraints apply"
   affected_refs: []
   required_for: close
   resolution: null
@@ -1041,7 +1041,7 @@ params:
     sensitive_action_scope: null
     final_acceptance:
       accepted: true
-      basis: "Reviewed the documentation-only API reference update."
+      basis: "Reviewed the visible result basis."
     residual_risk_acceptance: null
     cancellation: null
   note: "Accepted."
@@ -1075,10 +1075,10 @@ user_judgment:
   judgment_kind: final_acceptance
   status: resolved
   presentation: short
-  question: "Do you accept the documentation-only API reference restructuring as complete?"
+  question: "Do you accept the visible result basis?"
   options: []
   context:
-    summary: "The paired MVP API method sections were restructured."
+    summary: "The requested changes are ready for final acceptance."
     related_refs: []
     artifact_refs: []
     visible_risks: []
@@ -1090,7 +1090,7 @@ user_judgment:
     answer:
       final_acceptance:
         accepted: true
-        basis: "Reviewed the documentation-only API reference update."
+        basis: "Reviewed the visible result basis."
     note: "Accepted."
     accepted_risks: []
     resolved_by_actor_kind: user
@@ -1218,7 +1218,7 @@ evidence_summary:
 artifact_refs: []
 next_actions:
   - action: harness.record_run
-    reason: "Record evidence before attempting completion."
+    reason: "Record evidence before attempting close."
 ```
 
 ### Owner links
