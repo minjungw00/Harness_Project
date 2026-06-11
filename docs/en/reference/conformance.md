@@ -1,6 +1,6 @@
 # Conformance reference
 
-## 1. Current status
+## Current status
 
 This repository is documentation-only and still in documentation review. It contains no Harness Server runtime, Harness Runtime Home, executable fixture files, conformance runner, generated conformance reports, generated runtime artifacts, or current runtime conformance results.
 
@@ -8,23 +8,101 @@ This document owns documentation-level conformance meaning, candidate future fix
 
 For the canonical current scope, see [Active MVP scope](active-mvp-scope.md). Current phase and handoff status remain owned by [MVP Plan repository status](../build/mvp-plan.md#documentation-acceptance-status).
 
-| Item | Current status | Owner | Executable now? |
-|---|---|---|---|
-| current documentation criteria | active reference criteria | `docs/en/reference/conformance.md` | no runtime execution |
-| planned internal smoke target | planned/documented | [MVP Plan first internal smoke target](../build/mvp-plan.md#first-internal-smoke-target) | no |
-| future fixture shape | candidate format | this document | no |
-| future executable fixtures | not implemented | future runner and owner-promoted fixtures | no |
-| later conformance reporting | later candidate | [Later Candidate Index](../later/index.md) | no |
+## Conformance item summary
+
+| Item | Current status | Details |
+|---|---|---|
+| current documentation criteria | active reference criteria | See [Current documentation criteria](#current-documentation-criteria) |
+| internal smoke target | planned/documented | See [Internal smoke target](#internal-smoke-target) |
+| future fixture shape | candidate future format | See [Future fixture shape](#future-fixture-shape) |
+| future executable fixtures | not implemented | See [Future executable fixtures](#future-executable-fixtures) |
+| runtime conformance report | later candidate; not implemented | See [Runtime conformance report](#runtime-conformance-report) |
+
+<a id="current-documentation-criteria"></a>
+### Current documentation criteria
+
+Current status:
+- Active reference criteria for documentation review and future planning.
+
+Executable now:
+- No runtime execution. These criteria do not run a Harness Server or create runtime records.
+
+Owner:
+- `docs/en/reference/conformance.md`
+
+Not allowed:
+- Do not treat documentation criteria as runtime conformance results, acceptance evidence, or implementation readiness.
+
+<a id="internal-smoke-target"></a>
+### Internal smoke target
+
+Current status:
+- Planned or documented as an implementation-planning target.
+
+Executable now:
+- No, unless a current implementation file explicitly provides it. This repository does not contain one.
+
+Owner:
+- [MVP Plan first internal smoke target](../build/mvp-plan.md#first-internal-smoke-target)
+
+Not allowed:
+- Do not describe this as an implemented conformance suite, a fixture specification, or proof that Harness is implemented.
+
+<a id="future-fixture-shape"></a>
+### Future fixture shape
+
+Current status:
+- Candidate future format documented by this reference.
+
+Executable now:
+- No. This repository contains no executable fixture files, fixture directory, or fixture runner.
+
+Owner:
+- `docs/en/reference/conformance.md`
+
+Not allowed:
+- Do not describe the candidate shape as current fixture files, current runner input, or an implemented conformance suite.
+
+<a id="future-executable-fixtures"></a>
+### Future executable fixtures
+
+Current status:
+- Not implemented.
+
+Executable now:
+- No. Executable fixture material requires a future runner and owner-promoted fixtures.
+
+Owner:
+- Future runner owner and the owners that promote fixtures. This repository has no current fixture runner or executable fixture owner.
+
+Not allowed:
+- Do not add fixture bodies, runner output, generated runtime objects, or current runtime results to this documentation repository.
+
+<a id="runtime-conformance-report"></a>
+### Runtime conformance report
+
+Current status:
+- Later candidate and not implemented.
+
+Executable now:
+- No. This repository contains no conformance runner, generated conformance reports, or runtime conformance results.
+
+Owner:
+- [Later Candidate Index](../later/index.md)
+- [Later policy and conformance: future conformance run entrypoint](../later/policy-and-conformance.md#future-conformance-run-entrypoint)
+
+Not allowed:
+- Do not present metrics, generated prose, rendered reports, or documentation-check labels as conformance authority or current runtime proof.
 
 When this page says "must", "required", or "always", it is naming a documentation criterion or a requirement for a future server/runner after implementation exists. It is not a claim that this repository already contains executable checks.
 
-## 2. What conformance means
+## What conformance means
 
 For a future server, conformance means executable checks can compare one owner-defined action with owner-defined authority records. Documentation checks are separate maintenance aids for links, terminology, owner boundaries, active/later wording, security wording, and bilingual parity.
 
 A future runtime conformance check must judge only facts made authoritative by an owner document. It must not treat generated prose, agent summaries, rendered reports, status wording, documentation-check labels, or projections as authority unless a specific owner promotes that fact.
 
-## 3. What does not exist yet
+## What does not exist yet
 
 The following are future implementation work, not current repository contents:
 
@@ -37,7 +115,7 @@ The following are future implementation work, not current repository contents:
 
 Examples on this page may guide planning, but they do not create runtime state, acceptance evidence, close readiness, residual-risk acceptance, generated reports, or implementation readiness.
 
-## 4. Fixture shape
+## Fixture shape
 
 Fixture shape is a candidate future format, not current files. After the Harness Server and runner exist, a promoted fixture should be a compact structured record with these parts:
 
@@ -93,7 +171,7 @@ Owner links:
 
 A future materialized fixture must use public owner schemas. It must not invent fixture-only enum values, pseudo-fields, localized display labels as state, prose-only expectations, or later-candidate-only values.
 
-## 5. Assertion authority
+## Assertion authority
 
 Assertion authority is the narrow set of facts a future fixture may judge after executable fixtures exist. Authority comes from owner-defined facts, not from scenario prose or generated summaries.
 
@@ -114,7 +192,7 @@ Exact assertion detail stays with these owners:
 | Security non-claims and guarantee levels | [Security](security.md) |
 | Runtime location and documentation-only boundaries | [Runtime Boundaries](runtime-boundaries.md) |
 
-## 6. Representative scenario index
+## Representative scenario index
 
 These scenario IDs are compact documentation criteria for future fixture planning. They are not fixture bodies, current runtime results, generated runtime objects, or an implementation plan. Use the owner links above for exact branch, storage, access, artifact, security, and close-readiness contracts.
 
@@ -456,13 +534,13 @@ Owner links:
 - [Core Model](core-model.md)
 - [Storage Effects](storage-effects.md)
 
-## 7. Catalog-only future boundary
+## Catalog-only future boundary
 
 Future fixture families belong in [Later policy and conformance: future fixture families](../later/policy-and-conformance.md#future-fixture-families). The later-candidate index keeps names only as later candidates, and this page does not reproduce the catalog.
 
 Future-family names are not scenario scripts, fixture bodies, active API payload examples, runner or reporting requirements, active MVP scope, implementation tasks, current results, or current runtime proof. A future owner must promote a narrow behavior with scope, fallback behavior, exact contracts, and proof-path expectations before executable fixture material exists.
 
-## 8. Metrics boundary
+## Metrics boundary
 
 Metrics are not conformance authority in the current documentation set. Future local metrics and later conformance reporting may be useful for diagnostics or planning, but until an owner promotes them they remain read-only derived displays or later candidates.
 
