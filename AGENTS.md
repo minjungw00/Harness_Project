@@ -79,9 +79,9 @@ Do not copy API response branches, schema field tables, DDL, storage effects, ac
 
 ## Temporary file rule
 
-Do not create archive copies, temporary migration plans, scratch notes, TODO-only files, review leftovers, generated runtime records, or one-off planning files in the repository.
+Do not create archive copies, temporary transition notes, scratch notes, TODO-only files, review leftovers, generated runtime records, or one-off planning files in the repository.
 
-Do not leave temporary migration plans, scratch notes, or TODO-only files in the repo. Remove scratch notes before finishing.
+Do not leave temporary transition notes, scratch notes, or TODO-only files in the repo. Remove scratch notes before finishing.
 
 If planning is needed, keep it in the conversation or in the requested target document. If the user explicitly asks for a planning document, place it only in an appropriate maintained documentation path and make sure it has durable reader value.
 

@@ -135,7 +135,7 @@ When the agent cannot honestly proceed without a user-owned judgment, it should 
 
 Evidence is support for a claim. It can be a diff, test output, screenshot, log, source citation, review note, or artifact reference. Evidence should say what it supports and what it does not support.
 
-Evidence shows what the work did, but it does not replace the user's final acceptance. Evidence is not user judgment. It is also not automatically a complete check of the user experience.
+Evidence shows what the work did, but it does not replace the user's final acceptance. Evidence is not user judgment. It is also not automatically a full check of the user experience.
 
 A test pass is not the same as user-visible review of copy, accessibility, visual layout, or the lived flow. Review can support acceptance, but it is not final acceptance.
 

@@ -26,7 +26,7 @@ In this documentation-only repository, "available in current MVP" means the spec
 | Level | Available in current MVP? | Conditions | May claim | Must not claim |
 |---|---|---|---|---|
 | `cooperative` | yes | default documented behavior | recorded procedure and agent cooperation | OS-level enforcement |
-| `detective` | limited | capability check passed and observed scope only | limited detection for observed changed paths | complete monitoring |
+| `detective` | limited | capability check passed and observed scope only | limited detection for observed changed paths | full monitoring |
 | `preventive` | no | future/later prevention-oriented mechanism | nothing in current MVP | sandboxing, OS permission enforcement, isolation, or active blocking without a promoted mechanism |
 | `isolated` | no | reserved later/profile-gated value only | no current isolation guarantee | OS sandboxing, OS permission enforcement, tamper-proof isolation, full security isolation |
 
@@ -41,7 +41,7 @@ The current MVP does not claim:
 - tamper-proof isolation
 - full security isolation
 - guaranteed full filesystem monitoring
-- complete prevention of malicious agent behavior
+- full prevention of malicious agent behavior
 - a stronger guarantee than the registered surface/profile supports
 - universal pre-tool blocking
 - command, network, or secret observation by default
@@ -55,7 +55,7 @@ Capability-gated `detective` wording is narrow:
 - A copied `surface_id`, generated file, `Projection`, chat text, Product Repository file, rendered display, or agent memory is not proof of capability.
 - Observed changed paths can support a limited changed-path detection claim only when the surface actually reports those paths for the relevant operation.
 - A missing or insufficient capability should route to the API/error owner behavior, such as `CAPABILITY_INSUFFICIENT`, rather than inventing authority.
-- `detective` wording never upgrades a claim to sandboxing, permission enforcement, tamper-proof storage, or complete monitoring.
+- `detective` wording never upgrades a claim to sandboxing, permission enforcement, tamper-proof storage, or full monitoring.
 
 ## 5. Assets
 

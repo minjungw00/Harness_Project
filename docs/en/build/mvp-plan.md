@@ -25,7 +25,7 @@ Server coding must not begin from this repository until the decisions in [Decisi
 
 ## Planning assumptions
 
-- The current task is implementation planning, not runtime implementation.
+- This Build page supports implementation planning, not runtime implementation.
 - Active MVP scope is owned by [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md); this plan does not repeat the scope list.
 - API method behavior is owned by [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md); this plan does not repeat request, response, branch, or error behavior.
 - Common API envelopes and response branches are owned by [`../reference/api/schema-core.md`](../reference/api/schema-core.md). State, artifact, judgment, and value-set schemas are owned by their split API schema references.

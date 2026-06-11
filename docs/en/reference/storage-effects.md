@@ -141,7 +141,7 @@ This table summarizes persistence effects. Method behavior and response unions r
 | `harness.request_user_judgment` | creates pending judgment request | See [`harness.request_user_judgment`](#harnessrequest_user_judgment) |
 | `harness.record_user_judgment` | resolves user judgment | See [`harness.record_user_judgment`](#harnessrecord_user_judgment) |
 | `harness.close_task intent=check` | read-only close-readiness check | See [`harness.close_task intent=check`](#harnessclose_task-intentcheck) |
-| `harness.close_task intent=complete` | closes or records blocked complete outcome | See [`harness.close_task intent=complete`](#harnessclose_task-intentcomplete) |
+| `harness.close_task intent=complete` | closes or records blocked `complete` outcome | See [`harness.close_task intent=complete`](#harnessclose_task-intentcomplete) |
 | `harness.close_task intent=cancel` | cancels or records blocked cancellation | See [`harness.close_task intent=cancel`](#harnessclose_task-intentcancel) |
 | `harness.close_task intent=supersede` | supersedes or records blocked supersession | See [`harness.close_task intent=supersede`](#harnessclose_task-intentsupersede) |
 
