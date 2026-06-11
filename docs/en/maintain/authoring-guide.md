@@ -101,6 +101,30 @@ Do not create a new document for temporary planning notes, migration notes, revi
 
 When adding a real new owner, update [Reference README](../reference/README.md) or the appropriate route index so readers can find it. Update [doc-index.yaml](../../doc-index.yaml) only as documentation retrieval metadata.
 
+### Active MVP API method split threshold
+
+[`reference/api/mvp-api.md`](../reference/api/mvp-api.md) currently owns all active MVP method behavior. The method reference should be split into method-specific owner documents when one or more of these conditions becomes true:
+
+- A new active method is added.
+- A method section needs more than one full request/response family.
+- `reference/api/mvp-api.md` becomes difficult to review as a single owner document.
+- Method behavior starts changing independently.
+- Method-level anchors and examples become too large for reliable review.
+
+This is a future maintenance threshold, not a current required split. A possible future maintenance pattern is listed below; `reference/api/mvp-api.md` is the current owner, and the method-specific paths are candidate paths only until the files are actually created:
+
+- `reference/api/mvp-api.md`
+- `reference/api/method-intake.md`
+- `reference/api/method-update-scope.md`
+- `reference/api/method-status.md`
+- `reference/api/method-prepare-write.md`
+- `reference/api/method-stage-artifact.md`
+- `reference/api/method-record-run.md`
+- `reference/api/method-user-judgment.md`
+- `reference/api/method-close-task.md`
+
+Do not add [doc-index.yaml](../../doc-index.yaml) entries for method-specific files unless those files actually exist.
+
 ## 5. Route documents and README files
 
 README files, Start pages, Use pages, Build pages, Later indexes, Maintain pages, and reference indexes route readers. They may say what a document is for, who should read it, and what practical result the reader should expect.
