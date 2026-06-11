@@ -37,101 +37,85 @@ It does not own product connector surfaces, artifact capture mechanics, multi-us
 
 ## Candidate details
 
+The promotion rule below applies to every candidate in this section.
+
 <a id="manual-qa-workflow-and-qa-gate"></a>
 ### Manual QA workflow and `qa_gate`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active QA workflow, gate, waiver, or close-readiness requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="manual-qa-waiver-qa-waiver"></a>
 ### Manual QA waiver `qa_waiver`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active waiver route or substitute for user-owned judgment.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="verification-gate-verification-gate"></a>
 ### Verification gate `verification_gate`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active verification gate fields or close-readiness requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="design-gates-and-policy-blockers"></a>
 ### Design gates and policy blockers
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active design gate fields, blocker categories, or close-readiness requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="design-policy-waiver"></a>
 ### Design-policy waiver
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active design-policy waiver route.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="broad-design-validators-and-severity-based-blocking"></a>
 ### Broad design validators and severity-based blocking
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active validator IDs, severity meanings, or blocking policy.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="full-design-quality-policy-families"></a>
 ### Full design-quality policy families
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `shared_design`, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, `manual_qa`, `two_stage_review_display`, detached-verification policy, or steward policy families.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="future-conformance-run-entrypoint"></a>
 ### Future conformance run entrypoint
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active conformance runner, executable fixture suite, or reporting contract.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-schema-extensions"></a>
 ### Later schema extensions
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active fields, enum values, or validators.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="validatorresult-stable-ids-and-policy-families"></a>
 ### `ValidatorResult` stable IDs and policy families
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active validator IDs, policy families, severity meanings, or waiver behavior.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="future-fixture-families"></a>
 ### Future fixture families
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create executable fixtures, conformance suites, assertions, or report formats.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="advanced-validators-and-interface-checks"></a>
 ### Advanced validators and interface checks
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active advanced validators, design-policy validators, language checks, or interface checks.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 ## Promotion rule
 
-Promotion is not a local edit to this file.
+Promotion is not a local edit to this file. A candidate becomes active only when current active scope and the relevant current owner document, or a new owner document created during promotion, are updated in the same documentation-only batch.
 
-Update the relevant current owner, or create a new owner document during promotion.
-
-This candidate entry is not itself an active owner document.
-
-Promotion-time owner updates do not create active requirements before promotion.
-
-A candidate becomes active only when current active scope and the relevant current owner document, or the new owner document created during promotion, are updated in the same documentation-only batch.
+Promotion-time owner update means that the owner work happens at promotion time. It does not create active requirements before promotion, and the candidate entry is not itself an active owner document.
 
 ## Active-scope non-effect
 
@@ -142,6 +126,7 @@ This document has no effect on the current MVP. Mentioning a candidate here does
 - [Later Candidate Index](index.md)
 - [Active MVP Scope](../reference/active-mvp-scope.md)
 - [Reference Index](../reference/README.md)
+- [Glossary](../reference/glossary.md)
 - [Core Model](../reference/core-model.md)
 - [Design Quality](../reference/design-quality.md)
 - [Conformance](../reference/conformance.md)

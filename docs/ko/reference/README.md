@@ -46,6 +46,7 @@
 | 공개 오류 코드와 오류 우선순위는 어디가 담당하나요? | [API 오류](api/errors.md) |
 | 저장소 기록이나 DDL은 어디가 담당하나요? | [저장소 기록](storage-records.md) |
 | 메서드별 저장 효과는 어디가 담당하나요? | [저장 효과](storage-effects.md) |
+| 저장 효과 질문은 어디로 가야 하나요? | [저장 효과](storage-effects.md) |
 | 보안 주장과 비보장은 어디가 담당하나요? | [보안](security.md) |
 | 제품 용어는 어디가 담당하나요? | [용어집](glossary.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
 | 읽기 전용 상태 보기 권한과 원천/최신성 경계는 어디가 담당하나요? | [상태 보기 권한 참조](projection-and-templates.md) |
@@ -63,6 +64,7 @@
 | 접근 등급은 어디에 정의되어 있나요? | [API 값 집합](api/schema-value-sets.md) |
 | `DryRunSummary`, `PlannedEffect`, `PlannedBlocker` 같은 `dry_run` 미리보기 구조는 어디에 정의되어 있나요? | [API 코어 스키마](api/schema-core.md), [API 값 집합](api/schema-value-sets.md) |
 | 보장 라벨 값의 담당 문서는 어디인가요? | [API 값 집합](api/schema-value-sets.md) |
+| `isolated`는 값으로 어디에 정의되어 있나요? | [API 값 집합](api/schema-value-sets.md). 보장 의미는 [보안](security.md)을 봅니다 |
 | `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, `ValidatorResult` 구조는 어디가 담당하나요? | [API 상태 스키마](api/schema-state.md) |
 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle` 구조는 어디가 담당하나요? | [API 아티팩트 스키마](api/schema-artifacts.md) |
 | `UserJudgment`, `SensitiveActionScope`, 수락된 위험 입력 구조는 어디가 담당하나요? | [API 판단 스키마](api/schema-judgment.md) |
@@ -74,7 +76,7 @@
 | 저장소 문서 묶음은 어디서 시작하나요? | [저장소](storage.md)를 먼저 보고, 아래의 구체적인 저장소 담당 문서로 이동합니다 |
 | Runtime Home 배치, 로컬 저장소 가정, 테이블 개요는 어디가 담당하나요? | [저장소 기록](storage-records.md), [런타임 경계](runtime-boundaries.md) |
 | `CloseReadinessBlocker`는 저장소 행인가요? | [저장소 기록](storage-records.md) |
-| 아티팩트 스테이징은 증거를 만드나요? | [저장 효과](storage-effects.md) |
+| 아티팩트 스테이징은 증거를 만드나요? | [아티팩트 저장소](storage-artifacts.md), [저장 효과](storage-effects.md) |
 | 아티팩트 승격은 어느 담당 문서가 맡나요? | [아티팩트 저장소](storage-artifacts.md) |
 | 스테이징 핸들 검증과 아티팩트 본문 읽기 자격은 어디가 담당하나요? | [아티팩트 저장소](storage-artifacts.md), [API 아티팩트 스키마](api/schema-artifacts.md) |
 | 멱등성, 상태 시계, 잠금, 마이그레이션은 어디가 담당하나요? | [저장소 버전 관리](storage-versioning.md), [API 오류](api/errors.md) |
@@ -109,12 +111,17 @@
 | 이후 후보는 어디에 문서화해야 하나요? | [이후 후보 색인](../later/index.md) |
 | 보안과 보증 이후 후보의 담당 문서는 어디인가요? | [보안과 보증 이후 후보](../later/security-and-assurance.md) |
 | 아티팩트와 증거 이후 후보의 담당 문서는 어디인가요? | [아티팩트와 증거 이후 후보](../later/artifacts-and-evidence.md) |
+| 아티팩트 이후 후보는 어디에 문서화되어 있나요? | [아티팩트와 증거 이후 후보](../later/artifacts-and-evidence.md) |
 | 커넥터와 접점 이후 후보의 담당 문서는 어디인가요? | [커넥터와 접점 이후 후보](../later/connectors-and-surfaces.md) |
 | 정책과 적합성 이후 후보의 담당 문서는 어디인가요? | [정책과 적합성 이후 후보](../later/policy-and-conformance.md) |
 | 작업 흐름과 협업 이후 후보의 담당 문서는 어디인가요? | [작업 흐름과 협업 이후 후보](../later/workflow-and-collaboration.md) |
+| 이후 후보는 현재 요구사항인가요? | [이후 후보 색인](../later/index.md), [현재 MVP 범위](active-mvp-scope.md) |
+| 승격 시점의 담당 문서 갱신은 무슨 뜻인가요? | [용어집](glossary.md), [이후 후보 색인](../later/index.md) |
 | 이후 후보가 활성 기능이 되려면 어떤 문서가 더 바뀌어야 하나요? | [이후 후보 색인](../later/index.md), [현재 MVP 범위](active-mvp-scope.md) |
 | "close readiness"를 한국어 참조 문서에서 "닫기 준비 상태"로 쓰는 기준은 어디가 담당하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml) |
+| 닫기 준비 상태 한국어 용어는 어디서 통제하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [용어집](glossary.md), [번역 가이드](../maintain/translation-guide.md) |
 | 한국어 용어는 어디서 통제하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [번역 가이드](../maintain/translation-guide.md), [용어집](glossary.md) |
 | 문서 작성 규칙은 어디에 있나요? | [작성 가이드](../maintain/authoring-guide.md) |
 | 문서 점검은 어디에 있나요? | [문서 점검](../maintain/checks.md) |
 | 검색과 경로 메타데이터는 어디에서 관리하나요? | [docs/doc-index.yaml](../../doc-index.yaml) |
+| 에이전트가 먼저 읽어야 할 문서는 무엇인가요? | [AGENTS.md](../../../AGENTS.md)를 먼저 읽고, 그다음 [docs/doc-index.yaml](../../doc-index.yaml)을 봅니다 |

@@ -46,164 +46,139 @@ It does not own connector mechanics, artifact body storage, security guarantees,
 
 ## Candidate details
 
+The promotion rule below applies to every candidate in this section.
+
 <a id="discovery-brief-question-queue-and-assumption-register"></a>
 ### Discovery brief, question queue, and assumption register
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active shaping records or persistence requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="verification-risk-acceptance-verification-risk-acceptance"></a>
 ### Verification-risk acceptance `verification_risk_acceptance`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active verification-risk acceptance route.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="eval-and-detached-verification-workflows"></a>
 ### Eval and detached verification workflows
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active evaluator authority, detached verification, or evaluation workflow requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="full-decision-packet-and-presentation-full"></a>
 ### Full `Decision Packet` and `presentation=full`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active full-format presentation path.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="rich-risk-review-and-residual-risk-lifecycle"></a>
 ### Rich risk review and residual-risk lifecycle
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active rich risk records, review workflow, or expiry behavior.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="release-handoff"></a>
 ### Release handoff
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active deployment, merge, rollback, or production authority.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="recovery-and-reconcile"></a>
 ### Recovery and reconcile
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active recovery, reconcile, or state-repair behavior.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="persistent-projection-jobs"></a>
 ### Persistent projection jobs
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active projection job lifecycle or job storage.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="projection-reconcile-and-editable-projection-areas"></a>
 ### Projection reconcile and editable projection areas
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active editable projection areas, reconcile queues, managed-block repair, or projection state authority.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="harness-next"></a>
 ### `harness.next`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active API method.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="harness-launch-verify"></a>
 ### `harness.launch_verify`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active verification-launch API method.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="harness-record-eval"></a>
 ### `harness.record_eval`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active evaluation-recording API method.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="harness-record-manual-qa"></a>
 ### `harness.record_manual_qa`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create an active Manual QA recording API method.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-harness-record-run-branches"></a>
 ### Later `harness.record_run` branches
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active `harness.record_run` branches for verification input, feedback-loop updates, or TDD trace updates.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-user-judgment-branches"></a>
 ### Later user-judgment branches
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `qa_waiver`, `verification_risk_acceptance`, waiver, reconcile, residual-risk, or richer acceptance branches.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-next-action-values"></a>
 ### Later next-action values
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `launch_verify`, `record_eval`, `record_manual_qa`, or `reconcile`.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="waiver-reconcile-and-residual-risk-branches"></a>
 ### Waiver, reconcile, and residual-risk branches
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active waiver, reconcile, or residual-risk branches.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="verification-result-cards-and-richer-verification-workflows"></a>
 ### Verification result cards and richer verification workflows
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active verification cards, richer verification workflows, or QA substitution.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="context-index-and-derived-metrics"></a>
 ### Context index and derived metrics
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active authority, close effect, long-term metric storage, or retrieval requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="team-workflows-and-orchestration"></a>
 ### Team workflows and orchestration
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active team permissions, shared capability sets, orchestration, or parallel-lane behavior.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="advanced-release-and-deployment-automation"></a>
 ### Advanced release and deployment automation
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active release, deployment, canary, rollback, merge, or production-monitoring automation.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 ## Promotion rule
 
-Promotion is not a local edit to this file.
+Promotion is not a local edit to this file. A candidate becomes active only when current active scope and the relevant current owner document, or a new owner document created during promotion, are updated in the same documentation-only batch.
 
-Update the relevant current owner, or create a new owner document during promotion.
-
-This candidate entry is not itself an active owner document.
-
-Promotion-time owner updates do not create active requirements before promotion.
-
-A candidate becomes active only when current active scope and the relevant current owner document, or the new owner document created during promotion, are updated in the same documentation-only batch.
+Promotion-time owner update means that the owner work happens at promotion time. It does not create active requirements before promotion, and the candidate entry is not itself an active owner document.
 
 ## Active-scope non-effect
 
@@ -214,6 +189,7 @@ This document has no effect on the current MVP. Mentioning a candidate here does
 - [Later Candidate Index](index.md)
 - [Active MVP Scope](../reference/active-mvp-scope.md)
 - [Reference Index](../reference/README.md)
+- [Glossary](../reference/glossary.md)
 - [Core Model](../reference/core-model.md)
 - [MVP API](../reference/api/mvp-api.md)
 - [API Judgment Schemas](../reference/api/schema-judgment.md)

@@ -46,6 +46,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Which document owns public error codes and error precedence? | [API Errors](api/errors.md) |
 | Which document owns storage records or DDL? | [Storage Records](storage-records.md) |
 | Which document owns method-to-storage effects? | [Storage Effects](storage-effects.md) |
+| Where does a storage effect question go? | [Storage Effects](storage-effects.md) |
 | Which document owns security claims and non-claims? | [Security](security.md) |
 | Which document owns product terminology? | [Glossary](glossary.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
 | Which document owns read-only projection authority and source-state/freshness boundaries? | [Projection Authority Reference](projection-and-templates.md) |
@@ -63,6 +64,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Where are access classes defined? | [API Value Sets](api/schema-value-sets.md) |
 | Where are dry-run preview structures such as `DryRunSummary`, `PlannedEffect`, and `PlannedBlocker` defined? | [API Schema Core](api/schema-core.md), [API Value Sets](api/schema-value-sets.md) |
 | Which document owns guarantee label values? | [API Value Sets](api/schema-value-sets.md) |
+| Where is `isolated` defined as a value? | [API Value Sets](api/schema-value-sets.md); use [Security](security.md) for guarantee semantics |
 | Which document owns `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, and `ValidatorResult` shapes? | [API State Schemas](api/schema-state.md) |
 | Which document owns `ArtifactRef`, `ArtifactInput`, and `StagedArtifactHandle` shapes? | [API Artifact Schemas](api/schema-artifacts.md) |
 | Which document owns `UserJudgment`, `SensitiveActionScope`, and accepted-risk input shapes? | [API Judgment Schemas](api/schema-judgment.md) |
@@ -74,7 +76,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Where should I start for the storage document family? | [Storage](storage.md), then the specific storage owner below |
 | Which document owns Runtime Home layout, local store assumptions, and table overview? | [Storage Records](storage-records.md), [Runtime Boundaries](runtime-boundaries.md) |
 | Is `CloseReadinessBlocker` a storage row? | [Storage Records](storage-records.md) |
-| Does artifact staging create evidence? | [Storage Effects](storage-effects.md) |
+| Does artifact staging create evidence? | [Artifact Storage](storage-artifacts.md), [Storage Effects](storage-effects.md) |
 | Which document owns artifact promotion? | [Artifact Storage](storage-artifacts.md) |
 | Which document owns staged-handle validation and artifact body-read eligibility? | [Artifact Storage](storage-artifacts.md), [API Artifact Schemas](api/schema-artifacts.md) |
 | Which document owns idempotency, state clocks, locks, and migrations? | [Storage Versioning](storage-versioning.md), [API Errors](api/errors.md) |
@@ -85,6 +87,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 |---|---|
 | Does the current MVP provide OS sandboxing? | [Security](security.md) |
 | Which document owns `isolated` guarantee semantics? | [Security](security.md) |
+| Which document owns guarantee semantics? | [Security](security.md) |
 | Where are guarantee semantics defined? | [Security](security.md) |
 | Which document owns Product Repository, Harness Server, and Harness Runtime Home separation? | [Runtime Boundaries](runtime-boundaries.md) |
 | Which document owns local connector behavior, capability context, and verified surface boundaries? | [Agent Integration](agent-integration.md), [MVP API](api/mvp-api.md), [Security](security.md) |
@@ -109,12 +112,17 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Where should later candidates be documented? | [Later Candidate Index](../later/index.md) |
 | Where are later security and assurance candidates documented? | [Security and Assurance Later Candidates](../later/security-and-assurance.md) |
 | Where are later artifact and evidence candidates documented? | [Artifacts and Evidence Later Candidates](../later/artifacts-and-evidence.md) |
+| Where are artifact later candidates documented? | [Artifacts and Evidence Later Candidates](../later/artifacts-and-evidence.md) |
 | Where are later connector and surface candidates documented? | [Connectors and Surfaces Later Candidates](../later/connectors-and-surfaces.md) |
 | Where are later policy and conformance candidates documented? | [Policy and Conformance Later Candidates](../later/policy-and-conformance.md) |
 | Where are later workflow and collaboration candidates documented? | [Workflow and Collaboration Later Candidates](../later/workflow-and-collaboration.md) |
+| Is a later candidate an active requirement? | [Later Candidate Index](../later/index.md), [Active MVP Scope](active-mvp-scope.md) |
+| What does promotion-time owner update mean? | [Glossary](glossary.md), [Later Candidate Index](../later/index.md) |
 | What else must change before a later candidate becomes active? | [Later Candidate Index](../later/index.md), [Active MVP Scope](active-mvp-scope.md) |
 | How should "close readiness" be written in Korean? | [docs/terminology-map.yaml](../../terminology-map.yaml) |
+| Where is close readiness Korean terminology controlled? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md) |
 | Where is Korean terminology controlled? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Translation Guide](../maintain/translation-guide.md), [Glossary](glossary.md) |
 | Where are documentation authoring rules? | [Authoring Guide](../maintain/authoring-guide.md) |
 | Where are documentation checks? | [Checks](../maintain/checks.md) |
 | Where is retrieval or route metadata maintained? | [docs/doc-index.yaml](../../doc-index.yaml) |
+| Which document should an agent read first? | [AGENTS.md](../../../AGENTS.md), then [docs/doc-index.yaml](../../doc-index.yaml) |

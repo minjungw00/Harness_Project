@@ -6,6 +6,8 @@ canonical_for:
   - "Recommended English and Korean terminology for Harness documentation."
   - "Identifier preservation rules for bilingual documentation."
   - "Mixed-language Korean expressions to avoid during human or LLM editing."
+  - "Korean close-readiness terminology routing for `닫기 준비 상태` and `닫기 가능 여부`."
+  - "Search-friendly routing for promotion-time owner update terminology."
 does_not_own:
   - "Product, API, storage, security, projection, or runtime contracts."
   - "Rendered UI copy when an exact template body owner defines the wording."
@@ -242,16 +244,19 @@ terms:
     ko_user: "승격 시점의 담당 문서 갱신"
     owner_documents:
       en:
+        - "docs/en/reference/glossary.md"
         - "docs/en/maintain/authoring-guide.md"
         - "docs/en/later/index.md"
         - "docs/en/reference/active-mvp-scope.md"
       ko:
+        - "docs/ko/reference/glossary.md"
         - "docs/ko/maintain/authoring-guide.md"
         - "docs/ko/later/index.md"
         - "docs/ko/reference/active-mvp-scope.md"
     notes:
       - "This means the owner does not exist as an active contract owner before promotion."
       - "Do not name a future owner as if it is a current canonical owner."
+      - "Later index and category documents apply the boundary; the glossary gives the term-level definition."
   future_owner_placeholder:
     category: "documentation_concept"
     en: "future owner placeholder"
@@ -349,6 +354,7 @@ terms:
     notes:
       - "`close readiness` is the evaluation concept, not the blocker schema."
       - "Use 닫기 준비 상태 in reference-facing Korean and 닫기 가능 여부 in user-facing Korean."
+      - "Korean terminology control routes through this map, the glossary, and the translation guide."
   close_readiness_evaluation:
     category: "product_concept"
     en: "close readiness evaluation"
@@ -696,9 +702,11 @@ terms:
     owner_documents:
       en:
         - "docs/en/reference/security.md"
+        - "docs/en/reference/active-mvp-scope.md"
         - "docs/en/reference/api/schema-value-sets.md"
       ko:
         - "docs/ko/reference/security.md"
+        - "docs/ko/reference/active-mvp-scope.md"
         - "docs/ko/reference/api/schema-value-sets.md"
     notes:
       - "`isolated` is a reserved later/profile-gated guarantee label, not an active current-MVP guarantee."

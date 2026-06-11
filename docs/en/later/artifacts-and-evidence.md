@@ -34,80 +34,67 @@ It does not own security control claims, connector mechanics, validator catalogs
 
 ## Candidate details
 
+The promotion rule below applies to every candidate in this section.
+
 <a id="full-evidence-manifest"></a>
 ### Full `Evidence Manifest`
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active evidence, artifact, or close-readiness requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="export"></a>
 ### Export
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active export behavior, export artifacts, or redaction guarantees.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="export-and-handoff-formats"></a>
 ### Export and handoff formats
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active file formats, bundle contracts, or provenance requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-actor-producer-and-capture-source-values"></a>
 ### Later actor, producer, and capture source values
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `evaluator`, `operator`, or `capture_adapter`.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="native-artifact-capture"></a>
 ### Native artifact capture
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active API requirements.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="read-only-playbook-and-judgment-context-metadata"></a>
 ### Read-only playbook and judgment context metadata
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active read-only metadata requirements or satisfy any judgment by itself.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-reference-and-artifact-value-families"></a>
 ### Later reference and artifact value families
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate later bundle, manifest, QA capture, export component, design, Eval, Manual QA, TDD, projection, or related-reference value families.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="later-template-names"></a>
 ### Later template names
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not activate `DEC`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `MANUAL-QA`, `TASK`, `DIRECT-RESULT`, `JOURNEY-CARD`, `DESIGN`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, or `EXPORT` templates.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 <a id="browser-capture-automation"></a>
 ### Browser capture automation
 
 - Status: Later candidate; currently inactive.
 - Current MVP non-effect: Not part of the current MVP. Does not create active browser capture, retention, redaction, QA, or acceptance behavior.
-- Promotion requirement: Update the relevant current owner, or create a new owner document during promotion. This candidate entry is not itself an active owner document. Promotion-time owner updates do not create active requirements before promotion.
 
 ## Promotion rule
 
-Promotion is not a local edit to this file.
+Promotion is not a local edit to this file. A candidate becomes active only when current active scope and the relevant current owner document, or a new owner document created during promotion, are updated in the same documentation-only batch.
 
-Update the relevant current owner, or create a new owner document during promotion.
-
-This candidate entry is not itself an active owner document.
-
-Promotion-time owner updates do not create active requirements before promotion.
-
-A candidate becomes active only when current active scope and the relevant current owner document, or the new owner document created during promotion, are updated in the same documentation-only batch.
+Promotion-time owner update means that the owner work happens at promotion time. It does not create active requirements before promotion, and the candidate entry is not itself an active owner document.
 
 ## Active-scope non-effect
 
@@ -118,6 +105,7 @@ This document has no effect on the current MVP. Mentioning a candidate here does
 - [Later Candidate Index](index.md)
 - [Active MVP Scope](../reference/active-mvp-scope.md)
 - [Reference Index](../reference/README.md)
+- [Glossary](../reference/glossary.md)
 - [Core Model](../reference/core-model.md)
 - [API Artifact Schemas](../reference/api/schema-artifacts.md)
 - [Artifact Storage](../reference/storage-artifacts.md)

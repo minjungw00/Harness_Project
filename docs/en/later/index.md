@@ -2,19 +2,11 @@
 
 This index routes inactive later candidates to their category documents. It is a summary table, not a contract owner.
 
-For current scope, see [Active MVP Scope](../reference/active-mvp-scope.md).
+For current scope, see [Active MVP Scope](../reference/active-mvp-scope.md). This page does not define current MVP behavior, implementation tasks, runtime permission, active API contracts, active storage effects, active security guarantees, or permission to start runtime/server coding.
 
-This page does not define current MVP behavior, implementation tasks, runtime permission, active API contracts, active storage effects, active security guarantees, or permission to start runtime/server coding.
+Mention here or in a category file is not promotion. A candidate becomes active only after current scope and the relevant current owner document, or a new owner document created during promotion, are updated in the same documentation-only batch.
 
-Mention here or in a category file is not promotion.
-
-Update the relevant current owner, or create a new owner document during promotion.
-
-This candidate entry is not itself an active owner document.
-
-Promotion-time owner updates do not create active requirements before promotion.
-
-A candidate becomes active only after current scope and the relevant current owner document, or the new owner document created during promotion, are updated in the same documentation-only batch.
+Promotion-time owner update means that the needed owner work happens at promotion time. It does not create active requirements before promotion, and a candidate entry is not itself an active owner document.
 
 Profile-gated values are distinct from later candidates. A value is profile-gated only when active scope and its owner document name the profile and supported value set. Values on this page remain later candidates until that promotion happens.
 

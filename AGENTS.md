@@ -38,6 +38,8 @@ Do not assume the compact route list is the full owner list. Split canonical own
 
 For exact owner routing, use `docs/doc-index.yaml`. It is the stable machine-readable route table for `doc_id`, owner family, canonical ownership, related documents, and language paths.
 
+LLM agents should read this `AGENTS.md` first for repository phase, documentation-only boundaries, and retrieval rules. Then use `docs/doc-index.yaml` for exact owner routing. Use `docs/*/reference/README.md` as the human-readable owner router, and keep it aligned with `docs/doc-index.yaml`.
+
 When `docs/doc-index.yaml` lists an exact owner for the question or concept, load that owner first. Pull related documents only when the owner, index metadata, or maintainer guidance sends you there.
 
 One concept should have one canonical owner. Edit the owner when the change affects normative meaning, including active MVP scope, API behavior, schemas, storage effects, security wording, access boundaries, close readiness, product terminology, or later-candidate promotion rules.
