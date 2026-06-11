@@ -59,10 +59,12 @@
 
 | 질문 | 담당 문서 |
 |---|---|
-| API 예시에서 쓰는 샘플 작업은 무엇인가요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md), [MVP API](api/mvp-api.md) |
+| API 예시는 어떤 시나리오를 사용하나요? | [MVP API](api/mvp-api.md), [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md) |
 | API 예시가 문서 유지보수를 시나리오로 써도 되나요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md) |
 | 활성 API method 목록은 어느 담당 문서가 맡나요? | [MVP API 경로 문서](api/mvp-api.md). 정확한 API method 이름 값은 [API 값 집합](api/schema-value-sets.md)이 담당합니다 |
+| `harness.status` API 예시의 `state_version` 규칙은 어디에서 확인하나요? | [상태 메서드](api/method-status.md), [문서 점검](../maintain/checks.md) |
 | `harness.prepare_write`는 무엇을 반환하나요? | [쓰기 준비 메서드](api/method-prepare-write.md), [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [Core 모델](core-model.md) |
+| `harness.prepare_write`의 민감 동작 승인은 어디가 담당하나요? | [쓰기 준비 메서드](api/method-prepare-write.md) |
 | `ToolRejectedResponse`는 어디에 정의되어 있나요? | [API 코어 스키마](api/schema-core.md), [API 오류](api/errors.md) |
 | `STATE_VERSION_CONFLICT`는 차단 사유 코드인가요? | [API 오류](api/errors.md) |
 | `dry_run=true`인 `harness.close_task`가 언제 `ToolDryRunResponse`가 아닌 결과를 반환하나요? | [Task 닫기 메서드](api/method-close-task.md) |
@@ -86,6 +88,7 @@
 | `harness.prepare_write` method 동작 | [쓰기 준비 메서드](api/method-prepare-write.md) |
 | `harness.stage_artifact` method 동작 | [아티팩트 스테이징 메서드](api/method-stage-artifact.md) |
 | `harness.record_run` method 동작 | [실행 기록 메서드](api/method-record-run.md) |
+| `harness.record_run`의 증거 동작 | [실행 기록 메서드](api/method-record-run.md), [저장 효과](storage-effects.md) |
 | 사용자 소유 판단 method 동작 | [사용자 판단 메서드](api/method-user-judgment.md) |
 | `harness.close_task` method 동작 | [Task 닫기 메서드](api/method-close-task.md) |
 
@@ -119,6 +122,7 @@
 | 질문 | 담당 문서 |
 |---|---|
 | 사용자 소유 판단과 비대체 규칙은 어디가 담당하나요? | [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md) |
+| 사용자 판단 프롬프트 동작은 어디가 담당하나요? | [사용자 판단 메서드](api/method-user-judgment.md), [Core 모델](core-model.md) |
 | 민감 동작 승인 경계는 어디가 담당하나요? | [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md), [보안](security.md) |
 | 닫기 준비 상태와 정직한 닫기 의미는 어디가 담당하나요? | [Core 모델](core-model.md), [Task 닫기 메서드](api/method-close-task.md), [API 오류](api/errors.md) |
 | 닫기 차단 사유 구조와 닫기 오류 경로는 어디가 담당하나요? | [API 상태 스키마](api/schema-state.md), [API 오류](api/errors.md) |

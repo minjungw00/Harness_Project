@@ -30,13 +30,13 @@ question_routes:
       canonical_owner_doc_id: reference.active-mvp-scope
       default_path: docs/en/reference/active-mvp-scope.md
       route_note: "Active MVP Scope owns included and excluded current-MVP scope items."
-    - question: "What is the sample task used in API examples?"
-      canonical_owner_doc_id: maintain.authoring-guide
-      default_path: docs/en/maintain/authoring-guide.md
+    - question: "API examples use what scenario?"
+      canonical_owner_doc_id: reference.api.mvp-api
+      default_path: docs/en/reference/api/mvp-api.md
       supporting_owner_doc_ids:
+        - maintain.authoring-guide
         - maintain.checks
-        - reference.api.mvp-api
-      route_note: "Authoring Guide owns durable example rules; Checks owns the example scenario review; MVP API carries the current account export confirmation example set."
+      route_note: "MVP API owns the current account data export confirmation scenario summary; Authoring Guide owns durable example rules; Checks owns example scenario review."
     - question: "Can API examples use documentation maintenance as the scenario?"
       canonical_owner_doc_id: maintain.authoring-guide
       default_path: docs/en/maintain/authoring-guide.md
@@ -61,10 +61,20 @@ question_routes:
       canonical_owner_doc_id: reference.api.method-status
       default_path: docs/en/reference/api/method-status.md
       route_note: "`harness.status` method behavior."
+    - question: "`harness.status` example state version rule"
+      canonical_owner_doc_id: reference.api.method-status
+      default_path: docs/en/reference/api/method-status.md
+      supporting_owner_doc_ids:
+        - maintain.checks
+      route_note: "`harness.status` owns its read-only state-version behavior and representative example snapshot; Checks owns API example internal-consistency review."
     - question: "`harness.prepare_write` behavior"
       canonical_owner_doc_id: reference.api.method-prepare-write
       default_path: docs/en/reference/api/method-prepare-write.md
       route_note: "`harness.prepare_write` method behavior."
+    - question: "`harness.prepare_write` sensitive approval"
+      canonical_owner_doc_id: reference.api.method-prepare-write
+      default_path: docs/en/reference/api/method-prepare-write.md
+      route_note: "`harness.prepare_write` owns the method requirement for separate sensitive-action approval before allowed Write Authorization."
     - question: "`harness.stage_artifact` behavior"
       canonical_owner_doc_id: reference.api.method-stage-artifact
       default_path: docs/en/reference/api/method-stage-artifact.md
@@ -73,10 +83,22 @@ question_routes:
       canonical_owner_doc_id: reference.api.method-record-run
       default_path: docs/en/reference/api/method-record-run.md
       route_note: "`harness.record_run` method behavior."
+    - question: "`harness.record_run` evidence behavior"
+      canonical_owner_doc_id: reference.api.method-record-run
+      default_path: docs/en/reference/api/method-record-run.md
+      supporting_owner_doc_ids:
+        - reference.storage-effects
+      route_note: "`harness.record_run` owns run/evidence method behavior; Storage Effects owns method-to-storage evidence effects and no-effect boundaries."
     - question: "user judgment methods"
       canonical_owner_doc_id: reference.api.method-user-judgment
       default_path: docs/en/reference/api/method-user-judgment.md
       route_note: "User judgment method behavior for `harness.request_user_judgment` and `harness.record_user_judgment`."
+    - question: "User judgment prompt ownership"
+      canonical_owner_doc_id: reference.api.method-user-judgment
+      default_path: docs/en/reference/api/method-user-judgment.md
+      supporting_owner_doc_ids:
+        - reference.core-model
+      route_note: "The user-judgment method owner owns prompt creation and recording behavior; Core Model owns user-owned judgment meaning and non-substitution rules."
     - question: "`harness.close_task` behavior"
       canonical_owner_doc_id: reference.api.method-close-task
       default_path: docs/en/reference/api/method-close-task.md

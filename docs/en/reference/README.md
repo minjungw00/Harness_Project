@@ -59,10 +59,12 @@ This route is for implementers and reviewers who need exact owners. New and work
 
 | Question | Owner document(s) |
 |---|---|
-| What is the sample task used in API examples? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md), [MVP API](api/mvp-api.md) |
+| API examples use what scenario? | [MVP API](api/mvp-api.md), [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
 | Can API examples use documentation maintenance as the scenario? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
 | Where is the active API method list? | [MVP API router](api/mvp-api.md); exact method-name values are in [API Value Sets](api/schema-value-sets.md) |
+| Where is the `harness.status` example `state_version` rule? | [Status method](api/method-status.md), [Checks](../maintain/checks.md) |
 | What does `harness.prepare_write` return? | [Prepare-write method](api/method-prepare-write.md), [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), [Core Model](core-model.md) |
+| Where is `harness.prepare_write` sensitive approval routed? | [Prepare-write method](api/method-prepare-write.md) |
 | Where is `ToolRejectedResponse` defined? | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
 | Is `STATE_VERSION_CONFLICT` a blocker code? | [API Errors](api/errors.md) |
 | When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`? | [Close-task method](api/method-close-task.md) |
@@ -86,6 +88,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | `harness.prepare_write` behavior | [Prepare-write method](api/method-prepare-write.md) |
 | `harness.stage_artifact` behavior | [Stage-artifact method](api/method-stage-artifact.md) |
 | `harness.record_run` behavior | [Record-run method](api/method-record-run.md) |
+| `harness.record_run` evidence behavior | [Record-run method](api/method-record-run.md), [Storage Effects](storage-effects.md) |
 | user judgment methods | [User-judgment methods](api/method-user-judgment.md) |
 | `harness.close_task` behavior | [Close-task method](api/method-close-task.md) |
 
@@ -120,6 +123,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Question | Owner document(s) |
 |---|---|
 | Which document owns user-owned judgment and non-substitution rules? | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md) |
+| Who owns user judgment prompt behavior? | [User-judgment methods](api/method-user-judgment.md), [Core Model](core-model.md) |
 | Which document owns sensitive-action approval boundaries? | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md), [Security](security.md) |
 | Which document owns close readiness and close honesty? | [Core Model](core-model.md), [Close-task method](api/method-close-task.md), [API Errors](api/errors.md) |
 | Which document owns close-readiness blocker shape and close error routing? | [API State Schemas](api/schema-state.md), [API Errors](api/errors.md) |
