@@ -181,6 +181,25 @@ Fix:
 - Split the Korean prose into natural paragraphs or bullets that preserve the meaning units.
 - Keep exact identifiers unchanged and preserve semantic parity without forcing line-by-line translation.
 
+### CHK-EXAMPLE-001: durable API examples
+
+Owner:
+- [MVP API](../reference/api/mvp-api.md)
+- [Authoring Guide](authoring-guide.md)
+
+Check:
+- Confirm API request/response examples, task payloads, run summaries, artifact descriptions, and user judgment prompts use a stable product-work scenario.
+- Confirm Harness documentation maintenance, review, migration, route cleanup, or section rewrite work is not the scenario inside API examples.
+- Confirm paired English and Korean API examples preserve equivalent scenario details.
+
+Failure:
+- An API example uses Harness documentation maintenance as the product task, artifact, run, or user judgment basis.
+- One language keeps a different scenario after paired updates.
+
+Fix:
+- Replace the full example chain with one durable product scenario.
+- Update paired English and Korean examples by meaning unit.
+
 ## 5. Terminology checks
 
 ### CHK-TERM-001: close readiness terminology

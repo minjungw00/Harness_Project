@@ -73,7 +73,7 @@ Use these owner routes before repeating details:
 
 Maintain docs own authoring rules and checks. They must not become secondary sources of truth for API, storage, schema, security, access class, close-readiness, projection, runtime, or product contracts.
 
-### Stabilization rules after restructuring
+### Value status stabilization rules
 
 A value name can exist in a schema, example, storage note, route page, or later-candidate list without the current MVP providing that behavior. Treat the name as vocabulary or reserved surface area until [Active MVP Scope](../reference/active-mvp-scope.md) and the semantic owner both say the behavior is active.
 
@@ -140,6 +140,8 @@ User-facing docs explain what the reader can decide, expect, or do. Avoid intern
 Reference-facing docs may use schema names, API method names, enum values, table names, and error codes, but exact identifiers must stay in backticks. A reference page may define only the contract it owns. When it mentions a neighboring contract, summarize briefly and link to that owner.
 
 Maintain docs should sound like editing instructions. They can name owner paths and duplication rules, but they should not reproduce technical contract bodies.
+
+API reference examples should use durable product-work scenarios. Do not use Harness documentation maintenance, review, migration, route cleanup, or section rewrite work as the business scenario inside API request/response examples, task payloads, run summaries, artifact descriptions, or user judgment prompts. Documentation file paths may appear in routing or maintain guidance when they are the subject of that guidance.
 
 ## 7. Long paragraph and chunking rules
 

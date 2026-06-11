@@ -118,16 +118,18 @@ params:
     expected_state_version: 17
     dry_run: false
     locale: en-US
-  user_request: "Update the API reference examples for the MVP docs."
+  user_request: "Add explicit confirmation before account data export."
   requested_mode: auto
   resume_policy: create_new
   acceptance_criteria:
-    - "Each active method has a minimal request and representative response."
+    - "Account export requires explicit confirmation before download."
   constraints:
     allowed_paths:
-      - docs/en/reference/api/mvp-api.md
+      - src/account/export.ts
+      - src/account/export-confirmation.ts
+      - tests/account-export.test.ts
     non_goals:
-      - "Runtime implementation"
+      - "Changing account deletion behavior"
     sensitive_categories: []
   initial_context_refs: []
 ```
@@ -167,7 +169,7 @@ state:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Update MVP API method examples."
+  goal_summary: "Add explicit confirmation before account data export."
   scope_summary: null
   active_change_unit_ref: null
   blocker_refs: []
@@ -244,24 +246,25 @@ params:
     dry_run: false
     locale: en-US
   task_id: task_456
-  goal_summary: "Restructure active MVP API method reference sections."
-  scope_boundary: "Only docs/en/reference/api/mvp-api.md and docs/ko/reference/api/mvp-api.md."
+  goal_summary: "Add explicit confirmation before account data export."
+  scope_boundary: "Only the account export flow and its tests."
   non_goals:
-    - "Implementing runtime API code"
+    - "Changing account deletion behavior"
   acceptance_criteria:
-    - "Every active method follows the standard section pattern."
-  autonomy_boundary: "Documentation-only edits."
-  baseline_ref: baseline_docs_2026_06_10
+    - "Account export requires explicit confirmation before download."
+  autonomy_boundary: "Stay within account export behavior and tests."
+  baseline_ref: baseline_account_export_001
   change_unit:
     operation: create_active
-    scope_summary: "Replace method bodies with uniform reference sections."
+    scope_summary: "Add confirmation handling to the account export flow."
     affected_areas:
-      - "API reference docs"
+      - "Account export"
     affected_paths:
-      - docs/en/reference/api/mvp-api.md
-      - docs/ko/reference/api/mvp-api.md
+      - src/account/export.ts
+      - src/account/export-confirmation.ts
+      - tests/account-export.test.ts
     constraints:
-      - "Preserve method identifiers and owner links."
+      - "Keep account deletion behavior unchanged."
   related_scope_decision_refs: []
 ```
 
@@ -308,8 +311,8 @@ state:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Restructure active MVP API method reference sections."
-  scope_summary: "Only paired MVP API reference docs."
+  goal_summary: "Add explicit confirmation before account data export."
+  scope_summary: "Only the account export flow and its tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
@@ -318,7 +321,7 @@ state:
     state_version: 19
 next_actions:
   - action: harness.prepare_write
-    reason: "Check the first documentation write against active scope."
+    reason: "Check the account export change against active scope."
 ```
 
 ### Owner links
@@ -421,7 +424,7 @@ active_task:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Restructure active MVP API method reference sections."
+  goal_summary: "Add explicit confirmation before account data export."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
@@ -431,7 +434,7 @@ active_task:
 status_card: "Task is ready for pre-write checking."
 next_actions:
   - action: harness.prepare_write
-    reason: "A product-file documentation edit is next."
+    reason: "The account export flow needs write checking."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary: null
@@ -515,13 +518,14 @@ params:
     locale: en-US
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "replace method reference sections"
+  intended_operation: "add account export confirmation step"
   intended_paths:
-    - docs/en/reference/api/mvp-api.md
-    - docs/ko/reference/api/mvp-api.md
+    - src/account/export.ts
+    - src/account/export-confirmation.ts
+    - tests/account-export.test.ts
   product_file_write_intended: true
   sensitive_categories: []
-  baseline_ref: baseline_docs_2026_06_10
+  baseline_ref: baseline_account_export_001
 ```
 
 ### Representative response
@@ -558,8 +562,9 @@ write_authorization:
   status: active
   basis_state_version: 19
   authorized_paths:
-    - docs/en/reference/api/mvp-api.md
-    - docs/ko/reference/api/mvp-api.md
+    - src/account/export.ts
+    - src/account/export-confirmation.ts
+    - tests/account-export.test.ts
 authorization_effect: created
 active_user_judgment_refs: []
 write_decision_reasons: []
@@ -636,10 +641,10 @@ params:
     dry_run: false
     locale: en-US
   task_id: task_456
-  display_name: "Documentation check summary"
+  display_name: "Account export test log"
   content_type: text/plain
   redaction_state: none
-  safe_bytes_or_notice: "No runtime code was changed."
+  safe_bytes_or_notice: "Account export tests passed with explicit confirmation coverage."
   expected_sha256: null
   expected_size_bytes: null
   relation_hint: "run_note"
@@ -664,7 +669,7 @@ staged_artifact_handle:
   created_by_surface_instance_id: surface_instance_01
   content_type: text/plain
   sha256: sha256:example
-  size_bytes: 28
+  size_bytes: 65
   redaction_state: none
   expires_at: "2026-06-10T12:30:00Z"
   consumed: false
@@ -741,19 +746,40 @@ params:
   change_unit_id: cu_001
   kind: implementation
   run_id: null
-  baseline_ref: baseline_docs_2026_06_10
+  baseline_ref: baseline_account_export_001
   write_authorization_id: wa_001
-  summary: "Replaced method sections with the standard API reference pattern."
+  summary: "Added explicit confirmation before account export download."
   observed_changes:
     changed_paths:
-      - docs/en/reference/api/mvp-api.md
-      - docs/ko/reference/api/mvp-api.md
+      - src/account/export.ts
+      - src/account/export-confirmation.ts
+      - tests/account-export.test.ts
     product_file_write_observed: true
     sensitive_categories: []
-    baseline_ref: baseline_docs_2026_06_10
-  artifact_inputs: []
+    baseline_ref: baseline_account_export_001
+  artifact_inputs:
+    - artifact_input_id: artifact_input_account_export_test_log_001
+      source_kind: staged_artifact
+      staged_artifact_handle:
+        handle_id: sah_001
+        project_id: proj_123
+        task_id: task_456
+        created_by_surface_id: surface_local
+        created_by_surface_instance_id: surface_instance_01
+        content_type: text/plain
+        sha256: sha256:example
+        size_bytes: 65
+        redaction_state: none
+        expires_at: "2026-06-10T12:30:00Z"
+        consumed: false
+      existing_artifact_ref: null
+      relation_hint: "test_log"
+      claim: "Account export confirmation tests passed."
+      expected_sha256: null
+      expected_size_bytes: null
+      redaction_state: none
   evidence_updates:
-    - claim: "Each active method follows the standard section pattern."
+    - claim: "Account export requires explicit confirmation before download."
       required_for_close: true
       coverage_state: supported
       supporting_refs: []
@@ -777,36 +803,109 @@ base:
 run_summary:
   run_ref:
     record_kind: run
-    record_id: run_001
+    record_id: run_account_export_tests_001
     project_id: proj_123
     task_id: task_456
     state_version: 21
   kind: implementation
-  summary: "Replaced method sections with the standard API reference pattern."
+  summary: "Added explicit confirmation before account export download."
   observed_changes:
     changed_paths:
-      - docs/en/reference/api/mvp-api.md
-      - docs/ko/reference/api/mvp-api.md
+      - src/account/export.ts
+      - src/account/export-confirmation.ts
+      - tests/account-export.test.ts
     product_file_write_observed: true
     sensitive_categories: []
-    baseline_ref: baseline_docs_2026_06_10
-  artifact_refs: []
-registered_artifacts: []
+    baseline_ref: baseline_account_export_001
+  artifact_refs:
+    - artifact_id: artifact_account_export_test_log_001
+      project_id: proj_123
+      task_id: task_456
+      display_name: "Account export test log"
+      content_type: text/plain
+      sha256: sha256:example
+      size_bytes: 65
+      redaction_state: none
+      availability: available
+      created_by_run_ref:
+        record_kind: run
+        record_id: run_account_export_tests_001
+        project_id: proj_123
+        task_id: task_456
+        state_version: 21
+      created_by_surface_id: surface_local
+      created_by_surface_instance_id: surface_instance_01
+      storage_ref: artifact://artifact_account_export_test_log_001
+registered_artifacts:
+  - artifact_id: artifact_account_export_test_log_001
+    project_id: proj_123
+    task_id: task_456
+    display_name: "Account export test log"
+    content_type: text/plain
+    sha256: sha256:example
+    size_bytes: 65
+    redaction_state: none
+    availability: available
+    created_by_run_ref:
+      record_kind: run
+      record_id: run_account_export_tests_001
+      project_id: proj_123
+      task_id: task_456
+      state_version: 21
+    created_by_surface_id: surface_local
+    created_by_surface_instance_id: surface_instance_01
+    storage_ref: artifact://artifact_account_export_test_log_001
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "Each active method follows the standard section pattern."
+    - claim: "Account export requires explicit confirmation before download."
       required_for_close: true
       coverage_state: supported
       supporting_refs:
         - record_kind: run
-          record_id: run_001
+          record_id: run_account_export_tests_001
           project_id: proj_123
           task_id: task_456
           state_version: 21
-      supporting_artifact_refs: []
+      supporting_artifact_refs:
+        - artifact_id: artifact_account_export_test_log_001
+          project_id: proj_123
+          task_id: task_456
+          display_name: "Account export test log"
+          content_type: text/plain
+          sha256: sha256:example
+          size_bytes: 65
+          redaction_state: none
+          availability: available
+          created_by_run_ref:
+            record_kind: run
+            record_id: run_account_export_tests_001
+            project_id: proj_123
+            task_id: task_456
+            state_version: 21
+          created_by_surface_id: surface_local
+          created_by_surface_instance_id: surface_instance_01
+          storage_ref: artifact://artifact_account_export_test_log_001
       gap_refs: []
-  artifact_refs: []
+  artifact_refs:
+    - artifact_id: artifact_account_export_test_log_001
+      project_id: proj_123
+      task_id: task_456
+      display_name: "Account export test log"
+      content_type: text/plain
+      sha256: sha256:example
+      size_bytes: 65
+      redaction_state: none
+      availability: available
+      created_by_run_ref:
+        record_kind: run
+        record_id: run_account_export_tests_001
+        project_id: proj_123
+        task_id: task_456
+        state_version: 21
+      created_by_surface_id: surface_local
+      created_by_surface_instance_id: surface_instance_01
+      storage_ref: artifact://artifact_account_export_test_log_001
 blocker_refs: []
 state:
   project_id: proj_123
@@ -890,11 +989,11 @@ params:
   change_unit_id: cu_001
   judgment_kind: final_acceptance
   presentation: short
-  question: "Do you accept the visible result basis?"
+  question: "Do you accept the account export confirmation result?"
   options:
     - option_id: accept
       label: "Accept"
-      description: "Record final acceptance for this Task."
+      description: "Record final acceptance for the account export change."
       consequence: "Close readiness can evaluate final acceptance as satisfied."
       is_default: true
     - option_id: revise
@@ -903,9 +1002,27 @@ params:
       consequence: "Close remains blocked on final acceptance."
       is_default: false
   context:
-    summary: "The requested changes are ready for final acceptance."
+    summary: "The account export confirmation change is ready for final acceptance."
     related_refs: []
-    artifact_refs: []
+    artifact_refs:
+      - artifact_id: artifact_account_export_test_log_001
+        project_id: proj_123
+        task_id: task_456
+        display_name: "Account export test log"
+        content_type: text/plain
+        sha256: sha256:example
+        size_bytes: 65
+        redaction_state: none
+        availability: available
+        created_by_run_ref:
+          record_kind: run
+          record_id: run_account_export_tests_001
+          project_id: proj_123
+          task_id: task_456
+          state_version: 21
+        created_by_surface_id: surface_local
+        created_by_surface_instance_id: surface_instance_01
+        storage_ref: artifact://artifact_account_export_test_log_001
     visible_risks: []
     constraints:
       - "Current Task constraints apply"
@@ -946,12 +1063,30 @@ user_judgment:
   judgment_kind: final_acceptance
   status: pending
   presentation: short
-  question: "Do you accept the visible result basis?"
+  question: "Do you accept the account export confirmation result?"
   options: []
   context:
-    summary: "The requested changes are ready for final acceptance."
+    summary: "The account export confirmation change is ready for final acceptance."
     related_refs: []
-    artifact_refs: []
+    artifact_refs:
+      - artifact_id: artifact_account_export_test_log_001
+        project_id: proj_123
+        task_id: task_456
+        display_name: "Account export test log"
+        content_type: text/plain
+        sha256: sha256:example
+        size_bytes: 65
+        redaction_state: none
+        availability: available
+        created_by_run_ref:
+          record_kind: run
+          record_id: run_account_export_tests_001
+          project_id: proj_123
+          task_id: task_456
+          state_version: 21
+        created_by_surface_id: surface_local
+        created_by_surface_instance_id: surface_instance_01
+        storage_ref: artifact://artifact_account_export_test_log_001
     visible_risks: []
     constraints:
       - "Current Task constraints apply"
@@ -1043,10 +1178,10 @@ params:
     sensitive_action_scope: null
     final_acceptance:
       accepted: true
-      basis: "Reviewed the visible result basis."
+      basis: "Reviewed the account export confirmation result and test log."
     residual_risk_acceptance: null
     cancellation: null
-  note: "Accepted."
+  note: "Accepted the account export confirmation change."
   accepted_risks: []
 ```
 
@@ -1077,12 +1212,30 @@ user_judgment:
   judgment_kind: final_acceptance
   status: resolved
   presentation: short
-  question: "Do you accept the visible result basis?"
+  question: "Do you accept the account export confirmation result?"
   options: []
   context:
-    summary: "The requested changes are ready for final acceptance."
+    summary: "The account export confirmation change is ready for final acceptance."
     related_refs: []
-    artifact_refs: []
+    artifact_refs:
+      - artifact_id: artifact_account_export_test_log_001
+        project_id: proj_123
+        task_id: task_456
+        display_name: "Account export test log"
+        content_type: text/plain
+        sha256: sha256:example
+        size_bytes: 65
+        redaction_state: none
+        availability: available
+        created_by_run_ref:
+          record_kind: run
+          record_id: run_account_export_tests_001
+          project_id: proj_123
+          task_id: task_456
+          state_version: 21
+        created_by_surface_id: surface_local
+        created_by_surface_instance_id: surface_instance_01
+        storage_ref: artifact://artifact_account_export_test_log_001
     visible_risks: []
     constraints: []
   affected_refs: []
@@ -1092,8 +1245,8 @@ user_judgment:
     answer:
       final_acceptance:
         accepted: true
-        basis: "Reviewed the visible result basis."
-    note: "Accepted."
+        basis: "Reviewed the account export confirmation result and test log."
+    note: "Accepted the account export confirmation change."
     accepted_risks: []
     resolved_by_actor_kind: user
   expires_at: null
