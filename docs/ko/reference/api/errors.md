@@ -1024,7 +1024,10 @@
 허용되지 않는 것:
 - 이 값을 닫기 차단 사유로 사용하지 않습니다.
 
-전체 닫기 준비 상태 평가 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 메서드 동작은 [`harness.close_task`](method-close-task.md)가 담당합니다. `CloseReadinessBlocker` 형태와 범주는 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)이 담당합니다.
+담당 문서:
+- 전체 닫기 준비 상태 평가 순서: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
+- 메서드 동작: [`harness.close_task`](method-close-task.md)
+- `CloseReadinessBlocker` 형태와 범주: [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)
 
 ## 사용자 표시 라벨
 

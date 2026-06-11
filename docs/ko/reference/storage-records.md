@@ -646,7 +646,24 @@
 
 필수 식별성과 고유 제약은 다음과 같습니다.
 
-- 활성 테이블은 불투명하고 안정적인 식별자를 기본 키 또는 동등한 고유 키로 사용합니다. 대상은 `project_id`, `surface_id`, `surface_instance_id`, `task_id`, `change_unit_id`, `user_judgment_id`, `write_authorization_id`, `run_id`, `handle_id`, `artifact_id`, `artifact_link_id`, `evidence_summary_id`, `blocker_id`, `event_id`, `invocation_id`입니다.
+- 활성 테이블은 불투명하고 안정적인 식별자를 기본 키 또는 동등한 고유 키로 사용합니다.
+
+  식별자 필드는 아래 항목을 포함합니다.
+  - `project_id`
+  - `surface_id`
+  - `surface_instance_id`
+  - `task_id`
+  - `change_unit_id`
+  - `user_judgment_id`
+  - `write_authorization_id`
+  - `run_id`
+  - `handle_id`
+  - `artifact_id`
+  - `artifact_link_id`
+  - `evidence_summary_id`
+  - `blocker_id`
+  - `event_id`
+  - `invocation_id`
 - 런타임 홈 식별 정보는 해당 런타임 홈의 `runtime_home_id` 하나를 저장합니다.
 - 프로젝트 등록에는 고유한 `project_id`와 고유한 `project_home`이 필요합니다. 향후 담당 문서가 다중 등록 동작을 정의하기 전까지 `repo_root` 하나에는 활성 등록 하나만 둡니다.
 - `project_state.project_id`는 등록된 프로젝트마다 한 행입니다.

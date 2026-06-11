@@ -99,7 +99,19 @@ Exception:
 
 - A blocked result does not automatically increment `project_state.state_version`.
 
-The active first schema should omit `tasks.state_version`. If an implementation encounters a legacy or prototype `tasks.state_version` column, that value is inactive metadata only. It must not be used as an authorization, `STATE_VERSION_CONFLICT`, stale-state, Write Authorization, idempotency, lock, or concurrency basis.
+The active first schema should omit `tasks.state_version`.
+
+If an implementation encounters a legacy or prototype `tasks.state_version` column, that value is inactive metadata only.
+
+`tasks.state_version` must not be used as:
+
+- authorization
+- `STATE_VERSION_CONFLICT`
+- stale-state basis
+- Write Authorization basis
+- idempotency basis
+- lock basis
+- concurrency basis
 
 Related storage fields record the project-wide clock:
 
@@ -111,7 +123,11 @@ Related storage fields record the project-wide clock:
 
 Condition: A new `dry_run=false` call commits an actual state change.
 
-Result: `project_state.state_version` increments by exactly 1. If one public call updates Task lifecycle fields and project-level fields together, it is still one state change and one increment. For example, `harness.close_task intent=supersede` may update both `tasks.lifecycle_phase` and `project_state.active_task_id` in the same commit.
+Result: `project_state.state_version` increments by exactly 1.
+
+One public call can update Task lifecycle fields and project-level fields together. That is still one state change and one increment.
+
+Example: `harness.close_task intent=supersede` may update both `tasks.lifecycle_phase` and `project_state.active_task_id` in the same commit.
 
 Exception: A committed blocked result does not automatically increment. It may increment only when the method owner allows blocker or other current-row mutation storage and [Storage Effects](storage-effects.md) allows a `state_version` effect for that branch.
 
@@ -160,7 +176,11 @@ Non-claim: `expected_state_version` is a freshness condition for stale writes. I
 
 Public error boundary: `STATE_VERSION_CONFLICT` is the only active current MVP public `ErrorCode` for project-wide state-version mismatch. No active current MVP call requires or accepts more than one public `expected_state_version`.
 
-Related storage field: Stale Write Authorization detection compares `write_authorizations.basis_state_version` with the current `project_state.state_version`. When that mismatch is surfaced through the public API, the public error is also `STATE_VERSION_CONFLICT`. The call is rejected before consumption and must not change the Write Authorization status unless another current contract explicitly says so.
+Related storage field: stale Write Authorization detection compares `write_authorizations.basis_state_version` with the current `project_state.state_version`.
+
+Public API effect: when that mismatch is surfaced through the public API, the public error is also `STATE_VERSION_CONFLICT`.
+
+Not allowed: the call must be rejected before consumption and must not change the Write Authorization status unless another current contract explicitly says so.
 
 ## Event meaning
 
@@ -269,9 +289,29 @@ This document intentionally excludes inactive DDL bundles, migration catalogs, a
 
 ## Failures and retry
 
-Pre-commit failures have no storage effect. Stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, validation failure, malformed request, and idempotency request-hash conflict end in `ToolRejectedResponse` before commit and do not increment `state_version`.
+Pre-commit failures have no storage effect.
 
-Transaction failures must leave no partial result. If any part of a new committed `dry_run=false` state change fails, storage must not partially leave current-row writes, events, replay rows, artifact effects, Write Authorization consumption, evidence updates, close effects, or a `state_version` increment.
+Examples:
+- stale `expected_state_version`
+- stale `WriteAuthorization.basis_state_version`
+- validation failure
+- malformed request
+- idempotency request-hash conflict
+
+Effect: these failures end in `ToolRejectedResponse` before commit and do not increment `state_version`.
+
+Transaction failures must leave no partial result.
+
+If any part of a new committed `dry_run=false` state change fails, storage must not partially leave:
+
+- current-row writes
+- events
+- replay rows
+- artifact effects
+- Write Authorization consumption
+- evidence updates
+- close effects
+- `state_version` increment
 
 Retry rules depend on the failure type. The summary table routes to detail blocks.
 

@@ -634,7 +634,24 @@ Not allowed:
 
 Required identity and uniqueness constraints:
 
-- Active tables use opaque stable ids as primary keys or equivalent unique keys: `project_id`, `surface_id`, `surface_instance_id`, `task_id`, `change_unit_id`, `user_judgment_id`, `write_authorization_id`, `run_id`, `handle_id`, `artifact_id`, `artifact_link_id`, `evidence_summary_id`, `blocker_id`, `event_id`, and `invocation_id`.
+- Active tables use opaque stable ids as primary keys or equivalent unique keys.
+
+  Identity fields include:
+  - `project_id`
+  - `surface_id`
+  - `surface_instance_id`
+  - `task_id`
+  - `change_unit_id`
+  - `user_judgment_id`
+  - `write_authorization_id`
+  - `run_id`
+  - `handle_id`
+  - `artifact_id`
+  - `artifact_link_id`
+  - `evidence_summary_id`
+  - `blocker_id`
+  - `event_id`
+  - `invocation_id`
 - Runtime Home identity stores one `runtime_home_id` for the Runtime Home.
 - Project registration requires unique `project_id`, unique `project_home`, and one active registration for a `repo_root` unless a future owner defines multi-registration behavior.
 - `project_state.project_id` is one row per registered project.

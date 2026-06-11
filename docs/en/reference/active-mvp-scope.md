@@ -28,7 +28,21 @@ Use this page when deciding whether a capability is part of the current MVP. Oth
 
 This repository is documentation-only source material for a future Harness Server. Runtime/server implementation has not started unless the maintainer handoff status in `docs/*/build/mvp-plan.md` explicitly says otherwise.
 
-The repository is not the user's Product Repository and not a Harness Runtime Home. These docs do not create runtime state, generated projections, artifacts, evidence records, QA records, acceptance records, close records, residual-risk records, executable fixtures, conformance results, or implementation-complete behavior.
+The repository is not the user's Product Repository and not a Harness Runtime Home.
+
+These docs do not create:
+
+- runtime state
+- generated projections
+- artifacts
+- evidence records
+- QA records
+- acceptance records
+- close records
+- residual-risk records
+- executable fixtures
+- conformance results
+- implementation-complete behavior
 
 ## Included in the active MVP
 
@@ -50,7 +64,8 @@ The included scope is summarized below. Detail blocks keep the active meaning an
 |---|---|
 | Plain-language intake and Task creation | [Intake method](api/method-intake.md), [Core Model](core-model.md) |
 | Scope updates | [Update-scope method](api/method-update-scope.md), [Core Model](core-model.md) |
-| Status and close-readiness review | [Status method](api/method-status.md), [Close-task method](api/method-close-task.md), [API State Schemas](api/schema-state.md), [Errors](api/errors.md), [Projection Authority Reference](projection-and-templates.md) |
+| Status review | [Status method](api/method-status.md), [API State Schemas](api/schema-state.md), [Projection Authority Reference](projection-and-templates.md) |
+| Close-readiness review | [Close-task method](api/method-close-task.md), [API State Schemas](api/schema-state.md), [Errors](api/errors.md) |
 | Prepare-write authorization | [Prepare-write method](api/method-prepare-write.md), [Storage Effects](storage-effects.md), [Security](security.md) |
 | Local surface registration | [Agent Integration](agent-integration.md), [Surface Recipes](../use/surface-recipes.md), [Security](security.md) |
 | Artifact staging | [Stage-artifact method](api/method-stage-artifact.md), [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md), [Storage Effects](storage-effects.md) |
@@ -120,7 +135,15 @@ Approving a sensitive action does not create active observation or blocking unle
 
 ## Reserved and profile-gated values
 
-Some value names may be reserved values or profile-gated values without being active user-visible capabilities. Reserved or profile-gated guarantee labels do not expand the current MVP scope. Their appearance in examples, schemas, or later-candidate tables does not activate behavior, make a guarantee available, or make the value a default current-MVP value.
+Some value names may be reserved values or profile-gated values without being active user-visible capabilities.
+
+Scope effect:
+- Reserved or profile-gated guarantee labels do not expand the current MVP scope.
+
+Non-claim:
+- Appearance in examples, schemas, or later-candidate tables does not activate behavior.
+- Appearance there does not make a guarantee available.
+- Appearance there does not make the value a default current-MVP value.
 
 Exact guarantee label value entries belong to [API Value Sets](api/schema-value-sets.md). Guarantee semantics, including non-claims for `isolated`, belong to [Security](security.md).
 

@@ -206,7 +206,16 @@ GuaranteeDisplay:
   capability_refs: StateRecordRef[]
 ```
 
-`CloseReadinessBlocker`는 닫기 준비 상태 발견 사항을 표현하는 데이터 형태입니다. 닫기 준비 상태 개념 전체가 아니며 그 자체로 지속 저장을 뜻하지도 않습니다. 전체 닫기 준비 상태 평가 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 응답 분기 동작과 커밋된 차단 결과는 [`harness.close_task`](method-close-task.md)가 담당합니다. 공개 오류 경로는 [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers)이 담당합니다.
+`CloseReadinessBlocker`는 닫기 준비 상태 발견 사항을 표현하는 데이터 형태입니다.
+
+비주장:
+- 닫기 준비 상태 개념 전체가 아닙니다.
+- 그 자체로 지속 저장을 뜻하지 않습니다.
+
+담당 문서:
+- 전체 닫기 준비 상태 평가 순서: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
+- 응답 분기 동작과 커밋된 차단 결과: [`harness.close_task`](method-close-task.md)
+- 공개 오류 경로: [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers)
 
 활성 `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값은 [API 값 집합](schema-value-sets.md)이 담당합니다. 보안 보장 의미는 [보안](../security.md)이 담당합니다.
 

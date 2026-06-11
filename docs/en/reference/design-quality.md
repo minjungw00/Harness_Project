@@ -2,7 +2,16 @@
 
 ## 1. Owns / Does not own
 
-This Reference page owns the active current MVP design-quality routing boundary as a judgment-routing and evidence/scope reference: how design-quality observations identify product decisions, technical decisions, scope decisions, evidence gaps, residual-risk visibility issues, or close blockers that are already owned by active Core/API categories.
+This Reference page owns the active current MVP design-quality routing boundary.
+
+Role: design-quality observations route to judgment, evidence, or scope owners when they identify:
+
+- product decisions
+- technical decisions
+- scope decisions
+- evidence gaps
+- residual-risk visibility issues
+- close blockers already owned by active Core/API categories
 
 It does not define an independent active gate, active design-quality `CloseReadinessBlocker.category`, active validator family, design-policy waiver route, severity-based blocking policy, evidence record, QA record, acceptance record, residual-risk record, or close authority.
 
@@ -191,9 +200,29 @@ Close effect:
 Not allowed:
 - Do not create a new gate, blocker, validator mapping, waiver route, evidence rule, or close authority.
 
-Active design quality does not create new Core state, `StateSummary.gates.design_gate`, `CloseReadinessBlocker.category=design_policy`, new schemas, new validator result fields, active design-policy validators, design-policy waiver, or a separate design-review authority.
+Active design quality does not create:
 
-Design quality must not turn ordinary work into an open-ended planning loop. Full domain-language audits, full module/interface review, full TDD trace, full feedback-loop audit, full codebase-stewardship review, detailed Manual QA policy, detached verification, two-stage review displays, and steward policies are not active current MVP blockers unless another active owner path explicitly requires a narrow piece of that work.
+- new Core state
+- `StateSummary.gates.design_gate`
+- `CloseReadinessBlocker.category=design_policy`
+- new schemas
+- new validator result fields
+- active design-policy validators
+- design-policy waiver
+- separate design-review authority
+
+Design quality must not turn ordinary work into an open-ended planning loop.
+
+Not active current-MVP blockers unless another active owner path explicitly requires a narrow piece:
+- full domain-language audits
+- full module/interface review
+- full TDD trace
+- full feedback-loop audit
+- full codebase-stewardship review
+- detailed Manual QA policy
+- detached verification
+- two-stage review displays
+- steward policies
 
 ## 3. Routing rules
 
@@ -369,7 +398,16 @@ Not allowed:
 
 The current MVP has no active design-quality waiver or design-policy waiver route. If an owner path allows a requirement to be deferred, accepted as risk, or resolved by user judgment, use that active owner path and its exact `judgment_kind`, blocker category, or evidence behavior.
 
-A waiver-like decision or accepted-risk answer records the responsible user judgment about a named requirement or a named visible risk. It does not erase the facts, remove the underlying limitation from the close basis, create evidence, prove verification, pass QA, replace final acceptance, or automatically make close successful.
+A waiver-like decision or accepted-risk answer records the responsible user judgment about a named requirement or a named visible risk.
+
+It does not:
+- erase the facts
+- remove the underlying limitation from the close basis
+- create evidence
+- prove verification
+- pass QA
+- replace final acceptance
+- automatically make close successful
 
 Keep the judgment routes separate:
 
@@ -509,7 +547,12 @@ Validator IDs are reporting labels. They do not create Core invariants, gates, c
 
 `ValidatorResult` shape is owned by [API State Schemas](api/schema-state.md). Severity-like values and the active stable `ValidatorResult.validator_id` set are owned by [API Value Sets](api/schema-value-sets.md).
 
-This document does not publish active design-policy validator IDs or a policy-to-validator mapping. Later stable validator ID sets remain candidates in [Later policy and conformance: `ValidatorResult` stable IDs and policy families](../later/policy-and-conformance.md#validatorresult-stable-ids-and-policy-families) unless an owner promotes a narrow active contract.
+This document does not publish:
+
+- active design-policy validator IDs
+- a policy-to-validator mapping
+
+Later stable validator ID sets remain candidates in [Later policy and conformance: `ValidatorResult` stable IDs and policy families](../later/policy-and-conformance.md#validatorresult-stable-ids-and-policy-families) unless an owner promotes a narrow active contract.
 
 ## 8. Later policy catalog boundary
 

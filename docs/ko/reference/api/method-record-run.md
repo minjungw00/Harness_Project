@@ -166,7 +166,7 @@ params:
         sha256: sha256:example
         size_bytes: 65
         redaction_state: none
-        expires_at: "2099-01-01T12:30:00Z"
+        expires_at: "<future-expiration-timestamp>"
         consumed: false
       existing_artifact_ref: null
       relation_hint: "test_log"

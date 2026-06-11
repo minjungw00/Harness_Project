@@ -28,7 +28,18 @@
 
 판단 스키마는 사용자가 소유한 선택의 구조를 보존합니다. 넓은 승인이 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소 판단, 이후 QA 면제, 이후 검증 위험 수락을 대신하게 만들지 않습니다.
 
-`UserJudgmentCandidate`는 대기 중인 판단이 아닙니다. 대기 중인 `UserJudgment`는 `harness.request_user_judgment`가 커밋된 뒤에만 존재합니다. 기록된 답변은 해당 대기 중인 판단과 그 `judgment_kind`만 해결합니다. 활성 범위를 조용히 바꾸거나, 증거를 만들거나, Write Authorization을 만들거나, 잔여 위험을 수락하거나, Task를 닫지 않습니다.
+`UserJudgmentCandidate`는 대기 중인 판단이 아닙니다.
+
+조건: 대기 중인 `UserJudgment`는 `harness.request_user_judgment`가 커밋된 뒤에만 존재합니다.
+
+효과: 기록된 답변은 해당 대기 중인 판단과 그 `judgment_kind`만 해결합니다.
+
+비주장:
+- 활성 범위를 조용히 바꾸지 않습니다.
+- 증거를 만들지 않습니다.
+- Write Authorization을 만들지 않습니다.
+- 잔여 위험을 수락하지 않습니다.
+- Task를 닫지 않습니다.
 
 ## `UserJudgment`
 

@@ -50,7 +50,15 @@ ToolEnvelope:
   locale: string | null
 ```
 
-`task_id` is an optional request-level Task selector. Method-specific `task_id` fields, when present, take precedence as described by [shared request rules](mvp-api.md#shared-request-rules). `expected_state_version` names the project-wide state clock used by state-changing methods; conflict behavior is owned by [state version conflict](errors.md#state-conflict-behavior) and [Storage Versioning](../storage-versioning.md).
+`task_id` is an optional request-level Task selector.
+
+Precedence: method-specific `task_id` fields, when present, take precedence as described by [shared request rules](mvp-api.md#shared-request-rules).
+
+`expected_state_version` names the project-wide state clock used by state-changing methods.
+
+Owner links:
+- conflict behavior: [state version conflict](errors.md#state-conflict-behavior)
+- storage version behavior: [Storage Versioning](../storage-versioning.md)
 
 <a id="common-response"></a>
 ## Common response branches
@@ -82,7 +90,11 @@ ToolDryRunResponse:
 
 Method-specific result fields belong only to the method result branch. `ToolRejectedResponse` and `ToolDryRunResponse` do not carry result-only fields such as `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, or `close_state`.
 
-The active `response_kind` and `effect_kind` values are owned by [response and effect values](schema-value-sets.md#response-and-effect-values). Shared branch reading is owned by [shared request rules](mvp-api.md#shared-request-rules), and method-specific state effects are owned by method owner documents. Public error precedence is owned by [API Errors](errors.md).
+Owner links:
+- active `response_kind` and `effect_kind` values: [response and effect values](schema-value-sets.md#response-and-effect-values)
+- shared branch reading: [shared request rules](mvp-api.md#shared-request-rules)
+- method-specific state effects: method owner documents
+- public error precedence: [API Errors](errors.md)
 
 ## Dry-run summary shapes
 

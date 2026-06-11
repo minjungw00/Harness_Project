@@ -39,8 +39,8 @@ This document owns the active public method list and owner routing. The exact ac
 | <a id="harnessintake"></a>`harness.intake` | Start, resume, or classify ordinary user work. | [Intake method](method-intake.md) |
 | <a id="harnessupdate_scope"></a>`harness.update_scope` | Update active Task scope and the active Change Unit after intake. | [Update-scope method](method-update-scope.md) |
 | <a id="harnessstatus"></a>`harness.status` | Return current state summary, blockers, pending judgments, evidence summary, close state, and next safe actions. | [Status method](method-status.md) |
-| <a id="harnessprepare_write"></a>`harness.prepare_write` | Check a proposed product-file write against current scope, state, required separate sensitive-action approval, baseline, and surface capability. | [Prepare-write method](method-prepare-write.md) |
-| <a id="harnessstage_artifact"></a>`harness.stage_artifact` | Stage caller-provided safe artifact bytes or a safe notice as a temporary handle for later `record_run` promotion. | [Stage-artifact method](method-stage-artifact.md) |
+| <a id="harnessprepare_write"></a>`harness.prepare_write` | Check product-file write compatibility before Write Authorization. | [Prepare-write method](method-prepare-write.md) |
+| <a id="harnessstage_artifact"></a>`harness.stage_artifact` | Stage safe bytes or a safe notice for later `record_run` promotion. | [Stage-artifact method](method-stage-artifact.md) |
 | <a id="harnessrecord_run"></a>`harness.record_run` | Record shaping, direct, or implementation work plus compact evidence and artifact refs. | [Record-run method](method-record-run.md) |
 | <a id="harnessrequest_user_judgment"></a>`harness.request_user_judgment` | Create one pending user-owned judgment request. | [User-judgment methods](method-user-judgment.md#harnessrequest_user_judgment) |
 | <a id="harnessrecord_user_judgment"></a>`harness.record_user_judgment` | Record the user's answer to an existing pending `UserJudgment`. | [User-judgment methods](method-user-judgment.md#harnessrecord_user_judgment) |
@@ -100,16 +100,28 @@ Non-claim: Task resolution selects owner records; it does not create a separate 
 
 | Storage area | Owner |
 |---|---|
-| Method-to-storage effect semantics, no-effect boundaries, dry-run storage effects, committed blocked storage consequences, and read-only storage boundaries | [Storage Effects](../storage-effects.md) |
+| Method-to-storage effects and no-effect boundaries | [Storage Effects](../storage-effects.md) |
 | Persistent record layouts, DDL ownership, record-column meaning, and storage-owned JSON placement | [Storage Records](../storage-records.md) |
 | State clocks, idempotency replay behavior, and version conflict storage rules | [Storage Versioning](../storage-versioning.md) |
 | Artifact staging, validation, promotion, linking, and body-read lifecycle | [Artifact Storage](../storage-artifacts.md) |
 
 ## Stable API example scenario summary
 
-Method owner examples use a durable account data export confirmation scenario: the Task summary is account data export confirmation, scope includes the account data export confirmation UI and account export confirmation tests, account deletion behavior and billing export behavior stay out of scope, and acceptance requires explicit confirmation before download. Other method examples may extend that same scenario with account export confirmation tests and representative run and evidence data.
+Method owner examples use a durable account data export confirmation scenario:
 
-Examples are compact branch examples, not full schema definitions. They rely on schema owners for full nested shapes and keep shared scenario refs internally consistent across `state_version`, artifact refs, run refs, judgment refs, close-readiness evidence, sensitive-action approval reasons, and expiration timestamps. Maintenance rules for replacing or reviewing API examples live in [Authoring Guide](../../maintain/authoring-guide.md) and [Checks](../../maintain/checks.md).
+- Task summary: account data export confirmation.
+- Scope: account data export confirmation UI and account export confirmation tests.
+- Out of scope: account deletion behavior and billing export behavior.
+- Acceptance: explicit confirmation is required before download.
+- Extension: method examples may add account export confirmation tests plus representative run and evidence data.
+
+Examples are compact branch examples, not full schema definitions.
+
+Consistency requirements:
+- Nested shapes stay with schema owners.
+- Shared scenario refs must stay aligned across `state_version`, artifact refs, run refs, judgment refs, close-readiness evidence, sensitive-action approval reasons, and expiration timestamps.
+
+Maintenance rules for replacing or reviewing API examples live in [Authoring Guide](../../maintain/authoring-guide.md) and [Checks](../../maintain/checks.md).
 
 ## Method owner documents
 

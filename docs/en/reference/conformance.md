@@ -540,10 +540,33 @@ Owner links:
 
 Future fixture families belong in [Later policy and conformance: future fixture families](../later/policy-and-conformance.md#future-fixture-families). The later-candidate index keeps names only as later candidates, and this page does not reproduce the catalog.
 
-Future-family names are not scenario scripts, fixture bodies, active API payload examples, runner or reporting requirements, active MVP scope, implementation tasks, current results, or current runtime proof. A future owner must promote a narrow behavior with scope, fallback behavior, exact contracts, and proof-path expectations before executable fixture material exists.
+Future-family names are not:
+
+- scenario scripts
+- fixture bodies
+- active API payload examples
+- runner or reporting requirements
+- active MVP scope
+- implementation tasks
+- current results
+- current runtime proof
+
+Promotion requirement: a future owner must promote a narrow behavior with scope, fallback behavior, exact contracts, and proof-path expectations before executable fixture material exists.
 
 ## Metrics boundary
 
 Metrics are not conformance authority in the current documentation set. Future local metrics and later conformance reporting may be useful for diagnostics or planning, but until an owner promotes them they remain read-only derived displays or later candidates.
 
-Metrics must not create Core state, satisfy evidence, pass QA or verification, authorize writes, accept final results, accept residual risk, close work, prove implementation readiness, or replace runtime conformance. If a future metric is promoted, its owner must define source records, freshness boundary, display wording, and the non-substitution rule.
+Metrics must not:
+
+- create Core state
+- satisfy evidence
+- pass QA or verification
+- authorize writes
+- accept final results
+- accept residual risk
+- close work
+- prove implementation readiness
+- replace runtime conformance
+
+Promotion requirement: if a future metric is promoted, its owner must define source records, freshness boundary, display wording, and the non-substitution rule.

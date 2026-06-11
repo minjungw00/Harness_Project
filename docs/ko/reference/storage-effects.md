@@ -24,7 +24,17 @@
 
 ## 저장 효과 분기 요약
 
-응답 형태와 저장 효과는 별개입니다. `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, `ArtifactRef`, `StagedArtifactHandle`은 API 데이터 형태입니다. 응답에 이런 값이 있다는 사실만으로 지속 저장, 아티팩트 승격, 스테이징 핸들 소비, 재실행 저장, `close_state` 변경, `project_state.state_version` 증가가 증명되지는 않습니다.
+응답 형태와 저장 효과는 별개입니다.
+
+API 데이터 형태에는 아래 값이 포함됩니다.
+
+- `CloseReadinessBlocker`
+- `WriteDecisionReason`
+- `PlannedBlocker`
+- `ArtifactRef`
+- `StagedArtifactHandle`
+
+비주장: 응답에 이런 값이 있다는 사실만으로 지속 저장, 아티팩트 승격, 스테이징 핸들 소비, 재실행 저장, `close_state` 변경, `project_state.state_version` 증가가 증명되지는 않습니다.
 
 효과는 선택된 메서드 동작과 응답 분기가 정합니다. 아래 표는 각 분기를 짧게 요약하고, 세부 블록은 허용될 수 있는 효과와 허용되지 않는 효과를 나누어 설명합니다.
 
@@ -183,7 +193,9 @@
 
 ## 읽기 전용 효과
 
-읽기 전용 결과는 응답으로만 반환되며 재실행 행이 아닙니다. `harness.status`와 `harness.close_task intent=check`는 응답을 위해 차단 사유, `CloseReadinessBlocker[]`, 증거 요약, 아티팩트 참조, 진단, 다음 행동을 계산할 수 있습니다.
+읽기 전용 결과는 응답으로만 반환되며 재실행 행이 아닙니다.
+
+허용되는 응답 계산: `harness.status`와 `harness.close_task intent=check`는 응답을 위해 차단 사유, `CloseReadinessBlocker[]`, 증거 요약, 아티팩트 참조, 진단, 다음 행동을 계산할 수 있습니다.
 
 저장소는 읽기가 일어났다는 이유만으로 그 계산값을 지속 저장하면 안 됩니다.
 
@@ -202,7 +214,13 @@
 
 ## 커밋된 차단 결과의 저장 효과
 
-커밋된 차단 결과는 거절 응답과 다릅니다. `harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 관련 메서드 담당 문서인 [쓰기 준비 메서드](api/method-prepare-write.md) 또는 [Task 닫기 메서드](api/method-close-task.md)가 차단 커밋을 허용할 때만 `MethodResult`입니다.
+커밋된 차단 결과는 거절 응답과 다릅니다.
+
+조건: `harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 관련 메서드 담당 문서가 차단 커밋을 허용할 때만 `MethodResult`입니다.
+
+담당 문서:
+- [쓰기 준비 메서드](api/method-prepare-write.md)
+- [Task 닫기 메서드](api/method-close-task.md)
 
 <a id="harnessprepare_write-committed-non-allow-decision"></a>
 ### `harness.prepare_write`의 커밋된 비허용 판단

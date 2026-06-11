@@ -28,7 +28,21 @@
 
 이 저장소는 향후 하네스 서버를 위한 문서 전용 원천 자료입니다. `docs/*/build/mvp-plan.md`의 유지보수자 인계 상태가 명시적으로 다르게 말하지 않는 한 런타임/서버 구현은 시작되지 않았습니다.
 
-이 저장소는 사용자의 `Product Repository`도 아니고 `Harness Runtime Home`도 아닙니다. 이 문서들은 런타임 상태, 생성된 상태 보기, 아티팩트, 증거 기록, QA 기록, 수락 기록, 닫기 기록, 잔여 위험 기록, 실행 가능한 픽스처, 적합성 결과, 구현 완료 동작을 만들지 않습니다.
+이 저장소는 사용자의 `Product Repository`도 아니고 `Harness Runtime Home`도 아닙니다.
+
+이 문서들은 아래 항목을 만들지 않습니다.
+
+- 런타임 상태
+- 생성된 상태 보기
+- 아티팩트
+- 증거 기록
+- QA 기록
+- 수락 기록
+- 닫기 기록
+- 잔여 위험 기록
+- 실행 가능한 픽스처
+- 적합성 결과
+- 구현 완료 동작
 
 ## 현재 MVP에 포함되는 것
 
@@ -50,7 +64,8 @@
 |---|---|
 | 평이한 언어 입력과 Task 생성 | [접수 메서드](api/method-intake.md), [Core 모델](core-model.md) |
 | 범위 업데이트 | [범위 갱신 메서드](api/method-update-scope.md), [Core 모델](core-model.md) |
-| 상태와 닫기 준비 상태 확인 | [상태 메서드](api/method-status.md), [Task 닫기 메서드](api/method-close-task.md), [API 상태 스키마](api/schema-state.md), [오류](api/errors.md), [상태 보기 권한 참조](projection-and-templates.md) |
+| 상태 확인 | [상태 메서드](api/method-status.md), [API 상태 스키마](api/schema-state.md), [상태 보기 권한 참조](projection-and-templates.md) |
+| 닫기 준비 상태 확인 | [Task 닫기 메서드](api/method-close-task.md), [API 상태 스키마](api/schema-state.md), [오류](api/errors.md) |
 | 쓰기 준비 승인 | [쓰기 준비 메서드](api/method-prepare-write.md), [저장 효과](storage-effects.md), [보안](security.md) |
 | 로컬 접점 등록 | [에이전트 통합](agent-integration.md), [접점별 사용 레시피](../use/surface-recipes.md), [보안](security.md) |
 | 아티팩트 스테이징 | [아티팩트 스테이징 메서드](api/method-stage-artifact.md), [API 아티팩트 스키마](api/schema-artifacts.md), [아티팩트 저장소](storage-artifacts.md), [저장 효과](storage-effects.md) |
@@ -120,7 +135,15 @@
 
 ## 예약된 값과 profile-gated 값
 
-일부 값 이름은 예약된 값이거나 profile-gated 값일 수 있지만, 그것만으로 사용자에게 보이는 활성 기능이 되지는 않습니다. 예약된 값이나 profile-gated 값인 보장 라벨은 현재 MVP 범위를 확장하지 않습니다. 예시, 스키마, 이후 후보 표에 나온다고 해서 동작이 활성화되거나 보장이 제공되거나 현재 MVP 기본값이 되지 않습니다.
+일부 값 이름은 예약된 값이거나 profile-gated 값일 수 있지만, 그것만으로 사용자에게 보이는 활성 기능이 되지는 않습니다.
+
+범위 효과:
+- 예약된 값이나 profile-gated 값인 보장 라벨은 현재 MVP 범위를 확장하지 않습니다.
+
+비주장:
+- 예시, 스키마, 이후 후보 표에 나온다고 해서 동작이 활성화되지 않습니다.
+- 그런 언급만으로 보장이 제공되지 않습니다.
+- 그런 언급만으로 현재 MVP 기본값이 되지 않습니다.
 
 정확한 보장 라벨 값 항목은 [API 값 집합](api/schema-value-sets.md)이 담당합니다. `isolated`의 비주장을 포함한 보장 의미는 [보안](security.md)이 담당합니다.
 

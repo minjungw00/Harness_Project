@@ -22,7 +22,16 @@ This document does not own:
 
 ## Shape versus effect
 
-Response data shape and storage effect are separate. `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, `ArtifactRef`, and `StagedArtifactHandle` are API data shapes. Their presence in a response does not by itself prove persistence, artifact promotion, staged-handle consumption, replay storage, close-state mutation, or `project_state.state_version` increment.
+Response data shape and storage effect are separate.
+
+API data shapes include:
+- `CloseReadinessBlocker`
+- `WriteDecisionReason`
+- `PlannedBlocker`
+- `ArtifactRef`
+- `StagedArtifactHandle`
+
+Non-claim: their presence in a response does not by itself prove persistence, artifact promotion, staged-handle consumption, replay storage, close-state mutation, or `project_state.state_version` increment.
 
 Effects come from the selected method behavior and response branch. The table summarizes each branch; the detail blocks separate allowed effects from forbidden effects.
 
@@ -175,7 +184,9 @@ Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker
 
 ## Read-only effects
 
-Read-only results are response-only and not replay rows. `harness.status` and `harness.close_task intent=check` may compute blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response.
+Read-only results are response-only and not replay rows.
+
+Allowed response computation: `harness.status` and `harness.close_task intent=check` may compute blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response.
 
 Storage must not persist those computed values merely because the read occurred.
 
@@ -194,7 +205,13 @@ For `harness.close_task intent=check`, the response branch is owned by [`harness
 
 ## Committed blocked effects
 
-Committed blocked outcomes are distinct from rejected responses. A committed blocked `harness.prepare_write` or `harness.close_task` outcome is a `MethodResult` only when the relevant method owner allows the blocked commit: [Prepare-write method](api/method-prepare-write.md) or [Close-task method](api/method-close-task.md).
+Committed blocked outcomes are distinct from rejected responses.
+
+Condition: a committed blocked `harness.prepare_write` or `harness.close_task` outcome is a `MethodResult` only when the relevant method owner allows the blocked commit.
+
+Owner links:
+- [Prepare-write method](api/method-prepare-write.md)
+- [Close-task method](api/method-close-task.md)
 
 <a id="harnessprepare_write-committed-non-allow-decision"></a>
 ### `harness.prepare_write` committed non-allow decision

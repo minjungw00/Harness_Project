@@ -1028,7 +1028,10 @@ Response path:
 Not allowed:
 - Do not use this as a close blocker.
 
-Full close-readiness evaluation order is owned by [Core Model close readiness](../core-model.md#close_task). Method behavior is owned by [`harness.close_task`](method-close-task.md). `CloseReadinessBlocker` shape and categories are owned by [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
+Owner links:
+- Full close-readiness evaluation order: [Core Model close readiness](../core-model.md#close_task)
+- Method behavior: [`harness.close_task`](method-close-task.md)
+- `CloseReadinessBlocker` shape and categories: [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md)
 
 ## User-facing labels
 

@@ -24,7 +24,25 @@ This document does not own:
 
 ## Authority boundary
 
-Core-owned state, user-owned judgment records, close records, residual-risk records, storage rows, and persisted `ArtifactRef` records are the authority. Projections are derived display only. They are not owner state. A projection, status card, Markdown report, rendered template, chat message, connector output, or agent context packet is display or support context only.
+Authority remains with:
+
+- Core-owned state
+- user-owned judgment records
+- close records
+- residual-risk records
+- storage rows
+- persisted `ArtifactRef` records
+
+Projections are derived display only. They are not owner state.
+
+Display or support context only:
+- projection
+- status card
+- Markdown report
+- rendered template
+- chat message
+- connector output
+- agent context packet
 
 Rendered output may quote owner values, summarize owner records, or link to owner records. It is not a second state store and is not authority just because it is well written, manually edited, copied into a Product Repository, or injected into an agent context.
 

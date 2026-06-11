@@ -59,7 +59,7 @@
 | 결과 | 상태 버전 효과 | 쓰기 승인 효과 |
 |---|---|---|
 | 커밋된 `decision=allowed` | `project_state.state_version`을 정확히 한 번 올립니다. | 경로 수준 `AuthorizedAttemptScope`에 대한 활성 쓰기 승인 하나를 만듭니다. |
-| 커밋된 `decision=blocked`, `decision=approval_required`, `decision=decision_required` | 메서드가 소유한 쓰기 결정 이유 상태를 저장하기 위해서만 올릴 수 있습니다. | 소비 가능한 쓰기 승인을 만들면 안 됩니다. |
+| 커밋된 비허용 판단 | 메서드가 소유한 쓰기 결정 이유 상태에 한해 올릴 수 있습니다. | 소비 가능한 쓰기 승인을 만들지 않습니다. |
 | 커밋 전 거절 또는 `dry_run` | 올리지 않습니다. | 만들지 않습니다. |
 
 ## 성공 결과

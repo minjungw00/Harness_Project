@@ -24,7 +24,13 @@ This document does not own:
 
 ## Boundary
 
-Artifact schemas never make a caller-supplied path authoritative. They describe the request and response shapes used by the artifact owner paths; validation, staging, promotion, linking, and body-read eligibility stay with method owner documents routed from [MVP API](mvp-api.md) and [Artifact Storage](../storage-artifacts.md).
+Artifact schemas never make a caller-supplied path authoritative.
+
+This document describes the request and response shapes used by artifact owner paths.
+
+Owner links:
+- validation, staging, promotion, and linking: method owner documents routed from [MVP API](mvp-api.md)
+- body-read eligibility and artifact lifecycle: [Artifact Storage](../storage-artifacts.md)
 
 ## `ArtifactRef`
 

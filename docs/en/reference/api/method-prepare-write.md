@@ -59,7 +59,7 @@ Requires:
 | Result | State-version effect | Write Authorization effect |
 |---|---|---|
 | Committed `decision=allowed` | Increments `project_state.state_version` exactly once. | Creates exactly one active Write Authorization for the path-level `AuthorizedAttemptScope`. |
-| Committed `decision=blocked`, `decision=approval_required`, or `decision=decision_required` | May increment only to persist method-owned write-decision reason state. | Must not create a consumable Write Authorization. |
+| Committed non-allow decision | May increment only for method-owned write-decision reason state. | Creates no consumable Write Authorization. |
 | Pre-commit rejection or dry run | Increments nothing. | Creates nothing. |
 
 ## Success result
