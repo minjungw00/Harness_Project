@@ -206,7 +206,7 @@ GuaranteeDisplay:
   capability_refs: StateRecordRef[]
 ```
 
-`CloseReadinessBlocker` is a data shape for close-readiness findings. It is not the whole close-readiness concept and it does not itself imply persistence. Complete close-readiness order is owned by [Core Model close readiness](../core-model.md#close_task). Response branch behavior and committed blocked outcomes are owned by [`harness.close_task`](mvp-api.md#harnessclose_task). Public error routing is owned by [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers).
+`CloseReadinessBlocker` is a data shape for close-readiness findings. It is not the whole close-readiness concept and it does not itself imply persistence. Full close-readiness evaluation order is owned by [Core Model close readiness](../core-model.md#close_task). Response branch behavior and committed blocked outcomes are owned by [`harness.close_task`](mvp-api.md#harnessclose_task). Public error routing is owned by [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers).
 
 Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values are owned by [API Value Sets](schema-value-sets.md). Security guarantee meaning is owned by [Security](../security.md).
 
