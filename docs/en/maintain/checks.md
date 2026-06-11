@@ -343,6 +343,25 @@ Failure:
 Fix:
 - Reword it as deferred and route to the Later Index, or promote it through the active owner before using active language.
 
+### CHK-SCOPE-LIST-STRUCTURE: current MVP scope list structure
+
+Owner:
+- [Active MVP Scope](../reference/active-mvp-scope.md)
+
+Check:
+- Confirm included and excluded current-MVP scope items are represented as scannable lists, tables, or equivalent structured blocks.
+- Confirm the structure makes it easy to tell what is included and what is excluded.
+- Confirm Korean may use natural phrasing, but it does not collapse many scope items into one long sentence.
+
+Failure:
+- Included or excluded current-MVP scope appears as a long comma-separated sentence.
+- A reader cannot quickly tell which items are included or excluded.
+- One language version omits or compresses important scope items compared with the other.
+
+Fix:
+- Convert the prose to a bullet list, table, or equivalent structured block.
+- Compare English and Korean by meaning unit and keep the scope contract in the active-scope owner.
+
 ### CHK-SCOPE-002: implementation-readiness wording
 
 Owner:
