@@ -229,20 +229,20 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the account export confirmation copy sufficient for account data export that may include personal data?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user's judgment that the confirmation copy is sufficient."
+      description: "Record the user's judgment that the account export confirmation copy is sufficient."
       consequence: "Close readiness can evaluate the product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised confirmation copy."
+      description: "Keep the Task open for revised account export confirmation copy."
       consequence: "Close remains blocked on the product decision."
       is_default: false
   context:
-    summary: "The confirmation copy tells the user that the export may include personal data before download."
+    summary: "The account export confirmation copy tells the user that the export may include personal data before download."
     related_refs: []
     artifact_refs: []
     visible_risks: []
@@ -281,7 +281,7 @@ params:
     product_decision:
       judgment:
         decision: accepted
-        rationale: "The confirmation clearly states that the export may include personal data."
+        rationale: "The account export confirmation copy clearly states that the export may include personal data."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
@@ -322,10 +322,10 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the account export confirmation copy sufficient for account data export that may include personal data?"
   options: []
   context:
-    summary: "The confirmation copy tells the user that the export may include personal data before download."
+    summary: "The account export confirmation copy tells the user that the export may include personal data before download."
     related_refs: []
     artifact_refs: []
     visible_risks: []
@@ -371,10 +371,10 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the account export confirmation copy sufficient for account data export that may include personal data?"
   options: []
   context:
-    summary: "The confirmation copy tells the user that the export may include personal data before download."
+    summary: "The account export confirmation copy tells the user that the export may include personal data before download."
     related_refs: []
     artifact_refs: []
     visible_risks: []
@@ -387,7 +387,7 @@ user_judgment:
       product_decision:
         judgment:
           decision: accepted
-          rationale: "The confirmation clearly states that the export may include personal data."
+          rationale: "The account export confirmation copy clearly states that the export may include personal data."
     note: null
     accepted_risks: []
     resolved_by_actor_kind: user

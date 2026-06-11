@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.close_task`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account export confirmation scenario
+- the minimal request and representative response for the shared account data export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -29,7 +29,7 @@ Conditions for terminal mutation:
 
 Results:
 
-- may commit `complete`, `cancel`, or `supersede`
+- may commit `intent=complete`, `intent=cancel`, or `intent=supersede`
 - may return close blockers
 
 Non-claims:
@@ -119,14 +119,14 @@ Close-readiness scenario data:
 
 The literal `intent=complete` selects the completion intent. It is not shorthand for the full close-readiness evaluation order.
 
-Successful close-readiness observation for the account export confirmation scenario. The evidence relies on existing run ref `run_account_export_tests_001`, promoted artifact `artifact_account_export_test_log_001`, and the resolved user judgment `uj_001`:
+Successful close-readiness observation for the account data export confirmation scenario. The evidence relies on existing run ref `run_account_export_tests_001`, promoted artifact `artifact_account_export_test_log_001`, and the resolved user judgment `uj_001`:
 
 ```yaml
 close_readiness:
   ready: true
   evidence:
     - "Account export confirmation tests passed."
-    - "User accepted the confirmation copy."
+    - "User accepted the account export confirmation copy."
 ```
 
 Blocked close-readiness observation for the same scenario. The test evidence is recorded in existing run ref `run_account_export_tests_001` with promoted artifact `artifact_account_export_test_log_001`; no resolved user judgment is available:

@@ -51,7 +51,7 @@ Requires:
 - compatible active scope
 - compatible baseline
 - required user-owned judgments
-- any separate `sensitive_approval`
+- any separate sensitive-action approval (`sensitive_approval`)
 - local surface capability needed for the intended product-file write check
 
 ## State version behavior
@@ -119,7 +119,7 @@ On commit, the method may persist Write Authorization or write-decision state ac
 
 ## Minimal valid request
 
-The sample uses `personal_data_export` as an example `sensitive_categories` value for account data export that may include personal data. This method example does not define `personal_data_export` as a new active value or define the complete sensitive-category value set.
+The sample uses `personal_data_export` as an example `sensitive_categories` value for account data export that may include personal data. This method example does not define `personal_data_export` as a new active value or define the full sensitive-category value set.
 
 ```yaml
 method: harness.prepare_write
@@ -136,7 +136,7 @@ params:
     locale: en-US
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "update account export confirmation flow"
+  intended_operation: "update account data export confirmation flow"
   intended_paths:
     - src/account/export.ts
     - src/account/export-confirmation.ts
@@ -194,7 +194,7 @@ guarantee_display:
     - "Write Authorization is a Harness compatibility record, not OS permission."
 ```
 
-Approval-required branch excerpt when approval is missing:
+Approval-required branch excerpt when sensitive-action approval is missing:
 
 ```yaml
 decision: approval_required
