@@ -31,7 +31,7 @@ Use these owner links when a design-quality finding crosses another contract:
 |---|---|
 | Core non-substitution, close readiness, waiver, accepted-risk, and residual-risk meaning | [Core Model Reference](core-model.md) |
 | `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, and `AcceptedRiskInput` shapes | [API Judgment Schemas](api/schema-judgment.md) |
-| Active method behavior for requesting or recording judgment, reporting status, and closing a Task | [User-judgment methods](api/method-user-judgment.md), [Status method](api/method-status.md), [Close-task method](api/method-close-task.md) |
+| Judgment, status, and close method behavior | [User-judgment methods](api/method-user-judgment.md), [Status method](api/method-status.md), [Close-task method](api/method-close-task.md) |
 | Method-to-storage effects for active API method branches | [Storage Effects](storage-effects.md) |
 | Deferred design gates, policy blockers, broad validators, waiver candidates, and policy catalogs | [Later Candidate Index](../later/index.md) |
 
@@ -43,17 +43,127 @@ Active current MVP design quality is a narrow judgment-routing and evidence/scop
 
 A design-quality finding can do only these things in the active MVP:
 
-| What the finding can do | Active route or result | Close-readiness boundary |
-|---|---|---|
-| Identify a product behavior, UX, wording, release promise, or user-value choice that needs the user. | Route as `judgment_kind=product_decision`. | Blocks close only when the active close path already requires `CloseReadinessBlocker.category=user_judgment`. |
-| Identify an architecture, dependency, migration, public-interface, compatibility, security/privacy, or material technical direction choice that needs the user. | Route as `judgment_kind=technical_decision`. | Blocks close only when the active close path already requires `CloseReadinessBlocker.category=user_judgment`. |
-| Identify scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change. | Route as `judgment_kind=scope_decision` or `CloseReadinessBlocker.category=scope`, depending on the owner path. | Blocks close only through the active scope or judgment owner path. |
-| Point out missing support for a close-relevant claim. | Request evidence or use `CloseReadinessBlocker.category=evidence` or `CloseReadinessBlocker.category=artifact_availability` through the Core evidence owner path. | Required evidence can block close only through the Core evidence owner path. |
-| Make a known limitation, unchecked condition, or trade-off visible. | Use residual-risk visibility, and `CloseReadinessBlocker.category=residual_risk_acceptance` only when the active close path requires acceptance. | Accepted risk records judgment about a visible risk; it does not prove success or erase the risk. |
-| Report that the connected surface cannot honestly support the claimed operation or guarantee. | Use `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the capability owner path. | The design-quality label does not strengthen the guarantee. |
-| Describe relative urgency or attention for the concern. | Advisory triage only, unless an active owner path separately requires action. | Severity alone never creates a blocker, validator mapping, waiver, evidence expectation, or close result. |
-| Choose one focused next action. | Ask one focused user judgment, request evidence, mark residual risk visible, show an advisory next action, or no action. | The action must stay narrow enough to unblock or clarify the named owner path. |
-| Stay advisory when no active owner path applies. | Advisory text or no action. | No new gate, blocker, validator mapping, waiver route, evidence rule, or close authority is created. |
+| Finding role | Details |
+|---|---|
+| product decision needed | See [Product decision needed](#design-quality-product-decision-needed) |
+| technical decision needed | See [Technical decision needed](#design-quality-technical-decision-needed) |
+| scope boundary change | See [Scope boundary change](#design-quality-scope-boundary-change) |
+| missing close-relevant support | See [Missing close-relevant support](#design-quality-missing-close-relevant-support) |
+| residual risk visibility | See [Residual risk visibility](#design-quality-residual-risk-visibility) |
+| surface capability gap | See [Surface capability gap](#design-quality-surface-capability-gap) |
+| advisory severity | See [Advisory severity](#design-quality-advisory-severity) |
+| focused next action | See [Focused next action](#design-quality-focused-next-action) |
+| no active owner path | See [No active owner path](#design-quality-no-active-owner-path) |
+
+<a id="design-quality-product-decision-needed"></a>
+### Product decision needed
+
+Condition:
+- The concern is a product behavior, UX, wording, release promise, or user-value choice that needs the user.
+
+Route:
+- Use `judgment_kind=product_decision`.
+
+Close-readiness boundary:
+- Blocks close only when the active close path already requires `CloseReadinessBlocker.category=user_judgment`.
+
+<a id="design-quality-technical-decision-needed"></a>
+### Technical decision needed
+
+Condition:
+- The concern is architecture, dependency, migration, public-interface, compatibility, security/privacy, or another material technical direction choice that needs the user.
+
+Route:
+- Use `judgment_kind=technical_decision`.
+
+Close-readiness boundary:
+- Blocks close only when the active close path already requires `CloseReadinessBlocker.category=user_judgment`.
+
+<a id="design-quality-scope-boundary-change"></a>
+### Scope boundary change
+
+Condition:
+- The concern is scope expansion, non-goal removal, Change Unit boundary change, or Autonomy Boundary change.
+
+Route:
+- Use `judgment_kind=scope_decision` or `CloseReadinessBlocker.category=scope`, depending on the owner path.
+
+Close-readiness boundary:
+- Blocks close only through the active scope or judgment owner path.
+
+<a id="design-quality-missing-close-relevant-support"></a>
+### Missing close-relevant support
+
+Condition:
+- A close-relevant claim lacks support.
+
+Route:
+- Request evidence through the Core evidence owner path.
+- Use `CloseReadinessBlocker.category=evidence` or `CloseReadinessBlocker.category=artifact_availability` only through that owner path.
+
+Close-readiness boundary:
+- Required evidence can block close only through the Core evidence owner path.
+
+<a id="design-quality-residual-risk-visibility"></a>
+### Residual risk visibility
+
+Condition:
+- A known limitation, unchecked condition, or trade-off matters to close.
+
+Route:
+- Use residual-risk visibility.
+- Use `CloseReadinessBlocker.category=residual_risk_acceptance` only when the active close path requires acceptance.
+
+Not allowed:
+- Accepted risk does not prove success or erase the risk.
+
+<a id="design-quality-surface-capability-gap"></a>
+### Surface capability gap
+
+Condition:
+- The connected surface cannot honestly support the claimed operation or guarantee.
+
+Route:
+- Use `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the capability owner path.
+
+Not allowed:
+- The design-quality label does not strengthen the guarantee.
+
+<a id="design-quality-advisory-severity"></a>
+### Advisory severity
+
+Condition:
+- The finding describes relative urgency or attention for the concern.
+
+Route:
+- Treat severity-like wording as advisory triage unless an active owner path separately requires action.
+
+Not allowed:
+- Severity alone never creates a blocker, validator mapping, waiver, evidence expectation, or close result.
+
+<a id="design-quality-focused-next-action"></a>
+### Focused next action
+
+Condition:
+- One narrow action can unblock or clarify the named owner path.
+
+Route:
+- Ask one focused user judgment, request evidence, mark residual risk visible, show an advisory next action, or take no action.
+
+Not allowed:
+- The action must not widen beyond what the named owner path needs.
+
+<a id="design-quality-no-active-owner-path"></a>
+### No active owner path
+
+Condition:
+- No active owner path applies.
+
+Effect:
+- The current MVP result is advisory text or no action.
+
+Not allowed:
+- Do not create a new gate, blocker, validator mapping, waiver route, evidence rule, or close authority.
 
 Active design quality does not create new Core state, `StateSummary.gates.design_gate`, `CloseReadinessBlocker.category=design_policy`, new schemas, new validator result fields, active design-policy validators, design-policy waiver, or a separate design-review authority.
 
@@ -63,14 +173,71 @@ Design quality must not turn ordinary work into an open-ended planning loop. Ful
 
 A design-quality observation affects current MVP state only through an active owner path. The observation must name the active route it depends on:
 
-| Concern | Active current MVP route |
+| Concern | Details |
 |---|---|
-| Product behavior, UX, wording, release promise, or user value is undecided. | `judgment_kind=product_decision`; use `CloseReadinessBlocker.category=user_judgment` only when the active close path requires that judgment. |
-| Architecture, dependency, migration, public interface, compatibility, security/privacy, or material technical direction is undecided. | `judgment_kind=technical_decision`; use `CloseReadinessBlocker.category=user_judgment` only when the active close path requires that judgment. |
-| Scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change is needed. | `judgment_kind=scope_decision` or `CloseReadinessBlocker.category=scope`, depending on the owner path. |
-| A close-relevant claim lacks support. | `CloseReadinessBlocker.category=evidence`, `CloseReadinessBlocker.category=artifact_availability`, or an evidence request through the Core evidence owner path. |
-| A known limitation or unchecked condition matters to close. | Residual-risk visibility through `CloseReadinessBlocker.category=residual_risk_visibility`, and `CloseReadinessBlocker.category=residual_risk_acceptance` only when the active close path requires acceptance. |
-| The connected surface cannot honestly support the claimed operation or guarantee. | `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the capability owner path. |
+| undecided product direction | See [Undecided product direction](#design-quality-route-product-direction) |
+| undecided technical direction | See [Undecided technical direction](#design-quality-route-technical-direction) |
+| scope boundary change needed | See [Scope boundary route](#design-quality-route-scope-boundary) |
+| close-relevant support missing | See [Evidence route](#design-quality-route-evidence) |
+| residual risk matters to close | See [Residual-risk route](#design-quality-route-residual-risk) |
+| surface capability cannot support claim | See [Surface capability route](#design-quality-route-surface-capability) |
+
+<a id="design-quality-route-product-direction"></a>
+### Undecided product direction
+
+Condition:
+- Product behavior, UX, wording, release promise, or user value is undecided.
+
+Route:
+- Use `judgment_kind=product_decision`.
+- Use `CloseReadinessBlocker.category=user_judgment` only when the active close path requires that judgment.
+
+<a id="design-quality-route-technical-direction"></a>
+### Undecided technical direction
+
+Condition:
+- Architecture, dependency, migration, public interface, compatibility, security/privacy, or material technical direction is undecided.
+
+Route:
+- Use `judgment_kind=technical_decision`.
+- Use `CloseReadinessBlocker.category=user_judgment` only when the active close path requires that judgment.
+
+<a id="design-quality-route-scope-boundary"></a>
+### Scope boundary route
+
+Condition:
+- Scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary change is needed.
+
+Route:
+- Use `judgment_kind=scope_decision` or `CloseReadinessBlocker.category=scope`, depending on the owner path.
+
+<a id="design-quality-route-evidence"></a>
+### Evidence route
+
+Condition:
+- A close-relevant claim lacks support.
+
+Route:
+- Use `CloseReadinessBlocker.category=evidence`, `CloseReadinessBlocker.category=artifact_availability`, or an evidence request through the Core evidence owner path.
+
+<a id="design-quality-route-residual-risk"></a>
+### Residual-risk route
+
+Condition:
+- A known limitation or unchecked condition matters to close.
+
+Route:
+- Use residual-risk visibility through `CloseReadinessBlocker.category=residual_risk_visibility`.
+- Use `CloseReadinessBlocker.category=residual_risk_acceptance` only when the active close path requires acceptance.
+
+<a id="design-quality-route-surface-capability"></a>
+### Surface capability route
+
+Condition:
+- The connected surface cannot honestly support the claimed operation or guarantee.
+
+Route:
+- Use `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, or a lower guarantee display through the capability owner path.
 
 A design-quality label, policy name, severity value, validator ID, or review phrase does not create the route. If no active owner path applies, the current MVP result is advisory text or no action.
 
@@ -97,12 +264,54 @@ A waiver-like decision or accepted-risk answer records the responsible user judg
 
 Keep the judgment routes separate:
 
-| Route | What it records | What it must not be treated as |
-|---|---|---|
-| `final_acceptance` | The user's result judgment after the close basis is visible. | Evidence creation, residual-risk acceptance, QA, verification, or blocker override. |
-| `residual_risk_acceptance` | The user's acceptance of a named visible residual risk for the requested close. | Correctness proof, evidence sufficiency, final acceptance, no-risk result, or automatic success. |
-| Active current MVP `UserJudgment.judgment_kind` values | Focused user-owned decisions whose values are owned by [API Value Sets](api/schema-value-sets.md). | Design-policy waiver, broad approval, later QA waiver, later verification-risk acceptance, or any future candidate that has not been promoted. |
-| Future design-quality waiver candidates | Later-only material in [Later](../later/index.md). | Active requirements, close blockers, validator behavior, or evidence rules. |
+| Route | Details |
+|---|---|
+| `final_acceptance` | See [`final_acceptance`](#design-quality-route-final-acceptance) |
+| `residual_risk_acceptance` | See [`residual_risk_acceptance`](#design-quality-route-residual-risk-acceptance) |
+| active `UserJudgment.judgment_kind` values | See [Active user judgment values](#design-quality-route-active-user-judgment-values) |
+| future design-quality waiver candidates | See [Future waiver candidates](#design-quality-route-future-waiver-candidates) |
+
+<a id="design-quality-route-final-acceptance"></a>
+### `final_acceptance`
+
+Effect:
+- Records the user's result judgment after the close basis is visible.
+
+Not allowed:
+- Do not treat it as evidence creation, residual-risk acceptance, QA, verification, or blocker override.
+
+<a id="design-quality-route-residual-risk-acceptance"></a>
+### `residual_risk_acceptance`
+
+Effect:
+- Records the user's acceptance of a named visible residual risk for the requested close.
+
+Not allowed:
+- Do not treat it as correctness proof, evidence sufficiency, final acceptance, no-risk result, or automatic success.
+
+<a id="design-quality-route-active-user-judgment-values"></a>
+### Active user judgment values
+
+Effect:
+- Record focused user-owned decisions.
+
+Owner links:
+- Values are owned by [API Value Sets](api/schema-value-sets.md).
+
+Not allowed:
+- Do not treat them as design-policy waiver, broad approval, later QA waiver, later verification-risk acceptance, or any future candidate that has not been promoted.
+
+<a id="design-quality-route-future-waiver-candidates"></a>
+### Future waiver candidates
+
+Effect:
+- Remain later-only material.
+
+Owner links:
+- [Later](../later/index.md)
+
+Not allowed:
+- Do not treat them as active requirements, close blockers, validator behavior, or evidence rules.
 
 Broad approval, a friendly "looks good", or a general go-ahead must not be treated as any of these judgments unless the active owner path asked for that specific judgment.
 
@@ -132,12 +341,57 @@ This document does not publish active design-policy validator IDs or a policy-to
 
 The full design-quality policy catalog is not active current MVP scope. These ideas are later-only until a named owner promotes a narrow behavior with scope, fallback behavior, exact contracts, and proof expectations.
 
-| Later-only idea | What it does not do in the active MVP | What promotion would need |
-|---|---|---|
-| `design_gate` and `CloseReadinessBlocker.category=design_policy` | No active gate, active close blocker, or close-readiness category. | Core/API owner changes plus value-set, schema, close-readiness, and storage-effect ownership. |
-| Design-policy waiver | No active waiver route and no automatic success path. | A named owner path, non-substitution rules, judgment behavior, and close-readiness effects. |
-| Broad design validators and severity-based blocking | No active validator IDs, severity meanings, policy-to-validator mapping, or severity-only blocker. | Stable validator set ownership, severity semantics, API/schema boundaries, and fallback behavior. |
-| Full design-quality policy families and steward policies | No active policy catalog, stewardship gate, or full review procedure. | A scoped policy owner, reader-facing behavior, proof expectations, and active/later migration path. |
-| Detailed review displays, operations/reporting candidates, full validator mappings, and future conformance fixtures | No active operations report, fixture requirement, implementation task, or conformance obligation. | Promotion through [Later Candidate Index](../later/index.md), active owner updates, and documentation-only acceptance before implementation work starts. |
+| Later-only idea | Details |
+|---|---|
+| `design_gate` and `CloseReadinessBlocker.category=design_policy` | See [`design_gate`](#design-quality-later-design-gate) |
+| Design-policy waiver | See [Design-policy waiver](#design-quality-later-design-policy-waiver) |
+| Broad design validators and severity-based blocking | See [Broad validators](#design-quality-later-broad-validators) |
+| Full design-quality policy families and steward policies | See [Policy families](#design-quality-later-policy-families) |
+| Detailed review displays and future reporting material | See [Detailed review displays](#design-quality-later-detailed-review-displays) |
+
+<a id="design-quality-later-design-gate"></a>
+### `design_gate`
+
+Not allowed:
+- No active gate, active close blocker, or close-readiness category exists for `design_gate` or `CloseReadinessBlocker.category=design_policy`.
+
+Promotion would need:
+- Core/API owner changes plus value-set, schema, close-readiness, and storage-effect ownership.
+
+<a id="design-quality-later-design-policy-waiver"></a>
+### Design-policy waiver
+
+Not allowed:
+- No active waiver route or automatic success path exists.
+
+Promotion would need:
+- A named owner path, non-substitution rules, judgment behavior, and close-readiness effects.
+
+<a id="design-quality-later-broad-validators"></a>
+### Broad validators
+
+Not allowed:
+- No active validator IDs, severity meanings, policy-to-validator mapping, or severity-only blocker exists.
+
+Promotion would need:
+- Stable validator set ownership, severity semantics, API/schema boundaries, and fallback behavior.
+
+<a id="design-quality-later-policy-families"></a>
+### Policy families
+
+Not allowed:
+- No active policy catalog, stewardship gate, or full review procedure exists.
+
+Promotion would need:
+- A scoped policy owner, reader-facing behavior, proof expectations, and active/later migration path.
+
+<a id="design-quality-later-detailed-review-displays"></a>
+### Detailed review displays
+
+Not allowed:
+- No active operations report, fixture requirement, implementation task, or conformance obligation exists.
+
+Promotion would need:
+- Promotion through [Later Candidate Index](../later/index.md), active owner updates, and documentation-only acceptance before implementation work starts.
 
 Later candidates may keep names only. They must not be presented as active current MVP requirements, blockers, waiver rules, evidence expectations, validator mappings, fixture requirements, operations reports, or implementation tasks.

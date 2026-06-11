@@ -80,14 +80,105 @@ Capability-gated `detective` wording is narrow:
 
 ## 7. Threat/control summary
 
-| Threat or confusion | Current control statement | Guarantee level | Limit |
-|---|---|---|---|
-| Agent ignores the documented procedure. | The specification records the expected procedure and requires owner-defined Harness paths for Harness state changes. | `cooperative` | It cannot prevent a malicious agent from acting outside Harness. |
-| Product write is outside the expected scope. | `harness.prepare_write` and `Write Authorization` can express product-file write compatibility in the specification. | `cooperative` | They do not grant or deny OS file permission. |
-| Changed paths differ from the expected scope. | A passed capability check may support limited detection for observed changed paths. | `detective` | It is not full filesystem monitoring. |
-| Stale or copied authority appears in text. | Registered surface context, staged-handle validation, and owner-defined checks must be used instead of copied identifiers. | `cooperative` / `detective` when observed | Copied `surface_id`, `ArtifactRef`, or rendered text is not authority. |
-| Local Harness files are modified outside the future server. | Storage/runtime owners may define consistency checks or rejection behavior. | `cooperative` unless a later mechanism is promoted | No tamper-proof storage is claimed. |
-| Sensitive-action approval is treated as broad approval. | Non-substitution rules keep sensitive-action approval, final acceptance, residual-risk acceptance, and write compatibility separate. | `cooperative` | User approval does not become sandboxing or OS permission. |
+| Threat or confusion | Details |
+|---|---|
+| documented procedure ignored | See [Documented procedure ignored](#security-threat-procedure-ignored) |
+| product write outside expected scope | See [Product write outside scope](#security-threat-product-write-outside-scope) |
+| changed paths differ from expected scope | See [Changed paths differ](#security-threat-changed-paths-differ) |
+| stale or copied authority appears in text | See [Stale or copied authority](#security-threat-stale-copied-authority) |
+| local Harness files modified outside future server | See [Local Harness files modified](#security-threat-local-files-modified) |
+| sensitive-action approval treated as broad approval | See [Broad approval confusion](#security-threat-broad-approval-confusion) |
+
+<a id="security-threat-procedure-ignored"></a>
+### Documented procedure ignored
+
+Condition:
+- An agent ignores the documented procedure.
+
+Current control:
+- The specification records the expected procedure and requires owner-defined Harness paths for Harness state changes.
+
+Guarantee level:
+- `cooperative`.
+
+Not allowed:
+- It cannot prevent a malicious agent from acting outside Harness.
+
+<a id="security-threat-product-write-outside-scope"></a>
+### Product write outside scope
+
+Condition:
+- Product write is outside the expected scope.
+
+Current control:
+- `harness.prepare_write` and `Write Authorization` can express product-file write compatibility in the specification.
+
+Guarantee level:
+- `cooperative`.
+
+Not allowed:
+- They do not grant or deny OS file permission.
+
+<a id="security-threat-changed-paths-differ"></a>
+### Changed paths differ
+
+Condition:
+- Changed paths differ from the expected scope.
+
+Current control:
+- A passed capability check may support limited detection for observed changed paths.
+
+Guarantee level:
+- `detective`.
+
+Not allowed:
+- This is not full filesystem monitoring.
+
+<a id="security-threat-stale-copied-authority"></a>
+### Stale or copied authority
+
+Condition:
+- Stale or copied authority appears in text.
+
+Current control:
+- Registered surface context, staged-handle validation, and owner-defined checks must be used instead of copied identifiers.
+
+Guarantee level:
+- `cooperative`.
+- `detective` only when observed.
+
+Not allowed:
+- Copied `surface_id`, `ArtifactRef`, or rendered text is not authority.
+
+<a id="security-threat-local-files-modified"></a>
+### Local Harness files modified
+
+Condition:
+- Local Harness files are modified outside the future server.
+
+Current control:
+- Storage/runtime owners may define consistency checks or rejection behavior.
+
+Guarantee level:
+- `cooperative` unless a later mechanism is promoted.
+
+Not allowed:
+- No tamper-proof storage is claimed.
+
+<a id="security-threat-broad-approval-confusion"></a>
+### Broad approval confusion
+
+Condition:
+- Sensitive-action approval is treated as broad approval.
+
+Current control:
+- Non-substitution rules keep sensitive-action approval, final acceptance, residual-risk acceptance, and write compatibility separate.
+
+Guarantee level:
+- `cooperative`.
+
+Not allowed:
+- User approval does not become sandboxing or OS permission.
 
 ## 8. `cooperative` behavior
 

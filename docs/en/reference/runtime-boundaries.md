@@ -24,11 +24,45 @@ This document does not own:
 
 Harness documentation must keep these locations distinct:
 
-| Location | Plain meaning | Boundary rule |
-|---|---|---|
-| Product Repository | The user's project workspace. | It can supply product files as input, but it is not Harness runtime state or a Runtime Home by default. |
-| Harness Server or installation | The future server process, package, or installed application location. | It may mediate Harness APIs and records, but the install location is not automatically where runtime data lives. |
-| Harness Runtime Home | The future operational data space for Harness records, local store metadata, and artifact storage. | It is runtime data space, not the Product Repository and not proof of security authority. |
+| Location | Details |
+|---|---|
+| Product Repository | See [Product Repository location](#runtime-location-product-repository) |
+| Harness Server or installation | See [Harness Server or installation location](#runtime-location-server-installation) |
+| Harness Runtime Home | See [Harness Runtime Home location](#runtime-location-runtime-home) |
+
+<a id="runtime-location-product-repository"></a>
+### Product Repository location
+
+Meaning:
+- The user's project workspace.
+
+Allowed effect:
+- It can supply product files as input.
+
+Not allowed:
+- It is not Harness runtime state or a Runtime Home by default.
+
+<a id="runtime-location-server-installation"></a>
+### Harness Server or installation location
+
+Meaning:
+- The future server process, package, or installed application location.
+
+Allowed effect:
+- It may mediate Harness APIs and records.
+
+Not allowed:
+- The install location is not automatically where runtime data lives.
+
+<a id="runtime-location-runtime-home"></a>
+### Harness Runtime Home location
+
+Meaning:
+- The future operational data space for Harness records, local store metadata, and artifact storage.
+
+Not allowed:
+- It is not the Product Repository.
+- It is not proof of security authority.
 
 ## Product repository
 
@@ -54,12 +88,48 @@ This documentation repository is not a Runtime Home.
 
 ## What may be stored where
 
-| Location | May store | Must not be treated as |
-|---|---|---|
-| Product Repository | Product source, product docs, tests, project configuration, and product files that future Harness checks may inspect. | Harness runtime state, generated Harness records, a Runtime Home, or authority proof. |
-| Harness Server or installation | Future server executable code, installed packages, server configuration, and application resources. | Product workspace content, canonical runtime data, or proof that a Runtime Home exists. |
-| Harness Runtime Home | Future Harness operational records, runtime metadata, local store data, artifacts, locks, migrations, and related diagnostics defined by storage/runtime owners. | Product source, server install files, or a security boundary. |
-| This documentation repository | Source documentation for future Harness behavior. | Runtime state, server implementation, generated projections, evidence, QA, acceptance, close records, or conformance output. |
+| Location | Details |
+|---|---|
+| Product Repository | See [Product Repository storage](#runtime-storage-product-repository) |
+| Harness Server or installation | See [Harness Server or installation storage](#runtime-storage-server-installation) |
+| Harness Runtime Home | See [Harness Runtime Home storage](#runtime-storage-runtime-home) |
+| This documentation repository | See [Documentation repository storage](#runtime-storage-documentation-repository) |
+
+<a id="runtime-storage-product-repository"></a>
+### Product Repository storage
+
+May store:
+- Product source, product docs, tests, project configuration, and product files that future Harness checks may inspect.
+
+Must not be treated as:
+- Harness runtime state, generated Harness records, a Runtime Home, or authority proof.
+
+<a id="runtime-storage-server-installation"></a>
+### Harness Server or installation storage
+
+May store:
+- Future server executable code, installed packages, server configuration, and application resources.
+
+Must not be treated as:
+- Product workspace content, canonical runtime data, or proof that a Runtime Home exists.
+
+<a id="runtime-storage-runtime-home"></a>
+### Harness Runtime Home storage
+
+May store:
+- Future Harness operational records, runtime metadata, local store data, artifacts, locks, migrations, and related diagnostics defined by storage/runtime owners.
+
+Must not be treated as:
+- Product source, server install files, or a security boundary.
+
+<a id="runtime-storage-documentation-repository"></a>
+### Documentation repository storage
+
+May store:
+- Source documentation for future Harness behavior.
+
+Must not be treated as:
+- Runtime state, server implementation, generated projections, evidence, QA, acceptance, close records, or conformance output.
 
 ## What must not be inferred
 

@@ -17,7 +17,7 @@
 | 여기서 담당하지 않는 것 | 담당 문서 |
 |---|---|
 | 메서드 요청 본문 스키마, 응답 필드 형태, 공통 요청/응답 래퍼 | [API 코어 스키마](schema-core.md), [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서, API 스키마 담당 문서입니다. |
-| Core의 게이트 의미, 사용자 판단 경계, 전체 닫기 준비 상태 평가 순서 | [Core 모델](../core-model.md), [사용자 판단 메서드](method-user-judgment.md), [Task 닫기 메서드](method-close-task.md)입니다. |
+| Core 관문, 사용자 판단, 닫기 준비 상태 평가 순서 | [Core 모델](../core-model.md), [사용자 판단 메서드](method-user-judgment.md), [Task 닫기 메서드](method-close-task.md)입니다. |
 | `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 값 집합 필드 정의 | [API 상태 스키마](schema-state.md), [API 코어 스키마](schema-core.md), [API 값 집합](schema-value-sets.md)입니다. |
 | 저장소 행, 재실행 행, DDL, 잠금, 마이그레이션, 저장 효과 | [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md)입니다. |
 | 보안 보장 표현과 접근 경계 주장 | [보안](../security.md)입니다. |
@@ -55,32 +55,408 @@ dry-run 미리보기:
 <a id="error-taxonomy"></a>
 ## 공개 `ErrorCode` 표
 
-| `ErrorCode` | 사용 위치 | 의미 | 상태 변경 | 차단 사유 코드 가능 여부 |
-| --- | --- | --- | --- | --- |
-| `VALIDATION_FAILED` | `ToolRejectedResponse.errors[]` | 요청 본문 형태, enum 값, 활성화 규칙, 프로필 검증, 아티팩트 입력 형태가 유효하지 않습니다. | 없음 | 요청 거부에서는 불가 |
-| `STATE_VERSION_CONFLICT` | `ToolRejectedResponse.errors[]` | 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, 또는 멱등 요청 해시 충돌입니다. | 없음 | 불가 |
-| `MCP_UNAVAILABLE` | `ToolRejectedResponse.errors[]` | 필요한 Core, MCP, 접점 도달 가능성을 사용할 수 없습니다. | 없음 | 요청 거부에서는 불가 |
-| `LOCAL_ACCESS_MISMATCH` | `ToolRejectedResponse.errors[]` | 도달 가능한 로컬 접근이 등록된 전송 경로, 세션, 바인딩, 프로젝트, 접점 인스턴스와 맞지 않거나 접근이 철회되었습니다. | 없음 | 요청 거부에서는 불가 |
-| `NO_ACTIVE_TASK` | `ToolRejectedResponse.errors[]` | Task가 필요하지만 활성 Task나 지정된 Task가 없습니다. | 없음 | 기본 불가 |
-| `NO_ACTIVE_CHANGE_UNIT` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 쓰기 가능하거나 닫기와 관련된 동작에 활성 범위 지정 Change Unit이 없습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `BASELINE_STALE` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 동작에 필요한 저장소 상태와 기준 상태가 더 이상 맞지 않습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `SCOPE_REQUIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 요청한 쓰기나 동작 전에 범위 확인이 필요합니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `SCOPE_VIOLATION` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 의도했거나 관찰된 경로 또는 민감 범주가 활성 범위나 저장된 승인 범위를 넘었습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `WRITE_AUTHORIZATION_REQUIRED` | `ToolRejectedResponse.errors[]` | 쓰기 가능한 Run에 필요한 Write Authorization이 없습니다. | 없음 | 기본 불가 |
-| `WRITE_AUTHORIZATION_INVALID` | `ToolRejectedResponse.errors[]` | 제공된 Write Authorization이 만료, 철회, 소비, 또는 버전 외 사유로 비호환입니다. | 없음 | 기본 불가 |
-| `APPROVAL_DENIED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 필요한 민감 동작 승인이 거부되었습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `APPROVAL_EXPIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 필요한 민감 동작 승인이 만료되었거나 범위 또는 기준 상태와 달라졌습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `APPROVAL_REQUIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 진행 전에 민감 동작 승인이 필요합니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `DECISION_UNRESOLVED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 관련 사용자 판단이 대기, 적용 범위 없는 보류, 거부, 차단, 오래됨, 대체됨, 비호환 상태입니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `AUTONOMY_BOUNDARY_EXCEEDED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 의도한 동작이 활성 Change Unit Autonomy Boundary를 넘었습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `DECISION_REQUIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 진행 전에 차단 중인 사용자 소유 판단을 요청해야 합니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `CAPABILITY_INSUFFICIENT` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 접점은 인식되었지만 필요한 접근 등급, 관찰, 캡처, 보장 지원, 활성 동작이 없습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `EVIDENCE_INSUFFICIENT` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 필요한 증거 범위가 없거나, 부분적이거나, 오래되었거나, 막혔습니다. | 거부 밖에서는 담당 문서가 정함 | 닫기 준비 상태 담당 문서가 허용할 수 있음 |
-| `RESIDUAL_RISK_NOT_VISIBLE` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 닫기에 영향을 주는 알려진 잔여 위험이 최종 수락이나 닫기 전에 보이지 않았습니다. | 거부 밖에서는 담당 문서가 정함 | 닫기 준비 상태 담당 문서가 허용할 수 있음 |
-| `ACCEPTANCE_REQUIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 필요한 최종 수락이 대기 중이거나, 거부되었거나, 표시된 결과 근거와 호환되지 않습니다. | 거부 밖에서는 담당 문서가 정함 | 닫기 준비 상태 담당 문서가 허용할 수 있음 |
-| `PROJECTION_STALE` | `ToolRejectedResponse.errors[]` | 요청한 읽기용 상태나 보기가 오래되었거나 실패했습니다. | 없음 | 그 자체로는 불가 |
-| `ARTIFACT_MISSING` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 참조한 지속 아티팩트가 없거나, 사용할 수 없거나, 닫기 근거로 쓸 수 없거나, 무결성/메타데이터 확인에 실패했습니다. | 거부 밖에서는 담당 문서가 정함 | 닫기 준비 상태 담당 문서가 허용할 수 있음 |
-| `VALIDATOR_FAILED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 필요한 활성 validator나 차단 사유 확인이 실패했고 더 구체적인 타입 코드가 없을 때 쓰는 대체 코드입니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용한 대체 코드 |
+| `ErrorCode` | 세부사항 |
+| --- | --- |
+| `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#errorcode-validation-failed) 참고 |
+| `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#errorcode-state-version-conflict) 참고 |
+| `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#errorcode-mcp-unavailable) 참고 |
+| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#errorcode-local-access-mismatch) 참고 |
+| `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#errorcode-no-active-task) 참고 |
+| `NO_ACTIVE_CHANGE_UNIT` | [`NO_ACTIVE_CHANGE_UNIT`](#errorcode-no-active-change-unit) 참고 |
+| `BASELINE_STALE` | [`BASELINE_STALE`](#errorcode-baseline-stale) 참고 |
+| `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](#errorcode-scope-required) 참고 |
+| `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](#errorcode-scope-violation) 참고 |
+| `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](#errorcode-write-authorization-required) 참고 |
+| `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](#errorcode-write-authorization-invalid) 참고 |
+| `APPROVAL_DENIED` | [`APPROVAL_DENIED`](#errorcode-approval-denied) 참고 |
+| `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](#errorcode-approval-expired) 참고 |
+| `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](#errorcode-approval-required) 참고 |
+| `DECISION_UNRESOLVED` | [`DECISION_UNRESOLVED`](#errorcode-decision-unresolved) 참고 |
+| `AUTONOMY_BOUNDARY_EXCEEDED` | [`AUTONOMY_BOUNDARY_EXCEEDED`](#errorcode-autonomy-boundary-exceeded) 참고 |
+| `DECISION_REQUIRED` | [`DECISION_REQUIRED`](#errorcode-decision-required) 참고 |
+| `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#errorcode-capability-insufficient) 참고 |
+| `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#errorcode-evidence-insufficient) 참고 |
+| `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#errorcode-residual-risk-not-visible) 참고 |
+| `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#errorcode-acceptance-required) 참고 |
+| `PROJECTION_STALE` | [`PROJECTION_STALE`](#errorcode-projection-stale) 참고 |
+| `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#errorcode-artifact-missing) 참고 |
+| `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#errorcode-validator-failed) 참고 |
+
+<a id="errorcode-validation-failed"></a>
+### `VALIDATION_FAILED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+조건:
+- 요청 본문 형태, enum 값, 활성화 규칙, 프로필 검증, 아티팩트 입력 형태가 유효하지 않습니다.
+
+효과:
+- 상태 변경 없음.
+
+허용되지 않는 것:
+- 요청 거부에서는 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-state-version-conflict"></a>
+### `STATE_VERSION_CONFLICT`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+조건:
+- `expected_state_version`이 오래되었거나, `WriteAuthorization.basis_state_version`이 오래되었거나, 멱등 요청 해시가 충돌합니다.
+
+효과:
+- 상태 변경 없음.
+
+허용되지 않는 것:
+- 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-mcp-unavailable"></a>
+### `MCP_UNAVAILABLE`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+조건:
+- 필요한 Core, MCP, 접점 도달 가능성을 사용할 수 없습니다.
+
+효과:
+- 상태 변경 없음.
+
+허용되지 않는 것:
+- 요청 거부에서는 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-local-access-mismatch"></a>
+### `LOCAL_ACCESS_MISMATCH`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+조건:
+- 도달 가능한 로컬 접근이 등록된 전송 경로, 세션, 바인딩, 프로젝트, 접점 인스턴스와 맞지 않거나 접근이 철회되었습니다.
+
+효과:
+- 상태 변경 없음.
+
+허용되지 않는 것:
+- 요청 거부에서는 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-no-active-task"></a>
+### `NO_ACTIVE_TASK`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+조건:
+- Task가 필요하지만 활성 Task나 지정된 Task가 없습니다.
+
+효과:
+- 상태 변경 없음.
+
+허용되지 않는 것:
+- 기본적으로 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-no-active-change-unit"></a>
+### `NO_ACTIVE_CHANGE_UNIT`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 쓰기 가능하거나 닫기와 관련된 동작에 활성 범위 지정 Change Unit이 없습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-baseline-stale"></a>
+### `BASELINE_STALE`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 동작에 필요한 저장소 상태와 기준 상태가 더 이상 맞지 않습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-scope-required"></a>
+### `SCOPE_REQUIRED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 요청한 쓰기나 동작 전에 범위 확인이 필요합니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-scope-violation"></a>
+### `SCOPE_VIOLATION`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 의도했거나 관찰된 경로 또는 민감 범주가 활성 범위나 저장된 승인 범위를 넘었습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-write-authorization-required"></a>
+### `WRITE_AUTHORIZATION_REQUIRED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+조건:
+- 쓰기 가능한 Run에 필요한 Write Authorization이 없습니다.
+
+효과:
+- 상태 변경 없음.
+
+허용되지 않는 것:
+- 기본적으로 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-write-authorization-invalid"></a>
+### `WRITE_AUTHORIZATION_INVALID`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+조건:
+- 제공된 Write Authorization이 만료, 철회, 소비, 또는 버전 외 사유로 비호환입니다.
+
+효과:
+- 상태 변경 없음.
+
+허용되지 않는 것:
+- 기본적으로 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-approval-denied"></a>
+### `APPROVAL_DENIED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 필요한 민감 동작 승인이 거부되었습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-approval-expired"></a>
+### `APPROVAL_EXPIRED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 필요한 민감 동작 승인이 만료되었거나 범위 또는 기준 상태와 달라졌습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-approval-required"></a>
+### `APPROVAL_REQUIRED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 진행 전에 민감 동작 승인이 필요합니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-decision-unresolved"></a>
+### `DECISION_UNRESOLVED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 관련 사용자 판단이 대기, 적용 범위 없는 보류, 거부, 차단, 오래됨, 대체됨, 비호환 상태입니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-autonomy-boundary-exceeded"></a>
+### `AUTONOMY_BOUNDARY_EXCEEDED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 의도한 동작이 활성 Change Unit Autonomy Boundary를 넘었습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-decision-required"></a>
+### `DECISION_REQUIRED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 진행 전에 차단 중인 사용자 소유 판단을 요청해야 합니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-capability-insufficient"></a>
+### `CAPABILITY_INSUFFICIENT`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 접점은 인식되었지만 필요한 접근 등급, 관찰, 캡처, 보장 지원, 활성 동작이 없습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-evidence-insufficient"></a>
+### `EVIDENCE_INSUFFICIENT`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 필요한 증거 범위가 없거나, 부분적이거나, 오래되었거나, 막혔습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 닫기 준비 상태 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-residual-risk-not-visible"></a>
+### `RESIDUAL_RISK_NOT_VISIBLE`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 닫기에 영향을 주는 알려진 잔여 위험이 최종 수락이나 닫기 전에 보이지 않았습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 닫기 준비 상태 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-acceptance-required"></a>
+### `ACCEPTANCE_REQUIRED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 필요한 최종 수락이 대기 중이거나, 거부되었거나, 표시된 결과 근거와 호환되지 않습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 닫기 준비 상태 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-projection-stale"></a>
+### `PROJECTION_STALE`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+조건:
+- 요청한 읽기용 상태나 보기가 오래되었거나 실패했습니다.
+
+효과:
+- 상태 변경 없음.
+
+허용되지 않는 것:
+- 그 자체로 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-artifact-missing"></a>
+### `ARTIFACT_MISSING`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 참조한 지속 아티팩트가 없거나, 사용할 수 없거나, 닫기 근거로 쓸 수 없거나, 무결성/메타데이터 확인에 실패했습니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 닫기 준비 상태 담당 문서 허용 없이 차단 사유 코드로 쓰지 않습니다.
+
+<a id="errorcode-validator-failed"></a>
+### `VALIDATOR_FAILED`
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+- 담당 문서가 정의한 결과 경로.
+
+조건:
+- 필요한 활성 validator나 차단 사유 확인이 실패했고 더 구체적인 타입 코드가 없을 때 쓰는 대체 코드입니다.
+
+효과:
+- 거부 밖에서는 담당 문서가 정한 효과만 가능합니다.
+
+허용되지 않는 것:
+- 담당 문서가 허용한 대체 코드 범위를 넘겨 쓰지 않습니다.
 
 `ToolError.details.authorization_reason`은 `missing`, `expired`, `stale`, `revoked`, `consumed`, `incompatible`만 사용합니다. 오래된 `WriteAuthorization.basis_state_version`은 `WRITE_AUTHORIZATION_INVALID`가 아니라 `STATE_VERSION_CONFLICT`를 사용합니다.
 
@@ -136,22 +512,116 @@ dry-run 미리보기:
 
 ## 거부 응답 동작
 
-| 조건 | 응답 경로 | 필요한 결과 |
-|---|---|---|
-| 메서드가 진행되기 전에 요청 형태, 스키마, 프로필, 스테이징된 아티팩트 핸들 검증이 실패합니다. | `ToolRejectedResponse.errors[]` | 커밋된 동작이 없습니다. 메서드별 결과 전용 필드를 넣지 않습니다. |
-| 커밋 전에 Core, MCP, 로컬 접근, 접점 역량, 상태 조회, Task 식별자, 필요한 선행조건이 실패합니다. | `ToolRejectedResponse.errors[]` | 기록, 재실행 행, 아티팩트, 이벤트, Write Authorization 소비, 닫기 상태 변경, 상태 버전 증가가 없습니다. |
-| `expected_state_version`, `WriteAuthorization.basis_state_version`, 멱등 요청 해시가 오래되었거나 충돌합니다. | `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse.errors[]` | 커밋된 동작이 없습니다. 이 충돌은 차단 사유가 아닙니다. |
-| `dry_run=true` 요청이 읽기 결과나 dry-run 미리보기를 만들기 전에 실패합니다. | `dry_run=true`인 `ToolRejectedResponse` | 이 거부는 `DryRunSummary.would_errors[]`도 아니고 `PlannedBlocker`도 아닙니다. |
+| 조건 | 세부사항 |
+|---|---|
+| 요청 검증이 진행 전에 실패 | [요청 검증 실패](#rejected-request-validation-failure) 참고 |
+| 선행조건이 커밋 전에 실패 | [선행조건 실패](#rejected-precondition-failure) 참고 |
+| 상태 또는 멱등성 충돌 | [상태 또는 멱등성 충돌](#rejected-state-or-idempotency-conflict) 참고 |
+| `dry_run=true` 미리보기 전 실패 | [`dry_run=true` 미리보기 전 실패](#rejected-dry-run-pre-preview-failure) 참고 |
+
+<a id="rejected-request-validation-failure"></a>
+### 요청 검증 실패
+
+조건:
+- 메서드가 진행되기 전에 요청 형태, 스키마, 프로필, 스테이징된 아티팩트 핸들 검증이 실패합니다.
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+효과:
+- 커밋된 동작이 없습니다.
+- 메서드별 결과 전용 필드를 넣지 않습니다.
+
+<a id="rejected-precondition-failure"></a>
+### 선행조건 실패
+
+조건:
+- 커밋 전에 Core, MCP, 로컬 접근, 접점 역량, 상태 조회, Task 식별자, 필요한 선행조건이 실패합니다.
+
+라우팅:
+- `ToolRejectedResponse.errors[]`.
+
+효과:
+- 기록, 재실행 행, 아티팩트, 이벤트, Write Authorization 소비, 닫기 상태 변경, 상태 버전 증가가 없습니다.
+
+<a id="rejected-state-or-idempotency-conflict"></a>
+### 상태 또는 멱등성 충돌
+
+조건:
+- `expected_state_version`, `WriteAuthorization.basis_state_version`, 멱등 요청 해시가 오래되었거나 충돌합니다.
+
+라우팅:
+- `STATE_VERSION_CONFLICT`를 담은 `ToolRejectedResponse.errors[]`.
+
+효과:
+- 커밋된 동작이 없습니다.
+
+허용되지 않는 것:
+- 이 충돌은 차단 사유가 아닙니다.
+
+<a id="rejected-dry-run-pre-preview-failure"></a>
+### `dry_run=true` 미리보기 전 실패
+
+조건:
+- `dry_run=true` 요청이 읽기 결과나 dry-run 미리보기를 만들기 전에 실패합니다.
+
+라우팅:
+- `dry_run=true`인 `ToolRejectedResponse`.
+
+허용되지 않는 것:
+- 이 거부를 `DryRunSummary.would_errors[]`나 `PlannedBlocker`로 표현하지 않습니다.
 
 거부 응답은 메서드가 커밋되는 동작으로 진행하지 않았다는 뜻입니다. 거부 응답은 차단 결과가 아니며, 요청에 없던 권한, 증거, 수락, 닫기 상태를 만들지 않습니다.
 
 ## 차단 결과 동작
 
-| 차단 경로 | 결과 데이터 | 오류 코드 규칙 |
-|---|---|---|
-| `decision=blocked`, `decision=approval_required`, `decision=decision_required`인 `PrepareWriteResult` | `write_decision_reasons: WriteDecisionReason[]` | 메서드 담당 판단 사유를 사용합니다. `CloseReadinessBlocker`를 반환하지 않습니다. |
-| 유효한 닫기 준비 상태 평가 뒤의 `CloseTaskResult(close_state=blocked)` | `blockers: CloseReadinessBlocker[]` | 닫기 차단 사유 매핑을 사용합니다. `STATE_VERSION_CONFLICT`를 쓰면 안 됩니다. |
-| `StatusResult.close_blockers`와 `harness.close_task intent=check` | 읽기 전용 `CloseReadinessBlocker` 관찰 데이터 | 읽기 때문에 저장된 차단 사유나 상태 버전 증가가 생기지 않습니다. |
+| 차단 경로 | 세부사항 |
+|---|---|
+| `PrepareWriteResult` 차단 판단 | [`PrepareWriteResult` 차단 판단](#blocked-prepare-write-result) 참고 |
+| `CloseTaskResult(close_state=blocked)` | [`CloseTaskResult(close_state=blocked)`](#blocked-close-task-result) 참고 |
+| 읽기 전용 닫기 차단 사유 관찰 | [읽기 전용 관찰](#blocked-read-only-observation) 참고 |
+
+<a id="blocked-prepare-write-result"></a>
+### `PrepareWriteResult` 차단 판단
+
+조건:
+- `PrepareWriteResult`가 `decision=blocked`, `decision=approval_required`, `decision=decision_required` 중 하나입니다.
+
+라우팅:
+- `write_decision_reasons: WriteDecisionReason[]`.
+
+효과:
+- 메서드 담당 판단 사유를 사용합니다.
+
+허용되지 않는 것:
+- `CloseReadinessBlocker`를 반환하지 않습니다.
+
+<a id="blocked-close-task-result"></a>
+### `CloseTaskResult(close_state=blocked)`
+
+조건:
+- 유효한 닫기 준비 상태 평가가 닫기 차단 사유를 반환합니다.
+
+라우팅:
+- `blockers: CloseReadinessBlocker[]`.
+
+효과:
+- 닫기 차단 사유 매핑을 사용합니다.
+
+허용되지 않는 것:
+- `STATE_VERSION_CONFLICT`를 쓰면 안 됩니다.
+
+<a id="blocked-read-only-observation"></a>
+### 읽기 전용 관찰
+
+조건:
+- `StatusResult.close_blockers` 또는 `harness.close_task intent=check`가 차단 사유 관찰 데이터를 반환합니다.
+
+라우팅:
+- 읽기 전용 `CloseReadinessBlocker` 관찰 데이터.
+
+허용되지 않는 것:
+- 읽기 때문에 저장된 차단 사유나 상태 버전 증가가 생기지 않습니다.
 
 차단 결과는 메서드가 동작별 차단 결과를 반환했을 수 있다는 뜻입니다. 공개 전송 또는 스키마 오류가 아닙니다. 커밋된 차단 결과와 상태 효과는 [MVP API 경로 문서](mvp-api.md)가 안내하는 관련 메서드 담당 문서와 [저장 효과](../storage-effects.md)가 허용해야 합니다.
 
@@ -186,13 +656,58 @@ dry-run 미리보기:
 
 ## 금지된 blocker-code 규칙
 
-| 금지된 사용 | 대신 사용할 것 |
+| 금지된 사용 | 세부사항 |
 |---|---|
-| `STATE_VERSION_CONFLICT`를 `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, 또는 커밋된 차단 결과의 주 오류로 사용합니다. | `effect_kind=no_effect`인 `ToolRejectedResponse.errors[]`를 사용합니다. |
-| 커밋 전 공개 오류를 차단 사유 배열로 복사합니다. | `ToolRejectedResponse.errors[]`를 반환합니다. |
-| 담당 문서의 명시적 허용 없이 공개 `ErrorCode`를 차단 사유 코드로 재사용합니다. | 메서드/스키마 담당 문서의 차단 사유 코드나 결과 사유를 사용합니다. |
-| 사용자 표시 라벨을 API 식별자로 사용합니다. | 공개 `ErrorCode`는 그대로 두고 표시 문구만 지역화합니다. |
-| dry-run 미리보기의 오래된 상태 충돌을 `DryRunSummary.would_errors[]`나 `DryRunSummary.would_blockers[]`로 표현합니다. | `STATE_VERSION_CONFLICT`로 요청을 거부합니다. |
+| 오래된 상태 공개 오류를 차단 사유 코드로 사용 | [오래된 상태 차단 사유 코드](#forbidden-stale-state-blocker-code) 참고 |
+| 커밋 전 공개 오류를 차단 사유 배열로 복사 | [커밋 전 공개 오류 복사](#forbidden-pre-commit-public-error-copy) 참고 |
+| 공개 `ErrorCode`를 담당 문서 허용 없이 재사용 | [공개 코드 재사용](#forbidden-public-code-reuse) 참고 |
+| 사용자 표시 라벨을 API 식별자로 사용 | [표시 라벨 식별자](#forbidden-user-facing-label-identifier) 참고 |
+| dry-run 오래된 상태 충돌을 미리보기로 표현 | [dry-run 오래된 상태 미리보기](#forbidden-dry-run-stale-state-preview) 참고 |
+
+<a id="forbidden-stale-state-blocker-code"></a>
+### 오래된 상태 차단 사유 코드
+
+허용되지 않는 것:
+- `STATE_VERSION_CONFLICT`를 `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, 또는 커밋된 차단 결과의 주 오류로 사용합니다.
+
+라우팅:
+- 대신 `effect_kind=no_effect`인 `ToolRejectedResponse.errors[]`를 사용합니다.
+
+<a id="forbidden-pre-commit-public-error-copy"></a>
+### 커밋 전 공개 오류 복사
+
+허용되지 않는 것:
+- 커밋 전 공개 오류를 차단 사유 배열로 복사합니다.
+
+라우팅:
+- `ToolRejectedResponse.errors[]`를 반환합니다.
+
+<a id="forbidden-public-code-reuse"></a>
+### 공개 코드 재사용
+
+허용되지 않는 것:
+- 담당 문서의 명시적 허용 없이 공개 `ErrorCode`를 차단 사유 코드로 재사용합니다.
+
+라우팅:
+- 메서드/스키마 담당 문서의 차단 사유 코드나 결과 사유를 사용합니다.
+
+<a id="forbidden-user-facing-label-identifier"></a>
+### 표시 라벨 식별자
+
+허용되지 않는 것:
+- 사용자 표시 라벨을 API 식별자로 사용합니다.
+
+효과:
+- 공개 `ErrorCode`는 그대로 두고 표시 문구만 지역화합니다.
+
+<a id="forbidden-dry-run-stale-state-preview"></a>
+### dry-run 오래된 상태 미리보기
+
+허용되지 않는 것:
+- dry-run 미리보기의 오래된 상태 충돌을 `DryRunSummary.would_errors[]`나 `DryRunSummary.would_blockers[]`로 표현합니다.
+
+라우팅:
+- `STATE_VERSION_CONFLICT`로 요청을 거부합니다.
 
 <a id="harnessclose_task-close-blockers"></a>
 
@@ -267,7 +782,7 @@ dry-run 미리보기:
 | `LOCAL_ACCESS_MISMATCH` | 로컬 접근 불일치 | 등록된 로컬 전송 경로/세션/바인딩을 사용하거나 로컬 접근 등록을 고칩니다. |
 | `CAPABILITY_INSUFFICIENT` | 접점 역량 부족 | 역량이 있는 접점을 사용하거나, 동작을 줄이거나, 빠진 역량이 필요 없는 경로를 선택합니다. |
 | `NO_ACTIVE_TASK` | 활성 Task 없음 | Task 범위 동작 전에 Task를 선택하거나 생성합니다. |
-| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 범위, 경계, 기준 상태 문제 | 범위를 확인하거나 좁히고, 유효한 범위 또는 기준 상태 변경을 담당 경로로 갱신하거나, 필요한 사용자 판단을 요청합니다. |
+| 범위, 경계, 기준 상태 코드 | 범위, 경계, 기준 상태 문제 | [범위, 경계, 기준 상태 라벨](#label-scope-boundary-baseline) 참고 |
 | `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | 쓰기 전 확인 없음 또는 사용할 수 없음 | 정확한 동작, 현재 범위, 현재 상태로 `harness.prepare_write`를 호출하거나 다시 시도합니다. |
 | `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | 판단 필요 | 집중된 `UserJudgment`를 요청하거나 해결합니다. |
 | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | 민감 동작 승인 필요 또는 사용 불가 | `judgment_kind=sensitive_approval`을 요청, 해결, 갱신합니다. |
@@ -277,6 +792,20 @@ dry-run 미리보기:
 | `PROJECTION_STALE` | 읽기용 보기 오래됨 | 그 보기에 의존하기 전에 새로 고칩니다. |
 | `ARTIFACT_MISSING` | 아티팩트 문제 | 없거나 사용할 수 없는 아티팩트를 복구, 재생성, 교체, 다시 연결합니다. |
 | `VALIDATOR_FAILED` | 확인 실패 | 가능하면 특정 validator나 차단 사유를 보여 줍니다. 타입 있는 코드가 없을 때만 이 대체 코드를 사용합니다. |
+
+<a id="label-scope-boundary-baseline"></a>
+### 범위, 경계, 기준 상태 라벨
+
+조건:
+- `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE`.
+
+효과:
+- 권장 라벨은 범위, 경계, 기준 상태 문제입니다.
+
+라우팅:
+- 범위를 확인하거나 좁힙니다.
+- 유효한 범위 또는 기준 상태 변경을 담당 경로로 갱신합니다.
+- 필요한 사용자 판단을 요청합니다.
 
 <a id="documentation-smoke-error-coverage"></a>
 
