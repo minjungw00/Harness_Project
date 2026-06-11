@@ -210,6 +210,30 @@ Fix:
 - Remove process-only wording and make the scenario durable.
 - Update paired English and Korean examples by meaning unit.
 
+### CHK-EXAMPLE-INTERNAL-CONSISTENCY: API example internal consistency
+
+Owner:
+- [Authoring Guide](authoring-guide.md)
+- The affected API method owner document
+
+Check:
+- Confirm example refs are introduced or explicitly described as existing.
+- Confirm a response snapshot does not include refs from a future `state_version`.
+- Confirm sensitive approval reasons match the request's sensitive category or a stated precondition.
+- Confirm artifact refs do not appear without staging, promotion, or an existing-artifact explanation.
+- Confirm expiration timestamps use placeholders or clearly future example dates.
+- Confirm cross-method examples that share a scenario do not contradict each other.
+
+Failure:
+- A status response includes supporting refs from a later `state_version`.
+- A sensitive approval reason appears while `sensitive_categories` is empty and no precondition explains it.
+- An artifact ref appears without staging, promotion, or existing-artifact context.
+- A staged handle has an obviously stale fixed expiration timestamp.
+
+Fix:
+- Align refs, versions, sensitive categories, artifact lifecycle, and timestamps.
+- Use placeholders for expiration examples where possible.
+
 ## 5. Terminology checks
 
 ### CHK-TERM-001: close readiness terminology
