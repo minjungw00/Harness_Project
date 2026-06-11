@@ -222,6 +222,28 @@ Fix:
 - Align wording with the terminology owner.
 - Add or revise owner terminology only when the new distinction is intentional.
 
+### CHK-TERM-COMPLETE-INTENT: `complete` intent ambiguity
+
+Owner:
+- [Terminology Map](../../terminology-map.yaml)
+- [Glossary](../reference/glossary.md)
+- [API Value Sets](../reference/api/schema-value-sets.md)
+- [MVP API](../reference/api/mvp-api.md)
+
+Check:
+- Preserve `complete` only when it is an identifier or enum value.
+- Do not leave `complete` in Korean prose when the English means full or entire.
+- Confirm Korean prose does not use phrases like "complete 닫기 준비 상태 순서".
+- In English, prefer "Full ..." when "Complete ..." could be confused with the enum value.
+
+Failure:
+- A Korean sentence preserves `complete` when the English means full or entire.
+- A heading makes `complete` look like `intent=complete` when it is not.
+
+Fix:
+- Use "전체", "전체 평가", or another natural Korean expression.
+- In English, prefer "Full ..." when needed to avoid enum ambiguity.
+
 ## 6. Owner-boundary checks
 
 ### CHK-OWNER-001: canonical owner violations

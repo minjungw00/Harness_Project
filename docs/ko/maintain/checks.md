@@ -222,6 +222,28 @@
 - 담당 용어 문서에 맞게 표현을 정리합니다.
 - 새 구분이 의도적일 때만 담당 용어를 추가하거나 고칩니다.
 
+### CHK-TERM-COMPLETE-INTENT: `complete` 의도 값 모호성
+
+담당 문서:
+- [용어 지도](../../terminology-map.yaml)
+- [용어집](../reference/glossary.md)
+- [API 값 집합](../reference/api/schema-value-sets.md)
+- [MVP API](../reference/api/mvp-api.md)
+
+점검:
+- `complete`는 식별자 또는 enum 값일 때만 보존합니다.
+- 영어가 full 또는 entire 의미일 때 한국어 산문에 `complete`를 남기지 않습니다.
+- "complete 닫기 준비 상태 순서" 같은 표현을 쓰지 않습니다.
+- 영어 문서에서는 enum 값과 헷갈릴 수 있는 "Complete ..." 대신 필요한 경우 "Full ..."을 씁니다.
+
+실패:
+- 영어가 full 또는 entire 의미인데 한국어 문장이 `complete`를 보존합니다.
+- 제목이 실제로는 `intent=complete`가 아닌데 `complete`를 그 값처럼 보이게 합니다.
+
+수정:
+- "전체", "전체 평가", 또는 문맥에 맞는 자연스러운 한국어 표현을 씁니다.
+- 영어에서는 enum 값 모호성을 피해야 할 때 "Full ..."을 우선합니다.
+
 ## 6. 담당 문서 경계 점검
 
 ### CHK-OWNER-001: 담당 문서 위반
