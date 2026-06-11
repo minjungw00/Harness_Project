@@ -249,15 +249,17 @@ API 데이터 형태에는 아래 값이 포함됩니다.
 계정 데이터 내보내기 쓰기 결정 데이터 예시는 아래와 같습니다.
 
 ```yaml
-intended_operation: "계정 데이터 내보내기 명시적 확인 단계 갱신"
+intended_operation: "계정 데이터 내보내기 확인 흐름 갱신"
 affected_paths:
   - src/account/export.ts
   - src/account/export-confirmation.ts
   - tests/account-export.test.ts
+sensitive_categories:
+  - personal_data_export
 decision: approval_required
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 명시적 확인 단계에 대한 승인이 필요합니다."
+    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 Write Authorization 전에 별도의 민감 동작 승인이 필요합니다."
 ```
 
 이 사유는 `prepare_write` 판단 사유입니다. 아래 항목이 아닙니다.
@@ -392,13 +394,13 @@ write_decision_reasons:
 
 - [`harness.prepare_write`의 커밋된 비허용 판단](#harnessprepare_write-committed-non-allow-decision)을 따릅니다.
 
-계정 데이터 내보내기 명시적 확인 단계에서는 저장된 쓰기 결정이 승인 필요 상태만 기록할 수 있습니다.
+개인정보를 포함할 수 있는 계정 데이터 내보내기에서는 저장된 쓰기 결정이 쓰기 승인(`Write Authorization`) 전 별도 민감 동작 승인 필요 상태만 기록할 수 있습니다.
 
 ```yaml
 decision: approval_required
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 명시적 확인 단계에 대한 승인이 필요합니다."
+    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 Write Authorization 전에 별도의 민감 동작 승인이 필요합니다."
 ```
 
 효과가 없는 분기:

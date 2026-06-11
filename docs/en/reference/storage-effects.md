@@ -240,15 +240,17 @@ Not allowed:
 Example account data export write-decision data:
 
 ```yaml
-intended_operation: "update account data export explicit confirmation step"
+intended_operation: "update account data export confirmation flow"
 affected_paths:
   - src/account/export.ts
   - src/account/export-confirmation.ts
   - tests/account-export.test.ts
+sensitive_categories:
+  - personal_data_export
 decision: approval_required
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "Account data export may include personal data and needs approval for the explicit confirmation step."
+    message: "Account data export may include personal data and requires separate sensitive-action approval before Write Authorization."
 ```
 
 Those reasons are prepare-write decision reasons. They are not:
@@ -383,13 +385,13 @@ Committed non-allowed decisions:
 
 - See [`harness.prepare_write` committed non-allow decision](#harnessprepare_write-committed-non-allow-decision).
 
-For the account data export explicit confirmation step, a persisted write decision may record only the approval requirement:
+For account data export that may include personal data, a persisted write decision may record only the separate sensitive-action approval requirement before `Write Authorization`:
 
 ```yaml
 decision: approval_required
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "Account data export may include personal data and needs approval for the explicit confirmation step."
+    message: "Account data export may include personal data and requires separate sensitive-action approval before Write Authorization."
 ```
 
 No-effect branches:
