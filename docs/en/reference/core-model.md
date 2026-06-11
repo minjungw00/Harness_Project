@@ -100,7 +100,22 @@ Not allowed:
 
 ## 4. User-owned judgment
 
-User-owned judgment is the boundary where Harness must ask or preserve the user's choice instead of inferring it. Exact schema fields are owned by [API Judgment Schemas](api/schema-judgment.md); this page owns the product meaning.
+Concept:
+- User-owned judgment is the boundary where Harness must ask the user or preserve the user's recorded choice instead of inferring it.
+- This page owns the product meaning. Exact schema fields and input shapes belong to the judgment schema owner.
+
+Inputs:
+- A product, technical, scope, sensitive-action, final-acceptance, residual-risk, or cancellation question that belongs to the user.
+- The affected object, scope, consequence, and close or write impact when one user reply is meant to satisfy more than one judgment kind.
+
+Not the same as:
+- Agent inference, broad consent, evidence, projection text, or generated summaries.
+- Active scope mutation, `Write Authorization`, sensitive-action approval, final acceptance, or residual-risk acceptance unless that exact judgment kind was asked and recorded.
+
+Owner links:
+- [API Judgment Schemas](api/schema-judgment.md)
+
+Judgment kinds:
 
 | Judgment kind | User owns the decision when the question concerns |
 |---|---|
@@ -120,9 +135,16 @@ Condition:
 - The question concerns public interface, compatibility break, data retention, privacy, or security.
 - The question concerns another material and costly-to-reverse technical direction.
 
-Agent latitude remains narrow: inside accepted scope and acceptance criteria, the agent may choose ordinary implementation details that do not change product behavior, technical direction, scope, security/privacy posture, compatibility, or costly-to-reverse architecture. That latitude is not a new permission system.
+Agent latitude:
+- Inside accepted scope and acceptance criteria, the agent may choose ordinary implementation details that do not change product behavior, technical direction, scope, security/privacy posture, compatibility, or costly-to-reverse architecture.
 
-Broad consent is also narrow. "Go ahead", "looks good", or similar wording cannot silently satisfy another judgment kind. A single reply may satisfy multiple judgments only when the prompt asked those distinct questions and Core records each compatible judgment with its affected object, scope, consequence, and close or write impact.
+Not the same as:
+- A new permission system.
+- Broad consent that silently satisfies another judgment kind.
+
+Multiple judgments:
+- "Go ahead", "looks good", or similar wording cannot silently satisfy another judgment kind.
+- A single reply may satisfy multiple judgments only when the prompt asked those distinct questions and Core records each compatible judgment with its affected object, scope, consequence, and close or write impact.
 
 ## 5. Non-substitution rules
 
@@ -198,17 +220,37 @@ Verification and Manual QA are conceptual boundaries in the current MVP, not act
 
 ## 8. Write authorization boundary
 
-`Write Authorization` is the Core record that makes one product-file write attempt compatible with current Harness state. It is created only through the compatible non-dry-run `prepare_write` path defined by the API owner.
+Concept:
+- `Write Authorization` is the Core record that makes one product-file write attempt compatible with current Harness state.
 
-| Boundary | Meaning |
-|---|---|
-| Scope-limited | It covers the intended product-file write attempt, not future work or a broader project area. |
-| Single-use | A compatible product-write Run consumes it once. Reuse, replay, and stale-state behavior are API/storage-owned details. |
-| Cooperative | It tells a connected agent or surface what is compatible with Harness state; it does not enforce OS-level prevention. |
-| Separate from sensitive approval | `sensitive_approval` may be required for a sensitive step, but it is not `Write Authorization`. |
-| Separate from close | A valid authorization does not prove the write happened, create evidence, satisfy acceptance, accept risk, or close the Task. |
+Creation:
+- It is created only through the compatible non-dry-run `prepare_write` path defined by the API owner.
 
-`WriteDecisionReason` belongs to prepare-write decision output. `CloseReadinessBlocker` belongs to close-readiness blocking data. They answer different questions and must not be interchanged.
+Inputs:
+- Current Harness state.
+- Active Task and Change Unit scope.
+- The intended product-file write attempt.
+- A compatible non-dry-run `prepare_write` result.
+
+Properties:
+- Scope-limited: it covers the intended product-file write attempt, not future work or a broader project area.
+- Single-use: a compatible product-write Run consumes it once. Reuse, replay, and stale-state behavior are API/storage-owned details.
+- Cooperative: it tells a connected agent or surface what is compatible with Harness state; it does not enforce OS-level prevention.
+
+Not the same as:
+- `sensitive_approval`, command approval, dependency approval, host/network/secret access, deployment approval, destructive-action approval, system access, or final acceptance.
+- Proof that the write happened, evidence creation, acceptance, residual-risk acceptance, or Task close.
+
+Owner links:
+- [Prepare Write Method](api/method-prepare-write.md)
+- [Record Run Method](api/method-record-run.md)
+- [API State Schemas](api/schema-state.md)
+- [Storage Effects](storage-effects.md)
+
+Decision reason boundary:
+- `WriteDecisionReason` belongs to prepare-write decision output.
+- `CloseReadinessBlocker` belongs to close-readiness blocking data.
+- They answer different questions and must not be interchanged.
 
 ## 9. Evidence and run authority
 
@@ -228,14 +270,61 @@ Can establish:
 Cannot establish:
 - The artifact content is safe, sufficient, or readable beyond the recorded integrity/redaction/availability facts.
 
-Evidence records must be read at their recorded scope. A passing test log supports the test it names; a screenshot supports the visible state it captures; an artifact supports only the content and integrity facts represented by the artifact owners. Evidence must not be inflated into proof of broader correctness.
+### Evidence authority
+
+Concept:
+- Evidence records support only the claims they record at their recorded scope.
+
+Inputs:
+- Run records.
+- Evidence summaries.
+- Evidence-eligible artifacts and `ArtifactRef` values when artifact owners allow them.
+- Related refs and coverage expectations.
+
+Can establish:
+- A passing test log supports the test it names.
+- A screenshot supports the visible state it captures.
+- An artifact supports only the content and integrity facts represented by the artifact owners.
+
+Not the same as:
+- Proof of broader correctness.
+- Final acceptance, future Manual QA, future verification, or residual-risk acceptance.
+- Proof of unrecorded behavior.
+
+Owner links:
+- [API Artifact Schemas](api/schema-artifacts.md)
+- [Artifact Storage](storage-artifacts.md)
+- [API Judgment Schemas](api/schema-judgment.md)
 
 <a id="close_task"></a>
 ## 10. Close readiness
 
-Close readiness is the Core evaluation concept for whether the current Task can close honestly. It considers current Core state, active scope, required user-owned judgments, sensitive-action approval, write/run compatibility, evidence, artifacts, final acceptance, residual risk, and recovery constraints.
+Concept:
+- Close readiness is the Core evaluation concept for whether the current Task can close honestly.
 
-`CloseReadinessBlocker` is not the concept itself. It is a state-shaped API data representation for blocking reasons, owned by [API State Schemas](api/schema-state.md) and [API Value Sets](api/schema-value-sets.md). Method behavior and response branches are owned by method owner documents routed from the [MVP API router](api/mvp-api.md); persistence and public errors are owned by [Storage Effects](storage-effects.md) and [API Errors](api/errors.md).
+Inputs:
+- Current Core state.
+- Active Task scope and Change Unit scope.
+- Required user-owned judgments.
+- Required sensitive-action approval.
+- Write and Run compatibility.
+- Evidence and artifacts.
+- Final acceptance.
+- Residual risk and required residual-risk acceptance.
+- Recovery constraints.
+
+Not the same as:
+- `CloseReadinessBlocker`.
+- `intent=complete`.
+- User acceptance alone.
+- Preflight rejection.
+
+Owner links:
+- [Close Task Method](api/method-close-task.md)
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
+- [Storage Effects](storage-effects.md)
+- [API Errors](api/errors.md)
 
 For an `intent=complete` close attempt, Core evaluates blockers in this conceptual order. Later rows do not satisfy earlier rows.
 
@@ -256,30 +345,101 @@ For an `intent=complete` close attempt, Core evaluates blockers in this conceptu
 | 13 | Recovery constraints | Remaining repair, corruption, reconciliation, or recovery work must be handled before close. |
 | 14 | Close transition | If no blocker remains, the terminal transition may proceed through the API-owned method behavior; otherwise the Task stays open. |
 
-Close readiness is separate from preflight rejection. Stale state, invalid request identity, local access failure before evaluation, and similar API-owned failures are not semantic close-readiness findings. They are routed through the API and error owners.
+Preflight failures:
+- Stale state, invalid request identity, local access failure before evaluation, and similar API-owned failures are not semantic close-readiness findings.
+- They are routed through the API and error owners.
 
 ## 11. Blockers and waivers
 
-| Concept | Core meaning | Not allowed |
-|---|---|---|
-| Blocker | A structured reason progress, write, Run recording, or close cannot proceed honestly. | Hiding it in projection prose, broad approval, or a successful-looking close result. |
-| Close blocker | A close-relevant reason that prevents honest close readiness. | Treating it as `WriteDecisionReason` or as proof of storage effects by itself. |
-| `CloseReadinessBlocker` | The API data representation of close blocking reasons. | Treating it as the whole close-readiness concept or as a prepare-write reason. |
-| Waiver | A scoped exception to a named requirement where the responsible owner allows it. | Using a waiver to create scope, sensitive-action approval, required evidence, final acceptance, or residual-risk visibility. |
-| Accepted risk | A user judgment that accepts a named visible residual risk for a requested close. | Treating accepted risk as verification, evidence sufficiency, final acceptance, or automatic success. |
+### Blocker
 
-A waiver can unblock only the named requirement and only through the owner path that permits it. Decision deferral is not waiver. A future quality-review waiver would not be QA evidence or a QA pass. A future missing-check risk path would not be verification or assurance upgrade.
+Concept:
+- A blocker is a structured reason progress, write, Run recording, or close cannot proceed honestly.
+
+Not the same as:
+- Projection prose.
+- Broad approval.
+- A successful-looking close result.
+
+Owner links:
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+### Close blocker
+
+Concept:
+- A close blocker is a close-relevant reason that prevents honest close readiness.
+
+Not the same as:
+- `WriteDecisionReason`.
+- Proof of storage effects by itself.
+
+Owner links:
+- [Close Task Method](api/method-close-task.md)
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+### `CloseReadinessBlocker`
+
+Concept:
+- `CloseReadinessBlocker` is the API data representation of close blocking reasons.
+
+Not the same as:
+- The whole close-readiness concept.
+- A prepare-write reason.
+- Proof of persistence by itself.
+
+Owner links:
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
+- [API Errors](api/errors.md)
+
+### Waiver
+
+Concept:
+- A waiver is a scoped exception to a named requirement where the responsible owner allows it.
+
+Allowed effect:
+- It can unblock only the named requirement and only through the owner path that permits it.
+
+Not the same as:
+- Decision deferral.
+- Scope creation, sensitive-action approval, required evidence, final acceptance, or residual-risk visibility.
+- QA evidence, a QA pass, verification, or an assurance upgrade.
+
+Owner links:
+- [Later Candidate Index](../later/index.md)
 
 ## 12. Residual risk
 
-Residual risk is known remaining uncertainty, an unchecked condition, limitation, or trade-off that matters to close. Known close-relevant residual risk must be visible before successful close. If close depends on accepting that risk, Core requires compatible `residual_risk_acceptance` tied to the visible risk and related refs.
+Concept:
+- Residual risk is known remaining uncertainty, an unchecked condition, limitation, or trade-off that matters to close.
 
-| Rule | Consequence |
-|---|---|
-| Visibility comes before acceptance. | The user cannot accept a risk that has not been made visible enough to judge. |
-| Acceptance is scoped. | It applies to the named visible risk for the requested close, not to all unknowns. |
-| Acceptance is not proof. | It does not verify work, satisfy evidence, satisfy QA, grant sensitive-action approval, create final acceptance, or make the result no-risk. |
-| Rich risk workflows are later material. | The current path is compact residual-risk summary, blockers, evidence refs, and `user_judgment` refs unless an owner promotes more. |
+Inputs:
+- The visible named risk.
+- The requested close and visible close basis.
+- Related evidence, artifact, blocker, or Run refs.
+- Compatible `residual_risk_acceptance` when close depends on accepting the risk.
+
+Required order:
+- Known close-relevant residual risk must be visible before successful close.
+- The user cannot accept a risk that has not been made visible enough to judge.
+
+Scope:
+- Acceptance applies to the named visible risk for the requested close, not to all unknowns.
+
+Not the same as:
+- Verification, evidence sufficiency, QA, sensitive-action approval, final acceptance, or a no-risk result.
+- A waiver or automatic success.
+
+Current MVP path:
+- The current path is compact residual-risk summary, blockers, evidence refs, and `user_judgment` refs unless an owner promotes more.
+- Rich risk workflows are later material.
+
+Owner links:
+- [API Judgment Schemas](api/schema-judgment.md)
+- [API State Schemas](api/schema-state.md)
+- [Later Candidate Index](../later/index.md)
 
 ## 13. Cross-owner links
 
