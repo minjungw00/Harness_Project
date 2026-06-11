@@ -7,7 +7,7 @@
 이 문서는 현재 MVP에서 `harness.status` 메서드가 담당하는 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 계정 데이터 내보내기 확인 예시의 최소 요청과 대표 응답
+- 계정 내보내기 확인 예시의 최소 요청과 대표 응답
 - 저장 담당 문서가 기록 단위 세부사항을 정의하기 전의 메서드 수준 저장 효과 기대치
 
 ## 담당하지 않는 것
@@ -109,7 +109,7 @@ params:
 
 ## 대표 응답
 
-결과 분기(`StatusResult`, 읽기 전용):
+결과 분기(`StatusResult`, 읽기 전용). 이 상태 snapshot은 계정 내보내기 확인 테스트 실행과 증거 참조 기록 뒤에 관찰된 응답입니다.
 
 ```yaml
 base:
@@ -133,24 +133,24 @@ active_task:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 데이터 내보내기 명시적 확인 단계를 추가하고 계정 데이터 내보내기 확인 테스트를 갱신한다."
+  goal_summary: "계정 내보내기 전에 명시적 확인 단계를 추가한다."
+  scope_summary: "계정 내보내기 명시적 확인 단계를 추가하고 계정 내보내기 확인 테스트를 갱신한다."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
-    state_version: 19
-status_summary: "계정 데이터 내보내기 확인 테스트가 기록되었습니다. 계정 데이터 내보내기 명시적 확인 단계 문구에 대한 사용자 수락은 아직 대기 중입니다."
+    state_version: 21
+status_summary: "계정 내보내기 확인 테스트가 기록되었습니다. 계정 내보내기 명시적 확인 단계 문구에 대한 사용자 수락은 아직 대기 중입니다."
 next_actions:
   - action: harness.request_user_judgment
-    reason: "닫기 전에 계정 데이터 내보내기 명시적 확인 단계 문구를 수락해 달라고 사용자에게 요청합니다."
+    reason: "닫기 전에 계정 내보내기 명시적 확인 단계 문구를 수락해 달라고 사용자에게 요청합니다."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
+    - claim: "계정 내보내기 확인 테스트가 통과했습니다."
       required_for_close: true
       coverage_state: supported
       supporting_refs:
@@ -167,7 +167,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "사용자가 계정 데이터 내보내기 명시적 확인 단계 문구를 아직 수락하지 않았습니다."
+      message: "사용자가 계정 내보내기 명시적 확인 단계 문구를 아직 수락하지 않았습니다."
 guarantee_display:
   level: cooperative
   notes:

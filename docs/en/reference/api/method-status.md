@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.status`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account data export confirmation scenario
+- the minimal request and representative response for the shared account export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -124,7 +124,7 @@ params:
 
 ## Representative response
 
-Result branch (`StatusResult`, read-only):
+Result branch (`StatusResult`, read-only). This status snapshot is observed after the account export confirmation test run and evidence refs are recorded:
 
 ```yaml
 base:
@@ -148,24 +148,24 @@ active_task:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Add an explicit confirmation step for account data export and update account data export confirmation tests."
+  goal_summary: "Add explicit confirmation before account export."
+  scope_summary: "Add an explicit confirmation step for account export and update account export confirmation tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
-    state_version: 19
-status_summary: "Account data export confirmation tests are recorded. User acceptance of the account data export explicit confirmation copy is still pending."
+    state_version: 21
+status_summary: "Account export confirmation tests are recorded. User acceptance of the account export explicit confirmation copy is still pending."
 next_actions:
   - action: harness.request_user_judgment
-    reason: "Ask the user to accept the account data export explicit confirmation copy before close."
+    reason: "Ask the user to accept the account export explicit confirmation copy before close."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "Account data export confirmation tests passed."
+    - claim: "Account export confirmation tests passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs:
@@ -182,7 +182,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "The user has not accepted the account data export explicit confirmation copy."
+      message: "The user has not accepted the account export explicit confirmation copy."
 guarantee_display:
   level: cooperative
   notes:
