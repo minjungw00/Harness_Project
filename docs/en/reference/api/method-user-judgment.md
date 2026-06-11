@@ -202,8 +202,6 @@ For `dry_run=true`, a valid preview returns `ToolDryRunResponse`. Branch shape i
 
 On commit, the method may persist pending judgment and related blocker state. Exact storage effects are owned by [Storage Effects](../storage-effects.md).
 
-Example artifact precondition: `artifact_account_export_confirmation_copy_001` is an existing `ArtifactRef` for the reviewed confirmation copy, promoted before the judgment request. The `harness.record_run` example keeps the test-log artifact as its representative promoted artifact and does not expand this additional copy artifact.
-
 
 ### `harness.record_user_judgment`
 
@@ -231,40 +229,22 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "Is the explicit confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user's judgment that the explicit confirmation copy is sufficient."
+      description: "Record the user's judgment that the confirmation copy is sufficient."
       consequence: "Close readiness can evaluate the product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised explicit confirmation copy."
+      description: "Keep the Task open for revised confirmation copy."
       consequence: "Close remains blocked on the product decision."
       is_default: false
   context:
-    summary: "The user must judge whether the explicit confirmation copy is sufficient for account data export that may include personal data."
+    summary: "The confirmation copy tells the user that the export may include personal data before download."
     related_refs: []
-    artifact_refs:
-      - artifact_id: artifact_account_export_confirmation_copy_001
-        project_id: proj_123
-        task_id: task_456
-        display_name: "account_export_confirmation_copy.txt"
-        content_type: text/plain
-        sha256: sha256:example
-        size_bytes: 65
-        redaction_state: none
-        availability: available
-        created_by_run_ref:
-          record_kind: run
-          record_id: run_account_export_tests_001
-          project_id: proj_123
-          task_id: task_456
-          state_version: 21
-        created_by_surface_id: surface_local
-        created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_confirmation_copy_001
+    artifact_refs: []
     visible_risks: []
     constraints:
       - "Current Task constraints apply"
@@ -342,30 +322,12 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "Is the explicit confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
   options: []
   context:
-    summary: "The user must judge whether the explicit confirmation copy is sufficient for account data export that may include personal data."
+    summary: "The confirmation copy tells the user that the export may include personal data before download."
     related_refs: []
-    artifact_refs:
-      - artifact_id: artifact_account_export_confirmation_copy_001
-        project_id: proj_123
-        task_id: task_456
-        display_name: "account_export_confirmation_copy.txt"
-        content_type: text/plain
-        sha256: sha256:example
-        size_bytes: 65
-        redaction_state: none
-        availability: available
-        created_by_run_ref:
-          record_kind: run
-          record_id: run_account_export_tests_001
-          project_id: proj_123
-          task_id: task_456
-          state_version: 21
-        created_by_surface_id: surface_local
-        created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_confirmation_copy_001
+    artifact_refs: []
     visible_risks: []
     constraints:
       - "Current Task constraints apply"
@@ -409,30 +371,12 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "Is the explicit confirmation copy sufficient for account data export that may include personal data?"
+  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
   options: []
   context:
-    summary: "The user must judge whether the explicit confirmation copy is sufficient for account data export that may include personal data."
+    summary: "The confirmation copy tells the user that the export may include personal data before download."
     related_refs: []
-    artifact_refs:
-      - artifact_id: artifact_account_export_confirmation_copy_001
-        project_id: proj_123
-        task_id: task_456
-        display_name: "account_export_confirmation_copy.txt"
-        content_type: text/plain
-        sha256: sha256:example
-        size_bytes: 65
-        redaction_state: none
-        availability: available
-        created_by_run_ref:
-          record_kind: run
-          record_id: run_account_export_tests_001
-          project_id: proj_123
-          task_id: task_456
-          state_version: 21
-        created_by_surface_id: surface_local
-        created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_confirmation_copy_001
+    artifact_refs: []
     visible_risks: []
     constraints: []
   affected_refs: []

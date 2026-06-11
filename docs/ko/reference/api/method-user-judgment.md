@@ -195,8 +195,6 @@
 
 커밋 시 대기 중인 판단과 관련 차단 사유 상태를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당합니다.
 
-예시 아티팩트 전제: `artifact_account_export_confirmation_copy_001`는 검토할 확인 문구를 가리키는 기존 `ArtifactRef`이며, 판단 요청 전에 승격되었습니다. `harness.record_run` 예시는 대표 승격 아티팩트로 테스트 로그만 보여 주며 이 추가 문구 아티팩트는 펼쳐 보이지 않습니다.
-
 
 ### `harness.record_user_judgment`
 
@@ -224,11 +222,11 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분합니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
   options:
     - option_id: accept
       label: "충분함"
-      description: "확인 문구가 충분하다는 사용자의 판단을 기록합니다."
+      description: "확인 문구가 충분하다는 사용자 판단을 기록합니다."
       consequence: "닫기 준비 상태 평가에서 제품 판단을 해결된 것으로 볼 수 있습니다."
       is_default: true
     - option_id: revise
@@ -237,27 +235,9 @@ params:
       consequence: "제품 판단 때문에 닫기가 계속 차단됩니다."
       is_default: false
   context:
-    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분한지는 사용자가 판단해야 합니다."
+    summary: "확인 문구는 다운로드 전에 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
     related_refs: []
-    artifact_refs:
-      - artifact_id: artifact_account_export_confirmation_copy_001
-        project_id: proj_123
-        task_id: task_456
-        display_name: "account_export_confirmation_copy.txt"
-        content_type: text/plain
-        sha256: sha256:example
-        size_bytes: 65
-        redaction_state: none
-        availability: available
-        created_by_run_ref:
-          record_kind: run
-          record_id: run_account_export_tests_001
-          project_id: proj_123
-          task_id: task_456
-          state_version: 21
-        created_by_surface_id: surface_local
-        created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_confirmation_copy_001
+    artifact_refs: []
     visible_risks: []
     constraints:
       - "현재 Task 제약이 적용됩니다"
@@ -335,30 +315,12 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분합니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
   options: []
   context:
-    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분한지는 사용자가 판단해야 합니다."
+    summary: "확인 문구는 다운로드 전에 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
     related_refs: []
-    artifact_refs:
-      - artifact_id: artifact_account_export_confirmation_copy_001
-        project_id: proj_123
-        task_id: task_456
-        display_name: "account_export_confirmation_copy.txt"
-        content_type: text/plain
-        sha256: sha256:example
-        size_bytes: 65
-        redaction_state: none
-        availability: available
-        created_by_run_ref:
-          record_kind: run
-          record_id: run_account_export_tests_001
-          project_id: proj_123
-          task_id: task_456
-          state_version: 21
-        created_by_surface_id: surface_local
-        created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_confirmation_copy_001
+    artifact_refs: []
     visible_risks: []
     constraints:
       - "현재 Task 제약이 적용됩니다"
@@ -402,30 +364,12 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분합니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
   options: []
   context:
-    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기의 명시적 확인 단계 문구가 충분한지는 사용자가 판단해야 합니다."
+    summary: "확인 문구는 다운로드 전에 내보내기에 개인정보가 포함될 수 있음을 사용자에게 알립니다."
     related_refs: []
-    artifact_refs:
-      - artifact_id: artifact_account_export_confirmation_copy_001
-        project_id: proj_123
-        task_id: task_456
-        display_name: "account_export_confirmation_copy.txt"
-        content_type: text/plain
-        sha256: sha256:example
-        size_bytes: 65
-        redaction_state: none
-        availability: available
-        created_by_run_ref:
-          record_kind: run
-          record_id: run_account_export_tests_001
-          project_id: proj_123
-          task_id: task_456
-          state_version: 21
-        created_by_surface_id: surface_local
-        created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_confirmation_copy_001
+    artifact_refs: []
     visible_risks: []
     constraints: []
   affected_refs: []
