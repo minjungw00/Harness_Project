@@ -125,11 +125,12 @@ method: harness.intake
 params:
   plain_language_request: "Add explicit confirmation before account data export."
   initial_scope:
-    boundary: "Only the account export flow and its tests."
+    boundary: "Only the account data export flow and its confirmation tests."
     non_goals:
       - "Changing account deletion behavior"
+      - "Changing billing export behavior"
     acceptance_criteria:
-      - "Account export requires explicit confirmation before download."
+      - "Account data export requires explicit confirmation before download."
 ```
 
 ## Representative response
@@ -168,11 +169,12 @@ state:
     result: none
     closed_at: null
   goal_summary: "Account data export confirmation"
-  scope_summary: "Only the account export flow and its tests."
+  scope_summary: "Only the account data export flow and its confirmation tests."
   non_goals:
     - "Changing account deletion behavior"
+    - "Changing billing export behavior"
   acceptance_criteria:
-    - "Account export requires explicit confirmation before download."
+    - "Account data export requires explicit confirmation before download."
   active_change_unit_ref: null
   blocker_refs: []
 next_actions:

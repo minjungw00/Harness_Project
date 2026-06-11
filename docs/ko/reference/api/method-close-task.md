@@ -115,7 +115,7 @@
 
 리터럴 `intent=complete`는 완료 의도를 고르는 API 값입니다. 전체 닫기 준비 상태 평가 순서를 뜻하는 산문 표현이 아닙니다.
 
-계정 내보내기 확인 시나리오에서 성공한 닫기 준비 상태 관찰 예시는 아래와 같습니다. 증거는 `run_account_export_tests_001` 및 해결된 사용자 판단 `uj_001`에 의존합니다.
+계정 내보내기 확인 시나리오에서 성공한 닫기 준비 상태 관찰 예시는 아래와 같습니다. 증거는 기존 실행 참조 `run_account_export_tests_001`, 승격된 아티팩트 `artifact_account_export_test_log_001`, 해결된 사용자 판단 `uj_001`에 의존합니다.
 
 ```yaml
 close_readiness:
@@ -125,7 +125,7 @@ close_readiness:
     - "사용자가 계정 내보내기 확인 문구를 수락했습니다."
 ```
 
-같은 시나리오에서 차단된 닫기 준비 상태 관찰 예시는 아래와 같습니다. 테스트 증거는 `run_account_export_tests_001`에 기록되어 있지만 해결된 사용자 판단은 없습니다.
+같은 시나리오에서 차단된 닫기 준비 상태 관찰 예시는 아래와 같습니다. 테스트 증거는 기존 실행 참조 `run_account_export_tests_001`과 승격된 아티팩트 `artifact_account_export_test_log_001`에 기록되어 있지만 해결된 사용자 판단은 없습니다.
 
 ```yaml
 close_readiness:
@@ -195,10 +195,64 @@ evidence_summary:
           project_id: proj_123
           task_id: task_456
           state_version: 21
-      supporting_artifact_refs: []
+      supporting_artifact_refs:
+        - artifact_id: artifact_account_export_test_log_001
+          project_id: proj_123
+          task_id: task_456
+          display_name: "account_export_confirmation_test.log"
+          content_type: text/plain
+          sha256: sha256:example
+          size_bytes: 65
+          redaction_state: none
+          availability: available
+          created_by_run_ref:
+            record_kind: run
+            record_id: run_account_export_tests_001
+            project_id: proj_123
+            task_id: task_456
+            state_version: 21
+          created_by_surface_id: surface_local
+          created_by_surface_instance_id: surface_instance_01
+          storage_ref: artifact://artifact_account_export_test_log_001
       gap_refs: []
-  artifact_refs: []
-artifact_refs: []
+  artifact_refs:
+    - artifact_id: artifact_account_export_test_log_001
+      project_id: proj_123
+      task_id: task_456
+      display_name: "account_export_confirmation_test.log"
+      content_type: text/plain
+      sha256: sha256:example
+      size_bytes: 65
+      redaction_state: none
+      availability: available
+      created_by_run_ref:
+        record_kind: run
+        record_id: run_account_export_tests_001
+        project_id: proj_123
+        task_id: task_456
+        state_version: 21
+      created_by_surface_id: surface_local
+      created_by_surface_instance_id: surface_instance_01
+      storage_ref: artifact://artifact_account_export_test_log_001
+artifact_refs:
+  - artifact_id: artifact_account_export_test_log_001
+    project_id: proj_123
+    task_id: task_456
+    display_name: "account_export_confirmation_test.log"
+    content_type: text/plain
+    sha256: sha256:example
+    size_bytes: 65
+    redaction_state: none
+    availability: available
+    created_by_run_ref:
+      record_kind: run
+      record_id: run_account_export_tests_001
+      project_id: proj_123
+      task_id: task_456
+      state_version: 21
+    created_by_surface_id: surface_local
+    created_by_surface_instance_id: surface_instance_01
+    storage_ref: artifact://artifact_account_export_test_log_001
 next_actions:
   - action: harness.request_user_judgment
     reason: "닫기를 시도하기 전에 계정 내보내기 확인 문구를 수락해 달라고 사용자에게 요청한다."

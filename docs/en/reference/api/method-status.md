@@ -124,7 +124,7 @@ params:
 
 ## Representative response
 
-Result branch (`StatusResult`, read-only). This status snapshot is observed after the account export confirmation test run and evidence refs are recorded:
+Result branch (`StatusResult`, read-only). This status snapshot is observed after `harness.record_run` has created `run_account_export_tests_001` and promoted `artifact_account_export_test_log_001` as evidence:
 
 ```yaml
 base:
@@ -148,20 +148,36 @@ active_task:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Add explicit confirmation before account export."
-  scope_summary: "Add an explicit confirmation step for account export and update account export confirmation tests."
+  goal_summary: "Add explicit confirmation before account data export."
+  scope_summary: "Add confirmation UI for account data export and update account export confirmation tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
     state_version: 21
-status_summary: "Account export confirmation tests are recorded. User acceptance of the account export explicit confirmation copy is still pending."
+status_summary: "Account export confirmation tests are recorded. User acceptance of the account export confirmation copy is still pending."
 next_actions:
   - action: harness.request_user_judgment
-    reason: "Ask the user to accept the account export explicit confirmation copy before close."
+    reason: "Ask the user to accept the account export confirmation copy before close."
 pending_user_judgments: []
-write_authority_summary: null
+write_authority_summary:
+  status: stale
+  write_authorization_ref:
+    record_kind: write_authorization
+    record_id: wa_001
+    project_id: proj_123
+    task_id: task_456
+    state_version: 20
+  basis_state_version: 19
+  intended_paths:
+    - src/account/export.ts
+    - src/account/export-confirmation.ts
+    - tests/account-export.test.ts
+  guarantee_display:
+    level: cooperative
+    notes:
+      - "Write Authorization is a Harness compatibility record, not OS permission."
 evidence_summary:
   status: sufficient
   coverage_items:
@@ -174,15 +190,51 @@ evidence_summary:
           project_id: proj_123
           task_id: task_456
           state_version: 21
-      supporting_artifact_refs: []
+      supporting_artifact_refs:
+        - artifact_id: artifact_account_export_test_log_001
+          project_id: proj_123
+          task_id: task_456
+          display_name: "account_export_confirmation_test.log"
+          content_type: text/plain
+          sha256: sha256:example
+          size_bytes: 65
+          redaction_state: none
+          availability: available
+          created_by_run_ref:
+            record_kind: run
+            record_id: run_account_export_tests_001
+            project_id: proj_123
+            task_id: task_456
+            state_version: 21
+          created_by_surface_id: surface_local
+          created_by_surface_instance_id: surface_instance_01
+          storage_ref: artifact://artifact_account_export_test_log_001
       gap_refs: []
-  artifact_refs: []
+  artifact_refs:
+    - artifact_id: artifact_account_export_test_log_001
+      project_id: proj_123
+      task_id: task_456
+      display_name: "account_export_confirmation_test.log"
+      content_type: text/plain
+      sha256: sha256:example
+      size_bytes: 65
+      redaction_state: none
+      availability: available
+      created_by_run_ref:
+        record_kind: run
+        record_id: run_account_export_tests_001
+        project_id: proj_123
+        task_id: task_456
+        state_version: 21
+      created_by_surface_id: surface_local
+      created_by_surface_instance_id: surface_instance_01
+      storage_ref: artifact://artifact_account_export_test_log_001
 blocker_refs: []
 close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "The user has not accepted the account export explicit confirmation copy."
+      message: "The user has not accepted the account export confirmation copy."
 guarantee_display:
   level: cooperative
   notes:

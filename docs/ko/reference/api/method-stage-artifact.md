@@ -157,7 +157,7 @@ staged_artifact_handle:
   created_by_surface_instance_id: surface_instance_01
   content_type: text/plain
   sha256: sha256:example
-  size_bytes: 51
+  size_bytes: 65
   redaction_state: none
   expires_at: "<future-expiration-timestamp>"
   consumed: false

@@ -119,7 +119,7 @@ Close-readiness scenario data:
 
 The literal `intent=complete` selects the completion intent. It is not shorthand for the full close-readiness evaluation order.
 
-Successful close-readiness observation for the account export confirmation scenario. The evidence relies on `run_account_export_tests_001` and the resolved user judgment `uj_001`:
+Successful close-readiness observation for the account export confirmation scenario. The evidence relies on existing run ref `run_account_export_tests_001`, promoted artifact `artifact_account_export_test_log_001`, and the resolved user judgment `uj_001`:
 
 ```yaml
 close_readiness:
@@ -129,7 +129,7 @@ close_readiness:
     - "User accepted the confirmation copy."
 ```
 
-Blocked close-readiness observation for the same scenario. The test evidence is recorded in `run_account_export_tests_001`; no resolved user judgment is available:
+Blocked close-readiness observation for the same scenario. The test evidence is recorded in existing run ref `run_account_export_tests_001` with promoted artifact `artifact_account_export_test_log_001`; no resolved user judgment is available:
 
 ```yaml
 close_readiness:
@@ -199,10 +199,64 @@ evidence_summary:
           project_id: proj_123
           task_id: task_456
           state_version: 21
-      supporting_artifact_refs: []
+      supporting_artifact_refs:
+        - artifact_id: artifact_account_export_test_log_001
+          project_id: proj_123
+          task_id: task_456
+          display_name: "account_export_confirmation_test.log"
+          content_type: text/plain
+          sha256: sha256:example
+          size_bytes: 65
+          redaction_state: none
+          availability: available
+          created_by_run_ref:
+            record_kind: run
+            record_id: run_account_export_tests_001
+            project_id: proj_123
+            task_id: task_456
+            state_version: 21
+          created_by_surface_id: surface_local
+          created_by_surface_instance_id: surface_instance_01
+          storage_ref: artifact://artifact_account_export_test_log_001
       gap_refs: []
-  artifact_refs: []
-artifact_refs: []
+  artifact_refs:
+    - artifact_id: artifact_account_export_test_log_001
+      project_id: proj_123
+      task_id: task_456
+      display_name: "account_export_confirmation_test.log"
+      content_type: text/plain
+      sha256: sha256:example
+      size_bytes: 65
+      redaction_state: none
+      availability: available
+      created_by_run_ref:
+        record_kind: run
+        record_id: run_account_export_tests_001
+        project_id: proj_123
+        task_id: task_456
+        state_version: 21
+      created_by_surface_id: surface_local
+      created_by_surface_instance_id: surface_instance_01
+      storage_ref: artifact://artifact_account_export_test_log_001
+artifact_refs:
+  - artifact_id: artifact_account_export_test_log_001
+    project_id: proj_123
+    task_id: task_456
+    display_name: "account_export_confirmation_test.log"
+    content_type: text/plain
+    sha256: sha256:example
+    size_bytes: 65
+    redaction_state: none
+    availability: available
+    created_by_run_ref:
+      record_kind: run
+      record_id: run_account_export_tests_001
+      project_id: proj_123
+      task_id: task_456
+      state_version: 21
+    created_by_surface_id: surface_local
+    created_by_surface_instance_id: surface_instance_01
+    storage_ref: artifact://artifact_account_export_test_log_001
 next_actions:
   - action: harness.request_user_judgment
     reason: "Ask the user to accept the account export confirmation copy before attempting close."

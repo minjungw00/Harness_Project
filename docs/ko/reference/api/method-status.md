@@ -109,7 +109,7 @@ params:
 
 ## 대표 응답
 
-결과 분기(`StatusResult`, 읽기 전용). 이 상태 snapshot은 계정 내보내기 확인 테스트 실행과 증거 참조 기록 뒤에 관찰된 응답입니다.
+결과 분기(`StatusResult`, 읽기 전용). 이 상태 snapshot은 `harness.record_run`이 `run_account_export_tests_001`을 만들고 `artifact_account_export_test_log_001`을 증거 아티팩트로 승격한 뒤에 관찰된 응답입니다.
 
 ```yaml
 base:
@@ -134,7 +134,7 @@ active_task:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 내보내기 확인 단계를 추가하고 계정 내보내기 확인 테스트를 갱신한다."
+  scope_summary: "계정 내보내기 확인 UI를 추가하고 계정 내보내기 확인 테스트를 갱신한다."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
@@ -146,7 +146,23 @@ next_actions:
   - action: harness.request_user_judgment
     reason: "닫기 전에 계정 내보내기 확인 문구를 수락해 달라고 사용자에게 요청합니다."
 pending_user_judgments: []
-write_authority_summary: null
+write_authority_summary:
+  status: stale
+  write_authorization_ref:
+    record_kind: write_authorization
+    record_id: wa_001
+    project_id: proj_123
+    task_id: task_456
+    state_version: 20
+  basis_state_version: 19
+  intended_paths:
+    - src/account/export.ts
+    - src/account/export-confirmation.ts
+    - tests/account-export.test.ts
+  guarantee_display:
+    level: cooperative
+    notes:
+      - "쓰기 승인(`Write Authorization`)은 하네스 호환성 기록이며 OS 권한이 아닙니다."
 evidence_summary:
   status: sufficient
   coverage_items:
@@ -159,9 +175,45 @@ evidence_summary:
           project_id: proj_123
           task_id: task_456
           state_version: 21
-      supporting_artifact_refs: []
+      supporting_artifact_refs:
+        - artifact_id: artifact_account_export_test_log_001
+          project_id: proj_123
+          task_id: task_456
+          display_name: "account_export_confirmation_test.log"
+          content_type: text/plain
+          sha256: sha256:example
+          size_bytes: 65
+          redaction_state: none
+          availability: available
+          created_by_run_ref:
+            record_kind: run
+            record_id: run_account_export_tests_001
+            project_id: proj_123
+            task_id: task_456
+            state_version: 21
+          created_by_surface_id: surface_local
+          created_by_surface_instance_id: surface_instance_01
+          storage_ref: artifact://artifact_account_export_test_log_001
       gap_refs: []
-  artifact_refs: []
+  artifact_refs:
+    - artifact_id: artifact_account_export_test_log_001
+      project_id: proj_123
+      task_id: task_456
+      display_name: "account_export_confirmation_test.log"
+      content_type: text/plain
+      sha256: sha256:example
+      size_bytes: 65
+      redaction_state: none
+      availability: available
+      created_by_run_ref:
+        record_kind: run
+        record_id: run_account_export_tests_001
+        project_id: proj_123
+        task_id: task_456
+        state_version: 21
+      created_by_surface_id: surface_local
+      created_by_surface_instance_id: surface_instance_01
+      storage_ref: artifact://artifact_account_export_test_log_001
 blocker_refs: []
 close_readiness:
   ready: false
