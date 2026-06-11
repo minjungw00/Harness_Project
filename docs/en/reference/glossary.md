@@ -1,71 +1,1028 @@
-# Glossary reference
+# Glossary
 
-This document owns official terminology for Harness documentation. It defines prose meaning, Korean terminology choices, identifier preservation, expressions to avoid, and owner routing for product terms. It does not define exact schemas, value sets, DDL, storage effects, security mechanisms, API behavior, or implementation sequencing.
+This document owns official terminology for Harness documentation.
+It defines prose meaning, Korean terminology choices, identifier preservation, expressions to avoid, and owner routing for product terms.
 
-## Owns / Does not own
+It does not define exact schemas, value sets, DDL, storage effects, security mechanisms, API behavior, runtime behavior, or implementation sequencing.
 
-This document owns:
+## How to use this glossary
 
-- official English terminology for product, Core, API, storage, security, agent, projection, and later-candidate concepts
-- recommended Korean reference terms and user-facing Korean alternatives
-- term-level meaning for documentation prose
-- expressions to avoid in Korean Harness documentation
-- links from terms to canonical technical owners
+Use the summary table as a compact routing aid. Use the term cards as the editable terminology source for each term.
 
-This document does not own:
+Use this glossary with [docs/terminology-map.yaml](../../terminology-map.yaml). The glossary gives reader meaning and owner routing.
 
-- exact API field shapes or enum-like values; see API schema owners and [API Value Sets](api/schema-value-sets.md)
-- public error codes; see [API Errors](api/errors.md)
-- storage records, effects, artifacts, versioning, locks, or migrations; see storage owners through [Reference Index](README.md)
-- template bodies; see [Template Bodies](template-bodies.md)
-- implementation readiness; see [MVP Plan](../build/mvp-plan.md)
+The terminology map is the machine-readable control file for bilingual term choices, identifier preservation, and mixed-language Korean expressions to avoid.
 
-## Terminology control table
+Preserve exact identifiers in backticks in both languages.
 
-Use this table with [docs/terminology-map.yaml](../../terminology-map.yaml). The glossary gives reader meaning and owner routing; the map is the machine-readable control file. Preserve exact identifiers in backticks in both languages.
+When a card points to a schema, API, storage, security, projection, or runtime contract, follow the owner document instead of copying contract details into the glossary.
 
-| English term | Meaning | Korean reference term | Korean user-facing term | Preserve as identifier | Avoid | Owner document |
-|---|---|---|---|---|---|---|
-| Harness | Planned local work-authority server for AI-assisted product work. | 하네스 | 하네스 | - | Treating this documentation repository as a working server. | [Active MVP Scope](active-mvp-scope.md), [Runtime Boundaries](runtime-boundaries.md) |
-| Product Repository | The user's project workspace; product files are not Harness runtime state. | Product Repository | 제품 저장소 | `Product Repository` when naming the boundary | Treating product files as Harness records. | [Runtime Boundaries](runtime-boundaries.md) |
-| Harness Runtime Home | Future operational data space for Harness records and artifacts. This documentation repo is not one. | Harness Runtime Home | 런타임 홈 | `Harness Runtime Home` when naming the boundary | Treating this repo or a Product Repository as a Runtime Home. | [Runtime Boundaries](runtime-boundaries.md), storage owners through [Reference Index](README.md) |
-| documentation-only | Current repository work is documentation work only; it does not authorize runtime implementation or generated runtime records. | 문서 전용 | 문서 전용 | File paths and owner labels | implementation-complete, runtime-ready, generated operational record | [Authoring Guide](../maintain/authoring-guide.md), [Runtime Boundaries](runtime-boundaries.md), [MVP Plan](../build/mvp-plan.md) |
-| active MVP | The active product scope boundary for the first planned local work loop. | 현재 MVP | 현재 MVP | Owner titles and exact values | Treating later candidates or profile-gated values as active requirements. | [Active MVP Scope](active-mvp-scope.md), [API Value Sets](api/schema-value-sets.md) |
-| reserved value | A value name kept for future or profile-gated use; the name does not activate behavior by itself. | 예약된 값 | 예약된 값 | Exact value strings | Calling it default, required, supported, enforced, accepted, verified, close-ready, or an active guarantee. | [Active MVP Scope](active-mvp-scope.md), [API Value Sets](api/schema-value-sets.md) |
-| profile-gated value | A value usable only when the relevant profile supports it; value presence does not imply universal availability. | profile-gated 값 | profile-gated 값 | Exact value strings | Treating a profile-gated value as current MVP behavior because it appears in a value set. | [Active MVP Scope](active-mvp-scope.md), [API Value Sets](api/schema-value-sets.md) |
-| later candidate | An inactive future idea; it does not create active requirements unless the relevant owners promote it. | 이후 후보 | 이후 후보 | - | Calling deferred material an active MVP requirement. | [Later Candidate Index](../later/index.md), [Active MVP Scope](active-mvp-scope.md) |
-| owner document | The canonical document allowed to define a product concept, contract, schema family, route, or terminology rule. | 담당 문서 | 담당 문서 | File paths and anchors | secondary source of truth, copied contract owner | [Authoring Guide](../maintain/authoring-guide.md), [Reference Index](README.md) |
-| current owner | A canonical owner document that exists now and can be linked as the current source of normative meaning. | 현재 담당 문서 | 현재 담당 문서 | File paths and anchors | Naming a future owner placeholder as a current canonical owner. | [Authoring Guide](../maintain/authoring-guide.md), [Reference Index](README.md), [doc-index.yaml](../../doc-index.yaml) |
-| promotion-time owner update | Updating or creating canonical owner documents only when a later candidate is promoted. | 승격 시점의 담당 문서 갱신 | 승격 시점의 담당 문서 갱신 | File paths and anchors | Naming a future owner as if it already exists as a current canonical owner. | [Authoring Guide](../maintain/authoring-guide.md), [Later Candidate Index](../later/index.md), [Active MVP Scope](active-mvp-scope.md) |
-| future owner placeholder | A planning phrase that signals a future owner may need to be created or designated; it is not a current owner document. | 향후 담당 문서 자리표시자 | 향후 담당 문서 자리표시자 | - | Routing readers to the placeholder as if it were a current canonical owner. | [Authoring Guide](../maintain/authoring-guide.md), [Later Candidate Index](../later/index.md) |
-| `Task` | The user-value unit being shaped, executed, blocked, or closed. | `Task` | 작업, when exact entity identity is not needed | `Task`, `task_id`, `active_task_id` | Translating the identifier; using "task" for unrelated chores when the Harness entity matters. | [Core Model](core-model.md), [API State Schemas](api/schema-state.md), [API Value Sets](api/schema-value-sets.md) |
-| scope | The accepted boundary for what the current Task or Change Unit covers and excludes. | 범위 | 범위 | `scope`, `scope_decision`, `AuthorizedAttemptScope`, `SensitiveActionScope` | 스코프, silent scope expansion, broad approval | [Core Model](core-model.md), [MVP API](api/mvp-api.md), [API Judgment Schemas](api/schema-judgment.md) |
-| user-owned judgment | A decision Harness must ask or preserve instead of inferring. | 사용자 소유 판단 | 사용자 판단 | `user_judgment`, `UserJudgment`, `judgment_kind` values | Treating broad approval as acceptance, risk acceptance, scope change, or Write Authorization. | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md) |
-| close readiness | Whether the current Task can close honestly from current owner state. | 닫기 준비 상태 | 닫기 가능 여부 | `CloseReadinessBlocker` when naming the schema | close 가능성 평가, 닫기 가능성 평가 | [Core Model](core-model.md), [MVP API](api/mvp-api.md), [API Errors](api/errors.md) |
-| close readiness evaluation | The owner-path check that derives close readiness and remaining close blockers. | 닫기 준비 상태 평가 | 닫기 준비 상태 평가 | `harness.close_task`, `CloseTaskResult`, `CloseReadinessBlocker` | close 가능성 평가, 닫기 가능성 평가 | [Core Model](core-model.md), [MVP API](api/mvp-api.md), [API Errors](api/errors.md) |
-| `complete` intent value | The `harness.close_task` `intent` value or another explicit identifier. It is not the ordinary adjective meaning full or entire. | `complete` | `complete` | `complete`, `intent=complete` | Preserving `complete` in Korean prose when the meaning is full, entire, or complete evaluation. | [MVP API](api/mvp-api.md), [API Value Sets](api/schema-value-sets.md) |
-| full evaluation order | The full or entire evaluation order. English prose should prefer "full" or "entire" when "complete" could be confused with the `complete` enum. | 전체 평가 순서 | 전체 평가 순서 | - | `complete` 평가 순서, complete 평가 순서, `complete` 닫기 준비 상태 순서, complete 닫기 준비 상태 순서 | [Translation Guide](../maintain/translation-guide.md), [Terminology Map](../../terminology-map.yaml) |
-| close blocker | A close-relevant reason that prevents honest close readiness until the owner path addresses it. | 닫기 차단 사유 | 닫기 차단 사유 | `close_blockers`, `CloseReadinessBlocker` when naming API data | close blocker를 확인한다, blocker reason | [Core Model](core-model.md), [API State Schemas](api/schema-state.md), [API Errors](api/errors.md) |
-| `CloseReadinessBlocker` | API schema identifier for close-readiness blocking data; not the whole close-readiness concept. | `CloseReadinessBlocker` | 닫기 차단 사유, when not naming the schema | `CloseReadinessBlocker`, `CloseReadinessBlocker.code` | Translating the identifier; using it as a prepare-write reason. | [API State Schemas](api/schema-state.md), [API Value Sets](api/schema-value-sets.md), [API Errors](api/errors.md) |
-| artifact | Harness-associated material tracked through artifact owners; exact storage behavior belongs to artifact contracts. | 아티팩트 | 아티팩트 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle`, `artifact_id` | artifact 저장, artifact bytes, raw path as authority | [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md) |
-| `ArtifactRef` | Public pointer to a registered persistent artifact. | `ArtifactRef` | 아티팩트 참조, when not naming the schema | `ArtifactRef`, `existing_artifact_ref` | Translating the identifier; treating a displayed ref as proof of readable bytes or evidence sufficiency. | [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md) |
-| `StagedArtifactHandle` | Temporary handle returned by successful artifact staging; not persistent artifact authority by itself. | `StagedArtifactHandle` | 스테이징된 아티팩트 핸들 | `StagedArtifactHandle`, `staged_artifact_handle` | staged handle, bearer token, persistent artifact | [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md) |
-| projection | Read-only derived display or support context from owner records. | 상태 보기 | 상태 보기 | `Projection`, `ProjectionKind` when naming exact labels | Treating rendered display as Core state, evidence, acceptance, or authority. | [Projection Authority Reference](projection-and-templates.md), [Template Bodies](template-bodies.md) |
-| surface | A user, agent, tool, connector, or local context where Harness is used or observed. | 접점 | 접점 | `surface_id`, `surface_instance_id`, `VerifiedSurfaceContext` | surface 정보, surface authority, treating `surface_id` as authority proof | [Agent Integration](agent-integration.md), [Security](security.md) |
-| runtime | Future executing Harness server/runtime behavior and runtime data space. | 런타임 | 런타임 | `Harness Runtime Home` | Treating Markdown source docs as runtime state or generated runtime output. | [Runtime Boundaries](runtime-boundaries.md), [Security](security.md) |
-| `Write Authorization` | Named Core authorization for one compatible product-file write attempt; not OS permission or sensitive-action approval. | 쓰기 권한 부여 | 쓰기 권한 부여 | `Write Authorization`, `AuthorizedAttemptScope`, `WriteAuthorization.basis_state_version` | write permission, command approval, sensitive approval substitute | [Core Model](core-model.md), [Security](security.md), [MVP API](api/mvp-api.md) |
-| sensitive approval / sensitive-action approval | User judgment for a named sensitive action; keep the preferred prose as "sensitive-action approval." | 민감 동작 승인 | 민감 동작 승인 | `sensitive_approval`, `SensitiveActionScope` | Treating it as Write Authorization, final acceptance, or broad approval. | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md), [Security](security.md) |
-| access class | Classification used by API and security owners to describe protected read, mutation, artifact, and connector access expectations. | 접근 등급 | 접근 등급 | `access_class`, `VerifiedSurfaceContext.access_class` | Treating an access class as OS permission or broad authority. | [API Value Sets](api/schema-value-sets.md), [MVP API](api/mvp-api.md), [Security](security.md) |
-| active guarantee | A guarantee the current MVP actually claims; active scope and Security must both document it as current behavior. | 현재 활성 보장 | 현재 활성 보장 | Exact guarantee label values | Treating reserved or profile-gated labels as active guarantees. | [Security](security.md), [Active MVP Scope](active-mvp-scope.md), [API Value Sets](api/schema-value-sets.md) |
-| cooperative guarantee | Harness can guide, record, compare, or refuse owner-defined Harness state-changing paths when the surface follows the documented procedure. | 협력형 보장 | 협력형 보장 | `cooperative` when naming a value | Strengthening to `detective`, `preventive`, `isolated`, sandboxed, or enforced. | [Security](security.md) |
-| detective guarantee | Harness can report supported observable facts only after the relevant capability check has passed. | 탐지형 보장 | 탐지형 보장 | `detective` when naming a value | Claiming full monitoring or prevention. | [Security](security.md), [Agent Integration](agent-integration.md) |
-| preventive guarantee | Harness can prevent an action only when the exact preventive mechanism and proof path are documented. | 예방형 보장 | 예방형 보장 | `preventive` when naming a value | Claiming current-MVP sandboxing or permission control without an active owner. | [Security](security.md), [Later Candidate Index](../later/index.md) |
-| `isolated` | Reserved later/profile-gated guarantee label; it is not an active guarantee in the current MVP. | `isolated` | `isolated` | `isolated` | 격리 보장이 제공됩니다, 현재 격리됩니다, 현재 MVP가 isolated 보장을 제공합니다 | [Security](security.md), [API Value Sets](api/schema-value-sets.md) |
-| dry-run | A valid preview path for selected operations; it does not commit writes or create owner records. | dry-run 미리보기 | 미리보기 | `dry_run`, `ToolDryRunResponse`, `DryRunSummary`, `PlannedBlocker` | Treating dry-run output as committed state, stored blocker state, or `CloseReadinessBlocker`. | [API Schema Core](api/schema-core.md), [MVP API](api/mvp-api.md), [API Errors](api/errors.md), [Storage Effects](storage-effects.md) |
-| blocked result | A method-specific blocked outcome, not a public transport or schema rejection. | 차단 결과 | 차단 결과 | `CloseTaskResult(close_state=blocked)`, `decision=blocked`, `WriteDecisionReason`, `CloseReadinessBlocker` | rejected response, public error, `STATE_VERSION_CONFLICT` as blocker code | [API Errors](api/errors.md), [MVP API](api/mvp-api.md), [Storage Effects](storage-effects.md) |
-| rejected response | A `ToolRejectedResponse` branch for failures before the method proceeds to the committed operation. | 거부 응답 | 거부 응답 | `ToolRejectedResponse`, `ToolError`, `ErrorCode` | blocked result, close blocker, committed outcome | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Storage Effects](storage-effects.md) |
-| lifecycle | The allowed phase progression for a concept such as a Task or artifact handle. | 생명주기 | 생명주기 | `Task.lifecycle_phase`, `artifact_staging.status` | lifecycle 의미 | Concept-specific owner: [Core Model](core-model.md), [API Value Sets](api/schema-value-sets.md), [Artifact Storage](storage-artifacts.md) |
+## Summary table
 
-## Terminology control
+| Term | Korean reference term | Primary owner |
+|---|---|---|
+| Harness | 하네스 | [Active MVP Scope](active-mvp-scope.md) |
+| Product Repository | Product Repository | [Runtime Boundaries](runtime-boundaries.md) |
+| Harness Runtime Home | Harness Runtime Home | [Runtime Boundaries](runtime-boundaries.md) |
+| documentation-only | 문서 전용 | [Authoring Guide](../maintain/authoring-guide.md) |
+| active MVP | 현재 MVP | [Active MVP Scope](active-mvp-scope.md) |
+| later candidate | 이후 후보 | [Later Candidate Index](../later/index.md) |
+| owner document | 담당 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
+| current owner | 현재 담당 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
+| promotion-time owner update | 승격 시점의 담당 문서 갱신 | [Later Candidate Index](../later/index.md) |
+| future owner placeholder | 향후 담당 문서 자리표시자 | [Authoring Guide](../maintain/authoring-guide.md) |
+| `Task` | `Task` | [Core Model](core-model.md) |
+| scope | 범위 | [Core Model](core-model.md) |
+| user-owned judgment | 사용자 소유 판단 | [Core Model](core-model.md) |
+| close readiness | 닫기 준비 상태 | [Core Model](core-model.md) |
+| close readiness evaluation | 닫기 준비 상태 평가 | [MVP API](api/mvp-api.md) |
+| close blocker | 닫기 차단 사유 | [Core Model](core-model.md) |
+| `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API State Schemas](api/schema-state.md) |
+| complete intent | `complete` | [MVP API](api/mvp-api.md) |
+| full evaluation order | 전체 평가 순서 | [Translation Guide](../maintain/translation-guide.md) |
+| artifact | 아티팩트 | [API Artifact Schemas](api/schema-artifacts.md) |
+| `ArtifactRef` | `ArtifactRef` | [API Artifact Schemas](api/schema-artifacts.md) |
+| `StagedArtifactHandle` | `StagedArtifactHandle` | [API Artifact Schemas](api/schema-artifacts.md) |
+| projection | 상태 보기 | [Projection Authority Reference](projection-and-templates.md) |
+| surface | 접점 | [Agent Integration](agent-integration.md) |
+| runtime | 런타임 | [Runtime Boundaries](runtime-boundaries.md) |
+| `Write Authorization` | 쓰기 권한 부여 | [Core Model](core-model.md) |
+| sensitive approval | 민감 동작 승인 | [Core Model](core-model.md) |
+| access class | 접근 등급 | [API Value Sets](api/schema-value-sets.md) |
+| active guarantee | 현재 활성 보장 | [Security](security.md) |
+| cooperative guarantee | 협력형 보장 | [Security](security.md) |
+| detective guarantee | 탐지형 보장 | [Security](security.md) |
+| preventive guarantee | 예방형 보장 | [Security](security.md) |
+| `isolated` | `isolated` | [Security](security.md) |
+| reserved value | 예약된 값 | [Active MVP Scope](active-mvp-scope.md) |
+| profile-gated value | profile-gated 값 | [Active MVP Scope](active-mvp-scope.md) |
+| dry-run | dry-run 미리보기 | [API Schema Core](api/schema-core.md) |
+| blocked result | 차단 결과 | [API Errors](api/errors.md) |
+| rejected response | 거부 응답 | [API Schema Core](api/schema-core.md) |
+| lifecycle | 생명주기 | [Core Model](core-model.md) |
 
-[docs/terminology-map.yaml](../../terminology-map.yaml) is the canonical machine-readable terminology control file for bilingual term choices, identifier preservation, and mixed-language expressions to avoid. Keep this glossary and the terminology map aligned in the same documentation-only batch whenever terminology changes.
+## Terms
+
+### Harness
+
+English:
+- Harness
+
+Korean:
+- Reference: 하네스
+- User-facing: 하네스
+
+Preserve:
+- Harness when naming the product
+
+Avoid:
+- Treating this documentation repository as a working server.
+
+Owner:
+- [Active MVP Scope](active-mvp-scope.md)
+- [Runtime Boundaries](runtime-boundaries.md)
+
+Notes:
+- Harness is the planned local work-authority server for AI-assisted product work.
+
+### Product Repository
+
+English:
+- Product Repository
+
+Korean:
+- Reference: Product Repository
+- User-facing: 제품 저장소
+
+Preserve:
+- `Product Repository` when naming the boundary
+
+Avoid:
+- Treating product files as Harness records.
+
+Owner:
+- [Runtime Boundaries](runtime-boundaries.md)
+
+Notes:
+- The Product Repository is the user's project workspace, not Harness runtime state.
+
+### Harness Runtime Home
+
+English:
+- Harness Runtime Home
+
+Korean:
+- Reference: Harness Runtime Home
+- User-facing: 런타임 홈
+
+Preserve:
+- `Harness Runtime Home` when naming the boundary
+
+Avoid:
+- Treating this documentation repository or a Product Repository as a Runtime Home.
+
+Owner:
+- [Runtime Boundaries](runtime-boundaries.md)
+
+Notes:
+- The Harness Runtime Home is the future operational data space for Harness records and artifacts.
+
+### documentation-only
+
+English:
+- documentation-only
+
+Korean:
+- Reference: 문서 전용
+- User-facing: 문서 전용
+
+Preserve:
+- File paths and owner labels
+
+Avoid:
+- implementation-complete
+- runtime-ready
+- generated operational record
+
+Owner:
+- [Authoring Guide](../maintain/authoring-guide.md)
+- [Runtime Boundaries](runtime-boundaries.md)
+- [MVP Plan](../build/mvp-plan.md)
+
+Notes:
+- Documentation-only work does not authorize runtime implementation or generated runtime records.
+
+### active MVP
+
+English:
+- active MVP
+- current MVP
+
+Korean:
+- Reference: 현재 MVP
+- User-facing: 현재 MVP
+
+Preserve:
+- Owner titles and exact value strings
+
+Avoid:
+- Treating later candidates or profile-gated values as active requirements.
+
+Owner:
+- [Active MVP Scope](active-mvp-scope.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- Active MVP is the active product scope boundary for the first planned local work loop.
+
+### later candidate
+
+English:
+- later candidate
+
+Korean:
+- Reference: 이후 후보
+- User-facing: 이후 후보
+
+Preserve:
+- Exact owner paths when routing promotion requirements
+
+Avoid:
+- Calling deferred material an active MVP requirement.
+
+Owner:
+- [Later Candidate Index](../later/index.md)
+- [Active MVP Scope](active-mvp-scope.md)
+
+Notes:
+- A later candidate is inactive until the relevant owners promote it.
+
+### owner document
+
+English:
+- owner document
+
+Korean:
+- Reference: 담당 문서
+- User-facing: 담당 문서
+
+Preserve:
+- File paths
+- Anchors
+- `doc_id` values
+
+Avoid:
+- secondary source of truth
+- copied contract owner
+
+Owner:
+- [Authoring Guide](../maintain/authoring-guide.md)
+- [Reference Index](README.md)
+
+Notes:
+- An owner document is the canonical document allowed to define a product concept, contract, schema family, route, or terminology rule.
+
+### current owner
+
+English:
+- current owner
+- current canonical owner
+- current owner document
+
+Korean:
+- Reference: 현재 담당 문서
+- User-facing: 현재 담당 문서
+
+Preserve:
+- File paths
+- Anchors
+- `doc_id` values
+
+Avoid:
+- Naming a future owner placeholder as a current canonical owner.
+
+Owner:
+- [Authoring Guide](../maintain/authoring-guide.md)
+- [Reference Index](README.md)
+- [doc-index.yaml](../../doc-index.yaml)
+
+Notes:
+- Use this only when the canonical owner exists now and can be linked as the current source of normative meaning.
+
+### promotion-time owner update
+
+English:
+- promotion-time owner update
+
+Korean:
+- Reference: 승격 시점의 담당 문서 갱신
+- User-facing: 승격 시점의 담당 문서 갱신
+
+Preserve:
+- File paths
+- Anchors
+
+Avoid:
+- Naming a future owner as if it already exists as a current canonical owner.
+
+Owner:
+- [Authoring Guide](../maintain/authoring-guide.md)
+- [Later Candidate Index](../later/index.md)
+- [Active MVP Scope](active-mvp-scope.md)
+
+Notes:
+- Promotion may require creating or designating an owner, then updating active scope, schemas, API behavior, storage, templates, checks, and paired-language docs as applicable.
+
+### future owner placeholder
+
+English:
+- future owner placeholder
+
+Korean:
+- Reference: 향후 담당 문서 자리표시자
+- User-facing: 향후 담당 문서 자리표시자
+
+Preserve:
+- Exact owner-gap wording when routing later candidates
+
+Avoid:
+- Routing readers to the placeholder as if it were a current canonical owner.
+
+Owner:
+- [Authoring Guide](../maintain/authoring-guide.md)
+- [Later Candidate Index](../later/index.md)
+
+Notes:
+- Use this phrase only to signal that a later candidate may need an owner created or designated at promotion time.
+
+### `Task`
+
+English:
+- `Task`
+
+Korean:
+- Reference: `Task`
+- User-facing: 작업, when exact entity identity is not needed
+
+Preserve:
+- `Task`
+- `task_id`
+- `active_task_id`
+
+Avoid:
+- Translating the identifier.
+- Using "task" for unrelated chores when the Harness entity matters.
+
+Owner:
+- [Core Model](core-model.md)
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- `Task` is the user-value unit being shaped, executed, blocked, or closed.
+
+### scope
+
+English:
+- scope
+
+Korean:
+- Reference: 범위
+- User-facing: 범위
+
+Preserve:
+- `scope`
+- `scope_decision`
+- `AuthorizedAttemptScope`
+- `SensitiveActionScope`
+
+Avoid:
+- 스코프
+- silent scope expansion
+- broad approval
+
+Owner:
+- [Core Model](core-model.md)
+- [MVP API](api/mvp-api.md)
+- [API Judgment Schemas](api/schema-judgment.md)
+
+Notes:
+- Scope is the accepted boundary for what the current `Task` or Change Unit covers and excludes.
+
+### user-owned judgment
+
+English:
+- user-owned judgment
+
+Korean:
+- Reference: 사용자 소유 판단
+- User-facing: 사용자 판단
+
+Preserve:
+- `user_judgment`
+- `UserJudgment`
+- `judgment_kind`
+
+Avoid:
+- Treating broad approval as acceptance, risk acceptance, scope change, sensitive-action approval, or Write Authorization.
+
+Owner:
+- [Core Model](core-model.md)
+- [API Judgment Schemas](api/schema-judgment.md)
+
+Notes:
+- Harness must ask for or preserve user-owned judgment instead of inferring it.
+
+### close readiness
+
+English:
+- close readiness
+
+Korean:
+- Reference: 닫기 준비 상태
+- User-facing: 닫기 가능 여부
+
+Preserve:
+- `CloseReadinessBlocker`
+
+Avoid:
+- close 가능성 평가
+- 닫기 가능성 평가
+
+Owner:
+- [Core Model](core-model.md)
+- [MVP API](api/mvp-api.md)
+- [API Errors](api/errors.md)
+
+Notes:
+- This is the evaluation concept, not the blocker schema.
+
+### close readiness evaluation
+
+English:
+- close readiness evaluation
+
+Korean:
+- Reference: 닫기 준비 상태 평가
+- User-facing: 닫기 준비 상태 평가
+
+Preserve:
+- `harness.close_task`
+- `CloseTaskResult`
+- `CloseReadinessBlocker`
+
+Avoid:
+- close 가능성 평가
+- 닫기 가능성 평가
+
+Owner:
+- [Core Model](core-model.md)
+- [MVP API](api/mvp-api.md)
+- [API Errors](api/errors.md)
+
+Notes:
+- This is the owner-path check that derives close readiness and remaining close blockers.
+
+### close blocker
+
+English:
+- close blocker
+
+Korean:
+- Reference: 닫기 차단 사유
+- User-facing: 닫기 차단 사유
+
+Preserve:
+- `close_blockers`
+- `CloseReadinessBlocker`
+
+Avoid:
+- close blocker를 확인한다
+- blocker reason
+
+Owner:
+- [Core Model](core-model.md)
+- [API State Schemas](api/schema-state.md)
+- [API Errors](api/errors.md)
+
+Notes:
+- Use this for a close-relevant reason that prevents honest close readiness until the owner path addresses it.
+
+### `CloseReadinessBlocker`
+
+English:
+- `CloseReadinessBlocker`
+
+Korean:
+- Reference: `CloseReadinessBlocker`
+- User-facing: 닫기 차단 사유, when not naming the schema
+
+Preserve:
+- `CloseReadinessBlocker`
+- `CloseReadinessBlocker.code`
+
+Avoid:
+- Translating the identifier.
+- Using it as a prepare-write reason.
+- Using it as the whole close-readiness concept.
+
+Owner:
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
+- [API Errors](api/errors.md)
+
+Notes:
+- `CloseReadinessBlocker` is the API schema identifier for close-readiness blocking data.
+
+### complete intent
+
+English:
+- complete intent
+- `complete` when naming the intent value
+
+Korean:
+- Reference: `complete`
+- User-facing: `complete`
+
+Preserve:
+- `complete`
+- `intent=complete`
+
+Avoid:
+- Preserving `complete` in Korean prose when the meaning is full, entire, or complete evaluation.
+
+Owner:
+- [MVP API](api/mvp-api.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- Preserve `complete` only when it is an enum value or explicit identifier.
+
+### full evaluation order
+
+English:
+- full evaluation order
+- entire evaluation order
+
+Korean:
+- Reference: 전체 평가 순서
+- User-facing: 전체 평가 순서
+
+Preserve:
+- None specific
+
+Avoid:
+- `complete` 평가 순서
+- complete 평가 순서
+- `complete` 닫기 준비 상태 순서
+- complete 닫기 준비 상태 순서
+
+Owner:
+- [Translation Guide](../maintain/translation-guide.md)
+- [Terminology Map](../../terminology-map.yaml)
+
+Notes:
+- English prose should prefer "full" or "entire" when "complete" could be confused with the `complete` enum.
+- Use 전체 닫기 준비 상태 평가 순서 for the full close-readiness evaluation order in Korean.
+
+### artifact
+
+English:
+- artifact
+
+Korean:
+- Reference: 아티팩트
+- User-facing: 아티팩트
+
+Preserve:
+- `ArtifactRef`
+- `ArtifactInput`
+- `StagedArtifactHandle`
+- `artifact_id`
+
+Avoid:
+- artifact 저장
+- artifact bytes
+- raw path as authority
+
+Owner:
+- [API Artifact Schemas](api/schema-artifacts.md)
+- [Artifact Storage](storage-artifacts.md)
+
+Notes:
+- Artifact storage behavior belongs to artifact contracts, not to the general term.
+
+### `ArtifactRef`
+
+English:
+- `ArtifactRef`
+
+Korean:
+- Reference: `ArtifactRef`
+- User-facing: 아티팩트 참조, when not naming the schema
+
+Preserve:
+- `ArtifactRef`
+- `existing_artifact_ref`
+
+Avoid:
+- Translating the identifier.
+- Treating a displayed ref as proof of readable bytes or evidence sufficiency.
+
+Owner:
+- [API Artifact Schemas](api/schema-artifacts.md)
+- [Artifact Storage](storage-artifacts.md)
+
+Notes:
+- `ArtifactRef` is a public pointer to a registered persistent artifact.
+
+### `StagedArtifactHandle`
+
+English:
+- `StagedArtifactHandle`
+
+Korean:
+- Reference: `StagedArtifactHandle`
+- User-facing: 스테이징된 아티팩트 핸들
+
+Preserve:
+- `StagedArtifactHandle`
+- `staged_artifact_handle`
+
+Avoid:
+- staged handle
+- bearer token
+- persistent artifact
+
+Owner:
+- [API Artifact Schemas](api/schema-artifacts.md)
+- [Artifact Storage](storage-artifacts.md)
+
+Notes:
+- `StagedArtifactHandle` is temporary and is not persistent artifact authority by itself.
+
+### projection
+
+English:
+- projection
+
+Korean:
+- Reference: 상태 보기
+- User-facing: 상태 보기
+
+Preserve:
+- `Projection`
+- `ProjectionKind`
+
+Avoid:
+- Treating rendered display as Core state, evidence, acceptance, or authority.
+
+Owner:
+- [Projection Authority Reference](projection-and-templates.md)
+- [Template Bodies](template-bodies.md)
+
+Notes:
+- Projection is read-only derived display or support context from owner records.
+
+### surface
+
+English:
+- surface
+
+Korean:
+- Reference: 접점
+- User-facing: 접점
+
+Preserve:
+- `surface_id`
+- `surface_instance_id`
+- `VerifiedSurfaceContext`
+
+Avoid:
+- surface 정보
+- surface authority
+- Treating `surface_id` as authority proof.
+
+Owner:
+- [Agent Integration](agent-integration.md)
+- [Security](security.md)
+
+Notes:
+- A surface is a user, agent, tool, connector, or local context where Harness is used or observed.
+
+### runtime
+
+English:
+- runtime
+
+Korean:
+- Reference: 런타임
+- User-facing: 런타임
+
+Preserve:
+- `Harness Runtime Home`
+
+Avoid:
+- Treating Markdown source docs as runtime state.
+- Treating Markdown source docs as generated runtime output.
+
+Owner:
+- [Runtime Boundaries](runtime-boundaries.md)
+- [Security](security.md)
+
+Notes:
+- Runtime means future executing Harness server/runtime behavior and runtime data space.
+
+### `Write Authorization`
+
+English:
+- `Write Authorization`
+
+Korean:
+- Reference: 쓰기 권한 부여
+- User-facing: 쓰기 권한 부여
+
+Preserve:
+- `Write Authorization`
+- `AuthorizedAttemptScope`
+- `WriteAuthorization.basis_state_version`
+
+Avoid:
+- write permission
+- command approval
+- sensitive approval substitute
+
+Owner:
+- [Core Model](core-model.md)
+- [Security](security.md)
+- [MVP API](api/mvp-api.md)
+
+Notes:
+- `Write Authorization` is the named Core authorization for one compatible product-file write attempt.
+- It is not OS permission or sensitive-action approval.
+
+### sensitive approval
+
+English:
+- sensitive approval
+- sensitive-action approval
+
+Korean:
+- Reference: 민감 동작 승인
+- User-facing: 민감 동작 승인
+
+Preserve:
+- `sensitive_approval`
+- `SensitiveActionScope`
+
+Avoid:
+- Treating it as Write Authorization.
+- Treating it as final acceptance.
+- Treating it as broad approval.
+
+Owner:
+- [Core Model](core-model.md)
+- [API Judgment Schemas](api/schema-judgment.md)
+- [Security](security.md)
+
+Notes:
+- Prefer "sensitive-action approval" in English prose.
+
+### access class
+
+English:
+- access class
+
+Korean:
+- Reference: 접근 등급
+- User-facing: 접근 등급
+
+Preserve:
+- `access_class`
+- `VerifiedSurfaceContext.access_class`
+
+Avoid:
+- Treating an access class as OS permission.
+- Treating an access class as broad authority.
+
+Owner:
+- [API Value Sets](api/schema-value-sets.md)
+- [MVP API](api/mvp-api.md)
+- [Security](security.md)
+
+Notes:
+- Access class is a classification used by API and security owners to describe protected access expectations.
+
+### active guarantee
+
+English:
+- active guarantee
+
+Korean:
+- Reference: 현재 활성 보장
+- User-facing: 현재 활성 보장
+
+Preserve:
+- Exact guarantee label values
+
+Avoid:
+- Treating reserved or profile-gated labels as active guarantees.
+
+Owner:
+- [Security](security.md)
+- [Active MVP Scope](active-mvp-scope.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- A guarantee is active only when active scope and Security both document it as current behavior.
+
+### cooperative guarantee
+
+English:
+- cooperative guarantee
+
+Korean:
+- Reference: 협력형 보장
+- User-facing: 협력형 보장
+
+Preserve:
+- `cooperative`
+
+Avoid:
+- Strengthening cooperative wording into detective, preventive, isolated, sandboxed, or enforced wording.
+
+Owner:
+- [Security](security.md)
+
+Notes:
+- Cooperative guarantee wording depends on the surface following the documented procedure.
+
+### detective guarantee
+
+English:
+- detective guarantee
+
+Korean:
+- Reference: 탐지형 보장
+- User-facing: 탐지형 보장
+
+Preserve:
+- `detective`
+
+Avoid:
+- Claiming full monitoring.
+- Claiming prevention.
+
+Owner:
+- [Security](security.md)
+- [Agent Integration](agent-integration.md)
+
+Notes:
+- Use detective guarantee only when the documented observable scope and capability check support it.
+
+### preventive guarantee
+
+English:
+- preventive guarantee
+
+Korean:
+- Reference: 예방형 보장
+- User-facing: 예방형 보장
+
+Preserve:
+- `preventive`
+
+Avoid:
+- Claiming current-MVP sandboxing without an active owner.
+- Claiming permission control without an active owner.
+
+Owner:
+- [Security](security.md)
+- [Later Candidate Index](../later/index.md)
+
+Notes:
+- Use preventive guarantee only when the exact preventive mechanism and proof path are documented.
+
+### `isolated`
+
+English:
+- `isolated`
+
+Korean:
+- Reference: `isolated`
+- User-facing: `isolated`
+
+Preserve:
+- `isolated`
+
+Avoid:
+- 격리 보장이 제공됩니다
+- 현재 격리됩니다
+- 현재 MVP가 isolated 보장을 제공합니다
+
+Owner:
+- [Security](security.md)
+- [Active MVP Scope](active-mvp-scope.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- `isolated` is a reserved later/profile-gated guarantee label, not an active current-MVP guarantee.
+
+### reserved value
+
+English:
+- reserved value
+
+Korean:
+- Reference: 예약된 값
+- User-facing: 예약된 값
+
+Preserve:
+- Exact value strings
+
+Avoid:
+- default
+- required
+- supported
+- enforced
+- accepted
+- verified
+- close-ready
+- active guarantee
+
+Owner:
+- [Active MVP Scope](active-mvp-scope.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- A reserved value may exist as vocabulary or future surface area without activating behavior.
+
+### profile-gated value
+
+English:
+- profile-gated value
+
+Korean:
+- Reference: profile-gated 값
+- User-facing: profile-gated 값
+
+Preserve:
+- Exact value strings
+
+Avoid:
+- Treating a profile-gated value as current MVP behavior because it appears in a value set.
+
+Owner:
+- [Active MVP Scope](active-mvp-scope.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- A profile-gated value is available only when the relevant profile and owner behavior are active.
+
+### dry-run
+
+English:
+- dry-run
+
+Korean:
+- Reference: dry-run 미리보기
+- User-facing: 미리보기
+
+Preserve:
+- `dry_run`
+- `ToolDryRunResponse`
+- `DryRunSummary`
+- `PlannedBlocker`
+
+Avoid:
+- Treating dry-run output as committed state.
+- Treating dry-run output as stored blocker state.
+- Treating `PlannedBlocker` as `CloseReadinessBlocker`.
+
+Owner:
+- [API Schema Core](api/schema-core.md)
+- [MVP API](api/mvp-api.md)
+- [API Errors](api/errors.md)
+- [Storage Effects](storage-effects.md)
+
+Notes:
+- Dry-run is a valid preview path for selected operations and does not commit writes or create owner records.
+
+### blocked result
+
+English:
+- blocked result
+
+Korean:
+- Reference: 차단 결과
+- User-facing: 차단 결과
+
+Preserve:
+- `CloseTaskResult(close_state=blocked)`
+- `decision=blocked`
+- `WriteDecisionReason`
+- `CloseReadinessBlocker`
+
+Avoid:
+- rejected response
+- public error
+- `STATE_VERSION_CONFLICT` as blocker code
+
+Owner:
+- [API Errors](api/errors.md)
+- [MVP API](api/mvp-api.md)
+- [Storage Effects](storage-effects.md)
+
+Notes:
+- A blocked result is method-specific and is not a public transport or schema rejection.
+
+### rejected response
+
+English:
+- rejected response
+
+Korean:
+- Reference: 거부 응답
+- User-facing: 거부 응답
+
+Preserve:
+- `ToolRejectedResponse`
+- `ToolError`
+- `ErrorCode`
+
+Avoid:
+- blocked result
+- close blocker
+- committed outcome
+
+Owner:
+- [API Schema Core](api/schema-core.md)
+- [API Errors](api/errors.md)
+- [Storage Effects](storage-effects.md)
+
+Notes:
+- A rejected response means the method failed before proceeding to the committed operation.
+
+### lifecycle
+
+English:
+- lifecycle
+
+Korean:
+- Reference: 생명주기
+- User-facing: 생명주기
+
+Preserve:
+- `Task.lifecycle_phase`
+- `artifact_staging.status`
+
+Avoid:
+- lifecycle 의미
+
+Owner:
+- [Core Model](core-model.md)
+- [API Value Sets](api/schema-value-sets.md)
+- [Artifact Storage](storage-artifacts.md)
+
+Notes:
+- Use lifecycle for the allowed phase progression of a concept such as a `Task` or artifact handle.

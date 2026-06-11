@@ -390,6 +390,9 @@ terms:
   complete_intent:
     category: "identifier"
     en: "complete"
+    aliases_en:
+      - "complete intent"
+      - "`complete` intent value"
     ko_reference: "`complete`"
     ko_user: "`complete`"
     preserve_identifier: true
