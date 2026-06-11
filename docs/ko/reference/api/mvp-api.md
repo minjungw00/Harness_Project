@@ -370,24 +370,27 @@ params:
     locale: ko-KR
   task_id: task_456
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_boundary: "계정 내보내기 흐름과 해당 테스트만."
+  scope_boundary: "포함 범위: 계정 데이터 내보내기 확인 UI를 추가한다. 계정 내보내기 테스트를 갱신한다."
   non_goals:
-    - "계정 삭제 동작 변경"
+    - "계정 삭제 동작"
+    - "청구 내보내기 동작"
   acceptance_criteria:
-    - "다운로드 전에 계정 내보내기 확인이 필요하다."
-  autonomy_boundary: "계정 내보내기 동작과 테스트 범위 안에서만 작업한다."
+    - "계정 데이터 내보내기 전에 명시적 확인이 필요하다."
+  autonomy_boundary: "계정 데이터 내보내기 확인 UI와 계정 내보내기 테스트 범위 안에서만 작업한다."
   baseline_ref: baseline_account_export_001
   change_unit:
     operation: create_active
-    scope_summary: "계정 내보내기 흐름에 확인 처리를 추가한다."
+    scope_summary: "계정 데이터 내보내기 확인 UI를 추가하고 계정 내보내기 테스트를 갱신한다."
     affected_areas:
-      - "계정 내보내기"
+      - "계정 데이터 내보내기 확인 UI"
+      - "계정 내보내기 테스트"
     affected_paths:
       - src/account/export.ts
       - src/account/export-confirmation.ts
       - tests/account-export.test.ts
     constraints:
-      - "계정 삭제 동작은 바꾸지 않는다."
+      - "계정 삭제 동작은 범위에서 제외한다."
+      - "청구 내보내기 동작은 범위에서 제외한다."
   related_scope_decision_refs: []
 ```
 
@@ -435,7 +438,7 @@ state:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 내보내기 흐름과 해당 테스트만."
+  scope_summary: "계정 데이터 내보내기 확인 UI를 추가한다. 계정 내보내기 테스트를 갱신한다."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001

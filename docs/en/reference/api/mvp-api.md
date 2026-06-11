@@ -247,24 +247,27 @@ params:
     locale: en-US
   task_id: task_456
   goal_summary: "Add explicit confirmation before account data export."
-  scope_boundary: "Only the account export flow and its tests."
+  scope_boundary: "Add confirmation UI for account data export. Update account export tests."
   non_goals:
-    - "Changing account deletion behavior"
+    - "Account deletion behavior"
+    - "Billing export behavior"
   acceptance_criteria:
-    - "Account export requires explicit confirmation before download."
-  autonomy_boundary: "Stay within account export behavior and tests."
+    - "Account data export requires explicit confirmation before download."
+  autonomy_boundary: "Stay within account data export confirmation UI and account export tests."
   baseline_ref: baseline_account_export_001
   change_unit:
     operation: create_active
-    scope_summary: "Add confirmation handling to the account export flow."
+    scope_summary: "Add confirmation UI for account data export and update account export tests."
     affected_areas:
-      - "Account export"
+      - "Account data export confirmation UI"
+      - "Account export tests"
     affected_paths:
       - src/account/export.ts
       - src/account/export-confirmation.ts
       - tests/account-export.test.ts
     constraints:
       - "Keep account deletion behavior unchanged."
+      - "Keep billing export behavior unchanged."
   related_scope_decision_refs: []
 ```
 
@@ -312,7 +315,7 @@ state:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Only the account export flow and its tests."
+  scope_summary: "Add confirmation UI for account data export. Update account export tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
