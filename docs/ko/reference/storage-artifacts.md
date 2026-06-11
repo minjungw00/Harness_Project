@@ -49,6 +49,18 @@
 
 성공한 `harness.stage_artifact`는 `base.effect_kind=staging_created`인 `StageArtifactResult`를 반환합니다. 저장소는 `artifacts/tmp/` 아래 안전한 아티팩트 바이트 또는 안전한 알림을 둘 수 있고, `artifact_staging` 또는 동등한 저장소 소유 스테이징 기록을 만들 수 있습니다.
 
+스테이징할 아티팩트 데이터 예시는 아래와 같습니다.
+
+```yaml
+artifact:
+  kind: test_log
+  name: account_export_confirmation_test.log
+  description: "계정 내보내기 확인 동작 테스트 출력."
+staged_artifact_handle: staged_artifact_account_export_test_log_001
+```
+
+이 예시는 제품 테스트 출력을 스테이징하는 입력을 나타냅니다. 지속 `ArtifactRef`가 아니며, 호환되는 담당 메서드가 계약에 따라 기록하고 승격하기 전에는 정식 증거가 아닙니다.
+
 스테이징 기록은 적어도 아래 사실을 추적합니다.
 
 | 분류 | 저장되는 사실 |

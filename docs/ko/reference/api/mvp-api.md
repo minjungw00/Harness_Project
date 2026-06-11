@@ -884,6 +884,18 @@ write_decision_reasons:
 
 성공 시 임시 스테이징 결과만 만듭니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당하고, 아티팩트 생명주기 세부사항은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
+### 아티팩트 데이터 예시
+
+스테이징할 아티팩트는 안정적인 제품 테스트 출력입니다. 임시 스테이징 핸들은 나중에 `harness.record_run`에 제출할 수 있지만, 스테이징만으로 정식 증거가 생기지는 않습니다.
+
+```yaml
+artifact:
+  kind: test_log
+  name: account_export_confirmation_test.log
+  description: "계정 내보내기 확인 동작 테스트 출력."
+staged_artifact_handle: staged_artifact_account_export_test_log_001
+```
+
 ### 최소 유효 요청
 
 ```yaml
@@ -900,13 +912,13 @@ params:
     dry_run: false
     locale: ko-KR
   task_id: task_456
-  display_name: "계정 내보내기 테스트 로그"
+  display_name: "account_export_confirmation_test.log"
   content_type: text/plain
   redaction_state: none
-  safe_bytes_or_notice: "명시적 확인 단계를 포함한 계정 내보내기 테스트가 통과했습니다."
+  safe_bytes_or_notice: "계정 내보내기 확인 동작 테스트 출력."
   expected_sha256: null
   expected_size_bytes: null
-  relation_hint: "run_note"
+  relation_hint: "test_log"
 ```
 
 ### 대표 응답
@@ -921,7 +933,7 @@ base:
   state_version: null
   events: []
 staged_artifact_handle:
-  handle_id: sah_001
+  handle_id: staged_artifact_account_export_test_log_001
   project_id: proj_123
   task_id: task_456
   created_by_surface_id: surface_local
@@ -1076,7 +1088,7 @@ params:
     - artifact_input_id: artifact_input_account_export_test_log_001
       source_kind: staged_artifact
       staged_artifact_handle:
-        handle_id: sah_001
+        handle_id: staged_artifact_account_export_test_log_001
         project_id: proj_123
         task_id: task_456
         created_by_surface_id: surface_local
@@ -1089,7 +1101,7 @@ params:
         consumed: false
       existing_artifact_ref: null
       relation_hint: "test_log"
-      claim: "계정 내보내기 확인 테스트가 통과했습니다."
+      claim: "계정 내보내기 확인 동작 테스트 출력."
       expected_sha256: null
       expected_size_bytes: null
       redaction_state: none
@@ -1136,7 +1148,7 @@ run_summary:
     - artifact_id: artifact_account_export_test_log_001
       project_id: proj_123
       task_id: task_456
-      display_name: "계정 내보내기 테스트 로그"
+      display_name: "account_export_confirmation_test.log"
       content_type: text/plain
       sha256: sha256:example
       size_bytes: 65
@@ -1155,7 +1167,7 @@ registered_artifacts:
   - artifact_id: artifact_account_export_test_log_001
     project_id: proj_123
     task_id: task_456
-    display_name: "계정 내보내기 테스트 로그"
+    display_name: "account_export_confirmation_test.log"
     content_type: text/plain
     sha256: sha256:example
     size_bytes: 65
@@ -1186,7 +1198,7 @@ evidence_summary:
         - artifact_id: artifact_account_export_test_log_001
           project_id: proj_123
           task_id: task_456
-          display_name: "계정 내보내기 테스트 로그"
+          display_name: "account_export_confirmation_test.log"
           content_type: text/plain
           sha256: sha256:example
           size_bytes: 65
@@ -1206,7 +1218,7 @@ evidence_summary:
     - artifact_id: artifact_account_export_test_log_001
       project_id: proj_123
       task_id: task_456
-      display_name: "계정 내보내기 테스트 로그"
+      display_name: "account_export_confirmation_test.log"
       content_type: text/plain
       sha256: sha256:example
       size_bytes: 65
@@ -1353,7 +1365,7 @@ params:
       - artifact_id: artifact_account_export_test_log_001
         project_id: proj_123
         task_id: task_456
-        display_name: "계정 내보내기 테스트 로그"
+        display_name: "account_export_confirmation_test.log"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1417,7 +1429,7 @@ user_judgment:
       - artifact_id: artifact_account_export_test_log_001
         project_id: proj_123
         task_id: task_456
-        display_name: "계정 내보내기 테스트 로그"
+        display_name: "account_export_confirmation_test.log"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1604,7 +1616,7 @@ user_judgment:
       - artifact_id: artifact_account_export_test_log_001
         project_id: proj_123
         task_id: task_456
-        display_name: "계정 내보내기 테스트 로그"
+        display_name: "account_export_confirmation_test.log"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65

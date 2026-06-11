@@ -640,6 +640,18 @@ For `dry_run=true`, a valid staging preview returns `ToolDryRunResponse`, not `S
 
 On success, the method creates a temporary staging result only. Exact storage effects are owned by [Storage Effects](../storage-effects.md), and artifact lifecycle details are owned by [Artifact Storage](../storage-artifacts.md).
 
+### Artifact data example
+
+The staged artifact is stable product test output. The temporary handle can later be submitted to `harness.record_run`, but staging alone does not create canonical evidence.
+
+```yaml
+artifact:
+  kind: test_log
+  name: account_export_confirmation_test.log
+  description: "Test output for account export confirmation behavior."
+staged_artifact_handle: staged_artifact_account_export_test_log_001
+```
+
 ### Minimal valid request
 
 ```yaml
@@ -656,13 +668,13 @@ params:
     dry_run: false
     locale: en-US
   task_id: task_456
-  display_name: "Account export test log"
+  display_name: "account_export_confirmation_test.log"
   content_type: text/plain
   redaction_state: none
-  safe_bytes_or_notice: "Account export tests passed with explicit confirmation coverage."
+  safe_bytes_or_notice: "Test output for account export confirmation behavior."
   expected_sha256: null
   expected_size_bytes: null
-  relation_hint: "run_note"
+  relation_hint: "test_log"
 ```
 
 ### Representative response
@@ -677,7 +689,7 @@ base:
   state_version: null
   events: []
 staged_artifact_handle:
-  handle_id: sah_001
+  handle_id: staged_artifact_account_export_test_log_001
   project_id: proj_123
   task_id: task_456
   created_by_surface_id: surface_local
@@ -776,7 +788,7 @@ params:
     - artifact_input_id: artifact_input_account_export_test_log_001
       source_kind: staged_artifact
       staged_artifact_handle:
-        handle_id: sah_001
+        handle_id: staged_artifact_account_export_test_log_001
         project_id: proj_123
         task_id: task_456
         created_by_surface_id: surface_local
@@ -789,7 +801,7 @@ params:
         consumed: false
       existing_artifact_ref: null
       relation_hint: "test_log"
-      claim: "Account export confirmation tests passed."
+      claim: "Test output for account export confirmation behavior."
       expected_sha256: null
       expected_size_bytes: null
       redaction_state: none
@@ -836,7 +848,7 @@ run_summary:
     - artifact_id: artifact_account_export_test_log_001
       project_id: proj_123
       task_id: task_456
-      display_name: "Account export test log"
+      display_name: "account_export_confirmation_test.log"
       content_type: text/plain
       sha256: sha256:example
       size_bytes: 65
@@ -855,7 +867,7 @@ registered_artifacts:
   - artifact_id: artifact_account_export_test_log_001
     project_id: proj_123
     task_id: task_456
-    display_name: "Account export test log"
+    display_name: "account_export_confirmation_test.log"
     content_type: text/plain
     sha256: sha256:example
     size_bytes: 65
@@ -886,7 +898,7 @@ evidence_summary:
         - artifact_id: artifact_account_export_test_log_001
           project_id: proj_123
           task_id: task_456
-          display_name: "Account export test log"
+          display_name: "account_export_confirmation_test.log"
           content_type: text/plain
           sha256: sha256:example
           size_bytes: 65
@@ -906,7 +918,7 @@ evidence_summary:
     - artifact_id: artifact_account_export_test_log_001
       project_id: proj_123
       task_id: task_456
-      display_name: "Account export test log"
+      display_name: "account_export_confirmation_test.log"
       content_type: text/plain
       sha256: sha256:example
       size_bytes: 65
@@ -1023,7 +1035,7 @@ params:
       - artifact_id: artifact_account_export_test_log_001
         project_id: proj_123
         task_id: task_456
-        display_name: "Account export test log"
+        display_name: "account_export_confirmation_test.log"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1087,7 +1099,7 @@ user_judgment:
       - artifact_id: artifact_account_export_test_log_001
         project_id: proj_123
         task_id: task_456
-        display_name: "Account export test log"
+        display_name: "account_export_confirmation_test.log"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1236,7 +1248,7 @@ user_judgment:
       - artifact_id: artifact_account_export_test_log_001
         project_id: proj_123
         task_id: task_456
-        display_name: "Account export test log"
+        display_name: "account_export_confirmation_test.log"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
