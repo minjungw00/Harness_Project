@@ -1,4 +1,4 @@
-# Later: Artifacts and evidence
+# Later: artifacts and evidence
 
 <a id="what-this-document-owns"></a>
 ## Owns / Does not own

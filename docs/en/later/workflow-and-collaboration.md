@@ -1,4 +1,4 @@
-# Later: Workflow and collaboration
+# Later: workflow and collaboration
 
 <a id="what-this-document-owns"></a>
 ## Owns / Does not own

@@ -1,4 +1,4 @@
-# Later: Connectors and surfaces
+# Later: connectors and surfaces
 
 <a id="what-this-document-owns"></a>
 ## Owns / Does not own

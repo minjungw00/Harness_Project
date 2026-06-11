@@ -1,4 +1,4 @@
-# Later: Security and assurance
+# Later: security and assurance
 
 <a id="what-this-document-owns"></a>
 ## Owns / Does not own

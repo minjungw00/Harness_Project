@@ -1,4 +1,4 @@
-# Later: Policy and conformance
+# Later: policy and conformance
 
 <a id="what-this-document-owns"></a>
 ## Owns / Does not own
