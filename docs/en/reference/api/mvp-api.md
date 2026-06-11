@@ -428,26 +428,26 @@ active_task:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
+  scope_summary: "Add confirmation UI for account data export and update account export tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
     state_version: 19
-status_card: "Task is ready for pre-write checking."
+status_summary: "Scope is defined. Implementation evidence is not recorded yet."
 next_actions:
-  - action: harness.prepare_write
-    reason: "The account export flow needs write checking."
+  - action: harness.record_run
+    reason: "Record account export confirmation test evidence before close."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary: null
 blocker_refs: []
-close_state: blocked
-close_blockers:
-  - category: evidence
-    code: EVIDENCE_INSUFFICIENT
-    message: "No run evidence has been recorded yet."
-    related_refs: []
+close_readiness:
+  ready: false
+  blockers:
+    - code: missing_test_evidence
+      message: "Account export confirmation tests have not been recorded."
 guarantee_display:
   level: cooperative
   notes:

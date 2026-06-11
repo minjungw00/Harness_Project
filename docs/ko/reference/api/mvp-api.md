@@ -579,26 +579,26 @@ active_task:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
+  scope_summary: "계정 데이터 내보내기 확인 UI를 추가하고 계정 내보내기 테스트를 갱신한다."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
     state_version: 19
-status_card: "Task가 쓰기 전 확인을 할 준비가 되었습니다."
+status_summary: "범위가 정의되었습니다. 구현 증거는 아직 기록되지 않았습니다."
 next_actions:
-  - action: harness.prepare_write
-    reason: "계정 내보내기 흐름을 쓰기 전에 확인해야 합니다."
+  - action: harness.record_run
+    reason: "닫기 전에 계정 내보내기 확인 테스트 증거를 기록합니다."
 pending_user_judgments: []
 write_authority_summary: null
 evidence_summary: null
 blocker_refs: []
-close_state: blocked
-close_blockers:
-  - category: evidence
-    code: EVIDENCE_INSUFFICIENT
-    message: "아직 Run 증거가 기록되지 않았습니다."
-    related_refs: []
+close_readiness:
+  ready: false
+  blockers:
+    - code: missing_test_evidence
+      message: "계정 내보내기 확인 테스트가 아직 기록되지 않았습니다."
 guarantee_display:
   level: cooperative
   notes:
