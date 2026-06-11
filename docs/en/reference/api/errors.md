@@ -56,10 +56,10 @@ Dry-run preview:
 
 <a id="error-taxonomy"></a>
 
-## Public `ErrorCode` table
+## Public `ErrorCode` summary
 
 | ErrorCode | Details |
-| --- | --- |
+|---|---|
 | `VALIDATION_FAILED` | See [`VALIDATION_FAILED`](#errorcode-validation-failed) |
 | `STATE_VERSION_CONFLICT` | See [`STATE_VERSION_CONFLICT`](#errorcode-state-version-conflict) |
 | `MCP_UNAVAILABLE` | See [`MCP_UNAVAILABLE`](#errorcode-mcp-unavailable) |
@@ -89,377 +89,405 @@ Dry-run preview:
 ### `VALIDATION_FAILED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
+- `ToolRejectedResponse.errors[]`
 
-Meaning:
+Condition:
 - Invalid payload shape, enum value, activation rule, profile validation, or artifact input shape.
 
-State change:
-- None.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
-Blocker-code rule:
-- Not allowed for request rejection.
+Not allowed:
+- Do not use this as a blocker code for request rejection.
 
 <a id="errorcode-state-version-conflict"></a>
 ### `STATE_VERSION_CONFLICT`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
+- `ToolRejectedResponse.errors[]`
 
-Meaning:
-- Stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, or idempotency request-hash conflict.
+Condition:
+- `expected_state_version` is stale.
+- `WriteAuthorization.basis_state_version` is stale.
+- The idempotency request hash conflicts.
 
-State change:
-- None.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
-Blocker-code rule:
-- Forbidden.
+Not allowed:
+- Do not use this as a close-readiness blocker code.
+- Do not use this as `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, or a committed blocked-result primary code.
 
 <a id="errorcode-mcp-unavailable"></a>
 ### `MCP_UNAVAILABLE`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
+- `ToolRejectedResponse.errors[]`
 
-Meaning:
+Condition:
 - Required Core, MCP, or surface reachability is unavailable.
 
-State change:
-- None.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
-Blocker-code rule:
-- Not allowed for request rejection.
+Not allowed:
+- Do not use this as a blocker code for request rejection.
 
 <a id="errorcode-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
+- `ToolRejectedResponse.errors[]`
 
-Meaning:
+Condition:
 - Reachable local access does not match the registered transport, session, binding, project, or surface instance, or access was revoked.
 
-State change:
-- None.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
-Blocker-code rule:
-- Not allowed for request rejection.
+Not allowed:
+- Do not use this as a blocker code for request rejection.
 
 <a id="errorcode-no-active-task"></a>
 ### `NO_ACTIVE_TASK`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
+- `ToolRejectedResponse.errors[]`
 
-Meaning:
+Condition:
 - A Task is required but none is active or addressed.
 
-State change:
-- None.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
-Blocker-code rule:
-- Not allowed by default.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-no-active-change-unit"></a>
 ### `NO_ACTIVE_CHANGE_UNIT`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - A write-capable or close-relevant operation lacks an active scoped Change Unit.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-baseline-stale"></a>
 ### `BASELINE_STALE`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - The baseline no longer matches the repository state required by the operation.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-scope-required"></a>
 ### `SCOPE_REQUIRED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Scope confirmation is required before the requested write or action can proceed.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-scope-violation"></a>
 ### `SCOPE_VIOLATION`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Intended or observed paths or sensitive categories exceed active scope or stored authorized scope.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-write-authorization-required"></a>
 ### `WRITE_AUTHORIZATION_REQUIRED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
+- `ToolRejectedResponse.errors[]`
 
-Meaning:
+Condition:
 - A write-capable Run lacks a required Write Authorization.
 
-State change:
-- None.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
-Blocker-code rule:
-- Not allowed by default.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-write-authorization-invalid"></a>
 ### `WRITE_AUTHORIZATION_INVALID`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
+- `ToolRejectedResponse.errors[]`
 
-Meaning:
+Condition:
 - Supplied Write Authorization is expired, revoked, consumed, or incompatible for a non-version reason.
 
-State change:
-- None.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
-Blocker-code rule:
-- Not allowed by default.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-approval-denied"></a>
 ### `APPROVAL_DENIED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Required sensitive-action approval was denied.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-approval-expired"></a>
 ### `APPROVAL_EXPIRED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Required sensitive-action approval expired or drifted from scope or baseline.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-approval-required"></a>
 ### `APPROVAL_REQUIRED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Sensitive-action approval is required before proceeding.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-decision-unresolved"></a>
 ### `DECISION_UNRESOLVED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - A relevant user judgment is pending, deferred without coverage, rejected, blocked, stale, superseded, or incompatible.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-autonomy-boundary-exceeded"></a>
 ### `AUTONOMY_BOUNDARY_EXCEEDED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - The intended operation exceeds the active Change Unit Autonomy Boundary.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-decision-required"></a>
 ### `DECISION_REQUIRED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - A blocking user-owned judgment must be requested before proceeding.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-capability-insufficient"></a>
 ### `CAPABILITY_INSUFFICIENT`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - The surface is recognized but lacks a required access class, observation, capture, guarantee support, or active behavior.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only.
+Not allowed:
+- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-evidence-insufficient"></a>
 ### `EVIDENCE_INSUFFICIENT`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Required evidence coverage is absent, partial, stale, or blocked.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Close-readiness owner may allow.
+Not allowed:
+- Do not use this as a blocker code unless the close-readiness owner explicitly allows that mapping.
 
 <a id="errorcode-residual-risk-not-visible"></a>
 ### `RESIDUAL_RISK_NOT_VISIBLE`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Known close-relevant residual risk has not been made visible before final acceptance or close.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Close-readiness owner may allow.
+Not allowed:
+- Do not use this as a blocker code unless the close-readiness owner explicitly allows that mapping.
 
 <a id="errorcode-acceptance-required"></a>
 ### `ACCEPTANCE_REQUIRED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Required final acceptance is pending, rejected, or incompatible with the visible result basis.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Close-readiness owner may allow.
+Not allowed:
+- Do not use this as a blocker code unless the close-readiness owner explicitly allows that mapping.
 
 <a id="errorcode-projection-stale"></a>
 ### `PROJECTION_STALE`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
+- `ToolRejectedResponse.errors[]`
 
-Meaning:
+Condition:
 - A requested readable status or view is stale or failed.
 
-State change:
-- None.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
-Blocker-code rule:
-- Not allowed by itself.
+Not allowed:
+- Do not use this by itself as a close-readiness blocker code.
 
 <a id="errorcode-artifact-missing"></a>
 ### `ARTIFACT_MISSING`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - A referenced persistent artifact is missing, unavailable, unusable for the close basis, or failed integrity/metadata checks.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Close-readiness owner may allow.
+Not allowed:
+- Do not use this as a blocker code unless the close-readiness owner explicitly allows that mapping.
 
 <a id="errorcode-validator-failed"></a>
 ### `VALIDATOR_FAILED`
 
 Used in:
-- `ToolRejectedResponse.errors[]`.
-- Owner-defined result paths.
+- `ToolRejectedResponse.errors[]`
+- Owner-defined result paths
 
-Meaning:
+Condition:
 - Fallback when a required active validator or blocker check failed and no more specific typed code applies.
 
-State change:
-- Owner-defined only outside rejection.
+State effect:
+- Rejection path: no committed operation proceeds and no owner state mutation occurs.
+- Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Blocker-code rule:
-- Owner-only fallback.
+Not allowed:
+- Do not use this fallback when a more specific active code applies.
+- Do not use this as a blocker code outside the owning method or schema fallback.
 
 `ToolError.details.authorization_reason` uses `missing`, `expired`, `stale`, `revoked`, `consumed`, or `incompatible`. A stale `WriteAuthorization.basis_state_version` uses `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`.
 
@@ -485,7 +513,7 @@ When an error-bearing branch has non-empty `errors`, `errors[0]` is the primary 
 | Precedence | Primary `ErrorCode` | Applies to |
 |---:|---|---|
 | 1 | `VALIDATION_FAILED` | Rejected request shape or validation failure. |
-| 2 | `STATE_VERSION_CONFLICT` | Rejected response only. Never a committed blocked result primary code. |
+| 2 | `STATE_VERSION_CONFLICT` | Rejected response only; see [precedence exclusion](#state-version-conflict-precedence-exclusion). |
 | 3 | `MCP_UNAVAILABLE` | Rejected Core, MCP, or surface reachability failure. |
 | 4 | `LOCAL_ACCESS_MISMATCH` | Rejected local-access binding mismatch or revocation. |
 | 5 | `NO_ACTIVE_TASK` | Rejected missing Task identity. |
@@ -509,7 +537,21 @@ When an error-bearing branch has non-empty `errors`, `errors[0]` is the primary 
 | 23 | `ARTIFACT_MISSING` | Persistent artifact missing, unavailable, unusable, or failed. |
 | 24 | `VALIDATOR_FAILED` | Typed fallback when no more specific active code applies. |
 
-`STATE_VERSION_CONFLICT` appears in this table only for `ToolRejectedResponse.errors[]`. It must not be selected as `MethodResult.base.errors[0]`, `CloseTaskResult(close_state=blocked).errors[0]`, `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.
+<a id="state-version-conflict-precedence-exclusion"></a>
+### `STATE_VERSION_CONFLICT` precedence exclusion
+
+Used in:
+- `ToolRejectedResponse.errors[]`
+
+Condition:
+- A rejected response is selected because stale state or idempotency conflict prevents the method from proceeding.
+
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
+
+Not allowed:
+- Do not select `STATE_VERSION_CONFLICT` as `MethodResult.base.errors[0]`, `CloseTaskResult(close_state=blocked).errors[0]`, `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.
 
 <a id="blocked-and-dry-run-behavior"></a>
 
@@ -531,9 +573,12 @@ Condition:
 Route:
 - `ToolRejectedResponse.errors[]`.
 
-Effect:
-- No committed operation.
-- No method-specific result-only fields.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
+
+Not allowed:
+- Do not include method-specific result-only fields.
 
 <a id="rejected-precondition-failure"></a>
 ### Precondition failure
@@ -544,7 +589,7 @@ Condition:
 Route:
 - `ToolRejectedResponse.errors[]`.
 
-Effect:
+State effect:
 - No records, replay rows, artifacts, events, Write Authorization consumption, close-state mutation, or state-version increment.
 
 <a id="rejected-state-or-idempotency-conflict"></a>
@@ -556,8 +601,9 @@ Condition:
 Route:
 - `ToolRejectedResponse.errors[]` with `STATE_VERSION_CONFLICT`.
 
-Effect:
-- No committed operation.
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
 
 Not allowed:
 - The conflict is not a blocker.
@@ -570,6 +616,9 @@ Condition:
 
 Route:
 - `ToolRejectedResponse` with `dry_run=true`.
+
+State effect:
+- No committed operation or dry-run preview is produced.
 
 Not allowed:
 - Do not represent the rejection as `DryRunSummary.would_errors[]` or `PlannedBlocker`.
@@ -593,7 +642,10 @@ Condition:
 Route:
 - `write_decision_reasons: WriteDecisionReason[]`.
 
-Effect:
+State effect:
+- Only the method owner may define any committed blocked-result effect.
+
+Result data:
 - Uses method-owned decision reasons.
 
 Not allowed:
@@ -608,7 +660,10 @@ Condition:
 Route:
 - `blockers: CloseReadinessBlocker[]`.
 
-Effect:
+State effect:
+- Only the close-task method owner may define any committed blocked-result effect.
+
+Result data:
 - Uses close-readiness blocker mapping.
 
 Not allowed:
@@ -644,19 +699,81 @@ Blocked result means the method may have returned an operation-specific blocked 
 
 ## State version conflict
 
-| Conflict condition | Public code | Response path | Blocker use |
-|---|---|---|---|
-| `ToolEnvelope.expected_state_version` is stale against `project_state.state_version`. | `STATE_VERSION_CONFLICT` | `ToolRejectedResponse.errors[]` | forbidden |
-| `WriteAuthorization.basis_state_version` is stale before consumption. | `STATE_VERSION_CONFLICT` | `ToolRejectedResponse.errors[]` | forbidden |
-| The same `idempotency_key` is reused with a different request hash. | `STATE_VERSION_CONFLICT` | `ToolRejectedResponse.errors[]` | forbidden |
-
-`STATE_VERSION_CONFLICT` has one active current MVP meaning: a project-wide pre-commit freshness or idempotency conflict. It is not a method-specific result, not dry-run preview data, not a `MethodResult.decision` value, not `WriteDecisionReason.code`, not `CloseReadinessBlocker.code`, and not `PlannedBlocker.code`.
-
-| Detail case | Required detail guidance |
+| Conflict case | Details |
 |---|---|
-| Stale `expected_state_version` | Include `state_clock: project_state.state_version`, `current_state_version`, `expected_state_version`, `project_id`, and `task_id` when available. |
-| Idempotency request-hash conflict | Identify the `idempotency_key` and request-hash mismatch without exposing sensitive request bodies. |
-| Stale Write Authorization basis | Identify the stale authorization basis and current `project_state.state_version`; do not consume the authorization. |
+| stale `expected_state_version` | See [Stale `expected_state_version`](#state-conflict-expected-state-version) |
+| stale `WriteAuthorization.basis_state_version` | See [Stale Write Authorization basis](#state-conflict-write-authorization-basis) |
+| idempotency request-hash conflict | See [Idempotency request-hash conflict](#state-conflict-idempotency-hash) |
+
+`STATE_VERSION_CONFLICT` has one active current MVP meaning: a project-wide pre-commit freshness or idempotency conflict.
+
+<a id="state-conflict-expected-state-version"></a>
+### Stale `expected_state_version`
+
+Condition:
+- `ToolEnvelope.expected_state_version` is older than `project_state.state_version`.
+
+Public code:
+- `STATE_VERSION_CONFLICT`
+
+Response path:
+- `ToolRejectedResponse.errors[]`
+
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
+
+Detail guidance:
+- Include `state_clock: project_state.state_version`, `current_state_version`, `expected_state_version`, `project_id`, and `task_id` when available.
+
+Not allowed:
+- Do not use this as a blocker code.
+
+<a id="state-conflict-write-authorization-basis"></a>
+### Stale Write Authorization basis
+
+Condition:
+- `WriteAuthorization.basis_state_version` is stale before consumption.
+
+Public code:
+- `STATE_VERSION_CONFLICT`
+
+Response path:
+- `ToolRejectedResponse.errors[]`
+
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
+- The Write Authorization is not consumed.
+
+Detail guidance:
+- Identify the stale authorization basis and current `project_state.state_version`.
+
+Not allowed:
+- Do not use this as a blocker code.
+
+<a id="state-conflict-idempotency-hash"></a>
+### Idempotency request-hash conflict
+
+Condition:
+- The same `idempotency_key` is reused with a different request hash.
+
+Public code:
+- `STATE_VERSION_CONFLICT`
+
+Response path:
+- `ToolRejectedResponse.errors[]`
+
+State effect:
+- No committed operation proceeds.
+- No owner state mutation occurs.
+
+Detail guidance:
+- Identify the `idempotency_key` and request-hash mismatch without exposing sensitive request bodies.
+
+Not allowed:
+- Do not use this as a blocker code.
+- Do not represent this as dry-run preview data, `MethodResult.decision`, `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.
 
 ## Forbidden blocker-code rules
 
@@ -671,17 +788,17 @@ Blocked result means the method may have returned an operation-specific blocked 
 <a id="forbidden-stale-state-blocker-code"></a>
 ### Stale-state blocker code
 
-Forbidden use:
-- `STATE_VERSION_CONFLICT` as `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, or committed blocked-result primary code.
+Not allowed:
+- Do not use `STATE_VERSION_CONFLICT` as `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, or a committed blocked-result primary code.
 
 Use instead:
-- `ToolRejectedResponse.errors[]` with `effect_kind=no_effect`.
+- Return `ToolRejectedResponse.errors[]` with `effect_kind=no_effect`.
 
 <a id="forbidden-pre-commit-public-error-copy"></a>
 ### Pre-commit public error copy
 
-Forbidden use:
-- Pre-commit public errors copied into blocker arrays.
+Not allowed:
+- Do not copy pre-commit public errors into blocker arrays.
 
 Use instead:
 - Return `ToolRejectedResponse.errors[]`.
@@ -689,8 +806,8 @@ Use instead:
 <a id="forbidden-public-code-reuse"></a>
 ### Public code reuse
 
-Forbidden use:
-- Public `ErrorCode` reused as a blocker code without explicit canonical owner permission.
+Not allowed:
+- Do not reuse a public `ErrorCode` as a blocker code without explicit canonical owner permission.
 
 Use instead:
 - Use the method/schema owner's blocker code or result reason.
@@ -698,8 +815,8 @@ Use instead:
 <a id="forbidden-user-facing-label-identifier"></a>
 ### User-facing label identifier
 
-Forbidden use:
-- User-facing label used as an API identifier.
+Not allowed:
+- Do not use a user-facing label as an API identifier.
 
 Use instead:
 - Keep the public `ErrorCode` unchanged and localize only display text.
@@ -707,8 +824,8 @@ Use instead:
 <a id="forbidden-dry-run-stale-state-preview"></a>
 ### Dry-run stale-state preview
 
-Forbidden use:
-- Dry-run stale-state conflict represented in `DryRunSummary.would_errors[]` or `DryRunSummary.would_blockers[]`.
+Not allowed:
+- Do not represent a dry-run stale-state conflict in `DryRunSummary.would_errors[]` or `DryRunSummary.would_blockers[]`.
 
 Use instead:
 - Reject the request with `STATE_VERSION_CONFLICT`.
@@ -726,51 +843,190 @@ Use instead:
 | Invalid `intent=cancel` or `intent=supersede` terminal transition | [Invalid terminal transition](#close-task-invalid-terminal-transition) |
 
 <a id="close-task-preflight-failure"></a>
-Preflight failure:
-- Conditions: stale state, stale Write Authorization basis, idempotency conflict, validation failure, local-access failure, capability failure, unreadable Core state, or unresolved project/Task identity before close-readiness evaluation.
-- Response path: `ToolRejectedResponse.errors[]`.
-- Public-code rule: `STATE_VERSION_CONFLICT` and other pre-commit errors stay in the rejected response.
-- Not allowed: No `CloseReadinessBlocker` entries.
+### Preflight failure
+
+Condition:
+- Stale state, stale Write Authorization basis, idempotency conflict, validation failure, local-access failure, capability failure, unreadable Core state, or unresolved project/Task identity occurs before close-readiness evaluation.
+
+Response path:
+- `ToolRejectedResponse.errors[]`
+
+Public-code rule:
+- `STATE_VERSION_CONFLICT` and other pre-commit errors stay in the rejected response.
+
+Not allowed:
+- Do not return `CloseReadinessBlocker` entries.
 
 <a id="close-task-intent-check"></a>
-`intent=check`:
-- Condition: The request is a valid read.
-- Response path: `CloseTaskResult` read-only result.
-- Allowed: May return `CloseReadinessBlocker` observation data.
-- Not allowed: No stored blocker and no state-version increment.
+### `intent=check`
+
+Condition:
+- The request is a valid read.
+
+Response path:
+- `CloseTaskResult` read-only result
+
+Allowed:
+- May return `CloseReadinessBlocker` observation data.
+
+State effect:
+- No stored blocker and no state-version increment.
 
 <a id="close-task-intent-complete-blocked"></a>
-`intent=complete` blocked:
-- Condition: A valid evaluation finds close-readiness blockers.
-- Response path: `CloseTaskResult(close_state=blocked)`.
-- Allowed: May return `CloseReadinessBlocker[]`.
-- Not allowed: `STATE_VERSION_CONFLICT` is forbidden.
+### `intent=complete` blocked
+
+Condition:
+- A valid evaluation finds close-readiness blockers.
+
+Response path:
+- `CloseTaskResult(close_state=blocked)`
+
+Allowed:
+- May return `CloseReadinessBlocker[]`.
+
+Not allowed:
+- Do not use `STATE_VERSION_CONFLICT`.
 
 <a id="close-task-intent-complete-closed"></a>
-`intent=complete` closed:
-- Condition: No remaining owner-defined close blockers exist.
-- Response path: `CloseTaskResult(close_state=closed)`.
-- Public-code rule: No close blockers.
+### `intent=complete` closed
+
+Condition:
+- No remaining owner-defined close blockers exist.
+
+Response path:
+- `CloseTaskResult(close_state=closed)`
+
+Public-code rule:
+- No close blockers.
 
 <a id="close-task-invalid-terminal-transition"></a>
-Invalid terminal transition:
-- Condition: `intent=cancel` or `intent=supersede` has an invalid terminal transition.
-- Response path: Method-owned result or rejection path.
-- Public-code rule: Blockers are limited to transition validity.
-- Not allowed: Do not require evidence sufficiency, final acceptance, or residual-risk acceptance for cancellation or supersession.
+### Invalid terminal transition
 
-| Close-readiness finding | Public code mapping |
+Condition:
+- `intent=cancel` or `intent=supersede` has an invalid terminal transition.
+
+Response path:
+- Method-owned result or rejection path
+
+Public-code rule:
+- Blockers are limited to transition validity.
+
+Not allowed:
+- Do not require evidence sufficiency, final acceptance, or residual-risk acceptance for cancellation or supersession.
+
+### Close-readiness finding code summary
+
+| Close-readiness finding | Details |
 |---|---|
-| Evidence gap | `EVIDENCE_INSUFFICIENT` |
-| Missing, unavailable, unusable, or failed close-relevant persistent artifact | `ARTIFACT_MISSING` |
-| Required final acceptance missing or incompatible | `ACCEPTANCE_REQUIRED` |
-| Known close-relevant residual risk not visible | `RESIDUAL_RISK_NOT_VISIBLE` |
-| Visible but unaccepted residual risk | `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `category=residual_risk_acceptance` |
-| Unresolved user-owned judgment | `DECISION_REQUIRED` or `DECISION_UNRESOLVED` |
-| Sensitive-action approval missing, denied, expired, or drifted | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED` |
-| Scope, autonomy boundary, or baseline blocker after valid evaluation | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, or `BASELINE_STALE` when the owner permits it |
-| Readable view freshness issue | `PROJECTION_STALE`; not a close blocker by itself |
-| Stale project-wide state or stale Write Authorization basis | `STATE_VERSION_CONFLICT` in `ToolRejectedResponse.errors[]`; never a close blocker |
+| Evidence gap | See [Evidence gap](#close-mapping-evidence-gap) |
+| Persistent artifact issue | See [Persistent artifact issue](#close-mapping-artifact-issue) |
+| Final acceptance issue | See [Final acceptance issue](#close-mapping-final-acceptance) |
+| Residual risk not visible | See [Residual risk not visible](#close-mapping-residual-risk-not-visible) |
+| Visible but unaccepted residual risk | See [Unaccepted residual risk](#close-mapping-unaccepted-residual-risk) |
+| Unresolved user-owned judgment | See [Unresolved user-owned judgment](#close-mapping-unresolved-user-judgment) |
+| Sensitive-action approval issue | See [Sensitive-action approval issue](#close-mapping-sensitive-approval) |
+| Scope, boundary, or baseline blocker | See [Scope, boundary, or baseline blocker](#close-mapping-scope-boundary-baseline) |
+| Readable view freshness issue | See [Readable view freshness issue](#close-mapping-readable-view-freshness) |
+| Stale project-wide state or Write Authorization basis | See [Stale state is rejected](#close-mapping-stale-state-rejected) |
+
+<a id="close-mapping-evidence-gap"></a>
+### Evidence gap
+
+Condition:
+- Close-readiness evaluation finds an evidence gap.
+
+Public code mapping:
+- `EVIDENCE_INSUFFICIENT`
+
+<a id="close-mapping-artifact-issue"></a>
+### Persistent artifact issue
+
+Condition:
+- A close-relevant persistent artifact is missing, unavailable, unusable for the close basis, or failed.
+
+Public code mapping:
+- `ARTIFACT_MISSING`
+
+<a id="close-mapping-final-acceptance"></a>
+### Final acceptance issue
+
+Condition:
+- Required final acceptance is missing or incompatible.
+
+Public code mapping:
+- `ACCEPTANCE_REQUIRED`
+
+<a id="close-mapping-residual-risk-not-visible"></a>
+### Residual risk not visible
+
+Condition:
+- Known close-relevant residual risk is not visible.
+
+Public code mapping:
+- `RESIDUAL_RISK_NOT_VISIBLE`
+
+<a id="close-mapping-unaccepted-residual-risk"></a>
+### Unaccepted residual risk
+
+Condition:
+- Residual risk is visible but not accepted.
+
+Public code mapping:
+- `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `category=residual_risk_acceptance`
+
+<a id="close-mapping-unresolved-user-judgment"></a>
+### Unresolved user-owned judgment
+
+Condition:
+- A user-owned judgment is unresolved.
+
+Public code mapping:
+- `DECISION_REQUIRED` or `DECISION_UNRESOLVED`
+
+<a id="close-mapping-sensitive-approval"></a>
+### Sensitive-action approval issue
+
+Condition:
+- Sensitive-action approval is missing, denied, expired, or drifted.
+
+Public code mapping:
+- `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED`
+
+<a id="close-mapping-scope-boundary-baseline"></a>
+### Scope, boundary, or baseline blocker
+
+Condition:
+- A valid evaluation finds a scope, autonomy boundary, or baseline blocker.
+
+Public code mapping:
+- `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, or `BASELINE_STALE`
+
+Not allowed:
+- Do not use this mapping unless the owner permits it.
+
+<a id="close-mapping-readable-view-freshness"></a>
+### Readable view freshness issue
+
+Condition:
+- A readable view freshness issue is present.
+
+Public code mapping:
+- `PROJECTION_STALE`
+
+Not allowed:
+- Do not use `PROJECTION_STALE` by itself as a close blocker.
+
+<a id="close-mapping-stale-state-rejected"></a>
+### Stale state is rejected
+
+Condition:
+- Project-wide state or `WriteAuthorization.basis_state_version` is stale.
+
+Response path:
+- `ToolRejectedResponse.errors[]` with `STATE_VERSION_CONFLICT`
+
+Not allowed:
+- Do not use this as a close blocker.
 
 Full close-readiness evaluation order is owned by [Core Model close readiness](../core-model.md#close_task). Method behavior is owned by [`harness.close_task`](method-close-task.md). `CloseReadinessBlocker` shape and categories are owned by [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
 
