@@ -16,8 +16,8 @@
 
 | 여기서 담당하지 않는 것 | 담당 문서 |
 |---|---|
-| 메서드 요청 본문 스키마, 응답 필드 형태, 공통 요청/응답 래퍼 | [API 코어 스키마](schema-core.md), [MVP API](mvp-api.md), 분리된 API 스키마 담당 문서입니다. |
-| Core의 게이트 의미, 사용자 판단 경계, 전체 닫기 준비 상태 평가 순서 | [Core 모델](../core-model.md)과 [MVP API](mvp-api.md)입니다. |
+| 메서드 요청 본문 스키마, 응답 필드 형태, 공통 요청/응답 래퍼 | [API 코어 스키마](schema-core.md), [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서, API 스키마 담당 문서입니다. |
+| Core의 게이트 의미, 사용자 판단 경계, 전체 닫기 준비 상태 평가 순서 | [Core 모델](../core-model.md), [사용자 판단 메서드](method-user-judgment.md), [Task 닫기 메서드](method-close-task.md)입니다. |
 | `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 값 집합 필드 정의 | [API 상태 스키마](schema-state.md), [API 코어 스키마](schema-core.md), [API 값 집합](schema-value-sets.md)입니다. |
 | 저장소 행, 재실행 행, DDL, 잠금, 마이그레이션, 저장 효과 | [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md)입니다. |
 | 보안 보장 표현과 접근 경계 주장 | [보안](../security.md)입니다. |
@@ -153,7 +153,7 @@ dry-run 미리보기:
 | 유효한 닫기 준비 상태 평가 뒤의 `CloseTaskResult(close_state=blocked)` | `blockers: CloseReadinessBlocker[]` | 닫기 차단 사유 매핑을 사용합니다. `STATE_VERSION_CONFLICT`를 쓰면 안 됩니다. |
 | `StatusResult.close_blockers`와 `harness.close_task intent=check` | 읽기 전용 `CloseReadinessBlocker` 관찰 데이터 | 읽기 때문에 저장된 차단 사유나 상태 버전 증가가 생기지 않습니다. |
 
-차단 결과는 메서드가 동작별 차단 결과를 반환했을 수 있다는 뜻입니다. 공개 전송 또는 스키마 오류가 아닙니다. 커밋된 차단 결과와 상태 효과는 [MVP API](mvp-api.md)와 [저장 효과](../storage-effects.md)가 허용해야 합니다.
+차단 결과는 메서드가 동작별 차단 결과를 반환했을 수 있다는 뜻입니다. 공개 전송 또는 스키마 오류가 아닙니다. 커밋된 차단 결과와 상태 효과는 [MVP API 경로 문서](mvp-api.md)가 안내하는 관련 메서드 담당 문서와 [저장 효과](../storage-effects.md)가 허용해야 합니다.
 
 ## Dry-run 동작
 
@@ -253,7 +253,7 @@ dry-run 미리보기:
 | 읽기용 보기 최신성 문제입니다. | `PROJECTION_STALE`; 그 자체로 닫기 차단 사유가 아닙니다. |
 | 프로젝트 전체 상태나 Write Authorization 근거 버전이 오래되었습니다. | `ToolRejectedResponse.errors[]`의 `STATE_VERSION_CONFLICT`; 절대 닫기 차단 사유가 아닙니다. |
 
-전체 닫기 준비 상태 평가 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 메서드 동작은 [`harness.close_task`](mvp-api.md#harnessclose_task)가 담당합니다. `CloseReadinessBlocker` 형태와 범주는 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)이 담당합니다.
+전체 닫기 준비 상태 평가 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 메서드 동작은 [`harness.close_task`](method-close-task.md)가 담당합니다. `CloseReadinessBlocker` 형태와 범주는 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)이 담당합니다.
 
 ## 사용자 표시 라벨
 
@@ -286,7 +286,7 @@ dry-run 미리보기:
 |---|---|
 | 공개 `ErrorCode` 값, 의미, 우선순위 | 이 문서입니다. |
 | `ToolRejectedResponse`, `ToolDryRunResponse`, `ToolError`, `ToolResultBase`, `DryRunSummary`, 응답 분기 형태 | [API 코어 스키마](schema-core.md)입니다. |
-| 메서드 동작, 분기 선택, 메서드별 요청 본문 | [MVP API](mvp-api.md)입니다. |
+| 메서드 동작, 분기 선택, 메서드별 요청 본문 | [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서입니다. |
 | `WriteDecisionReason`, `CloseReadinessBlocker`, 상태 요약, 닫기 준비 상태 데이터 형태 | [API 상태 스키마](schema-state.md)입니다. |
 | `response_kind`, `effect_kind`, `PlannedBlocker.source_kind`, 차단 사유 범주, enum 형태 API 값 | [API 값 집합](schema-value-sets.md)입니다. |
 | `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`, 아티팩트 입력 형태 | [API 아티팩트 스키마](schema-artifacts.md)입니다. |

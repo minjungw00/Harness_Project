@@ -27,8 +27,8 @@ Server coding must not begin from this repository until the decisions in [Decisi
 
 - This Build page supports implementation planning, not runtime implementation.
 - Active MVP scope is owned by [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md); this plan does not repeat the scope list.
-- API method behavior is owned by [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md); this plan does not repeat request, response, branch, or error behavior.
-- Common API envelopes and response branches are owned by [`../reference/api/schema-core.md`](../reference/api/schema-core.md). State, artifact, judgment, and value-set schemas are owned by their split API schema references.
+- API method routing is owned by [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md), and method behavior is owned by the method owner documents it lists. This plan does not repeat request, response, branch, or error behavior.
+- Common API envelopes and response branches are owned by [`../reference/api/schema-core.md`](../reference/api/schema-core.md). State, artifact, judgment, and value-set schemas are owned by their API schema references.
 - Storage effects are owned by [`../reference/storage-effects.md`](../reference/storage-effects.md); this plan does not define tables, migrations, artifact lifecycle, or state effects.
 - Security claims are owned by [`../reference/security.md`](../reference/security.md), and runtime-home/access boundaries are owned by [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md).
 - Later candidates remain outside the current MVP unless maintainers promote them through the appropriate owner documents.
@@ -42,7 +42,7 @@ Use this sequence for the first implementation plan after maintainer handoff:
 3. Map each planned server surface to its Reference owner before designing code structure.
 4. Implement contract-neutral scaffolding only after the API, schema, storage, security, and runtime-boundary owners are accepted for that slice.
 5. Add durable storage behavior only from [`../reference/storage-effects.md`](../reference/storage-effects.md).
-6. Add API/tool behavior only from [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md) and the relevant split API schema owners.
+6. Add API/tool behavior only from [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md), the relevant method owner documents, and the relevant API schema owners.
 7. Add status/display behavior as derived reads of owner-defined state, not as independent authority.
 8. Keep acceptance, residual-risk acceptance, evidence, verification, and close readiness distinct in implementation tasks.
 
@@ -75,7 +75,7 @@ Maintainers must record one of these outcomes for each item before implementatio
 |---|---|
 | Build handoff | Maintainers confirm this page is the active Build entry point for implementation planning. |
 | Current MVP scope | Maintainers accept the boundary in [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md), or name the unresolved scope impact. |
-| API and schemas | Maintainers accept the relevant slice of [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md) and the needed API schema owners. |
+| API and schemas | Maintainers accept the relevant slice of [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md), the affected method owner documents, and the needed API schema owners. |
 | Storage effects | Maintainers accept the relevant slice of [`../reference/storage-effects.md`](../reference/storage-effects.md) before any runtime storage files, DDL, or artifact storage are created. |
 | Security and runtime boundaries | Maintainers accept the relevant claims and non-claims in [`../reference/security.md`](../reference/security.md) and [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md). |
 | Smoke target | Maintainers accept the first internal smoke target as an implementation-planning target, not as a conformance claim. |
@@ -96,7 +96,7 @@ Use these owners instead of repeating contracts in this Build plan:
 | Topic | Owner |
 |---|---|
 | Current MVP scope | [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md) |
-| API method behavior | [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md) |
+| API method behavior | [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md) and the method owner documents it lists |
 | Common API envelopes and response branches | [`../reference/api/schema-core.md`](../reference/api/schema-core.md) |
 | State schemas and close-readiness structures | [`../reference/api/schema-state.md`](../reference/api/schema-state.md) |
 | Artifact schemas | [`../reference/api/schema-artifacts.md`](../reference/api/schema-artifacts.md) |

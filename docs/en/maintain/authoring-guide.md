@@ -58,7 +58,7 @@ Use these owner routes before repeating details:
 | Topic | Canonical owner |
 |---|---|
 | Current MVP boundary and active/later status | [Active MVP Scope](../reference/active-mvp-scope.md) |
-| API method contracts | [MVP API](../reference/api/mvp-api.md) |
+| API method contracts | [MVP API router](../reference/api/mvp-api.md) and the method owner documents it lists |
 | Common API envelopes and response branches | [API Schema Core](../reference/api/schema-core.md) |
 | State, artifact, judgment, and API value-set schemas | [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), [API Value Sets](../reference/api/schema-value-sets.md) |
 | Public error codes and error routing | [Errors](../reference/api/errors.md) |
@@ -101,19 +101,11 @@ Do not create a new document for temporary planning notes, migration notes, revi
 
 When adding a real new owner, update [Reference README](../reference/README.md) or the appropriate route index so readers can find it. Update [doc-index.yaml](../../doc-index.yaml) only as documentation retrieval metadata.
 
-### Active MVP API method split threshold
+<a id="active-mvp-api-method-split-threshold"></a>
+### Active MVP API method owners
 
-[`reference/api/mvp-api.md`](../reference/api/mvp-api.md) currently owns all active MVP method behavior. The method reference should be split into method-specific owner documents when one or more of these conditions becomes true:
+[`reference/api/mvp-api.md`](../reference/api/mvp-api.md) is the stable route document for the active MVP API method family. Method-specific owner documents own active MVP method behavior:
 
-- A new active method is added.
-- A method section needs more than one full request/response family.
-- `reference/api/mvp-api.md` becomes difficult to review as a single owner document.
-- Method behavior starts changing independently.
-- Method-level anchors and examples become too large for reliable review.
-
-This is a future maintenance threshold, not a current required split. A possible future maintenance pattern is listed below; `reference/api/mvp-api.md` is the current owner, and the method-specific paths are candidate paths only until the files are actually created:
-
-- `reference/api/mvp-api.md`
 - `reference/api/method-intake.md`
 - `reference/api/method-update-scope.md`
 - `reference/api/method-status.md`
@@ -123,7 +115,9 @@ This is a future maintenance threshold, not a current required split. A possible
 - `reference/api/method-user-judgment.md`
 - `reference/api/method-close-task.md`
 
-Do not add [doc-index.yaml](../../doc-index.yaml) entries for method-specific files unless those files actually exist.
+When active method behavior changes, edit the method owner first. Then update the API router, [Reference README](../reference/README.md), [doc-index.yaml](../../doc-index.yaml), paired-language owner, and practical inbound links that should land on the method owner.
+
+Keep [`reference/api/mvp-api.md`](../reference/api/mvp-api.md) as a route and shared-reading document. It should not duplicate method-specific request bodies, response bodies, result branches, blocked-result details, or storage-effect detail already owned by a method owner.
 
 ## 5. Route documents and README files
 

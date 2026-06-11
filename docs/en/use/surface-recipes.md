@@ -93,7 +93,7 @@ Do not bury the user in schema fields, logs, generated projections, or long hist
 ## Links to reference contracts
 
 - [Agent Integration Reference](../reference/agent-integration.md): connector behavior, `capability_profile`, `VerifiedSurfaceContext`, context push/pull, fallback semantics, and connector conformance.
-- [MVP API](../reference/api/mvp-api.md): active method behavior and request conditions.
+- [MVP API router](../reference/api/mvp-api.md) and method owner documents: active method behavior and request conditions.
 - [API Value Sets](../reference/api/schema-value-sets.md): access classes and enum-like API values.
 - [API Errors](../reference/api/errors.md): public error codes and recovery routing.
 - [Security](../reference/security.md): guarantee wording and non-claims.

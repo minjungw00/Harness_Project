@@ -16,7 +16,7 @@ This document owns:
 
 This document does not own:
 
-- Public API payload schemas, response branch shapes, envelopes, or method result structures. Use [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and the API schema owners.
+- Public API payload schemas, response branch shapes, envelopes, or method result structures. Use the [MVP API router](api/mvp-api.md), method owner documents, [API Schema Core](api/schema-core.md), and the API schema owners.
 - Storage DDL, persisted JSON layout, locks, migrations, runtime-home placement, or method-to-storage effects. Use [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md).
 - Exact active enum-like values and wire field lists. Use [API Value Sets](api/schema-value-sets.md) and [API State Schemas](api/schema-state.md).
 - Public error code definitions or error precedence. Use [API Errors](api/errors.md).
@@ -151,7 +151,7 @@ Evidence records must be read at their recorded scope. A passing test log suppor
 
 Close readiness is the Core evaluation concept for whether the current Task can close honestly. It considers current Core state, active scope, required user-owned judgments, sensitive-action approval, write/run compatibility, evidence, artifacts, final acceptance, residual risk, and recovery constraints.
 
-`CloseReadinessBlocker` is not the concept itself. It is a state-shaped API data representation for blocking reasons, owned by [API State Schemas](api/schema-state.md) and [API Value Sets](api/schema-value-sets.md). Method behavior, response branches, persistence, and public errors are owned by [MVP API](api/mvp-api.md), [Storage Effects](storage-effects.md), and [API Errors](api/errors.md).
+`CloseReadinessBlocker` is not the concept itself. It is a state-shaped API data representation for blocking reasons, owned by [API State Schemas](api/schema-state.md) and [API Value Sets](api/schema-value-sets.md). Method behavior and response branches are owned by method owner documents routed from the [MVP API router](api/mvp-api.md); persistence and public errors are owned by [Storage Effects](storage-effects.md) and [API Errors](api/errors.md).
 
 For an `intent=complete` close attempt, Core evaluates blockers in this conceptual order. Later rows do not satisfy earlier rows.
 
@@ -201,7 +201,7 @@ Residual risk is known remaining uncertainty, an unchecked condition, limitation
 
 | Topic | Owner |
 |---|---|
-| API method behavior, request/response shapes, envelopes, dry-run/rejection branches, and method effects | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md) |
+| API method behavior, request/response shapes, envelopes, dry-run/rejection branches, and method effects | [MVP API router](api/mvp-api.md), method owner documents, [API Schema Core](api/schema-core.md) |
 | State-shaped API data, `ShapingReadiness`, `CloseReadinessBlocker`, `ValidatorResult`, and public state fields | [API State Schemas](api/schema-state.md), [API Value Sets](api/schema-value-sets.md) |
 | User judgment schema, `SensitiveActionScope`, and accepted-risk input shapes | [API Judgment Schemas](api/schema-judgment.md) |
 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle`, artifact staging, promotion, integrity, redaction, and body-read eligibility | [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md) |

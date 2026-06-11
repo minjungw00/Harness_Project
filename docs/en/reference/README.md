@@ -19,7 +19,7 @@ Use this order when moving from product boundary to exact contract owners:
 | Step | Owner route |
 |---|---|
 | Active scope | [Active MVP Scope](active-mvp-scope.md) |
-| API methods | [MVP API](api/mvp-api.md) |
+| API methods | [MVP API router](api/mvp-api.md), then the method owner document for the method being checked |
 | Schema owners | [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), [API Judgment Schemas](api/schema-judgment.md), [API Value Sets](api/schema-value-sets.md), [API Errors](api/errors.md) |
 | Storage effects | [Storage Effects](storage-effects.md), then [Storage Records](storage-records.md), [Artifact Storage](storage-artifacts.md), or [Storage Versioning](storage-versioning.md) when that narrower owner applies |
 
@@ -42,7 +42,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Question | Owner document(s) |
 |---|---|
 | Which document owns Core authority, Task state, evidence, residual risk, and non-substitution rules? | [Core Model](core-model.md) |
-| Which document owns API method behavior? | [MVP API](api/mvp-api.md) |
+| Which document owns API method behavior? | [MVP API router](api/mvp-api.md), then the method owner document listed there |
 | Which document owns shared API response branches and envelopes? | [API Schema Core](api/schema-core.md) |
 | Which document owns public error codes and error precedence? | [API Errors](api/errors.md) |
 | Which document owns storage records or DDL? | [Storage Records](storage-records.md) |
@@ -60,10 +60,10 @@ This route is for implementers and reviewers who need exact owners. New and work
 |---|---|
 | What is the sample task used in API examples? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md), [MVP API](api/mvp-api.md) |
 | Can API examples use documentation maintenance as the scenario? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
-| What does `harness.prepare_write` return? | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), [Core Model](core-model.md) |
+| What does `harness.prepare_write` return? | [Prepare-write method](api/method-prepare-write.md), [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), [Core Model](core-model.md) |
 | Where is `ToolRejectedResponse` defined? | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
 | Is `STATE_VERSION_CONFLICT` a blocker code? | [API Errors](api/errors.md) |
-| When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`? | [MVP API](api/mvp-api.md) |
+| When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`? | [Close-task method](api/method-close-task.md) |
 | Which document owns active method names, `response_kind`, `effect_kind`, and enum-like API values? | [API Value Sets](api/schema-value-sets.md) |
 | Is `complete` an enum value or the word "full" in this context? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [API Value Sets](api/schema-value-sets.md) |
 | Where are access classes defined? | [API Value Sets](api/schema-value-sets.md) |
@@ -73,6 +73,19 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Which document owns `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, and `ValidatorResult` shapes? | [API State Schemas](api/schema-state.md) |
 | Which document owns `ArtifactRef`, `ArtifactInput`, and `StagedArtifactHandle` shapes? | [API Artifact Schemas](api/schema-artifacts.md) |
 | Which document owns `UserJudgment`, `SensitiveActionScope`, and accepted-risk input shapes? | [API Judgment Schemas](api/schema-judgment.md) |
+
+## API method owners
+
+| Method or family | Owner document |
+|---|---|
+| `harness.intake` | [Intake method](api/method-intake.md) |
+| `harness.update_scope` | [Update-scope method](api/method-update-scope.md) |
+| `harness.status` | [Status method](api/method-status.md) |
+| `harness.prepare_write` | [Prepare-write method](api/method-prepare-write.md) |
+| `harness.stage_artifact` | [Stage-artifact method](api/method-stage-artifact.md) |
+| `harness.record_run` | [Record-run method](api/method-record-run.md) |
+| `harness.request_user_judgment`, `harness.record_user_judgment` | [User-judgment methods](api/method-user-judgment.md) |
+| `harness.close_task` | [Close-task method](api/method-close-task.md) |
 
 ## Storage owners
 
@@ -96,7 +109,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Which document owns guarantee semantics? | [Security](security.md) |
 | Where are guarantee semantics defined? | [Security](security.md) |
 | Which document owns Product Repository, Harness Server, and Harness Runtime Home separation? | [Runtime Boundaries](runtime-boundaries.md) |
-| Which document owns local connector behavior, capability context, and verified surface boundaries? | [Agent Integration](agent-integration.md), [MVP API](api/mvp-api.md), [Security](security.md) |
+| Which document owns local connector behavior, capability context, and verified surface boundaries? | [Agent Integration](agent-integration.md), [MVP API router](api/mvp-api.md), method owner documents, [Security](security.md) |
 | Which document owns CLI, IDE/editor, chat, and local MCP usage recipes? | [Surface Recipes](../use/surface-recipes.md) |
 | Which document owns public security-related error mapping? | [API Errors](api/errors.md), [Security](security.md) |
 
@@ -106,10 +119,10 @@ This route is for implementers and reviewers who need exact owners. New and work
 |---|---|
 | Which document owns user-owned judgment and non-substitution rules? | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md) |
 | Which document owns sensitive-action approval boundaries? | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md), [Security](security.md) |
-| Which document owns close readiness and close honesty? | [Core Model](core-model.md), [MVP API](api/mvp-api.md), [API Errors](api/errors.md) |
+| Which document owns close readiness and close honesty? | [Core Model](core-model.md), [Close-task method](api/method-close-task.md), [API Errors](api/errors.md) |
 | Which document owns close-readiness blocker shape and close error routing? | [API State Schemas](api/schema-state.md), [API Errors](api/errors.md) |
 | Which document owns final acceptance and residual-risk acceptance boundaries? | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md), [API Value Sets](api/schema-value-sets.md) |
-| Which document owns compact evidence summary meaning? | [Core Model](core-model.md), [API State Schemas](api/schema-state.md), [MVP API](api/mvp-api.md) |
+| Which document owns compact evidence summary meaning? | [Core Model](core-model.md), [API State Schemas](api/schema-state.md), [Record-run method](api/method-record-run.md), [Status method](api/method-status.md) |
 
 ## Later and maintenance owners
 

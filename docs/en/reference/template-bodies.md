@@ -125,7 +125,7 @@ Avoid pressure wording such as `obviously`, `just approve`, or `I can decide thi
 ### Owner links
 
 - [Core Model](core-model.md) for user-owned judgment and non-substitution rules.
-- [MVP API](api/mvp-api.md) for judgment request and record method behavior.
+- [User-judgment methods](api/method-user-judgment.md) for judgment request and record method behavior.
 - [API Judgment Schemas](api/schema-judgment.md) for `UserJudgment`, `SensitiveActionScope`, and accepted-risk shapes.
 - [Security](security.md) for sensitive-action approval boundaries.
 
@@ -177,7 +177,7 @@ Avoid `fully verified`, `QA passed`, or `accepted` unless the relevant owner rec
 ### Owner links
 
 - [Core Model](core-model.md) for evidence meaning and non-substitution rules.
-- [MVP API](api/mvp-api.md) for run/evidence method behavior.
+- [Record-run method](api/method-record-run.md) for run/evidence method behavior.
 - [API State Schemas](api/schema-state.md) for evidence summary and validator-shaped display data.
 - [API Artifact Schemas](api/schema-artifacts.md) and [Artifact Storage](storage-artifacts.md) for artifact refs, availability, and body-read eligibility.
 - [Storage Effects](storage-effects.md) for what does and does not mutate storage.
@@ -224,7 +224,7 @@ Use `Closed by owner result` only when the close owner path returned an actual c
 ### Owner links
 
 - [Core Model](core-model.md) for close readiness, close honesty, final acceptance, and residual-risk boundaries.
-- [MVP API](api/mvp-api.md) for `harness.close_task` behavior.
+- [Close-task method](api/method-close-task.md) for `harness.close_task` behavior.
 - [API State Schemas](api/schema-state.md) for `CloseReadinessBlocker`.
 - [API Judgment Schemas](api/schema-judgment.md) for final acceptance and accepted-risk input shapes.
 - [API Errors](api/errors.md) for close rejection and blocker routing.

@@ -19,7 +19,7 @@
 | 단계 | 담당 문서 경로 |
 |---|---|
 | 현재 MVP 범위 | [현재 MVP 범위](active-mvp-scope.md) |
-| API 메서드 | [MVP API](api/mvp-api.md) |
+| API 메서드 | [MVP API 경로 문서](api/mvp-api.md)를 먼저 보고, 확인할 메서드의 담당 문서로 이동합니다 |
 | 스키마 담당 문서 | [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 아티팩트 스키마](api/schema-artifacts.md), [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md), [API 오류](api/errors.md) |
 | 저장 효과 | [저장 효과](storage-effects.md)를 먼저 보고, 필요한 경우 [저장소 기록](storage-records.md), [아티팩트 저장소](storage-artifacts.md), [저장소 버전 관리](storage-versioning.md)로 들어갑니다 |
 
@@ -42,7 +42,7 @@
 | 질문 | 담당 문서 |
 |---|---|
 | Core 권한, Task 상태, 증거, 잔여 위험, 비대체 규칙은 어디가 담당하나요? | [Core 모델](core-model.md) |
-| API 메서드 동작은 어디가 담당하나요? | [MVP API](api/mvp-api.md) |
+| API 메서드 동작은 어디가 담당하나요? | [MVP API 경로 문서](api/mvp-api.md)를 먼저 보고, 그 안의 메서드 담당 문서로 이동합니다 |
 | 공통 API 응답 분기와 요청 래퍼는 어디가 담당하나요? | [API 코어 스키마](api/schema-core.md) |
 | 공개 오류 코드와 오류 우선순위는 어디가 담당하나요? | [API 오류](api/errors.md) |
 | 저장소 기록이나 DDL은 어디가 담당하나요? | [저장소 기록](storage-records.md) |
@@ -60,10 +60,10 @@
 |---|---|
 | API 예시에서 쓰는 샘플 작업은 무엇인가요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md), [MVP API](api/mvp-api.md) |
 | API 예시가 문서 유지보수를 시나리오로 써도 되나요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md) |
-| `harness.prepare_write`는 무엇을 반환하나요? | [MVP API](api/mvp-api.md), [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [Core 모델](core-model.md) |
+| `harness.prepare_write`는 무엇을 반환하나요? | [쓰기 준비 메서드](api/method-prepare-write.md), [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [Core 모델](core-model.md) |
 | `ToolRejectedResponse`는 어디에 정의되어 있나요? | [API 코어 스키마](api/schema-core.md), [API 오류](api/errors.md) |
 | `STATE_VERSION_CONFLICT`는 차단 사유 코드인가요? | [API 오류](api/errors.md) |
-| `dry_run=true`인 `harness.close_task`가 언제 `ToolDryRunResponse`가 아닌 결과를 반환하나요? | [MVP API](api/mvp-api.md) |
+| `dry_run=true`인 `harness.close_task`가 언제 `ToolDryRunResponse`가 아닌 결과를 반환하나요? | [Task 닫기 메서드](api/method-close-task.md) |
 | 활성 메서드 이름, `response_kind`, `effect_kind`, enum 형태 API 값은 어디가 담당하나요? | [API 값 집합](api/schema-value-sets.md) |
 | `complete`가 enum 값인지, 이 문맥에서 "전체"라는 뜻인지 어디서 확인하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [용어집](glossary.md), [API 값 집합](api/schema-value-sets.md) |
 | 접근 등급은 어디에 정의되어 있나요? | [API 값 집합](api/schema-value-sets.md) |
@@ -73,6 +73,19 @@
 | `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, `ValidatorResult` 구조는 어디가 담당하나요? | [API 상태 스키마](api/schema-state.md) |
 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle` 구조는 어디가 담당하나요? | [API 아티팩트 스키마](api/schema-artifacts.md) |
 | `UserJudgment`, `SensitiveActionScope`, 수락된 위험 입력 구조는 어디가 담당하나요? | [API 판단 스키마](api/schema-judgment.md) |
+
+## API 메서드 담당 문서
+
+| 메서드 또는 묶음 | 담당 문서 |
+|---|---|
+| `harness.intake` | [접수 메서드](api/method-intake.md) |
+| `harness.update_scope` | [범위 갱신 메서드](api/method-update-scope.md) |
+| `harness.status` | [상태 메서드](api/method-status.md) |
+| `harness.prepare_write` | [쓰기 준비 메서드](api/method-prepare-write.md) |
+| `harness.stage_artifact` | [아티팩트 스테이징 메서드](api/method-stage-artifact.md) |
+| `harness.record_run` | [실행 기록 메서드](api/method-record-run.md) |
+| `harness.request_user_judgment`, `harness.record_user_judgment` | [사용자 판단 메서드](api/method-user-judgment.md) |
+| `harness.close_task` | [Task 닫기 메서드](api/method-close-task.md) |
 
 ## 저장소 담당 문서
 
@@ -95,7 +108,7 @@
 | `isolated` 보장 의미의 담당 문서는 어디인가요? | [보안](security.md) |
 | 보장 의미의 담당 문서는 어디인가요? | [보안](security.md) |
 | Product Repository, Harness Server, Harness Runtime Home의 분리는 어디가 담당하나요? | [런타임 경계](runtime-boundaries.md) |
-| 로컬 커넥터 동작, 역량 맥락, 확인된 접점 경계는 어디가 담당하나요? | [에이전트 통합](agent-integration.md), [MVP API](api/mvp-api.md), [보안](security.md) |
+| 로컬 커넥터 동작, 역량 맥락, 확인된 접점 경계는 어디가 담당하나요? | [에이전트 통합](agent-integration.md), [MVP API 경로 문서](api/mvp-api.md), 메서드 담당 문서, [보안](security.md) |
 | CLI, IDE/editor, 채팅, 로컬 MCP 사용 레시피는 어디가 담당하나요? | [접점별 사용 레시피](../use/surface-recipes.md) |
 | 보안 관련 공개 오류 경로는 어디가 담당하나요? | [API 오류](api/errors.md), [보안](security.md) |
 
@@ -105,10 +118,10 @@
 |---|---|
 | 사용자 소유 판단과 비대체 규칙은 어디가 담당하나요? | [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md) |
 | 민감 동작 승인 경계는 어디가 담당하나요? | [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md), [보안](security.md) |
-| 닫기 준비 상태와 정직한 닫기 의미는 어디가 담당하나요? | [Core 모델](core-model.md), [MVP API](api/mvp-api.md), [API 오류](api/errors.md) |
+| 닫기 준비 상태와 정직한 닫기 의미는 어디가 담당하나요? | [Core 모델](core-model.md), [Task 닫기 메서드](api/method-close-task.md), [API 오류](api/errors.md) |
 | 닫기 차단 사유 구조와 닫기 오류 경로는 어디가 담당하나요? | [API 상태 스키마](api/schema-state.md), [API 오류](api/errors.md) |
 | 최종 수락과 잔여 위험 수락 경계는 어디가 담당하나요? | [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md) |
-| 압축된 증거 요약의 의미는 어디가 담당하나요? | [Core 모델](core-model.md), [API 상태 스키마](api/schema-state.md), [MVP API](api/mvp-api.md) |
+| 압축된 증거 요약의 의미는 어디가 담당하나요? | [Core 모델](core-model.md), [API 상태 스키마](api/schema-state.md), [실행 기록 메서드](api/method-record-run.md), [상태 메서드](api/method-status.md) |
 
 ## 이후 후보와 유지보수 문서
 

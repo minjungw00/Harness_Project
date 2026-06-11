@@ -59,8 +59,8 @@ question_routes:
         - reference.api.schema-value-sets
       route_note: "Terminology Map and Glossary disambiguate prose versus identifier usage; API Value Sets owns `intent=complete` as a value."
     - question: "When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`?"
-      canonical_owner_doc_id: reference.api.mvp-api
-      default_path: docs/en/reference/api/mvp-api.md
+      canonical_owner_doc_id: reference.api.method-close-task
+      default_path: docs/en/reference/api/method-close-task.md
       route_note: "Method branch selection for `harness.close_task`."
     - question: 'How should "Full close-readiness evaluation order" be written in Korean?'
       canonical_owner_doc_id: reference.glossary
@@ -616,23 +616,26 @@ docs:
       en: docs/en/reference/api/mvp-api.md
       ko: docs/ko/reference/api/mvp-api.md
     default_for_agent: en
-    primary_role: public_method_behavior
+    primary_role: public_method_router
     canonical_for:
-      - active_public_method_behavior
-      - method_request_response_behavior
+      - active_public_method_list
+      - method_owner_routing
       - shared_request_rules
-      - method_state_effect_matrix
-      - local_access_class_usage
+      - schema_owner_links_for_methods
+      - storage_effect_owner_links_for_methods
+      - local_access_class_routing
       - representative_api_example_scenario
     owns:
-      - active public method behavior
-      - method-level request behavior
-      - method-level response behavior
-      - method state-effect summaries
-      - method storage owner summaries
-      - method security boundary summaries
+      - active public method list
+      - method owner routing
+      - shared envelope and response branch reading rules
+      - schema owner links for methods
+      - storage-effect owner links for methods
       - representative API example scenario used by this method reference
     does_not_own:
+      - method-specific request behavior
+      - method-specific response behavior
+      - method-specific result examples
       - common response envelopes
       - shared schema bodies
       - active value sets
@@ -640,11 +643,296 @@ docs:
       - storage DDL
       - artifact storage lifecycle
     related_docs:
+      - reference.api.method-intake
+      - reference.api.method-update-scope
+      - reference.api.method-status
+      - reference.api.method-prepare-write
+      - reference.api.method-stage-artifact
+      - reference.api.method-record-run
+      - reference.api.method-user-judgment
+      - reference.api.method-close-task
       - reference.api.schema-core
       - reference.api.schema-value-sets
       - reference.api.errors
       - reference.storage-effects
       - reference.security
+
+  - doc_id: reference.api.method-intake
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/method-intake.md
+      ko: docs/ko/reference/api/method-intake.md
+    default_for_agent: en
+    primary_role: api_method_owner
+    canonical_for:
+      - harness_intake_method_behavior
+      - intake_required_inputs
+      - intake_result_behavior
+      - intake_state_version_behavior
+      - intake_dry_run_behavior
+    owns:
+      - "`harness.intake` method behavior"
+      - "`IntakeResult` branch behavior"
+      - intake minimal request and representative response
+    does_not_own:
+      - common response envelopes
+      - shared schema bodies
+      - active value sets
+      - public error precedence
+      - storage DDL
+    related_docs:
+      - reference.api.mvp-api
+      - reference.api.schema-core
+      - reference.api.schema-state
+      - reference.api.schema-value-sets
+      - reference.api.errors
+      - reference.storage-effects
+
+  - doc_id: reference.api.method-update-scope
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/method-update-scope.md
+      ko: docs/ko/reference/api/method-update-scope.md
+    default_for_agent: en
+    primary_role: api_method_owner
+    canonical_for:
+      - harness_update_scope_method_behavior
+      - update_scope_required_inputs
+      - update_scope_result_behavior
+      - update_scope_state_version_behavior
+      - stale_write_authorization_method_consequence
+    owns:
+      - "`harness.update_scope` method behavior"
+      - "`UpdateScopeResult` branch behavior"
+      - update-scope minimal request and representative response
+    does_not_own:
+      - common response envelopes
+      - shared schema bodies
+      - active value sets
+      - public error precedence
+      - storage DDL
+    related_docs:
+      - reference.api.mvp-api
+      - reference.api.schema-core
+      - reference.api.schema-state
+      - reference.api.schema-judgment
+      - reference.api.schema-value-sets
+      - reference.api.errors
+      - reference.storage-effects
+      - reference.storage-versioning
+
+  - doc_id: reference.api.method-status
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/method-status.md
+      ko: docs/ko/reference/api/method-status.md
+    default_for_agent: en
+    primary_role: api_method_owner
+    canonical_for:
+      - harness_status_method_behavior
+      - status_required_inputs
+      - status_result_behavior
+      - status_read_only_behavior
+      - status_dry_run_behavior
+    owns:
+      - "`harness.status` method behavior"
+      - "`StatusResult` branch behavior"
+      - status minimal request and representative response
+    does_not_own:
+      - common response envelopes
+      - shared schema bodies
+      - active value sets
+      - public error precedence
+      - storage DDL
+    related_docs:
+      - reference.api.mvp-api
+      - reference.api.schema-core
+      - reference.api.schema-state
+      - reference.api.schema-value-sets
+      - reference.api.errors
+      - reference.storage-effects
+
+  - doc_id: reference.api.method-prepare-write
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/method-prepare-write.md
+      ko: docs/ko/reference/api/method-prepare-write.md
+    default_for_agent: en
+    primary_role: api_method_owner
+    canonical_for:
+      - harness_prepare_write_method_behavior
+      - prepare_write_required_inputs
+      - prepare_write_result_behavior
+      - write_authorization_creation_behavior
+      - prepare_write_dry_run_behavior
+    owns:
+      - "`harness.prepare_write` method behavior"
+      - "`PrepareWriteResult` branch behavior"
+      - prepare-write minimal request and representative response
+    does_not_own:
+      - common response envelopes
+      - shared schema bodies
+      - active value sets
+      - public error precedence
+      - storage DDL
+      - security guarantees
+    related_docs:
+      - reference.api.mvp-api
+      - reference.api.schema-core
+      - reference.api.schema-state
+      - reference.api.schema-judgment
+      - reference.api.schema-value-sets
+      - reference.api.errors
+      - reference.storage-effects
+      - reference.storage-versioning
+      - reference.security
+
+  - doc_id: reference.api.method-stage-artifact
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/method-stage-artifact.md
+      ko: docs/ko/reference/api/method-stage-artifact.md
+    default_for_agent: en
+    primary_role: api_method_owner
+    canonical_for:
+      - harness_stage_artifact_method_behavior
+      - stage_artifact_required_inputs
+      - stage_artifact_result_behavior
+      - staged_artifact_handle_result_behavior
+      - stage_artifact_dry_run_behavior
+    owns:
+      - "`harness.stage_artifact` method behavior"
+      - "`StageArtifactResult` branch behavior"
+      - stage-artifact minimal request and representative response
+    does_not_own:
+      - common response envelopes
+      - shared schema bodies
+      - active value sets
+      - public error precedence
+      - storage DDL
+      - artifact lifecycle
+    related_docs:
+      - reference.api.mvp-api
+      - reference.api.schema-core
+      - reference.api.schema-artifacts
+      - reference.api.schema-value-sets
+      - reference.api.errors
+      - reference.storage-effects
+      - reference.storage-artifacts
+
+  - doc_id: reference.api.method-record-run
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/method-record-run.md
+      ko: docs/ko/reference/api/method-record-run.md
+    default_for_agent: en
+    primary_role: api_method_owner
+    canonical_for:
+      - harness_record_run_method_behavior
+      - record_run_required_inputs
+      - record_run_result_behavior
+      - run_recording_evidence_update_behavior
+      - artifact_promotion_method_behavior
+    owns:
+      - "`harness.record_run` method behavior"
+      - "`RecordRunResult` branch behavior"
+      - record-run minimal request and representative response
+    does_not_own:
+      - common response envelopes
+      - shared schema bodies
+      - active value sets
+      - public error precedence
+      - storage DDL
+      - artifact lifecycle
+      - Core evidence meaning
+    related_docs:
+      - reference.api.mvp-api
+      - reference.api.schema-core
+      - reference.api.schema-state
+      - reference.api.schema-artifacts
+      - reference.api.schema-value-sets
+      - reference.api.errors
+      - reference.core-model
+      - reference.storage-effects
+      - reference.storage-artifacts
+
+  - doc_id: reference.api.method-user-judgment
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/method-user-judgment.md
+      ko: docs/ko/reference/api/method-user-judgment.md
+    default_for_agent: en
+    primary_role: api_method_family_owner
+    canonical_for:
+      - harness_request_user_judgment_method_behavior
+      - harness_record_user_judgment_method_behavior
+      - request_user_judgment_result_behavior
+      - record_user_judgment_result_behavior
+      - user_judgment_method_boundary
+    owns:
+      - "`harness.request_user_judgment` method behavior"
+      - "`harness.record_user_judgment` method behavior"
+      - "`RequestUserJudgmentResult` branch behavior"
+      - "`RecordUserJudgmentResult` branch behavior"
+      - user-judgment minimal requests and representative responses
+    does_not_own:
+      - common response envelopes
+      - shared schema bodies
+      - active value sets
+      - public error precedence
+      - storage DDL
+      - Core user-owned judgment meaning
+    related_docs:
+      - reference.api.mvp-api
+      - reference.api.schema-core
+      - reference.api.schema-state
+      - reference.api.schema-judgment
+      - reference.api.schema-value-sets
+      - reference.api.errors
+      - reference.core-model
+      - reference.storage-effects
+
+  - doc_id: reference.api.method-close-task
+    status: active
+    family: reference.api
+    paths:
+      en: docs/en/reference/api/method-close-task.md
+      ko: docs/ko/reference/api/method-close-task.md
+    default_for_agent: en
+    primary_role: api_method_owner
+    canonical_for:
+      - harness_close_task_method_behavior
+      - close_task_required_inputs
+      - close_task_result_behavior
+      - close_task_dry_run_behavior
+      - close_task_blocked_result_behavior
+    owns:
+      - "`harness.close_task` method behavior"
+      - "`CloseTaskResult` branch behavior"
+      - close-task minimal request and representative response
+    does_not_own:
+      - common response envelopes
+      - shared schema bodies
+      - active value sets
+      - public error precedence
+      - storage DDL
+      - Core close readiness meaning
+    related_docs:
+      - reference.api.mvp-api
+      - reference.api.schema-core
+      - reference.api.schema-state
+      - reference.api.schema-value-sets
+      - reference.api.errors
+      - reference.core-model
+      - reference.storage-effects
+      - reference.storage-versioning
 
   - doc_id: reference.api.schema-core
     status: active

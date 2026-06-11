@@ -17,7 +17,7 @@ This document does not own:
 - artifact lifecycle details; see [Artifact Storage](storage-artifacts.md)
 - idempotency, locks, state-version clocks, event ordering, or migrations; see [Storage Versioning](storage-versioning.md)
 - public response branches or schemas; see [API Schema Core](api/schema-core.md)
-- API method behavior; see [MVP API](api/mvp-api.md)
+- API method behavior; see the [MVP API router](api/mvp-api.md) and method owner documents
 - public error code precedence; see [API Errors](api/errors.md)
 
 ## Shape versus effect
@@ -187,11 +187,11 @@ Storage must not persist those computed values merely because the read occurred.
 - evidence update
 - `project_state.state_version` increment
 
-For `harness.close_task intent=check`, the response branch is owned by [`harness.close_task`](api/mvp-api.md#harnessclose_task). This storage page only asserts that the check remains read-only, including with `dry_run=true` and with `blockers: CloseReadinessBlocker[]`.
+For `harness.close_task intent=check`, the response branch is owned by [`harness.close_task`](api/method-close-task.md). This storage page only asserts that the check remains read-only, including with `dry_run=true` and with `blockers: CloseReadinessBlocker[]`.
 
 ## Committed blocked effects
 
-Committed blocked outcomes are distinct from rejected responses. A committed blocked `harness.prepare_write` or `harness.close_task` outcome is a `MethodResult` only when [MVP API](api/mvp-api.md) allows the blocked commit.
+Committed blocked outcomes are distinct from rejected responses. A committed blocked `harness.prepare_write` or `harness.close_task` outcome is a `MethodResult` only when the relevant method owner allows the blocked commit: [Prepare-write method](api/method-prepare-write.md) or [Close-task method](api/method-close-task.md).
 
 <a id="harnessprepare_write-committed-non-allow-decision"></a>
 ### `harness.prepare_write` committed non-allow decision
@@ -266,7 +266,7 @@ Not allowed:
 <a id="method-effects"></a>
 ## Method effect summary
 
-This table summarizes persistence effects. Method behavior and response unions remain owned by [MVP API](api/mvp-api.md).
+This table summarizes persistence effects. Method behavior and response unions remain owned by method owner documents routed from the [MVP API router](api/mvp-api.md).
 
 | Method | Primary storage effect | Details |
 |---|---|---|
@@ -303,7 +303,7 @@ Those branches create no Task, refs, event, replay row, or state-version increme
 
 Owner links:
 
-- [MVP API `harness.intake`](api/mvp-api.md#harnessintake)
+- [`harness.intake` method](api/method-intake.md)
 - [Storage Records](storage-records.md)
 - [Storage Versioning](storage-versioning.md)
 
@@ -327,7 +327,7 @@ Valid dry-run previews only describe scope, Change Unit, blocker, and stale auth
 
 Owner links:
 
-- [MVP API `harness.update_scope`](api/mvp-api.md#harnessupdate_scope)
+- [`harness.update_scope` method](api/method-update-scope.md)
 - [Storage Records](storage-records.md)
 - [Storage Versioning](storage-versioning.md)
 
@@ -348,7 +348,7 @@ No-effect branches:
 
 Owner links:
 
-- [MVP API `harness.status`](api/mvp-api.md#harnessstatus)
+- [`harness.status` method](api/method-status.md)
 
 ### `harness.prepare_write`
 
@@ -388,7 +388,7 @@ Those branches do not create:
 
 Owner links:
 
-- [MVP API `harness.prepare_write`](api/mvp-api.md#harnessprepare_write)
+- [`harness.prepare_write` method](api/method-prepare-write.md)
 - [Storage Records](storage-records.md)
 - [Storage Versioning](storage-versioning.md)
 
@@ -423,7 +423,7 @@ Valid `dry_run=true` does not create:
 
 Owner links:
 
-- [MVP API `harness.stage_artifact`](api/mvp-api.md#harnessstage_artifact)
+- [`harness.stage_artifact` method](api/method-stage-artifact.md)
 - [Artifact Storage](storage-artifacts.md)
 
 ### `harness.record_run`
@@ -475,7 +475,7 @@ run_ref: run_account_export_tests_001
 
 Owner links:
 
-- [MVP API `harness.record_run`](api/mvp-api.md#harnessrecord_run)
+- [`harness.record_run` method](api/method-record-run.md)
 - [Artifact Storage](storage-artifacts.md)
 - [Storage Records](storage-records.md)
 
@@ -505,7 +505,7 @@ Valid dry-run previews do not create:
 
 Owner links:
 
-- [MVP API `harness.request_user_judgment`](api/mvp-api.md#harnessrequest_user_judgment)
+- [`harness.request_user_judgment` method](api/method-user-judgment.md#harnessrequest_user_judgment)
 - [Storage Records](storage-records.md)
 
 ### `harness.record_user_judgment`
@@ -533,7 +533,7 @@ Valid dry-run previews do not create:
 
 Owner links:
 
-- [MVP API `harness.record_user_judgment`](api/mvp-api.md#harnessrecord_user_judgment)
+- [`harness.record_user_judgment` method](api/method-user-judgment.md#harnessrecord_user_judgment)
 - [Storage Records](storage-records.md)
 
 ### `harness.close_task intent=check`
@@ -556,7 +556,7 @@ No-effect branches:
 
 Owner links:
 
-- [MVP API `harness.close_task`](api/mvp-api.md#harnessclose_task)
+- [`harness.close_task` method](api/method-close-task.md)
 
 ### `harness.close_task intent=complete`
 
@@ -577,7 +577,7 @@ Valid `dry_run=true` returns `ToolDryRunResponse`. Preflight failures are no-eff
 
 Owner links:
 
-- [MVP API `harness.close_task`](api/mvp-api.md#harnessclose_task)
+- [`harness.close_task` method](api/method-close-task.md)
 - [Storage Versioning](storage-versioning.md)
 
 ### `harness.close_task intent=cancel`
@@ -601,7 +601,7 @@ Valid `dry_run=true` returns `ToolDryRunResponse`.
 
 Owner links:
 
-- [MVP API `harness.close_task`](api/mvp-api.md#harnessclose_task)
+- [`harness.close_task` method](api/method-close-task.md)
 - [Storage Versioning](storage-versioning.md)
 
 ### `harness.close_task intent=supersede`
@@ -626,12 +626,12 @@ Valid `dry_run=true` returns `ToolDryRunResponse`.
 
 Owner links:
 
-- [MVP API `harness.close_task`](api/mvp-api.md#harnessclose_task)
+- [`harness.close_task` method](api/method-close-task.md)
 - [Storage Versioning](storage-versioning.md)
 
 ## Related owners
 
-- [MVP API](api/mvp-api.md) for selected method behavior and response unions.
+- [MVP API router](api/mvp-api.md) and method owner documents for selected method behavior and response unions.
 - [API Errors](api/errors.md) for rejected-response public errors.
 - [Storage Records](storage-records.md) for records that effects may touch.
 - [Artifact Storage](storage-artifacts.md) for staged-handle and artifact lifecycle details.

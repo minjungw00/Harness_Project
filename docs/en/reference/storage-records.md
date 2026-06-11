@@ -31,7 +31,7 @@ This document does not own:
 - artifact staging, promotion, linking, body reads, retention, or integrity lifecycle; see [Artifact Storage](storage-artifacts.md)
 - `project_state.state_version`, idempotency, event meaning, locks, or migrations; see [Storage Versioning](storage-versioning.md)
 - API request or response schemas; see [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), and the other API schema owners
-- API method behavior; see [MVP API](api/mvp-api.md)
+- API method behavior; see the [MVP API router](api/mvp-api.md) and method owner documents
 - runtime/repository/server boundaries; see [Runtime Boundaries](runtime-boundaries.md)
 
 ## Runtime home layout
@@ -1088,4 +1088,4 @@ Exceptions:
 - [Storage Effects](storage-effects.md) for which methods create, update, observe, or leave records untouched.
 - [Artifact Storage](storage-artifacts.md) for artifact-specific storage lifecycle.
 - [Storage Versioning](storage-versioning.md) for clocks, idempotency, locks, and migration semantics.
-- [MVP API](api/mvp-api.md) for public method behavior that uses records.
+- [MVP API router](api/mvp-api.md) and method owner documents for public method behavior that uses records.

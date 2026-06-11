@@ -41,7 +41,7 @@ Profile-gated behavior remains inactive until the active-scope and owner documen
 
 ## `VerifiedSurfaceContext`
 
-`VerifiedSurfaceContext` is the result a future server derives by matching a request's selected `surface_id` to registered local surface facts, transport/session/binding evidence, access class, and capability posture. The exact request envelope and access-class values belong to [MVP API](api/mvp-api.md) and [API Value Sets](api/schema-value-sets.md).
+`VerifiedSurfaceContext` is the result a future server derives by matching a request's selected `surface_id` to registered local surface facts, transport/session/binding evidence, access class, and capability posture. The exact request envelope and access-class values belong to the [MVP API router](api/mvp-api.md), method owner documents, and [API Value Sets](api/schema-value-sets.md).
 
 The connector may pass `surface_id` as a selector, but it does not get to assert `verified=true`. A public API request has exactly one request-level `VerifiedSurfaceContext.access_class`; nested payloads such as artifact inputs do not add a second request access class. Protected reads and mutations can rely on a surface only when the API owner says the verified context is compatible with the method.
 
@@ -106,7 +106,7 @@ This boundary is a documentation contract for future connector behavior. It is n
 
 - [Surface Recipes](../use/surface-recipes.md) for practical surface-specific usage.
 - [API Schema Core](api/schema-core.md) and [API Value Sets](api/schema-value-sets.md) for common API context fields and values.
-- [MVP API](api/mvp-api.md) for method request conditions.
+- [MVP API router](api/mvp-api.md) and method owner documents for method request conditions.
 - [Security](security.md) for guarantee wording and non-claims.
 - [Runtime Boundaries](runtime-boundaries.md) for Product Repository, Harness Server, and Runtime Home separation.
 - [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), and [Artifact Storage](storage-artifacts.md) for storage and artifact authority boundaries.

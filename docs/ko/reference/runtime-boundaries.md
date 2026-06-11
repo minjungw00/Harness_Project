@@ -130,6 +130,6 @@
 - [참조 색인](README.md): 질문을 담당 문서로 안내합니다.
 - [보안](security.md): 보안 주장, 비주장, 신뢰 경계, 보장 수준을 담당합니다.
 - [저장소 기록](storage-records.md), [저장 효과](storage-effects.md), [아티팩트 저장소](storage-artifacts.md), [저장소 버전 관리](storage-versioning.md): 저장소 배치, 효과, 아티팩트, 잠금, 마이그레이션, 버전 관리를 담당합니다.
-- [MVP API](api/mvp-api.md)와 API 스키마 담당 문서: 메서드 동작과 API 형태를 담당합니다.
+- [MVP API 경로 문서](api/mvp-api.md), 메서드 담당 문서, API 스키마 담당 문서: 메서드 경로, 메서드 동작, API 형태를 담당합니다.
 - [상태 보기 권한 참조](projection-and-templates.md): 상태 보기 권한과 원천 상태/최신성 경계를 담당합니다.
 - [템플릿 본문](template-bodies.md): 상태 카드, 판단 요청, 실행/증거 요약, 닫기 결과, 에이전트 맥락 패킷 본문을 담당합니다.

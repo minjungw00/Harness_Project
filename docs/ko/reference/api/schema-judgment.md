@@ -19,9 +19,9 @@
 이 문서는 담당하지 않습니다.
 
 - 사용자 소유 판단의 제품 의미와 비대체 규칙: [Core 모델](../core-model.md)
-- 판단 요청과 기록 메서드 동작: [MVP API](mvp-api.md)
+- 판단 요청과 기록 메서드 동작: [사용자 판단 메서드](method-user-judgment.md)
 - 활성 판단 종류 값, 상태 값, 표시 형식 값, 필요 판단 위치 값: [API 값 집합](schema-value-sets.md)
-- 최종 수락이나 잔여 위험 수락의 닫기 효과: [Core 모델](../core-model.md), [MVP API](mvp-api.md)
+- 최종 수락이나 잔여 위험 수락의 닫기 효과: [Core 모델](../core-model.md), [Task 닫기 메서드](method-close-task.md)
 - 판단 누락, 미해결, 거절, 만료에 대한 공개 오류 의미: [API 오류](errors.md)
 
 ## 경계
@@ -149,7 +149,7 @@ AcceptedRiskInput:
 ## 관련 담당 문서
 
 - [Core 모델](../core-model.md): 사용자 소유 판단 의미와 비대체 규칙.
-- [MVP API](mvp-api.md): `harness.request_user_judgment`, `harness.record_user_judgment`.
+- [사용자 판단 메서드](method-user-judgment.md): `harness.request_user_judgment`, `harness.record_user_judgment`.
 - [API 값 집합](schema-value-sets.md): `judgment_kind`, `presentation`, `required_for`, 상태, 선택지 표시 경계.
 - [API 상태 스키마](schema-state.md): `StateRecordRef`.
 - [API 아티팩트 스키마](schema-artifacts.md): `ArtifactRef`.

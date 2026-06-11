@@ -17,14 +17,14 @@
 이 문서는 담당하지 않습니다.
 
 - 아티팩트 저장소 배치, 스테이징 기록, 승격 지속 효과, 보존, 본문 읽기 저장소 자격: [아티팩트 저장소](../storage-artifacts.md)
-- `harness.stage_artifact`, `harness.record_run`, 아티팩트 읽기 메서드 동작: [MVP API](mvp-api.md)
+- `harness.stage_artifact`, `harness.record_run` 메서드 동작: [아티팩트 스테이징 메서드](method-stage-artifact.md), [실행 기록 메서드](method-record-run.md), [MVP API 경로 문서](mvp-api.md)
 - 활성 아티팩트 값 집합: [API 값 집합](schema-value-sets.md)
 - 증거 충분성: [Core 모델](../core-model.md), [API 상태 스키마](schema-state.md)
 - 접근, 차단, 격리에 대한 보안 주장: [보안](../security.md)
 
 ## 경계
 
-아티팩트 스키마는 호출자가 보낸 경로 문자열을 권한으로 만들지 않습니다. 이 문서는 아티팩트 담당 경로가 쓰는 요청/응답 형태를 설명합니다. 검증, 스테이징, 승격, 연결, 본문 읽기 자격은 [MVP API](mvp-api.md)와 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
+아티팩트 스키마는 호출자가 보낸 경로 문자열을 권한으로 만들지 않습니다. 이 문서는 아티팩트 담당 경로가 쓰는 요청/응답 형태를 설명합니다. 검증, 스테이징, 승격, 연결, 본문 읽기 자격은 [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서와 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
 ## `ArtifactRef`
 
@@ -104,7 +104,7 @@ ArtifactInput:
 
 ## 관련 담당 문서
 
-- [MVP API](mvp-api.md): 아티팩트 관련 메서드 동작.
+- [아티팩트 스테이징 메서드](method-stage-artifact.md), [실행 기록 메서드](method-record-run.md), [MVP API 경로 문서](mvp-api.md): 아티팩트 관련 메서드 동작.
 - [아티팩트 저장소](../storage-artifacts.md): 스테이징, 승격, 지속 연결, 본문 읽기 생명주기.
 - [API 값 집합](schema-value-sets.md): `ArtifactInput.source_kind`, `redaction_state`, 가용성, 관련 값.
 - [API 상태 스키마](schema-state.md): `ArtifactRef`를 언급하는 증거 요약.

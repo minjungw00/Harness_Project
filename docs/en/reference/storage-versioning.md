@@ -17,7 +17,7 @@ This document owns:
 This document does not own:
 
 - record layout or DDL; see [Storage Records](storage-records.md)
-- which method branch produces an effect; see [Storage Effects](storage-effects.md) and [MVP API](api/mvp-api.md)
+- which method branch produces an effect; see [Storage Effects](storage-effects.md), the [MVP API router](api/mvp-api.md), and method owner documents
 - public error codes and precedence; see [API Errors](api/errors.md)
 - artifact lifecycle; see [Artifact Storage](storage-artifacts.md)
 - security guarantee wording; see [Security](security.md)
@@ -115,7 +115,7 @@ Result: `project_state.state_version` increments by exactly 1. If one public cal
 
 Exception: A committed blocked result does not automatically increment. It may increment only when the method owner allows blocker or other current-row mutation storage and [Storage Effects](storage-effects.md) allows a `state_version` effect for that branch.
 
-Owner links: Method-specific persistence effects belong to [Storage Effects](storage-effects.md) and [MVP API](api/mvp-api.md).
+Owner links: method-specific persistence effects belong to [Storage Effects](storage-effects.md) and the method owner documents routed from the [MVP API router](api/mvp-api.md).
 
 ## Non-incrementing cases
 

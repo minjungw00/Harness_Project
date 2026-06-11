@@ -19,9 +19,9 @@ This document owns:
 This document does not own:
 
 - the product meaning and non-substitution rules for user-owned judgment; see [Core Model](../core-model.md)
-- method behavior for requesting or recording judgment; see [MVP API](mvp-api.md)
+- method behavior for requesting or recording judgment; see [User-judgment methods](method-user-judgment.md)
 - active judgment-kind values, status values, presentation values, and required-for values; see [API Value Sets](schema-value-sets.md)
-- final acceptance or residual-risk close effects; see [Core Model](../core-model.md) and [MVP API](mvp-api.md)
+- final acceptance or residual-risk close effects; see [Core Model](../core-model.md) and [Close-task method](method-close-task.md)
 - public error semantics for missing, unresolved, denied, or expired judgment; see [API Errors](errors.md)
 
 ## Boundary
@@ -149,7 +149,7 @@ Accepted risk is scoped to the named visible risk and the requested judgment. It
 ## Related owners
 
 - [Core Model](../core-model.md) for user-owned judgment meaning and non-substitution rules.
-- [MVP API](mvp-api.md) for `harness.request_user_judgment` and `harness.record_user_judgment`.
+- [User-judgment methods](method-user-judgment.md) for `harness.request_user_judgment` and `harness.record_user_judgment`.
 - [API Value Sets](schema-value-sets.md) for `judgment_kind`, `presentation`, `required_for`, status, and option display boundaries.
 - [API State Schemas](schema-state.md) for `StateRecordRef`.
 - [API Artifact Schemas](schema-artifacts.md) for `ArtifactRef`.

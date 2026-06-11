@@ -33,7 +33,7 @@ The storage family does not own:
 - Runtime Home deployment
 - permission claims
 
-Use [MVP API](api/mvp-api.md), the API schema owners, [Core Model](core-model.md), [API Errors](api/errors.md), [Security](security.md), and [Runtime Boundaries](runtime-boundaries.md) for those contracts.
+Use the [MVP API router](api/mvp-api.md), method owner documents, the API schema owners, [Core Model](core-model.md), [API Errors](api/errors.md), [Security](security.md), and [Runtime Boundaries](runtime-boundaries.md) for those contracts.
 
 API data shape and persistence effect are separate. A response field such as `CloseReadinessBlocker[]`, `ArtifactRef`, or `StagedArtifactHandle` describes API data; it does not by itself prove that a row was written, an artifact was promoted, a handle was consumed, or `project_state.state_version` changed.
 

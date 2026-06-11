@@ -18,7 +18,7 @@
 
 이 문서는 담당하지 않습니다.
 
-- 메서드 동작: [MVP API](mvp-api.md)
+- 메서드 동작: [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서
 - 상태와 현재 위치 스키마: [API 상태 스키마](schema-state.md)
 - 아티팩트 스키마: [API 아티팩트 스키마](schema-artifacts.md)
 - 사용자 소유 판단 스키마: [API 판단 스키마](schema-judgment.md)
@@ -35,7 +35,7 @@
 <a id="tool-envelope"></a>
 ## `ToolEnvelope`
 
-`ToolEnvelope`는 [MVP API](mvp-api.md)가 더 좁은 메서드별 요청 규칙을 두지 않는 한 공개 메서드가 사용하는 공통 요청 래퍼입니다.
+`ToolEnvelope`는 [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서가 더 좁은 메서드별 요청 규칙을 두지 않는 한 공개 메서드가 사용하는 공통 요청 래퍼입니다.
 
 ```yaml
 ToolEnvelope:
@@ -61,7 +61,7 @@ ToolEnvelope:
 - `ToolRejectedResponse`
 - 선택된 상태 효과 동작이나 저장소 스테이징 동작에 유효한 미리보기 분기가 있을 때의 `ToolDryRunResponse`
 
-`MethodResult`는 하나의 구체 스키마 이름이 아닙니다. [MVP API](mvp-api.md)가 정의하는 메서드별 성공 또는 커밋 결과 분기입니다. 모든 구체 메서드 결과는 `base: ToolResultBase`를 담고 그 뒤에 해당 메서드의 결과 필드만 둡니다.
+`MethodResult`는 하나의 구체 스키마 이름이 아닙니다. [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서가 정의하는 메서드별 성공 또는 커밋 결과 분기입니다. 모든 구체 메서드 결과는 `base: ToolResultBase`를 담고 그 뒤에 해당 메서드의 결과 필드만 둡니다.
 
 ```yaml
 ToolResultBase:
@@ -82,7 +82,7 @@ ToolDryRunResponse:
 
 메서드별 결과 필드는 그 메서드 결과 분기에만 둡니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, `close_state` 같은 결과 전용 필드를 담지 않습니다.
 
-활성 `response_kind`와 `effect_kind` 값은 [응답과 효과 값](schema-value-sets.md#응답과-효과-값)이 담당합니다. 분기 선택과 상태 효과는 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 담당합니다. 공개 오류 우선순위는 [API 오류](errors.md)가 담당합니다.
+활성 `response_kind`와 `effect_kind` 값은 [응답과 효과 값](schema-value-sets.md#응답과-효과-값)이 담당합니다. 공통 분기 읽기 규칙은 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 공개 오류 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ## `dry_run` 요약 형태
 

@@ -79,6 +79,6 @@ This page states the location boundary and the non-inference rules. Detailed gua
 - [Reference Index](README.md): routes questions to canonical owners.
 - [Security](security.md): owns security claims, non-claims, trust boundaries, and guarantee levels.
 - [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md): own storage layout, effects, artifacts, locks, migrations, and versioning.
-- [MVP API](api/mvp-api.md) and API schema owners: own method behavior and API shapes.
+- [MVP API router](api/mvp-api.md), method owner documents, and API schema owners: own method routing, method behavior, and API shapes.
 - [Projection Authority Reference](projection-and-templates.md): owns projection authority and source-state/freshness boundaries.
 - [Template Bodies](template-bodies.md): owns status card, judgment request, run/evidence summary, close result, and agent context packet bodies.

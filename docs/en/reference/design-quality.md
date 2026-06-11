@@ -17,7 +17,7 @@ It owns:
 It does not own:
 
 - Core lifecycle, gates, blockers, `prepare_write`, `close_task`, Write Authorization, final acceptance, residual-risk acceptance, or non-substitution rules; see [Core Model Reference](core-model.md)
-- MCP request/response schemas, `ValidatorResult`, `UserJudgment`, `AcceptedRiskInput`, public errors, or active/later schema values; see [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Judgment Schemas](api/schema-judgment.md), and [API Errors](api/errors.md)
+- MCP request/response schemas, `ValidatorResult`, `UserJudgment`, `AcceptedRiskInput`, public errors, or active/later schema values; see the [MVP API router](api/mvp-api.md), method owner documents, [API Schema Core](api/schema-core.md), [API Judgment Schemas](api/schema-judgment.md), and [API Errors](api/errors.md)
 - SQLite DDL and persisted tables; see [Storage Records](storage-records.md)
 - validator-run storage effects; see [Storage Effects](storage-effects.md)
 - artifact storage; see [Artifact Storage](storage-artifacts.md)
@@ -31,7 +31,7 @@ Use these owner links when a design-quality finding crosses another contract:
 |---|---|
 | Core non-substitution, close readiness, waiver, accepted-risk, and residual-risk meaning | [Core Model Reference](core-model.md) |
 | `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, and `AcceptedRiskInput` shapes | [API Judgment Schemas](api/schema-judgment.md) |
-| Active method behavior for requesting or recording judgment, reporting status, and closing a Task | [MVP API](api/mvp-api.md) |
+| Active method behavior for requesting or recording judgment, reporting status, and closing a Task | [User-judgment methods](api/method-user-judgment.md), [Status method](api/method-status.md), [Close-task method](api/method-close-task.md) |
 | Method-to-storage effects for active API method branches | [Storage Effects](storage-effects.md) |
 | Deferred design gates, policy blockers, broad validators, waiver candidates, and policy catalogs | [Later Candidate Index](../later/index.md) |
 

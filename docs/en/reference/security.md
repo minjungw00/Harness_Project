@@ -120,7 +120,7 @@ Until those conditions are met, use "the specification requires" for future serv
 - [Active MVP Scope](active-mvp-scope.md) owns current MVP inclusion, exclusion, and active/later boundaries.
 - [Runtime Boundaries](runtime-boundaries.md) owns Product Repository, Harness Server, Runtime Home, and non-isolation separation.
 - [Agent Integration](agent-integration.md) owns connector behavior and `capability_profile` meaning at the surface boundary.
-- [MVP API](api/mvp-api.md), [API Value Sets](api/schema-value-sets.md), and [API Errors](api/errors.md) own method behavior, value sets, and public error routing.
+- [MVP API router](api/mvp-api.md), method owner documents, [API Value Sets](api/schema-value-sets.md), and [API Errors](api/errors.md) own method routing, method behavior, value sets, and public error routing.
 - [Core Model](core-model.md) owns user-owned judgment and non-substitution rules.
 - [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), and [Artifact Storage](storage-artifacts.md) own storage and artifact details.
 - [Later Candidate Index](../later/index.md) owns deferred stronger capability, monitoring, isolation, and preventive-control candidates.

@@ -19,7 +19,7 @@
 
 ## 담당하지 않는 것
 
-저장소 문서는 API 요청 또는 응답 형태, 공개 오류 우선순위, 메서드 동작, Core 생명주기 의미, 보안 보장, Runtime Home 배포, 권한 주장을 담당하지 않습니다. 해당 계약은 [MVP API](api/mvp-api.md), API 스키마 담당 문서, [Core 모델](core-model.md), [API 오류](api/errors.md), [보안](security.md), [런타임 경계](runtime-boundaries.md)를 봅니다.
+저장소 문서는 API 요청 또는 응답 형태, 공개 오류 우선순위, 메서드 동작, Core 생명주기 의미, 보안 보장, Runtime Home 배포, 권한 주장을 담당하지 않습니다. 해당 계약은 [MVP API 경로 문서](api/mvp-api.md), 메서드 담당 문서, API 스키마 담당 문서, [Core 모델](core-model.md), [API 오류](api/errors.md), [보안](security.md), [런타임 경계](runtime-boundaries.md)를 봅니다.
 
 API 데이터 형태와 저장 효과는 별개입니다.
 

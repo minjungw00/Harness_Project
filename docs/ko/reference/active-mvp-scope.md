@@ -136,7 +136,7 @@
 
 보장 의미, 탐지형 표현, `preventive`와 `isolated` 승격 규칙, 보안 비주장의 기준 설명은 [보안](security.md)을 확인하세요. 보장 라벨 값 항목은 [API 값 집합](api/schema-value-sets.md)을 확인하세요.
 
-`harness.prepare_write`와 `Write Authorization`은 제품 파일 쓰기 호환성 메커니즘입니다. 메서드 동작은 [MVP API](api/mvp-api.md)가 담당하고, Core 의미는 [Core 모델](core-model.md)이 담당합니다.
+`harness.prepare_write`와 `Write Authorization`은 제품 파일 쓰기 호환성 메커니즘입니다. 메서드 동작은 [MVP API 경로 문서](api/mvp-api.md)가 안내하는 [쓰기 준비 메서드](api/method-prepare-write.md)가 담당하고, Core 의미는 [Core 모델](core-model.md)이 담당합니다.
 
 ## 문서 전용 경계
 
@@ -150,7 +150,7 @@
 |---|---|
 | 구현 준비와 유지보수자 인계 상태 | [MVP 계획](../build/mvp-plan.md) |
 | Core 권한, Task 상태, 사용자 소유 판단 경계 | [Core 모델](core-model.md) |
-| API 메서드 동작 | [MVP API](api/mvp-api.md) |
+| API 메서드 동작 | [MVP API 경로 문서](api/mvp-api.md)와 메서드 담당 문서 |
 | API 스키마와 값 집합 | [참조 색인의 API와 스키마 담당 문서](README.md#api와-스키마-담당-문서) |
 | 공개 오류와 닫기 차단 사유 경로 | [오류](api/errors.md) |
 | 저장소 기록, 효과, 아티팩트 생명주기, 버전 관리, 잠금 | [참조 색인의 저장소 담당 문서](README.md#저장소-담당-문서) |

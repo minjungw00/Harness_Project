@@ -127,7 +127,7 @@
 ### 담당 문서 링크
 
 - [Core 모델](core-model.md): 사용자 소유 판단과 비대체 규칙.
-- [MVP API](api/mvp-api.md): 판단 요청과 기록 메서드 동작.
+- [사용자 판단 메서드](api/method-user-judgment.md): 판단 요청과 기록 메서드 동작.
 - [API 판단 스키마](api/schema-judgment.md): `UserJudgment`, `SensitiveActionScope`, 수락된 위험 형태.
 - [보안](security.md): 민감 동작 승인 경계.
 
@@ -180,7 +180,7 @@
 ### 담당 문서 링크
 
 - [Core 모델](core-model.md): 증거 의미와 비대체 규칙.
-- [MVP API](api/mvp-api.md): 실행/증거 메서드 동작.
+- [실행 기록 메서드](api/method-record-run.md): 실행/증거 메서드 동작.
 - [API 상태 스키마](api/schema-state.md): 증거 요약과 `ValidatorResult` 형태 표시 데이터.
 - [API 아티팩트 스키마](api/schema-artifacts.md)와 [아티팩트 저장소](storage-artifacts.md): 아티팩트 참조, 가용성, 본문 읽기 자격.
 - [저장 효과](storage-effects.md): 저장소를 바꾸는 것과 바꾸지 않는 것.
@@ -228,7 +228,7 @@
 ### 담당 문서 링크
 
 - [Core 모델](core-model.md): 닫기 준비 상태, 정직한 닫기, 최종 수락, 잔여 위험 경계.
-- [MVP API](api/mvp-api.md): `harness.close_task` 동작.
+- [Task 닫기 메서드](api/method-close-task.md): `harness.close_task` 동작.
 - [API 상태 스키마](api/schema-state.md): `CloseReadinessBlocker`.
 - [API 판단 스키마](api/schema-judgment.md): 최종 수락과 수락된 위험 입력 형태.
 - [API 오류](api/errors.md): 닫기 거절과 차단 사유 경로.

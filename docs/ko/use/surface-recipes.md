@@ -93,7 +93,7 @@ IDE/editor 통합은 에이전트가 절차를 지키도록 도울 수 있습니
 ## 참조 계약 링크
 
 - [에이전트 통합 참조](../reference/agent-integration.md): 커넥터 동작, `capability_profile`, `VerifiedSurfaceContext`, 맥락 주입/가져오기, 대체 동작, 커넥터 적합성.
-- [MVP API](../reference/api/mvp-api.md): 활성 메서드 동작과 요청 조건.
+- [MVP API 경로 문서](../reference/api/mvp-api.md)와 메서드 담당 문서: 활성 메서드 동작과 요청 조건.
 - [API 값 집합](../reference/api/schema-value-sets.md): 접근 등급과 enum 형태 API 값.
 - [API 오류](../reference/api/errors.md): 공개 오류 코드와 복구 경로.
 - [보안](../reference/security.md): 보장 표현과 비주장.

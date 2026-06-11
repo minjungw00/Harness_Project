@@ -18,7 +18,7 @@ This document does not own:
 
 - common envelopes or response branches; see [API Schema Core](schema-core.md)
 - active enum-like values; see [API Value Sets](schema-value-sets.md)
-- method behavior; see [MVP API](mvp-api.md)
+- method behavior; see the [MVP API router](mvp-api.md) and method owner documents
 - public error semantics; see [API Errors](errors.md)
 - Core lifecycle and close-readiness product meaning; see [Core Model](../core-model.md)
 - storage records or persistence effects; see [Storage Records](../storage-records.md) and [Storage Effects](../storage-effects.md)
@@ -70,7 +70,7 @@ StateSummary:
   guarantee_display: GuaranteeDisplay | null
 ```
 
-`StateSummary` may summarize stored Core state, computed read-only status, and close-readiness observations. It does not decide whether a method committed. That decision comes from the response branch and [MVP API](mvp-api.md).
+`StateSummary` may summarize stored Core state, computed read-only status, and close-readiness observations. It does not decide whether a method committed. That decision comes from the response branch and the method owner routed from [MVP API](mvp-api.md).
 
 ## Task lifecycle state
 
@@ -181,7 +181,7 @@ ObservedChanges:
   baseline_ref: string | null
 ```
 
-`ArtifactRef` is owned by [API Artifact Schemas](schema-artifacts.md). Evidence sufficiency meaning is owned by [Core Model evidence and run authority](../core-model.md#9-evidence-and-run-authority) and method behavior is owned by [MVP API](mvp-api.md).
+`ArtifactRef` is owned by [API Artifact Schemas](schema-artifacts.md). Evidence sufficiency meaning is owned by [Core Model evidence and run authority](../core-model.md#9-evidence-and-run-authority), and method behavior is owned by method owner documents routed from [MVP API](mvp-api.md).
 
 ## Close readiness and validation shapes
 
@@ -206,7 +206,7 @@ GuaranteeDisplay:
   capability_refs: StateRecordRef[]
 ```
 
-`CloseReadinessBlocker` is a data shape for close-readiness findings. It is not the whole close-readiness concept and it does not itself imply persistence. Full close-readiness evaluation order is owned by [Core Model close readiness](../core-model.md#close_task). Response branch behavior and committed blocked outcomes are owned by [`harness.close_task`](mvp-api.md#harnessclose_task). Public error routing is owned by [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers).
+`CloseReadinessBlocker` is a data shape for close-readiness findings. It is not the whole close-readiness concept and it does not itself imply persistence. Full close-readiness evaluation order is owned by [Core Model close readiness](../core-model.md#close_task). Response branch behavior and committed blocked outcomes are owned by [`harness.close_task`](method-close-task.md). Public error routing is owned by [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers).
 
 Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values are owned by [API Value Sets](schema-value-sets.md). Security guarantee meaning is owned by [Security](../security.md).
 
@@ -214,7 +214,7 @@ Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorRes
 
 - [API Schema Core](schema-core.md) for `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, and `ToolDryRunResponse`.
 - [API Value Sets](schema-value-sets.md) for exact values used by state fields.
-- [MVP API](mvp-api.md) for the methods that return these schemas.
+- [MVP API router](mvp-api.md) and method owner documents for the methods that return these schemas.
 - [API Artifact Schemas](schema-artifacts.md) for `ArtifactRef`.
 - [API Judgment Schemas](schema-judgment.md) for `UserJudgmentCandidate`.
 - [Storage Effects](../storage-effects.md) for persistence and state-effect consequences.

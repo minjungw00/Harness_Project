@@ -19,7 +19,7 @@
 | 아티팩트 생명주기 세부사항 | [아티팩트 저장소](storage-artifacts.md) |
 | 멱등성, 잠금, `state_version` 시계, 이벤트 순서, 마이그레이션 | [저장소 버전 관리](storage-versioning.md) |
 | 공개 응답 분기와 스키마 | [API 코어 스키마](api/schema-core.md) |
-| API 메서드 동작 | [MVP API](api/mvp-api.md) |
+| API 메서드 동작 | [MVP API 경로 문서](api/mvp-api.md)와 메서드 담당 문서 |
 | 공개 오류 코드 우선순위 | [API 오류](api/errors.md) |
 
 ## 저장 효과 분기 요약
@@ -198,11 +198,11 @@
 - 증거 업데이트
 - `project_state.state_version` 증가
 
-`harness.close_task intent=check`의 응답 분기는 [`harness.close_task`](api/mvp-api.md#harnessclose_task)가 담당합니다. 이 저장 효과 문서는 `dry_run=true`이거나 `blockers: CloseReadinessBlocker[]`를 포함하더라도 그 점검이 읽기 전용이라는 점만 담당합니다.
+`harness.close_task intent=check`의 응답 분기는 [`harness.close_task`](api/method-close-task.md)가 담당합니다. 이 저장 효과 문서는 `dry_run=true`이거나 `blockers: CloseReadinessBlocker[]`를 포함하더라도 그 점검이 읽기 전용이라는 점만 담당합니다.
 
 ## 커밋된 차단 결과의 저장 효과
 
-커밋된 차단 결과는 거절 응답과 다릅니다. `harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 [MVP API](api/mvp-api.md)가 차단 커밋을 허용할 때만 `MethodResult`입니다.
+커밋된 차단 결과는 거절 응답과 다릅니다. `harness.prepare_write` 또는 `harness.close_task`의 커밋된 차단 결과는 관련 메서드 담당 문서인 [쓰기 준비 메서드](api/method-prepare-write.md) 또는 [Task 닫기 메서드](api/method-close-task.md)가 차단 커밋을 허용할 때만 `MethodResult`입니다.
 
 <a id="harnessprepare_write-committed-non-allow-decision"></a>
 ### `harness.prepare_write`의 커밋된 비허용 판단
@@ -277,7 +277,7 @@ write_decision_reasons:
 <a id="메서드별-저장-효과"></a>
 ## 메서드 저장 효과 요약
 
-아래 표는 메서드별 지속 저장 효과를 요약합니다. 메서드 동작과 응답 공용체는 [MVP API](api/mvp-api.md)가 담당합니다.
+아래 표는 메서드별 지속 저장 효과를 요약합니다. 메서드 동작과 응답 공용체는 [MVP API 경로 문서](api/mvp-api.md)가 안내하는 메서드 담당 문서가 담당합니다.
 
 | 메서드 | 주 저장 효과 | 세부사항 |
 |---|---|---|
@@ -314,7 +314,7 @@ write_decision_reasons:
 
 담당 문서:
 
-- [MVP API의 `harness.intake`](api/mvp-api.md#harnessintake)
+- [`harness.intake` 메서드](api/method-intake.md)
 - [저장소 기록](storage-records.md)
 - [저장소 버전 관리](storage-versioning.md)
 
@@ -338,7 +338,7 @@ write_decision_reasons:
 
 담당 문서:
 
-- [MVP API의 `harness.update_scope`](api/mvp-api.md#harnessupdate_scope)
+- [`harness.update_scope` 메서드](api/method-update-scope.md)
 - [저장소 기록](storage-records.md)
 - [저장소 버전 관리](storage-versioning.md)
 
@@ -359,7 +359,7 @@ write_decision_reasons:
 
 담당 문서:
 
-- [MVP API의 `harness.status`](api/mvp-api.md#harnessstatus)
+- [`harness.status` 메서드](api/method-status.md)
 
 ### `harness.prepare_write`
 
@@ -399,7 +399,7 @@ write_decision_reasons:
 
 담당 문서:
 
-- [MVP API의 `harness.prepare_write`](api/mvp-api.md#harnessprepare_write)
+- [`harness.prepare_write` 메서드](api/method-prepare-write.md)
 - [저장소 기록](storage-records.md)
 - [저장소 버전 관리](storage-versioning.md)
 
@@ -434,7 +434,7 @@ write_decision_reasons:
 
 담당 문서:
 
-- [MVP API의 `harness.stage_artifact`](api/mvp-api.md#harnessstage_artifact)
+- [`harness.stage_artifact` 메서드](api/method-stage-artifact.md)
 - [아티팩트 저장소](storage-artifacts.md)
 
 ### `harness.record_run`
@@ -486,7 +486,7 @@ run_ref: run_account_export_tests_001
 
 담당 문서:
 
-- [MVP API의 `harness.record_run`](api/mvp-api.md#harnessrecord_run)
+- [`harness.record_run` 메서드](api/method-record-run.md)
 - [아티팩트 저장소](storage-artifacts.md)
 - [저장소 기록](storage-records.md)
 
@@ -516,7 +516,7 @@ run_ref: run_account_export_tests_001
 
 담당 문서:
 
-- [MVP API의 `harness.request_user_judgment`](api/mvp-api.md#harnessrequest_user_judgment)
+- [`harness.request_user_judgment` 메서드](api/method-user-judgment.md#harnessrequest_user_judgment)
 - [저장소 기록](storage-records.md)
 
 ### `harness.record_user_judgment`
@@ -544,7 +544,7 @@ run_ref: run_account_export_tests_001
 
 담당 문서:
 
-- [MVP API의 `harness.record_user_judgment`](api/mvp-api.md#harnessrecord_user_judgment)
+- [`harness.record_user_judgment` 메서드](api/method-user-judgment.md#harnessrecord_user_judgment)
 - [저장소 기록](storage-records.md)
 
 ### `harness.close_task intent=check`
@@ -567,7 +567,7 @@ run_ref: run_account_export_tests_001
 
 담당 문서:
 
-- [MVP API의 `harness.close_task`](api/mvp-api.md#harnessclose_task)
+- [`harness.close_task` 메서드](api/method-close-task.md)
 
 ### `harness.close_task intent=complete`
 
@@ -588,7 +588,7 @@ run_ref: run_account_export_tests_001
 
 담당 문서:
 
-- [MVP API의 `harness.close_task`](api/mvp-api.md#harnessclose_task)
+- [`harness.close_task` 메서드](api/method-close-task.md)
 - [저장소 버전 관리](storage-versioning.md)
 
 ### `harness.close_task intent=cancel`
@@ -612,7 +612,7 @@ run_ref: run_account_export_tests_001
 
 담당 문서:
 
-- [MVP API의 `harness.close_task`](api/mvp-api.md#harnessclose_task)
+- [`harness.close_task` 메서드](api/method-close-task.md)
 - [저장소 버전 관리](storage-versioning.md)
 
 ### `harness.close_task intent=supersede`
@@ -637,12 +637,12 @@ run_ref: run_account_export_tests_001
 
 담당 문서:
 
-- [MVP API의 `harness.close_task`](api/mvp-api.md#harnessclose_task)
+- [`harness.close_task` 메서드](api/method-close-task.md)
 - [저장소 버전 관리](storage-versioning.md)
 
 ## 관련 담당 문서
 
-- [MVP API](api/mvp-api.md): 선택된 메서드 동작과 응답 공용체.
+- [MVP API 경로 문서](api/mvp-api.md)와 메서드 담당 문서: 선택된 메서드 동작과 응답 공용체.
 - [API 오류](api/errors.md): 거절 응답의 공개 오류.
 - [저장소 기록](storage-records.md): 저장 효과가 건드릴 수 있는 기록.
 - [아티팩트 저장소](storage-artifacts.md): 스테이징 핸들과 아티팩트 생명주기 세부사항.

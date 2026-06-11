@@ -18,8 +18,8 @@ This document does not own:
 
 | Not owned here | Owner |
 |---|---|
-| Method payload schemas, response field shapes, and common envelopes | [API Schema Core](schema-core.md), [MVP API](mvp-api.md), and the split API schema owners. |
-| Core gate semantics, user-judgment boundaries, and full close-readiness evaluation order | [Core Model](../core-model.md) and [MVP API](mvp-api.md). |
+| Method payload schemas, response field shapes, and common envelopes | [API Schema Core](schema-core.md), method owner documents routed from [MVP API](mvp-api.md), and the API schema owners. |
+| Core gate semantics, user-judgment boundaries, and full close-readiness evaluation order | [Core Model](../core-model.md), [User-judgment methods](method-user-judgment.md), and [Close-task method](method-close-task.md). |
 | `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and value-set field definitions | [API State Schemas](schema-state.md), [API Schema Core](schema-core.md), and [API Value Sets](schema-value-sets.md). |
 | Storage rows, replay rows, DDL, locks, migrations, and storage effects | [Storage Records](../storage-records.md), [Storage Effects](../storage-effects.md), and [Storage Versioning](../storage-versioning.md). |
 | Security guarantee wording and access-boundary claims | [Security](../security.md). |
@@ -156,7 +156,7 @@ Rejected response means the method did not proceed to the committed operation. I
 | `CloseTaskResult(close_state=blocked)` after a valid close-readiness evaluation | `blockers: CloseReadinessBlocker[]` | Uses close-readiness blocker mapping. It must not use `STATE_VERSION_CONFLICT`. |
 | `StatusResult.close_blockers` and `harness.close_task intent=check` | Read-only `CloseReadinessBlocker` observation data | No stored blocker and no state-version increment for the read. |
 
-Blocked result means the method may have returned an operation-specific blocked outcome. It is not a public transport/schema error. Any committed blocked result and any state effect must be allowed by [MVP API](mvp-api.md) and [Storage Effects](../storage-effects.md).
+Blocked result means the method may have returned an operation-specific blocked outcome. It is not a public transport/schema error. Any committed blocked result and any state effect must be allowed by the relevant method owner routed from [MVP API](mvp-api.md) and [Storage Effects](../storage-effects.md).
 
 ## Dry-run behavior
 
@@ -257,7 +257,7 @@ Invalid terminal transition:
 | Readable view freshness issue | `PROJECTION_STALE`; not a close blocker by itself |
 | Stale project-wide state or stale Write Authorization basis | `STATE_VERSION_CONFLICT` in `ToolRejectedResponse.errors[]`; never a close blocker |
 
-Full close-readiness evaluation order is owned by [Core Model close readiness](../core-model.md#close_task). Method behavior is owned by [`harness.close_task`](mvp-api.md#harnessclose_task). `CloseReadinessBlocker` shape and categories are owned by [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
+Full close-readiness evaluation order is owned by [Core Model close readiness](../core-model.md#close_task). Method behavior is owned by [`harness.close_task`](method-close-task.md). `CloseReadinessBlocker` shape and categories are owned by [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
 
 ## User-facing labels
 
@@ -290,7 +290,7 @@ User-facing labels may differ from public error identifiers. Labels are display 
 |---|---|
 | Public `ErrorCode` values, meanings, and precedence | This document. |
 | `ToolRejectedResponse`, `ToolDryRunResponse`, `ToolError`, `ToolResultBase`, `DryRunSummary`, and response branch shape | [API Schema Core](schema-core.md). |
-| Method behavior, branch selection, and method-specific payloads | [MVP API](mvp-api.md). |
+| Method behavior, branch selection, and method-specific payloads | Method owner documents routed from [MVP API](mvp-api.md). |
 | `WriteDecisionReason`, `CloseReadinessBlocker`, state summaries, and close-readiness data shapes | [API State Schemas](schema-state.md). |
 | `response_kind`, `effect_kind`, `PlannedBlocker.source_kind`, blocker categories, and enum-like API values | [API Value Sets](schema-value-sets.md). |
 | `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`, and artifact input shape | [API Artifact Schemas](schema-artifacts.md). |

@@ -19,7 +19,7 @@
 
 - 이 Build 문서는 구현 계획을 돕는 문서이지 런타임 구현이 아닙니다.
 - 현재 MVP 범위는 [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md)가 담당합니다. 이 문서는 범위 목록을 반복하지 않습니다.
-- API 메서드 동작은 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md)가 담당합니다. 이 문서는 요청, 응답, 분기, 오류 동작을 반복하지 않습니다.
+- API 메서드 경로는 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md)가 담당하고, 메서드 동작은 그 문서가 나열하는 메서드 담당 문서가 담당합니다. 이 문서는 요청, 응답, 분기, 오류 동작을 반복하지 않습니다.
 - 공통 API 요청 래퍼와 응답 분기는 [`../reference/api/schema-core.md`](../reference/api/schema-core.md)가 담당합니다. 상태, 아티팩트, 판단, 값 집합 스키마는 분리된 API 스키마 참조가 담당합니다.
 - 저장 효과는 [`../reference/storage-effects.md`](../reference/storage-effects.md)가 담당합니다. 이 문서는 테이블, 마이그레이션, 아티팩트 생명주기, 상태 효과를 정의하지 않습니다.
 - 보안 주장은 [`../reference/security.md`](../reference/security.md)가 담당하고, 런타임 홈과 접근 경계는 [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md)가 담당합니다.
@@ -34,7 +34,7 @@
 3. 코드 구조를 설계하기 전에 각 서버 접점이 어느 참조 담당 문서를 따르는지 연결합니다.
 4. API, 스키마, 저장소, 보안, 런타임 경계 담당 문서가 해당 조각을 수락한 뒤에만 계약을 해치지 않는 뼈대를 만듭니다.
 5. 오래 남는 저장 동작은 [`../reference/storage-effects.md`](../reference/storage-effects.md)에 있는 내용만 사용합니다.
-6. API와 도구 동작은 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md)를 따르고, 스키마는 관련된 분리 API 스키마 담당 문서를 따릅니다.
+6. API와 도구 동작은 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md), 관련 메서드 담당 문서, 관련 API 스키마 담당 문서를 따릅니다.
 7. 상태와 표시 동작은 담당 문서가 정한 상태에서 파생해 읽는 것으로 다루며, 독립 권한처럼 만들지 않습니다.
 8. 수락, 잔여 위험 수락, 증거, 검증, 닫기 준비 상태를 구현 작업에서 서로 구분합니다.
 
@@ -68,7 +68,7 @@
 |---|---|
 | 빌드 인계 | 유지보수자가 이 문서를 구현 계획의 활성 빌드 진입점으로 확인합니다. |
 | 현재 MVP 범위 | 유지보수자가 [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md)의 경계를 수락하거나, 해결되지 않은 범위 영향을 이름 붙입니다. |
-| API와 스키마 | 유지보수자가 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md)와 필요한 API 스키마 담당 문서의 해당 조각을 수락합니다. |
+| API와 스키마 | 유지보수자가 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md), 영향을 받는 메서드 담당 문서, 필요한 API 스키마 담당 문서의 해당 조각을 수락합니다. |
 | 저장 효과 | 런타임 저장 파일, DDL, 아티팩트 저장소를 만들기 전에 유지보수자가 [`../reference/storage-effects.md`](../reference/storage-effects.md)의 해당 조각을 수락합니다. |
 | 보안과 런타임 경계 | 유지보수자가 [`../reference/security.md`](../reference/security.md)와 [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md)의 관련 주장과 비주장을 수락합니다. |
 | 스모크 목표 | 유지보수자가 첫 내부 스모크 목표를 적합성 주장이 아니라 구현 계획 목표로 수락합니다. |
@@ -89,7 +89,7 @@
 | 주제 | 담당 문서 |
 |---|---|
 | 현재 MVP 범위 | [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md) |
-| API 메서드 동작 | [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md) |
+| API 메서드 동작 | [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md)와 그 문서가 나열하는 메서드 담당 문서 |
 | 공통 API 요청 래퍼와 응답 분기 | [`../reference/api/schema-core.md`](../reference/api/schema-core.md) |
 | 상태 스키마와 닫기 준비 상태 구조 | [`../reference/api/schema-state.md`](../reference/api/schema-state.md) |
 | 아티팩트 스키마 | [`../reference/api/schema-artifacts.md`](../reference/api/schema-artifacts.md) |

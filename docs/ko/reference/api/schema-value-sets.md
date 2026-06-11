@@ -18,7 +18,7 @@
 
 - 공개 `ErrorCode` 값과 우선순위: [API 오류](errors.md)
 - 이 값을 쓰는 필드 형태: [API 코어 스키마](schema-core.md), [API 상태 스키마](schema-state.md), [API 아티팩트 스키마](schema-artifacts.md), [API 판단 스키마](schema-judgment.md)
-- 메서드 동작: [MVP API](mvp-api.md)
+- 메서드 동작: [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서
 - 보안 보장 의미: [보안](../security.md)
 - 이후 후보 승격: [이후 후보 색인](../../later/index.md)
 
@@ -53,7 +53,7 @@ harness.record_user_judgment
 harness.close_task
 ```
 
-메서드 동작은 [MVP API](mvp-api.md)가 담당합니다. 메서드 이름은 Task 생명주기 값이 아닙니다.
+메서드 동작은 [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서가 담당합니다. 메서드 이름은 Task 생명주기 값이 아닙니다.
 
 <a id="response-and-effect-values"></a>
 ## 응답과 효과 값
@@ -75,7 +75,7 @@ staging_created
 no_effect
 ```
 
-`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 분기 선택과 상태 효과는 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류](errors.md)가 담당합니다.
+`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 읽기 규칙은 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류](errors.md)가 담당합니다.
 
 <a id="access-class-values"></a>
 ## 접근 등급 값
@@ -460,5 +460,5 @@ incompatible
 - [현재 MVP 범위](../active-mvp-scope.md): 값이 현재 MVP에 속하는지 판단.
 - [API 오류](errors.md): 공개 오류 코드와 우선순위.
 - [API 코어 스키마](schema-core.md), [API 상태 스키마](schema-state.md), [API 아티팩트 스키마](schema-artifacts.md), [API 판단 스키마](schema-judgment.md): 이 값을 쓰는 필드.
-- [MVP API](mvp-api.md): 이 값을 사용하는 메서드 동작.
+- [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서: 이 값을 사용하는 메서드 동작.
 - [이후 후보 색인](../../later/index.md): 비활성 값 이름.

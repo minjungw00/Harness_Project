@@ -18,7 +18,7 @@ This document does not own:
 
 - public `ErrorCode` values or precedence; see [API Errors](errors.md)
 - field shapes that use these values; see [API Schema Core](schema-core.md), [API State Schemas](schema-state.md), [API Artifact Schemas](schema-artifacts.md), and [API Judgment Schemas](schema-judgment.md)
-- method behavior; see [MVP API](mvp-api.md)
+- method behavior; see the [MVP API router](mvp-api.md) and method owner documents
 - security guarantee meaning; see [Security](../security.md)
 - later candidate promotion; see [Later Candidate Index](../../later/index.md)
 
@@ -45,7 +45,7 @@ harness.record_user_judgment
 harness.close_task
 ```
 
-Method behavior is owned by [MVP API](mvp-api.md). Method names are not Task lifecycle values.
+Method behavior is owned by method owner documents routed from [MVP API](mvp-api.md). Method names are not Task lifecycle values.
 
 <a id="response-and-effect-values"></a>
 ## Response and effect values
@@ -67,7 +67,7 @@ staging_created
 no_effect
 ```
 
-`response_kind` and `effect_kind` are branch metadata values. Branch selection and state effects are owned by [shared request rules](mvp-api.md#shared-request-rules). Public error semantics for rejected branches are owned by [API Errors](errors.md).
+`response_kind` and `effect_kind` are branch metadata values. Shared branch reading is owned by [shared request rules](mvp-api.md#shared-request-rules), and method-specific state effects are owned by method owner documents. Public error semantics for rejected branches are owned by [API Errors](errors.md).
 
 <a id="access-class-values"></a>
 ## Access class values
@@ -426,5 +426,5 @@ These names are not default active MVP values. A listed name is a value-set boun
 - [Active MVP Scope](../active-mvp-scope.md) for whether a value belongs in the current MVP.
 - [API Errors](errors.md) for public error codes and precedence.
 - [API Schema Core](schema-core.md), [API State Schemas](schema-state.md), [API Artifact Schemas](schema-artifacts.md), and [API Judgment Schemas](schema-judgment.md) for fields that use these values.
-- [MVP API](mvp-api.md) for method behavior using these values.
+- [MVP API router](mvp-api.md) and method owner documents for method behavior using these values.
 - [Later Candidate Index](../../later/index.md) for inactive value names.

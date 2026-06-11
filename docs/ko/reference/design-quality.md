@@ -17,7 +17,7 @@
 이 문서는 담당하지 않습니다.
 
 - Core 생명주기, 관문, 차단 사유, `prepare_write`, `close_task`, Write Authorization, 최종 수락, 잔여 위험 수락, 대체 불가능 규칙. [Core 모델 참조](core-model.md)를 봅니다.
-- MCP 요청/응답 스키마, `ValidatorResult`, `UserJudgment`, `AcceptedRiskInput`, 공개 오류, 현재/이후 스키마 값. [MVP API](api/mvp-api.md), [API 코어 스키마](api/schema-core.md), [API 판단 스키마](api/schema-judgment.md), [API 오류](api/errors.md)를 봅니다.
+- MCP 요청/응답 스키마, `ValidatorResult`, `UserJudgment`, `AcceptedRiskInput`, 공개 오류, 현재/이후 스키마 값. [MVP API 경로 문서](api/mvp-api.md), 메서드 담당 문서, [API 코어 스키마](api/schema-core.md), [API 판단 스키마](api/schema-judgment.md), [API 오류](api/errors.md)를 봅니다.
 - SQLite DDL과 지속 테이블. [저장소 기록](storage-records.md)을 봅니다.
 - 검증기 실행 저장 효과. [저장 효과](storage-effects.md)를 봅니다.
 - 아티팩트 저장소. [아티팩트 저장소](storage-artifacts.md)를 봅니다.
@@ -31,7 +31,7 @@
 |---|---|
 | Core 대체 금지, 닫기 준비 상태, 면제, 수락된 위험, 잔여 위험의 의미 | [Core 모델 참조](core-model.md) |
 | `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput` 구조 | [API 판단 스키마](api/schema-judgment.md) |
-| 사용자 판단 요청/기록, 상태 보고, Task 닫기의 활성 메서드 동작 | [MVP API](api/mvp-api.md) |
+| 사용자 판단 요청/기록, 상태 보고, Task 닫기의 활성 메서드 동작 | [사용자 판단 메서드](api/method-user-judgment.md), [상태 메서드](api/method-status.md), [Task 닫기 메서드](api/method-close-task.md) |
 | 활성 API 메서드 분기의 메서드별 저장 효과 | [저장 효과](storage-effects.md) |
 | 이후 설계 관문, 정책 차단 사유, 넓은 검증기, 면제 후보, 정책 목록 | [이후 후보 색인](../later/index.md) |
 

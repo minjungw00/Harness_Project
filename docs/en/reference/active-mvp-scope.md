@@ -136,7 +136,7 @@ The current MVP guarantee boundary is `cooperative` by default. The current MVP 
 
 For guarantee semantics, detective wording, promotion rules for `preventive` and `isolated`, and security non-claims, see [Security](security.md). For guarantee label value entries, see [API Value Sets](api/schema-value-sets.md).
 
-`harness.prepare_write` and `Write Authorization` remain product-file write compatibility mechanisms. Their method behavior belongs to [MVP API](api/mvp-api.md), and their Core meaning belongs to [Core Model](core-model.md).
+`harness.prepare_write` and `Write Authorization` remain product-file write compatibility mechanisms. Their method behavior belongs to the [Prepare-write method](api/method-prepare-write.md), routed from the [MVP API router](api/mvp-api.md), and their Core meaning belongs to [Core Model](core-model.md).
 
 ## Documentation-only boundary
 
@@ -150,7 +150,7 @@ Implementation readiness and maintainer handoff status stay in [MVP Plan](../bui
 |---|---|
 | Implementation readiness and maintainer handoff status | [MVP Plan](../build/mvp-plan.md) |
 | Core authority, Task state, and user-owned judgment boundaries | [Core Model](core-model.md) |
-| API method behavior | [MVP API](api/mvp-api.md) |
+| API method behavior | [MVP API router](api/mvp-api.md) and method owner documents |
 | API schemas and value sets | [API schema owners in the Reference Index](README.md#api-and-schema-owners) |
 | Public errors and close-readiness blocker behavior | [Errors](api/errors.md) |
 | Storage records, effects, artifact lifecycle, versioning, and locks | [Storage owners in the Reference Index](README.md#storage-owners) |

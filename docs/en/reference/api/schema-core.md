@@ -18,7 +18,7 @@ This document owns:
 
 This document does not own:
 
-- method behavior; see [MVP API](mvp-api.md)
+- method behavior; see the [MVP API router](mvp-api.md) and method owner documents
 - state and current-position schemas; see [API State Schemas](schema-state.md)
 - artifact schemas; see [API Artifact Schemas](schema-artifacts.md)
 - user-owned judgment schemas; see [API Judgment Schemas](schema-judgment.md)
@@ -35,7 +35,7 @@ Schema blocks in this page are planning notation, not generated code. They descr
 <a id="tool-envelope"></a>
 ## `ToolEnvelope`
 
-`ToolEnvelope` is the common request envelope used by public methods unless [MVP API](mvp-api.md) gives a narrower method-specific request rule.
+`ToolEnvelope` is the common request envelope used by public methods unless a method owner routed from [MVP API](mvp-api.md) gives a narrower method-specific request rule.
 
 ```yaml
 ToolEnvelope:
@@ -61,7 +61,7 @@ Every public method response uses exactly one branch:
 - `ToolRejectedResponse`
 - `ToolDryRunResponse` when the selected state-effecting or storage-staging operation has a valid preview branch
 
-`MethodResult` is not a single concrete schema. It is the method-specific successful or committed result branch defined by [MVP API](mvp-api.md). Every concrete method result carries `base: ToolResultBase` and then only that method's result fields.
+`MethodResult` is not a single concrete schema. It is the method-specific successful or committed result branch defined by method owner documents routed from [MVP API](mvp-api.md). Every concrete method result carries `base: ToolResultBase` and then only that method's result fields.
 
 ```yaml
 ToolResultBase:
@@ -82,7 +82,7 @@ ToolDryRunResponse:
 
 Method-specific result fields belong only to the method result branch. `ToolRejectedResponse` and `ToolDryRunResponse` do not carry result-only fields such as `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, or `close_state`.
 
-The active `response_kind` and `effect_kind` values are owned by [response and effect values](schema-value-sets.md#response-and-effect-values). Branch selection and state effects are owned by [shared request rules](mvp-api.md#shared-request-rules). Public error precedence is owned by [API Errors](errors.md).
+The active `response_kind` and `effect_kind` values are owned by [response and effect values](schema-value-sets.md#response-and-effect-values). Shared branch reading is owned by [shared request rules](mvp-api.md#shared-request-rules), and method-specific state effects are owned by method owner documents. Public error precedence is owned by [API Errors](errors.md).
 
 ## Dry-run summary shapes
 

@@ -18,7 +18,7 @@
 
 - 공통 요청 래퍼나 응답 분기: [API 코어 스키마](schema-core.md)
 - 활성 enum 형태 값: [API 값 집합](schema-value-sets.md)
-- 메서드 동작: [MVP API](mvp-api.md)
+- 메서드 동작: [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서
 - 공개 오류 의미: [API 오류](errors.md)
 - Core 생명주기와 닫기 준비 상태의 제품 의미: [Core 모델](../core-model.md)
 - 저장소 기록과 지속 효과: [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md)
@@ -70,7 +70,7 @@ StateSummary:
   guarantee_display: GuaranteeDisplay | null
 ```
 
-`StateSummary`는 저장된 Core 상태, 계산된 읽기 전용 상태, 닫기 준비 상태 관찰을 요약할 수 있습니다. 어떤 메서드가 커밋했는지는 이 구조가 아니라 응답 분기와 [MVP API](mvp-api.md)가 정합니다.
+`StateSummary`는 저장된 Core 상태, 계산된 읽기 전용 상태, 닫기 준비 상태 관찰을 요약할 수 있습니다. 어떤 메서드가 커밋했는지는 이 구조가 아니라 응답 분기와 [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서가 정합니다.
 
 ## Task 생명주기 상태
 
@@ -181,7 +181,7 @@ ObservedChanges:
   baseline_ref: string | null
 ```
 
-`ArtifactRef`는 [API 아티팩트 스키마](schema-artifacts.md)가 담당합니다. 증거 충분성의 의미는 [Core 모델의 실행과 증거의 권한](../core-model.md#9-실행과-증거의-권한)이 담당하고, 메서드 동작은 [MVP API](mvp-api.md)가 담당합니다.
+`ArtifactRef`는 [API 아티팩트 스키마](schema-artifacts.md)가 담당합니다. 증거 충분성의 의미는 [Core 모델의 실행과 증거의 권한](../core-model.md#9-실행과-증거의-권한)이 담당하고, 메서드 동작은 [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서가 담당합니다.
 
 ## 닫기 준비 상태와 검증 형태
 
@@ -206,7 +206,7 @@ GuaranteeDisplay:
   capability_refs: StateRecordRef[]
 ```
 
-`CloseReadinessBlocker`는 닫기 준비 상태 발견 사항을 표현하는 데이터 형태입니다. 닫기 준비 상태 개념 전체가 아니며 그 자체로 지속 저장을 뜻하지도 않습니다. 전체 닫기 준비 상태 평가 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 응답 분기 동작과 커밋된 차단 결과는 [`harness.close_task`](mvp-api.md#harnessclose_task)가 담당합니다. 공개 오류 경로는 [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers)이 담당합니다.
+`CloseReadinessBlocker`는 닫기 준비 상태 발견 사항을 표현하는 데이터 형태입니다. 닫기 준비 상태 개념 전체가 아니며 그 자체로 지속 저장을 뜻하지도 않습니다. 전체 닫기 준비 상태 평가 순서는 [Core 모델의 닫기 준비 상태](../core-model.md#close_task)가 담당합니다. 응답 분기 동작과 커밋된 차단 결과는 [`harness.close_task`](method-close-task.md)가 담당합니다. 공개 오류 경로는 [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers)이 담당합니다.
 
 활성 `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값은 [API 값 집합](schema-value-sets.md)이 담당합니다. 보안 보장 의미는 [보안](../security.md)이 담당합니다.
 
@@ -214,7 +214,7 @@ GuaranteeDisplay:
 
 - [API 코어 스키마](schema-core.md): `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`.
 - [API 값 집합](schema-value-sets.md): 상태 필드가 쓰는 정확한 값.
-- [MVP API](mvp-api.md): 이 스키마를 반환하는 메서드.
+- [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서: 이 스키마를 반환하는 메서드.
 - [API 아티팩트 스키마](schema-artifacts.md): `ArtifactRef`.
 - [API 판단 스키마](schema-judgment.md): `UserJudgmentCandidate`.
 - [저장 효과](../storage-effects.md): 지속 저장과 상태 효과.
