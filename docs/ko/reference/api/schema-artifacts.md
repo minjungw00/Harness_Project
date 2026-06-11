@@ -108,4 +108,4 @@ ArtifactInput:
 - [아티팩트 저장소](../storage-artifacts.md): 스테이징, 승격, 지속 연결, 본문 읽기 생명주기.
 - [API 값 집합](schema-value-sets.md): `ArtifactInput.source_kind`, `redaction_state`, 가용성, 관련 값.
 - [API 상태 스키마](schema-state.md): `ArtifactRef`를 언급하는 증거 요약.
-- [런타임 경계](../runtime-boundaries.md)와 [보안](../security.md): 로컬 접근과 비보장 경계.
+- [런타임 경계](../runtime-boundaries.md)와 [보안](../security.md): 로컬 접근과 비주장 경계.

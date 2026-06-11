@@ -4,7 +4,7 @@
 
 ## 이 문서가 담당하는 것
 
-이 문서는 현재 MVP 기능 경계, 제품 범위 수준의 포함/제외 기준, profile-gated 값과 이후 후보가 현재 범위에 미치는 경계, 다른 문서가 반복하지 말고 요약해 연결해야 하는 범위 수준 보장과 비보장 문구를 담당합니다.
+이 문서는 현재 MVP 기능 경계, 제품 범위 수준의 포함/제외 기준, profile-gated 값과 이후 후보가 현재 범위에 미치는 경계, 다른 문서가 반복하지 말고 요약해 연결해야 하는 범위 수준 보장과 비주장 문구를 담당합니다.
 
 어떤 기능이 현재 MVP에 속하는지 판단할 때는 이 문서를 기준으로 삼습니다. README, Build, Later, 참조 색인, 다른 경로 문서는 상세 목록을 다시 쓰지 말고 이 문서로 연결합니다.
 
@@ -85,7 +85,7 @@ API 메서드 동작, 스키마 필드, 저장 효과, 보안 증명, 템플릿 
 | 공개 오류와 닫기 차단 사유 경로 | [오류](api/errors.md) |
 | 저장소 기록, 효과, 아티팩트 생명주기, 버전 관리, 잠금 | [저장소 기록](storage-records.md), [저장 효과](storage-effects.md), [아티팩트 저장소](storage-artifacts.md), [저장소 버전 관리](storage-versioning.md) |
 | 런타임, 저장소, 서버 경계 | [런타임 경계](runtime-boundaries.md) |
-| 보안 주장과 비보장 | [보안](security.md) |
+| 보안 주장과 비주장 | [보안](security.md) |
 | 접점과 커넥터 동작 | [에이전트 통합](agent-integration.md), [접점별 사용 레시피](../use/surface-recipes.md) |
 | 상태 보기 권한과 원천 상태/최신성 경계 | [상태 보기 권한 참조](projection-and-templates.md) |
 | 읽기용 표시의 템플릿 본문 | [템플릿 본문](template-bodies.md) |

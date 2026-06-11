@@ -813,7 +813,7 @@ guarantee_display:
 
 결과:
 
-- 서버는 확인된 로컬 접점에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다.
+- 향후 서버는 확인된 로컬 접점에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다.
 
 비주장:
 
@@ -953,7 +953,7 @@ expires_at: "2026-06-10T12:30:00Z"
 
 - `VerifiedSurfaceContext.access_class=run_recording`입니다.
 - `verified=true`입니다.
-- `source_kind=staged_artifact`에서는 현재 확인된 `surface_id`와 `surface_instance_id`가 스테이징 핸들에 서버가 기록한 출처와 일치해야 합니다.
+- `source_kind=staged_artifact`에서는 현재 확인된 `surface_id`와 `surface_instance_id`가 스테이징 핸들의 기록된 출처와 일치해야 합니다.
 
 비주장:
 

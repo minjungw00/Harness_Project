@@ -96,7 +96,7 @@ IDE/editor 통합은 에이전트가 절차를 지키도록 도울 수 있습니
 - [MVP API](../reference/api/mvp-api.md): 활성 메서드 동작과 요청 조건.
 - [API 값 집합](../reference/api/schema-value-sets.md): 접근 등급과 enum 형태 API 값.
 - [API 오류](../reference/api/errors.md): 공개 오류 코드와 복구 경로.
-- [보안](../reference/security.md): 보장 표현과 비보장.
+- [보안](../reference/security.md): 보장 표현과 비주장.
 - [런타임 경계](../reference/runtime-boundaries.md): Product Repository, Harness Server, Runtime Home 분리.
 - [현재 MVP 범위](../reference/active-mvp-scope.md): 활성, 프로필 조건부, 이후 후보 경계.
 

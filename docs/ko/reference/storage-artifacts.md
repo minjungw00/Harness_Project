@@ -60,7 +60,7 @@
 | 생명주기 | `status`, `expires_at` |
 | 소비 결과 | `consumed_by_run_id`, `promoted_artifact_id`, `consumed_at` 같은 소비 사실 |
 
-`created_by_surface_*` 필드는 성공한 `harness.stage_artifact` 요청의 `VerifiedSurfaceContext`에서 향후 서버가 기록하는 값입니다. 호출자가 제출한 권한 주장이 아니며, 제출된 핸들의 형태가 맞다는 이유만으로 신뢰하면 안 됩니다.
+`created_by_surface_*` 필드는 성공한 `harness.stage_artifact` 요청의 `VerifiedSurfaceContext`에서 향후 서버가 기록하는 값입니다. 호출자가 제출한 권한 주장이 아니며, 제출된 핸들의 형태가 맞다는 이유만으로 신뢰하지 말고 저장소에 있는 스테이징 기록과 대조해야 합니다.
 
 스테이징이 만들지 않는 것은 아래와 같습니다.
 
