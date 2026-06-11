@@ -99,18 +99,18 @@ This table names active storage record categories and links to category details.
 | `project.yaml` | static project configuration | See [`project.yaml`](#projectyaml) |
 | `project_state` | current project state, version, and active pointers | See [`project_state`](#project_state) |
 | `surfaces` | registered local surface facts for API access checks | See [`surfaces`](#surfaces) |
-| `tasks` | user-value work unit, shaping summary, lifecycle, and close state | See [`tasks`](#tasks) |
-| `change_units` | scoped work boundary for write compatibility and close basis | See [`change_units`](#change_units) |
+| `tasks` | work unit, shaping, lifecycle, and close state | See [`tasks`](#tasks) |
+| `change_units` | scoped write and close boundary | See [`change_units`](#change_units) |
 | `user_judgments` | user-owned judgment and sensitive-action approval records | See [`user_judgments`](#user_judgments) |
 | `write_authorizations` | single-use cooperative Write Authorization records | See [`write_authorizations`](#write_authorizations) |
 | `runs` | committed execution or observation records | See [`runs`](#runs) |
-| `artifact_staging` | temporary staged artifact handles and safe staging bytes/notices | See [`artifact_staging`](#artifact_staging) |
+| `artifact_staging` | temporary staged artifact handles | See [`artifact_staging`](#artifact_staging) |
 | `artifacts` | registered durable artifact metadata or bytes | See [`artifacts`](#artifacts) |
 | `artifact_links` | owner relations between artifacts and supported Core/API records | See [`artifact_links`](#artifact_links) |
 | `evidence_summaries` | compact evidence coverage and gap records | See [`evidence_summaries`](#evidence_summaries) |
-| `blockers` | structured blocker state for next action, write compatibility, evidence, close, or recovery | See [`blockers`](#blockers) |
+| `blockers` | structured blocker state | See [`blockers`](#blockers) |
 | `task_events` | append-only audit and ordering trail for committed Core mutations | See [`task_events`](#task_events) |
-| `tool_invocations` | replay rows for committed non-dry-run Core method responses | See [`tool_invocations`](#tool_invocations) |
+| `tool_invocations` | committed Core method replay rows | See [`tool_invocations`](#tool_invocations) |
 
 ## Record category details
 

@@ -24,14 +24,58 @@
 
 ## 아티팩트 생명주기 요약
 
-아티팩트 저장은 네 단계를 구분합니다.
+아티팩트 저장은 네 단계를 구분합니다. 아래 요약 표는 단계만 보여 주고, 세부 블록은 의미와 증거와의 관계를 분리합니다.
 
-| 단계 | 의미 | 증거와의 관계 |
-|---|---|---|
-| 스테이징 | `harness.stage_artifact`가 임시 아티팩트 바이트나 안전한 알림을 저장하고 스테이징 핸들을 반환하는 단계입니다. | 스테이징 자체는 정식 증거를 만들지 않습니다. |
-| 승격 | 담당 메서드가 호환되는 스테이징 핸들을 받아 지속 `ArtifactRef`와 필요한 `artifact_links`로 등록하는 단계입니다. | 담당 메서드 계약이 허용할 때만 증거 범위가 갱신될 수 있습니다. |
-| 기존 아티팩트 연결 | 이미 지속되는 아티팩트를 새 담당 관계에 연결하는 단계입니다. | 담당 메서드가 증거로 기록하지 않으면 새 증거를 뜻하지 않습니다. |
-| 아티팩트 본문 읽기 | 등록된 `ArtifactRef`의 메타데이터나 아티팩트 바이트를 읽는 단계입니다. | 접근 등급, 역량, 가림 처리, 가용성, 담당 관계를 통과해야 합니다. |
+| 단계 | 세부 블록 |
+|---|---|
+| 스테이징 | [생명주기: 스테이징](#artifact-lifecycle-staging) |
+| 승격 | [생명주기: 승격](#artifact-lifecycle-promotion) |
+| 기존 아티팩트 연결 | [생명주기: 기존 아티팩트 연결](#artifact-lifecycle-existing-artifact-link) |
+| 아티팩트 본문 읽기 | [생명주기: 아티팩트 본문 읽기](#artifact-lifecycle-body-read) |
+
+<a id="artifact-lifecycle-staging"></a>
+**생명주기: 스테이징**
+
+의미:
+
+- `harness.stage_artifact`가 임시 아티팩트 바이트나 안전한 알림을 저장하고 스테이징 핸들을 반환하는 단계입니다.
+
+증거와의 관계:
+
+- 스테이징 자체는 정식 증거를 만들지 않습니다.
+
+<a id="artifact-lifecycle-promotion"></a>
+**생명주기: 승격**
+
+의미:
+
+- 담당 메서드가 호환되는 스테이징 핸들을 받아 지속 `ArtifactRef`와 필요한 `artifact_links`로 등록하는 단계입니다.
+
+증거와의 관계:
+
+- 담당 메서드 계약이 허용할 때만 증거 범위가 갱신될 수 있습니다.
+
+<a id="artifact-lifecycle-existing-artifact-link"></a>
+**생명주기: 기존 아티팩트 연결**
+
+의미:
+
+- 이미 지속되는 아티팩트를 새 담당 관계에 연결하는 단계입니다.
+
+증거와의 관계:
+
+- 담당 메서드가 증거로 기록하지 않으면 새 증거를 뜻하지 않습니다.
+
+<a id="artifact-lifecycle-body-read"></a>
+**생명주기: 아티팩트 본문 읽기**
+
+의미:
+
+- 등록된 `ArtifactRef`의 메타데이터나 아티팩트 바이트를 읽는 단계입니다.
+
+조건:
+
+- 접근 등급, 역량, 가림 처리, 가용성, 담당 관계를 통과해야 합니다.
 
 `ArtifactRef`는 등록된 지속 아티팩트를 가리키는 공개 API 포인터입니다. 저장소는 `artifacts`와 `artifact_links`를 통해 지속 아티팩트 권한을 표현합니다.
 
@@ -99,14 +143,59 @@ staged_artifact_handle: staged_artifact_account_export_test_log_001
 | 관계 | 스테이징 핸들은 승격 전까지 `ArtifactRef`가 아닙니다. |
 | 권한 | 스테이징 핸들은 아무 로컬 호출자나 사용할 수 있는 베어러 토큰이 아닙니다. |
 
-`artifact_staging.status`는 저장소 소유의 임시 핸들 생명주기입니다.
+`artifact_staging.status`는 저장소 소유의 임시 핸들 생명주기입니다. 요약 표는 값만 짧게 보여 주고, 세부 블록은 조건과 허용되는 효과를 나눕니다.
 
-| 값 | 저장소 의미 |
-|---|---|
-| `staged` | 핸들이 만료되지 않았고, 소비되지 않았으며, 호환되는 담당 메서드가 소비할 수 있습니다. |
-| `consumed` | 호환되는 담당 메서드가 핸들을 소비했고 소비한 Run과 승격된 아티팩트 식별자를 기록했습니다. |
-| `expired` | 핸들의 사용 가능 시간이 지났고 소비할 수 없습니다. |
-| `discarded` | 지속 등록 전에 임시 스테이징 객체를 버렸습니다. |
+| 값 | 요약 | 세부사항 |
+|---|---|---|
+| `staged` | 소비 후보 | [`staged`](#artifact-staging-status-staged) |
+| `consumed` | 담당 메서드가 소비함 | [`consumed`](#artifact-staging-status-consumed) |
+| `expired` | 사용 가능 시간 지남 | [`expired`](#artifact-staging-status-expired) |
+| `discarded` | 임시 객체 버림 | [`discarded`](#artifact-staging-status-discarded) |
+
+<a id="artifact-staging-status-staged"></a>
+**`artifact_staging.status=staged`**
+
+조건:
+
+- 핸들이 만료되지 않았습니다.
+- 핸들이 아직 소비되지 않았습니다.
+
+허용되는 효과:
+
+- 호환되는 담당 메서드가 핸들을 소비할 수 있습니다.
+
+<a id="artifact-staging-status-consumed"></a>
+**`artifact_staging.status=consumed`**
+
+조건:
+
+- 호환되는 담당 메서드가 핸들을 소비했습니다.
+
+저장 효과:
+
+- 소비한 Run과 승격된 아티팩트 식별자를 기록합니다.
+
+<a id="artifact-staging-status-expired"></a>
+**`artifact_staging.status=expired`**
+
+조건:
+
+- 핸들의 사용 가능 시간이 지났습니다.
+
+허용되지 않는 효과:
+
+- 핸들을 소비할 수 없습니다.
+
+<a id="artifact-staging-status-discarded"></a>
+**`artifact_staging.status=discarded`**
+
+조건:
+
+- 지속 등록 전에 임시 스테이징 객체를 버렸습니다.
+
+허용되지 않는 효과:
+
+- 핸들을 소비할 수 없습니다.
 
 소비할 수 있는 값은 `staged`뿐입니다. `consumed`, `expired`, `discarded`는 `staged`로 돌아갈 수 없습니다.
 
@@ -241,14 +330,52 @@ staged_artifact_handle: staged_artifact_account_export_test_log_001
 9. 기존 아티팩트 연결 검증.
 10. 아티팩트 본문 읽기 없음.
 
-아래 스테이징 핸들은 변경 전에 API 담당 검증 오류 경로로 거절해야 합니다.
+아래 스테이징 핸들은 변경 전에 API 담당 검증 오류 경로로 거절해야 합니다. 요약 표는 실패 유형만 보여 주고, 세부 블록은 예를 분리합니다.
 
-| 실패 유형 | 예 |
+| 실패 유형 | 세부사항 |
 |---|---|
-| 존재 또는 생명주기 문제 | 존재하지 않음, 만료됨, 이미 소비됨, 버려짐 |
-| 범위 불일치 | 일치하지 않음, Task가 다름, 프로젝트가 다름 |
-| 접점 불일치 | 접점이 다름, `created_by_surface_id` 불일치, `created_by_surface_instance_id` 불일치 |
-| 무결성 불일치 | `sha256` 불일치, `size_bytes` 불일치, `redaction_state` 불일치, 무결성에 맞지 않음 |
+| 존재 또는 생명주기 문제 | [존재 또는 생명주기 문제](#staged-handle-failure-existence-lifecycle) |
+| 범위 불일치 | [범위 불일치](#staged-handle-failure-scope) |
+| 접점 불일치 | [접점 불일치](#staged-handle-failure-surface) |
+| 무결성 불일치 | [무결성 불일치](#staged-handle-failure-integrity) |
+
+<a id="staged-handle-failure-existence-lifecycle"></a>
+**존재 또는 생명주기 문제**
+
+예:
+
+- 존재하지 않음.
+- 만료됨.
+- 이미 소비됨.
+- 버려짐.
+
+<a id="staged-handle-failure-scope"></a>
+**범위 불일치**
+
+예:
+
+- 일치하지 않음.
+- Task가 다름.
+- 프로젝트가 다름.
+
+<a id="staged-handle-failure-surface"></a>
+**접점 불일치**
+
+예:
+
+- 접점이 다름.
+- `created_by_surface_id` 불일치.
+- `created_by_surface_instance_id` 불일치.
+
+<a id="staged-handle-failure-integrity"></a>
+**무결성 불일치**
+
+예:
+
+- `sha256` 불일치.
+- `size_bytes` 불일치.
+- `redaction_state` 불일치.
+- 무결성에 맞지 않음.
 
 이 오류를 증거 충분성, 로컬 접근 불일치, 역량 부족으로 숨기면 안 됩니다.
 
@@ -265,14 +392,44 @@ staged_artifact_handle: staged_artifact_account_export_test_log_001
 - `tool_invocations`.
 - `project_state.state_version`.
 
-`artifacts.status`는 가용성 상태입니다.
+`artifacts.status`는 가용성 상태입니다. 요약 표는 값만 짧게 보여 주고, 세부 블록은 저장소 의미를 나눕니다.
 
-| 값 | 저장소 의미 |
-|---|---|
-| `available` | 등록된 안전 바이트 또는 안전한 메타데이터 알림이 존재하며 저장된 무결성 메타데이터와 맞습니다. |
-| `missing` | 아티팩트 행은 남아 있지만 등록된 바이트 또는 안전한 메타데이터 알림을 찾을 수 없습니다. |
-| `integrity_failed` | 사용할 수 있는 바이트 또는 메타데이터가 `sha256`이나 `size_bytes` 같은 저장된 무결성 사실과 맞지 않습니다. |
-| `unavailable` | 아티팩트 저장소 또는 필요한 조회 경로가 현재 등록된 바이트 또는 안전한 메타데이터 알림을 제공할 수 없습니다. |
+| 값 | 요약 | 세부사항 |
+|---|---|---|
+| `available` | 존재하고 무결성 일치 | [`available`](#artifacts-status-available) |
+| `missing` | 행은 남았지만 본문 없음 | [`missing`](#artifacts-status-missing) |
+| `integrity_failed` | 무결성 사실 불일치 | [`integrity_failed`](#artifacts-status-integrity_failed) |
+| `unavailable` | 조회 경로 사용 불가 | [`unavailable`](#artifacts-status-unavailable) |
+
+<a id="artifacts-status-available"></a>
+**`artifacts.status=available`**
+
+저장소 의미:
+
+- 등록된 안전 바이트 또는 안전한 메타데이터 알림이 존재합니다.
+- 저장된 무결성 메타데이터와 맞습니다.
+
+<a id="artifacts-status-missing"></a>
+**`artifacts.status=missing`**
+
+저장소 의미:
+
+- 아티팩트 행은 남아 있습니다.
+- 등록된 바이트 또는 안전한 메타데이터 알림을 찾을 수 없습니다.
+
+<a id="artifacts-status-integrity_failed"></a>
+**`artifacts.status=integrity_failed`**
+
+저장소 의미:
+
+- 사용할 수 있는 바이트 또는 메타데이터가 `sha256`이나 `size_bytes` 같은 저장된 무결성 사실과 맞지 않습니다.
+
+<a id="artifacts-status-unavailable"></a>
+**`artifacts.status=unavailable`**
+
+저장소 의미:
+
+- 아티팩트 저장소 또는 필요한 조회 경로가 현재 등록된 바이트 또는 안전한 메타데이터 알림을 제공할 수 없습니다.
 
 `artifacts.redaction_state`는 [API 아티팩트 스키마](api/schema-artifacts.md)의 활성 `ArtifactRef.redaction_state` 값을 사용합니다. `blocked`는 가림 또는 생략 상태이지 아티팩트 가용성 상태가 아닙니다. 커밋된 안전 알림이나 가림 처리된 아티팩트 바이트가 존재하고 무결성 확인이 가능하면 `blocked`, `secret_omitted`, `redacted` 아티팩트도 `artifacts.status=available`일 수 있습니다.
 

@@ -162,18 +162,18 @@
 | `project.yaml` | 정적 프로젝트 설정 | [`project.yaml`](#projectyaml) 참고 |
 | `project_state` | 현재 프로젝트 상태, 버전, 활성 포인터 저장 | [`project_state`](#project_state) 참고 |
 | `surfaces` | API 접근 점검에 쓰는 등록된 로컬 접점 사실 저장 | [`surfaces`](#surfaces) 참고 |
-| `tasks` | 사용자 가치 작업 단위, 구체화 요약, 생명주기, 닫기 상태 저장 | [`tasks`](#tasks) 참고 |
-| `change_units` | 쓰기 호환성과 닫기 근거를 위한 범위 있는 작업 경계 저장 | [`change_units`](#change_units) 참고 |
+| `tasks` | 작업 단위, 구체화, 생명주기, 닫기 상태 저장 | [`tasks`](#tasks) 참고 |
+| `change_units` | 쓰기와 닫기 기준이 되는 범위 경계 저장 | [`change_units`](#change_units) 참고 |
 | `user_judgments` | 사용자 소유 판단과 민감 동작 승인 기록 저장 | [`user_judgments`](#user_judgments) 참고 |
 | `write_authorizations` | 단일 사용 협력형 Write Authorization 기록 저장 | [`write_authorizations`](#write_authorizations) 참고 |
 | `runs` | 커밋된 실행 또는 관찰 기록 저장 | [`runs`](#runs) 참고 |
-| `artifact_staging` | 임시 아티팩트 핸들과 안전한 스테이징 바이트/알림 저장 | [`artifact_staging`](#artifact_staging) 참고 |
+| `artifact_staging` | 임시 아티팩트 핸들 저장 | [`artifact_staging`](#artifact_staging) 참고 |
 | `artifacts` | 등록된 영속 아티팩트 메타데이터 또는 바이트 저장 | [`artifacts`](#artifacts) 참고 |
 | `artifact_links` | 아티팩트와 지원 대상 Core/API 기록의 담당 관계 저장 | [`artifact_links`](#artifact_links) 참고 |
 | `evidence_summaries` | 간결한 증거 범위와 공백 기록 저장 | [`evidence_summaries`](#evidence_summaries) 참고 |
-| `blockers` | 다음 행동, 쓰기 호환성, 증거, 닫기, 복구를 위한 구조화된 차단 사유 상태 저장 | [`blockers`](#blockers) 참고 |
+| `blockers` | 구조화된 차단 사유 상태 저장 | [`blockers`](#blockers) 참고 |
 | `task_events` | 커밋된 Core 변경의 추가 전용 감사 및 순서 기록 저장 | [`task_events`](#task_events) 참고 |
-| `tool_invocations` | 커밋된 `dry_run=false` Core 메서드 응답의 재실행 행 저장 | [`tool_invocations`](#tool_invocations) 참고 |
+| `tool_invocations` | 커밋된 Core 메서드 재실행 행 저장 | [`tool_invocations`](#tool_invocations) 참고 |
 
 ## 저장 기록 범주 세부사항
 

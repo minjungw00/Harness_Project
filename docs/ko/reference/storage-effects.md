@@ -625,14 +625,108 @@ run_ref: run_account_export_tests_001
 
 `project_state.state_version`은 상태 효과가 허용된 커밋에서만 증가합니다. 성공한 상태 변경은 커밋당 정확히 한 번 증가하고, 커밋된 차단 결과는 메서드 담당 문서가 `state_version` 효과를 허용할 때만 증가할 수 있습니다.
 
-| 분기 | `project_state.state_version` 영향 |
-|---|---|
-| 읽기 전용 결과 | 증가하지 않습니다. |
-| `ToolRejectedResponse` | 증가하지 않습니다. |
-| 유효한 `ToolDryRunResponse` | 증가하지 않습니다. |
-| `StageArtifactResult`, `effect_kind=staging_created` | 증가하지 않습니다. 임시 스테이징은 Core 상태 변경이 아닙니다. |
-| 커밋된 차단 결과 | 메서드 담당 문서가 차단 결과 커밋과 `state_version` 효과를 허용할 때만 증가할 수 있습니다. |
-| 성공한 상태 변경 | 커밋당 정확히 한 번 증가합니다. |
+요약 표는 분기별 영향을 보여 주고, 세부 블록은 조건과 저장 효과를 분리합니다.
+
+| 분기 | 영향 | 세부사항 |
+|---|---|---|
+| 읽기 전용 결과 | 증가하지 않음 | [읽기 전용 결과](#state-version-read-only-result) |
+| `ToolRejectedResponse` | 증가하지 않음 | [`ToolRejectedResponse`](#state-version-toolrejectedresponse) |
+| 유효한 `ToolDryRunResponse` | 증가하지 않음 | [유효한 `dry_run` 미리보기](#state-version-valid-dry-run-preview) |
+| `StageArtifactResult`, `effect_kind=staging_created` | 증가하지 않음 | [스테이징 생성 결과](#state-version-staging-created-result) |
+| 커밋된 차단 결과 | 메서드별 | [커밋된 차단 결과](#state-version-committed-blocked-result) |
+| 성공한 상태 변경 | 한 번 증가 | [성공한 상태 변경](#state-version-successful-mutation) |
+
+<a id="state-version-read-only-result"></a>
+**읽기 전용 결과**
+
+조건:
+
+- 응답이 읽기 전용 결과입니다.
+
+허용되는 효과:
+
+- 응답 데이터 반환.
+
+허용되지 않는 효과:
+
+- `project_state.state_version` 증가.
+
+<a id="state-version-toolrejectedresponse"></a>
+**`ToolRejectedResponse`**
+
+조건:
+
+- 요청이 커밋 전에 거절됩니다.
+
+허용되는 효과:
+
+- 거절 응답 반환.
+
+허용되지 않는 효과:
+
+- `project_state.state_version` 증가.
+- 담당 기록 변경.
+
+<a id="state-version-valid-dry-run-preview"></a>
+**유효한 `dry_run` 미리보기**
+
+조건:
+
+- 유효한 `ToolDryRunResponse` 미리보기입니다.
+
+허용되는 효과:
+
+- 계획된 효과를 응답으로 설명.
+
+허용되지 않는 효과:
+
+- `project_state.state_version` 증가.
+- 담당 기록 변경.
+
+<a id="state-version-staging-created-result"></a>
+**스테이징 생성 결과**
+
+조건:
+
+- `StageArtifactResult`가 `effect_kind=staging_created`로 반환됩니다.
+
+허용되는 효과:
+
+- 저장소 소유 임시 스테이징.
+
+허용되지 않는 효과:
+
+- `project_state.state_version` 증가.
+
+예외:
+
+- 임시 스테이징은 Core 상태 변경이 아닙니다.
+
+<a id="state-version-committed-blocked-result"></a>
+**커밋된 차단 결과**
+
+조건:
+
+- 메서드 담당 문서가 차단 결과 커밋을 허용합니다.
+
+허용되는 효과:
+
+- 메서드 담당 문서가 차단 결과 커밋과 `state_version` 효과를 허용할 때만 증가할 수 있습니다.
+
+허용되지 않는 효과:
+
+- 메서드 담당 문서가 허용하지 않은 `state_version` 증가.
+
+<a id="state-version-successful-mutation"></a>
+**성공한 상태 변경**
+
+조건:
+
+- 상태 변경이 성공적으로 커밋됩니다.
+
+허용되는 효과:
+
+- `project_state.state_version`이 커밋당 정확히 한 번 증가합니다.
 
 `state_version`이 오래된 경우는 커밋된 차단 결과가 아닙니다. 오래된 `expected_state_version` 또는 오래된 `WriteAuthorization.basis_state_version`은 사전 확인의 `ToolRejectedResponse` 분기에 속하며 저장 효과가 없습니다.
 

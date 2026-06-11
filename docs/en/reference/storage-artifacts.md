@@ -65,14 +65,45 @@ The example represents product test output prepared for staging. It is not a per
 
 Staging creates only temporary artifact storage. Method-effect questions such as evidence creation, replay rows, and state-version increments are owned by [Storage Effects](storage-effects.md).
 
-`artifact_staging.status` is a storage-owned temporary handle lifecycle:
+`artifact_staging.status` is a storage-owned temporary handle lifecycle. The summary table stays short; detail blocks define the value meanings.
 
-| Value | Storage meaning |
-|---|---|
-| `staged` | The handle is unexpired, unconsumed, and potentially consumable by a compatible `harness.record_run`. |
-| `consumed` | A compatible `harness.record_run` consumed the handle and recorded the consuming Run and promoted artifact ids. |
-| `expired` | The handle passed its usable lifetime and cannot be consumed. |
-| `discarded` | The temporary staging object was discarded before persistent registration. |
+| Value | Summary | Details |
+|---|---|---|
+| `staged` | consumable candidate | [`staged`](#artifact-staging-status-staged) |
+| `consumed` | consumed by owner method | [`consumed`](#artifact-staging-status-consumed) |
+| `expired` | usable lifetime passed | [`expired`](#artifact-staging-status-expired) |
+| `discarded` | temporary object discarded | [`discarded`](#artifact-staging-status-discarded) |
+
+<a id="artifact-staging-status-staged"></a>
+**`artifact_staging.status=staged`**
+
+Storage meaning:
+
+- The handle is unexpired and unconsumed.
+- A compatible `harness.record_run` may consume it.
+
+<a id="artifact-staging-status-consumed"></a>
+**`artifact_staging.status=consumed`**
+
+Storage meaning:
+
+- A compatible `harness.record_run` consumed the handle.
+- Storage recorded the consuming Run and promoted artifact ids.
+
+<a id="artifact-staging-status-expired"></a>
+**`artifact_staging.status=expired`**
+
+Storage meaning:
+
+- The handle passed its usable lifetime.
+- The handle cannot be consumed.
+
+<a id="artifact-staging-status-discarded"></a>
+**`artifact_staging.status=discarded`**
+
+Storage meaning:
+
+- The temporary staging object was discarded before persistent registration.
 
 Only `staged` is consumable. Terminal values cannot return to `staged`.
 
@@ -160,14 +191,44 @@ An artifact link does not create the owner record, satisfy a gate by itself, pro
 
 ## Availability, redaction, and integrity
 
-`artifacts.status` is an availability state:
+`artifacts.status` is an availability state. The summary table stays short; detail blocks define the value meanings.
 
-| Value | Storage meaning |
-|---|---|
-| `available` | The registered safe bytes or safe metadata notice is present and matches stored integrity metadata. |
-| `missing` | The artifact row remains, but the registered bytes or safe metadata notice cannot be found. |
-| `integrity_failed` | The available bytes or metadata do not match stored integrity facts such as `sha256` or `size_bytes`. |
-| `unavailable` | The artifact store or required retrieval path cannot currently provide the registered bytes or safe metadata notice. |
+| Value | Summary | Details |
+|---|---|---|
+| `available` | present and integrity-matched | [`available`](#artifacts-status-available) |
+| `missing` | row remains, payload missing | [`missing`](#artifacts-status-missing) |
+| `integrity_failed` | integrity facts mismatch | [`integrity_failed`](#artifacts-status-integrity_failed) |
+| `unavailable` | retrieval path unavailable | [`unavailable`](#artifacts-status-unavailable) |
+
+<a id="artifacts-status-available"></a>
+**`artifacts.status=available`**
+
+Storage meaning:
+
+- The registered safe bytes or safe metadata notice is present.
+- The stored payload matches stored integrity metadata.
+
+<a id="artifacts-status-missing"></a>
+**`artifacts.status=missing`**
+
+Storage meaning:
+
+- The artifact row remains.
+- The registered bytes or safe metadata notice cannot be found.
+
+<a id="artifacts-status-integrity_failed"></a>
+**`artifacts.status=integrity_failed`**
+
+Storage meaning:
+
+- Available bytes or metadata do not match stored integrity facts such as `sha256` or `size_bytes`.
+
+<a id="artifacts-status-unavailable"></a>
+**`artifacts.status=unavailable`**
+
+Storage meaning:
+
+- The artifact store or required retrieval path cannot currently provide the registered bytes or safe metadata notice.
 
 `artifacts.redaction_state` uses the active `ArtifactRef.redaction_state` values from [API Artifact Schemas](api/schema-artifacts.md). `blocked` is a redaction/omission state, not an artifact availability status. A `blocked`, `secret_omitted`, or `redacted` artifact may still have `artifacts.status=available` when the committed safe notice or redacted bytes are present and integrity-aware.
 

@@ -121,14 +121,61 @@ Pre-commit failures have no storage effect. Stale `expected_state_version`, stal
 
 Transaction failures must leave no partial result. If any part of a new committed `dry_run=false` state change fails, storage must not partially leave current-row writes, events, replay rows, artifact effects, Write Authorization consumption, evidence updates, close effects, or a `state_version` increment.
 
-Retry rules depend on the failure type:
+Retry rules depend on the failure type. The summary table routes to detail blocks.
 
-| Situation | Retry method | Note |
-|---|---|---|
-| Stale `expected_state_version` | Read current state again and send a new request with the latest `project_state.state_version`. | This is a freshness check only; it does not replace user-owned judgment. |
-| Transport uncertainty for the same request | Retry with the same `idempotency_key` and same `request_hash`. | If the original committed, the original response is returned as replay and the state change is not repeated. |
-| Different request with the same `idempotency_key` | Do not retry; use a new idempotency key. | Same key with a different `request_hash` is `STATE_VERSION_CONFLICT`. |
-| Pre-commit validation failure | Fix the request and send a new request. | The failed request did not create a replay row. |
+| Situation | Retry route |
+|---|---|
+| Stale `expected_state_version` | [Stale `expected_state_version`](#retry-stale-expected-state-version) |
+| Transport uncertainty for the same request | [Transport uncertainty](#retry-transport-uncertainty) |
+| Different request with the same `idempotency_key` | [Different request with same key](#retry-different-request-same-key) |
+| Pre-commit validation failure | [Pre-commit validation failure](#retry-pre-commit-validation-failure) |
+
+<a id="retry-stale-expected-state-version"></a>
+**Stale `expected_state_version`**
+
+Retry method:
+
+- Read current state again.
+- Send a new request with the latest `project_state.state_version`.
+
+Note:
+
+- This is a freshness check only; it does not replace user-owned judgment.
+
+<a id="retry-transport-uncertainty"></a>
+**Transport uncertainty**
+
+Retry method:
+
+- Retry with the same `idempotency_key` and same `request_hash`.
+
+Note:
+
+- If the original committed, the original response is returned as replay and the state change is not repeated.
+
+<a id="retry-different-request-same-key"></a>
+**Different request with same key**
+
+Retry method:
+
+- Do not retry with the reused key.
+- Use a new idempotency key.
+
+Note:
+
+- The same key with a different `request_hash` is `STATE_VERSION_CONFLICT`.
+
+<a id="retry-pre-commit-validation-failure"></a>
+**Pre-commit validation failure**
+
+Retry method:
+
+- Fix the request.
+- Send a new request.
+
+Note:
+
+- The failed request did not create a replay row.
 
 Retry does not lower user-judgment boundaries. If a new acceptance, sensitive-action approval, residual-risk acceptance, or `Write Authorization` is needed after failure, the owning route must be used again.
 

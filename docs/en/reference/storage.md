@@ -39,11 +39,55 @@ API data shape and persistence effect are separate. A response field such as `Cl
 
 ## Storage owner routes
 
+Use this summary table for first-hop routing. The detail blocks keep the routing conditions out of long table cells.
+
 | Need | Owner |
 |---|---|
-| Runtime Home layout, local store assumptions, persisted record categories, table overview, storage-owned JSON, record-level active/later exclusions | [Storage Records](storage-records.md) |
-| Read-only effects, dry-run effects, rejected no-effect branches, committed blocked effects, method-by-method persistence effects | [Storage Effects](storage-effects.md) |
-| Staged artifacts, `ArtifactRef`, existing artifact links, staged-handle promotion, artifact body-read boundaries, retention, integrity | [Artifact Storage](storage-artifacts.md) |
-| `project_state.state_version`, idempotency and replay rows, event meaning, locks, migrations | [Storage Versioning](storage-versioning.md) |
+| Record layout | [Storage Records](storage-records.md) |
+| Method effects | [Storage Effects](storage-effects.md) |
+| Artifact lifecycle | [Artifact Storage](storage-artifacts.md) |
+| Versioning and operational boundaries | [Storage Versioning](storage-versioning.md) |
+
+**Storage Records route**
+
+Use [Storage Records](storage-records.md) for:
+
+- Runtime Home layout.
+- Local store assumptions.
+- Persisted record categories.
+- Table overview.
+- Storage-owned JSON.
+- Record-level active/later exclusions.
+
+**Storage Effects route**
+
+Use [Storage Effects](storage-effects.md) for:
+
+- Read-only effects.
+- Dry-run effects.
+- Rejected no-effect branches.
+- Committed blocked effects.
+- Method-by-method persistence effects.
+
+**Artifact Storage route**
+
+Use [Artifact Storage](storage-artifacts.md) for:
+
+- staged artifacts.
+- `ArtifactRef`.
+- existing artifact links.
+- staged-handle promotion.
+- artifact body-read boundaries.
+- retention and integrity.
+
+**Storage Versioning route**
+
+Use [Storage Versioning](storage-versioning.md) for:
+
+- `project_state.state_version`.
+- idempotency and replay rows.
+- event meaning.
+- locks.
+- migrations.
 
 Storage owners describe future Harness Runtime Home records only. This documentation repository is not a Runtime Home and must not contain generated runtime state.
