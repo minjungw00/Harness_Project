@@ -9,6 +9,8 @@ canonical_for:
   - "Korean close-readiness terminology routing for `닫기 준비 상태` and `닫기 가능 여부`."
   - "Search-friendly routing for promotion-time owner update terminology."
   - "Terminology distinction between `complete` as an enum/identifier and ordinary prose meaning full or entire."
+  - "Terminology boundaries for reserved/profile-gated value presence versus active behavior."
+  - "Owner-role routing for `isolated` semantics and value-set entry ownership."
 does_not_own:
   - "Product, API, storage, security, projection, or runtime contracts."
   - "Rendered UI copy when an exact template body owner defines the wording."
@@ -198,6 +200,7 @@ terms:
         - "docs/ko/reference/api/schema-value-sets.md"
     notes:
       - "A reserved value may be listed as vocabulary or future surface area without being active current-MVP behavior."
+      - "Presence in a value set does not activate behavior."
       - "Mark reserved values at the point of use; do not imply default, required, supported, enforced, accepted, verified, or close-ready behavior unless the active owner says so."
   profile_gated_value:
     category: "value_status"
@@ -214,6 +217,7 @@ terms:
     notes:
       - "A profile-gated value is available only when the documented profile or gate and owner behavior are active."
       - "Do not treat a profile-gated value as active MVP behavior merely because it appears in a value set."
+      - "Presence in a value set does not activate behavior."
   owner_document:
     category: "product_concept"
     en: "owner document"
@@ -280,6 +284,7 @@ terms:
         - "docs/ko/later/index.md"
     notes:
       - "Use only to signal that a later candidate needs an owner created or designated at promotion time."
+      - "A future owner placeholder is not a current owner document."
       - "Do not route readers to a future owner placeholder as if it is a current owner document."
   task:
     category: "product_concept"
@@ -395,10 +400,12 @@ terms:
       - "`complete` intent value"
     ko_reference: "`complete`"
     ko_user: "`complete`"
-    preserve_identifier: true
     preserve_as_identifier:
       - "complete"
       - "intent=complete"
+    avoid_ko:
+      - "complete 평가"
+      - "complete 닫기 준비 상태"
     owner_documents:
       en:
         - "docs/en/reference/api/mvp-api.md"
@@ -407,6 +414,7 @@ terms:
         - "docs/ko/reference/api/mvp-api.md"
         - "docs/ko/reference/api/schema-value-sets.md"
     notes:
+      - "The prose concept is complete intent; only the value string is `complete`."
       - "Preserve only when it is an enum value or identifier, such as `intent=complete`."
       - "Do not preserve `complete` in Korean prose when it means full or entire."
       - "English prose should prefer full or entire when `complete` could be confused with the enum value."
@@ -415,6 +423,8 @@ terms:
     en: "full evaluation order"
     ko_reference: "전체 평가 순서"
     ko_user: "전체 평가 순서"
+    ko_contextual:
+      close_readiness: "전체 닫기 준비 상태 평가 순서"
     aliases_en:
       - "entire evaluation order"
       - "full close-readiness evaluation order"
@@ -765,9 +775,26 @@ terms:
         - "docs/ko/reference/security.md"
         - "docs/ko/reference/active-mvp-scope.md"
         - "docs/ko/reference/api/schema-value-sets.md"
+    owner_roles:
+      semantics:
+        en:
+          - "docs/en/reference/security.md"
+        ko:
+          - "docs/ko/reference/security.md"
+      current_mvp_availability:
+        en:
+          - "docs/en/reference/active-mvp-scope.md"
+        ko:
+          - "docs/ko/reference/active-mvp-scope.md"
+      value_entry:
+        en:
+          - "docs/en/reference/api/schema-value-sets.md"
+        ko:
+          - "docs/ko/reference/api/schema-value-sets.md"
     notes:
       - "`isolated` is a reserved later/profile-gated guarantee label, not an active current-MVP guarantee."
-      - "Security owns guarantee semantics; schema value sets own the value entry."
+      - "Security owns guarantee semantics and non-claims; Active MVP Scope owns current-MVP availability; API Value Sets owns the value entry."
+      - "Presence in a value set does not activate behavior."
   dry_run:
     category: "api_concept"
     en: "dry-run"

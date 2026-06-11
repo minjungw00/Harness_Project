@@ -294,6 +294,7 @@ Owner:
 
 Notes:
 - Use this phrase only to signal that a later candidate may need an owner created or designated at promotion time.
+- A future owner placeholder is not a current owner document.
 
 ### `Task`
 
@@ -490,12 +491,15 @@ Preserve:
 
 Avoid:
 - Preserving `complete` in Korean prose when the meaning is full, entire, or complete evaluation.
+- complete 평가
+- complete 닫기 준비 상태
 
 Owner:
 - [MVP API](api/mvp-api.md)
 - [API Value Sets](api/schema-value-sets.md)
 
 Notes:
+- The prose concept is complete intent; only the value string is `complete`.
 - Preserve `complete` only when it is an enum value or explicit identifier.
 
 ### full evaluation order
@@ -505,8 +509,8 @@ English:
 - entire evaluation order
 
 Korean:
-- Reference: 전체 평가 순서
-- User-facing: 전체 평가 순서
+- Reference: 전체 평가 순서; in close-readiness context, 전체 닫기 준비 상태 평가 순서
+- User-facing: 전체 평가 순서; in close-readiness context, 전체 닫기 준비 상태 평가 순서
 
 Preserve:
 - None specific
@@ -861,12 +865,13 @@ Avoid:
 - 현재 MVP가 isolated 보장을 제공합니다
 
 Owner:
-- [Security](security.md)
-- [Active MVP Scope](active-mvp-scope.md)
-- [API Value Sets](api/schema-value-sets.md)
+- [Security](security.md) for semantics and non-claims
+- [Active MVP Scope](active-mvp-scope.md) for current-MVP availability
+- [API Value Sets](api/schema-value-sets.md) for the value entry
 
 Notes:
 - `isolated` is a reserved later/profile-gated guarantee label, not an active current-MVP guarantee.
+- Presence in a value set does not activate behavior.
 
 ### reserved value
 
@@ -896,6 +901,7 @@ Owner:
 
 Notes:
 - A reserved value may exist as vocabulary or future surface area without activating behavior.
+- Presence in a value set does not activate behavior.
 
 ### profile-gated value
 
@@ -918,6 +924,7 @@ Owner:
 
 Notes:
 - A profile-gated value is available only when the relevant profile and owner behavior are active.
+- Presence in a value set does not activate behavior.
 
 ### dry-run
 

@@ -295,6 +295,7 @@
 
 설명:
 - 이 표현은 이후 후보가 승격될 때 담당 문서를 만들거나 지정해야 할 수 있음을 나타낼 때만 씁니다.
+- 향후 담당 문서 자리표시자는 현재 담당 문서가 아닙니다.
 
 ### `Task`
 
@@ -491,12 +492,15 @@
 
 피할 표현:
 - 전체, 전체 평가, 전체 평가 순서를 뜻하는 산문에서 `complete`를 보존하는 표현
+- complete 평가
+- complete 닫기 준비 상태
 
 담당 문서:
 - [MVP API](api/mvp-api.md)
 - [API 값 집합](api/schema-value-sets.md)
 
 설명:
+- 이 항목에서 `complete`는 값 문자열일 때만 씁니다.
 - `complete`는 enum 값이나 명시적 식별자일 때만 보존합니다.
 
 ### full evaluation order
@@ -506,8 +510,8 @@
 - entire evaluation order
 
 한국어:
-- 참조 문서: 전체 평가 순서
-- 사용자 문서: 전체 평가 순서
+- 참조 문서: 전체 평가 순서, 닫기 준비 상태 맥락에서는 전체 닫기 준비 상태 평가 순서
+- 사용자 문서: 전체 평가 순서, 닫기 준비 상태 맥락에서는 전체 닫기 준비 상태 평가 순서
 
 보존할 식별자:
 - 해당 없음
@@ -862,12 +866,13 @@
 - 현재 MVP가 isolated 보장을 제공합니다
 
 담당 문서:
-- [보안](security.md)
-- [현재 MVP 범위](active-mvp-scope.md)
-- [API 값 집합](api/schema-value-sets.md)
+- [보안](security.md): 의미와 비주장 경계
+- [현재 MVP 범위](active-mvp-scope.md): 현재 MVP 사용 가능성
+- [API 값 집합](api/schema-value-sets.md): 값 항목
 
 설명:
 - `isolated`는 이후/profile-gated 보장 라벨로 예약된 값이며 현재 MVP의 활성 보장이 아닙니다.
+- 값 집합에 있다는 사실만으로 동작이 활성화되지는 않습니다.
 
 ### reserved value
 
@@ -897,6 +902,7 @@
 
 설명:
 - 예약된 값은 어휘나 향후 접점으로 존재할 수 있지만, 이름만으로 동작이 활성화되지는 않습니다.
+- 값 집합에 있다는 사실만으로 동작이 활성화되지는 않습니다.
 
 ### profile-gated value
 
@@ -919,6 +925,7 @@
 
 설명:
 - profile-gated 값은 관련 프로필과 담당 동작이 활성화되어 있을 때만 사용할 수 있습니다.
+- 값 집합에 있다는 사실만으로 동작이 활성화되지는 않습니다.
 
 ### dry-run
 
