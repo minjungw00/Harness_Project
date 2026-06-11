@@ -566,30 +566,295 @@ Ordinary active MVP Core operations do not hard-delete authority rows. They move
 
 Unconsumed or expired `artifact_staging` rows and `artifacts/tmp/` staging bytes or notices may be marked `expired` or `discarded`, and temporary bytes may be cleaned before registration, because they are not evidence authority. Once an `artifacts` row is committed, retention purge, project teardown, or destructive cleanup is outside ordinary active MVP mutation behavior and needs an owner-defined path.
 
-## Storage-owned values and JSON
+## Storage-owned value summary
 
 Closed current MVP storage value sets are table-level persistence constraints. Rows that mirror API schema values must match the API schema owner exactly; rows marked storage-owned define storage behavior that is not a public API schema body. Unknown values fail before commit.
 
-| Field | Current MVP values | Storage rule |
+| Field | Purpose | Details |
 |---|---|---|
-| Project registration `status` | `active` | Only registered active projects are in the baseline current MVP. Disable/unregister behavior is later until promoted. |
-| `surfaces.transport_kind` | `local_mcp_stdio`, `local_http` | Stored local transport category for registration matching. It is not a socket or protocol setup specification. |
-| `surfaces.local_access_posture` | `registered_local`, `unavailable`, `mismatch`, `revoked` | Stored registration posture for API compatibility checks; meanings mirror the API schema owner. |
-| `surfaces.status` | `active`, `disabled`, `stale`, `revoked` | Stored surface registration usability; meanings mirror the API schema owner. |
-| `tasks.lifecycle_phase` | `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, `cancelled`, `superseded` | Persisted Task lifecycle. `intake` is not a stored value; `superseded` is terminal. |
-| `tasks.close_reason` | `none`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` | Persisted close detail, separate from lifecycle and result. |
-| `tasks.result` | `none`, `advice_only`, `completed`, `cancelled`, `superseded` | Persisted coarse outcome. Failed Runs, violations, blocked closes, and evidence gaps stay in their owning records. |
-| `change_units.status` | `proposed`, `active`, `replaced`, `closed` | Storage-owned active Change Unit lifecycle for write compatibility and close basis. |
-| `write_authorizations.status` | `active`, `consumed`, `expired`, `stale`, `revoked` | Durable authorization lifecycle. Storage owns persistence and transition rules. |
-| `artifact_staging.status` | `staged`, `consumed`, `expired`, `discarded` | Storage-owned temporary handle lifecycle. Only `staged` is consumable by `harness.record_run`; terminal values cannot return to `staged`. |
-| `artifacts.status` | `available`, `missing`, `integrity_failed`, `unavailable` | Storage-owned artifact availability state. Redaction and blocked-payload handling stay in `redaction_state`. |
-| `artifact_links.owner_record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | Persisted owner relation discriminator; storage owns same-project/same-Task owner lookup and relation validation. |
-| `blockers.status` | `active`, `resolved`, `superseded` | Storage-owned blocker row state. Public close blocker shapes remain API-owned. |
-| `tool_invocations.status` | `committed` | A replay row exists only for a committed non-dry-run Core `MethodResult` response whose method state-effect row creates replay. |
+| Project registration `status` | active project registration baseline | See [Project registration `status`](#project-registration-status) |
+| `surfaces.transport_kind` | stored local transport category | See [`surfaces.transport_kind`](#surfacestransport_kind) |
+| `surfaces.local_access_posture` | stored registration posture | See [`surfaces.local_access_posture`](#surfaceslocal_access_posture) |
+| `surfaces.status` | stored surface registration usability | See [`surfaces.status`](#surfacesstatus) |
+| `tasks.lifecycle_phase` | persisted Task lifecycle | See [`tasks.lifecycle_phase`](#taskslifecycle_phase) |
+| `tasks.close_reason` | persisted close detail | See [`tasks.close_reason`](#tasksclose_reason) |
+| `tasks.result` | persisted coarse Task outcome | See [`tasks.result`](#tasksresult) |
+| `change_units.status` | active Change Unit lifecycle | See [`change_units.status`](#change_unitsstatus) |
+| `write_authorizations.status` | durable authorization lifecycle | See [`write_authorizations.status`](#write_authorizationsstatus) |
+| `artifact_staging.status` | temporary handle lifecycle | See [`artifact_staging.status`](#artifact_stagingstatus) |
+| `artifacts.status` | artifact availability state | See [`artifacts.status`](#artifactsstatus) |
+| `artifact_links.owner_record_kind` | owner relation discriminator | See [`artifact_links.owner_record_kind`](#artifact_linksowner_record_kind) |
+| `blockers.status` | blocker row state | See [`blockers.status`](#blockersstatus) |
+| `tool_invocations.status` | committed replay row state | See [`tool_invocations.status`](#tool_invocationsstatus) |
+
+<a id="project-registration-status"></a>
+### Project registration `status`
+
+Values:
+- `active`
+
+Storage rule:
+- Only registered active projects are in the baseline current MVP.
+- Disable/unregister behavior is later until promoted.
+
+Owner links:
+- [Runtime Boundaries](runtime-boundaries.md).
+- [Storage Versioning](storage-versioning.md).
+
+<a id="surfacestransport_kind"></a>
+### `surfaces.transport_kind`
+
+Values:
+- `local_mcp_stdio`
+- `local_http`
+
+Storage rule:
+- Stored local transport category for registration matching.
+- It is not a socket or protocol setup specification.
+
+Owner links:
+- [Agent Integration](agent-integration.md).
+- [MVP API](api/mvp-api.md).
+- [Security](security.md).
+
+<a id="surfaceslocal_access_posture"></a>
+### `surfaces.local_access_posture`
+
+Values:
+- `registered_local`
+- `unavailable`
+- `mismatch`
+- `revoked`
+
+Storage rule:
+- Stored registration posture for API compatibility checks.
+- Meanings mirror the API schema owner.
+
+Owner links:
+- [API Schema Core](api/schema-core.md).
+- [Agent Integration](agent-integration.md).
+- [Security](security.md).
+
+<a id="surfacesstatus"></a>
+### `surfaces.status`
+
+Values:
+- `active`
+- `disabled`
+- `stale`
+- `revoked`
+
+Storage rule:
+- Stored surface registration usability.
+- Meanings mirror the API schema owner.
+
+Owner links:
+- [API Schema Core](api/schema-core.md).
+- [Agent Integration](agent-integration.md).
+- [Security](security.md).
+
+<a id="taskslifecycle_phase"></a>
+### `tasks.lifecycle_phase`
+
+Values:
+- `shaping`
+- `ready`
+- `executing`
+- `waiting_user`
+- `blocked`
+- `completed`
+- `cancelled`
+- `superseded`
+
+Storage rule:
+- Persisted Task lifecycle.
+- `intake` is not a stored lifecycle value.
+- `superseded` is terminal.
+
+Owner links:
+- [API Value Sets](api/schema-value-sets.md#task-lifecycle-values).
+- [API State Schemas](api/schema-state.md).
+- [Core Model](core-model.md).
+
+<a id="tasksclose_reason"></a>
+### `tasks.close_reason`
+
+Values:
+- `none`
+- `completed_self_checked`
+- `completed_with_risk_accepted`
+- `cancelled`
+- `superseded`
+
+Storage rule:
+- Persisted close detail.
+- It is separate from lifecycle and result.
+
+Owner links:
+- [API Value Sets](api/schema-value-sets.md#task-lifecycle-values).
+- [API State Schemas](api/schema-state.md).
+- [Core Model](core-model.md).
+
+<a id="tasksresult"></a>
+### `tasks.result`
+
+Values:
+- `none`
+- `advice_only`
+- `completed`
+- `cancelled`
+- `superseded`
+
+Storage rule:
+- Persisted coarse outcome.
+- Failed Runs, violations, blocked closes, and evidence gaps stay in their owning records.
+
+Owner links:
+- [API Value Sets](api/schema-value-sets.md#task-lifecycle-values).
+- [API State Schemas](api/schema-state.md).
+- [Core Model](core-model.md).
+
+<a id="change_unitsstatus"></a>
+### `change_units.status`
+
+Values:
+- `proposed`
+- `active`
+- `replaced`
+- `closed`
+
+Storage rule:
+- Storage-owned active Change Unit lifecycle.
+- The lifecycle supports write compatibility and close basis.
+
+Owner links:
+- [Core Model](core-model.md).
+- [Storage Effects](storage-effects.md).
+- [MVP API](api/mvp-api.md).
+
+<a id="write_authorizationsstatus"></a>
+### `write_authorizations.status`
+
+Values:
+- `active`
+- `consumed`
+- `expired`
+- `stale`
+- `revoked`
+
+Storage rule:
+- Durable authorization lifecycle.
+- Storage owns persistence and transition rules.
+
+Owner links:
+- [Storage Effects](storage-effects.md).
+- [MVP API](api/mvp-api.md).
+- [Security](security.md).
+
+<a id="artifact_stagingstatus"></a>
+### `artifact_staging.status`
+
+Values:
+- `staged`
+- `consumed`
+- `expired`
+- `discarded`
+
+Storage rule:
+- Storage-owned temporary handle lifecycle.
+- Only `staged` is consumable by `harness.record_run`.
+- Terminal values cannot return to `staged`.
+
+Owner links:
+- [Artifact Storage](storage-artifacts.md).
+- [API Artifact Schemas](api/schema-artifacts.md).
+- [MVP API](api/mvp-api.md).
+
+<a id="artifactsstatus"></a>
+### `artifacts.status`
+
+Values:
+- `available`
+- `missing`
+- `integrity_failed`
+- `unavailable`
+
+Storage rule:
+- Storage-owned artifact availability state.
+- Redaction and blocked-payload handling stay in `redaction_state`.
+
+Owner links:
+- [Artifact Storage](storage-artifacts.md).
+- [API Artifact Schemas](api/schema-artifacts.md).
+- [Security](security.md).
+
+<a id="artifact_linksowner_record_kind"></a>
+### `artifact_links.owner_record_kind`
+
+Values:
+- `task`
+- `change_unit`
+- `run`
+- `user_judgment`
+- `evidence_summary`
+- `blocker`
+
+Storage rule:
+- Persisted owner relation discriminator.
+- Storage owns same-project/same-Task owner lookup and relation validation.
+
+Owner links:
+- [Artifact Storage](storage-artifacts.md).
+- [API Value Sets](api/schema-value-sets.md#record-and-reference-values).
+- [Core Model](core-model.md).
+
+<a id="blockersstatus"></a>
+### `blockers.status`
+
+Values:
+- `active`
+- `resolved`
+- `superseded`
+
+Storage rule:
+- Storage-owned blocker row state.
+- Public close blocker shapes remain API-owned.
+
+Owner links:
+- [Core Model](core-model.md).
+- [API State Schemas](api/schema-state.md).
+- [API Errors](api/errors.md).
+
+<a id="tool_invocationsstatus"></a>
+### `tool_invocations.status`
+
+Values:
+- `committed`
+
+Storage rule:
+- A replay row exists only for a committed non-dry-run Core `MethodResult` response whose method state-effect row creates replay.
+
+Owner links:
+- [Storage Versioning](storage-versioning.md).
+- [MVP API](api/mvp-api.md).
+- [API Schema Core](api/schema-core.md).
+
+### Values not owned here
 
 Other persisted status-like API fields, including `tasks.mode`, `runs.kind`, `runs.status`, `user_judgments.status`, and `evidence_summaries.status`, validate against [API Value Sets](api/schema-value-sets.md) and the Core/API method owners. Storage may index and constrain them, but this document does not redefine their public schema values.
 
-SQLite `TEXT` columns that store JSON are a storage representation choice, not permission to persist arbitrary JSON. Core must parse and validate JSON before commit. API-shaped stored JSON validates against the API schema owners. Storage-only JSON validates against this document or the owner document named by this document. SQLite defaults such as `'{}'` and `'[]'` are storage defaults only; they do not make API fields optional.
+## Storage-owned JSON
+
+### JSON storage conditions
+
+SQLite `TEXT` columns that store JSON are a storage representation choice, not permission to persist arbitrary JSON.
+
+- Core must parse and validate JSON before commit.
+- API-shaped stored JSON validates against the API schema owners.
+- Storage-only JSON validates against this document or the owner document named by this document.
+- SQLite defaults such as `'{}'` and `'[]'` are storage defaults only; they do not make API fields optional.
+
+### Stored JSON
 
 Active JSON `TEXT` columns are limited to compact owner-shaped data needed by the active records, including:
 
@@ -602,6 +867,8 @@ Active JSON `TEXT` columns are limited to compact owner-shaped data needed by th
 - `blockers.owner_ref_json` and `blockers.related_refs_json`.
 - `task_events.payload_json`.
 - `tool_invocations.response_json`.
+
+### JSON not stored
 
 Task and Change Unit shaping JSON stores compact summaries and bounded lists only. It must not store a standalone Discovery Brief, Question Queue, Assumption Register, full design artifact, generated projection body, evidence manifest body, QA record, acceptance record, residual-risk record, or close record under another name.
 
