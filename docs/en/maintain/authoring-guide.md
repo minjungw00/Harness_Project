@@ -151,14 +151,17 @@ API examples should avoid self-referential documentation edits as task payloads,
 
 ## 7. Long paragraph and chunking rules
 
-Long paragraphs should be split into condition/result/exception/owner-link blocks. Use this shape when a paragraph is trying to carry a rule, a consequence, and a caveat at the same time:
+Reference docs should keep rule boundaries visible. Do not combine condition, effect, exception, non-claim, and owner routing in one dense paragraph. A paragraph should not require the reader to infer where a rule applies, what it permits, what it forbids, which caveat applies, or which owner carries the canonical detail.
 
-- Condition: when the rule applies.
-- Result: what the editor should do.
-- Exception: when the rule does not apply.
-- Owner link: where the canonical detail lives.
+Use named blocks when a rule has multiple parts:
 
-Prefer short paragraphs, compact bullets, and small tables for routing. Use a Markdown table when each cell is short and the table helps comparison or routing. Source maintainability is part of documentation quality: when a cell needs a list, multiple conditions, or more than one sentence, prefer a summary table plus per-item detail blocks.
+- Conditions: when the rule applies.
+- Allowed effects: what the rule allows or requires.
+- Not allowed: what the rule does not allow and what the text does not claim.
+- Exceptions: when a different rule or caveat applies.
+- Owner links: where the canonical detail lives.
+
+Prefer short paragraphs, compact bullets, and small tables for routing. If a sentence contains several "must not", "does not", or "only when" clauses, consider a list or named block. Use a Markdown table when each cell is short and the table helps comparison or routing. Source maintainability is part of documentation quality: when a cell needs a list, multiple conditions, or more than one sentence, prefer a summary table plus per-item detail blocks.
 
 A table should not hide conditions, exceptions, non-claims, or owner links inside a long cell. If a paragraph or table needs several examples of fields, status values, storage outcomes, or guarantee levels, that is usually a sign the text has become contract material and should move to the owner.
 
@@ -168,7 +171,7 @@ English and Korean docs are both active. Do not finish a meaning-changing batch 
 
 Korean docs must not be literal translations. Maintain semantic parity by meaning unit while allowing natural Korean sentence order, paragraph rhythm, and terminology. Preserve exact identifiers in both languages, including file paths, `doc_id` values, API method names, schema fields, enum values, table names, validator IDs, and error codes.
 
-Korean reference docs must preserve structural meaning units, not just broad topic coverage. Conditions, results, exceptions, non-claims, owner links, and close-readiness consequences must remain visible as separate meaning units when the English owner uses that structure. Matching line counts are not required, but do not collapse important structure into dense paragraphs that hide a caveat or owner boundary.
+Korean reference docs must preserve structural meaning units, not just broad topic coverage. Conditions, effects, exceptions, non-claims, owner links, and close-readiness consequences must remain visible as separate meaning units when the English owner uses that structure. Matching line counts are not required, but do not collapse important structure into dense paragraphs that hide a caveat or owner boundary.
 
 Use [Translation Guide](translation-guide.md) and [Terminology Map](../../terminology-map.yaml) for bilingual wording. During normal agent work, load only one language for the same `doc_id`; load both only for translation, parity review, or a bilingual edit where comparison is necessary.
 
@@ -195,10 +198,10 @@ Do not route active documentation through stale legacy paths. If an old path app
 - [ ] Route documents expose canonical owner gaps instead of hiding them with broad route text.
 - [ ] Meaning-changing edits were made in both English and Korean.
 - [ ] Korean prose is natural, not a literal translation, and exact identifiers are preserved.
-- [ ] Korean reference docs preserve condition, result, exception, non-claim, and owner-link structure by meaning unit.
+- [ ] Korean reference docs preserve condition, effect, exception, non-claim, and owner-link structure by meaning unit.
 - [ ] User-facing docs avoid internal schema names unless necessary.
 - [ ] Reference docs keep schema names and other exact identifiers in backticks.
-- [ ] Long paragraphs were split into condition/result/exception/owner-link blocks where useful.
+- [ ] Dense reference paragraphs were split into conditions, allowed effects, not-allowed effects, exceptions, and owner links where useful.
 - [ ] Tables use short cells, and dense table content was moved into summary tables plus per-item detail blocks.
 - [ ] Links point to active routes and canonical owners.
 - [ ] New or changed terminology was checked against [Terminology Map](../../terminology-map.yaml).
