@@ -181,23 +181,30 @@ Fix:
 - Split the Korean prose into natural paragraphs or bullets that preserve the meaning units.
 - Keep exact identifiers unchanged and preserve semantic parity without forcing line-by-line translation.
 
-### CHK-EXAMPLE-001: durable API examples
+### CHK-EXAMPLE-TIMELESS-SCENARIO: timeless API and Reference scenarios
 
 Owner:
-- [MVP API](../reference/api/mvp-api.md)
 - [Authoring Guide](authoring-guide.md)
+- The affected Reference owner selected from [Reference Index](../reference/README.md)
 
 Check:
-- Confirm API request/response examples, task payloads, run summaries, artifact descriptions, and user judgment prompts use a stable product-work scenario.
-- Confirm Harness documentation maintenance, review, migration, route cleanup, or section rewrite work is not the scenario inside API examples.
-- Confirm paired English and Korean API examples preserve equivalent scenario details.
+- Confirm API and Reference examples use stable product or user scenarios.
+- Confirm examples do not use the current documentation edit, refactor, review, migration, or section restructuring as their scenario.
+- Confirm documentation paths are used as example payload only when the document is specifically about documentation maintenance.
+- Confirm example wording does not narrate the current edit or review process instead of a product or user scenario.
+- Confirm paired English and Korean examples preserve equivalent scenario details.
 
 Failure:
-- An API example uses Harness documentation maintenance as the product task, artifact, run, or user judgment basis.
+- Example payload includes current documentation paths such as `docs/en/reference/api/mvp-api.md`.
+- Example task goal describes rewriting the Harness documentation set.
+- Example baseline, artifact, run, or judgment names refer to the current documentation edit.
+- Example wording describes the current edit or review process instead of a product or user scenario.
 - One language keeps a different scenario after paired updates.
 
 Fix:
-- Replace the full example chain with one durable product scenario.
+- Replace the example with a durable product or user scenario.
+- Keep file paths only when the document is explicitly about documentation maintenance.
+- Remove process-only wording and make the scenario durable.
 - Update paired English and Korean examples by meaning unit.
 
 ## 5. Terminology checks
