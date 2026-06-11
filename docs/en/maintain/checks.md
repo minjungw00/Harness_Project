@@ -610,6 +610,23 @@ Fix:
 
 ## 13. Editorial style checks
 
+### CHK-TABLE-SOURCE-MAINTAINABILITY: Markdown table source maintainability
+
+Owner:
+- [Authoring Guide](authoring-guide.md)
+
+Check:
+- Confirm Markdown table cells are short.
+- Confirm long conditions are moved into detail blocks.
+- Confirm source diffs remain reviewable.
+
+Failure:
+- A table cell contains multiple conditions, multiple sentences, or a list-like sequence.
+- A single source line becomes too long to review.
+
+Fix:
+- Convert the dense table to a summary table plus per-item detail blocks.
+
 ### CHK-EN-HEADING-CASE: English heading case
 
 Owner:

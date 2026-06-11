@@ -126,7 +126,9 @@ Long paragraphs should be split into condition/result/exception/owner-link block
 - Exception: when the rule does not apply.
 - Owner link: where the canonical detail lives.
 
-Prefer short paragraphs, compact bullets, and small tables for routing. If a paragraph needs several examples of fields, status values, storage outcomes, or guarantee levels, that is usually a sign the text has become contract material and should move to the owner.
+Prefer short paragraphs, compact bullets, and small tables for routing. Use a Markdown table when each cell is short and the table helps comparison or routing. Source maintainability is part of documentation quality: when a cell needs a list, multiple conditions, or more than one sentence, prefer a summary table plus per-item detail blocks.
+
+A table should not hide conditions, exceptions, non-claims, or owner links inside a long cell. If a paragraph or table needs several examples of fields, status values, storage outcomes, or guarantee levels, that is usually a sign the text has become contract material and should move to the owner.
 
 ## 8. Cross-language editing
 
@@ -165,6 +167,7 @@ Do not route active documentation through stale legacy paths. If an old path app
 - [ ] User-facing docs avoid internal schema names unless necessary.
 - [ ] Reference docs keep schema names and other exact identifiers in backticks.
 - [ ] Long paragraphs were split into condition/result/exception/owner-link blocks where useful.
+- [ ] Tables use short cells, and dense table content was moved into summary tables plus per-item detail blocks.
 - [ ] Links point to active routes and canonical owners.
 - [ ] New or changed terminology was checked against [Terminology Map](../../terminology-map.yaml).
 - [ ] No temporary planning files, archive copies, generated runtime records, or migration notes remain.
