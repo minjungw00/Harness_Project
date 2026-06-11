@@ -12,7 +12,17 @@
 
 이 API는 협력형 하네스 기록/확인 동작만 반환합니다. 보안 비주장과 보장 표현은 [보안](../security.md)이 담당합니다.
 
-요구사항 구체화는 활성 Task, Change Unit, `user_judgment`, 증거 요약, 차단 사유 경로, 다음 행동, 파생된 `ShapingReadiness` 보기를 사용합니다. API는 모호한 요청에서 안전한 첫 Change Unit으로 이동하기 위해 별도의 활성 Discovery Brief, Question Queue, Assumption Register 또는 비슷한 커밋된 계획 아티팩트를 도입하면 안 됩니다.
+요구사항 구체화는 아래 경로를 사용합니다.
+
+- 활성 Task.
+- Change Unit.
+- `user_judgment`.
+- 증거 요약.
+- 차단 사유 경로.
+- 다음 행동.
+- 파생된 `ShapingReadiness` 보기.
+
+비주장: API는 모호한 요청에서 안전한 첫 Change Unit으로 이동하기 위해 별도의 활성 커밋된 계획 아티팩트를 도입하지 않습니다. 해당 비주장에는 Discovery Brief, Question Queue, Assumption Register와 비슷한 아티팩트가 포함됩니다.
 
 <a id="active-mvp-method-behavior"></a>
 
@@ -25,12 +35,12 @@
 | [`harness.intake`](#harnessintake) | 평소 사용자 작업을 시작, 재개, 분류합니다. |
 | [`harness.status`](#harnessstatus) | 현재 상태 요약, 차단 사유, 대기 중인 판단, 증거 요약, 닫기 상태, 다음 안전한 행동을 반환합니다. |
 | [`harness.update_scope`](#harnessupdate_scope) | `harness.intake` 이후 활성 Task 범위와 활성 Change Unit을 갱신합니다. |
-| [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 파일 쓰기를 현재 범위, 상태, 필요한 별도 민감 동작 승인, baseline, 접점 역량과 비교합니다. |
+| [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 파일 쓰기를 현재 범위, 상태, 필요한 별도 민감 동작 승인, 기준선, 접점 역량과 비교합니다. |
 | [`harness.stage_artifact`](#harnessstage_artifact) | 호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림을 나중에 `record_run`이 승격할 수 있는 임시 스테이징 핸들로 스테이징합니다. |
 | [`harness.record_run`](#harnessrecord_run) | `shaping_update`, `direct`, `implementation` 종류의 작업과 간결한 증거/아티팩트 참조를 기록합니다. |
 | [`harness.request_user_judgment`](#harnessrequest_user_judgment) | 대기 중인 사용자 소유 판단 요청 하나를 만듭니다. |
 | [`harness.record_user_judgment`](#harnessrecord_user_judgment) | 기존 대기 중인 `UserJudgment`에 대한 사용자의 답을 기록합니다. |
-| [`harness.close_task`](#harnessclose_task) | 닫기 준비 상태를 확인하고, 차단 사유가 허용할 때만 `complete`, `cancel`, `supersede` intent를 처리합니다. |
+| [`harness.close_task`](#harnessclose_task) | 닫기 준비 상태를 확인하고, 차단 사유가 허용할 때만 `complete`, `cancel`, `supersede` 값을 가진 `intent`를 처리합니다. |
 
 이 문서는 메서드 역할과 메서드별 결과 동작을 이름 붙입니다. 분기, 저장 효과, `dry_run`, 재실행, 상태 버전 규칙의 기준 설명은 [API 코어 스키마](schema-core.md), [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md)를 확인하세요.
 
@@ -38,19 +48,60 @@
 
 ## 공통 요청 규칙
 
-모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다. 각 공개 메서드 응답은 정확히 하나의 응답 분기입니다. 구체적인 메서드별 `MethodResult`, `ToolRejectedResponse`, 또는 `ToolDryRunResponse` 중 하나입니다. 메서드 결과 스키마는 실제 읽기 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드 상태 효과 표가 허용하는 커밋된 차단 결과에 대해 구체적인 결과를 이름 붙입니다. 메서드 결과는 `response_kind=result`인 [`ToolResultBase`](schema-core.md#common-response)를 사용합니다. `ToolRejectedResponse`와 `ToolDryRunResponse`는 [공통 응답 분기](schema-core.md#common-response)의 스키마를 사용하며 메서드별 result 전용 필드를 상속하지 않습니다.
+모든 메서드는 [`ToolEnvelope`](schema-core.md#tool-envelope)를 사용합니다.
 
-아래 예시는 간결한 분기 예시이지 전체 스키마 정의가 아닙니다. 최소 요청 예시는 해당 메서드의 유효한 호출을 구성하는 데 필요한 필드를 포함합니다. 대표 응답 예시는 분기 이해에 중요한 필드를 보여 주며, 설명 중인 동작에 영향을 주지 않는 스키마 담당 중첩 필드는 생략할 수 있습니다. 전체 형태는 연결된 스키마 담당 문서를 사용합니다.
+응답 분기 규칙:
 
-커밋되는 `dry_run=false` 상태 변경 호출에는 `null`이 아닌 `idempotency_key`와 현재 프로젝트 전체 `expected_state_version`이 필요합니다. 읽기 전용 호출, 유효한 dry-run 미리보기, 스테이징 유틸리티 호출의 예외는 각 담당 문서가 정의합니다.
+- 각 공개 메서드 응답은 정확히 하나의 응답 분기입니다.
+- 가능한 분기는 구체적인 메서드별 `MethodResult`, `ToolRejectedResponse`, `ToolDryRunResponse` 중 하나입니다.
+- 메서드 결과 스키마는 실제 읽기 결과, 성공한 스테이징 결과, Core 커밋 결과, 또는 메서드 상태 효과 표가 허용하는 커밋된 차단 결과를 이름 붙입니다.
+- 메서드 결과는 `response_kind=result`인 [`ToolResultBase`](schema-core.md#common-response)를 사용합니다.
+- `ToolRejectedResponse`와 `ToolDryRunResponse`는 [공통 응답 분기](schema-core.md#common-response)의 스키마를 사용하며 메서드별 result 전용 필드를 상속하지 않습니다.
+
+예시 읽기 규칙:
+
+- 아래 예시는 간결한 분기 예시이지 전체 스키마 정의가 아닙니다.
+- 최소 요청 예시는 해당 메서드의 유효한 호출을 구성하는 데 필요한 필드를 포함합니다.
+- 대표 응답 예시는 분기 이해에 중요한 필드를 보여 줍니다.
+- 설명 중인 동작에 영향을 주지 않는 스키마 담당 중첩 필드는 생략할 수 있습니다.
+- 전체 형태는 연결된 스키마 담당 문서를 사용합니다.
+
+커밋되는 `dry_run=false` 상태 변경 호출의 조건:
+
+- `idempotency_key`가 `null`이 아닙니다.
+- `expected_state_version`이 현재 프로젝트 전체 상태 버전입니다.
+
+예외:
+
+- 읽기 전용 호출.
+- 유효한 `dry_run` 미리보기.
+- 스테이징 유틸리티 호출.
+
+위 예외의 세부사항은 각 담당 문서가 정의합니다.
 
 응답 분기 선택은 [공통 응답 분기](schema-core.md#common-response)가 담당합니다. 저장과 재실행 효과는 [저장 효과](../storage-effects.md)와 [저장소 버전 관리](../storage-versioning.md)가 담당합니다. 공개 오류, 오래된 상태 우선순위, 닫기 차단 사유 경로는 [API 오류](errors.md)가 담당합니다.
 
-메서드에 도구별 `task_id`가 있으면 Core는 메서드 필드, `ToolEnvelope.task_id`, 활성 Task 순서로 기본 Task를 해석합니다. 이 해석은 담당 기록을 고르는 것이지 별도 상태 시계를 만들지 않습니다.
+메서드에 도구별 `task_id`가 있으면 Core는 아래 순서로 기본 Task를 해석합니다.
 
-로컬 접근 등급은 하네스 API 호환성 등급이지 OS 권한 등급이 아닙니다. 활성 `access_class` 값은 [접근 등급 값](schema-value-sets.md#접근-등급-값)이 담당합니다. 커넥터 도출과 역량 태세는 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
+1. 메서드 필드.
+2. `ToolEnvelope.task_id`.
+3. 활성 Task.
 
-각 공개 API 요청에는 요청 수준 접근 등급이 정확히 하나 있습니다. `ArtifactInput[]` 같은 중첩 페이로드는 두 번째 접근 등급을 추가하지 않습니다. 아티팩트 스테이징, 승격, 본문 읽기 경계는 [API 아티팩트 스키마](schema-artifacts.md)와 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
+비주장: 이 해석은 담당 기록을 고르는 것이지 별도 상태 시계를 만들지 않습니다.
+
+로컬 접근 등급의 경계:
+
+- 결과: 로컬 접근 등급은 하네스 API 호환성 등급입니다.
+- 비주장: OS 권한 등급이 아닙니다.
+- 담당 문서: 활성 `access_class` 값은 [접근 등급 값](schema-value-sets.md#접근-등급-값)이 담당합니다.
+- 담당 문서: 커넥터 도출과 역량 태세는 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
+
+요청 수준 접근 등급 경계:
+
+- 조건: 공개 API 요청 하나가 있습니다.
+- 결과: 요청 수준 접근 등급은 정확히 하나입니다.
+- 비주장: `ArtifactInput[]` 같은 중첩 페이로드는 두 번째 접근 등급을 추가하지 않습니다.
+- 담당 문서: 아티팩트 스테이징, 승격, 본문 읽기 경계는 [API 아티팩트 스키마](schema-artifacts.md)와 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
 <a id="harnessintake"></a>
 
@@ -68,11 +119,28 @@
 
 ### 접근 요구사항
 
-`dry_run=false` 커밋에는 `VerifiedSurfaceContext.access_class=core_mutation`과 `verified=true`가 필요합니다. `surface_id`는 등록된 로컬 접점을 고르는 선택자이며, 그 자체가 권한이 아닙니다.
+조건:
+
+- `dry_run=false` 커밋입니다.
+- `VerifiedSurfaceContext.access_class=core_mutation`입니다.
+- `verified=true`입니다.
+
+비주장: `surface_id`는 등록된 로컬 접점을 고르는 선택자일 뿐, 그 자체가 권한이 아닙니다.
 
 ### 상태 버전 동작
 
-커밋된 `dry_run=false` 결과는 프로젝트 전체 `project_state.state_version`을 정확히 한 번 올리고 멱등 키에 대한 재실행 행을 만듭니다. `dry_run`, 읽기 실패, 검증 실패, 로컬 접근 실패, 오래된 `expected_state_version`은 Task, Change Unit, 이벤트, 재실행 행, 차단 사유 갱신, 상태 버전 증가를 만들지 않습니다.
+커밋된 `dry_run=false` 결과:
+
+- 프로젝트 전체 `project_state.state_version`을 정확히 한 번 올립니다.
+- 멱등 키에 대한 재실행 행을 만듭니다.
+
+아래 경우는 Task, Change Unit, 이벤트, 재실행 행, 차단 사유 갱신, 상태 버전 증가를 만들지 않습니다.
+
+- `dry_run`.
+- 읽기 실패.
+- 검증 실패.
+- 로컬 접근 실패.
+- 오래된 `expected_state_version`.
 
 ### 성공 결과
 
@@ -80,11 +148,31 @@
 
 ### 차단 결과
 
-이 메서드는 쓰기 준비 경로 대신 shaping 또는 차단 사유 상태를 기록하는 커밋된 `IntakeResult`를 반환할 수 있습니다. 차단 질문은 별도 Discovery Brief, Question Queue, Assumption Register 아티팩트가 아니라 Task, Change Unit, 사용자 판단, 증거, 차단 사유, 다음 행동 필드로 표현해야 합니다.
+이 메서드는 쓰기 준비 경로 대신 shaping 또는 차단 사유 상태를 기록하는 커밋된 `IntakeResult`를 반환할 수 있습니다.
+
+차단 질문은 아래 필드로 표현해야 합니다.
+
+- Task.
+- Change Unit.
+- 사용자 판단.
+- 증거.
+- 차단 사유.
+- 다음 행동.
+
+비주장: 별도 Discovery Brief, Question Queue, Assumption Register 아티팩트는 만들지 않습니다.
 
 ### 거절 결과
 
-검증 실패, 오래된 `expected_state_version`, Core 또는 로컬 접점 사용 불가, 로컬 접근 불일치, 활성 Task 호환성 부족, validator 실패처럼 커밋 전 실패가 있으면 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
+커밋 전 실패가 있으면 `ToolRejectedResponse`를 반환합니다. 예시는 아래와 같습니다.
+
+- 검증 실패.
+- 오래된 `expected_state_version`.
+- Core 또는 로컬 접점 사용 불가.
+- 로컬 접근 불일치.
+- 활성 Task 호환성 부족.
+- validator 실패.
+
+공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ### `dry_run` 동작
 
@@ -181,7 +269,7 @@ next_actions:
 
 ### 목적
 
-`harness.intake` 이후 활성 Task의 목표 요약, 범위 경계, 범위 밖 항목, 수락 기준, 자율성 경계, baseline 참조, 활성 Change Unit을 갱신합니다. 사용자 소유 차단 사유가 처리되면 shaping 상태를 안전한 첫 Change Unit으로 옮기는 활성 경로입니다.
+`harness.intake` 이후 활성 Task의 목표 요약, 범위 경계, 범위 밖 항목, 수락 기준, 자율성 경계, 기준선 참조, 활성 Change Unit을 갱신합니다. 사용자 소유 차단 사유가 처리되면 shaping 상태를 안전한 첫 Change Unit으로 옮기는 활성 경로입니다.
 
 ### 필수 입력
 
@@ -193,23 +281,65 @@ next_actions:
 
 ### 접근 요구사항
 
-`dry_run=false` 커밋에는 `VerifiedSurfaceContext.access_class=core_mutation`과 `verified=true`가 필요합니다. 요청은 같은 프로젝트의 호환되는 Task를 식별해야 하며, 활성 Change Unit을 만들거나 교체할 때는 다음 안전한 행동을 정직하게 만들 만큼의 범위를 제공해야 합니다.
+조건:
+
+- `dry_run=false` 커밋입니다.
+- `VerifiedSurfaceContext.access_class=core_mutation`입니다.
+- `verified=true`입니다.
+- 요청은 같은 프로젝트의 호환되는 Task를 식별합니다.
+- 활성 Change Unit을 만들거나 교체할 때는 다음 안전한 행동을 정직하게 만들 만큼의 범위를 제공합니다.
 
 ### 상태 버전 동작
 
-커밋된 `dry_run=false` 결과는 `project_state.state_version`을 정확히 한 번 올립니다. 범위, baseline, 수락 기준, 범위 밖 항목, 자율성 경계, Change Unit, 프로젝트 상태가 활성 쓰기 승인(`Write Authorization`)의 기준 상태와 더 이상 맞지 않으면 Core는 그 승인을 `status=stale`로 표시합니다. 소비, 철회, 만료, 조용한 재사용은 하지 않습니다.
+커밋된 `dry_run=false` 결과:
+
+- `project_state.state_version`을 정확히 한 번 올립니다.
+
+활성 쓰기 승인(`Write Authorization`)의 기준 상태와 더 이상 맞지 않으면 Core는 그 승인을 `status=stale`로 표시합니다. 비교 대상은 아래와 같습니다.
+
+- 범위.
+- 기준선.
+- 수락 기준.
+- 범위 밖 항목.
+- 자율성 경계.
+- Change Unit.
+- 프로젝트 상태.
+
+비주장: `status=stale` 표시는 소비, 철회, 만료, 조용한 재사용이 아닙니다.
 
 ### 성공 결과
 
-`base.response_kind=result`, `base.effect_kind=core_committed`인 `UpdateScopeResult`를 반환합니다. 결과에는 `task_ref`, 선택적 `change_unit_ref`, 연결된 scope decision 참조, stale 쓰기 승인 참조, 차단 사유 참조, 현재 `state`, `next_actions`가 들어갑니다.
+`base.response_kind=result`, `base.effect_kind=core_committed`인 `UpdateScopeResult`를 반환합니다. 결과에는 `task_ref`, 선택적 `change_unit_ref`, 연결된 `scope_decision` 참조, `status=stale` 쓰기 승인 참조, 차단 사유 참조, 현재 `state`, `next_actions`가 들어갑니다.
 
 ### 차단 결과
 
-범위가 아직 준비되지 않았을 때 메서드가 소유한 차단 사유 또는 현재 행 갱신을 커밋할 수 있습니다. 커밋된 차단 범위 결과는 필요한 사용자 소유 판단 범주가 `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval` 중 무엇인지 식별해야 하며, 막연한 모호함 뒤에 숨기면 안 됩니다.
+범위가 아직 준비되지 않았을 때 메서드가 소유한 차단 사유 또는 현재 행 갱신을 커밋할 수 있습니다.
+
+커밋된 차단 범위 결과는 필요한 사용자 소유 판단 범주를 식별해야 합니다.
+
+- `product_decision`.
+- `technical_decision`.
+- `scope_decision`.
+- `sensitive_approval`.
+
+비주장: 필요한 판단을 막연한 모호함 뒤에 숨기면 안 됩니다.
 
 ### 거절 결과
 
-오래된 `expected_state_version`, 유효하지 않은 Task 식별, 유효하지 않은 Change Unit 작업, 필요한 범위 누락, 범위 위반, 미해결 필수 판단, 자율성 경계 위반, stale baseline, 로컬 접근 실패, validator 실패 같은 커밋 전 실패는 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
+커밋 전 실패가 있으면 `ToolRejectedResponse`를 반환합니다. 예시는 아래와 같습니다.
+
+- 오래된 `expected_state_version`.
+- 유효하지 않은 Task 식별.
+- 유효하지 않은 Change Unit 작업.
+- 필요한 범위 누락.
+- 범위 위반.
+- 미해결 필수 판단.
+- 자율성 경계 위반.
+- 기준선이 오래되었습니다.
+- 로컬 접근 실패.
+- validator 실패.
+
+공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ### `dry_run` 동작
 
@@ -217,7 +347,7 @@ next_actions:
 
 ### 저장 효과
 
-커밋 시 범위 담당 현재 상태와 stale 승인 결과를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당합니다.
+커밋 시 범위 담당 현재 상태와 `status=stale` 승인 결과를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당합니다.
 
 ### 최소 유효 요청
 
@@ -319,7 +449,7 @@ next_actions:
 - 범위 관련 사용자 판단 형태: [API 판단 스키마](schema-judgment.md).
 - 활성 값 집합과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류: [API 오류](errors.md).
-- 저장 효과와 stale 쓰기 승인 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).
+- 저장 효과와 `status=stale` 쓰기 승인 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).
 
 <a id="harnessstatus"></a>
 
@@ -336,11 +466,31 @@ Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 활성 Tas
 
 ### 접근 요구사항
 
-보호된 Core 세부정보를 반환하려면 같은 프로젝트의 활성 로컬 접점과 `VerifiedSurfaceContext.access_class=read_status`가 필요합니다. 오래된 상태 보기, 대화 요약, 생성된 Markdown 파일, 캐시된 텍스트는 상태 권한 근거가 아닙니다.
+조건:
+
+- 보호된 Core 세부정보를 반환합니다.
+- 같은 프로젝트의 활성 로컬 접점이 있습니다.
+- `VerifiedSurfaceContext.access_class=read_status`입니다.
+
+비주장: 오래된 상태 보기, 대화 요약, 생성된 Markdown 파일, 캐시된 텍스트는 상태 권한 근거가 아닙니다.
 
 ### 상태 버전 동작
 
-상태 변경은 없고 `project_state.state_version`을 올리지 않습니다. 결과는 현재 관찰된 상태 버전을 보고할 수 있지만 이벤트, 재실행 행, 닫기 변경, 아티팩트 효과, 스테이징 핸들 소비, 증거 갱신, 쓰기 승인 변경을 만들지 않습니다.
+상태 변경은 없고 `project_state.state_version`을 올리지 않습니다.
+
+결과:
+
+- 현재 관찰된 상태 버전을 보고할 수 있습니다.
+
+비주장:
+
+- 이벤트를 만들지 않습니다.
+- 재실행 행을 만들지 않습니다.
+- 닫기 변경을 만들지 않습니다.
+- 아티팩트 효과를 만들지 않습니다.
+- 스테이징 핸들을 소비하지 않습니다.
+- 증거를 갱신하지 않습니다.
+- 쓰기 승인을 변경하지 않습니다.
 
 ### 성공 결과
 
@@ -352,7 +502,15 @@ Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 활성 Tas
 
 ### 거절 결과
 
-Core 사용 불가, 로컬 접근 불일치, 요청한 보호 세부정보에 대한 역량 부족, Task 범위 읽기에 필요한 활성 Task 없음, 요청한 상태 보기가 stale 또는 사용 불가인 경우처럼 읽기를 안전하게 제공할 수 없으면 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
+읽기를 안전하게 제공할 수 없으면 `ToolRejectedResponse`를 반환합니다. 예시는 아래와 같습니다.
+
+- Core 사용 불가.
+- 로컬 접근 불일치.
+- 요청한 보호 세부정보에 대한 역량 부족.
+- Task 범위 읽기에 필요한 활성 Task 없음.
+- 요청한 상태 보기가 오래되었거나 사용 불가.
+
+공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ### `dry_run` 동작
 
@@ -453,7 +611,21 @@ guarantee_display:
 
 ### 목적
 
-제안된 제품 파일 쓰기 하나를 현재 Task, 활성 Change Unit, 범위, baseline, 필요한 별도 민감 동작 승인, 확인된 로컬 접점 역량과 비교합니다. 허용되면 소비 가능한 단일 사용 쓰기 승인(`Write Authorization`)을 만듭니다. 허용되지 않으면 그 쓰기 승인 경로를 거부하거나 미룹니다. 보안 비주장은 [보안](../security.md)이 담당합니다.
+제안된 제품 파일 쓰기 하나를 아래 항목과 비교합니다.
+
+- 현재 Task.
+- 활성 Change Unit.
+- 범위.
+- 기준선.
+- 필요한 별도 민감 동작 승인.
+- 확인된 로컬 접점 역량.
+
+결과:
+
+- 허용되면 소비 가능한 단일 사용 쓰기 승인(`Write Authorization`)을 만듭니다.
+- 허용되지 않으면 그 쓰기 승인 경로를 거부하거나 미룹니다.
+
+보안 비주장은 [보안](../security.md)이 담당합니다.
 
 ### 필수 입력
 
@@ -463,11 +635,23 @@ guarantee_display:
 
 ### 접근 요구사항
 
-`VerifiedSurfaceContext.access_class=write_authorization`과 `verified=true`가 필요합니다. 메서드는 호환되는 활성 범위, baseline, 필요한 사용자 소유 판단, 별도 `sensitive_approval`, 의도한 제품 파일 쓰기 확인에 필요한 로컬 접점 역량도 요구합니다.
+조건:
+
+- `VerifiedSurfaceContext.access_class=write_authorization`입니다.
+- `verified=true`입니다.
+- 호환되는 활성 범위가 있습니다.
+- 기준선이 호환됩니다.
+- 필요한 사용자 소유 판단이 처리되어 있습니다.
+- 필요한 경우 별도 `sensitive_approval`이 있습니다.
+- 의도한 제품 파일 쓰기 확인에 필요한 로컬 접점 역량이 있습니다.
 
 ### 상태 버전 동작
 
-커밋된 `decision=allowed`는 `project_state.state_version`을 정확히 한 번 올리고 경로 수준 `AuthorizedAttemptScope`에 대한 활성 쓰기 승인 하나를 만듭니다. 커밋된 `decision=blocked`, `decision=approval_required`, `decision=decision_required`는 메서드가 소유한 쓰기 결정 이유 상태를 저장하기 위해서만 상태 버전을 올릴 수 있으며 소비 가능한 쓰기 승인을 만들면 안 됩니다. 커밋 전 거절과 `dry_run`은 아무것도 올리지 않습니다.
+| 결과 | 상태 버전 효과 | 쓰기 승인 효과 |
+|---|---|---|
+| 커밋된 `decision=allowed` | `project_state.state_version`을 정확히 한 번 올립니다. | 경로 수준 `AuthorizedAttemptScope`에 대한 활성 쓰기 승인 하나를 만듭니다. |
+| 커밋된 `decision=blocked`, `decision=approval_required`, `decision=decision_required` | 메서드가 소유한 쓰기 결정 이유 상태를 저장하기 위해서만 올릴 수 있습니다. | 소비 가능한 쓰기 승인을 만들면 안 됩니다. |
+| 커밋 전 거절 또는 `dry_run` | 올리지 않습니다. | 만들지 않습니다. |
 
 ### 성공 결과
 
@@ -475,11 +659,33 @@ guarantee_display:
 
 ### 차단 결과
 
-커밋된 차단 결정은 `decision=blocked`, `decision=approval_required`, `decision=decision_required`를 가진 `PrepareWriteResult`입니다. `write_decision_reasons`는 비어 있으면 안 됩니다. 이 이유들은 `CloseReadinessBlocker` 값이 아니며 닫기 준비 상태를 평가하지 않습니다. 소비 가능한 쓰기 승인은 만들어지지 않습니다.
+커밋된 차단 결정은 `decision=blocked`, `decision=approval_required`, `decision=decision_required`를 가진 `PrepareWriteResult`입니다.
+
+조건:
+
+- `write_decision_reasons`는 비어 있으면 안 됩니다.
+
+비주장:
+
+- `write_decision_reasons`는 `CloseReadinessBlocker` 값이 아닙니다.
+- 쓰기 결정 이유는 닫기 준비 상태를 평가하지 않습니다.
+- 소비 가능한 쓰기 승인은 만들어지지 않습니다.
 
 ### 거절 결과
 
-오래된 `expected_state_version`, 멱등 요청 해시 충돌, 요청 검증 실패, 활성 Task 또는 Change Unit 없음, 로컬 접근 실패, Core 사용 불가, stale baseline, 유효하지 않은 요청 보장, 역량 실패처럼 `decision` 평가나 커밋 전 실패가 있으면 `ToolRejectedResponse`를 반환합니다. `STATE_VERSION_CONFLICT`는 항상 거절 응답 오류이며 쓰기 결정 이유가 아닙니다.
+`decision` 평가나 커밋 전에 실패가 있으면 `ToolRejectedResponse`를 반환합니다. 예시는 아래와 같습니다.
+
+- 오래된 `expected_state_version`.
+- 멱등 요청 해시 충돌.
+- 요청 검증 실패.
+- 활성 Task 또는 Change Unit 없음.
+- 로컬 접근 실패.
+- Core 사용 불가.
+- 기준선이 오래되었습니다.
+- 유효하지 않은 요청 보장.
+- 역량 실패.
+
+비주장: `STATE_VERSION_CONFLICT`는 항상 거절 응답 오류이며 쓰기 결정 이유가 아닙니다.
 
 ### `dry_run` 동작
 
@@ -576,7 +782,20 @@ guarantee_display:
 
 ### 목적
 
-호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림을 같은 프로젝트와 Task에 대한 임시 `StagedArtifactHandle`로 스테이징합니다. 스테이징은 입력 준비일 뿐입니다. 그 자체로 기준 증거, 지속 `ArtifactRef`, 관문 충족, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 만들지 않습니다.
+호출자가 제공한 안전한 아티팩트 바이트 또는 안전한 알림을 같은 프로젝트와 Task에 대한 임시 `StagedArtifactHandle`로 스테이징합니다.
+
+결과:
+
+- 스테이징은 입력 준비일 뿐입니다.
+
+비주장:
+
+- 기준 증거를 만들지 않습니다.
+- 지속 `ArtifactRef`를 만들지 않습니다.
+- 관문 충족을 만들지 않습니다.
+- 최종 수락을 만들지 않습니다.
+- 잔여 위험 수락을 만들지 않습니다.
+- 닫기 준비 상태를 만들지 않습니다.
 
 ### 필수 입력
 
@@ -585,11 +804,30 @@ guarantee_display:
 
 ### 접근 요구사항
 
-`VerifiedSurfaceContext.access_class=artifact_registration`, `verified=true`, 호환되는 `project_id`와 `task_id`, `manual_artifact_attachment_supported=true`가 필요합니다. 서버는 확인된 로컬 접점에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다. 호출자는 이 값을 권한 근거로 제출하지 않습니다.
+조건:
+
+- `VerifiedSurfaceContext.access_class=artifact_registration`입니다.
+- `verified=true`입니다.
+- `project_id`와 `task_id`가 호환됩니다.
+- `manual_artifact_attachment_supported=true`입니다.
+
+결과:
+
+- 서버는 확인된 로컬 접점에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다.
+
+비주장:
+
+- 호출자는 이 값을 권한 근거로 제출하지 않습니다.
 
 ### 상태 버전 동작
 
-성공한 스테이징 결과는 Core 상태를 바꾸지 않고 `project_state.state_version`을 올리지 않습니다. `tool_invocations` 재실행 행도 만들지 않습니다. 거절과 `dry_run` 요청은 저장 효과가 없습니다.
+성공한 스테이징 결과의 효과:
+
+- Core 상태를 바꾸지 않습니다.
+- `project_state.state_version`을 올리지 않습니다.
+- `tool_invocations` 재실행 행을 만들지 않습니다.
+
+비주장: 거절과 `dry_run` 요청은 저장 효과가 없습니다.
 
 ### 성공 결과
 
@@ -597,11 +835,24 @@ guarantee_display:
 
 ### 차단 결과
 
-커밋된 차단 분기는 없습니다. 유효하지 않은 스테이징 요청은 Core 변경 전에 거절됩니다. 스테이징 가용성이나 역량 문제는 차단 사유를 만들지 않습니다.
+커밋된 차단 분기는 없습니다.
+
+- 유효하지 않은 스테이징 요청은 Core 변경 전에 거절됩니다.
+- 스테이징 가용성이나 역량 문제는 차단 사유를 만들지 않습니다.
 
 ### 거절 결과
 
-유효하지 않은 요청 형태, 체크섬 또는 크기 불일치, 안전하지 않은 아티팩트 입력, 지원하지 않는 redaction 상태, Core 또는 로컬 접점 사용 불가, 로컬 접근 불일치, 아티팩트 등록 역량 부족은 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
+아래 경우는 `ToolRejectedResponse`를 반환합니다.
+
+- 유효하지 않은 요청 형태.
+- 체크섬 또는 크기 불일치.
+- 안전하지 않은 아티팩트 입력.
+- 지원하지 않는 가림 처리 상태.
+- Core 또는 로컬 접점 사용 불가.
+- 로컬 접근 불일치.
+- 아티팩트 등록 역량 부족.
+
+공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ### `dry_run` 동작
 
@@ -676,7 +927,18 @@ expires_at: "2026-06-10T12:30:00Z"
 
 ### 목적
 
-`shaping_update`, `direct`, `implementation` 종류의 작업을 기록합니다. 또한 간결한 증거 범위를 갱신하고, 제품 쓰기를 기록할 때 호환되는 쓰기 승인을 소비하며, 기존 아티팩트를 연결하고, 허용되는 경우 적격 스테이징 핸들을 지속 `ArtifactRef`로 승격합니다.
+`harness.record_run`은 아래 작업을 기록합니다.
+
+- `shaping_update`.
+- `direct`.
+- `implementation`.
+
+추가 결과:
+
+- 간결한 증거 범위를 갱신합니다.
+- 제품 쓰기를 기록할 때 호환되는 쓰기 승인을 소비합니다.
+- 기존 아티팩트를 연결합니다.
+- 허용되는 경우 적격 스테이징 핸들을 지속 `ArtifactRef`로 승격합니다.
 
 ### 필수 입력
 
@@ -687,11 +949,32 @@ expires_at: "2026-06-10T12:30:00Z"
 
 ### 접근 요구사항
 
-`VerifiedSurfaceContext.access_class=run_recording`과 `verified=true`가 필요합니다. `ArtifactInput[]`는 `artifact_registration`을 추가하지 않습니다. `source_kind=staged_artifact`에서는 현재 확인된 `surface_id`와 `surface_instance_id`가 스테이징 핸들에 서버가 기록한 출처와 일치해야 합니다. 현재 MVP에는 접점 간 스테이징 핸들 인계가 없습니다.
+조건:
+
+- `VerifiedSurfaceContext.access_class=run_recording`입니다.
+- `verified=true`입니다.
+- `source_kind=staged_artifact`에서는 현재 확인된 `surface_id`와 `surface_instance_id`가 스테이징 핸들에 서버가 기록한 출처와 일치해야 합니다.
+
+비주장:
+
+- `ArtifactInput[]`는 `artifact_registration`을 추가하지 않습니다.
+- 현재 MVP에는 접점 간 스테이징 핸들 인계가 없습니다.
 
 ### 상태 버전 동작
 
-호환되는 커밋 결과는 `project_state.state_version`을 정확히 한 번 올립니다. 제품 쓰기 기록은 현재 상태 버전이 승인 기준 상태와 여전히 맞고 관찰된 변경 경로가 승인된 시도와 호환될 때만 활성 쓰기 승인을 소비합니다. 오래된 `expected_state_version` 또는 stale 승인 기준 상태는 소비 전에 거절됩니다.
+호환되는 커밋 결과:
+
+- `project_state.state_version`을 정확히 한 번 올립니다.
+
+제품 쓰기 기록이 활성 쓰기 승인을 소비하려면 아래 조건을 모두 만족해야 합니다.
+
+- 현재 상태 버전이 승인 기준 상태와 여전히 맞습니다.
+- 관찰된 변경 경로가 승인된 시도와 호환됩니다.
+
+예외:
+
+- 오래된 `expected_state_version`은 소비 전에 거절됩니다.
+- 승인 기준 상태가 오래되었으면 소비 전에 거절됩니다.
 
 ### 성공 결과
 
@@ -699,11 +982,35 @@ expires_at: "2026-06-10T12:30:00Z"
 
 ### 차단 결과
 
-Run 자체는 기록 가능하지만 결과가 증거 gap 같은 차단 사유를 만들거나 유지할 때 호환되는 Run 관련 차단 사유 상태를 커밋할 수 있습니다. 유효하지 않은 스테이징 핸들, 누락된 쓰기 승인, stale 상태, stale 승인 기준 상태, 로컬 접근 실패를 숨기기 위해 커밋된 차단 결과를 사용하면 안 됩니다. 그런 경우는 커밋 전에 거절됩니다.
+Run 자체는 기록 가능하지만 결과가 증거 공백 같은 차단 사유를 만들거나 유지할 때 호환되는 Run 관련 차단 사유 상태를 커밋할 수 있습니다.
+
+비주장: 아래 실패를 숨기기 위해 커밋된 차단 결과를 사용하면 안 됩니다.
+
+- 유효하지 않은 스테이징 핸들.
+- 누락된 쓰기 승인.
+- 상태가 오래되었습니다.
+- 승인 기준 상태가 오래되었습니다.
+- 로컬 접근 실패.
+
+위 경우는 커밋 전에 거절됩니다.
 
 ### 거절 결과
 
-오래된 `expected_state_version`, stale 쓰기 승인 기준 상태, 제품 쓰기에 필요한 쓰기 승인 누락 또는 무효, 유효하지 않은 스테이징 핸들, 스테이징 핸들 출처 불일치, 누락된 아티팩트, 범위 위반, baseline stale, 로컬 접근 실패, 역량 부족, validator 실패는 `ToolRejectedResponse`를 반환합니다. 유효하지 않은 스테이징 핸들은 아티팩트 입력 세부정보가 있는 검증 실패이며, 요청 수준 로컬 접근 자체가 실패한 경우가 아니라면 로컬 접근 불일치가 아닙니다.
+아래 경우는 `ToolRejectedResponse`를 반환합니다.
+
+- 오래된 `expected_state_version`.
+- 쓰기 승인 기준 상태가 오래되었습니다.
+- 제품 쓰기에 필요한 쓰기 승인 누락 또는 무효.
+- 유효하지 않은 스테이징 핸들.
+- 스테이징 핸들 출처 불일치.
+- 누락된 아티팩트.
+- 범위 위반.
+- 기준선이 오래되었습니다.
+- 로컬 접근 실패.
+- 역량 부족.
+- validator 실패.
+
+비주장: 유효하지 않은 스테이징 핸들은 아티팩트 입력 세부정보가 있는 검증 실패입니다. 요청 수준 로컬 접근 자체가 실패한 경우가 아니라면 로컬 접근 불일치가 아닙니다.
 
 ### `dry_run` 동작
 
@@ -826,7 +1133,18 @@ state:
 
 ### 목적
 
-초점이 분명한 사용자 소유 결정 하나에 대해 대기 중인 `UserJudgment`를 만듭니다. 이 메서드는 사용자에게 묻는 경로입니다. 에이전트가 사용자를 대신해 답하거나, 추론하거나, 질문 범위를 넓히거나, 결정을 내려서는 안 됩니다.
+초점이 분명한 사용자 소유 결정 하나에 대해 대기 중인 `UserJudgment`를 만듭니다.
+
+결과:
+
+- 이 메서드는 사용자에게 묻는 경로입니다.
+
+비주장:
+
+- 에이전트가 사용자를 대신해 답하지 않습니다.
+- 에이전트가 사용자를 대신해 추론하지 않습니다.
+- 에이전트가 질문 범위를 넓히지 않습니다.
+- 에이전트가 결정을 내리지 않습니다.
 
 ### 필수 입력
 
@@ -840,7 +1158,15 @@ state:
 
 ### 상태 버전 동작
 
-커밋된 `dry_run=false` 결과는 `project_state.state_version`을 정확히 한 번 올리고 대기 중인 판단을 만듭니다. 다른 메서드가 반환한 candidate는 이 메서드가 커밋하기 전까지 지속 기록이 아닙니다. `dry_run`과 거절은 대기 중인 판단, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
+커밋된 `dry_run=false` 결과:
+
+- `project_state.state_version`을 정확히 한 번 올립니다.
+- 대기 중인 판단을 만듭니다.
+
+비주장:
+
+- 다른 메서드가 반환한 후보는 이 메서드가 커밋하기 전까지 지속 기록이 아닙니다.
+- `dry_run`과 거절은 대기 중인 판단, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
 ### 성공 결과
 
@@ -852,7 +1178,18 @@ state:
 
 ### 거절 결과
 
-유효하지 않은 질문 형태, 유효하지 않은 `judgment_kind`, Task 없음, 미해결 선행 판단, 로컬 접근 실패, 역량 부족, 오래된 `expected_state_version`, validator 실패는 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
+아래 경우는 `ToolRejectedResponse`를 반환합니다.
+
+- 유효하지 않은 질문 형태.
+- 유효하지 않은 `judgment_kind`.
+- Task 없음.
+- 미해결 선행 판단.
+- 로컬 접근 실패.
+- 역량 부족.
+- 오래된 `expected_state_version`.
+- validator 실패.
+
+공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ### `dry_run` 동작
 
@@ -973,7 +1310,18 @@ state:
 
 ### 목적
 
-기존 대기 중인 `UserJudgment` 하나에 대한 사용자의 답을 기록합니다. 이 메서드는 사용자의 답에 따라 특정 대기 판단을 resolved, rejected, deferred, blocked 또는 해당 상태로 표시합니다. 답변을 관련 없는 승인, 범위 확장, 수락, 잔여 위험 수락, 쓰기 승인으로 넓히지 않습니다.
+기존 대기 중인 `UserJudgment` 하나에 대한 사용자의 답을 기록합니다.
+
+결과:
+
+- 사용자의 답에 따라 특정 대기 판단을 `resolved`, `rejected`, `deferred`, `blocked` 또는 해당 상태로 표시합니다.
+
+비주장:
+
+- 답변을 관련 없는 승인으로 넓히지 않습니다.
+- 답변을 범위 확장으로 넓히지 않습니다.
+- 답변을 수락이나 잔여 위험 수락으로 넓히지 않습니다.
+- 답변을 쓰기 승인으로 넓히지 않습니다.
 
 ### 필수 입력
 
@@ -987,7 +1335,14 @@ state:
 
 ### 상태 버전 동작
 
-커밋된 `dry_run=false` 결과는 `project_state.state_version`을 정확히 한 번 올리고 지정된 `user_judgments` 행을 갱신합니다. `dry_run`과 거절은 판단 해결, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
+커밋된 `dry_run=false` 결과:
+
+- `project_state.state_version`을 정확히 한 번 올립니다.
+- 지정된 `user_judgments` 행을 갱신합니다.
+
+비주장:
+
+- `dry_run`과 거절은 판단 해결, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
 ### 성공 결과
 
@@ -995,11 +1350,31 @@ state:
 
 ### 차단 결과
 
-사용자의 답이 그렇거나 초점이 맞는 판단의 호환 결과가 그렇다면 지정된 판단은 `rejected`, `deferred`, `blocked` 또는 차단 사유를 만드는 상태로 커밋될 수 있습니다. 이 결과는 포함된 차단 사유와 판단에 의존하는 요약만 갱신합니다. 해결된 `scope_decision`이라도 활성 범위나 활성 Change Unit 필드를 바꾸려면 여전히 `harness.update_scope`가 필요합니다.
+사용자의 답이 그렇거나 초점이 맞는 판단의 호환 결과가 그렇다면 지정된 판단은 `rejected`, `deferred`, `blocked` 또는 차단 사유를 만드는 상태로 커밋될 수 있습니다.
+
+결과:
+
+- 포함된 차단 사유와 판단에 의존하는 요약만 갱신합니다.
+
+비주장:
+
+- 해결된 `scope_decision`만으로 활성 범위나 활성 Change Unit 필드가 바뀌지 않습니다.
+- 해당 필드를 바꾸려면 여전히 `harness.update_scope`가 필요합니다.
 
 ### 거절 결과
 
-오래된 `expected_state_version`, 알 수 없거나 `pending`이 아닌 판단, `judgment_kind` 불일치, 유효하지 않은 선택지, 유효하지 않은 답변 페이로드, 만료되었거나 호환되지 않는 승인, 로컬 접근 실패, validator 실패는 `ToolRejectedResponse`를 반환합니다. 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
+아래 경우는 `ToolRejectedResponse`를 반환합니다.
+
+- 오래된 `expected_state_version`.
+- 알 수 없거나 `pending`이 아닌 판단.
+- `judgment_kind` 불일치.
+- 유효하지 않은 선택지.
+- 유효하지 않은 답변 페이로드.
+- 만료되었거나 호환되지 않는 승인.
+- 로컬 접근 실패.
+- validator 실패.
+
+공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
 ### `dry_run` 동작
 
@@ -1119,7 +1494,22 @@ next_actions:
 
 ### 목적
 
-활성 Task의 닫기 준비 상태를 평가하고, 선택한 intent가 허용하며 차단 사유가 없을 때 `complete`, `cancel`, `supersede`를 커밋합니다. `harness.close_task`는 닫기 차단 사유를 반환할 수 있습니다. 닫기는 Core 상태 전이이며, 대화, 상태 텍스트, 최종 수락만, 잔여 위험 수락만, 증거만, 렌더링된 보기에서 추론하는 보고서가 아닙니다.
+활성 Task의 닫기 준비 상태를 평가합니다.
+
+조건:
+
+- 선택한 `intent`가 허용됩니다.
+- 차단 사유가 없습니다.
+
+결과:
+
+- `complete`, `cancel`, `supersede`를 커밋할 수 있습니다.
+- `harness.close_task`는 닫기 차단 사유를 반환할 수 있습니다.
+
+비주장:
+
+- 닫기는 Core 상태 전이이며 보고서가 아닙니다.
+- 대화, 상태 텍스트, 최종 수락만, 잔여 위험 수락만, 증거만, 렌더링된 보기에서 닫기를 추론하지 않습니다.
 
 ### 필수 입력
 
@@ -1130,31 +1520,70 @@ next_actions:
 
 ### 접근 요구사항
 
-`intent=check`는 보호된 닫기 준비 상태 세부정보를 위해 `VerifiedSurfaceContext.access_class=read_status`가 필요합니다. 상태 변경 intent는 `VerifiedSurfaceContext.access_class=core_mutation`, `verified=true`, 호환되는 Task 식별, 유효한 생명주기, 닫기 관련 담당 기록을 요구합니다.
+| `intent` 종류 | 조건 |
+|---|---|
+| `intent=check` | 보호된 닫기 준비 상태 세부정보를 위해 `VerifiedSurfaceContext.access_class=read_status`가 필요합니다. |
+| 상태 변경 `intent` | `VerifiedSurfaceContext.access_class=core_mutation`, `verified=true`, 호환되는 Task 식별, 유효한 생명주기, 닫기 관련 담당 기록이 필요합니다. |
 
 ### 상태 버전 동작
 
-`intent=check`는 `dry_run=true`여도 항상 읽기 전용이며 상태를 올리지 않습니다. 상태 변경 intent의 커밋된 종료 닫기 또는 커밋된 차단 닫기는 `project_state.state_version`을 정확히 한 번 올립니다. 닫기 사전 확인 거절, 오래된 `expected_state_version`, stale 닫기 관련 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌, `dry_run` 미리보기는 아무것도 올리지 않습니다.
+| 경우 | 상태 버전 효과 |
+|---|---|
+| `intent=check` | `dry_run=true`여도 항상 읽기 전용이며 상태를 올리지 않습니다. |
+| 상태 변경 `intent`의 커밋된 종료 닫기 또는 커밋된 차단 닫기 | `project_state.state_version`을 정확히 한 번 올립니다. |
+| 닫기 사전 확인 거절, 오래된 `expected_state_version`, 닫기 관련 `WriteAuthorization.basis_state_version` 오래됨, 멱등 요청 해시 충돌, `dry_run` 미리보기 | 아무것도 올리지 않습니다. |
 
 ### 성공 결과
 
-`base.response_kind=result`인 `CloseTaskResult`를 반환합니다. `intent=check`에서는 `base.effect_kind=read_only`이고 `close_state`는 계산된 현재 닫기 상태입니다. 성공한 종료 상태 변경에서는 `base.effect_kind=core_committed`이고 `close_state`는 `closed`, `cancelled`, `superseded` 중 하나입니다.
+`base.response_kind=result`인 `CloseTaskResult`를 반환합니다.
+
+| 경우 | 효과 | `close_state` |
+|---|---|---|
+| `intent=check` | `base.effect_kind=read_only` | 계산된 현재 닫기 상태. |
+| 성공한 종료 상태 변경 | `base.effect_kind=core_committed` | `closed`, `cancelled`, `superseded` 중 하나. |
 
 ### 차단 결과
 
-닫기 사전 확인이 성공한 뒤 `intent=complete`는 `blockers: CloseReadinessBlocker[]`를 가진 `CloseTaskResult(close_state=blocked)`를 반환할 수 있습니다. 상태 변경 intent는 메서드 상태 효과 표가 그 커밋된 차단 결과를 허용할 때만 차단 사유 상태 효과를 저장할 수 있습니다. `CloseReadinessBlocker`가 있다는 사실만으로 저장을 뜻하지 않습니다. `STATE_VERSION_CONFLICT`는 절대 `CloseReadinessBlocker.code`가 아닙니다.
+조건:
+
+- 닫기 사전 확인이 성공했습니다.
+- `intent=complete`입니다.
+
+결과:
+
+- `blockers: CloseReadinessBlocker[]`를 가진 `CloseTaskResult(close_state=blocked)`를 반환할 수 있습니다.
+- 상태 변경 `intent`는 메서드 상태 효과 표가 그 커밋된 차단 결과를 허용할 때만 차단 사유 상태 효과를 저장할 수 있습니다.
+
+비주장:
+
+- `CloseReadinessBlocker`가 있다는 사실만으로 저장을 뜻하지 않습니다.
+- `STATE_VERSION_CONFLICT`는 절대 `CloseReadinessBlocker.code`가 아닙니다.
 
 ### 거절 결과
 
-검증 실패, 로컬 접근 실패, 오래된 `expected_state_version`, stale 닫기 관련 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌, 잘못된 프로젝트 또는 읽을 수 없는 Task 식별, Core 사용 불가, 역량 부족처럼 닫기 준비 상태 평가 전 사전 확인 실패가 있으면 `ToolRejectedResponse`를 반환합니다. 거절 응답은 `CloseTaskResult.blockers`를 반환하지 않고 닫기 효과를 만들지 않습니다.
+닫기 준비 상태 평가 전 사전 확인 실패가 있으면 `ToolRejectedResponse`를 반환합니다. 예시는 아래와 같습니다.
+
+- 검증 실패.
+- 로컬 접근 실패.
+- 오래된 `expected_state_version`.
+- 닫기 관련 `WriteAuthorization.basis_state_version` 오래됨.
+- 멱등 요청 해시 충돌.
+- 잘못된 프로젝트 또는 읽을 수 없는 Task 식별.
+- Core 사용 불가.
+- 역량 부족.
+
+비주장:
+
+- 거절 응답은 `CloseTaskResult.blockers`를 반환하지 않습니다.
+- 거절 응답은 닫기 효과를 만들지 않습니다.
 
 ### `dry_run` 동작
 
-`intent=check`와 `dry_run=true`는 읽기 전용 `CloseTaskResult` 분기에 남습니다. 상태 변경 intent의 `dry_run=true`는 유효할 때 공통 미리보기 분기를 사용합니다. 분기 형태와 계획 차단 사유 표현은 [API 코어 스키마](schema-core.md)와 [API 오류](errors.md)가 담당합니다.
+`intent=check`와 `dry_run=true`는 읽기 전용 `CloseTaskResult` 분기에 남습니다. 상태 변경 `intent`의 `dry_run=true`는 유효할 때 공통 미리보기 분기를 사용합니다. 분기 형태와 계획 차단 사유 표현은 [API 코어 스키마](schema-core.md)와 [API 오류](errors.md)가 담당합니다.
 
 ### 저장 효과
 
-`intent=check`에는 저장 효과가 없습니다. 상태 변경 닫기 intent는 메서드 결과에 따라 닫기 또는 차단 결과를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당합니다.
+`intent=check`에는 저장 효과가 없습니다. 상태 변경 닫기 `intent`는 메서드 결과에 따라 닫기 또는 차단 결과를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당합니다.
 
 ### 최소 유효 요청
 
