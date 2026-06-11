@@ -21,6 +21,7 @@ This document owns:
 - Runtime Home identity and project-local storage layout assumptions.
 - Active persisted record categories and table-level storage roles.
 - Record-column meaning for future storage design.
+- Storage-owned record values and status fields.
 - Storage-owned JSON `TEXT` placement and validation expectations.
 - Record-level active/later exclusions.
 

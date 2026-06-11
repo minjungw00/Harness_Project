@@ -56,6 +56,7 @@ Use [Storage Records](storage-records.md) for:
 - Local store assumptions.
 - Persisted record categories.
 - Table overview.
+- Storage-owned record values and status fields.
 - Storage-owned JSON.
 - Record-level active/later exclusions.
 

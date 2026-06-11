@@ -189,6 +189,7 @@ Owner:
 
 Check:
 - Confirm API and Reference examples use stable product or user scenarios.
+- For current MVP API examples, confirm they use the shared account export confirmation sample task unless the documentation batch intentionally replaces that sample across the API examples, paired Korean examples, checks, and routes.
 - Confirm examples do not use the current documentation edit, refactor, review, migration, or section restructuring as their scenario.
 - Confirm documentation paths are used as example payload only when the document is specifically about documentation maintenance.
 - Confirm example wording does not narrate the current edit or review process instead of a product or user scenario.
@@ -199,10 +200,12 @@ Failure:
 - Example task goal describes rewriting the Harness documentation set.
 - Example baseline, artifact, run, or judgment names refer to the current documentation edit.
 - Example wording describes the current edit or review process instead of a product or user scenario.
+- The shared API sample task changes in one language, route, or check but not the paired owner set.
 - One language keeps a different scenario after paired updates.
 
 Fix:
 - Replace the example with a durable product or user scenario.
+- Use the shared account export confirmation sample task, or replace the sample consistently across the API examples, paired Korean examples, checks, and routes.
 - Keep file paths only when the document is explicitly about documentation maintenance.
 - Remove process-only wording and make the scenario durable.
 - Update paired English and Korean examples by meaning unit.
@@ -702,6 +705,7 @@ Owner:
 
 Check:
 - Confirm Markdown table cells are short.
+- Split a long Markdown table when a cell needs lists, multiple conditions, multiple sentences, or a source line that is hard to review.
 - Confirm long conditions are moved into detail blocks.
 - Confirm source diffs remain reviewable.
 

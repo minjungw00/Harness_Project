@@ -30,6 +30,19 @@ question_routes:
       canonical_owner_doc_id: reference.active-mvp-scope
       default_path: docs/en/reference/active-mvp-scope.md
       route_note: "Active MVP Scope owns included and excluded current-MVP scope items."
+    - question: "What is the sample task used in API examples?"
+      canonical_owner_doc_id: maintain.authoring-guide
+      default_path: docs/en/maintain/authoring-guide.md
+      supporting_owner_doc_ids:
+        - maintain.checks
+        - reference.api.mvp-api
+      route_note: "Authoring Guide owns durable example rules; Checks owns the example scenario review; MVP API carries the current account export confirmation example set."
+    - question: "Are API examples allowed to use the current documentation edit as the scenario?"
+      canonical_owner_doc_id: maintain.authoring-guide
+      default_path: docs/en/maintain/authoring-guide.md
+      supporting_owner_doc_ids:
+        - maintain.checks
+      route_note: "API examples must use durable product or user scenarios, not the current documentation edit, refactor, review, route cleanup, or migration."
     - question: "Is `STATE_VERSION_CONFLICT` a blocker code?"
       canonical_owner_doc_id: reference.api.errors
       default_path: docs/en/reference/api/errors.md
@@ -151,12 +164,28 @@ question_routes:
       canonical_owner_doc_id: reference.storage-effects
       default_path: docs/en/reference/storage-effects.md
       route_note: "Storage Effects owns method-to-storage effect semantics and no-effect boundaries."
+    - question: "Where are storage record values defined?"
+      canonical_owner_doc_id: reference.storage-records
+      default_path: docs/en/reference/storage-records.md
+      route_note: "Storage Records owns storage-owned record values, status fields, record-column meaning, and storage-owned JSON placement."
     - question: "Where is the large-table authoring rule defined?"
       canonical_owner_doc_id: maintain.authoring-guide
       default_path: docs/en/maintain/authoring-guide.md
       supporting_owner_doc_ids:
         - maintain.checks
       route_note: "Authoring Guide owns table source maintainability guidance; Checks owns the large-table review check."
+    - question: "When should a long Markdown table be split?"
+      canonical_owner_doc_id: maintain.authoring-guide
+      default_path: docs/en/maintain/authoring-guide.md
+      supporting_owner_doc_ids:
+        - maintain.checks
+      route_note: "Split a table when cells need lists, multiple conditions, multiple sentences, or source lines become hard to review."
+    - question: "When should a dense reference paragraph be split?"
+      canonical_owner_doc_id: maintain.authoring-guide
+      default_path: docs/en/maintain/authoring-guide.md
+      supporting_owner_doc_ids:
+        - maintain.checks
+      route_note: "Split dense reference prose when conditions, effects, exceptions, non-claims, or owner links are hidden in one paragraph."
 docs:
   - doc_id: agents.root
     status: active
@@ -594,6 +623,7 @@ docs:
       - shared_request_rules
       - method_state_effect_matrix
       - local_access_class_usage
+      - representative_api_example_scenario
     owns:
       - active public method behavior
       - method-level request behavior
@@ -601,6 +631,7 @@ docs:
       - method state-effect summaries
       - method storage owner summaries
       - method security boundary summaries
+      - representative API example scenario used by this method reference
     does_not_own:
       - common response envelopes
       - shared schema bodies
@@ -906,6 +937,7 @@ docs:
       - table_overview
       - storage_ddl_ownership
       - record_column_meaning
+      - storage_record_values
       - storage_owned_json_fields
       - record_level_active_later_exclusions
     owns:
@@ -916,6 +948,7 @@ docs:
       - storage table overview
       - DDL ownership
       - record-column meaning
+      - storage-owned record values and status fields
       - storage-owned JSON placement
       - record-level active/later exclusions
     does_not_own:
@@ -1615,12 +1648,16 @@ docs:
       - documentation_authoring_rules
       - owner_boundary_discipline
       - route_document_rules
+      - durable_example_scenarios
+      - dense_reference_paragraph_chunking
       - large_table_authoring_rule
       - stale_content_cleanup_rules
     owns:
       - documentation authoring rules
       - owner-boundary discipline
       - route document rules
+      - durable example scenario rules
+      - dense reference paragraph split guidance
       - large-table authoring guidance
       - documentation-only scope reminders
       - stale content cleanup rules
@@ -1686,6 +1723,8 @@ docs:
       - owner_boundary_check
       - bilingual_check
       - stale_content_check
+      - timeless_example_scenario_check
+      - dense_reference_paragraph_scannability_check
       - large_table_source_maintainability_check
     owns:
       - documentation checks
@@ -1693,6 +1732,8 @@ docs:
       - owner-boundary checks
       - bilingual checks
       - stale-content checks
+      - timeless API and Reference example scenario check
+      - dense reference paragraph scannability check
       - large-table source maintainability check
       - quality drift checks
     does_not_own:

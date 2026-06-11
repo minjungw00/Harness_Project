@@ -40,7 +40,7 @@ For exact owner routing, use `docs/doc-index.yaml`. It is the stable machine-rea
 
 LLM agents should read this `AGENTS.md` first for repository phase, documentation-only boundaries, and retrieval rules. Then use `docs/doc-index.yaml` for exact owner routing. Use `docs/*/reference/README.md` as the human-readable owner router, and keep it aligned with `docs/doc-index.yaml`.
 
-For high-signal terminology, scope, storage, and owner questions, check `question_routes.routes` in `docs/doc-index.yaml` before broad keyword retrieval. If a route matches, load the canonical owner first and load listed supporting owners only when the question spans that boundary.
+For high-signal terminology, example-scenario, scope, storage, and owner questions, check `question_routes.routes` in `docs/doc-index.yaml` before broad keyword retrieval. If a route matches, load the canonical owner first and load listed supporting owners only when the question spans that boundary.
 
 When `docs/doc-index.yaml` lists an exact owner for the question or concept, load that owner first. Pull related documents only when the owner, index metadata, or maintainer guidance sends you there.
 

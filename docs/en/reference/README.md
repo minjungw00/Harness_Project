@@ -58,6 +58,8 @@ This route is for implementers and reviewers who need exact owners. New and work
 
 | Question | Owner document(s) |
 |---|---|
+| What is the sample task used in API examples? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md), [MVP API](api/mvp-api.md) |
+| Are API examples allowed to use the current documentation edit as the scenario? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
 | What does `harness.prepare_write` return? | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), [Core Model](core-model.md) |
 | Where is `ToolRejectedResponse` defined? | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
 | Is `STATE_VERSION_CONFLICT` a blocker code? | [API Errors](api/errors.md) |
@@ -78,6 +80,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 |---|---|
 | Where should I start for the storage document family? | [Storage](storage.md), then the specific storage owner below |
 | Which document owns Runtime Home layout, local store assumptions, and table overview? | [Storage Records](storage-records.md), [Runtime Boundaries](runtime-boundaries.md) |
+| Where are storage record values defined? | [Storage Records](storage-records.md) |
 | Is `CloseReadinessBlocker` a storage row? | [Storage Records](storage-records.md) |
 | Does artifact staging create evidence? | [Artifact Storage](storage-artifacts.md), [Storage Effects](storage-effects.md) |
 | Which document owns artifact promotion? | [Artifact Storage](storage-artifacts.md) |
@@ -129,6 +132,8 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Where is Korean terminology controlled? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Translation Guide](../maintain/translation-guide.md), [Glossary](glossary.md) |
 | Where are documentation authoring rules? | [Authoring Guide](../maintain/authoring-guide.md) |
 | Where is the large-table authoring rule defined? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
+| When should a long Markdown table be split? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
+| When should a dense reference paragraph be split? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
 | Where are documentation checks? | [Checks](../maintain/checks.md) |
 | Where is retrieval or route metadata maintained? | [docs/doc-index.yaml](../../doc-index.yaml) |
 | Which document should an agent read first? | [AGENTS.md](../../../AGENTS.md), then [docs/doc-index.yaml](../../doc-index.yaml) |

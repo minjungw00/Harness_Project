@@ -58,6 +58,8 @@
 
 | 질문 | 담당 문서 |
 |---|---|
+| API 예시에서 쓰는 샘플 작업은 무엇인가요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md), [MVP API](api/mvp-api.md) |
+| API 예시가 현재 문서 편집을 시나리오로 써도 되나요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md) |
 | `harness.prepare_write`는 무엇을 반환하나요? | [MVP API](api/mvp-api.md), [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [Core 모델](core-model.md) |
 | `ToolRejectedResponse`는 어디에 정의되어 있나요? | [API 코어 스키마](api/schema-core.md), [API 오류](api/errors.md) |
 | `STATE_VERSION_CONFLICT`는 차단 사유 코드인가요? | [API 오류](api/errors.md) |
@@ -78,6 +80,7 @@
 |---|---|
 | 저장소 문서 묶음은 어디서 시작하나요? | [저장소](storage.md)를 먼저 보고, 아래의 구체적인 저장소 담당 문서로 이동합니다 |
 | Runtime Home 배치, 로컬 저장소 가정, 테이블 개요는 어디가 담당하나요? | [저장소 기록](storage-records.md), [런타임 경계](runtime-boundaries.md) |
+| 저장소 기록 값은 어디에 정의되어 있나요? | [저장소 기록](storage-records.md) |
 | `CloseReadinessBlocker`는 저장소 행인가요? | [저장소 기록](storage-records.md) |
 | 아티팩트 스테이징은 증거를 만드나요? | [아티팩트 저장소](storage-artifacts.md), [저장 효과](storage-effects.md) |
 | 아티팩트 승격은 어느 담당 문서가 맡나요? | [아티팩트 저장소](storage-artifacts.md) |
@@ -128,6 +131,8 @@
 | 한국어 용어는 어디서 통제하나요? | [docs/terminology-map.yaml](../../terminology-map.yaml), [번역 가이드](../maintain/translation-guide.md), [용어집](glossary.md) |
 | 문서 작성 규칙은 어디에 있나요? | [작성 가이드](../maintain/authoring-guide.md) |
 | 큰 Markdown 표 작성 규칙은 어디에 있나요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md) |
+| 긴 Markdown 표는 언제 나누나요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md) |
+| 촘촘한 참조 문단은 언제 나누나요? | [작성 가이드](../maintain/authoring-guide.md), [문서 점검](../maintain/checks.md) |
 | 문서 점검은 어디에 있나요? | [문서 점검](../maintain/checks.md) |
 | 검색과 경로 메타데이터는 어디에서 관리하나요? | [docs/doc-index.yaml](../../doc-index.yaml) |
 | 에이전트가 먼저 읽어야 할 문서는 무엇인가요? | [AGENTS.md](../../../AGENTS.md)를 먼저 읽고, 그다음 [docs/doc-index.yaml](../../doc-index.yaml)을 봅니다 |

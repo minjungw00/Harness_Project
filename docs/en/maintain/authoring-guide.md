@@ -145,6 +145,10 @@ Maintain docs should sound like editing instructions. They can name owner paths 
 
 Examples in reference and API documentation should use stable product or user scenarios. They should remain useful after the current edit context is forgotten.
 
+The current API reference sample task is: add explicit confirmation before account data export, update account data export confirmation tests, and record account export confirmation test output as representative run/evidence data. If a documentation batch replaces this sample task, update the API examples, paired Korean examples, checks, and routes together.
+
+API examples are not allowed to use the current documentation edit as the scenario.
+
 Do not make the example scenario the current documentation edit, migration, refactor, review, route cleanup, or section restructuring. Repository-internal documentation paths, including paths under `docs/`, should appear as example data only when the document is explicitly about documentation maintenance.
 
 API examples should avoid self-referential documentation edits as task payloads, request examples, response examples, run summaries, artifact descriptions, or user judgment prompts.
@@ -152,6 +156,8 @@ API examples should avoid self-referential documentation edits as task payloads,
 ## 7. Long paragraph and chunking rules
 
 Reference docs should keep rule boundaries visible. Do not combine condition, effect, exception, non-claim, and owner routing in one dense paragraph. A paragraph should not require the reader to infer where a rule applies, what it permits, what it forbids, which caveat applies, or which owner carries the canonical detail.
+
+Split a dense reference paragraph when it combines more than one rule type, such as a condition, allowed effect, not-allowed effect, exception, non-claim, or owner link.
 
 Use named blocks when a rule has multiple parts:
 
@@ -162,6 +168,8 @@ Use named blocks when a rule has multiple parts:
 - Owner links: where the canonical detail lives.
 
 Prefer short paragraphs, compact bullets, and small tables for routing. If a sentence contains several "must not", "does not", or "only when" clauses, consider a list or named block. Use a Markdown table when each cell is short and the table helps comparison or routing. Source maintainability is part of documentation quality: when a cell needs a list, multiple conditions, or more than one sentence, prefer a summary table plus per-item detail blocks.
+
+Split a long Markdown table when any cell needs a list, multiple conditions, multiple sentences, or a source line that is hard to review.
 
 A table should not hide conditions, exceptions, non-claims, or owner links inside a long cell. If a paragraph or table needs several examples of fields, status values, storage outcomes, or guarantee levels, that is usually a sign the text has become contract material and should move to the owner.
 
