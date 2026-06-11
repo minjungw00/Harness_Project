@@ -1350,28 +1350,28 @@ params:
     locale: ko-KR
   task_id: task_456
   change_unit_id: cu_001
-  judgment_kind: final_acceptance
+  judgment_kind: product_decision
   presentation: short
-  question: "계정 데이터 내보내기의 명시적 확인 단계 결과를 최종 수락하시겠습니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
   options:
     - option_id: accept
-      label: "수락"
-      description: "계정 데이터 내보내기 변경의 최종 수락을 기록합니다."
-      consequence: "닫기 준비 상태 평가에서 최종 수락을 충족된 것으로 볼 수 있습니다."
+      label: "충분함"
+      description: "확인 문구가 충분하다는 사용자의 판단을 기록합니다."
+      consequence: "닫기 준비 상태 평가에서 제품 판단을 해결된 것으로 볼 수 있습니다."
       is_default: true
     - option_id: revise
       label: "수정"
-      description: "추가 변경을 위해 Task를 열어 둡니다."
-      consequence: "최종 수락 때문에 닫기가 계속 차단됩니다."
+      description: "확인 문구 수정을 위해 Task를 열어 둡니다."
+      consequence: "제품 판단 때문에 닫기가 계속 차단됩니다."
       is_default: false
   context:
-    summary: "계정 데이터 내보내기의 명시적 확인 단계 변경을 최종 수락할 수 있습니다."
+    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분한지는 사용자가 판단해야 합니다."
     related_refs: []
     artifact_refs:
-      - artifact_id: artifact_account_export_test_log_001
+      - artifact_id: artifact_account_export_confirmation_copy_001
         project_id: proj_123
         task_id: task_456
-        display_name: "account_export_confirmation_test.log"
+        display_name: "account_export_confirmation_copy.txt"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1385,7 +1385,7 @@ params:
           state_version: 21
         created_by_surface_id: surface_local
         created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_test_log_001
+        storage_ref: artifact://artifact_account_export_confirmation_copy_001
     visible_risks: []
     constraints:
       - "현재 Task 제약이 적용됩니다"
@@ -1423,19 +1423,19 @@ user_judgment:
   project_id: proj_123
   task_id: task_456
   change_unit_id: cu_001
-  judgment_kind: final_acceptance
+  judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "계정 데이터 내보내기의 명시적 확인 단계 결과를 최종 수락하시겠습니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
   options: []
   context:
-    summary: "계정 데이터 내보내기의 명시적 확인 단계 변경을 최종 수락할 수 있습니다."
+    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분한지는 사용자가 판단해야 합니다."
     related_refs: []
     artifact_refs:
-      - artifact_id: artifact_account_export_test_log_001
+      - artifact_id: artifact_account_export_confirmation_copy_001
         project_id: proj_123
         task_id: task_456
-        display_name: "account_export_confirmation_test.log"
+        display_name: "account_export_confirmation_copy.txt"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1449,7 +1449,7 @@ user_judgment:
           state_version: 21
         created_by_surface_id: surface_local
         created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_test_log_001
+        storage_ref: artifact://artifact_account_export_confirmation_copy_001
     visible_risks: []
     constraints:
       - "현재 Task 제약이 적용됩니다"
@@ -1570,19 +1570,20 @@ params:
     dry_run: false
     locale: ko-KR
   user_judgment_id: uj_001
-  judgment_kind: final_acceptance
+  judgment_kind: product_decision
   selected_option_id: accept
   answer:
-    product_decision: null
+    product_decision:
+      judgment:
+        decision: accepted
+        rationale: "확인 문구가 내보내기에 개인정보가 포함될 수 있음을 명확히 알립니다."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
-    final_acceptance:
-      accepted: true
-      basis: "계정 데이터 내보내기의 명시적 확인 단계 결과와 테스트 로그를 검토했습니다."
+    final_acceptance: null
     residual_risk_acceptance: null
     cancellation: null
-  note: "계정 데이터 내보내기 변경을 수락합니다."
+  note: null
   accepted_risks: []
 ```
 
@@ -1610,19 +1611,19 @@ user_judgment:
   project_id: proj_123
   task_id: task_456
   change_unit_id: cu_001
-  judgment_kind: final_acceptance
+  judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "계정 데이터 내보내기의 명시적 확인 단계 결과를 최종 수락하시겠습니까?"
+  question: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분합니까?"
   options: []
   context:
-    summary: "계정 데이터 내보내기의 명시적 확인 단계 변경을 최종 수락할 수 있습니다."
+    summary: "개인정보를 포함할 수 있는 계정 데이터 내보내기에 대해 확인 문구가 충분한지는 사용자가 판단해야 합니다."
     related_refs: []
     artifact_refs:
-      - artifact_id: artifact_account_export_test_log_001
+      - artifact_id: artifact_account_export_confirmation_copy_001
         project_id: proj_123
         task_id: task_456
-        display_name: "account_export_confirmation_test.log"
+        display_name: "account_export_confirmation_copy.txt"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1636,7 +1637,7 @@ user_judgment:
           state_version: 21
         created_by_surface_id: surface_local
         created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_test_log_001
+        storage_ref: artifact://artifact_account_export_confirmation_copy_001
     visible_risks: []
     constraints: []
   affected_refs: []
@@ -1644,10 +1645,11 @@ user_judgment:
   resolution:
     selected_option_id: accept
     answer:
-      final_acceptance:
-        accepted: true
-        basis: "계정 데이터 내보내기의 명시적 확인 단계 결과와 테스트 로그를 검토했습니다."
-    note: "계정 데이터 내보내기 변경을 수락합니다."
+      product_decision:
+        judgment:
+          decision: accepted
+          rationale: "확인 문구가 내보내기에 개인정보가 포함될 수 있음을 명확히 알립니다."
+    note: null
     accepted_risks: []
     resolved_by_actor_kind: user
   expires_at: null
@@ -1664,7 +1666,7 @@ state:
   state_version: 23
 next_actions:
   - action: harness.close_task
-    reason: "최종 수락 뒤 닫기 준비 상태를 평가한다."
+    reason: "사용자 판단을 기록한 뒤 닫기 준비 상태를 평가한다."
 ```
 
 ### 담당 문서 링크

@@ -1020,28 +1020,28 @@ params:
     locale: en-US
   task_id: task_456
   change_unit_id: cu_001
-  judgment_kind: final_acceptance
+  judgment_kind: product_decision
   presentation: short
-  question: "Do you accept the account export confirmation result?"
+  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
   options:
     - option_id: accept
-      label: "Accept"
-      description: "Record final acceptance for the account export change."
-      consequence: "Close readiness can evaluate final acceptance as satisfied."
+      label: "Sufficient"
+      description: "Record the user's judgment that the confirmation copy is sufficient."
+      consequence: "Close readiness can evaluate the product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for more changes."
-      consequence: "Close remains blocked on final acceptance."
+      description: "Keep the Task open for revised confirmation copy."
+      consequence: "Close remains blocked on the product decision."
       is_default: false
   context:
-    summary: "The account export confirmation change is ready for final acceptance."
+    summary: "The user must judge whether the confirmation copy is sufficient for account data export that may include personal data."
     related_refs: []
     artifact_refs:
-      - artifact_id: artifact_account_export_test_log_001
+      - artifact_id: artifact_account_export_confirmation_copy_001
         project_id: proj_123
         task_id: task_456
-        display_name: "account_export_confirmation_test.log"
+        display_name: "account_export_confirmation_copy.txt"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1055,7 +1055,7 @@ params:
           state_version: 21
         created_by_surface_id: surface_local
         created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_test_log_001
+        storage_ref: artifact://artifact_account_export_confirmation_copy_001
     visible_risks: []
     constraints:
       - "Current Task constraints apply"
@@ -1093,19 +1093,19 @@ user_judgment:
   project_id: proj_123
   task_id: task_456
   change_unit_id: cu_001
-  judgment_kind: final_acceptance
+  judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "Do you accept the account export confirmation result?"
+  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
   options: []
   context:
-    summary: "The account export confirmation change is ready for final acceptance."
+    summary: "The user must judge whether the confirmation copy is sufficient for account data export that may include personal data."
     related_refs: []
     artifact_refs:
-      - artifact_id: artifact_account_export_test_log_001
+      - artifact_id: artifact_account_export_confirmation_copy_001
         project_id: proj_123
         task_id: task_456
-        display_name: "account_export_confirmation_test.log"
+        display_name: "account_export_confirmation_copy.txt"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1119,7 +1119,7 @@ user_judgment:
           state_version: 21
         created_by_surface_id: surface_local
         created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_test_log_001
+        storage_ref: artifact://artifact_account_export_confirmation_copy_001
     visible_risks: []
     constraints:
       - "Current Task constraints apply"
@@ -1202,19 +1202,20 @@ params:
     dry_run: false
     locale: en-US
   user_judgment_id: uj_001
-  judgment_kind: final_acceptance
+  judgment_kind: product_decision
   selected_option_id: accept
   answer:
-    product_decision: null
+    product_decision:
+      judgment:
+        decision: accepted
+        rationale: "The confirmation clearly states that the export may include personal data."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
-    final_acceptance:
-      accepted: true
-      basis: "Reviewed the account export confirmation result and test log."
+    final_acceptance: null
     residual_risk_acceptance: null
     cancellation: null
-  note: "Accepted the account export confirmation change."
+  note: null
   accepted_risks: []
 ```
 
@@ -1242,19 +1243,19 @@ user_judgment:
   project_id: proj_123
   task_id: task_456
   change_unit_id: cu_001
-  judgment_kind: final_acceptance
+  judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "Do you accept the account export confirmation result?"
+  question: "Is the confirmation copy sufficient for account data export that may include personal data?"
   options: []
   context:
-    summary: "The account export confirmation change is ready for final acceptance."
+    summary: "The user must judge whether the confirmation copy is sufficient for account data export that may include personal data."
     related_refs: []
     artifact_refs:
-      - artifact_id: artifact_account_export_test_log_001
+      - artifact_id: artifact_account_export_confirmation_copy_001
         project_id: proj_123
         task_id: task_456
-        display_name: "account_export_confirmation_test.log"
+        display_name: "account_export_confirmation_copy.txt"
         content_type: text/plain
         sha256: sha256:example
         size_bytes: 65
@@ -1268,7 +1269,7 @@ user_judgment:
           state_version: 21
         created_by_surface_id: surface_local
         created_by_surface_instance_id: surface_instance_01
-        storage_ref: artifact://artifact_account_export_test_log_001
+        storage_ref: artifact://artifact_account_export_confirmation_copy_001
     visible_risks: []
     constraints: []
   affected_refs: []
@@ -1276,10 +1277,11 @@ user_judgment:
   resolution:
     selected_option_id: accept
     answer:
-      final_acceptance:
-        accepted: true
-        basis: "Reviewed the account export confirmation result and test log."
-    note: "Accepted the account export confirmation change."
+      product_decision:
+        judgment:
+          decision: accepted
+          rationale: "The confirmation clearly states that the export may include personal data."
+    note: null
     accepted_risks: []
     resolved_by_actor_kind: user
   expires_at: null
@@ -1296,7 +1298,7 @@ state:
   state_version: 23
 next_actions:
   - action: harness.close_task
-    reason: "Evaluate close readiness after final acceptance."
+    reason: "Evaluate close readiness after recording the user's product decision."
 ```
 
 ### Owner links
