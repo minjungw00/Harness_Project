@@ -145,7 +145,17 @@ Maintain docs should sound like editing instructions. They can name owner paths 
 
 Examples in reference and API documentation should use stable product or user scenarios. They should remain useful after the maintenance context is forgotten.
 
-The current API reference sample task is: add explicit confirmation before account data export, update account data export confirmation tests, and record account data export confirmation test output as representative run/evidence data. If a documentation batch replaces this sample task, update the API examples, paired Korean examples, checks, and routes together.
+API examples may share one scenario across methods. When examples share refs, `state_version`, `ArtifactRef` values, run refs, judgment refs, and close-readiness evidence must describe the same timeline and must not contradict each other.
+
+Representative examples may omit unrelated fields, but each response snapshot must be internally consistent. A response snapshot must not include refs from a later `state_version` than the snapshot's `base.state_version` or visible state summary.
+
+Sensitive-action approval reasons must match request inputs or explicitly stated preconditions. Do not add approval reasons unsupported by `sensitive_categories`, `SensitiveActionScope`, intended paths, intended operation, or the scenario setup.
+
+`ArtifactRef` values must be introduced by staging, promotion, or an explicit existing-artifact statement before they appear as evidence, judgment context, or close-readiness support.
+
+Expiration timestamps should use placeholders or clearly future example dates.
+
+The API reference sample task is: add explicit confirmation before account data export, update account data export confirmation tests, and record account data export confirmation test output as representative run/evidence data. When the sample task changes, update the API examples, paired Korean examples, checks, and routes together.
 
 API examples must not use documentation maintenance as the scenario.
 

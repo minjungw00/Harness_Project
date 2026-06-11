@@ -76,6 +76,7 @@
 - 대표 응답 예시는 분기 이해에 중요한 필드를 보여 줍니다.
 - 설명 중인 동작에 영향을 주지 않는 스키마 담당 중첩 필드는 생략할 수 있습니다.
 - 전체 형태는 연결된 스키마 담당 문서를 사용합니다.
+- 공유 API 예시는 상태 버전, 아티팩트 참조, Run 참조, 사용자 판단 참조, 닫기 준비 상태 증거, 민감 승인 사유, 만료 timestamp 사이의 내부 정합성을 유지합니다. 기준 규칙은 [작성 가이드](../../maintain/authoring-guide.md)가 담당합니다.
 
 공유 샘플 작업:
 
@@ -573,17 +574,17 @@ base:
   response_kind: result
   effect_kind: read_only
   dry_run: false
-  state_version: 19
+  state_version: 21
   events: []
 active_task:
   project_id: proj_123
-  state_version: 19
+  state_version: 21
   task_ref:
     record_kind: task
     record_id: task_456
     project_id: proj_123
     task_id: task_456
-    state_version: 19
+    state_version: 21
   mode: work
   lifecycle:
     lifecycle_phase: ready
@@ -761,7 +762,8 @@ params:
     - src/account/export-confirmation.ts
     - tests/account-export.test.ts
   product_file_write_intended: true
-  sensitive_categories: []
+  sensitive_categories:
+    - personal_data_export
   baseline_ref: baseline_account_export_001
 ```
 
@@ -977,9 +979,9 @@ staged_artifact_handle:
   sha256: sha256:example
   size_bytes: 65
   redaction_state: none
-  expires_at: "2026-06-10T12:30:00Z"
+  expires_at: "2099-01-01T12:30:00Z"
   consumed: false
-expires_at: "2026-06-10T12:30:00Z"
+expires_at: "2099-01-01T12:30:00Z"
 ```
 
 ### 담당 문서 링크
@@ -1141,7 +1143,7 @@ params:
         sha256: sha256:example
         size_bytes: 65
         redaction_state: none
-        expires_at: "2026-06-10T12:30:00Z"
+        expires_at: "2099-01-01T12:30:00Z"
         consumed: false
       existing_artifact_ref: null
       relation_hint: "test_log"
@@ -1367,6 +1369,8 @@ state:
 ### 저장 효과
 
 커밋 시 대기 중인 판단과 관련 차단 사유 상태를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당합니다.
+
+예시 아티팩트 전제: `artifact_account_export_confirmation_copy_001`는 검토할 확인 문구를 가리키는 기존 `ArtifactRef`이며, 판단 요청 전에 승격되었습니다. `harness.record_run` 예시는 대표 승격 아티팩트로 테스트 로그만 보여 주며 이 추가 문구 아티팩트는 펼쳐 보이지 않습니다.
 
 ### 최소 유효 요청
 
@@ -1865,18 +1869,18 @@ base:
   response_kind: result
   effect_kind: read_only
   dry_run: false
-  state_version: 23
+  state_version: 21
   events: []
 close_state: blocked
 state:
   project_id: proj_123
-  state_version: 23
+  state_version: 21
   task_ref:
     record_kind: task
     record_id: task_456
     project_id: proj_123
     task_id: task_456
-    state_version: 23
+    state_version: 21
 blockers:
   - category: user_judgment
     code: missing_user_judgment

@@ -112,6 +112,7 @@ Examples below:
 - show branch-critical fields in representative response examples
 - may omit schema-owned nested fields that do not affect the illustrated behavior
 - rely on the linked schema owners for full schema shapes
+- keep shared scenario refs internally consistent across `state_version`, artifact refs, run refs, judgment refs, close-readiness evidence, sensitive-action approval reasons, and expiration timestamps; the standing rule lives in [Authoring Guide](../../maintain/authoring-guide.md)
 
 Shared sample task:
 
@@ -674,17 +675,17 @@ base:
   response_kind: result
   effect_kind: read_only
   dry_run: false
-  state_version: 19
+  state_version: 21
   events: []
 active_task:
   project_id: proj_123
-  state_version: 19
+  state_version: 21
   task_ref:
     record_kind: task
     record_id: task_456
     project_id: proj_123
     task_id: task_456
-    state_version: 19
+    state_version: 21
   mode: work
   lifecycle:
     lifecycle_phase: ready
@@ -866,7 +867,8 @@ params:
     - src/account/export-confirmation.ts
     - tests/account-export.test.ts
   product_file_write_intended: true
-  sensitive_categories: []
+  sensitive_categories:
+    - personal_data_export
   baseline_ref: baseline_account_export_001
 ```
 
@@ -1094,9 +1096,9 @@ staged_artifact_handle:
   sha256: sha256:example
   size_bytes: 65
   redaction_state: none
-  expires_at: "2026-06-10T12:30:00Z"
+  expires_at: "2099-01-01T12:30:00Z"
   consumed: false
-expires_at: "2026-06-10T12:30:00Z"
+expires_at: "2099-01-01T12:30:00Z"
 ```
 
 ### Owner links
@@ -1278,7 +1280,7 @@ params:
         sha256: sha256:example
         size_bytes: 65
         redaction_state: none
-        expires_at: "2026-06-10T12:30:00Z"
+        expires_at: "2099-01-01T12:30:00Z"
         consumed: false
       existing_artifact_ref: null
       relation_hint: "test_log"
@@ -1505,6 +1507,8 @@ For `dry_run=true`, a valid preview returns `ToolDryRunResponse`. Branch shape i
 ### Storage effect
 
 On commit, the method may persist pending judgment and related blocker state. Exact storage effects are owned by [Storage Effects](../storage-effects.md).
+
+Example artifact precondition: `artifact_account_export_confirmation_copy_001` is an existing `ArtifactRef` for the reviewed confirmation copy, promoted before the judgment request. The `harness.record_run` example keeps the test-log artifact as its representative promoted artifact and does not expand this additional copy artifact.
 
 ### Minimal valid request
 
@@ -2013,18 +2017,18 @@ base:
   response_kind: result
   effect_kind: read_only
   dry_run: false
-  state_version: 23
+  state_version: 21
   events: []
 close_state: blocked
 state:
   project_id: proj_123
-  state_version: 23
+  state_version: 21
   task_ref:
     record_kind: task
     record_id: task_456
     project_id: proj_123
     task_id: task_456
-    state_version: 23
+    state_version: 21
 blockers:
   - category: user_judgment
     code: missing_user_judgment
