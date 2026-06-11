@@ -141,7 +141,13 @@ Reference-facing docs may use schema names, API method names, enum values, table
 
 Maintain docs should sound like editing instructions. They can name owner paths and duplication rules, but they should not reproduce technical contract bodies.
 
-API reference examples should use durable product-work scenarios. Do not use Harness documentation maintenance, review, migration, route cleanup, or section rewrite work as the business scenario inside API request/response examples, task payloads, run summaries, artifact descriptions, or user judgment prompts. Documentation file paths may appear in routing or maintain guidance when they are the subject of that guidance.
+### Durable examples
+
+Examples in reference and API documentation should use stable product or user scenarios. They should remain useful after the current edit context is forgotten.
+
+Do not make the example scenario the current documentation edit, migration, refactor, review, route cleanup, or section restructuring. Repository-internal documentation paths, including paths under `docs/`, should appear as example data only when the document is explicitly about documentation maintenance.
+
+API examples should avoid self-referential documentation edits as task payloads, request examples, response examples, run summaries, artifact descriptions, or user judgment prompts.
 
 ## 7. Long paragraph and chunking rules
 
