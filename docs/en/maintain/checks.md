@@ -722,23 +722,25 @@ Failure:
 Fix:
 - Split dense prose into Conditions, Allowed effects, Not allowed, Exceptions, and Owner links as appropriate.
 
-### CHK-TABLE-SOURCE-MAINTAINABILITY: Markdown table source maintainability
+### `CHK-TABLE-SOURCE-MAINTAINABILITY`: Markdown table source maintainability
 
 Owner:
 - [Authoring Guide](authoring-guide.md)
 
 Check:
-- Confirm Markdown table cells are short.
-- Split a long Markdown table when a cell needs lists, multiple conditions, multiple sentences, or a source line that is hard to review.
-- Confirm long conditions are moved into detail blocks.
-- Confirm source diffs remain reviewable.
+- Apply this check to all Reference documents, not only storage references.
+- Confirm each Markdown table cell remains short.
+- If a cell needs multiple conditions, exceptions, non-claims, allowed effects, forbidden effects, or owner links, confirm the table uses a summary row plus a detail block.
+- Confirm source diffs remain reviewable and table cells do not hide rule boundaries.
 
 Failure:
-- A table cell contains multiple conditions, multiple sentences, or a list-like sequence.
+- A Reference table cell contains multiple conditions, exceptions, non-claims, allowed effects, forbidden effects, owner links, multiple sentences, or a list-like sequence.
 - A single source line becomes too long to review.
+- A dense cell makes the condition, result, or exception boundary hard to detect.
 
 Fix:
-- Convert the dense table to a summary table plus per-item detail blocks.
+- Convert the dense table to a summary row plus a detail block.
+- Move long conditions, exceptions, non-claims, allowed effects, forbidden effects, and owner links out of table cells.
 
 ### CHK-EN-HEADING-CASE: English heading case
 
