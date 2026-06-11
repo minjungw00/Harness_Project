@@ -17,66 +17,181 @@ Use the [Reference index](README.md) to route API, storage, connector, runtime-b
 <a id="honest-guarantee-display"></a>
 ## 2. Current guarantee levels
 
-The current MVP guarantee boundary is `cooperative` by default. `detective` wording is allowed only for a documented, observed scope after the relevant capability check has passed. `preventive` and `isolated` are not active current-MVP guarantees.
+The current MVP guarantee boundary is `cooperative` by default.
 
-`preventive` and `isolated` are related but distinct. `preventive` means prevention-oriented controls that may be future/later. `isolated` is a stronger isolation-oriented label that is also reserved for later/profile-gated use. In the current MVP, `isolated` does not support claims of OS sandboxing, OS permission enforcement, tamper-proof isolation, or full security isolation.
+Conditions:
+- "Available in current MVP" means the specification may describe the behavior as current MVP source material.
+- Capability-gated `detective` wording requires a documented capability check that passed for the named surface and observed scope.
 
-In this documentation-only repository, "available in current MVP" means the specification may describe the behavior as current MVP source material. It does not mean this repository contains a working Harness Server, runtime monitor, sandbox, or storage layer.
+May claim:
+- `cooperative` is the default current-MVP guarantee level.
+- `detective` is available only for the checked capability and observed scope.
+- `preventive` and `isolated` are reserved for later/profile-gated use.
 
-| Level | Available in current MVP? | Conditions | May claim | Must not claim |
-|---|---|---|---|---|
-| `cooperative` | yes | default documented behavior | recorded procedure and agent cooperation | OS-level enforcement |
-| `detective` | limited | capability check passed and observed scope only | limited detection for observed changed paths | full monitoring |
-| `preventive` | no | future/later prevention-oriented mechanism | nothing in current MVP | sandboxing, OS permission enforcement, isolation, or active blocking without a promoted mechanism |
-| `isolated` | no | reserved later/profile-gated value only | no current isolation guarantee | OS sandboxing, OS permission enforcement, tamper-proof isolation, full security isolation |
+Must not claim:
+- This repository contains a working Harness Server, runtime monitor, sandbox, or storage layer.
+- `preventive` or `isolated` is an active current-MVP guarantee.
+- `isolated` supports OS sandboxing, OS permission enforcement, tamper-proof isolation, or full security isolation in the current MVP.
+- `isolated` is a synonym for `preventive`.
+
+Owner links:
+- [Active MVP Scope](active-mvp-scope.md) owns current-MVP inclusion and active/later boundaries.
+- [API Value Sets](api/schema-value-sets.md) owns guarantee label value entries.
+- [Later Candidate Index](../later/index.md) owns deferred stronger security and assurance candidates.
+
+| Level | Current MVP status | Scan rule |
+|---|---|---|
+| `cooperative` | active default | Use for documented procedures and agent cooperation. |
+| `detective` | limited | Use only after the relevant capability check has passed, and name the observed scope. |
+| `preventive` | not active | Do not claim current prevention, active blocking, sandboxing, permission enforcement, or isolation. |
+| `isolated` | not active | Treat as a reserved later/profile-gated isolation label with no current isolation guarantee. |
 
 ## 3. Explicit non-claims
 
-The current MVP does not claim:
+The current MVP has these explicit non-claims.
+
+Operating system and isolation:
 
 - OS-level sandboxing
 - OS permission enforcement
 - current isolation guarantee
-- tamper-proof storage
 - tamper-proof isolation
 - full security isolation
+
+Monitoring and prevention:
+
 - guaranteed full filesystem monitoring
 - full prevention of malicious agent behavior
 - a stronger guarantee than the registered surface/profile supports
 - universal pre-tool blocking
 - command, network, or secret observation by default
+
+Storage and artifact authority:
+
+- tamper-proof storage
 - native artifact capture as an active guarantee
 
 ## 4. Capability-gated `detective` claims
 
-Capability-gated `detective` wording is narrow:
+Capability-gated `detective` wording is narrow.
 
-- A capability check can support a `detective` claim only for the named surface, the checked capability, and the observed scope.
-- A copied `surface_id`, generated file, `Projection`, chat text, Product Repository file, rendered display, or agent memory is not proof of capability.
-- Observed changed paths can support a limited changed-path detection claim only when the surface actually reports those paths for the relevant operation.
-- A missing or insufficient capability should route to the API/error owner behavior, such as `CAPABILITY_INSUFFICIENT`, rather than inventing authority.
-- `detective` wording never upgrades a claim to sandboxing, permission enforcement, tamper-proof storage, or full monitoring.
+Conditions:
+- The claim names the surface.
+- The relevant capability check has passed.
+- The observed scope is documented.
+- Changed-path wording is used only when the surface actually reports those paths for the relevant operation.
+
+May claim:
+- The checked surface, checked capability, and observed scope support a limited `detective` claim.
+- Observed changed paths support a limited changed-path detection claim when the reporting condition is met.
+- Missing or insufficient capability routes to the API/error owner behavior, such as `CAPABILITY_INSUFFICIENT`.
+
+Must not claim:
+- A copied `surface_id`, generated file, `Projection`, chat text, Product Repository file, rendered display, or agent memory is proof of capability.
+- `detective` wording upgrades a claim to sandboxing, permission enforcement, tamper-proof storage, or full monitoring.
+
+Owner links:
+- [Agent Integration](agent-integration.md) owns connector behavior and capability-profile meaning at the surface boundary.
+- [API Errors](api/errors.md) owns public error routing such as `CAPABILITY_INSUFFICIENT`.
+- [Runtime Boundaries](runtime-boundaries.md) owns Product Repository, Runtime Home, and non-isolation separation.
 
 ## 5. Assets
 
-| Asset | Current MVP security posture |
-|---|---|
-| Core-owned Harness records | Changed only through owner-defined Harness paths in the specification. This is not a claim that local files are tamper-proof. |
-| Product Repository files | User workspace files. They can be inputs to checks, but they are not Harness state and are not proof of Harness authority. |
-| Harness Runtime Home and local store | Future operational data space owned by storage/runtime owners. This documentation repository is not a Runtime Home. |
-| Artifacts and staged handles | `ArtifactRef`, `ArtifactInput`, and `StagedArtifactHandle` require API/storage validation. Displayed identifiers do not create artifact authority. |
-| Surface identity and capability profile | Registered surface context and capability checks limit what may be claimed. `surface_id` alone is not an authority token. |
-| User-owned judgments | Sensitive-action approval, final acceptance, waiver, and residual-risk acceptance remain distinct. None of them grants OS permission. |
+| Asset | May claim | Must not claim |
+|---|---|---|
+| Core-owned Harness records | Changed only through owner-defined Harness paths in the specification. | Local files are tamper-proof. |
+| Product Repository files | User workspace files can be inputs to checks. | Product files are Harness state or proof of Harness authority. |
+| Harness Runtime Home and local store | Future operational data space is owned by storage/runtime owners. | This documentation repository is a Runtime Home. |
+| Artifacts and staged handles | `ArtifactRef`, `ArtifactInput`, and `StagedArtifactHandle` require API/storage validation. | Displayed identifiers create artifact authority. |
+| Surface identity and capability profile | Registered surface context and capability checks limit what may be claimed. | `surface_id` alone is an authority token. |
+| User-owned judgments | Sensitive-action approval, final acceptance, waiver, and residual-risk acceptance remain distinct. | User-owned judgment grants OS permission. |
+
+Owner links:
+- [Runtime Boundaries](runtime-boundaries.md) owns Product Repository, Harness Server, Runtime Home, and non-isolation separation.
+- [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), and [Artifact Storage](storage-artifacts.md) own storage and artifact details.
+- [Core Model](core-model.md) owns user-owned judgment and non-substitution rules.
 
 ## 6. Trust boundaries
 
-| Boundary | Rule | Non-claim |
-|---|---|---|
-| Product Repository / Harness records | Product files, generated Markdown, and chat text do not directly mutate Harness records. | Product text is not Harness state. |
-| Harness Server / Runtime Home | The future server would mediate Harness records and storage effects. | This repository does not contain that runtime. |
-| Connector surface / Harness authority | A connector can carry context only within its verified surface and capability profile. | A connector description is not proof of authority. |
-| Rendered displays / source records | Generated displays can summarize source records. | A rendered display is not a new authority source. |
-| User judgment / product-file write scope | Sensitive-action approval is separate from product-file write compatibility and `Write Authorization`. | Broad approval does not substitute for either boundary. |
+### Product Repository / Harness records
+
+Conditions:
+- Product files, generated Markdown, or chat text mention or summarize Harness concepts.
+
+May claim:
+- Those materials do not directly mutate Harness records.
+
+Must not claim:
+- Product text is Harness state.
+- Product Repository content is proof of Harness authority.
+
+Owner links:
+- [Runtime Boundaries](runtime-boundaries.md) owns the Product Repository boundary.
+- [Storage Effects](storage-effects.md) owns storage effects.
+
+### Harness Server / Runtime Home
+
+Conditions:
+- Future server behavior or runtime storage is being described.
+
+May claim:
+- The future server would mediate Harness records and storage effects.
+- Runtime Home details must come from storage/runtime owners.
+
+Must not claim:
+- This repository contains that runtime.
+- A Runtime Home is automatically a security boundary.
+
+Owner links:
+- [Runtime Boundaries](runtime-boundaries.md) owns Harness Server, Runtime Home, and non-isolation separation.
+- [Storage Records](storage-records.md) owns storage record layout.
+
+### Connector surface / Harness authority
+
+Conditions:
+- A connector carries context for a surface and capability profile.
+
+May claim:
+- A connector can carry context only within its verified surface and capability profile.
+
+Must not claim:
+- A connector description is proof of authority.
+- A copied `surface_id` is proof of capability.
+
+Owner links:
+- [Agent Integration](agent-integration.md) owns connector behavior and `capability_profile` meaning.
+
+### Rendered displays / source records
+
+Conditions:
+- Generated displays or rendered templates summarize source records.
+
+May claim:
+- Generated displays can summarize source records.
+
+Must not claim:
+- A rendered display is a new authority source.
+- Rendered text replaces source-record authority.
+
+Owner links:
+- [Projection Authority Reference](projection-and-templates.md) owns projection authority and freshness boundaries.
+- [Template Bodies](template-bodies.md) owns rendered template bodies.
+
+### User judgment / product-file write scope
+
+Conditions:
+- Sensitive-action approval, product-file write compatibility, or `Write Authorization` is being described.
+
+May claim:
+- Sensitive-action approval is separate from product-file write compatibility and `Write Authorization`.
+
+Must not claim:
+- Broad approval substitutes for either boundary.
+- User approval becomes sandboxing or OS permission.
+
+Owner links:
+- [Core Model](core-model.md) owns user-owned judgment and non-substitution rules.
+- [Storage Effects](storage-effects.md) owns product-file and Harness-record storage effects.
 
 ## 7. Threat/control summary
 
@@ -182,29 +297,86 @@ Not allowed:
 
 ## 8. `cooperative` behavior
 
-`cooperative` behavior means the connected surface follows the documented procedure and the specification defines what Harness should record. The specification requires future server behavior to keep owner-defined state changes, write compatibility, evidence summaries, user-owned judgments, and close-readiness outcomes on their documented paths.
+`cooperative` behavior is the default current-MVP guarantee level.
 
-`cooperative` wording may say Harness records, checks, routes, rejects within its own API path, or asks for the right user-owned judgment. It must not say Harness blocks arbitrary tools, controls OS permissions, makes files tamper-proof, or prevents malicious agent behavior.
+Conditions:
+- The connected surface follows the documented procedure.
+- The specification defines what Harness should record.
+- Owner-defined Harness paths carry state changes, write compatibility, evidence summaries, user-owned judgments, and close-readiness outcomes.
+
+May claim:
+- Harness records, checks, routes, rejects within its own API path, or asks for the right user-owned judgment.
+- The specification requires future server behavior to keep owner-defined outcomes on their documented paths.
+
+Must not claim:
+- Harness blocks arbitrary tools.
+- Harness controls OS permissions.
+- Harness makes files tamper-proof.
+- Harness prevents malicious agent behavior.
+
+Owner links:
+- [Core Model](core-model.md) owns user-owned judgment and non-substitution rules.
+- [Storage Effects](storage-effects.md) owns storage effects.
+- [Runtime Boundaries](runtime-boundaries.md) owns runtime and Product Repository separation.
 
 ## 9. `detective` behavior
 
-`detective` behavior means Harness can report a mismatch or observed fact after the relevant surface has shown that it can observe that fact. Examples include limited changed-path reporting after the capability check for that exact surface and operation has passed.
+`detective` behavior is capability-gated and scope-limited.
 
-`detective` wording must include the observed scope. It must not imply command monitoring, network monitoring, secret access monitoring, full filesystem monitoring, or pre-execution blocking unless another active owner documents and proves that exact mechanism.
+Conditions:
+- The relevant surface has shown that it can observe the fact being claimed.
+- The capability check for that exact surface and operation has passed.
+- The observed scope is named.
+
+May claim:
+- Harness can report a mismatch or observed fact within the observed scope.
+- Limited changed-path reporting is available only for the checked surface and operation.
+
+Must not claim:
+- Command monitoring.
+- Network monitoring.
+- Secret access monitoring.
+- Full filesystem monitoring.
+- Pre-execution blocking.
+
+Owner links:
+- [Agent Integration](agent-integration.md) owns connector capability meaning.
+- [API Errors](api/errors.md) owns capability-related error routing.
+
+Exceptions:
+- Another active owner may document and prove an exact stronger mechanism. Without that owner, keep the wording `cooperative` or capability-gated `detective`.
 
 ## 10. Later `preventive` and `isolated` boundary
 
-`preventive` behavior means a documented mechanism stops or denies an action before it happens. `isolated` behavior requires a documented boundary strong enough to support an isolation guarantee over execution, state, permissions, or storage. The current MVP has no active `preventive` guarantee and no active `isolated` isolation guarantee.
+`preventive` and `isolated` are not active current-MVP guarantees.
 
-A later or profile-gated `preventive` or `isolated` claim requires a promoted owner to document:
+Conditions:
+- `preventive` behavior requires a documented mechanism that stops or denies an action before it happens.
+- `isolated` behavior requires a documented boundary strong enough to support an isolation guarantee over execution, state, permissions, or storage.
+- A later or profile-gated `preventive` or `isolated` claim requires a promoted owner.
 
-- the mechanism that prevents the action or provides isolation
-- the exact covered operation, path, surface, profile, and isolation boundary when `isolated` is claimed
-- the bypass and fallback behavior
-- the proof path and user-visible error behavior
-- paired English/Korean documentation and active-scope promotion
+Promotion requirements:
+- The mechanism that prevents the action or provides isolation.
+- The exact covered operation, path, surface, profile, and isolation boundary when `isolated` is claimed.
+- The bypass and fallback behavior.
+- The proof path and user-visible error behavior.
+- Paired English/Korean documentation and active-scope promotion.
 
-Until those conditions are met, use "the specification requires" for future server obligations and keep the guarantee level `cooperative` or capability-gated `detective`. Do not use `isolated` as a synonym for `preventive`; `isolated` is reserved for a stronger isolation-oriented guarantee.
+May claim:
+- `preventive` is reserved for a documented prevention-oriented mechanism.
+- `isolated` is reserved for a stronger isolation-oriented guarantee.
+- Future server obligations may be described as "the specification requires" until a stronger guarantee is promoted.
+
+Must not claim:
+- The current MVP has an active `preventive` guarantee.
+- The current MVP has an active `isolated` isolation guarantee.
+- `isolated` is a synonym for `preventive`.
+- A stronger guarantee exists before the promoted owner documents the mechanism, boundary, proof path, and active-scope promotion.
+
+Owner links:
+- [Active MVP Scope](active-mvp-scope.md) owns active/later status.
+- [API Value Sets](api/schema-value-sets.md) owns guarantee label value entries.
+- [Later Candidate Index](../later/index.md) owns deferred stronger capability, monitoring, isolation, and preventive-control candidates.
 
 ## 11. Cross-owner links
 
