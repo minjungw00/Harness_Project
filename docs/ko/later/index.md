@@ -62,7 +62,7 @@
 | `ValidatorResult` 안정 ID와 정책 계열 | 정책과 적합성 | 안정 검증기 식별, 정책 계열, 심각도, 면제 어휘 이후 후보입니다. | [`ValidatorResult` 안정 ID와 정책 계열](policy-and-conformance.md#validatorresult-stable-ids-and-policy-families) |
 | 면제, `reconcile`, 잔여 위험 분기 | 작업 흐름과 협업 | 면제, `reconcile`, 잔여 위험 분기 이후 후보입니다. | [면제, `reconcile`, 잔여 위험 분기](workflow-and-collaboration.md#waiver-reconcile-and-residual-risk-branches) |
 | 이후 템플릿 이름 | 아티팩트와 증거 | 더 풍부한 판단, 증거, 실행, 설계, 내보내기 표시를 위한 템플릿 이름 이후 후보입니다. | [이후 템플릿 이름](artifacts-and-evidence.md#later-template-names) |
-| 향후 fixture 계열 | 정책과 적합성 | 실행 가능한 fixture 계열, 적합성 모음, 검증 주장, 보고 형식 이후 후보입니다. | [향후 fixture 계열](policy-and-conformance.md#future-fixture-families) |
+| 향후 픽스처 계열 | 정책과 적합성 | 실행 가능한 픽스처 계열, 적합성 모음, 검증 주장, 보고 형식 이후 후보입니다. | [향후 픽스처 계열](policy-and-conformance.md#future-fixture-families) |
 | 대시보드와 호스팅 작업 흐름 | 커넥터와 접점 | 대시보드, 호스팅 작업 흐름, 시각화, 카드, 아티팩트 대시보드 접점 이후 후보입니다. | [대시보드와 호스팅 작업 흐름](connectors-and-surfaces.md#dashboard-and-hosted-workflows) |
 | 검증 결과 카드와 더 풍부한 검증 작업 흐름 | 작업 흐름과 협업 | QA를 대체하지 않는 검증 카드와 더 풍부한 검증 작업 흐름 이후 후보입니다. | [검증 결과 카드와 더 풍부한 검증 작업 흐름](workflow-and-collaboration.md#verification-result-cards-and-richer-verification-workflows) |
 | 브라우저 캡처 자동화 | 아티팩트와 증거 | 브라우저 스크린샷, 녹화, 캡처된 UI 상태를 증거 자료로 다루는 이후 후보입니다. | [브라우저 캡처 자동화](artifacts-and-evidence.md#browser-capture-automation) |

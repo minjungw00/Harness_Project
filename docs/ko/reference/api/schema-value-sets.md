@@ -121,7 +121,7 @@ local_surface_registration
 <a id="task-lifecycle-values"></a>
 ## Task 생명주기 값
 
-`StateSummary.mode`와 지속 저장되는 확정 Task mode는 아래 값을 사용합니다.
+`StateSummary.mode`와 지속 저장되는 확정 `Task.mode`는 아래 값을 사용합니다.
 
 ```text
 advisor

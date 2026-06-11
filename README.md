@@ -24,7 +24,7 @@ For the canonical current scope, see [Active MVP scope](docs/en/reference/active
 
 - A running Harness instance, runtime implementation, Harness Runtime Home, generated runtime state, operational artifacts, executable fixtures, or conformance runners.
 
-- 실행 중인 하네스 인스턴스, 런타임 구현, Harness Runtime Home, 생성된 런타임 상태, 운영 아티팩트, 실행 가능한 fixture, 적합성 실행기.
+- 실행 중인 하네스 인스턴스, 런타임 구현, Harness Runtime Home, 생성된 런타임 상태, 운영 아티팩트, 실행 가능한 픽스처, 적합성 실행기.
 
 ## Start reading
 

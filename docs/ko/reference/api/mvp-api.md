@@ -182,7 +182,7 @@
 
 ### 저장 효과
 
-커밋 시 intake가 담당하는 Task 또는 Change Unit 상태를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당하고, 저장 기록 형태는 [저장소 기록](../storage-records.md)이 담당합니다.
+커밋 시 `harness.intake`가 담당하는 Task 또는 Change Unit 상태를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당하고, 저장 기록 형태는 [저장소 기록](../storage-records.md)이 담당합니다.
 
 ### 최소 유효 요청
 

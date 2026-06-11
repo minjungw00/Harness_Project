@@ -43,13 +43,13 @@
 | `LOCAL_ACCESS_MISMATCH` | `ToolRejectedResponse.errors[]` | 도달 가능한 로컬 접근이 등록된 전송 경로, 세션, 바인딩, 프로젝트, 접점 인스턴스와 맞지 않거나 접근이 철회되었습니다. | 없음 | 요청 거부에서는 불가 |
 | `NO_ACTIVE_TASK` | `ToolRejectedResponse.errors[]` | Task가 필요하지만 활성 Task나 지정된 Task가 없습니다. | 없음 | 기본 불가 |
 | `NO_ACTIVE_CHANGE_UNIT` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 쓰기 가능하거나 닫기와 관련된 동작에 활성 범위 지정 Change Unit이 없습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `BASELINE_STALE` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 동작에 필요한 저장소 상태와 baseline이 더 이상 맞지 않습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
+| `BASELINE_STALE` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 동작에 필요한 저장소 상태와 기준 상태가 더 이상 맞지 않습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
 | `SCOPE_REQUIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 요청한 쓰기나 동작 전에 범위 확인이 필요합니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
 | `SCOPE_VIOLATION` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 의도했거나 관찰된 경로 또는 민감 범주가 활성 범위나 저장된 승인 범위를 넘었습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
 | `WRITE_AUTHORIZATION_REQUIRED` | `ToolRejectedResponse.errors[]` | 쓰기 가능한 Run에 필요한 Write Authorization이 없습니다. | 없음 | 기본 불가 |
 | `WRITE_AUTHORIZATION_INVALID` | `ToolRejectedResponse.errors[]` | 제공된 Write Authorization이 만료, 철회, 소비, 또는 버전 외 사유로 비호환입니다. | 없음 | 기본 불가 |
 | `APPROVAL_DENIED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 필요한 민감 동작 승인이 거부되었습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
-| `APPROVAL_EXPIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 필요한 민감 동작 승인이 만료되었거나 범위 또는 baseline에서 달라졌습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
+| `APPROVAL_EXPIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 필요한 민감 동작 승인이 만료되었거나 범위 또는 기준 상태와 달라졌습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
 | `APPROVAL_REQUIRED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 진행 전에 민감 동작 승인이 필요합니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
 | `DECISION_UNRESOLVED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 관련 사용자 판단이 대기, 적용 범위 없는 보류, 거부, 차단, 오래됨, 대체됨, 비호환 상태입니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
 | `AUTONOMY_BOUNDARY_EXCEEDED` | `ToolRejectedResponse.errors[]`, 담당 문서가 정의한 결과 경로 | 의도한 동작이 활성 Change Unit Autonomy Boundary를 넘었습니다. | 거부 밖에서는 담당 문서가 정함 | 담당 문서가 허용할 때만 |
@@ -91,7 +91,7 @@
 | 4 | `LOCAL_ACCESS_MISMATCH` | 로컬 접근 바인딩 불일치나 철회로 거부되었습니다. |
 | 5 | `NO_ACTIVE_TASK` | Task 식별자가 없어 거부되었습니다. |
 | 6 | `NO_ACTIVE_CHANGE_UNIT` | 활성 Change Unit이 없습니다. |
-| 7 | `BASELINE_STALE` | baseline이 오래되었습니다. |
+| 7 | `BASELINE_STALE` | 기준 상태가 오래되었습니다. |
 | 8 | `SCOPE_REQUIRED` | 필요한 범위 확인이 없습니다. |
 | 9 | `SCOPE_VIOLATION` | 범위 또는 승인된 시도 범위를 위반했습니다. |
 | 10 | `WRITE_AUTHORIZATION_REQUIRED` | 필요한 Write Authorization이 없습니다. |
@@ -172,7 +172,7 @@
 | 커밋 전 공개 오류를 차단 사유 배열로 복사합니다. | `ToolRejectedResponse.errors[]`를 반환합니다. |
 | 담당 문서의 명시적 허용 없이 공개 `ErrorCode`를 차단 사유 코드로 재사용합니다. | 메서드/스키마 담당 문서의 차단 사유 코드나 결과 사유를 사용합니다. |
 | 사용자 표시 라벨을 API 식별자로 사용합니다. | 공개 `ErrorCode`는 그대로 두고 표시 문구만 지역화합니다. |
-| dry-run의 오래된 상태 충돌을 `DryRunSummary.would_errors[]`나 `DryRunSummary.would_blockers[]`로 표현합니다. | `STATE_VERSION_CONFLICT`로 요청을 거부합니다. |
+| dry-run 미리보기의 오래된 상태 충돌을 `DryRunSummary.would_errors[]`나 `DryRunSummary.would_blockers[]`로 표현합니다. | `STATE_VERSION_CONFLICT`로 요청을 거부합니다. |
 
 <a id="harnessclose_task-close-blockers"></a>
 
@@ -195,7 +195,7 @@
 | 잔여 위험은 보였지만 수락되지 않았습니다. | `category=residual_risk_acceptance`와 함께 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED` |
 | 사용자 소유 판단이 해결되지 않았습니다. | `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED` |
 | 민감 동작 승인이 없거나, 거부되었거나, 만료되었거나, 달라졌습니다. | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` |
-| 유효한 평가 뒤 범위, 자율성 경계, baseline 차단 사유가 있습니다. | 담당 문서가 허용할 때 `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` |
+| 유효한 평가 뒤 범위, 자율성 경계, 기준 상태 차단 사유가 있습니다. | 담당 문서가 허용할 때 `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` |
 | 읽기용 보기 최신성 문제입니다. | `PROJECTION_STALE`; 그 자체로 닫기 차단 사유가 아닙니다. |
 | 프로젝트 전체 상태나 Write Authorization 근거 버전이 오래되었습니다. | `ToolRejectedResponse.errors[]`의 `STATE_VERSION_CONFLICT`; 절대 닫기 차단 사유가 아닙니다. |
 
@@ -213,7 +213,7 @@
 | `LOCAL_ACCESS_MISMATCH` | 로컬 접근 불일치 | 등록된 로컬 전송 경로/세션/바인딩을 사용하거나 로컬 접근 등록을 고칩니다. |
 | `CAPABILITY_INSUFFICIENT` | 접점 역량 부족 | 역량이 있는 접점을 사용하거나, 동작을 줄이거나, 빠진 역량이 필요 없는 경로를 선택합니다. |
 | `NO_ACTIVE_TASK` | 활성 Task 없음 | Task 범위 동작 전에 Task를 선택하거나 생성합니다. |
-| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 범위, 경계, baseline 문제 | 범위를 확인하거나 좁히고, 유효한 범위 또는 baseline 변경을 담당 경로로 갱신하거나, 필요한 사용자 판단을 요청합니다. |
+| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | 범위, 경계, 기준 상태 문제 | 범위를 확인하거나 좁히고, 유효한 범위 또는 기준 상태 변경을 담당 경로로 갱신하거나, 필요한 사용자 판단을 요청합니다. |
 | `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | 쓰기 전 확인 없음 또는 사용할 수 없음 | 정확한 동작, 현재 범위, 현재 상태로 `harness.prepare_write`를 호출하거나 다시 시도합니다. |
 | `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | 판단 필요 | 집중된 `UserJudgment`를 요청하거나 해결합니다. |
 | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | 민감 동작 승인 필요 또는 사용 불가 | `judgment_kind=sensitive_approval`을 요청, 해결, 갱신합니다. |

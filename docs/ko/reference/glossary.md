@@ -12,7 +12,7 @@
 
 용어 지도는 한영 용어 선택, 식별자 보존, 피해야 할 한국어 혼합 표현을 기계 판독 가능한 형태로 관리합니다.
 
-정확한 식별자는 영어와 한국어 모두에서 backtick으로 보존합니다.
+정확한 식별자는 영어와 한국어 모두에서 백틱으로 보존합니다.
 
 카드가 스키마, API, 저장소, 보안, 상태 보기, 런타임 계약을 가리킬 때는 계약 세부사항을 용어집에 복사하지 말고 담당 문서를 따릅니다.
 
@@ -439,8 +439,8 @@
 - `CloseReadinessBlocker`
 
 피할 표현:
-- close blocker를 확인한다
-- blocker reason
+- 닫기 차단 사유를 영어로 남기는 표현
+- 차단 사유에 영어 단어를 섞는 표현
 
 담당 문서:
 - [Core 모델](core-model.md)
@@ -492,8 +492,8 @@
 
 피할 표현:
 - 전체, 전체 평가, 전체 평가 순서를 뜻하는 산문에서 `complete`를 보존하는 표현
-- complete 평가
-- complete 닫기 준비 상태
+- 전체 평가 뜻으로 `complete`를 붙이는 표현
+- 닫기 준비 상태 맥락의 전체 순서에 `complete`를 붙이는 표현
 
 담당 문서:
 - [MVP API](api/mvp-api.md)
@@ -517,10 +517,8 @@
 - 해당 없음
 
 피할 표현:
-- `complete` 평가 순서
-- complete 평가 순서
-- `complete` 닫기 준비 상태 순서
-- complete 닫기 준비 상태 순서
+- 전체 평가 순서 뜻으로 `complete`를 붙이는 표현
+- 전체 닫기 준비 상태 평가 순서 뜻으로 `complete`를 붙이는 표현
 
 담당 문서:
 - [번역 가이드](../maintain/translation-guide.md)
@@ -546,8 +544,8 @@
 - `artifact_id`
 
 피할 표현:
-- artifact 저장
-- artifact bytes
+- 아티팩트를 영어로 남긴 저장 표현
+- 아티팩트 본문 바이트를 영어로 남긴 표현
 - 원시 경로를 권한 근거로 쓰는 표현
 
 담당 문서:
@@ -595,7 +593,7 @@
 - `staged_artifact_handle`
 
 피할 표현:
-- staged handle
+- 스테이징 핸들에서 영어 표현만 남기는 표현
 - 베어러 토큰
 - 지속 아티팩트
 
@@ -644,8 +642,8 @@
 - `VerifiedSurfaceContext`
 
 피할 표현:
-- surface 정보
-- surface authority
+- 접점 정보를 영어로 남긴 표현
+- 접점을 권한처럼 보이게 하는 표현
 - `surface_id`를 권한 증거로 보는 표현
 
 담당 문서:
@@ -1025,7 +1023,7 @@
 - `artifact_staging.status`
 
 피할 표현:
-- lifecycle 의미
+- 생명주기 의미를 영어로 남긴 표현
 
 담당 문서:
 - [Core 모델](core-model.md)

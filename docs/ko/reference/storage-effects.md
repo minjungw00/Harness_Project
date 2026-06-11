@@ -442,7 +442,7 @@ Task는 열린 상태로 남습니다.
 
 특히 아래 추론은 하지 않습니다.
 
-- 응답에 `CloseReadinessBlocker[]`가 있으므로 닫기 차단 사유 record가 저장되었다.
+- 응답에 `CloseReadinessBlocker[]`가 있으므로 닫기 차단 사유 기록이 저장되었다.
 - 응답에 `ArtifactRef`가 있으므로 아티팩트가 승격되었다.
 - 응답에 `StagedArtifactHandle`이 있으므로 스테이징 핸들이 소비되었다.
 - `dry_run` 응답에 계획된 효과가 있으므로 담당 기록이 바뀌었다.
