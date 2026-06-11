@@ -677,6 +677,24 @@ Fix:
 
 ## 13. Editorial style checks
 
+### `CHK-REFERENCE-PARAGRAPH-SCANNABILITY`: Reference paragraph scannability
+
+Owner:
+- [Authoring Guide](authoring-guide.md)
+
+Check:
+- Inspect changed Reference paragraphs for multiple conditions, exceptions, non-claims, owner links, or effects hidden in one dense paragraph.
+- If a paragraph contains more than one rule type, confirm it is split into named blocks or bullets.
+- Confirm allowed and disallowed behavior are visually separated.
+
+Failure:
+- A paragraph requires the reader to infer condition/result/exception boundaries.
+- A paragraph combines allowed and disallowed behavior without visual separation.
+- A paragraph contains several "must not", "does not", or "only when" clauses that would be clearer as a list.
+
+Fix:
+- Split dense prose into Conditions, Allowed effects, Not allowed, Exceptions, and Owner links as appropriate.
+
 ### CHK-TABLE-SOURCE-MAINTAINABILITY: Markdown table source maintainability
 
 Owner:
