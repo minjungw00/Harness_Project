@@ -39,19 +39,9 @@ Template output cannot by wording alone:
 - Freshness cues such as source refs, `state_version`, observation time, stale markers, unavailable markers, or capability-limited markers when present.
 - Artifact availability only through owner-approved `ArtifactRef` display data or an owner-approved unavailable/redacted note.
 
-### Rendered output
-
-A compact current-position card with these regions:
-
-- state and active scope
-- blockers and pending user judgments
-- run/evidence summary and gaps
-- close-readiness summary
-- next safe action
-- source refs and freshness
-
 ### Must show
 
+- A compact current-position card with separate regions for state and active scope, blockers and pending user judgments, run/evidence summary and gaps, close-readiness summary, next safe action, and source refs and freshness.
 - That the card is read-only derived display.
 - Any stale, partial, unavailable, redacted, or capability-limited source condition.
 - Required blockers, unresolved user judgments, and required evidence gaps.
@@ -92,12 +82,9 @@ Avoid wording such as `approved`, `accepted`, `verified`, or `closed` unless the
 - Exact question, bounded options, rationale, uncertainty, affected scope, consequence of deferral, and non-substitution notes.
 - Any linked source refs, `state_version`, and freshness or capability-limited notes.
 
-### Rendered output
-
-A focused request that asks one decision and separates the user's answer from evidence, acceptance, residual-risk acceptance, and write authorization.
-
 ### Must show
 
+- One focused decision request that separates the user's answer from evidence, acceptance, residual-risk acceptance, and write authorization.
 - The exact question the user is being asked to decide.
 - Why this is a user-owned judgment rather than an agent inference.
 - Options that are short, distinct, and compatible with the current facts.
@@ -137,19 +124,9 @@ Avoid pressure wording such as `obviously`, `just approve`, or `I can decide thi
 - Evidence coverage items, required/optional/not-applicable status, supporting run refs, supporting `ArtifactRef` links, blockers, validator results when present, and freshness cues.
 - Artifact availability, redaction, blocked-artifact, or unavailable notes from artifact owners.
 
-### Rendered output
-
-A concise evidence-position summary with these regions:
-
-- what was run or checked
-- result and confidence limits
-- required evidence coverage
-- optional supporting evidence
-- artifacts and source refs
-- gaps, blockers, and next safe action
-
 ### Must show
 
+- A concise evidence-position summary with separate regions for what was run or checked, result and confidence limits, required evidence coverage, optional supporting evidence, artifacts and source refs, and gaps, blockers, and next safe action.
 - Required evidence separately from optional support.
 - Unsupported, partial, stale, blocked, or missing required evidence.
 - Which run or artifact supports which claim when that link exists.
@@ -190,12 +167,9 @@ Avoid `fully verified`, `QA passed`, or `accepted` unless the relevant owner rec
 - `CloseReadinessBlocker[]`, evidence summary, pending user judgments, final-acceptance state, residual-risk state, artifact availability, source refs, freshness cues, and the requested close intent.
 - The owner result that distinguishes a read-only close check from a state-changing close attempt.
 
-### Rendered output
-
-A close-position result that clearly states whether the body is showing a read-only check, blocked close attempt, or owner-recorded close result.
-
 ### Must show
 
+- Whether the body is showing a read-only close check, blocked close attempt, or owner-recorded close result.
 - The close intent and whether the owner result was read-only or state-changing.
 - Every returned close blocker and the owner route for resolving it.
 - Remaining evidence, user judgment, final acceptance, residual-risk, or artifact availability gaps.
@@ -237,12 +211,11 @@ Use `Closed by owner result` only when the close owner path returned an actual c
 - Connector or surface capability context when it affects what the agent may safely infer.
 - Only the language and owner sections needed for the next action.
 
-### Rendered output
-
-A compact support packet for an agent, not a replacement for owner records. It may be structured Markdown, JSON-like text, or another connector-approved readable shape, but it must keep authority and freshness visible.
-
 ### Must show
 
+- A compact support packet for an agent, not a replacement for owner records.
+- A readable connector-approved structure when the connector uses Markdown, JSON-like text, or another display shape.
+- Authority and freshness cues visible in the packet.
 - Current task and scope in a compact form.
 - Pending user-owned judgments and blockers.
 - Next safe action and any action the agent must not take yet.
