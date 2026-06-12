@@ -251,7 +251,7 @@ API 데이터 형태에는 아래 값이 포함됩니다.
 요청 측 `harness.prepare_write` 페이로드 필드는 [`method-prepare-write.md`](api/method-prepare-write.md)를 확인하세요. 이 섹션은 쓰기 결정과 그 사유가 기록되는 저장 효과만 설명합니다.
 
 ```yaml
-intended_operation: "명시적 확인 단계가 필요하도록 계정 내보내기 흐름 갱신"
+intended_operation: "명시적 확인 단계가 필요하도록 계정 데이터 내보내기 흐름을 갱신"
 intended_paths:
   - src/account/export.ts
   - src/account/export-confirmation.ts
@@ -500,13 +500,13 @@ write_decision_reasons:
 - 스테이징 행.
 - 아티팩트.
 
-제품 파일 쓰기 지속 저장은 테스트 증거 지속 저장과 별개입니다. 메서드 담당 문서가 커밋된 제품 파일 쓰기 실행을 허용할 때 저장소는 호환되는 `write_authorizations` 행을 소비하고 허용된 실행과 증거의 저장 효과를 지속할 수 있습니다. 아래 계정 내보내기 확인 예시는 제품 파일 쓰기 관찰이 아닙니다.
+제품 파일 쓰기 지속 저장은 테스트 증거 지속 저장과 별개입니다. 메서드 담당 문서가 커밋된 제품 파일 쓰기 실행을 허용할 때 저장소는 호환되는 `write_authorizations` 행을 소비하고 허용된 실행과 증거의 저장 효과를 지속할 수 있습니다. 아래 계정 데이터 내보내기 확인 예시는 제품 파일 쓰기 관찰이 아닙니다.
 
-계정 내보내기 확인 테스트 실행에서는 커밋된 `harness.record_run`이 테스트 증거를 기록하고, 스테이징된 테스트 로그 아티팩트를 승격하고, 증거를 갱신할 수 있습니다.
+계정 데이터 내보내기 확인 테스트 실행에서는 커밋된 `harness.record_run`이 테스트 증거를 기록하고, 스테이징된 테스트 로그 아티팩트를 승격하고, 증거를 갱신할 수 있습니다.
 
 ```yaml
 command: "npm test -- account-export"
-summary: "계정 내보내기 확인 테스트가 통과했습니다."
+summary: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
 artifacts:
   - staged_artifact_account_export_test_log_001
 run_ref: run_account_export_tests_001

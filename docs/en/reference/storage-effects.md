@@ -242,7 +242,7 @@ Example account data export write-decision data:
 For the request-side `harness.prepare_write` payload fields, see [`method-prepare-write.md`](api/method-prepare-write.md). This section only describes the storage effect of recording the write decision and its reasons.
 
 ```yaml
-intended_operation: "update account export flow to require explicit confirmation"
+intended_operation: "update account data export flow to require explicit confirmation"
 intended_paths:
   - src/account/export.ts
   - src/account/export-confirmation.ts
@@ -491,13 +491,13 @@ Rejected attempts do not change:
 - staging rows
 - artifacts
 
-Product file write persistence is separate from test evidence persistence. When the method owner allows a committed run that records a product file write, storage may consume a compatible `write_authorizations` row and persist the allowed run and evidence effects. The account export confirmation example below is not a product file write observation.
+Product file write persistence is separate from test evidence persistence. When the method owner allows a committed run that records a product file write, storage may consume a compatible `write_authorizations` row and persist the allowed run and evidence effects. The account data export confirmation example below is not a product file write observation.
 
-For an account export confirmation test run, a committed `harness.record_run` may record test evidence, promote the staged test log, and update evidence:
+For an account data export confirmation test run, a committed `harness.record_run` may record test evidence, promote the staged test log, and update evidence:
 
 ```yaml
 command: "npm test -- account-export"
-summary: "Account export confirmation tests passed."
+summary: "Account data export confirmation tests passed."
 artifacts:
   - staged_artifact_account_export_test_log_001
 run_ref: run_account_export_tests_001
