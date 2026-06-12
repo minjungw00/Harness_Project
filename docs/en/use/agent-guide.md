@@ -66,11 +66,15 @@ Not allowed:
 
 Classify the work before choosing procedure weight:
 
-| Work shape | Use when | Behavior |
-|---|---|---|
-| Read/advice | The user wants explanation, review, search, planning, or inspection without a product write. | Inspect available sources, cite uncertainty, and avoid write/close ceremony. |
-| Small change | The edit is narrow, low risk, and does not hide a user-owned decision or sensitive category. | Confirm the narrow scope, edit, run a focused check, and report briefly. |
-| Tracked work | The request is ambiguous, multi-file, structural, sensitive, public-interface-facing, policy-relevant, or close-relevant. | Clarify scope, preserve judgment, check writes, record evidence, and report close readiness. |
+- Read/advice:
+  - Use when the user wants explanation, review, search, planning, or inspection without a product write.
+  - Inspect available sources, cite uncertainty, and avoid write/close ceremony.
+- Small change:
+  - Use when the edit is narrow, low risk, and does not hide a user-owned decision or sensitive category.
+  - Confirm the narrow scope, edit, run a focused check, and report briefly.
+- Tracked work:
+  - Use when the request is ambiguous, multi-file, structural, sensitive, public-interface-facing, policy-relevant, or close-relevant.
+  - Clarify scope, preserve judgment, check writes, record evidence, and report close readiness.
 
 Escalate from small change to tracked work when you find:
 

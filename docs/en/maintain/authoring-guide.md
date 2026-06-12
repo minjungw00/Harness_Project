@@ -53,23 +53,40 @@ One concept, one canonical owner. A canonical owner is the one document allowed 
 
 Other documents may contain a short 1-2 sentence summary plus a link. Do not copy long contract explanations into README, route, or maintain documents. If the same explanation appears in several files, keep the owner version and shrink the others to a reader consequence plus an owner link.
 
-Use these owner routes before repeating details:
+Use these single-owner routes before repeating details:
 
 | Topic | Canonical owner |
 |---|---|
 | Current MVP boundary and active/later status | [Active MVP Scope](../reference/active-mvp-scope.md) |
-| API method contracts | [MVP API router](../reference/api/mvp-api.md) and the method owner documents it lists |
 | Common API envelopes and response branches | [API Schema Core](../reference/api/schema-core.md) |
-| State, artifact, judgment, and API value-set schemas | [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), [API Value Sets](../reference/api/schema-value-sets.md) |
 | Public error codes and error routing | [Errors](../reference/api/errors.md) |
 | Storage effects | [Storage Effects](../reference/storage-effects.md) |
 | Security guarantees and access-boundary wording | [Security](../reference/security.md) |
-| Projection authority and rendered template bodies | [Projection Authority Reference](../reference/projection-and-templates.md), [Template Bodies](../reference/template-bodies.md) |
-| Surface usage recipes and connector boundaries | [Surface Recipes](../use/surface-recipes.md), [Agent Integration](../reference/agent-integration.md) |
 | Product definitions | [Glossary](../reference/glossary.md) |
-| Later candidates and promotion boundaries | [Later Candidate Index](../later/index.md), [Active MVP Scope](../reference/active-mvp-scope.md) |
-| Translation and bilingual terminology practice | [Translation Guide](translation-guide.md) and [Terminology Map](../../terminology-map.yaml) |
 | Documentation retrieval routes | [doc-index.yaml](../../doc-index.yaml) |
+
+Use these multi-owner routes when the question crosses an owner boundary:
+
+- API method contracts:
+  - [MVP API router](../reference/api/mvp-api.md)
+  - the method owner documents it lists
+- API schema families:
+  - [API State Schemas](../reference/api/schema-state.md)
+  - [API Artifact Schemas](../reference/api/schema-artifacts.md)
+  - [API Judgment Schemas](../reference/api/schema-judgment.md)
+  - [API Value Sets](../reference/api/schema-value-sets.md)
+- Projection and template owners:
+  - [Projection Authority Reference](../reference/projection-and-templates.md)
+  - [Template Bodies](../reference/template-bodies.md)
+- Surface and connector owners:
+  - [Surface Recipes](../use/surface-recipes.md)
+  - [Agent Integration](../reference/agent-integration.md)
+- Later-candidate routing:
+  - [Later Candidate Index](../later/index.md)
+  - [Active MVP Scope](../reference/active-mvp-scope.md)
+- Translation and bilingual terminology:
+  - [Translation Guide](translation-guide.md)
+  - [Terminology Map](../../terminology-map.yaml)
 
 Maintain docs own authoring rules and checks. They must not become secondary sources of truth for API, storage, schema, security, access class, close-readiness, projection, runtime, or product contracts.
 

@@ -71,15 +71,23 @@ This target is not a conformance suite, not a fixture specification, and not pro
 
 Maintainers must record one of these outcomes for each item before implementation begins: accepted for the first server slice, blocked with named impact, or deferred with named impact.
 
-| Decision item | Required outcome before coding |
-|---|---|
-| Build handoff | Maintainers confirm this page is the active Build entry point for implementation planning. |
-| Current MVP scope | Maintainers accept the boundary in [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md), or name the unresolved scope impact. |
-| API and schemas | Maintainers accept the relevant slice of [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md), the affected method owner documents, and the needed API schema owners. |
-| Storage effects | Maintainers accept the relevant slice of [`../reference/storage-effects.md`](../reference/storage-effects.md) before any runtime storage files, DDL, or artifact storage are created. |
-| Security and runtime boundaries | Maintainers accept the relevant claims and non-claims in [`../reference/security.md`](../reference/security.md) and [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md). |
-| Smoke target | Maintainers accept the first internal smoke target as an implementation-planning target, not as a conformance claim. |
-| Deferred material | Maintainers confirm no later candidate is required for the first server slice unless it has been promoted by its owner. |
+- Build handoff:
+  - Maintainers confirm this page is the active Build entry point for implementation planning.
+- Current MVP scope:
+  - Maintainers accept the boundary in [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md), or name the unresolved scope impact.
+- API and schemas:
+  - Maintainers accept the relevant slice of [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md).
+  - Maintainers also accept the affected method owner documents and needed API schema owners.
+- Storage effects:
+  - Maintainers accept the relevant slice of [`../reference/storage-effects.md`](../reference/storage-effects.md).
+  - This happens before any runtime storage files, DDL, or artifact storage are created.
+- Security and runtime boundaries:
+  - Maintainers accept the relevant claims and non-claims in [`../reference/security.md`](../reference/security.md).
+  - Maintainers also accept the relevant boundaries in [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md).
+- Smoke target:
+  - Maintainers accept the first internal smoke target as an implementation-planning target, not as a conformance claim.
+- Deferred material:
+  - Maintainers confirm no later candidate is required for the first server slice unless it has been promoted by its owner.
 
 ## Documentation-only boundary
 

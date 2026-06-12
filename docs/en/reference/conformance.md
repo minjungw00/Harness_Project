@@ -10,13 +10,21 @@ For the canonical current scope, see [Active MVP scope](active-mvp-scope.md). Cu
 
 ## Conformance item summary
 
-| Item | Current status | Details |
-|---|---|---|
-| current documentation criteria | active documentation criteria; not runtime results | See [Current documentation criteria](#current-documentation-criteria) |
-| internal smoke target | planned/documented; not executable here | See [Internal smoke target](#internal-smoke-target) |
-| future fixture shape | candidate future format; not executable here | See [Future fixture shape](#future-fixture-shape) |
-| future executable fixtures | not implemented; not executable here | See [Future executable fixtures](#future-executable-fixtures) |
-| runtime conformance report | later candidate; not implemented; not executable here | See [Runtime conformance report](#runtime-conformance-report) |
+- Current documentation criteria:
+  - Current status: active documentation criteria; not runtime results.
+  - Details: [Current documentation criteria](#current-documentation-criteria).
+- Internal smoke target:
+  - Current status: planned/documented; not executable here.
+  - Details: [Internal smoke target](#internal-smoke-target).
+- Future fixture shape:
+  - Current status: candidate future format; not executable here.
+  - Details: [Future fixture shape](#future-fixture-shape).
+- Future executable fixtures:
+  - Current status: not implemented; not executable here.
+  - Details: [Future executable fixtures](#future-executable-fixtures).
+- Runtime conformance report:
+  - Current status: later candidate; not implemented; not executable here.
+  - Details: [Runtime conformance report](#runtime-conformance-report).
 
 <a id="current-documentation-criteria"></a>
 ### Current documentation criteria
@@ -196,36 +204,62 @@ Exact assertion detail stays with these owners:
 
 These scenario IDs are compact documentation criteria for future fixture planning. They are not fixture bodies, current runtime results, generated runtime objects, or an implementation plan. Use the owner links above for exact branch, storage, access, artifact, security, and close-readiness contracts.
 
-| Scenario ID | Details |
-|---|---|
-| `MVP-ACTIVE-registered-surface-mismatch-blocks-mutation` | See [registered surface mismatch](#scenario-mvp-active-registered-surface-mismatch-blocks-mutation) |
-| `MVP-ACTIVE-verified-local-surface-allows-owner-mutation` | See [verified local surface](#scenario-mvp-active-verified-local-surface-allows-owner-mutation) |
-| `MVP-ACTIVE-single-access-class-per-public-request` | See [single access class](#scenario-mvp-active-single-access-class-per-public-request) |
-| `MVP-ACTIVE-detective-display-capability-gated` | See [`detective` display](#scenario-mvp-active-detective-display-capability-gated) |
-| `MVP-ACTIVE-shaping-readiness-gap-blocks-or-asks` | See [shaping readiness gap](#scenario-mvp-active-shaping-readiness-gap-blocks-or-asks) |
-| `MVP-ACTIVE-project-state-version-stale-mutation-rejected` | See [stale mutation](#scenario-mvp-active-project-state-version-stale-mutation-rejected) |
-| `MVP-ACTIVE-dry-run-pre-commit-failure-rejected` | See [`dry_run` pre-commit failure](#scenario-mvp-active-dry-run-pre-commit-failure-rejected) |
-| `MVP-ACTIVE-status-close-blockers-read-only` | See [read-only close blockers](#scenario-mvp-active-status-close-blockers-read-only) |
-| `MVP-ACTIVE-sensitive-approval-records-sensitive-action-scope` | See [sensitive approval scope](#scenario-mvp-active-sensitive-approval-records-sensitive-action-scope) |
-| `MVP-ACTIVE-prepare-write-requires-compatible-scope-and-approval` | See [`prepare_write` compatibility](#scenario-mvp-active-prepare-write-requires-compatible-scope-and-approval) |
-| `MVP-ACTIVE-authorized-attempt-scope-product-file-write-only` | See [`AuthorizedAttemptScope`](#scenario-mvp-active-authorized-attempt-scope-product-file-write-only) |
-| `MVP-ACTIVE-record-run-consumes-write-authorization-once` | See [single-use Write Authorization](#scenario-mvp-active-record-run-consumes-write-authorization-once) |
-| `MVP-ACTIVE-stage-artifact-temporary-handle-only` | See [temporary staged handle](#scenario-mvp-active-stage-artifact-temporary-handle-only) |
-| `MVP-ACTIVE-record-run-artifact-input-validation-order` | See [artifact input validation order](#scenario-mvp-active-record-run-artifact-input-validation-order) |
-| `MVP-ACTIVE-record-run-promotes-staged-artifact-to-artifact-ref` | See [staged artifact promotion](#scenario-mvp-active-record-run-promotes-staged-artifact-to-artifact-ref) |
-| `MVP-ACTIVE-record-run-rejects-staged-artifact-surface-instance-mismatch` | See [staged artifact mismatch](#scenario-mvp-active-record-run-rejects-staged-artifact-surface-instance-mismatch) |
-| `MVP-ACTIVE-record-run-links-existing-artifact-without-registering-bytes` | See [existing artifact link](#scenario-mvp-active-record-run-links-existing-artifact-without-registering-bytes) |
-| `MVP-ACTIVE-captured-artifact-rejected-in-active-mvp` | See [captured artifact rejection](#scenario-mvp-active-captured-artifact-rejected-in-active-mvp) |
-| `MVP-ACTIVE-close-task-complete-stale-state-version-rejected` | See [stale close state](#scenario-mvp-active-close-task-complete-stale-state-version-rejected) |
-| `MVP-ACTIVE-close-task-complete-stale-write-authorization-basis-rejected` | See [stale Write Authorization basis](#scenario-mvp-active-close-task-complete-stale-write-authorization-basis-rejected) |
-| `MVP-ACTIVE-close-task-blocks-current-write-compatibility` | See [write compatibility blocker](#scenario-mvp-active-close-task-blocks-current-write-compatibility) |
-| `MVP-ACTIVE-close-task-blocks-evidence-insufficient` | See [evidence blocker](#scenario-mvp-active-close-task-blocks-evidence-insufficient) |
-| `MVP-ACTIVE-close-task-blocks-required-artifact-unavailable` | See [artifact availability blocker](#scenario-mvp-active-close-task-blocks-required-artifact-unavailable) |
-| `MVP-ACTIVE-close-task-blocks-final-acceptance-missing` | See [final acceptance blocker](#scenario-mvp-active-close-task-blocks-final-acceptance-missing) |
-| `MVP-ACTIVE-close-task-blocks-visible-unaccepted-residual-risk` | See [residual risk blocker](#scenario-mvp-active-close-task-blocks-visible-unaccepted-residual-risk) |
-| `MVP-ACTIVE-close-task-check-read-only` | See [read-only close check](#scenario-mvp-active-close-task-check-read-only) |
-| `MVP-ACTIVE-close-task-state-effecting-dry-run-preview` | See [state-effecting close dry-run](#scenario-mvp-active-close-task-state-effecting-dry-run-preview) |
-| `MVP-ACTIVE-close-task-supersede-one-state-version` | See [supersede state version](#scenario-mvp-active-close-task-supersede-one-state-version) |
+- `MVP-ACTIVE-registered-surface-mismatch-blocks-mutation`
+  See [registered surface mismatch](#scenario-mvp-active-registered-surface-mismatch-blocks-mutation).
+- `MVP-ACTIVE-verified-local-surface-allows-owner-mutation`
+  See [verified local surface](#scenario-mvp-active-verified-local-surface-allows-owner-mutation).
+- `MVP-ACTIVE-single-access-class-per-public-request`
+  See [single access class](#scenario-mvp-active-single-access-class-per-public-request).
+- `MVP-ACTIVE-detective-display-capability-gated`
+  See [`detective` display](#scenario-mvp-active-detective-display-capability-gated).
+- `MVP-ACTIVE-shaping-readiness-gap-blocks-or-asks`
+  See [shaping readiness gap](#scenario-mvp-active-shaping-readiness-gap-blocks-or-asks).
+- `MVP-ACTIVE-project-state-version-stale-mutation-rejected`
+  See [stale mutation](#scenario-mvp-active-project-state-version-stale-mutation-rejected).
+- `MVP-ACTIVE-dry-run-pre-commit-failure-rejected`
+  See [`dry_run` pre-commit failure](#scenario-mvp-active-dry-run-pre-commit-failure-rejected).
+- `MVP-ACTIVE-status-close-blockers-read-only`
+  See [read-only close blockers](#scenario-mvp-active-status-close-blockers-read-only).
+- `MVP-ACTIVE-sensitive-approval-records-sensitive-action-scope`
+  See [sensitive approval scope](#scenario-mvp-active-sensitive-approval-records-sensitive-action-scope).
+- `MVP-ACTIVE-prepare-write-requires-compatible-scope-and-approval`
+  See [`prepare_write` compatibility](#scenario-mvp-active-prepare-write-requires-compatible-scope-and-approval).
+- `MVP-ACTIVE-authorized-attempt-scope-product-file-write-only`
+  See [`AuthorizedAttemptScope`](#scenario-mvp-active-authorized-attempt-scope-product-file-write-only).
+- `MVP-ACTIVE-record-run-consumes-write-authorization-once`
+  See [single-use Write Authorization](#scenario-mvp-active-record-run-consumes-write-authorization-once).
+- `MVP-ACTIVE-stage-artifact-temporary-handle-only`
+  See [temporary staged handle](#scenario-mvp-active-stage-artifact-temporary-handle-only).
+- `MVP-ACTIVE-record-run-artifact-input-validation-order`
+  See [artifact input validation order](#scenario-mvp-active-record-run-artifact-input-validation-order).
+- `MVP-ACTIVE-record-run-promotes-staged-artifact-to-artifact-ref`
+  See [staged artifact promotion](#scenario-mvp-active-record-run-promotes-staged-artifact-to-artifact-ref).
+- `MVP-ACTIVE-record-run-rejects-staged-artifact-surface-instance-mismatch`
+  See [staged artifact mismatch](#scenario-mvp-active-record-run-rejects-staged-artifact-surface-instance-mismatch).
+- `MVP-ACTIVE-record-run-links-existing-artifact-without-registering-bytes`
+  See [existing artifact link](#scenario-mvp-active-record-run-links-existing-artifact-without-registering-bytes).
+- `MVP-ACTIVE-captured-artifact-rejected-in-active-mvp`
+  See [captured artifact rejection](#scenario-mvp-active-captured-artifact-rejected-in-active-mvp).
+- `MVP-ACTIVE-close-task-complete-stale-state-version-rejected`
+  See [stale close state](#scenario-mvp-active-close-task-complete-stale-state-version-rejected).
+- `MVP-ACTIVE-close-task-complete-stale-write-authorization-basis-rejected`
+  See [stale Write Authorization basis](#scenario-mvp-active-close-task-complete-stale-write-authorization-basis-rejected).
+- `MVP-ACTIVE-close-task-blocks-current-write-compatibility`
+  See [write compatibility blocker](#scenario-mvp-active-close-task-blocks-current-write-compatibility).
+- `MVP-ACTIVE-close-task-blocks-evidence-insufficient`
+  See [evidence blocker](#scenario-mvp-active-close-task-blocks-evidence-insufficient).
+- `MVP-ACTIVE-close-task-blocks-required-artifact-unavailable`
+  See [artifact availability blocker](#scenario-mvp-active-close-task-blocks-required-artifact-unavailable).
+- `MVP-ACTIVE-close-task-blocks-final-acceptance-missing`
+  See [final acceptance blocker](#scenario-mvp-active-close-task-blocks-final-acceptance-missing).
+- `MVP-ACTIVE-close-task-blocks-visible-unaccepted-residual-risk`
+  See [residual risk blocker](#scenario-mvp-active-close-task-blocks-visible-unaccepted-residual-risk).
+- `MVP-ACTIVE-close-task-check-read-only`
+  See [read-only close check](#scenario-mvp-active-close-task-check-read-only).
+- `MVP-ACTIVE-close-task-state-effecting-dry-run-preview`
+  See [state-effecting close dry-run](#scenario-mvp-active-close-task-state-effecting-dry-run-preview).
+- `MVP-ACTIVE-close-task-supersede-one-state-version`
+  See [supersede state version](#scenario-mvp-active-close-task-supersede-one-state-version).
 
 <a id="scenario-mvp-active-registered-surface-mismatch-blocks-mutation"></a>
 ### `MVP-ACTIVE-registered-surface-mismatch-blocks-mutation`

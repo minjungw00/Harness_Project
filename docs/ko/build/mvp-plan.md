@@ -64,15 +64,23 @@
 
 유지보수자는 구현을 시작하기 전에 각 항목에 대해 첫 서버 조각 수락, 이름 붙은 영향이 있는 차단, 이름 붙은 영향이 있는 보류 중 하나를 기록해야 합니다.
 
-| 결정 항목 | 구현 전 필요한 결과 |
-|---|---|
-| 빌드 인계 | 유지보수자가 이 문서를 구현 계획의 활성 빌드 진입점으로 확인합니다. |
-| 현재 MVP 범위 | 유지보수자가 [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md)의 경계를 수락하거나, 해결되지 않은 범위 영향을 이름 붙입니다. |
-| API와 스키마 | 유지보수자가 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md), 영향을 받는 메서드 담당 문서, 필요한 API 스키마 담당 문서의 해당 조각을 수락합니다. |
-| 저장 효과 | 런타임 저장 파일, DDL, 아티팩트 저장소를 만들기 전에 유지보수자가 [`../reference/storage-effects.md`](../reference/storage-effects.md)의 해당 조각을 수락합니다. |
-| 보안과 런타임 경계 | 유지보수자가 [`../reference/security.md`](../reference/security.md)와 [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md)의 관련 주장과 비주장을 수락합니다. |
-| 스모크 목표 | 유지보수자가 첫 내부 스모크 목표를 적합성 주장이 아니라 구현 계획 목표로 수락합니다. |
-| 미룬 자료 | 담당 문서에서 승격하지 않은 이후 후보가 첫 서버 조각에 필요하지 않음을 유지보수자가 확인합니다. |
+- 빌드 인계:
+  - 유지보수자가 이 문서를 구현 계획의 활성 빌드 진입점으로 확인합니다.
+- 현재 MVP 범위:
+  - 유지보수자가 [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md)의 경계를 수락하거나, 해결되지 않은 범위 영향을 이름 붙입니다.
+- API와 스키마:
+  - 유지보수자가 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md)의 해당 조각을 수락합니다.
+  - 영향을 받는 메서드 담당 문서와 필요한 API 스키마 담당 문서도 함께 수락합니다.
+- 저장 효과:
+  - 유지보수자가 [`../reference/storage-effects.md`](../reference/storage-effects.md)의 해당 조각을 수락합니다.
+  - 이 수락은 런타임 저장 파일, DDL, 아티팩트 저장소를 만들기 전에 필요합니다.
+- 보안과 런타임 경계:
+  - 유지보수자가 [`../reference/security.md`](../reference/security.md)의 관련 주장과 비주장을 수락합니다.
+  - [`../reference/runtime-boundaries.md`](../reference/runtime-boundaries.md)의 관련 경계도 함께 수락합니다.
+- 스모크 목표:
+  - 유지보수자가 첫 내부 스모크 목표를 적합성 주장이 아니라 구현 계획 목표로 수락합니다.
+- 미룬 자료:
+  - 담당 문서에서 승격하지 않은 이후 후보가 첫 서버 조각에 필요하지 않음을 유지보수자가 확인합니다.
 
 ## 문서 전용 경계
 

@@ -10,13 +10,21 @@
 
 ## 적합성 항목 요약
 
-| 항목 | 현재 상태 | 상세 |
-|---|---|---|
-| 현재 문서 기준 | 활성 문서 기준이며 런타임 결과가 아님 | [현재 문서 기준](#current-documentation-criteria) 참조 |
-| 내부 스모크 목표 | 계획 또는 문서화됨, 여기서는 실행 불가 | [내부 스모크 목표](#internal-smoke-target) 참조 |
-| 향후 픽스처 형식 | 향후 후보 형식이며 여기서는 실행 불가 | [향후 픽스처 형식](#future-fixture-shape) 참조 |
-| 향후 실행 가능한 픽스처 | 구현되지 않았으며 여기서는 실행 불가 | [향후 실행 가능한 픽스처](#future-executable-fixtures) 참조 |
-| 런타임 적합성 보고 | 이후 후보이고 구현되지 않았으며 여기서는 실행 불가 | [런타임 적합성 보고](#runtime-conformance-report) 참조 |
+- 현재 문서 기준:
+  - 현재 상태: 활성 문서 기준이며 런타임 결과가 아닙니다.
+  - 세부사항: [현재 문서 기준](#current-documentation-criteria)을 참고합니다.
+- 내부 스모크 목표:
+  - 현재 상태: 계획 또는 문서화된 항목이며 여기서는 실행할 수 없습니다.
+  - 세부사항: [내부 스모크 목표](#internal-smoke-target)를 참고합니다.
+- 향후 픽스처 형식:
+  - 현재 상태: 향후 후보 형식이며 여기서는 실행할 수 없습니다.
+  - 세부사항: [향후 픽스처 형식](#future-fixture-shape)을 참고합니다.
+- 향후 실행 가능한 픽스처:
+  - 현재 상태: 구현되지 않았으며 여기서는 실행할 수 없습니다.
+  - 세부사항: [향후 실행 가능한 픽스처](#future-executable-fixtures)를 참고합니다.
+- 런타임 적합성 보고:
+  - 현재 상태: 이후 후보이며 구현되지 않았고 여기서는 실행할 수 없습니다.
+  - 세부사항: [런타임 적합성 보고](#runtime-conformance-report)를 참고합니다.
 
 <a id="current-documentation-criteria"></a>
 ### 현재 문서 기준
@@ -196,36 +204,62 @@
 
 아래 `scenario_id`는 향후 픽스처 계획을 위한 작은 문서 기준입니다. 픽스처 본문, 현재 런타임 결과, 생성된 런타임 객체, 구현 계획이 아닙니다. 정확한 분기, 저장, 접근, 아티팩트, 보안, 닫기 준비 상태 계약은 위 담당 문서 링크를 사용합니다.
 
-| 시나리오 ID | 세부사항 |
-|---|---|
-| `MVP-ACTIVE-registered-surface-mismatch-blocks-mutation` | [등록된 접점 불일치](#scenario-mvp-active-registered-surface-mismatch-blocks-mutation) 참고 |
-| `MVP-ACTIVE-verified-local-surface-allows-owner-mutation` | [확인된 로컬 접점](#scenario-mvp-active-verified-local-surface-allows-owner-mutation) 참고 |
-| `MVP-ACTIVE-single-access-class-per-public-request` | [단일 접근 등급](#scenario-mvp-active-single-access-class-per-public-request) 참고 |
-| `MVP-ACTIVE-detective-display-capability-gated` | [`detective` 표시](#scenario-mvp-active-detective-display-capability-gated) 참고 |
-| `MVP-ACTIVE-shaping-readiness-gap-blocks-or-asks` | [구체화 준비 공백](#scenario-mvp-active-shaping-readiness-gap-blocks-or-asks) 참고 |
-| `MVP-ACTIVE-project-state-version-stale-mutation-rejected` | [오래된 상태 변경](#scenario-mvp-active-project-state-version-stale-mutation-rejected) 참고 |
-| `MVP-ACTIVE-dry-run-pre-commit-failure-rejected` | [`dry_run` 커밋 전 실패](#scenario-mvp-active-dry-run-pre-commit-failure-rejected) 참고 |
-| `MVP-ACTIVE-status-close-blockers-read-only` | [읽기 전용 닫기 차단 사유](#scenario-mvp-active-status-close-blockers-read-only) 참고 |
-| `MVP-ACTIVE-sensitive-approval-records-sensitive-action-scope` | [민감 동작 승인 범위](#scenario-mvp-active-sensitive-approval-records-sensitive-action-scope) 참고 |
-| `MVP-ACTIVE-prepare-write-requires-compatible-scope-and-approval` | [`prepare_write` 호환성](#scenario-mvp-active-prepare-write-requires-compatible-scope-and-approval) 참고 |
-| `MVP-ACTIVE-authorized-attempt-scope-product-file-write-only` | [`AuthorizedAttemptScope`](#scenario-mvp-active-authorized-attempt-scope-product-file-write-only) 참고 |
-| `MVP-ACTIVE-record-run-consumes-write-authorization-once` | [1회용 Write Authorization](#scenario-mvp-active-record-run-consumes-write-authorization-once) 참고 |
-| `MVP-ACTIVE-stage-artifact-temporary-handle-only` | [임시 스테이징 핸들](#scenario-mvp-active-stage-artifact-temporary-handle-only) 참고 |
-| `MVP-ACTIVE-record-run-artifact-input-validation-order` | [아티팩트 입력 검증 순서](#scenario-mvp-active-record-run-artifact-input-validation-order) 참고 |
-| `MVP-ACTIVE-record-run-promotes-staged-artifact-to-artifact-ref` | [스테이징된 아티팩트 승격](#scenario-mvp-active-record-run-promotes-staged-artifact-to-artifact-ref) 참고 |
-| `MVP-ACTIVE-record-run-rejects-staged-artifact-surface-instance-mismatch` | [스테이징된 아티팩트 불일치](#scenario-mvp-active-record-run-rejects-staged-artifact-surface-instance-mismatch) 참고 |
-| `MVP-ACTIVE-record-run-links-existing-artifact-without-registering-bytes` | [기존 아티팩트 연결](#scenario-mvp-active-record-run-links-existing-artifact-without-registering-bytes) 참고 |
-| `MVP-ACTIVE-captured-artifact-rejected-in-active-mvp` | [캡처 아티팩트 거절](#scenario-mvp-active-captured-artifact-rejected-in-active-mvp) 참고 |
-| `MVP-ACTIVE-close-task-complete-stale-state-version-rejected` | [오래된 닫기 상태](#scenario-mvp-active-close-task-complete-stale-state-version-rejected) 참고 |
-| `MVP-ACTIVE-close-task-complete-stale-write-authorization-basis-rejected` | [오래된 Write Authorization 근거](#scenario-mvp-active-close-task-complete-stale-write-authorization-basis-rejected) 참고 |
-| `MVP-ACTIVE-close-task-blocks-current-write-compatibility` | [쓰기 호환성 차단](#scenario-mvp-active-close-task-blocks-current-write-compatibility) 참고 |
-| `MVP-ACTIVE-close-task-blocks-evidence-insufficient` | [증거 차단](#scenario-mvp-active-close-task-blocks-evidence-insufficient) 참고 |
-| `MVP-ACTIVE-close-task-blocks-required-artifact-unavailable` | [아티팩트 가용성 차단](#scenario-mvp-active-close-task-blocks-required-artifact-unavailable) 참고 |
-| `MVP-ACTIVE-close-task-blocks-final-acceptance-missing` | [최종 수락 차단](#scenario-mvp-active-close-task-blocks-final-acceptance-missing) 참고 |
-| `MVP-ACTIVE-close-task-blocks-visible-unaccepted-residual-risk` | [잔여 위험 차단](#scenario-mvp-active-close-task-blocks-visible-unaccepted-residual-risk) 참고 |
-| `MVP-ACTIVE-close-task-check-read-only` | [읽기 전용 닫기 확인](#scenario-mvp-active-close-task-check-read-only) 참고 |
-| `MVP-ACTIVE-close-task-state-effecting-dry-run-preview` | [상태 효과가 있는 닫기 `dry_run`](#scenario-mvp-active-close-task-state-effecting-dry-run-preview) 참고 |
-| `MVP-ACTIVE-close-task-supersede-one-state-version` | [`supersede` 상태 버전](#scenario-mvp-active-close-task-supersede-one-state-version) 참고 |
+- `MVP-ACTIVE-registered-surface-mismatch-blocks-mutation`
+  [등록된 접점 불일치](#scenario-mvp-active-registered-surface-mismatch-blocks-mutation)를 참고합니다.
+- `MVP-ACTIVE-verified-local-surface-allows-owner-mutation`
+  [확인된 로컬 접점](#scenario-mvp-active-verified-local-surface-allows-owner-mutation)을 참고합니다.
+- `MVP-ACTIVE-single-access-class-per-public-request`
+  [단일 접근 등급](#scenario-mvp-active-single-access-class-per-public-request)을 참고합니다.
+- `MVP-ACTIVE-detective-display-capability-gated`
+  [`detective` 표시](#scenario-mvp-active-detective-display-capability-gated)를 참고합니다.
+- `MVP-ACTIVE-shaping-readiness-gap-blocks-or-asks`
+  [구체화 준비 공백](#scenario-mvp-active-shaping-readiness-gap-blocks-or-asks)을 참고합니다.
+- `MVP-ACTIVE-project-state-version-stale-mutation-rejected`
+  [오래된 상태 변경](#scenario-mvp-active-project-state-version-stale-mutation-rejected)을 참고합니다.
+- `MVP-ACTIVE-dry-run-pre-commit-failure-rejected`
+  [`dry_run` 커밋 전 실패](#scenario-mvp-active-dry-run-pre-commit-failure-rejected)를 참고합니다.
+- `MVP-ACTIVE-status-close-blockers-read-only`
+  [읽기 전용 닫기 차단 사유](#scenario-mvp-active-status-close-blockers-read-only)를 참고합니다.
+- `MVP-ACTIVE-sensitive-approval-records-sensitive-action-scope`
+  [민감 동작 승인 범위](#scenario-mvp-active-sensitive-approval-records-sensitive-action-scope)를 참고합니다.
+- `MVP-ACTIVE-prepare-write-requires-compatible-scope-and-approval`
+  [`prepare_write` 호환성](#scenario-mvp-active-prepare-write-requires-compatible-scope-and-approval)을 참고합니다.
+- `MVP-ACTIVE-authorized-attempt-scope-product-file-write-only`
+  [`AuthorizedAttemptScope`](#scenario-mvp-active-authorized-attempt-scope-product-file-write-only)를 참고합니다.
+- `MVP-ACTIVE-record-run-consumes-write-authorization-once`
+  [1회용 Write Authorization](#scenario-mvp-active-record-run-consumes-write-authorization-once)을 참고합니다.
+- `MVP-ACTIVE-stage-artifact-temporary-handle-only`
+  [임시 스테이징 핸들](#scenario-mvp-active-stage-artifact-temporary-handle-only)을 참고합니다.
+- `MVP-ACTIVE-record-run-artifact-input-validation-order`
+  [아티팩트 입력 검증 순서](#scenario-mvp-active-record-run-artifact-input-validation-order)를 참고합니다.
+- `MVP-ACTIVE-record-run-promotes-staged-artifact-to-artifact-ref`
+  [스테이징된 아티팩트 승격](#scenario-mvp-active-record-run-promotes-staged-artifact-to-artifact-ref)을 참고합니다.
+- `MVP-ACTIVE-record-run-rejects-staged-artifact-surface-instance-mismatch`
+  [스테이징된 아티팩트 불일치](#scenario-mvp-active-record-run-rejects-staged-artifact-surface-instance-mismatch)를 참고합니다.
+- `MVP-ACTIVE-record-run-links-existing-artifact-without-registering-bytes`
+  [기존 아티팩트 연결](#scenario-mvp-active-record-run-links-existing-artifact-without-registering-bytes)을 참고합니다.
+- `MVP-ACTIVE-captured-artifact-rejected-in-active-mvp`
+  [캡처 아티팩트 거절](#scenario-mvp-active-captured-artifact-rejected-in-active-mvp)을 참고합니다.
+- `MVP-ACTIVE-close-task-complete-stale-state-version-rejected`
+  [오래된 닫기 상태](#scenario-mvp-active-close-task-complete-stale-state-version-rejected)를 참고합니다.
+- `MVP-ACTIVE-close-task-complete-stale-write-authorization-basis-rejected`
+  [오래된 Write Authorization 근거](#scenario-mvp-active-close-task-complete-stale-write-authorization-basis-rejected)를 참고합니다.
+- `MVP-ACTIVE-close-task-blocks-current-write-compatibility`
+  [쓰기 호환성 차단](#scenario-mvp-active-close-task-blocks-current-write-compatibility)을 참고합니다.
+- `MVP-ACTIVE-close-task-blocks-evidence-insufficient`
+  [증거 차단](#scenario-mvp-active-close-task-blocks-evidence-insufficient)을 참고합니다.
+- `MVP-ACTIVE-close-task-blocks-required-artifact-unavailable`
+  [아티팩트 가용성 차단](#scenario-mvp-active-close-task-blocks-required-artifact-unavailable)을 참고합니다.
+- `MVP-ACTIVE-close-task-blocks-final-acceptance-missing`
+  [최종 수락 차단](#scenario-mvp-active-close-task-blocks-final-acceptance-missing)을 참고합니다.
+- `MVP-ACTIVE-close-task-blocks-visible-unaccepted-residual-risk`
+  [잔여 위험 차단](#scenario-mvp-active-close-task-blocks-visible-unaccepted-residual-risk)을 참고합니다.
+- `MVP-ACTIVE-close-task-check-read-only`
+  [읽기 전용 닫기 확인](#scenario-mvp-active-close-task-check-read-only)을 참고합니다.
+- `MVP-ACTIVE-close-task-state-effecting-dry-run-preview`
+  [상태 효과가 있는 닫기 `dry_run`](#scenario-mvp-active-close-task-state-effecting-dry-run-preview)을 참고합니다.
+- `MVP-ACTIVE-close-task-supersede-one-state-version`
+  [`supersede` 상태 버전](#scenario-mvp-active-close-task-supersede-one-state-version)을 참고합니다.
 
 <a id="scenario-mvp-active-registered-surface-mismatch-blocks-mutation"></a>
 ### `MVP-ACTIVE-registered-surface-mismatch-blocks-mutation`

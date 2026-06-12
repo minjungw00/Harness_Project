@@ -6,23 +6,32 @@ This document describes future Harness Server behavior for planning and review. 
 
 This document owns:
 
-| This document owns | Boundary |
-|---|---|
-| Public `ErrorCode` identifiers | The public code set, public meanings, and which public path may carry each code. |
-| Error precedence | How to choose `errors[0]` when a response branch carries more than one public error. |
-| Error vs blocker routing | Whether a condition belongs in `ToolRejectedResponse.errors[]`, a method-specific blocked result, or dry-run preview data. |
-| `STATE_VERSION_CONFLICT` | Public stale-state and idempotency-conflict behavior. |
-| User-facing labels | Display guidance for public errors. |
+- Public `ErrorCode` identifiers: the public code set, public meanings, and allowed public paths.
+- Error precedence: how to choose `errors[0]` when a response branch carries more than one public error.
+- Error vs blocker routing: where a condition belongs across rejected responses, blocked results, and dry-run previews.
+- `STATE_VERSION_CONFLICT`: public stale-state and idempotency-conflict behavior.
+- User-facing labels: display guidance for public errors.
 
 This document does not own:
 
-| Not owned here | Owner |
-|---|---|
-| Method payload schemas, response field shapes, and common envelopes | [API Schema Core](schema-core.md), method owner documents routed from [MVP API](mvp-api.md), and the API schema owners. |
-| Core gates, user judgments, and close-readiness order | [Core Model](../core-model.md), [User-judgment methods](method-user-judgment.md), and [Close-task method](method-close-task.md). |
-| `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and value-set field definitions | [API State Schemas](schema-state.md), [API Schema Core](schema-core.md), and [API Value Sets](schema-value-sets.md). |
-| Storage rows, replay rows, DDL, locks, migrations, and storage effects | [Storage Records](../storage-records.md), [Storage Effects](../storage-effects.md), and [Storage Versioning](../storage-versioning.md). |
-| Security guarantee wording and access-boundary claims | [Security](../security.md). |
+- Method payload schemas, response field shapes, and common envelopes:
+  - [API Schema Core](schema-core.md)
+  - method owner documents routed from [MVP API](mvp-api.md)
+  - API schema owners
+- Core gates, user judgments, and close-readiness order:
+  - [Core Model](../core-model.md)
+  - [User-judgment methods](method-user-judgment.md)
+  - [Close-task method](method-close-task.md)
+- `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and value-set field definitions:
+  - [API State Schemas](schema-state.md)
+  - [API Schema Core](schema-core.md)
+  - [API Value Sets](schema-value-sets.md)
+- Storage rows, replay rows, DDL, locks, migrations, and storage effects:
+  - [Storage Records](../storage-records.md)
+  - [Storage Effects](../storage-effects.md)
+  - [Storage Versioning](../storage-versioning.md)
+- Security guarantee wording and access-boundary claims:
+  - [Security](../security.md)
 
 ## Error vs blocker
 
@@ -1020,13 +1029,16 @@ Use instead:
 
 ## `close_task` blocker mapping
 
-| `close_task` situation | Details |
-|---|---|
-| Preflight failure before close-readiness evaluation | [Preflight failure](#close-task-preflight-failure) |
-| `intent=check` with a valid read | [`intent=check`](#close-task-intent-check) |
-| `intent=complete` with close-readiness blockers | [`intent=complete` blocked](#close-task-intent-complete-blocked) |
-| `intent=complete` with no close blockers | [`intent=complete` closed](#close-task-intent-complete-closed) |
-| Invalid `intent=cancel` or `intent=supersede` terminal transition | [Invalid terminal transition](#close-task-invalid-terminal-transition) |
+- Preflight failure before close-readiness evaluation:
+  - [Preflight failure](#close-task-preflight-failure)
+- `intent=check` with a valid read:
+  - [`intent=check`](#close-task-intent-check)
+- `intent=complete` with close-readiness blockers:
+  - [`intent=complete` blocked](#close-task-intent-complete-blocked)
+- `intent=complete` with no close blockers:
+  - [`intent=complete` closed](#close-task-intent-complete-closed)
+- Invalid `intent=cancel` or `intent=supersede` terminal transition:
+  - [Invalid terminal transition](#close-task-invalid-terminal-transition)
 
 <a id="close-task-preflight-failure"></a>
 ### Preflight failure
@@ -1409,16 +1421,32 @@ Smallest unblocker:
 
 ## Owner links
 
-| Question | Owner |
-|---|---|
-| Public `ErrorCode` values, meanings, and precedence | This document. |
-| `ToolRejectedResponse`, `ToolDryRunResponse`, `ToolError`, `ToolResultBase`, `DryRunSummary`, and response branch shape | [API Schema Core](schema-core.md). |
-| Method behavior, branch selection, and method-specific payloads | Method owner documents routed from [MVP API](mvp-api.md). |
-| `WriteDecisionReason`, `CloseReadinessBlocker`, state summaries, and close-readiness data shapes | [API State Schemas](schema-state.md). |
-| `response_kind`, `effect_kind`, `PlannedBlocker.source_kind`, blocker categories, and enum-like API values | [API Value Sets](schema-value-sets.md). |
-| `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`, and artifact input shape | [API Artifact Schemas](schema-artifacts.md). |
-| Staged-handle storage validation and artifact promotion lifecycle | [Artifact Storage](../storage-artifacts.md). |
-| User judgments, sensitive-action approval, final acceptance, and residual-risk acceptance shapes | [API Judgment Schemas](schema-judgment.md) and [Core Model](../core-model.md). |
-| Full close-readiness evaluation order and non-substitution rules | [Core Model close readiness](../core-model.md#close_task). |
-| Storage effects, replay rows, state clocks, and DDL | [Storage Effects](../storage-effects.md), [Storage Versioning](../storage-versioning.md), and [Storage Records](../storage-records.md). |
-| Security guarantee wording and access-boundary claims | [Security](../security.md). |
+- Public `ErrorCode` values, meanings, and precedence:
+  - This document.
+- Response branch shape:
+  - [API Schema Core](schema-core.md)
+  - Applies to `ToolRejectedResponse`, `ToolDryRunResponse`, `ToolError`, `ToolResultBase`, and `DryRunSummary`.
+- Method behavior, branch selection, and method-specific payloads:
+  - method owner documents routed from [MVP API](mvp-api.md)
+- State and close-readiness data shapes:
+  - [API State Schemas](schema-state.md)
+  - Applies to `WriteDecisionReason`, `CloseReadinessBlocker`, and state summaries.
+- Enum-like API values:
+  - [API Value Sets](schema-value-sets.md)
+  - Applies to `response_kind`, `effect_kind`, `PlannedBlocker.source_kind`, and blocker categories.
+- Artifact input and reference shapes:
+  - [API Artifact Schemas](schema-artifacts.md)
+  - Applies to `ArtifactInput`, `ArtifactRef`, and `StagedArtifactHandle`.
+- Staged-handle storage validation and artifact promotion lifecycle:
+  - [Artifact Storage](../storage-artifacts.md)
+- User judgments, approvals, acceptance, and residual-risk acceptance shapes:
+  - [API Judgment Schemas](schema-judgment.md)
+  - [Core Model](../core-model.md)
+- Full close-readiness evaluation order and non-substitution rules:
+  - [Core Model close readiness](../core-model.md#close_task)
+- Storage effects, replay rows, state clocks, and DDL:
+  - [Storage Effects](../storage-effects.md)
+  - [Storage Versioning](../storage-versioning.md)
+  - [Storage Records](../storage-records.md)
+- Security guarantee wording and access-boundary claims:
+  - [Security](../security.md)

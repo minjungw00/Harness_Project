@@ -38,23 +38,40 @@
 
 다른 문서에는 1-2문장짜리 짧은 요약과 링크만 둘 수 있습니다. README, 경로 안내 문서, 유지보수 문서에 긴 계약 설명을 복사하지 않습니다. 같은 설명이 여러 파일에 있으면 담당 문서의 내용을 남기고, 나머지는 독자에게 보이는 결과와 담당 문서 링크로 줄입니다.
 
-세부사항을 반복하기 전에 아래 담당 문서를 먼저 확인합니다.
+세부사항을 반복하기 전에 아래 단일 담당 문서 경로를 먼저 확인합니다.
 
 | 주제 | 담당 문서 |
 |---|---|
 | 현재 MVP 경계와 현재/이후 상태 | [현재 MVP 범위](../reference/active-mvp-scope.md) |
-| API 메서드 계약 | [MVP API 경로 문서](../reference/api/mvp-api.md)와 그 문서가 나열하는 메서드 담당 문서 |
 | 공통 API 요청 래퍼와 응답 분기 | [API 코어 스키마](../reference/api/schema-core.md) |
-| 상태, 아티팩트, 판단, API 값 집합 스키마 | [API 상태 스키마](../reference/api/schema-state.md), [API 아티팩트 스키마](../reference/api/schema-artifacts.md), [API 판단 스키마](../reference/api/schema-judgment.md), [API 값 집합](../reference/api/schema-value-sets.md) |
 | 공개 오류 코드와 오류 경로 | [오류](../reference/api/errors.md) |
 | 저장 효과 | [저장 효과](../reference/storage-effects.md) |
 | 보안 보장과 접근 경계 표현 | [보안](../reference/security.md) |
-| 상태 보기 권한과 렌더링 템플릿 본문 | [상태 보기 권한 참조](../reference/projection-and-templates.md), [템플릿 본문](../reference/template-bodies.md) |
-| 접점별 사용 레시피와 커넥터 경계 | [접점별 사용 레시피](../use/surface-recipes.md), [에이전트 통합](../reference/agent-integration.md) |
 | 제품 정의 | [용어집](../reference/glossary.md) |
-| 이후 후보와 승격 경계 | [이후 후보 색인](../later/index.md), [현재 MVP 범위](../reference/active-mvp-scope.md) |
-| 번역과 한영 용어 작성 방식 | [번역 가이드](translation-guide.md)와 [용어 지도](../../terminology-map.yaml) |
 | 문서 검색 경로 | [doc-index.yaml](../../doc-index.yaml) |
+
+질문이 여러 담당 문서 경계를 건너면 아래 경로를 사용합니다.
+
+- API 메서드 계약:
+  - [MVP API 경로 문서](../reference/api/mvp-api.md)
+  - 그 문서가 나열하는 메서드 담당 문서
+- API 스키마 묶음:
+  - [API 상태 스키마](../reference/api/schema-state.md)
+  - [API 아티팩트 스키마](../reference/api/schema-artifacts.md)
+  - [API 판단 스키마](../reference/api/schema-judgment.md)
+  - [API 값 집합](../reference/api/schema-value-sets.md)
+- 상태 보기와 템플릿 담당 문서:
+  - [상태 보기 권한 참조](../reference/projection-and-templates.md)
+  - [템플릿 본문](../reference/template-bodies.md)
+- 접점과 커넥터 담당 문서:
+  - [접점별 사용 레시피](../use/surface-recipes.md)
+  - [에이전트 통합](../reference/agent-integration.md)
+- 이후 후보 경로:
+  - [이후 후보 색인](../later/index.md)
+  - [현재 MVP 범위](../reference/active-mvp-scope.md)
+- 번역과 한영 용어 작성 방식:
+  - [번역 가이드](translation-guide.md)
+  - [용어 지도](../../terminology-map.yaml)
 
 유지보수 문서는 작성 규칙과 점검을 담당합니다. API, 저장소, 스키마, 보안, 접근 등급, 닫기 준비 상태, 상태 보기, 런타임, 제품 계약의 두 번째 기준 문서가 되면 안 됩니다.
 

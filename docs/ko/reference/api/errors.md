@@ -4,23 +4,32 @@
 
 ## 이 문서가 담당하는 것
 
-| 이 문서가 담당하는 것 | 경계 |
-|---|---|
-| 공개 `ErrorCode` 식별자 | 공개 코드 집합, 공개 의미, 각 코드를 실을 수 있는 공개 경로입니다. |
-| 오류 우선순위 | 응답 분기에 공개 오류가 여러 개 있을 때 `errors[0]`을 고르는 방식입니다. |
-| 오류와 차단 사유 경로 | 조건이 `ToolRejectedResponse.errors[]`, 메서드별 차단 결과, `dry_run` 미리보기 데이터 중 어디에 속하는지입니다. |
-| `STATE_VERSION_CONFLICT` | 공개 오래된 상태와 멱등성 충돌 동작입니다. |
-| 사용자 표시 라벨 | 공개 오류를 화면에 설명하는 지침입니다. |
+- 공개 `ErrorCode` 식별자: 공개 코드 집합, 공개 의미, 각 코드를 실을 수 있는 공개 경로입니다.
+- 오류 우선순위: 응답 분기에 공개 오류가 여러 개 있을 때 `errors[0]`을 고르는 방식입니다.
+- 오류와 차단 사유 경로: 거부 응답, 차단 결과, `dry_run` 미리보기 중 조건이 속하는 곳입니다.
+- `STATE_VERSION_CONFLICT`: 공개 오래된 상태와 멱등성 충돌 동작입니다.
+- 사용자 표시 라벨: 공개 오류를 화면에 설명하는 지침입니다.
 
 ## 이 문서가 담당하지 않는 것
 
-| 여기서 담당하지 않는 것 | 담당 문서 |
-|---|---|
-| 메서드 요청 본문 스키마, 응답 필드 형태, 공통 요청/응답 래퍼 | [API 코어 스키마](schema-core.md), [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서, API 스키마 담당 문서입니다. |
-| Core 관문, 사용자 판단, 닫기 준비 상태 평가 순서 | [Core 모델](../core-model.md), [사용자 판단 메서드](method-user-judgment.md), [Task 닫기 메서드](method-close-task.md)입니다. |
-| `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 값 집합 필드 정의 | [API 상태 스키마](schema-state.md), [API 코어 스키마](schema-core.md), [API 값 집합](schema-value-sets.md)입니다. |
-| 저장소 행, 재실행 행, DDL, 잠금, 마이그레이션, 저장 효과 | [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md)입니다. |
-| 보안 보장 표현과 접근 경계 주장 | [보안](../security.md)입니다. |
+- 메서드 요청 본문 스키마, 응답 필드 형태, 공통 요청/응답 래퍼:
+  - [API 코어 스키마](schema-core.md)
+  - [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서
+  - API 스키마 담당 문서
+- Core 관문, 사용자 판단, 닫기 준비 상태 평가 순서:
+  - [Core 모델](../core-model.md)
+  - [사용자 판단 메서드](method-user-judgment.md)
+  - [Task 닫기 메서드](method-close-task.md)
+- `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 값 집합 필드 정의:
+  - [API 상태 스키마](schema-state.md)
+  - [API 코어 스키마](schema-core.md)
+  - [API 값 집합](schema-value-sets.md)
+- 저장소 행, 재실행 행, DDL, 잠금, 마이그레이션, 저장 효과:
+  - [저장소 기록](../storage-records.md)
+  - [저장 효과](../storage-effects.md)
+  - [저장소 버전 관리](../storage-versioning.md)
+- 보안 보장 표현과 접근 경계 주장:
+  - [보안](../security.md)
 
 ## 오류와 차단 사유
 
@@ -1016,13 +1025,16 @@
 
 ## `close_task` 차단 사유 매핑
 
-| `close_task` 상황 | 상세 |
-|---|---|
-| 닫기 준비 상태 평가 전 사전 확인 실패 | [사전 확인 실패](#close-task-preflight-failure) |
-| 유효한 읽기인 `intent=check` | [`intent=check`](#close-task-intent-check) |
-| 닫기 차단 사유를 찾은 `intent=complete` | [차단된 `intent=complete`](#close-task-intent-complete-blocked) |
-| 닫기 차단 사유가 없는 `intent=complete` | [닫힌 `intent=complete`](#close-task-intent-complete-closed) |
-| 유효하지 않은 `intent=cancel` 또는 `intent=supersede` 종료 전이 | [유효하지 않은 종료 전이](#close-task-invalid-terminal-transition) |
+- 닫기 준비 상태 평가 전 사전 확인 실패:
+  - [사전 확인 실패](#close-task-preflight-failure)
+- 유효한 읽기인 `intent=check`:
+  - [`intent=check`](#close-task-intent-check)
+- 닫기 차단 사유를 찾은 `intent=complete`:
+  - [차단된 `intent=complete`](#close-task-intent-complete-blocked)
+- 닫기 차단 사유가 없는 `intent=complete`:
+  - [닫힌 `intent=complete`](#close-task-intent-complete-closed)
+- 유효하지 않은 `intent=cancel` 또는 `intent=supersede` 종료 전이:
+  - [유효하지 않은 종료 전이](#close-task-invalid-terminal-transition)
 
 <a id="close-task-preflight-failure"></a>
 ### 사전 확인 실패
@@ -1406,16 +1418,32 @@
 
 ## 담당 문서 링크
 
-| 질문 | 담당 문서 |
-|---|---|
-| 공개 `ErrorCode` 값, 의미, 우선순위 | 이 문서입니다. |
-| `ToolRejectedResponse`, `ToolDryRunResponse`, `ToolError`, `ToolResultBase`, `DryRunSummary`, 응답 분기 형태 | [API 코어 스키마](schema-core.md)입니다. |
-| 메서드 동작, 분기 선택, 메서드별 요청 본문 | [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서입니다. |
-| `WriteDecisionReason`, `CloseReadinessBlocker`, 상태 요약, 닫기 준비 상태 데이터 형태 | [API 상태 스키마](schema-state.md)입니다. |
-| `response_kind`, `effect_kind`, `PlannedBlocker.source_kind`, 차단 사유 범주, enum 형태 API 값 | [API 값 집합](schema-value-sets.md)입니다. |
-| `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`, 아티팩트 입력 형태 | [API 아티팩트 스키마](schema-artifacts.md)입니다. |
-| 스테이징된 아티팩트 핸들 저장소 검증과 아티팩트 승격 생명주기 | [아티팩트 저장소](../storage-artifacts.md)입니다. |
-| 사용자 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락 형태 | [API 판단 스키마](schema-judgment.md)와 [Core 모델](../core-model.md)입니다. |
-| 전체 닫기 준비 상태 평가 순서와 비대체 규칙 | [Core 모델의 닫기 준비 상태](../core-model.md#close_task)입니다. |
-| 저장 효과, 재실행 행, 상태 시계, DDL | [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md), [저장소 기록](../storage-records.md)입니다. |
-| 보안 보장 표현과 접근 경계 주장 | [보안](../security.md)입니다. |
+- 공개 `ErrorCode` 값, 의미, 우선순위:
+  - 이 문서입니다.
+- 응답 분기 형태:
+  - [API 코어 스키마](schema-core.md)
+  - `ToolRejectedResponse`, `ToolDryRunResponse`, `ToolError`, `ToolResultBase`, `DryRunSummary`에 적용됩니다.
+- 메서드 동작, 분기 선택, 메서드별 요청 본문:
+  - [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서
+- 상태와 닫기 준비 상태 데이터 형태:
+  - [API 상태 스키마](schema-state.md)
+  - `WriteDecisionReason`, `CloseReadinessBlocker`, 상태 요약에 적용됩니다.
+- enum 형태 API 값:
+  - [API 값 집합](schema-value-sets.md)
+  - `response_kind`, `effect_kind`, `PlannedBlocker.source_kind`, 차단 사유 범주에 적용됩니다.
+- 아티팩트 입력과 참조 형태:
+  - [API 아티팩트 스키마](schema-artifacts.md)
+  - `ArtifactInput`, `ArtifactRef`, `StagedArtifactHandle`에 적용됩니다.
+- 스테이징된 아티팩트 핸들 저장소 검증과 아티팩트 승격 생명주기:
+  - [아티팩트 저장소](../storage-artifacts.md)
+- 사용자 판단, 승인, 수락, 잔여 위험 수락 형태:
+  - [API 판단 스키마](schema-judgment.md)
+  - [Core 모델](../core-model.md)
+- 전체 닫기 준비 상태 평가 순서와 비대체 규칙:
+  - [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
+- 저장 효과, 재실행 행, 상태 시계, DDL:
+  - [저장 효과](../storage-effects.md)
+  - [저장소 버전 관리](../storage-versioning.md)
+  - [저장소 기록](../storage-records.md)
+- 보안 보장 표현과 접근 경계 주장:
+  - [보안](../security.md)
