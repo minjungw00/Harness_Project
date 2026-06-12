@@ -1,1943 +1,859 @@
 version: 1
 metadata:
-  purpose: Route documentation retrieval by stable `doc_id`, owner family, and language.
-  documentation_metadata_only: true
+  purpose: "Machine-readable owner routing for the active Harness documentation set."
+  default_language: "en"
+  documentation_metadata: true
   runtime_config: false
-retrieval_rule:
-  load_one_language_per_doc_id: true
-  default_agent_language: en
-  allow_korean_when_user_context_is_korean: true
-  paired_docs_must_not_be_loaded_together: true
-  paired_docs_exception: translation_or_semantic_parity_review_only
-question_routes:
-  purpose: Route high-signal agent questions to one primary owner, with a supporting owner only when the question spans routing or availability boundaries.
-  routes:
-    - question: "Which document should an agent read first?"
-      canonical_owner_doc_id: agents.root
-      default_path: AGENTS.md
-      supporting_owner_doc_ids:
-        - docs.doc-index
-      route_note: "Read repository agent rules first, then use `docs/doc-index.yaml` for exact owner lookup."
-    - question: "Where is retrieval or route metadata maintained?"
-      canonical_owner_doc_id: docs.doc-index
-      default_path: docs/doc-index.yaml
-      route_note: "Machine-readable route metadata for `doc_id`, owner family, canonical ownership, related documents, and language paths."
-    - question: "Where is the baseline scope defined?"
-      canonical_owner_doc_id: reference.scope
-      default_path: docs/en/reference/scope.md
-      route_note: "Baseline scope and active/out-of-scope boundary."
-    - question: "Where is the baseline scope excluded scope defined?"
-      canonical_owner_doc_id: reference.scope
-      default_path: docs/en/reference/scope.md
-      route_note: "Scope owns included and excluded baseline scope items."
-    - question: "API examples use what scenario?"
-      canonical_owner_doc_id: reference.api.methods
-      default_path: docs/en/reference/api/methods.md
-      supporting_owner_doc_ids:
-        - maintain.authoring-guide
-        - maintain.checks
-      route_note: "API Methods owns the current account data export confirmation scenario summary; Authoring Guide owns durable example rules; Checks owns example scenario review."
-    - question: "Can API examples use documentation maintenance as the scenario?"
-      canonical_owner_doc_id: maintain.authoring-guide
-      default_path: docs/en/maintain/authoring-guide.md
-      supporting_owner_doc_ids:
-        - maintain.checks
-      route_note: "API examples must use durable product or user scenarios, not documentation maintenance, refactoring, route cleanup, section restructuring, or migration."
-    - question: "Where are API example consistency questions routed?"
-      canonical_owner_doc_id: maintain.checks
-      default_path: docs/en/maintain/checks.md
-      supporting_owner_doc_ids:
-        - maintain.authoring-guide
-        - reference.api.methods
-      route_note: "Checks owns API example internal-consistency review; Authoring Guide owns durable example and field-name rules; API Methods owns the shared scenario summary; affected method and schema owners own concrete example fields."
-    - question: "Where are field-name consistency questions routed?"
-      canonical_owner_doc_id: maintain.checks
-      default_path: docs/en/maintain/checks.md
-      supporting_owner_doc_ids:
-        - maintain.authoring-guide
-      route_note: "Checks owns example field-name consistency review; Authoring Guide owns the durable field-name rule. Concrete field definitions route to the affected method, schema, or storage owner."
-    - question: "Where is the active API method list?"
-      canonical_owner_doc_id: reference.api.methods
-      default_path: docs/en/reference/api/methods.md
-      supporting_owner_doc_ids:
-        - reference.api.schema-value-sets
-      route_note: "API Methods owns the active public method list and owner routing; API Value Sets owns exact method-name values."
-    - question: "`harness.intake` behavior"
-      canonical_owner_doc_id: reference.api.method-intake
-      default_path: docs/en/reference/api/method-intake.md
-      route_note: "`harness.intake` method behavior."
-    - question: "`harness.update_scope` behavior"
-      canonical_owner_doc_id: reference.api.method-update-scope
-      default_path: docs/en/reference/api/method-update-scope.md
-      route_note: "`harness.update_scope` method behavior."
-    - question: "`harness.status` behavior"
-      canonical_owner_doc_id: reference.api.method-status
-      default_path: docs/en/reference/api/method-status.md
-      route_note: "`harness.status` method behavior."
-    - question: "`harness.status` example state version rule"
-      canonical_owner_doc_id: reference.api.method-status
-      default_path: docs/en/reference/api/method-status.md
-      supporting_owner_doc_ids:
-        - maintain.checks
-      route_note: "`harness.status` owns its read-only state-version behavior and representative example snapshot; Checks owns API example internal-consistency review."
-    - question: "`harness.prepare_write` behavior"
-      canonical_owner_doc_id: reference.api.method-prepare-write
-      default_path: docs/en/reference/api/method-prepare-write.md
-      route_note: "`harness.prepare_write` method behavior."
-    - question: "`harness.prepare_write` sensitive approval"
-      canonical_owner_doc_id: reference.api.method-prepare-write
-      default_path: docs/en/reference/api/method-prepare-write.md
-      route_note: "`harness.prepare_write` owns the method requirement for separate sensitive-action approval before allowed Write Authorization."
-    - question: "`harness.prepare_write` payload fields"
-      canonical_owner_doc_id: reference.api.method-prepare-write
-      default_path: docs/en/reference/api/method-prepare-write.md
-      supporting_owner_doc_ids:
-        - reference.api.schema-core
-        - reference.api.schema-state
-        - reference.api.schema-judgment
-        - reference.api.schema-value-sets
-      route_note: "`harness.prepare_write` owns method-specific payload fields; shared `ToolEnvelope`, state, judgment, and value fields route to schema owners."
-    - question: "`harness.stage_artifact` behavior"
-      canonical_owner_doc_id: reference.api.method-stage-artifact
-      default_path: docs/en/reference/api/method-stage-artifact.md
-      route_note: "`harness.stage_artifact` method behavior."
-    - question: "`harness.record_run` behavior"
-      canonical_owner_doc_id: reference.api.method-record-run
-      default_path: docs/en/reference/api/method-record-run.md
-      route_note: "`harness.record_run` method behavior."
-    - question: "`harness.record_run` evidence behavior"
-      canonical_owner_doc_id: reference.api.method-record-run
-      default_path: docs/en/reference/api/method-record-run.md
-      supporting_owner_doc_ids:
-        - reference.storage-effects
-      route_note: "`harness.record_run` owns run/evidence method behavior; Storage Effects owns method-to-storage evidence effects and no-effect boundaries."
-    - question: "`harness.record_run` payload fields"
-      canonical_owner_doc_id: reference.api.method-record-run
-      default_path: docs/en/reference/api/method-record-run.md
-      supporting_owner_doc_ids:
-        - reference.api.schema-core
-        - reference.api.schema-state
-        - reference.api.schema-artifacts
-        - reference.api.schema-value-sets
-      route_note: "`harness.record_run` owns method-specific payload fields; shared `ToolEnvelope`, state, artifact, and value fields route to schema owners."
-    - question: "user judgment methods"
-      canonical_owner_doc_id: reference.api.method-user-judgment
-      default_path: docs/en/reference/api/method-user-judgment.md
-      route_note: "User judgment method behavior for `harness.request_user_judgment` and `harness.record_user_judgment`."
-    - question: "User judgment prompt ownership"
-      canonical_owner_doc_id: reference.api.method-user-judgment
-      default_path: docs/en/reference/api/method-user-judgment.md
-      supporting_owner_doc_ids:
-        - reference.core-model
-      route_note: "The user-judgment method owner owns prompt creation and recording behavior; Core Model owns user-owned judgment meaning and non-substitution rules."
-    - question: "`harness.close_task` behavior"
-      canonical_owner_doc_id: reference.api.method-close-task
-      default_path: docs/en/reference/api/method-close-task.md
-      route_note: "`harness.close_task` method behavior."
-    - question: "`harness.close_task` payload fields"
-      canonical_owner_doc_id: reference.api.method-close-task
-      default_path: docs/en/reference/api/method-close-task.md
-      supporting_owner_doc_ids:
-        - reference.api.schema-core
-        - reference.api.schema-state
-        - reference.api.schema-value-sets
-      route_note: "`harness.close_task` owns method-specific payload fields; shared `ToolEnvelope`, close-readiness state, and value fields route to schema owners."
-    - question: "Where are method response branch schemas defined?"
-      canonical_owner_doc_id: reference.api.schema-core
-      default_path: docs/en/reference/api/schema-core.md
-      supporting_owner_doc_ids:
-        - reference.api.schema-state
-        - reference.api.schema-artifacts
-        - reference.api.schema-judgment
-        - reference.api.schema-value-sets
-      route_note: "API Schema Core owns common response branches; nested state, artifact, judgment, and value fields route to their schema owners. Method owners own behavior, not shared schema bodies."
-    - question: "Is `STATE_VERSION_CONFLICT` a blocker code?"
-      canonical_owner_doc_id: reference.api.errors
-      default_path: docs/en/reference/api/errors.md
-      route_note: "Public error-code routing and blocker-code exclusions."
-    - question: "Is `CloseReadinessBlocker` a storage row?"
-      canonical_owner_doc_id: reference.storage-records
-      default_path: docs/en/reference/storage-records.md
-      route_note: "Storage row and DDL ownership; schema meaning remains with API State Schemas."
-    - question: "`complete` enum vs full meaning"
-      canonical_owner_doc_id: terminology.map
-      default_path: docs/terminology-map.yaml
-      supporting_owner_doc_ids:
-        - reference.glossary
-      route_note: "Terminology Map and Glossary disambiguate prose versus identifier usage. Open API Value Sets only when the follow-up asks for the exact `intent=complete` value contract."
-    - question: "When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`?"
-      canonical_owner_doc_id: reference.api.method-close-task
-      default_path: docs/en/reference/api/method-close-task.md
-      route_note: "Method branch selection for `harness.close_task`."
-    - question: 'How should "Full close-readiness evaluation order" be written in Korean?'
-      canonical_owner_doc_id: reference.glossary
-      default_path: docs/en/reference/glossary.md
-      supporting_owner_doc_ids:
-        - maintain.translation-guide
-      route_note: "Use `전체 닫기 준비 상태 평가 순서` for the full close-readiness evaluation order; do not load API Value Sets unless the question is about the literal `complete` intent value."
-    - question: "Artifact staging creates evidence?"
-      canonical_owner_doc_id: reference.storage-artifacts
-      default_path: docs/en/reference/storage-artifacts.md
-      supporting_owner_doc_ids:
-        - reference.storage-effects
-      route_note: "Artifact Storage owns staging lifecycle and evidence-authority boundaries; Storage Effects owns method storage effects and no-evidence staging effects."
-    - question: "Which document owns artifact promotion?"
-      canonical_owner_doc_id: reference.storage-artifacts
-      default_path: docs/en/reference/storage-artifacts.md
-      route_note: "Artifact staging, validation, promotion, linking, and body-read lifecycle."
-    - question: "Does the baseline scope provide OS sandboxing?"
-      canonical_owner_doc_id: reference.security
-      default_path: docs/en/reference/security.md
-      route_note: "Security claims, guarantee wording, and explicit security non-claims."
-    - question: "Which document owns `isolated` guarantee semantics?"
-      canonical_owner_doc_id: reference.security
-      default_path: docs/en/reference/security.md
-      supporting_owner_doc_ids:
-        - reference.scope
-      route_note: "Security owns `isolated` guarantee semantics and non-claims; Scope confirms baseline-scope availability."
-    - question: "Is `isolated` active in the baseline scope?"
-      canonical_owner_doc_id: reference.security
-      default_path: docs/en/reference/security.md
-      supporting_owner_doc_ids:
-        - reference.scope
-      route_note: "Security states current isolation non-claims; Scope states the current guarantee boundary."
-    - question: "Which document owns guarantee semantics?"
-      canonical_owner_doc_id: reference.security
-      default_path: docs/en/reference/security.md
-      route_note: "Security owns guarantee semantics and guarantee wording for `cooperative`, `detective`, `preventive`, and `isolated`."
-    - question: "Which document owns guarantee label values?"
-      canonical_owner_doc_id: reference.api.schema-value-sets
-      default_path: docs/en/reference/api/schema-value-sets.md
-      route_note: "Guarantee label value names only; guarantee semantics and isolation claims route to Security."
-    - question: "Where is `isolated` defined as a value?"
-      canonical_owner_doc_id: reference.api.schema-value-sets
-      default_path: docs/en/reference/api/schema-value-sets.md
-      supporting_owner_doc_ids:
-        - reference.security
-      route_note: "API Value Sets owns the `isolated` value entry; Security owns its guarantee meaning and non-claim boundary."
-    - question: "Where are access classes defined?"
-      canonical_owner_doc_id: reference.api.schema-value-sets
-      default_path: docs/en/reference/api/schema-value-sets.md
-      route_note: "Active `access_class` values."
-    - question: 'How should "close readiness" be written in Korean?'
-      canonical_owner_doc_id: terminology.map
-      default_path: docs/terminology-map.yaml
-      supporting_owner_doc_ids:
-        - reference.glossary
-        - maintain.translation-guide
-      route_note: "Terminology Map controls the Korean term; Glossary explains product meaning; Translation Guide controls natural Korean style."
-    - question: "Where is close readiness Korean terminology controlled?"
-      canonical_owner_doc_id: terminology.map
-      default_path: docs/terminology-map.yaml
-      supporting_owner_doc_ids:
-        - reference.glossary
-        - maintain.translation-guide
-      route_note: "Use `닫기 준비 상태` in reference prose and the paired glossary/translation guidance for context."
-    - question: "How should Korean close readiness terminology be written?"
-      canonical_owner_doc_id: terminology.map
-      default_path: docs/terminology-map.yaml
-      supporting_owner_doc_ids:
-        - reference.glossary
-        - maintain.translation-guide
-      route_note: "Use `닫기 준비 상태` in reference prose and `닫기 가능 여부` only for user-facing close-readiness wording."
-    - question: "Where are Korean prose and translation guidance controlled?"
-      canonical_owner_doc_id: maintain.translation-guide
-      default_path: docs/en/maintain/translation-guide.md
-      supporting_owner_doc_ids:
-        - terminology.map
-        - reference.glossary
-      route_note: "Translation Guide owns natural Korean prose and semantic-parity rules; Terminology Map owns machine-readable term controls; Glossary explains product term meaning and owner routing."
-    - question: "Is a reserved, profile-gated, or out-of-scope capability an active requirement?"
-      canonical_owner_doc_id: reference.scope
-      default_path: docs/en/reference/scope.md
-      supporting_owner_doc_ids:
-        - reference.security
-        - reference.api.schema-value-sets
-      route_note: "Scope owns the active boundary; security and value-set owners define exact guarantee or value meaning."
-    - question: "What does promotion-time owner update mean?"
-      canonical_owner_doc_id: reference.glossary
-      default_path: docs/en/reference/glossary.md
-      supporting_owner_doc_ids:
-        - reference.scope
-      route_note: "Glossary defines the term; Scope owns whether a capability is active."
-    - question: "Where does a storage effect question go?"
-      canonical_owner_doc_id: reference.storage-effects
-      default_path: docs/en/reference/storage-effects.md
-      route_note: "Method-to-storage effect semantics route to Storage Effects before narrower storage owners."
-    - question: "Which document owns storage effects?"
-      canonical_owner_doc_id: reference.storage-effects
-      default_path: docs/en/reference/storage-effects.md
-      route_note: "Storage Effects owns method-to-storage effect semantics and no-effect boundaries."
-    - question: "Where are storage record values defined?"
-      canonical_owner_doc_id: reference.storage-records
-      default_path: docs/en/reference/storage-records.md
-      route_note: "Storage Records owns storage-owned record values, status fields, record-column meaning, and storage-owned JSON placement."
-    - question: "Long table split rule"
-      canonical_owner_doc_id: maintain.authoring-guide
-      default_path: docs/en/maintain/authoring-guide.md
-      supporting_owner_doc_ids:
-        - maintain.checks
-      route_note: "Authoring Guide owns long Markdown table split guidance; Checks owns the table source-maintainability review."
-    - question: "When should a long Markdown table be split?"
-      canonical_owner_doc_id: maintain.authoring-guide
-      default_path: docs/en/maintain/authoring-guide.md
-      supporting_owner_doc_ids:
-        - maintain.checks
-      route_note: "Split a table when cells need lists, multiple conditions, multiple sentences, or source lines become hard to review."
-    - question: "Dense paragraph split rule"
-      canonical_owner_doc_id: maintain.authoring-guide
-      default_path: docs/en/maintain/authoring-guide.md
-      supporting_owner_doc_ids:
-        - maintain.checks
-      route_note: "Split dense reference prose when conditions, effects, exceptions, non-claims, or owner links are hidden in one paragraph."
-docs:
-  - doc_id: agents.root
-    status: active
-    family: root
-    paths:
-      shared: AGENTS.md
-    default_for_agent: shared
-    primary_role: repository_agent_rules
-    canonical_for:
-      - first_agent_reading_path
-      - repository_agent_rules
-      - documentation_editing_rules
-      - owner_lookup_entry_rule
-      - question_routes_before_broad_retrieval
-    owns:
-      - first-read agent instructions
-      - repository agent rules
-      - documentation editing rules
-      - initial owner lookup rule before `docs/doc-index.yaml`
-      - high-signal question route lookup before broad retrieval
-    does_not_own:
-      - technical contracts
-      - baseline scope
-      - API behavior
-      - storage effects
-      - security guarantees
-      - terminology definitions
-    related_docs:
-      - docs.doc-index
-      - maintain.authoring-guide
-      - reference.index
 
-  - doc_id: docs.doc-index
-    status: active
-    family: index
-    paths:
-      shared: docs/doc-index.yaml
-    default_for_agent: shared
-    primary_role: machine_readable_owner_router
-    canonical_for:
-      - exact_owner_routing_metadata
-      - doc_id_route_table
-      - owner_family_metadata
-      - language_path_metadata
-      - high_signal_question_routes
-    owns:
-      - machine-readable retrieval metadata
-      - exact owner routing by `doc_id`
-      - language path metadata
-      - high-signal question routes
-    does_not_own:
-      - technical contracts
-      - baseline scope
-      - API behavior
-      - storage effects
-      - security guarantees
-      - terminology definitions
-    related_docs:
-      - agents.root
-      - readme.root
-      - docs.root-index
-      - reference.index
-      - maintain.authoring-guide
+language_retrieval:
+  normal_lookup: "Use one language version for ordinary lookup, choosing the user's language when clear and `default_language` otherwise."
+  paired_review_rule: "Translation review, bilingual parity review, and documentation quality review must read both `path_en` and `path_ko` for each affected `doc_id`."
+  read_both_language_versions_for:
+    - "translation review"
+    - "bilingual parity review"
+    - "documentation quality review"
 
-  - doc_id: readme.root
-    status: active
-    family: index
-    paths:
-      shared: README.md
-    default_for_agent: shared
-    primary_role: repository_entry_route
-    canonical_for:
-      - repository_entry_navigation
-      - repository_entry_summary
-      - top_level_documentation_routes
-    owns:
-      - repository-level entry routing
-      - repository entry summary
-      - top-level documentation start links
-    does_not_own:
-      - technical contracts
-      - baseline scope
-      - API behavior
-      - storage effects
-      - security guarantees
-      - implementation routing
-    related_docs:
-      - agents.root
-      - docs.root-index
-      - docs.index
-      - reference.scope
+entry_schema:
+  required:
+    - "doc_id"
+    - "path_en"
+    - "path_ko"
+    - "role"
+    - "owner_for"
+    - "normative_level"
+    - "audience"
+  optional:
+    - "not_owner_for"
+    - "depends_on"
+  roles:
+    - "entry"
+    - "use"
+    - "reference"
+    - "maintain"
+    - "build"
+  normative_levels:
+    - "contract"
+    - "guide"
+    - "example"
+    - "maintenance"
 
-  - doc_id: docs.root-index
-    status: active
-    family: index
-    paths:
-      shared: docs/README.md
-    default_for_agent: shared
-    primary_role: bilingual_docs_directory_route
-    canonical_for:
-      - docs_directory_language_selection
-      - bilingual_documentation_entry_routing
-      - first_hop_documentation_navigation
-    owns:
-      - docs-directory language selection
-      - bilingual first-hop documentation navigation
-      - route links to language-specific documentation indexes
-    does_not_own:
-      - technical contracts
-      - baseline scope
-      - API behavior
-      - storage effects
-      - security guarantees
-      - implementation routing
-    related_docs:
-      - readme.root
-      - docs.index
-      - docs.doc-index
-      - start
-      - reference.index
-      - maintain.authoring-guide
-      - terminology.map
+shared_documents:
+  - doc_id: "agents.root"
+    path: "AGENTS.md"
+    role: "maintain"
+    owner_for:
+      - "repository agent working rules"
+      - "documentation editing rules"
+      - "first-read instructions for agents"
+    not_owner_for:
+      - "reference contracts"
+      - "API behavior"
+      - "storage effects"
+    normative_level: "maintenance"
+    audience:
+      - "agents"
+      - "maintainers"
 
-  - doc_id: docs.index
-    status: active
-    family: index
-    paths:
-      en: docs/en/README.md
-      ko: docs/ko/README.md
-    default_for_agent: en
-    primary_role: language_entry_route
-    canonical_for:
-      - language_specific_entry_routing
-      - top_level_document_navigation
-    owns:
-      - language-specific entry routing
-      - first-hop documentation navigation
-    does_not_own:
-      - technical contracts
-      - baseline scope
-      - API details
-      - storage details
-      - security details
-      - implementation routing
-    related_docs:
-      - readme.root
-      - docs.root-index
-      - start
-      - reference.index
-      - maintain.authoring-guide
+  - doc_id: "readme.root"
+    path: "README.md"
+    role: "entry"
+    owner_for:
+      - "repository entry navigation"
+      - "top-level documentation routes"
+    not_owner_for:
+      - "reference contracts"
+      - "implementation contracts"
+    normative_level: "guide"
+    audience:
+      - "all readers"
 
-  - doc_id: start
-    status: active
-    family: start
-    paths:
-      en: docs/en/start.md
-      ko: docs/ko/start.md
-    default_for_agent: en
-    primary_role: product_orientation
-    canonical_for:
-      - first_read_orientation
-      - harness_product_thesis
-      - user_facing_concept_intro
-    owns:
-      - first-read product orientation
-      - high-level Harness purpose
-      - introductory user and agent responsibilities
-    does_not_own:
-      - exact technical contracts
-      - implementation routing
-      - API schemas
-      - storage records
-    related_docs:
-      - use.user-guide
-      - use.agent-guide
-      - reference.core-model
+  - doc_id: "docs.root"
+    path: "docs/README.md"
+    role: "entry"
+    owner_for:
+      - "bilingual documentation language selection"
+      - "first-hop documentation routes"
+    not_owner_for:
+      - "reference contracts"
+      - "technical owner detail"
+    normative_level: "guide"
+    audience:
+      - "all readers"
 
-  - doc_id: use.user-guide
-    status: active
-    family: use
-    paths:
-      en: docs/en/use/user-guide.md
-      ko: docs/ko/use/user-guide.md
-    default_for_agent: en
-    primary_role: user_workflow_guide
-    canonical_for:
-      - user_workflow_guidance
-      - user_owned_judgment_workflow
-      - close_readiness_user_explanation
-    owns:
-      - user-facing workflow guidance
-      - plain-language task flow
-      - user-owned judgment handling from a user perspective
-    does_not_own:
-      - internal contracts
-      - API schemas
-      - storage records
-      - connector behavior
-      - security guarantees
-    related_docs:
-      - start
-      - use.judgment-examples
-      - reference.core-model
-      - reference.api.methods
+  - doc_id: "docs.doc-index"
+    path: "docs/doc-index.yaml"
+    role: "maintain"
+    owner_for:
+      - "owner-routing metadata"
+      - "paired document path metadata"
+      - "language retrieval rule"
+    not_owner_for:
+      - "product contracts"
+      - "API contracts"
+      - "storage contracts"
+      - "security guarantees"
+    normative_level: "maintenance"
+    audience:
+      - "agents"
+      - "maintainers"
 
-  - doc_id: use.agent-guide
-    status: active
-    family: use
-    paths:
-      en: docs/en/use/agent-guide.md
-      ko: docs/ko/use/agent-guide.md
-    default_for_agent: en
-    primary_role: agent_operating_guide
-    canonical_for:
-      - agent_context_discipline
-      - agent_workflow_guidance
-      - one_language_per_doc_id_usage
-    owns:
-      - agent operating guidance
-      - context discipline
-      - user-judgment respect from an agent perspective
-      - active/out-of-scope boundary reminders for agents
-    does_not_own:
-      - connector reference contracts
-      - API schemas
-      - storage records
-      - security guarantee definitions
-    related_docs:
-      - use.surface-recipes
-      - reference.agent-integration
-      - reference.security
-      - reference.core-model
+  - doc_id: "terminology.map"
+    path: "docs/terminology-map.yaml"
+    role: "maintain"
+    owner_for:
+      - "bilingual terminology controls"
+      - "identifier preservation rules"
+      - "Korean mixed-language expressions to avoid"
+    not_owner_for:
+      - "product contracts"
+      - "API contracts"
+      - "storage contracts"
+      - "security guarantees"
+    normative_level: "maintenance"
+    audience:
+      - "maintainers"
+      - "translators"
 
-  - doc_id: use.judgment-examples
-    status: active
-    family: use
-    paths:
-      en: docs/en/use/judgment-examples.md
-      ko: docs/ko/use/judgment-examples.md
-    default_for_agent: en
-    primary_role: judgment_example_guide
-    canonical_for:
-      - user_owned_judgment_examples
-      - judgment_boundary_examples
-      - non_substitution_examples
-    owns:
-      - examples for distinct user-owned judgment situations
-      - user-facing judgment separation examples
-      - examples where agents must not decide for the user
-    does_not_own:
-      - canonical judgment schemas
-      - judgment value sets
-      - Core authority rules
-      - storage effects
-    related_docs:
-      - use.user-guide
-      - reference.core-model
-      - reference.api.schema-judgment
-      - reference.api.schema-value-sets
+documents:
+  - doc_id: "docs.index"
+    path_en: "docs/en/README.md"
+    path_ko: "docs/ko/README.md"
+    role: "entry"
+    owner_for:
+      - "language-specific documentation entry"
+      - "reading path selection"
+      - "owner lookup entry points"
+    not_owner_for:
+      - "reference contracts"
+      - "technical owner detail"
+    normative_level: "guide"
+    audience:
+      - "all readers"
 
-  - doc_id: use.surface-recipes
-    status: active
-    family: use
-    paths:
-      en: docs/en/use/surface-recipes.md
-      ko: docs/ko/use/surface-recipes.md
-    default_for_agent: en
-    primary_role: surface_usage_recipes
-    canonical_for:
-      - surface_specific_usage_recipes
-      - user_visible_surface_workflows
-      - connector_recipe_routing
-      - cli_surface_recipe
-      - ide_editor_surface_recipe
-      - chat_surface_recipe
-      - local_mcp_surface_recipe
-      - surface_failure_reporting
-    owns:
-      - surface-specific usage recipes
-      - user-visible steps for supported surfaces
-      - practical recipe routing to connector owners
-      - failure and status summary patterns for named surfaces
-    does_not_own:
-      - connector contracts
-      - VerifiedSurfaceContext meaning
-      - connector conformance boundaries
-      - API schemas
-      - storage effects
-      - security guarantee definitions
-    related_docs:
-      - use.agent-guide
-      - reference.agent-integration
-      - reference.security
-      - reference.api.methods
-      - reference.api.errors
+  - doc_id: "start"
+    path_en: "docs/en/start.md"
+    path_ko: "docs/ko/start.md"
+    role: "entry"
+    owner_for:
+      - "product orientation"
+      - "Harness thesis"
+      - "first-read concept introduction"
+    not_owner_for:
+      - "exact API contracts"
+      - "storage records"
+      - "security guarantee detail"
+    normative_level: "guide"
+    audience:
+      - "new users"
+      - "agents"
+      - "implementers"
 
-  - doc_id: build.implementation-guide
-    status: active
-    family: build
-    paths:
-      en: docs/en/build/implementation-guide.md
-      ko: docs/ko/build/implementation-guide.md
-    default_for_agent: en
-    primary_role: implementation_guide
-    canonical_for:
-      - implementation_entry_route
-      - owner_based_build_sequence
-      - first_runtime_slice_guidance
-    owns:
-      - implementation entry routing
-      - owner-based build sequence
-      - first runtime slice guidance
-    does_not_own:
-      - baseline scope contracts
-      - exact schemas
-      - API behavior
-      - storage contracts
-      - security claims
-      - runtime behavior
-    related_docs:
-      - reference.scope
-      - reference.index
+  - doc_id: "use.user-guide"
+    path_en: "docs/en/use/user-guide.md"
+    path_ko: "docs/ko/use/user-guide.md"
+    role: "use"
+    owner_for:
+      - "user workflow guidance"
+      - "plain-language task flow"
+      - "user-facing close-readiness explanation"
+    not_owner_for:
+      - "API schemas"
+      - "storage records"
+      - "security guarantees"
+    normative_level: "guide"
+    audience:
+      - "users"
+      - "agents"
 
-  - doc_id: reference.index
-    status: active
-    family: reference
-    paths:
-      en: docs/en/reference/README.md
-      ko: docs/ko/reference/README.md
-    default_for_agent: en
-    primary_role: reference_owner_router
-    canonical_for:
-      - reference_owner_routing
-      - one_owner_per_contract_route
-      - non_owner_routing_rule
-    owns:
-      - Reference owner routing
-      - canonical owner lookup for exact contracts
-      - non-owner routing rules for reference pages
-    does_not_own:
-      - detailed contracts
-      - schemas
-      - DDL
-      - template bodies
-      - security guarantees
-      - implementation sequencing
-    related_docs:
-      - docs.doc-index
-      - docs.index
-      - reference.scope
-      - maintain.authoring-guide
+  - doc_id: "use.agent-guide"
+    path_en: "docs/en/use/agent-guide.md"
+    path_ko: "docs/ko/use/agent-guide.md"
+    role: "use"
+    owner_for:
+      - "agent workflow guidance"
+      - "context discipline"
+      - "agent handling of user-owned judgment"
+    not_owner_for:
+      - "connector contracts"
+      - "API schemas"
+      - "security guarantee definitions"
+    normative_level: "guide"
+    audience:
+      - "agents"
+      - "agent operators"
 
-  - doc_id: reference.scope
-    status: active
-    family: reference.scope
-    paths:
-      en: docs/en/reference/scope.md
-      ko: docs/ko/reference/scope.md
-    default_for_agent: en
-    primary_role: active_scope_owner
-    canonical_for:
-      - baseline_scope
-      - baseline_out_of_scope_boundary
-      - scope_level_exclusions
-      - baseline_scope_exclusions
-      - baseline_scope_guarantee_boundary
-    owns:
-      - detailed baseline scope boundary
-      - scope-level active/out-of-scope split
-      - included and excluded baseline scope items
-      - profile-gated and out-of-scope scope boundaries
-      - baseline scope guarantee boundary
-      - out-of-scope material until promoted
-    does_not_own:
-      - implementation sequencing
-      - method behavior
-      - API schemas
-      - storage contracts
-      - security guarantees
-      - out-of-scope capability details
-    related_docs:
-      - build.implementation-guide
-      - reference.index
-      - reference.security
-      - reference.api.schema-value-sets
+  - doc_id: "use.judgment-examples"
+    path_en: "docs/en/use/judgment-examples.md"
+    path_ko: "docs/ko/use/judgment-examples.md"
+    role: "use"
+    owner_for:
+      - "user-owned judgment examples"
+      - "judgment boundary examples"
+      - "non-substitution examples"
+    not_owner_for:
+      - "judgment schemas"
+      - "judgment value sets"
+      - "Core authority rules"
+    normative_level: "example"
+    audience:
+      - "users"
+      - "agents"
+      - "maintainers"
 
-  - doc_id: reference.core-model
-    status: active
-    family: reference.core
-    paths:
-      en: docs/en/reference/core-model.md
-      ko: docs/ko/reference/core-model.md
-    default_for_agent: en
-    primary_role: core_authority_model
-    canonical_for:
-      - core_product_concepts
-      - authority_model
-      - lifecycle_meaning
-      - close_readiness_meaning
-      - user_owned_judgment_boundaries
-    owns:
-      - Core product concepts
-      - authority model
-      - lifecycle meaning
-      - close readiness meaning
-      - user-owned judgment boundaries
-      - non-substitution rules
-    does_not_own:
-      - wire schemas
-      - exact value sets
-      - storage layout
-      - public error precedence
-      - connector recipes
-      - template bodies
-    related_docs:
-      - reference.scope
-      - reference.api.methods
-      - reference.api.schema-judgment
-      - reference.api.errors
+  - doc_id: "use.surface-recipes"
+    path_en: "docs/en/use/surface-recipes.md"
+    path_ko: "docs/ko/use/surface-recipes.md"
+    role: "use"
+    owner_for:
+      - "surface-specific usage recipes"
+      - "user-visible surface workflows"
+      - "surface failure reporting patterns"
+    not_owner_for:
+      - "connector contracts"
+      - "API schemas"
+      - "storage effects"
+      - "security guarantee definitions"
+    normative_level: "guide"
+    audience:
+      - "users"
+      - "agents"
+      - "connector authors"
 
-  - doc_id: reference.api.methods
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/methods.md
-      ko: docs/ko/reference/api/methods.md
-    default_for_agent: en
-    primary_role: public_method_router
-    canonical_for:
-      - active_public_method_list
-      - method_owner_routing
-      - shared_envelope_and_response_branch_owner_links
-      - schema_owner_links_for_methods
-      - storage_effect_owner_links_for_methods
-      - local_access_class_routing
-      - representative_api_example_scenario
-    owns:
-      - active public method list
-      - method owner routing
-      - shared envelope and response branch owner links
-      - schema owner links for methods
-      - storage-effect owner links for methods
-      - representative API example scenario used by this method reference
-    does_not_own:
-      - full per-method behavior details
-      - method-specific request behavior
-      - method-specific response behavior
-      - method-specific result examples
-      - API example consistency rules
-      - example field-name consistency rules
-      - common response envelopes
-      - schema field definitions
-      - shared schema bodies
-      - active value sets
-      - public error-code semantics
-      - storage effect details
-      - storage DDL
-      - artifact storage lifecycle
-    related_docs:
-      - reference.api.method-intake
-      - reference.api.method-update-scope
-      - reference.api.method-status
-      - reference.api.method-prepare-write
-      - reference.api.method-stage-artifact
-      - reference.api.method-record-run
-      - reference.api.method-user-judgment
-      - reference.api.method-close-task
-      - reference.api.schema-core
-      - reference.api.schema-state
-      - reference.api.schema-artifacts
-      - reference.api.schema-judgment
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.storage-effects
-      - reference.storage-records
-      - reference.storage-artifacts
-      - reference.storage-versioning
-      - maintain.authoring-guide
-      - maintain.checks
-      - reference.security
+  - doc_id: "build.implementation-guide"
+    path_en: "docs/en/build/implementation-guide.md"
+    path_ko: "docs/ko/build/implementation-guide.md"
+    role: "build"
+    owner_for:
+      - "implementation entry routing"
+      - "owner-based build sequence"
+      - "first runtime slice guidance"
+    not_owner_for:
+      - "baseline scope contracts"
+      - "API behavior"
+      - "schema contracts"
+      - "storage contracts"
+      - "security claims"
+    normative_level: "guide"
+    audience:
+      - "implementers"
+      - "reviewers"
 
-  - doc_id: reference.api.method-intake
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/method-intake.md
-      ko: docs/ko/reference/api/method-intake.md
-    default_for_agent: en
-    primary_role: api_method_owner
-    canonical_for:
-      - harness_intake_method_behavior
-      - intake_required_inputs
-      - intake_result_behavior
-      - intake_state_version_behavior
-      - intake_dry_run_behavior
-    owns:
-      - "`harness.intake` method behavior"
+  - doc_id: "reference.index"
+    path_en: "docs/en/reference/README.md"
+    path_ko: "docs/ko/reference/README.md"
+    role: "reference"
+    owner_for:
+      - "reference owner routing"
+      - "canonical owner lookup"
+      - "reference family navigation"
+    not_owner_for:
+      - "detailed contracts"
+      - "schemas"
+      - "storage effects"
+      - "security guarantees"
+    normative_level: "guide"
+    audience:
+      - "agents"
+      - "implementers"
+      - "maintainers"
+
+  - doc_id: "reference.scope"
+    path_en: "docs/en/reference/scope.md"
+    path_ko: "docs/ko/reference/scope.md"
+    role: "reference"
+    owner_for:
+      - "baseline scope"
+      - "included and excluded scope"
+      - "active and profile-gated scope boundaries"
+      - "scope-level guarantee boundary"
+    not_owner_for:
+      - "method behavior"
+      - "schema definitions"
+      - "storage contracts"
+      - "security guarantee semantics"
+    normative_level: "contract"
+    audience:
+      - "agents"
+      - "implementers"
+      - "maintainers"
+
+  - doc_id: "reference.core-model"
+    path_en: "docs/en/reference/core-model.md"
+    path_ko: "docs/ko/reference/core-model.md"
+    role: "reference"
+    owner_for:
+      - "Core authority model"
+      - "lifecycle meaning"
+      - "close-readiness meaning"
+      - "user-owned judgment boundaries"
+    not_owner_for:
+      - "wire schemas"
+      - "storage layout"
+      - "public error precedence"
+    normative_level: "contract"
+    audience:
+      - "agents"
+      - "implementers"
+      - "maintainers"
+
+  - doc_id: "reference.runtime-boundaries"
+    path_en: "docs/en/reference/runtime-boundaries.md"
+    path_ko: "docs/ko/reference/runtime-boundaries.md"
+    role: "reference"
+    owner_for:
+      - "Product Repository boundary"
+      - "Harness Runtime Home boundary"
+      - "runtime and repository separation"
+    not_owner_for:
+      - "API behavior"
+      - "storage record layout"
+      - "security guarantees"
+    normative_level: "contract"
+    audience:
+      - "agents"
+      - "implementers"
+      - "maintainers"
+
+  - doc_id: "reference.security"
+    path_en: "docs/en/reference/security.md"
+    path_ko: "docs/ko/reference/security.md"
+    role: "reference"
+    owner_for:
+      - "security guarantee wording"
+      - "access-boundary non-claims"
+      - "guarantee semantics"
+    not_owner_for:
+      - "access-class value names"
+      - "method behavior"
+      - "connector recipes"
+    normative_level: "contract"
+    audience:
+      - "agents"
+      - "implementers"
+      - "security reviewers"
+      - "maintainers"
+
+  - doc_id: "reference.glossary"
+    path_en: "docs/en/reference/glossary.md"
+    path_ko: "docs/ko/reference/glossary.md"
+    role: "reference"
+    owner_for:
+      - "product terminology"
+      - "term meaning"
+      - "terminology owner routing"
+    not_owner_for:
+      - "API contracts"
+      - "storage contracts"
+      - "security mechanisms"
+    depends_on:
+      - "terminology.map"
+    normative_level: "contract"
+    audience:
+      - "readers"
+      - "maintainers"
+      - "translators"
+
+  - doc_id: "reference.api.methods"
+    path_en: "docs/en/reference/api/methods.md"
+    path_ko: "docs/ko/reference/api/methods.md"
+    role: "reference"
+    owner_for:
+      - "active public API method list"
+      - "API method owner routing"
+      - "shared method reading rules"
+      - "representative API example scenario"
+    not_owner_for:
+      - "method-specific behavior"
+      - "shared schema bodies"
+      - "storage effect detail"
+      - "public error semantics"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
+
+  - doc_id: "reference.api.method-intake"
+    path_en: "docs/en/reference/api/method-intake.md"
+    path_ko: "docs/ko/reference/api/method-intake.md"
+    role: "reference"
+    owner_for:
+      - "`harness.intake` behavior"
       - "`IntakeResult` branch behavior"
-      - intake minimal request and representative response
-    does_not_own:
-      - common response envelopes
-      - shared schema bodies
-      - active value sets
-      - public error precedence
-      - storage DDL
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.schema-state
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.storage-effects
+      - "intake examples"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.method-update-scope
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/method-update-scope.md
-      ko: docs/ko/reference/api/method-update-scope.md
-    default_for_agent: en
-    primary_role: api_method_owner
-    canonical_for:
-      - harness_update_scope_method_behavior
-      - update_scope_required_inputs
-      - update_scope_result_behavior
-      - update_scope_state_version_behavior
-      - stale_write_authorization_method_consequence
-    owns:
-      - "`harness.update_scope` method behavior"
+  - doc_id: "reference.api.method-update-scope"
+    path_en: "docs/en/reference/api/method-update-scope.md"
+    path_ko: "docs/ko/reference/api/method-update-scope.md"
+    role: "reference"
+    owner_for:
+      - "`harness.update_scope` behavior"
       - "`UpdateScopeResult` branch behavior"
-      - update-scope minimal request and representative response
-    does_not_own:
-      - common response envelopes
-      - shared schema bodies
-      - active value sets
-      - public error precedence
-      - storage DDL
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.schema-state
-      - reference.api.schema-judgment
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.storage-effects
-      - reference.storage-versioning
+      - "update-scope examples"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.method-status
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/method-status.md
-      ko: docs/ko/reference/api/method-status.md
-    default_for_agent: en
-    primary_role: api_method_owner
-    canonical_for:
-      - harness_status_method_behavior
-      - status_required_inputs
-      - status_result_behavior
-      - status_read_only_behavior
-      - status_dry_run_behavior
-      - status_example_state_version_rule
-    owns:
-      - "`harness.status` method behavior"
+  - doc_id: "reference.api.method-status"
+    path_en: "docs/en/reference/api/method-status.md"
+    path_ko: "docs/ko/reference/api/method-status.md"
+    role: "reference"
+    owner_for:
+      - "`harness.status` behavior"
       - "`StatusResult` branch behavior"
-      - status example state-version rule
-      - status minimal request and representative response
-    does_not_own:
-      - common response envelopes
-      - shared schema bodies
-      - active value sets
-      - public error precedence
-      - storage DDL
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.schema-state
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.storage-effects
+      - "status read-only behavior"
+      - "status examples"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.method-prepare-write
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/method-prepare-write.md
-      ko: docs/ko/reference/api/method-prepare-write.md
-    default_for_agent: en
-    primary_role: api_method_owner
-    canonical_for:
-      - harness_prepare_write_method_behavior
-      - prepare_write_required_inputs
-      - prepare_write_result_behavior
-      - write_authorization_creation_behavior
-      - prepare_write_dry_run_behavior
-      - prepare_write_sensitive_approval_behavior
-    owns:
-      - "`harness.prepare_write` method behavior"
+  - doc_id: "reference.api.method-prepare-write"
+    path_en: "docs/en/reference/api/method-prepare-write.md"
+    path_ko: "docs/ko/reference/api/method-prepare-write.md"
+    role: "reference"
+    owner_for:
+      - "`harness.prepare_write` behavior"
       - "`PrepareWriteResult` branch behavior"
-      - prepare-write sensitive-action approval behavior
-      - prepare-write minimal request and representative response
-    does_not_own:
-      - common response envelopes
-      - shared schema bodies
-      - active value sets
-      - public error precedence
-      - storage DDL
-      - security guarantees
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.schema-state
-      - reference.api.schema-judgment
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.storage-effects
-      - reference.storage-versioning
-      - reference.security
+      - "Write Authorization creation behavior"
+      - "sensitive-action approval behavior"
+    not_owner_for:
+      - "security guarantee semantics"
+      - "shared schema bodies"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.method-stage-artifact
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/method-stage-artifact.md
-      ko: docs/ko/reference/api/method-stage-artifact.md
-    default_for_agent: en
-    primary_role: api_method_owner
-    canonical_for:
-      - harness_stage_artifact_method_behavior
-      - stage_artifact_required_inputs
-      - stage_artifact_result_behavior
-      - staged_artifact_handle_result_behavior
-      - stage_artifact_dry_run_behavior
-    owns:
-      - "`harness.stage_artifact` method behavior"
+  - doc_id: "reference.api.method-stage-artifact"
+    path_en: "docs/en/reference/api/method-stage-artifact.md"
+    path_ko: "docs/ko/reference/api/method-stage-artifact.md"
+    role: "reference"
+    owner_for:
+      - "`harness.stage_artifact` behavior"
       - "`StageArtifactResult` branch behavior"
-      - stage-artifact minimal request and representative response
-    does_not_own:
-      - common response envelopes
-      - shared schema bodies
-      - active value sets
-      - public error precedence
-      - storage DDL
-      - artifact lifecycle
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.schema-artifacts
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.storage-effects
-      - reference.storage-artifacts
+      - "staged handle result behavior"
+    not_owner_for:
+      - "artifact storage lifecycle"
+      - "shared schema bodies"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.method-record-run
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/method-record-run.md
-      ko: docs/ko/reference/api/method-record-run.md
-    default_for_agent: en
-    primary_role: api_method_owner
-    canonical_for:
-      - harness_record_run_method_behavior
-      - record_run_required_inputs
-      - record_run_result_behavior
-      - run_recording_evidence_update_behavior
-      - artifact_promotion_method_behavior
-    owns:
-      - "`harness.record_run` method behavior"
+  - doc_id: "reference.api.method-record-run"
+    path_en: "docs/en/reference/api/method-record-run.md"
+    path_ko: "docs/ko/reference/api/method-record-run.md"
+    role: "reference"
+    owner_for:
+      - "`harness.record_run` behavior"
       - "`RecordRunResult` branch behavior"
-      - record-run minimal request and representative response
-    does_not_own:
-      - common response envelopes
-      - shared schema bodies
-      - active value sets
-      - public error precedence
-      - storage DDL
-      - artifact lifecycle
-      - Core evidence meaning
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.schema-state
-      - reference.api.schema-artifacts
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.core-model
-      - reference.storage-effects
-      - reference.storage-artifacts
+      - "run and evidence method behavior"
+      - "artifact promotion method behavior"
+    not_owner_for:
+      - "artifact storage lifecycle"
+      - "Core evidence meaning"
+      - "shared schema bodies"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.method-user-judgment
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/method-user-judgment.md
-      ko: docs/ko/reference/api/method-user-judgment.md
-    default_for_agent: en
-    primary_role: api_method_family_owner
-    canonical_for:
-      - harness_request_user_judgment_method_behavior
-      - harness_record_user_judgment_method_behavior
-      - request_user_judgment_result_behavior
-      - record_user_judgment_result_behavior
-      - user_judgment_method_boundary
-      - user_judgment_prompt_ownership
-    owns:
-      - "`harness.request_user_judgment` method behavior"
-      - "`harness.record_user_judgment` method behavior"
-      - "`RequestUserJudgmentResult` branch behavior"
-      - "`RecordUserJudgmentResult` branch behavior"
-      - user judgment prompt behavior
-      - user-judgment minimal requests and representative responses
-    does_not_own:
-      - common response envelopes
-      - shared schema bodies
-      - active value sets
-      - public error precedence
-      - storage DDL
-      - Core user-owned judgment meaning
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.schema-state
-      - reference.api.schema-judgment
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.core-model
-      - reference.storage-effects
+  - doc_id: "reference.api.method-user-judgment"
+    path_en: "docs/en/reference/api/method-user-judgment.md"
+    path_ko: "docs/ko/reference/api/method-user-judgment.md"
+    role: "reference"
+    owner_for:
+      - "`harness.request_user_judgment` behavior"
+      - "`harness.record_user_judgment` behavior"
+      - "user-judgment prompt and recording behavior"
+    not_owner_for:
+      - "Core user-owned judgment meaning"
+      - "shared schema bodies"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.method-close-task
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/method-close-task.md
-      ko: docs/ko/reference/api/method-close-task.md
-    default_for_agent: en
-    primary_role: api_method_owner
-    canonical_for:
-      - harness_close_task_method_behavior
-      - close_task_required_inputs
-      - close_task_result_behavior
-      - close_task_dry_run_behavior
-      - close_task_blocked_result_behavior
-    owns:
-      - "`harness.close_task` method behavior"
+  - doc_id: "reference.api.method-close-task"
+    path_en: "docs/en/reference/api/method-close-task.md"
+    path_ko: "docs/ko/reference/api/method-close-task.md"
+    role: "reference"
+    owner_for:
+      - "`harness.close_task` behavior"
       - "`CloseTaskResult` branch behavior"
-      - close-task minimal request and representative response
-    does_not_own:
-      - common response envelopes
-      - shared schema bodies
-      - active value sets
-      - public error precedence
-      - storage DDL
-      - Core close readiness meaning
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.schema-state
-      - reference.api.schema-value-sets
-      - reference.api.errors
-      - reference.core-model
-      - reference.storage-effects
-      - reference.storage-versioning
+      - "close-readiness evaluation order"
+      - "close-task examples"
+    not_owner_for:
+      - "Core close-readiness meaning"
+      - "shared schema bodies"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.schema-core
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/schema-core.md
-      ko: docs/ko/reference/api/schema-core.md
-    default_for_agent: en
-    primary_role: common_api_schema_owner
-    canonical_for:
-      - schema_notation_conventions
-      - tool_envelope
-      - common_method_result_branch_model
-      - common_response_branches
-      - tool_result_base
-      - tool_rejected_response
-      - tool_dry_run_response
-      - shared_support_shapes
-      - tool_error
-      - event_ref
-      - response_kind_field
-      - effect_kind_field
-    owns:
-      - schema notation conventions
-      - common API envelope
-      - common method result branch model
-      - common response branch schemas
-      - shared support shapes
-      - "`ToolError`"
-      - "`EventRef`"
-      - common `response_kind` and `effect_kind` fields
-    does_not_own:
-      - state schemas
-      - artifact schemas
-      - judgment schemas
-      - value sets
-      - access class values
-      - local surface verification behavior
-      - method behavior
-      - public errors
-      - storage effects
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-state
-      - reference.api.schema-artifacts
-      - reference.api.schema-judgment
-      - reference.api.schema-value-sets
+  - doc_id: "reference.api.schema-core"
+    path_en: "docs/en/reference/api/schema-core.md"
+    path_ko: "docs/ko/reference/api/schema-core.md"
+    role: "reference"
+    owner_for:
+      - "common API request envelopes"
+      - "common API response branches"
+      - "shared API error envelope shapes"
+    not_owner_for:
+      - "method-specific behavior"
+      - "nested state shapes"
+      - "nested artifact shapes"
+      - "nested judgment shapes"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.schema-state
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/schema-state.md
-      ko: docs/ko/reference/api/schema-state.md
-    default_for_agent: en
-    primary_role: api_state_schema_owner
-    canonical_for:
-      - state_summary_schema
-      - state_record_ref_schema
-      - task_lifecycle_state_api_shape
-      - state_snapshot_reference_structures
-      - shaping_readiness_schema
-      - current_position_display_schema
-      - close_state_display_schema
-      - task_state_api_shapes
-      - close_readiness_blocker_schema
-      - validator_result_schema
-      - evidence_summary_api_shape
-      - write_authority_summary_shape
-    owns:
-      - API state schemas
-      - "`StateSummary`"
-      - "`StateRecordRef`"
-      - task lifecycle state API shape
-      - state snapshot and reference structures
-      - "`ShapingReadiness`"
-      - current-position display data shapes
-      - task and close state API shapes
-      - "`CloseReadinessBlocker`"
-      - "`ValidatorResult`"
-    does_not_own:
-      - common response branches
-      - value sets
-      - method effects
-      - storage persistence
-      - Core lifecycle meaning
-    related_docs:
-      - reference.api.schema-core
-      - reference.api.schema-value-sets
-      - reference.core-model
-      - reference.storage-records
+  - doc_id: "reference.api.schema-state"
+    path_en: "docs/en/reference/api/schema-state.md"
+    path_ko: "docs/ko/reference/api/schema-state.md"
+    role: "reference"
+    owner_for:
+      - "state schemas"
+      - "close-readiness state shapes"
+      - "`CloseReadinessBlocker` shape"
+    not_owner_for:
+      - "method behavior"
+      - "storage rows"
+      - "public error semantics"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.schema-artifacts
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/schema-artifacts.md
-      ko: docs/ko/reference/api/schema-artifacts.md
-    default_for_agent: en
-    primary_role: api_artifact_schema_owner
-    canonical_for:
-      - artifact_ref_schema
-      - artifact_input_schema
-      - staged_artifact_handle_schema
-      - staged_vs_existing_artifact_input_distinction
-      - artifact_reference_access_constraints
-      - artifact_link_api_shapes
-    owns:
-      - API artifact schemas
-      - "`ArtifactRef`"
-      - "`ArtifactInput`"
-      - "`StagedArtifactHandle`"
-      - staged versus existing artifact input distinctions
-      - artifact-related access constraints by reference
-      - artifact link API shapes
-    does_not_own:
-      - artifact storage lifecycle
-      - method behavior
-      - value sets
-      - security claims
-      - retention rules
-    related_docs:
-      - reference.api.schema-core
-      - reference.storage-artifacts
-      - reference.api.schema-value-sets
-      - reference.security
+  - doc_id: "reference.api.schema-artifacts"
+    path_en: "docs/en/reference/api/schema-artifacts.md"
+    path_ko: "docs/ko/reference/api/schema-artifacts.md"
+    role: "reference"
+    owner_for:
+      - "artifact reference schemas"
+      - "`ArtifactInput` shape"
+      - "`StagedArtifactHandle` shape"
+    not_owner_for:
+      - "artifact storage lifecycle"
+      - "method behavior"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.schema-judgment
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/schema-judgment.md
-      ko: docs/ko/reference/api/schema-judgment.md
-    default_for_agent: en
-    primary_role: api_judgment_schema_owner
-    canonical_for:
-      - user_judgment_schema
-      - user_judgment_candidate_schema
-      - sensitive_action_scope_schema
-      - accepted_risk_input_schema
-      - judgment_request_schema
-      - judgment_response_schema
-      - judgment_display_shapes
-      - user_owned_judgment_schema_semantics
-    owns:
-      - API judgment schemas
-      - "`UserJudgment`"
-      - "`UserJudgmentCandidate`"
-      - "`SensitiveActionScope`"
-      - "`AcceptedRiskInput`"
-      - judgment request shapes
-      - judgment response shapes
-      - judgment display shapes
-      - user-owned judgment schema semantics
-    does_not_own:
-      - Core judgment meaning
-      - method behavior
-      - active judgment values
-      - close effects
-      - user-facing examples
-    related_docs:
-      - reference.core-model
-      - reference.api.schema-value-sets
-      - use.judgment-examples
-      - reference.api.methods
+  - doc_id: "reference.api.schema-judgment"
+    path_en: "docs/en/reference/api/schema-judgment.md"
+    path_ko: "docs/ko/reference/api/schema-judgment.md"
+    role: "reference"
+    owner_for:
+      - "user judgment schemas"
+      - "sensitive-action approval schemas"
+      - "accepted-risk input shapes"
+    not_owner_for:
+      - "Core user-owned judgment meaning"
+      - "method behavior"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.schema-value-sets
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/schema-value-sets.md
-      ko: docs/ko/reference/api/schema-value-sets.md
-    default_for_agent: en
-    primary_role: api_value_set_owner
-    canonical_for:
-      - active_api_value_sets
-      - enum_like_values
-      - complete_intent_value
-      - method_name_values
-      - response_kind_values
-      - effect_kind_values
-      - access_class_values
-      - status_values
-      - guarantee_label_values
-      - reserved_profile_gated_value_names
-    owns:
-      - API value sets
-      - enum-like active values
-      - "`complete` as a close-task intent value"
-      - active public method names
-      - active `response_kind` and `effect_kind` values
-      - active `access_class` values
-      - status and phase values
-      - guarantee label values
-      - reserved/profile-gated value names
-    does_not_own:
-      - public `ErrorCode` values
-      - field shapes
-      - method behavior
-      - out-of-scope capability promotion
-      - storage status semantics
-      - active guarantee semantics
-      - security isolation claims
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.api.errors
-      - reference.security
+  - doc_id: "reference.api.schema-value-sets"
+    path_en: "docs/en/reference/api/schema-value-sets.md"
+    path_ko: "docs/ko/reference/api/schema-value-sets.md"
+    role: "reference"
+    owner_for:
+      - "API value sets"
+      - "method-name values"
+      - "access-class values"
+      - "enum-like API vocabulary"
+    not_owner_for:
+      - "value semantics outside schema vocabulary"
+      - "security guarantee meanings"
+      - "method behavior"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.api.errors
-    status: active
-    family: reference.api
-    paths:
-      en: docs/en/reference/api/errors.md
-      ko: docs/ko/reference/api/errors.md
-    default_for_agent: en
-    primary_role: public_error_contract
-    canonical_for:
-      - public_error_codes
-      - error_precedence
-      - pre_commit_failure_behavior
-      - state_version_conflict
-      - close_task_blocker_codes
-    owns:
-      - public `ErrorCode` contract
-      - primary error code precedence
-      - preflight rejection meaning
-      - pre-commit failure behavior
-      - "`STATE_VERSION_CONFLICT`"
-      - close readiness blocker code routing
-    does_not_own:
-      - Core gate semantics
-      - method payload schemas
-      - durable storage effects
-      - connector fallback rules
-      - security guarantee definitions
-    related_docs:
-      - reference.api.methods
-      - reference.api.schema-core
-      - reference.core-model
-      - reference.storage-versioning
+  - doc_id: "reference.api.errors"
+    path_en: "docs/en/reference/api/errors.md"
+    path_ko: "docs/ko/reference/api/errors.md"
+    role: "reference"
+    owner_for:
+      - "public error codes"
+      - "error routing"
+      - "error precedence"
+      - "blocker-code exclusions"
+    not_owner_for:
+      - "method result behavior"
+      - "storage effects"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.storage-routing
-    status: active
-    family: reference.storage
-    paths:
-      en: docs/en/reference/storage.md
-      ko: docs/ko/reference/storage.md
-    default_for_agent: en
-    primary_role: storage_family_router
-    canonical_for:
-      - older_storage_link_routing
-      - split_storage_owner_lookup
-      - storage_family_owner_routing
-      - api_shape_vs_persistence_effect_distinction
-    owns:
-      - compatibility routing from older storage links
-      - routes to split storage owners
-      - short distinction between API data shape and persistence effects
-    does_not_own:
-      - storage records
-      - storage effects
-      - artifact storage lifecycle
-      - state versioning
-      - locks
-      - migrations
-      - DDL
-      - API schemas
-      - method behavior
-    related_docs:
-      - reference.storage-records
-      - reference.storage-effects
-      - reference.storage-artifacts
-      - reference.storage-versioning
+  - doc_id: "reference.storage"
+    path_en: "docs/en/reference/storage.md"
+    path_ko: "docs/ko/reference/storage.md"
+    role: "reference"
+    owner_for:
+      - "storage family routing"
+      - "storage owner reading order"
+      - "storage authority boundaries"
+    not_owner_for:
+      - "record layout detail"
+      - "method storage effects"
+      - "artifact lifecycle detail"
+      - "versioning detail"
+    normative_level: "guide"
+    audience:
+      - "implementers"
+      - "maintainers"
 
-  - doc_id: reference.storage-records
-    status: active
-    family: reference.storage
-    paths:
-      en: docs/en/reference/storage-records.md
-      ko: docs/ko/reference/storage-records.md
-    default_for_agent: en
-    primary_role: storage_record_owner
-    canonical_for:
-      - runtime_home_layout
-      - local_store_assumptions
-      - persistent_record_layouts
-      - persisted_record_categories
-      - table_overview
-      - storage_ddl_ownership
-      - record_column_meaning
-      - storage_record_values
-      - storage_owned_json_fields
-      - record_level_out_of_scope_exclusions
-    owns:
-      - Runtime Home layout assumptions
-      - local store assumptions
-      - persistent record families
-      - persisted record categories
-      - storage table overview
-      - DDL ownership
-      - record-column meaning
-      - storage-owned record values and status fields
-      - storage-owned JSON placement
-      - record-level active/out-of-scope exclusions
-    does_not_own:
-      - method-to-storage effects
-      - artifact lifecycle
-      - state versioning
-      - idempotency
-      - locks
-      - migrations
-      - API request/response schemas
-      - method behavior
-    related_docs:
-      - reference.storage-effects
-      - reference.storage-artifacts
-      - reference.storage-versioning
-      - reference.api.methods
+  - doc_id: "reference.storage-records"
+    path_en: "docs/en/reference/storage-records.md"
+    path_ko: "docs/ko/reference/storage-records.md"
+    role: "reference"
+    owner_for:
+      - "storage record layout"
+      - "table overview"
+      - "storage-owned record values"
+      - "storage-owned JSON placement"
+    not_owner_for:
+      - "method behavior"
+      - "API schemas"
+      - "security guarantees"
+    normative_level: "contract"
+    audience:
+      - "storage implementers"
+      - "maintainers"
 
-  - doc_id: reference.storage-effects
-    status: active
-    family: reference.storage
-    paths:
-      en: docs/en/reference/storage-effects.md
-      ko: docs/ko/reference/storage-effects.md
-    default_for_agent: en
-    primary_role: storage_effect_owner
-    canonical_for:
-      - method_storage_effects
-      - method_by_method_storage_effects
-      - storage_effect_owner_questions
-      - no_effect_boundaries
-      - dry_run_storage_effects
-      - committed_blocked_storage_effects
-      - read_only_storage_boundaries
-    owns:
-      - storage effects for method branches
-      - method-by-method storage effects
-      - storage-effect owner routing
-      - no-effect boundaries
-      - dry-run storage boundaries
-      - committed blocked response storage consequences
-      - read-only storage boundaries
-    does_not_own:
-      - record layout
-      - artifact lifecycle
-      - idempotency
-      - locks
-      - migrations
-      - API schemas
-      - method behavior
-    related_docs:
-      - reference.api.methods
-      - reference.storage-records
-      - reference.storage-artifacts
-      - reference.storage-versioning
+  - doc_id: "reference.storage-effects"
+    path_en: "docs/en/reference/storage-effects.md"
+    path_ko: "docs/ko/reference/storage-effects.md"
+    role: "reference"
+    owner_for:
+      - "method-to-storage effects"
+      - "read-only and dry-run storage effects"
+      - "rejected and blocked branch storage effects"
+    not_owner_for:
+      - "API request shapes"
+      - "storage table layout"
+      - "artifact body lifecycle"
+    normative_level: "contract"
+    audience:
+      - "storage implementers"
+      - "API implementers"
+      - "maintainers"
 
-  - doc_id: reference.storage-artifacts
-    status: active
-    family: reference.storage
-    paths:
-      en: docs/en/reference/storage-artifacts.md
-      ko: docs/ko/reference/storage-artifacts.md
-    default_for_agent: en
-    primary_role: artifact_storage_owner
-    canonical_for:
-      - artifact_storage_lifecycle
-      - artifact_staging
-      - staged_handle_validation
-      - artifact_promotion
-      - artifact_linking
-      - artifact_body_read_eligibility
-      - artifact_retention_integrity
-      - artifact_staging_evidence_boundary
-    owns:
-      - artifact storage lifecycle
-      - artifact staging
-      - staged-handle validation
-      - artifact promotion
-      - persistent artifact linking
-      - body-read eligibility
-      - retention and integrity boundaries
-      - artifact staging versus evidence-authority boundary
-    does_not_own:
-      - API artifact schemas
-      - method behavior
-      - general DDL
-      - security claims
-      - public error precedence
-    related_docs:
-      - reference.api.schema-artifacts
-      - reference.storage-records
-      - reference.storage-effects
-      - reference.security
+  - doc_id: "reference.storage-artifacts"
+    path_en: "docs/en/reference/storage-artifacts.md"
+    path_ko: "docs/ko/reference/storage-artifacts.md"
+    role: "reference"
+    owner_for:
+      - "artifact storage lifecycle"
+      - "staging validation"
+      - "artifact promotion"
+      - "artifact body-read boundaries"
+    not_owner_for:
+      - "artifact API schema shapes"
+      - "method branch behavior"
+    normative_level: "contract"
+    audience:
+      - "storage implementers"
+      - "API implementers"
+      - "maintainers"
 
-  - doc_id: reference.storage-versioning
-    status: active
-    family: reference.storage
-    paths:
-      en: docs/en/reference/storage-versioning.md
-      ko: docs/ko/reference/storage-versioning.md
-    default_for_agent: en
-    primary_role: storage_versioning_owner
-    canonical_for:
-      - state_versioning
-      - idempotency
-      - event_meaning
-      - locks
-      - migrations
-      - project_state_version_clock
-    owns:
-      - state versioning
-      - idempotency semantics
-      - event meaning for `task_events`
-      - lock semantics
-      - migration semantics
-      - project-wide `state_version` storage boundary
-    does_not_own:
-      - record layout
-      - method branch selection
-      - public error precedence
-      - runtime operations
-      - API schemas
-    related_docs:
-      - reference.api.errors
-      - reference.api.methods
-      - reference.storage-records
-      - reference.storage-effects
+  - doc_id: "reference.storage-versioning"
+    path_en: "docs/en/reference/storage-versioning.md"
+    path_ko: "docs/ko/reference/storage-versioning.md"
+    role: "reference"
+    owner_for:
+      - "state versioning"
+      - "idempotency and replay rows"
+      - "storage locking"
+      - "migration boundaries"
+    not_owner_for:
+      - "method behavior"
+      - "API schema fields"
+      - "runtime deployment"
+    normative_level: "contract"
+    audience:
+      - "storage implementers"
+      - "maintainers"
 
-  - doc_id: reference.runtime-boundaries
-    status: active
-    family: reference.runtime
-    paths:
-      en: docs/en/reference/runtime-boundaries.md
-      ko: docs/ko/reference/runtime-boundaries.md
-    default_for_agent: en
-    primary_role: runtime_boundary_owner
-    canonical_for:
-      - runtime_repository_boundary
-      - harness_runtime_home_boundary
-      - server_boundary
-      - mutation_boundary
-      - non_isolation_boundary
-    owns:
-      - runtime boundary
-      - Product Repository boundary
-      - Harness Server boundary
-      - Harness Runtime Home boundary
-      - non-isolation boundary
-    does_not_own:
-      - security controls
-      - API schemas
-      - storage DDL
-      - deployment steps
-      - implementation routing
-    related_docs:
-      - reference.security
-      - reference.storage-records
-      - build.implementation-guide
+  - doc_id: "reference.agent-integration"
+    path_en: "docs/en/reference/agent-integration.md"
+    path_ko: "docs/ko/reference/agent-integration.md"
+    role: "reference"
+    owner_for:
+      - "agent connector behavior"
+      - "capability context boundaries"
+      - "`VerifiedSurfaceContext` connector meaning"
+      - "connector fallback semantics"
+    not_owner_for:
+      - "surface-specific recipes"
+      - "API schema shapes"
+      - "security guarantee meanings"
+    normative_level: "contract"
+    audience:
+      - "connector authors"
+      - "agents"
+      - "maintainers"
 
-  - doc_id: reference.security
-    status: active
-    family: reference.security
-    paths:
-      en: docs/en/reference/security.md
-      ko: docs/ko/reference/security.md
-    default_for_agent: en
-    primary_role: security_claim_owner
-    canonical_for:
-      - security_claims
-      - security_non_claims
-      - trust_boundaries
-      - guarantee_semantics
-      - guarantee_wording
-      - cooperative_guarantee
-      - detective_guarantee
-      - preventive_guarantee
-      - isolated_guarantee_boundary
-      - current_isolation_non_claim
-      - sensitive_action_boundary
-    owns:
-      - security claims
-      - explicit security non-claims
-      - trust boundaries
-      - guarantee semantics
-      - guarantee wording
-      - "`cooperative` guarantee semantics"
-      - "`detective` guarantee semantics"
-      - "`preventive` guarantee semantics"
-      - "`isolated` guarantee boundary"
-      - current non-claim for isolation
-      - sensitive-action security boundary
-    does_not_own:
-      - API schemas
-      - storage DDL
-      - connector context budgets
-      - OS-level enforcement
-      - surface usage recipes
-    related_docs:
-      - reference.scope
-      - reference.runtime-boundaries
-      - reference.agent-integration
-      - reference.api.schema-value-sets
-      - reference.api.methods
-      - use.surface-recipes
+  - doc_id: "reference.projection-and-templates"
+    path_en: "docs/en/reference/projection-and-templates.md"
+    path_ko: "docs/ko/reference/projection-and-templates.md"
+    role: "reference"
+    owner_for:
+      - "Projection authority"
+      - "projection and template routing"
+      - "derived display boundaries"
+    not_owner_for:
+      - "exact template bodies"
+      - "API method behavior"
+      - "storage contracts"
+    normative_level: "contract"
+    audience:
+      - "implementers"
+      - "agent integrators"
+      - "maintainers"
 
-  - doc_id: reference.agent-integration
-    status: active
-    family: reference.agent
-    paths:
-      en: docs/en/reference/agent-integration.md
-      ko: docs/ko/reference/agent-integration.md
-    default_for_agent: en
-    primary_role: agent_connector_reference
-    canonical_for:
-      - agent_connector_reference
-      - capability_profile_meaning
-      - verified_surface_context_boundary
-      - guarantee_display_gating
-      - connector_context_push_pull
-      - connector_context_discipline
-      - connector_fallback_semantics
-      - connector_conformance_boundary
-      - mcp_unavailable_diagnostics
-    owns:
-      - agent connector reference
-      - capability profile meaning
-      - VerifiedSurfaceContext connector boundary
-      - guarantee display gating from capability context
-      - context push/pull guidance
-      - context discipline for connectors
-      - connector fallback semantics
-      - connector conformance boundary
-      - MCP availability diagnostic routing
-    does_not_own:
-      - CLI, IDE/editor, chat, or local MCP surface recipes
-      - surface failure and status summary recipes
-      - Core state authority
-      - API schemas
-      - storage contracts
-      - security guarantee meanings
-      - template bodies
-    related_docs:
-      - use.agent-guide
-      - use.surface-recipes
-      - reference.security
-      - reference.runtime-boundaries
-      - reference.api.methods
-      - reference.api.errors
+  - doc_id: "reference.template-bodies"
+    path_en: "docs/en/reference/template-bodies.md"
+    path_ko: "docs/ko/reference/template-bodies.md"
+    role: "reference"
+    owner_for:
+      - "template body wording"
+      - "status card wording"
+      - "Decision Packet wording"
+      - "Evidence Manifest wording"
+    not_owner_for:
+      - "projection authority"
+      - "API schemas"
+      - "storage contracts"
+    normative_level: "contract"
+    audience:
+      - "implementers"
+      - "maintainers"
+      - "translators"
 
-  - doc_id: reference.projection-and-templates
-    status: active
-    family: reference.projection
-    paths:
-      en: docs/en/reference/projection-and-templates.md
-      ko: docs/ko/reference/projection-and-templates.md
-    default_for_agent: en
-    primary_role: projection_authority_owner
-    canonical_for:
-      - projection_authority
-      - read_only_derived_display_boundaries
-      - projection_freshness
-      - source_state_freshness_boundaries
-      - rendered_display_non_authority
-      - rendered_label_boundaries
-      - out_of_scope_projection_boundaries
-    owns:
-      - projection authority
-      - read-only derived-display boundaries
-      - source-state and freshness boundaries
-      - rendered display non-authority rules
-      - rendered label boundaries
-      - out-of-scope projection boundaries
-    does_not_own:
-      - status card bodies
-      - judgment request bodies
-      - run/evidence summary bodies
-      - close result bodies
-      - agent context packet bodies
-      - source-of-truth state
-      - storage authority
-      - API schemas
-      - connector behavior
-    related_docs:
-      - reference.template-bodies
-      - reference.core-model
-      - reference.api.schema-state
-      - reference.api.schema-judgment
-      - reference.api.schema-artifacts
-      - reference.security
+  - doc_id: "reference.conformance"
+    path_en: "docs/en/reference/conformance.md"
+    path_ko: "docs/ko/reference/conformance.md"
+    role: "reference"
+    owner_for:
+      - "conformance terminology"
+      - "documentation-level conformance criteria"
+      - "assertion authority boundaries"
+    not_owner_for:
+      - "API branches"
+      - "storage effects"
+      - "security guarantees"
+      - "close-readiness behavior"
+    normative_level: "contract"
+    audience:
+      - "implementers"
+      - "reviewers"
+      - "maintainers"
 
-  - doc_id: reference.template-bodies
-    status: active
-    family: reference.template
-    paths:
-      en: docs/en/reference/template-bodies.md
-      ko: docs/ko/reference/template-bodies.md
-    default_for_agent: en
-    primary_role: template_body_owner
-    canonical_for:
-      - active_template_bodies
-      - status_card_body
-      - judgment_request_body
-      - run_evidence_summary_body
-      - close_result_body
-      - agent_context_packet_body
-      - rendered_wording_boundaries
-      - template_display_text
-    owns:
-      - status card body
-      - judgment request body
-      - run/evidence summary body
-      - close result body
-      - agent context packet body
-      - rendered wording boundaries
-      - template display text boundaries
-    does_not_own:
-      - projection authority
-      - source-state and freshness authority
-      - source-of-truth state
-      - API schemas
-      - out-of-scope template candidates
-    related_docs:
-      - reference.projection-and-templates
-      - reference.core-model
-      - reference.agent-integration
-      - reference.api.schema-state
-      - reference.api.schema-judgment
-      - reference.api.schema-artifacts
-      - reference.security
-      - terminology.map
+  - doc_id: "reference.design-quality"
+    path_en: "docs/en/reference/design-quality.md"
+    path_ko: "docs/ko/reference/design-quality.md"
+    role: "reference"
+    owner_for:
+      - "design-quality routing boundary"
+      - "quality observation routing"
+      - "advisory severity boundary"
+    not_owner_for:
+      - "independent close blockers"
+      - "design-policy validator catalogs"
+      - "acceptance records"
+    normative_level: "contract"
+    audience:
+      - "agents"
+      - "reviewers"
+      - "maintainers"
 
-  - doc_id: reference.conformance
-    status: active
-    family: reference.conformance
-    paths:
-      en: docs/en/reference/conformance.md
-      ko: docs/ko/reference/conformance.md
-    default_for_agent: en
-    primary_role: conformance_reference
-    canonical_for:
-      - conformance_meaning
-      - candidate_fixture_shape
-      - assertion_authority
-      - non_executable_suite_boundary
-      - documentation_smoke_examples
-    owns:
-      - conformance meaning
-      - candidate fixture shape
-      - assertion authority
-      - non-executable suite boundary
-      - representative documentation smoke examples
-    does_not_own:
-      - executable runners
-      - runtime conformance reports
-      - active implementation output
-      - API schemas
-      - generated QA records
-    related_docs:
-      - reference.api.errors
-      - reference.design-quality
-      - maintain.checks
+  - doc_id: "maintain.authoring-guide"
+    path_en: "docs/en/maintain/authoring-guide.md"
+    path_ko: "docs/ko/maintain/authoring-guide.md"
+    role: "maintain"
+    owner_for:
+      - "documentation architecture rules"
+      - "canonical owner rule"
+      - "durable example rules"
+      - "route document rules"
+    not_owner_for:
+      - "product contracts"
+      - "API contracts"
+      - "storage contracts"
+      - "security guarantees"
+    normative_level: "maintenance"
+    audience:
+      - "maintainers"
+      - "agents"
 
-  - doc_id: reference.design-quality
-    status: active
-    family: reference.design
-    paths:
-      en: docs/en/reference/design-quality.md
-      ko: docs/ko/reference/design-quality.md
-    default_for_agent: en
-    primary_role: design_quality_owner
-    canonical_for:
-      - design_quality_activation
-      - design_finding_severity
-      - design_quality_close_impact
-      - design_policy_waiver_boundary
-      - validator_id_boundary
-    owns:
-      - design-quality activation
-      - finding severity
-      - close impact
-      - waiver boundary
-      - validator ID boundary
-    does_not_own:
-      - broad product design choices
-      - Core gate definitions
-      - storage DDL
-      - conformance runner output
-      - out-of-scope policy catalog details
-    related_docs:
-      - reference.core-model
-      - reference.conformance
-      - reference.api.errors
+  - doc_id: "maintain.translation-guide"
+    path_en: "docs/en/maintain/translation-guide.md"
+    path_ko: "docs/ko/maintain/translation-guide.md"
+    role: "maintain"
+    owner_for:
+      - "bilingual semantic parity rules"
+      - "Korean technical writing rules"
+      - "identifier preservation guidance"
+      - "hidden anchor policy"
+    not_owner_for:
+      - "product contracts"
+      - "API contracts"
+      - "storage contracts"
+    depends_on:
+      - "terminology.map"
+    normative_level: "maintenance"
+    audience:
+      - "maintainers"
+      - "translators"
+      - "agents"
 
-  - doc_id: reference.glossary
-    status: active
-    family: reference.terminology
-    paths:
-      en: docs/en/reference/glossary.md
-      ko: docs/ko/reference/glossary.md
-    default_for_agent: en
-    primary_role: terminology_definition_owner
-    canonical_for:
-      - official_terminology_definitions
-      - product_term_definitions
-      - complete_intent_disambiguation
-      - full_evaluation_order_term
-      - api_schema_term_definitions
-      - storage_term_definitions
-      - security_agent_projection_terms
-      - promotion_time_owner_update_term
-      - close_readiness_term_routing
-    owns:
-      - official terminology definitions
-      - product terms
-      - "`complete` versus full/entire terminology"
-      - full evaluation order terminology
-      - Core terms
-      - API and schema terms
-      - storage terms
-      - security, agent, projection, and template terms
-      - promotion-time owner update term meaning
-      - close readiness terminology routing
-    does_not_own:
-      - contract details
-      - schemas
-      - DDL
-      - transition rules
-      - implementation sequencing
-    related_docs:
-      - terminology.map
-      - maintain.translation-guide
-      - reference.core-model
-
-  - doc_id: terminology.map
-    status: active
-    family: reference.terminology
-    paths:
-      shared: docs/terminology-map.yaml
-    default_for_agent: shared
-    primary_role: bilingual_term_map
-    canonical_for:
-      - stable_bilingual_term_mappings
-      - semantic_parity_term_keys
-      - complete_identifier_vs_full_prose_term_control
-      - documentation_maintenance_terms
-      - close_readiness_korean_terminology
-      - korean_close_readiness_term_control
-    owns:
-      - stable English/Korean term mappings
-      - cross-language terminology notes
-      - "`complete` identifier versus full/entire prose guidance"
-      - search-friendly canonical term keys
-      - Korean term controls for close readiness
-    does_not_own:
-      - product contracts
-      - API contracts
-      - storage contracts
-      - security contracts
-      - projection contracts
-      - runtime contracts
-      - template body wording
-    related_docs:
-      - reference.glossary
-      - maintain.translation-guide
-      - reference.template-bodies
-
-  - doc_id: maintain.authoring-guide
-    status: maintain
-    family: maintain
-    paths:
-      en: docs/en/maintain/authoring-guide.md
-      ko: docs/ko/maintain/authoring-guide.md
-    default_for_agent: en
-    primary_role: documentation_authoring_rules
-    canonical_for:
-      - documentation_authoring_rules
-      - owner_boundary_discipline
-      - route_document_rules
-      - durable_example_scenarios
-      - api_example_consistency_rules
-      - example_field_name_consistency_rules
-      - dense_reference_paragraph_chunking
-      - large_table_authoring_rule
-      - stale_content_cleanup_rules
-    owns:
-      - documentation authoring rules
-      - owner-boundary discipline
-      - route document rules
-      - durable example scenario rules
-      - API example consistency rules
-      - example field-name consistency rules
-      - dense reference paragraph split guidance
-      - large-table authoring guidance
-      - documentation editing scope reminders
-      - stale content cleanup rules
-    does_not_own:
-      - Harness runtime contracts
-      - generated records
-      - API schemas
-      - storage contracts
-      - security contracts
-      - implementation approval
-    related_docs:
-      - maintain.translation-guide
-      - maintain.checks
-      - reference.index
-
-  - doc_id: maintain.translation-guide
-    status: maintain
-    family: maintain
-    paths:
-      en: docs/en/maintain/translation-guide.md
-      ko: docs/ko/maintain/translation-guide.md
-    default_for_agent: en
-    primary_role: bilingual_editing_rules
-    canonical_for:
-      - bilingual_semantic_parity_rules
-      - korean_terminology_guidance
-      - close_readiness_korean_style_guidance
-      - complete_vs_full_korean_disambiguation
-      - full_close_readiness_evaluation_order_korean
-      - exact_identifier_preservation
-      - natural_korean_rule
-    owns:
-      - bilingual semantic parity rules
-      - Korean terminology guidance
-      - close readiness Korean style guidance
-      - "`complete` versus full/entire Korean guidance"
-      - full close-readiness evaluation order Korean phrasing
-      - exact-identifier preservation
-      - natural Korean prose rules
-      - route and context parity rules
-    does_not_own:
-      - runtime configuration
-      - source-of-truth state
-      - acceptance records
-      - product contracts
-      - template body wording
-    related_docs:
-      - maintain.authoring-guide
-      - reference.glossary
-      - terminology.map
-
-  - doc_id: maintain.checks
-    status: maintain
-    family: maintain
-    paths:
-      en: docs/en/maintain/checks.md
-      ko: docs/ko/maintain/checks.md
-    default_for_agent: en
-    primary_role: documentation_checklist
-    canonical_for:
-      - documentation_checks
-      - route_check
-      - owner_boundary_check
-      - bilingual_check
-      - stale_content_check
-      - timeless_example_scenario_check
-      - dense_reference_paragraph_scannability_check
-      - large_table_source_maintainability_check
-      - api_example_internal_consistency_check
-      - api_example_state_version_consistency_check
-      - api_example_field_name_consistency_check
-    owns:
-      - documentation checks
-      - route drift checks
-      - owner-boundary checks
-      - bilingual checks
-      - stale-content checks
-      - timeless API and Reference example scenario check
-      - dense reference paragraph scannability check
-      - large-table source maintainability check
-      - API example internal-consistency check
-      - API example state-version consistency check
-      - API example field-name consistency check
-      - quality drift checks
-    does_not_own:
-      - runtime proof
-      - server conformance
-      - generated QA records
-      - acceptance records
-      - implementation completeness
-    related_docs:
-      - maintain.authoring-guide
-      - maintain.translation-guide
-      - reference.conformance
+  - doc_id: "maintain.checks"
+    path_en: "docs/en/maintain/checks.md"
+    path_ko: "docs/ko/maintain/checks.md"
+    role: "maintain"
+    owner_for:
+      - "documentation maintenance checks"
+      - "link and anchor check procedures"
+      - "bilingual parity check procedures"
+      - "API example consistency checks"
+    not_owner_for:
+      - "runtime conformance"
+      - "product acceptance"
+      - "API contracts"
+      - "storage contracts"
+    depends_on:
+      - "maintain.authoring-guide"
+      - "maintain.translation-guide"
+    normative_level: "maintenance"
+    audience:
+      - "maintainers"
+      - "agents"
