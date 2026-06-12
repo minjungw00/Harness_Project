@@ -239,9 +239,11 @@ Not allowed:
 
 Example account data export write-decision data:
 
+This storage-effect example reuses prepare-write request data, so the path field follows the method owner document's `intended_paths` name.
+
 ```yaml
 intended_operation: "update account data export confirmation flow"
-affected_paths:
+intended_paths:
   - src/account/export.ts
   - src/account/export-confirmation.ts
   - tests/account-export.test.ts

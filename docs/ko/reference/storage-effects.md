@@ -233,7 +233,7 @@ API 데이터 형태에는 아래 값이 포함됩니다.
 허용될 수 있는 효과:
 
 - 응답과 재실행 페이로드에 `write_decision_reasons: WriteDecisionReason[]`를 남길 수 있습니다.
-- 단, 메서드 계약이 해당 판단 기록을 허용할 때만 가능합니다.
+- 단, method 담당 문서가 해당 판단 기록을 허용할 때만 가능합니다.
 
 허용되지 않는 효과:
 
@@ -246,11 +246,13 @@ API 데이터 형태에는 아래 값이 포함됩니다.
 - 스테이징 핸들 소비
 - `close_task` 효과 적용
 
-계정 데이터 내보내기 쓰기 결정 데이터 예시는 아래와 같습니다.
+계정 데이터 내보내기 write decision 데이터 예시는 아래와 같습니다.
+
+이 저장 효과 예시는 `harness.prepare_write` 요청 field 일부를 함께 보여 주므로, 경로 field는 method 담당 문서가 쓰는 `intended_paths`를 따릅니다.
 
 ```yaml
-intended_operation: "계정 데이터 내보내기 확인 흐름 갱신"
-affected_paths:
+intended_operation: "계정 내보내기 확인 흐름 갱신"
+intended_paths:
   - src/account/export.ts
   - src/account/export-confirmation.ts
   - tests/account-export.test.ts
