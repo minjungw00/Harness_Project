@@ -138,7 +138,7 @@ params:
     locale: ko-KR
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "명시적 확인 단계가 필요하도록 계정 내보내기 흐름 갱신"
+  intended_operation: "명시적 확인 단계가 필요하도록 계정 내보내기 확인 흐름을 갱신"
   intended_paths:
     - src/account/export.ts
     - src/account/export-confirmation.ts

@@ -246,7 +246,7 @@ params:
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "계정 내보내기 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
+      - "계정 내보내기 확인 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -339,7 +339,7 @@ user_judgment:
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "계정 내보내기 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
+      - "계정 내보내기 확인 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -403,7 +403,7 @@ user_judgment:
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "계정 내보내기 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
+      - "계정 내보내기 확인 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
   affected_refs:
     - record_kind: task
       record_id: task_456
