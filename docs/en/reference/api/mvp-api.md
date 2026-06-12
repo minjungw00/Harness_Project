@@ -25,7 +25,7 @@ This document does not own:
 
 ## API method family boundary
 
-The active MVP API is a small local MCP surface for one user work loop. It can intake work, show status, update active scope, check proposed product writes, stage artifacts, record runs and evidence refs, ask and record user-owned judgment, and close only when active blockers allow it.
+The active MVP API is a small local MCP surface for one user work loop. It can intake work, show status, update active scope, check proposed product writes, stage artifacts, record runs and evidence refs, ask and record user-owned judgment, and close only when no active blockers prevent it.
 
 The API returns cooperative Harness record and check behavior only. Security non-claims and guarantee wording belong to [Security](../security.md). Future API or schema candidates are cataloged in [Later Candidate Index](../../later/index.md), not in this active reference.
 

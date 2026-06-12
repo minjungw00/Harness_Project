@@ -70,7 +70,7 @@
 | 공통 페이로드 스키마는 어디서 정의되는가? | `api/schema-core.md` |
 | `harness.status`의 `state_version` 예시 규칙은 어디에 있는가? | `api/method-status.md`, `../maintain/checks.md` |
 | `harness.prepare_write`는 무엇을 반환하는가? | `api/method-prepare-write.md` |
-| `harness.prepare_write` 응답 branch는 어디서 정의되는가? | `api/schema-core.md` |
+| `harness.prepare_write` 응답 분기는 어디서 정의되는가? | `api/schema-core.md` |
 | `harness.prepare_write` 상태 형태는 어디서 정의되는가? | `api/schema-state.md` |
 | `harness.prepare_write` 판단 형태는 어디서 정의되는가? | `api/schema-judgment.md` |
 | `harness.prepare_write` 민감 동작 승인은 어디서 정의되는가? | `api/method-prepare-write.md` |

@@ -527,7 +527,7 @@
 - [용어 지도](../../terminology-map.yaml)
 
 설명:
-- 영어 산문에서는 enum 값 `complete`와 헷갈릴 수 있는 자리에서 full이나 entire를 씁니다.
+- 영어 산문에서는 enum 값 `complete`와 헷갈릴 수 있는 자리에서 `full`이나 `entire`를 씁니다.
 - 닫기 준비 상태 맥락에서는 전체 닫기 준비 상태 평가 순서라고 씁니다.
 
 ### artifact
@@ -731,7 +731,7 @@
 - [보안](security.md)
 
 설명:
-- 영어 산문에서는 sensitive-action approval을 기본 표현으로 씁니다.
+- 영어 산문에서는 `sensitive-action approval`을 기본 표현으로 씁니다.
 
 ### access class
 
@@ -954,7 +954,7 @@
 - [저장 효과](storage-effects.md)
 
 설명:
-- dry-run은 선택된 동작의 유효한 미리보기 경로이며 쓰기를 커밋하거나 담당 기록을 만들지 않습니다.
+- `dry-run`은 선택된 동작의 유효한 미리보기 경로이며 쓰기를 커밋하거나 담당 기록을 만들지 않습니다.
 
 ### blocked result
 
