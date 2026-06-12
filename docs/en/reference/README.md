@@ -18,144 +18,158 @@ Use this order when moving from product boundary to exact contract owners:
 
 | Step | Owner route |
 |---|---|
-| Active scope | [Active MVP Scope](active-mvp-scope.md) |
-| API methods | [MVP API router](api/mvp-api.md), then the method owner document for the method being checked |
-| Schema owners | Use [API and schema owners](#api-and-schema-owners) to choose the exact schema owner. |
-| Storage effects | Start with [Storage Effects](storage-effects.md), then route to a narrower storage owner when needed. |
+| Active scope | `active-mvp-scope.md` |
+| API method list | `api/mvp-api.md` |
+| API method behavior | [API method owners](#api-method-owners) |
+| Schema shapes | [API and schema owners](#api-and-schema-owners) |
+| Storage effects | `storage-effects.md` |
 
 This route is for implementers and reviewers who need exact owners. New and working users should begin with [Start](../start.md) and the [User Guide](../use/user-guide.md).
 
 ## Current scope
 
-| Question | Owner document(s) |
+| Question | Owner |
 |---|---|
-| Where is the current MVP scope defined? | [Active MVP Scope](active-mvp-scope.md) |
-| Where is the current MVP excluded scope defined? | [Active MVP Scope](active-mvp-scope.md) |
-| Is a capability active, profile-gated, or later-only? | [Active MVP Scope](active-mvp-scope.md), [API Value Sets](api/schema-value-sets.md), [Later Candidate Index](../later/index.md) |
-| Is `isolated` active in the current MVP? | [Security](security.md), [Active MVP Scope](active-mvp-scope.md) |
-| Has this repository started runtime or server implementation? | [MVP Plan](../build/mvp-plan.md), [Active MVP Scope](active-mvp-scope.md) |
-| Where is the documentation-only boundary stated? | [Active MVP Scope](active-mvp-scope.md), [Runtime Boundaries](runtime-boundaries.md) |
-| Where is implementation-readiness or maintainer handoff status tracked? | [MVP Plan](../build/mvp-plan.md) |
+| Where is current MVP included scope defined? | `active-mvp-scope.md` |
+| Where is current MVP excluded scope defined? | `active-mvp-scope.md` |
+| Is a capability active, profile-gated, or later-only? | `active-mvp-scope.md` |
+| Is `isolated` active in the current MVP? | `active-mvp-scope.md`, `security.md` |
+| Has runtime or server implementation started? | `../build/mvp-plan.md` |
+| Where is the documentation-only boundary stated? | `runtime-boundaries.md`, `active-mvp-scope.md` |
+| Where is maintainer handoff status tracked? | `../build/mvp-plan.md` |
 
 ## Find the owner document
 
-| Question | Owner document(s) |
+| Question | Owner |
 |---|---|
-| Which document owns Core authority, Task state, evidence, residual risk, and non-substitution rules? | [Core Model](core-model.md) |
-| Which document owns API method behavior? | Method owner documents listed in the API method owners table; [MVP API router](api/mvp-api.md) owns the active method list and owner routing |
-| Which document owns shared API response branches and envelopes? | [API Schema Core](api/schema-core.md) |
-| Which document owns method response branch schemas? | [API Schema Core](api/schema-core.md) |
-| Which document owns nested state, artifact, judgment, and value shapes? | Use the relevant schema owner in [API and schema owners](#api-and-schema-owners). |
-| Which document owns public error codes and error precedence? | [API Errors](api/errors.md) |
-| Which document owns storage records or DDL? | [Storage Records](storage-records.md) |
-| Which document owns storage effects? | [Storage Effects](storage-effects.md) |
-| Which document owns method-to-storage effects? | [Storage Effects](storage-effects.md) |
-| Where does a storage effect question go? | [Storage Effects](storage-effects.md) |
-| Which document owns security claims and non-claims? | [Security](security.md) |
-| Which document owns product terminology? | [Glossary](glossary.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
-| Which document owns read-only projection authority and source-state/freshness boundaries? | [Projection Authority Reference](projection-and-templates.md) |
-| Which document owns status card, judgment request, run/evidence summary, close result, and agent context packet bodies? | [Template Bodies](template-bodies.md) |
+| Which document owns Core authority, Task state, evidence, residual risk, and non-substitution rules? | `core-model.md` |
+| Which document owns the active API method list? | `api/mvp-api.md` |
+| Which document owns shared API response branches and envelopes? | `api/schema-core.md` |
+| Which document owns method response branch schemas? | `api/schema-core.md` |
+| Which document owns public error codes and error precedence? | `api/errors.md` |
+| Which document owns storage records or DDL? | `storage-records.md` |
+| Which document owns storage effects? | `storage-effects.md` |
+| Which document owns method-to-storage effects? | `storage-effects.md` |
+| Which document owns security claims and non-claims? | `security.md` |
+| Which document owns product terminology? | `glossary.md`, `../../terminology-map.yaml` |
+| Which document owns read-only projection authority and freshness boundaries? | `projection-and-templates.md` |
+| Which document owns rendered template bodies? | `template-bodies.md` |
 
 ## API and schema owners
 
-| Question | Owner document(s) |
+| Question | Owner |
 |---|---|
-| API examples use what scenario? | [MVP API](api/mvp-api.md), [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
-| Can API examples use documentation maintenance as the scenario? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
-| Where is the active API method list? | [MVP API router](api/mvp-api.md); exact method-name values are in [API Value Sets](api/schema-value-sets.md) |
-| Where is the `harness.status` example `state_version` rule? | [Status method](api/method-status.md), [Checks](../maintain/checks.md) |
-| What does `harness.prepare_write` return? | [Prepare-write method](api/method-prepare-write.md) |
-| Which schemas support `harness.prepare_write` responses? | [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), [Core Model](core-model.md) |
-| Where is `harness.prepare_write` sensitive approval routed? | [Prepare-write method](api/method-prepare-write.md) |
-| Where is `ToolRejectedResponse` defined? | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
-| Is `STATE_VERSION_CONFLICT` a blocker code? | [API Errors](api/errors.md) |
-| When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`? | [Close-task method](api/method-close-task.md) |
-| Which document owns active method names, `response_kind`, `effect_kind`, and enum-like API values? | [API Value Sets](api/schema-value-sets.md) |
-| Is `complete` an enum value or the word "full" in this context? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [API Value Sets](api/schema-value-sets.md) |
-| Where are access classes defined? | [API Value Sets](api/schema-value-sets.md) |
-| Where are dry-run preview structures such as `DryRunSummary`, `PlannedEffect`, and `PlannedBlocker` defined? | [API Schema Core](api/schema-core.md), [API Value Sets](api/schema-value-sets.md) |
-| Which document owns guarantee label values? | [API Value Sets](api/schema-value-sets.md) |
-| Where is `isolated` defined as a value? | [API Value Sets](api/schema-value-sets.md); use [Security](security.md) for guarantee semantics |
-| Which document owns `StateSummary`, `ShapingReadiness`, `NextActionSummary`, `CloseReadinessBlocker`, and `ValidatorResult` shapes? | [API State Schemas](api/schema-state.md) |
-| Which document owns `ArtifactRef`, `ArtifactInput`, and `StagedArtifactHandle` shapes? | [API Artifact Schemas](api/schema-artifacts.md) |
-| Which document owns `UserJudgment`, `SensitiveActionScope`, and accepted-risk input shapes? | [API Judgment Schemas](api/schema-judgment.md) |
+| What scenario do API examples use? | `api/mvp-api.md` |
+| Can API examples use documentation maintenance as the scenario? | `../maintain/authoring-guide.md` |
+| Where are API example checks defined? | `../maintain/checks.md` |
+| Where is the active API method list? | `api/mvp-api.md` |
+| Where are exact API method-name values defined? | `api/schema-value-sets.md` |
+| Where is the `harness.status` example `state_version` rule? | `api/method-status.md` |
+| What does `harness.prepare_write` return? | `api/method-prepare-write.md` |
+| Which schema owns `harness.prepare_write` response branches? | `api/schema-core.md` |
+| Which schema owns `harness.prepare_write` state shapes? | `api/schema-state.md` |
+| Which schema owns `harness.prepare_write` judgment shapes? | `api/schema-judgment.md` |
+| Where is `harness.prepare_write` sensitive approval routed? | `api/method-prepare-write.md` |
+| Where is `ToolRejectedResponse` defined? | `api/schema-core.md` |
+| Is `STATE_VERSION_CONFLICT` a blocker code? | `api/errors.md` |
+| When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`? | `api/method-close-task.md` |
+| Which document owns `response_kind`, `effect_kind`, and enum-like API values? | `api/schema-value-sets.md` |
+| Is `complete` an enum value or the word "full" here? | `../../terminology-map.yaml` |
+| Where are access classes defined? | `api/schema-value-sets.md` |
+| Where are `DryRunSummary`, `PlannedEffect`, and `PlannedBlocker` defined? | `api/schema-core.md` |
+| Which document owns guarantee label values? | `api/schema-value-sets.md` |
+| Which document owns guarantee semantics? | `security.md` |
+| Where is `isolated` defined as a value? | `api/schema-value-sets.md` |
+| Where is `isolated` guarantee meaning defined? | `security.md` |
+| Which document owns state summary shapes? | `api/schema-state.md` |
+| Which document owns artifact reference shapes? | `api/schema-artifacts.md` |
+| Which document owns judgment and accepted-risk input shapes? | `api/schema-judgment.md` |
 
 ## API method owners
 
-| Question | Owner document |
+| Question | Owner |
 |---|---|
-| `harness.intake` behavior | [Intake method](api/method-intake.md) |
-| `harness.update_scope` behavior | [Update-scope method](api/method-update-scope.md) |
-| `harness.status` behavior | [Status method](api/method-status.md) |
-| `harness.prepare_write` behavior | [Prepare-write method](api/method-prepare-write.md) |
-| `harness.stage_artifact` behavior | [Stage-artifact method](api/method-stage-artifact.md) |
-| `harness.record_run` behavior | [Record-run method](api/method-record-run.md) |
-| `harness.record_run` evidence behavior | [Record-run method](api/method-record-run.md), [Storage Effects](storage-effects.md) |
-| user judgment methods | [User-judgment methods](api/method-user-judgment.md) |
-| `harness.close_task` behavior | [Close-task method](api/method-close-task.md) |
+| What does `harness.intake` do? | `api/method-intake.md` |
+| What does `harness.update_scope` do? | `api/method-update-scope.md` |
+| What does `harness.status` return? | `api/method-status.md` |
+| What does `harness.prepare_write` return? | `api/method-prepare-write.md` |
+| What does `harness.stage_artifact` do? | `api/method-stage-artifact.md` |
+| What does `harness.record_run` do? | `api/method-record-run.md` |
+| How does `harness.record_run` handle evidence? | `api/method-record-run.md` |
+| What storage effects does `harness.record_run` have? | `storage-effects.md` |
+| What does `harness.request_user_judgment` do? | `api/method-user-judgment.md` |
+| What does `harness.record_user_judgment` do? | `api/method-user-judgment.md` |
+| What does `harness.close_task` do? | `api/method-close-task.md` |
 
 ## Storage owners
 
-| Question | Owner document(s) |
+| Question | Owner |
 |---|---|
-| Where should I start for the storage document family? | [Storage](storage.md), then the specific storage owner below |
-| Which document owns Runtime Home layout, local store assumptions, and table overview? | [Storage Records](storage-records.md), [Runtime Boundaries](runtime-boundaries.md) |
-| Where are storage record values defined? | [Storage Records](storage-records.md) |
-| Is `CloseReadinessBlocker` a storage row? | [Storage Records](storage-records.md) |
-| Does artifact staging create evidence? | [Artifact Storage](storage-artifacts.md), [Storage Effects](storage-effects.md) |
-| Which document owns artifact promotion? | [Artifact Storage](storage-artifacts.md) |
-| Which document owns staged-handle validation and artifact body-read eligibility? | [Artifact Storage](storage-artifacts.md), [API Artifact Schemas](api/schema-artifacts.md) |
-| Which document owns idempotency, state clocks, locks, and migrations? | [Storage Versioning](storage-versioning.md), [API Errors](api/errors.md) |
+| Where should I start for the storage document family? | `storage.md` |
+| Which document owns Harness Runtime Home separation? | `runtime-boundaries.md` |
+| Which document owns local store assumptions and table overview? | `storage-records.md` |
+| Where are storage record values defined? | `storage-records.md` |
+| Is `CloseReadinessBlocker` a storage row? | `storage-records.md` |
+| Does artifact staging create evidence? | `storage-artifacts.md`, `storage-effects.md` |
+| Which document owns artifact staging and promotion? | `storage-artifacts.md` |
+| Which document owns artifact reference schemas? | `api/schema-artifacts.md` |
+| Which document owns staged-handle validation and body-read eligibility? | `storage-artifacts.md` |
+| Which document owns idempotency, state clocks, locks, and migrations? | `storage-versioning.md` |
 
 ## Security and runtime owners
 
-| Question | Owner document(s) |
+| Question | Owner |
 |---|---|
-| Does the current MVP provide OS sandboxing? | [Security](security.md) |
-| Which document owns `isolated` guarantee semantics? | [Security](security.md) |
-| Which document owns guarantee semantics? | [Security](security.md) |
-| Where are guarantee semantics defined? | [Security](security.md) |
-| Which document owns Product Repository, Harness Server, and Harness Runtime Home separation? | [Runtime Boundaries](runtime-boundaries.md) |
-| Which document owns local connector behavior and capability context? | [Agent Integration](agent-integration.md) |
-| Which document owns verified surface and guarantee boundaries? | [Agent Integration](agent-integration.md), [MVP API router](api/mvp-api.md), method owner documents, [Security](security.md) |
-| Which document owns CLI, IDE/editor, chat, and local MCP usage recipes? | [Surface Recipes](../use/surface-recipes.md) |
-| Which document owns public security-related error mapping? | [API Errors](api/errors.md), [Security](security.md) |
+| Does the current MVP provide OS sandboxing? | `security.md` |
+| Which document owns `isolated` guarantee semantics? | `security.md` |
+| Which document owns guarantee semantics? | `security.md` |
+| Which document owns Product Repository, Harness Server, and Harness Runtime Home separation? | `runtime-boundaries.md` |
+| Which document owns local connector behavior and capability context? | `agent-integration.md` |
+| Which document owns verified surface context? | `agent-integration.md` |
+| Which document owns verified guarantee boundaries? | `security.md` |
+| Which document owns CLI, IDE/editor, chat, and local MCP recipes? | `../use/surface-recipes.md` |
+| Which document owns public security-related error mapping? | `api/errors.md` |
 
 ## User judgment and close-readiness owners
 
-| Question | Owner document(s) |
+| Question | Owner |
 |---|---|
-| Which document owns user-owned judgment and non-substitution rules? | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md) |
-| Who owns user judgment prompt behavior? | [User-judgment methods](api/method-user-judgment.md), [Core Model](core-model.md) |
-| Which document owns sensitive-action approval boundaries? | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md), [Security](security.md) |
-| Which document owns close readiness and close honesty? | [Core Model](core-model.md), [Close-task method](api/method-close-task.md), [API Errors](api/errors.md) |
-| Which document owns close-readiness blocker shape and close error routing? | [API State Schemas](api/schema-state.md), [API Errors](api/errors.md) |
-| Which document owns final acceptance and residual-risk acceptance boundaries? | [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md), [API Value Sets](api/schema-value-sets.md) |
-| Which document owns compact evidence summary meaning? | [Core Model](core-model.md), [API State Schemas](api/schema-state.md), [Record-run method](api/method-record-run.md), [Status method](api/method-status.md) |
+| Which document owns user-owned judgment meaning? | `core-model.md` |
+| Which document owns user judgment prompt behavior? | `api/method-user-judgment.md` |
+| Which document owns user judgment schemas? | `api/schema-judgment.md` |
+| Which document owns sensitive-action approval meaning? | `core-model.md` |
+| Which document owns sensitive-action approval schemas? | `api/schema-judgment.md` |
+| Which document owns sensitive-action security semantics? | `security.md` |
+| Which document owns close readiness and close honesty meaning? | `core-model.md` |
+| Which document owns `harness.close_task` behavior? | `api/method-close-task.md` |
+| Which document owns close-readiness blocker shape? | `api/schema-state.md` |
+| Which document owns close error routing? | `api/errors.md` |
+| Which document owns final acceptance and residual-risk boundaries? | `core-model.md` |
+| Which document owns accepted-risk schemas? | `api/schema-judgment.md` |
+| Which document owns accepted-risk values? | `api/schema-value-sets.md` |
+| Which document owns compact evidence summary meaning? | `core-model.md` |
+| Which document owns compact evidence summary shape? | `api/schema-state.md` |
 
 ## Later and maintenance owners
 
-| Question | Owner document(s) |
+| Question | Owner |
 |---|---|
-| Where should later candidates be documented? | [Later Candidate Index](../later/index.md) |
-| Where are later security and assurance candidates documented? | [Security and Assurance Later Candidates](../later/security-and-assurance.md) |
-| Where are later artifact and evidence candidates documented? | [Artifacts and Evidence Later Candidates](../later/artifacts-and-evidence.md) |
-| Where are artifact later candidates documented? | [Artifacts and Evidence Later Candidates](../later/artifacts-and-evidence.md) |
-| Where are later connector and surface candidates documented? | [Connectors and Surfaces Later Candidates](../later/connectors-and-surfaces.md) |
-| Where are later policy and conformance candidates documented? | [Policy and Conformance Later Candidates](../later/policy-and-conformance.md) |
-| Where are later workflow and collaboration candidates documented? | [Workflow and Collaboration Later Candidates](../later/workflow-and-collaboration.md) |
-| Is a later candidate an active requirement? | [Later Candidate Index](../later/index.md), [Active MVP Scope](active-mvp-scope.md) |
-| What does promotion-time owner update mean? | [Glossary](glossary.md), [Later Candidate Index](../later/index.md) |
-| What else must change before a later candidate becomes active? | [Later Candidate Index](../later/index.md), [Active MVP Scope](active-mvp-scope.md) |
-| How should "Full close-readiness evaluation order" be written in Korean? | [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md), [API Value Sets](api/schema-value-sets.md) |
-| How should "close readiness" be written in Korean? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md) |
-| How should Korean close readiness terminology be written? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md) |
-| Where is close readiness Korean terminology controlled? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md) |
-| Where is Korean terminology controlled? | [docs/terminology-map.yaml](../../terminology-map.yaml), [Translation Guide](../maintain/translation-guide.md), [Glossary](glossary.md) |
-| Where are documentation authoring rules? | [Authoring Guide](../maintain/authoring-guide.md) |
-| Where is the large-table authoring rule defined? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
-| When should a long Markdown table be split? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
-| When should a dense reference paragraph be split? | [Authoring Guide](../maintain/authoring-guide.md), [Checks](../maintain/checks.md) |
-| Where are documentation checks? | [Checks](../maintain/checks.md) |
-| Where is retrieval or route metadata maintained? | [docs/doc-index.yaml](../../doc-index.yaml) |
-| Which document should an agent read first? | [AGENTS.md](../../../AGENTS.md), then [docs/doc-index.yaml](../../doc-index.yaml) |
+| Where should later candidates be documented? | `../later/index.md` |
+| Where are later security and assurance candidates documented? | `../later/security-and-assurance.md` |
+| Where are later artifact and evidence candidates documented? | `../later/artifacts-and-evidence.md` |
+| Where are later connector and surface candidates documented? | `../later/connectors-and-surfaces.md` |
+| Where are later policy and conformance candidates documented? | `../later/policy-and-conformance.md` |
+| Where are later workflow and collaboration candidates documented? | `../later/workflow-and-collaboration.md` |
+| Is a later candidate an active requirement? | `active-mvp-scope.md` |
+| What does promotion-time owner update mean? | `glossary.md` |
+| What must change before a later candidate becomes active? | `../later/index.md` |
+| How should "Full close-readiness evaluation order" be written in Korean? | `../maintain/translation-guide.md` |
+| How should "close readiness" be written in Korean? | `../../terminology-map.yaml` |
+| Where is Korean terminology controlled? | `../../terminology-map.yaml` |
+| Where are documentation authoring rules? | `../maintain/authoring-guide.md` |
+| Where is the large-table authoring rule defined? | `../maintain/authoring-guide.md` |
+| When should a long Markdown table be split? | `../maintain/authoring-guide.md` |
+| When should a dense reference paragraph be split? | `../maintain/authoring-guide.md` |
+| Where are documentation checks? | `../maintain/checks.md` |
+| Where is retrieval or route metadata maintained? | `../../doc-index.yaml` |
+| Which document should an agent read first? | `../../../AGENTS.md`, `../../doc-index.yaml` |
