@@ -185,6 +185,7 @@ Fix:
 
 Owner:
 - [Authoring Guide](authoring-guide.md)
+- [MVP API router](../reference/api/mvp-api.md)
 - The affected Reference owner selected from [Reference Index](../reference/README.md)
 
 Check:
@@ -710,6 +711,7 @@ Fix:
 
 Owner:
 - [Authoring Guide](authoring-guide.md)
+- [Checks](checks.md)
 
 Check:
 - Inspect changed Reference paragraphs for multiple conditions, exceptions, non-claims, owner links, or effects hidden in one dense paragraph.
@@ -728,6 +730,7 @@ Fix:
 
 Owner:
 - [Authoring Guide](authoring-guide.md)
+- [Checks](checks.md)
 
 Check:
 - Confirm the table maintainability rule applies to all Reference documents, not only storage references.

@@ -59,12 +59,12 @@
 
 | 질문 | 담당 문서 |
 |---|---|
-| API 예시는 어떤 시나리오를 사용하나요? | `api/mvp-api.md` |
+| API 예시는 어떤 시나리오를 사용하나요? | `api/mvp-api.md`, `../maintain/authoring-guide.md`, `../maintain/checks.md` |
 | API 예시가 문서 유지보수를 시나리오로 써도 되나요? | `../maintain/authoring-guide.md` |
 | API 예시 점검은 어느 담당 문서가 맡나요? | `../maintain/checks.md` |
 | 활성 API 메서드 목록은 어느 담당 문서가 맡나요? | `api/mvp-api.md` |
 | 정확한 API 메서드 이름 값은 어느 담당 문서가 맡나요? | `api/schema-value-sets.md` |
-| `harness.status` 예시의 `state_version` 규칙은 어디에서 확인하나요? | `api/method-status.md` |
+| `harness.status` 예시의 `state_version` 규칙은 어디에서 확인하나요? | `api/method-status.md`, `../maintain/checks.md` |
 | `harness.prepare_write`는 무엇을 반환하나요? | `api/method-prepare-write.md` |
 | `harness.prepare_write` 응답 분기 스키마는 어느 담당 문서가 맡나요? | `api/schema-core.md` |
 | `harness.prepare_write` 상태 형태는 어느 담당 문서가 맡나요? | `api/schema-state.md` |
@@ -74,7 +74,7 @@
 | `STATE_VERSION_CONFLICT`는 차단 사유 코드인가요? | `api/errors.md` |
 | `dry_run=true`인 `harness.close_task`가 언제 `ToolDryRunResponse`가 아닌 응답을 반환하나요? | `api/method-close-task.md` |
 | `response_kind`, `effect_kind`, enum 형태 API 값은 어느 담당 문서가 맡나요? | `api/schema-value-sets.md` |
-| `complete`가 enum 값인지, 여기서 "전체"라는 뜻인지 어디서 확인하나요? | `../../terminology-map.yaml` |
+| `complete`가 enum 값인지, 여기서 "전체"라는 뜻인지 어디서 확인하나요? | `../../terminology-map.yaml`, `glossary.md` |
 | 접근 등급은 어디에 정의되어 있나요? | `api/schema-value-sets.md` |
 | `DryRunSummary`, `PlannedEffect`, `PlannedBlocker`는 어디에 정의되어 있나요? | `api/schema-core.md` |
 | 보장 라벨 값의 담당 문서는 어디인가요? | `api/schema-value-sets.md` |
@@ -95,7 +95,7 @@
 | `harness.prepare_write` 메서드 동작은 어느 담당 문서가 맡나요? | `api/method-prepare-write.md` |
 | `harness.stage_artifact` 메서드 동작은 어느 담당 문서가 맡나요? | `api/method-stage-artifact.md` |
 | `harness.record_run` 메서드 동작은 어느 담당 문서가 맡나요? | `api/method-record-run.md` |
-| `harness.record_run` 증거 메서드 동작은 어느 담당 문서가 맡나요? | `api/method-record-run.md` |
+| `harness.record_run` 증거 메서드 동작은 어느 담당 문서가 맡나요? | `api/method-record-run.md`, `storage-effects.md` |
 | `harness.record_run` 저장 효과는 어느 담당 문서가 맡나요? | `storage-effects.md` |
 | `harness.request_user_judgment` 메서드 동작은 어느 담당 문서가 맡나요? | `api/method-user-judgment.md` |
 | `harness.record_user_judgment` 메서드 동작은 어느 담당 문서가 맡나요? | `api/method-user-judgment.md` |
@@ -135,7 +135,7 @@
 | 질문 | 담당 문서 |
 |---|---|
 | 사용자 소유 판단 의미는 어느 담당 문서가 맡나요? | `core-model.md` |
-| 사용자 판단 프롬프트 동작은 어느 담당 문서가 맡나요? | `api/method-user-judgment.md` |
+| 사용자 판단 프롬프트 동작은 어느 담당 문서가 맡나요? | `api/method-user-judgment.md`, `core-model.md` |
 | 사용자 판단 스키마는 어느 담당 문서가 맡나요? | `api/schema-judgment.md` |
 | 민감 동작 승인 의미는 어느 담당 문서가 맡나요? | `core-model.md` |
 | 민감 동작 승인 스키마는 어느 담당 문서가 맡나요? | `api/schema-judgment.md` |
@@ -167,9 +167,9 @@
 | "close readiness"는 한국어로 어떻게 써야 하나요? | `../../terminology-map.yaml` |
 | 한국어 용어는 어디서 통제하나요? | `../../terminology-map.yaml` |
 | 문서 작성 규칙은 어디에 있나요? | `../maintain/authoring-guide.md` |
-| 큰 Markdown 표 작성 규칙은 어디에 있나요? | `../maintain/authoring-guide.md` |
-| 긴 Markdown 표는 언제 나누나요? | `../maintain/authoring-guide.md` |
-| 촘촘한 참조 문단은 언제 나누나요? | `../maintain/authoring-guide.md` |
+| 큰 Markdown 표 작성 규칙은 어디에 있나요? | `../maintain/authoring-guide.md`, `../maintain/checks.md` |
+| 긴 Markdown 표는 언제 나누나요? | `../maintain/authoring-guide.md`, `../maintain/checks.md` |
+| 촘촘한 참조 문단은 언제 나누나요? | `../maintain/authoring-guide.md`, `../maintain/checks.md` |
 | 문서 점검은 어디에 있나요? | `../maintain/checks.md` |
 | 검색과 경로 메타데이터는 어디에서 관리하나요? | `../../doc-index.yaml` |
 | 에이전트가 먼저 읽어야 할 문서는 무엇인가요? | `../../../AGENTS.md`, `../../doc-index.yaml` |

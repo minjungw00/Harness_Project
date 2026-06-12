@@ -59,12 +59,12 @@ This route is for implementers and reviewers who need exact owners. New and work
 
 | Question | Owner |
 |---|---|
-| What scenario do API examples use? | `api/mvp-api.md` |
+| What scenario do API examples use? | `api/mvp-api.md`, `../maintain/authoring-guide.md`, `../maintain/checks.md` |
 | Can API examples use documentation maintenance as the scenario? | `../maintain/authoring-guide.md` |
 | Where are API example checks defined? | `../maintain/checks.md` |
 | Where is the active API method list? | `api/mvp-api.md` |
 | Where are exact API method-name values defined? | `api/schema-value-sets.md` |
-| Where is the `harness.status` example `state_version` rule? | `api/method-status.md` |
+| Where is the `harness.status` example `state_version` rule? | `api/method-status.md`, `../maintain/checks.md` |
 | What does `harness.prepare_write` return? | `api/method-prepare-write.md` |
 | Which schema owns `harness.prepare_write` response branch schemas? | `api/schema-core.md` |
 | Which schema owns `harness.prepare_write` state shapes? | `api/schema-state.md` |
@@ -74,7 +74,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Is `STATE_VERSION_CONFLICT` a blocker code? | `api/errors.md` |
 | When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`? | `api/method-close-task.md` |
 | Which document owns `response_kind`, `effect_kind`, and enum-like API values? | `api/schema-value-sets.md` |
-| Is `complete` an enum value or the word "full" here? | `../../terminology-map.yaml` |
+| Is `complete` an enum value or the word "full" here? | `../../terminology-map.yaml`, `glossary.md` |
 | Where are access classes defined? | `api/schema-value-sets.md` |
 | Where are `DryRunSummary`, `PlannedEffect`, and `PlannedBlocker` defined? | `api/schema-core.md` |
 | Which document owns guarantee label values? | `api/schema-value-sets.md` |
@@ -95,7 +95,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Where is `harness.prepare_write` behavior defined? | `api/method-prepare-write.md` |
 | Where is `harness.stage_artifact` behavior defined? | `api/method-stage-artifact.md` |
 | Where is `harness.record_run` behavior defined? | `api/method-record-run.md` |
-| Where is `harness.record_run` evidence behavior defined? | `api/method-record-run.md` |
+| Where is `harness.record_run` evidence behavior defined? | `api/method-record-run.md`, `storage-effects.md` |
 | Where are `harness.record_run` storage effects defined? | `storage-effects.md` |
 | Where is `harness.request_user_judgment` behavior defined? | `api/method-user-judgment.md` |
 | Where is `harness.record_user_judgment` behavior defined? | `api/method-user-judgment.md` |
@@ -135,7 +135,7 @@ This route is for implementers and reviewers who need exact owners. New and work
 | Question | Owner |
 |---|---|
 | Which document owns user-owned judgment meaning? | `core-model.md` |
-| Which document owns user judgment prompt behavior? | `api/method-user-judgment.md` |
+| Which document owns user judgment prompt behavior? | `api/method-user-judgment.md`, `core-model.md` |
 | Which document owns user judgment schemas? | `api/schema-judgment.md` |
 | Which document owns sensitive-action approval meaning? | `core-model.md` |
 | Which document owns sensitive-action approval schemas? | `api/schema-judgment.md` |
@@ -167,9 +167,9 @@ This route is for implementers and reviewers who need exact owners. New and work
 | How should "close readiness" be written in Korean? | `../../terminology-map.yaml` |
 | Where is Korean terminology controlled? | `../../terminology-map.yaml` |
 | Where are documentation authoring rules? | `../maintain/authoring-guide.md` |
-| Where is the large-table authoring rule defined? | `../maintain/authoring-guide.md` |
-| When should a long Markdown table be split? | `../maintain/authoring-guide.md` |
-| When should a dense reference paragraph be split? | `../maintain/authoring-guide.md` |
+| Where is the large-table authoring rule defined? | `../maintain/authoring-guide.md`, `../maintain/checks.md` |
+| When should a long Markdown table be split? | `../maintain/authoring-guide.md`, `../maintain/checks.md` |
+| When should a dense reference paragraph be split? | `../maintain/authoring-guide.md`, `../maintain/checks.md` |
 | Where are documentation checks? | `../maintain/checks.md` |
 | Where is retrieval or route metadata maintained? | `../../doc-index.yaml` |
 | Which document should an agent read first? | `../../../AGENTS.md`, `../../doc-index.yaml` |

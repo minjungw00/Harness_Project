@@ -495,12 +495,14 @@ Avoid:
 - complete 닫기 준비 상태
 
 Owner:
+- [Terminology Map](../../terminology-map.yaml)
 - [Close-task method](api/method-close-task.md)
 - [API Value Sets](api/schema-value-sets.md)
 
 Notes:
 - The prose concept is complete intent; only the value string is `complete`.
 - Preserve `complete` only when it is an enum value or explicit identifier.
+- For `complete` enum-versus-full questions, use the Terminology Map and this glossary first. Open API Value Sets only for exact value-name contracts.
 
 ### full evaluation order
 

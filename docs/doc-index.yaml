@@ -120,13 +120,12 @@ question_routes:
       canonical_owner_doc_id: reference.storage-records
       default_path: docs/en/reference/storage-records.md
       route_note: "Storage row and DDL ownership; schema meaning remains with API State Schemas."
-    - question: 'Is `complete` an enum value or the word "full" in this context?'
+    - question: "`complete` enum vs full meaning"
       canonical_owner_doc_id: terminology.map
       default_path: docs/terminology-map.yaml
       supporting_owner_doc_ids:
         - reference.glossary
-        - reference.api.schema-value-sets
-      route_note: "Terminology Map and Glossary disambiguate prose versus identifier usage; API Value Sets owns `intent=complete` as a value."
+      route_note: "Terminology Map and Glossary disambiguate prose versus identifier usage. Open API Value Sets only when the follow-up asks for the exact `intent=complete` value contract."
     - question: "When can `harness.close_task` with `dry_run=true` return something other than `ToolDryRunResponse`?"
       canonical_owner_doc_id: reference.api.method-close-task
       default_path: docs/en/reference/api/method-close-task.md
@@ -136,9 +135,8 @@ question_routes:
       default_path: docs/en/reference/glossary.md
       supporting_owner_doc_ids:
         - maintain.translation-guide
-        - reference.api.schema-value-sets
-      route_note: "Use `전체 닫기 준비 상태 평가 순서` for the full close-readiness evaluation order; use API Value Sets only when `complete` is the intent value."
-    - question: "Does artifact staging create evidence?"
+      route_note: "Use `전체 닫기 준비 상태 평가 순서` for the full close-readiness evaluation order; do not load API Value Sets unless the question is about the literal `complete` intent value."
+    - question: "Artifact staging creates evidence?"
       canonical_owner_doc_id: reference.storage-artifacts
       default_path: docs/en/reference/storage-artifacts.md
       supporting_owner_doc_ids:
@@ -237,19 +235,19 @@ question_routes:
       canonical_owner_doc_id: reference.storage-records
       default_path: docs/en/reference/storage-records.md
       route_note: "Storage Records owns storage-owned record values, status fields, record-column meaning, and storage-owned JSON placement."
-    - question: "Where is the large-table authoring rule defined?"
+    - question: "Long table split rule"
       canonical_owner_doc_id: maintain.authoring-guide
       default_path: docs/en/maintain/authoring-guide.md
       supporting_owner_doc_ids:
         - maintain.checks
-      route_note: "Authoring Guide owns table source maintainability guidance; Checks owns the large-table review check."
+      route_note: "Authoring Guide owns long Markdown table split guidance; Checks owns the table source-maintainability review."
     - question: "When should a long Markdown table be split?"
       canonical_owner_doc_id: maintain.authoring-guide
       default_path: docs/en/maintain/authoring-guide.md
       supporting_owner_doc_ids:
         - maintain.checks
       route_note: "Split a table when cells need lists, multiple conditions, multiple sentences, or source lines become hard to review."
-    - question: "When should a dense reference paragraph be split?"
+    - question: "Dense paragraph split rule"
       canonical_owner_doc_id: maintain.authoring-guide
       default_path: docs/en/maintain/authoring-guide.md
       supporting_owner_doc_ids:
@@ -733,6 +731,8 @@ docs:
       - reference.storage-records
       - reference.storage-artifacts
       - reference.storage-versioning
+      - maintain.authoring-guide
+      - maintain.checks
       - reference.security
 
   - doc_id: reference.api.method-intake
@@ -815,9 +815,11 @@ docs:
       - status_result_behavior
       - status_read_only_behavior
       - status_dry_run_behavior
+      - status_example_state_version_rule
     owns:
       - "`harness.status` method behavior"
       - "`StatusResult` branch behavior"
+      - status example state-version rule
       - status minimal request and representative response
     does_not_own:
       - common response envelopes
@@ -847,9 +849,11 @@ docs:
       - prepare_write_result_behavior
       - write_authorization_creation_behavior
       - prepare_write_dry_run_behavior
+      - prepare_write_sensitive_approval_behavior
     owns:
       - "`harness.prepare_write` method behavior"
       - "`PrepareWriteResult` branch behavior"
+      - prepare-write sensitive-action approval behavior
       - prepare-write minimal request and representative response
     does_not_own:
       - common response envelopes
@@ -954,11 +958,13 @@ docs:
       - request_user_judgment_result_behavior
       - record_user_judgment_result_behavior
       - user_judgment_method_boundary
+      - user_judgment_prompt_ownership
     owns:
       - "`harness.request_user_judgment` method behavior"
       - "`harness.record_user_judgment` method behavior"
       - "`RequestUserJudgmentResult` branch behavior"
       - "`RecordUserJudgmentResult` branch behavior"
+      - user judgment prompt behavior
       - user-judgment minimal requests and representative responses
     does_not_own:
       - common response envelopes
@@ -1386,6 +1392,7 @@ docs:
       - artifact_linking
       - artifact_body_read_eligibility
       - artifact_retention_integrity
+      - artifact_staging_evidence_boundary
     owns:
       - artifact storage lifecycle
       - artifact staging
@@ -1394,6 +1401,7 @@ docs:
       - persistent artifact linking
       - body-read eligibility
       - retention and integrity boundaries
+      - artifact staging versus evidence-authority boundary
     does_not_own:
       - API artifact schemas
       - method behavior
@@ -2092,6 +2100,8 @@ docs:
       - timeless_example_scenario_check
       - dense_reference_paragraph_scannability_check
       - large_table_source_maintainability_check
+      - api_example_internal_consistency_check
+      - api_example_state_version_consistency_check
     owns:
       - documentation checks
       - route drift checks
@@ -2101,6 +2111,8 @@ docs:
       - timeless API and Reference example scenario check
       - dense reference paragraph scannability check
       - large-table source maintainability check
+      - API example internal-consistency check
+      - API example state-version consistency check
       - quality drift checks
     does_not_own:
       - runtime proof

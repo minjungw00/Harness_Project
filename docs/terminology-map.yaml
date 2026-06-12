@@ -408,9 +408,11 @@ terms:
       - "complete 닫기 준비 상태"
     owner_documents:
       en:
+        - "docs/en/reference/glossary.md"
         - "docs/en/reference/api/mvp-api.md"
         - "docs/en/reference/api/schema-value-sets.md"
       ko:
+        - "docs/ko/reference/glossary.md"
         - "docs/ko/reference/api/mvp-api.md"
         - "docs/ko/reference/api/schema-value-sets.md"
     notes:

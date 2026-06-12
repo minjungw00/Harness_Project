@@ -496,12 +496,14 @@
 - 닫기 준비 상태 맥락의 전체 순서에 `complete`를 붙이는 표현
 
 담당 문서:
+- [용어 지도](../../terminology-map.yaml)
 - [Task 닫기 메서드](api/method-close-task.md)
 - [API 값 집합](api/schema-value-sets.md)
 
 설명:
 - 이 항목에서 `complete`는 값 문자열일 때만 씁니다.
 - `complete`는 enum 값이나 명시적 식별자일 때만 보존합니다.
+- `complete`가 enum 값인지 전체 뜻 산문인지 묻는 경우 [용어 지도](../../terminology-map.yaml)와 이 용어집을 먼저 봅니다. 정확한 값 이름 계약이 필요할 때만 [API 값 집합](api/schema-value-sets.md)을 엽니다.
 
 ### full evaluation order
 
