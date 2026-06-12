@@ -178,9 +178,9 @@ API examples should avoid self-referential documentation edits as task payloads,
 
 ## 7. Long paragraph and chunking rules
 
-Reference docs should keep rule boundaries visible. Do not combine condition, effect, exception, non-claim, and owner routing in one dense paragraph. A paragraph should not require the reader to infer where a rule applies, what it permits, what it forbids, which caveat applies, or which owner carries the canonical detail.
+Reference and Maintain docs should keep rule boundaries visible. Do not combine condition, effect, exception, non-claim, and owner routing in one dense paragraph. A paragraph should not require the reader to infer where a rule applies, what it permits, what it forbids, which caveat applies, or which owner carries the canonical detail.
 
-Split a dense reference paragraph when it combines more than one rule type, such as a condition, allowed effect, not-allowed effect, exception, non-claim, or owner link.
+Split a dense paragraph when it combines more than one rule type, such as a condition, allowed effect, not-allowed effect, exception, non-claim, or owner link.
 
 Use named blocks when a rule has multiple parts:
 
@@ -192,7 +192,14 @@ Use named blocks when a rule has multiple parts:
 
 Prefer short paragraphs, compact bullets, and small route tables. If a sentence contains several "must not", "does not", or "only when" clauses, consider a list or named block.
 
-Use Markdown tables only for short mappings, comparisons, or owner routing. The table maintainability rule applies to all Reference documents, not only storage references.
+For check entries, use named blocks instead of dense table cells:
+
+- Owner: which document owns the rule or check.
+- Check: what to inspect.
+- Failure: what indicates the check failed.
+- Fix: how to repair the documentation.
+
+Use Markdown tables only for short mappings, comparisons, or owner routing. The table maintainability rule applies to all documentation, including Reference and Maintain docs.
 
 Use a summary row plus a detail block when a cell would need any of these:
 
@@ -243,7 +250,8 @@ Do not route active documentation through stale legacy paths. If an old path app
 - [ ] User-facing docs avoid internal schema names unless necessary.
 - [ ] Reference docs keep schema names and other exact identifiers in backticks.
 - [ ] Dense reference paragraphs were split into conditions, allowed effects, not-allowed effects, exceptions, and owner links where useful.
-- [ ] Tables in all Reference documents use short mappings, and dense cells were moved into summary rows plus detail blocks.
+- [ ] Tables in all documentation use short mappings, and dense cells were moved into summary rows plus detail blocks.
+- [ ] Check descriptions use named blocks and bullets instead of dense table cells.
 - [ ] Links point to active routes and canonical owners.
 - [ ] New or changed terminology was checked against [Terminology Map](../../terminology-map.yaml).
 - [ ] No temporary planning files, archive copies, generated runtime records, or migration notes remain.

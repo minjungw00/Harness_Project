@@ -727,14 +727,14 @@ Fix:
 
 ## 13. Editorial style checks
 
-### `CHK-REFERENCE-PARAGRAPH-SCANNABILITY`: Reference paragraph scannability
+### CHK-REFERENCE-PARAGRAPH-SCANNABILITY: paragraph scannability
 
 Owner:
 - [Authoring Guide](authoring-guide.md)
 - [Checks](checks.md)
 
 Check:
-- Inspect changed Reference paragraphs for multiple conditions, exceptions, non-claims, owner links, or effects hidden in one dense paragraph.
+- Inspect changed Reference and Maintain paragraphs for multiple conditions, exceptions, non-claims, owner links, or effects hidden in one dense paragraph.
 - If a paragraph contains more than one rule type, confirm it is split into named blocks or bullets.
 - Confirm allowed and disallowed behavior are visually separated.
 
@@ -745,8 +745,9 @@ Failure:
 
 Fix:
 - Split dense prose into Conditions, Allowed effects, Not allowed, Exceptions, and Owner links as appropriate.
+- For check descriptions, use Owner, Check, Failure, and Fix blocks with bullets.
 
-### `CHK-TABLE-SOURCE-MAINTAINABILITY`: Markdown table source maintainability
+### CHK-TABLE-SOURCE-MAINTAINABILITY: Markdown table source maintainability
 
 Owner:
 - [Authoring Guide](authoring-guide.md)
@@ -754,7 +755,7 @@ Owner:
 
 Check:
 - Confirm tables are used only for short mappings, comparisons, or owner routing.
-- Confirm the table rule covers all Reference documents, not only storage references.
+- Confirm the table rule covers all documentation, including Maintain docs.
 - Confirm dense cells are rewritten as summary rows plus detail blocks.
 - Confirm long conditions, exceptions, non-claims, effects, owner links, and list-like examples sit outside cells.
 
@@ -767,6 +768,7 @@ Failure:
 Fix:
 - Keep the table row as the short mapping.
 - Put detail below the table as bullets or named blocks.
+- Rewrite long check rows as named blocks instead of preserving table cells.
 - Move contract detail to the canonical owner.
 
 ### CHK-EN-HEADING-CASE: English heading case
