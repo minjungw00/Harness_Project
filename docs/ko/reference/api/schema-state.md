@@ -1,7 +1,7 @@
-# API 상태 schema
+# API 상태 스키마
 
 의미:
-- 이 문서는 현재 MVP의 상태 형태 API schema를 담당합니다.
+- 이 문서는 현재 MVP의 상태 형태 API 스키마를 담당합니다.
 - 문서 원천 자료일 뿐입니다.
 
 의미하지 않는 것:
@@ -16,12 +16,12 @@
 - API 데이터 형태로서의 Task 생명주기 상태
 - 상태 관련 스냅샷과 참조 구조
 - `ShapingReadiness`
-- `NextActionSummary`, `WriteAuthoritySummary`, `EvidenceSummary`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 현재 위치 표시 schema
+- `NextActionSummary`, `WriteAuthoritySummary`, `EvidenceSummary`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 현재 위치 표시 스키마
 - 상태 형태 데이터와 응답 효과의 경계
 
 이 문서는 담당하지 않습니다.
 
-- 공통 요청 래퍼나 응답 branch: [API 코어 schema](schema-core.md)
+- 공통 요청 래퍼나 응답 분기: [API 코어 스키마](schema-core.md)
 - 활성 enum 형태 값: [API 값 집합](schema-value-sets.md)
 - 메서드 동작: [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서
 - 공개 오류 의미: [API 오류](errors.md)
@@ -31,14 +31,14 @@
 ## 경계
 
 의미:
-- 상태 schema는 API 데이터 형태를 설명합니다.
+- 상태 스키마는 API 데이터 형태를 설명합니다.
 
 의미하지 않는 것:
 - 상태처럼 보이는 필드가 있다고 해서 그 자체로 지속 저장이 생기지 않습니다.
 - 상태처럼 보이는 필드가 있다고 해서 그 자체로 Core 전이, 재실행 행, `task_events`, 아티팩트 효과, Write Authorization 효과, `state_version` 증가가 생기지 않습니다.
 
 담당 문서 링크:
-- 응답 branch 선택: [공통 응답 branch](schema-core.md#common-response)
+- 응답 분기 선택: [공통 응답 분기](schema-core.md#common-response)
 - 메서드 동작과 효과: [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서
 
 ## 상태 참조
@@ -97,7 +97,7 @@ StateSummary:
 - 어떤 메서드가 커밋했는지를 결정하지 않습니다.
 
 담당 문서 링크:
-- 커밋 결정 branch: [공통 응답 branch](schema-core.md#common-response)
+- 커밋 결정 분기: [공통 응답 분기](schema-core.md#common-response)
 - 메서드별 커밋 동작: [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서
 
 ## Task 생명주기 상태
@@ -226,7 +226,7 @@ ObservedChanges:
 ```
 
 담당 문서 링크:
-- `ArtifactRef`: [API 아티팩트 schema](schema-artifacts.md)
+- `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md)
 - 증거 충분성의 의미: [Core 모델의 실행과 증거의 권한](../core-model.md#9-실행과-증거의-권한)
 - 메서드 동작: [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서
 
@@ -262,16 +262,16 @@ GuaranteeDisplay:
 
 담당 문서 링크:
 - 전체 닫기 준비 상태 평가 순서: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
-- 응답 branch 동작과 커밋된 차단 결과: [`harness.close_task`](method-close-task.md)
+- 응답 분기 동작과 커밋된 차단 결과: [`harness.close_task`](method-close-task.md)
 - 공개 오류 경로: [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers)
 - 활성 `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값: [API 값 집합](schema-value-sets.md)
 - 보안 보장 의미: [보안](../security.md)
 
 ## 관련 담당 문서
 
-- [API 코어 schema](schema-core.md): `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`.
+- [API 코어 스키마](schema-core.md): `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`.
 - [API 값 집합](schema-value-sets.md): 상태 필드가 쓰는 정확한 값.
-- [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서: 이 schema를 반환하는 메서드.
-- [API 아티팩트 schema](schema-artifacts.md): `ArtifactRef`.
-- [API 판단 schema](schema-judgment.md): `UserJudgmentCandidate`.
+- [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서: 이 스키마를 반환하는 메서드.
+- [API 아티팩트 스키마](schema-artifacts.md): `ArtifactRef`.
+- [API 판단 스키마](schema-judgment.md): `UserJudgmentCandidate`.
 - [저장 효과](../storage-effects.md): 지속 저장과 상태 효과.
