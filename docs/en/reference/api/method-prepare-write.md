@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.prepare_write`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account data export confirmation scenario
+- the minimal request and representative response for the shared account export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -74,6 +74,7 @@ For `decision=allowed`:
 - `write_authorization_ref` is non-null
 - `write_authorization` is non-null
 - `authorization_effect` is `created` for a new commit or `returned` for an idempotent replay
+- `active_user_judgment_refs` may cite resolved user-owned judgments that satisfy write preconditions, including a separate `sensitive_approval`
 
 ## Blocked result
 
@@ -149,10 +150,12 @@ params:
 
 ## Representative response
 
-Allowed branch after the separate sensitive-action approval is already present:
+### Allowed branch
+
+This branch applies after the separate sensitive-action approval is already present.
 
 The existing sensitive-action approval is represented by `active_user_judgment_refs` at `state_version: 19`.
-`uj_sensitive_export_001` represents the sensitive-action approval needed before `Write Authorization`.
+`uj_sensitive_export_001` represents an existing resolved `judgment_kind=sensitive_approval` whose `SensitiveActionScope` matches the account data export step and is needed before `Write Authorization`.
 The account export confirmation copy judgment is handled separately by the user-judgment methods and is not the same approval.
 
 ```yaml
@@ -203,7 +206,9 @@ guarantee_display:
     - "Write Authorization is a Harness compatibility record, not OS permission."
 ```
 
-Approval-required branch excerpt when the matching sensitive-action approval is missing:
+### Approval-required branch excerpt
+
+This branch applies when the matching sensitive-action approval is missing.
 
 The approval-required reason corresponds to request `sensitive_categories: [personal_data_export]`.
 

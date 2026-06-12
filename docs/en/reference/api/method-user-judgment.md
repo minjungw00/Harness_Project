@@ -5,7 +5,7 @@
 This document owns active MVP method behavior for `harness.request_user_judgment` and `harness.record_user_judgment`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal requests and representative responses for the shared account data export confirmation scenario
+- the minimal requests and representative responses for the shared account export confirmation scenario
 - the method boundary between creating a pending user-owned judgment and recording the user's answer
 
 ## What this document does not own

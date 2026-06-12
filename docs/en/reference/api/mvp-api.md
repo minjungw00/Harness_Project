@@ -107,7 +107,7 @@ Non-claim: Task resolution selects owner records; it does not create a separate 
 
 ## Stable API example scenario summary
 
-Method owner examples use a durable account data export confirmation scenario:
+Method owner examples use a durable account export confirmation scenario:
 
 - Task summary: add explicit confirmation before account data export.
 - Scope: account export flow and account export confirmation tests.

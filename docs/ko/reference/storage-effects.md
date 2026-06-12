@@ -246,12 +246,12 @@ API 데이터 형태에는 아래 값이 포함됩니다.
 - 스테이징 핸들 소비
 - `close_task` 효과 적용
 
-계정 데이터 내보내기 write decision 데이터 예시는 아래와 같습니다.
+계정 데이터 내보내기 쓰기 결정 데이터 예시는 아래와 같습니다.
 
-요청 측 `harness.prepare_write` payload field는 [`method-prepare-write.md`](api/method-prepare-write.md)를 확인하세요. 이 섹션은 write decision과 그 사유가 기록되는 저장 효과만 설명합니다.
+요청 측 `harness.prepare_write` 페이로드 필드는 [`method-prepare-write.md`](api/method-prepare-write.md)를 확인하세요. 이 섹션은 쓰기 결정과 그 사유가 기록되는 저장 효과만 설명합니다.
 
 ```yaml
-intended_operation: "계정 내보내기 확인 흐름 갱신"
+intended_operation: "명시적 확인 단계가 필요하도록 계정 내보내기 흐름 갱신"
 intended_paths:
   - src/account/export.ts
   - src/account/export-confirmation.ts
@@ -261,7 +261,7 @@ sensitive_categories:
 decision: approval_required
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 Write Authorization 전에 별도의 민감 동작 승인이 필요합니다."
+    message: "계정 데이터 내보내기에는 개인정보가 포함될 수 있으므로 Write Authorization 전에 별도의 민감 동작 승인이 필요합니다."
 ```
 
 이 사유는 `prepare_write` 판단 사유입니다. 아래 항목이 아닙니다.
@@ -402,7 +402,7 @@ write_decision_reasons:
 decision: approval_required
 write_decision_reasons:
   - code: sensitive_export_flow
-    message: "계정 데이터 내보내기는 개인정보를 포함할 수 있으므로 Write Authorization 전에 별도의 민감 동작 승인이 필요합니다."
+    message: "계정 데이터 내보내기에는 개인정보가 포함될 수 있으므로 Write Authorization 전에 별도의 민감 동작 승인이 필요합니다."
 ```
 
 효과가 없는 분기:

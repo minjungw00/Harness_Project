@@ -7,7 +7,7 @@
 이 문서는 현재 MVP의 `harness.prepare_write` 메서드 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 공유 계정 데이터 내보내기 확인 시나리오의 최소 요청과 대표 응답
+- 공유 계정 내보내기 확인 시나리오의 최소 요청과 대표 응답
 - 저장 담당 문서가 기록 단위 세부사항을 정의하기 전의 메서드 수준 저장 효과 기대치
 
 ## 담당하지 않는 것
@@ -74,6 +74,7 @@
 - `write_authorization_ref`는 `null`이 아닙니다.
 - `write_authorization`은 `null`이 아닙니다.
 - `authorization_effect`는 새 커밋에서 `created`, 멱등 재실행에서 `returned`입니다.
+- `active_user_judgment_refs`는 별도 `sensitive_approval`을 포함해 쓰기 선행조건을 만족하는 해결된 사용자 소유 판단을 가리킬 수 있습니다.
 
 ## 차단 결과
 
@@ -149,10 +150,12 @@ params:
 
 ## 대표 응답
 
-별도의 민감 동작 승인이 이미 있을 때의 허용 분기입니다.
+### 허용 분기
+
+별도의 민감 동작 승인이 이미 있을 때 적용되는 분기입니다.
 
 기존 민감 동작 승인은 `state_version: 19`의 `active_user_judgment_refs` 사용자 판단 참조로 표시됩니다.
-`uj_sensitive_export_001`은 `Write Authorization` 전에 필요한 민감 동작 승인을 나타냅니다.
+`uj_sensitive_export_001`은 계정 데이터 내보내기 단계와 맞는 `SensitiveActionScope`를 가진 기존의 해결된 `judgment_kind=sensitive_approval`이며, `Write Authorization` 전에 필요한 민감 동작 승인을 나타냅니다.
 계정 내보내기 확인 문구에 대한 사용자 판단은 사용자 판단 메서드에서 별도로 처리되며, 이 민감 동작 승인과 같은 승인이 아닙니다.
 
 ```yaml
@@ -203,7 +206,9 @@ guarantee_display:
     - "쓰기 승인(`Write Authorization`)은 하네스 호환성 기록이며 OS 권한이 아닙니다."
 ```
 
-대응하는 민감 동작 승인이 없을 때의 승인 필요 분기 발췌:
+### 승인 필요 분기 발췌
+
+대응하는 민감 동작 승인이 없을 때 적용되는 분기입니다.
 
 이 승인 필요 사유는 요청의 `sensitive_categories: [personal_data_export]`에 대응합니다.
 
