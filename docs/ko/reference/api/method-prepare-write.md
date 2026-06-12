@@ -136,7 +136,7 @@ params:
     locale: ko-KR
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "계정 내보내기 확인 흐름 갱신"
+  intended_operation: "명시적 확인 단계가 필요하도록 계정 내보내기 흐름 갱신"
   intended_paths:
     - src/account/export.ts
     - src/account/export-confirmation.ts
@@ -151,7 +151,8 @@ params:
 
 별도의 민감 동작 승인이 이미 있을 때의 허용 분기(`PrepareWriteResult`, `decision=allowed`):
 
-기존 민감 동작 승인은 `state_version: 19`의 `active_user_judgment_refs` 사용자 판단 참조로 표시됩니다. `intended_operation`은 제품 UI 확인 작업을 이름 붙일 뿐이며, 하네스 민감 동작 승인을 대신하지 않습니다.
+기존 민감 동작 승인은 `state_version: 19`의 `active_user_judgment_refs` 사용자 판단 참조로 표시됩니다. `intended_operation`은 계정 내보내기 흐름 변경을 이름 붙일 뿐이며, 하네스 민감 동작 승인을 대신하지 않습니다.
+아래 누락 승인 사유는 요청의 `sensitive_categories: [personal_data_export]`에 대응합니다.
 
 ```yaml
 base:
@@ -201,7 +202,7 @@ guarantee_display:
     - "쓰기 승인(`Write Authorization`)은 하네스 호환성 기록이며 OS 권한이 아닙니다."
 ```
 
-민감 동작 승인이 없을 때의 승인 필요 분기 발췌:
+대응하는 민감 동작 승인이 없을 때의 승인 필요 분기 발췌:
 
 ```yaml
 decision: approval_required

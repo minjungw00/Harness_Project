@@ -149,7 +149,7 @@ active_task:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Add confirmation UI for account data export and update account export confirmation tests."
+  scope_summary: "Account export flow and account export confirmation tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001

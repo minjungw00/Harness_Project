@@ -119,24 +119,22 @@ params:
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
   scope_update:
     include:
-      - "계정 내보내기 확인 UI를 추가한다."
+      - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하도록 계정 내보내기 흐름을 갱신한다."
       - "계정 내보내기 확인 테스트를 갱신한다."
     exclude:
       - "계정 삭제 동작"
-      - "청구 내보내기 동작"
-  scope_boundary: "계정 내보내기 확인 UI를 추가하고 확인 테스트를 갱신한다."
+  scope_boundary: "계정 내보내기 흐름과 계정 내보내기 확인 테스트."
   non_goals:
     - "계정 삭제 동작"
-    - "청구 내보내기 동작"
   acceptance_criteria:
     - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
-  autonomy_boundary: "계정 내보내기 확인 UI와 테스트 범위 안에서만 작업한다."
+  autonomy_boundary: "계정 내보내기 흐름과 계정 내보내기 확인 테스트 범위 안에서만 작업한다."
   baseline_ref: baseline_account_export_001
   change_unit:
     operation: create_active
-    scope_summary: "계정 내보내기 확인 UI를 추가하고 확인 테스트를 갱신한다."
+    scope_summary: "계정 내보내기 흐름과 계정 내보내기 확인 테스트."
     affected_areas:
-      - "계정 내보내기 확인 UI"
+      - "계정 내보내기 흐름"
       - "계정 내보내기 확인 테스트"
     affected_paths:
       - src/account/export.ts
@@ -144,7 +142,6 @@ params:
       - tests/account-export.test.ts
     constraints:
       - "계정 삭제 동작은 범위에서 제외한다."
-      - "청구 내보내기 동작은 범위에서 제외한다."
   related_scope_decision_refs: []
 ```
 
@@ -192,10 +189,9 @@ state:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 내보내기 확인 UI를 추가하고 확인 테스트를 갱신한다."
+  scope_summary: "계정 내보내기 흐름과 계정 내보내기 확인 테스트."
   non_goals:
     - "계정 삭제 동작"
-    - "청구 내보내기 동작"
   acceptance_criteria:
     - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
   active_change_unit_ref:

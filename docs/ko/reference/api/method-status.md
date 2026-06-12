@@ -134,7 +134,7 @@ active_task:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 내보내기 확인 UI를 추가하고 확인 테스트를 갱신한다."
+  scope_summary: "계정 내보내기 흐름과 계정 내보내기 확인 테스트."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001

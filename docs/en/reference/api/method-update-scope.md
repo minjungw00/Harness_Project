@@ -141,24 +141,22 @@ params:
   goal_summary: "Add explicit confirmation before account data export."
   scope_update:
     include:
-      - "Add confirmation UI for account data export."
+      - "Update the account export flow to require explicit confirmation before download."
       - "Update account export confirmation tests."
     exclude:
       - "Account deletion behavior"
-      - "Billing export behavior"
-  scope_boundary: "Add confirmation UI for account data export and update account export confirmation tests."
+  scope_boundary: "Account export flow and account export confirmation tests."
   non_goals:
     - "Account deletion behavior"
-    - "Billing export behavior"
   acceptance_criteria:
     - "Account data export requires an explicit confirmation step before download."
-  autonomy_boundary: "Stay within the account data export confirmation UI and account export confirmation tests."
+  autonomy_boundary: "Stay within the account export flow and account export confirmation tests."
   baseline_ref: baseline_account_export_001
   change_unit:
     operation: create_active
-    scope_summary: "Add confirmation UI for account data export and update account export confirmation tests."
+    scope_summary: "Account export flow and account export confirmation tests."
     affected_areas:
-      - "Account data export confirmation UI"
+      - "Account export flow"
       - "Account export confirmation tests"
     affected_paths:
       - src/account/export.ts
@@ -166,7 +164,6 @@ params:
       - tests/account-export.test.ts
     constraints:
       - "Keep account deletion behavior out of scope."
-      - "Keep billing export behavior out of scope."
   related_scope_decision_refs: []
 ```
 
@@ -214,10 +211,9 @@ state:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Add confirmation UI for account data export and update account export confirmation tests."
+  scope_summary: "Account export flow and account export confirmation tests."
   non_goals:
     - "Account deletion behavior"
-    - "Billing export behavior"
   acceptance_criteria:
     - "Account data export requires an explicit confirmation step before download."
   active_change_unit_ref:

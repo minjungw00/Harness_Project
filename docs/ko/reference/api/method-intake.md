@@ -100,10 +100,9 @@ method: harness.intake
 params:
   plain_language_request: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
   initial_scope:
-    boundary: "계정 내보내기 흐름과 확인 테스트만."
+    boundary: "계정 내보내기 흐름과 계정 내보내기 확인 테스트만."
     non_goals:
       - "계정 삭제 동작"
-      - "청구 내보내기 동작"
     acceptance_criteria:
       - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
 ```
@@ -144,10 +143,9 @@ state:
     result: none
     closed_at: null
   goal_summary: "계정 데이터 내보내기 전에 명시적 확인 단계를 추가한다."
-  scope_summary: "계정 내보내기 흐름과 확인 테스트만."
+  scope_summary: "계정 내보내기 흐름과 계정 내보내기 확인 테스트만."
   non_goals:
     - "계정 삭제 동작"
-    - "청구 내보내기 동작"
   acceptance_criteria:
     - "계정 데이터 내보내기 전에 명시적 확인 단계가 필요하다."
   active_change_unit_ref: null

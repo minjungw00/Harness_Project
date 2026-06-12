@@ -109,11 +109,11 @@ Non-claim: Task resolution selects owner records; it does not create a separate 
 
 Method owner examples use a durable account data export confirmation scenario:
 
-- Task summary: account data export confirmation.
-- Scope: account data export confirmation UI and account export confirmation tests.
-- Out of scope: account deletion behavior and billing export behavior.
-- Acceptance: explicit confirmation is required before download.
-- Extension: method examples may add account export confirmation tests plus representative run and evidence data.
+- Task summary: add explicit confirmation before account data export.
+- Scope: account export flow and account export confirmation tests.
+- Out of scope: account deletion behavior.
+- Acceptance: explicit confirmation is required before account data export download.
+- Extension: method examples may add representative account export confirmation test run and evidence data.
 
 Examples are compact branch examples, not full schema definitions.
 

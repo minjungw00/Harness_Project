@@ -136,7 +136,7 @@ params:
     locale: en-US
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "update account data export confirmation flow"
+  intended_operation: "update account export flow to require explicit confirmation"
   intended_paths:
     - src/account/export.ts
     - src/account/export-confirmation.ts
@@ -151,7 +151,8 @@ params:
 
 Allowed branch after the separate sensitive-action approval is already present (`PrepareWriteResult`, `decision=allowed`):
 
-The existing sensitive-action approval is represented by `active_user_judgment_refs` at `state_version: 19`. The `intended_operation` names product UI confirmation work, which remains separate from Harness sensitive-action approval.
+The existing sensitive-action approval is represented by `active_user_judgment_refs` at `state_version: 19`. The `intended_operation` names the account export flow change, which remains separate from Harness sensitive-action approval.
+The missing-approval reason shown below corresponds to request `sensitive_categories: [personal_data_export]`.
 
 ```yaml
 base:
@@ -201,7 +202,7 @@ guarantee_display:
     - "Write Authorization is a Harness compatibility record, not OS permission."
 ```
 
-Approval-required branch excerpt when sensitive-action approval is missing:
+Approval-required branch excerpt when the matching sensitive-action approval is missing:
 
 ```yaml
 decision: approval_required

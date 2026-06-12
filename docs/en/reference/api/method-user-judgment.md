@@ -247,7 +247,7 @@ params:
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Current Task constraints apply"
+      - "Account export flow and account export confirmation tests remain in scope; account deletion behavior remains out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -340,7 +340,7 @@ user_judgment:
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Current Task constraints apply"
+      - "Account export flow and account export confirmation tests remain in scope; account deletion behavior remains out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -404,7 +404,7 @@ user_judgment:
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Current Task constraints apply"
+      - "Account export flow and account export confirmation tests remain in scope; account deletion behavior remains out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
