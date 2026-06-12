@@ -730,7 +730,7 @@ Owner:
 - [Authoring Guide](authoring-guide.md)
 
 Check:
-- Apply this check to all Reference documents, not only storage references.
+- Confirm the table maintainability rule applies to all Reference documents, not only storage references.
 - Confirm each Markdown table cell remains short.
 - If a cell needs multiple conditions, exceptions, non-claims, allowed effects, forbidden effects, or owner links, confirm the table uses a summary row plus a detail block.
 - Confirm source diffs remain reviewable and table cells do not hide rule boundaries.
