@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.close_task`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account export confirmation scenario
+- the minimal request and representative response for the shared account data export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -121,14 +121,14 @@ Close-readiness scenario data:
 
 The literal `intent=complete` selects the completion intent. It is not shorthand for the full close-readiness evaluation order.
 
-Successful close-readiness observation for the account export confirmation scenario. The evidence relies on existing run ref `run_account_export_tests_001`, promoted artifact `artifact_account_export_test_log_001`, and the resolved user judgment `uj_001`:
+Successful close-readiness observation for the account data export confirmation scenario. The evidence relies on existing run ref `run_account_export_tests_001`, promoted artifact `artifact_account_export_test_log_001`, and the resolved user judgment `uj_001`:
 
 ```yaml
 close_readiness:
   ready: true
   evidence:
-    - "Account export confirmation tests passed."
-    - "User accepted the account export confirmation copy."
+    - "Account data export confirmation tests passed."
+    - "User accepted the account data export confirmation copy."
 ```
 
 Blocked close-readiness observation for the same scenario. This is the version-21 variant used by the representative response below: the test evidence is recorded in existing run ref `run_account_export_tests_001` with promoted artifact `artifact_account_export_test_log_001`, and no resolved user judgment is available:
@@ -138,7 +138,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "The user has not accepted the account export confirmation copy."
+      message: "The user has not accepted the account data export confirmation copy."
 ```
 
 ## Minimal valid request
@@ -187,12 +187,12 @@ state:
 blockers:
   - category: user_judgment
     code: missing_user_judgment
-    message: "The user has not accepted the account export confirmation copy."
+    message: "The user has not accepted the account data export confirmation copy."
     related_refs: []
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "Account export confirmation tests passed."
+    - claim: "Account data export confirmation tests passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs:
@@ -261,7 +261,7 @@ artifact_refs:
     storage_ref: artifact://artifact_account_export_test_log_001
 next_actions:
   - action: harness.request_user_judgment
-    reason: "Ask the user to accept the account export confirmation copy before attempting close."
+    reason: "Ask the user to accept the account data export confirmation copy before attempting close."
 ```
 
 ## Owner links

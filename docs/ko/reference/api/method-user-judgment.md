@@ -5,7 +5,7 @@
 이 문서는 현재 MVP의 `harness.request_user_judgment`와 `harness.record_user_judgment` 메서드 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 공유 계정 내보내기 확인 시나리오의 최소 요청과 대표 응답
+- 공유 계정 데이터 내보내기 확인 시나리오의 최소 요청과 대표 응답
 - 대기 중인 사용자 판단을 만드는 동작과 사용자의 답을 기록하는 동작의 메서드 경계
 
 ## 담당하지 않는 것
@@ -202,7 +202,7 @@
 
 ## 예시 정합성
 
-현재 `UserJudgment` 스키마에서 사용자에게 보이는 판단 프롬프트는 `question` 필드입니다. 계정 내보내기 확인 문구에 대한 사용자 판단은 이 프롬프트와 `context.summary`에 담습니다. 이 예시는 아티팩트를 근거로 들지 않으므로 `context.artifact_refs: []`는 의도한 값입니다.
+현재 `UserJudgment` 스키마에서 사용자에게 보이는 판단 프롬프트는 `question` 필드입니다. 계정 데이터 내보내기 확인 문구에 대한 사용자 판단은 이 프롬프트와 `context.summary`에 담습니다. 이 예시는 아티팩트를 근거로 들지 않으므로 `context.artifact_refs: []`는 의도한 값입니다.
 
 요청과 응답 예시는 같은 `options` 선택지 값과 같은 Task를 가리키는 `affected_refs`를 유지합니다. `record_user_judgment` 예시는 `accept`를 선택하고 `decision: accepted`를 기록하며, 근거는 충분함 선택지와 같은 의미입니다. 시간 필드는 `null` 또는 플레이스홀더 값을 사용합니다.
 
@@ -228,25 +228,25 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "계정 내보내기 확인 문구가 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 충분히 알린다고 판단해 수락해도 됩니까?"
+  question: "계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알리는 계정 데이터 내보내기 확인 문구를 충분하다고 수락해도 됩니까?"
   options:
     - option_id: accept
       label: "충분함"
-      description: "계정 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
+      description: "계정 데이터 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
       consequence: "닫기 준비 상태가 제품 판단을 해결된 것으로 평가할 수 있습니다."
       is_default: true
     - option_id: revise
       label: "수정 필요"
-      description: "수정된 계정 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
+      description: "수정된 계정 데이터 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
       consequence: "제품 판단이 남아 있어 닫기가 계속 차단됩니다."
       is_default: false
   context:
-    summary: "다운로드 전에 표시되는 계정 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알립니다."
+    summary: "다운로드 전에 표시되는 계정 데이터 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알립니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "계정 내보내기 확인 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
+      - "계정 데이터 내보내기 흐름과 계정 데이터 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -280,7 +280,7 @@ params:
     product_decision:
       judgment:
         decision: accepted
-        rationale: "계정 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 명확히 알립니다."
+        rationale: "계정 데이터 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 명확히 알립니다."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
@@ -321,25 +321,25 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "계정 내보내기 확인 문구가 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 충분히 알린다고 판단해 수락해도 됩니까?"
+  question: "계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알리는 계정 데이터 내보내기 확인 문구를 충분하다고 수락해도 됩니까?"
   options:
     - option_id: accept
       label: "충분함"
-      description: "계정 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
+      description: "계정 데이터 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
       consequence: "닫기 준비 상태가 제품 판단을 해결된 것으로 평가할 수 있습니다."
       is_default: true
     - option_id: revise
       label: "수정 필요"
-      description: "수정된 계정 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
+      description: "수정된 계정 데이터 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
       consequence: "제품 판단이 남아 있어 닫기가 계속 차단됩니다."
       is_default: false
   context:
-    summary: "다운로드 전에 표시되는 계정 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알립니다."
+    summary: "다운로드 전에 표시되는 계정 데이터 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알립니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "계정 내보내기 확인 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
+      - "계정 데이터 내보내기 흐름과 계정 데이터 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -385,25 +385,25 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "계정 내보내기 확인 문구가 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 충분히 알린다고 판단해 수락해도 됩니까?"
+  question: "계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알리는 계정 데이터 내보내기 확인 문구를 충분하다고 수락해도 됩니까?"
   options:
     - option_id: accept
       label: "충분함"
-      description: "계정 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
+      description: "계정 데이터 내보내기 확인 문구가 충분하다는 사용자 판단을 기록합니다."
       consequence: "닫기 준비 상태가 제품 판단을 해결된 것으로 평가할 수 있습니다."
       is_default: true
     - option_id: revise
       label: "수정 필요"
-      description: "수정된 계정 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
+      description: "수정된 계정 데이터 내보내기 확인 문구가 필요하므로 Task를 열어 둡니다."
       consequence: "제품 판단이 남아 있어 닫기가 계속 차단됩니다."
       is_default: false
   context:
-    summary: "다운로드 전에 표시되는 계정 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알립니다."
+    summary: "다운로드 전에 표시되는 계정 데이터 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 알립니다."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "계정 내보내기 확인 흐름과 계정 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
+      - "계정 데이터 내보내기 흐름과 계정 데이터 내보내기 확인 테스트는 범위 안에 있고, 계정 삭제 동작은 범위 밖입니다."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -417,7 +417,7 @@ user_judgment:
       product_decision:
         judgment:
           decision: accepted
-          rationale: "계정 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 명확히 알립니다."
+          rationale: "계정 데이터 내보내기 확인 문구는 계정 데이터 내보내기 파일에 개인정보가 포함될 수 있음을 명확히 알립니다."
     note: null
     accepted_risks: []
     resolved_by_actor_kind: user

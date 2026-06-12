@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.record_run`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account export confirmation scenario
+- the minimal request and representative response for the shared account data export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -135,13 +135,13 @@ Exact storage effects are owned by [Storage Effects](../storage-effects.md), and
 
 Run data example:
 
-The run records account export confirmation test evidence and may consume the staged test log from the shared `harness.stage_artifact` example as evidence:
+The run records account data export confirmation test evidence and may consume the staged test log from the shared `harness.stage_artifact` example as evidence:
 
 This example records test evidence after the write path has already been handled. It does not claim that this run observed the product file write itself.
 
 ```yaml
 command: "npm test -- account-export"
-summary: "Account export confirmation tests passed."
+summary: "Account data export confirmation tests passed."
 artifacts:
   - staged_artifact_account_export_test_log_001
 run_ref: run_account_export_tests_001
@@ -169,7 +169,7 @@ params:
   run_id: null
   baseline_ref: baseline_account_export_001
   write_authorization_id: null
-  summary: "Account export confirmation tests passed."
+  summary: "Account data export confirmation tests passed."
   observed_changes:
     changed_paths: []
     product_file_write_observed: false
@@ -192,12 +192,12 @@ params:
         consumed: false
       existing_artifact_ref: null
       relation_hint: "test_log"
-      claim: "Test output for account export confirmation tests."
+      claim: "Test output for account data export confirmation tests."
       expected_sha256: null
       expected_size_bytes: null
       redaction_state: none
   evidence_updates:
-    - claim: "Account export confirmation tests passed."
+    - claim: "Account data export confirmation tests passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs: []
@@ -226,7 +226,7 @@ run_summary:
     task_id: task_456
     state_version: 21
   kind: implementation
-  summary: "Account export confirmation tests passed."
+  summary: "Account data export confirmation tests passed."
   observed_changes:
     changed_paths: []
     product_file_write_observed: false
@@ -273,7 +273,7 @@ registered_artifacts:
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "Account export confirmation tests passed."
+    - claim: "Account data export confirmation tests passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs:

@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.intake`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the scenario request fields and representative response for the shared account export confirmation scenario
+- the scenario request fields and representative response for the shared account data export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -125,7 +125,7 @@ method: harness.intake
 params:
   plain_language_request: "Add explicit confirmation before account data export."
   initial_scope:
-    boundary: "Only the account export flow and account export confirmation tests."
+    boundary: "Only the account data export flow and account data export confirmation tests."
     non_goals:
       - "Changing account deletion behavior"
     acceptance_criteria:
@@ -168,7 +168,7 @@ state:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Only the account export flow and account export confirmation tests."
+  scope_summary: "Only the account data export flow and account data export confirmation tests."
   non_goals:
     - "Changing account deletion behavior"
   acceptance_criteria:

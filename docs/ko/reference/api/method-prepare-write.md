@@ -7,7 +7,7 @@
 이 문서는 현재 MVP의 `harness.prepare_write` 메서드 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 공유 계정 내보내기 확인 시나리오의 최소 요청과 대표 응답
+- 공유 계정 데이터 내보내기 확인 시나리오의 최소 요청과 대표 응답
 - 저장 담당 문서가 기록 단위 세부사항을 정의하기 전의 메서드 수준 저장 효과 기대치
 
 ## 담당하지 않는 것
@@ -138,7 +138,7 @@ params:
     locale: ko-KR
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "명시적 확인 단계가 필요하도록 계정 내보내기 확인 흐름을 갱신"
+  intended_operation: "명시적 확인 단계가 필요하도록 계정 데이터 내보내기 흐름을 갱신"
   intended_paths:
     - src/account/export.ts
     - src/account/export-confirmation.ts
@@ -157,7 +157,7 @@ params:
 
 기존 민감 동작 승인은 `state_version: 19`의 `active_user_judgment_refs` 사용자 판단 참조로 표시됩니다.
 `uj_sensitive_export_001`은 계정 데이터 내보내기 단계에 맞는 `SensitiveActionScope`를 가진 기존의 해결된 `judgment_kind=sensitive_approval`이며, `Write Authorization` 전에 필요한 민감 동작 승인을 나타냅니다.
-계정 내보내기 확인 문구에 대한 사용자 판단은 사용자 판단 메서드에서 별도로 처리되며, 이 민감 동작 승인과 같은 승인이 아닙니다.
+계정 데이터 내보내기 확인 문구에 대한 사용자 판단은 사용자 판단 메서드에서 별도로 처리되며, 이 민감 동작 승인과 같은 승인이 아닙니다.
 
 ```yaml
 base:

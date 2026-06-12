@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.status`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account export confirmation scenario
+- the minimal request and representative response for the shared account data export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -149,17 +149,17 @@ active_task:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Account export flow and account export confirmation tests."
+  scope_summary: "Account data export flow and account data export confirmation tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
     state_version: 21
-status_summary: "Account export confirmation tests are recorded. User acceptance of the account export confirmation copy is still pending."
+status_summary: "Account data export confirmation tests are recorded. User acceptance of the account data export confirmation copy is still pending."
 next_actions:
   - action: harness.request_user_judgment
-    reason: "Ask the user to accept the account export confirmation copy before close."
+    reason: "Ask the user to accept the account data export confirmation copy before close."
 pending_user_judgments: []
 write_authority_summary:
   status: stale
@@ -181,7 +181,7 @@ write_authority_summary:
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "Account export confirmation tests passed."
+    - claim: "Account data export confirmation tests passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs:
@@ -234,7 +234,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "The user has not accepted the account export confirmation copy."
+      message: "The user has not accepted the account data export confirmation copy."
 guarantee_display:
   level: cooperative
   notes:

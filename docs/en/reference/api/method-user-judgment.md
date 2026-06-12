@@ -5,7 +5,7 @@
 This document owns active MVP method behavior for `harness.request_user_judgment` and `harness.record_user_judgment`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal requests and representative responses for the shared account export confirmation scenario
+- the minimal requests and representative responses for the shared account data export confirmation scenario
 - the method boundary between creating a pending user-owned judgment and recording the user's answer
 
 ## What this document does not own
@@ -209,7 +209,7 @@ On commit, the method may persist judgment resolution and dependent blocker or s
 
 ## Example consistency
 
-The example's judgment prompt is the `question` field in the current `UserJudgment` schema. The account export confirmation copy is represented through that prompt and `context.summary`; `context.artifact_refs: []` is intentional because the example does not cite an artifact.
+The example's judgment prompt is the `question` field in the current `UserJudgment` schema. The account data export confirmation copy is represented through that prompt and `context.summary`; `context.artifact_refs: []` is intentional because the example does not cite an artifact.
 
 The request and response examples keep the same `options` values and the same affected Task in `affected_refs`. The `record_user_judgment` example selects `accept`, records `decision: accepted`, and gives a rationale that matches the sufficient-copy option. Timestamp fields use `null` or placeholder values.
 
@@ -235,25 +235,25 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "Should the account export confirmation copy that warns users the download may include personal data be accepted as sufficient?"
+  question: "Should the account data export confirmation copy that warns users the account data export file may include personal data be accepted as sufficient?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user's judgment that the account export confirmation copy is sufficient."
+      description: "Record the user's judgment that the account data export confirmation copy is sufficient."
       consequence: "Close readiness can evaluate the product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised account export confirmation copy."
+      description: "Keep the Task open for revised account data export confirmation copy."
       consequence: "Close remains blocked on the product decision."
       is_default: false
   context:
-    summary: "The account export confirmation copy shown before download warns that the account data export may include personal data."
+    summary: "The account data export confirmation copy shown before download warns that the account data export file may include personal data."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Account export flow and account export confirmation tests remain in scope; account deletion behavior remains out of scope."
+      - "Account data export flow and account data export confirmation tests remain in scope; account deletion behavior remains out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -287,7 +287,7 @@ params:
     product_decision:
       judgment:
         decision: accepted
-        rationale: "The account export confirmation copy clearly warns that the account data export may include personal data."
+        rationale: "The account data export confirmation copy clearly warns that the account data export file may include personal data."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
@@ -328,25 +328,25 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "Should the account export confirmation copy that warns users the download may include personal data be accepted as sufficient?"
+  question: "Should the account data export confirmation copy that warns users the account data export file may include personal data be accepted as sufficient?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user's judgment that the account export confirmation copy is sufficient."
+      description: "Record the user's judgment that the account data export confirmation copy is sufficient."
       consequence: "Close readiness can evaluate the product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised account export confirmation copy."
+      description: "Keep the Task open for revised account data export confirmation copy."
       consequence: "Close remains blocked on the product decision."
       is_default: false
   context:
-    summary: "The account export confirmation copy shown before download warns that the account data export may include personal data."
+    summary: "The account data export confirmation copy shown before download warns that the account data export file may include personal data."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Account export flow and account export confirmation tests remain in scope; account deletion behavior remains out of scope."
+      - "Account data export flow and account data export confirmation tests remain in scope; account deletion behavior remains out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -392,25 +392,25 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "Should the account export confirmation copy that warns users the download may include personal data be accepted as sufficient?"
+  question: "Should the account data export confirmation copy that warns users the account data export file may include personal data be accepted as sufficient?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user's judgment that the account export confirmation copy is sufficient."
+      description: "Record the user's judgment that the account data export confirmation copy is sufficient."
       consequence: "Close readiness can evaluate the product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised account export confirmation copy."
+      description: "Keep the Task open for revised account data export confirmation copy."
       consequence: "Close remains blocked on the product decision."
       is_default: false
   context:
-    summary: "The account export confirmation copy shown before download warns that the account data export may include personal data."
+    summary: "The account data export confirmation copy shown before download warns that the account data export file may include personal data."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Account export flow and account export confirmation tests remain in scope; account deletion behavior remains out of scope."
+      - "Account data export flow and account data export confirmation tests remain in scope; account deletion behavior remains out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -424,7 +424,7 @@ user_judgment:
       product_decision:
         judgment:
           decision: accepted
-          rationale: "The account export confirmation copy clearly warns that the account data export may include personal data."
+          rationale: "The account data export confirmation copy clearly warns that the account data export file may include personal data."
     note: null
     accepted_risks: []
     resolved_by_actor_kind: user

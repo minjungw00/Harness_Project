@@ -7,7 +7,7 @@
 이 문서는 현재 MVP의 `harness.close_task` 메서드 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 공유 계정 내보내기 확인 시나리오의 최소 요청과 대표 응답
+- 공유 계정 데이터 내보내기 확인 시나리오의 최소 요청과 대표 응답
 - 저장 담당 문서가 기록 단위 세부사항을 정의하기 전의 메서드 수준 저장 효과 기대치
 
 ## 담당하지 않는 것
@@ -117,14 +117,14 @@
 
 리터럴 `intent=complete`는 완료 의도를 고르는 API 값입니다. 전체 닫기 준비 상태 평가 순서를 뜻하는 산문 표현이 아닙니다.
 
-계정 내보내기 확인 시나리오에서 성공한 닫기 준비 상태 관찰 예시는 아래와 같습니다. 증거는 기존 실행 참조 `run_account_export_tests_001`, 승격된 아티팩트 `artifact_account_export_test_log_001`, 해결된 사용자 판단 `uj_001`에 의존합니다.
+계정 데이터 내보내기 확인 시나리오에서 성공한 닫기 준비 상태 관찰 예시는 아래와 같습니다. 증거는 기존 실행 참조 `run_account_export_tests_001`, 승격된 아티팩트 `artifact_account_export_test_log_001`, 해결된 사용자 판단 `uj_001`에 의존합니다.
 
 ```yaml
 close_readiness:
   ready: true
   evidence:
-    - "계정 내보내기 확인 테스트가 통과했습니다."
-    - "사용자가 계정 내보내기 확인 문구를 수락했습니다."
+    - "계정 데이터 내보내기 확인 테스트가 통과했습니다."
+    - "사용자가 계정 데이터 내보내기 확인 문구를 수락했습니다."
 ```
 
 같은 시나리오에서 차단된 닫기 준비 상태 관찰 예시는 아래와 같습니다. 아래 대표 응답이 사용하는 `state_version: 21` 변형입니다. 테스트 증거는 기존 실행 참조 `run_account_export_tests_001`과 승격된 아티팩트 `artifact_account_export_test_log_001`에 기록되어 있지만 해결된 사용자 판단은 없습니다.
@@ -134,7 +134,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "사용자가 계정 내보내기 확인 문구를 아직 수락하지 않았습니다."
+      message: "사용자가 계정 데이터 내보내기 확인 문구를 아직 수락하지 않았습니다."
 ```
 
 ## 최소 유효 요청
@@ -183,12 +183,12 @@ state:
 blockers:
   - category: user_judgment
     code: missing_user_judgment
-    message: "사용자가 계정 내보내기 확인 문구를 아직 수락하지 않았습니다."
+    message: "사용자가 계정 데이터 내보내기 확인 문구를 아직 수락하지 않았습니다."
     related_refs: []
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "계정 내보내기 확인 테스트가 통과했습니다."
+    - claim: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
       required_for_close: true
       coverage_state: supported
       supporting_refs:
@@ -257,7 +257,7 @@ artifact_refs:
     storage_ref: artifact://artifact_account_export_test_log_001
 next_actions:
   - action: harness.request_user_judgment
-    reason: "닫기를 시도하기 전에 계정 내보내기 확인 문구를 수락해 달라고 사용자에게 요청한다."
+    reason: "닫기를 시도하기 전에 계정 데이터 내보내기 확인 문구를 수락해 달라고 사용자에게 요청한다."
 ```
 
 ## 담당 문서 링크

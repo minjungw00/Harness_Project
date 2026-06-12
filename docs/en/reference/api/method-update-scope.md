@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.update_scope`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account export confirmation scenario
+- the minimal request and representative response for the shared account data export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -141,23 +141,23 @@ params:
   goal_summary: "Add explicit confirmation before account data export."
   scope_update:
     include:
-      - "Update the account export flow to require explicit confirmation before download."
-      - "Update account export confirmation tests."
+      - "Update the account data export flow to require explicit confirmation before download."
+      - "Update account data export confirmation tests."
     exclude:
       - "Account deletion behavior"
-  scope_boundary: "Account export flow and account export confirmation tests."
+  scope_boundary: "Account data export flow and account data export confirmation tests."
   non_goals:
     - "Account deletion behavior"
   acceptance_criteria:
     - "Account data export requires an explicit confirmation step before download."
-  autonomy_boundary: "Stay within the account export flow and account export confirmation tests."
+  autonomy_boundary: "Stay within the account data export flow and account data export confirmation tests."
   baseline_ref: baseline_account_export_001
   change_unit:
     operation: create_active
-    scope_summary: "Account export flow and account export confirmation tests."
+    scope_summary: "Account data export flow and account data export confirmation tests."
     affected_areas:
-      - "Account export flow"
-      - "Account export confirmation tests"
+      - "Account data export flow"
+      - "Account data export confirmation tests"
     affected_paths:
       - src/account/export.ts
       - src/account/export-confirmation.ts
@@ -211,7 +211,7 @@ state:
     result: none
     closed_at: null
   goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Account export flow and account export confirmation tests."
+  scope_summary: "Account data export flow and account data export confirmation tests."
   non_goals:
     - "Account deletion behavior"
   acceptance_criteria:

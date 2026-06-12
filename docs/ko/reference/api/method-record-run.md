@@ -7,7 +7,7 @@
 이 문서는 현재 MVP의 `harness.record_run` 메서드 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 공유 계정 내보내기 확인 시나리오의 최소 요청과 대표 응답
+- 공유 계정 데이터 내보내기 확인 시나리오의 최소 요청과 대표 응답
 - 저장 담당 문서가 기록 단위 세부사항을 정의하기 전의 메서드 수준 저장 효과 기대치
 
 ## 담당하지 않는 것
@@ -115,13 +115,13 @@
 
 실행 데이터 예시:
 
-이 실행은 계정 내보내기 확인 테스트 증거를 기록하며, 공유 `harness.stage_artifact` 예시의 스테이징된 테스트 로그를 테스트 증거로 소비할 수 있습니다.
+이 실행은 계정 데이터 내보내기 확인 테스트 증거를 기록하며, 공유 `harness.stage_artifact` 예시의 스테이징된 테스트 로그를 테스트 증거로 소비할 수 있습니다.
 
 이 예시는 쓰기 경로가 별도로 처리된 뒤 테스트 증거를 기록하는 경우입니다. 이 실행 자체가 제품 파일 쓰기를 관찰했다는 뜻은 아닙니다.
 
 ```yaml
 command: "npm test -- account-export"
-summary: "계정 내보내기 확인 테스트가 통과했습니다."
+summary: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
 artifacts:
   - staged_artifact_account_export_test_log_001
 run_ref: run_account_export_tests_001
@@ -149,7 +149,7 @@ params:
   run_id: null
   baseline_ref: baseline_account_export_001
   write_authorization_id: null
-  summary: "계정 내보내기 확인 테스트가 통과했습니다."
+  summary: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
   observed_changes:
     changed_paths: []
     product_file_write_observed: false
@@ -172,12 +172,12 @@ params:
         consumed: false
       existing_artifact_ref: null
       relation_hint: "test_log"
-      claim: "계정 내보내기 확인 테스트 출력."
+      claim: "계정 데이터 내보내기 확인 테스트 출력."
       expected_sha256: null
       expected_size_bytes: null
       redaction_state: none
   evidence_updates:
-    - claim: "계정 내보내기 확인 테스트가 통과했습니다."
+    - claim: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
       required_for_close: true
       coverage_state: supported
       supporting_refs: []
@@ -206,7 +206,7 @@ run_summary:
     task_id: task_456
     state_version: 21
   kind: implementation
-  summary: "계정 내보내기 확인 테스트가 통과했습니다."
+  summary: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
   observed_changes:
     changed_paths: []
     product_file_write_observed: false
@@ -253,7 +253,7 @@ registered_artifacts:
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "계정 내보내기 확인 테스트가 통과했습니다."
+    - claim: "계정 데이터 내보내기 확인 테스트가 통과했습니다."
       required_for_close: true
       coverage_state: supported
       supporting_refs:

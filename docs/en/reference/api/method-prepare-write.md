@@ -7,7 +7,7 @@
 This document owns active MVP method behavior for `harness.prepare_write`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account export confirmation scenario
+- the minimal request and representative response for the shared account data export confirmation scenario
 - method-level storage-effect expectations before storage owners define record-level details
 
 ## What this document does not own
@@ -138,7 +138,7 @@ params:
     locale: en-US
   task_id: task_456
   change_unit_id: cu_001
-  intended_operation: "update account export flow to require explicit confirmation"
+  intended_operation: "update account data export flow to require explicit confirmation"
   intended_paths:
     - src/account/export.ts
     - src/account/export-confirmation.ts
@@ -157,7 +157,7 @@ This branch applies after the separate sensitive-action approval is already pres
 
 The existing sensitive-action approval is represented by `active_user_judgment_refs` at `state_version: 19`.
 `uj_sensitive_export_001` represents an existing resolved `judgment_kind=sensitive_approval` whose `SensitiveActionScope` matches the account data export step and is needed before `Write Authorization`.
-The account export confirmation copy judgment is handled separately by the user-judgment methods and is not the same approval.
+The account data export confirmation copy judgment is handled separately by the user-judgment methods and is not the same approval.
 
 ```yaml
 base:
