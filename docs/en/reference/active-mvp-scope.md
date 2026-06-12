@@ -119,16 +119,17 @@ Close attempts:
 - Active MVP meaning: `harness.close_task` can check close readiness and attempt supported close outcomes.
 - Required boundary: Evidence, final acceptance, residual-risk, and non-substitution boundaries remain intact.
 
-Read-time status or derived display is active only as part of status and close-readiness review. Persistent projection jobs, generated projection files, and managed projection repair are not active scope.
+Status display boundary:
+- Current scope: Read-time status or derived display is active only as part of status and close-readiness review.
+- Not included: Persistent projection jobs, generated projection files, and managed projection repair.
 
 ## Excluded from the active MVP
 
-The active MVP is intentionally narrow. For canonical security non-claims and guarantee levels, see [Security](security.md). While this repository remains documentation-only, the active MVP is also not a runtime implementation.
+Current scope:
+- The active MVP is intentionally narrow.
 
-Later candidates do not create active requirements.
-
-The active MVP excludes:
-
+Not included:
+- runtime implementation while this repository remains documentation-only
 - native artifact capture and `captured_artifact`
 - projection reconcile, persistent projection jobs, and managed block drift repair
 - full `Evidence Manifest`
@@ -143,48 +144,76 @@ The active MVP excludes:
 - generated conformance artifacts
 - operations profiles
 
-Approving a sensitive action does not create active observation or blocking unless an owner promotes that capability. Security and observation boundaries belong to [Security](security.md) and the relevant later-candidate owners.
+Does not imply:
+- Later candidates do not create active requirements.
+- Approving a sensitive action does not create active observation or blocking unless an owner promotes that capability.
+
+Owner links:
+- Security non-claims, guarantee levels, and observation boundaries: [Security](security.md) and relevant later-candidate owners.
+- Deferred promotion boundaries: [Later Candidate Index](../later/index.md).
 
 ## Reserved and profile-gated values
 
-Some value names may be reserved values or profile-gated values without being active user-visible capabilities.
+Current scope:
+- Some value names may be reserved values or profile-gated values without being active user-visible capabilities.
 
-Scope effect:
+Does not imply:
 - Reserved or profile-gated guarantee labels do not expand the current MVP scope.
-
-Non-claim:
 - Appearance in examples, schemas, or later-candidate tables does not activate behavior.
 - Appearance there does not make a guarantee available.
 - Appearance there does not make the value a default current-MVP value.
 
-Exact guarantee label value entries belong to [API Value Sets](api/schema-value-sets.md). Guarantee semantics, including non-claims for `isolated`, belong to [Security](security.md).
+Owner links:
+- Exact guarantee label value entries: [API Value Sets](api/schema-value-sets.md).
+- Guarantee semantics, including non-claims for `isolated`: [Security](security.md).
 
 ## Later candidates
 
-[Later Candidate Index](../later/index.md) owns deferred candidate names and promotion boundaries.
+Owner links:
+- Deferred candidate names and promotion boundaries: [Later Candidate Index](../later/index.md).
 
 Promotion condition:
 - A later candidate remains inert until an owner document promotes a narrow capability with scope, fallback behavior, proof expectations, and paired English/Korean documentation.
 
-Mentioning a later candidate in examples, route text, schema notes, or this reference does not promote it and does not make it an active MVP requirement.
+Does not imply:
+- Mentioning a later candidate in examples, route text, schema notes, or this reference does not promote it and does not make it an active MVP requirement.
 
 ## Current guarantee boundary
 
-The current MVP guarantee boundary is `cooperative` by default. The current MVP does not provide `isolated` guarantee semantics. Reserved or profile-gated guarantee labels do not expand the current MVP scope.
+Current scope:
+- The current MVP guarantee boundary is `cooperative` by default.
+- `harness.prepare_write` and `Write Authorization` remain product-file write compatibility mechanisms.
 
-For guarantee semantics, detective wording, promotion rules for `preventive` and `isolated`, and security non-claims, see [Security](security.md). For guarantee label value entries, see [API Value Sets](api/schema-value-sets.md).
+Not included:
+- The current MVP does not provide `isolated` guarantee semantics.
 
-`harness.prepare_write` and `Write Authorization` remain product-file write compatibility mechanisms.
+Does not imply:
+- Reserved or profile-gated guarantee labels do not expand the current MVP scope.
 
 Owner links:
+- Guarantee semantics, detective wording, promotion rules for `preventive` and `isolated`, and security non-claims: [Security](security.md).
+- Guarantee label value entries: [API Value Sets](api/schema-value-sets.md).
 - Method behavior: [Prepare-write method](api/method-prepare-write.md), routed from the [MVP API router](api/mvp-api.md).
 - Core meaning: [Core Model](core-model.md).
 
 ## Documentation-only boundary
 
-Editing this document or any linked reference document does not implement the Harness Server, create runtime state, run conformance, generate projections, stage artifacts, record evidence, accept QA, accept residual risk, close tasks, or authorize server coding.
+Editing this document or any linked reference document is documentation-only.
 
-Implementation readiness and maintainer handoff status stay in [MVP Plan](../build/mvp-plan.md). If that plan does not explicitly authorize runtime work, this repository remains documentation-only.
+Does not imply:
+- Harness Server implementation
+- runtime state creation
+- conformance execution
+- generated projections
+- artifact staging
+- evidence recording
+- QA acceptance
+- residual-risk acceptance
+- task closure
+- server-coding authorization
+
+Owner links:
+- Implementation readiness and maintainer handoff status: [MVP Plan](../build/mvp-plan.md). If that plan does not explicitly authorize runtime work, this repository remains documentation-only.
 
 ## Owner links
 
