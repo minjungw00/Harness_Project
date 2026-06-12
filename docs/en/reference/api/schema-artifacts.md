@@ -93,14 +93,13 @@ ArtifactInput:
   redaction_state: string | null
 ```
 
-Exactly one source field is active for each input:
+For each input, exactly one source field is populated and the other source field is `null`. `ArtifactInput.source_kind` selects which source field is active; active source-kind values and value meanings are owned by [artifact values](schema-value-sets.md#artifact-values).
 
-| `source_kind` | Required source field | Meaning |
-|---|---|---|
-| `staged_artifact` | `staged_artifact_handle` | Use a compatible transient staged handle through the owner path. |
-| `existing_artifact` | `existing_artifact_ref` | Link an already persistent same-project artifact without registering new bytes. |
+Shape rules:
+- If `staged_artifact_handle` is populated, it must be a compatible transient staged handle.
+- If `existing_artifact_ref` is populated, it must be an already persistent same-project artifact reference.
 
-Values outside the active source-kind list are not baseline `ArtifactInput` sources. Caller-supplied paths, logs, capture claims, or local file references are not artifact authority.
+Caller-supplied paths, logs, capture claims, or local file references are not artifact authority.
 
 ## Reference constraints
 

@@ -536,7 +536,7 @@ expires_at: "<future-expiration-timestamp>"
 
 규칙:
 
-- `artifacts.redaction_state`는 [API 아티팩트 스키마](api/schema-artifacts.md)의 활성 `ArtifactRef.redaction_state` 값을 사용합니다.
+- `artifacts.redaction_state`는 [API 값 집합](api/schema-value-sets.md#아티팩트-값)의 활성 `ArtifactRef.redaction_state` 값을 사용합니다.
 - 체크섬과 크기 검증은 아티팩트 바이트와 저장된 메타데이터가 맞는지 확인합니다.
 - `sha256`, `size_bytes`, `content_type`은 저장된 바이트 비교와 가용성 처리를 위한 무결성 사실입니다.
 

@@ -344,7 +344,7 @@ Storage meaning:
 
 Rule:
 
-- `artifacts.redaction_state` uses the active `ArtifactRef.redaction_state` values from [API Artifact Schemas](api/schema-artifacts.md).
+- `artifacts.redaction_state` uses the active `ArtifactRef.redaction_state` values from [API Value Sets](api/schema-value-sets.md#artifact-values).
 - `sha256`, `size_bytes`, and `content_type` are artifact integrity facts for comparison and availability handling.
 
 Allowed:

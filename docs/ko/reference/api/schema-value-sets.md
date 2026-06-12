@@ -10,7 +10,8 @@
 - API `response_kind`와 `effect_kind` 값
 - 활성 `access_class` 값
 - 공유 상태 참조에서 쓰는 기록/참조 판별 값
-- 활성 생명주기, 닫기 상태, 출처 종류, 판단 종류, 표시 형식, 필요 판단 위치, 선택지 표시, 아티팩트, 가림 처리, validator, 보장 표시 등 API 값 집합
+- 활성 생명주기, 닫기 상태, 출처 종류, 판단 종류, 표시 형식, 필요 판단 위치, 아티팩트 가림 처리, 아티팩트 가용성 표시, `ValidatorResult.status`, `ValidatorResult.severity`, 보장 표시 등 API 값 집합
+- 활성 공개 `ValidatorResult.validator_id` 값의 경계
 - 활성 스키마 해석에 영향을 주는 프로필 조건부 또는 예약 값 경계
 - 렌더링된 라벨이 기준 스키마 값이 아니라는 규칙
 
@@ -300,26 +301,14 @@ error
 blocking
 ```
 
+이 기준 범위 값 집합 담당 문서는 활성 안정 `ValidatorResult.validator_id` 집합을 공개하지 않습니다. 영향받는 담당 문서가 정확한 안정 값을 이 문서에 공개하고 그 의미를 정의하기 전까지 `validator_id` 문자열은 보고용 라벨입니다.
+
 `GuaranteeDisplay.level`은 기준 범위 활성 값으로 아래를 사용합니다.
 
 ```text
 cooperative
 detective
 ```
-
-`changed_path_detection_verification`은 아래 값을 사용합니다.
-
-```text
-passed
-failed
-stale
-not_run
-```
-
-예전 `planned_not_run`은 활성 값이 아닙니다.
-
-- 비주장: `planned_not_run`은 `detective`의 근거가 될 수 없습니다.
-- 담당 문서: 보장 수준 의미는 [보안](../security.md)이 담당합니다.
 
 <a id="artifact-values"></a>
 ## 아티팩트 값
@@ -331,7 +320,13 @@ staged_artifact
 existing_artifact
 ```
 
-이 목록 밖의 값은 활성 출처 값이 아니며, 아티팩트 캡처나 로컬 파일 읽기를 승인하지 않습니다.
+값 의미:
+- `staged_artifact`는 아티팩트 담당 경로를 통해 호환되는 임시 스테이징 핸들을 선택합니다.
+- `existing_artifact`는 새 바이트를 등록하지 않고 이미 지속되는 같은 프로젝트 아티팩트를 선택합니다.
+
+선택된 출처 값은 어느 `ArtifactInput` 출처 필드가 활성인지 정합니다. 정확한 형태 불변조건은 [API 아티팩트 스키마](schema-artifacts.md#artifactinput)가 담당합니다.
+
+이 목록 밖의 값은 활성 출처 값이 아니며, 아티팩트 캡처, 호출자가 준 경로, 로그, 로컬 파일 읽기를 승인하지 않습니다.
 
 `redaction_state`는 아래 값을 사용합니다.
 
@@ -427,8 +422,6 @@ incompatible
 경계:
 - 활성 목록 밖의 이름은 메모, 예시, 경로 문서, 렌더링된 라벨에 나온다는 이유만으로 기준 범위 동작이 되지 않습니다.
 - 예약된 값이나 프로필 조건부 값의 동작을 지원된다고 설명하려면 [범위 참조](../scope.md) 경계와 영향받는 의미 담당 문서가 먼저 필요합니다.
-
-활성 아티팩트 입력은 `staged_artifact` 또는 `existing_artifact`를 사용합니다. 아티팩트 출처 의미는 [API 아티팩트 스키마](schema-artifacts.md)와 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
 ## 관련 담당 문서
 

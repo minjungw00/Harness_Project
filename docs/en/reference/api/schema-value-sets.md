@@ -10,7 +10,8 @@ This document owns:
 - API `response_kind` and `effect_kind` values
 - active `access_class` values
 - record/reference discriminator values used by shared state references
-- active lifecycle, close-state, source-kind, judgment-kind, presentation, required-for, option-display, artifact, redaction, validator, guarantee-display, and similar API value sets
+- active lifecycle, close-state, source-kind, judgment-kind, presentation, required-for, artifact redaction, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
+- the boundary for active public `ValidatorResult.validator_id` values
 - profile-gated or reserved value boundaries where they affect active schema interpretation
 - the rule that rendered labels are not canonical schema values
 
@@ -24,9 +25,15 @@ This document does not own:
 
 ## Boundary
 
-Only values listed here as active are active API values. Profile-gated values must name the profile or capability gate at the point of use. Values outside the active lists are not baseline API values unless [Scope](../scope.md) and the affected semantic owner define the supported behavior.
+Only values listed here as active are active API values.
 
-Rendered labels are display text. They do not replace the canonical values listed in this document.
+Conditions:
+- Profile-gated values must name the profile or capability gate at the point of use.
+- Values outside the active lists are not baseline API values unless [Scope](../scope.md) and the affected semantic owner define the supported behavior.
+
+Not implied:
+- Naming a value outside an active list does not widen active scope.
+- Rendered labels are display text. They do not replace the canonical values listed in this document.
 
 <a id="method-name-values"></a>
 ## Method name values
@@ -279,23 +286,14 @@ error
 blocking
 ```
 
+This baseline value-set owner does not publish an active stable `ValidatorResult.validator_id` set. A `validator_id` string is a reporting label unless an affected owner publishes the exact stable value here and defines its semantic meaning.
+
 `GuaranteeDisplay.level` uses baseline values:
 
 ```text
 cooperative
 detective
 ```
-
-`changed_path_detection_verification` uses:
-
-```text
-passed
-failed
-stale
-not_run
-```
-
-Legacy `planned_not_run` is not an active value and cannot justify `detective`.
 
 <a id="artifact-values"></a>
 ## Artifact values
@@ -307,7 +305,13 @@ staged_artifact
 existing_artifact
 ```
 
-Values outside this list are not active source values and do not authorize artifact capture or local file reads.
+Value meanings:
+- `staged_artifact` selects a compatible transient staged handle through the artifact owner path.
+- `existing_artifact` selects an already persistent same-project artifact without registering new bytes.
+
+The selected source value determines which `ArtifactInput` source field is active. The exact shape invariant is owned by [API Artifact Schemas](schema-artifacts.md#artifactinput).
+
+Values outside this list are not active source values and do not authorize artifact capture, caller-supplied paths, logs, or local file reads.
 
 `redaction_state` uses:
 
@@ -400,8 +404,6 @@ Reserved or profile-gated names are not default baseline values. This document d
 Boundary:
 - A name outside an active list is not available as baseline behavior by appearing in a note, example, route page, or rendered label.
 - A reserved or profile-gated value needs the [Scope](../scope.md) boundary and affected semantic owner before any behavior can be described as supported.
-
-Active artifact intake uses `staged_artifact` or `existing_artifact`; artifact source semantics belong to [API Artifact Schemas](schema-artifacts.md) and [Artifact Storage](../storage-artifacts.md).
 
 ## Related owners
 
