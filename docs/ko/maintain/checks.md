@@ -237,24 +237,24 @@
 수정 방향:
 - 참조, 버전, 민감 범주, 아티팩트 생명주기, 타임스탬프, 공유 시나리오 데이터를 서로 맞춥니다.
 
-### CHK-EXAMPLE-FIELD-NAME-CONSISTENCY: 예시 field name 일관성
+### CHK-EXAMPLE-FIELD-NAME-CONSISTENCY: 예시 필드 이름 일관성
 
 담당 문서:
 - [`maintain/authoring-guide.md`](authoring-guide.md)
-- 영향을 받는 담당 method 문서 또는 schema 문서
+- 영향을 받는 메서드 담당 문서 또는 스키마 담당 문서
 
 점검:
-- 예시 field name은 담당 method 또는 schema 문서와 일치해야 합니다.
-- method payload 데이터를 재사용하는 storage/effect 예시는 storage summary로 따로 설명하지 않은 채 같은 개념에 다른 field name을 사용하면 안 됩니다.
-- 여러 예시에서 공유되는 field name은 일관되어야 합니다.
+- 예시 필드 이름은 메서드 담당 문서 또는 스키마 담당 문서와 일치해야 합니다.
+- 메서드 페이로드 데이터를 재사용하는 저장소/효과 예시는 저장소 요약 데이터라고 따로 설명하지 않은 채 같은 개념에 다른 필드 이름을 사용하면 안 됩니다.
+- 여러 예시에서 공유되는 필드 이름은 일관되어야 합니다.
 
 실패:
-- method 예시가 `intended_paths`를 쓰고, 관련 storage 예시가 같은 개념에 `affected_paths`를 설명 없이 사용합니다.
-- 예시에 나타난 field name이 관련 method, schema 문서, 또는 storage summary 섹션에서 담당하지 않는 이름입니다.
-- 관련 예시 두 곳이 같은 개념에 서로 다른 field name을 쓰면서 담당 경계 주석을 두지 않습니다.
+- 메서드 예시가 `intended_paths`를 쓰고, 관련 저장소 예시가 같은 개념에 `affected_paths`를 설명 없이 사용합니다.
+- 예시에 나타난 필드 이름이 관련 메서드, 스키마, 또는 저장소 요약 섹션에서 담당하지 않는 이름입니다.
+- 관련 예시 두 곳이 같은 개념에 서로 다른 필드 이름을 쓰면서 담당 경계 주석을 두지 않습니다.
 
 수정:
-- 담당 method 또는 schema 문서의 field name을 사용하거나, 해당 field name이 storage summary 데이터임을 분명히 표시합니다.
+- 메서드 담당 문서 또는 스키마 담당 문서의 필드 이름을 사용하거나, 해당 필드 이름이 저장소 요약 데이터임을 분명히 표시합니다.
 - 필요하면 담당 문서 링크를 추가합니다.
 
 ## 5. 용어 점검

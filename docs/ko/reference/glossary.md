@@ -397,7 +397,7 @@
 - [API 오류](api/errors.md)
 
 설명:
-- 평가 개념이며 blocker schema 자체가 아닙니다.
+- 평가 개념이며 차단 사유 스키마 자체가 아닙니다.
 
 ### close readiness evaluation
 

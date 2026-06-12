@@ -156,7 +156,7 @@
 - 로컬 접근 실패.
 - 역량 부족.
 - 오래된 `expected_state_version`.
-- validator 실패.
+- 검증기 실패.
 
 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
@@ -172,7 +172,7 @@
 - 유효하지 않은 답변 페이로드.
 - 만료되었거나 호환되지 않는 승인.
 - 로컬 접근 실패.
-- validator 실패.
+- 검증기 실패.
 
 공개 오류 코드 의미와 우선순위는 [API 오류](errors.md)가 담당합니다.
 
@@ -204,7 +204,7 @@
 
 현재 `UserJudgment` 스키마에서 사용자에게 보이는 판단 프롬프트는 `question` 필드입니다. 계정 내보내기 확인 문구에 대한 사용자 판단은 이 프롬프트와 `context.summary`에 담습니다. 이 예시는 아티팩트를 근거로 들지 않으므로 `context.artifact_refs: []`는 의도한 값입니다.
 
-요청과 응답 예시는 같은 `options` 선택지 값과 같은 Task를 가리키는 `affected_refs` 영향 받는 ref를 유지합니다. `record_user_judgment` 예시는 `accept`를 선택하고 `decision: accepted`를 기록하며, 근거는 충분함 선택지와 같은 의미입니다. 시간 필드는 `null` 또는 플레이스홀더 값을 사용합니다.
+요청과 응답 예시는 같은 `options` 선택지 값과 같은 Task를 가리키는 `affected_refs`를 유지합니다. `record_user_judgment` 예시는 `accept`를 선택하고 `decision: accepted`를 기록하며, 근거는 충분함 선택지와 같은 의미입니다. 시간 필드는 `null` 또는 플레이스홀더 값을 사용합니다.
 
 ## 최소 유효 요청
 

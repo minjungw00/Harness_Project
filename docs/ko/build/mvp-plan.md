@@ -17,7 +17,7 @@
 
 ## 계획 전제
 
-- 이 Build 문서는 구현 계획을 돕는 문서이지 런타임 구현이 아닙니다.
+- 이 빌드 문서는 구현 계획을 돕는 문서이지 런타임 구현이 아닙니다.
 - 현재 MVP 범위는 [`../reference/active-mvp-scope.md`](../reference/active-mvp-scope.md)가 담당합니다. 이 문서는 범위 목록을 반복하지 않습니다.
 - API 메서드 경로는 [`../reference/api/mvp-api.md`](../reference/api/mvp-api.md)가 담당하고, 메서드 동작은 그 문서가 나열하는 메서드 담당 문서가 담당합니다. 이 문서는 요청, 응답, 분기, 오류 동작을 반복하지 않습니다.
 - 공통 API 요청 래퍼와 응답 분기는 [`../reference/api/schema-core.md`](../reference/api/schema-core.md)가 담당합니다. 상태, 아티팩트, 판단, 값 집합 스키마는 분리된 API 스키마 참조가 담당합니다.

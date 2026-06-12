@@ -431,7 +431,7 @@ consumed
 incompatible
 ```
 
-`ToolError.details.artifact_input_error.reason`은 [공개 `ErrorCode` 표](errors.md#error-taxonomy)에 있는 스테이징된 핸들 사유 값을 사용합니다. 각 공개 오류 코드와 detail 사유의 의미는 [API 오류](errors.md)가 담당합니다.
+`ToolError.details.artifact_input_error.reason`은 [공개 `ErrorCode` 표](errors.md#error-taxonomy)에 있는 스테이징된 핸들 사유 값을 사용합니다. 각 공개 오류 코드와 세부 사유의 의미는 [API 오류](errors.md)가 담당합니다.
 
 ## 프로필 조건부 및 예약 값
 
