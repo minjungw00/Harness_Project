@@ -265,6 +265,6 @@ next_actions:
 - 요청 래퍼, 공통 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - 닫기 준비 상태 형태, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`: [API 상태 스키마](schema-state.md).
 - 닫기 상태, 생명주기, 닫기 이유, 차단 사유 값: [API 값 집합](schema-value-sets.md).
-- 전체 닫기 준비 상태 평가 순서와 정직한 닫기: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
+- 닫기 준비 상태 의미와 정직한 닫기: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
 - 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers).
 - 저장 효과와 상태 버전 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

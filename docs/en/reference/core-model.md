@@ -1,1185 +1,369 @@
 # Core model reference
 
-This reference defines the Harness Core authority model as documentation reference material. It is not runtime state, generated output, or executable server material.
+This reference owns the Harness Core authority model. It defines how Core, a `Task`, a Change Unit, user-owned judgment, evidence, artifact references, `Write Authorization`, close readiness, blockers, acceptance, and residual risk relate to each other.
 
-Core is the local authority record for task scope, user-owned judgment, evidence, verification expectations, close readiness, and residual risk. It owns the product meaning of those boundaries. Security guarantee wording and non-claims belong to [Security](security.md).
+Core is the local authority record for Harness state. It is not chat memory, generated Markdown, a status report, a tutorial, a storage layout, or an API response shape.
 
-## 1. Owns / Does not own
+## 1. Owner Boundary
 
 This document owns:
 
-- Core authority invariants and non-substitution rules.
-- Product meaning for Task scope, Change Unit boundaries, user-owned judgment, evidence, close readiness, close honesty, waivers, and residual risk.
-- Conceptual lifecycle and gate boundaries.
-- The difference between `WriteDecisionReason`, close-readiness blocking reasons, and `CloseReadinessBlocker`.
-- Cross-owner routing when Core concepts touch API, Storage, Security, Projection, or out-of-scope material.
+- authority relationships among Core concepts
+- non-substitution rules for judgment, evidence, acceptance, risk, write authorization, and close
+- the product meaning of `Task`, Change Unit, user-owned judgment, evidence, close readiness, blockers, `Write Authorization`, final acceptance, and residual-risk acceptance
+- conceptual lifecycle and authority-check boundaries
 
 This document does not own:
 
-- Public API payload schemas, response branch shapes, envelopes, or method result structures. Use the [API Methods](api/methods.md), method owner documents, [API Schema Core](api/schema-core.md), and the API schema owners.
-- Storage DDL, persisted JSON layout, locks, migrations, runtime-home placement, or method-to-storage effects. Use [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md).
-- Exact active enum-like values and wire field lists. Use [API Value Sets](api/schema-value-sets.md) and [API State Schemas](api/schema-state.md).
-- Public error code definitions or error precedence. Use [API Errors](api/errors.md).
-- Rendered projection bodies, template text, connector recipes, security guarantee vocabulary, or out-of-scope capability catalogs.
+- API request fields, response branches, schema shapes, exact value sets, or method behavior
+- storage records, DDL, state-version effects, artifact bytes, locks, migrations, or persistence layout
+- rendered projection bodies, template text, display labels, or user workflow instructions
+- security guarantee wording, access-boundary claims, or out-of-scope capability catalogs
 
-Exact identifiers may appear here when needed to explain meaning. Their schema shape, value set, storage effect, and public error behavior remain with the linked owner documents.
+When this page names an exact identifier, it names the authority concept only. The linked owner documents define wire shape, method behavior, storage effect, display text, security wording, and exact values.
 
-## 2. Kernel invariants
+## 2. Authority Invariants
 
-| Invariant | Details |
-|---|---|
-| Core-owned state is authority. | See [Core state authority](#core-invariant-state-authority). |
-| Harness governs Harness records. | See [Harness record boundary](#core-invariant-harness-record-boundary). |
-| Product writes require compatible active scope. | See [Product write scope](#core-invariant-product-write-scope). |
-| User-owned judgment stays user-owned. | See [User-owned judgment authority](#core-invariant-user-owned-judgment). |
-| `Write Authorization` creation is narrow. | See [`Write Authorization` creation](#core-invariant-write-authorization-creation). |
-| Runs record what happened. | See [Run record authority](#core-invariant-run-record-authority). |
-| Evidence records support only recorded claims. | See [Evidence record authority](#core-invariant-evidence-record-authority). |
-| Close must stay honest. | See [Honest close](#core-invariant-honest-close). |
-| Baseline scope and out-of-scope capabilities stay separate. | See [Baseline scope boundary](#core-invariant-baseline-scope-boundary). |
+Core-owned state is authority.
 
-<a id="core-invariant-state-authority"></a>
-### Core state authority
+- Core state is the record other Harness owner paths use to decide current scope, required judgment, evidence support, write compatibility, blockers, close readiness, and residual risk.
+- Chat, reports, generated Markdown, projections, template output, and summaries can describe Core state, but they do not replace it.
 
-Concept:
-- Core-owned state is the authority for Harness operations.
+Harness governs Harness records.
 
-Not the same as:
-- chat
-- reports
-- generated Markdown
-- projections
-- template output
+- Core authority applies to Harness records and Harness state transitions.
+- It is not a general security-control surface and does not claim OS-level enforcement.
 
-Owner links:
-- [Projection Authority Reference](projection-and-templates.md)
-- [Template Bodies](template-bodies.md)
+Scope bounds work.
 
-<a id="core-invariant-harness-record-boundary"></a>
-### Harness record boundary
+- A `Task` defines the user-value unit. A Change Unit defines the active scoped work boundary for write-capable work inside that `Task`.
+- Product-file writes, evidence claims, final acceptance, and close claims must stay compatible with the active scope and Change Unit.
+- A resolved scope judgment does not silently mutate active scope; the active scope path must be updated by its owner.
 
-Concept:
-- Harness governs Harness records and state transitions.
+User-owned judgment stays user-owned.
 
-Not the same as:
-- a general security-control surface
+- Core must ask for or preserve a user-owned judgment instead of inferring it from agent confidence, broad approval, evidence, display text, or a generated summary.
+- One user answer can satisfy multiple authority needs only when those distinct questions were made visible and the recorded judgment remains compatible with each affected object, scope, consequence, and close or write impact.
 
-Owner links:
-- [Security](security.md)
+`Write Authorization` is narrow.
 
-<a id="core-invariant-product-write-scope"></a>
-### Product write scope
+- `Write Authorization` authorizes one compatible product-file write attempt under current Harness state.
+- It is not reusable scope, command approval, sensitive-action approval, OS permission, final acceptance, evidence, or proof that the write occurred.
 
-Condition:
-- Product writes require compatible active scope.
+Runs and evidence record support, not authority substitutes.
 
-Effect:
-- A write path outside the current Task and Change Unit must be reshaped before it can be compatible.
+- A Run records execution or observation. Evidence records support only the claims, scope, and context they actually record.
+- A Run, log, screenshot, artifact, or `ArtifactRef` does not retroactively create missing scope, missing judgment, missing approval, or missing `Write Authorization`.
 
-Owner links:
-- [Prepare Write Method](api/method-prepare-write.md)
-- [API State Schemas](api/schema-state.md)
+Close must stay honest.
 
-<a id="core-invariant-user-owned-judgment"></a>
-### User-owned judgment authority
+- Close readiness asks whether the current `Task` can close without hiding unresolved owner-path requirements.
+- If close-relevant blockers remain, Core must expose blockers instead of treating the `Task` as successfully complete.
 
-Concept:
-- User-owned judgment stays user-owned.
+Acceptance and risk acceptance are specific.
 
-Not the same as:
-- agent inference
-- broad consent
-- evidence
-- projection text
-- generated summaries
+- Final acceptance is the user's judgment of the visible close basis.
+- Residual-risk acceptance is the user's acceptance of named visible residual risk for the requested close.
+- Neither fills evidence gaps, changes scope, grants write authority, proves verification, or makes the result risk-free.
 
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
+## 3. Core Concepts
 
-<a id="core-invariant-write-authorization-creation"></a>
-### `Write Authorization` creation
+### Core
 
-Condition:
-- Only a non-dry-run allowed `prepare_write` path creates a consumable `Write Authorization`.
+Core is the local authority record for a Harness project. It records current authority state and routes changes through owner-defined paths.
 
-Effect:
-- `Write Authorization` is single-use for one compatible product-file attempt.
+Core authority is about Harness records. Security guarantee levels, local-access posture, and stronger isolation non-claims belong to [Security](security.md).
 
-Not allowed:
-- It is not reusable scope and not general permission.
+### `Task`
 
-Owner links:
-- [Prepare Write Method](api/method-prepare-write.md)
+A `Task` is the user-value unit being shaped, executed, blocked, or closed.
 
-<a id="core-invariant-run-record-authority"></a>
-### Run record authority
+A `Task` owns the main work path for scope, Change Units, required judgments, evidence expectations, close readiness, final outcome, and residual risk. Exact lifecycle values and state fields belong to the API state and value-set owners.
 
-Concept:
-- Runs record what happened.
-
-Not the same as:
-- retroactive authorization for work that lacked scope, required judgment, sensitive-action approval, or `Write Authorization`
-
-Owner links:
-- [Record Run Method](api/method-record-run.md)
-
-<a id="core-invariant-evidence-record-authority"></a>
-### Evidence record authority
-
-Concept:
-- Evidence records support only the claims they actually record.
-
-Not the same as:
-- acceptance
-- QA
-- verification
-- residual-risk acceptance
-- proof of unrecorded facts
-
-Owner links:
-- [API Artifact Schemas](api/schema-artifacts.md)
-- [API State Schemas](api/schema-state.md)
-
-<a id="core-invariant-honest-close"></a>
-### Honest close
-
-Condition:
-- Close-relevant blockers remain.
-
-Effect:
-- Core reports blockers instead of treating the Task as successfully completed.
-
-Owner links:
-- [Close Task Method](api/method-close-task.md)
-- [API State Schemas](api/schema-state.md)
-
-<a id="core-invariant-baseline-scope-boundary"></a>
-### Baseline Scope Boundary
-
-Concept:
-- Baseline scope and out-of-scope capabilities stay separate.
-
-Not supported until promoted:
-- separate QA or verification workflows
-- rich waiver
-- assurance material
-
-Owner links:
-- [Scope](scope.md)
-- [Scope Reference](scope.md)
-
-## 3. Core entities
-
-These entities describe authority relationships, not storage tables or API bodies.
-
-| Entity | Details |
-|---|---|
-| Task | See [Task](#core-entity-task-boundary). |
-| Change Unit | See [Change Unit](#core-entity-change-unit). |
-| Autonomy Boundary | See [Autonomy Boundary](#core-entity-autonomy-boundary). |
-| `user_judgment` | See [`user_judgment`](#core-entity-user-judgment). |
-| `Write Authorization` | See [`Write Authorization`](#core-entity-write-authorization-boundary). |
-| Run | See [Run](#core-entity-run). |
-| Evidence summary | See [Evidence summary](#core-entity-evidence-summary). |
-| `ArtifactRef` | See [`ArtifactRef`](#core-entity-artifactref-boundary). |
-| Blocker | See [Blocker](#core-entity-blocker). |
-| Residual-risk summary | See [Residual-risk summary](#core-entity-residual-risk-summary). |
-| Projection output | See [Projection output](#core-entity-projection-output). |
-| Template output | See [Template output](#core-entity-template-output-boundary). |
-| `ShapingReadiness` | See [`ShapingReadiness`](#core-entity-shaping-readiness). |
-
-<a id="core-entity-task-boundary"></a>
-### Task
-
-Concept:
-- A Task is the user-value unit being shaped, executed, blocked, or closed.
-
-Owner links:
-- Exact lifecycle values and public state fields are owned by [API Value Sets](api/schema-value-sets.md) and [API State Schemas](api/schema-state.md).
-
-<a id="core-entity-change-unit"></a>
 ### Change Unit
 
-Concept:
-- A Change Unit is the active scoped work boundary for write-capable work.
+A Change Unit is the active scoped work boundary for write-capable work inside a `Task`.
 
-Not the same as:
-- final acceptance
-- evidence
-- permission to widen scope silently
+It defines what the current work may change and what must stay outside the current work. It is not final acceptance, evidence, broad approval, or permission to widen scope silently.
 
-<a id="core-entity-autonomy-boundary"></a>
 ### Autonomy Boundary
 
-Concept:
-- An Autonomy Boundary is the agent latitude inside a Change Unit.
+An Autonomy Boundary is the agent latitude inside the active Change Unit.
 
-Not the same as:
-- scope expansion
-- sensitive-action approval
-- permission to make user-owned judgments
+It does not allow scope expansion, sensitive-action approval, user-owned judgment, or write authorization by inference.
 
-<a id="core-entity-user-judgment"></a>
-### `user_judgment`
+### User-Owned Judgment
 
-Concept:
-- `user_judgment` is the record family for decisions the user owns.
+User-owned judgment is the boundary where the user owns the decision. Core may record the judgment, but it must not invent it.
 
-Effect:
-- It can feed compatibility when the recorded judgment matches the affected object, scope, consequence, and close or write impact.
+User-owned judgment can concern product direction, technical direction, scope, a sensitive step, final acceptance, residual-risk acceptance, or cancellation. Exact judgment schema fields and value names belong to API schema and value-set owners.
 
-Not the same as:
-- active scope mutation
-- evidence creation
-- `Write Authorization`
-- sensitive-action approval, final acceptance, or residual-risk acceptance unless that exact judgment kind was asked and recorded
-- Task close by itself
-
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
-
-<a id="core-entity-write-authorization-boundary"></a>
-### `Write Authorization`
-
-Concept:
-- `Write Authorization` is a durable, single-use Core authorization for one compatible product-file write attempt.
-
-Not allowed:
-- It is not OS permission, command approval, sensitive-action approval, final acceptance, or reusable scope.
-
-Owner links:
-- [Prepare Write Method](api/method-prepare-write.md)
-- [Record Run Method](api/method-record-run.md)
-- [API State Schemas](api/schema-state.md)
-- [Storage Effects](storage-effects.md)
-
-<a id="core-entity-run"></a>
 ### Run
 
-Concept:
-- A Run is a record of execution or observation.
+A Run records an execution or observation with the available context and references.
 
-Not the same as:
-- Retroactive authorization for missing scope, missing judgment, missing approval, or missing `Write Authorization`.
-- Compatibility for subsequent product writes when the Run was read-only or shaping-only.
+It can support evidence and close-readiness review. It cannot approve missing preconditions after the fact.
 
-Owner links:
-- [Record Run Method](api/method-record-run.md)
+### Evidence
 
-<a id="core-entity-evidence-summary"></a>
-### Evidence summary
+Evidence is recorded support for a specific claim at a specific scope.
 
-Concept:
-- An evidence summary is the compact Core path for close-relevant support, gaps, refs, and coverage expectations.
+Evidence can show that a named test ran, a named output was observed, or a recorded artifact supports a recorded claim. It is not broad correctness, final acceptance, residual-risk acceptance, or separate QA or verification unless the relevant owners define that path.
 
-Not the same as:
-- Final acceptance.
-- Residual-risk acceptance.
-- Expanded evidence-package behavior outside the active owner paths.
-
-Owner links:
-- [API State Schemas](api/schema-state.md)
-- [API Artifact Schemas](api/schema-artifacts.md)
-
-<a id="core-entity-artifactref-boundary"></a>
 ### `ArtifactRef`
 
-Concept:
-- `ArtifactRef` is a durable reference to an evidence-eligible artifact when artifact owners allow that use.
+`ArtifactRef` is a public pointer to a registered persistent artifact.
 
-Owner links:
-- Artifact shape, staging, promotion, integrity, and body-read rules are owned by [API Artifact Schemas](api/schema-artifacts.md) and [Artifact Storage](storage-artifacts.md).
+Core may treat an artifact reference as evidence-eligible only when the artifact owners allow that use. The reference itself does not prove readable bytes, content sufficiency, safety, or integrity beyond the facts recorded by artifact owners.
 
-<a id="core-entity-blocker"></a>
+### `Write Authorization`
+
+`Write Authorization` is the named Core authorization for one compatible product-file write attempt.
+
+It depends on current Core state, active scope, active Change Unit compatibility, required user-owned judgments, and the write-authorization owner path. Its exact method behavior, API shape, storage effect, and stale-state handling belong to their owners.
+
 ### Blocker
 
-Concept:
-- A blocker is a structured reason progress, write, Run recording, or close cannot proceed honestly.
+A blocker is a structured reason that progress, write preparation, Run recording, or close cannot proceed honestly.
 
-Not the same as:
-- projection prose
-- broad approval
-- a successful-looking close result
+A close blocker is the close-relevant form: it prevents honest close readiness until the responsible owner path handles it. A blocker is not projection prose, broad approval, storage proof by itself, or a successful-looking close.
 
-Owner links:
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
+### Close Readiness
 
-<a id="core-entity-residual-risk-summary"></a>
-### Residual-risk summary
+Close readiness is the Core authority concept for whether the current `Task` can close honestly.
 
-Concept:
-- A residual-risk summary is the compact visibility path for known remaining uncertainty, limits, or trade-offs.
+It considers the current `Task`, active scope, Change Unit, required judgments, write and Run compatibility, evidence support, artifact availability, unresolved blockers, final acceptance, residual-risk visibility, residual-risk acceptance, and recovery constraints.
 
-Not the same as:
-- verification
-- evidence sufficiency
-- final acceptance
-- a no-risk result
-- rich residual-risk records or assurance displays unless promoted by an owner
+### Final Acceptance
 
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
-- [API State Schemas](api/schema-state.md)
-- [Scope Reference](scope.md)
+Final acceptance is a user-owned judgment that the visible close basis is acceptable for the requested close.
 
-<a id="core-entity-projection-output"></a>
-### Projection output
+It does not create evidence, approve sensitive action, change scope, accept residual risk, waive blockers, or prove verification.
 
-Concept:
-- Projection output is derived display from Core state and refs.
+### Residual Risk
 
-Not the same as:
-- authority
-- evidence
-- acceptance
+Residual risk is known remaining uncertainty, an unchecked condition, limitation, or trade-off that matters to close.
 
-Owner links:
-- [Projection Authority Reference](projection-and-templates.md)
+Residual-risk acceptance applies only to the named visible risk for the requested close. It does not cover all unknowns, replace evidence, replace final acceptance, or make the result risk-free.
 
-<a id="core-entity-template-output-boundary"></a>
-### Template output
+### Derived Display
 
-Concept:
-- Template output is rendered body text for cards, requests, summaries, results, and packets.
+Projection output, template output, status cards, summaries, and reports are derived display. They can help a reader see Core state, but they do not become Core authority, evidence, acceptance, or risk acceptance.
 
-Owner links:
-- Body expectations belong to [Template Bodies](template-bodies.md).
+## 4. User-Owned Judgment
 
-Not allowed:
-- Readability or manual editing does not turn output into authority.
+Core preserves the boundary between what the agent may decide and what the user must decide.
 
-<a id="core-entity-shaping-readiness"></a>
-### `ShapingReadiness`
+A judgment is user-owned when it changes or accepts a user-visible product outcome, a material technical direction, active scope, a named sensitive step, final acceptance, residual risk, or cancellation.
 
-Concept:
-- `ShapingReadiness` is a compact derived view over Core state for the next safe action.
+Product decisions include user-visible behavior, user flow, copy, UX, accessibility, release promises, product trade-offs, and user value.
 
-Inputs:
-- Task.
-- Change Unit.
-- Pending judgments.
-- Evidence summary.
-- Blockers.
-- Next-action state.
+Technical decisions include architecture, dependency or external service introduction, authentication direction, migration, public interface changes, compatibility breaks, data retention, privacy, security, and other costly-to-reverse technical directions.
 
-Owner links:
-- Core owns the readiness meaning: whether current owner state is concrete enough for the next safe action.
-- Wire fields are owned by [API State Schemas](api/schema-state.md).
+Scope decisions include scope expansion, non-goal removal, Change Unit boundary changes, and Autonomy Boundary changes.
 
-## 4. User-owned judgment
+Sensitive-action approval is permission for a named sensitive step inside a bounded `SensitiveActionScope`. It is not `Write Authorization`, security authority, product correctness, or final acceptance.
 
-Concept:
-- User-owned judgment is the boundary where Harness must ask the user or preserve the user's recorded choice instead of inferring it.
-- This page owns the product meaning. Exact schema fields and input shapes belong to the judgment schema owner.
+Final acceptance is the user's result judgment for the visible close basis.
 
-Inputs:
-- A product, technical, scope, sensitive-action, final-acceptance, residual-risk, or cancellation question that belongs to the user.
-- The affected object, scope, consequence, and close or write impact when one user reply is meant to satisfy more than one judgment kind.
+Residual-risk acceptance is the user's acceptance of a named visible residual risk for the requested close.
 
-Not the same as:
-- Agent inference, broad consent, evidence, projection text, or generated summaries.
-- Active scope mutation, `Write Authorization`, sensitive-action approval, final acceptance, or residual-risk acceptance unless that exact judgment kind was asked and recorded.
-
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
-
-Judgment kinds:
-
-| Judgment kind | User owns the decision when the question concerns |
-|---|---|
-| `product_decision` | User-visible behavior, user flow, copy, UX, accessibility, release promise, product trade-off, or user value. |
-| `technical_decision` | See [`technical_decision`](#core-judgment-technical-decision). |
-| `scope_decision` | Scope expansion, non-goal removal, Change Unit boundary changes, or Autonomy Boundary changes. |
-| `sensitive_approval` | Permission for a named sensitive step inside a bounded `SensitiveActionScope`. |
-| `final_acceptance` | The user's result judgment when the close path requires acceptance. |
-| `residual_risk_acceptance` | The user's acceptance of a named visible residual risk for the requested close. |
-| `cancellation` | Stopping the Task without a successful completed result. |
-
-<a id="core-judgment-technical-decision"></a>
-### `technical_decision`
-
-Condition:
-- The question concerns architecture, dependency or external service introduction, authentication direction, or migration.
-- The question concerns public interface, compatibility break, data retention, privacy, or security.
-- The question concerns another material and costly-to-reverse technical direction.
+Cancellation is a user-owned decision to stop the `Task` without a successful completed result.
 
 Agent latitude:
-- Inside accepted scope and acceptance criteria, the agent may choose ordinary implementation details that do not change product behavior, technical direction, scope, security/privacy posture, compatibility, or costly-to-reverse architecture.
 
-Not the same as:
-- A new permission system.
-- Broad consent that silently satisfies another judgment kind.
+- Inside accepted scope and acceptance criteria, the agent may choose ordinary implementation details that do not change product behavior, material technical direction, scope, security or privacy posture, compatibility, or costly-to-reverse architecture.
+- The agent must not treat "go ahead", "looks good", or similar broad language as another judgment kind unless the prompt made that distinct judgment visible and Core records it compatibly.
 
-Multiple judgments:
-- "Go ahead", "looks good", or similar wording cannot silently satisfy another judgment kind.
-- A single reply may satisfy multiple judgments only when the prompt asked those distinct questions and Core records each compatible judgment with its affected object, scope, consequence, and close or write impact.
+## 5. Non-Substitution Rules
 
-## 5. Non-substitution rules
+Generated text does not substitute for Core state.
 
-| Boundary | Details |
+- Chat, reports, generated Markdown, projection prose, status cards, and template bodies are not authority records.
+
+Evidence does not substitute for user judgment.
+
+- Evidence, logs, screenshots, artifacts, `ArtifactRef` values, and Run records do not replace final acceptance, residual-risk acceptance, sensitive-action approval, scope decisions, or other user-owned judgments.
+
+User judgment does not substitute for evidence.
+
+- Final acceptance, residual-risk acceptance, sensitive-action approval, and broad approval do not create missing evidence, prove correctness, satisfy separate verification, or make a close blocker disappear.
+
+Sensitive-action approval does not substitute for `Write Authorization`.
+
+- Sensitive-action approval authorizes the named sensitive step the user was asked about. It does not authorize product-file writes, commands, hosts, network, secrets, deployments, destructive operations, or final acceptance.
+
+`Write Authorization` does not substitute for acceptance.
+
+- `Write Authorization` makes one product-file write attempt compatible with Harness state. It does not prove the write occurred, record evidence, accept the result, accept risk, close the `Task`, or grant system access.
+
+Blocker data does not substitute across owner paths.
+
+- A prepare-write decision reason and a close blocker answer different authority questions.
+- `CloseReadinessBlocker` is an API data representation for close blocking reasons. It is not the whole close-readiness concept and does not prove persistence by itself.
+
+A waiver or accepted risk does not create automatic success.
+
+- A waiver can matter only for the named requirement and only where the responsible owner allows it.
+- Accepted risk does not replace evidence, final acceptance, verification, or remaining owner paths required for close.
+
+## 6. Task Lifecycle
+
+The lifecycle here is conceptual authority meaning, not an API state table.
+
+| Area | Authority meaning |
 |---|---|
-| Displays and generated text | See [Displays and generated text](#core-non-substitution-displays). |
-| Evidence and Run records | See [Evidence and Run records](#core-non-substitution-evidence-runs). |
-| `final_acceptance` | See [`final_acceptance`](#core-non-substitution-final-acceptance). |
-| `residual_risk_acceptance` | See [`residual_risk_acceptance`](#core-non-substitution-residual-risk-acceptance). |
-| `sensitive_approval` | See [`sensitive_approval`](#core-non-substitution-sensitive-approval). |
-| `Write Authorization` and `AuthorizedAttemptScope` | See [`Write Authorization` and `AuthorizedAttemptScope`](#core-non-substitution-write-authorization). |
-| `WriteDecisionReason` | See [`WriteDecisionReason`](#core-non-substitution-write-decision-reason). |
-| `CloseReadinessBlocker` | See [`CloseReadinessBlocker`](#core-non-substitution-close-readiness-blocker). |
-| Waiver or accepted risk | See [Waiver or accepted risk](#core-non-substitution-waiver-risk). |
+| Intake and shaping | User intent becomes a concrete goal, scope boundary, non-goals, acceptance criteria, Autonomy Boundary, and first safe Change Unit when the owner paths support it. |
+| Scope update | Accepted scope or Change Unit changes become active only through the scope owner path. A judgment record alone does not mutate active scope. |
+| Execution and observation | Runs record actions and observations. Product-file writes must be compatible with active scope and `Write Authorization`; read-only work does not authorize later writes. |
+| Waiting or blocked | If an owner path is missing, stale, incompatible, or unsafe to bypass, Core exposes the blocker and the next owner path instead of hiding the gap. |
+| Close attempt | Core evaluates whether the current state can close honestly. A final chat summary or generated report is not enough by itself. |
+| Terminal outcome | Completion, cancellation, or supersession ends the `Task` path. Cancellation and supersession are terminal, but they are not successful completion and do not satisfy completion evidence, acceptance, or risk requirements. |
 
-<a id="core-non-substitution-displays"></a>
-### Displays and generated text
+## 7. Authority Checks
 
-Applies to:
-- Chat, reports, generated Markdown, projection prose, and status cards.
+Authority checks summarize whether a Core action or close claim can proceed honestly. Public fields, exact values, response branches, and method behavior belong to API owners.
 
-Does not substitute for:
-- Core-owned state.
+| Check area | Authority meaning |
+|---|---|
+| Scope | The requested work, write, evidence claim, or close claim must fit the active `Task` scope and Change Unit. |
+| User-owned judgment | Required product, technical, scope, sensitive-action, final-acceptance, residual-risk, or cancellation judgment must be resolved by the user and compatible with the affected object and consequence. |
+| Sensitive action | A named sensitive step must have its own compatible user approval when that approval is required. |
+| Write compatibility | A product-file write attempt must be compatible with active scope and a consumable `Write Authorization`. |
+| Run and evidence | Recorded Runs, evidence summaries, and evidence-eligible artifacts must support the claims they are used for. |
+| Final acceptance | Required final acceptance must be tied to the visible close basis. |
+| Residual risk | Known close-relevant residual risk must be visible, and required risk acceptance must be compatible with the requested close. |
+| Close readiness | All close-relevant owner paths must support an honest terminal transition; remaining blockers keep the `Task` open. |
 
-<a id="core-non-substitution-evidence-runs"></a>
-### Evidence and Run records
+Separate QA and external verification workflows are not separate baseline authority records unless [Scope](scope.md) and the affected owners define them as supported.
 
-Applies to:
-- Evidence, logs, screenshots, artifacts, test output, and Run records.
+## 8. `Write Authorization`
 
-Does not substitute for:
-- final acceptance
-- separate QA or verification outcomes
-- residual-risk acceptance
+`Write Authorization` is Core authority for one compatible product-file write attempt.
 
-<a id="core-non-substitution-final-acceptance"></a>
-### `final_acceptance`
+It has these authority properties:
 
-Does not substitute for:
-- evidence
-- QA
-- verification
-- sensitive-action approval
-- scope change
-- residual-risk acceptance
-- blocker override
+- Scope-limited: it covers the intended product-file write attempt, not later attempts or a broader project area.
+- State-bound: it is based on current Harness state and can become stale when relevant state changes.
+- Single-use: one compatible product-write Run consumes it once.
+- Cooperative: it tells a connected agent or surface what is compatible with Harness state; it does not claim OS-level prevention or sandboxing.
 
-<a id="core-non-substitution-residual-risk-acceptance"></a>
-### `residual_risk_acceptance`
+It is not:
 
-Does not substitute for:
-- verification
-- evidence sufficiency
-- QA
-- final acceptance
-- a no-risk result
-
-<a id="core-non-substitution-sensitive-approval"></a>
-### `sensitive_approval`
-
-Does not substitute for:
-- product direction
-- technical direction
-- scope
-- correctness
-- evidence
-- QA
-- final acceptance
-- residual-risk acceptance
-- `Write Authorization`
-
-<a id="core-non-substitution-write-authorization"></a>
-### `Write Authorization` and `AuthorizedAttemptScope`
-
-Does not substitute for:
 - command approval
 - dependency approval
 - host, network, or secret access
 - deployment approval
 - destructive-action approval
 - system access
-- final acceptance
-
-<a id="core-non-substitution-write-decision-reason"></a>
-### `WriteDecisionReason`
-
-Does not substitute for:
-- a close-readiness blocker
-- `CloseReadinessBlocker`
-
-<a id="core-non-substitution-close-readiness-blocker"></a>
-### `CloseReadinessBlocker`
-
-Does not substitute for:
-- a prepare-write decision reason
-- the entire close-readiness concept
-- evidence
-- acceptance
-- storage effect by itself
-
-<a id="core-non-substitution-waiver-risk"></a>
-### Waiver or accepted risk
-
-Does not substitute for:
-- automatic success
-- verification
-- evidence
-- final acceptance
-- close without the remaining required owner paths
-
-Compact user-facing displays may summarize these boundaries, but they must not collapse them.
-
-## 6. Task lifecycle
-
-| Lifecycle area | Details |
-|---|---|
-| Intake and shaping | See [Intake and shaping](#core-lifecycle-intake-and-shaping). |
-| Scope update | See [Scope update](#core-lifecycle-scope-update). |
-| Execution and observation | See [Execution and observation](#core-lifecycle-execution-observation). |
-| Waiting or blocked | See [Waiting or blocked](#core-lifecycle-waiting-blocked). |
-| Close attempt | See [Close attempt](#core-lifecycle-close-attempt). |
-| Terminal outcome | See [Terminal outcome](#core-lifecycle-terminal-outcome). |
-
-<a id="core-lifecycle-intake-and-shaping"></a>
-### Intake and shaping
-
-Effect:
-- Turns ordinary user intent into a concrete goal, active scope, non-goals, acceptance criteria, Autonomy Boundary, and next safe action.
-
-Required honesty:
-- If a user-owned issue blocks the next safe action, expose the judgment need instead of guessing.
-
-<a id="core-lifecycle-scope-update"></a>
-### Scope update
-
-Effect:
-- Accepted scope or Change Unit changes move through `harness.update_scope`.
-
-Not the same as:
-- `scope_decision` records mutating active scope by themselves.
-
-<a id="core-lifecycle-execution-observation"></a>
-### Execution and observation
-
-Effect:
-- Run records describe actions or observations.
-
-Required honesty:
-- Product-file writes must be compatible with active scope and `Write Authorization`.
-- Read-only work does not authorize subsequent writes.
-
-<a id="core-lifecycle-waiting-blocked"></a>
-### Waiting or blocked
-
-Condition:
-- An owner path is missing, stale, incompatible, or unsafe to bypass.
-
-Effect:
-- Progress pauses.
-- The blocker points to the next safe owner path rather than hiding the gap.
-
-<a id="core-lifecycle-close-attempt"></a>
-### Close attempt
-
-Concept:
-- Core evaluates whether the Task can close honestly.
-
-Input:
-- Current Core state, not a final chat summary alone.
-
-Owner links:
-- [Close Task Method](api/method-close-task.md)
-- [API State Schemas](api/schema-state.md)
-
-<a id="core-lifecycle-terminal-outcome"></a>
-### Terminal outcome
-
-Effect:
-- Completion, cancellation, or supersession ends the Task path.
-
-Not allowed:
-- Cancellation and supersession are terminal, but they are not successful completion.
-- They do not satisfy evidence, acceptance, or risk requirements for completion.
-
-## 7. Active gates
-
-Gates are compatibility summaries for progress, write, Run recording, and close. This page owns their product meaning. Public fields, exact values, and wire shapes are owned by [API State Schemas](api/schema-state.md) and [API Value Sets](api/schema-value-sets.md).
-
-| Gate area | Details |
-|---|---|
-| Scope gate | See [Scope gate](#core-gate-scope). |
-| Decision gate | See [Decision gate](#core-gate-decision). |
-| Sensitive-action approval gate | See [Sensitive-action approval gate](#core-gate-sensitive-action-approval). |
-| Write-compatibility gate | See [Write-compatibility gate](#core-gate-write-compatibility). |
-| Evidence gate | See [Evidence gate](#core-gate-evidence). |
-| Acceptance gate | See [Acceptance gate](#core-gate-acceptance). |
-| Residual-risk gate | See [Residual-risk gate](#core-gate-residual-risk). |
-| Close-readiness gate | See [Close-readiness gate](#core-gate-close-readiness). |
-
-<a id="core-gate-scope"></a>
-### Scope gate
-
-Condition:
-- Active scope and Change Unit must cover the requested work.
-
-Not the same as:
-- deciding product questions for the user
-- deciding technical questions for the user
-
-Owner links:
-- [Update Scope Method](api/method-update-scope.md)
-- [API State Schemas](api/schema-state.md)
-
-<a id="core-gate-decision"></a>
-### Decision gate
-
-Condition:
-- A user-owned decision is required before progress, write, Run recording, or close can continue.
-
-Not the same as:
-- evidence
 - sensitive-action approval
 - final acceptance
+- evidence
 - residual-risk acceptance
+- proof that a write happened
+- `Task` close
 
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
-- [API State Schemas](api/schema-state.md)
+The prepare-write, record-run, API state schema, storage, and security owners define the method behavior, public shapes, storage effects, replay and stale-state behavior, and guarantee wording.
 
-<a id="core-gate-sensitive-action-approval"></a>
-### Sensitive-action approval gate
+## 9. Evidence and Run Authority
 
-Condition:
-- A named sensitive step inside `SensitiveActionScope` requires approval.
+Evidence authority is scoped to recorded claims.
 
-Not the same as:
-- `Write Authorization`
-- broad permission
-- product correctness
+Run authority:
 
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
-- [Prepare Write Method](api/method-prepare-write.md)
+- A Run can establish that an execution or observation was recorded with the available context and references.
+- A Run cannot establish that missing authorization, missing judgment, missing approval, or missing `Write Authorization` existed retroactively.
 
-<a id="core-gate-write-compatibility"></a>
-### Write-compatibility gate
+Evidence authority:
 
-Concept:
-- Whether a product-file write attempt is compatible with active scope and a consumable `Write Authorization`.
+- Evidence can establish that recorded support exists for a named claim, gap, reference, or coverage expectation.
+- Evidence cannot establish unrecorded behavior, broad correctness, final acceptance, residual-risk acceptance, or a no-risk result.
 
-Not allowed:
-- It does not approve commands, hosts, network, secrets, deployments, or destructive operations.
+`ArtifactRef` authority:
 
-Owner links:
-- [Prepare Write Method](api/method-prepare-write.md)
-- [Record Run Method](api/method-record-run.md)
-- [API State Schemas](api/schema-state.md)
+- An `ArtifactRef` can identify a registered artifact available for evidence use when artifact owners allow that use.
+- An `ArtifactRef` cannot by itself establish that artifact content is safe, sufficient, readable, or unredacted beyond recorded artifact-owner facts.
 
-<a id="core-gate-evidence"></a>
-### Evidence gate
+Display authority:
 
-Condition:
-- Close-relevant required support must be present and usable enough for the close path.
+- A projection, template, report, or status card can establish that a display was derived from available state and references.
+- The display itself is not Core authority, evidence, acceptance, or residual-risk acceptance.
 
-Not the same as:
-- proof beyond what was recorded
-- user acceptance
-- residual-risk acceptance
+<a id="close_task"></a>
+## 10. Close Readiness
 
-Owner links:
-- [API State Schemas](api/schema-state.md)
-- [API Artifact Schemas](api/schema-artifacts.md)
+Close readiness is the Core authority concept for whether the current `Task` can close honestly.
 
-<a id="core-gate-acceptance"></a>
-### Acceptance gate
+Close readiness considers:
 
-Condition:
-- Required final acceptance must be present for the visible close basis.
+- `Task` lifecycle eligibility for the requested terminal path
+- active scope, Change Unit, acceptance criteria, and completion policy
+- required user-owned judgments
+- required sensitive-action approval
+- write and Run compatibility
+- evidence sufficiency for the close basis
+- close-relevant artifact availability
+- unresolved blockers
+- required final acceptance
+- residual-risk visibility and required residual-risk acceptance
+- recovery, repair, corruption, reconciliation, or other constraints that would make close dishonest
 
-Not the same as:
-- filling evidence gaps
-- accepting residual risk
-- changing scope
+Close readiness is not:
 
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
-- [Close Task Method](api/method-close-task.md)
-
-<a id="core-gate-residual-risk"></a>
-### Residual-risk gate
-
-Condition:
-- Close-relevant residual risk must be visible and, when required, accepted.
-
-Not the same as:
-- verification
-- a risk-free result
-- final acceptance
-
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
-- [API State Schemas](api/schema-state.md)
-
-<a id="core-gate-close-readiness"></a>
-### Close-readiness gate
-
-Concept:
-- The close-readiness gate summarizes whether all close-relevant checks support an honest close.
-
-Effect:
-- If a close blocker remains, the Task stays open until the owner path addresses it.
-
-Not the same as:
 - `CloseReadinessBlocker`
 - `intent=complete`
 - user acceptance alone
+- evidence alone
+- a generated close summary
+- an API preflight rejection
 
-Owner links:
-- [Close Task Method](api/method-close-task.md)
-- [API State Schemas](api/schema-state.md)
+Close blockers:
 
-Separate QA and verification workflows are conceptual boundaries in the baseline scope, not active gates. They must not be described as active close requirements unless an owner promotes them.
-
-## 8. Write authorization boundary
-
-Concept:
-- `Write Authorization` is the Core record that makes one product-file write attempt compatible with current Harness state.
-
-Creation:
-- It is created only through the compatible non-dry-run `prepare_write` path defined by the API owner.
-
-Inputs:
-- Current Harness state.
-- Active Task and Change Unit scope.
-- The intended product-file write attempt.
-- A compatible non-dry-run `prepare_write` result.
-
-Properties:
-- Scope-limited: it covers the intended product-file write attempt, not future work or a broader project area.
-- Single-use: a compatible product-write Run consumes it once. Reuse, replay, and stale-state behavior are API/storage-owned details.
-- Cooperative: it tells a connected agent or surface what is compatible with Harness state; it does not enforce OS-level prevention.
-
-Not the same as:
-- `sensitive_approval`, command approval, dependency approval, host/network/secret access, deployment approval, destructive-action approval, system access, or final acceptance.
-- Proof that the write happened, evidence creation, acceptance, residual-risk acceptance, or Task close.
-
-Owner links:
-- [Prepare Write Method](api/method-prepare-write.md)
-- [Record Run Method](api/method-record-run.md)
-- [API State Schemas](api/schema-state.md)
-- [Storage Effects](storage-effects.md)
-
-Decision reason boundary:
-- `WriteDecisionReason` belongs to prepare-write decision output.
-- `CloseReadinessBlocker` belongs to close-readiness blocking data.
-- They answer different questions and must not be interchanged.
-
-## 9. Evidence and run authority
-
-| Record | Details |
-|---|---|
-| Run | See [Run authority](#core-evidence-run-authority). |
-| Evidence summary | See [Evidence summary authority](#core-evidence-summary-authority). |
-| `ArtifactRef` | See [`ArtifactRef` evidence use](#core-evidence-artifactref-use). |
-| Projection or report | See [Projection or report authority](#core-evidence-projection-report-authority). |
-
-<a id="core-evidence-run-authority"></a>
-### Run authority
-
-Can establish:
-- An execution or observation was recorded with the available context and refs.
-
-Cannot establish:
-- Missing authorization, missing judgment, or missing approval existed retroactively.
-
-Owner links:
-- [Record Run Method](api/method-record-run.md)
-
-<a id="core-evidence-summary-authority"></a>
-### Evidence summary authority
-
-Can establish:
-- Specific close-relevant claims have recorded support, gaps, refs, or coverage expectations.
-
-Cannot establish:
-- Unrecorded behavior happened.
-- The result is accepted.
-- Risk is accepted.
-
-Owner links:
-- [API State Schemas](api/schema-state.md)
-- [API Artifact Schemas](api/schema-artifacts.md)
-
-<a id="core-evidence-artifactref-use"></a>
-### `ArtifactRef` evidence use
-
-Can establish:
-- An artifact reference is available for evidence use when artifact owners allow it.
-
-Cannot establish:
-- The artifact content is safe, sufficient, or readable beyond the recorded integrity/redaction/availability facts.
-
-Owner links:
-- [API Artifact Schemas](api/schema-artifacts.md)
-- [Artifact Storage](storage-artifacts.md)
-
-<a id="core-evidence-projection-report-authority"></a>
-### Projection or report authority
-
-Can establish:
-- A display was generated from available state and refs.
-
-Cannot establish:
-- The display itself is authority.
-- The display itself is evidence.
-- The display itself is acceptance.
-
-Owner links:
-- [Projection Authority Reference](projection-and-templates.md)
-- [Template Bodies](template-bodies.md)
-
-### Evidence authority
-
-Concept:
-- Evidence records support only the claims they record at their recorded scope.
-
-Inputs:
-- Run records.
-- Evidence summaries.
-- Evidence-eligible artifacts and `ArtifactRef` values when artifact owners allow them.
-- Related refs and coverage expectations.
-
-Can establish:
-- A passing test log supports the test it names.
-- A screenshot supports the visible state it captures.
-- An artifact supports only the content and integrity facts represented by the artifact owners.
-
-Not the same as:
-- Proof of broader correctness.
-- Final acceptance, separate QA or verification outcomes, or residual-risk acceptance.
-- Proof of unrecorded behavior.
-
-Owner links:
-- [API Artifact Schemas](api/schema-artifacts.md)
-- [Artifact Storage](storage-artifacts.md)
-- [API Judgment Schemas](api/schema-judgment.md)
-
-<a id="close_task"></a>
-## 10. Close readiness
-
-Concept:
-- Close readiness is the Core evaluation concept for whether the current Task can close honestly.
-
-Inputs:
-- Current Core state.
-- Task scope and Change Unit scope.
-- Required evidence and close-relevant artifacts.
-- Required user-owned judgments.
-- Required sensitive-action approval.
-- Write and Run compatibility.
-- Unresolved blockers.
-- Final acceptance, when required.
-- Accepted residual risk, where applicable.
-- Recovery constraints.
-
-Not the same as:
-- `CloseReadinessBlocker`.
-- `intent=complete`.
-- User acceptance alone.
-- Preflight rejection.
-
-Schema boundary:
-- `CloseReadinessBlocker` is a data representation for close blocking reasons, not the close-readiness evaluation concept.
-
-Owner links:
-- [Close Task Method](api/method-close-task.md)
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
-- [Storage Effects](storage-effects.md)
-- [API Errors](api/errors.md)
-
-For an `intent=complete` close attempt, Core evaluates blockers in this conceptual order. Later rows do not satisfy earlier rows.
-
-| Order | Check area | Close-readiness meaning |
-|---:|---|---|
-| 1 | Task lifecycle | The selected Task must be eligible for the requested terminal path. |
-| 2 | Open or unrepaired Runs | Close cannot rely on open, unsafe, interrupted, incompatible, or unrepaired Run state. |
-| 3 | Scope and Change Unit | Active scope, acceptance criteria, and the applicable completion policy must support the close claim. |
-| 4 | User-owned judgment | Required product, technical, scope, and other non-sensitive user judgments must be resolved and compatible. |
-| 5 | Sensitive-action approval | Required sensitive-action approval must be present and compatible with the bounded step. |
-| 6 | Write and Run compatibility | Product-write claims must be backed by compatible authorization and recorded Run relationships. |
-| 7 | Baseline and surface capability | The baseline and connected surface must honestly support the close claim and any guarantee display. |
-| 8 | Evidence sufficiency | Required evidence coverage must be present, current, and usable for the close basis. |
-| 9 | Artifact availability | Close-relevant artifacts must be available and usable under artifact-owner rules. |
-| 10 | Final acceptance | Required final acceptance must be tied to the visible close basis. |
-| 11 | Residual-risk visibility | Known close-relevant risk must be visible enough for the user to judge. |
-| 12 | Residual-risk acceptance | Required acceptance of visible residual risk must be compatible with the requested close. |
-| 13 | Recovery constraints | Remaining repair, corruption, reconciliation, or recovery work must be handled before close. |
-| 14 | Close transition | See [Close transition](#core-close-readiness-close-transition). |
-
-<a id="core-close-readiness-close-transition"></a>
-### Close transition
-
-Condition:
-- No close blocker remains.
-
-Effect:
-- The terminal transition may proceed through the API-owned method behavior.
-
-If blocked:
-- The Task stays open.
-
-Owner links:
-- [Close Task Method](api/method-close-task.md)
-
-Preflight failures:
-- Stale state, invalid request identity, local access failure before evaluation, and similar API-owned failures are not semantic close-readiness findings.
-- They are routed through the API and error owners.
-
-## 11. Blockers and waivers
-
-### Blocker
-
-Concept:
-- A blocker is a structured reason progress, write, Run recording, or close cannot proceed honestly.
-
-Not the same as:
-- Projection prose.
-- Broad approval.
-- A successful-looking close result.
-
-Owner links:
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
-
-### Close blocker
-
-Concept:
 - A close blocker is a close-relevant reason that prevents honest close readiness.
+- If a close blocker remains, the `Task` stays open until the responsible owner path addresses it.
+- `CloseReadinessBlocker` is the API data representation for close blockers, not the whole close-readiness concept.
 
-Not the same as:
-- `WriteDecisionReason`.
-- Proof of storage effects by itself.
+Close transition:
 
-Owner links:
-- [Close Task Method](api/method-close-task.md)
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
+- When no close blocker remains and the method owner permits the requested terminal path, the terminal transition may proceed through API-owned method behavior.
+- Rejected requests before close-readiness evaluation, stale state, local access failures, and public error precedence belong to API and error owners.
 
-### `CloseReadinessBlocker`
+## 11. Blockers, Waivers, and Residual Risk
 
-Concept:
-- `CloseReadinessBlocker` is the API data representation of close blocking reasons.
+Blockers preserve honesty.
 
-Not the same as:
-- The whole close-readiness concept.
-- A prepare-write reason.
-- Proof of persistence by itself.
+- A blocker points to the owner path that must be handled before progress, write, Run recording, or close can proceed honestly.
+- A blocker must not be hidden by broad approval, projection prose, a generated success summary, or unrelated evidence.
 
-Owner links:
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
-- [API Errors](api/errors.md)
+Waivers are narrow.
 
-### Waiver
+- A waiver is a scoped exception to one named requirement where the responsible owner allows it.
+- A waiver does not create scope, sensitive-action approval, required evidence, final acceptance, residual-risk visibility, QA evidence, verification, or an assurance upgrade.
 
-Concept:
-- A waiver is a scoped exception to a named requirement where the responsible owner allows it.
+Residual risk must be visible before it can be accepted.
 
-Allowed effect:
-- It can unblock only the named requirement and only through the owner path that permits it.
+- Known close-relevant residual risk must be visible enough for the user to judge before successful close depends on accepting it.
+- Residual-risk acceptance applies to the named visible risk for the requested close, not to every unknown.
+- The supported baseline path uses compact residual-risk visibility, blockers, evidence references, artifact references, and user-judgment references. Rich risk workflows remain outside the baseline unless the scope and semantic owners promote them.
 
-Not the same as:
-- Decision deferral.
-- Scope creation, sensitive-action approval, required evidence, final acceptance, or residual-risk visibility.
-- QA evidence, a QA pass, verification, or an assurance upgrade.
+## 12. Related Owners
 
-Owner links:
-- [Scope Reference](scope.md)
+Use this table for owner routing. Do not copy the linked contracts into this page.
 
-## 12. Residual risk
-
-Concept:
-- Residual risk is known remaining uncertainty, an unchecked condition, limitation, or trade-off that matters to close.
-
-Inputs:
-- The visible named risk.
-- The requested close and visible close basis.
-- Related evidence, artifact, blocker, or Run refs.
-- Compatible `residual_risk_acceptance` when close depends on accepting the risk.
-
-Required order:
-- Known close-relevant residual risk must be visible before successful close.
-- The user cannot accept a risk that has not been made visible enough to judge.
-
-Scope:
-- Acceptance applies to the named visible risk for the requested close, not to all unknowns.
-
-Not the same as:
-- Verification, evidence sufficiency, QA, sensitive-action approval, final acceptance, or a no-risk result.
-- A waiver or automatic success.
-
-Baseline scope path:
-- The supported path is compact residual-risk summary, blockers, evidence refs, and `user_judgment` refs unless an owner promotes more.
-- Rich risk workflows are out of scope until promoted.
-
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md)
-- [API State Schemas](api/schema-state.md)
-- [Scope Reference](scope.md)
-
-## 13. Cross-owner links
-
-| Topic | Details |
+| Topic | Owner |
 |---|---|
-| API methods and envelopes | See [API methods and envelopes](#core-owner-api-methods-envelopes). |
-| State-shaped API data | See [State-shaped API data](#core-owner-state-shaped-api-data). |
-| User judgment schemas | See [User judgment schemas](#core-owner-user-judgment-schemas). |
-| Artifact schemas and lifecycle | See [Artifact schemas and lifecycle](#core-owner-artifact-schemas-lifecycle). |
-| Public errors | See [Public errors](#core-owner-public-errors). |
-| Storage records and effects | See [Storage records and effects](#core-owner-storage-records-effects). |
-| Projection authority | See [Projection authority](#core-owner-projection-authority). |
-| Template bodies | See [Template bodies](#core-owner-template-bodies). |
-| Security wording | See [Security wording](#core-owner-security-wording). |
-| Runtime boundaries | See [Runtime boundaries](#core-owner-runtime-boundaries). |
-| Design quality | See [Design quality](#core-owner-design-quality). |
-| Agent integration | See [Agent integration](#core-owner-agent-integration). |
-| Out-of-scope capabilities | See [Out-of-scope capabilities](#core-owner-out-of-scopes). |
-
-<a id="core-owner-api-methods-envelopes"></a>
-### API methods and envelopes
-
-Applies to:
-- API method behavior.
-- Request and response shapes.
-- Envelopes.
-- Dry-run and rejection branches.
-- Method effects.
-
-Owner links:
-- [API Methods](api/methods.md) and the method owner documents it lists.
-- [API Schema Core](api/schema-core.md).
-
-<a id="core-owner-state-shaped-api-data"></a>
-### State-shaped API data
-
-Applies to:
-- `ShapingReadiness`.
-- `CloseReadinessBlocker`.
-- `ValidatorResult`.
-- Public state fields.
-
-Owner links:
-- [API State Schemas](api/schema-state.md).
-- [API Value Sets](api/schema-value-sets.md).
-
-<a id="core-owner-user-judgment-schemas"></a>
-### User judgment schemas
-
-Applies to:
-- User judgment schema.
-- `SensitiveActionScope`.
-- Accepted-risk input shapes.
-
-Owner links:
-- [API Judgment Schemas](api/schema-judgment.md).
-
-<a id="core-owner-artifact-schemas-lifecycle"></a>
-### Artifact schemas and lifecycle
-
-Owner links:
-- [API Artifact Schemas](api/schema-artifacts.md).
-- [Artifact Storage](storage-artifacts.md).
-
-<a id="core-owner-public-errors"></a>
-### Public errors
-
-Applies to:
-- Public error codes.
-- Error routing.
-- Error precedence.
-
-Owner links:
-- [API Errors](api/errors.md).
-
-<a id="core-owner-storage-records-effects"></a>
-### Storage records and effects
-
-Owner links:
-- [Storage Records](storage-records.md).
-- [Storage Effects](storage-effects.md).
-- [Storage Versioning](storage-versioning.md).
-
-<a id="core-owner-projection-authority"></a>
-### Projection authority
-
-Applies to:
-- Projection authority.
-- Read-only display boundaries.
-
-Owner links:
-- [Projection Authority Reference](projection-and-templates.md).
-
-<a id="core-owner-template-bodies"></a>
-### Template bodies
-
-Applies to:
-- Status card bodies.
-- Judgment request bodies.
-- Run and evidence summary bodies.
-- Close result bodies.
-- Agent context packet bodies.
-
-Owner links:
-- [Template Bodies](template-bodies.md).
-
-<a id="core-owner-security-wording"></a>
-### Security wording
-
-Applies to:
-- Security guarantee wording.
-- Cooperative, detective, and stronger guarantee claims.
-- Local access posture.
-
-Owner links:
-- [Security Reference](security.md).
-
-<a id="core-owner-runtime-boundaries"></a>
-### Runtime boundaries
-
-Applies to:
-- Product Repository separation.
-- Harness Server separation.
-- Harness Runtime Home separation.
-
-Owner links:
-- [Runtime Boundaries Reference](runtime-boundaries.md).
-
-<a id="core-owner-design-quality"></a>
-### Design quality
-
-Applies to:
-- Design-quality boundaries.
-- Non-gate routing.
-
-Owner links:
-- [Design Quality](design-quality.md).
-
-<a id="core-owner-agent-integration"></a>
-### Agent integration
-
-Applies to:
-- Connector behavior.
-- Surface capability posture.
-
-Owner links:
-- [Agent Integration Reference](agent-integration.md).
-
-<a id="core-owner-out-of-scopes"></a>
-### Out-of-scope capabilities
-
-Applies to:
-- Out-of-scope capabilities.
-- Assurance, waiver, QA, verification, and fixture material outside the baseline scope.
-
-Owner links:
-- [Scope Reference](scope.md).
-
-If another document needs exact schema, DDL, rendered template text, public error codes, or out-of-scope capability catalogs, it must link to the owner instead of redefining them here.
+| API method list and method routing | [API Methods](api/methods.md) |
+| Method behavior | Method owner documents listed by [API Methods](api/methods.md) |
+| Common API envelopes and response branches | [API Schema Core](api/schema-core.md) |
+| State-shaped API data, including `ShapingReadiness`, `CloseReadinessBlocker`, and `WriteDecisionReason` | [API State Schemas](api/schema-state.md) and [API Value Sets](api/schema-value-sets.md) |
+| User judgment schema shapes, `SensitiveActionScope`, and accepted-risk input shapes | [API Judgment Schemas](api/schema-judgment.md) |
+| Artifact refs, artifact input shapes, staging handles, and artifact schema rules | [API Artifact Schemas](api/schema-artifacts.md) |
+| Public errors, error routing, and error precedence | [API Errors](api/errors.md) |
+| Storage records, storage effects, state-version effects, and persistence layout | [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), and [Storage Versioning](storage-versioning.md) |
+| Artifact storage lifecycle and body-read rules | [Artifact Storage](storage-artifacts.md) |
+| Projection authority and derived display boundaries | [Projection Authority Reference](projection-and-templates.md) |
+| Template bodies and rendered display wording | [Template Bodies](template-bodies.md) |
+| Security guarantees and access-boundary wording | [Security](security.md) |
+| Baseline and out-of-scope capability boundaries | [Scope](scope.md) |
+| Runtime and repository separation | [Runtime Boundaries](runtime-boundaries.md) |
+| Agent integration and surface capability posture | [Agent Integration](agent-integration.md) |

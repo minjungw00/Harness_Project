@@ -260,8 +260,8 @@ Not implied:
 - It does not itself imply persistence.
 
 Owner links:
-- Full close-readiness evaluation order: [Core Model close readiness](../core-model.md#close_task)
-- Response branch behavior and committed blocked outcomes: [`harness.close_task`](method-close-task.md)
+- Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)
+- Response branch behavior, close-readiness evaluation order, and committed blocked outcomes: [`harness.close_task`](method-close-task.md)
 - Public error routing: [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers)
 - Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md)
 - Security guarantee meaning: [Security](../security.md)

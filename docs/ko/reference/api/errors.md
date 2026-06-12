@@ -16,7 +16,7 @@
   - [API 코어 스키마](schema-core.md)
   - [API 메서드](methods.md)가 안내하는 메서드 담당 문서
   - API 스키마 담당 문서
-- Core 관문, 사용자 판단, 닫기 준비 상태 평가 순서:
+- Core 권한 확인, 사용자 판단 의미, 닫기 준비 상태 의미:
   - [Core 모델](../core-model.md)
   - [사용자 판단 메서드](method-user-judgment.md)
   - [Task 닫기 메서드](method-close-task.md)
@@ -1232,8 +1232,8 @@
 - 이 값을 닫기 차단 사유로 사용하지 않습니다.
 
 담당 문서:
-- 전체 닫기 준비 상태 평가 순서: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
-- 메서드 동작: [`harness.close_task`](method-close-task.md)
+- 닫기 준비 상태 의미와 대체 금지 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
+- 메서드 동작과 닫기 준비 상태 평가 순서: [`harness.close_task`](method-close-task.md)
 - `CloseReadinessBlocker` 형태와 범주: [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)
 
 <a id="documentation-smoke-error-coverage"></a>
@@ -1261,8 +1261,10 @@
 - 사용자 판단, 승인, 수락, 잔여 위험 수락 형태:
   - [API 판단 스키마](schema-judgment.md)
   - [Core 모델](../core-model.md)
-- 전체 닫기 준비 상태 평가 순서와 비대체 규칙:
+- 닫기 준비 상태 의미와 대체 금지 규칙:
   - [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
+- 닫기 준비 상태 메서드 동작과 평가 순서:
+  - [`harness.close_task`](method-close-task.md)
 - 저장 효과, 재실행 행, 상태 시계, DDL:
   - [저장 효과](../storage-effects.md)
   - [저장소 버전 관리](../storage-versioning.md)

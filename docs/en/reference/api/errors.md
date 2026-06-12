@@ -18,7 +18,7 @@ This document does not own:
   - [API Schema Core](schema-core.md)
   - method owner documents routed from [API Methods](methods.md)
   - API schema owners
-- Core gates, user judgments, and close-readiness order:
+- Core authority checks, user-judgment meaning, and close-readiness meaning:
   - [Core Model](../core-model.md)
   - [User-judgment methods](method-user-judgment.md)
   - [Close-task method](method-close-task.md)
@@ -1236,8 +1236,8 @@ Not allowed:
 - Do not use this as a close blocker.
 
 Owner links:
-- Full close-readiness evaluation order: [Core Model close readiness](../core-model.md#close_task)
-- Method behavior: [`harness.close_task`](method-close-task.md)
+- Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)
+- Method behavior and close-readiness evaluation order: [`harness.close_task`](method-close-task.md)
 - `CloseReadinessBlocker` shape and categories: [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md)
 
 <a id="documentation-smoke-error-coverage"></a>
@@ -1265,8 +1265,10 @@ Owner links:
 - User judgments, approvals, acceptance, and residual-risk acceptance shapes:
   - [API Judgment Schemas](schema-judgment.md)
   - [Core Model](../core-model.md)
-- Full close-readiness evaluation order and non-substitution rules:
+- Close-readiness meaning and non-substitution rules:
   - [Core Model close readiness](../core-model.md#close_task)
+- Close-readiness method behavior and evaluation order:
+  - [`harness.close_task`](method-close-task.md)
 - Storage effects, replay rows, state clocks, and DDL:
   - [Storage Effects](../storage-effects.md)
   - [Storage Versioning](../storage-versioning.md)
