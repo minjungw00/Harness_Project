@@ -9,8 +9,8 @@
 | 공개 `ErrorCode` 식별자 | 공개 코드 집합, 공개 의미, 각 코드를 실을 수 있는 공개 경로입니다. |
 | 오류 우선순위 | 응답 분기에 공개 오류가 여러 개 있을 때 `errors[0]`을 고르는 방식입니다. |
 | 오류와 차단 사유 경로 | 조건이 `ToolRejectedResponse.errors[]`, 메서드별 차단 결과, `dry_run` 미리보기 데이터 중 어디에 속하는지입니다. |
-| `STATE_VERSION_CONFLICT` | 공개 오래된 상태와 멱등성 충돌 동작입니다. 이 값은 공개 오류 코드이지 차단 사유 코드가 아닙니다. |
-| 사용자 표시 라벨 | 공개 오류를 화면에 설명하는 지침입니다. 라벨은 공개 식별자를 대체하지 않습니다. |
+| `STATE_VERSION_CONFLICT` | 공개 오래된 상태와 멱등성 충돌 동작입니다. |
+| 사용자 표시 라벨 | 공개 오류를 화면에 설명하는 지침입니다. |
 
 ## 이 문서가 담당하지 않는 것
 
@@ -24,7 +24,7 @@
 
 ## 오류와 차단 사유
 
-| 개념 | 공개 형태 | 세부사항 |
+| 개념 | 공개 형태 | 상세 |
 |---|---|---|
 | 거부 응답 | `ToolRejectedResponse.errors[]` | [거부 응답](#error-vs-blocker-rejected-response) |
 | 차단 결과 | 메서드별 결과 필드 | [차단 결과](#error-vs-blocker-blocked-result) |
@@ -57,30 +57,30 @@
 
 | ErrorCode | 상세 |
 |---|---|
-| `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#errorcode-validation-failed) 참고 |
-| `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#errorcode-state-version-conflict) 참고 |
-| `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#errorcode-mcp-unavailable) 참고 |
-| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#errorcode-local-access-mismatch) 참고 |
-| `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#errorcode-no-active-task) 참고 |
-| `NO_ACTIVE_CHANGE_UNIT` | [`NO_ACTIVE_CHANGE_UNIT`](#errorcode-no-active-change-unit) 참고 |
-| `BASELINE_STALE` | [`BASELINE_STALE`](#errorcode-baseline-stale) 참고 |
-| `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](#errorcode-scope-required) 참고 |
-| `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](#errorcode-scope-violation) 참고 |
-| `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](#errorcode-write-authorization-required) 참고 |
-| `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](#errorcode-write-authorization-invalid) 참고 |
-| `APPROVAL_DENIED` | [`APPROVAL_DENIED`](#errorcode-approval-denied) 참고 |
-| `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](#errorcode-approval-expired) 참고 |
-| `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](#errorcode-approval-required) 참고 |
-| `DECISION_UNRESOLVED` | [`DECISION_UNRESOLVED`](#errorcode-decision-unresolved) 참고 |
-| `AUTONOMY_BOUNDARY_EXCEEDED` | [`AUTONOMY_BOUNDARY_EXCEEDED`](#errorcode-autonomy-boundary-exceeded) 참고 |
-| `DECISION_REQUIRED` | [`DECISION_REQUIRED`](#errorcode-decision-required) 참고 |
-| `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#errorcode-capability-insufficient) 참고 |
-| `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#errorcode-evidence-insufficient) 참고 |
-| `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#errorcode-residual-risk-not-visible) 참고 |
-| `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#errorcode-acceptance-required) 참고 |
-| `PROJECTION_STALE` | [`PROJECTION_STALE`](#errorcode-projection-stale) 참고 |
-| `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#errorcode-artifact-missing) 참고 |
-| `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#errorcode-validator-failed) 참고 |
+| `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#errorcode-validation-failed) 참조 |
+| `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#errorcode-state-version-conflict) 참조 |
+| `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#errorcode-mcp-unavailable) 참조 |
+| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#errorcode-local-access-mismatch) 참조 |
+| `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#errorcode-no-active-task) 참조 |
+| `NO_ACTIVE_CHANGE_UNIT` | [`NO_ACTIVE_CHANGE_UNIT`](#errorcode-no-active-change-unit) 참조 |
+| `BASELINE_STALE` | [`BASELINE_STALE`](#errorcode-baseline-stale) 참조 |
+| `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](#errorcode-scope-required) 참조 |
+| `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](#errorcode-scope-violation) 참조 |
+| `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](#errorcode-write-authorization-required) 참조 |
+| `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](#errorcode-write-authorization-invalid) 참조 |
+| `APPROVAL_DENIED` | [`APPROVAL_DENIED`](#errorcode-approval-denied) 참조 |
+| `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](#errorcode-approval-expired) 참조 |
+| `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](#errorcode-approval-required) 참조 |
+| `DECISION_UNRESOLVED` | [`DECISION_UNRESOLVED`](#errorcode-decision-unresolved) 참조 |
+| `AUTONOMY_BOUNDARY_EXCEEDED` | [`AUTONOMY_BOUNDARY_EXCEEDED`](#errorcode-autonomy-boundary-exceeded) 참조 |
+| `DECISION_REQUIRED` | [`DECISION_REQUIRED`](#errorcode-decision-required) 참조 |
+| `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#errorcode-capability-insufficient) 참조 |
+| `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#errorcode-evidence-insufficient) 참조 |
+| `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#errorcode-residual-risk-not-visible) 참조 |
+| `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#errorcode-acceptance-required) 참조 |
+| `PROJECTION_STALE` | [`PROJECTION_STALE`](#errorcode-projection-stale) 참조 |
+| `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#errorcode-artifact-missing) 참조 |
+| `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#errorcode-validator-failed) 참조 |
 
 <a id="errorcode-validation-failed"></a>
 ### `VALIDATION_FAILED`
@@ -507,32 +507,170 @@
 
 오류를 담는 분기의 `errors`가 비어 있지 않으면 메서드 담당 문서가 더 좁은 메서드별 순서를 정의하지 않는 한 아래 순서로 `errors[0]` 공개 주 오류를 고릅니다.
 
-| 우선순위 | 주 `ErrorCode` | 적용 대상 |
+| 우선순위 | 주 `ErrorCode` | 상세 |
 |---:|---|---|
-| 1 | `VALIDATION_FAILED` | 거부된 요청 형태나 검증 실패입니다. |
-| 2 | `STATE_VERSION_CONFLICT` | 거부 응답에만 적용됩니다. [우선순위 제외](#state-version-conflict-precedence-exclusion) 참고 |
-| 3 | `MCP_UNAVAILABLE` | Core, MCP, 접점 도달 가능성 실패로 거부되었습니다. |
-| 4 | `LOCAL_ACCESS_MISMATCH` | 로컬 접근 바인딩 불일치나 철회로 거부되었습니다. |
-| 5 | `NO_ACTIVE_TASK` | Task 식별자가 없어 거부되었습니다. |
-| 6 | `NO_ACTIVE_CHANGE_UNIT` | 활성 Change Unit이 없습니다. |
-| 7 | `BASELINE_STALE` | 기준 상태가 오래되었습니다. |
-| 8 | `SCOPE_REQUIRED` | 필요한 범위 확인이 없습니다. |
-| 9 | `SCOPE_VIOLATION` | 범위 또는 승인된 시도 범위를 위반했습니다. |
-| 10 | `WRITE_AUTHORIZATION_REQUIRED` | 필요한 Write Authorization이 없습니다. |
-| 11 | `WRITE_AUTHORIZATION_INVALID` | 버전 외 사유로 Write Authorization을 사용할 수 없습니다. |
-| 12 | `APPROVAL_DENIED` | 민감 동작 승인이 거부되었습니다. |
-| 13 | `APPROVAL_EXPIRED` | 민감 동작 승인이 만료되었거나 달라졌습니다. |
-| 14 | `APPROVAL_REQUIRED` | 민감 동작 승인이 없습니다. |
-| 15 | `DECISION_UNRESOLVED` | 기존 사용자 판단을 사용할 수 없습니다. |
-| 16 | `AUTONOMY_BOUNDARY_EXCEEDED` | 자율성 경계를 넘었습니다. |
-| 17 | `DECISION_REQUIRED` | 새 사용자 소유 판단이 필요합니다. |
-| 18 | `CAPABILITY_INSUFFICIENT` | 접점 역량이 부족합니다. |
-| 19 | `EVIDENCE_INSUFFICIENT` | 증거 범위가 충분하지 않습니다. |
-| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | 닫기 관련 위험이 보이지 않습니다. |
-| 21 | `ACCEPTANCE_REQUIRED` | 최종 수락이 필요하거나 호환되지 않습니다. |
-| 22 | `PROJECTION_STALE` | 읽기용 보기가 오래되었거나 실패했습니다. |
-| 23 | `ARTIFACT_MISSING` | 지속 아티팩트가 없거나, 사용할 수 없거나, 실패했습니다. |
-| 24 | `VALIDATOR_FAILED` | 더 구체적인 활성 코드가 없을 때 쓰는 타입 있는 대체 코드입니다. |
+| 1 | `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#precedence-validation-failed) 참조 |
+| 2 | `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#state-version-conflict-precedence-exclusion) 참조 |
+| 3 | `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#precedence-mcp-unavailable) 참조 |
+| 4 | `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#precedence-local-access-mismatch) 참조 |
+| 5 | `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#precedence-no-active-task) 참조 |
+| 6 | `NO_ACTIVE_CHANGE_UNIT` | [`NO_ACTIVE_CHANGE_UNIT`](#precedence-no-active-change-unit) 참조 |
+| 7 | `BASELINE_STALE` | [`BASELINE_STALE`](#precedence-baseline-stale) 참조 |
+| 8 | `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](#precedence-scope-required) 참조 |
+| 9 | `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](#precedence-scope-violation) 참조 |
+| 10 | `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](#precedence-write-authorization-required) 참조 |
+| 11 | `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](#precedence-write-authorization-invalid) 참조 |
+| 12 | `APPROVAL_DENIED` | [`APPROVAL_DENIED`](#precedence-approval-denied) 참조 |
+| 13 | `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](#precedence-approval-expired) 참조 |
+| 14 | `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](#precedence-approval-required) 참조 |
+| 15 | `DECISION_UNRESOLVED` | [`DECISION_UNRESOLVED`](#precedence-decision-unresolved) 참조 |
+| 16 | `AUTONOMY_BOUNDARY_EXCEEDED` | [`AUTONOMY_BOUNDARY_EXCEEDED`](#precedence-autonomy-boundary-exceeded) 참조 |
+| 17 | `DECISION_REQUIRED` | [`DECISION_REQUIRED`](#precedence-decision-required) 참조 |
+| 18 | `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#precedence-capability-insufficient) 참조 |
+| 19 | `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#precedence-evidence-insufficient) 참조 |
+| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#precedence-residual-risk-not-visible) 참조 |
+| 21 | `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#precedence-acceptance-required) 참조 |
+| 22 | `PROJECTION_STALE` | [`PROJECTION_STALE`](#precedence-projection-stale) 참조 |
+| 23 | `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#precedence-artifact-missing) 참조 |
+| 24 | `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#precedence-validator-failed) 참조 |
+
+<a id="precedence-validation-failed"></a>
+### 우선순위 1: `VALIDATION_FAILED`
+
+적용 대상:
+- 거부된 요청 형태 또는 검증 실패입니다.
+
+<a id="precedence-mcp-unavailable"></a>
+### 우선순위 3: `MCP_UNAVAILABLE`
+
+적용 대상:
+- Core, MCP, 접점 도달 가능성 실패로 거부된 경우입니다.
+
+<a id="precedence-local-access-mismatch"></a>
+### 우선순위 4: `LOCAL_ACCESS_MISMATCH`
+
+적용 대상:
+- 로컬 접근 바인딩 불일치나 철회로 거부된 경우입니다.
+
+<a id="precedence-no-active-task"></a>
+### 우선순위 5: `NO_ACTIVE_TASK`
+
+적용 대상:
+- Task 식별자가 없어 거부된 경우입니다.
+
+<a id="precedence-no-active-change-unit"></a>
+### 우선순위 6: `NO_ACTIVE_CHANGE_UNIT`
+
+적용 대상:
+- 활성 Change Unit이 없는 경우입니다.
+
+<a id="precedence-baseline-stale"></a>
+### 우선순위 7: `BASELINE_STALE`
+
+적용 대상:
+- 기준 상태가 오래된 경우입니다.
+
+<a id="precedence-scope-required"></a>
+### 우선순위 8: `SCOPE_REQUIRED`
+
+적용 대상:
+- 필요한 범위 확인이 없는 경우입니다.
+
+<a id="precedence-scope-violation"></a>
+### 우선순위 9: `SCOPE_VIOLATION`
+
+적용 대상:
+- 범위 또는 승인된 시도 범위를 위반한 경우입니다.
+
+<a id="precedence-write-authorization-required"></a>
+### 우선순위 10: `WRITE_AUTHORIZATION_REQUIRED`
+
+적용 대상:
+- 필요한 Write Authorization이 없는 경우입니다.
+
+<a id="precedence-write-authorization-invalid"></a>
+### 우선순위 11: `WRITE_AUTHORIZATION_INVALID`
+
+적용 대상:
+- 버전 외 사유로 Write Authorization을 사용할 수 없는 경우입니다.
+
+<a id="precedence-approval-denied"></a>
+### 우선순위 12: `APPROVAL_DENIED`
+
+적용 대상:
+- 민감 동작 승인이 거부된 경우입니다.
+
+<a id="precedence-approval-expired"></a>
+### 우선순위 13: `APPROVAL_EXPIRED`
+
+적용 대상:
+- 민감 동작 승인이 만료되었거나 달라진 경우입니다.
+
+<a id="precedence-approval-required"></a>
+### 우선순위 14: `APPROVAL_REQUIRED`
+
+적용 대상:
+- 민감 동작 승인이 없는 경우입니다.
+
+<a id="precedence-decision-unresolved"></a>
+### 우선순위 15: `DECISION_UNRESOLVED`
+
+적용 대상:
+- 기존 사용자 판단을 사용할 수 없는 경우입니다.
+
+<a id="precedence-autonomy-boundary-exceeded"></a>
+### 우선순위 16: `AUTONOMY_BOUNDARY_EXCEEDED`
+
+적용 대상:
+- 자율성 경계를 넘은 경우입니다.
+
+<a id="precedence-decision-required"></a>
+### 우선순위 17: `DECISION_REQUIRED`
+
+적용 대상:
+- 새 사용자 소유 판단이 필요한 경우입니다.
+
+<a id="precedence-capability-insufficient"></a>
+### 우선순위 18: `CAPABILITY_INSUFFICIENT`
+
+적용 대상:
+- 접점 역량이 부족한 경우입니다.
+
+<a id="precedence-evidence-insufficient"></a>
+### 우선순위 19: `EVIDENCE_INSUFFICIENT`
+
+적용 대상:
+- 증거 범위가 충분하지 않은 경우입니다.
+
+<a id="precedence-residual-risk-not-visible"></a>
+### 우선순위 20: `RESIDUAL_RISK_NOT_VISIBLE`
+
+적용 대상:
+- 닫기 관련 위험이 보이지 않는 경우입니다.
+
+<a id="precedence-acceptance-required"></a>
+### 우선순위 21: `ACCEPTANCE_REQUIRED`
+
+적용 대상:
+- 최종 수락이 필요하거나 호환되지 않는 경우입니다.
+
+<a id="precedence-projection-stale"></a>
+### 우선순위 22: `PROJECTION_STALE`
+
+적용 대상:
+- 읽기용 보기가 오래되었거나 실패한 경우입니다.
+
+<a id="precedence-artifact-missing"></a>
+### 우선순위 23: `ARTIFACT_MISSING`
+
+적용 대상:
+- 지속 아티팩트가 없거나, 사용할 수 없거나, 사용할 수 있는 상태가 아니거나, 실패한 경우입니다.
+
+<a id="precedence-validator-failed"></a>
+### 우선순위 24: `VALIDATOR_FAILED`
+
+적용 대상:
+- 더 구체적인 활성 코드가 없을 때 쓰는 타입 있는 대체 코드입니다.
 
 <a id="state-version-conflict-precedence-exclusion"></a>
 ### `STATE_VERSION_CONFLICT` 우선순위 제외
@@ -554,12 +692,12 @@
 
 ## 거부 응답 동작
 
-| 조건 | 세부사항 |
+| 조건 | 상세 |
 |---|---|
-| 요청 검증이 진행 전에 실패 | [요청 검증 실패](#rejected-request-validation-failure) 참고 |
-| 선행조건이 커밋 전에 실패 | [선행조건 실패](#rejected-precondition-failure) 참고 |
-| 상태 또는 멱등성 충돌 | [상태 또는 멱등성 충돌](#rejected-state-or-idempotency-conflict) 참고 |
-| `dry_run=true` 미리보기 전 실패 | [`dry_run=true` 미리보기 전 실패](#rejected-dry-run-pre-preview-failure) 참고 |
+| 요청 검증이 진행 전에 실패 | [요청 검증 실패](#rejected-request-validation-failure) 참조 |
+| 선행조건이 커밋 전에 실패 | [선행조건 실패](#rejected-precondition-failure) 참조 |
+| 상태 또는 멱등성 충돌 | [상태 또는 멱등성 충돌](#rejected-state-or-idempotency-conflict) 참조 |
+| `dry_run=true` 미리보기 전 실패 | [`dry_run=true` 미리보기 전 실패](#rejected-dry-run-pre-preview-failure) 참조 |
 
 <a id="rejected-request-validation-failure"></a>
 ### 요청 검증 실패
@@ -624,11 +762,11 @@
 
 ## 차단 결과 동작
 
-| 차단 경로 | 세부사항 |
+| 차단 경로 | 상세 |
 |---|---|
-| `PrepareWriteResult` 차단 판단 | [`PrepareWriteResult` 차단 판단](#blocked-prepare-write-result) 참고 |
-| `CloseTaskResult(close_state=blocked)` | [`CloseTaskResult(close_state=blocked)`](#blocked-close-task-result) 참고 |
-| 읽기 전용 닫기 차단 사유 관찰 | [읽기 전용 관찰](#blocked-read-only-observation) 참고 |
+| `PrepareWriteResult` 차단 판단 | [`PrepareWriteResult` 차단 판단](#blocked-prepare-write-result) 참조 |
+| `CloseTaskResult(close_state=blocked)` | [`CloseTaskResult(close_state=blocked)`](#blocked-close-task-result) 참조 |
+| 읽기 전용 닫기 차단 사유 관찰 | [읽기 전용 관찰](#blocked-read-only-observation) 참조 |
 
 <a id="blocked-prepare-write-result"></a>
 ### `PrepareWriteResult` 차단 판단
@@ -682,14 +820,62 @@
 
 ## `dry_run` 동작
 
-| 요청 | 응답 | 규칙 |
-|---|---|---|
-| `dry_run=true`인 유효한 읽기 전용 호출 | `base.dry_run=true`, `base.effect_kind=read_only`인 메서드별 결과 | `dry_run=true`는 `ToolDryRunResponse`의 동의어가 아닙니다. |
-| `dry_run=true`인, 상태에 영향을 주는 유효한 호출 또는 저장소 담당 스테이징 동작 | `DryRunSummary`를 담은 `ToolDryRunResponse` | `dry_run` 미리보기는 커밋된 쓰기가 아닙니다. |
-| 예상 차단 사유가 있는 유효한 `dry_run` 미리보기 | `DryRunSummary.would_blockers: PlannedBlocker[]` | 미리보기 차단 사유는 저장된 `CloseReadinessBlocker` 객체가 아닙니다. |
-| `dry_run=true`의 커밋 전 실패 | `ToolRejectedResponse` | 실패는 미리보기가 아니라 거부입니다. |
+| `dry_run` 경우 | 상세 |
+|---|---|
+| 유효한 읽기 전용 호출 | [유효한 읽기 전용 `dry_run=true`](#dry-run-valid-read-only) 참조 |
+| 유효한 상태 영향 또는 스테이징 미리보기 | [유효한 `dry_run` 미리보기](#dry-run-valid-preview) 참조 |
+| 미리보기의 예상 차단 사유 | [`dry_run` 미리보기의 예상 차단 사유](#dry-run-expected-blockers) 참조 |
+| 커밋 전 실패 | [`dry_run=true`의 커밋 전 실패](#dry-run-pre-commit-failure) 참조 |
 
-`PlannedBlocker.code`는 `STATE_VERSION_CONFLICT`가 될 수 없습니다. 오래된 상태는 미리보기 전에 거부됩니다.
+<a id="dry-run-valid-read-only"></a>
+### 유효한 읽기 전용 `dry_run=true`
+
+조건:
+- 유효한 읽기 전용 호출이 `dry_run=true`를 설정합니다.
+
+응답 경로:
+- `base.dry_run=true`와 `base.effect_kind=read_only`를 담은 메서드별 결과입니다.
+
+허용되지 않는 것:
+- `dry_run=true`를 `ToolDryRunResponse`의 동의어로 보지 않습니다.
+
+<a id="dry-run-valid-preview"></a>
+### 유효한 `dry_run` 미리보기
+
+조건:
+- 유효한 상태 영향 동작이나 저장소 담당 스테이징 동작이 `dry_run=true`를 설정합니다.
+
+응답 경로:
+- `DryRunSummary`를 담은 `ToolDryRunResponse`입니다.
+
+상태 영향:
+- `dry_run` 미리보기는 커밋된 쓰기가 아닙니다.
+
+<a id="dry-run-expected-blockers"></a>
+### `dry_run` 미리보기의 예상 차단 사유
+
+조건:
+- 유효한 `dry_run` 미리보기에 예상 차단 사유가 있습니다.
+
+응답 경로:
+- `DryRunSummary.would_blockers: PlannedBlocker[]`.
+
+허용되지 않는 것:
+- 미리보기 차단 사유는 저장된 `CloseReadinessBlocker` 객체가 아닙니다.
+- `PlannedBlocker.code`는 `STATE_VERSION_CONFLICT`가 될 수 없습니다.
+
+<a id="dry-run-pre-commit-failure"></a>
+### `dry_run=true`의 커밋 전 실패
+
+조건:
+- `dry_run=true` 요청에 커밋 전 실패가 있습니다.
+
+응답 경로:
+- `ToolRejectedResponse`.
+
+허용되지 않는 것:
+- 실패를 `dry_run` 미리보기 데이터로 표현하지 않습니다.
+- 오래된 상태는 미리보기 전에 거부됩니다.
 
 <a id="idempotency"></a>
 <a id="state-conflict-behavior"></a>
@@ -697,9 +883,9 @@
 
 | 충돌 경우 | 상세 |
 |---|---|
-| 오래된 `expected_state_version` | [오래된 `expected_state_version`](#state-conflict-expected-state-version) 참고 |
-| 오래된 `WriteAuthorization.basis_state_version` | [오래된 Write Authorization 근거 버전](#state-conflict-write-authorization-basis) 참고 |
-| 멱등 요청 해시 충돌 | [멱등 요청 해시 충돌](#state-conflict-idempotency-hash) 참고 |
+| 오래된 `expected_state_version` | [오래된 `expected_state_version`](#state-conflict-expected-state-version) 참조 |
+| 오래된 `WriteAuthorization.basis_state_version` | [오래된 Write Authorization 근거 버전](#state-conflict-write-authorization-basis) 참조 |
+| 멱등 요청 해시 충돌 | [멱등 요청 해시 충돌](#state-conflict-idempotency-hash) 참조 |
 
 `STATE_VERSION_CONFLICT`의 현재 MVP 의미는 하나뿐입니다. 프로젝트 전체의 커밋 전 최신성 또는 멱등성 충돌입니다.
 
@@ -775,11 +961,11 @@
 
 | 금지된 사용 | 상세 |
 |---|---|
-| 오래된 상태 공개 오류를 차단 사유 코드로 사용 | [오래된 상태 차단 사유 코드](#forbidden-stale-state-blocker-code) 참고 |
-| 커밋 전 공개 오류를 차단 사유 배열로 복사 | [커밋 전 공개 오류 복사](#forbidden-pre-commit-public-error-copy) 참고 |
-| 공개 `ErrorCode`를 담당 문서 허용 없이 재사용 | [공개 코드 재사용](#forbidden-public-code-reuse) 참고 |
-| 사용자 표시 라벨을 API 식별자로 사용 | [표시 라벨 식별자](#forbidden-user-facing-label-identifier) 참고 |
-| `dry_run` 오래된 상태 충돌을 미리보기로 표현 | [`dry_run` 오래된 상태 미리보기](#forbidden-dry-run-stale-state-preview) 참고 |
+| 오래된 상태 공개 오류를 차단 사유 코드로 사용 | [오래된 상태 차단 사유 코드](#forbidden-stale-state-blocker-code) 참조 |
+| 커밋 전 공개 오류를 차단 사유 배열로 복사 | [커밋 전 공개 오류 복사](#forbidden-pre-commit-public-error-copy) 참조 |
+| 공개 `ErrorCode`를 담당 문서 허용 없이 재사용 | [공개 코드 재사용](#forbidden-public-code-reuse) 참조 |
+| 사용자 표시 라벨을 API 식별자로 사용 | [표시 라벨 식별자](#forbidden-user-facing-label-identifier) 참조 |
+| `dry_run` 오래된 상태 충돌을 미리보기로 표현 | [`dry_run` 오래된 상태 미리보기](#forbidden-dry-run-stale-state-preview) 참조 |
 
 <a id="forbidden-stale-state-blocker-code"></a>
 ### 오래된 상태 차단 사유 코드
@@ -830,7 +1016,7 @@
 
 ## `close_task` 차단 사유 매핑
 
-| `close_task` 상황 | 세부사항 |
+| `close_task` 상황 | 상세 |
 |---|---|
 | 닫기 준비 상태 평가 전 사전 확인 실패 | [사전 확인 실패](#close-task-preflight-failure) |
 | 유효한 읽기인 `intent=check` | [`intent=check`](#close-task-intent-check) |
@@ -912,18 +1098,20 @@
 
 ### 닫기 준비 상태 발견 사항 코드 요약
 
+이 표는 닫기 준비 상태 발견 사항에 대응하는 공개 오류 코드 묶음을 요약합니다. 공개 `ErrorCode` 값을 차단 사유 코드로 바꾸는 규칙이 아닙니다.
+
 | 닫기 준비 상태 발견 사항 | 상세 |
 |---|---|
-| 증거 공백 | [증거 공백](#close-mapping-evidence-gap) 참고 |
-| 지속 아티팩트 문제 | [지속 아티팩트 문제](#close-mapping-artifact-issue) 참고 |
-| 최종 수락 문제 | [최종 수락 문제](#close-mapping-final-acceptance) 참고 |
-| 잔여 위험이 보이지 않음 | [잔여 위험이 보이지 않음](#close-mapping-residual-risk-not-visible) 참고 |
-| 보였지만 수락되지 않은 잔여 위험 | [수락되지 않은 잔여 위험](#close-mapping-unaccepted-residual-risk) 참고 |
-| 해결되지 않은 사용자 소유 판단 | [해결되지 않은 사용자 소유 판단](#close-mapping-unresolved-user-judgment) 참고 |
-| 민감 동작 승인 문제 | [민감 동작 승인 문제](#close-mapping-sensitive-approval) 참고 |
-| 범위, 경계, 기준 상태 차단 사유 | [범위, 경계, 기준 상태 차단 사유](#close-mapping-scope-boundary-baseline) 참고 |
-| 읽기용 보기 최신성 문제 | [읽기용 보기 최신성 문제](#close-mapping-readable-view-freshness) 참고 |
-| 오래된 프로젝트 전체 상태 또는 Write Authorization 근거 | [오래된 상태는 거부](#close-mapping-stale-state-rejected) 참고 |
+| 증거 공백 | [증거 공백](#close-mapping-evidence-gap) 참조 |
+| 지속 아티팩트 문제 | [지속 아티팩트 문제](#close-mapping-artifact-issue) 참조 |
+| 최종 수락 문제 | [최종 수락 문제](#close-mapping-final-acceptance) 참조 |
+| 잔여 위험이 보이지 않음 | [잔여 위험이 보이지 않음](#close-mapping-residual-risk-not-visible) 참조 |
+| 보였지만 수락되지 않은 잔여 위험 | [수락되지 않은 잔여 위험](#close-mapping-unaccepted-residual-risk) 참조 |
+| 해결되지 않은 사용자 소유 판단 | [해결되지 않은 사용자 소유 판단](#close-mapping-unresolved-user-judgment) 참조 |
+| 민감 동작 승인 문제 | [민감 동작 승인 문제](#close-mapping-sensitive-approval) 참조 |
+| 범위, 경계, 기준 상태 차단 사유 | [범위, 경계, 기준 상태 차단 사유](#close-mapping-scope-boundary-baseline) 참조 |
+| 읽기용 보기 최신성 문제 | [읽기용 보기 최신성 문제](#close-mapping-readable-view-freshness) 참조 |
+| 오래된 프로젝트 전체 상태 또는 Write Authorization 근거 | [오래된 상태는 거부](#close-mapping-stale-state-rejected) 참조 |
 
 <a id="close-mapping-evidence-gap"></a>
 ### 증거 공백
@@ -1033,24 +1221,80 @@
 
 사용자 표시 라벨은 공개 오류 식별자와 다를 수 있습니다. 라벨은 표시 문구일 뿐 새 공개 코드가 아닙니다.
 
-| 공개 조건 | 권장 라벨 | 차단 해소에 필요한 최소 조치 |
-|---|---|---|
-| `VALIDATION_FAILED` | 잘못된 요청 | 다시 시도하기 전에 요청 본문, enum 값, 활성화 규칙, 프로필 값, 필드 집합을 고칩니다. |
-| `STATE_VERSION_CONFLICT` | 상태 버전 충돌 | 현재 상태를 새로 고치고 현재 `project_state.state_version`으로 다시 시도하거나 원래 멱등 요청을 재실행합니다. |
-| `MCP_UNAVAILABLE` | Core 또는 접점 사용 불가 | Core, MCP, 접점 도달 가능성을 다시 연결하거나 진단합니다. |
-| `LOCAL_ACCESS_MISMATCH` | 로컬 접근 불일치 | 등록된 로컬 전송 경로/세션/바인딩을 사용하거나 로컬 접근 등록을 고칩니다. |
-| `CAPABILITY_INSUFFICIENT` | 접점 역량 부족 | 역량이 있는 접점을 사용하거나, 동작을 줄이거나, 빠진 역량이 필요 없는 경로를 선택합니다. |
-| `NO_ACTIVE_TASK` | 활성 Task 없음 | Task 범위 동작 전에 Task를 선택하거나 생성합니다. |
-| 범위, 경계, 기준 상태 코드 | 범위, 경계, 기준 상태 문제 | [범위, 경계, 기준 상태 라벨](#label-scope-boundary-baseline) 참고 |
-| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | 쓰기 전 확인 없음 또는 사용할 수 없음 | 정확한 동작, 현재 범위, 현재 상태로 `harness.prepare_write`를 호출하거나 다시 시도합니다. |
-| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | 판단 필요 | 집중된 `UserJudgment`를 요청하거나 해결합니다. |
-| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | 민감 동작 승인 필요 또는 사용 불가 | `judgment_kind=sensitive_approval`을 요청, 해결, 갱신합니다. |
-| `EVIDENCE_INSUFFICIENT` | 증거 필요 | 누락된 증거를 기록, 재실행하거나 증거 공백과 최소 차단 해소 조치를 보여 줍니다. |
-| `ACCEPTANCE_REQUIRED` | 최종 수락 필요 | 표시된 결과 근거에 대해 `judgment_kind=final_acceptance`를 요청하거나 해결합니다. |
-| `RESIDUAL_RISK_NOT_VISIBLE` | 잔여 위험이 보이지 않음 | 최종 수락이나 닫기 전에 닫기 관련 잔여 위험을 보여 줍니다. |
-| `PROJECTION_STALE` | 읽기용 보기 오래됨 | 그 보기에 의존하기 전에 새로 고칩니다. |
-| `ARTIFACT_MISSING` | 아티팩트 문제 | 없거나 사용할 수 없는 아티팩트를 복구, 재생성, 교체, 다시 연결합니다. |
-| `VALIDATOR_FAILED` | 확인 실패 | 가능하면 특정 validator나 차단 사유를 보여 줍니다. 타입 있는 코드가 없을 때만 이 대체 코드를 사용합니다. |
+| 공개 조건 | 상세 |
+|---|---|
+| `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#label-validation-failed) 참조 |
+| `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#label-state-version-conflict) 참조 |
+| `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#label-mcp-unavailable) 참조 |
+| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#label-local-access-mismatch) 참조 |
+| `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#label-capability-insufficient) 참조 |
+| `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#label-no-active-task) 참조 |
+| 범위, 경계, 기준 상태 코드 | [범위, 경계, 기준 상태 라벨](#label-scope-boundary-baseline) 참조 |
+| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | [Write Authorization 라벨](#label-write-authorization) 참조 |
+| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | [판단 라벨](#label-judgment) 참조 |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | [민감 동작 승인 라벨](#label-sensitive-approval) 참조 |
+| `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#label-evidence-insufficient) 참조 |
+| `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#label-acceptance-required) 참조 |
+| `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#label-residual-risk-not-visible) 참조 |
+| `PROJECTION_STALE` | [`PROJECTION_STALE`](#label-projection-stale) 참조 |
+| `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#label-artifact-missing) 참조 |
+| `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#label-validator-failed) 참조 |
+
+<a id="label-validation-failed"></a>
+### `VALIDATION_FAILED` 라벨
+
+권장 라벨:
+- 잘못된 요청.
+
+차단 해소에 필요한 최소 조치:
+- 다시 시도하기 전에 요청 본문, enum 값, 활성화 규칙, 프로필 값, 필드 집합을 고칩니다.
+
+<a id="label-state-version-conflict"></a>
+### `STATE_VERSION_CONFLICT` 라벨
+
+권장 라벨:
+- 상태 버전 충돌.
+
+차단 해소에 필요한 최소 조치:
+- 현재 상태를 새로 고치고 현재 `project_state.state_version`으로 다시 시도하거나 원래 멱등 요청을 재실행합니다.
+
+<a id="label-mcp-unavailable"></a>
+### `MCP_UNAVAILABLE` 라벨
+
+권장 라벨:
+- Core 또는 접점 사용 불가.
+
+차단 해소에 필요한 최소 조치:
+- Core, MCP, 접점 도달 가능성을 다시 연결하거나 진단합니다.
+
+<a id="label-local-access-mismatch"></a>
+### `LOCAL_ACCESS_MISMATCH` 라벨
+
+권장 라벨:
+- 로컬 접근 불일치.
+
+차단 해소에 필요한 최소 조치:
+- 등록된 로컬 전송 경로, 세션, 또는 바인딩을 사용합니다.
+- 필요한 경우 로컬 접근 등록을 고칩니다.
+
+<a id="label-capability-insufficient"></a>
+### `CAPABILITY_INSUFFICIENT` 라벨
+
+권장 라벨:
+- 접점 역량 부족.
+
+차단 해소에 필요한 최소 조치:
+- 역량이 있는 접점을 사용합니다.
+- 동작을 줄이거나 빠진 역량이 필요 없는 경로를 선택합니다.
+
+<a id="label-no-active-task"></a>
+### `NO_ACTIVE_TASK` 라벨
+
+권장 라벨:
+- 활성 Task 없음.
+
+차단 해소에 필요한 최소 조치:
+- Task 범위 동작 전에 Task를 선택하거나 생성합니다.
 
 <a id="label-scope-boundary-baseline"></a>
 ### 범위, 경계, 기준 상태 라벨
@@ -1065,6 +1309,98 @@
 - 범위를 확인하거나 좁힙니다.
 - 유효한 범위 또는 기준 상태 변경을 담당 경로로 갱신합니다.
 - 필요한 사용자 판단을 요청합니다.
+
+<a id="label-write-authorization"></a>
+### Write Authorization 라벨
+
+조건:
+- `WRITE_AUTHORIZATION_REQUIRED` 또는 `WRITE_AUTHORIZATION_INVALID`.
+
+권장 라벨:
+- 쓰기 전 확인 없음 또는 사용할 수 없음.
+
+차단 해소에 필요한 최소 조치:
+- 정확한 동작, 현재 범위, 현재 상태로 `harness.prepare_write`를 호출하거나 다시 시도합니다.
+
+<a id="label-judgment"></a>
+### 판단 라벨
+
+조건:
+- `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`.
+
+권장 라벨:
+- 판단 필요.
+
+차단 해소에 필요한 최소 조치:
+- 집중된 `UserJudgment`를 요청하거나 해결합니다.
+
+<a id="label-sensitive-approval"></a>
+### 민감 동작 승인 라벨
+
+조건:
+- `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`.
+
+권장 라벨:
+- 민감 동작 승인 필요 또는 사용 불가.
+
+차단 해소에 필요한 최소 조치:
+- `judgment_kind=sensitive_approval`을 요청, 해결, 갱신합니다.
+
+<a id="label-evidence-insufficient"></a>
+### `EVIDENCE_INSUFFICIENT` 라벨
+
+권장 라벨:
+- 증거 필요.
+
+차단 해소에 필요한 최소 조치:
+- 누락된 증거를 기록하거나 재실행합니다.
+- 증거 공백과 최소 차단 해소 조치를 보여 줍니다.
+
+<a id="label-acceptance-required"></a>
+### `ACCEPTANCE_REQUIRED` 라벨
+
+권장 라벨:
+- 최종 수락 필요.
+
+차단 해소에 필요한 최소 조치:
+- 표시된 결과 근거에 대해 `judgment_kind=final_acceptance`를 요청하거나 해결합니다.
+
+<a id="label-residual-risk-not-visible"></a>
+### `RESIDUAL_RISK_NOT_VISIBLE` 라벨
+
+권장 라벨:
+- 잔여 위험이 보이지 않음.
+
+차단 해소에 필요한 최소 조치:
+- 최종 수락이나 닫기 전에 닫기 관련 잔여 위험을 보여 줍니다.
+
+<a id="label-projection-stale"></a>
+### `PROJECTION_STALE` 라벨
+
+권장 라벨:
+- 읽기용 보기 오래됨.
+
+차단 해소에 필요한 최소 조치:
+- 그 보기에 의존하기 전에 새로 고칩니다.
+
+<a id="label-artifact-missing"></a>
+### `ARTIFACT_MISSING` 라벨
+
+권장 라벨:
+- 아티팩트 문제.
+
+차단 해소에 필요한 최소 조치:
+- 없거나 사용할 수 없는 아티팩트를 복구, 재생성, 교체, 다시 연결합니다.
+
+<a id="label-validator-failed"></a>
+### `VALIDATOR_FAILED` 라벨
+
+권장 라벨:
+- 확인 실패.
+
+차단 해소에 필요한 최소 조치:
+- 가능하면 특정 validator나 차단 사유를 보여 줍니다.
+- 타입 있는 코드가 없을 때만 이 대체 코드를 사용합니다.
 
 <a id="documentation-smoke-error-coverage"></a>
 

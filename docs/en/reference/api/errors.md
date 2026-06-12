@@ -11,8 +11,8 @@ This document owns:
 | Public `ErrorCode` identifiers | The public code set, public meanings, and which public path may carry each code. |
 | Error precedence | How to choose `errors[0]` when a response branch carries more than one public error. |
 | Error vs blocker routing | Whether a condition belongs in `ToolRejectedResponse.errors[]`, a method-specific blocked result, or dry-run preview data. |
-| `STATE_VERSION_CONFLICT` | Public stale-state and idempotency-conflict behavior. It is a public error code, not a blocker code. |
-| User-facing labels | Display guidance for public errors. Labels do not replace public identifiers. |
+| `STATE_VERSION_CONFLICT` | Public stale-state and idempotency-conflict behavior. |
+| User-facing labels | Display guidance for public errors. |
 
 This document does not own:
 
@@ -510,32 +510,170 @@ Not allowed:
 
 When an error-bearing branch has non-empty `errors`, `errors[0]` is the primary public code selected by this order unless a method owner defines a stricter method-specific order.
 
-| Precedence | Primary `ErrorCode` | Applies to |
+| Precedence | Primary `ErrorCode` | Details |
 |---:|---|---|
-| 1 | `VALIDATION_FAILED` | Rejected request shape or validation failure. |
-| 2 | `STATE_VERSION_CONFLICT` | Rejected response only; see [precedence exclusion](#state-version-conflict-precedence-exclusion). |
-| 3 | `MCP_UNAVAILABLE` | Rejected Core, MCP, or surface reachability failure. |
-| 4 | `LOCAL_ACCESS_MISMATCH` | Rejected local-access binding mismatch or revocation. |
-| 5 | `NO_ACTIVE_TASK` | Rejected missing Task identity. |
-| 6 | `NO_ACTIVE_CHANGE_UNIT` | Missing active Change Unit. |
-| 7 | `BASELINE_STALE` | Stale baseline. |
-| 8 | `SCOPE_REQUIRED` | Missing required scope confirmation. |
-| 9 | `SCOPE_VIOLATION` | Scope or authorized-attempt violation. |
-| 10 | `WRITE_AUTHORIZATION_REQUIRED` | Missing required Write Authorization. |
-| 11 | `WRITE_AUTHORIZATION_INVALID` | Non-version invalid Write Authorization. |
-| 12 | `APPROVAL_DENIED` | Denied sensitive-action approval. |
-| 13 | `APPROVAL_EXPIRED` | Expired or drifted sensitive-action approval. |
-| 14 | `APPROVAL_REQUIRED` | Missing sensitive-action approval. |
-| 15 | `DECISION_UNRESOLVED` | Existing user judgment is not usable. |
-| 16 | `AUTONOMY_BOUNDARY_EXCEEDED` | Autonomy boundary exceeded. |
-| 17 | `DECISION_REQUIRED` | New user-owned judgment required. |
-| 18 | `CAPABILITY_INSUFFICIENT` | Missing surface capability. |
-| 19 | `EVIDENCE_INSUFFICIENT` | Evidence coverage insufficient. |
-| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | Close-relevant risk not visible. |
-| 21 | `ACCEPTANCE_REQUIRED` | Final acceptance required or incompatible. |
-| 22 | `PROJECTION_STALE` | Readable view stale or failed. |
-| 23 | `ARTIFACT_MISSING` | Persistent artifact missing, unavailable, unusable, or failed. |
-| 24 | `VALIDATOR_FAILED` | Typed fallback when no more specific active code applies. |
+| 1 | `VALIDATION_FAILED` | See [`VALIDATION_FAILED`](#precedence-validation-failed) |
+| 2 | `STATE_VERSION_CONFLICT` | See [`STATE_VERSION_CONFLICT`](#state-version-conflict-precedence-exclusion) |
+| 3 | `MCP_UNAVAILABLE` | See [`MCP_UNAVAILABLE`](#precedence-mcp-unavailable) |
+| 4 | `LOCAL_ACCESS_MISMATCH` | See [`LOCAL_ACCESS_MISMATCH`](#precedence-local-access-mismatch) |
+| 5 | `NO_ACTIVE_TASK` | See [`NO_ACTIVE_TASK`](#precedence-no-active-task) |
+| 6 | `NO_ACTIVE_CHANGE_UNIT` | See [`NO_ACTIVE_CHANGE_UNIT`](#precedence-no-active-change-unit) |
+| 7 | `BASELINE_STALE` | See [`BASELINE_STALE`](#precedence-baseline-stale) |
+| 8 | `SCOPE_REQUIRED` | See [`SCOPE_REQUIRED`](#precedence-scope-required) |
+| 9 | `SCOPE_VIOLATION` | See [`SCOPE_VIOLATION`](#precedence-scope-violation) |
+| 10 | `WRITE_AUTHORIZATION_REQUIRED` | See [`WRITE_AUTHORIZATION_REQUIRED`](#precedence-write-authorization-required) |
+| 11 | `WRITE_AUTHORIZATION_INVALID` | See [`WRITE_AUTHORIZATION_INVALID`](#precedence-write-authorization-invalid) |
+| 12 | `APPROVAL_DENIED` | See [`APPROVAL_DENIED`](#precedence-approval-denied) |
+| 13 | `APPROVAL_EXPIRED` | See [`APPROVAL_EXPIRED`](#precedence-approval-expired) |
+| 14 | `APPROVAL_REQUIRED` | See [`APPROVAL_REQUIRED`](#precedence-approval-required) |
+| 15 | `DECISION_UNRESOLVED` | See [`DECISION_UNRESOLVED`](#precedence-decision-unresolved) |
+| 16 | `AUTONOMY_BOUNDARY_EXCEEDED` | See [`AUTONOMY_BOUNDARY_EXCEEDED`](#precedence-autonomy-boundary-exceeded) |
+| 17 | `DECISION_REQUIRED` | See [`DECISION_REQUIRED`](#precedence-decision-required) |
+| 18 | `CAPABILITY_INSUFFICIENT` | See [`CAPABILITY_INSUFFICIENT`](#precedence-capability-insufficient) |
+| 19 | `EVIDENCE_INSUFFICIENT` | See [`EVIDENCE_INSUFFICIENT`](#precedence-evidence-insufficient) |
+| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | See [`RESIDUAL_RISK_NOT_VISIBLE`](#precedence-residual-risk-not-visible) |
+| 21 | `ACCEPTANCE_REQUIRED` | See [`ACCEPTANCE_REQUIRED`](#precedence-acceptance-required) |
+| 22 | `PROJECTION_STALE` | See [`PROJECTION_STALE`](#precedence-projection-stale) |
+| 23 | `ARTIFACT_MISSING` | See [`ARTIFACT_MISSING`](#precedence-artifact-missing) |
+| 24 | `VALIDATOR_FAILED` | See [`VALIDATOR_FAILED`](#precedence-validator-failed) |
+
+<a id="precedence-validation-failed"></a>
+### Precedence 1: `VALIDATION_FAILED`
+
+Applies to:
+- Rejected request shape or validation failure.
+
+<a id="precedence-mcp-unavailable"></a>
+### Precedence 3: `MCP_UNAVAILABLE`
+
+Applies to:
+- Rejected Core, MCP, or surface reachability failure.
+
+<a id="precedence-local-access-mismatch"></a>
+### Precedence 4: `LOCAL_ACCESS_MISMATCH`
+
+Applies to:
+- Rejected local-access binding mismatch or revocation.
+
+<a id="precedence-no-active-task"></a>
+### Precedence 5: `NO_ACTIVE_TASK`
+
+Applies to:
+- Rejected missing Task identity.
+
+<a id="precedence-no-active-change-unit"></a>
+### Precedence 6: `NO_ACTIVE_CHANGE_UNIT`
+
+Applies to:
+- Missing active Change Unit.
+
+<a id="precedence-baseline-stale"></a>
+### Precedence 7: `BASELINE_STALE`
+
+Applies to:
+- Stale baseline.
+
+<a id="precedence-scope-required"></a>
+### Precedence 8: `SCOPE_REQUIRED`
+
+Applies to:
+- Missing required scope confirmation.
+
+<a id="precedence-scope-violation"></a>
+### Precedence 9: `SCOPE_VIOLATION`
+
+Applies to:
+- Scope or authorized-attempt violation.
+
+<a id="precedence-write-authorization-required"></a>
+### Precedence 10: `WRITE_AUTHORIZATION_REQUIRED`
+
+Applies to:
+- Missing required Write Authorization.
+
+<a id="precedence-write-authorization-invalid"></a>
+### Precedence 11: `WRITE_AUTHORIZATION_INVALID`
+
+Applies to:
+- Non-version invalid Write Authorization.
+
+<a id="precedence-approval-denied"></a>
+### Precedence 12: `APPROVAL_DENIED`
+
+Applies to:
+- Denied sensitive-action approval.
+
+<a id="precedence-approval-expired"></a>
+### Precedence 13: `APPROVAL_EXPIRED`
+
+Applies to:
+- Expired or drifted sensitive-action approval.
+
+<a id="precedence-approval-required"></a>
+### Precedence 14: `APPROVAL_REQUIRED`
+
+Applies to:
+- Missing sensitive-action approval.
+
+<a id="precedence-decision-unresolved"></a>
+### Precedence 15: `DECISION_UNRESOLVED`
+
+Applies to:
+- Existing user judgment is not usable.
+
+<a id="precedence-autonomy-boundary-exceeded"></a>
+### Precedence 16: `AUTONOMY_BOUNDARY_EXCEEDED`
+
+Applies to:
+- Autonomy boundary exceeded.
+
+<a id="precedence-decision-required"></a>
+### Precedence 17: `DECISION_REQUIRED`
+
+Applies to:
+- New user-owned judgment required.
+
+<a id="precedence-capability-insufficient"></a>
+### Precedence 18: `CAPABILITY_INSUFFICIENT`
+
+Applies to:
+- Missing surface capability.
+
+<a id="precedence-evidence-insufficient"></a>
+### Precedence 19: `EVIDENCE_INSUFFICIENT`
+
+Applies to:
+- Evidence coverage insufficient.
+
+<a id="precedence-residual-risk-not-visible"></a>
+### Precedence 20: `RESIDUAL_RISK_NOT_VISIBLE`
+
+Applies to:
+- Close-relevant risk not visible.
+
+<a id="precedence-acceptance-required"></a>
+### Precedence 21: `ACCEPTANCE_REQUIRED`
+
+Applies to:
+- Final acceptance required or incompatible.
+
+<a id="precedence-projection-stale"></a>
+### Precedence 22: `PROJECTION_STALE`
+
+Applies to:
+- Readable view stale or failed.
+
+<a id="precedence-artifact-missing"></a>
+### Precedence 23: `ARTIFACT_MISSING`
+
+Applies to:
+- Persistent artifact missing, unavailable, unusable, or failed.
+
+<a id="precedence-validator-failed"></a>
+### Precedence 24: `VALIDATOR_FAILED`
+
+Applies to:
+- Typed fallback when no more specific active code applies.
 
 <a id="state-version-conflict-precedence-exclusion"></a>
 ### `STATE_VERSION_CONFLICT` precedence exclusion
@@ -685,14 +823,62 @@ Blocked result means the method may have returned an operation-specific blocked 
 
 ## Dry-run behavior
 
-| Request | Response | Rule |
-|---|---|---|
-| Valid read-only call with `dry_run=true` | Method-specific result with `base.dry_run=true` and `base.effect_kind=read_only` | `dry_run=true` is not a synonym for `ToolDryRunResponse`. |
-| Valid state-effecting or storage-owned staging operation with `dry_run=true` | `ToolDryRunResponse` with `DryRunSummary` | Dry-run preview is not a committed write. |
-| Valid dry-run preview with expected blockers | `DryRunSummary.would_blockers: PlannedBlocker[]` | Preview blockers are not stored `CloseReadinessBlocker` objects. |
-| Pre-commit failure with `dry_run=true` | `ToolRejectedResponse` | The failure is rejected, not previewed. |
+| Dry-run case | Details |
+|---|---|
+| valid read-only call | See [Valid read-only `dry_run=true`](#dry-run-valid-read-only) |
+| valid state-effecting or staging preview | See [Valid dry-run preview](#dry-run-valid-preview) |
+| expected blockers in preview | See [Expected blockers in dry-run preview](#dry-run-expected-blockers) |
+| pre-commit failure | See [Pre-commit failure with `dry_run=true`](#dry-run-pre-commit-failure) |
 
-`PlannedBlocker.code` must not be `STATE_VERSION_CONFLICT`. Stale state is rejected before preview.
+<a id="dry-run-valid-read-only"></a>
+### Valid read-only `dry_run=true`
+
+Condition:
+- A valid read-only call sets `dry_run=true`.
+
+Response path:
+- Method-specific result with `base.dry_run=true` and `base.effect_kind=read_only`.
+
+Not allowed:
+- Do not treat `dry_run=true` as a synonym for `ToolDryRunResponse`.
+
+<a id="dry-run-valid-preview"></a>
+### Valid dry-run preview
+
+Condition:
+- A valid state-effecting or storage-owned staging operation sets `dry_run=true`.
+
+Response path:
+- `ToolDryRunResponse` with `DryRunSummary`.
+
+State effect:
+- The dry-run preview is not a committed write.
+
+<a id="dry-run-expected-blockers"></a>
+### Expected blockers in dry-run preview
+
+Condition:
+- A valid dry-run preview has expected blockers.
+
+Response path:
+- `DryRunSummary.would_blockers: PlannedBlocker[]`.
+
+Not allowed:
+- Preview blockers are not stored `CloseReadinessBlocker` objects.
+- `PlannedBlocker.code` must not be `STATE_VERSION_CONFLICT`.
+
+<a id="dry-run-pre-commit-failure"></a>
+### Pre-commit failure with `dry_run=true`
+
+Condition:
+- A `dry_run=true` request has a pre-commit failure.
+
+Response path:
+- `ToolRejectedResponse`.
+
+Not allowed:
+- Do not represent the failure as dry-run preview data.
+- Stale state is rejected before preview.
 
 <a id="idempotency"></a>
 <a id="state-conflict-behavior"></a>
@@ -916,6 +1102,8 @@ Not allowed:
 
 ### Close-readiness finding code summary
 
+These rows summarize public error-code families for close-readiness findings. They do not turn public `ErrorCode` values into blocker codes.
+
 | Close-readiness finding | Details |
 |---|---|
 | Evidence gap | See [Evidence gap](#close-mapping-evidence-gap) |
@@ -1037,24 +1225,80 @@ Owner links:
 
 User-facing labels may differ from public error identifiers. Labels are display text, not new public codes.
 
-| Public condition | Suggested label | Smallest unblocker |
-|---|---|---|
-| `VALIDATION_FAILED` | invalid request | Fix the payload, enum value, activation rule, profile value, or field set before retrying. |
-| `STATE_VERSION_CONFLICT` | state version conflict | Refresh current state and retry with the current `project_state.state_version`, or replay the original idempotent request. |
-| `MCP_UNAVAILABLE` | Core or surface unavailable | Reconnect or diagnose Core, MCP, and surface reachability. |
-| `LOCAL_ACCESS_MISMATCH` | local access mismatch | Use the registered local transport/session/binding or repair local access registration. |
-| `CAPABILITY_INSUFFICIENT` | insufficient surface capability | Use a capable surface, reduce the operation, or avoid the missing capability. |
-| `NO_ACTIVE_TASK` | no active Task | Select or create a Task before a Task-scoped action. |
-| scope, boundary, or baseline codes | scope, boundary, or baseline issue | See [Scope, boundary, or baseline label](#label-scope-boundary-baseline) |
-| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or unusable pre-write check | Call or retry `harness.prepare_write` for the exact operation, current scope, and current state. |
-| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | judgment needed | Request or resolve the focused `UserJudgment`. |
-| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | sensitive-action approval needed or not usable | Request, resolve, or renew `judgment_kind=sensitive_approval`. |
-| `EVIDENCE_INSUFFICIENT` | evidence needed | Record, rerun, or show the missing evidence and smallest unblocker. |
-| `ACCEPTANCE_REQUIRED` | final acceptance needed | Request or resolve `judgment_kind=final_acceptance` for the visible result basis. |
-| `RESIDUAL_RISK_NOT_VISIBLE` | residual risk not visible | Show the close-relevant residual risk before final acceptance or close. |
-| `PROJECTION_STALE` | stale readable view | Refresh the view before relying on it. |
-| `ARTIFACT_MISSING` | artifact issue | Restore, regenerate, replace, or reconnect the missing or unusable artifact. |
-| `VALIDATOR_FAILED` | check failed | Show the specific validator or blocker when available; use this fallback only when no typed code applies. |
+| Public condition | Details |
+|---|---|
+| `VALIDATION_FAILED` | See [`VALIDATION_FAILED`](#label-validation-failed) |
+| `STATE_VERSION_CONFLICT` | See [`STATE_VERSION_CONFLICT`](#label-state-version-conflict) |
+| `MCP_UNAVAILABLE` | See [`MCP_UNAVAILABLE`](#label-mcp-unavailable) |
+| `LOCAL_ACCESS_MISMATCH` | See [`LOCAL_ACCESS_MISMATCH`](#label-local-access-mismatch) |
+| `CAPABILITY_INSUFFICIENT` | See [`CAPABILITY_INSUFFICIENT`](#label-capability-insufficient) |
+| `NO_ACTIVE_TASK` | See [`NO_ACTIVE_TASK`](#label-no-active-task) |
+| scope, boundary, or baseline codes | See [Scope, boundary, or baseline label](#label-scope-boundary-baseline) |
+| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | See [Write Authorization label](#label-write-authorization) |
+| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | See [Judgment label](#label-judgment) |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | See [Sensitive-action approval label](#label-sensitive-approval) |
+| `EVIDENCE_INSUFFICIENT` | See [`EVIDENCE_INSUFFICIENT`](#label-evidence-insufficient) |
+| `ACCEPTANCE_REQUIRED` | See [`ACCEPTANCE_REQUIRED`](#label-acceptance-required) |
+| `RESIDUAL_RISK_NOT_VISIBLE` | See [`RESIDUAL_RISK_NOT_VISIBLE`](#label-residual-risk-not-visible) |
+| `PROJECTION_STALE` | See [`PROJECTION_STALE`](#label-projection-stale) |
+| `ARTIFACT_MISSING` | See [`ARTIFACT_MISSING`](#label-artifact-missing) |
+| `VALIDATOR_FAILED` | See [`VALIDATOR_FAILED`](#label-validator-failed) |
+
+<a id="label-validation-failed"></a>
+### `VALIDATION_FAILED` label
+
+Suggested label:
+- invalid request.
+
+Smallest unblocker:
+- Fix the payload, enum value, activation rule, profile value, or field set before retrying.
+
+<a id="label-state-version-conflict"></a>
+### `STATE_VERSION_CONFLICT` label
+
+Suggested label:
+- state version conflict.
+
+Smallest unblocker:
+- Refresh current state and retry with the current `project_state.state_version`, or replay the original idempotent request.
+
+<a id="label-mcp-unavailable"></a>
+### `MCP_UNAVAILABLE` label
+
+Suggested label:
+- Core or surface unavailable.
+
+Smallest unblocker:
+- Reconnect or diagnose Core, MCP, and surface reachability.
+
+<a id="label-local-access-mismatch"></a>
+### `LOCAL_ACCESS_MISMATCH` label
+
+Suggested label:
+- local access mismatch.
+
+Smallest unblocker:
+- Use the registered local transport, session, or binding.
+- Repair local access registration when needed.
+
+<a id="label-capability-insufficient"></a>
+### `CAPABILITY_INSUFFICIENT` label
+
+Suggested label:
+- insufficient surface capability.
+
+Smallest unblocker:
+- Use a capable surface.
+- Reduce the operation or avoid the missing capability.
+
+<a id="label-no-active-task"></a>
+### `NO_ACTIVE_TASK` label
+
+Suggested label:
+- no active Task.
+
+Smallest unblocker:
+- Select or create a Task before a Task-scoped action.
 
 <a id="label-scope-boundary-baseline"></a>
 ### Scope, boundary, or baseline label
@@ -1069,6 +1313,97 @@ Smallest unblocker:
 - Confirm or narrow scope.
 - Update valid scope or baseline through the owner path.
 - Request the needed user judgment.
+
+<a id="label-write-authorization"></a>
+### Write Authorization label
+
+Public condition:
+- `WRITE_AUTHORIZATION_REQUIRED` or `WRITE_AUTHORIZATION_INVALID`.
+
+Suggested label:
+- missing or unusable pre-write check.
+
+Smallest unblocker:
+- Call or retry `harness.prepare_write` for the exact operation, current scope, and current state.
+
+<a id="label-judgment"></a>
+### Judgment label
+
+Public condition:
+- `DECISION_REQUIRED` or `DECISION_UNRESOLVED`.
+
+Suggested label:
+- judgment needed.
+
+Smallest unblocker:
+- Request or resolve the focused `UserJudgment`.
+
+<a id="label-sensitive-approval"></a>
+### Sensitive-action approval label
+
+Public condition:
+- `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED`.
+
+Suggested label:
+- sensitive-action approval needed or not usable.
+
+Smallest unblocker:
+- Request, resolve, or renew `judgment_kind=sensitive_approval`.
+
+<a id="label-evidence-insufficient"></a>
+### `EVIDENCE_INSUFFICIENT` label
+
+Suggested label:
+- evidence needed.
+
+Smallest unblocker:
+- Record, rerun, or show the missing evidence and smallest unblocker.
+
+<a id="label-acceptance-required"></a>
+### `ACCEPTANCE_REQUIRED` label
+
+Suggested label:
+- final acceptance needed.
+
+Smallest unblocker:
+- Request or resolve `judgment_kind=final_acceptance` for the visible result basis.
+
+<a id="label-residual-risk-not-visible"></a>
+### `RESIDUAL_RISK_NOT_VISIBLE` label
+
+Suggested label:
+- residual risk not visible.
+
+Smallest unblocker:
+- Show the close-relevant residual risk before final acceptance or close.
+
+<a id="label-projection-stale"></a>
+### `PROJECTION_STALE` label
+
+Suggested label:
+- stale readable view.
+
+Smallest unblocker:
+- Refresh the view before relying on it.
+
+<a id="label-artifact-missing"></a>
+### `ARTIFACT_MISSING` label
+
+Suggested label:
+- artifact issue.
+
+Smallest unblocker:
+- Restore, regenerate, replace, or reconnect the missing or unusable artifact.
+
+<a id="label-validator-failed"></a>
+### `VALIDATOR_FAILED` label
+
+Suggested label:
+- check failed.
+
+Smallest unblocker:
+- Show the specific validator or blocker when available.
+- Use this fallback only when no typed code applies.
 
 <a id="documentation-smoke-error-coverage"></a>
 
