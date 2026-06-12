@@ -237,6 +237,26 @@ Failure:
 Fix:
 - Align refs, versions, sensitive categories, artifact lifecycle, timestamps, and shared scenario data.
 
+### CHK-EXAMPLE-FIELD-NAME-CONSISTENCY: example field-name consistency
+
+Owner:
+- [`maintain/authoring-guide.md`](authoring-guide.md)
+- affected method or schema owner document
+
+Check:
+- Example field names match the owner method or schema document.
+- A storage/effect example that reuses method payload data does not use a different field name unless it is explicitly described as a storage-owned summary field.
+- Field names shared across examples are consistent.
+
+Failure:
+- A method example uses `intended_paths`, while a related storage example uses `affected_paths` for the same concept without explanation.
+- A field name appears in an example but is not owned by the relevant method, schema, or storage summary section.
+- Two related examples use different field names for the same concept without an owner-boundary note.
+
+Fix:
+- Use the owner method/schema field name, or clearly mark the field as storage-owned summary data.
+- Add an owner link when needed.
+
 ## 5. Terminology checks
 
 ### CHK-TERM-001: close readiness terminology
