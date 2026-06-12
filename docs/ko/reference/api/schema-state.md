@@ -1,6 +1,11 @@
-# API 상태 스키마
+# API 상태 schema
 
-이 문서는 현재 MVP의 상태 형태 API 스키마를 담당합니다. 문서 원천 자료일 뿐이며 런타임 상태, 생성된 상태 보기, 저장소 행, 상태 효과를 만들지 않습니다.
+의미:
+- 이 문서는 현재 MVP의 상태 형태 API schema를 담당합니다.
+- 문서 원천 자료일 뿐입니다.
+
+의미하지 않는 것:
+- 런타임 상태, 생성된 상태 보기, 저장소 행, 상태 효과를 만들지 않습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -11,12 +16,12 @@
 - API 데이터 형태로서의 Task 생명주기 상태
 - 상태 관련 스냅샷과 참조 구조
 - `ShapingReadiness`
-- `NextActionSummary`, `WriteAuthoritySummary`, `EvidenceSummary`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 현재 위치 표시 스키마
+- `NextActionSummary`, `WriteAuthoritySummary`, `EvidenceSummary`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 현재 위치 표시 schema
 - 상태 형태 데이터와 응답 효과의 경계
 
 이 문서는 담당하지 않습니다.
 
-- 공통 요청 래퍼나 응답 분기: [API 코어 스키마](schema-core.md)
+- 공통 요청 래퍼나 응답 branch: [API 코어 schema](schema-core.md)
 - 활성 enum 형태 값: [API 값 집합](schema-value-sets.md)
 - 메서드 동작: [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서
 - 공개 오류 의미: [API 오류](errors.md)
@@ -25,11 +30,24 @@
 
 ## 경계
 
-상태 스키마는 API 데이터 형태를 설명합니다. 상태처럼 보이는 필드가 있다고 해서 그 자체로 지속 저장, Core 전이, 재실행 행, `task_events`, 아티팩트 효과, Write Authorization 효과, `state_version` 증가가 생기지 않습니다. 선택된 응답 분기와 메서드 동작이 그 효과를 정합니다.
+의미:
+- 상태 schema는 API 데이터 형태를 설명합니다.
+
+의미하지 않는 것:
+- 상태처럼 보이는 필드가 있다고 해서 그 자체로 지속 저장이 생기지 않습니다.
+- 상태처럼 보이는 필드가 있다고 해서 그 자체로 Core 전이, 재실행 행, `task_events`, 아티팩트 효과, Write Authorization 효과, `state_version` 증가가 생기지 않습니다.
+
+담당 문서 링크:
+- 응답 branch 선택: [공통 응답 branch](schema-core.md#common-response)
+- 메서드 동작과 효과: [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서
 
 ## 상태 참조
 
-`StateRecordRef`는 API 응답에 나타나는 Core 소유 기록의 공통 공개 참조 형태입니다. 포인터일 뿐이며 저장소 행을 그대로 넣은 것이 아닙니다.
+의미:
+- `StateRecordRef`는 API 응답에 나타나는 Core 소유 기록의 공통 공개 참조 형태입니다.
+
+의미하지 않는 것:
+- 저장소 행을 그대로 넣은 것이 아닙니다.
 
 ```yaml
 StateRecordRef:
@@ -40,7 +58,9 @@ StateRecordRef:
   state_version: integer | null
 ```
 
-`record_kind` 값은 [기록과 참조 값](schema-value-sets.md#기록과-참조-값)이 담당합니다. 저장소 테이블 이름과 DDL은 [저장소 기록](../storage-records.md)에 남습니다.
+담당 문서 링크:
+- `record_kind` 값: [기록과 참조 값](schema-value-sets.md#기록과-참조-값)
+- 저장소 테이블 이름과 DDL: [저장소 기록](../storage-records.md)
 
 ## `StateSummary`
 
@@ -70,7 +90,15 @@ StateSummary:
   guarantee_display: GuaranteeDisplay | null
 ```
 
-`StateSummary`는 저장된 Core 상태, 계산된 읽기 전용 상태, 닫기 준비 상태 관찰을 요약할 수 있습니다. 어떤 메서드가 커밋했는지는 이 구조가 아니라 응답 분기와 [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서가 정합니다.
+의미:
+- `StateSummary`는 저장된 Core 상태, 계산된 읽기 전용 상태, 닫기 준비 상태 관찰을 요약할 수 있습니다.
+
+의미하지 않는 것:
+- 어떤 메서드가 커밋했는지를 결정하지 않습니다.
+
+담당 문서 링크:
+- 커밋 결정 branch: [공통 응답 branch](schema-core.md#common-response)
+- 메서드별 커밋 동작: [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서
 
 ## Task 생명주기 상태
 
@@ -84,11 +112,15 @@ TaskLifecycleState:
   closed_at: string | null
 ```
 
-`lifecycle_phase`, `close_reason`, `result`의 활성 값은 [Task 생명주기 값](schema-value-sets.md#task-생명주기-값)이 담당합니다. 생명주기 영역의 제품 의미는 [Core 모델의 Task 생명주기](../core-model.md#6-task-생명주기)가 담당합니다.
+담당 문서 링크:
+- `lifecycle_phase`, `close_reason`, `result`의 활성 값: [Task 생명주기 값](schema-value-sets.md#task-생명주기-값)
+- 생명주기 영역의 제품 의미: [Core 모델의 Task 생명주기](../core-model.md#6-task-생명주기)
 
 ## `ShapingReadiness`
 
-`ShapingReadiness`는 Task, Change Unit, 대기 중인 판단, 증거 요약, 차단 사유, 다음 행동 상태에서 파생되는 API 보기입니다. 현재 담당 상태가 다음 안전한 행동에 충분히 구체적인지를 보여 줍니다.
+의미:
+- `ShapingReadiness`는 Task, Change Unit, 대기 중인 판단, 증거 요약, 차단 사유, 다음 행동 상태에서 파생되는 API 보기입니다.
+- 현재 담당 상태가 다음 안전한 행동에 충분히 구체적인지를 보여 줍니다.
 
 ```yaml
 ShapingReadiness:
@@ -110,7 +142,11 @@ ShapingGap:
   user_judgment_candidate_ref: StateRecordRef | null
 ```
 
-준비 상태 공백은 차단 사유, 대기 중이거나 후보인 사용자 판단, 범위 갱신 다음 행동으로 이어질 수 있습니다. 하지만 별도 활성 Discovery Brief, Question Queue, Assumption Register, 생성된 계획 아티팩트를 만들지 않습니다.
+의미:
+- 준비 상태 공백은 차단 사유, 대기 중이거나 후보인 사용자 판단, 범위 갱신 다음 행동으로 이어질 수 있습니다.
+
+의미하지 않는 것:
+- 별도 활성 Discovery Brief, Question Queue, Assumption Register, 생성된 계획 아티팩트를 만들지 않습니다.
 
 ## 현재 위치 표시 형태
 
@@ -143,7 +179,15 @@ WriteDecisionReason:
   related_refs: StateRecordRef[]
 ```
 
-`WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다. 닫기 준비 상태의 차단 사유가 아닙니다. 활성 범주와 사유 값은 [상태와 차단 사유 값](schema-value-sets.md#상태와-차단-사유-값)이 담당합니다. 공개 오류 코드의 의미는 [API 오류](errors.md)에 남습니다.
+의미:
+- `WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다.
+
+의미하지 않는 것:
+- 닫기 준비 상태의 차단 사유가 아닙니다.
+
+담당 문서 링크:
+- 활성 범주와 사유 값: [상태와 차단 사유 값](schema-value-sets.md#상태와-차단-사유-값)
+- 공개 오류 코드의 의미: [API 오류](errors.md)
 
 ## 증거와 Run 스냅샷 형태
 
@@ -181,7 +225,10 @@ ObservedChanges:
   baseline_ref: string | null
 ```
 
-`ArtifactRef`는 [API 아티팩트 스키마](schema-artifacts.md)가 담당합니다. 증거 충분성의 의미는 [Core 모델의 실행과 증거의 권한](../core-model.md#9-실행과-증거의-권한)이 담당하고, 메서드 동작은 [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서가 담당합니다.
+담당 문서 링크:
+- `ArtifactRef`: [API 아티팩트 schema](schema-artifacts.md)
+- 증거 충분성의 의미: [Core 모델의 실행과 증거의 권한](../core-model.md#9-실행과-증거의-권한)
+- 메서드 동작: [MVP API 경로 문서](mvp-api.md)가 안내하는 메서드 담당 문서
 
 ## 닫기 준비 상태와 검증 형태
 
@@ -206,24 +253,25 @@ GuaranteeDisplay:
   capability_refs: StateRecordRef[]
 ```
 
-`CloseReadinessBlocker`는 닫기 준비 상태 발견 사항을 표현하는 데이터 형태입니다.
+의미:
+- `CloseReadinessBlocker`는 닫기 준비 상태 발견 사항을 표현하는 데이터 형태입니다.
 
-비주장:
+의미하지 않는 것:
 - 닫기 준비 상태 개념 전체가 아닙니다.
 - 그 자체로 지속 저장을 뜻하지 않습니다.
 
-담당 문서:
+담당 문서 링크:
 - 전체 닫기 준비 상태 평가 순서: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
-- 응답 분기 동작과 커밋된 차단 결과: [`harness.close_task`](method-close-task.md)
+- 응답 branch 동작과 커밋된 차단 결과: [`harness.close_task`](method-close-task.md)
 - 공개 오류 경로: [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers)
-
-활성 `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값은 [API 값 집합](schema-value-sets.md)이 담당합니다. 보안 보장 의미는 [보안](../security.md)이 담당합니다.
+- 활성 `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값: [API 값 집합](schema-value-sets.md)
+- 보안 보장 의미: [보안](../security.md)
 
 ## 관련 담당 문서
 
-- [API 코어 스키마](schema-core.md): `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`.
+- [API 코어 schema](schema-core.md): `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`.
 - [API 값 집합](schema-value-sets.md): 상태 필드가 쓰는 정확한 값.
-- [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서: 이 스키마를 반환하는 메서드.
-- [API 아티팩트 스키마](schema-artifacts.md): `ArtifactRef`.
-- [API 판단 스키마](schema-judgment.md): `UserJudgmentCandidate`.
+- [MVP API 경로 문서](mvp-api.md)와 메서드 담당 문서: 이 schema를 반환하는 메서드.
+- [API 아티팩트 schema](schema-artifacts.md): `ArtifactRef`.
+- [API 판단 schema](schema-judgment.md): `UserJudgmentCandidate`.
 - [저장 효과](../storage-effects.md): 지속 저장과 상태 효과.

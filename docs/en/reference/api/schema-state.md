@@ -1,6 +1,11 @@
 # API state schemas
 
-This document owns API state-shaped schemas for the current MVP. It is documentation source material only and does not create runtime state, generated projections, storage rows, or state effects.
+Meaning:
+- This document owns API state-shaped schemas for the current MVP.
+- It is documentation source material only.
+
+Not implied:
+- It does not create runtime state, generated projections, storage rows, or state effects.
 
 ## Owns / Does not own
 
@@ -25,11 +30,24 @@ This document does not own:
 
 ## Boundary
 
-State schemas describe API data shapes. A state-shaped field does not by itself create persistence, a Core transition, replay rows, `task_events`, artifact effects, Write Authorization effects, or a `state_version` increment. The selected response branch and method behavior define those effects.
+Meaning:
+- State schemas describe API data shapes.
+
+Not implied:
+- A state-shaped field does not by itself create persistence.
+- A state-shaped field does not by itself create a Core transition, replay rows, `task_events`, artifact effects, Write Authorization effects, or a `state_version` increment.
+
+Owner links:
+- Response branch selection: [Common response branches](schema-core.md#common-response)
+- Method behavior and effects: [MVP API router](mvp-api.md) and method owner documents
 
 ## State references
 
-`StateRecordRef` is the common public reference shape for Core-owned records that appear in API responses. It is a pointer, not an embedded storage row.
+Meaning:
+- `StateRecordRef` is the common public reference shape for Core-owned records that appear in API responses.
+
+Not implied:
+- It is not an embedded storage row.
 
 ```yaml
 StateRecordRef:
@@ -40,7 +58,9 @@ StateRecordRef:
   state_version: integer | null
 ```
 
-`record_kind` values are owned by [record and reference values](schema-value-sets.md#record-and-reference-values). Storage table names and DDL stay in [Storage Records](../storage-records.md).
+Owner links:
+- `record_kind` values: [record and reference values](schema-value-sets.md#record-and-reference-values)
+- storage table names and DDL: [Storage Records](../storage-records.md)
 
 ## `StateSummary`
 
@@ -70,7 +90,15 @@ StateSummary:
   guarantee_display: GuaranteeDisplay | null
 ```
 
-`StateSummary` may summarize stored Core state, computed read-only status, and close-readiness observations. It does not decide whether a method committed. That decision comes from the response branch and the method owner routed from [MVP API](mvp-api.md).
+Meaning:
+- `StateSummary` may summarize stored Core state, computed read-only status, and close-readiness observations.
+
+Not implied:
+- It does not decide whether a method committed.
+
+Owner links:
+- Commit decision branch: [Common response branches](schema-core.md#common-response)
+- Method-specific commit behavior: method owner documents routed from [MVP API](mvp-api.md)
 
 ## Task lifecycle state
 
@@ -84,11 +112,15 @@ TaskLifecycleState:
   closed_at: string | null
 ```
 
-Active values for `lifecycle_phase`, `close_reason`, and `result` are owned by [task lifecycle values](schema-value-sets.md#task-lifecycle-values). The product meaning of lifecycle areas is owned by [Core Model task lifecycle](../core-model.md#6-task-lifecycle).
+Owner links:
+- Active values for `lifecycle_phase`, `close_reason`, and `result`: [task lifecycle values](schema-value-sets.md#task-lifecycle-values)
+- Product meaning of lifecycle areas: [Core Model task lifecycle](../core-model.md#6-task-lifecycle)
 
 ## `ShapingReadiness`
 
-`ShapingReadiness` is a derived API view over Task, Change Unit, pending judgments, evidence summary, blockers, and next-action state. It shows whether the current owner state is concrete enough for the next safe action.
+Meaning:
+- `ShapingReadiness` is a derived API view over Task, Change Unit, pending judgments, evidence summary, blockers, and next-action state.
+- It shows whether the current owner state is concrete enough for the next safe action.
 
 ```yaml
 ShapingReadiness:
@@ -110,7 +142,11 @@ ShapingGap:
   user_judgment_candidate_ref: StateRecordRef | null
 ```
 
-Missing readiness can route to a blocker, a pending or candidate user judgment, or an update-scope next action. It does not create separate active Discovery Brief, Question Queue, Assumption Register, or generated planning artifact.
+Meaning:
+- Missing readiness can route to a blocker, a pending or candidate user judgment, or an update-scope next action.
+
+Not implied:
+- It does not create separate active Discovery Brief, Question Queue, Assumption Register, or generated planning artifact.
 
 ## Current-position display shapes
 
@@ -143,7 +179,15 @@ WriteDecisionReason:
   related_refs: StateRecordRef[]
 ```
 
-`WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`; it is not a close-readiness blocker. The active categories and reason values are owned by [state and blocker values](schema-value-sets.md#state-and-blocker-values). Public error code meaning stays in [API Errors](errors.md).
+Meaning:
+- `WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`.
+
+Not implied:
+- It is not a close-readiness blocker.
+
+Owner links:
+- Active categories and reason values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
+- Public error code meaning: [API Errors](errors.md)
 
 ## Evidence and run snapshot shapes
 
@@ -181,7 +225,10 @@ ObservedChanges:
   baseline_ref: string | null
 ```
 
-`ArtifactRef` is owned by [API Artifact Schemas](schema-artifacts.md). Evidence sufficiency meaning is owned by [Core Model evidence and run authority](../core-model.md#9-evidence-and-run-authority), and method behavior is owned by method owner documents routed from [MVP API](mvp-api.md).
+Owner links:
+- `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md)
+- Evidence sufficiency meaning: [Core Model evidence and run authority](../core-model.md#9-evidence-and-run-authority)
+- Method behavior: method owner documents routed from [MVP API](mvp-api.md)
 
 ## Close readiness and validation shapes
 
@@ -206,9 +253,10 @@ GuaranteeDisplay:
   capability_refs: StateRecordRef[]
 ```
 
-`CloseReadinessBlocker` is a data shape for close-readiness findings.
+Meaning:
+- `CloseReadinessBlocker` is a data shape for close-readiness findings.
 
-Non-claims:
+Not implied:
 - It is not the whole close-readiness concept.
 - It does not itself imply persistence.
 
@@ -216,8 +264,8 @@ Owner links:
 - Full close-readiness evaluation order: [Core Model close readiness](../core-model.md#close_task)
 - Response branch behavior and committed blocked outcomes: [`harness.close_task`](method-close-task.md)
 - Public error routing: [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers)
-
-Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values are owned by [API Value Sets](schema-value-sets.md). Security guarantee meaning is owned by [Security](../security.md).
+- Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md)
+- Security guarantee meaning: [Security](../security.md)
 
 ## Related owners
 
