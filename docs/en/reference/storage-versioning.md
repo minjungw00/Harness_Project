@@ -25,14 +25,31 @@ This document does not own:
 
 ## Project-wide state clock
 
-The active current MVP has one public state clock: `project_state.state_version`. It is project-wide and is the only active authorization, conflict, freshness, and concurrency basis for public API mutations.
+Meaning:
 
-Task routing still matters for ownership, blockers, close state, evidence, and user judgments. It does not select a separate Task-local state clock.
+- The active current MVP has one public state clock: `project_state.state_version`.
+- `project_state.state_version` is project-wide and is the only active authorization, conflict, freshness, and concurrency basis for public API mutations.
+- Task routing still matters for ownership, blockers, close state, evidence, and user judgments.
+- Task routing does not select a separate Task-local state clock.
+- A committed mutation response reports the resulting project-wide version.
+- Read-only results, `ToolDryRunResponse` previews, and temporary staging responses report the current project-wide version they observed.
 
-Response-branch `state_version` values always use the project-wide version:
+Increments when:
 
-- the resulting version after a committed mutation
-- the current project-wide version observed for read-only results, `ToolDryRunResponse` previews, and temporary staging responses
+- A `dry_run=false` state-changing call commits through an owner-allowed branch.
+
+Does not increment when:
+
+- A response only observes state, previews a dry-run effect, stages temporary data, or rejects before commit.
+
+Retry behavior:
+
+- Stale writes compare `ToolEnvelope.expected_state_version` with the current `project_state.state_version` before commit.
+- Transport uncertainty for a committed state-changing request is handled by idempotency replay, not by adding another state-version increment.
+
+Owner links:
+
+- Branch-level persistence effects belong to [Storage Effects](storage-effects.md) and the method owner documents routed from the [MVP API router](api/mvp-api.md).
 
 This summary table shows branch-level outcomes. Detail blocks keep conditions, results, and exceptions separate.
 
@@ -46,58 +63,100 @@ This summary table shows branch-level outcomes. Detail blocks keep conditions, r
 <a id="state-version-read-only-status"></a>
 **Read-only status**
 
-Condition:
+Meaning:
 
 - A read-only call such as `harness.status` observes current state.
 
-Result:
+Increments when:
 
-- `project_state.state_version` does not increment.
+- None. A read-only call does not increment by itself.
 
-Not allowed storage effects:
+Does not increment when:
 
-- current record creation or mutation
-- event append
-- replay row creation
+- The call only observes current state.
+- The call must not create or mutate current records, append events, or create replay rows.
+
+Retry behavior:
+
+- A repeated read-only call observes the then-current project-wide version; it is not idempotency replay.
+
+Owner links:
+
+- Method-specific no-effect branch details belong to [Storage Effects](storage-effects.md).
 
 <a id="state-version-rejected-response"></a>
 **Rejected response**
 
-Condition:
+Meaning:
 
 - `ToolRejectedResponse` returns before commit.
 
-Result:
+Increments when:
+
+- None. A pre-commit rejection does not increment by itself.
+
+Does not increment when:
 
 - The requested state change is not performed.
 - `project_state.state_version` does not increment.
 
+Retry behavior:
+
+- Retry follows the rejected reason: refresh state for stale version conflicts, fix invalid input for validation failures, or use the owner-required route for any judgment or authorization that is still needed.
+
+Owner links:
+
+- Public error-code routing belongs to [API Errors](api/errors.md).
+- Branch storage effects belong to [Storage Effects](storage-effects.md).
+
 <a id="state-version-successful-mutation"></a>
 **Successful mutation**
 
-Condition:
+Meaning:
 
 - A `dry_run=false` state change commits.
 
-Result:
+Increments when:
 
 - Project-wide state changes.
 - `project_state.state_version` increments exactly once per commit.
 
+Does not increment when:
+
+- The request reaches only a preview, rejection, replay, read-only result, or other no-effect branch.
+
+Retry behavior:
+
+- Retrying the same committed request through idempotency replay returns the original response and does not repeat the state change.
+
+Owner links:
+
+- Method-specific storage effects belong to [Storage Effects](storage-effects.md) and method owner documents.
+
 <a id="state-version-committed-blocked-result"></a>
 **Committed blocked result**
 
-Condition:
+Meaning:
 
 - The method owner allows a blocked result to commit.
-
-Result:
-
 - Whether the blocked result has a state effect is defined by the method owner and [committed blocked result storage effects](storage-effects.md#committed-blocked-result).
 
-Exception:
+Increments when:
 
-- A blocked result does not automatically increment `project_state.state_version`.
+- The method owner allows blocker or other current-row mutation storage and [Storage Effects](storage-effects.md) allows a `state_version` effect for that branch.
+
+Does not increment when:
+
+- A blocked result has no owner-defined state effect.
+- A blocked result merely exists; it does not automatically increment `project_state.state_version`.
+
+Retry behavior:
+
+- Follow the method owner and the failure/retry rules for the branch that produced the blocked result.
+
+Owner links:
+
+- Blocked-result storage effects belong to [Storage Effects](storage-effects.md#committed-blocked-result) and the affected method owner.
 
 The active first schema should omit `tasks.state_version`.
 
@@ -108,7 +167,7 @@ If an implementation encounters a legacy or prototype `tasks.state_version` colu
 - authorization
 - `STATE_VERSION_CONFLICT`
 - stale-state basis
-- Write Authorization basis
+- `Write Authorization` basis
 - idempotency basis
 - lock basis
 - concurrency basis
@@ -121,21 +180,41 @@ Related storage fields record the project-wide clock:
 
 ## Incrementing cases
 
-Condition: A new `dry_run=false` call commits an actual state change.
+Meaning:
 
-Result: `project_state.state_version` increments by exactly 1.
+- An increment means one committed project-wide state change.
+- One public call can update Task lifecycle fields and project-level fields together. That is still one state change and one increment.
 
-One public call can update Task lifecycle fields and project-level fields together. That is still one state change and one increment.
+Increments when:
 
-Example: `harness.close_task intent=supersede` may update both `tasks.lifecycle_phase` and `project_state.active_task_id` in the same commit.
+- A new `dry_run=false` call commits an actual state change.
+- `project_state.state_version` increments by exactly 1.
+- Example: `harness.close_task intent=supersede` may update both `tasks.lifecycle_phase` and `project_state.active_task_id` in the same commit.
 
-Exception: A committed blocked result does not automatically increment. It may increment only when the method owner allows blocker or other current-row mutation storage and [Storage Effects](storage-effects.md) allows a `state_version` effect for that branch.
+Does not increment when:
 
-Owner links: method-specific persistence effects belong to [Storage Effects](storage-effects.md) and the method owner documents routed from the [MVP API router](api/mvp-api.md).
+- A committed blocked result has no owner-defined state effect.
+- A committed blocked result merely exists; it does not automatically increment `project_state.state_version`.
+
+Retry behavior:
+
+- A replay of the already committed response does not create another increment.
+
+Owner links:
+
+- Method-specific persistence effects belong to [Storage Effects](storage-effects.md) and the method owner documents routed from the [MVP API router](api/mvp-api.md).
 
 ## Non-incrementing cases
 
-These branches do not increment `project_state.state_version`:
+Meaning:
+
+- No-effect branches may report an observed `state_version`, but they do not create a new one.
+
+Increments when:
+
+- None. The branches listed in this section do not increment.
+
+Does not increment when:
 
 - `harness.status`
 - `harness.close_task intent=check`
@@ -148,19 +227,44 @@ These branches do not increment `project_state.state_version`:
 - idempotent replay
 - no-effect rejected responses
 
-Result: These branches must not create current records, `task_events`, replay rows, artifact promotion, evidence summaries, `Write Authorization` creation or consumption, `close_state` mutation, or `project_state.state_version` increment.
+These branches must not create:
 
-Exception: Idempotent replay may return an already committed original response. It still creates no new state change, new event, or new `state_version` increment.
+- current records
+- `task_events`
+- replay rows
+- artifact promotion
+- evidence summaries
+- `Write Authorization` creation or consumption
+- `close_state` mutation
+- `project_state.state_version` increment
 
-Owner links: The detailed branch list and method-specific exceptions belong to [Storage Effects](storage-effects.md).
+Retry behavior:
+
+- Idempotent replay may return an already committed original response.
+- Replay still creates no new state change, new event, or new `state_version` increment.
+
+Owner links:
+
+- The detailed branch list and method-specific exceptions belong to [Storage Effects](storage-effects.md).
 
 ## `expected_state_version`
 
-Condition: A new `dry_run=false` state-changing API call compares `ToolEnvelope.expected_state_version` with the current `project_state.state_version` before commit.
+Meaning:
 
-Result: If the values match, the call may continue to commit after other validation passes. If the values do not match, Core returns `STATE_VERSION_CONFLICT` only in `ToolRejectedResponse.errors`.
+- `expected_state_version` is a freshness condition for stale writes.
+- A new `dry_run=false` state-changing API call compares `ToolEnvelope.expected_state_version` with the current `project_state.state_version` before commit.
+- `expected_state_version` does not replace user-owned judgment, sensitive-action approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
 
-Rejected result: A stale-state conflict does not create or change:
+Increments when:
+
+- The values match, other validation passes, and the call later commits an owner-allowed state change.
+
+Does not increment when:
+
+- The values do not match.
+- Core returns `STATE_VERSION_CONFLICT` only in `ToolRejectedResponse.errors`.
+
+A stale-state conflict does not create or change:
 
 - `CloseReadinessBlocker`
 - current record
@@ -172,15 +276,29 @@ Rejected result: A stale-state conflict does not create or change:
 - replay row
 - `project_state.state_version` increment
 
-Non-claim: `expected_state_version` is a freshness condition for stale writes. It does not replace user-owned judgment, sensitive-action approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
+Retry behavior:
 
-Public error boundary: `STATE_VERSION_CONFLICT` is the only active current MVP public `ErrorCode` for project-wide state-version mismatch. No active current MVP call requires or accepts more than one public `expected_state_version`.
+- Read current state again.
+- Send a new request with the latest `project_state.state_version`.
 
-Related storage field: stale Write Authorization detection compares `write_authorizations.basis_state_version` with the current `project_state.state_version`.
+Public API boundary:
 
-Public API effect: when that mismatch is surfaced through the public API, the public error is also `STATE_VERSION_CONFLICT`.
+- `STATE_VERSION_CONFLICT` is the only active current MVP public `ErrorCode` for project-wide state-version mismatch.
+- No active current MVP call requires or accepts more than one public `expected_state_version`.
+- When that mismatch is surfaced through the public API, the public error is also `STATE_VERSION_CONFLICT`.
 
-Not allowed: the call must be rejected before consumption and must not change the Write Authorization status unless another current contract explicitly says so.
+Related storage field:
+
+- Stale `Write Authorization` detection compares `write_authorizations.basis_state_version` with the current `project_state.state_version`.
+
+Owner links:
+
+- Public error-code routing belongs to [API Errors](api/errors.md).
+
+Not allowed:
+
+- The call must be rejected before consumption.
+- The call must not change the `Write Authorization` status unless another current contract explicitly says so.
 
 ## Event meaning
 
@@ -218,7 +336,7 @@ For `harness.record_run`, the same transaction also includes:
 - staged-handle consumption in `artifact_staging`
 - artifact promotion/linking
 - evidence update
-- Write Authorization consumption
+- `Write Authorization` consumption
 - event append
 - replay-row insert
 - exactly one `project_state.state_version` increment
@@ -228,7 +346,7 @@ If any part fails, the transaction must leave no partial:
 - authority row
 - staging consumption
 - persistent artifact promotion/linking
-- Write Authorization consumption
+- `Write Authorization` consumption
 - evidence update
 - event
 - close effect
@@ -237,13 +355,23 @@ If any part fails, the transaction must leave no partial:
 
 ## Idempotency and replay
 
-This section explains idempotency and replay meaning.
+Meaning:
 
-Condition: `tool_invocations` stores exact replay only for committed `dry_run=false` Core `MethodResult` responses whose API method state-effect row creates replay.
+- `tool_invocations` stores exact replay only for committed `dry_run=false` Core `MethodResult` responses whose API method state-effect row creates replay.
+- The storage unique key is `(project_id, tool_name, idempotency_key)`.
+- `request_hash` is the conflict discriminator stored in that row.
+- `tool_invocations.response_json` stores only the exact committed `dry_run=false` Core `MethodResult` response for a replay-row-creating state effect.
 
-Storage key: The storage unique key is `(project_id, tool_name, idempotency_key)`. `request_hash` is the conflict discriminator stored in that row.
+Increments when:
 
-Stored response: `tool_invocations.response_json` stores only the exact committed `dry_run=false` Core `MethodResult` response for a replay-row-creating state effect.
+- Only the original committed state-changing request can create a `state_version` increment.
+- The replay row is stored with that original committed response.
+
+Does not increment when:
+
+- The same `idempotency_key` and same `request_hash` are replayed.
+- Core returns the original committed response.
+- Core rejects reuse of the same `idempotency_key` with a different `request_hash`.
 
 Branches not stored:
 
@@ -254,42 +382,95 @@ Branches not stored:
 - `StatusResult`
 - successful `StageArtifactResult` staging result
 
-Replay result: If the same `idempotency_key` and same `request_hash` are replayed, Core returns the original committed response. It does not append events, promote or link artifacts, consume Write Authorization, or change state again.
+Retry behavior:
 
-Conflict result: If the same `idempotency_key` is reused with a different `request_hash`, Core returns `STATE_VERSION_CONFLICT` as defined by [state version conflict](api/errors.md#state-conflict-behavior).
+- If the same `idempotency_key` and same `request_hash` are replayed, Core returns the original committed response.
+- Replay does not append events, promote or link artifacts, consume `Write Authorization`, or change state again.
+- If the same `idempotency_key` is reused with a different `request_hash`, Core returns `STATE_VERSION_CONFLICT` as defined by [state version conflict](api/errors.md#state-conflict-behavior).
+
+Owner links:
+
+- Public conflict behavior belongs to [API Errors](api/errors.md#state-conflict-behavior).
+- Branch storage effects belong to [Storage Effects](storage-effects.md).
 
 Non-claim: `request_hash` must not be added to a second uniqueness key that would allow the same idempotency key to fork into multiple committed responses.
 
 ## Lock policy
 
-Runtime mutations serialize through Core-owned state-changing paths, with ordinary SQLite transactions and a process/project lock if needed. Authority placement is owned by [Runtime Boundaries](runtime-boundaries.md).
+Meaning:
 
-The active current MVP does not require a `persistent_locks` table. Durable lock/recovery metadata is later operations material until an owner promotes it.
+- Runtime mutations serialize through Core-owned state-changing paths.
+- Core uses ordinary SQLite transactions and a process/project lock if needed.
+- Locks protect concurrent state writes.
 
-Locks protect concurrent state writes. Security guarantee wording and non-claims belong to [Security](security.md).
+Increments when:
+
+- The protected operation commits an owner-allowed state change under the normal `state_version` rules.
+
+Does not increment when:
+
+- Lock acquisition or release does not itself define a public state change.
+- The active current MVP does not require a `persistent_locks` table.
+- Durable lock/recovery metadata is later operations material until an owner promotes it.
+
+Retry behavior:
+
+- Retrying after transport uncertainty still follows idempotency and state-version rules.
+- A lock does not override stale `expected_state_version`, user-owned judgment, or authorization boundaries.
+
+Owner links:
+
+- Authority placement belongs to [Runtime Boundaries](runtime-boundaries.md).
+- Security guarantee wording and non-claims belong to [Security](security.md).
 
 ## Migration boundary
 
-No migration runner exists in this repository, and no runtime data exists to migrate. This document does not define migration steps for existing runtime data. Before runtime implementation, maintainers must separately accept the actual DDL, migration mechanism, storage profile, and tightening behavior.
+Meaning:
+
+- No migration runner exists in this repository.
+- No runtime data exists to migrate.
+- This document does not define migration steps for existing runtime data.
+- Before runtime implementation, maintainers must separately accept the actual DDL, migration mechanism, storage profile, and tightening behavior.
+
+Increments when:
+
+- None for active current MVP migration execution.
+- No public API `state_version` increment is defined here for migrations.
+- A future accepted migration must state its version and storage-profile behavior in its owning documentation.
+
+Does not increment when:
+
+- Status cards, compact views, projection freshness, close readiness, and report prose are derived from current records at read time.
+- Derived read-time material is not migration authority, repair input, or a storage mutation path.
+
+Retry behavior:
+
+- Each future migration must declare a source version, target version, storage profile, owner, and rollback or repair expectation before it is accepted.
+- Future migrations must run transactionally for `registry.sqlite` or one `state.sqlite` at a time, with a clear interrupted-state recovery rule before runtime implementation.
+
+Owner links:
+
+- Record layout and DDL belong to [Storage Records](storage-records.md).
+- Runtime Home separation belongs to [Runtime Boundaries](runtime-boundaries.md).
 
 The active migration boundary is:
 
 - Store schema/profile version in Runtime Home metadata and `project_state`, or an equivalent maintainer-accepted mechanism.
-- Each future migration must declare a source version, target version, storage profile, owner, and rollback or repair expectation before it is accepted.
-- Run future migrations transactionally for `registry.sqlite` or one `state.sqlite` at a time, with a clear interrupted-state recovery rule before runtime implementation.
 - Validate owner-shaped JSON before commit and before tightening constraints.
 - Treat unknown owner-bound status or enum values as invalid until an owner defines them.
 - Tighten nullable fields, foreign keys, enum checks, and JSON validation only after existing rows have been validated or routed to an owner-defined repair state.
 - Preserve `task_events.event_seq` ordering when `task_events` is retained.
 - Preserve artifact hashes and owner links, or mark affected refs invalid for recovery.
 - Preserve committed `tool_invocations` replay rows so idempotency does not fork after migration.
-- Keep status cards, compact views, projection freshness, close readiness, and report prose derived from current records at read time. They are not migration authority, repair input, or storage mutation paths.
 
 This document intentionally excludes inactive DDL bundles, migration catalogs, and profile-specific migration details.
 
 ## Failures and retry
 
-Pre-commit failures have no storage effect.
+Meaning:
+
+- Pre-commit failures have no storage effect.
+- Transaction failures must leave no partial result.
 
 Examples:
 - stale `expected_state_version`
@@ -298,9 +479,14 @@ Examples:
 - malformed request
 - idempotency request-hash conflict
 
-Effect: these failures end in `ToolRejectedResponse` before commit and do not increment `state_version`.
+Increments when:
 
-Transaction failures must leave no partial result.
+- Only a complete committed state-changing transaction increments `state_version`.
+
+Does not increment when:
+
+- These failures end in `ToolRejectedResponse` before commit.
+- Any part of a new committed `dry_run=false` state change fails.
 
 If any part of a new committed `dry_run=false` state change fails, storage must not partially leave:
 
@@ -308,12 +494,15 @@ If any part of a new committed `dry_run=false` state change fails, storage must 
 - events
 - replay rows
 - artifact effects
-- Write Authorization consumption
+- `Write Authorization` consumption
 - evidence updates
 - close effects
 - `state_version` increment
 
-Retry rules depend on the failure type. The summary table routes to detail blocks.
+Retry behavior:
+
+- Retry rules depend on the failure type.
+- The summary table routes to detail blocks.
 
 | Situation | Retry route |
 |---|---|
@@ -325,7 +514,7 @@ Retry rules depend on the failure type. The summary table routes to detail block
 <a id="retry-stale-expected-state-version"></a>
 **Stale `expected_state_version`**
 
-Retry method:
+Retry behavior:
 
 - Read current state again.
 - Send a new request with the latest `project_state.state_version`.
@@ -337,7 +526,7 @@ Note:
 <a id="retry-transport-uncertainty"></a>
 **Transport uncertainty**
 
-Retry method:
+Retry behavior:
 
 - Retry with the same `idempotency_key` and same `request_hash`.
 
@@ -348,7 +537,7 @@ Note:
 <a id="retry-different-request-same-key"></a>
 **Different request with same key**
 
-Retry method:
+Retry behavior:
 
 - Do not retry with the reused key.
 - Use a new idempotency key.
@@ -360,7 +549,7 @@ Note:
 <a id="retry-pre-commit-validation-failure"></a>
 **Pre-commit validation failure**
 
-Retry method:
+Retry behavior:
 
 - Fix the request.
 - Send a new request.
@@ -370,6 +559,11 @@ Note:
 - The failed request did not create a replay row.
 
 Retry does not lower user-judgment boundaries. If a new acceptance, sensitive-action approval, residual-risk acceptance, or `Write Authorization` is needed after failure, the owning route must be used again.
+
+Owner links:
+
+- Public conflict errors belong to [API Errors](api/errors.md).
+- Branch storage effects belong to [Storage Effects](storage-effects.md).
 
 ## Related owners
 
