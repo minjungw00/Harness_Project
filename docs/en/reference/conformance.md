@@ -12,11 +12,11 @@ For the canonical current scope, see [Active MVP scope](active-mvp-scope.md). Cu
 
 | Item | Current status | Details |
 |---|---|---|
-| current documentation criteria | active reference criteria | See [Current documentation criteria](#current-documentation-criteria) |
-| internal smoke target | planned/documented | See [Internal smoke target](#internal-smoke-target) |
-| future fixture shape | candidate future format | See [Future fixture shape](#future-fixture-shape) |
-| future executable fixtures | not implemented | See [Future executable fixtures](#future-executable-fixtures) |
-| runtime conformance report | later candidate; not implemented | See [Runtime conformance report](#runtime-conformance-report) |
+| current documentation criteria | active documentation criteria; not runtime results | See [Current documentation criteria](#current-documentation-criteria) |
+| internal smoke target | planned/documented; not executable here | See [Internal smoke target](#internal-smoke-target) |
+| future fixture shape | candidate future format; not executable here | See [Future fixture shape](#future-fixture-shape) |
+| future executable fixtures | not implemented; not executable here | See [Future executable fixtures](#future-executable-fixtures) |
+| runtime conformance report | later candidate; not implemented; not executable here | See [Runtime conformance report](#runtime-conformance-report) |
 
 <a id="current-documentation-criteria"></a>
 ### Current documentation criteria
@@ -25,7 +25,7 @@ Current status:
 - Active reference criteria for documentation review and future planning.
 
 Executable now:
-- No runtime execution. These criteria do not run a Harness Server or create runtime records.
+- No runtime execution. These criteria do not run a Harness Server, execute a conformance suite, or create runtime records.
 
 Owner:
 - `docs/en/reference/conformance.md`
@@ -55,7 +55,7 @@ Current status:
 - Candidate future format documented by this reference.
 
 Executable now:
-- No. This repository contains no executable fixture files, fixture directory, or fixture runner.
+- No. This repository contains no executable fixture files, fixture directory, fixture runner, or suite entry point.
 
 Owner:
 - `docs/en/reference/conformance.md`
@@ -85,7 +85,7 @@ Current status:
 - Later candidate and not implemented.
 
 Executable now:
-- No. This repository contains no conformance runner, generated conformance reports, or runtime conformance results.
+- No. This repository contains no conformance runner, suite entry point, generated conformance reports, or runtime conformance results.
 
 Owner:
 - [Later Candidate Index](../later/index.md)
