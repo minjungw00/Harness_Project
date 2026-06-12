@@ -77,7 +77,7 @@ ToolEnvelope:
 - `expected_state_version`은 상태 변경 메서드가 쓰는 프로젝트 전체 상태 시계를 가리킵니다.
 
 우선순위:
-- 메서드별 `task_id` 필드가 있으면 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 설명하는 대로 그 필드가 우선합니다.
+- 메서드별 `task_id` 필드가 있으면 [공통 요청 래퍼와 응답 분기 경로](mvp-api.md#공통-요청-규칙)가 설명하는 대로 그 필드가 우선합니다.
 
 담당 문서 링크:
 - 충돌 동작: [상태 버전 충돌](errors.md#state-conflict-behavior)
@@ -124,7 +124,7 @@ ToolDryRunResponse:
 
 담당 문서 링크:
 - 활성 `response_kind`와 `effect_kind` 값: [응답과 효과 값](schema-value-sets.md#응답과-효과-값)
-- 공통 분기 읽기 규칙: [공통 요청 규칙](mvp-api.md#공통-요청-규칙)
+- 공통 분기 읽기 규칙: [공통 요청 래퍼와 응답 분기 경로](mvp-api.md#공통-요청-규칙)
 - 메서드별 상태 효과: 메서드 담당 문서
 - 공개 오류 우선순위: [API 오류](errors.md)
 

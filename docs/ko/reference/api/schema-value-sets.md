@@ -75,7 +75,7 @@ staging_created
 no_effect
 ```
 
-`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 읽기 규칙은 [공통 요청 규칙](mvp-api.md#공통-요청-규칙)이 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류](errors.md)가 담당합니다.
+`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 읽기 규칙은 [공통 요청 래퍼와 응답 분기 경로](mvp-api.md#공통-요청-규칙)가 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류](errors.md)가 담당합니다.
 
 <a id="access-class-values"></a>
 ## 접근 등급 값
@@ -95,7 +95,7 @@ no_effect
 
 - 결과: 접근 등급은 하네스 API 호환성 분류입니다.
 - 비주장: 접근 등급은 OS 권한 분류가 아닙니다.
-- 담당 문서: 로컬 접점 확인 동작은 [공통 요청 규칙](mvp-api.md#공통-요청-규칙), [에이전트 통합](../agent-integration.md), [보안](../security.md)에 남습니다.
+- 담당 문서: 로컬 접점 확인 동작은 [공통 요청 래퍼와 응답 분기 경로](mvp-api.md#공통-요청-규칙), [에이전트 통합](../agent-integration.md), [보안](../security.md)에 남습니다.
 
 <a id="record-and-reference-values"></a>
 ## 기록과 참조 값

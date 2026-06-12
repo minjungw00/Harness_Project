@@ -272,7 +272,7 @@ Focus:
 
 Owner links:
 - [Agent Integration](agent-integration.md)
-- [Shared request rules](api/mvp-api.md#shared-request-rules)
+- [Shared envelope and response branch routes](api/mvp-api.md#shared-request-rules)
 - [Storage Effects](storage-effects.md)
 
 <a id="scenario-mvp-active-single-access-class-per-public-request"></a>
@@ -283,7 +283,7 @@ Focus:
 
 Owner links:
 - [API Value Sets](api/schema-value-sets.md)
-- [Shared request rules](api/mvp-api.md#shared-request-rules)
+- [Shared envelope and response branch routes](api/mvp-api.md#shared-request-rules)
 - [Security](security.md)
 
 <a id="scenario-mvp-active-detective-display-capability-gated"></a>

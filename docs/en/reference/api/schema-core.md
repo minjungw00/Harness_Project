@@ -77,7 +77,7 @@ Meaning:
 - `expected_state_version` names the project-wide state clock used by state-changing methods.
 
 Precedence:
-- Method-specific `task_id` fields, when present, take precedence as described by [shared request rules](mvp-api.md#shared-request-rules).
+- Method-specific `task_id` fields, when present, take precedence as described by the [shared envelope and response branch routes](mvp-api.md#shared-request-rules).
 
 Owner links:
 - conflict behavior: [state version conflict](errors.md#state-conflict-behavior)
@@ -124,7 +124,7 @@ Not implied:
 
 Owner links:
 - active `response_kind` and `effect_kind` values: [response and effect values](schema-value-sets.md#response-and-effect-values)
-- shared branch reading: [shared request rules](mvp-api.md#shared-request-rules)
+- shared branch reading: [shared envelope and response branch routes](mvp-api.md#shared-request-rules)
 - method-specific state effects: method owner documents
 - public error precedence: [API Errors](errors.md)
 

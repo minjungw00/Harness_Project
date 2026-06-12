@@ -340,6 +340,7 @@ write_decision_reasons:
 - [저장소 기록](storage-records.md)
 - [저장소 버전 관리](storage-versioning.md)
 
+<a id="harnessupdate_scope"></a>
 ### `harness.update_scope`
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
@@ -383,6 +384,7 @@ write_decision_reasons:
 
 - [`harness.status` 메서드](api/method-status.md)
 
+<a id="harnessprepare_write"></a>
 ### `harness.prepare_write`
 
 `decision=allowed`로 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
@@ -425,6 +427,7 @@ write_decision_reasons:
 - [저장소 기록](storage-records.md)
 - [저장소 버전 관리](storage-versioning.md)
 
+<a id="harnessstage_artifact"></a>
 ### `harness.stage_artifact`
 
 성공한 스테이징은 다음을 수행할 수 있습니다.
@@ -459,6 +462,7 @@ write_decision_reasons:
 - [`harness.stage_artifact` 메서드](api/method-stage-artifact.md)
 - [아티팩트 저장소](storage-artifacts.md)
 
+<a id="harnessrecord_run"></a>
 ### `harness.record_run`
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
@@ -515,6 +519,7 @@ state_version: 21
 - [아티팩트 저장소](storage-artifacts.md)
 - [저장소 기록](storage-records.md)
 
+<a id="harnessrequest_user_judgment"></a>
 ### `harness.request_user_judgment`
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
@@ -544,6 +549,7 @@ state_version: 21
 - [`harness.request_user_judgment` 메서드](api/method-user-judgment.md#harnessrequest_user_judgment)
 - [저장소 기록](storage-records.md)
 
+<a id="harnessrecord_user_judgment"></a>
 ### `harness.record_user_judgment`
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
@@ -572,6 +578,7 @@ state_version: 21
 - [`harness.record_user_judgment` 메서드](api/method-user-judgment.md#harnessrecord_user_judgment)
 - [저장소 기록](storage-records.md)
 
+<a id="harnessclose_task-intentcheck"></a>
 ### `harness.close_task intent=check`
 
 읽기 전용 호출은 다음 특성을 가집니다.
@@ -594,6 +601,7 @@ state_version: 21
 
 - [`harness.close_task` 메서드](api/method-close-task.md)
 
+<a id="harnessclose_task-intentcomplete"></a>
 ### `harness.close_task intent=complete`
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
@@ -616,6 +624,7 @@ state_version: 21
 - [`harness.close_task` 메서드](api/method-close-task.md)
 - [저장소 버전 관리](storage-versioning.md)
 
+<a id="harnessclose_task-intentcancel"></a>
 ### `harness.close_task intent=cancel`
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
@@ -640,6 +649,7 @@ state_version: 21
 - [`harness.close_task` 메서드](api/method-close-task.md)
 - [저장소 버전 관리](storage-versioning.md)
 
+<a id="harnessclose_task-intentsupersede"></a>
 ### `harness.close_task intent=supersede`
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.

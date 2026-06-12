@@ -753,7 +753,7 @@ Avoid:
 
 Owner:
 - [API Value Sets](api/schema-value-sets.md)
-- [Shared request rules](api/mvp-api.md#shared-request-rules)
+- [Shared envelope and response branch routes](api/mvp-api.md#shared-request-rules)
 - [Security](security.md)
 
 Notes:

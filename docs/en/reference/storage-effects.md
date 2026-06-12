@@ -331,6 +331,7 @@ Owner links:
 - [Storage Records](storage-records.md)
 - [Storage Versioning](storage-versioning.md)
 
+<a id="harnessupdate_scope"></a>
 ### `harness.update_scope`
 
 Committed `dry_run=false` may:
@@ -374,6 +375,7 @@ Owner links:
 
 - [`harness.status` method](api/method-status.md)
 
+<a id="harnessprepare_write"></a>
 ### `harness.prepare_write`
 
 Committed `dry_run=false` with `decision=allowed` may:
@@ -416,6 +418,7 @@ Owner links:
 - [Storage Records](storage-records.md)
 - [Storage Versioning](storage-versioning.md)
 
+<a id="harnessstage_artifact"></a>
 ### `harness.stage_artifact`
 
 Successful staging may:
@@ -450,6 +453,7 @@ Owner links:
 - [`harness.stage_artifact` method](api/method-stage-artifact.md)
 - [Artifact Storage](storage-artifacts.md)
 
+<a id="harnessrecord_run"></a>
 ### `harness.record_run`
 
 Committed `dry_run=false` may:
@@ -506,6 +510,7 @@ Owner links:
 - [Artifact Storage](storage-artifacts.md)
 - [Storage Records](storage-records.md)
 
+<a id="harnessrequest_user_judgment"></a>
 ### `harness.request_user_judgment`
 
 Committed `dry_run=false` may:
@@ -535,6 +540,7 @@ Owner links:
 - [`harness.request_user_judgment` method](api/method-user-judgment.md#harnessrequest_user_judgment)
 - [Storage Records](storage-records.md)
 
+<a id="harnessrecord_user_judgment"></a>
 ### `harness.record_user_judgment`
 
 Committed `dry_run=false` may:
@@ -563,6 +569,7 @@ Owner links:
 - [`harness.record_user_judgment` method](api/method-user-judgment.md#harnessrecord_user_judgment)
 - [Storage Records](storage-records.md)
 
+<a id="harnessclose_task-intentcheck"></a>
 ### `harness.close_task intent=check`
 
 Read-only calls:
@@ -585,6 +592,7 @@ Owner links:
 
 - [`harness.close_task` method](api/method-close-task.md)
 
+<a id="harnessclose_task-intentcomplete"></a>
 ### `harness.close_task intent=complete`
 
 Committed `dry_run=false` may:
@@ -607,6 +615,7 @@ Owner links:
 - [`harness.close_task` method](api/method-close-task.md)
 - [Storage Versioning](storage-versioning.md)
 
+<a id="harnessclose_task-intentcancel"></a>
 ### `harness.close_task intent=cancel`
 
 Committed `dry_run=false` may:
@@ -631,6 +640,7 @@ Owner links:
 - [`harness.close_task` method](api/method-close-task.md)
 - [Storage Versioning](storage-versioning.md)
 
+<a id="harnessclose_task-intentsupersede"></a>
 ### `harness.close_task intent=supersede`
 
 Committed `dry_run=false` may:

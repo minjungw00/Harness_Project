@@ -272,7 +272,7 @@
 
 담당 문서 링크:
 - [에이전트 통합](agent-integration.md)
-- [공통 요청 규칙](api/mvp-api.md#공통-요청-규칙)
+- [공통 요청 래퍼와 응답 분기 경로](api/mvp-api.md#공통-요청-규칙)
 - [저장 효과](storage-effects.md)
 
 <a id="scenario-mvp-active-single-access-class-per-public-request"></a>
@@ -283,7 +283,7 @@
 
 담당 문서 링크:
 - [API 값 집합](api/schema-value-sets.md)
-- [공통 요청 규칙](api/mvp-api.md#공통-요청-규칙)
+- [공통 요청 래퍼와 응답 분기 경로](api/mvp-api.md#공통-요청-규칙)
 - [보안](security.md)
 
 <a id="scenario-mvp-active-detective-display-capability-gated"></a>
