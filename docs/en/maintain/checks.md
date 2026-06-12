@@ -185,6 +185,7 @@ Fix:
 
 Owner:
 - [Authoring Guide](authoring-guide.md)
+- [Korean Translation Guide](../../ko/maintain/translation-guide.md)
 - [MVP API router](../reference/api/mvp-api.md)
 - The affected Reference owner selected from [Reference Index](../reference/README.md)
 
@@ -195,6 +196,7 @@ Check:
 - Confirm documentation paths are used as example payload only when the document is specifically about documentation maintenance.
 - Confirm example wording does not narrate a documentation maintenance process instead of a product or user scenario.
 - Confirm paired English and Korean examples preserve equivalent scenario details.
+- Confirm shared example scenarios in Korean documents use natural Korean wording, avoid compressed noun chains, and do not preserve English noun order when a natural Korean phrase is clearer.
 
 Failure:
 - Example payload includes internal documentation paths when the document is not about documentation maintenance.
@@ -203,6 +205,7 @@ Failure:
 - Example wording describes a documentation maintenance process instead of a product or user scenario.
 - The shared API sample task changes in one language, route, or check but not the paired owner set.
 - One language keeps a different scenario after paired updates.
+- A Korean shared example scenario uses compressed noun chains or preserved English noun order that makes the scenario harder to read.
 
 Fix:
 - Replace the example with a durable product or user scenario.
@@ -210,6 +213,7 @@ Fix:
 - Keep file paths only when the document is explicitly about documentation maintenance.
 - Remove process-only wording and make the scenario durable.
 - Update paired English and Korean examples by meaning unit.
+- Rewrite the Korean shared scenario wording as natural Korean while preserving equivalent scenario details.
 
 ### CHK-EXAMPLE-INTERNAL-CONSISTENCY: API example internal consistency
 
