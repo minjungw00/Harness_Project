@@ -57,7 +57,9 @@ Non-claims:
 |---|---|
 | `intent=check` | Always read-only and never increments state, including when `dry_run=true`. |
 | Committed terminal close or committed blocked close for mutating intents | Increments `project_state.state_version` exactly once. |
-| Close preflight rejection, stale `expected_state_version`, stale close-relevant `WriteAuthorization.basis_state_version`, idempotency request-hash conflict, or dry-run preview | Increments nothing. |
+| Pre-commit failure or dry-run preview | Increments nothing. |
+
+Pre-commit failure includes close preflight rejection, stale `expected_state_version`, stale close-relevant `WriteAuthorization.basis_state_version`, and idempotency request-hash conflict.
 
 ## Success result
 

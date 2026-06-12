@@ -68,9 +68,9 @@
 | 닫기 준비 상태 확인 | [Task 닫기 메서드](api/method-close-task.md), [API 상태 스키마](api/schema-state.md), [오류](api/errors.md) |
 | 쓰기 준비 승인 | [쓰기 준비 메서드](api/method-prepare-write.md), [저장 효과](storage-effects.md), [보안](security.md) |
 | 로컬 접점 등록 | [에이전트 통합](agent-integration.md), [접점별 사용 레시피](../use/surface-recipes.md), [보안](security.md) |
-| 아티팩트 스테이징 | [아티팩트 스테이징 메서드](api/method-stage-artifact.md), [API 아티팩트 스키마](api/schema-artifacts.md), [아티팩트 저장소](storage-artifacts.md), [저장 효과](storage-effects.md) |
+| 아티팩트 스테이징 | [아티팩트 스테이징 담당 문서](#artifact-staging-owners) 참고 |
 | 실행 및 증거 기록 | [실행 기록 메서드](api/method-record-run.md), [저장 효과](storage-effects.md), [Core 모델](core-model.md) |
-| 집중된 사용자 판단 기록 | [사용자 판단 메서드](api/method-user-judgment.md), [Core 모델](core-model.md), [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md) |
+| 집중된 사용자 판단 기록 | [사용자 판단 담당 문서](#user-judgment-owners) 참고 |
 | 닫기 시도 | [Task 닫기 메서드](api/method-close-task.md), [Core 모델](core-model.md), [오류](api/errors.md) |
 
 평이한 언어 입력과 Task 생성:
@@ -91,6 +91,12 @@
 - 현재 MVP에서의 의미: 등록된 로컬 접점은 활성 접점과 지원 역량을 식별할 수 있습니다.
 - 조건: 이 사실은 현재 범위 확인에만 사용됩니다.
 
+<a id="artifact-staging-owners"></a>
+아티팩트 스테이징 담당 문서:
+- 메서드 동작: [아티팩트 스테이징 메서드](api/method-stage-artifact.md).
+- API 형태: [API 아티팩트 스키마](api/schema-artifacts.md).
+- 생명주기와 저장 효과: [아티팩트 저장소](storage-artifacts.md), [저장 효과](storage-effects.md).
+
 아티팩트 스테이징:
 - 현재 MVP에서의 의미: 새 아티팩트 바이트는 활성 스테이징 경로로 현재 범위에 들어올 수 있습니다.
 - 조건: 기존 아티팩트는 호환되는 지속 아티팩트 참조를 통해서만 연결됩니다.
@@ -98,6 +104,12 @@
 실행 및 증거 기록:
 - 현재 MVP에서의 의미: 활성 작업의 실행 기록과 간결한 증거 요약을 남길 수 있습니다.
 - 조건: 호환되는 아티팩트 승격이나 연결은 아티팩트 담당 문서가 허용할 때만 포함됩니다.
+
+<a id="user-judgment-owners"></a>
+사용자 판단 담당 문서:
+- 메서드 동작: [사용자 판단 메서드](api/method-user-judgment.md).
+- 제품 의미: [Core 모델](core-model.md).
+- API 형태와 값: [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md).
 
 집중된 사용자 판단 기록:
 - 현재 MVP에서의 의미: 활성 판단 경로로 사용자 소유 판단을 요청하고 기록할 수 있습니다.
@@ -149,7 +161,10 @@
 
 ## 이후 후보
 
-[이후 후보 색인](../later/index.md)은 미뤄 둔 후보 이름과 승격 경계를 담당합니다. 이후 후보는 담당 문서가 좁은 기능 범위, 대체 동작, 증명 기대, 한영 문서 동시 유지를 갖춰 승격하기 전까지 동작하지 않습니다.
+[이후 후보 색인](../later/index.md)은 미뤄 둔 후보 이름과 승격 경계를 담당합니다.
+
+승격 조건:
+- 이후 후보는 담당 문서가 좁은 기능 범위, 대체 동작, 증명 기대, 한영 문서 동시 유지를 갖춰 승격하기 전까지 동작하지 않습니다.
 
 이후 후보가 예시, 경로 문구, 스키마 메모, 이 참조 문서에 언급되어도 승격이 아니며 현재 MVP 요구사항이 되지 않습니다.
 
@@ -159,7 +174,11 @@
 
 보장 의미, 탐지형 표현, `preventive`와 `isolated` 승격 규칙, 보안 비주장의 기준 설명은 [보안](security.md)을 확인하세요. 보장 라벨 값 항목은 [API 값 집합](api/schema-value-sets.md)을 확인하세요.
 
-`harness.prepare_write`와 `Write Authorization`은 제품 파일 쓰기 호환성 메커니즘입니다. 메서드 동작은 [MVP API 경로 문서](api/mvp-api.md)가 안내하는 [쓰기 준비 메서드](api/method-prepare-write.md)가 담당하고, Core 의미는 [Core 모델](core-model.md)이 담당합니다.
+`harness.prepare_write`와 `Write Authorization`은 제품 파일 쓰기 호환성 메커니즘입니다.
+
+담당 문서:
+- 메서드 동작: [MVP API 경로 문서](api/mvp-api.md)가 안내하는 [쓰기 준비 메서드](api/method-prepare-write.md).
+- Core 의미: [Core 모델](core-model.md).
 
 ## 문서 전용 경계
 

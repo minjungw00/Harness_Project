@@ -68,9 +68,9 @@ The included scope is summarized below. Detail blocks keep the active meaning an
 | Close-readiness review | [Close-task method](api/method-close-task.md), [API State Schemas](api/schema-state.md), [Errors](api/errors.md) |
 | Prepare-write authorization | [Prepare-write method](api/method-prepare-write.md), [Storage Effects](storage-effects.md), [Security](security.md) |
 | Local surface registration | [Agent Integration](agent-integration.md), [Surface Recipes](../use/surface-recipes.md), [Security](security.md) |
-| Artifact staging | [Stage-artifact method](api/method-stage-artifact.md), [API Artifact Schemas](api/schema-artifacts.md), [Artifact Storage](storage-artifacts.md), [Storage Effects](storage-effects.md) |
+| Artifact staging | See [Artifact staging owners](#artifact-staging-owners). |
 | Run and evidence recording | [Record-run method](api/method-record-run.md), [Storage Effects](storage-effects.md), [Core Model](core-model.md) |
-| Focused user judgment capture | [User-judgment methods](api/method-user-judgment.md), [Core Model](core-model.md), [API Judgment Schemas](api/schema-judgment.md), [API Value Sets](api/schema-value-sets.md) |
+| Focused user judgment capture | See [User judgment owners](#user-judgment-owners). |
 | Close attempts | [Close-task method](api/method-close-task.md), [Core Model](core-model.md), [Errors](api/errors.md) |
 
 Plain-language intake and Task creation:
@@ -91,6 +91,12 @@ Local surface registration:
 - Active MVP meaning: Registered local surfaces can identify the active surface and its supported capabilities.
 - Condition: Those facts are used only for current scope checks.
 
+<a id="artifact-staging-owners"></a>
+Artifact staging owners:
+- Method behavior: [Stage-artifact method](api/method-stage-artifact.md).
+- API shapes: [API Artifact Schemas](api/schema-artifacts.md).
+- Lifecycle and storage effects: [Artifact Storage](storage-artifacts.md) and [Storage Effects](storage-effects.md).
+
 Artifact staging:
 - Active MVP meaning: New artifact bytes can enter active scope through the active staging path.
 - Condition: Existing artifacts can be linked only through compatible persisted artifact references.
@@ -98,6 +104,12 @@ Artifact staging:
 Run and evidence recording:
 - Active MVP meaning: Runs and compact evidence summaries can be recorded for active work.
 - Condition: Compatible artifact promotion or linking is included only when the artifact owners allow it.
+
+<a id="user-judgment-owners"></a>
+User judgment owners:
+- Method behavior: [User-judgment methods](api/method-user-judgment.md).
+- Product meaning: [Core Model](core-model.md).
+- API shapes and values: [API Judgment Schemas](api/schema-judgment.md) and [API Value Sets](api/schema-value-sets.md).
 
 Focused user judgment capture:
 - Active MVP meaning: User-owned judgments can be requested and recorded through the active judgment path.
@@ -149,7 +161,10 @@ Exact guarantee label value entries belong to [API Value Sets](api/schema-value-
 
 ## Later candidates
 
-[Later Candidate Index](../later/index.md) owns deferred candidate names and promotion boundaries. A later candidate remains inert until an owner document promotes a narrow capability with scope, fallback behavior, proof expectations, and paired English/Korean documentation.
+[Later Candidate Index](../later/index.md) owns deferred candidate names and promotion boundaries.
+
+Promotion condition:
+- A later candidate remains inert until an owner document promotes a narrow capability with scope, fallback behavior, proof expectations, and paired English/Korean documentation.
 
 Mentioning a later candidate in examples, route text, schema notes, or this reference does not promote it and does not make it an active MVP requirement.
 
@@ -159,7 +174,11 @@ The current MVP guarantee boundary is `cooperative` by default. The current MVP 
 
 For guarantee semantics, detective wording, promotion rules for `preventive` and `isolated`, and security non-claims, see [Security](security.md). For guarantee label value entries, see [API Value Sets](api/schema-value-sets.md).
 
-`harness.prepare_write` and `Write Authorization` remain product-file write compatibility mechanisms. Their method behavior belongs to the [Prepare-write method](api/method-prepare-write.md), routed from the [MVP API router](api/mvp-api.md), and their Core meaning belongs to [Core Model](core-model.md).
+`harness.prepare_write` and `Write Authorization` remain product-file write compatibility mechanisms.
+
+Owner links:
+- Method behavior: [Prepare-write method](api/method-prepare-write.md), routed from the [MVP API router](api/mvp-api.md).
+- Core meaning: [Core Model](core-model.md).
 
 ## Documentation-only boundary
 

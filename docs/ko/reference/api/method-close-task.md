@@ -57,7 +57,9 @@
 |---|---|
 | `intent=check` | `dry_run=true`여도 항상 읽기 전용이며 상태를 올리지 않습니다. |
 | 상태 변경 `intent`의 커밋된 종료 닫기 또는 커밋된 차단 닫기 | `project_state.state_version`을 정확히 한 번 올립니다. |
-| 닫기 사전 확인 거절, 오래된 `expected_state_version`, 닫기 관련 `WriteAuthorization.basis_state_version` 오래됨, 멱등 요청 해시 충돌, `dry_run` 미리보기 | 아무것도 올리지 않습니다. |
+| 커밋 전 실패 또는 `dry_run` 미리보기 | 아무것도 올리지 않습니다. |
+
+커밋 전 실패에는 닫기 사전 확인 거절, 오래된 `expected_state_version`, 닫기 관련 `WriteAuthorization.basis_state_version` 오래됨, 멱등 요청 해시 충돌이 포함됩니다.
 
 ## 성공 결과
 
