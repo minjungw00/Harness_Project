@@ -35,7 +35,7 @@ This document does not own:
 
 ## Error vs blocker
 
-| Concept | Public shape | Details |
+| Concept | Public shape | Detail section |
 |---|---|---|
 | Rejected response | `ToolRejectedResponse.errors[]` | [Rejected response](#error-vs-blocker-rejected-response) |
 | Blocked result | method-specific result fields | [Blocked result](#error-vs-blocker-blocked-result) |
@@ -67,32 +67,32 @@ Dry-run preview:
 
 ## Public `ErrorCode` summary
 
-| ErrorCode | Details |
+| Public `ErrorCode` | Detail section |
 |---|---|
-| `VALIDATION_FAILED` | See [`VALIDATION_FAILED`](#errorcode-validation-failed) |
-| `STATE_VERSION_CONFLICT` | See [`STATE_VERSION_CONFLICT`](#errorcode-state-version-conflict) |
-| `MCP_UNAVAILABLE` | See [`MCP_UNAVAILABLE`](#errorcode-mcp-unavailable) |
-| `LOCAL_ACCESS_MISMATCH` | See [`LOCAL_ACCESS_MISMATCH`](#errorcode-local-access-mismatch) |
-| `NO_ACTIVE_TASK` | See [`NO_ACTIVE_TASK`](#errorcode-no-active-task) |
-| `NO_ACTIVE_CHANGE_UNIT` | See [`NO_ACTIVE_CHANGE_UNIT`](#errorcode-no-active-change-unit) |
-| `BASELINE_STALE` | See [`BASELINE_STALE`](#errorcode-baseline-stale) |
-| `SCOPE_REQUIRED` | See [`SCOPE_REQUIRED`](#errorcode-scope-required) |
-| `SCOPE_VIOLATION` | See [`SCOPE_VIOLATION`](#errorcode-scope-violation) |
-| `WRITE_AUTHORIZATION_REQUIRED` | See [`WRITE_AUTHORIZATION_REQUIRED`](#errorcode-write-authorization-required) |
-| `WRITE_AUTHORIZATION_INVALID` | See [`WRITE_AUTHORIZATION_INVALID`](#errorcode-write-authorization-invalid) |
-| `APPROVAL_DENIED` | See [`APPROVAL_DENIED`](#errorcode-approval-denied) |
-| `APPROVAL_EXPIRED` | See [`APPROVAL_EXPIRED`](#errorcode-approval-expired) |
-| `APPROVAL_REQUIRED` | See [`APPROVAL_REQUIRED`](#errorcode-approval-required) |
-| `DECISION_UNRESOLVED` | See [`DECISION_UNRESOLVED`](#errorcode-decision-unresolved) |
-| `AUTONOMY_BOUNDARY_EXCEEDED` | See [`AUTONOMY_BOUNDARY_EXCEEDED`](#errorcode-autonomy-boundary-exceeded) |
-| `DECISION_REQUIRED` | See [`DECISION_REQUIRED`](#errorcode-decision-required) |
-| `CAPABILITY_INSUFFICIENT` | See [`CAPABILITY_INSUFFICIENT`](#errorcode-capability-insufficient) |
-| `EVIDENCE_INSUFFICIENT` | See [`EVIDENCE_INSUFFICIENT`](#errorcode-evidence-insufficient) |
-| `RESIDUAL_RISK_NOT_VISIBLE` | See [`RESIDUAL_RISK_NOT_VISIBLE`](#errorcode-residual-risk-not-visible) |
-| `ACCEPTANCE_REQUIRED` | See [`ACCEPTANCE_REQUIRED`](#errorcode-acceptance-required) |
-| `PROJECTION_STALE` | See [`PROJECTION_STALE`](#errorcode-projection-stale) |
-| `ARTIFACT_MISSING` | See [`ARTIFACT_MISSING`](#errorcode-artifact-missing) |
-| `VALIDATOR_FAILED` | See [`VALIDATOR_FAILED`](#errorcode-validator-failed) |
+| `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#errorcode-validation-failed) |
+| `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#errorcode-state-version-conflict) |
+| `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#errorcode-mcp-unavailable) |
+| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#errorcode-local-access-mismatch) |
+| `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#errorcode-no-active-task) |
+| `NO_ACTIVE_CHANGE_UNIT` | [`NO_ACTIVE_CHANGE_UNIT`](#errorcode-no-active-change-unit) |
+| `BASELINE_STALE` | [`BASELINE_STALE`](#errorcode-baseline-stale) |
+| `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](#errorcode-scope-required) |
+| `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](#errorcode-scope-violation) |
+| `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](#errorcode-write-authorization-required) |
+| `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](#errorcode-write-authorization-invalid) |
+| `APPROVAL_DENIED` | [`APPROVAL_DENIED`](#errorcode-approval-denied) |
+| `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](#errorcode-approval-expired) |
+| `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](#errorcode-approval-required) |
+| `DECISION_UNRESOLVED` | [`DECISION_UNRESOLVED`](#errorcode-decision-unresolved) |
+| `AUTONOMY_BOUNDARY_EXCEEDED` | [`AUTONOMY_BOUNDARY_EXCEEDED`](#errorcode-autonomy-boundary-exceeded) |
+| `DECISION_REQUIRED` | [`DECISION_REQUIRED`](#errorcode-decision-required) |
+| `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#errorcode-capability-insufficient) |
+| `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#errorcode-evidence-insufficient) |
+| `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#errorcode-residual-risk-not-visible) |
+| `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#errorcode-acceptance-required) |
+| `PROJECTION_STALE` | [`PROJECTION_STALE`](#errorcode-projection-stale) |
+| `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#errorcode-artifact-missing) |
+| `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#errorcode-validator-failed) |
 
 <a id="errorcode-validation-failed"></a>
 ### `VALIDATION_FAILED`
@@ -118,8 +118,6 @@ Used in:
 
 Condition:
 - `expected_state_version` is stale.
-- `WriteAuthorization.basis_state_version` is stale.
-- The idempotency request hash conflicts.
 
 State effect:
 - No committed operation proceeds.
@@ -127,7 +125,9 @@ State effect:
 
 Not allowed:
 - Do not use this as a close-readiness blocker code.
-- Do not use this as `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, or a committed blocked-result primary code.
+
+Related conflict details:
+- Stale `WriteAuthorization.basis_state_version` and idempotency request-hash conflicts are covered in [State version conflict](#state-conflict-behavior).
 
 <a id="errorcode-mcp-unavailable"></a>
 ### `MCP_UNAVAILABLE`
@@ -519,32 +519,32 @@ Not allowed:
 
 When an error-bearing branch has non-empty `errors`, `errors[0]` is the primary public code selected by this order unless a method owner defines a stricter method-specific order.
 
-| Precedence | Primary `ErrorCode` | Details |
+| Precedence | Primary `ErrorCode` | Detail section |
 |---:|---|---|
-| 1 | `VALIDATION_FAILED` | See [`VALIDATION_FAILED`](#precedence-validation-failed) |
-| 2 | `STATE_VERSION_CONFLICT` | See [`STATE_VERSION_CONFLICT`](#state-version-conflict-precedence-exclusion) |
-| 3 | `MCP_UNAVAILABLE` | See [`MCP_UNAVAILABLE`](#precedence-mcp-unavailable) |
-| 4 | `LOCAL_ACCESS_MISMATCH` | See [`LOCAL_ACCESS_MISMATCH`](#precedence-local-access-mismatch) |
-| 5 | `NO_ACTIVE_TASK` | See [`NO_ACTIVE_TASK`](#precedence-no-active-task) |
-| 6 | `NO_ACTIVE_CHANGE_UNIT` | See [`NO_ACTIVE_CHANGE_UNIT`](#precedence-no-active-change-unit) |
-| 7 | `BASELINE_STALE` | See [`BASELINE_STALE`](#precedence-baseline-stale) |
-| 8 | `SCOPE_REQUIRED` | See [`SCOPE_REQUIRED`](#precedence-scope-required) |
-| 9 | `SCOPE_VIOLATION` | See [`SCOPE_VIOLATION`](#precedence-scope-violation) |
-| 10 | `WRITE_AUTHORIZATION_REQUIRED` | See [`WRITE_AUTHORIZATION_REQUIRED`](#precedence-write-authorization-required) |
-| 11 | `WRITE_AUTHORIZATION_INVALID` | See [`WRITE_AUTHORIZATION_INVALID`](#precedence-write-authorization-invalid) |
-| 12 | `APPROVAL_DENIED` | See [`APPROVAL_DENIED`](#precedence-approval-denied) |
-| 13 | `APPROVAL_EXPIRED` | See [`APPROVAL_EXPIRED`](#precedence-approval-expired) |
-| 14 | `APPROVAL_REQUIRED` | See [`APPROVAL_REQUIRED`](#precedence-approval-required) |
-| 15 | `DECISION_UNRESOLVED` | See [`DECISION_UNRESOLVED`](#precedence-decision-unresolved) |
-| 16 | `AUTONOMY_BOUNDARY_EXCEEDED` | See [`AUTONOMY_BOUNDARY_EXCEEDED`](#precedence-autonomy-boundary-exceeded) |
-| 17 | `DECISION_REQUIRED` | See [`DECISION_REQUIRED`](#precedence-decision-required) |
-| 18 | `CAPABILITY_INSUFFICIENT` | See [`CAPABILITY_INSUFFICIENT`](#precedence-capability-insufficient) |
-| 19 | `EVIDENCE_INSUFFICIENT` | See [`EVIDENCE_INSUFFICIENT`](#precedence-evidence-insufficient) |
-| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | See [`RESIDUAL_RISK_NOT_VISIBLE`](#precedence-residual-risk-not-visible) |
-| 21 | `ACCEPTANCE_REQUIRED` | See [`ACCEPTANCE_REQUIRED`](#precedence-acceptance-required) |
-| 22 | `PROJECTION_STALE` | See [`PROJECTION_STALE`](#precedence-projection-stale) |
-| 23 | `ARTIFACT_MISSING` | See [`ARTIFACT_MISSING`](#precedence-artifact-missing) |
-| 24 | `VALIDATOR_FAILED` | See [`VALIDATOR_FAILED`](#precedence-validator-failed) |
+| 1 | `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#precedence-validation-failed) |
+| 2 | `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#state-version-conflict-precedence-exclusion) |
+| 3 | `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#precedence-mcp-unavailable) |
+| 4 | `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#precedence-local-access-mismatch) |
+| 5 | `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#precedence-no-active-task) |
+| 6 | `NO_ACTIVE_CHANGE_UNIT` | [`NO_ACTIVE_CHANGE_UNIT`](#precedence-no-active-change-unit) |
+| 7 | `BASELINE_STALE` | [`BASELINE_STALE`](#precedence-baseline-stale) |
+| 8 | `SCOPE_REQUIRED` | [`SCOPE_REQUIRED`](#precedence-scope-required) |
+| 9 | `SCOPE_VIOLATION` | [`SCOPE_VIOLATION`](#precedence-scope-violation) |
+| 10 | `WRITE_AUTHORIZATION_REQUIRED` | [`WRITE_AUTHORIZATION_REQUIRED`](#precedence-write-authorization-required) |
+| 11 | `WRITE_AUTHORIZATION_INVALID` | [`WRITE_AUTHORIZATION_INVALID`](#precedence-write-authorization-invalid) |
+| 12 | `APPROVAL_DENIED` | [`APPROVAL_DENIED`](#precedence-approval-denied) |
+| 13 | `APPROVAL_EXPIRED` | [`APPROVAL_EXPIRED`](#precedence-approval-expired) |
+| 14 | `APPROVAL_REQUIRED` | [`APPROVAL_REQUIRED`](#precedence-approval-required) |
+| 15 | `DECISION_UNRESOLVED` | [`DECISION_UNRESOLVED`](#precedence-decision-unresolved) |
+| 16 | `AUTONOMY_BOUNDARY_EXCEEDED` | [`AUTONOMY_BOUNDARY_EXCEEDED`](#precedence-autonomy-boundary-exceeded) |
+| 17 | `DECISION_REQUIRED` | [`DECISION_REQUIRED`](#precedence-decision-required) |
+| 18 | `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#precedence-capability-insufficient) |
+| 19 | `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#precedence-evidence-insufficient) |
+| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#precedence-residual-risk-not-visible) |
+| 21 | `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#precedence-acceptance-required) |
+| 22 | `PROJECTION_STALE` | [`PROJECTION_STALE`](#precedence-projection-stale) |
+| 23 | `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#precedence-artifact-missing) |
+| 24 | `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#precedence-validator-failed) |
 
 <a id="precedence-validation-failed"></a>
 ### Precedence 1: `VALIDATION_FAILED`
@@ -691,7 +691,7 @@ Used in:
 - `ToolRejectedResponse.errors[]`
 
 Condition:
-- A rejected response is selected because stale state or idempotency conflict prevents the method from proceeding.
+- A rejected response is selected because stale `expected_state_version` prevents the method from proceeding.
 
 State effect:
 - No committed operation proceeds.
@@ -700,16 +700,19 @@ State effect:
 Not allowed:
 - Do not select `STATE_VERSION_CONFLICT` as `MethodResult.base.errors[0]`, `CloseTaskResult(close_state=blocked).errors[0]`, `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.
 
+Related conflict details:
+- Stale `WriteAuthorization.basis_state_version` and idempotency request-hash conflicts are covered in [State version conflict](#state-conflict-behavior).
+
 <a id="blocked-and-dry-run-behavior"></a>
 
 ## Rejected response behavior
 
-| Condition | Details |
+| Condition | Detail section |
 |---|---|
-| request validation fails before proceed | See [Request validation failure](#rejected-request-validation-failure) |
-| precondition fails before commit | See [Precondition failure](#rejected-precondition-failure) |
-| state or idempotency conflict | See [State or idempotency conflict](#rejected-state-or-idempotency-conflict) |
-| `dry_run=true` pre-preview failure | See [`dry_run=true` pre-preview failure](#rejected-dry-run-pre-preview-failure) |
+| request validation fails before proceed | [Request validation failure](#rejected-request-validation-failure) |
+| precondition fails before commit | [Precondition failure](#rejected-precondition-failure) |
+| state or idempotency conflict | [State or idempotency conflict](#rejected-state-or-idempotency-conflict) |
+| `dry_run=true` pre-preview failure | [`dry_run=true` pre-preview failure](#rejected-dry-run-pre-preview-failure) |
 
 <a id="rejected-request-validation-failure"></a>
 ### Request validation failure
@@ -774,11 +777,11 @@ Rejected response means the method did not proceed to the committed operation. I
 
 ## Blocked result behavior
 
-| Blocked path | Details |
+| Blocked path | Detail section |
 |---|---|
-| `PrepareWriteResult` blocked decision | See [`PrepareWriteResult` blocked decision](#blocked-prepare-write-result) |
-| `CloseTaskResult(close_state=blocked)` | See [`CloseTaskResult(close_state=blocked)`](#blocked-close-task-result) |
-| read-only close-blocker observation | See [Read-only close-blocker observation](#blocked-read-only-observation) |
+| `PrepareWriteResult` blocked decision | [`PrepareWriteResult` blocked decision](#blocked-prepare-write-result) |
+| `CloseTaskResult(close_state=blocked)` | [`CloseTaskResult(close_state=blocked)`](#blocked-close-task-result) |
+| read-only close-blocker observation | [Read-only close-blocker observation](#blocked-read-only-observation) |
 
 <a id="blocked-prepare-write-result"></a>
 ### `PrepareWriteResult` blocked decision
@@ -832,12 +835,12 @@ Blocked result means the method may have returned an operation-specific blocked 
 
 ## Dry-run behavior
 
-| Dry-run case | Details |
+| Dry-run case | Detail section |
 |---|---|
-| valid read-only call | See [Valid read-only `dry_run=true`](#dry-run-valid-read-only) |
-| valid state-effecting or staging preview | See [Valid dry-run preview](#dry-run-valid-preview) |
-| expected blockers in preview | See [Expected blockers in dry-run preview](#dry-run-expected-blockers) |
-| pre-commit failure | See [Pre-commit failure with `dry_run=true`](#dry-run-pre-commit-failure) |
+| valid read-only call | [Valid read-only `dry_run=true`](#dry-run-valid-read-only) |
+| valid state-effecting or staging preview | [Valid dry-run preview](#dry-run-valid-preview) |
+| expected blockers in preview | [Expected blockers in dry-run preview](#dry-run-expected-blockers) |
+| pre-commit failure | [Pre-commit failure with `dry_run=true`](#dry-run-pre-commit-failure) |
 
 <a id="dry-run-valid-read-only"></a>
 ### Valid read-only `dry_run=true`
@@ -894,11 +897,11 @@ Not allowed:
 
 ## State version conflict
 
-| Conflict case | Details |
+| Conflict case | Detail section |
 |---|---|
-| stale `expected_state_version` | See [Stale `expected_state_version`](#state-conflict-expected-state-version) |
-| stale `WriteAuthorization.basis_state_version` | See [Stale Write Authorization basis](#state-conflict-write-authorization-basis) |
-| idempotency request-hash conflict | See [Idempotency request-hash conflict](#state-conflict-idempotency-hash) |
+| stale `expected_state_version` | [Stale `expected_state_version`](#state-conflict-expected-state-version) |
+| stale `WriteAuthorization.basis_state_version` | [Stale Write Authorization basis](#state-conflict-write-authorization-basis) |
+| idempotency request-hash conflict | [Idempotency request-hash conflict](#state-conflict-idempotency-hash) |
 
 `STATE_VERSION_CONFLICT` has one active current MVP meaning: a project-wide pre-commit freshness or idempotency conflict.
 
@@ -972,13 +975,13 @@ Not allowed:
 
 ## Forbidden blocker-code rules
 
-| Forbidden use | Details |
+| Forbidden use | Detail section |
 |---|---|
-| stale-state public error used as a blocker code | See [Stale-state blocker code](#forbidden-stale-state-blocker-code) |
-| pre-commit public error copied into blocker arrays | See [Pre-commit public error copy](#forbidden-pre-commit-public-error-copy) |
-| public `ErrorCode` reused without owner permission | See [Public code reuse](#forbidden-public-code-reuse) |
-| user-facing label used as API identifier | See [User-facing label identifier](#forbidden-user-facing-label-identifier) |
-| dry-run stale-state conflict previewed | See [Dry-run stale-state preview](#forbidden-dry-run-stale-state-preview) |
+| stale-state public error used as a blocker code | [Stale-state blocker code](#forbidden-stale-state-blocker-code) |
+| pre-commit public error copied into blocker arrays | [Pre-commit public error copy](#forbidden-pre-commit-public-error-copy) |
+| public `ErrorCode` reused without owner permission | [Public code reuse](#forbidden-public-code-reuse) |
+| user-facing label used as API identifier | [User-facing label identifier](#forbidden-user-facing-label-identifier) |
+| dry-run stale-state conflict previewed | [Dry-run stale-state preview](#forbidden-dry-run-stale-state-preview) |
 
 <a id="forbidden-stale-state-blocker-code"></a>
 ### Stale-state blocker code
@@ -1116,18 +1119,18 @@ Not allowed:
 
 These rows summarize public error-code families for close-readiness findings. They do not turn public `ErrorCode` values into blocker codes.
 
-| Close-readiness finding | Details |
+| Close-readiness finding | Detail section |
 |---|---|
-| Evidence gap | See [Evidence gap](#close-mapping-evidence-gap) |
-| Persistent artifact issue | See [Persistent artifact issue](#close-mapping-artifact-issue) |
-| Final acceptance issue | See [Final acceptance issue](#close-mapping-final-acceptance) |
-| Residual risk not visible | See [Residual risk not visible](#close-mapping-residual-risk-not-visible) |
-| Visible but unaccepted residual risk | See [Unaccepted residual risk](#close-mapping-unaccepted-residual-risk) |
-| Unresolved user-owned judgment | See [Unresolved user-owned judgment](#close-mapping-unresolved-user-judgment) |
-| Sensitive-action approval issue | See [Sensitive-action approval issue](#close-mapping-sensitive-approval) |
-| Scope, boundary, or baseline blocker | See [Scope, boundary, or baseline blocker](#close-mapping-scope-boundary-baseline) |
-| Readable view freshness issue | See [Readable view freshness issue](#close-mapping-readable-view-freshness) |
-| Stale project-wide state or Write Authorization basis | See [Stale state is rejected](#close-mapping-stale-state-rejected) |
+| Evidence gap | [Evidence gap](#close-mapping-evidence-gap) |
+| Persistent artifact issue | [Persistent artifact issue](#close-mapping-artifact-issue) |
+| Final acceptance issue | [Final acceptance issue](#close-mapping-final-acceptance) |
+| Residual risk not visible | [Residual risk not visible](#close-mapping-residual-risk-not-visible) |
+| Unaccepted residual risk | [Unaccepted residual risk](#close-mapping-unaccepted-residual-risk) |
+| Unresolved judgment | [Unresolved user-owned judgment](#close-mapping-unresolved-user-judgment) |
+| Sensitive approval issue | [Sensitive-action approval issue](#close-mapping-sensitive-approval) |
+| Scope, boundary, or baseline | [Scope, boundary, or baseline blocker](#close-mapping-scope-boundary-baseline) |
+| Readable view freshness | [Readable view freshness issue](#close-mapping-readable-view-freshness) |
+| Stale state rejection | [Stale state is rejected](#close-mapping-stale-state-rejected) |
 
 <a id="close-mapping-evidence-gap"></a>
 ### Evidence gap
@@ -1237,24 +1240,24 @@ Owner links:
 
 User-facing labels may differ from public error identifiers. Labels are display text, not new public codes.
 
-| Public condition | Details |
+| Public condition | Label detail |
 |---|---|
-| `VALIDATION_FAILED` | See [`VALIDATION_FAILED`](#label-validation-failed) |
-| `STATE_VERSION_CONFLICT` | See [`STATE_VERSION_CONFLICT`](#label-state-version-conflict) |
-| `MCP_UNAVAILABLE` | See [`MCP_UNAVAILABLE`](#label-mcp-unavailable) |
-| `LOCAL_ACCESS_MISMATCH` | See [`LOCAL_ACCESS_MISMATCH`](#label-local-access-mismatch) |
-| `CAPABILITY_INSUFFICIENT` | See [`CAPABILITY_INSUFFICIENT`](#label-capability-insufficient) |
-| `NO_ACTIVE_TASK` | See [`NO_ACTIVE_TASK`](#label-no-active-task) |
-| scope, boundary, or baseline codes | See [Scope, boundary, or baseline label](#label-scope-boundary-baseline) |
-| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | See [Write Authorization label](#label-write-authorization) |
-| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | See [Judgment label](#label-judgment) |
-| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | See [Sensitive-action approval label](#label-sensitive-approval) |
-| `EVIDENCE_INSUFFICIENT` | See [`EVIDENCE_INSUFFICIENT`](#label-evidence-insufficient) |
-| `ACCEPTANCE_REQUIRED` | See [`ACCEPTANCE_REQUIRED`](#label-acceptance-required) |
-| `RESIDUAL_RISK_NOT_VISIBLE` | See [`RESIDUAL_RISK_NOT_VISIBLE`](#label-residual-risk-not-visible) |
-| `PROJECTION_STALE` | See [`PROJECTION_STALE`](#label-projection-stale) |
-| `ARTIFACT_MISSING` | See [`ARTIFACT_MISSING`](#label-artifact-missing) |
-| `VALIDATOR_FAILED` | See [`VALIDATOR_FAILED`](#label-validator-failed) |
+| `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#label-validation-failed) |
+| `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#label-state-version-conflict) |
+| `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#label-mcp-unavailable) |
+| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#label-local-access-mismatch) |
+| `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#label-capability-insufficient) |
+| `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#label-no-active-task) |
+| scope, boundary, or baseline codes | [Scope, boundary, or baseline label](#label-scope-boundary-baseline) |
+| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | [Write Authorization label](#label-write-authorization) |
+| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | [Judgment label](#label-judgment) |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | [Sensitive-action approval label](#label-sensitive-approval) |
+| `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#label-evidence-insufficient) |
+| `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#label-acceptance-required) |
+| `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#label-residual-risk-not-visible) |
+| `PROJECTION_STALE` | [`PROJECTION_STALE`](#label-projection-stale) |
+| `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#label-artifact-missing) |
+| `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#label-validator-failed) |
 
 <a id="label-validation-failed"></a>
 ### `VALIDATION_FAILED` label
