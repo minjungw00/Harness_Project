@@ -160,7 +160,7 @@ API examples must be internally consistent. They may share one scenario across m
 
 When a shared example scenario appears in both languages, the Korean version should use natural Korean phrasing rather than mechanically preserving the English noun chain. After the scenario is introduced, Korean wording may be shorter as long as the meaning remains the same. Repeated scenario phrases should stay consistent across related examples.
 
-Representative responses may omit unrelated fields, but they must not contradict the request, the visible response state, or the shared scenario. A response snapshot must not include refs from a later `state_version` than the snapshot's `base.state_version` or visible state summary.
+Representative responses may omit unrelated fields, but they must not contradict the request, the visible response state, or the shared scenario. A response snapshot must not include refs from a newer `state_version` than the snapshot's `base.state_version` or visible state summary.
 
 Sensitive approval reasons must match request inputs or explicitly stated preconditions. Do not add approval reasons unsupported by `sensitive_categories`, `SensitiveActionScope`, intended paths, intended operation, or the scenario setup.
 

@@ -2,7 +2,6 @@
 
 Meaning:
 - This document owns API state-shaped schemas for the baseline scope.
-- It is documentation reference material only.
 
 Not implied:
 - It does not create runtime state, generated projections, storage rows, or state effects.

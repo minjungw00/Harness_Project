@@ -360,12 +360,11 @@ documents:
     owner_for:
       - "active public API method list"
       - "API method owner routing"
-      - "shared method reading rules"
-      - "representative API example scenario"
     not_owner_for:
       - "method-specific behavior"
       - "shared schema bodies"
       - "storage effect detail"
+      - "representative API example scenario"
       - "public error semantics"
     normative_level: "contract"
     audience:

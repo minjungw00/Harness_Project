@@ -3,7 +3,7 @@
 Rule:
 
 - This document owns persistent storage record layout for the baseline scope source design.
-- Persistent records are local records committed by Core for later reads.
+- Persistent records are local records committed by Core for subsequent reads.
 
 Not allowed:
 
@@ -450,7 +450,7 @@ Owner links:
 ### `artifact_staging`
 
 Purpose:
-- Stores transient staged safe bytes or safe notices created by `harness.stage_artifact` for later single-use `harness.record_run` consumption.
+- Stores transient staged safe bytes or safe notices created by `harness.stage_artifact` for single-use consumption by a subsequent `harness.record_run`.
 
 Stored in:
 - `state.sqlite` plus safe transient bytes or notices under `artifacts/tmp/`.

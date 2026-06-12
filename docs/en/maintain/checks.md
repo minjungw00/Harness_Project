@@ -223,7 +223,7 @@ Owner:
 
 Check:
 - Example refs are introduced or explicitly described as existing.
-- A response snapshot does not include refs from a later `state_version`.
+- A response snapshot does not include refs from a newer `state_version`.
 - Sensitive approval reasons match the request's `sensitive_categories` or stated precondition.
 - Artifact refs do not appear without staging, promotion, or existing-artifact context.
 - Expiration timestamps use placeholders or clearly future example dates.

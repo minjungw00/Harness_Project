@@ -563,7 +563,7 @@ Effect:
 
 Required honesty:
 - Product-file writes must be compatible with active scope and `Write Authorization`.
-- Read-only work does not authorize later writes.
+- Read-only work does not authorize subsequent writes.
 
 <a id="core-lifecycle-waiting-blocked"></a>
 ### Waiting or blocked

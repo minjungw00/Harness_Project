@@ -1,6 +1,6 @@
 # API value sets
 
-This document owns active API value sets and enum-like public values for the baseline scope. It is documentation reference material only and does not widen active scope by naming out-of-scope capabilities.
+This document owns active API value sets and enum-like public values for the baseline scope. Naming a reserved or out-of-scope value does not widen active scope.
 
 ## Owns / Does not own
 
@@ -67,7 +67,7 @@ staging_created
 no_effect
 ```
 
-`response_kind` and `effect_kind` are branch metadata values. Shared branch reading is owned by the [shared envelope and response branch routes](methods.md#shared-request-rules), and method-specific state effects are owned by method owner documents. Public error semantics for rejected branches are owned by [API Errors](errors.md).
+`response_kind` and `effect_kind` are branch metadata values. Common branch shape is owned by [API Schema Core](schema-core.md#common-response), and method-specific state effects are owned by method owner documents. Public error semantics for rejected branches are owned by [API Errors](errors.md).
 
 <a id="access-class-values"></a>
 ## Access class values
@@ -83,7 +83,7 @@ no_effect
 | `artifact_registration` | `harness.stage_artifact`. |
 | `artifact_read` | Artifact body reads when an owner path exposes them. |
 
-Access classes are Harness API compatibility classes, not OS permission classes. Local surface verification behavior stays with the [shared envelope and response branch routes](methods.md#shared-request-rules), [Agent Integration](../agent-integration.md), and [Security](../security.md).
+Access classes are Harness API compatibility classes, not OS permission classes. Method access requirements stay with method owner documents routed from [API Methods](methods.md); local surface verification behavior stays with [Agent Integration](../agent-integration.md) and [Security](../security.md).
 
 <a id="record-and-reference-values"></a>
 ## Record and reference values

@@ -108,7 +108,7 @@ Harness records:
 
 The agent must not:
 - Write outside the named scope.
-- Treat write approval as product approval, final acceptance, residual-risk acceptance, or blanket permission for later writes.
+- Treat write approval as product approval, final acceptance, residual-risk acceptance, or blanket permission for subsequent writes.
 - Treat sensitive-action approval as the same thing as product-file write approval.
 - Claim stronger security behavior than the security owner supports; see [Security](../reference/security.md).
 

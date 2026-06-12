@@ -1,6 +1,6 @@
 # API 값 집합
 
-이 문서는 기준 범위의 활성 API 값 집합과 enum 형태 공개 값을 담당합니다. 참조 문서일 뿐이며 지원 범위 밖 기능 이름을 적는 것만으로 활성 범위를 넓히지 않습니다.
+이 문서는 기준 범위의 활성 API 값 집합과 enum 형태 공개 값을 담당합니다. 예약된 값이나 지원 범위 밖 값을 이름 붙이는 것만으로 활성 범위가 넓어지지 않습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -75,7 +75,7 @@ staging_created
 no_effect
 ```
 
-`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 읽기 규칙은 [공통 요청 래퍼와 응답 분기 경로](methods.md#공통-요청-규칙)가 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류](errors.md)가 담당합니다.
+`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류](errors.md)가 담당합니다.
 
 <a id="access-class-values"></a>
 ## 접근 등급 값
@@ -95,7 +95,7 @@ no_effect
 
 - 결과: 접근 등급은 하네스 API 호환성 분류입니다.
 - 비주장: 접근 등급은 OS 권한 분류가 아닙니다.
-- 담당 문서: 로컬 접점 확인 동작은 [공통 요청 래퍼와 응답 분기 경로](methods.md#공통-요청-규칙), [에이전트 통합](../agent-integration.md), [보안](../security.md)에 남습니다.
+- 담당 문서: 메서드별 접근 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서에 남고, 로컬 접점 확인 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)에 남습니다.
 
 <a id="record-and-reference-values"></a>
 ## 기록과 참조 값

@@ -193,7 +193,7 @@ Reference links:
 
 User decides:
 - Whether to cancel the current task, defer the blocking choice, or narrow the task to read-only investigation.
-- Whether stopping means no successful result or only a pause before later work.
+- Whether stopping means no successful result or only a pause before subsequent work.
 
 Agent may do:
 - Preserve inspected facts and blockers without claiming implementation completion.
@@ -201,7 +201,7 @@ Agent may do:
 
 Harness records:
 - The cancellation, deferral, or narrowed-task decision when the owner path allows it.
-- That no successful close judgment has been made unless a separate close path later succeeds.
+- That no successful close judgment has been made unless a separate close path subsequently succeeds.
 
 Harness must not imply:
 - Cancellation or deferral is product direction, technical direction, evidence sufficiency, final acceptance, residual-risk acceptance, or close readiness for a completed result.
@@ -222,7 +222,7 @@ Agent may do:
 
 Harness records:
 - No new `UserJudgment` for ordinary implementation latitude.
-- Any later escalation only if the detail crosses a user-owned boundary.
+- Any subsequent escalation only if the detail crosses a user-owned boundary.
 
 Harness must not imply:
 - Every implementation detail needs a user decision.

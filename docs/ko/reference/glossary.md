@@ -750,7 +750,7 @@
 
 담당 문서:
 - [API 값 집합](api/schema-value-sets.md)
-- [공통 요청 래퍼와 응답 분기 경로](api/methods.md#공통-요청-규칙)
+- [에이전트 통합](agent-integration.md)
 - [보안](security.md)
 
 설명:

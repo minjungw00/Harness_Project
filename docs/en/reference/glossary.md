@@ -750,7 +750,7 @@ Avoid:
 
 Owner:
 - [API Value Sets](api/schema-value-sets.md)
-- [Shared envelope and response branch routes](api/methods.md#shared-request-rules)
+- [Agent Integration](agent-integration.md)
 - [Security](security.md)
 
 Notes:

@@ -257,7 +257,7 @@ Meaning:
 
 Increments when:
 
-- The values match, other validation passes, and the call later commits an owner-allowed state change.
+- The values match, other validation passes, and the call subsequently commits an owner-allowed state change.
 
 Does not increment when:
 
@@ -411,7 +411,7 @@ Does not increment when:
 
 - Lock acquisition or release does not itself define a public state change.
 - The baseline does not require a `persistent_locks` table.
-- Durable lock/recovery metadata is later operations material until an owner promotes it.
+- Durable lock/recovery metadata is reserved operations material until an owner promotes it.
 
 Retry behavior:
 

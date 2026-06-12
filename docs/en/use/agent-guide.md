@@ -213,7 +213,7 @@ Allowed:
 
 - Multiple questions over time can be correct.
 - Each question should target a distinct user-owned judgment that changes the next safe action.
-- Non-blocking curiosity questions can be parked for later.
+- Non-blocking curiosity questions can be parked for follow-up.
 
 Not allowed:
 
@@ -231,7 +231,7 @@ A focused clarification should show:
 - remaining uncertainty
 - required user-owned judgments
 - the one blocking question, if any
-- useful non-blocking questions parked for later
+- useful non-blocking questions parked for follow-up
 - evidence expectation or evidence gap
 - reasons close is already blocked
 - next safe action

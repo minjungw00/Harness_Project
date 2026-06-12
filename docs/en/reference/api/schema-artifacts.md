@@ -1,6 +1,6 @@
 # API artifact schemas
 
-This document owns API artifact-shaped schemas for the baseline scope. It is documentation reference material only and does not grant local file access, create artifact bytes, create storage rows, or prove evidence sufficiency.
+This document owns API artifact-shaped schemas for the baseline scope. The schemas define request and response shapes; they do not grant local file access, create artifact bytes, create storage rows, or prove evidence sufficiency.
 
 ## Owns / Does not own
 

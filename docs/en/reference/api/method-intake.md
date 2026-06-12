@@ -8,7 +8,7 @@ This document owns baseline method behavior for `harness.intake`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
 - the scenario request fields and representative response for the shared account data export confirmation scenario
-- method-level storage-effect expectations before storage owners define record-level details
+- method-level storage-effect summary and links to storage owners
 
 ## What this document does not own
 

@@ -272,7 +272,7 @@ Focus:
 
 Owner links:
 - [Agent Integration](agent-integration.md)
-- [Shared envelope and response branch routes](api/methods.md#shared-request-rules)
+- [API method owner routing](api/methods.md#method-owner-routing-table)
 - [Storage Effects](storage-effects.md)
 
 <a id="scenario-baseline-single-access-class-per-public-request"></a>
@@ -283,7 +283,7 @@ Focus:
 
 Owner links:
 - [API Value Sets](api/schema-value-sets.md)
-- [Shared envelope and response branch routes](api/methods.md#shared-request-rules)
+- [Agent Integration](agent-integration.md)
 - [Security](security.md)
 
 <a id="scenario-baseline-detective-display-capability-gated"></a>

@@ -1,6 +1,6 @@
 # API judgment schemas
 
-This document owns API schemas for user-owned judgment in the baseline scope. It is documentation reference material only and does not record user decisions by itself.
+This document owns API schemas for user-owned judgment in the baseline scope. The schemas define judgment-shaped API data; they do not record user decisions by themselves.
 
 ## Owns / Does not own
 

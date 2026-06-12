@@ -2,7 +2,6 @@
 
 Meaning:
 - This document owns the common API envelope and response-branch schemas for the baseline scope.
-- It is documentation reference material only.
 
 Not implied:
 - It does not define method behavior, storage effects, state snapshots, artifact lifecycle, user-judgment meaning, public error semantics, or active value sets.
@@ -34,8 +33,8 @@ This document does not own:
 ## Schema notation
 
 Meaning:
-- Schema blocks in this page are planning notation.
-- They describe candidate API contract shape only.
+- Schema blocks in this page are contract notation for public API shapes.
+- They describe field presence and nesting, not method-specific behavior.
 
 Not implied:
 - Schema blocks are not generated code.
@@ -77,7 +76,7 @@ Meaning:
 - `expected_state_version` names the project-wide state clock used by state-changing methods.
 
 Precedence:
-- Method-specific `task_id` fields, when present, take precedence as described by the [shared envelope and response branch routes](methods.md#shared-request-rules).
+- Method-specific `task_id` fields, when present, take precedence as described by the affected method owner document.
 
 Owner links:
 - conflict behavior: [state version conflict](errors.md#state-conflict-behavior)
@@ -124,7 +123,7 @@ Not implied:
 
 Owner links:
 - active `response_kind` and `effect_kind` values: [response and effect values](schema-value-sets.md#response-and-effect-values)
-- shared branch reading: [shared envelope and response branch routes](methods.md#shared-request-rules)
+- shared branch reading: [common response branches](#common-response)
 - method-specific state effects: method owner documents
 - public error precedence: [API Errors](errors.md)
 
