@@ -1,6 +1,6 @@
 # Template bodies
 
-This document owns baseline rendered body expectations for status cards, judgment requests, run/evidence summaries, close results, and agent context packets. It is documentation reference material only and does not generate projection files, runtime artifacts, QA records, acceptance records, or close records.
+This document owns baseline rendered body expectations for status cards, public error messages, judgment requests, run/evidence summaries, close results, and agent context packets. It defines display expectations and does not generate projection files, runtime artifacts, QA records, acceptance records, or close records.
 
 ## Owns / Does not own
 
@@ -9,6 +9,7 @@ This document owns:
 - exact active template body structure for rendered status or support displays
 - user-facing wording boundaries for those bodies
 - locale-aware rendered labels where a body needs them
+- user-facing public-error display labels and recovery cues
 - links from body placeholders to schema and authority owners
 
 This document does not own:
@@ -16,11 +17,14 @@ This document does not own:
 - projection authority, freshness, or read-only derived-display rules; see [Projection Authority Reference](projection-and-templates.md)
 - source-of-truth state or storage; see [Core Model](core-model.md) and storage owners
 - API schemas or value sets; see API schema owners
+- public `ErrorCode` identifiers, precedence, rejected-response behavior, error-vs-blocker routing, or machine-readable `ToolError.details`; see [API Errors](api/errors.md)
 - out-of-scope template candidates; see [Scope Reference](scope.md)
 
 ## Boundary
 
 Template text is display text. It can summarize owner records, but it must route authority questions back to those records.
+
+Public `ErrorCode` values may appear as input conditions for label selection, but those identifiers remain API identifiers owned by [API Errors](api/errors.md).
 
 Template output cannot by wording alone:
 
@@ -30,6 +34,222 @@ Template output cannot by wording alone:
 - create final acceptance or accept residual risk
 - close a Task or create close readiness
 - mutate owner records
+- define, rename, or localize public `ErrorCode` identifiers or machine-readable detail keys
+- convert rejected-response errors into blockers or blocked results
+
+## Public error display labels
+
+Use this section when rendering public API errors for a user or agent-facing surface. The public `ErrorCode` stays unchanged; a label or recovery cue is display text only.
+
+Rendered error copy must:
+
+- Preserve the public `ErrorCode` when the exact diagnostic identifier is shown.
+- Pair a concise label with one recovery cue when the surface has room.
+- Keep labels separate from `CloseReadinessBlocker.code`, `WriteDecisionReason.code`, `PlannedBlocker.code`, and `ToolError.details` keys.
+- Route error-contract questions to [API Errors](api/errors.md).
+
+Rendered error copy must not:
+
+- Replace a public `ErrorCode` with a localized label.
+- Reuse a label as a machine-readable code.
+- Hide close blockers or turn rejected responses into blocked results.
+
+<a id="label-validation-failed"></a>
+### `VALIDATION_FAILED`
+
+Public condition:
+- `VALIDATION_FAILED`.
+
+Suggested label:
+- invalid request
+
+Recovery cue:
+- Fix the payload, enum value, activation rule, profile value, or field set before retrying.
+
+<a id="label-state-version-conflict"></a>
+### `STATE_VERSION_CONFLICT`
+
+Public condition:
+- `STATE_VERSION_CONFLICT`.
+
+Suggested label:
+- state version conflict
+
+Recovery cue:
+- Refresh current state and retry with the current `project_state.state_version`, or replay the original idempotent request.
+
+<a id="label-mcp-unavailable"></a>
+### `MCP_UNAVAILABLE`
+
+Public condition:
+- `MCP_UNAVAILABLE`.
+
+Suggested label:
+- Core or surface unavailable
+
+Recovery cue:
+- Reconnect or diagnose Core, MCP, and surface reachability.
+
+<a id="label-local-access-mismatch"></a>
+### `LOCAL_ACCESS_MISMATCH`
+
+Public condition:
+- `LOCAL_ACCESS_MISMATCH`.
+
+Suggested label:
+- local access mismatch
+
+Recovery cue:
+- Use the registered local transport, session, or binding.
+- Repair local access registration when needed.
+
+<a id="label-capability-insufficient"></a>
+### `CAPABILITY_INSUFFICIENT`
+
+Public condition:
+- `CAPABILITY_INSUFFICIENT`.
+
+Suggested label:
+- insufficient surface capability
+
+Recovery cue:
+- Use a capable surface.
+- Reduce the operation or avoid the missing capability.
+
+<a id="label-no-active-task"></a>
+### `NO_ACTIVE_TASK`
+
+Public condition:
+- `NO_ACTIVE_TASK`.
+
+Suggested label:
+- no active Task
+
+Recovery cue:
+- Select or create a Task before a Task-scoped action.
+
+<a id="label-scope-boundary-baseline"></a>
+### Scope, boundary, or baseline
+
+Public condition:
+- `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, or `BASELINE_STALE`.
+
+Suggested label:
+- scope, boundary, or baseline issue
+
+Recovery cue:
+- Confirm or narrow scope.
+- Update valid scope or baseline through the owner path.
+- Request the needed user judgment.
+
+<a id="label-write-authorization"></a>
+### Write Authorization
+
+Public condition:
+- `WRITE_AUTHORIZATION_REQUIRED` or `WRITE_AUTHORIZATION_INVALID`.
+
+Suggested label:
+- missing or unusable pre-write check
+
+Recovery cue:
+- Call or retry `harness.prepare_write` for the exact operation, current scope, and current state.
+
+<a id="label-judgment"></a>
+### Judgment
+
+Public condition:
+- `DECISION_REQUIRED` or `DECISION_UNRESOLVED`.
+
+Suggested label:
+- judgment needed
+
+Recovery cue:
+- Request or resolve the focused `UserJudgment`.
+
+<a id="label-sensitive-approval"></a>
+### Sensitive-action approval
+
+Public condition:
+- `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED`.
+
+Suggested label:
+- sensitive-action approval needed or not usable
+
+Recovery cue:
+- Request, resolve, or renew `judgment_kind=sensitive_approval`.
+
+<a id="label-evidence-insufficient"></a>
+### `EVIDENCE_INSUFFICIENT`
+
+Public condition:
+- `EVIDENCE_INSUFFICIENT`.
+
+Suggested label:
+- evidence needed
+
+Recovery cue:
+- Record, rerun, or show the missing evidence, then display the smallest next action needed.
+
+<a id="label-acceptance-required"></a>
+### `ACCEPTANCE_REQUIRED`
+
+Public condition:
+- `ACCEPTANCE_REQUIRED`.
+
+Suggested label:
+- final acceptance needed
+
+Recovery cue:
+- Request or resolve `judgment_kind=final_acceptance` for the visible result basis.
+
+<a id="label-residual-risk-not-visible"></a>
+### `RESIDUAL_RISK_NOT_VISIBLE`
+
+Public condition:
+- `RESIDUAL_RISK_NOT_VISIBLE`.
+
+Suggested label:
+- residual risk not visible
+
+Recovery cue:
+- Show the close-relevant residual risk before final acceptance or close.
+
+<a id="label-projection-stale"></a>
+### `PROJECTION_STALE`
+
+Public condition:
+- `PROJECTION_STALE`.
+
+Suggested label:
+- stale readable view
+
+Recovery cue:
+- Refresh the view before relying on it.
+
+<a id="label-artifact-missing"></a>
+### `ARTIFACT_MISSING`
+
+Public condition:
+- `ARTIFACT_MISSING`.
+
+Suggested label:
+- artifact issue
+
+Recovery cue:
+- Restore, regenerate, replace, or reconnect the missing or unusable artifact.
+
+<a id="label-validator-failed"></a>
+### `VALIDATOR_FAILED`
+
+Public condition:
+- `VALIDATOR_FAILED`.
+
+Suggested label:
+- check failed
+
+Recovery cue:
+- Show the specific validator or check result when available.
+- Use this fallback label only when no typed public code gives a clearer label.
 
 ## Status card body
 

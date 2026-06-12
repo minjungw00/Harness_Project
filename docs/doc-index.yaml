@@ -603,9 +603,12 @@ documents:
       - "error routing"
       - "error precedence"
       - "blocker-code exclusions"
+      - "machine-readable error details"
     not_owner_for:
       - "method result behavior"
       - "storage effects"
+      - "user-facing display labels"
+      - "rendered error message phrasing"
     normative_level: "contract"
     audience:
       - "API implementers"
@@ -747,9 +750,15 @@ documents:
       - "template body wording"
       - "status card wording"
       - "Decision Packet wording"
+      - "public-error display labels"
+      - "rendered error message phrasing"
     not_owner_for:
       - "projection authority"
       - "API schemas"
+      - "public ErrorCode identifiers"
+      - "error precedence"
+      - "error-vs-blocker routing"
+      - "machine-readable error details"
       - "storage contracts"
     normative_level: "contract"
     audience:

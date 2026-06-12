@@ -1,6 +1,6 @@
 # API errors
 
-This document describes Harness Server behavior for planning and review. It does not mean this documentation repository implements an MCP server or any runtime behavior.
+This document defines public API error contracts for Harness API responses. It does not define rendered labels, message copy, templates, storage rows, or runtime output.
 
 ## Owns / Does not own
 
@@ -10,7 +10,7 @@ This document owns:
 - Error precedence: how to choose `errors[0]` when a response branch carries more than one public error.
 - Error vs blocker routing: where a condition belongs across rejected responses, blocked results, and dry-run previews.
 - `STATE_VERSION_CONFLICT`: public stale-state and idempotency-conflict behavior.
-- User-facing labels: display guidance for public errors.
+- Machine-readable error detail fields and helper values carried under `ToolError.details`.
 
 This document does not own:
 
@@ -32,6 +32,8 @@ This document does not own:
   - [Storage Versioning](../storage-versioning.md)
 - Security guarantee wording and access-boundary claims:
   - [Security](../security.md)
+- User-facing labels, rendered message phrasing, and template wording:
+  - [Template Bodies](../template-bodies.md)
 
 ## Error vs blocker
 
@@ -62,6 +64,8 @@ Dry-run preview:
 - State effect: Not a committed write and not stored blocker state.
 
 `ErrorCode` values are public API identifiers. Blocker codes are operation-specific result values. A public `ErrorCode` must not be reused as a blocker code unless the canonical method or schema owner explicitly allows that use.
+
+Rendered labels and messages are display text owned by [Template Bodies](../template-bodies.md). They must not be used as `ErrorCode` values, blocker-code values, or machine-readable `ToolError.details` keys.
 
 <a id="error-taxonomy"></a>
 
@@ -1236,190 +1240,6 @@ Owner links:
 - Method behavior: [`harness.close_task`](method-close-task.md)
 - `CloseReadinessBlocker` shape and categories: [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md)
 
-## User-facing labels
-
-User-facing labels may differ from public error identifiers. Labels are display text, not new public codes.
-
-| Public condition | Label detail |
-|---|---|
-| `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#label-validation-failed) |
-| `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#label-state-version-conflict) |
-| `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#label-mcp-unavailable) |
-| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#label-local-access-mismatch) |
-| `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#label-capability-insufficient) |
-| `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#label-no-active-task) |
-| scope, boundary, or baseline codes | [Scope, boundary, or baseline label](#label-scope-boundary-baseline) |
-| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | [Write Authorization label](#label-write-authorization) |
-| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | [Judgment label](#label-judgment) |
-| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | [Sensitive-action approval label](#label-sensitive-approval) |
-| `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#label-evidence-insufficient) |
-| `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#label-acceptance-required) |
-| `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#label-residual-risk-not-visible) |
-| `PROJECTION_STALE` | [`PROJECTION_STALE`](#label-projection-stale) |
-| `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#label-artifact-missing) |
-| `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#label-validator-failed) |
-
-<a id="label-validation-failed"></a>
-### `VALIDATION_FAILED` label
-
-Suggested label:
-- invalid request.
-
-Smallest unblocker:
-- Fix the payload, enum value, activation rule, profile value, or field set before retrying.
-
-<a id="label-state-version-conflict"></a>
-### `STATE_VERSION_CONFLICT` label
-
-Suggested label:
-- state version conflict.
-
-Smallest unblocker:
-- Refresh current state and retry with the current `project_state.state_version`, or replay the original idempotent request.
-
-<a id="label-mcp-unavailable"></a>
-### `MCP_UNAVAILABLE` label
-
-Suggested label:
-- Core or surface unavailable.
-
-Smallest unblocker:
-- Reconnect or diagnose Core, MCP, and surface reachability.
-
-<a id="label-local-access-mismatch"></a>
-### `LOCAL_ACCESS_MISMATCH` label
-
-Suggested label:
-- local access mismatch.
-
-Smallest unblocker:
-- Use the registered local transport, session, or binding.
-- Repair local access registration when needed.
-
-<a id="label-capability-insufficient"></a>
-### `CAPABILITY_INSUFFICIENT` label
-
-Suggested label:
-- insufficient surface capability.
-
-Smallest unblocker:
-- Use a capable surface.
-- Reduce the operation or avoid the missing capability.
-
-<a id="label-no-active-task"></a>
-### `NO_ACTIVE_TASK` label
-
-Suggested label:
-- no active Task.
-
-Smallest unblocker:
-- Select or create a Task before a Task-scoped action.
-
-<a id="label-scope-boundary-baseline"></a>
-### Scope, boundary, or baseline label
-
-Public condition:
-- `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, or `BASELINE_STALE`.
-
-Suggested label:
-- scope, boundary, or baseline issue.
-
-Smallest unblocker:
-- Confirm or narrow scope.
-- Update valid scope or baseline through the owner path.
-- Request the needed user judgment.
-
-<a id="label-write-authorization"></a>
-### Write Authorization label
-
-Public condition:
-- `WRITE_AUTHORIZATION_REQUIRED` or `WRITE_AUTHORIZATION_INVALID`.
-
-Suggested label:
-- missing or unusable pre-write check.
-
-Smallest unblocker:
-- Call or retry `harness.prepare_write` for the exact operation, current scope, and current state.
-
-<a id="label-judgment"></a>
-### Judgment label
-
-Public condition:
-- `DECISION_REQUIRED` or `DECISION_UNRESOLVED`.
-
-Suggested label:
-- judgment needed.
-
-Smallest unblocker:
-- Request or resolve the focused `UserJudgment`.
-
-<a id="label-sensitive-approval"></a>
-### Sensitive-action approval label
-
-Public condition:
-- `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED`.
-
-Suggested label:
-- sensitive-action approval needed or not usable.
-
-Smallest unblocker:
-- Request, resolve, or renew `judgment_kind=sensitive_approval`.
-
-<a id="label-evidence-insufficient"></a>
-### `EVIDENCE_INSUFFICIENT` label
-
-Suggested label:
-- evidence needed.
-
-Smallest unblocker:
-- Record, rerun, or show the missing evidence and smallest unblocker.
-
-<a id="label-acceptance-required"></a>
-### `ACCEPTANCE_REQUIRED` label
-
-Suggested label:
-- final acceptance needed.
-
-Smallest unblocker:
-- Request or resolve `judgment_kind=final_acceptance` for the visible result basis.
-
-<a id="label-residual-risk-not-visible"></a>
-### `RESIDUAL_RISK_NOT_VISIBLE` label
-
-Suggested label:
-- residual risk not visible.
-
-Smallest unblocker:
-- Show the close-relevant residual risk before final acceptance or close.
-
-<a id="label-projection-stale"></a>
-### `PROJECTION_STALE` label
-
-Suggested label:
-- stale readable view.
-
-Smallest unblocker:
-- Refresh the view before relying on it.
-
-<a id="label-artifact-missing"></a>
-### `ARTIFACT_MISSING` label
-
-Suggested label:
-- artifact issue.
-
-Smallest unblocker:
-- Restore, regenerate, replace, or reconnect the missing or unusable artifact.
-
-<a id="label-validator-failed"></a>
-### `VALIDATOR_FAILED` label
-
-Suggested label:
-- check failed.
-
-Smallest unblocker:
-- Show the specific validator or blocker when available.
-- Use this fallback only when no typed code applies.
-
 <a id="documentation-smoke-error-coverage"></a>
 
 ## Owner links
@@ -1453,3 +1273,5 @@ Smallest unblocker:
   - [Storage Records](../storage-records.md)
 - Security guarantee wording and access-boundary claims:
   - [Security](../security.md)
+- User-facing labels, rendered error message phrasing, and template-facing wording:
+  - [Template Bodies](../template-bodies.md)

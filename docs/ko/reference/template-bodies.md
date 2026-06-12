@@ -1,6 +1,6 @@
 # 템플릿 본문
 
-이 문서는 상태 카드, 판단 요청, 실행/증거 요약, 닫기 결과, 에이전트 맥락 패킷에 대한 기준 범위 활성 렌더링 본문 기대치를 담당합니다. 참조 문서일 뿐이며 상태 보기 파일, 런타임 아티팩트, QA 기록, 수락 기록, 닫기 기록을 생성하지 않습니다.
+이 문서는 상태 카드, 공개 오류 메시지, 판단 요청, 실행/증거 요약, 닫기 결과, 에이전트 맥락 패킷에 대한 기준 범위 활성 렌더링 본문 기대치를 담당합니다. 표시 기대치를 정의하지만 상태 보기 파일, 런타임 아티팩트, QA 기록, 수락 기록, 닫기 기록을 생성하지 않습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -9,6 +9,7 @@
 - 렌더링된 상태 또는 지원 표시를 위한 정확한 활성 템플릿 본문 구조
 - 해당 본문의 사용자 표시 문구 경계
 - 본문에 필요한 지역화 표시 라벨
+- 공개 오류의 사용자 표시 라벨과 해결 안내
 - 본문 자리 표시자에서 스키마 및 권한 담당 문서로 가는 링크
 
 이 문서는 담당하지 않습니다.
@@ -16,11 +17,14 @@
 - 상태 보기 권한, 최신성, 읽기 전용 파생 표시 규칙: [상태 보기 권한 참조](projection-and-templates.md)
 - 원천 상태나 저장소: [Core 모델](core-model.md)과 저장소 담당 문서
 - API 스키마나 값 집합: API 스키마 담당 문서
+- 공개 `ErrorCode` 식별자, 우선순위, 거부 응답 동작, 오류와 차단 사유 경로, 기계 판독용 `ToolError.details`: [API 오류](api/errors.md)
 - 지원 범위 밖 템플릿 후보: [범위 참조](scope.md)
 
 ## 경계
 
 템플릿 문구는 표시 문구입니다. 담당 기록을 요약할 수는 있지만, 권한을 확인해야 할 때는 그 담당 기록으로 되돌려야 합니다.
+
+공개 `ErrorCode` 값은 라벨 선택을 위한 입력 조건으로 나타날 수 있습니다. 그래도 그 식별자는 [API 오류](api/errors.md)가 담당하는 API 식별자입니다.
 
 템플릿 출력은 문구만으로 아래 일을 할 수 없습니다.
 
@@ -30,6 +34,222 @@
 - 최종 수락 생성 또는 잔여 위험 수락
 - Task 닫기 또는 닫기 준비 상태 생성
 - 담당 기록 변경
+- 공개 `ErrorCode` 식별자나 기계 판독용 세부 키 정의, 이름 변경, 지역화
+- 거부 응답 오류를 차단 사유나 차단 결과로 바꾸기
+
+## 공개 오류 표시 라벨
+
+이 섹션은 공개 API 오류를 사용자나 에이전트가 보는 접점에 렌더링할 때 사용합니다. 공개 `ErrorCode`는 그대로 두고, 라벨과 해결 안내는 표시 문구로만 씁니다.
+
+렌더링 오류 문구는 아래 기준을 지킵니다.
+
+- 정확한 진단 식별자를 보여 줄 때는 공개 `ErrorCode`를 그대로 보존합니다.
+- 접점에 공간이 있으면 짧은 라벨과 해결 안내 하나를 함께 보여 줍니다.
+- 라벨을 `CloseReadinessBlocker.code`, `WriteDecisionReason.code`, `PlannedBlocker.code`, `ToolError.details` 키와 구분합니다.
+- 오류 계약 질문은 [API 오류](api/errors.md)로 안내합니다.
+
+렌더링 오류 문구는 아래처럼 쓰면 안 됩니다.
+
+- 공개 `ErrorCode`를 지역화 라벨로 대체하기.
+- 라벨을 기계 판독용 코드로 재사용하기.
+- 닫기 차단 사유를 숨기거나 거부 응답을 차단 결과로 바꾸기.
+
+<a id="label-validation-failed"></a>
+### `VALIDATION_FAILED`
+
+적용되는 공개 조건:
+- `VALIDATION_FAILED`.
+
+표시 라벨:
+- 잘못된 요청
+
+해결 안내:
+- 다시 시도하기 전에 요청 본문, enum 값, 활성화 규칙, 프로필 값, 필드 집합을 고칩니다.
+
+<a id="label-state-version-conflict"></a>
+### `STATE_VERSION_CONFLICT`
+
+적용되는 공개 조건:
+- `STATE_VERSION_CONFLICT`.
+
+표시 라벨:
+- 상태 버전 충돌
+
+해결 안내:
+- 현재 상태를 새로 고치고 현재 `project_state.state_version`으로 다시 시도하거나 원래 멱등 요청을 재실행합니다.
+
+<a id="label-mcp-unavailable"></a>
+### `MCP_UNAVAILABLE`
+
+적용되는 공개 조건:
+- `MCP_UNAVAILABLE`.
+
+표시 라벨:
+- Core 또는 접점 사용 불가
+
+해결 안내:
+- Core, MCP, 접점 도달 가능성을 확인하고 필요하면 다시 연결합니다.
+
+<a id="label-local-access-mismatch"></a>
+### `LOCAL_ACCESS_MISMATCH`
+
+적용되는 공개 조건:
+- `LOCAL_ACCESS_MISMATCH`.
+
+표시 라벨:
+- 로컬 접근 불일치
+
+해결 안내:
+- 등록된 로컬 전송 경로, 세션, 또는 바인딩을 사용합니다.
+- 필요한 경우 로컬 접근 등록을 고칩니다.
+
+<a id="label-capability-insufficient"></a>
+### `CAPABILITY_INSUFFICIENT`
+
+적용되는 공개 조건:
+- `CAPABILITY_INSUFFICIENT`.
+
+표시 라벨:
+- 접점 역량 부족
+
+해결 안내:
+- 역량이 있는 접점을 사용합니다.
+- 동작을 줄이거나 빠진 역량이 필요 없는 경로를 선택합니다.
+
+<a id="label-no-active-task"></a>
+### `NO_ACTIVE_TASK`
+
+적용되는 공개 조건:
+- `NO_ACTIVE_TASK`.
+
+표시 라벨:
+- 활성 Task 없음
+
+해결 안내:
+- Task 범위 동작 전에 Task를 선택하거나 생성합니다.
+
+<a id="label-scope-boundary-baseline"></a>
+### 범위, 경계, 기준 상태
+
+적용되는 공개 조건:
+- `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE`.
+
+표시 라벨:
+- 범위, 경계, 기준 상태 문제
+
+해결 안내:
+- 범위를 확인하거나 좁힙니다.
+- 유효한 범위 또는 기준 상태 변경을 담당 경로로 갱신합니다.
+- 필요한 사용자 판단을 요청합니다.
+
+<a id="label-write-authorization"></a>
+### Write Authorization
+
+적용되는 공개 조건:
+- `WRITE_AUTHORIZATION_REQUIRED` 또는 `WRITE_AUTHORIZATION_INVALID`.
+
+표시 라벨:
+- 쓰기 전 확인 필요 또는 사용 불가
+
+해결 안내:
+- 정확한 동작, 현재 범위, 현재 상태로 `harness.prepare_write`를 호출하거나 다시 시도합니다.
+
+<a id="label-judgment"></a>
+### 판단
+
+적용되는 공개 조건:
+- `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`.
+
+표시 라벨:
+- 판단 필요
+
+해결 안내:
+- 집중된 `UserJudgment`를 요청하거나 해결합니다.
+
+<a id="label-sensitive-approval"></a>
+### 민감 동작 승인
+
+적용되는 공개 조건:
+- `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`.
+
+표시 라벨:
+- 민감 동작 승인 필요 또는 사용 불가
+
+해결 안내:
+- `judgment_kind=sensitive_approval`을 요청, 해결, 갱신합니다.
+
+<a id="label-evidence-insufficient"></a>
+### `EVIDENCE_INSUFFICIENT`
+
+적용되는 공개 조건:
+- `EVIDENCE_INSUFFICIENT`.
+
+표시 라벨:
+- 증거 필요
+
+해결 안내:
+- 누락된 증거를 기록하거나 재실행하거나 보여 주고, 다음에 필요한 최소 행동을 표시합니다.
+
+<a id="label-acceptance-required"></a>
+### `ACCEPTANCE_REQUIRED`
+
+적용되는 공개 조건:
+- `ACCEPTANCE_REQUIRED`.
+
+표시 라벨:
+- 최종 수락 필요
+
+해결 안내:
+- 표시된 결과 근거에 대해 `judgment_kind=final_acceptance`를 요청하거나 해결합니다.
+
+<a id="label-residual-risk-not-visible"></a>
+### `RESIDUAL_RISK_NOT_VISIBLE`
+
+적용되는 공개 조건:
+- `RESIDUAL_RISK_NOT_VISIBLE`.
+
+표시 라벨:
+- 잔여 위험이 보이지 않음
+
+해결 안내:
+- 최종 수락이나 닫기 전에 닫기 관련 잔여 위험을 보여 줍니다.
+
+<a id="label-projection-stale"></a>
+### `PROJECTION_STALE`
+
+적용되는 공개 조건:
+- `PROJECTION_STALE`.
+
+표시 라벨:
+- 상태 보기 오래됨
+
+해결 안내:
+- 그 보기에 의존하기 전에 새로 고칩니다.
+
+<a id="label-artifact-missing"></a>
+### `ARTIFACT_MISSING`
+
+적용되는 공개 조건:
+- `ARTIFACT_MISSING`.
+
+표시 라벨:
+- 아티팩트 문제
+
+해결 안내:
+- 없거나 사용할 수 없는 아티팩트를 복구, 재생성, 교체, 다시 연결합니다.
+
+<a id="label-validator-failed"></a>
+### `VALIDATOR_FAILED`
+
+적용되는 공개 조건:
+- `VALIDATOR_FAILED`.
+
+표시 라벨:
+- 확인 실패
+
+해결 안내:
+- 가능하면 특정 검증기나 확인 결과를 보여 줍니다.
+- 더 분명한 타입 있는 공개 코드가 없을 때만 이 대체 라벨을 사용합니다.
 
 <a id="status-card-body"></a>
 ## 상태 카드 본문

@@ -1,6 +1,6 @@
 # API 오류
 
-이 문서는 하네스 서버 동작을 계획하고 검토하기 위한 참조입니다. 이 문서 저장소에 MCP 서버나 런타임 동작이 구현되어 있다는 뜻이 아닙니다.
+이 문서는 하네스 API 응답의 공개 오류 계약을 정의합니다. 렌더링 라벨, 메시지 문구, 템플릿, 저장소 행, 런타임 출력은 정의하지 않습니다.
 
 ## 이 문서가 담당하는 것
 
@@ -8,7 +8,7 @@
 - 오류 우선순위: 응답 분기에 공개 오류가 여러 개 있을 때 `errors[0]`을 고르는 방식입니다.
 - 오류와 차단 사유 경로: 거부 응답, 차단 결과, `dry_run` 미리보기 중 조건이 속하는 곳입니다.
 - `STATE_VERSION_CONFLICT`: 공개 오래된 상태와 멱등성 충돌 동작입니다.
-- 사용자 표시 라벨: 공개 오류를 화면에 설명하는 지침입니다.
+- `ToolError.details`에 실리는 기계 판독용 오류 세부 필드와 보조 값입니다.
 
 ## 이 문서가 담당하지 않는 것
 
@@ -30,6 +30,8 @@
   - [저장소 버전 관리](../storage-versioning.md)
 - 보안 보장 표현과 접근 경계 주장:
   - [보안](../security.md)
+- 사용자 표시 라벨, 렌더링 메시지 문구, 템플릿 표현:
+  - [템플릿 본문](../template-bodies.md)
 
 ## 오류와 차단 사유
 
@@ -60,6 +62,8 @@
 - 상태 영향: 커밋된 쓰기가 아니며 저장된 차단 사유 상태도 아닙니다.
 
 `ErrorCode` 값은 공개 API 식별자입니다. 차단 사유 코드는 동작별 결과 값입니다. 공개 `ErrorCode`는 기준 메서드나 스키마 담당 문서가 명시적으로 허용하지 않는 한 차단 사유 코드로 재사용하면 안 됩니다.
+
+렌더링 라벨과 메시지는 [템플릿 본문](../template-bodies.md)이 담당하는 표시 문구입니다. 이 값을 `ErrorCode`, 차단 사유 코드, 기계 판독용 `ToolError.details` 키로 사용하면 안 됩니다.
 
 <a id="error-taxonomy"></a>
 ## 공개 `ErrorCode` 요약
@@ -1232,191 +1236,6 @@
 - 메서드 동작: [`harness.close_task`](method-close-task.md)
 - `CloseReadinessBlocker` 형태와 범주: [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)
 
-## 사용자 표시 라벨
-
-사용자 표시 라벨은 공개 오류 식별자와 다를 수 있습니다. 라벨은 표시 문구일 뿐 새 공개 코드가 아닙니다.
-
-| 공개 조건 | 라벨 세부 항목 |
-|---|---|
-| `VALIDATION_FAILED` | [`VALIDATION_FAILED`](#label-validation-failed) |
-| `STATE_VERSION_CONFLICT` | [`STATE_VERSION_CONFLICT`](#label-state-version-conflict) |
-| `MCP_UNAVAILABLE` | [`MCP_UNAVAILABLE`](#label-mcp-unavailable) |
-| `LOCAL_ACCESS_MISMATCH` | [`LOCAL_ACCESS_MISMATCH`](#label-local-access-mismatch) |
-| `CAPABILITY_INSUFFICIENT` | [`CAPABILITY_INSUFFICIENT`](#label-capability-insufficient) |
-| `NO_ACTIVE_TASK` | [`NO_ACTIVE_TASK`](#label-no-active-task) |
-| 범위, 경계, 기준 상태 코드 | [범위, 경계, 기준 상태 라벨](#label-scope-boundary-baseline) |
-| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | [Write Authorization 라벨](#label-write-authorization) |
-| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | [판단 라벨](#label-judgment) |
-| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | [민감 동작 승인 라벨](#label-sensitive-approval) |
-| `EVIDENCE_INSUFFICIENT` | [`EVIDENCE_INSUFFICIENT`](#label-evidence-insufficient) |
-| `ACCEPTANCE_REQUIRED` | [`ACCEPTANCE_REQUIRED`](#label-acceptance-required) |
-| `RESIDUAL_RISK_NOT_VISIBLE` | [`RESIDUAL_RISK_NOT_VISIBLE`](#label-residual-risk-not-visible) |
-| `PROJECTION_STALE` | [`PROJECTION_STALE`](#label-projection-stale) |
-| `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#label-artifact-missing) |
-| `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#label-validator-failed) |
-
-<a id="label-validation-failed"></a>
-### `VALIDATION_FAILED` 라벨
-
-권장 라벨:
-- 잘못된 요청.
-
-차단 해소에 필요한 최소 조치:
-- 다시 시도하기 전에 요청 본문, enum 값, 활성화 규칙, 프로필 값, 필드 집합을 고칩니다.
-
-<a id="label-state-version-conflict"></a>
-### `STATE_VERSION_CONFLICT` 라벨
-
-권장 라벨:
-- 상태 버전 충돌.
-
-차단 해소에 필요한 최소 조치:
-- 현재 상태를 새로 고치고 현재 `project_state.state_version`으로 다시 시도하거나 원래 멱등 요청을 재실행합니다.
-
-<a id="label-mcp-unavailable"></a>
-### `MCP_UNAVAILABLE` 라벨
-
-권장 라벨:
-- Core 또는 접점 사용 불가.
-
-차단 해소에 필요한 최소 조치:
-- Core, MCP, 접점 도달 가능성을 다시 연결하거나 진단합니다.
-
-<a id="label-local-access-mismatch"></a>
-### `LOCAL_ACCESS_MISMATCH` 라벨
-
-권장 라벨:
-- 로컬 접근 불일치.
-
-차단 해소에 필요한 최소 조치:
-- 등록된 로컬 전송 경로, 세션, 또는 바인딩을 사용합니다.
-- 필요한 경우 로컬 접근 등록을 고칩니다.
-
-<a id="label-capability-insufficient"></a>
-### `CAPABILITY_INSUFFICIENT` 라벨
-
-권장 라벨:
-- 접점 역량 부족.
-
-차단 해소에 필요한 최소 조치:
-- 역량이 있는 접점을 사용합니다.
-- 동작을 줄이거나 빠진 역량이 필요 없는 경로를 선택합니다.
-
-<a id="label-no-active-task"></a>
-### `NO_ACTIVE_TASK` 라벨
-
-권장 라벨:
-- 활성 Task 없음.
-
-차단 해소에 필요한 최소 조치:
-- Task 범위 동작 전에 Task를 선택하거나 생성합니다.
-
-<a id="label-scope-boundary-baseline"></a>
-### 범위, 경계, 기준 상태 라벨
-
-조건:
-- `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE`.
-
-권장 라벨:
-- 권장 라벨은 범위, 경계, 기준 상태 문제입니다.
-
-차단 해소에 필요한 최소 조치:
-- 범위를 확인하거나 좁힙니다.
-- 유효한 범위 또는 기준 상태 변경을 담당 경로로 갱신합니다.
-- 필요한 사용자 판단을 요청합니다.
-
-<a id="label-write-authorization"></a>
-### Write Authorization 라벨
-
-조건:
-- `WRITE_AUTHORIZATION_REQUIRED` 또는 `WRITE_AUTHORIZATION_INVALID`.
-
-권장 라벨:
-- 쓰기 전 확인 없음 또는 사용할 수 없음.
-
-차단 해소에 필요한 최소 조치:
-- 정확한 동작, 현재 범위, 현재 상태로 `harness.prepare_write`를 호출하거나 다시 시도합니다.
-
-<a id="label-judgment"></a>
-### 판단 라벨
-
-조건:
-- `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`.
-
-권장 라벨:
-- 판단 필요.
-
-차단 해소에 필요한 최소 조치:
-- 집중된 `UserJudgment`를 요청하거나 해결합니다.
-
-<a id="label-sensitive-approval"></a>
-### 민감 동작 승인 라벨
-
-조건:
-- `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`.
-
-권장 라벨:
-- 민감 동작 승인 필요 또는 사용 불가.
-
-차단 해소에 필요한 최소 조치:
-- `judgment_kind=sensitive_approval`을 요청, 해결, 갱신합니다.
-
-<a id="label-evidence-insufficient"></a>
-### `EVIDENCE_INSUFFICIENT` 라벨
-
-권장 라벨:
-- 증거 필요.
-
-차단 해소에 필요한 최소 조치:
-- 누락된 증거를 기록하거나 재실행합니다.
-- 증거 공백과 최소 차단 해소 조치를 보여 줍니다.
-
-<a id="label-acceptance-required"></a>
-### `ACCEPTANCE_REQUIRED` 라벨
-
-권장 라벨:
-- 최종 수락 필요.
-
-차단 해소에 필요한 최소 조치:
-- 표시된 결과 근거에 대해 `judgment_kind=final_acceptance`를 요청하거나 해결합니다.
-
-<a id="label-residual-risk-not-visible"></a>
-### `RESIDUAL_RISK_NOT_VISIBLE` 라벨
-
-권장 라벨:
-- 잔여 위험이 보이지 않음.
-
-차단 해소에 필요한 최소 조치:
-- 최종 수락이나 닫기 전에 닫기 관련 잔여 위험을 보여 줍니다.
-
-<a id="label-projection-stale"></a>
-### `PROJECTION_STALE` 라벨
-
-권장 라벨:
-- 읽기용 보기 오래됨.
-
-차단 해소에 필요한 최소 조치:
-- 그 보기에 의존하기 전에 새로 고칩니다.
-
-<a id="label-artifact-missing"></a>
-### `ARTIFACT_MISSING` 라벨
-
-권장 라벨:
-- 아티팩트 문제.
-
-차단 해소에 필요한 최소 조치:
-- 없거나 사용할 수 없는 아티팩트를 복구, 재생성, 교체, 다시 연결합니다.
-
-<a id="label-validator-failed"></a>
-### `VALIDATOR_FAILED` 라벨
-
-권장 라벨:
-- 확인 실패.
-
-차단 해소에 필요한 최소 조치:
-- 가능하면 특정 검증기나 차단 사유를 보여 줍니다.
-- 타입 있는 코드가 없을 때만 이 대체 코드를 사용합니다.
-
 <a id="documentation-smoke-error-coverage"></a>
 
 ## 담당 문서 링크
@@ -1450,3 +1269,5 @@
   - [저장소 기록](../storage-records.md)
 - 보안 보장 표현과 접근 경계 주장:
   - [보안](../security.md)
+- 사용자 표시 라벨, 렌더링 오류 메시지 문구, 템플릿 표현:
+  - [템플릿 본문](../template-bodies.md)
