@@ -27,10 +27,10 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | API value sets and blocker category values | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
 | API error family index | [`api/errors.md`](api/errors.md) |
 | Public `ErrorCode` identifiers and meanings | [`api/error-codes.md`](api/error-codes.md) |
-| API error precedence and state conflict behavior | [`api/error-precedence.md`](api/error-precedence.md) |
-| API response branch routing for rejected, blocked, and `dry_run` branches | [`api/error-routing.md`](api/error-routing.md) |
-| Close-readiness blocker/API response boundary | [`api/blocker-routing.md`](api/blocker-routing.md) |
-| Machine-readable `ToolError.details` | [`api/error-details.md`](api/error-details.md) |
+| API error selection precedence | [`api/error-precedence.md`](api/error-precedence.md) |
+| API response branch routing | [`api/error-routing.md`](api/error-routing.md) |
+| Close-readiness blocker/API response boundary routing | [`api/blocker-routing.md`](api/blocker-routing.md) |
+| Machine-readable `ToolError.details` and helper values | [`api/error-details.md`](api/error-details.md) |
 
 ## Storage owners
 
@@ -65,7 +65,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | `harness.close_task` method behavior | [`api/method-close-task.md`](api/method-close-task.md) |
 | `CloseReadinessBlocker` shape | [`api/schema-state.md`](api/schema-state.md) |
 | Blocker category values | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
-| Close-readiness blocker/API response boundary | [`api/blocker-routing.md`](api/blocker-routing.md) |
+| Close-readiness blocker/API response boundary routing | [`api/blocker-routing.md`](api/blocker-routing.md) |
 
 ## Maintenance and metadata
 

@@ -27,10 +27,10 @@
 | API 값 집합과 차단 사유 범주 값 | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
 | API 오류 문서 묶음 색인 | [`api/errors.md`](api/errors.md) |
 | 공개 `ErrorCode` 식별자와 의미 | [`api/error-codes.md`](api/error-codes.md) |
-| API 오류 우선순위와 상태 충돌 동작 | [`api/error-precedence.md`](api/error-precedence.md) |
-| 거부, 차단, `dry_run` 분기의 API 응답 처리 경로 | [`api/error-routing.md`](api/error-routing.md) |
-| 닫기 차단 사유와 API 응답 경계 | [`api/blocker-routing.md`](api/blocker-routing.md) |
-| 기계 판독용 `ToolError.details` | [`api/error-details.md`](api/error-details.md) |
+| API 오류 선택 우선순위 | [`api/error-precedence.md`](api/error-precedence.md) |
+| API 응답 분기 처리 경로 | [`api/error-routing.md`](api/error-routing.md) |
+| 닫기 차단 사유와 API 응답 사이의 차단 사유 처리 경로 | [`api/blocker-routing.md`](api/blocker-routing.md) |
+| 기계 판독용 `ToolError.details`와 보조 값 | [`api/error-details.md`](api/error-details.md) |
 
 ## 저장소 담당 문서
 
@@ -65,7 +65,7 @@
 | `harness.close_task` 메서드 동작 | [`api/method-close-task.md`](api/method-close-task.md) |
 | `CloseReadinessBlocker` 형태 | [`api/schema-state.md`](api/schema-state.md) |
 | 차단 사유 범주 값 | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
-| 닫기 차단 사유와 API 응답 경계 | [`api/blocker-routing.md`](api/blocker-routing.md) |
+| 닫기 차단 사유와 API 응답 사이의 차단 사유 처리 경로 | [`api/blocker-routing.md`](api/blocker-routing.md) |
 
 ## 유지보수와 메타데이터
 
