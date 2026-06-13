@@ -447,6 +447,9 @@ Allowed examples:
 <a id="design-quality-evidence-non-satisfying-references"></a>
 ### References that do not automatically satisfy evidence
 
+Boundary:
+- Chat claims, general summaries, rendered projection text, unregistered files, screenshots without an owner route, test-pass status by itself, final acceptance, or residual-risk acceptance do not automatically satisfy required evidence.
+
 Close effect:
 - These references do not remove a required-evidence blocker by themselves.
 
