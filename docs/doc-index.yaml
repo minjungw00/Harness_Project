@@ -846,7 +846,6 @@ documents:
     owner_for:
       - "template body wording"
       - "status card wording"
-      - "Decision Packet wording"
       - "public-error display labels"
       - "rendered error message phrasing"
     not_owner_for:

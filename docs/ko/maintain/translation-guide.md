@@ -55,7 +55,7 @@
 - 스키마 이름, 스키마 필드, 객체 이름
 - enum 값, 상태 값, 오류 코드, validator ID, 테이블 이름
 - DDL, 열 이름, 저장소 식별자, 템플릿 이름, 코드 리터럴
-    - `Product Repository`, `Harness Runtime Home`, `Projection`, `Write Authorization`, `Evidence Manifest`, `Decision Packet`처럼 의도적으로 정확해야 하는 하네스 라벨
+    - `Product Repository`, `Harness Runtime Home`, `Projection`, `Write Authorization`처럼 의도적으로 정확해야 하는 하네스 라벨
 
 코드 블록, 스키마 예시, API 예시, 파일 경로, 필드 목록, 리터럴 값 표 안의 정확한 문자열은 번역하지 않습니다. 한국어 표시 라벨은 독자를 위한 문구일 뿐이며 기준 식별자를 대신하지 않습니다.
 
@@ -129,7 +129,6 @@
 | lifecycle 의미 | 생명주기의 뜻 |
 | staged handle을 전달한다 | 스테이징된 아티팩트 핸들을 전달한다 |
 | `surface_id`를 접점 권한으로 본다 | `surface_id`는 접점 식별자일 뿐 권한 증거가 아니다 |
-| Evidence Manifest를 일반 증거 목록처럼 번역한다 | 정확한 라벨이면 `Evidence Manifest`, 일반 산문이면 증거 목록이나 증거 명세 |
 
 ## 6. 한국어 기술 문서 문체
 

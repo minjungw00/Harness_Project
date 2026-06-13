@@ -55,7 +55,7 @@ Preserve these exactly:
 - schema names, schema fields, and object names
 - enum values, status values, error codes, validator IDs, and table names
 - DDL, column names, storage identifiers, template names, and code literals
-    - Harness labels that are intentionally exact, such as `Product Repository`, `Harness Runtime Home`, `Projection`, `Write Authorization`, `Evidence Manifest`, and `Decision Packet`
+    - Harness labels that are intentionally exact, such as `Product Repository`, `Harness Runtime Home`, `Projection`, and `Write Authorization`
 
 Do not translate exact strings inside code blocks, schema examples, API examples, file paths, field lists, or literal-value tables. Localized Korean display labels are reader-facing text; they do not replace canonical identifiers.
 
@@ -129,7 +129,6 @@ Examples:
 | lifecycle 의미 | 생명주기의 뜻 |
 | staged handle을 전달한다 | 스테이징된 아티팩트 핸들을 전달한다 |
 | `surface_id`를 접점 권한으로 본다 | `surface_id`는 접점 식별자일 뿐 권한 증거가 아니다 |
-| Evidence Manifest를 일반 증거 목록처럼 번역한다 | 정확한 라벨이면 `Evidence Manifest`, 일반 산문이면 증거 목록이나 증거 명세 |
 
 ## 6. Korean technical writing style
 

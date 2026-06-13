@@ -69,8 +69,6 @@ identifier_preservation:
     - "Harness Runtime Home"
     - "Projection"
     - "Write Authorization"
-    - "Evidence Manifest"
-    - "Decision Packet"
 avoid:
   ko:
     - phrase: "close 가능성 평가"
