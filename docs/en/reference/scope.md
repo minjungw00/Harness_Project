@@ -82,9 +82,9 @@ User judgment owners:
 <a id="excluded-from-baseline-scope"></a>
 ## Excluded from baseline scope
 
-The following capability families are outside the supported baseline unless this Scope reference and the affected owner documents promote them.
+The following capability families are outside the supported baseline scope. They become supported only when this Scope reference includes them and the affected current owner documents define their behavior.
 
-Not included:
+Excluded capabilities:
 
 - native artifact capture from surfaces
 - persistent projection jobs, projection reconciliation, generated projection files, and managed projection repair
@@ -100,16 +100,21 @@ Not included:
 - generated conformance artifacts
 - operations profiles
 
-Does not imply:
+Scope rule:
 
+- Capabilities listed here are outside the baseline scope.
 - Excluded capabilities are not baseline requirements.
-- Approval of a sensitive action does not create observation, blocking, isolation, QA, or verification behavior unless the relevant owners define that capability as supported.
+- Excluded capabilities are not supported behavior unless this Scope reference and the affected current owner documents explicitly define them as supported.
+- Sensitive-action approval does not by itself imply broad security monitoring, quarantine, QA gates, verification gates, command/network/secret observation, pre-tool blocking, isolation, or any other out-of-scope behavior.
 
-Owner links:
+Owner routing:
 
-- Security non-claims, guarantee levels, and observation boundaries: [Security](security.md).
-- Value names and reserved values: [API Value Sets](api/schema-value-sets.md).
-- Conformance procedures and checks: [Conformance](conformance.md).
+- API method behavior, schemas, and value names: [API Methods](api/methods.md), [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), [API Judgment Schemas](api/schema-judgment.md), and [API Value Sets](api/schema-value-sets.md).
+- Storage records/effects and artifact lifecycle: [Storage](storage.md), [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), and [Artifact Storage](storage-artifacts.md).
+- Runtime and repository boundaries: [Runtime Boundaries](runtime-boundaries.md).
+- Security non-claims, guarantee levels, observation, blocking, isolation, and sensitive-action approval boundaries: [Security](security.md) and [Core Model](core-model.md).
+- Conformance procedures and check expectations: [Conformance](conformance.md).
+- Product terminology and bilingual terminology controls: [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md), and [docs/terminology-map.yaml](../../terminology-map.yaml).
 
 <a id="reserved-and-profile-gated-values"></a>
 ## Reserved and profile-gated values
@@ -151,7 +156,7 @@ Promotion must define:
 
 If no current owner exists for the capability, promotion requires creating or designating that owner before the capability is described as supported. Do not route readers to a placeholder as if it were a current owner.
 
-Does not imply:
+Promotion boundary:
 
 - Mentioning an excluded, reserved, or profile-gated capability in examples, route text, schema notes, value sets, or this reference does not promote it.
 
