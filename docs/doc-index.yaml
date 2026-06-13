@@ -681,7 +681,7 @@ documents:
       - "close-readiness blocker routing"
       - "close-readiness blocker categories"
       - "close_task blocker mapping"
-      - "forbidden public error as blocker mapping"
+      - "public-code-to-blocker boundary"
     normative_level: "contract"
     audience:
       - "API implementers"
@@ -697,7 +697,7 @@ documents:
       - "close-readiness blocker category routing"
       - "API error versus close-readiness blocker boundary"
       - "close_task blocker mapping"
-      - "forbidden public error as blocker mapping"
+      - "public-code-to-blocker boundary"
     not_owner_for:
       - "Core close-readiness meaning"
       - "CloseReadinessBlocker schema shape"
@@ -890,7 +890,7 @@ documents:
       - "machine-readable error details"
       - "storage record authority or layout"
       - "storage contracts"
-      - "display packages outside current rendered bodies"
+      - "rendered bodies outside current template-body scope"
     normative_level: "contract"
     audience:
       - "implementers"

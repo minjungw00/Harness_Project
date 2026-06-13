@@ -2,9 +2,9 @@
 
 This document owns the baseline persistent storage record families and storage record layout. Persistent records are local records committed by Core for later reads inside the `Harness Runtime Home`.
 
-Persistent records are not tamper-proof storage, anti-forgery proof, external audit guarantees, or `Product Repository` write authority.
+Persistent records provide local storage authority for Harness records. Security guarantees, external audit guarantees, anti-forgery claims, and `Product Repository` write authority remain with their owners.
 
-## Owns / does not own
+## Owner boundaries
 
 This document owns:
 
@@ -146,7 +146,7 @@ Rules:
 
 - Core must parse and validate JSON before commit.
 - API-shaped stored JSON validates against the API schema owners.
-- Storage-only JSON validates against this document or the owner document named by this document.
+- Storage-only JSON validates against this storage contract or the referenced storage owner.
 - SQLite defaults such as `'{}'` and `'[]'` are storage defaults only; they do not make API fields optional.
 
 | Record family | JSON `TEXT` category |

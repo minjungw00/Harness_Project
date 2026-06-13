@@ -419,7 +419,7 @@ Owner:
 - [Scope Reference](scope.md)
 
 Notes:
-- Use this phrase only to signal that an out-of-scope capability may need an owner created or designated before activation.
+- Use this phrase only to signal that an out-of-scope capability may need an owner created or designated before promotion.
 - An owner placeholder is not an existing owner document.
 
 ### `Task`
@@ -599,7 +599,7 @@ Owner:
 - [API blocker routing](api/blocker-routing.md)
 
 Notes:
-- This is the owner-path check that derives close readiness and remaining close blockers.
+- Close readiness evaluation derives close readiness and remaining close blockers through the Core and method owners.
 
 ### close-readiness blocker
 
@@ -1207,7 +1207,7 @@ Owner:
 - [API blocker routing](api/blocker-routing.md)
 
 Notes:
-- Blocker routing covers close-readiness blocker routing, close-task blocker mapping, and forbidden public-error-as-blocker mapping.
+- Blocker routing covers close-readiness blocker routing, close-task blocker mapping, and the public-code-to-blocker boundary.
 
 ### `ToolError.details`
 

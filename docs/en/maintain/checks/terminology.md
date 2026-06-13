@@ -143,12 +143,12 @@ Check:
 - Search maintained Reference docs, glossary entries, `docs/terminology-map.yaml`, `doc-index.yaml`, display wording owners, and changed metadata for retired, deleted, or unsupported concept names.
 - Confirm unsupported capability names are used only when a semantic owner still needs the exact name, or when a Maintain/terminology owner intentionally lists a searchable forbidden expression.
 - Confirm Reference owners describe stable categories, owner gaps, or out-of-scope capability families instead of preserving obsolete names as examples.
-- Confirm negative examples do not make removed names look like supported concepts, owner routes, storage record families, or display packages.
+- Confirm negative examples do not make removed names look like supported concepts, owner routes, storage record families, or rendered body families.
 
 Failure:
 - A glossary entry, terminology-map entry, metadata route, Reference page, or display wording owner keeps a removed or unsupported concept name solely to say that it is not supported.
 - A negative example causes retrieval to treat the old name as a supported contract, supported capability, or owner route.
-- A display wording owner or storage-related note keeps an unsupported package or pseudo-family name that becomes searchable as an official concept.
+- A display wording owner or storage-related note keeps an unsupported rendered-body or storage-like family name that becomes searchable as an official concept.
 
 Fix:
 - Remove the stale name or replace it with the stable category and the applicable owner link.

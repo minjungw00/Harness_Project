@@ -1032,15 +1032,15 @@ terms:
       ko:
         - "docs/ko/reference/api/blocker-routing.md"
     notes:
-      - "Blocker routing covers close-readiness blocker routing, close-task blocker mapping, and forbidden-public-error-as-blocker mapping."
+      - "Blocker routing covers close-readiness blocker routing, close-task blocker mapping, and the public-code-to-blocker boundary."
       - "The owner document path remains `api/blocker-routing.md`."
       - "`CloseReadinessBlocker` schema shape belongs to `api/schema-state.md`."
       - "The close-readiness authority concept belongs to `reference/core-model.md`."
   forbidden_public_error_as_blocker_mapping:
     category: "api_concept"
-    en: "forbidden public-error-as-blocker mapping"
-    ko_reference: "금지된 공개 오류의 차단 사유 매핑"
-    ko_user: "금지된 공개 오류의 차단 사유 매핑"
+    en: "public-code-to-blocker boundary"
+    ko_reference: "공개 코드와 blocker 경계"
+    ko_user: "공개 코드와 blocker 경계"
     preserve_as_identifier:
       - "ErrorCode"
       - "CloseReadinessBlocker.code"
@@ -1050,6 +1050,7 @@ terms:
       ko:
         - "docs/ko/reference/api/blocker-routing.md"
     notes:
+      - "The YAML key is metadata-only; use the `en` and Korean labels as the current display terms."
       - "Public `ErrorCode` values are not copied into `CloseReadinessBlocker.code` unless the schema or method owner explicitly allows that exact use."
   dry_run:
     category: "api_concept"

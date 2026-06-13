@@ -124,7 +124,7 @@ User-facing docs explain what the reader can decide, expect, or do. Avoid intern
 
 Reference-facing docs may use schema names, API method names, enum values, table names, and error codes, but exact identifiers must stay in backticks. A reference page may define only the contract it owns. When it mentions a neighboring contract, summarize briefly and link to that owner.
 
-Display wording owners define rendered body guidance, labels, and display phrasing only. They do not own API semantics, close-readiness blocker semantics, storage records, or wording for unsupported package concepts. Route those concerns to the focused API, blocker, storage, scope, or terminology owner.
+Display wording owners define rendered body guidance, labels, and display phrasing only. They do not own API semantics, close-readiness blocker semantics, storage records, or wording for out-of-scope rendered bodies. Route those concerns to the focused API, blocker, storage, scope, or terminology owner.
 
 Maintain docs should sound like editing instructions. They can name owner paths and duplication rules, but they should not reproduce technical contract bodies.
 
@@ -219,10 +219,10 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] README, route, and maintain documents use short summaries plus owner links instead of copied contract explanations.
 - [ ] API, storage, schema, security, access-boundary, and close-readiness details live in the appropriate Reference owner.
 - [ ] API error code meanings, precedence, response branch routing, close-readiness blocker routing, and machine-readable details route to their separate API owners.
-- [ ] Display wording owners do not define API semantics, blocker semantics, storage records, or unsupported package wording.
+- [ ] Display wording owners do not define API semantics, blocker semantics, storage records, or out-of-scope rendered-body wording.
 - [ ] Value names are not treated as baseline scope behavior merely because they exist in schemas, examples, storage notes, or out-of-scope lists.
 - [ ] Removed or unsupported concept names do not remain in glossary, terminology-map, metadata, negative examples, or display wording owners unless a terminology owner intentionally preserves a searchable banned expression.
-- [ ] Storage record references name persisted record families from the storage owner and do not create pseudo-families through negative examples.
+- [ ] Storage record references name persisted record families from the storage owner and do not create storage-like family names through negative examples.
 - [ ] `active` is used only for runtime or currently applied state, exact identifiers, or status values, not for supported contracts or owner routing.
 - [ ] Documentation-routing concepts such as `applicable owner path` are not described as product behavior, storage persistence, or runtime state.
 - [ ] Implementation guidance and metadata use durable implementation wording, not build-moment or interim-stage labels.

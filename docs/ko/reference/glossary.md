@@ -1207,7 +1207,7 @@
 - [API blocker 처리 경로](api/blocker-routing.md)
 
 설명:
-- blocker 처리 경로는 닫기 준비 상태 blocker 처리 경로, `close_task` blocker 매핑, 금지된 공개 오류의 blocker 표현을 다룹니다.
+- blocker 처리 경로는 닫기 준비 상태 blocker 처리 경로, `close_task` blocker 매핑, 공개 코드와 blocker 경계를 다룹니다.
 
 ### `ToolError.details`
 

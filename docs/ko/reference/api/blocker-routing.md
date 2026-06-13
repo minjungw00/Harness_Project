@@ -10,7 +10,7 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 
 - 닫기 준비 상태 차단 사유 처리 범주와 공개 오류 코드 묶음의 관계.
 - `ToolRejectedResponse.errors[]` 공개 API 오류와 `CloseReadinessBlocker[]` 닫기 차단 사유 데이터 사이의 경계.
-- 공개 `ErrorCode`를 `CloseReadinessBlocker.code`에 복사하지 않고 공개 오류 코드 묶음을 닫기 차단 사유로 표현하는 조건.
+- 공개 `ErrorCode`를 `CloseReadinessBlocker.code`에 복사하지 않고 공개 오류 코드 묶음을 닫기 차단 사유로 표현할 수 있는 방식.
 - 사전 확인 거부, 읽기 전용 닫기 확인, 차단된 닫기 시도, 닫힌 결과, 유효하지 않은 종료 전이에 대한 `harness.close_task` 차단 사유 매핑.
 - 닫기 준비 상태 blocker 처리 경로가 거부 응답, 차단 결과, `dry_run` 미리보기와 연결되는 방식.
 
@@ -43,7 +43,7 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 | 유효한 `dry_run` 미리보기에서 차단 사유형 결과 예상 | `DryRunSummary.would_blockers: PlannedBlocker[]` | 미리보기 차단 사유는 저장된 `CloseReadinessBlocker` 객체가 아니며 닫기 준비 상태를 만들지 않습니다. |
 | 응답 분기 선택이 질문인 경우 | [API 오류 처리 경로](error-routing.md) | 이 문서는 응답 분기가 정해진 뒤의 차단 사유 의미를 다룹니다. |
 
-## 금지된 공개 오류의 표현
+## 공개 오류와 blocker 경계
 
 공개 `ErrorCode` 값은 공개 API 식별자이지 차단 사유 코드가 아닙니다. 어떤 조건이 유효한 닫기 준비 상태 평가 중 발견되고, 적용되는 담당 문서가 그 조건에 대해 지원되는 차단 사유 범주나 차단 사유 코드를 정의할 때만 닫기 차단 사유가 공개 오류 코드 묶음에 대응할 수 있습니다.
 
@@ -297,15 +297,14 @@ blocker 처리 경로:
 응답 경계:
 - 오래된 상태는 닫기 차단 사유가 아닙니다.
 
-## 비주장
+## 권한 경계
 
-blocker 처리 경로는 아래를 의미하지 않습니다.
+blocker 처리 경로는 닫기 준비 상태 발견 사항을 분류합니다. 경로가 정해진 blocker 데이터는 아래 권한을 각 담당 문서에 남깁니다.
 
-- 최종 수락
-- 잔여 위험 수락
-- 사용자 승인, 민감 동작 승인, `Write Authorization`
-- 증거 충분성 또는 아티팩트 가용성
-- 닫기 완료 또는 종료 `Task` 상태
-- 차단 사유 지속 저장 또는 상태 버전 증가
+- 최종 수락과 잔여 위험 수락
+- 사용자 소유 판단, 민감 동작 승인, `Write Authorization`
+- 증거 충분성과 아티팩트 가용성
+- 닫기 완료와 종료 `Task` 상태
+- 차단 사유 지속 저장과 상태 버전 증가
 - 렌더링 표시 문구
-- Core 권한, 메서드, 스키마, 저장소, 템플릿 담당 문서를 우회할 권한
+- Core 권한, 메서드, 스키마, 저장소, 템플릿 계약

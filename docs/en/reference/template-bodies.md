@@ -1,8 +1,8 @@
 # Template bodies
 
-This document owns display-facing wording for current rendered template bodies: status cards, public error messages, judgment requests, run/evidence summaries, close results, and agent context packets. It owns rendered body guidance, user-facing labels, and display phrasing only; authority, storage records, API error semantics, and close-readiness blocker semantics stay with the linked owner records.
+This document owns display-facing wording for current rendered template bodies: status cards, public error messages, judgment requests, run/evidence summaries, close results, and agent context packets. It owns rendered body guidance, user-facing labels, and display phrasing only; authority, storage records, API error semantics, and close-readiness blocker semantics stay with the linked owners.
 
-## Owns / Does not own
+## Owner boundaries
 
 This document owns:
 
@@ -19,30 +19,26 @@ This document does not own:
 - API schemas, value sets, public `ErrorCode` identifiers, or public `ErrorCode` semantics; see API schema owners and [API error codes](api/error-codes.md)
 - error precedence, rejected-response behavior, response branch routing, or machine-readable `ToolError.details`; see [API error precedence](api/error-precedence.md), [API error routing](api/error-routing.md), and [API error details](api/error-details.md)
 - close-readiness blocker semantics, blocker-code routing, or `CloseReadinessBlocker` shape; see [Core Model](core-model.md), [API State Schemas](api/schema-state.md), and [API blocker routing](api/blocker-routing.md)
-- display packages outside the current bodies listed above; see [Scope Reference](scope.md) for support boundaries
+- rendered bodies outside the current list; see [Scope Reference](scope.md) for support boundaries
 
-## Boundary
+## Authority boundary
 
 Template text is display text. It can summarize owner records, but it must route authority questions back to those records.
 
 Public `ErrorCode` values may appear as input conditions for label selection, but those identifiers and their meanings remain API-owned by [API error codes](api/error-codes.md). Error precedence, response branch routing, blocker mappings, and machine-readable details remain with their API owners.
 
-Template output cannot by wording alone:
+Template wording must not, by itself:
 
-- authorize writes
-- create evidence or persistent artifacts
-- satisfy evidence, QA, verification, acceptance, or close gates
-- create final acceptance or accept residual risk
-- close a Task or create close readiness
-- mutate owner records
+- authorize writes or mutate owner records
+- create evidence, persistent artifacts, final acceptance, or residual-risk acceptance
+- satisfy evidence, QA, verification, acceptance, close-readiness, or close gates
 - define storage record layout or make a rendered body the storage authority
-- define, rename, localize, or change the semantics of public `ErrorCode` identifiers or machine-readable detail keys
-- define close-readiness blocker semantics, blocker codes, or blocker routing
+- define, rename, localize, or change public `ErrorCode` identifiers, machine-readable detail keys, close-readiness blocker semantics, blocker codes, or blocker routing
 - convert rejected-response errors into blockers or blocked results
 
 ## Public error display labels
 
-Use this section when rendering public API errors for a user or agent-facing surface. The public `ErrorCode` stays unchanged, and its meaning stays with the API owner. A label or recovery cue is display text only.
+Use the public error display label rules when rendering public API errors for a user or agent-facing surface. The public `ErrorCode` stays unchanged, and its meaning stays with the API owner. A label or recovery cue is display text only.
 
 Rendered error copy must:
 

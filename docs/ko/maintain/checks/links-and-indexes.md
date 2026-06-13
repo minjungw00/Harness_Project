@@ -141,7 +141,7 @@
 - 공개 `ErrorCode` 의미는 [API 오류 코드](../../reference/api/error-codes.md)로 보냅니다.
 - 우선순위, 충돌 선택, 오래된 상태 순서는 [API 오류 우선순위](../../reference/api/error-precedence.md)로 보냅니다.
 - 거부 응답, 차단 결과, `dry_run` 응답 분기 경로는 [API 오류 처리 경로](../../reference/api/error-routing.md)로 보냅니다.
-- 닫기 준비 상태 blocker 처리 경로, `harness.close_task` 차단 사유 매핑, 금지된 공개 오류의 차단 사유 매핑은 [API blocker 처리 경로](../../reference/api/blocker-routing.md)로 보냅니다.
+- 닫기 준비 상태 blocker 처리 경로, `harness.close_task` 차단 사유 매핑, 공개 코드와 blocker 경계는 [API blocker 처리 경로](../../reference/api/blocker-routing.md)로 보냅니다.
 - 기계 판독용 `ToolError.details` 필드, 보조 값, 세부 값 의미는 [API 오류 세부사항](../../reference/api/error-details.md)으로 보냅니다.
 
 실패 조건:

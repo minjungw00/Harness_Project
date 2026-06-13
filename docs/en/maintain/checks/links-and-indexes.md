@@ -141,7 +141,7 @@ Check:
 - Route public `ErrorCode` meanings to [API error codes](../../reference/api/error-codes.md).
 - Route precedence, conflict selection, and stale-state ordering to [API error precedence](../../reference/api/error-precedence.md).
 - Route rejected-response, blocked-result, and `dry_run` response branch routing to [API error routing](../../reference/api/error-routing.md).
-- Route close-readiness blocker routing, `harness.close_task` blocker mapping, and forbidden public-error-as-blocker mapping to [API blocker routing](../../reference/api/blocker-routing.md).
+- Route close-readiness blocker routing, `harness.close_task` blocker mapping, and the public-code-to-blocker boundary to [API blocker routing](../../reference/api/blocker-routing.md).
 - Route machine-readable `ToolError.details` fields, helper values, and detail-value meanings to [API error details](../../reference/api/error-details.md).
 
 Failure:

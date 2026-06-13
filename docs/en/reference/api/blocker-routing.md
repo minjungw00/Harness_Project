@@ -10,7 +10,7 @@ This document owns:
 
 - Close-readiness blocker routing categories and their relationship to public error-code families.
 - The boundary between `ToolRejectedResponse.errors[]` public API errors and `CloseReadinessBlocker[]` close-readiness blocker data.
-- Conditions where a public error-code family is represented as a close-readiness blocker without copying the public `ErrorCode` into `CloseReadinessBlocker.code`.
+- How a public error-code family may be represented as a close-readiness blocker without copying the public `ErrorCode` into `CloseReadinessBlocker.code`.
 - `harness.close_task` blocker mapping for preflight rejection, read-only close checks, blocked close attempts, closed results, and invalid terminal transitions.
 - How close-readiness blocker routing relates to rejected responses, blocked results, and `dry_run` previews.
 
@@ -43,7 +43,7 @@ Exact `CloseReadinessBlocker.category` value names belong to [API Value Sets](sc
 | Valid dry-run preview predicts blocker-like outcomes | `DryRunSummary.would_blockers: PlannedBlocker[]` | Preview blockers are not stored `CloseReadinessBlocker` objects and do not create close-readiness state. |
 | Response branch selection is the question | [API error routing](error-routing.md) | This page routes blocker meaning after the response branch is known. |
 
-## Forbidden public error representation
+## Public error to blocker boundary
 
 Public `ErrorCode` values are public API identifiers, not blocker codes. A close-readiness blocker may correspond to a public error-code family only when the condition is found during a valid close-readiness evaluation and the applicable owner defines a supported blocker category or blocker code for that condition.
 
@@ -297,15 +297,14 @@ Response path:
 Response boundary:
 - Stale state is not a close blocker.
 
-## Non-claims
+## Authority boundary
 
-Blocker routing does not imply:
+Blocker routing classifies close-readiness findings. The routed blocker data leaves these authorities with their owners:
 
-- final acceptance
-- residual-risk acceptance
-- user approval, sensitive-action approval, or `Write Authorization`
-- evidence sufficiency or artifact availability
-- close completion or terminal `Task` state
-- blocker persistence or state-version increment
+- final acceptance and residual-risk acceptance
+- user-owned judgment, sensitive-action approval, and `Write Authorization`
+- evidence sufficiency and artifact availability
+- close completion and terminal `Task` state
+- blocker persistence and state-version increments
 - rendered display wording
-- permission to bypass the Core authority, method, schema, storage, or template owner
+- Core authority, method, schema, storage, and template contracts

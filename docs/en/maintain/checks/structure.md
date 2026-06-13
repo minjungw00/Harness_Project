@@ -187,17 +187,17 @@ Owner:
 Check:
 - Inspect display wording owners, template pages, and rendered-label guidance for contract claims.
 - Confirm display wording owners define rendered body guidance, labels, and display phrasing only.
-- Confirm API semantics, close-readiness blocker semantics, storage records, and unsupported package wording route to the focused owner instead of being defined by display text.
+- Confirm API semantics, close-readiness blocker semantics, storage records, and out-of-scope rendered-body names route to the focused owner instead of being defined by display text.
 
 Failure:
 - A display wording owner defines `ErrorCode` meaning, response branch behavior, close-readiness blocker meaning, storage record authority, or storage layout.
 - A rendered label, message, or package phrase is treated as the canonical API value, blocker value, storage record, or supported concept.
-- Unsupported package wording remains in display guidance solely as a negative example and makes the unsupported concept look official.
+- An out-of-scope rendered-body name remains in display guidance solely as a negative example and makes the name look official.
 
 Fix:
 - Keep the display wording only when it is needed for rendered text.
 - Route API meaning, blocker meaning, storage records, support availability, and terminology to their focused owners.
-- Remove unsupported package wording unless a terminology owner intentionally preserves a searchable banned expression.
+- Remove out-of-scope rendered-body names unless a terminology owner intentionally preserves a searchable banned expression.
 
 ## CHK-SCOPE-001: baseline/out-of-scope leakage
 
@@ -289,18 +289,18 @@ Owner:
 Check:
 - Inspect storage mentions in changed docs, examples, route pages, metadata, and display wording owners.
 - Confirm storage record references focus on persisted record families defined by the storage owner.
-- Confirm unsupported pseudo-families are not preserved as negative examples in a way that turns them into official storage concepts.
+- Confirm storage-like names outside the persisted record families are not preserved as negative examples in a way that turns them into official storage concepts.
 - Confirm API shapes, display labels, and documentation-routing terms are not described as storage record families.
 
 Failure:
 - A non-storage page invents or names a storage-like family that the storage owner does not define.
-- A negative example gives an unsupported pseudo-family enough structure, naming, or repetition that it becomes searchable as an official concept.
+- A negative example gives an unsupported storage-like name enough structure, naming, or repetition that it becomes searchable as an official concept.
 - A schema, rendered label, owner route, or metadata key is described as a persisted storage record.
 
 Fix:
 - Retarget the statement to the persisted record family named by Storage Records, or remove the unsupported name.
 - Route storage effects to Storage Effects and storage layout to Storage Records.
-- Use stable categories when explaining non-storage concepts instead of inventing pseudo-family names.
+- Use stable categories when explaining non-storage concepts instead of inventing storage-like family names.
 
 ## CHK-READ-001: user-facing readability
 

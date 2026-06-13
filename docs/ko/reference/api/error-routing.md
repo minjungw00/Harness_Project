@@ -20,7 +20,7 @@
 - 기계 판독용 오류 세부사항: [API 오류 세부사항](error-details.md).
 - `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 공통 분기 형태: [API 상태 스키마](schema-state.md), [API 값 집합](schema-value-sets.md), [API 코어 스키마](schema-core.md).
 - 닫기 준비 상태 의미와 대체 불가 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
-- 닫기 준비 상태 blocker 처리 경로, 금지된 공개 오류의 차단 사유 표현, `harness.close_task` 차단 사유 매핑: [API blocker 처리 경로](blocker-routing.md).
+- 닫기 준비 상태 blocker 처리 경로, 공개 코드와 blocker 경계, `harness.close_task` 차단 사유 매핑: [API blocker 처리 경로](blocker-routing.md).
 
 ## 오류와 차단 사유
 
@@ -267,4 +267,4 @@
 
 ## 닫기 준비 상태 blocker 처리 경로
 
-자세한 닫기 준비 상태 blocker 처리 경로, 금지된 공개 오류의 차단 사유 표현, `harness.close_task` 차단 사유 매핑은 [API blocker 처리 경로](blocker-routing.md)가 담당합니다.
+자세한 닫기 준비 상태 blocker 처리 경로, 공개 코드와 blocker 경계, `harness.close_task` 차단 사유 매핑은 [API blocker 처리 경로](blocker-routing.md)가 담당합니다.
