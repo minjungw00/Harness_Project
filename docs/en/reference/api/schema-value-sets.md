@@ -2,7 +2,7 @@
 
 This document owns supported API value sets and enum-like public values for the baseline scope. Naming a reserved or out-of-scope value does not widen baseline scope.
 
-## Owns / Does not own
+## Owns / does not own
 
 This document owns:
 

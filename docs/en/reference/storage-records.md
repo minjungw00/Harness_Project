@@ -4,7 +4,7 @@ This document owns the baseline persistent storage record layout and stored reco
 
 Persistent records are not tamper-proof storage, anti-forgery proof, external audit guarantees, or `Product Repository` write authority.
 
-## Owns / Does not own
+## Owns / does not own
 
 This document owns:
 
@@ -21,7 +21,7 @@ This document does not own:
 - API request or response schemas; see [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), [API Judgment Schemas](api/schema-judgment.md), and [API Value Sets](api/schema-value-sets.md)
 - API method behavior; see [API Methods](api/methods.md) and the method owner documents
 - runtime location and repository boundaries; see [Runtime Boundaries](runtime-boundaries.md)
-- security guarantee levels and security non-claims; see [Security](security.md)
+- security guarantee levels and security boundaries; see [Security](security.md)
 
 ## Storage model
 
@@ -136,7 +136,7 @@ Storage must validate stored relationships before commit, including:
 - artifact owner relations
 - JSON reference arrays that SQLite cannot express as direct foreign keys
 
-### Deletion non-claim
+### Deletion boundary
 
 Ordinary baseline Core operations do not hard-delete authority rows. Rows move through status or lifecycle fields, Core appends events, and replay rows plus artifact metadata remain available for audit and recovery.
 
@@ -204,4 +204,4 @@ Status, close readiness, run/evidence summaries, next actions, readable cards, `
 - [Template Bodies](template-bodies.md) for user-visible status cards, judgment requests, run/evidence summaries, close results, and agent context packets.
 - [Projection Authority Reference](projection-and-templates.md) for read-only projection authority, source records, and freshness boundaries.
 - [Runtime Boundaries](runtime-boundaries.md) for Runtime Home and Product Repository boundaries.
-- [Security](security.md) for security non-claims and guarantee levels.
+- [Security](security.md) for security boundaries and guarantee levels.

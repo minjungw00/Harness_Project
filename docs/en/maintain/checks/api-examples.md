@@ -60,12 +60,12 @@ Check:
 - A response snapshot does not include refs from a newer `state_version`.
 - Sensitive approval reasons match the request's `sensitive_categories` or stated precondition.
 - Artifact refs do not appear without staging, promotion, or existing-artifact context.
-- Expiration timestamps use placeholders or clearly future example dates.
+- Expiration timestamps use placeholders or dates that are later than the example's stated issue date.
 - Cross-method examples that share a scenario do not contradict each other.
 - Representative responses do not silently drop meaningful request fields unless labeled as abbreviated.
 
 Failure:
-- Status examples include future-version supporting refs.
+- Status examples include newer-version supporting refs.
 - Approval reasons do not match `sensitive_categories`.
 - Artifact refs appear without lifecycle context.
 - Staged handles have stale fixed expiration timestamps.

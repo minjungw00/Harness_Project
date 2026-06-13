@@ -119,7 +119,7 @@ Check:
 - Confirm supported contracts, supported API methods, supported values, maintained documents, and owner routing use terms such as "supported", "applicable", "maintained", or "current", not `active`.
 
 Failure:
-- A document says "active owner path", "active contract", "active API method", or "active reference document" when it means applicable, supported, or maintained.
+- A document uses `active` for an owner path, contract, API method, reference document, or other documentation route when it means applicable, supported, or maintained.
 - Korean prose translates `active` as "활성" for a documentation contract or owner route instead of using the appropriate Korean term.
 
 Fix:
@@ -141,7 +141,7 @@ Check:
 
 Failure:
 - A Reference page keeps a removed or unsupported concept name solely to say that it is not supported.
-- A negative example causes retrieval to treat the old name as an active contract, supported capability, or owner route.
+- A negative example causes retrieval to treat the old name as a supported contract, supported capability, or owner route.
 
 Fix:
 - Remove the stale name or replace it with the stable category and the applicable owner link.

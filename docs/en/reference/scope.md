@@ -12,7 +12,7 @@ This document owns:
 - the supported baseline scope boundary
 - included and excluded capability families
 - the scope meaning of reserved and profile-gated values
-- scope-level guarantee and non-claim wording that other documents should summarize instead of repeating
+- scope-level guarantee boundaries that other documents should summarize instead of repeating
 
 This document does not own:
 
@@ -88,7 +88,7 @@ Excluded capabilities:
 
 - native artifact capture from surfaces
 - persistent projection jobs, projection reconciliation, generated projection files, and managed projection repair
-- full evidence-manifest production
+- expanded evidence packages
 - manual QA and external verification workflows
 - command, network, and secret access observation
 - command, network, and secret pre-tool blocking
@@ -112,7 +112,7 @@ Owner routing:
 - API method behavior, schemas, and value names: [API Methods](api/methods.md), [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), [API Judgment Schemas](api/schema-judgment.md), and [API Value Sets](api/schema-value-sets.md).
 - Storage records/effects and artifact lifecycle: [Storage](storage.md), [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), and [Artifact Storage](storage-artifacts.md).
 - Runtime and repository boundaries: [Runtime Boundaries](runtime-boundaries.md).
-- Security non-claims, guarantee levels, observation, blocking, isolation, and sensitive-action approval boundaries: [Security](security.md) and [Core Model](core-model.md).
+- Security boundary wording, guarantee levels, observation, blocking, isolation, and sensitive-action approval boundaries: [Security](security.md) and [Core Model](core-model.md).
 - Conformance procedures and check expectations: [Conformance](conformance.md).
 - Product terminology and bilingual terminology controls: [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md), and [docs/terminology-map.yaml](../../terminology-map.yaml).
 
@@ -139,7 +139,7 @@ Point-of-use rule:
 Owner links:
 
 - Exact value names and value-set placement: [API Value Sets](api/schema-value-sets.md).
-- Guarantee semantics and non-claims, including stronger isolation claims: [Security](security.md).
+- Guarantee semantics and security boundaries, including stronger isolation claims: [Security](security.md).
 - Product terminology for reserved and profile-gated values: [Glossary](glossary.md).
 
 <a id="out-of-scope-capability-promotion"></a>
@@ -177,7 +177,7 @@ Not included:
 
 Owner links:
 
-- Guarantee semantics, detective wording, and security non-claims: [Security](security.md).
+- Guarantee semantics, detective wording, and security boundaries: [Security](security.md).
 - Guarantee label value entries: [API Value Sets](api/schema-value-sets.md).
 - Method behavior: [Prepare-write method](api/method-prepare-write.md), routed from [API Methods](api/methods.md).
 - Core meaning: [Core Model](core-model.md).

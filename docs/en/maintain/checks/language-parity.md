@@ -47,13 +47,13 @@ Owner:
 - [Authoring Guide](../authoring-guide.md)
 
 Check:
-- For Korean reference edits, compare conditions, results, exceptions, non-claims, owner links, and close-readiness consequences as meaning units.
+- For Korean reference edits, compare conditions, results, exceptions, boundary caveats, owner links, and close-readiness consequences as meaning units.
 - Confirm Korean prose may differ in line count and sentence order while keeping important caveats and owner boundaries visible.
-- Inspect dense Korean paragraphs for merged rules that hide a condition, exception, or non-claim.
+- Inspect dense Korean paragraphs for merged rules that hide a condition, exception, or boundary caveat.
 
 Failure:
-- Korean text preserves the broad topic but collapses separate condition/result/exception or non-claim structure.
-- A Korean paragraph makes an owner boundary, baseline/out-of-scope boundary, security non-claim, or close-readiness consequence harder to detect than in the paired meaning unit.
+- Korean text preserves the broad topic but collapses separate condition/result/exception or boundary-caveat structure.
+- A Korean paragraph makes an owner boundary, baseline/out-of-scope boundary, security boundary, or close-readiness consequence harder to detect than in the paired meaning unit.
 
 Fix:
 - Split the Korean prose into natural paragraphs or bullets that preserve the meaning units.
@@ -67,11 +67,11 @@ Owner:
 
 Check:
 - For Korean storage reference edits, compare the paired English storage source docs by meaning unit.
-- Confirm conditions, effects, exceptions, non-claims, and owner links remain visibly separate in Korean.
-- Inspect dense Korean paragraphs for merged storage rules that hide a condition, exception, or non-claim.
+- Confirm conditions, effects, exceptions, boundary caveats, and owner links remain visibly separate in Korean.
+- Inspect dense Korean paragraphs for merged storage rules that hide a condition, exception, or boundary caveat.
 
 Failure:
-- Important storage conditions, effects, exceptions, or non-claims are collapsed into dense Korean paragraphs.
+- Important storage conditions, effects, exceptions, or boundary caveats are collapsed into dense Korean paragraphs.
 - Korean prose preserves the broad topic but makes the storage boundary harder to review than the paired English meaning unit.
 
 Fix:

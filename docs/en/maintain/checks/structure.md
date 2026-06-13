@@ -68,7 +68,7 @@ Check:
 
 Failure:
 - The final tree contains a one-off plan, scratch note, review note, archive copy, generated runtime-like record, migration note, or unresolved task marker from the documentation batch.
-- A maintained page contains a task marker that names work to finish later instead of a durable maintenance rule.
+- A maintained page contains a task marker that names deferred work instead of a durable maintenance rule.
 
 Fix:
 - Remove the transient file or task marker.
@@ -250,7 +250,7 @@ Failure:
 
 Fix:
 - Replace duplicated contract text with a short reader consequence and a link to the precise owner.
-- Reword security claims to the documented guarantee level or explicit non-claim.
+- Reword security claims to the documented guarantee level or explicit boundary.
 
 ## CHK-READ-001: user-facing readability
 
@@ -278,13 +278,13 @@ Owner:
 - [Checks Index](../checks.md)
 
 Check:
-- Inspect changed Reference and Maintain paragraphs for multiple conditions, exceptions, non-claims, owner links, or effects hidden in one dense paragraph.
+- Inspect changed Reference and Maintain paragraphs for multiple conditions, exceptions, boundary caveats, owner links, or effects hidden in one dense paragraph.
 - Confirm tables are used only for short mappings, comparisons, or owner routing.
-- Confirm long conditions, exceptions, non-claims, effects, owner links, and list-like examples sit outside table cells.
+- Confirm long conditions, exceptions, boundary caveats, effects, owner links, and list-like examples sit outside table cells.
 
 Failure:
 - A paragraph requires the reader to infer condition/result/exception boundaries.
-- A table cell contains multiple sentences, multiple conditions, hidden exceptions, non-claims, effects, owner links, or list-like sequences.
+- A table cell contains multiple sentences, multiple conditions, hidden exceptions, boundary caveats, effects, owner links, or list-like sequences.
 - A source line is hard to review.
 
 Fix:

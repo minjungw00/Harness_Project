@@ -1,8 +1,8 @@
 # Design quality
 
-## 1. Owns / Does not own
+## 1. Owns / does not own
 
-This reference owns the baseline design-quality routing boundary.
+This reference owns the baseline design-quality routing boundary. The boundary makes quality observations legible as routes to existing judgment, evidence, scope, residual-risk, surface-capability, or close-readiness owners.
 
 Design-quality observations route to judgment, evidence, or scope owners when they identify:
 
@@ -13,29 +13,15 @@ Design-quality observations route to judgment, evidence, or scope owners when th
 - residual-risk visibility issues
 - close blockers already owned by supported Core/API categories
 
-It does not define an independent baseline gate, supported design-quality close category, supported validator family, quality-waiver route, severity-based blocking policy, evidence record, QA record, acceptance record, residual-risk record, or close authority.
-
 It owns:
 
 - the baseline design-quality role as judgment-routing and evidence/scope reference
 - how design-quality observations route to `judgment_kind=product_decision`, `judgment_kind=technical_decision`, and `judgment_kind=scope_decision`
 - how design-quality observations point to existing supported blocker categories such as `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, or `surface_capability`
 - the baseline design-quality severity boundary: severity-like wording is advisory triage unless an applicable owner path separately requires action
-- the boundary between design-quality observations, supported `ValidatorResult.validator_id` values, and out-of-scope quality-policy material
+- the boundary between design-quality observations, any supported `ValidatorResult.validator_id` value, and out-of-scope quality-policy material
 
-It does not own:
-
-- Core lifecycle, gates, blockers, `prepare_write`, `close_task`, Write Authorization, final acceptance, residual-risk acceptance, or non-substitution rules; see [Core Model Reference](core-model.md)
-- MCP request/response schemas, `ValidatorResult`, `UserJudgment`, `AcceptedRiskInput`, or supported/out-of-scope schema values; see the [API Methods](api/methods.md), method owner documents, [API Schema Core](api/schema-core.md), and [API Judgment Schemas](api/schema-judgment.md)
-- Public error semantics; see [API error codes](api/error-codes.md), [API error routing](api/error-routing.md), [API error precedence](api/error-precedence.md), and [API error details](api/error-details.md)
-- SQLite DDL and persisted tables; see [Storage Records](storage-records.md)
-- validator-run storage effects; see [Storage Effects](storage-effects.md)
-- artifact storage; see [Artifact Storage](storage-artifacts.md)
-- projection authority; see [Projection Authority Reference](projection-and-templates.md)
-- template bodies, status cards, or rendered reports; see [Template Bodies](template-bodies.md)
-- out-of-scope design-quality policy systems, broad review procedures, operations/reporting material, or conformance catalogs
-
-Use these owner links when a design-quality finding crosses another contract:
+Neighboring contracts stay with their owners:
 
 | Question | Owner |
 |---|---|
@@ -46,6 +32,8 @@ Use these owner links when a design-quality finding crosses another contract:
 | Close-task method behavior | [Close-task method](api/method-close-task.md) |
 | Method-to-storage effects for supported API method branches | [Storage Effects](storage-effects.md) |
 | Out-of-scope design-quality policy families | [Scope Reference](scope.md) |
+
+This reference does not define an independent baseline gate, supported design-quality close category, supported validator family, quality-waiver route, severity-based blocking policy, evidence record, QA record, acceptance record, residual-risk record, close authority, operations report, conformance catalog, SQLite DDL, persisted table, projection authority, rendered report, or template body.
 
 Reference text records the design-quality boundary and owner routes. It does not create Harness Server state, evidence, QA, acceptance, residual-risk, or close records.
 
@@ -67,6 +55,16 @@ A design-quality finding can do only these things in the baseline:
 | focused next action | See [Focused next action](#design-quality-focused-next-action) |
 | no applicable owner path | See [No applicable owner path](#design-quality-no-applicable-owner-path) |
 
+Baseline owner-boundary rules:
+
+| Boundary | Rule |
+|---|---|
+| Independent close authority | A design-quality label does not create a close blocker, close category, scope override, evidence rule, or guarantee. |
+| Evidence and risk | Evidence, final acceptance, residual-risk visibility, and residual-risk acceptance keep their Core/API owner meanings. |
+| Severity | Severity-like wording is advisory unless an applicable owner path separately requires action. |
+| Focused action | A next action must stay limited to what the named owner path needs. |
+| Owner gap | When no applicable owner path applies, the baseline result is advisory text or no action. |
+
 <a id="design-quality-product-decision-needed"></a>
 ### Product decision needed
 
@@ -78,9 +76,6 @@ Route:
 
 Close effect:
 - Blocks close only when the applicable close path already requires `CloseReadinessBlocker.category=user_judgment`.
-
-Not allowed:
-- Do not treat the design-quality label as an independent close blocker.
 
 <a id="design-quality-technical-decision-needed"></a>
 ### Technical decision needed
@@ -94,9 +89,6 @@ Route:
 Close effect:
 - Blocks close only when the applicable close path already requires `CloseReadinessBlocker.category=user_judgment`.
 
-Not allowed:
-- Do not treat the design-quality label as an independent close blocker.
-
 <a id="design-quality-scope-boundary-change"></a>
 ### Scope boundary change
 
@@ -108,9 +100,6 @@ Route:
 
 Close effect:
 - Blocks close only through the scope or judgment owner path.
-
-Not allowed:
-- Do not treat the design-quality label as a scope override.
 
 <a id="design-quality-missing-close-relevant-support"></a>
 ### Missing close-relevant support
@@ -125,9 +114,6 @@ Route:
 Close effect:
 - Required evidence can block close only through the Core evidence owner path.
 
-Not allowed:
-- Do not create a design-quality evidence rule outside that owner path.
-
 <a id="design-quality-residual-risk-visibility"></a>
 ### Residual risk visibility
 
@@ -141,9 +127,6 @@ Route:
 Close effect:
 - Affects close only through the residual-risk visibility or residual-risk acceptance owner path.
 
-Not allowed:
-- Accepted risk does not prove success or erase the risk.
-
 <a id="design-quality-surface-capability-gap"></a>
 ### Surface capability gap
 
@@ -155,9 +138,6 @@ Route:
 
 Close effect:
 - Affects close only through the capability owner path.
-
-Not allowed:
-- The design-quality label does not strengthen the guarantee.
 
 <a id="design-quality-advisory-severity"></a>
 ### Advisory severity
@@ -171,9 +151,6 @@ Route:
 Close effect:
 - Severity-like wording has no close effect by itself.
 
-Not allowed:
-- Severity alone never creates a blocker, validator mapping, waiver, evidence expectation, or close result.
-
 <a id="design-quality-focused-next-action"></a>
 ### Focused next action
 
@@ -186,20 +163,14 @@ Route:
 Close effect:
 - Can affect close only when the named owner path uses that action.
 
-Not allowed:
-- The action must not widen beyond what the named owner path needs.
-
 <a id="design-quality-no-applicable-owner-path"></a>
-### No Applicable Owner Path
+### No applicable owner path
 
 Condition:
 - No applicable owner path applies.
 
 Close effect:
 - The baseline scope result is advisory text or no action.
-
-Not allowed:
-- Do not create a new gate, blocker, validator mapping, waiver route, evidence rule, or close authority.
 
 Baseline design quality does not create:
 
@@ -211,14 +182,7 @@ Baseline design quality does not create:
 
 Design quality must not turn ordinary work into an open-ended planning loop.
 
-Not supported blockers unless another applicable owner path explicitly requires a narrow piece:
-- full domain-language audits
-- full module/interface review
-- full TDD trace
-- full feedback-loop audit
-- full codebase-stewardship review
-- broad review catalogs
-- out-of-scope quality processes
+Quality-policy material outside baseline scope can be advisory only, unless another applicable owner path explicitly requires a narrow action.
 
 ## 3. Routing rules
 
@@ -324,7 +288,7 @@ A design-quality observation blocks close only through an applicable owner path.
 | supported close category | See [Supported close category](#design-quality-close-supported-category) |
 
 <a id="design-quality-close-applicable-dependency"></a>
-### Applicable Close Dependency
+### Applicable close dependency
 
 Condition:
 - The observation is tied to the active `Task` or Change Unit and the attempted close.
@@ -332,9 +296,6 @@ Condition:
 
 Close effect:
 - The observation can block close only when the named owner path would block close without the design-quality label.
-
-Not allowed:
-- Do not treat a design-quality label as independent close authority.
 
 <a id="design-quality-close-focused-unblock-path"></a>
 ### Focused unblock path
@@ -345,26 +306,20 @@ Condition:
 Close effect:
 - Can affect close only by giving exactly one next action for that owner path.
 
-Not allowed:
-- Do not widen the next action into a broad design review or open-ended planning loop.
-
 <a id="design-quality-close-unsupported-policy-basis"></a>
 ### Unsupported policy basis
 
 Condition:
-- The observation relies on an unsupported quality-policy route, a broad policy catalog, or severity alone.
+- The observation relies on a quality-policy route outside baseline scope, broad policy material, or severity alone.
 
 Close effect:
 - The observation does not block close on that basis.
-
-Not allowed:
-- Do not treat out-of-scope quality-policy material as a baseline gate, close blocker, waiver route, evidence rule, or close authority.
 
 <a id="design-quality-close-advisory-only-policy-phrase"></a>
 ### Advisory-only policy phrase
 
 Condition:
-- The finding mentions domain language, vertical slice shape, TDD, module/interface review, stewardship, broad review stages, or another policy family outside baseline scope.
+- The finding mentions a quality-policy family outside baseline scope.
 
 Route:
 - Use an advisory next action, evidence request, focused user judgment, or residual-risk marker only when an applicable owner path needs that narrow action.
@@ -372,11 +327,8 @@ Route:
 Close effect:
 - The finding does not block close merely because it mentions one of those topics.
 
-Not allowed:
-- Do not present an out-of-scope policy family as a baseline requirement.
-
 <a id="design-quality-close-supported-category"></a>
-### Supported Close Category
+### Supported close category
 
 Condition:
 - A design-quality observation affects close.
@@ -386,9 +338,6 @@ Route:
 
 Close effect:
 - The close-readiness finding remains in the supported category owned by that close path.
-
-Not allowed:
-- Do not create a design-quality-specific close category in the baseline scope.
 
 ## 5. No separate quality waiver
 
@@ -425,8 +374,8 @@ Effect:
 Close effect:
 - Does not override close blockers by itself.
 
-Not allowed:
-- Do not treat it as evidence creation, residual-risk acceptance, QA, verification, or blocker override.
+Boundary:
+- `final_acceptance` is not evidence creation, residual-risk acceptance, QA, verification, or blocker override.
 
 <a id="design-quality-route-residual-risk-acceptance"></a>
 ### `residual_risk_acceptance`
@@ -440,11 +389,11 @@ Effect:
 Close effect:
 - Affects close only through the applicable residual-risk owner path.
 
-Not allowed:
-- Do not treat it as correctness proof, evidence sufficiency, final acceptance, no-risk result, or automatic success.
+Boundary:
+- `residual_risk_acceptance` is not correctness proof, evidence sufficiency, final acceptance, a no-risk result, or automatic success.
 
 <a id="design-quality-route-supported-user-judgment-values"></a>
-### Supported User Judgment Values
+### Supported user judgment values
 
 Condition:
 - A focused user-owned decision is required.
@@ -458,10 +407,9 @@ Owner links:
 Close effect:
 - They can affect close only through the applicable owner path that asked for the judgment.
 
-Not allowed:
-- Do not treat them as broad approval, a separate quality waiver, or an unsupported judgment category.
-
-Broad approval, a friendly "looks good", or a general go-ahead must not be treated as any of these judgments unless the applicable owner path asked for that specific judgment.
+Boundary:
+- Supported user judgment values are not broad approval, a separate quality waiver, or unsupported judgment categories.
+- Broad approval, a friendly "looks good", or a general go-ahead is not one of these judgments unless the applicable owner path asks for that specific judgment.
 
 ## 6. Evidence expectation
 
@@ -499,9 +447,6 @@ Allowed examples:
 <a id="design-quality-evidence-non-satisfying-references"></a>
 ### References that do not automatically satisfy evidence
 
-Not allowed:
-- Do not automatically treat chat assertions, generic summaries, rendered projection prose, unregistered files, screenshots without an owner path, passing tests alone, final acceptance, or residual-risk acceptance as required evidence.
-
 Close effect:
 - These references do not remove a required-evidence blocker by themselves.
 
@@ -521,18 +466,18 @@ Close effect:
 
 Validator IDs are reporting labels. They do not create Core invariants, gates, close blockers, waivers, evidence records, or user judgments.
 
-`ValidatorResult` shape is owned by [API State Schemas](api/schema-state.md). Severity-like values and the supported stable `ValidatorResult.validator_id` set are owned by [API Value Sets](api/schema-value-sets.md).
+`ValidatorResult` shape is owned by [API State Schemas](api/schema-state.md). Severity-like values and the boundary for any supported stable `ValidatorResult.validator_id` value are owned by [API Value Sets](api/schema-value-sets.md).
 
 This document does not publish:
 
 - supported design-policy validator IDs
 - a policy-to-validator mapping
 
-Validator IDs outside the supported set have no baseline effect unless [Scope](scope.md) and the affected owners promote a narrow supported contract.
+Validator IDs outside a supported value published by [API Value Sets](api/schema-value-sets.md) have no baseline effect unless [Scope](scope.md) and the affected owners define a narrow supported contract.
 
-## 8. Out-of-Scope Policy Material
+## 8. Out-of-scope policy material
 
-The full design-quality policy catalog is not baseline scope.
+Design-quality policy material beyond this routing boundary is not baseline scope.
 
 This page does not publish unsupported gate names, blocker categories, waiver branches, validator families, workflow branches, or promotion checklists. Use [Scope](scope.md) for category-level baseline exclusions.
 

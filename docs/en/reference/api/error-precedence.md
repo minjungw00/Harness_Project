@@ -203,8 +203,8 @@ State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
 
-Not allowed:
-- Do not select `STATE_VERSION_CONFLICT` as `MethodResult.base.errors[0]`, `CloseTaskResult(close_state=blocked).errors[0]`, `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.
+Selection boundary:
+- `STATE_VERSION_CONFLICT` is not selected as `MethodResult.base.errors[0]`, `CloseTaskResult(close_state=blocked).errors[0]`, `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.
 
 Related conflict details:
 - Stale `WriteAuthorization.basis_state_version` and idempotency request-hash conflicts are covered in [State version conflict](#state-conflict-behavior).
@@ -221,6 +221,13 @@ Related conflict details:
 | idempotency request-hash conflict | [Idempotency request-hash conflict](#state-conflict-idempotency-hash) |
 
 `STATE_VERSION_CONFLICT` has one baseline meaning: a project-wide pre-commit freshness or idempotency conflict.
+
+Conflict routing boundary:
+
+| Boundary | Rule |
+|---|---|
+| Response path | Use `ToolRejectedResponse.errors[]` with `STATE_VERSION_CONFLICT`. |
+| Result and blocker paths | Do not use `STATE_VERSION_CONFLICT` as a blocker code, dry-run preview, `MethodResult.decision`, `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`. |
 
 <a id="state-conflict-expected-state-version"></a>
 ### Stale `expected_state_version`
@@ -240,9 +247,6 @@ State effect:
 
 Detail fields:
 - Use [State conflict detail fields](error-details.md#state-conflict-detail-fields).
-
-Not allowed:
-- Do not use this as a blocker code.
 
 <a id="state-conflict-write-authorization-basis"></a>
 ### Stale Write Authorization basis
@@ -264,9 +268,6 @@ State effect:
 Detail fields:
 - Use [State conflict detail fields](error-details.md#state-conflict-detail-fields).
 
-Not allowed:
-- Do not use this as a blocker code.
-
 <a id="state-conflict-idempotency-hash"></a>
 ### Idempotency request-hash conflict
 
@@ -285,7 +286,3 @@ State effect:
 
 Detail fields:
 - Use [State conflict detail fields](error-details.md#state-conflict-detail-fields).
-
-Not allowed:
-- Do not use this as a blocker code.
-- Do not represent this as dry-run preview data, `MethodResult.decision`, `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.

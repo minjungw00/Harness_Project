@@ -47,7 +47,8 @@ Conditions:
 - `VerifiedSurfaceContext.access_class=core_mutation`.
 - `verified=true`.
 
-Non-claim: `surface_id` selects a registered local surface; it is not itself authority.
+Surface identity boundary:
+- `surface_id` selects a registered local surface; `surface_id` is not itself authority.
 
 ## State version behavior
 

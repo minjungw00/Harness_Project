@@ -39,7 +39,7 @@ Rejected response:
 Blocked result:
 - Public shape: Method-specific result fields such as `write_decision_reasons` or `blockers`.
 - Meaning: The method may have returned an operation-specific blocked outcome.
-- Non-claim: This is not a public transport or schema error.
+- Boundary: Blocked result data is not a public transport or schema error.
 - State effect: Only the method owner may allow a committed blocked result or read-only blocker data.
 
 <a id="error-vs-blocker-dry-run-preview"></a>
@@ -76,8 +76,8 @@ State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
 
-Not allowed:
-- Do not include method-specific result-only fields.
+Result boundary:
+- Method-specific result-only fields are not part of this rejected response.
 
 <a id="rejected-precondition-failure"></a>
 ### Precondition failure
@@ -104,7 +104,7 @@ State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
 
-Not allowed:
+Routing boundary:
 - The conflict is not a blocker.
 
 <a id="rejected-dry-run-pre-preview-failure"></a>
@@ -119,8 +119,8 @@ Route:
 State effect:
 - No committed operation or dry-run preview is produced.
 
-Not allowed:
-- Do not represent the rejection as `DryRunSummary.would_errors[]` or `PlannedBlocker`.
+Preview boundary:
+- The rejection is not represented as `DryRunSummary.would_errors[]` or `PlannedBlocker`.
 
 Rejected response means the method did not proceed to the committed operation. It is not a blocked result and does not create the authority, evidence, acceptance, or close state that the request lacked.
 
@@ -147,8 +147,8 @@ State effect:
 Result data:
 - Uses method-owned decision reasons.
 
-Not allowed:
-- Does not return `CloseReadinessBlocker`.
+Result boundary:
+- `PrepareWriteResult` blocked decisions do not return `CloseReadinessBlocker`.
 
 <a id="blocked-close-task-result"></a>
 ### `CloseTaskResult(close_state=blocked)`
@@ -165,8 +165,8 @@ State effect:
 Result data:
 - Uses close-readiness blocker mapping.
 
-Not allowed:
-- Must not use `STATE_VERSION_CONFLICT`.
+Public-code boundary:
+- `CloseTaskResult(close_state=blocked)` does not use `STATE_VERSION_CONFLICT`.
 
 <a id="blocked-read-only-observation"></a>
 ### Read-only close-blocker observation
@@ -177,7 +177,7 @@ Condition:
 Route:
 - Read-only `CloseReadinessBlocker` observation data.
 
-Not allowed:
+State effect:
 - No stored blocker and no state-version increment for the read.
 
 Blocked result means the method may have returned an operation-specific blocked outcome. It is not a public transport/schema error. Any committed blocked result and any state effect must be allowed by the relevant method owner routed from [API Methods](methods.md) and [Storage Effects](../storage-effects.md).
@@ -200,8 +200,8 @@ Condition:
 Response path:
 - Method-specific result with `base.dry_run=true` and `base.effect_kind=read_only`.
 
-Not allowed:
-- Do not treat `dry_run=true` as a synonym for `ToolDryRunResponse`.
+Branch boundary:
+- `dry_run=true` is not a synonym for `ToolDryRunResponse`.
 
 <a id="dry-run-valid-preview"></a>
 ### Valid dry-run preview
@@ -224,7 +224,7 @@ Condition:
 Response path:
 - `DryRunSummary.would_blockers: PlannedBlocker[]`.
 
-Not allowed:
+Preview boundary:
 - Preview blockers are not stored `CloseReadinessBlocker` objects.
 - `PlannedBlocker.code` must not be `STATE_VERSION_CONFLICT`.
 
@@ -237,64 +237,21 @@ Condition:
 Response path:
 - `ToolRejectedResponse`.
 
-Not allowed:
-- Do not represent the failure as dry-run preview data.
+Preview boundary:
+- The failure is not represented as dry-run preview data.
 - Stale state is rejected before preview.
 
 ## Forbidden blocker-code rules
 
-| Forbidden use | Detail section |
-|---|---|
-| stale-state public error used as a blocker code | [Stale-state blocker code](#forbidden-stale-state-blocker-code) |
-| pre-commit public error copied into blocker arrays | [Pre-commit public error copy](#forbidden-pre-commit-public-error-copy) |
-| public `ErrorCode` reused without owner permission | [Public code reuse](#forbidden-public-code-reuse) |
-| user-facing label used as API identifier | [User-facing label identifier](#forbidden-user-facing-label-identifier) |
-| dry-run stale-state conflict previewed | [Dry-run stale-state preview](#forbidden-dry-run-stale-state-preview) |
+These boundary rules keep public error identifiers separate from method-owned blocker values.
 
-<a id="forbidden-stale-state-blocker-code"></a>
-### Stale-state blocker code
-
-Not allowed:
-- Do not use `STATE_VERSION_CONFLICT` as `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, or a committed blocked-result primary code.
-
-Use instead:
-- Return `ToolRejectedResponse.errors[]` with `effect_kind=no_effect`.
-
-<a id="forbidden-pre-commit-public-error-copy"></a>
-### Pre-commit public error copy
-
-Not allowed:
-- Do not copy pre-commit public errors into blocker arrays.
-
-Use instead:
-- Return `ToolRejectedResponse.errors[]`.
-
-<a id="forbidden-public-code-reuse"></a>
-### Public code reuse
-
-Not allowed:
-- Do not reuse a public `ErrorCode` as a blocker code without explicit canonical owner permission.
-
-Use instead:
-- Use the method/schema owner's blocker code or result reason.
-
-<a id="forbidden-user-facing-label-identifier"></a>
-### User-facing label identifier
-
-Not allowed:
-- Do not use a user-facing label as an API identifier.
-
-Use instead:
-- Keep the public `ErrorCode` unchanged and localize only display text.
-
-<a id="forbidden-dry-run-stale-state-preview"></a>
-### Dry-run stale-state preview
-
-Not allowed:
-- Do not represent a dry-run stale-state conflict in `DryRunSummary.would_errors[]` or `DryRunSummary.would_blockers[]`.
-
-Use instead:
-- Reject the request with `STATE_VERSION_CONFLICT`.
+| Forbidden use | Boundary | Use instead |
+|---|---|---|
+| <a id="forbidden-stale-state-blocker-code"></a>Stale-state public error used as a blocker code | `STATE_VERSION_CONFLICT` is not a `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, or committed blocked-result primary code. | Return `ToolRejectedResponse.errors[]` with `effect_kind=no_effect`. |
+| <a id="forbidden-pre-commit-public-error-copy"></a>Pre-commit public error copied into blocker arrays | Pre-commit public errors stay out of blocker arrays. | Return `ToolRejectedResponse.errors[]`. |
+| <a id="forbidden-public-code-reuse"></a>Public `ErrorCode` reused without owner permission | A public `ErrorCode` becomes a blocker code only when the canonical owner explicitly allows that use. | Use the method/schema owner's blocker code or result reason. |
+| <a id="forbidden-user-facing-label-identifier"></a>User-facing label used as API identifier | User-facing labels are display text, not API identifiers. | Keep the public `ErrorCode` unchanged and localize only display text. |
+| <a id="forbidden-dry-run-stale-state-preview"></a>Dry-run stale-state conflict previewed | A dry-run stale-state conflict is not represented in `DryRunSummary.would_errors[]` or `DryRunSummary.would_blockers[]`. | Reject the request with `STATE_VERSION_CONFLICT`. |
 
 <a id="harnessclose_task-close-blockers"></a>
 
@@ -323,8 +280,8 @@ Response path:
 Public-code rule:
 - `STATE_VERSION_CONFLICT` and other pre-commit errors stay in the rejected response.
 
-Not allowed:
-- Do not return `CloseReadinessBlocker` entries.
+Response boundary:
+- Preflight failures do not return `CloseReadinessBlocker` entries.
 
 <a id="close-task-intent-check"></a>
 ### `intent=check`
@@ -353,8 +310,8 @@ Response path:
 Allowed:
 - May return `CloseReadinessBlocker[]`.
 
-Not allowed:
-- Do not use `STATE_VERSION_CONFLICT`.
+Public-code boundary:
+- `intent=complete` blocked does not use `STATE_VERSION_CONFLICT`.
 
 <a id="close-task-intent-complete-closed"></a>
 ### `intent=complete` closed
@@ -380,8 +337,8 @@ Response path:
 Public-code rule:
 - Blockers are limited to transition validity.
 
-Not allowed:
-- Do not require evidence sufficiency, final acceptance, or residual-risk acceptance for cancellation or supersession.
+Transition boundary:
+- Cancellation and supersession do not require evidence sufficiency, final acceptance, or residual-risk acceptance.
 
 ### Close-readiness finding code summary
 
@@ -472,8 +429,8 @@ Condition:
 Public code mapping:
 - `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, or `BASELINE_STALE`
 
-Not allowed:
-- Do not use this mapping unless the owner permits it.
+Owner boundary:
+- Use the scope, boundary, or baseline public-code mapping only when the owner permits the mapping.
 
 <a id="close-mapping-readable-view-freshness"></a>
 ### Readable view freshness issue
@@ -484,8 +441,8 @@ Condition:
 Public code mapping:
 - `PROJECTION_STALE`
 
-Not allowed:
-- Do not use `PROJECTION_STALE` by itself as a close blocker.
+Owner boundary:
+- `PROJECTION_STALE` is not a close blocker by itself.
 
 <a id="close-mapping-stale-state-rejected"></a>
 ### Stale state is rejected
@@ -496,8 +453,8 @@ Condition:
 Response path:
 - `ToolRejectedResponse.errors[]` with `STATE_VERSION_CONFLICT`
 
-Not allowed:
-- Do not use this as a close blocker.
+Response boundary:
+- Stale state is not a close blocker.
 
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)

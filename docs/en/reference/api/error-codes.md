@@ -51,6 +51,18 @@ This document does not own:
 | `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#errorcode-artifact-missing) |
 | `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#errorcode-validator-failed) |
 
+## Code-use boundary
+
+Public `ErrorCode` values are not blocker codes by default.
+
+| Boundary | Rule |
+|---|---|
+| Rejected-response errors | Use public `ErrorCode` values in `ToolRejectedResponse.errors[]` for rejected public API requests. |
+| Owner-defined result paths | A method, schema, or close-readiness owner may define a result-path mapping for a public error-code family, but the mapping does not make the public `ErrorCode` a blocker code. |
+| Stale state | `STATE_VERSION_CONFLICT` stays on rejected-response paths and is not a close-readiness blocker, result decision, write-decision reason, or planned blocker. |
+| Readable view freshness | `PROJECTION_STALE` alone is not a close-readiness blocker code. |
+| Fallback | `VALIDATOR_FAILED` is available only when no more specific supported code applies and the owning method or schema owns the fallback. |
+
 <a id="errorcode-validation-failed"></a>
 ### `VALIDATION_FAILED`
 
@@ -64,9 +76,6 @@ State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
 
-Not allowed:
-- Do not use this as a blocker code for request rejection.
-
 <a id="errorcode-state-version-conflict"></a>
 ### `STATE_VERSION_CONFLICT`
 
@@ -79,9 +88,6 @@ Condition:
 State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
-
-Not allowed:
-- Do not use this as a close-readiness blocker code.
 
 Related conflict details:
 - Stale `WriteAuthorization.basis_state_version` and idempotency request-hash conflicts are covered in [State version conflict](error-precedence.md#state-conflict-behavior).
@@ -99,9 +105,6 @@ State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
 
-Not allowed:
-- Do not use this as a blocker code for request rejection.
-
 <a id="errorcode-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
 
@@ -115,9 +118,6 @@ State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
 
-Not allowed:
-- Do not use this as a blocker code for request rejection.
-
 <a id="errorcode-no-active-task"></a>
 ### `NO_ACTIVE_TASK`
 
@@ -130,9 +130,6 @@ Condition:
 State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
-
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-no-active-change-unit"></a>
 ### `NO_ACTIVE_CHANGE_UNIT`
@@ -148,9 +145,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
-
 <a id="errorcode-baseline-stale"></a>
 ### `BASELINE_STALE`
 
@@ -164,9 +158,6 @@ Condition:
 State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
-
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-scope-required"></a>
 ### `SCOPE_REQUIRED`
@@ -182,9 +173,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
-
 <a id="errorcode-scope-violation"></a>
 ### `SCOPE_VIOLATION`
 
@@ -199,9 +187,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
-
 <a id="errorcode-write-authorization-required"></a>
 ### `WRITE_AUTHORIZATION_REQUIRED`
 
@@ -215,9 +200,6 @@ State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
 
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
-
 <a id="errorcode-write-authorization-invalid"></a>
 ### `WRITE_AUTHORIZATION_INVALID`
 
@@ -230,9 +212,6 @@ Condition:
 State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
-
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-approval-denied"></a>
 ### `APPROVAL_DENIED`
@@ -248,9 +227,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
-
 <a id="errorcode-approval-expired"></a>
 ### `APPROVAL_EXPIRED`
 
@@ -264,9 +240,6 @@ Condition:
 State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
-
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-approval-required"></a>
 ### `APPROVAL_REQUIRED`
@@ -282,9 +255,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
-
 <a id="errorcode-decision-unresolved"></a>
 ### `DECISION_UNRESOLVED`
 
@@ -298,9 +268,6 @@ Condition:
 State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
-
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-autonomy-boundary-exceeded"></a>
 ### `AUTONOMY_BOUNDARY_EXCEEDED`
@@ -316,9 +283,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
-
 <a id="errorcode-decision-required"></a>
 ### `DECISION_REQUIRED`
 
@@ -332,9 +296,6 @@ Condition:
 State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
-
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
 
 <a id="errorcode-capability-insufficient"></a>
 ### `CAPABILITY_INSUFFICIENT`
@@ -350,9 +311,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the canonical method or schema owner explicitly allows that use.
-
 <a id="errorcode-evidence-insufficient"></a>
 ### `EVIDENCE_INSUFFICIENT`
 
@@ -366,9 +324,6 @@ Condition:
 State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
-
-Not allowed:
-- Do not use this as a blocker code unless the close-readiness owner explicitly allows that mapping.
 
 <a id="errorcode-residual-risk-not-visible"></a>
 ### `RESIDUAL_RISK_NOT_VISIBLE`
@@ -384,9 +339,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the close-readiness owner explicitly allows that mapping.
-
 <a id="errorcode-acceptance-required"></a>
 ### `ACCEPTANCE_REQUIRED`
 
@@ -401,9 +353,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the close-readiness owner explicitly allows that mapping.
-
 <a id="errorcode-projection-stale"></a>
 ### `PROJECTION_STALE`
 
@@ -416,9 +365,6 @@ Condition:
 State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
-
-Not allowed:
-- Do not use this by itself as a close-readiness blocker code.
 
 <a id="errorcode-artifact-missing"></a>
 ### `ARTIFACT_MISSING`
@@ -434,9 +380,6 @@ State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
-Not allowed:
-- Do not use this as a blocker code unless the close-readiness owner explicitly allows that mapping.
-
 <a id="errorcode-validator-failed"></a>
 ### `VALIDATOR_FAILED`
 
@@ -450,7 +393,3 @@ Condition:
 State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
-
-Not allowed:
-- Do not use this fallback when a more specific supported code applies.
-- Do not use this as a blocker code outside the owning method or schema fallback.
