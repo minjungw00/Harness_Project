@@ -2,7 +2,7 @@
 
 This document owns the common API envelope and response-branch schemas for the baseline scope.
 
-It does not define method behavior, storage effects, state snapshots, artifact lifecycle, user-judgment meaning, public error semantics, or active value sets.
+It does not define method behavior, storage effects, state snapshots, artifact lifecycle, user-judgment meaning, public error semantics, or supported value sets.
 
 ## Owns / Does not own
 
@@ -24,7 +24,7 @@ This document does not own:
 - state and current-position schemas; see [API State Schemas](schema-state.md)
 - artifact schemas; see [API Artifact Schemas](schema-artifacts.md)
 - user-owned judgment schemas; see [API Judgment Schemas](schema-judgment.md)
-- active method names, `response_kind` values, `effect_kind` values, access classes, or other enum-like values; see [API Value Sets](schema-value-sets.md)
+- supported method names, `response_kind` values, `effect_kind` values, access classes, or other enum-like values; see [API Value Sets](schema-value-sets.md)
 - public error codes, precedence, or error semantics; see [API Errors](errors.md)
 - storage records or effects; see [Storage Records](../storage-records.md) and [Storage Effects](../storage-effects.md)
 
@@ -120,7 +120,7 @@ Not implied:
 - `ToolRejectedResponse` and `ToolDryRunResponse` do not carry result-only fields such as `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, or `close_state`.
 
 Owner links:
-- active `response_kind` and `effect_kind` values: [response and effect values](schema-value-sets.md#response-and-effect-values)
+- supported `response_kind` and `effect_kind` values: [response and effect values](schema-value-sets.md#response-and-effect-values)
 - shared branch reading: [common response branches](#common-response)
 - method-specific state effects: method owner documents
 - public error precedence: [API Errors](errors.md)

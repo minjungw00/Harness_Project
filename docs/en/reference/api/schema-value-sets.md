@@ -1,18 +1,18 @@
 # API value sets
 
-This document owns active API value sets and enum-like public values for the baseline scope. Naming a reserved or out-of-scope value does not widen active scope.
+This document owns supported API value sets and enum-like public values for the baseline scope. Naming a reserved or out-of-scope value does not widen baseline scope.
 
 ## Owns / Does not own
 
 This document owns:
 
-- active public method-name values
+- supported public method-name values
 - API `response_kind` and `effect_kind` values
-- active `access_class` values
+- supported `access_class` values
 - record/reference discriminator values used by shared state references
-- active lifecycle, close-state, source-kind, judgment-kind, presentation, required-for, artifact redaction, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
-- the boundary for active public `ValidatorResult.validator_id` values
-- profile-gated or reserved value boundaries where they affect active schema interpretation
+- supported lifecycle, close-state, source-kind, judgment-kind, presentation, required-for, artifact redaction, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
+- the boundary for supported public `ValidatorResult.validator_id` values
+- profile-gated or reserved value boundaries where they affect supported schema interpretation
 - the rule that rendered labels are not canonical schema values
 
 This document does not own:
@@ -25,20 +25,20 @@ This document does not own:
 
 ## Boundary
 
-Only values listed as active in this document are active API values.
+Only values listed as supported in this document are supported API values.
 
 Conditions:
 - Profile-gated values must name the profile or capability gate at the point of use.
-- Values outside the active lists are not baseline API values unless [Scope](../scope.md) and the affected semantic owner define the supported behavior.
+- Values outside the supported lists are not baseline API values unless [Scope](../scope.md) and the affected semantic owner define the supported behavior.
 
 Not implied:
-- Naming a value outside an active list does not widen active scope.
+- Naming a value outside a supported list does not widen baseline scope.
 - Rendered labels are display text. They do not replace the canonical values listed in this document.
 
 <a id="method-name-values"></a>
 ## Method name values
 
-The active public method-name set is:
+The supported public method-name set is:
 
 ```text
 harness.intake
@@ -81,7 +81,7 @@ no_effect
 
 `VerifiedSurfaceContext.access_class` uses exactly one request-level value per public API request:
 
-| Value | Active owner path |
+| Value | Applicable owner path |
 |---|---|
 | `read_status` | Read-only status and close-check reads. |
 | `core_mutation` | Core state mutation not otherwise specialized. |
@@ -286,7 +286,7 @@ error
 blocking
 ```
 
-This baseline value-set owner does not publish an active stable `ValidatorResult.validator_id` set. A `validator_id` string is a reporting label unless an affected owner publishes the exact stable value here and defines its semantic meaning.
+This baseline value-set owner does not publish a supported stable `ValidatorResult.validator_id` set. A `validator_id` string is a reporting label unless an affected owner publishes the exact stable value here and defines its semantic meaning.
 
 `GuaranteeDisplay.level` uses baseline values:
 
@@ -309,9 +309,9 @@ Value meanings:
 - `staged_artifact` selects a compatible transient staged handle through the artifact owner path.
 - `existing_artifact` selects an already persistent same-project artifact without registering new bytes.
 
-The selected source value determines which `ArtifactInput` source field is active. The exact shape invariant is owned by [API Artifact Schemas](schema-artifacts.md#artifactinput).
+The selected source value determines which `ArtifactInput` source field applies. The exact shape invariant is owned by [API Artifact Schemas](schema-artifacts.md#artifactinput).
 
-Values outside this list are not active source values and do not authorize artifact capture, caller-supplied paths, logs, or local file reads.
+Values outside this list are not supported source values and do not authorize artifact capture, caller-supplied paths, logs, or local file reads.
 
 `redaction_state` uses:
 
@@ -399,10 +399,10 @@ incompatible
 
 ## Profile-gated and reserved values
 
-Reserved or profile-gated names are not default baseline values. This document does not publish unsupported value names as part of the active value sets.
+Reserved or profile-gated names are not default baseline values. This document does not publish unsupported value names as part of the supported value sets.
 
 Boundary:
-- A name outside an active list is not available as baseline behavior by appearing in a note, example, route page, or rendered label.
+- A name outside a supported list is not available as baseline behavior by appearing in a note, example, route page, or rendered label.
 - A reserved or profile-gated value needs the [Scope](../scope.md) boundary and affected semantic owner before any behavior can be described as supported.
 
 ## Related owners

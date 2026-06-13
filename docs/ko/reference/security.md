@@ -17,7 +17,7 @@
 <a id="honest-guarantee-display"></a>
 하네스가 어떤 보장을 설명하려면 [범위](scope.md)와 이 보안 담당 문서가 모두 그 보장 수준을 지원해야 합니다. 주장이 접점 역량에 의존한다면 그 접점과 관찰 범위에 대한 역량 확인도 통과해야 합니다.
 
-활성 보장 표시 라벨은 `cooperative`와 `detective`입니다. 값 이름은 [API 값 집합](api/schema-value-sets.md)이 담당합니다.
+지원되는 보장 표시 라벨은 `cooperative`와 `detective`입니다. 값 이름은 [API 값 집합](api/schema-value-sets.md)이 담당합니다.
 
 ### `cooperative`
 

@@ -11,17 +11,17 @@
 - 범위 판단
 - 증거 공백
 - 잔여 위험 표시 문제
-- 이미 활성 Core/API 범주가 담당하는 닫기 차단 사유
+- 이미 지원되는 Core/API 범주가 담당하는 닫기 차단 사유
 
-이 문서는 독립적인 활성 관문, 설계 품질 전용 활성 닫기 차단 범주, 활성 검증기 계열, 품질 면제 경로, 심각도 기반 차단 정책, 증거 기록, QA 기록, 수락 기록, 잔여 위험 기록, 닫기 권한을 정의하지 않습니다.
+이 문서는 독립적인 기준 범위 관문, 설계 품질 전용 지원 닫기 차단 범주, 지원 검증기 계열, 품질 면제 경로, 심각도 기반 차단 정책, 증거 기록, QA 기록, 수락 기록, 잔여 위험 기록, 닫기 권한을 정의하지 않습니다.
 
 이 문서가 담당합니다.
 
 - 기준 범위에서 판단 라우팅, 증거 참조, 범위 참조로 쓰이는 설계 품질 역할
 - 설계 품질 관찰 사항을 `judgment_kind=product_decision`, `judgment_kind=technical_decision`, `judgment_kind=scope_decision`으로 보내는 기준
-- 설계 품질 관찰 사항을 `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `surface_capability` 같은 기존 활성 차단 사유 범주로 연결하는 기준
-- 활성 설계 품질 심각도 경계. 심각도 형태의 문구는 활성 담당 경로가 별도 행동을 요구하지 않는 한 조언성 우선순위입니다.
-- 설계 품질 관찰 사항, 활성 `ValidatorResult.validator_id` 값, 지원 범위 밖 품질 정책 자료 사이의 경계
+- 설계 품질 관찰 사항을 `scope`, `user_judgment`, `evidence`, `artifact_availability`, `residual_risk_visibility`, `surface_capability` 같은 기존 지원 차단 사유 범주로 연결하는 기준
+- 기준 범위 설계 품질 심각도 경계. 심각도 형태의 문구는 적용되는 담당 경로가 별도 행동을 요구하지 않는 한 조언성 우선순위입니다.
+- 설계 품질 관찰 사항, 지원되는 `ValidatorResult.validator_id` 값, 지원 범위 밖 품질 정책 자료 사이의 경계
 
 이 문서는 담당하지 않습니다.
 
@@ -43,14 +43,14 @@
 | 사용자 판단 메서드 동작 | [사용자 판단 메서드](api/method-user-judgment.md) |
 | 상태 메서드 동작 | [상태 메서드](api/method-status.md) |
 | 닫기 메서드 동작 | [Task 닫기 메서드](api/method-close-task.md) |
-| 활성 API 메서드 분기의 메서드별 저장 효과 | [저장 효과](storage-effects.md) |
+| 지원되는 API 메서드 분기의 메서드별 저장 효과 | [저장 효과](storage-effects.md) |
 | 지원 범위 밖 설계 품질 정책 계열 | [범위 참조](scope.md) |
 
 참조 문구는 설계 품질 경계와 담당 경로를 기록합니다. 하네스 서버 상태, 증거, QA, 수락, 잔여 위험, 닫기 기록을 만들지는 않습니다.
 
 ## 2. 기준 범위 설계 품질 역할
 
-기준 범위에서 설계 품질은 판단 라우팅을 하고 증거와 범위를 참조하는 좁은 층입니다. 품질 관련 우려를 이해할 수 있게 만들고, 그 우려를 기존 활성 담당 경로로 보냅니다.
+기준 범위에서 설계 품질은 판단 라우팅을 하고 증거와 범위를 참조하는 좁은 층입니다. 품질 관련 우려를 이해할 수 있게 만들고, 그 우려를 적용되는 담당 경로로 보냅니다.
 
 설계 품질 발견 사항이 기준 범위에서 할 수 있는 일은 아래뿐입니다.
 
@@ -64,7 +64,7 @@
 | 접점 역량 공백 | [접점 역량 공백](#design-quality-surface-capability-gap) 참조 |
 | 조언성 심각도 | [조언성 심각도](#design-quality-advisory-severity) 참조 |
 | 집중된 다음 행동 | [집중된 다음 행동](#design-quality-focused-next-action) 참조 |
-| 활성 담당 경로 없음 | [활성 담당 경로 없음](#design-quality-no-active-owner-path) 참조 |
+| 적용되는 담당 경로 없음 | [적용되는 담당 경로 없음](#design-quality-no-active-owner-path) 참조 |
 
 <a id="design-quality-product-decision-needed"></a>
 ### 제품 판단 필요
@@ -76,7 +76,7 @@
 - `judgment_kind=product_decision`을 사용합니다.
 
 닫기 영향:
-- 활성 닫기 경로가 이미 `CloseReadinessBlocker.category=user_judgment`를 요구할 때만 닫기를 차단합니다.
+- 적용되는 닫기 경로가 이미 `CloseReadinessBlocker.category=user_judgment`를 요구할 때만 닫기를 차단합니다.
 
 허용되지 않는 것:
 - 설계 품질 라벨 자체를 독립적인 닫기 차단 사유로 취급하지 않습니다.
@@ -91,7 +91,7 @@
 - `judgment_kind=technical_decision`을 사용합니다.
 
 닫기 영향:
-- 활성 닫기 경로가 이미 `CloseReadinessBlocker.category=user_judgment`를 요구할 때만 닫기를 차단합니다.
+- 적용되는 닫기 경로가 이미 `CloseReadinessBlocker.category=user_judgment`를 요구할 때만 닫기를 차단합니다.
 
 허용되지 않는 것:
 - 설계 품질 라벨 자체를 독립적인 닫기 차단 사유로 취급하지 않습니다.
@@ -106,7 +106,7 @@
 - 담당 경로에 따라 `judgment_kind=scope_decision` 또는 `CloseReadinessBlocker.category=scope`를 사용합니다.
 
 닫기 영향:
-- 활성 범위 또는 사용자 판단 담당 경로를 통해서만 닫기를 차단합니다.
+- 범위 또는 사용자 판단 담당 경로를 통해서만 닫기를 차단합니다.
 
 허용되지 않는 것:
 - 설계 품질 라벨을 범위 판단을 우회하는 근거로 취급하지 않습니다.
@@ -135,7 +135,7 @@
 
 라우팅:
 - 잔여 위험 표시를 사용합니다.
-- 활성 닫기 경로가 수락을 요구할 때만 `CloseReadinessBlocker.category=residual_risk_acceptance`를 사용합니다.
+- 적용되는 닫기 경로가 수락을 요구할 때만 `CloseReadinessBlocker.category=residual_risk_acceptance`를 사용합니다.
 
 닫기 영향:
 - 잔여 위험 표시 또는 잔여 위험 수락 담당 경로를 통해서만 닫기에 영향을 줍니다.
@@ -165,7 +165,7 @@
 - 발견 사항이 우려의 상대적 긴급도나 주의 수준을 설명합니다.
 
 라우팅:
-- 활성 담당 경로가 별도 행동을 요구하지 않는 한 심각도 형태의 문구는 조언성 우선순위로 다룹니다.
+- 적용되는 담당 경로가 별도 행동을 요구하지 않는 한 심각도 형태의 문구는 조언성 우선순위로 다룹니다.
 
 닫기 영향:
 - 심각도 형태의 문구 자체에는 닫기 영향이 없습니다.
@@ -189,10 +189,10 @@
 - 다음 행동을 이름 붙은 담당 경로가 요구하는 범위보다 넓히지 않습니다.
 
 <a id="design-quality-no-active-owner-path"></a>
-### 활성 담당 경로 없음
+### 적용되는 담당 경로 없음
 
 조건:
-- 적용되는 활성 담당 경로가 없습니다.
+- 적용되는 담당 경로가 없습니다.
 
 닫기 영향:
 - 기준 범위 결과는 조언 문구이거나 아무 행동 없음입니다.
@@ -200,17 +200,17 @@
 허용되지 않는 것:
 - 새 관문, 차단 사유, 검증기 매핑, 면제 경로, 증거 규칙, 닫기 권한을 만들지 않습니다.
 
-활성 설계 품질은 아래 항목을 만들지 않습니다.
+기준 범위 설계 품질은 아래 항목을 만들지 않습니다.
 
 - 새 Core 상태나 스키마
 - 새 `ValidatorResult` 필드
-- 활성 정책 검증기
+- 지원 정책 검증기
 - 품질 면제 경로
 - 별도 설계 검토 권한
 
 설계 품질은 평범한 작업을 끝없는 계획 반복으로 만들면 안 됩니다.
 
-다른 활성 담당 경로가 좁은 일부를 명시적으로 요구하지 않는 한, 아래 항목은 기준 범위 차단 사유가 아닙니다.
+다른 적용되는 담당 경로가 좁은 일부를 명시적으로 요구하지 않는 한, 아래 항목은 기준 범위 차단 사유가 아닙니다.
 
 - 전체 도메인 언어 점검
 - 전체 모듈/인터페이스 검토
@@ -222,7 +222,7 @@
 
 ## 3. 라우팅 규칙
 
-설계 품질 관찰 사항은 활성 담당 경로를 통해서만 기준 범위 상태에 영향을 줍니다. 관찰 사항은 자신이 의존하는 활성 경로를 이름 붙여야 합니다.
+설계 품질 관찰 사항은 적용되는 담당 경로를 통해서만 기준 범위 상태에 영향을 줍니다. 관찰 사항은 자신이 의존하는 적용되는 경로를 이름 붙여야 합니다.
 
 | 우려 | 상세 |
 |---|---|
@@ -241,10 +241,10 @@
 
 라우팅:
 - `judgment_kind=product_decision`을 사용합니다.
-- 활성 닫기 경로가 그 판단을 요구할 때만 `CloseReadinessBlocker.category=user_judgment`를 사용합니다.
+- 적용되는 닫기 경로가 그 판단을 요구할 때만 `CloseReadinessBlocker.category=user_judgment`를 사용합니다.
 
 닫기 영향:
-- 활성 담당 경로가 그 사용자 판단을 요구할 때만 닫기를 차단합니다.
+- 적용되는 담당 경로가 그 사용자 판단을 요구할 때만 닫기를 차단합니다.
 
 <a id="design-quality-route-technical-direction"></a>
 ### 기술 방향 미결정
@@ -254,10 +254,10 @@
 
 라우팅:
 - `judgment_kind=technical_decision`을 사용합니다.
-- 활성 닫기 경로가 그 판단을 요구할 때만 `CloseReadinessBlocker.category=user_judgment`를 사용합니다.
+- 적용되는 닫기 경로가 그 판단을 요구할 때만 `CloseReadinessBlocker.category=user_judgment`를 사용합니다.
 
 닫기 영향:
-- 활성 담당 경로가 그 사용자 판단을 요구할 때만 닫기를 차단합니다.
+- 적용되는 담당 경로가 그 사용자 판단을 요구할 때만 닫기를 차단합니다.
 
 <a id="design-quality-route-scope-boundary"></a>
 ### 범위 경계 라우팅
@@ -269,7 +269,7 @@
 - 담당 경로에 따라 `judgment_kind=scope_decision` 또는 `CloseReadinessBlocker.category=scope`를 사용합니다.
 
 닫기 영향:
-- 활성 범위 또는 사용자 판단 담당 경로를 통해서만 닫기를 차단합니다.
+- 범위 또는 사용자 판단 담당 경로를 통해서만 닫기를 차단합니다.
 
 <a id="design-quality-route-evidence"></a>
 ### 증거 라우팅
@@ -291,10 +291,10 @@
 
 라우팅:
 - `CloseReadinessBlocker.category=residual_risk_visibility`로 잔여 위험을 보이게 합니다.
-- 활성 닫기 경로가 수락을 요구할 때만 `CloseReadinessBlocker.category=residual_risk_acceptance`를 사용합니다.
+- 적용되는 닫기 경로가 수락을 요구할 때만 `CloseReadinessBlocker.category=residual_risk_acceptance`를 사용합니다.
 
 닫기 영향:
-- 활성 잔여 위험 담당 경로를 통해서만 닫기에 영향을 줍니다.
+- 적용되는 잔여 위험 담당 경로를 통해서만 닫기에 영향을 줍니다.
 
 <a id="design-quality-route-surface-capability"></a>
 ### 접점 역량 라우팅
@@ -306,29 +306,29 @@
 - 역량 담당 경로에서 `CloseReadinessBlocker.category=surface_capability`, `CAPABILITY_INSUFFICIENT`, 또는 낮아진 보장 표시를 사용합니다.
 
 닫기 영향:
-- 활성 역량 담당 경로를 통해서만 닫기에 영향을 줍니다.
+- 적용되는 역량 담당 경로를 통해서만 닫기에 영향을 줍니다.
 
-설계 품질 라벨, 정책 이름, 심각도 값, 검증기 ID, 검토 문구는 그 자체로 경로를 만들지 않습니다. 적용되는 활성 담당 경로가 없으면 기준 범위 결과는 조언 문구이거나 아무 행동 없음입니다.
+설계 품질 라벨, 정책 이름, 심각도 값, 검증기 ID, 검토 문구는 그 자체로 경로를 만들지 않습니다. 적용되는 담당 경로가 없으면 기준 범위 결과는 조언 문구이거나 아무 행동 없음입니다.
 
 <a id="when-a-finding-blocks-close"></a>
 ## 4. 닫기 차단 사유가 되는 조건
 
-설계 품질 관찰 사항은 활성 담당 경로를 통해서만 닫기를 차단합니다.
+설계 품질 관찰 사항은 적용되는 담당 경로를 통해서만 닫기를 차단합니다.
 
 | 닫기 차단 질문 | 상세 |
 |---|---|
-| 활성 닫기 의존성 | [활성 닫기 의존성](#design-quality-close-active-dependency) 참조 |
+| 적용되는 닫기 의존성 | [적용되는 닫기 의존성](#design-quality-close-active-dependency) 참조 |
 | 집중된 차단 해소 경로 | [집중된 차단 해소 경로](#design-quality-close-focused-unblock-path) 참조 |
 | 지원되지 않는 정책 근거 | [지원되지 않는 정책 근거](#design-quality-close-unsupported-policy-basis) 참조 |
 | 조언에 그치는 정책 문구 | [조언에 그치는 정책 문구](#design-quality-close-advisory-only-policy-phrase) 참조 |
-| 활성 닫기 차단 범주 | [활성 닫기 차단 범주](#design-quality-close-active-category) 참조 |
+| 지원되는 닫기 차단 범주 | [지원되는 닫기 차단 범주](#design-quality-close-active-category) 참조 |
 
 <a id="design-quality-close-active-dependency"></a>
-### 활성 닫기 의존성
+### 적용되는 닫기 의존성
 
 조건:
 - 관찰 사항이 활성 `Task` 또는 Change Unit과 시도 중인 닫기에 연결되어 있습니다.
-- 관찰 사항이 활성 닫기 차단 집합 안의 기존 활성 `CloseReadinessBlocker.category`, `judgment_kind`, API 오류, 담당 경로를 이름 붙입니다.
+- 관찰 사항이 적용되는 닫기 차단 집합 안의 기존 지원 `CloseReadinessBlocker.category`, `judgment_kind`, API 오류, 담당 경로를 이름 붙입니다.
 
 닫기 영향:
 - 이름 붙인 담당 경로가 설계 품질 라벨 없이도 닫기를 차단할 때만 닫기를 차단할 수 있습니다.
@@ -358,7 +358,7 @@
 - 그 근거만으로는 닫기를 차단하지 않습니다.
 
 허용되지 않는 것:
-- 지원 범위 밖 품질 정책 자료를 활성 관문, 닫기 차단 사유, 면제 경로, 증거 규칙, 닫기 권한으로 취급하지 않습니다.
+- 지원 범위 밖 품질 정책 자료를 기준 범위 관문, 닫기 차단 사유, 면제 경로, 증거 규칙, 닫기 권한으로 취급하지 않습니다.
 
 <a id="design-quality-close-advisory-only-policy-phrase"></a>
 ### 조언에 그치는 정책 문구
@@ -367,7 +367,7 @@
 - 발견 사항이 도메인 언어, 세로 조각 형태, TDD, 모듈/인터페이스 검토, 관리 책임, 넓은 검토 단계, 기준 범위 밖 정책 계열을 언급합니다.
 
 라우팅:
-- 활성 담당 경로가 그 좁은 행동을 필요로 할 때만 조언성 다음 행동, 증거 요청, 집중된 사용자 판단, 잔여 위험 표시를 사용합니다.
+- 적용되는 담당 경로가 그 좁은 행동을 필요로 할 때만 조언성 다음 행동, 증거 요청, 집중된 사용자 판단, 잔여 위험 표시를 사용합니다.
 
 닫기 영향:
 - 위 주제를 언급했다는 이유만으로는 닫기를 차단하지 않습니다.
@@ -376,23 +376,23 @@
 - 지원 범위 밖 정책 계열을 기준 범위 요구사항처럼 제시하지 않습니다.
 
 <a id="design-quality-close-active-category"></a>
-### 활성 닫기 차단 범주
+### 지원되는 닫기 차단 범주
 
 조건:
 - 설계 품질 관찰 사항이 닫기에 영향을 줍니다.
 
 라우팅:
-- [API 값 집합](api/schema-value-sets.md)이 담당하는 활성 `CloseReadinessBlocker.category` 값을 사용합니다.
+- [API 값 집합](api/schema-value-sets.md)이 담당하는 지원되는 `CloseReadinessBlocker.category` 값을 사용합니다.
 
 닫기 영향:
-- 닫기 준비 상태 평가의 닫기 차단 사유는 그 닫기 경로가 담당하는 활성 범주 안에 남습니다.
+- 닫기 준비 상태 평가의 닫기 차단 사유는 그 닫기 경로가 담당하는 지원 범주 안에 남습니다.
 
 허용되지 않는 것:
 - 기준 범위에서 설계 품질 전용 닫기 차단 범주를 만들지 않습니다.
 
 ## 5. 별도 품질 면제 없음
 
-기준 범위에는 별도의 활성 품질 면제 경로가 없습니다. 어떤 요구사항을 유예하거나, 위험으로 수락하거나, 사용자 판단으로 해결할 수 있는지는 그 활성 담당 경로가 정합니다. 그 경로의 정확한 `judgment_kind`, 차단 사유 범주, 증거 동작을 사용해야 합니다.
+기준 범위에는 별도의 품질 면제 경로가 없습니다. 어떤 요구사항을 유예하거나, 위험으로 수락하거나, 사용자 판단으로 해결할 수 있는지는 그 적용되는 담당 경로가 정합니다. 그 경로의 정확한 `judgment_kind`, 차단 사유 범주, 증거 동작을 사용해야 합니다.
 
 면제에 가까운 결정이나 수락된 위험 답변은 이름 붙은 요구사항 또는 이름 붙은 보이는 위험에 대한 책임 있는 사용자 판단을 기록합니다.
 
@@ -412,13 +412,13 @@
 |---|---|
 | `final_acceptance` | [`final_acceptance`](#design-quality-route-final-acceptance) 참조 |
 | `residual_risk_acceptance` | [`residual_risk_acceptance`](#design-quality-route-residual-risk-acceptance) 참조 |
-| 활성 `UserJudgment.judgment_kind` 값 | [활성 사용자 판단 값](#design-quality-route-active-user-judgment-values) 참조 |
+| 지원되는 `UserJudgment.judgment_kind` 값 | [지원되는 사용자 판단 값](#design-quality-route-active-user-judgment-values) 참조 |
 
 <a id="design-quality-route-final-acceptance"></a>
 ### `final_acceptance`
 
 조건:
-- 닫기 근거가 보이고 활성 담당 경로가 사용자의 결과 판단을 요청합니다.
+- 닫기 근거가 보이고 적용되는 담당 경로가 사용자의 결과 판단을 요청합니다.
 
 기록 효과:
 - 닫기 근거가 보인 뒤 사용자가 결과를 판단한 내용을 기록합니다.
@@ -439,13 +439,13 @@
 - 요청한 닫기를 위해 이름 붙은 보이는 잔여 위험을 사용자가 수락한 내용을 기록합니다.
 
 닫기 영향:
-- 활성 잔여 위험 담당 경로를 통해서만 닫기에 영향을 줍니다.
+- 적용되는 잔여 위험 담당 경로를 통해서만 닫기에 영향을 줍니다.
 
 허용되지 않는 것:
 - 정확성 증명, 증거 충분성, 최종 수락, 무위험 결과, 자동 성공으로 취급하지 않습니다.
 
 <a id="design-quality-route-active-user-judgment-values"></a>
-### 활성 사용자 판단 값
+### 지원되는 사용자 판단 값
 
 조건:
 - 집중된 사용자 소유 판단이 필요합니다.
@@ -457,12 +457,12 @@
 - 값은 [API 값 집합](api/schema-value-sets.md)이 담당합니다.
 
 닫기 영향:
-- 판단을 요청한 활성 담당 경로를 통해서만 닫기에 영향을 줄 수 있습니다.
+- 판단을 요청한 적용되는 담당 경로를 통해서만 닫기에 영향을 줄 수 있습니다.
 
 허용되지 않는 것:
 - 포괄 승인, 별도 품질 면제, 지원되지 않는 판단 범주로 취급하지 않습니다.
 
-넓은 승인, "좋아 보인다" 같은 말, 일반적인 진행 승인은 활성 담당 경로가 그 특정 판단을 물은 경우가 아니라면 위 판단으로 취급하면 안 됩니다.
+넓은 승인, "좋아 보인다" 같은 말, 일반적인 진행 승인은 적용되는 담당 경로가 그 특정 판단을 물은 경우가 아니라면 위 판단으로 취급하면 안 됩니다.
 
 ## 6. 증거 기대치
 
@@ -479,7 +479,7 @@
 ### 요청할 수 있는 증거 공백
 
 조건:
-- 활성 담당 경로가 쓰기 안전성, 닫기 준비 상태, 사용자 판단, 잔여 위험, 정직한 보장 표시에 영향을 주는 주장을 뒷받침해야 합니다.
+- 적용되는 담당 경로가 쓰기 안전성, 닫기 준비 상태, 사용자 판단, 잔여 위험, 정직한 보장 표시에 영향을 주는 주장을 뒷받침해야 합니다.
 
 라우팅:
 - Core 증거 담당 경로를 통해 증거를 요청합니다.
@@ -522,14 +522,14 @@
 
 검증기 ID는 보고용 라벨입니다. Core 불변조건, 관문, 닫기 차단 사유, 면제, 증거 기록, 사용자 판단을 만들지 않습니다.
 
-`ValidatorResult` 형태는 [API 상태 스키마](api/schema-state.md)가 담당합니다. `severity` 형태 값과 활성 안정 `ValidatorResult.validator_id` 집합은 [API 값 집합](api/schema-value-sets.md)이 담당합니다.
+`ValidatorResult` 형태는 [API 상태 스키마](api/schema-state.md)가 담당합니다. `severity` 형태 값과 지원되는 안정 `ValidatorResult.validator_id` 집합은 [API 값 집합](api/schema-value-sets.md)이 담당합니다.
 
 이 문서는 아래 항목을 제공하지 않습니다.
 
-- 활성 설계 정책 검증기 ID
+- 지원되는 설계 정책 검증기 ID
 - 정책-검증기 매핑
 
-[범위 참조](scope.md)와 영향받는 담당 문서가 좁은 활성 계약을 승격하지 않는 한, 활성 집합 밖의 검증기 ID는 기준 범위 효과가 없습니다.
+[범위 참조](scope.md)와 영향받는 담당 문서가 좁은 지원 계약을 승격하지 않는 한, 지원 집합 밖의 검증기 ID는 기준 범위 효과가 없습니다.
 
 ## 8. 지원 범위 밖 정책 자료 경계
 

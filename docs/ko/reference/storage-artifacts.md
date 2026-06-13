@@ -275,7 +275,7 @@ expires_at: "<future-expiration-timestamp>"
 - `redaction_state`.
 - 생산자와 보존 사실.
 - 가용성 `status`.
-- `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` 같은 활성 기록에 대한 담당 연결.
+- `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` 같은 기존 담당 기록에 대한 담당 연결.
 
 규칙:
 
@@ -290,7 +290,7 @@ expires_at: "<future-expiration-timestamp>"
 필수 검증:
 
 - `owner_record_kind`가 `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` 중 하나인지 확인합니다.
-- `owner_record_id`가 그 활성 테이블에 존재하는지 확인합니다.
+- `owner_record_id`가 해당 담당 테이블에 존재하는지 확인합니다.
 - 담당 기록이 같은 `project_id`와 `task_id`에 속하는지 확인합니다.
 - 관계가 아티팩트 사용 방식과 호환되는지 확인합니다.
 
@@ -354,7 +354,7 @@ expires_at: "<future-expiration-timestamp>"
 
 규칙:
 
-- `artifacts.redaction_state`는 [API 값 집합](api/schema-value-sets.md#artifact-values)의 활성 `ArtifactRef.redaction_state` 값을 사용합니다.
+- `artifacts.redaction_state`는 [API 값 집합](api/schema-value-sets.md#artifact-values)의 지원되는 `ArtifactRef.redaction_state` 값을 사용합니다.
 - `sha256`, `size_bytes`, `content_type`은 저장된 바이트 비교와 가용성 처리를 위한 무결성 사실입니다.
 
 허용되는 것:

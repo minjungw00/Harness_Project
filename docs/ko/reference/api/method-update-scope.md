@@ -30,13 +30,13 @@
 - 기준선 참조
 - 활성 Change Unit
 
-결과: 사용자 소유 차단 사유가 처리되면 shaping 상태를 안전한 첫 Change Unit으로 옮기는 활성 경로입니다.
+결과: 사용자 소유 차단 사유가 처리되면 shaping 상태를 안전한 첫 Change Unit으로 옮기는 지원 경로입니다.
 
 ## 필수 입력
 
 - `ToolEnvelope`: `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `task_id`.
-- 바꿀 범위 필드. 포함/제외 방식으로 범위를 갱신할 때는 `scope_update.include`에 범위에 포함할 제품 작업을, `scope_update.exclude`에 범위에서 제외할 제품 동작을 둡니다. `null`은 현재 값을 유지한다는 뜻이고, 빈 배열은 그 목록을 빈 목록으로 교체합니다.
+- 바꿀 범위 필드. 포함/제외 방식으로 범위를 갱신할 때는 `scope_update.include`에 범위에 포함할 제품 작업을, `scope_update.exclude`에 범위에서 제외할 제품 동작을 둡니다. `null`은 기존 값을 유지한다는 뜻이고, 빈 배열은 그 목록을 빈 목록으로 교체합니다.
 - `change_unit.operation`과 그 작업에 필요한 필드.
 - 해결된 `judgment_kind=scope_decision`을 적용한다면 `related_scope_decision_refs`.
 
@@ -230,6 +230,6 @@ next_actions:
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
 - 상태 참조, `StateSummary`, `ShapingReadiness`, 차단 사유, 다음 행동: [API 상태 스키마](schema-state.md).
 - 범위 관련 사용자 판단 형태: [API 판단 스키마](schema-judgment.md).
-- 활성 값 집합과 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 값 집합과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류: [API 오류](errors.md).
 - 저장 효과와 `status=stale` 쓰기 승인 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

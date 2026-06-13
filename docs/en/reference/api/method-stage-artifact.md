@@ -163,6 +163,6 @@ expires_at: "<future-expiration-timestamp>"
 
 - Request envelope, response branches, and dry-run summaries: [API Schema Core](schema-core.md).
 - `StagedArtifactHandle`, `ArtifactInput`, and `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md).
-- Active artifact values and access classes: [API Value Sets](schema-value-sets.md).
+- Supported artifact values and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors: [API Errors](errors.md).
 - Persistence effects and artifact lifecycle: [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).

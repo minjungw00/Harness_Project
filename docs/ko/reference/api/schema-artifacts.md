@@ -18,7 +18,7 @@
 
 - 아티팩트 저장소 배치, 스테이징 기록, 승격 지속 효과, 보존, 본문 읽기 저장소 자격: [아티팩트 저장소](../storage-artifacts.md)
 - `harness.stage_artifact`, `harness.record_run` 메서드 동작: [아티팩트 스테이징 메서드](method-stage-artifact.md), [실행 기록 메서드](method-record-run.md), [API 메서드](methods.md)
-- 활성 아티팩트 값 집합: [API 값 집합](schema-value-sets.md)
+- 지원되는 아티팩트 값 집합: [API 값 집합](schema-value-sets.md)
 - 증거 충분성: [Core 모델](../core-model.md), [API 상태 스키마](schema-state.md)
 - 접근, 차단, 격리에 대한 보안 주장: [보안](../security.md)
 
@@ -93,7 +93,7 @@ ArtifactInput:
   redaction_state: string | null
 ```
 
-각 입력에서는 출처 필드 하나만 채우고 다른 출처 필드는 `null`이어야 합니다. `ArtifactInput.source_kind`는 어느 출처 필드가 활성인지 고르며, 활성 출처 종류 값과 값 의미는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당합니다.
+각 입력에서는 출처 필드 하나만 채우고 다른 출처 필드는 `null`이어야 합니다. `ArtifactInput.source_kind`는 어느 출처 필드가 적용되는지 고르며, 지원되는 출처 종류 값과 값 의미는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당합니다.
 
 형태 규칙:
 - `staged_artifact_handle`이 채워지면 호환되는 임시 스테이징 핸들이어야 합니다.

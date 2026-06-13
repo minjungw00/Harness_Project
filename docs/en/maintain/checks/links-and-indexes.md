@@ -11,7 +11,7 @@ Owner:
 
 Check:
 - Validate changed relative links, file paths, anchors, route tables, and paired-language links.
-- Confirm active navigation uses the compact active routes from the authoring owner.
+- Confirm maintained navigation uses the compact maintained routes from the authoring owner.
 - Confirm contract links point to the canonical owner, not to a convenient duplicate.
 
 Failure:
@@ -19,7 +19,7 @@ Failure:
 - A route page links directly to deep contract detail where the Reference Index should choose the owner.
 
 Fix:
-- Update the link to the active route or canonical owner.
+- Update the link to the maintained route or canonical owner.
 - Add or preserve anchors only where they are needed for stable links.
 
 ## CHK-LINK-002: hidden anchors
@@ -50,17 +50,17 @@ Owner:
 
 Check:
 - Inspect changed route documents, `README` files, indexes, and `doc-index.yaml` entries for questions whose exact canonical owner is missing or unclear.
-- Confirm route text points to a current owner when one exists.
+- Confirm route text points to an applicable owner when one exists.
 - Confirm a missing owner is exposed as a documentation gap instead of being hidden behind broad route prose, Maintain guidance, or copied contract detail.
 
 Failure:
-- A route document answers a contract question without a current canonical owner.
+- A route document answers a contract question without an applicable canonical owner.
 - A route sends readers to a broad index or Maintain page when the question needs an owner that does not yet exist.
 - `doc-index.yaml` names a default owner that cannot answer the routed question.
 
 Fix:
 - Retarget the route to the exact owner selected from the Reference Index.
-- If no current owner exists, state the owner gap and route to the closest real owner, [Scope Reference](../../reference/scope.md), or [Implementation Guide](../../build/implementation-guide.md) as appropriate.
+- If no applicable owner exists, state the owner gap and route to the closest real owner, [Scope Reference](../../reference/scope.md), or [Implementation Guide](../../build/implementation-guide.md) as appropriate.
 - Create or designate a real owner only in the same paired documentation batch that defines the owner boundary.
 
 ## CHK-LINK-004: check-page routing
@@ -72,7 +72,7 @@ Owner:
 Check:
 - Confirm `checks.md` remains a short index to focused check pages.
 - Confirm new check pages are paired under `docs/en/maintain/checks/` and `docs/ko/maintain/checks/`.
-- Confirm `doc-index.yaml` contains route metadata for each active paired check page.
+- Confirm `doc-index.yaml` contains route metadata for each maintained paired check page.
 
 Failure:
 - The index starts accumulating detailed check bodies again.

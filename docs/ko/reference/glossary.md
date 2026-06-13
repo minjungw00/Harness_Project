@@ -27,7 +27,7 @@
 | baseline scope | 기준 범위 | [기준 범위](scope.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | [범위 참조](scope.md) |
 | owner document | 담당 문서 | [작성 가이드](../maintain/authoring-guide.md) |
-| current owner | 현재 담당 문서 | [작성 가이드](../maintain/authoring-guide.md) |
+| existing owner | 기존 담당 문서 | [작성 가이드](../maintain/authoring-guide.md) |
 | promotion-time owner update | 승격 시점의 담당 문서 갱신 | [범위 참조](scope.md) |
 | owner placeholder | 담당 문서 자리표시자 | [작성 가이드](../maintain/authoring-guide.md) |
 | `Task` | `Task` | [Core 모델](core-model.md) |
@@ -221,16 +221,16 @@
 설명:
 - 담당 문서는 제품 개념, 계약, 스키마 묶음, 경로, 용어 규칙의 기준 의미를 정의할 수 있는 기준 문서입니다.
 
-### current owner
+### existing owner
 
 영어:
-- current owner
-- current canonical owner
-- current owner document
+- existing owner
+- existing canonical owner
+- existing owner document
 
 한국어:
-- 참조 문서: 현재 담당 문서
-- 사용자 문서: 현재 담당 문서
+- 참조 문서: 기존 담당 문서
+- 사용자 문서: 기존 담당 문서
 
 보존할 식별자:
 - 파일 경로
@@ -238,7 +238,7 @@
 - `doc_id` 값
 
 피할 표현:
-- 담당 문서 자리표시자를 현재 담당 문서처럼 이름 붙이는 표현
+- 담당 문서 자리표시자를 기존 담당 문서처럼 이름 붙이는 표현
 
 담당 문서:
 - [작성 가이드](../maintain/authoring-guide.md)
@@ -246,7 +246,7 @@
 - [doc-index.yaml](../../doc-index.yaml)
 
 설명:
-- 현재 담당 문서는 지금 존재하며 규범 의미의 기준으로 연결할 수 있을 때만 그렇게 부릅니다.
+- 기존 담당 문서는 이미 존재하며 규범 의미의 기준으로 연결할 수 있을 때만 그렇게 부릅니다.
 
 ### promotion-time owner update
 
@@ -262,7 +262,7 @@
 - 앵커
 
 피할 표현:
-- 아직 없는 담당 문서가 이미 현재 담당 문서인 것처럼 이름 붙이는 표현
+- 아직 없는 담당 문서가 이미 기존 담당 문서인 것처럼 이름 붙이는 표현
 
 담당 문서:
 - [작성 가이드](../maintain/authoring-guide.md)
@@ -285,7 +285,7 @@
 - 범위 밖 기능의 담당 문서 공백을 안내하는 정확한 표현
 
 피할 표현:
-- 자리표시자를 현재 담당 문서처럼 독자에게 안내하는 표현
+- 자리표시자를 기존 담당 문서처럼 독자에게 안내하는 표현
 
 담당 문서:
 - [작성 가이드](../maintain/authoring-guide.md)
@@ -293,7 +293,7 @@
 
 설명:
 - 이 표현은 지원 범위 밖 기능을 기준 범위로 승격하기 전에 담당 문서를 만들거나 지정해야 할 수 있음을 나타낼 때만 씁니다.
-- 담당 문서 자리표시자는 현재 담당 문서가 아닙니다.
+- 담당 문서 자리표시자는 기존 담당 문서가 아닙니다.
 
 ### `Task`
 

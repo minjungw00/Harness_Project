@@ -62,7 +62,7 @@ If the chat surface cannot verify local access, state, artifact availability, or
 
 ## Local MCP surface
 
-A local MCP surface is the practical route for asking active Harness owner paths for status, scope updates, write checks, run/evidence recording, user-judgment capture, artifact staging, and close checks when those methods are active.
+A local MCP surface is the practical route for asking supported Harness owner paths for status, scope updates, write checks, run/evidence recording, user-judgment capture, artifact staging, and close checks when those methods are supported.
 
 For local MCP work:
 
@@ -108,11 +108,11 @@ Do not bury the user in schema fields, logs, generated readable views, or long h
 Use these owner routes for exact contracts:
 
 - [Agent Integration Reference](../reference/agent-integration.md): connector behavior, `capability_profile`, `VerifiedSurfaceContext`, context exchange, fallback boundaries.
-- [API Methods](../reference/api/methods.md): active method list and method-owner routing.
+- [API Methods](../reference/api/methods.md): supported method list and method-owner routing.
 - [API Errors](../reference/api/errors.md): public error codes and recovery routing.
 - [Security](../reference/security.md): guarantee wording and non-claims.
 - [Runtime Boundaries](../reference/runtime-boundaries.md): `Product Repository`, Harness Server, and `Harness Runtime Home` separation.
-- [Scope](../reference/scope.md): active, profile-gated, and out-of-scope boundaries.
+- [Scope](../reference/scope.md): baseline, profile-gated, and out-of-scope boundaries.
 
 ## Where to go next
 

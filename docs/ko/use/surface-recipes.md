@@ -62,7 +62,7 @@ IDE/편집기 통합은 에이전트가 절차를 지키도록 도울 수 있습
 
 ## 로컬 MCP 접점
 
-로컬 MCP 접점은 필요한 메서드가 활성일 때 상태 조회, 범위 업데이트, 쓰기 확인, 실행/증거 기록, 사용자 판단 기록, 아티팩트 스테이징, 닫기 확인을 활성 하네스 담당 경로에 요청하는 실무 경로입니다.
+로컬 MCP 접점은 필요한 메서드가 지원될 때 상태 조회, 범위 업데이트, 쓰기 확인, 실행/증거 기록, 사용자 판단 기록, 아티팩트 스테이징, 닫기 확인을 지원되는 하네스 담당 경로에 요청하는 실무 경로입니다.
 
 로컬 MCP 작업에서는 아래를 따릅니다.
 
@@ -108,11 +108,11 @@ IDE/편집기 통합은 에이전트가 절차를 지키도록 도울 수 있습
 정확한 계약은 아래 담당 경로를 사용합니다.
 
 - [에이전트 통합 참조](../reference/agent-integration.md): 커넥터 동작, `capability_profile`, `VerifiedSurfaceContext`, 맥락 교환, 대체 경계.
-- [API 메서드](../reference/api/methods.md): 활성 메서드 목록과 메서드 담당 경로.
+- [API 메서드](../reference/api/methods.md): 지원되는 메서드 목록과 메서드 담당 경로.
 - [API 오류](../reference/api/errors.md): 공개 오류 코드와 복구 경로.
 - [보안](../reference/security.md): 보장 표현과 비주장.
 - [런타임 경계](../reference/runtime-boundaries.md): `Product Repository`, Harness Server, `Harness Runtime Home` 분리.
-- [기준 범위](../reference/scope.md): 활성, 프로필 조건부, 지원 범위 밖 기능 경계.
+- [기준 범위](../reference/scope.md): 기준 범위, 프로필 조건부, 지원 범위 밖 기능 경계.
 
 ## 다음 읽기 경로
 

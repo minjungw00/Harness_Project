@@ -6,7 +6,7 @@ This document owns rendered body guidance, display phrasing, user-facing labels,
 
 This document owns:
 
-- exact active template body structure for rendered status or support displays
+- exact supported template body structure for rendered status or support displays
 - user-facing display phrasing for those bodies
 - locale-aware rendered labels where a body needs them
 - user-facing public-error display labels and recovery cues
@@ -450,7 +450,7 @@ Use `Closed by owner result` only when the close owner path returned an actual c
 ### Must not imply
 
 - The packet is Core state, storage state, evidence, acceptance, residual-risk acceptance, or close output.
-- A stale packet overrides current owner state.
+- A stale packet overrides newer owner-returned state.
 - The agent may bypass user judgment, write authorization, artifact rules, or close blockers.
 - The packet should include full schemas, DDL, logs, artifact bodies, unrelated contract material, out-of-scope capability catalogs, or paired bilingual docs by default.
 

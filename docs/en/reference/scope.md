@@ -82,7 +82,7 @@ User judgment owners:
 <a id="excluded-from-baseline-scope"></a>
 ## Excluded from baseline scope
 
-The following capability families are outside the supported baseline scope. They become supported only when this Scope reference includes them and the affected current owner documents define their behavior.
+The following capability families are outside the supported baseline scope. They become supported only when this Scope reference includes them and the affected existing owner documents define their behavior.
 
 Excluded capabilities:
 
@@ -104,7 +104,7 @@ Scope rule:
 
 - Capabilities listed here are outside the baseline scope.
 - Excluded capabilities are not baseline requirements.
-- Excluded capabilities are not supported behavior unless this Scope reference and the affected current owner documents explicitly define them as supported.
+- Excluded capabilities are not supported behavior unless this Scope reference and the affected existing owner documents explicitly define them as supported.
 - Sensitive-action approval does not by itself imply broad security monitoring, quarantine, QA gates, verification gates, command/network/secret observation, pre-tool blocking, isolation, or any other out-of-scope behavior.
 
 Owner routing:
@@ -154,7 +154,7 @@ Promotion must define:
 - API behavior, schemas, storage effects, runtime boundaries, security guarantees, conformance checks, and terminology updates when those areas are affected
 - paired English and Korean documentation
 
-If no current owner exists for the capability, promotion requires creating or designating that owner before the capability is described as supported. Do not route readers to a placeholder as if it were a current owner.
+If no applicable owner exists for the capability, promotion requires creating or designating that owner before the capability is described as supported. Do not route readers to a placeholder as if it were an existing owner.
 
 Promotion boundary:
 

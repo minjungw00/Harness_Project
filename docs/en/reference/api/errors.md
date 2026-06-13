@@ -391,7 +391,7 @@ Used in:
 - Owner-defined result paths
 
 Condition:
-- The surface is recognized but lacks a required access class, observation, capture, guarantee support, or active behavior.
+- The surface is recognized but lacks a required access class, observation, capture, guarantee support, or supported behavior.
 
 State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
@@ -492,14 +492,14 @@ Used in:
 - Owner-defined result paths
 
 Condition:
-- Fallback when a required active validator or blocker check failed and no more specific typed code applies.
+- Fallback when a required validator or blocker check failed and no more specific typed code applies.
 
 State effect:
 - Rejection path: no committed operation proceeds and no owner state mutation occurs.
 - Owner-defined result paths: only the owning method or schema may define committed result effects.
 
 Not allowed:
-- Do not use this fallback when a more specific active code applies.
+- Do not use this fallback when a more specific supported code applies.
 - Do not use this as a blocker code outside the owning method or schema fallback.
 
 `ToolError.details.authorization_reason` uses `missing`, `expired`, `stale`, `revoked`, `consumed`, or `incompatible`. A stale `WriteAuthorization.basis_state_version` uses `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`.
@@ -686,7 +686,7 @@ Applies to:
 ### Precedence 24: `VALIDATOR_FAILED`
 
 Applies to:
-- Typed fallback when no more specific active code applies.
+- Typed fallback when no more specific supported code applies.
 
 <a id="state-version-conflict-precedence-exclusion"></a>
 ### `STATE_VERSION_CONFLICT` precedence exclusion

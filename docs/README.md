@@ -1,8 +1,8 @@
 # Harness documentation / 하네스 문서
 
-This directory routes readers into the active bilingual Harness documentation set. Choose a language first, then follow the linked entry pages to the owner document you need.
+This directory routes readers into the maintained bilingual Harness documentation set. Choose a language first, then follow the linked entry pages to the owner document you need.
 
-이 디렉터리는 활성 한영 Harness 문서 세트로 들어가는 경로입니다. 먼저 언어를 고른 뒤, 연결된 진입 문서에서 필요한 담당 문서로 이동합니다.
+이 디렉터리는 유지되는 한영 Harness 문서 세트로 들어가는 경로입니다. 먼저 언어를 고른 뒤, 연결된 진입 문서에서 필요한 담당 문서로 이동합니다.
 
 ## Choose a language / 언어 선택
 

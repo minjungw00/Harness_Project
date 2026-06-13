@@ -8,7 +8,7 @@ Run the checks that match the edit. For most documentation batches, start with [
 
 | Page | Use for |
 |---|---|
-| [Structure checks](checks/structure.md) | owner boundaries, route-page shape, active/out-of-scope wording, implementation wording, reference-claim placement, readability, and final reports |
+| [Structure checks](checks/structure.md) | owner boundaries, route-page shape, baseline/out-of-scope wording, implementation wording, reference-claim placement, readability, and final reports |
 | [Language parity checks](checks/language-parity.md) | English/Korean semantic parity, identifier preservation, Korean structure, and Korean technical style |
 | [Terminology checks](checks/terminology.md) | terminology-map usage, mixed-language Korean, `complete` ambiguity, close-readiness wording, and access/security wording terms |
 | [API examples checks](checks/api-examples.md) | durable scenarios, field-name consistency, response snapshot consistency, refs, timestamps, and API owner routing in examples |

@@ -18,7 +18,7 @@ This document does not own:
 
 - artifact storage layout, staging records, promotion persistence, retention, or body-read storage eligibility; see [Artifact Storage](../storage-artifacts.md)
 - method behavior for `harness.stage_artifact` and `harness.record_run`; see [Stage-artifact method](method-stage-artifact.md), [Record-run method](method-record-run.md), and the [API Methods](methods.md)
-- active artifact value sets; see [API Value Sets](schema-value-sets.md)
+- supported artifact value sets; see [API Value Sets](schema-value-sets.md)
 - evidence sufficiency; see [Core Model](../core-model.md) and [API State Schemas](schema-state.md)
 - security claims about access, blocking, or isolation; see [Security](../security.md)
 
@@ -93,7 +93,7 @@ ArtifactInput:
   redaction_state: string | null
 ```
 
-For each input, exactly one source field is populated and the other source field is `null`. `ArtifactInput.source_kind` selects which source field is active; active source-kind values and value meanings are owned by [artifact values](schema-value-sets.md#artifact-values).
+For each input, exactly one source field is populated and the other source field is `null`. `ArtifactInput.source_kind` selects which source field applies; supported source-kind values and value meanings are owned by [artifact values](schema-value-sets.md#artifact-values).
 
 Shape rules:
 - If `staged_artifact_handle` is populated, it must be a compatible transient staged handle.

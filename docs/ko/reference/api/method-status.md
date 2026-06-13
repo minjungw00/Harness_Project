@@ -236,13 +236,13 @@ close_readiness:
 guarantee_display:
   level: cooperative
   notes:
-    - "더 강한 로컬 보장이 활성화되지 않았습니다."
+    - "더 강한 로컬 보장이 적용 중이지 않습니다."
 ```
 
 ## 담당 문서 링크
 
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
 - 상태, 닫기 준비 상태 형태, 증거 요약, 보장 표시: [API 상태 스키마](schema-state.md).
-- 활성 값과 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류와 닫기 차단 사유 경로: [API 오류](errors.md), [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers).
 - 저장 효과: [저장 효과](../storage-effects.md).

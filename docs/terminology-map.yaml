@@ -237,14 +237,14 @@ terms:
         - "docs/ko/reference/README.md"
     notes:
       - "Use for the canonical documentation owner of a contract or term."
-  current_owner:
+  existing_owner:
     category: "documentation_concept"
-    en: "current owner"
-    ko_reference: "현재 담당 문서"
-    ko_user: "현재 담당 문서"
+    en: "existing owner"
+    ko_reference: "기존 담당 문서"
+    ko_user: "기존 담당 문서"
     aliases_en:
-      - "current canonical owner"
-      - "current owner document"
+      - "existing canonical owner"
+      - "existing owner document"
     owner_documents:
       en:
         - "docs/en/maintain/authoring-guide.md"
@@ -253,7 +253,7 @@ terms:
         - "docs/ko/maintain/authoring-guide.md"
         - "docs/ko/reference/README.md"
     notes:
-      - "Use only when the canonical owner exists now and can be linked as the current source of normative meaning."
+      - "Use only when the canonical owner already exists and can be linked as the source of normative meaning."
       - "Do not use for an owner placeholder or an owner type that must be created or designated at promotion time."
   promotion_time_owner_update:
     category: "documentation_concept"
@@ -273,7 +273,7 @@ terms:
         - "docs/ko/reference/scope.md"
     notes:
       - "This means the owner does not exist as a baseline contract owner before promotion."
-      - "Do not name a missing owner as if it is a current canonical owner."
+      - "Do not name a missing owner as if it is an existing canonical owner."
       - "Scope applies the baseline boundary; the glossary gives the term-level definition."
   owner_placeholder:
     category: "documentation_concept"
@@ -289,8 +289,8 @@ terms:
         - "docs/ko/reference/scope.md"
     notes:
       - "Use only to signal that an out-of-scope capability needs an owner created or designated before baseline support."
-      - "An owner placeholder is not a current owner document."
-      - "Do not route readers to an owner placeholder as if it is a current owner document."
+      - "An owner placeholder is not an existing owner document."
+      - "Do not route readers to an owner placeholder as if it is an existing owner document."
   task:
     category: "product_concept"
     en: "Task"

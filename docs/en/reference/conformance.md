@@ -547,7 +547,7 @@ Scenario family names outside the baseline scope belong in [Scope](scope.md). Th
 Out-of-scope family names are not:
 
 - scenario scripts
-- active API payload examples
+- supported API payload examples
 - runner or reporting requirements
 - baseline scope
 - implementation tasks

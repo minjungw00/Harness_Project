@@ -184,6 +184,6 @@ next_actions:
 
 - Request envelope and response branches: [`ToolEnvelope`](schema-core.md#tool-envelope) and [common response branches](schema-core.md#common-response).
 - State refs, `StateSummary`, `ShapingReadiness`, and next actions: [API State Schemas](schema-state.md).
-- Active method names, mode values, `resume_policy`, `response_kind`, `effect_kind`, and access classes: [API Value Sets](schema-value-sets.md).
+- Supported method names, mode values, `resume_policy`, `response_kind`, `effect_kind`, and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors and state-version conflicts: [API Errors](errors.md).
 - Persistence effects: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).

@@ -11,7 +11,7 @@ Owner:
 
 Check:
 - Compare paired files by meaning unit when the edit changes meaning.
-- Confirm the paired files keep the same reader purpose, normative strength, owner routing, active/out-of-scope boundary, user-judgment boundary, and security guarantee level.
+- Confirm the paired files keep the same reader purpose, normative strength, owner routing, baseline/out-of-scope boundary, user-judgment boundary, and security guarantee level.
 - Allow natural Korean structure instead of line-by-line translation.
 
 Failure:
@@ -53,7 +53,7 @@ Check:
 
 Failure:
 - Korean text preserves the broad topic but collapses separate condition/result/exception or non-claim structure.
-- A Korean paragraph makes an owner boundary, active/out-of-scope boundary, security non-claim, or close-readiness consequence harder to detect than in the paired meaning unit.
+- A Korean paragraph makes an owner boundary, baseline/out-of-scope boundary, security non-claim, or close-readiness consequence harder to detect than in the paired meaning unit.
 
 Fix:
 - Split the Korean prose into natural paragraphs or bullets that preserve the meaning units.

@@ -21,7 +21,7 @@
 이 문서는 담당하지 않습니다.
 
 - 공통 요청 래퍼나 응답 분기: [API 코어 스키마](schema-core.md)
-- 활성 enum 형태 값: [API 값 집합](schema-value-sets.md)
+- 지원되는 enum 형태 값: [API 값 집합](schema-value-sets.md)
 - 메서드 동작: [API 메서드](methods.md)와 메서드 담당 문서
 - 공개 오류 의미: [API 오류](errors.md)
 - Core 생명주기와 닫기 준비 상태의 제품 의미: [Core 모델](../core-model.md)
@@ -63,7 +63,7 @@ StateRecordRef:
 
 ## `StateSummary`
 
-`StateSummary`는 현재 `Task` 경로를 보여 줘야 하는 활성 메서드가 반환하는 간결한 현재 위치 상태입니다.
+`StateSummary`는 지원되는 메서드가 현재 `Task` 경로를 보여 줘야 할 때 반환하는 간결한 현재 위치 상태입니다.
 
 ```yaml
 StateSummary:
@@ -112,14 +112,14 @@ TaskLifecycleState:
 ```
 
 담당 문서 링크:
-- `lifecycle_phase`, `close_reason`, `result`의 활성 값: [`Task` 생명주기 값](schema-value-sets.md#task-lifecycle-values)
+- `lifecycle_phase`, `close_reason`, `result`의 지원 값: [`Task` 생명주기 값](schema-value-sets.md#task-lifecycle-values)
 - 생명주기 영역의 제품 의미: [Core 모델의 `Task` 생명주기](../core-model.md#6-task-lifecycle)
 
 ## `ShapingReadiness`
 
 의미:
 - `ShapingReadiness`는 `Task`, Change Unit, 대기 중인 판단, 증거 요약, 차단 사유, 다음 행동 상태에서 파생되는 API 보기입니다.
-- 현재 담당 상태가 다음 안전한 행동에 충분히 구체적인지를 보여 줍니다.
+- 적용되는 담당 상태가 다음 안전한 행동에 충분히 구체적인지를 보여 줍니다.
 
 ```yaml
 ShapingReadiness:
@@ -145,7 +145,7 @@ ShapingGap:
 - 준비 상태 공백은 차단 사유, 대기 중이거나 후보인 사용자 판단, 범위 갱신 다음 행동으로 이어질 수 있습니다.
 
 의미하지 않는 것:
-- 별도 활성 계획 기록이나 생성된 계획 아티팩트를 만들지 않습니다.
+- 별도 기준 범위 계획 기록이나 생성된 계획 아티팩트를 만들지 않습니다.
 
 ## 현재 위치 표시 형태
 
@@ -185,7 +185,7 @@ WriteDecisionReason:
 - 닫기 준비 상태의 차단 사유가 아닙니다.
 
 담당 문서 링크:
-- 활성 범주와 사유 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
+- 지원되는 범주와 사유 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
 - 공개 오류 코드의 의미: [API 오류](errors.md)
 
 ## 증거와 실행 기록 스냅샷 형태
@@ -263,7 +263,7 @@ GuaranteeDisplay:
 - 닫기 준비 상태 의미와 대체 금지 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
 - 응답 분기 동작, 닫기 준비 상태 평가 순서, 커밋된 차단 결과: [`harness.close_task`](method-close-task.md)
 - 공개 오류 경로: [`close_task` 차단 사유 매핑](errors.md#harnessclose_task-close-blockers)
-- 활성 `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값: [API 값 집합](schema-value-sets.md)
+- 지원되는 `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값: [API 값 집합](schema-value-sets.md)
 - 보안 보장 의미: [보안](../security.md)
 
 ## 관련 담당 문서

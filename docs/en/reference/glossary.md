@@ -27,7 +27,7 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | baseline scope | 기준 범위 | [Scope](scope.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | [Scope Reference](scope.md) |
 | owner document | 담당 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
-| current owner | 현재 담당 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
+| existing owner | 기존 담당 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
 | promotion-time owner update | 승격 시점의 담당 문서 갱신 | [Scope Reference](scope.md) |
 | owner placeholder | 담당 문서 자리표시자 | [Authoring Guide](../maintain/authoring-guide.md) |
 | `Task` | `Task` | [Core Model](core-model.md) |
@@ -221,16 +221,16 @@ Owner:
 Notes:
 - An owner document is the canonical document allowed to define a product concept, contract, schema family, route, or terminology rule.
 
-### current owner
+### existing owner
 
 English:
-- current owner
-- current canonical owner
-- current owner document
+- existing owner
+- existing canonical owner
+- existing owner document
 
 Korean:
-- Reference: 현재 담당 문서
-- User-facing: 현재 담당 문서
+- Reference: 기존 담당 문서
+- User-facing: 기존 담당 문서
 
 Preserve:
 - File paths
@@ -238,7 +238,7 @@ Preserve:
 - `doc_id` values
 
 Avoid:
-- Naming an owner placeholder as a current canonical owner.
+- Naming an owner placeholder as an existing canonical owner.
 
 Owner:
 - [Authoring Guide](../maintain/authoring-guide.md)
@@ -246,7 +246,7 @@ Owner:
 - [doc-index.yaml](../../doc-index.yaml)
 
 Notes:
-- Use this only when the canonical owner exists now and can be linked as the current source of normative meaning.
+- Use this only when the canonical owner already exists and can be linked as the source of normative meaning.
 
 ### promotion-time owner update
 
@@ -262,7 +262,7 @@ Preserve:
 - Anchors
 
 Avoid:
-- Naming a missing owner as if it already exists as a current canonical owner.
+- Naming a missing owner as if it already exists as an existing canonical owner.
 
 Owner:
 - [Authoring Guide](../maintain/authoring-guide.md)
@@ -285,7 +285,7 @@ Preserve:
 - Exact owner-gap wording when routing out-of-scope capabilities
 
 Avoid:
-- Routing readers to the placeholder as if it were a current canonical owner.
+- Routing readers to the placeholder as if it were an existing canonical owner.
 
 Owner:
 - [Authoring Guide](../maintain/authoring-guide.md)
@@ -293,7 +293,7 @@ Owner:
 
 Notes:
 - Use this phrase only to signal that an out-of-scope capability may need an owner created or designated before activation.
-- An owner placeholder is not a current owner document.
+- An owner placeholder is not an existing owner document.
 
 ### `Task`
 

@@ -1,6 +1,6 @@
 # API methods
 
-This reference owns the active public API method list and routes each method to its behavior owner. It does not define method behavior, shared schema bodies, storage effects, public error semantics, or example consistency rules.
+This reference owns the supported public API method list and routes each method to its behavior owner. It does not define method behavior, shared schema bodies, storage effects, public error semantics, or example consistency rules.
 
 <a id="baseline-scope-method-behavior"></a>
 
@@ -8,11 +8,11 @@ This reference owns the active public API method list and routes each method to 
 
 Only methods listed below are supported public API methods routed by this document. A method name not listed here is outside the supported public method family.
 
-Method-specific behavior belongs to the method owner documents. Out-of-scope API or schema capabilities remain outside this method router unless [Scope](../scope.md) and the affected owners define them as active.
+Method-specific behavior belongs to the method owner documents. Out-of-scope API or schema capabilities remain outside this method router unless [Scope](../scope.md) and the affected owners define them as supported.
 
 <a id="method-owner-routing-table"></a>
 
-## Current API method list
+## Supported API method list
 
 This table is both the supported public method list and the first-hop route for method behavior questions.
 

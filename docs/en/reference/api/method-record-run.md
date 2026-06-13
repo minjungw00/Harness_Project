@@ -331,6 +331,6 @@ state:
 - `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, and refs: [API State Schemas](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, and `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md).
 - Write Authorization and close-relevant evidence boundaries: [Core Model](../core-model.md).
-- Active values and access classes: [API Value Sets](schema-value-sets.md).
+- Supported values and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors: [API Errors](errors.md).
 - Persistence effects and artifact promotion: [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).

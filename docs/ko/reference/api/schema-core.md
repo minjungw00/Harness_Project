@@ -4,7 +4,7 @@
 - 이 문서는 기준 범위의 공통 API 요청 래퍼와 응답 분기 스키마를 담당합니다.
 
 의미하지 않는 것:
-- 메서드 동작, 저장 효과, 상태 스냅샷, 아티팩트 생명주기, 사용자 소유 판단 의미, 공개 오류 의미, 활성 값 집합을 정의하지 않습니다.
+- 메서드 동작, 저장 효과, 상태 스냅샷, 아티팩트 생명주기, 사용자 소유 판단 의미, 공개 오류 의미, 지원되는 값 집합을 정의하지 않습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -26,7 +26,7 @@
 - 상태와 현재 위치 스키마: [API 상태 스키마](schema-state.md)
 - 아티팩트 스키마: [API 아티팩트 스키마](schema-artifacts.md)
 - 사용자 소유 판단 스키마: [API 판단 스키마](schema-judgment.md)
-- 활성 메서드 이름, `response_kind` 값, `effect_kind` 값, 접근 등급, 그 밖의 enum 형태 값: [API 값 집합](schema-value-sets.md)
+- 지원되는 메서드 이름, `response_kind` 값, `effect_kind` 값, 접근 등급, 그 밖의 enum 형태 값: [API 값 집합](schema-value-sets.md)
 - 공개 오류 코드, 우선순위, 오류 의미: [API 오류](errors.md)
 - 저장소 기록과 효과: [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md)
 
@@ -122,7 +122,7 @@ ToolDryRunResponse:
 - `ToolRejectedResponse`와 `ToolDryRunResponse`는 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, `close_state` 같은 결과 전용 필드를 담지 않습니다.
 
 담당 문서 링크:
-- 활성 `response_kind`와 `effect_kind` 값: [응답과 효과 값](schema-value-sets.md#response-and-effect-values)
+- 지원되는 `response_kind`와 `effect_kind` 값: [응답과 효과 값](schema-value-sets.md#response-and-effect-values)
 - 공통 분기 읽기 규칙: [공통 응답 분기](#common-response)
 - 메서드별 상태 효과: 메서드 담당 문서
 - 공개 오류 우선순위: [API 오류](errors.md)

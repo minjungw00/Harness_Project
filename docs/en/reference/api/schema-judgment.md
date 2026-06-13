@@ -20,7 +20,7 @@ This document does not own:
 
 - the product meaning and non-substitution rules for user-owned judgment; see [Core Model](../core-model.md)
 - method behavior for requesting or recording judgment; see [User-judgment methods](method-user-judgment.md)
-- active judgment-kind values, status values, presentation values, and required-for values; see [API Value Sets](schema-value-sets.md)
+- supported judgment-kind values, status values, presentation values, and required-for values; see [API Value Sets](schema-value-sets.md)
 - final acceptance or residual-risk close effects; see [Core Model](../core-model.md) and [Close-task method](method-close-task.md)
 - public error semantics for missing, unresolved, denied, or expired judgment; see [API Errors](errors.md)
 
@@ -114,7 +114,7 @@ RecordUserJudgmentPayload:
   cancellation: object | null
 ```
 
-`selected_option_id` and `note` are request-level and resolution-level fields. `RecordUserJudgmentPayload` must not repeat them. Exactly one decision-specific payload branch should be populated for the active `judgment_kind` unless a method owner explicitly allows a narrower structure.
+`selected_option_id` and `note` are request-level and resolution-level fields. `RecordUserJudgmentPayload` must not repeat them. Exactly one decision-specific payload branch should be populated for the selected `judgment_kind` unless a method owner explicitly allows a narrower structure.
 
 ## `SensitiveActionScope`
 
@@ -157,4 +157,4 @@ Accepted risk is scoped to the named visible risk and the requested judgment. It
 - [API Value Sets](schema-value-sets.md) for `judgment_kind`, `presentation`, `required_for`, status, and option display boundaries.
 - [API State Schemas](schema-state.md) for `StateRecordRef`.
 - [API Artifact Schemas](schema-artifacts.md) for `ArtifactRef`.
-- [Scope Reference](../scope.md) for reserved judgment routes and active-boundary checks.
+- [Scope Reference](../scope.md) for reserved judgment routes and baseline-boundary checks.

@@ -337,6 +337,6 @@ state:
 - `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, 참조: [API 상태 스키마](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md).
 - 쓰기 승인과 닫기 관련 증거 경계: [Core 모델](../core-model.md).
-- 활성 값과 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류: [API 오류](errors.md).
 - 저장 효과와 아티팩트 승격: [저장 효과](../storage-effects.md), [아티팩트 저장소](../storage-artifacts.md).

@@ -441,7 +441,7 @@ next_actions:
 - Request envelope, response branches, and dry-run summaries: [API Schema Core](schema-core.md).
 - `UserJudgment`, options, context, and answer payloads: [API Judgment Schemas](schema-judgment.md).
 - State refs and summaries: [API State Schemas](schema-state.md).
-- Judgment kinds and active values: [API Value Sets](schema-value-sets.md).
+- Judgment kinds and supported values: [API Value Sets](schema-value-sets.md).
 - User-owned judgment and non-substitution rules: [Core Model](../core-model.md).
 - Public errors and persistence effects: [API Errors](errors.md) and [Storage Effects](../storage-effects.md).
 
@@ -451,6 +451,6 @@ next_actions:
 - Request envelope, response branches, and dry-run summaries: [API Schema Core](schema-core.md).
 - `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, and `AcceptedRiskInput`: [API Judgment Schemas](schema-judgment.md).
 - State refs and summaries: [API State Schemas](schema-state.md).
-- Judgment values and active method-local values: [API Value Sets](schema-value-sets.md).
+- Judgment values and supported method-local values: [API Value Sets](schema-value-sets.md).
 - User-owned judgment, final acceptance, residual-risk acceptance, and non-substitution rules: [Core Model](../core-model.md).
 - Public errors and persistence effects: [API Errors](errors.md) and [Storage Effects](../storage-effects.md).

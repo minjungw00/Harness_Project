@@ -10,10 +10,10 @@ Read owner documents before encoding behavior.
 
 Use this path for an implementation slice:
 
-1. Confirm the active capability boundary in [Scope](../reference/scope.md).
+1. Confirm the supported capability boundary in [Scope](../reference/scope.md).
 2. Use the [Reference Index](../reference/README.md) to choose the exact owner for each contract question.
 3. Read [Core Model](../reference/core-model.md) for authority concepts that cross APIs, storage, and close readiness.
-4. Use [API Methods](../reference/api/methods.md) for the active public method list and method-owner routing.
+4. Use [API Methods](../reference/api/methods.md) for the supported public method list and method-owner routing.
 5. Read the affected method owner, schema owner, storage owner, [Runtime Boundaries](../reference/runtime-boundaries.md), [Security](../reference/security.md), and [Conformance](../reference/conformance.md) together when behavior crosses those areas.
 6. Use [Agent Integration](../reference/agent-integration.md) and [Surface Recipes](../use/surface-recipes.md) only for the surface or connector boundary they own.
 7. Keep user-owned judgment, evidence, verification expectations, acceptance, close readiness, and residual risk as separate authority concepts.
@@ -22,7 +22,7 @@ Use this path for an implementation slice:
 
 [Scope](../reference/scope.md) is the baseline gate. A capability is implementable as baseline behavior only when Scope includes it and the affected owners define the behavior, shape, storage, runtime, security, and conformance detail the implementation needs.
 
-Do not infer active behavior from value names, examples, route summaries, or schema vocabulary. Use Scope for the boundary and the narrower owners for exact method behavior, fields, effects, guarantees, and assertions.
+Do not infer supported behavior from value names, examples, route summaries, or schema vocabulary. Use Scope for the boundary and the narrower owners for exact method behavior, fields, effects, guarantees, and assertions.
 
 ## Contract owner combinations
 
@@ -37,12 +37,12 @@ Most implementation work needs more than one owner. Start from the owner closest
 | Which public errors or close-readiness blocker routes are valid? | [API Errors](../reference/api/errors.md), plus the affected method and state-schema owners |
 | What changes in storage? | [Storage Effects](../reference/storage-effects.md) first, then [Storage Records](../reference/storage-records.md), [Artifact Storage](../reference/storage-artifacts.md), or [Storage Versioning](../reference/storage-versioning.md) when the effect needs record, artifact, clock, lock, or migration detail |
 | Where do product files, server files, and runtime data live? | [Runtime Boundaries](../reference/runtime-boundaries.md), with storage owners for data detail |
-| What security wording or guarantee level is valid? | [Security](../reference/security.md), with [Scope](../reference/scope.md) for active availability and [API Value Sets](../reference/api/schema-value-sets.md) for exact value names |
+| What security wording or guarantee level is valid? | [Security](../reference/security.md), with [Scope](../reference/scope.md) for supported availability and [API Value Sets](../reference/api/schema-value-sets.md) for exact value names |
 | What should a conformance check assert? | [Conformance](../reference/conformance.md), then the API, schema, storage, security, runtime, and Core owners that make each asserted fact authoritative |
 | How should a surface or connector behave? | [Agent Integration](../reference/agent-integration.md), [Surface Recipes](../use/surface-recipes.md), and the relevant API/security owners |
 | What can a read-only display show? | [Projection Authority](../reference/projection-and-templates.md), [Template Bodies](../reference/template-bodies.md), and the state/schema owners for source facts |
 
-When owners appear to disagree, do not resolve the mismatch in implementation code. Treat it as an owner gap: Scope gates active availability, method owners define method behavior, schema owners define shapes, storage owners define effects, Runtime Boundaries define locations, Security defines guarantee wording, and Conformance defines assertion authority.
+When owners appear to disagree, do not resolve the mismatch in implementation code. Treat it as an owner gap: Scope gates supported availability, method owners define method behavior, schema owners define shapes, storage owners define effects, Runtime Boundaries define locations, Security defines guarantee wording, and Conformance defines assertion authority.
 
 ## Use documents and reference contracts
 
@@ -56,7 +56,7 @@ If a use document and a Reference owner seem to differ, implement the Reference 
 
 Do not implement an excluded capability because it is named in Scope, examples, conformance scenario IDs, schema value sets, or route summaries. A name may be vocabulary or reserved surface area without being supported behavior.
 
-An out-of-scope capability becomes implementable only after [Scope](../reference/scope.md) and the affected owners define a supported contract. Until then, implementation code should reject, ignore, or avoid the behavior according to the active owners.
+An out-of-scope capability becomes implementable only after [Scope](../reference/scope.md) and the affected owners define a supported contract. Until then, implementation code should reject, ignore, or avoid the behavior according to the applicable owners.
 
 ## Conformance scenarios
 
@@ -72,7 +72,7 @@ Do not infer fields, optionality, storage effects, security guarantees, out-of-s
 
 ## Minimal baseline slice
 
-The smallest useful baseline implementation slice carries one ordinary user task through the active owner path. Use [Scope](../reference/scope.md) for included capabilities and the narrower owners for exact requests, responses, storage effects, errors, blockers, security wording, and conformance assertions.
+The smallest useful baseline implementation slice carries one ordinary user task through the applicable owner path. Use [Scope](../reference/scope.md) for included capabilities and the narrower owners for exact requests, responses, storage effects, errors, blockers, security wording, and conformance assertions.
 
 This slice is a stable build shape, not a separate contract.
 

@@ -17,7 +17,7 @@ This document owns Harness security guarantee wording, local-access assumptions,
 <a id="honest-guarantee-display"></a>
 Harness may describe a guarantee only when [Scope](scope.md) and this security owner both support the guarantee level. If the claim depends on a surface capability, the relevant surface capability check must also pass for the named surface and observed scope.
 
-The active guarantee display labels are `cooperative` and `detective`; the value names are owned by [API Value Sets](api/schema-value-sets.md).
+The supported guarantee display labels are `cooperative` and `detective`; the value names are owned by [API Value Sets](api/schema-value-sets.md).
 
 ### `cooperative`
 

@@ -131,7 +131,7 @@ You decide:
 
 - which blocker to address next
 - whether to provide final acceptance when the close basis is visible
-- whether to accept a named residual risk when the active close path requires that judgment
+- whether to accept a named residual risk when the applicable close path requires that judgment
 - whether the task should complete, cancel, or be superseded
 
 The agent should show scope, evidence, checks, pending judgments, final-acceptance needs, residual-risk needs, known blockers, and the next action that would unblock close.
@@ -157,7 +157,7 @@ Use the use docs for workflow. Use owner reference docs for exact contracts:
 
 | Need | Owner Route |
 |---|---|
-| Active and out-of-scope boundary | [Scope](../reference/scope.md) |
+| Baseline and out-of-scope boundary | [Scope](../reference/scope.md) |
 | Core authority, user-owned judgment, close-readiness meaning | [Core Model](../reference/core-model.md) |
 | Security wording and guarantee levels | [Security](../reference/security.md) |
 | API methods and schemas | [Reference Index](../reference/README.md) |
@@ -171,5 +171,5 @@ Do not treat this guide as the API contract. Do not copy detailed contract rules
 |---|---|
 | Working user | [Judgment Examples](judgment-examples.md) -> [Scope](../reference/scope.md) |
 | Agent author or operator | [Agent Guide](agent-guide.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
-| Implementer | [Reference Index](../reference/README.md) -> active scope -> API methods -> schema owners -> storage effects |
+| Implementer | [Reference Index](../reference/README.md) -> baseline scope -> API methods -> schema owners -> storage effects |
 | Documentation maintainer | [Authoring Guide](../maintain/authoring-guide.md) -> [Translation Guide](../maintain/translation-guide.md) -> [Checks](../maintain/checks.md) |

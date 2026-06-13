@@ -180,6 +180,6 @@ expires_at: "<future-expiration-timestamp>"
 
 - 요청 래퍼, 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - `StagedArtifactHandle`, `ArtifactInput`, `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md).
-- 활성 아티팩트 값과 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 아티팩트 값과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류: [API 오류](errors.md).
 - 저장 효과와 아티팩트 생명주기: [저장 효과](../storage-effects.md), [아티팩트 저장소](../storage-artifacts.md).

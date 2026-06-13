@@ -298,7 +298,7 @@ Owner links:
 Not allowed:
 
 - The call must be rejected before consumption.
-- The call must not change the `Write Authorization` status unless another current contract explicitly says so.
+- The call must not change the `Write Authorization` status unless another supported contract explicitly says so.
 
 ## Event meaning
 

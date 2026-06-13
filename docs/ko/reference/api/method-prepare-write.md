@@ -121,7 +121,7 @@
 
 ## 최소 유효 요청
 
-이 예시는 개인정보가 포함될 수 있는 계정 데이터 내보내기에 대해 `personal_data_export`를 `sensitive_categories`의 예시 값으로 사용합니다. 이 메서드 예시는 `personal_data_export`를 새 활성 값으로 정의하지 않고, 민감 범주의 전체 값 집합도 정의하지 않습니다.
+이 예시는 개인정보가 포함될 수 있는 계정 데이터 내보내기에 대해 `personal_data_export`를 `sensitive_categories`의 예시 값으로 사용합니다. 이 메서드 예시는 `personal_data_export`를 새 지원 값으로 정의하지 않고, 민감 범주의 전체 값 집합도 정의하지 않습니다.
 
 ```yaml
 method: harness.prepare_write
@@ -228,6 +228,6 @@ write_decision_reasons:
 - 요청 래퍼, 공통 결과 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - `WriteAuthorizationSummary`, 상태 요약, 참조: [API 상태 스키마](schema-state.md).
 - `SensitiveActionScope`와 사용자 소유 승인 경계: [API 판단 스키마](schema-judgment.md).
-- 활성 값과 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류, `STATE_VERSION_CONFLICT`, 차단/`dry_run` 동작: [API 오류](errors.md).
 - 저장 효과와 상태 시계: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

@@ -12,7 +12,7 @@ Owner:
 
 Check:
 - Confirm API and Reference examples use stable product or user scenarios.
-- For current API method examples, confirm they use the shared account data export confirmation sample task unless the documentation batch intentionally replaces that sample across the API examples, paired Korean examples, checks, and routes.
+- For supported API method examples, confirm they use the shared account data export confirmation sample task unless the documentation batch intentionally replaces that sample across the API examples, paired Korean examples, checks, and routes.
 - Confirm examples do not use documentation maintenance, refactoring, migration, route cleanup, or section restructuring as their scenario.
 - Confirm documentation paths are used as example payload only when the document is specifically about documentation maintenance.
 - Confirm paired English and Korean examples preserve equivalent scenario details.

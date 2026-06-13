@@ -124,16 +124,16 @@ Owner:
 Check:
 - Inspect changed maintained docs, examples, route text, and summaries for out-of-scope capabilities presented as baseline scope behavior.
 - Confirm profile-gated or reserved values are labeled at the point of use.
-- Confirm out-of-scope activation wording describes missing owners as owners to create or designate, not as existing current owners.
+- Confirm out-of-scope promotion wording describes missing owners as owners to create or designate, not as existing owners.
 
 Failure:
 - An out-of-scope capability, reserved operation, profile-gated value, or unproved behavior is described as a default baseline requirement.
-- Promotion wording names a nonexistent owner as if it were already current.
+- Promotion wording names a nonexistent owner as if it already existed.
 - Promotion wording omits the need to update baseline scope and paired English/Korean docs when meaning changes.
 
 Fix:
 - Reword as out of scope and route to Scope, or promote it through the semantic owner before using baseline-support language.
-- Link existing current owners only when they actually exist.
+- Link existing owners only when they actually exist.
 - If promoting the capability, update baseline scope, relevant owners, routes, checks, and paired-language docs in the same documentation batch.
 
 ## CHK-SCOPE-002: implementation wording
@@ -147,7 +147,7 @@ Check:
 - Confirm implementation authority is not claimed outside the Implementation Guide owner.
 
 Failure:
-- Active docs describe documentation reference material as accepted runtime behavior or implementation authority without the Implementation Guide owner.
+- Maintained docs describe documentation reference material as accepted runtime behavior or implementation authority without the Implementation Guide owner.
 
 Fix:
 - Reword as planning or reference documentation.

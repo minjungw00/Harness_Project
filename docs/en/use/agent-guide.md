@@ -190,7 +190,7 @@ A compact status summary should include the active task or work boundary, active
 <a id="handle-close"></a>
 ## Handle close honestly
 
-Close only when the active path can support the close claim. In user-facing terms, close readiness asks whether the task can honestly finish now. Exact close meaning belongs to [Core Model](../reference/core-model.md); method behavior belongs to [Close-task Method](../reference/api/method-close-task.md); state shapes belong to [API State Schemas](../reference/api/schema-state.md).
+Close only when the applicable path can support the close claim. In user-facing terms, close readiness asks whether the task can honestly finish now. Exact close meaning belongs to [Core Model](../reference/core-model.md); method behavior belongs to [Close-task Method](../reference/api/method-close-task.md); state shapes belong to [API State Schemas](../reference/api/schema-state.md).
 
 For small work, a close-like result can be brief:
 
@@ -217,7 +217,7 @@ Do not close from prose, tests alone, broad acceptance-like language, residual-r
 <a id="respect-boundaries"></a>
 ## Respect owner and scope boundaries
 
-Baseline behavior should stay compact. Do not make out-of-scope capability presentation formats look like active requirements.
+Baseline behavior should stay compact. Do not make out-of-scope capability presentation formats look like supported requirements.
 
 Do not make these appear required for ordinary baseline work:
 
@@ -230,7 +230,7 @@ Do not make these appear required for ordinary baseline work:
 - operations control programs
 - other out-of-scope capabilities
 
-Quality concerns should route through an active owner path when one applies, such as scope, user-owned judgment, evidence, residual-risk visibility, surface capability, or another active blocker. Do not invent a separate quality gate or waiver path in the use guide.
+Quality concerns should route through an applicable owner path when one applies, such as scope, user-owned judgment, evidence, residual-risk visibility, surface capability, or another applicable blocker. Do not invent a separate quality gate or waiver path in the use guide.
 
 Use compact user-facing shapes first: status, focused judgment request, what was checked, and close result. Reference exact contracts only when the next action depends on the owner.
 

@@ -96,7 +96,7 @@ Owner links:
 `capability_profile` is an integration declaration describing what a registered surface can support. It is not authority by itself.
 
 Condition:
-- A capability may be declared supported only when [Scope](scope.md) and the affected owners define it as active or profile-gated supported behavior.
+- A capability may be declared supported only when [Scope](scope.md) and the affected owners define it as baseline or profile-gated supported behavior.
 - Protected reads, mutations, artifact operations, and guarantee displays may use a capability declaration only with compatible active surface context and owner-method support.
 
 Agent may:
@@ -112,7 +112,7 @@ Agent must not:
 - replace method-owner access conditions or security-owner guarantee wording with a capability declaration
 
 Owner links:
-- [Scope](scope.md) owns active and profile-gated scope boundaries.
+- [Scope](scope.md) owns baseline and profile-gated scope boundaries.
 - [Security](security.md) owns guarantee vocabulary and guarantee-strength non-claims.
 - [API Value Sets](api/schema-value-sets.md) owns access-class value names.
 

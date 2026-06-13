@@ -20,7 +20,7 @@
 
 - 사용자 소유 판단의 제품 의미와 비대체 규칙: [Core 모델](../core-model.md)
 - 판단 요청과 기록 메서드 동작: [사용자 판단 메서드](method-user-judgment.md)
-- 활성 판단 종류 값, 상태 값, 표시 형식 값, 필요 판단 위치 값: [API 값 집합](schema-value-sets.md)
+- 지원되는 판단 종류 값, 상태 값, 표시 형식 값, 필요 판단 위치 값: [API 값 집합](schema-value-sets.md)
 - 최종 수락이나 잔여 위험 수락의 닫기 효과: [Core 모델](../core-model.md), [Task 닫기 메서드](method-close-task.md)
 - 판단 누락, 미해결, 거절, 만료에 대한 공개 오류 의미: [API 오류](errors.md)
 
@@ -121,7 +121,7 @@ RecordUserJudgmentPayload:
   cancellation: object | null
 ```
 
-`selected_option_id`와 `note`는 요청 수준이자 해결 수준의 필드입니다. `RecordUserJudgmentPayload`는 이 둘을 반복하면 안 됩니다. 메서드 담당 문서가 더 좁은 구조를 명시적으로 허용하지 않는 한 활성 `judgment_kind`에 맞는 판단별 요청 본문 분기 하나만 채워야 합니다.
+`selected_option_id`와 `note`는 요청 수준이자 해결 수준의 필드입니다. `RecordUserJudgmentPayload`는 이 둘을 반복하면 안 됩니다. 메서드 담당 문서가 더 좁은 구조를 명시적으로 허용하지 않는 한 선택된 `judgment_kind`에 맞는 판단별 요청 본문 분기 하나만 채워야 합니다.
 
 ## `SensitiveActionScope`
 
@@ -164,4 +164,4 @@ AcceptedRiskInput:
 - [API 값 집합](schema-value-sets.md): `judgment_kind`, `presentation`, `required_for`, 상태, 선택지 표시 경계.
 - [API 상태 스키마](schema-state.md): `StateRecordRef`.
 - [API 아티팩트 스키마](schema-artifacts.md): `ArtifactRef`.
-- [범위 참조](../scope.md): 예약된 판단 경로와 활성 경계 확인.
+- [범위 참조](../scope.md): 예약된 판단 경로와 기준 범위 경계 확인.

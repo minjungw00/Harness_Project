@@ -13,11 +13,11 @@ Owner links:
 This document owns:
 
 - Runtime Home identity and project-local storage layout assumptions.
-- Active persisted record categories and table-level storage roles.
+- Baseline persisted record categories and table-level storage roles.
 - Record-column meaning for baseline storage design.
 - Storage-owned record values and status fields.
 - Storage-owned JSON `TEXT` placement and validation expectations.
-- Record-level active/out-of-scope exclusions.
+- Record-level baseline/out-of-scope exclusions.
 
 This document does not own:
 
@@ -97,7 +97,7 @@ Runtime Home is Harness operational data space. It is not automatically the Prod
 
 ### Conditions
 
-The baseline persists only the Core records needed by the active state-changing method set. `harness.status` and `harness.close_task intent=check` are read-only.
+The baseline persists only the Core records needed by the supported state-changing method set. `harness.status` and `harness.close_task intent=check` are read-only.
 
 State-changing method set:
 
@@ -111,13 +111,13 @@ State-changing method set:
 
 ### Stored records
 
-The active Core persisted records are:
+The baseline Core persisted records are:
 
 - Runtime Home identity in `registry.sqlite`.
 - Minimal project registration in `registry.sqlite`.
 - Static project configuration in `project.yaml`.
 - `project_state`.
-- `surfaces`, limited to the registered local/reference surface facts needed by the active API envelope, capability display, and local-access posture.
+- `surfaces`, limited to the registered local/reference surface facts needed by the supported API envelope, capability display, and local-access posture.
 - `tasks`.
 - `change_units`.
 - `user_judgments`.
@@ -144,19 +144,19 @@ Owner links:
 Not allowed:
 
 - No other persisted table family or transient handle family is baseline scope.
-- Requirement shaping persists only through the active record families listed above and does not create separate requirement-discovery records.
-- Evidence is stored only through the active compact evidence-summary and artifact-ref paths.
+- Requirement shaping persists only through the baseline record families listed above and does not create separate requirement-discovery records.
+- Evidence is stored only through the baseline compact evidence-summary and artifact-ref paths.
 
 ### Projection non-claim
 
 Not allowed:
 
-- Projection has no active persisted table family.
+- Projection has no baseline persisted table family.
 - `status-card`, `judgment-request`, `run-evidence-summary`, `close-result`, and `agent-context-packet` are not stored state or storage mutation paths.
 
 Allowed:
 
-- `status-card`, `judgment-request`, `run-evidence-summary`, `close-result`, and `agent-context-packet` are read-time views over active records.
+- `status-card`, `judgment-request`, `run-evidence-summary`, `close-result`, and `agent-context-packet` are read-time views over baseline records.
 
 ### Shaping storage
 
@@ -165,7 +165,7 @@ Allowed:
 - Requirement shaping persists through `tasks`, `change_units`, `user_judgments`, `evidence_summaries`, and `blockers`.
 - Evidence persists through compact evidence summaries, `CompletionPolicy` on the Task or Change Unit, required coverage items, and artifact refs.
 
-Minimum active shaping information:
+Minimum baseline shaping information:
 
 - current goal summary
 - active scope summary
@@ -186,11 +186,11 @@ Exceptions:
 
 Not allowed:
 
-- Storage must not create extra active planning tables to make the request appear ready.
+- Storage must not create extra baseline planning tables to make the request appear ready.
 
 ## Table overview
 
-This table names active storage record categories and links to category details. It is not full DDL and does not duplicate API schemas or rendered template bodies.
+This table names baseline storage record categories and links to category details. It is not full DDL and does not duplicate API schemas or rendered template bodies.
 
 | Record category | Purpose | Details |
 |---|---|---|
@@ -511,7 +511,7 @@ Owner links:
 ### `artifact_links`
 
 Purpose:
-- Stores the owner relation from an artifact to the active Core/API record it supports.
+- Stores the owner relation from an artifact to the supported Core/API record it supports.
 
 Stored in:
 - `state.sqlite`.
@@ -644,7 +644,7 @@ Not allowed:
 
 Required identity and uniqueness constraints:
 
-- Active tables use opaque stable ids as primary keys or equivalent unique keys.
+- Baseline tables use opaque stable ids as primary keys or equivalent unique keys.
 
   Identity fields include:
   - `project_id`
@@ -1027,7 +1027,7 @@ SQLite `TEXT` columns that store JSON are a storage representation choice, not p
 
 ### Stored JSON
 
-Active JSON `TEXT` columns are limited to compact owner-shaped data needed by the active records, including:
+Baseline JSON `TEXT` columns are limited to compact owner-shaped data needed by the baseline records, including:
 
 - `surfaces.capability_profile_json`.
 - Task and Change Unit shaping columns such as `success_criteria_json`, `acceptance_criteria_json`, `scope_boundary_json`, `non_goals_json`, `affected_areas_json`, `affected_path_candidates_json`, `constraints_json`, `autonomy_boundary_json`, and `completion_policy_json`.
@@ -1063,7 +1063,7 @@ Exceptions:
 
 Not allowed:
 
-- Reference-schema presence alone does not make storage active.
+- Reference-schema presence alone does not make storage supported.
 
 ### Not stored
 
@@ -1073,7 +1073,7 @@ Unless [Scope](scope.md) and the storage owners define a supported contract, the
 
 Allowed:
 
-- Active status, close readiness, run/evidence summaries, next actions, readable cards, `agent-context-packet`, and guarantee display are read-time derived views over active persisted records.
+- Status, close readiness, run/evidence summaries, next actions, readable cards, `agent-context-packet`, and guarantee display are read-time derived views over baseline persisted records.
 
 Exceptions:
 

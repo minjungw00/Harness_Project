@@ -21,7 +21,7 @@ This document owns:
 This document does not own:
 
 - common envelopes or response branches; see [API Schema Core](schema-core.md)
-- active enum-like values; see [API Value Sets](schema-value-sets.md)
+- supported enum-like values; see [API Value Sets](schema-value-sets.md)
 - method behavior; see the [API Methods](methods.md) and method owner documents
 - public error semantics; see [API Errors](errors.md)
 - Core lifecycle and close-readiness product meaning; see [Core Model](../core-model.md)
@@ -63,7 +63,7 @@ Owner links:
 
 ## `StateSummary`
 
-`StateSummary` is the compact current-position state returned by active methods that need to show the current Task path.
+`StateSummary` is the compact current-position state returned by supported methods that need to show the current Task path.
 
 ```yaml
 StateSummary:
@@ -112,14 +112,14 @@ TaskLifecycleState:
 ```
 
 Owner links:
-- Active values for `lifecycle_phase`, `close_reason`, and `result`: [task lifecycle values](schema-value-sets.md#task-lifecycle-values)
+- Supported values for `lifecycle_phase`, `close_reason`, and `result`: [task lifecycle values](schema-value-sets.md#task-lifecycle-values)
 - Product meaning of lifecycle areas: [Core Model task lifecycle](../core-model.md#6-task-lifecycle)
 
 ## `ShapingReadiness`
 
 Meaning:
 - `ShapingReadiness` is a derived API view over Task, Change Unit, pending judgments, evidence summary, blockers, and next-action state.
-- It shows whether the active owner state is concrete enough for the next safe action.
+- It shows whether the applicable owner state is concrete enough for the next safe action.
 
 ```yaml
 ShapingReadiness:
@@ -145,7 +145,7 @@ Meaning:
 - Missing readiness can route to a blocker, a pending or candidate user judgment, or an update-scope next action.
 
 Not implied:
-- It does not create separate active planning records or generated planning artifacts.
+- It does not create separate baseline planning records or generated planning artifacts.
 
 ## Current-position display shapes
 
@@ -185,7 +185,7 @@ Not implied:
 - It is not a close-readiness blocker.
 
 Owner links:
-- Active categories and reason values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
+- Supported categories and reason values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
 - Public error code meaning: [API Errors](errors.md)
 
 ## Evidence and run snapshot shapes
@@ -263,7 +263,7 @@ Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)
 - Response branch behavior, close-readiness evaluation order, and committed blocked outcomes: [`harness.close_task`](method-close-task.md)
 - Public error routing: [`close_task` blocker mapping](errors.md#harnessclose_task-close-blockers)
-- Active `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md)
+- Supported `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md)
 - Security guarantee meaning: [Security](../security.md)
 
 ## Related owners

@@ -41,11 +41,11 @@ When an entry's `owner_for` matches the question or concept, load that owner fir
 
 One concept has one canonical owner. Edit the owner when the change affects normative meaning, including baseline scope, API behavior, schemas, storage effects, security wording, access boundaries, close readiness, product terminology, or out-of-scope promotion rules.
 
-If an entry route, README, or maintain document cannot point to a current owner, do not fill the gap with duplicate contract prose. Name the owner gap or route to the closest current owner.
+If an entry route, README, or maintain document cannot point to an applicable owner, do not fill the gap with duplicate contract prose. Name the owner gap or route to the closest applicable owner.
 
 API routing shortcut:
 
-- `docs/*/reference/api/methods.md` owns the active public API method list and method owner routing, not detailed method behavior.
+- `docs/*/reference/api/methods.md` owns the supported public API method list and method owner routing, not detailed method behavior.
 - Route method behavior to the method-specific owner linked from the API method router.
 - Route response branch schemas and nested API shapes to the schema owner documents listed in `docs/doc-index.yaml` and `docs/*/reference/README.md`.
 - Route method payload field questions to the affected method owner when the field is method-specific; route shared envelope fields and nested schema fields to the schema owners.
@@ -54,15 +54,15 @@ API routing shortcut:
 
 ## Language Selection
 
-English and Korean docs are both active. Neither language is an archive, appendix, or translation-only copy.
+English and Korean docs are both maintained. Neither language is an archive, appendix, or translation-only copy.
 
 Read one language version of the same `doc_id` unless checking translation parity, doing bilingual editing, or resolving a terminology/parity issue that requires comparison.
 
 For normal agent retrieval, use the language that matches the user request or the default language in `docs/doc-index.yaml`. Do not inject paired English and Korean docs for the same `doc_id` into the same context unless a parity review requires both versions.
 
-Do not finish a meaning-changing documentation batch with only one language updated when the changed document has an active paired path.
+Do not finish a meaning-changing documentation batch with only one language updated when the changed document has a maintained paired path.
 
-For bilingual edits, preserve the same reader purpose, normative strength, owner routing, current/out-of-scope boundary, user-judgment boundary, and security guarantee level by meaning unit. Matching line counts are not required.
+For bilingual edits, preserve the same reader purpose, normative strength, owner routing, baseline/out-of-scope boundary, user-judgment boundary, and security guarantee level by meaning unit. Matching line counts are not required.
 
 ## Korean Documentation Rule
 
@@ -105,7 +105,7 @@ API examples must not use documentation maintenance, migration, refactoring, rou
 - Keep baseline behavior separate from reserved, profile-gated, and out-of-scope material. Do not describe out-of-scope capabilities as baseline requirements.
 - Guard, freeze, careful-mode, and security wording must match the actual guarantee level documented by the security owner. Only documented preventive mechanisms should claim preventive behavior.
 - Replace dated project narration with durable owner-routed guidance or remove it.
-- Rewrite, move, merge, shrink, or delete prose when it conflicts with current owner boundaries, active/out-of-scope boundaries, Korean quality rules, or implementation feasibility.
+- Rewrite, move, merge, shrink, or delete prose when it conflicts with owner boundaries, baseline/out-of-scope boundaries, Korean quality rules, or implementation feasibility.
 - Preserve exact identifiers in backticks, including file paths, `doc_id` values, API method names, schema fields, enum values, status values, table names, validator IDs, error codes, anchors, and code literals.
 - Major implementation decisions belong in `docs/en/build/implementation-guide.md` and `docs/ko/build/implementation-guide.md`, not scattered across route or maintain documents.
 - Path allowlists and batch boundaries for documentation edits are maintainer editing controls, not Harness runtime override capabilities.
@@ -126,7 +126,7 @@ Validate changed relative links, file paths, anchors, route tables, and paired-l
 
 Validate terminology against `docs/terminology-map.yaml` and the relevant glossary entries. Confirm exact identifiers remain unchanged and are backticked where prose clarity or searchability requires.
 
-For meaning-changing bilingual edits, compare paired files by meaning unit. Confirm the paired files keep the same reader purpose, normative strength, owner routing, current/out-of-scope boundary, user-judgment boundary, and security guarantee level while allowing natural Korean structure.
+For meaning-changing bilingual edits, compare paired files by meaning unit. Confirm the paired files keep the same reader purpose, normative strength, owner routing, baseline/out-of-scope boundary, user-judgment boundary, and security guarantee level while allowing natural Korean structure.
 
 For example edits, validate scenario durability, field-name consistency, response snapshot consistency, artifact-ref lifecycle context, sensitive approval reasons, and timestamp handling against the affected owner documents and `docs/*/maintain/checks.md`.
 

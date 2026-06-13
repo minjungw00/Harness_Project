@@ -455,7 +455,7 @@ next_actions:
 - 요청 래퍼, 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - `UserJudgment`, 선택지, 맥락, 답변 페이로드: [API 판단 스키마](schema-judgment.md).
 - 상태 참조와 요약: [API 상태 스키마](schema-state.md).
-- 판단 종류와 활성 값: [API 값 집합](schema-value-sets.md).
+- 판단 종류와 지원 값: [API 값 집합](schema-value-sets.md).
 - 사용자 소유 판단과 비대체 규칙: [Core 모델](../core-model.md).
 - 공개 오류와 저장 효과: [API 오류](errors.md), [저장 효과](../storage-effects.md).
 
@@ -465,6 +465,6 @@ next_actions:
 - 요청 래퍼, 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`: [API 판단 스키마](schema-judgment.md).
 - 상태 참조와 요약: [API 상태 스키마](schema-state.md).
-- 판단 값과 활성 메서드 내부 값: [API 값 집합](schema-value-sets.md).
+- 판단 값과 지원되는 메서드 내부 값: [API 값 집합](schema-value-sets.md).
 - 사용자 소유 판단, 최종 수락, 잔여 위험 수락, 비대체 규칙: [Core 모델](../core-model.md).
 - 공개 오류와 저장 효과: [API 오류](errors.md), [저장 효과](../storage-effects.md).

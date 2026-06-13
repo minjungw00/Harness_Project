@@ -118,7 +118,7 @@ On commit, the method may persist Write Authorization or write-decision state ac
 
 ## Minimal valid request
 
-The sample uses `personal_data_export` as an example `sensitive_categories` value for account data export that may include personal data. This method example does not define `personal_data_export` as a new active value or define the full sensitive-category value set.
+The sample uses `personal_data_export` as an example `sensitive_categories` value for account data export that may include personal data. This method example does not define `personal_data_export` as a new supported value or define the full sensitive-category value set.
 
 ```yaml
 method: harness.prepare_write
@@ -225,6 +225,6 @@ write_decision_reasons:
 - Request envelope, common result branches, and dry-run summaries: [API Schema Core](schema-core.md).
 - `WriteAuthorizationSummary`, state summaries, and refs: [API State Schemas](schema-state.md).
 - `SensitiveActionScope` and user-owned approval boundaries: [API Judgment Schemas](schema-judgment.md).
-- Active values and access classes: [API Value Sets](schema-value-sets.md).
+- Supported values and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors, `STATE_VERSION_CONFLICT`, and blocked/dry-run behavior: [API Errors](errors.md).
 - Persistence effects and state clocks: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).

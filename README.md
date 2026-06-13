@@ -1,8 +1,8 @@
 # Harness project / 하네스 프로젝트
 
-This repository is the entry point for the active bilingual Harness documentation set and its routing metadata.
+This repository is the entry point for the maintained bilingual Harness documentation set and its routing metadata.
 
-이 저장소는 활성 한영 Harness 문서 세트와 경로 메타데이터의 진입점입니다.
+이 저장소는 유지되는 한영 Harness 문서 세트와 경로 메타데이터의 진입점입니다.
 
 ## Language entry points / 언어 선택
 

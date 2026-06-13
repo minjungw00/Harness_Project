@@ -30,13 +30,13 @@ Update active Task and Change Unit fields after intake:
 - baseline reference
 - active Change Unit
 
-This method is the active path that turns shaping into a first safe Change Unit when user-owned blockers have been handled.
+This method is the supported path that turns shaping into a first safe Change Unit when user-owned blockers have been handled.
 
 ## Required inputs
 
 - `ToolEnvelope` with non-null `idempotency_key` and current `expected_state_version` for non-dry-run commits.
 - `task_id`.
-- Any scope fields to change. For include/exclude updates, `scope_update.include` lists product work to bring into scope and `scope_update.exclude` lists product behavior that remains out of scope. `null` means leave the current value unchanged; an empty array replaces that list with an empty list.
+- Any scope fields to change. For include/exclude updates, `scope_update.include` lists product work to bring into scope and `scope_update.exclude` lists product behavior that remains out of scope. `null` means leave the existing value unchanged; an empty array replaces that list with an empty list.
 - `change_unit.operation` and the fields needed by that operation.
 - `related_scope_decision_refs` when the update applies a resolved `judgment_kind=scope_decision`.
 
@@ -232,6 +232,6 @@ next_actions:
 - Request envelope and response branches: [API Schema Core](schema-core.md).
 - State refs, `StateSummary`, `ShapingReadiness`, blockers, and next actions: [API State Schemas](schema-state.md).
 - Scope-related user judgment shapes: [API Judgment Schemas](schema-judgment.md).
-- Active value sets and access classes: [API Value Sets](schema-value-sets.md).
+- Supported value sets and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors: [API Errors](errors.md).
 - Persistence effects and stale authorization behavior: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).

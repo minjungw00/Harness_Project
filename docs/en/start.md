@@ -21,7 +21,7 @@ The agent can answer in the same ordinary language. When a request hides product
 
 Harness is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Harness Runtime Home`.
 
-Harness records authority boundaries. It does not turn a polished summary, readable view, status card, or chat answer into the authority record. Harness documentation and connected surfaces must not claim stronger enforcement than the active scope and security owners support. For exact security wording, use [Security](reference/security.md).
+Harness records authority boundaries. It does not turn a polished summary, readable view, status card, or chat answer into the authority record. Harness documentation and connected surfaces must not claim stronger enforcement than the applied scope and security owners support. For exact security wording, use [Security](reference/security.md).
 
 ## The problem Harness solves
 
@@ -102,7 +102,7 @@ If something is missing, the close path should name the smallest unblocker. Exac
 
 ## Baseline scope
 
-The baseline scope is intentionally narrow. Use [Scope](reference/scope.md) for active, profile-gated, and out-of-scope boundaries.
+The baseline scope is intentionally narrow. Use [Scope](reference/scope.md) for baseline, profile-gated, and out-of-scope boundaries.
 
 ## Where to go next
 
@@ -111,7 +111,7 @@ The baseline scope is intentionally narrow. Use [Scope](reference/scope.md) for 
 | New user | [User Guide](use/user-guide.md) |
 | Working user | [User Guide](use/user-guide.md) -> [Judgment Examples](use/judgment-examples.md) -> [Scope](reference/scope.md) |
 | Agent author or operator | [Agent Guide](use/agent-guide.md) -> [Agent Integration Reference](reference/agent-integration.md) |
-| Implementer | [Reference Index](reference/README.md) -> active scope -> API methods -> schema owners -> storage effects |
+| Implementer | [Reference Index](reference/README.md) -> baseline scope -> API methods -> schema owners -> storage effects |
 | Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) -> [Translation Guide](maintain/translation-guide.md) -> [Checks](maintain/checks.md) |
 
 Use the [Reference Index](reference/README.md) when you need exact owner documents. New users should not need API schemas to understand the product.

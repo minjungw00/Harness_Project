@@ -129,7 +129,7 @@ Agent may do:
 
 - Identify missing or stale evidence.
 - Explain what claim cannot be supported yet.
-- Attach or reference eligible artifacts only through the active owner path.
+- Attach or reference eligible artifacts only through the applicable owner path.
 
 Agent must not imply:
 
@@ -248,4 +248,4 @@ Owner links:
 
 ## Where to go next
 
-Use [Agent Guide](agent-guide.md) for operating patterns and [Scope](../reference/scope.md) when an example raises an active, profile-gated, or out-of-scope question. Use [Reference Index](../reference/README.md) for exact owner routing.
+Use [Agent Guide](agent-guide.md) for operating patterns and [Scope](../reference/scope.md) when an example raises a baseline, profile-gated, or out-of-scope question. Use [Reference Index](../reference/README.md) for exact owner routing.

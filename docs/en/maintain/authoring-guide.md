@@ -97,9 +97,9 @@ Reserved and profile-gated values are not baseline guarantees. Mark them at the 
 
 Value-set owner documents define exact value names, validation placement, and enum-like vocabulary. Semantic owner documents define what the value means, whether it is supported, what guarantee level it carries, and what reader consequence follows. If a value-set entry and a semantic owner appear to disagree, do not infer behavior from the value name. Fix the owner gap or route the reader to the correct owner.
 
-Out-of-scope capability promotion requirements may name the kinds of owners that must change when the capability enters the baseline scope. They must not name a nonexistent owner as if it were already a current owner document. If no current owner exists, say that promotion requires creating or designating that owner, then updating baseline scope, schemas, API behavior, storage, templates, checks, and paired-language docs as applicable.
+Out-of-scope capability promotion requirements may name the kinds of owners that must change when the capability enters the baseline scope. They must not name a nonexistent owner as if it were already an existing owner document. If no applicable owner exists, say that promotion requires creating or designating that owner, then updating baseline scope, schemas, API behavior, storage, templates, checks, and paired-language docs as applicable.
 
-Route documents must expose canonical owner gaps rather than hide them. If a README, index, Start page, Use page, Scope page, or `doc-index.yaml` route cannot point to a current owner for the question, do not fill the gap with route prose. Say what is missing, route to the closest real owner, and leave the normative definition out of the route document.
+Route documents must expose canonical owner gaps rather than hide them. If a README, index, Start page, Use page, Scope page, or `doc-index.yaml` route cannot point to an applicable owner for the question, do not fill the gap with route prose. Say what is missing, route to the closest real owner, and leave the normative definition out of the route document.
 
 ## 3. When to edit an existing owner
 
@@ -243,7 +243,7 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] API examples are internally consistent across response snapshots, `state_version`, refs, paths, artifact refs, sensitive approval reasons, expiration timestamps, and shared scenario evidence.
 - [ ] Reserved and profile-gated values are labeled where used and are not described as baseline guarantees.
 - [ ] Value-set owners define names; semantic owners define meaning, support availability, guarantees, and reader consequences.
-- [ ] Out-of-scope promotion wording does not present non-existing owners as current owner documents.
+- [ ] Out-of-scope promotion wording does not present non-existing owners as existing owner documents.
 - [ ] Route documents expose canonical owner gaps instead of hiding them with broad route text.
 - [ ] Meaning-changing edits were made in both English and Korean.
 - [ ] Korean prose is natural, not a literal translation, and exact identifiers are preserved.
