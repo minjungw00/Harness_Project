@@ -21,7 +21,7 @@ This document does not own:
 - `harness.close_task` request behavior, close-readiness evaluation order, and committed blocked outcomes; see [`harness.close_task`](method-close-task.md).
 - Rejected-response, blocked-result, and `dry_run` response branch routing; see [API error routing](error-routing.md).
 - Public `ErrorCode` meanings and precedence; see [API error codes](error-codes.md) and [API error precedence](error-precedence.md).
-- Display labels and rendered wording; see [Template Bodies](../template-bodies.md).
+- Display labels and rendered wording as display text only; see [Template Bodies](../template-bodies.md).
 
 ## Close-readiness blocker categories
 

@@ -19,7 +19,7 @@
 - 주 코드 우선순위와 충돌 선택: [API 오류 우선순위](error-precedence.md).
 - API 응답 분기 경로: [API 오류 경로](error-routing.md).
 - 닫기 준비 상태 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md).
-- 렌더링 라벨과 메시지 문구: [템플릿 본문](../template-bodies.md).
+- 표시 문구로만 쓰는 렌더링 라벨과 메시지 문구: [템플릿 본문](../template-bodies.md).
 
 <a id="machine-readable-error-details"></a>
 

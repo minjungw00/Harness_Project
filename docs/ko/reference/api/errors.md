@@ -21,4 +21,4 @@
 - `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 값 집합 필드 정의: [API 상태 스키마](schema-state.md), [API 코어 스키마](schema-core.md), [API 값 집합](schema-value-sets.md).
 - 저장소 행, 재실행 행, DDL, 잠금, 마이그레이션, 저장 효과: [저장소 기록](../storage-records.md), [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).
 - 보안 보장 표현과 접근 경계 주장: [보안](../security.md).
-- 사용자 표시 라벨, 렌더링 메시지 문구, 템플릿 표현: [템플릿 본문](../template-bodies.md).
+- 표시 문구로 쓰는 사용자 표시 라벨과 렌더링 메시지 문구: [템플릿 본문](../template-bodies.md).

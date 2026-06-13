@@ -1,6 +1,6 @@
 # Projection authority reference
 
-This document owns the distinction between authoritative Harness records and read-only projected, status, or template views. Exact rendered body guidance, display phrasing, user-facing labels, and template wording live in [Template Bodies](template-bodies.md).
+This document owns the distinction between authoritative Harness records and read-only projected, status, or template views. Current rendered body guidance, display phrasing, and user-facing labels live in [Template Bodies](template-bodies.md).
 
 ## Owns / Does not own
 
@@ -10,7 +10,7 @@ This document owns:
 - read-only derived-display rules
 - source-state visibility requirements for display output
 - the rule that rendered labels are display text, not canonical schema values
-- routing between authority questions and template wording questions
+- routing between authority questions and display-wording questions
 
 This document does not own:
 
@@ -54,7 +54,7 @@ Display output must:
 
 ## Template and label boundary
 
-[Template Bodies](template-bodies.md) owns exact rendered body guidance for status cards, judgment requests, run/evidence summaries, close results, agent context packets, and public-error display labels.
+[Template Bodies](template-bodies.md) owns current rendered body guidance for status cards, judgment requests, run/evidence summaries, close results, agent context packets, and public-error display labels.
 
 This document may say whether a view is authority or display. It must not define the exact wording, body sections, or localized labels for that view.
 
@@ -62,7 +62,7 @@ Rendered labels may help readers understand owner records, but labels do not ren
 
 ## Owner links
 
-- [Template Bodies](template-bodies.md) owns rendered body guidance, display phrasing, user-facing labels, and template wording.
+- [Template Bodies](template-bodies.md) owns current rendered body guidance, display phrasing, and user-facing labels.
 - [Core Model](core-model.md) owns Core authority, user-owned judgment, close readiness, final acceptance, and residual-risk boundaries.
 - [Reference Index](README.md) routes API, storage, artifact, and security owner questions.
 - [Agent Integration](agent-integration.md) owns surface registration, active surface context, and capability declarations.

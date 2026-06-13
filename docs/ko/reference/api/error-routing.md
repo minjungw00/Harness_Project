@@ -52,7 +52,7 @@
 
 `ErrorCode` 값은 공개 API 식별자입니다. 동작별 차단 사유 코드 경로와 닫기 준비 상태 차단 사유 매핑은 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다.
 
-렌더링 라벨과 메시지는 [템플릿 본문](../template-bodies.md)이 담당하는 표시 문구입니다. 이 값을 `ErrorCode`, 차단 사유 코드 값, 기계 판독용 `ToolError.details` 키로 사용하면 안 됩니다.
+렌더링 라벨과 메시지는 [템플릿 본문](../template-bodies.md)이 담당하는 표시 문구입니다. API 오류 의미나 차단 사유 의미를 정의하지 않으며, 이 값을 `ErrorCode`, 차단 사유 코드 값, 기계 판독용 `ToolError.details` 키로 사용하면 안 됩니다.
 
 <a id="blocked-and-dry-run-behavior"></a>
 

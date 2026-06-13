@@ -1,30 +1,31 @@
 # Template bodies
 
-This document owns rendered body guidance, display phrasing, user-facing labels, and template wording for status cards, public error messages, judgment requests, run/evidence summaries, close results, and agent context packets. It defines display text only; authority stays with the owner records linked by each body.
+This document owns display-facing wording for current rendered template bodies: status cards, public error messages, judgment requests, run/evidence summaries, close results, and agent context packets. It owns rendered body guidance, user-facing labels, and display phrasing only; authority, storage records, API error semantics, and close-readiness blocker semantics stay with the linked owner records.
 
 ## Owns / Does not own
 
 This document owns:
 
-- exact supported template body structure for rendered status or support displays
-- user-facing display phrasing for those bodies
+- rendered template body guidance for current status and support displays
+- user-facing label wording and display phrasing for those bodies
 - locale-aware rendered labels where a body needs them
-- user-facing public-error display labels and recovery cues
+- user-facing public-error display labels and recovery cues as display text
 - links from body placeholders to schema and authority owners
 
 This document does not own:
 
 - projection authority, freshness, or read-only derived-display rules; see [Projection Authority Reference](projection-and-templates.md)
-- source-of-truth state or storage; see [Core Model](core-model.md) and storage owners
-- API schemas or value sets; see API schema owners
-- public `ErrorCode` identifiers, precedence, rejected-response behavior, close-readiness blocker routing, or machine-readable `ToolError.details`; see [API error codes](api/error-codes.md), [API error precedence](api/error-precedence.md), [API error routing](api/error-routing.md), [API blocker routing](api/blocker-routing.md), and [API error details](api/error-details.md)
-- out-of-scope template candidates; see [Scope Reference](scope.md)
+- source-of-truth state, storage record authority, or storage record layout; see [Core Model](core-model.md) and storage owners
+- API schemas, value sets, public `ErrorCode` identifiers, or public `ErrorCode` semantics; see API schema owners and [API error codes](api/error-codes.md)
+- error precedence, rejected-response behavior, response branch routing, or machine-readable `ToolError.details`; see [API error precedence](api/error-precedence.md), [API error routing](api/error-routing.md), and [API error details](api/error-details.md)
+- close-readiness blocker semantics, blocker-code routing, or `CloseReadinessBlocker` shape; see [Core Model](core-model.md), [API State Schemas](api/schema-state.md), and [API blocker routing](api/blocker-routing.md)
+- display packages outside the current bodies listed above; see [Scope Reference](scope.md) for support boundaries
 
 ## Boundary
 
 Template text is display text. It can summarize owner records, but it must route authority questions back to those records.
 
-Public `ErrorCode` values may appear as input conditions for label selection, but those identifiers remain API identifiers owned by [API error codes](api/error-codes.md).
+Public `ErrorCode` values may appear as input conditions for label selection, but those identifiers and their meanings remain API-owned by [API error codes](api/error-codes.md). Error precedence, response branch routing, blocker mappings, and machine-readable details remain with their API owners.
 
 Template output cannot by wording alone:
 
@@ -34,12 +35,14 @@ Template output cannot by wording alone:
 - create final acceptance or accept residual risk
 - close a Task or create close readiness
 - mutate owner records
-- define, rename, or localize public `ErrorCode` identifiers or machine-readable detail keys
+- define storage record layout or make a rendered body the storage authority
+- define, rename, localize, or change the semantics of public `ErrorCode` identifiers or machine-readable detail keys
+- define close-readiness blocker semantics, blocker codes, or blocker routing
 - convert rejected-response errors into blockers or blocked results
 
 ## Public error display labels
 
-Use this section when rendering public API errors for a user or agent-facing surface. The public `ErrorCode` stays unchanged; a label or recovery cue is display text only.
+Use this section when rendering public API errors for a user or agent-facing surface. The public `ErrorCode` stays unchanged, and its meaning stays with the API owner. A label or recovery cue is display text only.
 
 Rendered error copy must:
 
@@ -51,13 +54,14 @@ Rendered error copy must:
 Rendered error copy must not:
 
 - Replace a public `ErrorCode` with a localized label.
+- Define or change public `ErrorCode` semantics.
 - Reuse a label as a machine-readable code.
 - Hide close blockers or turn rejected responses into blocked results.
 
 <a id="label-validation-failed"></a>
 ### `VALIDATION_FAILED`
 
-Public condition:
+Label-selection input:
 - `VALIDATION_FAILED`.
 
 Suggested label:
@@ -69,7 +73,7 @@ Recovery cue:
 <a id="label-state-version-conflict"></a>
 ### `STATE_VERSION_CONFLICT`
 
-Public condition:
+Label-selection input:
 - `STATE_VERSION_CONFLICT`.
 
 Suggested label:
@@ -81,7 +85,7 @@ Recovery cue:
 <a id="label-mcp-unavailable"></a>
 ### `MCP_UNAVAILABLE`
 
-Public condition:
+Label-selection input:
 - `MCP_UNAVAILABLE`.
 
 Suggested label:
@@ -93,7 +97,7 @@ Recovery cue:
 <a id="label-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
 
-Public condition:
+Label-selection input:
 - `LOCAL_ACCESS_MISMATCH`.
 
 Suggested label:
@@ -106,7 +110,7 @@ Recovery cue:
 <a id="label-capability-insufficient"></a>
 ### `CAPABILITY_INSUFFICIENT`
 
-Public condition:
+Label-selection input:
 - `CAPABILITY_INSUFFICIENT`.
 
 Suggested label:
@@ -119,7 +123,7 @@ Recovery cue:
 <a id="label-no-active-task"></a>
 ### `NO_ACTIVE_TASK`
 
-Public condition:
+Label-selection input:
 - `NO_ACTIVE_TASK`.
 
 Suggested label:
@@ -131,7 +135,7 @@ Recovery cue:
 <a id="label-scope-boundary-baseline"></a>
 ### Scope, boundary, or baseline
 
-Public condition:
+Label-selection input:
 - `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, or `BASELINE_STALE`.
 
 Suggested label:
@@ -145,7 +149,7 @@ Recovery cue:
 <a id="label-write-authorization"></a>
 ### Write Authorization
 
-Public condition:
+Label-selection input:
 - `WRITE_AUTHORIZATION_REQUIRED` or `WRITE_AUTHORIZATION_INVALID`.
 
 Suggested label:
@@ -157,7 +161,7 @@ Recovery cue:
 <a id="label-judgment"></a>
 ### Judgment
 
-Public condition:
+Label-selection input:
 - `DECISION_REQUIRED` or `DECISION_UNRESOLVED`.
 
 Suggested label:
@@ -169,7 +173,7 @@ Recovery cue:
 <a id="label-sensitive-approval"></a>
 ### Sensitive-action approval
 
-Public condition:
+Label-selection input:
 - `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED`.
 
 Suggested label:
@@ -181,7 +185,7 @@ Recovery cue:
 <a id="label-evidence-insufficient"></a>
 ### `EVIDENCE_INSUFFICIENT`
 
-Public condition:
+Label-selection input:
 - `EVIDENCE_INSUFFICIENT`.
 
 Suggested label:
@@ -193,7 +197,7 @@ Recovery cue:
 <a id="label-acceptance-required"></a>
 ### `ACCEPTANCE_REQUIRED`
 
-Public condition:
+Label-selection input:
 - `ACCEPTANCE_REQUIRED`.
 
 Suggested label:
@@ -205,7 +209,7 @@ Recovery cue:
 <a id="label-residual-risk-not-visible"></a>
 ### `RESIDUAL_RISK_NOT_VISIBLE`
 
-Public condition:
+Label-selection input:
 - `RESIDUAL_RISK_NOT_VISIBLE`.
 
 Suggested label:
@@ -217,7 +221,7 @@ Recovery cue:
 <a id="label-projection-stale"></a>
 ### `PROJECTION_STALE`
 
-Public condition:
+Label-selection input:
 - `PROJECTION_STALE`.
 
 Suggested label:
@@ -229,7 +233,7 @@ Recovery cue:
 <a id="label-artifact-missing"></a>
 ### `ARTIFACT_MISSING`
 
-Public condition:
+Label-selection input:
 - `ARTIFACT_MISSING`.
 
 Suggested label:
@@ -241,7 +245,7 @@ Recovery cue:
 <a id="label-validator-failed"></a>
 ### `VALIDATOR_FAILED`
 
-Public condition:
+Label-selection input:
 - `VALIDATOR_FAILED`.
 
 Suggested label:

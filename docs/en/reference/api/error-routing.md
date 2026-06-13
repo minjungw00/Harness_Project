@@ -52,7 +52,7 @@ Dry-run preview:
 
 `ErrorCode` values are public API identifiers. Operation-specific blocker-code routing and close-readiness blocker mapping belong to [API blocker routing](blocker-routing.md).
 
-Rendered labels and messages are display text owned by [Template Bodies](../template-bodies.md). They must not be used as `ErrorCode` values, blocker-code values, or machine-readable `ToolError.details` keys.
+Rendered labels and messages are display text owned by [Template Bodies](../template-bodies.md). They do not define API error or blocker semantics and must not be used as `ErrorCode` values, blocker-code values, or machine-readable `ToolError.details` keys.
 
 <a id="blocked-and-dry-run-behavior"></a>
 

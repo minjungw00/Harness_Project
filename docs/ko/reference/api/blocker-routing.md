@@ -21,7 +21,7 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 - `harness.close_task` 요청 동작, 닫기 준비 상태 평가 순서, 커밋된 차단 결과: [`harness.close_task`](method-close-task.md)를 봅니다.
 - 거부 응답, 차단 결과, `dry_run` 응답 분기 경로: [API 오류 경로](error-routing.md)를 봅니다.
 - 공개 `ErrorCode` 의미와 우선순위: [API 오류 코드](error-codes.md)와 [API 오류 우선순위](error-precedence.md)를 봅니다.
-- 표시 라벨과 렌더링 문구: [템플릿 본문](../template-bodies.md)을 봅니다.
+- 표시 문구로만 쓰는 표시 라벨과 렌더링 문구: [템플릿 본문](../template-bodies.md)을 봅니다.
 
 ## 닫기 준비 상태 차단 사유 처리 범주
 

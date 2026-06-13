@@ -19,7 +19,7 @@ This document does not own:
 - Close-readiness blocker routing and `close_task` blocker mapping; see [API blocker routing](blocker-routing.md).
 - `ToolError.details` fields and helper values; see [API error details](error-details.md).
 - Common response branch shapes; see [API Schema Core](schema-core.md).
-- Rendered labels and message wording; see [Template Bodies](../template-bodies.md).
+- Rendered labels and message wording as display text only; see [Template Bodies](../template-bodies.md).
 
 <a id="error-taxonomy"></a>
 

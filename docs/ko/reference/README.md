@@ -50,7 +50,7 @@
 | 에이전트 통합과 현재 적용 접점 맥락 | [`agent-integration.md`](agent-integration.md) |
 | 접점별 사용 레시피 | [`../use/surface-recipes.md`](../use/surface-recipes.md) |
 | 권한과 상태 보기/상태 카드/템플릿 보기의 구분 | [`projection-and-templates.md`](projection-and-templates.md) |
-| 템플릿 본문, 라벨, 표시 문구 | [`template-bodies.md`](template-bodies.md) |
+| 표시용 템플릿 본문과 라벨 | [`template-bodies.md`](template-bodies.md) |
 | 적합성 참조 | [`conformance.md`](conformance.md) |
 | 설계 품질 참조 | [`design-quality.md`](design-quality.md) |
 

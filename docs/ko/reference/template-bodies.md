@@ -1,30 +1,31 @@
 # 템플릿 본문
 
-이 문서는 상태 카드, 공개 오류 메시지, 판단 요청, 실행/증거 요약, 닫기 결과, 에이전트 맥락 패킷의 렌더링 본문 지침, 표시 문구, 사용자 표시 라벨, 템플릿 표현을 담당합니다. 이 문서가 정의하는 것은 표시 문구뿐이며, 권한은 각 본문이 연결하는 담당 기록에 남습니다.
+이 문서는 현재 렌더링되는 템플릿 본문, 즉 상태 카드, 공개 오류 메시지, 판단 요청, 실행/증거 요약, 닫기 결과, 에이전트 맥락 패킷의 표시용 문구를 담당합니다. 담당 범위는 렌더링 본문 지침, 사용자 표시 라벨, 표시 문구뿐입니다. 권한, 저장소 기록, API 오류 의미, 닫기 준비 상태 차단 사유 의미는 각 본문이 연결하는 담당 기록에 남습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
 이 문서가 담당합니다.
 
-- 렌더링된 상태 또는 지원 표시를 위한 정확한 지원 템플릿 본문 구조
-- 그 본문의 사용자 표시 문구
+- 현재 상태 표시와 지원 표시를 위한 렌더링 템플릿 본문 지침
+- 그 본문의 사용자 표시 라벨과 표시 문구
 - 본문에 필요한 지역화 표시 라벨
-- 공개 오류의 사용자 표시 라벨과 해결 안내
+- 표시 문구로서의 공개 오류 사용자 표시 라벨과 해결 안내
 - 본문 자리 표시자에서 스키마 및 권한 담당 문서로 가는 링크
 
 이 문서는 담당하지 않습니다.
 
 - 상태 보기 권한, 최신성, 읽기 전용 파생 표시 규칙: [상태 보기 권한 참조](projection-and-templates.md)
-- 원천 상태나 저장소: [Core 모델](core-model.md)과 저장소 담당 문서
-- API 스키마나 값 집합: API 스키마 담당 문서
-- 공개 `ErrorCode` 식별자, 우선순위, 거부 응답 동작, 닫기 준비 상태 차단 사유 처리 경로, 기계 판독용 `ToolError.details`: [API 오류 코드](api/error-codes.md), [API 오류 우선순위](api/error-precedence.md), [API 오류 경로](api/error-routing.md), [API 차단 사유 처리 경로](api/blocker-routing.md), [API 오류 세부사항](api/error-details.md)
-- 지원 범위 밖 템플릿 후보: [범위 참조](scope.md)
+- 원천 상태, 저장소 기록 권한, 저장소 기록 구조: [Core 모델](core-model.md)과 저장소 담당 문서
+- API 스키마, 값 집합, 공개 `ErrorCode` 식별자, 공개 `ErrorCode` 의미: API 스키마 담당 문서와 [API 오류 코드](api/error-codes.md)
+- 오류 우선순위, 거부 응답 동작, 응답 분기 경로, 기계 판독용 `ToolError.details`: [API 오류 우선순위](api/error-precedence.md), [API 오류 경로](api/error-routing.md), [API 오류 세부사항](api/error-details.md)
+- 닫기 준비 상태 차단 사유 의미, 차단 사유 코드 경로, `CloseReadinessBlocker` 형태: [Core 모델](core-model.md), [API 상태 스키마](api/schema-state.md), [API 차단 사유 처리 경로](api/blocker-routing.md)
+- 위에 나열한 현재 본문에 포함되지 않는 표시 묶음: 지원 경계는 [범위 참조](scope.md)
 
 ## 경계
 
 템플릿 문구는 표시 문구입니다. 담당 기록을 요약할 수는 있지만, 권한을 확인해야 할 때는 그 담당 기록으로 되돌려야 합니다.
 
-공개 `ErrorCode` 값은 라벨 선택을 위한 입력 조건으로 나타날 수 있습니다. 그래도 그 식별자는 [API 오류 코드](api/error-codes.md)가 담당하는 API 식별자입니다.
+공개 `ErrorCode` 값은 라벨 선택을 위한 입력 조건으로 나타날 수 있습니다. 그래도 그 식별자와 의미는 [API 오류 코드](api/error-codes.md)가 담당하는 API 항목입니다. 오류 우선순위, 응답 분기 경로, 차단 사유 매핑, 기계 판독용 세부사항은 각 API 담당 문서에 남습니다.
 
 템플릿 출력은 문구만으로 아래 일을 할 수 없습니다.
 
@@ -34,12 +35,14 @@
 - 최종 수락 생성 또는 잔여 위험 수락
 - `Task` 닫기 또는 닫기 준비 상태 생성
 - 담당 기록 변경
-- 공개 `ErrorCode` 식별자나 기계 판독용 세부 키 정의, 이름 변경, 지역화
+- 저장소 기록 구조 정의 또는 렌더링 본문을 저장소 권한으로 만들기
+- 공개 `ErrorCode` 식별자나 기계 판독용 세부 키의 정의, 이름 변경, 지역화, 의미 변경
+- 닫기 준비 상태 차단 사유 의미, 차단 사유 코드, 차단 사유 처리 경로 정의
 - 거부 응답 오류를 차단 사유나 차단 결과로 바꾸기
 
 ## 공개 오류 표시 라벨
 
-이 섹션은 공개 API 오류를 사용자나 에이전트가 보는 접점에 렌더링할 때 사용합니다. 공개 `ErrorCode`는 그대로 두고, 라벨과 해결 안내는 표시 문구로만 씁니다.
+이 섹션은 공개 API 오류를 사용자나 에이전트가 보는 접점에 렌더링할 때 사용합니다. 공개 `ErrorCode`는 그대로 두고, 그 의미도 API 담당 문서에 남깁니다. 라벨과 해결 안내는 표시 문구로만 씁니다.
 
 렌더링 오류 문구는 아래 기준을 지킵니다.
 
@@ -51,13 +54,14 @@
 렌더링 오류 문구는 아래처럼 쓰면 안 됩니다.
 
 - 공개 `ErrorCode`를 지역화 라벨로 대체하기.
+- 공개 `ErrorCode` 의미를 정의하거나 바꾸기.
 - 라벨을 기계 판독용 코드로 재사용하기.
 - 닫기 차단 사유를 숨기거나 거부 응답을 차단 결과로 바꾸기.
 
 <a id="label-validation-failed"></a>
 ### `VALIDATION_FAILED`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `VALIDATION_FAILED`.
 
 표시 라벨:
@@ -69,7 +73,7 @@
 <a id="label-state-version-conflict"></a>
 ### `STATE_VERSION_CONFLICT`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `STATE_VERSION_CONFLICT`.
 
 표시 라벨:
@@ -81,7 +85,7 @@
 <a id="label-mcp-unavailable"></a>
 ### `MCP_UNAVAILABLE`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `MCP_UNAVAILABLE`.
 
 표시 라벨:
@@ -93,7 +97,7 @@
 <a id="label-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `LOCAL_ACCESS_MISMATCH`.
 
 표시 라벨:
@@ -106,7 +110,7 @@
 <a id="label-capability-insufficient"></a>
 ### `CAPABILITY_INSUFFICIENT`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `CAPABILITY_INSUFFICIENT`.
 
 표시 라벨:
@@ -119,7 +123,7 @@
 <a id="label-no-active-task"></a>
 ### `NO_ACTIVE_TASK`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `NO_ACTIVE_TASK`.
 
 표시 라벨:
@@ -131,7 +135,7 @@
 <a id="label-scope-boundary-baseline"></a>
 ### 범위, 경계, 기준 상태
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE`.
 
 표시 라벨:
@@ -145,7 +149,7 @@
 <a id="label-write-authorization"></a>
 ### Write Authorization
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `WRITE_AUTHORIZATION_REQUIRED` 또는 `WRITE_AUTHORIZATION_INVALID`.
 
 표시 라벨:
@@ -157,7 +161,7 @@
 <a id="label-judgment"></a>
 ### 판단
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED`.
 
 표시 라벨:
@@ -169,7 +173,7 @@
 <a id="label-sensitive-approval"></a>
 ### 민감 동작 승인
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`.
 
 표시 라벨:
@@ -181,7 +185,7 @@
 <a id="label-evidence-insufficient"></a>
 ### `EVIDENCE_INSUFFICIENT`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `EVIDENCE_INSUFFICIENT`.
 
 표시 라벨:
@@ -193,7 +197,7 @@
 <a id="label-acceptance-required"></a>
 ### `ACCEPTANCE_REQUIRED`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `ACCEPTANCE_REQUIRED`.
 
 표시 라벨:
@@ -205,7 +209,7 @@
 <a id="label-residual-risk-not-visible"></a>
 ### `RESIDUAL_RISK_NOT_VISIBLE`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `RESIDUAL_RISK_NOT_VISIBLE`.
 
 표시 라벨:
@@ -217,7 +221,7 @@
 <a id="label-projection-stale"></a>
 ### `PROJECTION_STALE`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `PROJECTION_STALE`.
 
 표시 라벨:
@@ -229,7 +233,7 @@
 <a id="label-artifact-missing"></a>
 ### `ARTIFACT_MISSING`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `ARTIFACT_MISSING`.
 
 표시 라벨:
@@ -241,7 +245,7 @@
 <a id="label-validator-failed"></a>
 ### `VALIDATOR_FAILED`
 
-적용되는 공개 조건:
+라벨 선택 입력:
 - `VALIDATOR_FAILED`.
 
 표시 라벨:

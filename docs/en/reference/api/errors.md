@@ -21,4 +21,4 @@ It does not define rendered labels, message copy, templates, storage rows, runti
 - `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and value-set field definitions: [API State Schemas](schema-state.md), [API Schema Core](schema-core.md), and [API Value Sets](schema-value-sets.md).
 - Storage rows, replay rows, DDL, locks, migrations, and storage effects: [Storage Records](../storage-records.md), [Storage Effects](../storage-effects.md), and [Storage Versioning](../storage-versioning.md).
 - Security guarantee wording and access-boundary claims: [Security](../security.md).
-- User-facing labels, rendered message phrasing, and template wording: [Template Bodies](../template-bodies.md).
+- User-facing labels and rendered message phrasing as display text: [Template Bodies](../template-bodies.md).

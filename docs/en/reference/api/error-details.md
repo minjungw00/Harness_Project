@@ -19,7 +19,7 @@ This document does not own:
 - Primary-code precedence and conflict selection; see [API error precedence](error-precedence.md).
 - API response branch routing; see [API error routing](error-routing.md).
 - Close-readiness blocker routing; see [API blocker routing](blocker-routing.md).
-- Rendered labels and message wording; see [Template Bodies](../template-bodies.md).
+- Rendered labels and message wording as display text only; see [Template Bodies](../template-bodies.md).
 
 <a id="machine-readable-error-details"></a>
 
