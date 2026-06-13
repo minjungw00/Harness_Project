@@ -22,18 +22,7 @@ This document does not own:
 
 Stage caller-provided safe artifact bytes or a safe notice into a transient `StagedArtifactHandle` for the same project and Task.
 
-Result:
-
-- Staging is input preparation only.
-
-Non-claims:
-
-- It does not create canonical evidence.
-- It does not create persistent `ArtifactRef`.
-- It does not create gate satisfaction.
-- It does not create final acceptance.
-- It does not create residual-risk acceptance.
-- It does not create close readiness.
+Staging is input preparation only. It does not create canonical evidence, a persistent `ArtifactRef`, gate satisfaction, final acceptance, residual-risk acceptance, or close readiness.
 
 ## Required inputs
 
@@ -49,13 +38,7 @@ Requires:
 - compatible `project_id` and `task_id`
 - `manual_artifact_attachment_supported=true`
 
-Result:
-
-- A server records `created_by_surface_id` and `created_by_surface_instance_id` from the verified local surface.
-
-Non-claim:
-
-- The caller does not provide those fields as authority.
+A server records `created_by_surface_id` and `created_by_surface_instance_id` from the verified local surface. The caller does not provide those fields as authority.
 
 ## State version behavior
 

@@ -5,7 +5,7 @@
 
 Use this guide when writing or reviewing agent behavior for a Harness-connected session.
 
-A good Harness-connected agent should turn ordinary user requests into careful work, keep context small, preserve user-owned judgment, check before writes, record evidence after meaningful action, report status for the user's next decision, and close honestly.
+A good Harness-connected agent turns ordinary user requests into careful work, keeps context small, preserves user-owned judgment, checks before writes, records evidence after meaningful action, reports status for the user's next decision, and closes honestly.
 
 This guide is use documentation. It is not a connector contract, API schema, template catalog, conformance fixture, storage contract, or security guarantee.
 
@@ -16,7 +16,7 @@ Owner links:
 - Exact API, schema, storage, security, and close-readiness contracts: [Reference Index](../reference/README.md)
 
 <a id="operating-loop"></a>
-## Operating Loop
+## Operating loop
 
 Use this loop unless the user has asked only for simple advice:
 
@@ -31,7 +31,7 @@ Use this loop unless the user has asked only for simple advice:
 Keep the loop light for tiny changes. Increase procedure weight when the task becomes ambiguous, multi-file, public-interface-facing, sensitive, close-relevant, or dependent on a user-owned decision.
 
 <a id="infer-use"></a>
-## Infer Harness Use From Task Shape
+## Infer Harness use from task shape
 
 The agent should not require a startup phrase. Users do not need to say "Harness", know internal labels, or name API methods before ordinary work can begin.
 
@@ -57,14 +57,14 @@ Choose procedure weight from the work shape:
 Escalate from small change to tracked work when you find scope drift, a new public interface, security or privacy impact, destructive risk, a dependency or migration choice, a user-visible inspection expectation, an evidence limit, final acceptance need, residual risk, or another user-owned judgment.
 
 <a id="keep-context-small"></a>
-## Keep Context Small
+## Keep context small
 
 Always-on context should fit the next action. Carry summaries and refs, then load exact owner sections only when the next action needs them.
 
 Include only what is currently useful:
 
 - verified surface status and capability limits
-- current task or work shape
+- active task or work boundary
 - active scope, non-goals, and relevant paths or operation class
 - pending user-owned judgment
 - sensitive-action approval or write-approval summary when relevant
@@ -78,16 +78,16 @@ Include only what is currently useful:
 Do not inject full schemas, DDL, template bodies, logs, artifact bodies, paired bilingual docs, unrelated contract material, out-of-scope catalogs, or generated readable views into every prompt.
 
 <a id="clarify-focused"></a>
-## Clarify With Focused Questions
+## Clarify with focused questions
 
 Inspect first. Before asking the user, check relevant files, docs, tests, current Harness state, accepted judgments, and artifacts when they are available.
 
-Ask only the question that changes the next safe action or resolves a user-owned judgment. Prefer one blocking question at a time. Park useful but non-blocking curiosity questions for later.
+Ask only the question that changes the next safe action or resolves a user-owned judgment. Prefer one blocking question at a time. Save useful but non-blocking curiosity questions until they affect the work.
 
 A focused clarification should show:
 
 - what was verified
-- current goal
+- active goal
 - candidate or active scope and non-goals
 - acceptance criteria for the next slice
 - what the agent may decide on its own
@@ -100,7 +100,7 @@ A focused clarification should show:
 Unknowns block progress only when they affect the first safe work item or the next safe action. If the blocker is agent-resolvable or surface-owned, name the next action instead of asking the user.
 
 <a id="preserve-user-judgment"></a>
-## Preserve User-Owned Judgment
+## Preserve user-owned judgment
 
 The agent may identify a bounded option when current facts and accepted scope already support one. It must not decide a user-owned choice silently.
 
@@ -123,7 +123,7 @@ Inside accepted scope, the agent may usually decide local implementation details
 Escalate back to the user when a detail becomes product-visible, changes accepted direction, introduces a dependency or service, affects security or privacy, breaks compatibility, becomes costly to reverse, or changes scope, acceptance, sensitive action, or residual risk.
 
 <a id="request-judgment-narrowly"></a>
-### Request Judgment Narrowly
+### Request judgment narrowly
 
 A judgment request should include:
 
@@ -140,7 +140,7 @@ Do not treat "yes", "approved", "looks good", "go ahead", or "continue" as a bun
 Keep product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation separate. No judgment substitutes for another.
 
 <a id="check-before-writes"></a>
-## Check Before Writes
+## Check before writes
 
 Before product, code, or file writes in Harness-connected work, use the owner write path only after the intended operation is specific enough to evaluate. Exact prepare-write behavior belongs to [Prepare-write Method](../reference/api/method-prepare-write.md).
 
@@ -158,7 +158,7 @@ Show the user:
 If scope changes, update the active scope before asking for a new write check. Treat any old write result that no longer matches the updated scope as stale.
 
 <a id="record-evidence"></a>
-## Record Evidence After Action
+## Record evidence after action
 
 After meaningful execution, checks, reviews, or artifact-producing work, summarize what happened and what supports each claim. Exact run/evidence behavior belongs to [Record-run Method](../reference/api/method-record-run.md), with artifact details owned by [API Artifact Schemas](../reference/api/schema-artifacts.md) and [Artifact Storage](../reference/storage-artifacts.md).
 
@@ -175,7 +175,7 @@ Do not treat arbitrary absolute paths, raw secrets, tokens, full sensitive logs,
 Keep evidence sufficiency, artifact availability, close readiness, final acceptance, and residual-risk acceptance separate.
 
 <a id="report-status"></a>
-## Report Status For The Next Decision
+## Report status for the next decision
 
 Status output should lead with:
 
@@ -185,10 +185,10 @@ Status output should lead with:
 
 The agent should not ask the user to solve something it can safely inspect, refresh, retry, narrow, or record.
 
-A compact status summary should include the current task or work shape, active scope, freshest relevant facts, pending judgment or approval, evidence gap when relevant, close blocker when relevant, and one next safe action.
+A compact status summary should include the active task or work boundary, active scope, freshest relevant facts, pending judgment or approval, evidence gap when relevant, close blocker when relevant, and one next safe action.
 
 <a id="handle-close"></a>
-## Handle Close Honestly
+## Handle close honestly
 
 Close only when the active path can support the close claim. In user-facing terms, close readiness asks whether the task can honestly finish now. Exact close meaning belongs to [Core Model](../reference/core-model.md); method behavior belongs to [Close-task Method](../reference/api/method-close-task.md); state shapes belong to [API State Schemas](../reference/api/schema-state.md).
 
@@ -215,7 +215,7 @@ Use a read-only close review when the user only asks whether close would be bloc
 Do not close from prose, tests alone, broad acceptance-like language, residual-risk acceptance, generated readable views, or stale status summaries. Final acceptance and residual-risk acceptance cannot override missing required evidence.
 
 <a id="respect-boundaries"></a>
-## Respect Owner And Scope Boundaries
+## Respect owner and scope boundaries
 
 Baseline behavior should stay compact. Do not make out-of-scope capability presentation formats look like active requirements.
 
@@ -235,16 +235,16 @@ Quality concerns should route through an active owner path when one applies, suc
 Use compact user-facing shapes first: status, focused judgment request, what was checked, and close result. Reference exact contracts only when the next action depends on the owner.
 
 <a id="language-context"></a>
-## Choose Language Context Deliberately
+## Choose language context deliberately
 
-For ordinary Harness session context, load the language needed for the current user or task. Do not load both English and Korean paired docs for the same `doc_id` unless translation parity is the work.
+For ordinary Harness session context, load the language needed for the active user or task. Do not load both English and Korean paired docs for the same `doc_id` unless translation parity is the work.
 
 Bilingual documentation maintenance is different: use the authoring and translation guides, compare paired files deliberately, and keep semantic parity.
 
 When the task is Korean-facing, preserve exact identifiers such as API names, schema fields, enum values, file paths, error codes, table names, and validator IDs. Write natural Korean for ordinary concepts instead of English nouns with Korean particles.
 
 <a id="where-next"></a>
-## Where To Go Next
+## Where to go next
 
 Agent authors and operators should use this path:
 

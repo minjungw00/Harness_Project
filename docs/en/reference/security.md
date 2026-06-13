@@ -2,7 +2,7 @@
 
 This document owns Harness security guarantee wording, local-access assumptions, sensitive-action approval boundaries, and explicit security non-guarantees.
 
-## Owns / Does Not Own
+## Owns / does not own
 
 | This document owns | This document does not own |
 |---|---|
@@ -12,7 +12,7 @@ This document owns Harness security guarantee wording, local-access assumptions,
 | Sensitive-action approval as a security-adjacent user-owned judgment boundary. | OS permissions, deployment controls, arbitrary-tool sandboxing, or host policy. |
 | Non-authority rules for local files, generated displays, copied identifiers, chat text, and agent memory. | Runtime location definitions; see [Runtime Boundaries](runtime-boundaries.md). |
 
-## Supported Security Guarantees
+## Supported security guarantees
 
 <a id="honest-guarantee-display"></a>
 Harness may describe a guarantee only when [Scope](scope.md) and this security owner both support the guarantee level. If the claim depends on a surface capability, the relevant surface capability check must also pass for the named surface and observed scope.
@@ -35,7 +35,7 @@ Must not claim:
 - `cooperative` blocks arbitrary tool behavior, host commands, network access, secret access, or product-file edits outside Harness-owned paths.
 - `cooperative` provides OS permission enforcement, sandboxing, tamper-proof isolation, or full security isolation.
 
-### Capability-Gated `detective`
+### Capability-gated `detective`
 
 `detective` is supported only as a limited, capability-gated claim.
 
@@ -54,7 +54,7 @@ Must not claim:
 - A copied `surface_id`, `access_class`, connector description, `Projection`, generated display, chat message, or agent memory proves capability.
 - `detective` wording becomes prevention, sandboxing, OS permission enforcement, full monitoring, or tamper-proof storage.
 
-### Preventive Guarantees
+### Preventive guarantees
 
 The baseline contract does not define a supported preventive guarantee.
 
@@ -64,7 +64,7 @@ Must not claim:
 - Harness observes or blocks command, network, or secret access by default.
 - Harness provides OS sandboxing, host permission enforcement, or stronger isolation.
 
-## Sensitive-Action Approval Boundary
+## Sensitive-action approval boundary
 
 Sensitive-action approval is a user-owned judgment for a named sensitive step inside a bounded `SensitiveActionScope`.
 
@@ -82,7 +82,7 @@ Owner links:
 - [API Judgment Schemas](api/schema-judgment.md) owns `SensitiveActionScope` shape.
 - [Prepare-write method](api/method-prepare-write.md) owns `harness.prepare_write` behavior.
 
-## Local Access Assumptions
+## Local access assumptions
 
 Harness security claims assume local actors use owner-defined Harness paths for Harness state, records, artifacts, write compatibility, and user-owned judgments.
 
@@ -97,9 +97,9 @@ Must not claim:
 - Direct local modification outside owner-defined Harness paths creates valid Harness records, evidence, acceptance, residual-risk acceptance, `Write Authorization`, or artifact authority.
 - `Harness Runtime Home` is automatically an OS security boundary, sandbox, or isolation layer.
 
-## Authority Boundaries
+## Authority boundaries
 
-### Harness Records
+### Harness records
 
 Harness records carry authority only through the owner-defined Harness paths that create, validate, or update them.
 
@@ -107,7 +107,7 @@ Must not claim:
 - Local file contents are tamper-proof because they describe or store Harness data.
 - Product text, generated text, or copied record-looking text directly mutates Harness records.
 
-### Product Repository Files
+### Product Repository files
 
 `Product Repository` files are user workspace files.
 
@@ -132,7 +132,7 @@ Must not claim:
 - `Harness Runtime Home` is automatically a security boundary.
 - Placing data under `Harness Runtime Home` proves security authority or isolation.
 
-### Surfaces And Capability Context
+### Surfaces and capability context
 
 Surface identity and capability context limit what may be claimed.
 
@@ -144,7 +144,7 @@ Must not claim:
 - A copied surface identifier proves capability.
 - An `access_class` is OS permission or broad authority.
 
-### Generated Displays And Text
+### Generated displays and text
 
 Generated displays, rendered templates, chat text, connector prose, and agent memory can help readers understand source records.
 
@@ -152,9 +152,9 @@ Must not claim:
 - A rendered display, `Projection`, status card, template output, chat message, connector description, or agent memory is a new authority source.
 - Displayed `ArtifactRef`, `UserJudgment`, `Write Authorization`, or `surface_id` text creates the authority named by those identifiers.
 
-## Explicit Non-Guarantees
+## Explicit non-guarantees
 
-### Operating System And Isolation
+### Operating system and isolation
 
 Harness does not guarantee:
 
@@ -164,7 +164,7 @@ Harness does not guarantee:
 - Full security isolation.
 - Isolation between local users, processes, tools, or hosts.
 
-### Monitoring And Prevention
+### Monitoring and prevention
 
 Harness does not guarantee:
 
@@ -175,7 +175,7 @@ Harness does not guarantee:
 - Universal pre-tool blocking.
 - Prevention of malicious agent behavior outside Harness-owned paths.
 
-### Storage And Artifact Authority
+### Storage and artifact authority
 
 Harness does not guarantee:
 
@@ -184,7 +184,7 @@ Harness does not guarantee:
 - Artifact authority from displayed identifiers alone.
 - Validation or acceptance from copied artifact, run, evidence, or judgment text.
 
-### Broad Authority Inference
+### Broad authority inference
 
 Harness does not allow readers or agents to infer authority from:
 
@@ -197,7 +197,7 @@ Harness does not allow readers or agents to infer authority from:
 - Connector prose.
 - Chat text or agent memory.
 
-## Related Owners
+## Related owners
 
 - [Scope](scope.md): baseline inclusion, exclusions, and supported guarantee boundary.
 - [Runtime Boundaries](runtime-boundaries.md): `Product Repository`, Harness installation/runtime location, and `Harness Runtime Home` boundaries.

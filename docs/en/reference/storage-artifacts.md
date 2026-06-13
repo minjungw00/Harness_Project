@@ -1,8 +1,6 @@
 # Artifact storage
 
-Rule:
-
-- This document owns the artifact storage lifecycle for the baseline scope source design.
+This document owns the artifact storage lifecycle for the baseline scope source design.
 
 ## Owns / Does not own
 
@@ -25,11 +23,7 @@ This document does not own:
 <a id="lifecycle-boundary"></a>
 ## Lifecycle summary
 
-Rule:
-
-- Artifact storage distinguishes staging, promotion, persistent linking, and body reads.
-- `ArtifactRef` is the public API pointer to a registered persistent artifact.
-- Storage implements persistent artifact authority through `artifacts` plus `artifact_links`.
+Artifact storage distinguishes staging, promotion, persistent linking, and body reads. `ArtifactRef` is the public API pointer to a registered persistent artifact. Storage implements persistent artifact authority through `artifacts` plus `artifact_links`.
 
 | Stage | Details |
 |---|---|
@@ -99,10 +93,7 @@ Not allowed:
 
 ## Staging
 
-Rule:
-
-- Transient staging is not artifact authority.
-- `artifact_staging` or an equivalent storage-owned staging manifest tracks staging facts.
+Transient staging is not artifact authority. `artifact_staging` or an equivalent storage-owned staging manifest tracks staging facts.
 
 Tracked facts:
 
@@ -119,10 +110,7 @@ Tracked facts:
 - `expires_at`
 - consumption facts such as `consumed_by_run_id`, `promoted_artifact_id`, and `consumed_at`
 
-Rule:
-
-- Core records the `created_by_surface_*` fields from the successful `harness.stage_artifact` request's `VerifiedSurfaceContext`.
-- The fields must be checked against the staging row.
+Core records the `created_by_surface_*` fields from the successful `harness.stage_artifact` request's `VerifiedSurfaceContext`. The consuming owner path must check those fields against the staging row.
 
 Not allowed:
 
@@ -146,10 +134,7 @@ staged_artifact_handle: staged_artifact_account_export_test_log_001
 expires_at: "<future-expiration-timestamp>"
 ```
 
-Rule:
-
-- The example represents product test output prepared for staging.
-- Staging creates only transient artifact storage.
+The example represents product test output prepared for staging. Staging creates only transient artifact storage.
 
 Not allowed:
 
@@ -206,9 +191,7 @@ Only `staged` is consumable. Terminal values cannot return to `staged`.
 
 ## Promotion
 
-Rule:
-
-- Only a compatible owner method may consume a staged handle and promote it to a persistent `ArtifactRef`.
+Only a compatible owner method may consume a staged handle and promote it to a persistent `ArtifactRef`.
 
 Required conditions:
 
@@ -240,9 +223,7 @@ The consuming transaction may commit only after validation:
 
 ## Existing artifacts
 
-Rule:
-
-- `existing_artifact` reuses the persisted artifact row only when the existing artifact remains compatible with the new use.
+`existing_artifact` reuses the persisted artifact row only when the existing artifact remains compatible with the new use.
 
 Required conditions:
 
@@ -275,10 +256,7 @@ An artifact is evidence-eligible only when storage has:
 - an availability `status`
 - an owner link to an active record such as `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, or `blocker`
 
-Rule:
-
-- Evidence eligibility, artifact availability, and evidence sufficiency remain separate.
-- Artifact owner relation integrity is required even though `artifact_links` is a polymorphic owner table.
+Evidence eligibility, artifact availability, and evidence sufficiency remain separate. Artifact owner relation integrity is required even though `artifact_links` is a polymorphic owner table.
 
 Allowed:
 
@@ -348,10 +326,7 @@ Storage meaning:
 
 - The artifact store or required retrieval path cannot currently provide the registered bytes or safe metadata notice.
 
-Rule:
-
-- `artifacts.redaction_state` uses the active `ArtifactRef.redaction_state` values from [API Value Sets](api/schema-value-sets.md#artifact-values).
-- `sha256`, `size_bytes`, and `content_type` are artifact integrity facts for comparison and availability handling.
+`artifacts.redaction_state` uses the active `ArtifactRef.redaction_state` values from [API Value Sets](api/schema-value-sets.md#artifact-values). `sha256`, `size_bytes`, and `content_type` are artifact integrity facts for comparison and availability handling.
 
 Allowed:
 
@@ -445,11 +420,7 @@ Allowed:
 - Unconsumed or expired `artifact_staging` rows and `artifacts/tmp/` staging bytes or notices may be marked `expired` or `discarded`.
 - transient bytes may be cleaned before registration.
 
-Rule:
-
-- These transient staging materials are not evidence authority.
-- Once an `artifacts` row is committed, retention purge, project teardown, or destructive cleanup is outside ordinary baseline mutation behavior and needs an owner-defined path.
-- A retention or migration path must preserve artifact hashes, owner links, events, and replay rows, or mark affected refs invalid for recovery.
+These transient staging materials are not evidence authority. Once an `artifacts` row is committed, retention purge, project teardown, or destructive cleanup is outside ordinary baseline mutation behavior and needs an owner-defined path. A retention or migration path must preserve artifact hashes, owner links, events, and replay rows, or mark affected refs invalid for recovery.
 
 Not allowed:
 

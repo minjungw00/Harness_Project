@@ -1,8 +1,8 @@
 # Authoring guide
 
-Use this guide when changing Harness documentation. It is an authoring and documentation-architecture guide only.
+Use this guide when changing Harness documentation. This is an authoring and documentation-architecture guide only.
 
-It does not authorize:
+This guide does not authorize:
 
 - Harness Server/runtime implementation
 - product-repository writes
@@ -37,21 +37,21 @@ Use the compact maintained routes:
 - `docs/*/maintain/checks.md`
 - `docs/*/maintain/checks/*.md`
 
-[docs/doc-index.yaml](../../doc-index.yaml) owns retrieval and routing metadata. It is not runtime configuration and not a contract owner. [docs/terminology-map.yaml](../../terminology-map.yaml) owns bilingual terminology controls when it exists. It does not own API, storage, schema, security, projection, or runtime behavior.
+[`docs/doc-index.yaml`](../../doc-index.yaml) owns retrieval and routing metadata. It is not runtime configuration and not a contract owner. [`docs/terminology-map.yaml`](../../terminology-map.yaml) owns bilingual terminology controls. It does not own API, storage, schema, security, projection, or runtime behavior.
 
 ### Maintainer reading path
 
-Use this path for documentation maintenance:
+For documentation maintenance, read:
 
 [Authoring Guide](authoring-guide.md) -> [Translation Guide](translation-guide.md) -> [Checks Index](checks.md) -> focused check pages -> [doc-index.yaml](../../doc-index.yaml) -> [Terminology Map](../../terminology-map.yaml).
 
-The maintain path helps editors choose inputs and owners. It does not create runtime state, acceptance, evidence, close records, or implementation authority.
+The maintenance path helps editors choose inputs and owners. It does not create runtime state, acceptance, evidence, close records, or implementation authority.
 
 ## 2. Canonical owner rule
 
 One concept, one canonical owner. A canonical owner is the one document allowed to define the normative meaning of a product concept, contract, schema family, storage effect, security guarantee, route, or terminology rule.
 
-Other documents may contain a short 1-2 sentence summary plus a link. Do not copy long contract explanations into README, route, or maintain documents. If the same explanation appears in several files, keep the owner version and shrink the others to a reader consequence plus an owner link.
+Other documents may contain a short one- or two-sentence summary plus a link. Do not copy long contract explanations into README, route, or maintain documents. If the same explanation appears in several files, keep the owner version and shrink the others to a reader consequence plus an owner link.
 
 Use these single-owner routes before repeating details:
 
@@ -97,7 +97,7 @@ Reserved and profile-gated values are not baseline guarantees. Mark them at the 
 
 Value-set owner documents define exact value names, validation placement, and enum-like vocabulary. Semantic owner documents define what the value means, whether it is supported, what guarantee level it carries, and what reader consequence follows. If a value-set entry and a semantic owner appear to disagree, do not infer behavior from the value name. Fix the owner gap or route the reader to the correct owner.
 
-Out-of-scope capability promotion requirements may name the kinds of owners that must change when the capability enters the baseline scope. They must not name a non-existing owner as if it were already a current owner document. If no current owner exists, say that promotion requires creating or designating that owner, then updating baseline scope, schemas, API behavior, storage, templates, checks, and paired-language docs as applicable.
+Out-of-scope capability promotion requirements may name the kinds of owners that must change when the capability enters the baseline scope. They must not name a nonexistent owner as if it were already a current owner document. If no current owner exists, say that promotion requires creating or designating that owner, then updating baseline scope, schemas, API behavior, storage, templates, checks, and paired-language docs as applicable.
 
 Route documents must expose canonical owner gaps rather than hide them. If a README, index, Start page, Use page, Scope page, or `doc-index.yaml` route cannot point to a current owner for the question, do not fill the gap with route prose. Say what is missing, route to the closest real owner, and leave the normative definition out of the route document.
 

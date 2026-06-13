@@ -18,7 +18,7 @@ Run the checks that match the edit. For most documentation batches, start with [
 
 Use `PASS`, `WARN`, `FAIL`, or `SKIP` only as documentation-maintenance labels. A passing documentation check is not runtime conformance, implementation acceptance, QA completion, close readiness, or residual-risk acceptance.
 
-Tie findings to file paths, owner documents, and suggested documentation fixes. If a check is skipped, say why.
+Tie findings to file paths, owner documents, and suggested documentation fixes. If a check is skipped, state the reason.
 
 ## Report shape
 
@@ -31,4 +31,4 @@ Use a compact report shape after meaningful documentation edits:
 - Skipped checks:
 - Residual documentation risks:
 
-The report should say results are documentation-maintenance findings only when that distinction could be unclear.
+The report should identify results as documentation-maintenance findings when that distinction could be unclear.

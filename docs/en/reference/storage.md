@@ -4,7 +4,7 @@ This page routes readers into the storage reference family and names the owner f
 
 ## How to read
 
-The storage family separates conditions, results, exceptions, and non-claims. Do not infer storage effects from API schema shape or user-visible display prose.
+The storage family separates conditions, results, exceptions, and non-claims. Do not infer storage effects from API schema shapes or user-visible display prose.
 
 - Conditions identify the method branch, record state, or artifact lifecycle stage where a storage rule applies.
 - Results identify stored rows, artifacts, replay rows, events, and state-version impact.

@@ -4,7 +4,7 @@ This reference owns the Harness Core authority model. It defines how Core, a `Ta
 
 Core is the local authority record for Harness state. It is not chat memory, generated Markdown, a status report, a tutorial, a storage layout, or an API response shape.
 
-## 1. Owner Boundary
+## 1. Owner boundary
 
 This document owns:
 
@@ -22,7 +22,7 @@ This document does not own:
 
 When this page names an exact identifier, it names the authority concept only. The linked owner documents define wire shape, method behavior, storage effect, display text, security wording, and exact values.
 
-## 2. Authority Invariants
+## 2. Authority invariants
 
 Core-owned state is authority.
 
@@ -92,7 +92,7 @@ An Autonomy Boundary is the agent latitude inside the active Change Unit.
 
 It does not allow scope expansion, sensitive-action approval, user-owned judgment, or write authorization by inference.
 
-### User-Owned Judgment
+### User-owned judgment
 
 User-owned judgment is the boundary where the user owns the decision. Core may record the judgment, but it must not invent it.
 
@@ -128,30 +128,30 @@ A blocker is a structured reason that progress, write preparation, Run recording
 
 A close blocker is the close-relevant form: it prevents honest close readiness until the responsible owner path handles it. A blocker is not projection prose, broad approval, storage proof by itself, or a successful-looking close.
 
-### Close Readiness
+### Close readiness
 
 Close readiness is the Core authority concept for whether the current `Task` can close honestly.
 
 It considers the current `Task`, active scope, Change Unit, required judgments, write and Run compatibility, evidence support, artifact availability, unresolved blockers, final acceptance, residual-risk visibility, residual-risk acceptance, and recovery constraints.
 
-### Final Acceptance
+### Final acceptance
 
 Final acceptance is a user-owned judgment that the visible close basis is acceptable for the requested close.
 
 It does not create evidence, approve sensitive action, change scope, accept residual risk, waive blockers, or prove verification.
 
-### Residual Risk
+### Residual risk
 
 Residual risk is known remaining uncertainty, an unchecked condition, limitation, or trade-off that matters to close.
 
 Residual-risk acceptance applies only to the named visible risk for the requested close. It does not cover all unknowns, replace evidence, replace final acceptance, or make the result risk-free.
 
-### Derived Display
+### Derived display
 
 Projection output, template output, status cards, summaries, and reports are derived display. They can help a reader see Core state, but they do not become Core authority, evidence, acceptance, or risk acceptance.
 
 <a id="4-user-owned-judgment"></a>
-## 4. User-Owned Judgment
+## 4. User-owned judgment
 
 Core preserves the boundary between what the agent may decide and what the user must decide.
 
@@ -176,7 +176,7 @@ Agent latitude:
 - Inside accepted scope and acceptance criteria, the agent may choose ordinary implementation details that do not change product behavior, material technical direction, scope, security or privacy posture, compatibility, or costly-to-reverse architecture.
 - The agent must not treat "go ahead", "looks good", or similar broad language as another judgment kind unless the prompt made that distinct judgment visible and Core records it compatibly.
 
-## 5. Non-Substitution Rules
+## 5. Non-substitution rules
 
 Generated text does not substitute for Core state.
 
@@ -209,7 +209,7 @@ A waiver or accepted risk does not create automatic success.
 - Accepted risk does not replace evidence, final acceptance, verification, or remaining owner paths required for close.
 
 <a id="6-task-lifecycle"></a>
-## 6. Task Lifecycle
+## 6. Task lifecycle
 
 The lifecycle here is conceptual authority meaning, not an API state table.
 
@@ -217,12 +217,12 @@ The lifecycle here is conceptual authority meaning, not an API state table.
 |---|---|
 | Intake and shaping | User intent becomes a concrete goal, scope boundary, non-goals, acceptance criteria, Autonomy Boundary, and first safe Change Unit when the owner paths support it. |
 | Scope update | Accepted scope or Change Unit changes become active only through the scope owner path. A judgment record alone does not mutate active scope. |
-| Execution and observation | Runs record actions and observations. Product-file writes must be compatible with active scope and `Write Authorization`; read-only work does not authorize later writes. |
+| Execution and observation | Runs record actions and observations. Product-file writes must be compatible with active scope and `Write Authorization`; read-only work does not authorize subsequent writes. |
 | Waiting or blocked | If an owner path is missing, stale, incompatible, or unsafe to bypass, Core exposes the blocker and the next owner path instead of hiding the gap. |
 | Close attempt | Core evaluates whether the current state can close honestly. A final chat summary or generated report is not enough by itself. |
 | Terminal outcome | Completion, cancellation, or supersession ends the `Task` path. Cancellation and supersession are terminal, but they are not successful completion and do not satisfy completion evidence, acceptance, or risk requirements. |
 
-## 7. Authority Checks
+## 7. Authority checks
 
 Authority checks summarize whether a Core action or close claim can proceed honestly. Public fields, exact values, response branches, and method behavior belong to API owners.
 
@@ -245,7 +245,7 @@ Separate QA and external verification workflows are not separate baseline author
 
 It has these authority properties:
 
-- Scope-limited: it covers the intended product-file write attempt, not later attempts or a broader project area.
+- Scope-limited: it covers the intended product-file write attempt, not subsequent attempts or a broader project area.
 - State-bound: it is based on current Harness state and can become stale when relevant state changes.
 - Single-use: one compatible product-write Run consumes it once.
 - Cooperative: it tells a connected agent or surface what is compatible with Harness state; it does not claim OS-level prevention or sandboxing.
@@ -268,7 +268,7 @@ It is not:
 The prepare-write, record-run, API state schema, storage, and security owners define the method behavior, public shapes, storage effects, replay and stale-state behavior, and guarantee wording.
 
 <a id="9-evidence-and-run-authority"></a>
-## 9. Evidence and Run Authority
+## 9. Evidence and Run authority
 
 Evidence authority is scoped to recorded claims.
 
@@ -293,7 +293,7 @@ Display authority:
 - The display itself is not Core authority, evidence, acceptance, or residual-risk acceptance.
 
 <a id="close_task"></a>
-## 10. Close Readiness
+## 10. Close readiness
 
 Close readiness is the Core authority concept for whether the current `Task` can close honestly.
 
@@ -331,7 +331,7 @@ Close transition:
 - When no close blocker remains and the method owner permits the requested terminal path, the terminal transition may proceed through API-owned method behavior.
 - Rejected requests before close-readiness evaluation, stale state, local access failures, and public error precedence belong to API and error owners.
 
-## 11. Blockers, Waivers, and Residual Risk
+## 11. Blockers, waivers, and residual risk
 
 Blockers preserve honesty.
 
@@ -349,7 +349,7 @@ Residual risk must be visible before it can be accepted.
 - Residual-risk acceptance applies to the named visible risk for the requested close, not to every unknown.
 - The supported baseline path uses compact residual-risk visibility, blockers, evidence references, artifact references, and user-judgment references. Rich risk workflows remain outside the baseline unless the scope and semantic owners promote them.
 
-## 12. Related Owners
+## 12. Related owners
 
 Use this table for owner routing. Do not copy the linked contracts into this page.
 

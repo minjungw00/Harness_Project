@@ -1,11 +1,11 @@
-# Scope Reference
+# Scope reference
 
 This reference owns the Harness supported baseline scope boundary. It defines which capability families are inside the baseline, which remain outside it, and how reserved or profile-gated values affect scope.
 
 This page is a stable reference contract rather than project narration or implementation planning.
 
 <a id="owns-does-not-own"></a>
-## Owns / Does Not Own
+## Owns / does not own
 
 This document owns:
 
@@ -30,12 +30,12 @@ This document does not own:
 Use this page when deciding whether a capability is part of the supported baseline scope. Route, build, README, and reference documents should link here for the scope boundary instead of repeating the detailed list.
 
 <a id="supported-baseline-scope"></a>
-## Supported Baseline Scope
+## Supported baseline scope
 
 The baseline scope is intentionally narrow. A capability is inside the supported baseline only when this page includes the capability family and the relevant owner documents define its behavior, data shapes, and storage or security consequences.
 
 <a id="what-supported-means"></a>
-### What Supported Means
+### What supported means
 
 In this documentation set, supported means:
 
@@ -50,7 +50,7 @@ Supported does not mean:
 - a security, conformance, storage, or projection guarantee exists without the relevant owner document defining that guarantee
 
 <a id="included-capabilities"></a>
-### Included Capabilities
+### Included capabilities
 
 | Baseline capability | Supported boundary | Primary owners |
 |---|---|---|
@@ -80,7 +80,7 @@ User judgment owners:
 - API shapes and values: [API Judgment Schemas](api/schema-judgment.md) and [API Value Sets](api/schema-value-sets.md).
 
 <a id="excluded-from-baseline-scope"></a>
-## Excluded from Baseline Scope
+## Excluded from baseline scope
 
 The following capability families are outside the supported baseline unless this Scope reference and the affected owner documents promote them.
 
@@ -112,7 +112,7 @@ Owner links:
 - Conformance procedures and checks: [Conformance](conformance.md).
 
 <a id="reserved-and-profile-gated-values"></a>
-## Reserved and Profile-Gated Values
+## Reserved and profile-gated values
 
 Some value names may exist as reserved values or profile-gated values without being supported user-visible capabilities.
 
@@ -138,7 +138,7 @@ Owner links:
 - Product terminology for reserved and profile-gated values: [Glossary](glossary.md).
 
 <a id="out-of-scope-capability-promotion"></a>
-## Out-of-Scope Capability Promotion
+## Out-of-scope capability promotion
 
 An out-of-scope capability becomes supported only when this Scope reference and the affected owner documents define a narrow supported contract.
 
@@ -156,7 +156,7 @@ Does not imply:
 - Mentioning an excluded, reserved, or profile-gated capability in examples, route text, schema notes, value sets, or this reference does not promote it.
 
 <a id="supported-guarantee-boundary"></a>
-## Supported Guarantee Boundary
+## Supported guarantee boundary
 
 Baseline scope uses the guarantee level defined by [Security](security.md). Scope availability and security semantics must agree before a guarantee can be described as supported.
 
@@ -178,7 +178,7 @@ Owner links:
 - Core meaning: [Core Model](core-model.md).
 
 <a id="owner-documents"></a>
-## Owner Documents
+## Owner documents
 
 Use these owners for detailed contract questions. This table routes responsibility; it does not duplicate those contracts.
 

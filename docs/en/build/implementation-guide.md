@@ -1,6 +1,6 @@
 # Implementation guide
 
-This guide gives implementers a stable route from Harness product scope to the owner documents that define runtime behavior. It is an implementation reading guide, not a product contract.
+This guide gives implementers a stable route from Harness product scope to the owner documents that define runtime behavior. It is a reading guide for implementation work, not a product contract.
 
 This guide does not define baseline scope, API behavior, schemas, storage effects, security guarantees, runtime locations, connector behavior, conformance authority, or example validity. Those contracts stay in the Reference owners.
 
@@ -66,7 +66,7 @@ Implementation code should reject, ignore, or avoid out-of-scope behavior accord
 
 [Conformance](../reference/conformance.md) explains documentation-level conformance meaning, assertion authority, and compact scenario routing. It does not provide executable fixture files, generated reports, runtime proof, or new API behavior.
 
-Use conformance scenarios as coverage prompts. For each scenario, bind every assertion to an owner-defined fact before writing a test or check. A valid implementation check should compare structured method responses, Core state, storage effects, artifact facts, public error codes, security guarantee display, or required absence of forbidden side effects only when the relevant owner defines that fact.
+Use conformance scenarios as coverage prompts. For each scenario, bind every assertion to an owner-defined fact before writing a test or check. A valid implementation check compares structured method responses, Core state, storage effects, artifact facts, public error codes, security guarantee display, or the required absence of forbidden side effects only when the relevant owner defines that fact.
 
 Do not treat scenario prose, generated summaries, rendered reports, documentation-check labels, or status display text as runtime authority unless a specific owner promotes that fact.
 

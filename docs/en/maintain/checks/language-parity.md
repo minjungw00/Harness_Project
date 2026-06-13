@@ -48,7 +48,7 @@ Owner:
 
 Check:
 - For Korean reference edits, compare conditions, results, exceptions, non-claims, owner links, and close-readiness consequences as meaning units.
-- Confirm Korean prose may differ in line count and sentence order but still keeps important caveats and owner boundaries visible.
+- Confirm Korean prose may differ in line count and sentence order while keeping important caveats and owner boundaries visible.
 - Inspect dense Korean paragraphs for merged rules that hide a condition, exception, or non-claim.
 
 Failure:

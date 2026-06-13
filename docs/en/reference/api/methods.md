@@ -2,7 +2,7 @@
 
 ## What this document owns
 
-This document is the stable route document for the current API method family. It owns:
+This document is the stable route document for the active API method family. It owns:
 
 - the active public API method list
 - method owner routing

@@ -18,7 +18,6 @@ This document does not own:
 
 ## Purpose
 
-
 <a id="harnessrequest_user_judgment"></a>
 
 ### `harness.request_user_judgment`
@@ -32,16 +31,7 @@ Create one pending `UserJudgment` for a focused user-owned decision. The method 
 
 Record the user's answer to one existing pending `UserJudgment`.
 
-Result:
-
-- The method resolves, rejects, defers, blocks, or marks the specific pending judgment according to the user's answer.
-
-Non-claims:
-
-- It does not broaden the answer into unrelated approval.
-- It does not broaden the answer into scope expansion.
-- It does not broaden the answer into acceptance or residual-risk acceptance.
-- It does not broaden the answer into Write Authorization.
+The method resolves, rejects, defers, blocks, or marks the specific pending judgment according to the user's answer. It does not broaden the answer into unrelated approval, scope expansion, acceptance, residual-risk acceptance, or Write Authorization.
 
 ## Required inputs
 
@@ -140,9 +130,7 @@ The method rejects before commit when a judgment cannot be created because:
 
 The addressed judgment may be committed as `rejected`, `deferred`, `blocked`, or otherwise blocker-producing when that is the user's answer or the compatible result of the focused judgment.
 
-Result:
-
-- updates only covered blockers and judgment-dependent summaries
+The result updates only covered blockers and judgment-dependent summaries.
 
 Non-claims:
 

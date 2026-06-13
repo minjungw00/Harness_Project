@@ -4,13 +4,13 @@ Use this guide when an agent needs to make Harness-connected work feel clear in 
 
 These recipes describe user-visible flow: what to show, when to refresh, how to report failure, and how to summarize status without turning copied text, rendered displays, or agent memory into authority. Exact connector behavior and security guarantees stay in the Reference owners.
 
-## CLI Surface
+## CLI surface
 
 A CLI surface should keep status compact and action-oriented.
 
 Before meaningful work, show:
 
-- current task or work shape
+- active task or work boundary
 - active scope and non-goals
 - relevant paths, command, or operation class
 - pending user-owned judgment
@@ -25,7 +25,7 @@ For write-capable work:
 
 If command observation or artifact access is unavailable for the current surface, say so and name a safe recovery action.
 
-## IDE/Editor Surface
+## IDE/editor surface
 
 An IDE/editor surface should keep the active editing boundary close to the edit workflow without claiming that the editor prevents every unsafe action.
 
@@ -40,13 +40,13 @@ Show:
 For editing work:
 
 - Refresh task and scope before broad or public-interface-facing edits.
-- Compare intended file paths with the current scope before writing.
+- Compare intended file paths with the active scope before writing.
 - Keep product, UX, accessibility, security, dependency, migration, final-acceptance, and residual-risk decisions separate from editor convenience prompts.
 - After meaningful saves, summarize changed files, checks run, evidence gaps, and close blockers.
 
 An IDE/editor integration may help keep the agent honest, but security wording and guarantee levels belong to [Security](../reference/security.md).
 
-## Chat Surface
+## Chat surface
 
 A chat surface is best at shaping, judgment requests, status summaries, and human-readable failure reporting.
 
@@ -60,7 +60,7 @@ For chat work:
 
 If the chat surface cannot verify local access, state, artifact availability, or capability support, say that directly and route to reconnect, refresh, a capable surface, a narrower operation, or explicit non-Harness continuation.
 
-## Local MCP Surface
+## Local MCP surface
 
 A local MCP surface is the practical route for asking active Harness owner paths for status, scope updates, write checks, run/evidence recording, user-judgment capture, artifact staging, and close checks when those methods are active.
 
@@ -74,7 +74,7 @@ For local MCP work:
 
 Do not use local MCP availability to imply stronger observation, prevention, or isolation than the relevant owners support.
 
-## Failure Reporting
+## Failure reporting
 
 Failure reporting should lead with the primary blocker and the next action that can unblock it.
 
@@ -87,23 +87,23 @@ Name whether the blocker is:
 
 Include what the surface tried to do, what was verified, what was unavailable or stale, what was not changed or recorded, any owner-provided code, and the next safe action.
 
-## Status Summaries
+## Status summaries
 
 Keep status short and decision-ready.
 
 A good status summary says:
 
-- current task or work shape
+- active task or work boundary
 - active scope
 - primary blocker
-- current guarantee level or capability limit
+- active guarantee level or capability limit
 - evidence or artifact gap when relevant
 - close readiness when relevant
 - one next safe action
 
 Do not bury the user in schema fields, logs, generated readable views, or long history. Pull exact Reference detail only when the next action depends on the contract.
 
-## Reference Owners
+## Reference owners
 
 Use these owner routes for exact contracts:
 
@@ -114,6 +114,6 @@ Use these owner routes for exact contracts:
 - [Runtime Boundaries](../reference/runtime-boundaries.md): `Product Repository`, Harness Server, and `Harness Runtime Home` separation.
 - [Scope](../reference/scope.md): active, profile-gated, and out-of-scope boundaries.
 
-## Where To Go Next
+## Where to go next
 
 Use [Agent Guide](agent-guide.md) for general agent behavior, then [Agent Integration Reference](../reference/agent-integration.md) for exact connector ownership. Implementers should continue through the [Reference Index](../reference/README.md) instead of treating these recipes as API or schema contracts.

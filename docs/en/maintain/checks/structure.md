@@ -15,7 +15,7 @@ Check:
 - For terminology questions, include [Terminology Map](../../../terminology-map.yaml) as an input.
 
 Failure:
-- The review starts from an unspecified scope, a full Reference dump, a stale route, or both languages for the same `doc_id` when parity review is not needed.
+- The review starts from an unspecified scope, a full reference dump, a stale route, or both languages for the same `doc_id` when parity review is not needed.
 - A strict contract is checked without naming its owner.
 
 Fix:
@@ -128,7 +128,7 @@ Check:
 
 Failure:
 - An out-of-scope capability, reserved operation, profile-gated value, or unproved behavior is described as a default baseline requirement.
-- Promotion wording names a non-existing owner as if it were already current.
+- Promotion wording names a nonexistent owner as if it were already current.
 - Promotion wording omits the need to update baseline scope and paired English/Korean docs when meaning changes.
 
 Fix:

@@ -8,7 +8,7 @@ This repository is the entry point for the active bilingual Harness documentatio
 
 - English: [`docs/en/README.md`](docs/en/README.md)
 - 한국어: [`docs/ko/README.md`](docs/ko/README.md)
-- Documentation directory: [`docs/README.md`](docs/README.md)
+- Documentation directory index: [`docs/README.md`](docs/README.md)
 
 ## Major routes / 주요 경로
 

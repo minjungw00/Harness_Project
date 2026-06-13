@@ -1,13 +1,8 @@
 # Storage records
 
-Rule:
+This document owns persistent storage record layout for the baseline scope source design. Persistent records are local records committed by Core for subsequent reads.
 
-- This document owns persistent storage record layout for the baseline scope source design.
-- Persistent records are local records committed by Core for subsequent reads.
-
-Not allowed:
-
-- Persistent records are not tamper-proof storage, anti-forgery proof, or external audit guarantees.
+Persistent records are not tamper-proof storage, anti-forgery proof, or external audit guarantees.
 
 Owner links:
 
@@ -44,10 +39,7 @@ Storage records and API schemas have different owner boundaries.
 
 ## Runtime Home layout
 
-Rule:
-
-- Harness uses one local Runtime Home and one project-local state database per registered project.
-- The default reference root is `~/.harness`.
+Harness uses one local Runtime Home and one project-local state database per registered project. The default reference root is `~/.harness`.
 
 Allowed:
 
@@ -77,12 +69,7 @@ The path meanings are storage assumptions:
 - `state.sqlite` stores project-local Core state for the registered project.
 - `artifacts/` is the project artifact store. `artifacts/tmp/` is transient staging space, not evidence authority.
 
-Rule:
-
-- Runtime Home identity must not depend only on a filesystem path.
-- A copied or moved Runtime Home may carry the same stored `runtime_home_id`.
-- A newly created Runtime Home gets a new id.
-- Runtime Home files are local operational control data and may contain sensitive support data.
+Runtime Home identity must not depend only on a filesystem path. A copied or moved Runtime Home may carry the same stored `runtime_home_id`, while a newly created Runtime Home gets a new id. Runtime Home files are local operational control data and may contain sensitive support data.
 
 Allowed:
 
@@ -110,10 +97,7 @@ Runtime Home is Harness operational data space. It is not automatically the Prod
 
 ### Conditions
 
-Rule:
-
-- The baseline persists only the Core records needed by the active state-changing method set.
-- `harness.status` and `harness.close_task intent=check` are read-only.
+The baseline persists only the Core records needed by the active state-changing method set. `harness.status` and `harness.close_task intent=check` are read-only.
 
 State-changing method set:
 
@@ -157,11 +141,7 @@ Owner links:
 
 ### Not stored
 
-Not allowed:
-
-- No other persisted table family or transient handle family is baseline scope.
-- Requirement shaping is not a separate committed Discovery Brief, Shared Design, Question Queue, Assumption Register, or First Safe Change Unit Candidate table.
-- Evidence is stored only through the active compact evidence-summary and artifact-ref paths.
+No other persisted table family or transient handle family is baseline scope. Requirement shaping is not a separate committed Discovery Brief, Shared Design, Question Queue, Assumption Register, or First Safe Change Unit Candidate table. Evidence is stored only through the active compact evidence-summary and artifact-ref paths.
 
 ### Projection non-claim
 
@@ -647,10 +627,7 @@ Owner links:
 
 ## First schema integrity contract
 
-Rule:
-
-- This section is a first-implementation storage contract for SQLite schema design.
-- For a first SQLite schema, committed rows must preserve these identities, value sets, relations, and transaction boundaries.
+This section is a first-implementation storage contract for SQLite schema design. For a first SQLite schema, committed rows must preserve these identities, value sets, relations, and transaction boundaries.
 
 Allowed:
 
@@ -707,13 +684,7 @@ Main relationship constraints:
 
 ### Authority-row deletion non-claim
 
-Rule:
-
-- Ordinary baseline Core operations do not hard-delete authority rows.
-- Rows move through status or lifecycle fields.
-- Core appends events.
-- Replay and artifact metadata remain available for audit and recovery.
-- Foreign keys should default to `RESTRICT` or equivalent owner validation for authority rows.
+Ordinary baseline Core operations do not hard-delete authority rows. Rows move through status or lifecycle fields, Core appends events, and replay and artifact metadata remain available for audit and recovery. Foreign keys should default to `RESTRICT` or equivalent owner validation for authority rows.
 
 Not allowed:
 
@@ -744,11 +715,7 @@ Not allowed:
 
 ## Storage-owned value summary
 
-Rule:
-
-- Closed baseline scope storage value sets are table-level persistence constraints.
-- Rows that mirror API schema values must match the API schema owner exactly.
-- Rows marked storage-owned define storage behavior that is not a public API schema body.
+Closed baseline scope storage value sets are table-level persistence constraints. Rows that mirror API schema values must match the API schema owner exactly. Rows marked storage-owned define storage behavior that is not a public API schema body.
 
 Not allowed:
 
@@ -1025,9 +992,7 @@ Owner links:
 
 ### Values not owned here
 
-Rule:
-
-- Other persisted status-like API fields validate against [API Value Sets](api/schema-value-sets.md) and the Core/API method owners.
+Other persisted status-like API fields validate against [API Value Sets](api/schema-value-sets.md) and the Core/API method owners.
 
 Examples:
 
@@ -1072,9 +1037,7 @@ Active JSON `TEXT` columns are limited to compact owner-shaped data needed by th
 
 ### JSON not stored
 
-Rule:
-
-- Task and Change Unit shaping JSON stores compact summaries and bounded lists only.
+Task and Change Unit shaping JSON stores compact summaries and bounded lists only.
 
 Not allowed:
 
@@ -1094,9 +1057,7 @@ Not allowed:
 
 ### Conditions
 
-Rule:
-
-- Profile-gated storage is outside the baseline.
+Profile-gated storage is outside the baseline.
 
 Exceptions:
 

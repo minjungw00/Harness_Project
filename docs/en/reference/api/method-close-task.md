@@ -22,20 +22,9 @@ This document does not own:
 
 Evaluate close readiness for an active Task.
 
-Conditions for terminal mutation:
+Terminal mutation is allowed only when the selected intent permits mutation and blockers are absent. The method may commit `intent=complete`, `intent=cancel`, or `intent=supersede`, and it may return close blockers.
 
-- the selected intent allows it
-- blockers are absent
-
-Results:
-
-- may commit `intent=complete`, `intent=cancel`, or `intent=supersede`
-- may return close blockers
-
-Non-claims:
-
-- Close is a Core state transition, not a report.
-- Close is not inferred from chat, status text, acceptance alone, residual-risk acceptance alone, evidence alone, or a rendered view.
+Close is a Core state transition, not a report. Close is not inferred from chat, status text, acceptance alone, residual-risk acceptance alone, evidence alone, or a rendered view.
 
 ## Required inputs
 
@@ -77,10 +66,7 @@ Conditions:
 - close preflight succeeds
 - `intent=complete`
 
-Result:
-
-- may return `CloseTaskResult(close_state=blocked)` with `blockers: CloseReadinessBlocker[]`
-- mutating intents may persist blocker-state effects only when the method state-effect table allows that committed blocked result
+The method may return `CloseTaskResult(close_state=blocked)` with `blockers: CloseReadinessBlocker[]`. Mutating intents may persist blocker-state effects only when the method state-effect table allows that committed blocked result.
 
 Non-claims:
 
@@ -121,7 +107,7 @@ Close-readiness scenario data:
 
 The literal `intent=complete` selects the completion intent. It is not shorthand for the full close-readiness evaluation order.
 
-Successful close-readiness observation for the account data export confirmation scenario. The evidence relies on existing run ref `run_account_export_tests_001`, promoted artifact `artifact_account_export_test_log_001`, and the resolved user judgment `uj_001`:
+Successful close-readiness observation for the account data export confirmation scenario. The evidence relies on existing run ref `run_account_export_tests_001`, promoted artifact `artifact_account_export_test_log_001`, and resolved user judgment `uj_001`:
 
 ```yaml
 close_readiness:

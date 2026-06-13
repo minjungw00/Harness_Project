@@ -1,10 +1,10 @@
-# Reference Index
+# Reference index
 
 Use this index to choose the owner document for a Harness reference question. This README is a route: it points to owners and does not define API contracts, schemas, storage effects, security guarantees, or scope.
 
 For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml).
 
-## Product and System Owners
+## Product and system owners
 
 | Topic | Owner |
 |---|---|
@@ -15,7 +15,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | Product terminology | [`glossary.md`](glossary.md), [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
 | Implementation entry route | [`../build/implementation-guide.md`](../build/implementation-guide.md) |
 
-## API and Schema Owners
+## API and schema owners
 
 | Topic | Owner |
 |---|---|
@@ -29,7 +29,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | Public error codes and error routing | [`api/errors.md`](api/errors.md) |
 
 <a id="api-method-owners"></a>
-## API Method Owners
+## API method owners
 
 | Method | Owner |
 |---|---|
@@ -42,7 +42,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | `harness.request_user_judgment` and `harness.record_user_judgment` | [`api/method-user-judgment.md`](api/method-user-judgment.md) |
 | `harness.close_task` | [`api/method-close-task.md`](api/method-close-task.md) |
 
-## Storage Owners
+## Storage owners
 
 | Topic | Owner |
 |---|---|
@@ -53,7 +53,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | State clocks, versioning, and migrations | [`storage-versioning.md`](storage-versioning.md) |
 | Runtime home separation | [`runtime-boundaries.md`](runtime-boundaries.md) |
 
-## Surface, Projection, and Quality Owners
+## Surface, projection, and quality owners
 
 | Topic | Owner |
 |---|---|
@@ -64,7 +64,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | Conformance reference | [`conformance.md`](conformance.md) |
 | Design quality reference | [`design-quality.md`](design-quality.md) |
 
-## User Judgment and Close-Readiness Owners
+## User judgment and close-readiness owners
 
 | Topic | Owner |
 |---|---|
@@ -76,7 +76,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | Close-readiness state shapes | [`api/schema-state.md`](api/schema-state.md) |
 | Close error routing | [`api/errors.md`](api/errors.md) |
 
-## Maintenance and Metadata
+## Maintenance and metadata
 
 | Need | Route |
 |---|---|

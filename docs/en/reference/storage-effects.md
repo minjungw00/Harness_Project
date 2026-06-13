@@ -188,7 +188,7 @@ Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker
 
 Read-only results are response-only and not replay rows.
 
-Allowed response computation: `harness.status` and `harness.close_task intent=check` may compute blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response.
+For response computation, `harness.status` and `harness.close_task intent=check` may compute blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response.
 
 Storage must not persist those computed values merely because the read occurred.
 
@@ -278,9 +278,7 @@ Allowed effects:
 - replay row
 - `project_state.state_version`
 
-Result:
-
-- The Task remains open.
+The Task remains open.
 
 Not allowed:
 

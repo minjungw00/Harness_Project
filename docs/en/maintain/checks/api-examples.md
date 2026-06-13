@@ -1,6 +1,6 @@
 # API examples checks
 
-Use these checks for API and Reference examples. They check documentation example quality only; they do not validate product runtime conformance.
+Use these checks for API and reference examples. They check documentation example quality only; they do not validate product runtime conformance.
 
 ## CHK-EXAMPLE-001: durable API and Reference scenarios
 

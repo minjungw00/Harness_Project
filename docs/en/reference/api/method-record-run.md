@@ -26,12 +26,7 @@ This document does not own:
 - a direct answer or result
 - implementation work
 
-Additional results:
-
-- updates compact evidence coverage
-- consumes a compatible Write Authorization when recording a product write
-- links existing artifacts
-- promotes eligible staged handles to persistent `ArtifactRef` records where allowed
+The method may also update compact evidence coverage, consume a compatible Write Authorization when recording a product write, link existing artifacts, and promote eligible staged handles to persistent `ArtifactRef` records where allowed.
 
 ## Required inputs
 
@@ -66,10 +61,7 @@ Product-write recording consumes the active Write Authorization only when:
 - the current state version still matches the authorization basis
 - observed changed paths are compatible with the authorized attempt
 
-Rejected before consumption:
-
-- stale `expected_state_version`
-- stale authorization basis
+The method rejects stale `expected_state_version` and stale authorization basis before consuming the active Write Authorization.
 
 ## Success result
 
@@ -135,7 +127,7 @@ Exact storage effects are owned by [Storage Effects](../storage-effects.md), and
 
 Run data example:
 
-The run records account data export confirmation test evidence and may consume the staged test log from the shared `harness.stage_artifact` example as evidence:
+The run records account data export confirmation test evidence and may consume the staged test log from the shared `harness.stage_artifact` example as evidence.
 
 This example records test evidence after the write path has already been handled. It does not claim that this run observed the product file write itself.
 

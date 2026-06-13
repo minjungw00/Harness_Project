@@ -24,7 +24,7 @@ This document does not own:
 
 Authority remains with owner records, not with rendered views. Authoritative records include Core-owned state, user-owned judgments, owner-recorded evidence and artifacts, acceptance and residual-risk records, close records, and storage records owned by the storage documents.
 
-Projected, status, and template views are read-only display. They may quote owner values, summarize owner records, or link to owner records. They are not a second state store, even when they are well written, manually edited, copied into a `Product Repository`, or injected into agent context.
+Projected, status, and template views are read-only display. They may quote owner values, summarize owner records, or link to owner records. They are not a second state store, even when they are clear, manually edited, copied into a `Product Repository`, or injected into agent context.
 
 ## Views cannot create authority
 

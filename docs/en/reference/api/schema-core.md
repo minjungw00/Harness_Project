@@ -1,10 +1,8 @@
 # API schema core
 
-Meaning:
-- This document owns the common API envelope and response-branch schemas for the baseline scope.
+This document owns the common API envelope and response-branch schemas for the baseline scope.
 
-Not implied:
-- It does not define method behavior, storage effects, state snapshots, artifact lifecycle, user-judgment meaning, public error semantics, or active value sets.
+It does not define method behavior, storage effects, state snapshots, artifact lifecycle, user-judgment meaning, public error semantics, or active value sets.
 
 ## Owns / Does not own
 

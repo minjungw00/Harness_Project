@@ -2,7 +2,7 @@
 
 This document owns the location boundary among `Product Repository`, Harness installation or runtime process, and `Harness Runtime Home`. It defines local access assumptions for those locations and routes storage and security details to their owners.
 
-## Owns / Does Not Own
+## Owns / does not own
 
 | This document owns | This document does not own |
 |---|---|
@@ -12,7 +12,7 @@ This document owns the location boundary among `Product Repository`, Harness ins
 | Local access and location non-authority rules. | Projection authority, template bodies, or rendered display freshness. |
 | The rule that runtime location does not by itself prove Harness authority, security authority, or isolation. | Product scope, close readiness, evidence sufficiency, or user-owned judgment meaning. |
 
-## Location Model
+## Location model
 
 Harness keeps three local location boundaries distinct.
 
@@ -38,7 +38,7 @@ Must not claim:
 - A `Product Repository` is automatically `Harness Runtime Home`.
 
 <a id="runtime-location-server-installation"></a>
-### Harness Installation Or Runtime Process
+### Harness installation or runtime process
 
 Harness installation or runtime process location is where Harness executable code, packages, application resources, or process configuration may live.
 
@@ -66,7 +66,7 @@ Must not claim:
 - `Harness Runtime Home` is automatically a security boundary.
 - `Harness Runtime Home` provides isolation by default.
 
-## Local Access Boundaries
+## Local access boundaries
 
 Local access to a file or directory is not the same as Harness authority.
 
@@ -79,7 +79,7 @@ Must not claim:
 - Direct local modification outside owner-defined Harness paths creates valid Harness records, evidence, acceptance, residual-risk acceptance, `Write Authorization`, or artifact authority.
 - The location of runtime data changes the security guarantee level by itself.
 
-## Runtime Location, Storage, And Security Owners
+## Runtime location, storage, and security owners
 
 Runtime location is a boundary statement, not a storage layout or security mechanism.
 
@@ -96,7 +96,7 @@ Security owns:
 
 This document only keeps the locations and non-inference rules distinct.
 
-## What Must Not Be Inferred
+## What must not be inferred
 
 Do not infer Harness authority, security authority, runtime state, or isolation from:
 
@@ -116,7 +116,7 @@ Do not infer that:
 - Product files are Harness records.
 - Generated displays replace source-record authority.
 
-## Related Owners
+## Related owners
 
 - [Security](security.md): security claims, non-claims, trust boundaries, and guarantee levels.
 - [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md): storage record layout, effects, artifacts, migrations, versioning, and runtime data details.

@@ -119,7 +119,7 @@ Owner links:
 
 Meaning:
 - `ShapingReadiness` is a derived API view over Task, Change Unit, pending judgments, evidence summary, blockers, and next-action state.
-- It shows whether the current owner state is concrete enough for the next safe action.
+- It shows whether the active owner state is concrete enough for the next safe action.
 
 ```yaml
 ShapingReadiness:

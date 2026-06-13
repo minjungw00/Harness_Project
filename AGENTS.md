@@ -35,11 +35,11 @@ Use `docs/doc-index.yaml` for exact owner routing. It is the stable machine-read
 
 LLM agents should read this `AGENTS.md` first for repository editing rules, then use `docs/doc-index.yaml` for exact owner lookup. Use `docs/*/reference/README.md` as the human-readable owner router, and keep it aligned with `docs/doc-index.yaml`.
 
-For high-signal terminology, example-scenario, API example-consistency, field-name consistency, scope, storage, and owner questions, check `question_routes.routes` in `docs/doc-index.yaml` before broad keyword retrieval. If a route matches, load the canonical owner first and load listed supporting owners only when the question spans that boundary.
+For high-signal questions about terminology, example scenarios, API example consistency, field-name consistency, scope, storage, or ownership, check `question_routes.routes` in `docs/doc-index.yaml` before broad keyword retrieval. If a route matches, load the canonical owner first and load listed supporting owners only when the question spans that boundary.
 
 When `docs/doc-index.yaml` lists an exact owner for the question or concept, load that owner first. Pull related documents only when the owner, index metadata, or maintainer guidance sends you there.
 
-One concept should have one canonical owner. Edit the owner when the change affects normative meaning, including baseline scope, API behavior, schemas, storage effects, security wording, access boundaries, close readiness, product terminology, or out-of-scope promotion rules.
+One concept has one canonical owner. Edit the owner when the change affects normative meaning, including baseline scope, API behavior, schemas, storage effects, security wording, access boundaries, close readiness, product terminology, or out-of-scope promotion rules.
 
 If an entry route, README, or maintain document cannot point to a current owner, do not fill the gap with duplicate contract prose. Name the owner gap or route to the closest current owner.
 
@@ -58,7 +58,7 @@ English and Korean docs are both active. Neither language is an archive, appendi
 
 Read one language version of the same `doc_id` unless checking translation parity, doing bilingual editing, or resolving a terminology/parity issue that requires comparison.
 
-For normal agent retrieval, use the language that matches the user request or the default language in `docs/doc-index.yaml`. Do not inject paired English and Korean docs for the same `doc_id` into the same context without a parity reason.
+For normal agent retrieval, use the language that matches the user request or the default language in `docs/doc-index.yaml`. Do not inject paired English and Korean docs for the same `doc_id` into the same context unless a parity review requires both versions.
 
 Do not finish a meaning-changing documentation batch with only one language updated when the changed document has an active paired path.
 
@@ -78,7 +78,7 @@ Avoid mixed-language Korean patterns where the English word is not an identifier
 
 Owner documents define normative meaning. Route documents help readers find owners. Maintain documents define editing procedures and checks. User-facing guides explain practical workflows and expected reader outcomes. Reference documents define the contracts they own.
 
-README files, Start pages, Use pages, Build pages, Maintain pages, and reference indexes may summarize reader purpose, expected result, and where to go next. They should use short summaries plus links to canonical owners.
+README files, Start pages, Use pages, Build pages, Maintain pages, and reference indexes may summarize reader purpose, expected result, and where to go next. Use short summaries plus links to canonical owners.
 
 Do not copy API response branches, schema field tables, DDL, storage effects, access class lists, security guarantees, projection behavior, close-readiness contracts, or error-code contracts into non-owner documents. If a duplicate explanation is stale, shrink it to a practical consequence and link to the owner instead of refreshing the duplicate.
 

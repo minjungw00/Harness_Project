@@ -1,6 +1,6 @@
 # Agent integration reference
 
-This document owns how agent-facing surfaces are registered, selected as active surface context, and described by capability declarations. It also defines the boundary for carrying owner-defined Harness context into an agent surface.
+This document owns how agent-facing surfaces are registered, selected for active surface context, and described by capability declarations. It also defines the boundary for carrying owner-defined Harness context into an agent surface.
 
 It does not define API schemas, method behavior, storage effects, security guarantee meanings, projection authority, or rendered template wording.
 
@@ -139,7 +139,7 @@ Owner links:
 
 ## Fallback boundary
 
-Fallback display applies when the active surface or a required integration capability is unavailable, mismatched, stale, or insufficient.
+Fallback display applies when the active surface or a required integration capability is unavailable, mismatched, stale, or insufficient for the requested operation.
 
 Agent may:
 - move to a capable surface

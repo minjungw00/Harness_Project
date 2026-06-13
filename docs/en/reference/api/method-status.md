@@ -20,7 +20,7 @@ This document does not own:
 
 ## Purpose
 
-Return a read-only current-position view over Core state: active Task summary, blockers, pending user judgments, Write Authorization summary, evidence summary, close state, close-readiness findings, guarantee display, and next safe actions.
+`harness.status` returns a read-only current-position view over Core state: active Task summary, blockers, pending user judgments, Write Authorization summary, evidence summary, close state, close-readiness findings, guarantee display, and next safe actions.
 
 ## Required inputs
 
@@ -79,7 +79,7 @@ Returns `ToolRejectedResponse` only when the read cannot be safely served, such 
 - local access mismatch
 - insufficient capability for the requested protected detail
 - missing active Task for a Task-scoped read
-- stale or unavailable projection when such a view was requested
+- stale or unavailable projection when a projection-backed view was requested
 
 Public error code meaning and precedence are owned by [API Errors](errors.md).
 

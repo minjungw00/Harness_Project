@@ -25,7 +25,7 @@ This document does not own:
 
 ## Boundary
 
-Only values listed here as active are active API values.
+Only values listed as active in this document are active API values.
 
 Conditions:
 - Profile-gated values must name the profile or capability gate at the point of use.

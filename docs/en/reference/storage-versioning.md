@@ -158,7 +158,7 @@ Owner links:
 
 - Blocked-result storage effects belong to [Storage Effects](storage-effects.md#committed-blocked-result) and the affected method owner.
 
-The baseline first schema should omit `tasks.state_version`.
+The first baseline schema should omit `tasks.state_version`.
 
 If an implementation encounters a legacy or prototype `tasks.state_version` column, that value is ignored metadata only.
 
@@ -385,7 +385,7 @@ Owner links:
 - Public conflict behavior belongs to [API Errors](api/errors.md#state-conflict-behavior).
 - Branch storage effects belong to [Storage Effects](storage-effects.md).
 
-Non-claim: `request_hash` must not be added to a second uniqueness key that would allow the same idempotency key to fork into multiple committed responses.
+`request_hash` must not be added to a second uniqueness key that would allow the same idempotency key to fork into multiple committed responses.
 
 ## Lock policy
 

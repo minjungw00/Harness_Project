@@ -20,7 +20,7 @@ This document does not own:
 
 ## Purpose
 
-Start, resume, supersede, or reject an ordinary user work loop.
+`harness.intake` starts, resumes, supersedes, or rejects an ordinary user work loop.
 
 The method resolves the requested mode to a concrete Task state:
 
@@ -31,7 +31,7 @@ The method resolves the requested mode to a concrete Task state:
 Scope boundary:
 
 - `harness.intake` may create the first scope candidate for write-capable work.
-- Later scope changes belong to `harness.update_scope`.
+- Subsequent scope changes belong to `harness.update_scope`.
 
 ## Required inputs
 

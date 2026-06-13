@@ -1,6 +1,6 @@
 # Start
 
-## What Harness Is
+## What Harness is
 
 Harness is a local authority record for AI-assisted product work. It keeps the fragile basis of a task out of chat-only memory: scope, user-owned judgment, evidence, verification expectations, acceptance, close readiness, and residual risk.
 
@@ -15,13 +15,13 @@ Before you say it is done, show the evidence and residual risk.
 
 The agent can answer in the same ordinary language. When a request hides product, technical, inspection, acceptance, or risk choices, Harness makes those choices visible instead of letting the agent decide them silently.
 
-## What Harness Is Not
+## What Harness is not
 
 Harness is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Harness Runtime Home`.
 
-Harness records authority boundaries. It does not turn a polished summary, readable view, status card, or chat answer into the authority record. It also should not claim stronger enforcement than the active scope and security owners support. For exact security wording, use [Security](reference/security.md).
+Harness records authority boundaries. It does not turn a polished summary, readable view, status card, or chat answer into the authority record. Harness documentation and connected surfaces must not claim stronger enforcement than the active scope and security owners support. For exact security wording, use [Security](reference/security.md).
 
-## The Problem It Solves
+## The problem Harness solves
 
 AI-assisted work can move faster than the record around it:
 
@@ -32,7 +32,7 @@ AI-assisted work can move faster than the record around it:
 
 Harness exists to make those substitutions visible and invalid as authority.
 
-It helps a later reader see:
+Harness helps a reviewer see:
 
 - what was in scope
 - what the user decided
@@ -41,7 +41,7 @@ It helps a later reader see:
 - what still needs human judgment
 - whether the work can honestly close
 
-## One Ordinary Task
+## One ordinary task
 
 A user might ask:
 
@@ -70,7 +70,7 @@ Inspect and return a narrow plan. No product writes yet.
 
 The user did not need to say an internal mode name. The agent clarified because the request touches product behavior, security expectations, checks, and user-owned judgment.
 
-## What The User Owns
+## What the user owns
 
 The user owns goals, meaningful scope changes, product behavior, material technical direction, user-visible inspection expectations, final acceptance, residual-risk acceptance, and scoped permission for named sensitive actions.
 
@@ -78,15 +78,15 @@ The agent may compare options, inspect source, run checks, name evidence gaps, a
 
 Broad phrases such as "go ahead" or "looks good" apply only to the specific pending choice they reasonably answer. They do not automatically grant sensitive-action permission, accept the finished result, accept known residual risk, or settle another out-of-scope judgment candidate.
 
-## What The Agent Does
+## What the agent does
 
 The agent can clarify requirements, name non-goals, propose the next safe work slice, inspect relevant sources, show options with uncertainty, implement inside agreed scope, run focused checks, and report evidence.
 
-When the work shape changes, the agent should say so. A typo fix can stay light. A bug fix can start with inspection and a narrow repair. A broad feature request should expose the goal, non-goals, success criteria, unknowns, user-owned judgments, evidence plan, and close blockers.
+When the work boundary changes, the agent should say so. A typo fix can stay light. A bug fix can start with inspection and a narrow repair. A broad feature request should expose the goal, non-goals, success criteria, unknowns, user-owned judgments, evidence plan, and close blockers.
 
 When the agent cannot honestly proceed without a user-owned judgment, it should ask a specific question rather than treating silence or momentum as permission.
 
-## What Evidence Means
+## What evidence means
 
 Evidence supports a claim. It can be a diff, test output, screenshot, log, source citation, review note, or artifact reference. Evidence should say what it supports and what it does not support.
 
@@ -94,19 +94,19 @@ Evidence shows what the work did, but it does not replace final acceptance. A te
 
 If evidence is missing, stale, weak, or limited to the agent's own check, Harness should keep that visible instead of rounding it into "done."
 
-## What Close Readiness Means
+## What close readiness means
 
 Close readiness answers a simple question: can the task honestly finish now, and what still blocks it?
 
 If something is missing, the close path should name the smallest unblocker. Exact close-readiness meaning belongs to [Core Model](reference/core-model.md); method behavior belongs to [Close-task Method](reference/api/method-close-task.md); error routing belongs to [API Errors](reference/api/errors.md).
 
-## Baseline Scope
+## Baseline scope
 
-The baseline scope is intentionally narrow. Use [Scope](reference/scope.md) for the current active, profile-gated, and out-of-scope boundaries.
+The baseline scope is intentionally narrow. Use [Scope](reference/scope.md) for active, profile-gated, and out-of-scope boundaries.
 
-Out-of-scope capabilities are not active requirements until the scope owner and affected owners promote them. If a detail is not in current scope, treat it as deferred even when it appears in an example or reserved-value note.
+Out-of-scope capabilities are not active requirements until the scope owner and affected owners promote them. If a detail is not in active scope, treat it as deferred even when it appears in an example or reserved-value note.
 
-## Where To Go Next
+## Where to go next
 
 | Reader | Path |
 |---|---|

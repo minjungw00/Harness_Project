@@ -2,9 +2,9 @@
 
 ## 1. Owns / Does not own
 
-This Reference page owns the baseline design-quality routing boundary.
+This reference owns the baseline design-quality routing boundary.
 
-Role: design-quality observations route to judgment, evidence, or scope owners when they identify:
+Design-quality observations route to judgment, evidence, or scope owners when they identify:
 
 - product decisions
 - technical decisions

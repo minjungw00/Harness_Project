@@ -1,8 +1,8 @@
 # Translation guide
 
-Use this guide when editing paired English and Korean Harness documentation. This is a documentation-maintenance standard only. It is not a runtime conformance record, implementation record, QA result, acceptance record, close record, or generated Harness artifact.
+Use this guide when editing paired English and Korean Harness documentation. This guide is only a documentation-maintenance standard. It is not a runtime conformance record, implementation record, QA result, acceptance record, close record, or generated Harness artifact.
 
-The canonical terminology map exists at [docs/terminology-map.yaml](../../terminology-map.yaml). Check it before adding or changing product terms, Korean prose terms, identifier explanations, or mixed-language bans. If this guide and the terminology map disagree, stop and align them in the same documentation batch.
+The canonical terminology map is [`docs/terminology-map.yaml`](../../terminology-map.yaml). Check it before adding or changing product terms, Korean prose terms, identifier explanations, or mixed-language bans. If this guide and the terminology map disagree, stop and align them in the same documentation batch.
 
 ## 1. Semantic parity
 
@@ -59,13 +59,13 @@ Preserve these exactly:
 
 Do not translate exact strings inside code blocks, schema examples, API examples, file paths, field lists, or literal-value tables. Localized Korean display labels are reader-facing text; they do not replace canonical identifiers.
 
-Good distinction:
+Use this distinction:
 
 - Identifier: `ArtifactRef`
 - Korean explanation: 아티팩트 참조 스키마
 - Prose term: 아티팩트
 
-Some English words can be both code values and ordinary adjectives. Determine the context before preserving the word. Preserve `complete` in backticks only when it is an identifier, such as `intent=complete`; when it means full or entire, English prose should prefer "full" or "entire" and Korean prose should use natural phrases such as 전체, 전체 평가, or 전체 평가 순서.
+Some English words can be both code values and ordinary adjectives. Determine the context before preserving the word. Preserve `complete` in backticks only when it is an identifier, such as `intent=complete`. When the English means full or entire, English prose should prefer "full" or "entire" and Korean prose should use natural phrases such as 전체, 전체 평가, or 전체 평가 순서.
 
 ## 4. Product concept terminology
 

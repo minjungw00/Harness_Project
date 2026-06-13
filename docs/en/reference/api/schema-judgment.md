@@ -30,16 +30,9 @@ Judgment schemas preserve the structure of a user-owned choice. They do not let 
 
 `UserJudgmentCandidate` is not a pending judgment.
 
-Condition: a pending `UserJudgment` exists only after `harness.request_user_judgment` commits.
+A pending `UserJudgment` exists only after `harness.request_user_judgment` commits. A recorded answer resolves only the specific pending judgment and its `judgment_kind`.
 
-Effect: a recorded answer resolves only the specific pending judgment and its `judgment_kind`.
-
-Non-claims:
-- It does not silently update active scope.
-- It does not create evidence.
-- It does not create Write Authorization.
-- It does not accept residual risk.
-- It does not close a Task.
+A recorded answer does not silently update active scope, create evidence, create Write Authorization, accept residual risk, or close a Task.
 
 ## `UserJudgment`
 

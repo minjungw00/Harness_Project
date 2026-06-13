@@ -29,10 +29,7 @@ Check one proposed product-file write against:
 - required separate sensitive-action approval
 - verified local surface capability
 
-Results:
-
-- When the check is allowed, it creates a consumable single-use Write Authorization.
-- When the check is not allowed, it denies or defers that Write Authorization path.
+When the check is allowed, the method creates a consumable single-use Write Authorization. When the check is not allowed, the method denies or defers that Write Authorization path.
 
 Security non-claims belong to [Security](../security.md).
 

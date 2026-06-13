@@ -6,7 +6,7 @@ The examples are illustrative. They are not an exhaustive policy, a schema refer
 
 Each example separates the user's decision from what the agent may do and what the agent must not imply.
 
-## Product Choice
+## Product choice
 
 Scenario:
 
@@ -15,12 +15,12 @@ Scenario:
 User decides:
 
 - Whether the feedback should be inline text, a toast, or a modal.
-- Whether that behavior fits the product tone, flow, accessibility expectation, and user-facing trade-off.
+- Whether the save-feedback behavior fits the product tone, flow, accessibility expectation, and user-facing trade-off.
 
 Agent may do:
 
 - Inspect existing UI patterns.
-- Recommend the option that best fits the current product behavior.
+- Recommend the option that best fits the inspected product behavior.
 - Explain consequences, such as a modal interrupting flow or a toast leaving the form unobstructed.
 
 Agent must not imply:
@@ -33,7 +33,7 @@ Owner links:
 - [Core Model](../reference/core-model.md)
 - [API Judgment Schemas](../reference/api/schema-judgment.md)
 
-## Technical Direction
+## Technical direction
 
 Scenario:
 
@@ -46,25 +46,25 @@ User decides:
 
 Agent may do:
 
-- Inspect the current design.
+- Inspect the existing design.
 - Narrow options to a bounded recommendation with trade-offs.
 - Continue read-only investigation while the direction is unresolved.
 
 Agent must not imply:
 
 - A strong recommendation is the same thing as user-owned technical judgment.
-- A technical choice approves dependency installation, product-file writes, or future migration work by itself.
+- A technical choice approves dependency installation, product-file writes, or migration work by itself.
 
 Owner links:
 
 - [Core Model](../reference/core-model.md)
 - [Agent Guide](agent-guide.md)
 
-## Scope Change
+## Scope change
 
 Scenario:
 
-- The accepted task is limited to `src/auth`, but the agent finds a helper path outside that boundary.
+- The accepted task is limited to `src/auth`, but the agent finds a helper path outside the accepted boundary.
 
 User decides:
 
@@ -74,7 +74,7 @@ User decides:
 Agent may do:
 
 - Name the exact path or behavior that appears necessary.
-- Explain why the current boundary blocks the next safe action.
+- Explain why the accepted boundary blocks the next safe action.
 - Continue inspection inside accepted scope while writes outside scope remain blocked.
 
 Agent must not imply:
@@ -87,7 +87,7 @@ Owner links:
 - [Core Model](../reference/core-model.md)
 - [Update-scope Method](../reference/api/method-update-scope.md)
 
-## Sensitive Action
+## Sensitive action
 
 Scenario:
 
@@ -95,7 +95,7 @@ Scenario:
 
 User decides:
 
-- Whether to permit that named sensitive action.
+- Whether to permit the named sensitive action.
 - The command or tool, intended paths, host, dependency or target, secret handle if any, and time window.
 
 Agent may do:
@@ -107,18 +107,18 @@ Agent may do:
 Agent must not imply:
 
 - Sensitive approval is product-file write authorization, final acceptance, residual-risk acceptance, or security authority.
-- A broad "go ahead" approves unrelated installs, future upgrades, deploys, secret printing, or product decisions.
+- A broad "go ahead" approves unrelated installs, upgrades, deploys, secret printing, or product decisions.
 
 Owner links:
 
 - [Core Model](../reference/core-model.md)
 - [Security](../reference/security.md)
 
-## Evidence Gap
+## Evidence gap
 
 Scenario:
 
-- Tests pass, but the claim also depends on user-visible behavior that was not inspected.
+- Tests pass, but the claim also depends on user-visible behavior that the agent did not inspect.
 
 User decides:
 
@@ -142,7 +142,7 @@ Owner links:
 - [API State Schemas](../reference/api/schema-state.md)
 - [Artifact Storage](../reference/storage-artifacts.md)
 
-## Final Acceptance
+## Final acceptance
 
 Scenario:
 
@@ -168,15 +168,15 @@ Owner links:
 - [Core Model](../reference/core-model.md)
 - [API Judgment Schemas](../reference/api/schema-judgment.md)
 
-## Residual Risk
+## Residual risk
 
 Scenario:
 
-- Password reset remains out of scope for a login slice, and that remaining risk is visible.
+- Password reset remains out of scope for a login slice, and the remaining risk is visible.
 
 User decides:
 
-- Whether to accept that named residual risk.
+- Whether to accept the named residual risk.
 - Whether to reject the risk, add work to remove it, or narrow the close claim.
 
 Agent may do:
@@ -194,7 +194,7 @@ Owner links:
 - [Core Model](../reference/core-model.md)
 - [API Judgment Schemas](../reference/api/schema-judgment.md)
 
-## Close Readiness
+## Close readiness
 
 Scenario:
 
@@ -220,7 +220,7 @@ Owner links:
 - [Close-task Method](../reference/api/method-close-task.md)
 - [API Errors](../reference/api/errors.md)
 
-## Ordinary Implementation Detail
+## Ordinary implementation detail
 
 Scenario:
 
@@ -246,6 +246,6 @@ Owner links:
 - [Agent Guide](agent-guide.md)
 - [Core Model](../reference/core-model.md)
 
-## Where To Go Next
+## Where to go next
 
 Use [Agent Guide](agent-guide.md) for operating patterns and [Scope](../reference/scope.md) when an example raises an active, profile-gated, or out-of-scope question. Use [Reference Index](../reference/README.md) for exact owner routing.

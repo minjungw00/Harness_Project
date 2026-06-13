@@ -30,7 +30,7 @@ Update active Task and Change Unit fields after intake:
 - baseline reference
 - active Change Unit
 
-Result: this is the active path that turns shaping into a first safe Change Unit when user-owned blockers have been handled.
+This method is the active path that turns shaping into a first safe Change Unit when user-owned blockers have been handled.
 
 ## Required inputs
 

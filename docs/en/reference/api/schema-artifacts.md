@@ -24,7 +24,7 @@ This document does not own:
 
 ## Boundary
 
-Artifact schemas never make a caller-supplied path authoritative.
+Artifact schemas do not make a caller-supplied path authoritative.
 
 This document describes the request and response shapes used by artifact owner paths.
 

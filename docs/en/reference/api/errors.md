@@ -1,6 +1,6 @@
 # API errors
 
-This document defines public API error contracts for Harness API responses. It does not define rendered labels, message copy, templates, storage rows, or runtime output.
+This document owns public API error contracts for Harness API responses. It does not define rendered labels, message copy, templates, storage rows, or runtime output.
 
 ## Owns / Does not own
 

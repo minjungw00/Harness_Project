@@ -72,7 +72,7 @@ Owner relation:
 - Exact request fields, response branches, storage effects, error precedence, guarantee levels, and close-readiness details remain in their canonical owner documents.
 
 Conflict rule:
-- If a scenario summary and a canonical owner disagree, the canonical owner wins and this page must be corrected.
+- If a scenario summary and a canonical owner disagree, the canonical owner wins. Correct this page rather than implementing the conflicting summary.
 
 Not allowed:
 - Do not treat scenario prose, summaries, rendered views, metrics, or maintenance-check labels as authority for facts the owner documents do not define.
