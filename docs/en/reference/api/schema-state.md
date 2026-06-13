@@ -1,40 +1,23 @@
 # API state schemas
 
-Meaning:
-- This document owns API state-shaped schemas for the baseline scope.
+This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ShapingReadiness`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `EvidenceSummary`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
 
-Not implied:
-- It does not create runtime state, generated projections, storage rows, or state effects.
+## Owner boundary
 
-## Owns / Does not own
+This document owns state-shaped API fields, nesting, references, summaries, snapshots, display shapes, and the boundary between state-shaped data and response effects. Neighboring contracts remain with these owners:
 
-This document owns:
-
-- `StateSummary`
-- `StateRecordRef`
-- task lifecycle state as API data shape
-- state-related snapshot and reference structures
-- `ShapingReadiness`
-- current-position display schemas such as `NextActionSummary`, `WriteAuthoritySummary`, `EvidenceSummary`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`
-- the boundary between state-shaped data and response effects
-
-This document does not own:
-
-- common envelopes or response branches; see [API Schema Core](schema-core.md)
-- supported enum-like values; see [API Value Sets](schema-value-sets.md)
-- method behavior; see the [API Methods](methods.md) and method owner documents
-- public error semantics; see [API error codes](error-codes.md) and [API error routing](error-routing.md)
-- Core lifecycle and close-readiness product meaning; see [Core Model](../core-model.md)
-- storage records or persistence effects; see [Storage Records](../storage-records.md) and [Storage Effects](../storage-effects.md)
+| Neighboring contract | Owner |
+|---|---|
+| Common envelopes and response branches | [API Schema Core](schema-core.md) |
+| Supported enum-like values | [API Value Sets](schema-value-sets.md) |
+| Method behavior | [API Methods](methods.md) and method owner documents |
+| Public error semantics | [API error codes](error-codes.md) and [API error routing](error-routing.md) |
+| Core lifecycle and close-readiness product meaning | [Core Model](../core-model.md) |
+| Storage records and persistence effects | [Storage Records](../storage-records.md) and [Storage Effects](../storage-effects.md) |
 
 ## Boundary
 
-Meaning:
-- State schemas describe API data shapes.
-
-Not implied:
-- A state-shaped field does not by itself create persistence.
-- A state-shaped field does not by itself create a Core transition, replay rows, `task_events`, artifact effects, Write Authorization effects, or a `state_version` increment.
+State schemas describe API data shapes only. A state-shaped field does not choose a response branch or create persistence, Core transitions, replay rows, `task_events`, artifact effects, Write Authorization effects, or a `state_version` increment.
 
 Owner links:
 - Response branch selection: [Common response branches](schema-core.md#common-response)
@@ -45,8 +28,7 @@ Owner links:
 Meaning:
 - `StateRecordRef` is the common public reference shape for Core-owned records that appear in API responses.
 
-Not implied:
-- It is not an embedded storage row.
+It is a public reference, not an embedded storage row.
 
 ```yaml
 StateRecordRef:
@@ -92,8 +74,7 @@ StateSummary:
 Meaning:
 - `StateSummary` may summarize stored Core state, computed read-only status, and close-readiness observations.
 
-Not implied:
-- It does not decide whether a method committed.
+Response branches decide whether a method committed.
 
 Owner links:
 - Commit decision branch: [Common response branches](schema-core.md#common-response)
@@ -143,9 +124,7 @@ ShapingGap:
 
 Meaning:
 - Missing readiness can route to a blocker, a pending or candidate user judgment, or an update-scope next action.
-
-Not implied:
-- It does not create separate baseline planning records or generated planning artifacts.
+- Durable effects stay with the method and storage owners.
 
 ## Current-position display shapes
 
@@ -181,8 +160,7 @@ WriteDecisionReason:
 Meaning:
 - `WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`.
 
-Not implied:
-- It is not a close-readiness blocker.
+It is distinct from `CloseReadinessBlocker`.
 
 Owner links:
 - Supported categories and reason values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
@@ -255,9 +233,7 @@ GuaranteeDisplay:
 Meaning:
 - `CloseReadinessBlocker` is a data shape for close-readiness findings.
 
-Not implied:
-- It is not the whole close-readiness concept.
-- It does not itself imply persistence.
+Close-readiness meaning and persistence behavior stay with the method, Core model, and storage owners linked below.
 
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)

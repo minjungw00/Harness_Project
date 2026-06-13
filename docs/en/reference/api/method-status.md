@@ -36,7 +36,7 @@ Requires:
 - same-project active local surface
 - `VerifiedSurfaceContext.access_class=read_status`
 
-Non-claim: a stale projection, chat summary, generated Markdown file, or cached text is not state authority.
+For this response, state authority comes from the Core-owned state summarized in `StatusResult`.
 
 ## State version behavior
 

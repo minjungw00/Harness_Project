@@ -27,11 +27,8 @@ This document does not own:
 
 Only values listed as supported in this document are supported API values.
 
-Conditions:
 - Profile-gated values must name the profile or capability gate at the point of use.
 - Values outside the supported lists are not baseline API values unless [Scope](../scope.md) and the affected semantic owner define the supported behavior.
-
-Not implied:
 - Naming a value outside a supported list does not widen baseline scope.
 - Rendered labels are display text. They do not replace the canonical values listed in this document.
 
@@ -311,7 +308,7 @@ Value meanings:
 
 The selected source value determines which `ArtifactInput` source field applies. The exact shape invariant is owned by [API Artifact Schemas](schema-artifacts.md#artifactinput).
 
-Values outside this list are not supported source values and do not authorize artifact capture, caller-supplied paths, logs, or local file reads.
+Values outside this list are not supported source values. New source behavior needs a supported value here and an affected semantic owner.
 
 `redaction_state` uses:
 

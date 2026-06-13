@@ -211,7 +211,7 @@
 
 ## 예시 정합성
 
-현재 `UserJudgment` 스키마에서 사용자에게 보이는 판단 프롬프트는 `question` 필드입니다. 계정 데이터 내보내기 확인 문구에 대한 사용자 판단은 이 프롬프트와 `context.summary`에 담습니다. 이 예시는 아티팩트를 근거로 들지 않으므로 `context.artifact_refs: []`는 의도한 값입니다.
+지원되는 `UserJudgment` 스키마에서 사용자에게 보이는 판단 프롬프트는 `question` 필드입니다. 계정 데이터 내보내기 확인 문구에 대한 사용자 판단은 이 프롬프트와 `context.summary`에 담습니다. 이 예시는 아티팩트를 근거로 들지 않으므로 `context.artifact_refs: []`는 의도한 값입니다.
 
 요청과 응답 예시는 같은 `options` 선택지 값과 같은 `Task`를 가리키는 `affected_refs`를 유지합니다. `record_user_judgment` 예시는 `accept`를 선택하고 `decision: accepted`를 기록하며, 근거는 충분함 선택지와 같은 의미입니다. 시간 필드는 `null` 또는 플레이스홀더 값을 사용합니다.
 

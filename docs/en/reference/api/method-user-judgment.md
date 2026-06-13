@@ -197,7 +197,7 @@ On commit, the method may persist judgment resolution and dependent blocker or s
 
 ## Example consistency
 
-The example's judgment prompt is the `question` field in the current `UserJudgment` schema. The account data export confirmation copy is represented through that prompt and `context.summary`; `context.artifact_refs: []` is intentional because the example does not cite an artifact.
+The example's judgment prompt is the `question` field in the supported `UserJudgment` schema. The account data export confirmation copy is represented through that prompt and `context.summary`; `context.artifact_refs: []` is intentional because the example does not cite an artifact.
 
 The request and response examples keep the same `options` values and the same affected Task in `affected_refs`. The `record_user_judgment` example selects `accept`, records `decision: accepted`, and gives a rationale that matches the sufficient-copy option. Timestamp fields use `null` or placeholder values.
 

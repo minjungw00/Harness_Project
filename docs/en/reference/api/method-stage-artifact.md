@@ -22,7 +22,7 @@ This document does not own:
 
 Stage caller-provided safe artifact bytes or a safe notice into a transient `StagedArtifactHandle` for the same project and Task.
 
-Staging is input preparation only. It does not create canonical evidence, a persistent `ArtifactRef`, gate satisfaction, final acceptance, residual-risk acceptance, or close readiness.
+Staging is input preparation only. Evidence, persistent artifact links, acceptance, residual-risk, and close-readiness effects are owned by the relevant method and storage owner paths.
 
 ## Required inputs
 
@@ -59,7 +59,7 @@ Returns `StageArtifactResult` with:
 - transient `staged_artifact_handle`
 - `expires_at`
 
-Non-claim: the result does not contain a persistent `ArtifactRef`.
+The result contains a transient handle, not a persistent `ArtifactRef`.
 
 ## Blocked result
 
@@ -97,7 +97,7 @@ On success, the method creates a transient staging result only. Exact storage ef
 
 Artifact data example:
 
-The staged artifact is stable product test output. `harness.record_run` may consume the transient handle when recording evidence, but staging alone does not create canonical evidence.
+The staged artifact is stable product test output. `harness.record_run` may consume the transient handle when recording evidence; evidence creation is owned by `harness.record_run` and artifact promotion by [Artifact Storage](../storage-artifacts.md).
 
 ```yaml
 artifact:

@@ -83,14 +83,9 @@ The method may return a committed `IntakeResult` that records shaping or blocker
 
 Blocking questions must be represented through:
 
-- Task
-- Change Unit
-- user judgment
-- evidence
-- blocker
-- next-action fields
-
-Non-claim: blocking questions are not represented through separate planning artifacts.
+- Task or Change Unit state
+- user judgment, evidence, blocker, or next-action fields
+- the schema owners linked below for nested field shapes
 
 ## Rejected result
 
