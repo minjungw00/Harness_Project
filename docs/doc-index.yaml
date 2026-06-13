@@ -669,18 +669,19 @@ documents:
     path_ko: "docs/ko/reference/api/error-routing.md"
     role: "reference"
     owner_for:
-      - "rejected response error routing"
-      - "blocked result error routing"
-      - "dry-run error preview routing"
       - "API response branch routing"
+      - "rejected response branch routing"
+      - "blocked result response branch routing"
+      - "`dry_run` preview response branch routing"
     not_owner_for:
       - "public error code meanings"
       - "primary error precedence"
       - "machine-readable error details"
       - "close-readiness meaning"
       - "close-readiness blocker routing"
+      - "close-readiness blocker categories"
       - "close_task blocker mapping"
-      - "forbidden public error as blocker rules"
+      - "forbidden public error as blocker mapping"
     normative_level: "contract"
     audience:
       - "API implementers"
@@ -693,14 +694,17 @@ documents:
     role: "reference"
     owner_for:
       - "close-readiness blocker routing"
+      - "close-readiness blocker category routing"
       - "API error versus close-readiness blocker boundary"
       - "close_task blocker mapping"
-      - "forbidden public error as blocker rules"
+      - "forbidden public error as blocker mapping"
     not_owner_for:
       - "Core close-readiness meaning"
       - "CloseReadinessBlocker schema shape"
       - "close_task method behavior"
       - "API response branch routing"
+      - "blocked result response branch routing"
+      - "`dry_run` preview response branch routing"
       - "display wording"
     normative_level: "contract"
     audience:

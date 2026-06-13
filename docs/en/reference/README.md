@@ -25,7 +25,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | Artifact reference shapes | [`api/schema-artifacts.md`](api/schema-artifacts.md) |
 | User judgment and sensitive-action schemas | [`api/schema-judgment.md`](api/schema-judgment.md) |
 | API value sets | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
-| API error family route | [`api/errors.md`](api/errors.md) |
+| API error family index | [`api/errors.md`](api/errors.md) |
 | Public `ErrorCode` identifiers and meanings | [`api/error-codes.md`](api/error-codes.md) |
 | API error precedence and state conflict behavior | [`api/error-precedence.md`](api/error-precedence.md) |
 | API response branch routing | [`api/error-routing.md`](api/error-routing.md) |

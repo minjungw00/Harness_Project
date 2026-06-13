@@ -13,7 +13,7 @@ Check:
 - Validate changed relative links, file paths, anchors, route tables, and paired-language links.
 - Confirm maintained navigation uses the compact maintained routes from the authoring owner.
 - Confirm contract links point to the canonical owner, not to a convenient duplicate.
-- For API error links, use [API errors](../../reference/api/errors.md) as the family index only; route public code meanings, precedence, response branch routing, close-readiness blocker routing, and machine-readable details to their focused API owners.
+- For API error links, use [API errors](../../reference/api/errors.md) as the family index only; route public code meanings, precedence, response branch routing, close-readiness blocker routing and mappings, and machine-readable details to their focused API owners.
 
 Failure:
 - A link targets a missing file, missing anchor, stale route family, wrong-language owner, or deleted compatibility path.
@@ -128,7 +128,7 @@ Fix:
 ## CHK-LINK-007: API error owner routing
 
 Owner:
-- [API errors](../../reference/api/errors.md)
+- [API errors family index](../../reference/api/errors.md)
 - [API error codes](../../reference/api/error-codes.md)
 - [API error precedence](../../reference/api/error-precedence.md)
 - [API error routing](../../reference/api/error-routing.md)
@@ -140,9 +140,9 @@ Check:
 - Use [API errors](../../reference/api/errors.md) as the family index only.
 - Route public `ErrorCode` meanings to [API error codes](../../reference/api/error-codes.md).
 - Route precedence, conflict selection, and stale-state ordering to [API error precedence](../../reference/api/error-precedence.md).
-- Route rejected-response, blocked-result, and `dry_run` branch placement to [API error routing](../../reference/api/error-routing.md).
-- Route close-readiness blocker placement to [API blocker routing](../../reference/api/blocker-routing.md).
-- Route machine-readable `ToolError.details` fields and detail-value meanings to [API error details](../../reference/api/error-details.md).
+- Route rejected-response, blocked-result, and `dry_run` response branch routing to [API error routing](../../reference/api/error-routing.md).
+- Route close-readiness blocker routing, `harness.close_task` blocker mapping, and forbidden public-error-as-blocker mapping to [API blocker routing](../../reference/api/blocker-routing.md).
+- Route machine-readable `ToolError.details` fields, helper values, and detail-value meanings to [API error details](../../reference/api/error-details.md).
 
 Failure:
 - A document sends all API error questions to the family index or to one broad error page.

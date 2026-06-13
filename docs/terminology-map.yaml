@@ -479,15 +479,13 @@ terms:
     owner_documents:
       en:
         - "docs/en/reference/core-model.md"
-        - "docs/en/reference/api/methods.md"
-        - "docs/en/reference/api/errors.md"
       ko:
         - "docs/ko/reference/core-model.md"
-        - "docs/ko/reference/api/methods.md"
-        - "docs/ko/reference/api/errors.md"
     notes:
       - "`close readiness` is the evaluation concept, not the blocker schema."
       - "Use 닫기 준비 상태 in reference-facing Korean and 닫기 가능 여부 in user-facing Korean."
+      - "Close-task method behavior belongs to `api/method-close-task.md`."
+      - "Close-readiness blocker routing belongs to `api/blocker-routing.md`."
       - "Korean terminology control routes through this map, the glossary, and the translation guide."
   close_readiness_evaluation:
     category: "product_concept"
@@ -503,15 +501,13 @@ terms:
       - "닫기 가능성 평가"
     owner_documents:
       en:
-        - "docs/en/reference/core-model.md"
-        - "docs/en/reference/api/methods.md"
-        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/api/method-close-task.md"
       ko:
-        - "docs/ko/reference/core-model.md"
-        - "docs/ko/reference/api/methods.md"
-        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/api/method-close-task.md"
     notes:
       - "Do not translate this as 가능성 평가."
+      - "The close-readiness authority concept belongs to `reference/core-model.md`."
+      - "Close-readiness blocker routing belongs to `api/blocker-routing.md`."
   complete_intent:
     category: "identifier"
     en: "complete"
@@ -585,11 +581,11 @@ terms:
       en:
         - "docs/en/reference/core-model.md"
         - "docs/en/reference/api/schema-state.md"
-        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/api/blocker-routing.md"
       ko:
         - "docs/ko/reference/core-model.md"
         - "docs/ko/reference/api/schema-state.md"
-        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/api/blocker-routing.md"
     notes:
       - "Use this for a reason that prevents honest close readiness."
   close_readiness_blocker:
@@ -603,11 +599,11 @@ terms:
       en:
         - "docs/en/reference/api/schema-state.md"
         - "docs/en/reference/api/schema-value-sets.md"
-        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/api/blocker-routing.md"
       ko:
         - "docs/ko/reference/api/schema-state.md"
         - "docs/ko/reference/api/schema-value-sets.md"
-        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/api/blocker-routing.md"
     notes:
       - "Never translate the identifier itself."
       - "Do not use it as a prepare-write reason or as the entire close-readiness concept."
@@ -931,6 +927,112 @@ terms:
         - "docs/ko/reference/agent-integration.md"
     notes:
       - "Use only when the documented observable scope and capability check support it."
+  error_code:
+    category: "api_concept"
+    en: "ErrorCode"
+    preserve_identifier: true
+    ko_reference: "`ErrorCode`"
+    ko_user: "공개 오류 코드"
+    ko_explanation: "공개 오류 코드 식별자"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/error-codes.md"
+      ko:
+        - "docs/ko/reference/api/error-codes.md"
+    notes:
+      - "Public `ErrorCode` identifiers and error code meanings belong to `api/error-codes.md`."
+      - "Public `ErrorCode` values are not close-readiness blocker codes by default."
+  error_precedence:
+    category: "api_concept"
+    en: "error precedence"
+    ko_reference: "오류 우선순위"
+    ko_user: "오류 우선순위"
+    preserve_as_identifier:
+      - "STATE_VERSION_CONFLICT"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/error-precedence.md"
+      ko:
+        - "docs/ko/reference/api/error-precedence.md"
+    notes:
+      - "Primary public-error selection, conflict selection, and stale-state ordering belong to `api/error-precedence.md`."
+  api_response_branch_routing:
+    category: "api_concept"
+    en: "API response branch routing"
+    ko_reference: "API 응답 분기 경로"
+    ko_user: "API 응답 분기 경로"
+    preserve_as_identifier:
+      - "ToolRejectedResponse"
+      - "ToolDryRunResponse"
+      - "CloseTaskResult(close_state=blocked)"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/error-routing.md"
+      ko:
+        - "docs/ko/reference/api/error-routing.md"
+    notes:
+      - "Rejected-response, blocked-result, and `dry_run` preview response branch routing belongs to `api/error-routing.md`."
+      - "Close-readiness blocker categories and blocker mappings belong to `api/blocker-routing.md`."
+  tool_error_details:
+    category: "api_concept"
+    en: "ToolError.details"
+    preserve_identifier: true
+    ko_reference: "`ToolError.details`"
+    ko_user: "오류 세부사항"
+    ko_explanation: "기계 판독용 오류 세부사항"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/error-details.md"
+      ko:
+        - "docs/ko/reference/api/error-details.md"
+    notes:
+      - "`ToolError.details` fields, nested keys, and machine-readable detail constraints belong to `api/error-details.md`."
+  error_detail_helper_values:
+    category: "api_concept"
+    en: "error detail helper values"
+    ko_reference: "오류 세부사항 보조 값"
+    ko_user: "오류 세부사항 보조 값"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/error-details.md"
+      ko:
+        - "docs/ko/reference/api/error-details.md"
+    notes:
+      - "Detail helper values under `ToolError.details` belong to `api/error-details.md`."
+      - "Detail helper values are not top-level public `ErrorCode` values."
+  close_readiness_blocker_routing:
+    category: "api_concept"
+    en: "close-readiness blocker routing"
+    ko_reference: "닫기 준비 상태 차단 사유 처리 경로"
+    ko_user: "닫기 차단 사유 처리 경로"
+    preserve_as_identifier:
+      - "CloseReadinessBlocker"
+      - "CloseReadinessBlocker.category"
+      - "CloseReadinessBlocker.code"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/blocker-routing.md"
+      ko:
+        - "docs/ko/reference/api/blocker-routing.md"
+    notes:
+      - "Close-readiness blocker routing, close-task blocker mapping, and forbidden-public-error-as-blocker mapping belong to `api/blocker-routing.md`."
+      - "`CloseReadinessBlocker` schema shape belongs to `api/schema-state.md`."
+      - "The close-readiness authority concept belongs to `reference/core-model.md`."
+  forbidden_public_error_as_blocker_mapping:
+    category: "api_concept"
+    en: "forbidden public-error-as-blocker mapping"
+    ko_reference: "금지된 공개 오류의 차단 사유 매핑"
+    ko_user: "금지된 공개 오류의 차단 사유 매핑"
+    preserve_as_identifier:
+      - "ErrorCode"
+      - "CloseReadinessBlocker.code"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/blocker-routing.md"
+      ko:
+        - "docs/ko/reference/api/blocker-routing.md"
+    notes:
+      - "Public `ErrorCode` values are not copied into `CloseReadinessBlocker.code` unless the schema or method owner explicitly allows that exact use."
   dry_run:
     category: "api_concept"
     en: "dry-run"
@@ -945,12 +1047,12 @@ terms:
       en:
         - "docs/en/reference/api/schema-core.md"
         - "docs/en/reference/api/methods.md"
-        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/api/error-routing.md"
         - "docs/en/reference/storage-effects.md"
       ko:
         - "docs/ko/reference/api/schema-core.md"
         - "docs/ko/reference/api/methods.md"
-        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/api/error-routing.md"
         - "docs/ko/reference/storage-effects.md"
     notes:
       - "Dry-run preview is not committed state or stored blocker state."
@@ -967,11 +1069,11 @@ terms:
       - "CloseReadinessBlocker"
     owner_documents:
       en:
-        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/api/error-routing.md"
         - "docs/en/reference/api/methods.md"
         - "docs/en/reference/storage-effects.md"
       ko:
-        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/api/error-routing.md"
         - "docs/ko/reference/api/methods.md"
         - "docs/ko/reference/storage-effects.md"
     notes:
@@ -989,11 +1091,11 @@ terms:
     owner_documents:
       en:
         - "docs/en/reference/api/schema-core.md"
-        - "docs/en/reference/api/errors.md"
+        - "docs/en/reference/api/error-routing.md"
         - "docs/en/reference/storage-effects.md"
       ko:
         - "docs/ko/reference/api/schema-core.md"
-        - "docs/ko/reference/api/errors.md"
+        - "docs/ko/reference/api/error-routing.md"
         - "docs/ko/reference/storage-effects.md"
     notes:
       - "Rejected response means the method did not proceed to the committed operation."

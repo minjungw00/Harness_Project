@@ -569,7 +569,7 @@
 담당 문서:
 - [Core 모델](core-model.md)
 - [Task 닫기 메서드](api/method-close-task.md)
-- [API blocker 처리 경로](api/blocker-routing.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 설명:
 - 평가 개념이며 차단 사유 스키마 자체가 아닙니다.
@@ -595,7 +595,7 @@
 담당 문서:
 - [Core 모델](core-model.md)
 - [Task 닫기 메서드](api/method-close-task.md)
-- [API blocker 처리 경로](api/blocker-routing.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 설명:
 - 닫기 준비 상태와 남은 닫기 차단 사유를 도출하는 담당 경로의 확인입니다.
@@ -620,7 +620,7 @@
 담당 문서:
 - [Core 모델](core-model.md)
 - [API 상태 스키마](api/schema-state.md)
-- [API blocker 처리 경로](api/blocker-routing.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 설명:
 - 닫기 차단 사유는 담당 경로에서 처리하기 전까지 정직한 닫기 준비 상태를 막는 이유입니다.
@@ -646,7 +646,7 @@
 담당 문서:
 - [API 상태 스키마](api/schema-state.md)
 - [API 값 집합](api/schema-value-sets.md)
-- [API blocker 처리 경로](api/blocker-routing.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 설명:
 - `CloseReadinessBlocker`는 닫기 준비 상태의 차단 데이터를 나타내는 API 스키마 식별자입니다.

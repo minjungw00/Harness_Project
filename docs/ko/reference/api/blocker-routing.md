@@ -1,6 +1,6 @@
-# API blocker 처리 경로
+# API 차단 사유 처리 경로
 
-이 문서는 닫기 준비 상태의 blocker 처리 경로와 공개 API 오류와 닫기 차단 사유의 경계를 담당합니다.
+이 문서는 닫기 준비 상태 차단 사유 처리 경로와 공개 API 오류와 닫기 차단 사유의 경계를 담당합니다.
 
 Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close_task` 메서드 동작, 표시 문구, 저장 효과, API 응답 분기 경로는 정의하지 않습니다.
 
@@ -8,11 +8,11 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 
 이 문서가 담당합니다.
 
-- 닫기 준비 상태 blocker 처리 범주와 공개 오류 코드 묶음의 관계.
+- 닫기 준비 상태 차단 사유 처리 범주와 공개 오류 코드 묶음의 관계.
 - `ToolRejectedResponse.errors[]` 공개 API 오류와 `CloseReadinessBlocker[]` 닫기 차단 사유 데이터 사이의 경계.
 - 공개 `ErrorCode`를 `CloseReadinessBlocker.code`에 복사하지 않고 공개 오류 코드 묶음을 닫기 차단 사유로 표현하는 조건.
-- 사전 확인 거부, 읽기 전용 닫기 확인, 차단된 닫기 시도, 닫힌 결과, 유효하지 않은 종료 전이에 대한 `harness.close_task` blocker 매핑.
-- 닫기 준비 상태 blocker 처리 경로가 거부 응답, 차단 결과, `dry_run` 미리보기와 연결되는 방식.
+- 사전 확인 거부, 읽기 전용 닫기 확인, 차단된 닫기 시도, 닫힌 결과, 유효하지 않은 종료 전이에 대한 `harness.close_task` 차단 사유 매핑.
+- 닫기 준비 상태 차단 사유 처리 경로가 거부 응답, 차단 결과, `dry_run` 미리보기와 연결되는 방식.
 
 이 문서는 담당하지 않습니다.
 
@@ -23,7 +23,7 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 - 공개 `ErrorCode` 의미와 우선순위: [API 오류 코드](error-codes.md)와 [API 오류 우선순위](error-precedence.md)를 봅니다.
 - 표시 라벨과 렌더링 문구: [템플릿 본문](../template-bodies.md)을 봅니다.
 
-## 닫기 준비 상태 blocker 처리 범주
+## 닫기 준비 상태 차단 사유 처리 범주
 
 정확한 `CloseReadinessBlocker.category` 값 이름은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다. 이 문서는 그 값을 닫기 준비 상태 발견 사항을 적용되는 담당 문서로 보내는 데만 사용합니다.
 
@@ -34,36 +34,36 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 | 증거와 아티팩트 근거 | `evidence`, `artifact_availability` | 증거 충분성이나 지속 아티팩트 가용성에 관한 차단 사유를 보냅니다. 증거와 아티팩트 의미는 각 담당 문서에 남습니다. |
 | 수락과 잔여 위험 | `final_acceptance`, `residual_risk_visibility`, `residual_risk_acceptance` | 최종 수락, 보이는 잔여 위험, 잔여 위험 수락 관련 차단 사유를 보냅니다. 이 경로 자체가 수락을 만들지는 않습니다. |
 
-## API 오류와 blocker 경계
+## API 오류와 차단 사유 경계
 
 | 상황 | 경로 | 경계 |
 |---|---|---|
 | 유효한 닫기 준비 상태 평가 전 실패 | `ToolRejectedResponse.errors[]`와 `ToolError.code: ErrorCode` | 요청이 유효한 닫기 준비 상태 결과에 도달하지 않았습니다. `CloseReadinessBlocker[]`를 반환하지 않습니다. |
 | 유효한 닫기 준비 상태 평가에서 닫기 차단 사유 발견 | 메서드 결과 또는 읽기 전용 상태 결과의 `CloseReadinessBlocker[]` | 데이터는 닫기가 막힌 이유를 설명합니다. 공개 전송 오류나 스키마 거부가 아닙니다. |
 | 유효한 `dry_run` 미리보기에서 차단 사유형 결과 예상 | `DryRunSummary.would_blockers: PlannedBlocker[]` | 미리보기 차단 사유는 저장된 `CloseReadinessBlocker` 객체가 아니며 닫기 준비 상태를 만들지 않습니다. |
-| 응답 분기 선택이 질문인 경우 | [API 오류 경로](error-routing.md) | 이 문서는 응답 분기가 정해진 뒤의 blocker 의미를 다룹니다. |
+| 응답 분기 선택이 질문인 경우 | [API 오류 경로](error-routing.md) | 이 문서는 응답 분기가 정해진 뒤의 차단 사유 의미를 다룹니다. |
 
 ## 금지된 공개 오류의 표현
 
-공개 `ErrorCode` 값은 공개 API 식별자이지 blocker 코드가 아닙니다. 어떤 조건이 유효한 닫기 준비 상태 평가 중 발견되고, 적용되는 담당 문서가 그 조건에 대해 지원되는 blocker 범주나 blocker 코드를 정의할 때만 닫기 차단 사유가 공개 오류 코드 묶음에 대응할 수 있습니다.
+공개 `ErrorCode` 값은 공개 API 식별자이지 차단 사유 코드가 아닙니다. 어떤 조건이 유효한 닫기 준비 상태 평가 중 발견되고, 적용되는 담당 문서가 그 조건에 대해 지원되는 차단 사유 범주나 차단 사유 코드를 정의할 때만 닫기 차단 사유가 공개 오류 코드 묶음에 대응할 수 있습니다.
 
 공개 `ErrorCode` 묶음은 매핑으로 언급할 수 있지만, 스키마나 메서드 담당 문서가 그 정확한 사용을 명시적으로 허용하지 않는 한 그 값을 `CloseReadinessBlocker.code`에 복사하지 않습니다.
 
-| 공개 오류 묶음 | 닫기 준비 상태 blocker 표현 | 경계 |
+| 공개 오류 묶음 | 닫기 준비 상태 차단 사유 표현 | 경계 |
 |---|---|---|
 | `EVIDENCE_INSUFFICIENT` | 유효한 평가에서 증거 공백을 찾으면 `category=evidence`로 보냅니다. | 사전 확인 실패는 계속 `ToolRejectedResponse.errors[]`를 사용합니다. |
 | `ARTIFACT_MISSING` | 닫기에 영향을 주는 지속 아티팩트 문제는 `category=artifact_availability`로 보냅니다. | 아티팩트 형태와 저장 의미는 아티팩트 담당 문서에 남습니다. |
-| `ACCEPTANCE_REQUIRED` | 최종 수락이 없거나 호환되지 않으면 `category=final_acceptance`로 보냅니다. | blocker는 최종 수락을 만들지 않습니다. |
+| `ACCEPTANCE_REQUIRED` | 최종 수락이 없거나 호환되지 않으면 `category=final_acceptance`로 보냅니다. | 차단 사유는 최종 수락을 만들지 않습니다. |
 | `RESIDUAL_RISK_NOT_VISIBLE` | 닫기에 영향을 주는 알려진 잔여 위험이 보이지 않으면 `category=residual_risk_visibility`로 보냅니다. | 표시 여부는 잔여 위험 수락과 구분됩니다. |
-| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | 미해결 사용자 소유 판단이나 잔여 위험 수락은 `category=user_judgment` 또는 `category=residual_risk_acceptance`로 보냅니다. | blocker는 사용자의 결정을 기록하지 않습니다. |
-| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | 민감 동작 승인 문제는 `category=sensitive_approval`로 보냅니다. | blocker는 승인이나 `Write Authorization`을 만들지 않습니다. |
+| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | 미해결 사용자 소유 판단이나 잔여 위험 수락은 `category=user_judgment` 또는 `category=residual_risk_acceptance`로 보냅니다. | 차단 사유는 사용자의 결정을 기록하지 않습니다. |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | 민감 동작 승인 문제는 `category=sensitive_approval`로 보냅니다. | 차단 사유는 승인이나 `Write Authorization`을 만들지 않습니다. |
 | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE`, `CAPABILITY_INSUFFICIENT` | 범위, 자율성 경계, 기준 상태, 접점 역량 발견 사항은 담당 문서가 허용할 때 `category=scope`, `category=baseline`, 또는 `category=surface_capability`로 보냅니다. | 공개 코드 이름만으로 지원 여부를 추론하지 않습니다. |
 | `PROJECTION_STALE` | 읽기용 보기 최신성 문제는 관련 공개 코드 묶음으로 이름 붙일 수 있습니다. | `PROJECTION_STALE`만으로는 닫기 차단 사유가 아닙니다. |
-| `STATE_VERSION_CONFLICT` | 닫기 준비 상태 blocker 표현이 없습니다. | 오래된 상태는 닫기 준비 상태 평가 전에 거부됩니다. |
+| `STATE_VERSION_CONFLICT` | 닫기 준비 상태 차단 사유 표현이 없습니다. | 오래된 상태는 닫기 준비 상태 평가 전에 거부됩니다. |
 
 ## API 응답과의 관계
 
-| API 응답 경로 | blocker 처리 경로가 적용되는 방식 | 담당 경계 |
+| API 응답 경로 | 차단 사유 처리 경로가 적용되는 방식 | 담당 경계 |
 |---|---|---|
 | 거부 응답 | 사전 확인, 검증, 최신성, 로컬 접근, 역량, 요청 실패는 `ToolRejectedResponse.errors[]`에 남습니다. | 거부 응답 분기 경로는 [API 오류 경로](error-routing.md)가 담당합니다. |
 | 차단 결과 | 유효한 `CloseTaskResult(close_state=blocked)`는 `blockers: CloseReadinessBlocker[]`를 포함할 수 있습니다. | 메서드 동작과 커밋된 차단 효과는 [`harness.close_task`](method-close-task.md)와 [저장 효과](../storage-effects.md)가 담당합니다. |
@@ -72,7 +72,7 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 
 <a id="harnessclose_task-close-blockers"></a>
 
-## `harness.close_task` blocker 매핑
+## `harness.close_task` 차단 사유 매핑
 
 - 닫기 준비 상태 평가 전 사전 확인 실패:
   - [사전 확인 실패](#close-task-preflight-failure)
@@ -159,7 +159,7 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 
 ## 닫기 준비 상태 발견 사항 코드 요약
 
-이 표는 닫기 준비 상태 발견 사항에 대응하는 공개 오류 코드 묶음을 요약합니다. 공개 `ErrorCode` 값을 blocker 코드로 바꾸는 규칙이 아닙니다.
+이 표는 닫기 준비 상태 발견 사항에 대응하는 공개 오류 코드 묶음을 요약합니다. 공개 `ErrorCode` 값을 차단 사유 코드로 바꾸는 규칙이 아닙니다.
 
 | 닫기 준비 상태 발견 사항 | 세부 항목 |
 |---|---|
@@ -180,7 +180,7 @@ Core 닫기 준비 상태 권한, `CloseReadinessBlocker` 형태, `harness.close
 조건:
 - 닫기 준비 상태 평가에서 증거 공백을 찾습니다.
 
-blocker 처리 경로:
+차단 사유 처리 경로:
 - `category=evidence`
 
 공개 코드 매핑:
@@ -192,7 +192,7 @@ blocker 처리 경로:
 조건:
 - 닫기에 영향을 주는 지속 아티팩트가 없거나, 사용할 수 없거나, 닫기 근거로 쓸 수 없거나, 실패했습니다.
 
-blocker 처리 경로:
+차단 사유 처리 경로:
 - `category=artifact_availability`
 
 공개 코드 매핑:
@@ -204,7 +204,7 @@ blocker 처리 경로:
 조건:
 - 필요한 최종 수락이 없거나 호환되지 않습니다.
 
-blocker 처리 경로:
+차단 사유 처리 경로:
 - `category=final_acceptance`
 
 공개 코드 매핑:
@@ -216,7 +216,7 @@ blocker 처리 경로:
 조건:
 - 닫기에 영향을 주는 알려진 잔여 위험이 보이지 않습니다.
 
-blocker 처리 경로:
+차단 사유 처리 경로:
 - `category=residual_risk_visibility`
 
 공개 코드 매핑:
@@ -228,7 +228,7 @@ blocker 처리 경로:
 조건:
 - 잔여 위험은 보였지만 수락 기록이 없습니다.
 
-blocker 처리 경로:
+차단 사유 처리 경로:
 - `category=residual_risk_acceptance`
 
 공개 코드 매핑:
@@ -240,7 +240,7 @@ blocker 처리 경로:
 조건:
 - 사용자 소유 판단이 해결되지 않았습니다.
 
-blocker 처리 경로:
+차단 사유 처리 경로:
 - `category=user_judgment`
 
 공개 코드 매핑:
@@ -252,7 +252,7 @@ blocker 처리 경로:
 조건:
 - 민감 동작 승인이 없거나, 거부되었거나, 만료되었거나, 달라졌습니다.
 
-blocker 처리 경로:
+차단 사유 처리 경로:
 - `category=sensitive_approval`
 
 공개 코드 매핑:
@@ -264,7 +264,7 @@ blocker 처리 경로:
 조건:
 - 유효한 평가에서 범위, 자율성 경계, 기준 상태, 접점 역량 차단 사유를 찾습니다.
 
-blocker 처리 경로:
+차단 사유 처리 경로:
 - `category=scope`, `category=baseline`, 또는 `category=surface_capability`
 
 공개 코드 매핑:
@@ -299,7 +299,7 @@ blocker 처리 경로:
 
 ## 비주장
 
-blocker 처리 경로는 아래를 의미하지 않습니다.
+차단 사유 처리 경로는 아래를 의미하지 않습니다.
 
 - 최종 수락
 - 잔여 위험 수락
