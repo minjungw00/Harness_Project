@@ -2,7 +2,7 @@
 
 This document owns official terminology for Harness documentation. It defines prose meaning, Korean terminology choices, identifier preservation, expressions to avoid, and owner routing for product terms.
 
-It does not define exact schemas, value sets, DDL, storage effects, security mechanisms, API behavior, runtime behavior, or implementation sequencing.
+It does not define exact schemas, value sets, DDL, storage effects, security mechanisms, API behavior, runtime behavior, or baseline implementation reading paths.
 
 ## How to use this glossary
 

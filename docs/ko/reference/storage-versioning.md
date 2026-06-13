@@ -159,7 +159,7 @@
 
 - 차단 결과 저장 효과는 [저장 효과](storage-effects.md#committed-blocked-result)와 그 메서드 담당 문서가 담당합니다.
 
-기준 범위 첫 스키마에서는 `tasks.state_version`을 생략해야 합니다. 구현이 레거시 또는 프로토타입 `tasks.state_version` 열을 만나더라도 그 값은 무시되는 메타데이터일 뿐입니다.
+기준 범위 저장소 스키마에서는 `tasks.state_version`을 생략해야 합니다. 기준 범위에 속하지 않는 `tasks.state_version` 열은 무시되는 메타데이터일 뿐입니다.
 
 `tasks.state_version`은 아래 기준으로 쓰면 안 됩니다.
 

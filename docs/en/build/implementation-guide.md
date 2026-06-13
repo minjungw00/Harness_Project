@@ -4,11 +4,11 @@ This guide gives implementers a stable route from Harness product scope to the o
 
 This guide does not define baseline scope, API behavior, schemas, storage effects, security guarantees, runtime locations, connector behavior, conformance authority, or example validity. Those contracts stay in the Reference owners.
 
-## Implementer reading path
+## Baseline implementation reading path
 
 Read owner documents before encoding behavior.
 
-Use this path for an implementation unit:
+Use this path when interpreting baseline implementation work:
 
 1. Confirm the baseline scope and supported behavior boundary in [Scope](../reference/scope.md).
 2. Use the [Reference Index](../reference/README.md) to choose the applicable owner for each contract question.
@@ -18,7 +18,7 @@ Use this path for an implementation unit:
 6. Use [Agent Integration](../reference/agent-integration.md) and [Surface Recipes](../use/surface-recipes.md) only for the surface or connector boundary they own.
 7. Keep user-owned judgment, evidence, verification expectations, acceptance, close readiness, and residual risk as separate authority concepts.
 
-## Baseline scope interpretation
+## Baseline implementation interpretation
 
 [Scope](../reference/scope.md) is the baseline scope gate. A capability is implementable as baseline behavior only when Scope includes it and the applicable owners define the supported behavior, shape, storage, runtime, security, and conformance detail the implementation needs.
 

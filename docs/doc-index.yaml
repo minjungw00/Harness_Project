@@ -224,9 +224,9 @@ documents:
     path_ko: "docs/ko/build/implementation-guide.md"
     role: "build"
     owner_for:
-      - "implementation entry routing"
-      - "owner-based build sequence"
-      - "first runtime slice guidance"
+      - "baseline implementation reading path"
+      - "baseline implementation interpretation"
+      - "minimal supported implementation shape"
     not_owner_for:
       - "baseline scope contracts"
       - "API behavior"

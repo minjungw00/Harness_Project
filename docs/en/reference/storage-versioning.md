@@ -159,9 +159,9 @@ Owner links:
 
 - Blocked-result storage effects belong to [Storage Effects](storage-effects.md#committed-blocked-result) and the affected method owner.
 
-The first baseline schema should omit `tasks.state_version`.
+The baseline storage schema should omit `tasks.state_version`.
 
-If an implementation encounters a legacy or prototype `tasks.state_version` column, that value is ignored metadata only.
+A non-baseline `tasks.state_version` column is ignored metadata only.
 
 `tasks.state_version` must not be used as:
 

@@ -212,7 +212,7 @@ Failure:
 
 Fix:
 - Reword as planning or reference documentation.
-- Route implementation sequence questions to the Implementation Guide.
+- Route baseline implementation reading-path questions to the Implementation Guide.
 
 ## CHK-SCOPE-003: excluded-scope wording
 

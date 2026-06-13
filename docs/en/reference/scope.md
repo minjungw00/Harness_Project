@@ -16,7 +16,7 @@ This document owns:
 
 This document does not own:
 
-- implementation sequencing; see the [Implementation Guide](../build/implementation-guide.md)
+- baseline implementation reading paths; see the [Implementation Guide](../build/implementation-guide.md)
 - API method behavior
 - schema fields
 - storage records or effects

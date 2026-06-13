@@ -16,7 +16,7 @@
 
 이 문서가 담당하지 않습니다.
 
-- 구현 순서. [구현 가이드](../build/implementation-guide.md)를 봅니다.
+- 기준 범위 구현 읽기 경로. [구현 가이드](../build/implementation-guide.md)를 봅니다.
 - API 메서드 동작
 - 스키마 필드
 - 저장소 기록이나 저장 효과
