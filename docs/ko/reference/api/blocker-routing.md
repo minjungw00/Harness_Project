@@ -8,7 +8,7 @@
 
 | 관심사 | 담당 문서 |
 |---|---|
-| 오류와 차단 사유의 경계 | 이 문서 |
+| 닫기 차단 사유/API 응답 처리 경계 | 이 문서 |
 | `harness.close_task` 요청 동작, 평가 순서, 결과 분기, 커밋된 차단 결과 | [`harness.close_task`](method-close-task.md) |
 | `CloseReadinessBlocker` 필드와 중첩 형태 | [API 상태 스키마](schema-state.md) |
 | 정확한 `CloseReadinessBlocker.category` 값과 그 밖의 enum 형태 API 어휘 | [API 값 집합](schema-value-sets.md#state-and-blocker-values) |

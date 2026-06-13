@@ -72,6 +72,8 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | profile-gated value | 프로필 조건부 값 | [Scope](scope.md) |
 | error routing | 오류 처리 경로 | [API error routing](api/error-routing.md) |
 | blocker routing | 차단 사유 처리 경로 | [API blocker routing](api/blocker-routing.md) |
+| error/blocker boundary | 오류와 차단 사유의 경계 | [API blocker routing](api/blocker-routing.md) |
+| public error as blocker | 공개 오류 코드가 차단 사유로 표현되는 경우 | [API blocker routing](api/blocker-routing.md) |
 | `ToolError.details` | `ToolError.details` | [API error details](api/error-details.md) |
 | dry-run | dry-run 미리보기 | [API Schema Core](api/schema-core.md) |
 | blocked result | 차단 결과 | [API error routing](api/error-routing.md) |
@@ -1395,6 +1397,55 @@ Owner:
 Notes:
 - Blocker routing covers the routing boundary between close-readiness blockers and API response branches, including the public-code-to-blocker boundary.
 - Method-specific `harness.close_task` behavior belongs to the close-task method owner.
+
+### error/blocker boundary
+
+English:
+- error/blocker boundary
+- API error versus close-readiness blocker boundary
+
+Korean:
+- Reference: 오류와 차단 사유의 경계
+- User-facing: 오류와 차단 사유의 경계
+
+Preserve:
+- `ErrorCode`
+- `CloseReadinessBlocker`
+- `CloseReadinessBlocker.code`
+
+Avoid:
+- Treating public error codes and blockers as the same code space.
+- Treating API errors and close-readiness blockers as the same code space.
+
+Owner:
+- [API blocker routing](api/blocker-routing.md)
+
+Notes:
+- The error/blocker boundary separates API errors returned before a valid evaluation from close-readiness blocker data returned after a valid evaluation.
+
+### public error as blocker
+
+English:
+- public error as blocker
+- public `ErrorCode` as blocker
+
+Korean:
+- Reference: 공개 오류 코드가 차단 사유로 표현되는 경우
+- User-facing: 공개 오류 코드가 차단 사유로 표현되는 경우
+
+Preserve:
+- `ErrorCode`
+- `CloseReadinessBlocker.code`
+
+Avoid:
+- Automatically copying public `ErrorCode` values into `CloseReadinessBlocker.code`.
+
+Owner:
+- [API blocker routing](api/blocker-routing.md)
+- [API error codes](api/error-codes.md)
+
+Notes:
+- Public error as blocker wording is limited to cases where the schema or method owner allows that exact use.
 
 ### `ToolError.details`
 
