@@ -179,6 +179,29 @@ Fix:
 - Keep indexes as navigation unless they truly own the route concept.
 - If the focused owner is missing, name the owner gap instead of routing the contract to an index.
 
+## CHK-LINK-009: moved-concept and owner-boundary anchors
+
+Owner:
+- [Authoring Guide](../authoring-guide.md)
+- [Reference Index](../../reference/README.md)
+- [doc-index.yaml](../../../doc-index.yaml)
+
+Check:
+- Inspect hidden anchors and explicit anchor IDs for concepts whose owner moved or whose owner boundary changed.
+- Confirm the stable anchor for a concept lives in the document that now owns the concept.
+- Confirm redirect-style hidden anchors do not remain in old documents when they make the old document look like the owner.
+- Confirm an anchor ID does not imply that an old document, broad index, or route page still owns a moved concept.
+
+Failure:
+- A hidden anchor for a moved concept remains in the old document and receives owner-like inbound links.
+- A route or index page keeps an anchor ID that names a contract it no longer owns.
+- Inbound links land on a compatibility anchor instead of the actual owner section, causing readers or retrieval to treat the old page as canonical.
+
+Fix:
+- Move or add the stable anchor on the actual owner section.
+- Retarget inbound links to the owner.
+- Remove redirect-style anchors from old documents when they create owner confusion; keep only short route links where navigation is still useful.
+
 ## CHK-LLM-001: duplicate contract text creates retrieval noise
 
 Owner:

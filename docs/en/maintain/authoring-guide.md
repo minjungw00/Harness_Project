@@ -122,6 +122,8 @@ They should not carry copied API response branches, blocker schema details, acce
 
 When a README or route document starts to need tables of fields, status values, guarantee levels, storage effects, or error behavior, the content belongs in an owner. Keep the route page focused on navigation.
 
+Negative rules can also turn a route document into a contract document. A route page may state a short boundary such as what it does not own, but it should not accumulate "Not allowed", "Does not imply", exception, or "must not" lists that define a concept outside the owner. Move durable prohibitions, exceptions, and non-claims to the owner, then keep the route page to a practical consequence plus a link.
+
 ## 6. User-facing vs reference-facing writing
 
 User-facing docs explain what the reader can decide, expect, or do. Avoid internal schema names unless the exact identifier is necessary for the reader's task. Prefer plain outcomes and link to the owner for contract details.
@@ -207,6 +209,8 @@ Table parity includes table count in changed sections, header meanings, row mean
 
 List parity includes normative lists, allowed and not-allowed clauses, does-not-imply clauses, exceptions, and owner-boundary lists. Korean prose may use a natural rhythm, but it must not drop or absorb a list item that carries a rule, exception, non-claim, or owner link.
 
+Negative-clause parity includes one-sided prohibition, exception, and non-claim markers. Check English markers such as `Not allowed`, `Does not imply`, `Not implied`, and `must not`, and Korean markers such as `허용되지 않는 것`, `의미하지 않는 것`, and `해서는 안 됩니다`. One language must not impose stronger prohibitions, broader exceptions, or stronger non-claims than the other. If one language puts a prohibition in a table, list, or named block, keep the paired meaning unit in the corresponding place.
+
 When a label or concept is removed, search the paired language for exact strings, paraphrases, translations, and mixed-language variants. A removed English label must not survive through Korean prose unless a terminology owner intentionally preserves it as a searchable forbidden expression.
 
 Use [Translation Guide](translation-guide.md) and [Terminology Map](../../terminology-map.yaml) for bilingual wording. During normal agent work, load only one language for the same `doc_id`; load both only for translation, parity review, or a bilingual edit where comparison is necessary.
@@ -219,6 +223,8 @@ Use relative links inside the documentation tree. Keep exact file paths, anchors
 
 When changing headings, check inbound links and the paired-language document. Korean headings should stay natural; use hidden anchors when a stable English anchor must be preserved.
 
+Hidden anchors for a concept belong in the document that actually owns the concept. Do not leave redirect-style hidden anchors in an old document when they make that document look like the owner. Anchor IDs should not imply that a route page, broad index, or former owner still owns a moved concept.
+
 Do not route maintained documentation through stale legacy paths. If an old path appears during review, replace it with the compact maintained route or remove the stale route wording.
 
 ## 10. Pre-merge checklist
@@ -230,6 +236,7 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] Terminology-map and glossary owner targets point to focused owners when focused owners exist, not to broad indexes.
 - [ ] Repeated owner maps were reduced to the canonical map plus links.
 - [ ] README, route, and maintain documents use short summaries plus owner links instead of copied contract explanations.
+- [ ] Route and index documents do not define contracts through accumulated negative rules, exception lists, or non-claim tables.
 - [ ] API, storage, schema, security, access-boundary, and close-readiness details live in the appropriate Reference owner.
 - [ ] API error code meanings, precedence, response branch routing, close-readiness blocker routing, and machine-readable details route to their separate API owners.
 - [ ] API blocker-routing docs do not own method behavior, schema shape, value sets, Core authority, or display wording.
@@ -253,10 +260,13 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] Heading parity was not treated as sufficient for bilingual semantic parity.
 - [ ] Paired tables were checked for count, headers, row meanings, and placement relative to sections.
 - [ ] Paired normative lists, allowed/not-allowed clauses, does-not-imply clauses, exceptions, and owner-boundary lists were checked by meaning unit.
+- [ ] One-sided negative clauses were checked so one language does not impose stronger prohibitions, exceptions, or non-claims than the other.
+- [ ] Negative clauses kept corresponding placement when one language used a table, list, or named block.
 - [ ] Removed concept labels do not survive through Korean paraphrase, translation, mixed-language variants, tables, lists, headings, or metadata.
 - [ ] Korean prose is natural, not a literal translation, and exact identifiers are preserved.
 - [ ] Korean prose avoids unnecessary English common nouns when they are not identifiers, product labels, or natural technical borrowings.
 - [ ] Korean reference docs preserve condition, effect, exception, non-claim, and owner-link structure by meaning unit.
+- [ ] Hidden anchors for moved concepts live in the actual owner and do not make an old document look like it still owns the concept.
 - [ ] User-facing docs avoid internal schema names unless necessary.
 - [ ] Reference docs keep schema names and other exact identifiers in backticks.
 - [ ] Dense reference paragraphs were split into conditions, allowed effects, not-allowed effects, exceptions, and owner links where useful.

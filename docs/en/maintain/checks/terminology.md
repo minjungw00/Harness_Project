@@ -200,3 +200,24 @@ Failure:
 Fix:
 - Replace prose terms with "닫기 차단 사유", "차단 사유 범주", or "차단 사유 처리 경로" according to the concept.
 - Preserve exact identifiers such as `CloseReadinessBlocker` and `CloseReadinessBlocker.category` when naming schemas or fields.
+
+## CHK-TERM-010: Korean compressed owner-link and blocker-routing prose
+
+Owner:
+- [Korean Authoring Guide](../../../ko/maintain/authoring-guide.md)
+- [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
+- [Terminology Map](../../../terminology-map.yaml)
+
+Check:
+- Inspect Korean owner-link, route, and blocker-routing sentences for long compressed noun phrases.
+- Confirm Korean sentences separate the concept, the owner route, the boundary or non-claim, and the reader action when those parts all appear.
+- Confirm exact identifiers stay searchable, but ordinary English nouns are translated into natural Korean prose.
+
+Failure:
+- A Korean owner-link or blocker-routing sentence compresses several concepts into one unreadable noun phrase.
+- A sentence chains owner, exception, prohibition, and route target so tightly that the reviewer cannot tell which concept the owner link applies to.
+- Korean prose keeps an English noun chain where the terminology map provides a Korean term.
+
+Fix:
+- Rewrite the sentence as natural Korean, using two sentences or bullets when that makes the owner route and boundary clearer.
+- Keep identifiers unchanged, and use terminology-map Korean terms for ordinary prose concepts.

@@ -188,3 +188,26 @@ Failure:
 Fix:
 - Remove the residue or replace it with the stable category and applicable owner link.
 - If maintainers must keep the expression searchable, move it to the terminology owner or focused Maintain guidance as a forbidden expression.
+
+## CHK-PARITY-010: negative-clause strength and placement
+
+Owner:
+- [Translation Guide](../translation-guide.md)
+- [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
+- [Authoring Guide](../authoring-guide.md)
+
+Check:
+- Search paired changed sections for negative-clause markers, including English `Not allowed`, `Does not imply`, `Not implied`, and `must not`, and Korean `허용되지 않는 것`, `의미하지 않는 것`, and `해서는 안 됩니다`.
+- Compare each prohibition, exception, and non-claim by meaning unit.
+- Confirm one language does not impose a stronger prohibition, broader exception, narrower exception, or stronger non-claim than the other.
+- If one language places a prohibition or non-claim in a table, list, named block, or nearby sentence, confirm the paired language keeps that meaning unit in the corresponding place.
+
+Failure:
+- A negative clause appears only in one language and changes what the reader is told to avoid.
+- One language uses stronger wording, such as changing a caution into a prohibition or turning a narrow exception into a broad exception.
+- A prohibition lives in a visible table or list in one language but is buried, moved to a different scope, or omitted in the paired language.
+
+Fix:
+- Restore the missing prohibition, exception, or non-claim in the paired language.
+- Match normative strength and placement by meaning unit while keeping Korean prose natural.
+- If the negative rule defines a product contract, move it to the owner and leave both paired non-owner pages with a short boundary plus owner link.
