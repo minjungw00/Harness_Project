@@ -1,304 +1,127 @@
 # Runtime boundaries reference
 
-This document owns the boundary between Product Repository, Harness Server or installation, and Harness Runtime Home.
+This document owns the location boundary among `Product Repository`, Harness installation or runtime process, and `Harness Runtime Home`. It defines local access assumptions for those locations and routes storage and security details to their owners.
 
-Conditions:
-- Use this page when a claim depends on where product files, server installation files, or Harness runtime data live.
-- Treat this repository as source documentation for a Harness Server only.
+## Owns / Does Not Own
 
-May claim:
-- A Markdown file in this repository may describe a Harness rule.
-- Product Repository, Harness Server or installation, and Harness Runtime Home are distinct locations.
-
-Must not claim:
-- Documentation files are Harness Server/runtime implementation material, Runtime Home data, generated projection systems, conformance runners, runtime state, or runtime data.
-- Documentation files are runtime state, Harness records, generated artifacts, projections, acceptance records, evidence records, or operational files.
-
-Owner links:
-- [Security](security.md) owns security guarantee meanings and non-claims.
-- [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), and [Artifact Storage](storage-artifacts.md) own storage details.
-
-## Owns / Does not own
-
-This document owns:
-
-- the separation between Product Repository, Harness Server or installation, and Harness Runtime Home
-- the rule that Product Repository files do not create Harness authority
-- the rule that generated displays, chat text, connector prose, and agent memory do not create Harness authority
-- the distinction between server installation location and runtime data location
-- the boundary statement that a Runtime Home is not automatically a security boundary
-
-This document does not own:
-
-- storage record shapes, effects, artifacts, versioning, locks, or migrations; see storage owners through [Reference Index](README.md)
-- public API schemas or method behavior; see API owners through [Reference Index](README.md)
-- security guarantee meanings or detailed security non-claims; see [Security](security.md)
-- projection authority; see [Projection Authority Reference](projection-and-templates.md)
-
-## Three locations
-
-Harness documentation must keep these locations distinct:
-
-| Location | Details |
+| This document owns | This document does not own |
 |---|---|
-| Product Repository | See [Product Repository location](#runtime-location-product-repository) |
-| Harness Server or installation | See [Harness Server or installation location](#runtime-location-server-installation) |
-| Harness Runtime Home | See [Harness Runtime Home location](#runtime-location-runtime-home) |
+| The definition of `Product Repository`. | Storage record layout, locks, migrations, versioning, or artifact lifecycle details. |
+| The definition of `Harness Runtime Home`. | API method behavior or public schema shapes. |
+| The separation between product files, installation/runtime files, and runtime data. | Detailed security guarantee meanings or security non-guarantees. |
+| Local access and location non-authority rules. | Projection authority, template bodies, or rendered display freshness. |
+| The rule that runtime location does not by itself prove Harness authority, security authority, or isolation. | Product scope, close readiness, evidence sufficiency, or user-owned judgment meaning. |
+
+## Location Model
+
+Harness keeps three local location boundaries distinct.
+
+| Boundary | Definition | Must not infer |
+|---|---|---|
+| `Product Repository` | The user's project workspace, including product source, product documentation, tests, configuration, and other project files. | It is not Harness runtime state, not `Harness Runtime Home`, and not proof of Harness authority. |
+| Harness installation or runtime process | The process, package, application resources, and configuration used to run Harness behavior. | The installation location is not automatically the runtime data location. |
+| `Harness Runtime Home` | The per-user or per-installation operational data space for Harness-owned records, local runtime metadata, and artifact data as storage/runtime owners define them. | It is not the `Product Repository`, not automatically a security boundary, and not isolation by default. |
 
 <a id="runtime-location-product-repository"></a>
-### Product Repository location
+### `Product Repository`
 
-Conditions:
-- The user's project workspace.
+`Product Repository` is the user's project workspace.
 
 May claim:
-- It can supply product files as input.
+- Product files can be inspected as inputs to owner-defined Harness checks or user-owned judgments.
+- Compatible product-file writes can be governed by the active scope, Change Unit, required judgments, and write-authorization owners.
 
 Must not claim:
-- It is Harness runtime state or a Runtime Home by default.
-
-Owner links:
-- [Storage Effects](storage-effects.md) owns product-file and Harness-record storage effects.
-- [Security](security.md) owns security non-claims.
+- `Product Repository` content is Harness state.
+- `Product Repository` content is generated Harness output.
+- `Product Repository` content proves Harness authority.
+- A `Product Repository` is automatically `Harness Runtime Home`.
 
 <a id="runtime-location-server-installation"></a>
-### Harness Server or installation location
+### Harness Installation Or Runtime Process
 
-Conditions:
-- The server process, package, or installed application location.
+Harness installation or runtime process location is where Harness executable code, packages, application resources, or process configuration may live.
 
 May claim:
-- It may mediate Harness APIs and records.
+- The runtime process mediates Harness API behavior and Harness records through owner-defined paths.
+- Installation resources and runtime data can live in different locations.
 
 Must not claim:
-- The install location is automatically where runtime data lives.
-
-Owner links:
-- [API Methods](api/methods.md) routes method behavior to API owners.
-- [Storage Records](storage-records.md) owns runtime data record layout.
+- Installing or running Harness from a directory makes that directory `Harness Runtime Home`.
+- The installation location proves that runtime data exists there.
+- The installation path grants Harness authority, security authority, or product-file write authority.
 
 <a id="runtime-location-runtime-home"></a>
-### Harness Runtime Home location
+### `Harness Runtime Home`
 
-Conditions:
-- The operational data space for Harness records, local store metadata, and artifact storage.
-
-May claim:
-- Storage/runtime owners may define what operational data belongs there.
-
-Must not claim:
-- It is the Product Repository.
-- It is proof of security authority.
-- It provides isolation by default.
-
-Owner links:
-- [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), and [Artifact Storage](storage-artifacts.md) own runtime data details.
-- [Security](security.md) owns security guarantee wording.
-
-## Product repository
-
-The Product Repository is the user's project workspace.
-
-Conditions:
-- Product files may be input to Harness checks or user-owned judgments.
-- Project-local Harness metadata is allowed only when storage/runtime owners define it.
+`Harness Runtime Home` is the operational data space for Harness runtime data.
 
 May claim:
-- Product Repository files are user workspace files.
-- Owner-defined project-local Harness metadata may exist when the storage and runtime owners define it.
+- Storage/runtime owners define what operational data belongs in `Harness Runtime Home`.
+- Storage/runtime owners define validation, storage effects, record layout, artifact storage, versioning, and recovery behavior for that data.
 
 Must not claim:
-- Product Repository content is Harness state.
-- Product Repository content is generated Harness output.
-- Product Repository content is proof of Harness authority.
-- A Product Repository is automatically the Harness Runtime Home.
-- Ordinary product files become Harness records because project-local metadata exists.
+- `Harness Runtime Home` is the `Product Repository`.
+- `Harness Runtime Home` is server installation storage by default.
+- `Harness Runtime Home` is automatically a security boundary.
+- `Harness Runtime Home` provides isolation by default.
 
-Owner links:
-- [Storage Effects](storage-effects.md) owns product-file and Harness-record effects.
-- [Core Model](core-model.md) owns user-owned judgment boundaries.
-- [Security](security.md) owns security authority non-claims.
+## Local Access Boundaries
 
-## Harness server or installation
-
-The Harness Server mediates Harness records and API behavior.
-
-Conditions:
-- A server installation location is where server code, packages, configuration, or application resources may live.
-- A directory is a Runtime Home only when storage/runtime owners define it as such.
+Local access to a file or directory is not the same as Harness authority.
 
 May claim:
-- A Harness Server mediates Harness records and API behavior.
-- A server installation location can be distinct from runtime data storage.
+- A local actor may have filesystem access to product files, installation files, or runtime data locations according to the host environment.
+- Harness authority depends on owner-defined API, storage, runtime, security, and user-judgment paths.
 
 Must not claim:
-- The installation location and runtime data location are the same by default.
-- Installing or running a server from a directory makes that directory the Runtime Home.
-- Documentation files are executable server material.
-- Documentation edits create server code, start runtime behavior, or authorize product/runtime writes.
+- A local path, directory name, copied identifier, rendered display, chat message, connector description, or agent memory proves Harness authority.
+- Direct local modification outside owner-defined Harness paths creates valid Harness records, evidence, acceptance, residual-risk acceptance, `Write Authorization`, or artifact authority.
+- The location of runtime data changes the security guarantee level by itself.
 
-Owner links:
-- [API Methods](api/methods.md) routes API method behavior.
-- [Storage Records](storage-records.md) owns runtime data record layout.
-- [Storage Effects](storage-effects.md) owns product/runtime write effects.
+## Runtime Location, Storage, And Security Owners
 
-## Harness runtime home
+Runtime location is a boundary statement, not a storage layout or security mechanism.
 
-Harness Runtime Home is the per-user or per-installation operational data space.
+Storage owners define:
+- which Harness records, metadata, artifact data, and operational diagnostics belong in `Harness Runtime Home`
+- how those records are shaped, versioned, validated, migrated, and updated
+- which method branches create storage effects
 
-Conditions:
-- Storage/runtime owners define what operational data belongs in the Runtime Home.
+Security owns:
+- guarantee levels and non-guarantees
+- local-access assumptions and access-boundary wording
+- whether a claim may use `cooperative` or capability-gated `detective` wording
+- the non-claim that `Harness Runtime Home` is not automatically a security boundary
 
-May include:
-- Harness-owned records.
-- Local store metadata.
-- Staged or persisted artifact data.
-- Locks, migrations, and related diagnostics.
+This document only keeps the locations and non-inference rules distinct.
 
-May claim:
-- A Runtime Home can hold Harness operational data when storage/runtime owners define the data and validation rules.
+## What Must Not Be Inferred
 
-Must not claim:
-- A Runtime Home is the Product Repository.
-- A Runtime Home is automatically a security boundary.
-- This documentation repository is a Runtime Home.
+Do not infer Harness authority, security authority, runtime state, or isolation from:
 
-Owner links:
-- [Security](security.md) owns security guarantee wording and non-claims.
-- [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md) own storage and runtime data details.
+- `Product Repository` text or project files.
+- The directory where Harness is installed or started.
+- The directory selected as `Harness Runtime Home`.
+- A copied `surface_id`.
+- A displayed `ArtifactRef`.
+- A rendered `Projection`, status card, or template output.
+- Connector prose, chat text, or agent memory.
 
-## Storage location assumptions
+Do not infer that:
 
-Conditions:
-- A claim names where product files, server installation files, Harness records, artifact data, or runtime metadata live.
+- `Product Repository` is `Harness Runtime Home`.
+- Installation location and runtime data location are the same.
+- `Harness Runtime Home` is a security boundary.
+- Product files are Harness records.
+- Generated displays replace source-record authority.
 
-May claim:
-- Product Repository storage, Harness Server or installation storage, Harness Runtime Home storage, and documentation repository storage are separate assumptions.
-- Storage/runtime owners may define operational data placement.
+## Related Owners
 
-Must not claim:
-- Product Repository storage, server installation storage, and Runtime Home storage are the same by default.
-- A storage location proves Harness authority, security authority, or isolation.
-- This documentation repository is runtime data storage.
-
-Owner links:
-- [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md) own storage details.
-- [Security](security.md) owns security boundary and isolation non-claims.
-
-| Location | Details |
-|---|---|
-| Product Repository | See [Product Repository storage](#runtime-storage-product-repository) |
-| Harness Server or installation | See [Harness Server or installation storage](#runtime-storage-server-installation) |
-| Harness Runtime Home | See [Harness Runtime Home storage](#runtime-storage-runtime-home) |
-| This documentation repository | See [Documentation repository storage](#runtime-storage-documentation-repository) |
-
-<a id="runtime-storage-product-repository"></a>
-### Product Repository storage
-
-Conditions:
-- The location is the user's project workspace.
-
-May claim:
-- Product source, product docs, tests, project configuration, and product files that Harness checks may inspect.
-
-Must not claim:
-- Product Repository storage is Harness runtime state.
-- Product Repository storage contains generated Harness records by default.
-- Product Repository storage is a Runtime Home.
-- Product Repository storage proves Harness authority.
-
-Owner links:
-- [Storage Effects](storage-effects.md) owns product-file effects.
-- [Security](security.md) owns authority and guarantee non-claims.
-
-<a id="runtime-storage-server-installation"></a>
-### Harness Server or installation storage
-
-Conditions:
-- The location is the server process, package, or installed application location.
-
-May claim:
-- Server executable code, installed packages, server configuration, and application resources.
-
-Must not claim:
-- Harness Server or installation storage is product workspace content.
-- Harness Server or installation storage is canonical runtime data.
-- Harness Server or installation storage proves that a Runtime Home exists.
-
-Owner links:
-- [API Methods](api/methods.md) routes method behavior.
-- [Storage Records](storage-records.md) owns runtime data records.
-
-<a id="runtime-storage-runtime-home"></a>
-### Harness Runtime Home storage
-
-Conditions:
-- Storage/runtime owners define the operational data space.
-
-May claim:
-- Harness operational records defined by storage/runtime owners.
-- Runtime metadata and local store data defined by storage/runtime owners.
-- Artifacts, locks, migrations, and related diagnostics defined by storage/runtime owners.
-
-Must not claim:
-- Harness Runtime Home storage is product source.
-- Harness Runtime Home storage is server install files.
-- Harness Runtime Home storage is a security boundary.
-- Harness Runtime Home storage provides isolation by default.
-
-Owner links:
-- [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md) own runtime data details.
-- [Security](security.md) owns security boundary claim wording and non-claims.
-
-<a id="runtime-storage-documentation-repository"></a>
-### Documentation repository storage
-
-Conditions:
-- The location is this documentation repository.
-
-May claim:
-- Source documentation for Harness behavior.
-
-Must not claim:
-- Documentation repository storage is runtime state.
-- Documentation repository storage is executable server material.
-- Documentation repository storage contains generated projections.
-- Documentation repository storage contains evidence, QA, acceptance, close records, or conformance output.
-
-Owner links:
-- [Implementation Guide](../build/implementation-guide.md) owns implementation routing.
-- [Security](security.md) owns security non-claims.
-
-## What must not be inferred
-
-Conditions:
-- A reader sees Harness concepts in documentation, Product Repository text, generated Markdown, rendered displays, connector prose, chat text, or agent memory.
-- A reader sees a copied `surface_id`, displayed `ArtifactRef`, rendered projection, install directory, or local directory name.
-
-Must not claim or infer:
-- Documentation files are a working Harness Server, Runtime Home, or runtime data.
-- Documentation files are Harness records or generated operational files.
-- The Product Repository is the Runtime Home unless an owner-defined runtime configuration says so.
-- The server installation directory is the runtime data directory.
-- A Runtime Home is a security boundary.
-- Product Repository text, generated Markdown, rendered displays, or rendered projections create Harness authority.
-- Chat text, connector prose, or agent memory creates Harness authority.
-- Copied `surface_id` values or displayed `ArtifactRef` values create Harness authority.
-
-Owner links:
-- [Security](security.md) owns detailed authority, guarantee, and isolation non-claims.
-- [Projection Authority Reference](projection-and-templates.md) owns projection authority and freshness boundaries.
-- [Agent Integration](agent-integration.md) owns connector surface boundaries.
-
-## Security boundary links
-
-This page states the location boundary and the non-inference rules. Detailed guarantee levels, capability-gated detective wording, explicit non-claims, and stronger-control requirements belong to [Security](security.md).
-
-## Owner links
-
-- [Reference Index](README.md): routes questions to canonical owners.
-- [Security](security.md): owns security claims, non-claims, trust boundaries, and guarantee levels.
-- [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md): own storage layout, effects, artifacts, locks, migrations, and versioning.
-- [API Methods](api/methods.md), method owner documents, and API schema owners: own method routing, method behavior, and API shapes.
-- [Projection Authority Reference](projection-and-templates.md): owns projection authority and source-state/freshness boundaries.
-- [Template Bodies](template-bodies.md): owns status card, judgment request, run/evidence summary, close result, and agent context packet bodies.
+- [Security](security.md): security claims, non-claims, trust boundaries, and guarantee levels.
+- [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), and [Storage Versioning](storage-versioning.md): storage record layout, effects, artifacts, migrations, versioning, and runtime data details.
+- [API Methods](api/methods.md) and method owner documents: method routing and method behavior.
+- [Core Model](core-model.md): Core authority, user-owned judgments, `Write Authorization`, acceptance, and residual risk.
+- [Agent Integration](agent-integration.md): surface context and capability-profile boundaries.
+- [Projection Authority Reference](projection-and-templates.md): projection authority and freshness boundaries.
+- [Template Bodies](template-bodies.md): rendered template body contracts.
