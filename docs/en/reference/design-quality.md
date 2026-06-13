@@ -46,7 +46,7 @@ Use these owner links when a design-quality finding crosses another contract:
 | Method-to-storage effects for active API method branches | [Storage Effects](storage-effects.md) |
 | Out-of-scope design-quality policy families | [Scope Reference](scope.md) |
 
-Documentation in this repository remains planning reference material. It does not mean a Harness Server, runtime state, generated evidence, QA record, Acceptance record, residual-risk record, or close record exists here today.
+Reference text records the design-quality boundary and owner routes. It does not create Harness Server state, evidence, QA, acceptance, residual-risk, or close records.
 
 ## 2. Baseline design-quality role
 
@@ -535,4 +535,4 @@ The full design-quality policy catalog is not baseline scope.
 
 This page does not publish unsupported gate names, blocker categories, waiver branches, validator families, workflow branches, or promotion checklists. Use [Scope](scope.md) for category-level baseline exclusions.
 
-Out-of-scope quality material must not be presented as baseline requirements, blockers, waiver rules, evidence expectations, validator mappings, fixture requirements, operations reports, or implementation tasks.
+Out-of-scope quality material must not be presented as baseline requirements, blockers, waiver rules, evidence expectations, validator mappings, conformance scenario requirements, operations reports, or implementation tasks.

@@ -2,138 +2,114 @@
 
 ## Boundary
 
-This reference defines conformance terminology and document-level criteria. Runtime conformance outputs, generated reports, executable fixtures, and runner artifacts belong outside the documentation tree.
+This reference defines stable conformance scenario semantics and reference criteria.
 
-This document owns documentation-level conformance meaning, candidate fixture shape, assertion authority boundaries, and a compact scenario index. It does not define API branches, storage effects, access classes, artifact promotion, security guarantees, or close-readiness behavior.
+A conformance scenario is a named behavior expectation. It can be evaluated only against facts made authoritative by the API, storage, security, scope, Core, artifact, and surface owner documents.
 
-For the canonical baseline scope, see [Scope](scope.md). Implementation routing is described in the [Implementation Guide](../build/implementation-guide.md).
+This document owns:
+
+- `scenario_id` naming rules
+- conformance scenario semantics
+- expected behavior summaries for the scenario index
+- assertion authority boundaries for conformance criteria
+- the relationship between conformance criteria, canonical owner documents, examples, and tutorials
+
+It does not define API branches, storage effects, access classes, artifact promotion, security guarantees, close-readiness behavior, or implementation routing.
+
+For the canonical baseline scope, see [Scope](scope.md). For product terminology, see [Glossary](glossary.md).
 
 ## Conformance item summary
 
 | Item | Boundary | Details |
 |---|---|---|
-| Documentation criteria | Supported documentation criteria | [Details](#documentation-criteria) |
-| Internal smoke target | Implementation-owned check target | [Details](#internal-smoke-target) |
-| Fixture shape | Out-of-scope candidate shape | [Details](#fixture-shape-boundary) |
-| Executable fixtures | Out of documentation scope | [Details](#executable-fixtures) |
-| Runtime conformance report | Out-of-scope capability | [Details](#runtime-conformance-report) |
+| Scenario semantics | Stable behavior expectation | [Details](#scenario-semantics) |
+| Scenario IDs | Stable identifier rules | [Details](#scenario-id-rules) |
+| Expected behavior | Owner-routed criteria | [Details](#expected-behavior) |
+| Assertion authority | Facts owned by canonical owners | [Details](#assertion-authority) |
+| Examples and tutorials | Non-authoritative illustrations | [Details](#criteria-vs-examples-and-tutorials) |
 
-<a id="documentation-criteria"></a>
-### Documentation criteria
+<a id="scenario-semantics"></a>
+### Scenario semantics
 
-Boundary:
-- Supported reference criteria for documentation maintenance.
+Definition:
+- A conformance scenario names one behavior expectation that belongs to the baseline scope or to a clearly routed owner boundary.
 
-Execution boundary:
-- No runtime execution. These criteria do not run a Harness Server, execute a conformance suite, or create runtime records.
+Required parts:
+- `scenario_id`
+- expected behavior
+- owner links
+- assertion boundary
 
-Owner:
-- `docs/en/reference/conformance.md`
-
-Not allowed:
-- Do not treat documentation criteria as runtime conformance results, acceptance evidence, or implementation routing.
-
-<a id="internal-smoke-target"></a>
-### Internal smoke target
-
-Boundary:
-- Implementation-owned check target.
-
-Execution boundary:
-- Execution behavior belongs to the implementation owner.
-
-Owner:
-- `build/implementation-guide.md`
+Allowed effect:
+- A scenario may summarize what a conforming result must preserve, reject, expose, or leave unchanged.
 
 Not allowed:
-- Do not describe this as a documentation-owned conformance suite.
+- A scenario must not redefine the API, storage, security, scope, close-readiness, artifact, or surface contract it cites.
 
-<a id="fixture-shape-boundary"></a>
-### Fixture shape boundary
+<a id="scenario-id-rules"></a>
+### Scenario ID rules
 
-Boundary:
-- Out-of-scope candidate format documented by this reference.
+Definition:
+- `scenario_id` is the stable identifier for the behavior under review.
 
-Execution boundary:
-- The candidate shape is not a fixture file, runner input, or suite entry point.
-
-Owner:
-- `docs/en/reference/conformance.md`
-
-Not allowed:
-- Do not describe the candidate shape as fixture files, runner input, or an executable conformance suite.
-
-<a id="executable-fixtures"></a>
-### Executable fixtures
-
-Boundary:
-- Out of documentation scope.
-
-Execution boundary:
-- Executable fixture material requires a runner owner and owner-promoted fixtures.
-
-Owner:
-- Runner owner and the owners that promote fixtures.
+Rules:
+- Use `BASELINE-*` IDs for baseline-scope behavior.
+- Name the observable behavior, not a project phase, review stage, work queue, or implementation status.
+- Keep IDs stable when the expected behavior remains stable.
+- Rename an ID only when the scenario's meaning changes, and update same-page anchors and internal links in the same batch.
 
 Not allowed:
-- Do not add fixture bodies, runner output, generated runtime objects, or runtime results to this documentation repository.
+- Do not use temporary status labels, date labels, runner names, or maintainer workflow labels as scenario IDs.
 
-<a id="runtime-conformance-report"></a>
-### Runtime conformance report
+<a id="expected-behavior"></a>
+### Expected behavior
 
-Boundary:
-- Out-of-scope capability.
+Definition:
+- Expected behavior is the stable criterion a conforming implementation or check must satisfy for the scenario.
 
-Execution boundary:
-- Conformance runners, suite entry points, generated conformance reports, and runtime conformance results belong outside documentation.
+Owner relation:
+- This page may state the scenario-level outcome.
+- Exact request fields, response branches, storage effects, error precedence, guarantee levels, and close-readiness details remain in their canonical owner documents.
 
-Owner:
-- [Scope Reference](scope.md)
-- [Policy and conformance: conformance run entrypoint](scope.md)
+Conflict rule:
+- If a scenario summary and a canonical owner disagree, the canonical owner wins and this page must be corrected.
 
 Not allowed:
-- Do not present metrics, generated prose, rendered reports, or documentation-check labels as conformance authority or runtime proof.
-
-When this page says "must", "required", or "always", it is naming a documentation criterion or a requirement for a server or runner contract. It is not a claim that documentation creates executable checks.
+- Do not treat scenario prose, summaries, rendered views, metrics, or maintenance-check labels as authority for facts the owner documents do not define.
 
 ## What conformance means
 
-For a server, conformance means executable checks can compare one owner-defined action with owner-defined authority records. Documentation checks are separate maintenance aids for links, terminology, owner boundaries, active/out-of-scope wording, security wording, and bilingual parity.
+Conformance means an implementation or check can compare one owner-defined action with owner-defined authority records and owner-defined non-effects.
 
-A runtime conformance check must judge only facts made authoritative by an owner document. It must not treat generated prose, agent summaries, rendered reports, status wording, documentation-check labels, or projections as authority unless a specific owner promotes that fact.
+Conformance criteria judge only facts made authoritative by an owner document. They must not treat scenario prose, agent summaries, rendered views, status wording, maintenance-check labels, or projections as authority unless a specific owner defines that fact as authoritative.
 
-## Documentation boundary
+When this page says "must", "required", or "always", it is naming a conformance criterion or an owner-routed requirement. It is not redefining neighboring contracts.
 
-The following are runtime or implementation outputs, not documentation repository contents:
+## Criteria vs examples and tutorials
 
-- Harness Server runtime or Harness Runtime Home data
-- executable fixture files or a fixture directory
-- a conformance runner or `harness conformance run` implementation
-- generated conformance reports, generated runtime artifacts, projections, operational files, or runtime state
-- runtime results for baseline behavior or out-of-scope capabilities
-- runtime proof of pre-tool blocking, OS permission control, arbitrary-tool sandboxing, tamper-proof storage, security isolation, or profile-gated stronger guarantee claims
+Conformance criteria are reference expectations. Examples and tutorials may illustrate how a reader might recognize a scenario, but they do not create authority records, API branches, storage effects, security guarantees, close-readiness results, acceptance evidence, or residual-risk acceptance.
 
-Examples on this page explain conformance concepts, but they do not create runtime state, acceptance evidence, close readiness, residual-risk acceptance, generated reports, or implementation routing.
+Reference scenarios must use stable behavior descriptions. They must not use documentation maintenance, route cleanup, migration work, broad review stages, or temporary project status as the behavior being tested.
 
-## Fixture shape
+## Scenario criterion shape
 
-Fixture shape is an out-of-scope candidate format, not documentation-owned fixture files. A promoted fixture should be a compact structured record with these parts:
+A conformance scenario criterion uses this compact structure:
 
 | Part | Details |
 |---|---|
-| `scenario_id` | See [`scenario_id`](#fixture-scenario-id) |
-| authority context | See [Authority context](#fixture-authority-context) |
-| action | See [Action](#fixture-action) |
-| expected assertions | See [Expected assertions](#fixture-expected-assertions) |
-| owner links | See [Owner links](#fixture-owner-links) |
+| `scenario_id` | See [`scenario_id`](#criterion-scenario-id) |
+| authority context | See [Authority context](#criterion-authority-context) |
+| action | See [Action](#criterion-action) |
+| expected behavior | See [Expected behavior](#criterion-expected-behavior) |
+| owner links | See [Owner links](#criterion-owner-links) |
 
-<a id="fixture-scenario-id"></a>
+<a id="criterion-scenario-id"></a>
 ### `scenario_id`
 
 Purpose:
 - Stable identifier for the behavior under review.
 
-<a id="fixture-authority-context"></a>
+<a id="criterion-authority-context"></a>
 ### Authority context
 
 Purpose:
@@ -142,7 +118,7 @@ Purpose:
 Expected content:
 - Task, Change Unit, state version, surface, owner refs, Core state, storage rows, artifact refs, and capability facts.
 
-<a id="fixture-action"></a>
+<a id="criterion-action"></a>
 ### Action
 
 Purpose:
@@ -151,16 +127,16 @@ Purpose:
 Owner link:
 - The request must use the owner request schema.
 
-<a id="fixture-expected-assertions"></a>
-### Expected assertions
+<a id="criterion-expected-behavior"></a>
+### Expected behavior
 
 Purpose:
-- Names the structured facts an owner-promoted fixture may compare.
+- Names the stable outcome that a conforming result must satisfy.
 
 Expected content:
 - Response facts, owner-state effects, storage or artifact facts, blocker facts, error facts, guarantee-display facts, and required absence of forbidden side effects.
 
-<a id="fixture-owner-links"></a>
+<a id="criterion-owner-links"></a>
 ### Owner links
 
 Purpose:
@@ -169,13 +145,13 @@ Purpose:
 Owner links:
 - API, Core, Storage, Security, Agent Integration, artifact, and policy owners.
 
-An owner-promoted materialized fixture must use public owner schemas. It must not invent fixture-only enum values, pseudo-fields, localized display labels as state, prose-only expectations, or out-of-scope-only values.
+A conformance criterion must use public owner schemas. It must not invent criterion-only enum values, pseudo-fields, localized display labels as state, prose-only expectations, or out-of-scope-only values.
 
 ## Assertion authority
 
-Assertion authority is the narrow set of facts an owner-promoted fixture may judge. Authority comes from owner-defined facts, not from scenario prose or generated summaries.
+Assertion authority is the narrow set of facts a conformance criterion may judge. Authority comes from owner-defined facts, not from scenario prose or generated summaries.
 
-Fixture assertions may reference owner-defined response facts, Core state, storage effects, artifact facts, public `ErrorCode` values, structured blockers, guarantee-display facts, and required absence of forbidden side effects.
+Conformance assertions may reference owner-defined response facts, Core state, storage effects, artifact facts, public `ErrorCode` values, structured blockers, guarantee-display facts, and required absence of forbidden side effects.
 
 Exact assertion detail stays with these owners:
 
@@ -194,7 +170,7 @@ Exact assertion detail stays with these owners:
 
 ## Representative scenario index
 
-These scenario IDs are compact documentation criteria for owner-promoted fixture design. They are not fixture bodies, runtime results, generated runtime objects, or an implementation plan. Use the owner links above for exact branch, storage, access, artifact, security, and close-readiness contracts.
+These scenario IDs are compact reference criteria. They are not examples, tutorials, runtime results, or an implementation plan. Use the owner links above for exact branch, storage, access, artifact, security, and close-readiness contracts.
 
 - `BASELINE-registered-surface-mismatch-blocks-mutation`
   See [registered surface mismatch](#scenario-baseline-registered-surface-mismatch-blocks-mutation).
@@ -256,7 +232,7 @@ These scenario IDs are compact documentation criteria for owner-promoted fixture
 <a id="scenario-baseline-registered-surface-mismatch-blocks-mutation"></a>
 ### `BASELINE-registered-surface-mismatch-blocks-mutation`
 
-Focus:
+Expected behavior:
 - Local surface mismatch before mutation.
 
 Owner links:
@@ -267,7 +243,7 @@ Owner links:
 <a id="scenario-baseline-verified-local-surface-allows-owner-mutation"></a>
 ### `BASELINE-verified-local-surface-allows-owner-mutation`
 
-Focus:
+Expected behavior:
 - Verified local surface permits only owner-scoped mutation checks.
 
 Owner links:
@@ -278,7 +254,7 @@ Owner links:
 <a id="scenario-baseline-single-access-class-per-public-request"></a>
 ### `BASELINE-single-access-class-per-public-request`
 
-Focus:
+Expected behavior:
 - One request-level `access_class` per public API request.
 
 Owner links:
@@ -289,7 +265,7 @@ Owner links:
 <a id="scenario-baseline-detective-display-capability-gated"></a>
 ### `BASELINE-detective-display-capability-gated`
 
-Focus:
+Expected behavior:
 - `detective` wording requires a supported observed scope.
 
 Owner links:
@@ -299,7 +275,7 @@ Owner links:
 <a id="scenario-baseline-shaping-readiness-gap-blocks-or-asks"></a>
 ### `BASELINE-shaping-readiness-gap-blocks-or-asks`
 
-Focus:
+Expected behavior:
 - Shaping gaps remain owner-path blockers or judgment candidates, not separate planning artifacts.
 
 Owner links:
@@ -311,7 +287,7 @@ Owner links:
 <a id="scenario-baseline-project-state-version-stale-mutation-rejected"></a>
 ### `BASELINE-project-state-version-stale-mutation-rejected`
 
-Focus:
+Expected behavior:
 - Stale project-wide state version fails before commit.
 
 Owner links:
@@ -322,7 +298,7 @@ Owner links:
 <a id="scenario-baseline-dry-run-pre-commit-failure-rejected"></a>
 ### `BASELINE-dry-run-pre-commit-failure-rejected`
 
-Focus:
+Expected behavior:
 - `dry_run` does not bypass validation, access, capability, or stale-state rejection.
 
 Owner links:
@@ -333,7 +309,7 @@ Owner links:
 <a id="scenario-baseline-status-close-blockers-read-only"></a>
 ### `BASELINE-status-close-blockers-read-only`
 
-Focus:
+Expected behavior:
 - Status and close-check blockers can be read without storage mutation.
 
 Owner links:
@@ -345,7 +321,7 @@ Owner links:
 <a id="scenario-baseline-sensitive-approval-records-sensitive-action-scope"></a>
 ### `BASELINE-sensitive-approval-records-sensitive-action-scope`
 
-Focus:
+Expected behavior:
 - Sensitive-action approval is separate from Write Authorization and final acceptance.
 
 Owner links:
@@ -356,7 +332,7 @@ Owner links:
 <a id="scenario-baseline-prepare-write-requires-compatible-scope-and-approval"></a>
 ### `BASELINE-prepare-write-requires-compatible-scope-and-approval`
 
-Focus:
+Expected behavior:
 - `prepare_write` is a cooperative product-file compatibility path.
 
 Owner links:
@@ -367,7 +343,7 @@ Owner links:
 <a id="scenario-baseline-authorized-attempt-scope-product-file-write-only"></a>
 ### `BASELINE-authorized-attempt-scope-product-file-write-only`
 
-Focus:
+Expected behavior:
 - `AuthorizedAttemptScope` is product-file write scope only.
 
 Owner links:
@@ -378,7 +354,7 @@ Owner links:
 <a id="scenario-baseline-record-run-consumes-write-authorization-once"></a>
 ### `BASELINE-record-run-consumes-write-authorization-once`
 
-Focus:
+Expected behavior:
 - Compatible Run recording consumes a matching Write Authorization once.
 
 Owner links:
@@ -389,7 +365,7 @@ Owner links:
 <a id="scenario-baseline-stage-artifact-transient-handle-only"></a>
 ### `BASELINE-stage-artifact-transient-handle-only`
 
-Focus:
+Expected behavior:
 - Staging creates only a transient staged handle.
 
 Owner links:
@@ -400,7 +376,7 @@ Owner links:
 <a id="scenario-baseline-record-run-artifact-input-validation-order"></a>
 ### `BASELINE-record-run-artifact-input-validation-order`
 
-Focus:
+Expected behavior:
 - Run artifact inputs are validated before promotion or linking.
 
 Owner links:
@@ -411,7 +387,7 @@ Owner links:
 <a id="scenario-baseline-record-run-promotes-staged-artifact-to-artifact-ref"></a>
 ### `BASELINE-record-run-promotes-staged-artifact-to-artifact-ref`
 
-Focus:
+Expected behavior:
 - Compatible Run recording may promote a staged handle to persistent `ArtifactRef`.
 
 Owner links:
@@ -422,7 +398,7 @@ Owner links:
 <a id="scenario-baseline-record-run-rejects-staged-artifact-surface-instance-mismatch"></a>
 ### `BASELINE-record-run-rejects-staged-artifact-surface-instance-mismatch`
 
-Focus:
+Expected behavior:
 - Staged-handle provenance mismatch rejects promotion.
 
 Owner links:
@@ -433,7 +409,7 @@ Owner links:
 <a id="scenario-baseline-record-run-links-existing-artifact-without-registering-bytes"></a>
 ### `BASELINE-record-run-links-existing-artifact-without-registering-bytes`
 
-Focus:
+Expected behavior:
 - Existing persistent artifacts may be linked without registering new bytes.
 
 Owner links:
@@ -444,7 +420,7 @@ Owner links:
 <a id="scenario-baseline-captured-artifact-rejected-in-baseline-scope"></a>
 ### `BASELINE-captured-artifact-rejected-in-baseline-scope`
 
-Focus:
+Expected behavior:
 - Native/captured artifact sources are not baseline artifact authority.
 
 Owner links:
@@ -455,7 +431,7 @@ Owner links:
 <a id="scenario-baseline-close-task-complete-stale-state-version-rejected"></a>
 ### `BASELINE-close-task-complete-stale-state-version-rejected`
 
-Focus:
+Expected behavior:
 - Stale state fails before close-readiness evaluation.
 
 Owner links:
@@ -466,7 +442,7 @@ Owner links:
 <a id="scenario-baseline-close-task-complete-stale-write-authorization-basis-rejected"></a>
 ### `BASELINE-close-task-complete-stale-write-authorization-basis-rejected`
 
-Focus:
+Expected behavior:
 - Stale close-relevant Write Authorization basis fails before close commit.
 
 Owner links:
@@ -477,7 +453,7 @@ Owner links:
 <a id="scenario-baseline-close-task-blocks-current-write-compatibility"></a>
 ### `BASELINE-close-task-blocks-current-write-compatibility`
 
-Focus:
+Expected behavior:
 - Close can block on semantic write compatibility.
 
 Owner links:
@@ -488,7 +464,7 @@ Owner links:
 <a id="scenario-baseline-close-task-blocks-evidence-insufficient"></a>
 ### `BASELINE-close-task-blocks-evidence-insufficient`
 
-Focus:
+Expected behavior:
 - Close can block on insufficient required evidence.
 
 Owner links:
@@ -499,7 +475,7 @@ Owner links:
 <a id="scenario-baseline-close-task-blocks-required-artifact-unavailable"></a>
 ### `BASELINE-close-task-blocks-required-artifact-unavailable`
 
-Focus:
+Expected behavior:
 - Close can block on required artifact availability.
 
 Owner links:
@@ -510,7 +486,7 @@ Owner links:
 <a id="scenario-baseline-close-task-blocks-final-acceptance-missing"></a>
 ### `BASELINE-close-task-blocks-final-acceptance-missing`
 
-Focus:
+Expected behavior:
 - Close can block on missing compatible final acceptance.
 
 Owner links:
@@ -521,7 +497,7 @@ Owner links:
 <a id="scenario-baseline-close-task-blocks-visible-unaccepted-residual-risk"></a>
 ### `BASELINE-close-task-blocks-visible-unaccepted-residual-risk`
 
-Focus:
+Expected behavior:
 - Close can block on visible residual risk without compatible acceptance.
 
 Owner links:
@@ -532,7 +508,7 @@ Owner links:
 <a id="scenario-baseline-close-task-check-read-only"></a>
 ### `BASELINE-close-task-check-read-only`
 
-Focus:
+Expected behavior:
 - `harness.close_task intent=check` is read-only.
 
 Owner links:
@@ -543,7 +519,7 @@ Owner links:
 <a id="scenario-baseline-close-task-state-effecting-dry-run-preview"></a>
 ### `BASELINE-close-task-state-effecting-dry-run-preview`
 
-Focus:
+Expected behavior:
 - State-effecting close intents use dry-run preview only when valid and previewable.
 
 Owner links:
@@ -554,7 +530,7 @@ Owner links:
 <a id="scenario-baseline-close-task-supersede-one-state-version"></a>
 ### `BASELINE-close-task-supersede-one-state-version`
 
-Focus:
+Expected behavior:
 - Supersede is a terminal non-completion path with one project-wide state mutation when valid.
 
 Owner links:
@@ -562,14 +538,13 @@ Owner links:
 - [Core Model](core-model.md)
 - [Storage Effects](storage-effects.md)
 
-## Catalog-only boundary
+## Catalog boundary
 
-Fixture families outside the baseline scope belong in [Policy and conformance fixture families](scope.md). The out-of-scope index keeps names only as out-of-scope capabilities, and this page does not reproduce the catalog.
+Scenario family names outside the baseline scope belong in [Scope](scope.md). The scope owner may keep names only as out-of-scope capabilities, and this page does not reproduce that catalog.
 
 Out-of-scope family names are not:
 
 - scenario scripts
-- fixture bodies
 - active API payload examples
 - runner or reporting requirements
 - baseline scope
@@ -577,11 +552,9 @@ Out-of-scope family names are not:
 - runtime results
 - runtime proof
 
-Promotion requirement: an owner must promote a narrow behavior with scope, fallback behavior, exact contracts, and proof-path expectations before executable fixture material is supported.
-
 ## Metrics boundary
 
-Metrics are not conformance authority. Local metrics and conformance reporting may be useful for diagnostics, but until an owner promotes them they remain read-only derived displays or out-of-scope capabilities.
+Metrics are not conformance authority. A metric affects a conformance criterion only when a canonical owner defines the source records, freshness boundary, display wording, and non-substitution rule.
 
 Metrics must not:
 
@@ -594,5 +567,3 @@ Metrics must not:
 - close work
 - prove implementation routing
 - replace runtime conformance
-
-Promotion requirement: if a metric is promoted, its owner must define source records, freshness boundary, display wording, and the non-substitution rule.
