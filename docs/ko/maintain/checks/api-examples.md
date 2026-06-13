@@ -104,7 +104,7 @@
 
 점검:
 - 예시 설명과 주변 산문이 메서드 동작, 공통 요청 래퍼, 상태 스키마, 아티팩트 스키마, 판단 스키마, 값 집합, API 오류 개념을 알맞은 좁은 담당 문서로 보내는지 확인합니다.
-- API 오류 개념은 공개 코드 의미를 [API 오류 코드](../../reference/api/error-codes.md), 우선순위와 충돌을 [API 오류 우선순위](../../reference/api/error-precedence.md), 오류와 차단 사유 경로를 [API 오류 경로](../../reference/api/error-routing.md), 기계 판독용 세부사항을 [API 오류 세부사항](../../reference/api/error-details.md)으로 보냅니다.
+- API 오류 개념은 공개 코드 의미를 [API 오류 코드](../../reference/api/error-codes.md), 우선순위와 충돌을 [API 오류 우선순위](../../reference/api/error-precedence.md), 응답 분기 경로를 [API 오류 경로](../../reference/api/error-routing.md), 닫기 준비 상태 blocker 처리 경로를 [API blocker 처리 경로](../../reference/api/blocker-routing.md), 기계 판독용 세부사항을 [API 오류 세부사항](../../reference/api/error-details.md)으로 보냅니다.
 - API 오류 문서 묶음 색인을 코드 의미, 우선순위, 경로, 세부 스키마의 담당 문서처럼 쓰지 않는지 확인합니다.
 - 메서드 수준 담당 경로를 예시 지침에 다시 나열하지 않고 API 메서드 경로 문서로 연결하는지 확인합니다.
 - 예시가 알맞은 API 담당 문서 밖에서 API 메서드, 스키마 이름, 필드, 값, 오류 코드를 재정의하지 않는지 확인합니다.

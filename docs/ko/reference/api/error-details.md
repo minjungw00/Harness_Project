@@ -17,7 +17,8 @@
 - `ToolError` 형태: [API 코어 스키마](schema-core.md#shared-support-shapes).
 - 공개 `ErrorCode` 값과 의미: [API 오류 코드](error-codes.md).
 - 주 코드 우선순위와 충돌 선택: [API 오류 우선순위](error-precedence.md).
-- 오류와 차단 사유 경로: [API 오류 경로](error-routing.md).
+- API 응답 분기 경로: [API 오류 경로](error-routing.md).
+- 닫기 준비 상태 blocker 처리 경로: [API blocker 처리 경로](blocker-routing.md).
 - 렌더링 라벨과 메시지 문구: [템플릿 본문](../template-bodies.md).
 
 <a id="machine-readable-error-details"></a>

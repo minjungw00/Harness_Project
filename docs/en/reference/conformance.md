@@ -474,7 +474,7 @@ Expected behavior:
 Owner links:
 - [Core Model](core-model.md)
 - [API State Schemas](api/schema-state.md)
-- [`close_task` blocker mapping](api/error-routing.md#harnessclose_task-close-blockers)
+- [`close_task` blocker mapping](api/blocker-routing.md#harnessclose_task-close-blockers)
 
 <a id="scenario-baseline-close-task-blocks-required-artifact-unavailable"></a>
 ### `BASELINE-close-task-blocks-required-artifact-unavailable`
@@ -485,7 +485,7 @@ Expected behavior:
 Owner links:
 - [API State Schemas](api/schema-state.md)
 - [Artifact Storage](storage-artifacts.md)
-- [`close_task` blocker mapping](api/error-routing.md#harnessclose_task-close-blockers)
+- [`close_task` blocker mapping](api/blocker-routing.md#harnessclose_task-close-blockers)
 
 <a id="scenario-baseline-close-task-blocks-final-acceptance-missing"></a>
 ### `BASELINE-close-task-blocks-final-acceptance-missing`

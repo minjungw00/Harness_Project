@@ -17,7 +17,7 @@ This document does not own:
 - projection authority, freshness, or read-only derived-display rules; see [Projection Authority Reference](projection-and-templates.md)
 - source-of-truth state or storage; see [Core Model](core-model.md) and storage owners
 - API schemas or value sets; see API schema owners
-- public `ErrorCode` identifiers, precedence, rejected-response behavior, error-vs-blocker routing, or machine-readable `ToolError.details`; see [API error codes](api/error-codes.md), [API error precedence](api/error-precedence.md), [API error routing](api/error-routing.md), and [API error details](api/error-details.md)
+- public `ErrorCode` identifiers, precedence, rejected-response behavior, close-readiness blocker routing, or machine-readable `ToolError.details`; see [API error codes](api/error-codes.md), [API error precedence](api/error-precedence.md), [API error routing](api/error-routing.md), [API blocker routing](api/blocker-routing.md), and [API error details](api/error-details.md)
 - out-of-scope template candidates; see [Scope Reference](scope.md)
 
 ## Boundary
@@ -46,7 +46,7 @@ Rendered error copy must:
 - Preserve the public `ErrorCode` when the exact diagnostic identifier is shown.
 - Pair a concise label with one recovery cue when the surface has room.
 - Keep labels separate from `CloseReadinessBlocker.code`, `WriteDecisionReason.code`, `PlannedBlocker.code`, and `ToolError.details` keys.
-- Route public code meanings to [API error codes](api/error-codes.md), precedence or conflict selection to [API error precedence](api/error-precedence.md), error-versus-blocker routing to [API error routing](api/error-routing.md), and machine-readable details to [API error details](api/error-details.md). Use [API errors](api/errors.md) only as the family index.
+- Route public code meanings to [API error codes](api/error-codes.md), precedence or conflict selection to [API error precedence](api/error-precedence.md), response branch routing to [API error routing](api/error-routing.md), close-readiness blocker routing to [API blocker routing](api/blocker-routing.md), and machine-readable details to [API error details](api/error-details.md). Use [API errors](api/errors.md) only as the family index.
 
 Rendered error copy must not:
 
@@ -425,7 +425,8 @@ Use `Closed by owner result` only when the close owner path returned an actual c
 - [Close-task method](api/method-close-task.md) for `harness.close_task` behavior.
 - [API State Schemas](api/schema-state.md) for `CloseReadinessBlocker`.
 - [API Judgment Schemas](api/schema-judgment.md) for final acceptance and accepted-risk input shapes.
-- [API error routing](api/error-routing.md) for close rejection and blocker routing.
+- [API error routing](api/error-routing.md) for close rejection response branch routing.
+- [API blocker routing](api/blocker-routing.md) for close-readiness blocker routing.
 
 <a id="agent-context-packet-body"></a>
 ## Agent context packet body

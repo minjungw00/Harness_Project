@@ -104,7 +104,7 @@ When baseline method behavior changes, edit the method owner first. Then update 
 
 Keep [`reference/api/methods.md`](../reference/api/methods.md) as a route and shared-reading document. It should not duplicate method-specific request bodies, response bodies, result branches, blocked-result details, or storage-effect detail already owned by a method owner.
 
-API error documentation is split by concern. [`reference/api/errors.md`](../reference/api/errors.md) is the family index only. Public `ErrorCode` meanings belong in [API error codes](../reference/api/error-codes.md), precedence and conflict selection belong in [API error precedence](../reference/api/error-precedence.md), error-versus-blocker routing belongs in [API error routing](../reference/api/error-routing.md), and machine-readable `ToolError.details` belongs in [API error details](../reference/api/error-details.md).
+API error documentation is split by concern. [`reference/api/errors.md`](../reference/api/errors.md) is the family index only. Public `ErrorCode` meanings belong in [API error codes](../reference/api/error-codes.md), precedence and conflict selection belong in [API error precedence](../reference/api/error-precedence.md), rejected-response, blocked-result, and `dry_run` branch routing belongs in [API error routing](../reference/api/error-routing.md), close-readiness blocker routing belongs in [API blocker routing](../reference/api/blocker-routing.md), and machine-readable `ToolError.details` belongs in [API error details](../reference/api/error-details.md).
 
 ## 5. Route documents and README files
 
@@ -211,7 +211,7 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] Repeated owner maps were reduced to the canonical map plus links.
 - [ ] README, route, and maintain documents use short summaries plus owner links instead of copied contract explanations.
 - [ ] API, storage, schema, security, access-boundary, and close-readiness details live in the appropriate Reference owner.
-- [ ] API error code meanings, precedence, error-versus-blocker routing, and machine-readable details route to their separate API error owners.
+- [ ] API error code meanings, precedence, response branch routing, close-readiness blocker routing, and machine-readable details route to their separate API owners.
 - [ ] Value names are not treated as baseline scope behavior merely because they exist in schemas, examples, storage notes, or out-of-scope lists.
 - [ ] `active` is used only for runtime or currently applied state, exact identifiers, or status values, not for supported contracts or owner routing.
 - [ ] Example field names come from the method, schema, or storage owner, and storage-owned summary data is labeled where it uses a different field name.

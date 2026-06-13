@@ -1,16 +1,17 @@
 # API error routing
 
-This document owns API error versus blocker routing for rejected responses, blocked results, `dry_run` previews, forbidden blocker-code use, and `close_task` blocker mapping.
+This document owns API response branch routing for rejected responses, blocked results, and `dry_run` previews.
 
-It does not define public `ErrorCode` meanings, primary-code precedence, `ToolError.details`, response branch shapes, display labels, or close-readiness meaning.
+It does not define public `ErrorCode` meanings, primary-code precedence, `ToolError.details`, response branch shapes, display labels, close-readiness meaning, or detailed close-readiness blocker routing.
 
 ## Owner boundaries
 
 This document owns:
 
 - The boundary between `ToolRejectedResponse.errors[]`, method-specific blocked results, and `ToolDryRunResponse` preview diagnostics.
-- Rules that keep pre-commit public errors out of blocker-code arrays.
-- `close_task` mappings between close-readiness findings and public error-code families where the mapping is needed.
+- Rejected-response routing for request, precondition, state, idempotency, and pre-preview failures.
+- Blocked-result branch routing, including the distinction between `PrepareWriteResult` blocked decisions and `CloseTaskResult(close_state=blocked)`.
+- `dry_run` branch routing for valid read-only calls, valid previews, preview blockers, and pre-commit failures.
 
 This document does not own:
 
@@ -19,6 +20,7 @@ This document does not own:
 - Machine-readable error details; see [API error details](error-details.md).
 - `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and common branch shapes; see [API State Schemas](schema-state.md), [API Value Sets](schema-value-sets.md), and [API Schema Core](schema-core.md).
 - Close-readiness meaning and non-substitution rules; see [Core Model close readiness](../core-model.md#close_task).
+- Close-readiness blocker routing, forbidden public-error-as-blocker representation, and `harness.close_task` blocker mapping; see [API blocker routing](blocker-routing.md).
 
 ## Error vs blocker
 
@@ -48,7 +50,7 @@ Dry-run preview:
 - Meaning: Previewable diagnostics for a valid dry-run request.
 - State effect: Not a committed write and not stored blocker state.
 
-`ErrorCode` values are public API identifiers. Blocker codes are operation-specific result values. A public `ErrorCode` must not be reused as a blocker code unless the canonical method or schema owner explicitly allows that use.
+`ErrorCode` values are public API identifiers. Operation-specific blocker-code routing and close-readiness blocker mapping belong to [API blocker routing](blocker-routing.md).
 
 Rendered labels and messages are display text owned by [Template Bodies](../template-bodies.md). They must not be used as `ErrorCode` values, blocker-code values, or machine-readable `ToolError.details` keys.
 
@@ -163,7 +165,7 @@ State effect:
 - Only the close-task method owner may define any committed blocked-result effect.
 
 Result data:
-- Uses close-readiness blocker mapping.
+- Close-readiness blocker routing belongs to [API blocker routing](blocker-routing.md).
 
 Public-code boundary:
 - `CloseTaskResult(close_state=blocked)` does not use `STATE_VERSION_CONFLICT`.
@@ -241,222 +243,28 @@ Preview boundary:
 - The failure is not represented as dry-run preview data.
 - Stale state is rejected before preview.
 
-## Forbidden blocker-code rules
-
-These boundary rules keep public error identifiers separate from method-owned blocker values.
-
-| Forbidden use | Boundary | Use instead |
-|---|---|---|
-| <a id="forbidden-stale-state-blocker-code"></a>Stale-state public error used as a blocker code | `STATE_VERSION_CONFLICT` is not a `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, or committed blocked-result primary code. | Return `ToolRejectedResponse.errors[]` with `effect_kind=no_effect`. |
-| <a id="forbidden-pre-commit-public-error-copy"></a>Pre-commit public error copied into blocker arrays | Pre-commit public errors stay out of blocker arrays. | Return `ToolRejectedResponse.errors[]`. |
-| <a id="forbidden-public-code-reuse"></a>Public `ErrorCode` reused without owner permission | A public `ErrorCode` becomes a blocker code only when the canonical owner explicitly allows that use. | Use the method/schema owner's blocker code or result reason. |
-| <a id="forbidden-user-facing-label-identifier"></a>User-facing label used as API identifier | User-facing labels are display text, not API identifiers. | Keep the public `ErrorCode` unchanged and localize only display text. |
-| <a id="forbidden-dry-run-stale-state-preview"></a>Dry-run stale-state conflict previewed | A dry-run stale-state conflict is not represented in `DryRunSummary.would_errors[]` or `DryRunSummary.would_blockers[]`. | Reject the request with `STATE_VERSION_CONFLICT`. |
-
+<a id="forbidden-stale-state-blocker-code"></a>
+<a id="forbidden-pre-commit-public-error-copy"></a>
+<a id="forbidden-public-code-reuse"></a>
+<a id="forbidden-user-facing-label-identifier"></a>
+<a id="forbidden-dry-run-stale-state-preview"></a>
 <a id="harnessclose_task-close-blockers"></a>
-
-## `close_task` blocker mapping
-
-- Preflight failure before close-readiness evaluation:
-  - [Preflight failure](#close-task-preflight-failure)
-- `intent=check` with a valid read:
-  - [`intent=check`](#close-task-intent-check)
-- `intent=complete` with close-readiness blockers:
-  - [`intent=complete` blocked](#close-task-intent-complete-blocked)
-- `intent=complete` with no close blockers:
-  - [`intent=complete` closed](#close-task-intent-complete-closed)
-- Invalid `intent=cancel` or `intent=supersede` terminal transition:
-  - [Invalid terminal transition](#close-task-invalid-terminal-transition)
-
 <a id="close-task-preflight-failure"></a>
-### Preflight failure
-
-Condition:
-- Stale state, stale Write Authorization basis, idempotency conflict, validation failure, local-access failure, capability failure, unreadable Core state, or unresolved project/Task identity occurs before close-readiness evaluation.
-
-Response path:
-- `ToolRejectedResponse.errors[]`
-
-Public-code rule:
-- `STATE_VERSION_CONFLICT` and other pre-commit errors stay in the rejected response.
-
-Response boundary:
-- Preflight failures do not return `CloseReadinessBlocker` entries.
-
 <a id="close-task-intent-check"></a>
-### `intent=check`
-
-Condition:
-- The request is a valid read.
-
-Response path:
-- `CloseTaskResult` read-only result
-
-Allowed:
-- May return `CloseReadinessBlocker` observation data.
-
-State effect:
-- No stored blocker and no state-version increment.
-
 <a id="close-task-intent-complete-blocked"></a>
-### `intent=complete` blocked
-
-Condition:
-- A valid evaluation finds close-readiness blockers.
-
-Response path:
-- `CloseTaskResult(close_state=blocked)`
-
-Allowed:
-- May return `CloseReadinessBlocker[]`.
-
-Public-code boundary:
-- `intent=complete` blocked does not use `STATE_VERSION_CONFLICT`.
-
 <a id="close-task-intent-complete-closed"></a>
-### `intent=complete` closed
-
-Condition:
-- No remaining owner-defined close blockers exist.
-
-Response path:
-- `CloseTaskResult(close_state=closed)`
-
-Public-code rule:
-- No close blockers.
-
 <a id="close-task-invalid-terminal-transition"></a>
-### Invalid terminal transition
-
-Condition:
-- `intent=cancel` or `intent=supersede` has an invalid terminal transition.
-
-Response path:
-- Method-owned result or rejection path
-
-Public-code rule:
-- Blockers are limited to transition validity.
-
-Transition boundary:
-- Cancellation and supersession do not require evidence sufficiency, final acceptance, or residual-risk acceptance.
-
-### Close-readiness finding code summary
-
-These rows summarize public error-code families for close-readiness findings. They do not turn public `ErrorCode` values into blocker codes.
-
-| Close-readiness finding | Detail section |
-|---|---|
-| Evidence gap | [Evidence gap](#close-mapping-evidence-gap) |
-| Persistent artifact issue | [Persistent artifact issue](#close-mapping-artifact-issue) |
-| Final acceptance issue | [Final acceptance issue](#close-mapping-final-acceptance) |
-| Residual risk not visible | [Residual risk not visible](#close-mapping-residual-risk-not-visible) |
-| Residual risk missing acceptance | [Residual risk missing acceptance](#close-mapping-unaccepted-residual-risk) |
-| Unresolved judgment | [Unresolved user-owned judgment](#close-mapping-unresolved-user-judgment) |
-| Sensitive approval issue | [Sensitive-action approval issue](#close-mapping-sensitive-approval) |
-| Scope, boundary, or baseline | [Scope, boundary, or baseline blocker](#close-mapping-scope-boundary-baseline) |
-| Readable view freshness | [Readable view freshness issue](#close-mapping-readable-view-freshness) |
-| Stale state rejection | [Stale state is rejected](#close-mapping-stale-state-rejected) |
-
 <a id="close-mapping-evidence-gap"></a>
-### Evidence gap
-
-Condition:
-- Close-readiness evaluation finds an evidence gap.
-
-Public code mapping:
-- `EVIDENCE_INSUFFICIENT`
-
 <a id="close-mapping-artifact-issue"></a>
-### Persistent artifact issue
-
-Condition:
-- A close-relevant persistent artifact is missing, unavailable, unusable for the close basis, or failed.
-
-Public code mapping:
-- `ARTIFACT_MISSING`
-
 <a id="close-mapping-final-acceptance"></a>
-### Final acceptance issue
-
-Condition:
-- Required final acceptance is missing or incompatible.
-
-Public code mapping:
-- `ACCEPTANCE_REQUIRED`
-
 <a id="close-mapping-residual-risk-not-visible"></a>
-### Residual risk not visible
-
-Condition:
-- Known close-relevant residual risk is not visible.
-
-Public code mapping:
-- `RESIDUAL_RISK_NOT_VISIBLE`
-
 <a id="close-mapping-unaccepted-residual-risk"></a>
-### Residual risk missing acceptance
-
-Condition:
-- Residual risk is visible and lacks a recorded acceptance.
-
-Public code mapping:
-- `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `category=residual_risk_acceptance`
-
 <a id="close-mapping-unresolved-user-judgment"></a>
-### Unresolved user-owned judgment
-
-Condition:
-- A user-owned judgment is unresolved.
-
-Public code mapping:
-- `DECISION_REQUIRED` or `DECISION_UNRESOLVED`
-
 <a id="close-mapping-sensitive-approval"></a>
-### Sensitive-action approval issue
-
-Condition:
-- Sensitive-action approval is missing, denied, expired, or drifted.
-
-Public code mapping:
-- `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED`
-
 <a id="close-mapping-scope-boundary-baseline"></a>
-### Scope, boundary, or baseline blocker
-
-Condition:
-- A valid evaluation finds a scope, autonomy boundary, or baseline blocker.
-
-Public code mapping:
-- `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, or `BASELINE_STALE`
-
-Owner boundary:
-- Use the scope, boundary, or baseline public-code mapping only when the owner permits the mapping.
-
 <a id="close-mapping-readable-view-freshness"></a>
-### Readable view freshness issue
-
-Condition:
-- A readable view freshness issue is present.
-
-Public code mapping:
-- `PROJECTION_STALE`
-
-Owner boundary:
-- `PROJECTION_STALE` is not a close blocker by itself.
-
 <a id="close-mapping-stale-state-rejected"></a>
-### Stale state is rejected
 
-Condition:
-- Project-wide state or `WriteAuthorization.basis_state_version` is stale.
+## Close-readiness blocker routing
 
-Response path:
-- `ToolRejectedResponse.errors[]` with `STATE_VERSION_CONFLICT`
-
-Response boundary:
-- Stale state is not a close blocker.
-
-Owner links:
-- Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)
-- Method behavior and close-readiness evaluation order: [`harness.close_task`](method-close-task.md)
-- `CloseReadinessBlocker` shape and categories: [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md)
+Detailed close-readiness blocker routing, forbidden public-error-as-blocker representation, and `harness.close_task` blocker mapping belong to [API blocker routing](blocker-routing.md).

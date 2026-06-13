@@ -1,6 +1,6 @@
 # API errors
 
-This document is the API error reference index. It routes public error-code, precedence, routing, and machine-readable detail questions to the focused error owner documents.
+This document is the API error reference index. It routes public error-code, precedence, response branch routing, close-readiness blocker routing, and machine-readable detail questions to focused owner documents.
 
 It does not define rendered labels, message copy, templates, storage rows, runtime output, or method-specific result payloads.
 
@@ -10,7 +10,8 @@ It does not define rendered labels, message copy, templates, storage rows, runti
 |---|---|
 | Public `ErrorCode` identifiers, meanings, and occurrence summaries | [API error codes](error-codes.md) |
 | Primary public-error selection, precedence, stale-state conflict, and idempotency conflict behavior | [API error precedence](error-precedence.md) |
-| Rejected responses, blocked results, `dry_run` previews, forbidden blocker-code use, and `close_task` blocker mapping | [API error routing](error-routing.md) |
+| Rejected responses, blocked results, and `dry_run` previews | [API error routing](error-routing.md) |
+| Close-readiness blocker routing, forbidden public-error-as-blocker representation, and `close_task` blocker mapping | [API blocker routing](blocker-routing.md) |
 | `ToolError.details`, detail fields, helper values, and machine-readable detail constraints | [API error details](error-details.md) |
 
 ## Related owners

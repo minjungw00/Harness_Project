@@ -2,7 +2,7 @@
 
 This document owns primary public-error selection when more than one public error candidate exists. It also owns public stale-state and idempotency conflict behavior for `STATE_VERSION_CONFLICT`.
 
-It does not define the public `ErrorCode` value set, blocker routing, machine-readable detail fields, response branch shapes, storage replay rows, or rendered labels.
+It does not define the public `ErrorCode` value set, response branch routing, close-readiness blocker routing, machine-readable detail fields, response branch shapes, storage replay rows, or rendered labels.
 
 ## Owner boundaries
 
@@ -15,7 +15,8 @@ This document owns:
 This document does not own:
 
 - Public code meanings outside precedence selection; see [API error codes](error-codes.md).
-- API error versus blocker routing; see [API error routing](error-routing.md).
+- API response branch routing; see [API error routing](error-routing.md).
+- Close-readiness blocker routing; see [API blocker routing](blocker-routing.md).
 - Machine-readable conflict detail fields; see [API error details](error-details.md#state-conflict-detail-fields).
 - Storage replay rows and state clocks; see [Storage Versioning](../storage-versioning.md).
 

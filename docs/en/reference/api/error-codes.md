@@ -2,7 +2,7 @@
 
 This document owns public `ErrorCode` identifiers, meanings, and occurrence summaries for Harness API responses.
 
-It does not define primary-error precedence, API error versus blocker routing, `ToolError.details`, response branch shapes, display labels, storage effects, or security guarantees.
+It does not define primary-error precedence, response branch routing, close-readiness blocker routing, `ToolError.details`, response branch shapes, display labels, storage effects, or security guarantees.
 
 ## Owner boundaries
 
@@ -15,7 +15,8 @@ This document owns:
 This document does not own:
 
 - Primary-code selection and state-version conflict behavior; see [API error precedence](error-precedence.md).
-- Rejected-response, blocked-result, `dry_run`, and `close_task` routing; see [API error routing](error-routing.md).
+- Rejected-response, blocked-result, and `dry_run` branch routing; see [API error routing](error-routing.md).
+- Close-readiness blocker routing and `close_task` blocker mapping; see [API blocker routing](blocker-routing.md).
 - `ToolError.details` fields and helper values; see [API error details](error-details.md).
 - Common response branch shapes; see [API Schema Core](schema-core.md).
 - Rendered labels and message wording; see [Template Bodies](../template-bodies.md).

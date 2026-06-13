@@ -2,7 +2,7 @@
 
 This document owns machine-readable `ToolError.details` semantics, detail fields, helper values, and detail constraints for Harness API errors.
 
-It does not define the `ToolError` object shape, public `ErrorCode` meanings, precedence selection, blocker routing, display labels, or storage effects.
+It does not define the `ToolError` object shape, public `ErrorCode` meanings, precedence selection, response branch routing, close-readiness blocker routing, display labels, or storage effects.
 
 ## Owner boundaries
 
@@ -17,7 +17,8 @@ This document does not own:
 - The `ToolError` shape; see [API Schema Core](schema-core.md#shared-support-shapes).
 - Public `ErrorCode` values and meanings; see [API error codes](error-codes.md).
 - Primary-code precedence and conflict selection; see [API error precedence](error-precedence.md).
-- Error versus blocker routing; see [API error routing](error-routing.md).
+- API response branch routing; see [API error routing](error-routing.md).
+- Close-readiness blocker routing; see [API blocker routing](blocker-routing.md).
 - Rendered labels and message wording; see [Template Bodies](../template-bodies.md).
 
 <a id="machine-readable-error-details"></a>

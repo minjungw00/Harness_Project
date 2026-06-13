@@ -569,7 +569,7 @@ Avoid:
 Owner:
 - [Core Model](core-model.md)
 - [Close-task method](api/method-close-task.md)
-- [API error routing](api/error-routing.md)
+- [API blocker routing](api/blocker-routing.md)
 
 Notes:
 - This is the evaluation concept, not the blocker schema.
@@ -595,7 +595,7 @@ Avoid:
 Owner:
 - [Core Model](core-model.md)
 - [Close-task method](api/method-close-task.md)
-- [API error routing](api/error-routing.md)
+- [API blocker routing](api/blocker-routing.md)
 
 Notes:
 - This is the owner-path check that derives close readiness and remaining close blockers.
@@ -620,7 +620,7 @@ Avoid:
 Owner:
 - [Core Model](core-model.md)
 - [API State Schemas](api/schema-state.md)
-- [API error routing](api/error-routing.md)
+- [API blocker routing](api/blocker-routing.md)
 
 Notes:
 - Use this for a close-relevant reason that prevents honest close readiness until the owner path addresses it.
@@ -646,7 +646,7 @@ Avoid:
 Owner:
 - [API State Schemas](api/schema-state.md)
 - [API Value Sets](api/schema-value-sets.md)
-- [API error routing](api/error-routing.md)
+- [API blocker routing](api/blocker-routing.md)
 
 Notes:
 - `CloseReadinessBlocker` is the API schema identifier for close-readiness blocking data.

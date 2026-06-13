@@ -13,7 +13,7 @@
 - 바뀐 상대 링크, 파일 경로, 앵커, 경로 표, 대응 언어 링크를 확인합니다.
 - 유지되는 탐색 문구가 작성 담당 문서의 간결 경로를 쓰는지 확인합니다.
 - 계약 링크가 편한 중복 문서가 아니라 담당 문서를 가리키는지 확인합니다.
-- API 오류 링크는 [API 오류](../../reference/api/errors.md)를 문서 묶음 색인으로만 사용합니다. 공개 코드 의미, 우선순위, 오류와 차단 사유 경로, 기계 판독용 세부사항은 각각의 집중 API 오류 담당 문서로 보냅니다.
+- API 오류 링크는 [API 오류](../../reference/api/errors.md)를 문서 묶음 색인으로만 사용합니다. 공개 코드 의미, 우선순위, 응답 분기 경로, 닫기 준비 상태 blocker 처리 경로, 기계 판독용 세부사항은 각각의 집중 API 담당 문서로 보냅니다.
 
 실패 조건:
 - 링크가 없는 파일, 없는 앵커, 오래된 경로 묶음, 잘못된 언어의 담당 문서, 삭제된 호환 경로를 가리킵니다.
@@ -132,6 +132,7 @@
 - [API 오류 코드](../../reference/api/error-codes.md)
 - [API 오류 우선순위](../../reference/api/error-precedence.md)
 - [API 오류 경로](../../reference/api/error-routing.md)
+- [API blocker 처리 경로](../../reference/api/blocker-routing.md)
 - [API 오류 세부사항](../../reference/api/error-details.md)
 - [작성 가이드](../authoring-guide.md)
 
@@ -139,7 +140,8 @@
 - [API 오류](../../reference/api/errors.md)는 문서 묶음 색인으로만 사용합니다.
 - 공개 `ErrorCode` 의미는 [API 오류 코드](../../reference/api/error-codes.md)로 보냅니다.
 - 우선순위, 충돌 선택, 오래된 상태 순서는 [API 오류 우선순위](../../reference/api/error-precedence.md)로 보냅니다.
-- 오류와 차단 사유 배치는 [API 오류 경로](../../reference/api/error-routing.md)로 보냅니다.
+- 거부 응답, 차단 결과, `dry_run` 분기 배치는 [API 오류 경로](../../reference/api/error-routing.md)로 보냅니다.
+- 닫기 준비 상태 blocker 처리 경로는 [API blocker 처리 경로](../../reference/api/blocker-routing.md)로 보냅니다.
 - 기계 판독용 `ToolError.details` 필드와 세부 값 의미는 [API 오류 세부사항](../../reference/api/error-details.md)으로 보냅니다.
 
 실패 조건:
