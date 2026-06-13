@@ -47,7 +47,7 @@ Owner:
 
 Check:
 - Confirm documentation checks produced review notes only.
-- Confirm they did not create or simulate Harness runtime records, generated projections, operational artifacts, executable fixtures, conformance reports, QA records, acceptance records, close records, residual-risk records, or product writes.
+- Confirm they did not create or simulate Harness runtime state, generated projections, operational artifacts, executable fixtures, conformance reports, QA results, acceptance decisions, close-readiness state, residual-risk decisions, or product writes.
 
 Failure:
 - A documentation check leaves behind generated operational files, runtime-like state, fixture output, one-off conversion notes, archive copies, or one-off planning files.
@@ -63,11 +63,11 @@ Owner:
 - [Checks Index](../checks.md)
 
 Check:
-- Inspect changed files and newly added files for one-off planning files, working-note remnants, review leftovers, archive copies, transition notes, one-off conversion notes, scratch files, generated runtime records, and unresolved task markers such as `FIXME` or other all-caps placeholders.
+- Inspect changed files and newly added files for one-off planning files, working-note remnants, review leftovers, archive copies, transition notes, one-off conversion notes, ad hoc files, generated runtime records, and unresolved task markers such as `FIXME` or other all-caps placeholders.
 - Confirm documentation-maintenance findings live in the final report or the appropriate maintained documentation page, not in ad hoc files.
 
 Failure:
-- The final tree contains a one-off plan, working-note remnant, review note, archive copy, scratch file, generated runtime-like record, one-off conversion note, or unresolved task marker from the documentation batch.
+- The final tree contains a one-off plan, working-note remnant, review note, archive copy, ad hoc file, generated runtime-like record, one-off conversion note, or unresolved task marker from the documentation batch.
 - A maintained page contains a task marker that names deferred work instead of a durable maintenance rule.
 
 Fix:

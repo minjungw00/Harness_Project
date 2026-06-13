@@ -10,10 +10,10 @@ This guide does not authorize:
 - runtime state
 - projections
 - evidence records
-- QA records
-- acceptance records
-- close records
-- residual-risk records
+- QA results
+- acceptance decisions
+- close-readiness state
+- residual-risk decisions
 - executable fixtures
 - conformance runners
 
@@ -47,7 +47,7 @@ For documentation maintenance, read:
 
 [Authoring Guide](authoring-guide.md) -> [Translation Guide](translation-guide.md) -> [Checks Index](checks.md) -> focused check pages -> [doc-index.yaml](../../doc-index.yaml) -> [Terminology Map](../../terminology-map.yaml).
 
-The maintenance path helps editors choose inputs and owners. It does not create runtime state, acceptance, evidence, close records, or implementation authority.
+The maintenance path helps editors choose inputs and owners. It does not create runtime state, acceptance, evidence, close-readiness state, or implementation authority.
 
 ## 2. Canonical owner rule
 
@@ -97,7 +97,7 @@ When adding a real new owner, update [Reference README](../reference/README.md) 
 
 Split or reroute an existing owner when one reference document starts carrying unrelated concerns. A single owner should not define API behavior, schemas, storage effects, security guarantees, error precedence, templates, and examples simply because a workflow mentions them together. Keep the narrow owner definition in the document that owns the concern, and route neighboring concerns with short links.
 
-Build guidance and route metadata should use durable implementation meaning. Avoid build-moment labels, transfer labels, current-work labels, or interim-stage labels that would stop making sense after the implementation path matures.
+Build guidance and route metadata should use durable implementation meaning. Avoid build-moment labels, current-work labels, or interim-stage labels that would stop making sense after the implementation path matures.
 
 <a id="baseline-scope-api-method-split-threshold"></a>
 ### API method owners
@@ -246,5 +246,5 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] Check descriptions use named blocks and bullets instead of dense table cells.
 - [ ] Links point to maintained routes and canonical owners.
 - [ ] New or changed terminology was checked against [Terminology Map](../../terminology-map.yaml).
-- [ ] No one-off planning files, archive copies, working-note remnants, scratch files, generated runtime records, unresolved task markers, one-off conversion notes, or review leftovers remain.
+- [ ] No one-off planning files, archive copies, working-note remnants, ad hoc files, generated runtime records, unresolved task markers, one-off conversion notes, or review leftovers remain.
 - [ ] Relevant checks in [Checks](checks.md) and its focused check pages were run or reported as skipped.

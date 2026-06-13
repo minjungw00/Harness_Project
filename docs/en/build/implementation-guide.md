@@ -72,12 +72,12 @@ Do not infer fields, optionality, storage effects, security guarantees, out-of-s
 
 ## Small baseline build shape
 
-A small baseline build can carry one ordinary user task through the applicable owner path. Use [Scope](../reference/scope.md) for included capabilities and the relevant owners for exact requests, responses, storage effects, errors, blockers, security wording, and conformance assertions.
+A small baseline build can carry one ordinary user task by following [Scope](../reference/scope.md) for included capabilities and the relevant owners for exact requests, responses, storage effects, errors, blockers, security wording, and conformance assertions.
 
 This is an implementation shape, not a separate contract.
 
 ## Repository boundary
 
-Runtime state, generated artifacts, evidence records, QA records, acceptance records, close records, residual-risk records, fixture outputs, and product implementation files are not stored in this documentation tree.
+Runtime state, generated artifacts, evidence outputs, QA results, acceptance decisions, close-readiness state, residual-risk decisions, fixture outputs, and product implementation files are not stored in this documentation tree.
 
 Path allowlists, route tables, and documentation batch boundaries in these docs are maintainer editing controls for the documentation set. They are not Harness runtime permissions, write authorizations, sandbox guarantees, or proof of enforcement.

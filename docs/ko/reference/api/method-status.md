@@ -232,7 +232,7 @@ close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "계정 데이터 내보내기 확인 문구에 대한 사용자 수락 기록이 없습니다."
+      message: "계정 데이터 내보내기 확인 문구에 대한 사용자 수락이 없습니다."
 guarantee_display:
   level: cooperative
   notes:

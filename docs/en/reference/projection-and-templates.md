@@ -15,14 +15,14 @@ This document owns:
 This document does not own:
 
 - status card, judgment request, run/evidence summary, close result, agent context packet, or public-error display wording; see [Template Bodies](template-bodies.md)
-- source-of-truth Core state, user-owned judgment, evidence, acceptance, residual-risk, or close records; see [Core Model](core-model.md)
+- source-of-truth Core state, user-owned judgment, evidence, acceptance decisions, residual-risk decisions, or close-readiness state; see [Core Model](core-model.md)
 - storage records, artifact records, or storage effects; see storage owners through [Reference Index](README.md)
 - public API schemas or method behavior; see API owners through [Reference Index](README.md)
 - surface registration, active surface context, or capability declarations; see [Agent Integration](agent-integration.md)
 
 ## Authority boundary
 
-Authority remains with owner records, not with rendered views. Authoritative records include Core-owned state, user-owned judgments, owner-recorded evidence and artifacts, acceptance and residual-risk records, close records, and storage records owned by the storage documents.
+Authority remains with owner records, not with rendered views. Authoritative records include Core-owned state, user-owned judgments, owner-recorded evidence and artifacts, acceptance decisions, residual-risk decisions, close-readiness state, and storage records owned by the storage documents.
 
 Projected, status, and template views are read-only display. They may quote owner values, summarize owner records, or link to owner records. They are not a second state store, even when they are clear, manually edited, copied into a `Product Repository`, or injected into agent context.
 
@@ -36,7 +36,7 @@ A rendered label, status badge, Markdown section, projection, template body, cha
 - create final acceptance or accept residual risk
 - create close readiness or remove a `CloseReadinessBlocker`
 - close a Task
-- mutate Core, storage, artifact, user-judgment, acceptance, residual-risk, or close records
+- mutate Core, storage, artifact, user-judgment, acceptance decisions, residual-risk decisions, or close-readiness state
 
 If an owner record exists for one of those outcomes, a view may show or link to it. The display text is not the reason the outcome exists.
 

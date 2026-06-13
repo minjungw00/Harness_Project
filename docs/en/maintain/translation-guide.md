@@ -1,6 +1,6 @@
 # Translation guide
 
-Use this guide when editing paired English and Korean Harness documentation. This guide is only a documentation-maintenance standard. It is not a runtime conformance record, implementation record, QA result, acceptance record, close record, or generated Harness artifact.
+Use this guide when editing paired English and Korean Harness documentation. This guide is only a documentation-maintenance standard. It is not runtime conformance, implementation authority, a QA result, an acceptance decision, close-readiness state, or a generated Harness artifact.
 
 The canonical terminology map is [`docs/terminology-map.yaml`](../../terminology-map.yaml). Check it before adding or changing product terms, Korean prose terms, identifier explanations, or mixed-language bans. If this guide and the terminology map disagree, stop and align them in the same documentation batch.
 

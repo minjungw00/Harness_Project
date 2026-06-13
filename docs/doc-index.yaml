@@ -599,7 +599,7 @@ documents:
     path_ko: "docs/ko/reference/api/errors.md"
     role: "reference"
     owner_for:
-      - "API error family routing"
+      - "API error family index and routing"
       - "API error owner lookup"
       - "first-hop API error reference navigation"
     depends_on:
@@ -927,7 +927,7 @@ documents:
     not_owner_for:
       - "independent close blockers"
       - "design-policy validator catalogs"
-      - "acceptance records"
+      - "acceptance decisions"
     normative_level: "contract"
     audience:
       - "agents"

@@ -226,7 +226,7 @@ blocker 처리 경로:
 ### 잔여 위험 수락 누락
 
 조건:
-- 잔여 위험은 보였지만 수락 기록이 없습니다.
+- 잔여 위험은 보였지만 수락이 기록되어 있지 않습니다.
 
 blocker 처리 경로:
 - `category=residual_risk_acceptance`

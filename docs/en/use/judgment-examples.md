@@ -129,7 +129,7 @@ Agent may do:
 
 - Identify missing or stale evidence.
 - Explain what claim cannot be supported yet.
-- Attach or reference eligible artifacts only through the applicable owner path.
+- Follow the artifact and evidence owners when attaching or referencing eligible artifacts.
 
 Agent must not imply:
 

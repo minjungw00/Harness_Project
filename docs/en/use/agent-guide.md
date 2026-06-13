@@ -230,7 +230,7 @@ Do not make these appear required for ordinary baseline work:
 - operations control programs
 - other out-of-scope capabilities
 
-Quality concerns should route through an applicable owner path when one applies, such as scope, user-owned judgment, evidence, residual-risk visibility, surface capability, or another applicable blocker. Do not invent a separate quality gate or waiver path in the use guide.
+Quality concerns should route to the applicable owner when one applies, such as scope, user-owned judgment, evidence, residual-risk visibility, surface capability, or another applicable blocker. Do not invent a separate quality gate or waiver path in the use guide.
 
 Use compact user-facing shapes first: status, focused judgment request, what was checked, and close result. Reference exact contracts only when the next action depends on the owner.
 
