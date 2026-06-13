@@ -80,7 +80,7 @@
 ### 우선순위 6: `NO_ACTIVE_CHANGE_UNIT`
 
 적용 대상:
-- 활성 Change Unit이 없는 경우입니다.
+- 현재 적용 Change Unit이 없는 경우입니다.
 
 <a id="precedence-baseline-stale"></a>
 ### 우선순위 7: `BASELINE_STALE`

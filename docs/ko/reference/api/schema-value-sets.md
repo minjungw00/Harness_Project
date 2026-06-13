@@ -146,7 +146,7 @@ cancelled
 superseded
 ```
 
-`StatusResult.close_state`는 활성 닫기 상태가 없을 때 `none`도 허용합니다.
+`StatusResult.close_state`는 현재 적용 닫기 상태가 없을 때 `none`도 허용합니다.
 
 `Task.close_reason`은 아래 값을 사용합니다.
 

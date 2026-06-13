@@ -90,9 +90,9 @@
 | 런타임 홈 식별 정보 | `registry.sqlite` | 런타임 홈 식별자, 스키마/저장 프로필, 로컬 레지스트리 메타데이터. |
 | 프로젝트 등록 | `registry.sqlite` | 등록된 프로젝트를 `repo_root`와 `project_home`에 연결하는 매핑. |
 | `project.yaml` | 프로젝트 홈 | 등록된 프로젝트 하나의 정적 프로젝트 설정. |
-| `project_state` | `state.sqlite` | 프로젝트별 로컬 상태 헤더, 저장 프로필, 상태 시계 필드, 활성 `Task` 포인터, 기본 접점 포인터. |
+| `project_state` | `state.sqlite` | 프로젝트별 로컬 상태 헤더, 저장 프로필, 상태 시계 필드, 현재 적용 `Task` 포인터, 기본 접점 포인터. |
 | `surfaces` | `state.sqlite` | API 요청 래퍼 호환성, 기능 표시, 로컬 접근 상태에 필요한 등록된 로컬 접점 사실. |
-| `tasks` | `state.sqlite` | 사용자 가치 작업 단위, 구체화 요약, 생명주기/결과/닫기 요약, 활성 `CompletionPolicy`, 활성 Change Unit 포인터. |
+| `tasks` | `state.sqlite` | 사용자 가치 작업 단위, 구체화 요약, 생명주기/결과/닫기 요약, 현재 적용 `CompletionPolicy`, 현재 적용 Change Unit 포인터. |
 | `change_units` | `state.sqlite` | 범위 있는 작업 경계, 쓰기/닫기 근거, 범위 요약, Change Unit 생명주기. |
 | `user_judgments` | `state.sqlite` | 대기 중이거나 해결된 사용자 소유 판단, 필요한 경우 별도 민감 동작 승인 범위. |
 | `write_authorizations` | `state.sqlite` | 단일 사용 협력형 `Write Authorization` 기록, 기준 버전, 시도 범위, 만료, 소비 상태. |
@@ -115,8 +115,8 @@
 - 프로젝트 등록에는 고유한 프로젝트 식별자와 고유한 프로젝트 홈이 필요합니다.
 - 프로젝트 범위 행은 등록된 프로젝트에 속합니다.
 - `Task` 범위 행은 자신을 소유한 `tasks` 행과 같은 프로젝트와 같은 `Task`에 속합니다.
-- 활성 포인터, 기본 접점 포인터, 담당 참조는 같은 프로젝트의 기록을 가리켜야 합니다.
-- `Task` 하나에는 활성 Change Unit이 최대 하나만 있습니다.
+- 현재 적용 포인터, 기본 접점 포인터, 담당 참조는 같은 프로젝트의 기록을 가리켜야 합니다.
+- `Task` 하나에는 현재 적용 Change Unit이 최대 하나만 있습니다.
 - 소비된 `Write Authorization` 행, 소비된 스테이징 핸들, 승격된 스테이징 아티팩트, 아티팩트 담당 연결, 재실행 키처럼 단일 사용 관계는 여러 커밋 의미로 갈라지면 안 됩니다.
 
 ### 현재 행, 이벤트 행, 재실행 행
@@ -130,7 +130,7 @@
 저장소는 커밋 전에 저장 관계를 검증해야 합니다. 검증에는 아래 항목이 포함됩니다.
 
 - 같은 프로젝트와 같은 `Task` 소유 관계
-- 활성 포인터 대상
+- 현재 적용 포인터 대상
 - 호환되는 `Write Authorization` 소비
 - 아티팩트 스테이징 소비와 승격 대상
 - 아티팩트 담당 관계
@@ -159,7 +159,7 @@
 - `blockers.status`: `active`, `resolved`, `superseded`.
 - `tool_invocations.status`: `committed`.
 
-공개 API 스키마 값을 반영하는 행은 API 스키마 담당 문서와 정확히 맞아야 합니다. 이 문서는 `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result`, `runs.kind`, `runs.status`, `user_judgments.status`, `evidence_summaries.status` 같은 필드의 공개 API 값을 다시 정의하지 않습니다. 해당 값은 [API 값 집합](api/schema-value-sets.md), [API 상태 스키마](api/schema-state.md), 메서드 담당 문서를 봅니다.
+공개 API 스키마 값을 반영하는 행은 API 스키마 담당 문서와 정확히 맞아야 합니다. 이 문서는 `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result`, `runs.kind`, `runs.status`, `user_judgments.status`, `evidence_summaries.status` 같은 필드의 공개 API 값을 다시 정의하지 않습니다. 공개 API 값은 [API 값 집합](api/schema-value-sets.md), [API 상태 스키마](api/schema-state.md), 메서드 담당 문서를 봅니다.
 
 ## 저장소 소유 JSON
 

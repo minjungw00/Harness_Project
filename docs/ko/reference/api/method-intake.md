@@ -95,7 +95,7 @@
 - 오래된 `expected_state_version`.
 - Core 또는 로컬 접점 사용 불가.
 - 로컬 접근 불일치.
-- 활성 `Task` 호환성 부족.
+- 현재 적용 `Task`와 호환되지 않음.
 - 검증기 실패.
 
 공개 오류 코드 의미는 [API 오류 코드](error-codes.md)가 담당합니다. 공개 오류 우선순위는 [API 오류 우선순위](error-precedence.md)가 담당합니다.
@@ -172,7 +172,7 @@ state:
   blocker_refs: []
 next_actions:
   - action: harness.update_scope
-    reason: "쓰기 확인 전에 첫 활성 Change Unit을 만든다."
+    reason: "쓰기 확인 전에 처음 적용할 Change Unit을 만든다."
 ```
 
 ## 담당 문서 링크
