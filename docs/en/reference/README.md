@@ -9,10 +9,10 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | Topic | Owner |
 |---|---|
 | Scope questions | [`scope.md`](scope.md) |
-| Core authority, product concepts, user-owned judgment, and close readiness | [`core-model.md`](core-model.md) |
+| Core authority, product concepts, user-owned judgment, and close-readiness authority concepts | [`core-model.md`](core-model.md) |
 | Runtime and repository boundaries | [`runtime-boundaries.md`](runtime-boundaries.md) |
 | Security wording and guarantee semantics | [`security.md`](security.md) |
-| Product terminology | [`glossary.md`](glossary.md), [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
+| Terminology definitions | [`glossary.md`](glossary.md), [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
 | Implementation entry route | [`../build/implementation-guide.md`](../build/implementation-guide.md) |
 
 ## API and schema owners
@@ -21,15 +21,15 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 |---|---|
 | Public API method list and method routing | [`api/methods.md`](api/methods.md) |
 | Shared request envelopes and response branches | [`api/schema-core.md`](api/schema-core.md) |
-| State and close-readiness state shapes | [`api/schema-state.md`](api/schema-state.md) |
+| State schemas and `CloseReadinessBlocker` shape | [`api/schema-state.md`](api/schema-state.md) |
 | Artifact reference shapes | [`api/schema-artifacts.md`](api/schema-artifacts.md) |
 | User judgment and sensitive-action schemas | [`api/schema-judgment.md`](api/schema-judgment.md) |
-| API value sets | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
+| API value sets and blocker category values | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
 | API error family index | [`api/errors.md`](api/errors.md) |
 | Public `ErrorCode` identifiers and meanings | [`api/error-codes.md`](api/error-codes.md) |
 | API error precedence and state conflict behavior | [`api/error-precedence.md`](api/error-precedence.md) |
 | API response branch routing | [`api/error-routing.md`](api/error-routing.md) |
-| Close-readiness blocker routing | [`api/blocker-routing.md`](api/blocker-routing.md) |
+| Blocker/API response routing boundary | [`api/blocker-routing.md`](api/blocker-routing.md) |
 | Machine-readable `ToolError.details` | [`api/error-details.md`](api/error-details.md) |
 
 ## Storage owners
@@ -52,7 +52,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | Authority vs projected/status/template views | [`projection-and-templates.md`](projection-and-templates.md) |
 | Display-facing template bodies and labels | [`template-bodies.md`](template-bodies.md) |
 | Conformance reference | [`conformance.md`](conformance.md) |
-| Design quality reference | [`design-quality.md`](design-quality.md) |
+| Design-quality finding semantics and owner-boundary rules | [`design-quality.md`](design-quality.md) |
 
 ## User judgment and close-readiness owners
 
@@ -61,10 +61,11 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | User-owned judgment meaning | [`core-model.md`](core-model.md) |
 | User judgment methods | [`api/method-user-judgment.md`](api/method-user-judgment.md) |
 | User judgment schemas | [`api/schema-judgment.md`](api/schema-judgment.md) |
-| Close-readiness meaning | [`core-model.md`](core-model.md) |
-| Close task method | [`api/method-close-task.md`](api/method-close-task.md) |
-| Close-readiness state shapes | [`api/schema-state.md`](api/schema-state.md) |
-| Close-readiness blocker routing | [`api/blocker-routing.md`](api/blocker-routing.md) |
+| Close-readiness authority concepts | [`core-model.md`](core-model.md) |
+| `harness.close_task` method behavior | [`api/method-close-task.md`](api/method-close-task.md) |
+| `CloseReadinessBlocker` shape | [`api/schema-state.md`](api/schema-state.md) |
+| Blocker category values | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
+| Blocker/API response routing boundary | [`api/blocker-routing.md`](api/blocker-routing.md) |
 
 ## Maintenance and metadata
 
@@ -74,5 +75,5 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | Machine-readable owner routing | [`../../doc-index.yaml`](../../doc-index.yaml) |
 | Documentation authoring rules | [`../maintain/authoring-guide.md`](../maintain/authoring-guide.md) |
 | Documentation checks index | [`../maintain/checks.md`](../maintain/checks.md) |
-| Translation guidance | [`../maintain/translation-guide.md`](../maintain/translation-guide.md) |
+| Bilingual terminology and Korean style guidance | [`../maintain/translation-guide.md`](../maintain/translation-guide.md) |
 | Bilingual terminology controls | [`../../terminology-map.yaml`](../../terminology-map.yaml) |
