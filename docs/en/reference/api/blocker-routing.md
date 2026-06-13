@@ -2,27 +2,36 @@
 
 This document owns the routing boundary between close-readiness blockers and API response branches. It is a boundary router, not the method behavior owner or the schema owner.
 
-Use it to decide which owner handles a close-relevant API condition after the response branch boundary is known. It does not define `harness.close_task` method behavior, `CloseReadinessBlocker` shape, blocker category values, Core close-readiness authority, storage effects, public `ErrorCode` meanings, response-branch selection, or display wording.
+Use it to decide which owner handles a close-relevant API condition after the response branch boundary is known. It does not define `harness.close_task` method behavior, `CloseReadinessBlocker` shape, blocker category values, Core close-readiness authority, storage effects, public `ErrorCode` meanings, API error precedence, response-branch selection, or display wording.
 
 ## Owner boundaries
 
 | Concern | Owner |
 |---|---|
-| Blocker/API response routing boundary | This document |
+| Close-readiness blocker/API response routing boundary | This document |
 | `harness.close_task` request behavior, evaluation order, result branches, and committed blocked outcomes | [`harness.close_task`](method-close-task.md) |
 | `CloseReadinessBlocker` fields and nested shape | [API State Schemas](schema-state.md) |
 | Exact `CloseReadinessBlocker.category` values and other enum-like API vocabulary | [API Value Sets](schema-value-sets.md#state-and-blocker-values) |
 | Core close-readiness authority, final acceptance, residual-risk acceptance, and non-substitution rules | [Core Model close readiness](../core-model.md#close_task) |
-| Rejected-response, blocked-result, and `dry_run` response branch selection | [API error routing](error-routing.md) |
-| Public `ErrorCode` meanings and precedence | [API error codes](error-codes.md) and [API error precedence](error-precedence.md) |
+| API response branch routing for rejected responses, blocked results, and `dry_run` previews | [API error routing](error-routing.md) |
+| Public `ErrorCode` meanings | [API error codes](error-codes.md) |
+| API error precedence and conflict selection | [API error precedence](error-precedence.md) |
 | Display labels and rendered wording | [Template Bodies](../template-bodies.md) |
+
+## Common error/blocker boundary
+
+- A public `ErrorCode` identifies an API error condition defined by [API error codes](error-codes.md). It is not automatically a `CloseReadinessBlocker.category` value or any other close-readiness blocker category.
+- A rejected response error code stays on the API error side even when the same underlying condition can affect close readiness. It is not used as a blocker category merely because of that relationship.
+- Close-readiness blockers use the `CloseReadinessBlocker` shape from [API State Schemas](schema-state.md) and the blocker category value set from [API Value Sets](schema-value-sets.md#state-and-blocker-values).
+- Blocker routing applies after API response branch routing and does not replace [API error precedence](error-precedence.md).
+- [API error codes](error-codes.md) defines public error code meanings; this document defines the boundary between those errors and close-readiness blocker routing.
 
 ## API error and blocker boundary
 
 | Situation | Route | Boundary |
 |---|---|---|
 | Failure before a valid close-readiness evaluation | `ToolRejectedResponse.errors[]` with `ToolError.code: ErrorCode` | The request did not reach a valid close-readiness result. It does not return `CloseReadinessBlocker[]`. |
-| Valid close-readiness evaluation finds a close blocker | `CloseReadinessBlocker[]` in the method result or read-only state result | The data explains why close is blocked. Schema shape and exact category values stay with the schema and value-set owners. |
+| Valid close-readiness evaluation finds a close-readiness blocker | `CloseReadinessBlocker[]` in the method result or read-only state result | The data explains why close is blocked. Schema shape and exact category values stay with the schema and value-set owners. |
 | Valid `dry_run` preview predicts blocker-like outcomes | `DryRunSummary.would_blockers: PlannedBlocker[]` | Preview blockers are not stored `CloseReadinessBlocker` objects and do not create close-readiness state. |
 | Response branch selection is the question | [API error routing](error-routing.md) | This page applies after the branch boundary is identified; it does not choose every response branch. |
 
@@ -39,9 +48,7 @@ Use it to decide which owner handles a close-relevant API condition after the re
 
 ## Public code boundary
 
-Public `ErrorCode` values are public API identifiers, not blocker codes. A public error-code family may be cited as related to a close-readiness blocker only when the condition is found during a valid close-readiness evaluation and the applicable owner defines a supported blocker category or blocker code for that condition.
-
-The public value is not copied into `CloseReadinessBlocker.code` unless the schema or method owner explicitly allows that exact use.
+Use this table only after applying the common boundary above. Public-code families can be related to close-readiness blockers only through owner-defined blocker data; public `ErrorCode` values are not copied into `CloseReadinessBlocker.code` unless the schema or method owner explicitly allows that exact use.
 
 | Public-code relationship | Blocker-side route | Boundary |
 |---|---|---|

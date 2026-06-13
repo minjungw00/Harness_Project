@@ -2,7 +2,7 @@
 
 이 문서는 닫기 차단 사유와 API 응답 분기 사이의 처리 경계를 담당합니다. 메서드 동작 담당 문서나 스키마 담당 문서가 아니라 경계 안내 문서입니다.
 
-응답 분기 경계가 식별된 뒤 닫기 관련 API 조건을 어느 담당 문서가 다루는지 고를 때 사용합니다. `harness.close_task` 메서드 동작, `CloseReadinessBlocker` 형태, 차단 사유 범주 값, Core 닫기 준비 상태 권한, 저장 효과, 공개 `ErrorCode` 의미, 응답 분기 선택, 표시 문구는 정의하지 않습니다.
+응답 분기 경계가 식별된 뒤 닫기 관련 API 조건을 어느 담당 문서가 다루는지 고를 때 사용합니다. `harness.close_task` 메서드 동작, `CloseReadinessBlocker` 형태, 차단 사유 범주 값, Core 닫기 준비 상태 권한, 저장 효과, 공개 `ErrorCode` 의미, API 오류 우선순위, 응답 분기 선택, 표시 문구는 정의하지 않습니다.
 
 ## 담당 경계
 
@@ -13,9 +13,18 @@
 | `CloseReadinessBlocker` 필드와 중첩 형태 | [API 상태 스키마](schema-state.md) |
 | 정확한 `CloseReadinessBlocker.category` 값과 그 밖의 enum 형태 API 어휘 | [API 값 집합](schema-value-sets.md#state-and-blocker-values) |
 | Core 닫기 준비 상태 권한, 최종 수락, 잔여 위험 수락, 대체 불가 규칙 | [Core 모델의 닫기 준비 상태](../core-model.md#close_task) |
-| 거부 응답, 차단 결과, `dry_run` 응답 분기 선택 | [API 오류 처리 경로](error-routing.md) |
-| 공개 `ErrorCode` 의미와 우선순위 | [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md) |
+| 거부 응답, 차단 결과, `dry_run` 미리보기의 API 응답 분기 처리 경로 | [API 오류 처리 경로](error-routing.md) |
+| 공개 `ErrorCode` 의미 | [API 오류 코드](error-codes.md) |
+| API 오류 우선순위와 충돌 선택 | [API 오류 우선순위](error-precedence.md) |
 | 표시 라벨과 렌더링 문구 | [템플릿 본문](../template-bodies.md) |
+
+## 오류와 차단 사유의 공통 경계
+
+- 공개 `ErrorCode`는 [API 오류 코드](error-codes.md)가 정의하는 API 오류 조건 식별자입니다. 이것만으로 `CloseReadinessBlocker.category` 값이나 차단 사유 범주가 되지 않습니다.
+- 거부 응답의 오류 코드는 같은 조건이 닫기 준비 상태에 영향을 줄 수 있다는 이유만으로 차단 사유 범주로 사용하지 않습니다. 그 오류 코드는 API 오류 쪽에 남습니다.
+- 닫기 차단 사유는 [API 상태 스키마](schema-state.md)의 `CloseReadinessBlocker` 형태와 [API 값 집합](schema-value-sets.md#state-and-blocker-values)의 차단 사유 범주 값 집합을 사용합니다.
+- 차단 사유 처리 경로는 API 응답 분기 처리 경로가 정해진 뒤에 적용되며 [API 오류 우선순위](error-precedence.md)를 대신하지 않습니다.
+- [API 오류 코드](error-codes.md)는 공개 오류 코드 의미를 정의하고, 이 문서는 그 오류와 닫기 차단 사유 처리 경로 사이의 경계를 정의합니다.
 
 ## 오류와 차단 사유의 경계
 
@@ -39,9 +48,7 @@
 
 ## 공개 오류 코드가 차단 사유로 표현되는 경우
 
-공개 `ErrorCode` 값은 공개 API 식별자이지 차단 사유 코드가 아닙니다. 어떤 조건이 유효한 닫기 준비 상태 평가 중 발견되고, 적용되는 담당 문서가 그 조건에 대해 지원되는 차단 사유 범주나 차단 사유 코드를 정의할 때만 공개 오류 코드를 닫기 차단 사유와 관련지을 수 있습니다.
-
-스키마나 메서드 담당 문서가 그 정확한 사용을 명시적으로 허용하지 않는 한 공개 값을 `CloseReadinessBlocker.code`에 복사하지 않습니다.
+위의 공통 경계를 적용한 뒤에만 이 표를 사용합니다. 공개 오류 코드 묶음은 담당 문서가 정의한 차단 사유 데이터를 통해서만 닫기 차단 사유와 관련될 수 있습니다. 스키마나 메서드 담당 문서가 그 정확한 사용을 명시적으로 허용하지 않는 한 공개 `ErrorCode` 값을 `CloseReadinessBlocker.code`에 복사하지 않습니다.
 
 | 공개 오류 코드와의 관계 | 차단 사유 쪽 경로 | 경계 |
 |---|---|---|
