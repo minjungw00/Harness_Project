@@ -46,7 +46,11 @@
 
 - `VerifiedSurfaceContext.access_class=run_recording`입니다.
 - `verified=true`입니다.
-- `source_kind=staged_artifact`에서는 현재 확인된 `surface_id`와 `surface_instance_id`가 스테이징 핸들의 기록된 출처와 일치해야 합니다.
+
+`source_kind=staged_artifact`인 경우:
+
+- 현재 확인된 `surface_id`가 스테이징 핸들의 기록된 출처와 일치해야 합니다.
+- 현재 확인된 `surface_instance_id`가 스테이징 핸들의 기록된 출처와 일치해야 합니다.
 
 비주장:
 
@@ -55,23 +59,29 @@
 
 ## 상태 버전 동작
 
-호환되는 커밋 결과:
-
-- `project_state.state_version`을 정확히 한 번 올립니다.
+호환되는 커밋 결과는 `project_state.state_version`을 정확히 한 번 올립니다.
 
 제품 쓰기 기록이 활성 쓰기 승인을 소비하려면 아래 조건을 모두 만족해야 합니다.
 
 - 현재 상태 버전이 승인 기준 상태와 여전히 맞습니다.
 - 관찰된 변경 경로가 승인된 시도와 호환됩니다.
 
-예외:
+소비 전에 거절되는 경우:
 
-- 오래된 `expected_state_version`은 소비 전에 거절됩니다.
-- 승인 기준 상태가 오래되었으면 소비 전에 거절됩니다.
+- 오래된 `expected_state_version`.
+- 오래된 승인 기준 상태.
 
 ## 성공 결과
 
-`base.response_kind=result`, `base.effect_kind=core_committed`인 `RecordRunResult`를 반환합니다. 결과에는 `run_summary`, `registered_artifacts`, 갱신된 `evidence_summary`, `blocker_refs`, 현재 `state`가 들어갑니다.
+아래 값을 담은 `RecordRunResult`를 반환합니다.
+
+- `base.response_kind=result`
+- `base.effect_kind=core_committed`
+- `run_summary`
+- 모든 `registered_artifacts`
+- 갱신된 `evidence_summary`
+- `blocker_refs`
+- 현재 `state`
 
 ## 차단 결과
 
@@ -111,7 +121,15 @@
 
 ## 저장 효과
 
-커밋 시 실행, 증거, 차단 사유, 쓰기 승인 소비, 아티팩트 연결 결과를 지속할 수 있습니다. 정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당하고, 아티팩트 승격 세부사항은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
+커밋 시 아래 결과를 지속할 수 있습니다.
+
+- 실행 결과
+- 증거 결과
+- 차단 사유 결과
+- 쓰기 승인 소비 결과
+- 아티팩트 연결 결과
+
+정확한 저장 효과는 [저장 효과](../storage-effects.md)가 담당하고, 아티팩트 승격 세부사항은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
 실행 데이터 예시:
 

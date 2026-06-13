@@ -53,7 +53,7 @@
 | `harness.record_user_judgment` | [사용자 판단 메서드 담당 문서](method-user-judgment.md#harnessrecord_user_judgment) |
 | `harness.close_task` | [Task 닫기 메서드 담당 문서](method-close-task.md) |
 
-<a id="메서드-담당-문서-경로"></a>
+<a id="method-owner-routing-table"></a>
 
 ## 메서드 담당 문서 경로
 

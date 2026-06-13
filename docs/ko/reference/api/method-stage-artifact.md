@@ -69,7 +69,14 @@
 
 ## 성공 결과
 
-`base.response_kind=result`, `base.effect_kind=staging_created`인 `StageArtifactResult`를 반환합니다. 결과에는 임시 `staged_artifact_handle`과 `expires_at`이 들어갑니다. 지속 `ArtifactRef`는 포함하지 않습니다.
+아래 값을 담은 `StageArtifactResult`를 반환합니다.
+
+- `base.response_kind=result`
+- `base.effect_kind=staging_created`
+- 임시 `staged_artifact_handle`
+- `expires_at`
+
+비주장: 결과에는 지속 `ArtifactRef`가 포함되지 않습니다.
 
 ## 차단 결과
 
@@ -94,7 +101,12 @@
 
 ## `dry_run` 동작
 
-`dry_run=true`에서 유효한 스테이징 미리보기는 `StageArtifactResult`가 아니라 `ToolDryRunResponse`를 반환합니다. 분기 형태는 [API 코어 스키마](schema-core.md)가 담당하고, 스테이징 효과 없음 의미는 [저장 효과](../storage-effects.md)와 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
+`dry_run=true`에서 유효한 스테이징 미리보기:
+
+- `ToolDryRunResponse`를 반환합니다.
+- `StageArtifactResult`를 반환하지 않습니다.
+
+분기 형태는 [API 코어 스키마](schema-core.md)가 담당하고, 스테이징 효과 없음 의미는 [저장 효과](../storage-effects.md)와 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
 ## 저장 효과
 

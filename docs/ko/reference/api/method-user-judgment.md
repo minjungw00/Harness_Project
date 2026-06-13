@@ -25,16 +25,7 @@
 
 초점이 분명한 사용자 소유 결정 하나에 대해 대기 중인 `UserJudgment`를 만듭니다.
 
-결과:
-
-- 이 메서드는 사용자에게 묻는 경로입니다.
-
-비주장:
-
-- 에이전트가 사용자를 대신해 답하지 않습니다.
-- 에이전트가 사용자를 대신해 추론하지 않습니다.
-- 에이전트가 질문 범위를 넓히지 않습니다.
-- 에이전트가 결정을 내리지 않습니다.
+이 메서드는 사용자에게 묻는 경로입니다. 에이전트는 사용자를 대신해 답하거나, 추론하거나, 판단 범위를 넓히거나, 결정을 내려서는 안 됩니다.
 
 
 <a id="harnessrecord_user_judgment"></a>
@@ -105,28 +96,46 @@
 - `project_state.state_version`을 정확히 한 번 올립니다.
 - 지정된 `user_judgments` 행을 갱신합니다.
 
-비주장:
-
-- `dry_run`과 거절은 판단 해결, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
+비주장: `dry_run`과 거절은 판단 해결, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
 ## 성공 결과
 
 
 ### `harness.request_user_judgment`
 
-`base.response_kind=result`, `base.effect_kind=core_committed`인 `RequestUserJudgmentResult`를 반환합니다. 결과에는 `user_judgment_ref`, 대기 중인 `user_judgment`, 영향을 받은 `blocker_refs`, 현재 `state`가 들어갑니다.
+아래 값을 담은 `RequestUserJudgmentResult`를 반환합니다.
+
+- `base.response_kind=result`
+- `base.effect_kind=core_committed`
+- `user_judgment_ref`
+- 대기 중인 `user_judgment`
+- 영향을 받은 `blocker_refs`
+- 현재 `state`
 
 
 ### `harness.record_user_judgment`
 
-`base.response_kind=result`, `base.effect_kind=core_committed`인 `RecordUserJudgmentResult`를 반환합니다. 결과에는 `user_judgment_ref`, 갱신된 `user_judgment`, `updated_refs`, 현재 `state`, `next_actions`가 들어갑니다.
+아래 값을 담은 `RecordUserJudgmentResult`를 반환합니다.
+
+- `base.response_kind=result`
+- `base.effect_kind=core_committed`
+- `user_judgment_ref`
+- 갱신된 `user_judgment`
+- `updated_refs`
+- 현재 `state`
+- `next_actions`
 
 ## 차단 결과
 
 
 ### `harness.request_user_judgment`
 
-별도 커밋된 차단 응답 분기는 없습니다. 요청이 유효하지 않거나 선행조건을 확인할 수 없어 판단을 만들 수 없으면 메서드는 커밋 전에 거절합니다.
+별도 커밋된 차단 응답 분기는 없습니다.
+
+아래 이유로 판단을 만들 수 없으면 메서드는 커밋 전에 거절합니다.
+
+- 요청이 유효하지 않음
+- 선행조건을 확인할 수 없음
 
 
 ### `harness.record_user_judgment`

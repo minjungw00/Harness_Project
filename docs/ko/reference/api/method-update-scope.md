@@ -20,7 +20,17 @@
 
 ## 목적
 
-`harness.intake` 이후 활성 Task의 목표 요약, 범위 경계, 범위 밖 항목, 수락 기준, 자율성 경계, 기준선 참조, 활성 Change Unit을 갱신합니다. 사용자 소유 차단 사유가 처리되면 shaping 상태를 안전한 첫 Change Unit으로 옮기는 활성 경로입니다.
+`harness.intake` 이후 활성 Task와 Change Unit 필드를 갱신합니다.
+
+- 목표 요약
+- 범위 경계
+- 범위 밖 항목
+- 수락 기준
+- 자율성 경계
+- 기준선 참조
+- 활성 Change Unit
+
+결과: 사용자 소유 차단 사유가 처리되면 shaping 상태를 안전한 첫 Change Unit으로 옮기는 활성 경로입니다.
 
 ## 필수 입력
 
@@ -60,7 +70,17 @@
 
 ## 성공 결과
 
-`base.response_kind=result`, `base.effect_kind=core_committed`인 `UpdateScopeResult`를 반환합니다. 결과에는 `task_ref`, 선택적 `change_unit_ref`, 연결된 `scope_decision` 참조, `status=stale` 쓰기 승인 참조, 차단 사유 참조, 현재 `state`, `next_actions`가 들어갑니다.
+아래 값을 담은 `UpdateScopeResult`를 반환합니다.
+
+- `base.response_kind=result`
+- `base.effect_kind=core_committed`
+- `task_ref`
+- 선택적 `change_unit_ref`
+- 연결된 `scope_decision` 참조
+- `status=stale` 쓰기 승인 참조
+- 차단 사유 참조
+- 현재 `state`
+- `next_actions`
 
 ## 차단 결과
 

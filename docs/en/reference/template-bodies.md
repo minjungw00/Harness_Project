@@ -251,6 +251,7 @@ Recovery cue:
 - Show the specific validator or check result when available.
 - Use this fallback label only when no typed public code gives a clearer label.
 
+<a id="status-card-body"></a>
 ## Status card body
 
 ### Input state
@@ -294,6 +295,7 @@ Avoid wording such as `approved`, `accepted`, `verified`, or `closed` unless the
 - [API Judgment Schemas](api/schema-judgment.md) for user-judgment references.
 - [API Artifact Schemas](api/schema-artifacts.md) for `ArtifactRef` display inputs.
 
+<a id="judgment-request-body"></a>
 ## Judgment request body
 
 ### Input state
@@ -336,6 +338,7 @@ Avoid pressure wording such as `obviously`, `just approve`, or `I can decide thi
 - [API Judgment Schemas](api/schema-judgment.md) for `UserJudgment`, `SensitiveActionScope`, and accepted-risk shapes.
 - [Security](security.md) for sensitive-action approval boundaries.
 
+<a id="run--evidence-summary-body"></a>
 ## Run / evidence summary body
 
 ### Input state
@@ -379,6 +382,7 @@ Avoid `fully verified`, `QA passed`, or `accepted` unless the relevant owner rec
 - [API Artifact Schemas](api/schema-artifacts.md) and [Artifact Storage](storage-artifacts.md) for artifact refs, availability, and body-read eligibility.
 - [Storage Effects](storage-effects.md) for what does and does not mutate storage.
 
+<a id="close-result-body"></a>
 ## Close result body
 
 ### Input state
@@ -423,6 +427,7 @@ Use `Closed by owner result` only when the close owner path returned an actual c
 - [API Judgment Schemas](api/schema-judgment.md) for final acceptance and accepted-risk input shapes.
 - [API Errors](api/errors.md) for close rejection and blocker routing.
 
+<a id="agent-context-packet-body"></a>
 ## Agent context packet body
 
 ### Input state

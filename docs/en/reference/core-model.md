@@ -150,6 +150,7 @@ Residual-risk acceptance applies only to the named visible risk for the requeste
 
 Projection output, template output, status cards, summaries, and reports are derived display. They can help a reader see Core state, but they do not become Core authority, evidence, acceptance, or risk acceptance.
 
+<a id="4-user-owned-judgment"></a>
 ## 4. User-Owned Judgment
 
 Core preserves the boundary between what the agent may decide and what the user must decide.
@@ -207,6 +208,7 @@ A waiver or accepted risk does not create automatic success.
 - A waiver can matter only for the named requirement and only where the responsible owner allows it.
 - Accepted risk does not replace evidence, final acceptance, verification, or remaining owner paths required for close.
 
+<a id="6-task-lifecycle"></a>
 ## 6. Task Lifecycle
 
 The lifecycle here is conceptual authority meaning, not an API state table.
@@ -265,6 +267,7 @@ It is not:
 
 The prepare-write, record-run, API state schema, storage, and security owners define the method behavior, public shapes, storage effects, replay and stale-state behavior, and guarantee wording.
 
+<a id="9-evidence-and-run-authority"></a>
 ## 9. Evidence and Run Authority
 
 Evidence authority is scoped to recorded claims.

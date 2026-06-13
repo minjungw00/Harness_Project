@@ -58,7 +58,7 @@ StateRecordRef:
 ```
 
 담당 문서 링크:
-- `record_kind` 값: [기록과 참조 값](schema-value-sets.md#기록과-참조-값)
+- `record_kind` 값: [기록과 참조 값](schema-value-sets.md#record-and-reference-values)
 - 저장소 테이블 이름과 DDL: [저장소 기록](../storage-records.md)
 
 ## `StateSummary`
@@ -112,8 +112,8 @@ TaskLifecycleState:
 ```
 
 담당 문서 링크:
-- `lifecycle_phase`, `close_reason`, `result`의 활성 값: [Task 생명주기 값](schema-value-sets.md#task-생명주기-값)
-- 생명주기 영역의 제품 의미: [Core 모델의 Task 생명주기](../core-model.md#6-task-생명주기)
+- `lifecycle_phase`, `close_reason`, `result`의 활성 값: [Task 생명주기 값](schema-value-sets.md#task-lifecycle-values)
+- 생명주기 영역의 제품 의미: [Core 모델의 Task 생명주기](../core-model.md#6-task-lifecycle)
 
 ## `ShapingReadiness`
 
@@ -185,7 +185,7 @@ WriteDecisionReason:
 - 닫기 준비 상태의 차단 사유가 아닙니다.
 
 담당 문서 링크:
-- 활성 범주와 사유 값: [상태와 차단 사유 값](schema-value-sets.md#상태와-차단-사유-값)
+- 활성 범주와 사유 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
 - 공개 오류 코드의 의미: [API 오류](errors.md)
 
 ## 증거와 Run 스냅샷 형태
@@ -226,7 +226,7 @@ ObservedChanges:
 
 담당 문서 링크:
 - `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md)
-- 증거 충분성의 의미: [Core 모델의 실행과 증거의 권한](../core-model.md#9-실행과-증거의-권한)
+- 증거 충분성의 의미: [Core 모델의 실행과 증거의 권한](../core-model.md#9-evidence-and-run-authority)
 - 메서드 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
 
 ## 닫기 준비 상태와 검증 형태

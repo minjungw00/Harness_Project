@@ -29,9 +29,10 @@ Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 활성 Tas
 
 ## 접근 요구사항
 
-조건:
+조건: 보호된 Core 세부정보를 반환합니다.
 
-- 보호된 Core 세부정보를 반환합니다.
+요구사항:
+
 - 같은 프로젝트의 활성 로컬 접점이 있습니다.
 - `VerifiedSurfaceContext.access_class=read_status`입니다.
 
@@ -39,25 +40,30 @@ Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 활성 Tas
 
 ## 상태 버전 동작
 
-상태 변경은 없고 `project_state.state_version`을 올리지 않습니다.
+상태 변경은 없고 `project_state.state_version`은 절대 증가하지 않습니다.
 
-결과:
+결과는 현재 관찰된 상태 버전을 보고할 수 있습니다.
 
-- 현재 관찰된 상태 버전을 보고할 수 있습니다.
+이 메서드는 아래 항목을 만들지 않습니다.
 
-비주장:
-
-- 이벤트를 만들지 않습니다.
-- 재실행 행을 만들지 않습니다.
-- 닫기 변경을 만들지 않습니다.
-- 아티팩트 효과를 만들지 않습니다.
-- 스테이징 핸들을 소비하지 않습니다.
-- 증거를 갱신하지 않습니다.
-- 쓰기 승인을 변경하지 않습니다.
+- 이벤트
+- 재실행 행
+- 닫기 변경
+- 아티팩트 효과
+- 스테이징 핸들 소비
+- 증거 갱신
+- Write Authorization 변경
 
 ## 성공 결과
 
-`base.response_kind=result`, `base.effect_kind=read_only`인 `StatusResult`를 반환합니다. `include.close=true`일 때 `StatusResult.close_blockers`는 읽기 전용 관찰인 `CloseReadinessBlocker[]`입니다. 저장된 `close_task` 결과가 아닙니다.
+아래 값을 담은 `StatusResult`를 반환합니다.
+
+- `base.response_kind=result`
+- `base.effect_kind=read_only`
+
+`include.close=true`일 때 `StatusResult.close_blockers`는 읽기 전용 관찰인 `CloseReadinessBlocker[]`입니다.
+
+비주장: `StatusResult.close_blockers`는 저장된 `close_task` 결과가 아닙니다.
 
 ## 차단 결과
 
@@ -77,7 +83,14 @@ Core 상태의 읽기 전용 현재 위치 보기를 반환합니다. 활성 Tas
 
 ## `dry_run` 동작
 
-이 읽기 전용 메서드에서는 `dry_run=true`가 `ToolDryRunResponse` 분기를 만들지 않습니다. 유효한 요청은 같은 `StatusResult` 형태를 반환하며 `base.dry_run=true`, `base.effect_kind=read_only`를 사용합니다. 분기 규칙은 [API 코어 스키마](schema-core.md)가 담당합니다.
+이 읽기 전용 메서드에서는 `dry_run=true`가 `ToolDryRunResponse` 분기를 만들지 않습니다.
+
+유효한 요청은 같은 `StatusResult` 형태를 반환합니다.
+
+- `base.dry_run=true`
+- `base.effect_kind=read_only`
+
+분기 규칙은 [API 코어 스키마](schema-core.md)가 담당합니다.
 
 ## 저장 효과
 

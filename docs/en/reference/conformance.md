@@ -85,6 +85,7 @@ Conformance criteria judge only facts made authoritative by an owner document. T
 
 When this page says "must", "required", or "always", it is naming a conformance criterion or an owner-routed requirement. It is not redefining neighboring contracts.
 
+<a id="criteria-vs-examples-and-tutorials"></a>
 ## Criteria vs examples and tutorials
 
 Conformance criteria are reference expectations. Examples and tutorials may illustrate how a reader might recognize a scenario, but they do not create authority records, API branches, storage effects, security guarantees, close-readiness results, acceptance evidence, or residual-risk acceptance.
@@ -147,6 +148,7 @@ Owner links:
 
 A conformance criterion must use public owner schemas. It must not invent criterion-only enum values, pseudo-fields, localized display labels as state, prose-only expectations, or out-of-scope-only values.
 
+<a id="assertion-authority"></a>
 ## Assertion authority
 
 Assertion authority is the narrow set of facts a conformance criterion may judge. Authority comes from owner-defined facts, not from scenario prose or generated summaries.

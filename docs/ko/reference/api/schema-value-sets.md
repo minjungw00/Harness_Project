@@ -92,11 +92,7 @@ no_effect
 | `artifact_registration` | `harness.stage_artifact`. |
 | `artifact_read` | 담당 경로가 노출하는 아티팩트 본문 읽기. |
 
-접근 등급의 의미는 아래 경계를 따릅니다.
-
-- 결과: 접근 등급은 하네스 API 호환성 분류입니다.
-- 비주장: 접근 등급은 OS 권한 분류가 아닙니다.
-- 담당 문서: 메서드별 접근 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서에 남고, 로컬 접점 확인 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)에 남습니다.
+접근 등급은 하네스 API 호환성 분류이지 OS 권한 분류가 아닙니다. 메서드별 접근 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, 로컬 접점 확인 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
 
 <a id="record-and-reference-values"></a>
 ## 기록과 참조 값
@@ -130,11 +126,7 @@ direct
 work
 ```
 
-`harness.intake`의 `requested_mode`는 입력 전용으로 `auto`도 받습니다.
-
-- 조건: 입력이 `requested_mode=auto`입니다.
-- 결과: 지속 저장되거나 표시되는 Task 상태가 되기 전에 `advisor`, `direct`, `work` 중 하나로 확정되어야 합니다.
-- 비주장: `auto`는 지속 저장되는 Task 상태 값이 아닙니다.
+`harness.intake`의 `requested_mode`는 입력 전용으로 `auto`도 받습니다. `auto`는 지속 저장되거나 표시되는 Task 상태가 되기 전에 `advisor`, `direct`, `work` 중 하나로 확정되어야 합니다.
 
 `Task.lifecycle_phase`는 아래 값을 사용합니다.
 
@@ -181,12 +173,7 @@ cancelled
 superseded
 ```
 
-아래 항목은 종료 `Task.result` 값이 아닙니다.
-
-- Run 실패.
-- 위반.
-- 차단된 닫기.
-- 증거 공백.
+Run 실패, 위반, 차단된 닫기, 증거 공백은 종료 `Task.result` 값이 아닙니다.
 
 ## 메서드 내부 값
 
@@ -395,10 +382,7 @@ superseded
 incompatible
 ```
 
-`UserJudgmentOption.option_id`의 범위는 해당 판단 안으로 제한됩니다.
-
-- 비주장: 전역 값 집합이 아닙니다.
-- 비주장: 화면에 보이는 선택지 라벨은 기준 값이 아니라 표시 텍스트일 뿐입니다.
+`UserJudgmentOption.option_id`의 범위는 해당 판단 안으로 제한되며 전역 값 집합이 아닙니다. 화면에 보이는 선택지 라벨은 기준 값이 아니라 표시 텍스트일 뿐입니다.
 
 ## 오류 세부사항 보조 값
 

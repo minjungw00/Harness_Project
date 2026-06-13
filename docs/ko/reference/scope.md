@@ -174,7 +174,7 @@
 
 - 보장 의미, 탐지형 표현, 보안 비주장: [보안](security.md).
 - 보장 라벨 값 항목: [API 값 집합](api/schema-value-sets.md).
-- 메서드 동작: [API 메서드](api/methods.md)가 안내하는 [쓰기 준비 메서드](api/method-prepare-write.md).
+- 메서드 동작: [쓰기 준비 메서드](api/method-prepare-write.md), [API 메서드](api/methods.md)의 안내.
 - Core 의미: [Core 모델](core-model.md).
 
 <a id="owner-documents"></a>

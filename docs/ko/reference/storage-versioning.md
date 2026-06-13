@@ -16,14 +16,12 @@
 
 이 문서는 담당하지 않습니다.
 
-| 주제 | 담당 문서 |
-|---|---|
-| 기록 배치나 DDL | [저장소 기록](storage-records.md) |
-| 어떤 메서드 분기가 효과를 만드는지 | [저장 효과](storage-effects.md), [API 메서드](api/methods.md), 메서드 담당 문서 |
-| 공개 오류 코드와 우선순위 | [API 오류](api/errors.md) |
-| 아티팩트 생명주기 | [아티팩트 저장소](storage-artifacts.md) |
-| 보안 보장 표현 | [보안](security.md) |
-| 런타임 배포나 운영 명령 | 이 문서의 범위 밖입니다 |
+- 기록 배치나 DDL; [저장소 기록](storage-records.md)을 봅니다.
+- 어떤 메서드 분기가 효과를 만드는지; [저장 효과](storage-effects.md), [API 메서드](api/methods.md), 메서드 담당 문서를 봅니다.
+- 공개 오류 코드와 우선순위; [API 오류](api/errors.md)를 봅니다.
+- 아티팩트 생명주기; [아티팩트 저장소](storage-artifacts.md)를 봅니다.
+- 보안 보장 표현; [보안](security.md)을 봅니다.
+- 런타임 배포나 운영 명령.
 
 ## 상태 버전의 의미
 
@@ -302,7 +300,17 @@
 
 ## 이벤트 의미
 
-`task_events`는 커밋된 Core 상태 변경을 순서대로 기록합니다. 감사와 순서 기록이지 일반 운영에서 현재 상태를 재구성하는 기본 출처가 아닙니다. `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers` 같은 현재 행이 현재 상태로 남습니다.
+`task_events`는 커밋된 Core 상태 변경을 순서대로 기록합니다. 감사와 순서 기록이지 일반 운영에서 현재 상태를 재구성하는 기본 출처가 아닙니다. 현재 행은 계속 현재 상태로 남습니다.
+
+- `tasks`
+- `change_units`
+- `user_judgments`
+- `write_authorizations`
+- `runs`
+- `artifacts`
+- `artifact_links`
+- `evidence_summaries`
+- `blockers`
 
 일반적인 기준 범위 운영에서 `task_events`는 추가 전용입니다. 이벤트가 커밋된 뒤에는 Core가 그 행을 갱신하거나 삭제해 기록을 바꾸면 안 됩니다. 수정이나 복구는 담당 경로를 통한 새 이벤트와 현재 행 갱신으로 기록합니다.
 
@@ -314,7 +322,12 @@
 - 커밋 전 실패.
 - 효과가 없는 거부 응답.
 
-새 커밋된 `dry_run=false` 상태 변경에서는 현재 행 쓰기, `task_events` 추가, 프로젝트 전체 `state_version` 증가, 재실행 행 삽입이 하나의 트랜잭션으로 커밋되어야 합니다. 메서드별로 어떤 현재 행과 아티팩트 효과가 함께 들어가는지는 [저장 효과](storage-effects.md)가 담당합니다.
+새 커밋된 `dry_run=false` 상태 변경에서는 아래 효과가 하나의 트랜잭션으로 커밋되어야 합니다.
+
+- 현재 행 쓰기
+- `task_events` 추가
+- 프로젝트 전체 `state_version` 증가
+- `tool_invocations` 재실행 행 삽입
 
 스테이징 핸들 소비, 아티팩트 승격, 아티팩트 연결 같은 아티팩트 생명주기 효과는 [아티팩트 저장소](storage-artifacts.md), [저장 효과](storage-effects.md), 메서드 담당 문서가 허용할 때만 같은 커밋 트랜잭션에 들어갑니다.
 
@@ -546,5 +559,4 @@
 - [저장 효과](storage-effects.md): 어떤 분기가 상태를 올리거나 올리지 않는지.
 - [저장소 기록](storage-records.md): 버전 관리나 재실행 데이터를 저장하는 열.
 - [아티팩트 저장소](storage-artifacts.md): 아티팩트 생명주기와 보존 경계.
-- [런타임 경계](runtime-boundaries.md): Runtime Home 분리와 권한 배치 경계.
-- [보안](security.md): 잠금과 구분해야 하는 보안 보장 표현.
+- [런타임 경계](runtime-boundaries.md): Runtime Home 분리.

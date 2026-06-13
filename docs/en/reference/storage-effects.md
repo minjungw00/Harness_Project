@@ -169,6 +169,8 @@ No-effect branches must not:
 
 When preflight returns `ToolRejectedResponse`, the requested committed operation does not proceed. This principle applies to `dry_run` requests too. `dry_run` does not bypass validation, access, capability, or stale-state rejection.
 
+## Dry-run preview effects
+
 Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker[]` or planned effects. Those preview entries do not create:
 
 - `task_event` or `task_events` append

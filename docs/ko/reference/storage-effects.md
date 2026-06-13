@@ -13,14 +13,12 @@
 
 이 문서는 담당하지 않습니다.
 
-| 주제 | 담당 문서 |
-|---|---|
-| 기록 배치와 DDL | [저장소 기록](storage-records.md) |
-| 아티팩트 생명주기 세부사항 | [아티팩트 저장소](storage-artifacts.md) |
-| 멱등성, 잠금, `state_version` 시계, 이벤트 순서, 마이그레이션 | [저장소 버전 관리](storage-versioning.md) |
-| 공개 응답 분기와 스키마 | [API 코어 스키마](api/schema-core.md) |
-| API 메서드 동작 | [API 메서드](api/methods.md)와 메서드 담당 문서 |
-| 공개 오류 코드 우선순위 | [API 오류](api/errors.md) |
+- 기록 배치와 DDL; [저장소 기록](storage-records.md)을 봅니다.
+- 아티팩트 생명주기 세부사항; [아티팩트 저장소](storage-artifacts.md)를 봅니다.
+- 멱등성, 잠금, `state_version` 시계, 이벤트 순서, 마이그레이션; [저장소 버전 관리](storage-versioning.md)를 봅니다.
+- 공개 응답 분기와 스키마; [API 코어 스키마](api/schema-core.md)를 봅니다.
+- API 메서드 동작; [API 메서드](api/methods.md)와 메서드 담당 문서를 봅니다.
+- 공개 오류 코드 우선순위; [API 오류](api/errors.md)를 봅니다.
 
 ## 형태와 효과
 
@@ -297,7 +295,6 @@ write_decision_reasons:
 `STATE_VERSION_CONFLICT`는 사전 확인의 `ToolRejectedResponse` 분기에 속합니다.
 
 <a id="method-effects"></a>
-<a id="메서드별-저장-효과"></a>
 ## 메서드 저장 효과 요약
 
 아래 표는 메서드별 지속 저장 효과를 요약합니다. 메서드 동작과 응답 공용체는 [API 메서드](api/methods.md)가 안내하는 메서드 담당 문서가 담당합니다.

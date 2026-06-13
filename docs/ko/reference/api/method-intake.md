@@ -20,7 +20,18 @@
 
 ## 목적
 
-평소 사용자 작업 루프를 시작, 재개, 대체, 거절하고 요청된 모드를 구체적인 `advisor`, `direct`, `work` Task 상태로 확정합니다. `harness.intake`는 쓰기 가능한 작업의 첫 범위 후보를 만들 수 있지만, 이후 범위 변경은 `harness.update_scope`가 담당합니다.
+평소 사용자 작업 루프를 시작, 재개, 대체, 거절합니다.
+
+이 메서드는 요청된 모드를 구체적인 Task 상태로 확정합니다.
+
+- `advisor`
+- `direct`
+- `work`
+
+범위 경계:
+
+- `harness.intake`는 쓰기 가능한 작업의 첫 범위 후보를 만들 수 있습니다.
+- 이후 범위 변경은 `harness.update_scope`가 담당합니다.
 
 ## 필수 입력
 
@@ -55,7 +66,16 @@
 
 ## 성공 결과
 
-`base.response_kind=result`, `base.effect_kind=core_committed`인 `IntakeResult`를 반환합니다. 결과에는 `task_ref`, 선택적 `change_unit_ref`, 현재 `state`, `next_actions`가 들어갑니다. `requested_mode=auto`라면 저장되고 표시되는 모드는 확정된 구체적 모드여야 하며 `auto`가 되면 안 됩니다.
+아래 값을 담은 `IntakeResult`를 반환합니다.
+
+- `base.response_kind=result`
+- `base.effect_kind=core_committed`
+- `task_ref`
+- 선택적 `change_unit_ref`
+- 현재 `state`
+- `next_actions`
+
+`requested_mode=auto`라면 저장되고 표시되는 모드는 확정된 구체적 모드여야 하며 `auto`가 되면 안 됩니다.
 
 ## 차단 결과
 
@@ -87,7 +107,12 @@
 
 ## `dry_run` 동작
 
-`dry_run=true`에서 유효한 상태 효과 미리보기는 `IntakeResult`가 아니라 `ToolDryRunResponse`를 반환합니다. 분기 형태는 [API 코어 스키마](schema-core.md)가 담당하고, 저장 효과 없음 의미는 [저장 효과](../storage-effects.md)가 담당합니다.
+`dry_run=true`에서 유효한 상태 효과 미리보기:
+
+- `ToolDryRunResponse`를 반환합니다.
+- `IntakeResult`를 반환하지 않습니다.
+
+분기 형태는 [API 코어 스키마](schema-core.md)가 담당하고, 저장 효과 없음 의미는 [저장 효과](../storage-effects.md)가 담당합니다.
 
 ## 저장 효과
 

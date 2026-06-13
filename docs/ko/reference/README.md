@@ -20,7 +20,7 @@
 | 주제 | 담당 문서 |
 |---|---|
 | 공개 API 메서드 목록과 메서드 경로 | [`api/methods.md`](api/methods.md) |
-| 메서드별 동작 | [API 메서드 담당 문서](#api-메서드-담당-문서) |
+| 메서드별 동작 | [API 메서드 담당 문서](#api-method-owners) |
 | 공통 요청 래퍼와 응답 분기 | [`api/schema-core.md`](api/schema-core.md) |
 | 상태와 닫기 준비 상태 형태 | [`api/schema-state.md`](api/schema-state.md) |
 | 아티팩트 참조 형태 | [`api/schema-artifacts.md`](api/schema-artifacts.md) |
@@ -28,7 +28,7 @@
 | API 값 집합 | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
 | 공개 오류 코드와 오류 경로 | [`api/errors.md`](api/errors.md) |
 
-<a id="api-메서드-담당-문서"></a>
+<a id="api-method-owners"></a>
 
 ## API 메서드 담당 문서
 

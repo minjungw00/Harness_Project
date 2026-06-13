@@ -55,7 +55,7 @@
 - 스키마 이름, 스키마 필드, 객체 이름
 - enum 값, 상태 값, 오류 코드, validator ID, 테이블 이름
 - DDL, 열 이름, 저장소 식별자, 템플릿 이름, 코드 리터럴
-- `Product Repository`, `Harness Runtime Home`, `Projection`, `Write Authorization`, `Evidence Manifest`, `Decision Packet`처럼 의도적으로 정확해야 하는 하네스 라벨
+    - `Product Repository`, `Harness Runtime Home`, `Projection`, `Write Authorization`, `Evidence Manifest`, `Decision Packet`처럼 의도적으로 정확해야 하는 하네스 라벨
 
 코드 블록, 스키마 예시, API 예시, 파일 경로, 필드 목록, 리터럴 값 표 안의 정확한 문자열은 번역하지 않습니다. 한국어 표시 라벨은 독자를 위한 문구일 뿐이며 기준 식별자를 대신하지 않습니다.
 

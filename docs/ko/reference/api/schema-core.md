@@ -122,7 +122,7 @@ ToolDryRunResponse:
 - `ToolRejectedResponse`와 `ToolDryRunResponse`는 `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, `close_state` 같은 결과 전용 필드를 담지 않습니다.
 
 담당 문서 링크:
-- 활성 `response_kind`와 `effect_kind` 값: [응답과 효과 값](schema-value-sets.md#응답과-효과-값)
+- 활성 `response_kind`와 `effect_kind` 값: [응답과 효과 값](schema-value-sets.md#response-and-effect-values)
 - 공통 분기 읽기 규칙: [공통 응답 분기](#common-response)
 - 메서드별 상태 효과: 메서드 담당 문서
 - 공개 오류 우선순위: [API 오류](errors.md)
@@ -163,7 +163,7 @@ PlannedBlocker:
 
 담당 문서 링크:
 - `NextActionSummary`와 `StateRecordRef`: [API 상태 스키마](schema-state.md)
-- `PlannedBlocker.source_kind` 값: [상태와 차단 사유 값](schema-value-sets.md#상태와-차단-사유-값)
+- `PlannedBlocker.source_kind` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
 - `ToolError.code`에 쓰는 공개 `ErrorCode` 값: [API 오류](errors.md)
 
 ## 공통 보조 형태

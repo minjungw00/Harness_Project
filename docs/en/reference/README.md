@@ -28,6 +28,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 | API value sets | [`api/schema-value-sets.md`](api/schema-value-sets.md) |
 | Public error codes and error routing | [`api/errors.md`](api/errors.md) |
 
+<a id="api-method-owners"></a>
 ## API Method Owners
 
 | Method | Owner |
