@@ -75,7 +75,7 @@
 - `judgment_kind=product_decision`을 사용합니다.
 
 닫기 영향:
-- 적용되는 닫기 준비 상태 계약이 이미 `CloseReadinessBlocker.category=user_judgment`를 요구할 때만 닫기를 차단합니다.
+- 적용되는 닫기 준비 상태 계약이 이미 `CloseReadinessBlocker.category=user_judgment`를 요구할 때만 닫기가 이 판단에 의존할 수 있습니다.
 
 <a id="design-quality-technical-decision-needed"></a>
 ### 기술 판단 필요
@@ -87,7 +87,7 @@
 - `judgment_kind=technical_decision`을 사용합니다.
 
 닫기 영향:
-- 적용되는 닫기 준비 상태 계약이 이미 `CloseReadinessBlocker.category=user_judgment`를 요구할 때만 닫기를 차단합니다.
+- 적용되는 닫기 준비 상태 계약이 이미 `CloseReadinessBlocker.category=user_judgment`를 요구할 때만 닫기가 이 판단에 의존할 수 있습니다.
 
 <a id="design-quality-scope-boundary-change"></a>
 ### 범위 경계 변경
@@ -99,7 +99,7 @@
 - 적용되는 범위 또는 판단 계약에 따라 `judgment_kind=scope_decision` 또는 `CloseReadinessBlocker.category=scope`를 사용합니다.
 
 닫기 영향:
-- 범위 또는 판단 계약이 그 차단 사유를 정의할 때만 닫기를 차단합니다.
+- 범위 또는 판단 계약이 그 차단 사유를 정의할 때만 닫기가 이 경로에 의존할 수 있습니다.
 
 <a id="design-quality-missing-close-relevant-support"></a>
 ### 닫기 관련 뒷받침 부족
@@ -189,7 +189,7 @@
 
 ## 3. 라우팅 규칙
 
-설계 품질 관찰 사항은 관련 담당 문서나 계약이 그 효과를 정의할 때만 기준 범위 상태에 영향을 줍니다. 관찰 사항은 자신이 의존하는 경로를 이름 붙여야 합니다.
+설계 품질 관찰 사항은 관련 담당 문서나 계약이 그 효과를 정의할 때만 기준 범위 제품 효과를 가집니다. 관찰 사항은 자신이 의존하는 담당 문서가 정의한 경로를 이름 붙여야 합니다.
 
 | 우려 | 상세 |
 |---|---|
@@ -211,7 +211,7 @@
 - 적용되는 닫기 준비 상태 계약이 그 판단을 요구할 때만 `CloseReadinessBlocker.category=user_judgment`를 사용합니다.
 
 닫기 영향:
-- 관련 닫기 준비 상태, 판단, 메서드 담당 문서가 그 사용자 판단을 요구할 때만 닫기를 차단합니다.
+- 관련 닫기 준비 상태, 판단, 메서드 담당 문서가 그 사용자 판단을 요구할 때만 닫기가 그 판단에 의존할 수 있습니다.
 
 <a id="design-quality-route-technical-direction"></a>
 ### 기술 방향 미결정
@@ -224,7 +224,7 @@
 - 적용되는 닫기 준비 상태 계약이 그 판단을 요구할 때만 `CloseReadinessBlocker.category=user_judgment`를 사용합니다.
 
 닫기 영향:
-- 관련 닫기 준비 상태, 판단, 메서드 담당 문서가 그 사용자 판단을 요구할 때만 닫기를 차단합니다.
+- 관련 닫기 준비 상태, 판단, 메서드 담당 문서가 그 사용자 판단을 요구할 때만 닫기가 그 판단에 의존할 수 있습니다.
 
 <a id="design-quality-route-scope-boundary"></a>
 ### 범위 경계 라우팅
@@ -236,7 +236,7 @@
 - 적용되는 범위 또는 판단 계약에 따라 `judgment_kind=scope_decision` 또는 `CloseReadinessBlocker.category=scope`를 사용합니다.
 
 닫기 영향:
-- 범위 또는 판단 계약이 그 차단 사유를 정의할 때만 닫기를 차단합니다.
+- 범위 또는 판단 계약이 그 차단 사유를 정의할 때만 닫기가 그 경로에 의존할 수 있습니다.
 
 <a id="design-quality-route-evidence"></a>
 ### 증거 라우팅
@@ -278,13 +278,13 @@
 설계 품질 라벨, 정책 이름, 심각도 값, 검증기 ID, 검토 문구는 그 자체로 경로를 만들지 않습니다. 관련 담당 문서나 계약이 경로를 정의하지 않으면 기준 범위 결과는 조언 문구이거나 아무 행동 없음입니다.
 
 <a id="when-a-finding-blocks-close"></a>
-## 4. 닫기 차단 사유가 되는 조건
+## 4. 닫기 의존성 경계
 
-설계 품질 발견 사항은 자동으로 닫기 차단 사유가 되지 않습니다. 관련 닫기 준비 상태, 범위, 판단, 메서드 담당 문서가 그 효과를 정의할 때만 닫기에 영향을 줍니다.
+이 절은 별도의 설계 품질 차단 장치가 아니라 담당 문서가 정의한 닫기 의존성을 설명합니다. 설계 품질 발견 사항은 관련 닫기 준비 상태, 범위, 판단, 메서드 담당 문서가 그 효과를 정의할 때만 닫기에 영향을 줍니다.
 
 증거 요구사항도 같은 경계를 따릅니다. 설계 품질 발견 사항은 부족한 뒷받침을 지적할 수 있지만, 그 요구사항은 Core 증거 권한이나 다른 관련 참조 계약이 정의할 때만 닫기에 영향을 줍니다.
 
-| 닫기 차단 질문 | 상세 |
+| 경계 질문 | 상세 |
 |---|---|
 | 적용되는 닫기 의존성 | [적용되는 닫기 의존성](#design-quality-close-applicable-dependency) 참조 |
 | 집중된 차단 해소 경로 | [집중된 차단 해소 경로](#design-quality-close-focused-unblock-path) 참조 |
@@ -297,10 +297,10 @@
 
 조건:
 - 관찰 사항이 현재 적용되는 `Task` 또는 Change Unit과 시도 중인 닫기에 연결되어 있습니다.
-- 관찰 사항이 닫기 차단 집합 안의 기존 지원 `CloseReadinessBlocker.category`, 지원되는 `judgment_kind`, 지원되는 API 오류, 또는 다른 관련 계약을 이름 붙입니다.
+- 관찰 사항이 닫기 의존성 집합 안의 기존 지원 `CloseReadinessBlocker.category`, 지원되는 `judgment_kind`, 지원되는 API 오류, 또는 다른 관련 계약을 이름 붙입니다.
 
 닫기 영향:
-- 이름 붙은 닫기 의존성이 설계 품질 라벨 없이도 닫기를 차단할 때만 닫기를 차단할 수 있습니다.
+- 이름 붙은 담당 문서 정의 의존성만 닫기를 차단할 수 있으며, 설계 품질 라벨은 별도의 차단 사유를 추가하지 않습니다.
 
 <a id="design-quality-close-focused-unblock-path"></a>
 ### 집중된 차단 해소 경로

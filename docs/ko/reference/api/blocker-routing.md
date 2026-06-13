@@ -1,8 +1,8 @@
 # API 차단 사유 처리 경로
 
-이 문서는 닫기 차단 사유와 API 응답 분기 사이의 처리 경계만 담당합니다.
+이 문서는 닫기 차단 사유와 API 응답 분기 사이의 처리 경계를 담당합니다. 메서드 동작 담당 문서나 스키마 담당 문서가 아니라 경계 안내 문서입니다.
 
-닫기 관련 발견 사항이 언제 `CloseReadinessBlocker[]`로 표현되는지, 언제 API가 거부 응답이나 미리보기 분기에 남는지, 이웃 계약은 어느 담당 문서가 정의하는지를 설명합니다. `harness.close_task` 메서드 동작, `CloseReadinessBlocker` 형태, 차단 사유 범주 값, Core 닫기 준비 상태 권한, 저장 효과, 공개 `ErrorCode` 의미, 응답 분기 선택, 표시 문구는 정의하지 않습니다.
+응답 분기 경계가 식별된 뒤 닫기 관련 API 조건을 어느 담당 문서가 다루는지 고를 때 사용합니다. `harness.close_task` 메서드 동작, `CloseReadinessBlocker` 형태, 차단 사유 범주 값, Core 닫기 준비 상태 권한, 저장 효과, 공개 `ErrorCode` 의미, 응답 분기 선택, 표시 문구는 정의하지 않습니다.
 
 ## 담당 경계
 
@@ -28,7 +28,7 @@
 
 ## 차단 사유 범주 처리 경계
 
-`CloseReadinessBlocker.category`는 닫기 차단 사유를 책임지는 담당 문서 묶음을 식별합니다. 정확한 차단 사유 범주 값은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다. 이 문서는 범주를 가진 차단 사유 데이터를 알맞은 담당 관심사로 보내는 경계만 설명합니다.
+`CloseReadinessBlocker.category`는 담당 문서가 정의한 메서드 또는 상태 결과가 차단 사유 데이터를 만든 뒤 그 닫기 차단 사유를 책임지는 담당 문서 묶음을 식별합니다. 정확한 차단 사유 범주 값은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다. 이 문서는 범주를 가진 차단 사유 데이터를 알맞은 담당 관심사로 보내는 경계만 설명합니다.
 
 | 담당 관심사 | 처리 경로에서의 사용 | 경계 |
 |---|---|---|

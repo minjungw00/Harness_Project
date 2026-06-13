@@ -73,7 +73,7 @@ Owner:
 - [Translation Guide](../translation-guide.md)
 
 Check:
-- Confirm `surface_id`, surface, connector, capability, and access-class wording does not imply authority, approval, or binding proof unless the owner says so.
+- Confirm `surface_id`, surface, connector, capability, and access-class wording is not presented as authority, approval, or binding proof unless the owner says so.
 - Confirm access-related terms preserve the distinction between documentation guidance and runtime enforcement.
 - Confirm cooperative, detective, prevention, guard, freeze, careful mode, sandbox, permission, blocking, tamper-proof, isolation, and capability wording stays within owner-backed terminology.
 
@@ -123,7 +123,7 @@ Check:
 - Confirm supported contracts, supported API methods, supported values, maintained documents, and owner routing use terms such as "supported", "applicable", "maintained", or "current", not `active`.
 
 Failure:
-- A document uses `active` for an owner path, contract, API method, reference document, or other documentation route when it means applicable, supported, or maintained.
+- A document uses `active` for an owner route, contract, API method, reference document, or other documentation route when it means applicable, supported, or maintained.
 - Korean prose translates `active` as "활성" for a documentation contract or owner route instead of using the appropriate Korean term.
 
 Fix:
@@ -167,13 +167,13 @@ Owner:
 Check:
 - Search changed prose for documentation-routing terms such as `applicable owner path`, owner route, owner target, route metadata, and owner gap.
 - Confirm these terms describe documentation navigation, authoring, retrieval, or metadata only.
-- Confirm owner path terms are not the grammatical actor for product behavior, storage persistence, API support, evidence authority, close-readiness state, or user-visible display.
+- Confirm owner-route terms are not the grammatical actor for product behavior, storage persistence, API support, evidence authority, close-readiness state, or user-visible display.
 - Confirm they are not described as product behavior, storage persistence, runtime state, evidence authority, close-readiness state, or API support.
 
 Failure:
 - A documentation-routing term is used as if it were a persisted product field, runtime status, API value, storage record, support guarantee, or close-readiness result.
-- A sentence says an owner path, route, or metadata entry performs, blocks, allows, stores, verifies, accepts, displays, or authorizes product behavior.
-- A guide says a product behavior is available because an owner path applies, instead of because Scope and the semantic owner define support.
+- A sentence says an owner route, documentation route, or metadata entry performs, blocks, allows, stores, verifies, accepts, displays, or authorizes product behavior.
+- A guide says a product behavior is available because an owner route applies, instead of because Scope and the semantic owner define support.
 
 Fix:
 - Reword the term as documentation routing or metadata.
@@ -189,7 +189,7 @@ Owner:
 Check:
 - Korean prose uses "닫기 차단 사유" for close-readiness blocker prose.
 - Korean prose uses "차단 사유 범주" for blocker category prose and preserves `CloseReadinessBlocker.category` when naming the exact field.
-- Korean prose uses "차단 사유 처리 경로" for blocker routing prose and preserves exact owner paths or identifiers when naming them.
+- Korean prose uses "차단 사유 처리 경로" for blocker routing prose and preserves exact owner routes or identifiers when naming them.
 - Confirm variants such as "close blocker", "blocker category", "blocker 처리 경로", and "blocker 라우팅" appear only in forbidden-expression lists or quoted examples.
 
 Failure:

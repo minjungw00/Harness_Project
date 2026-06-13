@@ -84,8 +84,8 @@
 | full evaluation order | 전체 평가 순서, 닫기 준비 상태 맥락에서는 전체 닫기 준비 상태 평가 순서 | 전체 순서 뜻으로 `complete`를 붙이지 않습니다. |
 | artifact | 아티팩트 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle`은 보존합니다. 아티팩트가 있다는 사실만으로 증거 충분성이 성립한다고 쓰지 않습니다. |
 | evidence | 증거 | `EvidenceSummary`, `EvidenceCoverageItem`, `evidence_summary`는 보존합니다. |
-| evidence package | 증거 패키지 | 범위와 영향받는 담당 문서가 지원을 정의하기 전에는 용어 또는 지원 범위 밖 기능 표현으로만 씁니다. |
-| expanded or additional evidence packages | 확장 또는 추가 증거 패키지 | 지원 범위 밖 기능 묶음입니다. 이 표현만으로 패키지 내용, 저장 동작, 닫기 준비 상태 동작을 정의하지 않습니다. |
+| evidence collection workflow | 증거 수집 흐름 | 범위와 영향받는 담당 문서가 지원을 정의하기 전에는 용어 또는 지원 범위 밖 기능 표현으로만 씁니다. |
+| expanded or additional evidence collection workflows | 확장 또는 추가 증거 수집 흐름 | 지원 범위 밖 기능 묶음입니다. 이 표현만으로 흐름의 산출물, 저장 동작, 닫기 준비 상태 동작을 정의하지 않습니다. |
 | surface | 접점 | `surface_id`는 보존하고, 권한 증거처럼 들리게 쓰지 않습니다. |
 | active surface context | 현재 적용 접점 맥락 | 요청이나 상호작용에 현재 적용되는 런타임 또는 세션의 접점 맥락에 씁니다. `VerifiedSurfaceContext`는 보존합니다. |
 | lifecycle | 생명주기 | 식별자가 아니라면 한국어 산문에 영어 용어를 남기지 않습니다. |
@@ -219,7 +219,7 @@
 | artifact bytes | 아티팩트 본문 바이트 |
 | evidence 기록 | 증거 기록 |
 | evidence summary | 증거 요약, 또는 스키마 이름이면 `EvidenceSummary` |
-| evidence package | 증거 패키지 |
+| evidence collection workflow | 증거 수집 흐름 |
 | staged handle | 스테이징된 아티팩트 핸들, 또는 식별자 이름이면 `StagedArtifactHandle` |
 | checksum, size 검증 | 체크섬과 크기 검증 |
 | ToolEnvelope 봉투 | `ToolEnvelope` 요청 래퍼 |

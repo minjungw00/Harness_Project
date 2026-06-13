@@ -14,7 +14,7 @@ canonical_for:
   - "Terminology boundaries between documentation owner routing and product behavior or storage persistence conditions."
   - "Terminology routing for API error routing, blocker routing, error/blocker boundaries, public error as blocker wording, and `ToolError.details`."
   - "Artifact and evidence terminology conventions for bilingual documentation."
-  - "Terminology routing for evidence package wording, close-task behavior, and design-quality owner boundaries."
+  - "Terminology routing for evidence collection workflow wording, close-task behavior, and design-quality owner boundaries."
 does_not_own:
   - "Product, API, storage, security, projection, or runtime contracts."
   - "Rendered UI copy when an exact template body owner defines the wording."
@@ -88,8 +88,8 @@ avoid:
       use: "증거 기록, 또는 식별자를 뜻할 때는 `EvidenceSummary` 같은 정확한 이름"
     - phrase: "evidence summary"
       use: "증거 요약, 또는 스키마를 뜻할 때는 `EvidenceSummary`"
-    - phrase: "evidence package"
-      use: "증거 패키지"
+    - phrase: "evidence collection workflow"
+      use: "증거 수집 흐름"
     - phrase: "staged handle"
       use: "스테이징된 아티팩트 핸들, 또는 식별자를 뜻할 때는 `StagedArtifactHandle`"
     - phrase: "checksum, size 검증"
@@ -261,13 +261,13 @@ terms:
         - "docs/ko/reference/scope.md"
     notes:
       - "An out-of-scope capability is deferred material until an owner promotes it."
-  evidence_package:
+  evidence_collection_workflow:
     category: "out_of_scope_capability_term"
-    en: "evidence package"
-    ko_reference: "증거 패키지"
-    ko_user: "증거 패키지"
+    en: "evidence collection workflow"
+    ko_reference: "증거 수집 흐름"
+    ko_user: "증거 수집 흐름"
     avoid_ko:
-      - "evidence package"
+      - "evidence collection workflow"
     owner_documents:
       en:
         - "docs/en/reference/scope.md"
@@ -276,17 +276,17 @@ terms:
         - "docs/ko/reference/scope.md"
         - "docs/ko/reference/glossary.md"
     notes:
-      - "Use this wording for evidence package concepts only as terminology or out-of-scope capability wording unless Scope and the affected owners define support."
-      - "Do not use alternate package-index wording for evidence package concepts unless it is an exact supported identifier."
-      - "Baseline evidence is recorded evidence and evidence summaries, not a package feature by name alone."
-  expanded_evidence_packages:
+      - "Use this wording for evidence collection workflows only as terminology or out-of-scope capability wording unless Scope and the affected owners define support."
+      - "Do not use collection-output or index wording as a named artifact unless it is an exact supported identifier."
+      - "Baseline evidence is recorded evidence and evidence summaries, not a collection workflow feature by name alone."
+  expanded_evidence_collection_workflows:
     category: "out_of_scope_capability"
-    en: "expanded or additional evidence packages"
+    en: "expanded or additional evidence collection workflows"
     aliases_en:
-      - "expanded evidence packages"
-      - "additional evidence packages"
-    ko_reference: "확장 또는 추가 증거 패키지"
-    ko_user: "확장 또는 추가 증거 패키지"
+      - "expanded evidence collection workflows"
+      - "additional evidence collection workflows"
+    ko_reference: "확장 또는 추가 증거 수집 흐름"
+    ko_user: "확장 또는 추가 증거 수집 흐름"
     owner_documents:
       en:
         - "docs/en/reference/scope.md"
@@ -296,7 +296,7 @@ terms:
         - "docs/ko/reference/glossary.md"
     notes:
       - "This is an excluded capability family until Scope and the affected existing owner documents define a supported contract."
-      - "Do not define package contents, package exclusions, storage records, or close-readiness behavior from this phrase."
+      - "Do not define workflow outputs, storage records, or close-readiness behavior from this phrase."
   reserved_value:
     category: "value_status"
     en: "reserved value"
@@ -359,7 +359,7 @@ terms:
     notes:
       - "Use when a product behavior or close effect depends on the contract defined by the relevant owner document."
       - "Korean may use 담당 문서가 정의한 계약 when that is clearer than 담당 계약."
-      - "Do not make an owner path or documentation route the actor for product behavior."
+      - "Do not make an owner route or documentation route the actor for product behavior."
   applicable_owner_path:
     category: "documentation_concept"
     en: "applicable owner path"

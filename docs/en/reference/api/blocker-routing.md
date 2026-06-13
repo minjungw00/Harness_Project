@@ -1,8 +1,8 @@
 # API blocker routing
 
-This document owns the routing boundary between close-readiness blockers and API response branches.
+This document owns the routing boundary between close-readiness blockers and API response branches. It is a boundary router, not the method behavior owner or the schema owner.
 
-It explains when a close-relevant finding is represented as `CloseReadinessBlocker[]`, when the API stays on a rejected or preview branch, and which owner defines the neighboring contract. It does not define `harness.close_task` method behavior, `CloseReadinessBlocker` shape, blocker category values, Core close-readiness authority, storage effects, public `ErrorCode` meanings, response-branch selection, or display wording.
+Use it to decide which owner handles a close-relevant API condition after the response branch boundary is known. It does not define `harness.close_task` method behavior, `CloseReadinessBlocker` shape, blocker category values, Core close-readiness authority, storage effects, public `ErrorCode` meanings, response-branch selection, or display wording.
 
 ## Owner boundaries
 
@@ -28,7 +28,7 @@ It explains when a close-relevant finding is represented as `CloseReadinessBlock
 
 ## Category routing boundary
 
-`CloseReadinessBlocker.category` identifies the owner family responsible for a close-readiness blocker. Exact category values belong to [API Value Sets](schema-value-sets.md#state-and-blocker-values); this page only routes category-bearing blocker data to the appropriate owner concern.
+`CloseReadinessBlocker.category` identifies the owner family responsible for a close-readiness blocker after an owner-defined method or state result has produced blocker data. Exact category values belong to [API Value Sets](schema-value-sets.md#state-and-blocker-values); this page only routes category-bearing blocker data to the appropriate owner concern.
 
 | Owner concern | Routing use | Boundary |
 |---|---|---|

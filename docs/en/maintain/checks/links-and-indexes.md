@@ -99,7 +99,7 @@ Check:
 Failure:
 - A non-method-router page repeats the supported public API method owner table.
 - A method route points to a missing file, wrong language path, or stale method owner.
-- `doc-index.yaml` omits or misroutes the method router or a method owner path.
+- `doc-index.yaml` omits or misroutes the method router or a method owner route.
 
 Fix:
 - Keep the full method list in API Methods and shrink other pages to a short route link.

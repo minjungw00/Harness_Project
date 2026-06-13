@@ -30,8 +30,8 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | supported API method | 지원되는 API 메서드 | [API Methods](api/methods.md) |
 | supported API value | 지원되는 API 값 | [API Value Sets](api/schema-value-sets.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | [Scope Reference](scope.md) |
-| evidence package | 증거 패키지 | [Scope Reference](scope.md) |
-| expanded or additional evidence packages | 확장 또는 추가 증거 패키지 | [Scope Reference](scope.md) |
+| evidence collection workflow | 증거 수집 흐름 | [Scope Reference](scope.md) |
+| expanded or additional evidence collection workflows | 확장 또는 추가 증거 수집 흐름 | [Scope Reference](scope.md) |
 | owner document | 담당 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
 | owner contract | 담당 계약 | [Authoring Guide](../maintain/authoring-guide.md) |
 | applicable owner path | 적용되는 담당 경로 | [Authoring Guide](../maintain/authoring-guide.md) |
@@ -302,46 +302,46 @@ Owner:
 Notes:
 - An out-of-scope capability is not baseline behavior unless [Scope](scope.md) and the affected owners define it as supported.
 
-### evidence package
+### evidence collection workflow
 
 English:
-- evidence package
+- evidence collection workflow
 
 Korean:
-- Reference: 증거 패키지
-- User-facing: 증거 패키지
+- Reference: 증거 수집 흐름
+- User-facing: 증거 수집 흐름
 
 Preserve:
 - Exact evidence identifiers, such as `EvidenceSummary`, when naming schemas or fields.
 
 Avoid:
-- Treating package wording as baseline evidence behavior.
-- Treating package wording as a storage record or close-readiness result.
+- Treating collection workflow wording as baseline evidence behavior.
+- Treating collection workflow wording as a storage record or close-readiness result.
 
 Owner:
 - [Scope Reference](scope.md)
 - [Terminology Map](../../terminology-map.yaml)
 
 Notes:
-- Use evidence package wording only as terminology or out-of-scope capability wording unless [Scope](scope.md) and the affected owners define support.
-- Baseline evidence is recorded evidence and evidence summaries, not a package feature by name alone.
+- Use evidence collection workflow wording only as terminology or out-of-scope capability wording unless [Scope](scope.md) and the affected owners define support.
+- Baseline evidence is recorded evidence and evidence summaries, not a collection workflow feature by name alone.
 
-### expanded or additional evidence packages
+### expanded or additional evidence collection workflows
 
 English:
-- expanded or additional evidence packages
-- expanded evidence packages
-- additional evidence packages
+- expanded or additional evidence collection workflows
+- expanded evidence collection workflows
+- additional evidence collection workflows
 
 Korean:
-- Reference: 확장 또는 추가 증거 패키지
-- User-facing: 확장 또는 추가 증거 패키지
+- Reference: 확장 또는 추가 증거 수집 흐름
+- User-facing: 확장 또는 추가 증거 수집 흐름
 
 Preserve:
 - Exact evidence identifiers, such as `EvidenceSummary`, when naming schemas or fields.
 
 Avoid:
-- Defining package contents, storage records, or close-readiness behavior from this phrase.
+- Defining workflow outputs, storage records, or close-readiness behavior from this phrase.
 - Calling this capability baseline behavior.
 
 Owner:
@@ -390,7 +390,7 @@ Preserve:
 - File paths, anchors, and `doc_id` values when naming the source document.
 
 Avoid:
-- using an owner path as a product actor
+- using documentation routes as product actors
 - treating route metadata as the contract itself
 
 Owner:
@@ -416,7 +416,7 @@ Preserve:
 - `doc_id` values
 
 Avoid:
-- using `active` for owner-path routing
+- using `active` for documentation routing
 - using product support wording when the meaning is only documentation routing
 - using owner-routing terminology as product behavior or a storage persistence condition
 
@@ -426,7 +426,7 @@ Owner:
 - [doc-index.yaml](../../doc-index.yaml)
 
 Notes:
-- An applicable owner path is the owner route that applies to a topic.
+- This term names the owner route that applies to a topic.
 - It is a documentation-routing concept, not a product behavior, runtime state, or persistence condition.
 - Product behavior should name the owner document, owner contract, applicable reference, or concrete owner instead.
 

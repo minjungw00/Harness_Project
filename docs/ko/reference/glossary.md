@@ -30,8 +30,8 @@
 | supported API method | 지원되는 API 메서드 | [API 메서드](api/methods.md) |
 | supported API value | 지원되는 API 값 | [API 값 집합](api/schema-value-sets.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | [범위 참조](scope.md) |
-| evidence package | 증거 패키지 | [범위 참조](scope.md) |
-| expanded or additional evidence packages | 확장 또는 추가 증거 패키지 | [범위 참조](scope.md) |
+| evidence collection workflow | 증거 수집 흐름 | [범위 참조](scope.md) |
+| expanded or additional evidence collection workflows | 확장 또는 추가 증거 수집 흐름 | [범위 참조](scope.md) |
 | owner document | 담당 문서 | [작성 가이드](../maintain/authoring-guide.md) |
 | owner contract | 담당 계약 | [작성 가이드](../maintain/authoring-guide.md) |
 | applicable owner path | 적용되는 담당 경로 | [작성 가이드](../maintain/authoring-guide.md) |
@@ -304,46 +304,46 @@
 설명:
 - 지원 범위 밖 기능은 [범위 참조](scope.md)와 영향받는 담당 문서가 지원된다고 정의하기 전까지 기준 범위 동작이 아닙니다.
 
-### evidence package
+### evidence collection workflow
 
 영어:
-- evidence package
+- evidence collection workflow
 
 한국어:
-- 참조 문서: 증거 패키지
-- 사용자 문서: 증거 패키지
+- 참조 문서: 증거 수집 흐름
+- 사용자 문서: 증거 수집 흐름
 
 보존할 식별자:
 - 스키마나 필드 이름을 말할 때는 `EvidenceSummary` 같은 정확한 증거 식별자
 
 피할 표현:
-- 패키지 표현을 기준 범위 증거 동작처럼 쓰는 표현
-- 패키지 표현을 저장소 기록이나 닫기 준비 상태 결과처럼 쓰는 표현
+- 증거 수집 흐름 표현을 기준 범위 증거 동작처럼 쓰는 표현
+- 증거 수집 흐름 표현을 저장소 기록이나 닫기 준비 상태 결과처럼 쓰는 표현
 
 담당 문서:
 - [범위 참조](scope.md)
 - [용어 지도](../../terminology-map.yaml)
 
 설명:
-- 증거 패키지는 [범위 참조](scope.md)와 영향받는 담당 문서가 지원을 정의하기 전에는 용어 또는 지원 범위 밖 기능 표현으로만 씁니다.
-- 기준 범위의 증거는 기록된 증거와 증거 요약이지, 이름만으로 성립하는 패키지 기능이 아닙니다.
+- 증거 수집 흐름은 [범위 참조](scope.md)와 영향받는 담당 문서가 지원을 정의하기 전에는 용어 또는 지원 범위 밖 기능 표현으로만 씁니다.
+- 기준 범위의 증거는 기록된 증거와 증거 요약이지, 이름만으로 성립하는 수집 흐름 기능이 아닙니다.
 
-### expanded or additional evidence packages
+### expanded or additional evidence collection workflows
 
 영어:
-- expanded or additional evidence packages
-- expanded evidence packages
-- additional evidence packages
+- expanded or additional evidence collection workflows
+- expanded evidence collection workflows
+- additional evidence collection workflows
 
 한국어:
-- 참조 문서: 확장 또는 추가 증거 패키지
-- 사용자 문서: 확장 또는 추가 증거 패키지
+- 참조 문서: 확장 또는 추가 증거 수집 흐름
+- 사용자 문서: 확장 또는 추가 증거 수집 흐름
 
 보존할 식별자:
 - 스키마나 필드 이름을 말할 때는 `EvidenceSummary` 같은 정확한 증거 식별자
 
 피할 표현:
-- 이 표현만으로 패키지 내용, 저장소 기록, 닫기 준비 상태 동작을 정의하는 표현
+- 이 표현만으로 흐름의 산출물, 저장소 기록, 닫기 준비 상태 동작을 정의하는 표현
 - 이 기능을 기준 범위 동작처럼 부르는 표현
 
 담당 문서:

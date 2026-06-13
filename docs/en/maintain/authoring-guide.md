@@ -130,7 +130,7 @@ Reference-facing docs may use schema names, API method names, enum values, table
 
 Display wording owners define rendered body guidance, labels, and display phrasing only. They do not own API semantics, close-readiness blocker semantics, storage records, or wording for out-of-scope rendered bodies. Route those concerns to the focused API, blocker, storage, scope, or terminology owner.
 
-Maintain docs should sound like editing instructions. They can name owner paths and duplication rules, but they should not reproduce technical contract bodies.
+Maintain docs should sound like editing instructions. They can name owner routes and duplication rules, but they should not reproduce technical contract bodies.
 
 ### Durable examples
 
@@ -168,7 +168,7 @@ Use named blocks when a rule has multiple parts:
 
 - Conditions: when the rule applies.
 - Allowed effects: what the rule allows or requires.
-- Not allowed: what the rule does not allow and what the text does not claim.
+- Disallowed effects: what the rule forbids and what the text does not claim.
 - Exceptions: when a different rule or caveat applies.
 - Owner links: where the canonical detail lives.
 

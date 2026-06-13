@@ -75,7 +75,7 @@ Route:
 - Use `judgment_kind=product_decision`.
 
 Close effect:
-- Blocks close only when the applicable close-readiness contract already requires `CloseReadinessBlocker.category=user_judgment`.
+- Close can depend on this decision only when the applicable close-readiness contract already requires `CloseReadinessBlocker.category=user_judgment`.
 
 <a id="design-quality-technical-decision-needed"></a>
 ### Technical decision needed
@@ -87,7 +87,7 @@ Route:
 - Use `judgment_kind=technical_decision`.
 
 Close effect:
-- Blocks close only when the applicable close-readiness contract already requires `CloseReadinessBlocker.category=user_judgment`.
+- Close can depend on this decision only when the applicable close-readiness contract already requires `CloseReadinessBlocker.category=user_judgment`.
 
 <a id="design-quality-scope-boundary-change"></a>
 ### Scope boundary change
@@ -99,7 +99,7 @@ Route:
 - Use `judgment_kind=scope_decision` or `CloseReadinessBlocker.category=scope`, depending on the affected scope or judgment contract.
 
 Close effect:
-- Blocks close only when the scope or judgment contract defines that blocker.
+- Close can depend on this route only when the scope or judgment contract defines that blocker.
 
 <a id="design-quality-missing-close-relevant-support"></a>
 ### Missing close-relevant support
@@ -189,7 +189,7 @@ Quality-policy material outside baseline scope can be advisory only, unless a re
 
 ## 3. Routing rules
 
-A design-quality observation affects baseline scope state only when the relevant owner document or contract defines that effect. The observation must name the route it depends on:
+A design-quality observation has a baseline product effect only when the relevant owner document or contract defines that effect. The observation must name the owner-defined route it depends on:
 
 | Concern | Details |
 |---|---|
@@ -211,7 +211,7 @@ Route:
 - Use `CloseReadinessBlocker.category=user_judgment` only when the applicable close-readiness contract requires that judgment.
 
 Close effect:
-- Blocks close only when the relevant close-readiness, judgment, or method owner requires that user decision.
+- Close can depend on that user decision only when the relevant close-readiness, judgment, or method owner requires it.
 
 <a id="design-quality-route-technical-direction"></a>
 ### Undecided technical direction
@@ -224,7 +224,7 @@ Route:
 - Use `CloseReadinessBlocker.category=user_judgment` only when the applicable close-readiness contract requires that judgment.
 
 Close effect:
-- Blocks close only when the relevant close-readiness, judgment, or method owner requires that user decision.
+- Close can depend on that user decision only when the relevant close-readiness, judgment, or method owner requires it.
 
 <a id="design-quality-route-scope-boundary"></a>
 ### Scope boundary route
@@ -236,7 +236,7 @@ Route:
 - Use `judgment_kind=scope_decision` or `CloseReadinessBlocker.category=scope`, depending on the affected scope or judgment contract.
 
 Close effect:
-- Blocks close only when the scope or judgment contract defines that blocker.
+- Close can depend on that route only when the scope or judgment contract defines that blocker.
 
 <a id="design-quality-route-evidence"></a>
 ### Evidence route
@@ -278,13 +278,13 @@ Close effect:
 A design-quality label, policy name, severity value, validator ID, or review phrase does not create the route. If no relevant owner document or contract defines the route, the baseline scope result is advisory text or no action.
 
 <a id="when-a-finding-blocks-close"></a>
-## 4. When a finding blocks close
+## 4. Close dependency boundary
 
-A design-quality finding does not automatically become a close-readiness blocker. It affects close only when the relevant close-readiness, scope, judgment, or method owner defines that effect.
+This section describes owner-defined close dependencies, not a separate design-quality blocking mechanism. A design-quality finding affects close only when the relevant close-readiness, scope, judgment, or method owner defines that effect.
 
 Evidence requirements follow the same boundary. A design-quality finding may point out a missing support claim, but the requirement affects close only when the Core evidence authority or another relevant reference contract defines that requirement.
 
-| Close-blocking question | Details |
+| Boundary question | Details |
 |---|---|
 | applicable close dependency | See [Applicable close dependency](#design-quality-close-applicable-dependency) |
 | focused unblock path | See [Focused unblock path](#design-quality-close-focused-unblock-path) |
@@ -297,10 +297,10 @@ Evidence requirements follow the same boundary. A design-quality finding may poi
 
 Condition:
 - The observation is tied to the active `Task` or Change Unit and the attempted close.
-- The observation names an existing supported `CloseReadinessBlocker.category`, supported `judgment_kind`, supported API error, or another relevant contract in the close-blocking set.
+- The observation names an existing supported `CloseReadinessBlocker.category`, supported `judgment_kind`, supported API error, or another relevant contract in the close dependency set.
 
 Close effect:
-- The observation can block close only when the named close dependency would block close without the design-quality label.
+- Close can be blocked only by the named owner-defined dependency; the design-quality label adds no separate blocker.
 
 <a id="design-quality-close-focused-unblock-path"></a>
 ### Focused unblock path

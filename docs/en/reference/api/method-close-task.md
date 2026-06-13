@@ -105,7 +105,7 @@ Method-specific blocker-producing branches:
 
 Non-claims:
 
-- The presence of `CloseReadinessBlocker` alone does not imply persistence.
+- Persistence requires the method branch and storage-effect owner to allow it; `CloseReadinessBlocker` presence alone is insufficient.
 - `STATE_VERSION_CONFLICT` is never a `CloseReadinessBlocker.code`.
 - A blocker category does not create the underlying user judgment, approval, evidence, artifact availability, acceptance, risk acceptance, or recovery state.
 
