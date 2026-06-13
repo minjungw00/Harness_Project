@@ -1,54 +1,34 @@
 # Projection authority reference
 
-This document owns projection authority and read-only derived-display boundaries. Exact rendered body expectations live in [Template Bodies](template-bodies.md).
-
-This is documentation reference material only. It is not a runtime projection, runtime state, generated artifact, evidence record, QA record, final-acceptance record, residual-risk record, close record, or implementation authority.
+This document owns the distinction between authoritative Harness records and read-only projected, status, or template views. Exact rendered body guidance, display phrasing, user-facing labels, and template wording live in [Template Bodies](template-bodies.md).
 
 ## Owns / Does not own
 
 This document owns:
 
-- projection authority boundaries
+- authority boundaries for projections, status views, and template views
 - read-only derived-display rules
-- freshness and unavailable-state wording for projected output
+- source-state visibility requirements for display output
 - the rule that rendered labels are display text, not canonical schema values
-- the out-of-scope boundary for projection reconcile, persistent projection jobs, and managed block drift repair
+- routing between authority questions and template wording questions
 
 This document does not own:
 
-- status card, judgment request, run/evidence summary, close result, or agent context packet bodies; see [Template Bodies](template-bodies.md)
-- source-of-truth Core state; see [Core Model](core-model.md)
-- storage records or projection storage candidates; see storage owners and [Scope Reference](scope.md)
-- public API schemas; see API schema owners
-- connector behavior; see [Agent Integration](agent-integration.md)
+- status card, judgment request, run/evidence summary, close result, agent context packet, or public-error display wording; see [Template Bodies](template-bodies.md)
+- source-of-truth Core state, user-owned judgment, evidence, acceptance, residual-risk, or close records; see [Core Model](core-model.md)
+- storage records, artifact records, or storage effects; see storage owners through [Reference Index](README.md)
+- public API schemas or method behavior; see API owners through [Reference Index](README.md)
+- surface registration, active surface context, or capability declarations; see [Agent Integration](agent-integration.md)
 
 ## Authority boundary
 
-Authority remains with:
+Authority remains with owner records, not with rendered views. Authoritative records include Core-owned state, user-owned judgments, owner-recorded evidence and artifacts, acceptance and residual-risk records, close records, and storage records owned by the storage documents.
 
-- Core-owned state
-- user-owned judgment records
-- close records
-- residual-risk records
-- storage rows
-- persisted `ArtifactRef` records
+Projected, status, and template views are read-only display. They may quote owner values, summarize owner records, or link to owner records. They are not a second state store, even when they are well written, manually edited, copied into a `Product Repository`, or injected into agent context.
 
-Projections are derived display only. They are not owner state.
+## Views cannot create authority
 
-Display or support context only:
-- projection
-- status card
-- Markdown report
-- rendered template
-- chat message
-- connector output
-- agent context packet
-
-Rendered output may quote owner values, summarize owner records, or link to owner records. It is not a second state store and is not authority just because it is well written, manually edited, copied into a Product Repository, or injected into an agent context.
-
-## Rendered display cannot
-
-A rendered label, status badge, Markdown section, projection, template body, chat summary, connector output, or agent context packet cannot by itself:
+A rendered label, status badge, Markdown section, projection, template body, chat summary, surface output, or agent context packet cannot by itself:
 
 - authorize writes
 - create evidence or a persistent `ArtifactRef`
@@ -58,46 +38,31 @@ A rendered label, status badge, Markdown section, projection, template body, cha
 - close a Task
 - mutate Core, storage, artifact, user-judgment, acceptance, residual-risk, or close records
 
-If an owner record exists for one of those outcomes, the display may show or link to it. The display text is not the reason the outcome exists.
+If an owner record exists for one of those outcomes, a view may show or link to it. The display text is not the reason the outcome exists.
 
-## Derived display and source state
+## Source state in display
 
-Projection output is computed from current owner records at read time unless an owner promotes a persisted projection job. It may help a person read scope, evidence gaps, blockers, freshness, next safe action, residual risk, and current guarantee wording.
+Derived display must keep the source boundary visible enough for a reader or agent to know what the display is based on.
 
-Generated display must preserve omission, redaction, blocked-artifact, and unavailable notes without reconstructing hidden source values. A display that cannot read required owner state must show that condition instead of inventing a friendly-looking status.
+Display output must:
 
-## Freshness and source-state boundary
+- show source refs, `state_version`, observation time, or an equivalent source cue when the owner result provides one
+- preserve stale, partial, unavailable, redacted, blocked-artifact, conflicted, or capability-limited source conditions
+- keep display labels separate from canonical enum values and schema fields
+- link back to the relevant owner when a reader needs the authority record
+- treat hand-edited or stale display as display to discard or recompute, not as Core repair input
 
-Projected output must keep its source boundary visible enough for the reader to judge it:
+## Template and label boundary
 
-- Show source state version, source refs, observation time, or an equivalent freshness cue when the source provides one.
-- Preserve stale, partial, unavailable, conflicted, or capability-limited source conditions.
-- Keep display labels separate from canonical enum values and schema fields.
-- Link back to the relevant owner when a reader needs the authority record.
-- Treat hand-edited or stale display as display to discard or recompute, not as Core repair input.
+[Template Bodies](template-bodies.md) owns exact rendered body guidance for status cards, judgment requests, run/evidence summaries, close results, agent context packets, and public-error display labels.
 
-## Template body owner
+This document may say whether a view is authority or display. It must not define the exact wording, body sections, or localized labels for that view.
 
-[Template Bodies](template-bodies.md) owns the body expectations for:
+Rendered labels may help readers understand owner records, but labels do not rename API values, storage fields, `ErrorCode` values, or blocker codes.
 
-- status cards
-- judgment requests
-- run/evidence summaries
-- close results
-- agent context packets
+## Owner links
 
-This document may link to that owner, but it must not redefine those body sections.
-
-## Out-of-Scope Boundary
-
-The baseline scope has no active reconcile queue, editable projection input path, projection-to-Core repair path, persistent projection job, or managed block drift repair. Those remain out-of-scope capabilities until promoted with scope, fallback behavior, non-substitution rules, and proof expectations.
-
-## Related owners
-
-- [Template Bodies](template-bodies.md) for exact rendered body expectations.
-- [Core Model](core-model.md) for Core authority, user-owned judgment, close readiness, final acceptance, and residual-risk boundaries.
-- [API State Schemas](api/schema-state.md) for state-shaped data used by displays.
-- [API Judgment Schemas](api/schema-judgment.md) for user-judgment and accepted-risk input shapes.
-- [API Artifact Schemas](api/schema-artifacts.md) for `ArtifactRef` display inputs.
-- [Security](security.md) for guarantee wording.
-- [Scope Reference](scope.md) for projection reconcile and persistent projection job candidates.
+- [Template Bodies](template-bodies.md) owns rendered body guidance, display phrasing, user-facing labels, and template wording.
+- [Core Model](core-model.md) owns Core authority, user-owned judgment, close readiness, final acceptance, and residual-risk boundaries.
+- [Reference Index](README.md) routes API, storage, artifact, and security owner questions.
+- [Agent Integration](agent-integration.md) owns surface registration, active surface context, and capability declarations.

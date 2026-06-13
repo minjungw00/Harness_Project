@@ -1,13 +1,13 @@
 # Template bodies
 
-This document owns baseline rendered body expectations for status cards, public error messages, judgment requests, run/evidence summaries, close results, and agent context packets. It defines display expectations and does not generate projection files, runtime artifacts, QA records, acceptance records, or close records.
+This document owns rendered body guidance, display phrasing, user-facing labels, and template wording for status cards, public error messages, judgment requests, run/evidence summaries, close results, and agent context packets. It defines display text only; authority stays with the owner records linked by each body.
 
 ## Owns / Does not own
 
 This document owns:
 
 - exact active template body structure for rendered status or support displays
-- user-facing wording boundaries for those bodies
+- user-facing display phrasing for those bodies
 - locale-aware rendered labels where a body needs them
 - user-facing public-error display labels and recovery cues
 - links from body placeholders to schema and authority owners
@@ -88,7 +88,7 @@ Suggested label:
 - Core or surface unavailable
 
 Recovery cue:
-- Reconnect or diagnose Core, MCP, and surface reachability.
+- Reconnect Core, MCP, or the selected surface, or show that the route is unavailable.
 
 <a id="label-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
@@ -428,13 +428,13 @@ Use `Closed by owner result` only when the close owner path returned an actual c
 ### Input state
 
 - Current task summary, active scope, out-of-scope items, pending user judgments, blockers, next safe actions, evidence gaps, artifact availability summary, close readiness, residual-risk summary, guarantee level, source refs, and freshness cues.
-- Connector or surface capability context when it affects what the agent may safely infer.
+- Active surface capability context when it affects what the agent may safely infer.
 - Only the language and owner sections needed for the next action.
 
 ### Must show
 
 - A compact support packet for an agent, not a replacement for owner records.
-- A readable connector-approved structure when the connector uses Markdown, JSON-like text, or another display shape.
+- A readable surface-supported structure when the surface uses Markdown, JSON-like text, or another display shape.
 - Authority and freshness cues visible in the packet.
 - Current task and scope in a compact form.
 - Pending user-owned judgments and blockers.
@@ -462,7 +462,7 @@ Avoid wording that presents the packet as a record, approval, or close result.
 
 ### Owner links
 
-- [Agent Integration](agent-integration.md) for connector context discipline and capability context.
+- [Agent Integration](agent-integration.md) for active surface context and capability declarations.
 - [Projection Authority Reference](projection-and-templates.md) for read-only display and freshness boundaries.
 - [Core Model](core-model.md) for authority, user-owned judgment, close readiness, and residual-risk boundaries.
 - [API State Schemas](api/schema-state.md), [API Judgment Schemas](api/schema-judgment.md), and [API Artifact Schemas](api/schema-artifacts.md) for packet input shapes.

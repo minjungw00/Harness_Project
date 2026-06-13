@@ -56,10 +56,10 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 
 | Topic | Owner |
 |---|---|
-| Agent integration and connector ownership | [`agent-integration.md`](agent-integration.md) |
+| Agent integration and active surface context | [`agent-integration.md`](agent-integration.md) |
 | Surface usage recipes | [`../use/surface-recipes.md`](../use/surface-recipes.md) |
-| Projection authority and template routing | [`projection-and-templates.md`](projection-and-templates.md) |
-| Template bodies | [`template-bodies.md`](template-bodies.md) |
+| Authority vs projected/status/template views | [`projection-and-templates.md`](projection-and-templates.md) |
+| Template bodies, labels, and display wording | [`template-bodies.md`](template-bodies.md) |
 | Conformance reference | [`conformance.md`](conformance.md) |
 | Design quality reference | [`design-quality.md`](design-quality.md) |
 

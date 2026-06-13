@@ -710,17 +710,21 @@ documents:
     path_ko: "docs/ko/reference/agent-integration.md"
     role: "reference"
     owner_for:
-      - "agent connector behavior"
-      - "capability context boundaries"
-      - "`VerifiedSurfaceContext` connector meaning"
-      - "connector fallback semantics"
+      - "surface registration"
+      - "active surface context"
+      - "`VerifiedSurfaceContext` integration boundaries"
+      - "`capability_profile` declaration boundaries"
+      - "agent context handoff boundaries"
     not_owner_for:
       - "surface-specific recipes"
+      - "API method behavior"
       - "API schema shapes"
       - "security guarantee meanings"
+      - "projection authority"
+      - "rendered template wording"
     normative_level: "contract"
     audience:
-      - "connector authors"
+      - "agent integrators"
       - "agents"
       - "maintainers"
 
@@ -729,13 +733,16 @@ documents:
     path_ko: "docs/ko/reference/projection-and-templates.md"
     role: "reference"
     owner_for:
-      - "Projection authority"
-      - "projection and template routing"
+      - "Projection authority boundaries"
+      - "authoritative records vs projected/status/template views"
       - "derived display boundaries"
+      - "display labels are not canonical schema values"
     not_owner_for:
       - "exact template bodies"
       - "API method behavior"
       - "storage contracts"
+      - "surface registration"
+      - "capability declarations"
     normative_level: "contract"
     audience:
       - "implementers"
