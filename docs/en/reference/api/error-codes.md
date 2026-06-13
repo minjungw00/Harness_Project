@@ -53,17 +53,13 @@ This document does not own:
 | `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#errorcode-artifact-missing) |
 | `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#errorcode-validator-failed) |
 
-## Code-use boundary
+## Occurrence path summary
 
-Public `ErrorCode` values are not blocker codes by default.
-
-| Boundary | Rule |
+| Occurrence path | Rule |
 |---|---|
-| Rejected-response errors | Use public `ErrorCode` values in `ToolRejectedResponse.errors[]` for rejected public API requests. |
-| Owner-defined result paths | A method, schema, or close-readiness owner may define a result-path mapping for a public error-code family, but the mapping does not make the public `ErrorCode` a blocker code. |
-| Stale state | `STATE_VERSION_CONFLICT` stays on rejected-response paths and is not a close-readiness blocker, result decision, write-decision reason, or planned blocker. |
-| Readable view freshness | `PROJECTION_STALE` alone is not a close-readiness blocker code. |
-| Fallback | `VALIDATOR_FAILED` is available only when no more specific supported code applies and the owning method or schema owns the fallback. |
+| Rejected-response errors | Public `ErrorCode` values appear in `ToolRejectedResponse.errors[]` for rejected public API requests. |
+| Owner-defined result paths | A method, schema, or close-readiness owner may define whether a public error-code family appears on an owner-defined result path. That result-path use does not change the public meaning owned here. |
+| Error/blocker boundary | See [API blocker routing](blocker-routing.md) for the owner boundary between public API errors and `CloseReadinessBlocker` data. |
 
 <a id="errorcode-validation-failed"></a>
 ### `VALIDATION_FAILED`
@@ -91,7 +87,7 @@ State effect:
 - No committed operation proceeds.
 - No owner state mutation occurs.
 
-Related conflict details:
+Notes:
 - Stale `WriteAuthorization.basis_state_version` and idempotency request-hash conflicts are covered in [State version conflict](error-precedence.md#state-conflict-behavior).
 
 <a id="errorcode-mcp-unavailable"></a>
