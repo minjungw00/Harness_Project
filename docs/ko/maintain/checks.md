@@ -8,11 +8,11 @@
 
 | 문서 | 사용할 때 |
 |---|---|
-| [구조 점검](checks/structure.md) | 담당 문서 경계, 경로 문서 형태, 기준 범위/지원 범위 밖 표현, 구현 표현, 참조 주장 위치, 가독성, 최종 보고 형식 |
+| [구조 점검](checks/structure.md) | 담당 문서 경계, 경로 문서 형태, 담당 문서 지도 위치, 기준 범위/지원 범위 밖 표현, 구현 표현, 참조 주장 위치, 가독성, 최종 보고 형식 |
 | [언어 일치 점검](checks/language-parity.md) | 영어/한국어 의미 일치, 식별자 보존, 한국어 구조, 한국어 기술 문체 |
 | [용어 점검](checks/terminology.md) | 용어 지도 사용, 혼합어 한국어, `complete` 모호성, 닫기 준비 상태 표현, 접근/보안 표현 |
 | [API 예시 점검](checks/api-examples.md) | 오래 유지되는 시나리오, 필드 이름 일관성, 응답 스냅샷 정합성, 참조, 타임스탬프, 예시의 API 담당 문서 경로 |
-| [링크와 색인 점검](checks/links-and-indexes.md) | 상대 링크, 앵커, `README` 경로, `doc-index.yaml`, 담당 문서 공백, LLM 검색 경로 |
+| [링크와 색인 점검](checks/links-and-indexes.md) | 상대 링크, 앵커, `README` 경로, `doc-index.yaml`, 담당 문서 공백, 메서드 경로 문서 위치, LLM 검색 경로 |
 
 ## 결과 라벨
 

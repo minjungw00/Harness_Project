@@ -53,39 +53,9 @@ One concept, one canonical owner. A canonical owner is the one document allowed 
 
 Other documents may contain a short one- or two-sentence summary plus a link. Do not copy long contract explanations into README, route, or maintain documents. If the same explanation appears in several files, keep the owner version and shrink the others to a reader consequence plus an owner link.
 
-Use these single-owner routes before repeating details:
+Use the [Reference Index](../reference/README.md) for human-readable owner lookup and [`docs/doc-index.yaml`](../../doc-index.yaml) for exact machine-readable metadata. For API method questions, use [`reference/api/methods.md`](../reference/api/methods.md) as the supported method list and first-hop method owner router.
 
-| Topic | Canonical owner |
-|---|---|
-| Baseline scope boundary and baseline/out-of-scope status | [Scope](../reference/scope.md) |
-| Common API envelopes and response branches | [API Schema Core](../reference/api/schema-core.md) |
-| Public error codes and error routing | [Errors](../reference/api/errors.md) |
-| Storage effects | [Storage Effects](../reference/storage-effects.md) |
-| Security guarantees and access-boundary wording | [Security](../reference/security.md) |
-| Product definitions | [Glossary](../reference/glossary.md) |
-| Documentation retrieval routes | [doc-index.yaml](../../doc-index.yaml) |
-
-Use these multi-owner routes when the question crosses an owner boundary:
-
-- API method contracts:
-  - [API Methods](../reference/api/methods.md)
-  - the method owner documents it lists
-- API schema families:
-  - [API State Schemas](../reference/api/schema-state.md)
-  - [API Artifact Schemas](../reference/api/schema-artifacts.md)
-  - [API Judgment Schemas](../reference/api/schema-judgment.md)
-  - [API Value Sets](../reference/api/schema-value-sets.md)
-- Projection and template owners:
-  - [Projection Authority Reference](../reference/projection-and-templates.md)
-  - [Template Bodies](../reference/template-bodies.md)
-- Surface and connector owners:
-  - [Surface Recipes](../use/surface-recipes.md)
-  - [Agent Integration](../reference/agent-integration.md)
-- Out-of-scope capability routing:
-  - [Scope](../reference/scope.md)
-- Translation and bilingual terminology:
-  - [Translation Guide](translation-guide.md)
-  - [Terminology Map](../../terminology-map.yaml)
+When a question crosses owner boundaries, choose the applicable owner from the Reference Index or `doc-index.yaml`, then load only the owner sections needed for the edit. Do not recreate owner maps inside Maintain guidance.
 
 Maintain docs own authoring rules and checks. They must not become secondary sources of truth for API, storage, schema, security, access class, close-readiness, projection, runtime, or product contracts.
 
@@ -120,16 +90,7 @@ When adding a real new owner, update [Reference README](../reference/README.md) 
 <a id="baseline-scope-api-method-split-threshold"></a>
 ### API method owners
 
-[`reference/api/methods.md`](../reference/api/methods.md) is the stable route document for the baseline API method family. Method-specific owner documents own baseline method behavior:
-
-- `reference/api/method-intake.md`
-- `reference/api/method-update-scope.md`
-- `reference/api/method-status.md`
-- `reference/api/method-prepare-write.md`
-- `reference/api/method-stage-artifact.md`
-- `reference/api/method-record-run.md`
-- `reference/api/method-user-judgment.md`
-- `reference/api/method-close-task.md`
+[`reference/api/methods.md`](../reference/api/methods.md) is the stable route document for the baseline API method family. It owns the supported public method list and routes each method to the method owner.
 
 When baseline method behavior changes, edit the method owner first. Then update the API router, [Reference README](../reference/README.md), [doc-index.yaml](../../doc-index.yaml), paired-language owner, and practical inbound links that should land on the method owner.
 

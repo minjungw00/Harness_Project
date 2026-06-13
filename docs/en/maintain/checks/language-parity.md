@@ -62,8 +62,7 @@ Fix:
 ## CHK-PARITY-004: Korean storage structure
 
 Owner:
-- [Korean Storage Records](../../../ko/reference/storage-records.md), [Korean Storage Effects](../../../ko/reference/storage-effects.md), [Korean Artifact Storage](../../../ko/reference/storage-artifacts.md), [Korean Storage Versioning](../../../ko/reference/storage-versioning.md)
-- [English Storage Records](../../reference/storage-records.md), [English Storage Effects](../../reference/storage-effects.md), [English Artifact Storage](../../reference/storage-artifacts.md), [English Storage Versioning](../../reference/storage-versioning.md)
+- The applicable paired storage owner selected from [Reference Index](../../reference/README.md) and `doc-index.yaml`
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 
 Check:

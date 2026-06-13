@@ -712,7 +712,7 @@ documents:
     role: "reference"
     owner_for:
       - "surface registration"
-      - "active surface context"
+      - "current surface context"
       - "`VerifiedSurfaceContext` integration boundaries"
       - "`capability_profile` declaration boundaries"
       - "agent context transfer boundaries"
@@ -880,6 +880,7 @@ documents:
       - "documentation structure checks"
       - "canonical owner boundary checks"
       - "route-page shape checks"
+      - "owner-map placement checks"
       - "baseline and out-of-scope wording checks"
       - "documentation final report format"
     not_owner_for:
@@ -973,6 +974,7 @@ documents:
       - "link and anchor check procedures"
       - "README and route index check procedures"
       - "doc-index route metadata checks"
+      - "method-router placement checks"
       - "LLM retrieval route checks"
     not_owner_for:
       - "product contracts"

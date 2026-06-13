@@ -82,11 +82,13 @@ Owner:
 
 Check:
 - Inspect `README` files, Start pages, Use pages, Build pages, Maintain pages, Scope pages, and route indexes for contract tables, long field explanations, status-value lists, security guarantee details, storage-effect details, and API branch summaries.
+- Confirm method-level owner maps appear only in [API Methods](../../reference/api/methods.md).
 - Confirm those pages route readers instead of defining contracts.
 
 Failure:
 - A route page becomes useful as a standalone technical contract.
 - A route list tries to enumerate every contract detail, owner subcase, status value, schema branch, storage effect, or security guarantee.
+- A non-method-router page repeats the supported public API method owner table.
 
 Fix:
 - Move normative detail to the canonical owner if it is missing there.
@@ -157,9 +159,7 @@ Fix:
 
 Owner:
 - [Reference Index](../../reference/README.md)
-- [API Methods](../../reference/api/methods.md)
-- [Storage Effects](../../reference/storage-effects.md)
-- [Security](../../reference/security.md)
+- The applicable owner selected from the Reference Index or `doc-index.yaml`
 
 Check:
 - Inspect non-owner API, storage, and security mentions for short purpose summaries and owner links.

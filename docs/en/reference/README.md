@@ -42,7 +42,7 @@ For machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-
 
 | Topic | Owner |
 |---|---|
-| Agent integration and active surface context | [`agent-integration.md`](agent-integration.md) |
+| Agent integration and current surface context | [`agent-integration.md`](agent-integration.md) |
 | Surface usage recipes | [`../use/surface-recipes.md`](../use/surface-recipes.md) |
 | Authority vs projected/status/template views | [`projection-and-templates.md`](projection-and-templates.md) |
 | Template bodies, labels, and display wording | [`template-bodies.md`](template-bodies.md) |

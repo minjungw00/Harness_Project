@@ -100,15 +100,11 @@
 담당 문서:
 - [참조 색인](../../reference/README.md)
 - [API 메서드](../../reference/api/methods.md)
-- [API 코어 스키마](../../reference/api/schema-core.md)
-- [API 상태 스키마](../../reference/api/schema-state.md)
-- [API 아티팩트 스키마](../../reference/api/schema-artifacts.md)
-- [API 판단 스키마](../../reference/api/schema-judgment.md)
-- [API 값 집합](../../reference/api/schema-value-sets.md)
-- [오류](../../reference/api/errors.md)
+- 참조 색인이나 API 메서드 경로 문서에서 고른 적용되는 API 담당 문서
 
 점검:
 - 예시 설명과 주변 산문이 메서드 동작, 공통 요청 래퍼, 상태 스키마, 아티팩트 스키마, 판단 스키마, 값 집합, 공개 오류를 알맞은 좁은 담당 문서로 보내는지 확인합니다.
+- 메서드 수준 담당 경로를 예시 지침에 다시 나열하지 않고 API 메서드 경로 문서로 연결하는지 확인합니다.
 - 예시가 알맞은 API 담당 문서 밖에서 API 메서드, 스키마 이름, 필드, 값, 오류 코드를 재정의하지 않는지 확인합니다.
 
 실패 조건:

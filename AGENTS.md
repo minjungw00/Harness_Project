@@ -35,7 +35,7 @@ Use `docs/doc-index.yaml` for exact owner routing. It is the stable machine-read
 
 LLM agents should read this `AGENTS.md` first for repository editing rules, then use `docs/doc-index.yaml` for exact owner lookup. Use entries in `shared_documents` and `documents` to find the matching `doc_id`, the owning `path` or `path_en`/`path_ko`, the entry's `owner_for` scope, and any `depends_on` support documents.
 
-Use `docs/*/reference/README.md` as the human-readable reference owner index, not as a replacement for `docs/doc-index.yaml`. Keep route documents aligned with the index without copying contract details into them.
+Use `docs/*/reference/README.md` as the human-readable reference owner index, not as a replacement for `docs/doc-index.yaml`. Keep route documents aligned with the index without copying contract details or recreating owner maps inside them.
 
 When an entry's `owner_for` matches the question or concept, load that owner first. Use `not_owner_for` to avoid routing a question to a nearby but non-owning document. Pull `depends_on` documents only when the owner, index metadata, or maintainer guidance sends you there. Use `role`, `normative_level`, and `audience` to distinguish route, guide, reference, build, and maintenance documents before editing.
 
@@ -45,7 +45,7 @@ If an entry route, README, or maintain document cannot point to an applicable ow
 
 API routing shortcut:
 
-- `docs/*/reference/api/methods.md` owns the supported public API method list and method owner routing, not detailed method behavior.
+- `docs/*/reference/api/methods.md` owns the supported public API method list and method owner routing; keep method-level routing there, not in `AGENTS.md`.
 - Route method behavior to the method-specific owner linked from the API method router.
 - Route response branch schemas and nested API shapes to the schema owner documents listed in `docs/doc-index.yaml` and `docs/*/reference/README.md`.
 - Route method payload field questions to the affected method owner when the field is method-specific; route shared envelope fields and nested schema fields to the schema owners.

@@ -100,15 +100,11 @@ Fix:
 Owner:
 - [Reference Index](../../reference/README.md)
 - [API Methods](../../reference/api/methods.md)
-- [API Schema Core](../../reference/api/schema-core.md)
-- [API State Schemas](../../reference/api/schema-state.md)
-- [API Artifact Schemas](../../reference/api/schema-artifacts.md)
-- [API Judgment Schemas](../../reference/api/schema-judgment.md)
-- [API Value Sets](../../reference/api/schema-value-sets.md)
-- [Errors](../../reference/api/errors.md)
+- The applicable API owner selected from the Reference Index or API Methods router
 
 Check:
 - Confirm example notes and surrounding prose route method behavior, common envelopes, state schemas, artifact schemas, judgment schemas, value sets, and public errors to the narrow owner.
+- Confirm method-level owner routing is linked through the API Methods router rather than repeated in example guidance.
 - Confirm examples do not redefine API methods, schema names, fields, values, or error codes outside the appropriate API owner.
 
 Failure:

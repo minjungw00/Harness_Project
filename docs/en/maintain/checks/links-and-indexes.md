@@ -83,6 +83,27 @@ Fix:
 - Move detailed procedures to the focused page.
 - Add or update the paired-language page and route metadata in the same documentation batch.
 
+## CHK-LINK-005: method owner routing placement
+
+Owner:
+- [API Methods](../../reference/api/methods.md)
+- [doc-index.yaml](../../../doc-index.yaml)
+- [Authoring Guide](../authoring-guide.md)
+
+Check:
+- Confirm the supported public API method list and method-level owner table live in API Methods.
+- Confirm `AGENTS.md`, Reference indexes, and Maintain docs link to API Methods instead of repeating the full method map.
+- Confirm `doc-index.yaml` paths for the method router and method owners match existing files.
+
+Failure:
+- A non-method-router page repeats the supported public API method owner table.
+- A method route points to a missing file, wrong language path, or stale method owner.
+- `doc-index.yaml` omits or misroutes the method router or a method owner path.
+
+Fix:
+- Keep the full method list in API Methods and shrink other pages to a short route link.
+- Update the affected path in API Methods or `doc-index.yaml`.
+
 ## CHK-LLM-001: duplicate contract text creates retrieval noise
 
 Owner:

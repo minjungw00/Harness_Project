@@ -62,8 +62,7 @@
 ## CHK-PARITY-004: 한국어 저장소 구조
 
 담당 문서:
-- [한국어 저장소 기록](../../reference/storage-records.md), [한국어 저장 효과](../../reference/storage-effects.md), [한국어 아티팩트 저장소](../../reference/storage-artifacts.md), [한국어 저장소 버전 관리](../../reference/storage-versioning.md)
-- [영어 저장소 기록](../../../en/reference/storage-records.md), [영어 저장 효과](../../../en/reference/storage-effects.md), [영어 아티팩트 저장소](../../../en/reference/storage-artifacts.md), [영어 저장소 버전 관리](../../../en/reference/storage-versioning.md)
+- [참조 색인](../../reference/README.md)과 `doc-index.yaml`에서 고른 적용되는 대응 저장소 담당 문서
 - [번역 가이드](../translation-guide.md)
 
 점검:

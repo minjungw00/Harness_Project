@@ -185,21 +185,4 @@ Owner links:
 <a id="owner-documents"></a>
 ## Owner documents
 
-Use these owners for detailed contract questions. This table routes responsibility; it does not duplicate those contracts.
-
-| Contract area | Owner documents |
-|---|---|
-| Baseline scope, excluded scope, and reserved/profile-gated scope availability | [Scope Reference](scope.md) |
-| Core authority, `Task` state, close readiness, and user-owned judgment boundaries | [Core Model](core-model.md) |
-| Public API method list and method routing | [API Methods](api/methods.md) |
-| Method-specific API behavior | [Intake](api/method-intake.md), [Update Scope](api/method-update-scope.md), [Status](api/method-status.md), [Prepare Write](api/method-prepare-write.md), [Stage Artifact](api/method-stage-artifact.md), [Record Run](api/method-record-run.md), [User Judgment](api/method-user-judgment.md), [Close Task](api/method-close-task.md) |
-| Shared API envelopes, response branches, schemas, and value sets | [API Schema Core](api/schema-core.md), [API State Schemas](api/schema-state.md), [API Artifact Schemas](api/schema-artifacts.md), [API Judgment Schemas](api/schema-judgment.md), [API Value Sets](api/schema-value-sets.md) |
-| Public errors and close-readiness blocker routing | [Errors](api/errors.md) |
-| Storage records, effects, artifact lifecycle, versioning, and locks | [Storage](storage.md), [Storage Records](storage-records.md), [Storage Effects](storage-effects.md), [Artifact Storage](storage-artifacts.md), [Storage Versioning](storage-versioning.md) |
-| Runtime and repository boundaries | [Runtime Boundaries](runtime-boundaries.md) |
-| Security claims, access-boundary wording, and guarantee semantics | [Security](security.md) |
-| Surface and connector behavior | [Agent Integration](agent-integration.md), [Surface Recipes](../use/surface-recipes.md) |
-| Projection authority, source-state freshness, and template routing | [Projection Authority Reference](projection-and-templates.md), [Template Bodies](template-bodies.md) |
-| Conformance procedures and check expectations | [Conformance](conformance.md) |
-| Implementation entry routing | [Implementation Guide](../build/implementation-guide.md) |
-| Product terminology and bilingual terminology controls | [Glossary](glossary.md), [Translation Guide](../maintain/translation-guide.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
+Use this page for supported baseline scope questions. For detailed questions outside the scope boundary, choose the applicable owner from the [Reference Index](README.md) or [`docs/doc-index.yaml`](../../doc-index.yaml). For API method behavior, start with [API Methods](api/methods.md).

@@ -185,21 +185,4 @@
 <a id="owner-documents"></a>
 ## 담당 문서
 
-세부 계약 질문에는 아래 담당 문서를 사용합니다. 이 표는 책임 경로를 안내하며, 계약을 중복 정의하지 않습니다.
-
-| 계약 영역 | 담당 문서 |
-|---|---|
-| 기준 범위, 제외 범위, 예약/프로필 조건부 값의 범위상 사용 가능성 | [범위 참조](scope.md) |
-| Core 권한, `Task` 상태, 닫기 준비 상태, 사용자 소유 판단 경계 | [Core 모델](core-model.md) |
-| 공개 API 메서드 목록과 메서드 경로 | [API 메서드](api/methods.md) |
-| 메서드별 API 동작 | [접수](api/method-intake.md), [범위 업데이트](api/method-update-scope.md), [상태](api/method-status.md), [쓰기 준비](api/method-prepare-write.md), [아티팩트 스테이징](api/method-stage-artifact.md), [실행 기록](api/method-record-run.md), [사용자 판단](api/method-user-judgment.md), [Task 닫기](api/method-close-task.md) |
-| 공통 API 요청 래퍼, 응답 분기, 스키마, 값 집합 | [API 코어 스키마](api/schema-core.md), [API 상태 스키마](api/schema-state.md), [API 아티팩트 스키마](api/schema-artifacts.md), [API 판단 스키마](api/schema-judgment.md), [API 값 집합](api/schema-value-sets.md) |
-| 공개 오류와 닫기 차단 사유 경로 | [오류](api/errors.md) |
-| 저장소 기록, 저장 효과, 아티팩트 생명주기, 버전 관리, 잠금 | [저장소](storage.md), [저장소 기록](storage-records.md), [저장 효과](storage-effects.md), [아티팩트 저장소](storage-artifacts.md), [저장소 버전 관리](storage-versioning.md) |
-| 런타임과 제품 저장소 경계 | [런타임 경계](runtime-boundaries.md) |
-| 보안 주장, 접근 경계 표현, 보장 의미 | [보안](security.md) |
-| 접점과 커넥터 동작 | [에이전트 통합](agent-integration.md), [접점별 사용 레시피](../use/surface-recipes.md) |
-| 상태 보기 권한, 원천 상태 최신성, 템플릿 경로 | [상태 보기 권한 참조](projection-and-templates.md), [템플릿 본문](template-bodies.md) |
-| 적합성 절차와 점검 기대 | [적합성](conformance.md) |
-| 구현 진입 경로 | [구현 가이드](../build/implementation-guide.md) |
-| 제품 용어와 한영 용어 통제 | [용어집](glossary.md), [번역 가이드](../maintain/translation-guide.md), [docs/terminology-map.yaml](../../terminology-map.yaml) |
+지원되는 기준 범위 질문에는 이 문서를 사용합니다. 범위 경계 밖의 세부 계약 질문은 [참조 색인](README.md)이나 [`docs/doc-index.yaml`](../../doc-index.yaml)에서 적용되는 담당 문서를 고릅니다. API 메서드 동작은 [API 메서드](api/methods.md)에서 시작합니다.

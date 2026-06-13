@@ -53,39 +53,9 @@
 
 다른 문서에는 1-2문장짜리 짧은 요약과 링크만 둘 수 있습니다. README, 경로 안내 문서, 유지보수 문서에 긴 계약 설명을 복사하지 않습니다. 같은 설명이 여러 파일에 있으면 담당 문서의 내용을 남기고, 나머지는 독자에게 보이는 결과와 담당 문서 링크로 줄입니다.
 
-세부사항을 반복하기 전에 아래 단일 담당 문서 경로를 먼저 확인합니다.
+사람이 읽는 담당 문서 찾기는 [참조 색인](../reference/README.md)을 사용하고, 정확한 기계 판독용 메타데이터는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다. API 메서드 질문은 [`reference/api/methods.md`](../reference/api/methods.md)를 지원되는 메서드 목록과 첫 담당 경로로 사용합니다.
 
-| 주제 | 담당 문서 |
-|---|---|
-| 기준 범위 경계와 기준 범위/범위 밖 상태 | [범위](../reference/scope.md) |
-| 공통 API 요청 래퍼와 응답 분기 | [API 코어 스키마](../reference/api/schema-core.md) |
-| 공개 오류 코드와 오류 경로 | [오류](../reference/api/errors.md) |
-| 저장 효과 | [저장 효과](../reference/storage-effects.md) |
-| 보안 보장과 접근 경계 표현 | [보안](../reference/security.md) |
-| 제품 정의 | [용어집](../reference/glossary.md) |
-| 문서 검색 경로 | [doc-index.yaml](../../doc-index.yaml) |
-
-질문이 여러 담당 문서 경계를 건너면 아래 경로를 사용합니다.
-
-- API 메서드 계약:
-  - [API 메서드](../reference/api/methods.md)
-  - 그 문서가 나열하는 메서드 담당 문서
-- API 스키마 묶음:
-  - [API 상태 스키마](../reference/api/schema-state.md)
-  - [API 아티팩트 스키마](../reference/api/schema-artifacts.md)
-  - [API 판단 스키마](../reference/api/schema-judgment.md)
-  - [API 값 집합](../reference/api/schema-value-sets.md)
-- 상태 보기와 템플릿 담당 문서:
-  - [상태 보기 권한 참조](../reference/projection-and-templates.md)
-  - [템플릿 본문](../reference/template-bodies.md)
-- 접점과 커넥터 담당 문서:
-  - [접점별 사용 레시피](../use/surface-recipes.md)
-  - [에이전트 통합](../reference/agent-integration.md)
-- 범위 밖 기능 경로:
-  - [범위](../reference/scope.md)
-- 번역과 한영 용어 작성 방식:
-  - [번역 가이드](translation-guide.md)
-  - [용어 지도](../../terminology-map.yaml)
+질문이 여러 담당 문서 경계를 건너면 참조 색인이나 `doc-index.yaml`에서 적용되는 담당 문서를 고른 뒤, 편집에 필요한 담당 문서 구간만 읽습니다. 유지보수 지침 안에 담당 문서 지도를 다시 만들지 않습니다.
 
 유지보수 문서는 작성 규칙과 점검을 담당합니다. API, 저장소, 스키마, 보안, 접근 등급, 닫기 준비 상태, 상태 보기, 런타임, 제품 계약의 두 번째 기준 문서가 되면 안 됩니다.
 
@@ -120,16 +90,7 @@
 <a id="baseline-scope-api-method-split-threshold"></a>
 ### API 메서드 담당 문서
 
-[`reference/api/methods.md`](../reference/api/methods.md)는 기준 범위 API 메서드 묶음의 안정적인 경로 문서입니다. 기준 범위 메서드 동작은 아래 메서드별 담당 문서가 담당합니다.
-
-- `reference/api/method-intake.md`
-- `reference/api/method-update-scope.md`
-- `reference/api/method-status.md`
-- `reference/api/method-prepare-write.md`
-- `reference/api/method-stage-artifact.md`
-- `reference/api/method-record-run.md`
-- `reference/api/method-user-judgment.md`
-- `reference/api/method-close-task.md`
+[`reference/api/methods.md`](../reference/api/methods.md)는 기준 범위 API 메서드 묶음의 안정적인 경로 문서입니다. 이 문서가 지원되는 공개 메서드 목록을 담당하고 각 메서드를 메서드 담당 문서로 보냅니다.
 
 기준 범위 메서드 동작이 바뀌면 먼저 메서드 담당 문서를 고칩니다. 그런 다음 API 경로 문서, [참조 README](../reference/README.md), [doc-index.yaml](../../doc-index.yaml), 대응 언어 담당 문서, 메서드 담당 문서로 직접 가야 하는 실제 내부 링크를 함께 맞춥니다.
 
