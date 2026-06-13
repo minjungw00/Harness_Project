@@ -26,6 +26,7 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | documentation | 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
 | baseline scope | 기준 범위 | [Scope](scope.md) |
 | supported scope | 지원 범위 | [Scope](scope.md) |
+| supported behavior | 지원 동작 | [Scope](scope.md) |
 | supported API method | 지원되는 API 메서드 | [API Methods](api/methods.md) |
 | supported API value | 지원되는 API 값 | [API Value Sets](api/schema-value-sets.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | [Scope Reference](scope.md) |
@@ -41,7 +42,7 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | user-owned judgment | 사용자 소유 판단 | [Core Model](core-model.md) |
 | close readiness | 닫기 준비 상태 | [Core Model](core-model.md) |
 | close readiness evaluation | 닫기 준비 상태 평가 | [Close-task method](api/method-close-task.md) |
-| close blocker | 닫기 차단 사유 | [Core Model](core-model.md) |
+| close-readiness blocker | 닫기 차단 사유 | [Core Model](core-model.md) |
 | `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API State Schemas](api/schema-state.md) |
 | complete intent | `complete` | [API Value Sets](api/schema-value-sets.md) |
 | full evaluation order | 전체 평가 순서 | [Translation Guide](../maintain/translation-guide.md) |
@@ -62,6 +63,9 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | detective guarantee | 탐지형 보장 | [Security](security.md) |
 | reserved value | 예약된 값 | [Scope](scope.md) |
 | profile-gated value | 프로필 조건부 값 | [Scope](scope.md) |
+| error routing | 오류 처리 경로 | [API error routing](api/error-routing.md) |
+| blocker routing | blocker 처리 경로 | [API blocker routing](api/blocker-routing.md) |
+| `ToolError.details` | `ToolError.details` | [API error details](api/error-details.md) |
 | dry-run | dry-run 미리보기 | [API Schema Core](api/schema-core.md) |
 | blocked result | 차단 결과 | [API error routing](api/error-routing.md) |
 | rejected response | 거부 응답 | [API Schema Core](api/schema-core.md) |
@@ -202,6 +206,29 @@ Owner:
 Notes:
 - Supported scope is behavior or capability documented as supported.
 
+### supported behavior
+
+English:
+- supported behavior
+
+Korean:
+- Reference: 지원 동작
+- User-facing: 지원 동작
+
+Preserve:
+- Owner titles and exact value strings
+
+Avoid:
+- Inferring supported behavior from value-set presence, examples, route summaries, or owner path terminology.
+- Using this term for runtime-active or currently applied session state.
+
+Owner:
+- [Scope](scope.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- Supported behavior is behavior documented as supported by Scope and the affected semantic owner.
+
 ### supported API method
 
 English:
@@ -310,6 +337,7 @@ Preserve:
 Avoid:
 - using `active` for owner-path routing
 - using product support wording when the meaning is only documentation routing
+- using owner path terminology as product behavior or a storage persistence condition
 
 Owner:
 - [Authoring Guide](../maintain/authoring-guide.md)
@@ -318,6 +346,7 @@ Owner:
 
 Notes:
 - An applicable owner path is the owner route that applies to a topic.
+- It is a documentation-routing concept, not a product behavior, runtime state, or persistence condition.
 
 ### existing owner
 
@@ -572,9 +601,10 @@ Owner:
 Notes:
 - This is the owner-path check that derives close readiness and remaining close blockers.
 
-### close blocker
+### close-readiness blocker
 
 English:
+- close-readiness blocker
 - close blocker
 
 Korean:
@@ -595,7 +625,7 @@ Owner:
 - [API blocker routing](api/blocker-routing.md)
 
 Notes:
-- Use this for a close-relevant reason that prevents honest close readiness until the owner path addresses it.
+- Use this for a close-relevant reason that prevents honest close readiness until the responsible owner-defined condition is resolved.
 
 ### `CloseReadinessBlocker`
 
@@ -1128,6 +1158,78 @@ Owner:
 
 Notes:
 - Use migration for technical schema, storage, data, or documentation migration concepts.
+
+### error routing
+
+English:
+- error routing
+- API response branch routing
+- API error routing, when naming the owner document
+
+Korean:
+- Reference: 오류 처리 경로
+- User-facing: 오류 처리 경로
+
+Preserve:
+- `ToolRejectedResponse`
+- `ToolDryRunResponse`
+- `CloseTaskResult(close_state=blocked)`
+
+Avoid:
+- Treating error routing as public `ErrorCode` meaning, error precedence, `ToolError.details`, or close-readiness blocker routing.
+
+Owner:
+- [API error routing](api/error-routing.md)
+
+Notes:
+- Error routing covers API response branch routing for rejected responses, blocked results, and `dry_run` previews.
+
+### blocker routing
+
+English:
+- blocker routing
+- close-readiness blocker routing
+- API blocker routing, when naming the owner document
+
+Korean:
+- Reference: blocker 처리 경로
+- User-facing: blocker 처리 경로
+
+Preserve:
+- `CloseReadinessBlocker`
+- `CloseReadinessBlocker.category`
+- `CloseReadinessBlocker.code`
+
+Avoid:
+- Treating blocker routing as public `ErrorCode` meaning, response branch routing, or `ToolError.details`.
+
+Owner:
+- [API blocker routing](api/blocker-routing.md)
+
+Notes:
+- Blocker routing covers close-readiness blocker routing, close-task blocker mapping, and forbidden public-error-as-blocker mapping.
+
+### `ToolError.details`
+
+English:
+- `ToolError.details`
+
+Korean:
+- Reference: `ToolError.details`
+- User-facing: 오류 세부사항, when not naming the exact API identifier
+
+Preserve:
+- `ToolError.details`
+
+Avoid:
+- Translating the identifier.
+- Treating detail helper values as top-level public `ErrorCode` values.
+
+Owner:
+- [API error details](api/error-details.md)
+
+Notes:
+- `ToolError.details` is the exact API detail identifier for machine-readable error details.
 
 ### dry-run
 

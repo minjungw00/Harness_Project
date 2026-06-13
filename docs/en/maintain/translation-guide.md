@@ -78,12 +78,13 @@ Use one Korean term for one concept unless the terminology map explicitly distin
 | close readiness, reference-facing | 닫기 준비 상태 | Preserve identifiers such as `CloseReadinessBlocker`. |
 | close readiness, user-facing | 닫기 가능 여부 | Use when explaining to end users whether a task can be closed. |
 | close readiness evaluation | 닫기 준비 상태 평가 | Never use "close 가능성 평가". |
+| close-readiness blocker | 닫기 차단 사유 | A close-relevant blocker; preserve `CloseReadinessBlocker` when naming the schema. |
 | `complete` as an identifier | `complete` | Preserve only when it is an enum value or identifier, such as `intent=complete`; use "full" or "entire" for ordinary adjective meaning. |
 | full evaluation order | 전체 평가 순서; in close-readiness context, 전체 닫기 준비 상태 평가 순서 | Do not write `complete` 평가 순서, complete 평가 순서, or `complete` 닫기 준비 상태 순서. |
 | artifact | 아티팩트 | Preserve `ArtifactRef`, `ArtifactInput`, and `StagedArtifactHandle`; do not use artifact availability as evidence sufficiency. |
 | evidence | 증거 | Preserve `EvidenceSummary`, `EvidenceCoverageItem`, and `evidence_summary`. |
 | surface | 접점 | Preserve `surface_id`; do not make it sound like proof of authority. |
-| active surface context | 현재 적용 접점 맥락 | Use for the current surface context for a request or interaction; preserve `VerifiedSurfaceContext`. |
+| active surface context | 현재 적용 접점 맥락 | Use for the current runtime or session surface context for a request or interaction; preserve `VerifiedSurfaceContext`. |
 | lifecycle | 생명주기 | Do not leave "lifecycle" in Korean prose unless it is an identifier. |
 | projection | 상태 보기 | Use `Projection` when the exact Harness label matters. |
 | user-owned judgment | 사용자 소유 판단 | Keep distinct from acceptance and residual-risk acceptance. |
@@ -93,12 +94,16 @@ Use one Korean term for one concept unless the terminology map explicitly distin
 | detective guarantee | 탐지형 보장 | Use only when the documented observable scope supports it. |
 | baseline scope | 기준 범위 | Stable scope contract; do not translate out-of-scope capabilities or current `Task` or Change Unit scope as baseline scope. |
 | supported scope | 지원 범위, or 지원되는 범위 when grammar requires | Behavior or capability documented as supported; not runtime-active state. |
-| active scope | 현재 적용 범위 | Current scope inside a `Task` or Change Unit; not a documentation support contract. |
-| active Change Unit | 현재 적용 Change Unit | Currently applied Change Unit in the authority model; not a project phase. |
+| supported behavior | 지원 동작 | Behavior documented as supported by Scope and the affected owner; not runtime-active state. |
+| active scope | 현재 적용 범위 | Current runtime or session scope inside a `Task` or Change Unit; not a documentation support contract. |
+| active Change Unit | 현재 적용 Change Unit | Currently applied Change Unit in the authority model; not a project phase or documentation support contract. |
 | supported API method | 지원되는 API 메서드 | Public method documented as supported; preserve exact method identifiers. |
 | supported API value | 지원되는 API 값 | Value documented as supported; value-set presence alone is not enough. |
-| applicable owner path | 적용되는 담당 경로 | Owner route that applies to a topic; use only for documentation routing. |
+| applicable owner path | 적용되는 담당 경로 | Owner route that applies to a topic; use only for documentation routing, not product behavior or storage persistence. |
 | baseline guarantee | 기준 범위 보장 | Use only when Scope and Security document the behavior as supported in the baseline scope. |
+| error routing | 오류 처리 경로 | Covers API response branch routing; owner path remains `api/error-routing.md`. |
+| blocker routing | blocker 처리 경로 | Covers close-readiness blocker routing; owner path remains `api/blocker-routing.md`. |
+| `ToolError.details` | `ToolError.details` | Exact API detail identifier; preserve it in backticks. |
 | out-of-scope capability | 지원 범위 밖 기능 | Keep deferred material clearly deferred. |
 | migration | 마이그레이션 | Use for technical schema, storage, data, or documentation migration concepts; do not translate it as previous choice. |
 

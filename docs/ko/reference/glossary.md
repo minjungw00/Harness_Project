@@ -26,6 +26,7 @@
 | documentation | 문서 | [작성 가이드](../maintain/authoring-guide.md) |
 | baseline scope | 기준 범위 | [기준 범위](scope.md) |
 | supported scope | 지원 범위 | [기준 범위](scope.md) |
+| supported behavior | 지원 동작 | [기준 범위](scope.md) |
 | supported API method | 지원되는 API 메서드 | [API 메서드](api/methods.md) |
 | supported API value | 지원되는 API 값 | [API 값 집합](api/schema-value-sets.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | [범위 참조](scope.md) |
@@ -41,7 +42,7 @@
 | user-owned judgment | 사용자 소유 판단 | [Core 모델](core-model.md) |
 | close readiness | 닫기 준비 상태 | [Core 모델](core-model.md) |
 | close readiness evaluation | 닫기 준비 상태 평가 | [Task 닫기 메서드](api/method-close-task.md) |
-| close blocker | 닫기 차단 사유 | [Core 모델](core-model.md) |
+| close-readiness blocker | 닫기 차단 사유 | [Core 모델](core-model.md) |
 | `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API 상태 스키마](api/schema-state.md) |
 | complete intent | `complete` | [API 값 집합](api/schema-value-sets.md) |
 | full evaluation order | 전체 평가 순서 | [번역 가이드](../maintain/translation-guide.md) |
@@ -62,6 +63,9 @@
 | detective guarantee | 탐지형 보장 | [보안](security.md) |
 | reserved value | 예약된 값 | [기준 범위](scope.md) |
 | profile-gated value | 프로필 조건부 값 | [기준 범위](scope.md) |
+| error routing | 오류 처리 경로 | [API 오류 경로](api/error-routing.md) |
+| blocker routing | blocker 처리 경로 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
+| `ToolError.details` | `ToolError.details` | [API 오류 세부사항](api/error-details.md) |
 | dry-run | dry-run 미리보기 | [API 코어 스키마](api/schema-core.md) |
 | blocked result | 차단 결과 | [API 오류 경로](api/error-routing.md) |
 | rejected response | 거부 응답 | [API 코어 스키마](api/schema-core.md) |
@@ -202,6 +206,29 @@
 설명:
 - 지원 범위는 지원된다고 문서화된 동작이나 역량을 뜻합니다.
 
+### supported behavior
+
+영어:
+- supported behavior
+
+한국어:
+- 참조 문서: 지원 동작
+- 사용자 문서: 지원 동작
+
+보존할 식별자:
+- 담당 문서 제목과 정확한 값 문자열
+
+피할 표현:
+- 값 집합에 있다는 사실, 예시, 경로 요약, 담당 경로 용어만 보고 지원 동작으로 추론하는 표현
+- 런타임에서 현재 적용되는 세션 상태를 이 용어로 부르는 표현
+
+담당 문서:
+- [기준 범위](scope.md)
+- [API 값 집합](api/schema-value-sets.md)
+
+설명:
+- 지원 동작은 기준 범위와 영향받는 의미 담당 문서가 지원된다고 문서화한 동작입니다.
+
 ### supported API method
 
 영어:
@@ -310,6 +337,7 @@
 피할 표현:
 - 담당 경로 안내에 `active`를 쓰는 표현
 - 문서 경로 안내만 뜻하는 자리에 제품 지원 계약 표현을 쓰는 표현
+- 담당 경로 용어를 제품 동작이나 저장 지속 조건처럼 쓰는 표현
 
 담당 문서:
 - [작성 가이드](../maintain/authoring-guide.md)
@@ -318,6 +346,7 @@
 
 설명:
 - 적용되는 담당 경로는 어떤 주제에 적용되는 담당 문서 경로입니다.
+- 문서 경로 안내 개념일 뿐, 제품 동작, 런타임 상태, 저장 지속 조건이 아닙니다.
 
 ### existing owner
 
@@ -572,9 +601,10 @@
 설명:
 - 닫기 준비 상태와 남은 닫기 차단 사유를 도출하는 담당 경로의 확인입니다.
 
-### close blocker
+### close-readiness blocker
 
 영어:
+- close-readiness blocker
 - close blocker
 
 한국어:
@@ -595,7 +625,7 @@
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 설명:
-- 닫기 차단 사유는 담당 경로에서 처리하기 전까지 정직한 닫기 준비 상태를 막는 이유입니다.
+- 닫기 차단 사유는 담당 문서가 정의한 조건이 해결되기 전까지 정직한 닫기 준비 상태를 막는 이유입니다.
 
 ### `CloseReadinessBlocker`
 
@@ -1128,6 +1158,78 @@
 
 설명:
 - 마이그레이션은 스키마, 저장소, 데이터, 문서 구조를 옮기거나 갱신하는 기술 개념에 씁니다.
+
+### error routing
+
+영어:
+- error routing
+- API response branch routing
+- 담당 문서 제목을 말할 때 API error routing
+
+한국어:
+- 참조 문서: 오류 처리 경로
+- 사용자 문서: 오류 처리 경로
+
+보존할 식별자:
+- `ToolRejectedResponse`
+- `ToolDryRunResponse`
+- `CloseTaskResult(close_state=blocked)`
+
+피할 표현:
+- 오류 처리 경로를 공개 `ErrorCode` 의미, 오류 우선순위, `ToolError.details`, 닫기 준비 상태 차단 사유 처리 경로처럼 쓰는 표현
+
+담당 문서:
+- [API 오류 경로](api/error-routing.md)
+
+설명:
+- 오류 처리 경로는 거부 응답, 차단 결과, `dry_run` 미리보기의 API 응답 분기 경로를 다룹니다.
+
+### blocker routing
+
+영어:
+- blocker routing
+- close-readiness blocker routing
+- 담당 문서 제목을 말할 때 API blocker routing
+
+한국어:
+- 참조 문서: blocker 처리 경로
+- 사용자 문서: blocker 처리 경로
+
+보존할 식별자:
+- `CloseReadinessBlocker`
+- `CloseReadinessBlocker.category`
+- `CloseReadinessBlocker.code`
+
+피할 표현:
+- blocker 처리 경로를 공개 `ErrorCode` 의미, 응답 분기 경로, `ToolError.details`처럼 쓰는 표현
+
+담당 문서:
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
+
+설명:
+- blocker 처리 경로는 닫기 준비 상태 차단 사유 처리 경로, `close_task` blocker 매핑, 금지된 공개 오류의 blocker 표현을 다룹니다.
+
+### `ToolError.details`
+
+영어:
+- `ToolError.details`
+
+한국어:
+- 참조 문서: `ToolError.details`
+- 사용자 문서: 정확한 API 식별자를 말하지 않을 때는 오류 세부사항
+
+보존할 식별자:
+- `ToolError.details`
+
+피할 표현:
+- 식별자를 번역하는 표현
+- 세부사항 보조 값을 최상위 공개 `ErrorCode` 값처럼 쓰는 표현
+
+담당 문서:
+- [API 오류 세부사항](api/error-details.md)
+
+설명:
+- `ToolError.details`는 기계 판독용 오류 세부사항을 나타내는 정확한 API 세부 식별자입니다.
 
 ### dry-run
 

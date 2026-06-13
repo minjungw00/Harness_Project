@@ -11,6 +11,8 @@ canonical_for:
   - "Terminology distinction between `complete` as an enum/identifier and ordinary prose meaning full or entire."
   - "Terminology boundaries for reserved/profile-gated value presence versus supported behavior."
   - "Terminology boundaries between stable supported documentation contracts and runtime-active or currently applied context."
+  - "Terminology boundaries between documentation owner routing and product behavior or storage persistence conditions."
+  - "Terminology routing for API error routing, blocker routing, and `ToolError.details`."
   - "Artifact and evidence terminology conventions for bilingual documentation."
 does_not_own:
   - "Product, API, storage, security, projection, or runtime contracts."
@@ -35,6 +37,7 @@ identifier_preservation:
     - "user_judgment"
     - "judgment_kind"
     - "CloseReadinessBlocker"
+    - "CloseReadinessBlocker.category"
     - "CloseReadinessBlocker.code"
     - "ArtifactRef"
     - "ArtifactInput"
@@ -53,6 +56,7 @@ identifier_preservation:
     - "DryRunSummary"
     - "PlannedBlocker"
     - "ToolError"
+    - "ToolError.details"
     - "ErrorCode"
     - "SensitiveActionScope"
     - "AuthorizedAttemptScope"
@@ -191,6 +195,22 @@ terms:
       - "Use for behavior or capability documented as supported."
       - "Do not use supported scope for the currently applied scope inside a `Task` or Change Unit."
       - "Korean may use 지원 범위 as a noun phrase or 지원되는 범위 when grammar needs a modifier."
+  supported_behavior:
+    category: "product_concept"
+    en: "supported behavior"
+    ko_reference: "지원 동작"
+    ko_user: "지원 동작"
+    owner_documents:
+      en:
+        - "docs/en/reference/scope.md"
+        - "docs/en/reference/api/schema-value-sets.md"
+      ko:
+        - "docs/ko/reference/scope.md"
+        - "docs/ko/reference/api/schema-value-sets.md"
+    notes:
+      - "Use for behavior documented as supported by Scope and the affected semantic owner."
+      - "Do not infer supported behavior from value-set presence, examples, route summaries, or owner path terminology."
+      - "Do not use supported behavior for runtime-active or currently applied session state."
   supported_api_method:
     category: "api_concept"
     en: "supported API method"
@@ -297,6 +317,7 @@ terms:
     notes:
       - "Use for the owner route that applies to a topic."
       - "Use only for documentation routing, not as a product support contract."
+      - "Do not use owner path terminology as a product behavior, storage persistence condition, or runtime state."
       - "Do not use active or support-contract wording as a broad substitute for applicable owner routing."
   existing_owner:
     category: "documentation_concept"
@@ -410,6 +431,7 @@ terms:
         - "docs/ko/reference/api/method-update-scope.md"
     notes:
       - "Use for the scope currently applied inside a `Task` or Change Unit context."
+      - "Active is reserved for runtime or session state and exact identifiers, not supported documentation contracts."
       - "Do not use active scope to mean baseline scope, supported scope, or a documentation contract."
       - "In Korean, prefer 현재 적용 범위 when clarity matters; do not automatically translate active as 활성."
   active_change_unit:
@@ -430,6 +452,7 @@ terms:
     notes:
       - "Use for the currently applied Change Unit in the authority model."
       - "Do not use active Change Unit for a project phase or documentation work phase."
+      - "Do not use active Change Unit for a supported documentation contract."
       - "In Korean, prefer 현재 적용 Change Unit when clarity matters; preserve Change Unit as the product term."
   user_owned_judgment:
     category: "product_concept"
@@ -552,7 +575,9 @@ terms:
       - "If a source phrase says \"Complete close-readiness order\" but means the full order, write 전체 닫기 준비 상태 평가 순서 in Korean."
   close_blocker:
     category: "product_concept"
-    en: "close blocker"
+    en: "close-readiness blocker"
+    aliases_en:
+      - "close blocker"
     ko_reference: "닫기 차단 사유"
     ko_user: "닫기 차단 사유"
     preserve_as_identifier:
@@ -596,7 +621,7 @@ terms:
     ko_reference: "차단 사유"
     ko_user: "차단 사유"
     notes:
-      - "Use close blocker / 닫기 차단 사유 when the blocker specifically comes from close readiness."
+      - "Use close-readiness blocker / 닫기 차단 사유 when the blocker specifically comes from close readiness."
   artifact:
     category: "product_concept"
     en: "artifact"
@@ -758,6 +783,7 @@ terms:
         - "docs/ko/reference/security.md"
     notes:
       - "Use for the current surface context for a request or interaction."
+      - "Active is reserved for runtime or session state and exact identifiers, not supported documentation contracts."
       - "Do not use active surface context as proof of authority, access, binding, or capability by itself."
       - "In Korean, prefer 현재 적용 접점 맥락 when clarity matters; preserve exact surface identifiers."
   runtime:
@@ -941,9 +967,13 @@ terms:
       - "Primary public-error selection, conflict selection, and stale-state ordering belong to `api/error-precedence.md`."
   api_response_branch_routing:
     category: "api_concept"
-    en: "API response branch routing"
-    ko_reference: "API 응답 분기 경로"
-    ko_user: "API 응답 분기 경로"
+    en: "error routing"
+    aliases_en:
+      - "API response branch routing"
+      - "API error routing"
+      - "response branch routing"
+    ko_reference: "오류 처리 경로"
+    ko_user: "오류 처리 경로"
     preserve_as_identifier:
       - "ToolRejectedResponse"
       - "ToolDryRunResponse"
@@ -954,7 +984,8 @@ terms:
       ko:
         - "docs/ko/reference/api/error-routing.md"
     notes:
-      - "Rejected-response, blocked-result, and `dry_run` preview response branch routing belongs to `api/error-routing.md`."
+      - "Error routing covers API response branch routing for rejected responses, blocked results, and `dry_run` preview responses."
+      - "The owner document path remains `api/error-routing.md`."
       - "Close-readiness blocker categories and blocker mappings belong to `api/blocker-routing.md`."
   tool_error_details:
     category: "api_concept"
@@ -985,9 +1016,12 @@ terms:
       - "Detail helper values are not top-level public `ErrorCode` values."
   close_readiness_blocker_routing:
     category: "api_concept"
-    en: "close-readiness blocker routing"
-    ko_reference: "닫기 준비 상태 차단 사유 처리 경로"
-    ko_user: "닫기 차단 사유 처리 경로"
+    en: "blocker routing"
+    aliases_en:
+      - "close-readiness blocker routing"
+      - "API blocker routing"
+    ko_reference: "blocker 처리 경로"
+    ko_user: "blocker 처리 경로"
     preserve_as_identifier:
       - "CloseReadinessBlocker"
       - "CloseReadinessBlocker.category"
@@ -998,7 +1032,8 @@ terms:
       ko:
         - "docs/ko/reference/api/blocker-routing.md"
     notes:
-      - "Close-readiness blocker routing, close-task blocker mapping, and forbidden-public-error-as-blocker mapping belong to `api/blocker-routing.md`."
+      - "Blocker routing covers close-readiness blocker routing, close-task blocker mapping, and forbidden-public-error-as-blocker mapping."
+      - "The owner document path remains `api/blocker-routing.md`."
       - "`CloseReadinessBlocker` schema shape belongs to `api/schema-state.md`."
       - "The close-readiness authority concept belongs to `reference/core-model.md`."
   forbidden_public_error_as_blocker_mapping:

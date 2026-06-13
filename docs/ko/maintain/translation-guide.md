@@ -78,12 +78,13 @@
 | close readiness, 참조 문서 | 닫기 준비 상태 | `CloseReadinessBlocker` 같은 식별자는 보존합니다. |
 | close readiness, 사용자 문서 | 닫기 가능 여부 | 사용자가 작업을 닫을 수 있는지 설명할 때 씁니다. |
 | close readiness evaluation | 닫기 준비 상태 평가 | 영어와 한국어를 섞은 평가 표현을 쓰지 않습니다. |
+| close-readiness blocker | 닫기 차단 사유 | 닫기와 관련된 차단 사유입니다. 스키마를 이름 붙일 때는 `CloseReadinessBlocker`를 보존합니다. |
 | 식별자로서 `complete` | `complete` | `intent=complete`처럼 enum 값이나 식별자일 때만 보존합니다. 일반 형용사 뜻이면 전체나 전체 평가처럼 옮깁니다. |
 | full evaluation order | 전체 평가 순서, 닫기 준비 상태 맥락에서는 전체 닫기 준비 상태 평가 순서 | 전체 순서 뜻으로 `complete`를 붙이지 않습니다. |
 | artifact | 아티팩트 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle`은 보존합니다. 아티팩트가 있다는 사실만으로 증거 충분성이 성립한다고 쓰지 않습니다. |
 | evidence | 증거 | `EvidenceSummary`, `EvidenceCoverageItem`, `evidence_summary`는 보존합니다. |
 | surface | 접점 | `surface_id`는 보존하고, 권한 증거처럼 들리게 쓰지 않습니다. |
-| active surface context | 현재 적용 접점 맥락 | 요청이나 상호작용에 현재 적용되는 접점 맥락에 씁니다. `VerifiedSurfaceContext`는 보존합니다. |
+| active surface context | 현재 적용 접점 맥락 | 요청이나 상호작용에 현재 적용되는 런타임 또는 세션의 접점 맥락에 씁니다. `VerifiedSurfaceContext`는 보존합니다. |
 | lifecycle | 생명주기 | 식별자가 아니라면 한국어 산문에 영어 용어를 남기지 않습니다. |
 | projection | 상태 보기 | 정확한 하네스 라벨이 필요할 때만 `Projection`을 씁니다. |
 | user-owned judgment | 사용자 소유 판단 | 수락, 잔여 위험 수락과 구분합니다. |
@@ -93,12 +94,16 @@
 | detective guarantee | 탐지형 보장 | 문서화된 관찰 범위가 뒷받침할 때만 씁니다. |
 | baseline scope | 기준 범위 | 안정적인 범위 계약입니다. 지원 범위 밖 기능이나 현재 `Task` 또는 Change Unit 범위를 기준 범위로 옮기지 않습니다. |
 | supported scope | 지원 범위, 문법상 자연스러울 때는 지원되는 범위 | 지원된다고 문서화된 동작이나 역량입니다. 런타임에서 현재 적용되는 상태가 아닙니다. |
-| active scope | 현재 적용 범위 | `Task`나 Change Unit 안에서 현재 적용되는 범위입니다. 문서상의 지원 계약이 아닙니다. |
-| active Change Unit | 현재 적용 Change Unit | 권한 모델에서 현재 적용되는 Change Unit입니다. 프로젝트 단계가 아닙니다. |
+| supported behavior | 지원 동작 | 기준 범위와 영향받는 담당 문서가 지원된다고 문서화한 동작입니다. 런타임에서 현재 적용되는 상태가 아닙니다. |
+| active scope | 현재 적용 범위 | `Task`나 Change Unit 안에서 현재 적용되는 런타임 또는 세션 범위입니다. 문서상의 지원 계약이 아닙니다. |
+| active Change Unit | 현재 적용 Change Unit | 권한 모델에서 현재 적용되는 Change Unit입니다. 프로젝트 단계나 문서상의 지원 계약이 아닙니다. |
 | supported API method | 지원되는 API 메서드 | 지원된다고 문서화된 공개 메서드입니다. 정확한 메서드 식별자는 보존합니다. |
 | supported API value | 지원되는 API 값 | 지원된다고 문서화된 값입니다. 값 집합에 있다는 사실만으로는 충분하지 않습니다. |
-| applicable owner path | 적용되는 담당 경로 | 어떤 주제에 적용되는 담당 문서 경로입니다. 문서 경로 안내에만 씁니다. |
+| applicable owner path | 적용되는 담당 경로 | 어떤 주제에 적용되는 담당 문서 경로입니다. 문서 경로 안내에만 쓰고, 제품 동작이나 저장 지속 조건처럼 쓰지 않습니다. |
 | baseline guarantee | 기준 범위 보장 | 기준 범위와 보안 담당 문서가 지원된다고 정의한 보장에만 씁니다. |
+| error routing | 오류 처리 경로 | API 응답 분기 경로를 다룹니다. 담당 경로는 `api/error-routing.md`로 유지합니다. |
+| blocker routing | blocker 처리 경로 | 닫기 준비 상태 차단 사유 처리 경로를 다룹니다. 담당 경로는 `api/blocker-routing.md`로 유지합니다. |
+| `ToolError.details` | `ToolError.details` | 정확한 API 세부 식별자이므로 백틱 안에 그대로 보존합니다. |
 | out-of-scope capability | 지원 범위 밖 기능 | 미뤄 둔 자료임을 분명히 유지합니다. |
 | migration | 마이그레이션 | 스키마, 저장소, 데이터, 문서 구조를 옮기거나 갱신하는 기술 개념에 씁니다. 이전 선택이라는 뜻으로 옮기지 않습니다. |
 
