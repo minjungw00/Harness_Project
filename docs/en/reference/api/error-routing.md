@@ -2,7 +2,9 @@
 
 This document owns API response branch routing for rejected responses, blocked results, and `dry_run` previews.
 
-It does not define public `ErrorCode` meanings, primary-code precedence, `ToolError.details`, response branch shapes, display labels, close-readiness meaning, or detailed close-readiness blocker routing.
+Use it to choose the API response branch. Do not use it to map individual close-readiness blockers, define blocker categories or codes, or decide `harness.close_task` method behavior.
+
+It does not define public `ErrorCode` meanings, primary-code precedence, `ToolError.details`, response branch shapes, display labels, close-readiness meaning, or close-readiness blocker category/code routing.
 
 ## Owner boundaries
 
@@ -156,17 +158,18 @@ Result boundary:
 <a id="blocked-close-task-result"></a>
 ### `CloseTaskResult(close_state=blocked)`
 
-Condition:
-- A valid close-readiness evaluation returns close blockers.
+Branch condition:
+- A valid `CloseTaskResult(close_state=blocked)` is returned under the `harness.close_task` method contract.
 
-Route:
-- `blockers: CloseReadinessBlocker[]`.
+Response branch:
+- The method result carries `blockers: CloseReadinessBlocker[]`.
 
 State effect:
 - Only the close-task method owner may define any committed blocked-result effect.
 
-Result data:
-- Close-readiness blocker routing belongs to [API blocker routing](blocker-routing.md).
+Result data boundary:
+- Close-readiness blocker/API response routing and public-code-to-blocker routing belong to [API blocker routing](blocker-routing.md).
+- `CloseReadinessBlocker` shape and category values stay with [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md).
 
 Public-code boundary:
 - `CloseTaskResult(close_state=blocked)` does not use `STATE_VERSION_CONFLICT`.
@@ -174,10 +177,10 @@ Public-code boundary:
 <a id="blocked-read-only-observation"></a>
 ### Read-only close-blocker observation
 
-Condition:
-- `StatusResult.close_blockers` or `harness.close_task intent=check` returns blocker observation data.
+Branch condition:
+- A read-only status or check result exposes close-blocker observation data.
 
-Route:
+Response branch:
 - Read-only `CloseReadinessBlocker` observation data.
 
 State effect:

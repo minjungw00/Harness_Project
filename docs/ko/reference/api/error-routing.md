@@ -2,7 +2,9 @@
 
 이 문서는 거부 응답, 차단 결과, `dry_run` 미리보기에 대한 API 응답 분기 경로를 담당합니다.
 
-공개 `ErrorCode` 의미, 주 코드 우선순위, `ToolError.details`, 응답 분기 형태, 표시 라벨, 닫기 준비 상태 의미, 자세한 차단 사유 처리 경로는 정의하지 않습니다.
+API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차단 사유를 매핑하거나, 차단 사유 범주와 코드를 정의하거나, `harness.close_task` 메서드 동작을 결정하는 문서로 사용하지 않습니다.
+
+공개 `ErrorCode` 의미, 주 코드 우선순위, `ToolError.details`, 응답 분기 형태, 표시 라벨, 닫기 준비 상태 의미, 닫기 차단 사유 범주와 코드 처리 경로는 정의하지 않습니다.
 
 ## 담당 경계
 
@@ -156,17 +158,18 @@
 <a id="blocked-close-task-result"></a>
 ### `CloseTaskResult(close_state=blocked)`
 
-조건:
-- 유효한 닫기 준비 상태 평가가 닫기 차단 사유를 반환합니다.
+분기 조건:
+- `harness.close_task` 메서드 계약에 따라 유효한 `CloseTaskResult(close_state=blocked)`가 반환되는 경우입니다.
 
-라우팅:
-- `blockers: CloseReadinessBlocker[]`.
+응답 분기:
+- 메서드 결과가 `blockers: CloseReadinessBlocker[]`를 담습니다.
 
 상태 영향:
 - 커밋된 차단 결과의 상태 영향은 `close_task` 메서드 담당 문서만 정의할 수 있습니다.
 
-결과 데이터:
-- 차단 사유 처리 경로는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다.
+결과 데이터 경계:
+- 닫기 차단 사유/API 응답 처리 경계와 공개 오류 코드가 차단 사유로 표현되는 경우는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다.
+- `CloseReadinessBlocker` 형태와 범주 값은 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)에 남습니다.
 
 공개 오류 코드가 차단 사유로 표현되는 경우:
 - `CloseTaskResult(close_state=blocked)`는 `STATE_VERSION_CONFLICT`를 사용하지 않습니다.
@@ -174,10 +177,10 @@
 <a id="blocked-read-only-observation"></a>
 ### 읽기 전용 관찰
 
-조건:
-- `StatusResult.close_blockers` 또는 `harness.close_task intent=check`가 차단 사유 관찰 데이터를 반환합니다.
+분기 조건:
+- 읽기 전용 상태 또는 확인 결과가 닫기 차단 사유 관찰 데이터를 노출합니다.
 
-라우팅:
+응답 분기:
 - 읽기 전용 `CloseReadinessBlocker` 관찰 데이터.
 
 상태 영향:

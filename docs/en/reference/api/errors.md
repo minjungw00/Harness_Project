@@ -1,6 +1,6 @@
 # API errors
 
-This document is the API error reference index. It routes public error-code, precedence, response branch routing, close-readiness blocker routing, and machine-readable detail questions to focused owner documents.
+This document is the API error reference family index. Use it as the first-hop route to focused API error owners, not as the owner for public code meanings, precedence, response branch routing, close-readiness blocker routing, or machine-readable details.
 
 It does not define rendered labels, message copy, templates, storage rows, runtime output, or method-specific result payloads.
 
