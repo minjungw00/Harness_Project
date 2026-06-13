@@ -1,10 +1,10 @@
-# User guide
+# User Guide
 
-Harness is meant to let you work in ordinary language while keeping decision boundaries visible. You decide the work and the risky calls. Harness records scope, evidence, approvals, user judgment, and close basis. The agent must not present inference as if it were your decision.
+Harness lets you work in ordinary language while keeping decision boundaries visible. You decide the work and the risky calls. The agent should keep scope, judgment, evidence, approvals, and close basis separate instead of presenting inference as your decision.
 
-This guide describes intended user behavior for a local Harness Server. This repository is documentation: runtime state, generated artifacts, evidence records, acceptance records, close records, and conformance output belong outside this documentation tree. Exact state, API, schema, storage, and security contracts are owned by the [Reference Index](../reference/README.md).
+This guide is the user workflow path. Exact API behavior, schemas, storage effects, security wording, and reference-level close-readiness rules live in the owners linked from the [Reference Index](../reference/README.md).
 
-## Starting a task
+## Start A Task
 
 Start the way you normally would:
 
@@ -16,227 +16,160 @@ Show me what still blocks the first safe change.
 Close this only if the evidence is sufficient.
 ```
 
-You do not need to choose an internal mode or know API names before work begins. The agent should turn the request into a visible working shape before it acts.
+You do not need internal mode names or API names. The agent should turn the request into a visible work shape before it acts.
 
 You decide:
-- The goal in ordinary language.
-- The first important outcome you want.
-- Any non-goals, path limits, or "ask me before..." rules.
-- Whether the request is only advice, a small change, or work that needs tracking when that distinction matters to you.
 
-Harness records:
-- The current goal, scope, and non-goals.
-- Known facts, unknowns, and pending user judgment.
-- The next safe action.
-- Whether the work shape is still too vague to start safely.
+- the goal in ordinary language
+- the first important outcome
+- non-goals, path limits, or "ask me before..." rules
+- whether the request is advice, a small change, or tracked work when that distinction matters
 
-The agent must not:
-- Make you learn schema names before helping.
-- Treat a broad request for help as permission to write files.
-- Infer product behavior, technical direction, final acceptance, or residual-risk acceptance from your opening request.
-- Create one-off planning files or artifacts just because the task needs shaping.
+The agent should show:
 
-## Keeping scope current
+- current goal, scope, and non-goals
+- known facts, unknowns, and pending user-owned judgment
+- the next safe action
+- whether the request is still too vague to start safely
 
-Scope changes when the goal, non-goals, affected area, acceptance criteria, allowed paths, or current work piece changes. Say the change plainly; the agent should update the visible record before relying on an old write check or old status.
+The agent should not treat a broad request for help as permission to write files, infer product behavior, infer final acceptance, or create one-off planning artifacts just because the task needs shaping.
+
+## Keep Scope Current
+
+Scope changes when the goal, non-goals, affected area, acceptance criteria, allowed paths, or current work slice changes. Say the change plainly. The agent should refresh the visible boundary before relying on old status or old write approval.
 
 You decide:
-- Whether to expand, narrow, pause, cancel, or supersede the task.
-- Whether a new file path, dependency, service, command, or user-visible behavior belongs in scope.
-- Which acceptance criteria or non-goals should change.
-- Whether a new question is yours to decide or a local implementation detail the agent may handle.
 
-Harness records:
-- The accepted scope update and the current boundary.
-- The facts or user judgment that caused the update.
-- Any old approval or write basis that is now stale.
-- The next safe action under the updated scope.
+- whether to expand, narrow, pause, cancel, or supersede the task
+- whether a new path, dependency, service, command, migration choice, or user-visible behavior belongs in scope
+- which acceptance criteria or non-goals should change
+- whether a new question is yours to decide or a local implementation detail
 
-The agent must not:
-- Treat enthusiasm, "sounds good," or "go ahead" as a scope expansion unless that exact expansion was named.
-- Reuse a write approval after the scope it depended on changed.
-- Hide a new product direction, external dependency, service, migration, security choice, or public-interface change as a small implementation detail.
-- Remove a non-goal without asking.
+The agent should show the accepted boundary, the reason it changed, any stale approval or status, and the next safe action under the updated scope.
 
-## Reviewing status
+The agent should not treat "sounds good" or "go ahead" as scope expansion unless the exact expansion was named.
 
-At any point, you can ask for the current status in plain terms:
+## Review Status
+
+At any point, you can ask:
 
 ```text
 What is known, what is still blocked, and what can safely happen next?
 ```
 
-You decide:
-- Which pending decision to answer.
-- Whether to continue, defer, narrow, cancel, or ask for more inspection.
-- Whether the status gives you enough context to make the next judgment.
+You decide which pending decision to answer and whether to continue, defer, narrow, cancel, or ask for more inspection.
 
-Harness records:
-- The current scope, status, and next safe action.
-- Facts the agent inspected and facts still unknown.
-- Pending user judgment, approval needs, evidence gaps, and close blockers.
-- Changed paths or a clear no-file-change result when relevant.
+A useful status summary says:
 
-The agent must not:
-- Mix inspected facts with user-owned judgment.
-- Ask you to restate facts it can safely inspect.
-- Present stale status as current.
-- Treat passing tests, a summary, or its own confidence as final acceptance.
+- current task or work shape
+- active scope
+- inspected facts and unknowns
+- primary blocker
+- pending user judgment or approval need
+- evidence gaps and close blockers when relevant
+- one next safe action
 
-## Approving a write
+The agent should not mix inspected facts with user-owned judgment, ask you to restate facts it can safely inspect, present stale status as current, or treat passing tests as final acceptance.
 
-A write approval is bounded permission for a named write attempt.
+## Approve Writes And Sensitive Actions
 
-It is not:
-
-- approval of the whole plan
-- final acceptance
-- residual-risk acceptance
-- a guarantee that Harness can stop every tool before it acts
+A write approval is bounded permission for a named write attempt. It is not whole-plan approval, final acceptance, residual-risk acceptance, or a guarantee that Harness can prevent every unsafe action.
 
 You decide:
-- The specific write or set of writes you are allowing.
-- The paths, commands, dependency changes, hosts, or external actions included in that approval.
-- Whether a separate sensitive action is allowed, such as dependency installation, deployment, secret access, or destructive command use.
-- What is explicitly not authorized.
 
-Harness records:
-- The intended write and the scope it is checked against.
-- The approval limit, such as path, action, time, task, or single-use boundary.
-- Whether the write is allowed, blocked, needs more user judgment, or needs separate sensitive-action approval.
-- When the write basis is stale or no longer compatible with current scope.
+- the specific write or set of writes you allow
+- paths, commands, dependency changes, hosts, or external actions included in that approval
+- whether a separate sensitive action is allowed, such as dependency installation, deployment, secret access, or destructive command use
+- what is explicitly not authorized
 
-The agent must not:
-- Write outside the named scope.
-- Treat write approval as product approval, final acceptance, residual-risk acceptance, or blanket permission for subsequent writes.
-- Treat sensitive-action approval as the same thing as product-file write approval.
-- Claim stronger security behavior than the security owner supports; see [Security](../reference/security.md).
+The agent should show the intended write, the scope it checked against, the approval limit, whether a separate sensitive-action approval is needed, and whether the basis has gone stale.
 
-## Recording runs and evidence
+The agent should not write outside the named scope, treat sensitive-action approval as product-file write approval, or claim stronger security behavior than [Security](../reference/security.md) supports.
+
+## Provide User-Owned Judgment
+
+User-owned judgment is a choice that belongs to you. The agent may recommend a bounded option when the facts support one, but it must keep your decision separate from its inference.
+
+You decide:
+
+- product behavior, UX, copy, user flow, accessibility trade-offs, and user-visible outcomes
+- material technical direction, including architecture, dependencies, external services, authentication, migration, security, privacy, retention, compatibility, and public interfaces
+- scope changes, final acceptance, residual-risk acceptance, cancellation, and supersession
+- whether to defer a judgment and what may continue while it is deferred
+
+The agent should ask the exact question, present concise options, name any bounded recommendation, record what your answer settles, and state what it does not settle.
+
+The agent should not turn "approved" into every pending judgment or combine product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, and residual-risk acceptance into one broad approval.
+
+For examples, see [Judgment Examples](judgment-examples.md). For exact authority boundaries, see [Core Model](../reference/core-model.md).
+
+## Use Evidence Without Replacing Judgment
 
 After meaningful action, the agent should show what happened and what supports each important claim. Evidence is support for a claim; it is not your judgment.
 
 You decide:
-- Which user-visible result, product choice, technical choice, or risk you are judging.
-- Whether to provide a manual observation or ask for more evidence.
-- Whether a missing item is acceptable only through a separate close or residual-risk path.
 
-Harness records:
-- What ran or changed.
-- Evidence references, including persisted artifacts when they are used.
-- Which claim each evidence item supports.
-- What passed, failed, was skipped, was not applicable, was redacted, was blocked, or is still missing.
-- Whether required close evidence is sufficient.
+- which visible result, product choice, technical choice, or risk you are judging
+- whether to provide a manual observation or ask for more evidence
+- whether a missing item must be gathered rather than accepted as risk
 
-The agent must not:
-- Treat a staged artifact as persistent evidence until it is recorded and linked to a claim.
-- Treat evidence as user judgment or final acceptance.
-- Use a raw local path, copied log location, or "the file is over there" as evidence authority by itself.
-- Expose raw secrets, tokens, or full sensitive logs.
-- Claim that tests prove user-visible behavior, accessibility, security, privacy, or completeness beyond what they actually cover.
+The agent should show what ran or changed, which claim each evidence item supports, what passed or failed, what is missing or stale, and which claim remains unsupported.
 
-## Providing user judgment
+The agent should not treat a staged artifact, raw local path, copied log location, screenshot alone, generated summary, or test pass as broader proof than it is. It also should not expose raw secrets, tokens, or full sensitive logs.
 
-User judgment is a choice that belongs to you. The agent may recommend a bounded option when the facts support one, but it must keep your decision separate from its inference.
+## Review Close Readiness
 
-You decide:
-- Product behavior, UX, copy, user flow, accessibility trade-offs, and user-visible outcomes.
-- Material technical direction, including architecture, dependencies, external services, authentication, migration, security, privacy, retention, compatibility, and public interfaces.
-- Scope changes, final acceptance, residual-risk acceptance, cancellation, and supersession.
-- Whether to defer a judgment and what may continue while it is deferred.
-
-Harness records:
-- The exact question asked.
-- The available options and any bounded recommendation.
-- Your answer and what it settles.
-- What the answer does not settle.
-
-The agent must not:
-- Turn "go ahead," "approved," or "looks good" into every pending judgment.
-- Collapse product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, and residual-risk acceptance into one broad approval.
-- Ask a vague multi-decision question when one narrow decision would unblock the next safe action.
-- Decide a material user-owned choice silently.
-
-## Reviewing close readiness
-
-Before larger work is called done, ask for close readiness in ordinary language:
+Before larger work is called done, ask in ordinary language:
 
 ```text
 Show what changed, what was checked, what residual risk is visible, and what still blocks close.
 ```
 
+For users, this is about close readiness: whether the task can honestly finish now. In reference terms, close-readiness meaning belongs to [Core Model](../reference/core-model.md), and close method behavior belongs to [Close-task Method](../reference/api/method-close-task.md).
+
 You decide:
-- Which blocker to address next.
-- Whether to provide final acceptance when the close basis is visible.
-- Whether a named residual risk is acceptable when the active close path requires that judgment.
-- Whether the task should complete, cancel, or be superseded.
 
-Harness records:
-- Whether scope stayed in bounds.
-- Required and optional evidence support.
-- Pending user judgment, final acceptance need, and residual-risk need.
-- Known blockers and the next action that would unblock close.
-- A read-only close-readiness check when the user only asks whether close would be blocked.
+- which blocker to address next
+- whether to provide final acceptance when the close basis is visible
+- whether to accept a named residual risk when the active close path requires that judgment
+- whether the task should complete, cancel, or be superseded
 
-The agent must not:
-- Call the task done while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved.
-- Treat passing tests as close readiness.
-- Treat a read-only close review as if it changed task state.
-- Hide a UI inspection gap, evidence gap, security concern, or unresolved user decision behind a generic "done."
+The agent should show scope, evidence, checks, pending judgments, final-acceptance needs, residual-risk needs, known blockers, and the next action that would unblock close.
 
-## Closing or accepting residual risk
+The agent should not call the task done while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved.
+
+## Close Or Accept Residual Risk
 
 Closing and accepting residual risk are separate user judgments. Final acceptance means you accept the visible result. Residual-risk acceptance means you accept a named remaining risk that is still visible.
 
 You decide:
-- Whether the task should complete, cancel, or be superseded.
-- Whether you accept the named final result.
-- Whether you accept a named residual risk, including its affected area and consequence.
-- Whether missing required evidence must be gathered instead of accepted as risk.
 
-Harness records:
-- The close attempt and its outcome.
-- The final acceptance basis when completion needs it.
-- The named residual risk, its scope, its consequence, and the reason it remains.
-- Any blocker that prevents honest close.
+- whether the task should complete, cancel, or be superseded
+- whether you accept the named final result
+- whether you accept a named residual risk, including its affected area and consequence
+- whether missing required evidence must be gathered instead of accepted as risk
 
-The agent must not:
-- Use residual-risk acceptance to cover missing required evidence.
-- Treat "looks good" as residual-risk acceptance unless the risk was named and you were asked that exact question.
-- Present cancelled or superseded work as successful completion.
-- Turn a failed command, missing artifact, stale evidence, or unresolved blocker into a vague failed task result.
+The agent should not use residual-risk acceptance to cover missing required evidence, treat "looks good" as risk acceptance unless the risk was named, or present cancelled or superseded work as successful completion.
 
-## What Harness does not guarantee
+## Use Reference Owners For Contract Detail
 
-Harness makes scope, judgment, evidence, and close basis visible. That visibility is useful, but it is not the same thing as enforcement or proof. For canonical security non-claims and guarantee levels, see [Security](../reference/security.md).
+Use the use docs for workflow. Use owner reference docs for exact contracts:
 
-You decide:
-- Whether to continue when Harness authority, evidence, or observable surface information is unavailable.
-- Whether a weaker record is acceptable for the task at hand.
-- Whether to move to a safer surface, gather more evidence, or stop.
+| Need | Owner Route |
+|---|---|
+| Current active and out-of-scope boundary | [Scope](../reference/scope.md) |
+| Core authority, user-owned judgment, close-readiness meaning | [Core Model](../reference/core-model.md) |
+| Security wording and guarantee levels | [Security](../reference/security.md) |
+| API methods and schemas | [Reference Index](../reference/README.md) |
+| Surface and connector behavior | [Agent Integration Reference](../reference/agent-integration.md) |
 
-Harness records:
-- The facts it can honestly observe or record.
-- Missing, stale, redacted, blocked, or unsupported evidence.
-- Whether the agent is working with a cooperative record rather than a proven stronger control.
-- Known limits that affect write, evidence, judgment, or close claims.
+Do not treat this guide as the API contract, and do not copy detailed contract rules back into the user-facing path.
 
-The agent must not:
-- Imply stronger security, observation, or prevention than the relevant owner and active surface support.
-- Claim Harness proves correctness, completeness, accessibility, privacy, security, or production safety by itself.
-- Turn "Harness recorded this" into "the user accepted this."
-
-## Where to go next
-
-This guide is the user-facing workflow. Continue by role instead of starting with internal schema details.
+## Where To Go Next
 
 | Reader | Path |
 |---|---|
 | Working user | [Judgment Examples](judgment-examples.md) -> [Scope](../reference/scope.md) |
-| Agent author/operator | [Agent Guide](agent-guide.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
+| Agent author or operator | [Agent Guide](agent-guide.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
 | Implementer | [Reference Index](../reference/README.md) -> active scope -> API methods -> schema owners -> storage effects |
 | Documentation maintainer | [Authoring Guide](../maintain/authoring-guide.md) -> [Translation Guide](../maintain/translation-guide.md) -> [Checks](../maintain/checks.md) |
-
-Use the [Reference Index](../reference/README.md) when you need exact method behavior, schema shape, storage effect, error behavior, security wording, or close-readiness rules. Do not treat this user guide as the API contract, and do not copy detailed contract rules back into the user-facing path.
-
-Reading these docs does not create runtime state, evidence, acceptance, close records, or implementation authority.
