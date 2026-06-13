@@ -25,13 +25,20 @@
 | Harness Runtime Home | Harness Runtime Home | [런타임 경계](runtime-boundaries.md) |
 | documentation | 문서 | [작성 가이드](../maintain/authoring-guide.md) |
 | baseline scope | 기준 범위 | [기준 범위](scope.md) |
+| supported scope | 지원 범위 | [기준 범위](scope.md) |
+| supported API method | 지원되는 API 메서드 | [API 메서드](api/methods.md) |
+| supported API value | 지원되는 API 값 | [API 값 집합](api/schema-value-sets.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | [범위 참조](scope.md) |
 | owner document | 담당 문서 | [작성 가이드](../maintain/authoring-guide.md) |
+| applicable owner path | 적용되는 담당 경로 | [작성 가이드](../maintain/authoring-guide.md) |
+| supported owner path | 지원되는 담당 경로 | [작성 가이드](../maintain/authoring-guide.md) |
 | existing owner | 기존 담당 문서 | [작성 가이드](../maintain/authoring-guide.md) |
 | promotion-time owner update | 승격 시점의 담당 문서 갱신 | [범위 참조](scope.md) |
 | owner placeholder | 담당 문서 자리표시자 | [작성 가이드](../maintain/authoring-guide.md) |
 | `Task` | `Task` | [Core 모델](core-model.md) |
 | scope | 범위 | [Core 모델](core-model.md) |
+| active scope | 현재 적용 범위 | [Core 모델](core-model.md) |
+| active Change Unit | 현재 적용 Change Unit | [Core 모델](core-model.md) |
 | user-owned judgment | 사용자 소유 판단 | [Core 모델](core-model.md) |
 | close readiness | 닫기 준비 상태 | [Core 모델](core-model.md) |
 | close readiness evaluation | 닫기 준비 상태 평가 | [Task 닫기 메서드](api/method-close-task.md) |
@@ -46,6 +53,7 @@
 | `StagedArtifactHandle` | `StagedArtifactHandle` | [API 아티팩트 스키마](api/schema-artifacts.md) |
 | projection | 상태 보기 | [상태 보기 권한 참조](projection-and-templates.md) |
 | surface | 접점 | [에이전트 통합](agent-integration.md) |
+| active surface context | 현재 적용 접점 맥락 | [에이전트 통합](agent-integration.md) |
 | runtime | 런타임 | [런타임 경계](runtime-boundaries.md) |
 | `Write Authorization` | 쓰기 권한 부여 | [Core 모델](core-model.md) |
 | sensitive approval | 민감 동작 승인 | [Core 모델](core-model.md) |
@@ -172,7 +180,72 @@
 - [API 값 집합](api/schema-value-sets.md)
 
 설명:
-- 기준 범위는 지원되는 문서화 제품 범위의 경계입니다.
+- 기준 범위는 안정적인 범위 계약이며, `Task`나 Change Unit 안에서 현재 적용되는 범위를 뜻하지 않습니다.
+
+### supported scope
+
+영어:
+- supported scope
+
+한국어:
+- 참조 문서: 지원 범위
+- 사용자 문서: 지원되는 범위
+
+보존할 식별자:
+- 담당 문서 제목과 정확한 값 문자열
+
+피할 표현:
+- `Task`나 Change Unit 안에서 현재 적용되는 범위를 이 용어로 부르는 표현
+
+담당 문서:
+- [기준 범위](scope.md)
+
+설명:
+- 지원 범위는 지원된다고 문서화된 동작이나 역량을 뜻합니다.
+
+### supported API method
+
+영어:
+- supported API method
+
+한국어:
+- 참조 문서: 지원되는 API 메서드
+- 사용자 문서: 지원되는 API 메서드
+
+보존할 식별자:
+- 정확한 공개 API 메서드 식별자
+
+피할 표현:
+- 언급되었거나 예약된 메서드 이름을 지원되는 메서드처럼 보는 표현
+
+담당 문서:
+- [API 메서드](api/methods.md)
+
+설명:
+- 지원되는 API 메서드는 지원된다고 문서화된 공개 메서드입니다.
+
+### supported API value
+
+영어:
+- supported API value
+
+한국어:
+- 참조 문서: 지원되는 API 값
+- 사용자 문서: 지원되는 API 값
+
+보존할 식별자:
+- 정확한 enum 값, 상태 값, 스키마 값 문자열
+
+피할 표현:
+- 값 집합에 있다는 사실만으로 지원된다고 보는 표현
+
+담당 문서:
+- [기준 범위](scope.md)
+- [API 값 집합](api/schema-value-sets.md)
+
+설명:
+- 지원되는 API 값은 지원된다고 문서화된 값입니다.
+- 정확한 값 이름 질문은 API 값 집합으로 보내고, 동작이나 지원 여부 질문은 의미 담당 문서로 보냅니다.
 
 ### out-of-scope capability
 
@@ -220,6 +293,59 @@
 
 설명:
 - 담당 문서는 제품 개념, 계약, 스키마 묶음, 경로, 용어 규칙의 기준 의미를 정의할 수 있는 기준 문서입니다.
+
+### applicable owner path
+
+영어:
+- applicable owner path
+
+한국어:
+- 참조 문서: 적용되는 담당 경로
+- 사용자 문서: 적용되는 담당 경로
+
+보존할 식별자:
+- 파일 경로
+- 앵커
+- `doc_id` 값
+
+피할 표현:
+- active owner path
+- 단순한 주제 경로 안내를 supported owner path라고 부르는 표현
+
+담당 문서:
+- [작성 가이드](../maintain/authoring-guide.md)
+- [참조 색인](README.md)
+- [doc-index.yaml](../../doc-index.yaml)
+
+설명:
+- 적용되는 담당 경로는 어떤 주제에 적용되는 담당 문서 경로입니다.
+
+### supported owner path
+
+영어:
+- supported owner path
+
+한국어:
+- 참조 문서: 지원되는 담당 경로
+- 사용자 문서: 지원되는 담당 경로
+
+보존할 식별자:
+- 파일 경로
+- 앵커
+- `doc_id` 값
+
+피할 표현:
+- 이 표현을 적용되는 담당 경로의 동의어처럼 쓰는 표현
+- 런타임에서 현재 적용되는 경로처럼 쓰는 표현
+
+담당 문서:
+- [작성 가이드](../maintain/authoring-guide.md)
+- [참조 색인](README.md)
+- [doc-index.yaml](../../doc-index.yaml)
+
+설명:
+- 문서가 특정 동작이나 역량에 대해 그 담당 경로를 지원된다고 명시할 때만 씁니다.
+- 일반적인 주제 경로 안내에는 적용되는 담당 경로를 씁니다.
 
 ### existing owner
 
@@ -348,6 +474,57 @@
 
 설명:
 - 범위는 현재 `Task`나 Change Unit이 포함하고 제외하는 합의된 경계입니다.
+
+### active scope
+
+영어:
+- active scope
+- currently applied scope
+
+한국어:
+- 참조 문서: 현재 적용 범위
+- 사용자 문서: 현재 적용 범위
+
+보존할 식별자:
+- `scope`
+- `scope_decision`
+- `AuthorizedAttemptScope`
+- `SensitiveActionScope`
+
+피할 표현:
+- 현재 적용 범위를 기준 범위, 지원 범위, 문서 계약처럼 쓰는 표현
+
+담당 문서:
+- [Core 모델](core-model.md)
+- [범위 갱신 메서드](api/method-update-scope.md)
+
+설명:
+- active scope는 `Task`나 Change Unit 맥락 안에서 현재 적용되는 범위입니다.
+- 한국어에서는 뜻이 더 분명해지는 자리에서 active를 자동으로 활성으로 옮기지 말고 현재 적용 범위를 우선합니다.
+
+### active Change Unit
+
+영어:
+- active Change Unit
+
+한국어:
+- 참조 문서: 현재 적용 Change Unit
+- 사용자 문서: 현재 적용 Change Unit
+
+보존할 식별자:
+- Change Unit
+- `change_unit_id`
+
+피할 표현:
+- active Change Unit을 프로젝트 단계나 문서 작업 단계처럼 보는 표현
+
+담당 문서:
+- [Core 모델](core-model.md)
+- [범위 갱신 메서드](api/method-update-scope.md)
+
+설명:
+- active Change Unit은 권한 모델에서 현재 적용되는 Change Unit입니다.
+- 한국어 산문에서도 Change Unit은 제품 용어로 보존합니다.
 
 ### user-owned judgment
 
@@ -707,6 +884,32 @@
 
 설명:
 - 접점은 하네스가 쓰이거나 관찰되는 사용자, 에이전트, 도구, 커넥터, 로컬 맥락입니다.
+
+### active surface context
+
+영어:
+- active surface context
+
+한국어:
+- 참조 문서: 현재 적용 접점 맥락
+- 사용자 문서: 현재 적용 접점 맥락
+
+보존할 식별자:
+- `VerifiedSurfaceContext`
+- `VerifiedSurfaceContext.access_class`
+- `surface_id`
+- `surface_instance_id`
+
+피할 표현:
+- 현재 적용 접점 맥락만으로 권한, 접근, 바인딩, 역량이 증명된다고 보는 표현
+
+담당 문서:
+- [에이전트 통합](agent-integration.md)
+- [보안](security.md)
+
+설명:
+- active surface context는 요청이나 상호작용에 현재 적용되는 접점 맥락입니다.
+- 한국어에서는 뜻이 더 분명해지는 자리에서 현재 적용 접점 맥락을 우선하고, 정확한 접점 식별자는 보존합니다.
 
 ### runtime
 

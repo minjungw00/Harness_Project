@@ -10,6 +10,7 @@ canonical_for:
   - "Search-friendly routing for promotion-time owner update terminology."
   - "Terminology distinction between `complete` as an enum/identifier and ordinary prose meaning full or entire."
   - "Terminology boundaries for reserved/profile-gated value presence versus supported behavior."
+  - "Terminology boundaries between stable supported documentation contracts and runtime-active or currently applied context."
   - "Artifact and evidence terminology conventions for bilingual documentation."
 does_not_own:
   - "Product, API, storage, security, projection, or runtime contracts."
@@ -177,6 +178,50 @@ terms:
         - "docs/ko/reference/api/schema-value-sets.md"
     notes:
       - "Do not describe out-of-scope capabilities as baseline requirements."
+      - "Baseline scope is the stable scope contract, not the currently applied `Task` or Change Unit scope."
+  supported_scope:
+    category: "product_concept"
+    en: "supported scope"
+    ko_reference: "지원 범위"
+    ko_user: "지원되는 범위"
+    owner_documents:
+      en:
+        - "docs/en/reference/scope.md"
+      ko:
+        - "docs/ko/reference/scope.md"
+    notes:
+      - "Use for behavior or capability documented as supported."
+      - "Do not use supported scope for the currently applied scope inside a `Task` or Change Unit."
+      - "Korean may use 지원 범위 as a noun phrase or 지원되는 범위 when grammar needs a modifier."
+  supported_api_method:
+    category: "api_concept"
+    en: "supported API method"
+    ko_reference: "지원되는 API 메서드"
+    ko_user: "지원되는 API 메서드"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/methods.md"
+      ko:
+        - "docs/ko/reference/api/methods.md"
+    notes:
+      - "Use only for a public API method documented as supported."
+      - "Preserve exact method identifiers when naming a method."
+  supported_api_value:
+    category: "api_concept"
+    en: "supported API value"
+    ko_reference: "지원되는 API 값"
+    ko_user: "지원되는 API 값"
+    owner_documents:
+      en:
+        - "docs/en/reference/scope.md"
+        - "docs/en/reference/api/schema-value-sets.md"
+      ko:
+        - "docs/ko/reference/scope.md"
+        - "docs/ko/reference/api/schema-value-sets.md"
+    notes:
+      - "Use only for a value documented as supported."
+      - "Presence in a value set does not by itself make an API value supported."
+      - "Route value-name questions to API Value Sets and behavior/support questions to the semantic owner."
   out_of_scope_capability:
     category: "product_concept"
     en: "out-of-scope capability"
@@ -237,6 +282,41 @@ terms:
         - "docs/ko/reference/README.md"
     notes:
       - "Use for the canonical documentation owner of a contract or term."
+  applicable_owner_path:
+    category: "documentation_concept"
+    en: "applicable owner path"
+    ko_reference: "적용되는 담당 경로"
+    ko_user: "적용되는 담당 경로"
+    owner_documents:
+      en:
+        - "docs/en/maintain/authoring-guide.md"
+        - "docs/en/reference/README.md"
+        - "docs/doc-index.yaml"
+      ko:
+        - "docs/ko/maintain/authoring-guide.md"
+        - "docs/ko/reference/README.md"
+        - "docs/doc-index.yaml"
+    notes:
+      - "Use for the owner route that applies to a topic."
+      - "Do not use active or supported as a broad substitute for applicable owner routing."
+  supported_owner_path:
+    category: "documentation_concept"
+    en: "supported owner path"
+    ko_reference: "지원되는 담당 경로"
+    ko_user: "지원되는 담당 경로"
+    owner_documents:
+      en:
+        - "docs/en/maintain/authoring-guide.md"
+        - "docs/en/reference/README.md"
+        - "docs/doc-index.yaml"
+      ko:
+        - "docs/ko/maintain/authoring-guide.md"
+        - "docs/ko/reference/README.md"
+        - "docs/doc-index.yaml"
+    notes:
+      - "Use only when the documentation explicitly describes an owner path as supported for the behavior or capability."
+      - "For ordinary topic routing, prefer applicable owner path."
+      - "A supported owner path is not a runtime-active path."
   existing_owner:
     category: "documentation_concept"
     en: "existing owner"
@@ -333,6 +413,43 @@ terms:
         - "docs/ko/reference/core-model.md"
         - "docs/ko/reference/api/methods.md"
         - "docs/ko/reference/api/schema-judgment.md"
+  active_scope:
+    category: "runtime_context"
+    en: "active scope"
+    ko_reference: "현재 적용 범위"
+    ko_user: "현재 적용 범위"
+    aliases_en:
+      - "currently applied scope"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/method-update-scope.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/method-update-scope.md"
+    notes:
+      - "Use for the scope currently applied inside a `Task` or Change Unit context."
+      - "Do not use active scope to mean baseline scope, supported scope, or a documentation contract."
+      - "In Korean, prefer 현재 적용 범위 when clarity matters; do not automatically translate active as 활성."
+  active_change_unit:
+    category: "runtime_context"
+    en: "active Change Unit"
+    ko_reference: "현재 적용 Change Unit"
+    ko_user: "현재 적용 Change Unit"
+    preserve_as_identifier:
+      - "Change Unit"
+      - "change_unit_id"
+    owner_documents:
+      en:
+        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/method-update-scope.md"
+      ko:
+        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/method-update-scope.md"
+    notes:
+      - "Use for the currently applied Change Unit in the authority model."
+      - "Do not use active Change Unit for a project phase or documentation work phase."
+      - "In Korean, prefer 현재 적용 Change Unit when clarity matters; preserve Change Unit as the product term."
   user_owned_judgment:
     category: "product_concept"
     en: "user-owned judgment"
@@ -645,6 +762,27 @@ terms:
         - "docs/ko/reference/security.md"
     notes:
       - "Do not make surface wording sound like proof of authority, access, binding, or capability."
+  active_surface_context:
+    category: "runtime_context"
+    en: "active surface context"
+    ko_reference: "현재 적용 접점 맥락"
+    ko_user: "현재 적용 접점 맥락"
+    preserve_as_identifier:
+      - "VerifiedSurfaceContext"
+      - "VerifiedSurfaceContext.access_class"
+      - "surface_id"
+      - "surface_instance_id"
+    owner_documents:
+      en:
+        - "docs/en/reference/agent-integration.md"
+        - "docs/en/reference/security.md"
+      ko:
+        - "docs/ko/reference/agent-integration.md"
+        - "docs/ko/reference/security.md"
+    notes:
+      - "Use for the current surface context for a request or interaction."
+      - "Do not use active surface context as proof of authority, access, binding, or capability by itself."
+      - "In Korean, prefer 현재 적용 접점 맥락 when clarity matters; preserve exact surface identifiers."
   runtime:
     category: "product_concept"
     en: "runtime"

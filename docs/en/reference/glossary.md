@@ -25,13 +25,20 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | Harness Runtime Home | Harness Runtime Home | [Runtime Boundaries](runtime-boundaries.md) |
 | documentation | 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
 | baseline scope | 기준 범위 | [Scope](scope.md) |
+| supported scope | 지원 범위 | [Scope](scope.md) |
+| supported API method | 지원되는 API 메서드 | [API Methods](api/methods.md) |
+| supported API value | 지원되는 API 값 | [API Value Sets](api/schema-value-sets.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | [Scope Reference](scope.md) |
 | owner document | 담당 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
+| applicable owner path | 적용되는 담당 경로 | [Authoring Guide](../maintain/authoring-guide.md) |
+| supported owner path | 지원되는 담당 경로 | [Authoring Guide](../maintain/authoring-guide.md) |
 | existing owner | 기존 담당 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
 | promotion-time owner update | 승격 시점의 담당 문서 갱신 | [Scope Reference](scope.md) |
 | owner placeholder | 담당 문서 자리표시자 | [Authoring Guide](../maintain/authoring-guide.md) |
 | `Task` | `Task` | [Core Model](core-model.md) |
 | scope | 범위 | [Core Model](core-model.md) |
+| active scope | 현재 적용 범위 | [Core Model](core-model.md) |
+| active Change Unit | 현재 적용 Change Unit | [Core Model](core-model.md) |
 | user-owned judgment | 사용자 소유 판단 | [Core Model](core-model.md) |
 | close readiness | 닫기 준비 상태 | [Core Model](core-model.md) |
 | close readiness evaluation | 닫기 준비 상태 평가 | [Close-task method](api/method-close-task.md) |
@@ -46,6 +53,7 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | `StagedArtifactHandle` | `StagedArtifactHandle` | [API Artifact Schemas](api/schema-artifacts.md) |
 | projection | 상태 보기 | [Projection Authority Reference](projection-and-templates.md) |
 | surface | 접점 | [Agent Integration](agent-integration.md) |
+| active surface context | 현재 적용 접점 맥락 | [Agent Integration](agent-integration.md) |
 | runtime | 런타임 | [Runtime Boundaries](runtime-boundaries.md) |
 | `Write Authorization` | 쓰기 권한 부여 | [Core Model](core-model.md) |
 | sensitive approval | 민감 동작 승인 | [Core Model](core-model.md) |
@@ -172,7 +180,72 @@ Owner:
 - [API Value Sets](api/schema-value-sets.md)
 
 Notes:
-- Baseline scope is the supported product scope boundary.
+- Baseline scope is the stable scope contract, not the currently applied `Task` or Change Unit scope.
+
+### supported scope
+
+English:
+- supported scope
+
+Korean:
+- Reference: 지원 범위
+- User-facing: 지원되는 범위
+
+Preserve:
+- Owner titles and exact value strings
+
+Avoid:
+- Using this term for the scope currently applied inside a `Task` or Change Unit.
+
+Owner:
+- [Scope](scope.md)
+
+Notes:
+- Supported scope is behavior or capability documented as supported.
+
+### supported API method
+
+English:
+- supported API method
+
+Korean:
+- Reference: 지원되는 API 메서드
+- User-facing: 지원되는 API 메서드
+
+Preserve:
+- Exact public API method identifiers
+
+Avoid:
+- Treating any mentioned or reserved method name as supported.
+
+Owner:
+- [API Methods](api/methods.md)
+
+Notes:
+- A supported API method is a public method documented as supported.
+
+### supported API value
+
+English:
+- supported API value
+
+Korean:
+- Reference: 지원되는 API 값
+- User-facing: 지원되는 API 값
+
+Preserve:
+- Exact enum values, status values, and schema value strings
+
+Avoid:
+- Treating value-set presence alone as support.
+
+Owner:
+- [Scope](scope.md)
+- [API Value Sets](api/schema-value-sets.md)
+
+Notes:
+- A supported API value is a value documented as supported.
+- Route exact value-name questions to API Value Sets and behavior/support questions to the semantic owner.
 
 ### out-of-scope capability
 
@@ -220,6 +293,59 @@ Owner:
 
 Notes:
 - An owner document is the canonical document allowed to define a product concept, contract, schema family, route, or terminology rule.
+
+### applicable owner path
+
+English:
+- applicable owner path
+
+Korean:
+- Reference: 적용되는 담당 경로
+- User-facing: 적용되는 담당 경로
+
+Preserve:
+- File paths
+- Anchors
+- `doc_id` values
+
+Avoid:
+- active owner path
+- supported owner path, when the meaning is only topic routing
+
+Owner:
+- [Authoring Guide](../maintain/authoring-guide.md)
+- [Reference Index](README.md)
+- [doc-index.yaml](../../doc-index.yaml)
+
+Notes:
+- An applicable owner path is the owner route that applies to a topic.
+
+### supported owner path
+
+English:
+- supported owner path
+
+Korean:
+- Reference: 지원되는 담당 경로
+- User-facing: 지원되는 담당 경로
+
+Preserve:
+- File paths
+- Anchors
+- `doc_id` values
+
+Avoid:
+- Using this term as a synonym for applicable owner path.
+- Using this term as a runtime-active path.
+
+Owner:
+- [Authoring Guide](../maintain/authoring-guide.md)
+- [Reference Index](README.md)
+- [doc-index.yaml](../../doc-index.yaml)
+
+Notes:
+- Use this only when documentation explicitly describes an owner path as supported for the behavior or capability.
+- For ordinary topic routing, use applicable owner path.
 
 ### existing owner
 
@@ -348,6 +474,57 @@ Owner:
 
 Notes:
 - Scope is the accepted boundary for what the current `Task` or Change Unit covers and excludes.
+
+### active scope
+
+English:
+- active scope
+- currently applied scope
+
+Korean:
+- Reference: 현재 적용 범위
+- User-facing: 현재 적용 범위
+
+Preserve:
+- `scope`
+- `scope_decision`
+- `AuthorizedAttemptScope`
+- `SensitiveActionScope`
+
+Avoid:
+- Using active scope to mean baseline scope, supported scope, or a documentation contract.
+
+Owner:
+- [Core Model](core-model.md)
+- [Update-scope method](api/method-update-scope.md)
+
+Notes:
+- Active scope is the scope currently applied inside a `Task` or Change Unit context.
+- In Korean, prefer 현재 적용 범위 when clarity matters instead of automatically translating active as 활성.
+
+### active Change Unit
+
+English:
+- active Change Unit
+
+Korean:
+- Reference: 현재 적용 Change Unit
+- User-facing: 현재 적용 Change Unit
+
+Preserve:
+- Change Unit
+- `change_unit_id`
+
+Avoid:
+- Treating an active Change Unit as a project phase or documentation work phase.
+
+Owner:
+- [Core Model](core-model.md)
+- [Update-scope method](api/method-update-scope.md)
+
+Notes:
+- An active Change Unit is the currently applied Change Unit in the authority model.
+- Preserve Change Unit as the product term in Korean prose.
 
 ### user-owned judgment
 
@@ -707,6 +884,32 @@ Owner:
 
 Notes:
 - A surface is a user, agent, tool, connector, or local context where Harness is used or observed.
+
+### active surface context
+
+English:
+- active surface context
+
+Korean:
+- Reference: 현재 적용 접점 맥락
+- User-facing: 현재 적용 접점 맥락
+
+Preserve:
+- `VerifiedSurfaceContext`
+- `VerifiedSurfaceContext.access_class`
+- `surface_id`
+- `surface_instance_id`
+
+Avoid:
+- Treating active surface context as proof of authority, access, binding, or capability by itself.
+
+Owner:
+- [Agent Integration](agent-integration.md)
+- [Security](security.md)
+
+Notes:
+- Active surface context is the current surface context for a request or interaction.
+- In Korean, prefer 현재 적용 접점 맥락 when clarity matters and preserve exact surface identifiers.
 
 ### runtime
 
