@@ -17,8 +17,8 @@
 - 상태 보기 권한, 최신성, 읽기 전용 파생 표시 규칙: [상태 보기 권한 참조](projection-and-templates.md)
 - 원천 상태, 저장소 기록 권한, 저장소 기록 구조: [Core 모델](core-model.md)과 저장소 담당 문서
 - API 스키마, 값 집합, 공개 `ErrorCode` 식별자, 공개 `ErrorCode` 의미: API 스키마 담당 문서와 [API 오류 코드](api/error-codes.md)
-- 오류 우선순위, 거부 응답 동작, 응답 분기 경로, 기계 판독용 `ToolError.details`: [API 오류 우선순위](api/error-precedence.md), [API 오류 경로](api/error-routing.md), [API 오류 세부사항](api/error-details.md)
-- 닫기 준비 상태 차단 사유 의미, 차단 사유 코드 경로, `CloseReadinessBlocker` 형태: [Core 모델](core-model.md), [API 상태 스키마](api/schema-state.md), [API 차단 사유 처리 경로](api/blocker-routing.md)
+- 오류 우선순위, 거부 응답 동작, 응답 분기 경로, 기계 판독용 `ToolError.details`: [API 오류 우선순위](api/error-precedence.md), [API 오류 처리 경로](api/error-routing.md), [API 오류 세부사항](api/error-details.md)
+- 닫기 준비 상태 차단 사유 의미, blocker 코드 처리 경로, `CloseReadinessBlocker` 형태: [Core 모델](core-model.md), [API 상태 스키마](api/schema-state.md), [API blocker 처리 경로](api/blocker-routing.md)
 - 위에 나열한 현재 본문에 포함되지 않는 표시 묶음: 지원 경계는 [범위 참조](scope.md)
 
 ## 경계
@@ -37,7 +37,7 @@
 - 담당 기록 변경
 - 저장소 기록 구조 정의 또는 렌더링 본문을 저장소 권한으로 만들기
 - 공개 `ErrorCode` 식별자나 기계 판독용 세부 키의 정의, 이름 변경, 지역화, 의미 변경
-- 닫기 준비 상태 차단 사유 의미, 차단 사유 코드, 차단 사유 처리 경로 정의
+- 닫기 준비 상태 차단 사유 의미, 차단 사유 코드, blocker 처리 경로 정의
 - 거부 응답 오류를 차단 사유나 차단 결과로 바꾸기
 
 ## 공개 오류 표시 라벨
@@ -49,7 +49,7 @@
 - 정확한 진단 식별자를 보여 줄 때는 공개 `ErrorCode`를 그대로 보존합니다.
 - 접점에 공간이 있으면 짧은 라벨과 해결 안내 하나를 함께 보여 줍니다.
 - 라벨을 `CloseReadinessBlocker.code`, `WriteDecisionReason.code`, `PlannedBlocker.code`, `ToolError.details` 키와 구분합니다.
-- 공개 코드 의미는 [API 오류 코드](api/error-codes.md), 우선순위나 충돌 선택은 [API 오류 우선순위](api/error-precedence.md), 응답 분기 경로는 [API 오류 경로](api/error-routing.md), 닫기 준비 상태 차단 사유 처리 경로는 [API 차단 사유 처리 경로](api/blocker-routing.md), 기계 판독용 세부사항은 [API 오류 세부사항](api/error-details.md)으로 안내합니다. [API 오류](api/errors.md)는 문서 묶음 색인으로만 사용합니다.
+- 공개 코드 의미는 [API 오류 코드](api/error-codes.md), 우선순위나 충돌 선택은 [API 오류 우선순위](api/error-precedence.md), 응답 분기 경로는 [API 오류 처리 경로](api/error-routing.md), 닫기 준비 상태 blocker 처리 경로는 [API blocker 처리 경로](api/blocker-routing.md), 기계 판독용 세부사항은 [API 오류 세부사항](api/error-details.md)으로 안내합니다. [API 오류](api/errors.md)는 문서 묶음 색인으로만 사용합니다.
 
 렌더링 오류 문구는 아래처럼 쓰면 안 됩니다.
 
@@ -127,7 +127,7 @@
 - `NO_ACTIVE_TASK`.
 
 표시 라벨:
-- 활성 `Task` 없음
+- 현재 적용 `Task` 없음
 
 해결 안내:
 - 작업 범위 동작 전에 `Task`를 선택하거나 생성합니다.
@@ -266,7 +266,7 @@
 
 ### 반드시 표시할 것
 
-- 현재 위치를 압축해 보여 주는 카드로, 상태와 활성 범위, 차단 사유와 대기 중인 사용자 판단, 실행/증거 요약과 공백, 닫기 준비 상태 요약, 다음 안전한 행동, 출처 참조와 최신성을 별도 영역으로 표시합니다.
+- 현재 위치를 압축해 보여 주는 카드로, 상태와 현재 적용 범위, 차단 사유와 대기 중인 사용자 판단, 실행/증거 요약과 공백, 닫기 준비 상태 요약, 다음 안전한 행동, 출처 참조와 최신성을 별도 영역으로 표시합니다.
 - 카드가 읽기 전용 파생 표시라는 사실.
 - 오래됨, 일부만 있음, 사용할 수 없음, 가림 처리, 역량 제한 같은 원천 조건.
 - 필수 차단 사유, 해결되지 않은 사용자 판단, 필수 증거 공백.
@@ -347,8 +347,8 @@
 
 ### 입력 상태
 
-- 활성 `Task` 또는 Change Unit의 실행 및 증거 담당 기록.
-- 증거 범위 항목, 필수/선택/해당 없음 상태, 지원 실행 기록 참조, 지원 `ArtifactRef` 링크, 차단 사유, 있는 경우 `ValidatorResult`, 최신성 단서.
+- 현재 적용 `Task` 또는 Change Unit의 실행 및 증거 담당 기록.
+- 증거 범위 항목, 필수/선택/해당 없음 상태, 뒷받침하는 실행 기록 참조, 뒷받침하는 `ArtifactRef` 링크, 차단 사유, 있는 경우 `ValidatorResult`, 최신성 단서.
 - 아티팩트 담당 문서에서 온 아티팩트 가용성, 가림 처리, 차단된 아티팩트, 사용할 수 없음 메모.
 
 ### 반드시 표시할 것
@@ -429,16 +429,16 @@
 - [Task 닫기 메서드](api/method-close-task.md): `harness.close_task` 동작.
 - [API 상태 스키마](api/schema-state.md): `CloseReadinessBlocker`.
 - [API 판단 스키마](api/schema-judgment.md): 최종 수락과 수락된 위험 입력 형태.
-- [API 오류 경로](api/error-routing.md): 닫기 거부 응답 분기 경로.
-- [API 차단 사유 처리 경로](api/blocker-routing.md): 닫기 준비 상태 차단 사유 처리 경로.
+- [API 오류 처리 경로](api/error-routing.md): 닫기 거부 응답 분기 경로.
+- [API blocker 처리 경로](api/blocker-routing.md): 닫기 준비 상태 blocker 처리 경로.
 
 <a id="agent-context-packet-body"></a>
 ## 에이전트 맥락 패킷 본문
 
 ### 입력 상태
 
-- 현재 작업 요약, 활성 범위, 범위 밖 항목, 대기 중인 사용자 판단, 차단 사유, 다음 안전한 행동, 증거 공백, 아티팩트 가용성 요약, 닫기 준비 상태, 잔여 위험 요약, 보장 수준, 출처 참조, 최신성 단서.
-- 에이전트가 안전하게 추론할 수 있는 범위에 영향을 주는 활성 접점 역량 맥락.
+- 현재 작업 요약, 현재 적용 범위, 범위 밖 항목, 대기 중인 사용자 판단, 차단 사유, 다음 안전한 행동, 증거 공백, 아티팩트 가용성 요약, 닫기 준비 상태, 잔여 위험 요약, 보장 수준, 출처 참조, 최신성 단서.
+- 에이전트가 안전하게 추론할 수 있는 범위에 영향을 주는 현재 적용 접점 역량 맥락.
 - 다음 행동에 필요한 언어와 담당 섹션만 사용합니다.
 
 ### 반드시 표시할 것
@@ -472,7 +472,7 @@
 
 ### 담당 문서 링크
 
-- [에이전트 통합](agent-integration.md): 활성 접점 맥락과 역량 선언.
+- [에이전트 통합](agent-integration.md): 현재 적용 접점 맥락과 역량 선언.
 - [상태 보기 권한 참조](projection-and-templates.md): 읽기 전용 표시와 최신성 경계.
 - [Core 모델](core-model.md): 권한, 사용자 소유 판단, 닫기 준비 상태, 잔여 위험 경계.
 - [API 상태 스키마](api/schema-state.md), [API 판단 스키마](api/schema-judgment.md), [API 아티팩트 스키마](api/schema-artifacts.md): 패킷 입력 형태.

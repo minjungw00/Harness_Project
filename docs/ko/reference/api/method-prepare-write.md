@@ -22,8 +22,8 @@
 
 제안된 제품 파일 쓰기 하나를 아래 항목과 비교합니다.
 
-- 활성 `Task`.
-- 활성 Change Unit.
+- 현재 적용 `Task`.
+- 현재 적용 Change Unit.
 - 범위.
 - 기준선.
 - 필요한 별도 민감 동작 승인.
@@ -39,7 +39,7 @@
 ## 필수 입력
 
 - `ToolEnvelope`: `dry_run=false` 커밋에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
-- `task_id`와 `change_unit_id`. 담당 해석이 활성 `Task`와 활성 Change Unit을 모호하지 않게 사용할 수 있을 때만 `null`을 사용할 수 있습니다.
+- `task_id`와 `change_unit_id`. 담당 해석이 현재 적용 `Task`와 현재 적용 Change Unit을 모호하지 않게 사용할 수 있을 때만 `null`을 사용할 수 있습니다.
 - `intended_operation`, `intended_paths`, `product_file_write_intended`, `sensitive_categories`, `baseline_ref`.
 
 ## 접근 요구사항
@@ -48,7 +48,7 @@
 
 - `VerifiedSurfaceContext.access_class=write_authorization`입니다.
 - `verified=true`입니다.
-- 호환되는 활성 범위가 있습니다.
+- 호환되는 현재 적용 범위가 있습니다.
 - 기준선이 호환됩니다.
 - 필요한 사용자 소유 판단이 처리되어 있습니다.
 - 필요한 경우 별도 민감 동작 승인(`sensitive_approval`)이 있습니다.
@@ -58,7 +58,7 @@
 
 | 결과 | 상태 버전 효과 | 쓰기 승인 효과 |
 |---|---|---|
-| 커밋된 `decision=allowed` | `project_state.state_version`을 정확히 한 번 올립니다. | 활성 쓰기 승인 하나를 만듭니다. |
+| 커밋된 `decision=allowed` | `project_state.state_version`을 정확히 한 번 올립니다. | `status=active` 쓰기 승인 하나를 만듭니다. |
 | 커밋된 비허용 판단 | 메서드가 소유한 쓰기 결정 이유 상태에 한해 올릴 수 있습니다. | 소비 가능한 쓰기 승인을 만들지 않습니다. |
 | 커밋 전 거절 또는 `dry_run` | 올리지 않습니다. | 만들지 않습니다. |
 
@@ -102,7 +102,7 @@
 - 오래된 `expected_state_version`.
 - 멱등 요청 해시 충돌.
 - 요청 검증 실패.
-- 활성 `Task` 또는 Change Unit 없음.
+- 현재 적용 `Task` 또는 Change Unit 없음.
 - 로컬 접근 실패.
 - Core 사용 불가.
 - 기준선이 오래되었습니다.
@@ -229,5 +229,5 @@ write_decision_reasons:
 - `WriteAuthorizationSummary`, 상태 요약, 참조: [API 상태 스키마](schema-state.md).
 - `SensitiveActionScope`와 사용자 소유 승인 경계: [API 판단 스키마](schema-judgment.md).
 - 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
-- 공개 오류, `STATE_VERSION_CONFLICT`, 차단/`dry_run` 동작: [API 오류 코드](error-codes.md), [상태 버전 충돌](error-precedence.md#state-conflict-behavior), [API 오류 경로](error-routing.md).
+- 공개 오류, `STATE_VERSION_CONFLICT`, 차단/`dry_run` 동작: [API 오류 코드](error-codes.md), [상태 버전 충돌](error-precedence.md#state-conflict-behavior), [API 오류 처리 경로](error-routing.md).
 - 저장 효과와 상태 시계: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

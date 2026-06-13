@@ -15,8 +15,8 @@
 이 문서는 담당하지 않습니다.
 
 - 우선순위 선택 밖의 공개 코드 의미: [API 오류 코드](error-codes.md).
-- API 응답 분기 경로: [API 오류 경로](error-routing.md).
-- 닫기 준비 상태 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md).
+- API 응답 분기 경로: [API 오류 처리 경로](error-routing.md).
+- 닫기 준비 상태 blocker 처리 경로: [API blocker 처리 경로](blocker-routing.md).
 - 기계 판독용 충돌 세부 필드: [API 오류 세부사항](error-details.md#state-conflict-detail-fields).
 - 저장소 재실행 행과 상태 시계: [저장소 버전 관리](../storage-versioning.md).
 

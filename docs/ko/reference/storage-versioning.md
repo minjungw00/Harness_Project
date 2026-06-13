@@ -107,7 +107,7 @@
 담당 문서 링크:
 
 - 공개 `ErrorCode` 의미는 [API 오류 코드](api/error-codes.md)가 담당합니다.
-- 거부 응답 분기 경로는 [API 오류 경로](api/error-routing.md)가 담당합니다.
+- 거부 응답 분기 경로는 [API 오류 처리 경로](api/error-routing.md)가 담당합니다.
 - 분기별 저장 효과는 [저장 효과](storage-effects.md)가 담당합니다.
 
 <a id="state-version-successful-mutation"></a>
@@ -294,7 +294,7 @@
 
 - 공개 `ErrorCode` 의미는 [API 오류 코드](api/error-codes.md)가 담당합니다.
 - 상태 충돌 우선순위는 [API 오류 우선순위](api/error-precedence.md#state-conflict-behavior)가 담당합니다.
-- 거부 응답 분기 경로는 [API 오류 경로](api/error-routing.md)가 담당합니다.
+- 거부 응답 분기 경로는 [API 오류 처리 경로](api/error-routing.md)가 담당합니다.
 
 허용되지 않는 것:
 

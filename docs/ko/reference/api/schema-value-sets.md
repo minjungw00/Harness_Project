@@ -18,7 +18,7 @@
 이 문서는 담당하지 않습니다.
 
 - 공개 `ErrorCode` 값과 우선순위: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md)
-- 닫기 준비 상태 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md)
+- 닫기 준비 상태 blocker 처리 경로: [API blocker 처리 경로](blocker-routing.md)
 - 이 값을 쓰는 필드 형태: [API 코어 스키마](schema-core.md), [API 상태 스키마](schema-state.md), [API 아티팩트 스키마](schema-artifacts.md), [API 판단 스키마](schema-judgment.md)
 - 메서드 동작: [API 메서드](methods.md)와 메서드 담당 문서
 - 보안 보장 의미: [보안](../security.md)
@@ -72,7 +72,7 @@ staging_created
 no_effect
 ```
 
-`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류 코드](error-codes.md)와 [API 오류 경로](error-routing.md)가 담당합니다.
+`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류 코드](error-codes.md)와 [API 오류 처리 경로](error-routing.md)가 담당합니다.
 
 <a id="access-class-values"></a>
 ## 접근 등급 값
@@ -397,7 +397,7 @@ incompatible
 - [기준 범위](../scope.md): 값이 기준 범위에 속하는지 판단.
 - [API 오류 코드](error-codes.md): 공개 오류 코드 의미.
 - [API 오류 우선순위](error-precedence.md): 공개 오류 우선순위.
-- [API 차단 사유 처리 경로](blocker-routing.md): 닫기 준비 상태 차단 사유 처리 경로.
+- [API blocker 처리 경로](blocker-routing.md): 닫기 준비 상태 blocker 처리 경로.
 - [API 오류 세부사항](error-details.md): 기계 판독용 오류 세부사항 보조 값.
 - [API 코어 스키마](schema-core.md), [API 상태 스키마](schema-state.md), [API 아티팩트 스키마](schema-artifacts.md), [API 판단 스키마](schema-judgment.md): 이 값을 쓰는 필드.
 - [API 메서드](methods.md)와 메서드 담당 문서: 이 값을 사용하는 메서드 동작.

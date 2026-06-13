@@ -63,11 +63,11 @@
 | detective guarantee | 탐지형 보장 | [보안](security.md) |
 | reserved value | 예약된 값 | [기준 범위](scope.md) |
 | profile-gated value | 프로필 조건부 값 | [기준 범위](scope.md) |
-| error routing | 오류 처리 경로 | [API 오류 경로](api/error-routing.md) |
-| blocker routing | blocker 처리 경로 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
+| error routing | 오류 처리 경로 | [API 오류 처리 경로](api/error-routing.md) |
+| blocker routing | blocker 처리 경로 | [API blocker 처리 경로](api/blocker-routing.md) |
 | `ToolError.details` | `ToolError.details` | [API 오류 세부사항](api/error-details.md) |
 | dry-run | dry-run 미리보기 | [API 코어 스키마](api/schema-core.md) |
-| blocked result | 차단 결과 | [API 오류 경로](api/error-routing.md) |
+| blocked result | 차단 결과 | [API 오류 처리 경로](api/error-routing.md) |
 | rejected response | 거부 응답 | [API 코어 스키마](api/schema-core.md) |
 | migration | 마이그레이션 | [저장소 버전 관리](storage-versioning.md) |
 | lifecycle | 생명주기 | [Core 모델](core-model.md) |
@@ -570,7 +570,7 @@
 담당 문서:
 - [Core 모델](core-model.md)
 - [Task 닫기 메서드](api/method-close-task.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API blocker 처리 경로](api/blocker-routing.md)
 
 설명:
 - 평가 개념이며 차단 사유 스키마 자체가 아닙니다.
@@ -596,10 +596,10 @@
 담당 문서:
 - [Core 모델](core-model.md)
 - [Task 닫기 메서드](api/method-close-task.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API blocker 처리 경로](api/blocker-routing.md)
 
 설명:
-- 닫기 준비 상태와 남은 닫기 차단 사유를 도출하는 담당 경로의 확인입니다.
+- 담당 문서 경계에 따라 닫기 준비 상태와 남은 닫기 차단 사유를 도출하는 확인입니다.
 
 ### close-readiness blocker
 
@@ -622,7 +622,7 @@
 담당 문서:
 - [Core 모델](core-model.md)
 - [API 상태 스키마](api/schema-state.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API blocker 처리 경로](api/blocker-routing.md)
 
 설명:
 - 닫기 차단 사유는 담당 문서가 정의한 조건이 해결되기 전까지 정직한 닫기 준비 상태를 막는 이유입니다.
@@ -648,7 +648,7 @@
 담당 문서:
 - [API 상태 스키마](api/schema-state.md)
 - [API 값 집합](api/schema-value-sets.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API blocker 처리 경로](api/blocker-routing.md)
 
 설명:
 - `CloseReadinessBlocker`는 닫기 준비 상태의 차단 데이터를 나타내는 API 스키마 식별자입니다.
@@ -1176,10 +1176,10 @@
 - `CloseTaskResult(close_state=blocked)`
 
 피할 표현:
-- 오류 처리 경로를 공개 `ErrorCode` 의미, 오류 우선순위, `ToolError.details`, 닫기 준비 상태 차단 사유 처리 경로처럼 쓰는 표현
+- 오류 처리 경로를 공개 `ErrorCode` 의미, 오류 우선순위, `ToolError.details`, 닫기 준비 상태 blocker 처리 경로처럼 쓰는 표현
 
 담당 문서:
-- [API 오류 경로](api/error-routing.md)
+- [API 오류 처리 경로](api/error-routing.md)
 
 설명:
 - 오류 처리 경로는 거부 응답, 차단 결과, `dry_run` 미리보기의 API 응답 분기 경로를 다룹니다.
@@ -1204,10 +1204,10 @@
 - blocker 처리 경로를 공개 `ErrorCode` 의미, 응답 분기 경로, `ToolError.details`처럼 쓰는 표현
 
 담당 문서:
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API blocker 처리 경로](api/blocker-routing.md)
 
 설명:
-- blocker 처리 경로는 닫기 준비 상태 차단 사유 처리 경로, `close_task` blocker 매핑, 금지된 공개 오류의 blocker 표현을 다룹니다.
+- blocker 처리 경로는 닫기 준비 상태 blocker 처리 경로, `close_task` blocker 매핑, 금지된 공개 오류의 blocker 표현을 다룹니다.
 
 ### `ToolError.details`
 
@@ -1254,7 +1254,7 @@
 담당 문서:
 - [API 코어 스키마](api/schema-core.md)
 - [API 메서드](api/methods.md)
-- [API 오류 경로](api/error-routing.md)
+- [API 오류 처리 경로](api/error-routing.md)
 - [저장 효과](storage-effects.md)
 
 설명:
@@ -1281,7 +1281,7 @@
 - `STATE_VERSION_CONFLICT`를 차단 코드로 쓰는 표현
 
 담당 문서:
-- [API 오류 경로](api/error-routing.md)
+- [API 오류 처리 경로](api/error-routing.md)
 - [쓰기 준비 메서드](api/method-prepare-write.md)
 - [Task 닫기 메서드](api/method-close-task.md)
 - [저장 효과](storage-effects.md)
@@ -1310,7 +1310,7 @@
 
 담당 문서:
 - [API 코어 스키마](api/schema-core.md)
-- [API 오류 경로](api/error-routing.md)
+- [API 오류 처리 경로](api/error-routing.md)
 - [저장 효과](storage-effects.md)
 
 설명:

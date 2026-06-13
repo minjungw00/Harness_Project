@@ -302,7 +302,7 @@ write_decision_reasons:
 | 메서드 | 주 저장 효과 | 세부사항 |
 |---|---|---|
 | `harness.intake` | `Task`와 구체화 기록 생성 | [`harness.intake`](#harnessintake) |
-| `harness.update_scope` | 활성 범위 기록 갱신 | [`harness.update_scope`](#harnessupdate_scope) |
+| `harness.update_scope` | 현재 적용 범위 기록 갱신 | [`harness.update_scope`](#harnessupdate_scope) |
 | `harness.status` | 읽기 전용 응답 | [`harness.status`](#harnessstatus) |
 | `harness.prepare_write` | 쓰기 판단 효과 기록 | [`harness.prepare_write`](#harnessprepare_write) |
 | `harness.stage_artifact` | 임시 스테이징만 생성 | [`harness.stage_artifact`](#harnessstage_artifact) |
@@ -344,8 +344,8 @@ write_decision_reasons:
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
 
-- 활성 `Task` 범위 필드를 갱신합니다.
-- 활성 `change_units`를 만들거나 교체합니다.
+- 현재 적용 `Task` 범위 필드를 갱신합니다.
+- 현재 적용 `change_units` 행을 만들거나 교체합니다.
 - 메서드 담당 문서가 허용한 차단 사유 또는 오래된 `Write Authorization` 참조를 갱신합니다.
 - 이벤트를 추가합니다.
 - 재실행 행을 생성합니다.
@@ -389,7 +389,7 @@ write_decision_reasons:
 
 `decision=allowed`로 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
 
-- 호환되는 활성 `Write Authorization`을 만들거나 반환합니다.
+- 호환되는 `status=active` `Write Authorization`을 만들거나 반환합니다.
 - 이벤트를 추가합니다.
 - 재실행 행을 생성합니다.
 - `project_state.state_version`을 한 번 증가시킵니다.
@@ -678,7 +678,7 @@ state_version: 21
 ## 관련 담당 문서
 
 - [API 메서드](api/methods.md)와 메서드 담당 문서: 선택된 메서드 동작과 응답 공용체.
-- [API 오류 경로](api/error-routing.md), [API 오류 코드](api/error-codes.md): 거부 응답의 공개 오류.
+- [API 오류 처리 경로](api/error-routing.md), [API 오류 코드](api/error-codes.md): 거부 응답의 공개 오류.
 - [저장소 기록](storage-records.md): 저장 효과가 건드릴 수 있는 기록.
 - [아티팩트 저장소](storage-artifacts.md): 스테이징 핸들과 아티팩트 생명주기 세부사항.
 - [저장소 버전 관리](storage-versioning.md): `state_version` 시계와 재실행/멱등성 의미.
