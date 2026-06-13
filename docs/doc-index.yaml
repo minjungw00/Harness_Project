@@ -968,9 +968,13 @@ documents:
     owner_for:
       - "documentation structure checks"
       - "canonical owner boundary checks"
+      - "owner granularity checks"
       - "route-page shape checks"
       - "owner-map placement checks"
+      - "duplicate owner-map checks"
       - "baseline and out-of-scope wording checks"
+      - "excluded-scope double-negative checks"
+      - "transient maintenance leftover checks"
       - "documentation final report format"
     not_owner_for:
       - "runtime conformance"
@@ -992,6 +996,7 @@ documents:
     role: "maintain"
     owner_for:
       - "English and Korean semantic parity checks"
+      - "paired heading parity checks"
       - "identifier preservation checks"
       - "Korean structure preservation checks"
       - "Korean readability checks"
@@ -1015,7 +1020,9 @@ documents:
     owner_for:
       - "terminology-map check procedures"
       - "mixed-language Korean check procedures"
+      - "`active` versus supported or applicable wording checks"
       - "`complete` ambiguity checks"
+      - "retired or unsupported concept-name checks"
       - "close-readiness terminology checks"
       - "surface and access wording checks"
     not_owner_for:
@@ -1063,6 +1070,8 @@ documents:
       - "link and anchor check procedures"
       - "README and route index check procedures"
       - "doc-index route metadata checks"
+      - "doc-index structure reference checks"
+      - "API error owner-routing checks"
       - "method-router placement checks"
       - "LLM retrieval route checks"
     not_owner_for:

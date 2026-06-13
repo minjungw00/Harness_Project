@@ -87,9 +87,32 @@ Owner:
 Check:
 - Inspect Korean user-facing prose for natural Korean technical writing, Korean concept-first phrasing, and consistent terms.
 - Confirm exact identifiers remain searchable but are not exposed as ordinary display labels.
+- Confirm common English nouns and noun chains are translated into Korean unless they are exact identifiers, intentional product labels, or natural technical borrowings.
 
 Failure:
 - Korean prose mirrors English sentence order, keeps avoidable English noun phrases, or hides the reader action behind internal identifiers.
+- Korean prose keeps an ordinary English common noun only because it appears in the paired English sentence.
 
 Fix:
 - Rewrite in natural Korean while preserving identifiers and semantic parity.
+
+## CHK-PARITY-006: paired headings and reading structure
+
+Owner:
+- [Translation Guide](../translation-guide.md)
+- [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
+- [Authoring Guide](../authoring-guide.md)
+
+Check:
+- When headings change, compare the paired English and Korean files by heading meaning and reading structure.
+- Confirm each language exposes the same major meaning units, owner routes, warnings, exceptions, and checklist scope.
+- Confirm Korean visible headings stay natural; use hidden anchors when a stable English anchor must remain available.
+
+Failure:
+- A heading change in one language adds, removes, weakens, or reroutes a meaning unit compared with the paired file.
+- The section hierarchy makes a rule easier to find in one language and materially harder to find in the other.
+- Korean headings preserve English wording or order only to match an anchor.
+
+Fix:
+- Update the paired heading and nearby context in the same documentation batch.
+- Preserve stable anchors with hidden anchors when needed, while keeping visible Korean headings natural.

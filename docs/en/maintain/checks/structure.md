@@ -56,6 +56,24 @@ Fix:
 - Remove generated or transient material.
 - Keep the result in the final review report only.
 
+## CHK-STRUCT-004: no transient maintenance leftovers
+
+Owner:
+- [Authoring Guide](../authoring-guide.md)
+- [Checks Index](../checks.md)
+
+Check:
+- Inspect changed files and newly added files for one-off planning files, scratch notes, review leftovers, archive copies, transition notes, migration notes, generated runtime records, and unresolved task markers such as `TODO` or `FIXME`.
+- Confirm documentation-maintenance findings live in the final report or the appropriate maintained documentation page, not in ad hoc files.
+
+Failure:
+- The final tree contains a one-off plan, scratch note, review note, archive copy, generated runtime-like record, migration note, or unresolved task marker from the documentation batch.
+- A maintained page contains a task marker that names work to finish later instead of a durable maintenance rule.
+
+Fix:
+- Remove the transient file or task marker.
+- Convert durable guidance into the appropriate owner document only when it has stable reader value.
+
 ## CHK-OWNER-001: canonical owner violations
 
 Owner:
@@ -116,6 +134,47 @@ Fix:
 - Link to the semantic owner for meaning and support availability.
 - If no semantic owner exists, expose the owner gap instead of inferring behavior from the value name.
 
+## CHK-OWNER-004: owner granularity
+
+Owner:
+- [Authoring Guide](../authoring-guide.md)
+- [Reference Index](../../reference/README.md)
+- [doc-index.yaml](../../../doc-index.yaml)
+
+Check:
+- Inspect changed Reference owners for unrelated concerns accumulated in one document.
+- Confirm a single owner is not defining multiple distinct contract families, such as API behavior, schema fields, storage effects, security guarantees, API error precedence, templates, and examples.
+- Confirm neighboring concerns are routed with short links when another owner already defines them.
+
+Failure:
+- A Reference page becomes the practical owner for several unrelated concerns because the workflow mentions them together.
+- A page's `owner_for` scope in `doc-index.yaml` is broad enough that readers cannot tell which document owns a specific contract question.
+- A new section adds a second contract family instead of routing to the existing owner.
+
+Fix:
+- Split the concern into a focused paired owner when no owner exists, or route to the existing owner when one exists.
+- Update the paired owner, Reference Index, `doc-index.yaml`, and inbound links in the same documentation batch when a real split is made.
+
+## CHK-OWNER-005: duplicate owner maps
+
+Owner:
+- [Authoring Guide](../authoring-guide.md)
+- [Reference Index](../../reference/README.md)
+- [doc-index.yaml](../../../doc-index.yaml)
+
+Check:
+- Search route pages, `README` files, Maintain pages, Reference introductions, and agent guidance for repeated owner maps.
+- Confirm the full map for a concern appears only in the canonical route or owner document.
+- Confirm other pages use a short purpose summary plus a link to the map.
+
+Failure:
+- The same owner table, method map, API error map, schema map, storage map, security map, or route matrix appears in multiple documents.
+- Two maps describe the same routing surface with different owners, terms, order, or omissions.
+
+Fix:
+- Keep the canonical map and shrink duplicates to a short route link.
+- If the canonical map is wrong, update it first, then update links that point to it.
+
 ## CHK-SCOPE-001: baseline/out-of-scope leakage
 
 Owner:
@@ -154,6 +213,25 @@ Failure:
 Fix:
 - Reword as planning or reference documentation.
 - Route implementation sequence questions to the Implementation Guide.
+
+## CHK-SCOPE-003: excluded-scope wording
+
+Owner:
+- [Scope](../../reference/scope.md)
+- [Authoring Guide](../authoring-guide.md)
+
+Check:
+- Inspect excluded-scope, out-of-scope, reserved, and profile-gated wording for double negatives.
+- Confirm the text states support or exclusion directly, using owner-backed conditions.
+- Confirm unsupported or excluded concepts are not described as supported by phrases such as "not excluded", "not unsupported", or "not outside support".
+
+Failure:
+- A sentence makes readers infer support from a double negative.
+- Excluded-scope logic is written so that a route page, example, or value-set mention appears to promote the capability.
+
+Fix:
+- Rewrite the sentence as "excluded until..." or "supported only when..." with the applicable owner link.
+- Route promotion requirements to Scope and the affected owners.
 
 ## CHK-REFERENCE-001: API, storage, and security summaries point to owners
 

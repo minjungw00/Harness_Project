@@ -59,6 +59,10 @@ When a question crosses owner boundaries, choose the applicable owner from the R
 
 Maintain docs own authoring rules and checks. They must not become secondary sources of truth for API, storage, schema, security, access class, close-readiness, projection, runtime, or product contracts.
 
+Use "applicable owner path" for topic routing. Do not use `active` for owner routes, supported contracts, supported methods, or maintained reference documents. Reserve `active` for runtime or currently applied state, such as active scope, active Change Unit, active surface context, or exact status values.
+
+Do not repeat the same owner map in multiple documents. Keep the full map in the canonical router or owner, and let other pages use a short purpose summary plus a link. If a repeated map is already present, remove the duplicate instead of refreshing both copies.
+
 ### Value status stabilization rules
 
 A value name can exist in a schema, example, storage note, or route page without the baseline scope providing that behavior. Treat the name as vocabulary or reserved surface area until [Scope](../reference/scope.md) and the semantic owner both define the behavior as supported in the baseline scope.
@@ -70,6 +74,8 @@ Value-set owner documents define exact value names, validation placement, and en
 Out-of-scope capability promotion requirements may name the kinds of owners that must change when the capability enters the baseline scope. They must not name a nonexistent owner as if it were already an existing owner document. If no applicable owner exists, say that promotion requires creating or designating that owner, then updating baseline scope, schemas, API behavior, storage, templates, checks, and paired-language docs as applicable.
 
 Route documents must expose canonical owner gaps rather than hide them. If a README, index, Start page, Use page, Scope page, or `doc-index.yaml` route cannot point to an applicable owner for the question, do not fill the gap with route prose. Say what is missing, route to the closest real owner, and leave the normative definition out of the route document.
+
+Write excluded-scope logic directly. Prefer "excluded until promoted by the scope owner" or "supported only when the scope owner and affected owners define support" over double negatives such as "not excluded", "not unsupported", or "not outside support".
 
 ## 3. When to edit an existing owner
 
@@ -87,6 +93,8 @@ Do not create a new document for one-off planning notes, migration notes, review
 
 When adding a real new owner, update [Reference README](../reference/README.md) or the appropriate route index so readers can find it. Update [doc-index.yaml](../../doc-index.yaml) only as documentation retrieval metadata.
 
+Split or reroute an existing owner when one reference document starts carrying unrelated concerns. A single owner should not define API behavior, schemas, storage effects, security guarantees, error precedence, templates, and examples simply because a workflow mentions them together. Keep the narrow owner definition in the document that owns the concern, and route neighboring concerns with short links.
+
 <a id="baseline-scope-api-method-split-threshold"></a>
 ### API method owners
 
@@ -95,6 +103,8 @@ When adding a real new owner, update [Reference README](../reference/README.md) 
 When baseline method behavior changes, edit the method owner first. Then update the API router, [Reference README](../reference/README.md), [doc-index.yaml](../../doc-index.yaml), paired-language owner, and practical inbound links that should land on the method owner.
 
 Keep [`reference/api/methods.md`](../reference/api/methods.md) as a route and shared-reading document. It should not duplicate method-specific request bodies, response bodies, result branches, blocked-result details, or storage-effect detail already owned by a method owner.
+
+API error documentation is split by concern. [`reference/api/errors.md`](../reference/api/errors.md) is the family index only. Public `ErrorCode` meanings belong in [API error codes](../reference/api/error-codes.md), precedence and conflict selection belong in [API error precedence](../reference/api/error-precedence.md), error-versus-blocker routing belongs in [API error routing](../reference/api/error-routing.md), and machine-readable `ToolError.details` belongs in [API error details](../reference/api/error-details.md).
 
 ## 5. Route documents and README files
 
@@ -197,17 +207,25 @@ Do not route maintained documentation through stale legacy paths. If an old path
 
 - [ ] The edit stayed documentation and did not imply runtime implementation.
 - [ ] Each concept still has one canonical owner.
+- [ ] No single reference owner now carries unrelated API, schema, storage, security, error, template, and example concerns that should be split or routed.
+- [ ] Repeated owner maps were reduced to the canonical map plus links.
 - [ ] README, route, and maintain documents use short summaries plus owner links instead of copied contract explanations.
 - [ ] API, storage, schema, security, access-boundary, and close-readiness details live in the appropriate Reference owner.
+- [ ] API error code meanings, precedence, error-versus-blocker routing, and machine-readable details route to their separate API error owners.
 - [ ] Value names are not treated as baseline scope behavior merely because they exist in schemas, examples, storage notes, or out-of-scope lists.
+- [ ] `active` is used only for runtime or currently applied state, exact identifiers, or status values, not for supported contracts or owner routing.
 - [ ] Example field names come from the method, schema, or storage owner, and storage-owned summary data is labeled where it uses a different field name.
 - [ ] API examples are internally consistent across response snapshots, `state_version`, refs, paths, artifact refs, sensitive approval reasons, expiration timestamps, and shared scenario evidence.
 - [ ] Reserved and profile-gated values are labeled where used and are not described as baseline guarantees.
 - [ ] Value-set owners define names; semantic owners define meaning, support availability, guarantees, and reader consequences.
 - [ ] Out-of-scope promotion wording does not present non-existing owners as existing owner documents.
+- [ ] Excluded-scope logic is written directly, without double negatives.
 - [ ] Route documents expose canonical owner gaps instead of hiding them with broad route text.
+- [ ] References to `docs/doc-index.yaml` name structures and keys that actually exist.
 - [ ] Meaning-changing edits were made in both English and Korean.
+- [ ] Paired English/Korean headings keep equivalent meaning and reading structure.
 - [ ] Korean prose is natural, not a literal translation, and exact identifiers are preserved.
+- [ ] Korean prose avoids unnecessary English common nouns when they are not identifiers, product labels, or natural technical borrowings.
 - [ ] Korean reference docs preserve condition, effect, exception, non-claim, and owner-link structure by meaning unit.
 - [ ] User-facing docs avoid internal schema names unless necessary.
 - [ ] Reference docs keep schema names and other exact identifiers in backticks.
@@ -216,5 +234,5 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] Check descriptions use named blocks and bullets instead of dense table cells.
 - [ ] Links point to maintained routes and canonical owners.
 - [ ] New or changed terminology was checked against [Terminology Map](../../terminology-map.yaml).
-- [ ] No one-off planning files, archive copies, generated runtime records, or migration notes remain.
+- [ ] No one-off planning files, archive copies, scratch notes, generated runtime records, unresolved task markers, migration notes, or review leftovers remain.
 - [ ] Relevant checks in [Checks](checks.md) and its focused check pages were run or reported as skipped.

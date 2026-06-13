@@ -104,3 +104,45 @@ Failure:
 Fix:
 - Align the map and both guides in the same documentation batch.
 - Replace vague placeholders with concrete examples that can be searched.
+
+## CHK-TERM-006: `active` versus supported or applicable
+
+Owner:
+- [Terminology Map](../../../terminology-map.yaml)
+- [Glossary](../../reference/glossary.md)
+- [Core Model](../../reference/core-model.md)
+- [Agent Integration](../../reference/agent-integration.md)
+
+Check:
+- Search changed prose for `active`.
+- Confirm `active` is used only for runtime or currently applied state, exact identifiers, exact status values, active scope, active Change Unit, or active surface context.
+- Confirm supported contracts, supported API methods, supported values, maintained documents, and owner routing use terms such as "supported", "applicable", "maintained", or "current", not `active`.
+
+Failure:
+- A document says "active owner path", "active contract", "active API method", or "active reference document" when it means applicable, supported, or maintained.
+- Korean prose translates `active` as "활성" for a documentation contract or owner route instead of using the appropriate Korean term.
+
+Fix:
+- Replace `active` with the owner-backed term: "applicable owner path", "supported API method", "supported value", "maintained document", or "current state".
+- Keep `active` only when it is an exact identifier, status value, or currently applied runtime/session state.
+
+## CHK-TERM-007: retired or unsupported concept names
+
+Owner:
+- [Terminology Map](../../../terminology-map.yaml)
+- [Scope](../../reference/scope.md)
+- [Reference Index](../../reference/README.md)
+- [Authoring Guide](../authoring-guide.md)
+
+Check:
+- Search maintained Reference docs for retired, deleted, or unsupported concept names that remain only as negative examples.
+- Confirm unsupported capability names are used only when a semantic owner still needs the exact name, or when a Maintain/terminology owner intentionally lists a searchable forbidden expression.
+- Confirm Reference owners describe stable categories, owner gaps, or out-of-scope capability families instead of preserving obsolete names as examples.
+
+Failure:
+- A Reference page keeps a removed or unsupported concept name solely to say that it is not supported.
+- A negative example causes retrieval to treat the old name as an active contract, supported capability, or owner route.
+
+Fix:
+- Remove the stale name or replace it with the stable category and the applicable owner link.
+- Move searchable banned terminology to the Terminology Map and translation guides when the term needs to remain searchable for maintainers.

@@ -105,11 +105,13 @@ Owner:
 Check:
 - Confirm example notes and surrounding prose route method behavior, common envelopes, state schemas, artifact schemas, judgment schemas, value sets, and API error concepts to the narrow owner.
 - For API error concepts, route public code meanings to [API error codes](../../reference/api/error-codes.md), precedence and conflicts to [API error precedence](../../reference/api/error-precedence.md), error-versus-blocker routing to [API error routing](../../reference/api/error-routing.md), and machine-readable details to [API error details](../../reference/api/error-details.md).
+- Confirm the API error family index is not treated as the owner for code meanings, precedence, routing, or detail schemas.
 - Confirm method-level owner routing is linked through the API Methods router rather than repeated in example guidance.
 - Confirm examples do not redefine API methods, schema names, fields, values, or error codes outside the appropriate API owner.
 
 Failure:
 - A link points to a broad index when the reader needs a precise contract owner.
+- A single broad API error page is treated as the owner for separate error-code, precedence, routing, and details concerns.
 - A non-owner page reproduces request/response structure, response branches, error behavior, schema fields, enum-like values, or method semantics as if it owns them.
 
 Fix:

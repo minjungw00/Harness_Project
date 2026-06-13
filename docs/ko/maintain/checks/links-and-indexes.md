@@ -105,6 +105,53 @@
 - 전체 메서드 목록은 API 메서드 문서에 두고 다른 문서는 짧은 경로 링크로 줄입니다.
 - API 메서드 문서나 `doc-index.yaml`의 영향을 받은 경로를 고칩니다.
 
+## CHK-LINK-006: `doc-index.yaml` 구조 참조
+
+담당 문서:
+- [doc-index.yaml](../../../doc-index.yaml)
+- [작성 가이드](../authoring-guide.md)
+
+점검:
+- `docs/doc-index.yaml` 구조를 이름 붙이는 산문, 경로 표, 프롬프트, 점검 지침을 확인합니다.
+- `shared_documents`, `documents`, `entry_schema`, `doc_id`, `path`, `path_en`, `path_ko`, `role`, `owner_for`, `not_owner_for`, `depends_on`, `normative_level`, `audience`처럼 실제로 존재하는 구조와 키만 참조하는지 확인합니다.
+- 문서가 `doc-index.yaml` 안에 없는 섹션, 생성된 색인, 현재 런타임 상태가 있는 것처럼 설명하지 않는지 확인합니다.
+
+실패 조건:
+- 유지보수자에게 존재하지 않는 지도, 키, 섹션, 언어 경로 필드를 읽으라고 안내합니다.
+- 경로가 `doc-index.yaml`에 없는 `doc_id`나 담당 메타데이터 항목을 이름 붙입니다.
+- `doc-index.yaml`을 런타임 설정이나 제품 계약 데이터처럼 다룹니다.
+
+수정 방향:
+- 실제 YAML 구조에 맞게 문서를 다시 쓰거나, 같은 문서 작업 묶음에서 `doc-index.yaml`을 검색 메타데이터로 갱신합니다.
+- 계약 세부사항은 `doc-index.yaml`을 확장하지 말고 담당 문서로 보냅니다.
+
+## CHK-LINK-007: API 오류 담당 경로
+
+담당 문서:
+- [API 오류](../../reference/api/errors.md)
+- [API 오류 코드](../../reference/api/error-codes.md)
+- [API 오류 우선순위](../../reference/api/error-precedence.md)
+- [API 오류 경로](../../reference/api/error-routing.md)
+- [API 오류 세부사항](../../reference/api/error-details.md)
+- [작성 가이드](../authoring-guide.md)
+
+점검:
+- [API 오류](../../reference/api/errors.md)는 문서 묶음 색인으로만 사용합니다.
+- 공개 `ErrorCode` 의미는 [API 오류 코드](../../reference/api/error-codes.md)로 보냅니다.
+- 우선순위, 충돌 선택, 오래된 상태 순서는 [API 오류 우선순위](../../reference/api/error-precedence.md)로 보냅니다.
+- 오류와 차단 사유 배치는 [API 오류 경로](../../reference/api/error-routing.md)로 보냅니다.
+- 기계 판독용 `ToolError.details` 필드와 세부 값 의미는 [API 오류 세부사항](../../reference/api/error-details.md)으로 보냅니다.
+
+실패 조건:
+- 문서가 모든 API 오류 질문을 문서 묶음 색인이나 넓은 오류 문서 하나로 보냅니다.
+- 메서드, 스키마, 저장소, 적합성, 유지보수 문서가 공개 코드 의미, 우선순위, 경로, 세부사항을 집중 API 오류 담당 문서 밖에서 재정의합니다.
+- 반복된 API 오류 담당 지도가 집중 담당 문서와 어긋납니다.
+
+수정 방향:
+- 각 링크를 좁은 API 오류 담당 문서로 다시 보냅니다.
+- 넓은 오류 설명은 짧은 독자 결과와 담당 문서 링크로 줄입니다.
+- 담당 지도는 기준 API 오류 경로 문서나 담당 문서에만 둡니다.
+
 ## CHK-LLM-001: 중복 계약 문구로 인한 검색 잡음
 
 담당 문서:

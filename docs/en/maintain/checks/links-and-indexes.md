@@ -105,6 +105,53 @@ Fix:
 - Keep the full method list in API Methods and shrink other pages to a short route link.
 - Update the affected path in API Methods or `doc-index.yaml`.
 
+## CHK-LINK-006: `doc-index.yaml` structure references
+
+Owner:
+- [doc-index.yaml](../../../doc-index.yaml)
+- [Authoring Guide](../authoring-guide.md)
+
+Check:
+- Inspect prose, route tables, prompts, and check guidance that name `docs/doc-index.yaml` structures.
+- Confirm they refer only to structures and keys that exist, such as `shared_documents`, `documents`, `entry_schema`, `doc_id`, `path`, `path_en`, `path_ko`, `role`, `owner_for`, `not_owner_for`, `depends_on`, `normative_level`, and `audience`.
+- Confirm a document does not describe missing sections, generated indexes, or current runtime state inside `doc-index.yaml`.
+
+Failure:
+- Text tells maintainers to read a nonexistent map, key, section, or language path field.
+- A route names a `doc_id` or owner metadata entry that is absent from `doc-index.yaml`.
+- Text treats `doc-index.yaml` as runtime config or product contract data.
+
+Fix:
+- Reword the documentation to match the actual YAML structure, or update `doc-index.yaml` as retrieval metadata in the same documentation batch.
+- Route contract detail to the owner instead of extending `doc-index.yaml`.
+
+## CHK-LINK-007: API error owner routing
+
+Owner:
+- [API errors](../../reference/api/errors.md)
+- [API error codes](../../reference/api/error-codes.md)
+- [API error precedence](../../reference/api/error-precedence.md)
+- [API error routing](../../reference/api/error-routing.md)
+- [API error details](../../reference/api/error-details.md)
+- [Authoring Guide](../authoring-guide.md)
+
+Check:
+- Use [API errors](../../reference/api/errors.md) as the family index only.
+- Route public `ErrorCode` meanings to [API error codes](../../reference/api/error-codes.md).
+- Route precedence, conflict selection, and stale-state ordering to [API error precedence](../../reference/api/error-precedence.md).
+- Route error-versus-blocker placement to [API error routing](../../reference/api/error-routing.md).
+- Route machine-readable `ToolError.details` fields and detail-value meanings to [API error details](../../reference/api/error-details.md).
+
+Failure:
+- A document sends all API error questions to the family index or to one broad error page.
+- A method, schema, storage, conformance, or Maintain page redefines code meanings, precedence, routing, or details outside the focused API error owner.
+- A repeated API error owner map drifts from the focused owners.
+
+Fix:
+- Retarget each link to the narrow API error owner.
+- Shrink broad error explanations to a reader consequence plus owner links.
+- Keep owner maps in the canonical API error route or owner pages.
+
 ## CHK-LLM-001: duplicate contract text creates retrieval noise
 
 Owner:
