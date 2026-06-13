@@ -65,7 +65,7 @@ A design-quality finding can do only these things in the baseline:
 | surface capability gap | See [Surface capability gap](#design-quality-surface-capability-gap) |
 | advisory severity | See [Advisory severity](#design-quality-advisory-severity) |
 | focused next action | See [Focused next action](#design-quality-focused-next-action) |
-| no applicable owner path | See [No applicable owner path](#design-quality-no-active-owner-path) |
+| no applicable owner path | See [No applicable owner path](#design-quality-no-applicable-owner-path) |
 
 <a id="design-quality-product-decision-needed"></a>
 ### Product decision needed
@@ -189,7 +189,7 @@ Close effect:
 Not allowed:
 - The action must not widen beyond what the named owner path needs.
 
-<a id="design-quality-no-active-owner-path"></a>
+<a id="design-quality-no-applicable-owner-path"></a>
 ### No Applicable Owner Path
 
 Condition:
@@ -317,17 +317,17 @@ A design-quality observation blocks close only through an applicable owner path.
 
 | Close-blocking question | Details |
 |---|---|
-| applicable close dependency | See [Applicable close dependency](#design-quality-close-active-dependency) |
+| applicable close dependency | See [Applicable close dependency](#design-quality-close-applicable-dependency) |
 | focused unblock path | See [Focused unblock path](#design-quality-close-focused-unblock-path) |
 | unsupported policy basis | See [Unsupported policy basis](#design-quality-close-unsupported-policy-basis) |
 | advisory-only policy phrase | See [Advisory-only policy phrase](#design-quality-close-advisory-only-policy-phrase) |
-| supported close category | See [Supported close category](#design-quality-close-active-category) |
+| supported close category | See [Supported close category](#design-quality-close-supported-category) |
 
-<a id="design-quality-close-active-dependency"></a>
+<a id="design-quality-close-applicable-dependency"></a>
 ### Applicable Close Dependency
 
 Condition:
-- The observation is tied to the active Task or Change Unit and the attempted close.
+- The observation is tied to the active `Task` or Change Unit and the attempted close.
 - The observation names an existing supported `CloseReadinessBlocker.category`, `judgment_kind`, API error, or owner path from the applicable close-blocking set.
 
 Close effect:
@@ -375,7 +375,7 @@ Close effect:
 Not allowed:
 - Do not present an out-of-scope policy family as a baseline requirement.
 
-<a id="design-quality-close-active-category"></a>
+<a id="design-quality-close-supported-category"></a>
 ### Supported Close Category
 
 Condition:
@@ -411,7 +411,7 @@ Keep the judgment routes separate:
 |---|---|
 | `final_acceptance` | See [`final_acceptance`](#design-quality-route-final-acceptance) |
 | `residual_risk_acceptance` | See [`residual_risk_acceptance`](#design-quality-route-residual-risk-acceptance) |
-| supported `UserJudgment.judgment_kind` values | See [Supported user judgment values](#design-quality-route-active-user-judgment-values) |
+| supported `UserJudgment.judgment_kind` values | See [Supported user judgment values](#design-quality-route-supported-user-judgment-values) |
 
 <a id="design-quality-route-final-acceptance"></a>
 ### `final_acceptance`
@@ -443,7 +443,7 @@ Close effect:
 Not allowed:
 - Do not treat it as correctness proof, evidence sufficiency, final acceptance, no-risk result, or automatic success.
 
-<a id="design-quality-route-active-user-judgment-values"></a>
+<a id="design-quality-route-supported-user-judgment-values"></a>
 ### Supported User Judgment Values
 
 Condition:

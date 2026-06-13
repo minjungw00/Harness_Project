@@ -65,7 +65,7 @@
 | 접점 역량 공백 | [접점 역량 공백](#design-quality-surface-capability-gap) 참조 |
 | 조언성 심각도 | [조언성 심각도](#design-quality-advisory-severity) 참조 |
 | 집중된 다음 행동 | [집중된 다음 행동](#design-quality-focused-next-action) 참조 |
-| 적용되는 담당 경로 없음 | [적용되는 담당 경로 없음](#design-quality-no-active-owner-path) 참조 |
+| 적용되는 담당 경로 없음 | [적용되는 담당 경로 없음](#design-quality-no-applicable-owner-path) 참조 |
 
 <a id="design-quality-product-decision-needed"></a>
 ### 제품 판단 필요
@@ -189,7 +189,7 @@
 허용되지 않는 것:
 - 다음 행동을 이름 붙은 담당 경로가 요구하는 범위보다 넓히지 않습니다.
 
-<a id="design-quality-no-active-owner-path"></a>
+<a id="design-quality-no-applicable-owner-path"></a>
 ### 적용되는 담당 경로 없음
 
 조건:
@@ -318,17 +318,17 @@
 
 | 닫기 차단 질문 | 상세 |
 |---|---|
-| 적용되는 닫기 의존성 | [적용되는 닫기 의존성](#design-quality-close-active-dependency) 참조 |
+| 적용되는 닫기 의존성 | [적용되는 닫기 의존성](#design-quality-close-applicable-dependency) 참조 |
 | 집중된 차단 해소 경로 | [집중된 차단 해소 경로](#design-quality-close-focused-unblock-path) 참조 |
 | 지원되지 않는 정책 근거 | [지원되지 않는 정책 근거](#design-quality-close-unsupported-policy-basis) 참조 |
 | 조언에 그치는 정책 문구 | [조언에 그치는 정책 문구](#design-quality-close-advisory-only-policy-phrase) 참조 |
-| 지원되는 닫기 차단 범주 | [지원되는 닫기 차단 범주](#design-quality-close-active-category) 참조 |
+| 지원되는 닫기 차단 범주 | [지원되는 닫기 차단 범주](#design-quality-close-supported-category) 참조 |
 
-<a id="design-quality-close-active-dependency"></a>
+<a id="design-quality-close-applicable-dependency"></a>
 ### 적용되는 닫기 의존성
 
 조건:
-- 관찰 사항이 활성 `Task` 또는 Change Unit과 시도 중인 닫기에 연결되어 있습니다.
+- 관찰 사항이 현재 적용되는 `Task` 또는 Change Unit과 시도 중인 닫기에 연결되어 있습니다.
 - 관찰 사항이 적용되는 닫기 차단 집합 안의 기존 지원 `CloseReadinessBlocker.category`, `judgment_kind`, API 오류, 담당 경로를 이름 붙입니다.
 
 닫기 영향:
@@ -376,7 +376,7 @@
 허용되지 않는 것:
 - 지원 범위 밖 정책 계열을 기준 범위 요구사항처럼 제시하지 않습니다.
 
-<a id="design-quality-close-active-category"></a>
+<a id="design-quality-close-supported-category"></a>
 ### 지원되는 닫기 차단 범주
 
 조건:
@@ -413,7 +413,7 @@
 |---|---|
 | `final_acceptance` | [`final_acceptance`](#design-quality-route-final-acceptance) 참조 |
 | `residual_risk_acceptance` | [`residual_risk_acceptance`](#design-quality-route-residual-risk-acceptance) 참조 |
-| 지원되는 `UserJudgment.judgment_kind` 값 | [지원되는 사용자 판단 값](#design-quality-route-active-user-judgment-values) 참조 |
+| 지원되는 `UserJudgment.judgment_kind` 값 | [지원되는 사용자 판단 값](#design-quality-route-supported-user-judgment-values) 참조 |
 
 <a id="design-quality-route-final-acceptance"></a>
 ### `final_acceptance`
@@ -445,7 +445,7 @@
 허용되지 않는 것:
 - 정확성 증명, 증거 충분성, 최종 수락, 무위험 결과, 자동 성공으로 취급하지 않습니다.
 
-<a id="design-quality-route-active-user-judgment-values"></a>
+<a id="design-quality-route-supported-user-judgment-values"></a>
 ### 지원되는 사용자 판단 값
 
 조건:
