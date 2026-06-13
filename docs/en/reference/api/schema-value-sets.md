@@ -220,6 +220,8 @@ direct
 <a id="state-and-blocker-values"></a>
 ## State and blocker values
 
+The `CloseReadinessBlocker` object shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). This section owns the supported `CloseReadinessBlocker.category` values and neighboring state/blocker values.
+
 `PlannedBlocker.source_kind` uses:
 
 ```text

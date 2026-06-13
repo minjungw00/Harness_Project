@@ -37,3 +37,5 @@ This table is both the supported public method list and the first-hop route for 
 | `harness.request_user_judgment` | [User-judgment method owner](method-user-judgment.md#harnessrequest_user_judgment) |
 | `harness.record_user_judgment` | [User-judgment method owner](method-user-judgment.md#harnessrecord_user_judgment) |
 | `harness.close_task` | [Close-task method](method-close-task.md) |
+
+Use the linked method owner for request and response behavior. For `harness.close_task`, blocker-producing branches stay with the close-task method owner; use [API blocker routing](blocker-routing.md) only for close-readiness blocker/API response routing semantics.

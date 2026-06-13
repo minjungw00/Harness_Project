@@ -45,14 +45,14 @@
 
 | 공개 코드와의 관계 | 차단 사유 쪽 경로 | 경계 |
 |---|---|---|
-| 증거, 아티팩트, 수락, 사용자 판단, 승인, 범위, 자율성 경계, 기준 상태, 역량 묶음 | 담당 문서가 정의한 `CloseReadinessBlocker.category`와 `CloseReadinessBlocker.code`를 통해 보냅니다. | 공개 코드 의미는 [API 오류 코드](error-codes.md)에, 정확한 차단 사유 값은 [API 상태 스키마](schema-state.md)와 [API 값 집합](schema-value-sets.md)에 남습니다. |
+| 증거, 아티팩트, 수락, 사용자 판단, 승인, 범위, 자율성 경계, 기준 상태, 역량 묶음 | 담당 문서가 정의한 `CloseReadinessBlocker.category`와 `CloseReadinessBlocker.code`를 통해 보냅니다. | 공개 코드 의미는 [API 오류 코드](error-codes.md)에 남습니다. 차단 사유 형태는 [API 상태 스키마](schema-state.md)가, 범주 값은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이, 메서드별 차단 사유 생성은 [`harness.close_task`](method-close-task.md)가 담당합니다. |
 | 읽기용 보기 최신성 묶음 | 담당 문서가 허용할 때 관련 진단으로 이름 붙일 수 있습니다. | 최신성 진단만으로는 닫기 준비 상태 차단 사유가 아닙니다. |
 | 상태 버전 또는 멱등성 충돌 묶음 | 닫기 준비 상태 차단 사유 표현이 없습니다. | 이 실패는 닫기 준비 상태 평가 전에 거부되며 [API 오류 우선순위](error-precedence.md)에 남습니다. |
 
 <a id="harnessclose_task-close-blockers"></a>
 ## `harness.close_task` 메서드 경로
 
-메서드별 닫기 동작은 [`harness.close_task`](method-close-task.md)가 담당합니다. 사전 확인 거부, `intent=check`, `intent=complete`, 종료 상태 변경, 유효하지 않은 종료 전이, 상태 버전 동작, 커밋된 차단 결과는 그 메서드 담당 문서로 보냅니다.
+메서드별 닫기 동작은 [`harness.close_task`](method-close-task.md)가 담당합니다. 요청 검증, `intent` 처리, 종료 상태 변경, 상태 버전 동작, 커밋된 차단 결과는 그 메서드 담당 문서로 보냅니다.
 
 이 문서는 그 메서드가 반환하는 차단 사유 데이터와 이웃 API 오류, 스키마, 값 집합, Core, 저장소, 표시 담당 문서 사이의 경계만 정의합니다.
 

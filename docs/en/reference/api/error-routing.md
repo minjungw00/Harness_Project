@@ -18,7 +18,7 @@ This document does not own:
 - Public code meanings; see [API error codes](error-codes.md).
 - Primary public-error selection; see [API error precedence](error-precedence.md).
 - Machine-readable error details; see [API error details](error-details.md).
-- `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and common branch shapes; see [API State Schemas](schema-state.md), [API Value Sets](schema-value-sets.md), and [API Schema Core](schema-core.md).
+- `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, and common branch shapes; see [API State Schemas](schema-state.md) and [API Schema Core](schema-core.md). Category and enum-like values are owned by [API Value Sets](schema-value-sets.md).
 - Close-readiness meaning and non-substitution rules; see [Core Model close readiness](../core-model.md#close_task).
 - Close-readiness blocker/API response boundary and the public-code-to-blocker boundary; see [API blocker routing](blocker-routing.md).
 - `harness.close_task` method-specific blocker behavior; see [`harness.close_task`](method-close-task.md).
@@ -268,4 +268,4 @@ Preview boundary:
 
 ## Close-readiness blocker routing
 
-Close-readiness blocker category routing boundaries and the public-code-to-blocker boundary belong to [API blocker routing](blocker-routing.md). `harness.close_task` method-specific blocker behavior belongs to [`harness.close_task`](method-close-task.md).
+Close-readiness blocker/API response routing boundaries and the public-code-to-blocker boundary belong to [API blocker routing](blocker-routing.md). Exact `CloseReadinessBlocker.category` values belong to [API Value Sets](schema-value-sets.md#state-and-blocker-values). `harness.close_task` method-specific blocker behavior belongs to [`harness.close_task`](method-close-task.md).

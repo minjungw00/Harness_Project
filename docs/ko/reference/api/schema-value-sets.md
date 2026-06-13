@@ -220,6 +220,8 @@ direct
 <a id="state-and-blocker-values"></a>
 ## 상태와 차단 사유 값
 
+`CloseReadinessBlocker` 객체 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. 이 절은 지원되는 `CloseReadinessBlocker.category` 값과 인접 상태/차단 사유 값을 담당합니다.
+
 `PlannedBlocker.source_kind`는 아래 값을 사용합니다.
 
 ```text

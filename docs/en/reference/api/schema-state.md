@@ -207,6 +207,7 @@ Owner links:
 - Evidence sufficiency meaning: [Core Model evidence and run authority](../core-model.md#9-evidence-and-run-authority)
 - Method behavior: method owner documents routed from [API Methods](methods.md)
 
+<a id="close-readiness-and-validation-shapes"></a>
 ## Close readiness and validation shapes
 
 ```yaml
@@ -238,14 +239,14 @@ Close-readiness meaning and persistence behavior stay with the method, Core mode
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)
 - Response branch behavior, close-readiness evaluation order, and committed blocked outcomes: [`harness.close_task`](method-close-task.md)
-- Close-readiness blocker routing: [API blocker routing](blocker-routing.md)
-- Supported `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md)
+- Close-readiness blocker/API response routing semantics: [API blocker routing](blocker-routing.md)
+- Supported `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md#state-and-blocker-values)
 - Security guarantee meaning: [Security](../security.md)
 
 ## Related owners
 
 - [API Schema Core](schema-core.md) for `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, and `ToolDryRunResponse`.
-- [API Value Sets](schema-value-sets.md) for exact values used by state fields.
+- [API Value Sets](schema-value-sets.md#state-and-blocker-values) for exact close-readiness blocker category values and neighboring state values.
 - [API Methods](methods.md) and method owner documents for the methods that return these schemas.
 - [API Artifact Schemas](schema-artifacts.md) for `ArtifactRef`.
 - [API Judgment Schemas](schema-judgment.md) for `UserJudgmentCandidate`.

@@ -45,14 +45,14 @@ The public value is not copied into `CloseReadinessBlocker.code` unless the sche
 
 | Public-code relationship | Blocker-side route | Boundary |
 |---|---|---|
-| Evidence, artifact, acceptance, user-judgment, approval, scope, autonomy-boundary, baseline, or capability families | Route through the owner-defined `CloseReadinessBlocker.category` and `CloseReadinessBlocker.code`. | Public code meanings stay with [API error codes](error-codes.md); exact blocker values stay with [API State Schemas](schema-state.md) and [API Value Sets](schema-value-sets.md). |
+| Evidence, artifact, acceptance, user-judgment, approval, scope, autonomy-boundary, baseline, or capability families | Route through the owner-defined `CloseReadinessBlocker.category` and `CloseReadinessBlocker.code`. | Public code meanings stay with [API error codes](error-codes.md); blocker shape stays with [API State Schemas](schema-state.md), category values stay with [API Value Sets](schema-value-sets.md#state-and-blocker-values), and method-specific blocker production stays with [`harness.close_task`](method-close-task.md). |
 | Readable-view freshness families | May be named as related diagnostics when the owner allows it. | A freshness diagnostic by itself is not a close-readiness blocker. |
 | State-version or idempotency conflict families | No close-readiness blocker representation. | These failures are rejected before close-readiness evaluation and stay with [API error precedence](error-precedence.md). |
 
 <a id="harnessclose_task-close-blockers"></a>
 ## `harness.close_task` method route
 
-Method-specific close behavior belongs to [`harness.close_task`](method-close-task.md). Route preflight rejection, `intent=check`, `intent=complete`, terminal mutation, invalid terminal transition, state-version behavior, and committed blocked outcomes to that method owner.
+Method-specific close behavior belongs to [`harness.close_task`](method-close-task.md). Route request validation, intent handling, terminal mutation, state-version behavior, and committed blocked outcomes to that method owner.
 
 This document only defines the boundary between the blocker data returned by that method and the neighboring API error, schema, value-set, Core, storage, and display owners.
 

@@ -7,6 +7,7 @@
 This document owns baseline method behavior for `harness.close_task`:
 
 - method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
+- method-specific blocker-producing branches for `CloseTaskResult.blockers`
 - the minimal request and representative response for the shared account data export confirmation scenario
 - method-level storage-effect summary and links to storage owners
 
@@ -16,6 +17,7 @@ This document does not own:
 
 - common `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, or `ToolDryRunResponse` schema bodies
 - nested state, artifact, judgment, value-set, or error schema definitions
+- close-readiness blocker/API response routing or blocker category value definitions
 - storage DDL, storage record layouts, artifact lifecycle, security guarantees, or Core product meaning
 
 ## Purpose
@@ -33,12 +35,35 @@ Close is a Core state transition, not a report. Close is not inferred from chat,
 - For `intent=complete`, `intent=cancel`, or `intent=supersede` with `dry_run=false`, non-null `idempotency_key` and current `expected_state_version`.
 - For `intent=check`, `idempotency_key` and `expected_state_version` may be `null`, and `close_reason` must be `null`.
 
+## Intent field rules
+
+The supported values for `intent`, `close_reason`, and `close_state` are owned by [API Value Sets](schema-value-sets.md#task-lifecycle-values).
+
+| `intent` | `close_reason` | `superseding_task_id` | Method rule |
+|---|---|---|---|
+| `check` | `null` | `null` | Read-only close-readiness observation. |
+| `complete` | `completed_self_checked` or `completed_with_risk_accepted` | `null` | Completion path; requires close-readiness evaluation. |
+| `cancel` | `cancelled` | `null` | Cancellation path; does not substitute for evidence sufficiency. |
+| `supersede` | `superseded` | Non-null same-project replacement Task reference | Supersession path; does not substitute for evidence sufficiency. |
+
 ## Access requirements
 
 | `intent` kind | Conditions |
 |---|---|
 | `intent=check` | Requires `VerifiedSurfaceContext.access_class=read_status` for protected close-readiness detail. |
 | Mutating intents | Require `core_mutation`, verified surface context, compatible Task state, and close-relevant owner records. |
+
+## Method flow
+
+Implementations evaluate `harness.close_task` in this order:
+
+1. Validate the envelope, method fields, `intent` field combination, and same-project Task identity. Shape failures, wrong-project identity, and unreadable Task identity return `ToolRejectedResponse`.
+2. Verify the surface context, access class, local capability, and requested terminal path preconditions.
+3. For `dry_run=false` mutating intents, check `idempotency_key`, current `expected_state_version`, idempotency request hash, and any close-relevant `WriteAuthorization.basis_state_version` before close-readiness evaluation. Stale or conflicting values return `ToolRejectedResponse`.
+4. For `intent=check`, compute current close readiness and return read-only `CloseTaskResult`. This branch may report `close_state=ready` or `close_state=blocked`, and it never commits.
+5. For mutating intents with `dry_run=true`, return the common preview branch after valid preflight. Preview blockers are `PlannedBlocker` data, not stored `CloseReadinessBlocker` objects.
+6. For `intent=complete`, run the full close-readiness evaluation. If blockers remain, return the blocked branch; otherwise commit `close_state=closed`.
+7. For `intent=cancel` or `intent=supersede`, evaluate only the terminal-path constraints for that requested path. These paths do not require completion evidence or final acceptance, but they can block when cancellation or supersession itself would be dishonest.
 
 ## State version behavior
 
@@ -64,14 +89,25 @@ Returns `CloseTaskResult` with `base.response_kind=result`.
 Conditions:
 
 - close preflight succeeds
-- `intent=complete`
+- the method reaches read-only close-readiness observation or terminal-path evaluation
+- the requested path has one or more close or terminal blockers
 
-The method may return `CloseTaskResult(close_state=blocked)` with `blockers: CloseReadinessBlocker[]`. Mutating intents may persist blocker-state effects only when the method state-effect table allows that committed blocked result.
+The method may return `CloseTaskResult(close_state=blocked)` with `blockers: CloseReadinessBlocker[]`. Mutating intents may persist blocker-state effects only when this method's state-version rules and the storage-effect owner allow that committed blocked result.
+
+Method-specific blocker-producing branches:
+
+| Branch | Blocker production |
+|---|---|
+| `intent=check` | Returns current close-readiness blockers as read-only observation data. It does not create blocker rows or increment state. |
+| `intent=complete` | Produces blockers for unresolved completion requirements, including Task state, open Run compatibility, scope, user-owned judgment, sensitive approval, write compatibility, baseline, surface capability, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, or recovery constraints when the applicable owner condition is unmet. |
+| `intent=cancel` | Produces blockers only for cancellation-specific terminal constraints, such as incompatible Task state, required recovery or repair constraints, or owner-defined cancellation constraints. Completion-only evidence and final-acceptance gaps do not block cancellation by themselves. |
+| `intent=supersede` | Produces blockers only for supersession-specific terminal constraints, such as incompatible Task state, incompatible same-project superseding Task relationship, or recovery or repair constraints. Completion-only evidence and final-acceptance gaps do not block supersession by themselves. |
 
 Non-claims:
 
 - The presence of `CloseReadinessBlocker` alone does not imply persistence.
 - `STATE_VERSION_CONFLICT` is never a `CloseReadinessBlocker.code`.
+- A blocker category does not create the underlying user judgment, approval, evidence, artifact availability, acceptance, risk acceptance, or recovery state.
 
 ## Rejected result
 
@@ -97,7 +133,7 @@ Non-claims:
 
 Mutating intents with `dry_run=true` use the common preview branch when valid.
 
-Branch shape is owned by [API Schema Core](schema-core.md). Planned-blocker response branch routing is owned by [API error routing](error-routing.md); close-readiness blocker routing is owned by [API blocker routing](blocker-routing.md).
+Branch shape is owned by [API Schema Core](schema-core.md). Planned-blocker response branch routing is owned by [API error routing](error-routing.md). Close-readiness blocker/API response routing semantics are owned by [API blocker routing](blocker-routing.md).
 
 ## Storage effect
 
@@ -253,10 +289,10 @@ next_actions:
 ## Owner links
 
 - Request envelope, common response branches, and dry-run summaries: [API Schema Core](schema-core.md).
-- Close-readiness shapes, `CloseReadinessBlocker`, `EvidenceSummary`, and `StateSummary`: [API State Schemas](schema-state.md).
-- Close state, lifecycle, close reason, and blocker values: [API Value Sets](schema-value-sets.md).
+- `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, and `StateSummary` shapes: [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
+- Close state, lifecycle, close reason, and `CloseReadinessBlocker.category` values: [API Value Sets](schema-value-sets.md#state-and-blocker-values).
 - Close-readiness meaning and close honesty: [Core Model close readiness](../core-model.md#close_task).
 - Public `ErrorCode` meanings: [API error codes](error-codes.md).
 - Rejected-response branch routing: [API error routing](error-routing.md).
-- Close-readiness blocker routing: [API blocker routing](blocker-routing.md).
+- Close-readiness blocker/API response routing semantics: [API blocker routing](blocker-routing.md).
 - Persistence effects and state-version behavior: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).

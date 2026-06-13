@@ -18,7 +18,7 @@
 - 공개 코드 의미: [API 오류 코드](error-codes.md).
 - 주 공개 오류 선택: [API 오류 우선순위](error-precedence.md).
 - 기계 판독용 오류 세부사항: [API 오류 세부사항](error-details.md).
-- `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 공통 분기 형태: [API 상태 스키마](schema-state.md), [API 값 집합](schema-value-sets.md), [API 코어 스키마](schema-core.md).
+- `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 공통 분기 형태: [API 상태 스키마](schema-state.md), [API 코어 스키마](schema-core.md). 범주와 enum 형태 값은 [API 값 집합](schema-value-sets.md)이 담당합니다.
 - 닫기 준비 상태 의미와 대체 불가 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
 - 닫기 준비 상태 차단 사유/API 응답 경계와 공개 코드와 차단 사유 경계: [API 차단 사유 처리 경로](blocker-routing.md).
 - `harness.close_task` 메서드별 차단 동작: [`harness.close_task`](method-close-task.md).
@@ -268,4 +268,4 @@
 
 ## 닫기 준비 상태 차단 사유 처리 경로
 
-닫기 준비 상태 차단 사유 범주 처리 경계와 공개 코드와 차단 사유 경계는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다. `harness.close_task` 메서드별 차단 동작은 [`harness.close_task`](method-close-task.md)가 담당합니다.
+닫기 준비 상태 차단 사유/API 응답 처리 경계와 공개 코드와 차단 사유 경계는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다. 정확한 `CloseReadinessBlocker.category` 값은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다. `harness.close_task` 메서드별 차단 동작은 [`harness.close_task`](method-close-task.md)가 담당합니다.
