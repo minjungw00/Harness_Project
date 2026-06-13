@@ -238,7 +238,7 @@ Close-readiness meaning and persistence behavior stay with the method, Core mode
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)
 - Response branch behavior, close-readiness evaluation order, and committed blocked outcomes: [`harness.close_task`](method-close-task.md)
-- Close-readiness blocker routing: [`close_task` blocker mapping](blocker-routing.md#harnessclose_task-close-blockers)
+- Close-readiness blocker routing: [API blocker routing](blocker-routing.md)
 - Supported `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md)
 - Security guarantee meaning: [Security](../security.md)
 

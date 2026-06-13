@@ -12,4 +12,4 @@ This page is a route into the storage reference family. It points to storage own
 | `project_state.state_version`, idempotency, replay, events, locks, and migrations | [Storage Versioning](storage-versioning.md) |
 | Product Repository, Harness Server, and Runtime Home locations | [Runtime Boundaries](runtime-boundaries.md) |
 
-For non-storage contracts, route to [API Methods](api/methods.md), API schema owners, [Core Model](core-model.md), the [API error family index](api/errors.md), or [Security](security.md) as needed.
+For non-storage contracts, route to [API Methods](api/methods.md), API schema owners, [Core Model](core-model.md), [Security](security.md), or the focused API error owner as needed: [API error codes](api/error-codes.md), [API error precedence](api/error-precedence.md), [API error routing](api/error-routing.md), [API blocker routing](api/blocker-routing.md), or [API error details](api/error-details.md). Use the [API error family index](api/errors.md) only for family navigation.

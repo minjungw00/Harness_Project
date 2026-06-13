@@ -18,6 +18,7 @@ This document owns:
 This document does not own:
 
 - public `ErrorCode` values or precedence; see [API error codes](error-codes.md) and [API error precedence](error-precedence.md)
+- close-readiness blocker routing; see [API blocker routing](blocker-routing.md)
 - field shapes that use these values; see [API Schema Core](schema-core.md), [API State Schemas](schema-state.md), [API Artifact Schemas](schema-artifacts.md), and [API Judgment Schemas](schema-judgment.md)
 - method behavior; see the [API Methods](methods.md) and method owner documents
 - security guarantee meaning; see [Security](../security.md)
@@ -396,6 +397,7 @@ Boundary:
 - [Scope](../scope.md) for whether a value belongs in the baseline scope.
 - [API error codes](error-codes.md) for public error code meanings.
 - [API error precedence](error-precedence.md) for public error precedence.
+- [API blocker routing](blocker-routing.md) for close-readiness blocker routing.
 - [API error details](error-details.md) for machine-readable error detail helper values.
 - [API Schema Core](schema-core.md), [API State Schemas](schema-state.md), [API Artifact Schemas](schema-artifacts.md), and [API Judgment Schemas](schema-judgment.md) for fields that use these values.
 - [API Methods](methods.md) and method owner documents for method behavior using these values.

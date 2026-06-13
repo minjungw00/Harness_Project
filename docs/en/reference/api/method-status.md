@@ -246,5 +246,7 @@ guarantee_display:
 - Request envelope and response branches: [API Schema Core](schema-core.md).
 - Status state, close-readiness shapes, evidence summaries, and guarantee display: [API State Schemas](schema-state.md).
 - Supported values and access classes: [API Value Sets](schema-value-sets.md).
-- Public errors and close-readiness blocker routing: [API error codes](error-codes.md) and [`close_task` blocker mapping](blocker-routing.md#harnessclose_task-close-blockers).
+- Public `ErrorCode` meanings: [API error codes](error-codes.md).
+- Rejected-response branch routing: [API error routing](error-routing.md).
+- Close-readiness blocker routing: [API blocker routing](blocker-routing.md).
 - Persistence effects: [Storage Effects](../storage-effects.md).

@@ -244,5 +244,7 @@ guarantee_display:
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
 - 상태, 닫기 준비 상태 형태, 증거 요약, 보장 표시: [API 상태 스키마](schema-state.md).
 - 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
-- 공개 오류와 닫기 준비 상태 차단 사유 처리 경로: [API 오류 코드](error-codes.md), [`close_task` 차단 사유 매핑](blocker-routing.md#harnessclose_task-close-blockers).
+- 공개 `ErrorCode` 의미: [API 오류 코드](error-codes.md).
+- 거부 응답 분기 경로: [API 오류 경로](error-routing.md).
+- 닫기 준비 상태 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md).
 - 저장 효과: [저장 효과](../storage-effects.md).

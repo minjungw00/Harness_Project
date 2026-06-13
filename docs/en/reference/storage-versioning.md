@@ -106,7 +106,8 @@ Retry behavior:
 
 Owner links:
 
-- Public error-code routing belongs to [API error routing](api/error-routing.md).
+- Public `ErrorCode` meanings belong to [API error codes](api/error-codes.md).
+- Rejected-response branch routing belongs to [API error routing](api/error-routing.md).
 - Branch storage effects belong to [Storage Effects](storage-effects.md).
 
 <a id="state-version-successful-mutation"></a>
@@ -293,7 +294,9 @@ Related storage field:
 
 Owner links:
 
-- Public error-code routing belongs to [API error routing](api/error-routing.md).
+- Public `ErrorCode` meaning belongs to [API error codes](api/error-codes.md).
+- State-conflict precedence belongs to [API error precedence](api/error-precedence.md#state-conflict-behavior).
+- Rejected-response branch routing belongs to [API error routing](api/error-routing.md).
 
 Not allowed:
 

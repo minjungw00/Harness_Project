@@ -314,6 +314,7 @@ write_decision_reasons:
 | `harness.close_task intent=cancel` | 취소 또는 차단된 취소 기록 | [`harness.close_task intent=cancel`](#harnessclose_task-intentcancel) |
 | `harness.close_task intent=supersede` | 대체 또는 차단된 대체 기록 | [`harness.close_task intent=supersede`](#harnessclose_task-intentsupersede) |
 
+<a id="harnessintake"></a>
 ### `harness.intake`
 
 커밋되는 `dry_run=false` 호출은 다음을 수행할 수 있습니다.
@@ -363,6 +364,7 @@ write_decision_reasons:
 - [저장소 기록](storage-records.md)
 - [저장소 버전 관리](storage-versioning.md)
 
+<a id="harnessstatus"></a>
 ### `harness.status`
 
 읽기 전용 호출은 다음 특성을 가집니다.

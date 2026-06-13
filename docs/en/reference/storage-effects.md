@@ -307,6 +307,7 @@ This table summarizes persistence effects. Method behavior and response unions r
 | `harness.close_task intent=cancel` | cancels or records blocked cancellation | See [`harness.close_task intent=cancel`](#harnessclose_task-intentcancel) |
 | `harness.close_task intent=supersede` | supersedes or records blocked supersession | See [`harness.close_task intent=supersede`](#harnessclose_task-intentsupersede) |
 
+<a id="harnessintake"></a>
 ### `harness.intake`
 
 Committed `dry_run=false` may:
@@ -356,6 +357,7 @@ Owner links:
 - [Storage Records](storage-records.md)
 - [Storage Versioning](storage-versioning.md)
 
+<a id="harnessstatus"></a>
 ### `harness.status`
 
 Read-only calls:

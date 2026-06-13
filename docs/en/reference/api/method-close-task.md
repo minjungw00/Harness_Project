@@ -256,5 +256,7 @@ next_actions:
 - Close-readiness shapes, `CloseReadinessBlocker`, `EvidenceSummary`, and `StateSummary`: [API State Schemas](schema-state.md).
 - Close state, lifecycle, close reason, and blocker values: [API Value Sets](schema-value-sets.md).
 - Close-readiness meaning and close honesty: [Core Model close readiness](../core-model.md#close_task).
-- Public errors and close-readiness blocker routing: [API error codes](error-codes.md) and [`close_task` blocker mapping](blocker-routing.md#harnessclose_task-close-blockers).
+- Public `ErrorCode` meanings: [API error codes](error-codes.md).
+- Rejected-response branch routing: [API error routing](error-routing.md).
+- Close-readiness blocker routing: [API blocker routing](blocker-routing.md).
 - Persistence effects and state-version behavior: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).
