@@ -112,9 +112,9 @@ API examples must not use documentation maintenance, migration, refactoring, rou
 
 ## One-Off File Rule
 
-Do not create archive copies, one-off transition notes, scratch notes, unresolved note-only files, review leftovers, generated runtime records, one-off planning files, migration notes, or work logs in the repository.
+Do not create archive copies, one-off transition notes, working-note remnants, unresolved note-only files, review leftovers, generated runtime records, one-off planning files, one-off conversion notes, or work logs in the repository.
 
-Remove scratch notes and transient review material before finishing.
+Remove working-note remnants and transient review material before finishing.
 
 If the user explicitly asks for a planning document, place it only in an appropriate maintained documentation path and make sure it has durable reader value.
 
@@ -130,4 +130,4 @@ For meaning-changing bilingual edits, compare paired files by meaning unit. Conf
 
 For example edits, validate scenario durability, field-name consistency, response snapshot consistency, artifact-ref lifecycle context, sensitive approval reasons, and timestamp handling against the affected owner documents and `docs/*/maintain/checks.md`.
 
-Before finishing, confirm no one-off planning files, archive copies, scratch files, migration notes, generated runtime records, or work logs remain from the edit.
+Before finishing, confirm no one-off planning files, archive copies, working-note remnants, one-off conversion notes, generated runtime records, or work logs remain from the edit.

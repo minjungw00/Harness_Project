@@ -309,7 +309,7 @@ Preserve:
 - `doc_id` values
 
 Avoid:
-- active owner path
+- using `active` for owner-path routing
 - supported owner path, when the meaning is only topic routing
 
 Owner:

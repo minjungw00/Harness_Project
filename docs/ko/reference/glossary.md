@@ -309,7 +309,7 @@
 - `doc_id` 값
 
 피할 표현:
-- active owner path
+- 담당 경로 안내에 `active`를 쓰는 표현
 - 단순한 주제 경로 안내를 supported owner path라고 부르는 표현
 
 담당 문서:

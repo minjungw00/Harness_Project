@@ -36,10 +36,6 @@ Harness stores baseline records in one local `Harness Runtime Home` and one proj
       state.sqlite
       artifacts/
         tmp/
-        diffs/
-        logs/
-        screenshots/
-        checkpoints/
 ```
 
 Storage placement:
@@ -97,7 +93,7 @@ This table names the baseline storage record families. It is not full DDL and do
 | `user_judgments` | `state.sqlite` | Pending and resolved user-owned judgments, including separate sensitive-action approval scope when relevant. |
 | `write_authorizations` | `state.sqlite` | Single-use cooperative `Write Authorization` record, basis version, attempt scope, expiration, and consumption state. |
 | `runs` | `state.sqlite` | Committed execution or observation records, compatible authorization consumption, and compact evidence updates. |
-| `artifact_staging` | `state.sqlite` plus `artifacts/tmp/` | Transient staged artifact handles, safe staging metadata, and temporary bytes or notices. |
+| `artifact_staging` | `state.sqlite` plus `artifacts/tmp/` | Transient staged artifact handles, safe staging metadata, and transient bytes or notices. |
 | `artifacts` | `state.sqlite` plus artifact store | Durable artifact metadata or body location, integrity, redaction, retention, producer, and availability facts. |
 | `artifact_links` | `state.sqlite` | Owner relation between an artifact and a supported Core/API record. |
 | `evidence_summaries` | `state.sqlite` | Compact evidence coverage, supporting references, and gap references. |

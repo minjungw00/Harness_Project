@@ -231,4 +231,4 @@ Mixed English/Korean may be correct when the English part is an identifier, for 
 - [ ] User-facing Korean and reference-facing Korean use the right level of terminology.
 - [ ] Forbidden mixed-language patterns were removed except where cited as examples in this guide.
 - [ ] New or changed terminology was checked against [docs/terminology-map.yaml](../../terminology-map.yaml).
-- [ ] No one-off planning files, archive copies, generated runtime records, or migration notes remain.
+- [ ] No one-off planning files, archive copies, generated runtime records, or one-off conversion notes remain.

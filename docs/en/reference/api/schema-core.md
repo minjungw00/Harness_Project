@@ -164,6 +164,8 @@ Owner links:
 - `PlannedBlocker.source_kind` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
 - public `ErrorCode` values used in `ToolError.code`: [API error codes](error-codes.md)
 
+<a id="shared-support-shapes"></a>
+
 ## Shared support shapes
 
 ```yaml

@@ -39,8 +39,8 @@ The supported public method-name set is:
 
 ```text
 harness.intake
-harness.status
 harness.update_scope
+harness.status
 harness.prepare_write
 harness.stage_artifact
 harness.record_run

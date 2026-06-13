@@ -89,7 +89,7 @@ If a duplicate explanation is stale, do not refresh the duplicate. Replace it wi
 
 Create a new document only when no existing owner can responsibly hold the concept. The new page must have a stable reader purpose, a clear owner boundary, and a paired English/Korean route when it is part of the maintained documentation set.
 
-Do not create a new document for one-off planning notes, migration notes, review leftovers, one-off summaries, or duplicated contract extracts. Put implementation decisions in [Implementation Guide](../build/implementation-guide.md). Put contract definitions in the appropriate Reference owner. Put terminology choices in [Glossary](../reference/glossary.md), [Translation Guide](translation-guide.md), or [Terminology Map](../../terminology-map.yaml).
+Do not create a new document for one-off planning notes, one-off conversion notes, review leftovers, one-off summaries, or duplicated contract extracts. Put implementation decisions in [Implementation Guide](../build/implementation-guide.md). Put contract definitions in the appropriate Reference owner. Put terminology choices in [Glossary](../reference/glossary.md), [Translation Guide](translation-guide.md), or [Terminology Map](../../terminology-map.yaml).
 
 When adding a real new owner, update [Reference README](../reference/README.md) or the appropriate route index so readers can find it. Update [doc-index.yaml](../../doc-index.yaml) only as documentation retrieval metadata.
 
@@ -234,5 +234,5 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] Check descriptions use named blocks and bullets instead of dense table cells.
 - [ ] Links point to maintained routes and canonical owners.
 - [ ] New or changed terminology was checked against [Terminology Map](../../terminology-map.yaml).
-- [ ] No one-off planning files, archive copies, scratch notes, generated runtime records, unresolved task markers, migration notes, or review leftovers remain.
+- [ ] No one-off planning files, archive copies, working-note remnants, generated runtime records, unresolved task markers, one-off conversion notes, or review leftovers remain.
 - [ ] Relevant checks in [Checks](checks.md) and its focused check pages were run or reported as skipped.

@@ -243,58 +243,15 @@
 
 ## 금지된 차단 사유 코드 규칙
 
-| 금지된 사용 | 세부 항목 |
-|---|---|
-| 오래된 상태 공개 오류를 차단 사유 코드로 사용 | [오래된 상태 차단 사유 코드](#forbidden-stale-state-blocker-code) |
-| 커밋 전 공개 오류를 차단 사유 배열로 복사 | [커밋 전 공개 오류 복사](#forbidden-pre-commit-public-error-copy) |
-| 공개 `ErrorCode`를 담당 문서 허용 없이 재사용 | [공개 코드 재사용](#forbidden-public-code-reuse) |
-| 사용자 표시 라벨을 API 식별자로 사용 | [표시 라벨 식별자](#forbidden-user-facing-label-identifier) |
-| `dry_run` 오래된 상태 충돌을 미리보기로 표현 | [`dry_run` 오래된 상태 미리보기](#forbidden-dry-run-stale-state-preview) |
+이 경계 규칙은 공개 오류 식별자를 메서드 담당 차단 값과 분리합니다.
 
-<a id="forbidden-stale-state-blocker-code"></a>
-### 오래된 상태 차단 사유 코드
-
-허용되지 않는 것:
-- `STATE_VERSION_CONFLICT`를 `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, 커밋된 차단 결과의 주 오류 코드로 사용하지 않습니다.
-
-대신 사용할 것:
-- `effect_kind=no_effect`인 `ToolRejectedResponse.errors[]`를 반환합니다.
-
-<a id="forbidden-pre-commit-public-error-copy"></a>
-### 커밋 전 공개 오류 복사
-
-허용되지 않는 것:
-- 커밋 전 공개 오류를 차단 사유 배열로 복사하지 않습니다.
-
-대신 사용할 것:
-- `ToolRejectedResponse.errors[]`를 반환합니다.
-
-<a id="forbidden-public-code-reuse"></a>
-### 공개 코드 재사용
-
-허용되지 않는 것:
-- 담당 문서의 명시적 허용 없이 공개 `ErrorCode`를 차단 사유 코드로 재사용하지 않습니다.
-
-대신 사용할 것:
-- 메서드/스키마 담당 문서의 차단 사유 코드나 결과 사유를 사용합니다.
-
-<a id="forbidden-user-facing-label-identifier"></a>
-### 표시 라벨 식별자
-
-허용되지 않는 것:
-- 사용자 표시 라벨을 API 식별자로 사용하지 않습니다.
-
-대신 사용할 것:
-- 공개 `ErrorCode`는 그대로 두고 표시 문구만 지역화합니다.
-
-<a id="forbidden-dry-run-stale-state-preview"></a>
-### `dry_run` 오래된 상태 미리보기
-
-허용되지 않는 것:
-- `dry_run` 미리보기의 오래된 상태 충돌을 `DryRunSummary.would_errors[]`나 `DryRunSummary.would_blockers[]`로 표현하지 않습니다.
-
-대신 사용할 것:
-- `STATE_VERSION_CONFLICT`로 요청을 거부합니다.
+| 금지된 사용 | 경계 | 대신 사용할 것 |
+|---|---|---|
+| <a id="forbidden-stale-state-blocker-code"></a>오래된 상태 공개 오류를 차단 사유 코드로 사용 | `STATE_VERSION_CONFLICT`를 `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`, `MethodResult.decision`, 커밋된 차단 결과의 주 오류 코드로 사용하지 않습니다. | `effect_kind=no_effect`인 `ToolRejectedResponse.errors[]`를 반환합니다. |
+| <a id="forbidden-pre-commit-public-error-copy"></a>커밋 전 공개 오류를 차단 사유 배열로 복사 | 커밋 전 공개 오류를 차단 사유 배열로 복사하지 않습니다. | `ToolRejectedResponse.errors[]`를 반환합니다. |
+| <a id="forbidden-public-code-reuse"></a>공개 `ErrorCode`를 담당 문서 허용 없이 재사용 | 담당 문서의 명시적 허용 없이 공개 `ErrorCode`를 차단 사유 코드로 재사용하지 않습니다. | 메서드/스키마 담당 문서의 차단 사유 코드나 결과 사유를 사용합니다. |
+| <a id="forbidden-user-facing-label-identifier"></a>사용자 표시 라벨을 API 식별자로 사용 | 사용자 표시 라벨을 API 식별자로 사용하지 않습니다. | 공개 `ErrorCode`는 그대로 두고 표시 문구만 지역화합니다. |
+| <a id="forbidden-dry-run-stale-state-preview"></a>`dry_run` 오래된 상태 충돌을 미리보기로 표현 | `dry_run` 미리보기의 오래된 상태 충돌을 `DryRunSummary.would_errors[]`나 `DryRunSummary.would_blockers[]`로 표현하지 않습니다. | `STATE_VERSION_CONFLICT`로 요청을 거부합니다. |
 
 <a id="harnessclose_task-close-blockers"></a>
 

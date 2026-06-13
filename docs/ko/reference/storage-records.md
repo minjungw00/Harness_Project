@@ -36,10 +36,6 @@
       state.sqlite
       artifacts/
         tmp/
-        diffs/
-        logs/
-        screenshots/
-        checkpoints/
 ```
 
 저장 위치의 의미는 아래와 같습니다.

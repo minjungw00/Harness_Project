@@ -50,7 +50,7 @@ Check:
 - Confirm they did not create or simulate Harness runtime records, generated projections, operational artifacts, executable fixtures, conformance reports, QA records, acceptance records, close records, residual-risk records, or product writes.
 
 Failure:
-- A documentation check leaves behind generated operational files, runtime-like state, fixture output, migration notes, archive copies, or one-off planning files.
+- A documentation check leaves behind generated operational files, runtime-like state, fixture output, one-off conversion notes, archive copies, or one-off planning files.
 
 Fix:
 - Remove generated or transient material.
@@ -63,11 +63,11 @@ Owner:
 - [Checks Index](../checks.md)
 
 Check:
-- Inspect changed files and newly added files for one-off planning files, scratch notes, review leftovers, archive copies, transition notes, migration notes, generated runtime records, and unresolved task markers such as `TODO` or `FIXME`.
+- Inspect changed files and newly added files for one-off planning files, working-note remnants, review leftovers, archive copies, transition notes, one-off conversion notes, generated runtime records, and unresolved task markers such as `FIXME` or other all-caps placeholders.
 - Confirm documentation-maintenance findings live in the final report or the appropriate maintained documentation page, not in ad hoc files.
 
 Failure:
-- The final tree contains a one-off plan, scratch note, review note, archive copy, generated runtime-like record, migration note, or unresolved task marker from the documentation batch.
+- The final tree contains a one-off plan, working-note remnant, review note, archive copy, generated runtime-like record, one-off conversion note, or unresolved task marker from the documentation batch.
 - A maintained page contains a task marker that names deferred work instead of a durable maintenance rule.
 
 Fix:

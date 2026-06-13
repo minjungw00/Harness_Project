@@ -50,6 +50,18 @@
 | `ARTIFACT_MISSING` | [`ARTIFACT_MISSING`](#errorcode-artifact-missing) |
 | `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](#errorcode-validator-failed) |
 
+## 코드 사용 경계
+
+공개 `ErrorCode` 값은 기본적으로 차단 사유 코드가 아닙니다.
+
+| 경계 | 규칙 |
+|---|---|
+| 거부 응답 오류 | 거부된 공개 API 요청의 `ToolRejectedResponse.errors[]`에서 공개 `ErrorCode` 값을 사용합니다. |
+| 담당 문서가 정의한 결과 경로 | 메서드, 스키마, 닫기 준비 상태 담당 문서는 공개 오류 코드 묶음의 결과 경로 매핑을 정의할 수 있지만, 그 매핑은 공개 `ErrorCode`를 차단 사유 코드로 만들지 않습니다. |
+| 오래된 상태 | `STATE_VERSION_CONFLICT`는 거부 응답 경로에 머물며 닫기 준비 상태 차단 사유, 결과 판단, 쓰기 판단 사유, 예정 차단 사유가 아닙니다. |
+| 읽기용 보기 최신성 | `PROJECTION_STALE`만으로는 닫기 준비 상태 차단 사유 코드가 아닙니다. |
+| 대체 코드 | `VALIDATOR_FAILED`는 더 구체적인 지원 코드가 적용되지 않고 담당 메서드나 스키마가 대체 사용을 담당할 때만 사용할 수 있습니다. |
+
 <a id="errorcode-validation-failed"></a>
 ### `VALIDATION_FAILED`
 
