@@ -28,6 +28,26 @@ related_owners:
     ko: "docs/ko/maintain/translation-guide.md"
 identifier_preservation:
   rule: "Preserve exact identifiers unchanged in English and Korean. Use backticks in prose when the value is code-like, schema-like, or a product label that must be searched exactly."
+  exact_identifier_classes:
+    - "file paths and anchors"
+    - "`doc_id` values"
+    - "API methods, tool names, resource names, and MCP method names"
+    - "schema names, schema fields, and object names"
+    - "enum values, status values, error codes, validator IDs, and table names"
+    - "DDL, column names, storage identifiers, template names, and code literals"
+    - "intentional Harness product labels"
+  backtick_contexts:
+    - "prose mentions of code-like, schema-like, route-like, or search-critical values"
+    - "exact product labels when the label itself is being named"
+    - "file paths, anchors, and machine-readable keys when prose clarity requires exact search"
+  literal_translation_exclusions:
+    - "code blocks"
+    - "schema examples"
+    - "API examples"
+    - "file paths"
+    - "field lists"
+    - "literal-value tables"
+    - "machine-readable metadata"
   identifiers:
     - "Task"
     - "task_id"

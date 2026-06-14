@@ -221,3 +221,29 @@ Failure:
 Fix:
 - Rewrite the sentence as natural Korean, using two sentences or bullets when that makes the owner route and boundary clearer.
 - Keep identifiers unchanged, and use terminology-map Korean terms for ordinary prose concepts.
+
+## CHK-TERM-011: glossary card focus
+
+Owner:
+- [Glossary](../../reference/glossary.md)
+- [Terminology Map](../../../terminology-map.yaml)
+- [Translation Guide](../translation-guide.md)
+- [Authoring Guide](../authoring-guide.md)
+
+Check:
+- Inspect changed glossary cards for the intended fields: meaning, Korean term, type, primary owner, related references, and a short usage note.
+- Confirm term cards explain the term and route to the primary owner instead of carrying long avoid lists, identifier-preservation lists, owner-routing tables, or documentation-quality checklists.
+- Confirm API behavior, storage effects, security guarantees, method behavior, and detailed response/schema contracts remain in their focused owners.
+- Confirm Korean glossary cards use natural Korean technical prose and preserve exact identifiers unchanged.
+
+Failure:
+- A glossary card becomes a translation guide, identifier-preservation policy, owner-routing table, or reference contract.
+- A usage note accumulates repeated "do not", "must not", or avoid-list wording that belongs in the terminology map, translation guide, authoring guide, or focused checks.
+- A card copies API, storage, security, schema, projection, or method behavior instead of linking to the owner.
+
+Fix:
+- Shrink the card to the role-focused fields and keep the usage note short.
+- Move systematic identifier controls to the terminology map.
+- Move Korean prose style guidance to the translation guide.
+- Move review procedures to Maintain checks.
+- Route contract detail to the applicable reference owner.

@@ -6,7 +6,7 @@
 
 ## 이 용어집을 사용하는 방법
 
-요약 표는 빠른 경로 확인용으로 사용합니다. 각 용어의 실제 통제 내용은 용어 카드에서 관리합니다.
+요약 표는 빠른 경로 확인용으로 사용합니다. 각 용어의 실제 통제 내용은 용어 카드에서 관리합니다. 용어 카드는 짧게 유지합니다. 용어의 뜻, 한국어 표현, 유형, 담당 문서, 관련 참조만 분명히 드러내면 됩니다.
 
 각 용어 카드는 아래 담당 필드를 사용합니다.
 
@@ -117,7 +117,7 @@ Related references:
 - [런타임 경계](runtime-boundaries.md)
 
 Usage note:
-- 제품 이름을 가리킬 때 Harness를 보존하고, 이 문서 저장소를 실행 중인 서버처럼 보지 않습니다.
+- 제품 이름에는 Harness를 씁니다.
 
 ### Product Repository
 
@@ -140,7 +140,7 @@ Related references:
 - 없음.
 
 Usage note:
-- 경계를 이름 붙일 때는 `Product Repository`를 보존합니다.
+- 이 경계를 이름 붙일 때는 정확한 라벨을 씁니다.
 
 ### Harness Runtime Home
 
@@ -163,7 +163,7 @@ Related references:
 - 없음.
 
 Usage note:
-- 경계를 이름 붙일 때는 `Harness Runtime Home`을 보존합니다.
+- 이 경계를 이름 붙일 때는 정확한 라벨을 씁니다.
 
 ### documentation
 
@@ -210,7 +210,7 @@ Related references:
 - [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- 지원 범위 밖 기능이나 프로필 조건부 값을 기준 범위 요구사항처럼 쓰지 않습니다.
+- 지원 상태 세부사항은 기준 범위 문서를 따릅니다.
 
 ### supported scope
 
@@ -233,7 +233,7 @@ Related references:
 - 없음.
 
 Usage note:
-- `Task`나 Change Unit 안에서 현재 적용되는 범위를 지원 범위라고 부르지 않습니다.
+- 현재 적용 범위는 active scope 용어로 구분합니다.
 
 ### supported behavior
 
@@ -256,7 +256,7 @@ Related references:
 - [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- 값 집합에 있다는 사실, 예시, 경로 요약, 담당 경로 용어만 보고 지원을 추론하지 않습니다.
+- 지원 여부 질문은 기준 범위와 의미 담당 문서로 보냅니다.
 
 ### supported API method
 
@@ -279,7 +279,7 @@ Related references:
 - 없음.
 
 Usage note:
-- 공개 API 메서드를 이름 붙일 때는 정확한 메서드 식별자를 보존합니다.
+- 공개 API 메서드를 이름 붙일 때는 정확한 메서드 식별자를 씁니다.
 
 ### supported API value
 
@@ -325,7 +325,7 @@ Related references:
 - 없음.
 
 Usage note:
-- 미뤄 둔 자료를 기준 범위 요구사항이라고 부르지 않습니다.
+- 지원 상태 질문은 기준 범위 문서로 보냅니다.
 
 ### evidence collection workflow
 
@@ -339,7 +339,7 @@ Type:
 - 지원 범위 밖 기능 표현
 
 Meaning:
-- 증거 수집 흐름이라는 표현은 지원이 정의되기 전까지 용어 또는 지원 범위 밖 표현입니다.
+- 증거 수집 흐름은 기능 영역을 가리키는 표현입니다.
 
 Primary owner:
 - [기준 범위](scope.md)
@@ -348,7 +348,7 @@ Related references:
 - [용어 지도](../../terminology-map.yaml)
 
 Usage note:
-- 기준 범위의 증거는 기록된 증거와 증거 요약이지, 이름만으로 성립하는 수집 흐름 기능이 아닙니다.
+- 지원 상태는 기준 범위 문서에서 확인합니다.
 
 ### expanded or additional evidence collection workflows
 
@@ -373,7 +373,7 @@ Related references:
 - [용어 지도](../../terminology-map.yaml)
 
 Usage note:
-- 이 표현만으로 흐름의 산출물, 저장소 기록, 닫기 준비 상태 동작을 정의하지 않습니다.
+- 계약 세부사항은 기준 범위와 영향받는 담당 문서에서 확인합니다.
 
 ### owner document
 
@@ -419,7 +419,7 @@ Related references:
 - [용어 지도](../../terminology-map.yaml)
 
 Usage note:
-- 제품 동작이 담당 문서가 정의한 계약에 의존할 때 사용하고, 경로 메타데이터 자체를 계약처럼 보지 않습니다.
+- 담당 문서가 정의한 계약을 가리킬 때 씁니다.
 
 ### applicable owner path
 
@@ -443,7 +443,7 @@ Related references:
 - [doc-index.yaml](../../doc-index.yaml)
 
 Usage note:
-- 문서 경로 안내에만 쓰며, 담당 경로에 `active`를 쓰지 않습니다.
+- 문서 경로 안내에만 씁니다.
 
 ### applicable reference
 
@@ -467,7 +467,7 @@ Related references:
 - [용어 지도](../../terminology-map.yaml)
 
 Usage note:
-- 문서 경로 안내를 위한 줄임말로만 쓰고, 런타임 상태나 저장 조건처럼 쓰지 않습니다.
+- 문서 경로 안내를 위한 줄임말로만 씁니다.
 
 ### existing owner
 
@@ -493,7 +493,7 @@ Related references:
 - [doc-index.yaml](../../doc-index.yaml)
 
 Usage note:
-- 담당 문서 자리표시자를 기존 담당 문서처럼 이름 붙이지 않습니다.
+- 이미 존재하는 담당 문서에만 씁니다.
 
 ### promotion-time owner update
 
@@ -516,7 +516,7 @@ Related references:
 - [작성 가이드](../maintain/authoring-guide.md)
 
 Usage note:
-- 승격에는 담당 문서 생성이나 지정 뒤 기준 범위, API, 저장소, 템플릿, 점검, 한영 문서 갱신이 필요할 수 있습니다.
+- 승격 계획을 말할 때 쓰며, 지원 경계는 기준 범위 문서가 담당합니다.
 
 ### owner placeholder
 
@@ -539,7 +539,7 @@ Related references:
 - [기준 범위](scope.md)
 
 Usage note:
-- 자리표시자를 기존 기준 담당 문서처럼 독자에게 안내하지 않습니다.
+- 담당 문서 공백을 표시할 때만 씁니다.
 
 ### `Task`
 
@@ -563,7 +563,7 @@ Related references:
 - [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- `Task`, `task_id`, `active_task_id` 같은 식별자는 보존합니다.
+- 엔티티나 필드를 이름 붙일 때는 정확한 식별자를 씁니다.
 
 ### scope
 
@@ -587,7 +587,7 @@ Related references:
 - [API 판단 스키마](api/schema-judgment.md)
 
 Usage note:
-- `scope`, `scope_decision`, `AuthorizedAttemptScope`, `SensitiveActionScope` 같은 정확한 식별자는 보존합니다.
+- 스키마나 API 필드를 이름 붙일 때는 정확한 식별자를 씁니다.
 
 ### active scope
 
@@ -611,7 +611,7 @@ Related references:
 - [범위 갱신 메서드](api/method-update-scope.md)
 
 Usage note:
-- active scope를 기준 범위, 지원 범위, 문서 계약의 뜻으로 쓰지 않습니다.
+- active scope는 기준 범위나 지원 범위와 구분합니다.
 
 ### active Change Unit
 
@@ -634,7 +634,7 @@ Related references:
 - [범위 갱신 메서드](api/method-update-scope.md)
 
 Usage note:
-- 한국어 산문에서도 Change Unit은 제품 용어로 보존합니다.
+- 한국어 산문에서도 Change Unit은 제품 용어로 둡니다.
 
 ### user-owned judgment
 
@@ -648,7 +648,7 @@ Type:
 - Core 권한 용어
 
 Meaning:
-- 사용자 소유 판단은 하네스가 추론하지 않고 사용자에게 묻거나 사용자 선택으로 보존해야 하는 결정입니다.
+- 사용자 소유 판단은 사용자에게 남겨진 결정입니다.
 
 Primary owner:
 - [Core 모델](core-model.md)
@@ -657,7 +657,7 @@ Related references:
 - [API 판단 스키마](api/schema-judgment.md)
 
 Usage note:
-- 광범위한 승인을 수락, 위험 수락, 범위 변경, 민감 동작 승인, `Write Authorization`으로 보지 않습니다.
+- 수락과 권한 부여 계열 용어와 구분합니다.
 
 ### `UserJudgment`
 
@@ -681,7 +681,7 @@ Related references:
 - [사용자 판단 메서드](api/method-user-judgment.md)
 
 Usage note:
-- 스키마 이름을 사용자 소유 판단 전체 개념처럼 쓰지 않습니다.
+- 개념은 산문 용어로, 스키마는 식별자로 이름 붙입니다.
 
 ### close readiness
 
@@ -708,7 +708,7 @@ Related references:
 - [템플릿 본문](template-bodies.md)
 
 Usage note:
-- 평가 개념이며 `CloseReadinessBlocker` 스키마 자체가 아닙니다.
+- 스키마를 이름 붙일 때만 스키마 용어를 씁니다.
 
 ### close readiness evaluation
 
@@ -722,7 +722,7 @@ Type:
 - Task 닫기 메서드 용어
 
 Meaning:
-- 닫기 준비 상태 평가는 닫기 준비 상태와 남은 차단 사유를 도출하는 메서드별 평가입니다.
+- 닫기 준비 상태 평가는 닫기 준비 상태를 다루는 메서드 담당 평가입니다.
 
 Primary owner:
 - [Task 닫기 메서드](api/method-close-task.md)
@@ -734,7 +734,7 @@ Related references:
 - [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- 정확한 API 요소를 이름 붙일 때는 `harness.close_task`, `CloseTaskResult`, `CloseReadinessBlocker`를 보존합니다.
+- 평가 세부사항은 메서드 담당 문서를 따릅니다.
 
 ### close task
 
@@ -775,7 +775,7 @@ Type:
 - API 메서드 동작 용어
 
 Meaning:
-- Task 닫기 동작은 메서드별 요청 검증, 평가 순서, 결과 분기, dry-run 동작, 차단 사유 생성을 가리킵니다.
+- Task 닫기 동작은 `harness.close_task`의 메서드별 동작을 가리킵니다.
 
 Primary owner:
 - [Task 닫기 메서드](api/method-close-task.md)
@@ -787,7 +787,7 @@ Related references:
 - [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- Task 닫기 동작을 Core 닫기 준비 상태 의미나 차단 사유/API 응답 처리 경로의 담당 개념처럼 쓰지 않습니다.
+- 메서드별 세부사항은 메서드 담당 문서를 따릅니다.
 
 ### `harness.close_task`
 
@@ -814,7 +814,7 @@ Related references:
 - [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- 메서드별 동작은 메서드 담당 문서로 보내고, Core 닫기 준비 상태 의미와 차단 사유/API 응답 처리 경로는 각각의 담당 문서로 보냅니다.
+- 메서드별 세부사항은 메서드 담당 문서를 따릅니다.
 
 ### close-readiness blocker
 
@@ -829,7 +829,7 @@ Type:
 - API 차단 사유 처리 용어
 
 Meaning:
-- 닫기 차단 사유는 유효한 닫기 준비 상태 평가가 닫기 차단을 발견한 뒤 처리되는 닫기 관련 차단 사유 데이터입니다.
+- 닫기 차단 사유는 닫기와 관련된 차단 사유 데이터입니다.
 
 Primary owner:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
@@ -842,7 +842,7 @@ Related references:
 - [템플릿 본문](template-bodies.md)
 
 Usage note:
-- 한국어 산문에서는 닫기 차단 사유를 쓰고, 스키마를 이름 붙일 때만 `CloseReadinessBlocker`를 보존합니다.
+- 한국어 산문에서는 닫기 차단 사유를 쓰고, 스키마에는 `CloseReadinessBlocker`를 씁니다.
 
 ### `CloseReadinessBlocker`
 
@@ -869,7 +869,7 @@ Related references:
 - [템플릿 본문](template-bodies.md)
 
 Usage note:
-- 스키마 이름을 닫기 준비 상태 전체 개념처럼 쓰지 않습니다.
+- 개념은 산문 용어로, 스키마는 식별자로 이름 붙입니다.
 
 ### blocker category
 
@@ -893,7 +893,7 @@ Related references:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 Usage note:
-- 정확한 필드 이름을 말할 때는 `CloseReadinessBlocker.category`를 보존합니다.
+- 정확한 필드 이름은 `CloseReadinessBlocker.category`입니다.
 
 ### complete intent
 
@@ -918,7 +918,7 @@ Related references:
 - [용어 지도](../../terminology-map.yaml)
 
 Usage note:
-- `complete`는 enum 값이나 명시적 식별자일 때만 보존하고, 일반 산문에서는 전체나 전체 평가처럼 씁니다.
+- `complete`는 enum 값이나 정확한 식별자일 때만 씁니다.
 
 ### full evaluation order
 
@@ -942,7 +942,7 @@ Related references:
 - [용어 지도](../../terminology-map.yaml)
 
 Usage note:
-- 영어에서는 `intent=complete`와 헷갈릴 수 있는 자리에서 full이나 entire를 씁니다.
+- 일반 산문 의미에는 full이나 entire를 씁니다.
 
 ### artifact
 
@@ -990,7 +990,7 @@ Related references:
 - [저장소 기록](storage-records.md)
 
 Usage note:
-- 증거는 최종 수락, 잔여 위험 수락, 포괄적 검증, 아티팩트 존재를 대신하지 않습니다.
+- 수락과 잔여 위험 계열 용어와 구분합니다.
 
 ### `ArtifactRef`
 
@@ -1013,7 +1013,7 @@ Related references:
 - [아티팩트 저장소](storage-artifacts.md)
 
 Usage note:
-- 표시된 참조만으로 본문 읽기 권한이나 증거 충분성이 증명되지는 않습니다.
+- 참조 생명주기 세부사항은 아티팩트 스키마 담당 문서를 따릅니다.
 
 ### `ArtifactInput`
 
@@ -1036,7 +1036,7 @@ Related references:
 - 없음.
 
 Usage note:
-- 아티팩트 입력만으로 지속 아티팩트 권한이 생기지는 않습니다.
+- 입력 세부사항은 아티팩트 스키마 담당 문서를 따릅니다.
 
 ### `StagedArtifactHandle`
 
@@ -1059,7 +1059,7 @@ Related references:
 - [아티팩트 저장소](storage-artifacts.md)
 
 Usage note:
-- 스테이징된 핸들은 임시 값이며 그 자체로 지속 아티팩트 권한이 아닙니다.
+- 핸들 세부사항은 아티팩트 스키마 담당 문서를 따릅니다.
 
 ### projection
 
@@ -1082,7 +1082,7 @@ Related references:
 - [템플릿 본문](template-bodies.md)
 
 Usage note:
-- 렌더링된 표시를 Core 상태, 증거, 수락, 권한으로 보지 않습니다.
+- 권한 세부사항은 상태 보기 담당 문서를 따릅니다.
 
 ### `Projection`
 
@@ -1106,7 +1106,7 @@ Related references:
 - [API 상태 스키마](api/schema-state.md)
 
 Usage note:
-- 상태 보기를 그 상태 보기가 요약하는 담당 기록처럼 보지 않습니다.
+- 라벨 세부사항은 상태 보기 담당 문서를 따릅니다.
 
 ### surface
 
@@ -1153,7 +1153,7 @@ Related references:
 - [보안](security.md)
 
 Usage note:
-- `surface_id`를 권한, 도달 가능성, 접근, 바인딩, 역량의 증거로 보지 않습니다.
+- 접점 식별 세부사항은 에이전트 통합 문서를 따릅니다.
 
 ### active surface context
 
@@ -1176,7 +1176,7 @@ Related references:
 - [보안](security.md)
 
 Usage note:
-- 현재 적용 접점 맥락만으로 권한, 접근, 바인딩, 역량이 증명된다고 보지 않습니다.
+- 접점 맥락 세부사항은 에이전트 통합 문서를 따릅니다.
 
 ### `state_version`
 
@@ -1201,7 +1201,7 @@ Related references:
 - [저장 효과](storage-effects.md)
 
 Usage note:
-- `state_version` 표현을 재사용해 Task별 또는 상태 보기별 상태 시계를 만들지 않습니다.
+- 상태 시계 세부사항은 저장소 버전 관리 문서를 따릅니다.
 
 ### runtime
 
@@ -1248,7 +1248,7 @@ Related references:
 - [쓰기 준비 메서드](api/method-prepare-write.md)
 
 Usage note:
-- OS 권한, 명령 승인, 민감 동작 승인이 아닙니다.
+- 명령 승인, 민감 동작 승인과 구분합니다.
 
 ### sensitive approval
 
@@ -1273,7 +1273,7 @@ Related references:
 - [보안](security.md)
 
 Usage note:
-- 영어 산문에서는 sensitive-action approval을 기본 표현으로 쓰고, 이를 `Write Authorization`이나 최종 수락으로 보지 않습니다.
+- 영어 산문에서는 sensitive-action approval을 기본 표현으로 씁니다.
 
 ### access class
 
@@ -1297,7 +1297,7 @@ Related references:
 - [보안](security.md)
 
 Usage note:
-- 접근 등급을 OS 권한이나 광범위한 권한으로 보지 않습니다.
+- 값 이름은 API 값 집합, 보장 표현은 보안 문서를 따릅니다.
 
 ### baseline guarantee
 
@@ -1311,7 +1311,7 @@ Type:
 - 보안 용어
 
 Meaning:
-- 기준 범위와 보안 담당 문서가 모두 기준 범위에서 지원된다고 문서화한 보장만 기준 범위 보장입니다.
+- 기준 범위 보장은 기준 범위에서 지원되는 보장을 가리킵니다.
 
 Primary owner:
 - [보안](security.md)
@@ -1321,7 +1321,7 @@ Related references:
 - [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- 예약된 라벨이나 프로필 조건부 라벨을 기준 범위 보장처럼 쓰지 않습니다.
+- 보장 수준은 보안 문서를 따릅니다.
 
 ### cooperative guarantee
 
@@ -1344,7 +1344,7 @@ Related references:
 - 없음.
 
 Usage note:
-- 협력형 표현을 탐지형, 샌드박스, 강제 차단, 더 강한 격리 표현으로 강화하지 않습니다.
+- 보장 강도는 보안 문서를 따릅니다.
 
 ### detective guarantee
 
@@ -1367,7 +1367,7 @@ Related references:
 - [에이전트 통합](agent-integration.md)
 
 Usage note:
-- 전체 모니터링이나 예방을 주장하지 않습니다.
+- 보장 강도는 보안 문서를 따릅니다.
 
 ### design-quality owner boundary
 
@@ -1438,7 +1438,7 @@ Related references:
 - [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- 값 집합에 있다는 이유만으로 프로필 조건부 값을 기준 범위 동작처럼 쓰지 않습니다.
+- 지원 상태는 기준 범위 문서를 따릅니다.
 
 ### `ErrorCode`
 
@@ -1464,7 +1464,7 @@ Related references:
 - [API 오류 세부사항](api/error-details.md)
 
 Usage note:
-- 공개 `ErrorCode` 값을 기본적으로 `CloseReadinessBlocker.category`나 `CloseReadinessBlocker.code` 값으로 보지 않습니다.
+- 공개 코드 의미는 API 오류 코드 문서를 따릅니다.
 
 ### error code meanings
 
@@ -1491,7 +1491,7 @@ Related references:
 - [API 오류 세부사항](api/error-details.md)
 
 Usage note:
-- 공개 오류 코드 의미를 우선순위 선택, 응답 분기 처리, `ToolError.details` 정의, 닫기 차단 사유 처리 경로로 쓰지 않습니다.
+- 이웃 관심사는 각 API 오류 담당 문서를 따릅니다.
 
 ### error precedence
 
@@ -1518,7 +1518,7 @@ Related references:
 - [API 오류 세부사항](api/error-details.md)
 
 Usage note:
-- 오류 우선순위로 오류 코드 의미, 응답 분기, `ToolError.details`, 닫기 차단 사유 처리 경로를 정의하지 않습니다.
+- 이웃 관심사는 각 API 오류 담당 문서를 따릅니다.
 
 ### error routing
 
@@ -1546,7 +1546,7 @@ Related references:
 - [API 오류 세부사항](api/error-details.md)
 
 Usage note:
-- 오류 처리 경로를 공개 `ErrorCode` 의미, 오류 우선순위, `ToolError.details`, 닫기 차단 사유 처리 경로로 쓰지 않습니다.
+- 이웃 관심사는 각 API 오류 담당 문서를 따릅니다.
 
 ### blocker routing
 
@@ -1578,7 +1578,7 @@ Related references:
 - [템플릿 본문](template-bodies.md)
 
 Usage note:
-- `harness.close_task` 메서드별 동작은 Task 닫기 메서드 담당 문서가 맡습니다.
+- 이 경계는 차단 사유 처리 경로 문서를 따릅니다.
 
 ### error/blocker boundary
 
@@ -1602,7 +1602,7 @@ Related references:
 - [API 오류 코드](api/error-codes.md)
 
 Usage note:
-- 공개 오류 코드와 차단 사유를 같은 코드 공간으로 보지 않습니다.
+- 이 경계는 API 차단 사유 처리 경로 문서를 따릅니다.
 
 ### public error as blocker
 
@@ -1626,7 +1626,7 @@ Related references:
 - [API 오류 코드](api/error-codes.md)
 
 Usage note:
-- 공개 `ErrorCode` 값을 자동으로 `CloseReadinessBlocker.code`에 복사하지 않습니다.
+- 이 좁은 경우는 API 차단 사유 처리 경로 문서를 따릅니다.
 
 ### `ToolError.details`
 
@@ -1651,7 +1651,7 @@ Related references:
 - [API 오류 처리 경로](api/error-routing.md)
 
 Usage note:
-- 세부사항 보조 값을 최상위 공개 `ErrorCode` 값처럼 쓰지 않습니다.
+- 중첩 세부 값은 API 오류 세부사항 문서를 따릅니다.
 
 ### detail helper values
 
@@ -1677,7 +1677,7 @@ Related references:
 - [API 오류 처리 경로](api/error-routing.md)
 
 Usage note:
-- 세부사항 보조 값을 최상위 공개 `ErrorCode` 값처럼 쓰지 않습니다.
+- 중첩 세부 값은 API 오류 세부사항 문서를 따릅니다.
 
 ### dry-run preview routing
 
@@ -1703,7 +1703,7 @@ Related references:
 - [저장 효과](storage-effects.md)
 
 Usage note:
-- dry-run 미리보기 처리 경로로 `ToolDryRunResponse` 형태, 메서드별 `dry_run` 지원 여부, 저장 효과를 정의하지 않습니다.
+- 이웃 세부사항은 메서드, 스키마, 저장소 담당 문서를 따릅니다.
 
 ### blocked result
 
@@ -1754,7 +1754,7 @@ Related references:
 - [저장 효과](storage-effects.md)
 
 Usage note:
-- 거부 응답을 차단 결과, 닫기 차단 사유, 커밋된 결과처럼 보지 않습니다.
+- 분기 세부사항은 API 오류 처리 경로 문서를 따릅니다.
 
 ### migration
 
@@ -1777,7 +1777,7 @@ Related references:
 - [저장소 개요](storage.md)
 
 Usage note:
-- 기술 마이그레이션을 이전 선택이나 이전 결정으로 옮기지 않습니다.
+- 한국어 기술 문맥에서는 마이그레이션을 씁니다.
 
 ### lifecycle
 
@@ -1801,4 +1801,4 @@ Related references:
 - [아티팩트 저장소](storage-artifacts.md)
 
 Usage note:
-- `Task.lifecycle_phase`, `artifact_staging.status` 같은 정확한 식별자는 보존합니다.
+- 생명주기 필드나 값은 정확한 식별자로 이름 붙입니다.

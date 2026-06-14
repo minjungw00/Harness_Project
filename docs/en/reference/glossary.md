@@ -6,7 +6,7 @@ It does not define exact schemas, value sets, DDL, storage effects, security mec
 
 ## How to use this glossary
 
-Use the summary table as a compact routing aid. Use the term cards as the editable terminology source for each term.
+Use the summary table as a compact routing aid. Use the term cards as the editable terminology source for each term. Term cards stay short: they define the term, name the Korean term, identify the term type, and route readers to the primary owner.
 
 Each term card uses these ownership fields:
 
@@ -117,7 +117,7 @@ Related references:
 - [Runtime Boundaries](runtime-boundaries.md)
 
 Usage note:
-- Preserve Harness when naming the product; do not treat this documentation repository as a running server.
+- Use Harness for the product name.
 
 ### Product Repository
 
@@ -140,7 +140,7 @@ Related references:
 - None.
 
 Usage note:
-- Preserve `Product Repository` when naming the boundary.
+- Use the exact label when naming this boundary.
 
 ### Harness Runtime Home
 
@@ -163,7 +163,7 @@ Related references:
 - None.
 
 Usage note:
-- Preserve `Harness Runtime Home` when naming the boundary.
+- Use the exact label when naming this boundary.
 
 ### documentation
 
@@ -210,7 +210,7 @@ Related references:
 - [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Do not describe out-of-scope capabilities or profile-gated values as baseline requirements.
+- Use Scope for support-status detail.
 
 ### supported scope
 
@@ -233,7 +233,7 @@ Related references:
 - None.
 
 Usage note:
-- Do not use supported scope for the currently applied scope inside a `Task` or Change Unit.
+- Use active scope for the currently applied `Task` or Change Unit boundary.
 
 ### supported behavior
 
@@ -256,7 +256,7 @@ Related references:
 - [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Do not infer support from value-set presence, examples, route summaries, or owner-routing terminology.
+- Use Scope and the semantic owner for support questions.
 
 ### supported API method
 
@@ -279,7 +279,7 @@ Related references:
 - None.
 
 Usage note:
-- Preserve exact method identifiers when naming public API methods.
+- Use exact method identifiers when naming public API methods.
 
 ### supported API value
 
@@ -325,7 +325,7 @@ Related references:
 - None.
 
 Usage note:
-- Do not call deferred material a baseline requirement.
+- Route support-status questions to Scope.
 
 ### evidence collection workflow
 
@@ -339,7 +339,7 @@ Type:
 - out-of-scope capability wording
 
 Meaning:
-- Evidence collection workflow wording names a capability area that remains terminology or out-of-scope wording unless support is defined.
+- Evidence collection workflow wording names a capability area.
 
 Primary owner:
 - [Scope](scope.md)
@@ -348,7 +348,7 @@ Related references:
 - [Terminology Map](../../terminology-map.yaml)
 
 Usage note:
-- Baseline evidence is recorded evidence and evidence summaries, not a collection workflow feature by name alone.
+- Use Scope for support status.
 
 ### expanded or additional evidence collection workflows
 
@@ -373,7 +373,7 @@ Related references:
 - [Terminology Map](../../terminology-map.yaml)
 
 Usage note:
-- Do not define workflow outputs, storage records, or close-readiness behavior from this phrase.
+- Use Scope and affected owners for contract detail.
 
 ### owner document
 
@@ -419,7 +419,7 @@ Related references:
 - [Terminology Map](../../terminology-map.yaml)
 
 Usage note:
-- Use it when product behavior depends on an owner-defined contract, not when route metadata itself is the contract.
+- Use it for the contract defined by an owner document.
 
 ### applicable owner path
 
@@ -443,7 +443,7 @@ Related references:
 - [doc-index.yaml](../../doc-index.yaml)
 
 Usage note:
-- Use this only for documentation routing; do not use `active` for owner routes.
+- Use only for documentation routing.
 
 ### applicable reference
 
@@ -467,7 +467,7 @@ Related references:
 - [Terminology Map](../../terminology-map.yaml)
 
 Usage note:
-- Treat it as documentation routing shorthand, not runtime state or a storage condition.
+- Use only as documentation-routing shorthand.
 
 ### existing owner
 
@@ -493,7 +493,7 @@ Related references:
 - [doc-index.yaml](../../doc-index.yaml)
 
 Usage note:
-- Do not name an owner placeholder as an existing canonical owner.
+- Use only for owner documents that already exist.
 
 ### promotion-time owner update
 
@@ -516,7 +516,7 @@ Related references:
 - [Authoring Guide](../maintain/authoring-guide.md)
 
 Usage note:
-- Promotion may require creating or designating an owner before updating scope, API, storage, templates, checks, and paired-language docs.
+- Use when discussing promotion planning; Scope owns the support boundary.
 
 ### owner placeholder
 
@@ -539,7 +539,7 @@ Related references:
 - [Scope](scope.md)
 
 Usage note:
-- Do not route readers to a placeholder as if it were an existing canonical owner.
+- Use only to signal an owner gap.
 
 ### `Task`
 
@@ -563,7 +563,7 @@ Related references:
 - [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Preserve identifiers such as `Task`, `task_id`, and `active_task_id`.
+- Use exact identifiers when naming the entity or fields.
 
 ### scope
 
@@ -587,7 +587,7 @@ Related references:
 - [API Judgment Schemas](api/schema-judgment.md)
 
 Usage note:
-- Preserve exact identifiers such as `scope`, `scope_decision`, `AuthorizedAttemptScope`, and `SensitiveActionScope`.
+- Use exact identifiers when naming schema or API fields.
 
 ### active scope
 
@@ -611,7 +611,7 @@ Related references:
 - [Update-scope method](api/method-update-scope.md)
 
 Usage note:
-- Do not use active scope to mean baseline scope, supported scope, or a documentation contract.
+- Keep active scope distinct from baseline or supported scope.
 
 ### active Change Unit
 
@@ -634,7 +634,7 @@ Related references:
 - [Update-scope method](api/method-update-scope.md)
 
 Usage note:
-- Preserve Change Unit as the product term in Korean prose.
+- Keep Change Unit as the product term in Korean prose.
 
 ### user-owned judgment
 
@@ -648,7 +648,7 @@ Type:
 - Core authority term
 
 Meaning:
-- User-owned judgment is a decision Harness must ask for or preserve instead of inferring.
+- User-owned judgment is a decision reserved to the user.
 
 Primary owner:
 - [Core Model](core-model.md)
@@ -657,7 +657,7 @@ Related references:
 - [API Judgment Schemas](api/schema-judgment.md)
 
 Usage note:
-- Do not treat broad approval as acceptance, risk acceptance, scope change, sensitive-action approval, or `Write Authorization`.
+- Keep it distinct from acceptance and authorization terms.
 
 ### `UserJudgment`
 
@@ -681,7 +681,7 @@ Related references:
 - [User judgment methods](api/method-user-judgment.md)
 
 Usage note:
-- Do not use the schema name as the whole user-owned judgment concept.
+- Use the prose term for the concept and the schema identifier for the schema.
 
 ### close readiness
 
@@ -708,7 +708,7 @@ Related references:
 - [Template Bodies](template-bodies.md)
 
 Usage note:
-- This is the evaluation concept, not the `CloseReadinessBlocker` schema.
+- Use schema terms only when naming the schema.
 
 ### close readiness evaluation
 
@@ -722,7 +722,7 @@ Type:
 - close-task method term
 
 Meaning:
-- Close readiness evaluation is the method-specific evaluation that derives close readiness and remaining blockers.
+- Close readiness evaluation names the method-owned evaluation for close readiness.
 
 Primary owner:
 - [Close-task method](api/method-close-task.md)
@@ -734,7 +734,7 @@ Related references:
 - [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Preserve `harness.close_task`, `CloseTaskResult`, and `CloseReadinessBlocker` when naming exact API elements.
+- Use the method owner for evaluation detail.
 
 ### close task
 
@@ -775,7 +775,7 @@ Type:
 - API method behavior term
 
 Meaning:
-- Close task behavior is method-specific request validation, evaluation order, result branching, dry-run behavior, and blocker production.
+- Close task behavior names method-specific behavior of `harness.close_task`.
 
 Primary owner:
 - [Close-task method](api/method-close-task.md)
@@ -787,7 +787,7 @@ Related references:
 - [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Do not use close task behavior as the owner for Core close-readiness meaning or blocker/API response routing.
+- Use the method owner for method-specific detail.
 
 ### `harness.close_task`
 
@@ -814,7 +814,7 @@ Related references:
 - [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Route method-specific behavior to the method owner; route Core close-readiness meaning and blocker/API response routing to their own owners.
+- Use the method owner for method-specific detail.
 
 ### close-readiness blocker
 
@@ -829,7 +829,7 @@ Type:
 - API blocker-routing term
 
 Meaning:
-- A close-readiness blocker is the close-relevant blocker data routed after a valid close-readiness evaluation finds close is blocked.
+- A close-readiness blocker is close-relevant blocker data.
 
 Primary owner:
 - [API blocker routing](api/blocker-routing.md)
@@ -842,7 +842,7 @@ Related references:
 - [Template Bodies](template-bodies.md)
 
 Usage note:
-- Use the Korean prose term 닫기 차단 사유 and preserve `CloseReadinessBlocker` only when naming the schema.
+- Use 닫기 차단 사유 in Korean prose; use `CloseReadinessBlocker` for the schema.
 
 ### `CloseReadinessBlocker`
 
@@ -869,7 +869,7 @@ Related references:
 - [Template Bodies](template-bodies.md)
 
 Usage note:
-- Do not use the schema name as the whole close-readiness concept.
+- Use the prose term for the concept and the schema identifier for the schema.
 
 ### blocker category
 
@@ -893,7 +893,7 @@ Related references:
 - [API blocker routing](api/blocker-routing.md)
 
 Usage note:
-- Preserve `CloseReadinessBlocker.category` when naming the exact field.
+- Use `CloseReadinessBlocker.category` when naming the exact field.
 
 ### complete intent
 
@@ -918,7 +918,7 @@ Related references:
 - [Terminology Map](../../terminology-map.yaml)
 
 Usage note:
-- Preserve `complete` only when it is an enum value or explicit identifier; use full or entire for ordinary prose meaning.
+- Use `complete` only for the enum value or exact identifier.
 
 ### full evaluation order
 
@@ -942,7 +942,7 @@ Related references:
 - [Terminology Map](../../terminology-map.yaml)
 
 Usage note:
-- Prefer full or entire in English when complete could be confused with `intent=complete`.
+- Use full or entire for ordinary prose meaning.
 
 ### artifact
 
@@ -990,7 +990,7 @@ Related references:
 - [Storage Records](storage-records.md)
 
 Usage note:
-- Evidence is not final acceptance, residual-risk acceptance, broad verification, or artifact availability by itself.
+- Keep acceptance and residual-risk terms separate.
 
 ### `ArtifactRef`
 
@@ -1013,7 +1013,7 @@ Related references:
 - [Artifact Storage](storage-artifacts.md)
 
 Usage note:
-- A displayed ref is not proof of readable bytes or evidence sufficiency.
+- Use the artifact schema owner for ref lifecycle detail.
 
 ### `ArtifactInput`
 
@@ -1021,7 +1021,7 @@ Term:
 - `ArtifactInput`
 
 Korean term:
-- `ArtifactInput`; user-facing prose may use provided artifact when not naming the schema.
+- `ArtifactInput`; user-facing prose may use 제공할 아티팩트 when not naming the schema.
 
 Type:
 - API schema
@@ -1036,7 +1036,7 @@ Related references:
 - None.
 
 Usage note:
-- Artifact input is not persistent artifact authority by itself.
+- Use the artifact schema owner for input detail.
 
 ### `StagedArtifactHandle`
 
@@ -1059,7 +1059,7 @@ Related references:
 - [Artifact Storage](storage-artifacts.md)
 
 Usage note:
-- A staged handle is transient and is not persistent artifact authority by itself.
+- Use the artifact schema owner for handle detail.
 
 ### projection
 
@@ -1082,7 +1082,7 @@ Related references:
 - [Template Bodies](template-bodies.md)
 
 Usage note:
-- Do not treat rendered display as Core state, evidence, acceptance, or authority.
+- Use the projection owner for authority detail.
 
 ### `Projection`
 
@@ -1106,7 +1106,7 @@ Related references:
 - [API State Schemas](api/schema-state.md)
 
 Usage note:
-- Do not treat a projected display as the authority record it summarizes.
+- Use the projection owner for label detail.
 
 ### surface
 
@@ -1153,7 +1153,7 @@ Related references:
 - [Security](security.md)
 
 Usage note:
-- Do not treat `surface_id` as proof of permission, reachability, access, binding, or capability.
+- Use Agent Integration for surface-identity detail.
 
 ### active surface context
 
@@ -1176,7 +1176,7 @@ Related references:
 - [Security](security.md)
 
 Usage note:
-- Do not treat active surface context as proof of authority, access, binding, or capability by itself.
+- Use Agent Integration for context detail.
 
 ### `state_version`
 
@@ -1201,7 +1201,7 @@ Related references:
 - [Storage Effects](storage-effects.md)
 
 Usage note:
-- Do not create Task-local or projection-local state clocks by reusing `state_version` wording.
+- Use Storage Versioning for state-clock detail.
 
 ### runtime
 
@@ -1248,7 +1248,7 @@ Related references:
 - [Prepare-write method](api/method-prepare-write.md)
 
 Usage note:
-- It is not OS permission, command approval, or sensitive-action approval.
+- Keep this label distinct from command approval and sensitive approval.
 
 ### sensitive approval
 
@@ -1273,7 +1273,7 @@ Related references:
 - [Security](security.md)
 
 Usage note:
-- Prefer sensitive-action approval in English prose; do not treat it as `Write Authorization` or final acceptance.
+- Prefer sensitive-action approval in English prose.
 
 ### access class
 
@@ -1297,7 +1297,7 @@ Related references:
 - [Security](security.md)
 
 Usage note:
-- Do not treat access class as OS permission or broad authority.
+- Use API Value Sets for value names and Security for guarantee wording.
 
 ### baseline guarantee
 
@@ -1311,7 +1311,7 @@ Type:
 - security term
 
 Meaning:
-- A guarantee is a baseline guarantee only when Scope and Security document it as supported in the baseline scope.
+- Baseline guarantee names a guarantee supported in the baseline scope.
 
 Primary owner:
 - [Security](security.md)
@@ -1321,7 +1321,7 @@ Related references:
 - [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Do not treat reserved or profile-gated labels as baseline guarantees.
+- Use Security for guarantee level.
 
 ### cooperative guarantee
 
@@ -1344,7 +1344,7 @@ Related references:
 - None.
 
 Usage note:
-- Do not strengthen cooperative wording into detective, sandboxed, enforced, or stronger-isolation wording.
+- Use Security for guarantee strength.
 
 ### detective guarantee
 
@@ -1367,7 +1367,7 @@ Related references:
 - [Agent Integration](agent-integration.md)
 
 Usage note:
-- Do not claim full monitoring or prevention from detective wording.
+- Use Security for guarantee strength.
 
 ### design-quality owner boundary
 
@@ -1438,7 +1438,7 @@ Related references:
 - [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Do not treat a profile-gated value as baseline behavior because it appears in a value set.
+- Use Scope for support status.
 
 ### `ErrorCode`
 
@@ -1464,7 +1464,7 @@ Related references:
 - [API error details](api/error-details.md)
 
 Usage note:
-- Do not treat public `ErrorCode` values as `CloseReadinessBlocker.category` or `CloseReadinessBlocker.code` values by default.
+- Use the error-code owner for public code meanings.
 
 ### error code meanings
 
@@ -1491,7 +1491,7 @@ Related references:
 - [API error details](api/error-details.md)
 
 Usage note:
-- Do not use error-code meanings to choose precedence, route response branches, define `ToolError.details`, or route close-readiness blockers.
+- Use the focused API error owners for neighboring concerns.
 
 ### error precedence
 
@@ -1518,7 +1518,7 @@ Related references:
 - [API error details](api/error-details.md)
 
 Usage note:
-- Do not use error precedence to define code meanings, response branches, `ToolError.details`, or close-readiness blocker routing.
+- Use the focused API error owners for neighboring concerns.
 
 ### error routing
 
@@ -1546,7 +1546,7 @@ Related references:
 - [API error details](api/error-details.md)
 
 Usage note:
-- Do not use error routing for public `ErrorCode` meaning, error precedence, `ToolError.details`, or close-readiness blocker routing.
+- Use the focused API error owners for neighboring concerns.
 
 ### blocker routing
 
@@ -1578,7 +1578,7 @@ Related references:
 - [Template Bodies](template-bodies.md)
 
 Usage note:
-- Method-specific `harness.close_task` behavior belongs to the close-task method owner.
+- Use the blocker-routing owner for this boundary.
 
 ### error/blocker boundary
 
@@ -1602,7 +1602,7 @@ Related references:
 - [API error codes](api/error-codes.md)
 
 Usage note:
-- Do not treat public error codes and blockers as the same code space.
+- Use API blocker routing for this boundary.
 
 ### public error as blocker
 
@@ -1626,7 +1626,7 @@ Related references:
 - [API error codes](api/error-codes.md)
 
 Usage note:
-- Do not automatically copy public `ErrorCode` values into `CloseReadinessBlocker.code`.
+- Use API blocker routing for this narrow case.
 
 ### `ToolError.details`
 
@@ -1651,7 +1651,7 @@ Related references:
 - [API error routing](api/error-routing.md)
 
 Usage note:
-- Do not treat detail helper values as top-level public `ErrorCode` values.
+- Use API error details for nested detail values.
 
 ### detail helper values
 
@@ -1677,7 +1677,7 @@ Related references:
 - [API error routing](api/error-routing.md)
 
 Usage note:
-- Do not treat detail helper values as top-level public `ErrorCode` values.
+- Use API error details for nested detail values.
 
 ### dry-run preview routing
 
@@ -1703,7 +1703,7 @@ Related references:
 - [Storage Effects](storage-effects.md)
 
 Usage note:
-- Do not use dry-run preview routing to define `ToolDryRunResponse` shape, method support for `dry_run`, or storage effects.
+- Use focused method, schema, and storage owners for neighboring details.
 
 ### blocked result
 
@@ -1754,7 +1754,7 @@ Related references:
 - [Storage Effects](storage-effects.md)
 
 Usage note:
-- Do not treat a rejected response as a blocked result, close blocker, or committed outcome.
+- Use API error routing for branch detail.
 
 ### migration
 
@@ -1777,7 +1777,7 @@ Related references:
 - [Storage Overview](storage.md)
 
 Usage note:
-- Do not translate technical migration as previous choice or prior decision.
+- Use 마이그레이션 for the technical concept in Korean prose.
 
 ### lifecycle
 
@@ -1801,4 +1801,4 @@ Related references:
 - [Artifact Storage](storage-artifacts.md)
 
 Usage note:
-- Preserve exact identifiers such as `Task.lifecycle_phase` and `artifact_staging.status`.
+- Use exact identifiers when naming lifecycle fields or values.

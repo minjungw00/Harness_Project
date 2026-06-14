@@ -15,9 +15,9 @@
 - 같은 독자 목적
 - 같은 규범 강도
 - 같은 기준 범위/지원 범위 밖 경계
-- 같은 담당 문서 경로
-- 같은 사용자 판단, 증거, 검증, 수락, 잔여 위험 경계
-- 같은 보안 보장 수준
+- 대응 자료에 이미 있는 담당 문서 참조를 같은 의미로 다루는지
+- 대응 자료에 이미 있는 사용자 판단, 증거, 검증, 수락, 잔여 위험 경계를 같은 의미로 다루는지
+- 대응 자료에 이미 있는 보안 보장 표현을 같은 수준으로 다루는지
 - 같은 정확한 식별자
 
 의미가 바뀐 작업을 한 언어만 고친 채 끝내지 않습니다. 한국어를 다듬다가 영어 의미 문제가 보이면 영어도 함께 고칩니다. 영어에 제품 개념을 추가했다면 같은 작업 묶음에서 자연스러운 한국어 대응 표현을 한국어 문서에 넣습니다.
@@ -40,24 +40,15 @@
 - `docs/*/maintain/checks.md`
 - `docs/*/maintain/checks/*.md`
 
-계약 담당 문서는 대응되는 [Reference Index](../../en/reference/README.md) / [참조 색인](../reference/README.md)에서 고릅니다. 경로 문서나 유지보수 문서가 스키마, DDL, API 계약, 보안 보장, 상태 보기 동작, 런타임 상태의 중복 담당 문서가 되면 안 됩니다.
+담당 문서 찾기는 작성 가이드와 `docs/doc-index.yaml`이 담당합니다. 번역 작업에서는 기존 담당 문서 참조의 의미를 보존하고, 이 가이드에 계약 세부사항을 추가하지 않습니다.
 
 일반 에이전트 작업에서는 같은 `doc_id`의 한 언어만 불러옵니다. 번역, 의미 일치 검토, 비교가 필요한 이중 언어 편집일 때만 두 언어를 함께 봅니다.
 
 ## 3. 식별자 보존
 
-정확한 식별자는 영어와 한국어에서 그대로 보존합니다. 코드, 스키마, 경로, 검색 기준으로 쓰이는 값은 산문에 나올 때 백틱으로 감쌉니다.
+`docs/terminology-map.yaml`이 체계적인 식별자 분류, 정확한 식별자 목록, 정확한 제품 라벨을 담당합니다. 그 값은 영어와 한국어에서 그대로 보존합니다. 코드, 스키마, 경로, 검색 기준으로 쓰이는 값은 산문에 나올 때 백틱으로 감쌉니다.
 
-아래 항목은 정확히 보존합니다.
-
-- 파일 경로, 앵커, `doc_id` 값
-- API 메서드, 도구 이름, 리소스 이름, MCP 메서드 이름
-- 스키마 이름, 스키마 필드, 객체 이름
-- enum 값, 상태 값, 오류 코드, validator ID, 테이블 이름
-- DDL, 열 이름, 저장소 식별자, 템플릿 이름, 코드 리터럴
-    - `Product Repository`, `Harness Runtime Home`, `Projection`, `Write Authorization`처럼 의도적으로 정확해야 하는 하네스 라벨
-
-코드 블록, 스키마 예시, API 예시, 파일 경로, 필드 목록, 리터럴 값 표 안의 정확한 문자열은 번역하지 않습니다. 한국어 표시 라벨은 독자를 위한 문구일 뿐이며 기준 식별자를 대신하지 않습니다.
+코드 블록, 스키마 예시, API 예시, 파일 경로, 필드 목록, 리터럴 값 표, 기계 판독용 메타데이터 안의 정확한 문자열은 번역하지 않습니다. 한국어 표시 라벨은 독자를 위한 문구일 뿐이며 기준 식별자를 대신하지 않습니다.
 
 구분 예시는 아래와 같습니다.
 
@@ -69,57 +60,43 @@
 
 ## 4. 제품 개념 용어
 
-[docs/terminology-map.yaml](../../terminology-map.yaml)을 제품 개념과 금지할 혼합어의 기준 용어 지도로 사용합니다. 이 가이드는 유지보수자가 읽는 기준이고, 용어 지도는 기계 판독 가능한 통제 파일입니다.
+[docs/terminology-map.yaml](../../terminology-map.yaml)을 제품 개념과 금지할 혼합어의 기준 용어 지도로 사용합니다. 이 가이드는 산문 번역 기준을 제공하고, 용어 지도는 기계 판독 가능한 통제 파일입니다.
 
-하나의 개념에는 하나의 한국어 표현을 씁니다. 단, 용어 지도가 사용자 문서와 참조 문서의 표현을 나누는 경우에는 그 구분을 따릅니다.
+하나의 개념에는 하나의 한국어 표현을 씁니다. 단, 용어 지도가 사용자 문서와 참조 문서의 표현을 나누는 경우에는 그 구분을 따릅니다. 아래 표는 산문 문체 보조 자료이며, 담당 경로나 제품 계약 요약이 아닙니다.
 
-| 영어 개념 | 한국어 산문 | 식별자 또는 라벨 규칙 |
+| 영어 개념 | 참조 문서 한국어 | 사용자 문서 또는 문체 메모 |
 |---|---|---|
-| close readiness, 참조 문서 | 닫기 준비 상태 | `CloseReadinessBlocker` 같은 식별자는 보존합니다. |
-| close readiness, 사용자 문서 | 닫기 가능 여부 | 사용자가 작업을 닫을 수 있는지 설명할 때 씁니다. |
-| close readiness evaluation | 닫기 준비 상태 평가 | 영어와 한국어를 섞은 평가 표현을 쓰지 않습니다. |
-| close task | Task 닫기 | 정확한 공개 API 메서드 식별자를 말할 때는 `harness.close_task`를 보존합니다. |
-| close-readiness blocker | 닫기 차단 사유 | 닫기와 관련된 차단 사유입니다. 스키마를 이름 붙일 때는 `CloseReadinessBlocker`를 보존합니다. |
-| blocker category | 차단 사유 범주 | `CloseReadinessBlocker.category`처럼 정확한 필드 이름을 말할 때는 식별자를 보존합니다. |
-| 식별자로서 `complete` | `complete` | `intent=complete`처럼 enum 값이나 식별자일 때만 보존합니다. 일반 형용사 뜻이면 전체나 전체 평가처럼 옮깁니다. |
-| full evaluation order | 전체 평가 순서, 닫기 준비 상태 맥락에서는 전체 닫기 준비 상태 평가 순서 | 전체 순서 뜻으로 `complete`를 붙이지 않습니다. |
-| artifact | 아티팩트 | `ArtifactRef`, `ArtifactInput`, `StagedArtifactHandle`은 보존합니다. 아티팩트가 있다는 사실만으로 증거 충분성이 성립한다고 쓰지 않습니다. |
-| evidence | 증거 | `EvidenceSummary`, `EvidenceCoverageItem`, `evidence_summary`는 보존합니다. |
-| evidence collection workflow | 증거 수집 흐름 | 범위와 영향받는 담당 문서가 지원을 정의하기 전에는 용어 또는 지원 범위 밖 기능 표현으로만 씁니다. |
-| expanded or additional evidence collection workflows | 확장 또는 추가 증거 수집 흐름 | 지원 범위 밖 기능 묶음입니다. 이 표현만으로 흐름의 산출물, 저장 동작, 닫기 준비 상태 동작을 정의하지 않습니다. |
-| surface | 접점 | `surface_id`는 보존하고, 권한 증거처럼 들리게 쓰지 않습니다. |
-| active surface context | 현재 적용 접점 맥락 | 요청이나 상호작용에 현재 적용되는 런타임 또는 세션의 접점 맥락에 씁니다. `VerifiedSurfaceContext`는 보존합니다. |
-| lifecycle | 생명주기 | 식별자가 아니라면 한국어 산문에 영어 용어를 남기지 않습니다. |
-| projection | 상태 보기 | 정확한 하네스 라벨이 필요할 때만 `Projection`을 씁니다. |
-| user-owned judgment | 사용자 소유 판단 | 수락, 잔여 위험 수락과 구분합니다. |
-| sensitive-action approval | 민감 동작 승인 | `Write Authorization`처럼 설명하지 않습니다. |
-| Write Authorization | 쓰기 권한 부여, 또는 라벨로서 `Write Authorization` | 하네스 기록 이름을 말할 때는 정확한 라벨을 보존합니다. |
-| cooperative guarantee | 협력형 보장 | 탐지형, 샌드박싱, 강제 차단, 더 강한 격리 표현으로 강화하지 않습니다. |
-| detective guarantee | 탐지형 보장 | 문서화된 관찰 범위가 뒷받침할 때만 씁니다. |
-| baseline scope | 기준 범위 | 안정적인 범위 계약입니다. 지원 범위 밖 기능이나 현재 `Task` 또는 Change Unit 범위를 기준 범위로 옮기지 않습니다. |
-| supported scope | 지원 범위, 문법상 자연스러울 때는 지원되는 범위 | 지원된다고 문서화된 동작이나 역량입니다. 런타임에서 현재 적용되는 상태가 아닙니다. |
-| supported behavior | 지원 동작 | 기준 범위와 영향받는 담당 문서가 지원된다고 문서화한 동작입니다. 런타임에서 현재 적용되는 상태가 아닙니다. |
-| active scope | 현재 적용 범위 | `Task`나 Change Unit 안에서 현재 적용되는 런타임 또는 세션 범위입니다. 문서상의 지원 계약이 아닙니다. |
-| active Change Unit | 현재 적용 Change Unit | 권한 모델에서 현재 적용되는 Change Unit입니다. 프로젝트 단계나 문서상의 지원 계약이 아닙니다. |
-| supported API method | 지원되는 API 메서드 | 지원된다고 문서화된 공개 메서드입니다. 정확한 메서드 식별자는 보존합니다. |
-| supported API value | 지원되는 API 값 | 지원된다고 문서화된 값입니다. 값 집합에 있다는 사실만으로는 충분하지 않습니다. |
-| owner document | 담당 문서 | 계약이나 용어의 기준 담당 문서입니다. |
-| owner contract | 담당 계약, 또는 담당 문서가 정의한 계약 | 제품 동작이 관련 담당 문서가 정의한 계약에 의존할 때 씁니다. 담당 문서 경로를 제품 동작의 주어로 만들지 않습니다. |
-| applicable owner path | 적용되는 담당 경로 | 어떤 주제에 적용되는 담당 문서 경로입니다. 문서 경로 안내에만 쓰고, 제품 동작이나 저장 지속 조건처럼 쓰지 않습니다. |
-| applicable reference | 적용되는 참조 문서 | 제품 산문에서 관련 계약을 정의하는 참조 문서를 가리킬 때 씁니다. |
-| baseline guarantee | 기준 범위 보장 | 기준 범위와 보안 담당 문서가 지원된다고 정의한 보장에만 씁니다. |
-| close task behavior | Task 닫기 동작 | 메서드별 `harness.close_task` 동작은 Task 닫기 메서드 담당 문서가 담당합니다. |
-| error routing | 오류 처리 경로 | API 응답 분기 경로를 다룹니다. 담당 문서는 `api/error-routing.md`입니다. |
-| blocker routing | 차단 사유 처리 경로 | 닫기 차단 사유와 API 응답 분기 사이의 처리 경계를 다룹니다. 담당 문서는 `api/blocker-routing.md`입니다. |
-| error/blocker boundary | 오류와 차단 사유의 경계 | 유효한 평가 전 API 오류와 유효한 평가 뒤 닫기 차단 사유 데이터를 구분할 때 씁니다. |
-| public error as blocker | 공개 오류 코드가 차단 사유로 표현되는 경우 | `ErrorCode`와 `CloseReadinessBlocker.code`는 식별자로 보존합니다. |
-| `ToolError.details` | `ToolError.details` | 정확한 API 세부 식별자이므로 백틱 안에 그대로 보존합니다. |
-| blocked result | 차단 결과 | enum 값이나 코드 값이면 정확한 API 값을 보존하고, 일반 산문에서는 자연스럽게 설명합니다. |
-| design-quality owner boundary | 설계 품질 담당 경계 | 설계 품질 관찰 사항은 관련 담당 문서나 담당 계약으로 이어집니다. 독립적인 제품 권한을 만들지 않습니다. |
-| out-of-scope capability | 지원 범위 밖 기능 | 미뤄 둔 자료임을 분명히 유지합니다. |
-| migration | 마이그레이션 | 스키마, 저장소, 데이터, 문서 구조를 옮기거나 갱신하는 기술 개념에 씁니다. 이전 선택이라는 뜻으로 옮기지 않습니다. |
+| close readiness | 닫기 준비 상태 | 사용자 설명에서는 닫기 가능 여부를 쓸 수 있습니다. |
+| close readiness evaluation | 닫기 준비 상태 평가 | close/가능성을 섞은 표현은 피합니다. |
+| close task | Task 닫기 | 정확한 메서드 식별자일 때만 `harness.close_task`를 씁니다. |
+| close-readiness blocker | 닫기 차단 사유 | 스키마 식별자일 때만 `CloseReadinessBlocker`를 씁니다. |
+| blocker category | 차단 사유 범주 | 정확한 필드일 때만 `CloseReadinessBlocker.category`를 씁니다. |
+| full 또는 entire evaluation order | 전체 평가 순서 | 닫기 준비 상태 맥락에서는 전체 닫기 준비 상태 평가 순서를 씁니다. |
+| artifact | 아티팩트 | 정확한 아티팩트 스키마 식별자는 보존합니다. |
+| evidence | 증거 | 정확한 증거 스키마 식별자는 보존합니다. |
+| surface | 접점 | 정확한 접점 식별자는 보존합니다. |
+| active surface context | 현재 적용 접점 맥락 | 식별자를 이름 붙일 때는 `VerifiedSurfaceContext`를 보존합니다. |
+| lifecycle | 생명주기 | 식별자가 아니면 lifecycle을 영어로 남기지 않습니다. |
+| projection | 상태 보기 | 정확한 Harness 라벨이 필요할 때는 `Projection`을 씁니다. |
+| user-owned judgment | 사용자 소유 판단 | 사용자 문서에서는 사용자 판단이 자연스러울 수 있습니다. |
+| sensitive-action approval | 민감 동작 승인 | 정확한 라벨을 말할 때는 `Write Authorization`을 그대로 둡니다. |
+| cooperative guarantee | 협력형 보장 | 원문의 보장 강도와 같은 수준으로 옮깁니다. |
+| detective guarantee | 탐지형 보장 | 원문의 보장 강도와 같은 수준으로 옮깁니다. |
+| baseline scope | 기준 범위 | 현재 적용 범위와 구분합니다. |
+| supported scope | 지원 범위 | 수식어 자리에서는 지원되는 범위가 자연스러울 수 있습니다. |
+| supported behavior | 지원 동작 | 현재 적용 런타임 상태와 구분합니다. |
+| active scope | 현재 적용 범위 | 정확한 식별자가 있으면 보존합니다. |
+| active Change Unit | 현재 적용 Change Unit | Change Unit은 제품 용어로 둡니다. |
+| owner document | 담당 문서 | 문서 담당 관계를 말할 때 씁니다. |
+| owner contract | 담당 계약 | 담당 문서가 정의한 계약이 더 분명할 수 있습니다. |
+| applicable owner path | 적용되는 담당 경로 | 문서 경로 안내 산문에 씁니다. |
+| applicable reference | 적용되는 참조 문서 | 문장이 참조 문서를 가리킬 때 씁니다. |
+| error routing | 오류 처리 경로 | 경로 자체를 이름 붙일 때만 정확한 경로를 보존합니다. |
+| blocker routing | 차단 사유 처리 경로 | blocker 라우팅은 한국어 산문에서 피합니다. |
+| out-of-scope capability | 지원 범위 밖 기능 | 한국어 개념을 먼저 둡니다. |
+| migration | 마이그레이션 | 기술 마이그레이션 문맥에 씁니다. |
 
-빠진 용어가 있으면 새 변형을 여러 문서에 퍼뜨리기 전에 용어 지도와 양쪽 번역 가이드를 먼저 갱신합니다.
+빠진 용어가 있으면 새 변형을 여러 문서에 퍼뜨리기 전에 용어 지도를 먼저 갱신합니다.
 
 ## 5. 일반 산문 번역
 
@@ -144,7 +121,7 @@
 | surface에서 보인다 | 접점에서 보인다 |
 | lifecycle 의미 | 생명주기의 뜻 |
 | staged handle을 전달한다 | 스테이징된 아티팩트 핸들을 전달한다 |
-| `surface_id`를 접점 권한으로 본다 | `surface_id`는 접점 식별자일 뿐 권한 증거가 아니다 |
+| surface 정보 | 접점 정보 |
 
 ## 6. 한국어 기술 문서 문체
 
@@ -231,22 +208,12 @@
 | blocker 라우팅 | 차단 사유 처리 경로 |
 | migration = 이전 선택 | 기술 마이그레이션 문맥에서는 마이그레이션 |
 
-영어 부분이 식별자라면 한국어와 함께 써도 됩니다. 예를 들어 `ArtifactRef`를 보존한다, `surface_id`는 권한 증거가 아니다 같은 문장은 올바릅니다. 영어 부분이 일반 산문이면 한국어로 옮깁니다.
+영어 부분이 식별자라면 한국어와 함께 써도 됩니다. 예를 들어 `ArtifactRef`를 보존한다, `surface_id` 필드를 보존한다 같은 문장은 올바릅니다. 영어 부분이 일반 산문이면 한국어로 옮깁니다.
 
-## 10. 검토 체크리스트
+## 10. 검토
 
-- [ ] 편집이 문서 변경으로 남아 있고 런타임 구현을 암시하지 않습니다.
-- [ ] 영어와 한국어 문서가 줄 수가 아니라 의미 단위로 일치합니다.
-- [ ] 의미가 바뀐 내용은 같은 작업 묶음에서 양쪽 언어에 반영했습니다.
-- [ ] 대응 파일의 독자 목적, 경로 역할, 담당 문서 경로, 기준 범위/지원 범위 밖 경계가 맞습니다.
-- [ ] 식별자, API 메서드, 파일 경로, enum 값, 스키마 이름, 테이블 이름, validator ID, 오류 코드, 앵커, 코드 리터럴이 보존되었습니다.
-- [ ] 산문에서 명확성이나 검색성이 필요한 정확한 식별자는 백틱으로 감쌌습니다.
-- [ ] 식별자나 의도적 라벨이 아닌 일반 영어 명사는 한국어 산문으로 옮겼습니다.
-- [ ] 한국어 문장이 비식별자에 대해 "English noun + 한국어 조사" 형태를 피합니다.
-- [ ] 보이는 한국어 제목이 자연스럽습니다.
-- [ ] 안정적인 영어 앵커가 필요할 때 숨김 앵커로 보존했습니다.
-- [ ] 링크 텍스트가 보이는 제목의 의미와 맞습니다.
-- [ ] 사용자 문서와 참조 문서가 각각 알맞은 용어 수준을 사용합니다.
-- [ ] 금지할 혼합어 패턴을 제거했습니다.
-- [ ] 새 용어나 바뀐 용어를 [docs/terminology-map.yaml](../../terminology-map.yaml)과 대조했습니다.
-- [ ] 일회성 계획 파일, 보관 사본, 생성된 런타임 기록, 일회성 변환 메모가 남아 있지 않습니다.
+번역을 고친 뒤에는 이 가이드를 체크리스트로 쓰지 말고 집중 유지보수 점검을 실행합니다.
+
+- [언어 일치 점검](checks/language-parity.md): 의미 단위 일치, 자연스러운 한국어 구조, 제목, 표, 목록, 식별자 보존을 확인합니다.
+- [용어 점검](checks/terminology.md): 용어 지도 정렬, 혼합어 한국어, 용어집 카드 초점, `active` 표현, `complete` 모호성, 관련 용어 통제를 확인합니다.
+- [링크와 색인 점검](checks/links-and-indexes.md): 제목, 앵커, 상대 링크, 용어 담당 대상, 경로 메타데이터가 바뀌었을 때 사용합니다.
