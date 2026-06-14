@@ -4,12 +4,12 @@
 
 ## CHK-LINK-001: 깨진 링크와 오래된 경로
 
-담당 문서:
+점검 기준 문서:
 - [작성 가이드](../authoring-guide.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 - [참조 색인](../../reference/README.md)
 
-점검:
+확인할 근거:
 - 바뀐 상대 링크, 파일 경로, 앵커, 경로 표, 대응 언어 링크를 확인합니다.
 - 유지되는 탐색 문구가 작성 담당 문서의 간결 경로를 쓰는지 확인합니다.
 - 계약 링크가 편한 중복 문서가 아니라 담당 문서를 가리키는지 확인합니다.
@@ -25,11 +25,11 @@
 
 ## CHK-LINK-002: 숨김 앵커
 
-담당 문서:
+점검 기준 문서:
 - [번역 가이드](../translation-guide.md)
 - [작성 가이드](../authoring-guide.md)
 
-점검:
+확인할 근거:
 - 한국어 제목은 보이는 문구가 자연스러운지 확인합니다.
 - 안정적인 영어 앵커가 필요하면 자연스러운 한국어 제목 앞에 숨김 HTML 앵커를 둡니다.
 - 제목을 바꾼 뒤에는 수정한 언어와 대응 경로의 들어오는 링크를 확인합니다.
@@ -44,12 +44,12 @@
 
 ## CHK-LINK-003: 경로 문서의 담당 문서 공백 드러내기
 
-담당 문서:
+점검 기준 문서:
 - [작성 가이드](../authoring-guide.md)
 - [참조 색인](../../reference/README.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-점검:
+확인할 근거:
 - 바뀐 경로 문서, `README`, 색인, `doc-index.yaml` 항목에서 질문에 맞는 정확한 담당 문서가 없거나 불분명한 곳을 찾습니다.
 - 적용되는 담당 문서가 있으면 경로 문구가 그 문서로 보내는지 확인합니다.
 - 담당 문서가 없으면 넓은 경로 설명, 유지보수 지침, 복사한 계약 세부사항으로 숨기지 않고 문서 공백으로 드러내는지 확인합니다.
@@ -66,11 +66,11 @@
 
 ## CHK-LINK-004: 점검 문서 경로
 
-담당 문서:
+점검 기준 문서:
 - [점검 색인](../checks.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-점검:
+확인할 근거:
 - `checks.md`가 집중 점검 문서로 보내는 짧은 색인으로 남아 있는지 확인합니다.
 - 새 점검 문서가 `docs/en/maintain/checks/`와 `docs/ko/maintain/checks/` 아래에 대응 쌍으로 있는지 확인합니다.
 - `doc-index.yaml`이 유지되는 대응 점검 문서마다 경로 메타데이터를 갖는지 확인합니다.
@@ -86,12 +86,12 @@
 
 ## CHK-LINK-005: 메서드 담당 문서 경로 위치
 
-담당 문서:
+점검 기준 문서:
 - [API 메서드](../../reference/api/methods.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 - [작성 가이드](../authoring-guide.md)
 
-점검:
+확인할 근거:
 - 지원되는 공개 API 메서드 목록과 메서드 수준 담당 표가 API 메서드 문서에 있는지 확인합니다.
 - `AGENTS.md`, 참조 색인, 유지보수 문서가 전체 메서드 지도를 반복하지 않고 API 메서드 문서로 연결하는지 확인합니다.
 - `doc-index.yaml`의 메서드 경로 문서와 메서드 담당 문서 경로가 실제 파일과 맞는지 확인합니다.
@@ -107,11 +107,11 @@
 
 ## CHK-LINK-006: `doc-index.yaml` 구조 참조
 
-담당 문서:
+점검 기준 문서:
 - [doc-index.yaml](../../../doc-index.yaml)
 - [작성 가이드](../authoring-guide.md)
 
-점검:
+확인할 근거:
 - `docs/doc-index.yaml` 구조를 이름 붙이는 산문, 경로 표, 프롬프트, 점검 지침을 확인합니다.
 - `shared_documents`, `documents`, `entry_schema`, `doc_id`, `path`, `path_en`, `path_ko`, `role`, `owner_for`, `not_owner_for`, `depends_on`, `normative_level`, `audience`처럼 실제로 존재하는 구조와 키만 참조하는지 확인합니다.
 - 문서가 `doc-index.yaml` 안에 없는 섹션, 생성된 색인, 현재 런타임 상태가 있는 것처럼 설명하지 않는지 확인합니다.
@@ -127,7 +127,7 @@
 
 ## CHK-LINK-007: API 오류 담당 문서 경로
 
-담당 문서:
+점검 기준 문서:
 - [API 오류 문서 묶음 색인](../../reference/api/errors.md)
 - [API 오류 코드](../../reference/api/error-codes.md)
 - [API 오류 우선순위](../../reference/api/error-precedence.md)
@@ -136,7 +136,7 @@
 - [API 오류 세부사항](../../reference/api/error-details.md)
 - [작성 가이드](../authoring-guide.md)
 
-점검:
+확인할 근거:
 - [API 오류](../../reference/api/errors.md)는 문서 묶음 색인으로만 사용합니다.
 - 공개 `ErrorCode` 의미는 [API 오류 코드](../../reference/api/error-codes.md)로 보냅니다.
 - 우선순위, 충돌 선택, 오래된 상태 순서는 [API 오류 우선순위](../../reference/api/error-precedence.md)로 보냅니다.
@@ -157,13 +157,13 @@
 
 ## CHK-LINK-008: 용어와 메타데이터 담당 대상
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [용어집](../../reference/glossary.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 - [참조 색인](../../reference/README.md)
 
-점검:
+확인할 근거:
 - 편집한 용어 지도의 `primary_owner`와 `related_references`, 용어집 담당 문서 링크, `doc-index.yaml` 담당 메타데이터, 경로 표를 확인합니다.
 - 집중 담당 문서가 있으면 각 담당 대상이 그 문서를 가리키는지 확인합니다.
 - 같은 용어에 대해 용어집 요약 표의 `Primary owner`, 자세한 용어 카드의 `Primary owner`, 용어 지도의 `primary_owner`가 일치하는지 확인합니다. 명시적인 담당 문서 공백이 있으면 그 공백을 드러냅니다.
@@ -189,12 +189,12 @@
 
 ## CHK-LINK-009: 옮겨진 개념과 담당 경계 앵커
 
-담당 문서:
+점검 기준 문서:
 - [작성 가이드](../authoring-guide.md)
 - [참조 색인](../../reference/README.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-점검:
+확인할 근거:
 - 담당 문서가 옮겨졌거나 담당 경계가 바뀐 개념의 숨김 앵커와 명시적 앵커 ID를 확인합니다.
 - 개념의 안정적인 앵커가 현재 그 개념을 담당하는 문서에 있는지 확인합니다.
 - 예전 문서에 남은 리디렉션식 숨김 앵커가 그 문서를 여전히 담당 문서처럼 보이게 하지 않는지 확인합니다.
@@ -212,12 +212,12 @@
 
 ## CHK-LLM-001: 중복 계약 문구로 인한 검색 잡음
 
-담당 문서:
+점검 기준 문서:
 - [doc-index.yaml](../../../doc-index.yaml)
 - [참조 색인](../../reference/README.md)
 - [작성 가이드](../authoring-guide.md)
 
-점검:
+확인할 근거:
 - 에이전트 지침, `README`, 유지보수 문서, 요약 문구에서 담당 문서 대신 검색될 수 있는 중복 계약 문구를 찾습니다.
 - 검색 지침이 다음 행동에 필요한 담당 문서 섹션 하나로 안내하는지 확인합니다.
 
@@ -231,11 +231,11 @@
 
 ## CHK-LLM-002: `doc_id` 하나에 한 언어
 
-담당 문서:
+점검 기준 문서:
 - [번역 가이드](../translation-guide.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-점검:
+확인할 근거:
 - 일반 에이전트 검색이 하나의 `doc_id`에 한 언어만 싣는지 확인합니다.
 - 영어/한국어 대응 문서를 함께 싣는 경우가 번역, 의미 일치 검토, 이중 언어 편집에 한정되는지 확인합니다.
 

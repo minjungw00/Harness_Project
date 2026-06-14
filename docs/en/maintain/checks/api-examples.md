@@ -4,13 +4,13 @@ Use these checks for API and reference examples. They check documentation exampl
 
 ## CHK-EXAMPLE-001: durable API and Reference scenarios
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [API Methods](../../reference/api/methods.md)
 - The affected Reference owner selected from [Reference Index](../../reference/README.md)
 
-Check:
+Evidence to inspect:
 - Confirm API and Reference examples use stable product or user scenarios.
 - For supported API method examples, confirm they use the shared account data export confirmation sample task unless the documentation batch intentionally replaces that sample across the API examples, paired Korean examples, checks, and routes.
 - Confirm examples do not use documentation maintenance, refactoring, documentation transition work, route reshaping, or section restructuring as their scenario.
@@ -32,11 +32,11 @@ Fix:
 
 ## CHK-EXAMPLE-002: Korean scenario wording
 
-Owner:
+Check sources:
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Confirm shared example scenarios in Korean documents use natural Korean wording.
 - Confirm Korean examples avoid compressed noun chains and do not preserve English noun order when a natural Korean phrase is clearer.
 - Confirm repeated scenario phrases stay consistent across related examples.
@@ -51,11 +51,11 @@ Fix:
 
 ## CHK-EXAMPLE-003: API example internal consistency
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - The affected API method owner document
 
-Check:
+Evidence to inspect:
 - Example refs are introduced or explicitly described as existing.
 - A response snapshot does not include refs from a newer `state_version`.
 - Sensitive approval reasons match the request's `sensitive_categories` or stated precondition.
@@ -77,11 +77,11 @@ Fix:
 
 ## CHK-EXAMPLE-004: field-name consistency
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - The affected method, schema, or storage owner document
 
-Check:
+Evidence to inspect:
 - Example field names match the owner method or schema document.
 - A storage/effect example that reuses method payload data does not use a different field name unless it is explicitly described as a storage-owned summary field.
 - Field names shared across examples are consistent.
@@ -97,12 +97,12 @@ Fix:
 
 ## CHK-EXAMPLE-005: API owner routing in examples
 
-Owner:
+Check sources:
 - [Reference Index](../../reference/README.md)
 - [API Methods](../../reference/api/methods.md)
 - The applicable API owner selected from the Reference Index or API Methods router
 
-Check:
+Evidence to inspect:
 - Confirm example notes and surrounding prose route method behavior, common envelopes, state schemas, artifact schemas, judgment schemas, value sets, and API error concepts to the narrow owner.
 - For API error concepts, route public code meanings to [API error codes](../../reference/api/error-codes.md), precedence and conflicts to [API error precedence](../../reference/api/error-precedence.md), rejected-response, blocked-result, and `dry_run` response branch routing to [API error routing](../../reference/api/error-routing.md), close-readiness blocker/API response boundaries and public-code-to-blocker boundaries to [API blocker routing](../../reference/api/blocker-routing.md), and machine-readable details to [API error details](../../reference/api/error-details.md).
 - Confirm the API error family index is not treated as the owner for code meanings, precedence, response branch routing, close-readiness blocker routing, or detail schemas.

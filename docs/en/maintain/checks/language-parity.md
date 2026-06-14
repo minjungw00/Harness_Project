@@ -6,12 +6,12 @@ Heading alignment is only a navigation signal. Passing heading parity does not p
 
 ## CHK-PARITY-001: English and Korean meaning parity
 
-Owner:
+Check sources:
 - [English Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Compare paired files by meaning unit when the edit changes meaning.
 - Confirm the paired files keep the same reader purpose, normative strength, owner routing, baseline/out-of-scope boundary, user-judgment boundary, and security guarantee level.
 - Do not treat matching headings as sufficient; inspect the meaning units below the headings.
@@ -27,11 +27,11 @@ Fix:
 
 ## CHK-PARITY-002: exact identifier preservation
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Translation Guide](../translation-guide.md)
 
-Check:
+Evidence to inspect:
 - Confirm exact identifiers remain unchanged in both languages.
 - Confirm file paths, anchors, `doc_id` values, API methods, schema fields, enum values, table names, validator IDs, error codes, and product labels appear in backticks when prose clarity or searchability needs them.
 
@@ -44,12 +44,12 @@ Fix:
 
 ## CHK-PARITY-003: Korean structure preservation
 
-Owner:
+Check sources:
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [Korean Authoring Guide](../../../ko/maintain/authoring-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - For Korean reference edits, compare conditions, results, exceptions, boundary caveats, owner links, and close-readiness consequences as meaning units.
 - Confirm Korean prose may differ in line count and sentence order while keeping important caveats and owner boundaries visible.
 - Inspect dense Korean paragraphs for merged rules that hide a condition, exception, or boundary caveat.
@@ -64,11 +64,11 @@ Fix:
 
 ## CHK-PARITY-004: Korean storage structure
 
-Owner:
+Check sources:
 - The applicable paired storage owner selected from [Reference Index](../../reference/README.md) and `doc-index.yaml`
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 
-Check:
+Evidence to inspect:
 - For Korean storage reference edits, compare the paired English storage source docs by meaning unit.
 - Confirm conditions, effects, exceptions, boundary caveats, and owner links remain visibly separate in Korean.
 - Inspect dense Korean paragraphs for merged storage rules that hide a condition, exception, or boundary caveat.
@@ -83,11 +83,11 @@ Fix:
 
 ## CHK-PARITY-005: Korean user-facing readability
 
-Owner:
+Check sources:
 - [Korean Authoring Guide](../../../ko/maintain/authoring-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect Korean user-facing prose for natural Korean technical writing, Korean concept-first phrasing, and consistent terms.
 - Confirm exact identifiers remain searchable but are not exposed as ordinary display labels.
 - Confirm common English nouns and noun chains are translated into Korean unless they are exact identifiers, intentional product labels, or natural technical borrowings.
@@ -103,12 +103,12 @@ Fix:
 
 ## CHK-PARITY-006: paired headings and reading structure
 
-Owner:
+Check sources:
 - [Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Treat heading parity as an index to the comparison, not the comparison itself.
 - When headings change, compare the paired English and Korean files by heading meaning and reading structure.
 - When sections are added, removed, split, or merged, confirm the paired files still expose the same meaning units through equivalent headings or nearby text.
@@ -127,12 +127,12 @@ Fix:
 
 ## CHK-PARITY-007: table semantic parity
 
-Owner:
+Check sources:
 - [Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Compare table count within the changed sections of paired files.
 - Confirm corresponding tables have equivalent header meanings, with exact identifiers preserved unchanged.
 - Compare table row meanings, not only row counts; row splits or merges are acceptable only when every condition, value, owner route, exception, and non-claim remains present by meaning.
@@ -150,12 +150,12 @@ Fix:
 
 ## CHK-PARITY-008: list semantic parity
 
-Owner:
+Check sources:
 - [Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Compare normative lists, allowed and not-allowed clauses, does-not-imply clauses, exceptions, and owner-boundary lists by meaning unit.
 - Confirm list ordering changes do not change priority, evaluation order, routing order, or reader consequence.
 - Confirm Korean may use natural sentence rhythm while preserving every list item that carries a rule, exception, non-claim, or owner link.
@@ -171,12 +171,12 @@ Fix:
 
 ## CHK-PARITY-009: removed-concept translation residue
 
-Owner:
+Check sources:
 - [Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [Terminology Map](../../../terminology-map.yaml)
 
-Check:
+Evidence to inspect:
 - When a concept label, owner route, value name, display phrase, or example term is removed in one language, search the paired language for exact strings, paraphrases, translations, and mixed-language variants.
 - Confirm a removed English label does not survive through Korean paraphrase, translation, table rows, list items, headings, glossary text, metadata, or display wording.
 - Preserve a removed expression only when a Maintain or terminology owner intentionally keeps it as a searchable forbidden expression.
@@ -191,12 +191,12 @@ Fix:
 
 ## CHK-PARITY-010: negative-clause strength and placement
 
-Owner:
+Check sources:
 - [Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Search paired changed sections for negative-clause markers, including English `Not allowed`, `Does not imply`, `Not implied`, and `must not`, and Korean `허용되지 않는 것`, `의미하지 않는 것`, and `해서는 안 됩니다`.
 - Compare each prohibition, exception, and non-claim by meaning unit.
 - Confirm one language does not impose a stronger prohibition, broader exception, narrower exception, or stronger non-claim than the other.
@@ -214,12 +214,12 @@ Fix:
 
 ## CHK-PARITY-011: semantic skeleton parity
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Korean Authoring Guide](../../../ko/maintain/authoring-guide.md)
 - [Translation Guide](../translation-guide.md)
 
-Check:
+Evidence to inspect:
 - For changed paired sections that use or imply a semantic skeleton, identify the meaning-unit skeleton before comparing prose. Important Reference sections should have the skeleton identified before prose is written or reshaped.
 - Common skeletons include `Purpose`, `Conditions`, `Result`, `Non-claim`, `Owner boundary`, and `Related references`; another acceptable skeleton is `Meaning`, `Contract`, `Boundary`, and `Related references`.
 - Confirm the paired English and Korean sections use the same skeleton for the same section.

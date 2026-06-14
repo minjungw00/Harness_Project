@@ -4,12 +4,12 @@ Use these checks when an edit changes product terms, Korean prose terms, mixed-l
 
 ## CHK-TERM-001: close-readiness terminology
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [Translation Guide](../translation-guide.md)
 
-Check:
+Evidence to inspect:
 - Korean reference prose uses "닫기 준비 상태".
 - Korean user-facing prose may use "닫기 가능 여부".
 - Korean prose does not use "close 가능성 평가" or "닫기 가능성 평가" except in forbidden-expression lists or quoted legacy examples.
@@ -24,12 +24,12 @@ Fix:
 
 ## CHK-TERM-002: terminology drift
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [Translation Guide](../translation-guide.md)
 
-Check:
+Evidence to inspect:
 - Search changed prose for new product terms, mixed-language Korean, and alternate spellings of existing concepts.
 - Confirm each new durable term is owned by the glossary, the terminology map, or the relevant reference owner.
 - Confirm Korean sentences translate ordinary English noun phrases unless the English is an identifier, intentional product label, or natural technical borrowing.
@@ -44,13 +44,13 @@ Fix:
 
 ## CHK-TERM-003: `complete` intent ambiguity
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [API Value Sets](../../reference/api/schema-value-sets.md)
 - [API Methods](../../reference/api/methods.md)
 
-Check:
+Evidence to inspect:
 - Preserve `complete` only when it is an identifier or enum value.
 - Do not leave `complete` in Korean prose when the English means full or entire.
 - Confirm Korean prose does not use phrases like "complete 닫기 준비 상태 순서".
@@ -66,13 +66,13 @@ Fix:
 
 ## CHK-TERM-004: surface, access, and security wording
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Security](../../reference/security.md)
 - [Agent Integration](../../reference/agent-integration.md)
 - [Translation Guide](../translation-guide.md)
 
-Check:
+Evidence to inspect:
 - Confirm `surface_id`, surface, connector, capability, and access-class wording is not presented as authority, approval, or binding proof unless the owner says so.
 - Confirm access-related terms preserve the distinction between documentation guidance and runtime enforcement.
 - Confirm cooperative, detective, prevention, guard, freeze, careful mode, sandbox, permission, blocking, tamper-proof, isolation, and capability wording stays within owner-backed terminology.
@@ -87,14 +87,14 @@ Fix:
 
 ## CHK-TERM-005: terminology-map alignment
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 - [English Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 
-Check:
+Evidence to inspect:
 - Compare changed terminology guidance with `docs/terminology-map.yaml`.
 - Confirm `primary_owner` targets point to the focused owner document when one exists, and `related_references` hold adjacent routes instead of broadening ownership.
 - Confirm glossary summary-table `Primary owner` cells and detailed glossary-card `Primary owner` blocks follow the same focused-owner rule.
@@ -116,13 +116,13 @@ Fix:
 
 ## CHK-TERM-006: `active` versus supported or applicable
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [Core Model](../../reference/core-model.md)
 - [Agent Integration](../../reference/agent-integration.md)
 
-Check:
+Evidence to inspect:
 - Search changed prose for `active`.
 - Confirm `active` is used only for runtime or currently applied state, exact identifiers, exact status values, active scope, active Change Unit, or active surface context.
 - Confirm supported contracts, supported API methods, supported values, maintained documents, and owner routing use terms such as "supported", "applicable", "maintained", or "current", not `active`.
@@ -137,14 +137,14 @@ Fix:
 
 ## CHK-TERM-007: retired or unsupported concept names
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Scope](../../reference/scope.md)
 - [Reference Index](../../reference/README.md)
 - [Authoring Guide](../authoring-guide.md)
 - [Template Bodies](../../reference/template-bodies.md)
 
-Check:
+Evidence to inspect:
 - Search maintained Reference docs, glossary entries, `docs/terminology-map.yaml`, `doc-index.yaml`, display wording owners, and changed metadata for retired, deleted, or unsupported concept names.
 - When an English concept label is removed, search Korean prose for paraphrases, translations, mixed-language variants, table rows, list items, and headings that preserve the same removed concept.
 - Confirm unsupported capability names are used only when a semantic owner still needs the exact name, or when a Maintain/terminology owner intentionally lists a searchable forbidden expression.
@@ -164,12 +164,12 @@ Fix:
 
 ## CHK-TERM-008: documentation-routing terms stay documentary
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Search changed prose for documentation-routing terms such as `applicable owner path`, owner route, owner target, route metadata, and owner gap.
 - Confirm these terms describe documentation navigation, authoring, retrieval, or metadata only.
 - Confirm owner-route terms are not the grammatical actor for product behavior, storage persistence, API support, evidence authority, close-readiness state, or user-visible display.
@@ -186,12 +186,12 @@ Fix:
 
 ## CHK-TERM-009: Korean blocker terminology
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [Translation Guide](../translation-guide.md)
 
-Check:
+Evidence to inspect:
 - Korean prose uses "닫기 차단 사유" for close-readiness blocker prose.
 - Korean prose uses "차단 사유 범주" for blocker category prose and preserves `CloseReadinessBlocker.category` when naming the exact field.
 - Korean prose uses "차단 사유 처리 경로" for blocker routing prose and preserves exact owner routes or identifiers when naming them.
@@ -208,12 +208,12 @@ Fix:
 
 ## CHK-TERM-010: Korean compressed owner-link and blocker-routing prose
 
-Owner:
+Check sources:
 - [Korean Authoring Guide](../../../ko/maintain/authoring-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 - [Terminology Map](../../../terminology-map.yaml)
 
-Check:
+Evidence to inspect:
 - Inspect Korean owner-link, route, and blocker-routing sentences for long compressed noun phrases.
 - Confirm Korean sentences separate the concept, the owner route, the boundary or non-claim, and the reader action when those parts all appear.
 - Confirm exact identifiers stay searchable, but ordinary English nouns are translated into natural Korean prose.
@@ -229,13 +229,13 @@ Fix:
 
 ## CHK-TERM-011: glossary card focus
 
-Owner:
+Check sources:
 - [Glossary](../../reference/glossary.md)
 - [Terminology Map](../../../terminology-map.yaml)
 - [Translation Guide](../translation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect changed glossary cards for the intended fields: meaning, Korean term, type, primary owner, related references, and a short usage note.
 - Confirm each summary-table `Primary owner` matches the detailed card's `Primary owner` for the same term.
 - Confirm term cards explain the term and route to the primary owner instead of carrying long avoid lists, identifier-preservation lists, owner-routing tables, or documentation-quality checklists.
@@ -260,13 +260,13 @@ Fix:
 
 ## CHK-TERM-012: owner-routing label usage
 
-Owner:
+Check sources:
 - [Glossary](../../reference/glossary.md)
 - [Terminology Map](../../../terminology-map.yaml)
 - [Authoring Guide](../authoring-guide.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Inspect glossary tables, glossary cards, terminology-map entries, route prose, and Maintain checks that use `Primary owner`, `Related references`, `owner contract`, `primary_owner`, or `related_references`.
 - Confirm `Primary owner` and `primary_owner` name the canonical owner for the term or concept.
 - Confirm `Related references` and `related_references` name adjacent documents only; they must not be presented as alternate owners or owner contracts.

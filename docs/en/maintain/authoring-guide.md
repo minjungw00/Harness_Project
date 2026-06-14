@@ -198,12 +198,15 @@ Use named blocks when a rule has multiple parts:
 
 Prefer short paragraphs, compact bullets, and small route tables. If a sentence contains several "must not", "does not", or "only when" clauses, consider a list or named block.
 
-For check entries, use named blocks instead of dense table cells:
+For check entries, use named blocks instead of dense table cells. Use non-owner labels for check-card document lists:
 
-- Owner: which document owns the rule or check.
-- Check: what to inspect.
-- Failure: what indicates the check failed.
-- Fix: how to repair the documentation.
+- Check sources: documents that define the check basis.
+- Applies to: files or document families the check applies to.
+- Evidence to inspect: concrete documents, examples, links, fields, labels, or route metadata to inspect.
+- Pass condition: success criteria.
+- Related checks: related check IDs or sections.
+
+Do not use the old owner label for check-card source lists.
 
 Use Markdown tables only for short mappings, comparisons, or owner routing. The table maintainability rule applies to all documentation, including Reference and Maintain docs.
 

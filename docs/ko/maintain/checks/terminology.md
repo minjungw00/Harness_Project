@@ -4,12 +4,12 @@
 
 ## CHK-TERM-001: 닫기 준비 상태 용어
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [용어집](../../reference/glossary.md)
 - [번역 가이드](../translation-guide.md)
 
-점검:
+확인할 근거:
 - 한국어 참조 문서는 "닫기 준비 상태"를 씁니다.
 - 한국어 사용자 문서는 "닫기 가능 여부"를 쓸 수 있습니다.
 - 한국어 산문은 "close 가능성 평가"나 "닫기 가능성 평가"를 쓰지 않습니다. 단, 금지 표현 목록이나 인용된 과거 예시는 예외입니다.
@@ -24,12 +24,12 @@
 
 ## CHK-TERM-002: 용어 변동
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [용어집](../../reference/glossary.md)
 - [번역 가이드](../translation-guide.md)
 
-점검:
+확인할 근거:
 - 바뀐 산문에서 새 제품 용어, 혼합어 한국어, 기존 개념의 다른 표기를 찾습니다.
 - 오래 유지될 새 용어가 용어집, 용어 지도, 또는 알맞은 참조 담당 문서에 있는지 확인합니다.
 - 한국어 문장이 식별자, 의도적 제품 라벨, 자연스러운 기술 차용어가 아닌 일반 영어 명사구를 한국어로 옮겼는지 확인합니다.
@@ -44,13 +44,13 @@
 
 ## CHK-TERM-003: `complete` 의도 값 모호성
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [용어집](../../reference/glossary.md)
 - [API 값 집합](../../reference/api/schema-value-sets.md)
 - [API 메서드](../../reference/api/methods.md)
 
-점검:
+확인할 근거:
 - `complete`는 식별자 또는 enum 값일 때만 보존합니다.
 - 영어가 full 또는 entire 의미일 때 한국어 산문에 `complete`를 남기지 않습니다.
 - 한국어 산문이 "complete 닫기 준비 상태 순서" 같은 표현을 쓰지 않는지 확인합니다.
@@ -66,13 +66,13 @@
 
 ## CHK-TERM-004: 접점, 접근, 보안 표현
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [보안](../../reference/security.md)
 - [에이전트 통합](../../reference/agent-integration.md)
 - [번역 가이드](../translation-guide.md)
 
-점검:
+확인할 근거:
 - `surface_id`, 접점, 커넥터, 역량, 접근 등급 표현이 담당 문서 근거 없이 권한, 승인, 바인딩 증거를 뜻하지 않는지 확인합니다.
 - 접근 관련 용어가 문서 지침과 런타임 강제를 구분하는지 확인합니다.
 - 협력형, 탐지형, 예방형, `guard`, `freeze`, `careful mode`, 샌드박스, 권한, 차단, 변조 방지, 격리, 역량 표현이 담당 문서 근거 안에 있는지 확인합니다.
@@ -87,14 +87,14 @@
 
 ## CHK-TERM-005: 용어 지도 정렬
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [용어집](../../reference/glossary.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 - [영어 번역 가이드](../../../en/maintain/translation-guide.md)
 - [한국어 번역 가이드](../translation-guide.md)
 
-점검:
+확인할 근거:
 - 바뀐 용어 지침을 `docs/terminology-map.yaml`과 대조합니다.
 - `primary_owner` 대상이 집중 담당 문서가 있을 때 넓은 색인이나 문서 묶음 페이지가 아니라 그 문서를 가리키고, 주변 경로는 `related_references`에 있는지 확인합니다.
 - 용어집 요약 표의 `Primary owner` 셀과 자세한 용어 카드의 `Primary owner` 블록도 같은 집중 담당 문서 원칙을 따르는지 확인합니다.
@@ -116,13 +116,13 @@
 
 ## CHK-TERM-006: `active`와 지원/적용 표현 구분
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [용어집](../../reference/glossary.md)
 - [Core 모델](../../reference/core-model.md)
 - [에이전트 통합](../../reference/agent-integration.md)
 
-점검:
+확인할 근거:
 - 바뀐 산문에서 `active`를 검색합니다.
 - `active`가 런타임 또는 현재 적용 상태, 정확한 식별자, 정확한 상태 값, active scope, active Change Unit, active surface context를 말할 때만 쓰였는지 확인합니다.
 - 지원되는 계약, 지원되는 API 메서드, 지원되는 값, 유지되는 문서, 담당 문서 경로는 `active`가 아니라 "지원되는", "적용되는", "유지되는", "현재" 같은 문맥에 맞는 표현을 쓰는지 확인합니다.
@@ -137,14 +137,14 @@
 
 ## CHK-TERM-007: 더 이상 쓰지 않거나 지원되지 않는 개념 이름
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [범위](../../reference/scope.md)
 - [참조 색인](../../reference/README.md)
 - [작성 가이드](../authoring-guide.md)
 - [템플릿 본문](../../reference/template-bodies.md)
 
-점검:
+확인할 근거:
 - 유지되는 참조 문서, 용어집, `docs/terminology-map.yaml`, `doc-index.yaml`, 표시 문구 담당 문서, 바뀐 메타데이터에서 더 이상 쓰지 않거나, 삭제되었거나, 지원되지 않는 개념 이름을 검색합니다.
 - 영어 개념 라벨을 제거했다면 한국어 산문에서 같은 제거된 개념을 보존하는 바꿔 쓴 표현, 번역 표현, 혼합어 변형, 표 행, 목록 항목, 제목을 찾습니다.
 - 의미 담당 문서가 정확한 이름을 여전히 필요로 하거나, 유지보수/용어 담당 문서가 검색 가능한 금지 표현으로 의도적으로 보관하는 경우에만 지원되지 않는 기능 이름을 남기는지 확인합니다.
@@ -164,12 +164,12 @@
 
 ## CHK-TERM-008: 문서 경로 안내 용어는 문서 용도로만 사용
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [용어집](../../reference/glossary.md)
 - [작성 가이드](../authoring-guide.md)
 
-점검:
+확인할 근거:
 - 바뀐 산문에서 `applicable owner path`, 담당 경로, 담당 대상, 경로 메타데이터, 담당 문서 공백 같은 문서 경로 안내 용어를 찾습니다.
 - 이 용어들이 문서 탐색, 작성, 검색, 메타데이터만 설명하는지 확인합니다.
 - 담당 문서 경로 용어가 제품 동작, 저장 지속 조건, API 지원 여부, 증거 권한, 닫기 준비 상태, 사용자에게 보이는 표시의 행위 주어가 되지 않는지 확인합니다.
@@ -186,12 +186,12 @@
 
 ## CHK-TERM-009: 한국어 차단 사유 용어
 
-담당 문서:
+점검 기준 문서:
 - [용어 지도](../../../terminology-map.yaml)
 - [용어집](../../reference/glossary.md)
 - [번역 가이드](../translation-guide.md)
 
-점검:
+확인할 근거:
 - 닫기와 관련된 차단 사유를 산문으로 설명할 때는 "닫기 차단 사유"를 쓰는지 확인합니다.
 - 차단 사유 범주를 산문으로 설명할 때는 "차단 사유 범주"를 쓰고, 정확한 필드 이름을 말할 때는 `CloseReadinessBlocker.category`를 보존하는지 확인합니다.
 - 차단 사유 처리 경로를 산문으로 설명할 때는 "차단 사유 처리 경로"를 쓰고, 정확한 담당 문서 경로나 식별자를 말할 때는 그대로 보존하는지 확인합니다.
@@ -208,12 +208,12 @@
 
 ## CHK-TERM-010: 압축된 담당 문서 링크와 차단 사유 처리 경로 문장
 
-담당 문서:
+점검 기준 문서:
 - [작성 가이드](../authoring-guide.md)
 - [번역 가이드](../translation-guide.md)
 - [용어 지도](../../../terminology-map.yaml)
 
-점검:
+확인할 근거:
 - 한국어의 담당 문서 링크, 경로 안내, 차단 사유 처리 경로 문장이 긴 명사구로 뭉쳐 있지 않은지 확인합니다.
 - 한 문장에 개념, 담당 문서 경로, 경계나 비주장, 독자 행동이 함께 나오면 각 부분이 분리되어 읽히는지 확인합니다.
 - 정확한 식별자는 검색 가능하게 보존하되, 일반 영어 명사는 자연스러운 한국어 산문으로 옮겼는지 확인합니다.
@@ -229,13 +229,13 @@
 
 ## CHK-TERM-011: 용어집 카드 초점
 
-담당 문서:
+점검 기준 문서:
 - [용어집](../../reference/glossary.md)
 - [용어 지도](../../../terminology-map.yaml)
 - [번역 가이드](../translation-guide.md)
 - [작성 가이드](../authoring-guide.md)
 
-점검:
+확인할 근거:
 - 바뀐 용어집 카드가 의도한 필드인 뜻, 한국어 표현, 유형, 담당 문서, 관련 참조, 짧은 사용 메모에 집중하는지 확인합니다.
 - 각 요약 표의 `Primary owner`가 같은 용어의 자세한 카드에 있는 `Primary owner`와 일치하는지 확인합니다.
 - 용어 카드가 긴 피할 표현 목록, 식별자 보존 목록, 담당 문서 경로 표, 문서 품질 체크리스트를 들고 있지 않은지 확인합니다.
@@ -260,13 +260,13 @@
 
 ## CHK-TERM-012: 담당 경로 라벨 사용
 
-담당 문서:
+점검 기준 문서:
 - [용어집](../../reference/glossary.md)
 - [용어 지도](../../../terminology-map.yaml)
 - [작성 가이드](../authoring-guide.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-점검:
+확인할 근거:
 - `Primary owner`, `Related references`, `owner contract`, `primary_owner`, `related_references`를 사용하는 용어집 표, 용어 카드, 용어 지도 항목, 경로 안내 산문, 유지보수 점검을 확인합니다.
 - `Primary owner`와 `primary_owner`가 용어나 개념의 기준 담당 문서를 이름 붙이는지 확인합니다.
 - `Related references`와 `related_references`는 주변 문서만 이름 붙이는지 확인합니다. 이를 다른 담당 문서나 담당 계약처럼 설명하면 안 됩니다.

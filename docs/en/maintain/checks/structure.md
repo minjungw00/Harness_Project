@@ -4,12 +4,12 @@ Use these checks for documentation architecture, owner boundaries, route-page st
 
 ## CHK-STRUCT-001: review scope inputs
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Reference Index](../../reference/README.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Identify changed files, paired-language files, touched headings, and touched anchors.
 - For each contract-like statement, identify one canonical owner from the Reference Index or `doc-index.yaml`.
 - For terminology questions, include [Terminology Map](../../../terminology-map.yaml) as an input.
@@ -24,11 +24,11 @@ Fix:
 
 ## CHK-STRUCT-002: maintenance result labels
 
-Owner:
+Check sources:
 - [Checks Index](../checks.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Use `PASS`, `WARN`, `FAIL`, or `SKIP` only as documentation-maintenance labels.
 - Keep findings tied to file paths, owner documents, and suggested documentation fixes.
 
@@ -41,11 +41,11 @@ Fix:
 
 ## CHK-STRUCT-003: no generated runtime outputs
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Runtime Boundaries](../../reference/runtime-boundaries.md)
 
-Check:
+Evidence to inspect:
 - Confirm documentation checks produced review notes only.
 - Confirm they did not create or simulate Harness runtime state, generated projections, operational artifacts, executable fixtures, conformance reports, QA results, acceptance decisions, close-readiness state, residual-risk decisions, or product writes.
 
@@ -58,11 +58,11 @@ Fix:
 
 ## CHK-STRUCT-004: no transient maintenance leftovers
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Checks Index](../checks.md)
 
-Check:
+Evidence to inspect:
 - Inspect changed files and newly added files for one-off planning files, working-note remnants, review leftovers, archive copies, transition notes, one-off conversion notes, ad hoc files, generated runtime records, and unresolved task markers such as `FIXME` or other all-caps placeholders.
 - Confirm documentation-maintenance findings live in the final report or the appropriate maintained documentation page, not in ad hoc files.
 
@@ -76,11 +76,11 @@ Fix:
 
 ## CHK-OWNER-001: canonical owner violations
 
-Owner:
+Check sources:
 - [Reference Index](../../reference/README.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - For API, schema, storage, security, access-boundary, projection, template, close-readiness, judgment, error, and runtime-boundary statements, confirm the strict definition lives in one canonical owner.
 - Confirm non-owner documents use only a short reader consequence plus an owner link.
 
@@ -94,11 +94,11 @@ Fix:
 
 ## CHK-OWNER-002: route-page over-detailing
 
-Owner:
+Check sources:
 - [Reference Index](../../reference/README.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect `README` files, Start pages, Use pages, Build pages, Maintain pages, Scope pages, and route indexes for contract tables, long field explanations, status-value lists, security guarantee details, storage-effect details, and API branch summaries.
 - Confirm method-level owner maps appear only in [API Methods](../../reference/api/methods.md).
 - Confirm those pages route readers instead of defining contracts.
@@ -122,13 +122,13 @@ Fix:
 
 ## CHK-OWNER-003: value-set names versus semantic ownership
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Reference Index](../../reference/README.md)
 - [Scope](../../reference/scope.md)
 - [API Value Sets](../../reference/api/schema-value-sets.md)
 
-Check:
+Evidence to inspect:
 - For status values, enum-like values, profile-gated values, reserved values, access classes, guarantee labels, blocker categories, and display values, identify both the value-set owner and the semantic owner.
 - Confirm the value-set owner is used for exact names and validation placement only.
 - Confirm supported behavior, support availability, guarantee level, and reader consequence come from the semantic owner.
@@ -144,12 +144,12 @@ Fix:
 
 ## CHK-OWNER-004: owner granularity
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Reference Index](../../reference/README.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Inspect changed Reference owners for unrelated concerns accumulated in one document.
 - Confirm a single owner is not defining multiple distinct contract families, such as API behavior, schema fields, storage effects, security guarantees, API error precedence, templates, and examples.
 - Confirm neighboring concerns are routed with short links when another owner already defines them.
@@ -165,12 +165,12 @@ Fix:
 
 ## CHK-OWNER-005: duplicate owner maps
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Reference Index](../../reference/README.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Search route pages, `README` files, Maintain pages, Reference introductions, and agent guidance for repeated owner maps.
 - Confirm the full map for a concern appears only in the canonical route or owner document.
 - Confirm other pages use a short purpose summary plus a link to the map.
@@ -185,12 +185,12 @@ Fix:
 
 ## CHK-OWNER-006: display wording owner boundaries
 
-Owner:
+Check sources:
 - [Template Bodies](../../reference/template-bodies.md)
 - [Authoring Guide](../authoring-guide.md)
 - The focused API, blocker, storage, scope, or terminology owner selected from the Reference Index
 
-Check:
+Evidence to inspect:
 - Inspect display wording owners, template pages, and rendered-label guidance for contract claims.
 - Confirm display wording owners define rendered body guidance, labels, and display phrasing only.
 - Confirm API semantics, close-readiness blocker semantics, storage records, and out-of-scope rendered-body names route to the focused owner instead of being defined by display text.
@@ -207,7 +207,7 @@ Fix:
 
 ## CHK-OWNER-007: blocker-routing owner boundary
 
-Owner:
+Check sources:
 - [API blocker routing](../../reference/api/blocker-routing.md)
 - [API Methods](../../reference/api/methods.md)
 - [API State Schemas](../../reference/api/schema-state.md)
@@ -216,7 +216,7 @@ Owner:
 - [Template Bodies](../../reference/template-bodies.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect blocker-routing docs, route summaries, Maintain guidance, and API error routing text that mention blocker routing.
 - Confirm blocker-routing material stays within its owner boundary and does not become the owner for method behavior, schema shape, value sets, Core authority, or display wording.
 - Confirm method-specific `harness.close_task` behavior routes to the method owner.
@@ -232,12 +232,12 @@ Fix:
 
 ## CHK-OWNER-008: split owner size and scope
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Reference Index](../../reference/README.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - When a Reference owner is newly split or narrowed, compare its introduction, headings, `owner_for`, `not_owner_for`, and inbound routes.
 - Confirm the split owner has a narrow reader purpose and does not collect every neighboring concern left outside the previous owner.
 - Confirm adjacent API behavior, schema, storage, security, error, display wording, template, example, and route concerns point to their focused owners.
@@ -254,12 +254,12 @@ Fix:
 
 ## CHK-SCOPE-001: baseline/out-of-scope leakage
 
-Owner:
+Check sources:
 - [Scope](../../reference/scope.md)
 - [Implementation Guide](../../build/implementation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect changed maintained docs, examples, route text, and summaries for out-of-scope capabilities presented as baseline scope behavior.
 - Confirm profile-gated or reserved values are labeled at the point of use.
 - Confirm out-of-scope promotion wording describes missing owners as owners to create or designate, not as existing owners.
@@ -276,11 +276,11 @@ Fix:
 
 ## CHK-SCOPE-002: implementation wording
 
-Owner:
+Check sources:
 - [Implementation Guide](../../build/implementation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Confirm documentation edits do not imply the server, runtime, conformance runner, generated projections, or runtime behavior exists because of documentation alone.
 - Confirm implementation authority is not claimed outside the Implementation Guide owner.
 - Confirm implementation guidance, build pages, and metadata use durable implementation wording rather than build-moment labels, transfer labels, current-work labels, or interim-stage labels.
@@ -296,11 +296,11 @@ Fix:
 
 ## CHK-SCOPE-003: excluded-scope wording
 
-Owner:
+Check sources:
 - [Scope](../../reference/scope.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect excluded-scope, out-of-scope, reserved, and profile-gated wording for double negatives.
 - Confirm the text states support or exclusion directly, using owner-backed conditions.
 - Confirm unsupported or excluded concepts are not described as supported by phrases such as "not excluded", "not unsupported", or "not outside support".
@@ -315,11 +315,11 @@ Fix:
 
 ## CHK-REFERENCE-001: API, storage, and security summaries point to owners
 
-Owner:
+Check sources:
 - [Reference Index](../../reference/README.md)
 - The applicable owner selected from the Reference Index or `doc-index.yaml`
 
-Check:
+Evidence to inspect:
 - Inspect non-owner API, storage, and security mentions for short purpose summaries and owner links.
 - Confirm API methods, schema fields, storage effects, DDL-like details, access boundaries, and security guarantees are not redefined outside their owners.
 - Confirm security wording stays within the documented guarantee level.
@@ -334,12 +334,12 @@ Fix:
 
 ## CHK-REFERENCE-002: storage record family references
 
-Owner:
+Check sources:
 - [Storage Records](../../reference/storage-records.md)
 - [Storage Effects](../../reference/storage-effects.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect storage mentions in changed docs, examples, route pages, metadata, and display wording owners.
 - Confirm storage record references focus on persisted record families defined by the storage owner.
 - Confirm storage-like names outside the persisted record families are not preserved as negative examples in a way that turns them into official storage concepts.
@@ -357,13 +357,13 @@ Fix:
 
 ## CHK-READ-001: user-facing readability
 
-Owner:
+Check sources:
 - [User Guide](../../use/user-guide.md)
 - [Agent Guide](../../use/agent-guide.md)
 - [Judgment Examples](../../use/judgment-examples.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect user-facing docs for raw schema names, field lists, enum-like values, storage language, and internal API branch language.
 - Keep exact identifiers only when the reader needs them for the task.
 
@@ -376,11 +376,11 @@ Fix:
 
 ## CHK-STYLE-001: paragraph and table scannability
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Checks Index](../checks.md)
 
-Check:
+Evidence to inspect:
 - Inspect changed Reference and Maintain paragraphs for multiple conditions, exceptions, boundary caveats, owner links, or effects hidden in one dense paragraph.
 - Confirm important Reference sections have a defined semantic skeleton before prose is written or reshaped.
 - Confirm the skeleton keeps conditions, results, non-claims, owner boundaries, and related references visible instead of hiding them in dense prose.
@@ -401,11 +401,11 @@ Fix:
 
 ## CHK-STYLE-002: English heading case
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Checks Index](../checks.md)
 
-Check:
+Evidence to inspect:
 - Inspect changed English section headings for sentence case.
 - Preserve exact identifiers, product labels, acronyms, and code literals when their casing is meaningful.
 - After heading changes, check inbound links and paired-language route links when relevant.
@@ -419,11 +419,11 @@ Fix:
 
 ## CHK-REPORT-001: final review report format
 
-Owner:
+Check sources:
 - [Checks Index](../checks.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - The final report lists review scope, changed files, checks run, findings by file, owner links for each finding, skipped checks with reasons, and suggested fixes.
 - The report states that results are documentation-maintenance findings only when that distinction could be unclear.
 

@@ -4,12 +4,12 @@ Use these checks for relative links, anchors, route tables, `README` pages, `doc
 
 ## CHK-LINK-001: broken links and stale routes
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 - [Reference Index](../../reference/README.md)
 
-Check:
+Evidence to inspect:
 - Validate changed relative links, file paths, anchors, route tables, and paired-language links.
 - Confirm maintained navigation uses the compact maintained routes from the authoring owner.
 - Confirm contract links point to the canonical owner, not to a convenient duplicate.
@@ -25,11 +25,11 @@ Fix:
 
 ## CHK-LINK-002: hidden anchors
 
-Owner:
+Check sources:
 - [Translation Guide](../translation-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - For Korean headings, keep visible headings natural Korean.
 - When an English anchor must remain stable, use a hidden HTML anchor before the natural Korean heading.
 - After heading changes, check inbound links in the changed language and its paired route.
@@ -44,12 +44,12 @@ Fix:
 
 ## CHK-LINK-003: route documents expose owner gaps
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Reference Index](../../reference/README.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Inspect changed route documents, `README` files, indexes, and `doc-index.yaml` entries for questions whose exact canonical owner is missing or unclear.
 - Confirm route text points to an applicable owner when one exists.
 - Confirm a missing owner is exposed as a documentation gap instead of being hidden behind broad route prose, Maintain guidance, or copied contract detail.
@@ -66,11 +66,11 @@ Fix:
 
 ## CHK-LINK-004: check-page routing
 
-Owner:
+Check sources:
 - [Checks Index](../checks.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Confirm `checks.md` remains a short index to focused check pages.
 - Confirm new check pages are paired under `docs/en/maintain/checks/` and `docs/ko/maintain/checks/`.
 - Confirm `doc-index.yaml` contains route metadata for each maintained paired check page.
@@ -86,12 +86,12 @@ Fix:
 
 ## CHK-LINK-005: method owner routing placement
 
-Owner:
+Check sources:
 - [API Methods](../../reference/api/methods.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Confirm the supported public API method list and method-level owner table live in API Methods.
 - Confirm `AGENTS.md`, Reference indexes, and Maintain docs link to API Methods instead of repeating the full method map.
 - Confirm `doc-index.yaml` paths for the method router and method owners match existing files.
@@ -107,11 +107,11 @@ Fix:
 
 ## CHK-LINK-006: `doc-index.yaml` structure references
 
-Owner:
+Check sources:
 - [doc-index.yaml](../../../doc-index.yaml)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect prose, route tables, prompts, and check guidance that name `docs/doc-index.yaml` structures.
 - Confirm they refer only to structures and keys that exist, such as `shared_documents`, `documents`, `entry_schema`, `doc_id`, `path`, `path_en`, `path_ko`, `role`, `owner_for`, `not_owner_for`, `depends_on`, `normative_level`, and `audience`.
 - Confirm a document does not describe missing sections, generated indexes, or current runtime state inside `doc-index.yaml`.
@@ -127,7 +127,7 @@ Fix:
 
 ## CHK-LINK-007: API error owner routing
 
-Owner:
+Check sources:
 - [API errors family index](../../reference/api/errors.md)
 - [API error codes](../../reference/api/error-codes.md)
 - [API error precedence](../../reference/api/error-precedence.md)
@@ -136,7 +136,7 @@ Owner:
 - [API error details](../../reference/api/error-details.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Use [API errors](../../reference/api/errors.md) as the family index only.
 - Route public `ErrorCode` meanings to [API error codes](../../reference/api/error-codes.md).
 - Route precedence, conflict selection, and stale-state ordering to [API error precedence](../../reference/api/error-precedence.md).
@@ -157,13 +157,13 @@ Fix:
 
 ## CHK-LINK-008: terminology and metadata owner targets
 
-Owner:
+Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 - [Reference Index](../../reference/README.md)
 
-Check:
+Evidence to inspect:
 - Inspect terminology-map `primary_owner` and `related_references`, glossary owner links, `doc-index.yaml` owner metadata, and route tables touched by the edit.
 - Confirm each owner target points to the focused owner document when one exists.
 - Confirm glossary summary-table `Primary owner` cells, detailed glossary-card `Primary owner` blocks, and terminology-map `primary_owner` targets match for the same term unless an explicit owner gap is named.
@@ -189,12 +189,12 @@ Fix:
 
 ## CHK-LINK-009: moved-concept and owner-boundary anchors
 
-Owner:
+Check sources:
 - [Authoring Guide](../authoring-guide.md)
 - [Reference Index](../../reference/README.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Inspect hidden anchors and explicit anchor IDs for concepts whose owner moved or whose owner boundary changed.
 - Confirm the stable anchor for a concept lives in the document that now owns the concept.
 - Confirm redirect-style hidden anchors do not remain in old documents when they make the old document look like the owner.
@@ -212,12 +212,12 @@ Fix:
 
 ## CHK-LLM-001: duplicate contract text creates retrieval noise
 
-Owner:
+Check sources:
 - [doc-index.yaml](../../../doc-index.yaml)
 - [Reference Index](../../reference/README.md)
 - [Authoring Guide](../authoring-guide.md)
 
-Check:
+Evidence to inspect:
 - Inspect agent guidance, `README` pages, maintain docs, and summaries for duplicate contract text that could be retrieved instead of the owner.
 - Confirm retrieval guidance points agents to one owner section for the next action.
 
@@ -231,11 +231,11 @@ Fix:
 
 ## CHK-LLM-002: one language per `doc_id`
 
-Owner:
+Check sources:
 - [Translation Guide](../translation-guide.md)
 - [doc-index.yaml](../../../doc-index.yaml)
 
-Check:
+Evidence to inspect:
 - Confirm normal agent retrieval loads only one language for a given `doc_id`.
 - Confirm paired English/Korean docs are loaded together only for translation, semantic parity review, or bilingual editing.
 
