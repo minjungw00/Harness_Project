@@ -2,7 +2,7 @@
 
 Use these checks when a documentation edit changes meaning in paired English and Korean pages, changes Korean prose, or affects identifiers that must remain stable across languages. These checks do not make either language subordinate to the other.
 
-Heading alignment is only a navigation signal. Passing heading parity does not prove semantic parity for paragraphs, tables, lists, examples, warnings, exceptions, or removed concepts.
+Heading alignment is only a navigation signal. Passing heading parity does not prove semantic parity for paragraphs, tables, lists, examples, warnings, exceptions, or removed concepts. English/Korean parity is also not enough when both languages share the same wrong semantic label or structure.
 
 ## CHK-PARITY-001: English and Korean meaning parity
 
@@ -224,13 +224,18 @@ Evidence to inspect:
 - Common skeletons include `Purpose`, `Conditions`, `Result`, `Non-claim`, `Owner boundary`, and `Related references`; another acceptable skeleton is `Meaning`, `Contract`, `Boundary`, and `Related references`.
 - Confirm the paired English and Korean sections use the same skeleton for the same section.
 - Confirm sentence count may differ, but meaning-unit placement and normative strength remain aligned.
+- Confirm matching skeletons are checked against the content they label; parity does not make a mislabeled unit correct.
 - Search Korean changed sections for structural labels such as `조건`, `결과`, `비주장`, and `허용되지 않는 것`; each label must have the corresponding English meaning unit in the paired section.
 - Confirm Korean natural wording does not add labels such as `조건`, `결과`, `비주장`, or `허용되지 않는 것` unless English has the equivalent meaning unit.
 - Confirm English does not add `Not allowed`, `Does not imply`, or `Non-claim` sections unless Korean has the equivalent meaning unit.
 
+Pass condition:
+- Paired sections use the same meaning-unit skeleton, and each label matches the content type it names in both languages.
+
 Failure:
 - Paired sections match headings or tables but use different semantic skeletons.
 - One language adds, removes, or relocates a condition, result, non-claim, owner boundary, or related-reference meaning unit.
+- Both languages use the same skeleton, but a label names the wrong kind of content.
 - Korean introduces `조건`, `결과`, `비주장`, or `허용되지 않는 것` as visible structure without an English counterpart.
 - One language adds a label or negative section that changes normative strength or makes a rule easier to find in only that language.
 
@@ -238,3 +243,31 @@ Fix:
 - Define or restore the same skeleton in both languages for the same section.
 - Rewrite Korean naturally while preserving the same meaning-unit placement, owner routing, and normative strength.
 - Remove one-sided labels or add the paired meaning unit when the owner-backed meaning belongs in both languages.
+
+## CHK-PARITY-012: both-languages-wrong semantic labels
+
+Check sources:
+- [Authoring Guide](../authoring-guide.md)
+- [Structure checks](structure.md)
+- [English Translation Guide](../translation-guide.md)
+- [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
+
+Evidence to inspect:
+- After comparing paired files, run the semantic label-content check on each language independently.
+- Inspect matching labels such as `Not allowed`, `Required behavior`, `Result`, `Does not imply`, and `Owner boundary`, plus their Korean equivalents or nearby Korean prose.
+- Confirm both languages classify content correctly before accepting parity: required versus prohibited, effect versus non-effect, and route versus contract.
+- Confirm a Korean label is not accepted only because it mirrors the English label, and an English label is not accepted only because the Korean page has the same structure.
+
+Pass condition:
+- Paired languages match by meaning unit, and each language also uses labels and structure that correctly describe the content.
+
+Failure:
+- English and Korean both put required behavior under a prohibition label, or prohibited behavior under a requirement label.
+- English and Korean both place an effect under a non-effect label, or a non-effect under a result label.
+- English and Korean both present a route or owner-boundary note as if it were contract text.
+- The parity review passes because both languages match, even though both share the same wrong semantic label or structure.
+
+Fix:
+- Correct the semantic label or structure in both languages in the same documentation batch.
+- Preserve natural Korean prose while keeping the corrected meaning unit, owner route, and normative strength aligned.
+- When the content is contract detail, move it to the canonical owner and leave both paired non-owner pages with a short consequence plus owner link.

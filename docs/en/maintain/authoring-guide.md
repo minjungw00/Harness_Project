@@ -154,6 +154,16 @@ Another common skeleton is:
 - `Boundary`
 - `Related references`
 
+Use semantic labels only for the content they name:
+
+- `Not allowed`: prohibited actions or states.
+- `Required behavior`: required behavior.
+- `Result`: outcomes or reader-visible consequences.
+- `Does not imply`: non-implications and non-claims.
+- `Owner boundary`: ownership boundaries and routing limits.
+
+Do not fix a mislabeled unit by copying the same label into both languages. Check the content type first: required behavior is not a prohibited action, an effect is not a non-effect, and a route is not a contract. Rename the label, move the content, or route to the owner so the label and content agree.
+
 Use the same skeleton for the same section in English and Korean. Korean may use natural sentence order, split or combine sentences, and choose natural headings or bullets, but it must not introduce extra labels such as `조건`, `결과`, `비주장`, or `허용되지 않는 것` unless the English section has the equivalent meaning unit. English must not use `Not allowed`, `Does not imply`, or `Non-claim` sections unless Korean has the equivalent meaning unit. Sentence count may differ; meaning-unit placement and normative strength must match.
 
 ### Durable examples
@@ -205,6 +215,8 @@ For check entries, use named blocks instead of dense table cells. Use non-owner 
 - Evidence to inspect: concrete documents, examples, links, fields, labels, or route metadata to inspect.
 - Pass condition: success criteria.
 - Related checks: related check IDs or sections.
+
+Every maintain-check card should expose its basis, scope, evidence, and success criterion with `Check sources`, `Applies to`, `Evidence to inspect`, and `Pass condition` when those roles are present. Remediation labels such as `Failure` and `Fix` may appear in addition to those blocks, but they do not replace the pass condition.
 
 Use ownership labels only for term or contract ownership:
 

@@ -1,6 +1,6 @@
 # Structure checks
 
-Use these checks for documentation architecture, owner boundaries, route-page structure, display wording boundaries, storage record references, reference-claim placement, and final report shape. These are documentation quality checks only; they do not certify product runtime behavior.
+Use these checks for documentation architecture, owner boundaries, route-page structure, label-content consistency, display wording boundaries, storage record references, reference-claim placement, and final report shape. These are documentation quality checks only; they do not certify product runtime behavior.
 
 ## CHK-STRUCT-001: review scope inputs
 
@@ -91,20 +91,60 @@ Applies to:
 Evidence to inspect:
 - Confirm check-card basis documents use `Check sources`.
 - Confirm checked files or document families use `Applies to`.
+- Confirm inspected documents, fields, examples, labels, links, anchors, or route metadata use `Evidence to inspect`.
+- Confirm success criteria use `Pass condition`.
 - Confirm route destinations use `Route` or `Reference route`.
 - Confirm maintenance companion pages use `Check sources` when they define the basis, or `Maintained with` when they are paired pages to update or review.
-- Confirm check cards do not use owner labels for check basis documents, checked file lists, route destinations, or companion maintenance pages.
+- Confirm check cards do not use `Owner`, `Primary owner`, or other owner labels for check basis documents, checked file lists, evidence lists, route destinations, pass criteria, or companion maintenance pages.
+
+Pass condition:
+- Maintain check cards use role-specific labels for basis, scope, evidence, and success criteria, and reserve ownership labels for actual term or contract ownership.
 
 Failure:
 - A maintain check card uses an owner label for check sources.
 - A check card lists checked files or document families under `Check sources` when they are not a basis for the check.
+- Evidence or success criteria are buried under an ambiguous label instead of `Evidence to inspect` or `Pass condition`.
 - A route destination, adjacent reference, or companion maintenance page is labeled as ownership.
 
 Fix:
 - Rename check basis lists to `Check sources`.
 - Move checked files or document families into `Applies to`.
+- Move inspected material into `Evidence to inspect`.
+- Move success criteria into `Pass condition`.
 - Rename navigation targets to `Route` or `Reference route`.
 - Rename companion maintenance pages to `Maintained with`, unless they define the check basis.
+
+## CHK-STRUCT-006: semantic label-content consistency
+
+Check sources:
+- [Authoring Guide](../authoring-guide.md)
+- [Translation Guide](../translation-guide.md)
+- [Reference Index](../../reference/README.md)
+
+Applies to:
+- Changed Reference and Maintain sections that use named semantic labels, labeled table rows, or labeled list groups.
+
+Evidence to inspect:
+- Inspect labels such as `Not allowed`, `Required behavior`, `Result`, `Does not imply`, and `Owner boundary`.
+- Confirm `Not allowed` contains prohibited actions or states, not requirements, outcomes, examples, or route links.
+- Confirm `Required behavior` contains required behavior, not prohibitions, optional guidance, outcomes, or non-claims.
+- Confirm `Result` contains outcomes or reader-visible consequences, not preconditions, requirements, or owner routes.
+- Confirm `Does not imply` contains non-implications or non-claims, not effects, requirements, or prohibitions.
+- Confirm `Owner boundary` contains ownership boundaries or routing limits, not the contract body itself.
+- Classify each labeled unit before checking parity: required versus prohibited, effect versus non-effect, and route versus contract.
+
+Pass condition:
+- Each label matches the semantic content underneath it, and each content unit is classified before it is routed, translated, or compared for parity.
+
+Failure:
+- A prohibited action is placed under `Required behavior`, or a requirement is placed under `Not allowed`.
+- An effect or outcome is placed under `Does not imply`, or a non-effect is presented as a `Result`.
+- A route or owner-boundary note is written as if it were the contract, or contract detail is hidden under `Owner boundary`.
+- English and Korean use matching labels, but the shared label is wrong for the content.
+
+Fix:
+- Rename the label, move the content to the correct meaning unit, or split the unit so requirements, prohibitions, effects, non-effects, routes, and contracts are separately reviewable.
+- If the content defines a contract, route it to the canonical owner and leave non-owner pages with a short consequence plus owner link.
 
 ## CHK-OWNER-001: canonical owner violations
 
