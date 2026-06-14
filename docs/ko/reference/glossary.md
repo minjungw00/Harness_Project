@@ -27,6 +27,7 @@
 | Product Repository | Product Repository | [런타임 경계](runtime-boundaries.md) |
 | Harness Runtime Home | Harness Runtime Home | [런타임 경계](runtime-boundaries.md) |
 | documentation | 문서 | [작성 가이드](../maintain/authoring-guide.md) |
+| semantic skeleton | 의미 골격 | [작성 가이드](../maintain/authoring-guide.md) |
 | baseline scope | 기준 범위 | [기준 범위](scope.md) |
 | supported scope | 지원 범위 | [기준 범위](scope.md) |
 | supported behavior | 지원 동작 | [기준 범위](scope.md) |
@@ -56,6 +57,7 @@
 | close-readiness blocker | 닫기 차단 사유 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API 상태 스키마](api/schema-state.md) |
 | blocker category | 차단 사유 범주 | [API 값 집합](api/schema-value-sets.md) |
+| blocker | 차단 사유 | [용어 지도](../../terminology-map.yaml) |
 | complete intent | `complete` | [API 값 집합](api/schema-value-sets.md) |
 | full evaluation order | 전체 평가 순서 | [번역 가이드](../maintain/translation-guide.md) |
 | artifact | 아티팩트 | [API 아티팩트 스키마](api/schema-artifacts.md) |
@@ -87,7 +89,8 @@
 | error/blocker boundary | 오류와 차단 사유의 경계 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | public error as blocker | 공개 오류 코드가 차단 사유로 표현되는 경우 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | `ToolError.details` | `ToolError.details` | [API 오류 세부사항](api/error-details.md) |
-| detail helper values | 오류 세부사항 보조 값 | [API 오류 세부사항](api/error-details.md) |
+| error detail helper values | 오류 세부사항 보조 값 | [API 오류 세부사항](api/error-details.md) |
+| dry-run | dry-run 미리보기 | [API 코어 스키마](api/schema-core.md) |
 | dry-run preview routing | dry-run 미리보기 처리 경로 | [API 오류 처리 경로](api/error-routing.md) |
 | blocked result | 차단 결과 | [API 오류 처리 경로](api/error-routing.md) |
 | rejected response | 거부 응답 | [API 오류 처리 경로](api/error-routing.md) |
@@ -188,6 +191,30 @@ Related references:
 
 Usage note:
 - 문서 권한을 런타임 동작이나 제품 구현 출력과 구분합니다.
+
+### semantic skeleton
+
+Term:
+- semantic skeleton
+
+Korean term:
+- 의미 골격
+
+Type:
+- 문서 개념
+
+Meaning:
+- 의미 골격은 중요한 참조 섹션을 쓰거나 다듬기 전에 정하는 의미 단위 구조입니다.
+
+Primary owner:
+- [작성 가이드](../maintain/authoring-guide.md)
+
+Related references:
+- [구조 점검](../maintain/checks/structure.md)
+- [언어 일치 점검](../maintain/checks/language-parity.md)
+
+Usage note:
+- 작성 용어로만 사용하고 제품 동작이나 런타임 상태로 쓰지 않습니다.
 
 ### baseline scope
 
@@ -872,6 +899,29 @@ Related references:
 
 Usage note:
 - 정확한 필드를 이름 붙일 때는 `CloseReadinessBlocker.category`를 씁니다.
+
+### blocker
+
+Term:
+- blocker
+
+Korean term:
+- 차단 사유
+
+Type:
+- 일반 산문 용어
+
+Meaning:
+- 차단 사유는 어떤 동작을 진행하지 못하게 하는 이유를 가리키는 일반 산문 용어입니다.
+
+Primary owner:
+- [용어 지도](../../terminology-map.yaml)
+
+Related references:
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
+
+Usage note:
+- 닫기 준비 상태 평가에서 나온 차단 사유에는 `close-readiness blocker` 용어를 씁니다.
 
 ### complete intent
 
@@ -1611,11 +1661,11 @@ Related references:
 Usage note:
 - 중첩 세부 값은 API 오류 세부사항 문서를 따릅니다.
 
-### detail helper values
+### error detail helper values
 
 Term:
-- detail helper values
 - error detail helper values
+- detail helper values
 
 Korean term:
 - 오류 세부사항 보조 값
@@ -1634,6 +1684,32 @@ Related references:
 
 Usage note:
 - 중첩 세부 값은 API 오류 세부사항 문서를 따릅니다.
+
+### dry-run
+
+Term:
+- dry-run
+- 정확한 필드를 이름 붙일 때는 `dry_run`
+
+Korean term:
+- dry-run 미리보기
+
+Type:
+- API 미리보기 용어
+
+Meaning:
+- 이 용어는 공통 `dry_run` 필드와 미리보기 응답 형태가 나타내는 API 미리보기 개념입니다.
+
+Primary owner:
+- [API 코어 스키마](api/schema-core.md)
+
+Related references:
+- [API 오류 처리 경로](api/error-routing.md)
+- [저장 효과](storage-effects.md)
+- [API 메서드](api/methods.md)
+
+Usage note:
+- 이웃 동작은 메서드, 처리 경로, 저장소 담당 문서를 따릅니다.
 
 ### dry-run preview routing
 

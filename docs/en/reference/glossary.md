@@ -27,6 +27,7 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | Product Repository | Product Repository | [Runtime Boundaries](runtime-boundaries.md) |
 | Harness Runtime Home | Harness Runtime Home | [Runtime Boundaries](runtime-boundaries.md) |
 | documentation | 문서 | [Authoring Guide](../maintain/authoring-guide.md) |
+| semantic skeleton | 의미 골격 | [Authoring Guide](../maintain/authoring-guide.md) |
 | baseline scope | 기준 범위 | [Scope](scope.md) |
 | supported scope | 지원 범위 | [Scope](scope.md) |
 | supported behavior | 지원 동작 | [Scope](scope.md) |
@@ -56,6 +57,7 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | close-readiness blocker | 닫기 차단 사유 | [API blocker routing](api/blocker-routing.md) |
 | `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API State Schemas](api/schema-state.md) |
 | blocker category | 차단 사유 범주 | [API Value Sets](api/schema-value-sets.md) |
+| blocker | 차단 사유 | [Terminology Map](../../terminology-map.yaml) |
 | complete intent | `complete` | [API Value Sets](api/schema-value-sets.md) |
 | full evaluation order | 전체 평가 순서 | [Translation Guide](../maintain/translation-guide.md) |
 | artifact | 아티팩트 | [API Artifact Schemas](api/schema-artifacts.md) |
@@ -87,7 +89,8 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | error/blocker boundary | 오류와 차단 사유의 경계 | [API blocker routing](api/blocker-routing.md) |
 | public error as blocker | 공개 오류 코드가 차단 사유로 표현되는 경우 | [API blocker routing](api/blocker-routing.md) |
 | `ToolError.details` | `ToolError.details` | [API error details](api/error-details.md) |
-| detail helper values | 오류 세부사항 보조 값 | [API error details](api/error-details.md) |
+| error detail helper values | 오류 세부사항 보조 값 | [API error details](api/error-details.md) |
+| dry-run | dry-run 미리보기 | [API Core Schemas](api/schema-core.md) |
 | dry-run preview routing | dry-run 미리보기 처리 경로 | [API error routing](api/error-routing.md) |
 | blocked result | 차단 결과 | [API error routing](api/error-routing.md) |
 | rejected response | 거부 응답 | [API error routing](api/error-routing.md) |
@@ -188,6 +191,30 @@ Related references:
 
 Usage note:
 - Keep documentation authority separate from runtime behavior and product implementation output.
+
+### semantic skeleton
+
+Term:
+- semantic skeleton
+
+Korean term:
+- 의미 골격
+
+Type:
+- documentation concept
+
+Meaning:
+- A semantic skeleton is the planned meaning-unit structure for an important Reference section.
+
+Primary owner:
+- [Authoring Guide](../maintain/authoring-guide.md)
+
+Related references:
+- [Structure checks](../maintain/checks/structure.md)
+- [Language parity checks](../maintain/checks/language-parity.md)
+
+Usage note:
+- Use it as an authoring term, not as product behavior or runtime state.
 
 ### baseline scope
 
@@ -872,6 +899,29 @@ Related references:
 
 Usage note:
 - Use `CloseReadinessBlocker.category` when naming the exact field.
+
+### blocker
+
+Term:
+- blocker
+
+Korean term:
+- 차단 사유
+
+Type:
+- general prose term
+
+Meaning:
+- Blocker is a general prose term for a reason that prevents an action from proceeding.
+
+Primary owner:
+- [Terminology Map](../../terminology-map.yaml)
+
+Related references:
+- [API blocker routing](api/blocker-routing.md)
+
+Usage note:
+- Use close-readiness blocker for blockers that come from close-readiness evaluation.
 
 ### complete intent
 
@@ -1611,11 +1661,11 @@ Related references:
 Usage note:
 - Use API error details for nested detail values.
 
-### detail helper values
+### error detail helper values
 
 Term:
-- detail helper values
 - error detail helper values
+- detail helper values
 
 Korean term:
 - 오류 세부사항 보조 값
@@ -1634,6 +1684,32 @@ Related references:
 
 Usage note:
 - Use API error details for nested detail values.
+
+### dry-run
+
+Term:
+- dry-run
+- `dry_run` when naming the exact field
+
+Korean term:
+- dry-run 미리보기
+
+Type:
+- API preview term
+
+Meaning:
+- Dry-run names the API preview concept represented by the common `dry_run` field and dry-run response shapes.
+
+Primary owner:
+- [API Core Schemas](api/schema-core.md)
+
+Related references:
+- [API error routing](api/error-routing.md)
+- [Storage Effects](storage-effects.md)
+- [API Methods](api/methods.md)
+
+Usage note:
+- Use focused method, routing, and storage owners for neighboring behavior.
 
 ### dry-run preview routing
 

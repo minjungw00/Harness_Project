@@ -12,7 +12,7 @@ canonical_for:
   - "Terminology boundaries for reserved/profile-gated value presence versus supported behavior."
   - "Terminology boundaries between stable supported documentation contracts and runtime-active or currently applied context."
   - "Terminology boundaries between documentation owner routing and product behavior or storage persistence conditions."
-  - "Terminology routing for API error-code meanings, error precedence, API response branch routing, blocker routing, dry-run preview routing, public error as blocker wording, `ToolError.details`, and detail helper values."
+  - "Terminology routing for API error-code meanings, error precedence, API response branch routing, blocker routing, dry-run preview routing, public error as blocker wording, `ToolError.details`, and error detail helper values."
   - "Artifact and evidence terminology conventions for bilingual documentation."
   - "Terminology routing for evidence collection workflow wording, close-task behavior, and design-quality owner boundaries."
 does_not_own:
@@ -1355,6 +1355,8 @@ terms:
   error_detail_helper_values:
     category: "api_concept"
     en: "error detail helper values"
+    aliases_en:
+      - "detail helper values"
     ko_reference: "오류 세부사항 보조 값"
     ko_user: "오류 세부사항 보조 값"
     primary_owner:

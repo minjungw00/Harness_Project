@@ -521,9 +521,11 @@ documents:
     owner_for:
       - "common API request envelopes"
       - "common API response branches"
+      - "dry-run response shapes"
       - "shared API error envelope shapes"
     not_owner_for:
       - "method-specific behavior"
+      - "dry-run response branch routing"
       - "nested state shapes"
       - "nested artifact shapes"
       - "nested judgment shapes"
@@ -634,7 +636,7 @@ documents:
       - "API response branch routing"
       - "blocker/API response routing boundary"
       - "public-code-to-blocker boundary"
-      - "`ToolError.details` and detail helper values"
+      - "`ToolError.details` fields and error detail helper values"
       - "`CloseReadinessBlocker` shape"
       - "`CloseReadinessBlocker.category` values"
       - "`harness.close_task` method-specific behavior"
