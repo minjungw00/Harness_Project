@@ -74,6 +74,38 @@
 - 일회성 파일이나 작업 표시를 제거합니다.
 - 오래 유지될 독자 가치가 있을 때만 알맞은 담당 문서의 지침으로 바꿉니다.
 
+## CHK-STRUCT-005: 유지보수 라벨 분류
+
+점검 기준 문서:
+- [작성 가이드](../authoring-guide.md)
+- [점검 색인](../checks.md)
+
+적용 대상:
+- `docs/en/maintain/checks.md`
+- `docs/ko/maintain/checks.md`
+- `docs/en/maintain/checks/*.md`
+- `docs/ko/maintain/checks/*.md`
+- `docs/en/maintain/authoring-guide.md`
+- `docs/ko/maintain/authoring-guide.md`
+
+확인할 근거:
+- 점검 카드의 기준 문서가 점검 기준 문서(`Check sources`) 라벨을 쓰는지 확인합니다.
+- 확인 대상 파일이나 문서 묶음이 적용 대상(`Applies to`) 라벨을 쓰는지 확인합니다.
+- 경로 목적지가 경로(`Route`) 또는 참조 경로(`Reference route`) 라벨을 쓰는지 확인합니다.
+- 함께 봐야 하는 유지보수 문서가 점검 기준을 정의하면 점검 기준 문서(`Check sources`), 같은 작업 묶음에서 함께 고치거나 검토할 문서이면 함께 유지(`Maintained with`)를 쓰는지 확인합니다.
+- 점검 카드가 점검 기준 문서, 확인 대상 파일 목록, 경로 목적지, 함께 유지할 문서에 소유권 라벨을 쓰지 않는지 확인합니다.
+
+실패 조건:
+- 유지보수 점검 카드가 점검 기준 문서에 소유권 라벨을 사용합니다.
+- 점검 기준이 아닌 확인 대상 파일이나 문서 묶음이 점검 기준 문서(`Check sources`) 아래에 놓입니다.
+- 경로 목적지, 주변 참조, 함께 유지할 문서가 소유권으로 라벨링됩니다.
+
+수정 방향:
+- 점검 기준 목록은 점검 기준 문서(`Check sources`)로 이름 붙입니다.
+- 확인 대상 파일이나 문서 묶음은 적용 대상(`Applies to`)으로 옮깁니다.
+- 탐색 목적지는 경로(`Route`) 또는 참조 경로(`Reference route`)로 이름 붙입니다.
+- 함께 유지할 문서는 함께 유지(`Maintained with`)로 이름 붙입니다. 단, 그 문서가 점검 기준을 정의한다면 점검 기준 문서(`Check sources`)를 씁니다.
+
 ## CHK-OWNER-001: 담당 문서 위반
 
 점검 기준 문서:

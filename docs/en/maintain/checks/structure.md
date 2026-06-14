@@ -74,6 +74,38 @@ Fix:
 - Remove the transient file or task marker.
 - Convert durable guidance into the appropriate owner document only when it has stable reader value.
 
+## CHK-STRUCT-005: maintenance label taxonomy
+
+Check sources:
+- [Authoring Guide](../authoring-guide.md)
+- [Checks Index](../checks.md)
+
+Applies to:
+- `docs/en/maintain/checks.md`
+- `docs/ko/maintain/checks.md`
+- `docs/en/maintain/checks/*.md`
+- `docs/ko/maintain/checks/*.md`
+- `docs/en/maintain/authoring-guide.md`
+- `docs/ko/maintain/authoring-guide.md`
+
+Evidence to inspect:
+- Confirm check-card basis documents use `Check sources`.
+- Confirm checked files or document families use `Applies to`.
+- Confirm route destinations use `Route` or `Reference route`.
+- Confirm maintenance companion pages use `Check sources` when they define the basis, or `Maintained with` when they are paired pages to update or review.
+- Confirm check cards do not use owner labels for check basis documents, checked file lists, route destinations, or companion maintenance pages.
+
+Failure:
+- A maintain check card uses an owner label for check sources.
+- A check card lists checked files or document families under `Check sources` when they are not a basis for the check.
+- A route destination, adjacent reference, or companion maintenance page is labeled as ownership.
+
+Fix:
+- Rename check basis lists to `Check sources`.
+- Move checked files or document families into `Applies to`.
+- Rename navigation targets to `Route` or `Reference route`.
+- Rename companion maintenance pages to `Maintained with`, unless they define the check basis.
+
 ## CHK-OWNER-001: canonical owner violations
 
 Check sources:

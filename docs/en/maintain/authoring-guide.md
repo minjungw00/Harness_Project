@@ -206,7 +206,16 @@ For check entries, use named blocks instead of dense table cells. Use non-owner 
 - Pass condition: success criteria.
 - Related checks: related check IDs or sections.
 
-Do not use the old owner label for check-card source lists.
+Use ownership labels only for term or contract ownership:
+
+- Primary owner: the single focused owner for a glossary term or terminology-map `primary_owner`.
+- See also or Related references: adjacent term or reference documents that help the reader, but do not own the term.
+- Route or Reference route: documentation navigation to a reader destination, not ownership.
+- Check sources: documents that define a maintenance check basis.
+- Applies to: files or document families inspected by a maintenance check.
+- Maintained with: companion maintenance pages that should change or be reviewed in the same batch.
+
+Do not use the old owner label for check-card source lists. Do not use `Primary owner` for check inputs, adjacent references, route destinations, or companion maintenance pages.
 
 Use Markdown tables only for short mappings, comparisons, or owner routing. The table maintainability rule applies to all documentation, including Reference and Maintain docs.
 
@@ -259,6 +268,8 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] No single reference owner now carries unrelated API, schema, storage, security, error, template, and example concerns that should be split or routed.
 - [ ] A newly split Reference owner did not grow into another broad catch-all owner.
 - [ ] Terminology-map and glossary owner targets point to focused owners when focused owners exist, not to broad indexes.
+- [ ] Glossary entries name exactly one `Primary owner`; adjacent documents use `See also` or `Related references`.
+- [ ] Maintain check cards use `Check sources` for check basis documents and `Applies to` for checked files or document families.
 - [ ] Repeated owner maps were reduced to the canonical map plus links.
 - [ ] README, route, and maintain documents use short summaries plus owner links instead of copied contract explanations.
 - [ ] Route and index documents do not define contracts through accumulated negative rules, exception lists, or non-claim tables.
