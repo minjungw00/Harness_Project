@@ -1,8 +1,6 @@
 # 아티팩트 저장
 
-규칙:
-
-- 이 문서는 기준 범위 원천 설계에서 아티팩트 저장 생명주기를 담당합니다.
+이 문서는 기준 범위 원천 설계에서 아티팩트 저장 생명주기를 담당합니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -25,11 +23,7 @@
 <a id="lifecycle-boundary"></a>
 ## 아티팩트 생명주기 요약
 
-규칙:
-
-- 아티팩트 저장은 스테이징, 승격, 지속 연결, 본문 읽기를 구분합니다.
-- `ArtifactRef`는 등록된 지속 아티팩트를 가리키는 공개 API 포인터입니다.
-- 저장소는 `artifacts`와 `artifact_links`를 통해 지속 아티팩트 권한을 구현합니다.
+아티팩트 저장은 스테이징, 승격, 지속 연결, 본문 읽기를 구분합니다. `ArtifactRef`는 등록된 지속 아티팩트를 가리키는 공개 API 포인터입니다. 저장소는 `artifacts`와 `artifact_links`를 통해 지속 아티팩트 권한을 구현합니다.
 
 | 단계 | 세부 블록 |
 |---|---|
@@ -99,10 +93,7 @@
 
 ## 스테이징
 
-규칙:
-
-- 임시 스테이징은 아티팩트 권한이 아닙니다.
-- `artifact_staging` 또는 동등한 저장소 소유 스테이징 기록이 스테이징 사실을 추적합니다.
+임시 스테이징은 아티팩트 권한이 아닙니다. `artifact_staging` 또는 동등한 저장소 소유 스테이징 기록이 스테이징 사실을 추적합니다.
 
 추적되는 사실:
 
@@ -119,10 +110,7 @@
 - `expires_at`
 - `consumed_by_run_id`, `promoted_artifact_id`, `consumed_at` 같은 소비 사실
 
-규칙:
-
-- `created_by_surface_*` 필드는 성공한 `harness.stage_artifact` 요청의 `VerifiedSurfaceContext`에서 Core가 기록합니다.
-- 이 필드는 스테이징 행과 대조해야 합니다.
+`created_by_surface_*` 필드는 성공한 `harness.stage_artifact` 요청의 `VerifiedSurfaceContext`에서 Core가 기록합니다. 소비하는 담당 메서드는 이 필드를 스테이징 행과 대조해야 합니다.
 
 허용되지 않는 것:
 
@@ -146,10 +134,7 @@ staged_artifact_handle: staged_artifact_account_export_test_log_001
 expires_at: "<future-expiration-timestamp>"
 ```
 
-규칙:
-
-- 이 예시는 제품 테스트 출력을 스테이징하는 입력을 나타냅니다.
-- 스테이징은 임시 아티팩트 저장만 만듭니다.
+이 예시는 제품 테스트 출력을 스테이징하는 입력을 나타냅니다. 스테이징은 임시 아티팩트 저장만 만듭니다.
 
 허용되지 않는 것:
 
@@ -163,8 +148,6 @@ expires_at: "<future-expiration-timestamp>"
 ## 스테이징 핸들
 
 `artifact_staging.status`는 저장소 소유의 임시 핸들 생명주기입니다. 요약 표는 값만 짧게 보여 주고, 세부 블록은 값의 의미를 정의합니다.
-
-`StagedArtifactHandle`은 성공한 `harness.stage_artifact`가 반환하는 임시 스테이징 핸들입니다. 이 값은 저장소가 보관한 호환 스테이징 기록으로 해석될 때만 소비 후보가 됩니다.
 
 | 값 | 요약 | 세부사항 |
 |---|---|---|
@@ -208,9 +191,7 @@ expires_at: "<future-expiration-timestamp>"
 
 ## 승격
 
-규칙:
-
-- 호환되는 담당 메서드만 스테이징 핸들을 소비하고 지속 `ArtifactRef`로 승격할 수 있습니다.
+호환되는 담당 메서드만 스테이징 핸들을 소비하고 지속 `ArtifactRef`로 승격할 수 있습니다.
 
 필수 조건:
 
@@ -242,9 +223,7 @@ expires_at: "<future-expiration-timestamp>"
 
 ## 기존 아티팩트 참조
 
-규칙:
-
-- `existing_artifact`는 기존 아티팩트가 새 사용과 호환될 때만 지속 아티팩트 행을 재사용합니다.
+`existing_artifact`는 기존 아티팩트가 새 사용과 호환될 때만 지속 아티팩트 행을 재사용합니다.
 
 필수 조건:
 
@@ -277,10 +256,7 @@ expires_at: "<future-expiration-timestamp>"
 - 가용성 `status`.
 - `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` 같은 기존 담당 기록에 대한 담당 연결.
 
-규칙:
-
-- 증거 자격, 아티팩트 가용성, 증거 충분성은 서로 분리됩니다.
-- `artifact_links`가 다형 담당 테이블이어도 아티팩트 담당 관계 무결성은 필요합니다.
+증거 자격, 아티팩트 가용성, 증거 충분성은 서로 분리됩니다. `artifact_links`가 다형 담당 테이블이어도 아티팩트 담당 관계 무결성은 필요합니다.
 
 허용되는 것:
 
@@ -308,8 +284,6 @@ expires_at: "<future-expiration-timestamp>"
 - 최종 수락 생성.
 - 잔여 위험 수락.
 - `Task` 닫기.
-
-기존 아티팩트 참조도 마찬가지입니다. `existing_artifact`가 새 `artifact_links` 행을 추가할 수는 있지만, 담당 메서드가 그 연결을 증거로 기록하지 않으면 새 증거가 생겼다고 볼 수 없습니다.
 
 ## 가용성, 가림 처리, 무결성
 
@@ -352,10 +326,7 @@ expires_at: "<future-expiration-timestamp>"
 
 - 아티팩트 저장소 또는 필요한 조회 경로가 현재 등록된 바이트 또는 안전한 메타데이터 알림을 제공할 수 없습니다.
 
-규칙:
-
-- `artifacts.redaction_state`는 [API 값 집합](api/schema-value-sets.md#artifact-values)의 지원되는 `ArtifactRef.redaction_state` 값을 사용합니다.
-- `sha256`, `size_bytes`, `content_type`은 저장된 바이트 비교와 가용성 처리를 위한 무결성 사실입니다.
+`artifacts.redaction_state`는 [API 값 집합](api/schema-value-sets.md#artifact-values)의 지원되는 `ArtifactRef.redaction_state` 값을 사용합니다. `sha256`, `size_bytes`, `content_type`은 저장된 바이트 비교와 가용성 처리를 위한 무결성 사실입니다.
 
 허용되는 것:
 
@@ -394,8 +365,6 @@ expires_at: "<future-expiration-timestamp>"
 ## 검증과 실패
 
 거절된 스테이징 핸들 입력은 아티팩트 검증 실패로 남아야 합니다. 증거 충분성, 로컬 접근 불일치, 역량 부족, 메서드 성공으로 숨기면 안 됩니다.
-
-요약 표는 실패 유형만 보여 주고, 세부 블록은 예를 분리합니다.
 
 | 실패 유형 | 세부사항 |
 |---|---|
@@ -451,11 +420,7 @@ expires_at: "<future-expiration-timestamp>"
 - 소비되지 않았거나 만료된 `artifact_staging` 행과 `artifacts/tmp/` 스테이징 바이트 또는 알림은 `expired` 또는 `discarded`로 표시할 수 있습니다.
 - 등록 전 임시 바이트는 정리할 수 있습니다.
 
-규칙:
-
-- 이 임시 스테이징 자료는 증거 권한이 아닙니다.
-- `artifacts` 행이 커밋된 뒤의 보존 삭제, 프로젝트 해체, 파괴적 정리는 일반적인 기준 범위 변경 동작 밖이며 명시적인 저장소 또는 마이그레이션 계약이 필요합니다.
-- 그 계약은 아티팩트 해시, 담당 연결, 이벤트, 재실행 행을 보존하거나 영향을 받은 참조를 복구 대상으로 유효하지 않게 표시해야 합니다.
+이 임시 스테이징 자료는 증거 권한이 아닙니다. `artifacts` 행이 커밋된 뒤의 보존 삭제, 프로젝트 해체, 파괴적 정리는 일반적인 기준 범위 변경 동작 밖이며 명시적인 저장소 또는 마이그레이션 계약이 필요합니다. 그 계약은 아티팩트 해시, 담당 연결, 이벤트, 재실행 행을 보존하거나 영향을 받은 참조를 복구 대상으로 유효하지 않게 표시해야 합니다.
 
 허용되지 않는 것:
 

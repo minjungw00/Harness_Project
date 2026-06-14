@@ -2,7 +2,19 @@
 
 This document owns the routing boundary between close-readiness blockers and API response branches. It is a boundary router, not the method behavior owner or the schema owner.
 
-Use it only after the response branch boundary is known. It routes owner questions at the error/blocker boundary; it does not define `harness.close_task` method behavior, `CloseReadinessBlocker` shape, blocker category values, Core close-readiness authority, storage effects, public `ErrorCode` meanings, API error precedence, response-branch selection, or display wording.
+Use it only after the response branch boundary is known. It routes owner questions at the error/blocker boundary.
+
+This document does not define:
+
+- `harness.close_task` method behavior
+- `CloseReadinessBlocker` shape
+- blocker category values
+- Core close-readiness authority
+- storage effects
+- public `ErrorCode` meanings
+- API error precedence
+- response-branch selection
+- display wording
 
 ## Owner boundaries
 

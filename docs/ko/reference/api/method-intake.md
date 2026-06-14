@@ -47,7 +47,8 @@
 - `VerifiedSurfaceContext.access_class=core_mutation`입니다.
 - `verified=true`입니다.
 
-비주장: `surface_id`는 등록된 로컬 접점을 고르는 선택자일 뿐, 그 자체가 권한이 아닙니다.
+접점 식별 경계:
+- `surface_id`는 등록된 로컬 접점을 고르는 선택자일 뿐, 그 자체가 권한이 아닙니다.
 
 ## 상태 버전 동작
 

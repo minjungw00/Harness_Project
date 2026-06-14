@@ -222,7 +222,7 @@ direct
 
 `CloseReadinessBlocker` 객체 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다.
 
-이 절은 차단 사유 범주 값인 `CloseReadinessBlocker.category`와 인접 상태/차단 사유 값을 담당합니다. 차단 사유 처리 경로는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다.
+이 절은 차단 사유 범주 값인 `CloseReadinessBlocker.category`와 인접 상태/차단 사유 값을 담당합니다.
 
 `PlannedBlocker.source_kind`는 아래 값을 사용합니다.
 

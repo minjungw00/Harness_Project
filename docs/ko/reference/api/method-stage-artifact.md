@@ -38,13 +38,7 @@
 - `project_id`와 `task_id`가 호환됩니다.
 - `manual_artifact_attachment_supported=true`입니다.
 
-결과:
-
-- 서버는 확인된 로컬 접점에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다.
-
-비주장:
-
-- 호출자는 이 값을 권한 근거로 제출하지 않습니다.
+서버는 확인된 로컬 접점에서 `created_by_surface_id`와 `created_by_surface_instance_id`를 기록합니다. 호출자는 이 값을 권한 근거로 제출하지 않습니다.
 
 ## 상태 버전 동작
 

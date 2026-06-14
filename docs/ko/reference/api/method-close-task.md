@@ -17,8 +17,7 @@
 
 - `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`의 공통 스키마 본문
 - 상태, 아티팩트, 사용자 판단, 값 집합, 오류의 중첩 스키마 정의
-- 차단 사유 처리 경로
-- 차단 사유 범주 값의 정의와 표시 문구
+- 닫기 차단 사유/API 응답 처리 경로, 차단 사유 범주 값 정의, 표시 문구
 - 저장 DDL, 저장 기록 레이아웃, 아티팩트 생명주기, 보안 보장, Core 제품 의미
 
 ## 목적

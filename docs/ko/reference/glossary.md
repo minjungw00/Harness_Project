@@ -1588,7 +1588,7 @@ Related references:
 - [Task 닫기 메서드](api/method-close-task.md)
 
 Usage note:
-- 이 경계는 [API 차단 사유 처리 경로](api/blocker-routing.md)에서 확인합니다.
+- 이 경계에는 API 차단 사유 처리 경로 담당 문서를 사용합니다.
 
 ### error/blocker boundary
 
@@ -1612,7 +1612,7 @@ Related references:
 - [API 오류 코드](api/error-codes.md)
 
 Usage note:
-- 이 경계는 [API 차단 사유 처리 경로](api/blocker-routing.md)에서 확인합니다.
+- 이 경계에는 API 차단 사유 처리 경로 담당 문서를 사용합니다.
 
 ### public error as blocker
 
@@ -1636,7 +1636,7 @@ Related references:
 - [API 오류 코드](api/error-codes.md)
 
 Usage note:
-- 이 좁은 경우는 [API 차단 사유 처리 경로](api/blocker-routing.md)에서 확인합니다.
+- 이 좁은 경우에는 API 차단 사유 처리 경로 담당 문서를 사용합니다.
 
 ### `ToolError.details`
 
