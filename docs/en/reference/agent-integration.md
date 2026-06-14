@@ -1,18 +1,18 @@
 # Agent integration reference
 
-This document owns how agent-facing surfaces are registered, selected for active surface context, and described by capability declarations. It also defines the boundary for carrying owner-result Harness context into an agent surface.
+This document owns how agent-facing surfaces are registered, selected for current surface context, and described by capability declarations. It also defines the boundary for carrying owner-result Harness context into an agent surface.
 
-It does not define API schemas, method behavior, storage effects, security guarantee meanings, projection authority, or rendered template wording.
+It does not define API schemas, method behavior, storage effects, security guarantee meanings, projection/display authority boundaries, or rendered template wording.
 
 ## Owns / Does not own
 
 This document owns:
 
 - surface registration inputs and selector meaning for agent integration
-- active surface context boundaries, including `surface_id`, `surface_instance_id`, and request-level `VerifiedSurfaceContext`
+- current surface context boundaries, including `surface_id`, `surface_instance_id`, and request-level `VerifiedSurfaceContext`
 - capability declaration boundaries for `capability_profile`
 - agent context transfer rules between owner results and a surface
-- fallback display when the active surface is unavailable, mismatched, stale, or capability-limited
+- fallback display when the selected surface or current surface context is unavailable, mismatched, stale, or capability-limited
 - one-language-per-`doc_id` retrieval guidance for agent context
 
 This document does not own:
@@ -21,7 +21,7 @@ This document does not own:
 - API request envelopes, response branches, schema shapes, method access requirements, or access-class value names; see [API Schema Core](api/schema-core.md), [API Methods](api/methods.md), method owners, and [API Value Sets](api/schema-value-sets.md)
 - storage layout, artifact lifecycle, or staged-handle validation; see storage and artifact owners through [Reference Index](README.md)
 - security guarantee meanings or access-boundary wording; see [Security](security.md)
-- authority versus projected display rules; see [Projection Authority Reference](projection-and-templates.md)
+- authority versus projected display rules; see [Projection and template display boundaries](projection-and-templates.md)
 - rendered body wording, public display labels, or template phrasing; see [Template Bodies](template-bodies.md)
 
 ## Integration boundary
@@ -29,7 +29,7 @@ This document does not own:
 Agent-facing surfaces carry context between Harness owner results and an agent. They do not create Harness authority.
 
 Condition:
-- An agent may rely on a surface only through owner-returned state or a compatible active surface context.
+- An agent may rely on a surface only through owner-returned state or a compatible current surface context.
 - Display text, chat messages, generated files, surface descriptions, `Product Repository` files, projections, and agent memory are support context only.
 
 Agent may:
@@ -44,7 +44,7 @@ Agent must not:
 Owner links:
 - [Core Model](core-model.md) owns Core authority, user-owned judgment, close readiness, acceptance, and residual-risk boundaries.
 - [Runtime Boundaries](runtime-boundaries.md) owns `Product Repository`, Harness Server, and `Harness Runtime Home` separation.
-- [Projection Authority Reference](projection-and-templates.md) owns authority versus projected display rules.
+- [Projection and template display boundaries](projection-and-templates.md) owns authority versus projected display rules.
 
 ## Surface registration
 
@@ -68,7 +68,7 @@ Owner links:
 - [API Value Sets](api/schema-value-sets.md) owns access-class value names.
 - [Security](security.md) owns access-boundary and guarantee wording.
 
-## Active surface context
+## Current surface context
 
 `VerifiedSurfaceContext` is the owner-returned context that says the selected surface is compatible with the current request.
 
@@ -97,7 +97,7 @@ Owner links:
 
 Condition:
 - A capability may be declared supported only when [Scope](scope.md) and the affected owners define it as baseline or profile-gated supported behavior.
-- Protected reads, mutations, artifact operations, and guarantee displays may use a capability declaration only with compatible active surface context and owner-method support.
+- Protected reads, mutations, artifact operations, and guarantee displays may use a capability declaration only with compatible current surface context and owner-method support.
 
 Agent may:
 - describe supported access classes
@@ -121,11 +121,11 @@ Owner links:
 Agent context transfer gives the agent enough owner context for the next action without turning the packet into an authority record.
 
 Condition:
-- Agent context should contain only owner results needed for the next action and active surface limits that affect that action.
+- Agent context should contain only owner results needed for the next action and current surface-context limits that affect that action.
 - A context packet is support context, not Core state, storage state, evidence, acceptance, residual-risk acceptance, or close output.
 
 Agent may:
-- pass compact context containing the current Task summary, active scope, `state_version`, pending user-owned judgments, blockers, next safe action, evidence and artifact summaries, close-readiness and residual-risk summaries, owner-supported guarantee display, and source or limitation notes
+- pass compact context containing the current Task summary, current scope, `state_version`, pending user-owned judgments, blockers, next safe action, evidence and artifact summaries, close-readiness and residual-risk summaries, owner-supported guarantee display, and source or limitation notes
 - retrieve exact owner sections only when the next action needs them
 - include both language versions for the same `doc_id` when bilingual maintenance requires semantic-parity review
 
@@ -136,11 +136,11 @@ Agent must not:
 Owner links:
 - [Template Bodies](template-bodies.md) owns agent context packet wording.
 - [Reference Index](README.md) routes exact owner sections.
-- [Translation Guide](../maintain/translation-guide.md) owns bilingual semantic-parity review expectations.
+- [Translation Guide](../maintain/translation-guide.md) owns bilingual semantic-parity review guidance.
 
 ## Fallback boundary
 
-Fallback display applies when the active surface or a required integration capability is unavailable, mismatched, stale, or insufficient for the requested operation.
+Fallback display applies when the current surface context or a required integration capability is unavailable, mismatched, stale, or insufficient for the requested operation.
 
 Agent may:
 - move to a capable surface

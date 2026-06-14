@@ -1,6 +1,6 @@
-# Projection authority reference
+# Projection and template display boundaries
 
-This document owns the distinction between authoritative Harness records and read-only projected, status, or template views. Current rendered body guidance, display phrasing, and user-facing labels live in [Template Bodies](template-bodies.md).
+This document owns the distinction between authoritative Harness records and read-only projected, status, or template views. A `Projection` is a view or rendered state surface; it does not create authority. Current rendered body guidance, display phrasing, and user-facing labels live in [Template Bodies](template-bodies.md).
 
 ## Owns / Does not own
 
@@ -18,7 +18,7 @@ This document does not own:
 - source-of-truth Core state, user-owned judgment, evidence, acceptance decisions, residual-risk decisions, or close-readiness state; see [Core Model](core-model.md)
 - storage records, artifact records, or storage effects; see storage owners through [Reference Index](README.md)
 - public API schemas or method behavior; see API owners through [Reference Index](README.md)
-- surface registration, active surface context, or capability declarations; see [Agent Integration](agent-integration.md)
+- surface registration, current surface context, or capability declarations; see [Agent Integration](agent-integration.md)
 
 ## Authority boundary
 
@@ -30,7 +30,7 @@ Projected, status, and template views are read-only display. They may quote owne
 
 A rendered label, status badge, Markdown section, projection, template body, chat summary, surface output, or agent context packet cannot by itself:
 
-- authorize writes
+- create `Write Authorization`
 - create evidence or a persistent `ArtifactRef`
 - satisfy verification, QA, evidence, acceptance, or other gates
 - create final acceptance or accept residual risk
@@ -58,11 +58,11 @@ Display output must:
 
 This document may say whether a view is authority or display. It must not define the exact wording, body sections, or localized labels for that view.
 
-Rendered labels may help readers understand owner records, but labels do not rename API values, storage fields, `ErrorCode` values, or blocker codes.
+Rendered labels may refer to semantic owners to help readers understand owner records, but labels do not redefine those semantics or rename API values, storage fields, `ErrorCode` values, or blocker codes.
 
 ## Owner links
 
 - [Template Bodies](template-bodies.md) owns current rendered body guidance, display phrasing, and user-facing labels.
 - [Core Model](core-model.md) owns Core authority, user-owned judgment, close readiness, final acceptance, and residual-risk boundaries.
 - [Reference Index](README.md) routes API, storage, artifact, and security owner questions.
-- [Agent Integration](agent-integration.md) owns surface registration, active surface context, and capability declarations.
+- [Agent Integration](agent-integration.md) owns surface registration, current surface context, and capability declarations.
