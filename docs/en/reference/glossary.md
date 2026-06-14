@@ -316,7 +316,7 @@ Type:
 - scope boundary term
 
 Meaning:
-- An out-of-scope capability is excluded from baseline behavior until Scope and the affected owners define support.
+- An out-of-scope capability names a capability outside the supported boundary.
 
 Primary owner:
 - [Scope](scope.md)
@@ -325,7 +325,7 @@ Related references:
 - None.
 
 Usage note:
-- Route support-status questions to Scope.
+- Use Scope for support status.
 
 ### evidence collection workflow
 
@@ -364,7 +364,7 @@ Type:
 - out-of-scope capability family
 
 Meaning:
-- This phrase names an excluded evidence-workflow capability family.
+- This phrase names an evidence-workflow capability family outside the supported boundary.
 
 Primary owner:
 - [Scope](scope.md)
@@ -373,7 +373,7 @@ Related references:
 - [Terminology Map](../../terminology-map.yaml)
 
 Usage note:
-- Use Scope and affected owners for contract detail.
+- Use Scope for support status.
 
 ### owner document
 
@@ -387,7 +387,7 @@ Type:
 - owner-routing term
 
 Meaning:
-- An owner document is the canonical document allowed to define a product concept, contract, schema family, route, or terminology rule.
+- An owner document is the canonical source for a product concept, contract, route, or terminology rule.
 
 Primary owner:
 - [Authoring Guide](../maintain/authoring-guide.md)
@@ -695,7 +695,7 @@ Type:
 - Core close-readiness concept
 
 Meaning:
-- Close readiness is the Core concept for whether a task can be honestly closed.
+- Close readiness is the Core concept for whether a task is ready to close.
 
 Primary owner:
 - [Core Model](core-model.md)
@@ -703,9 +703,6 @@ Primary owner:
 Related references:
 - [Close-task method](api/method-close-task.md)
 - [API blocker routing](api/blocker-routing.md)
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
-- [Template Bodies](template-bodies.md)
 
 Usage note:
 - Use schema terms only when naming the schema.
@@ -722,16 +719,13 @@ Type:
 - close-task method term
 
 Meaning:
-- Close readiness evaluation names the method-owned evaluation for close readiness.
+- Close readiness evaluation names the close-task method concern for close readiness.
 
 Primary owner:
 - [Close-task method](api/method-close-task.md)
 
 Related references:
 - [Core Model](core-model.md)
-- [API blocker routing](api/blocker-routing.md)
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
 - Use the method owner for evaluation detail.
@@ -748,15 +742,13 @@ Type:
 - API method term
 
 Meaning:
-- Close task is the API-owned Task-closing operation exposed through `harness.close_task`.
+- Close task names the Task-closing API operation.
 
 Primary owner:
 - [Close-task method](api/method-close-task.md)
 
 Related references:
 - [API Methods](api/methods.md)
-- [Core Model](core-model.md)
-- [API blocker routing](api/blocker-routing.md)
 
 Usage note:
 - Use `harness.close_task` when naming the exact public method.
@@ -772,22 +764,19 @@ Korean term:
 - Task 닫기 동작
 
 Type:
-- API method behavior term
+- API method term
 
 Meaning:
-- Close task behavior names method-specific behavior of `harness.close_task`.
+- Close task behavior names the behavior area owned by `harness.close_task`.
 
 Primary owner:
 - [Close-task method](api/method-close-task.md)
 
 Related references:
-- [Core Model](core-model.md)
-- [API blocker routing](api/blocker-routing.md)
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
+- [API Methods](api/methods.md)
 
 Usage note:
-- Use the method owner for method-specific detail.
+- Use the close-task method owner for details.
 
 ### `harness.close_task`
 
@@ -808,13 +797,9 @@ Primary owner:
 
 Related references:
 - [API Methods](api/methods.md)
-- [Core Model](core-model.md)
-- [API blocker routing](api/blocker-routing.md)
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
-- Use the method owner for method-specific detail.
+- Use the close-task method owner for details.
 
 ### close-readiness blocker
 
@@ -829,17 +814,14 @@ Type:
 - API blocker-routing term
 
 Meaning:
-- A close-readiness blocker is close-relevant blocker data.
+- A close-readiness blocker names a reason a task is not ready to close.
 
 Primary owner:
 - [API blocker routing](api/blocker-routing.md)
 
 Related references:
 - [Core Model](core-model.md)
-- [Close-task method](api/method-close-task.md)
 - [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
-- [Template Bodies](template-bodies.md)
 
 Usage note:
 - Use 닫기 차단 사유 in Korean prose; use `CloseReadinessBlocker` for the schema.
@@ -862,11 +844,7 @@ Primary owner:
 - [API State Schemas](api/schema-state.md)
 
 Related references:
-- [Core Model](core-model.md)
-- [Close-task method](api/method-close-task.md)
-- [API Value Sets](api/schema-value-sets.md)
 - [API blocker routing](api/blocker-routing.md)
-- [Template Bodies](template-bodies.md)
 
 Usage note:
 - Use the prose term for the concept and the schema identifier for the schema.
@@ -883,7 +861,7 @@ Type:
 - API value concept
 
 Meaning:
-- Blocker category is the prose concept for classifying close-readiness blockers by responsible concern.
+- Blocker category is the prose concept for grouping close-readiness blockers.
 
 Primary owner:
 - [API Value Sets](api/schema-value-sets.md)
@@ -956,7 +934,7 @@ Type:
 - artifact term
 
 Meaning:
-- An artifact is product work material represented through artifact schemas or artifact storage.
+- An artifact is product work material that Harness can refer to.
 
 Primary owner:
 - [API Artifact Schemas](api/schema-artifacts.md)
@@ -987,7 +965,6 @@ Primary owner:
 Related references:
 - [API State Schemas](api/schema-state.md)
 - [Record-run method](api/method-record-run.md)
-- [Storage Records](storage-records.md)
 
 Usage note:
 - Keep acceptance and residual-risk terms separate.
@@ -1004,7 +981,7 @@ Type:
 - API schema
 
 Meaning:
-- `ArtifactRef` is a public pointer to a registered persistent artifact.
+- `ArtifactRef` is the API schema identifier for an artifact reference.
 
 Primary owner:
 - [API Artifact Schemas](api/schema-artifacts.md)
@@ -1013,7 +990,7 @@ Related references:
 - [Artifact Storage](storage-artifacts.md)
 
 Usage note:
-- Use the artifact schema owner for ref lifecycle detail.
+- Use the artifact schema owner for reference detail.
 
 ### `ArtifactInput`
 
@@ -1073,7 +1050,7 @@ Type:
 - projection term
 
 Meaning:
-- A projection is read-only derived display or support context from owner records.
+- A projection is a read-only status or display view.
 
 Primary owner:
 - [Projection Authority Reference](projection-and-templates.md)
@@ -1082,7 +1059,7 @@ Related references:
 - [Template Bodies](template-bodies.md)
 
 Usage note:
-- Use the projection owner for authority detail.
+- Use the projection owner for authority questions.
 
 ### `Projection`
 
@@ -1191,14 +1168,13 @@ Type:
 - storage versioning identifier
 
 Meaning:
-- `state_version` names the project-wide state clock reported by public state summaries and affected storage records.
+- `state_version` names the project-wide state version identifier.
 
 Primary owner:
 - [Storage Versioning](storage-versioning.md)
 
 Related references:
 - [API Schema Core](api/schema-core.md)
-- [Storage Effects](storage-effects.md)
 
 Usage note:
 - Use Storage Versioning for state-clock detail.
@@ -1311,14 +1287,13 @@ Type:
 - security term
 
 Meaning:
-- Baseline guarantee names a guarantee supported in the baseline scope.
+- Baseline guarantee names a Security-defined guarantee in the baseline scope.
 
 Primary owner:
 - [Security](security.md)
 
 Related references:
 - [Scope](scope.md)
-- [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
 - Use Security for guarantee level.
@@ -1335,7 +1310,7 @@ Type:
 - security term
 
 Meaning:
-- A cooperative guarantee depends on the surface following the documented procedure.
+- Cooperative guarantee names a Security-defined guarantee type.
 
 Primary owner:
 - [Security](security.md)
@@ -1358,13 +1333,13 @@ Type:
 - security term
 
 Meaning:
-- A detective guarantee depends on documented observable scope and capability checks.
+- Detective guarantee names a Security-defined guarantee type.
 
 Primary owner:
 - [Security](security.md)
 
 Related references:
-- [Agent Integration](agent-integration.md)
+- None.
 
 Usage note:
 - Use Security for guarantee strength.
@@ -1406,7 +1381,7 @@ Type:
 - value-status term
 
 Meaning:
-- A reserved value may exist as vocabulary or reserved surface area without making behavior supported.
+- Reserved value names vocabulary that is not supported behavior by itself.
 
 Primary owner:
 - [Scope](scope.md)
@@ -1429,7 +1404,7 @@ Type:
 - value-status term
 
 Meaning:
-- A profile-gated value is available only when the relevant profile and owner behavior define it as supported.
+- Profile-gated value names vocabulary whose support depends on an explicit profile.
 
 Primary owner:
 - [Scope](scope.md)
@@ -1460,8 +1435,6 @@ Primary owner:
 Related references:
 - [API error precedence](api/error-precedence.md)
 - [API error routing](api/error-routing.md)
-- [API blocker routing](api/blocker-routing.md)
-- [API error details](api/error-details.md)
 
 Usage note:
 - Use the error-code owner for public code meanings.
@@ -1479,16 +1452,13 @@ Type:
 - API error-code term
 
 Meaning:
-- Error code meanings are the public meanings and allowed occurrence summaries for `ErrorCode` values.
+- Error code meanings name the public meaning concern for `ErrorCode` values.
 
 Primary owner:
 - [API error codes](api/error-codes.md)
 
 Related references:
 - [API error precedence](api/error-precedence.md)
-- [API error routing](api/error-routing.md)
-- [API blocker routing](api/blocker-routing.md)
-- [API error details](api/error-details.md)
 
 Usage note:
 - Use the focused API error owners for neighboring concerns.
@@ -1506,16 +1476,13 @@ Type:
 - API error-precedence term
 
 Meaning:
-- Error precedence selects the primary public `ErrorCode` when an error-bearing branch has more than one public error candidate.
+- Error precedence names the primary public-error selection concern.
 
 Primary owner:
 - [API error precedence](api/error-precedence.md)
 
 Related references:
 - [API error codes](api/error-codes.md)
-- [API error routing](api/error-routing.md)
-- [API blocker routing](api/blocker-routing.md)
-- [API error details](api/error-details.md)
 
 Usage note:
 - Use the focused API error owners for neighboring concerns.
@@ -1534,16 +1501,14 @@ Type:
 - API error-routing term
 
 Meaning:
-- Error routing covers API response branch routing for rejected responses, blocked results, and `dry_run` previews.
+- Error routing names the API response-branch routing concern.
 
 Primary owner:
 - [API error routing](api/error-routing.md)
 
 Related references:
 - [API error codes](api/error-codes.md)
-- [API error precedence](api/error-precedence.md)
 - [API blocker routing](api/blocker-routing.md)
-- [API error details](api/error-details.md)
 
 Usage note:
 - Use the focused API error owners for neighboring concerns.
@@ -1569,13 +1534,8 @@ Primary owner:
 
 Related references:
 - [API error routing](api/error-routing.md)
-- [API error codes](api/error-codes.md)
-- [API error precedence](api/error-precedence.md)
 - [Core Model](core-model.md)
 - [Close-task method](api/method-close-task.md)
-- [API State Schemas](api/schema-state.md)
-- [API Value Sets](api/schema-value-sets.md)
-- [Template Bodies](template-bodies.md)
 
 Usage note:
 - Use the blocker-routing owner for this boundary.
@@ -1593,7 +1553,7 @@ Type:
 - API blocker-routing term
 
 Meaning:
-- The error/blocker boundary separates API errors returned before a valid evaluation from close-readiness blocker data returned after a valid evaluation.
+- The error/blocker boundary names the distinction between API errors and close-readiness blockers.
 
 Primary owner:
 - [API blocker routing](api/blocker-routing.md)
@@ -1617,7 +1577,7 @@ Type:
 - API blocker-routing term
 
 Meaning:
-- Public error as blocker names the narrow case where a public error code may appear as blocker data.
+- Public error as blocker names a blocker-routing concern involving public error codes.
 
 Primary owner:
 - [API blocker routing](api/blocker-routing.md)
@@ -1647,8 +1607,6 @@ Primary owner:
 
 Related references:
 - [API error codes](api/error-codes.md)
-- [API error precedence](api/error-precedence.md)
-- [API error routing](api/error-routing.md)
 
 Usage note:
 - Use API error details for nested detail values.
@@ -1666,15 +1624,13 @@ Type:
 - API detail term
 
 Meaning:
-- Detail helper values are nested helper values used under `ToolError.details`.
+- Detail helper values name nested values under `ToolError.details`.
 
 Primary owner:
 - [API error details](api/error-details.md)
 
 Related references:
-- [API error codes](api/error-codes.md)
-- [API error precedence](api/error-precedence.md)
-- [API error routing](api/error-routing.md)
+- None.
 
 Usage note:
 - Use API error details for nested detail values.
@@ -1692,18 +1648,16 @@ Type:
 - API preview-routing term
 
 Meaning:
-- Dry-run preview routing covers which API response branch represents valid `dry_run` previews, preview blockers, and pre-preview failures.
+- Dry-run preview routing names the response-branch routing concern for `dry_run` previews.
 
 Primary owner:
 - [API error routing](api/error-routing.md)
 
 Related references:
-- [API Schema Core](api/schema-core.md)
 - [API Methods](api/methods.md)
-- [Storage Effects](storage-effects.md)
 
 Usage note:
-- Use focused method, schema, and storage owners for neighboring details.
+- Use focused method and schema owners for neighboring details.
 
 ### blocked result
 
@@ -1717,18 +1671,16 @@ Type:
 - API result term
 
 Meaning:
-- A blocked result is a method-specific result that reports a valid operation could not proceed.
+- Blocked result names an API result branch for a valid but blocked operation.
 
 Primary owner:
 - [API error routing](api/error-routing.md)
 
 Related references:
-- [Prepare-write method](api/method-prepare-write.md)
-- [Close-task method](api/method-close-task.md)
-- [Storage Effects](storage-effects.md)
+- [API Methods](api/methods.md)
 
 Usage note:
-- A blocked result is not a public transport error or schema rejection.
+- Use API error routing for result-branch detail.
 
 ### rejected response
 
@@ -1742,7 +1694,7 @@ Type:
 - API response branch
 
 Meaning:
-- A rejected response means the method failed before proceeding to the committed operation.
+- Rejected response names an API response branch for a rejected request.
 
 Primary owner:
 - [API error routing](api/error-routing.md)
@@ -1750,8 +1702,6 @@ Primary owner:
 Related references:
 - [API Schema Core](api/schema-core.md)
 - [API error codes](api/error-codes.md)
-- [API error precedence](api/error-precedence.md)
-- [Storage Effects](storage-effects.md)
 
 Usage note:
 - Use API error routing for branch detail.
@@ -1791,14 +1741,13 @@ Type:
 - lifecycle term
 
 Meaning:
-- Lifecycle is the allowed phase progression of a concept such as a `Task` or artifact handle.
+- Lifecycle is the phase progression of a concept such as a `Task` or artifact handle.
 
 Primary owner:
 - [Core Model](core-model.md)
 
 Related references:
 - [API Value Sets](api/schema-value-sets.md)
-- [Artifact Storage](storage-artifacts.md)
 
 Usage note:
 - Use exact identifiers when naming lifecycle fields or values.

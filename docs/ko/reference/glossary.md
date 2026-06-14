@@ -316,7 +316,7 @@ Type:
 - 범위 경계 용어
 
 Meaning:
-- 지원 범위 밖 기능은 기준 범위와 영향받는 담당 문서가 지원을 정의하기 전까지 기준 범위 동작에서 제외됩니다.
+- 지원 범위 밖 기능은 지원 범위 밖에 있는 기능을 가리킵니다.
 
 Primary owner:
 - [기준 범위](scope.md)
@@ -325,7 +325,7 @@ Related references:
 - 없음.
 
 Usage note:
-- 지원 상태 질문은 기준 범위 문서로 보냅니다.
+- 지원 상태는 기준 범위 문서를 따릅니다.
 
 ### evidence collection workflow
 
@@ -364,7 +364,7 @@ Type:
 - 지원 범위 밖 기능 묶음
 
 Meaning:
-- 이 표현은 제외된 증거 흐름 기능 묶음을 가리킵니다.
+- 이 표현은 지원 범위 밖에 있는 증거 흐름 기능 묶음을 가리킵니다.
 
 Primary owner:
 - [기준 범위](scope.md)
@@ -373,7 +373,7 @@ Related references:
 - [용어 지도](../../terminology-map.yaml)
 
 Usage note:
-- 계약 세부사항은 기준 범위와 영향받는 담당 문서에서 확인합니다.
+- 지원 상태는 기준 범위 문서를 따릅니다.
 
 ### owner document
 
@@ -387,7 +387,7 @@ Type:
 - 담당 경로 용어
 
 Meaning:
-- 담당 문서는 제품 개념, 계약, 스키마 묶음, 경로, 용어 규칙의 기준 의미를 정의할 수 있는 문서입니다.
+- 담당 문서는 제품 개념, 계약, 경로, 용어 규칙의 기준 출처입니다.
 
 Primary owner:
 - [작성 가이드](../maintain/authoring-guide.md)
@@ -695,7 +695,7 @@ Type:
 - Core 닫기 준비 상태 개념
 
 Meaning:
-- 닫기 준비 상태는 작업을 정직하게 닫을 수 있는지를 나타내는 Core 개념입니다.
+- 닫기 준비 상태는 작업을 닫을 준비가 되었는지를 나타내는 Core 개념입니다.
 
 Primary owner:
 - [Core 모델](core-model.md)
@@ -703,9 +703,6 @@ Primary owner:
 Related references:
 - [Task 닫기 메서드](api/method-close-task.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [API 상태 스키마](api/schema-state.md)
-- [API 값 집합](api/schema-value-sets.md)
-- [템플릿 본문](template-bodies.md)
 
 Usage note:
 - 스키마를 이름 붙일 때만 스키마 용어를 씁니다.
@@ -722,16 +719,13 @@ Type:
 - Task 닫기 메서드 용어
 
 Meaning:
-- 닫기 준비 상태 평가는 닫기 준비 상태를 다루는 메서드 담당 평가입니다.
+- 닫기 준비 상태 평가는 닫기 준비 상태를 다루는 Task 닫기 메서드 관심사입니다.
 
 Primary owner:
 - [Task 닫기 메서드](api/method-close-task.md)
 
 Related references:
 - [Core 모델](core-model.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [API 상태 스키마](api/schema-state.md)
-- [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
 - 평가 세부사항은 메서드 담당 문서를 따릅니다.
@@ -748,15 +742,13 @@ Type:
 - API 메서드 용어
 
 Meaning:
-- Task 닫기는 `harness.close_task`로 노출되는 API 담당 Task 닫기 작업입니다.
+- Task 닫기는 Task를 닫는 API 작업을 가리킵니다.
 
 Primary owner:
 - [Task 닫기 메서드](api/method-close-task.md)
 
 Related references:
 - [API 메서드](api/methods.md)
-- [Core 모델](core-model.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 Usage note:
 - 정확한 공개 메서드를 이름 붙일 때는 `harness.close_task`를 씁니다.
@@ -772,22 +764,19 @@ Korean term:
 - Task 닫기 동작
 
 Type:
-- API 메서드 동작 용어
+- API 메서드 용어
 
 Meaning:
-- Task 닫기 동작은 `harness.close_task`의 메서드별 동작을 가리킵니다.
+- Task 닫기 동작은 `harness.close_task` 담당 문서가 다루는 동작 영역을 가리킵니다.
 
 Primary owner:
 - [Task 닫기 메서드](api/method-close-task.md)
 
 Related references:
-- [Core 모델](core-model.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [API 상태 스키마](api/schema-state.md)
-- [API 값 집합](api/schema-value-sets.md)
+- [API 메서드](api/methods.md)
 
 Usage note:
-- 메서드별 세부사항은 메서드 담당 문서를 따릅니다.
+- 세부사항은 Task 닫기 메서드 담당 문서를 따릅니다.
 
 ### `harness.close_task`
 
@@ -808,13 +797,9 @@ Primary owner:
 
 Related references:
 - [API 메서드](api/methods.md)
-- [Core 모델](core-model.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [API 상태 스키마](api/schema-state.md)
-- [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
-- 메서드별 세부사항은 메서드 담당 문서를 따릅니다.
+- 세부사항은 Task 닫기 메서드 담당 문서를 따릅니다.
 
 ### close-readiness blocker
 
@@ -829,17 +814,14 @@ Type:
 - API 차단 사유 처리 용어
 
 Meaning:
-- 닫기 차단 사유는 닫기와 관련해 막힌 이유를 담는 데이터입니다.
+- 닫기 차단 사유는 작업을 닫을 준비가 되지 않은 이유를 가리킵니다.
 
 Primary owner:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 Related references:
 - [Core 모델](core-model.md)
-- [Task 닫기 메서드](api/method-close-task.md)
 - [API 상태 스키마](api/schema-state.md)
-- [API 값 집합](api/schema-value-sets.md)
-- [템플릿 본문](template-bodies.md)
 
 Usage note:
 - 한국어 산문에서는 닫기 차단 사유를 쓰고, 스키마에는 `CloseReadinessBlocker`를 씁니다.
@@ -862,11 +844,7 @@ Primary owner:
 - [API 상태 스키마](api/schema-state.md)
 
 Related references:
-- [Core 모델](core-model.md)
-- [Task 닫기 메서드](api/method-close-task.md)
-- [API 값 집합](api/schema-value-sets.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [템플릿 본문](template-bodies.md)
 
 Usage note:
 - 개념은 산문 용어로, 스키마는 식별자로 이름 붙입니다.
@@ -883,7 +861,7 @@ Type:
 - API 값 개념
 
 Meaning:
-- 차단 사유 범주는 닫기 차단 사유를 담당 관심사에 따라 나누어 설명하는 산문 개념입니다.
+- 차단 사유 범주는 닫기 차단 사유를 묶어 설명하는 산문 개념입니다.
 
 Primary owner:
 - [API 값 집합](api/schema-value-sets.md)
@@ -956,7 +934,7 @@ Type:
 - 아티팩트 용어
 
 Meaning:
-- 아티팩트는 아티팩트 스키마나 아티팩트 저장소를 통해 표현되는 제품 작업 자료입니다.
+- 아티팩트는 하네스가 참조할 수 있는 제품 작업 자료입니다.
 
 Primary owner:
 - [API 아티팩트 스키마](api/schema-artifacts.md)
@@ -987,7 +965,6 @@ Primary owner:
 Related references:
 - [API 상태 스키마](api/schema-state.md)
 - [실행 기록 메서드](api/method-record-run.md)
-- [저장소 기록](storage-records.md)
 
 Usage note:
 - 수락과 잔여 위험 계열 용어와 구분합니다.
@@ -1004,7 +981,7 @@ Type:
 - API 스키마
 
 Meaning:
-- `ArtifactRef`는 등록된 지속 아티팩트를 가리키는 공개 포인터입니다.
+- `ArtifactRef`는 아티팩트 참조를 나타내는 API 스키마 식별자입니다.
 
 Primary owner:
 - [API 아티팩트 스키마](api/schema-artifacts.md)
@@ -1013,7 +990,7 @@ Related references:
 - [아티팩트 저장소](storage-artifacts.md)
 
 Usage note:
-- 참조 생명주기 세부사항은 아티팩트 스키마 담당 문서를 따릅니다.
+- 참조 세부사항은 아티팩트 스키마 담당 문서를 따릅니다.
 
 ### `ArtifactInput`
 
@@ -1073,7 +1050,7 @@ Type:
 - 상태 보기 용어
 
 Meaning:
-- 상태 보기는 담당 기록에서 만든 읽기 전용 파생 표시 또는 지원 맥락입니다.
+- 상태 보기는 읽기 전용 상태 또는 표시 보기입니다.
 
 Primary owner:
 - [상태 보기 권한 참조](projection-and-templates.md)
@@ -1082,7 +1059,7 @@ Related references:
 - [템플릿 본문](template-bodies.md)
 
 Usage note:
-- 권한 세부사항은 상태 보기 담당 문서를 따릅니다.
+- 권한 질문은 상태 보기 담당 문서를 따릅니다.
 
 ### `Projection`
 
@@ -1191,14 +1168,13 @@ Type:
 - 저장소 버전 관리 식별자
 
 Meaning:
-- `state_version`은 공개 상태 요약과 영향받은 저장소 기록이 보고하는 프로젝트 전체 상태 시계를 가리킵니다.
+- `state_version`은 프로젝트 전체 상태 버전 식별자를 가리킵니다.
 
 Primary owner:
 - [저장소 버전 관리](storage-versioning.md)
 
 Related references:
 - [API 코어 스키마](api/schema-core.md)
-- [저장 효과](storage-effects.md)
 
 Usage note:
 - 상태 시계 세부사항은 저장소 버전 관리 문서를 따릅니다.
@@ -1311,14 +1287,13 @@ Type:
 - 보안 용어
 
 Meaning:
-- 기준 범위 보장은 기준 범위에서 지원되는 보장을 가리킵니다.
+- 기준 범위 보장은 보안 문서가 정의하는 기준 범위 보장을 가리킵니다.
 
 Primary owner:
 - [보안](security.md)
 
 Related references:
 - [기준 범위](scope.md)
-- [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
 - 보장 수준은 보안 문서를 따릅니다.
@@ -1335,7 +1310,7 @@ Type:
 - 보안 용어
 
 Meaning:
-- 협력형 보장은 접점이 문서화된 절차를 따른다는 전제에 놓입니다.
+- 협력형 보장은 보안 문서가 정의하는 보장 유형입니다.
 
 Primary owner:
 - [보안](security.md)
@@ -1358,13 +1333,13 @@ Type:
 - 보안 용어
 
 Meaning:
-- 탐지형 보장은 문서화된 관찰 범위와 역량 확인에 의존합니다.
+- 탐지형 보장은 보안 문서가 정의하는 보장 유형입니다.
 
 Primary owner:
 - [보안](security.md)
 
 Related references:
-- [에이전트 통합](agent-integration.md)
+- 없음.
 
 Usage note:
 - 보장 강도는 보안 문서를 따릅니다.
@@ -1406,7 +1381,7 @@ Type:
 - 값 상태 용어
 
 Meaning:
-- 예약된 값은 어휘나 예약된 접점으로 존재할 수 있지만, 이름만으로 지원 동작이 되지는 않습니다.
+- 예약된 값은 그 자체만으로 지원 동작이 되지 않는 어휘입니다.
 
 Primary owner:
 - [기준 범위](scope.md)
@@ -1429,7 +1404,7 @@ Type:
 - 값 상태 용어
 
 Meaning:
-- 프로필 조건부 값은 관련 프로필과 담당 동작이 지원된다고 정의되어 있을 때만 사용할 수 있습니다.
+- 프로필 조건부 값은 명시된 프로필에 따라 지원 상태가 정해지는 어휘입니다.
 
 Primary owner:
 - [기준 범위](scope.md)
@@ -1460,8 +1435,6 @@ Primary owner:
 Related references:
 - [API 오류 우선순위](api/error-precedence.md)
 - [API 오류 처리 경로](api/error-routing.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [API 오류 세부사항](api/error-details.md)
 
 Usage note:
 - 공개 코드 의미는 API 오류 코드 문서를 따릅니다.
@@ -1479,16 +1452,13 @@ Type:
 - API 오류 코드 용어
 
 Meaning:
-- 공개 오류 코드 의미는 `ErrorCode` 값의 공개 의미와 허용된 발생 경로 요약을 가리킵니다.
+- 공개 오류 코드 의미는 `ErrorCode` 값의 공개 의미 관심사를 가리킵니다.
 
 Primary owner:
 - [API 오류 코드](api/error-codes.md)
 
 Related references:
 - [API 오류 우선순위](api/error-precedence.md)
-- [API 오류 처리 경로](api/error-routing.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [API 오류 세부사항](api/error-details.md)
 
 Usage note:
 - 이웃 관심사는 각 API 오류 담당 문서를 따릅니다.
@@ -1506,16 +1476,13 @@ Type:
 - API 오류 우선순위 용어
 
 Meaning:
-- 오류 우선순위는 오류 포함 분기에 공개 오류 후보가 둘 이상 있을 때 대표 공개 `ErrorCode`를 고르는 규칙입니다.
+- 오류 우선순위는 대표 공개 오류 선택 관심사를 가리킵니다.
 
 Primary owner:
 - [API 오류 우선순위](api/error-precedence.md)
 
 Related references:
 - [API 오류 코드](api/error-codes.md)
-- [API 오류 처리 경로](api/error-routing.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [API 오류 세부사항](api/error-details.md)
 
 Usage note:
 - 이웃 관심사는 각 API 오류 담당 문서를 따릅니다.
@@ -1534,16 +1501,14 @@ Type:
 - API 오류 처리 용어
 
 Meaning:
-- 오류 처리 경로는 거부 응답, 차단 결과, `dry_run` 미리보기의 API 응답 분기 경로를 다룹니다.
+- 오류 처리 경로는 API 응답 분기 처리 관심사를 가리킵니다.
 
 Primary owner:
 - [API 오류 처리 경로](api/error-routing.md)
 
 Related references:
 - [API 오류 코드](api/error-codes.md)
-- [API 오류 우선순위](api/error-precedence.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
-- [API 오류 세부사항](api/error-details.md)
 
 Usage note:
 - 이웃 관심사는 각 API 오류 담당 문서를 따릅니다.
@@ -1569,13 +1534,8 @@ Primary owner:
 
 Related references:
 - [API 오류 처리 경로](api/error-routing.md)
-- [API 오류 코드](api/error-codes.md)
-- [API 오류 우선순위](api/error-precedence.md)
 - [Core 모델](core-model.md)
 - [Task 닫기 메서드](api/method-close-task.md)
-- [API 상태 스키마](api/schema-state.md)
-- [API 값 집합](api/schema-value-sets.md)
-- [템플릿 본문](template-bodies.md)
 
 Usage note:
 - 이 경계는 [API 차단 사유 처리 경로](api/blocker-routing.md)에서 확인합니다.
@@ -1593,7 +1553,7 @@ Type:
 - API 차단 사유 처리 용어
 
 Meaning:
-- 오류와 차단 사유의 경계는 유효한 평가 전에 반환되는 API 오류와 유효한 평가 뒤 반환되는 닫기 차단 사유 데이터를 구분합니다.
+- 오류와 차단 사유의 경계는 API 오류와 닫기 차단 사유 사이의 구분을 가리킵니다.
 
 Primary owner:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
@@ -1617,7 +1577,7 @@ Type:
 - API 차단 사유 처리 용어
 
 Meaning:
-- 공개 오류 코드가 차단 사유로 표현되는 경우는 공개 오류 코드가 닫기 차단 사유 데이터로 나타날 수 있는 좁은 경우를 가리킵니다.
+- 공개 오류 코드가 차단 사유로 표현되는 경우는 공개 오류 코드가 관련된 차단 사유 처리 관심사를 가리킵니다.
 
 Primary owner:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
@@ -1647,8 +1607,6 @@ Primary owner:
 
 Related references:
 - [API 오류 코드](api/error-codes.md)
-- [API 오류 우선순위](api/error-precedence.md)
-- [API 오류 처리 경로](api/error-routing.md)
 
 Usage note:
 - 중첩 세부 값은 API 오류 세부사항 문서를 따릅니다.
@@ -1666,15 +1624,13 @@ Type:
 - API 세부사항 용어
 
 Meaning:
-- 세부사항 보조 값은 `ToolError.details` 아래에서 쓰이는 중첩 보조 값입니다.
+- 세부사항 보조 값은 `ToolError.details` 아래의 중첩 값을 가리킵니다.
 
 Primary owner:
 - [API 오류 세부사항](api/error-details.md)
 
 Related references:
-- [API 오류 코드](api/error-codes.md)
-- [API 오류 우선순위](api/error-precedence.md)
-- [API 오류 처리 경로](api/error-routing.md)
+- 없음.
 
 Usage note:
 - 중첩 세부 값은 API 오류 세부사항 문서를 따릅니다.
@@ -1692,18 +1648,16 @@ Type:
 - API 미리보기 처리 용어
 
 Meaning:
-- dry-run 미리보기 처리 경로는 유효한 `dry_run` 미리보기, 미리보기 차단 사유, 미리보기 전 실패가 어느 API 응답 분기로 표현되는지 다룹니다.
+- dry-run 미리보기 처리 경로는 `dry_run` 미리보기의 응답 분기 처리 관심사를 가리킵니다.
 
 Primary owner:
 - [API 오류 처리 경로](api/error-routing.md)
 
 Related references:
-- [API 코어 스키마](api/schema-core.md)
 - [API 메서드](api/methods.md)
-- [저장 효과](storage-effects.md)
 
 Usage note:
-- 이웃 세부사항은 메서드, 스키마, 저장소 담당 문서를 따릅니다.
+- 이웃 세부사항은 메서드와 스키마 담당 문서를 따릅니다.
 
 ### blocked result
 
@@ -1717,18 +1671,16 @@ Type:
 - API 결과 용어
 
 Meaning:
-- 차단 결과는 유효한 동작이 진행될 수 없음을 보고하는 메서드별 결과입니다.
+- 차단 결과는 유효하지만 차단된 동작을 위한 API 결과 분기를 가리킵니다.
 
 Primary owner:
 - [API 오류 처리 경로](api/error-routing.md)
 
 Related references:
-- [쓰기 준비 메서드](api/method-prepare-write.md)
-- [Task 닫기 메서드](api/method-close-task.md)
-- [저장 효과](storage-effects.md)
+- [API 메서드](api/methods.md)
 
 Usage note:
-- 차단 결과는 공개 전송 오류나 스키마 거부가 아닙니다.
+- 결과 분기 세부사항은 API 오류 처리 경로 문서를 따릅니다.
 
 ### rejected response
 
@@ -1742,7 +1694,7 @@ Type:
 - API 응답 분기
 
 Meaning:
-- 거부 응답은 메서드가 커밋 동작으로 진행하기 전에 실패했다는 뜻입니다.
+- 거부 응답은 거부된 요청을 위한 API 응답 분기를 가리킵니다.
 
 Primary owner:
 - [API 오류 처리 경로](api/error-routing.md)
@@ -1750,8 +1702,6 @@ Primary owner:
 Related references:
 - [API 코어 스키마](api/schema-core.md)
 - [API 오류 코드](api/error-codes.md)
-- [API 오류 우선순위](api/error-precedence.md)
-- [저장 효과](storage-effects.md)
 
 Usage note:
 - 분기 세부사항은 API 오류 처리 경로 문서를 따릅니다.
@@ -1791,14 +1741,13 @@ Type:
 - 생명주기 용어
 
 Meaning:
-- 생명주기는 `Task`나 아티팩트 핸들 같은 개념에서 허용되는 단계 진행입니다.
+- 생명주기는 `Task`나 아티팩트 핸들 같은 개념의 단계 진행입니다.
 
 Primary owner:
 - [Core 모델](core-model.md)
 
 Related references:
 - [API 값 집합](api/schema-value-sets.md)
-- [아티팩트 저장소](storage-artifacts.md)
 
 Usage note:
 - 생명주기 필드나 값은 정확한 식별자로 이름 붙입니다.
