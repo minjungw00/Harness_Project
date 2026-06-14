@@ -281,7 +281,7 @@ write_decision_reasons:
 
 이 결과에서도 `Task`는 열린 상태로 남습니다.
 
-허용되지 않는 효과:
+허용되지 않는 사용:
 
 - 이 분기를 `STATE_VERSION_CONFLICT`에 사용
 - `STATE_VERSION_CONFLICT`를 재실행으로 저장

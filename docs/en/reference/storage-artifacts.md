@@ -87,9 +87,9 @@ Allowed:
 
 Not allowed:
 
-- A `StagedArtifactHandle` shape is not authority unless it resolves to a compatible stored `artifact_staging` row or equivalent storage-owned staging record.
-- `existing_artifact` does not register a new artifact body.
-- Caller-supplied paths, logs, capture claims, or local file references are not registration authority in the baseline.
+- Do not treat a `StagedArtifactHandle` shape as authority unless it resolves to a compatible stored `artifact_staging` row or equivalent storage-owned staging record.
+- Do not use `existing_artifact` to register a new artifact body.
+- Do not treat caller-supplied paths, logs, capture claims, or local file references as registration authority in the baseline.
 
 ## Staging
 
@@ -114,7 +114,7 @@ Core records the `created_by_surface_*` fields from the successful `harness.stag
 
 Not allowed:
 
-- The fields are not caller-provided authority claims.
+- Do not treat the fields as caller-provided authority claims.
 - A submitted handle must not be trusted merely because it has the right shape.
 
 Allowed:
@@ -138,8 +138,8 @@ The example represents product test output prepared for staging. Staging creates
 
 Not allowed:
 
-- The example is not a persistent `ArtifactRef`.
-- The example does not become canonical evidence until a compatible owner method records and promotes it under that method's contract.
+- Do not treat the example as a persistent `ArtifactRef`.
+- Do not treat the example as canonical evidence until a compatible owner method records and promotes it under that method's contract.
 
 Owner links:
 
@@ -204,8 +204,8 @@ Required conditions:
 
 Not allowed:
 
-- Cross-surface staged artifact transfer is outside the baseline scope.
-- `StagedArtifactHandle` is not a bearer token that any local caller may use.
+- Do not treat cross-surface staged artifact transfer as baseline-supported.
+- Do not treat `StagedArtifactHandle` as a bearer token that any local caller may use.
 
 The consuming transaction must validate:
 
@@ -272,8 +272,8 @@ Required validation:
 
 Not allowed:
 
-- Missing, unavailable, integrity-failed, or otherwise unusable artifacts do not stop being artifact-availability problems.
-- A raw `artifact_id` without a valid owner link is not evidence support.
+- Do not hide missing, unavailable, integrity-failed, or otherwise unusable artifacts as anything other than artifact-availability problems.
+- Do not treat a raw `artifact_id` without a valid owner link as evidence support.
 
 An artifact link does not:
 
@@ -336,9 +336,9 @@ Allowed:
 
 Not allowed:
 
-- `blocked` is a redaction/omission state, not an artifact availability status.
-- `sha256`, `size_bytes`, and `content_type` are not security guarantee claims.
-- `uri` is not a caller-supplied arbitrary filesystem path.
+- Do not treat `blocked` as an artifact availability status.
+- Do not use `sha256`, `size_bytes`, or `content_type` as security guarantee claims.
+- Do not treat `uri` as a caller-supplied arbitrary filesystem path.
 - Raw secrets, tokens, and full sensitive logs must not be stored as evidence bytes.
 
 Owner links:
@@ -360,7 +360,7 @@ Artifact metadata or content reads require:
 
 Not allowed:
 
-- A local path under the artifact store, an artifact `uri`, a staged path, or a copied file is not enough by itself to read or rely on artifact bytes.
+- Do not treat a local path under the artifact store, an artifact `uri`, a staged path, or a copied file as sufficient authority to read or rely on artifact bytes.
 
 ## Validation and failures
 

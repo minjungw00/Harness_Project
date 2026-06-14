@@ -51,7 +51,7 @@ Storage effect:
 
 - Response only.
 
-Not allowed:
+Disallowed effects:
 
 - replay row
 - event
@@ -67,7 +67,7 @@ Storage effect:
 
 - None.
 
-Not allowed:
+Disallowed effects:
 
 - current row
 - replay row
@@ -83,7 +83,7 @@ Storage effect:
 
 - Response preview only.
 
-Not allowed:
+Disallowed effects:
 
 - current row
 - generated persistent ref
@@ -100,7 +100,7 @@ Allowed effect:
 
 - storage-owned transient staging
 
-Not allowed:
+Disallowed effects:
 
 - Core current row
 - replay row
@@ -136,7 +136,7 @@ Allowed effects:
 - explicitly allowed replay-row effect
 - explicitly allowed `project_state.state_version` effect
 
-Not allowed:
+Disallowed effects:
 
 - creating the missing authority that the branch reports
 
@@ -228,7 +228,7 @@ Allowed effects:
 - The response and replay payload may record `write_decision_reasons: WriteDecisionReason[]`.
 - This is allowed only when the method contract permits the committed decision record.
 
-Not allowed:
+Disallowed effects:
 
 - creating consumable `Write Authorization`
 - changing `close_state`
@@ -280,7 +280,7 @@ Allowed effects:
 
 The Task remains open.
 
-Not allowed:
+Disallowed uses:
 
 - using this branch for `STATE_VERSION_CONFLICT`
 - storing `STATE_VERSION_CONFLICT` as replay

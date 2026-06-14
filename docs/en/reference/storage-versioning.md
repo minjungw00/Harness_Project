@@ -285,13 +285,16 @@ Retry behavior:
 - Read current state again.
 - Send a new request with the latest `project_state.state_version`.
 
-Owner boundary:
+Contract boundary:
 
 - `expected_state_version` does not replace user-owned judgment, sensitive-action approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
 - `STATE_VERSION_CONFLICT` is the only baseline public `ErrorCode` for project-wide state-version mismatch.
 - No baseline call requires or accepts more than one public `expected_state_version`.
 - When that mismatch is surfaced through the public API, the public error is also `STATE_VERSION_CONFLICT`.
 - Stale `Write Authorization` detection compares `write_authorizations.basis_state_version` with the current `project_state.state_version`.
+
+Owner links:
+
 - Public `ErrorCode` meaning belongs to [API error codes](api/error-codes.md).
 - State-conflict precedence belongs to [API error precedence](api/error-precedence.md#state-conflict-behavior).
 - Rejected-response branch routing belongs to [API error routing](api/error-routing.md).
