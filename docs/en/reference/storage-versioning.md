@@ -254,54 +254,47 @@ Meaning:
 
 - `expected_state_version` is a freshness condition for stale writes.
 - A new `dry_run=false` state-changing API call compares `ToolEnvelope.expected_state_version` with the current `project_state.state_version` before commit.
-- `expected_state_version` does not replace user-owned judgment, sensitive-action approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
 
-Increments when:
+Condition:
 
-- The values match, other validation passes, and the call subsequently commits an owner-allowed state change.
+- When the values match and other validation passes, the call can continue to an owner-allowed state-changing branch.
+- When the values do not match, the call is a stale-state conflict.
 
-Does not increment when:
+Required behavior:
 
-- The values do not match.
+- A matching call increments `project_state.state_version` only when it subsequently commits an owner-allowed state change.
+- A stale-state conflict must be rejected before `Write Authorization` consumption.
 - Core returns `STATE_VERSION_CONFLICT` only in `ToolRejectedResponse.errors`.
+- `project_state.state_version` does not increment for the stale-state conflict.
 
-A stale-state conflict does not create or change:
+Not allowed:
 
-- `CloseReadinessBlocker`
-- current record
-- `task_event` or `task_events` append
-- artifact
-- evidence summary
-- `Write Authorization` creation or consumption
-- `close_state` mutation
-- replay row
-- `project_state.state_version` increment
+- A stale-state conflict must not create or change:
+  - `CloseReadinessBlocker`
+  - current record
+  - `task_event` or `task_events` append
+  - artifact
+  - evidence summary
+  - `Write Authorization` status change, creation, or consumption unless another supported contract explicitly says so
+  - `close_state` mutation
+  - replay row
+  - `project_state.state_version` increment
 
 Retry behavior:
 
 - Read current state again.
 - Send a new request with the latest `project_state.state_version`.
 
-Public API boundary:
+Owner boundary:
 
+- `expected_state_version` does not replace user-owned judgment, sensitive-action approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
 - `STATE_VERSION_CONFLICT` is the only baseline public `ErrorCode` for project-wide state-version mismatch.
 - No baseline call requires or accepts more than one public `expected_state_version`.
 - When that mismatch is surfaced through the public API, the public error is also `STATE_VERSION_CONFLICT`.
-
-Related storage field:
-
 - Stale `Write Authorization` detection compares `write_authorizations.basis_state_version` with the current `project_state.state_version`.
-
-Owner links:
-
 - Public `ErrorCode` meaning belongs to [API error codes](api/error-codes.md).
 - State-conflict precedence belongs to [API error precedence](api/error-precedence.md#state-conflict-behavior).
 - Rejected-response branch routing belongs to [API error routing](api/error-routing.md).
-
-Not allowed:
-
-- The call must be rejected before consumption.
-- The call must not change the `Write Authorization` status unless another supported contract explicitly says so.
 
 ## Event meaning
 

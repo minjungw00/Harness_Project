@@ -252,54 +252,47 @@
 
 - `expected_state_version`은 오래된 상태에 대한 쓰기를 막는 최신성 조건입니다.
 - 새 `dry_run=false` 상태 변경 API 호출은 커밋 전에 `ToolEnvelope.expected_state_version`을 현재 `project_state.state_version`과 비교합니다.
-- `expected_state_version`은 사용자 소유 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, `Write Authorization`을 대신하지 않습니다.
 
-증가하는 경우:
+조건:
 
-- 값이 맞고 다른 검증을 통과한 뒤 호출이 담당 문서가 허용한 상태 변경으로 커밋될 때 증가합니다.
+- 값이 맞고 다른 검증을 통과하면 호출은 담당 문서가 허용한 상태 변경 분기로 계속 진행할 수 있습니다.
+- 값이 맞지 않으면 호출은 오래된 상태 충돌입니다.
 
-증가하지 않는 경우:
+필수 동작:
 
-- 값이 맞지 않으면 증가하지 않습니다.
+- 값이 맞는 호출도 이후 담당 문서가 허용한 상태 변경을 커밋할 때만 `project_state.state_version`을 증가시킵니다.
+- 오래된 상태 충돌은 `Write Authorization` 소비 전에 거절되어야 합니다.
 - Core는 `STATE_VERSION_CONFLICT`를 `ToolRejectedResponse.errors`에만 담아 반환합니다.
+- 오래된 상태 충돌에서는 `project_state.state_version`이 증가하지 않습니다.
 
-오래된 상태 충돌은 아래 항목을 만들거나 바꾸지 않습니다.
+허용되지 않는 것:
 
-- `CloseReadinessBlocker`.
-- 현재 기록.
-- `task_event` 또는 `task_events` 추가.
-- 아티팩트.
-- 증거 요약.
-- `Write Authorization` 생성 또는 소비.
-- `close_state` 변경.
-- 재실행 행.
-- `project_state.state_version` 증가.
+- 오래된 상태 충돌은 아래 항목을 만들거나 바꾸면 안 됩니다.
+  - `CloseReadinessBlocker`.
+  - 현재 기록.
+  - `task_event` 또는 `task_events` 추가.
+  - 아티팩트.
+  - 증거 요약.
+  - 다른 지원 계약이 명시적으로 말하지 않는 한 `Write Authorization` 상태 변경, 생성 또는 소비.
+  - `close_state` 변경.
+  - 재실행 행.
+  - `project_state.state_version` 증가.
 
 재시도 동작:
 
 - 현재 상태를 다시 읽습니다.
 - 최신 `project_state.state_version`으로 새 요청을 보냅니다.
 
-공개 API 경계:
+담당 경계:
 
+- `expected_state_version`은 사용자 소유 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, `Write Authorization`을 대신하지 않습니다.
 - 프로젝트 전체 상태 버전 불일치에 쓰는 기준 범위의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다.
 - 기준 범위의 공개 호출은 둘 이상의 공개 `expected_state_version`을 요구하거나 받지 않습니다.
 - 이 불일치를 공개 API로 드러낼 때도 `STATE_VERSION_CONFLICT`를 사용합니다.
-
-관련 저장 필드:
-
 - 오래된 `Write Authorization`인지 판단할 때는 `write_authorizations.basis_state_version`을 현재 `project_state.state_version`과 비교합니다.
-
-담당 문서 링크:
-
 - 공개 `ErrorCode` 의미는 [API 오류 코드](api/error-codes.md)가 담당합니다.
 - 상태 충돌 우선순위는 [API 오류 우선순위](api/error-precedence.md#state-conflict-behavior)가 담당합니다.
 - 거부 응답 분기 경로는 [API 오류 처리 경로](api/error-routing.md)가 담당합니다.
-
-허용되지 않는 것:
-
-- 호출은 소비 전에 거절되어야 합니다.
-- 다른 지원 계약이 명시적으로 말하지 않는 한 `Write Authorization` 상태도 바꾸면 안 됩니다.
 
 ## 이벤트 의미
 
