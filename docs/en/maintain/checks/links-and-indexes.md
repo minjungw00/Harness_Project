@@ -253,7 +253,7 @@ Failure:
 
 Fix:
 - Shrink duplicates to route text and owner links.
-- Keep agent context to the current work summary, needed owner section, and needed language.
+- Keep agent context to a focused summary, needed owner section, and needed language.
 
 ## CHK-LLM-002: one language per `doc_id`
 

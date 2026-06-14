@@ -64,14 +64,21 @@ Check sources:
 
 Evidence to inspect:
 - Inspect changed files and newly added files for one-off planning files, working-note remnants, review leftovers, archive copies, transition notes, one-off conversion notes, ad hoc files, generated runtime records, and unresolved task markers such as `FIXME` or other all-caps placeholders.
+- Search changed maintained prose and Maintain check pages for task-context residue. Include English patterns such as `this task`, `this change`, `this cleanup`, `rework`, `temporary`, `TODO`, `draft`, and `migration note`.
+- Search changed Korean maintained prose and Maintain check pages for task-context residue. Include Korean patterns such as `이번 작업`, `이번 변경`, `이번 수정`, `이 작업`, `작업에서 바뀐`, `작업에서 수정한`, `추후 정리`, `임시`, and `재작업`.
+- Confirm general maintenance conditions use stable wording such as `changed`, `edited`, `when a document changes`, `변경된`, `편집된`, `문서 변경 시`, and `점검 대상`.
 - Confirm documentation-maintenance findings live in the final report or the appropriate maintained documentation page, not in ad hoc files.
 
 Failure:
 - The final tree contains a one-off plan, working-note remnant, review note, archive copy, ad hoc file, generated runtime-like record, one-off conversion note, or unresolved task marker from the documentation batch.
 - A maintained page contains a task marker that names deferred work instead of a durable maintenance rule.
+- A maintained page uses wording tied to a specific maintenance episode instead of stable documentation-quality wording.
+- Task-context wording appears outside a quoted prohibited-pattern list or other explicit Maintain check example.
 
 Fix:
 - Remove the transient file or task marker.
+- Replace task-specific wording with stable maintenance conditions such as `changed`, `edited`, and `when a document changes`.
+- Replace Korean task-context wording with stable maintenance expressions such as `변경된`, `편집된`, `문서 변경 시`, and `점검 대상`.
 - Convert durable guidance into the appropriate owner document only when it has stable reader value.
 
 ## CHK-STRUCT-005: maintenance label taxonomy
@@ -362,7 +369,7 @@ Check sources:
 Evidence to inspect:
 - Confirm documentation edits do not imply the server, runtime, conformance runner, generated projections, or runtime behavior exists because of documentation alone.
 - Confirm implementation authority is not claimed outside the Implementation Guide owner.
-- Confirm implementation guidance, build pages, and metadata use durable implementation wording rather than build-moment labels, transfer labels, current-work labels, or interim-stage labels.
+- Confirm implementation guidance, build pages, and metadata use durable implementation wording rather than build-moment labels, transfer labels, batch-specific labels, or interim-stage labels.
 
 Failure:
 - Maintained docs describe documentation reference material as accepted runtime behavior or implementation authority without the Implementation Guide owner.

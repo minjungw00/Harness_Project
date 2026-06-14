@@ -99,7 +99,9 @@ Split or reroute an existing owner when one reference document starts carrying u
 
 When a large owner is split, the new owner must not become the next catch-all document. Give the split document a narrow reader purpose, keep neighboring concerns routed to their focused owners, and update `owner_for` and `not_owner_for` metadata so the boundary remains reviewable.
 
-Build guidance and route metadata should use durable implementation meaning. Avoid build-moment labels, current-work labels, or interim-stage labels that would stop making sense after the implementation path matures.
+Build guidance and route metadata should use durable implementation meaning. Avoid build-moment labels, batch-specific labels, or interim-stage labels that would stop making sense after the implementation path matures.
+
+Maintenance guidance should describe general documentation conditions, not a named batch, ticket, PR, or reviewer note. Prefer stable wording such as `changed`, `edited`, and `when a document changes`.
 
 <a id="baseline-scope-api-method-split-threshold"></a>
 ### API method owners
@@ -303,6 +305,7 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] `active` is used only for runtime or currently applied state, exact identifiers, or status values, not for supported contracts or owner routing.
 - [ ] Documentation-routing concepts such as `applicable owner path` are not described as product behavior, storage persistence, runtime state, or actors for product behavior.
 - [ ] Implementation guidance and metadata use durable implementation wording, not build-moment or interim-stage labels.
+- [ ] Maintenance wording uses stable conditions such as `changed`, `edited`, and `when a document changes`, not labels from a named batch, ticket, PR, or reviewer note.
 - [ ] Example field names come from the method, schema, or storage owner, and storage-owned summary data is labeled where it uses a different field name.
 - [ ] API examples are internally consistent across response snapshots, `state_version`, refs, paths, artifact refs, sensitive approval reasons, expiration timestamps, and shared scenario evidence.
 - [ ] Reserved and profile-gated values are labeled where used and are not described as baseline guarantees.

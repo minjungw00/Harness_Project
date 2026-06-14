@@ -83,7 +83,7 @@ Use the terminology map for concrete replacements. Do not restate those replacem
 
 ### Maintenance and documentation-check wording
 
-Maintenance and documentation-check prose should stay stable after the editing context is gone. Do not translate general phrases such as "changed", "touched by the edit", or "when an edit changes" as if they referred to the maintainer's current task.
+Maintenance and documentation-check prose should stay stable after the editing context is gone. Do not translate general phrases such as "changed", "touched by the edit", or "when an edit changes" as if they referred to a specific maintenance batch.
 
 Use these stable Korean patterns:
 
