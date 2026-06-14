@@ -588,6 +588,22 @@ terms:
       - "Do not translate this as 가능성 평가."
       - "The close-readiness authority concept belongs to `reference/core-model.md`."
       - "Close-readiness blocker routing belongs to `api/blocker-routing.md`."
+  close_task:
+    category: "api_concept"
+    en: "close task"
+    ko_reference: "Task 닫기"
+    ko_user: "Task 닫기"
+    preserve_as_identifier:
+      - "harness.close_task"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/method-close-task.md"
+      ko:
+        - "docs/ko/reference/api/method-close-task.md"
+    notes:
+      - "Use `harness.close_task` when naming the exact public API method."
+      - "Core close-readiness authority belongs to `reference/core-model.md`."
+      - "Close-readiness blocker routing belongs to `api/blocker-routing.md`."
   close_task_behavior:
     category: "api_concept"
     en: "close task behavior"
@@ -670,7 +686,7 @@ terms:
       - "Use 전체 닫기 준비 상태 평가 순서 for the full close-readiness evaluation order."
       - "If a source phrase says \"Complete close-readiness order\" but means the full order, write 전체 닫기 준비 상태 평가 순서 in Korean."
   close_blocker:
-    category: "product_concept"
+    category: "api_concept"
     en: "close-readiness blocker"
     aliases_en:
       - "close blocker"
@@ -683,14 +699,16 @@ terms:
       - "close blocker를 확인한다"
     owner_documents:
       en:
-        - "docs/en/reference/core-model.md"
+        - "docs/en/reference/api/blocker-routing.md"
       ko:
-        - "docs/ko/reference/core-model.md"
+        - "docs/ko/reference/api/blocker-routing.md"
     notes:
-      - "Use this for a reason that prevents honest close readiness."
+      - "Use 닫기 차단 사유 for close-readiness blocker prose."
+      - "Core close-readiness authority belongs to `reference/core-model.md`."
+      - "Method-specific blocker production belongs to `api/method-close-task.md`."
       - "`CloseReadinessBlocker` schema shape belongs to `api/schema-state.md`."
       - "`CloseReadinessBlocker.category` values belong to `api/schema-value-sets.md`."
-      - "Close-readiness blocker/API response boundary routing belongs to `api/blocker-routing.md`."
+      - "Rendered wording belongs to `reference/template-bodies.md`."
   close_readiness_blocker:
     category: "identifier"
     en: "CloseReadinessBlocker"
@@ -708,6 +726,7 @@ terms:
       - "Do not use it as a prepare-write reason or as the entire close-readiness concept."
       - "Route exact category-value questions to `api/schema-value-sets.md`."
       - "Route close-readiness blocker/API response boundary questions to `api/blocker-routing.md`."
+      - "Route method-specific blocker production to `api/method-close-task.md`."
   blocker_category:
     category: "api_concept"
     en: "blocker category"
@@ -722,6 +741,7 @@ terms:
         - "docs/ko/reference/api/schema-value-sets.md"
     notes:
       - "Use for the prose category concept; preserve `CloseReadinessBlocker.category` when naming the exact field."
+      - "Route the object shape to `api/schema-state.md`."
       - "Route category-bearing blocker/API response boundary questions to `api/blocker-routing.md`."
   blocker:
     category: "general_prose"

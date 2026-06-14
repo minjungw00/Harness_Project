@@ -50,9 +50,10 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | `UserJudgment` | `UserJudgment` | [API Judgment Schemas](api/schema-judgment.md) |
 | close readiness | 닫기 준비 상태 | [Core Model](core-model.md) |
 | close readiness evaluation | 닫기 준비 상태 평가 | [Close-task method](api/method-close-task.md) |
+| close task | Task 닫기 | [Close-task method](api/method-close-task.md) |
 | close task behavior | Task 닫기 동작 | [Close-task method](api/method-close-task.md) |
 | `harness.close_task` | `harness.close_task` | [Close-task method](api/method-close-task.md) |
-| close-readiness blocker | 닫기 차단 사유 | [Core Model](core-model.md) |
+| close-readiness blocker | 닫기 차단 사유 | [API blocker routing](api/blocker-routing.md) |
 | `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API State Schemas](api/schema-state.md) |
 | blocker category | 차단 사유 범주 | [API Value Sets](api/schema-value-sets.md) |
 | complete intent | `complete` | [API Value Sets](api/schema-value-sets.md) |
@@ -699,6 +700,9 @@ Primary owner:
 Related references:
 - [Close-task method](api/method-close-task.md)
 - [API blocker routing](api/blocker-routing.md)
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
+- [Template Bodies](template-bodies.md)
 
 Usage note:
 - This is the evaluation concept, not the `CloseReadinessBlocker` schema.
@@ -723,9 +727,36 @@ Primary owner:
 Related references:
 - [Core Model](core-model.md)
 - [API blocker routing](api/blocker-routing.md)
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
 - Preserve `harness.close_task`, `CloseTaskResult`, and `CloseReadinessBlocker` when naming exact API elements.
+
+### close task
+
+Term:
+- close task
+
+Korean term:
+- Task 닫기
+
+Type:
+- API method term
+
+Meaning:
+- Close task is the API-owned Task-closing operation exposed through `harness.close_task`.
+
+Primary owner:
+- [Close-task method](api/method-close-task.md)
+
+Related references:
+- [API Methods](api/methods.md)
+- [Core Model](core-model.md)
+- [API blocker routing](api/blocker-routing.md)
+
+Usage note:
+- Use `harness.close_task` when naming the exact public method.
 
 ### close task behavior
 
@@ -749,6 +780,8 @@ Primary owner:
 Related references:
 - [Core Model](core-model.md)
 - [API blocker routing](api/blocker-routing.md)
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
 - Do not use close task behavior as the owner for Core close-readiness meaning or blocker/API response routing.
@@ -774,6 +807,8 @@ Related references:
 - [API Methods](api/methods.md)
 - [Core Model](core-model.md)
 - [API blocker routing](api/blocker-routing.md)
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
 
 Usage note:
 - Route method-specific behavior to the method owner; route Core close-readiness meaning and blocker/API response routing to their own owners.
@@ -788,17 +823,20 @@ Korean term:
 - 닫기 차단 사유
 
 Type:
-- Core close-readiness concept
+- API blocker-routing term
 
 Meaning:
-- A close-readiness blocker is a close-relevant reason that prevents honest close readiness until the responsible owner-defined condition is resolved.
+- A close-readiness blocker is the close-relevant blocker data routed after a valid close-readiness evaluation finds close is blocked.
 
 Primary owner:
-- [Core Model](core-model.md)
+- [API blocker routing](api/blocker-routing.md)
 
 Related references:
+- [Core Model](core-model.md)
+- [Close-task method](api/method-close-task.md)
 - [API State Schemas](api/schema-state.md)
-- [API blocker routing](api/blocker-routing.md)
+- [API Value Sets](api/schema-value-sets.md)
+- [Template Bodies](template-bodies.md)
 
 Usage note:
 - Use the Korean prose term 닫기 차단 사유 and preserve `CloseReadinessBlocker` only when naming the schema.
@@ -821,8 +859,11 @@ Primary owner:
 - [API State Schemas](api/schema-state.md)
 
 Related references:
+- [Core Model](core-model.md)
+- [Close-task method](api/method-close-task.md)
 - [API Value Sets](api/schema-value-sets.md)
 - [API blocker routing](api/blocker-routing.md)
+- [Template Bodies](template-bodies.md)
 
 Usage note:
 - Do not use the schema name as the whole close-readiness concept.
@@ -845,6 +886,7 @@ Primary owner:
 - [API Value Sets](api/schema-value-sets.md)
 
 Related references:
+- [API State Schemas](api/schema-state.md)
 - [API blocker routing](api/blocker-routing.md)
 
 Usage note:
@@ -1466,7 +1508,11 @@ Primary owner:
 - [API blocker routing](api/blocker-routing.md)
 
 Related references:
+- [Core Model](core-model.md)
 - [Close-task method](api/method-close-task.md)
+- [API State Schemas](api/schema-state.md)
+- [API Value Sets](api/schema-value-sets.md)
+- [Template Bodies](template-bodies.md)
 
 Usage note:
 - Method-specific `harness.close_task` behavior belongs to the close-task method owner.

@@ -78,6 +78,7 @@ Use one Korean term for one concept unless the terminology map explicitly distin
 | close readiness, reference-facing | 닫기 준비 상태 | Preserve identifiers such as `CloseReadinessBlocker`. |
 | close readiness, user-facing | 닫기 가능 여부 | Use when explaining to end users whether a task can be closed. |
 | close readiness evaluation | 닫기 준비 상태 평가 | Never use "close 가능성 평가". |
+| close task | Task 닫기 | Preserve `harness.close_task` when naming the exact public API method. |
 | close-readiness blocker | 닫기 차단 사유 | A close-relevant blocker; preserve `CloseReadinessBlocker` when naming the schema. |
 | blocker category | 차단 사유 범주 | Preserve the exact field identifier when naming `CloseReadinessBlocker.category`. |
 | `complete` as an identifier | `complete` | Preserve only when it is an enum value or identifier, such as `intent=complete`; use "full" or "entire" for ordinary adjective meaning. |

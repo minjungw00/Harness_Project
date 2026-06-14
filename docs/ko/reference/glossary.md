@@ -50,9 +50,10 @@
 | `UserJudgment` | `UserJudgment` | [API 판단 스키마](api/schema-judgment.md) |
 | close readiness | 닫기 준비 상태 | [Core 모델](core-model.md) |
 | close readiness evaluation | 닫기 준비 상태 평가 | [Task 닫기 메서드](api/method-close-task.md) |
+| close task | Task 닫기 | [Task 닫기 메서드](api/method-close-task.md) |
 | close task behavior | Task 닫기 동작 | [Task 닫기 메서드](api/method-close-task.md) |
 | `harness.close_task` | `harness.close_task` | [Task 닫기 메서드](api/method-close-task.md) |
-| close-readiness blocker | 닫기 차단 사유 | [Core 모델](core-model.md) |
+| close-readiness blocker | 닫기 차단 사유 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API 상태 스키마](api/schema-state.md) |
 | blocker category | 차단 사유 범주 | [API 값 집합](api/schema-value-sets.md) |
 | complete intent | `complete` | [API 값 집합](api/schema-value-sets.md) |
@@ -699,6 +700,9 @@ Primary owner:
 Related references:
 - [Task 닫기 메서드](api/method-close-task.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 상태 스키마](api/schema-state.md)
+- [API 값 집합](api/schema-value-sets.md)
+- [템플릿 본문](template-bodies.md)
 
 Usage note:
 - 평가 개념이며 `CloseReadinessBlocker` 스키마 자체가 아닙니다.
@@ -723,9 +727,36 @@ Primary owner:
 Related references:
 - [Core 모델](core-model.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 상태 스키마](api/schema-state.md)
+- [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
 - 정확한 API 요소를 이름 붙일 때는 `harness.close_task`, `CloseTaskResult`, `CloseReadinessBlocker`를 보존합니다.
+
+### close task
+
+Term:
+- close task
+
+Korean term:
+- Task 닫기
+
+Type:
+- API 메서드 용어
+
+Meaning:
+- Task 닫기는 `harness.close_task`로 노출되는 API 담당 Task 닫기 작업입니다.
+
+Primary owner:
+- [Task 닫기 메서드](api/method-close-task.md)
+
+Related references:
+- [API 메서드](api/methods.md)
+- [Core 모델](core-model.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
+
+Usage note:
+- 정확한 공개 메서드를 이름 붙일 때는 `harness.close_task`를 씁니다.
 
 ### close task behavior
 
@@ -749,6 +780,8 @@ Primary owner:
 Related references:
 - [Core 모델](core-model.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 상태 스키마](api/schema-state.md)
+- [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
 - Task 닫기 동작을 Core 닫기 준비 상태 의미나 차단 사유/API 응답 처리 경로의 담당 개념처럼 쓰지 않습니다.
@@ -774,6 +807,8 @@ Related references:
 - [API 메서드](api/methods.md)
 - [Core 모델](core-model.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 상태 스키마](api/schema-state.md)
+- [API 값 집합](api/schema-value-sets.md)
 
 Usage note:
 - 메서드별 동작은 메서드 담당 문서로 보내고, Core 닫기 준비 상태 의미와 차단 사유/API 응답 처리 경로는 각각의 담당 문서로 보냅니다.
@@ -788,17 +823,20 @@ Korean term:
 - 닫기 차단 사유
 
 Type:
-- Core 닫기 준비 상태 개념
+- API 차단 사유 처리 용어
 
 Meaning:
-- 닫기 차단 사유는 담당 문서가 정의한 조건이 해결되기 전까지 정직한 닫기 준비 상태를 막는 이유입니다.
+- 닫기 차단 사유는 유효한 닫기 준비 상태 평가가 닫기 차단을 발견한 뒤 처리되는 닫기 관련 차단 사유 데이터입니다.
 
 Primary owner:
-- [Core 모델](core-model.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 Related references:
+- [Core 모델](core-model.md)
+- [Task 닫기 메서드](api/method-close-task.md)
 - [API 상태 스키마](api/schema-state.md)
-- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 값 집합](api/schema-value-sets.md)
+- [템플릿 본문](template-bodies.md)
 
 Usage note:
 - 한국어 산문에서는 닫기 차단 사유를 쓰고, 스키마를 이름 붙일 때만 `CloseReadinessBlocker`를 보존합니다.
@@ -821,8 +859,11 @@ Primary owner:
 - [API 상태 스키마](api/schema-state.md)
 
 Related references:
+- [Core 모델](core-model.md)
+- [Task 닫기 메서드](api/method-close-task.md)
 - [API 값 집합](api/schema-value-sets.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [템플릿 본문](template-bodies.md)
 
 Usage note:
 - 스키마 이름을 닫기 준비 상태 전체 개념처럼 쓰지 않습니다.
@@ -845,6 +886,7 @@ Primary owner:
 - [API 값 집합](api/schema-value-sets.md)
 
 Related references:
+- [API 상태 스키마](api/schema-state.md)
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 Usage note:
@@ -1466,7 +1508,11 @@ Primary owner:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 Related references:
+- [Core 모델](core-model.md)
 - [Task 닫기 메서드](api/method-close-task.md)
+- [API 상태 스키마](api/schema-state.md)
+- [API 값 집합](api/schema-value-sets.md)
+- [템플릿 본문](template-bodies.md)
 
 Usage note:
 - `harness.close_task` 메서드별 동작은 Task 닫기 메서드 담당 문서가 맡습니다.

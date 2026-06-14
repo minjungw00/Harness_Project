@@ -78,6 +78,7 @@
 | close readiness, 참조 문서 | 닫기 준비 상태 | `CloseReadinessBlocker` 같은 식별자는 보존합니다. |
 | close readiness, 사용자 문서 | 닫기 가능 여부 | 사용자가 작업을 닫을 수 있는지 설명할 때 씁니다. |
 | close readiness evaluation | 닫기 준비 상태 평가 | 영어와 한국어를 섞은 평가 표현을 쓰지 않습니다. |
+| close task | Task 닫기 | 정확한 공개 API 메서드 식별자를 말할 때는 `harness.close_task`를 보존합니다. |
 | close-readiness blocker | 닫기 차단 사유 | 닫기와 관련된 차단 사유입니다. 스키마를 이름 붙일 때는 `CloseReadinessBlocker`를 보존합니다. |
 | blocker category | 차단 사유 범주 | `CloseReadinessBlocker.category`처럼 정확한 필드 이름을 말할 때는 식별자를 보존합니다. |
 | 식별자로서 `complete` | `complete` | `intent=complete`처럼 enum 값이나 식별자일 때만 보존합니다. 일반 형용사 뜻이면 전체나 전체 평가처럼 옮깁니다. |

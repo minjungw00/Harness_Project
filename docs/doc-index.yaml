@@ -292,6 +292,7 @@ documents:
       - "public error precedence"
       - "`harness.close_task` method-specific behavior"
       - "`CloseReadinessBlocker` schema shape"
+      - "close-readiness blocker terminology routing"
     normative_level: "contract"
     audience:
       - "agents"
@@ -493,6 +494,8 @@ documents:
     path_ko: "docs/ko/reference/api/method-close-task.md"
     role: "reference"
     owner_for:
+      - "close task API method term"
+      - "`harness.close_task` public method identifier"
       - "`harness.close_task` method-specific behavior"
       - "`CloseTaskResult` method result branch behavior"
       - "method-specific close-readiness evaluation order"
@@ -720,6 +723,8 @@ documents:
     path_ko: "docs/ko/reference/api/blocker-routing.md"
     role: "reference"
     owner_for:
+      - "close-readiness blocker terminology"
+      - "blocker routing"
       - "close-readiness blocker/API response boundary"
       - "error/blocker boundary for close-readiness blocker data"
       - "public-code-to-blocker boundary"
