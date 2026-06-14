@@ -26,6 +26,52 @@ related_owners:
   translation_guide:
     en: "docs/en/maintain/translation-guide.md"
     ko: "docs/ko/maintain/translation-guide.md"
+term_entry_schema:
+  term_identifier:
+    source: "mapping key under `terms`"
+    rule: "Use stable snake_case keys for machine-readable term records."
+  required_fields:
+    - "category"
+    - "en"
+    - "ko_reference"
+    - "ko_user"
+    - "primary_owner"
+    - "related_references"
+  optional_fields:
+    - "aliases_en"
+    - "en_label"
+    - "en_preferred_prose"
+    - "ko_contextual"
+    - "ko_explanation"
+    - "ko_reference_first_reference"
+    - "preserve_identifier"
+    - "preserve_as_identifier"
+    - "preserve_as_label"
+    - "avoid_ko"
+    - "notes"
+  preferred_expression_fields:
+    - "en"
+    - "en_label"
+    - "en_preferred_prose"
+    - "ko_reference"
+    - "ko_user"
+    - "ko_contextual"
+    - "ko_explanation"
+    - "ko_reference_first_reference"
+  identifier_preservation_fields:
+    - "preserve_identifier"
+    - "preserve_as_identifier"
+    - "preserve_as_label"
+  avoid_expression_fields:
+    - "avoid_ko"
+    - "avoid.ko"
+  field_semantics:
+    category: "Term type used by terminology and maintenance checks."
+    primary_owner: "Focused owner document for the term's definition, contract, or terminology rule."
+    related_references: "Adjacent documents that help interpret the term; these paths are not alternate primary owners."
+    notes: "Check-oriented guidance for terminology, owner routing, identifier preservation, and Korean prose."
+  owner_path_rule: "Every `primary_owner` and `related_references` path must exist and be represented in `docs/doc-index.yaml`."
+  index_owner_rule: "Use an index as `primary_owner` only for index-owned navigation terms."
 identifier_preservation:
   rule: "Preserve exact identifiers unchanged in English and Korean. Use backticks in prose when the value is code-like, schema-like, or a product label that must be searched exactly."
   exact_identifier_classes:
@@ -162,6 +208,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/runtime-boundaries.md"
       ko: "docs/ko/reference/runtime-boundaries.md"
+    related_references: []
   harness_runtime_home:
     category: "product_label"
     en: "Harness Runtime Home"
@@ -172,6 +219,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/runtime-boundaries.md"
       ko: "docs/ko/reference/runtime-boundaries.md"
+    related_references: []
   documentation:
     category: "general_prose"
     en: "documentation"
@@ -226,6 +274,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/scope.md"
       ko: "docs/ko/reference/scope.md"
+    related_references: []
     notes:
       - "Use for behavior or capability documented as supported."
       - "Do not use supported scope for the currently applied scope inside a `Task` or Change Unit."
@@ -253,6 +302,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/api/methods.md"
       ko: "docs/ko/reference/api/methods.md"
+    related_references: []
     notes:
       - "Use only for a public API method documented as supported."
       - "Preserve exact method identifiers when naming a method."
@@ -279,6 +329,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/scope.md"
       ko: "docs/ko/reference/scope.md"
+    related_references: []
     notes:
       - "An out-of-scope capability is deferred material until an owner promotes it."
   evidence_collection_workflow:
@@ -937,6 +988,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/api/schema-artifacts.md"
       ko: "docs/ko/reference/api/schema-artifacts.md"
+    related_references: []
   staged_artifact_handle:
     category: "identifier"
     en: "StagedArtifactHandle"
@@ -1203,6 +1255,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/security.md"
       ko: "docs/ko/reference/security.md"
+    related_references: []
     notes:
       - "Do not strengthen cooperative wording into detective, sandboxed, enforced, or stronger isolation wording."
   detective_guarantee:
@@ -1233,6 +1286,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/design-quality.md"
       ko: "docs/ko/reference/design-quality.md"
+    related_references: []
     notes:
       - "Use for the Design Quality reference boundary that routes observations to relevant judgment, evidence, scope, surface-capability, residual-risk, or close-readiness owners."
       - "Design-quality wording does not create an independent close blocker, QA result, acceptance decision, residual-risk decision, evidence authority, validator catalog, or close authority."
