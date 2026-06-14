@@ -16,7 +16,7 @@ This document owns:
 
 It does not define API branches, storage effects, access classes, artifact promotion, security guarantees, close-readiness behavior, or implementation routing.
 
-For the canonical baseline scope, see [Scope](scope.md). For selected core term meanings, see [Glossary](glossary.md). For complete structured terminology metadata, see [`docs/terminology-map.yaml`](../../terminology-map.yaml).
+For the canonical baseline scope, see [Scope](scope.md). For compact meanings of curated core terms included in the glossary, see [Glossary](glossary.md). For complete structured terminology metadata, see [`docs/terminology-map.yaml`](../../terminology-map.yaml).
 
 ## Conformance item summary
 

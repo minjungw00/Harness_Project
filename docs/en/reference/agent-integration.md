@@ -18,7 +18,7 @@ This document owns:
 This document does not own:
 
 - surface-specific workflows; see [Surface Recipes](../use/surface-recipes.md)
-- API request envelopes, response branches, schema shapes, method access requirements, or access-class value names; see [API Methods](api/methods.md) and [API Value Sets](api/schema-value-sets.md)
+- API request envelopes, response branches, schema shapes, method access requirements, or access-class value names; see [API Schema Core](api/schema-core.md), [API Methods](api/methods.md), method owners, and [API Value Sets](api/schema-value-sets.md)
 - storage layout, artifact lifecycle, or staged-handle validation; see storage and artifact owners through [Reference Index](README.md)
 - security guarantee meanings or access-boundary wording; see [Security](security.md)
 - authority versus projected display rules; see [Projection Authority Reference](projection-and-templates.md)

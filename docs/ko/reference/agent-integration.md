@@ -18,7 +18,7 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 이 문서는 담당하지 않습니다.
 
 - 접점별 사용 흐름: [접점별 사용 레시피](../use/surface-recipes.md)
-- API 요청 래퍼, 응답 분기, 스키마 형태, 메서드 접근 요구사항, 접근 등급 값 이름: [API 메서드](api/methods.md)와 [API 값 집합](api/schema-value-sets.md)
+- API 요청 래퍼, 응답 분기, 스키마 형태, 메서드 접근 요구사항, 접근 등급 값 이름: [API 코어 스키마](api/schema-core.md), [API 메서드](api/methods.md), 메서드 담당 문서, [API 값 집합](api/schema-value-sets.md)
 - 저장소 배치, 아티팩트 생명주기, 스테이징 핸들 검증: [참조 색인](README.md)에서 고르는 저장소와 아티팩트 담당 문서
 - 보안 보장 의미나 접근 경계 표현: [보안](security.md)
 - 권한과 파생 표시의 구분 규칙: [상태 보기 권한 참조](projection-and-templates.md)

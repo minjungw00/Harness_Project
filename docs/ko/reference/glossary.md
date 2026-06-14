@@ -4,7 +4,7 @@
 
 완전한 구조화 용어 메타데이터는 [`docs/terminology-map.yaml`](../../terminology-map.yaml)에 있습니다. 이 용어집은 선별된 용어 이름, 한국어 용어, 간결한 뜻, 주 담당 문서만 반복합니다. 선호 표현, 피할 표현, 식별자 보존 통제, 주변 참조는 용어 지도에 남깁니다. 주제별 담당 문서 찾기는 [참조 색인](README.md)을 사용합니다. `doc_id` 기준의 정확한 기계 판독 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다.
 
-계약 세부사항과 번역 규칙은 이 표가 아니라 각각의 집중 담당 문서에서 확인합니다.
+계약 세부사항은 각각의 집중 담당 문서에서 확인합니다. 번역과 문체 규칙은 [번역 가이드](../maintain/translation-guide.md)에, 구조화 용어 메타데이터와 표현 통제는 [`docs/terminology-map.yaml`](../../terminology-map.yaml)에 둡니다.
 
 ## 용어
 

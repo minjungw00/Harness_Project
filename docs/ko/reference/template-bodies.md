@@ -16,7 +16,7 @@
 
 - 상태 보기 권한, 최신성, 읽기 전용 파생 표시 규칙: [상태 보기 권한 참조](projection-and-templates.md)
 - 원천 상태, 저장소 기록 권한, 저장소 기록 구조: [Core 모델](core-model.md)과 저장소 담당 문서
-- API 스키마, 값 집합, 공개 `ErrorCode` 식별자, 공개 `ErrorCode` 의미: API 스키마 담당 문서와 [API 오류 코드](api/error-codes.md)
+- API 스키마, API 값 집합, 공개 `ErrorCode` 식별자, 공개 `ErrorCode` 의미: API 스키마 담당 문서, [API 값 집합](api/schema-value-sets.md), [API 오류 코드](api/error-codes.md)
 - 오류 우선순위, 거부 응답 동작, 응답 분기 경로, 기계 판독용 `ToolError.details`: [API 오류 우선순위](api/error-precedence.md), [API 오류 처리 경로](api/error-routing.md), [API 오류 세부사항](api/error-details.md)
 - 닫기 차단 사유 의미, 차단 사유 코드 처리 경로, `CloseReadinessBlocker` 형태: [Core 모델](core-model.md), [API 상태 스키마](api/schema-state.md), [API 차단 사유 처리 경로](api/blocker-routing.md)
 - 현재 목록 밖의 렌더링 본문: 지원 경계는 [범위 참조](scope.md)
@@ -272,7 +272,7 @@
 ### 암시하면 안 되는 것
 
 - 카드가 쓰기를 승인하거나, 증거를 기록하거나, 위험을 수락하거나, `Task`를 닫는다는 의미.
-- 스키마 담당 문서가 말하지 않았는데 초록색 또는 긍정 라벨이 기준 enum 값이라는 의미.
+- [API 값 집합](api/schema-value-sets.md)이 지원 값으로 정의하지 않았는데 초록색 또는 긍정 라벨이 기준 enum 값이라는 의미.
 - 아티팩트가 있다는 사실만으로 증거가 충분하다는 의미.
 - 빠진 원천 데이터를 낙관적인 문구로 대신할 수 있다는 의미.
 

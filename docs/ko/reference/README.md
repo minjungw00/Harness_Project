@@ -2,7 +2,7 @@
 
 이 색인은 하네스 참조 질문의 담당 문서를 고르는 사람이 읽는 참조 담당 문서 색인입니다. 이 README는 담당 문서로 안내할 뿐 용어집의 뜻풀이, API 계약, 스키마, 저장 효과, 보안 보장, 범위를 정의하지 않습니다.
 
-선별된 핵심 용어의 간단한 뜻은 [용어집](glossary.md)을 사용합니다. `doc_id` 기준의 기계 판독 가능한 담당 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다. 완전한 구조화 용어 메타데이터, 한영 표현 통제, 식별자 통제는 [`docs/terminology-map.yaml`](../../terminology-map.yaml)을 사용합니다.
+용어집에 포함된 선별 핵심 용어의 간단한 뜻은 [용어집](glossary.md)을 사용합니다. `doc_id` 기준의 기계 판독 가능한 담당 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다. 완전한 구조화 용어 메타데이터, 한영 표현 통제, 식별자 통제는 [`docs/terminology-map.yaml`](../../terminology-map.yaml)을 사용합니다.
 
 ## 제품과 시스템 담당 문서
 

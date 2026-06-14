@@ -16,7 +16,7 @@ This document does not own:
 
 - projection authority, freshness, or read-only derived-display rules; see [Projection Authority Reference](projection-and-templates.md)
 - source-of-truth state, storage record authority, or storage record layout; see [Core Model](core-model.md) and storage owners
-- API schemas, value sets, public `ErrorCode` identifiers, or public `ErrorCode` semantics; see API schema owners and [API error codes](api/error-codes.md)
+- API schemas, API value sets, public `ErrorCode` identifiers, or public `ErrorCode` semantics; see API schema owners, [API Value Sets](api/schema-value-sets.md), and [API error codes](api/error-codes.md)
 - error precedence, rejected-response behavior, response branch routing, or machine-readable `ToolError.details`; see [API error precedence](api/error-precedence.md), [API error routing](api/error-routing.md), and [API error details](api/error-details.md)
 - close-readiness blocker semantics, blocker-code routing, or `CloseReadinessBlocker` shape; see [Core Model](core-model.md), [API State Schemas](api/schema-state.md), and [API blocker routing](api/blocker-routing.md)
 - rendered bodies outside the current list; see [Scope Reference](scope.md) for support boundaries
@@ -272,7 +272,7 @@ Recovery cue:
 ### Must not imply
 
 - The card authorizes a write, records evidence, accepts risk, or closes the Task.
-- A green or positive label is a canonical enum value unless a schema owner says so.
+- A green or positive label is a canonical enum value unless [API Value Sets](api/schema-value-sets.md) defines it as a supported value.
 - Artifact availability alone proves evidence sufficiency.
 - Missing source data can be replaced by optimistic wording.
 

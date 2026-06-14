@@ -2,7 +2,7 @@
 
 Use this index to choose the owner document for a Harness reference question. This README is the human-readable reference owner index: it points to owners and does not define glossary term meanings, API contracts, schemas, storage effects, security guarantees, or scope.
 
-For selected core term meanings, use the [Glossary](glossary.md). For machine-readable owner routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml). For complete structured terminology metadata, bilingual wording controls, and identifier controls, use [`docs/terminology-map.yaml`](../../terminology-map.yaml).
+For compact meanings of curated core terms included there, use the [Glossary](glossary.md). For machine-readable owner routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml). For complete structured terminology metadata, bilingual wording controls, and identifier controls, use [`docs/terminology-map.yaml`](../../terminology-map.yaml).
 
 ## Product and system owners
 
