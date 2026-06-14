@@ -389,7 +389,7 @@ Check:
 
 Failure:
 - A paragraph requires the reader to infer condition/result/exception boundaries.
-- A Reference section is drafted without a clear skeleton, causing conditions, results, non-claims, owner boundaries, or related references to drift.
+- A Reference section lacks a clear skeleton, causing conditions, results, non-claims, owner boundaries, or related references to drift.
 - A table cell contains multiple sentences, multiple conditions, hidden exceptions, boundary caveats, effects, owner links, or list-like sequences.
 - A source line is hard to review.
 
