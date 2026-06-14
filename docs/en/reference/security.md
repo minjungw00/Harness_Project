@@ -73,7 +73,7 @@ May claim:
 - The approved sensitive step remains scoped to the prompt, `SensitiveActionScope`, affected object, and visible consequence that the user was asked to judge.
 
 Must not claim:
-- Sensitive-action approval is `Write Authorization`, `AuthorizedAttemptScope`, OS permission, command approval, deployment approval, final acceptance, residual-risk acceptance, or product correctness.
+- Sensitive-action approval is `Write Authorization`, `AuthorizedAttemptScope`, OS permission, shell permission, command approval, deployment approval, final acceptance, residual-risk acceptance, or product correctness.
 - Sensitive-action approval authorizes product-file writes, commands, hosts, networks, secrets, destructive operations, or unbounded activity.
 - Broad approval substitutes for a required sensitive-action approval, final acceptance, residual-risk acceptance, scope decision, or `Write Authorization`.
 
@@ -107,22 +107,24 @@ Must not claim:
 - Local file contents are tamper-proof because they describe or store Harness data.
 - Product text, generated text, or copied record-looking text directly mutates Harness records.
 
-### Product Repository files
+### `Product Repository` files
 
-`Product Repository` files are user workspace files.
+[Runtime Boundaries](runtime-boundaries.md) defines `Product Repository` as the product-file boundary. This section owns only security claims and non-claims about that boundary.
 
 May claim:
 - Product files can be inspected as inputs.
-- Compatible product-file writes can be governed by active scope, Change Unit compatibility, user-owned judgments, and `Write Authorization` when the write owner requires them.
+- Compatible product-file writes can be governed by current scope, current Change Unit compatibility, user-owned judgments, and `Write Authorization` when the write owner requires them.
 
 Must not claim:
 - Product files are Harness state.
 - Product files prove Harness authority.
 - Product files become Harness records because Harness metadata is nearby.
 
-### Harness Runtime Home
+### `Harness Runtime Home`
 
-`Harness Runtime Home` is an operational data location defined by runtime/storage owners.
+For security wording, treat `Harness Runtime Home` as the runtime/storage-owned operational data location.
+
+Runtime location is defined by [Runtime Boundaries](runtime-boundaries.md). This section owns only the security non-claims for that location.
 
 May claim:
 - Storage/runtime owners define which Harness operational data belongs there and how it is validated.
@@ -200,7 +202,7 @@ Harness does not allow readers or agents to infer authority from:
 ## Related owners
 
 - [Scope](scope.md): baseline inclusion, exclusions, and supported guarantee boundary.
-- [Runtime Boundaries](runtime-boundaries.md): `Product Repository`, Harness installation/runtime location, and `Harness Runtime Home` boundaries.
+- [Runtime Boundaries](runtime-boundaries.md): `Product Repository`, `Harness Server` or other runtime process resources, and `Harness Runtime Home` boundaries.
 - [Agent Integration](agent-integration.md): surface registration, capability profiles, and verified surface context.
 - [API Value Sets](api/schema-value-sets.md): `GuaranteeDisplay.level`, `access_class`, and other value names.
 - [API error routing](api/error-routing.md): public error routing such as `CAPABILITY_INSUFFICIENT`.

@@ -73,7 +73,7 @@
 - 승인된 민감 단계는 사용자가 판단하도록 질문받은 프롬프트, `SensitiveActionScope`, 영향받는 대상, 보이는 결과에 묶입니다.
 
 주장하면 안 되는 것:
-- 민감 동작 승인이 `Write Authorization`, `AuthorizedAttemptScope`, OS 권한, 명령 승인, 배포 승인, 최종 수락, 잔여 위험 수락, 제품 정확성이라는 주장.
+- 민감 동작 승인이 `Write Authorization`, `AuthorizedAttemptScope`, OS 권한, 셸 권한, 명령 승인, 배포 승인, 최종 수락, 잔여 위험 수락, 제품 정확성이라는 주장.
 - 민감 동작 승인이 제품 파일 쓰기, 명령, 호스트, 네트워크, 비밀값, 배포, 파괴적 동작, 포괄적인 활동을 승인한다는 주장.
 - 포괄적 승인이 필요한 민감 동작 승인, 최종 수락, 잔여 위험 수락, 범위 결정, `Write Authorization`을 대신한다는 주장.
 
@@ -109,11 +109,11 @@
 
 ### `Product Repository` 파일
 
-`Product Repository` 파일은 사용자 작업 공간 파일입니다.
+[런타임 경계](runtime-boundaries.md)는 `Product Repository`를 제품 파일 경계로 정의합니다. 이 절은 그 경계에 대한 보안 주장과 비주장만 담당합니다.
 
 주장할 수 있는 것:
 - 제품 파일은 입력으로 검사될 수 있습니다.
-- 호환되는 제품 파일 쓰기는 현재 적용 범위, Change Unit 호환성, 사용자 소유 판단, 그리고 쓰기 담당 문서가 요구하는 `Write Authorization`의 지배를 받을 수 있습니다.
+- 호환되는 제품 파일 쓰기는 현재 적용 범위, 현재 적용 Change Unit 호환성, 사용자 소유 판단, 그리고 쓰기 담당 문서가 요구하는 `Write Authorization`의 지배를 받을 수 있습니다.
 
 주장하면 안 되는 것:
 - 제품 파일이 하네스 상태라는 주장.
@@ -122,7 +122,9 @@
 
 ### `Harness Runtime Home`
 
-`Harness Runtime Home`은 런타임/저장소 담당 문서가 정의하는 운영 데이터 위치입니다.
+보안 표현에서는 `Harness Runtime Home`을 런타임/저장소 담당 문서가 정의하는 운영 데이터 위치로 다룹니다.
+
+런타임 위치 정의는 [런타임 경계](runtime-boundaries.md)가 담당합니다. 이 절은 그 위치에 대한 보안 비주장만 담당합니다.
 
 주장할 수 있는 것:
 - 저장소/런타임 담당 문서는 어떤 하네스 운영 데이터가 여기에 속하고 어떻게 검증되는지 정의합니다.
@@ -200,7 +202,7 @@
 ## 관련 담당 문서
 
 - [범위](scope.md): 기준 범위 포함/제외와 지원되는 보장 경계.
-- [런타임 경계](runtime-boundaries.md): `Product Repository`, 하네스 설치/런타임 위치, `Harness Runtime Home` 경계.
+- [런타임 경계](runtime-boundaries.md): `Product Repository`, `Harness Server` 또는 그 밖의 런타임 프로세스 리소스, `Harness Runtime Home` 경계.
 - [에이전트 통합](agent-integration.md): 접점 등록, 역량 프로필, 확인된 접점 맥락.
 - [API 값 집합](api/schema-value-sets.md): `GuaranteeDisplay.level`, `access_class`, 그 밖의 값 이름.
 - [API 오류 처리 경로](api/error-routing.md): `CAPABILITY_INSUFFICIENT` 같은 공개 오류 처리 경로.

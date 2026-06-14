@@ -1,6 +1,6 @@
 # Core model reference
 
-This reference owns the Harness Core authority model. It defines how Core, a `Task`, a Change Unit, user-owned judgment, evidence, artifact references, `Write Authorization`, close readiness, blockers, acceptance, and residual risk relate to each other.
+This reference owns the Core authority model for Harness state. It defines how Core, a `Task`, a Change Unit, user-owned judgment, evidence, artifact references, `Write Authorization`, close readiness, blockers, acceptance, and residual risk relate to each other.
 
 Core is the local authority record for Harness state. It is not chat memory, generated Markdown, a status report, a tutorial, a storage layout, or an API response shape.
 
@@ -36,9 +36,9 @@ Harness governs Harness records.
 
 Scope bounds work.
 
-- A `Task` defines the user-value unit. A Change Unit defines the active scoped work boundary for write-capable work inside that `Task`.
-- Product-file writes, evidence claims, final acceptance, and close claims must stay compatible with the active scope and Change Unit.
-- A resolved scope judgment does not silently mutate active scope; active scope must be updated through the scope owner-defined transition.
+- A `Task` defines the user-value unit. A Change Unit defines the current write-capable work boundary inside that `Task`.
+- Product-file writes, evidence claims, final acceptance, and close claims must stay compatible with the current scope and current Change Unit.
+- A resolved scope judgment does not silently mutate current scope; current scope must be updated through the scope owner-defined transition.
 
 User-owned judgment stays user-owned.
 
@@ -48,7 +48,7 @@ User-owned judgment stays user-owned.
 `Write Authorization` is narrow.
 
 - `Write Authorization` authorizes one compatible product-file write attempt under current Harness state.
-- It is not reusable scope, command approval, sensitive-action approval, OS permission, final acceptance, evidence, or proof that the write occurred.
+- It is not reusable scope, ordinary write approval, command approval, shell permission, sensitive-action approval, user-owned judgment, OS permission, deployment approval, final acceptance, residual-risk acceptance, evidence, or proof that the write occurred.
 
 Runs and evidence record support, not authority substitutes.
 
@@ -70,7 +70,7 @@ Acceptance and risk acceptance are specific.
 
 ### Core
 
-Core is the local authority record for a Harness project. It records current authority state and applies changes through owner-defined transitions.
+Core is the local authority record for Harness state within a project. It records current authority state and applies changes through owner-defined transitions.
 
 Core authority is about Harness records. Security guarantee levels, local-access posture, and stronger isolation non-claims belong to [Security](security.md).
 
@@ -78,17 +78,17 @@ Core authority is about Harness records. Security guarantee levels, local-access
 
 A `Task` is the user-value unit being shaped, executed, blocked, or closed.
 
-A `Task` owns the main work path for scope, Change Units, required judgments, evidence expectations, close readiness, final outcome, and residual risk. Exact lifecycle values and state fields belong to the API state and value-set owners.
+A `Task` owns the main work path for scope, Change Units, required judgments, verification criteria, evidence support, close readiness, final outcome, and residual risk. Exact lifecycle values and state fields belong to the API state and value-set owners.
 
 ### Change Unit
 
-A Change Unit is the active scoped work boundary for write-capable work inside a `Task`.
+A Change Unit is the currently applied work boundary for write-capable work inside a `Task`.
 
 It defines what the current work may change and what must stay outside the current work. It is not final acceptance, evidence, broad approval, or permission to widen scope silently.
 
 ### Autonomy Boundary
 
-An Autonomy Boundary is the agent latitude inside the active Change Unit.
+An Autonomy Boundary is the agent latitude inside the current Change Unit.
 
 It does not allow scope expansion, sensitive-action approval, user-owned judgment, or write authorization by inference.
 
@@ -120,7 +120,9 @@ Core may treat an artifact reference as evidence-eligible only when the artifact
 
 `Write Authorization` is the named Core authorization for one compatible product-file write attempt.
 
-It depends on current Core state, active scope, active Change Unit compatibility, required user-owned judgments, and `Write Authorization` compatibility rules. Its exact method behavior, API shape, storage effect, and stale-state handling belong to their owners.
+It depends on current Core state, current scope, current Change Unit compatibility, required user-owned judgments, and `Write Authorization` compatibility rules.
+
+Its exact method behavior, API shape, storage effect, and stale-state handling belong to their owners.
 
 ### Blocker
 
@@ -132,7 +134,7 @@ A close blocker is the close-relevant form: it prevents honest close readiness u
 
 Close readiness is the Core authority concept for whether the current `Task` can close honestly.
 
-It considers the current `Task`, active scope, Change Unit, required judgments, write and Run compatibility, evidence support, artifact availability, unresolved blockers, final acceptance, residual-risk visibility, residual-risk acceptance, and recovery constraints.
+It considers the current `Task`, current scope, current Change Unit, required judgments, write and Run compatibility, evidence support, artifact availability, unresolved blockers, final acceptance, residual-risk visibility, residual-risk acceptance, and recovery constraints.
 
 ### Final acceptance
 
@@ -155,7 +157,7 @@ Projection output, template output, status cards, summaries, and reports are der
 
 Core preserves the boundary between what the agent may decide and what the user must decide.
 
-A judgment is user-owned when it changes or accepts a user-visible product outcome, a material technical direction, active scope, a named sensitive step, final acceptance, residual risk, or cancellation.
+A judgment is user-owned when it changes or accepts a user-visible product outcome, a material technical direction, current scope, a named sensitive step, final acceptance, residual risk, or cancellation.
 
 Product decisions include user-visible behavior, user flow, copy, UX, accessibility, release promises, product trade-offs, and user value.
 
@@ -217,8 +219,8 @@ The lifecycle here is conceptual authority meaning, not an API state table.
 | Area | Authority meaning |
 |---|---|
 | Intake and shaping | User intent becomes a concrete goal, scope boundary, non-goals, acceptance criteria, Autonomy Boundary, and first safe Change Unit when the relevant owners define support. |
-| Scope update | Accepted scope or Change Unit changes become active only through the scope owner-defined transition. A judgment record alone does not mutate active scope. |
-| Execution and observation | Runs record actions and observations. Product-file writes must be compatible with active scope and `Write Authorization`; read-only work does not authorize subsequent writes. |
+| Scope update | Accepted scope or Change Unit changes become currently applied only through the scope owner-defined transition. A judgment record alone does not mutate current scope. |
+| Execution and observation | Runs record actions and observations. Product-file writes must be compatible with current scope and `Write Authorization`; read-only work does not authorize subsequent writes. |
 | Waiting or blocked | If required owner-defined authority data is missing, stale, incompatible, or unsafe to bypass, Core exposes the blocker and the next required step instead of hiding the gap. |
 | Close attempt | Core evaluates whether the current state can close honestly. A final chat summary or generated report is not enough by itself. |
 | Terminal outcome | Completion, cancellation, or supersession ends the `Task` path. Cancellation and supersession are terminal, but they are not successful completion and do not satisfy completion evidence, acceptance, or risk requirements. |
@@ -229,10 +231,10 @@ Authority checks summarize whether a Core action or close claim can proceed hone
 
 | Check area | Authority meaning |
 |---|---|
-| Scope | The requested work, write, evidence claim, or close claim must fit the active `Task` scope and Change Unit. |
+| Scope | The requested work, write, evidence claim, or close claim must fit the current `Task` scope and current Change Unit. |
 | User-owned judgment | Required product, technical, scope, sensitive-action, final-acceptance, residual-risk, or cancellation judgment must be resolved by the user and compatible with the affected object and consequence. |
 | Sensitive action | A named sensitive step must have its own compatible user approval when that approval is required. |
-| Write compatibility | A product-file write attempt must be compatible with active scope and a consumable `Write Authorization`. |
+| Write compatibility | A product-file write attempt must be compatible with current scope and a consumable `Write Authorization`. |
 | Run and evidence | Recorded Runs, evidence summaries, and evidence-eligible artifacts must support the claims they are used for. |
 | Final acceptance | Required final acceptance must be tied to the visible close basis. |
 | Residual risk | Known close-relevant residual risk must be visible, and required risk acceptance must be compatible with the requested close. |
@@ -254,12 +256,16 @@ It has these authority properties:
 It is not:
 
 - command approval
+- ordinary write approval
 - dependency approval
+- shell permission
+- OS permission
 - host, network, or secret access
 - deployment approval
 - destructive-action approval
 - system access
 - sensitive-action approval
+- user-owned judgment
 - final acceptance
 - evidence
 - residual-risk acceptance
@@ -301,7 +307,7 @@ Close readiness is the Core authority concept for whether the current `Task` can
 Close readiness considers:
 
 - `Task` lifecycle eligibility for the requested terminal path
-- active scope, Change Unit, acceptance criteria, and completion policy
+- current scope, current Change Unit, acceptance criteria, and completion policy
 - required user-owned judgments
 - required sensitive-action approval
 - write and Run compatibility

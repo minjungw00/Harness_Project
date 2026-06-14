@@ -1,6 +1,8 @@
 # Runtime boundaries reference
 
-This document owns the location boundary among `Product Repository`, Harness installation or runtime process, and `Harness Runtime Home`. It defines local access assumptions for those locations and routes storage and security details to their owners.
+This document owns the boundary among `Product Repository`, `Harness Server` or other Harness runtime process resources, and `Harness Runtime Home`. It defines local access assumptions for those locations and routes storage and security details to their owners.
+
+`Harness Server` is a serving/runtime component. It is not Harness as a whole, not Core, and not the local authority record for Harness state.
 
 ## Owns / does not own
 
@@ -8,28 +10,28 @@ This document owns the location boundary among `Product Repository`, Harness ins
 |---|---|
 | The definition of `Product Repository`. | Storage record layout, locks, migrations, versioning, or artifact lifecycle details. |
 | The definition of `Harness Runtime Home`. | API method behavior or public schema shapes. |
-| The separation between product files, installation/runtime files, and runtime data. | Detailed security guarantee meanings or security non-guarantees. |
+| The separation between product files, `Harness Server` or other installation/runtime files, and runtime data. | Detailed security guarantee meanings or security non-guarantees. |
 | Local access and location non-authority rules. | Projection authority, template bodies, or rendered display freshness. |
 | The rule that runtime location does not by itself prove Harness authority, security authority, or isolation. | Product scope, close readiness, evidence sufficiency, or user-owned judgment meaning. |
 
 ## Location model
 
-Harness keeps three local location boundaries distinct.
+Harness keeps product-file, server/runtime, and runtime-data boundaries distinct.
 
 | Boundary | Definition | Must not infer |
 |---|---|---|
-| `Product Repository` | The user's project workspace, including product source, product documentation, tests, configuration, and other project files. | It is not Harness runtime state, not `Harness Runtime Home`, and not proof of Harness authority. |
-| Harness installation or runtime process | The process, package, application resources, and configuration used to run Harness behavior. | The installation location is not automatically the runtime data location. |
-| `Harness Runtime Home` | The per-user or per-installation operational data space for Harness-owned records, local runtime metadata, and artifact data as storage/runtime owners define them. | It is not the `Product Repository`, not automatically a security boundary, and not isolation by default. |
+| `Product Repository` | The user's product-file boundary: project source, product documentation, tests, configuration, and other project files. | It is not Harness runtime state, not `Harness Runtime Home`, and not proof of Harness authority. |
+| `Harness Server` or other runtime process resources | The serving/runtime component, process, package, application resources, and configuration used to run Harness behavior. | It is not Harness as a whole, not Core, not the local authority record, and not automatically the runtime data location. |
+| `Harness Runtime Home` | The runtime storage location for Harness-owned records, local runtime metadata, and artifact data as storage/runtime owners define them. | It is not the `Product Repository`, not automatically a security boundary, and not isolation by default. |
 
 <a id="runtime-location-product-repository"></a>
 ### `Product Repository`
 
-`Product Repository` is the user's project workspace.
+`Product Repository` is the user's project workspace and product-file boundary.
 
 May claim:
 - Product files can be inspected as inputs to owner-defined Harness checks or user-owned judgments.
-- Compatible product-file writes can be governed by the active scope, Change Unit, required judgments, and write-authorization owners.
+- Compatible product-file writes can be governed by the current scope, current Change Unit, required judgments, and `Write Authorization` owners.
 
 Must not claim:
 - `Product Repository` content is Harness state.
@@ -38,15 +40,17 @@ Must not claim:
 - A `Product Repository` is automatically `Harness Runtime Home`.
 
 <a id="runtime-location-server-installation"></a>
-### Harness installation or runtime process
+### `Harness Server` and runtime process
 
-Harness installation or runtime process location is where Harness executable code, packages, application resources, or process configuration may live.
+`Harness Server` is a Harness runtime/server component. Its installation or runtime process location is where Harness executable code, packages, application resources, or process configuration may live.
 
 May claim:
 - The runtime process mediates Harness API behavior and Harness records through documented owner contracts.
 - Installation resources and runtime data can live in different locations.
 
 Must not claim:
+- `Harness Server` is the Harness product/system as a whole.
+- `Harness Server` is Core or the local authority record for Harness state.
 - Installing or running Harness from a directory makes that directory `Harness Runtime Home`.
 - The installation location proves that runtime data exists there.
 - The installation path grants Harness authority, security authority, or product-file write authority.
@@ -54,7 +58,7 @@ Must not claim:
 <a id="runtime-location-runtime-home"></a>
 ### `Harness Runtime Home`
 
-`Harness Runtime Home` is the operational data space for Harness runtime data.
+`Harness Runtime Home` is the runtime storage location for Harness runtime data.
 
 May claim:
 - Storage/runtime owners define what operational data belongs in `Harness Runtime Home`.
