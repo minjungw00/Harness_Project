@@ -1,12 +1,14 @@
 # Start
 
-This is the product-orientation guide for Harness. It introduces the basic ideas and routes exact contract questions to the reference owners.
+This is the first-read overview for Harness. It introduces the concept model in ordinary language and routes exact contract questions to the reference owners.
 
 ## What Harness is
 
-Harness is a local authority record for AI-assisted product work. It keeps the fragile basis of a task out of chat-only memory: scope, user-owned judgment, evidence, verification expectations, acceptance, close readiness, and residual risk.
+Harness is the local work-authority product/system for AI-assisted product work. It helps users and agents keep the basis of a task visible while the work moves: scope, user-owned judgment, evidence, verification criteria, final acceptance, residual-risk acceptance, and close readiness.
 
-Users can speak normally:
+Harness itself is not a local authority record. Core is the local authority record for Harness state. Core records the authority state that Harness uses; Harness is the broader product/system around that record, its server/runtime components, connected surfaces, and reader workflows.
+
+Users can still speak normally:
 
 ```text
 Make this plan concrete enough to implement.
@@ -15,33 +17,34 @@ Show what I need to decide and what you can verify.
 Before you say it is done, show the evidence and residual risk.
 ```
 
-The agent can answer in the same ordinary language. When a request hides product, technical, inspection, acceptance, or risk choices, Harness makes those choices visible instead of letting the agent decide them silently.
+Harness gives an agent a place to keep those boundaries explicit instead of letting chat momentum turn hidden choices into product direction.
 
-## What Harness is not
+## The core concepts
 
-Harness is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Harness Runtime Home`.
+These concepts are related, but they are not interchangeable:
 
-Harness records authority boundaries. It does not turn a polished summary, readable view, status card, or chat answer into the authority record. Harness documentation and connected surfaces must not claim stronger enforcement than the applied scope and security owners support. For exact security wording, use [Security](reference/security.md).
+| Concept | First-read meaning | Exact owner |
+|---|---|---|
+| Harness | The local work-authority product/system for AI-assisted product work. | [Scope](reference/scope.md) |
+| Core | The local authority record for Harness state. | [Core Model](reference/core-model.md) |
+| `Harness Server` | A serving/runtime component of Harness, not a synonym for Harness as a whole. | [Runtime Boundaries](reference/runtime-boundaries.md) |
+| `Harness Runtime Home` | The local runtime data space for Harness operational data as storage/runtime owners define it. | [Runtime Boundaries](reference/runtime-boundaries.md) |
+| `Product Repository` | The user's project workspace and product files. | [Runtime Boundaries](reference/runtime-boundaries.md) |
+| `Projection` | A read-only state view or display of owner records. | [Projection Authority Reference](reference/projection-and-templates.md) |
+| `Write Authorization` | The exact Harness product label for one compatible product-file write attempt under current Harness state. | [Core Model](reference/core-model.md) |
+
+Do not use one of these terms as a shortcut for another. A readable `Projection`, a file in the `Product Repository`, or a directory selected as `Harness Runtime Home` is not Core. `Harness Server` names a component; it does not rename the whole product/system.
 
 ## The problem Harness solves
 
 AI-assisted work can move faster than the record around it:
 
-- A small request grows.
+- A small request grows into a larger product change.
 - A product choice gets buried in implementation.
-- A test pass starts sounding like proof of the whole user experience.
+- A passing test starts sounding like proof of the whole user experience.
 - A user says "looks good" and the agent treats every unresolved judgment as settled.
 
-Harness exists to make those substitutions visible and invalid as authority.
-
-Harness helps a reviewer see:
-
-- what was in scope
-- what the user decided
-- what evidence supports the claim
-- what was checked
-- what still needs human judgment
-- whether the work can honestly close
+Harness exists to make those substitutions visible. The useful question is not only "did the agent do something?" It is also "what was in scope, what did the user decide, what evidence supports the claim, what verification criteria were checked, what risks remain, and can the work honestly close?"
 
 ## One ordinary task
 
@@ -51,7 +54,7 @@ A user might ask:
 Add remember-me behavior to login, but clarify the plan before changing files.
 ```
 
-A useful agent response does not start by choosing hidden product and security behavior. It names the narrow goal, likely non-goals, facts it can inspect, and judgments the user still owns:
+A useful agent response does not choose hidden product or security behavior first. It names the narrow goal, likely non-goals, facts it can inspect, and judgments the user still owns:
 
 ```text
 Goal I heard:
@@ -67,38 +70,31 @@ You likely need to decide:
 Whether "remember me" means a longer session, remembered email, or both, and what session risk is acceptable.
 
 Safe next step:
-Inspect and return a narrow plan. No product writes yet.
+Inspect and return a narrow plan. No product-file writes yet.
 ```
 
-The user did not need to say an internal mode name. The agent clarified because the request touches product behavior, security expectations, checks, and user-owned judgment.
+The user did not need to name an internal mode. The agent clarified because the request touches product behavior, security expectations, verification criteria, and user-owned judgment.
 
-## What the user owns
+## Authority concepts stay separate
 
-The user owns goals, meaningful scope changes, product behavior, material technical direction, user-visible inspection expectations, final acceptance, residual-risk acceptance, and scoped permission for named sensitive actions.
+Harness documentation uses these concepts separately:
 
-The agent may compare options, inspect source, run checks, name evidence gaps, and explain consequences. It must not turn tool output, passing tests, generated summaries, or its own confidence into the user's judgment.
+- User-owned judgment is a decision or assessment the user owns. An agent may explain options, but it must not invent the judgment.
+- Sensitive-action approval is approval for a named sensitive step. It is not final acceptance and not `Write Authorization`.
+- `Write Authorization` is the exact product label for Core authority around one compatible product-file write attempt. It must not be collapsed into ordinary write approval.
+- Evidence is material support for a specific claim, such as a diff, test output, screenshot, log, source citation, review note, or artifact reference. Evidence supports a claim; it is not the user's judgment.
+- Verification criteria are user-visible criteria for checking work. They guide what should be checked; they are not themselves evidence, final acceptance, residual-risk acceptance, or close readiness.
+- Final acceptance is a user-owned judgment about the visible close basis.
+- Residual-risk acceptance is a user-owned judgment about a named visible residual risk.
+- Close readiness is the reference concept for whether a task can honestly close from its current state. In user-facing language, "ready to close" is a friendly alias only when it points back to close readiness.
 
-Broad phrases such as "go ahead" or "looks good" apply only to the specific pending choice they reasonably answer. They do not automatically grant sensitive-action permission, accept the finished result, accept known residual risk, or settle another out-of-scope judgment candidate.
+For exact authority rules and non-substitution boundaries, use [Core Model](reference/core-model.md).
 
-## What the agent does
+## What Harness is not
 
-The agent can clarify requirements, name non-goals, propose the next safe work slice, inspect relevant sources, show options with uncertainty, implement inside agreed scope, run focused checks, and report evidence.
+Harness is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Harness Runtime Home`.
 
-When the work boundary changes, the agent should say so. A typo fix can stay light. A bug fix can start with inspection and a narrow repair. A broad feature request should expose the goal, non-goals, success criteria, unknowns, user-owned judgments, evidence plan, and close blockers.
-
-When the agent cannot honestly proceed without a user-owned judgment, it should ask a specific question rather than treating silence or momentum as permission.
-
-## What evidence means
-
-Evidence is the material a claim points to, such as a diff, test output, screenshot, log, source citation, review note, or artifact reference. It supports a claim; it is not the user's judgment.
-
-For exact evidence, artifact, and non-substitution boundaries, use [Core Model](reference/core-model.md), [Artifact Storage](reference/storage-artifacts.md), and the relevant owners from the [Reference Index](reference/README.md).
-
-## What close readiness means
-
-Close readiness answers a simple question: can the task honestly finish now, and what still blocks it?
-
-If something is missing, the close path should name the smallest unblocker. Exact close-readiness meaning belongs to [Core Model](reference/core-model.md); method behavior belongs to [Close-task Method](reference/api/method-close-task.md); close-readiness blocker routing belongs to [API blocker routing](reference/api/blocker-routing.md).
+Harness also does not turn a polished chat answer, generated summary, readable status card, or `Projection` into the authority record. Exact display boundaries belong to [Projection Authority Reference](reference/projection-and-templates.md), runtime and location boundaries belong to [Runtime Boundaries](reference/runtime-boundaries.md), and security wording belongs to [Security](reference/security.md).
 
 ## Baseline scope
 
