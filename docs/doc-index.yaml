@@ -358,11 +358,13 @@ documents:
     path_ko: "docs/ko/reference/glossary.md"
     role: "reference"
     owner_for:
-      - "compact human-readable term guidance for selected core terms"
+      - "compact human-readable term guidance for selected core reader-facing terms"
       - "curated reader-facing glossary subset"
       - "term-level primary owner links for selected glossary terms"
     not_owner_for:
       - "complete structured term inventory"
+      - "all product terms or terminology-map entries"
+      - "all API, schema, storage, or value-set values"
       - "full reference owner index"
       - "machine-readable owner routing"
       - "terminology metadata"
@@ -371,7 +373,7 @@ documents:
       - "security mechanisms"
     depends_on:
       - "terminology.map"
-    normative_level: "contract"
+    normative_level: "guide"
     audience:
       - "readers"
       - "maintainers"

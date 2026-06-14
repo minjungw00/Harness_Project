@@ -12,7 +12,7 @@
 | Core 권한, 제품 개념, 사용자 소유 판단, 닫기 준비 상태의 권한 개념 | [`core-model.md`](core-model.md) |
 | 런타임과 제품 저장소 경계 | [`runtime-boundaries.md`](runtime-boundaries.md) |
 | 보안 표현과 보장 의미 | [`security.md`](security.md) |
-| 선별된 핵심 용어 안내 | [`glossary.md`](glossary.md) |
+| 선별된 핵심 용어의 간결한 안내 | [`glossary.md`](glossary.md) |
 | 완전한 구조화 용어 메타데이터와 식별자 통제 | [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
 | 구현 진입 경로 | [`../build/implementation-guide.md`](../build/implementation-guide.md) |
 
@@ -77,5 +77,5 @@
 | 문서 작성 규칙 | [`../maintain/authoring-guide.md`](../maintain/authoring-guide.md) |
 | 문서 점검 색인 | [`../maintain/checks.md`](../maintain/checks.md) |
 | 한영 용어와 한국어 문체 지침 | [`../maintain/translation-guide.md`](../maintain/translation-guide.md) |
-| 선별된 핵심 용어 안내 | [`glossary.md`](glossary.md) |
+| 선별된 핵심 용어의 간결한 안내 | [`glossary.md`](glossary.md) |
 | 완전한 구조화 용어 메타데이터 | [`../../terminology-map.yaml`](../../terminology-map.yaml) |

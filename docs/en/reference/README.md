@@ -12,7 +12,7 @@ For compact meanings of curated core terms included there, use the [Glossary](gl
 | Core authority, product concepts, user-owned judgment, and close-readiness authority concepts | [`core-model.md`](core-model.md) |
 | Runtime and repository boundaries | [`runtime-boundaries.md`](runtime-boundaries.md) |
 | Security wording and guarantee semantics | [`security.md`](security.md) |
-| Selected core term guide | [`glossary.md`](glossary.md) |
+| Compact selected core term guide | [`glossary.md`](glossary.md) |
 | Complete structured terminology metadata and identifier controls | [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
 | Implementation entry route | [`../build/implementation-guide.md`](../build/implementation-guide.md) |
 
@@ -77,5 +77,5 @@ For compact meanings of curated core terms included there, use the [Glossary](gl
 | Documentation authoring rules | [`../maintain/authoring-guide.md`](../maintain/authoring-guide.md) |
 | Documentation checks index | [`../maintain/checks.md`](../maintain/checks.md) |
 | Bilingual terminology and Korean style guidance | [`../maintain/translation-guide.md`](../maintain/translation-guide.md) |
-| Selected core term guide | [`glossary.md`](glossary.md) |
+| Compact selected core term guide | [`glossary.md`](glossary.md) |
 | Complete structured terminology metadata | [`../../terminology-map.yaml`](../../terminology-map.yaml) |
