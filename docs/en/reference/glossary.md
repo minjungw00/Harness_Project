@@ -1,6 +1,8 @@
 # Glossary
 
-This glossary is the human-readable term guide for Harness documentation. Use it to understand a term and find the single focused owner to read next.
+This glossary is the compact human-readable term meaning guide for Harness documentation. Use it to understand a term and find the focused owner for that term.
+
+It is not the full reference owner index. For owner lookup by topic, use the [Reference Index](README.md). For exact machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml).
 
 Structured terminology metadata, identifier-preservation controls, and Korean mixed-language controls live in [docs/terminology-map.yaml](../../terminology-map.yaml). Exact API behavior, schemas, storage effects, security guarantees, close-readiness behavior, and error routing live in the linked owner documents.
 

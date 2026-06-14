@@ -1,9 +1,10 @@
 version: 1
 title: "Terminology Map"
+role: "Machine-readable terminology metadata and bilingual wording controls."
 documentation_metadata_only: true
 runtime_config: false
 canonical_for:
-  - "Recommended English and Korean terminology for Harness documentation."
+  - "Structured English and Korean terminology records for Harness documentation."
   - "Identifier preservation rules for bilingual documentation."
   - "Mixed-language Korean expressions to avoid during human or LLM editing."
   - "Korean close-readiness terminology routing for `닫기 준비 상태` and `닫기 가능 여부`."
@@ -16,16 +17,22 @@ canonical_for:
   - "Artifact and evidence terminology conventions for bilingual documentation."
   - "Terminology routing for evidence collection workflow wording, close-task behavior, and design-quality owner boundaries."
 does_not_own:
+  - "Reader-facing glossary definitions or full reference owner indexes."
   - "Product, API, storage, security, projection, or runtime contracts."
   - "Rendered UI copy when an exact template body owner defines the wording."
   - "Runtime localization configuration."
 related_owners:
+  reference_index:
+    en: "docs/en/reference/README.md"
+    ko: "docs/ko/reference/README.md"
   glossary:
     en: "docs/en/reference/glossary.md"
     ko: "docs/ko/reference/glossary.md"
   translation_guide:
     en: "docs/en/maintain/translation-guide.md"
     ko: "docs/ko/maintain/translation-guide.md"
+related_metadata:
+  doc_index: "docs/doc-index.yaml"
 term_entry_schema:
   term_identifier:
     source: "mapping key under `terms`"

@@ -1,9 +1,16 @@
 version: 1
 metadata:
-  purpose: "Machine-readable owner routing for the maintained Harness documentation set."
+  purpose: "Machine-readable owner-routing metadata for the maintained Harness documentation set."
   default_language: "en"
   documentation_metadata: true
   runtime_config: false
+  human_reference_index:
+    en: "docs/en/reference/README.md"
+    ko: "docs/ko/reference/README.md"
+  human_term_guide:
+    en: "docs/en/reference/glossary.md"
+    ko: "docs/ko/reference/glossary.md"
+  terminology_metadata: "docs/terminology-map.yaml"
 
 language_retrieval:
   normal_lookup: "Use one language version for ordinary lookup, choosing the user's language when clear and `default_language` otherwise."
@@ -84,10 +91,12 @@ shared_documents:
     path: "docs/doc-index.yaml"
     role: "maintain"
     owner_for:
-      - "owner-routing metadata"
+      - "machine-readable documentation owner routing"
       - "paired document path metadata"
       - "language retrieval rule"
     not_owner_for:
+      - "reader-facing glossary prose"
+      - "terminology metadata"
       - "product contracts"
       - "API contracts"
       - "storage contracts"
@@ -101,10 +110,13 @@ shared_documents:
     path: "docs/terminology-map.yaml"
     role: "maintain"
     owner_for:
+      - "machine-readable terminology metadata"
       - "bilingual terminology controls"
       - "identifier preservation rules"
       - "Korean mixed-language expressions to avoid"
     not_owner_for:
+      - "reader-facing glossary prose"
+      - "reference owner routing"
       - "product contracts"
       - "API contracts"
       - "storage contracts"
@@ -243,10 +255,13 @@ documents:
     path_ko: "docs/ko/reference/README.md"
     role: "reference"
     owner_for:
+      - "human-readable reference owner index"
       - "reference owner routing"
       - "canonical owner lookup"
       - "reference family navigation"
     not_owner_for:
+      - "glossary term meanings"
+      - "terminology metadata"
       - "detailed contracts"
       - "schemas"
       - "storage effects"
@@ -341,10 +356,13 @@ documents:
     path_ko: "docs/ko/reference/glossary.md"
     role: "reference"
     owner_for:
+      - "compact human-readable term meanings"
       - "product terminology"
-      - "terminology definitions"
-      - "terminology owner routing"
+      - "term-level owner links"
     not_owner_for:
+      - "full reference owner index"
+      - "machine-readable owner routing"
+      - "terminology metadata"
       - "API contracts"
       - "storage contracts"
       - "security mechanisms"

@@ -1,8 +1,8 @@
 # 참조 색인
 
-이 색인은 하네스 참조 질문의 담당 문서를 고르는 경로입니다. 이 README는 담당 문서로 안내할 뿐 API 계약, 스키마, 저장 효과, 보안 보장, 범위를 정의하지 않습니다.
+이 색인은 하네스 참조 질문의 담당 문서를 고르는 사람이 읽는 참조 담당 문서 색인입니다. 이 README는 담당 문서로 안내할 뿐 용어집의 뜻풀이, API 계약, 스키마, 저장 효과, 보안 보장, 범위를 정의하지 않습니다.
 
-`doc_id` 기준의 기계 판독 가능한 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다.
+용어의 간단한 뜻은 [용어집](glossary.md)을 사용합니다. `doc_id` 기준의 기계 판독 가능한 담당 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다. 구조화된 한영 용어 메타데이터와 식별자 통제는 [`docs/terminology-map.yaml`](../../terminology-map.yaml)을 사용합니다.
 
 ## 제품과 시스템 담당 문서
 
@@ -12,7 +12,8 @@
 | Core 권한, 제품 개념, 사용자 소유 판단, 닫기 준비 상태의 권한 개념 | [`core-model.md`](core-model.md) |
 | 런타임과 제품 저장소 경계 | [`runtime-boundaries.md`](runtime-boundaries.md) |
 | 보안 표현과 보장 의미 | [`security.md`](security.md) |
-| 용어 정의 | [`glossary.md`](glossary.md), [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
+| 용어 뜻 | [`glossary.md`](glossary.md) |
+| 구조화된 용어 메타데이터와 식별자 통제 | [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
 | 구현 진입 경로 | [`../build/implementation-guide.md`](../build/implementation-guide.md) |
 
 ## API와 스키마 담당 문서
@@ -76,4 +77,5 @@
 | 문서 작성 규칙 | [`../maintain/authoring-guide.md`](../maintain/authoring-guide.md) |
 | 문서 점검 색인 | [`../maintain/checks.md`](../maintain/checks.md) |
 | 한영 용어와 한국어 문체 지침 | [`../maintain/translation-guide.md`](../maintain/translation-guide.md) |
-| 한영 용어 통제 | [`../../terminology-map.yaml`](../../terminology-map.yaml) |
+| 사람이 읽는 용어 뜻 | [`glossary.md`](glossary.md) |
+| 구조화된 용어 메타데이터 | [`../../terminology-map.yaml`](../../terminology-map.yaml) |
