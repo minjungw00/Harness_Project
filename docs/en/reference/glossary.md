@@ -2,9 +2,9 @@
 
 This glossary is a compact human-readable guide to selected core Harness terms. Use it to understand major concepts and find the focused primary owner for each included term. It is a curated reader-facing subset.
 
-Complete structured terminology metadata lives in [`docs/terminology-map.yaml`](../../terminology-map.yaml), including term records, bilingual wording controls, identifier-preservation rules, primary owner paths, and related-reference metadata. Each glossary row follows the matching terminology-map entry for its focused primary owner; adjacent references stay in the map's `related_references`. For owner lookup by topic, use the [Reference Index](README.md). For exact machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml).
+Complete structured terminology metadata lives in [`docs/terminology-map.yaml`](../../terminology-map.yaml). This glossary repeats only the selected term label, Korean term, compact meaning, and focused primary owner. Preferred expressions, avoid expressions, identifier-preservation controls, and adjacent references stay in the terminology map. For owner lookup by topic, use the [Reference Index](README.md). For exact machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml).
 
-Contract detail stays in the focused owner documents, not in this table.
+Contract detail and translation rules stay in their focused owners, not in this table.
 
 ## Terms
 

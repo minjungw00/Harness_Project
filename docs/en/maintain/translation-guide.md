@@ -56,13 +56,12 @@ Use [`docs/terminology-map.yaml`](../../terminology-map.yaml) as the complete st
 
 Use one Korean expression for one concept unless the terminology map intentionally distinguishes user-facing and reference-facing wording. When a durable term is missing, add it to the terminology map before spreading a new variant across the docs.
 
-Use the map fields for term-specific choices:
+Use the map fields for term-specific choices instead of copying full term records into this guide:
 
-- `ko_reference` for reference-facing Korean.
-- `ko_user` for user-facing Korean.
-- `ko_contextual` and `ko_explanation` for context-specific wording and identifier explanations.
+- `ko_reference` and `ko_user` for audience-sensitive Korean.
+- `ko_contextual`, `ko_explanation`, and first-reference fields for context-specific wording.
 - `preserve_identifier`, `preserve_as_identifier`, and `preserve_as_label` for exact strings that stay English.
-- `avoid_ko` and top-level `avoid.ko` for searchable Korean mixed-language expressions to replace.
+- Top-level `avoid.ko` for shared searchable Korean mixed-language expressions; term-level `avoid_ko` only when a phrase needs term-local context that is not already in the shared list.
 
 Do not copy the terminology map's preferred-expression or avoid-expression lists into this guide or the glossary. Add a glossary row only when readers need a compact term meaning and primary owner, not merely to preserve a translation choice.
 
@@ -80,7 +79,7 @@ Use English unchanged only when it is:
 
 Avoid "English noun + Korean particle" when the English noun is not an identifier. Prefer a Korean concept first, then add the exact English value only if the reader needs contract precision or searchability.
 
-Use the terminology map for concrete replacements. For example, strings such as `artifact 저장` and `blocker 라우팅` belong in the map-owned avoid list; do not recreate that list here.
+Use the terminology map for concrete replacements. Do not restate those replacements here; link or update the map instead.
 
 ## 6. Korean technical writing style
 
@@ -132,7 +131,7 @@ Do not expose raw enum names or schema fields as user-facing labels unless the e
 
 Korean prose should not keep ordinary English nouns, noun chains, or adjective labels when the terminology map provides a Korean expression. Search changed Korean for English words joined to Korean particles, suffixes, or common nouns, then replace them with natural Korean unless the English string is an exact identifier, exact product label, or natural borrowed technical term.
 
-Keep concrete avoid examples short and searchable. The structured avoid list belongs in [`docs/terminology-map.yaml`](../../terminology-map.yaml); this guide explains how to apply it in prose.
+When this guide must mention a prohibited pattern, keep it to a short searchable example and store the replacement in [`docs/terminology-map.yaml`](../../terminology-map.yaml). Do not build a second avoid list here.
 
 Mixed English/Korean may be correct when the English part is an identifier, for example `ArtifactRef`를 보존한다 or `surface_id` 필드를 보존한다. When the English part is ordinary prose, translate it.
 

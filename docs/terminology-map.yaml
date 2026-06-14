@@ -81,8 +81,9 @@ term_entry_schema:
     - "preserve_as_identifier"
     - "preserve_as_label"
   avoid_expression_fields:
-    - "avoid_ko"
     - "avoid.ko"
+    - "avoid_ko"
+  avoid_expression_rule: "Use top-level `avoid.ko` for shared searchable avoid expressions; use term-level `avoid_ko` only for term-local expressions not already represented there."
   field_types:
     category: "string term type"
     en: "string preferred English term"
@@ -99,7 +100,7 @@ term_entry_schema:
     preserve_as_label: "list of exact product-label strings"
     primary_owner: "language path pair for one focused owner document"
     related_references: "list of language path pairs for adjacent documents"
-    avoid_ko: "list of searchable Korean expressions to avoid"
+    avoid_ko: "term-local list of searchable Korean expressions to avoid; use only when the expression is not already represented in top-level `avoid.ko`"
     notes: "list of strings for terminology checks and maintenance routing"
   field_semantics:
     category: "Term type used by terminology and maintenance checks."
@@ -210,6 +211,10 @@ avoid:
       use: "차단 사유 처리 경로"
     - phrase: "blocker category"
       use: "차단 사유 범주"
+    - phrase: "complete 평가"
+      use: "전체 평가, 또는 식별자를 뜻할 때는 `complete`"
+    - phrase: "complete 닫기 준비 상태"
+      use: "전체 닫기 준비 상태 평가, 또는 식별자를 뜻할 때는 `complete`"
     - phrase: "`complete` 평가 순서"
       use: "전체 평가 순서"
     - phrase: "complete 평가 순서"
@@ -373,8 +378,6 @@ terms:
     en: "evidence collection workflow"
     ko_reference: "증거 수집 흐름"
     ko_user: "증거 수집 흐름"
-    avoid_ko:
-      - "evidence collection workflow"
     primary_owner:
       en: "docs/en/reference/scope.md"
       ko: "docs/ko/reference/scope.md"
@@ -577,8 +580,6 @@ terms:
       - "scope_decision"
       - "AuthorizedAttemptScope"
       - "SensitiveActionScope"
-    avoid_ko:
-      - "스코프"
     primary_owner:
       en: "docs/en/reference/core-model.md"
       ko: "docs/ko/reference/core-model.md"
@@ -669,9 +670,6 @@ terms:
     ko_user: "닫기 가능 여부"
     preserve_as_identifier:
       - "CloseReadinessBlocker"
-    avoid_ko:
-      - "close 가능성 평가"
-      - "닫기 가능성 평가"
     primary_owner:
       en: "docs/en/reference/core-model.md"
       ko: "docs/ko/reference/core-model.md"
@@ -701,9 +699,6 @@ terms:
       - "harness.close_task"
       - "CloseTaskResult"
       - "CloseReadinessBlocker"
-    avoid_ko:
-      - "close 가능성 평가"
-      - "닫기 가능성 평가"
     primary_owner:
       en: "docs/en/reference/api/method-close-task.md"
       ko: "docs/ko/reference/api/method-close-task.md"
@@ -805,9 +800,6 @@ terms:
     preserve_as_identifier:
       - "complete"
       - "intent=complete"
-    avoid_ko:
-      - "complete 평가"
-      - "complete 닫기 준비 상태"
     primary_owner:
       en: "docs/en/reference/api/schema-value-sets.md"
       ko: "docs/ko/reference/api/schema-value-sets.md"
@@ -835,11 +827,6 @@ terms:
       - "Complete close-readiness order"
       - "complete close-readiness order"
       - "complete close-readiness evaluation order"
-    avoid_ko:
-      - "`complete` 평가 순서"
-      - "complete 평가 순서"
-      - "`complete` 닫기 준비 상태 순서"
-      - "complete 닫기 준비 상태 순서"
     primary_owner:
       en: "docs/terminology-map.yaml"
       ko: "docs/terminology-map.yaml"
@@ -861,8 +848,6 @@ terms:
     preserve_as_identifier:
       - "close_blockers"
       - "CloseReadinessBlocker"
-    avoid_ko:
-      - "close blocker를 확인한다"
     primary_owner:
       en: "docs/en/reference/api/blocker-routing.md"
       ko: "docs/ko/reference/api/blocker-routing.md"
@@ -918,8 +903,6 @@ terms:
     ko_user: "차단 사유 범주"
     preserve_as_identifier:
       - "CloseReadinessBlocker.category"
-    avoid_ko:
-      - "blocker category"
     primary_owner:
       en: "docs/en/reference/api/schema-value-sets.md"
       ko: "docs/ko/reference/api/schema-value-sets.md"
@@ -955,11 +938,6 @@ terms:
       - "ArtifactInput"
       - "StagedArtifactHandle"
       - "artifact_id"
-    avoid_ko:
-      - "artifact 저장"
-      - "artifact bytes"
-      - "staged handle"
-      - "checksum, size 검증"
     primary_owner:
       en: "docs/en/reference/api/schema-artifacts.md"
       ko: "docs/ko/reference/api/schema-artifacts.md"
@@ -981,9 +959,6 @@ terms:
       - "evidence_summary"
       - "evidence_updates"
       - "evidence_summaries"
-    avoid_ko:
-      - "evidence 기록"
-      - "evidence summary"
     primary_owner:
       en: "docs/en/reference/core-model.md"
       ko: "docs/ko/reference/core-model.md"
@@ -1035,8 +1010,6 @@ terms:
     preserve_as_identifier:
       - "StagedArtifactHandle"
       - "staged_artifact_handle"
-    avoid_ko:
-      - "staged handle"
     primary_owner:
       en: "docs/en/reference/api/schema-artifacts.md"
       ko: "docs/ko/reference/api/schema-artifacts.md"
@@ -1089,8 +1062,6 @@ terms:
       - "surface_id"
       - "surface_instance_id"
       - "VerifiedSurfaceContext"
-    avoid_ko:
-      - "surface 정보"
     primary_owner:
       en: "docs/en/reference/agent-integration.md"
       ko: "docs/ko/reference/agent-integration.md"
@@ -1182,8 +1153,6 @@ terms:
     preserve_as_identifier:
       - "Task.lifecycle_phase"
       - "artifact_staging.status"
-    avoid_ko:
-      - "lifecycle 의미"
     primary_owner:
       en: "docs/en/reference/core-model.md"
       ko: "docs/ko/reference/core-model.md"
@@ -1270,8 +1239,6 @@ terms:
     en: "migration"
     ko_reference: "마이그레이션"
     ko_user: "마이그레이션"
-    avoid_ko:
-      - "migration = 이전 선택"
     primary_owner:
       en: "docs/en/reference/storage-versioning.md"
       ko: "docs/ko/reference/storage-versioning.md"
@@ -1474,9 +1441,6 @@ terms:
       - "CloseReadinessBlocker"
       - "CloseReadinessBlocker.category"
       - "CloseReadinessBlocker.code"
-    avoid_ko:
-      - "blocker 처리 경로"
-      - "blocker 라우팅"
     primary_owner:
       en: "docs/en/reference/api/blocker-routing.md"
       ko: "docs/ko/reference/api/blocker-routing.md"
