@@ -134,6 +134,28 @@ Display wording owners define rendered body guidance, labels, and display phrasi
 
 Maintain docs should sound like editing instructions. They can name owner routes and duplication rules, but they should not reproduce technical contract bodies.
 
+### Reference semantic skeletons
+
+Important Reference sections should have a semantic skeleton before prose is written or reshaped. A semantic skeleton is the intended sequence of meaning units for the section. It is an authoring control, not a product contract, runtime behavior, rendered label set, or replacement for the owner document.
+
+Common skeletons include:
+
+- `Purpose`
+- `Conditions`
+- `Result`
+- `Non-claim`
+- `Owner boundary`
+- `Related references`
+
+Another common skeleton is:
+
+- `Meaning`
+- `Contract`
+- `Boundary`
+- `Related references`
+
+Use the same skeleton for the same section in English and Korean. Korean may use natural sentence order, split or combine sentences, and choose natural headings or bullets, but it must not introduce extra labels such as `조건`, `결과`, `비주장`, or `허용되지 않는 것` unless the English section has the equivalent meaning unit. English must not use `Not allowed`, `Does not imply`, or `Non-claim` sections unless Korean has the equivalent meaning unit. Sentence count may differ; meaning-unit placement and normative strength must match.
+
 ### Durable examples
 
 Examples in reference and API documentation should use stable product or user scenarios. They should remain useful after the maintenance context is forgotten.
@@ -256,8 +278,10 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] Route documents expose canonical owner gaps instead of hiding them with broad route text.
 - [ ] References to `docs/doc-index.yaml` name structures and keys that actually exist.
 - [ ] Meaning-changing edits were made in both English and Korean.
+- [ ] Important Reference sections have a defined semantic skeleton before prose is written or reshaped.
 - [ ] Paired English/Korean headings keep equivalent meaning and reading structure.
 - [ ] Heading parity was not treated as sufficient for bilingual semantic parity.
+- [ ] Paired English/Korean sections use the same semantic skeleton for the same section.
 - [ ] Paired tables were checked for count, headers, row meanings, and placement relative to sections.
 - [ ] Paired normative lists, allowed/not-allowed clauses, does-not-imply clauses, exceptions, and owner-boundary lists were checked by meaning unit.
 - [ ] One-sided negative clauses were checked so one language does not impose stronger prohibitions, exceptions, or non-claims than the other.

@@ -981,6 +981,7 @@ documents:
       - "canonical owner rule"
       - "durable example rules"
       - "route document rules"
+      - "reference semantic skeleton rules"
     not_owner_for:
       - "product contracts"
       - "API contracts"
@@ -1044,6 +1045,7 @@ documents:
       - "canonical owner boundary checks"
       - "owner granularity checks"
       - "route-page shape checks"
+      - "reference semantic skeleton checks"
       - "owner-map placement checks"
       - "duplicate owner-map checks"
       - "baseline and out-of-scope wording checks"
@@ -1070,6 +1072,7 @@ documents:
     role: "maintain"
     owner_for:
       - "English and Korean semantic parity checks"
+      - "reference semantic skeleton parity checks"
       - "paired heading parity checks"
       - "identifier preservation checks"
       - "Korean structure preservation checks"

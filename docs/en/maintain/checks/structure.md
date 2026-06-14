@@ -379,15 +379,19 @@ Owner:
 
 Check:
 - Inspect changed Reference and Maintain paragraphs for multiple conditions, exceptions, boundary caveats, owner links, or effects hidden in one dense paragraph.
+- Confirm important Reference sections have a defined semantic skeleton before prose is written or reshaped.
+- Confirm the skeleton keeps conditions, results, non-claims, owner boundaries, and related references visible instead of hiding them in dense prose.
 - Confirm tables are used only for short mappings, comparisons, or owner routing.
 - Confirm long conditions, exceptions, boundary caveats, effects, owner links, and list-like examples sit outside table cells.
 
 Failure:
 - A paragraph requires the reader to infer condition/result/exception boundaries.
+- A Reference section is drafted without a clear skeleton, causing conditions, results, non-claims, owner boundaries, or related references to drift.
 - A table cell contains multiple sentences, multiple conditions, hidden exceptions, boundary caveats, effects, owner links, or list-like sequences.
 - A source line is hard to review.
 
 Fix:
+- Define a small skeleton, such as `Purpose` / `Conditions` / `Result` / `Non-claim` / `Owner boundary` / `Related references`, or `Meaning` / `Contract` / `Boundary` / `Related references`.
 - Split dense prose into named blocks or bullets.
 - Keep table rows as short mappings and put details below as bullets or named blocks.
 - Move contract detail to the canonical owner.

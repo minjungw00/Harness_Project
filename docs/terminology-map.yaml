@@ -185,6 +185,21 @@ terms:
         ko: "docs/ko/build/implementation-guide.md"
     notes:
       - "Documentation work does not implement runtime behavior or create generated runtime records."
+  semantic_skeleton:
+    category: "documentation_concept"
+    en: "semantic skeleton"
+    ko_reference: "의미 골격"
+    ko_user: "의미 골격"
+    primary_owner:
+      en: "docs/en/maintain/authoring-guide.md"
+      ko: "docs/ko/maintain/authoring-guide.md"
+    related_references:
+      - en: "docs/en/maintain/checks/structure.md"
+        ko: "docs/ko/maintain/checks/structure.md"
+      - en: "docs/en/maintain/checks/language-parity.md"
+        ko: "docs/ko/maintain/checks/language-parity.md"
+    notes:
+      - "A semantic skeleton is an authoring control for important Reference sections, not a product contract or runtime behavior."
   baseline_scope:
     category: "product_concept"
     en: "baseline scope"
