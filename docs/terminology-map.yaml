@@ -4,8 +4,13 @@ role: "Machine-readable terminology metadata and bilingual wording controls."
 documentation_metadata_only: true
 runtime_config: false
 canonical_for:
-  - "Structured English and Korean terminology records for Harness documentation."
+  - "Complete structured term inventory under `terms` for Harness documentation."
+  - "Korean term forms through `ko_reference`, `ko_user`, `ko_contextual`, `ko_explanation`, and first-reference wording fields."
+  - "Term type through each entry's `category` value."
   - "Identifier preservation rules for bilingual documentation."
+  - "Primary owner and related-reference routing for each structured term."
+  - "Preferred expressions and avoid expressions for documentation maintenance and automated checks."
+  - "Term notes needed for owner routing, identifier preservation, Korean prose, and check behavior."
   - "Mixed-language Korean expressions to avoid during human or LLM editing."
   - "Korean close-readiness terminology routing for `닫기 준비 상태` and `닫기 가능 여부`."
   - "Search-friendly routing for promotion-time owner update terminology."
@@ -21,7 +26,7 @@ does_not_own:
   - "Product, API, storage, security, projection, or runtime contracts."
   - "Rendered UI copy when an exact template body owner defines the wording."
   - "Runtime localization configuration."
-related_owners:
+related_documents:
   reference_index:
     en: "docs/en/reference/README.md"
     ko: "docs/ko/reference/README.md"
@@ -37,6 +42,12 @@ term_entry_schema:
   term_identifier:
     source: "mapping key under `terms`"
     rule: "Use stable snake_case keys for machine-readable term records."
+  entry_shape:
+    rule: "Each `terms` entry uses the required fields below plus only the listed optional fields."
+    primary_owner_rule: "`primary_owner` is the single focused owner for the term; adjacent routes stay in `related_references`."
+    related_reference_rule: "`related_references` is always a list and may be empty."
+  language_path_pair:
+    rule: "Use `{en: path, ko: path}` for paired documentation. Use the same path in both keys for shared metadata documents."
   required_fields:
     - "category"
     - "en"
@@ -72,6 +83,24 @@ term_entry_schema:
   avoid_expression_fields:
     - "avoid_ko"
     - "avoid.ko"
+  field_types:
+    category: "string term type"
+    en: "string preferred English term"
+    aliases_en: "list of strings"
+    en_label: "string exact English product label"
+    en_preferred_prose: "string preferred English prose expression"
+    ko_reference: "string reference-facing Korean term form"
+    ko_user: "string user-facing Korean term form"
+    ko_contextual: "mapping of context key to Korean term form"
+    ko_explanation: "string Korean explanation for an exact identifier or label"
+    ko_reference_first_reference: "string Korean first-reference form"
+    preserve_identifier: "boolean"
+    preserve_as_identifier: "list of exact identifier strings"
+    preserve_as_label: "list of exact product-label strings"
+    primary_owner: "language path pair for one focused owner document"
+    related_references: "list of language path pairs for adjacent documents"
+    avoid_ko: "list of searchable Korean expressions to avoid"
+    notes: "list of strings for terminology checks and maintenance routing"
   field_semantics:
     category: "Term type used by terminology and maintenance checks."
     primary_owner: "Focused owner document for the term's definition, contract, or terminology rule."
