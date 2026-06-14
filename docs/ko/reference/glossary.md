@@ -47,9 +47,11 @@
 | active scope | 현재 적용 범위 | [Core 모델](core-model.md) |
 | active Change Unit | 현재 적용 Change Unit | [Core 모델](core-model.md) |
 | user-owned judgment | 사용자 소유 판단 | [Core 모델](core-model.md) |
+| `UserJudgment` | `UserJudgment` | [API 판단 스키마](api/schema-judgment.md) |
 | close readiness | 닫기 준비 상태 | [Core 모델](core-model.md) |
 | close readiness evaluation | 닫기 준비 상태 평가 | [Task 닫기 메서드](api/method-close-task.md) |
 | close task behavior | Task 닫기 동작 | [Task 닫기 메서드](api/method-close-task.md) |
+| `harness.close_task` | `harness.close_task` | [Task 닫기 메서드](api/method-close-task.md) |
 | close-readiness blocker | 닫기 차단 사유 | [Core 모델](core-model.md) |
 | `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API 상태 스키마](api/schema-state.md) |
 | blocker category | 차단 사유 범주 | [API 값 집합](api/schema-value-sets.md) |
@@ -61,8 +63,11 @@
 | `ArtifactInput` | `ArtifactInput` | [API 아티팩트 스키마](api/schema-artifacts.md) |
 | `StagedArtifactHandle` | `StagedArtifactHandle` | [API 아티팩트 스키마](api/schema-artifacts.md) |
 | projection | 상태 보기 | [상태 보기 권한 참조](projection-and-templates.md) |
+| `Projection` | `Projection` | [상태 보기 권한 참조](projection-and-templates.md) |
 | surface | 접점 | [에이전트 통합](agent-integration.md) |
+| `surface_id` | `surface_id` | [에이전트 통합](agent-integration.md) |
 | active surface context | 현재 적용 접점 맥락 | [에이전트 통합](agent-integration.md) |
+| `state_version` | `state_version` | [저장소 버전 관리](storage-versioning.md) |
 | runtime | 런타임 | [런타임 경계](runtime-boundaries.md) |
 | `Write Authorization` | 쓰기 권한 부여 | [Core 모델](core-model.md) |
 | sensitive approval | 민감 동작 승인 | [Core 모델](core-model.md) |
@@ -73,6 +78,7 @@
 | design-quality owner boundary | 설계 품질 담당 경계 | [설계 품질](design-quality.md) |
 | reserved value | 예약된 값 | [기준 범위](scope.md) |
 | profile-gated value | 프로필 조건부 값 | [기준 범위](scope.md) |
+| `ErrorCode` | `ErrorCode` | [API 오류 코드](api/error-codes.md) |
 | error routing | 오류 처리 경로 | [API 오류 처리 경로](api/error-routing.md) |
 | blocker routing | 차단 사유 처리 경로 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | error/blocker boundary | 오류와 차단 사유의 경계 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
@@ -649,6 +655,30 @@ Related references:
 Usage note:
 - 광범위한 승인을 수락, 위험 수락, 범위 변경, 민감 동작 승인, `Write Authorization`으로 보지 않습니다.
 
+### `UserJudgment`
+
+Term:
+- `UserJudgment`
+
+Korean term:
+- `UserJudgment`; 스키마를 말하지 않을 때는 사용자 소유 판단을 씁니다.
+
+Type:
+- API 스키마
+
+Meaning:
+- `UserJudgment`는 대기 중이거나 해결된 사용자 소유 판단을 나타내는 API 스키마 식별자입니다.
+
+Primary owner:
+- [API 판단 스키마](api/schema-judgment.md)
+
+Related references:
+- [Core 모델](core-model.md)
+- [사용자 판단 메서드](api/method-user-judgment.md)
+
+Usage note:
+- 스키마 이름을 사용자 소유 판단 전체 개념처럼 쓰지 않습니다.
+
 ### close readiness
 
 Term:
@@ -722,6 +752,31 @@ Related references:
 
 Usage note:
 - Task 닫기 동작을 Core 닫기 준비 상태 의미나 차단 사유/API 응답 처리 경로의 담당 개념처럼 쓰지 않습니다.
+
+### `harness.close_task`
+
+Term:
+- `harness.close_task`
+
+Korean term:
+- `harness.close_task`
+
+Type:
+- API 메서드 식별자
+
+Meaning:
+- `harness.close_task`는 Task 닫기 요청에 쓰는 공개 메서드 식별자입니다.
+
+Primary owner:
+- [Task 닫기 메서드](api/method-close-task.md)
+
+Related references:
+- [API 메서드](api/methods.md)
+- [Core 모델](core-model.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
+
+Usage note:
+- 메서드별 동작은 메서드 담당 문서로 보내고, Core 닫기 준비 상태 의미와 차단 사유/API 응답 처리 경로는 각각의 담당 문서로 보냅니다.
 
 ### close-readiness blocker
 
@@ -984,6 +1039,30 @@ Related references:
 Usage note:
 - 렌더링된 표시를 Core 상태, 증거, 수락, 권한으로 보지 않습니다.
 
+### `Projection`
+
+Term:
+- `Projection`
+
+Korean term:
+- `Projection`; 참조 산문에서 처음 설명할 때는 `Projection`(읽기 전용 상태 보기)을 쓸 수 있습니다.
+
+Type:
+- 제품 라벨
+
+Meaning:
+- `Projection`은 읽기 전용 파생 상태 보기나 표시 보기를 가리키는 정확한 Harness 라벨입니다.
+
+Primary owner:
+- [상태 보기 권한 참조](projection-and-templates.md)
+
+Related references:
+- [템플릿 본문](template-bodies.md)
+- [API 상태 스키마](api/schema-state.md)
+
+Usage note:
+- 상태 보기를 그 상태 보기가 요약하는 담당 기록처럼 보지 않습니다.
+
 ### surface
 
 Term:
@@ -1007,6 +1086,30 @@ Related references:
 Usage note:
 - `surface_id`는 권한 증거가 아닙니다.
 
+### `surface_id`
+
+Term:
+- `surface_id`
+
+Korean term:
+- `surface_id`
+
+Type:
+- 접점 식별자
+
+Meaning:
+- `surface_id`는 등록된 로컬 접점을 고르는 요청 수준 선택자입니다.
+
+Primary owner:
+- [에이전트 통합](agent-integration.md)
+
+Related references:
+- [API 코어 스키마](api/schema-core.md)
+- [보안](security.md)
+
+Usage note:
+- `surface_id`를 권한, 도달 가능성, 접근, 바인딩, 역량의 증거로 보지 않습니다.
+
 ### active surface context
 
 Term:
@@ -1029,6 +1132,31 @@ Related references:
 
 Usage note:
 - 현재 적용 접점 맥락만으로 권한, 접근, 바인딩, 역량이 증명된다고 보지 않습니다.
+
+### `state_version`
+
+Term:
+- `state_version`
+- `project_state.state_version`
+
+Korean term:
+- `state_version`
+
+Type:
+- 저장소 버전 관리 식별자
+
+Meaning:
+- `state_version`은 공개 상태 요약과 영향받은 저장소 기록이 보고하는 프로젝트 전체 상태 시계를 가리킵니다.
+
+Primary owner:
+- [저장소 버전 관리](storage-versioning.md)
+
+Related references:
+- [API 코어 스키마](api/schema-core.md)
+- [저장 효과](storage-effects.md)
+
+Usage note:
+- `state_version` 표현을 재사용해 Task별 또는 상태 보기별 상태 시계를 만들지 않습니다.
 
 ### runtime
 
@@ -1266,6 +1394,32 @@ Related references:
 
 Usage note:
 - 값 집합에 있다는 이유만으로 프로필 조건부 값을 기준 범위 동작처럼 쓰지 않습니다.
+
+### `ErrorCode`
+
+Term:
+- `ErrorCode`
+
+Korean term:
+- `ErrorCode`; 정확한 식별자를 말하지 않을 때는 공개 오류 코드를 쓸 수 있습니다.
+
+Type:
+- API 오류 식별자
+
+Meaning:
+- `ErrorCode`는 공개 API 오류 코드의 식별자 공간입니다.
+
+Primary owner:
+- [API 오류 코드](api/error-codes.md)
+
+Related references:
+- [API 오류 우선순위](api/error-precedence.md)
+- [API 오류 처리 경로](api/error-routing.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 오류 세부사항](api/error-details.md)
+
+Usage note:
+- 공개 `ErrorCode` 값을 기본적으로 `CloseReadinessBlocker.category`나 `CloseReadinessBlocker.code` 값으로 보지 않습니다.
 
 ### error routing
 

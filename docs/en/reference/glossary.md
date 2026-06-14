@@ -47,9 +47,11 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | active scope | 현재 적용 범위 | [Core Model](core-model.md) |
 | active Change Unit | 현재 적용 Change Unit | [Core Model](core-model.md) |
 | user-owned judgment | 사용자 소유 판단 | [Core Model](core-model.md) |
+| `UserJudgment` | `UserJudgment` | [API Judgment Schemas](api/schema-judgment.md) |
 | close readiness | 닫기 준비 상태 | [Core Model](core-model.md) |
 | close readiness evaluation | 닫기 준비 상태 평가 | [Close-task method](api/method-close-task.md) |
 | close task behavior | Task 닫기 동작 | [Close-task method](api/method-close-task.md) |
+| `harness.close_task` | `harness.close_task` | [Close-task method](api/method-close-task.md) |
 | close-readiness blocker | 닫기 차단 사유 | [Core Model](core-model.md) |
 | `CloseReadinessBlocker` | `CloseReadinessBlocker` | [API State Schemas](api/schema-state.md) |
 | blocker category | 차단 사유 범주 | [API Value Sets](api/schema-value-sets.md) |
@@ -61,8 +63,11 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | `ArtifactInput` | `ArtifactInput` | [API Artifact Schemas](api/schema-artifacts.md) |
 | `StagedArtifactHandle` | `StagedArtifactHandle` | [API Artifact Schemas](api/schema-artifacts.md) |
 | projection | 상태 보기 | [Projection Authority Reference](projection-and-templates.md) |
+| `Projection` | `Projection` | [Projection Authority Reference](projection-and-templates.md) |
 | surface | 접점 | [Agent Integration](agent-integration.md) |
+| `surface_id` | `surface_id` | [Agent Integration](agent-integration.md) |
 | active surface context | 현재 적용 접점 맥락 | [Agent Integration](agent-integration.md) |
+| `state_version` | `state_version` | [Storage Versioning](storage-versioning.md) |
 | runtime | 런타임 | [Runtime Boundaries](runtime-boundaries.md) |
 | `Write Authorization` | 쓰기 권한 부여 | [Core Model](core-model.md) |
 | sensitive approval | 민감 동작 승인 | [Core Model](core-model.md) |
@@ -73,6 +78,7 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | design-quality owner boundary | 설계 품질 담당 경계 | [Design Quality](design-quality.md) |
 | reserved value | 예약된 값 | [Scope](scope.md) |
 | profile-gated value | 프로필 조건부 값 | [Scope](scope.md) |
+| `ErrorCode` | `ErrorCode` | [API error codes](api/error-codes.md) |
 | error routing | 오류 처리 경로 | [API error routing](api/error-routing.md) |
 | blocker routing | 차단 사유 처리 경로 | [API blocker routing](api/blocker-routing.md) |
 | error/blocker boundary | 오류와 차단 사유의 경계 | [API blocker routing](api/blocker-routing.md) |
@@ -649,6 +655,30 @@ Related references:
 Usage note:
 - Do not treat broad approval as acceptance, risk acceptance, scope change, sensitive-action approval, or `Write Authorization`.
 
+### `UserJudgment`
+
+Term:
+- `UserJudgment`
+
+Korean term:
+- `UserJudgment`; prose should use 사용자 소유 판단 when not naming the schema.
+
+Type:
+- API schema
+
+Meaning:
+- `UserJudgment` is the API schema identifier for a pending or resolved user-owned judgment.
+
+Primary owner:
+- [API Judgment Schemas](api/schema-judgment.md)
+
+Related references:
+- [Core Model](core-model.md)
+- [User judgment methods](api/method-user-judgment.md)
+
+Usage note:
+- Do not use the schema name as the whole user-owned judgment concept.
+
 ### close readiness
 
 Term:
@@ -722,6 +752,31 @@ Related references:
 
 Usage note:
 - Do not use close task behavior as the owner for Core close-readiness meaning or blocker/API response routing.
+
+### `harness.close_task`
+
+Term:
+- `harness.close_task`
+
+Korean term:
+- `harness.close_task`
+
+Type:
+- API method identifier
+
+Meaning:
+- `harness.close_task` is the public method identifier for close-task requests.
+
+Primary owner:
+- [Close-task method](api/method-close-task.md)
+
+Related references:
+- [API Methods](api/methods.md)
+- [Core Model](core-model.md)
+- [API blocker routing](api/blocker-routing.md)
+
+Usage note:
+- Route method-specific behavior to the method owner; route Core close-readiness meaning and blocker/API response routing to their own owners.
 
 ### close-readiness blocker
 
@@ -984,6 +1039,30 @@ Related references:
 Usage note:
 - Do not treat rendered display as Core state, evidence, acceptance, or authority.
 
+### `Projection`
+
+Term:
+- `Projection`
+
+Korean term:
+- `Projection`; reference prose may introduce it as `Projection`(읽기 전용 상태 보기).
+
+Type:
+- product label
+
+Meaning:
+- `Projection` is the exact Harness label for a read-only derived status or display view.
+
+Primary owner:
+- [Projection Authority Reference](projection-and-templates.md)
+
+Related references:
+- [Template Bodies](template-bodies.md)
+- [API State Schemas](api/schema-state.md)
+
+Usage note:
+- Do not treat a projected display as the authority record it summarizes.
+
 ### surface
 
 Term:
@@ -1007,6 +1086,30 @@ Related references:
 Usage note:
 - `surface_id` is not authority proof.
 
+### `surface_id`
+
+Term:
+- `surface_id`
+
+Korean term:
+- `surface_id`
+
+Type:
+- surface identifier
+
+Meaning:
+- `surface_id` is the request-level selector for a registered local surface.
+
+Primary owner:
+- [Agent Integration](agent-integration.md)
+
+Related references:
+- [API Schema Core](api/schema-core.md)
+- [Security](security.md)
+
+Usage note:
+- Do not treat `surface_id` as proof of permission, reachability, access, binding, or capability.
+
 ### active surface context
 
 Term:
@@ -1029,6 +1132,31 @@ Related references:
 
 Usage note:
 - Do not treat active surface context as proof of authority, access, binding, or capability by itself.
+
+### `state_version`
+
+Term:
+- `state_version`
+- `project_state.state_version`
+
+Korean term:
+- `state_version`
+
+Type:
+- storage versioning identifier
+
+Meaning:
+- `state_version` names the project-wide state clock reported by public state summaries and affected storage records.
+
+Primary owner:
+- [Storage Versioning](storage-versioning.md)
+
+Related references:
+- [API Schema Core](api/schema-core.md)
+- [Storage Effects](storage-effects.md)
+
+Usage note:
+- Do not create Task-local or projection-local state clocks by reusing `state_version` wording.
 
 ### runtime
 
@@ -1266,6 +1394,32 @@ Related references:
 
 Usage note:
 - Do not treat a profile-gated value as baseline behavior because it appears in a value set.
+
+### `ErrorCode`
+
+Term:
+- `ErrorCode`
+
+Korean term:
+- `ErrorCode`; user-facing prose may use 공개 오류 코드 when not naming the identifier.
+
+Type:
+- API error identifier
+
+Meaning:
+- `ErrorCode` is the public API error-code identifier space.
+
+Primary owner:
+- [API error codes](api/error-codes.md)
+
+Related references:
+- [API error precedence](api/error-precedence.md)
+- [API error routing](api/error-routing.md)
+- [API blocker routing](api/blocker-routing.md)
+- [API error details](api/error-details.md)
+
+Usage note:
+- Do not treat public `ErrorCode` values as `CloseReadinessBlocker.category` or `CloseReadinessBlocker.code` values by default.
 
 ### error routing
 
