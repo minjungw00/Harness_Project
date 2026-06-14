@@ -27,7 +27,18 @@ This document does not own:
 
 `ToolError.details` is machine-readable diagnostic data. It is not display text and does not replace the public `ToolError.code`.
 
-Detail keys and helper values are exact identifiers. They must not be localized, rendered as user-facing labels, or reused as blocker codes unless an owning method or schema explicitly allows that use.
+Detail keys and helper values are exact identifiers.
+
+Condition:
+- Detail keys and helper values may be reused as blocker codes only when an owning method or schema explicitly allows that exact use.
+
+Required behavior:
+- Preserve detail keys and helper values as machine-readable identifiers.
+
+Not allowed:
+- Do not localize detail keys or helper values.
+- Do not render them as user-facing labels.
+- Do not reuse them as blocker codes without owning method or schema support.
 
 Detail data must stay limited to stable diagnostic facts. It must not expose sensitive request bodies, duplicate method payloads, or define storage effects.
 

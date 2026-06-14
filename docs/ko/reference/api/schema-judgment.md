@@ -114,7 +114,16 @@ RecordUserJudgmentPayload:
   cancellation: object | null
 ```
 
-`selected_option_id`와 `note`는 요청 수준이자 해결 수준의 필드입니다. `RecordUserJudgmentPayload`는 이 둘을 반복하면 안 됩니다. 메서드 담당 문서가 더 좁은 구조를 명시적으로 허용하지 않는 한 선택된 `judgment_kind`에 맞는 판단별 요청 본문 분기 하나만 채워야 합니다.
+`selected_option_id`와 `note`는 요청 수준이자 해결 수준의 필드입니다.
+
+필수 동작:
+- 선택된 `judgment_kind`에 맞는 판단별 요청 본문 분기 하나만 채워야 합니다.
+
+담당 문서 예외:
+- 메서드 담당 문서가 더 좁은 구조를 명시적으로 허용할 수 있습니다.
+
+허용되지 않는 것:
+- `RecordUserJudgmentPayload`는 `selected_option_id`나 `note`를 반복하면 안 됩니다.
 
 ## `SensitiveActionScope`
 

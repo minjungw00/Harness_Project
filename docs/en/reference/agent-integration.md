@@ -127,9 +127,10 @@ Condition:
 Agent may:
 - pass compact context containing the current Task summary, active scope, `state_version`, pending user-owned judgments, blockers, next safe action, evidence and artifact summaries, close-readiness and residual-risk summaries, owner-supported guarantee display, and source or limitation notes
 - retrieve exact owner sections only when the next action needs them
+- include both language versions for the same `doc_id` when bilingual maintenance requires semantic-parity review
 
 Agent must not:
-- inject full schemas, DDL, historical logs, artifact bodies, unrelated contract material, out-of-scope catalogs, exact template bodies, or both languages for the same `doc_id` unless bilingual maintenance requires semantic-parity review
+- inject full schemas, DDL, historical logs, artifact bodies, unrelated contract material, out-of-scope catalogs, exact template bodies, or both language versions for the same `doc_id` by default
 - treat a stale or copied context packet as newer authority than the owner result or underlying record
 
 Owner links:

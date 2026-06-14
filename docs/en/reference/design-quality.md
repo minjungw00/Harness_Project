@@ -414,7 +414,8 @@ Close effect:
 
 Boundary:
 - Supported user judgment values are not broad approval, a separate quality waiver, or unsupported judgment categories.
-- Broad approval, a friendly "looks good", or a general go-ahead is not one of these judgments unless the relevant contract asks for that specific judgment.
+- Broad approval, a friendly "looks good", or a general go-ahead counts as one of these judgments only when the relevant contract asks for that specific judgment.
+- Broad approval by itself is not one of these judgments.
 
 ## 6. Evidence expectation
 

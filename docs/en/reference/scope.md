@@ -104,7 +104,8 @@ Scope rule:
 
 - Capabilities listed here are outside the baseline scope.
 - Excluded capabilities are not baseline requirements.
-- Excluded capabilities are not supported behavior unless this Scope reference and the affected existing owner documents explicitly define them as supported.
+- Excluded capabilities become supported behavior only when this Scope reference and the affected existing owner documents explicitly define them as supported.
+- Until then, excluded capabilities are not supported behavior.
 - Sensitive-action approval does not by itself imply broad security monitoring, quarantine, QA gates, verification gates, command/network/secret observation, pre-tool blocking, isolation, or any other out-of-scope behavior.
 
 Owner routing:
@@ -135,7 +136,8 @@ Profile-gated value:
 Point-of-use rule:
 
 - Mark reserved and profile-gated values where they appear.
-- Do not describe them as default, required, supported, enforced, accepted, verified, close-ready, detective, sandboxed, or stronger-isolation behavior unless this page and the semantic owner both define that behavior.
+- Describe reserved and profile-gated values as default, required, supported, enforced, accepted, verified, close-ready, detective, sandboxed, or stronger-isolation behavior only when this page and the semantic owner both define that behavior.
+- Otherwise, do not use those labels for the value.
 
 Owner links:
 

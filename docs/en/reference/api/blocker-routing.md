@@ -60,7 +60,14 @@ This document does not define:
 
 ## Public code boundary
 
-Use this table only after applying the common boundary above. Public-code families can be related to close-readiness blockers only through owner-defined blocker data; public `ErrorCode` values are not copied into `CloseReadinessBlocker.code` unless the schema or method owner explicitly allows that exact use.
+Use this table only after applying the common boundary above.
+
+Condition:
+- Public-code families can be related to close-readiness blockers only through owner-defined blocker data.
+- A public `ErrorCode` value can be copied into `CloseReadinessBlocker.code` only when the schema or method owner explicitly allows that exact use.
+
+Not allowed:
+- Do not copy public `ErrorCode` values into `CloseReadinessBlocker.code` without that owner-defined allowance.
 
 | Public-code relationship | Blocker-side route | Boundary |
 |---|---|---|

@@ -174,7 +174,8 @@ Cancellation is a user-owned decision to stop the `Task` without a successful co
 Agent latitude:
 
 - Inside accepted scope and acceptance criteria, the agent may choose ordinary implementation details that do not change product behavior, material technical direction, scope, security or privacy posture, compatibility, or costly-to-reverse architecture.
-- The agent must not treat "go ahead", "looks good", or similar broad language as another judgment kind unless the prompt made that distinct judgment visible and Core records it compatibly.
+- The agent may treat "go ahead", "looks good", or similar broad language as another judgment kind only when the prompt made that distinct judgment visible and Core records it compatibly.
+- The agent must not treat broad language alone as another judgment kind.
 
 ## 5. Non-substitution rules
 

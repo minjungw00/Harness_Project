@@ -259,6 +259,7 @@ Condition:
 
 - When the values match and other validation passes, the call can continue to an owner-allowed state-changing branch.
 - When the values do not match, the call is a stale-state conflict.
+- Another supported contract must explicitly define any stale-conflict `Write Authorization` status change, creation, or consumption.
 
 Required behavior:
 
@@ -269,13 +270,13 @@ Required behavior:
 
 Not allowed:
 
-- A stale-state conflict must not create or change:
+- In the baseline path, a stale-state conflict must not create or change:
   - `CloseReadinessBlocker`
   - current record
   - `task_event` or `task_events` append
   - artifact
   - evidence summary
-  - `Write Authorization` status change, creation, or consumption unless another supported contract explicitly says so
+  - `Write Authorization` status change, creation, or consumption
   - `close_state` mutation
   - replay row
   - `project_state.state_version` increment
@@ -313,7 +314,9 @@ Owner links:
 - `evidence_summaries`
 - `blockers`
 
-`task_events` is append-only for ordinary baseline operation. After an event is committed, Core must not update or delete that row to change history. Corrections or repairs are recorded by new events and current-row updates only when the affected method owner and storage owners allow that path.
+`task_events` is append-only for ordinary baseline operation. After an event is committed, Core must not update or delete that row to change history.
+
+Corrections or repairs are recorded by new events and current-row updates only when the affected method owner and storage owners allow that path.
 
 Branches that do not append events:
 

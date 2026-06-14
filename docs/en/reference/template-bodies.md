@@ -272,7 +272,7 @@ Recovery cue:
 ### Must not imply
 
 - The card authorizes a write, records evidence, accepts risk, or closes the Task.
-- A green or positive label is a canonical enum value unless [API Value Sets](api/schema-value-sets.md) defines it as a supported value.
+- A green or positive label is a canonical enum value without support from [API Value Sets](api/schema-value-sets.md).
 - Artifact availability alone proves evidence sufficiency.
 - Missing source data can be replaced by optimistic wording.
 
@@ -285,7 +285,9 @@ Use direct status language:
 - `Close is blocked by: {close_blocker_summary}.`
 - `Next safe action: {next_action}.`
 
-Avoid wording such as `approved`, `accepted`, `verified`, or `closed` unless the corresponding owner record exists and is linked.
+Use wording such as `approved`, `accepted`, `verified`, or `closed` only when the corresponding owner record exists and is linked.
+
+Otherwise, avoid those words.
 
 ### Owner links
 
@@ -372,7 +374,9 @@ Use coverage language:
 - `Required evidence still missing: {gap_items}.`
 - `Artifact available: {artifact_ref}; content status: {availability_note}.`
 
-Avoid `fully verified`, `QA passed`, or `accepted` unless the relevant owner record exists and is linked.
+Use `fully verified`, `QA passed`, or `accepted` only when the relevant owner record exists and is linked.
+
+Otherwise, avoid those words.
 
 ### Owner links
 

@@ -114,7 +114,16 @@ RecordUserJudgmentPayload:
   cancellation: object | null
 ```
 
-`selected_option_id` and `note` are request-level and resolution-level fields. `RecordUserJudgmentPayload` must not repeat them. Exactly one decision-specific payload branch should be populated for the selected `judgment_kind` unless a method owner explicitly allows a narrower structure.
+`selected_option_id` and `note` are request-level and resolution-level fields.
+
+Required behavior:
+- Exactly one decision-specific payload branch should be populated for the selected `judgment_kind`.
+
+Owner exception:
+- A method owner may explicitly allow a narrower structure.
+
+Not allowed:
+- `RecordUserJudgmentPayload` must not repeat `selected_option_id` or `note`.
 
 ## `SensitiveActionScope`
 

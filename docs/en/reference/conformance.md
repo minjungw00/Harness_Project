@@ -81,7 +81,9 @@ Not allowed:
 
 Conformance means an implementation or check can compare one owner-defined action with owner-defined authority records and owner-defined non-effects.
 
-Conformance criteria judge only facts made authoritative by an owner document. They must not treat scenario prose, agent summaries, rendered views, status wording, maintenance-check labels, or projections as authority unless a specific owner defines that fact as authoritative.
+Conformance criteria judge only facts made authoritative by an owner document. Scenario prose, agent summaries, rendered views, status wording, maintenance-check labels, or projections become conformance authority only when a specific owner defines that fact as authoritative.
+
+They must not be treated as authority by themselves.
 
 When this page says "must", "required", or "always", it is naming a conformance criterion or an owner-routed requirement. It is not redefining neighboring contracts.
 
