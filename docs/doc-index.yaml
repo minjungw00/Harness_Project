@@ -111,11 +111,13 @@ shared_documents:
     role: "maintain"
     owner_for:
       - "machine-readable terminology metadata"
+      - "complete structured term inventory"
       - "bilingual terminology controls"
       - "identifier preservation rules"
       - "Korean mixed-language expressions to avoid"
     not_owner_for:
       - "reader-facing glossary prose"
+      - "curated glossary subset selection"
       - "reference owner routing"
       - "product contracts"
       - "API contracts"
@@ -356,10 +358,11 @@ documents:
     path_ko: "docs/ko/reference/glossary.md"
     role: "reference"
     owner_for:
-      - "compact human-readable term meanings"
-      - "product terminology"
-      - "term-level owner links"
+      - "compact human-readable term meanings for included terms"
+      - "curated glossary subset"
+      - "term-level primary owner links for included terms"
     not_owner_for:
+      - "complete structured term inventory"
       - "full reference owner index"
       - "machine-readable owner routing"
       - "terminology metadata"

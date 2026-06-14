@@ -4,7 +4,7 @@ role: "Machine-readable terminology metadata and bilingual wording controls."
 documentation_metadata_only: true
 runtime_config: false
 canonical_for:
-  - "Complete structured term inventory under `terms` for Harness documentation."
+  - "Complete structured term inventory under `terms` for Harness documentation; glossary pages are curated reader-facing subsets and do not need rows for every structured term."
   - "Korean term forms through `ko_reference`, `ko_user`, `ko_contextual`, `ko_explanation`, and first-reference wording fields."
   - "Term type through each entry's `category` value."
   - "Identifier preservation rules for bilingual documentation."
@@ -22,7 +22,7 @@ canonical_for:
   - "Artifact and evidence terminology conventions for bilingual documentation."
   - "Terminology routing for evidence collection workflow wording, close-task behavior, and design-quality owner boundaries."
 does_not_own:
-  - "Reader-facing glossary definitions or full reference owner indexes."
+  - "Reader-facing glossary definitions, curated glossary subset selection, or full reference owner indexes."
   - "Product, API, storage, security, projection, or runtime contracts."
   - "Rendered UI copy when an exact template body owner defines the wording."
   - "Runtime localization configuration."
