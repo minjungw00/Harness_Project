@@ -91,6 +91,7 @@ Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
 - [Glossary](../../reference/glossary.md)
 - [doc-index.yaml](../../../doc-index.yaml)
+- [API Value Sets](../../reference/api/schema-value-sets.md)
 - [English Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 
@@ -104,9 +105,12 @@ Evidence to inspect:
 - Confirm the glossary remains compact and reader-facing.
 - Confirm the glossary is not required to mirror every terminology-map term.
 - Confirm checks do not require a specific glossary layout.
+- Confirm checks do not require expanded per-term detail; role-level validation is enough.
 - Confirm every term included in the glossary has matching terminology-map metadata.
 - Confirm Markdown links to the glossary are used only when the linked context refers to a term included in the curated glossary.
 - Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner, not to the glossary.
+- Confirm schema fields, enum values, API values, helper values, storage details, and translation-control terms route to focused owners or `docs/terminology-map.yaml` unless the exact term is intentionally included as a core glossary term.
+- Confirm reserved or profile-gated value contexts route to [API Value Sets](../../reference/api/schema-value-sets.md) and `docs/terminology-map.yaml`; add a glossary link only when the linked term is included in the curated glossary.
 - Confirm `primary_owner` targets point to the focused owner document when one exists, and `related_references` hold adjacent routes instead of broadening ownership.
 - Confirm glossary `Primary owner` values match terminology-map `primary_owner` for included terms.
 - Confirm glossary `See also` or `Related references` values do not contradict terminology-map `related_references`.
@@ -116,15 +120,18 @@ Evidence to inspect:
 - Confirm any new forbidden expression appears in the terminology map and both translation guides.
 
 Pass condition:
-- The terminology map remains the complete structured terminology metadata source; the glossary remains a compact reader-facing subset; every glossary-included term has matching terminology-map metadata, the same primary owner, and non-contradictory related references; no check requires the glossary to mirror the full map or use a specific layout.
+- The terminology map remains the complete structured terminology metadata source; the glossary remains a compact reader-facing subset; every glossary-included term has matching terminology-map metadata, the same primary owner, and non-contradictory related references; detailed value, schema, helper, storage, and translation-control contexts route to focused owners or `docs/terminology-map.yaml`; no check requires the glossary to mirror the full map or use a specific layout.
 
 Failure:
 - The guides and terminology map disagree.
 - A glossary-included term is missing from the terminology map or lacks matching terminology-map metadata.
 - A check or route requires the glossary to include every terminology-map term.
 - A check requires a specific glossary layout.
+- A check treats missing expanded per-term detail as a glossary failure.
 - A Markdown link points to the glossary for a term that is not included in the curated glossary.
 - A terminology-map-only term is routed to the glossary instead of `docs/terminology-map.yaml` or its focused owner.
+- A schema field, enum value, API value, helper value, storage detail, or translation-control term routes to the glossary even though the exact term is not intentionally included as a core glossary term.
+- A reserved or profile-gated value context routes to the glossary instead of API Value Sets and `docs/terminology-map.yaml`, unless the linked term is included in the curated glossary.
 - A terminology-map or glossary owner target points to an index when a focused owner already owns the term's meaning, value set, API concern, storage concern, or display wording.
 - A glossary-included term lists multiple primary owners or treats related references as primary owners.
 - A terminology-map `primary_owner`, glossary `Primary owner`, or `doc-index.yaml` entry names a different primary owner for the same term without an intentional split term or explicit owner gap.
@@ -139,6 +146,8 @@ Fix:
 - Synchronize glossary content, terminology-map entries, and `doc-index.yaml` metadata when the primary owner changes.
 - Keep terminology-map-only terms out of the glossary unless readers need compact glossary coverage.
 - Retarget glossary links to the focused owner or `docs/terminology-map.yaml` when the linked context is not a curated glossary term.
+- Retarget detailed value, schema, helper, storage, and translation-control links to the focused owner or `docs/terminology-map.yaml`.
+- Route reserved and profile-gated value contexts to API Value Sets and `docs/terminology-map.yaml`; keep glossary links only for included core glossary terms.
 - Replace vague placeholders with concrete examples that can be searched.
 
 Related checks:
@@ -279,6 +288,7 @@ Evidence to inspect:
 - Confirm each included term has only one `Primary owner`; use `See also`, `Related references`, or terminology-map `related_references` for adjacent documents.
 - Confirm glossary `See also` or `Related references` values do not contradict terminology-map `related_references`.
 - Confirm the glossary can be represented as a compact table, compact entries, or another human-readable view; checks must not require a specific layout.
+- Confirm checks do not require expanded per-term detail or a full terminology-map mirror.
 - Confirm included terms explain the term and route to the primary owner instead of carrying long avoid lists, identifier-preservation lists, owner-routing maps, or documentation-quality checklists.
 - Confirm the glossary remains a compact reader-facing term guide rather than the complete structured terminology metadata source.
 - Confirm terminology-map terms do not need glossary coverage unless the compact glossary view includes them.
@@ -297,6 +307,7 @@ Failure:
 - A glossary `See also` or `Related references` value contradicts terminology-map `related_references`.
 - The glossary becomes a broad owner-routing map, complete structured terminology metadata source, or layout-specific system instead of a compact term guide.
 - A check requires the glossary to mirror every terminology-map term.
+- A check requires expanded per-term detail before accepting a compact glossary entry.
 - A usage note accumulates repeated "do not", "must not", or avoid-list wording that belongs in the terminology map, translation guide, authoring guide, or focused checks.
 - A glossary-included term repeats `doc-index.yaml` route metadata or reference contract detail instead of linking to the owner.
 - A glossary-included term copies API, storage, security, schema, projection, or method behavior instead of linking to the owner.
@@ -370,18 +381,18 @@ Evidence to inspect:
 - Inspect each glossary link's text and surrounding sentence. The link is valid only when that context refers to a term that actually appears in the curated glossary.
 - Confirm glossary links are used for core reader-facing concept summaries, not for the complete structured terminology inventory.
 - Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner, not to the glossary.
-- Confirm schema fields, enum values, API value sets, helper values, storage record details, and translation-control terms route to focused owners or `docs/terminology-map.yaml`, not to the glossary.
+- Confirm schema fields, enum values, API values and value sets, helper values, storage record details, and translation-control terms route to focused owners or `docs/terminology-map.yaml`, not to the glossary unless the exact term is intentionally included as a core glossary term.
 - Confirm reserved or profile-gated value contexts route to [API Value Sets](../../reference/api/schema-value-sets.md) and `docs/terminology-map.yaml`, not to the glossary unless the linked term actually appears in the glossary.
 - Confirm the check validates semantic route correctness, not only file or anchor existence.
 
 Pass condition:
-- Every glossary link refers to a curated glossary term in a core reader-facing concept-summary context; terminology-map-only terms and detailed value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml`.
+- Every glossary link refers to a curated glossary term in a core reader-facing concept-summary context; terminology-map-only terms and detailed value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml` unless the exact linked term is intentionally included as a core glossary term.
 
 Failure:
 - A Markdown link points to the glossary for a term that is absent from the curated glossary.
 - A link uses the glossary as if it were the complete structured terminology inventory.
 - A terminology-map-only term links to the glossary.
-- A schema field, enum value, API value set, helper value, storage record detail, or translation-control term links to the glossary instead of its focused owner or `docs/terminology-map.yaml`.
+- A schema field, enum value, API value or value set, helper value, storage record detail, or translation-control term links to the glossary instead of its focused owner or `docs/terminology-map.yaml`, unless the exact term is intentionally included as a core glossary term.
 - A reserved or profile-gated value context links to the glossary instead of API Value Sets and `docs/terminology-map.yaml`, unless the linked term appears in the glossary.
 - A glossary link resolves as a Markdown link but points readers to the wrong semantic owner.
 
