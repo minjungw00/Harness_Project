@@ -103,11 +103,13 @@ Check:
 - Confirm method-level owner maps appear only in [API Methods](../../reference/api/methods.md).
 - Confirm those pages route readers instead of defining contracts.
 - Confirm a route or index page does not become the broad contract document for several focused owners.
+- Confirm an index document is not listed or treated as the primary owner for detailed terms, schema/API/storage/security concepts, or owner contracts when a focused owner exists.
 - Confirm route and index pages do not accumulate detailed negative rules, exception lists, non-claim tables, or "must not" clauses that effectively define a contract outside its owner.
 
 Failure:
 - A route page becomes useful as a standalone technical contract.
 - A route or index page grows into a broad contract document because it accumulates API, schema, storage, security, error, display, or close-readiness details.
+- An index, `README`, or family route is used as the primary owner for a detailed term or contract even though a focused owner can answer the question.
 - A route list tries to enumerate every contract detail, owner subcase, status value, schema branch, storage effect, or security guarantee.
 - A route or index page becomes a contract by collecting enough prohibitions, exceptions, "Not allowed" rows, or "Does not imply" rows to define the concept negatively.
 - A non-method-router page repeats the supported public API method owner table.
@@ -115,6 +117,7 @@ Failure:
 Fix:
 - Move normative detail to the canonical owner if it is missing there.
 - Replace route-page detail with reader purpose, expected result, and owner links.
+- Retarget the primary owner to the focused owner; keep indexes as first-hop routes or related references only.
 - Keep only the short boundary a route reader needs, then link to the owner for durable prohibitions, exceptions, and non-claims.
 
 ## CHK-OWNER-003: value-set names versus semantic ownership

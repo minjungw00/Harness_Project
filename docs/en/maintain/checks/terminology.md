@@ -1,6 +1,6 @@
 # Terminology checks
 
-Use these checks when an edit changes product terms, Korean prose terms, mixed-language expressions, identifier explanations, documentation-routing terms, close-readiness wording, or access/security wording. The terminology map owns maintainer terminology controls; product contracts remain in their reference owners.
+Use these checks when an edit changes product terms, Korean prose terms, mixed-language expressions, identifier explanations, documentation-routing terms, glossary owner labels, close-readiness wording, or access/security wording. The terminology map owns maintainer terminology controls; product contracts remain in their reference owners.
 
 ## CHK-TERM-001: close-readiness terminology
 
@@ -89,24 +89,29 @@ Fix:
 
 Owner:
 - [Terminology Map](../../../terminology-map.yaml)
+- [Glossary](../../reference/glossary.md)
+- [doc-index.yaml](../../../doc-index.yaml)
 - [English Translation Guide](../translation-guide.md)
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 
 Check:
 - Compare changed terminology guidance with `docs/terminology-map.yaml`.
 - Confirm `primary_owner` targets point to the focused owner document when one exists, and `related_references` hold adjacent routes instead of broadening ownership.
-- Confirm glossary owner links follow the same focused-owner rule.
+- Confirm glossary summary-table `Primary owner` cells and detailed glossary-card `Primary owner` blocks follow the same focused-owner rule.
+- Confirm terminology-map `primary_owner`, glossary `Primary owner`, and `doc-index.yaml` owner metadata stay synchronized by concept when those records exist.
 - Confirm forbidden mixed-language examples in the guides use concrete strings, not vague descriptions.
 - Confirm any new forbidden expression appears in the terminology map and both translation guides.
 
 Failure:
 - The guides and terminology map disagree.
 - A terminology-map or glossary owner target points to an index when a focused owner already owns the term's meaning, value set, API concern, storage concern, or display wording.
+- A terminology-map `primary_owner`, glossary summary table, detailed glossary card, or `doc-index.yaml` entry names a different primary owner for the same term without an intentional split term or explicit owner gap.
 - A Korean guide describes a banned mixed-language pattern without a searchable real string such as "artifact를 저장한다".
 
 Fix:
 - Align the map and both guides in the same documentation batch.
 - Retarget owner links to the focused owner, using an index only for navigation concepts or explicit owner gaps.
+- Synchronize glossary summary rows, detailed cards, terminology-map entries, and `doc-index.yaml` metadata when the primary owner changes.
 - Replace vague placeholders with concrete examples that can be searched.
 
 ## CHK-TERM-006: `active` versus supported or applicable
@@ -232,18 +237,50 @@ Owner:
 
 Check:
 - Inspect changed glossary cards for the intended fields: meaning, Korean term, type, primary owner, related references, and a short usage note.
+- Confirm each summary-table `Primary owner` matches the detailed card's `Primary owner` for the same term.
 - Confirm term cards explain the term and route to the primary owner instead of carrying long avoid lists, identifier-preservation lists, owner-routing tables, or documentation-quality checklists.
+- Confirm the glossary does not duplicate the translation guide's prose-style rules, `doc-index.yaml` retrieval metadata role, or reference owners' API, storage, schema, security, projection, runtime, or method contracts.
 - Confirm API behavior, storage effects, security guarantees, method behavior, and detailed response/schema contracts remain in their focused owners.
 - Confirm Korean glossary cards use natural Korean technical prose and preserve exact identifiers unchanged.
 
 Failure:
 - A glossary card becomes a translation guide, identifier-preservation policy, owner-routing table, or reference contract.
+- A summary row and detailed card disagree about the term's `Primary owner`.
 - A usage note accumulates repeated "do not", "must not", or avoid-list wording that belongs in the terminology map, translation guide, authoring guide, or focused checks.
+- A card repeats `doc-index.yaml` route metadata or reference contract detail instead of linking to the owner.
 - A card copies API, storage, security, schema, projection, or method behavior instead of linking to the owner.
 
 Fix:
 - Shrink the card to the role-focused fields and keep the usage note short.
+- Align the summary-table owner cell with the detailed card and focused owner target.
 - Move systematic identifier controls to the terminology map.
 - Move Korean prose style guidance to the translation guide.
 - Move review procedures to Maintain checks.
 - Route contract detail to the applicable reference owner.
+
+## CHK-TERM-012: owner-routing label usage
+
+Owner:
+- [Glossary](../../reference/glossary.md)
+- [Terminology Map](../../../terminology-map.yaml)
+- [Authoring Guide](../authoring-guide.md)
+- [doc-index.yaml](../../../doc-index.yaml)
+
+Check:
+- Inspect glossary tables, glossary cards, terminology-map entries, route prose, and Maintain checks that use `Primary owner`, `Related references`, `owner contract`, `primary_owner`, or `related_references`.
+- Confirm `Primary owner` and `primary_owner` name the canonical owner for the term or concept.
+- Confirm `Related references` and `related_references` name adjacent documents only; they must not be presented as alternate owners or owner contracts.
+- Confirm owner contract terminology means the contract defined by the relevant owner document, not a document path, route label, related reference, or index.
+- Confirm index documents are not labeled as primary owners for detailed terms when focused owners exist.
+
+Failure:
+- `Primary owner` and `Related references` are used interchangeably.
+- A related reference is described as the owner contract or as another primary owner.
+- An index or route page is labeled as the primary owner for a detailed term, API concern, schema concern, storage concern, security concern, or display wording concern already owned by a focused document.
+- Owner contract wording points to a route label or metadata entry instead of the contract defined by the focused owner.
+
+Fix:
+- Restore `Primary owner` for the focused owner and move adjacent documents to `Related references`.
+- Split the glossary term when one label is trying to cover multiple canonical owners.
+- Reword owner contract usage so it points to the focused owner document's contract.
+- Keep indexes as navigation or related references unless the indexed concept itself is the route concept.

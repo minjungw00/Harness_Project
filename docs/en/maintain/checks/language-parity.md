@@ -212,7 +212,7 @@ Fix:
 - Match normative strength and placement by meaning unit while keeping Korean prose natural.
 - If the negative rule defines a product contract, move it to the owner and leave both paired non-owner pages with a short boundary plus owner link.
 
-## CHK-PARITY-011: reference semantic skeleton parity
+## CHK-PARITY-011: semantic skeleton parity
 
 Owner:
 - [Authoring Guide](../authoring-guide.md)
@@ -220,16 +220,18 @@ Owner:
 - [Translation Guide](../translation-guide.md)
 
 Check:
-- For important Reference sections, identify the semantic skeleton used by the section before comparing prose.
+- For changed paired sections that use or imply a semantic skeleton, identify the meaning-unit skeleton before comparing prose. Important Reference sections should have the skeleton identified before prose is written or reshaped.
 - Common skeletons include `Purpose`, `Conditions`, `Result`, `Non-claim`, `Owner boundary`, and `Related references`; another acceptable skeleton is `Meaning`, `Contract`, `Boundary`, and `Related references`.
-- Confirm the paired English and Korean section uses the same skeleton for the same section.
+- Confirm the paired English and Korean sections use the same skeleton for the same section.
 - Confirm sentence count may differ, but meaning-unit placement and normative strength remain aligned.
+- Search Korean changed sections for structural labels such as `조건`, `결과`, `비주장`, and `허용되지 않는 것`; each label must have the corresponding English meaning unit in the paired section.
 - Confirm Korean natural wording does not add labels such as `조건`, `결과`, `비주장`, or `허용되지 않는 것` unless English has the equivalent meaning unit.
 - Confirm English does not add `Not allowed`, `Does not imply`, or `Non-claim` sections unless Korean has the equivalent meaning unit.
 
 Failure:
 - Paired sections match headings or tables but use different semantic skeletons.
 - One language adds, removes, or relocates a condition, result, non-claim, owner boundary, or related-reference meaning unit.
+- Korean introduces `조건`, `결과`, `비주장`, or `허용되지 않는 것` as visible structure without an English counterpart.
 - One language adds a label or negative section that changes normative strength or makes a rule easier to find in only that language.
 
 Fix:

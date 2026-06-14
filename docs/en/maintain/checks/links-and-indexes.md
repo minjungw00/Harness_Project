@@ -166,16 +166,24 @@ Owner:
 Check:
 - Inspect terminology-map `primary_owner` and `related_references`, glossary owner links, `doc-index.yaml` owner metadata, and route tables touched by the edit.
 - Confirm each owner target points to the focused owner document when one exists.
+- Confirm glossary summary-table `Primary owner` cells, detailed glossary-card `Primary owner` blocks, and terminology-map `primary_owner` targets match for the same term unless an explicit owner gap is named.
+- Confirm `doc-index.yaml` `owner_for` and `not_owner_for` metadata does not contradict the focused owner named by the glossary or terminology map for the same concept.
+- Confirm `related_references` and glossary `Related references` hold adjacent context only; they must not be used as alternate primary owners.
 - Use a broad index only when the concept is index-owned navigation, a first-hop route, or an explicitly named owner gap.
 - Confirm API error code meanings, error precedence, API response branch routing, close-readiness blocker routing, and `ToolError.details` targets stay separate.
 
 Failure:
 - A terminology, glossary, metadata, or route target points to a broad index when a focused owner exists.
+- A glossary summary table points to one primary owner while the detailed glossary card or terminology map points to another.
+- `doc-index.yaml` metadata makes a different document look primary for the same concept without a documented owner split or owner gap.
+- A `related_references` or `Related references` entry is treated as a second primary owner.
 - An API error family index is used as the owner for public code meanings, precedence, response branch routing, close-readiness blocker routing, or machine-readable details.
 - `doc-index.yaml` metadata makes a route/index document look like the owner of focused contract detail.
 
 Fix:
 - Retarget the link or metadata field to the focused owner.
+- Synchronize the glossary summary table, detailed glossary card, terminology map, and `doc-index.yaml` metadata in the same documentation batch when the owner target changes.
+- Move adjacent documents from primary-owner fields into related-reference fields.
 - Keep indexes as navigation unless they truly own the route concept.
 - If the focused owner is missing, name the owner gap instead of routing the contract to an index.
 
