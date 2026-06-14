@@ -79,13 +79,9 @@ Returns `RecordRunResult` with:
 
 The method may commit compatible run-related blocker state when the run is recordable but the result creates or preserves blockers, such as evidence gaps.
 
-Non-claim: a committed blocked result must not hide:
+Not allowed:
 
-- invalid staged handles
-- missing Write Authorization
-- stale state
-- stale authorization basis
-- local access failures
+- A committed blocked result must not hide invalid staged handles, missing Write Authorization, stale state, stale authorization basis, or local access failures.
 
 Those failures are rejected before commit.
 

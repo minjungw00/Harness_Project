@@ -93,7 +93,9 @@ A committed blocked scope result must identify the missing user-owned judgment c
 - `scope_decision`
 - `sensitive_approval`
 
-Non-claim: a blocked scope result must not hide the missing judgment behind vague ambiguity.
+Not allowed:
+
+- A blocked scope result must not hide the missing judgment behind vague ambiguity.
 
 ## Rejected result
 

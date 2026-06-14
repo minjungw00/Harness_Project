@@ -34,7 +34,7 @@ Meaning:
 - Schema blocks in this page are contract notation for public API shapes.
 - They describe field presence and nesting, not method-specific behavior.
 
-Not implied:
+Does not imply:
 - Schema blocks are not generated code.
 
 Notation:
@@ -50,7 +50,7 @@ Owner links:
 Meaning:
 - `ToolEnvelope` is the common request envelope used by public methods.
 
-Not implied:
+Does not imply:
 - It does not override narrower method-specific request rules.
 
 Owner links:
@@ -93,7 +93,7 @@ Meaning:
 - `MethodResult` is the method-specific successful or committed result branch defined by method owner documents routed from [API Methods](methods.md).
 - Every concrete method result carries `base: ToolResultBase` and then only that method's result fields.
 
-Not implied:
+Does not imply:
 - `MethodResult` is not a single concrete schema.
 
 ```yaml
@@ -116,7 +116,7 @@ ToolDryRunResponse:
 Meaning:
 - Method-specific result fields belong only to the method result branch.
 
-Not implied:
+Does not imply:
 - `ToolRejectedResponse` and `ToolDryRunResponse` do not carry result-only fields such as `task_ref`, `run_summary`, `staged_artifact_handle`, `write_authorization_ref`, `user_judgment_ref`, `decision`, or `close_state`.
 
 Owner links:
@@ -131,7 +131,7 @@ Meaning:
 - `DryRunSummary`, `PlannedEffect`, and `PlannedBlocker` are common dry-run branch support shapes.
 - They are descriptive preview data only.
 
-Not implied:
+Does not imply:
 - They do not create records.
 - They do not reserve refs.
 - They do not consume handles.
