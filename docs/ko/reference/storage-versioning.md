@@ -382,7 +382,7 @@
 - 공개 충돌 동작은 [API 오류 우선순위](api/error-precedence.md#state-conflict-behavior)가 담당합니다.
 - 분기별 저장 효과는 [저장 효과](storage-effects.md)가 담당합니다.
 
-비주장: `request_hash`를 두 번째 고유 키에 넣어 같은 `idempotency_key`가 여러 커밋 응답으로 갈라질 수 있게 만들면 안 됩니다.
+`request_hash`를 두 번째 고유 키에 넣어 같은 `idempotency_key`가 여러 커밋 응답으로 갈라질 수 있게 만들면 안 됩니다.
 
 ## 잠금 정책
 

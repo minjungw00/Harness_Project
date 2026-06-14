@@ -37,7 +37,7 @@
 
 ## 접근 요구사항
 
-조건:
+요구사항:
 
 - `VerifiedSurfaceContext.access_class=run_recording`입니다.
 - `verified=true`입니다.
