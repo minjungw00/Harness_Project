@@ -66,6 +66,8 @@ Common choices:
 | evidence | 증거 | Preserve exact evidence schema identifiers. |
 | artifact | 아티팩트 | Preserve exact artifact schema identifiers. |
 | blocker | 차단 사유 | Use 닫기 차단 사유 for close-readiness blocker prose. |
+| blocker routing | 차단 사유 처리 경로 | Use for routing between API response branches and close-readiness blockers. |
+| blocker category | 차단 사유 범주 | Preserve `CloseReadinessBlocker.category` when naming the exact field. |
 | owner document | 담당 문서 | Use for documentation ownership prose. |
 | applicable owner path | 적용되는 담당 경로 | Use only for documentation-routing prose. |
 | surface | 접점 | Preserve exact surface identifiers such as `surface_id`. |
@@ -183,6 +185,7 @@ The following patterns are forbidden in Korean prose unless they appear inside a
 | close blocker를 확인한다 | 닫기 차단 사유를 확인한다 |
 | blocker 처리 경로 | 차단 사유 처리 경로 |
 | blocker 라우팅 | 차단 사유 처리 경로 |
+| blocker category | 차단 사유 범주 |
 
 Mixed English/Korean may be correct when the English part is an identifier, for example `ArtifactRef`를 보존한다 or `surface_id` 필드를 보존한다. When the English part is ordinary prose, translate it.
 

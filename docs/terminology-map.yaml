@@ -126,6 +126,8 @@ avoid:
       use: "차단 사유 처리 경로"
     - phrase: "blocker 라우팅"
       use: "차단 사유 처리 경로"
+    - phrase: "blocker category"
+      use: "차단 사유 범주"
     - phrase: "`complete` 평가 순서"
       use: "전체 평가 순서"
     - phrase: "complete 평가 순서"
@@ -829,6 +831,8 @@ terms:
     ko_user: "차단 사유 범주"
     preserve_as_identifier:
       - "CloseReadinessBlocker.category"
+    avoid_ko:
+      - "blocker category"
     primary_owner:
       en: "docs/en/reference/api/schema-value-sets.md"
       ko: "docs/ko/reference/api/schema-value-sets.md"

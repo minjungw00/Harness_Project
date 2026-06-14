@@ -65,7 +65,9 @@
 | out-of-scope capability | 지원 범위 밖 기능 | 한국어 개념을 먼저 둡니다. |
 | evidence | 증거 | 정확한 증거 스키마 식별자는 보존합니다. |
 | artifact | 아티팩트 | 정확한 아티팩트 스키마 식별자는 보존합니다. |
-| blocker | 차단 사유 | 닫기 준비 상태 맥락에서는 닫기 차단 사유를 씁니다. |
+| blocker | 차단 사유 | 닫기 준비 상태를 설명할 때는 닫기 차단 사유를 씁니다. |
+| blocker routing | 차단 사유 처리 경로 | API 응답 분기와 닫기 차단 사유 사이의 경로를 말할 때 씁니다. |
+| blocker category | 차단 사유 범주 | 정확한 필드를 이름 붙일 때는 `CloseReadinessBlocker.category`를 씁니다. |
 | owner document | 담당 문서 | 문서 담당 관계를 말할 때 씁니다. |
 | applicable owner path | 적용되는 담당 경로 | 문서 경로 안내 산문에만 씁니다. |
 | surface | 접점 | `surface_id` 같은 정확한 접점 식별자는 보존합니다. |
@@ -183,6 +185,7 @@
 | close blocker를 확인한다 | 닫기 차단 사유를 확인한다 |
 | blocker 처리 경로 | 차단 사유 처리 경로 |
 | blocker 라우팅 | 차단 사유 처리 경로 |
+| blocker category | 차단 사유 범주 |
 
 영어 부분이 식별자라면 한국어와 함께 써도 됩니다. 예를 들어 `ArtifactRef`를 보존한다, `surface_id` 필드를 보존한다 같은 문장은 올바릅니다. 영어 부분이 일반 산문이면 한국어로 옮깁니다.
 

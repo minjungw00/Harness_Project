@@ -17,7 +17,8 @@
 
 - `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`의 공통 스키마 본문
 - 상태, 아티팩트, 사용자 판단, 값 집합, 오류의 중첩 스키마 정의
-- 닫기 차단 사유와 API 응답 분기 사이의 처리 경로, 차단 사유 범주 값의 정의, 표시 문구
+- 차단 사유 처리 경로
+- 차단 사유 범주 값의 정의와 표시 문구
 - 저장 DDL, 저장 기록 레이아웃, 아티팩트 생명주기, 보안 보장, Core 제품 의미
 
 ## 목적
@@ -30,7 +31,11 @@
 
 비주장: 닫기는 Core 상태 전이이며 보고서가 아닙니다. 대화, 상태 텍스트, 최종 수락만, 잔여 위험 수락만, 증거만, 렌더링된 보기에서 닫기를 추론하지 않습니다.
 
-담당 경계: 이 문서는 `harness.close_task`의 메서드별 요청 조건, 결과 분기, 평가 순서, 차단 사유 생성 분기를 담당합니다. 닫기 차단 사유와 API 응답 분기 사이의 처리 경로는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다. `CloseReadinessBlocker` 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes), API 값 이름은 [API 값 집합](schema-value-sets.md#state-and-blocker-values), 닫기 준비 상태 권한은 [Core 모델의 닫기 준비 상태](../core-model.md#close_task), 표시 문구는 [템플릿 본문](../template-bodies.md)이 담당합니다.
+담당 경계: 이 문서는 `harness.close_task`의 메서드별 요청 조건, 결과 분기, 평가 순서, 차단 사유 생성 분기를 담당합니다.
+
+차단 사유 처리 경로는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다. 그 경로는 닫기 차단 사유와 API 응답 분기 사이의 경계를 다룹니다.
+
+`CloseReadinessBlocker` 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. API 값 이름은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다. 닫기 준비 상태 권한은 [Core 모델의 닫기 준비 상태](../core-model.md#close_task), 표시 문구는 [템플릿 본문](../template-bodies.md)이 담당합니다.
 
 ## 필수 입력
 
@@ -106,7 +111,7 @@
 | 분기 | 차단 사유 생성 |
 |---|---|
 | `intent=check` | 현재 닫기 차단 사유를 읽기 전용 관찰 데이터로 반환합니다. 차단 사유 행을 만들거나 상태를 증가시키지 않습니다. |
-| `intent=complete` | 적용되는 담당 조건이 충족되지 않았을 때 `Task` 상태, 열린 실행 기록 호환성, 범위, 사용자 소유 판단, 민감 동작 승인, 쓰기 호환성, 기준 상태, 접점 역량, 증거, 아티팩트 가용성, 최종 수락, 잔여 위험 표시, 잔여 위험 수락, 복구 제약에 대한 차단 사유를 만들 수 있습니다. |
+| `intent=complete` | 적용되는 담당 조건이 충족되지 않으면 차단 사유를 만들 수 있습니다. 대상은 `Task` 상태, 열린 실행 기록 호환성, 범위, 사용자 소유 판단, 민감 동작 승인, 쓰기 호환성, 기준 상태, 접점 역량, 증거, 아티팩트 가용성, 최종 수락, 잔여 위험 표시, 잔여 위험 수락, 복구 제약입니다. |
 | `intent=cancel` | 호환되지 않는 `Task` 상태, 필요한 복구나 수리 제약, 담당 문서가 정의한 취소 제약처럼 취소 전용 종료 제약에 대해서만 차단 사유를 만듭니다. 완료 전용 증거 공백과 최종 수락 공백은 그 자체로 취소를 막지 않습니다. |
 | `intent=supersede` | 호환되지 않는 `Task` 상태, 호환되지 않는 같은 프로젝트의 대체 `Task` 관계, 복구나 수리 제약처럼 대체 전용 종료 제약에 대해서만 차단 사유를 만듭니다. 완료 전용 증거 공백과 최종 수락 공백은 그 자체로 대체를 막지 않습니다. |
 
@@ -140,7 +145,7 @@
 
 분기 형태는 [API 코어 스키마](schema-core.md)가 담당합니다. 미리보기에서 예상 차단 사유가 어떤 API 응답 분기로 나타나는지는 [API 오류 처리 경로](error-routing.md)가 담당합니다.
 
-닫기 차단 사유와 API 응답 분기 사이의 차단 사유 처리 경로는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다.
+차단 사유 처리 경로는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다. 이 경로는 닫기 차단 사유와 API 응답 분기 사이의 경계를 다룹니다.
 
 ## 저장 효과
 
@@ -302,5 +307,5 @@ next_actions:
 - 표시 라벨과 렌더링된 문구: [템플릿 본문](../template-bodies.md).
 - 공개 `ErrorCode` 의미: [API 오류 코드](error-codes.md).
 - 거부 응답 분기 경로: [API 오류 처리 경로](error-routing.md).
-- 닫기 차단 사유와 API 응답 분기 사이의 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md).
+- 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md). 이 경로는 닫기 차단 사유와 API 응답 분기 사이의 경계를 다룹니다.
 - 저장 효과와 상태 버전 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

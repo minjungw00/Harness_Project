@@ -829,7 +829,7 @@ Type:
 - API 차단 사유 처리 용어
 
 Meaning:
-- 닫기 차단 사유는 닫기와 관련된 차단 사유 데이터입니다.
+- 닫기 차단 사유는 닫기와 관련해 막힌 이유를 담는 데이터입니다.
 
 Primary owner:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
@@ -850,7 +850,7 @@ Term:
 - `CloseReadinessBlocker`
 
 Korean term:
-- `CloseReadinessBlocker`; 스키마를 말하지 않을 때는 닫기 차단 사유를 씁니다.
+- `CloseReadinessBlocker`; 스키마 이름을 말하지 않을 때는 닫기 차단 사유를 씁니다.
 
 Type:
 - API 스키마
@@ -883,7 +883,7 @@ Type:
 - API 값 개념
 
 Meaning:
-- 차단 사유 범주는 닫기 차단 사유를 담당 관심사별로 분류하는 산문 개념입니다.
+- 차단 사유 범주는 닫기 차단 사유를 담당 관심사에 따라 나누어 설명하는 산문 개념입니다.
 
 Primary owner:
 - [API 값 집합](api/schema-value-sets.md)
@@ -893,7 +893,7 @@ Related references:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 Usage note:
-- 정확한 필드 이름은 `CloseReadinessBlocker.category`입니다.
+- 정확한 필드를 이름 붙일 때는 `CloseReadinessBlocker.category`를 씁니다.
 
 ### complete intent
 
@@ -1578,7 +1578,7 @@ Related references:
 - [템플릿 본문](template-bodies.md)
 
 Usage note:
-- 이 경계는 차단 사유 처리 경로 문서를 따릅니다.
+- 이 경계는 [API 차단 사유 처리 경로](api/blocker-routing.md)에서 확인합니다.
 
 ### error/blocker boundary
 
@@ -1602,7 +1602,7 @@ Related references:
 - [API 오류 코드](api/error-codes.md)
 
 Usage note:
-- 이 경계는 API 차단 사유 처리 경로 문서를 따릅니다.
+- 이 경계는 [API 차단 사유 처리 경로](api/blocker-routing.md)에서 확인합니다.
 
 ### public error as blocker
 
@@ -1617,7 +1617,7 @@ Type:
 - API 차단 사유 처리 용어
 
 Meaning:
-- 공개 오류 코드가 차단 사유로 표현되는 경우는 공개 오류 코드가 차단 사유 데이터로 나타날 수 있는 좁은 경우를 가리킵니다.
+- 공개 오류 코드가 차단 사유로 표현되는 경우는 공개 오류 코드가 닫기 차단 사유 데이터로 나타날 수 있는 좁은 경우를 가리킵니다.
 
 Primary owner:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
@@ -1626,7 +1626,7 @@ Related references:
 - [API 오류 코드](api/error-codes.md)
 
 Usage note:
-- 이 좁은 경우는 API 차단 사유 처리 경로 문서를 따릅니다.
+- 이 좁은 경우는 [API 차단 사유 처리 경로](api/blocker-routing.md)에서 확인합니다.
 
 ### `ToolError.details`
 
