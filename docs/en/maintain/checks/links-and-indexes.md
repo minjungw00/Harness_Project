@@ -165,27 +165,34 @@ Check sources:
 
 Evidence to inspect:
 - Inspect terminology-map `primary_owner` and `related_references`, glossary owner links, `doc-index.yaml` owner metadata, and route tables touched by the edit.
+- Confirm `docs/terminology-map.yaml` remains the complete structured term inventory.
+- Confirm the glossary remains a curated compact view and is not required to mirror every terminology-map term.
+- Confirm every term shown in the glossary exists in the terminology map.
 - Confirm each owner target points to the focused owner document when one exists.
-- Confirm glossary summary-table `Primary owner` cells, detailed glossary-card `Primary owner` blocks, and terminology-map `primary_owner` targets match for the same term unless an explicit owner gap is named.
+- Confirm glossary `Primary owner` values and terminology-map `primary_owner` targets match for the same included term unless an explicit owner gap is named.
 - Confirm `doc-index.yaml` `owner_for` and `not_owner_for` metadata does not contradict the focused owner named by the glossary or terminology map for the same concept.
 - Confirm `doc-index.yaml` does not overclaim ownership for a focused term by making a route, index, or broad document look primary when the glossary or terminology map names a focused owner.
-- Confirm `related_references` and glossary `Related references` hold adjacent context only; they must not be used as alternate primary owners.
+- Confirm terminology-map `related_references` and glossary `See also` or `Related references` hold adjacent context only; they must not be used as alternate primary owners or contradict each other.
 - Use a broad index only when the concept is index-owned navigation, a first-hop route, or an explicitly named owner gap.
 - Confirm API error code meanings, error precedence, API response branch routing, close-readiness blocker routing, and `ToolError.details` targets stay separate.
 
 Failure:
 - A terminology, glossary, metadata, or route target points to a broad index when a focused owner exists.
-- A glossary summary table points to one primary owner while the detailed glossary card or terminology map points to another.
+- A glossary term is missing from the terminology map.
+- A check or route requires the glossary to include every terminology-map term.
+- A glossary entry points to one primary owner while the terminology map points to another.
 - `doc-index.yaml` metadata makes a different document look primary for the same concept without a documented owner split or owner gap.
 - `doc-index.yaml` overclaims ownership for a focused term, API concern, schema concern, storage concern, security concern, or display wording concern.
-- A `related_references` or `Related references` entry is treated as a second primary owner.
+- A terminology-map `related_references`, glossary `See also`, or glossary `Related references` entry is treated as a second primary owner or contradicts the adjacent references for the same term.
 - An API error family index is used as the owner for public code meanings, precedence, response branch routing, close-readiness blocker routing, or machine-readable details.
 - `doc-index.yaml` metadata makes a route/index document look like the owner of focused contract detail.
 
 Fix:
 - Retarget the link or metadata field to the focused owner.
 - Narrow `doc-index.yaml` `owner_for` metadata or add `not_owner_for` metadata so route and index pages do not overclaim focused terms.
-- Synchronize the glossary summary table, detailed glossary card, terminology map, and `doc-index.yaml` metadata in the same documentation batch when the owner target changes.
+- Synchronize the glossary entry, terminology map, and `doc-index.yaml` metadata in the same documentation batch when the owner target changes.
+- Add the term to the terminology map before showing it in the glossary, or remove the glossary entry when it is not part of the curated view.
+- Keep terminology-map-only terms out of the glossary unless readers need the compact glossary entry.
 - Move adjacent documents from primary-owner fields into related-reference fields.
 - Keep indexes as navigation unless they truly own the route concept.
 - If the focused owner is missing, name the owner gap instead of routing the contract to an index.

@@ -2,7 +2,7 @@
 
 Use this guide when editing paired English and Korean Harness documentation. It owns bilingual semantic parity, natural Korean technical prose, identifier preservation guidance, mixed-language Korean style rules, and hidden-anchor practice.
 
-This is a documentation-maintenance guide. It does not define product behavior, API behavior, storage effects, security guarantees, projection behavior, runtime behavior, schema contracts, glossary term cards, or owner-routing indexes. When contract detail is needed, link to the focused owner instead of restating it here.
+This is a documentation-maintenance guide. It does not define product behavior, API behavior, storage effects, security guarantees, projection behavior, runtime behavior, schema contracts, glossary entries, or owner-routing indexes. When contract detail is needed, link to the focused owner instead of restating it here.
 
 Structured terminology metadata lives in [`docs/terminology-map.yaml`](../../terminology-map.yaml). Human-readable term definitions live in the [Glossary](../reference/glossary.md). Check the terminology map before adding or changing product terms, Korean prose terms, identifier explanations, product labels, or Korean mixed-language examples. If this guide and the terminology map disagree, align them in the same documentation batch.
 
@@ -141,5 +141,5 @@ Mixed English/Korean may be correct when the English part is an identifier, for 
 After translation edits, run the focused Maintain checks instead of using this guide as a checklist:
 
 - [Language parity checks](checks/language-parity.md) for meaning-unit parity, natural Korean structure, headings, tables, lists, and identifier preservation.
-- [Terminology checks](checks/terminology.md) for terminology-map alignment, mixed-language Korean, glossary card focus, `active` wording, `complete` ambiguity, and related term controls.
+- [Terminology checks](checks/terminology.md) for terminology-map alignment, mixed-language Korean, glossary entry focus, `active` wording, `complete` ambiguity, and related term controls.
 - [Links and indexes checks](checks/links-and-indexes.md) when headings, anchors, relative links, terminology targets, or route metadata changed.
