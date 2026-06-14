@@ -126,7 +126,10 @@ Applies to:
 
 Evidence to inspect:
 - Inspect labels such as `Not allowed`, `Required behavior`, `Result`, `Does not imply`, and `Owner boundary`.
-- Confirm `Not allowed` contains prohibited actions or states, not requirements, outcomes, examples, or route links.
+- Confirm `Not allowed` and Korean `허용되지 않는 것` contain prohibited actions or states, not requirements, outcomes, examples, or route links.
+- For prohibitions with `unless`, `only when`, or `except when`, confirm the condition, prohibited behavior, and owner boundary remain separately reviewable when one sentence would make the label unclear.
+- Confirm conditions that define when something may be treated as authority are not hidden inside a `Not allowed` bullet or row.
+- In Korean text under `허용되지 않는 것`, inspect sentences that use `되어야 합니다` or `해야 합니다`; confirm they are not actually required behavior that belongs under a requirement or condition label.
 - Confirm `Required behavior` contains required behavior, not prohibitions, optional guidance, outcomes, or non-claims.
 - Confirm `Result` contains outcomes or reader-visible consequences, not preconditions, requirements, or owner routes.
 - Confirm `Does not imply` contains non-implications or non-claims, not effects, requirements, or prohibitions.
@@ -134,16 +137,20 @@ Evidence to inspect:
 - Classify each labeled unit before checking parity: required versus prohibited, effect versus non-effect, and route versus contract.
 
 Pass condition:
-- Each label matches the semantic content underneath it, and each content unit is classified before it is routed, translated, or compared for parity.
+- Each label matches the semantic content underneath it, conditional prohibitions remain clear, and each content unit is classified before it is routed, translated, or compared for parity.
 
 Failure:
-- A prohibited action is placed under `Required behavior`, or a requirement is placed under `Not allowed`.
+- A prohibited action is placed under `Required behavior`, or a requirement is placed under `Not allowed` or `허용되지 않는 것`.
+- A `Not allowed` unit mixes a prohibition with an `unless`, `only when`, or `except when` condition so the reader cannot tell which behavior is prohibited and which condition permits or routes the exception.
+- A condition that tells readers when something may be treated as authority is buried inside a prohibition bullet or row.
+- Korean `허용되지 않는 것` text uses `되어야 합니다` or `해야 합니다` for content that is actually required behavior.
 - An effect or outcome is placed under `Does not imply`, or a non-effect is presented as a `Result`.
 - A route or owner-boundary note is written as if it were the contract, or contract detail is hidden under `Owner boundary`.
 - English and Korean use matching labels, but the shared label is wrong for the content.
 
 Fix:
 - Rename the label, move the content to the correct meaning unit, or split the unit so requirements, prohibitions, effects, non-effects, routes, and contracts are separately reviewable.
+- When a conditional prohibition is unclear, split it into `Conditions`, `Not allowed`, and `Owner boundary` units.
 - If the content defines a contract, route it to the canonical owner and leave non-owner pages with a short consequence plus owner link.
 
 ## CHK-OWNER-001: canonical owner violations

@@ -198,18 +198,23 @@ Check sources:
 
 Evidence to inspect:
 - Search paired changed sections for negative-clause markers, including English `Not allowed`, `Does not imply`, `Not implied`, and `must not`, and Korean `허용되지 않는 것`, `의미하지 않는 것`, and `해서는 안 됩니다`.
+- Search conditional prohibition markers, including English `unless`, `only when`, and `except when`, and Korean conditional or exception phrasing such as `단`, `일 때만`, and `경우를 제외하고`.
 - Compare each prohibition, exception, and non-claim by meaning unit.
+- Confirm a conditional prohibition does not hide the condition that permits, limits, or routes a claim of authority inside a prohibition label in one language when the paired language exposes it as a condition or owner boundary.
 - Confirm one language does not impose a stronger prohibition, broader exception, narrower exception, or stronger non-claim than the other.
 - If one language places a prohibition or non-claim in a table, list, named block, or nearby sentence, confirm the paired language keeps that meaning unit in the corresponding place.
 
 Failure:
 - A negative clause appears only in one language and changes what the reader is told to avoid.
 - One language uses stronger wording, such as changing a caution into a prohibition or turning a narrow exception into a broad exception.
+- A conditional prohibition is split into condition and prohibition in one language but buried under `Not allowed` or `허용되지 않는 것` in the paired language.
+- A condition for treating something as authority is easier to find in one language and hidden inside a prohibition bullet in the other.
 - A prohibition lives in a visible table or list in one language but is buried, moved to a different scope, or omitted in the paired language.
 
 Fix:
 - Restore the missing prohibition, exception, or non-claim in the paired language.
 - Match normative strength and placement by meaning unit while keeping Korean prose natural.
+- Split unclear conditional prohibitions into corresponding condition, not-allowed, and owner-boundary units in both languages.
 - If the negative rule defines a product contract, move it to the owner and leave both paired non-owner pages with a short boundary plus owner link.
 
 ## CHK-PARITY-011: semantic skeleton parity
@@ -222,6 +227,7 @@ Check sources:
 Evidence to inspect:
 - For changed paired sections that use or imply a semantic skeleton, identify the meaning-unit skeleton before comparing prose. Important Reference sections should have the skeleton identified before prose is written or reshaped.
 - Common skeletons include `Purpose`, `Conditions`, `Result`, `Non-claim`, `Owner boundary`, and `Related references`; another acceptable skeleton is `Meaning`, `Contract`, `Boundary`, and `Related references`.
+- When a conditional prohibition would otherwise be unclear, use the same semantic skeleton in both languages for `Conditions`, `Not allowed`, and `Owner boundary`.
 - Confirm the paired English and Korean sections use the same skeleton for the same section.
 - Confirm sentence count may differ, but meaning-unit placement and normative strength remain aligned.
 - Confirm matching skeletons are checked against the content they label; parity does not make a mislabeled unit correct.
@@ -235,6 +241,7 @@ Pass condition:
 Failure:
 - Paired sections match headings or tables but use different semantic skeletons.
 - One language adds, removes, or relocates a condition, result, non-claim, owner boundary, or related-reference meaning unit.
+- One language exposes a conditional prohibition as `Conditions`, `Not allowed`, and `Owner boundary`, while the other hides the condition inside a prohibition unit.
 - Both languages use the same skeleton, but a label names the wrong kind of content.
 - Korean introduces `조건`, `결과`, `비주장`, or `허용되지 않는 것` as visible structure without an English counterpart.
 - One language adds a label or negative section that changes normative strength or makes a rule easier to find in only that language.
@@ -256,6 +263,8 @@ Evidence to inspect:
 - After comparing paired files, run the semantic label-content check on each language independently.
 - Inspect matching labels such as `Not allowed`, `Required behavior`, `Result`, `Does not imply`, and `Owner boundary`, plus their Korean equivalents or nearby Korean prose.
 - Confirm both languages classify content correctly before accepting parity: required versus prohibited, effect versus non-effect, and route versus contract.
+- Confirm both languages do not share an unclear conditional prohibition where an `unless`, `only when`, or `except when` condition belongs in `Conditions` or `Owner boundary`, but both pages leave it under `Not allowed` or `허용되지 않는 것`.
+- In Korean, inspect `허용되지 않는 것` sentences that use `되어야 합니다` or `해야 합니다`; do not accept them merely because English has the same prohibition structure.
 - Do not validate a Korean label only because it mirrors the English label, and do not validate an English label only because the Korean page has the same structure.
 
 Pass condition:
@@ -263,6 +272,8 @@ Pass condition:
 
 Failure:
 - English and Korean both put required behavior under a prohibition label, or prohibited behavior under a requirement label.
+- English and Korean both hide a condition for treating something as authority inside a prohibition bullet or row.
+- English and Korean both use a prohibition label for a sentence that should be split into condition, prohibited behavior, and owner boundary.
 - English and Korean both place an effect under a non-effect label, or a non-effect under a result label.
 - English and Korean both present a route or owner-boundary note as if it were contract text.
 - The parity review passes because both languages match, even though both share the same wrong semantic label or structure.

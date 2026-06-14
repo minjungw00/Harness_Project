@@ -162,6 +162,14 @@ Use semantic labels only for the content they name:
 - `Does not imply`: non-implications and non-claims.
 - `Owner boundary`: ownership boundaries and routing limits.
 
+Give conditional prohibitions an extra pass. A `Not allowed` unit should name the prohibited behavior. If a prohibition also carries an `unless`, `only when`, or `except when` condition, consider splitting the unit into:
+
+- `Conditions`: when the condition or exception applies.
+- `Not allowed`: the behavior that remains prohibited.
+- `Owner boundary`: the document that owns the condition, authority boundary, or route.
+
+Do not hide a condition that tells readers when something may be treated as authority inside a prohibition bullet when that makes the sentence hard to parse.
+
 Do not fix a mislabeled unit by copying the same label into both languages. Check the content type first: required behavior is not a prohibited action, an effect is not a non-effect, and a route is not a contract. Rename the label, move the content, or route to the owner so the label and content agree.
 
 Use the same skeleton for the same section in English and Korean. Korean may use natural sentence order, split or combine sentences, and choose natural headings or bullets, but it must not introduce extra labels such as `조건`, `결과`, `비주장`, or `허용되지 않는 것` unless the English section has the equivalent meaning unit. English must not use `Not allowed`, `Does not imply`, or `Non-claim` sections unless Korean has the equivalent meaning unit. Sentence count may differ; meaning-unit placement and normative strength must match.
@@ -305,9 +313,11 @@ Do not route maintained documentation through stale legacy paths. If an old path
 - [ ] References to `docs/doc-index.yaml` name structures and keys that actually exist.
 - [ ] Meaning-changing edits were made in both English and Korean.
 - [ ] Important Reference sections have a defined semantic skeleton before prose is written or reshaped.
+- [ ] Conditional prohibitions split condition, prohibited behavior, and owner boundary when one sentence would make the label unclear.
 - [ ] Paired English/Korean headings keep equivalent meaning and reading structure.
 - [ ] Heading parity was not treated as sufficient for bilingual semantic parity.
 - [ ] Paired English/Korean sections use the same semantic skeleton for the same section.
+- [ ] Korean `허용되지 않는 것` text that uses `되어야 합니다` or `해야 합니다` was checked for required behavior.
 - [ ] Paired tables were checked for count, headers, row meanings, and placement relative to sections.
 - [ ] Paired normative lists, allowed/not-allowed clauses, does-not-imply clauses, exceptions, and owner-boundary lists were checked by meaning unit.
 - [ ] One-sided negative clauses were checked so one language does not impose stronger prohibitions, exceptions, or non-claims than the other.
