@@ -105,6 +105,8 @@ Evidence to inspect:
 - Confirm the glossary is not required to mirror every terminology-map term.
 - Confirm checks do not require a specific glossary layout.
 - Confirm every term included in the glossary has matching terminology-map metadata.
+- Confirm Markdown links to the glossary are used only when the linked context refers to a term included in the curated glossary.
+- Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner, not to the glossary.
 - Confirm `primary_owner` targets point to the focused owner document when one exists, and `related_references` hold adjacent routes instead of broadening ownership.
 - Confirm glossary `Primary owner` values match terminology-map `primary_owner` for included terms.
 - Confirm glossary `See also` or `Related references` values do not contradict terminology-map `related_references`.
@@ -121,6 +123,8 @@ Failure:
 - A glossary-included term is missing from the terminology map or lacks matching terminology-map metadata.
 - A check or route requires the glossary to include every terminology-map term.
 - A check requires a specific glossary layout.
+- A Markdown link points to the glossary for a term that is not included in the curated glossary.
+- A terminology-map-only term is routed to the glossary instead of `docs/terminology-map.yaml` or its focused owner.
 - A terminology-map or glossary owner target points to an index when a focused owner already owns the term's meaning, value set, API concern, storage concern, or display wording.
 - A glossary-included term lists multiple primary owners or treats related references as primary owners.
 - A terminology-map `primary_owner`, glossary `Primary owner`, or `doc-index.yaml` entry names a different primary owner for the same term without an intentional split term or explicit owner gap.
@@ -134,11 +138,13 @@ Fix:
 - Keep one glossary `Primary owner` and move adjacent documents to `See also` or `Related references`.
 - Synchronize glossary content, terminology-map entries, and `doc-index.yaml` metadata when the primary owner changes.
 - Keep terminology-map-only terms out of the glossary unless readers need compact glossary coverage.
+- Retarget glossary links to the focused owner or `docs/terminology-map.yaml` when the linked context is not a curated glossary term.
 - Replace vague placeholders with concrete examples that can be searched.
 
 Related checks:
 - [CHK-TERM-011](#chk-term-011-glossary-entry-focus)
 - [CHK-TERM-012](#chk-term-012-owner-routing-label-usage)
+- [CHK-TERM-013](#chk-term-013-glossary-link-route-semantics)
 - [CHK-LINK-008](links-and-indexes.md#chk-link-008-terminology-and-metadata-owner-targets)
 
 ## CHK-TERM-006: `active` versus supported or applicable
@@ -347,3 +353,45 @@ Fix:
 - Split the glossary term when one label is trying to cover multiple canonical owners.
 - Reword owner contract usage so it points to the focused owner document's contract.
 - Keep indexes as navigation or related references unless the indexed concept itself is the route concept.
+
+## CHK-TERM-013: glossary link route semantics
+
+Check sources:
+- [Glossary](../../reference/glossary.md)
+- [Terminology Map](../../../terminology-map.yaml)
+- [API Value Sets](../../reference/api/schema-value-sets.md)
+- [API error details](../../reference/api/error-details.md)
+- [Authoring Guide](../authoring-guide.md)
+
+Applies to:
+- Markdown links whose target is the glossary, and the nearby prose that gives each link its meaning.
+
+Evidence to inspect:
+- Inspect each glossary link's text and surrounding sentence. The link is valid only when that context refers to a term that actually appears in the curated glossary.
+- Confirm glossary links are used for core reader-facing concept summaries, not for the complete structured terminology inventory.
+- Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner, not to the glossary.
+- Confirm schema fields, enum values, API value sets, helper values, storage record details, and translation-control terms route to focused owners or `docs/terminology-map.yaml`, not to the glossary.
+- Confirm reserved or profile-gated value contexts route to [API Value Sets](../../reference/api/schema-value-sets.md) and `docs/terminology-map.yaml`, not to the glossary unless the linked term actually appears in the glossary.
+- Confirm the check validates semantic route correctness, not only file or anchor existence.
+
+Pass condition:
+- Every glossary link refers to a curated glossary term in a core reader-facing concept-summary context; terminology-map-only terms and detailed value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml`.
+
+Failure:
+- A Markdown link points to the glossary for a term that is absent from the curated glossary.
+- A link uses the glossary as if it were the complete structured terminology inventory.
+- A terminology-map-only term links to the glossary.
+- A schema field, enum value, API value set, helper value, storage record detail, or translation-control term links to the glossary instead of its focused owner or `docs/terminology-map.yaml`.
+- A reserved or profile-gated value context links to the glossary instead of API Value Sets and `docs/terminology-map.yaml`, unless the linked term appears in the glossary.
+- A glossary link resolves as a Markdown link but points readers to the wrong semantic owner.
+
+Fix:
+- Retarget the link to the focused owner, `docs/terminology-map.yaml`, [API Value Sets](../../reference/api/schema-value-sets.md), [API error details](../../reference/api/error-details.md), the relevant storage owner, or the relevant translation guidance as appropriate.
+- Add or adjust a glossary term only when readers need compact glossary coverage and the term has terminology-map metadata and one focused primary owner.
+- Keep glossary links for selected core reader-facing terms only.
+
+Related checks:
+- [CHK-TERM-005](#chk-term-005-terminology-map-alignment)
+- [CHK-TERM-011](#chk-term-011-glossary-entry-focus)
+- [CHK-LINK-008](links-and-indexes.md#chk-link-008-terminology-and-metadata-owner-targets)
+- [CHK-LINK-010](links-and-indexes.md#chk-link-010-glossary-link-route-correctness)

@@ -174,6 +174,8 @@ Evidence to inspect:
 - Confirm the glossary is not required to mirror every terminology-map term.
 - Confirm checks do not require a specific glossary layout.
 - Confirm every term included in the glossary has matching terminology-map metadata.
+- Confirm Markdown links to the glossary point only from contexts that refer to terms included in the curated glossary.
+- Confirm terminology-map-only terms route to `docs/terminology-map.yaml` or focused owners, not to the glossary.
 - Confirm each owner target points to the focused owner document when one exists.
 - Confirm glossary `Primary owner` values and terminology-map `primary_owner` targets match for the same included term unless an explicit owner gap is named.
 - Confirm `doc-index.yaml` `owner_for` and `not_owner_for` metadata does not contradict the focused owner named by the glossary or terminology map for the same concept.
@@ -190,6 +192,8 @@ Failure:
 - A glossary-included term is missing from the terminology map or lacks matching terminology-map metadata.
 - A check or route requires the glossary to include every terminology-map term.
 - A check requires a specific glossary layout.
+- A Markdown link points to the glossary for linked text or nearby prose that is not a curated glossary term.
+- A terminology-map-only term is linked to the glossary instead of `docs/terminology-map.yaml` or its focused owner.
 - A glossary-included term points to one primary owner while the terminology map points to another.
 - `doc-index.yaml` metadata makes a different document look primary for the same concept without a documented owner split or owner gap.
 - `doc-index.yaml` overclaims ownership for a focused term, API concern, schema concern, storage concern, security concern, or display wording concern.
@@ -203,6 +207,7 @@ Fix:
 - Synchronize glossary content, the terminology map, and `doc-index.yaml` metadata in the same documentation batch when the owner target changes.
 - Add the term to the terminology map before including it in the glossary, or remove it from the compact glossary view.
 - Keep terminology-map-only terms out of the glossary unless readers need compact glossary coverage.
+- Retarget glossary links to focused owners or `docs/terminology-map.yaml` when the linked context is outside the curated glossary subset.
 - Move adjacent documents from primary-owner fields into related-reference fields.
 - Keep indexes as navigation unless they truly own the route concept.
 - If the focused owner is missing, name the owner gap instead of routing the contract to an index.
@@ -211,6 +216,7 @@ Related checks:
 - [CHK-TERM-005](terminology.md#chk-term-005-terminology-map-alignment)
 - [CHK-TERM-011](terminology.md#chk-term-011-glossary-entry-focus)
 - [CHK-TERM-012](terminology.md#chk-term-012-owner-routing-label-usage)
+- [CHK-TERM-013](terminology.md#chk-term-013-glossary-link-route-semantics)
 - [CHK-LINK-003](#chk-link-003-route-documents-expose-owner-gaps)
 
 ## CHK-LINK-009: moved-concept and owner-boundary anchors
@@ -235,6 +241,45 @@ Fix:
 - Move or add the stable anchor on the actual owner section.
 - Retarget inbound links to the owner.
 - Remove redirect-style anchors from old documents when they create owner confusion; keep only short route links where navigation is still useful.
+
+## CHK-LINK-010: glossary link route correctness
+
+Check sources:
+- [Glossary](../../reference/glossary.md)
+- [Terminology Map](../../../terminology-map.yaml)
+- [Reference Index](../../reference/README.md)
+- [API Value Sets](../../reference/api/schema-value-sets.md)
+- [Authoring Guide](../authoring-guide.md)
+
+Applies to:
+- Markdown links whose target is `glossary.md` or a relative path to the glossary.
+
+Evidence to inspect:
+- Validate that each glossary link resolves to the intended file or anchor.
+- Inspect the link text and nearby prose to confirm the linked context refers to a term that appears in the curated glossary.
+- Confirm the glossary link is a route to a core reader-facing concept summary, not a route to the complete structured terminology inventory.
+- Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner.
+- Confirm schema fields, enum values, API value sets, helper values, storage record details, and translation-control terms route to focused owners or `docs/terminology-map.yaml`.
+- Confirm reserved or profile-gated value contexts route to [API Value Sets](../../reference/api/schema-value-sets.md) and `docs/terminology-map.yaml`, not to the glossary unless the linked term actually appears in the glossary.
+- Use the Reference Index or `doc-index.yaml` when the linked context needs an owner that is not the glossary.
+
+Pass condition:
+- Every glossary Markdown link is both resolvable and semantically correct for a curated glossary term; other terminology, value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml`.
+
+Failure:
+- A glossary link is unbroken but semantically points to the wrong owner.
+- Linked text or surrounding prose names a term that is absent from the curated glossary.
+- A terminology-map-only term, schema field, enum value, API value set, helper value, storage record detail, or translation-control term links to the glossary.
+- A reserved or profile-gated value context links to the glossary when the linked term is not included in the glossary.
+
+Fix:
+- Retarget the Markdown link to the focused owner, Reference Index route, `docs/terminology-map.yaml`, [API Value Sets](../../reference/api/schema-value-sets.md), or the applicable schema, storage, error-detail, or translation owner.
+- Add a glossary link only when the linked term is included in the curated glossary and the surrounding context needs a compact reader-facing concept summary.
+
+Related checks:
+- [CHK-LINK-001](#chk-link-001-broken-links-and-stale-routes)
+- [CHK-LINK-008](#chk-link-008-terminology-and-metadata-owner-targets)
+- [CHK-TERM-013](terminology.md#chk-term-013-glossary-link-route-semantics)
 
 ## CHK-LLM-001: duplicate contract text creates retrieval noise
 
