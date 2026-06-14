@@ -80,14 +80,17 @@
 | reserved value | 예약된 값 | [기준 범위](scope.md) |
 | profile-gated value | 프로필 조건부 값 | [기준 범위](scope.md) |
 | `ErrorCode` | `ErrorCode` | [API 오류 코드](api/error-codes.md) |
+| error code meanings | 공개 오류 코드 의미 | [API 오류 코드](api/error-codes.md) |
+| error precedence | 오류 우선순위 | [API 오류 우선순위](api/error-precedence.md) |
 | error routing | 오류 처리 경로 | [API 오류 처리 경로](api/error-routing.md) |
 | blocker routing | 차단 사유 처리 경로 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | error/blocker boundary | 오류와 차단 사유의 경계 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | public error as blocker | 공개 오류 코드가 차단 사유로 표현되는 경우 | [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | `ToolError.details` | `ToolError.details` | [API 오류 세부사항](api/error-details.md) |
-| dry-run | dry-run 미리보기 | [API 코어 스키마](api/schema-core.md) |
+| detail helper values | 오류 세부사항 보조 값 | [API 오류 세부사항](api/error-details.md) |
+| dry-run preview routing | dry-run 미리보기 처리 경로 | [API 오류 처리 경로](api/error-routing.md) |
 | blocked result | 차단 결과 | [API 오류 처리 경로](api/error-routing.md) |
-| rejected response | 거부 응답 | [API 코어 스키마](api/schema-core.md) |
+| rejected response | 거부 응답 | [API 오류 처리 경로](api/error-routing.md) |
 | migration | 마이그레이션 | [저장소 버전 관리](storage-versioning.md) |
 | lifecycle | 생명주기 | [Core 모델](core-model.md) |
 
@@ -1463,6 +1466,60 @@ Related references:
 Usage note:
 - 공개 `ErrorCode` 값을 기본적으로 `CloseReadinessBlocker.category`나 `CloseReadinessBlocker.code` 값으로 보지 않습니다.
 
+### error code meanings
+
+Term:
+- error code meanings
+- public error code meanings
+
+Korean term:
+- 공개 오류 코드 의미
+
+Type:
+- API 오류 코드 용어
+
+Meaning:
+- 공개 오류 코드 의미는 `ErrorCode` 값의 공개 의미와 허용된 발생 경로 요약을 가리킵니다.
+
+Primary owner:
+- [API 오류 코드](api/error-codes.md)
+
+Related references:
+- [API 오류 우선순위](api/error-precedence.md)
+- [API 오류 처리 경로](api/error-routing.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 오류 세부사항](api/error-details.md)
+
+Usage note:
+- 공개 오류 코드 의미를 우선순위 선택, 응답 분기 처리, `ToolError.details` 정의, 닫기 차단 사유 처리 경로로 쓰지 않습니다.
+
+### error precedence
+
+Term:
+- error precedence
+- primary public-error selection
+
+Korean term:
+- 오류 우선순위
+
+Type:
+- API 오류 우선순위 용어
+
+Meaning:
+- 오류 우선순위는 오류 포함 분기에 공개 오류 후보가 둘 이상 있을 때 대표 공개 `ErrorCode`를 고르는 규칙입니다.
+
+Primary owner:
+- [API 오류 우선순위](api/error-precedence.md)
+
+Related references:
+- [API 오류 코드](api/error-codes.md)
+- [API 오류 처리 경로](api/error-routing.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 오류 세부사항](api/error-details.md)
+
+Usage note:
+- 오류 우선순위로 오류 코드 의미, 응답 분기, `ToolError.details`, 닫기 차단 사유 처리 경로를 정의하지 않습니다.
+
 ### error routing
 
 Term:
@@ -1483,7 +1540,10 @@ Primary owner:
 - [API 오류 처리 경로](api/error-routing.md)
 
 Related references:
-- 없음.
+- [API 오류 코드](api/error-codes.md)
+- [API 오류 우선순위](api/error-precedence.md)
+- [API 차단 사유 처리 경로](api/blocker-routing.md)
+- [API 오류 세부사항](api/error-details.md)
 
 Usage note:
 - 오류 처리 경로를 공개 `ErrorCode` 의미, 오류 우선순위, `ToolError.details`, 닫기 차단 사유 처리 경로로 쓰지 않습니다.
@@ -1508,6 +1568,9 @@ Primary owner:
 - [API 차단 사유 처리 경로](api/blocker-routing.md)
 
 Related references:
+- [API 오류 처리 경로](api/error-routing.md)
+- [API 오류 코드](api/error-codes.md)
+- [API 오류 우선순위](api/error-precedence.md)
 - [Core 모델](core-model.md)
 - [Task 닫기 메서드](api/method-close-task.md)
 - [API 상태 스키마](api/schema-state.md)
@@ -1583,35 +1646,64 @@ Primary owner:
 - [API 오류 세부사항](api/error-details.md)
 
 Related references:
-- 없음.
+- [API 오류 코드](api/error-codes.md)
+- [API 오류 우선순위](api/error-precedence.md)
+- [API 오류 처리 경로](api/error-routing.md)
 
 Usage note:
 - 세부사항 보조 값을 최상위 공개 `ErrorCode` 값처럼 쓰지 않습니다.
 
-### dry-run
+### detail helper values
 
 Term:
-- dry-run
+- detail helper values
+- error detail helper values
 
 Korean term:
-- dry-run 미리보기; 사용자 문서에서는 미리보기를 쓸 수 있습니다.
+- 오류 세부사항 보조 값
 
 Type:
-- API 미리보기 용어
+- API 세부사항 용어
 
 Meaning:
-- dry-run은 선택된 동작의 유효한 미리보기 경로입니다.
+- 세부사항 보조 값은 `ToolError.details` 아래에서 쓰이는 중첩 보조 값입니다.
 
 Primary owner:
-- [API 코어 스키마](api/schema-core.md)
+- [API 오류 세부사항](api/error-details.md)
 
 Related references:
-- [API 메서드](api/methods.md)
+- [API 오류 코드](api/error-codes.md)
+- [API 오류 우선순위](api/error-precedence.md)
 - [API 오류 처리 경로](api/error-routing.md)
+
+Usage note:
+- 세부사항 보조 값을 최상위 공개 `ErrorCode` 값처럼 쓰지 않습니다.
+
+### dry-run preview routing
+
+Term:
+- dry-run preview routing
+- `dry_run` preview response branch routing
+
+Korean term:
+- dry-run 미리보기 처리 경로
+
+Type:
+- API 미리보기 처리 용어
+
+Meaning:
+- dry-run 미리보기 처리 경로는 유효한 `dry_run` 미리보기, 미리보기 차단 사유, 미리보기 전 실패가 어느 API 응답 분기로 표현되는지 다룹니다.
+
+Primary owner:
+- [API 오류 처리 경로](api/error-routing.md)
+
+Related references:
+- [API 코어 스키마](api/schema-core.md)
+- [API 메서드](api/methods.md)
 - [저장 효과](storage-effects.md)
 
 Usage note:
-- dry-run 출력은 쓰기를 커밋하거나 담당 기록을 만들거나 차단 사유 상태를 저장하지 않습니다.
+- dry-run 미리보기 처리 경로로 `ToolDryRunResponse` 형태, 메서드별 `dry_run` 지원 여부, 저장 효과를 정의하지 않습니다.
 
 ### blocked result
 
@@ -1653,10 +1745,12 @@ Meaning:
 - 거부 응답은 메서드가 커밋 동작으로 진행하기 전에 실패했다는 뜻입니다.
 
 Primary owner:
-- [API 코어 스키마](api/schema-core.md)
+- [API 오류 처리 경로](api/error-routing.md)
 
 Related references:
-- [API 오류 처리 경로](api/error-routing.md)
+- [API 코어 스키마](api/schema-core.md)
+- [API 오류 코드](api/error-codes.md)
+- [API 오류 우선순위](api/error-precedence.md)
 - [저장 효과](storage-effects.md)
 
 Usage note:

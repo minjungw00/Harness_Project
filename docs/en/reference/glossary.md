@@ -80,14 +80,17 @@ When a card points to a schema, API, storage, security, projection, or runtime c
 | reserved value | 예약된 값 | [Scope](scope.md) |
 | profile-gated value | 프로필 조건부 값 | [Scope](scope.md) |
 | `ErrorCode` | `ErrorCode` | [API error codes](api/error-codes.md) |
+| error code meanings | 공개 오류 코드 의미 | [API error codes](api/error-codes.md) |
+| error precedence | 오류 우선순위 | [API error precedence](api/error-precedence.md) |
 | error routing | 오류 처리 경로 | [API error routing](api/error-routing.md) |
 | blocker routing | 차단 사유 처리 경로 | [API blocker routing](api/blocker-routing.md) |
 | error/blocker boundary | 오류와 차단 사유의 경계 | [API blocker routing](api/blocker-routing.md) |
 | public error as blocker | 공개 오류 코드가 차단 사유로 표현되는 경우 | [API blocker routing](api/blocker-routing.md) |
 | `ToolError.details` | `ToolError.details` | [API error details](api/error-details.md) |
-| dry-run | dry-run 미리보기 | [API Schema Core](api/schema-core.md) |
+| detail helper values | 오류 세부사항 보조 값 | [API error details](api/error-details.md) |
+| dry-run preview routing | dry-run 미리보기 처리 경로 | [API error routing](api/error-routing.md) |
 | blocked result | 차단 결과 | [API error routing](api/error-routing.md) |
-| rejected response | 거부 응답 | [API Schema Core](api/schema-core.md) |
+| rejected response | 거부 응답 | [API error routing](api/error-routing.md) |
 | migration | 마이그레이션 | [Storage Versioning](storage-versioning.md) |
 | lifecycle | 생명주기 | [Core Model](core-model.md) |
 
@@ -1463,6 +1466,60 @@ Related references:
 Usage note:
 - Do not treat public `ErrorCode` values as `CloseReadinessBlocker.category` or `CloseReadinessBlocker.code` values by default.
 
+### error code meanings
+
+Term:
+- error code meanings
+- public error code meanings
+
+Korean term:
+- 공개 오류 코드 의미
+
+Type:
+- API error-code term
+
+Meaning:
+- Error code meanings are the public meanings and allowed occurrence summaries for `ErrorCode` values.
+
+Primary owner:
+- [API error codes](api/error-codes.md)
+
+Related references:
+- [API error precedence](api/error-precedence.md)
+- [API error routing](api/error-routing.md)
+- [API blocker routing](api/blocker-routing.md)
+- [API error details](api/error-details.md)
+
+Usage note:
+- Do not use error-code meanings to choose precedence, route response branches, define `ToolError.details`, or route close-readiness blockers.
+
+### error precedence
+
+Term:
+- error precedence
+- primary public-error selection
+
+Korean term:
+- 오류 우선순위
+
+Type:
+- API error-precedence term
+
+Meaning:
+- Error precedence selects the primary public `ErrorCode` when an error-bearing branch has more than one public error candidate.
+
+Primary owner:
+- [API error precedence](api/error-precedence.md)
+
+Related references:
+- [API error codes](api/error-codes.md)
+- [API error routing](api/error-routing.md)
+- [API blocker routing](api/blocker-routing.md)
+- [API error details](api/error-details.md)
+
+Usage note:
+- Do not use error precedence to define code meanings, response branches, `ToolError.details`, or close-readiness blocker routing.
+
 ### error routing
 
 Term:
@@ -1483,7 +1540,10 @@ Primary owner:
 - [API error routing](api/error-routing.md)
 
 Related references:
-- None.
+- [API error codes](api/error-codes.md)
+- [API error precedence](api/error-precedence.md)
+- [API blocker routing](api/blocker-routing.md)
+- [API error details](api/error-details.md)
 
 Usage note:
 - Do not use error routing for public `ErrorCode` meaning, error precedence, `ToolError.details`, or close-readiness blocker routing.
@@ -1508,6 +1568,9 @@ Primary owner:
 - [API blocker routing](api/blocker-routing.md)
 
 Related references:
+- [API error routing](api/error-routing.md)
+- [API error codes](api/error-codes.md)
+- [API error precedence](api/error-precedence.md)
 - [Core Model](core-model.md)
 - [Close-task method](api/method-close-task.md)
 - [API State Schemas](api/schema-state.md)
@@ -1583,35 +1646,64 @@ Primary owner:
 - [API error details](api/error-details.md)
 
 Related references:
-- None.
+- [API error codes](api/error-codes.md)
+- [API error precedence](api/error-precedence.md)
+- [API error routing](api/error-routing.md)
 
 Usage note:
 - Do not treat detail helper values as top-level public `ErrorCode` values.
 
-### dry-run
+### detail helper values
 
 Term:
-- dry-run
+- detail helper values
+- error detail helper values
 
 Korean term:
-- dry-run 미리보기; user-facing prose may use 미리보기.
+- 오류 세부사항 보조 값
 
 Type:
-- API preview term
+- API detail term
 
 Meaning:
-- Dry-run is a valid preview path for selected operations.
+- Detail helper values are nested helper values used under `ToolError.details`.
 
 Primary owner:
-- [API Schema Core](api/schema-core.md)
+- [API error details](api/error-details.md)
 
 Related references:
-- [API Methods](api/methods.md)
+- [API error codes](api/error-codes.md)
+- [API error precedence](api/error-precedence.md)
 - [API error routing](api/error-routing.md)
+
+Usage note:
+- Do not treat detail helper values as top-level public `ErrorCode` values.
+
+### dry-run preview routing
+
+Term:
+- dry-run preview routing
+- `dry_run` preview response branch routing
+
+Korean term:
+- dry-run 미리보기 처리 경로
+
+Type:
+- API preview-routing term
+
+Meaning:
+- Dry-run preview routing covers which API response branch represents valid `dry_run` previews, preview blockers, and pre-preview failures.
+
+Primary owner:
+- [API error routing](api/error-routing.md)
+
+Related references:
+- [API Schema Core](api/schema-core.md)
+- [API Methods](api/methods.md)
 - [Storage Effects](storage-effects.md)
 
 Usage note:
-- Dry-run output does not commit writes, create owner records, or store blocker state.
+- Do not use dry-run preview routing to define `ToolDryRunResponse` shape, method support for `dry_run`, or storage effects.
 
 ### blocked result
 
@@ -1653,10 +1745,12 @@ Meaning:
 - A rejected response means the method failed before proceeding to the committed operation.
 
 Primary owner:
-- [API Schema Core](api/schema-core.md)
+- [API error routing](api/error-routing.md)
 
 Related references:
-- [API error routing](api/error-routing.md)
+- [API Schema Core](api/schema-core.md)
+- [API error codes](api/error-codes.md)
+- [API error precedence](api/error-precedence.md)
 - [Storage Effects](storage-effects.md)
 
 Usage note:

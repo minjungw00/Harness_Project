@@ -12,7 +12,7 @@ canonical_for:
   - "Terminology boundaries for reserved/profile-gated value presence versus supported behavior."
   - "Terminology boundaries between stable supported documentation contracts and runtime-active or currently applied context."
   - "Terminology boundaries between documentation owner routing and product behavior or storage persistence conditions."
-  - "Terminology routing for API error routing, blocker routing, error/blocker boundaries, public error as blocker wording, and `ToolError.details`."
+  - "Terminology routing for API error-code meanings, error precedence, API response branch routing, blocker routing, dry-run preview routing, public error as blocker wording, `ToolError.details`, and detail helper values."
   - "Artifact and evidence terminology conventions for bilingual documentation."
   - "Terminology routing for evidence collection workflow wording, close-task behavior, and design-quality owner boundaries."
 does_not_own:
@@ -1098,6 +1098,23 @@ terms:
     notes:
       - "Public `ErrorCode` identifiers and error code meanings belong to `api/error-codes.md`."
       - "Public `ErrorCode` values are not `CloseReadinessBlocker.category` values or `CloseReadinessBlocker.code` values by default."
+  error_code_meanings:
+    category: "api_concept"
+    en: "error code meanings"
+    aliases_en:
+      - "public error code meanings"
+    ko_reference: "공개 오류 코드 의미"
+    ko_user: "공개 오류 코드 의미"
+    preserve_as_identifier:
+      - "ErrorCode"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/error-codes.md"
+      ko:
+        - "docs/ko/reference/api/error-codes.md"
+    notes:
+      - "Public error code meanings and allowed occurrence summaries belong to `api/error-codes.md`."
+      - "Response branch routing, error precedence, blocker routing, and `ToolError.details` each have focused owners."
   error_precedence:
     category: "api_concept"
     en: "error precedence"
@@ -1224,6 +1241,27 @@ terms:
     notes:
       - "Use this as boundary wording for the distinction between public `ErrorCode` values and close-readiness blocker data."
       - "Public `ErrorCode` values are not copied into `CloseReadinessBlocker.code` unless the schema or method owner explicitly allows that exact use."
+  dry_run_preview_routing:
+    category: "api_concept"
+    en: "dry-run preview routing"
+    aliases_en:
+      - "`dry_run` preview response branch routing"
+      - "dry-run preview response branch routing"
+    ko_reference: "dry-run 미리보기 처리 경로"
+    ko_user: "미리보기 처리 경로"
+    preserve_as_identifier:
+      - "dry_run"
+      - "ToolDryRunResponse"
+      - "DryRunSummary"
+      - "PlannedBlocker"
+    owner_documents:
+      en:
+        - "docs/en/reference/api/error-routing.md"
+      ko:
+        - "docs/ko/reference/api/error-routing.md"
+    notes:
+      - "Dry-run preview response branch routing belongs to `api/error-routing.md`."
+      - "`ToolDryRunResponse` shape belongs to `api/schema-core.md`; storage effects belong to `storage-effects.md`."
   dry_run:
     category: "api_concept"
     en: "dry-run"
@@ -1237,15 +1275,13 @@ terms:
     owner_documents:
       en:
         - "docs/en/reference/api/schema-core.md"
-        - "docs/en/reference/api/error-routing.md"
-        - "docs/en/reference/storage-effects.md"
       ko:
         - "docs/ko/reference/api/schema-core.md"
-        - "docs/ko/reference/api/error-routing.md"
-        - "docs/ko/reference/storage-effects.md"
     notes:
       - "Dry-run preview is not committed state or stored blocker state."
       - "Preview blockers are `PlannedBlocker`, not `CloseReadinessBlocker`."
+      - "For response branch routing, use the `dry_run_preview_routing` term and `api/error-routing.md`."
+      - "Storage effects for dry-run behavior belong to `storage-effects.md`."
   blocked_result:
     category: "api_concept"
     en: "blocked result"
@@ -1259,17 +1295,12 @@ terms:
     owner_documents:
       en:
         - "docs/en/reference/api/error-routing.md"
-        - "docs/en/reference/api/method-close-task.md"
-        - "docs/en/reference/api/method-prepare-write.md"
-        - "docs/en/reference/storage-effects.md"
       ko:
         - "docs/ko/reference/api/error-routing.md"
-        - "docs/ko/reference/api/method-close-task.md"
-        - "docs/ko/reference/api/method-prepare-write.md"
-        - "docs/ko/reference/storage-effects.md"
     notes:
       - "A blocked result is not a public transport or schema rejection."
       - "`STATE_VERSION_CONFLICT` is a rejected response error, not a blocked-result code."
+      - "Method-specific result fields belong to the affected method owner; storage effects belong to `storage-effects.md`."
   rejected_response:
     category: "api_concept"
     en: "rejected response"
@@ -1281,13 +1312,10 @@ terms:
       - "ErrorCode"
     owner_documents:
       en:
-        - "docs/en/reference/api/schema-core.md"
         - "docs/en/reference/api/error-routing.md"
-        - "docs/en/reference/storage-effects.md"
       ko:
-        - "docs/ko/reference/api/schema-core.md"
         - "docs/ko/reference/api/error-routing.md"
-        - "docs/ko/reference/storage-effects.md"
     notes:
       - "Rejected response means the method did not proceed to the committed operation."
       - "Do not use rejected responses as close blockers or committed blocked results."
+      - "Response shapes belong to `api/schema-core.md`; storage effects belong to `storage-effects.md`."
