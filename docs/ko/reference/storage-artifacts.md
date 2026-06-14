@@ -115,12 +115,17 @@
 - `expires_at`
 - `consumed_by_run_id`, `promoted_artifact_id`, `consumed_at` 같은 소비 사실
 
-Core는 성공한 `harness.stage_artifact` 요청의 `VerifiedSurfaceContext`에서 `created_by_surface_*` 필드를 기록합니다. 소비하는 담당 메서드는 이 필드를 스테이징 행과 대조해야 합니다.
+Core는 성공한 `harness.stage_artifact` 요청의 `VerifiedSurfaceContext`에서 `created_by_surface_*` 필드를 기록합니다.
+
+조건:
+
+- 제출된 `StagedArtifactHandle`이 호환되는 저장된 `artifact_staging` 행이나 동등하게 저장소가 관리하는 스테이징 기록에 대응할 때만, 그 핸들을 스테이징된 아티팩트에 대한 권한 근거로 취급할 수 있습니다.
+- 소비하는 담당 메서드는 저장된 `created_by_surface_*` 필드를 그 스테이징 행과 대조해야 합니다.
 
 허용되지 않는 것:
 
-- 이 필드를 호출자가 제출한 권한 주장으로 취급하면 안 됩니다.
-- 제출된 핸들의 형태가 맞다는 이유만으로 신뢰하면 안 됩니다.
+- `created_by_surface_*` 필드를 호출자가 제출한 권한 주장으로 취급하면 안 됩니다.
+- 제출된 `StagedArtifactHandle` 형태만으로 아티팩트 권한처럼 취급하면 안 됩니다.
 
 허용되는 것:
 

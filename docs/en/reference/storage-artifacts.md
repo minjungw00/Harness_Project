@@ -115,12 +115,17 @@ Tracked facts:
 - `expires_at`
 - consumption facts such as `consumed_by_run_id`, `promoted_artifact_id`, and `consumed_at`
 
-Core records the `created_by_surface_*` fields from the successful `harness.stage_artifact` request's `VerifiedSurfaceContext`. The consuming owner method must check those fields against the staging row.
+Core records the `created_by_surface_*` fields from the successful `harness.stage_artifact` request's `VerifiedSurfaceContext`.
+
+Conditions:
+
+- A submitted `StagedArtifactHandle` can be treated as authority for a staged artifact only when it resolves to a compatible stored `artifact_staging` row or equivalent storage-owned staging record.
+- The consuming owner method must check the stored `created_by_surface_*` fields against that staging row.
 
 Not allowed:
 
-- Do not treat the fields as caller-provided authority claims.
-- A submitted handle must not be trusted merely because it has the right shape.
+- Do not treat the `created_by_surface_*` fields as caller-provided authority claims.
+- Do not treat the submitted `StagedArtifactHandle` shape alone as artifact authority.
 
 Allowed:
 
