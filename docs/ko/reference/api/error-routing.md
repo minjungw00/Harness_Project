@@ -22,7 +22,7 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 - 기계 판독용 오류 세부사항: [API 오류 세부사항](error-details.md).
 - `CloseReadinessBlocker`, `WriteDecisionReason`, `PlannedBlocker`, 공통 분기 형태: [API 상태 스키마](schema-state.md), [API 코어 스키마](schema-core.md). 범주와 enum 형태 값은 [API 값 집합](schema-value-sets.md)이 담당합니다.
 - 닫기 준비 상태 의미와 대체 불가 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
-- 닫기 차단 사유와 API 응답 사이의 경계, 오류와 차단 사유의 경계: [API 차단 사유 처리 경로](blocker-routing.md).
+- 닫기 차단 사유와 API 응답 사이의 경계, 공개 오류 코드가 차단 사유로 표현되는 경우의 경계: [API 차단 사유 처리 경로](blocker-routing.md).
 - `harness.close_task` 메서드별 차단 동작: [`harness.close_task`](method-close-task.md).
 
 ## 오류와 차단 사유
@@ -53,7 +53,7 @@ API 응답 분기를 고를 때 이 문서를 사용합니다. 개별 닫기 차
 - 의미: 유효한 `dry_run` 요청에서 미리 볼 수 있는 진단입니다.
 - 상태 영향: 커밋된 쓰기가 아니며 저장된 차단 사유 상태도 아닙니다.
 
-`ErrorCode` 값은 공개 API 식별자입니다. 닫기 차단 사유와 API 응답 사이의 경계, 오류와 차단 사유의 경계는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다.
+`ErrorCode` 값은 공개 API 식별자입니다. 닫기 차단 사유와 API 응답 사이의 경계, 공개 오류 코드가 차단 사유로 표현되는 경우의 경계는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다.
 
 렌더링 라벨과 메시지는 [템플릿 본문](../template-bodies.md)이 담당하는 표시 문구입니다. API 오류 의미나 차단 사유 의미를 정의하지 않으며, 이 값을 `ErrorCode`, 차단 사유 코드 값, 기계 판독용 `ToolError.details` 키로 사용하면 안 됩니다.
 

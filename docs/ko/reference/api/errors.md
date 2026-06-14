@@ -11,7 +11,7 @@
 | 공개 `ErrorCode` 식별자, 의미, 발생 위치 요약 | [API 오류 코드](error-codes.md) |
 | 주 공개 오류 선택, 우선순위, 오래된 상태 충돌, 멱등성 충돌 동작 | [API 오류 우선순위](error-precedence.md) |
 | 거부 응답, 차단 결과, `dry_run` 미리보기 | [API 오류 처리 경로](error-routing.md) |
-| 닫기 차단 사유와 API 응답 사이의 경계, 오류와 차단 사유의 경계 | [API 차단 사유 처리 경로](blocker-routing.md) |
+| 닫기 차단 사유와 API 응답 사이의 경계, 공개 오류 코드가 차단 사유로 표현되는 경우의 경계 | [API 차단 사유 처리 경로](blocker-routing.md) |
 | `harness.close_task` 메서드별 차단 동작 | [`harness.close_task`](method-close-task.md) |
 | `ToolError.details`, 세부 필드, 보조 값, 기계 판독용 세부사항 제약 | [API 오류 세부사항](error-details.md) |
 

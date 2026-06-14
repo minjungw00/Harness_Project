@@ -260,7 +260,7 @@ write_decision_reasons:
 
 이 사유는 `harness.prepare_write` 판단 사유입니다. 아래 항목이 아닙니다.
 
-- 닫기 준비 상태 평가 결과.
+- 닫기 차단 사유.
 - `CloseReadinessBlocker[]`.
 - 닫기 차단 사유 기록.
 
