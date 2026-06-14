@@ -1,8 +1,10 @@
 # Translation guide
 
-Use this guide when editing paired English and Korean Harness documentation. This guide is only a documentation-maintenance standard. It is not runtime conformance, implementation authority, a QA result, an acceptance decision, close-readiness state, or a generated Harness artifact.
+Use this guide when editing paired English and Korean Harness documentation. This guide owns bilingual semantic parity, Korean prose quality, identifier preservation guidance, product-label naming guidance, mixed-language Korean style rules, and hidden-anchor practice.
 
-The canonical terminology map is [`docs/terminology-map.yaml`](../../terminology-map.yaml). Check it before adding or changing product terms, Korean prose terms, identifier explanations, or mixed-language bans. If this guide and the terminology map disagree, stop and align them in the same documentation batch.
+This guide is only a documentation-maintenance standard. It is not a product reference, API behavior document, storage-effect document, owner-routing index, runtime conformance result, implementation authority, QA result, acceptance decision, close-readiness state, or generated Harness artifact.
+
+The canonical terminology map is [`docs/terminology-map.yaml`](../../terminology-map.yaml). Check it before adding or changing product terms, Korean prose terms, identifier explanations, product labels, or mixed-language bans. If this guide and the terminology map disagree, stop and align them in the same documentation batch.
 
 ## 1. Semantic parity
 
@@ -18,85 +20,58 @@ Semantic parity requires:
 - the same treatment of owner references already present in the paired material
 - the same treatment of user-judgment, evidence, verification, acceptance, and residual-risk boundaries already present in the paired material
 - the same treatment of security guarantee wording already present in the paired material
-- the same exact identifiers
+- the same exact identifiers and exact product labels where they are named
 
 Do not finish a meaning-changing batch with only one language updated. If Korean editing exposes an English problem, fix the English too. If English editing introduces a product concept, add the natural Korean equivalent in the paired Korean document during the same batch.
+
+Do not add Korean-only structure just to make a sentence feel more organized. Labels such as `조건`, `결과`, `비주장`, or `허용되지 않는 것` belong in Korean only when the English document has the same meaning unit, such as a condition, result, non-claim, or not-allowed clause. Korean can express that unit with natural wording, but it must not create a new rule, exception, warning, or prohibition that the English page does not carry.
 
 ## 2. Document pair and route parity
 
 Every major maintained page should have an English/Korean pair at the matching route under `docs/en/` and `docs/ko/`. Paired documents do not need matching line numbers, but they must keep matching scope and reader intent.
 
-Route and navigation text must use the compact maintained structure:
-
-- `docs/doc-index.yaml`
-- `docs/*/start.md`
-- `docs/*/use/user-guide.md`
-- `docs/*/use/agent-guide.md`
-- `docs/*/use/judgment-examples.md`
-- `docs/*/build/implementation-guide.md`
-- `docs/*/reference/README.md`
-- `docs/*/maintain/authoring-guide.md`
-- `docs/*/maintain/translation-guide.md`
-- `docs/*/maintain/checks.md`
-- `docs/*/maintain/checks/*.md`
-
-Owner lookup belongs to the Authoring Guide and `docs/doc-index.yaml`. In translation work, preserve existing owner references by meaning and do not add contract detail to this guide.
+Preserve route and owner references that already exist in the paired material by meaning. Do not use this guide to recreate full owner maps, API method maps, storage-effect summaries, schema field tables, or product contract text. Owner lookup belongs to the [Authoring Guide](authoring-guide.md), [`docs/doc-index.yaml`](../../doc-index.yaml), and the applicable reference owner.
 
 During normal agent work, load only one language for the same `doc_id`. Load both languages only for translation, parity review, or a bilingual edit where comparison is necessary.
 
-## 3. Identifier preservation
+## 3. Identifiers, labels, and ordinary concepts
 
-`docs/terminology-map.yaml` owns the systematic identifier classes, exact identifier lists, and exact product labels. Preserve those values unchanged in English and Korean. Put code-like, schema-like, route-like, or search-critical values in backticks when they appear in prose.
+`docs/terminology-map.yaml` owns the systematic identifier classes, exact identifier lists, product labels that require exact naming, and mixed-language Korean expressions to avoid. Preserve those values unchanged in English and Korean. Put code-like, schema-like, route-like, or search-critical values in backticks when they appear in prose.
 
-Do not translate exact strings inside code blocks, schema examples, API examples, file paths, field lists, literal-value tables, or machine-readable metadata. Localized Korean display labels are reader-facing text; they do not replace canonical identifiers.
+Do not translate exact strings inside code blocks, schema examples, API examples, file paths, field lists, literal-value tables, or machine-readable metadata. Localized Korean display labels are reader-facing text; they do not replace canonical identifiers or exact product labels.
 
 Use this distinction:
 
-- Identifier: `ArtifactRef`
-- Korean explanation: 아티팩트 참조 스키마
-- Prose term: 아티팩트
+- Exact identifier: `ArtifactRef`
+- Korean explanation of the identifier: 아티팩트 참조 스키마
+- Ordinary prose concept: 아티팩트
+- Exact product label: `Product Repository`, `Harness Runtime Home`, `Projection`, or `Write Authorization` when naming the label itself
+- Korean reader-facing prose: 제품 저장소, 런타임 홈, 상태 보기, or 쓰기 권한 부여 when the exact label is not the subject
 
 Some English words can be both code values and ordinary adjectives. Determine the context before preserving the word. Preserve `complete` in backticks only when it is an identifier, such as `intent=complete`. When the English means full or entire, English prose should prefer "full" or "entire" and Korean prose should use natural phrases such as 전체, 전체 평가, or 전체 평가 순서.
 
-## 4. Product concept terminology
+## 4. Recurring term choices
 
-Use [docs/terminology-map.yaml](../../terminology-map.yaml) as the canonical terminology map for product concepts and mixed-language bans. This guide gives prose-level translation guidance; the map is the machine-readable control file.
+Use [docs/terminology-map.yaml](../../terminology-map.yaml) as the canonical terminology map for product concepts, product labels, and mixed-language bans. This section is a prose style aid, not an owner route, glossary card, or product contract summary.
 
-Use one Korean term for one concept unless the terminology map explicitly distinguishes user-facing and reference-facing wording. This table is a prose style aid, not an owner route or product contract.
+Use one Korean term for one concept unless the terminology map explicitly distinguishes user-facing and reference-facing wording. When a term is missing, add it to the terminology map before spreading a new variant across the docs.
 
-| English concept | Korean reference prose | Korean user-facing or style note |
+Common choices:
+
+| English concept | Korean prose | Note |
 |---|---|---|
-| close readiness | 닫기 준비 상태 | 닫기 가능 여부 in user-facing explanations |
-| close readiness evaluation | 닫기 준비 상태 평가 | Avoid mixed close/가능성 wording. |
-| close task | Task 닫기 | Use `harness.close_task` only for the exact method identifier. |
-| close-readiness blocker | 닫기 차단 사유 | Use `CloseReadinessBlocker` only for the schema identifier. |
-| blocker category | 차단 사유 범주 | Use `CloseReadinessBlocker.category` only for the exact field. |
-| full or entire evaluation order | 전체 평가 순서 | Use 전체 닫기 준비 상태 평가 순서 in close-readiness context. |
-| artifact | 아티팩트 | Preserve exact artifact schema identifiers. |
-| evidence | 증거 | Preserve exact evidence schema identifiers. |
-| surface | 접점 | Preserve exact surface identifiers. |
-| active surface context | 현재 적용 접점 맥락 | Preserve `VerifiedSurfaceContext` when naming the identifier. |
-| lifecycle | 생명주기 | Leave lifecycle in English only when it is an identifier. |
-| projection | 상태 보기 | Use `Projection` when the exact Harness label matters. |
-| user-owned judgment | 사용자 소유 판단 | 사용자 판단 may fit user-facing prose. |
-| sensitive-action approval | 민감 동작 승인 | Keep `Write Authorization` as the exact label when that label is named. |
-| cooperative guarantee | 협력형 보장 | Use the same guarantee-strength wording as the source. |
-| detective guarantee | 탐지형 보장 | Use the same guarantee-strength wording as the source. |
-| baseline scope | 기준 범위 | Keep distinct from 현재 적용 범위. |
+| baseline scope | 기준 범위 | Keep distinct from currently applied scope. |
 | supported scope | 지원 범위 | 지원되는 범위 may be more natural as a modifier. |
-| supported behavior | 지원 동작 | Keep distinct from currently applied runtime state. |
-| active scope | 현재 적용 범위 | Preserve exact identifiers when present. |
-| active Change Unit | 현재 적용 Change Unit | Keep Change Unit as the product term. |
-| owner document | 담당 문서 | Use for documentation ownership prose. |
-| owner contract | 담당 계약 | 담당 문서가 정의한 계약 may be clearer in prose. |
-| applicable owner path | 적용되는 담당 경로 | Use for documentation-routing prose. |
-| applicable reference | 적용되는 참조 문서 | Use when the sentence points to a reference document. |
-| error routing | 오류 처리 경로 | Use exact owner paths only when naming paths. |
-| blocker routing | 차단 사유 처리 경로 | Avoid blocker 라우팅 in Korean prose. |
 | out-of-scope capability | 지원 범위 밖 기능 | Keep the Korean term concept-first. |
-| migration | 마이그레이션 | Use for technical migration contexts. |
-
-When a term is missing, add it to the terminology map before spreading a new variant across the docs.
+| evidence | 증거 | Preserve exact evidence schema identifiers. |
+| artifact | 아티팩트 | Preserve exact artifact schema identifiers. |
+| blocker | 차단 사유 | Use 닫기 차단 사유 for close-readiness blocker prose. |
+| owner document | 담당 문서 | Use for documentation ownership prose. |
+| applicable owner path | 적용되는 담당 경로 | Use only for documentation-routing prose. |
+| surface | 접점 | Preserve exact surface identifiers such as `surface_id`. |
+| projection | 상태 보기 | Use `Projection` only when the exact label matters. |
+| close readiness | 닫기 준비 상태 | User-facing prose may use 닫기 가능 여부. |
+| user-owned judgment | 사용자 소유 판단 | 사용자 판단 may fit user-facing prose. |
 
 ## 5. General prose translation
 
@@ -140,9 +115,11 @@ Do not mirror English sentence order when it produces stiff translationese. It i
 
 Visible Korean headings should be natural Korean. Do not keep an English heading visible only to preserve an existing link. Use the hidden anchor policy instead.
 
+When Korean uses named blocks, bullets, or tables for readability, compare them with the English meaning units. Korean may expose an existing condition, result, exception, non-claim, or prohibition more naturally, but it must not add a Korean-only structural claim such as `조건`, `결과`, `비주장`, or `허용되지 않는 것` when the paired English text has no corresponding meaning unit.
+
 ## 7. Hidden anchor policy
 
-Stable English anchors may be needed for existing links, old references, or external bookmarks. Preserve those anchors with hidden HTML anchors before a natural Korean heading.
+Stable English anchors may be needed for existing links or external bookmarks. Preserve those anchors with hidden HTML anchors before a natural Korean heading.
 
 Use this pattern:
 
@@ -193,9 +170,9 @@ The following patterns are forbidden in Korean prose unless they appear inside a
 | complete 평가 순서 | 전체 평가 순서 |
 | `complete` 닫기 준비 상태 순서 | 전체 닫기 준비 상태 평가 순서 |
 | complete 닫기 준비 상태 순서 | 전체 닫기 준비 상태 평가 순서 |
-| artifact 저장 | 아티팩트 저장, or 아티팩트를 저장 |
+| artifact 저장 | 아티팩트 저장소, or 아티팩트를 저장 when the action is meant |
 | artifact bytes | 아티팩트 본문 바이트 |
-| evidence 기록 | 증거 기록 |
+| evidence 기록 | 증거 기록, or an exact identifier such as `EvidenceSummary` when naming one |
 | evidence summary | 증거 요약, or `EvidenceSummary` when naming the schema |
 | evidence collection workflow | 증거 수집 흐름 |
 | staged handle | 스테이징된 아티팩트 핸들, or `StagedArtifactHandle` when naming the identifier |
@@ -206,7 +183,6 @@ The following patterns are forbidden in Korean prose unless they appear inside a
 | close blocker를 확인한다 | 닫기 차단 사유를 확인한다 |
 | blocker 처리 경로 | 차단 사유 처리 경로 |
 | blocker 라우팅 | 차단 사유 처리 경로 |
-| migration = 이전 선택 | technical migration context: 마이그레이션 |
 
 Mixed English/Korean may be correct when the English part is an identifier, for example `ArtifactRef`를 보존한다 or `surface_id` 필드를 보존한다. When the English part is ordinary prose, translate it.
 
