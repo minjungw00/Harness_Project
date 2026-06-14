@@ -17,28 +17,20 @@
 
 - `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, `ToolDryRunResponse`의 공통 스키마 본문
 - 상태, 아티팩트, 사용자 판단, 값 집합, 오류의 중첩 스키마 정의
-- 닫기 차단 사유와 API 응답 분기 사이의 차단 사유 처리 경로
-- 차단 사유 범주 값의 정의. `CloseReadinessBlocker.category`가 여기에 포함됩니다.
+- 닫기 차단 사유와 API 응답 분기 사이의 처리 경로, 차단 사유 범주 값의 정의, 표시 문구
 - 저장 DDL, 저장 기록 레이아웃, 아티팩트 생명주기, 보안 보장, Core 제품 의미
 
 ## 목적
 
-현재 적용 `Task`의 닫기 준비 상태를 평가합니다.
+목적: `harness.close_task`는 현재 적용 `Task`의 닫기 준비 상태를 평가합니다.
 
-조건:
+요청 조건: 선택한 `intent`가 상태 변경을 허용하고 닫기 차단 사유가 없을 때만 종료 상태 변경을 할 수 있습니다.
 
-- 선택한 `intent`가 상태 변경을 허용합니다.
-- 닫기 차단 사유가 없습니다.
+결과: 이 메서드는 읽기 전용 닫기 준비 상태 관찰을 반환하거나, `intent=complete`, `intent=cancel`, `intent=supersede`를 커밋하거나, `CloseTaskResult.blockers`에 닫기 차단 사유를 반환할 수 있습니다.
 
-결과:
+비주장: 닫기는 Core 상태 전이이며 보고서가 아닙니다. 대화, 상태 텍스트, 최종 수락만, 잔여 위험 수락만, 증거만, 렌더링된 보기에서 닫기를 추론하지 않습니다.
 
-- `intent=complete`, `intent=cancel`, `intent=supersede`를 커밋할 수 있습니다.
-- `harness.close_task`는 닫기 차단 사유를 반환할 수 있습니다.
-
-비주장:
-
-- 닫기는 Core 상태 전이이며 보고서가 아닙니다.
-- 대화, 상태 텍스트, 최종 수락만, 잔여 위험 수락만, 증거만, 렌더링된 보기에서 닫기를 추론하지 않습니다.
+담당 경계: 이 문서는 `harness.close_task`의 메서드별 요청 조건, 결과 분기, 평가 순서, 차단 사유 생성 분기를 담당합니다. 닫기 차단 사유와 API 응답 분기 사이의 처리 경로는 [API 차단 사유 처리 경로](blocker-routing.md)가 담당합니다. `CloseReadinessBlocker` 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes), API 값 이름은 [API 값 집합](schema-value-sets.md#state-and-blocker-values), 닫기 준비 상태 권한은 [Core 모델의 닫기 준비 상태](../core-model.md#close_task), 표시 문구는 [템플릿 본문](../template-bodies.md)이 담당합니다.
 
 ## 필수 입력
 
@@ -307,6 +299,7 @@ next_actions:
 - `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary` 형태: [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes).
 - 닫기 상태, 생명주기, 닫기 이유, 차단 사유 범주 값(`CloseReadinessBlocker.category`): [API 값 집합](schema-value-sets.md#state-and-blocker-values).
 - 닫기 준비 상태 의미와 정직한 닫기: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
+- 표시 라벨과 렌더링된 문구: [템플릿 본문](../template-bodies.md).
 - 공개 `ErrorCode` 의미: [API 오류 코드](error-codes.md).
 - 거부 응답 분기 경로: [API 오류 처리 경로](error-routing.md).
 - 닫기 차단 사유와 API 응답 분기 사이의 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md).

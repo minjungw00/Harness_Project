@@ -17,16 +17,20 @@ This document does not own:
 
 - common `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, or `ToolDryRunResponse` schema bodies
 - nested state, artifact, judgment, value-set, or error schema definitions
-- close-readiness blocker/API response routing or blocker category value definitions
+- close-readiness blocker/API response routing, blocker category value definitions, or display wording
 - storage DDL, storage record layouts, artifact lifecycle, security guarantees, or Core product meaning
 
 ## Purpose
 
-Evaluate close readiness for an active Task.
+Purpose: `harness.close_task` evaluates close readiness for an active `Task`.
 
-Terminal mutation is allowed only when the selected intent permits mutation and blockers are absent. The method may commit `intent=complete`, `intent=cancel`, or `intent=supersede`, and it may return close blockers.
+Request condition: Terminal mutation is allowed only when the selected `intent` permits mutation and blockers are absent.
 
-Close is a Core state transition, not a report. Close is not inferred from chat, status text, acceptance alone, residual-risk acceptance alone, evidence alone, or a rendered view.
+Result: The method can return a read-only close-readiness observation, commit `intent=complete`, `intent=cancel`, or `intent=supersede`, or return close blockers in `CloseTaskResult.blockers`.
+
+Non-claim: Close is a Core state transition, not a report. Close is not inferred from chat, status text, acceptance alone, residual-risk acceptance alone, evidence alone, or a rendered view.
+
+Owner boundary: This document owns method-specific request conditions, result branches, evaluation order, and blocker-producing branches for `harness.close_task`. Close-readiness blocker/API response routing belongs to [API blocker routing](blocker-routing.md). `CloseReadinessBlocker` shape belongs to [API State Schemas](schema-state.md#close-readiness-and-validation-shapes), API value names belong to [API Value Sets](schema-value-sets.md#state-and-blocker-values), close-readiness authority belongs to [Core Model close readiness](../core-model.md#close_task), and display wording belongs to [Template Bodies](../template-bodies.md).
 
 ## Required inputs
 
@@ -92,7 +96,10 @@ Conditions:
 - the method reaches read-only close-readiness observation or terminal-path evaluation
 - the requested path has one or more close or terminal blockers
 
-The method may return `CloseTaskResult(close_state=blocked)` with `blockers: CloseReadinessBlocker[]`. Mutating intents may persist blocker-state effects only when this method's state-version rules and the storage-effect owner allow that committed blocked result.
+Result:
+
+- The method may return `CloseTaskResult(close_state=blocked)` with `blockers: CloseReadinessBlocker[]`.
+- Mutating intents may persist blocker-state effects only when this method's state-version rules and the storage-effect owner allow that committed blocked result.
 
 Method-specific blocker-producing branches:
 
@@ -292,6 +299,7 @@ next_actions:
 - `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, and `StateSummary` shapes: [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
 - Close state, lifecycle, close reason, and `CloseReadinessBlocker.category` values: [API Value Sets](schema-value-sets.md#state-and-blocker-values).
 - Close-readiness meaning and close honesty: [Core Model close readiness](../core-model.md#close_task).
+- Display labels and rendered wording: [Template Bodies](../template-bodies.md).
 - Public `ErrorCode` meanings: [API error codes](error-codes.md).
 - Rejected-response branch routing: [API error routing](error-routing.md).
 - Close-readiness blocker/API response routing semantics: [API blocker routing](blocker-routing.md).
