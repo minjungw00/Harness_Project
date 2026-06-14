@@ -812,11 +812,11 @@ terms:
       - "`complete` 닫기 준비 상태 순서"
       - "complete 닫기 준비 상태 순서"
     primary_owner:
-      en: "docs/en/maintain/translation-guide.md"
-      ko: "docs/ko/maintain/translation-guide.md"
+      en: "docs/terminology-map.yaml"
+      ko: "docs/terminology-map.yaml"
     related_references:
-      - en: "docs/en/reference/glossary.md"
-        ko: "docs/ko/reference/glossary.md"
+      - en: "docs/en/maintain/translation-guide.md"
+        ko: "docs/ko/maintain/translation-guide.md"
     notes:
       - "Do not preserve the English word `complete` when it means full or entire rather than an enum value."
       - "Use 전체, 전체 평가, or 전체 평가 순서 for ordinary prose meaning."

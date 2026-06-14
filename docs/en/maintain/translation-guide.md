@@ -48,7 +48,7 @@ Use this distinction:
 - Exact product label: `Product Repository`, `Harness Runtime Home`, `Projection`, or `Write Authorization` when naming the label itself
 - Korean reader-facing prose: 제품 저장소, 런타임 홈, 상태 보기, or 쓰기 권한 부여 when the exact label is not the subject
 
-Some English words can be both code values and ordinary adjectives. Determine the context before preserving the word. Preserve `complete` in backticks only when it is an identifier, such as `intent=complete`. When the English means full or entire, English prose should prefer "full" or "entire" and Korean prose should use natural phrases such as 전체, 전체 평가, or 전체 평가 순서.
+Some English words can be both code values and ordinary adjectives. Determine the context before preserving the word. Preserve `complete` in backticks only when it is an identifier, such as `intent=complete`. When the English means full or entire, English prose should prefer "full" or "entire" and Korean prose should use the terminology map's ordinary-prose replacement.
 
 ## 4. Recurring terminology
 
@@ -56,25 +56,15 @@ Use [`docs/terminology-map.yaml`](../../terminology-map.yaml) as the canonical t
 
 Use one Korean expression for one concept unless the terminology map intentionally distinguishes user-facing and reference-facing wording. When a durable term is missing, add it to the terminology map before spreading a new variant across the docs.
 
-Common choices:
+Use the map fields for term-specific choices:
 
-| English concept | Korean prose | Style note |
-|---|---|---|
-| scope | 범위 | Use the more specific term when the source distinguishes it. |
-| baseline scope | 기준 범위 | Keep distinct from currently applied scope. |
-| supported scope | 지원 범위 | 지원되는 범위 may be more natural as a modifier. |
-| out-of-scope capability | 지원 범위 밖 기능 | Keep the Korean term concept-first. |
-| evidence | 증거 | Preserve exact evidence identifiers such as `EvidenceSummary`. |
-| artifact | 아티팩트 | Preserve exact artifact identifiers such as `ArtifactRef`. |
-| blocker | 차단 사유 | Use 닫기 차단 사유 when the blocker is specifically close-related. |
-| blocker category | 차단 사유 범주 | Preserve `CloseReadinessBlocker.category` when naming the exact field. |
-| blocker routing | 차단 사유 처리 경로 | Use for the prose routing concept; preserve exact identifiers. |
-| owner document | 담당 문서 | Use only for documentation ownership prose. |
-| applicable owner path | 적용되는 담당 경로 | Use only for documentation-routing prose. |
-| surface | 접점 | Preserve exact surface identifiers such as `surface_id`. |
-| projection | 상태 보기 | Use `Projection` only when the exact label matters. |
-| close readiness | 닫기 준비 상태 | User-facing prose may use 닫기 가능 여부. |
-| user-owned judgment | 사용자 소유 판단 | 사용자 판단 may fit user-facing prose. |
+- `ko_reference` for reference-facing Korean.
+- `ko_user` for user-facing Korean.
+- `ko_contextual` and `ko_explanation` for context-specific wording and identifier explanations.
+- `preserve_identifier`, `preserve_as_identifier`, and `preserve_as_label` for exact strings that stay English.
+- `avoid_ko` and top-level `avoid.ko` for searchable Korean mixed-language expressions to replace.
+
+Do not copy the terminology map's preferred-expression or avoid-expression lists into this guide or the glossary. Add a glossary row only when readers need a compact term meaning and primary owner, not merely to preserve a translation choice.
 
 ## 5. Translating ordinary prose
 
@@ -90,18 +80,7 @@ Use English unchanged only when it is:
 
 Avoid "English noun + Korean particle" when the English noun is not an identifier. Prefer a Korean concept first, then add the exact English value only if the reader needs contract precision or searchability.
 
-Examples:
-
-| Avoid | Use |
-|---|---|
-| artifact를 저장한다 | 아티팩트를 저장한다 |
-| evidence를 기록한다 | 증거를 기록한다 |
-| surface에서 보인다 | 접점에서 보인다 |
-| lifecycle 의미 | 생명주기 의미, or 생명주기의 뜻 |
-| staged handle을 전달한다 | 스테이징된 아티팩트 핸들을 전달한다 |
-| close blocker를 확인한다 | 닫기 차단 사유를 확인한다 |
-| blocker 라우팅 | 차단 사유 처리 경로 |
-| `complete` 평가 순서 | 전체 평가 순서 when the meaning is the full order |
+Use the terminology map for concrete replacements. For example, strings such as `artifact 저장` and `blocker 라우팅` belong in the map-owned avoid list; do not recreate that list here.
 
 ## 6. Korean technical writing style
 
@@ -143,22 +122,9 @@ When changing headings in one language, check paired-language links and anchors 
 
 User-facing docs explain what the reader can decide, expect, or do. Reference-facing docs define the contracts they own. Korean terminology may differ by audience while preserving the same meaning.
 
-Use user-facing Korean when the reader needs a plain operational meaning:
+Use the terminology map's `ko_user` field when the reader needs a plain operational meaning. Use `ko_reference` when a page names or defines a maintained concept. Use `ko_reference_first_reference`, `ko_explanation`, or related explanation fields when the exact label or identifier matters.
 
-- 닫기 가능 여부
-- 확인한 것
-- 다음 안전한 행동
-- 사용자가 판단할 부분
-- 하네스가 확인할 수 있는 수준
-
-Use reference-facing Korean when the page names or defines a maintained concept:
-
-- 닫기 준비 상태
-- 닫기 준비 상태 평가
-- 닫기 차단 사유
-- 사용자 소유 판단
-- 증거 요약
-- `Projection`(읽기 전용 상태 보기) on first reference when the exact label matters
+Do not maintain a second audience-specific term list in this guide. Put durable audience distinctions in the terminology map, then use the glossary only for compact human-readable term meanings.
 
 Do not expose raw enum names or schema fields as user-facing labels unless the exact raw value is the subject. A Korean display label is localized text, not a replacement for the canonical value.
 
