@@ -381,9 +381,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/scope.md"
       ko: "docs/ko/reference/scope.md"
-    related_references:
-      - en: "docs/en/reference/glossary.md"
-        ko: "docs/ko/reference/glossary.md"
+    related_references: []
     notes:
       - "Use this wording for evidence collection workflows only as terminology or out-of-scope capability wording unless Scope and the affected owners define support."
       - "Do not use collection-output or index wording as a named artifact unless it is an exact supported identifier."
@@ -399,9 +397,7 @@ terms:
     primary_owner:
       en: "docs/en/reference/scope.md"
       ko: "docs/ko/reference/scope.md"
-    related_references:
-      - en: "docs/en/reference/glossary.md"
-        ko: "docs/ko/reference/glossary.md"
+    related_references: []
     notes:
       - "This is an excluded capability family until Scope and the affected existing owner documents define a supported contract."
       - "Do not define workflow outputs, storage records, or close-readiness behavior from this phrase."
@@ -457,9 +453,7 @@ terms:
     primary_owner:
       en: "docs/en/maintain/authoring-guide.md"
       ko: "docs/ko/maintain/authoring-guide.md"
-    related_references:
-      - en: "docs/en/reference/glossary.md"
-        ko: "docs/ko/reference/glossary.md"
+    related_references: []
     notes:
       - "Use when a product behavior or close effect depends on the contract defined by the relevant owner document."
       - "Korean may use 담당 문서가 정의한 계약 when that is clearer than 담당 계약."
@@ -494,8 +488,6 @@ terms:
     related_references:
       - en: "docs/en/maintain/authoring-guide.md"
         ko: "docs/ko/maintain/authoring-guide.md"
-      - en: "docs/en/reference/glossary.md"
-        ko: "docs/ko/reference/glossary.md"
     notes:
       - "Use when prose needs to point product behavior to the reference document that defines the relevant contract."
       - "This is documentation routing shorthand; it is not a runtime record, state value, or storage condition."
@@ -529,12 +521,10 @@ terms:
     related_references:
       - en: "docs/en/maintain/authoring-guide.md"
         ko: "docs/ko/maintain/authoring-guide.md"
-      - en: "docs/en/reference/glossary.md"
-        ko: "docs/ko/reference/glossary.md"
     notes:
       - "This means the owner does not exist as a baseline contract owner before promotion."
       - "Do not name a missing owner as if it is an existing canonical owner."
-      - "Scope applies the baseline boundary; the glossary gives the term-level definition."
+      - "Scope applies the baseline boundary; the terminology map keeps the structured term record."
   owner_placeholder:
     category: "documentation_concept"
     en: "owner placeholder"
@@ -806,8 +796,6 @@ terms:
     related_references:
       - en: "docs/en/reference/api/method-close-task.md"
         ko: "docs/ko/reference/api/method-close-task.md"
-      - en: "docs/en/reference/glossary.md"
-        ko: "docs/ko/reference/glossary.md"
     notes:
       - "The prose concept is complete intent; only the value string is `complete`."
       - "Preserve only when it is an enum value or identifier, such as `intent=complete`."
