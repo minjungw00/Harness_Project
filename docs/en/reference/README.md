@@ -2,7 +2,7 @@
 
 Use this index to choose the owner document for a Harness reference question. This README is the human-readable reference owner index: it points to owners and does not define glossary term meanings, API contracts, schemas, storage effects, security guarantees, or scope.
 
-For compact term meanings, use the [Glossary](glossary.md). For machine-readable owner routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml). For structured bilingual terminology metadata and identifier controls, use [`docs/terminology-map.yaml`](../../terminology-map.yaml).
+For selected core term meanings, use the [Glossary](glossary.md). For machine-readable owner routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml). For complete structured terminology metadata, bilingual wording controls, and identifier controls, use [`docs/terminology-map.yaml`](../../terminology-map.yaml).
 
 ## Product and system owners
 
@@ -12,8 +12,8 @@ For compact term meanings, use the [Glossary](glossary.md). For machine-readable
 | Core authority, product concepts, user-owned judgment, and close-readiness authority concepts | [`core-model.md`](core-model.md) |
 | Runtime and repository boundaries | [`runtime-boundaries.md`](runtime-boundaries.md) |
 | Security wording and guarantee semantics | [`security.md`](security.md) |
-| Term meanings | [`glossary.md`](glossary.md) |
-| Structured terminology metadata and identifier controls | [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
+| Selected core term guide | [`glossary.md`](glossary.md) |
+| Complete structured terminology metadata and identifier controls | [`docs/terminology-map.yaml`](../../terminology-map.yaml) |
 | Implementation entry route | [`../build/implementation-guide.md`](../build/implementation-guide.md) |
 
 ## API and schema owners
@@ -77,5 +77,5 @@ For compact term meanings, use the [Glossary](glossary.md). For machine-readable
 | Documentation authoring rules | [`../maintain/authoring-guide.md`](../maintain/authoring-guide.md) |
 | Documentation checks index | [`../maintain/checks.md`](../maintain/checks.md) |
 | Bilingual terminology and Korean style guidance | [`../maintain/translation-guide.md`](../maintain/translation-guide.md) |
-| Human-readable term meanings | [`glossary.md`](glossary.md) |
-| Structured terminology metadata | [`../../terminology-map.yaml`](../../terminology-map.yaml) |
+| Selected core term guide | [`glossary.md`](glossary.md) |
+| Complete structured terminology metadata | [`../../terminology-map.yaml`](../../terminology-map.yaml) |

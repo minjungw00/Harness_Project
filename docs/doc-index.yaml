@@ -358,9 +358,9 @@ documents:
     path_ko: "docs/ko/reference/glossary.md"
     role: "reference"
     owner_for:
-      - "compact human-readable term meanings for included terms"
-      - "curated glossary subset"
-      - "term-level primary owner links for included terms"
+      - "compact human-readable term guidance for selected core terms"
+      - "curated reader-facing glossary subset"
+      - "term-level primary owner links for selected glossary terms"
     not_owner_for:
       - "complete structured term inventory"
       - "full reference owner index"
