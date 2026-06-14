@@ -18,6 +18,11 @@ canonical_for:
   - "Terminology boundaries for reserved/profile-gated value presence versus supported behavior."
   - "Terminology boundaries between stable supported documentation contracts and runtime-active or currently applied context."
   - "Terminology boundaries between documentation owner routing and product behavior or storage persistence conditions."
+  - "Terminology distinction that Harness is the local work-authority product/system for AI-assisted product work, while Core is the local authority record for Harness state."
+  - "Terminology boundaries among Harness, Core, Harness Server, `Harness Runtime Home`, and `Product Repository`."
+  - "Preferred current-runtime-context wording for current scope, currently applied scope, current Change Unit, and current surface context."
+  - "Terminology boundaries among `Write Authorization`, write approval, sensitive-action approval, final acceptance, residual-risk acceptance, and user-owned judgment."
+  - "Preferred verification criteria wording for user-visible criteria used to check work."
   - "Terminology routing for API error-code meanings, error precedence, API response branch routing, blocker routing, dry-run preview routing, public error as blocker wording, `ToolError.details`, and error detail helper values."
   - "Artifact and evidence terminology conventions for bilingual documentation."
   - "Terminology routing for evidence collection workflow wording, close-task behavior, and design-quality owner boundaries."
@@ -65,6 +70,7 @@ term_entry_schema:
     - "preserve_identifier"
     - "preserve_as_identifier"
     - "preserve_as_label"
+    - "avoid_en"
     - "avoid_ko"
     - "notes"
   preferred_expression_fields:
@@ -81,9 +87,11 @@ term_entry_schema:
     - "preserve_as_identifier"
     - "preserve_as_label"
   avoid_expression_fields:
+    - "avoid.en"
     - "avoid.ko"
+    - "avoid_en"
     - "avoid_ko"
-  avoid_expression_rule: "Use top-level `avoid.ko` for shared searchable avoid expressions; use term-level `avoid_ko` only for term-local expressions not already represented there."
+  avoid_expression_rule: "Use top-level `avoid.en` and `avoid.ko` for shared searchable avoid expressions; use term-level `avoid_en` or `avoid_ko` only for term-local expressions not already represented there."
   field_types:
     category: "string term type"
     en: "string preferred English term"
@@ -100,6 +108,7 @@ term_entry_schema:
     preserve_as_label: "list of exact product-label strings"
     primary_owner: "language path pair for one focused owner document"
     related_references: "list of language path pairs for adjacent documents"
+    avoid_en: "term-local list of searchable English expressions to avoid; use only when the expression is not already represented in top-level `avoid.en`"
     avoid_ko: "term-local list of searchable Korean expressions to avoid; use only when the expression is not already represented in top-level `avoid.ko`"
     notes: "list of strings for terminology checks and maintenance routing"
   field_semantics:
@@ -169,16 +178,48 @@ identifier_preservation:
     - "VerifiedSurfaceContext"
     - "VerifiedSurfaceContext.access_class"
     - "access_class"
+    - "active_change_unit_ref"
     - "state_version"
+    - "status=active"
     - "Task.lifecycle_phase"
     - "artifact_staging.status"
   product_labels:
     - "Product Repository"
     - "Harness Runtime Home"
+    - "Harness Server"
     - "Projection"
     - "Write Authorization"
 avoid:
+  en:
+    - phrase: "Harness is a local authority record"
+      use: "Harness is the local work-authority product/system for AI-assisted product work; Core is the local authority record for Harness state."
+    - phrase: "local work-authority server"
+      use: "local work-authority product/system when referring to Harness; `Harness Server` only when referring to the serving/runtime component."
+    - phrase: "active scope"
+      use: "current scope or currently applied scope, except when preserving an exact identifier or status value."
+    - phrase: "active Change Unit"
+      use: "current Change Unit or currently applied Change Unit, except when preserving an exact identifier such as `active_change_unit_ref`."
+    - phrase: "active surface context"
+      use: "current surface context or currently applied surface context."
+    - phrase: "verification expectations"
+      use: "verification criteria when the meaning is user-visible criteria for checking work."
+    - phrase: "inspection expectations"
+      use: "verification criteria when the meaning is user-visible criteria for checking work."
   ko:
+    - phrase: "활성 범위"
+      use: "현재 적용 범위"
+    - phrase: "활성 Change Unit"
+      use: "현재 적용 Change Unit"
+    - phrase: "활성 접점 맥락"
+      use: "현재 적용 접점 맥락"
+    - phrase: "활성 접점"
+      use: "현재 런타임 접점 맥락을 뜻할 때는 현재 적용 접점 맥락"
+    - phrase: "확인 기대"
+      use: "검증 기준"
+    - phrase: "검증 기대치"
+      use: "검증 기준"
+    - phrase: "쓰기 승인(`Write Authorization`)"
+      use: "정확한 제품 라벨은 `Write Authorization`으로 보존하고 한국어 설명은 쓰기 권한 부여를 사용; 일반 사용자 승인은 쓰기 승인으로 별도 설명"
     - phrase: "close 가능성 평가"
       use: "닫기 준비 상태 평가"
     - phrase: "닫기 가능성 평가"
@@ -231,36 +272,100 @@ terms:
   harness:
     category: "product_concept"
     en: "Harness"
+    en_preferred_prose: "local work-authority product/system"
     ko_reference: "하네스"
     ko_user: "하네스"
     primary_owner:
       en: "docs/en/reference/scope.md"
       ko: "docs/ko/reference/scope.md"
     related_references:
+      - en: "docs/en/reference/core-model.md"
+        ko: "docs/ko/reference/core-model.md"
       - en: "docs/en/reference/runtime-boundaries.md"
         ko: "docs/ko/reference/runtime-boundaries.md"
+    notes:
+      - "Harness is the local work-authority product/system for AI-assisted product work."
+      - "Do not describe Harness itself as the authority record; Core is the local authority record for Harness state."
+      - "Do not use `Harness Server` as a synonym for Harness; `Harness Server` names only a serving/runtime component."
+  core:
+    category: "product_concept"
+    en: "Core"
+    ko_reference: "Core"
+    ko_user: "Core"
+    preserve_as_identifier:
+      - "Core"
+    primary_owner:
+      en: "docs/en/reference/core-model.md"
+      ko: "docs/ko/reference/core-model.md"
+    related_references:
+      - en: "docs/en/reference/storage-records.md"
+        ko: "docs/ko/reference/storage-records.md"
+      - en: "docs/en/reference/storage-effects.md"
+        ko: "docs/ko/reference/storage-effects.md"
+    notes:
+      - "Core is the local authority record for Harness state."
+      - "Core authority applies to Harness records and Harness state transitions, not to OS-level security control by itself."
+      - "Use Core when discussing the authority record; use Harness for the broader product/system."
+  local_authority_record:
+    category: "product_concept"
+    en: "local authority record"
+    ko_reference: "로컬 기준 기록"
+    ko_user: "로컬 기준 기록"
+    primary_owner:
+      en: "docs/en/reference/core-model.md"
+      ko: "docs/ko/reference/core-model.md"
+    related_references:
+      - en: "docs/en/reference/runtime-boundaries.md"
+        ko: "docs/ko/reference/runtime-boundaries.md"
+    notes:
+      - "Use this concept for Core, not Harness as a whole."
+      - "A location, rendered view, chat answer, documentation route, or product repository file is not the local authority record."
   product_repository:
     category: "product_label"
     en: "Product Repository"
     ko_reference: "Product Repository"
     ko_user: "제품 저장소"
+    ko_reference_first_reference: "`Product Repository`(제품 저장소)"
     preserve_as_label:
       - "Product Repository"
     primary_owner:
       en: "docs/en/reference/runtime-boundaries.md"
       ko: "docs/ko/reference/runtime-boundaries.md"
     related_references: []
+    notes:
+      - "`Product Repository` is the product files/repository boundary."
+      - "Do not treat `Product Repository` content as Harness runtime state, `Harness Runtime Home`, or proof of Harness authority."
   harness_runtime_home:
     category: "product_label"
     en: "Harness Runtime Home"
     ko_reference: "Harness Runtime Home"
     ko_user: "런타임 홈"
+    ko_reference_first_reference: "`Harness Runtime Home`(런타임 홈)"
     preserve_as_label:
       - "Harness Runtime Home"
     primary_owner:
       en: "docs/en/reference/runtime-boundaries.md"
       ko: "docs/ko/reference/runtime-boundaries.md"
     related_references: []
+    notes:
+      - "`Harness Runtime Home` is the local runtime storage location for Harness operational data as storage/runtime owners define it."
+      - "Do not treat `Harness Runtime Home` as `Product Repository`, server installation storage by default, a security boundary, or isolation by default."
+  harness_server:
+    category: "product_label"
+    en: "Harness Server"
+    ko_reference: "Harness Server"
+    ko_user: "Harness Server"
+    preserve_as_label:
+      - "Harness Server"
+    primary_owner:
+      en: "docs/en/reference/runtime-boundaries.md"
+      ko: "docs/ko/reference/runtime-boundaries.md"
+    related_references:
+      - en: "docs/en/reference/security.md"
+        ko: "docs/ko/reference/security.md"
+    notes:
+      - "`Harness Server` refers only to a serving/runtime component."
+      - "Do not use `Harness Server` to mean the Harness product/system, Core, `Harness Runtime Home`, or the `Product Repository`."
   documentation:
     category: "general_prose"
     en: "documentation"
@@ -578,9 +683,9 @@ terms:
         ko: "docs/ko/reference/api/method-update-scope.md"
       - en: "docs/en/reference/api/schema-judgment.md"
         ko: "docs/ko/reference/api/schema-judgment.md"
-  active_scope:
+  current_scope:
     category: "runtime_context"
-    en: "active scope"
+    en: "current scope"
     ko_reference: "현재 적용 범위"
     ko_user: "현재 적용 범위"
     aliases_en:
@@ -593,17 +698,21 @@ terms:
         ko: "docs/ko/reference/api/method-update-scope.md"
     notes:
       - "Use for the scope currently applied inside a `Task` or Change Unit context."
-      - "Active is reserved for runtime or session state and exact identifiers, not supported documentation contracts."
-      - "Do not use active scope to mean baseline scope, supported scope, or a documentation contract."
-      - "In Korean, prefer 현재 적용 범위 when clarity matters; do not automatically translate active as 활성."
-  active_change_unit:
+      - "Prefer current scope or currently applied scope in prose."
+      - "Do not use the discouraged active wording to mean the current runtime context, baseline scope, supported scope, or a documentation contract."
+      - "In Korean, use 현재 적용 범위 for this runtime-context meaning."
+      - "Preserve exact identifiers and status values that include `active`."
+  current_change_unit:
     category: "runtime_context"
-    en: "active Change Unit"
+    en: "current Change Unit"
     ko_reference: "현재 적용 Change Unit"
     ko_user: "현재 적용 Change Unit"
+    aliases_en:
+      - "currently applied Change Unit"
     preserve_as_identifier:
       - "Change Unit"
       - "change_unit_id"
+      - "active_change_unit_ref"
     primary_owner:
       en: "docs/en/reference/core-model.md"
       ko: "docs/ko/reference/core-model.md"
@@ -612,9 +721,10 @@ terms:
         ko: "docs/ko/reference/api/method-update-scope.md"
     notes:
       - "Use for the currently applied Change Unit in the authority model."
-      - "Do not use active Change Unit for a project phase or documentation work phase."
-      - "Do not use active Change Unit for a supported documentation contract."
-      - "In Korean, prefer 현재 적용 Change Unit when clarity matters; preserve Change Unit as the product term."
+      - "Prefer current Change Unit or currently applied Change Unit in prose."
+      - "Do not use the discouraged active wording for the current runtime context, a project phase, a documentation work phase, or a supported documentation contract."
+      - "In Korean, use 현재 적용 Change Unit; preserve Change Unit as the product term."
+      - "Preserve exact identifiers such as `active_change_unit_ref`."
   user_owned_judgment:
     category: "product_concept"
     en: "user-owned judgment"
@@ -631,7 +741,7 @@ terms:
       - en: "docs/en/reference/api/schema-judgment.md"
         ko: "docs/ko/reference/api/schema-judgment.md"
     notes:
-      - "Keep distinct from final acceptance, residual-risk acceptance, sensitive-action approval, scope changes, and `Write Authorization`."
+      - "Keep distinct from `Write Authorization`, write approval, sensitive-action approval, final acceptance, residual-risk acceptance, scope changes, evidence, and verification criteria."
   user_judgment_schema:
     category: "identifier"
     en: "UserJudgment"
@@ -653,6 +763,42 @@ terms:
         ko: "docs/ko/reference/api/method-user-judgment.md"
     notes:
       - "Use the prose term for the concept and the schema identifier for the schema."
+  final_acceptance:
+    category: "product_concept"
+    en: "final acceptance"
+    ko_reference: "최종 수락"
+    ko_user: "최종 수락"
+    primary_owner:
+      en: "docs/en/reference/core-model.md"
+      ko: "docs/ko/reference/core-model.md"
+    related_references:
+      - en: "docs/en/reference/api/schema-judgment.md"
+        ko: "docs/ko/reference/api/schema-judgment.md"
+      - en: "docs/en/reference/api/method-user-judgment.md"
+        ko: "docs/ko/reference/api/method-user-judgment.md"
+      - en: "docs/en/reference/api/method-close-task.md"
+        ko: "docs/ko/reference/api/method-close-task.md"
+    notes:
+      - "Final acceptance is a user-owned judgment about the visible close basis."
+      - "Keep distinct from `Write Authorization`, write approval, sensitive-action approval, residual-risk acceptance, evidence, verification criteria, and broad approval."
+  residual_risk_acceptance:
+    category: "product_concept"
+    en: "residual-risk acceptance"
+    ko_reference: "잔여 위험 수락"
+    ko_user: "잔여 위험 수락"
+    primary_owner:
+      en: "docs/en/reference/core-model.md"
+      ko: "docs/ko/reference/core-model.md"
+    related_references:
+      - en: "docs/en/reference/api/schema-judgment.md"
+        ko: "docs/ko/reference/api/schema-judgment.md"
+      - en: "docs/en/reference/api/method-user-judgment.md"
+        ko: "docs/ko/reference/api/method-user-judgment.md"
+      - en: "docs/en/reference/api/method-close-task.md"
+        ko: "docs/ko/reference/api/method-close-task.md"
+    notes:
+      - "Residual-risk acceptance is a user-owned judgment about a named visible residual risk for the requested close."
+      - "Keep distinct from final acceptance, `Write Authorization`, write approval, sensitive-action approval, evidence sufficiency, verification criteria, and proof that no risk remains."
   close_readiness:
     category: "product_concept"
     en: "close readiness"
@@ -961,6 +1107,26 @@ terms:
       - "Use 증거 in Korean prose."
       - "Preserve evidence schema and storage identifiers exactly."
       - "Evidence supports recorded claims; it is not final acceptance, residual-risk acceptance, broad verification, or artifact availability by itself."
+  verification_criteria:
+    category: "product_concept"
+    en: "verification criteria"
+    ko_reference: "검증 기준"
+    ko_user: "검증 기준"
+    primary_owner:
+      en: "docs/en/reference/core-model.md"
+      ko: "docs/ko/reference/core-model.md"
+    related_references:
+      - en: "docs/en/reference/scope.md"
+        ko: "docs/ko/reference/scope.md"
+      - en: "docs/en/reference/api/method-update-scope.md"
+        ko: "docs/ko/reference/api/method-update-scope.md"
+      - en: "docs/en/use/agent-guide.md"
+        ko: "docs/ko/use/agent-guide.md"
+    notes:
+      - "Use when the meaning is user-visible criteria for checking work."
+      - "Do not use the discouraged expectation wording for this concept."
+      - "Verification criteria do not by themselves create evidence, QA, final acceptance, residual-risk acceptance, or close readiness."
+      - "Separate QA and external verification workflows remain out of scope unless Scope and affected owners define support."
   artifact_ref:
     category: "identifier"
     en: "ArtifactRef"
@@ -1076,11 +1242,13 @@ terms:
         ko: "docs/ko/reference/security.md"
     notes:
       - "Use Agent Integration for surface-identity detail."
-  active_surface_context:
+  current_surface_context:
     category: "runtime_context"
-    en: "active surface context"
+    en: "current surface context"
     ko_reference: "현재 적용 접점 맥락"
     ko_user: "현재 적용 접점 맥락"
+    aliases_en:
+      - "currently applied surface context"
     preserve_as_identifier:
       - "VerifiedSurfaceContext"
       - "VerifiedSurfaceContext.access_class"
@@ -1094,9 +1262,10 @@ terms:
         ko: "docs/ko/reference/security.md"
     notes:
       - "Use for the current surface context for a request or interaction."
-      - "Active is reserved for runtime or session state and exact identifiers, not supported documentation contracts."
-      - "Do not use active surface context as proof of authority, access, binding, or capability by itself."
-      - "In Korean, prefer 현재 적용 접점 맥락 when clarity matters; preserve exact surface identifiers."
+      - "Prefer current surface context or currently applied surface context in prose."
+      - "Do not use the discouraged active wording for this runtime-context meaning."
+      - "Do not use current surface context as proof of authority, access, binding, or capability by itself."
+      - "In Korean, use 현재 적용 접점 맥락; preserve exact surface identifiers."
   state_version:
     category: "identifier"
     en: "state_version"
@@ -1149,12 +1318,34 @@ terms:
         ko: "docs/ko/reference/api/schema-value-sets.md"
       - en: "docs/en/reference/storage-artifacts.md"
         ko: "docs/ko/reference/storage-artifacts.md"
+  write_approval:
+    category: "product_concept"
+    en: "write approval"
+    ko_reference: "쓰기 승인"
+    ko_user: "쓰기 승인"
+    primary_owner:
+      en: "docs/en/reference/core-model.md"
+      ko: "docs/ko/reference/core-model.md"
+    related_references:
+      - en: "docs/en/reference/api/schema-judgment.md"
+        ko: "docs/ko/reference/api/schema-judgment.md"
+      - en: "docs/en/reference/api/method-user-judgment.md"
+        ko: "docs/ko/reference/api/method-user-judgment.md"
+      - en: "docs/en/reference/api/method-prepare-write.md"
+        ko: "docs/ko/reference/api/method-prepare-write.md"
+    notes:
+      - "Use for ordinary user approval or prose summaries about approving a write, not for the exact Harness product label."
+      - "When naming the exact product label, preserve `Write Authorization`."
+      - "Do not use the discouraged Korean parenthetical form as the standard expression for the exact product label."
+      - "Keep ordinary write approval distinct from `Write Authorization`, sensitive-action approval, final acceptance, residual-risk acceptance, and user-owned judgment."
   write_authorization:
     category: "product_label"
     en: "write authorization"
     en_label: "Write Authorization"
     ko_reference: "쓰기 권한 부여"
     ko_user: "쓰기 권한 부여"
+    ko_reference_first_reference: "`Write Authorization`(쓰기 권한 부여)"
+    ko_explanation: "호환되는 제품 파일 쓰기 시도 하나를 위한 Core 권한 부여"
     preserve_as_label:
       - "Write Authorization"
     preserve_as_identifier:
@@ -1170,10 +1361,13 @@ terms:
         ko: "docs/ko/reference/api/method-prepare-write.md"
     notes:
       - "Use the exact label when naming the Harness concept."
-      - "Do not treat sensitive-action approval as `Write Authorization`."
+      - "In Korean explanatory prose, use 쓰기 권한 부여 rather than 쓰기 승인 for the exact product label."
+      - "Do not treat write approval, sensitive-action approval, final acceptance, residual-risk acceptance, or broad user-owned judgment as `Write Authorization`."
   sensitive_approval:
     category: "product_concept"
-    en: "sensitive approval"
+    en: "sensitive-action approval"
+    aliases_en:
+      - "sensitive approval"
     en_preferred_prose: "sensitive-action approval"
     ko_reference: "민감 동작 승인"
     ko_user: "민감 동작 승인"
@@ -1189,7 +1383,8 @@ terms:
       - en: "docs/en/reference/security.md"
         ko: "docs/ko/reference/security.md"
     notes:
-      - "Keep sensitive approval distinct from final acceptance, residual-risk acceptance, and `Write Authorization`."
+      - "Use for user approval of a named sensitive step inside `SensitiveActionScope`."
+      - "Keep sensitive-action approval distinct from write approval, `Write Authorization`, final acceptance, residual-risk acceptance, and user-owned judgment."
   access_class:
     category: "product_concept"
     en: "access class"

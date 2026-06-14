@@ -114,6 +114,9 @@ shared_documents:
       - "complete structured term inventory"
       - "bilingual terminology controls"
       - "identifier preservation rules"
+      - "English and Korean discouraged-expression metadata"
+      - "Harness, Core, Harness Server, Harness Runtime Home, and Product Repository terminology routing"
+      - "Write Authorization, write approval, sensitive-action approval, final-acceptance, residual-risk acceptance, and verification-criteria terminology distinctions"
       - "Korean mixed-language expressions to avoid"
     not_owner_for:
       - "reader-facing glossary prose"
@@ -150,9 +153,10 @@ documents:
     role: "entry"
     owner_for:
       - "product orientation"
-      - "Harness thesis"
+      - "Harness product/system thesis"
       - "first-read concept introduction"
     not_owner_for:
+      - "Core local authority record model"
       - "exact API contracts"
       - "storage records"
       - "security guarantee detail"
@@ -207,7 +211,7 @@ documents:
     not_owner_for:
       - "judgment schemas"
       - "judgment value sets"
-      - "Core authority rules"
+      - "Core local authority record rules"
     normative_level: "example"
     audience:
       - "users"
@@ -299,11 +303,16 @@ documents:
     path_ko: "docs/ko/reference/core-model.md"
     role: "reference"
     owner_for:
-      - "Core authority model"
+      - "Core local authority record model for Harness state"
+      - "current scope and current Change Unit authority context"
       - "lifecycle meaning"
       - "close-readiness authority concepts"
       - "user-owned judgment boundaries"
+      - "Write Authorization, approval, final-acceptance, and residual-risk non-substitution boundaries"
+      - "verification criteria and evidence/acceptance authority boundaries"
     not_owner_for:
+      - "Harness product/system thesis"
+      - "Harness Server, Product Repository, or Harness Runtime Home location boundaries"
       - "wire schemas"
       - "storage layout"
       - "public error precedence"
@@ -323,8 +332,11 @@ documents:
     owner_for:
       - "Product Repository boundary"
       - "Harness Runtime Home boundary"
-      - "runtime and repository separation"
+      - "Harness Server and runtime process boundary"
+      - "runtime, server, and repository separation"
     not_owner_for:
+      - "Harness product/system thesis"
+      - "Core local authority record model"
       - "API behavior"
       - "storage record layout"
       - "security guarantees"
@@ -449,8 +461,12 @@ documents:
       - "`harness.prepare_write` behavior"
       - "`PrepareWriteResult` branch behavior"
       - "Write Authorization creation behavior"
-      - "sensitive-action approval behavior"
+      - "method-specific sensitive-action approval handling"
     not_owner_for:
+      - "Core meaning of Write Authorization"
+      - "ordinary write approval meaning"
+      - "final acceptance or residual-risk acceptance meaning"
+      - "user-owned judgment product meaning"
       - "security guarantee semantics"
       - "shared schema bodies"
     normative_level: "contract"
@@ -504,7 +520,7 @@ documents:
       - "`harness.record_user_judgment` behavior"
       - "user-judgment prompt and recording behavior"
     not_owner_for:
-      - "Core user-owned judgment meaning"
+      - "Core user-owned judgment, final-acceptance, residual-risk, or approval meaning"
       - "shared schema bodies"
     normative_level: "contract"
     audience:
@@ -605,8 +621,9 @@ documents:
       - "user judgment schemas"
       - "sensitive-action approval schemas"
       - "accepted-risk input shapes"
+      - "judgment-shaped API data for approvals and acceptance"
     not_owner_for:
-      - "Core user-owned judgment meaning"
+      - "Core user-owned judgment, approval, final-acceptance, or residual-risk meaning"
       - "method behavior"
     normative_level: "contract"
     audience:
@@ -891,10 +908,12 @@ documents:
     owner_for:
       - "surface registration"
       - "current surface context"
+      - "currently applied surface context boundaries"
       - "`VerifiedSurfaceContext` integration boundaries"
       - "`capability_profile` declaration boundaries"
       - "agent context transfer boundaries"
     not_owner_for:
+      - "Core local authority record model"
       - "surface-specific recipes"
       - "API method behavior"
       - "API schema shapes"
@@ -913,7 +932,7 @@ documents:
     role: "reference"
     owner_for:
       - "Projection authority boundaries"
-      - "authoritative records vs projected/status/template views"
+      - "Core authoritative records vs projected/status/template views"
       - "derived display boundaries"
       - "display labels are not canonical schema values"
     not_owner_for:
@@ -937,7 +956,7 @@ documents:
       - "user-facing label wording"
       - "display phrasing"
       - "public-error display labels"
-      - "display wording versus authority-record boundary"
+      - "display wording versus Core authority record boundary"
       - "display wording versus API error semantics boundary"
     not_owner_for:
       - "projection authority"
