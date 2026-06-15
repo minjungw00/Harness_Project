@@ -2,6 +2,8 @@
 
 Use these documentation quality checks when an edit changes product terms, Korean prose terms, mixed-language expressions, identifier explanations, documentation-routing terms, glossary owner labels, close-readiness wording, or access/security wording. These checks do not describe Harness product behavior. The terminology map owns complete structured terminology metadata and bilingual wording controls; product contracts remain in their reference owners.
 
+When this page lists discouraged or forbidden strings, treat them as search patterns for reviewers. They are not wording to keep in ordinary documentation prose unless the surrounding text explicitly identifies them as search patterns or quoted legacy examples.
+
 ## CHK-TERM-001: close-readiness terminology
 
 Check sources:
@@ -74,15 +76,18 @@ Check sources:
 
 Evidence to inspect:
 - Confirm `surface_id`, surface, connector, capability, and access-class wording is not presented as authority, approval, or binding proof unless the owner says so.
+- Confirm `Write Authorization` is not collapsed into ordinary write approval, sensitive-action approval, final acceptance, residual-risk acceptance, or broad user-owned judgment.
 - Confirm access-related terms preserve the distinction between documentation guidance and runtime enforcement.
 - Confirm cooperative, detective, prevention, guard, freeze, careful mode, sandbox, permission, blocking, tamper-proof, isolation, and capability wording stays within owner-backed terminology.
 
 Failure:
 - A surface or access term is used as proof of permission, user judgment, Write Authorization, security isolation, or runtime enforcement without owner support.
+- A sentence treats ordinary approval, sensitive-action approval, final acceptance, or residual-risk acceptance as if it were the product label `Write Authorization`.
 - Security wording implies stronger isolation, sandboxing, permission enforcement, or tamper-proof behavior merely because route text, examples, or out-of-scope material mentions it.
 
 Fix:
 - Reword the statement as identification, routing, or documented guidance as appropriate.
+- Preserve `Write Authorization` as the exact product label when that concept is named, and use separate wording for ordinary approval concepts.
 - Link to Security for guarantee semantics, Agent Integration for connector context, and Scope for support availability when needed.
 
 ## CHK-TERM-005: terminology-map alignment
@@ -156,7 +161,7 @@ Related checks:
 - [CHK-TERM-013](#chk-term-013-glossary-link-route-semantics)
 - [CHK-LINK-008](links-and-indexes.md#chk-link-008-terminology-and-metadata-owner-targets)
 
-## CHK-TERM-006: `active` versus supported or applicable
+## CHK-TERM-006: `active` versus current, supported, or applicable
 
 Check sources:
 - [Terminology Map](../../../terminology-map.yaml)
@@ -165,17 +170,20 @@ Check sources:
 - [Agent Integration](../../reference/agent-integration.md)
 
 Evidence to inspect:
-- Search changed prose for `active`.
-- Confirm `active` is used only for runtime or currently applied state, exact identifiers, exact status values, active scope, active Change Unit, or active surface context.
+- Search changed prose for `active`, `active scope`, `active Change Unit`, `active surface context`, and Korean "활성".
+- Confirm exact identifiers, exact status values, and code literals that contain `active` are preserved unchanged.
+- Confirm current runtime or session context uses "current scope", "currently applied scope", "current Change Unit", or "current surface context" in prose, not "active scope", "active Change Unit", or "active surface context".
 - Confirm supported contracts, supported API methods, supported values, maintained documents, and owner routing use terms such as "supported", "applicable", "maintained", or "current", not `active`.
 
 Failure:
 - A document uses `active` for an owner route, contract, API method, reference document, or other documentation route when it means applicable, supported, or maintained.
+- Prose uses "active scope", "active Change Unit", or "active surface context" for the current context instead of current/currently applied wording.
 - Korean prose translates `active` as "활성" for a documentation contract or owner route instead of using the appropriate Korean term.
+- Korean prose uses "활성 범위", "활성 Change Unit", "활성 접점", or "활성 접점 맥락" for the current context outside an exact identifier, status value, search pattern, or quoted legacy example.
 
 Fix:
-- Replace `active` with the owner-backed term: "applicable owner path", "supported API method", "supported value", "maintained document", or "current state".
-- Keep `active` only when it is an exact identifier, status value, or currently applied runtime/session state.
+- Replace `active` with the owner-backed term: "applicable owner path", "supported API method", "supported value", "maintained document", "current scope", "currently applied scope", or "current state".
+- Keep `active` only when it is an exact identifier, status value, code literal, or intentionally listed search pattern.
 
 ## CHK-TERM-007: retired or unsupported concept names
 
@@ -406,3 +414,32 @@ Related checks:
 - [CHK-TERM-011](#chk-term-011-glossary-entry-focus)
 - [CHK-LINK-008](links-and-indexes.md#chk-link-008-terminology-and-metadata-owner-targets)
 - [CHK-LINK-010](links-and-indexes.md#chk-link-010-glossary-link-route-correctness)
+
+## CHK-TERM-014: Harness/Core and judgment-boundary terminology
+
+Check sources:
+- [Terminology Map](../../../terminology-map.yaml)
+- [Glossary](../../reference/glossary.md)
+- [Authoring Guide](../authoring-guide.md)
+- [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
+
+Evidence to inspect:
+- Confirm "Harness" names the local work-authority product/system for AI-assisted product work, not the local authority record.
+- Confirm "Core" names the local authority record for Harness state.
+- Confirm user-visible criteria for checking work use "verification criteria"; avoid "verification expectations" and "inspection expectations" except as explicit search patterns or quoted legacy examples.
+- Confirm prose uses "current scope" or "currently applied scope" for current context, while preserving exact identifiers such as `active_change_unit_ref`.
+- Confirm `Write Authorization` remains distinct from ordinary write approval, sensitive-action approval, final acceptance, residual-risk acceptance, and broad user-owned judgment.
+- In Korean, confirm the paired terms use "검증 기준" and "현재 적용 범위", avoid prose "활성 범위" for current context, and preserve `Write Authorization` as an exact product label with Korean explanation when needed.
+
+Failure:
+- Harness is described as the local authority record, or Core is described as the product/system.
+- A document uses "verification expectations", "inspection expectations", "확인 기대", or "검증 기대치" as ordinary prose for user-visible criteria.
+- A document uses prose "active scope" or "활성 범위" for current context outside an exact identifier, status value, search pattern, or quoted legacy example.
+- `Write Authorization` is treated as the same thing as ordinary approval, final acceptance, residual-risk acceptance, or broad user-owned judgment.
+
+Fix:
+- Align the wording with `docs/terminology-map.yaml`.
+- Use "Harness" for the product/system and "Core" for the authority record.
+- Use "verification criteria" and Korean "검증 기준".
+- Use "current scope", "currently applied scope", and Korean "현재 적용 범위" for current context.
+- Preserve `Write Authorization` as the exact product label, and use separate wording for ordinary approval or acceptance concepts.

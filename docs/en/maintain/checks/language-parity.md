@@ -1,6 +1,6 @@
 # Language parity checks
 
-Use these checks when a documentation edit changes meaning in paired English and Korean pages, changes Korean prose, or affects identifiers that must remain stable across languages. These checks do not make either language subordinate to the other.
+Use these checks when a documentation edit changes meaning in paired English and Korean pages, changes Korean prose, or affects identifiers that must remain stable across languages. These are documentation quality checks only; they do not make either language subordinate to the other or certify product runtime behavior.
 
 Heading alignment is only a navigation signal. Passing heading parity does not prove semantic parity for paragraphs, tables, lists, examples, warnings, exceptions, or removed concepts. English/Korean parity is also not enough when both languages share the same wrong semantic label or structure.
 
@@ -180,6 +180,7 @@ Evidence to inspect:
 - When a concept label, owner route, value name, display phrase, or example term is removed in one language, search the paired language for exact strings, paraphrases, translations, and mixed-language variants.
 - Confirm a removed English label does not survive through Korean paraphrase, translation, table rows, list items, headings, glossary text, metadata, or display wording.
 - Preserve a removed expression only when a Maintain or terminology owner intentionally keeps it as a searchable forbidden expression.
+- When a removed expression is preserved as a search pattern, confirm the surrounding wording makes it clear that the string is a review pattern, not a current documentation statement.
 
 Failure:
 - The English label is gone literally, but the paired Korean text still preserves the removed concept by meaning.

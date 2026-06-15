@@ -1,6 +1,8 @@
 # Links and indexes checks
 
-Use these checks for relative links, anchors, route tables, `README` pages, `doc-index.yaml`, and retrieval guidance. These checks keep navigation stable; they do not define the contracts being linked.
+Use these checks for relative links, anchors, route tables, `README` pages, `doc-index.yaml`, and retrieval guidance. These checks keep navigation stable; they do not define or certify the contracts being linked.
+
+Use `docs/doc-index.yaml` as the canonical machine-readable owner route for `doc_id`, paired paths, role, owner scope, non-owner scope, dependencies, normative level, and audience metadata. Use the Reference Index as the human-readable route when readers need a navigation page.
 
 ## CHK-LINK-001: broken links and stale routes
 
@@ -11,12 +13,14 @@ Check sources:
 
 Evidence to inspect:
 - Validate changed relative links, file paths, anchors, route tables, and paired-language links.
+- Confirm owner-routing metadata is checked against `docs/doc-index.yaml` before relying on a README, route page, or prose summary.
 - Confirm maintained navigation uses the compact maintained routes from the authoring owner.
 - Confirm contract links point to the canonical owner, not to a convenient duplicate.
 - For API error links, use [API errors](../../reference/api/errors.md) as the family index only; route public code meanings, precedence, response branch routing, close-readiness blocker/API response boundaries, public-code-to-blocker boundaries, and machine-readable details to their focused API owners.
 
 Failure:
 - A link targets a missing file, missing anchor, stale route family, wrong-language owner, or deleted compatibility path.
+- A route or check uses a prose owner summary as the machine-readable owner route when `docs/doc-index.yaml` has the canonical metadata.
 - A route page links directly to deep contract detail where the Reference Index should choose the owner.
 
 Fix:
@@ -51,6 +55,7 @@ Check sources:
 
 Evidence to inspect:
 - Inspect changed route documents, `README` files, indexes, and `doc-index.yaml` entries for questions whose exact canonical owner is missing or unclear.
+- Treat `docs/doc-index.yaml` as the canonical machine-readable owner route and the Reference Index as a reader-facing route.
 - Confirm route text points to an applicable owner when one exists.
 - Confirm a missing owner is exposed as a documentation gap instead of being hidden behind broad route prose, Maintain guidance, or copied contract detail.
 
@@ -113,16 +118,17 @@ Check sources:
 
 Evidence to inspect:
 - Inspect prose, route tables, prompts, and check guidance that name `docs/doc-index.yaml` structures.
+- Confirm prose describes `docs/doc-index.yaml` as documentation owner-route metadata only, not as runtime configuration, product state, or an API conformance source.
 - Confirm they refer only to structures and keys that exist, such as `shared_documents`, `documents`, `entry_schema`, `doc_id`, `path`, `path_en`, `path_ko`, `role`, `owner_for`, `not_owner_for`, `depends_on`, `normative_level`, and `audience`.
 - Confirm a document does not describe missing sections, generated indexes, or current runtime state inside `doc-index.yaml`.
 
 Failure:
 - Text tells maintainers to read a nonexistent map, key, section, or language path field.
 - A route names a `doc_id` or owner metadata entry that is absent from `doc-index.yaml`.
-- Text treats `doc-index.yaml` as runtime config or product contract data.
+- Text treats `doc-index.yaml` as runtime config, product contract data, API conformance data, or product guarantee data.
 
 Fix:
-- Reword the documentation to match the actual YAML structure, or update `doc-index.yaml` as retrieval metadata in the same documentation batch.
+- Reword the documentation to match the actual YAML structure, or update `doc-index.yaml` as documentation owner-route metadata in the same documentation batch.
 - Route contract detail to the owner instead of extending `doc-index.yaml`.
 
 ## CHK-LINK-007: API error owner routing
@@ -170,6 +176,7 @@ Applies to:
 
 Evidence to inspect:
 - Inspect terminology-map `primary_owner` and `related_references`, glossary owner and related-reference targets, `doc-index.yaml` owner metadata, and route tables touched by the edit.
+- Check `doc-index.yaml` first for machine-readable owner routing, then use the glossary or Reference Index only for reader-facing term or route context.
 - Inspect glossary content by role, regardless of whether it is represented as a compact table, compact entries, or another human-readable view.
 - Confirm `docs/terminology-map.yaml` remains the complete structured terminology metadata source.
 - Confirm the glossary remains compact and reader-facing.

@@ -1,6 +1,6 @@
 # API examples checks
 
-Use these checks for API and reference examples. They check documentation example quality only; they do not validate product runtime conformance.
+Use these checks for API and reference examples. They check documentation example quality only; they do not validate product runtime conformance, API conformance, product acceptance, or close readiness.
 
 ## CHK-EXAMPLE-001: durable API and Reference scenarios
 
@@ -12,12 +12,16 @@ Check sources:
 
 Evidence to inspect:
 - Confirm API and Reference examples use stable product or user scenarios.
+- Confirm each example is self-contained enough for a reviewer to understand its preconditions, request data, response snapshot, refs, paths, and relevant state without relying on a fixed repository-wide sample task.
+- Confirm the check does not require all API examples to use one shared sample task.
 - When API method examples share a scenario across documents, confirm the shared scenario is consistent across affected API examples, paired Korean examples, checks, and routes.
-- Confirm examples do not use documentation maintenance, refactoring, documentation transitions, route reshaping, or section restructuring as their scenario.
+- Confirm examples do not use documentation maintenance, migration, refactoring, documentation transitions, route reshaping, or section restructuring as their scenario.
 - Confirm documentation paths are used as example payload only when the document is specifically about documentation maintenance.
 - Confirm paired English and Korean examples preserve equivalent scenario details.
 
 Failure:
+- A check requires all API examples to share one fixed sample task instead of accepting any stable, self-contained product or user scenario.
+- An example depends on unstated shared sample data, hidden setup, or cross-document context that a reviewer cannot reconstruct from the example or its stated preconditions.
 - Example payload includes internal documentation paths when the document is not about documentation maintenance.
 - Example goal describes documentation maintenance instead of product or user behavior.
 - Example baseline, artifact, run, or judgment names refer to documentation maintenance.
@@ -26,7 +30,9 @@ Failure:
 
 Fix:
 - Replace the example with a durable product or user scenario.
+- Make the example self-contained by stating the needed preconditions, existing refs, or abbreviated-response boundary.
 - Keep shared API example scenarios consistent across API examples, paired Korean examples, checks, and routes.
+- Remove any wording that requires a single shared sample task for all API examples.
 - Keep file paths only when the document is explicitly about documentation maintenance.
 - Update paired English and Korean examples by meaning unit.
 
@@ -57,6 +63,7 @@ Check sources:
 
 Evidence to inspect:
 - Example refs are introduced or explicitly described as existing.
+- The example includes enough local context to explain its request payload, visible response state, state version, refs, artifact lifecycle, judgment context, and close-readiness evidence.
 - A response snapshot does not include refs from a newer `state_version`.
 - Sensitive approval reasons match the request's `sensitive_categories` or stated precondition.
 - Artifact refs do not appear without staging, promotion, or existing-artifact context.
@@ -65,6 +72,7 @@ Evidence to inspect:
 - Representative responses do not silently drop meaningful request fields unless labeled as abbreviated.
 
 Failure:
+- An example cannot be reviewed without assuming a hidden shared fixture, unstated sample task, or external scenario.
 - Status examples include newer-version supporting refs.
 - Approval reasons do not match `sensitive_categories`.
 - Artifact refs appear without lifecycle context.
@@ -74,6 +82,7 @@ Failure:
 
 Fix:
 - Align refs, versions, sensitive categories, artifact lifecycle, timestamps, and shared scenario data.
+- Add concise local preconditions when a ref or state is intentionally pre-existing.
 
 ## CHK-EXAMPLE-004: field-name consistency
 

@@ -1,6 +1,6 @@
 # Structure checks
 
-Use these checks for documentation architecture, owner boundaries, route-page structure, label-content consistency, display wording boundaries, storage record references, reference-claim placement, and final report shape. These are documentation quality checks only; they do not certify product runtime behavior.
+Use these checks for documentation architecture, owner boundaries, route-page structure, label-content consistency, display wording boundaries, storage record references, reference-claim placement, and final report shape. These are documentation quality checks only; they do not certify product runtime behavior, API conformance, QA completion, close readiness, or product guarantees.
 
 ## CHK-STRUCT-001: review scope inputs
 
@@ -29,11 +29,11 @@ Check sources:
 - [Authoring Guide](../authoring-guide.md)
 
 Evidence to inspect:
-- Use `PASS`, `WARN`, `FAIL`, or `SKIP` only as documentation-maintenance labels.
+- Use `PASS`, `WARN`, `FAIL`, or `SKIP` only as documentation-maintenance check outcomes.
 - Keep findings tied to file paths, owner documents, and suggested documentation fixes.
 
 Failure:
-- The report treats a check result as documentation acceptance, implementation routing, runtime conformance, final acceptance, QA, close readiness, residual-risk acceptance, or implementation authority.
+- The report treats a check result as documentation acceptance, implementation routing, runtime conformance, API conformance, final acceptance, QA, close readiness, residual-risk acceptance, product guarantee, or implementation authority.
 
 Fix:
 - Reword the output as a documentation maintenance result.
@@ -64,21 +64,23 @@ Check sources:
 
 Evidence to inspect:
 - Inspect changed files and newly added files for one-off planning files, working-note remnants, review leftovers, archive copies, transition notes, one-off conversion notes, ad hoc files, generated runtime records, and unresolved fix markers or other all-caps placeholders.
-- Search changed maintained prose and Maintain check pages for task-context residue. Include English patterns such as `this\s+(task|change|cleanup)`, `re[- ]?work`, `temp(orary)?`, `T[O]D[O]`, `draf(t|ted)`, and `migration\s+note`.
-- Search changed Korean maintained prose and Maintain check pages for task-context residue. Include Korean patterns such as `이[번]\s+(작업|변경|수정)`, `이\s+작업`, `작업\s*에서\s+(바[뀐]|수정[한])`, `추후\s+정리`, `임시`, and `재작업`.
+- Search changed maintained prose and Maintain check pages for task-context residue. Include English patterns such as `T[O]D[O]`, `draf(t|ted)`, `current\s+PR`, `this\s+(work|task|change|cleanup)`, `rewrite\s+plan`, `later\s+cleanup`, `temp(orary)?`, `re[- ]?work`, and `migration\s+note`.
+- Search changed Korean maintained prose and Maintain check pages for task-context residue. Include Korean patterns such as `할\s*일`, `초안`, `현재\s*PR`, `이번\s*PR`, `이\s*(작업|변경|수정)`, `이번\s+(작업|변경|수정)`, `작업\s*에서\s+(바[뀐]|수정[한])`, `다시\s*쓰기\s*계획`, `재작성\s*계획`, `나중에\s+정리`, `나중\s+정리`, `추후\s+정리`, `임시`, and `재작업`.
+- In Maintain check docs, keep those strings only when the surrounding wording clearly identifies them as search patterns, quoted legacy examples, or forbidden-pattern examples.
 - Confirm general maintenance conditions use stable wording such as `changed`, `edited`, `when a document changes`, `변경된`, `편집된`, `문서 변경 시`, and `점검 대상`.
 - Confirm documentation-maintenance findings live in the final report or the appropriate maintained documentation page, not in ad hoc files.
 
 Failure:
 - The final tree contains a one-off plan, working-note remnant, review note, archive copy, ad hoc file, generated runtime-like record, one-off conversion note, or unresolved task marker from the documentation batch.
-- A maintained page contains a task marker that names deferred work instead of a durable maintenance rule.
+- A maintained page contains one of the listed work-specific residue markers, or an equivalent Korean marker, instead of a durable maintenance rule.
 - A maintained page uses wording tied to a specific maintenance episode instead of stable documentation-quality wording.
-- Task-context wording appears outside a quoted prohibited-pattern list or other explicit Maintain check example.
+- Task-context wording appears outside an explicit search-pattern list, quoted prohibited-pattern list, or other explicit Maintain check example.
 
 Fix:
 - Remove the transient file or task marker.
 - Replace task-specific wording with stable maintenance conditions such as `changed`, `edited`, and `when a document changes`.
 - Replace Korean task-context wording with stable maintenance expressions such as `변경된`, `편집된`, `문서 변경 시`, and `점검 대상`.
+- If a check document needs the string for review, keep it inside an explicit search-pattern or forbidden-pattern context.
 - Convert durable guidance into the appropriate owner document only when it has stable reader value.
 
 ## CHK-STRUCT-005: maintenance label taxonomy
@@ -515,7 +517,7 @@ Evidence to inspect:
 
 Failure:
 - Findings omit file paths, owners, or fixes.
-- The report claims acceptance, runtime conformance, implementation routing, QA completion, close readiness, or residual-risk acceptance.
+- The report claims acceptance, runtime conformance, API conformance, implementation routing, QA completion, close readiness, product guarantee, or residual-risk acceptance.
 
 Fix:
 - Rewrite the report in the compact shape from the [Checks Index](../checks.md).
