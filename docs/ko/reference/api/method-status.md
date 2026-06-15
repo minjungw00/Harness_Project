@@ -64,6 +64,24 @@
 
 비주장: `StatusResult.close_blockers`는 저장된 `close_task` 결과가 아닙니다.
 
+## 메서드 결과 필드
+
+`StatusResult`는 성공적인 상태 조회에 대한 메서드별 결과 분기입니다. 이 결과는 `base: ToolResultBase`와 아래 메서드 소유 최상위 필드를 담습니다.
+
+| 필드 | 결과 필드 의미 |
+|---|---|
+| `base` | 공통 결과 메타데이터입니다. `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 읽기 전용 상태 조회 결과는 `events: []`를 사용합니다. 공통 응답 분기에 `EventRef.event_kind`가 있을 때 그 값은 불투명한 예시용 분류 문자열로 남습니다. |
+| `active_task` | 현재 선택된 `Task` 요약의 `StateSummary | null`입니다. |
+| `status_summary` | 현재 상태 조회 보기를 요약하는 자유 형식 표시 문자열입니다. |
+| `next_actions` | 다음 안전한 API 단계를 설명하는 `NextActionSummary[]`입니다. |
+| `pending_user_judgments` | 상태 조회 보기에 선택된 대기 중 사용자 판단 기록의 `StateRecordRef[]`입니다. |
+| `blocker_refs` | 현재 상태 조회 보기에 보이는 차단 사유 기록의 `StateRecordRef[]`입니다. |
+| `close_state` | 현재 보기의 닫기 상태 값입니다. 현재 닫기 상태가 없을 때의 `none`을 포함한 지원 값은 [API 값 집합](schema-value-sets.md#task-lifecycle-values)이 담당합니다. |
+| `close_blockers` | 현재 보기에 대한 읽기 전용 `CloseReadinessBlocker[]` 관찰입니다. 저장된 `close_task` 결과가 아닙니다. |
+| `guarantee_display` | 현재 상태 조회 보기에 대한 `GuaranteeDisplay | null`입니다. |
+
+중첩된 `StateSummary`, `StateRecordRef`, `CloseReadinessBlocker`, `GuaranteeDisplay`, `NextActionSummary` 형태는 [API 상태 스키마](schema-state.md)가 담당합니다.
+
 ## 차단 결과
 
 커밋된 차단 분기는 없습니다.

@@ -80,6 +80,23 @@
 - 현재 `state`
 - `next_actions`
 
+## 메서드 결과 필드
+
+`UpdateScopeResult`는 성공적으로 커밋된 범위 갱신에 대한 메서드별 결과 분기입니다. 이 결과는 `base: ToolResultBase`와 아래 메서드 소유 최상위 필드를 담습니다.
+
+| 필드 | 결과 필드 의미 |
+|---|---|
+| `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. `base.events[].event_kind`가 있을 때 그 값은 불투명한 예시용 분류 문자열입니다. |
+| `task_ref` | 범위 결과가 갱신한 `Task`의 `StateRecordRef`입니다. |
+| `change_unit_ref` | 작업 뒤 현재 적용 Change Unit의 `StateRecordRef | null`입니다. 현재 적용 Change Unit이 없으면 `null`입니다. |
+| `linked_scope_decision_refs` | 갱신에 적용된 `scope_decision` 사용자 판단의 `StateRecordRef[]`입니다. |
+| `stale_write_authorization_refs` | 커밋된 갱신 때문에 오래된 상태가 된 `Write Authorization` 기록의 `StateRecordRef[]`입니다. 저장 효과와 버전 관리는 지속 세부사항을 담당합니다. |
+| `blocker_refs` | 메서드가 소유하며 갱신에서 커밋했거나 계속 관련되는 차단 사유의 `StateRecordRef[]`입니다. |
+| `state` | 범위 갱신 뒤의 현재 `StateSummary`입니다. 현재 적용 범위와 현재 적용 Change Unit 표시 필드를 포함합니다. |
+| `next_actions` | 다음 안전한 API 단계를 설명하는 `NextActionSummary[]`입니다. |
+
+지원되는 `change_unit.operation` 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. 이 메서드는 각 작업이 `change_unit_ref`, `state.active_change_unit_ref`, 오래된 `Write Authorization` 참조, 차단 사유 참조, `next_actions`에 어떻게 반영되는지를 담당합니다.
+
 ## 차단 결과
 
 범위가 아직 준비되지 않았을 때 메서드가 소유한 차단 사유 또는 현재 행 갱신을 커밋할 수 있습니다.

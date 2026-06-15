@@ -64,6 +64,24 @@ When `include.close=true`, `StatusResult.close_blockers` are read-only `CloseRea
 
 Non-claim: `StatusResult.close_blockers` are not stored close results.
 
+## Method result fields
+
+`StatusResult` is the method-specific result branch for a successful status read. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape is owned by [API Schema Core](schema-core.md#common-response). Read-only status results use `events: []`; `EventRef.event_kind`, when present in a common response branch, remains an opaque illustrative classification string. |
+| `active_task` | `StateSummary | null` for the currently selected Task summary. |
+| `status_summary` | Free-form display string summarizing the current status view. |
+| `next_actions` | `NextActionSummary[]` describing the next safe API steps. |
+| `pending_user_judgments` | `StateRecordRef[]` for pending user-judgment records selected into the status view. |
+| `blocker_refs` | `StateRecordRef[]` for blocker records visible in the current status view. |
+| `close_state` | Status close-state value for the current view. Supported values, including `none` when no current close state is available, are owned by [API Value Sets](schema-value-sets.md#task-lifecycle-values). |
+| `close_blockers` | Read-only `CloseReadinessBlocker[]` observations for the current view. They are not stored close results. |
+| `guarantee_display` | `GuaranteeDisplay | null` for the current status view. |
+
+Nested `StateSummary`, `StateRecordRef`, `CloseReadinessBlocker`, `GuaranteeDisplay`, and `NextActionSummary` shapes are owned by [API State Schemas](schema-state.md).
+
 ## Blocked result
 
 There is no committed blocked branch.

@@ -79,6 +79,20 @@ Returns `IntakeResult` with:
 
 If `requested_mode=auto`, the persisted and displayed mode must be the resolved concrete mode, never `auto`.
 
+## Method result fields
+
+`IntakeResult` is the method-specific result branch for a successful committed intake. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
+| `task_ref` | `StateRecordRef` for the Task selected by the intake result. |
+| `change_unit_ref` | `StateRecordRef | null` for a Change Unit selected or created during intake, or `null` when no current Change Unit applies yet. |
+| `state` | Current `StateSummary` after intake, including current scope and currently applied Change Unit display fields. |
+| `next_actions` | `NextActionSummary[]` describing the next safe API steps. |
+
+The supported `resume_policy` input values are owned by [API Value Sets](schema-value-sets.md#method-local-values). This method owns how those values select the Task and optional Change Unit shown in `task_ref`, `change_unit_ref`, and `state`.
+
 ## Blocked result
 
 The method may return a committed `IntakeResult` that records shaping or blocker state instead of a write-ready path.

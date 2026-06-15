@@ -80,6 +80,23 @@ Returns `UpdateScopeResult` with:
 - current `state`
 - `next_actions`
 
+## Method result fields
+
+`UpdateScopeResult` is the method-specific result branch for a successful committed scope update. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
+| `task_ref` | `StateRecordRef` for the Task updated by the scope result. |
+| `change_unit_ref` | `StateRecordRef | null` for the currently applied Change Unit after the operation, or `null` when no current Change Unit applies. |
+| `linked_scope_decision_refs` | `StateRecordRef[]` for `scope_decision` user judgments applied by the update. |
+| `stale_write_authorization_refs` | `StateRecordRef[]` for `Write Authorization` records made stale by the committed update. Storage effects and versioning own the persistence detail. |
+| `blocker_refs` | `StateRecordRef[]` for method-owned blockers committed or still relevant to the update. |
+| `state` | Current `StateSummary` after the scope update, including current scope and currently applied Change Unit display fields. |
+| `next_actions` | `NextActionSummary[]` describing the next safe API steps. |
+
+The supported `change_unit.operation` values are owned by [API Value Sets](schema-value-sets.md#method-local-values). This method owns how each operation is reflected in `change_unit_ref`, `state.active_change_unit_ref`, stale `Write Authorization` refs, blocker refs, and `next_actions`.
+
 ## Blocked result
 
 The method may commit method-owned blocker or current-row updates when scope is still not ready.
