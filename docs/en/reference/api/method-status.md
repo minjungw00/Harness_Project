@@ -151,12 +151,54 @@ active_task:
     closed_at: null
   goal_summary: "Add CSV summary export for dashboard totals."
   scope_summary: "CSV export column order and summary totals."
+  non_goals:
+    - "Changing dashboard chart rendering."
+  acceptance_criteria:
+    - "CSV exports include the selected columns in the approved order."
+  autonomy_boundary: "Stay within CSV summary export behavior."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_export_001
     project_id: proj_export_001
     task_id: task_export_001
     state_version: 41
+  baseline_ref: baseline_export_001
+  shaping_readiness: null
+  pending_user_judgment_refs:
+    - record_kind: user_judgment
+      record_id: uj_export_columns_001
+      project_id: proj_export_001
+      task_id: task_export_001
+      state_version: 42
+  blocker_refs: []
+  write_authority_summary: null
+  evidence_summary: null
+  close_state: blocked
+  close_blockers:
+    - category: user_judgment
+      code: missing_user_judgment
+      message: "User-owned product decision about CSV column order is still pending."
+      related_refs:
+        - record_kind: user_judgment
+          record_id: uj_export_columns_001
+          project_id: proj_export_001
+          task_id: task_export_001
+          state_version: 42
+      next_actions:
+        - action_kind: record_user_judgment
+          owner_method: harness.record_user_judgment
+          label: "Record the user's answer for the pending CSV column decision."
+          blocking_question: "What is the user's answer for the pending CSV column decision?"
+          required_refs:
+            - record_kind: user_judgment
+              record_id: uj_export_columns_001
+              project_id: proj_export_001
+              task_id: task_export_001
+              state_version: 42
+  guarantee_display:
+    level: cooperative
+    basis: "No stronger local guarantee is currently applied."
+    capability_refs: []
 status_summary: "A user-owned product decision about CSV column order is pending."
 next_actions:
   - action_kind: record_user_judgment

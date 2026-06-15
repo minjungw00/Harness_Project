@@ -277,6 +277,44 @@ state:
     project_id: proj_close_001
     task_id: task_close_001
     state_version: 72
+  mode: work
+  lifecycle:
+    lifecycle_phase: ready
+    close_reason: none
+    result: none
+    closed_at: null
+  goal_summary: "Complete onboarding checklist setup."
+  scope_summary: "Onboarding checklist completion."
+  non_goals:
+    - "Changing account creation."
+  acceptance_criteria:
+    - "The onboarding checklist is ready for user review."
+  autonomy_boundary: "Stay within onboarding checklist completion."
+  active_change_unit_ref: null
+  baseline_ref: baseline_close_001
+  shaping_readiness: null
+  pending_user_judgment_refs: []
+  blocker_refs: []
+  write_authority_summary: null
+  evidence_summary: null
+  close_state: blocked
+  close_blockers:
+    - category: final_acceptance
+      code: missing_final_acceptance
+      message: "Final acceptance is still required before this Task can close."
+      related_refs: []
+      next_actions:
+        - action_kind: request_user_judgment
+          owner_method: harness.request_user_judgment
+          label: "Request final acceptance from the user."
+          blocking_question: "Has the user given final acceptance for the completed Task?"
+          required_refs:
+            - record_kind: task
+              record_id: task_close_001
+              project_id: proj_close_001
+              task_id: task_close_001
+              state_version: 72
+  guarantee_display: null
 blockers:
   - category: final_acceptance
     code: missing_final_acceptance

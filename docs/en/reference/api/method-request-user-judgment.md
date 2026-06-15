@@ -212,6 +212,45 @@ blocker_refs: []
 state:
   project_id: proj_banner_001
   state_version: 52
+  task_ref:
+    record_kind: task
+    record_id: task_banner_001
+    project_id: proj_banner_001
+    task_id: task_banner_001
+    state_version: 51
+  mode: work
+  lifecycle:
+    lifecycle_phase: ready
+    close_reason: none
+    result: none
+    closed_at: null
+  goal_summary: "Decide dashboard banner copy length."
+  scope_summary: "Dashboard banner copy length decision."
+  non_goals:
+    - "Changing dashboard layout."
+  acceptance_criteria:
+    - "The banner copy length matches the user's product decision."
+  autonomy_boundary: "Stay within dashboard banner copy."
+  active_change_unit_ref:
+    record_kind: change_unit
+    record_id: cu_banner_001
+    project_id: proj_banner_001
+    task_id: task_banner_001
+    state_version: 51
+  baseline_ref: baseline_banner_001
+  shaping_readiness: null
+  pending_user_judgment_refs:
+    - record_kind: user_judgment
+      record_id: uj_banner_001
+      project_id: proj_banner_001
+      task_id: task_banner_001
+      state_version: 52
+  blocker_refs: []
+  write_authority_summary: null
+  evidence_summary: null
+  close_state: null
+  close_blockers: []
+  guarantee_display: null
 ```
 
 ## Owner links

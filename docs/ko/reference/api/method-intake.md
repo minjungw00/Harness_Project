@@ -184,8 +184,17 @@ state:
     - "Changing account creation."
   acceptance_criteria:
     - "New users see the checklist after opening a workspace."
+  autonomy_boundary: null
   active_change_unit_ref: null
+  baseline_ref: null
+  shaping_readiness: null
+  pending_user_judgment_refs: []
   blocker_refs: []
+  write_authority_summary: null
+  evidence_summary: null
+  close_state: null
+  close_blockers: []
+  guarantee_display: null
 next_actions:
   - action_kind: update_scope
     owner_method: harness.update_scope

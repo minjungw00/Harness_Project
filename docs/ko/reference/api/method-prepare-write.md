@@ -269,11 +269,17 @@ guarantee_display:
   capability_refs: []
 ```
 
-### 승인 필요 분기 발췌
+### 승인 필요 분기
 
 대응하는 민감 동작 승인이 없을 때 적용되는 분기입니다.
 
 ```yaml
+base:
+  response_kind: result
+  effect_kind: core_committed
+  dry_run: false
+  state_version: 20
+  events: []
 decision: approval_required
 write_authorization_ref: null
 write_authorization: null
@@ -283,6 +289,12 @@ write_decision_reasons:
     code: sensitive_account_preference
     message: "Profile preference updates require separate sensitive-action approval before Write Authorization."
     related_refs: []
+active_user_judgment_refs: []
+user_judgment_candidate: null
+guarantee_display:
+  level: cooperative
+  basis: "Write Authorization is a Harness compatibility record, not OS permission."
+  capability_refs: []
 ```
 
 ## 담당 문서 링크

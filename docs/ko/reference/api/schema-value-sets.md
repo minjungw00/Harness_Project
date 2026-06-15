@@ -227,6 +227,16 @@ created
 returned
 ```
 
+`WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status`는 아래 값을 사용합니다.
+
+```text
+active
+consumed
+expired
+stale
+revoked
+```
+
 `RecordRunRequest.kind`와 `RunSummary.kind`는 아래 값을 사용합니다.
 
 ```text

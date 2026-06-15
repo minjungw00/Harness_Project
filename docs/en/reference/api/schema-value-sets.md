@@ -227,6 +227,16 @@ created
 returned
 ```
 
+`WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` use:
+
+```text
+active
+consumed
+expired
+stale
+revoked
+```
+
 `RecordRunRequest.kind` and `RunSummary.kind` use:
 
 ```text

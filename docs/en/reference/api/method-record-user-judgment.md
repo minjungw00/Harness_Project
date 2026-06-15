@@ -225,6 +225,40 @@ updated_refs:
 state:
   project_id: proj_empty_001
   state_version: 63
+  task_ref:
+    record_kind: task
+    record_id: task_empty_001
+    project_id: proj_empty_001
+    task_id: task_empty_001
+    state_version: 62
+  mode: work
+  lifecycle:
+    lifecycle_phase: ready
+    close_reason: none
+    result: none
+    closed_at: null
+  goal_summary: "Decide empty-state illustration."
+  scope_summary: "Empty-state illustration decision."
+  non_goals:
+    - "Changing empty-state copy."
+  acceptance_criteria:
+    - "The empty-state illustration follows the user's product decision."
+  autonomy_boundary: "Stay within empty-state illustration choice."
+  active_change_unit_ref:
+    record_kind: change_unit
+    record_id: cu_empty_001
+    project_id: proj_empty_001
+    task_id: task_empty_001
+    state_version: 62
+  baseline_ref: baseline_empty_001
+  shaping_readiness: null
+  pending_user_judgment_refs: []
+  blocker_refs: []
+  write_authority_summary: null
+  evidence_summary: null
+  close_state: null
+  close_blockers: []
+  guarantee_display: null
 next_actions:
   - action_kind: close_task
     owner_method: harness.close_task

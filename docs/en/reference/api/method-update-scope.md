@@ -221,12 +221,22 @@ state:
     - "Search indexing behavior."
   acceptance_criteria:
     - "Saved filters reject changes outside owner and label fields."
+  autonomy_boundary: "Stay within saved-filter edit validation and related tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_filter_001
     project_id: proj_filter_001
     task_id: task_filter_001
     state_version: 19
+  baseline_ref: baseline_filter_001
+  shaping_readiness: null
+  pending_user_judgment_refs: []
+  blocker_refs: []
+  write_authority_summary: null
+  evidence_summary: null
+  close_state: null
+  close_blockers: []
+  guarantee_display: null
 next_actions:
   - action_kind: prepare_write
     owner_method: harness.prepare_write
