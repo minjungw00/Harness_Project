@@ -14,4 +14,4 @@ Shared metadata:
 
 Maintainers should read [`../AGENTS.md`](../AGENTS.md), then the relevant authoring, translation, and check guidance under `docs/*/maintain/`.
 
-This README is a route page. It does not define API behavior, storage effects, security guarantees, schemas, or detailed owner maps.
+This README is an entry route. It does not define API behavior, storage effects, security guarantees, schemas, or detailed owner maps. Use human-readable indexes for navigation and `doc-index.yaml` for exact owner routing.

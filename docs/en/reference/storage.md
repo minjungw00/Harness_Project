@@ -1,6 +1,6 @@
 # Storage
 
-Use this storage-family router to find the focused storage owner. For exact machine-readable owner routing, use [`docs/doc-index.yaml`](../../doc-index.yaml).
+Use this human-readable storage-family router to find the focused storage owner. For the exact machine-readable owner route, use [`docs/doc-index.yaml`](../../doc-index.yaml).
 
 This page does not define storage record layouts, storage effects, artifact lifecycle, versioning, API shapes, security guarantees, runtime locations, or Core authority semantics.
 

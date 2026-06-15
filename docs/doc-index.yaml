@@ -139,10 +139,11 @@ documents:
     owner_for:
       - "language-specific documentation entry"
       - "reading path selection"
-      - "owner lookup entry points"
+      - "human-readable owner-routing entry points"
     not_owner_for:
       - "reference contracts"
       - "technical owner detail"
+      - "machine-readable owner routing"
     normative_level: "guide"
     audience:
       - "all readers"
@@ -268,11 +269,13 @@ documents:
     path_ko: "docs/ko/reference/README.md"
     role: "reference"
     owner_for:
-      - "human-readable reference owner index"
-      - "reference owner routing"
-      - "canonical owner lookup"
+      - "human-readable reference index"
+      - "reader-facing reference navigation"
+      - "human-readable route to common reference owners"
       - "reference family navigation"
     not_owner_for:
+      - "machine-readable owner routing"
+      - "exact owner-route metadata"
       - "glossary term meanings"
       - "terminology metadata"
       - "detailed contracts"
@@ -406,8 +409,9 @@ documents:
     role: "reference"
     owner_for:
       - "supported public API method list"
-      - "API method owner routing"
+      - "human-readable API method owner routing"
     not_owner_for:
+      - "machine-readable owner routing"
       - "method-specific behavior"
       - "shared schema bodies"
       - "storage effect detail"
@@ -689,7 +693,7 @@ documents:
     owner_for:
       - "API error reference family index"
       - "first-hop routing to focused API error owners"
-      - "API error owner lookup"
+      - "human-readable API error navigation"
       - "first-hop API error reference navigation"
     depends_on:
       - "reference.api.error-codes"
@@ -701,6 +705,7 @@ documents:
       - "reference.api.schema-value-sets"
       - "reference.api.method-close-task"
     not_owner_for:
+      - "machine-readable owner routing"
       - "public error code meanings"
       - "error precedence"
       - "API response branch routing"
@@ -847,8 +852,9 @@ documents:
     owner_for:
       - "storage family routing"
       - "storage owner reading order"
-      - "storage contract routing"
+      - "human-readable storage owner navigation"
     not_owner_for:
+      - "machine-readable owner routing"
       - "record layout detail"
       - "method storage effects"
       - "artifact lifecycle detail"

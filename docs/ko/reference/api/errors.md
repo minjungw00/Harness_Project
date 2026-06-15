@@ -1,6 +1,6 @@
 # API 오류
 
-이 문서는 API 오류 묶음에서 집중 담당 문서를 찾기 위한 첫 경로로만 사용합니다. 정확한 기계 판독 담당 문서 경로는 [`docs/doc-index.yaml`](../../../doc-index.yaml)을 사용합니다.
+이 문서는 API 오류 묶음에서 집중 담당 문서를 찾기 위한 읽기용 첫 경로로만 사용합니다. 정확한 machine-readable 담당 경로는 [`docs/doc-index.yaml`](../../../doc-index.yaml)을 사용합니다.
 
 이 문서는 계약 담당 문서가 아닙니다.
 

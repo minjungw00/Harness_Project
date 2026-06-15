@@ -12,8 +12,8 @@ Repository organization:
 
 - `docs/en/` contains maintained English documentation.
 - `docs/ko/` contains maintained Korean documentation.
-- `docs/doc-index.yaml` is the canonical machine-readable owner route.
+- `docs/doc-index.yaml` is the canonical machine-readable owner route and paired-path metadata.
 - `docs/terminology-map.yaml` is the terminology and identifier-preservation source of truth.
 - `AGENTS.md` gives repository editing rules for agents and maintainers.
 
-README files are entry points. For contract details, follow the language entry pages to the applicable owner document.
+README files and human-readable indexes are entry routes. For exact owner routing, start from `docs/doc-index.yaml`; for contract details, follow the language entry pages to the applicable owner document.

@@ -1,6 +1,6 @@
 # Reference index
 
-Use this human-readable index to choose the next owner document for a Harness reference question. For exact machine-readable owner routing, use [`docs/doc-index.yaml`](../../doc-index.yaml); it is canonical for `doc_id`, paired paths, roles, owner scope, dependencies, normative level, and audience metadata.
+Use this human-readable index to choose the next owner document for a Harness reference question. For the exact machine-readable owner route, use [`docs/doc-index.yaml`](../../doc-index.yaml); it owns `doc_id`, paired paths, roles, owner scope, dependencies, normative level, and audience metadata.
 
 This README is route-only. It does not define term meanings, terminology metadata, API behavior, error meaning, error precedence, response branch routing, blocker routing, storage effects, schema shapes, security guarantees, or Core authority semantics.
 

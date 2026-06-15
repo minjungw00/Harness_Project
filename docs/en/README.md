@@ -10,4 +10,4 @@ Reading paths:
 - Implementers and reviewers: [Implementation Guide](build/implementation-guide.md), then [Reference Index](reference/README.md).
 - Documentation maintainers: [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain/translation-guide.md), [Checks Index](maintain/checks.md), [doc-index.yaml](../doc-index.yaml), and [Terminology Map](../terminology-map.yaml).
 
-For exact owner routing, use [doc-index.yaml](../doc-index.yaml). For human-readable reference navigation, use the [Reference Index](reference/README.md).
+For the exact machine-readable owner route, use [doc-index.yaml](../doc-index.yaml). For human-readable reference navigation, use the [Reference Index](reference/README.md).

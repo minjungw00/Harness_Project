@@ -1,6 +1,6 @@
 # API methods
 
-Use this method-family router to find the owner document for public Harness API method behavior. For exact machine-readable owner routing, use [`docs/doc-index.yaml`](../../../doc-index.yaml).
+Use this human-readable method-family router to find the owner document for public Harness API method behavior. For the exact machine-readable owner route, use [`docs/doc-index.yaml`](../../../doc-index.yaml).
 
 This page does not define method behavior, request or response bodies, shared schemas, storage effects, error semantics, security guarantees, or Core authority semantics.
 
