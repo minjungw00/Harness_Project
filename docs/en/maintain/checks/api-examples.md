@@ -2,7 +2,7 @@
 
 Use these checks for API and reference examples. They check documentation example quality only; they do not validate product runtime conformance, API conformance, product acceptance, or close readiness.
 
-API method reference examples are method-local minimal examples. They may use stable product or user nouns, but each method owner document must be reviewable on its own and must match the applicable method, schema, value-set, and storage-effect owners.
+API method reference examples are method-local minimal examples. They may use stable product or user nouns, but each method owner document must be reviewable on its own and must match the applicable method, schema, value-set, and storage-effect owners. Conformance scenarios may be linked only as conceptual references; they are not payload sources for method examples.
 
 ## CHK-EXAMPLE-001: durable method-local API and Reference scenarios
 
@@ -17,6 +17,8 @@ Evidence to inspect:
 - Confirm each API method example is minimal for the method it documents.
 - Confirm each method example introduces every ref, `state_version` fact, artifact ref, run ref, judgment ref, blocker ref, and file path it uses, or explicitly states it as a method-local precondition.
 - Confirm no method example depends on payload data, refs, state versions, artifact refs, run refs, judgment refs, blocker refs, or file paths introduced by another method reference document.
+- Confirm conformance scenarios, `scenario_id`s, and scenario-level documents are not used as shared payload sources for method examples.
+- Confirm conceptual links to conformance do not copy conformance payloads, refs, paths, state versions, or response snapshots into method examples for consistency.
 - Confirm the check does not require all API examples to use one fixed product task or scenario.
 - Confirm examples do not use documentation maintenance, migration, refactoring, documentation transitions, route reshaping, or section restructuring as their scenario.
 - Confirm documentation paths are used as example payload only when the document is specifically about documentation maintenance.
@@ -25,6 +27,8 @@ Evidence to inspect:
 Failure:
 - An example cannot be reviewed without assuming hidden sample data, unstated setup, or another method document's scenario context.
 - A method example asks readers to reuse a payload, ref, path, `state_version`, artifact ref, run ref, judgment ref, blocker ref, or response snapshot from another method reference document.
+- A method example copies a conformance payload, ref, path, `state_version`, artifact ref, run ref, judgment ref, blocker ref, or response snapshot for consistency.
+- A method example treats a conformance scenario as a shared fixture or example spine.
 - A check requires all API examples to use one fixed sample task instead of accepting any stable, method-local product or user scenario.
 - Example payload includes internal documentation paths when the document is not about documentation maintenance.
 - Example goal describes documentation maintenance instead of product or user behavior.
@@ -34,7 +38,8 @@ Failure:
 Fix:
 - Replace the example with a durable product or user scenario that stands on its own inside the method owner document.
 - Shrink method examples to the minimum request, local preconditions, and representative response needed for that method.
-- Move cross-method or end-to-end scenario material to conformance or scenario-level documentation.
+- Document cross-method or end-to-end concerns as scenario-level criteria in conformance or another scenario-level owner when they are needed outside method examples.
+- Keep conceptual conformance links when useful, but replace copied scenario payloads with method-local preconditions and distinct refs.
 - Keep file paths only when the document is explicitly about documentation maintenance.
 - Update paired English and Korean examples by meaning unit.
 
@@ -195,8 +200,9 @@ Evidence to inspect:
 - Inspect method owner examples as a set, not only one file at a time.
 - Treat a repeated business noun, path prefix, ref prefix, judgment ID family, run ID family, artifact ID family, blocker code family, or scenario description across three or more method owner documents as a cross-method scenario spine.
 - Confirm method examples do not refer to previous or later method examples for setup, refs, paths, `state_version`, artifact refs, run refs, judgment refs, blocker refs, or response snapshots.
-- Confirm cross-method or end-to-end scenarios appear only in conformance or scenario-level documentation.
+- Confirm cross-method or end-to-end scenarios, when needed, appear as scenario-level criteria in conformance or another scenario-level owner, not as a method-reference payload spine.
 - Confirm conformance scenarios do not require method reference documents to reuse conformance payloads.
+- Confirm method examples may link to conformance only conceptually and do not copy conformance payloads for consistency.
 
 Failure:
 - Three or more method owner documents repeat the same scenario identity through business nouns, paths, ref prefixes, ID families, blocker code families, or scenario description.
@@ -206,5 +212,5 @@ Failure:
 
 Fix:
 - Rewrite affected method examples into independent method-local examples with local preconditions and distinct refs.
-- Move cross-method or end-to-end scenario material to conformance or another scenario-level owner.
-- Remove wording that permits cross-method dependency in method reference examples.
+- Document cross-method or end-to-end concerns as scenario-level criteria in conformance or another scenario-level owner.
+- Remove wording that permits cross-method dependency or conformance-payload reuse in method reference examples.

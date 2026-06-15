@@ -12,11 +12,12 @@ This document owns:
 - conformance scenario semantics
 - expected behavior summaries for the scenario index
 - assertion authority boundaries for conformance criteria
-- the relationship between conformance criteria, canonical owner documents, examples, and tutorials
+- the relationship between conformance criteria, canonical owner documents, examples, tutorials, and method-local API examples
 
 This reference does not define neighboring contracts:
 
 - API and storage: API branches, storage effects, access classes, and artifact promotion
+- API method reference examples: method-local example payloads and setup
 - security and close readiness: security guarantees and close-readiness behavior
 - implementation: implementation routing
 
@@ -98,7 +99,9 @@ Conformance criteria are reference criteria. Examples and tutorials may illustra
 
 Reference scenarios must use stable behavior descriptions. They must not use maintainer workflow labels, broad review stages, or short-lived project status as the behavior being tested.
 
-Cross-method and end-to-end scenarios belong in conformance or other scenario-level documentation, not in API method reference examples. No conformance scenario, example, tutorial, or representative scenario requires API method reference documents to reuse its payloads; method reference examples remain method-local minimal examples that stay consistent with the applicable owner contracts.
+Cross-method and end-to-end scenarios may appear in conformance or other scenario-level documentation only as scenario-level criteria. They must not become a shared payload, fixture, or example spine for API method reference documents.
+
+API method examples may link to a conformance scenario to explain the concept they illustrate, but they must not copy that scenario's payload, refs, paths, `state_version`, artifact refs, run refs, judgment refs, blocker refs, or response snapshots for consistency. API method examples do not define conformance criteria, and conformance scenarios do not require method reference examples to reuse their payloads.
 
 ## Scenario criterion shape
 
@@ -180,7 +183,7 @@ Exact assertion detail stays with these owners:
 
 ## Representative scenario index
 
-These scenario IDs are compact reference criteria. They are not examples, tutorials, runtime results, an implementation plan, or required API example payloads. Use the owner links above for exact branch, storage, access, artifact, security, and close-readiness contracts.
+These scenario IDs are compact reference criteria. They are not examples, tutorials, runtime results, an implementation plan, required API example payloads, or a shared method-reference example spine. Use the owner links above for exact branch, storage, access, artifact, security, and close-readiness contracts.
 
 - `BASELINE-registered-surface-mismatch-blocks-mutation`
   See [registered surface mismatch](#scenario-baseline-registered-surface-mismatch-blocks-mutation).
