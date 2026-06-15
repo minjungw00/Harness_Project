@@ -51,6 +51,18 @@ A successful staging result:
 
 Rejected and dry-run requests have no storage effect.
 
+## Method result fields
+
+`StageArtifactResult` is the method-specific result branch for a successful staging operation. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Successful staging uses `base.response_kind=result`, `base.effect_kind=staging_created`, `base.state_version=null`, and `events: []`. |
+| `staged_artifact_handle` | Transient `StagedArtifactHandle` for the staged safe bytes or safe notice. The shape is owned by [API Artifact Schemas](schema-artifacts.md#stagedartifacthandle). |
+| `expires_at` | Expiration timestamp for the transient handle. It mirrors `staged_artifact_handle.expires_at`; lifecycle, expiry, and consumption details are owned by [Artifact Storage](../storage-artifacts.md). |
+
+`StageArtifactResult` does not include a persistent `ArtifactRef`, run summary, evidence summary, blocker refs, or current state snapshot.
+
 ## Success result
 
 Returns `StageArtifactResult` with:
@@ -94,6 +106,8 @@ For `dry_run=true`, a valid staging preview:
 ## Storage effect
 
 On success, the method creates a transient staging result only. Exact storage effects and artifact lifecycle details are owned by the storage documents linked below.
+
+The examples are intentionally compact and method-local. The representative response shows the full `StageArtifactResult` top-level shape and one `StagedArtifactHandle`.
 
 ## Minimal valid request
 

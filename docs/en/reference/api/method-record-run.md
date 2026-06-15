@@ -64,6 +64,21 @@ Product-write recording consumes the `Write Authorization` only when:
 
 The method rejects stale `expected_state_version` and stale authorization basis before consuming the `Write Authorization`.
 
+## Method result fields
+
+`RecordRunResult` is the method-specific result branch for a committed run-recording operation. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Committed `RecordRunResult` branches use `base.response_kind=result` and `base.effect_kind=core_committed`. `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
+| `run_summary` | `RunSummary` for the recorded Run. `RunSummary.kind` mirrors the request `kind`; supported run-kind values are owned by [API Value Sets](schema-value-sets.md#method-local-values). |
+| `registered_artifacts` | `ArtifactRef[]` for persistent artifact refs produced or linked for this run result. `ArtifactRef` shape is owned by [API Artifact Schemas](schema-artifacts.md#artifactref); promotion and linking lifecycle details are owned by [Artifact Storage](../storage-artifacts.md). |
+| `evidence_summary` | `EvidenceSummary | null` for evidence coverage updated by this run result, or `null` when the run records no evidence update. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes); evidence authority meaning is owned by [Core Model](../core-model.md#9-evidence-and-run-authority). |
+| `blocker_refs` | `StateRecordRef[]` for run- or evidence-related blockers committed or still relevant because of this result. |
+| `state` | Current `StateSummary` after the run is recorded. Nested state fields, including `write_authority_summary` after any `Write Authorization` consumption, are owned by [API State Schemas](schema-state.md). |
+
+Nested `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, and `ArtifactRef` field bodies stay with the schema owners linked above. Exact persistence effects, including staged-handle consumption, artifact promotion, evidence updates, replay rows, and `Write Authorization` consumption, stay with [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).
+
 ## Success result
 
 Returns `RecordRunResult` with:
@@ -116,6 +131,8 @@ For `dry_run=true`, a valid preview:
 ## Storage effect
 
 On commit, the method may persist run, evidence, blocker, authorization-consumption, and artifact-linking results. Exact storage effects and artifact promotion details are owned by the storage documents linked below.
+
+The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the committed run, promoted artifact ref, updated evidence summary, blocker refs, state version, and current state snapshot.
 
 ## Minimal valid request
 

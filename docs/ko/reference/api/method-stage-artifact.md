@@ -51,6 +51,18 @@
 
 거절과 `dry_run` 요청은 저장 효과가 없습니다.
 
+## 메서드 결과 필드
+
+`StageArtifactResult`는 성공한 스테이징 작업에 대한 메서드별 결과 분기입니다. 이 결과는 `base: ToolResultBase`와 아래 메서드 소유 최상위 필드를 담습니다.
+
+| 필드 | 결과 필드 의미 |
+|---|---|
+| `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 성공한 스테이징은 `base.response_kind=result`, `base.effect_kind=staging_created`, `base.state_version=null`, `events: []`를 사용합니다. |
+| `staged_artifact_handle` | 스테이징된 안전한 바이트 또는 안전한 알림에 대한 임시 `StagedArtifactHandle`입니다. 형태는 [API 아티팩트 스키마](schema-artifacts.md#stagedartifacthandle)가 담당합니다. |
+| `expires_at` | 임시 핸들의 만료 시각입니다. `staged_artifact_handle.expires_at`과 같은 값을 나타내며, 생명주기, 만료, 소비 세부사항은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다. |
+
+`StageArtifactResult`에는 지속 `ArtifactRef`, 실행 요약, 증거 요약, 차단 사유 참조, 현재 상태 스냅샷이 포함되지 않습니다.
+
 ## 성공 결과
 
 아래 값을 담은 `StageArtifactResult`를 반환합니다.
@@ -94,6 +106,8 @@
 ## 저장 효과
 
 성공 시 임시 스테이징 결과만 만듭니다. 정확한 저장 효과와 아티팩트 생명주기 세부사항은 아래 저장 담당 문서가 담당합니다.
+
+아래 예시는 메서드 안에서만 성립하도록 짧게 구성했습니다. 대표 응답은 전체 `StageArtifactResult` 최상위 형태와 하나의 `StagedArtifactHandle`을 보여 줍니다.
 
 ## 최소 유효 요청
 

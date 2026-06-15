@@ -62,6 +62,25 @@ Requires:
 | Committed non-allow decision | May increment only for method-owned write-decision reason state. | Creates no consumable `Write Authorization`. |
 | Pre-commit rejection or dry run | Increments nothing. | Creates nothing. |
 
+## Method result fields
+
+`PrepareWriteResult` is the method-specific result branch for committed write-preparation decisions. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Committed `PrepareWriteResult` branches use `base.response_kind=result` and `base.effect_kind=core_committed`. `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
+| `decision` | The method decision for this write-preparation attempt. Supported values are owned by [API Value Sets](schema-value-sets.md#method-local-values). |
+| `state` | Current `StateSummary` when this result includes a state snapshot. Nested state fields, including `write_authority_summary`, are owned by [API State Schemas](schema-state.md). |
+| `write_authorization_ref` | `StateRecordRef | null` for the consumable `Write Authorization` created or returned by an allowed decision. It is `null` for non-allow decisions. |
+| `write_authorization` | `WriteAuthorizationSummary | null` for the created or returned `Write Authorization`. It is `null` for non-allow decisions. |
+| `authorization_effect` | Method result effect for the `Write Authorization` path. Supported values are owned by [API Value Sets](schema-value-sets.md#method-local-values). |
+| `active_user_judgment_refs` | `StateRecordRef[]` for resolved user-owned judgments applied to the write-preparation decision, including matching `sensitive_approval` judgments when present. |
+| `write_decision_reasons` | `WriteDecisionReason[]` explaining non-allow decisions. The shape is owned by [API State Schemas](schema-state.md#current-position-display-shapes). |
+| `user_judgment_candidate` | `UserJudgmentCandidate | null` when the method proposes a focused user-owned judgment instead of creating `Write Authorization`; otherwise `null`. The shape is owned by [API Judgment Schemas](schema-judgment.md#userjudgmentcandidate). |
+| `guarantee_display` | `GuaranteeDisplay | null` for the method's compatibility display. The display shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes); security guarantee meaning is owned by [Security](../security.md). |
+
+Nested `StateRecordRef`, `StateSummary`, `WriteAuthorizationSummary`, `WriteDecisionReason`, `UserJudgmentCandidate`, and `GuaranteeDisplay` field bodies stay with the schema owners linked above.
+
 ## Success result
 
 Returns `PrepareWriteResult` with:
@@ -87,6 +106,9 @@ Committed blocked decisions are `PrepareWriteResult` values with one of these de
 
 Result data:
 
+- `write_authorization_ref` is `null`.
+- `write_authorization` is `null`.
+- `authorization_effect` is `none`.
 - `write_decision_reasons` must be non-empty.
 - Each entry is a `WriteDecisionReason`.
 - `category` uses the controlled `WriteDecisionReason.category` value set.
@@ -129,6 +151,8 @@ For `dry_run=true`, a valid preview:
 ## Storage effect
 
 On commit, the method may persist `Write Authorization` or write-decision state according to the method result. Exact storage effects are owned by the storage documents linked below.
+
+The examples are intentionally compact and method-local. Representative responses show fields needed for the relevant `PrepareWriteResult` branch; nested schema bodies are illustrated only where they clarify the method result.
 
 ## Minimal valid request
 

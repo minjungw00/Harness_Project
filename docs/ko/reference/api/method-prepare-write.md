@@ -62,6 +62,25 @@
 | 커밋된 비허용 결정 | 메서드가 소유한 쓰기 결정 이유 상태에 한해 올릴 수 있습니다. | 소비 가능한 `Write Authorization`을 만들지 않습니다. |
 | 커밋 전 거절 또는 `dry_run` | 올리지 않습니다. | 만들지 않습니다. |
 
+## 메서드 결과 필드
+
+`PrepareWriteResult`는 커밋된 쓰기 준비 결정에 대한 메서드별 결과 분기입니다. 이 결과는 `base: ToolResultBase`와 아래 메서드 소유 최상위 필드를 담습니다.
+
+| 필드 | 결과 필드 의미 |
+|---|---|
+| `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 커밋된 `PrepareWriteResult` 분기는 `base.response_kind=result`와 `base.effect_kind=core_committed`를 사용합니다. `base.events[].event_kind`가 있을 때 그 값은 불투명한 예시용 분류 문자열입니다. |
+| `decision` | 이 쓰기 준비 시도에 대한 메서드 결정입니다. 지원되는 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. |
+| `state` | 이 결과가 상태 스냅샷을 포함할 때의 현재 `StateSummary`입니다. `write_authority_summary`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
+| `write_authorization_ref` | 허용 결정이 만들거나 반환한 소비 가능한 `Write Authorization`의 `StateRecordRef | null`입니다. 비허용 결정에서는 `null`입니다. |
+| `write_authorization` | 만들거나 반환한 `Write Authorization`의 `WriteAuthorizationSummary | null`입니다. 비허용 결정에서는 `null`입니다. |
+| `authorization_effect` | `Write Authorization` 경로에 대한 메서드 결과 효과입니다. 지원되는 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. |
+| `active_user_judgment_refs` | 쓰기 준비 결정에 적용된 해결된 사용자 소유 판단의 `StateRecordRef[]`입니다. 일치하는 `sensitive_approval` 판단이 있으면 그 판단도 포함합니다. |
+| `write_decision_reasons` | 비허용 결정을 설명하는 `WriteDecisionReason[]`입니다. 형태는 [API 상태 스키마](schema-state.md#current-position-display-shapes)가 담당합니다. |
+| `user_judgment_candidate` | 메서드가 `Write Authorization`을 만들지 않고 집중된 사용자 소유 판단을 제안할 때의 `UserJudgmentCandidate | null`입니다. 그 밖의 경우에는 `null`입니다. 형태는 [API 판단 스키마](schema-judgment.md#userjudgmentcandidate)가 담당합니다. |
+| `guarantee_display` | 메서드의 호환성 표시를 위한 `GuaranteeDisplay | null`입니다. 표시 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당하고, 보안 보장 의미는 [보안](../security.md)이 담당합니다. |
+
+중첩된 `StateRecordRef`, `StateSummary`, `WriteAuthorizationSummary`, `WriteDecisionReason`, `UserJudgmentCandidate`, `GuaranteeDisplay` 필드 본문은 위에 연결된 스키마 담당 문서에 둡니다.
+
 ## 성공 결과
 
 `PrepareWriteResult`를 반환합니다.
@@ -87,10 +106,13 @@
 
 결과 데이터:
 
+- `write_authorization_ref`는 `null`입니다.
+- `write_authorization`은 `null`입니다.
+- `authorization_effect`는 `none`입니다.
 - `write_decision_reasons`는 비어 있으면 안 됩니다.
 - 각 항목은 `WriteDecisionReason`입니다.
 - `category`는 제어되는 `WriteDecisionReason.category` 값 집합을 사용합니다.
-- `code`는 이 메서드 문서가 더 좁은 로컬 코드 목록을 명시적으로 정의하지 않는 한 메서드 범위의 불투명 reason code입니다. 이 문서의 예시 코드는 설명용이며 전역 값 집합 항목이 아닙니다.
+- `code`는 이 메서드 문서가 더 좁은 로컬 코드 목록을 명시적으로 정의하지 않는 한 메서드 범위의 불투명 이유 코드입니다. 이 문서의 예시 코드는 설명용이며 전역 값 집합 항목이 아닙니다.
 - `message`는 자유 형식 표시 문자열입니다.
 - `related_refs`는 `StateRecordRef[]`를 사용합니다. 관련 참조가 없으면 `[]`를 사용합니다.
 
@@ -129,6 +151,8 @@
 ## 저장 효과
 
 커밋 시 메서드 결과에 따라 `Write Authorization` 또는 쓰기 결정 상태를 지속할 수 있습니다. 정확한 저장 효과는 아래 저장 담당 문서가 담당합니다.
+
+아래 예시는 메서드 안에서만 성립하도록 짧게 구성했습니다. 대표 응답은 해당 `PrepareWriteResult` 분기에 필요한 필드를 보여 주며, 중첩 스키마 본문은 메서드 결과를 분명히 하는 범위에서만 예시합니다.
 
 ## 최소 유효 요청
 
@@ -278,7 +302,7 @@ guarantee_display:
 
 대응하는 민감 동작 승인이 없을 때 적용되는 분기입니다.
 
-아래의 `code: sensitive_account_preference` 값은 이 예시를 위한 메서드 범위의 설명용 reason code입니다. 전역 `WriteDecisionReason.code` 값이 아닙니다.
+아래의 `code: sensitive_account_preference` 값은 이 예시를 위한 메서드 범위의 설명용 이유 코드입니다. 전역 `WriteDecisionReason.code` 값이 아닙니다.
 
 ```yaml
 base:
