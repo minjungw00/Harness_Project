@@ -14,7 +14,11 @@ This document owns:
 - assertion authority boundaries for conformance criteria
 - the relationship between conformance criteria, canonical owner documents, examples, and tutorials
 
-It does not define API branches, storage effects, access classes, artifact promotion, security guarantees, close-readiness behavior, or implementation routing.
+This reference does not define neighboring contracts:
+
+- API and storage: API branches, storage effects, access classes, and artifact promotion
+- security and close readiness: security guarantees and close-readiness behavior
+- implementation: implementation routing
 
 For the canonical baseline scope, see [Scope](scope.md). For compact meanings of curated core terms included in the glossary, see [Glossary](glossary.md). For complete structured terminology metadata, see [`docs/terminology-map.yaml`](../../terminology-map.yaml).
 
@@ -90,9 +94,11 @@ When this page says "must", "required", or "always", it is naming a conformance 
 <a id="criteria-vs-examples-and-tutorials"></a>
 ## Criteria vs examples and tutorials
 
-Conformance criteria are reference expectations. Examples and tutorials may illustrate how a reader might recognize a scenario, but they do not create authority records, API branches, storage effects, security guarantees, close-readiness results, acceptance evidence, or residual-risk acceptance.
+Conformance criteria are reference criteria. Examples and tutorials may illustrate how a reader might recognize a scenario, but they do not create authority records, API branches, storage effects, security guarantees, close-readiness results, acceptance evidence, or residual-risk acceptance.
 
 Reference scenarios must use stable behavior descriptions. They must not use documentation maintenance, route cleanup, migration work, broad review stages, or short-lived project status as the behavior being tested.
+
+No example, tutorial, or representative scenario requires API documentation to reuse one product scenario. API examples may use any stable, self-contained product or user scenario that stays consistent with the applicable owner contracts.
 
 ## Scenario criterion shape
 
@@ -174,7 +180,7 @@ Exact assertion detail stays with these owners:
 
 ## Representative scenario index
 
-These scenario IDs are compact reference criteria. They are not examples, tutorials, runtime results, or an implementation plan. Use the owner links above for exact branch, storage, access, artifact, security, and close-readiness contracts.
+These scenario IDs are compact reference criteria. They are not examples, tutorials, runtime results, an implementation plan, or required API example payloads. Use the owner links above for exact branch, storage, access, artifact, security, and close-readiness contracts.
 
 - `BASELINE-registered-surface-mismatch-blocks-mutation`
   See [registered surface mismatch](#scenario-baseline-registered-surface-mismatch-blocks-mutation).
@@ -199,7 +205,7 @@ These scenario IDs are compact reference criteria. They are not examples, tutori
 - `BASELINE-authorized-attempt-scope-product-file-write-only`
   See [`AuthorizedAttemptScope`](#scenario-baseline-authorized-attempt-scope-product-file-write-only).
 - `BASELINE-record-run-consumes-write-authorization-once`
-  See [single-use Write Authorization](#scenario-baseline-record-run-consumes-write-authorization-once).
+  See [single-use `Write Authorization`](#scenario-baseline-record-run-consumes-write-authorization-once).
 - `BASELINE-stage-artifact-transient-handle-only`
   See [transient staged handle](#scenario-baseline-stage-artifact-transient-handle-only).
 - `BASELINE-record-run-artifact-input-validation-order`
@@ -215,7 +221,7 @@ These scenario IDs are compact reference criteria. They are not examples, tutori
 - `BASELINE-close-task-complete-stale-state-version-rejected`
   See [stale close state](#scenario-baseline-close-task-complete-stale-state-version-rejected).
 - `BASELINE-close-task-complete-stale-write-authorization-basis-rejected`
-  See [stale Write Authorization basis](#scenario-baseline-close-task-complete-stale-write-authorization-basis-rejected).
+  See [stale `Write Authorization` basis](#scenario-baseline-close-task-complete-stale-write-authorization-basis-rejected).
 - `BASELINE-close-task-blocks-current-write-compatibility`
   See [write compatibility blocker](#scenario-baseline-close-task-blocks-current-write-compatibility).
 - `BASELINE-close-task-blocks-evidence-insufficient`
@@ -328,7 +334,7 @@ Owner links:
 ### `BASELINE-sensitive-approval-records-sensitive-action-scope`
 
 Expected behavior:
-- Sensitive-action approval is separate from Write Authorization and final acceptance.
+- Sensitive-action approval is separate from `Write Authorization` and final acceptance.
 
 Owner links:
 - [Core Model](core-model.md)
@@ -361,7 +367,7 @@ Owner links:
 ### `BASELINE-record-run-consumes-write-authorization-once`
 
 Expected behavior:
-- Compatible Run recording consumes a matching Write Authorization once.
+- Compatible Run recording consumes a matching `Write Authorization` once.
 
 Owner links:
 - [Record-run method](api/method-record-run.md)
@@ -449,7 +455,7 @@ Owner links:
 ### `BASELINE-close-task-complete-stale-write-authorization-basis-rejected`
 
 Expected behavior:
-- Stale close-relevant Write Authorization basis fails before close commit.
+- Stale close-relevant `Write Authorization` basis fails before close commit.
 
 Owner links:
 - [Close-task method](api/method-close-task.md)

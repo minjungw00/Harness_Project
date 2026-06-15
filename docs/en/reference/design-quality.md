@@ -33,9 +33,13 @@ Neighboring contracts stay with their owners:
 | Method-to-storage effects for supported API method branches | [Storage Effects](storage-effects.md) |
 | Out-of-scope design-quality policy families | [Scope Reference](scope.md) |
 
-This reference does not define an independent baseline gate, supported design-quality close category, supported validator family, quality-waiver route, severity-based blocking policy, evidence authority, QA result, acceptance decision, residual-risk decision, close authority, operations report, conformance catalog, SQLite DDL, persisted table, projection authority, rendered report, or template body.
+This reference does not define neighboring authority:
 
-Reference text documents the design-quality boundary and owner routing. It does not create Harness Server state, evidence, QA, acceptance, residual-risk decisions, or close-readiness state.
+- acceptance and close: product acceptance, final acceptance, residual-risk acceptance, close-readiness blockers, close authority, independent baseline gates, supported design-quality close categories, quality-waiver routes, or severity-based blocking policy
+- API, storage, and schemas: API method behavior, method-specific blocker production, storage effects, SQLite DDL, persisted tables, or supported validator families
+- evidence and reporting: evidence authority, QA results, operations reports, conformance catalogs, projection authority, rendered reports, or template bodies
+
+Reference text documents the design-quality boundary and owner routing. It does not create `Harness Server` state, user-owned judgment, `Write Authorization`, sensitive-action approval, evidence, QA, final acceptance, residual-risk acceptance, or close-readiness state.
 
 ## 2. Baseline design-quality role
 
@@ -59,8 +63,9 @@ Baseline owner-boundary rules:
 
 | Boundary | Rule |
 |---|---|
-| Independent close authority | A design-quality finding does not automatically become a close-readiness blocker, close category, scope override, evidence rule, or guarantee. |
+| Independent close authority | A design-quality finding does not automatically become a close-readiness blocker, close category, product acceptance gate, scope override, evidence rule, or guarantee. |
 | Evidence and risk | Evidence requirements, final acceptance, residual-risk visibility, and residual-risk acceptance affect close only when the Core evidence authority or another relevant reference contract defines that requirement or effect. |
+| Judgment and authorization | A finding does not replace user-owned judgment, `Write Authorization`, sensitive-action approval, final acceptance, residual-risk acceptance, or required evidence. |
 | Severity | Severity labels are advisory triage; they do not override API, storage, security, scope, or close-readiness owners. |
 | Focused action | A next action must stay limited to what the relevant owner contract requires; documentation-routing convenience cannot expand it. |
 | Owner gap | An owner gap means the required owner document or contract is absent or unclear. It does not make a route or document path a product authority. |
@@ -296,7 +301,7 @@ Evidence requirements follow the same boundary. A design-quality finding may poi
 ### Applicable close dependency
 
 Condition:
-- The observation is tied to the active `Task` or Change Unit and the attempted close.
+- The observation is tied to the current `Task` or Change Unit and the attempted close.
 - The observation names an existing supported `CloseReadinessBlocker.category`, supported `judgment_kind`, supported API error, or another relevant contract in the close dependency set.
 
 Close effect:
@@ -417,7 +422,7 @@ Boundary:
 - Broad approval, a friendly "looks good", or a general go-ahead counts as one of these judgments only when the relevant contract asks for that specific judgment.
 - Broad approval by itself is not one of these judgments.
 
-## 6. Evidence expectation
+## 6. Evidence routing boundary
 
 Design-quality observations may identify evidence gaps, but they do not create evidence requirements. Required evidence belongs to the Core evidence authority or another relevant reference contract.
 
@@ -473,7 +478,7 @@ Close effect:
 
 ## 7. Validator ID boundary
 
-Validator IDs are reporting labels. They do not create Core invariants, gates, close blockers, waivers, evidence records, or user judgments.
+Validator IDs are reporting labels. They do not create Core invariants, product gates, close blockers, waivers, evidence records, user judgments, `Write Authorization`, final acceptance, or residual-risk acceptance.
 
 `ValidatorResult` shape is owned by [API State Schemas](api/schema-state.md). Severity-like values and the boundary for any supported stable `ValidatorResult.validator_id` value are owned by [API Value Sets](api/schema-value-sets.md).
 
@@ -490,4 +495,4 @@ Design-quality policy material beyond this routing boundary is not baseline scop
 
 This page does not publish unsupported gate names, blocker categories, waiver branches, validator families, workflow branches, or promotion checklists. Use [Scope](scope.md) for category-level baseline exclusions.
 
-Out-of-scope quality material must not be presented as baseline requirements, blockers, waiver rules, evidence expectations, validator mappings, conformance scenario requirements, operations reports, or implementation tasks.
+Out-of-scope quality material must not be presented as baseline requirements, blockers, waiver rules, evidence requirements, verification criteria, validator mappings, conformance scenario requirements, operations reports, or implementation tasks.
