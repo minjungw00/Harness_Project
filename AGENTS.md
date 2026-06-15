@@ -46,7 +46,8 @@ Use the terminology map's Harness/Core distinction:
 - Use stable product or user scenarios in examples. Do not make documentation maintenance, route reshaping, or section restructuring the API example scenario unless the document is specifically about documentation maintenance.
 - Keep API examples internally consistent across request data, visible response state, `state_version`, refs, paths, artifact refs, run refs, judgment refs, sensitive approval reasons, and close-readiness evidence.
 - Preserve exact identifiers in prose, tables, examples, and route metadata.
-- Put major implementation decisions in `docs/en/build/implementation-guide.md` and `docs/ko/build/implementation-guide.md`, not in README files or broad route pages.
+- Treat `docs/en/build/implementation-guide.md` and `docs/ko/build/implementation-guide.md` as implementation reading paths and interpretation guides. They may route implementation questions to owner documents and describe guide-level supported implementation shape; they do not own product, API, storage, security, scope, schema, error, or Core authority semantics.
+- Do not put implementation logs, PR notes, transient migration records, or one-off decision records in maintained documentation. README files and route pages also stay short and navigational; contract-changing details belong in the relevant Reference owner.
 - Treat path allowlists and documentation batch boundaries as maintainer editing controls, not Harness runtime override capabilities.
 - Use durable maintenance wording. Avoid task-specific, PR-specific, or short-lived wording in maintained documentation.
 

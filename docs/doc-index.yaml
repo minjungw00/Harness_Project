@@ -243,14 +243,21 @@ documents:
     role: "build"
     owner_for:
       - "baseline implementation reading path"
-      - "baseline implementation interpretation"
-      - "minimal supported implementation shape"
+      - "owner-document interpretation for implementation questions"
+      - "guide-level supported implementation shape"
     not_owner_for:
       - "baseline scope contracts"
+      - "scope boundary changes"
       - "API behavior"
       - "schema contracts"
       - "storage contracts"
       - "security claims"
+      - "error behavior"
+      - "Core authority semantics"
+      - "product contract changes"
+      - "implementation logs"
+      - "PR notes"
+      - "transient migration records"
     normative_level: "guide"
     audience:
       - "implementers"

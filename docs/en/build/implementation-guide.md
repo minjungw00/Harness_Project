@@ -4,6 +4,8 @@ This guide is a reading path for implementers. It connects implementation questi
 
 It does not define or override baseline scope, API behavior, schemas, storage effects, security guarantees, runtime boundaries, error behavior, close-readiness rules, connector behavior, conformance authority, or example validity. Those contracts stay in the Reference owners.
 
+This guide may describe implementation reading paths, owner-document interpretation for implementation questions, and guide-level supported implementation shape. Decisions that change API behavior, storage effects, security guarantees, scope boundaries, schema shapes, error behavior, or Core authority semantics belong in the relevant Reference owner, not here.
+
 Harness is the local work-authority product/system for AI-assisted product work. Core is the local authority record for Harness state.
 
 ## Baseline implementation reading path
@@ -15,7 +17,7 @@ Use this path when turning product scope into implementation work:
 3. Read [Core Model](../reference/core-model.md) for authority concepts that cross APIs, storage, current scope, user-owned judgment, and close readiness.
 4. Use [API Methods](../reference/api/methods.md) for the supported public method list and method-owner routing.
 5. Add the focused schema, storage, runtime, security, error, and conformance owners only when the implementation question touches those concerns.
-6. Use [Agent Integration](../reference/agent-integration.md) and [Surface Recipes](../use/surface-recipes.md) for the surface or connector boundary they own.
+6. Use [Agent Integration](../reference/agent-integration.md) for connector boundaries and [Surface Recipes](../use/surface-recipes.md) for surface-specific usage workflows.
 7. Keep user-owned judgment, evidence, verification criteria, ordinary approval, write approval, sensitive-action approval, `Write Authorization`, final acceptance, close readiness, and residual-risk acceptance as distinct concepts. Core Model owns those distinctions.
 
 ## Owner route shortcuts
@@ -32,7 +34,7 @@ Use these as first-hop routes. Each route is a first stop; the focused owner car
 | Security boundaries and guarantee wording | [Security](../reference/security.md), with Scope for supported availability and API Value Sets for exact names |
 | Error behavior and blocker routing | [API Error Family Index](../reference/api/errors.md), then [API Error Codes](../reference/api/error-codes.md), [API Error Precedence](../reference/api/error-precedence.md), [API Error Routing](../reference/api/error-routing.md), [API Blocker Routing](../reference/api/blocker-routing.md), or [API Error Details](../reference/api/error-details.md) |
 | Conformance assertion authority | [Conformance](../reference/conformance.md), then the owner of each asserted fact |
-| Surface and connector boundaries | [Agent Integration](../reference/agent-integration.md) and [Surface Recipes](../use/surface-recipes.md) |
+| Connector boundaries and surface workflows | [Agent Integration](../reference/agent-integration.md) and [Surface Recipes](../use/surface-recipes.md) |
 | Read-only display and templates | [Projection Authority](../reference/projection-and-templates.md) and [Template Bodies](../reference/template-bodies.md) |
 
 If owners appear to disagree, the mismatch is an owner gap. Scope gates supported availability; focused owners define method behavior, schema shapes, storage effects, runtime locations, security wording, public error meanings, blocker routing, and assertion authority.
@@ -47,7 +49,7 @@ Names in value sets, examples, conformance scenario IDs, route summaries, or sch
 
 Use documents explain workflows, reader decisions, and expected outcomes. They are useful for understanding how a user or agent should move through Harness, but they do not override Reference contracts.
 
-Implementers may use [User Guide](../use/user-guide.md), [Agent Guide](../use/agent-guide.md), [Judgment Examples](../use/judgment-examples.md), and [Surface Recipes](../use/surface-recipes.md) to understand reader intent, surface behavior, and judgment boundaries. For API payloads, storage effects, security guarantees, close-readiness rules, access boundaries, or error behavior, route back to the applicable Reference owner.
+Implementers may use [User Guide](../use/user-guide.md), [Agent Guide](../use/agent-guide.md), [Judgment Examples](../use/judgment-examples.md), and [Surface Recipes](../use/surface-recipes.md) to understand reader intent, surface workflow expectations, and judgment boundaries. For API payloads, storage effects, security guarantees, close-readiness rules, access boundaries, or error behavior, route back to the applicable Reference owner.
 
 If a use document and a Reference owner seem to differ, the Reference owner is the authority. The route or guide mismatch is a documentation maintenance issue.
 
@@ -78,5 +80,7 @@ This is an implementation shape, not a separate contract.
 ## Repository boundary
 
 Runtime state, generated artifacts, evidence outputs, QA results, acceptance decisions, close-readiness state, residual-risk decisions, fixture outputs, and product implementation files are not stored in this documentation tree.
+
+Implementation logs, PR notes, transient migration records, and one-off decision records do not belong in maintained documentation.
 
 Path allowlists, route tables, and documentation batch boundaries in these docs are maintainer editing controls for the documentation set. They are not Harness runtime permissions, `Write Authorization`, sandbox guarantees, or proof of enforcement.
