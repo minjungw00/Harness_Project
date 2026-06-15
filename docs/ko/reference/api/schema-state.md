@@ -205,6 +205,7 @@ WriteDecisionReason:
 - `WriteDecisionReason.code` 생성과 로컬 의미: [`harness.prepare_write`](method-prepare-write.md)를 포함한 메서드 담당 문서
 - 공개 `ErrorCode` 값은 별도입니다: [API 오류 코드](error-codes.md)
 
+<a id="evidence-and-run-snapshot-shapes"></a>
 ## 증거와 실행 기록 스냅샷 형태
 
 ```yaml

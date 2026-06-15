@@ -66,6 +66,20 @@ Returns `RequestUserJudgmentResult` with:
 - affected `blocker_refs`
 - current `state`
 
+## Method result fields
+
+`RequestUserJudgmentResult` is the method-specific result branch for a committed user-judgment request. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Committed `RequestUserJudgmentResult` branches use `base.response_kind=result` and `base.effect_kind=core_committed`. `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
+| `user_judgment_ref` | `StateRecordRef` for the pending `UserJudgment` created by this request. |
+| `user_judgment` | The created pending `UserJudgment`. The nested shape, including `options`, `context`, `affected_refs`, `required_for`, and `resolution`, is owned by [API Judgment Schemas](schema-judgment.md#userjudgment). |
+| `blocker_refs` | `StateRecordRef[]` for blocker records affected by or still relevant to the pending judgment request. |
+| `state` | Current `StateSummary` after the pending judgment is created. Nested state fields are owned by [API State Schemas](schema-state.md). |
+
+The method owns that the committed `user_judgment` is pending and that `resolution` is `null`. The full judgment field body and judgment value sets stay with [API Judgment Schemas](schema-judgment.md) and [API Value Sets](schema-value-sets.md#judgment-values).
+
 ## Blocked result
 
 There is no separate committed blocked response branch for this method.

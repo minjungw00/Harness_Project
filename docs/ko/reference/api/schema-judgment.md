@@ -97,6 +97,7 @@ UserJudgmentContext:
 
 `option_id`는 그 판단 안에서만 유효합니다. `label`, `description`, `consequence`, `summary`, `constraints` 항목은 자유 형식 표시 문자열입니다. 화면에 보이는 라벨은 표시 텍스트이며 기준 스키마 값이 아닙니다.
 
+<a id="resolution-and-answer-payload"></a>
 ## 해결과 답변 요청 본문
 
 ```yaml

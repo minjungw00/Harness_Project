@@ -75,6 +75,21 @@
 
 결과는 포함된 차단 사유와 판단에 의존하는 요약만 갱신합니다. 관련 없는 승인, 증거, 범위 갱신, `Write Authorization`, 닫기 상태, 기록된 판단 자체를 넘어서는 잔여 위험 수락을 만들지 않습니다.
 
+## 메서드 결과 필드
+
+`RecordUserJudgmentResult`는 커밋된 사용자 판단 답변을 위한 메서드별 결과 분기입니다. 이 결과는 `base: ToolResultBase`와 아래 메서드 담당 최상위 필드를 담습니다.
+
+| 필드 | 결과 필드 의미 |
+|---|---|
+| `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 커밋된 `RecordUserJudgmentResult` 분기는 `base.response_kind=result`와 `base.effect_kind=core_committed`를 사용합니다. `base.events[].event_kind`가 있으면 불투명한 예시 분류 문자열입니다. |
+| `user_judgment_ref` | 답변이 기록된 뒤 지정된 `UserJudgment`의 `StateRecordRef`입니다. |
+| `user_judgment` | 기록된 답변이 초점이 맞는 판단을 해결할 때 `resolution`이 채워진 갱신된 `UserJudgment`입니다. 중첩 형태는 [API 판단 스키마](schema-judgment.md#userjudgment)가 담당합니다. |
+| `updated_refs` | 이 판단 답변 기록으로 갱신된 기록의 `StateRecordRef[]`입니다. |
+| `state` | 판단 답변이 기록된 뒤의 현재 `StateSummary`입니다. 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
+| `next_actions` | 다음에 안전하게 수행할 API 단계를 설명하는 `NextActionSummary[]`입니다. 기준 형태는 [API 상태 스키마](schema-state.md#current-position-display-shapes)가 담당합니다. |
+
+`RecordUserJudgmentPayload`는 `user_judgment.resolution.answer` 안에 남으며, [API 판단 스키마](schema-judgment.md#resolution-and-answer-payload)가 담당하는 형태를 사용합니다. `next_actions` 항목은 `action_kind`, `owner_method`, `label`, `blocking_question`, `required_refs`를 사용합니다. 오래된 `action` 또는 `reason` 필드는 `NextActionSummary`의 일부가 아닙니다.
+
 ## 차단 결과
 
 이 메서드에는 별도의 커밋된 차단 응답 분기가 없습니다.

@@ -160,6 +160,23 @@ Returns `CloseTaskResult` with `base.response_kind=result`.
 | Successful `intent=cancel` | `base.effect_kind=core_committed` | `cancelled` |
 | Successful `intent=supersede` | `base.effect_kind=core_committed` | `superseded` |
 
+## Method result fields
+
+`CloseTaskResult` is the method-specific result branch for a valid close check or terminal close attempt. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Valid `CloseTaskResult` branches use `base.response_kind=result`; this method selects `base.effect_kind=read_only` for `intent=check` and `base.effect_kind=core_committed` for committed terminal or owner-allowed committed blocked outcomes. |
+| `close_state` | Method result close state for the requested path. Supported values are owned by [API Value Sets](schema-value-sets.md#task-lifecycle-values). `close_state=blocked` is a method result after valid close or terminal-path evaluation, not `ToolRejectedResponse`. |
+| `state` | `StateSummary` for the selected Task after the check, terminal mutation, or owner-allowed blocked outcome. Nested state fields, including `close_blockers`, are owned by [API State Schemas](schema-state.md). |
+| `blockers` | `CloseReadinessBlocker[]` returned when the requested path has close or terminal blockers. Shape and nesting are owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes); `category` values are owned by [API Value Sets](schema-value-sets.md#state-and-blocker-values). |
+| `evidence_summary` | `EvidenceSummary | null` for the close basis visible in the result, or `null` when no evidence summary is selected into the result. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes). |
+| `artifact_refs` | `ArtifactRef[]` for close-relevant artifacts selected into the result. `ArtifactRef` shape is owned by [API Artifact Schemas](schema-artifacts.md#artifactref). |
+
+`CloseTaskResult` does not have a top-level `next_actions` field. Next actions for close blockers appear inside `CloseReadinessBlocker.next_actions` and use the canonical `NextActionSummary` shape from [API State Schemas](schema-state.md#current-position-display-shapes).
+
+This method owns the method-scoped `CloseReadinessBlocker.code` values it produces, such as the representative `missing_final_acceptance` code shown below. Those codes are not public `ErrorCode` values and are not global value-set entries unless another owner explicitly publishes them.
+
 ## Blocked result
 
 Conditions:
@@ -339,6 +356,7 @@ artifact_refs: []
 
 - Request envelope, common response branches, and `dry_run` summaries: [API Schema Core](schema-core.md).
 - `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, and `NextActionSummary` shapes: [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
+- `ArtifactRef` shape: [API Artifact Schemas](schema-artifacts.md#artifactref).
 - `intent` values: [API Value Sets method-local values](schema-value-sets.md#method-local-values).
 - Close state, lifecycle, and close reason values: [API Value Sets task lifecycle values](schema-value-sets.md#task-lifecycle-values).
 - `CloseReadinessBlocker.category` values: [API Value Sets state and blocker values](schema-value-sets.md#state-and-blocker-values).

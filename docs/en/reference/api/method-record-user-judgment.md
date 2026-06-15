@@ -75,6 +75,21 @@ The method may commit the addressed judgment as `resolved`, `rejected`, `deferre
 
 The result updates only covered blockers and judgment-dependent summaries. It does not create unrelated approvals, evidence, scope updates, `Write Authorization`, close state, or residual-risk acceptance beyond the recorded judgment itself.
 
+## Method result fields
+
+`RecordUserJudgmentResult` is the method-specific result branch for a committed user-judgment answer. It carries `base: ToolResultBase` and these method-owned top-level fields:
+
+| Field | Result-field meaning |
+|---|---|
+| `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Committed `RecordUserJudgmentResult` branches use `base.response_kind=result` and `base.effect_kind=core_committed`. `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
+| `user_judgment_ref` | `StateRecordRef` for the addressed `UserJudgment` after the answer is recorded. |
+| `user_judgment` | The updated `UserJudgment` with its `resolution` populated when the focused judgment is resolved by the recorded answer. The nested shape is owned by [API Judgment Schemas](schema-judgment.md#userjudgment). |
+| `updated_refs` | `StateRecordRef[]` for records updated by recording this judgment answer. |
+| `state` | Current `StateSummary` after the judgment answer is recorded. Nested state fields are owned by [API State Schemas](schema-state.md). |
+| `next_actions` | `NextActionSummary[]` describing next safe API steps. The canonical shape is owned by [API State Schemas](schema-state.md#current-position-display-shapes). |
+
+`RecordUserJudgmentPayload` stays inside `user_judgment.resolution.answer` and uses the shape owned by [API Judgment Schemas](schema-judgment.md#resolution-and-answer-payload). `next_actions` entries use `action_kind`, `owner_method`, `label`, `blocking_question`, and `required_refs`; stale `action` or `reason` fields are not part of `NextActionSummary`.
+
 ## Blocked result
 
 There is no separate committed blocked response branch for this method.

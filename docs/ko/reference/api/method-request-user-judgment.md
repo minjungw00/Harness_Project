@@ -66,6 +66,20 @@
 - 영향받은 `blocker_refs`
 - 현재 `state`
 
+## 메서드 결과 필드
+
+`RequestUserJudgmentResult`는 커밋된 사용자 판단 요청을 위한 메서드별 결과 분기입니다. 이 결과는 `base: ToolResultBase`와 아래 메서드 담당 최상위 필드를 담습니다.
+
+| 필드 | 결과 필드 의미 |
+|---|---|
+| `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 커밋된 `RequestUserJudgmentResult` 분기는 `base.response_kind=result`와 `base.effect_kind=core_committed`를 사용합니다. `base.events[].event_kind`가 있으면 불투명한 예시 분류 문자열입니다. |
+| `user_judgment_ref` | 이 요청으로 생성된 대기 중인 `UserJudgment`의 `StateRecordRef`입니다. |
+| `user_judgment` | 생성된 대기 중인 `UserJudgment`입니다. `options`, `context`, `affected_refs`, `required_for`, `resolution`을 포함한 중첩 형태는 [API 판단 스키마](schema-judgment.md#userjudgment)가 담당합니다. |
+| `blocker_refs` | 대기 판단 요청의 영향을 받았거나 계속 관련 있는 차단 사유 기록의 `StateRecordRef[]`입니다. |
+| `state` | 대기 판단이 생성된 뒤의 현재 `StateSummary`입니다. 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
+
+커밋된 `user_judgment`가 대기 상태이고 `resolution`이 `null`이라는 점은 이 메서드가 담당합니다. 판단 필드 본문 전체와 판단 값 집합은 [API 판단 스키마](schema-judgment.md)와 [API 값 집합](schema-value-sets.md#judgment-values)에 남습니다.
+
 ## 차단 결과
 
 이 메서드에는 별도의 커밋된 차단 응답 분기가 없습니다.

@@ -160,6 +160,23 @@ API 경계 블록:
 | 성공한 `intent=cancel` | `base.effect_kind=core_committed` | `cancelled` |
 | 성공한 `intent=supersede` | `base.effect_kind=core_committed` | `superseded` |
 
+## 메서드 결과 필드
+
+`CloseTaskResult`는 유효한 닫기 확인 또는 종료 닫기 시도를 위한 메서드별 결과 분기입니다. 이 결과는 `base: ToolResultBase`와 아래 메서드 담당 최상위 필드를 담습니다.
+
+| 필드 | 결과 필드 의미 |
+|---|---|
+| `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 유효한 `CloseTaskResult` 분기는 `base.response_kind=result`를 사용합니다. 이 메서드는 `intent=check`에는 `base.effect_kind=read_only`를, 커밋된 종료 결과 또는 담당 문서가 허용한 커밋된 차단 결과에는 `base.effect_kind=core_committed`를 선택합니다. |
+| `close_state` | 요청한 경로에 대한 메서드 결과 닫기 상태입니다. 지원 값은 [API 값 집합](schema-value-sets.md#task-lifecycle-values)이 담당합니다. `close_state=blocked`는 유효한 닫기 또는 종료 경로 평가 뒤의 메서드 결과이지 `ToolRejectedResponse`가 아닙니다. |
+| `state` | 확인, 종료 상태 변경, 또는 담당 문서가 허용한 차단 결과 뒤 선택된 Task의 `StateSummary`입니다. `close_blockers`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
+| `blockers` | 요청한 경로에 닫기 차단 사유 또는 종료 차단 사유가 있을 때 반환되는 `CloseReadinessBlocker[]`입니다. 형태와 중첩은 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당하며, `category` 값은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다. |
+| `evidence_summary` | 결과에 선택된 닫기 근거의 `EvidenceSummary | null`입니다. 결과에 증거 요약이 선택되지 않으면 `null`입니다. 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당합니다. |
+| `artifact_refs` | 결과에 선택된 닫기 관련 아티팩트의 `ArtifactRef[]`입니다. `ArtifactRef` 형태는 [API 아티팩트 스키마](schema-artifacts.md#artifactref)가 담당합니다. |
+
+`CloseTaskResult`에는 최상위 `next_actions` 필드가 없습니다. 닫기 차단 사유의 다음 동작은 `CloseReadinessBlocker.next_actions` 안에 나타나며 [API 상태 스키마](schema-state.md#current-position-display-shapes)의 기준 `NextActionSummary` 형태를 사용합니다.
+
+이 메서드는 자신이 생성하는 메서드 범위의 `CloseReadinessBlocker.code` 값을 담당합니다. 아래 대표 예시에 나오는 `missing_final_acceptance`가 그런 코드입니다. 이런 코드는 공개 `ErrorCode` 값이 아니며, 다른 담당 문서가 명시적으로 게시하지 않는 한 전역 값 집합 항목도 아닙니다.
+
 ## 차단 결과
 
 조건:
@@ -339,6 +356,7 @@ artifact_refs: []
 
 - 요청 래퍼, 공통 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, `NextActionSummary` 형태: [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes).
+- `ArtifactRef` 형태: [API 아티팩트 스키마](schema-artifacts.md#artifactref).
 - `intent` 값: [API 값 집합의 메서드 내부 값](schema-value-sets.md#method-local-values).
 - 닫기 상태, 생명주기, 닫기 이유 값: [API 값 집합의 Task 생명주기 값](schema-value-sets.md#task-lifecycle-values).
 - 차단 사유 범주 값(`CloseReadinessBlocker.category`): [API 값 집합의 상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values).
