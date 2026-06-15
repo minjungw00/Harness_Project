@@ -185,11 +185,14 @@ Fix:
 Check sources:
 - [Reference Index](../../reference/README.md)
 - [Authoring Guide](../authoring-guide.md)
+- [doc-index.yaml](../../../doc-index.yaml)
 
 Evidence to inspect:
-- Inspect `README` files, Start pages, Use pages, Build pages, Maintain pages, Scope pages, and route indexes for contract tables, long field explanations, status-value lists, security guarantee details, storage-effect details, and API branch summaries.
+- Classify pages from `doc-index.yaml` metadata such as `role`, `owner_for`, and `normative_level` before applying route-page checks.
+- Treat `reference.scope` (`docs/en/reference/scope.md` and `docs/ko/reference/scope.md`) as a contract owner for baseline scope, the supported boundary, the out-of-scope boundary, the profile-gated boundary, and the reserved behavior boundary.
+- Inspect route-only and index pages, such as `README` files, Start pages, Use pages, Build pages, Maintain pages, and reference indexes, for contract tables, long field explanations, status-value lists, security guarantee details, storage-effect details, and API branch summaries.
 - Confirm method-level owner maps appear only in [API Methods](../../reference/api/methods.md).
-- Confirm those pages route readers instead of defining contracts.
+- Confirm route-only and index pages route readers instead of defining contracts.
 - Confirm a route or index page does not become the broad contract document for several focused owners.
 - Confirm an index document is not listed or treated as the primary owner for detailed terms, schema/API/storage/security concepts, or owner contracts when a focused owner exists.
 - Confirm route and index pages do not accumulate detailed negative rules, exception lists, non-claim tables, or "must not" clauses that effectively define a contract outside its owner.
@@ -201,12 +204,14 @@ Failure:
 - A route list tries to enumerate every contract detail, owner subcase, status value, schema branch, storage effect, or security guarantee.
 - A route or index page becomes a contract by collecting enough prohibitions, exceptions, "Not allowed" rows, or "Does not imply" rows to define the concept negatively.
 - A non-method-router page repeats the supported public API method owner table.
+- A contract owner such as `reference.scope` is flagged as over-detailed merely because it contains contract detail that belongs to its `owner_for` scope.
 
 Fix:
 - Move normative detail to the canonical owner if it is missing there.
 - Replace route-page detail with reader purpose, expected result, and owner links.
 - Retarget the primary owner to the focused owner; keep indexes as first-hop routes or related references only.
 - Keep only the short boundary a route reader needs, then link to the owner for durable prohibitions, exceptions, and non-claims.
+- For `reference.scope`, evaluate whether scope detail stays within its owner boundary and routes API, storage, security, and other focused details to their owners.
 
 ## CHK-OWNER-003: value-set names versus semantic ownership
 

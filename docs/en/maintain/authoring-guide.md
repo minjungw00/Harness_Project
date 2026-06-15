@@ -18,7 +18,9 @@ Use the [Reference Index](../reference/README.md) as a human-readable route to o
 
 Owner documents define durable meaning for the specific concern they own. A product concept, API behavior, schema family, storage effect, security guarantee, value meaning, or close-readiness concept should have one canonical owner.
 
-Route documents help readers choose the next document. README files, Start pages, Use pages, Build pages, Maintain pages, Scope pages, and reference indexes may state purpose, audience, and next steps, but they should not become technical contracts.
+Classify route-only pages and indexes from `doc-index.yaml` metadata such as `role`, `owner_for`, and `normative_level`, not from a broad page-family label. `reference.scope` is a contract owner for baseline scope, the supported boundary, the out-of-scope boundary, the profile-gated boundary, and reserved behavior; treat it as the owner for those questions while routing API, storage, security, and other focused details to their own owners.
+
+Route documents help readers choose the next document. README files, Start pages, Use pages, Build pages, Maintain pages, and reference indexes may state purpose, audience, and next steps, but they should not become technical contracts.
 
 Maintain documents guide authors, translators, and reviewers. They may explain how to find owners, preserve terminology, and run checks. They must not become secondary sources for API behavior, storage effects, schemas, security guarantees, access boundaries, runtime state, close-readiness contracts, or product implementation.
 
@@ -40,7 +42,9 @@ Keep reference meaning units reviewable. Conditions, results, exceptions, non-cl
 
 ## 4. Route Pages
 
-Keep route pages short and navigational. If a route page starts to need field tables, status-value tables, storage-effect detail, error behavior, guarantee levels, or long lists of prohibitions and exceptions, move that material to the applicable owner and leave a short route link.
+Keep route-only and index pages short and navigational. If a route-only page or index starts to need field tables, status-value tables, storage-effect detail, error behavior, guarantee levels, or long lists of prohibitions and exceptions, move that material to the applicable owner and leave a short route link.
+
+Contract owner pages may contain the contract detail that belongs to their `owner_for` scope. They should still avoid duplicating other owners' API behavior, schema fields, storage effects, security guarantees, or adjacent contracts.
 
 Do not repeat the same owner map in multiple places. Keep the full machine-readable map in `doc-index.yaml`, keep human-readable owner routing in the relevant reference route, and let Maintain pages explain how to use those sources.
 

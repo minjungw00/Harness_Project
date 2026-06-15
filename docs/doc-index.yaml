@@ -283,9 +283,11 @@ documents:
     path_ko: "docs/ko/reference/scope.md"
     role: "reference"
     owner_for:
-      - "baseline scope"
-      - "included and excluded scope"
-      - "baseline and profile-gated scope boundaries"
+      - "baseline scope contract"
+      - "supported baseline boundary"
+      - "out-of-scope boundary"
+      - "profile-gated boundary"
+      - "reserved behavior boundary"
       - "scope-level guarantee boundary"
     not_owner_for:
       - "method behavior"
