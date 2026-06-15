@@ -2,7 +2,7 @@
 
 This document owns the baseline persistent storage record families and storage record layout. Persistent records are local records committed by Core for later reads inside the `Harness Runtime Home`.
 
-Persistent records provide local storage authority for Harness records. Security guarantees, external audit guarantees, anti-forgery claims, and `Product Repository` write authority remain with their owners.
+Persistent records are the local Core storage authority for Harness records. Security guarantees, external audit guarantees, anti-forgery claims, and `Product Repository` write authority remain with their owners.
 
 ## Owner boundaries
 
@@ -13,7 +13,7 @@ This document owns:
 - stored categories and relationship layout
 - storage-owned value sets
 - storage-owned SQLite JSON `TEXT` placement
-- record-layout validation expectations before commit
+- record-layout validation requirements before commit
 
 This document does not own:
 
@@ -69,9 +69,9 @@ Baseline storage persists only the record families defined by this baseline stor
 | `registry.sqlite` | Runtime Home identity | Runtime identity | One stored `runtime_home_id`, schema/storage profile, and local registry metadata. |
 | `registry.sqlite` | Project registration | Project mapping | Registered project identity mapped to `repo_root` and `project_home`. |
 | project home | `project.yaml` | Static configuration | Static project configuration for one registered project. |
-| `state.sqlite` | `project_state` | Project state header | Storage profile, `state_version`, active `Task` pointer, and default surface pointer. |
+| `state.sqlite` | `project_state` | Project state header | Storage profile, `state_version`, current `Task` pointer, and default surface pointer. |
 | `state.sqlite` | `surfaces` | Surface facts | Registered local surface facts needed for API envelope compatibility, capability display, and local-access posture. |
-| `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, lifecycle/result/close summary, active `CompletionPolicy`, and active Change Unit pointer. |
+| `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, lifecycle/result/close summary, current `CompletionPolicy`, and current Change Unit pointer. |
 | `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, close basis, Change Unit lifecycle, and owning `Task` relation. |
 | `state.sqlite` | `user_judgments` | User-owned judgment state | Pending and resolved user-owned judgments, including sensitive-action approval scope when relevant. |
 | `state.sqlite` | `write_authorizations` | Cooperative write authority | Single-use `Write Authorization`, basis version, attempt scope, expiration, and consumption state. |
@@ -94,8 +94,8 @@ Baseline records use opaque stable ids as primary keys or equivalent unique keys
 - Project registration requires unique project identity and a unique project home.
 - Project-scoped rows belong to a registered project.
 - Task-scoped rows belong to the same project and `Task` as their owning `tasks` row.
-- Active pointers, default surface pointers, and owner references must point to same-project records.
-- A `Task` has at most one active Change Unit.
+- Current pointers, default surface pointers, and owner references must point to same-project records.
+- A `Task` has at most one current Change Unit.
 - Single-use relations such as consumed `Write Authorization` rows, consumed staging handles, promoted staged artifacts, artifact owner links, and replay keys must not fork into multiple committed meanings.
 
 ### Current, event, and replay rows

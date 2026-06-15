@@ -138,9 +138,9 @@ Example staged artifact data:
 ```yaml
 artifact:
   kind: test_log
-  name: account_export_confirmation_test.log
-  description: "Test output for account data export confirmation tests."
-staged_artifact_handle: staged_artifact_account_export_test_log_001
+  name: checkout_receipt_render_test.log
+  description: "Test output for checkout receipt rendering."
+staged_artifact_handle: staged_artifact_receipt_render_test_log_001
 expires_at: "<future-expiration-timestamp>"
 ```
 
@@ -428,9 +428,17 @@ If artifact validation fails before commit, storage must not change artifact lif
 Allowed:
 
 - Unconsumed or expired `artifact_staging` rows and `artifacts/tmp/` staging bytes or notices may be marked `expired` or `discarded`.
-- transient bytes may be cleaned before registration.
+- Transient bytes may be cleaned before registration.
 
-These transient staging materials are not evidence authority. Once an `artifacts` row is committed, retention purge, project teardown, or destructive cleanup is outside ordinary baseline mutation behavior and needs an explicit storage or migration contract. That contract must preserve artifact hashes, owner links, events, and replay rows, or mark affected refs invalid for recovery.
+Condition:
+
+- These transient staging materials are not evidence authority.
+- Once an `artifacts` row is committed, retention purge, project teardown, or destructive cleanup is outside ordinary baseline mutation behavior.
+
+Required owner-defined contract:
+
+- That path needs an explicit storage or migration contract.
+- The contract must preserve artifact hashes, owner links, events, and replay rows, or mark affected refs invalid for recovery.
 
 Not allowed:
 

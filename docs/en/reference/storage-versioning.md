@@ -32,7 +32,7 @@ Meaning:
 - Task routing still matters for ownership, blockers, close state, evidence, and user judgments.
 - Task routing does not select a separate Task-local state clock.
 - A committed mutation response reports the resulting project-wide version.
-- Read-only results, `ToolDryRunResponse` previews, and transient staging responses report the current project-wide version they observed.
+- Read-only results, `ToolDryRunResponse` previews, and artifact-staging responses report the current project-wide version they observed.
 
 Increments when:
 
@@ -40,7 +40,7 @@ Increments when:
 
 Does not increment when:
 
-- A response only observes state, previews a dry-run effect, stages transient data, or rejects before commit.
+- A response only observes state, previews a dry-run effect, stages artifact data, or rejects before commit.
 
 Retry behavior:
 
@@ -421,14 +421,14 @@ Owner links:
 
 Meaning:
 
-- Migration semantics describe how accepted storage profile or schema-version changes preserve Core authority records.
+- Migration semantics describe how supported storage profile or schema-version changes preserve Core authority records.
 - Supported migration execution exists only when [Scope](scope.md) and the affected storage owners define a supported path.
 - Migration detail must state the version, storage profile, validation, repair, and tightening behavior it owns.
 
 Increments when:
 
-- No public API `state_version` increment is defined for migration unless the migration owner explicitly defines one.
-- An accepted migration states its version and storage-profile behavior in its owning documentation.
+- No public API `state_version` increment is defined for migration unless the owning migration contract explicitly defines one.
+- A supported migration states its version and storage-profile behavior in its owning documentation.
 
 Does not increment when:
 
@@ -446,7 +446,7 @@ Owner links:
 
 The baseline migration boundary is:
 
-- Store schema/profile version in Runtime Home metadata and `project_state`, or an equivalent maintainer-accepted mechanism.
+- Store schema/profile version in Runtime Home metadata and `project_state`, or an equivalent storage owner-defined mechanism.
 - Validate owner-shaped JSON before commit and before tightening constraints.
 - Treat unknown owner-bound status or enum values as invalid until an owner defines them.
 - Tighten nullable fields, foreign keys, enum checks, and JSON validation only after existing rows have been validated or routed to an owner-defined repair state.

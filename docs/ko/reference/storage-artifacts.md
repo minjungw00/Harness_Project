@@ -138,9 +138,9 @@ Core는 성공한 `harness.stage_artifact` 요청의 `VerifiedSurfaceContext`에
 ```yaml
 artifact:
   kind: test_log
-  name: account_export_confirmation_test.log
-  description: "계정 데이터 내보내기 확인 테스트 출력."
-staged_artifact_handle: staged_artifact_account_export_test_log_001
+  name: checkout_receipt_render_test.log
+  description: "결제 영수증 렌더링 테스트 출력."
+staged_artifact_handle: staged_artifact_receipt_render_test_log_001
 expires_at: "<future-expiration-timestamp>"
 ```
 
@@ -430,7 +430,15 @@ expires_at: "<future-expiration-timestamp>"
 - 소비되지 않았거나 만료된 `artifact_staging` 행과 `artifacts/tmp/` 스테이징 바이트 또는 알림은 `expired` 또는 `discarded`로 표시할 수 있습니다.
 - 등록 전 임시 바이트는 정리할 수 있습니다.
 
-이 임시 스테이징 자료는 증거 권한이 아닙니다. `artifacts` 행이 커밋된 뒤의 보존 정책에 따른 삭제, 프로젝트 해체, 파괴적 정리는 일반적인 기준 범위의 변경 동작에 포함되지 않으며 명시적인 저장소 또는 마이그레이션 계약이 필요합니다. 그 계약은 아티팩트 해시, 담당 연결, 이벤트, 재실행 행을 보존해야 합니다. 그렇지 않으면 영향을 받은 참조를 복구할 때 유효하지 않은 것으로 표시해야 합니다.
+조건:
+
+- 이 임시 스테이징 자료는 증거 권한이 아닙니다.
+- `artifacts` 행이 커밋된 뒤의 보존 정책에 따른 삭제, 프로젝트 해체, 파괴적 정리는 일반적인 기준 범위의 변경 동작에 포함되지 않습니다.
+
+담당 문서가 정의해야 하는 계약:
+
+- 그런 경로에는 명시적인 저장소 또는 마이그레이션 계약이 필요합니다.
+- 그 계약은 아티팩트 해시, 담당 연결, 이벤트, 재실행 행을 보존해야 합니다. 그렇지 않으면 영향을 받은 참조를 복구할 때 유효하지 않은 것으로 표시해야 합니다.
 
 허용되지 않는 것:
 

@@ -239,25 +239,12 @@ Disallowed effects:
 - consuming staged handles
 - applying `close_task` effects
 
-Example account data export write-decision data:
+Persistence boundary:
 
-For the request-side `harness.prepare_write` payload fields, see the [`harness.prepare_write` reference](api/method-prepare-write.md). This section only describes the storage effect of recording the write decision and its reasons.
+- Request-side `harness.prepare_write` payload fields belong to the [`harness.prepare_write` reference](api/method-prepare-write.md).
+- Stored `write_decision_reasons` remain `harness.prepare_write` decision reasons.
 
-```yaml
-intended_operation: "update account data export flow to require explicit confirmation"
-intended_paths:
-  - src/account/export.ts
-  - src/account/export-confirmation.ts
-  - tests/account-export.test.ts
-sensitive_categories:
-  - personal_data_export
-decision: approval_required
-write_decision_reasons:
-  - code: sensitive_export_flow
-    message: "Account data export may include personal data and requires separate sensitive-action approval before Write Authorization."
-```
-
-Those reasons are `harness.prepare_write` decision reasons. They are not:
+Those stored reasons are not:
 
 - close-readiness blockers
 - `CloseReadinessBlocker[]`
@@ -295,7 +282,7 @@ This table summarizes persistence effects. Method behavior and response unions r
 | Method | Primary storage effect | Details |
 |---|---|---|
 | `harness.intake` | creates task and shaping records | See [`harness.intake`](#harnessintake) |
-| `harness.update_scope` | updates active scope records | See [`harness.update_scope`](#harnessupdate_scope) |
+| `harness.update_scope` | updates current scope records | See [`harness.update_scope`](#harnessupdate_scope) |
 | `harness.status` | read-only response | See [`harness.status`](#harnessstatus) |
 | `harness.prepare_write` | records write decision effects | See [`harness.prepare_write`](#harnessprepare_write) |
 | `harness.stage_artifact` | creates transient staging only | See [`harness.stage_artifact`](#harnessstage_artifact) |
@@ -303,9 +290,9 @@ This table summarizes persistence effects. Method behavior and response unions r
 | `harness.request_user_judgment` | creates pending judgment request | See [`harness.request_user_judgment`](#harnessrequest_user_judgment) |
 | `harness.record_user_judgment` | resolves user judgment | See [`harness.record_user_judgment`](#harnessrecord_user_judgment) |
 | `harness.close_task intent=check` | read-only close-readiness check | See [`harness.close_task intent=check`](#harnessclose_task-intentcheck) |
-| `harness.close_task intent=complete` | closes or records blocked `complete` outcome | See [`harness.close_task intent=complete`](#harnessclose_task-intentcomplete) |
-| `harness.close_task intent=cancel` | cancels or records blocked cancellation | See [`harness.close_task intent=cancel`](#harnessclose_task-intentcancel) |
-| `harness.close_task intent=supersede` | supersedes or records blocked supersession | See [`harness.close_task intent=supersede`](#harnessclose_task-intentsupersede) |
+| `harness.close_task intent=complete` | persists method-selected `complete` terminal or blocked effect | See [`harness.close_task intent=complete`](#harnessclose_task-intentcomplete) |
+| `harness.close_task intent=cancel` | persists method-selected cancellation terminal or blocked effect | See [`harness.close_task intent=cancel`](#harnessclose_task-intentcancel) |
+| `harness.close_task intent=supersede` | persists method-selected supersession terminal or blocked effect | See [`harness.close_task intent=supersede`](#harnessclose_task-intentsupersede) |
 
 <a id="harnessintake"></a>
 ### `harness.intake`
@@ -337,8 +324,8 @@ Owner links:
 
 Committed `dry_run=false` may:
 
-- update active Task scope fields
-- create or replace active `change_units`
+- update current-scope Task fields
+- create or replace current `change_units`
 - update blockers or stale `Write Authorization` refs as the method owner allows
 - append events
 - create a replay row
@@ -382,7 +369,7 @@ Owner links:
 
 Committed `dry_run=false` with `decision=allowed` may:
 
-- create or return a compatible active `Write Authorization`
+- create or return a compatible `status=active` `Write Authorization`
 - append events
 - create a replay row
 - increment `project_state.state_version` once
@@ -390,15 +377,8 @@ Committed `dry_run=false` with `decision=allowed` may:
 Committed non-allowed decisions:
 
 - See [`harness.prepare_write` committed non-allow decision](#harnessprepare_write-committed-non-allow-decision).
-
-For account data export that may include personal data, a persisted write decision may record only the separate sensitive-action approval requirement before `Write Authorization`:
-
-```yaml
-decision: approval_required
-write_decision_reasons:
-  - code: sensitive_export_flow
-    message: "Account data export may include personal data and requires separate sensitive-action approval before Write Authorization."
-```
+- They may persist only the method-owned decision and `write_decision_reasons`.
+- They do not create `Write Authorization`.
 
 No-effect branches:
 
@@ -493,18 +473,11 @@ Rejected attempts do not change:
 - staging rows
 - artifacts
 
-Product file write persistence is separate from test evidence persistence. When the method owner allows a committed run that records a product file write, storage may consume a compatible `write_authorizations` row and persist the allowed run and evidence effects. The account data export confirmation example below is not a product file write observation.
+Product file write persistence boundary:
 
-For an account data export confirmation test run, a committed `harness.record_run` may record test evidence, promote the staged test log, and update evidence:
-
-```yaml
-command: "npm test -- account-export"
-summary: "Account data export confirmation tests passed."
-artifacts:
-  - staged_artifact_account_export_test_log_001
-run_ref: run_account_export_tests_001
-state_version: 21
-```
+- When the method owner allows a committed run that records a product file write, storage may consume a compatible `write_authorizations` row in the same commit.
+- Test evidence persistence can promote staged artifacts and update evidence without implying a product file write observation.
+- Exact run classification belongs to the [`harness.record_run` method](api/method-record-run.md).
 
 Owner links:
 
@@ -599,8 +572,8 @@ Owner links:
 
 Committed `dry_run=false` may:
 
-- close the Task when blockers allow it
-- commit allowed blocked `complete` effects while the Task remains open
+- persist the method-selected terminal completion effect
+- persist an owner-allowed blocked `complete` effect while the Task remains open
 - append events
 - create a replay row
 - increment `project_state.state_version` once
@@ -622,13 +595,11 @@ Owner links:
 
 Committed `dry_run=false` may:
 
-- cancel the Task
-- commit blockers that invalidate cancellation itself while the Task remains open
+- persist the method-selected cancellation effect
+- persist an owner-allowed blocked cancellation effect while the Task remains open
 - append events
 - create a replay row
 - increment `project_state.state_version` once
-
-Cancellation is not evidence sufficiency.
 
 No-effect branches:
 
@@ -647,14 +618,12 @@ Owner links:
 
 Committed `dry_run=false` may:
 
-- supersede the Task
-- update `project_state.active_task_id` in the same mutation
-- commit blockers that invalidate supersession itself
+- persist the method-selected supersession effect
+- update `project_state.active_task_id` in the same mutation when the method-selected effect requires it
+- persist an owner-allowed blocked supersession effect
 - append events
 - create a replay row
 - increment `project_state.state_version` once
-
-Supersession is not evidence sufficiency.
 
 No-effect branches:
 
