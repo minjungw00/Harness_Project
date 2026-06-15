@@ -88,6 +88,11 @@
 결과 데이터:
 
 - `write_decision_reasons`는 비어 있으면 안 됩니다.
+- 각 항목은 `WriteDecisionReason`입니다.
+- `category`는 제어되는 `WriteDecisionReason.category` 값 집합을 사용합니다.
+- `code`는 이 메서드 문서가 더 좁은 로컬 코드 목록을 명시적으로 정의하지 않는 한 메서드 범위의 불투명 reason code입니다. 이 문서의 예시 코드는 설명용이며 전역 값 집합 항목이 아닙니다.
+- `message`는 자유 형식 표시 문자열입니다.
+- `related_refs`는 `StateRecordRef[]`를 사용합니다. 관련 참조가 없으면 `[]`를 사용합니다.
 
 비주장:
 
@@ -272,6 +277,8 @@ guarantee_display:
 ### 승인 필요 분기
 
 대응하는 민감 동작 승인이 없을 때 적용되는 분기입니다.
+
+아래의 `code: sensitive_account_preference` 값은 이 예시를 위한 메서드 범위의 설명용 reason code입니다. 전역 `WriteDecisionReason.code` 값이 아닙니다.
 
 ```yaml
 base:

@@ -74,9 +74,9 @@ These values classify the API actor named by the request or resolution shape. Th
 <a id="next-action-values"></a>
 ## Next-action values
 
-`NextActionSummary.action_kind` uses:
+`NextActionSummary.action_kind` is a controlled action-category value. It uses only these supported values:
 
-| `action_kind` value | Matching `owner_method` when a method owns the next step |
+| `action_kind` value | `owner_method` when one method owns the next step |
 |---|---|
 | `update_scope` | `harness.update_scope` |
 | `prepare_write` | `harness.prepare_write` |
@@ -86,7 +86,7 @@ These values classify the API actor named by the request or resolution shape. Th
 | `record_user_judgment` | `harness.record_user_judgment` |
 | `close_task` | `harness.close_task` |
 
-`action_kind` is an action category. It is not a method-name value. When a full method name is needed, `NextActionSummary.owner_method` uses the [method-name value set](#method-name-values). Method behavior for the next step stays with the method owner document routed from [API Methods](methods.md).
+`action_kind` is not a method-name value. `NextActionSummary.owner_method` uses the [method-name value set](#method-name-values) when one supported public method owns the next step, and it is `null` when no single owner method applies. Method behavior for the next step stays with the method owner document routed from [API Methods](methods.md). The full `NextActionSummary` shape is owned by [API State Schemas](schema-state.md#current-position-display-shapes).
 
 <a id="response-and-effect-values"></a>
 ## Response and effect values
@@ -303,7 +303,7 @@ write_decision
 close_readiness
 ```
 
-`WriteDecisionReason.category` uses:
+`WriteDecisionReason.category` is a controlled category value. It uses only these supported values:
 
 | Value | Category family |
 |---|---|
@@ -316,7 +316,7 @@ close_readiness
 
 These categories classify `harness.prepare_write` decision reasons. They are not `CloseReadinessBlocker` objects and do not evaluate close readiness. Method-specific decision behavior and reason production stay with [`harness.prepare_write`](method-prepare-write.md).
 
-`WriteDecisionReason.code` is not a global closed enum. It is a method-scoped opaque reason code; method owners may show example codes without adding them to a global supported list.
+This value set controls `category` only. `WriteDecisionReason.code` is not a global closed enum. It is a method-scoped opaque reason code; method owners may show example codes without adding them to a global supported list. `message` is a free-form display string, and `related_refs` uses `StateRecordRef`.
 
 `CloseReadinessBlocker.category` uses:
 

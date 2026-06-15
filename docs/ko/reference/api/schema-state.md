@@ -170,17 +170,31 @@ WriteDecisionReason:
 ```
 
 의미:
-- `NextActionSummary`는 기준 다음 행동 표시 형태입니다.
-- `NextActionSummary.action_kind`는 제어되는 행동 범주 문자열입니다.
-- `owner_method`는 값이 있을 때 다음 단계를 담당하는 지원 공개 메서드 이름입니다. `action_kind`와는 구분됩니다.
-- `label`과 `blocking_question`은 자유 형식 표시 문자열이고, `required_refs`는 다음 단계에 필요한 기록을 가리킵니다.
+- `NextActionSummary`는 기준 다음 행동 표시 형태입니다. 유효한 필드는 `action_kind`, `owner_method`, `label`, `blocking_question`, `required_refs`입니다.
+- 오래된 `action` 또는 `reason` 필드를 쓰는 `next_actions` 항목은 유효한 `NextActionSummary`가 아닙니다.
 - `WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status`는 제어 값 문자열입니다.
 - `WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다.
-- `WriteDecisionReason.category`는 제어 값 문자열입니다.
-- `WriteDecisionReason.code`는 메서드 담당 문서가 더 좁은 로컬 코드 목록을 명시적으로 정의하지 않는 한 메서드 범위의 불투명 사유 코드입니다.
-- `WriteDecisionReason.message`는 자유 형식 표시 문자열입니다.
 
-`CloseReadinessBlocker`와는 다른 형태입니다.
+`NextActionSummary` 필드 분류:
+
+| 필드 | 분류 | 규칙 |
+|---|---|---|
+| `action_kind` | 제어되는 행동 범주 값. | [다음 행동 값](schema-value-sets.md#next-action-values)의 값 집합을 사용합니다. 메서드 이름 값이 아닙니다. |
+| `owner_method` | 담당 method 이름 또는 `null`. | 지원되는 공개 메서드 하나가 다음 행동을 담당할 때 그 API method를 이름 붙입니다. 단일 담당 method가 없으면 `null`을 사용합니다. |
+| `label` | 자유 형식 표시 문자열. | 사람과 LLM 에이전트가 읽는 표시 문자열이며 기준 값이 아닙니다. |
+| `blocking_question` | 자유 형식 표시 문자열 또는 `null`. | 행동을 진행하기 전에 풀어야 하는 질문입니다. 필요한 질문이 없으면 `null`을 사용합니다. |
+| `required_refs` | `StateRecordRef[]`. | 다음 행동에 필요한 기록입니다. 필요한 참조가 없으면 `[]`를 사용합니다. |
+
+`WriteDecisionReason` 필드 분류:
+
+| 필드 | 분류 | 규칙 |
+|---|---|---|
+| `category` | 제어되는 범주 값. | [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당하는 `WriteDecisionReason.category` 값 집합을 사용합니다. |
+| `code` | 메서드 범위의 불투명 reason code. | 전역의 빠짐없는 enum이 아닙니다. 메서드 담당 문서가 로컬 코드를 정의할 수 있지만, 예시 코드는 전역 값이 되지 않습니다. |
+| `message` | 자유 형식 표시 문자열. | 사람과 LLM 에이전트가 읽는 표시 문자열이며 기준 값이 아닙니다. |
+| `related_refs` | `StateRecordRef[]`. | 결정 사유와 관련된 기록입니다. 관련 참조가 없으면 `[]`를 사용합니다. |
+
+`WriteDecisionReason`은 `CloseReadinessBlocker`와 다른 형태입니다.
 
 담당 문서 링크:
 - `action_kind` 값: [다음 행동 값](schema-value-sets.md#next-action-values)

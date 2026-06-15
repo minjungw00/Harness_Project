@@ -88,6 +88,11 @@ Committed blocked decisions are `PrepareWriteResult` values with one of these de
 Result data:
 
 - `write_decision_reasons` must be non-empty.
+- Each entry is a `WriteDecisionReason`.
+- `category` uses the controlled `WriteDecisionReason.category` value set.
+- `code` is a method-scoped opaque reason code unless this method document explicitly defines a narrower local code list. Example codes in this document are illustrative and are not global value-set entries.
+- `message` is a free-form display string.
+- `related_refs` uses `StateRecordRef[]`; use `[]` when no related refs apply.
 
 Non-claims:
 
@@ -272,6 +277,8 @@ guarantee_display:
 ### Approval-required branch
 
 This branch applies when the matching sensitive-action approval is missing.
+
+The `code: sensitive_account_preference` value below is a method-scoped illustrative reason code for this example. It is not a global `WriteDecisionReason.code` value.
 
 ```yaml
 base:

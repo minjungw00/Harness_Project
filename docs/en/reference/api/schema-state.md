@@ -170,17 +170,31 @@ WriteDecisionReason:
 ```
 
 Meaning:
-- `NextActionSummary` is the canonical next-action display shape.
-- `NextActionSummary.action_kind` is a controlled action-category string.
-- `owner_method`, when present, names the supported public method that owns the next step. It is distinct from `action_kind`.
-- `label` and `blocking_question` are free-form display strings; `required_refs` names records needed for the next step.
+- `NextActionSummary` is the canonical next-action display shape. Its valid fields are `action_kind`, `owner_method`, `label`, `blocking_question`, and `required_refs`.
+- A `next_actions` entry that uses stale `action` or `reason` fields is not a valid `NextActionSummary`.
 - `WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` are controlled value strings.
 - `WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`.
-- `WriteDecisionReason.category` is a controlled value string.
-- `WriteDecisionReason.code` is a method-scoped opaque reason code unless a method owner explicitly defines a narrower local code list.
-- `WriteDecisionReason.message` is a free-form display string.
 
-It is distinct from `CloseReadinessBlocker`.
+`NextActionSummary` field classifications:
+
+| Field | Classification | Rule |
+|---|---|---|
+| `action_kind` | Controlled action category. | Uses the [next-action values](schema-value-sets.md#next-action-values). It is not a method-name value. |
+| `owner_method` | Method-name value or `null`. | Names the API method that owns the next action when one supported public method applies. Use `null` when no single owner method applies. |
+| `label` | Free-form display string. | Human- and agent-facing display text, not a canonical value. |
+| `blocking_question` | Free-form display string or `null`. | The question to resolve before the action can proceed, or `null` when no blocking question is needed. |
+| `required_refs` | `StateRecordRef[]`. | Records required for the next action. Use `[]` when there are no required refs. |
+
+`WriteDecisionReason` field classifications:
+
+| Field | Classification | Rule |
+|---|---|---|
+| `category` | Controlled category value. | Uses the `WriteDecisionReason.category` values owned by [API Value Sets](schema-value-sets.md#state-and-blocker-values). |
+| `code` | Method-scoped opaque reason code. | Not a global exhaustive enum. A method owner may define local codes, but example codes do not become global values. |
+| `message` | Free-form display string. | Human- and agent-facing display text, not a canonical value. |
+| `related_refs` | `StateRecordRef[]`. | Records related to the decision reason. Use `[]` when there are no related refs. |
+
+`WriteDecisionReason` is distinct from `CloseReadinessBlocker`.
 
 Owner links:
 - `action_kind` values: [next-action values](schema-value-sets.md#next-action-values)
