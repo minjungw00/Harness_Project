@@ -55,6 +55,8 @@ ArtifactRef:
 
 `ArtifactRef` is a reference and metadata shape. It does not make artifact body content readable by default and does not prove that the content is sufficient evidence for close.
 
+`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, and `storage_ref` are opaque identifiers. `display_name` is a free-form display string. `content_type` is media-type metadata, and `sha256` is a checksum string. `redaction_state` and `availability` are controlled value strings owned by [artifact values](schema-value-sets.md#artifact-values).
+
 ## `StagedArtifactHandle`
 
 `StagedArtifactHandle` is the transient-handle shape associated with `harness.stage_artifact` results. It is not the persistent `ArtifactRef` shape.
@@ -76,6 +78,8 @@ StagedArtifactHandle:
 
 The caller does not submit `created_by_surface_id` or `created_by_surface_instance_id` as authority claims. Staged-handle lifecycle, provenance validation, expiry, and promotion are owned by [Artifact Storage](../storage-artifacts.md) and method owner documents.
 
+`handle_id`, `project_id`, `task_id`, `created_by_surface_id`, and `created_by_surface_instance_id` are opaque identifiers. `content_type` is media-type metadata, `sha256` is a checksum string, and `redaction_state` is a controlled value string.
+
 ## `ArtifactInput`
 
 `ArtifactInput` is the request-side shape for methods that accept artifact links for run or evidence output.
@@ -94,6 +98,8 @@ ArtifactInput:
 ```
 
 For each input, exactly one source field is populated and the other source field is `null`. `ArtifactInput.source_kind` selects which source field applies; supported source-kind values and value meanings are owned by [artifact values](schema-value-sets.md#artifact-values).
+
+`artifact_input_id` is an opaque request-local input identifier. `relation_hint` and `claim` are free-form display or claim strings. `expected_sha256` is a checksum string. `redaction_state`, when present, is a controlled value string.
 
 Shape rules:
 - If `staged_artifact_handle` is populated, `existing_artifact_ref` is `null`.

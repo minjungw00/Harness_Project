@@ -38,12 +38,19 @@ Does not imply:
 - Schema blocks are not generated code.
 
 Notation:
+- `string` identifies the JSON scalar shape only. It does not by itself mean free-form text.
 - `string | null` means the field is present and may be null.
 - `Type[]` means an array of that type.
 
+String-like field classes:
+- A controlled value string must use the supported values from its linked value-set owner.
+- An opaque identifier or classification string is stable enough to carry, compare, correlate, or route to a narrower owner, but it is not an exhaustive public enum unless the owner publishes a value list.
+- A free-form display string is human-facing text. It is not a canonical schema value, error code, blocker code, or storage identifier.
+
 Owner links:
-- Field value sets: [API Value Sets](schema-value-sets.md), unless this page says the field is free-form text or an opaque identifier.
-- API examples must use supported enum-like values from [API Value Sets](schema-value-sets.md) unless the relevant schema owner explicitly defines the field as free-form text or an opaque identifier.
+- Controlled value strings: [API Value Sets](schema-value-sets.md), unless a schema or method owner links to a narrower owner.
+- Public error codes: [API error codes](error-codes.md).
+- API examples must use supported enum-like values from [API Value Sets](schema-value-sets.md) unless the relevant schema owner explicitly defines the field as free-form display text, an opaque identifier, or an opaque classification string.
 
 <a id="tool-envelope"></a>
 ## `ToolEnvelope`
@@ -72,12 +79,16 @@ ToolEnvelope:
 
 Meaning:
 - `task_id` is an optional request-level Task selector.
+- `actor_kind` is a controlled value string.
 - `expected_state_version` is the request-level field for a project-wide state clock value.
+- `project_id`, `task_id`, `surface_id`, `request_id`, and `idempotency_key` are opaque identifiers.
+- `locale` is a locale tag string, not a Harness-controlled value set.
 
 Does not imply:
 - This field list does not define conflict behavior, storage versioning, or method-specific selector precedence.
 
 Owner links:
+- `actor_kind` values: [actor values](schema-value-sets.md#actor-values)
 - method-specific request behavior: method owner documents routed from [API Methods](methods.md)
 - conflict behavior: [state version conflict](error-precedence.md#state-conflict-behavior)
 - storage version behavior: [Storage Versioning](../storage-versioning.md)
@@ -160,9 +171,12 @@ PlannedBlocker:
 Owner links:
 - `NextActionSummary` and `StateRecordRef`: [API State Schemas](schema-state.md)
 - `PlannedBlocker.source_kind` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
+- `PlannedBlocker.category` value routing: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
 - public `ErrorCode` values used in `ToolError.code`: [API error codes](error-codes.md)
 
-`PlannedEffect.target_kind`, `PlannedEffect.action`, and `PlannedEffect.description` are descriptive preview strings unless a method owner narrows them for a specific dry-run branch.
+`PlannedEffect.target_kind` and `PlannedEffect.action` are opaque preview classification strings unless a method owner narrows them for a specific dry-run branch. `PlannedEffect.description` and `DryRunSummary.diagnostics[]` entries are free-form display strings.
+
+`PlannedBlocker.category` uses the category set for the blocker family named by `PlannedBlocker.source_kind`: write-decision categories for `source_kind=write_decision`, and close-readiness blocker categories for `source_kind=close_readiness`. `PlannedBlocker.code` is an opaque preview reason code unless the method owner explicitly defines a narrower local code list. `PlannedBlocker.message` is a free-form display string.
 
 <a id="shared-support-shapes"></a>
 
@@ -182,6 +196,10 @@ EventRef:
 
 Meaning:
 - `ToolError` is the shape used by `ToolRejectedResponse.errors` and previewable `DryRunSummary.would_errors`.
+- `ToolError.code` is a public `ErrorCode` value.
+- `ToolError.message` is a free-form display string.
+- `EventRef.event_id` is an opaque event identifier.
+- `EventRef.event_kind` is an opaque event classification string. It is stable enough to carry and route, but this document does not publish an exhaustive public event-kind value set.
 
 Owner links:
 - public error code set: [API error codes](error-codes.md)

@@ -27,6 +27,8 @@
 
 의미:
 - `StateRecordRef`는 API 응답에 나타나는 Core 소유 기록의 공통 공개 참조 형태입니다.
+- `record_kind`는 제어 값 문자열입니다.
+- `record_id`, `project_id`, `task_id`는 불투명 식별자입니다.
 
 이는 공개 참조 형태이며 저장소 행을 그대로 넣은 것이 아닙니다.
 
@@ -73,11 +75,15 @@ StateSummary:
 
 의미:
 - `StateSummary`는 상태 참조, 요약, 닫기 준비 상태 필드를 담는 간결한 응답 형태입니다.
+- `mode`와 `close_state`는 값이 있을 때 제어 값 문자열입니다.
+- `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, `autonomy_boundary`는 자유 형식 표시 문자열입니다.
+- `baseline_ref`는 불투명 기준선 식별자입니다.
 
 의미하지 않는 것:
 - `StateSummary` 필드가 있다는 사실만으로 메서드 커밋 여부가 정의되지 않습니다.
 
 담당 문서 링크:
+- `mode`와 `close_state` 값: [`Task` 생명주기 값](schema-value-sets.md#task-lifecycle-values)
 - 커밋 결정 분기: [공통 응답 분기](schema-core.md#common-response)
 - 메서드별 커밋 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
 
@@ -125,6 +131,8 @@ ShapingGap:
 
 의미:
 - `ShapingGap`은 차단 사유나 사용자 판단 후보를 형태상 참조할 수 있습니다.
+- `user_owned_blocker_kind`와 `ShapingGap.gap_kind`는 불투명 준비 상태 분류 문자열입니다. 영향받는 담당 문서가 더 좁은 값을 공개하지 않는 한 빠짐없는 공개 값 집합이 아닙니다.
+- `ShapingGap.message`는 자유 형식 표시 문자열입니다.
 
 담당 문서 링크:
 - 메서드 동작과 지속 효과: [API 메서드](methods.md)가 안내하는 메서드 담당 문서와 [저장 효과](../storage-effects.md)
@@ -162,16 +170,24 @@ WriteDecisionReason:
 
 의미:
 - `NextActionSummary`는 기준 다음 행동 표시 형태입니다.
+- `NextActionSummary.action_kind`는 제어 값 문자열입니다.
 - `owner_method`는 값이 있을 때 다음 단계를 담당하는 지원 공개 메서드 이름입니다.
-- `label`과 `blocking_question`은 표시 텍스트이고, `required_refs`는 다음 단계에 필요한 기록을 가리킵니다.
+- `label`과 `blocking_question`은 자유 형식 표시 문자열이고, `required_refs`는 다음 단계에 필요한 기록을 가리킵니다.
+- `WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status`는 제어 값 문자열입니다.
 - `WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다.
+- `WriteDecisionReason.category`는 제어 값 문자열입니다.
+- `WriteDecisionReason.code`는 메서드 담당 문서가 더 좁은 로컬 코드 목록을 명시적으로 정의하지 않는 한 메서드 범위의 불투명 사유 코드입니다.
+- `WriteDecisionReason.message`는 자유 형식 표시 문자열입니다.
 
 `CloseReadinessBlocker`와는 다른 형태입니다.
 
 담당 문서 링크:
+- `action_kind` 값: [다음 행동 값](schema-value-sets.md#next-action-values)
 - `owner_method` 값: [메서드 이름 값](schema-value-sets.md#method-name-values)
-- 지원되는 범주와 사유 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
-- 공개 오류 코드의 의미: [API 오류 코드](error-codes.md)
+- `WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status` 값: [메서드 내부 값](schema-value-sets.md#method-local-values)
+- `WriteDecisionReason.category` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
+- `WriteDecisionReason.code` 생성과 로컬 의미: [`harness.prepare_write`](method-prepare-write.md)를 포함한 메서드 담당 문서
+- 공개 `ErrorCode` 값은 별도입니다: [API 오류 코드](error-codes.md)
 
 ## 증거와 실행 기록 스냅샷 형태
 
@@ -209,8 +225,16 @@ ObservedChanges:
   baseline_ref: string | null
 ```
 
+의미:
+- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, `RunSummary.kind`는 제어 값 문자열입니다.
+- `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, `RunSummary.summary`는 자유 형식 주장 또는 표시 문자열입니다.
+- `ObservedChanges.changed_paths`는 경로 문자열입니다.
+- `ObservedChanges.sensitive_categories`는 영향받는 메서드나 프로필 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 불투명 민감 범주 분류 문자열입니다.
+- `ObservedChanges.baseline_ref`는 불투명 기준선 식별자입니다.
+
 담당 문서 링크:
 - `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md)
+- 증거, `coverage_state`, 실행 종류 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values), [메서드 내부 값](schema-value-sets.md#method-local-values)
 - 증거 충분성의 의미: [Core 모델의 실행 기록과 증거의 권한](../core-model.md#9-evidence-and-run-authority)
 - 메서드 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
 
@@ -240,6 +264,11 @@ GuaranteeDisplay:
 
 의미:
 - `CloseReadinessBlocker`는 닫기 차단 사유를 표현하는 데이터 형태입니다.
+- `CloseReadinessBlocker.category`는 제어 값 문자열입니다.
+- `CloseReadinessBlocker.code`는 담당 문서가 정의하는 차단 사유 코드입니다. 차단 사유 또는 메서드 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 빠짐없는 전역 공개 enum이 아닙니다.
+- `CloseReadinessBlocker.message`, `ValidatorResult.message`, `GuaranteeDisplay.basis`는 자유 형식 표시 문자열입니다.
+- `ValidatorResult.validator_id`는 값 집합 담당 문서가 지원되는 안정 값을 공개하기 전까지 보고용 라벨입니다.
+- `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level`은 제어 값 문자열입니다.
 
 이 형태는 닫기 준비 상태 의미, 응답 처리 경로, 지속 동작을 정의하지 않습니다.
 

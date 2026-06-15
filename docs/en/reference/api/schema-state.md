@@ -27,6 +27,8 @@ Owner links:
 
 Meaning:
 - `StateRecordRef` is the common public reference shape for Core-owned records that appear in API responses.
+- `record_kind` is a controlled value string.
+- `record_id`, `project_id`, and `task_id` are opaque identifiers.
 
 It is a public reference, not an embedded storage row.
 
@@ -73,11 +75,15 @@ StateSummary:
 
 Meaning:
 - `StateSummary` is a compact response shape for state references, summaries, and close-readiness fields.
+- `mode` and `close_state` are controlled value strings when present.
+- `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, and `autonomy_boundary` are free-form display strings.
+- `baseline_ref` is an opaque baseline identifier.
 
 Does not imply:
 - `StateSummary` field presence does not define whether a method committed.
 
 Owner links:
+- `mode` and `close_state` values: [task lifecycle values](schema-value-sets.md#task-lifecycle-values)
 - Commit decision branch: [Common response branches](schema-core.md#common-response)
 - Method-specific commit behavior: method owner documents routed from [API Methods](methods.md)
 
@@ -125,6 +131,8 @@ ShapingGap:
 
 Meaning:
 - `ShapingGap` can reference a blocker or user-judgment candidate by shape.
+- `user_owned_blocker_kind` and `ShapingGap.gap_kind` are opaque readiness classification strings. They are not exhaustive public value sets unless an affected owner publishes narrower values.
+- `ShapingGap.message` is a free-form display string.
 
 Owner links:
 - Method behavior and durable effects: method owner documents routed from [API Methods](methods.md) and [Storage Effects](../storage-effects.md)
@@ -162,16 +170,24 @@ WriteDecisionReason:
 
 Meaning:
 - `NextActionSummary` is the canonical next-action display shape.
+- `NextActionSummary.action_kind` is a controlled value string.
 - `owner_method`, when present, names the supported public method that owns the next step.
-- `label` and `blocking_question` are display text; `required_refs` names records needed for the next step.
+- `label` and `blocking_question` are free-form display strings; `required_refs` names records needed for the next step.
+- `WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` are controlled value strings.
 - `WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`.
+- `WriteDecisionReason.category` is a controlled value string.
+- `WriteDecisionReason.code` is a method-scoped opaque reason code unless a method owner explicitly defines a narrower local code list.
+- `WriteDecisionReason.message` is a free-form display string.
 
 It is distinct from `CloseReadinessBlocker`.
 
 Owner links:
+- `action_kind` values: [next-action values](schema-value-sets.md#next-action-values)
 - `owner_method` values: [method name values](schema-value-sets.md#method-name-values)
-- Supported categories and reason values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
-- Public error code meaning: [API error codes](error-codes.md)
+- `WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` values: [method-local values](schema-value-sets.md#method-local-values)
+- `WriteDecisionReason.category` values: [state and blocker values](schema-value-sets.md#state-and-blocker-values)
+- `WriteDecisionReason.code` production and local meaning: method owner documents, including [`harness.prepare_write`](method-prepare-write.md)
+- Public `ErrorCode` values are separate: [API error codes](error-codes.md)
 
 ## Evidence and run snapshot shapes
 
@@ -209,8 +225,16 @@ ObservedChanges:
   baseline_ref: string | null
 ```
 
+Meaning:
+- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, and `RunSummary.kind` are controlled value strings.
+- `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, and `RunSummary.summary` are free-form claim or display strings.
+- `ObservedChanges.changed_paths` are path strings.
+- `ObservedChanges.sensitive_categories` are opaque sensitive-category classification strings unless an affected method or profile owner publishes a narrower local list.
+- `ObservedChanges.baseline_ref` is an opaque baseline identifier.
+
 Owner links:
 - `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md)
+- evidence, coverage, and run-kind values: [state and blocker values](schema-value-sets.md#state-and-blocker-values) and [method-local values](schema-value-sets.md#method-local-values)
 - Evidence sufficiency meaning: [Core Model evidence and run authority](../core-model.md#9-evidence-and-run-authority)
 - Method behavior: method owner documents routed from [API Methods](methods.md)
 
@@ -240,6 +264,11 @@ GuaranteeDisplay:
 
 Meaning:
 - `CloseReadinessBlocker` is a data shape for close-readiness findings.
+- `CloseReadinessBlocker.category` is a controlled value string.
+- `CloseReadinessBlocker.code` is an owner-defined blocker code. It is not an exhaustive global public enum unless the blocker or method owner publishes a narrower local list.
+- `CloseReadinessBlocker.message`, `ValidatorResult.message`, and `GuaranteeDisplay.basis` are free-form display strings.
+- `ValidatorResult.validator_id` is a reporting label unless the value-set owner publishes a supported stable value.
+- `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` are controlled value strings.
 
 This shape does not define close-readiness meaning, response routing, or persistence behavior.
 

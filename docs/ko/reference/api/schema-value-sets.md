@@ -7,10 +7,12 @@
 이 문서가 담당합니다.
 
 - 지원되는 공개 메서드 이름 값
+- 지원되는 행위자 종류 값
+- 지원되는 다음 행동 값
 - API `response_kind`와 `effect_kind` 값
 - 지원되는 `access_class` 값
 - 공유 상태 참조에서 쓰는 기록/참조 판별 값
-- 지원되는 생명주기, 닫기 상태, 출처 종류, 판단 종류, 표시 형식, 필요 판단 위치, 아티팩트 가림 처리, 아티팩트 가용성 표시, `ValidatorResult.status`, `ValidatorResult.severity`, 보장 표시 등 API 값 집합
+- 지원되는 생명주기, 닫기 상태, 출처 종류, 쓰기 결정 범주, 판단 종류, 표시 형식, 필요 판단 위치, 아티팩트 가림 처리, 아티팩트 가용성 표시, `ValidatorResult.status`, `ValidatorResult.severity`, 보장 표시 등 API 값 집합
 - 지원되는 `change_unit.operation` 값
 - 지원되는 공개 `ValidatorResult.validator_id` 값의 경계
 - 지원되는 스키마 해석에 영향을 주는 프로필 조건부 또는 예약 값 경계
@@ -33,7 +35,8 @@
 - 지원 목록 밖의 값은 [범위 참조](../scope.md)와 영향받는 의미 담당 문서가 지원 동작을 정의하기 전까지 기준 범위 API 값이 아닙니다.
 - 지원 목록 밖의 이름을 적는 것만으로 기준 범위가 넓어지지 않습니다.
 - 화면에 보이는 라벨은 표시 텍스트일 뿐이며, 이 문서의 기준 값을 대신하지 않습니다.
-- API 예시는 스키마 담당 문서가 해당 필드를 명시적으로 자유 형식 텍스트나 불투명 식별자로 정의하지 않는 한, 이 문서의 지원되는 enum 형태 값을 사용해야 합니다.
+- API 예시는 스키마 담당 문서가 해당 필드를 명시적으로 자유 형식 표시 문자열, 불투명 식별자, 또는 불투명 분류 문자열로 정의하지 않는 한, 이 문서의 지원되는 enum 형태 값을 사용해야 합니다.
+- 문자열 형태 필드는 스키마 담당 문서가 이 문서의 값 집합으로 연결할 때만 이 문서가 담당합니다. 불투명 식별자, 불투명 분류 문자열, 자유 형식 표시 문자열은 해당 스키마 또는 메서드 담당 문서에 남습니다.
 
 <a id="method-name-values"></a>
 ## 메서드 이름 값
@@ -53,6 +56,35 @@ harness.close_task
 ```
 
 메서드 동작은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당합니다. 메서드 이름은 `Task` 생명주기 값이 아닙니다.
+
+<a id="actor-values"></a>
+## 행위자 값
+
+`ToolEnvelope.actor_kind`와 `UserJudgmentResolution.resolved_by_actor_kind`는 아래 값을 사용합니다.
+
+```text
+agent
+user
+```
+
+이 값들은 요청이나 해결 형태가 이름 붙이는 API 행위자를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 최종 수락, 잔여 위험 수락, `Write Authorization`이 생기지는 않습니다.
+
+<a id="next-action-values"></a>
+## 다음 행동 값
+
+`NextActionSummary.action_kind`는 아래 값을 사용합니다.
+
+```text
+update_scope
+prepare_write
+stage_artifact
+record_run
+request_user_judgment
+record_user_judgment
+close_task
+```
+
+이 값들은 `harness.` 접두사 없이 공개 메서드 경로에 대응하는 다음 행동 라벨입니다. 메서드 이름 값은 아닙니다. 전체 메서드 이름이 필요할 때 `NextActionSummary.owner_method`가 메서드 이름 값 집합을 사용합니다.
 
 <a id="response-and-effect-values"></a>
 ## 응답과 효과 값
@@ -258,6 +290,19 @@ direct
 write_decision
 close_readiness
 ```
+
+`WriteDecisionReason.category`는 아래 값을 사용합니다.
+
+```text
+scope
+user_judgment
+sensitive_approval
+write_compatibility
+baseline
+surface_capability
+```
+
+이 범주는 `harness.prepare_write` 결정 사유를 분류합니다. `CloseReadinessBlocker` 객체가 아니며 닫기 준비 상태를 평가하지 않습니다.
 
 `CloseReadinessBlocker.category`는 아래 값을 사용합니다.
 

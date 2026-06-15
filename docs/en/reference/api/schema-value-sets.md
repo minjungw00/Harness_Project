@@ -7,10 +7,12 @@ This document owns supported API value sets and enum-like public values for the 
 This document owns:
 
 - supported public method-name values
+- supported actor-kind values
+- supported next-action values
 - API `response_kind` and `effect_kind` values
 - supported `access_class` values
 - record/reference discriminator values used by shared state references
-- supported lifecycle, close-state, source-kind, judgment-kind, presentation, required-for, artifact redaction, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
+- supported lifecycle, close-state, source-kind, write-decision category, judgment-kind, presentation, required-for, artifact redaction, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
 - supported `change_unit.operation` values
 - the boundary for supported public `ValidatorResult.validator_id` values
 - profile-gated or reserved value boundaries where they affect supported schema interpretation
@@ -33,7 +35,8 @@ Only values listed as supported in this document are supported API values.
 - Values outside the supported lists are not baseline API values unless [Scope](../scope.md) and the affected semantic owner define the supported behavior.
 - Naming a value outside a supported list does not widen baseline scope.
 - Rendered labels are display text. They do not replace the canonical values listed in this document.
-- API examples must use supported enum-like values from this document unless the schema owner explicitly defines the field as free-form text or an opaque identifier.
+- API examples must use supported enum-like values from this document unless the schema owner explicitly defines the field as a free-form display string, an opaque identifier, or an opaque classification string.
+- A string-like field is controlled by this document only when the schema owner routes that field to a value set here. Opaque identifiers, opaque classification strings, and free-form display strings stay with their schema or method owner.
 
 <a id="method-name-values"></a>
 ## Method name values
@@ -53,6 +56,35 @@ harness.close_task
 ```
 
 Method behavior is owned by method owner documents routed from [API Methods](methods.md). Method names are not Task lifecycle values.
+
+<a id="actor-values"></a>
+## Actor values
+
+`ToolEnvelope.actor_kind` and `UserJudgmentResolution.resolved_by_actor_kind` use:
+
+```text
+agent
+user
+```
+
+These values classify the API actor named by the request or resolution shape. They do not by themselves create user-owned judgment, approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
+
+<a id="next-action-values"></a>
+## Next-action values
+
+`NextActionSummary.action_kind` uses:
+
+```text
+update_scope
+prepare_write
+stage_artifact
+record_run
+request_user_judgment
+record_user_judgment
+close_task
+```
+
+These values are next-action labels corresponding to public method paths without the `harness.` prefix. They are not method-name values; when a full method name is needed, `NextActionSummary.owner_method` uses the method-name value set.
 
 <a id="response-and-effect-values"></a>
 ## Response and effect values
@@ -256,6 +288,19 @@ The `CloseReadinessBlocker` object shape is owned by [API State Schemas](schema-
 write_decision
 close_readiness
 ```
+
+`WriteDecisionReason.category` uses:
+
+```text
+scope
+user_judgment
+sensitive_approval
+write_compatibility
+baseline
+surface_capability
+```
+
+These categories classify `harness.prepare_write` decision reasons. They are not `CloseReadinessBlocker` objects and do not evaluate close readiness.
 
 `CloseReadinessBlocker.category` uses:
 

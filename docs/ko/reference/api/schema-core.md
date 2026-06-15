@@ -38,12 +38,19 @@
 - 스키마 블록은 생성된 코드가 아닙니다.
 
 표기:
+- `string`은 JSON 스칼라 형태만 나타냅니다. 이 표기만으로 자유 형식 텍스트라는 뜻이 되지 않습니다.
 - `string | null`은 필드가 존재하며 `null`일 수 있다는 뜻입니다.
 - `Type[]`는 그 타입의 배열입니다.
 
+문자열 형태 필드 분류:
+- 제어 값 문자열은 연결된 값 집합 담당 문서의 지원 값을 사용해야 합니다.
+- 불투명 식별자 또는 분류 문자열은 전달, 비교, 상관관계 확인, 더 좁은 담당 문서 경로 안내에 쓸 만큼 안정적입니다. 다만 담당 문서가 값 목록을 공개하지 않는 한 빠짐없는 공개 enum이 아닙니다.
+- 자유 형식 표시 문자열은 사람이 읽는 표시 텍스트입니다. 기준 스키마 값, 오류 코드, 차단 사유 코드, 저장소 식별자가 아닙니다.
+
 담당 문서 링크:
-- 필드 값 집합: 이 문서가 자유 형식 텍스트나 불투명 식별자라고 말하지 않는 한 [API 값 집합](schema-value-sets.md)에 둡니다.
-- API 예시는 관련 스키마 담당 문서가 해당 필드를 명시적으로 자유 형식 텍스트나 불투명 식별자로 정의하지 않는 한 [API 값 집합](schema-value-sets.md)의 지원되는 enum 형태 값을 사용해야 합니다.
+- 제어 값 문자열: 스키마나 메서드 담당 문서가 더 좁은 담당 문서로 연결하지 않는 한 [API 값 집합](schema-value-sets.md)에 둡니다.
+- 공개 오류 코드: [API 오류 코드](error-codes.md).
+- API 예시는 관련 스키마 담당 문서가 해당 필드를 명시적으로 자유 형식 표시 문자열, 불투명 식별자, 또는 불투명 분류 문자열로 정의하지 않는 한 [API 값 집합](schema-value-sets.md)의 지원되는 enum 형태 값을 사용해야 합니다.
 
 <a id="tool-envelope"></a>
 ## `ToolEnvelope`
@@ -72,12 +79,16 @@ ToolEnvelope:
 
 의미:
 - `task_id`는 요청 수준의 선택적 `Task` 선택자입니다.
+- `actor_kind`는 제어 값 문자열입니다.
 - `expected_state_version`은 프로젝트 전체 상태 시계 값을 담는 요청 수준 필드입니다.
+- `project_id`, `task_id`, `surface_id`, `request_id`, `idempotency_key`는 불투명 식별자입니다.
+- `locale`은 로캘 태그 문자열이며 하네스가 제어하는 값 집합이 아닙니다.
 
 의미하지 않는 것:
 - 이 필드 목록은 충돌 동작, 저장소 버전 관리, 메서드별 선택자 우선순위를 정의하지 않습니다.
 
 담당 문서 링크:
+- `actor_kind` 값: [행위자 값](schema-value-sets.md#actor-values)
 - 메서드별 요청 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
 - 충돌 동작: [상태 버전 충돌](error-precedence.md#state-conflict-behavior)
 - 저장소 버전 동작: [저장소 버전 관리](../storage-versioning.md)
@@ -160,9 +171,12 @@ PlannedBlocker:
 담당 문서 링크:
 - `NextActionSummary`와 `StateRecordRef`: [API 상태 스키마](schema-state.md)
 - `PlannedBlocker.source_kind` 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
+- `PlannedBlocker.category` 값 담당 경로: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)
 - `ToolError.code`에 쓰는 공개 `ErrorCode` 값: [API 오류 코드](error-codes.md)
 
-`PlannedEffect.target_kind`, `PlannedEffect.action`, `PlannedEffect.description`은 메서드 담당 문서가 특정 `dry_run` 분기에서 더 좁게 정의하지 않는 한 설명용 미리보기 문자열입니다.
+`PlannedEffect.target_kind`와 `PlannedEffect.action`은 메서드 담당 문서가 특정 `dry_run` 분기에서 더 좁게 정의하지 않는 한 불투명 미리보기 분류 문자열입니다. `PlannedEffect.description`과 `DryRunSummary.diagnostics[]` 항목은 자유 형식 표시 문자열입니다.
+
+`PlannedBlocker.category`는 `PlannedBlocker.source_kind`가 이름 붙이는 차단 사유 계열의 범주 집합을 사용합니다. `source_kind=write_decision`에는 쓰기 결정 범주를, `source_kind=close_readiness`에는 닫기 차단 사유 범주를 사용합니다. `PlannedBlocker.code`는 메서드 담당 문서가 더 좁은 로컬 코드 목록을 명시적으로 정의하지 않는 한 불투명 미리보기 사유 코드입니다. `PlannedBlocker.message`는 자유 형식 표시 문자열입니다.
 
 <a id="shared-support-shapes"></a>
 
@@ -182,6 +196,10 @@ EventRef:
 
 의미:
 - `ToolError`는 `ToolRejectedResponse.errors`와 미리보기 가능한 `DryRunSummary.would_errors`가 사용하는 형태입니다.
+- `ToolError.code`는 공개 `ErrorCode` 값입니다.
+- `ToolError.message`는 자유 형식 표시 문자열입니다.
+- `EventRef.event_id`는 불투명 이벤트 식별자입니다.
+- `EventRef.event_kind`는 불투명 이벤트 분류 문자열입니다. 전달하고 경로를 안내할 만큼 안정적이지만, 이 문서는 빠짐없는 공개 event-kind 값 집합을 공개하지 않습니다.
 
 담당 문서 링크:
 - 공개 오류 코드 집합: [API 오류 코드](error-codes.md)

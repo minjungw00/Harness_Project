@@ -55,6 +55,8 @@ ArtifactRef:
 
 `ArtifactRef`는 참조와 메타데이터 형태입니다. 이 값만으로 아티팩트 본문을 읽을 수 있는 것도 아니고, 그 본문이 닫기에 충분한 증거라는 뜻도 아닙니다.
 
+`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `storage_ref`는 불투명 식별자입니다. `display_name`은 자유 형식 표시 문자열입니다. `content_type`은 미디어 타입 메타데이터이고, `sha256`은 체크섬 문자열입니다. `redaction_state`와 `availability`는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당하는 제어 값 문자열입니다.
+
 ## `StagedArtifactHandle`
 
 `StagedArtifactHandle`은 `harness.stage_artifact` 결과와 연결되는 임시 핸들 형태입니다. 지속 아티팩트의 `ArtifactRef` 형태가 아닙니다.
@@ -76,6 +78,8 @@ StagedArtifactHandle:
 
 호출자는 `created_by_surface_id`나 `created_by_surface_instance_id`를 권한 주장으로 제출하지 않습니다. 스테이징 핸들의 생명주기, 출처 검증, 만료, 승격은 [아티팩트 저장소](../storage-artifacts.md)와 메서드 담당 문서가 담당합니다.
 
+`handle_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`는 불투명 식별자입니다. `content_type`은 미디어 타입 메타데이터이고, `sha256`은 체크섬 문자열이며, `redaction_state`는 제어 값 문자열입니다.
+
 ## `ArtifactInput`
 
 `ArtifactInput`은 실행 기록이나 증거 출력에 아티팩트 링크를 받는 메서드의 요청 측 형태입니다.
@@ -94,6 +98,8 @@ ArtifactInput:
 ```
 
 각 입력에서는 출처 필드 하나만 채우고 다른 출처 필드는 `null`이어야 합니다. `ArtifactInput.source_kind`는 어느 출처 필드가 적용되는지 고르며, 지원되는 출처 종류 값과 값 의미는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당합니다.
+
+`artifact_input_id`는 요청 안에서 유효한 불투명 입력 식별자입니다. `relation_hint`와 `claim`은 자유 형식 표시 또는 주장 문자열입니다. `expected_sha256`은 체크섬 문자열입니다. `redaction_state`는 값이 있을 때 제어 값 문자열입니다.
 
 형태 규칙:
 - `staged_artifact_handle`이 채워지면 `existing_artifact_ref`는 `null`입니다.
