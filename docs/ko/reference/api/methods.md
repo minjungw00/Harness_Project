@@ -26,8 +26,8 @@
 | `harness.prepare_write` | [쓰기 준비 메서드 담당 문서](method-prepare-write.md) |
 | `harness.stage_artifact` | [아티팩트 스테이징 메서드 담당 문서](method-stage-artifact.md) |
 | `harness.record_run` | [실행 기록 메서드 담당 문서](method-record-run.md) |
-| `harness.request_user_judgment` | [사용자 판단 메서드 담당 문서](method-user-judgment.md#harnessrequest_user_judgment) |
-| `harness.record_user_judgment` | [사용자 판단 메서드 담당 문서](method-user-judgment.md#harnessrecord_user_judgment) |
+| `harness.request_user_judgment` | [사용자 소유 판단 요청 메서드 담당 문서](method-request-user-judgment.md#harnessrequest_user_judgment) |
+| `harness.record_user_judgment` | [사용자 소유 판단 기록 메서드 담당 문서](method-record-user-judgment.md#harnessrecord_user_judgment) |
 | `harness.close_task` | [Task 닫기 메서드 담당 문서](method-close-task.md) |
 
 ## 가까운 경로

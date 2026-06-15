@@ -23,7 +23,7 @@ This document does not own:
 Check one proposed product-file write against:
 
 - current Task
-- active Change Unit
+- current Change Unit
 - scope
 - baseline
 - required separate sensitive-action approval
@@ -36,7 +36,7 @@ Security non-claims belong to [Security](../security.md).
 ## Required inputs
 
 - `ToolEnvelope` with non-null `idempotency_key` and current `expected_state_version` for non-dry-run commits.
-- `task_id` and `change_unit_id`, or `null` only when owner resolution can unambiguously use the active Task and active Change Unit.
+- `task_id` and `change_unit_id`, or `null` only when owner resolution can unambiguously use the current Task and current Change Unit.
 - `intended_operation`, `intended_paths`, `product_file_write_intended`, `sensitive_categories`, and `baseline_ref`.
 
 ## Access requirements
@@ -45,7 +45,7 @@ Requires:
 
 - `VerifiedSurfaceContext.access_class=write_authorization`
 - `verified=true`
-- compatible active scope
+- compatible current scope
 - compatible baseline
 - required user-owned judgments
 - any separate sensitive-action approval (`sensitive_approval`)
@@ -154,7 +154,7 @@ This branch applies after the separate sensitive-action approval is already pres
 
 The existing sensitive-action approval is represented by `active_user_judgment_refs` at `state_version: 19`.
 `uj_sensitive_export_001` represents an existing resolved `judgment_kind=sensitive_approval` whose `SensitiveActionScope` matches the account data export step and is needed before `Write Authorization`.
-The account data export confirmation copy judgment is handled separately by the user-judgment methods and is not the same approval.
+The account data export confirmation copy judgment is handled separately by the user-owned judgment request and record methods and is not the same approval.
 
 ```yaml
 base:

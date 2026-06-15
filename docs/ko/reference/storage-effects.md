@@ -540,7 +540,7 @@ state_version: 21
 
 담당 문서:
 
-- [`harness.request_user_judgment` 메서드](api/method-user-judgment.md#harnessrequest_user_judgment)
+- [`harness.request_user_judgment` 메서드](api/method-request-user-judgment.md#harnessrequest_user_judgment)
 - [저장소 기록](storage-records.md)
 
 <a id="harnessrecord_user_judgment"></a>
@@ -569,7 +569,7 @@ state_version: 21
 
 담당 문서:
 
-- [`harness.record_user_judgment` 메서드](api/method-user-judgment.md#harnessrecord_user_judgment)
+- [`harness.record_user_judgment` 메서드](api/method-record-user-judgment.md#harnessrecord_user_judgment)
 - [저장소 기록](storage-records.md)
 
 <a id="harnessclose_task-intentcheck"></a>

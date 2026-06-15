@@ -27,7 +27,7 @@ Neighboring contracts stay with their owners:
 |---|---|
 | Core non-substitution, close readiness, waiver, accepted-risk, and residual-risk meaning | [Core Model Reference](core-model.md) |
 | `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, and `AcceptedRiskInput` shapes | [API Judgment Schemas](api/schema-judgment.md) |
-| User-judgment method behavior | [User-judgment methods](api/method-user-judgment.md) |
+| User-owned judgment request and record method behavior | [Request-user-judgment method](api/method-request-user-judgment.md), [Record-user-judgment method](api/method-record-user-judgment.md) |
 | Status method behavior | [Status method](api/method-status.md) |
 | Close-task method behavior | [Close-task method](api/method-close-task.md) |
 | Method-to-storage effects for supported API method branches | [Storage Effects](storage-effects.md) |

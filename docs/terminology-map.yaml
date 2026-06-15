@@ -759,8 +759,10 @@ terms:
     related_references:
       - en: "docs/en/reference/core-model.md"
         ko: "docs/ko/reference/core-model.md"
-      - en: "docs/en/reference/api/method-user-judgment.md"
-        ko: "docs/ko/reference/api/method-user-judgment.md"
+      - en: "docs/en/reference/api/method-request-user-judgment.md"
+        ko: "docs/ko/reference/api/method-request-user-judgment.md"
+      - en: "docs/en/reference/api/method-record-user-judgment.md"
+        ko: "docs/ko/reference/api/method-record-user-judgment.md"
     notes:
       - "Use the prose term for the concept and the schema identifier for the schema."
   final_acceptance:
@@ -774,8 +776,10 @@ terms:
     related_references:
       - en: "docs/en/reference/api/schema-judgment.md"
         ko: "docs/ko/reference/api/schema-judgment.md"
-      - en: "docs/en/reference/api/method-user-judgment.md"
-        ko: "docs/ko/reference/api/method-user-judgment.md"
+      - en: "docs/en/reference/api/method-request-user-judgment.md"
+        ko: "docs/ko/reference/api/method-request-user-judgment.md"
+      - en: "docs/en/reference/api/method-record-user-judgment.md"
+        ko: "docs/ko/reference/api/method-record-user-judgment.md"
       - en: "docs/en/reference/api/method-close-task.md"
         ko: "docs/ko/reference/api/method-close-task.md"
     notes:
@@ -792,8 +796,10 @@ terms:
     related_references:
       - en: "docs/en/reference/api/schema-judgment.md"
         ko: "docs/ko/reference/api/schema-judgment.md"
-      - en: "docs/en/reference/api/method-user-judgment.md"
-        ko: "docs/ko/reference/api/method-user-judgment.md"
+      - en: "docs/en/reference/api/method-request-user-judgment.md"
+        ko: "docs/ko/reference/api/method-request-user-judgment.md"
+      - en: "docs/en/reference/api/method-record-user-judgment.md"
+        ko: "docs/ko/reference/api/method-record-user-judgment.md"
       - en: "docs/en/reference/api/method-close-task.md"
         ko: "docs/ko/reference/api/method-close-task.md"
     notes:
@@ -1329,8 +1335,10 @@ terms:
     related_references:
       - en: "docs/en/reference/api/schema-judgment.md"
         ko: "docs/ko/reference/api/schema-judgment.md"
-      - en: "docs/en/reference/api/method-user-judgment.md"
-        ko: "docs/ko/reference/api/method-user-judgment.md"
+      - en: "docs/en/reference/api/method-request-user-judgment.md"
+        ko: "docs/ko/reference/api/method-request-user-judgment.md"
+      - en: "docs/en/reference/api/method-record-user-judgment.md"
+        ko: "docs/ko/reference/api/method-record-user-judgment.md"
       - en: "docs/en/reference/api/method-prepare-write.md"
         ko: "docs/ko/reference/api/method-prepare-write.md"
     notes:

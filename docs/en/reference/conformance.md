@@ -287,7 +287,8 @@ Owner links:
 - [Core Model](core-model.md)
 - [API State Schemas](api/schema-state.md)
 - [Status method](api/method-status.md)
-- [User-judgment methods](api/method-user-judgment.md)
+- [Request-user-judgment method](api/method-request-user-judgment.md)
+- [Record-user-judgment method](api/method-record-user-judgment.md)
 
 <a id="scenario-baseline-project-state-version-stale-mutation-rejected"></a>
 ### `BASELINE-project-state-version-stale-mutation-rejected`

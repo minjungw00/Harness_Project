@@ -19,7 +19,8 @@ This document owns:
 This document does not own:
 
 - the product meaning and non-substitution rules for user-owned judgment; see [Core Model](../core-model.md)
-- method behavior for requesting or recording judgment; see [User-judgment methods](method-user-judgment.md)
+- method behavior for requesting judgment; see [Request-user-judgment method](method-request-user-judgment.md)
+- method behavior for recording judgment; see [Record-user-judgment method](method-record-user-judgment.md)
 - supported judgment-kind values, status values, presentation values, and required-for values; see [API Value Sets](schema-value-sets.md)
 - final acceptance or residual-risk close effects; see [Core Model](../core-model.md) and [Close-task method](method-close-task.md)
 - public error semantics for missing, unresolved, denied, or expired judgment; see [API error codes](error-codes.md)
@@ -32,7 +33,7 @@ Judgment schemas preserve the structure of a user-owned choice. They do not let 
 
 A pending `UserJudgment` exists only after `harness.request_user_judgment` commits. A recorded answer resolves only the specific pending judgment and its `judgment_kind`.
 
-A recorded answer does not silently update active scope, create evidence, create Write Authorization, accept residual risk, or close a Task.
+A recorded answer does not silently update current scope, create evidence, create `Write Authorization`, accept residual risk, or close a Task.
 
 ## `UserJudgment`
 
@@ -127,7 +128,7 @@ Not allowed:
 
 ## `SensitiveActionScope`
 
-`SensitiveActionScope` describes the named sensitive step the user is asked to approve. It is not `AuthorizedAttemptScope`, not Write Authorization, and not security authority; see [Security](../security.md).
+`SensitiveActionScope` describes the named sensitive step the user is asked to approve. It is not `AuthorizedAttemptScope`, not `Write Authorization`, and not security authority; see [Security](../security.md).
 
 ```yaml
 SensitiveActionScope:
@@ -162,7 +163,8 @@ Accepted risk is scoped to the named visible risk and the requested judgment. It
 ## Related owners
 
 - [Core Model](../core-model.md) for user-owned judgment meaning and non-substitution rules.
-- [User-judgment methods](method-user-judgment.md) for `harness.request_user_judgment` and `harness.record_user_judgment`.
+- [Request-user-judgment method](method-request-user-judgment.md) for `harness.request_user_judgment`.
+- [Record-user-judgment method](method-record-user-judgment.md) for `harness.record_user_judgment`.
 - [API Value Sets](schema-value-sets.md) for `judgment_kind`, `presentation`, `required_for`, status, and option display boundaries.
 - [API State Schemas](schema-state.md) for `StateRecordRef`.
 - [API Artifact Schemas](schema-artifacts.md) for `ArtifactRef`.

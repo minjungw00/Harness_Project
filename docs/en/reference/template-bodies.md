@@ -305,7 +305,7 @@ Otherwise, avoid those words.
 
 ### Input state
 
-- One pending user-owned judgment request returned by the user-judgment method.
+- One pending user-owned judgment request returned by `harness.request_user_judgment`.
 - Exact question, bounded options, rationale, uncertainty, affected scope, consequence of deferral, and non-substitution notes.
 - Any linked source refs, `state_version`, and freshness or capability-limited notes.
 
@@ -339,7 +339,8 @@ Avoid pressure wording such as `obviously`, `just approve`, or `I can decide thi
 ### Owner links
 
 - [Core Model](core-model.md) for user-owned judgment and non-substitution rules.
-- [User-judgment methods](api/method-user-judgment.md) for judgment request and record method behavior.
+- [Request-user-judgment method](api/method-request-user-judgment.md) for judgment request method behavior.
+- [Record-user-judgment method](api/method-record-user-judgment.md) for judgment record method behavior.
 - [API Judgment Schemas](api/schema-judgment.md) for `UserJudgment`, `SensitiveActionScope`, and accepted-risk shapes.
 - [Security](security.md) for sensitive-action approval boundaries.
 

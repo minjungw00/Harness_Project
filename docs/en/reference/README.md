@@ -16,7 +16,7 @@ This README is route-only. It does not define term meanings, terminology metadat
 
 ## Common Crossings
 
-- User-owned judgment meaning belongs in [Core Model](core-model.md); user-judgment method behavior belongs in [User-Judgment Method](api/method-user-judgment.md); judgment-shaped API data belongs in [Judgment Schemas](api/schema-judgment.md).
+- User-owned judgment meaning belongs in [Core Model](core-model.md); request and record method behavior belongs in [Request-user-judgment method](api/method-request-user-judgment.md) and [Record-user-judgment method](api/method-record-user-judgment.md); judgment-shaped API data belongs in [Judgment Schemas](api/schema-judgment.md).
 - Close-readiness authority concepts belong in [Core Model](core-model.md); `harness.close_task` behavior belongs in [Close-Task Method](api/method-close-task.md); `CloseReadinessBlocker` shape belongs in [State Schemas](api/schema-state.md); blocker/API response boundary questions belong in [API Blocker Routing](api/blocker-routing.md).
 - Public error code meaning belongs in [API Error Codes](api/error-codes.md); error precedence belongs in [API Error Precedence](api/error-precedence.md); response branch routing belongs in [API Error Routing](api/error-routing.md); machine-readable error details belong in [API Error Details](api/error-details.md).
 - Terminology lookup starts with the [Glossary](glossary.md) for selected reader-facing terms and [`docs/terminology-map.yaml`](../../terminology-map.yaml) for structured terminology and identifier controls.

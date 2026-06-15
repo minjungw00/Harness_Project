@@ -511,17 +511,38 @@ documents:
       - "agent integrators"
       - "maintainers"
 
-  - doc_id: "reference.api.method-user-judgment"
-    path_en: "docs/en/reference/api/method-user-judgment.md"
-    path_ko: "docs/ko/reference/api/method-user-judgment.md"
+  - doc_id: "reference.api.method-request-user-judgment"
+    path_en: "docs/en/reference/api/method-request-user-judgment.md"
+    path_ko: "docs/ko/reference/api/method-request-user-judgment.md"
     role: "reference"
     owner_for:
       - "`harness.request_user_judgment` behavior"
-      - "`harness.record_user_judgment` behavior"
-      - "user-judgment prompt and recording behavior"
+      - "`RequestUserJudgmentResult` branch behavior"
+      - "pending user-owned judgment request behavior"
     not_owner_for:
       - "Core user-owned judgment, final-acceptance, residual-risk, or approval meaning"
       - "shared schema bodies"
+      - "storage record layouts"
+      - "public error code meaning or precedence"
+    normative_level: "contract"
+    audience:
+      - "API implementers"
+      - "agent integrators"
+      - "maintainers"
+
+  - doc_id: "reference.api.method-record-user-judgment"
+    path_en: "docs/en/reference/api/method-record-user-judgment.md"
+    path_ko: "docs/ko/reference/api/method-record-user-judgment.md"
+    role: "reference"
+    owner_for:
+      - "`harness.record_user_judgment` behavior"
+      - "`RecordUserJudgmentResult` branch behavior"
+      - "user-owned judgment answer recording behavior"
+    not_owner_for:
+      - "Core user-owned judgment, final-acceptance, residual-risk, or approval meaning"
+      - "shared schema bodies"
+      - "storage record layouts"
+      - "public error code meaning or precedence"
     normative_level: "contract"
     audience:
       - "API implementers"

@@ -61,7 +61,7 @@
 | 로컬 접점 등록 | 등록된 로컬 접점은 범위 확인에 쓸 선택된 접점과 지원 역량을 식별할 수 있습니다. | [에이전트 통합](agent-integration.md), [접점별 사용 레시피](../use/surface-recipes.md), [보안](security.md) |
 | 아티팩트 스테이징과 호환되는 아티팩트 연결 | 새 아티팩트 바이트는 지원되는 스테이징 경로로 기준 범위에 들어올 수 있고, 호환되는 지속 아티팩트 참조는 아티팩트 담당 문서가 허용할 때 연결할 수 있습니다. | [아티팩트 스테이징 담당 문서](#artifact-staging-owners)를 봅니다. |
 | 실행 및 증거 기록 | 기준 범위 작업에 대해 실행 기록과 간결한 증거 요약을 남길 수 있습니다. | [실행 기록 메서드](api/method-record-run.md), [저장 효과](storage-effects.md), [Core 모델](core-model.md) |
-| 집중된 사용자 판단 기록 | 지원되는 판단 경로로 사용자 소유 판단을 요청하고 기록할 수 있습니다. 이 판단은 Core 소유 상태, 증거, 닫기 준비 상태 규칙을 대체하지 않습니다. | [사용자 판단 담당 문서](#user-judgment-owners)를 봅니다. |
+| 집중된 사용자 소유 판단 기록 | 지원되는 판단 경로로 사용자 소유 판단을 요청하고 기록할 수 있습니다. 이 판단은 Core 소유 상태, 증거, 닫기 준비 상태 규칙을 대체하지 않습니다. | [사용자 소유 판단 담당 문서](#user-judgment-owners)를 봅니다. |
 | 닫기 시도 | `harness.close_task`는 증거, 최종 수락, 잔여 위험, 대체 불가 경계를 유지하면서 닫기 준비 상태를 평가하고 지원되는 닫기 결과를 시도할 수 있습니다. | [Task 닫기 메서드](api/method-close-task.md), [Core 모델](core-model.md), [API 차단 사유 처리 경로](api/blocker-routing.md) |
 | 읽기 시점 상태 표시 | 읽기 전용 상태 또는 파생 표시는 상태 보기와 템플릿 담당 문서가 허용할 때 원천 상태를 요약할 수 있습니다. | [상태 보기 권한 참조](projection-and-templates.md), [템플릿 본문](template-bodies.md), [API 상태 스키마](api/schema-state.md) |
 
@@ -73,9 +73,9 @@
 - 생명주기와 저장 효과: [아티팩트 저장소](storage-artifacts.md)와 [저장 효과](storage-effects.md).
 
 <a id="user-judgment-owners"></a>
-사용자 판단 담당 문서:
+사용자 소유 판단 담당 문서:
 
-- 메서드 동작: [사용자 판단 메서드](api/method-user-judgment.md).
+- 메서드 동작: [사용자 소유 판단 요청 메서드](api/method-request-user-judgment.md)와 [사용자 소유 판단 기록 메서드](api/method-record-user-judgment.md).
 - 제품 의미: [Core 모델](core-model.md).
 - API 형태와 값: [API 판단 스키마](api/schema-judgment.md)와 [API 값 집합](api/schema-value-sets.md).
 

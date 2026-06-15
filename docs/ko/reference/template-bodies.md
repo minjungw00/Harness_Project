@@ -305,7 +305,7 @@
 
 ### 입력 상태
 
-- 사용자 판단 메서드가 반환한 대기 중인 사용자 소유 판단 요청 하나.
+- `harness.request_user_judgment`가 반환한 대기 중인 사용자 소유 판단 요청 하나.
 - 정확한 질문, 제한된 선택지, 근거, 불확실성, 영향을 받는 범위, 미룰 때의 결과, 대체 불가 메모.
 - 연결된 출처 참조, `state_version`, 최신성 또는 역량 제한 메모가 있으면 함께 사용합니다.
 
@@ -339,7 +339,8 @@
 ### 담당 문서 링크
 
 - [Core 모델](core-model.md): 사용자 소유 판단과 비대체 규칙.
-- [사용자 판단 메서드](api/method-user-judgment.md): 판단 요청과 기록 메서드 동작.
+- [사용자 소유 판단 요청 메서드](api/method-request-user-judgment.md): 판단 요청 메서드 동작.
+- [사용자 소유 판단 기록 메서드](api/method-record-user-judgment.md): 판단 기록 메서드 동작.
 - [API 판단 스키마](api/schema-judgment.md): `UserJudgment`, `SensitiveActionScope`, 수락된 위험 형태.
 - [보안](security.md): 민감 동작 승인 경계.
 

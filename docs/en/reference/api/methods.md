@@ -26,8 +26,8 @@ This page does not define method behavior, request or response bodies, shared sc
 | `harness.prepare_write` | [Prepare-write method](method-prepare-write.md) |
 | `harness.stage_artifact` | [Stage-artifact method](method-stage-artifact.md) |
 | `harness.record_run` | [Record-run method](method-record-run.md) |
-| `harness.request_user_judgment` | [User-judgment method owner](method-user-judgment.md#harnessrequest_user_judgment) |
-| `harness.record_user_judgment` | [User-judgment method owner](method-user-judgment.md#harnessrecord_user_judgment) |
+| `harness.request_user_judgment` | [Request-user-judgment method](method-request-user-judgment.md#harnessrequest_user_judgment) |
+| `harness.record_user_judgment` | [Record-user-judgment method](method-record-user-judgment.md#harnessrecord_user_judgment) |
 | `harness.close_task` | [Close-task method](method-close-task.md) |
 
 ## Nearby Routes

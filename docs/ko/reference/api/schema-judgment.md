@@ -1,6 +1,6 @@
 # API 판단 스키마
 
-이 문서는 기준 범위의 사용자 소유 판단 API 스키마를 담당합니다. 스키마는 사용자 판단 형태의 API 데이터를 정의하지만 그 자체로 사용자 결정을 기록하지 않습니다.
+이 문서는 기준 범위의 사용자 소유 판단 API 스키마를 담당합니다. 스키마는 사용자 소유 판단 형태의 API 데이터를 정의하지만 그 자체로 사용자 결정을 기록하지 않습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -19,7 +19,8 @@
 이 문서는 담당하지 않습니다.
 
 - 사용자 소유 판단의 제품 의미와 비대체 규칙: [Core 모델](../core-model.md)
-- 판단 요청과 기록 메서드 동작: [사용자 판단 메서드](method-user-judgment.md)
+- 판단 요청 메서드 동작: [사용자 소유 판단 요청 메서드](method-request-user-judgment.md)
+- 판단 기록 메서드 동작: [사용자 소유 판단 기록 메서드](method-record-user-judgment.md)
 - 지원되는 판단 종류 값, 상태 값, 표시 형식 값, 필요 판단 위치 값: [API 값 집합](schema-value-sets.md)
 - 최종 수락이나 잔여 위험 수락의 닫기 효과: [Core 모델](../core-model.md), [Task 닫기 메서드](method-close-task.md)
 - 판단 누락, 미해결, 거절, 만료에 대한 공개 오류 의미: [API 오류 코드](error-codes.md)
@@ -32,7 +33,7 @@
 
 대기 중인 `UserJudgment`는 `harness.request_user_judgment`가 커밋된 뒤에만 존재합니다. 기록된 답변은 그 대기 중인 판단과 그 `judgment_kind`만 해결합니다.
 
-기록된 답변은 활성 범위를 조용히 바꾸거나, 증거를 만들거나, `Write Authorization`을 만들거나, 잔여 위험을 수락하거나, `Task`를 닫지 않습니다.
+기록된 답변은 현재 적용 범위를 조용히 바꾸거나, 증거를 만들거나, `Write Authorization`을 만들거나, 잔여 위험을 수락하거나, `Task`를 닫지 않습니다.
 
 ## `UserJudgment`
 
@@ -127,7 +128,7 @@ RecordUserJudgmentPayload:
 
 ## `SensitiveActionScope`
 
-`SensitiveActionScope`는 사용자가 승인할지 판단해야 하는 이름 붙은 민감 단계를 설명합니다. `AuthorizedAttemptScope`도 아니고, Write Authorization도 아니며, 보안 권한도 아닙니다. [보안](../security.md)을 확인하세요.
+`SensitiveActionScope`는 사용자가 승인할지 판단해야 하는 이름 붙은 민감 단계를 설명합니다. `AuthorizedAttemptScope`도 아니고, `Write Authorization`도 아니며, 보안 권한도 아닙니다. [보안](../security.md)을 확인하세요.
 
 ```yaml
 SensitiveActionScope:
@@ -162,7 +163,8 @@ AcceptedRiskInput:
 ## 관련 담당 문서
 
 - [Core 모델](../core-model.md): 사용자 소유 판단 의미와 비대체 규칙.
-- [사용자 판단 메서드](method-user-judgment.md): `harness.request_user_judgment`, `harness.record_user_judgment`.
+- [사용자 소유 판단 요청 메서드](method-request-user-judgment.md): `harness.request_user_judgment`.
+- [사용자 소유 판단 기록 메서드](method-record-user-judgment.md): `harness.record_user_judgment`.
 - [API 값 집합](schema-value-sets.md): `judgment_kind`, `presentation`, `required_for`, 상태, 선택지 표시 경계.
 - [API 상태 스키마](schema-state.md): `StateRecordRef`.
 - [API 아티팩트 스키마](schema-artifacts.md): `ArtifactRef`.

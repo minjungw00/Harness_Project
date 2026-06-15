@@ -27,7 +27,7 @@
 |---|---|
 | Core 대체 금지, 닫기 준비 상태, 면제, 수락된 위험, 잔여 위험의 의미 | [Core 모델 참조](core-model.md) |
 | `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput` 구조 | [API 판단 스키마](api/schema-judgment.md) |
-| 사용자 판단 메서드 동작 | [사용자 판단 메서드](api/method-user-judgment.md) |
+| 사용자 소유 판단 요청과 기록 메서드 동작 | [사용자 소유 판단 요청 메서드](api/method-request-user-judgment.md), [사용자 소유 판단 기록 메서드](api/method-record-user-judgment.md) |
 | 상태 메서드 동작 | [상태 메서드](api/method-status.md) |
 | 닫기 메서드 동작 | [Task 닫기 메서드](api/method-close-task.md) |
 | 지원되는 API 메서드 분기의 메서드별 저장 효과 | [저장 효과](storage-effects.md) |

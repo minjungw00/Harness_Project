@@ -61,7 +61,7 @@ Supported does not mean:
 | Local surface registration | Registered local surfaces can identify the selected surface and supported capabilities for scope checks. | [Agent Integration](agent-integration.md), [Surface Recipes](../use/surface-recipes.md), [Security](security.md) |
 | Artifact staging and compatible artifact linking | New artifact bytes can enter the baseline through the supported staging path; compatible persisted artifact references can be linked when artifact owners allow it. | See [Artifact staging owners](#artifact-staging-owners). |
 | Run and evidence recording | Runs and compact evidence summaries can be recorded for baseline work. | [Record-run method](api/method-record-run.md), [Storage Effects](storage-effects.md), [Core Model](core-model.md) |
-| Focused user judgment capture | User-owned judgments can be requested and recorded through supported judgment paths without substituting for Core-owned state, evidence, or close-readiness rules. | See [User judgment owners](#user-judgment-owners). |
+| Focused user-owned judgment capture | User-owned judgments can be requested and recorded through supported judgment paths without substituting for Core-owned state, evidence, or close-readiness rules. | See [User-owned judgment owners](#user-judgment-owners). |
 | Close attempts | `harness.close_task` can evaluate close readiness and attempt supported close outcomes while preserving evidence, final acceptance, residual-risk, and non-substitution boundaries. | [Close-task method](api/method-close-task.md), [Core Model](core-model.md), [API blocker routing](api/blocker-routing.md) |
 | Read-time status display | Read-only status or derived display can summarize source state when the projection and template owners allow it. | [Projection Authority Reference](projection-and-templates.md), [Template Bodies](template-bodies.md), [API State Schemas](api/schema-state.md) |
 
@@ -73,9 +73,9 @@ Artifact staging owners:
 - Lifecycle and storage effects: [Artifact Storage](storage-artifacts.md) and [Storage Effects](storage-effects.md).
 
 <a id="user-judgment-owners"></a>
-User judgment owners:
+User-owned judgment owners:
 
-- Method behavior: [User-judgment methods](api/method-user-judgment.md).
+- Method behavior: [Request-user-judgment method](api/method-request-user-judgment.md) and [Record-user-judgment method](api/method-record-user-judgment.md).
 - Product meaning: [Core Model](core-model.md).
 - API shapes and values: [API Judgment Schemas](api/schema-judgment.md) and [API Value Sets](api/schema-value-sets.md).
 

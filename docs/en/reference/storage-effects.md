@@ -539,7 +539,7 @@ Valid dry-run previews do not create:
 
 Owner links:
 
-- [`harness.request_user_judgment` method](api/method-user-judgment.md#harnessrequest_user_judgment)
+- [`harness.request_user_judgment` method](api/method-request-user-judgment.md#harnessrequest_user_judgment)
 - [Storage Records](storage-records.md)
 
 <a id="harnessrecord_user_judgment"></a>
@@ -568,7 +568,7 @@ Valid dry-run previews do not create:
 
 Owner links:
 
-- [`harness.record_user_judgment` method](api/method-user-judgment.md#harnessrecord_user_judgment)
+- [`harness.record_user_judgment` method](api/method-record-user-judgment.md#harnessrecord_user_judgment)
 - [Storage Records](storage-records.md)
 
 <a id="harnessclose_task-intentcheck"></a>
