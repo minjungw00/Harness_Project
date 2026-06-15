@@ -6,23 +6,24 @@
 
 This document owns baseline method behavior for `harness.intake`:
 
-- method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the scenario request fields and representative response for the shared account data export confirmation scenario
-- method-level storage-effect summary and links to storage owners
+- method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
+- intake handling for starting, resuming, superseding, or rejecting a user work loop
+- intake examples
 
 ## What this document does not own
 
 This document does not own:
 
-- common `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, or `ToolDryRunResponse` schema bodies
+- common request envelope, response branch, dry-run, or rejected-response schema bodies
 - nested state, artifact, judgment, value-set, or error schema definitions
-- storage DDL, storage record layouts, artifact lifecycle, security guarantees, or Core product meaning
+- storage DDL, storage record layouts, exact storage effects, artifact lifecycle, security guarantees, or Core authority semantics
+- public error code meaning, public error precedence, or shared response-branch routing
 
 ## Purpose
 
 `harness.intake` starts, resumes, supersedes, or rejects an ordinary user work loop.
 
-The method resolves the requested mode to a concrete Task state:
+The method resolves the requested mode to a concrete Task mode:
 
 - `advisor`
 - `direct`
@@ -31,28 +32,28 @@ The method resolves the requested mode to a concrete Task state:
 Scope boundary:
 
 - `harness.intake` may create the first scope candidate for write-capable work.
-- Subsequent scope changes belong to `harness.update_scope`.
+- Later scope changes belong to `harness.update_scope`.
 
 ## Required inputs
 
-- `ToolEnvelope` with `project_id`, `surface_id`, `request_id`, `dry_run`, and, for non-dry-run commits, non-null `idempotency_key` and current `expected_state_version`.
+- A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
 - `plain_language_request`, `requested_mode`, and `resume_policy`.
-- Put any known initial scope candidate in `initial_scope.boundary`, `initial_scope.non_goals`, and `initial_scope.acceptance_criteria`; use empty arrays for list fields and `initial_context_refs` when none are known.
+- Any known initial scope candidate in `initial_scope.boundary`, `initial_scope.non_goals`, and `initial_scope.acceptance_criteria`; use empty arrays when no list items are known.
 
 ## Access requirements
 
-Conditions:
+A committed non-dry-run request requires:
 
-- `dry_run=false` commit.
-- `VerifiedSurfaceContext.access_class=core_mutation`.
-- `verified=true`.
+- `VerifiedSurfaceContext.access_class=core_mutation`
+- `verified=true`
 
 Surface identity boundary:
+
 - `surface_id` selects a registered local surface; `surface_id` is not itself authority.
 
 ## State version behavior
 
-Committed non-dry-run result:
+A committed non-dry-run result:
 
 - increments project-wide `project_state.state_version` exactly once
 - creates the replay row for the idempotency key
@@ -96,10 +97,10 @@ Returns `ToolRejectedResponse` for pre-commit failures such as:
 - stale `expected_state_version`
 - unavailable Core or local surface
 - local access mismatch
-- missing active-task compatibility
+- missing current Task compatibility
 - validator failure
 
-Public error code meaning is owned by [API error codes](error-codes.md). Public error precedence is owned by [API error precedence](error-precedence.md).
+Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
 
 ## Dry-run behavior
 
@@ -107,25 +108,37 @@ For `dry_run=true`, a valid state-effecting preview:
 
 - returns `ToolDryRunResponse`
 - does not return `IntakeResult`
-
-Branch shape is owned by [API Schema Core](schema-core.md); no-effect persistence semantics are owned by [Storage Effects](../storage-effects.md).
+- creates no durable intake state
 
 ## Storage effect
 
-On commit, the method may persist intake-owned Task or Change Unit state. Exact storage effects are owned by [Storage Effects](../storage-effects.md), and storage record shapes are owned by [Storage Records](../storage-records.md).
+On commit, the method may persist intake-owned Task or Change Unit state. Exact storage effects and storage record shapes are owned by the storage documents linked below.
 
-## Scenario request example
+## Minimal valid request
 
 ```yaml
 method: harness.intake
 params:
-  plain_language_request: "Add explicit confirmation before account data export."
+  envelope:
+    project_id: proj_123
+    task_id: null
+    actor_kind: agent
+    surface_id: surface_local
+    request_id: req_intake_001
+    idempotency_key: idem_intake_001
+    expected_state_version: 17
+    dry_run: false
+    locale: en-US
+  plain_language_request: "Add a confirmation step before invoice PDF download."
+  requested_mode: work
+  resume_policy: start_new
   initial_scope:
-    boundary: "Only the account data export flow and account data export confirmation tests."
+    boundary: "Invoice PDF download confirmation."
     non_goals:
-      - "Changing account deletion behavior"
+      - "Changing invoice generation."
     acceptance_criteria:
-      - "Account data export requires explicit confirmation before download."
+      - "Downloading an invoice PDF requires explicit confirmation."
+  initial_context_refs: []
 ```
 
 ## Representative response
@@ -163,17 +176,17 @@ state:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Only the account data export flow and account data export confirmation tests."
+  goal_summary: "Add a confirmation step before invoice PDF download."
+  scope_summary: "Invoice PDF download confirmation."
   non_goals:
-    - "Changing account deletion behavior"
+    - "Changing invoice generation."
   acceptance_criteria:
-    - "Account data export requires explicit confirmation before download."
+    - "Downloading an invoice PDF requires explicit confirmation."
   active_change_unit_ref: null
   blocker_refs: []
 next_actions:
   - action: harness.update_scope
-    reason: "Create the first active Change Unit before write checking."
+    reason: "Create the first currently applied Change Unit before write checking."
 ```
 
 ## Owner links
@@ -181,5 +194,5 @@ next_actions:
 - Request envelope and response branches: [`ToolEnvelope`](schema-core.md#tool-envelope) and [common response branches](schema-core.md#common-response).
 - State refs, `StateSummary`, `ShapingReadiness`, and next actions: [API State Schemas](schema-state.md).
 - Supported method names, mode values, `resume_policy`, `response_kind`, `effect_kind`, and access classes: [API Value Sets](schema-value-sets.md).
-- Public errors and state-version conflicts: [API error codes](error-codes.md), [state version conflict](error-precedence.md#state-conflict-behavior).
-- Persistence effects: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).
+- Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
+- Persistence effects and storage records: [Storage Effects](../storage-effects.md), [Storage Records](../storage-records.md), and [Storage Versioning](../storage-versioning.md).

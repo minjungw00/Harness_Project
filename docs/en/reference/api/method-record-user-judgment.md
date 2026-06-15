@@ -6,19 +6,19 @@
 
 This document owns baseline method behavior for `harness.record_user_judgment`:
 
-- method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
+- method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
 - recording the user's answer to one existing pending `UserJudgment`
 - method-specific boundaries for resolving, rejecting, deferring, blocking, or marking that pending user-owned judgment
-- the minimal request and representative response for an account data export confirmation scenario
+- record-user-judgment examples
 
 ## What this document does not own
 
 This document does not own:
 
-- common `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, or `ToolDryRunResponse` schema bodies
+- common request envelope, response branch, dry-run, or rejected-response schema bodies
 - `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`, value-set, or status field definitions
 - Core user-owned judgment meaning, final acceptance meaning, residual-risk meaning, sensitive-action approval meaning, or `Write Authorization` meaning
-- storage record layouts, exact storage effects, public error code meaning, or public error precedence
+- storage record layouts, exact storage effects, public error code meaning, public error precedence, or shared response-branch routing
 
 ## Purpose
 
@@ -28,7 +28,7 @@ The method updates the addressed pending judgment according to the user's answer
 
 ## Required inputs
 
-- `ToolEnvelope` with non-null `idempotency_key` and current `expected_state_version` for non-dry-run commits.
+- A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
 - `user_judgment_id` for an existing pending judgment.
 - Matching `judgment_kind`.
 - `selected_option_id`, `answer`, `note`, and `accepted_risks`.
@@ -36,17 +36,19 @@ The method updates the addressed pending judgment according to the user's answer
 
 `selected_option_id` and `note` stay at request level. `RecordUserJudgmentPayload` must not repeat them inside the decision-specific answer branch.
 
-Shared field shapes for `UserJudgmentResolution`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, and `AcceptedRiskInput` are owned by [API Judgment Schemas](schema-judgment.md).
-
 ## Access requirements
 
-The method requires `VerifiedSurfaceContext.access_class=core_mutation` and `verified=true`.
+The method requires:
 
-The pending judgment must belong to the same project and compatible `Task` selected by the request. Local access failures, unreadable judgment identity, and insufficient local capability reject before commit.
+- `VerifiedSurfaceContext.access_class=core_mutation`
+- `verified=true`
+- an addressed pending judgment that belongs to the same project and compatible Task selected by the request
 
-## State-version behavior
+Local access failures, unreadable judgment identity, and insufficient local capability reject before commit.
 
-Committed `dry_run=false` result:
+## State version behavior
+
+A committed non-dry-run result:
 
 - increments `project_state.state_version` exactly once
 - updates the addressed `user_judgments` row
@@ -55,7 +57,7 @@ Committed `dry_run=false` result:
 Non-claims:
 
 - Dry run and rejection create no judgment resolution, blocker update, event, replay row, or state-version increment.
-- A recorded `scope_decision` does not silently change current scope or current Change Unit records. Those records still require the scope owner-defined transition, such as `harness.update_scope`.
+- A recorded `scope_decision` does not silently change current scope or currently applied Change Unit records. Those records still require the scope owner-defined transition, such as `harness.update_scope`.
 
 ## Success result
 
@@ -69,11 +71,15 @@ Returns `RecordUserJudgmentResult` with:
 - current `state`
 - `next_actions`
 
-## Committed judgment outcomes
-
 The method may commit the addressed judgment as `resolved`, `rejected`, `deferred`, `blocked`, or another supported judgment status when that status is the user's answer or the compatible result of the focused judgment.
 
 The result updates only covered blockers and judgment-dependent summaries. It does not create unrelated approvals, evidence, scope updates, `Write Authorization`, close state, or residual-risk acceptance beyond the recorded judgment itself.
+
+## Blocked result
+
+There is no separate committed blocked response branch for this method.
+
+A committed `user_judgment.status=blocked` is a recorded judgment outcome, not `ToolRejectedResponse` and not a `PrepareWriteResult`-style blocked decision.
 
 ## Rejected result
 
@@ -89,27 +95,21 @@ Returns `ToolRejectedResponse` for pre-commit failures, including:
 - local access failure
 - validator failure
 
-Public error code meaning is owned by [API error codes](error-codes.md). Public error precedence is owned by [API error precedence](error-precedence.md).
+Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
 
 ## Dry-run behavior
 
-For `dry_run=true`, a valid preview returns `ToolDryRunResponse`. Branch shape is owned by [API Schema Core](schema-core.md); no-effect persistence semantics are owned by [Storage Effects](../storage-effects.md).
+For `dry_run=true`, a valid preview:
 
-The preview must not resolve the judgment, update blockers, append events, create replay rows, or increment state version.
+- returns `ToolDryRunResponse`
+- does not resolve the judgment
+- updates no blockers, events, replay rows, or state version
 
 ## Storage effect
 
-On commit, the method may persist judgment resolution and dependent blocker or summary state. Exact storage effects are owned by [Storage Effects](../storage-effects.md#harnessrecord_user_judgment).
+On commit, the method may persist judgment resolution and dependent blocker or summary state. Exact storage effects are owned by the storage documents linked below.
 
-## Example
-
-Example preconditions:
-
-- `uj_001` is a pending `product_decision` judgment for `task_456`.
-- The pending judgment was created at project `state_version` `22`.
-- The user selects the `accept` option because the account data export confirmation copy is sufficient.
-
-### Minimal valid request
+## Minimal valid request
 
 ```yaml
 method: harness.record_user_judgment
@@ -131,7 +131,7 @@ params:
     product_decision:
       judgment:
         decision: accepted
-        rationale: "The account data export confirmation copy clearly warns that the account data export file may include personal data."
+        rationale: "The invoice download confirmation copy is clear enough for this Task."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
@@ -142,7 +142,7 @@ params:
   accepted_risks: []
 ```
 
-### Representative response
+## Representative response
 
 Result branch (`RecordUserJudgmentResult`, committed):
 
@@ -169,25 +169,25 @@ user_judgment:
   judgment_kind: product_decision
   status: resolved
   presentation: short
-  question: "Should the account data export confirmation copy that warns users the account data export file may include personal data be accepted as sufficient?"
+  question: "Is the invoice download confirmation copy sufficient for this Task?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user-owned judgment that the account data export confirmation copy is sufficient."
-      consequence: "Close readiness can evaluate the product decision as resolved."
+      description: "Record the user-owned product decision that the copy is sufficient."
+      consequence: "Close readiness can evaluate this product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised account data export confirmation copy."
-      consequence: "Close remains blocked on the product decision."
+      description: "Keep the Task open for revised confirmation copy."
+      consequence: "Close remains blocked on this product decision."
       is_default: false
   context:
-    summary: "The account data export confirmation copy shown before download warns that the account data export file may include personal data."
+    summary: "The confirmation copy appears before invoice PDF download and tells users they are about to download a billing document."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Account data export flow and account data export confirmation tests remain in scope; account deletion behavior remains out of scope."
+      - "Invoice PDF download confirmation is in scope; invoice generation is out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -201,7 +201,7 @@ user_judgment:
       product_decision:
         judgment:
           decision: accepted
-          rationale: "The account data export confirmation copy clearly warns that the account data export file may include personal data."
+          rationale: "The invoice download confirmation copy is clear enough for this Task."
     note: null
     accepted_risks: []
     resolved_by_actor_kind: user
@@ -230,5 +230,5 @@ next_actions:
 - Judgment values and supported method-local values: [API Value Sets](schema-value-sets.md).
 - User-owned judgment, final acceptance, residual-risk acceptance, and non-substitution rules: [Core Model](../core-model.md).
 - Exact storage effects: [Storage Effects](../storage-effects.md#harnessrecord_user_judgment).
-- Public errors: [API error codes](error-codes.md) and [API error precedence](error-precedence.md).
+- Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Creating the pending judgment request: [`harness.request_user_judgment`](method-request-user-judgment.md).

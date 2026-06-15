@@ -6,17 +6,18 @@
 
 This document owns baseline method behavior for `harness.record_run`:
 
-- method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account data export confirmation scenario
-- method-level storage-effect summary and links to storage owners
+- method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
+- run recording, evidence update, blocker update, and artifact promotion method behavior
+- record-run examples
 
 ## What this document does not own
 
 This document does not own:
 
-- common `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, or `ToolDryRunResponse` schema bodies
-- nested state, artifact, judgment, value-set, or error schema definitions
-- storage DDL, storage record layouts, artifact lifecycle, security guarantees, or Core product meaning
+- common request envelope, response branch, dry-run, or rejected-response schema bodies
+- nested state, artifact, value-set, or error schema definitions
+- Core evidence meaning, Core authority semantics, storage DDL, storage record layouts, exact storage effects, artifact lifecycle, or security guarantees
+- public error code meaning, public error precedence, machine-readable error details, or shared response-branch routing
 
 ## Purpose
 
@@ -26,14 +27,14 @@ This document does not own:
 - a direct answer or result
 - implementation work
 
-The method may also update compact evidence coverage, consume a compatible Write Authorization when recording a product write, link existing artifacts, and promote eligible staged handles to persistent `ArtifactRef` records where allowed.
+The method may also update compact evidence coverage, consume a compatible `Write Authorization` when recording a product write, link existing artifacts, and promote eligible staged handles to persistent `ArtifactRef` records where allowed.
 
 ## Required inputs
 
-- `ToolEnvelope` with non-null `idempotency_key` and current `expected_state_version` for non-dry-run commits.
+- A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
 - `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, and `evidence_updates`.
-- Product-write runs require a compatible active Write Authorization from `harness.prepare_write`.
-- New artifact bytes must already be represented by a valid `StagedArtifactHandle`; `record_run` does not stage new bytes.
+- Product-write runs require a compatible `status=active` `Write Authorization` from `harness.prepare_write`.
+- New artifact bytes must already be represented by a valid `StagedArtifactHandle`; `harness.record_run` does not stage new bytes.
 
 ## Access requirements
 
@@ -56,12 +57,12 @@ Non-claims:
 
 A compatible committed result increments `project_state.state_version` exactly once.
 
-Product-write recording consumes the active Write Authorization only when:
+Product-write recording consumes the `Write Authorization` only when:
 
 - the current state version still matches the authorization basis
 - observed changed paths are compatible with the authorized attempt
 
-The method rejects stale `expected_state_version` and stale authorization basis before consuming the active Write Authorization.
+The method rejects stale `expected_state_version` and stale authorization basis before consuming the `Write Authorization`.
 
 ## Success result
 
@@ -81,7 +82,7 @@ The method may commit compatible run-related blocker state when the run is recor
 
 Not allowed:
 
-- A committed blocked result must not hide invalid staged handles, missing Write Authorization, stale state, stale authorization basis, or local access failures.
+- A committed blocked result must not hide invalid staged handles, missing `Write Authorization`, stale state, stale authorization basis, or local access failures.
 
 Those failures are rejected before commit.
 
@@ -90,8 +91,8 @@ Those failures are rejected before commit.
 Returns `ToolRejectedResponse` for:
 
 - stale `expected_state_version`
-- stale Write Authorization basis
-- missing or invalid Write Authorization for product writes
+- stale `Write Authorization` basis
+- missing or invalid `Write Authorization` for product writes
 - invalid staged handle
 - incompatible staged-handle provenance
 - missing artifact
@@ -103,38 +104,18 @@ Returns `ToolRejectedResponse` for:
 
 Non-claim: invalid staged handles are validation failures with artifact-input details owned by [API error details](error-details.md#artifact-input-error-reason), not local access mismatch unless request-level local access itself failed.
 
+Public error code meaning, precedence, details, and rejected-response routing are owned by the error documents linked below.
+
 ## Dry-run behavior
 
-For `dry_run=true`, a valid preview returns `ToolDryRunResponse`.
+For `dry_run=true`, a valid preview:
 
-Branch shape is owned by [API Schema Core](schema-core.md); no-effect persistence and promotion semantics are owned by [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).
+- returns `ToolDryRunResponse`
+- creates no Run, evidence update, blocker update, artifact link, artifact promotion, or `Write Authorization` consumption
 
 ## Storage effect
 
-On commit, the method may persist:
-
-- run results
-- evidence results
-- blocker results
-- authorization-consumption results
-- artifact-linking results
-
-Exact storage effects are owned by [Storage Effects](../storage-effects.md), and artifact promotion details are owned by [Artifact Storage](../storage-artifacts.md).
-
-Run data example:
-
-The run records account data export confirmation test evidence and may consume the staged test log from the shared `harness.stage_artifact` example as evidence.
-
-This example records test evidence after the write path has already been handled. It does not claim that this run observed the product file write itself.
-
-```yaml
-command: "npm test -- account-export"
-summary: "Account data export confirmation tests passed."
-artifacts:
-  - staged_artifact_account_export_test_log_001
-run_ref: run_account_export_tests_001
-state_version: 21
-```
+On commit, the method may persist run, evidence, blocker, authorization-consumption, and artifact-linking results. Exact storage effects and artifact promotion details are owned by the storage documents linked below.
 
 ## Minimal valid request
 
@@ -155,37 +136,17 @@ params:
   change_unit_id: cu_001
   kind: implementation
   run_id: null
-  baseline_ref: baseline_account_export_001
+  baseline_ref: baseline_invoice_download_001
   write_authorization_id: null
-  summary: "Account data export confirmation tests passed."
+  summary: "Invoice download confirmation tests passed."
   observed_changes:
     changed_paths: []
     product_file_write_observed: false
     sensitive_categories: []
-    baseline_ref: baseline_account_export_001
-  artifact_inputs:
-    - artifact_input_id: artifact_input_account_export_test_log_001
-      source_kind: staged_artifact
-      staged_artifact_handle:
-        handle_id: staged_artifact_account_export_test_log_001
-        project_id: proj_123
-        task_id: task_456
-        created_by_surface_id: surface_local
-        created_by_surface_instance_id: surface_instance_01
-        content_type: text/plain
-        sha256: sha256:example
-        size_bytes: 65
-        redaction_state: none
-        expires_at: "<future-expiration-timestamp>"
-        consumed: false
-      existing_artifact_ref: null
-      relation_hint: "test_log"
-      claim: "Test output for account data export confirmation tests."
-      expected_sha256: null
-      expected_size_bytes: null
-      redaction_state: none
+    baseline_ref: baseline_invoice_download_001
+  artifact_inputs: []
   evidence_updates:
-    - claim: "Account data export confirmation tests passed."
+    - claim: "Invoice download confirmation tests passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs: []
@@ -209,106 +170,34 @@ base:
 run_summary:
   run_ref:
     record_kind: run
-    record_id: run_account_export_tests_001
+    record_id: run_invoice_download_tests_001
     project_id: proj_123
     task_id: task_456
     state_version: 21
   kind: implementation
-  summary: "Account data export confirmation tests passed."
+  summary: "Invoice download confirmation tests passed."
   observed_changes:
     changed_paths: []
     product_file_write_observed: false
     sensitive_categories: []
-    baseline_ref: baseline_account_export_001
-  artifact_refs:
-    - artifact_id: artifact_account_export_test_log_001
-      project_id: proj_123
-      task_id: task_456
-      display_name: "account_export_confirmation_test.log"
-      content_type: text/plain
-      sha256: sha256:example
-      size_bytes: 65
-      redaction_state: none
-      availability: available
-      created_by_run_ref:
-        record_kind: run
-        record_id: run_account_export_tests_001
-        project_id: proj_123
-        task_id: task_456
-        state_version: 21
-      created_by_surface_id: surface_local
-      created_by_surface_instance_id: surface_instance_01
-      storage_ref: artifact://artifact_account_export_test_log_001
-registered_artifacts:
-  - artifact_id: artifact_account_export_test_log_001
-    project_id: proj_123
-    task_id: task_456
-    display_name: "account_export_confirmation_test.log"
-    content_type: text/plain
-    sha256: sha256:example
-    size_bytes: 65
-    redaction_state: none
-    availability: available
-    created_by_run_ref:
-      record_kind: run
-      record_id: run_account_export_tests_001
-      project_id: proj_123
-      task_id: task_456
-      state_version: 21
-    created_by_surface_id: surface_local
-    created_by_surface_instance_id: surface_instance_01
-    storage_ref: artifact://artifact_account_export_test_log_001
+    baseline_ref: baseline_invoice_download_001
+  artifact_refs: []
+registered_artifacts: []
 evidence_summary:
   status: sufficient
   coverage_items:
-    - claim: "Account data export confirmation tests passed."
+    - claim: "Invoice download confirmation tests passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs:
         - record_kind: run
-          record_id: run_account_export_tests_001
+          record_id: run_invoice_download_tests_001
           project_id: proj_123
           task_id: task_456
           state_version: 21
-      supporting_artifact_refs:
-        - artifact_id: artifact_account_export_test_log_001
-          project_id: proj_123
-          task_id: task_456
-          display_name: "account_export_confirmation_test.log"
-          content_type: text/plain
-          sha256: sha256:example
-          size_bytes: 65
-          redaction_state: none
-          availability: available
-          created_by_run_ref:
-            record_kind: run
-            record_id: run_account_export_tests_001
-            project_id: proj_123
-            task_id: task_456
-            state_version: 21
-          created_by_surface_id: surface_local
-          created_by_surface_instance_id: surface_instance_01
-          storage_ref: artifact://artifact_account_export_test_log_001
+      supporting_artifact_refs: []
       gap_refs: []
-  artifact_refs:
-    - artifact_id: artifact_account_export_test_log_001
-      project_id: proj_123
-      task_id: task_456
-      display_name: "account_export_confirmation_test.log"
-      content_type: text/plain
-      sha256: sha256:example
-      size_bytes: 65
-      redaction_state: none
-      availability: available
-      created_by_run_ref:
-        record_kind: run
-        record_id: run_account_export_tests_001
-        project_id: proj_123
-        task_id: task_456
-        state_version: 21
-      created_by_surface_id: surface_local
-      created_by_surface_instance_id: surface_instance_01
-      storage_ref: artifact://artifact_account_export_test_log_001
+  artifact_refs: []
 blocker_refs: []
 state:
   project_id: proj_123
@@ -326,7 +215,7 @@ state:
 - Request envelope, response branches, and dry-run summaries: [API Schema Core](schema-core.md).
 - `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, and refs: [API State Schemas](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, and `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md).
-- Write Authorization and close-relevant evidence boundaries: [Core Model](../core-model.md).
+- `Write Authorization` and close-relevant evidence boundaries: [Core Model](../core-model.md).
 - Supported values and access classes: [API Value Sets](schema-value-sets.md).
-- Public errors and artifact-input detail values: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [artifact-input error details](error-details.md#artifact-input-error-reason).
+- Public errors, precedence, response routing, and artifact-input detail values: [API error codes](error-codes.md), [API error precedence](error-precedence.md), [API error routing](error-routing.md), and [artifact-input error details](error-details.md#artifact-input-error-reason).
 - Persistence effects and artifact promotion: [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).

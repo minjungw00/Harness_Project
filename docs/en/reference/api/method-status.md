@@ -6,34 +6,33 @@
 
 This document owns baseline method behavior for `harness.status`:
 
-- method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account data export confirmation scenario
-- method-level storage-effect summary and links to storage owners
+- method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
+- read-only status behavior for current Core state
+- status examples
 
 ## What this document does not own
 
 This document does not own:
 
-- common `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, or `ToolDryRunResponse` schema bodies
+- common request envelope, response branch, dry-run, or rejected-response schema bodies
 - nested state, artifact, judgment, value-set, or error schema definitions
-- storage DDL, storage record layouts, artifact lifecycle, security guarantees, or Core product meaning
+- storage DDL, storage record layouts, exact storage effects, artifact lifecycle, security guarantees, or Core authority semantics
+- public error code meaning, public error precedence, or shared response-branch routing
 
 ## Purpose
 
-`harness.status` returns a read-only current-position view over Core state: active Task summary, blockers, pending user judgments, Write Authorization summary, evidence summary, close state, close-readiness findings, guarantee display, and next safe actions.
+`harness.status` returns a read-only current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Authorization` summary, evidence summary, close state, close-readiness findings, guarantee display, and next safe actions.
 
 ## Required inputs
 
-- `ToolEnvelope` with `project_id`, `surface_id`, `request_id`, and `dry_run`; `idempotency_key` and `expected_state_version` may be `null`.
+- A valid `ToolEnvelope`; `idempotency_key` and `expected_state_version` may be `null`.
 - `include` flags selecting which summaries the caller needs.
 
 ## Access requirements
 
-Condition: protected Core detail is returned.
+When protected Core detail is requested, the read requires:
 
-Requires:
-
-- same-project active local surface
+- same-project current local surface
 - `VerifiedSurfaceContext.access_class=read_status`
 
 For this response, state authority comes from the Core-owned state summarized in `StatusResult`.
@@ -52,7 +51,7 @@ The method creates no:
 - artifact effect
 - staged-handle consumption
 - evidence update
-- Write Authorization change
+- `Write Authorization` change
 
 ## Success result
 
@@ -78,10 +77,10 @@ Returns `ToolRejectedResponse` only when the read cannot be safely served, such 
 - unavailable Core
 - local access mismatch
 - insufficient capability for the requested protected detail
-- missing active Task for a Task-scoped read
+- missing current Task for a Task-scoped read
 - stale or unavailable projection when a projection-backed view was requested
 
-Public error code meaning is owned by [API error codes](error-codes.md). Public error precedence is owned by [API error precedence](error-precedence.md).
+Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
 
 ## Dry-run behavior
 
@@ -92,11 +91,9 @@ A valid request returns the same `StatusResult` shape with:
 - `base.dry_run=true`
 - `base.effect_kind=read_only`
 
-Branch rules are owned by [API Schema Core](schema-core.md).
-
 ## Storage effect
 
-This is a read-only method. Exact no-effect persistence semantics are owned by [Storage Effects](../storage-effects.md).
+This is a read-only method. Exact no-effect persistence semantics are owned by the storage documents linked below.
 
 ## Minimal valid request
 
@@ -116,129 +113,66 @@ params:
   include:
     task: true
     pending_user_judgments: true
-    write_authority: true
-    evidence: true
+    write_authority: false
+    evidence: false
     close: true
     guarantees: true
 ```
 
 ## Representative response
 
-Result branch (`StatusResult`, read-only). This status snapshot is observed after `harness.record_run` has created `run_account_export_tests_001` and promoted `artifact_account_export_test_log_001` as evidence:
+Result branch (`StatusResult`, read-only):
 
 ```yaml
 base:
   response_kind: result
   effect_kind: read_only
   dry_run: false
-  state_version: 21
+  state_version: 22
   events: []
 active_task:
   project_id: proj_123
-  state_version: 21
+  state_version: 22
   task_ref:
     record_kind: task
     record_id: task_456
     project_id: proj_123
     task_id: task_456
-    state_version: 21
+    state_version: 22
   mode: work
   lifecycle:
     lifecycle_phase: ready
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Account data export flow and account data export confirmation tests."
+  goal_summary: "Add a confirmation step before invoice PDF download."
+  scope_summary: "Invoice PDF download confirmation and related tests."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
     project_id: proj_123
     task_id: task_456
-    state_version: 21
-status_summary: "Account data export confirmation tests are recorded. User acceptance of the account data export confirmation copy is still pending."
+    state_version: 19
+status_summary: "A user-owned product decision about the invoice download confirmation copy is pending."
 next_actions:
-  - action: harness.request_user_judgment
-    reason: "Ask the user to accept the account data export confirmation copy before close."
-pending_user_judgments: []
-write_authority_summary:
-  status: stale
-  write_authorization_ref:
-    record_kind: write_authorization
-    record_id: wa_001
+  - action: harness.record_user_judgment
+    reason: "Record the user's answer for the pending product decision."
+pending_user_judgments:
+  - record_kind: user_judgment
+    record_id: uj_001
     project_id: proj_123
     task_id: task_456
-    state_version: 20
-  basis_state_version: 19
-  intended_paths:
-    - src/account/export.ts
-    - src/account/export-confirmation.ts
-    - tests/account-export.test.ts
-  guarantee_display:
-    level: cooperative
-    notes:
-      - "Write Authorization is a Harness compatibility record, not OS permission."
-evidence_summary:
-  status: sufficient
-  coverage_items:
-    - claim: "Account data export confirmation tests passed."
-      required_for_close: true
-      coverage_state: supported
-      supporting_refs:
-        - record_kind: run
-          record_id: run_account_export_tests_001
-          project_id: proj_123
-          task_id: task_456
-          state_version: 21
-      supporting_artifact_refs:
-        - artifact_id: artifact_account_export_test_log_001
-          project_id: proj_123
-          task_id: task_456
-          display_name: "account_export_confirmation_test.log"
-          content_type: text/plain
-          sha256: sha256:example
-          size_bytes: 65
-          redaction_state: none
-          availability: available
-          created_by_run_ref:
-            record_kind: run
-            record_id: run_account_export_tests_001
-            project_id: proj_123
-            task_id: task_456
-            state_version: 21
-          created_by_surface_id: surface_local
-          created_by_surface_instance_id: surface_instance_01
-          storage_ref: artifact://artifact_account_export_test_log_001
-      gap_refs: []
-  artifact_refs:
-    - artifact_id: artifact_account_export_test_log_001
-      project_id: proj_123
-      task_id: task_456
-      display_name: "account_export_confirmation_test.log"
-      content_type: text/plain
-      sha256: sha256:example
-      size_bytes: 65
-      redaction_state: none
-      availability: available
-      created_by_run_ref:
-        record_kind: run
-        record_id: run_account_export_tests_001
-        project_id: proj_123
-        task_id: task_456
-        state_version: 21
-      created_by_surface_id: surface_local
-      created_by_surface_instance_id: surface_instance_01
-      storage_ref: artifact://artifact_account_export_test_log_001
+    state_version: 22
 blocker_refs: []
 close_readiness:
   ready: false
   blockers:
     - code: missing_user_judgment
-      message: "User acceptance is missing for the account data export confirmation copy."
+      message: "User-owned product decision is still pending."
 guarantee_display:
   level: cooperative
   notes:
-    - "No stronger local guarantee is active."
+    - "No stronger local guarantee is currently applied."
 ```
 
 ## Owner links
@@ -246,7 +180,6 @@ guarantee_display:
 - Request envelope and response branches: [API Schema Core](schema-core.md).
 - Status state, close-readiness shapes, evidence summaries, and guarantee display: [API State Schemas](schema-state.md).
 - Supported values and access classes: [API Value Sets](schema-value-sets.md).
-- Public `ErrorCode` meanings: [API error codes](error-codes.md).
-- Rejected-response branch routing: [API error routing](error-routing.md).
+- Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Close-readiness blocker routing: [API blocker routing](blocker-routing.md).
 - Persistence effects: [Storage Effects](../storage-effects.md).

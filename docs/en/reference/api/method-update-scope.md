@@ -6,21 +6,22 @@
 
 This document owns baseline method behavior for `harness.update_scope`:
 
-- method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
-- the minimal request and representative response for the shared account data export confirmation scenario
-- method-level storage-effect summary and links to storage owners
+- method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
+- scope and Change Unit update behavior after intake
+- update-scope examples
 
 ## What this document does not own
 
 This document does not own:
 
-- common `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, or `ToolDryRunResponse` schema bodies
+- common request envelope, response branch, dry-run, or rejected-response schema bodies
 - nested state, artifact, judgment, value-set, or error schema definitions
-- storage DDL, storage record layouts, artifact lifecycle, security guarantees, or Core product meaning
+- storage DDL, storage record layouts, exact storage effects, artifact lifecycle, security guarantees, or Core authority semantics
+- public error code meaning, public error precedence, or shared response-branch routing
 
 ## Purpose
 
-Update active Task and Change Unit fields after intake:
+`harness.update_scope` updates current Task and Change Unit fields after intake:
 
 - goal summary
 - scope boundary
@@ -28,13 +29,13 @@ Update active Task and Change Unit fields after intake:
 - acceptance criteria
 - autonomy boundary
 - baseline reference
-- active Change Unit
+- currently applied Change Unit
 
 This method is the supported path that turns shaping into a first safe Change Unit when user-owned blockers have been handled.
 
 ## Required inputs
 
-- `ToolEnvelope` with non-null `idempotency_key` and current `expected_state_version` for non-dry-run commits.
+- A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
 - `task_id`.
 - Any scope fields to change. For include/exclude updates, `scope_update.include` lists product work to bring into scope and `scope_update.exclude` lists product behavior that remains out of scope. `null` means leave the existing value unchanged; an empty array replaces that list with an empty list.
 - `change_unit.operation` and the fields needed by that operation.
@@ -42,28 +43,25 @@ This method is the supported path that turns shaping into a first safe Change Un
 
 ## Access requirements
 
-Conditions:
+A committed non-dry-run request requires:
 
-- `dry_run=false` commit.
-- `VerifiedSurfaceContext.access_class=core_mutation`.
-- `verified=true`.
-- The request identifies a compatible same-project Task.
-- When creating or replacing an active Change Unit, the request provides enough scope to make the next safe action honest.
+- `VerifiedSurfaceContext.access_class=core_mutation`
+- `verified=true`
+- a compatible same-project Task
+- enough scope to make the next safe action honest when creating or replacing the currently applied Change Unit
 
 ## State version behavior
 
-Committed non-dry-run result:
+A committed non-dry-run result increments `project_state.state_version` exactly once.
 
-- increments `project_state.state_version` exactly once
+Core marks a `status=active` `Write Authorization` `status=stale` when its basis no longer matches:
 
-Core marks an active Write Authorization `status=stale` when its basis no longer matches:
-
-- scope
+- current scope
 - baseline
 - acceptance criteria
 - non-goals
 - autonomy boundary
-- Change Unit
+- currently applied Change Unit
 - project state
 
 Non-claim: `status=stale` does not consume, revoke, expire, or silently reuse the authorization.
@@ -77,7 +75,7 @@ Returns `UpdateScopeResult` with:
 - `task_ref`
 - optional `change_unit_ref`
 - linked scope-decision refs
-- stale Write Authorization refs
+- stale `Write Authorization` refs
 - blocker refs
 - current `state`
 - `next_actions`
@@ -112,17 +110,18 @@ Returns `ToolRejectedResponse` for pre-commit failures such as:
 - local access failure
 - validator failure
 
-Public error code meaning is owned by [API error codes](error-codes.md). Public error precedence is owned by [API error precedence](error-precedence.md).
+Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
 
 ## Dry-run behavior
 
-For `dry_run=true`, a valid state-effecting preview returns `ToolDryRunResponse`.
+For `dry_run=true`, a valid state-effecting preview:
 
-Branch shape is owned by [API Schema Core](schema-core.md); no-effect persistence semantics are owned by [Storage Effects](../storage-effects.md).
+- returns `ToolDryRunResponse`
+- creates no scope, Change Unit, blocker, or `Write Authorization` state
 
 ## Storage effect
 
-On commit, the method may persist scope-owned current state and stale-authorization consequences. Exact storage effects are owned by [Storage Effects](../storage-effects.md).
+On commit, the method may persist scope-owned current state and stale-authorization consequences. Exact storage effects are owned by the storage documents linked below.
 
 ## Minimal valid request
 
@@ -140,32 +139,32 @@ params:
     dry_run: false
     locale: en-US
   task_id: task_456
-  goal_summary: "Add explicit confirmation before account data export."
+  goal_summary: "Add a confirmation step before invoice PDF download."
   scope_update:
     include:
-      - "Update the account data export flow to require explicit confirmation before download."
-      - "Update account data export confirmation tests."
+      - "Update the invoice PDF download flow to require confirmation."
+      - "Update invoice download confirmation tests."
     exclude:
-      - "Account deletion behavior"
-  scope_boundary: "Account data export flow and account data export confirmation tests."
+      - "Invoice generation behavior."
+  scope_boundary: "Invoice PDF download confirmation and related tests."
   non_goals:
-    - "Account deletion behavior"
+    - "Invoice generation behavior."
   acceptance_criteria:
-    - "Account data export requires an explicit confirmation step before download."
-  autonomy_boundary: "Stay within the account data export flow and account data export confirmation tests."
-  baseline_ref: baseline_account_export_001
+    - "Downloading an invoice PDF requires explicit confirmation."
+  autonomy_boundary: "Stay within invoice PDF download confirmation and related tests."
+  baseline_ref: baseline_invoice_download_001
   change_unit:
     operation: create_active
-    scope_summary: "Account data export flow and account data export confirmation tests."
+    scope_summary: "Invoice PDF download confirmation and related tests."
     affected_areas:
-      - "Account data export flow"
-      - "Account data export confirmation tests"
+      - "Invoice PDF download flow"
+      - "Invoice download confirmation tests"
     affected_paths:
-      - src/account/export.ts
-      - src/account/export-confirmation.ts
-      - tests/account-export.test.ts
+      - src/billing/invoice-download.ts
+      - src/billing/invoice-download-confirmation.ts
+      - tests/invoice-download.test.ts
     constraints:
-      - "Keep account deletion behavior out of scope."
+      - "Keep invoice generation behavior out of scope."
   related_scope_decision_refs: []
 ```
 
@@ -212,12 +211,12 @@ state:
     close_reason: none
     result: none
     closed_at: null
-  goal_summary: "Add explicit confirmation before account data export."
-  scope_summary: "Account data export flow and account data export confirmation tests."
+  goal_summary: "Add a confirmation step before invoice PDF download."
+  scope_summary: "Invoice PDF download confirmation and related tests."
   non_goals:
-    - "Account deletion behavior"
+    - "Invoice generation behavior."
   acceptance_criteria:
-    - "Account data export requires an explicit confirmation step before download."
+    - "Downloading an invoice PDF requires explicit confirmation."
   active_change_unit_ref:
     record_kind: change_unit
     record_id: cu_001
@@ -226,7 +225,7 @@ state:
     state_version: 19
 next_actions:
   - action: harness.prepare_write
-    reason: "Check the account data export change against active scope."
+    reason: "Check the invoice download change against current scope."
 ```
 
 ## Owner links
@@ -235,5 +234,5 @@ next_actions:
 - State refs, `StateSummary`, `ShapingReadiness`, blockers, and next actions: [API State Schemas](schema-state.md).
 - Scope-related user judgment shapes: [API Judgment Schemas](schema-judgment.md).
 - Supported value sets and access classes: [API Value Sets](schema-value-sets.md).
-- Public errors: [API error codes](error-codes.md) and [API error precedence](error-precedence.md).
+- Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Persistence effects and stale authorization behavior: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).

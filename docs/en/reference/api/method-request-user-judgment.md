@@ -6,18 +6,18 @@
 
 This document owns baseline method behavior for `harness.request_user_judgment`:
 
-- method-specific required inputs, access requirements, state-version behavior, result branches, and dry-run behavior
+- method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
 - creation of one pending `UserJudgment` for a focused user-owned judgment
-- the minimal request and representative response for an account data export confirmation scenario
+- request-user-judgment examples
 
 ## What this document does not own
 
 This document does not own:
 
-- common `ToolEnvelope`, `ToolResultBase`, `ToolRejectedResponse`, or `ToolDryRunResponse` schema bodies
+- common request envelope, response branch, dry-run, or rejected-response schema bodies
 - `UserJudgment`, option, context, answer payload, value-set, or status field definitions
 - Core user-owned judgment meaning, final acceptance meaning, residual-risk meaning, sensitive-action approval meaning, or `Write Authorization` meaning
-- storage record layouts, exact storage effects, public error code meaning, or public error precedence
+- storage record layouts, exact storage effects, public error code meaning, public error precedence, or shared response-branch routing
 
 ## Purpose
 
@@ -27,22 +27,24 @@ The pending judgment is a request for a decision. It is not the decision itself,
 
 ## Required inputs
 
-- `ToolEnvelope` with non-null `idempotency_key` and current `expected_state_version` for non-dry-run commits.
+- A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
 - `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `question`, `options`, `context`, `affected_refs`, `required_for`, and `expires_at`.
 - A focused `question` with mutually understandable `options`.
 - Enough `context` for the user to judge the exact issue without relying on hidden chat state.
 
-Shared field shapes for `UserJudgment`, `UserJudgmentOption`, `UserJudgmentContext`, and refs are owned by [API Judgment Schemas](schema-judgment.md) and [API State Schemas](schema-state.md).
-
 ## Access requirements
 
-The method requires `VerifiedSurfaceContext.access_class=core_mutation` and `verified=true`.
+The method requires:
 
-The request must target a compatible same-project `Task` and optional Change Unit. Local access failures, unreadable project or Task identity, and insufficient local capability reject before commit.
+- `VerifiedSurfaceContext.access_class=core_mutation`
+- `verified=true`
+- a compatible same-project Task and optional Change Unit
 
-## State-version behavior
+Local access failures, unreadable project or Task identity, and insufficient local capability reject before commit.
 
-Committed `dry_run=false` result:
+## State version behavior
+
+A committed non-dry-run result:
 
 - increments `project_state.state_version` exactly once
 - creates one pending `UserJudgment`
@@ -68,33 +70,38 @@ Returns `RequestUserJudgmentResult` with:
 
 There is no separate committed blocked response branch for this method.
 
-When a pending judgment cannot be created, the method rejects before commit. Common causes include invalid request shape, an unsupported or incompatible `judgment_kind`, missing or incompatible Task identity, unresolved prerequisite judgment, local access failure, insufficient capability, stale `expected_state_version`, and validator failure.
+When a pending judgment cannot be created, the method rejects before commit.
 
 ## Rejected result
 
-Returns `ToolRejectedResponse` for pre-commit failures. Public error code meaning is owned by [API error codes](error-codes.md). Public error precedence is owned by [API error precedence](error-precedence.md).
+Returns `ToolRejectedResponse` for pre-commit failures such as:
+
+- invalid request shape
+- unsupported or incompatible `judgment_kind`
+- missing or incompatible Task identity
+- unresolved prerequisite judgment
+- local access failure
+- insufficient capability
+- stale `expected_state_version`
+- validator failure
 
 Rejected attempts do not create a pending judgment and do not persist request-like blocker data as a side effect.
 
+Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
+
 ## Dry-run behavior
 
-For `dry_run=true`, a valid preview returns `ToolDryRunResponse`. Branch shape is owned by [API Schema Core](schema-core.md); no-effect persistence semantics are owned by [Storage Effects](../storage-effects.md).
+For `dry_run=true`, a valid preview:
 
-The preview must not return a durable `user_judgment_ref` or create a pending `UserJudgment`.
+- returns `ToolDryRunResponse`
+- does not return a durable `user_judgment_ref`
+- creates no pending `UserJudgment`
 
 ## Storage effect
 
-On commit, the method may persist a pending `user_judgments` row and related blocker state. Exact storage effects are owned by [Storage Effects](../storage-effects.md#harnessrequest_user_judgment).
+On commit, the method may persist a pending `user_judgments` row and related blocker state. Exact storage effects are owned by the storage documents linked below.
 
-## Example
-
-Example preconditions:
-
-- `proj_123`, `task_456`, and `cu_001` already exist in the same project.
-- The current project `state_version` is `21`.
-- The account data export confirmation copy is ready for a user-owned product decision.
-
-### Minimal valid request
+## Minimal valid request
 
 ```yaml
 method: harness.request_user_judgment
@@ -113,25 +120,25 @@ params:
   change_unit_id: cu_001
   judgment_kind: product_decision
   presentation: short
-  question: "Should the account data export confirmation copy that warns users the account data export file may include personal data be accepted as sufficient?"
+  question: "Is the invoice download confirmation copy sufficient for this Task?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user-owned judgment that the account data export confirmation copy is sufficient."
-      consequence: "Close readiness can evaluate the product decision as resolved."
+      description: "Record the user-owned product decision that the copy is sufficient."
+      consequence: "Close readiness can evaluate this product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised account data export confirmation copy."
-      consequence: "Close remains blocked on the product decision."
+      description: "Keep the Task open for revised confirmation copy."
+      consequence: "Close remains blocked on this product decision."
       is_default: false
   context:
-    summary: "The account data export confirmation copy shown before download warns that the account data export file may include personal data."
+    summary: "The confirmation copy appears before invoice PDF download and tells users they are about to download a billing document."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Account data export flow and account data export confirmation tests remain in scope; account deletion behavior remains out of scope."
+      - "Invoice PDF download confirmation is in scope; invoice generation is out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -142,7 +149,7 @@ params:
   expires_at: null
 ```
 
-### Representative response
+## Representative response
 
 Result branch (`RequestUserJudgmentResult`, committed):
 
@@ -169,25 +176,25 @@ user_judgment:
   judgment_kind: product_decision
   status: pending
   presentation: short
-  question: "Should the account data export confirmation copy that warns users the account data export file may include personal data be accepted as sufficient?"
+  question: "Is the invoice download confirmation copy sufficient for this Task?"
   options:
     - option_id: accept
       label: "Sufficient"
-      description: "Record the user-owned judgment that the account data export confirmation copy is sufficient."
-      consequence: "Close readiness can evaluate the product decision as resolved."
+      description: "Record the user-owned product decision that the copy is sufficient."
+      consequence: "Close readiness can evaluate this product decision as resolved."
       is_default: true
     - option_id: revise
       label: "Revise"
-      description: "Keep the Task open for revised account data export confirmation copy."
-      consequence: "Close remains blocked on the product decision."
+      description: "Keep the Task open for revised confirmation copy."
+      consequence: "Close remains blocked on this product decision."
       is_default: false
   context:
-    summary: "The account data export confirmation copy shown before download warns that the account data export file may include personal data."
+    summary: "The confirmation copy appears before invoice PDF download and tells users they are about to download a billing document."
     related_refs: []
     artifact_refs: []
     visible_risks: []
     constraints:
-      - "Account data export flow and account data export confirmation tests remain in scope; account deletion behavior remains out of scope."
+      - "Invoice PDF download confirmation is in scope; invoice generation is out of scope."
   affected_refs:
     - record_kind: task
       record_id: task_456
@@ -213,5 +220,5 @@ state:
 - Judgment kinds and supported values: [API Value Sets](schema-value-sets.md).
 - User-owned judgment and non-substitution rules: [Core Model](../core-model.md).
 - Exact storage effects: [Storage Effects](../storage-effects.md#harnessrequest_user_judgment).
-- Public errors: [API error codes](error-codes.md) and [API error precedence](error-precedence.md).
+- Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Recording the user's answer to a pending judgment: [`harness.record_user_judgment`](method-record-user-judgment.md).
