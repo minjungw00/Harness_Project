@@ -1188,8 +1188,10 @@ documents:
     owner_for:
       - "API example durability checks"
       - "API example internal consistency checks"
-      - "API example field-name consistency checks"
+      - "API example field-name, required-field, and nullability consistency checks"
+      - "API example value-set and response-shape consistency checks"
       - "API example owner-routing checks"
+      - "cross-method scenario spine detection for API method examples"
     not_owner_for:
       - "API method contracts"
       - "API schema contracts"
@@ -1199,6 +1201,13 @@ documents:
       - "maintain.authoring-guide"
       - "maintain.translation-guide"
       - "reference.index"
+      - "reference.conformance"
+      - "reference.api.methods"
+      - "reference.api.schema-core"
+      - "reference.api.schema-state"
+      - "reference.api.schema-artifacts"
+      - "reference.api.schema-judgment"
+      - "reference.api.schema-value-sets"
     normative_level: "maintenance"
     audience:
       - "maintainers"

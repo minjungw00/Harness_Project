@@ -50,11 +50,15 @@ Treat documentation routes, path allowlists, check scopes, and batch boundaries 
 
 Examples in API and Reference documentation should be stable, self-contained product or user scenarios. They should illustrate the documented shape without creating product policy.
 
-API examples may use separate scenarios unless a shared scenario improves consistency. When examples share a scenario, the affected examples must keep compatible refs, paths, `state_version` values, artifact refs, run refs, judgment refs, and close-readiness evidence.
+API method reference examples must be method-local minimal examples. Each method owner document may use a stable product or user scenario, but the example must introduce every ref, `state_version` fact, artifact ref, run ref, judgment ref, blocker ref, and file path it needs within that method document or explicitly state it as a method-local precondition.
+
+A method example must not depend on refs, state versions, artifact refs, run refs, judgment refs, blocker refs, or file paths introduced by another method reference document. Repeated business nouns, path prefixes, ref prefixes, judgment ID families, run ID families, artifact ID families, blocker code families, or scenario descriptions across three or more method owner documents form a cross-method scenario spine. Cross-method or end-to-end scenarios belong only in conformance or scenario-level documentation, not in API method reference examples.
+
+Conformance scenarios must not require method reference documents to reuse their payloads. Validate API examples against schema owners, value-set owners, method-local input rules, and storage-effect owners where applicable. Unsupported enum-like values in examples are documentation failures unless the field is explicitly free-form; stale response shapes in examples are documentation failures.
 
 Do not use documentation maintenance, migration, refactoring, route reshaping, or section restructuring as ordinary product API example payloads. Repository-internal documentation paths, including paths under `docs/`, should appear as example data only when the document is specifically about documentation maintenance.
 
-Use [API examples checks](checks/api-examples.md) for detailed example review, including field-name consistency, response snapshot consistency, timestamps, and bilingual scenario parity.
+Use [API examples checks](checks/api-examples.md) for detailed example review, including field-name consistency, required and nullable fields, enum-like values, `NextActionSummary`, response branches, refs and `state_version`, artifact refs, judgment refs, close-readiness blockers, and cross-method scenario spine detection.
 
 ## 6. Terminology And Language
 

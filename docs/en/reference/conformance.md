@@ -98,7 +98,7 @@ Conformance criteria are reference criteria. Examples and tutorials may illustra
 
 Reference scenarios must use stable behavior descriptions. They must not use maintainer workflow labels, broad review stages, or short-lived project status as the behavior being tested.
 
-No example, tutorial, or representative scenario requires API documentation to reuse one product scenario. API examples may use any stable, self-contained product or user scenario that stays consistent with the applicable owner contracts.
+Cross-method and end-to-end scenarios belong in conformance or other scenario-level documentation, not in API method reference examples. No conformance scenario, example, tutorial, or representative scenario requires API method reference documents to reuse its payloads; method reference examples remain method-local minimal examples that stay consistent with the applicable owner contracts.
 
 ## Scenario criterion shape
 
