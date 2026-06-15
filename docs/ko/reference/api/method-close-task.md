@@ -59,7 +59,9 @@ API 경계 블록:
 스키마와 표시 블록:
 
 - `CloseReadinessBlocker`와 상태 형태 데이터는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다.
-- 정확한 `intent`, `close_reason`, `close_state`, 차단 사유 범주 값 이름은 [API 값 집합](schema-value-sets.md#task-lifecycle-values)과 [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)이 담당합니다.
+- 정확한 `intent` 값 이름은 [API 값 집합의 메서드 내부 값](schema-value-sets.md#method-local-values)이 담당합니다.
+- 정확한 `close_reason`과 `close_state` 값 이름은 [API 값 집합의 Task 생명주기 값](schema-value-sets.md#task-lifecycle-values)이 담당합니다.
+- 정확한 차단 사유 범주 값 이름은 [API 값 집합의 상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values)이 담당합니다.
 - 지속 저장 효과는 [저장 효과](../storage-effects.md)가 담당합니다.
 - 렌더링 문구는 [템플릿 본문](../template-bodies.md)이 담당합니다.
 
@@ -85,7 +87,7 @@ API 경계 블록:
 
 ## 닫기 의도
 
-`intent`, `close_reason`, `close_state`의 지원 값은 [API 값 집합](schema-value-sets.md#task-lifecycle-values)이 담당합니다.
+지원되는 `intent` 값은 [API 값 집합의 메서드 내부 값](schema-value-sets.md#method-local-values)이 담당합니다. 지원되는 `close_reason`과 `close_state` 값은 [API 값 집합의 Task 생명주기 값](schema-value-sets.md#task-lifecycle-values)이 담당합니다.
 
 | `intent` | `close_reason` | `superseding_task_id` | 메서드 규칙 |
 |---|---|---|---|
@@ -256,7 +258,7 @@ params:
 
 ### 대표 차단 확인 응답
 
-최종 수락이 아직 없는 `Task`의 읽기 전용 `CloseTaskResult`:
+`state_version: 72`의 `task_close_001`에 대해, 이 메서드 예시의 응답이 최종 수락 차단 사유 하나를 보고하는 읽기 전용 `CloseTaskResult`:
 
 ```yaml
 base:
@@ -299,7 +301,9 @@ artifact_refs: []
 
 - 요청 래퍼, 공통 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
 - `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, `NextActionSummary` 형태: [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes).
-- 닫기 상태, 생명주기, 닫기 이유, 차단 사유 범주 값(`CloseReadinessBlocker.category`): [API 값 집합](schema-value-sets.md#state-and-blocker-values).
+- `intent` 값: [API 값 집합의 메서드 내부 값](schema-value-sets.md#method-local-values).
+- 닫기 상태, 생명주기, 닫기 이유 값: [API 값 집합의 Task 생명주기 값](schema-value-sets.md#task-lifecycle-values).
+- 차단 사유 범주 값(`CloseReadinessBlocker.category`): [API 값 집합의 상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values).
 - 닫기 준비 상태 의미와 정직한 닫기: [Core 모델의 닫기 준비 상태](../core-model.md#close_task).
 - 공개 `ErrorCode` 의미: [API 오류 코드](error-codes.md).
 - 오류 우선순위와 오래된 상태 충돌 선택: [API 오류 우선순위](error-precedence.md).

@@ -59,7 +59,9 @@ API boundary block:
 Schema and display block:
 
 - `CloseReadinessBlocker` and state-shaped data belong to [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
-- exact `intent`, `close_reason`, `close_state`, and blocker-category value names belong to [API Value Sets](schema-value-sets.md#task-lifecycle-values) and [state and blocker values](schema-value-sets.md#state-and-blocker-values).
+- exact `intent` value names belong to [API Value Sets method-local values](schema-value-sets.md#method-local-values).
+- exact `close_reason` and `close_state` value names belong to [API Value Sets task lifecycle values](schema-value-sets.md#task-lifecycle-values).
+- exact blocker-category value names belong to [API Value Sets state and blocker values](schema-value-sets.md#state-and-blocker-values).
 - persistence effects belong to [Storage Effects](../storage-effects.md).
 - rendered wording belongs to [Template Bodies](../template-bodies.md).
 
@@ -85,7 +87,7 @@ Close condition:
 
 ## Close intents
 
-Supported values for `intent`, `close_reason`, and `close_state` are owned by [API Value Sets](schema-value-sets.md#task-lifecycle-values).
+Supported `intent` values are owned by [API Value Sets method-local values](schema-value-sets.md#method-local-values). Supported `close_reason` and `close_state` values are owned by [API Value Sets task lifecycle values](schema-value-sets.md#task-lifecycle-values).
 
 | `intent` | `close_reason` | `superseding_task_id` | Method rule |
 |---|---|---|---|
@@ -256,7 +258,7 @@ params:
 
 ### Representative blocked check response
 
-Read-only `CloseTaskResult` for a `Task` whose final acceptance is still missing:
+Read-only `CloseTaskResult` for `task_close_001` at `state_version: 72`, where the method-local response reports one final-acceptance blocker:
 
 ```yaml
 base:
@@ -299,7 +301,9 @@ artifact_refs: []
 
 - Request envelope, common response branches, and `dry_run` summaries: [API Schema Core](schema-core.md).
 - `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, and `NextActionSummary` shapes: [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
-- Close state, lifecycle, close reason, and `CloseReadinessBlocker.category` values: [API Value Sets](schema-value-sets.md#state-and-blocker-values).
+- `intent` values: [API Value Sets method-local values](schema-value-sets.md#method-local-values).
+- Close state, lifecycle, and close reason values: [API Value Sets task lifecycle values](schema-value-sets.md#task-lifecycle-values).
+- `CloseReadinessBlocker.category` values: [API Value Sets state and blocker values](schema-value-sets.md#state-and-blocker-values).
 - Close readiness meaning and close honesty: [Core Model close readiness](../core-model.md#close_task).
 - Public `ErrorCode` meanings: [API error codes](error-codes.md).
 - Error precedence and stale-state conflict selection: [API error precedence](error-precedence.md).
