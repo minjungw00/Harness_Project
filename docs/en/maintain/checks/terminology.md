@@ -4,6 +4,8 @@ Use these documentation quality checks when an edit changes product terms, Korea
 
 When this page lists discouraged or forbidden strings, treat them as search patterns for reviewers. They are not wording to keep in ordinary documentation prose unless the surrounding text explicitly identifies them as search patterns or quoted legacy examples.
 
+Terminology review boundary: terminology failures are wording, routing, or metadata failures in documentation. They are not product, API, storage, security, or close-readiness failures.
+
 ## CHK-TERM-001: close-readiness terminology
 
 Check sources:
@@ -125,7 +127,11 @@ Evidence to inspect:
 - Confirm any new forbidden expression appears in the terminology map and both translation guides.
 
 Pass condition:
-- The terminology map remains the complete structured terminology metadata source; the glossary remains a compact reader-facing subset; every glossary-included term has matching terminology-map metadata, the same primary owner, and non-contradictory related references; detailed value, schema, helper, storage, and translation-control contexts route to focused owners or `docs/terminology-map.yaml`; no check requires the glossary to mirror the full map or use a specific layout.
+- The terminology map remains the complete structured terminology metadata source.
+- The glossary remains a compact reader-facing subset.
+- Every glossary-included term has matching terminology-map metadata, the same primary owner, and non-contradictory related references.
+- Detailed value, schema, helper, storage, and translation-control contexts route to focused owners or `docs/terminology-map.yaml`.
+- No check requires the glossary to mirror the full map or use a specific layout.
 
 Failure:
 - The guides and terminology map disagree.
@@ -305,7 +311,10 @@ Evidence to inspect:
 - Confirm Korean glossary content uses natural Korean technical prose and preserves exact identifiers unchanged.
 
 Pass condition:
-- The glossary remains a compact reader-facing view of selected terms; every included term has matching terminology-map metadata, one primary owner matching the terminology map, and non-contradictory related references; detailed contracts, style rules, and complete structured terminology metadata stay in their owners.
+- The glossary remains a compact reader-facing view of selected terms.
+- Every included term has matching terminology-map metadata.
+- Each included term has one primary owner matching the terminology map and non-contradictory related references.
+- Detailed contracts, style rules, and complete structured terminology metadata stay in their owners.
 
 Failure:
 - A glossary-included term becomes a translation guide, identifier-preservation policy, owner-routing map, or reference contract.
@@ -394,7 +403,9 @@ Evidence to inspect:
 - Confirm the check validates semantic route correctness, not only file or anchor existence.
 
 Pass condition:
-- Every glossary link refers to a curated glossary term in a core reader-facing concept-summary context; terminology-map-only terms and detailed value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml` unless the exact linked term is intentionally included as a core glossary term.
+- Every glossary link refers to a curated glossary term in a core reader-facing concept-summary context.
+- Terminology-map-only terms route to the terminology map or focused owners.
+- Detailed value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml` unless the exact linked term is intentionally included as a core glossary term.
 
 Failure:
 - A Markdown link points to the glossary for a term that is absent from the curated glossary.

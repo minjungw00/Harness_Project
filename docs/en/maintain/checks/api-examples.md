@@ -4,6 +4,8 @@ Use these checks for API and reference examples. They check documentation exampl
 
 API method reference examples are method-local minimal examples. They may use stable product or user nouns, but each method owner document must be reviewable on its own and must match the applicable method, schema, value-set, and storage-effect owners. Conformance scenarios may be linked only as conceptual references; they are not payload sources for method examples.
 
+Documentation review boundary: schema, value-set, response-branch, and scenario-spine checks audit example text against owner documents; they are not implementation or conformance tests.
+
 ## CHK-EXAMPLE-001: durable method-local API and Reference scenarios
 
 Check sources:
@@ -76,8 +78,9 @@ Check sources:
 - [Storage Effects](../../reference/storage-effects.md), when the example claims a storage effect
 
 Evidence to inspect:
+- Audit the example against the applicable schema owners before accepting field names, required fields, nullable fields, response branches, refs, and timestamps.
 - Example refs are introduced inside the method document or explicitly described as method-local existing refs.
-- The example includes enough local context to explain its request payload, visible response state, `state_version`, refs, artifact lifecycle, judgment context, and close-readiness evidence.
+- The example includes enough local context to explain its request payload, visible response state, `state_version`, refs, artifact lifecycle, judgment context, and close-readiness example evidence.
 - `expected_state_version`, `base.state_version`, state snapshots, and `Write Authorization` basis values follow the method owner and storage-version owner.
 - A response snapshot does not include refs from a newer `state_version` than the example's stated response or local preconditions allow.
 - Sensitive approval reasons match the request's `sensitive_categories` or stated precondition.
@@ -90,7 +93,7 @@ Evidence to inspect:
 - Storage-effect claims match the method owner and storage-effect owner.
 
 Failure:
-- An example cannot be reviewed without assuming a hidden fixture, unstated sample task, or external scenario.
+- An example cannot be reviewed as documentation without assuming a hidden fixture, unstated sample task, or external scenario.
 - Status examples include newer-version supporting refs.
 - `expected_state_version`, `base.state_version`, or `Write Authorization` basis values conflict with the example's local preconditions.
 - Approval reasons do not match `sensitive_categories`.
@@ -168,6 +171,7 @@ Check sources:
 - [API error routing](../../reference/api/error-routing.md), when the example shows rejected or blocked branches
 
 Evidence to inspect:
+- Audit value-like example fields against the applicable value-set owner before accepting them as current example values.
 - Enum-like values in examples appear in the value-set owner unless the field is explicitly free-form text or an opaque identifier.
 - Method names, `response_kind`, `effect_kind`, `access_class`, `record_kind`, lifecycle values, close-state values, artifact `source_kind`, judgment values, `presentation` values, `required_for`, `UserJudgment.status`, `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` match their value-set owners.
 - Rendered labels are not used as canonical schema values.

@@ -4,6 +4,8 @@ Use these checks for relative links, anchors, route tables, `README` pages, `doc
 
 Use `docs/doc-index.yaml` as the canonical machine-readable owner route for `doc_id`, paired paths, role, owner scope, non-owner scope, dependencies, normative level, and audience metadata. Use the Reference Index as the human-readable route when readers need a navigation page.
 
+Navigation review boundary: link failures are documentation route failures. They are not failures of the API, storage, security, or product behavior named by a target page.
+
 ## CHK-LINK-001: broken links and stale routes
 
 Check sources:
@@ -196,7 +198,11 @@ Evidence to inspect:
 - Confirm API error code meanings, error precedence, API response branch routing, close-readiness blocker routing, and `ToolError.details` targets stay separate.
 
 Pass condition:
-- Terminology routes and metadata point to focused owners; the terminology map remains the complete structured terminology metadata source; the glossary remains a compact reader-facing subset; every glossary-included term has matching terminology-map metadata, the same primary owner, and non-contradictory related references; detailed value, schema, helper, storage, and translation-control contexts route to focused owners or `docs/terminology-map.yaml`; route and index metadata do not overclaim focused ownership.
+- Terminology routes and metadata point to focused owners.
+- The terminology map remains the complete structured terminology metadata source.
+- The glossary remains a compact reader-facing subset, and every glossary-included term has matching terminology-map metadata, the same primary owner, and non-contradictory related references.
+- Detailed value, schema, helper, storage, and translation-control contexts route to focused owners or `docs/terminology-map.yaml`.
+- Route and index metadata do not overclaim focused ownership.
 
 Failure:
 - A terminology, glossary, metadata, or route target points to a broad index when a focused owner exists.
@@ -280,7 +286,9 @@ Evidence to inspect:
 - Use the Reference Index or `doc-index.yaml` when the linked context needs an owner that is not the glossary.
 
 Pass condition:
-- Every glossary Markdown link is both resolvable and semantically correct for a curated glossary term; other terminology, value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml` unless the exact linked term is intentionally included as a core glossary term.
+- Every glossary Markdown link is resolvable.
+- Each glossary link is semantically correct for a curated glossary term.
+- Other terminology, value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml` unless the exact linked term is intentionally included as a core glossary term.
 
 Failure:
 - A glossary link is unbroken but semantically points to the wrong owner.

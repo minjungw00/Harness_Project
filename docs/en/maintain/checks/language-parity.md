@@ -4,6 +4,8 @@ Use these checks when a documentation edit changes meaning in paired English and
 
 Heading alignment is only a navigation signal. Passing heading parity does not prove semantic parity for paragraphs, tables, lists, examples, warnings, exceptions, or removed concepts. English/Korean parity is also not enough when both languages share the same wrong semantic label or structure.
 
+Parity review boundary: these checks compare maintained documentation meaning. They do not certify the product behavior that the paired documents may describe.
+
 ## CHK-PARITY-001: English and Korean meaning parity
 
 Check sources:

@@ -2,6 +2,8 @@
 
 Use these checks for documentation architecture, owner boundaries, route-page structure, label-content consistency, display wording boundaries, storage record references, reference-claim placement, and final report shape. These are documentation quality checks only; they do not certify product runtime behavior, API conformance, QA completion, close readiness, or product guarantees.
 
+Structure review boundary: these checks judge where documentation claims belong and how reviewable they are. They do not judge whether Harness implements the claim.
+
 ## CHK-STRUCT-001: review scope inputs
 
 Check sources:
@@ -163,6 +165,8 @@ Fix:
 - If the content defines a contract, route it to the canonical owner and leave non-owner pages with a short consequence plus owner link.
 
 ## CHK-OWNER-001: canonical owner violations
+
+Documentation boundary: owner findings are documentation placement findings, not product behavior findings.
 
 Check sources:
 - [Reference Index](../../reference/README.md)
@@ -346,6 +350,8 @@ Fix:
 - Update the paired owner, Reference Index, `doc-index.yaml`, and inbound links in the same documentation batch when the split changes routing.
 
 ## CHK-SCOPE-001: baseline/out-of-scope leakage
+
+Documentation boundary: scope checks inspect wording in documentation. They do not promote or remove product support.
 
 Check sources:
 - [Scope](../../reference/scope.md)
