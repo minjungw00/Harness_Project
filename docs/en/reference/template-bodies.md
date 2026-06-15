@@ -1,6 +1,15 @@
 # Template bodies
 
-This document owns display-facing wording and presentation packet/body shape for current rendered template bodies: status cards, public error messages, judgment requests, run/evidence summaries, close results, and agent context packets. It owns rendered body guidance, user-facing labels, and display phrasing only; authority, storage records, API error semantics, and close-readiness blocker semantics stay with the linked owners.
+This document owns display-facing wording and presentation packet/body shape for current rendered template bodies:
+
+- status cards
+- public error messages
+- judgment requests
+- run/evidence summaries
+- close results
+- agent context packets
+
+It owns rendered body guidance, user-facing labels, and display phrasing only. Authority, storage records, API error semantics, and close-readiness blocker semantics stay with the linked owners.
 
 ## Owner boundaries
 
@@ -16,7 +25,11 @@ Neighboring owners stay authoritative:
 - projection freshness and read-only derived-display rules: [Projection and template display boundaries](projection-and-templates.md)
 - Core state, user-owned judgment, evidence, close readiness, acceptance, and residual risk: [Core Model](core-model.md)
 - API schemas and value sets: schema owners and [API Value Sets](api/schema-value-sets.md)
-- public `ErrorCode` meanings, response branches, error precedence, blocker routing, and `ToolError.details`: [API error codes](api/error-codes.md), [API error routing](api/error-routing.md), [API error precedence](api/error-precedence.md), [API blocker routing](api/blocker-routing.md), and [API error details](api/error-details.md)
+- public `ErrorCode` meanings: [API error codes](api/error-codes.md)
+- response branches: [API error routing](api/error-routing.md)
+- error precedence: [API error precedence](api/error-precedence.md)
+- blocker routing: [API blocker routing](api/blocker-routing.md)
+- `ToolError.details`: [API error details](api/error-details.md)
 - storage record layout, persistence, artifact lifecycle, and storage effects: storage owners through [Reference Index](README.md)
 - support boundaries, security guarantees, and surface context: [Scope Reference](scope.md), [Security](security.md), and [Agent Integration](agent-integration.md)
 
@@ -24,7 +37,14 @@ Neighboring owners stay authoritative:
 
 Template text is display text. It can summarize owner records and refer to semantic owners, but it must not redefine those semantics or become authority.
 
-Owner-owned inputs such as public `ErrorCode`, `CloseReadinessBlocker`, `state_version`, and `ArtifactRef` may be used to choose or fill display text. Their meanings, precedence, routing, storage effects, and schema authority remain with their owners.
+Owner-owned inputs may be used to choose or fill display text:
+
+- public `ErrorCode`
+- `CloseReadinessBlocker`
+- `state_version`
+- `ArtifactRef`
+
+Their meanings, precedence, routing, storage effects, and schema authority remain with their owners.
 
 Template wording must not, by itself:
 
@@ -32,12 +52,21 @@ Template wording must not, by itself:
 - create evidence, persistent artifacts, final acceptance, or residual-risk acceptance
 - satisfy evidence, QA, verification, acceptance, close-readiness, or close gates
 - define storage layout, storage effects, or make a rendered body the storage authority
-- define, rename, localize, or change public `ErrorCode` identifiers or meanings, response-branch behavior, error precedence, machine-readable detail keys, close-readiness blocker semantics, blocker codes, or blocker routing
+- define, rename, localize, or change public `ErrorCode` identifiers or meanings
+- define or change response-branch behavior, error precedence, or machine-readable detail keys
+- define or change close-readiness blocker semantics, blocker codes, or blocker routing
 - convert rejected-response errors into blockers or blocked results
 
 ## Public error display labels
 
-Use this section to choose display labels and recovery cues when rendering public API errors for a user or agent-facing surface. It does not define which errors exist, what they mean, which branch wins, or how blocked results are routed.
+Use this section to choose display labels and recovery cues when rendering public API errors for a user or agent-facing surface.
+
+It does not define:
+
+- which errors exist
+- what they mean
+- which branch wins
+- how blocked results are routed
 
 Rendered error copy must:
 
@@ -55,7 +84,10 @@ Rendered error copy must not:
 
 Owner links:
 - [API error codes](api/error-codes.md) owns public code meanings.
-- [API error precedence](api/error-precedence.md), [API error routing](api/error-routing.md), [API blocker routing](api/blocker-routing.md), and [API error details](api/error-details.md) own adjacent API routing and detail rules.
+- [API error precedence](api/error-precedence.md): error precedence.
+- [API error routing](api/error-routing.md): API response branch routing.
+- [API blocker routing](api/blocker-routing.md): blocker routing.
+- [API error details](api/error-details.md): machine-readable detail rules.
 
 <a id="label-validation-failed"></a>
 ### `VALIDATION_FAILED`
@@ -265,7 +297,10 @@ Recovery cue:
 
 ### Must show
 
-- A compact current-position card with separate regions for state and current scope, blockers and pending user judgments, run/evidence summary and gaps, close-readiness summary, next safe action, and source refs and freshness.
+- A compact current-position card with separate regions for state and current scope.
+- Separate regions for blockers and pending user judgments.
+- Separate regions for run/evidence summary and gaps.
+- Separate regions for close-readiness summary, next safe action, source refs, and freshness.
 - That the card is read-only derived display.
 - Any stale, partial, unavailable, redacted, or capability-limited source condition.
 - Required blockers, unresolved user judgments, and required evidence gaps.
@@ -355,7 +390,11 @@ Avoid pressure wording such as `obviously`, `just approve`, or `I can decide thi
 
 ### Must show
 
-- A concise evidence-position summary with separate regions for what was run or checked, result and confidence limits, required evidence coverage, optional supporting evidence, artifacts and source refs, and gaps, blockers, and next safe action.
+- A concise evidence-position summary with separate regions for what was run or checked.
+- Separate regions for result and confidence limits.
+- Separate regions for required evidence coverage and optional supporting evidence.
+- Separate regions for artifacts and source refs.
+- Separate regions for gaps, blockers, and next safe action.
 - Required evidence separately from optional support.
 - Unsupported, partial, stale, blocked, or missing required evidence.
 - Which run or artifact supports which claim when that link exists.
@@ -441,7 +480,11 @@ Use `Closed by owner result` only when `harness.close_task` returned an actual s
 
 ### Input state
 
-- Current task summary, current scope, out-of-scope items, pending user judgments, blockers, next safe actions, evidence gaps, artifact availability summary, close readiness, residual-risk summary, guarantee level, source refs, and freshness cues.
+- Current task summary, current scope, and out-of-scope items.
+- Pending user judgments, blockers, and next safe actions.
+- Evidence gaps and artifact availability summary.
+- Close readiness, residual-risk summary, and guarantee level.
+- Source refs and freshness cues.
 - Current surface context and capability limits when they affect what the agent may safely infer.
 - Only the language and owner sections needed for the next action.
 

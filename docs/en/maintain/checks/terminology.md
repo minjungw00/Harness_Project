@@ -1,8 +1,21 @@
 # Terminology checks
 
-Use these documentation quality checks when an edit changes product terms, Korean prose terms, mixed-language expressions, identifier explanations, documentation-routing terms, glossary owner labels, close-readiness wording, or access/security wording. These checks do not describe Harness product behavior. The terminology map owns complete structured terminology metadata and bilingual wording controls; product contracts remain in their reference owners.
+Use these documentation quality checks when an edit changes:
 
-When this page lists discouraged or forbidden strings, treat them as search patterns for reviewers. They are not wording to keep in ordinary documentation prose unless the surrounding text explicitly identifies them as search patterns or quoted legacy examples.
+- product terms
+- Korean prose terms
+- mixed-language expressions
+- identifier explanations
+- documentation-routing terms
+- glossary owner labels
+- close-readiness wording
+- access/security wording
+
+These checks do not describe Harness product behavior. The terminology map owns complete structured terminology metadata and bilingual wording controls. Product contracts remain in their reference owners.
+
+When this page lists discouraged or forbidden strings, treat them as search patterns for reviewers. They are not wording to keep in ordinary documentation prose.
+
+Exception: the surrounding text may explicitly identify them as search patterns or quoted legacy examples.
 
 Terminology review boundary: terminology failures are wording, routing, or metadata failures in documentation. They are not product, API, storage, security, or close-readiness failures.
 
@@ -116,9 +129,13 @@ Evidence to inspect:
 - Confirm every term included in the glossary has matching terminology-map metadata.
 - Confirm Markdown links to the glossary are used only when the linked context refers to a term included in the curated glossary.
 - Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner, not to the glossary.
-- Confirm schema fields, enum values, API values, helper values, storage details, and translation-control terms route to focused owners or `docs/terminology-map.yaml` unless the exact term is intentionally included as a core glossary term.
-- Confirm reserved or profile-gated value contexts route to [API Value Sets](../../reference/api/schema-value-sets.md) and `docs/terminology-map.yaml`; add a glossary link only when the linked term is included in the curated glossary.
-- Confirm `primary_owner` targets point to the focused owner document when one exists, and `related_references` hold adjacent routes instead of broadening ownership.
+- Confirm detailed value and metadata contexts route to focused owners or `docs/terminology-map.yaml`.
+- Detailed contexts include schema fields, enum values, API values, helper values, storage details, and translation-control terms.
+- Add a glossary link for a detailed context only when the exact term is intentionally included as a core glossary term.
+- Confirm reserved or profile-gated value contexts route to [API Value Sets](../../reference/api/schema-value-sets.md) and `docs/terminology-map.yaml`.
+- Add a glossary link for a reserved or profile-gated value only when the linked term is included in the curated glossary.
+- Confirm `primary_owner` targets point to the focused owner document when one exists.
+- Confirm `related_references` hold adjacent routes instead of broadening ownership.
 - Confirm glossary `Primary owner` values match terminology-map `primary_owner` for included terms.
 - Confirm glossary `See also` or `Related references` values do not contradict terminology-map `related_references`.
 - Confirm each glossary term has exactly one `Primary owner`; adjacent documents belong under `See also`, `Related references`, or terminology-map `related_references`.
@@ -141,8 +158,10 @@ Failure:
 - A check treats missing expanded per-term detail as a glossary failure.
 - A Markdown link points to the glossary for a term that is not included in the curated glossary.
 - A terminology-map-only term is routed to the glossary instead of `docs/terminology-map.yaml` or its focused owner.
-- A schema field, enum value, API value, helper value, storage detail, or translation-control term routes to the glossary even though the exact term is not intentionally included as a core glossary term.
-- A reserved or profile-gated value context routes to the glossary instead of API Value Sets and `docs/terminology-map.yaml`, unless the linked term is included in the curated glossary.
+- A detailed context routes to the glossary even though the exact term is not intentionally included as a core glossary term.
+- Detailed contexts include schema fields, enum values, API values, helper values, storage details, and translation-control terms.
+- A reserved or profile-gated value context routes to the glossary instead of API Value Sets and `docs/terminology-map.yaml`.
+- Exception: the linked term is included in the curated glossary.
 - A terminology-map or glossary owner target points to an index when a focused owner already owns the term's meaning, value set, API concern, storage concern, or display wording.
 - A glossary-included term lists multiple primary owners or treats related references as primary owners.
 - A terminology-map `primary_owner`, glossary `Primary owner`, or `doc-index.yaml` entry names a different primary owner for the same term without an intentional split term or explicit owner gap.
@@ -158,7 +177,8 @@ Fix:
 - Keep terminology-map-only terms out of the glossary unless readers need compact glossary coverage.
 - Retarget glossary links to the focused owner or `docs/terminology-map.yaml` when the linked context is not a curated glossary term.
 - Retarget detailed value, schema, helper, storage, and translation-control links to the focused owner or `docs/terminology-map.yaml`.
-- Route reserved and profile-gated value contexts to API Value Sets and `docs/terminology-map.yaml`; keep glossary links only for included core glossary terms.
+- Route reserved and profile-gated value contexts to API Value Sets and `docs/terminology-map.yaml`.
+- Keep glossary links only for included core glossary terms.
 - Replace vague placeholders with concrete examples that can be searched.
 
 Related checks:
@@ -178,7 +198,9 @@ Check sources:
 Evidence to inspect:
 - Search changed prose for `active`, `active scope`, `active Change Unit`, `active surface context`, and Korean "활성".
 - Confirm exact identifiers, exact status values, and code literals that contain `active` are preserved unchanged.
-- Confirm current runtime or session context uses "current scope", "currently applied scope", "current Change Unit", or "current surface context" in prose, not "active scope", "active Change Unit", or "active surface context".
+- Confirm current runtime or session context uses current-context wording in prose.
+- Current-context wording includes "current scope", "currently applied scope", "current Change Unit", and "current surface context".
+- Do not use "active scope", "active Change Unit", or "active surface context" for that prose context.
 - Confirm supported contracts, supported API methods, supported values, maintained documents, and owner routing use terms such as "supported", "applicable", "maintained", or "current", not `active`.
 
 Failure:
@@ -303,10 +325,13 @@ Evidence to inspect:
 - Confirm glossary `See also` or `Related references` values do not contradict terminology-map `related_references`.
 - Confirm the glossary can be represented as a compact table, compact entries, or another human-readable view; checks must not require a specific layout.
 - Confirm checks do not require expanded per-term detail or a full terminology-map mirror.
-- Confirm included terms explain the term and route to the primary owner instead of carrying long avoid lists, identifier-preservation lists, owner-routing maps, or documentation-quality checklists.
+- Confirm included terms explain the term and route to the primary owner.
+- Confirm included terms do not carry long avoid lists, identifier-preservation lists, owner-routing maps, or documentation-quality checklists.
 - Confirm the glossary remains a compact reader-facing term guide rather than the complete structured terminology metadata source.
 - Confirm terminology-map terms do not need glossary coverage unless the compact glossary view includes them.
-- Confirm the glossary does not duplicate the translation guide's prose-style rules, `doc-index.yaml` retrieval metadata role, or reference owners' API, storage, schema, security, projection, runtime, or method contracts.
+- Confirm the glossary does not duplicate the translation guide's prose-style rules.
+- Confirm the glossary does not duplicate `doc-index.yaml` retrieval metadata role.
+- Confirm the glossary does not duplicate reference owners' API, storage, schema, security, projection, runtime, or method contracts.
 - Confirm API behavior, storage effects, security guarantees, method behavior, and detailed response/schema contracts remain in their focused owners.
 - Confirm Korean glossary content uses natural Korean technical prose and preserves exact identifiers unchanged.
 
@@ -365,7 +390,9 @@ Evidence to inspect:
 - Confirm index documents are not labeled as primary owners for detailed terms when focused owners exist.
 
 Pass condition:
-- Owner labels name only focused owner documents; related-reference labels name only adjacent context; Maintain-check labels describe check sources, scope, evidence, pass criteria, routes, or companion documents without implying terminology ownership.
+- Owner labels name only focused owner documents.
+- Related-reference labels name only adjacent context.
+- Maintain-check labels describe check sources, scope, evidence, pass criteria, routes, or companion documents without implying terminology ownership.
 
 Failure:
 - `Primary owner` and `Related references` are used interchangeably.
@@ -398,25 +425,32 @@ Evidence to inspect:
 - Inspect each glossary link's text and surrounding sentence. The link is valid only when that context refers to a term that actually appears in the curated glossary.
 - Confirm glossary links are used for core reader-facing concept summaries, not for the complete structured terminology inventory.
 - Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner, not to the glossary.
-- Confirm schema fields, enum values, API values and value sets, helper values, storage record details, and translation-control terms route to focused owners or `docs/terminology-map.yaml`, not to the glossary unless the exact term is intentionally included as a core glossary term.
-- Confirm reserved or profile-gated value contexts route to [API Value Sets](../../reference/api/schema-value-sets.md) and `docs/terminology-map.yaml`, not to the glossary unless the linked term actually appears in the glossary.
+- Confirm detailed value and metadata contexts route to focused owners or `docs/terminology-map.yaml`.
+- Detailed contexts include schema fields, enum values, API values and value sets, helper values, storage record details, and translation-control terms.
+- Do not route detailed contexts to the glossary unless the exact term is intentionally included as a core glossary term.
+- Confirm reserved or profile-gated value contexts route to [API Value Sets](../../reference/api/schema-value-sets.md) and `docs/terminology-map.yaml`.
+- Do not route reserved or profile-gated value contexts to the glossary unless the linked term actually appears in the glossary.
 - Confirm the check validates semantic route correctness, not only file or anchor existence.
 
 Pass condition:
 - Every glossary link refers to a curated glossary term in a core reader-facing concept-summary context.
 - Terminology-map-only terms route to the terminology map or focused owners.
-- Detailed value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml` unless the exact linked term is intentionally included as a core glossary term.
+- Detailed value, schema, helper, storage, and translation-control contexts route to their focused owners or `docs/terminology-map.yaml`.
+- Exception: the exact linked term is intentionally included as a core glossary term.
 
 Failure:
 - A Markdown link points to the glossary for a term that is absent from the curated glossary.
 - A link uses the glossary as if it were the complete structured terminology inventory.
 - A terminology-map-only term links to the glossary.
-- A schema field, enum value, API value or value set, helper value, storage record detail, or translation-control term links to the glossary instead of its focused owner or `docs/terminology-map.yaml`, unless the exact term is intentionally included as a core glossary term.
-- A reserved or profile-gated value context links to the glossary instead of API Value Sets and `docs/terminology-map.yaml`, unless the linked term appears in the glossary.
+- A schema field, enum value, API value or value set, helper value, storage record detail, or translation-control term links to the glossary instead of its focused owner or `docs/terminology-map.yaml`.
+- Exception: the exact term is intentionally included as a core glossary term.
+- A reserved or profile-gated value context links to the glossary instead of API Value Sets and `docs/terminology-map.yaml`.
+- Exception: the linked term appears in the glossary.
 - A glossary link resolves as a Markdown link but points readers to the wrong semantic owner.
 
 Fix:
-- Retarget the link to the focused owner, `docs/terminology-map.yaml`, [API Value Sets](../../reference/api/schema-value-sets.md), [API error details](../../reference/api/error-details.md), the relevant storage owner, or the relevant translation guidance as appropriate.
+- Retarget the link to the focused owner, `docs/terminology-map.yaml`, [API Value Sets](../../reference/api/schema-value-sets.md), or [API error details](../../reference/api/error-details.md).
+- For detailed contexts, retarget to the relevant storage owner or translation guidance as appropriate.
 - Add or adjust a glossary term only when readers need compact glossary coverage and the term has terminology-map metadata and one focused primary owner.
 - Keep glossary links for selected core reader-facing terms only.
 
@@ -440,7 +474,9 @@ Evidence to inspect:
 - Confirm user-visible criteria for checking work use "verification criteria"; avoid "verification expectations" and "inspection expectations" except as explicit search patterns or quoted legacy examples.
 - Confirm prose uses "current scope" or "currently applied scope" for current context, while preserving exact identifiers such as `active_change_unit_ref`.
 - Confirm `Write Authorization` remains distinct from ordinary write approval, sensitive-action approval, final acceptance, residual-risk acceptance, and broad user-owned judgment.
-- In Korean, confirm the paired terms use "검증 기준" and "현재 적용 범위", avoid prose "활성 범위" for current context, and preserve `Write Authorization` as an exact product label with Korean explanation when needed.
+- In Korean, confirm the paired terms use "검증 기준" and "현재 적용 범위".
+- Avoid prose "활성 범위" for current context.
+- Preserve `Write Authorization` as an exact product label with Korean explanation when needed.
 
 Failure:
 - Harness is described as the local authority record, or Core is described as the product/system.

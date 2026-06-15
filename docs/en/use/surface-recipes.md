@@ -2,7 +2,22 @@
 
 Use this guide when an agent needs to make Harness-connected work feel clear in a named surface: CLI, IDE/editor, chat, or local MCP.
 
-These recipes describe user-visible flow: what to show, when to refresh, how to report failure, and how to summarize status without turning copied text, rendered displays, or agent memory into authority. They do not define API behavior, storage effects, security guarantees, surface registration, or context-exchange contracts. Exact connector behavior, current surface context, registration details, storage effects, and security guarantees stay in the Reference owners.
+These recipes describe user-visible flow. They cover:
+
+- what to show
+- when to refresh
+- how to report failure
+- how to summarize status without turning copied text, rendered displays, or agent memory into authority
+
+They do not define:
+
+- API behavior
+- storage effects
+- security guarantees
+- surface registration
+- context-exchange contracts
+
+Exact connector behavior, current surface context, registration details, storage effects, and security guarantees stay in the Reference owners.
 
 ## CLI surface
 
@@ -58,7 +73,15 @@ For chat work:
 - Summarize what is verified, what is stale or unavailable, what remains user-owned, and the next safe action.
 - Do not treat "yes", "go ahead", or "looks good" as final acceptance, residual-risk acceptance, sensitive-action approval, write approval, or `Write Authorization` all at once.
 
-If the chat surface cannot verify local access, state, artifact availability, or capability support, say that directly and route to reconnect, refresh, a capable surface, a narrower operation, or explicit non-Harness continuation.
+If the chat surface cannot verify local access, state, artifact availability, or capability support, say that directly.
+
+Route to the applicable next action:
+
+- reconnect
+- refresh
+- use a capable surface
+- narrow the operation
+- continue explicitly outside Harness
 
 ## Local MCP surface
 
@@ -69,7 +92,8 @@ This recipe does not define the supported method list, surface registration, con
 For local MCP work:
 
 - Confirm reachability before relying on protected state.
-- Use [Agent Integration Reference](../reference/agent-integration.md) for `surface_id`, `VerifiedSurfaceContext`, `capability_profile`, surface registration, and current surface context. Treat identifiers as routing context, not authority by themselves.
+- Use [Agent Integration Reference](../reference/agent-integration.md) for `surface_id`, `VerifiedSurfaceContext`, `capability_profile`, surface registration, and current surface context.
+- Treat identifiers as routing context, not authority by themselves.
 - Refresh user-visible status when `state_version`, task identity, current scope, surface capability, or artifact context changes.
 - Keep artifact body access separate from artifact staging and run/evidence recording; use [Artifact Storage](../reference/storage-artifacts.md) for storage-effect detail.
 - When local MCP is unavailable, report the owner-provided condition and name the next safe recovery action.
@@ -119,4 +143,6 @@ Use these owner routes for exact contracts:
 
 ## Where to go next
 
-Use [Agent Guide](agent-guide.md) for general agent behavior, then [Agent Integration Reference](../reference/agent-integration.md) for exact connector ownership. Implementers should continue through the [Reference Index](../reference/README.md) instead of treating these recipes as API or schema contracts.
+Use [Agent Guide](agent-guide.md) for general agent behavior. Use [Agent Integration Reference](../reference/agent-integration.md) for exact connector ownership.
+
+Implementers should continue through the [Reference Index](../reference/README.md). Do not treat these recipes as API or schema contracts.
