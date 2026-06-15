@@ -11,13 +11,17 @@ Use these documentation quality checks when an edit changes:
 - close-readiness wording
 - access/security wording
 
-These checks do not describe Harness product behavior. The terminology map owns complete structured terminology metadata and bilingual wording controls. Product contracts remain in their reference owners.
+These checks do not describe Harness product behavior.
+
+The terminology map owns complete structured terminology metadata and bilingual wording controls. Product contracts remain in their reference owners.
 
 When this page lists discouraged or forbidden strings, treat them as search patterns for reviewers. They are not wording to keep in ordinary documentation prose.
 
 Exception: the surrounding text may explicitly identify them as search patterns or quoted legacy examples.
 
-Terminology review boundary: terminology failures are wording, routing, or metadata failures in documentation. They are not product, API, storage, security, or close-readiness failures.
+Terminology review boundary: terminology failures are wording, routing, or metadata failures in documentation.
+
+They are not product, API, storage, security, or close-readiness failures.
 
 ## CHK-TERM-001: close-readiness terminology
 
@@ -116,7 +120,11 @@ Check sources:
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 
 Applies to:
-- Terminology guidance, glossary content, terminology-map metadata, translation guides, and `doc-index.yaml` metadata touched by a terminology edit.
+- Terminology guidance touched by a terminology edit.
+- Glossary content touched by a terminology edit.
+- Terminology-map metadata touched by a terminology edit.
+- Translation guides touched by a terminology edit.
+- `doc-index.yaml` metadata touched by a terminology edit.
 
 Evidence to inspect:
 - Compare changed terminology guidance with `docs/terminology-map.yaml`.
@@ -139,7 +147,8 @@ Evidence to inspect:
 - Confirm glossary `Primary owner` values match terminology-map `primary_owner` for included terms.
 - Confirm glossary `See also` or `Related references` values do not contradict terminology-map `related_references`.
 - Confirm each glossary term has exactly one `Primary owner`; adjacent documents belong under `See also`, `Related references`, or terminology-map `related_references`.
-- Confirm terminology-map `primary_owner`, glossary `Primary owner`, and `doc-index.yaml` owner metadata stay synchronized by concept when those records exist.
+- Confirm terminology-map `primary_owner`, glossary `Primary owner`, and `doc-index.yaml` owner metadata stay synchronized by concept.
+- Apply this only when those records exist.
 - Confirm forbidden mixed-language examples in the guides use concrete strings, not vague descriptions.
 - Confirm any new forbidden expression appears in the terminology map and both translation guides.
 
@@ -162,9 +171,11 @@ Failure:
 - Detailed contexts include schema fields, enum values, API values, helper values, storage details, and translation-control terms.
 - A reserved or profile-gated value context routes to the glossary instead of API Value Sets and `docs/terminology-map.yaml`.
 - Exception: the linked term is included in the curated glossary.
-- A terminology-map or glossary owner target points to an index when a focused owner already owns the term's meaning, value set, API concern, storage concern, or display wording.
+- A terminology-map or glossary owner target points to an index.
+- A focused owner already owns the term's meaning, value set, API concern, storage concern, or display wording.
 - A glossary-included term lists multiple primary owners or treats related references as primary owners.
-- A terminology-map `primary_owner`, glossary `Primary owner`, or `doc-index.yaml` entry names a different primary owner for the same term without an intentional split term or explicit owner gap.
+- A terminology-map `primary_owner`, glossary `Primary owner`, or `doc-index.yaml` entry names a different primary owner for the same term.
+- There is no intentional split term or explicit owner gap.
 - A glossary `See also` or `Related references` value contradicts terminology-map `related_references` for the same term.
 - A Korean guide describes a banned mixed-language pattern without a searchable real string such as "artifact를 저장한다".
 
@@ -201,7 +212,8 @@ Evidence to inspect:
 - Confirm current runtime or session context uses current-context wording in prose.
 - Current-context wording includes "current scope", "currently applied scope", "current Change Unit", and "current surface context".
 - Do not use "active scope", "active Change Unit", or "active surface context" for that prose context.
-- Confirm supported contracts, supported API methods, supported values, maintained documents, and owner routing use terms such as "supported", "applicable", "maintained", or "current", not `active`.
+- Confirm supported contracts, API methods, and values use terms such as "supported" or "current", not `active`.
+- Confirm maintained documents and owner routing use terms such as "applicable" or "maintained", not `active`.
 
 Failure:
 - A document uses `active` for an owner route, contract, API method, reference document, or other documentation route when it means applicable, supported, or maintained.
@@ -223,7 +235,8 @@ Check sources:
 - [Template Bodies](../../reference/template-bodies.md)
 
 Evidence to inspect:
-- Search maintained Reference docs, glossary entries, `docs/terminology-map.yaml`, `doc-index.yaml`, display wording owners, and changed metadata for retired, deleted, or unsupported concept names.
+- Search maintained Reference docs, glossary entries, `docs/terminology-map.yaml`, `doc-index.yaml`, display wording owners, and changed metadata.
+- Look for retired, deleted, or unsupported concept names.
 - When an English concept label is removed, search Korean prose for paraphrases, translations, mixed-language variants, table rows, list items, and headings that preserve the same removed concept.
 - Confirm unsupported capability names are used only when a semantic owner still needs the exact name, or when a Maintain/terminology owner intentionally lists a searchable forbidden expression.
 - Confirm Reference owners describe stable categories, owner gaps, or out-of-scope capability families instead of preserving obsolete names as examples.
@@ -250,7 +263,8 @@ Check sources:
 Evidence to inspect:
 - Search changed prose for documentation-routing terms such as `applicable owner path`, owner route, owner target, route metadata, and owner gap.
 - Confirm these terms describe documentation navigation, authoring, retrieval, or metadata only.
-- Confirm owner-route terms are not the grammatical actor for product behavior, storage persistence, API support, evidence authority, close-readiness state, or user-visible display.
+- Confirm owner-route terms are not the grammatical actor for product behavior, storage persistence, or API support.
+- Confirm they are not the grammatical actor for evidence authority, close-readiness state, or user-visible display.
 - Confirm they are not described as product behavior, storage persistence, runtime state, evidence authority, close-readiness state, or API support.
 
 Failure:
@@ -314,16 +328,20 @@ Check sources:
 - [Authoring Guide](../authoring-guide.md)
 
 Applies to:
-- Terms included in the glossary, in any compact human-readable layout, and paired glossary content touched by the edit.
+- Terms included in the glossary, in any compact human-readable layout.
+- Paired glossary content touched by the edit.
 
 Evidence to inspect:
-- Inspect changed glossary content by role: term label, Korean term, compact meaning, focused primary owner, and any short usage context or adjacent reference.
+- Inspect changed glossary content by role.
+- Roles include term label, Korean term, compact meaning, focused primary owner, and any short usage context or adjacent reference.
 - Confirm every term included in the glossary exists in the terminology map.
 - Confirm every included term has matching terminology-map metadata for the term and any glossary roles it uses.
 - Confirm each included term's `Primary owner` matches the terminology-map `primary_owner` for the same term.
-- Confirm each included term has only one `Primary owner`; use `See also`, `Related references`, or terminology-map `related_references` for adjacent documents.
+- Confirm each included term has only one `Primary owner`.
+- Use `See also`, `Related references`, or terminology-map `related_references` for adjacent documents.
 - Confirm glossary `See also` or `Related references` values do not contradict terminology-map `related_references`.
-- Confirm the glossary can be represented as a compact table, compact entries, or another human-readable view; checks must not require a specific layout.
+- Confirm the glossary can be represented as a compact table, compact entries, or another human-readable view.
+- Checks must not require a specific layout.
 - Confirm checks do not require expanded per-term detail or a full terminology-map mirror.
 - Confirm included terms explain the term and route to the primary owner.
 - Confirm included terms do not carry long avoid lists, identifier-preservation lists, owner-routing maps, or documentation-quality checklists.
@@ -338,7 +356,8 @@ Evidence to inspect:
 Pass condition:
 - The glossary remains a compact reader-facing view of selected terms.
 - Every included term has matching terminology-map metadata.
-- Each included term has one primary owner matching the terminology map and non-contradictory related references.
+- Each included term has one primary owner matching the terminology map.
+- Related references do not contradict each other.
 - Detailed contracts, style rules, and complete structured terminology metadata stay in their owners.
 
 Failure:
@@ -347,7 +366,9 @@ Failure:
 - A glossary-included term lists multiple primary owners or promotes adjacent documents to primary-owner status.
 - A glossary-included term and terminology metadata disagree about the term's `Primary owner`.
 - A glossary `See also` or `Related references` value contradicts terminology-map `related_references`.
-- The glossary becomes a broad owner-routing map, complete structured terminology metadata source, or layout-specific system instead of a compact term guide.
+- The glossary becomes a broad owner-routing map.
+- The glossary becomes the complete structured terminology metadata source.
+- The glossary becomes layout-specific instead of remaining a compact term guide.
 - A check requires the glossary to mirror every terminology-map term.
 - A check requires expanded per-term detail before accepting a compact glossary entry.
 - A usage note accumulates repeated "do not", "must not", or avoid-list wording that belongs in the terminology map, translation guide, authoring guide, or focused checks.
@@ -378,13 +399,18 @@ Check sources:
 - [doc-index.yaml](../../../doc-index.yaml)
 
 Applies to:
-- Glossary labels, terminology-map labels, route prose, owner-routing prose, and Maintain checks touched by the edit.
+- Glossary labels touched by the edit.
+- Terminology-map labels touched by the edit.
+- Route prose, owner-routing prose, and Maintain checks touched by the edit.
 
 Evidence to inspect:
-- Inspect glossary entries, terminology-map entries, route prose, and Maintain checks that use `Primary owner`, `Related references`, `owner contract`, `primary_owner`, or `related_references`.
+- Inspect glossary entries, terminology-map entries, route prose, and Maintain checks.
+- Focus on uses of `Primary owner`, `Related references`, `owner contract`, `primary_owner`, or `related_references`.
 - Confirm `Primary owner` and `primary_owner` name the canonical owner for the term or concept.
 - Confirm `Related references` and `related_references` name adjacent documents only; they must not be presented as alternate owners or owner contracts.
-- Confirm Maintain-check basis documents use `Check sources`, checked file families use `Applies to`, and maintenance companion documents use `Check sources` or `Maintained with` according to their role.
+- Confirm Maintain-check basis documents use `Check sources`.
+- Confirm checked file families use `Applies to`.
+- Confirm maintenance companion documents use `Check sources` or `Maintained with` according to their role.
 - Confirm documentation navigation uses `Route` or `Reference route`, not owner labels, unless the text is naming the canonical owner.
 - Confirm owner contract terminology means the contract defined by the relevant owner document, not a document path, route label, related reference, or index.
 - Confirm index documents are not labeled as primary owners for detailed terms when focused owners exist.
@@ -419,10 +445,12 @@ Check sources:
 - [Authoring Guide](../authoring-guide.md)
 
 Applies to:
-- Markdown links whose target is the glossary, and the nearby prose that gives each link its meaning.
+- Markdown links whose target is the glossary.
+- Nearby prose that gives each link its meaning.
 
 Evidence to inspect:
-- Inspect each glossary link's text and surrounding sentence. The link is valid only when that context refers to a term that actually appears in the curated glossary.
+- Inspect each glossary link's text and surrounding sentence.
+- The link is valid only when that context refers to a term that actually appears in the curated glossary.
 - Confirm glossary links are used for core reader-facing concept summaries, not for the complete structured terminology inventory.
 - Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner, not to the glossary.
 - Confirm detailed value and metadata contexts route to focused owners or `docs/terminology-map.yaml`.
@@ -442,7 +470,8 @@ Failure:
 - A Markdown link points to the glossary for a term that is absent from the curated glossary.
 - A link uses the glossary as if it were the complete structured terminology inventory.
 - A terminology-map-only term links to the glossary.
-- A schema field, enum value, API value or value set, helper value, storage record detail, or translation-control term links to the glossary instead of its focused owner or `docs/terminology-map.yaml`.
+- A schema field, enum value, API value or value set, helper value, storage record detail, or translation-control term links to the glossary.
+- The link should instead point to its focused owner or `docs/terminology-map.yaml`.
 - Exception: the exact term is intentionally included as a core glossary term.
 - A reserved or profile-gated value context links to the glossary instead of API Value Sets and `docs/terminology-map.yaml`.
 - Exception: the linked term appears in the glossary.
@@ -469,9 +498,11 @@ Check sources:
 - [Korean Translation Guide](../../../ko/maintain/translation-guide.md)
 
 Evidence to inspect:
-- Confirm "Harness" names the local work-authority product/system for AI-assisted product work, not the local authority record.
+- Confirm "Harness" names the local work-authority product/system for AI-assisted product work.
+- Do not use "Harness" for the local authority record.
 - Confirm "Core" names the local authority record for Harness state.
-- Confirm user-visible criteria for checking work use "verification criteria"; avoid "verification expectations" and "inspection expectations" except as explicit search patterns or quoted legacy examples.
+- Confirm user-visible criteria for checking work use "verification criteria".
+- Avoid "verification expectations" and "inspection expectations" except as explicit search patterns or quoted legacy examples.
 - Confirm prose uses "current scope" or "currently applied scope" for current context, while preserving exact identifiers such as `active_change_unit_ref`.
 - Confirm `Write Authorization` remains distinct from ordinary write approval, sensitive-action approval, final acceptance, residual-risk acceptance, and broad user-owned judgment.
 - In Korean, confirm the paired terms use "검증 기준" and "현재 적용 범위".

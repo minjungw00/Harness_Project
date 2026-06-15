@@ -1,6 +1,8 @@
 # Links and indexes checks
 
-Use these checks for relative links, anchors, route tables, `README` pages, `doc-index.yaml`, and retrieval guidance. These checks keep navigation stable; they do not define or certify the contracts being linked.
+Use these checks for relative links, anchors, route tables, `README` pages, `doc-index.yaml`, and retrieval guidance.
+
+These checks keep navigation stable. They do not define or certify the contracts being linked.
 
 Use `docs/doc-index.yaml` as the canonical machine-readable owner route. It owns route metadata for:
 
@@ -31,7 +33,12 @@ Evidence to inspect:
 - Confirm maintained navigation uses the compact maintained routes from the authoring owner.
 - Confirm contract links point to the canonical owner, not to a convenient duplicate.
 - For API error links, use [API errors](../../reference/api/errors.md) as the family index only.
-- Route public code meanings, precedence, response branch routing, close-readiness blocker/API response boundaries, public-code-to-blocker boundaries, and machine-readable details to their focused API owners.
+- Route public code meanings to their focused API owner.
+- Route precedence to its focused API owner.
+- Route response branch routing to its focused API owner.
+- Route close-readiness blocker/API response boundaries to their focused API owner.
+- Route public-code-to-blocker boundaries to their focused API owner.
+- Route machine-readable details to their focused API owner.
 
 Failure:
 - A link targets a missing file, missing anchor, stale route family, wrong-language owner, or deleted compatibility path.
@@ -69,7 +76,8 @@ Check sources:
 - [doc-index.yaml](../../../doc-index.yaml)
 
 Evidence to inspect:
-- Inspect changed route documents, `README` files, indexes, and `doc-index.yaml` entries for questions whose exact canonical owner is missing or unclear.
+- Inspect changed route documents, `README` files, indexes, and `doc-index.yaml` entries.
+- Look for questions whose exact canonical owner is missing or unclear.
 - Treat `docs/doc-index.yaml` as the canonical machine-readable owner route and the Reference Index as a reader-facing route.
 - Confirm route text points to an applicable owner when one exists.
 - Confirm a missing owner is exposed as a documentation gap instead of being hidden behind broad route prose, Maintain guidance, or copied contract detail.
@@ -188,10 +196,15 @@ Check sources:
 - [API error details](../../reference/api/error-details.md)
 
 Applies to:
-- Terminology-map owner targets, glossary owner and related-reference targets, `doc-index.yaml` owner metadata, and terminology route tables touched by the edit.
+- Terminology-map owner targets touched by the edit.
+- Glossary owner and related-reference targets touched by the edit.
+- `doc-index.yaml` owner metadata touched by the edit.
+- Terminology route tables touched by the edit.
 
 Evidence to inspect:
-- Inspect terminology-map `primary_owner` and `related_references`, glossary owner and related-reference targets, `doc-index.yaml` owner metadata, and route tables touched by the edit.
+- Inspect touched terminology-map `primary_owner` and `related_references`.
+- Inspect touched glossary owner and related-reference targets.
+- Inspect touched `doc-index.yaml` owner metadata and route tables.
 - Check `doc-index.yaml` first for machine-readable owner routing, then use the glossary or Reference Index only for reader-facing term or route context.
 - Inspect glossary content by role, regardless of whether it is represented as a compact table, compact entries, or another human-readable view.
 - Confirm `docs/terminology-map.yaml` remains the complete structured terminology metadata source.
@@ -210,14 +223,16 @@ Evidence to inspect:
 - Confirm glossary `Primary owner` values and terminology-map `primary_owner` targets match for the same included term unless an explicit owner gap is named.
 - Confirm `doc-index.yaml` `owner_for` and `not_owner_for` metadata does not contradict the focused owner named by the glossary or terminology map for the same concept.
 - Confirm `doc-index.yaml` does not overclaim ownership for a focused term by making a route, index, or broad document look primary when the glossary or terminology map names a focused owner.
-- Confirm terminology-map `related_references` and glossary `See also` or `Related references` hold adjacent context only; they must not be used as alternate primary owners or contradict each other.
+- Confirm terminology-map `related_references` and glossary `See also` or `Related references` hold adjacent context only.
+- They must not be used as alternate primary owners or contradict each other.
 - Use a broad index only when the concept is index-owned navigation, a first-hop route, or an explicitly named owner gap.
 - Confirm API error code meanings, error precedence, API response branch routing, close-readiness blocker routing, and `ToolError.details` targets stay separate.
 
 Pass condition:
 - Terminology routes and metadata point to focused owners.
 - The terminology map remains the complete structured terminology metadata source.
-- The glossary remains a compact reader-facing subset, and every glossary-included term has matching terminology-map metadata, the same primary owner, and non-contradictory related references.
+- The glossary remains a compact reader-facing subset.
+- Every glossary-included term has matching terminology-map metadata, the same primary owner, and non-contradictory related references.
 - Detailed value, schema, helper, storage, and translation-control contexts route to focused owners or `docs/terminology-map.yaml`.
 - Route and index metadata do not overclaim focused ownership.
 
@@ -235,7 +250,8 @@ Failure:
 - A glossary-included term points to one primary owner while the terminology map points to another.
 - `doc-index.yaml` metadata makes a different document look primary for the same concept without a documented owner split or owner gap.
 - `doc-index.yaml` overclaims ownership for a focused term, API concern, schema concern, storage concern, security concern, or display wording concern.
-- A terminology-map `related_references`, glossary `See also`, or glossary `Related references` entry is treated as a second primary owner or contradicts the adjacent references for the same term.
+- A terminology-map `related_references`, glossary `See also`, or glossary `Related references` entry is treated as a second primary owner.
+- An adjacent-reference entry contradicts the adjacent references for the same term.
 - An API error family index is used as the owner for public code meanings, precedence, response branch routing, close-readiness blocker routing, or machine-readable details.
 - `doc-index.yaml` metadata makes a route/index document look like the owner of focused contract detail.
 
@@ -268,7 +284,8 @@ Check sources:
 - [doc-index.yaml](../../../doc-index.yaml)
 
 Evidence to inspect:
-- Inspect hidden anchors and explicit anchor IDs for concepts whose owner moved or whose owner boundary changed.
+- Inspect hidden anchors and explicit anchor IDs.
+- Focus on concepts whose owner moved or whose owner boundary changed.
 - Confirm the stable anchor for a concept lives in the document that now owns the concept.
 - Confirm redirect-style hidden anchors do not remain in old documents when they make the old document look like the owner.
 - Confirm an anchor ID does not imply that an old document, broad index, or route page still owns a moved concept.
@@ -298,7 +315,8 @@ Applies to:
 
 Evidence to inspect:
 - Validate that each glossary link resolves to the intended file or anchor.
-- Inspect the link text and nearby prose to confirm the linked context refers to a term that appears in the curated glossary.
+- Inspect the link text and nearby prose.
+- Confirm the linked context refers to a term that appears in the curated glossary.
 - Confirm the glossary link is a route to a core reader-facing concept summary, not a route to the complete structured terminology inventory.
 - Confirm terms that exist only in `docs/terminology-map.yaml` route to the terminology map or focused owner.
 - Confirm detailed value and metadata contexts route to focused owners or `docs/terminology-map.yaml`.
@@ -325,7 +343,9 @@ Failure:
 Fix:
 - Retarget the Markdown link to the focused owner, Reference Index route, `docs/terminology-map.yaml`, or [API Value Sets](../../reference/api/schema-value-sets.md).
 - For detailed contexts, retarget to the applicable schema, storage, error-detail, or translation owner.
-- Add a glossary link only when the linked term is included in the curated glossary and the surrounding context needs a compact reader-facing concept summary.
+- Add a glossary link only when both conditions hold.
+- The linked term is included in the curated glossary.
+- The surrounding context needs a compact reader-facing concept summary.
 
 Related checks:
 - [CHK-LINK-001](#chk-link-001-broken-links-and-stale-routes)

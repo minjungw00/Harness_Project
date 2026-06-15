@@ -9,7 +9,9 @@ This document owns display-facing wording and presentation packet/body shape for
 - close results
 - agent context packets
 
-It owns rendered body guidance, user-facing labels, and display phrasing only. Authority, storage records, API error semantics, and close-readiness blocker semantics stay with the linked owners.
+It owns only rendered body guidance, user-facing labels, and display phrasing.
+
+Authority, storage records, API error semantics, and close-readiness blocker semantics stay with the linked owners.
 
 ## Owner boundaries
 
@@ -291,7 +293,8 @@ Recovery cue:
 
 ### Input state
 
-- Current read-only state returned by `harness.status`, including `StateSummary`, blockers, pending `UserJudgment` items, evidence summary, close-readiness observations, guarantee display, and next safe action.
+- Current read-only state returned by `harness.status`.
+- Display inputs such as `StateSummary`, blockers, pending `UserJudgment` items, evidence summary, close-readiness observations, guarantee display, and next safe action.
 - Freshness cues such as source refs, `state_version`, observation time, stale markers, unavailable markers, or capability-limited markers when present.
 - Artifact availability only through owner-approved `ArtifactRef` display data or an owner-approved unavailable/redacted note.
 
@@ -341,7 +344,8 @@ Otherwise, avoid those words.
 ### Input state
 
 - One pending user-owned judgment request returned by `harness.request_user_judgment`.
-- Exact question, bounded options, rationale, uncertainty, affected scope, consequence of deferral, and non-substitution notes.
+- Exact question and bounded options.
+- Rationale, uncertainty, affected scope, consequence of deferral, and non-substitution notes.
 - Any linked source refs, `state_version`, and freshness or capability-limited notes.
 
 ### Must show
@@ -385,7 +389,9 @@ Avoid pressure wording such as `obviously`, `just approve`, or `I can decide thi
 ### Input state
 
 - Run and evidence owner records for the current Task or Change Unit.
-- Evidence coverage items, required/optional/not-applicable status, supporting run refs, supporting `ArtifactRef` links, blockers, validator results when present, and freshness cues.
+- Evidence coverage items and required/optional/not-applicable status.
+- Supporting run refs, supporting `ArtifactRef` links, blockers, and validator results when present.
+- Freshness cues.
 - Artifact availability, redaction, blocked-artifact, or unavailable notes from artifact owners.
 
 ### Must show
@@ -435,7 +441,9 @@ Otherwise, avoid those words.
 ### Input state
 
 - `CloseTaskResult` or close-readiness observations returned by `harness.close_task`.
-- `CloseReadinessBlocker[]`, evidence summary, pending user judgments, final-acceptance state, residual-risk state, artifact availability, source refs, freshness cues, and the requested close intent.
+- `CloseReadinessBlocker[]`, evidence summary, and pending user judgments.
+- Final-acceptance state, residual-risk state, and artifact availability.
+- Source refs, freshness cues, and the requested close intent.
 - The owner result that distinguishes a read-only close check from a state-changing close attempt.
 
 ### Must show
@@ -504,7 +512,8 @@ Use `Closed by owner result` only when `harness.close_task` returned an actual s
 - The packet is Core state, storage state, evidence, acceptance, residual-risk acceptance, or close output.
 - A stale packet overrides newer state returned by an owner method.
 - The agent may bypass user judgment, `Write Authorization`, artifact rules, or close blockers.
-- The packet should include full schemas, DDL, logs, artifact bodies, unrelated contract material, out-of-scope capability catalogs, or paired bilingual docs by default.
+- The packet should include full schemas, DDL, logs, artifact bodies, or unrelated contract material by default.
+- The packet should include out-of-scope capability catalogs or paired bilingual docs by default.
 
 ### User-facing wording
 

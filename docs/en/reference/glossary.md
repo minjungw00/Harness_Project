@@ -23,9 +23,9 @@ Contract detail stays in the focused owner documents. Translation and style rule
 |---|---|---|---|
 | Harness | 하네스 | The local work-authority product/system for AI-assisted product work. | [Scope](scope.md) |
 | Core | Core | The local authority record for Harness state. | [Core Model](core-model.md) |
-| `Harness Server` | Harness Server | A serving/runtime component of Harness; not a synonym for Harness as a whole. | [Runtime Boundaries](runtime-boundaries.md) |
+| `Harness Server` | Harness Server | A Harness serving/runtime component. Not a synonym for Harness as a whole. | [Runtime Boundaries](runtime-boundaries.md) |
 | `Product Repository` | 제품 저장소 | The user's project workspace and product files, separate from Harness runtime state. | [Runtime Boundaries](runtime-boundaries.md) |
-| `Harness Runtime Home` | 런타임 홈 | The local runtime data space for Harness operational data as storage/runtime owners define it. | [Runtime Boundaries](runtime-boundaries.md) |
+| `Harness Runtime Home` | 런타임 홈 | The local runtime data space for Harness operational data, as storage/runtime owners define it. | [Runtime Boundaries](runtime-boundaries.md) |
 | runtime | 런타임 | The operational Harness execution and data context. | [Runtime Boundaries](runtime-boundaries.md) |
 | baseline scope | 기준 범위 | The stable support boundary documented for Harness. | [Scope](scope.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | A deferred capability outside the baseline support boundary. | [Scope](scope.md) |
@@ -35,18 +35,18 @@ Contract detail stays in the focused owner documents. Translation and style rule
 | scope | 범위 | The work or authority boundary attached to a `Task` or Change Unit context. | [Core Model](core-model.md) |
 | current scope | 현재 적용 범위 | The scope currently applied inside a `Task` or Change Unit context. | [Core Model](core-model.md) |
 | current Change Unit | 현재 적용 Change Unit | The Change Unit currently applied in the authority model. | [Core Model](core-model.md) |
-| user-owned judgment | 사용자 소유 판단 | A user-owned decision or assessment recorded without becoming Core-owned fact. | [Core Model](core-model.md) |
+| user-owned judgment | 사용자 소유 판단 | A user decision or assessment recorded without becoming Core-owned fact. | [Core Model](core-model.md) |
 | evidence | 증거 | Recorded support for a specific claim at a specific scope. | [Core Model](core-model.md) |
 | verification criteria | 검증 기준 | User-visible criteria for checking work. | [Core Model](core-model.md) |
 | artifact | 아티팩트 | Work material referenced or staged through Harness artifact concepts. | [API Artifact Schemas](api/schema-artifacts.md) |
 | `Write Authorization` | 쓰기 권한 부여 | The exact Harness product label for Core authority around one compatible product-file write attempt. | [Core Model](core-model.md) |
-| write approval | 쓰기 승인 | Ordinary user approval or prose about approving a write; separate from `Write Authorization`. | [Core Model](core-model.md) |
+| write approval | 쓰기 승인 | Ordinary user approval, or prose about approving a write. Separate from `Write Authorization`. | [Core Model](core-model.md) |
 | sensitive-action approval | 민감 동작 승인 | User approval for a named sensitive step, separate from `Write Authorization` and final acceptance. | [Core Model](core-model.md) |
 | final acceptance | 최종 수락 | A user-owned judgment about whether the visible close basis is acceptable. | [Core Model](core-model.md) |
 | residual-risk acceptance | 잔여 위험 수락 | A user-owned judgment about a named visible residual risk. | [Core Model](core-model.md) |
 | close readiness | 닫기 준비 상태 | The Core concept for whether a `Task` is ready to close from its current state. | [Core Model](core-model.md) |
 | close-readiness blocker | 닫기 차단 사유 | A close-relevant reason surfaced when close readiness cannot proceed. | [API blocker routing](api/blocker-routing.md) |
-| `Projection` | 상태 보기 | The exact product label for a read-only state view; projection output is display, not Core authority. | [Projection Authority Reference](projection-and-templates.md) |
+| `Projection` | 상태 보기 | The exact product label for a read-only state view. Projection output is display, not Core authority. | [Projection Authority Reference](projection-and-templates.md) |
 | surface | 접점 | An integration or interaction boundary where context appears. | [Agent Integration](agent-integration.md) |
 | access class | 접근 등급 | A value category for verified surface and access context. | [API Value Sets](api/schema-value-sets.md) |
 | baseline guarantee | 기준 범위 보장 | Security wording for a guarantee supported in the baseline scope. | [Security](security.md) |

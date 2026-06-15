@@ -23,9 +23,9 @@
 |---|---|---|---|
 | Harness | 하네스 | AI 지원 제품 작업에서 로컬 작업 권한을 다루는 제품이자 시스템입니다. | [기준 범위](scope.md) |
 | Core | Core | 하네스 상태를 위한 로컬 기준 기록입니다. | [Core 모델](core-model.md) |
-| `Harness Server` | Harness Server | 하네스 전체가 아니라 하네스의 서버/런타임 구성 요소입니다. | [런타임 경계](runtime-boundaries.md) |
+| `Harness Server` | Harness Server | 하네스의 서버/런타임 구성 요소입니다. 하네스 전체와 같은 말이 아닙니다. | [런타임 경계](runtime-boundaries.md) |
 | `Product Repository` | 제품 저장소 | 하네스 런타임 상태와 구분되는 사용자의 프로젝트 작업 공간과 제품 파일입니다. | [런타임 경계](runtime-boundaries.md) |
-| `Harness Runtime Home` | 런타임 홈 | 저장소와 런타임 담당 문서가 정의하는 하네스 운영 데이터의 로컬 런타임 데이터 공간입니다. | [런타임 경계](runtime-boundaries.md) |
+| `Harness Runtime Home` | 런타임 홈 | 저장소/런타임 담당 문서가 정의한 하네스 운영 데이터의 로컬 런타임 데이터 공간입니다. | [런타임 경계](runtime-boundaries.md) |
 | runtime | 런타임 | 하네스의 운영 실행과 데이터 맥락입니다. | [런타임 경계](runtime-boundaries.md) |
 | baseline scope | 기준 범위 | 하네스가 안정적으로 지원한다고 문서화한 경계입니다. | [기준 범위](scope.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | 기준 지원 경계 밖에 있는 유예된 기능입니다. | [기준 범위](scope.md) |
@@ -35,12 +35,12 @@
 | scope | 범위 | `Task` 또는 Change Unit 맥락에 붙는 작업 또는 권한 경계입니다. | [Core 모델](core-model.md) |
 | current scope | 현재 적용 범위 | `Task` 또는 Change Unit 맥락 안에서 현재 적용되는 범위입니다. | [Core 모델](core-model.md) |
 | current Change Unit | 현재 적용 Change Unit | 권한 모델 안에서 현재 적용되는 Change Unit입니다. | [Core 모델](core-model.md) |
-| user-owned judgment | 사용자 소유 판단 | 하네스가 기록하지만 Core 소유 사실로 바꾸지 않는 사용자 결정이나 평가입니다. | [Core 모델](core-model.md) |
+| user-owned judgment | 사용자 소유 판단 | 기록되지만 Core 소유 사실이 되지 않는 사용자 결정이나 평가입니다. | [Core 모델](core-model.md) |
 | evidence | 증거 | 특정 범위에서 특정 주장을 뒷받침하는 기록입니다. | [Core 모델](core-model.md) |
 | verification criteria | 검증 기준 | 작업을 확인하기 위해 사용자가 볼 수 있는 기준입니다. | [Core 모델](core-model.md) |
 | artifact | 아티팩트 | 하네스 아티팩트 개념으로 참조되거나 스테이징되는 작업 자료입니다. | [API 아티팩트 스키마](api/schema-artifacts.md) |
 | `Write Authorization` | 쓰기 권한 부여 | 호환되는 제품 파일 쓰기 시도 하나에 대한 `Core` 권한을 가리키는 정확한 하네스 제품 라벨입니다. | [Core 모델](core-model.md) |
-| write approval | 쓰기 승인 | 쓰기를 승인한다는 일반 사용자 승인이나 산문 표현이며, `Write Authorization`과 구분됩니다. | [Core 모델](core-model.md) |
+| write approval | 쓰기 승인 | 쓰기를 승인한다는 일반 사용자 승인이나 산문 표현입니다. `Write Authorization`과 구분됩니다. | [Core 모델](core-model.md) |
 | sensitive-action approval | 민감 동작 승인 | 이름 붙은 민감 단계에 대한 사용자 승인이며, `Write Authorization`과 최종 수락과 구분됩니다. | [Core 모델](core-model.md) |
 | final acceptance | 최종 수락 | 보이는 닫기 근거를 받아들일 수 있는지에 대한 사용자 소유 판단입니다. | [Core 모델](core-model.md) |
 | residual-risk acceptance | 잔여 위험 수락 | 이름 붙은 보이는 잔여 위험에 대한 사용자 소유 판단입니다. | [Core 모델](core-model.md) |
