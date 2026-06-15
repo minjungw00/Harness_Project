@@ -95,6 +95,10 @@ A valid request returns the same `StatusResult` shape with:
 
 This is a read-only method. Exact no-effect persistence semantics are owned by the storage documents linked below.
 
+The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the status branch, observed refs, state version, current scope, current Change Unit, close state, and next actions.
+
+Method-local precondition: `task_export_001`, `cu_export_001`, and `uj_export_columns_001` already exist in `proj_export_001` at the listed state versions. The read-only response observes those refs; it does not create them.
+
 ## Minimal valid request
 
 ```yaml
@@ -121,7 +125,7 @@ params:
 
 ## Representative response
 
-Result branch (`StatusResult`, read-only):
+Abbreviated result branch (`StatusResult`, read-only):
 
 ```yaml
 base:

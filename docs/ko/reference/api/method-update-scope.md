@@ -38,7 +38,7 @@
 - 유효한 `ToolEnvelope`. 커밋되는 `dry_run`이 아닌 요청에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - `task_id`.
 - 바꿀 범위 필드. 포함/제외 방식으로 범위를 갱신할 때는 `scope_update.include`에 범위에 포함할 제품 작업을, `scope_update.exclude`에 범위에서 제외할 제품 동작을 둡니다. `null`은 기존 값을 유지한다는 뜻이고, 빈 배열은 그 목록을 빈 목록으로 교체합니다.
-- `change_unit.operation`과 그 작업에 필요한 필드.
+- `change_unit.operation`과 그 작업에 필요한 필드. 지원되는 작업 값과 그 의미는 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다.
 - 해결된 `judgment_kind=scope_decision`을 적용한다면 `related_scope_decision_refs`.
 
 ## 접근 요구사항
@@ -123,6 +123,10 @@
 
 커밋 시 범위 담당 현재 상태와 오래된 권한 부여 결과를 지속할 수 있습니다. 정확한 저장 효과는 아래 저장 담당 문서가 담당합니다.
 
+아래 예시는 메서드 안에서만 성립하도록 짧게 구성했습니다. 대표 응답은 update-scope 분기, 참조, 상태 버전, 현재 적용 범위, 현재 적용 Change Unit, 생명주기, 다음 행동을 보여 주는 데 필요한 필드로 축약했습니다.
+
+메서드 안의 전제: `task_filter_001`은 `proj_filter_001`에 `state_version: 18`로 이미 있으며, 알맞은 현재 적용 Change Unit이 없습니다. 이 요청은 `cu_filter_001`을 현재 적용 Change Unit으로 만듭니다.
+
 ## 최소 유효 요청
 
 ```yaml
@@ -170,7 +174,7 @@ params:
 
 ## 대표 응답
 
-결과 분기(`UpdateScopeResult`, 커밋됨):
+축약한 결과 분기(`UpdateScopeResult`, 커밋됨):
 
 ```yaml
 base:
@@ -246,6 +250,6 @@ next_actions:
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
 - 상태 참조, `StateSummary`, `ShapingReadiness`, 차단 사유, 다음 행동: [API 상태 스키마](schema-state.md).
 - 범위 관련 사용자 판단 형태: [API 판단 스키마](schema-judgment.md).
-- 지원되는 값 집합과 접근 등급: [API 값 집합](schema-value-sets.md).
+- 지원되는 값 집합, `change_unit.operation` 의미, 접근 등급: [API 값 집합](schema-value-sets.md#method-local-values), [접근 등급 값](schema-value-sets.md#access-class-values).
 - 공개 오류, 우선순위, 거절 응답 처리 경로: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md), [API 오류 처리 경로](error-routing.md).
 - 저장 효과와 오래된 권한 부여 동작: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

@@ -38,7 +38,7 @@ This method is the supported path that turns shaping into a first safe Change Un
 - A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
 - `task_id`.
 - Any scope fields to change. For include/exclude updates, `scope_update.include` lists product work to bring into scope and `scope_update.exclude` lists product behavior that remains out of scope. `null` means leave the existing value unchanged; an empty array replaces that list with an empty list.
-- `change_unit.operation` and the fields needed by that operation.
+- `change_unit.operation` and the fields needed by that operation; supported operation values and their meanings are owned by [API Value Sets](schema-value-sets.md#method-local-values).
 - `related_scope_decision_refs` when the update applies a resolved `judgment_kind=scope_decision`.
 
 ## Access requirements
@@ -123,6 +123,10 @@ For `dry_run=true`, a valid state-effecting preview:
 
 On commit, the method may persist scope-owned current state and stale-authorization consequences. Exact storage effects are owned by the storage documents linked below.
 
+The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the update-scope branch, refs, state version, current scope, current Change Unit, lifecycle, and next action.
+
+Method-local precondition: `task_filter_001` already exists in `proj_filter_001` at `state_version: 18`, with no suitable current Change Unit. This request creates `cu_filter_001` as the current Change Unit.
+
 ## Minimal valid request
 
 ```yaml
@@ -170,7 +174,7 @@ params:
 
 ## Representative response
 
-Result branch (`UpdateScopeResult`, committed):
+Abbreviated result branch (`UpdateScopeResult`, committed):
 
 ```yaml
 base:
@@ -246,6 +250,6 @@ next_actions:
 - Request envelope and response branches: [API Schema Core](schema-core.md).
 - State refs, `StateSummary`, `ShapingReadiness`, blockers, and next actions: [API State Schemas](schema-state.md).
 - Scope-related user judgment shapes: [API Judgment Schemas](schema-judgment.md).
-- Supported value sets and access classes: [API Value Sets](schema-value-sets.md).
+- Supported value sets, `change_unit.operation` meanings, and access classes: [API Value Sets](schema-value-sets.md#method-local-values) and [access class values](schema-value-sets.md#access-class-values).
 - Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Persistence effects and stale authorization behavior: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).

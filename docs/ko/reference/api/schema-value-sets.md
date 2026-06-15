@@ -173,6 +173,7 @@ superseded
 
 Run 실패, 위반, 차단된 닫기, 증거 공백은 종료 `Task.result` 값이 아닙니다.
 
+<a id="method-local-values"></a>
 ## 메서드 내부 값
 
 `harness.intake`의 `resume_policy`는 아래 값을 사용합니다.

@@ -114,6 +114,8 @@ For `dry_run=true`, a valid state-effecting preview:
 
 On commit, the method may persist intake-owned Task or Change Unit state. Exact storage effects and storage record shapes are owned by the storage documents linked below.
 
+The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the intake branch, refs, state version, lifecycle, current scope, current Change Unit, and next action.
+
 ## Minimal valid request
 
 ```yaml
@@ -143,7 +145,7 @@ params:
 
 ## Representative response
 
-Result branch (`IntakeResult`, committed):
+Abbreviated result branch (`IntakeResult`, committed):
 
 ```yaml
 base:

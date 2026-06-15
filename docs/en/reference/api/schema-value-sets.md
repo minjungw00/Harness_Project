@@ -173,6 +173,7 @@ superseded
 
 Run failures, violations, blocked closes, and evidence gaps are not terminal `Task.result` values.
 
+<a id="method-local-values"></a>
 ## Method-local values
 
 `resume_policy` for `harness.intake` uses:
