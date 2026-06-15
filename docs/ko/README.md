@@ -10,4 +10,4 @@
 - 구현 담당자와 검토자: [구현 가이드](build/implementation-guide.md)를 읽은 뒤 [참조 색인](reference/README.md)에서 담당 문서를 찾습니다.
 - 문서 유지보수자: [작성 가이드](maintain/authoring-guide.md), [번역 가이드](maintain/translation-guide.md), [점검 색인](maintain/checks.md), [doc-index.yaml](../doc-index.yaml), [용어 지도](../terminology-map.yaml)를 사용합니다.
 
-정확한 machine-readable 담당 경로는 [doc-index.yaml](../doc-index.yaml)을 사용합니다. 읽기용 참조 경로는 [참조 색인](reference/README.md)을 사용합니다.
+기계가 읽는 정확한 담당 경로는 [doc-index.yaml](../doc-index.yaml)을 사용합니다. 읽기용 참조 경로는 [참조 색인](reference/README.md)을 사용합니다.
