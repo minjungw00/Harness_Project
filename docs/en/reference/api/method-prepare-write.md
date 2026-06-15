@@ -181,6 +181,52 @@ state:
     project_id: proj_pref_001
     task_id: task_pref_001
     state_version: 20
+  mode: work
+  lifecycle:
+    lifecycle_phase: ready
+    close_reason: none
+    result: none
+    closed_at: null
+  goal_summary: "Update profile preference save flow."
+  scope_summary: "Profile preference save flow update."
+  non_goals:
+    - "Changing account deletion."
+  acceptance_criteria:
+    - "Profile preferences save successfully with related tests."
+  autonomy_boundary: "Stay within the profile preference save flow."
+  active_change_unit_ref:
+    record_kind: change_unit
+    record_id: cu_pref_001
+    project_id: proj_pref_001
+    task_id: task_pref_001
+    state_version: 19
+  baseline_ref: baseline_pref_001
+  shaping_readiness: null
+  pending_user_judgment_refs: []
+  blocker_refs: []
+  write_authority_summary:
+    status: active
+    write_authorization_ref:
+      record_kind: write_authorization
+      record_id: wa_pref_001
+      project_id: proj_pref_001
+      task_id: task_pref_001
+      state_version: 20
+    basis_state_version: 19
+    intended_paths:
+      - src/preferences/profile-save.ts
+      - src/preferences/profile-save.test.ts
+    guarantee_display:
+      level: cooperative
+      basis: "Write Authorization is a Harness compatibility record, not OS permission."
+      capability_refs: []
+  evidence_summary: null
+  close_state: null
+  close_blockers: []
+  guarantee_display:
+    level: cooperative
+    basis: "Write Authorization is a Harness compatibility record, not OS permission."
+    capability_refs: []
 write_authorization_ref:
   record_kind: write_authorization
   record_id: wa_pref_001
@@ -188,12 +234,26 @@ write_authorization_ref:
   task_id: task_pref_001
   state_version: 20
 write_authorization:
-  authorization_id: wa_pref_001
+  write_authorization_ref:
+    record_kind: write_authorization
+    record_id: wa_pref_001
+    project_id: proj_pref_001
+    task_id: task_pref_001
+    state_version: 20
   status: active
+  authorized_attempt_scope:
+    task_id: task_pref_001
+    change_unit_id: cu_pref_001
+    intended_operation: "update profile preference save flow"
+    intended_paths:
+      - src/preferences/profile-save.ts
+      - src/preferences/profile-save.test.ts
+    product_file_write_intended: true
+    sensitive_categories:
+      - account_preference_update
+    baseline_ref: baseline_pref_001
   basis_state_version: 19
-  authorized_paths:
-    - src/preferences/profile-save.ts
-    - src/preferences/profile-save.test.ts
+  expires_at: "<future-expiration-timestamp>"
 authorization_effect: created
 active_user_judgment_refs:
   - record_kind: user_judgment
@@ -219,8 +279,10 @@ write_authorization_ref: null
 write_authorization: null
 authorization_effect: none
 write_decision_reasons:
-  - code: sensitive_account_preference
+  - category: sensitive_approval
+    code: sensitive_account_preference
     message: "Profile preference updates require separate sensitive-action approval before Write Authorization."
+    related_refs: []
 ```
 
 ## Owner links

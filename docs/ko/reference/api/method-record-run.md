@@ -119,73 +119,60 @@
 
 ## 최소 유효 요청
 
+이 예시는 이 메서드 문서 안에서 전제로 둔 스테이징된 핸들의 검증 출력을 기록합니다. 메서드 안의 전제: `staged_runprobe_001`은 만료되지 않았고 소비되지 않았으며 `proj_runprobe_001` / `task_runprobe_001`에 속합니다. 기록된 접점 출처는 `surface_run_probe`와 `surface_instance_run_probe_01`입니다. 이 전제는 이 문서의 예시 안에서만 성립하며 다른 메서드 예시를 재사용하지 않습니다.
+
 ```yaml
 method: harness.record_run
 params:
   envelope:
-    project_id: proj_validation_001
-    task_id: task_validation_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
     actor_kind: agent
-    surface_id: surface_run
-    request_id: req_run_validation_001
-    idempotency_key: idem_run_validation_001
+    surface_id: surface_run_probe
+    request_id: req_runprobe_001
+    idempotency_key: idem_runprobe_001
     expected_state_version: 31
     dry_run: false
     locale: en-US
-  task_id: task_validation_001
-  change_unit_id: cu_validation_001
+  task_id: task_runprobe_001
+  change_unit_id: cu_runprobe_001
   kind: implementation
   run_id: null
-  baseline_ref: baseline_validation_001
+  baseline_ref: baseline_runprobe_001
   write_authorization_id: null
-  summary: "Shipping-rate preview validation passed."
+  summary: "Search-result count validation passed."
   observed_changes:
     changed_paths: []
     product_file_write_observed: false
     sensitive_categories: []
-    baseline_ref: baseline_validation_001
+    baseline_ref: baseline_runprobe_001
   artifact_inputs:
-    - artifact_input_id: artifact_input_validation_001
-      source_kind: existing_artifact
-      staged_artifact_handle: null
-      existing_artifact_ref:
-        artifact_id: artifact_validation_report_001
-        project_id: proj_validation_001
-        task_id: task_validation_001
-        display_name: "shipping-rate-validation.json"
+    - artifact_input_id: artifact_input_runprobe_001
+      source_kind: staged_artifact
+      staged_artifact_handle:
+        handle_id: staged_runprobe_001
+        project_id: proj_runprobe_001
+        task_id: task_runprobe_001
+        created_by_surface_id: surface_run_probe
+        created_by_surface_instance_id: surface_instance_run_probe_01
         content_type: application/json
-        sha256: sha256:example-validation
-        size_bytes: 128
+        sha256: sha256:example-runprobe
+        size_bytes: 96
         redaction_state: none
-        availability: available
-        created_by_run_ref: null
-        created_by_surface_id: surface_run
-        created_by_surface_instance_id: surface_instance_run_01
-        storage_ref: "artifact-storage://shipping-rate-validation"
+        expires_at: "<future-expiration-timestamp>"
+        consumed: false
+      existing_artifact_ref: null
       relation_hint: "validation_report"
-      claim: "Shipping-rate preview validation passed."
-      expected_sha256: "sha256:example-validation"
-      expected_size_bytes: 128
+      claim: "Search-result count validation passed."
+      expected_sha256: "sha256:example-runprobe"
+      expected_size_bytes: 96
       redaction_state: none
   evidence_updates:
-    - claim: "Shipping-rate preview validation passed."
+    - claim: "Search-result count validation passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs: []
-      supporting_artifact_refs:
-        - artifact_id: artifact_validation_report_001
-          project_id: proj_validation_001
-          task_id: task_validation_001
-          display_name: "shipping-rate-validation.json"
-          content_type: application/json
-          sha256: sha256:example-validation
-          size_bytes: 128
-          redaction_state: none
-          availability: available
-          created_by_run_ref: null
-          created_by_surface_id: surface_run
-          created_by_surface_instance_id: surface_instance_run_01
-          storage_ref: "artifact-storage://shipping-rate-validation"
+      supporting_artifact_refs: []
       gap_refs: []
 ```
 
@@ -200,111 +187,159 @@ base:
   dry_run: false
   state_version: 32
   events:
-    - event_id: evt_validation_001
+    - event_id: evt_runprobe_001
       event_kind: run_recorded
 run_summary:
   run_ref:
     record_kind: run
-    record_id: run_validation_001
-    project_id: proj_validation_001
-    task_id: task_validation_001
+    record_id: run_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
     state_version: 32
   kind: implementation
-  summary: "Shipping-rate preview validation passed."
+  summary: "Search-result count validation passed."
   observed_changes:
     changed_paths: []
     product_file_write_observed: false
     sensitive_categories: []
-    baseline_ref: baseline_validation_001
+    baseline_ref: baseline_runprobe_001
   artifact_refs:
-    - artifact_id: artifact_validation_report_001
-      project_id: proj_validation_001
-      task_id: task_validation_001
-      display_name: "shipping-rate-validation.json"
+    - artifact_id: artifact_runprobe_report_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      display_name: "search-result-count-validation.json"
       content_type: application/json
-      sha256: sha256:example-validation
-      size_bytes: 128
+      sha256: sha256:example-runprobe
+      size_bytes: 96
       redaction_state: none
       availability: available
-      created_by_run_ref: null
-      created_by_surface_id: surface_run
-      created_by_surface_instance_id: surface_instance_run_01
-      storage_ref: "artifact-storage://shipping-rate-validation"
+      created_by_run_ref:
+        record_kind: run
+        record_id: run_runprobe_001
+        project_id: proj_runprobe_001
+        task_id: task_runprobe_001
+        state_version: 32
+      created_by_surface_id: surface_run_probe
+      created_by_surface_instance_id: surface_instance_run_probe_01
+      storage_ref: "artifact-storage://search-result-count-validation"
 registered_artifacts:
-  - artifact_id: artifact_validation_report_001
-    project_id: proj_validation_001
-    task_id: task_validation_001
-    display_name: "shipping-rate-validation.json"
+  - artifact_id: artifact_runprobe_report_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
+    display_name: "search-result-count-validation.json"
     content_type: application/json
-    sha256: sha256:example-validation
-    size_bytes: 128
+    sha256: sha256:example-runprobe
+    size_bytes: 96
     redaction_state: none
     availability: available
-    created_by_run_ref: null
-    created_by_surface_id: surface_run
-    created_by_surface_instance_id: surface_instance_run_01
-    storage_ref: "artifact-storage://shipping-rate-validation"
+    created_by_run_ref:
+      record_kind: run
+      record_id: run_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
+    created_by_surface_id: surface_run_probe
+    created_by_surface_instance_id: surface_instance_run_probe_01
+    storage_ref: "artifact-storage://search-result-count-validation"
 evidence_summary:
   status: sufficient
   completion_policy:
     evidence_required: true
     required_claims:
-      - "Shipping-rate preview validation passed."
+      - "Search-result count validation passed."
   coverage_items:
-    - claim: "Shipping-rate preview validation passed."
+    - claim: "Search-result count validation passed."
       required_for_close: true
       coverage_state: supported
       supporting_refs:
         - record_kind: run
-          record_id: run_validation_001
-          project_id: proj_validation_001
-          task_id: task_validation_001
+          record_id: run_runprobe_001
+          project_id: proj_runprobe_001
+          task_id: task_runprobe_001
           state_version: 32
       supporting_artifact_refs:
-        - artifact_id: artifact_validation_report_001
-          project_id: proj_validation_001
-          task_id: task_validation_001
-          display_name: "shipping-rate-validation.json"
+        - artifact_id: artifact_runprobe_report_001
+          project_id: proj_runprobe_001
+          task_id: task_runprobe_001
+          display_name: "search-result-count-validation.json"
           content_type: application/json
-          sha256: sha256:example-validation
-          size_bytes: 128
+          sha256: sha256:example-runprobe
+          size_bytes: 96
           redaction_state: none
           availability: available
-          created_by_run_ref: null
-          created_by_surface_id: surface_run
-          created_by_surface_instance_id: surface_instance_run_01
-          storage_ref: "artifact-storage://shipping-rate-validation"
+          created_by_run_ref:
+            record_kind: run
+            record_id: run_runprobe_001
+            project_id: proj_runprobe_001
+            task_id: task_runprobe_001
+            state_version: 32
+          created_by_surface_id: surface_run_probe
+          created_by_surface_instance_id: surface_instance_run_probe_01
+          storage_ref: "artifact-storage://search-result-count-validation"
       gap_refs: []
   artifact_refs:
-    - artifact_id: artifact_validation_report_001
-      project_id: proj_validation_001
-      task_id: task_validation_001
-      display_name: "shipping-rate-validation.json"
+    - artifact_id: artifact_runprobe_report_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      display_name: "search-result-count-validation.json"
       content_type: application/json
-      sha256: sha256:example-validation
-      size_bytes: 128
+      sha256: sha256:example-runprobe
+      size_bytes: 96
       redaction_state: none
       availability: available
-      created_by_run_ref: null
-      created_by_surface_id: surface_run
-      created_by_surface_instance_id: surface_instance_run_01
-      storage_ref: "artifact-storage://shipping-rate-validation"
+      created_by_run_ref:
+        record_kind: run
+        record_id: run_runprobe_001
+        project_id: proj_runprobe_001
+        task_id: task_runprobe_001
+        state_version: 32
+      created_by_surface_id: surface_run_probe
+      created_by_surface_instance_id: surface_instance_run_probe_01
+      storage_ref: "artifact-storage://search-result-count-validation"
   updated_by_run_ref:
     record_kind: run
-    record_id: run_validation_001
-    project_id: proj_validation_001
-    task_id: task_validation_001
+    record_id: run_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
     state_version: 32
 blocker_refs: []
 state:
-  project_id: proj_validation_001
+  project_id: proj_runprobe_001
   state_version: 32
   task_ref:
     record_kind: task
-    record_id: task_validation_001
-    project_id: proj_validation_001
-    task_id: task_validation_001
+    record_id: task_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
     state_version: 32
+  mode: work
+  lifecycle:
+    lifecycle_phase: ready
+    close_reason: none
+    result: none
+    closed_at: null
+  goal_summary: "Validate search-result count display."
+  scope_summary: "Search-result count validation."
+  non_goals:
+    - "Changing search ranking."
+  acceptance_criteria:
+    - "Search results show the expected count."
+  autonomy_boundary: "Stay within validation recording for search-result counts."
+  active_change_unit_ref:
+    record_kind: change_unit
+    record_id: cu_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
+    state_version: 31
+  baseline_ref: baseline_runprobe_001
+  shaping_readiness: null
+  pending_user_judgment_refs: []
+  blocker_refs: []
+  write_authority_summary: null
+  evidence_summary: null
+  close_state: null
+  close_blockers: []
+  guarantee_display: null
 ```
 
 ## 담당 문서 링크
