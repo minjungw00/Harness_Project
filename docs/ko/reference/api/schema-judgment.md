@@ -14,7 +14,7 @@
 - `RecordUserJudgmentPayload`
 - `SensitiveActionScope`
 - `AcceptedRiskInput`
-- 사용자 소유 판단의 스키마 의미
+- 사용자 소유 판단의 스키마 필드와 중첩 구조
 
 이 문서는 담당하지 않습니다.
 
@@ -27,13 +27,13 @@
 
 ## 경계
 
-판단 스키마는 사용자가 소유한 선택의 구조를 보존합니다. 넓은 승인이 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소 판단, 지원되지 않는 판단 범주를 대신하게 만들지 않습니다.
+판단 스키마는 사용자가 소유한 선택의 필드 구조를 보존합니다. 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 취소 판단, 지원되지 않는 판단 범주의 동작 계약이 아닙니다. 그 의미는 Core와 메서드 담당 문서에 둡니다.
 
 `UserJudgmentCandidate`는 대기 중인 판단이 아닙니다.
 
-대기 중인 `UserJudgment`는 `harness.request_user_judgment`가 커밋된 뒤에만 존재합니다. 기록된 답변은 그 대기 중인 판단과 그 `judgment_kind`만 해결합니다.
+`UserJudgment`와 `UserJudgmentCandidate`는 서로 다른 형태입니다. 각 형태가 응답에 나타나는 조건은 메서드 담당 문서가 정의합니다.
 
-기록된 답변은 현재 적용 범위를 조용히 바꾸거나, 증거를 만들거나, `Write Authorization`을 만들거나, 잔여 위험을 수락하거나, `Task`를 닫지 않습니다.
+`RecordUserJudgmentPayload`는 현재 적용 범위, 증거, `Write Authorization`, 닫기 결과, 넓은 승인에 대한 스키마가 아닙니다.
 
 ## `UserJudgment`
 
@@ -61,7 +61,7 @@ UserJudgment:
 
 ## `UserJudgmentCandidate`
 
-`UserJudgmentCandidate`는 다음 안전한 경로에 사용자 소유 판단이 필요할 때 다른 메서드가 반환하는 집중된 질문 후보입니다. 화면에 보여 줄 수 있지만, `harness.request_user_judgment`가 커밋하기 전까지 지속 판단이 아닙니다.
+`UserJudgmentCandidate`는 제안된 집중 질문의 후보 형태입니다. `judgment_id`, `status`, `resolution`, `created_at`, `resolved_at` 필드가 없습니다.
 
 ```yaml
 UserJudgmentCandidate:
@@ -117,18 +117,18 @@ RecordUserJudgmentPayload:
 
 `selected_option_id`와 `note`는 요청 수준이자 해결 수준의 필드입니다.
 
-필수 동작:
-- 선택된 `judgment_kind`에 맞는 판단별 요청 본문 분기 하나만 채워야 합니다.
+형태 규칙:
+- 선택된 `judgment_kind`에 맞는 판단별 요청 본문 분기 하나만 채웁니다.
 
 담당 문서 예외:
-- 메서드 담당 문서가 더 좁은 구조를 명시적으로 허용할 수 있습니다.
+- 메서드 담당 문서가 더 좁은 요청 본문 구조를 명시적으로 정의할 수 있습니다.
 
 허용되지 않는 것:
-- `RecordUserJudgmentPayload`는 `selected_option_id`나 `note`를 반복하면 안 됩니다.
+- `RecordUserJudgmentPayload`에는 `selected_option_id`나 `note`가 없습니다.
 
 ## `SensitiveActionScope`
 
-`SensitiveActionScope`는 사용자가 승인할지 판단해야 하는 이름 붙은 민감 단계를 설명합니다. `AuthorizedAttemptScope`도 아니고, `Write Authorization`도 아니며, 보안 권한도 아닙니다. [보안](../security.md)을 확인하세요.
+`SensitiveActionScope`는 이름 붙은 민감 동작 승인 맥락의 스키마 형태입니다. `AuthorizedAttemptScope`도 아니고, `Write Authorization`도 아니며, 보안 권한도 아닙니다. [보안](../security.md)을 확인하세요.
 
 ```yaml
 SensitiveActionScope:
@@ -143,11 +143,11 @@ SensitiveActionScope:
   expires_at: string | null
 ```
 
-민감 동작 승인은 쓰기 호환성, 실행 기록, 닫기 전에 필요할 수 있습니다. 하지만 제품 파일 쓰기에 대한 `harness.prepare_write` 경로를 대신하지 않습니다.
+`SensitiveActionScope`의 존재는 민감 동작 승인이 필요한 위치를 정의하지 않습니다. 이 형태가 나타나는 위치는 메서드 담당 문서가 정의하며, 제품 파일 쓰기에 대한 `harness.prepare_write` 경로를 대신하지 않습니다.
 
 ## `AcceptedRiskInput`
 
-`AcceptedRiskInput`은 기록하려는 판단 안에서 사용자가 수락할 수 있는 보이는 잔여 위험을 이름 붙입니다.
+`AcceptedRiskInput`은 판단 요청 본문 안에서 보이는 잔여 위험의 이름을 담는 형태입니다.
 
 ```yaml
 AcceptedRiskInput:
@@ -158,7 +158,7 @@ AcceptedRiskInput:
   accepted_for_close: boolean
 ```
 
-수락된 위험은 이름 붙은 보이는 위험과 요청된 판단에만 적용됩니다. 검증, 증거 충분성, QA, 최종 수락, 결과에 위험이 없다는 증명이 아닙니다.
+이 형태는 검증, 증거 충분성, QA, 최종 수락, 결과에 위험이 없다는 증명이 아닙니다. 잔여 위험의 의미는 [Core 모델](../core-model.md)이 담당합니다.
 
 ## 관련 담당 문서
 

@@ -72,21 +72,21 @@ staging_created
 no_effect
 ```
 
-`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당하고, 메서드별 상태 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류 코드](error-codes.md)와 [API 오류 처리 경로](error-routing.md)가 담당합니다.
+`response_kind`와 `effect_kind`는 분기 메타데이터 값입니다. 공통 분기 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당하고, 메서드별 효과는 메서드 담당 문서가 담당합니다. 거절 분기의 공개 오류 의미는 [API 오류 코드](error-codes.md)와 [API 오류 처리 경로](error-routing.md)가 담당합니다.
 
 <a id="access-class-values"></a>
 ## 접근 등급 값
 
 `VerifiedSurfaceContext.access_class`는 공개 API 요청 하나마다 요청 수준 값 하나만 사용합니다.
 
-| 값 | 의미 담당 문서 |
+| 값 | 어휘 설명 |
 |---|---|
-| `read_status` | 읽기 전용 상태와 닫기 확인 읽기. |
-| `core_mutation` | 별도 분류가 없는 Core 상태 변경. |
-| `write_authorization` | `harness.prepare_write`. |
-| `run_recording` | `harness.record_run`. |
-| `artifact_registration` | `harness.stage_artifact`. |
-| `artifact_read` | 아티팩트 담당 문서가 지원을 정의한 아티팩트 본문 읽기. |
+| `read_status` | 상태와 닫기 확인 읽기의 접근 등급 값. |
+| `core_mutation` | Core 변경 접근 등급 값. |
+| `write_authorization` | `harness.prepare_write`와 연결되는 접근 등급 값. |
+| `run_recording` | `harness.record_run`과 연결되는 접근 등급 값. |
+| `artifact_registration` | `harness.stage_artifact`와 연결되는 접근 등급 값. |
+| `artifact_read` | 아티팩트 읽기 접근 등급 값입니다. 아티팩트 본문 읽기 지원은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다. |
 
 접근 등급은 하네스 API 호환성 분류이지 OS 권한 분류가 아닙니다. 메서드별 접근 요구사항은 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 담당하고, 로컬 접점 확인 동작은 [에이전트 통합](../agent-integration.md)과 [보안](../security.md)이 담당합니다.
 
@@ -109,12 +109,12 @@ task_event
 local_surface_registration
 ```
 
-이 값들은 API 참조에서 지속 Core 기록이나 로컬 접점 기록의 종류를 식별합니다. 저장소 테이블 이름, DDL, 메서드별 담당 규칙을 대신하지 않습니다.
+이 값들은 API 참조 종류를 식별합니다. 저장소 테이블 이름, DDL, Core 권한 의미, 메서드별 담당 규칙을 대신하지 않습니다.
 
 <a id="task-lifecycle-values"></a>
 ## `Task` 생명주기 값
 
-`StateSummary.mode`와 지속 저장되는 확정 `Task.mode`는 아래 값을 사용합니다.
+`StateSummary.mode`와 확정된 `Task.mode` 필드는 아래 값을 사용합니다.
 
 ```text
 advisor
@@ -122,7 +122,7 @@ direct
 work
 ```
 
-`harness.intake`의 `requested_mode`는 입력 전용으로 `auto`도 받습니다. `auto`는 지속 저장되거나 표시되는 `Task` 상태가 되기 전에 `advisor`, `direct`, `work` 중 하나로 확정되어야 합니다.
+`harness.intake`의 `requested_mode`는 입력 전용 값으로 `auto`도 받습니다. 출력 `Task.mode` 필드는 `advisor`, `direct`, `work`를 사용합니다. intake 확정 동작은 [intake 메서드](method-intake.md)가 담당합니다.
 
 `Task.lifecycle_phase`는 아래 값을 사용합니다.
 
@@ -308,12 +308,12 @@ existing_artifact
 ```
 
 값 의미:
-- `staged_artifact`는 아티팩트 담당 동작을 통해 호환되는 임시 스테이징 핸들을 선택합니다.
-- `existing_artifact`는 새 바이트를 등록하지 않고 이미 지속되는 같은 프로젝트 아티팩트를 선택합니다.
+- `staged_artifact`는 `ArtifactInput.staged_artifact_handle`과 짝을 이룹니다.
+- `existing_artifact`는 `ArtifactInput.existing_artifact_ref`와 짝을 이룹니다.
 
 선택된 출처 값은 어느 `ArtifactInput` 출처 필드가 적용되는지 정합니다. 정확한 형태 불변조건은 [API 아티팩트 스키마](schema-artifacts.md#artifactinput)가 담당합니다.
 
-이 목록 밖의 값은 지원되는 출처 값이 아닙니다. 새 출처 동작에는 이 문서의 지원 값과 영향받는 의미 담당 문서가 모두 필요합니다.
+이 목록 밖의 값은 지원되는 출처 값이 아닙니다. 새 출처 어휘의 동작을 지원된다고 설명하려면 이 문서의 지원 값과 영향받는 의미 담당 문서가 모두 필요합니다.
 
 `redaction_state`는 아래 값을 사용합니다.
 

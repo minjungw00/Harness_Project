@@ -1,6 +1,6 @@
 # API artifact schemas
 
-This document owns API artifact-shaped schemas for the baseline scope. The schemas define request and response shapes; they do not grant local file access, create artifact bytes, create storage rows, or prove evidence sufficiency.
+This document owns API artifact-shaped schemas for the baseline scope. The schemas define request and response shapes; they do not grant local file access, create artifact bytes, define storage rows, or prove evidence sufficiency.
 
 ## Owns / Does not own
 
@@ -29,12 +29,12 @@ Artifact schemas do not make a caller-supplied path authoritative.
 This document describes the request and response shapes used by artifact-related methods and owners.
 
 Owner links:
-- validation, staging, promotion, and linking: method owner documents routed from [API Methods](methods.md)
+- method validation, staging, promotion, and linking behavior: method owner documents routed from [API Methods](methods.md)
 - body-read eligibility and artifact lifecycle: [Artifact Storage](../storage-artifacts.md)
 
 ## `ArtifactRef`
 
-`ArtifactRef` is the public pointer to a persistent artifact that has already been registered by an artifact owner.
+`ArtifactRef` is the public artifact reference and metadata shape.
 
 ```yaml
 ArtifactRef:
@@ -57,7 +57,7 @@ ArtifactRef:
 
 ## `StagedArtifactHandle`
 
-`StagedArtifactHandle` is a transient handle returned by successful `harness.stage_artifact`. It represents storage-owned transient staging, not a persistent artifact.
+`StagedArtifactHandle` is the transient-handle shape associated with `harness.stage_artifact` results. It is not the persistent `ArtifactRef` shape.
 
 ```yaml
 StagedArtifactHandle:
@@ -74,11 +74,11 @@ StagedArtifactHandle:
   consumed: boolean
 ```
 
-The caller does not submit `created_by_surface_id` or `created_by_surface_instance_id` as authority claims. Staged-handle lifecycle, provenance validation, expiry, and promotion are owned by [Artifact Storage](../storage-artifacts.md).
+The caller does not submit `created_by_surface_id` or `created_by_surface_instance_id` as authority claims. Staged-handle lifecycle, provenance validation, expiry, and promotion are owned by [Artifact Storage](../storage-artifacts.md) and method owner documents.
 
 ## `ArtifactInput`
 
-`ArtifactInput` is used by methods that link artifacts into run or evidence output.
+`ArtifactInput` is the request-side shape for methods that accept artifact links for run or evidence output.
 
 ```yaml
 ArtifactInput:
@@ -96,8 +96,8 @@ ArtifactInput:
 For each input, exactly one source field is populated and the other source field is `null`. `ArtifactInput.source_kind` selects which source field applies; supported source-kind values and value meanings are owned by [artifact values](schema-value-sets.md#artifact-values).
 
 Shape rules:
-- If `staged_artifact_handle` is populated, it must be a compatible transient staged handle.
-- If `existing_artifact_ref` is populated, it must be an already persistent same-project artifact reference.
+- If `staged_artifact_handle` is populated, `existing_artifact_ref` is `null`.
+- If `existing_artifact_ref` is populated, `staged_artifact_handle` is `null`.
 
 Caller-supplied paths, logs, capture claims, or local file references are not artifact authority.
 
@@ -105,7 +105,7 @@ Caller-supplied paths, logs, capture claims, or local file references are not ar
 
 `ArtifactInput[]` selects one artifact source shape per input. It does not add a second request-level access class to a public API request.
 
-Invalid source-field shape returns through `ToolRejectedResponse` with public error semantics owned by [API error codes](error-codes.md) and [API error routing](error-routing.md). Staged-handle validation, promotion, body-read eligibility, and persistent linking are owned by [Artifact Storage](../storage-artifacts.md).
+Public error semantics and response routing for invalid source-field shape are owned by [API error codes](error-codes.md) and [API error routing](error-routing.md). Staged-handle validation, promotion, body-read eligibility, and persistent linking are owned by [Artifact Storage](../storage-artifacts.md) and method owner documents.
 
 ## Related owners
 

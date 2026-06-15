@@ -2,7 +2,7 @@
 
 This document owns the common API envelope (`ToolEnvelope`) and shared schema elements used by the baseline public API, including the common response branch model, shared support shapes, and schema notation conventions below.
 
-Neighboring contracts stay with their owners: method behavior routes through [API Methods](methods.md), storage effects through [Storage Effects](../storage-effects.md), runtime authority through [Core Model](../core-model.md) and [Runtime Boundaries](../runtime-boundaries.md), and display wording or template text through [Template Bodies](../template-bodies.md).
+Neighboring contracts stay with their owners: method behavior routes through [API Methods](methods.md), storage effects through [Storage Effects](../storage-effects.md), Core authority through [Core Model](../core-model.md), runtime boundaries through [Runtime Boundaries](../runtime-boundaries.md), and display wording or template text through [Template Bodies](../template-bodies.md).
 
 ## Owns / Does not own
 
@@ -71,12 +71,13 @@ ToolEnvelope:
 
 Meaning:
 - `task_id` is an optional request-level Task selector.
-- `expected_state_version` names the project-wide state clock used by state-changing methods.
+- `expected_state_version` is the request-level field for a project-wide state clock value.
 
-Precedence:
-- Method-specific `task_id` fields, when present, take precedence as described by the affected method owner document.
+Does not imply:
+- This field list does not define conflict behavior, storage versioning, or method-specific selector precedence.
 
 Owner links:
+- method-specific request behavior: method owner documents routed from [API Methods](methods.md)
 - conflict behavior: [state version conflict](error-precedence.md#state-conflict-behavior)
 - storage version behavior: [Storage Versioning](../storage-versioning.md)
 
@@ -87,10 +88,10 @@ Every public method response uses exactly one branch:
 
 - a method-specific `MethodResult`
 - `ToolRejectedResponse`
-- `ToolDryRunResponse` when the selected state-effecting or storage-staging operation has a valid preview branch
+- `ToolDryRunResponse` when the method owner defines a dry-run preview branch
 
 Meaning:
-- `MethodResult` is the method-specific successful or committed result branch defined by method owner documents routed from [API Methods](methods.md).
+- `MethodResult` is the method-specific result branch defined by method owner documents routed from [API Methods](methods.md).
 - Every concrete method result carries `base: ToolResultBase` and then only that method's result fields.
 
 Does not imply:
@@ -129,14 +130,10 @@ Owner links:
 
 Meaning:
 - `DryRunSummary`, `PlannedEffect`, and `PlannedBlocker` are common dry-run branch support shapes.
-- They are descriptive preview data only.
+- They are descriptive preview-data shapes only.
 
 Does not imply:
-- They do not create records.
-- They do not reserve refs.
-- They do not consume handles.
-- They do not create replay rows.
-- They do not increment `state_version`.
+- This page does not define record creation, ref reservation, handle consumption, replay rows, or `state_version` effects.
 
 ```yaml
 DryRunSummary:

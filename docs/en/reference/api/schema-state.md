@@ -4,7 +4,7 @@ This document owns API state-shaped schemas for the baseline scope. It defines p
 
 ## Owner boundary
 
-This document owns state-shaped API fields, nesting, references, summaries, snapshots, display shapes, and the boundary between state-shaped data and response effects. Neighboring contracts remain with these owners:
+This document owns state-shaped API fields, nesting, references, summaries, snapshots, display shapes, and the boundary between field presence and response effects. Neighboring contracts remain with these owners:
 
 | Neighboring contract | Owner |
 |---|---|
@@ -17,7 +17,7 @@ This document owns state-shaped API fields, nesting, references, summaries, snap
 
 ## Boundary
 
-State schemas describe API data shapes only. A state-shaped field does not choose a response branch or create persistence, Core transitions, replay rows, `task_events`, artifact effects, Write Authorization effects, or a `state_version` increment.
+State schemas describe API data shapes only. A state-shaped field does not choose a response branch or create persistence, Core transitions, replay rows, `task_events`, artifact effects, `Write Authorization` effects, or a `state_version` increment.
 
 Owner links:
 - Response branch selection: [Common response branches](schema-core.md#common-response)
@@ -72,9 +72,10 @@ StateSummary:
 ```
 
 Meaning:
-- `StateSummary` may summarize stored Core state, computed read-only status, and close-readiness observations.
+- `StateSummary` is a compact response shape for state references, summaries, and close-readiness fields.
 
-Response branches decide whether a method committed.
+Does not imply:
+- `StateSummary` field presence does not define whether a method committed.
 
 Owner links:
 - Commit decision branch: [Common response branches](schema-core.md#common-response)
@@ -99,8 +100,8 @@ Owner links:
 ## `ShapingReadiness`
 
 Meaning:
-- `ShapingReadiness` is a derived API view over Task, Change Unit, pending judgments, evidence summary, blockers, and next-action state.
-- It shows whether the applicable owner state is concrete enough for the next safe action.
+- `ShapingReadiness` is an API view shape over Task, Change Unit, pending judgment, evidence summary, blocker, and next-action fields.
+- Its boolean fields and `gaps` array expose readiness-shaped data for the current state.
 
 ```yaml
 ShapingReadiness:
@@ -123,8 +124,10 @@ ShapingGap:
 ```
 
 Meaning:
-- Missing readiness can route to a blocker, a pending or candidate user judgment, or an update-scope next action.
-- Durable effects stay with the method and storage owners.
+- `ShapingGap` can reference a blocker or user-judgment candidate by shape.
+
+Owner links:
+- Method behavior and durable effects: method owner documents routed from [API Methods](methods.md) and [Storage Effects](../storage-effects.md)
 
 ## Current-position display shapes
 
@@ -234,7 +237,7 @@ GuaranteeDisplay:
 Meaning:
 - `CloseReadinessBlocker` is a data shape for close-readiness findings.
 
-Close-readiness meaning and persistence behavior stay with the method, Core model, and storage owners linked below.
+This shape does not define close-readiness meaning, response routing, or persistence behavior.
 
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)

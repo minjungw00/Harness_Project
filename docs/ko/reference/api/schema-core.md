@@ -2,7 +2,7 @@
 
 이 문서는 기준 범위 공개 API에서 공통으로 쓰는 API 요청 래퍼(`ToolEnvelope`)와 공유 스키마 요소를 담당합니다. 여기에는 아래의 공통 응답 분기 모델, 공통 보조 형태, 스키마 표기 규칙이 포함됩니다.
 
-인접 계약은 각 담당 문서에 둡니다. 메서드 동작은 [API 메서드](methods.md), 저장 효과는 [저장 효과](../storage-effects.md), 런타임 권한은 [Core 모델](../core-model.md)과 [런타임 경계](../runtime-boundaries.md), 표시 문구와 템플릿 본문은 [템플릿 본문](../template-bodies.md)을 따릅니다.
+인접 계약은 각 담당 문서에 둡니다. 메서드 동작은 [API 메서드](methods.md), 저장 효과는 [저장 효과](../storage-effects.md), Core 권한은 [Core 모델](../core-model.md), 런타임 경계는 [런타임 경계](../runtime-boundaries.md), 표시 문구와 템플릿 본문은 [템플릿 본문](../template-bodies.md)을 따릅니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -71,12 +71,13 @@ ToolEnvelope:
 
 의미:
 - `task_id`는 요청 수준의 선택적 `Task` 선택자입니다.
-- `expected_state_version`은 상태 변경 메서드가 쓰는 프로젝트 전체 상태 시계를 가리킵니다.
+- `expected_state_version`은 프로젝트 전체 상태 시계 값을 담는 요청 수준 필드입니다.
 
-우선순위:
-- 메서드별 `task_id` 필드가 있으면 그 메서드 담당 문서가 설명하는 대로 그 필드가 우선합니다.
+의미하지 않는 것:
+- 이 필드 목록은 충돌 동작, 저장소 버전 관리, 메서드별 선택자 우선순위를 정의하지 않습니다.
 
 담당 문서 링크:
+- 메서드별 요청 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
 - 충돌 동작: [상태 버전 충돌](error-precedence.md#state-conflict-behavior)
 - 저장소 버전 동작: [저장소 버전 관리](../storage-versioning.md)
 
@@ -87,10 +88,10 @@ ToolEnvelope:
 
 - 메서드별 `MethodResult`
 - `ToolRejectedResponse`
-- 선택된 상태 효과 동작이나 저장소 스테이징 동작에 유효한 미리보기 분기가 있을 때의 `ToolDryRunResponse`
+- 메서드 담당 문서가 `dry_run` 미리보기 분기를 정의할 때의 `ToolDryRunResponse`
 
 의미:
-- `MethodResult`는 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 정의하는 메서드별 성공 또는 커밋 결과 분기입니다.
+- `MethodResult`는 [API 메서드](methods.md)가 안내하는 메서드 담당 문서가 정의하는 메서드별 결과 분기입니다.
 - 모든 구체 메서드 결과는 `base: ToolResultBase`를 담고 그 뒤에 그 메서드의 결과 필드만 둡니다.
 
 의미하지 않는 것:
@@ -129,14 +130,10 @@ ToolDryRunResponse:
 
 의미:
 - `DryRunSummary`, `PlannedEffect`, `PlannedBlocker`는 공통 `dry_run` 분기 보조 형태입니다.
-- 설명용 미리보기 데이터일 뿐입니다.
+- 설명용 미리보기 데이터 형태일 뿐입니다.
 
 의미하지 않는 것:
-- 기록을 만들지 않습니다.
-- 참조를 예약하지 않습니다.
-- 핸들을 소비하지 않습니다.
-- 재실행 행을 만들지 않습니다.
-- `state_version`을 올리지 않습니다.
+- 이 문서는 기록 생성, 참조 예약, 핸들 소비, 재실행 행, `state_version` 효과를 정의하지 않습니다.
 
 ```yaml
 DryRunSummary:

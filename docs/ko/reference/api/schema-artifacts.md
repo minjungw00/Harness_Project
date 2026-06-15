@@ -1,6 +1,6 @@
 # API 아티팩트 스키마
 
-이 문서는 기준 범위의 아티팩트 형태 API 스키마를 담당합니다. 스키마는 요청과 응답 형태를 정의하지만 로컬 파일 접근 권한, 아티팩트 본문, 저장소 행, 증거 충분성을 만들지 않습니다.
+이 문서는 기준 범위의 아티팩트 형태 API 스키마를 담당합니다. 스키마는 요청과 응답 형태를 정의하지만 로컬 파일 접근 권한, 아티팩트 본문, 저장소 행, 증거 충분성을 정의하지 않습니다.
 
 ## 담당하는 것 / 담당하지 않는 것
 
@@ -29,12 +29,12 @@
 이 문서는 아티팩트 관련 메서드와 담당 문서가 쓰는 요청/응답 형태를 설명합니다.
 
 담당 문서:
-- 검증, 스테이징, 승격, 연결: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
+- 메서드 검증, 스테이징, 승격, 연결 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
 - 본문 읽기 자격과 아티팩트 생명주기: [아티팩트 저장소](../storage-artifacts.md)
 
 ## `ArtifactRef`
 
-`ArtifactRef`는 아티팩트 담당 문서가 이미 등록한 지속 아티팩트를 가리키는 공개 포인터입니다.
+`ArtifactRef`는 공개 아티팩트 참조와 메타데이터 형태입니다.
 
 ```yaml
 ArtifactRef:
@@ -57,7 +57,7 @@ ArtifactRef:
 
 ## `StagedArtifactHandle`
 
-`StagedArtifactHandle`은 성공한 `harness.stage_artifact`가 반환하는 임시 핸들입니다. 지속 아티팩트가 아니라 저장소가 소유하는 임시 스테이징을 나타냅니다.
+`StagedArtifactHandle`은 `harness.stage_artifact` 결과와 연결되는 임시 핸들 형태입니다. 지속 아티팩트의 `ArtifactRef` 형태가 아닙니다.
 
 ```yaml
 StagedArtifactHandle:
@@ -74,11 +74,11 @@ StagedArtifactHandle:
   consumed: boolean
 ```
 
-호출자는 `created_by_surface_id`나 `created_by_surface_instance_id`를 권한 주장으로 제출하지 않습니다. 스테이징 핸들의 생명주기, 출처 검증, 만료, 승격은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
+호출자는 `created_by_surface_id`나 `created_by_surface_instance_id`를 권한 주장으로 제출하지 않습니다. 스테이징 핸들의 생명주기, 출처 검증, 만료, 승격은 [아티팩트 저장소](../storage-artifacts.md)와 메서드 담당 문서가 담당합니다.
 
 ## `ArtifactInput`
 
-`ArtifactInput`은 실행 기록이나 증거 출력에 아티팩트를 연결하는 메서드가 사용합니다.
+`ArtifactInput`은 실행 기록이나 증거 출력에 아티팩트 링크를 받는 메서드의 요청 측 형태입니다.
 
 ```yaml
 ArtifactInput:
@@ -96,8 +96,8 @@ ArtifactInput:
 각 입력에서는 출처 필드 하나만 채우고 다른 출처 필드는 `null`이어야 합니다. `ArtifactInput.source_kind`는 어느 출처 필드가 적용되는지 고르며, 지원되는 출처 종류 값과 값 의미는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당합니다.
 
 형태 규칙:
-- `staged_artifact_handle`이 채워지면 호환되는 임시 스테이징 핸들이어야 합니다.
-- `existing_artifact_ref`가 채워지면 이미 지속되는 같은 프로젝트 아티팩트 참조여야 합니다.
+- `staged_artifact_handle`이 채워지면 `existing_artifact_ref`는 `null`입니다.
+- `existing_artifact_ref`가 채워지면 `staged_artifact_handle`은 `null`입니다.
 
 호출자가 준 경로, 로그, 캡처 주장, 로컬 파일 참조는 아티팩트 권한이 아닙니다.
 
@@ -105,7 +105,7 @@ ArtifactInput:
 
 `ArtifactInput[]`은 입력마다 아티팩트 출처 형태 하나를 고릅니다. 공개 API 요청에 두 번째 요청 수준 접근 등급을 더하지 않습니다.
 
-출처 필드 형태가 잘못되면 [API 오류 코드](error-codes.md)와 [API 오류 처리 경로](error-routing.md)가 담당하는 공개 오류 의미에 따라 `ToolRejectedResponse`로 반환합니다. 스테이징된 아티팩트 핸들 검증, 승격, 본문 읽기 자격, 지속 연결은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
+출처 필드 형태 오류의 공개 오류 의미와 응답 처리 경로는 [API 오류 코드](error-codes.md)와 [API 오류 처리 경로](error-routing.md)가 담당합니다. 스테이징된 아티팩트 핸들 검증, 승격, 본문 읽기 자격, 지속 연결은 [아티팩트 저장소](../storage-artifacts.md)와 메서드 담당 문서가 담당합니다.
 
 ## 관련 담당 문서
 

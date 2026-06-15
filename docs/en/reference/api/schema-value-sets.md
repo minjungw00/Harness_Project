@@ -72,21 +72,21 @@ staging_created
 no_effect
 ```
 
-`response_kind` and `effect_kind` are branch metadata values. Common branch shape is owned by [API Schema Core](schema-core.md#common-response), and method-specific state effects are owned by method owner documents. Public error semantics for rejected branches are owned by [API error codes](error-codes.md) and [API error routing](error-routing.md).
+`response_kind` and `effect_kind` are branch metadata values. Common branch shape is owned by [API Schema Core](schema-core.md#common-response), method-specific effects are owned by method owner documents, and public error semantics for rejected branches are owned by [API error codes](error-codes.md) and [API error routing](error-routing.md).
 
 <a id="access-class-values"></a>
 ## Access class values
 
 `VerifiedSurfaceContext.access_class` uses exactly one request-level value per public API request:
 
-| Value | Semantic owner |
+| Value | Vocabulary note |
 |---|---|
-| `read_status` | Read-only status and close-check reads. |
-| `core_mutation` | Core state mutation not otherwise specialized. |
-| `write_authorization` | `harness.prepare_write`. |
-| `run_recording` | `harness.record_run`. |
-| `artifact_registration` | `harness.stage_artifact`. |
-| `artifact_read` | Artifact body reads when an artifact owner defines support. |
+| `read_status` | Status and close-check read access-class value. |
+| `core_mutation` | Core-mutation access-class value. |
+| `write_authorization` | Access-class value associated with `harness.prepare_write`. |
+| `run_recording` | Access-class value associated with `harness.record_run`. |
+| `artifact_registration` | Access-class value associated with `harness.stage_artifact`. |
+| `artifact_read` | Artifact-read access-class value; artifact body-read support is owned by [Artifact Storage](../storage-artifacts.md). |
 
 Access classes are Harness API compatibility classes, not OS permission classes. Method access requirements stay with method owner documents routed from [API Methods](methods.md); local surface verification behavior stays with [Agent Integration](../agent-integration.md) and [Security](../security.md).
 
@@ -109,12 +109,12 @@ task_event
 local_surface_registration
 ```
 
-These values identify persisted Core or local-surface record kinds in API references. They do not replace storage table names, DDL, or method-specific ownership rules.
+These values identify API reference kinds. They do not replace storage table names, DDL, Core authority meaning, or method-specific ownership rules.
 
 <a id="task-lifecycle-values"></a>
 ## Task lifecycle values
 
-`StateSummary.mode` and persisted resolved Task mode use:
+`StateSummary.mode` and resolved `Task.mode` fields use:
 
 ```text
 advisor
@@ -122,7 +122,7 @@ direct
 work
 ```
 
-`requested_mode` for `harness.intake` also accepts `auto` as input only. `auto` must resolve to `advisor`, `direct`, or `work` before persisted or displayed Task state.
+`requested_mode` for `harness.intake` also accepts `auto` as an input-only value. Output `Task.mode` fields use `advisor`, `direct`, or `work`; intake resolution behavior is owned by [Intake method](method-intake.md).
 
 `Task.lifecycle_phase` uses:
 
@@ -147,7 +147,7 @@ cancelled
 superseded
 ```
 
-`StatusResult.close_state` also permits `none` when no active close state is available.
+`StatusResult.close_state` also permits `none` when no current close state is available.
 
 `Task.close_reason` uses:
 
@@ -306,12 +306,12 @@ existing_artifact
 ```
 
 Value meanings:
-- `staged_artifact` selects a compatible transient staged handle through artifact-owner behavior.
-- `existing_artifact` selects an already persistent same-project artifact without registering new bytes.
+- `staged_artifact` pairs with `ArtifactInput.staged_artifact_handle`.
+- `existing_artifact` pairs with `ArtifactInput.existing_artifact_ref`.
 
 The selected source value determines which `ArtifactInput` source field applies. The exact shape invariant is owned by [API Artifact Schemas](schema-artifacts.md#artifactinput).
 
-Values outside this list are not supported source values. New source behavior needs a supported value here and an affected semantic owner.
+Values outside this list are not supported source values. New source vocabulary needs a supported value here and an affected semantic owner before behavior can be described as supported.
 
 `redaction_state` uses:
 

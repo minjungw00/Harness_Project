@@ -14,7 +14,7 @@ This document owns:
 - `RecordUserJudgmentPayload`
 - `SensitiveActionScope`
 - `AcceptedRiskInput`
-- user-owned judgment schema semantics
+- user-owned judgment schema fields and nesting
 
 This document does not own:
 
@@ -27,13 +27,13 @@ This document does not own:
 
 ## Boundary
 
-Judgment schemas preserve the structure of a user-owned choice. They do not let broad approval replace product decisions, technical decisions, scope decisions, sensitive-action approval, final acceptance, residual-risk acceptance, cancellation, or any unsupported judgment category.
+Judgment schemas preserve the field structure of a user-owned choice. They are not behavior contracts for product decisions, technical decisions, scope decisions, sensitive-action approval, final acceptance, residual-risk acceptance, cancellation, or unsupported judgment categories; those meanings stay with the Core and method owners.
 
 `UserJudgmentCandidate` is not a pending judgment.
 
-A pending `UserJudgment` exists only after `harness.request_user_judgment` commits. A recorded answer resolves only the specific pending judgment and its `judgment_kind`.
+`UserJudgment` and `UserJudgmentCandidate` are distinct shapes. Method owners define when each shape appears in a response.
 
-A recorded answer does not silently update current scope, create evidence, create `Write Authorization`, accept residual risk, or close a Task.
+A `RecordUserJudgmentPayload` is not the schema for current scope, evidence, `Write Authorization`, a close result, or a broad approval.
 
 ## `UserJudgment`
 
@@ -61,7 +61,7 @@ UserJudgment:
 
 ## `UserJudgmentCandidate`
 
-`UserJudgmentCandidate` is a proposed focused question returned by another method when the next safe path requires user-owned judgment. It is displayable, but it is not durable until `harness.request_user_judgment` commits it.
+`UserJudgmentCandidate` is the candidate shape for a proposed focused question. It has no `judgment_id`, `status`, `resolution`, `created_at`, or `resolved_at` field.
 
 ```yaml
 UserJudgmentCandidate:
@@ -117,18 +117,18 @@ RecordUserJudgmentPayload:
 
 `selected_option_id` and `note` are request-level and resolution-level fields.
 
-Required behavior:
-- Exactly one decision-specific payload branch should be populated for the selected `judgment_kind`.
+Shape rule:
+- Exactly one decision-specific payload branch is populated for the selected `judgment_kind`.
 
 Owner exception:
-- A method owner may explicitly allow a narrower structure.
+- A method owner may explicitly define a narrower payload structure.
 
 Not allowed:
-- `RecordUserJudgmentPayload` must not repeat `selected_option_id` or `note`.
+- `RecordUserJudgmentPayload` does not contain `selected_option_id` or `note`.
 
 ## `SensitiveActionScope`
 
-`SensitiveActionScope` describes the named sensitive step the user is asked to approve. It is not `AuthorizedAttemptScope`, not `Write Authorization`, and not security authority; see [Security](../security.md).
+`SensitiveActionScope` is the schema shape for a named sensitive-action approval context. It is not `AuthorizedAttemptScope`, not `Write Authorization`, and not security authority; see [Security](../security.md).
 
 ```yaml
 SensitiveActionScope:
@@ -143,11 +143,11 @@ SensitiveActionScope:
   expires_at: string | null
 ```
 
-Sensitive-action approval can be required before write compatibility, run recording, or close, but it does not replace the `harness.prepare_write` path for product-file writes.
+The presence of `SensitiveActionScope` does not define where sensitive-action approval is required. Method owners define where this shape appears, and it does not replace the `harness.prepare_write` path for product-file writes.
 
 ## `AcceptedRiskInput`
 
-`AcceptedRiskInput` names a visible residual risk the user may accept for the judgment being recorded.
+`AcceptedRiskInput` is the shape for naming a visible residual risk inside a judgment payload.
 
 ```yaml
 AcceptedRiskInput:
@@ -158,7 +158,7 @@ AcceptedRiskInput:
   accepted_for_close: boolean
 ```
 
-Accepted risk is scoped to the named visible risk and the requested judgment. It is not verification, evidence sufficiency, QA, final acceptance, or proof that the result has no risk.
+This shape is not verification, evidence sufficiency, QA, final acceptance, or proof that the result has no risk. Residual-risk meaning is owned by [Core Model](../core-model.md).
 
 ## Related owners
 
