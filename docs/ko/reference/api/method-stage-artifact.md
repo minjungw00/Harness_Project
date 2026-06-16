@@ -46,7 +46,8 @@
 성공한 스테이징 결과:
 
 - Core 상태를 바꾸지 않습니다.
-- `project_state.state_version`을 올리지 않습니다.
+- `project_state.state_version`을 증가시키지 않습니다.
+- 호출이 관찰한 현재 프로젝트 전체 `project_state.state_version`을 `base.state_version`에 보고합니다.
 - `tool_invocations` 재실행 행을 만들지 않습니다.
 
 거절과 `dry_run` 요청은 저장 효과가 없습니다.
@@ -57,7 +58,7 @@
 
 | 필드 | 결과 필드 의미 |
 |---|---|
-| `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 성공한 스테이징은 `base.response_kind=result`, `base.effect_kind=staging_created`, `base.state_version=null`, `events: []`를 사용합니다. |
+| `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 성공한 스테이징은 `base.response_kind=result`, `base.effect_kind=staging_created`, 호출이 관찰한 현재 프로젝트 전체 `project_state.state_version`을 담은 `base.state_version`, `events: []`를 사용합니다. |
 | `staged_artifact_handle` | 스테이징된 안전한 바이트 또는 안전한 알림에 대한 임시 `StagedArtifactHandle`입니다. 형태는 [API 아티팩트 스키마](schema-artifacts.md#stagedartifacthandle)가 담당합니다. |
 | `expires_at` | 임시 핸들의 만료 시각입니다. `staged_artifact_handle.expires_at`과 같은 값을 나타내며, 생명주기, 만료, 소비 세부사항은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다. |
 
@@ -69,6 +70,7 @@
 
 - `base.response_kind=result`
 - `base.effect_kind=staging_created`
+- 호출이 관찰한 현재 프로젝트 전체 버전으로 설정된 `base.state_version`
 - 임시 `staged_artifact_handle`
 - `expires_at`
 
@@ -143,7 +145,7 @@ base:
   response_kind: result
   effect_kind: staging_created
   dry_run: false
-  state_version: null
+  state_version: 42
   events: []
 staged_artifact_handle:
   handle_id: staged_trace_log_001
