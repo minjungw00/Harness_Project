@@ -173,7 +173,7 @@
 
 관련 저장 필드는 프로젝트 전체 시계를 기록합니다.
 
-- `write_authorizations.basis_state_version`은 Core가 권한을 준비할 때 사용한 `project_state.state_version`입니다.
+- `write_authorizations.basis_state_version`은 권한 생성 커밋 뒤 결과 `project_state.state_version`을 저장합니다. Core는 이 값을 나중에 `Write Authorization` 소비 최신성 판단의 근거로 사용합니다.
 - `tool_invocations.basis_state_version`은 호출이 커밋 전 관찰한 프로젝트 전체 상태 버전입니다.
 - `task_events.state_version`은 커밋된 이벤트 뒤의 결과 프로젝트 전체 버전입니다.
 
@@ -290,7 +290,8 @@
 - 프로젝트 전체 상태 버전 불일치에 쓰는 기준 범위의 유일한 공개 `ErrorCode`는 `STATE_VERSION_CONFLICT`입니다.
 - 기준 범위의 공개 호출은 둘 이상의 공개 `expected_state_version`을 요구하거나 받지 않습니다.
 - 이 불일치를 공개 API로 드러낼 때도 `STATE_VERSION_CONFLICT`를 사용합니다.
-- 오래된 `Write Authorization`인지 판단할 때는 `write_authorizations.basis_state_version`을 현재 `project_state.state_version`과 비교합니다.
+- 오래된 `Write Authorization`인지 판단할 때는 소비 직전에 `write_authorizations.basis_state_version`을 현재 `project_state.state_version`과 비교합니다.
+- 두 값이 다르면 오래된 권한 근거 충돌이므로 `STATE_VERSION_CONFLICT`를 반환하고 소비하지 않습니다.
 
 담당 문서 링크:
 

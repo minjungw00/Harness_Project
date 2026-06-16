@@ -78,6 +78,7 @@ Mutation conditions:
 
 - `dry_run=false` mutating intents require a non-null `idempotency_key` and current `expected_state_version`.
 - Stale `expected_state_version`, stale close-relevant `WriteAuthorization.basis_state_version`, or idempotency request-hash conflict is rejected before close readiness evaluation.
+- A close-relevant `WriteAuthorization.basis_state_version` is stale when it does not equal the current `project_state.state_version` at preflight.
 - A close-relevant `Write Authorization` freshness check does not record final acceptance, residual-risk acceptance, user-owned judgment, sensitive-action approval, or broad approval.
 
 Close condition:

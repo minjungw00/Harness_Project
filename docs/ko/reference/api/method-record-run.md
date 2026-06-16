@@ -59,8 +59,10 @@
 
 제품 쓰기 기록이 `Write Authorization`을 소비하려면 아래 조건을 모두 만족해야 합니다.
 
-- 현재 상태 버전이 `Write Authorization`의 근거 상태와 여전히 맞습니다.
+- 소비 직전 현재 `project_state.state_version`이 `WriteAuthorization.basis_state_version`과 같습니다.
 - 관찰된 변경 경로가 권한 부여된 시도와 호환됩니다.
+
+`harness.prepare_write`가 만든 `Write Authorization`은 사이에 다른 프로젝트 상태 변경이 없으면 생성 직후 오래되지 않습니다. 예를 들어 `harness.prepare_write`가 버전 `19`에서 버전 `20`으로 커밋하면 현재 `project_state.state_version`과 `WriteAuthorization.basis_state_version`이 모두 `20`인 동안 `harness.record_run`이 그 권한을 소비할 수 있습니다.
 
 오래된 `expected_state_version`과 오래된 `Write Authorization` 근거는 `Write Authorization`을 소비하기 전에 거절됩니다.
 
@@ -120,6 +122,8 @@
 비주장: 유효하지 않은 스테이징 핸들은 [API 오류 세부사항](error-details.md#artifact-input-error-reason)이 담당하는 아티팩트 입력 세부정보가 있는 검증 실패입니다. 요청 수준 로컬 접근 자체가 실패한 경우가 아니라면 로컬 접근 불일치가 아닙니다.
 
 공개 오류 코드 의미, 우선순위, 세부사항, 거절 응답 처리 경로는 아래 오류 담당 문서가 담당합니다.
+
+오래된 `Write Authorization` 근거에서는 소비 전에 거절되며 Run, 증거 갱신, 아티팩트 연결, 아티팩트 승격, 이벤트, 재실행 행, `project_state.state_version` 증가를 만들지 않습니다.
 
 ## `dry_run` 동작
 

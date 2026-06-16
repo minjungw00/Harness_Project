@@ -59,8 +59,10 @@ A compatible committed result increments `project_state.state_version` exactly o
 
 Product-write recording consumes the `Write Authorization` only when:
 
-- the current state version still matches the authorization basis
+- the current `project_state.state_version` equals `WriteAuthorization.basis_state_version` immediately before consumption
 - observed changed paths are compatible with the authorized attempt
+
+An authorization created by `harness.prepare_write` is not stale immediately after creation when no intervening project state change has occurred. If `harness.prepare_write` commits from version `19` to version `20`, `harness.record_run` may consume that authorization while the current `project_state.state_version` and `WriteAuthorization.basis_state_version` are both `20`.
 
 The method rejects stale `expected_state_version` and stale authorization basis before consuming the `Write Authorization`.
 
@@ -120,6 +122,8 @@ Returns `ToolRejectedResponse` for:
 Non-claim: invalid staged handles are validation failures with artifact-input details owned by [API error details](error-details.md#artifact-input-error-reason), not local access mismatch unless request-level local access itself failed.
 
 Public error code meaning, precedence, details, and rejected-response routing are owned by the error documents linked below.
+
+For a stale `Write Authorization` basis, rejection happens before consumption and creates no Run, evidence update, artifact link, artifact promotion, event, replay row, or `project_state.state_version` increment.
 
 ## Dry-run behavior
 

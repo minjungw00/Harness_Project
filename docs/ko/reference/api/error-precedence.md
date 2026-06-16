@@ -107,7 +107,7 @@
 ### 오래된 `Write Authorization` 근거 버전
 
 조건:
-- 소비 전 `WriteAuthorization.basis_state_version`이 오래된 상태입니다.
+- 소비 전에 `WriteAuthorization.basis_state_version`이 현재 `project_state.state_version`과 같지 않습니다.
 
 공개 오류 코드:
 - `STATE_VERSION_CONFLICT`
@@ -117,6 +117,7 @@
 
 소비 경계:
 - 오래된 `Write Authorization`은 소비되지 않습니다.
+- 거절된 시도는 소비 쪽 상태 변경을 만들지 않습니다.
 
 세부 필드:
 - [상태 충돌 세부 필드](error-details.md#state-conflict-detail-fields)를 사용합니다.

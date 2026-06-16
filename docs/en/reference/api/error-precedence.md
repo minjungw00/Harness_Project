@@ -108,7 +108,7 @@ Detail fields:
 ### Stale `Write Authorization` basis
 
 Condition:
-- `WriteAuthorization.basis_state_version` is stale before consumption.
+- Before consumption, `WriteAuthorization.basis_state_version` does not equal the current `project_state.state_version`.
 
 Public code:
 - `STATE_VERSION_CONFLICT`
@@ -118,6 +118,7 @@ Response path:
 
 Consumption boundary:
 - The stale `Write Authorization` is not consumed.
+- The rejected attempt creates no consumption-side state changes.
 
 Detail fields:
 - Use [State conflict detail fields](error-details.md#state-conflict-detail-fields).

@@ -192,6 +192,8 @@ This branch applies after the separate sensitive-action approval is already pres
 
 `uj_sensitive_pref_001` represents an existing resolved `judgment_kind=sensitive_approval` whose `SensitiveActionScope` matches the profile preference update. It is not ordinary write approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
 
+In this example, the request carries `expected_state_version: 19`; the allowed commit advances the project to `state_version: 20` and creates an active `Write Authorization` with `basis_state_version: 20`.
+
 ```yaml
 base:
   response_kind: result
@@ -242,7 +244,7 @@ state:
       project_id: proj_pref_001
       task_id: task_pref_001
       state_version: 20
-    basis_state_version: 19
+    basis_state_version: 20
     intended_paths:
       - src/preferences/profile-save.ts
       - src/preferences/profile-save.test.ts
@@ -282,7 +284,7 @@ write_authorization:
     sensitive_categories:
       - account_preference_update
     baseline_ref: baseline_pref_001
-  basis_state_version: 19
+  basis_state_version: 20
   expires_at: "<future-expiration-timestamp>"
 authorization_effect: created
 active_user_judgment_refs:

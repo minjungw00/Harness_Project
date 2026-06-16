@@ -50,8 +50,8 @@
 오래된 `expected_state_version` 세부사항:
 - 가능하면 `state_clock: project_state.state_version`, `current_state_version`, `expected_state_version`, `project_id`, `task_id`를 포함합니다.
 
-오래된 Write Authorization 근거 버전 세부사항:
-- 오래된 권한 부여 근거와 현재 `project_state.state_version`을 식별합니다.
+오래된 `Write Authorization` 근거 버전 세부사항:
+- 오래된 `WriteAuthorization.basis_state_version` 값과 현재 `project_state.state_version` 값을 모두 식별합니다.
 
 멱등 요청 해시 충돌 세부사항:
 - 민감한 요청 본문을 노출하지 않고 `idempotency_key`와 요청 해시 불일치를 식별합니다.

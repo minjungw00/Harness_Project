@@ -175,7 +175,7 @@ A non-baseline `tasks.state_version` column is ignored metadata only.
 
 Related storage fields record the project-wide clock:
 
-- `write_authorizations.basis_state_version` stores the `project_state.state_version` Core used when preparing the authorization.
+- `write_authorizations.basis_state_version` stores the resulting `project_state.state_version` after the authorization-creation commit. Core uses this value as the freshness basis for later `Write Authorization` consumption.
 - `tool_invocations.basis_state_version` stores the project-wide state version observed before the committed mutation.
 - `task_events.state_version` stores the resulting project-wide version after the committed event.
 
@@ -292,7 +292,8 @@ Contract boundary:
 - `STATE_VERSION_CONFLICT` is the only baseline public `ErrorCode` for project-wide state-version mismatch.
 - No baseline call requires or accepts more than one public `expected_state_version`.
 - When that mismatch is surfaced through the public API, the public error is also `STATE_VERSION_CONFLICT`.
-- Stale `Write Authorization` detection compares `write_authorizations.basis_state_version` with the current `project_state.state_version`.
+- Stale `Write Authorization` detection compares `write_authorizations.basis_state_version` with the current `project_state.state_version` immediately before consumption.
+- When those values differ, the stale authorization-basis conflict is `STATE_VERSION_CONFLICT` and consumption does not occur.
 
 Owner links:
 

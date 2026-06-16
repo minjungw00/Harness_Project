@@ -78,6 +78,7 @@ API 경계 블록:
 
 - `dry_run=false`인 상태 변경 `intent`에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - 오래된 `expected_state_version`, 오래된 닫기 관련 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌은 닫기 준비 상태 평가 전에 거절됩니다.
+- 닫기 관련 `WriteAuthorization.basis_state_version`은 사전 확인 시 현재 `project_state.state_version`과 같지 않을 때 오래된 값입니다.
 - 닫기 관련 `Write Authorization` 최신성 확인은 쓰기 호환성 확인일 뿐입니다. 최종 수락, 잔여 위험 수락, 사용자 소유 판단, 민감 동작 승인, 포괄적 승인을 기록하지 않습니다.
 
 닫기 조건:

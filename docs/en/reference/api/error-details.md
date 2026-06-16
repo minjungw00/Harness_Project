@@ -51,7 +51,7 @@ Stale `expected_state_version` details:
 - Include `state_clock: project_state.state_version`, `current_state_version`, `expected_state_version`, `project_id`, and `task_id` when available.
 
 Stale Write Authorization basis details:
-- Identify the stale authorization basis and current `project_state.state_version`.
+- Identify both the stale `WriteAuthorization.basis_state_version` value and the current `project_state.state_version` value.
 
 Idempotency request-hash conflict details:
 - Identify the `idempotency_key` and request-hash mismatch without exposing sensitive request bodies.

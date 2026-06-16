@@ -192,6 +192,8 @@ params:
 
 `uj_sensitive_pref_001`은 프로필 환경설정 갱신에 맞는 `SensitiveActionScope`를 가진 기존의 해결된 `judgment_kind=sensitive_approval`을 나타냅니다. 이는 일반 쓰기 승인, 최종 수락, 잔여 위험 수락, `Write Authorization`이 아닙니다.
 
+이 예시에서 요청은 `expected_state_version: 19`를 담습니다. 허용 커밋은 프로젝트 전체 상태를 `state_version: 20`으로 올리고, 권한 생성 커밋 뒤 결과 버전인 `basis_state_version: 20`을 가진 활성 `Write Authorization`을 만듭니다.
+
 ```yaml
 base:
   response_kind: result
@@ -242,7 +244,7 @@ state:
       project_id: proj_pref_001
       task_id: task_pref_001
       state_version: 20
-    basis_state_version: 19
+    basis_state_version: 20
     intended_paths:
       - src/preferences/profile-save.ts
       - src/preferences/profile-save.test.ts
@@ -282,7 +284,7 @@ write_authorization:
     sensitive_categories:
       - account_preference_update
     baseline_ref: baseline_pref_001
-  basis_state_version: 19
+  basis_state_version: 20
   expires_at: "<future-expiration-timestamp>"
 authorization_effect: created
 active_user_judgment_refs:
