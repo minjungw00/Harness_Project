@@ -367,12 +367,14 @@ Owner links:
 <a id="harnessprepare_write"></a>
 ### `harness.prepare_write`
 
-Committed `dry_run=false` with `decision=allowed` may:
+An original committed `dry_run=false` call with `decision=allowed` may:
 
-- create or return a compatible `status=active` `Write Authorization`
+- create a compatible `status=active` `Write Authorization`
 - append events
 - create a replay row
 - increment `project_state.state_version` once
+
+Idempotent replay returns the stored original response under [Storage Versioning](storage-versioning.md) and does not repeat these effects.
 
 Committed non-allowed decisions:
 

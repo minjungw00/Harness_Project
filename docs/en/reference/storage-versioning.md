@@ -378,8 +378,9 @@ Branches not stored:
 
 Retry behavior:
 
-- If the same `idempotency_key` and same `request_hash` are replayed, Core returns the original committed response.
-- Replay does not append events, promote or link artifacts, consume `Write Authorization`, or change state again.
+- If the same `idempotency_key` and same `request_hash` are replayed, Core returns the stored original committed response exactly.
+- Replay uses the stored response body; it does not recompute or reclassify `authorization_effect`, `base.state_version`, `base.events`, or any other response field.
+- Replay does not append events, promote or link artifacts, create or consume `Write Authorization`, create another replay row, or change state again.
 - If the same `idempotency_key` is reused with a different `request_hash`, Core returns `STATE_VERSION_CONFLICT` as defined by [state version conflict](api/error-precedence.md#state-conflict-behavior).
 
 Owner links:

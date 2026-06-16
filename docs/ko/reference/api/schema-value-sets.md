@@ -270,7 +270,6 @@ decision_required
 none
 would_create
 created
-returned
 ```
 
 `WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status`는 아래 값을 사용합니다.

@@ -270,7 +270,6 @@ decision_required
 none
 would_create
 created
-returned
 ```
 
 `WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` use:

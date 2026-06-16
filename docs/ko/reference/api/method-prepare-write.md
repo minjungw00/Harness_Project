@@ -71,8 +71,8 @@
 | `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 커밋된 `PrepareWriteResult` 분기는 `base.response_kind=result`와 `base.effect_kind=core_committed`를 사용합니다. `base.events[].event_kind`가 있을 때 그 값은 불투명한 예시용 분류 문자열입니다. |
 | `decision` | 이 쓰기 준비 시도에 대한 메서드 결정입니다. 지원되는 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. |
 | `state` | 이 결과가 상태 스냅샷을 포함할 때의 현재 `StateSummary`입니다. `write_authority_summary`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
-| `write_authorization_ref` | 허용 결정이 만들거나 반환한 소비 가능한 `Write Authorization`의 `StateRecordRef | null`입니다. 비허용 결정에서는 `null`입니다. |
-| `write_authorization` | 만들거나 반환한 `Write Authorization`의 `WriteAuthorizationSummary | null`입니다. 비허용 결정에서는 `null`입니다. |
+| `write_authorization_ref` | 허용 결정 결과에 포함되는 소비 가능한 `Write Authorization`의 `StateRecordRef | null`입니다. 새로 커밋된 허용 결정은 이를 만들고, 멱등 재실행은 이 필드를 바꾸지 않은 원래 커밋 응답을 반환합니다. 비허용 결정에서는 `null`입니다. |
+| `write_authorization` | 허용 결정 결과에 포함되는 `Write Authorization`의 `WriteAuthorizationSummary | null`입니다. 새로 커밋된 허용 결정은 이를 만들고, 멱등 재실행은 이 필드를 바꾸지 않은 원래 커밋 응답을 반환합니다. 비허용 결정에서는 `null`입니다. |
 | `authorization_effect` | `Write Authorization` 경로에 대한 메서드 결과 효과입니다. 지원되는 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. |
 | `active_user_judgment_refs` | 쓰기 준비 결정에 적용된 해결된 사용자 소유 판단의 `StateRecordRef[]`입니다. 일치하는 `sensitive_approval` 판단이 있으면 그 판단도 포함합니다. |
 | `write_decision_reasons` | 비허용 결정을 설명하는 `WriteDecisionReason[]`입니다. 형태는 [API 상태 스키마](schema-state.md#current-position-display-shapes)가 담당합니다. |
@@ -92,7 +92,8 @@
 
 - `write_authorization_ref`는 `null`이 아닙니다.
 - `write_authorization`은 `null`이 아닙니다.
-- `authorization_effect`는 새 커밋에서 `created`, 멱등 재실행에서 `returned`입니다.
+- `authorization_effect`는 새로 커밋된 `decision=allowed` 응답에서 `created`입니다.
+- 멱등 재실행은 저장된 원래 커밋 `PrepareWriteResult`를 그대로 반환합니다. `authorization_effect`, `base.state_version`, `base.events`나 다른 응답 필드를 다시 계산하거나 재분류하지 않으며, `Write Authorization`을 새로 만들거나 저장 효과를 반복하지 않습니다.
 - `Write Authorization`은 경로 수준 `AuthorizedAttemptScope`에 묶입니다.
 - `active_user_judgment_refs`는 별도 `sensitive_approval`을 포함해 쓰기 선행조건을 만족하는 해결된 사용자 소유 판단을 가리킬 수 있습니다.
 

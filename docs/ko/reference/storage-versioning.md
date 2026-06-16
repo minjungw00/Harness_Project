@@ -376,8 +376,9 @@
 
 재시도 동작:
 
-- 같은 `idempotency_key`와 같은 `request_hash`가 재실행되면 Core는 원래 커밋된 응답을 반환합니다.
-- 재실행은 이벤트, 아티팩트 승격 또는 연결, `Write Authorization` 소비, 상태 변경을 다시 만들지 않습니다.
+- 같은 `idempotency_key`와 같은 `request_hash`가 재실행되면 Core는 저장된 원래 커밋 응답을 그대로 반환합니다.
+- 재실행은 저장된 응답 본문을 사용하며, `authorization_effect`, `base.state_version`, `base.events`나 다른 응답 필드를 다시 계산하거나 재분류하지 않습니다.
+- 재실행은 이벤트를 추가하거나, 아티팩트를 승격 또는 연결하거나, `Write Authorization`을 새로 만들거나 소비하거나, 재실행 행을 추가로 만들거나, 상태를 다시 바꾸지 않습니다.
 - 같은 `idempotency_key`가 다른 `request_hash`로 재사용되면 Core는 [상태 버전 충돌](api/error-precedence.md#state-conflict-behavior)이 정의한 `STATE_VERSION_CONFLICT`를 반환합니다.
 
 담당 문서 링크:

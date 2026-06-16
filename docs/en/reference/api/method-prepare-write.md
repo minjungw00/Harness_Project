@@ -71,8 +71,8 @@ Requires:
 | `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Committed `PrepareWriteResult` branches use `base.response_kind=result` and `base.effect_kind=core_committed`. `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
 | `decision` | The method decision for this write-preparation attempt. Supported values are owned by [API Value Sets](schema-value-sets.md#method-local-values). |
 | `state` | Current `StateSummary` when this result includes a state snapshot. Nested state fields, including `write_authority_summary`, are owned by [API State Schemas](schema-state.md). |
-| `write_authorization_ref` | `StateRecordRef | null` for the consumable `Write Authorization` created or returned by an allowed decision. It is `null` for non-allow decisions. |
-| `write_authorization` | `WriteAuthorizationSummary | null` for the created or returned `Write Authorization`. It is `null` for non-allow decisions. |
+| `write_authorization_ref` | `StateRecordRef | null` for the consumable `Write Authorization` in an allowed decision result. A new allowed commit creates it; idempotent replay returns the stored original result without changing this field. It is `null` for non-allow decisions. |
+| `write_authorization` | `WriteAuthorizationSummary | null` for the `Write Authorization` in an allowed decision result. A new allowed commit creates it; idempotent replay returns the stored original result without changing this field. It is `null` for non-allow decisions. |
 | `authorization_effect` | Method result effect for the `Write Authorization` path. Supported values are owned by [API Value Sets](schema-value-sets.md#method-local-values). |
 | `active_user_judgment_refs` | `StateRecordRef[]` for resolved user-owned judgments applied to the write-preparation decision, including matching `sensitive_approval` judgments when present. |
 | `write_decision_reasons` | `WriteDecisionReason[]` explaining non-allow decisions. The shape is owned by [API State Schemas](schema-state.md#current-position-display-shapes). |
@@ -92,7 +92,8 @@ For `decision=allowed`:
 
 - `write_authorization_ref` is non-null
 - `write_authorization` is non-null
-- `authorization_effect` is `created` for a new commit or `returned` for an idempotent replay
+- `authorization_effect` is `created` for a new committed `decision=allowed` response
+- idempotent replay returns the stored original committed `PrepareWriteResult` exactly; it does not recompute or reclassify `authorization_effect`, `base.state_version`, `base.events`, or any other response field, and it does not create another `Write Authorization` or repeat the storage effect
 - the authorization is scoped to the path-level `AuthorizedAttemptScope`
 - `active_user_judgment_refs` may cite resolved user-owned judgments that satisfy write preconditions, including a separate `sensitive_approval`
 
