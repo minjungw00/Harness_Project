@@ -9,7 +9,7 @@
 이 문서가 담당합니다.
 
 - 오류를 담는 분기의 주 `errors[0]` 선택 순서.
-- `STATE_VERSION_CONFLICT`를 결과 코드와 차단 사유 코드 경로에서 제외하는 규칙.
+- `STATE_VERSION_CONFLICT`의 결과 쪽 및 차단 사유 코드 경로 경계.
 - 오래된 공개 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌 동작.
 
 이웃 담당 문서:
@@ -56,10 +56,10 @@
 | <a id="precedence-validator-failed"></a>24 | `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](error-codes.md#errorcode-validator-failed) |
 
 <a id="state-version-conflict-precedence-exclusion"></a>
-### `STATE_VERSION_CONFLICT` 우선순위 제외
+### `STATE_VERSION_CONFLICT` 선택 경계
 
 선택 조건:
-- 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌 때문에 메서드가 진행될 수 없어 거부 응답이 선택됩니다.
+- 오래된 `expected_state_version`, 오래된 `WriteAuthorization.basis_state_version`, 멱등 요청 해시 충돌 때문에 메서드가 진행될 수 없으면 거부 응답에서 `STATE_VERSION_CONFLICT`가 선택됩니다.
 
 선택 경계:
 - 이 충돌은 `ToolRejectedResponse.errors[]`로 표현하며, `MethodResult`나 `CloseTaskResult(close_state=blocked)` 분기를 만들지 않습니다. `STATE_VERSION_CONFLICT`를 결과 쪽 판단, 차단 사유 코드, 닫기 차단 사유 코드, 미리보기 차단 사유 코드로 모델링하지 않으며, 여기에는 `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, `PlannedBlocker.code`가 포함됩니다.

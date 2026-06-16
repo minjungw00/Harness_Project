@@ -9,7 +9,7 @@ Use it to choose the primary public code for an error-bearing branch. Use adjace
 Owned here:
 
 - The primary `errors[0]` selection order for error-bearing branches.
-- The `STATE_VERSION_CONFLICT` exclusion from result and blocker code paths.
+- The result-side and blocker-code path boundary for `STATE_VERSION_CONFLICT`.
 - Public stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, and idempotency request-hash conflict behavior.
 
 Adjacent owners:
@@ -56,10 +56,10 @@ When an error-bearing branch has non-empty `errors`, `errors[0]` is the primary 
 | <a id="precedence-validator-failed"></a>24 | `VALIDATOR_FAILED` | [`VALIDATOR_FAILED`](error-codes.md#errorcode-validator-failed) |
 
 <a id="state-version-conflict-precedence-exclusion"></a>
-### `STATE_VERSION_CONFLICT` precedence exclusion
+### `STATE_VERSION_CONFLICT` selection boundary
 
 Selection condition:
-- A rejected response is selected because a stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, or idempotency request-hash conflict prevents the method from proceeding.
+- A rejected response selects `STATE_VERSION_CONFLICT` when a stale `expected_state_version`, stale `WriteAuthorization.basis_state_version`, or idempotency request-hash conflict prevents the method from proceeding.
 
 Selection boundary:
 - Represent these conflicts through `ToolRejectedResponse.errors[]`; they do not produce a `MethodResult` or `CloseTaskResult(close_state=blocked)` branch. Do not model `STATE_VERSION_CONFLICT` as a result-side decision, blocker code, close-readiness blocker code, or planned blocker code, including `WriteDecisionReason.code`, `CloseReadinessBlocker.code`, or `PlannedBlocker.code`.
