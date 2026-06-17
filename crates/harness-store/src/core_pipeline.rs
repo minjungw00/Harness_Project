@@ -49,6 +49,64 @@ pub struct PendingTaskEvent {
     pub event_payload_json: String,
 }
 
+/// Storage-level mutation applied inside one Core commit transaction.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CoreStorageMutation {
+    InsertTask(TaskInsert),
+    SetActiveTask { task_id: String },
+    SupersedeTask { task_id: String },
+    UpdateTaskScope(TaskScopeUpdate),
+    InsertCurrentChangeUnit(ChangeUnitInsert),
+    ReplaceCurrentChangeUnit(ChangeUnitInsert),
+    MarkActiveWriteAuthorizationsStale { task_id: String },
+}
+
+/// Storage input for inserting a Task current row.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskInsert {
+    pub task_id: String,
+    pub created_by_surface_id: String,
+    pub created_by_surface_instance_id: String,
+    pub mode: String,
+    pub lifecycle_phase: String,
+    pub result: Option<String>,
+    pub title: Option<String>,
+    pub summary: Option<String>,
+    pub shaping_summary_json: String,
+    pub bounded_context_json: String,
+    pub autonomy_boundary_json: String,
+    pub close_summary_json: String,
+    pub completion_policy_json: String,
+    pub current_change_unit_id: Option<String>,
+}
+
+/// Storage input for updating Task scope-shaped current fields.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskScopeUpdate {
+    pub task_id: String,
+    pub lifecycle_phase: Option<String>,
+    pub result: Option<String>,
+    pub title: Option<String>,
+    pub summary: Option<String>,
+    pub shaping_summary_json: Option<String>,
+    pub bounded_context_json: Option<String>,
+    pub autonomy_boundary_json: Option<String>,
+    pub close_summary_json: Option<String>,
+    pub completion_policy_json: Option<String>,
+}
+
+/// Storage input for inserting a current Change Unit.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChangeUnitInsert {
+    pub change_unit_id: String,
+    pub task_id: String,
+    pub scope_summary_json: String,
+    pub bounded_paths_json: String,
+    pub write_basis_json: String,
+    pub close_basis_json: String,
+    pub lifecycle_json: String,
+}
+
 /// Event reference facts created by an atomic mutation commit.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CommittedEventRef {
@@ -106,6 +164,7 @@ pub enum MutationCommitOutcome {
 pub struct StorageEffectCounts {
     pub state_version: u64,
     pub tasks: u64,
+    pub change_units: u64,
     pub task_events: u64,
     pub tool_invocations: u64,
     pub user_judgments: u64,
@@ -114,6 +173,70 @@ pub struct StorageEffectCounts {
     pub artifact_staging: u64,
     pub artifacts: u64,
     pub blockers: u64,
+}
+
+/// Current Task row data needed by Core method implementations.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskRecord {
+    pub project_id: String,
+    pub task_id: String,
+    pub mode: String,
+    pub lifecycle_phase: String,
+    pub result: Option<String>,
+    pub title: Option<String>,
+    pub summary: Option<String>,
+    pub shaping_summary_json: String,
+    pub bounded_context_json: String,
+    pub autonomy_boundary_json: String,
+    pub close_summary_json: String,
+    pub completion_policy_json: String,
+    pub current_change_unit_id: Option<String>,
+    pub closed_at: Option<String>,
+}
+
+/// Current Change Unit row data needed by Core method implementations.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChangeUnitRecord {
+    pub project_id: String,
+    pub change_unit_id: String,
+    pub task_id: String,
+    pub status: String,
+    pub is_current: bool,
+    pub basis_state_version: Option<u64>,
+    pub scope_summary_json: String,
+    pub bounded_paths_json: String,
+    pub write_basis_json: String,
+    pub close_basis_json: String,
+    pub lifecycle_json: String,
+}
+
+/// Stored Write Authorization facts needed by status and stale-marking responses.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WriteAuthorizationRecord {
+    pub project_id: String,
+    pub write_authorization_id: String,
+    pub task_id: String,
+    pub change_unit_id: Option<String>,
+    pub basis_state_version: u64,
+    pub status: String,
+    pub attempt_scope_json: String,
+    pub expires_at: String,
+}
+
+/// Public record reference facts read from storage rows.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StoredRecordRef {
+    pub record_kind: String,
+    pub record_id: String,
+    pub project_id: String,
+    pub task_id: Option<String>,
+    pub state_version: Option<u64>,
+}
+
+/// Storage mutation handle scoped to a single committed transaction.
+pub struct ProjectMutation<'tx> {
+    project_id: &'tx str,
+    tx: &'tx Transaction<'tx>,
 }
 
 impl CoreProjectStore {
@@ -204,6 +327,75 @@ impl CoreProjectStore {
             .map_err(StoreError::from)
     }
 
+    /// Reads one Task current row.
+    pub fn task_record(&self, task_id: &TaskId) -> StoreResult<Option<TaskRecord>> {
+        task_record(&self.conn, &self.project.project_id, task_id.as_str())
+    }
+
+    /// Reads the current active Task row, when `project_state.active_task_id` is set.
+    pub fn active_task_record(&self) -> StoreResult<Option<TaskRecord>> {
+        let state = self.project_state()?;
+        match state.active_task_id {
+            Some(task_id) => task_record(&self.conn, &self.project.project_id, &task_id),
+            None => Ok(None),
+        }
+    }
+
+    /// Reads the current active Change Unit row for a Task.
+    pub fn current_change_unit(&self, task_id: &TaskId) -> StoreResult<Option<ChangeUnitRecord>> {
+        current_change_unit(&self.conn, &self.project.project_id, task_id.as_str())
+    }
+
+    /// Lists active Write Authorizations for a Task.
+    pub fn active_write_authorizations(
+        &self,
+        task_id: &TaskId,
+    ) -> StoreResult<Vec<WriteAuthorizationRecord>> {
+        active_write_authorizations(&self.conn, &self.project.project_id, task_id.as_str())
+    }
+
+    /// Lists pending user-judgment refs for a Task.
+    pub fn pending_user_judgment_refs(
+        &self,
+        task_id: &TaskId,
+        state_version: u64,
+    ) -> StoreResult<Vec<StoredRecordRef>> {
+        task_scoped_refs(
+            &self.conn,
+            RefQuery {
+                project_id: &self.project.project_id,
+                table: "user_judgments",
+                id_column: "judgment_id",
+                record_kind: "user_judgment",
+                task_id: task_id.as_str(),
+                status_column: "status",
+                status_value: "pending",
+                state_version,
+            },
+        )
+    }
+
+    /// Lists active blocker refs for a Task.
+    pub fn active_blocker_refs(
+        &self,
+        task_id: &TaskId,
+        state_version: u64,
+    ) -> StoreResult<Vec<StoredRecordRef>> {
+        task_scoped_refs(
+            &self.conn,
+            RefQuery {
+                project_id: &self.project.project_id,
+                table: "blockers",
+                id_column: "blocker_id",
+                record_kind: "blocker",
+                task_id: task_id.as_str(),
+                status_column: "status",
+                status_value: "active",
+                state_version,
+            },
+        )
+    }
+
     /// Reads a committed replay row without creating storage effects.
     pub fn tool_invocation(
         &self,
@@ -224,6 +416,7 @@ impl CoreProjectStore {
         Ok(StorageEffectCounts {
             state_version: state.state_version,
             tasks: table_count(&self.conn, "tasks", &self.project.project_id)?,
+            change_units: table_count(&self.conn, "change_units", &self.project.project_id)?,
             task_events: table_count(&self.conn, "task_events", &self.project.project_id)?,
             tool_invocations: table_count(
                 &self.conn,
@@ -255,6 +448,10 @@ impl CoreProjectStore {
     pub fn commit_mutation(
         &mut self,
         input: CommitMutationInput,
+        apply_mutation: impl FnOnce(
+            &mut ProjectMutation<'_>,
+            &CommittedMutationFacts,
+        ) -> StoreResult<()>,
         build_response_json: impl FnOnce(CommittedMutationFacts) -> StoreResult<String>,
     ) -> StoreResult<MutationCommitOutcome> {
         if input.project_id != self.project.project_id {
@@ -342,8 +539,26 @@ impl CoreProjectStore {
             });
         }
 
+        let committed_events = input
+            .events
+            .iter()
+            .map(|event| CommittedEventRef {
+                event_id: event.event_id.clone(),
+                event_kind: event.event_kind.clone(),
+            })
+            .collect::<Vec<_>>();
+        let facts = CommittedMutationFacts {
+            basis_state_version: current.state_version,
+            committed_state_version,
+            events: committed_events.clone(),
+        };
+        let mut mutation = ProjectMutation {
+            project_id: &self.project.project_id,
+            tx: &tx,
+        };
+        apply_mutation(&mut mutation, &facts)?;
+
         let first_event_seq = next_event_seq(&tx, &self.project.project_id)?;
-        let mut committed_events = Vec::with_capacity(input.events.len());
         for (index, event) in input.events.iter().enumerate() {
             let event_seq = first_event_seq
                 + i64::try_from(index).map_err(|_| StoreError::InvalidInput {
@@ -383,17 +598,8 @@ impl CoreProjectStore {
                     event.event_payload_json
                 ],
             )?;
-            committed_events.push(CommittedEventRef {
-                event_id: event.event_id.clone(),
-                event_kind: event.event_kind.clone(),
-            });
         }
 
-        let facts = CommittedMutationFacts {
-            basis_state_version: current.state_version,
-            committed_state_version,
-            events: committed_events.clone(),
-        };
         let response_json = build_response_json(facts)?;
         validate_json_text("tool_invocations.response_json", &response_json)?;
 
@@ -460,6 +666,398 @@ pub fn commit_input(
     }
 }
 
+impl CoreStorageMutation {
+    /// Applies this storage mutation inside the active Core commit transaction.
+    pub fn apply(
+        &self,
+        mutation: &mut ProjectMutation<'_>,
+        committed_state_version: u64,
+    ) -> StoreResult<()> {
+        match self {
+            Self::InsertTask(input) => mutation.insert_task(input),
+            Self::SetActiveTask { task_id } => mutation.set_active_task(task_id),
+            Self::SupersedeTask { task_id } => mutation.supersede_task(task_id),
+            Self::UpdateTaskScope(input) => mutation.update_task_scope(input),
+            Self::InsertCurrentChangeUnit(input) => {
+                mutation.insert_current_change_unit(input, committed_state_version)
+            }
+            Self::ReplaceCurrentChangeUnit(input) => {
+                mutation.replace_current_change_unit(input, committed_state_version)
+            }
+            Self::MarkActiveWriteAuthorizationsStale { task_id } => {
+                mutation.mark_active_write_authorizations_stale(task_id)
+            }
+        }
+    }
+}
+
+impl ProjectMutation<'_> {
+    fn insert_task(&mut self, input: &TaskInsert) -> StoreResult<()> {
+        validate_identifier("task_id", &input.task_id)?;
+        validate_identifier("created_by_surface_id", &input.created_by_surface_id)?;
+        validate_identifier(
+            "created_by_surface_instance_id",
+            &input.created_by_surface_instance_id,
+        )?;
+        validate_identifier("mode", &input.mode)?;
+        validate_identifier("lifecycle_phase", &input.lifecycle_phase)?;
+        validate_json_text("tasks.shaping_summary_json", &input.shaping_summary_json)?;
+        validate_json_text("tasks.bounded_context_json", &input.bounded_context_json)?;
+        validate_json_text(
+            "tasks.autonomy_boundary_json",
+            &input.autonomy_boundary_json,
+        )?;
+        validate_json_text("tasks.close_summary_json", &input.close_summary_json)?;
+        validate_json_text(
+            "tasks.completion_policy_json",
+            &input.completion_policy_json,
+        )?;
+
+        self.tx.execute(
+            "INSERT INTO tasks (
+                project_id,
+                task_id,
+                created_by_surface_id,
+                created_by_surface_instance_id,
+                mode,
+                lifecycle_phase,
+                result,
+                title,
+                summary,
+                shaping_summary_json,
+                bounded_context_json,
+                autonomy_boundary_json,
+                close_summary_json,
+                completion_policy_json,
+                current_change_unit_id,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                ?4,
+                ?5,
+                ?6,
+                ?7,
+                ?8,
+                ?9,
+                ?10,
+                ?11,
+                ?12,
+                ?13,
+                ?14,
+                ?15,
+                strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+            )",
+            params![
+                self.project_id,
+                input.task_id,
+                input.created_by_surface_id,
+                input.created_by_surface_instance_id,
+                input.mode,
+                input.lifecycle_phase,
+                input.result,
+                input.title,
+                input.summary,
+                input.shaping_summary_json,
+                input.bounded_context_json,
+                input.autonomy_boundary_json,
+                input.close_summary_json,
+                input.completion_policy_json,
+                input.current_change_unit_id
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn set_active_task(&mut self, task_id: &str) -> StoreResult<()> {
+        validate_identifier("task_id", task_id)?;
+        let changed = self.tx.execute(
+            "UPDATE project_state
+                SET active_task_id = ?2,
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+              WHERE project_id = ?1",
+            params![self.project_id, task_id],
+        )?;
+        if changed == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::SchemaInvariant {
+                database_kind: "project_state",
+                detail: "active Task update changed no rows".to_owned(),
+            })
+        }
+    }
+
+    fn supersede_task(&mut self, task_id: &str) -> StoreResult<()> {
+        validate_identifier("task_id", task_id)?;
+        self.tx.execute(
+            "UPDATE tasks
+                SET lifecycle_phase = 'superseded',
+                    result = 'superseded',
+                    close_summary_json = '{\"close_reason\":\"superseded\"}',
+                    closed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+              WHERE project_id = ?1
+                AND task_id = ?2",
+            params![self.project_id, task_id],
+        )?;
+        Ok(())
+    }
+
+    fn update_task_scope(&mut self, input: &TaskScopeUpdate) -> StoreResult<()> {
+        validate_identifier("task_id", &input.task_id)?;
+        if let Some(value) = &input.shaping_summary_json {
+            validate_json_text("tasks.shaping_summary_json", value)?;
+            self.update_task_text_column(&input.task_id, "shaping_summary_json", value)?;
+        }
+        if let Some(value) = &input.bounded_context_json {
+            validate_json_text("tasks.bounded_context_json", value)?;
+            self.update_task_text_column(&input.task_id, "bounded_context_json", value)?;
+        }
+        if let Some(value) = &input.autonomy_boundary_json {
+            validate_json_text("tasks.autonomy_boundary_json", value)?;
+            self.update_task_text_column(&input.task_id, "autonomy_boundary_json", value)?;
+        }
+        if let Some(value) = &input.close_summary_json {
+            validate_json_text("tasks.close_summary_json", value)?;
+            self.update_task_text_column(&input.task_id, "close_summary_json", value)?;
+        }
+        if let Some(value) = &input.completion_policy_json {
+            validate_json_text("tasks.completion_policy_json", value)?;
+            self.update_task_text_column(&input.task_id, "completion_policy_json", value)?;
+        }
+        if let Some(value) = &input.lifecycle_phase {
+            validate_identifier("lifecycle_phase", value)?;
+            self.update_task_text_column(&input.task_id, "lifecycle_phase", value)?;
+        }
+        if let Some(value) = &input.result {
+            validate_identifier("result", value)?;
+            self.update_task_text_column(&input.task_id, "result", value)?;
+        }
+        if let Some(value) = &input.title {
+            self.update_task_nullable_text_column(&input.task_id, "title", Some(value))?;
+        }
+        if let Some(value) = &input.summary {
+            self.update_task_nullable_text_column(&input.task_id, "summary", Some(value))?;
+        }
+        Ok(())
+    }
+
+    fn insert_current_change_unit(
+        &mut self,
+        input: &ChangeUnitInsert,
+        committed_state_version: u64,
+    ) -> StoreResult<()> {
+        self.insert_change_unit(input, committed_state_version)?;
+        self.set_task_current_change_unit(&input.task_id, Some(&input.change_unit_id))
+    }
+
+    fn replace_current_change_unit(
+        &mut self,
+        input: &ChangeUnitInsert,
+        committed_state_version: u64,
+    ) -> StoreResult<()> {
+        validate_identifier("task_id", &input.task_id)?;
+        self.tx.execute(
+            "UPDATE change_units
+                SET status = 'replaced',
+                    is_current = 0,
+                    closed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+              WHERE project_id = ?1
+                AND task_id = ?2
+                AND status = 'active'
+                AND is_current = 1",
+            params![self.project_id, input.task_id],
+        )?;
+        self.insert_current_change_unit(input, committed_state_version)
+    }
+
+    fn insert_change_unit(
+        &mut self,
+        input: &ChangeUnitInsert,
+        committed_state_version: u64,
+    ) -> StoreResult<()> {
+        validate_identifier("change_unit_id", &input.change_unit_id)?;
+        validate_identifier("task_id", &input.task_id)?;
+        validate_json_text("change_units.scope_summary_json", &input.scope_summary_json)?;
+        validate_json_text("change_units.bounded_paths_json", &input.bounded_paths_json)?;
+        validate_json_text("change_units.write_basis_json", &input.write_basis_json)?;
+        validate_json_text("change_units.close_basis_json", &input.close_basis_json)?;
+        validate_json_text("change_units.lifecycle_json", &input.lifecycle_json)?;
+        let basis_state_version = u64_to_i64("basis_state_version", committed_state_version)?;
+
+        self.tx.execute(
+            "INSERT INTO change_units (
+                project_id,
+                change_unit_id,
+                task_id,
+                status,
+                is_current,
+                basis_state_version,
+                scope_summary_json,
+                bounded_paths_json,
+                write_basis_json,
+                close_basis_json,
+                lifecycle_json,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                'active',
+                1,
+                ?4,
+                ?5,
+                ?6,
+                ?7,
+                ?8,
+                ?9,
+                strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+            )",
+            params![
+                self.project_id,
+                input.change_unit_id,
+                input.task_id,
+                basis_state_version,
+                input.scope_summary_json,
+                input.bounded_paths_json,
+                input.write_basis_json,
+                input.close_basis_json,
+                input.lifecycle_json
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn set_task_current_change_unit(
+        &mut self,
+        task_id: &str,
+        change_unit_id: Option<&str>,
+    ) -> StoreResult<()> {
+        validate_identifier("task_id", task_id)?;
+        let changed = self.tx.execute(
+            "UPDATE tasks
+                SET current_change_unit_id = ?3,
+                    lifecycle_phase = CASE
+                        WHEN ?3 IS NULL THEN lifecycle_phase
+                        ELSE 'ready'
+                    END,
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+              WHERE project_id = ?1
+                AND task_id = ?2",
+            params![self.project_id, task_id, change_unit_id],
+        )?;
+        if changed == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::SchemaInvariant {
+                database_kind: "project_state",
+                detail: "Task current Change Unit update changed no rows".to_owned(),
+            })
+        }
+    }
+
+    fn mark_active_write_authorizations_stale(&mut self, task_id: &str) -> StoreResult<()> {
+        validate_identifier("task_id", task_id)?;
+        self.tx.execute(
+            "UPDATE write_authorizations
+                SET status = 'stale'
+              WHERE project_id = ?1
+                AND task_id = ?2
+                AND status = 'active'",
+            params![self.project_id, task_id],
+        )?;
+        Ok(())
+    }
+
+    fn update_task_text_column(
+        &mut self,
+        task_id: &str,
+        column: &'static str,
+        value: &str,
+    ) -> StoreResult<()> {
+        let sql = match column {
+            "shaping_summary_json" => {
+                "UPDATE tasks SET shaping_summary_json = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            "bounded_context_json" => {
+                "UPDATE tasks SET bounded_context_json = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            "autonomy_boundary_json" => {
+                "UPDATE tasks SET autonomy_boundary_json = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            "close_summary_json" => {
+                "UPDATE tasks SET close_summary_json = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            "completion_policy_json" => {
+                "UPDATE tasks SET completion_policy_json = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            "lifecycle_phase" => {
+                "UPDATE tasks SET lifecycle_phase = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            "result" => {
+                "UPDATE tasks SET result = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            _ => {
+                return Err(StoreError::InvalidInput {
+                    detail: format!("unsupported Task text column {column}"),
+                })
+            }
+        };
+        let changed = self
+            .tx
+            .execute(sql, params![self.project_id, task_id, value])?;
+        if changed == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::SchemaInvariant {
+                database_kind: "project_state",
+                detail: format!("Task column {column} update changed no rows"),
+            })
+        }
+    }
+
+    fn update_task_nullable_text_column(
+        &mut self,
+        task_id: &str,
+        column: &'static str,
+        value: Option<&str>,
+    ) -> StoreResult<()> {
+        let sql = match column {
+            "title" => {
+                "UPDATE tasks SET title = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            "summary" => {
+                "UPDATE tasks SET summary = ?3, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE project_id = ?1 AND task_id = ?2"
+            }
+            _ => {
+                return Err(StoreError::InvalidInput {
+                    detail: format!("unsupported nullable Task column {column}"),
+                })
+            }
+        };
+        let changed = self
+            .tx
+            .execute(sql, params![self.project_id, task_id, value])?;
+        if changed == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::SchemaInvariant {
+                database_kind: "project_state",
+                detail: format!("Task column {column} update changed no rows"),
+            })
+        }
+    }
+}
+
 fn read_project_state(conn: &Connection, project_id: &str) -> StoreResult<ProjectStateHeader> {
     conn.query_row(
         "SELECT
@@ -478,6 +1076,202 @@ fn read_project_state(conn: &Connection, project_id: &str) -> StoreResult<Projec
         entity: "project_state",
         id: project_id.to_owned(),
     })
+}
+
+fn task_record(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+) -> StoreResult<Option<TaskRecord>> {
+    conn.query_row(
+        "SELECT
+            project_id,
+            task_id,
+            mode,
+            lifecycle_phase,
+            result,
+            title,
+            summary,
+            shaping_summary_json,
+            bounded_context_json,
+            autonomy_boundary_json,
+            close_summary_json,
+            completion_policy_json,
+            current_change_unit_id,
+            closed_at
+         FROM tasks
+         WHERE project_id = ?1
+           AND task_id = ?2",
+        params![project_id, task_id],
+        task_record_from_row,
+    )
+    .optional()
+    .map_err(StoreError::from)
+}
+
+fn task_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<TaskRecord> {
+    Ok(TaskRecord {
+        project_id: row.get(0)?,
+        task_id: row.get(1)?,
+        mode: row.get(2)?,
+        lifecycle_phase: row.get(3)?,
+        result: row.get(4)?,
+        title: row.get(5)?,
+        summary: row.get(6)?,
+        shaping_summary_json: row.get(7)?,
+        bounded_context_json: row.get(8)?,
+        autonomy_boundary_json: row.get(9)?,
+        close_summary_json: row.get(10)?,
+        completion_policy_json: row.get(11)?,
+        current_change_unit_id: row.get(12)?,
+        closed_at: row.get(13)?,
+    })
+}
+
+fn current_change_unit(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+) -> StoreResult<Option<ChangeUnitRecord>> {
+    conn.query_row(
+        "SELECT
+            project_id,
+            change_unit_id,
+            task_id,
+            status,
+            is_current,
+            basis_state_version,
+            scope_summary_json,
+            bounded_paths_json,
+            write_basis_json,
+            close_basis_json,
+            lifecycle_json
+         FROM change_units
+         WHERE project_id = ?1
+           AND task_id = ?2
+           AND status = 'active'
+           AND is_current = 1",
+        params![project_id, task_id],
+        change_unit_record_from_row,
+    )
+    .optional()
+    .map_err(StoreError::from)
+}
+
+fn change_unit_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ChangeUnitRecord> {
+    let is_current = row.get::<_, i64>(4)? == 1;
+    let basis_state_version = match row.get::<_, Option<i64>>(5)? {
+        Some(value) => Some(nonnegative_i64_to_u64(
+            "change_units.basis_state_version",
+            value,
+        )?),
+        None => None,
+    };
+    Ok(ChangeUnitRecord {
+        project_id: row.get(0)?,
+        change_unit_id: row.get(1)?,
+        task_id: row.get(2)?,
+        status: row.get(3)?,
+        is_current,
+        basis_state_version,
+        scope_summary_json: row.get(6)?,
+        bounded_paths_json: row.get(7)?,
+        write_basis_json: row.get(8)?,
+        close_basis_json: row.get(9)?,
+        lifecycle_json: row.get(10)?,
+    })
+}
+
+fn active_write_authorizations(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+) -> StoreResult<Vec<WriteAuthorizationRecord>> {
+    let mut stmt = conn.prepare(
+        "SELECT
+            project_id,
+            write_authorization_id,
+            task_id,
+            change_unit_id,
+            basis_state_version,
+            status,
+            attempt_scope_json,
+            expires_at
+         FROM write_authorizations
+         WHERE project_id = ?1
+           AND task_id = ?2
+           AND status = 'active'
+         ORDER BY write_authorization_id",
+    )?;
+    let rows = stmt.query_map(
+        params![project_id, task_id],
+        write_authorization_record_from_row,
+    )?;
+    let mut records = Vec::new();
+    for row in rows {
+        records.push(row?);
+    }
+    Ok(records)
+}
+
+fn write_authorization_record_from_row(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<WriteAuthorizationRecord> {
+    let basis_state_version = row.get::<_, i64>(4)?;
+    Ok(WriteAuthorizationRecord {
+        project_id: row.get(0)?,
+        write_authorization_id: row.get(1)?,
+        task_id: row.get(2)?,
+        change_unit_id: row.get(3)?,
+        basis_state_version: nonnegative_i64_to_u64(
+            "write_authorizations.basis_state_version",
+            basis_state_version,
+        )?,
+        status: row.get(5)?,
+        attempt_scope_json: row.get(6)?,
+        expires_at: row.get(7)?,
+    })
+}
+
+struct RefQuery<'a> {
+    project_id: &'a str,
+    table: &'static str,
+    id_column: &'static str,
+    record_kind: &'static str,
+    task_id: &'a str,
+    status_column: &'static str,
+    status_value: &'static str,
+    state_version: u64,
+}
+
+fn task_scoped_refs(conn: &Connection, query: RefQuery<'_>) -> StoreResult<Vec<StoredRecordRef>> {
+    let table = escape_sql_identifier(query.table);
+    let id_column = escape_sql_identifier(query.id_column);
+    let status_column = escape_sql_identifier(query.status_column);
+    let sql = format!(
+        "SELECT {id_column}
+           FROM {table}
+          WHERE project_id = ?1
+            AND task_id = ?2
+            AND {status_column} = ?3
+          ORDER BY {id_column}"
+    );
+    let mut stmt = conn.prepare(&sql)?;
+    let rows = stmt.query_map(
+        params![query.project_id, query.task_id, query.status_value],
+        |row| row.get::<_, String>(0),
+    )?;
+    let mut refs = Vec::new();
+    for row in rows {
+        refs.push(StoredRecordRef {
+            record_kind: query.record_kind.to_owned(),
+            record_id: row?,
+            project_id: query.project_id.to_owned(),
+            task_id: Some(query.task_id.to_owned()),
+            state_version: Some(query.state_version),
+        });
+    }
+    Ok(refs)
 }
 
 fn read_project_state_tx(
@@ -663,6 +1457,10 @@ fn table_count(conn: &Connection, table: &str, project_id: &str) -> StoreResult<
     let sql = format!("SELECT COUNT(*) FROM \"{escaped_table}\" WHERE project_id = ?1");
     let count: i64 = conn.query_row(&sql, params![project_id], |row| row.get(0))?;
     nonnegative_i64_to_u64("table count", count).map_err(StoreError::from)
+}
+
+fn escape_sql_identifier(identifier: &str) -> String {
+    format!("\"{}\"", identifier.replace('"', "\"\""))
 }
 
 fn validate_pending_event(event: &PendingTaskEvent) -> StoreResult<()> {

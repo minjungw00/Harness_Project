@@ -11,6 +11,7 @@ serde_json = "1"
 
 [dev-dependencies]
 harness-test-support = { path = "../harness-test-support" }
+rusqlite = { version = "0.32", features = ["bundled"] }
 
 [lib]
 path = "src/lib.rs"

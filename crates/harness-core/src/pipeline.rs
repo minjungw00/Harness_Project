@@ -7,15 +7,15 @@ use std::{
 use harness_store::{
     core_pipeline::{
         commit_input, CommitMutationInput, CommittedEventRef, CoreProjectStore,
-        MutationCommitOutcome, PendingTaskEvent, ProjectStateHeader,
+        CoreStorageMutation, MutationCommitOutcome, PendingTaskEvent, ProjectStateHeader,
     },
     StoreError,
 };
 use harness_types::{
-    canonical_request_hash, AccessClass, DryRunSummary, EffectKind, ErrorCode, EventId, EventRef,
-    IdempotencyKey, JsonObject, MethodName, ProjectId, RequestHash, ResponseKind, SurfaceId,
-    SurfaceInstanceId, TaskId, ToolDryRunResponse, ToolEnvelope, ToolError, ToolRejectedResponse,
-    ToolResultBase,
+    canonical_request_hash, AccessClass, ChangeUnitId, DryRunSummary, EffectKind, ErrorCode,
+    EventId, EventRef, IdempotencyKey, JsonObject, MethodName, ProjectId, RequestHash,
+    ResponseKind, SurfaceId, SurfaceInstanceId, TaskId, ToolDryRunResponse, ToolEnvelope,
+    ToolError, ToolRejectedResponse, ToolResultBase,
 };
 use serde_json::{Map, Value};
 
@@ -104,6 +104,9 @@ pub enum OwnerPipelineBranch {
         result_fields: JsonObject,
         event_kind: String,
         event_payload: JsonObject,
+        task_id: Option<TaskId>,
+        change_unit_id: Option<ChangeUnitId>,
+        storage_mutations: Vec<CoreStorageMutation>,
     },
 }
 
@@ -141,6 +144,10 @@ impl CoreService {
         Self {
             runtime_home: runtime_home.as_ref().to_path_buf(),
         }
+    }
+
+    pub(crate) fn runtime_home(&self) -> &Path {
+        &self.runtime_home
     }
 
     /// Runs the shared envelope, context, freshness, replay, and effect pipeline.
@@ -273,8 +280,11 @@ impl CoreService {
                 result_fields,
                 event_kind,
                 event_payload,
+                task_id: branch_task_id,
+                change_unit_id,
+                storage_mutations,
             } => {
-                let task_id = match resolved_task_id {
+                let task_id = match branch_task_id.or(resolved_task_id) {
                     Some(task_id) => task_id,
                     None => {
                         return response_from_rejected(
@@ -297,6 +307,8 @@ impl CoreService {
                         result_fields,
                         event_kind,
                         event_payload,
+                        change_unit_id,
+                        storage_mutations,
                         task_id: &task_id,
                         verified_surface,
                     },
@@ -627,6 +639,8 @@ struct CommitPipelineArgs<'a> {
     result_fields: JsonObject,
     event_kind: String,
     event_payload: JsonObject,
+    change_unit_id: Option<ChangeUnitId>,
+    storage_mutations: Vec<CoreStorageMutation>,
     task_id: &'a TaskId,
     verified_surface: VerifiedSurfaceContext,
 }
@@ -642,6 +656,8 @@ fn commit_mutation(
         result_fields,
         event_kind,
         event_payload,
+        change_unit_id,
+        storage_mutations,
         task_id,
         verified_surface,
     } = args;
@@ -655,16 +671,25 @@ fn commit_mutation(
         vec![PendingTaskEvent {
             event_id: format!("evt_{}", envelope.request_id.as_str()),
             task_id: task_id.as_str().to_owned(),
-            change_unit_id: None,
+            change_unit_id: change_unit_id.map(|id| id.into_inner()),
             event_kind,
             event_payload_json: serde_json::to_string(&Value::Object(event_payload))?,
         }],
     );
 
-    let outcome = store.commit_mutation(input, |facts| {
-        committed_response_json(result_fields, facts.committed_state_version, facts.events)
-            .map_err(store_invalid_input)
-    })?;
+    let outcome = store.commit_mutation(
+        input,
+        |mutation, facts| {
+            for storage_mutation in &storage_mutations {
+                storage_mutation.apply(mutation, facts.committed_state_version)?;
+            }
+            Ok(())
+        },
+        |facts| {
+            committed_response_json(result_fields, facts.committed_state_version, facts.events)
+                .map_err(store_invalid_input)
+        },
+    )?;
 
     match outcome {
         MutationCommitOutcome::Replayed { response_json, .. } => {
@@ -1440,6 +1465,9 @@ mod tests {
             result_fields: result_fields(marker),
             event_kind: "core.pipeline_placeholder_commit".to_owned(),
             event_payload: result_fields(marker),
+            task_id: None,
+            change_unit_id: None,
+            storage_mutations: Vec::new(),
         }
     }
 

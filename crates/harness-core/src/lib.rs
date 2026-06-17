@@ -9,6 +9,7 @@
 use harness_store::{artifacts::ArtifactStoreBoundary, sqlite::SqliteStoreBoundary};
 use harness_types::TypeBoundary;
 
+mod methods;
 pub mod pipeline;
 
 pub use pipeline::{
