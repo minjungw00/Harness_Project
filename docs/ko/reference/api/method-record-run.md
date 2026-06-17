@@ -60,6 +60,10 @@ RecordRunRequest:
 - `artifact_inputs`는 `ArtifactInput[]`을 사용합니다. `ArtifactInput`, `StagedArtifactHandle`, `ArtifactRef` 형태는 [API 아티팩트 스키마](schema-artifacts.md#artifactinput)가 담당합니다.
 - `kind`, 아티팩트 출처 값, `redaction_state`, 증거 범위 값은 [API 값 집합](schema-value-sets.md)이 담당합니다.
 
+경로와 접근 참고:
+- `observed_changes.changed_paths` 항목은 `Product Repository` API 제품 경로입니다. `Product Repository` 경로 정규화는 [런타임 경계](../runtime-boundaries.md#product-repository-api-path-normalization)가 담당합니다.
+- `ArtifactInput[]`와 스테이징 핸들은 두 번째 요청 수준 접근 등급을 만들지 않습니다. 요청 수준 접근 등급은 파생된 `VerifiedSurfaceContext`의 접근 등급 하나로 유지됩니다.
+
 ## 접근 요구사항
 
 요구사항:
@@ -71,6 +75,8 @@ RecordRunRequest:
 
 - 현재 확인된 `surface_id`가 스테이징 핸들의 기록된 출처와 일치해야 합니다.
 - 현재 확인된 `surface_instance_id`가 스테이징 핸들의 기록된 출처와 일치해야 합니다.
+
+기록된 출처는 스테이징 시점의 파생된 `VerifiedSurfaceContext`에서 캡처된 것입니다. 이 메서드는 호출자가 제출한 출처를 권한 근거로 받아들이지 않고, 그 기록된 출처를 현재 파생된 맥락과 비교합니다.
 
 비주장:
 
@@ -84,7 +90,7 @@ RecordRunRequest:
 제품 쓰기 기록이 `Write Authorization`을 소비하려면 아래 조건을 모두 만족해야 합니다.
 
 - 소비 직전 현재 `project_state.state_version`이 `WriteAuthorization.basis_state_version`과 같습니다.
-- 관찰된 변경 경로가 권한 부여된 시도와 호환됩니다.
+- `Product Repository` 경로 정규화 뒤의 관찰된 변경 경로가 권한 부여된 시도와 호환됩니다.
 
 `harness.prepare_write`가 만든 `Write Authorization`은 사이에 다른 프로젝트 상태 변경이 없으면 생성 직후 오래되지 않습니다. 예를 들어 `harness.prepare_write`가 버전 `19`에서 버전 `20`으로 커밋하면 현재 `project_state.state_version`과 `WriteAuthorization.basis_state_version`이 모두 `20`인 동안 `harness.record_run`이 그 권한을 소비할 수 있습니다.
 
@@ -164,7 +170,7 @@ RecordRunRequest:
 
 ## 최소 유효 요청
 
-이 예시는 이 메서드 문서 안에서 전제로 둔 스테이징된 핸들의 검증 출력을 기록합니다. 메서드 안의 전제: `staged_runprobe_001`은 만료되지 않았고 소비되지 않았으며 `proj_runprobe_001` / `task_runprobe_001`에 속합니다. 기록된 접점 출처는 `surface_run_probe`와 `surface_instance_run_probe_01`입니다. 이 전제는 이 문서의 예시 안에서만 성립하며 다른 메서드 예시를 재사용하지 않습니다.
+이 예시는 이 메서드 문서 안에서 전제로 둔 스테이징된 핸들의 검증 출력을 기록합니다. 메서드 안의 전제: `staged_runprobe_001`은 만료되지 않았고 소비되지 않았으며 `proj_runprobe_001` / `task_runprobe_001`에 속합니다. 스테이징 시점에 캡처된 기록된 접점 출처는 `surface_run_probe`와 `surface_instance_run_probe_01`입니다. 이 전제는 이 문서의 예시 안에서만 성립하며 다른 메서드 예시를 재사용하지 않습니다.
 
 ```yaml
 method: harness.record_run
@@ -393,6 +399,7 @@ state:
 - `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, 참조: [API 상태 스키마](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md).
 - `Write Authorization`과 닫기 관련 증거 경계: [Core 모델](../core-model.md).
+- `Product Repository` 경로 정규화: [런타임 경계](../runtime-boundaries.md#product-repository-api-path-normalization).
 - 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류, 우선순위, 응답 처리 경로, 아티팩트 입력 세부 값: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md), [API 오류 처리 경로](error-routing.md), [아티팩트 입력 오류 세부사항](error-details.md#artifact-input-error-reason).
 - 저장 효과와 아티팩트 승격: [저장 효과](../storage-effects.md), [아티팩트 저장소](../storage-artifacts.md).

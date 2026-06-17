@@ -59,6 +59,7 @@ PrepareWriteRequest:
 ```
 
 필드 참고:
+- `intended_paths` 항목은 `Product Repository` API 제품 경로입니다. `Product Repository` 경로 정규화는 [런타임 경계](../runtime-boundaries.md#product-repository-api-path-normalization)가 담당합니다. 이 메서드는 경로 수준 `AuthorizedAttemptScope`를 만들고 비교할 때 정규화된 저장소 상대 경로를 사용합니다.
 - `sensitive_categories` 항목은 이 메서드나 프로필 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 불투명 민감 범주 분류 문자열입니다.
 
 ## 접근 요구사항
@@ -113,7 +114,7 @@ PrepareWriteRequest:
 - `write_authorization`은 `null`이 아닙니다.
 - `authorization_effect`는 새로 커밋된 `decision=allowed` 응답에서 `created`입니다.
 - 멱등 재실행은 저장된 원래 커밋 `PrepareWriteResult`를 그대로 반환합니다. `authorization_effect`, `base.state_version`, `base.events`나 다른 응답 필드를 다시 계산하거나 재분류하지 않으며, `Write Authorization`을 새로 만들거나 저장 효과를 반복하지 않습니다.
-- `Write Authorization`은 경로 수준 `AuthorizedAttemptScope`에 묶입니다.
+- `Write Authorization`은 정규화된 저장소 상대 `intended_paths`를 사용하는 경로 수준 `AuthorizedAttemptScope`에 묶입니다.
 - `active_user_judgment_refs`는 별도 `sensitive_approval`을 포함해 쓰기 선행조건을 만족하는 해결된 사용자 소유 판단을 가리킬 수 있습니다.
 
 ## 차단 결과
@@ -356,6 +357,7 @@ guarantee_display:
 - `WriteAuthorizationSummary`, 상태 요약, 참조: [API 상태 스키마](schema-state.md).
 - `SensitiveActionScope`와 사용자 소유 승인 형태: [API 판단 스키마](schema-judgment.md).
 - `Write Authorization`, 쓰기 승인, 민감 동작 승인, 최종 수락, 잔여 위험 경계: [Core 모델](../core-model.md).
+- `Product Repository` 경로 정규화: [런타임 경계](../runtime-boundaries.md#product-repository-api-path-normalization).
 - 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류, `STATE_VERSION_CONFLICT`, 분기 처리 경로, 차단/`dry_run` 동작: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md), [API 오류 처리 경로](error-routing.md).
 - 저장 효과와 상태 시계: [저장 효과](../storage-effects.md), [저장소 버전 관리](../storage-versioning.md).

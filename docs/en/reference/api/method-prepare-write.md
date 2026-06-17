@@ -59,6 +59,7 @@ PrepareWriteRequest:
 ```
 
 Field notes:
+- `intended_paths` entries are `Product Repository` API product paths. Product Repository path normalization is owned by [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization); this method uses normalized repo-relative paths when forming and comparing the path-level `AuthorizedAttemptScope`.
 - `sensitive_categories` entries are opaque sensitive-category classification strings unless this method or a profile owner publishes a narrower local list.
 
 ## Access requirements
@@ -113,7 +114,7 @@ For `decision=allowed`:
 - `write_authorization` is non-null
 - `authorization_effect` is `created` for a new committed `decision=allowed` response
 - idempotent replay returns the stored original committed `PrepareWriteResult` exactly; it does not recompute or reclassify `authorization_effect`, `base.state_version`, `base.events`, or any other response field, and it does not create another `Write Authorization` or repeat the storage effect
-- the authorization is scoped to the path-level `AuthorizedAttemptScope`
+- the authorization is scoped to the path-level `AuthorizedAttemptScope` using normalized repo-relative `intended_paths`
 - `active_user_judgment_refs` may cite resolved user-owned judgments that satisfy write preconditions, including a separate `sensitive_approval`
 
 ## Blocked result
@@ -356,6 +357,7 @@ guarantee_display:
 - `WriteAuthorizationSummary`, state summaries, and refs: [API State Schemas](schema-state.md).
 - `SensitiveActionScope` and user-owned approval shapes: [API Judgment Schemas](schema-judgment.md).
 - `Write Authorization`, write approval, sensitive-action approval, final-acceptance, and residual-risk boundaries: [Core Model](../core-model.md).
+- Product Repository path normalization: [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization).
 - Supported values and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors, `STATE_VERSION_CONFLICT`, branch routing, and blocked/dry-run behavior: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Persistence effects and state clocks: [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).

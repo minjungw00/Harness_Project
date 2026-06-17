@@ -8,7 +8,7 @@
 
 | 이 문서가 담당하는 것 | 이 문서가 담당하지 않는 것 |
 |---|---|
-| `Product Repository` 정의. | 저장소 기록 배치, 잠금, 마이그레이션, 버전 관리, 아티팩트 생명주기 세부사항. |
+| `Product Repository` 정의와 `Product Repository` API 경로 정규화. | 저장소 기록 배치, 잠금, 마이그레이션, 버전 관리, 아티팩트 생명주기 세부사항. |
 | `Harness Runtime Home` 정의. | API 메서드 동작이나 공개 스키마 형태. |
 | 제품 파일, `Harness Server` 또는 그 밖의 설치/런타임 파일, 런타임 데이터의 분리. | 자세한 보안 보장 의미나 보안 비주장. |
 | 로컬 접근과 위치가 권한을 만들지 않는다는 규칙. | 상태 보기 권한, 템플릿 본문, 렌더링된 표시의 최신성. |
@@ -38,6 +38,23 @@
 - `Product Repository` 내용이 생성된 하네스 출력이라는 주장.
 - `Product Repository` 내용이 하네스 권한을 증명한다는 주장.
 - `Product Repository`가 자동으로 `Harness Runtime Home`이라는 주장.
+
+<a id="product-repository-api-path-normalization"></a>
+### `Product Repository` API 경로 정규화
+
+이 규칙은 API, 스키마, 메서드 담당 문서가 어떤 필드를 `Product Repository` 제품 경로로 식별할 때 적용됩니다.
+
+규칙:
+- API 제품 경로는 `Product Repository` 안의 저장소 상대 경로입니다.
+- 절대 경로는 `Product Repository` API 경로로 무효입니다.
+- 경로 정규화는 `.` 세그먼트와 저장소 밖으로 나가지 않는 `..` 세그먼트를 정리합니다. `..` 때문에 저장소 밖으로 벗어나는 경로는 무효입니다.
+- `Product Repository` 밖으로 해결되는 심볼릭 링크는 `Product Repository` 경로 필드에서 무효입니다.
+- 내부 경로 비교는 정규화된 저장소 상대 경로를 사용합니다.
+- API 응답은 정규화된 상대 경로만 기록합니다.
+
+의미하지 않는 것:
+- 이 경로 규칙은 OS 샌드박싱, 명령 차단, 네트워크 차단, 비밀값 차단, 또는 기준 범위의 `detective` 강제를 제공하지 않습니다.
+- 메서드별 권한 부여 결정은 API 메서드 담당 문서에 둡니다.
 
 <a id="runtime-location-server-installation"></a>
 ### `Harness Server`와 런타임 프로세스

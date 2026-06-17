@@ -70,20 +70,35 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 
 ## 현재 적용 접점 맥락
 
-`VerifiedSurfaceContext`는 선택된 접점이 현재 요청과 호환된다고 담당 결과가 반환하는 맥락입니다.
+`VerifiedSurfaceContext`는 한 번의 호출에 대해 내부에서 파생되는 맥락입니다. `Harness Server` 또는 로컬 어댑터는 등록된 접점 기록과 호출 맥락에서 이를 파생하고, 그 뒤 메서드 담당 문서가 파생된 맥락이 요청과 호환되는지 판단합니다. 이는 공개 요청 페이로드가 아닙니다.
+
+내부 형태이며 공개 API 스키마가 아닙니다.
+
+```yaml
+VerifiedSurfaceContext:
+  project_id: string
+  surface_id: string
+  surface_instance_id: string
+  access_class: string
+  capability_profile: object
+  verification_basis: string
+```
 
 조건:
 - 공개 API 요청 하나에는 요청 수준 `VerifiedSurfaceContext.access_class`가 정확히 하나 있습니다.
-- 아티팩트 입력 같은 중첩 페이로드는 두 번째 요청 접근 등급을 추가하지 않습니다.
-- `created_by_surface_id`, `created_by_surface_instance_id` 같은 스테이징된 아티팩트 출처는 호출자 텍스트가 아니라 담당 결과가 반환한 `VerifiedSurfaceContext`에서 옵니다.
-- 보호된 읽기, 상태 변경, 아티팩트 동작은 메서드 담당 문서가 확인된 맥락을 받아들일 때만 접점에 의존할 수 있습니다.
+- `ToolEnvelope`에는 `surface_instance_id`가 추가되지 않습니다. 공통 요청 래퍼는 [API 코어 스키마](api/schema-core.md#tool-envelope)에 둡니다.
+- `ArtifactInput`이나 `StagedArtifactHandle` 같은 중첩 페이로드는 두 번째 요청 수준 접근 등급을 추가하지 않습니다.
+- `created_by_surface_id`, `created_by_surface_instance_id` 같은 스테이징된 아티팩트 출처 필드는 호출자 텍스트나 중첩 아티팩트 입력이 아니라 스테이징 시점의 파생된 `VerifiedSurfaceContext`에서 옵니다.
+- 보호된 읽기, 상태 변경, 아티팩트 동작은 메서드 담당 문서가 파생된 확인 맥락을 받아들일 때만 접점에 의존할 수 있습니다.
 
 에이전트가 할 수 있는 것:
 - 맥락을 표시하거나 전달할 때 요청 수준 `VerifiedSurfaceContext.access_class`를 보존할 수 있습니다.
 - 맥락이 없거나 호환되지 않으면 사용 불가, 불일치, 오래됨, 역량 부족 접점 상태로 표시할 수 있습니다.
 
 에이전트가 하면 안 되는 것:
+- `VerifiedSurfaceContext`를 요청 페이로드로 제출하면 안 됩니다.
 - `verified=true`를 스스로 주장하면 안 됩니다.
+- `surface_instance_id`를 확인 권한 근거로 제출하면 안 됩니다.
 - 스테이징된 아티팩트 출처를 꾸며 내면 안 됩니다.
 - 복사된 식별자, 생성된 Markdown, 대화 텍스트, 상태 보기 텍스트, 에이전트 기억을 확인된 맥락의 대체물로 쓰면 안 됩니다.
 

@@ -8,7 +8,7 @@ This document owns the boundary among `Product Repository`, `Harness Server` or 
 
 | This document owns | This document does not own |
 |---|---|
-| The definition of `Product Repository`. | Storage record layout, locks, migrations, versioning, or artifact lifecycle details. |
+| The definition of `Product Repository` and Product Repository API path normalization. | Storage record layout, locks, migrations, versioning, or artifact lifecycle details. |
 | The definition of `Harness Runtime Home`. | API method behavior or public schema shapes. |
 | The separation between product files, `Harness Server` or other installation/runtime files, and runtime data. | Detailed security guarantee meanings or security non-guarantees. |
 | Local access and location non-authority rules. | Projection authority, template bodies, or rendered display freshness. |
@@ -38,6 +38,23 @@ Must not claim:
 - `Product Repository` content is generated Harness output.
 - `Product Repository` content proves Harness authority.
 - A `Product Repository` is automatically `Harness Runtime Home`.
+
+<a id="product-repository-api-path-normalization"></a>
+### Product Repository API path normalization
+
+These rules apply when an API, schema, or method owner identifies a field as a `Product Repository` product path.
+
+Rules:
+- API product paths are repository-relative paths inside the `Product Repository`.
+- Absolute paths are invalid as `Product Repository` API paths.
+- Path normalization resolves `.` segments and non-escaping `..` segments; a path that would escape the repository via `..` is invalid.
+- Symlinks that resolve outside the `Product Repository` are invalid for `Product Repository` path fields.
+- Internal path comparisons use normalized repo-relative paths.
+- API responses record normalized relative paths only.
+
+Does not imply:
+- These path rules do not provide OS sandboxing, command blocking, network blocking, secret blocking, or baseline detective enforcement.
+- Method-specific authorization decisions stay with API method owners.
 
 <a id="runtime-location-server-installation"></a>
 ### `Harness Server` and runtime process

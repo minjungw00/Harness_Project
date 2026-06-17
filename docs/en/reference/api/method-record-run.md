@@ -60,6 +60,10 @@ Nested owner links:
 - `artifact_inputs` uses `ArtifactInput[]`; `ArtifactInput`, `StagedArtifactHandle`, and `ArtifactRef` shapes are owned by [API Artifact Schemas](schema-artifacts.md#artifactinput).
 - `kind`, artifact source values, `redaction_state`, and evidence coverage values are owned by [API Value Sets](schema-value-sets.md).
 
+Path and access notes:
+- `observed_changes.changed_paths` entries are `Product Repository` API product paths. Product Repository path normalization is owned by [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization).
+- `ArtifactInput[]` and staged handles do not create a second request-level access class; the request-level access class remains the one in the derived `VerifiedSurfaceContext`.
+
 ## Access requirements
 
 Requires:
@@ -71,6 +75,8 @@ For `source_kind=staged_artifact`:
 
 - the current verified `surface_id` must match the staged handle's recorded provenance
 - the current verified `surface_instance_id` must match the staged handle's recorded provenance
+
+The recorded provenance was captured from the derived `VerifiedSurfaceContext` at staging time. This method compares it with the current derived context instead of accepting caller-submitted provenance as authority.
 
 Non-claims:
 
@@ -84,7 +90,7 @@ A compatible committed result increments `project_state.state_version` exactly o
 Product-write recording consumes the `Write Authorization` only when:
 
 - the current `project_state.state_version` equals `WriteAuthorization.basis_state_version` immediately before consumption
-- observed changed paths are compatible with the authorized attempt
+- observed changed paths, after Product Repository path normalization, are compatible with the authorized attempt
 
 An authorization created by `harness.prepare_write` is not stale immediately after creation when no intervening project state change has occurred. If `harness.prepare_write` commits from version `19` to version `20`, `harness.record_run` may consume that authorization while the current `project_state.state_version` and `WriteAuthorization.basis_state_version` are both `20`.
 
@@ -164,7 +170,7 @@ The examples are intentionally compact and method-local. The representative resp
 
 ## Minimal valid request
 
-This example records validation output from a method-local staged handle. Method-local precondition: `staged_runprobe_001` is unexpired, unconsumed, and belongs to `proj_runprobe_001` / `task_runprobe_001`; its recorded surface provenance is `surface_run_probe` and `surface_instance_run_probe_01`. The precondition is local to this document and does not reuse any other method example.
+This example records validation output from a method-local staged handle. Method-local precondition: `staged_runprobe_001` is unexpired, unconsumed, and belongs to `proj_runprobe_001` / `task_runprobe_001`; its recorded surface provenance, captured at staging time, is `surface_run_probe` and `surface_instance_run_probe_01`. The precondition is local to this document and does not reuse any other method example.
 
 ```yaml
 method: harness.record_run
@@ -393,6 +399,7 @@ state:
 - `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, and refs: [API State Schemas](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, and `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md).
 - `Write Authorization` and close-relevant evidence boundaries: [Core Model](../core-model.md).
+- Product Repository path normalization: [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization).
 - Supported values and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors, precedence, response routing, and artifact-input detail values: [API error codes](error-codes.md), [API error precedence](error-precedence.md), [API error routing](error-routing.md), and [artifact-input error details](error-details.md#artifact-input-error-reason).
 - Persistence effects and artifact promotion: [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).

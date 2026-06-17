@@ -70,20 +70,35 @@ Owner links:
 
 ## Current surface context
 
-`VerifiedSurfaceContext` is the owner-returned context that says the selected surface is compatible with the current request.
+`VerifiedSurfaceContext` is the internal, derived context for one invocation. A `Harness Server` or local adapter derives it from registered surface records and invocation context, then method owners decide whether the derived context is compatible with the request. It is not a public request payload.
+
+Internal shape, not a public API schema:
+
+```yaml
+VerifiedSurfaceContext:
+  project_id: string
+  surface_id: string
+  surface_instance_id: string
+  access_class: string
+  capability_profile: object
+  verification_basis: string
+```
 
 Condition:
 - A public API request has exactly one request-level `VerifiedSurfaceContext.access_class`.
-- Nested payloads such as artifact inputs do not add a second request access class.
-- Staged artifact provenance such as `created_by_surface_id` and `created_by_surface_instance_id` comes from owner-returned `VerifiedSurfaceContext`, not caller text.
-- Protected reads, mutations, and artifact operations can rely on a surface only when the method owner accepts the verified context.
+- `ToolEnvelope` does not gain `surface_instance_id`; the shared request envelope stays with [API Schema Core](api/schema-core.md#tool-envelope).
+- Nested payloads such as `ArtifactInput` or `StagedArtifactHandle` do not add a second request-level access class.
+- Staged artifact provenance fields such as `created_by_surface_id` and `created_by_surface_instance_id` come from the derived `VerifiedSurfaceContext` at staging time, not caller text or nested artifact input.
+- Protected reads, mutations, and artifact operations can rely on a surface only when the method owner accepts the derived verified context.
 
 Agent may:
 - preserve request-level `VerifiedSurfaceContext.access_class` when displaying or passing context
 - expose absent or incompatible context as unavailable, mismatched, stale, or insufficient surface state
 
 Agent must not:
+- submit `VerifiedSurfaceContext` as a request payload
 - assert `verified=true`
+- submit `surface_instance_id` as verification authority
 - fabricate staged artifact provenance
 - use copied identifiers, generated Markdown, chat text, projection text, or agent memory as substitutes for verified context
 
