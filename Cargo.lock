@@ -153,7 +153,10 @@ dependencies = [
 name = "harness-cli"
 version = "0.1.0"
 dependencies = [
- "harness-core",
+ "harness-store",
+ "harness-test-support",
+ "rusqlite",
+ "serde_json",
 ]
 
 [[package]]
@@ -178,6 +181,7 @@ dependencies = [
  "harness-test-support",
  "harness-types",
  "rusqlite",
+ "serde_json",
 ]
 
 [[package]]

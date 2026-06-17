@@ -10,6 +10,10 @@ pub enum StoreError {
     Io(io::Error),
     /// SQLite driver error.
     Sqlite(rusqlite::Error),
+    /// Local administrative setup input is not valid for the storage record.
+    InvalidInput { detail: String },
+    /// A required local setup record was not found.
+    NotFound { entity: &'static str, id: String },
     /// A recorded migration row conflicts with the compiled migration catalog.
     MigrationConflict {
         database_kind: &'static str,
@@ -40,6 +44,8 @@ impl fmt::Display for StoreError {
         match self {
             Self::Io(error) => write!(formatter, "filesystem error: {error}"),
             Self::Sqlite(error) => write!(formatter, "sqlite error: {error}"),
+            Self::InvalidInput { detail } => write!(formatter, "invalid setup input: {detail}"),
+            Self::NotFound { entity, id } => write!(formatter, "{entity} not found: {id}"),
             Self::MigrationConflict {
                 database_kind,
                 version,
@@ -67,7 +73,10 @@ impl Error for StoreError {
         match self {
             Self::Io(error) => Some(error),
             Self::Sqlite(error) => Some(error),
-            Self::MigrationConflict { .. } | Self::SchemaInvariant { .. } => None,
+            Self::InvalidInput { .. }
+            | Self::NotFound { .. }
+            | Self::MigrationConflict { .. }
+            | Self::SchemaInvariant { .. } => None,
         }
     }
 }
