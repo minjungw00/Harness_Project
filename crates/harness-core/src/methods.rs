@@ -5,6 +5,7 @@ use std::{
 };
 
 use harness_store::{
+    artifacts::{ArtifactStagingInsert, StagedPayloadKind},
     core_pipeline::{
         ChangeUnitInsert, ChangeUnitRecord, CoreProjectStore, CoreStorageMutation,
         ProjectStateHeader, StoredRecordRef, TaskInsert, TaskRecord, TaskScopeUpdate,
@@ -19,20 +20,23 @@ use harness_types::{
     GuaranteeDisplay, GuaranteeLevel, JsonObject, JudgmentKind, MethodName, NextActionKind,
     NextActionSummary, PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect,
     PrepareWriteDecision, PrepareWriteRequest, PrepareWriteResult, ProjectId, RecordId,
-    RecordUserJudgmentPayload, RecordUserJudgmentRequest, RequestedMode, ResumePolicy,
-    SensitiveActionScope, StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude,
-    StatusRequest, SurfaceId, SurfaceInstanceId, TaskId, TaskLifecyclePhase, TaskLifecycleState,
-    TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment,
-    UserJudgmentContext, UserJudgmentOption, UserJudgmentResolution, UserJudgmentStatus,
-    WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
-    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
+    RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState, RequestedMode,
+    ResumePolicy, SensitiveActionScope, StageArtifactRequest, StageArtifactResult,
+    StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind, StateRecordRef,
+    StatusCloseState, StatusInclude, StatusRequest, SurfaceId, SurfaceInstanceId, TaskId,
+    TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase,
+    UpdateScopeRequest, UserJudgment, UserJudgmentContext, UserJudgmentOption,
+    UserJudgmentResolution, UserJudgmentStatus, WriteAuthoritySummary, WriteAuthorizationId,
+    WriteAuthorizationStatus, WriteAuthorizationSummary, WriteDecisionCategory,
+    WriteDecisionReason,
 };
 use serde_json::{json, Map, Value};
+use sha2::{Digest, Sha256};
 
 use crate::pipeline::{
-    method_result_base, rejected_response, tool_error, CorePipelineError, CoreResult, CoreService,
-    InvocationContext, OwnerPipelineBranch, PipelineRequest, PipelineResponse, TaskRequirement,
-    VerifiedSurfaceContext,
+    dry_run_response, method_result_base, rejected_response, tool_error, CorePipelineError,
+    CoreResult, CoreService, InvocationContext, OwnerPipelineBranch, PipelineRequest,
+    PipelineResponse, TaskRequirement, VerifiedSurfaceContext,
 };
 
 impl CoreService {
@@ -256,7 +260,7 @@ impl CoreService {
         )? {
             return Ok(response);
         }
-        let verified_surface = match prepare_write_surface_context(
+        let verified_surface = match verified_surface_context(
             &store,
             &project_state,
             &request.envelope,
@@ -302,6 +306,168 @@ impl CoreService {
                 change_unit_id: plan.change_unit_id,
                 storage_mutations: plan.storage_mutations,
             },
+        })
+    }
+
+    /// Executes `harness.stage_artifact` as storage-owned transient staging.
+    pub fn stage_artifact(
+        &self,
+        request: StageArtifactRequest,
+        invocation: InvocationContext,
+    ) -> CoreResult<PipelineResponse> {
+        let stage_input = match validate_stage_artifact_input(&request) {
+            Ok(input) => input,
+            Err(errors) => {
+                return rejected_pipeline_response(request.envelope.dry_run, None, errors);
+            }
+        };
+        if let Some(envelope_task_id) = &request.envelope.task_id {
+            if envelope_task_id != &request.task_id {
+                return validation_rejected(
+                    request.envelope.dry_run,
+                    None,
+                    "task_id",
+                    "envelope.task_id must match StageArtifactRequest.task_id",
+                );
+            }
+        }
+
+        let (mut store, project_state) = match open_store_with_state(self, &request.envelope) {
+            Ok(opened) => opened,
+            Err(response) => return Ok(*response),
+        };
+        if let Some(expected_state_version) = request.envelope.expected_state_version {
+            if expected_state_version != project_state.state_version {
+                return Ok(stale_expected_state_response(
+                    &request.envelope,
+                    &project_state,
+                    expected_state_version,
+                ));
+            }
+        }
+
+        let verified_surface = match verified_surface_context(
+            &store,
+            &project_state,
+            &request.envelope,
+            &invocation,
+        ) {
+            Ok(context) => context,
+            Err(response) => return Ok(*response),
+        };
+        if verified_surface.access_class != AccessClass::ArtifactRegistration {
+            return rejected_pipeline_response(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                vec![capability_error(
+                    "surface access class is insufficient for artifact staging",
+                    Some(json!({
+                        "required_access_class": "artifact_registration",
+                        "actual_access_class": verified_surface.access_class
+                    })),
+                )],
+            );
+        }
+        if !surface_supports_artifact_staging(&verified_surface.capability_profile) {
+            return rejected_pipeline_response(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                vec![capability_error(
+                    "surface lacks manual artifact attachment support",
+                    Some(json!({
+                        "required_capability": "manual_artifact_attachment_supported"
+                    })),
+                )],
+            );
+        }
+
+        match store.task_record(&request.task_id) {
+            Ok(Some(_)) => {}
+            Ok(None) => {
+                return Ok(no_active_task_response(&request.envelope, &project_state));
+            }
+            Err(error) => {
+                return Ok(store_error_response(
+                    &request.envelope,
+                    &project_state,
+                    error,
+                ))
+            }
+        }
+
+        if request.envelope.dry_run {
+            let response = dry_run_response(
+                Some(project_state.state_version),
+                dry_run_summary(
+                    "artifact_staging",
+                    "would_stage",
+                    "Stage artifact would create one transient staged handle.",
+                    Vec::new(),
+                ),
+            );
+            let response_value = serde_json::to_value(response)?;
+            let response_json = serde_json::to_string(&response_value)?;
+            return Ok(PipelineResponse {
+                response_json,
+                response_value,
+                verified_surface: Some(verified_surface),
+                resolved_task_id: Some(request.task_id),
+                replayed: false,
+            });
+        }
+
+        let staging_record = store.create_artifact_staging(ArtifactStagingInsert {
+            handle_prefix: format!("staged_{}", request.envelope.request_id.as_str()),
+            task_id: request.task_id.as_str().to_owned(),
+            created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
+            created_by_surface_instance_id: verified_surface
+                .surface_instance_id
+                .as_str()
+                .to_owned(),
+            display_name: request.display_name,
+            content_type: request.content_type,
+            sha256: stage_input.sha256.clone(),
+            size_bytes: stage_input.size_bytes,
+            redaction_state: redaction_state_value(request.redaction_state).to_owned(),
+            relation_hint: request.relation_hint,
+            payload_kind: stage_input.payload_kind,
+            safe_bytes_or_notice: stage_input.safe_bytes,
+        })?;
+
+        let resolved_task_id = TaskId::new(staging_record.task_id.clone());
+        let handle = StagedArtifactHandle {
+            handle_id: StagedArtifactHandleId::new(staging_record.handle_id),
+            project_id: request.envelope.project_id.clone(),
+            task_id: resolved_task_id.clone(),
+            created_by_surface_id: SurfaceId::new(staging_record.created_by_surface_id),
+            created_by_surface_instance_id: SurfaceInstanceId::new(
+                staging_record.created_by_surface_instance_id,
+            ),
+            content_type: staging_record.content_type,
+            sha256: staging_record.sha256,
+            size_bytes: staging_record.size_bytes,
+            redaction_state: request.redaction_state,
+            expires_at: staging_record.expires_at.clone(),
+            consumed: false,
+        };
+        let result = StageArtifactResult {
+            base: method_result_base(
+                EffectKind::StagingCreated,
+                false,
+                Some(project_state.state_version),
+                Vec::new(),
+            ),
+            staged_artifact_handle: handle,
+            expires_at: staging_record.expires_at,
+        };
+        let response_value = serde_json::to_value(result)?;
+        let response_json = serde_json::to_string(&response_value)?;
+        Ok(PipelineResponse {
+            response_json,
+            response_value,
+            verified_surface: Some(verified_surface),
+            resolved_task_id: Some(resolved_task_id),
+            replayed: false,
         })
     }
 
@@ -475,6 +641,13 @@ struct PrepareWritePlan {
     dry_run_summary: DryRunSummary,
 }
 
+struct ValidatedStageArtifactInput {
+    safe_bytes: Vec<u8>,
+    sha256: String,
+    size_bytes: u64,
+    payload_kind: StagedPayloadKind,
+}
+
 enum PlanError {
     Core(CorePipelineError),
     Response(Box<PipelineResponse>),
@@ -558,7 +731,7 @@ fn selected_surface_instance(
     }
 }
 
-fn prepare_write_surface_context(
+fn verified_surface_context(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     envelope: &ToolEnvelope,
@@ -610,6 +783,305 @@ fn prepare_write_surface_context(
         capability_profile,
         verification_basis: invocation.verification_basis.clone(),
     })
+}
+
+const MAX_STAGED_BODY_BYTES: usize = 10 * 1024 * 1024;
+
+fn validate_stage_artifact_input(
+    request: &StageArtifactRequest,
+) -> Result<ValidatedStageArtifactInput, Vec<harness_types::ToolError>> {
+    let mut errors = Vec::new();
+    validate_stage_envelope(&request.envelope, &mut errors);
+    validate_stage_text_field("task_id", request.task_id.as_str(), &mut errors);
+    validate_stage_text_field("display_name", &request.display_name, &mut errors);
+    validate_stage_text_field("content_type", &request.content_type, &mut errors);
+
+    let safe_bytes = request.safe_bytes_or_notice.as_bytes().to_vec();
+    if safe_bytes.is_empty() {
+        errors.push(stage_validation_error(
+            "safe_bytes_or_notice",
+            "safe_bytes_or_notice must not be empty",
+        ));
+    }
+    if safe_bytes.len() > MAX_STAGED_BODY_BYTES {
+        errors.push(stage_validation_error(
+            "safe_bytes_or_notice",
+            "safe_bytes_or_notice exceeds the 10 MiB staging limit",
+        ));
+    }
+    if contains_obvious_raw_secret(&request.safe_bytes_or_notice) {
+        errors.push(stage_validation_error(
+            "safe_bytes_or_notice",
+            "raw secret-like content must be omitted or replaced with a safe notice",
+        ));
+    }
+
+    let media_type = normalized_media_type(&request.content_type);
+    let textual_media_type = media_type
+        .as_deref()
+        .is_some_and(is_safe_textual_media_type);
+    let payload_kind = if matches!(
+        request.redaction_state,
+        RedactionState::SecretOmitted | RedactionState::Blocked
+    ) {
+        StagedPayloadKind::SafeNotice
+    } else if textual_media_type {
+        StagedPayloadKind::SafeTextBody
+    } else {
+        StagedPayloadKind::SafeNotice
+    };
+    if media_type.is_none() {
+        errors.push(stage_validation_error(
+            "content_type",
+            "content_type must be a valid media type",
+        ));
+    }
+    if !textual_media_type
+        && !matches!(
+            request.redaction_state,
+            RedactionState::SecretOmitted | RedactionState::Blocked
+        )
+    {
+        errors.push(stage_validation_error(
+            "content_type",
+            "binary or unsupported content types must be represented by a safe notice",
+        ));
+    }
+
+    let size_bytes = safe_bytes.len() as u64;
+    if let Some(expected_size_bytes) = request.expected_size_bytes {
+        if expected_size_bytes != size_bytes {
+            errors.push(stage_validation_error(
+                "expected_size_bytes",
+                "expected_size_bytes does not match safe_bytes_or_notice byte length",
+            ));
+        }
+    }
+    let sha256 = sha256_string(&safe_bytes);
+    if let Some(expected_sha256) = &request.expected_sha256 {
+        if expected_sha256.trim().is_empty() {
+            errors.push(stage_validation_error(
+                "expected_sha256",
+                "expected_sha256 must not be empty when present",
+            ));
+        } else if expected_sha256 != &sha256 {
+            errors.push(stage_validation_error(
+                "expected_sha256",
+                "expected_sha256 does not match safe_bytes_or_notice",
+            ));
+        }
+    }
+
+    if errors.is_empty() {
+        Ok(ValidatedStageArtifactInput {
+            safe_bytes,
+            sha256,
+            size_bytes,
+            payload_kind,
+        })
+    } else {
+        Err(errors)
+    }
+}
+
+fn validate_stage_envelope(envelope: &ToolEnvelope, errors: &mut Vec<harness_types::ToolError>) {
+    validate_stage_text_field("project_id", envelope.project_id.as_str(), errors);
+    if let Some(task_id) = &envelope.task_id {
+        validate_stage_text_field("envelope.task_id", task_id.as_str(), errors);
+    }
+    validate_stage_text_field("surface_id", envelope.surface_id.as_str(), errors);
+    validate_stage_text_field("request_id", envelope.request_id.as_str(), errors);
+    if let Some(idempotency_key) = &envelope.idempotency_key {
+        validate_stage_text_field("idempotency_key", idempotency_key.as_str(), errors);
+    }
+}
+
+fn validate_stage_text_field(
+    field: &'static str,
+    value: &str,
+    errors: &mut Vec<harness_types::ToolError>,
+) {
+    if value.trim().is_empty() {
+        errors.push(stage_validation_error(field, "field must not be empty"));
+    } else if value.chars().any(char::is_control) {
+        errors.push(stage_validation_error(
+            field,
+            "field must not contain control characters",
+        ));
+    }
+}
+
+fn normalized_media_type(content_type: &str) -> Option<String> {
+    let media_type = content_type
+        .split(';')
+        .next()
+        .unwrap_or_default()
+        .trim()
+        .to_ascii_lowercase();
+    let (top, subtype) = media_type.split_once('/')?;
+    if top.is_empty()
+        || subtype.is_empty()
+        || media_type.chars().any(char::is_whitespace)
+        || media_type.chars().any(char::is_control)
+    {
+        None
+    } else {
+        Some(media_type)
+    }
+}
+
+fn is_safe_textual_media_type(media_type: &str) -> bool {
+    if media_type.starts_with("text/") {
+        return true;
+    }
+    matches!(
+        media_type,
+        "application/json"
+            | "application/xml"
+            | "application/markdown"
+            | "application/x-ndjson"
+            | "application/yaml"
+            | "application/x-yaml"
+            | "application/toml"
+            | "application/javascript"
+            | "application/ecmascript"
+    ) || media_type.ends_with("+json")
+        || media_type.ends_with("+xml")
+}
+
+fn contains_obvious_raw_secret(text: &str) -> bool {
+    let lower = text.to_ascii_lowercase();
+    [
+        "password=",
+        "passwd=",
+        "secret=",
+        "token=",
+        "api_key=",
+        "apikey=",
+        "aws_secret_access_key",
+        "authorization: bearer ",
+        "-----begin private key-----",
+        "-----begin rsa private key-----",
+        "-----begin openssh private key-----",
+    ]
+    .iter()
+    .any(|marker| lower.contains(marker))
+}
+
+fn sha256_string(bytes: &[u8]) -> String {
+    let digest = Sha256::digest(bytes);
+    format!("sha256:{}", lowercase_hex(&digest))
+}
+
+fn lowercase_hex(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        output.push(HEX[(byte >> 4) as usize] as char);
+        output.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    output
+}
+
+fn stage_validation_error(field: &'static str, message: &'static str) -> harness_types::ToolError {
+    let mut details = Map::new();
+    details.insert("field".to_owned(), Value::String(field.to_owned()));
+    tool_error(ErrorCode::ValidationFailed, message, false, Some(details))
+}
+
+fn stale_expected_state_response(
+    envelope: &ToolEnvelope,
+    project_state: &ProjectStateHeader,
+    expected_state_version: u64,
+) -> PipelineResponse {
+    let mut details = Map::new();
+    details.insert(
+        "state_clock".to_owned(),
+        Value::String("project_state.state_version".to_owned()),
+    );
+    details.insert(
+        "current_state_version".to_owned(),
+        Value::from(project_state.state_version),
+    );
+    details.insert(
+        "expected_state_version".to_owned(),
+        Value::from(expected_state_version),
+    );
+    details.insert(
+        "project_id".to_owned(),
+        Value::String(envelope.project_id.as_str().to_owned()),
+    );
+    if let Some(task_id) = &envelope.task_id {
+        details.insert(
+            "task_id".to_owned(),
+            Value::String(task_id.as_str().to_owned()),
+        );
+    }
+    infallible_rejected_pipeline_response(
+        envelope.dry_run,
+        Some(project_state.state_version),
+        vec![tool_error(
+            ErrorCode::StateVersionConflict,
+            "expected_state_version is stale",
+            true,
+            Some(details),
+        )],
+    )
+}
+
+fn capability_error(message: &'static str, details: Option<Value>) -> harness_types::ToolError {
+    let details = details.and_then(|value| match value {
+        Value::Object(object) => Some(object),
+        _ => None,
+    });
+    tool_error(ErrorCode::CapabilityInsufficient, message, false, details)
+}
+
+fn surface_supports_artifact_staging(capability_profile: &Value) -> bool {
+    surface_declares_artifact_registration(capability_profile)
+        && capability_profile
+            .get("manual_artifact_attachment_supported")
+            .and_then(Value::as_bool)
+            .or_else(|| {
+                capability_profile
+                    .pointer("/capabilities/manual_artifact_attachment_supported")
+                    .and_then(Value::as_bool)
+            })
+            == Some(true)
+}
+
+fn surface_declares_artifact_registration(capability_profile: &Value) -> bool {
+    if capability_profile
+        .get("supported_access_classes")
+        .and_then(Value::as_array)
+        .is_some_and(|values| {
+            values
+                .iter()
+                .any(|value| value.as_str() == Some("artifact_registration"))
+        })
+    {
+        return true;
+    }
+    if capability_profile
+        .get("access_class")
+        .and_then(Value::as_str)
+        == Some("artifact_registration")
+    {
+        return true;
+    }
+    capability_profile
+        .pointer("/capabilities/artifact_registration")
+        .and_then(Value::as_bool)
+        == Some(true)
+}
+
+fn redaction_state_value(redaction_state: RedactionState) -> &'static str {
+    match redaction_state {
+        RedactionState::None => "none",
+        RedactionState::Redacted => "redacted",
+        RedactionState::SecretOmitted => "secret_omitted",
+        RedactionState::Blocked => "blocked",
+    }
 }
 
 fn early_idempotency_replay(
@@ -4011,6 +4483,281 @@ mod tests {
     }
 
     #[test]
+    fn stage_artifact_creates_transient_handle_without_core_commit() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_valid")?;
+        let before = harness.counts()?;
+
+        let mut request = stage_artifact_request(
+            "req_stage_valid",
+            Some("idem_stage_valid"),
+            false,
+            Some(2),
+            &task_id,
+        );
+        request.display_name = "trace.log".to_owned();
+        request.content_type = "text/plain; charset=utf-8".to_owned();
+        request.safe_bytes_or_notice = "Local trace sample captured for debugging.".to_owned();
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+        let after = harness.counts()?;
+        let handle_id = response.response_value["staged_artifact_handle"]["handle_id"]
+            .as_str()
+            .expect("handle id should be present")
+            .to_owned();
+        let row = staged_artifact_row(&harness, &handle_id)?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "result");
+        assert_eq!(
+            response.response_value["base"]["effect_kind"],
+            "staging_created"
+        );
+        assert_eq!(response.response_value["base"]["state_version"], 2);
+        assert_eq!(response.response_value["base"]["events"], json!([]));
+        assert_eq!(
+            response.response_value["staged_artifact_handle"]["consumed"],
+            false
+        );
+        assert_eq!(response.response_value.get("artifact_ref"), None);
+        assert_eq!(after.state_version, before.state_version);
+        assert_eq!(after.artifact_staging, before.artifact_staging + 1);
+        assert_eq!(after.artifacts, before.artifacts);
+        assert_eq!(after.task_events, before.task_events);
+        assert_eq!(after.tool_invocations, before.tool_invocations);
+        assert_eq!(row.status, "staged");
+        assert_eq!(row.redaction_state, "none");
+        assert_eq!(row.created_by_surface_id, SURFACE_ID);
+        assert_eq!(row.created_by_surface_instance_id, SURFACE_INSTANCE_ID);
+        assert!(row.tmp_path.ends_with(".txt"));
+        assert!(harness
+            .runtime_home_path
+            .join("projects")
+            .join(PROJECT_ID)
+            .join(&row.tmp_path)
+            .exists());
+        assert!(
+            (23.99..=24.01).contains(&row.ttl_hours),
+            "expected 24h TTL, got {}",
+            row.ttl_hours
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_rejects_checksum_mismatch_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_sha")?;
+        let before = harness.counts()?;
+
+        let mut request = stage_artifact_request(
+            "req_stage_sha",
+            Some("idem_stage_sha"),
+            false,
+            Some(2),
+            &task_id,
+        );
+        request.safe_bytes_or_notice = "checksum mismatch sample".to_owned();
+        request.expected_sha256 = Some("sha256:0000".to_owned());
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_rejects_size_mismatch_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_size")?;
+        let before = harness.counts()?;
+
+        let mut request = stage_artifact_request(
+            "req_stage_size",
+            Some("idem_stage_size"),
+            false,
+            Some(2),
+            &task_id,
+        );
+        request.safe_bytes_or_notice = "size mismatch sample".to_owned();
+        request.expected_size_bytes = Some(999);
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_rejects_oversized_input_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_big")?;
+        let before = harness.counts()?;
+
+        let mut request = stage_artifact_request(
+            "req_stage_big",
+            Some("idem_stage_big"),
+            false,
+            Some(2),
+            &task_id,
+        );
+        request.display_name = "huge.log".to_owned();
+        request.safe_bytes_or_notice = "x".repeat(MAX_STAGED_BODY_BYTES + 1);
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_rejects_unsafe_secret_input_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_secret")?;
+        let before = harness.counts()?;
+
+        let mut request = stage_artifact_request(
+            "req_stage_secret",
+            Some("idem_stage_secret"),
+            false,
+            Some(2),
+            &task_id,
+        );
+        request.display_name = "secrets.log".to_owned();
+        request.safe_bytes_or_notice = "password=hunter2".to_owned();
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_rejects_unsupported_redaction_state() -> Result<(), Box<dyn Error>> {
+        let mut value = serde_json::to_value(stage_artifact_request(
+            "req_stage_bad_redaction",
+            Some("idem_stage_bad_redaction"),
+            false,
+            Some(2),
+            "task_redaction",
+        ))?;
+        value["redaction_state"] = json!("unsupported");
+
+        let error = serde_json::from_value::<StageArtifactRequest>(value)
+            .expect_err("unsupported redaction_state should not deserialize");
+        assert!(error.to_string().contains("unknown variant"));
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_dry_run_creates_no_handle_or_storage() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_dry")?;
+        let before = harness.counts()?;
+
+        let mut request = stage_artifact_request(
+            "req_stage_dry",
+            Some("idem_stage_dry"),
+            true,
+            Some(2),
+            &task_id,
+        );
+        request.display_name = "trace.md".to_owned();
+        request.content_type = "text/markdown".to_owned();
+        request.redaction_state = RedactionState::Redacted;
+        request.safe_bytes_or_notice = "Redacted diagnostic excerpt.".to_owned();
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "dry_run");
+        assert_eq!(response.response_value["base"]["effect_kind"], "no_effect");
+        assert!(response
+            .response_value
+            .get("staged_artifact_handle")
+            .is_none());
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_uses_verified_surface_provenance() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_provenance")?;
+
+        let mut request = stage_artifact_request(
+            "req_stage_provenance",
+            Some("idem_stage_provenance"),
+            false,
+            Some(2),
+            &task_id,
+        );
+        request.display_name = "binary.bin".to_owned();
+        request.content_type = "application/octet-stream".to_owned();
+        request.redaction_state = RedactionState::Blocked;
+        request.safe_bytes_or_notice = "Binary output omitted; see local run context.".to_owned();
+        let mut value = serde_json::to_value(request)?;
+        value["created_by_surface_id"] = json!("forged_surface");
+        value["created_by_surface_instance_id"] = json!("forged_instance");
+        let request: StageArtifactRequest = serde_json::from_value(value)?;
+
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+
+        assert_eq!(
+            response.response_value["staged_artifact_handle"]["created_by_surface_id"],
+            SURFACE_ID
+        );
+        assert_eq!(
+            response.response_value["staged_artifact_handle"]["created_by_surface_instance_id"],
+            SURFACE_INSTANCE_ID
+        );
+        assert_eq!(
+            response.response_value["staged_artifact_handle"]["redaction_state"],
+            "blocked"
+        );
+        let handle_id = response.response_value["staged_artifact_handle"]["handle_id"]
+            .as_str()
+            .expect("handle id should be present");
+        let row = staged_artifact_row(&harness, handle_id)?;
+        assert_eq!(row.created_by_surface_id, SURFACE_ID);
+        assert_eq!(row.created_by_surface_instance_id, SURFACE_INSTANCE_ID);
+        Ok(())
+    }
+
+    #[test]
     fn request_user_judgment_creates_pending_record() -> Result<(), Box<dyn Error>> {
         let harness = MethodHarness::new()?;
         let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "pending")?;
@@ -4583,6 +5330,32 @@ mod tests {
         }
     }
 
+    fn stage_artifact_request(
+        request_id: &str,
+        idempotency_key: Option<&str>,
+        dry_run: bool,
+        expected_state_version: Option<u64>,
+        task_id: &str,
+    ) -> StageArtifactRequest {
+        StageArtifactRequest {
+            envelope: envelope(
+                request_id,
+                idempotency_key,
+                dry_run,
+                expected_state_version,
+                Some(task_id),
+            ),
+            task_id: TaskId::new(task_id),
+            display_name: "trace.log".to_owned(),
+            content_type: "text/plain".to_owned(),
+            redaction_state: RedactionState::None,
+            safe_bytes_or_notice: "staging sample".to_owned(),
+            expected_sha256: None,
+            expected_size_bytes: None,
+            relation_hint: Some("diagnostic_log".to_owned()),
+        }
+    }
+
     fn assert_prepare_reason(response_value: &Value, code: &str) {
         let reasons = response_value["write_decision_reasons"]
             .as_array()
@@ -4633,6 +5406,58 @@ mod tests {
             .expect("change unit ref should be present")
             .to_owned();
         Ok((task_id, change_unit_id))
+    }
+
+    #[derive(Debug, PartialEq)]
+    struct StagedArtifactRow {
+        created_by_surface_id: String,
+        created_by_surface_instance_id: String,
+        status: String,
+        redaction_state: String,
+        tmp_path: String,
+        ttl_hours: f64,
+    }
+
+    fn enable_stage_artifact_capability(harness: &MethodHarness) -> Result<(), Box<dyn Error>> {
+        set_surface_capability(
+            harness,
+            &json!({
+                "access_class": "artifact_registration",
+                "supported_access_classes": ["artifact_registration"],
+                "manual_artifact_attachment_supported": true
+            })
+            .to_string(),
+        )
+    }
+
+    fn staged_artifact_row(
+        harness: &MethodHarness,
+        handle_id: &str,
+    ) -> Result<StagedArtifactRow, Box<dyn Error>> {
+        let conn = harness.conn()?;
+        Ok(conn.query_row(
+            "SELECT
+                created_by_surface_id,
+                created_by_surface_instance_id,
+                status,
+                redaction_state,
+                tmp_path,
+                (julianday(expires_at) - julianday(created_at)) * 24.0
+             FROM artifact_staging
+             WHERE project_id = ?1
+               AND handle_id = ?2",
+            rusqlite::params![PROJECT_ID, handle_id],
+            |row| {
+                Ok(StagedArtifactRow {
+                    created_by_surface_id: row.get(0)?,
+                    created_by_surface_instance_id: row.get(1)?,
+                    status: row.get(2)?,
+                    redaction_state: row.get(3)?,
+                    tmp_path: row.get(4)?,
+                    ttl_hours: row.get(5)?,
+                })
+            },
+        )?)
     }
 
     fn user_judgment_request(

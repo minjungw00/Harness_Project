@@ -13,8 +13,8 @@ use crate::{
 /// Project-local store handle used by the Core request pipeline.
 #[derive(Debug)]
 pub struct CoreProjectStore {
-    project: ProjectRecord,
-    conn: Connection,
+    pub(crate) project: ProjectRecord,
+    pub(crate) conn: Connection,
 }
 
 /// Current project-state header values needed by request routing.
