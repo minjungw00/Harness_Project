@@ -2,3 +2,29 @@
 .agents/
 .codex
 .codex/
+
+# Rust build output
+/target/
+
+# Local Harness runtime artifacts
+/.harness/
+/.harness-runtime/
+/harness-runtime/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+*.sqlite3-journal
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Generated or staged local output
+/artifacts/
+/staged-artifacts/
+/scratch/
+*.log

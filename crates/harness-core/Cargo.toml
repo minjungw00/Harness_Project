@@ -1,0 +1,12 @@
+[package]
+name = "harness-core"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+harness-store = { path = "../harness-store" }
+harness-types = { path = "../harness-types" }
+
+[lib]
+path = "src/lib.rs"

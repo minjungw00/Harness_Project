@@ -1,0 +1,11 @@
+[package]
+name = "harness-test-support"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+harness-types = { path = "../harness-types" }
+
+[lib]
+path = "src/lib.rs"

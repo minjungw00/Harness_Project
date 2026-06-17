@@ -1,0 +1,11 @@
+[package]
+name = "harness-mcp"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+harness-core = { path = "../harness-core" }
+
+[lib]
+path = "src/lib.rs"

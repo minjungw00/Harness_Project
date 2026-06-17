@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "crates/harness-types",
+    "crates/harness-store",
+    "crates/harness-core",
+    "crates/harness-cli",
+    "crates/harness-mcp",
+    "crates/harness-test-support",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
