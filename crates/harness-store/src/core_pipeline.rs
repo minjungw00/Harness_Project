@@ -59,6 +59,7 @@ pub enum CoreStorageMutation {
     InsertCurrentChangeUnit(ChangeUnitInsert),
     ReplaceCurrentChangeUnit(ChangeUnitInsert),
     MarkActiveWriteAuthorizationsStale { task_id: String },
+    InsertWriteAuthorization(WriteAuthorizationInsert),
     InsertUserJudgment(UserJudgmentInsert),
     ResolveUserJudgment(UserJudgmentResolutionUpdate),
 }
@@ -136,6 +137,20 @@ pub struct UserJudgmentResolutionUpdate {
     pub resolution_json: String,
     pub sensitive_action_scope_json: Option<String>,
     pub resolved_at: String,
+}
+
+/// Storage input for inserting one active Write Authorization.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WriteAuthorizationInsert {
+    pub write_authorization_id: String,
+    pub task_id: String,
+    pub change_unit_id: String,
+    pub attempt_scope_json: String,
+    pub created_by_surface_id: String,
+    pub created_by_surface_instance_id: String,
+    pub created_by_judgment_id: Option<String>,
+    pub expires_at: String,
+    pub metadata_json: String,
 }
 
 /// Event reference facts created by an atomic mutation commit.
@@ -449,6 +464,20 @@ impl CoreProjectStore {
         judgment_id: &str,
     ) -> StoreResult<Option<UserJudgmentRecord>> {
         user_judgment_record(&self.conn, &self.project.project_id, judgment_id)
+    }
+
+    /// Lists resolved user-owned judgment records for a Task and judgment kind.
+    pub fn resolved_user_judgment_records(
+        &self,
+        task_id: &TaskId,
+        judgment_kind: &str,
+    ) -> StoreResult<Vec<UserJudgmentRecord>> {
+        resolved_user_judgment_records(
+            &self.conn,
+            &self.project.project_id,
+            task_id.as_str(),
+            judgment_kind,
+        )
     }
 
     /// Returns the store clock in the public timestamp shape used by Core rows.
@@ -772,6 +801,9 @@ impl CoreStorageMutation {
             Self::MarkActiveWriteAuthorizationsStale { task_id } => {
                 mutation.mark_active_write_authorizations_stale(task_id)
             }
+            Self::InsertWriteAuthorization(input) => {
+                mutation.insert_write_authorization(input, committed_state_version)
+            }
             Self::InsertUserJudgment(input) => mutation.insert_user_judgment(input),
             Self::ResolveUserJudgment(input) => mutation.resolve_user_judgment(input),
         }
@@ -1061,6 +1093,84 @@ impl ProjectMutation<'_> {
                 AND task_id = ?2
                 AND status = 'active'",
             params![self.project_id, task_id],
+        )?;
+        Ok(())
+    }
+
+    fn insert_write_authorization(
+        &mut self,
+        input: &WriteAuthorizationInsert,
+        committed_state_version: u64,
+    ) -> StoreResult<()> {
+        validate_identifier("write_authorization_id", &input.write_authorization_id)?;
+        validate_identifier("task_id", &input.task_id)?;
+        validate_identifier("change_unit_id", &input.change_unit_id)?;
+        validate_json_text(
+            "write_authorizations.attempt_scope_json",
+            &input.attempt_scope_json,
+        )?;
+        validate_identifier("created_by_surface_id", &input.created_by_surface_id)?;
+        validate_identifier(
+            "created_by_surface_instance_id",
+            &input.created_by_surface_instance_id,
+        )?;
+        if let Some(created_by_judgment_id) = &input.created_by_judgment_id {
+            validate_identifier("created_by_judgment_id", created_by_judgment_id)?;
+        }
+        validate_identifier("expires_at", &input.expires_at)?;
+        validate_json_text("write_authorizations.metadata_json", &input.metadata_json)?;
+        let basis_state_version = u64_to_i64("basis_state_version", committed_state_version)?;
+
+        self.tx.execute(
+            "INSERT INTO write_authorizations (
+                project_id,
+                write_authorization_id,
+                task_id,
+                change_unit_id,
+                basis_state_version,
+                status,
+                attempt_scope_json,
+                created_by_surface_id,
+                created_by_surface_instance_id,
+                created_by_judgment_id,
+                expires_at,
+                consumed_by_run_id,
+                consumed_at,
+                revoked_at,
+                created_at,
+                metadata_json
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                ?4,
+                ?5,
+                'active',
+                ?6,
+                ?7,
+                ?8,
+                ?9,
+                ?10,
+                NULL,
+                NULL,
+                NULL,
+                strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                ?11
+            )",
+            params![
+                self.project_id,
+                input.write_authorization_id,
+                input.task_id,
+                input.change_unit_id,
+                basis_state_version,
+                input.attempt_scope_json,
+                input.created_by_surface_id,
+                input.created_by_surface_instance_id,
+                input.created_by_judgment_id,
+                input.expires_at,
+                input.metadata_json
+            ],
         )?;
         Ok(())
     }
@@ -1512,6 +1622,50 @@ fn user_judgment_record(
     )
     .optional()
     .map_err(StoreError::from)
+}
+
+fn resolved_user_judgment_records(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+    judgment_kind: &str,
+) -> StoreResult<Vec<UserJudgmentRecord>> {
+    let mut stmt = conn.prepare(
+        "SELECT
+            project_id,
+            judgment_id,
+            task_id,
+            change_unit_id,
+            judgment_kind,
+            status,
+            request_json,
+            context_json,
+            options_json,
+            affected_refs_json,
+            artifact_refs_json,
+            sensitive_action_scope_json,
+            resolution_json,
+            requested_by_surface_id,
+            requested_by_surface_instance_id,
+            requested_at,
+            resolved_at,
+            metadata_json
+         FROM user_judgments
+         WHERE project_id = ?1
+           AND task_id = ?2
+           AND judgment_kind = ?3
+           AND status = 'resolved'
+         ORDER BY judgment_id",
+    )?;
+    let rows = stmt.query_map(
+        params![project_id, task_id, judgment_kind],
+        user_judgment_record_from_row,
+    )?;
+    let mut records = Vec::new();
+    for row in rows {
+        records.push(row?);
+    }
+    Ok(records)
 }
 
 fn user_judgment_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<UserJudgmentRecord> {

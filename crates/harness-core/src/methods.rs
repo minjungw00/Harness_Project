@@ -1,30 +1,38 @@
-use std::collections::BTreeSet;
+use std::{
+    collections::BTreeSet,
+    fs,
+    path::{Component, Path},
+};
 
 use harness_store::{
     core_pipeline::{
         ChangeUnitInsert, ChangeUnitRecord, CoreProjectStore, CoreStorageMutation,
         ProjectStateHeader, StoredRecordRef, TaskInsert, TaskRecord, TaskScopeUpdate,
         UserJudgmentInsert, UserJudgmentRecord, UserJudgmentResolutionUpdate,
-        WriteAuthorizationRecord,
+        WriteAuthorizationInsert, WriteAuthorizationRecord,
     },
     StoreError,
 };
 use harness_types::{
-    canonical_request_hash, AccessClass, BaselineRef, ChangeUnitId, ChangeUnitOperation,
-    CloseReason, DryRunSummary, EffectKind, ErrorCode, JsonObject, JudgmentKind, MethodName,
-    NextActionKind, NextActionSummary, PlannedEffect, ProjectId, RecordId,
+    canonical_request_hash, AccessClass, AuthorizationEffect, AuthorizedAttemptScope, BaselineRef,
+    ChangeUnitId, ChangeUnitOperation, CloseReason, DryRunSummary, EffectKind, ErrorCode,
+    GuaranteeDisplay, GuaranteeLevel, JsonObject, JudgmentKind, MethodName, NextActionKind,
+    NextActionSummary, PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect,
+    PrepareWriteDecision, PrepareWriteRequest, PrepareWriteResult, ProjectId, RecordId,
     RecordUserJudgmentPayload, RecordUserJudgmentRequest, RequestedMode, ResumePolicy,
-    StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude, StatusRequest,
-    SurfaceInstanceId, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
-    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
-    UserJudgmentOption, UserJudgmentResolution, UserJudgmentStatus, WriteAuthoritySummary,
-    WriteAuthorizationStatus,
+    SensitiveActionScope, StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude,
+    StatusRequest, SurfaceId, SurfaceInstanceId, TaskId, TaskLifecyclePhase, TaskLifecycleState,
+    TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment,
+    UserJudgmentContext, UserJudgmentOption, UserJudgmentResolution, UserJudgmentStatus,
+    WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
+    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
 };
 use serde_json::{json, Map, Value};
 
 use crate::pipeline::{
     method_result_base, rejected_response, tool_error, CorePipelineError, CoreResult, CoreService,
     InvocationContext, OwnerPipelineBranch, PipelineRequest, PipelineResponse, TaskRequirement,
+    VerifiedSurfaceContext,
 };
 
 impl CoreService {
@@ -208,6 +216,95 @@ impl CoreService {
         })
     }
 
+    /// Executes `harness.prepare_write` through the shared Core mutation pipeline.
+    pub fn prepare_write(
+        &self,
+        request: PrepareWriteRequest,
+        invocation: InvocationContext,
+    ) -> CoreResult<PipelineResponse> {
+        let request_json = serde_json::to_value(&request)?;
+        if let Some(envelope_task_id) = &request.envelope.task_id {
+            if request
+                .task_id
+                .as_ref()
+                .is_some_and(|task_id| task_id != envelope_task_id)
+            {
+                return validation_rejected(
+                    request.envelope.dry_run,
+                    None,
+                    "task_id",
+                    "envelope.task_id must match PrepareWriteRequest.task_id",
+                );
+            }
+        }
+        if !request.envelope.dry_run {
+            if let Some(response) = validate_committed_envelope(&request.envelope)? {
+                return Ok(response);
+            }
+        }
+
+        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
+            Ok(opened) => opened,
+            Err(response) => return Ok(*response),
+        };
+        if let Some(response) = early_idempotency_replay(
+            &store,
+            &project_state,
+            MethodName::PrepareWrite,
+            &request.envelope,
+            &request_json,
+        )? {
+            return Ok(response);
+        }
+        let verified_surface = match prepare_write_surface_context(
+            &store,
+            &project_state,
+            &request.envelope,
+            &invocation,
+        ) {
+            Ok(context) => context,
+            Err(response) => return Ok(*response),
+        };
+        let plan =
+            match plan_prepare_write(&store, &project_state, request.clone(), &verified_surface) {
+                Ok(plan) => plan,
+                Err(PlanError::Response(response)) => return Ok(*response),
+                Err(PlanError::Core(error)) => return Err(error),
+            };
+
+        let required_access_class = invocation.access_class;
+        if request.envelope.dry_run {
+            return self.execute_pipeline(PipelineRequest {
+                method_name: MethodName::PrepareWrite,
+                envelope: request.envelope,
+                request_json,
+                invocation,
+                required_access_class,
+                task_requirement: TaskRequirement::None,
+                branch: OwnerPipelineBranch::DryRunPreview {
+                    dry_run_summary: plan.dry_run_summary,
+                },
+            });
+        }
+
+        self.execute_pipeline(PipelineRequest {
+            method_name: MethodName::PrepareWrite,
+            envelope: request.envelope,
+            request_json,
+            invocation,
+            required_access_class,
+            task_requirement: TaskRequirement::None,
+            branch: OwnerPipelineBranch::CommitMutation {
+                result_fields: plan.result_fields,
+                event_kind: plan.event_kind,
+                event_payload: plan.event_payload,
+                task_id: Some(plan.task_id),
+                change_unit_id: plan.change_unit_id,
+                storage_mutations: plan.storage_mutations,
+            },
+        })
+    }
+
     /// Executes `harness.request_user_judgment` through the shared Core mutation pipeline.
     pub fn request_user_judgment(
         &self,
@@ -368,6 +465,16 @@ struct MethodPlan {
     next_actions: Vec<NextActionSummary>,
 }
 
+struct PrepareWritePlan {
+    task_id: TaskId,
+    change_unit_id: Option<ChangeUnitId>,
+    storage_mutations: Vec<CoreStorageMutation>,
+    event_kind: String,
+    event_payload: JsonObject,
+    result_fields: JsonObject,
+    dry_run_summary: DryRunSummary,
+}
+
 enum PlanError {
     Core(CorePipelineError),
     Response(Box<PipelineResponse>),
@@ -449,6 +556,60 @@ fn selected_surface_instance(
             )],
         ))),
     }
+}
+
+fn prepare_write_surface_context(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    envelope: &ToolEnvelope,
+    invocation: &InvocationContext,
+) -> Result<VerifiedSurfaceContext, Box<PipelineResponse>> {
+    let surface_instance_id =
+        selected_surface_instance(store, project_state, envelope, invocation)?;
+    let surface = match store.surface(&envelope.surface_id, surface_instance_id.as_str()) {
+        Ok(Some(surface)) => surface,
+        Ok(None) => {
+            return Err(Box::new(infallible_rejected_pipeline_response(
+                envelope.dry_run,
+                Some(project_state.state_version),
+                vec![tool_error(
+                    ErrorCode::LocalAccessMismatch,
+                    "local surface context does not match the registered surface",
+                    false,
+                    None,
+                )],
+            )))
+        }
+        Err(error) => {
+            return Err(Box::new(store_error_response(
+                envelope,
+                project_state,
+                error,
+            )))
+        }
+    };
+    let capability_profile = serde_json::from_str::<Value>(&surface.capability_profile_json)
+        .map_err(|_| {
+            Box::new(infallible_rejected_pipeline_response(
+                envelope.dry_run,
+                Some(project_state.state_version),
+                vec![tool_error(
+                    ErrorCode::McpUnavailable,
+                    "surface capability profile is invalid",
+                    true,
+                    None,
+                )],
+            ))
+        })?;
+
+    Ok(VerifiedSurfaceContext {
+        project_id: ProjectId::new(surface.project_id),
+        surface_id: SurfaceId::new(surface.surface_id),
+        surface_instance_id: SurfaceInstanceId::new(surface.surface_instance_id),
+        access_class: invocation.access_class,
+        capability_profile,
+        verification_basis: invocation.verification_basis.clone(),
+    })
 }
 
 fn early_idempotency_replay(
@@ -921,6 +1082,745 @@ fn plan_update_scope(
         result_fields: strip_base(serde_json::to_value(result)?)?,
         next_actions,
     })
+}
+
+fn plan_prepare_write(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: PrepareWriteRequest,
+    verified_surface: &VerifiedSurfaceContext,
+) -> Result<PrepareWritePlan, PlanError> {
+    if request.intended_operation.trim().is_empty() {
+        validation_plan_error(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            "intended_operation",
+            "intended_operation must not be empty",
+        )?;
+        unreachable!("validation_plan_error always returns Err");
+    }
+
+    let normalized_paths = match normalize_product_paths(
+        &store.project_record().repo_root,
+        &request.intended_paths,
+    ) {
+        Ok(paths) => paths,
+        Err(ProductPathError::Invalid) => {
+            validation_plan_error(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                "intended_paths",
+                "intended_paths must be relative Product Repository paths that stay inside the repository",
+            )?;
+            unreachable!("validation_plan_error always returns Err");
+        }
+        Err(ProductPathError::LocalAccess) => {
+            let response = rejected_pipeline_response(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                vec![tool_error(
+                    ErrorCode::LocalAccessMismatch,
+                    "intended_paths resolve outside the Product Repository",
+                    false,
+                    None,
+                )],
+            )
+            .map_err(PlanError::Core)?;
+            return Err(PlanError::Response(Box::new(response)));
+        }
+    };
+
+    let planned_state_version = project_state.state_version + 1;
+    let (task_id, task, mut reasons) = resolve_prepare_write_task(store, project_state, &request)?;
+    let current_change_unit = store.current_change_unit(&task_id).map_err(|error| {
+        PlanError::Response(Box::new(store_error_response(
+            &request.envelope,
+            project_state,
+            error,
+        )))
+    })?;
+    let change_unit = resolve_prepare_write_change_unit(
+        &request,
+        &task_id,
+        current_change_unit.as_ref(),
+        &mut reasons,
+    );
+
+    if request.product_file_write_intended == normalized_paths.is_empty() {
+        reasons.push(write_decision_reason(
+            WriteDecisionCategory::WriteCompatibility,
+            "product_write_flag_mismatch",
+            "product_file_write_intended must match the intended Product Repository paths.",
+            Vec::new(),
+        ));
+    }
+
+    if let Some(change_unit) = change_unit {
+        if !baseline_matches(change_unit, &task, &request.baseline_ref) {
+            reasons.push(write_decision_reason(
+                WriteDecisionCategory::Baseline,
+                "baseline_mismatch",
+                "baseline_ref does not match the current write-compatibility basis.",
+                vec![change_unit_ref(
+                    &request.envelope.project_id,
+                    &task_id,
+                    change_unit,
+                    project_state.state_version,
+                )],
+            ));
+        }
+
+        if !paths_match_current_change_unit(
+            &store.project_record().repo_root,
+            &normalized_paths,
+            change_unit,
+        ) {
+            reasons.push(write_decision_reason(
+                WriteDecisionCategory::Scope,
+                "path_out_of_scope",
+                "One or more intended paths are outside the current Change Unit path scope.",
+                vec![change_unit_ref(
+                    &request.envelope.project_id,
+                    &task_id,
+                    change_unit,
+                    project_state.state_version,
+                )],
+            ));
+        }
+    }
+
+    let pending_user_judgment_refs = store
+        .pending_user_judgment_refs(&task_id, project_state.state_version)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .into_iter()
+        .map(state_ref_from_stored)
+        .collect::<Vec<_>>();
+    if !pending_user_judgment_refs.is_empty() {
+        reasons.push(write_decision_reason(
+            WriteDecisionCategory::UserJudgment,
+            "user_judgment_unresolved",
+            "A user-owned judgment required before write preparation remains unresolved.",
+            pending_user_judgment_refs.clone(),
+        ));
+    }
+
+    let mut active_user_judgment_refs = Vec::new();
+    if !request.sensitive_categories.is_empty() {
+        let matching_sensitive_approval = matching_sensitive_approval(
+            store,
+            project_state,
+            &request,
+            &task_id,
+            change_unit,
+            &normalized_paths,
+        )?;
+        if let Some(record) = matching_sensitive_approval {
+            active_user_judgment_refs.push(state_ref(
+                StateRecordKind::UserJudgment,
+                &record.judgment_id,
+                &request.envelope.project_id,
+                Some(&task_id),
+                Some(project_state.state_version),
+            ));
+        } else {
+            reasons.push(write_decision_reason(
+                WriteDecisionCategory::SensitiveApproval,
+                "sensitive_approval_missing",
+                "A matching sensitive-action approval is required before Write Authorization.",
+                Vec::new(),
+            ));
+        }
+    }
+
+    if verified_surface.access_class != AccessClass::WriteAuthorization {
+        reasons.push(write_decision_reason(
+            WriteDecisionCategory::SurfaceCapability,
+            "surface_access_class_mismatch",
+            "The verified surface access class is incompatible with Write Authorization.",
+            Vec::new(),
+        ));
+    }
+    if !surface_supports_prepare_write(&verified_surface.capability_profile) {
+        reasons.push(write_decision_reason(
+            WriteDecisionCategory::SurfaceCapability,
+            "surface_capability_insufficient",
+            "The verified surface lacks the write-authorization capability declaration.",
+            Vec::new(),
+        ));
+    }
+
+    let guarantee_display = Some(write_authorization_guarantee());
+    let branch_change_unit_id =
+        change_unit.map(|record| ChangeUnitId::new(record.change_unit_id.clone()));
+    let scope_change_unit_id = branch_change_unit_id.clone().unwrap_or_else(|| {
+        request
+            .change_unit_id
+            .clone()
+            .unwrap_or_else(|| ChangeUnitId::new("missing_current_change_unit"))
+    });
+    let decision = prepare_write_decision(&reasons);
+    let allowed = reasons.is_empty();
+    let write_authorization_id =
+        WriteAuthorizationId::new(format!("wa_{}", request.envelope.request_id.as_str()));
+    let authorized_attempt_scope = AuthorizedAttemptScope {
+        task_id: task_id.clone(),
+        change_unit_id: scope_change_unit_id.clone(),
+        intended_operation: request.intended_operation.clone(),
+        intended_paths: normalized_paths.clone(),
+        product_file_write_intended: request.product_file_write_intended,
+        sensitive_categories: request.sensitive_categories.clone(),
+        baseline_ref: Some(request.baseline_ref.clone()),
+    };
+    let attempt_scope_json = serde_json::to_string(&authorized_attempt_scope)?;
+    let expires_at = "2999-01-01T00:00:00Z".to_owned();
+    let write_authorization_ref = allowed.then(|| {
+        state_ref(
+            StateRecordKind::WriteAuthorization,
+            write_authorization_id.as_str(),
+            &request.envelope.project_id,
+            Some(&task_id),
+            Some(planned_state_version),
+        )
+    });
+    let write_authorization = write_authorization_ref
+        .as_ref()
+        .map(|write_authorization_ref| WriteAuthorizationSummary {
+            write_authorization_ref: write_authorization_ref.clone(),
+            status: WriteAuthorizationStatus::Active,
+            authorized_attempt_scope: authorized_attempt_scope.clone(),
+            basis_state_version: planned_state_version,
+            expires_at: Some(expires_at.clone()),
+        });
+    let synthetic_write_authorization = allowed.then(|| WriteAuthorizationRecord {
+        project_id: request.envelope.project_id.as_str().to_owned(),
+        write_authorization_id: write_authorization_id.as_str().to_owned(),
+        task_id: task_id.as_str().to_owned(),
+        change_unit_id: Some(scope_change_unit_id.as_str().to_owned()),
+        basis_state_version: planned_state_version,
+        status: "active".to_owned(),
+        attempt_scope_json: attempt_scope_json.clone(),
+        expires_at: expires_at.clone(),
+    });
+
+    let blocker_refs = store
+        .active_blocker_refs(&task_id, planned_state_version)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .into_iter()
+        .map(state_ref_from_stored)
+        .collect::<Vec<_>>();
+    let state = build_state_summary(SummaryBuild {
+        project_id: &request.envelope.project_id,
+        state_version: planned_state_version,
+        task: &task,
+        current_change_unit: change_unit,
+        pending_user_judgment_refs,
+        blocker_refs,
+        active_write_authorization: synthetic_write_authorization.as_ref(),
+        options: SummaryOptions::prepare_write(),
+    })?;
+    let result = PrepareWriteResult {
+        base: placeholder_base(),
+        decision,
+        state: Some(state),
+        write_authorization_ref: write_authorization_ref.clone(),
+        write_authorization,
+        authorization_effect: if allowed {
+            AuthorizationEffect::Created
+        } else {
+            AuthorizationEffect::None
+        },
+        active_user_judgment_refs,
+        write_decision_reasons: reasons.clone(),
+        user_judgment_candidate: None,
+        guarantee_display: guarantee_display.clone(),
+    };
+
+    let storage_mutations = if allowed {
+        vec![CoreStorageMutation::InsertWriteAuthorization(
+            WriteAuthorizationInsert {
+                write_authorization_id: write_authorization_id.as_str().to_owned(),
+                task_id: task_id.as_str().to_owned(),
+                change_unit_id: scope_change_unit_id.as_str().to_owned(),
+                attempt_scope_json,
+                created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
+                created_by_surface_instance_id: verified_surface
+                    .surface_instance_id
+                    .as_str()
+                    .to_owned(),
+                created_by_judgment_id: None,
+                expires_at,
+                metadata_json: serde_json::to_string(&json!({
+                    "verification_basis": verified_surface.verification_basis.clone()
+                }))?,
+            },
+        )]
+    } else {
+        Vec::new()
+    };
+    let event_kind = if allowed {
+        "write_authorization_created"
+    } else {
+        "write_decision_recorded"
+    }
+    .to_owned();
+    let event_payload = object_from_value(json!({
+        "task_id": task_id.clone(),
+        "change_unit_id": branch_change_unit_id.clone(),
+        "decision": decision,
+        "write_authorization_id": allowed.then(|| write_authorization_id.as_str().to_owned()),
+        "reason_codes": reasons.iter().map(|reason| reason.code.clone()).collect::<Vec<_>>()
+    }))?;
+
+    Ok(PrepareWritePlan {
+        task_id,
+        change_unit_id: branch_change_unit_id,
+        storage_mutations,
+        event_kind,
+        event_payload,
+        result_fields: strip_base(serde_json::to_value(result)?)?,
+        dry_run_summary: prepare_write_dry_run_summary(
+            allowed,
+            &reasons,
+            write_authorization_ref,
+            guarantee_display,
+        ),
+    })
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ProductPathError {
+    Invalid,
+    LocalAccess,
+}
+
+fn resolve_prepare_write_task(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &PrepareWriteRequest,
+) -> Result<(TaskId, TaskRecord, Vec<WriteDecisionReason>), PlanError> {
+    let task_id = request
+        .task_id
+        .clone()
+        .or_else(|| request.envelope.task_id.clone())
+        .or_else(|| project_state.active_task_id.clone().map(TaskId::new))
+        .ok_or_else(|| {
+            PlanError::Response(Box::new(no_active_task_response(
+                &request.envelope,
+                project_state,
+            )))
+        })?;
+    let task = store
+        .task_record(&task_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .ok_or_else(|| {
+            PlanError::Response(Box::new(no_active_task_response(
+                &request.envelope,
+                project_state,
+            )))
+        })?;
+
+    let mut reasons = Vec::new();
+    if project_state
+        .active_task_id
+        .as_deref()
+        .is_some_and(|active_task_id| active_task_id != task_id.as_str())
+    {
+        reasons.push(write_decision_reason(
+            WriteDecisionCategory::Scope,
+            "scope_not_current",
+            "The addressed Task is not the current Task.",
+            vec![state_ref(
+                StateRecordKind::Task,
+                task_id.as_str(),
+                &request.envelope.project_id,
+                Some(&task_id),
+                Some(project_state.state_version),
+            )],
+        ));
+    }
+
+    Ok((task_id, task, reasons))
+}
+
+fn resolve_prepare_write_change_unit<'a>(
+    request: &PrepareWriteRequest,
+    task_id: &TaskId,
+    current_change_unit: Option<&'a ChangeUnitRecord>,
+    reasons: &mut Vec<WriteDecisionReason>,
+) -> Option<&'a ChangeUnitRecord> {
+    let Some(current_change_unit) = current_change_unit else {
+        reasons.push(write_decision_reason(
+            WriteDecisionCategory::Scope,
+            "no_current_change_unit",
+            "No current Change Unit can be resolved for write preparation.",
+            Vec::new(),
+        ));
+        return None;
+    };
+
+    if request
+        .change_unit_id
+        .as_ref()
+        .is_some_and(|change_unit_id| change_unit_id.as_str() != current_change_unit.change_unit_id)
+    {
+        reasons.push(write_decision_reason(
+            WriteDecisionCategory::Scope,
+            "scope_not_current",
+            "The addressed Change Unit is not the current Change Unit.",
+            vec![change_unit_ref(
+                &request.envelope.project_id,
+                task_id,
+                current_change_unit,
+                current_change_unit.basis_state_version.unwrap_or_default(),
+            )],
+        ));
+    }
+
+    Some(current_change_unit)
+}
+
+fn normalize_product_paths(
+    repo_root: &Path,
+    raw_paths: &[String],
+) -> Result<Vec<String>, ProductPathError> {
+    let canonical_repo_root =
+        fs::canonicalize(repo_root).map_err(|_| ProductPathError::LocalAccess)?;
+    raw_paths
+        .iter()
+        .map(|path| normalize_product_path(repo_root, &canonical_repo_root, path))
+        .collect()
+}
+
+fn normalize_product_path(
+    repo_root: &Path,
+    canonical_repo_root: &Path,
+    raw_path: &str,
+) -> Result<String, ProductPathError> {
+    if raw_path.trim().is_empty() || raw_path.contains('\\') {
+        return Err(ProductPathError::Invalid);
+    }
+    let path = Path::new(raw_path);
+    if path.is_absolute() {
+        return Err(ProductPathError::Invalid);
+    }
+
+    let mut parts = Vec::new();
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                if parts.pop().is_none() {
+                    return Err(ProductPathError::Invalid);
+                }
+            }
+            Component::Normal(value) => {
+                let value = value.to_str().ok_or(ProductPathError::Invalid)?;
+                if value.is_empty() {
+                    return Err(ProductPathError::Invalid);
+                }
+                parts.push(value.to_owned());
+            }
+            Component::RootDir | Component::Prefix(_) => return Err(ProductPathError::Invalid),
+        }
+    }
+    if parts.is_empty() {
+        return Err(ProductPathError::Invalid);
+    }
+
+    let normalized = parts.join("/");
+    ensure_product_path_does_not_escape(repo_root, canonical_repo_root, &normalized)?;
+    Ok(normalized)
+}
+
+fn ensure_product_path_does_not_escape(
+    repo_root: &Path,
+    canonical_repo_root: &Path,
+    normalized_path: &str,
+) -> Result<(), ProductPathError> {
+    let mut candidate = repo_root.join(normalized_path);
+    while !candidate.exists() {
+        if !candidate.pop() {
+            return Err(ProductPathError::LocalAccess);
+        }
+    }
+    let canonical_candidate =
+        fs::canonicalize(candidate).map_err(|_| ProductPathError::LocalAccess)?;
+    if canonical_candidate.starts_with(canonical_repo_root) {
+        Ok(())
+    } else {
+        Err(ProductPathError::LocalAccess)
+    }
+}
+
+fn baseline_matches(
+    change_unit: &ChangeUnitRecord,
+    task: &TaskRecord,
+    baseline_ref: &BaselineRef,
+) -> bool {
+    let write_basis = parse_json_object(&change_unit.write_basis_json);
+    let baseline = string_member(&write_basis, "baseline_ref")
+        .or_else(|| StoredScope::from_task(task).baseline_ref);
+    baseline.as_deref() == Some(baseline_ref.as_str())
+}
+
+fn paths_match_current_change_unit(
+    repo_root: &Path,
+    intended_paths: &[String],
+    change_unit: &ChangeUnitRecord,
+) -> bool {
+    if intended_paths.is_empty() {
+        return true;
+    }
+    let raw_bounded_paths =
+        serde_json::from_str::<Vec<String>>(&change_unit.bounded_paths_json).unwrap_or_default();
+    if raw_bounded_paths.is_empty() {
+        return false;
+    }
+    let bounded_paths = normalize_product_paths(repo_root, &raw_bounded_paths).unwrap_or_default();
+    !bounded_paths.is_empty()
+        && intended_paths.iter().all(|path| {
+            bounded_paths
+                .iter()
+                .any(|scope| path_is_within(path, scope))
+        })
+}
+
+fn path_is_within(path: &str, scope: &str) -> bool {
+    path == scope
+        || path
+            .strip_prefix(scope)
+            .is_some_and(|rest| rest.starts_with('/'))
+}
+
+fn matching_sensitive_approval(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &PrepareWriteRequest,
+    task_id: &TaskId,
+    change_unit: Option<&ChangeUnitRecord>,
+    normalized_paths: &[String],
+) -> Result<Option<UserJudgmentRecord>, PlanError> {
+    let records = store
+        .resolved_user_judgment_records(task_id, "sensitive_approval")
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?;
+    let now = store.current_timestamp().map_err(|error| {
+        PlanError::Response(Box::new(infallible_rejected_pipeline_response(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            vec![store_unavailable_error(error)],
+        )))
+    })?;
+
+    for record in records {
+        if !record
+            .change_unit_id
+            .as_deref()
+            .map(|record_change_unit_id| {
+                change_unit.map(|change_unit| change_unit.change_unit_id.as_str())
+                    == Some(record_change_unit_id)
+            })
+            .unwrap_or(true)
+        {
+            continue;
+        }
+        let Ok(scope) =
+            serde_json::from_str::<SensitiveActionScope>(&record.sensitive_action_scope_json)
+        else {
+            continue;
+        };
+        if sensitive_scope_matches(
+            &store.project_record().repo_root,
+            &request.sensitive_categories,
+            normalized_paths,
+            &scope,
+            &now,
+        ) {
+            return Ok(Some(record));
+        }
+    }
+
+    Ok(None)
+}
+
+fn sensitive_scope_matches(
+    repo_root: &Path,
+    sensitive_categories: &[String],
+    normalized_paths: &[String],
+    scope: &SensitiveActionScope,
+    now: &str,
+) -> bool {
+    if scope
+        .expires_at
+        .as_deref()
+        .is_some_and(|expires_at| expires_at <= now)
+    {
+        return false;
+    }
+    let Ok(scope_paths) = normalize_product_paths(repo_root, &scope.intended_paths) else {
+        return false;
+    };
+    string_set(sensitive_categories) == string_set(&scope.sensitive_categories)
+        && string_set(normalized_paths) == string_set(&scope_paths)
+}
+
+fn string_set(values: &[String]) -> BTreeSet<&str> {
+    values.iter().map(String::as_str).collect()
+}
+
+fn surface_supports_prepare_write(capability_profile: &Value) -> bool {
+    if capability_profile
+        .get("supported_access_classes")
+        .and_then(Value::as_array)
+        .is_some_and(|values| {
+            values
+                .iter()
+                .any(|value| value.as_str() == Some("write_authorization"))
+        })
+    {
+        return true;
+    }
+    if capability_profile
+        .get("access_class")
+        .and_then(Value::as_str)
+        == Some("write_authorization")
+    {
+        return true;
+    }
+    if capability_profile
+        .get("write_authorization")
+        .and_then(Value::as_bool)
+        == Some(true)
+    {
+        return true;
+    }
+    capability_profile
+        .pointer("/capabilities/write_authorization")
+        .and_then(Value::as_bool)
+        == Some(true)
+}
+
+fn prepare_write_decision(reasons: &[WriteDecisionReason]) -> PrepareWriteDecision {
+    if reasons.is_empty() {
+        PrepareWriteDecision::Allowed
+    } else if reasons
+        .iter()
+        .any(|reason| reason.code == "user_judgment_unresolved")
+    {
+        PrepareWriteDecision::DecisionRequired
+    } else if reasons
+        .iter()
+        .any(|reason| reason.code == "sensitive_approval_missing")
+    {
+        PrepareWriteDecision::ApprovalRequired
+    } else {
+        PrepareWriteDecision::Blocked
+    }
+}
+
+fn prepare_write_dry_run_summary(
+    allowed: bool,
+    reasons: &[WriteDecisionReason],
+    _write_authorization_ref: Option<StateRecordRef>,
+    _guarantee_display: Option<GuaranteeDisplay>,
+) -> DryRunSummary {
+    DryRunSummary {
+        planned_effects: if allowed {
+            vec![PlannedEffect {
+                target_kind: "write_authorization".to_owned(),
+                action: "would_create".to_owned(),
+                description: "Prepare write would create one active Write Authorization."
+                    .to_owned(),
+            }]
+        } else {
+            Vec::new()
+        },
+        would_blockers: reasons
+            .iter()
+            .map(|reason| PlannedBlocker {
+                source_kind: PlannedBlockerSourceKind::WriteDecision,
+                category: write_decision_category_value(reason.category).to_owned(),
+                code: reason.code.clone(),
+                message: reason.message.clone(),
+                related_refs: reason.related_refs.clone(),
+            })
+            .collect(),
+        would_errors: Vec::new(),
+        next_actions: Vec::new(),
+        diagnostics: Vec::new(),
+    }
+}
+
+fn write_decision_reason(
+    category: WriteDecisionCategory,
+    code: &'static str,
+    message: &'static str,
+    related_refs: Vec<StateRecordRef>,
+) -> WriteDecisionReason {
+    WriteDecisionReason {
+        category,
+        code: code.to_owned(),
+        message: message.to_owned(),
+        related_refs,
+    }
+}
+
+fn write_decision_category_value(category: WriteDecisionCategory) -> &'static str {
+    match category {
+        WriteDecisionCategory::Scope => "scope",
+        WriteDecisionCategory::UserJudgment => "user_judgment",
+        WriteDecisionCategory::SensitiveApproval => "sensitive_approval",
+        WriteDecisionCategory::WriteCompatibility => "write_compatibility",
+        WriteDecisionCategory::Baseline => "baseline",
+        WriteDecisionCategory::SurfaceCapability => "surface_capability",
+    }
+}
+
+fn change_unit_ref(
+    project_id: &ProjectId,
+    task_id: &TaskId,
+    change_unit: &ChangeUnitRecord,
+    state_version: u64,
+) -> StateRecordRef {
+    state_ref(
+        StateRecordKind::ChangeUnit,
+        &change_unit.change_unit_id,
+        project_id,
+        Some(task_id),
+        Some(state_version),
+    )
+}
+
+fn write_authorization_guarantee() -> GuaranteeDisplay {
+    GuaranteeDisplay {
+        level: GuaranteeLevel::Cooperative,
+        basis: "Write Authorization is a Harness compatibility record, not OS permission."
+            .to_owned(),
+        capability_refs: Vec::new(),
+    }
 }
 
 fn plan_request_user_judgment(
@@ -1728,6 +2628,14 @@ impl SummaryOptions {
         }
     }
 
+    fn prepare_write() -> Self {
+        Self {
+            pending_user_judgments: true,
+            blockers: true,
+            write_authority: true,
+        }
+    }
+
     fn status(include: &StatusInclude) -> Self {
         Self {
             pending_user_judgments: include.pending_user_judgments,
@@ -2290,7 +3198,7 @@ fn string_array_member(object: &JsonObject, key: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use std::{error::Error, path::PathBuf};
+    use std::{error::Error, fs, path::PathBuf};
 
     use harness_store::{
         bootstrap::{
@@ -2322,12 +3230,14 @@ mod tests {
     impl MethodHarness {
         fn new() -> Result<Self, Box<dyn Error>> {
             let runtime_home = TempRuntimeHome::new("core-methods")?;
+            let repo_root = runtime_home.path().join("repo");
+            fs::create_dir_all(&repo_root)?;
             initialize_runtime_home(runtime_home.path(), "runtime_home_methods", "{}")?;
             register_project(
                 runtime_home.path(),
                 ProjectRegistration {
                     project_id: PROJECT_ID.to_owned(),
-                    repo_root: runtime_home.path().join("repo"),
+                    repo_root,
                     project_home: None,
                     status: ACTIVE_PROJECT_STATUS.to_owned(),
                     metadata_json: "{}".to_owned(),
@@ -2341,7 +3251,11 @@ mod tests {
                     surface_instance_id: SURFACE_INSTANCE_ID.to_owned(),
                     surface_kind: "local_test".to_owned(),
                     display_name: Some("Method Test Surface".to_owned()),
-                    capability_profile_json: "{}".to_owned(),
+                    capability_profile_json: json!({
+                        "access_class": "write_authorization",
+                        "supported_access_classes": ["write_authorization"]
+                    })
+                    .to_string(),
                     local_access_json: "{}".to_owned(),
                     metadata_json: "{}".to_owned(),
                 },
@@ -2682,6 +3596,417 @@ mod tests {
                 .len(),
             1
         );
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_allowed")?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_prepare_allowed_sensitive",
+                "idem_prepare_allowed_sensitive",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::SensitiveApproval,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        harness.service.record_user_judgment(
+            record_judgment_request(
+                "req_prepare_allowed_record",
+                "idem_prepare_allowed_record",
+                Some(3),
+                &task_id,
+                "uj_req_prepare_allowed_sensitive",
+                JudgmentKind::SensitiveApproval,
+                answer_payload(JudgmentKind::SensitiveApproval),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before = harness.counts()?;
+
+        let mut request = prepare_write_request(
+            "req_prepare_allowed",
+            "idem_prepare_allowed",
+            Some(4),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        request.sensitive_categories = vec!["network".to_owned()];
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["decision"], "allowed");
+        assert_eq!(response.response_value["authorization_effect"], "created");
+        assert_eq!(response.response_value["base"]["state_version"], 5);
+        assert_eq!(
+            response.response_value["write_authorization"]["basis_state_version"],
+            5
+        );
+        assert_eq!(
+            response.response_value["write_authorization"]["authorized_attempt_scope"]
+                ["intended_paths"],
+            json!(["src/export.rs"])
+        );
+        assert_eq!(
+            response.response_value["active_user_judgment_refs"]
+                .as_array()
+                .expect("active judgment refs should be an array")
+                .len(),
+            1
+        );
+        assert_eq!(after.state_version, before.state_version + 1);
+        assert_eq!(after.write_authorizations, before.write_authorizations + 1);
+        assert_eq!(after.task_events, before.task_events + 1);
+        assert_eq!(after.tool_invocations, before.tool_invocations + 1);
+        assert_eq!(
+            write_authorization_basis(&harness, "wa_req_prepare_allowed")?,
+            5
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_blocked_path_creates_no_authorization() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_path")?;
+        let before = harness.counts()?;
+
+        let mut request = prepare_write_request(
+            "req_prepare_path",
+            "idem_prepare_path",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        request.intended_paths = vec!["src/other.rs".to_owned()];
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["decision"], "blocked");
+        assert_prepare_reason(&response.response_value, "path_out_of_scope");
+        assert!(response.response_value["write_authorization"].is_null());
+        assert_eq!(after.state_version, before.state_version + 1);
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_missing_change_unit_returns_decision_reason() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let intake = harness.service.intake(
+            intake_request(
+                "req_prepare_no_cu_task",
+                "idem_prepare_no_cu_task",
+                false,
+                Some(0),
+                RequestedMode::Work,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let task_id = intake.response_value["task_ref"]["record_id"]
+            .as_str()
+            .expect("task ref should be present")
+            .to_owned();
+        let before = harness.counts()?;
+
+        let request = prepare_write_request(
+            "req_prepare_no_cu",
+            "idem_prepare_no_cu",
+            Some(1),
+            Some(&task_id),
+            None,
+        );
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["decision"], "blocked");
+        assert_prepare_reason(&response.response_value, "no_current_change_unit");
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_judgment")?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_prepare_judgment_pending",
+                "idem_prepare_judgment_pending",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before = harness.counts()?;
+
+        let request = prepare_write_request(
+            "req_prepare_judgment",
+            "idem_prepare_judgment",
+            Some(3),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["decision"], "decision_required");
+        assert_prepare_reason(&response.response_value, "user_judgment_unresolved");
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_missing_sensitive_approval_requires_approval() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&harness, "prepare_sensitive")?;
+        let before = harness.counts()?;
+
+        let mut request = prepare_write_request(
+            "req_prepare_sensitive",
+            "idem_prepare_sensitive",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        request.sensitive_categories = vec!["network".to_owned()];
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["decision"], "approval_required");
+        assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_baseline_mismatch_blocks_authorization() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_baseline")?;
+        let before = harness.counts()?;
+
+        let mut request = prepare_write_request(
+            "req_prepare_baseline",
+            "idem_prepare_baseline",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        request.baseline_ref = BaselineRef::new("baseline_other");
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["decision"], "blocked");
+        assert_prepare_reason(&response.response_value, "baseline_mismatch");
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_surface_access_mismatch_is_method_decision() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_surface")?;
+        let before = harness.counts()?;
+
+        let request = prepare_write_request(
+            "req_prepare_surface_access",
+            "idem_prepare_surface_access",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::CoreMutation))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "result");
+        assert_eq!(response.response_value["decision"], "blocked");
+        assert_prepare_reason(&response.response_value, "surface_access_class_mismatch");
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_surface_capability_insufficient_is_method_decision(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_cap")?;
+        set_surface_capability(&harness, "{}")?;
+        let before = harness.counts()?;
+
+        let request = prepare_write_request(
+            "req_prepare_capability",
+            "idem_prepare_capability",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["decision"], "blocked");
+        assert_prepare_reason(&response.response_value, "surface_capability_insufficient");
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_product_write_flag_mismatch_blocks_authorization() -> Result<(), Box<dyn Error>>
+    {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_flag")?;
+        let before = harness.counts()?;
+
+        let mut request = prepare_write_request(
+            "req_prepare_flag",
+            "idem_prepare_flag",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        request.product_file_write_intended = false;
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["decision"], "blocked");
+        assert_prepare_reason(&response.response_value, "product_write_flag_mismatch");
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_dry")?;
+        let before = harness.counts()?;
+
+        let mut request = prepare_write_request(
+            "req_prepare_dry",
+            "idem_prepare_dry",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        request.envelope.dry_run = true;
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "dry_run");
+        assert_eq!(
+            response.response_value["dry_run_summary"]["planned_effects"][0]["action"],
+            "would_create"
+        );
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_rejects_escaping_product_path_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_escape")?;
+        let before = harness.counts()?;
+
+        let mut request = prepare_write_request(
+            "req_prepare_escape",
+            "idem_prepare_escape",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        request.intended_paths = vec!["../outside.rs".to_owned()];
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_stale_state_rejects_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_stale")?;
+        let before = harness.counts()?;
+
+        let request = prepare_write_request(
+            "req_prepare_stale",
+            "idem_prepare_stale",
+            Some(1),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "STATE_VERSION_CONFLICT"
+        );
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_idempotency_replays_without_second_authorization() -> Result<(), Box<dyn Error>>
+    {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_replay")?;
+        let request = prepare_write_request(
+            "req_prepare_replay",
+            "idem_prepare_replay",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+
+        let first = harness
+            .service
+            .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
+        let after_first = harness.counts()?;
+        let second = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+
+        assert_eq!(first.response_value["decision"], "allowed");
+        assert!(second.replayed);
+        assert_eq!(second.response_json, first.response_json);
+        assert_eq!(harness.counts()?, after_first);
+        assert_eq!(write_authorization_count(&harness)?, 1);
         Ok(())
     }
 
@@ -3233,6 +4558,41 @@ mod tests {
         }
     }
 
+    fn prepare_write_request(
+        request_id: &str,
+        idempotency_key: &str,
+        expected_state_version: Option<u64>,
+        task_id: Option<&str>,
+        change_unit_id: Option<&str>,
+    ) -> PrepareWriteRequest {
+        PrepareWriteRequest {
+            envelope: envelope(
+                request_id,
+                Some(idempotency_key),
+                false,
+                expected_state_version,
+                task_id,
+            ),
+            task_id: task_id.map(TaskId::new),
+            change_unit_id: change_unit_id.map(ChangeUnitId::new),
+            intended_operation: "local_sensitive_step".to_owned(),
+            intended_paths: vec!["src/export.rs".to_owned()],
+            product_file_write_intended: true,
+            sensitive_categories: Vec::new(),
+            baseline_ref: BaselineRef::new("baseline_test"),
+        }
+    }
+
+    fn assert_prepare_reason(response_value: &Value, code: &str) {
+        let reasons = response_value["write_decision_reasons"]
+            .as_array()
+            .expect("write_decision_reasons should be an array");
+        assert!(
+            reasons.iter().any(|reason| reason["code"] == code),
+            "expected prepare_write reason code {code}, got {reasons:?}"
+        );
+    }
+
     fn create_task_with_change_unit(
         harness: &MethodHarness,
         prefix: &str,
@@ -3479,6 +4839,49 @@ mod tests {
             ],
         )?;
         Ok(())
+    }
+
+    fn set_surface_capability(
+        harness: &MethodHarness,
+        capability_profile_json: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = harness.conn()?;
+        conn.execute(
+            "UPDATE surfaces
+                SET capability_profile_json = ?3
+              WHERE project_id = ?1
+                AND surface_id = ?2",
+            rusqlite::params![PROJECT_ID, SURFACE_ID, capability_profile_json],
+        )?;
+        Ok(())
+    }
+
+    fn write_authorization_count(harness: &MethodHarness) -> Result<u64, Box<dyn Error>> {
+        let conn = harness.conn()?;
+        let count: i64 = conn.query_row(
+            "SELECT COUNT(*)
+               FROM write_authorizations
+              WHERE project_id = ?1",
+            rusqlite::params![PROJECT_ID],
+            |row| row.get(0),
+        )?;
+        Ok(u64::try_from(count)?)
+    }
+
+    fn write_authorization_basis(
+        harness: &MethodHarness,
+        write_authorization_id: &str,
+    ) -> Result<u64, Box<dyn Error>> {
+        let conn = harness.conn()?;
+        let basis: i64 = conn.query_row(
+            "SELECT basis_state_version
+               FROM write_authorizations
+              WHERE project_id = ?1
+                AND write_authorization_id = ?2",
+            rusqlite::params![PROJECT_ID, write_authorization_id],
+            |row| row.get(0),
+        )?;
+        Ok(u64::try_from(basis)?)
     }
 
     fn user_judgment_status(
