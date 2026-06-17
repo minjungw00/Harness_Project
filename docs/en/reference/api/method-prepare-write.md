@@ -9,6 +9,7 @@ This document owns baseline method behavior for `harness.prepare_write`:
 - method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
 - `PrepareWriteResult` decision behavior
 - method-specific handling for creating one consumable `Write Authorization`
+- method-specific `WriteDecisionReason.code` production behavior
 - prepare-write examples
 
 ## What this document does not own
@@ -133,12 +134,30 @@ Result data:
 - `write_decision_reasons` must be non-empty.
 - Each entry is a `WriteDecisionReason`.
 - `category` uses the controlled `WriteDecisionReason.category` value set.
-- `code` is a method-scoped opaque reason code unless this method document explicitly defines a narrower local code list. Example codes in this document are illustrative and are not global value-set entries.
+- `code` uses this method's local v1 code list below.
 - `message` is a free-form display string.
 - `related_refs` uses `StateRecordRef[]`; use `[]` when no related refs apply.
 
+Method-local `WriteDecisionReason.code` list:
+
+The production meanings below apply only when this method reaches a committed non-allow `PrepareWriteResult`. Pre-commit failures still return `ToolRejectedResponse` according to the error owners.
+
+| Code | Category | Local production meaning |
+|---|---|---|
+| `scope_not_current` | `scope` | Current scope is not compatible with the addressed Task, Change Unit, or intended write basis. |
+| `path_out_of_scope` | `scope` | One or more `intended_paths` are outside current scope. |
+| `sensitive_approval_missing` | `sensitive_approval` | A required separate `sensitive_approval` user judgment is absent. |
+| `user_judgment_unresolved` | `user_judgment` | A user-owned judgment required for the write preconditions remains unresolved. |
+| `baseline_mismatch` | `baseline` | `baseline_ref` does not match the write-compatibility basis. |
+| `surface_access_class_mismatch` | `surface_capability` | The verified surface `access_class` is incompatible with the `Write Authorization` path. |
+| `surface_capability_insufficient` | `surface_capability` | The verified surface lacks a required capability for the intended product-file write check. |
+| `product_write_flag_mismatch` | `write_compatibility` | `product_file_write_intended` does not match the intended operation or paths. |
+| `no_current_change_unit` | `scope` | No current Change Unit can be resolved for the write-preparation decision. |
+
 Non-claims:
 
+- These codes are method-local `WriteDecisionReason.code` values. They are not public `ErrorCode` values, not `CloseReadinessBlocker.code` values, and not global value-set entries.
+- `STATE_VERSION_CONFLICT` is a rejected-response `ErrorCode`; it must not be represented as a method-local write decision reason.
 - `write_decision_reasons` are not `CloseReadinessBlocker` values.
 - `write_decision_reasons` do not evaluate close readiness.
 - No consumable `Write Authorization` is created.
@@ -157,7 +176,7 @@ Returns `ToolRejectedResponse` for failures before decision evaluation or commit
 - invalid requested guarantee
 - capability failure
 
-Non-claim: `STATE_VERSION_CONFLICT` is always a rejected response error, never a write decision reason.
+Non-claim: `STATE_VERSION_CONFLICT` is always a rejected response error, never a method-local write decision reason.
 
 Public error code meaning, precedence, and rejected-response routing are owned by the error documents linked below.
 
@@ -325,7 +344,7 @@ guarantee_display:
 
 This branch applies when the matching sensitive-action approval is missing.
 
-The `code: sensitive_account_preference` value below is a method-scoped illustrative reason code for this example. It is not a global `WriteDecisionReason.code` value.
+The `code: sensitive_approval_missing` value below is one of this method's local reason codes. It is not a public `ErrorCode` value.
 
 ```yaml
 base:
@@ -340,7 +359,7 @@ write_authorization: null
 authorization_effect: none
 write_decision_reasons:
   - category: sensitive_approval
-    code: sensitive_account_preference
+    code: sensitive_approval_missing
     message: "Profile preference updates require separate sensitive-action approval before Write Authorization."
     related_refs: []
 active_user_judgment_refs: []

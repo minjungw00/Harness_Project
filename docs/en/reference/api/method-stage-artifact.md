@@ -51,6 +51,18 @@ Nested owner links:
 - `redaction_state` values are owned by [API Value Sets artifact values](schema-value-sets.md#artifact-values).
 - The result-side `StagedArtifactHandle` shape stays with [API Artifact Schemas](schema-artifacts.md#stagedartifacthandle).
 
+## Staging admission defaults
+
+This method applies the baseline staging defaults owned by [Artifact Storage](../storage-artifacts.md):
+
+- the returned handle expires 24 hours after staging creation
+- the stored staged artifact body or safe notice is capped at 10 MiB (10,485,760 bytes)
+- stored body bytes are limited to safe text, JSON, Markdown, XML, or equivalent textual media types
+- binary input is represented only by a safe textual notice unless a future owner defines a profile-gated safe binary body path
+- raw secrets must not be stored; use `redaction_state=secret_omitted` or `redaction_state=blocked` safe notices where applicable
+
+Requests that fail these admission requirements use the existing rejected-result behavior for invalid or unsafe artifact input. This section applies and routes storage-owned defaults; artifact lifecycle, retention, redaction-state value meaning, and body-read eligibility remain owned by [Artifact Storage](../storage-artifacts.md) and [API Value Sets](schema-value-sets.md#artifact-values).
+
 ## Access requirements
 
 Requires:

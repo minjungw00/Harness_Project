@@ -9,6 +9,7 @@
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
 - `PrepareWriteResult` 결정 동작
 - 소비 가능한 `Write Authorization` 하나를 만드는 메서드별 처리
+- 메서드별 `WriteDecisionReason.code` 생성 동작
 - 쓰기 준비 예시
 
 ## 담당하지 않는 것
@@ -133,12 +134,30 @@ PrepareWriteRequest:
 - `write_decision_reasons`는 비어 있으면 안 됩니다.
 - 각 항목은 `WriteDecisionReason`입니다.
 - `category`는 제어되는 `WriteDecisionReason.category` 값 집합을 사용합니다.
-- `code`는 이 메서드 문서가 더 좁은 로컬 코드 목록을 명시적으로 정의하지 않는 한 메서드 범위의 불투명 이유 코드입니다. 이 문서의 예시 코드는 설명용이며 전역 값 집합 항목이 아닙니다.
+- `code`는 아래에 있는 이 메서드의 로컬 v1 코드 목록을 사용합니다.
 - `message`는 자유 형식 표시 문자열입니다.
 - `related_refs`는 `StateRecordRef[]`를 사용합니다. 관련 참조가 없으면 `[]`를 사용합니다.
 
+메서드 로컬 `WriteDecisionReason.code` 목록:
+
+아래 생성 의미는 이 메서드가 커밋되는 비허용 `PrepareWriteResult`에 도달했을 때만 적용됩니다. 커밋 전 실패는 여전히 오류 담당 문서에 따라 `ToolRejectedResponse`를 반환합니다.
+
+| 코드 | 범주 | 로컬 생성 의미 |
+|---|---|---|
+| `scope_not_current` | `scope` | 현재 적용 범위가 요청한 `Task`, Change Unit, 또는 의도한 쓰기 기준과 호환되지 않습니다. |
+| `path_out_of_scope` | `scope` | `intended_paths` 중 하나 이상이 현재 적용 범위를 벗어납니다. |
+| `sensitive_approval_missing` | `sensitive_approval` | 필요한 별도 `sensitive_approval` 사용자 판단이 없습니다. |
+| `user_judgment_unresolved` | `user_judgment` | 쓰기 선행조건에 필요한 사용자 소유 판단이 아직 해결되지 않았습니다. |
+| `baseline_mismatch` | `baseline` | `baseline_ref`가 쓰기 호환성 기준과 맞지 않습니다. |
+| `surface_access_class_mismatch` | `surface_capability` | 확인된 접점의 `access_class`가 `Write Authorization` 경로와 맞지 않습니다. |
+| `surface_capability_insufficient` | `surface_capability` | 확인된 접점에 의도한 제품 파일 쓰기 확인에 필요한 역량이 없습니다. |
+| `product_write_flag_mismatch` | `write_compatibility` | `product_file_write_intended`가 의도한 동작 또는 경로와 맞지 않습니다. |
+| `no_current_change_unit` | `scope` | 쓰기 준비 결정에 사용할 현재 적용 Change Unit을 확인할 수 없습니다. |
+
 비주장:
 
+- 이 코드는 메서드 로컬 `WriteDecisionReason.code` 값입니다. 공개 `ErrorCode` 값, `CloseReadinessBlocker.code` 값, 전역 값 집합 항목이 아닙니다.
+- `STATE_VERSION_CONFLICT`는 거절 응답 `ErrorCode`입니다. 메서드 로컬 쓰기 결정 이유로 표현하면 안 됩니다.
 - `write_decision_reasons`는 `CloseReadinessBlocker` 값이 아닙니다.
 - 쓰기 결정 이유는 닫기 준비 상태를 평가하지 않습니다.
 - 소비 가능한 `Write Authorization`은 만들어지지 않습니다.
@@ -157,7 +176,7 @@ PrepareWriteRequest:
 - 유효하지 않은 요청 보장
 - 역량 실패
 
-비주장: `STATE_VERSION_CONFLICT`는 항상 거부 응답 오류이며 쓰기 결정 이유가 아닙니다.
+비주장: `STATE_VERSION_CONFLICT`는 항상 거절 응답 오류이며 메서드 로컬 쓰기 결정 이유가 아닙니다.
 
 공개 오류 코드 의미, 우선순위, 거절 응답 처리 경로는 아래 오류 담당 문서가 담당합니다.
 
@@ -325,7 +344,7 @@ guarantee_display:
 
 대응하는 민감 동작 승인이 없을 때 적용되는 분기입니다.
 
-아래의 `code: sensitive_account_preference` 값은 이 예시를 위한 메서드 범위의 설명용 이유 코드입니다. 전역 `WriteDecisionReason.code` 값이 아닙니다.
+아래의 `code: sensitive_approval_missing` 값은 이 메서드의 로컬 이유 코드 중 하나입니다. 공개 `ErrorCode` 값이 아닙니다.
 
 ```yaml
 base:
@@ -340,7 +359,7 @@ write_authorization: null
 authorization_effect: none
 write_decision_reasons:
   - category: sensitive_approval
-    code: sensitive_account_preference
+    code: sensitive_approval_missing
     message: "Profile preference updates require separate sensitive-action approval before Write Authorization."
     related_refs: []
 active_user_judgment_refs: []

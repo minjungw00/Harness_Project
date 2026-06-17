@@ -194,7 +194,28 @@ Returns `CloseTaskResult` with `base.response_kind=result`.
 
 `CloseTaskResult` does not have a top-level `next_actions` field. Next actions for close blockers appear inside `CloseReadinessBlocker.next_actions` and use the canonical `NextActionSummary` shape from [API State Schemas](schema-state.md#current-position-display-shapes).
 
-This method owns the method-scoped `CloseReadinessBlocker.code` values it produces, such as the representative `missing_final_acceptance` code shown below. Those codes are not public `ErrorCode` values and are not global value-set entries unless another owner explicitly publishes them.
+This method owns the method-scoped `CloseReadinessBlocker.code` values it produces. Those codes are not public `ErrorCode` values and are not global value-set entries.
+
+Method-local `CloseReadinessBlocker.code` list:
+
+The production meanings below apply only after the method reaches close-readiness observation or terminal-path evaluation. Preflight failures still return `ToolRejectedResponse` according to the error owners.
+
+| Code | Category | Local production meaning |
+|---|---|---|
+| `task_not_closeable` | `task` | The selected Task lifecycle or terminal-path state cannot take the requested close intent. |
+| `missing_active_change_unit` | `scope` | A close path requires a current Change Unit, but none is available. |
+| `pending_user_judgment` | `user_judgment` | A required user-owned judgment remains pending or unresolved. |
+| `missing_sensitive_approval` | `sensitive_approval` | A required separate sensitive-action approval is absent. |
+| `write_authorization_stale` | `write_compatibility` | A close-relevant `Write Authorization` is unusable for a freshness reason that is not routed as `STATE_VERSION_CONFLICT`. |
+| `baseline_stale` | `baseline` | The close-relevant baseline basis is stale on a blocker-producing path. |
+| `evidence_claim_unsupported` | `evidence` | A required close claim lacks supported evidence coverage. |
+| `artifact_unavailable` | `artifact_availability` | A close-relevant artifact is missing, unavailable, unusable, or integrity-failed. |
+| `missing_final_acceptance` | `final_acceptance` | Required final acceptance is absent. |
+| `residual_risk_not_visible` | `residual_risk_visibility` | Close-relevant residual risk has not been made visible. |
+| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | Required residual-risk acceptance is absent. |
+| `recovery_required` | `recovery` | Recovery work remains required before the requested close path can proceed. |
+
+These codes are method-local `CloseReadinessBlocker.code` values. They are not public `ErrorCode` values, not `WriteDecisionReason.code` values, and not global value-set entries.
 
 ## Blocked result
 
@@ -223,6 +244,7 @@ Non-claims:
 
 - `CloseReadinessBlocker` presence alone does not prove persistence.
 - `STATE_VERSION_CONFLICT` is never a `CloseReadinessBlocker.code`.
+- `STATE_VERSION_CONFLICT` is a rejected-response `ErrorCode`, not a method-local blocker or decision code.
 - A blocker category does not create the underlying user judgment, approval, evidence, artifact availability, final acceptance, residual-risk acceptance, or recovery state.
 
 ## Rejected result

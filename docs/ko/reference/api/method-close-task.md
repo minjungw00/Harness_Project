@@ -194,7 +194,28 @@ CloseTaskRequest:
 
 `CloseTaskResult`에는 최상위 `next_actions` 필드가 없습니다. 닫기 차단 사유의 다음 동작은 `CloseReadinessBlocker.next_actions` 안에 나타나며 [API 상태 스키마](schema-state.md#current-position-display-shapes)의 기준 `NextActionSummary` 형태를 사용합니다.
 
-이 메서드는 자신이 생성하는 메서드 범위의 `CloseReadinessBlocker.code` 값을 담당합니다. 아래 대표 예시에 나오는 `missing_final_acceptance`가 그런 코드입니다. 이런 코드는 공개 `ErrorCode` 값이 아니며, 다른 담당 문서가 명시적으로 게시하지 않는 한 전역 값 집합 항목도 아닙니다.
+이 메서드는 자신이 생성하는 메서드 범위의 `CloseReadinessBlocker.code` 값을 담당합니다. 이런 코드는 공개 `ErrorCode` 값이 아니며 전역 값 집합 항목도 아닙니다.
+
+메서드 로컬 `CloseReadinessBlocker.code` 목록:
+
+아래 생성 의미는 이 메서드가 닫기 준비 상태 관찰 또는 종료 경로 평가에 도달한 뒤에만 적용됩니다. 사전 확인 실패는 여전히 오류 담당 문서에 따라 `ToolRejectedResponse`를 반환합니다.
+
+| 코드 | 범주 | 로컬 생성 의미 |
+|---|---|---|
+| `task_not_closeable` | `task` | 선택된 `Task` 생명주기나 종료 경로 상태가 요청한 닫기 의도를 받을 수 없습니다. |
+| `missing_active_change_unit` | `scope` | 닫기 경로에 현재 적용 Change Unit이 필요하지만 사용할 수 없습니다. |
+| `pending_user_judgment` | `user_judgment` | 필요한 사용자 소유 판단이 아직 대기 중이거나 해결되지 않았습니다. |
+| `missing_sensitive_approval` | `sensitive_approval` | 필요한 별도 민감 동작 승인이 없습니다. |
+| `write_authorization_stale` | `write_compatibility` | 닫기 관련 `Write Authorization`이 `STATE_VERSION_CONFLICT`로 처리되지 않는 최신성 사유로 사용할 수 없습니다. |
+| `baseline_stale` | `baseline` | 닫기 관련 기준선 근거가 차단 사유 생성 경로에서 오래되었습니다. |
+| `evidence_claim_unsupported` | `evidence` | 필요한 닫기 주장이 지원되는 증거 범위를 갖지 못했습니다. |
+| `artifact_unavailable` | `artifact_availability` | 닫기 관련 아티팩트가 없거나, 사용할 수 없거나, 사용에 부적합하거나, 무결성에 실패했습니다. |
+| `missing_final_acceptance` | `final_acceptance` | 필요한 최종 수락이 없습니다. |
+| `residual_risk_not_visible` | `residual_risk_visibility` | 닫기 관련 잔여 위험이 보이지 않게 남아 있습니다. |
+| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | 필요한 잔여 위험 수락이 없습니다. |
+| `recovery_required` | `recovery` | 요청한 닫기 경로를 진행하기 전에 복구 작업이 남아 있습니다. |
+
+이 코드는 메서드 로컬 `CloseReadinessBlocker.code` 값입니다. 공개 `ErrorCode` 값, `WriteDecisionReason.code` 값, 전역 값 집합 항목이 아닙니다.
 
 ## 차단 결과
 
@@ -223,6 +244,7 @@ CloseTaskRequest:
 
 - `CloseReadinessBlocker`가 있다는 사실만으로는 지속 저장을 증명하지 않습니다.
 - `STATE_VERSION_CONFLICT`는 절대 `CloseReadinessBlocker.code`가 아닙니다.
+- `STATE_VERSION_CONFLICT`는 거절 응답 `ErrorCode`이며 메서드 로컬 차단 사유 코드나 결정 코드가 아닙니다.
 - 차단 사유 범주는 사용자 판단, 승인, 증거, 아티팩트 가용성, 최종 수락, 잔여 위험 수락, 복구 상태 자체를 만들지 않습니다.
 
 ## 거절 결과

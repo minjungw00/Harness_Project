@@ -134,6 +134,15 @@ Allowed:
 - It may write safe bytes or a safe notice under `artifacts/tmp/`.
 - It may create the transient staging row.
 
+Baseline staging defaults:
+
+- Default staging TTL is 24 hours. `expires_at` is set to 24 hours after staging creation.
+- The stored staged artifact body or safe notice must not exceed 10 MiB (10,485,760 bytes).
+- Safe body storage is limited to safe text, JSON, Markdown, XML, or equivalent textual media types.
+- Binary input is not stored as staged body bytes in the baseline. When binary material must be represented, staging stores only a safe textual notice unless a future owner defines a profile-gated safe binary body path.
+- Raw secrets, tokens, credentials, and full sensitive logs must not be stored. Represent that material with a safe notice using `redaction_state=secret_omitted` or `redaction_state=blocked`, as applicable.
+- These defaults do not add baseline artifact scanning, malware detection, secret scanning, OS sandboxing, command blocking, or network blocking.
+
 Example staged artifact data:
 
 ```yaml
