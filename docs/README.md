@@ -12,6 +12,6 @@ Shared metadata:
 - [`doc-index.yaml`](doc-index.yaml) is the canonical machine-readable route for documentation owners and paired paths.
 - [`terminology-map.yaml`](terminology-map.yaml) is the terminology and identifier-preservation source of truth.
 
-Maintainers should read [`../AGENTS.md`](../AGENTS.md), then the relevant authoring, translation, and check guidance under `docs/*/maintain/`.
+Maintainers and implementation agents should read [`../AGENTS.md`](../AGENTS.md), then the relevant authoring, translation, and check guidance under `docs/*/maintain/`.
 
 This README is an entry route. It does not define API behavior, storage effects, security guarantees, schemas, or detailed owner maps. Use human-readable indexes for navigation and `doc-index.yaml` for exact owner routing.
