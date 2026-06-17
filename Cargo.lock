@@ -164,7 +164,9 @@ name = "harness-core"
 version = "0.1.0"
 dependencies = [
  "harness-store",
+ "harness-test-support",
  "harness-types",
+ "serde_json",
 ]
 
 [[package]]

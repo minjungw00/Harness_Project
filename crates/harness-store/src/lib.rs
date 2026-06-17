@@ -9,6 +9,7 @@ use harness_types::TypeBoundary;
 
 pub mod artifacts;
 pub mod bootstrap;
+pub mod core_pipeline;
 pub mod error;
 pub mod migrations;
 pub mod sqlite;

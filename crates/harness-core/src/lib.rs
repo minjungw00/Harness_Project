@@ -9,6 +9,14 @@
 use harness_store::{artifacts::ArtifactStoreBoundary, sqlite::SqliteStoreBoundary};
 use harness_types::TypeBoundary;
 
+pub mod pipeline;
+
+pub use pipeline::{
+    dry_run_response, method_result_base, method_result_value, rejected_response, tool_error,
+    CorePipelineError, CoreResult, CoreService, InvocationContext, OwnerPipelineBranch,
+    PipelineRequest, PipelineResponse, TaskRequirement, VerifiedSurfaceContext,
+};
+
 /// Minimal Core service marker for validating crate boundaries.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct CoreBoundary {
