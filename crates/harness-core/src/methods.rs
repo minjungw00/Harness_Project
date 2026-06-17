@@ -1,18 +1,24 @@
+use std::collections::BTreeSet;
+
 use harness_store::{
     core_pipeline::{
         ChangeUnitInsert, ChangeUnitRecord, CoreProjectStore, CoreStorageMutation,
         ProjectStateHeader, StoredRecordRef, TaskInsert, TaskRecord, TaskScopeUpdate,
+        UserJudgmentInsert, UserJudgmentRecord, UserJudgmentResolutionUpdate,
         WriteAuthorizationRecord,
     },
     StoreError,
 };
 use harness_types::{
-    AccessClass, BaselineRef, ChangeUnitId, ChangeUnitOperation, CloseReason, DryRunSummary,
-    EffectKind, ErrorCode, JsonObject, MethodName, NextActionKind, NextActionSummary,
-    PlannedEffect, ProjectId, RecordId, RequestedMode, ResumePolicy, StateRecordKind,
-    StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, SurfaceInstanceId, TaskId,
-    TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase,
-    UpdateScopeRequest, WriteAuthoritySummary, WriteAuthorizationStatus,
+    canonical_request_hash, AccessClass, BaselineRef, ChangeUnitId, ChangeUnitOperation,
+    CloseReason, DryRunSummary, EffectKind, ErrorCode, JsonObject, JudgmentKind, MethodName,
+    NextActionKind, NextActionSummary, PlannedEffect, ProjectId, RecordId,
+    RecordUserJudgmentPayload, RecordUserJudgmentRequest, RequestedMode, ResumePolicy,
+    StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude, StatusRequest,
+    SurfaceInstanceId, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
+    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
+    UserJudgmentOption, UserJudgmentResolution, UserJudgmentStatus, WriteAuthoritySummary,
+    WriteAuthorizationStatus,
 };
 use serde_json::{json, Map, Value};
 
@@ -201,6 +207,156 @@ impl CoreService {
             },
         })
     }
+
+    /// Executes `harness.request_user_judgment` through the shared Core mutation pipeline.
+    pub fn request_user_judgment(
+        &self,
+        request: harness_types::RequestUserJudgmentRequest,
+        invocation: InvocationContext,
+    ) -> CoreResult<PipelineResponse> {
+        let request_json = serde_json::to_value(&request)?;
+        if let Some(envelope_task_id) = &request.envelope.task_id {
+            if envelope_task_id != &request.task_id {
+                return validation_rejected(
+                    request.envelope.dry_run,
+                    None,
+                    "task_id",
+                    "envelope.task_id must match RequestUserJudgmentRequest.task_id",
+                );
+            }
+        }
+        if !request.envelope.dry_run {
+            if let Some(response) = validate_committed_envelope(&request.envelope)? {
+                return Ok(response);
+            }
+        }
+
+        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
+            Ok(opened) => opened,
+            Err(response) => return Ok(*response),
+        };
+        let selected_surface_instance =
+            match selected_surface_instance(&store, &project_state, &request.envelope, &invocation)
+            {
+                Ok(surface_instance_id) => surface_instance_id,
+                Err(response) => return Ok(*response),
+            };
+        let plan = match plan_request_user_judgment(
+            &store,
+            &project_state,
+            request.clone(),
+            &selected_surface_instance,
+        ) {
+            Ok(plan) => plan,
+            Err(PlanError::Response(response)) => return Ok(*response),
+            Err(PlanError::Core(error)) => return Err(error),
+        };
+
+        if request.envelope.dry_run {
+            return self.execute_pipeline(PipelineRequest {
+                method_name: MethodName::RequestUserJudgment,
+                envelope: request.envelope,
+                request_json,
+                invocation,
+                required_access_class: AccessClass::CoreMutation,
+                task_requirement: TaskRequirement::None,
+                branch: OwnerPipelineBranch::DryRunPreview {
+                    dry_run_summary: dry_run_summary(
+                        "user_judgment",
+                        "create_pending",
+                        "Request would create one pending user-owned judgment.",
+                        plan.next_actions,
+                    ),
+                },
+            });
+        }
+
+        self.execute_pipeline(PipelineRequest {
+            method_name: MethodName::RequestUserJudgment,
+            envelope: request.envelope,
+            request_json,
+            invocation,
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::None,
+            branch: OwnerPipelineBranch::CommitMutation {
+                result_fields: plan.result_fields,
+                event_kind: "user_judgment_requested".to_owned(),
+                event_payload: plan.event_payload,
+                task_id: Some(plan.task_id),
+                change_unit_id: plan.change_unit_id,
+                storage_mutations: plan.storage_mutations,
+            },
+        })
+    }
+
+    /// Executes `harness.record_user_judgment` through the shared Core mutation pipeline.
+    pub fn record_user_judgment(
+        &self,
+        request: RecordUserJudgmentRequest,
+        invocation: InvocationContext,
+    ) -> CoreResult<PipelineResponse> {
+        let request_json = serde_json::to_value(&request)?;
+        if !request.envelope.dry_run {
+            if let Some(response) = validate_committed_envelope(&request.envelope)? {
+                return Ok(response);
+            }
+        }
+
+        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
+            Ok(opened) => opened,
+            Err(response) => return Ok(*response),
+        };
+        if let Some(response) = early_idempotency_replay(
+            &store,
+            &project_state,
+            MethodName::RecordUserJudgment,
+            &request.envelope,
+            &request_json,
+        )? {
+            return Ok(response);
+        }
+        let plan = match plan_record_user_judgment(&store, &project_state, request.clone()) {
+            Ok(plan) => plan,
+            Err(PlanError::Response(response)) => return Ok(*response),
+            Err(PlanError::Core(error)) => return Err(error),
+        };
+
+        if request.envelope.dry_run {
+            return self.execute_pipeline(PipelineRequest {
+                method_name: MethodName::RecordUserJudgment,
+                envelope: request.envelope,
+                request_json,
+                invocation,
+                required_access_class: AccessClass::CoreMutation,
+                task_requirement: TaskRequirement::None,
+                branch: OwnerPipelineBranch::DryRunPreview {
+                    dry_run_summary: dry_run_summary(
+                        "user_judgment",
+                        "resolve_pending",
+                        "Request would record the user's answer for one pending judgment.",
+                        plan.next_actions,
+                    ),
+                },
+            });
+        }
+
+        self.execute_pipeline(PipelineRequest {
+            method_name: MethodName::RecordUserJudgment,
+            envelope: request.envelope,
+            request_json,
+            invocation,
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::None,
+            branch: OwnerPipelineBranch::CommitMutation {
+                result_fields: plan.result_fields,
+                event_kind: "user_judgment_recorded".to_owned(),
+                event_payload: plan.event_payload,
+                task_id: Some(plan.task_id),
+                change_unit_id: plan.change_unit_id,
+                storage_mutations: plan.storage_mutations,
+            },
+        })
+    }
 }
 
 struct MethodPlan {
@@ -293,6 +449,63 @@ fn selected_surface_instance(
             )],
         ))),
     }
+}
+
+fn early_idempotency_replay(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    method_name: MethodName,
+    envelope: &ToolEnvelope,
+    request_json: &Value,
+) -> CoreResult<Option<PipelineResponse>> {
+    if envelope.dry_run {
+        return Ok(None);
+    }
+    let Some(idempotency_key) = &envelope.idempotency_key else {
+        return Ok(None);
+    };
+    let request_hash = canonical_request_hash(request_json)?;
+    let Some(record) = store
+        .tool_invocation(method_name, idempotency_key)
+        .map_err(CorePipelineError::from)?
+    else {
+        return Ok(None);
+    };
+
+    if record.request_hash == request_hash.as_str() {
+        let response_value = serde_json::from_str(&record.response_json)?;
+        return Ok(Some(PipelineResponse {
+            response_json: record.response_json,
+            response_value,
+            verified_surface: None,
+            resolved_task_id: None,
+            replayed: true,
+        }));
+    }
+
+    let mut details = Map::new();
+    details.insert(
+        "idempotency_key".to_owned(),
+        Value::String(idempotency_key.as_str().to_owned()),
+    );
+    details.insert(
+        "stored_request_hash".to_owned(),
+        Value::String(record.request_hash),
+    );
+    details.insert(
+        "attempted_request_hash".to_owned(),
+        Value::String(request_hash.as_str().to_owned()),
+    );
+    Ok(Some(rejected_pipeline_response(
+        false,
+        Some(project_state.state_version),
+        vec![tool_error(
+            ErrorCode::StateVersionConflict,
+            "idempotency_key was reused with a different request hash",
+            false,
+            Some(details),
+        )],
+    )?))
 }
 
 fn validate_committed_envelope(envelope: &ToolEnvelope) -> CoreResult<Option<PipelineResponse>> {
@@ -708,6 +921,728 @@ fn plan_update_scope(
         result_fields: strip_base(serde_json::to_value(result)?)?,
         next_actions,
     })
+}
+
+fn plan_request_user_judgment(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: harness_types::RequestUserJudgmentRequest,
+    surface_instance_id: &SurfaceInstanceId,
+) -> Result<MethodPlan, PlanError> {
+    validate_user_judgment_request_fields(UserJudgmentRequestValidation {
+        dry_run: request.envelope.dry_run,
+        state_version: Some(project_state.state_version),
+        question: &request.question,
+        options: &request.options,
+        context: &request.context,
+        affected_refs: &request.affected_refs,
+        project_id: &request.envelope.project_id,
+        task_id: &request.task_id,
+        expires_at: request.expires_at.as_deref(),
+        current_timestamp: store.current_timestamp().map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?,
+    })?;
+
+    let planned_state_version = project_state.state_version + 1;
+    let task = store
+        .task_record(&request.task_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .ok_or_else(|| {
+            PlanError::Response(Box::new(no_active_task_response(
+                &request.envelope,
+                project_state,
+            )))
+        })?;
+    let current_change_unit = store
+        .current_change_unit(&request.task_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?;
+    let branch_change_unit_id = if let Some(change_unit_id) = &request.change_unit_id {
+        let existing = store
+            .change_unit_record(&request.task_id, change_unit_id.as_str())
+            .map_err(|error| {
+                PlanError::Response(Box::new(store_error_response(
+                    &request.envelope,
+                    project_state,
+                    error,
+                )))
+            })?;
+        if existing.is_none() {
+            let response = rejected_pipeline_response(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                vec![tool_error(
+                    ErrorCode::NoActiveChangeUnit,
+                    "change_unit_id does not identify a Change Unit for the Task",
+                    false,
+                    None,
+                )],
+            )
+            .map_err(PlanError::Core)?;
+            return Err(PlanError::Response(Box::new(response)));
+        }
+        Some(change_unit_id.clone())
+    } else {
+        None
+    };
+
+    let requested_at = store.current_timestamp().map_err(|error| {
+        PlanError::Response(Box::new(store_error_response(
+            &request.envelope,
+            project_state,
+            error,
+        )))
+    })?;
+    let judgment_id = generated_user_judgment_id(&request.envelope);
+    let user_judgment_ref = state_ref(
+        StateRecordKind::UserJudgment,
+        judgment_id.as_str(),
+        &request.envelope.project_id,
+        Some(&request.task_id),
+        Some(planned_state_version),
+    );
+    let user_judgment = UserJudgment {
+        judgment_id: judgment_id.clone(),
+        project_id: request.envelope.project_id.clone(),
+        task_id: request.task_id.clone(),
+        change_unit_id: request.change_unit_id.clone(),
+        judgment_kind: request.judgment_kind,
+        status: UserJudgmentStatus::Pending,
+        presentation: request.presentation,
+        question: request.question.clone(),
+        options: request.options.clone(),
+        context: request.context.clone(),
+        affected_refs: request.affected_refs.clone(),
+        required_for: request.required_for,
+        resolution: None,
+        expires_at: request.expires_at.clone(),
+        created_at: requested_at.clone(),
+        resolved_at: None,
+    };
+
+    let mut pending_refs = store
+        .pending_user_judgment_refs(&request.task_id, planned_state_version)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .into_iter()
+        .map(state_ref_from_stored)
+        .collect::<Vec<_>>();
+    pending_refs.push(user_judgment_ref.clone());
+    let blocker_refs = store
+        .active_blocker_refs(&request.task_id, planned_state_version)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .into_iter()
+        .map(state_ref_from_stored)
+        .collect::<Vec<_>>();
+    let task_ref = state_ref(
+        StateRecordKind::Task,
+        request.task_id.as_str(),
+        &request.envelope.project_id,
+        Some(&request.task_id),
+        Some(planned_state_version),
+    );
+    let change_unit_ref = current_change_unit.as_ref().map(|record| {
+        state_ref(
+            StateRecordKind::ChangeUnit,
+            &record.change_unit_id,
+            &request.envelope.project_id,
+            Some(&request.task_id),
+            Some(record.basis_state_version.unwrap_or(planned_state_version)),
+        )
+    });
+    let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
+    let state = build_state_summary(SummaryBuild {
+        project_id: &request.envelope.project_id,
+        state_version: planned_state_version,
+        task: &task,
+        current_change_unit: current_change_unit.as_ref(),
+        pending_user_judgment_refs: pending_refs,
+        blocker_refs: blocker_refs.clone(),
+        active_write_authorization: None,
+        options: SummaryOptions::mutation(),
+    })?;
+    let result = harness_types::RequestUserJudgmentResult {
+        base: placeholder_base(),
+        user_judgment_ref: user_judgment_ref.clone(),
+        user_judgment,
+        blocker_refs,
+        state,
+    };
+    let storage_mutations = vec![CoreStorageMutation::InsertUserJudgment(
+        UserJudgmentInsert {
+            judgment_id: judgment_id.as_str().to_owned(),
+            task_id: request.task_id.as_str().to_owned(),
+            change_unit_id: request
+                .change_unit_id
+                .as_ref()
+                .map(|id| id.as_str().to_owned()),
+            judgment_kind: storage_value(request.judgment_kind)?,
+            request_json: serde_json::to_string(&json!({
+                "presentation": request.presentation,
+                "question": request.question,
+                "required_for": request.required_for,
+                "expires_at": request.expires_at
+            }))?,
+            context_json: serde_json::to_string(&request.context)?,
+            options_json: serde_json::to_string(&request.options)?,
+            affected_refs_json: serde_json::to_string(&request.affected_refs)?,
+            artifact_refs_json: serde_json::to_string(&request.context.artifact_refs)?,
+            sensitive_action_scope_json: "{}".to_owned(),
+            requested_by_surface_id: request.envelope.surface_id.as_str().to_owned(),
+            requested_by_surface_instance_id: surface_instance_id.as_str().to_owned(),
+            requested_at,
+            metadata_json: serde_json::to_string(&json!({
+                "requested_by_actor_kind": request.envelope.actor_kind
+            }))?,
+        },
+    )];
+    let event_payload = object_from_value(json!({
+        "task_id": request.task_id,
+        "change_unit_id": request.change_unit_id,
+        "judgment_id": judgment_id,
+        "judgment_kind": request.judgment_kind,
+        "required_for": request.required_for
+    }))?;
+
+    Ok(MethodPlan {
+        task_id: user_judgment_ref
+            .task_id
+            .clone()
+            .expect("user judgment refs are task-scoped"),
+        change_unit_id: branch_change_unit_id,
+        storage_mutations,
+        event_payload,
+        result_fields: strip_base(serde_json::to_value(result)?)?,
+        next_actions,
+    })
+}
+
+fn plan_record_user_judgment(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: RecordUserJudgmentRequest,
+) -> Result<MethodPlan, PlanError> {
+    let planned_state_version = project_state.state_version + 1;
+    let record = store
+        .user_judgment_record(request.user_judgment_id.as_str())
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .ok_or_else(|| {
+            PlanError::Response(Box::new(decision_rejected_response(
+                &request.envelope,
+                Some(project_state.state_version),
+                "user_judgment_id does not identify a pending user-owned judgment",
+            )))
+        })?;
+    if let Some(envelope_task_id) = &request.envelope.task_id {
+        if envelope_task_id.as_str() != record.task_id {
+            let response = validation_rejected(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                "task_id",
+                "envelope.task_id must match the addressed UserJudgment task_id",
+            )
+            .map_err(PlanError::Core)?;
+            return Err(PlanError::Response(Box::new(response)));
+        }
+    }
+    if record.status != "pending" {
+        return Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "user_judgment_id does not identify a pending user-owned judgment",
+        ))));
+    }
+
+    let mut user_judgment = user_judgment_from_record(&record)?;
+    let now = store.current_timestamp().map_err(|error| {
+        PlanError::Response(Box::new(store_error_response(
+            &request.envelope,
+            project_state,
+            error,
+        )))
+    })?;
+    if user_judgment
+        .expires_at
+        .as_deref()
+        .is_some_and(|expires_at| expires_at <= now.as_str())
+    {
+        return Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "pending user-owned judgment is expired",
+        ))));
+    }
+    if request.judgment_kind != user_judgment.judgment_kind {
+        return Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "judgment_kind is incompatible with the pending user-owned judgment",
+        ))));
+    }
+    if !user_judgment
+        .options
+        .iter()
+        .any(|option| option.option_id == request.selected_option_id)
+    {
+        let response = validation_rejected(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            "selected_option_id",
+            "selected_option_id is not one of the pending judgment options",
+        )
+        .map_err(PlanError::Core)?;
+        return Err(PlanError::Response(Box::new(response)));
+    }
+    validate_answer_payload(
+        request.envelope.dry_run,
+        Some(project_state.state_version),
+        request.judgment_kind,
+        &request.answer,
+    )?;
+
+    let task_id = TaskId::new(record.task_id.clone());
+    let task = store
+        .task_record(&task_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .ok_or_else(|| {
+            PlanError::Response(Box::new(no_active_task_response(
+                &request.envelope,
+                project_state,
+            )))
+        })?;
+    let current_change_unit = store.current_change_unit(&task_id).map_err(|error| {
+        PlanError::Response(Box::new(store_error_response(
+            &request.envelope,
+            project_state,
+            error,
+        )))
+    })?;
+    let resolution = UserJudgmentResolution {
+        selected_option_id: request.selected_option_id.clone(),
+        answer: request.answer.clone(),
+        note: request.note.clone(),
+        accepted_risks: request.accepted_risks.clone(),
+        resolved_by_actor_kind: request.envelope.actor_kind,
+    };
+    user_judgment.status = UserJudgmentStatus::Resolved;
+    user_judgment.resolution = Some(resolution.clone());
+    user_judgment.resolved_at = Some(now.clone());
+
+    let user_judgment_ref = state_ref(
+        StateRecordKind::UserJudgment,
+        request.user_judgment_id.as_str(),
+        &request.envelope.project_id,
+        Some(&task_id),
+        Some(planned_state_version),
+    );
+    let pending_refs = store
+        .pending_user_judgment_refs(&task_id, planned_state_version)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .into_iter()
+        .filter(|record_ref| record_ref.record_id != request.user_judgment_id.as_str())
+        .map(state_ref_from_stored)
+        .collect::<Vec<_>>();
+    let blocker_refs = store
+        .active_blocker_refs(&task_id, planned_state_version)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .into_iter()
+        .map(state_ref_from_stored)
+        .collect::<Vec<_>>();
+    let task_ref = state_ref(
+        StateRecordKind::Task,
+        task_id.as_str(),
+        &request.envelope.project_id,
+        Some(&task_id),
+        Some(planned_state_version),
+    );
+    let change_unit_ref = current_change_unit.as_ref().map(|record| {
+        state_ref(
+            StateRecordKind::ChangeUnit,
+            &record.change_unit_id,
+            &request.envelope.project_id,
+            Some(&task_id),
+            Some(record.basis_state_version.unwrap_or(planned_state_version)),
+        )
+    });
+    let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
+    let state = build_state_summary(SummaryBuild {
+        project_id: &request.envelope.project_id,
+        state_version: planned_state_version,
+        task: &task,
+        current_change_unit: current_change_unit.as_ref(),
+        pending_user_judgment_refs: pending_refs,
+        blocker_refs,
+        active_write_authorization: None,
+        options: SummaryOptions::mutation(),
+    })?;
+    let result = harness_types::RecordUserJudgmentResult {
+        base: placeholder_base(),
+        user_judgment_ref: user_judgment_ref.clone(),
+        user_judgment,
+        updated_refs: vec![user_judgment_ref],
+        state,
+        next_actions: next_actions.clone(),
+    };
+    let sensitive_action_scope_json = request
+        .answer
+        .sensitive_action_scope
+        .as_ref()
+        .map(serde_json::to_string)
+        .transpose()?;
+    let storage_mutations = vec![CoreStorageMutation::ResolveUserJudgment(
+        UserJudgmentResolutionUpdate {
+            judgment_id: request.user_judgment_id.as_str().to_owned(),
+            status: storage_value(UserJudgmentStatus::Resolved)?,
+            resolution_json: serde_json::to_string(&resolution)?,
+            sensitive_action_scope_json,
+            resolved_at: now,
+        },
+    )];
+    let event_payload = object_from_value(json!({
+        "task_id": task_id,
+        "change_unit_id": record.change_unit_id,
+        "judgment_id": request.user_judgment_id,
+        "judgment_kind": request.judgment_kind,
+        "selected_option_id": request.selected_option_id
+    }))?;
+
+    Ok(MethodPlan {
+        task_id,
+        change_unit_id: record.change_unit_id.map(ChangeUnitId::new),
+        storage_mutations,
+        event_payload,
+        result_fields: strip_base(serde_json::to_value(result)?)?,
+        next_actions,
+    })
+}
+
+struct UserJudgmentRequestValidation<'a> {
+    dry_run: bool,
+    state_version: Option<u64>,
+    question: &'a str,
+    options: &'a [UserJudgmentOption],
+    context: &'a UserJudgmentContext,
+    affected_refs: &'a [StateRecordRef],
+    project_id: &'a ProjectId,
+    task_id: &'a TaskId,
+    expires_at: Option<&'a str>,
+    current_timestamp: String,
+}
+
+fn validate_user_judgment_request_fields(
+    input: UserJudgmentRequestValidation<'_>,
+) -> Result<(), PlanError> {
+    if input.question.trim().is_empty() {
+        return validation_plan_error(
+            input.dry_run,
+            input.state_version,
+            "question",
+            "question must not be empty",
+        );
+    }
+    if input.options.is_empty() {
+        return validation_plan_error(
+            input.dry_run,
+            input.state_version,
+            "options",
+            "options must include at least one judgment option",
+        );
+    }
+    let mut option_ids = BTreeSet::new();
+    for option in input.options {
+        if option.option_id.as_str().trim().is_empty() {
+            return validation_plan_error(
+                input.dry_run,
+                input.state_version,
+                "options.option_id",
+                "option_id must not be empty",
+            );
+        }
+        if !option_ids.insert(option.option_id.as_str()) {
+            return validation_plan_error(
+                input.dry_run,
+                input.state_version,
+                "options.option_id",
+                "option_id values must be unique within the judgment",
+            );
+        }
+        if option.label.trim().is_empty() {
+            return validation_plan_error(
+                input.dry_run,
+                input.state_version,
+                "options.label",
+                "option label must not be empty",
+            );
+        }
+    }
+    if input.context.summary.trim().is_empty() {
+        return validation_plan_error(
+            input.dry_run,
+            input.state_version,
+            "context.summary",
+            "context.summary must not be empty",
+        );
+    }
+    for affected_ref in input.affected_refs {
+        if affected_ref.project_id != *input.project_id {
+            return validation_plan_error(
+                input.dry_run,
+                input.state_version,
+                "affected_refs.project_id",
+                "affected_refs must belong to the request project",
+            );
+        }
+        if affected_ref
+            .task_id
+            .as_ref()
+            .is_some_and(|ref_task_id| ref_task_id != input.task_id)
+        {
+            return validation_plan_error(
+                input.dry_run,
+                input.state_version,
+                "affected_refs.task_id",
+                "task-scoped affected_refs must belong to the request Task",
+            );
+        }
+    }
+    if let Some(expires_at) = input.expires_at {
+        if expires_at.trim().is_empty() {
+            return validation_plan_error(
+                input.dry_run,
+                input.state_version,
+                "expires_at",
+                "expires_at must be null or a non-empty timestamp string",
+            );
+        }
+        if expires_at <= input.current_timestamp.as_str() {
+            return validation_plan_error(
+                input.dry_run,
+                input.state_version,
+                "expires_at",
+                "expires_at must be in the future for a pending judgment request",
+            );
+        }
+    }
+    Ok(())
+}
+
+fn validate_answer_payload(
+    dry_run: bool,
+    state_version: Option<u64>,
+    judgment_kind: JudgmentKind,
+    answer: &RecordUserJudgmentPayload,
+) -> Result<(), PlanError> {
+    if populated_answer_branch_count(answer) != 1 {
+        return validation_plan_error(
+            dry_run,
+            state_version,
+            "answer",
+            "answer must populate exactly one decision-specific payload branch",
+        );
+    }
+    if !answer_branch_matches_kind(judgment_kind, answer) {
+        return validation_plan_error(
+            dry_run,
+            state_version,
+            "answer",
+            "answer payload branch must match the pending judgment_kind",
+        );
+    }
+    Ok(())
+}
+
+fn populated_answer_branch_count(answer: &RecordUserJudgmentPayload) -> usize {
+    usize::from(answer.product_decision.is_some())
+        + usize::from(answer.technical_decision.is_some())
+        + usize::from(answer.scope_decision.is_some())
+        + usize::from(answer.sensitive_action_scope.is_some())
+        + usize::from(answer.final_acceptance.is_some())
+        + usize::from(answer.residual_risk_acceptance.is_some())
+        + usize::from(answer.cancellation.is_some())
+}
+
+fn answer_branch_matches_kind(
+    judgment_kind: JudgmentKind,
+    answer: &RecordUserJudgmentPayload,
+) -> bool {
+    match judgment_kind {
+        JudgmentKind::ProductDecision => answer.product_decision.is_some(),
+        JudgmentKind::TechnicalDecision => answer.technical_decision.is_some(),
+        JudgmentKind::ScopeDecision => answer.scope_decision.is_some(),
+        JudgmentKind::SensitiveApproval => answer.sensitive_action_scope.is_some(),
+        JudgmentKind::FinalAcceptance => answer.final_acceptance.is_some(),
+        JudgmentKind::ResidualRiskAcceptance => answer.residual_risk_acceptance.is_some(),
+        JudgmentKind::Cancellation => answer.cancellation.is_some(),
+    }
+}
+
+fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudgment> {
+    let request = parse_json_object(&record.request_json);
+    Ok(UserJudgment {
+        judgment_id: harness_types::UserJudgmentId::new(record.judgment_id.clone()),
+        project_id: ProjectId::new(record.project_id.clone()),
+        task_id: TaskId::new(record.task_id.clone()),
+        change_unit_id: record.change_unit_id.clone().map(ChangeUnitId::new),
+        judgment_kind: parse_storage_value("user_judgments.judgment_kind", &record.judgment_kind)?,
+        status: parse_storage_value("user_judgments.status", &record.status)?,
+        presentation: request_member(
+            "user_judgments.request_json.presentation",
+            &request,
+            "presentation",
+        )?,
+        question: string_member(&request, "question").ok_or_else(|| {
+            CorePipelineError::InvalidDispatch {
+                detail: "user_judgments.request_json.question missing".to_owned(),
+            }
+        })?,
+        options: parse_json_text("user_judgments.options_json", &record.options_json)?,
+        context: parse_json_text("user_judgments.context_json", &record.context_json)?,
+        affected_refs: parse_json_text(
+            "user_judgments.affected_refs_json",
+            &record.affected_refs_json,
+        )?,
+        required_for: request_member(
+            "user_judgments.request_json.required_for",
+            &request,
+            "required_for",
+        )?,
+        resolution: record
+            .resolution_json
+            .as_deref()
+            .map(|text| parse_json_text("user_judgments.resolution_json", text))
+            .transpose()?,
+        expires_at: request
+            .get("expires_at")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
+        created_at: record.requested_at.clone(),
+        resolved_at: record.resolved_at.clone(),
+    })
+}
+
+fn request_member<T>(field: &'static str, object: &JsonObject, key: &str) -> CoreResult<T>
+where
+    T: serde::de::DeserializeOwned,
+{
+    let value = object
+        .get(key)
+        .cloned()
+        .ok_or_else(|| CorePipelineError::InvalidDispatch {
+            detail: format!("{field} missing"),
+        })?;
+    serde_json::from_value(value).map_err(CorePipelineError::from)
+}
+
+fn parse_storage_value<T>(field: &'static str, value: &str) -> CoreResult<T>
+where
+    T: serde::de::DeserializeOwned,
+{
+    serde_json::from_value(Value::String(value.to_owned())).map_err(|error| {
+        CorePipelineError::InvalidDispatch {
+            detail: format!("{field} contains unsupported value {value}: {error}"),
+        }
+    })
+}
+
+fn parse_json_text<T>(field: &'static str, text: &str) -> CoreResult<T>
+where
+    T: serde::de::DeserializeOwned,
+{
+    serde_json::from_str(text).map_err(|error| CorePipelineError::InvalidDispatch {
+        detail: format!("{field} is not valid stored JSON: {error}"),
+    })
+}
+
+fn storage_value<T>(value: T) -> CoreResult<String>
+where
+    T: serde::Serialize,
+{
+    match serde_json::to_value(value)? {
+        Value::String(value) => Ok(value),
+        _ => Err(CorePipelineError::InvalidDispatch {
+            detail: "storage value must serialize to a string".to_owned(),
+        }),
+    }
+}
+
+fn validation_plan_error(
+    dry_run: bool,
+    state_version: Option<u64>,
+    field: &'static str,
+    message: &'static str,
+) -> Result<(), PlanError> {
+    let response =
+        validation_rejected(dry_run, state_version, field, message).map_err(PlanError::Core)?;
+    Err(PlanError::Response(Box::new(response)))
+}
+
+fn decision_rejected_response(
+    envelope: &ToolEnvelope,
+    state_version: Option<u64>,
+    message: &'static str,
+) -> PipelineResponse {
+    rejected_pipeline_response(
+        envelope.dry_run,
+        state_version,
+        vec![tool_error(
+            ErrorCode::DecisionUnresolved,
+            message,
+            false,
+            None,
+        )],
+    )
+    .expect("rejected response serialization should succeed")
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1256,6 +2191,10 @@ fn generated_change_unit_id(envelope: &ToolEnvelope) -> ChangeUnitId {
     ChangeUnitId::new(format!("cu_{}", envelope.request_id.as_str()))
 }
 
+fn generated_user_judgment_id(envelope: &ToolEnvelope) -> harness_types::UserJudgmentId {
+    harness_types::UserJudgmentId::new(format!("uj_{}", envelope.request_id.as_str()))
+}
+
 fn resolve_requested_mode(requested_mode: RequestedMode) -> TaskMode {
     match requested_mode {
         RequestedMode::Advisor => TaskMode::Advisor,
@@ -1746,6 +2685,446 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn request_user_judgment_creates_pending_record() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "pending")?;
+        let before = harness.counts()?;
+
+        let response = harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_pending",
+                "idem_judgment_pending",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "result");
+        assert_eq!(response.response_value["base"]["state_version"], 3);
+        assert_eq!(
+            response.response_value["user_judgment"]["status"],
+            "pending"
+        );
+        assert_eq!(
+            response.response_value["user_judgment"]["judgment_kind"],
+            "product_decision"
+        );
+        assert_eq!(
+            response.response_value["state"]["pending_user_judgment_refs"]
+                .as_array()
+                .expect("pending refs should be an array")
+                .len(),
+            1
+        );
+        assert_eq!(after.state_version, before.state_version + 1);
+        assert_eq!(after.user_judgments, before.user_judgments + 1);
+        assert_eq!(
+            user_judgment_status(&harness, "uj_req_judgment_pending")?,
+            "pending"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn record_user_judgment_resolves_pending_record() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "resolve")?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_resolve",
+                "idem_judgment_resolve",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before = harness.counts()?;
+
+        let response = harness.service.record_user_judgment(
+            record_judgment_request(
+                "req_record_resolve",
+                "idem_record_resolve",
+                Some(3),
+                &task_id,
+                "uj_req_judgment_resolve",
+                JudgmentKind::ProductDecision,
+                answer_payload(JudgmentKind::ProductDecision),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "result");
+        assert_eq!(response.response_value["base"]["state_version"], 4);
+        assert_eq!(
+            response.response_value["user_judgment"]["status"],
+            "resolved"
+        );
+        assert_eq!(
+            response.response_value["user_judgment"]["resolution"]["resolved_by_actor_kind"],
+            "user"
+        );
+        assert_eq!(
+            response.response_value["state"]["pending_user_judgment_refs"]
+                .as_array()
+                .expect("pending refs should be an array")
+                .len(),
+            0
+        );
+        assert_eq!(after.state_version, before.state_version + 1);
+        assert_eq!(after.user_judgments, before.user_judgments);
+        assert_eq!(
+            user_judgment_status(&harness, "uj_req_judgment_resolve")?,
+            "resolved"
+        );
+        assert!(
+            resolution_json(&harness, "uj_req_judgment_resolve")?["answer"]["product_decision"]
+                .is_object()
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn incompatible_judgment_kind_is_rejected_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "kind")?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_kind",
+                "idem_judgment_kind",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before = harness.counts()?;
+
+        let response = harness.service.record_user_judgment(
+            record_judgment_request(
+                "req_record_wrong_kind",
+                "idem_record_wrong_kind",
+                Some(3),
+                &task_id,
+                "uj_req_judgment_kind",
+                JudgmentKind::TechnicalDecision,
+                answer_payload(JudgmentKind::TechnicalDecision),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "DECISION_UNRESOLVED"
+        );
+        assert_eq!(harness.counts()?, before);
+        assert_eq!(
+            user_judgment_status(&harness, "uj_req_judgment_kind")?,
+            "pending"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn final_acceptance_does_not_substitute_for_residual_risk_acceptance(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "risk")?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_risk",
+                "idem_judgment_risk",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ResidualRiskAcceptance,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before = harness.counts()?;
+
+        let response = harness.service.record_user_judgment(
+            record_judgment_request(
+                "req_record_final_for_risk",
+                "idem_record_final_for_risk",
+                Some(3),
+                &task_id,
+                "uj_req_judgment_risk",
+                JudgmentKind::ResidualRiskAcceptance,
+                answer_payload(JudgmentKind::FinalAcceptance),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+        assert_eq!(
+            user_judgment_status(&harness, "uj_req_judgment_risk")?,
+            "pending"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn sensitive_action_scope_does_not_create_write_authorization() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "sensitive")?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_sensitive",
+                "idem_judgment_sensitive",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::SensitiveApproval,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before = harness.counts()?;
+
+        let response = harness.service.record_user_judgment(
+            record_judgment_request(
+                "req_record_sensitive",
+                "idem_record_sensitive",
+                Some(3),
+                &task_id,
+                "uj_req_judgment_sensitive",
+                JudgmentKind::SensitiveApproval,
+                answer_payload(JudgmentKind::SensitiveApproval),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "result");
+        assert_eq!(after.write_authorizations, before.write_authorizations);
+        assert_eq!(
+            response.response_value["state"]["write_authority_summary"],
+            Value::Null
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn recorded_scope_decision_does_not_change_scope_or_current_change_unit(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "scope_judgment")?;
+        let original_scope = current_change_unit_scope(&harness, &task_id)?;
+        let original_current = current_change_unit_id(&harness, &task_id)?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_scope",
+                "idem_judgment_scope",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ScopeDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before = harness.counts()?;
+
+        let response = harness.service.record_user_judgment(
+            record_judgment_request(
+                "req_record_scope",
+                "idem_record_scope",
+                Some(3),
+                &task_id,
+                "uj_req_judgment_scope",
+                JudgmentKind::ScopeDecision,
+                answer_payload(JudgmentKind::ScopeDecision),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let after = harness.counts()?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "result");
+        assert_eq!(
+            response.response_value["state"]["scope_summary"],
+            "Initial current scope."
+        );
+        assert_eq!(
+            current_change_unit_scope(&harness, &task_id)?,
+            original_scope
+        );
+        assert_eq!(
+            current_change_unit_id(&harness, &task_id)?,
+            original_current
+        );
+        assert_eq!(after.change_units, before.change_units);
+        Ok(())
+    }
+
+    #[test]
+    fn judgment_dry_runs_have_no_storage_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "dry_judgment")?;
+        let before_request = harness.counts()?;
+
+        let request_preview = harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_dry",
+                "idem_judgment_dry",
+                true,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+
+        assert_eq!(
+            request_preview.response_value["base"]["response_kind"],
+            "dry_run"
+        );
+        assert_eq!(harness.counts()?, before_request);
+
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_dry_record",
+                "idem_judgment_dry_record",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before_record = harness.counts()?;
+
+        let mut record_preview_request = record_judgment_request(
+            "req_record_dry",
+            "idem_record_dry",
+            Some(3),
+            &task_id,
+            "uj_req_judgment_dry_record",
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        );
+        record_preview_request.envelope.dry_run = true;
+        let record_preview = harness.service.record_user_judgment(
+            record_preview_request,
+            invocation(AccessClass::CoreMutation),
+        )?;
+
+        assert_eq!(
+            record_preview.response_value["base"]["response_kind"],
+            "dry_run"
+        );
+        assert_eq!(harness.counts()?, before_record);
+        assert_eq!(
+            user_judgment_status(&harness, "uj_req_judgment_dry_record")?,
+            "pending"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn stale_state_rejects_record_user_judgment_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "stale_judgment")?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_stale",
+                "idem_judgment_stale",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let before = harness.counts()?;
+
+        let response = harness.service.record_user_judgment(
+            record_judgment_request(
+                "req_record_stale",
+                "idem_record_stale",
+                Some(2),
+                &task_id,
+                "uj_req_judgment_stale",
+                JudgmentKind::ProductDecision,
+                answer_payload(JudgmentKind::ProductDecision),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "STATE_VERSION_CONFLICT"
+        );
+        assert_eq!(harness.counts()?, before);
+        assert_eq!(
+            user_judgment_status(&harness, "uj_req_judgment_stale")?,
+            "pending"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn record_user_judgment_idempotency_replays_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "replay_judgment")?;
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_judgment_replay",
+                "idem_judgment_replay",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let request = record_judgment_request(
+            "req_record_replay",
+            "idem_record_replay",
+            Some(3),
+            &task_id,
+            "uj_req_judgment_replay",
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        );
+
+        let first = harness
+            .service
+            .record_user_judgment(request.clone(), invocation(AccessClass::CoreMutation))?;
+        let after_first = harness.counts()?;
+        let second = harness
+            .service
+            .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+
+        assert!(second.replayed);
+        assert_eq!(second.response_json, first.response_json);
+        assert_eq!(harness.counts()?, after_first);
+        Ok(())
+    }
+
     fn envelope(
         request_id: &str,
         idempotency_key: Option<&str>,
@@ -1854,6 +3233,210 @@ mod tests {
         }
     }
 
+    fn create_task_with_change_unit(
+        harness: &MethodHarness,
+        prefix: &str,
+    ) -> Result<(String, String), Box<dyn Error>> {
+        let intake_request_id = format!("req_{prefix}_task");
+        let intake_idempotency_key = format!("idem_{prefix}_task");
+        let intake = harness.service.intake(
+            intake_request(
+                &intake_request_id,
+                &intake_idempotency_key,
+                false,
+                Some(0),
+                RequestedMode::Work,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let task_id = intake.response_value["task_ref"]["record_id"]
+            .as_str()
+            .expect("task ref should be present")
+            .to_owned();
+
+        let scope_request_id = format!("req_{prefix}_scope");
+        let scope_idempotency_key = format!("idem_{prefix}_scope");
+        let scope = harness.service.update_scope(
+            update_scope_request(
+                &scope_request_id,
+                &scope_idempotency_key,
+                false,
+                Some(1),
+                &task_id,
+                ChangeUnitOperation::CreateCurrent,
+                "Initial current scope.",
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let change_unit_id = scope.response_value["change_unit_ref"]["record_id"]
+            .as_str()
+            .expect("change unit ref should be present")
+            .to_owned();
+        Ok((task_id, change_unit_id))
+    }
+
+    fn user_judgment_request(
+        request_id: &str,
+        idempotency_key: &str,
+        dry_run: bool,
+        expected_state_version: Option<u64>,
+        task_id: &str,
+        change_unit_id: Option<&str>,
+        judgment_kind: JudgmentKind,
+    ) -> harness_types::RequestUserJudgmentRequest {
+        harness_types::RequestUserJudgmentRequest {
+            envelope: envelope(
+                request_id,
+                Some(idempotency_key),
+                dry_run,
+                expected_state_version,
+                Some(task_id),
+            ),
+            task_id: TaskId::new(task_id),
+            change_unit_id: change_unit_id.map(ChangeUnitId::new),
+            judgment_kind,
+            presentation: harness_types::JudgmentPresentation::Short,
+            question: "Choose the focused test judgment outcome.".to_owned(),
+            options: vec![
+                UserJudgmentOption {
+                    option_id: harness_types::UserJudgmentOptionId::new("accept"),
+                    label: "Accept".to_owned(),
+                    description: "Record the focused user-owned judgment.".to_owned(),
+                    consequence: "Only this judgment record is resolved.".to_owned(),
+                    is_default: true,
+                },
+                UserJudgmentOption {
+                    option_id: harness_types::UserJudgmentOptionId::new("decline"),
+                    label: "Decline".to_owned(),
+                    description: "Record that the focused judgment was not accepted.".to_owned(),
+                    consequence: "The Task remains unresolved for this question.".to_owned(),
+                    is_default: false,
+                },
+            ],
+            context: UserJudgmentContext {
+                summary: "A focused test judgment needs a user-owned answer.".to_owned(),
+                related_refs: Vec::new(),
+                artifact_refs: Vec::new(),
+                visible_risks: Vec::new(),
+                constraints: vec!["The answer covers only the requested judgment kind.".to_owned()],
+            },
+            affected_refs: vec![StateRecordRef {
+                record_kind: StateRecordKind::Task,
+                record_id: RecordId::new(task_id),
+                project_id: ProjectId::new(PROJECT_ID),
+                task_id: Some(TaskId::new(task_id)),
+                state_version: expected_state_version,
+            }],
+            required_for: harness_types::JudgmentRequiredFor::Close,
+            expires_at: None,
+        }
+    }
+
+    fn record_judgment_request(
+        request_id: &str,
+        idempotency_key: &str,
+        expected_state_version: Option<u64>,
+        task_id: &str,
+        user_judgment_id: &str,
+        judgment_kind: JudgmentKind,
+        answer: RecordUserJudgmentPayload,
+    ) -> RecordUserJudgmentRequest {
+        let mut request_envelope = envelope(
+            request_id,
+            Some(idempotency_key),
+            false,
+            expected_state_version,
+            Some(task_id),
+        );
+        request_envelope.actor_kind = ActorKind::User;
+        RecordUserJudgmentRequest {
+            envelope: request_envelope,
+            user_judgment_id: harness_types::UserJudgmentId::new(user_judgment_id),
+            judgment_kind,
+            selected_option_id: harness_types::UserJudgmentOptionId::new("accept"),
+            answer,
+            note: Some("Recorded by the focused judgment test.".to_owned()),
+            accepted_risks: Vec::new(),
+        }
+    }
+
+    fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
+        let mut payload = RecordUserJudgmentPayload {
+            product_decision: None,
+            technical_decision: None,
+            scope_decision: None,
+            sensitive_action_scope: None,
+            final_acceptance: None,
+            residual_risk_acceptance: None,
+            cancellation: None,
+        };
+        match judgment_kind {
+            JudgmentKind::ProductDecision => {
+                payload.product_decision = Some(json_object(json!({
+                    "judgment": {
+                        "decision": "accepted",
+                        "rationale": "The product direction is accepted for this focused test."
+                    }
+                })));
+            }
+            JudgmentKind::TechnicalDecision => {
+                payload.technical_decision = Some(json_object(json!({
+                    "judgment": {
+                        "decision": "accepted",
+                        "rationale": "The technical direction is accepted for this focused test."
+                    }
+                })));
+            }
+            JudgmentKind::ScopeDecision => {
+                payload.scope_decision = Some(json_object(json!({
+                    "requested_scope_summary": "Expanded scope that must not apply silently.",
+                    "decision": "accepted"
+                })));
+            }
+            JudgmentKind::SensitiveApproval => {
+                payload.sensitive_action_scope = Some(harness_types::SensitiveActionScope {
+                    action_kind: "local_sensitive_step".to_owned(),
+                    description: "Allow the named sensitive step only.".to_owned(),
+                    intended_paths: vec!["src/export.rs".to_owned()],
+                    sensitive_categories: vec!["network".to_owned()],
+                    command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()),
+                    network_or_host_summary: Some("No remote host is authorized here.".to_owned()),
+                    secret_or_credential_summary: None,
+                    capability_claim: "This is not Write Authorization.".to_owned(),
+                    expires_at: None,
+                });
+            }
+            JudgmentKind::FinalAcceptance => {
+                payload.final_acceptance = Some(json_object(json!({
+                    "judgment": {
+                        "decision": "accepted",
+                        "basis": "The visible close basis is acceptable."
+                    }
+                })));
+            }
+            JudgmentKind::ResidualRiskAcceptance => {
+                payload.residual_risk_acceptance = Some(json_object(json!({
+                    "risk_id": "risk_visible_001",
+                    "decision": "accepted"
+                })));
+            }
+            JudgmentKind::Cancellation => {
+                payload.cancellation = Some(json_object(json!({
+                    "decision": "cancel",
+                    "reason": "The user chose to stop the Task."
+                })));
+            }
+        }
+        payload
+    }
+
+    fn json_object(value: Value) -> JsonObject {
+        match value {
+            Value::Object(object) => object,
+            _ => panic!("test helper expected a JSON object"),
+        }
+    }
+
     fn insert_active_write_authorization(
         harness: &MethodHarness,
         task_id: &str,
@@ -1896,6 +3479,74 @@ mod tests {
             ],
         )?;
         Ok(())
+    }
+
+    fn user_judgment_status(
+        harness: &MethodHarness,
+        user_judgment_id: &str,
+    ) -> Result<String, Box<dyn Error>> {
+        let conn = harness.conn()?;
+        Ok(conn.query_row(
+            "SELECT status
+               FROM user_judgments
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+            rusqlite::params![PROJECT_ID, user_judgment_id],
+            |row| row.get(0),
+        )?)
+    }
+
+    fn resolution_json(
+        harness: &MethodHarness,
+        user_judgment_id: &str,
+    ) -> Result<Value, Box<dyn Error>> {
+        let conn = harness.conn()?;
+        let text: String = conn.query_row(
+            "SELECT resolution_json
+               FROM user_judgments
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+            rusqlite::params![PROJECT_ID, user_judgment_id],
+            |row| row.get(0),
+        )?;
+        Ok(serde_json::from_str(&text)?)
+    }
+
+    fn current_change_unit_id(
+        harness: &MethodHarness,
+        task_id: &str,
+    ) -> Result<Option<String>, Box<dyn Error>> {
+        let conn = harness.conn()?;
+        Ok(conn.query_row(
+            "SELECT current_change_unit_id
+               FROM tasks
+              WHERE project_id = ?1
+                AND task_id = ?2",
+            rusqlite::params![PROJECT_ID, task_id],
+            |row| row.get(0),
+        )?)
+    }
+
+    fn current_change_unit_scope(
+        harness: &MethodHarness,
+        task_id: &str,
+    ) -> Result<String, Box<dyn Error>> {
+        let conn = harness.conn()?;
+        let text: String = conn.query_row(
+            "SELECT scope_summary_json
+               FROM change_units
+              WHERE project_id = ?1
+                AND task_id = ?2
+                AND status = 'active'
+                AND is_current = 1",
+            rusqlite::params![PROJECT_ID, task_id],
+            |row| row.get(0),
+        )?;
+        let value: Value = serde_json::from_str(&text)?;
+        Ok(value["scope_summary"]
+            .as_str()
+            .expect("scope_summary should be a string")
+            .to_owned())
     }
 
     fn active_current_change_units(

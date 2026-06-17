@@ -59,6 +59,8 @@ pub enum CoreStorageMutation {
     InsertCurrentChangeUnit(ChangeUnitInsert),
     ReplaceCurrentChangeUnit(ChangeUnitInsert),
     MarkActiveWriteAuthorizationsStale { task_id: String },
+    InsertUserJudgment(UserJudgmentInsert),
+    ResolveUserJudgment(UserJudgmentResolutionUpdate),
 }
 
 /// Storage input for inserting a Task current row.
@@ -105,6 +107,35 @@ pub struct ChangeUnitInsert {
     pub write_basis_json: String,
     pub close_basis_json: String,
     pub lifecycle_json: String,
+}
+
+/// Storage input for inserting a pending user-owned judgment request.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UserJudgmentInsert {
+    pub judgment_id: String,
+    pub task_id: String,
+    pub change_unit_id: Option<String>,
+    pub judgment_kind: String,
+    pub request_json: String,
+    pub context_json: String,
+    pub options_json: String,
+    pub affected_refs_json: String,
+    pub artifact_refs_json: String,
+    pub sensitive_action_scope_json: String,
+    pub requested_by_surface_id: String,
+    pub requested_by_surface_instance_id: String,
+    pub requested_at: String,
+    pub metadata_json: String,
+}
+
+/// Storage input for resolving one pending user-owned judgment.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UserJudgmentResolutionUpdate {
+    pub judgment_id: String,
+    pub status: String,
+    pub resolution_json: String,
+    pub sensitive_action_scope_json: Option<String>,
+    pub resolved_at: String,
 }
 
 /// Event reference facts created by an atomic mutation commit.
@@ -221,6 +252,29 @@ pub struct WriteAuthorizationRecord {
     pub status: String,
     pub attempt_scope_json: String,
     pub expires_at: String,
+}
+
+/// Stored user-owned judgment row data needed by Core method implementations.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UserJudgmentRecord {
+    pub project_id: String,
+    pub judgment_id: String,
+    pub task_id: String,
+    pub change_unit_id: Option<String>,
+    pub judgment_kind: String,
+    pub status: String,
+    pub request_json: String,
+    pub context_json: String,
+    pub options_json: String,
+    pub affected_refs_json: String,
+    pub artifact_refs_json: String,
+    pub sensitive_action_scope_json: String,
+    pub resolution_json: Option<String>,
+    pub requested_by_surface_id: String,
+    pub requested_by_surface_instance_id: String,
+    pub requested_at: String,
+    pub resolved_at: Option<String>,
+    pub metadata_json: String,
 }
 
 /// Public record reference facts read from storage rows.
@@ -346,6 +400,20 @@ impl CoreProjectStore {
         current_change_unit(&self.conn, &self.project.project_id, task_id.as_str())
     }
 
+    /// Reads one Change Unit row by exact Task and Change Unit identity.
+    pub fn change_unit_record(
+        &self,
+        task_id: &TaskId,
+        change_unit_id: &str,
+    ) -> StoreResult<Option<ChangeUnitRecord>> {
+        change_unit_record(
+            &self.conn,
+            &self.project.project_id,
+            task_id.as_str(),
+            change_unit_id,
+        )
+    }
+
     /// Lists active Write Authorizations for a Task.
     pub fn active_write_authorizations(
         &self,
@@ -373,6 +441,23 @@ impl CoreProjectStore {
                 state_version,
             },
         )
+    }
+
+    /// Reads one user-owned judgment row by project-local judgment identity.
+    pub fn user_judgment_record(
+        &self,
+        judgment_id: &str,
+    ) -> StoreResult<Option<UserJudgmentRecord>> {
+        user_judgment_record(&self.conn, &self.project.project_id, judgment_id)
+    }
+
+    /// Returns the store clock in the public timestamp shape used by Core rows.
+    pub fn current_timestamp(&self) -> StoreResult<String> {
+        self.conn
+            .query_row("SELECT strftime('%Y-%m-%dT%H:%M:%fZ', 'now')", [], |row| {
+                row.get(0)
+            })
+            .map_err(StoreError::from)
     }
 
     /// Lists active blocker refs for a Task.
@@ -687,6 +772,8 @@ impl CoreStorageMutation {
             Self::MarkActiveWriteAuthorizationsStale { task_id } => {
                 mutation.mark_active_write_authorizations_stale(task_id)
             }
+            Self::InsertUserJudgment(input) => mutation.insert_user_judgment(input),
+            Self::ResolveUserJudgment(input) => mutation.resolve_user_judgment(input),
         }
     }
 }
@@ -978,6 +1065,135 @@ impl ProjectMutation<'_> {
         Ok(())
     }
 
+    fn insert_user_judgment(&mut self, input: &UserJudgmentInsert) -> StoreResult<()> {
+        validate_identifier("judgment_id", &input.judgment_id)?;
+        validate_identifier("task_id", &input.task_id)?;
+        if let Some(change_unit_id) = &input.change_unit_id {
+            validate_identifier("change_unit_id", change_unit_id)?;
+        }
+        validate_identifier("judgment_kind", &input.judgment_kind)?;
+        validate_json_text("user_judgments.request_json", &input.request_json)?;
+        validate_json_text("user_judgments.context_json", &input.context_json)?;
+        validate_json_text("user_judgments.options_json", &input.options_json)?;
+        validate_json_text(
+            "user_judgments.affected_refs_json",
+            &input.affected_refs_json,
+        )?;
+        validate_json_text(
+            "user_judgments.artifact_refs_json",
+            &input.artifact_refs_json,
+        )?;
+        validate_json_text(
+            "user_judgments.sensitive_action_scope_json",
+            &input.sensitive_action_scope_json,
+        )?;
+        validate_identifier("requested_by_surface_id", &input.requested_by_surface_id)?;
+        validate_identifier(
+            "requested_by_surface_instance_id",
+            &input.requested_by_surface_instance_id,
+        )?;
+        validate_identifier("requested_at", &input.requested_at)?;
+        validate_json_text("user_judgments.metadata_json", &input.metadata_json)?;
+
+        self.tx.execute(
+            "INSERT INTO user_judgments (
+                project_id,
+                judgment_id,
+                task_id,
+                change_unit_id,
+                judgment_kind,
+                status,
+                request_json,
+                context_json,
+                options_json,
+                affected_refs_json,
+                artifact_refs_json,
+                sensitive_action_scope_json,
+                resolution_json,
+                requested_by_surface_id,
+                requested_by_surface_instance_id,
+                requested_at,
+                resolved_at,
+                metadata_json
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                ?4,
+                ?5,
+                'pending',
+                ?6,
+                ?7,
+                ?8,
+                ?9,
+                ?10,
+                ?11,
+                NULL,
+                ?12,
+                ?13,
+                ?14,
+                NULL,
+                ?15
+            )",
+            params![
+                self.project_id,
+                input.judgment_id,
+                input.task_id,
+                input.change_unit_id,
+                input.judgment_kind,
+                input.request_json,
+                input.context_json,
+                input.options_json,
+                input.affected_refs_json,
+                input.artifact_refs_json,
+                input.sensitive_action_scope_json,
+                input.requested_by_surface_id,
+                input.requested_by_surface_instance_id,
+                input.requested_at,
+                input.metadata_json
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn resolve_user_judgment(&mut self, input: &UserJudgmentResolutionUpdate) -> StoreResult<()> {
+        validate_identifier("judgment_id", &input.judgment_id)?;
+        validate_identifier("status", &input.status)?;
+        validate_json_text("user_judgments.resolution_json", &input.resolution_json)?;
+        if let Some(value) = &input.sensitive_action_scope_json {
+            validate_json_text("user_judgments.sensitive_action_scope_json", value)?;
+        }
+        validate_identifier("resolved_at", &input.resolved_at)?;
+
+        let changed = self.tx.execute(
+            "UPDATE user_judgments
+                SET status = ?3,
+                    resolution_json = ?4,
+                    sensitive_action_scope_json = COALESCE(?5, sensitive_action_scope_json),
+                    resolved_at = ?6
+              WHERE project_id = ?1
+                AND judgment_id = ?2
+                AND status = 'pending'",
+            params![
+                self.project_id,
+                input.judgment_id,
+                input.status,
+                input.resolution_json,
+                input.sensitive_action_scope_json,
+                input.resolved_at
+            ],
+        )?;
+        if changed == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::SchemaInvariant {
+                database_kind: "project_state",
+                detail: "pending user judgment resolution changed no rows".to_owned(),
+            })
+        }
+    }
+
     fn update_task_text_column(
         &mut self,
         task_id: &str,
@@ -1158,6 +1374,36 @@ fn current_change_unit(
     .map_err(StoreError::from)
 }
 
+fn change_unit_record(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+    change_unit_id: &str,
+) -> StoreResult<Option<ChangeUnitRecord>> {
+    conn.query_row(
+        "SELECT
+            project_id,
+            change_unit_id,
+            task_id,
+            status,
+            is_current,
+            basis_state_version,
+            scope_summary_json,
+            bounded_paths_json,
+            write_basis_json,
+            close_basis_json,
+            lifecycle_json
+         FROM change_units
+         WHERE project_id = ?1
+           AND task_id = ?2
+           AND change_unit_id = ?3",
+        params![project_id, task_id, change_unit_id],
+        change_unit_record_from_row,
+    )
+    .optional()
+    .map_err(StoreError::from)
+}
+
 fn change_unit_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ChangeUnitRecord> {
     let is_current = row.get::<_, i64>(4)? == 1;
     let basis_state_version = match row.get::<_, Option<i64>>(5)? {
@@ -1230,6 +1476,64 @@ fn write_authorization_record_from_row(
         status: row.get(5)?,
         attempt_scope_json: row.get(6)?,
         expires_at: row.get(7)?,
+    })
+}
+
+fn user_judgment_record(
+    conn: &Connection,
+    project_id: &str,
+    judgment_id: &str,
+) -> StoreResult<Option<UserJudgmentRecord>> {
+    conn.query_row(
+        "SELECT
+            project_id,
+            judgment_id,
+            task_id,
+            change_unit_id,
+            judgment_kind,
+            status,
+            request_json,
+            context_json,
+            options_json,
+            affected_refs_json,
+            artifact_refs_json,
+            sensitive_action_scope_json,
+            resolution_json,
+            requested_by_surface_id,
+            requested_by_surface_instance_id,
+            requested_at,
+            resolved_at,
+            metadata_json
+         FROM user_judgments
+         WHERE project_id = ?1
+           AND judgment_id = ?2",
+        params![project_id, judgment_id],
+        user_judgment_record_from_row,
+    )
+    .optional()
+    .map_err(StoreError::from)
+}
+
+fn user_judgment_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<UserJudgmentRecord> {
+    Ok(UserJudgmentRecord {
+        project_id: row.get(0)?,
+        judgment_id: row.get(1)?,
+        task_id: row.get(2)?,
+        change_unit_id: row.get(3)?,
+        judgment_kind: row.get(4)?,
+        status: row.get(5)?,
+        request_json: row.get(6)?,
+        context_json: row.get(7)?,
+        options_json: row.get(8)?,
+        affected_refs_json: row.get(9)?,
+        artifact_refs_json: row.get(10)?,
+        sensitive_action_scope_json: row.get(11)?,
+        resolution_json: row.get(12)?,
+        requested_by_surface_id: row.get(13)?,
+        requested_by_surface_instance_id: row.get(14)?,
+        requested_at: row.get(15)?,
+        resolved_at: row.get(16)?,
+        metadata_json: row.get(17)?,
     })
 }
 

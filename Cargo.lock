@@ -167,6 +167,7 @@ dependencies = [
  "harness-test-support",
  "harness-types",
  "rusqlite",
+ "serde",
  "serde_json",
 ]
 
