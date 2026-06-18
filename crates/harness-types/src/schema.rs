@@ -10,13 +10,13 @@ use crate::ids::{
     SurfaceInstanceId, TaskId, UserJudgmentId, UserJudgmentOptionId,
 };
 use crate::values::{
-    ActorKind, ArtifactAvailability, ArtifactInputSourceKind, CloseReadinessBlockerCategory,
-    CloseReason, CloseState, EffectKind, ErrorCode, EvidenceCoverageState, EvidenceStatus,
-    GuaranteeLevel, JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation,
-    JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName, NextActionKind,
-    PlannedBlockerSourceKind, RedactionState, ResponseKind, RunKind, StateRecordKind,
-    TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentStatus, UtcTimestamp, ValidatorSeverity,
-    ValidatorStatus, WriteAuthorizationStatus, WriteDecisionCategory,
+    ActorKind, ArtifactAvailability, ArtifactInputSourceKind, ArtifactIntegrityStatus,
+    CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind, ErrorCode,
+    EvidenceCoverageState, EvidenceStatus, GuaranteeLevel, JudgmentBasisCompatibilityStatus,
+    JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName,
+    NextActionKind, PlannedBlockerSourceKind, RedactionState, ResponseKind, RunKind,
+    StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentStatus, UtcTimestamp,
+    ValidatorSeverity, ValidatorStatus, WriteAuthorizationStatus, WriteDecisionCategory,
 };
 
 /// JSON object used where an owner document defines a field as `object`.
@@ -555,15 +555,21 @@ pub struct ArtifactRef {
     pub project_id: ProjectId,
     pub task_id: TaskId,
     pub display_name: String,
-    pub content_type: String,
-    pub sha256: String,
-    pub size_bytes: u64,
+    pub content_type: RequiredNullable<String>,
+    pub sha256: RequiredNullable<String>,
+    pub size_bytes: RequiredNullable<u64>,
+    #[serde(default = "legacy_unknown_artifact_integrity_status")]
+    pub integrity_status: ArtifactIntegrityStatus,
     pub redaction_state: RedactionState,
     pub availability: ArtifactAvailability,
     pub created_by_run_ref: RequiredNullable<StateRecordRef>,
     pub created_by_surface_id: RequiredNullable<SurfaceId>,
     pub created_by_surface_instance_id: RequiredNullable<SurfaceInstanceId>,
     pub storage_ref: RequiredNullable<StorageRef>,
+}
+
+fn legacy_unknown_artifact_integrity_status() -> ArtifactIntegrityStatus {
+    ArtifactIntegrityStatus::LegacyUnknown
 }
 
 /// Persisted producer identity facts for a durable artifact row.

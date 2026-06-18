@@ -194,12 +194,6 @@ fn validate_stage_artifact_input(
     validate_stage_text_field("content_type", &request.content_type, &mut errors);
 
     let safe_bytes = request.safe_bytes_or_notice.as_bytes().to_vec();
-    if safe_bytes.is_empty() {
-        errors.push(stage_validation_error(
-            "safe_bytes_or_notice",
-            "safe_bytes_or_notice must not be empty",
-        ));
-    }
     if safe_bytes.len() > MAX_STAGED_BODY_BYTES {
         errors.push(stage_validation_error(
             "safe_bytes_or_notice",
@@ -260,6 +254,11 @@ fn validate_stage_artifact_input(
             errors.push(stage_validation_error(
                 "expected_sha256",
                 "expected_sha256 must not be empty when present",
+            ));
+        } else if !is_lowercase_sha256_hex(expected_sha256) {
+            errors.push(stage_validation_error(
+                "expected_sha256",
+                "expected_sha256 must be a lowercase 64-character SHA-256 hex string",
             ));
         } else if expected_sha256 != &sha256 {
             errors.push(stage_validation_error(
@@ -367,7 +366,7 @@ fn contains_obvious_raw_secret(text: &str) -> bool {
 
 fn sha256_string(bytes: &[u8]) -> String {
     let digest = Sha256::digest(bytes);
-    format!("sha256:{}", lowercase_hex(&digest))
+    lowercase_hex(&digest)
 }
 
 fn lowercase_hex(bytes: &[u8]) -> String {
@@ -378,6 +377,13 @@ fn lowercase_hex(bytes: &[u8]) -> String {
         output.push(HEX[(byte & 0x0f) as usize] as char);
     }
     output
+}
+
+fn is_lowercase_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
 fn stage_validation_error(field: &'static str, message: &'static str) -> harness_types::ToolError {

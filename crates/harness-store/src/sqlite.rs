@@ -298,6 +298,19 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
     }
     validate_tool_invocations_primary_key(conn)?;
     validate_tool_invocations_replay_surface_foreign_key(conn)?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "artifacts",
+        ColumnSpec {
+            name: "integrity_status",
+            type_name: "TEXT",
+            not_null: true,
+            default_value: Some("'verified'"),
+            primary_key_position: 0,
+        },
+    )?;
+    validate_artifacts_integrity_status_constraint(conn)?;
     require_triggers(
         conn,
         PROJECT_STATE_DATABASE_KIND,
@@ -743,6 +756,38 @@ fn validate_tool_invocations_replay_surface_foreign_key(conn: &Connection) -> St
     ))
 }
 
+fn validate_artifacts_integrity_status_constraint(conn: &Connection) -> StoreResult<()> {
+    let table_sql: String = conn.query_row(
+        "SELECT sql
+           FROM sqlite_master
+          WHERE type = 'table'
+            AND name = 'artifacts'",
+        [],
+        |row| row.get(0),
+    )?;
+    let normalized = table_sql
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase();
+    let has_status_values = normalized
+        .contains("integrity_status in ('verified', 'legacy_unknown', 'corrupt')")
+        || normalized.contains("integrity_status in('verified', 'legacy_unknown', 'corrupt')");
+    let has_verified_requirement = normalized.contains("integrity_status <> 'verified'")
+        && normalized.contains("length(sha256) = 64")
+        && normalized.contains("sha256 not glob '*[^0-9a-f]*'")
+        && normalized.contains("size_bytes is not null")
+        && normalized.contains("content_type is not null");
+    if has_status_values && has_verified_requirement {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "artifacts.integrity_status constraint is missing or malformed",
+        ))
+    }
+}
+
 fn require_column(
     conn: &Connection,
     database_kind: &'static str,
@@ -839,7 +884,7 @@ mod tests {
         let path = project_state_db_path(runtime_home.path(), "PRJ-0001");
 
         let conn = open_project_state_database(&path)?;
-        assert_eq!(migration_count(&conn)?, 5);
+        assert_eq!(migration_count(&conn)?, 6);
         assert_eq!(
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
@@ -854,12 +899,12 @@ mod tests {
             &conn,
             PROJECT_STATE_DATABASE_KIND,
             PROJECT_STATE_SCHEMA_VERSION,
-            "project_state_judgment_resolution_outcome_v5"
+            "project_state_artifact_integrity_v6"
         )?);
         drop(conn);
 
         let conn = open_project_state_database(&path)?;
-        assert_eq!(migration_count(&conn)?, 5);
+        assert_eq!(migration_count(&conn)?, 6);
         assert!(foreign_keys_enabled(&conn)?);
         assert!(sqlite_object_exists(&conn, "table", "tool_invocations")?);
         assert!(column_exists(

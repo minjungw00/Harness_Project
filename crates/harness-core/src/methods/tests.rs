@@ -2412,6 +2412,36 @@ fn stage_artifact_rejects_checksum_mismatch_without_effect() -> Result<(), Box<d
         &task_id,
     );
     request.safe_bytes_or_notice = "checksum mismatch sample".to_owned();
+    request.expected_sha256 =
+        Some("0000000000000000000000000000000000000000000000000000000000000000".to_owned()).into();
+    let response = harness
+        .service
+        .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn stage_artifact_rejects_invalid_checksum_format_without_effect() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_stage_artifact_capability(&harness)?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "stage_sha_format")?;
+    let before = harness.counts()?;
+
+    let mut request = stage_artifact_request(
+        "req_stage_sha_format",
+        Some("idem_stage_sha_format"),
+        false,
+        Some(2),
+        &task_id,
+    );
+    request.safe_bytes_or_notice = "checksum format sample".to_owned();
     request.expected_sha256 = Some("sha256:0000".to_owned()).into();
     let response = harness
         .service
@@ -2422,6 +2452,7 @@ fn stage_artifact_rejects_checksum_mismatch_without_effect() -> Result<(), Box<d
         response.response_value["errors"][0]["code"],
         "VALIDATION_FAILED"
     );
+    assert!(response.response_json.contains("64-character SHA-256"));
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -3387,6 +3418,9 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_artifact")?;
     let handle = stage_artifact_for_record_run(&harness, &task_id, "run_artifact", 2)?;
     let handle_id = handle.handle_id.as_str().to_owned();
+    let expected_content_type = handle.content_type.clone();
+    let expected_sha256 = handle.sha256.clone();
+    let expected_size_bytes = handle.size_bytes;
     let before = harness.counts()?;
 
     let mut request = record_run_request(
@@ -3414,8 +3448,36 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
         .as_str()
         .expect("artifact id should be present")
         .to_owned();
+    let artifact_row = persistent_artifact_row(&harness, &artifact_id)?;
 
     assert_eq!(response.response_value["base"]["state_version"], 3);
+    assert_eq!(
+        response.response_value["registered_artifacts"][0]["integrity_status"],
+        "verified"
+    );
+    assert_eq!(
+        response.response_value["registered_artifacts"][0]["content_type"],
+        expected_content_type
+    );
+    assert_eq!(
+        response.response_value["registered_artifacts"][0]["sha256"],
+        expected_sha256
+    );
+    assert_eq!(
+        response.response_value["registered_artifacts"][0]["size_bytes"],
+        expected_size_bytes
+    );
+    assert_eq!(artifact_row.integrity_status, "verified");
+    assert_eq!(
+        artifact_row.content_type.as_deref(),
+        Some(expected_content_type.as_str())
+    );
+    assert_eq!(
+        artifact_row.sha256.as_deref(),
+        Some(expected_sha256.as_str())
+    );
+    assert_eq!(artifact_row.size_bytes, Some(expected_size_bytes));
+    assert_eq!(artifact_row.status, "available");
     assert_eq!(
         response.response_value["evidence_summary"]["status"],
         "sufficient"
@@ -3437,6 +3499,199 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
         &artifact_id,
         "evidence_summary"
     )?);
+    Ok(())
+}
+
+#[test]
+fn record_run_promotes_zero_byte_artifact_with_real_empty_sha256() -> Result<(), Box<dyn Error>> {
+    const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_zero_artifact")?;
+    let mut stage_request = stage_artifact_request(
+        "req_stage_zero_artifact",
+        Some("idem_stage_zero_artifact"),
+        false,
+        Some(2),
+        &task_id,
+    );
+    stage_request.safe_bytes_or_notice = String::new();
+    stage_request.expected_sha256 = Some(EMPTY_SHA256.to_owned()).into();
+    stage_request.expected_size_bytes = Some(0).into();
+    let stage_response = harness
+        .service
+        .stage_artifact(stage_request, invocation(AccessClass::ArtifactRegistration))?;
+    let handle: StagedArtifactHandle =
+        serde_json::from_value(stage_response.response_value["staged_artifact_handle"].clone())?;
+
+    let mut request = record_run_request(
+        "req_run_zero_artifact",
+        "idem_run_zero_artifact",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_zero",
+        handle,
+        Some("empty_report"),
+        Some("Zero-byte artifact was registered."),
+    )];
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+    let artifact_id = response.response_value["registered_artifacts"][0]["artifact_id"]
+        .as_str()
+        .expect("artifact id should be present");
+    let artifact_row = persistent_artifact_row(&harness, artifact_id)?;
+
+    assert_eq!(
+        response.response_value["registered_artifacts"][0]["integrity_status"],
+        "verified"
+    );
+    assert_eq!(
+        response.response_value["registered_artifacts"][0]["sha256"],
+        EMPTY_SHA256
+    );
+    assert_eq!(
+        response.response_value["registered_artifacts"][0]["size_bytes"],
+        0
+    );
+    assert_eq!(artifact_row.integrity_status, "verified");
+    assert_eq!(artifact_row.sha256.as_deref(), Some(EMPTY_SHA256));
+    assert_eq!(artifact_row.size_bytes, Some(0));
+    Ok(())
+}
+
+#[test]
+fn legacy_unknown_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "legacy_artifact")?;
+    let handle = stage_artifact_for_record_run(&harness, &task_id, "legacy_artifact", 2)?;
+
+    let mut request = record_run_request(
+        "req_run_legacy_artifact",
+        "idem_run_legacy_artifact",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_legacy",
+        handle,
+        Some("validation_report"),
+        Some("Legacy integrity evidence."),
+    )];
+    request.evidence_updates = vec![supported_evidence_update("Legacy integrity evidence.")];
+    request.close_assessment = Some(close_assessment_with_risks(
+        "Legacy integrity evidence.",
+        Vec::new(),
+    ))
+    .into();
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+    let artifact_id = response.response_value["registered_artifacts"][0]["artifact_id"]
+        .as_str()
+        .expect("artifact id should be present")
+        .to_owned();
+
+    set_artifact_integrity(&harness, &artifact_id, "legacy_unknown", None, None, None)?;
+
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_legacy_artifact",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: true,
+                close: true,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    let artifact_ref = &status.response_value["evidence_summary"]["coverage_items"][0]
+        ["supporting_artifact_refs"][0];
+
+    assert_eq!(
+        status.response_value["evidence_summary"]["status"],
+        "blocked"
+    );
+    assert_eq!(artifact_ref["integrity_status"], "legacy_unknown");
+    assert!(artifact_ref["content_type"].is_null());
+    assert!(artifact_ref["sha256"].is_null());
+    assert!(artifact_ref["size_bytes"].is_null());
+    assert_close_blocker(&status.response_value, "artifact_unavailable");
+
+    let check = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_legacy_artifact",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert_close_blocker(&check.response_value, "artifact_unavailable");
+    Ok(())
+}
+
+#[test]
+fn corrupt_artifact_is_not_linkable_as_existing_artifact() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "corrupt_artifact")?;
+    let (state_version, artifact_ref) =
+        promote_artifact_for_record_run(&harness, &task_id, &change_unit_id, 2, "corrupt")?;
+    let artifact_id = artifact_ref.artifact_id.as_str().to_owned();
+    let before = harness.counts()?;
+    set_artifact_integrity(
+        &harness,
+        &artifact_id,
+        "corrupt",
+        artifact_ref.content_type.as_ref().map(String::as_str),
+        artifact_ref.sha256.as_ref().map(String::as_str),
+        artifact_ref.size_bytes.as_ref().copied(),
+    )?;
+
+    let mut request = record_run_request(
+        "req_run_corrupt_existing",
+        "idem_run_corrupt_existing",
+        false,
+        Some(state_version),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![existing_artifact_input(
+        "artifact_input_corrupt_existing",
+        artifact_ref,
+    )];
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "ARTIFACT_MISSING"
+    );
+    assert_eq!(harness.counts()?, before);
     Ok(())
 }
 
@@ -3668,7 +3923,8 @@ fn record_run_checksum_mismatch_rejects_and_rolls_back_all_effects() -> Result<(
     let before_revision = task_revision(&harness, &task_id)?;
 
     let mut input = artifact_input_for_handle("artifact_input_sha", handle, None, None);
-    input.expected_sha256 = Some("sha256:0000".to_owned()).into();
+    input.expected_sha256 =
+        Some("0000000000000000000000000000000000000000000000000000000000000000".to_owned()).into();
     let mut request = record_run_request(
         "req_run_stage_sha",
         "idem_run_stage_sha",
@@ -3691,6 +3947,110 @@ fn record_run_checksum_mismatch_rejects_and_rolls_back_all_effects() -> Result<(
     assert_eq!(
         response.response_value["errors"][0]["details"]["artifact_input_error"]["reason"],
         "staged_handle_checksum_mismatch"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(task_revision(&harness, &task_id)?, before_revision);
+    assert_eq!(artifact_staging_status(&harness, &handle_id)?, "staged");
+    Ok(())
+}
+
+#[test]
+fn record_run_body_checksum_mismatch_rolls_back_all_effects() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_body_sha")?;
+    let handle = stage_artifact_for_record_run(&harness, &task_id, "run_body_sha", 2)?;
+    let handle_id = handle.handle_id.as_str().to_owned();
+    fs::write(
+        staged_artifact_body_path(&harness, &handle_id)?,
+        vec![b'x'; handle.size_bytes as usize],
+    )?;
+    let before = harness.counts()?;
+    let before_revision = task_revision(&harness, &task_id)?;
+
+    let mut request = record_run_request(
+        "req_run_body_sha",
+        "idem_run_body_sha",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_body_sha",
+        handle,
+        Some("validation_report"),
+        Some("Tampered body should not promote."),
+    )];
+    request.evidence_updates = vec![supported_evidence_update(
+        "Tampered body should not promote.",
+    )];
+    request.close_assessment = Some(close_assessment_with_risks(
+        "Tampered body should not promote.",
+        Vec::new(),
+    ))
+    .into();
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "MCP_UNAVAILABLE"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(task_revision(&harness, &task_id)?, before_revision);
+    assert_eq!(artifact_staging_status(&harness, &handle_id)?, "staged");
+    Ok(())
+}
+
+#[test]
+fn record_run_body_size_mismatch_rolls_back_all_effects() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_body_size")?;
+    let handle = stage_artifact_for_record_run(&harness, &task_id, "run_body_size", 2)?;
+    let handle_id = handle.handle_id.as_str().to_owned();
+    fs::write(
+        staged_artifact_body_path(&harness, &handle_id)?,
+        vec![b'x'; handle.size_bytes as usize + 1],
+    )?;
+    let before = harness.counts()?;
+    let before_revision = task_revision(&harness, &task_id)?;
+
+    let mut request = record_run_request(
+        "req_run_body_size",
+        "idem_run_body_size",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_body_size",
+        handle,
+        Some("validation_report"),
+        Some("Resized body should not promote."),
+    )];
+    request.evidence_updates = vec![supported_evidence_update(
+        "Resized body should not promote.",
+    )];
+    request.close_assessment = Some(close_assessment_with_risks(
+        "Resized body should not promote.",
+        Vec::new(),
+    ))
+    .into();
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "MCP_UNAVAILABLE"
     );
     assert_eq!(harness.counts()?, before);
     assert_eq!(task_revision(&harness, &task_id)?, before_revision);
@@ -8730,6 +9090,15 @@ struct StagedArtifactRow {
     ttl_hours: f64,
 }
 
+#[derive(Debug, PartialEq)]
+struct PersistentArtifactRow {
+    content_type: Option<String>,
+    sha256: Option<String>,
+    size_bytes: Option<u64>,
+    integrity_status: String,
+    status: String,
+}
+
 fn enable_stage_artifact_capability(harness: &MethodHarness) -> Result<(), Box<dyn Error>> {
     set_surface_capability(
         harness,
@@ -8770,6 +9139,47 @@ fn staged_artifact_row(
             })
         },
     )?)
+}
+
+fn persistent_artifact_row(
+    harness: &MethodHarness,
+    artifact_id: &str,
+) -> Result<PersistentArtifactRow, Box<dyn Error>> {
+    let conn = harness.conn()?;
+    Ok(conn.query_row(
+        "SELECT
+                content_type,
+                sha256,
+                size_bytes,
+                integrity_status,
+                status
+             FROM artifacts
+             WHERE project_id = ?1
+               AND artifact_id = ?2",
+        rusqlite::params![PROJECT_ID, artifact_id],
+        |row| {
+            let size_bytes = row.get::<_, Option<i64>>(2)?.map(|value| value as u64);
+            Ok(PersistentArtifactRow {
+                content_type: row.get(0)?,
+                sha256: row.get(1)?,
+                size_bytes,
+                integrity_status: row.get(3)?,
+                status: row.get(4)?,
+            })
+        },
+    )?)
+}
+
+fn staged_artifact_body_path(
+    harness: &MethodHarness,
+    handle_id: &str,
+) -> Result<PathBuf, Box<dyn Error>> {
+    let row = staged_artifact_row(harness, handle_id)?;
+    Ok(harness
+        .runtime_home_path
+        .join("projects")
+        .join(PROJECT_ID)
+        .join(row.tmp_path))
 }
 
 fn user_judgment_request(
@@ -9660,6 +10070,35 @@ fn set_artifact_owner_json(
     Ok(())
 }
 
+fn set_artifact_integrity(
+    harness: &MethodHarness,
+    artifact_id: &str,
+    integrity_status: &str,
+    content_type: Option<&str>,
+    sha256: Option<&str>,
+    size_bytes: Option<u64>,
+) -> Result<(), Box<dyn Error>> {
+    let conn = harness.conn()?;
+    conn.execute(
+        "UPDATE artifacts
+            SET integrity_status = ?3,
+                content_type = ?4,
+                sha256 = ?5,
+                size_bytes = ?6
+          WHERE project_id = ?1
+            AND artifact_id = ?2",
+        rusqlite::params![
+            PROJECT_ID,
+            artifact_id,
+            integrity_status,
+            content_type,
+            sha256,
+            size_bytes.map(|value| value as i64)
+        ],
+    )?;
+    Ok(())
+}
+
 fn clear_artifact_source_staging_handle(
     harness: &MethodHarness,
     artifact_id: &str,
@@ -9788,8 +10227,8 @@ fn existing_artifact_input(artifact_input_id: &str, artifact_ref: ArtifactRef) -
         existing_artifact_ref: Some(artifact_ref.clone()).into(),
         relation_hint: Some("reuse_existing_artifact".to_owned()).into(),
         claim: Some("Reused artifact for corruption coverage.".to_owned()).into(),
-        expected_sha256: Some(artifact_ref.sha256.clone()).into(),
-        expected_size_bytes: Some(artifact_ref.size_bytes).into(),
+        expected_sha256: artifact_ref.sha256.as_ref().cloned().into(),
+        expected_size_bytes: artifact_ref.size_bytes.as_ref().copied().into(),
         redaction_state: Some(artifact_ref.redaction_state).into(),
     }
 }

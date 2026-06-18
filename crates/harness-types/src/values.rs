@@ -516,6 +516,15 @@ pub enum ArtifactAvailability {
     Unusable,
 }
 
+/// Artifact integrity fact classification values.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ArtifactIntegrityStatus {
+    Verified,
+    LegacyUnknown,
+    Corrupt,
+}
+
 /// Judgment-kind values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

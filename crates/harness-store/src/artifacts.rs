@@ -220,13 +220,8 @@ fn validate_insert(input: &ArtifactStagingInsert) -> StoreResult<()> {
     )?;
     validate_nonempty_text("display_name", &input.display_name)?;
     validate_nonempty_text("content_type", &input.content_type)?;
-    validate_identifier("sha256", &input.sha256)?;
+    validate_artifact_sha256("sha256", &input.sha256)?;
     validate_identifier("redaction_state", &input.redaction_state)?;
-    if input.safe_bytes_or_notice.is_empty() {
-        return Err(StoreError::InvalidInput {
-            detail: "safe_bytes_or_notice must not be empty".to_owned(),
-        });
-    }
     validate_timestamp("created_at", &input.created_at)?;
     validate_timestamp("expires_at", &input.expires_at)?;
     Ok(())
@@ -276,6 +271,19 @@ fn validate_nonempty_text(field: &'static str, value: &str) -> StoreResult<()> {
     if value.chars().any(char::is_control) {
         return Err(StoreError::InvalidInput {
             detail: format!("{field} must not contain control characters"),
+        });
+    }
+    Ok(())
+}
+
+fn validate_artifact_sha256(field: &'static str, value: &str) -> StoreResult<()> {
+    if value.len() != 64
+        || !value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+    {
+        return Err(StoreError::InvalidInput {
+            detail: format!("{field} must be a lowercase 64-character SHA-256 hex string"),
         });
     }
     Ok(())

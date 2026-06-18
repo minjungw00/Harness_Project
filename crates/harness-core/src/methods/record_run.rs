@@ -1117,8 +1117,7 @@ fn validate_close_assessment_artifact_ref(
     if record
         .as_ref()
         .map(|record| {
-            let available = artifact_availability_from_stored_record(record)?
-                == ArtifactAvailability::Available;
+            let available = stored_artifact_is_verified_available(record)?;
             Ok::<_, CorePipelineError>(
                 record.project_id == request.envelope.project_id.as_str()
                     && record.task_id == request.task_id.as_str()
@@ -1342,9 +1341,10 @@ fn plan_staged_artifact_input(
         project_id: request.envelope.project_id.clone(),
         task_id: request.task_id.clone(),
         display_name: display_name.clone(),
-        content_type: content_type.clone(),
-        sha256: sha256.clone(),
-        size_bytes,
+        content_type: Some(content_type.clone()).into(),
+        sha256: Some(sha256.clone()).into(),
+        size_bytes: Some(size_bytes).into(),
+        integrity_status: ArtifactIntegrityStatus::Verified,
         redaction_state,
         availability: ArtifactAvailability::Available,
         created_by_run_ref: Some(run_ref.clone()).into(),
@@ -1574,8 +1574,7 @@ fn plan_existing_artifact_input(
                 "existing artifact cannot be found",
             )))
         })?;
-    let artifact_available =
-        artifact_availability_from_stored_record(&record)? == ArtifactAvailability::Available;
+    let artifact_available = stored_artifact_is_verified_available(&record)?;
     if record.task_id != request.task_id.as_str()
         || record.project_id != request.envelope.project_id.as_str()
         || !artifact_available
@@ -1598,7 +1597,41 @@ fn plan_existing_artifact_input(
             "existing artifact is not available for this Task",
         ))));
     }
-    if record.sha256.as_deref() != Some(existing_ref.sha256.as_str())
+    if existing_ref.integrity_status != ArtifactIntegrityStatus::Verified {
+        return Err(PlanError::Response(Box::new(artifact_missing_response(
+            request,
+            project_state,
+            "existing artifact does not have verified integrity facts",
+        ))));
+    }
+    let Some(existing_sha256) = existing_ref.sha256.as_ref() else {
+        return artifact_input_validation_plan_error(
+            request,
+            project_state,
+            input,
+            "staged_handle_checksum_mismatch",
+            "verified existing artifact refs must include sha256",
+        );
+    };
+    let Some(existing_size_bytes) = existing_ref.size_bytes.as_ref().copied() else {
+        return artifact_input_validation_plan_error(
+            request,
+            project_state,
+            input,
+            "staged_handle_size_mismatch",
+            "verified existing artifact refs must include size_bytes",
+        );
+    };
+    let Some(existing_content_type) = existing_ref.content_type.as_ref() else {
+        return artifact_input_validation_plan_error(
+            request,
+            project_state,
+            input,
+            "staged_handle_checksum_mismatch",
+            "verified existing artifact refs must include content_type",
+        );
+    };
+    if record.sha256.as_deref() != Some(existing_sha256.as_str())
         || input
             .expected_sha256
             .as_deref()
@@ -1612,7 +1645,7 @@ fn plan_existing_artifact_input(
             "existing artifact checksum does not match the stored artifact",
         );
     }
-    if record.size_bytes != Some(existing_ref.size_bytes)
+    if record.size_bytes != Some(existing_size_bytes)
         || input
             .expected_size_bytes
             .is_some_and(|expected| record.size_bytes != Some(expected))
@@ -1623,6 +1656,15 @@ fn plan_existing_artifact_input(
             input,
             "staged_handle_size_mismatch",
             "existing artifact size does not match the stored artifact",
+        );
+    }
+    if record.content_type.as_deref() != Some(existing_content_type.as_str()) {
+        return artifact_input_validation_plan_error(
+            request,
+            project_state,
+            input,
+            "staged_handle_checksum_mismatch",
+            "existing artifact content_type does not match the stored artifact",
         );
     }
     let stored_redaction_state: RedactionState = parse_owner_storage_value(
@@ -1828,6 +1870,7 @@ fn artifact_ref_from_stored_record(
     display_name: Option<String>,
 ) -> CoreResult<ArtifactRef> {
     let task_id = TaskId::new(record.task_id.clone());
+    let integrity_status = artifact_integrity_status_from_stored_record(record)?;
     Ok(ArtifactRef {
         artifact_id: ArtifactId::new(record.artifact_id.clone()),
         project_id: ProjectId::new(record.project_id.clone()),
@@ -1835,13 +1878,10 @@ fn artifact_ref_from_stored_record(
         display_name: display_name
             .or_else(|| record.producer.display_name.clone())
             .unwrap_or_else(|| record.artifact_id.clone()),
-        content_type: record
-            .content_type
-            .clone()
-            .or_else(|| record.producer.content_type.clone())
-            .unwrap_or_else(|| "application/octet-stream".to_owned()),
-        sha256: record.sha256.clone().unwrap_or_default(),
-        size_bytes: record.size_bytes.unwrap_or_default(),
+        content_type: sanitized_content_type(record, integrity_status).into(),
+        sha256: sanitized_sha256(record, integrity_status).into(),
+        size_bytes: record.size_bytes.into(),
+        integrity_status,
         redaction_state: parse_owner_storage_value(
             "artifacts",
             record.artifact_id.clone(),
@@ -1864,6 +1904,34 @@ fn artifact_ref_from_stored_record(
         .into(),
         storage_ref: Some(StorageRef::new(record.uri.clone())).into(),
     })
+}
+
+fn sanitized_content_type(
+    record: &StoredArtifactRecord,
+    integrity_status: ArtifactIntegrityStatus,
+) -> Option<String> {
+    match integrity_status {
+        ArtifactIntegrityStatus::Verified => record.content_type.clone(),
+        ArtifactIntegrityStatus::LegacyUnknown | ArtifactIntegrityStatus::Corrupt => record
+            .content_type
+            .as_ref()
+            .filter(|value| !value.trim().is_empty())
+            .cloned(),
+    }
+}
+
+fn sanitized_sha256(
+    record: &StoredArtifactRecord,
+    integrity_status: ArtifactIntegrityStatus,
+) -> Option<String> {
+    match integrity_status {
+        ArtifactIntegrityStatus::Verified => record.sha256.clone(),
+        ArtifactIntegrityStatus::LegacyUnknown | ArtifactIntegrityStatus::Corrupt => record
+            .sha256
+            .as_ref()
+            .filter(|value| is_lowercase_sha256_hex(value))
+            .cloned(),
+    }
 }
 
 fn staged_artifact_display_name(record: &StoredArtifactStagingRecord) -> String {
@@ -1890,6 +1958,43 @@ fn artifact_availability_from_stored_record(
             ),
         )),
     }
+}
+
+fn artifact_integrity_status_from_stored_record(
+    record: &StoredArtifactRecord,
+) -> CoreResult<ArtifactIntegrityStatus> {
+    parse_owner_storage_value(
+        "artifacts",
+        record.artifact_id.clone(),
+        "integrity_status",
+        &record.integrity_status,
+    )
+}
+
+fn stored_artifact_is_verified_available(record: &StoredArtifactRecord) -> CoreResult<bool> {
+    let available =
+        artifact_availability_from_stored_record(record)? == ArtifactAvailability::Available;
+    let verified =
+        artifact_integrity_status_from_stored_record(record)? == ArtifactIntegrityStatus::Verified;
+    if !available || !verified {
+        return Ok(false);
+    }
+    Ok(record
+        .content_type
+        .as_ref()
+        .is_some_and(|value| !value.trim().is_empty())
+        && record
+            .sha256
+            .as_ref()
+            .is_some_and(|value| is_lowercase_sha256_hex(value))
+        && record.size_bytes.is_some())
+}
+
+fn is_lowercase_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
 fn artifact_link_metadata(input: &ArtifactInput) -> CoreResult<String> {

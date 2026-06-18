@@ -250,6 +250,7 @@ fn status_evidence_summary(
         .latest_evidence_summary(&task_id)
         .map_err(CorePipelineError::from)?;
     Ok(close_task::close_evidence_summary(
+        store,
         record.as_ref(),
         task,
         project_id,

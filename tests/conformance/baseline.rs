@@ -3019,8 +3019,8 @@ fn promote_artifact_for_record_run(
 }
 
 fn existing_artifact_input(artifact_input_id: &str, artifact_ref: ArtifactRef) -> ArtifactInput {
-    let expected_sha256 = artifact_ref.sha256.clone();
-    let expected_size_bytes = artifact_ref.size_bytes;
+    let expected_sha256 = artifact_ref.sha256.as_ref().cloned();
+    let expected_size_bytes = artifact_ref.size_bytes.as_ref().copied();
     let redaction_state = artifact_ref.redaction_state;
     ArtifactInput {
         artifact_input_id: ArtifactInputId::new(artifact_input_id),
@@ -3029,8 +3029,8 @@ fn existing_artifact_input(artifact_input_id: &str, artifact_ref: ArtifactRef) -
         existing_artifact_ref: Some(artifact_ref).into(),
         relation_hint: Some("validation_report".to_owned()).into(),
         claim: Some("Reused artifact for corruption coverage.".to_owned()).into(),
-        expected_sha256: Some(expected_sha256).into(),
-        expected_size_bytes: Some(expected_size_bytes).into(),
+        expected_sha256: expected_sha256.into(),
+        expected_size_bytes: expected_size_bytes.into(),
         redaction_state: Some(redaction_state).into(),
     }
 }

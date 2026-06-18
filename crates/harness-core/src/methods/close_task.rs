@@ -563,6 +563,7 @@ fn load_close_task_context(
         .transpose()?
         .flatten();
     let evidence_summary = close_evidence_summary(
+        store,
         evidence_record.as_ref(),
         &task,
         &request.envelope.project_id,
@@ -1198,6 +1199,7 @@ fn completion_close_blockers(
 }
 
 pub(super) fn close_evidence_summary(
+    store: &CoreProjectStore,
     record: Option<&EvidenceSummaryRecord>,
     task: &TaskRecord,
     project_id: &ProjectId,
@@ -1238,6 +1240,28 @@ pub(super) fn close_evidence_summary(
     for item in &mut coverage_items {
         if required_set.contains(&item.claim) {
             item.required_for_close = true;
+        }
+        item.supporting_artifact_refs = item
+            .supporting_artifact_refs
+            .iter()
+            .map(|artifact_ref| {
+                sanitize_evidence_artifact_ref(
+                    store,
+                    artifact_ref,
+                    project_id,
+                    task_id,
+                    state_version,
+                )
+            })
+            .collect::<CoreResult<Vec<_>>>()?;
+        if item.required_for_close
+            && item.coverage_state == EvidenceCoverageState::Supported
+            && item.supporting_artifact_refs.iter().any(|artifact_ref| {
+                artifact_ref.availability != ArtifactAvailability::Available
+                    || artifact_ref.integrity_status != ArtifactIntegrityStatus::Verified
+            })
+        {
+            item.coverage_state = EvidenceCoverageState::Blocked;
         }
     }
     for claim in &required_set {
@@ -1304,6 +1328,131 @@ pub(super) fn close_evidence_summary(
         artifact_refs,
         updated_by_run_ref,
     }))
+}
+
+fn sanitize_evidence_artifact_ref(
+    store: &CoreProjectStore,
+    artifact_ref: &ArtifactRef,
+    project_id: &ProjectId,
+    task_id: &TaskId,
+    state_version: u64,
+) -> CoreResult<ArtifactRef> {
+    if artifact_ref.project_id != *project_id || artifact_ref.task_id != *task_id {
+        return Ok(unavailable_artifact_ref_from_raw(
+            artifact_ref,
+            ArtifactAvailability::Unusable,
+        ));
+    }
+    let Some(record) = store.artifact_record(artifact_ref.artifact_id.as_str())? else {
+        return Ok(unavailable_artifact_ref_from_raw(
+            artifact_ref,
+            ArtifactAvailability::Missing,
+        ));
+    };
+    let mut refreshed = artifact_ref_from_stored_record_for_close(
+        &record,
+        Some(artifact_ref.display_name.clone()),
+    )?;
+    refreshed.created_by_run_ref = refreshed
+        .created_by_run_ref
+        .as_ref()
+        .map(|record_ref| StateRecordRef {
+            state_version: Some(state_version).into(),
+            ..record_ref.clone()
+        })
+        .into();
+    Ok(refreshed)
+}
+
+fn unavailable_artifact_ref_from_raw(
+    artifact_ref: &ArtifactRef,
+    availability: ArtifactAvailability,
+) -> ArtifactRef {
+    ArtifactRef {
+        artifact_id: artifact_ref.artifact_id.clone(),
+        project_id: artifact_ref.project_id.clone(),
+        task_id: artifact_ref.task_id.clone(),
+        display_name: artifact_ref.display_name.clone(),
+        content_type: RequiredNullable::null(),
+        sha256: RequiredNullable::null(),
+        size_bytes: RequiredNullable::null(),
+        integrity_status: ArtifactIntegrityStatus::LegacyUnknown,
+        redaction_state: artifact_ref.redaction_state,
+        availability,
+        created_by_run_ref: artifact_ref.created_by_run_ref.clone(),
+        created_by_surface_id: artifact_ref.created_by_surface_id.clone(),
+        created_by_surface_instance_id: artifact_ref.created_by_surface_instance_id.clone(),
+        storage_ref: artifact_ref.storage_ref.clone(),
+    }
+}
+
+fn artifact_ref_from_stored_record_for_close(
+    record: &StoredArtifactRecord,
+    display_name: Option<String>,
+) -> CoreResult<ArtifactRef> {
+    let task_id = TaskId::new(record.task_id.clone());
+    let integrity_status = artifact_integrity_status_from_stored_record_for_close(record)?;
+    Ok(ArtifactRef {
+        artifact_id: ArtifactId::new(record.artifact_id.clone()),
+        project_id: ProjectId::new(record.project_id.clone()),
+        task_id: task_id.clone(),
+        display_name: display_name
+            .or_else(|| record.producer.display_name.clone())
+            .unwrap_or_else(|| record.artifact_id.clone()),
+        content_type: sanitized_content_type_for_close(record, integrity_status).into(),
+        sha256: sanitized_sha256_for_close(record, integrity_status).into(),
+        size_bytes: record.size_bytes.into(),
+        integrity_status,
+        redaction_state: parse_owner_storage_value(
+            "artifacts",
+            record.artifact_id.clone(),
+            "redaction_state",
+            &record.redaction_state,
+        )?,
+        availability: artifact_availability_from_stored_record_for_close(record)?,
+        created_by_run_ref: Some(state_ref(
+            StateRecordKind::Run,
+            record.provenance.producer_run_id.as_str(),
+            &ProjectId::new(record.project_id.clone()),
+            Some(&task_id),
+            None,
+        ))
+        .into(),
+        created_by_surface_id: Some(record.producer.created_by_surface_id.clone()).into(),
+        created_by_surface_instance_id: Some(
+            record.producer.created_by_surface_instance_id.clone(),
+        )
+        .into(),
+        storage_ref: Some(StorageRef::new(record.uri.clone())).into(),
+    })
+}
+
+fn sanitized_content_type_for_close(
+    record: &StoredArtifactRecord,
+    integrity_status: ArtifactIntegrityStatus,
+) -> Option<String> {
+    match integrity_status {
+        ArtifactIntegrityStatus::Verified => record.content_type.clone(),
+        ArtifactIntegrityStatus::LegacyUnknown | ArtifactIntegrityStatus::Corrupt => record
+            .content_type
+            .as_ref()
+            .filter(|value| !value.trim().is_empty())
+            .cloned(),
+    }
+}
+
+fn sanitized_sha256_for_close(
+    record: &StoredArtifactRecord,
+    integrity_status: ArtifactIntegrityStatus,
+) -> Option<String> {
+    match integrity_status {
+        ArtifactIntegrityStatus::Verified => record.sha256.clone(),
+        ArtifactIntegrityStatus::LegacyUnknown | ArtifactIntegrityStatus::Corrupt => record
+            .sha256
+            .as_ref()
+            .filter(|value| is_lowercase_sha256_hex_for_close(value))
+            .cloned(),
+    }
 }
 
 fn current_close_basis_blocker(
@@ -1471,11 +1620,14 @@ fn unavailable_close_artifact_refs(
                 "redaction_state",
                 &stored.redaction_state,
             )?;
+            let artifact_sha256 = artifact_ref.sha256.as_ref();
+            let artifact_size_bytes = artifact_ref.size_bytes.as_ref().copied();
             if stored.project_id != request.envelope.project_id.as_str()
                 || stored.task_id != request.task_id.as_str()
                 || !stored_available
-                || stored.sha256.as_deref() != Some(artifact_ref.sha256.as_str())
-                || stored.size_bytes != Some(artifact_ref.size_bytes)
+                || artifact_ref.integrity_status != ArtifactIntegrityStatus::Verified
+                || stored.sha256.as_deref() != artifact_sha256.map(String::as_str)
+                || stored.size_bytes != artifact_size_bytes
                 || stored_redaction_state != artifact_ref.redaction_state
                 || !owner_link_exists
             {
@@ -1545,9 +1697,32 @@ fn close_basis_artifact_ref_unavailable(
 }
 
 fn stored_artifact_is_available(record: &StoredArtifactRecord) -> CoreResult<bool> {
+    let available = artifact_availability_from_stored_record_for_close(record)?
+        == ArtifactAvailability::Available;
+    let verified = artifact_integrity_status_from_stored_record_for_close(record)?
+        == ArtifactIntegrityStatus::Verified;
+    if !available || !verified {
+        return Ok(false);
+    }
+    Ok(record
+        .content_type
+        .as_ref()
+        .is_some_and(|value| !value.trim().is_empty())
+        && record
+            .sha256
+            .as_ref()
+            .is_some_and(|value| is_lowercase_sha256_hex_for_close(value))
+        && record.size_bytes.is_some())
+}
+
+fn artifact_availability_from_stored_record_for_close(
+    record: &StoredArtifactRecord,
+) -> CoreResult<ArtifactAvailability> {
     match record.status.as_str() {
-        "available" => Ok(true),
-        "missing" | "integrity_failed" | "unavailable" => Ok(false),
+        "available" => Ok(ArtifactAvailability::Available),
+        "missing" => Ok(ArtifactAvailability::Missing),
+        "integrity_failed" => Ok(ArtifactAvailability::IntegrityFailed),
+        "unavailable" => Ok(ArtifactAvailability::Unavailable),
         _ => Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(
                 "artifacts",
@@ -1556,6 +1731,24 @@ fn stored_artifact_is_available(record: &StoredArtifactRecord) -> CoreResult<boo
             ),
         )),
     }
+}
+
+fn artifact_integrity_status_from_stored_record_for_close(
+    record: &StoredArtifactRecord,
+) -> CoreResult<ArtifactIntegrityStatus> {
+    parse_owner_storage_value(
+        "artifacts",
+        record.artifact_id.clone(),
+        "integrity_status",
+        &record.integrity_status,
+    )
+}
+
+fn is_lowercase_sha256_hex_for_close(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
 fn has_current_final_acceptance(

@@ -221,7 +221,8 @@ mod tests {
                 created_by_surface_id: SurfaceId::new("surface_artifact"),
                 created_by_surface_instance_id: SurfaceInstanceId::new("surface_instance_trace_01"),
                 content_type: "text/plain".to_owned(),
-                sha256: "sha256:example-trace".to_owned(),
+                sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    .to_owned(),
                 size_bytes: 42,
                 redaction_state: RedactionState::None,
                 expires_at: timestamp("2026-06-19T00:00:00Z"),
@@ -1473,7 +1474,7 @@ mod tests {
                 "created_by_surface_id": "surface_empty",
                 "created_by_surface_instance_id": "surface_instance_empty",
                 "content_type": "text/plain",
-                "sha256": "sha256:trace",
+                "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
                 "size_bytes": 18,
                 "redaction_state": "none",
                 "expires_at": expires_at,
@@ -1482,7 +1483,7 @@ mod tests {
             "existing_artifact_ref": null,
             "relation_hint": "diagnostic_log",
             "claim": null,
-            "expected_sha256": "sha256:trace",
+            "expected_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
             "expected_size_bytes": 18,
             "redaction_state": "none"
         })

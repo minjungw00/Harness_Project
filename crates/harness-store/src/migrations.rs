@@ -15,12 +15,13 @@ pub const BASELINE_SCHEMA_VERSION: i64 = 1;
 pub const REGISTRY_SCHEMA_VERSION: i64 = 1;
 
 /// Latest schema version for project `state.sqlite`.
-pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 5;
+pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 6;
 
 const PROJECT_STATE_REPLAY_CONTEXT_SCHEMA_VERSION: i64 = 2;
 const PROJECT_STATE_REPLAY_SURFACE_FK_SCHEMA_VERSION: i64 = 3;
 const PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_SCHEMA_VERSION: i64 = 4;
 const PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_SCHEMA_VERSION: i64 = 5;
+const PROJECT_STATE_ARTIFACT_INTEGRITY_SCHEMA_VERSION: i64 = 6;
 
 /// `schema_migrations.database_kind` for `registry.sqlite`.
 pub const REGISTRY_DATABASE_KIND: &str = "registry";
@@ -65,6 +66,12 @@ const PROJECT_STATE_MIGRATIONS: &[Migration] = &[
         version: PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_SCHEMA_VERSION,
         name: "project_state_judgment_resolution_outcome_v5",
         kind: MigrationKind::Sql(PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_V5_SQL),
+    },
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: PROJECT_STATE_ARTIFACT_INTEGRITY_SCHEMA_VERSION,
+        name: "project_state_artifact_integrity_v6",
+        kind: MigrationKind::Custom(apply_project_state_artifact_integrity_v6),
     },
 ];
 
@@ -226,6 +233,43 @@ fn apply_project_state_replay_surface_fk_v3(
             Ok(())
         }
     }
+}
+
+fn apply_project_state_artifact_integrity_v6(
+    conn: &mut Connection,
+    migration: &Migration,
+) -> StoreResult<()> {
+    validate_no_foreign_key_violations(conn, PROJECT_STATE_DATABASE_KIND, None)?;
+
+    let original_foreign_key_mode = foreign_keys_enabled(conn)?;
+    if original_foreign_key_mode {
+        set_foreign_keys(conn, false)?;
+    }
+
+    let migration_result = rebuild_artifacts_with_integrity_status_v6(conn, migration);
+    let restore_result = restore_foreign_key_mode(conn, original_foreign_key_mode);
+
+    match (migration_result, restore_result) {
+        (Err(error), _) => Err(error),
+        (Ok(()), Err(error)) => Err(StoreError::from(error)),
+        (Ok(()), Ok(())) => {
+            validate_no_foreign_key_violations(conn, PROJECT_STATE_DATABASE_KIND, None)?;
+            Ok(())
+        }
+    }
+}
+
+fn rebuild_artifacts_with_integrity_status_v6(
+    conn: &mut Connection,
+    migration: &Migration,
+) -> StoreResult<()> {
+    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
+    tx.execute_batch(PROJECT_STATE_ARTIFACT_INTEGRITY_V6_CREATE_COPY_SQL)?;
+    validate_no_foreign_key_violations(&tx, PROJECT_STATE_DATABASE_KIND, Some("artifacts_v6"))?;
+    tx.execute_batch(PROJECT_STATE_ARTIFACT_INTEGRITY_V6_SWAP_SQL)?;
+    insert_schema_migration(&tx, migration)?;
+    tx.commit()?;
+    Ok(())
 }
 
 fn rebuild_tool_invocations_with_surface_fk(
@@ -910,6 +954,117 @@ UPDATE project_state
  WHERE schema_version < 5;
 "#;
 
+const PROJECT_STATE_ARTIFACT_INTEGRITY_V6_CREATE_COPY_SQL: &str = r#"
+CREATE TABLE artifacts_v6 (
+  project_id TEXT NOT NULL,
+  artifact_id TEXT NOT NULL,
+  task_id TEXT NOT NULL,
+  producer_run_id TEXT,
+  source_staging_handle_id TEXT,
+  uri TEXT NOT NULL,
+  body_path TEXT,
+  sha256 TEXT,
+  size_bytes INTEGER CHECK (size_bytes IS NULL OR size_bytes >= 0),
+  content_type TEXT,
+  integrity_status TEXT NOT NULL DEFAULT 'verified'
+    CHECK (integrity_status IN ('verified', 'legacy_unknown', 'corrupt')),
+  redaction_state TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('available', 'missing', 'integrity_failed', 'unavailable')),
+  retention_json TEXT NOT NULL DEFAULT '{}',
+  producer_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, artifact_id),
+  CHECK (
+    integrity_status <> 'verified'
+    OR (
+      content_type IS NOT NULL
+      AND length(trim(content_type)) > 0
+      AND sha256 IS NOT NULL
+      AND length(sha256) = 64
+      AND sha256 NOT GLOB '*[^0-9a-f]*'
+      AND size_bytes IS NOT NULL
+      AND size_bytes >= 0
+    )
+  ),
+  FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
+  FOREIGN KEY (project_id, producer_run_id) REFERENCES runs (project_id, run_id),
+  FOREIGN KEY (project_id, source_staging_handle_id)
+    REFERENCES artifact_staging (project_id, handle_id)
+    DEFERRABLE INITIALLY DEFERRED
+);
+
+INSERT INTO artifacts_v6 (
+  project_id,
+  artifact_id,
+  task_id,
+  producer_run_id,
+  source_staging_handle_id,
+  uri,
+  body_path,
+  sha256,
+  size_bytes,
+  content_type,
+  integrity_status,
+  redaction_state,
+  status,
+  retention_json,
+  producer_json,
+  created_at,
+  updated_at,
+  metadata_json
+)
+SELECT
+  project_id,
+  artifact_id,
+  task_id,
+  producer_run_id,
+  source_staging_handle_id,
+  uri,
+  body_path,
+  sha256,
+  size_bytes,
+  content_type,
+  CASE
+    WHEN content_type IS NOT NULL
+      AND length(trim(content_type)) > 0
+      AND sha256 IS NOT NULL
+      AND length(sha256) = 64
+      AND sha256 NOT GLOB '*[^0-9a-f]*'
+      AND size_bytes IS NOT NULL
+      AND size_bytes >= 0
+    THEN 'verified'
+    ELSE 'legacy_unknown'
+  END,
+  redaction_state,
+  status,
+  retention_json,
+  producer_json,
+  created_at,
+  updated_at,
+  metadata_json
+FROM artifacts;
+"#;
+
+const PROJECT_STATE_ARTIFACT_INTEGRITY_V6_SWAP_SQL: &str = r#"
+DROP TABLE artifacts;
+
+ALTER TABLE artifacts_v6 RENAME TO artifacts;
+
+CREATE UNIQUE INDEX idx_artifacts_source_staging
+  ON artifacts (project_id, source_staging_handle_id)
+  WHERE source_staging_handle_id IS NOT NULL;
+
+CREATE INDEX idx_artifacts_task_status
+  ON artifacts (project_id, task_id, status);
+
+UPDATE project_state
+   SET schema_version = 6,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version < 6;
+"#;
+
 #[cfg(test)]
 mod tests {
     use std::{error::Error, fs};
@@ -922,6 +1077,17 @@ mod tests {
         enable_foreign_keys, foreign_keys_enabled, open_project_state_database,
         project_state_db_path, validate_project_state_schema,
     };
+
+    type ArtifactIntegrityRow = (String, Option<String>, Option<i64>, Option<String>);
+
+    struct V5ArtifactFixture<'a> {
+        artifact_id: &'a str,
+        producer_run_id: Option<&'a str>,
+        source_staging_handle_id: Option<&'a str>,
+        sha256: Option<&'a str>,
+        size_bytes: Option<i64>,
+        content_type: Option<&'a str>,
+    }
 
     #[test]
     fn version_one_project_state_replay_rows_become_legacy_unverified() -> Result<(), Box<dyn Error>>
@@ -991,7 +1157,7 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?)),
         )?;
         assert_eq!(schema_version, PROJECT_STATE_SCHEMA_VERSION);
-        assert_eq!(migration_count, 5);
+        assert_eq!(migration_count, PROJECT_STATE_SCHEMA_VERSION);
         assert_integrity_check_clean(&conn)?;
         assert_tool_invocations_surface_foreign_key(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
@@ -1099,7 +1265,7 @@ mod tests {
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
         );
-        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 5);
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 6);
         assert_integrity_check_clean(&conn)?;
         assert_tool_invocations_surface_foreign_key(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
@@ -1278,7 +1444,7 @@ mod tests {
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
         );
-        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 5);
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 6);
         assert_integrity_check_clean(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
 
@@ -1408,7 +1574,7 @@ mod tests {
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
         );
-        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 5);
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 6);
         assert_integrity_check_clean(&conn)?;
         assert_tool_invocations_surface_foreign_key(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
@@ -1447,7 +1613,7 @@ mod tests {
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
         );
-        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 5);
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 6);
         assert_integrity_check_clean(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
         Ok(())
@@ -1486,7 +1652,7 @@ mod tests {
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
         );
-        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 5);
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 6);
         assert_judgment_status_and_outcome(&conn, "judgment_pending", "pending", None)?;
         assert_judgment_status_and_outcome(&conn, "judgment_resolved_ambiguous", "resolved", None)?;
         assert_judgment_status_and_outcome(
@@ -1530,6 +1696,160 @@ mod tests {
         assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 4);
         assert_eq!(project_schema_version(&conn, "project_v5_rollback")?, 4);
         assert_integrity_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn artifact_integrity_migration_preserves_legacy_rows() -> Result<(), Box<dyn Error>> {
+        const VALID_SHA: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+        let runtime_home = TempRuntimeHome::new("migration-v5-artifacts")?;
+        let path = project_state_db_path(runtime_home.path(), "project_v5_artifacts");
+        fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+        let mut conn = Connection::open(&path)?;
+        enable_foreign_keys(&conn)?;
+        create_project_state_v5(&conn, "project_v5_artifacts")?;
+        insert_surface(&conn, "project_v5_artifacts")?;
+        insert_task_current(&conn, "project_v5_artifacts", "task_artifacts")?;
+        insert_run_for_artifact_migration(&conn, "project_v5_artifacts", "run_artifacts")?;
+        insert_staging_for_artifact_migration(&conn, "project_v5_artifacts", "staged_verified")?;
+        insert_staging_for_artifact_migration(
+            &conn,
+            "project_v5_artifacts",
+            "staged_missing_facts",
+        )?;
+        insert_staging_for_artifact_migration(
+            &conn,
+            "project_v5_artifacts",
+            "staged_invalid_hash",
+        )?;
+        insert_v5_artifact(
+            &conn,
+            "project_v5_artifacts",
+            V5ArtifactFixture {
+                artifact_id: "artifact_verified",
+                producer_run_id: Some("run_artifacts"),
+                source_staging_handle_id: Some("staged_verified"),
+                sha256: Some(VALID_SHA),
+                size_bytes: Some(0),
+                content_type: Some("text/plain"),
+            },
+        )?;
+        insert_v5_artifact(
+            &conn,
+            "project_v5_artifacts",
+            V5ArtifactFixture {
+                artifact_id: "artifact_missing_facts",
+                producer_run_id: Some("run_artifacts"),
+                source_staging_handle_id: Some("staged_missing_facts"),
+                sha256: None,
+                size_bytes: None,
+                content_type: None,
+            },
+        )?;
+        insert_v5_artifact(
+            &conn,
+            "project_v5_artifacts",
+            V5ArtifactFixture {
+                artifact_id: "artifact_invalid_hash",
+                producer_run_id: Some("run_artifacts"),
+                source_staging_handle_id: Some("staged_invalid_hash"),
+                sha256: Some("sha256:legacy"),
+                size_bytes: Some(12),
+                content_type: Some("text/plain"),
+            },
+        )?;
+        for artifact_id in [
+            "artifact_verified",
+            "artifact_missing_facts",
+            "artifact_invalid_hash",
+        ] {
+            insert_artifact_task_link(&conn, "project_v5_artifacts", artifact_id)?;
+        }
+
+        apply_project_state_migrations(&mut conn)?;
+        validate_project_state_schema(&conn)?;
+
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 6);
+        assert_eq!(project_schema_version(&conn, "project_v5_artifacts")?, 6);
+        assert_eq!(
+            artifact_integrity_row(&conn, "artifact_verified")?,
+            (
+                "verified".to_owned(),
+                Some(VALID_SHA.to_owned()),
+                Some(0),
+                Some("text/plain".to_owned())
+            )
+        );
+        assert_eq!(
+            artifact_integrity_row(&conn, "artifact_missing_facts")?,
+            ("legacy_unknown".to_owned(), None, None, None)
+        );
+        assert_eq!(
+            artifact_integrity_row(&conn, "artifact_invalid_hash")?,
+            (
+                "legacy_unknown".to_owned(),
+                Some("sha256:legacy".to_owned()),
+                Some(12),
+                Some("text/plain".to_owned())
+            )
+        );
+        assert_eq!(artifact_link_count(&conn)?, 3);
+        assert_integrity_check_clean(&conn)?;
+        assert_foreign_key_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_verified_artifact_integrity_is_rejected() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-invalid-artifact-integrity")?;
+        let conn = open_project_state_database(
+            runtime_home.project_state_db_path("project_bad_artifact"),
+        )?;
+        insert_project_state(&conn, "project_bad_artifact")?;
+        insert_surface(&conn, "project_bad_artifact")?;
+        insert_task_current(&conn, "project_bad_artifact", "task_bad_artifact")?;
+
+        let error = conn
+            .execute(
+                "INSERT INTO artifacts (
+                    project_id,
+                    artifact_id,
+                    task_id,
+                    uri,
+                    sha256,
+                    size_bytes,
+                    content_type,
+                    integrity_status,
+                    redaction_state,
+                    status,
+                    created_at,
+                    updated_at
+                )
+                VALUES (
+                    'project_bad_artifact',
+                    'artifact_bad_hash',
+                    'task_bad_artifact',
+                    'harness-artifact://project_bad_artifact/artifact_bad_hash',
+                    'sha256:not-hex',
+                    4,
+                    'text/plain',
+                    'verified',
+                    'none',
+                    'available',
+                    't0',
+                    't0'
+                )",
+                [],
+            )
+            .expect_err("verified artifacts require a lowercase 64-character SHA-256");
+        assert_constraint_error(error);
+        assert_integrity_check_clean(&conn)?;
+        assert_foreign_key_check_clean(&conn)?;
         Ok(())
     }
 
@@ -1626,6 +1946,17 @@ mod tests {
             conn,
             PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_SCHEMA_VERSION,
             "project_state_close_basis_judgment_basis_v4",
+        )?;
+        Ok(())
+    }
+
+    fn create_project_state_v5(conn: &Connection, project_id: &str) -> rusqlite::Result<()> {
+        create_project_state_v4(conn, project_id)?;
+        conn.execute_batch(PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_V5_SQL)?;
+        insert_migration_row(
+            conn,
+            PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_SCHEMA_VERSION,
+            "project_state_judgment_resolution_outcome_v5",
         )?;
         Ok(())
     }
@@ -1848,6 +2179,163 @@ mod tests {
             params![project_id, judgment_id, task_id, status],
         )?;
         Ok(())
+    }
+
+    fn insert_run_for_artifact_migration(
+        conn: &Connection,
+        project_id: &str,
+        run_id: &str,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO runs (
+                project_id,
+                run_id,
+                task_id,
+                kind,
+                status,
+                created_by_surface_id,
+                created_by_surface_instance_id,
+                created_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                'task_artifacts',
+                'implementation',
+                'recorded',
+                'surface_main',
+                'surface_instance_1',
+                't0'
+            )",
+            params![project_id, run_id],
+        )?;
+        Ok(())
+    }
+
+    fn insert_staging_for_artifact_migration(
+        conn: &Connection,
+        project_id: &str,
+        handle_id: &str,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO artifact_staging (
+                project_id,
+                handle_id,
+                task_id,
+                created_by_surface_id,
+                created_by_surface_instance_id,
+                redaction_state,
+                status,
+                expires_at,
+                created_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                'task_artifacts',
+                'surface_main',
+                'surface_instance_1',
+                'none',
+                'consumed',
+                't1',
+                't0'
+            )",
+            params![project_id, handle_id],
+        )?;
+        Ok(())
+    }
+
+    fn insert_v5_artifact(
+        conn: &Connection,
+        project_id: &str,
+        fixture: V5ArtifactFixture<'_>,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO artifacts (
+                project_id,
+                artifact_id,
+                task_id,
+                producer_run_id,
+                source_staging_handle_id,
+                uri,
+                sha256,
+                size_bytes,
+                content_type,
+                redaction_state,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                'task_artifacts',
+                ?3,
+                ?4,
+                'harness-artifact://project_v5_artifacts/' || ?2,
+                ?5,
+                ?6,
+                ?7,
+                'none',
+                'available',
+                't0',
+                't0'
+            )",
+            params![
+                project_id,
+                fixture.artifact_id,
+                fixture.producer_run_id,
+                fixture.source_staging_handle_id,
+                fixture.sha256,
+                fixture.size_bytes,
+                fixture.content_type
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn insert_artifact_task_link(
+        conn: &Connection,
+        project_id: &str,
+        artifact_id: &str,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO artifact_links (
+                project_id,
+                artifact_id,
+                task_id,
+                owner_record_kind,
+                owner_record_id,
+                created_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                'task_artifacts',
+                'task',
+                'task_artifacts',
+                't0'
+            )",
+            params![project_id, artifact_id],
+        )?;
+        Ok(())
+    }
+
+    fn artifact_integrity_row(
+        conn: &Connection,
+        artifact_id: &str,
+    ) -> rusqlite::Result<ArtifactIntegrityRow> {
+        conn.query_row(
+            "SELECT integrity_status, sha256, size_bytes, content_type
+               FROM artifacts
+              WHERE artifact_id = ?1",
+            [artifact_id],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+    }
+
+    fn artifact_link_count(conn: &Connection) -> rusqlite::Result<i64> {
+        conn.query_row("SELECT COUNT(*) FROM artifact_links", [], |row| row.get(0))
     }
 
     fn assert_judgment_status_and_outcome(

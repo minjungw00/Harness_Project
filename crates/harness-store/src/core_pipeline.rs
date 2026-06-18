@@ -1,4 +1,7 @@
-use std::path::Path;
+use std::{
+    fs,
+    path::{Component, Path},
+};
 
 use harness_types::{
     BaselineRef, ChangeUnitId, CurrentCloseBasis, EvidenceCoverageItem, IdempotencyKey,
@@ -10,6 +13,7 @@ use harness_types::{
 };
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 
 use crate::{
     bootstrap::{project_record, ProjectRecord, SurfaceRecord},
@@ -537,6 +541,7 @@ pub struct StoredArtifactRecord {
     pub sha256: Option<String>,
     pub size_bytes: Option<u64>,
     pub content_type: Option<String>,
+    pub integrity_status: String,
     pub redaction_state: String,
     pub status: String,
     pub producer: PersistedArtifactProducer,
@@ -555,6 +560,7 @@ struct StoredArtifactRecordRaw {
     sha256: Option<String>,
     size_bytes: Option<u64>,
     content_type: Option<String>,
+    integrity_status: String,
     redaction_state: String,
     status: String,
     producer_json: String,
@@ -610,6 +616,7 @@ pub struct StoredRecordRef {
 /// Storage mutation handle scoped to a single committed transaction.
 pub struct ProjectMutation<'tx> {
     project_id: &'tx str,
+    project_home: &'tx Path,
     tx: &'tx Transaction<'tx>,
 }
 
@@ -1152,6 +1159,7 @@ impl CoreProjectStore {
         };
         let mut mutation = ProjectMutation {
             project_id: &self.project.project_id,
+            project_home: &self.project.project_home,
             tx: &tx,
         };
         apply_mutation(&mut mutation, &facts)?;
@@ -1916,7 +1924,7 @@ impl ProjectMutation<'_> {
             "expected_created_by_surface_instance_id",
             &input.expected_created_by_surface_instance_id,
         )?;
-        validate_identifier("expected_sha256", &input.expected_sha256)?;
+        validate_artifact_sha256("expected_sha256", &input.expected_sha256)?;
         validate_identifier("expected_redaction_state", &input.expected_redaction_state)?;
         validate_timestamp("expected_expires_at", &input.expected_expires_at)?;
         validate_identifier("artifacts.uri", &input.uri)?;
@@ -1947,6 +1955,12 @@ impl ProjectMutation<'_> {
                 detail: "staged artifact changed before promotion".to_owned(),
             });
         }
+        verify_staged_artifact_body(
+            self.project_home,
+            staging.tmp_path.as_deref(),
+            &input.expected_sha256,
+            input.expected_size_bytes,
+        )?;
 
         let size_bytes = u64_to_i64("artifacts.size_bytes", input.expected_size_bytes)?;
         self.tx.execute(
@@ -1961,6 +1975,7 @@ impl ProjectMutation<'_> {
                 sha256,
                 size_bytes,
                 content_type,
+                integrity_status,
                 redaction_state,
                 status,
                 retention_json,
@@ -1980,6 +1995,7 @@ impl ProjectMutation<'_> {
                 ?8,
                 ?9,
                 ?10,
+                'verified',
                 ?11,
                 'available',
                 ?12,
@@ -2933,6 +2949,7 @@ fn artifact_record(
             sha256,
             size_bytes,
             content_type,
+            integrity_status,
             redaction_state,
             status,
             producer_json,
@@ -2992,6 +3009,7 @@ fn stored_artifact_record_from_raw(
         sha256: raw.sha256,
         size_bytes: raw.size_bytes,
         content_type: raw.content_type,
+        integrity_status: raw.integrity_status,
         redaction_state: raw.redaction_state,
         status: raw.status,
         producer,
@@ -3017,10 +3035,11 @@ fn artifact_record_raw_from_row(
         sha256: row.get(7)?,
         size_bytes,
         content_type: row.get(9)?,
-        redaction_state: row.get(10)?,
-        status: row.get(11)?,
-        producer_json: row.get(12)?,
-        metadata_json: row.get(13)?,
+        integrity_status: row.get(10)?,
+        redaction_state: row.get(11)?,
+        status: row.get(12)?,
+        producer_json: row.get(13)?,
+        metadata_json: row.get(14)?,
     })
 }
 
@@ -3646,6 +3665,76 @@ fn validate_timestamp(field: &'static str, value: &str) -> StoreResult<()> {
         .map_err(|_| StoreError::InvalidInput {
             detail: format!("{field} must be a valid RFC 3339 timestamp"),
         })
+}
+
+fn validate_artifact_sha256(field: &'static str, value: &str) -> StoreResult<()> {
+    if is_lowercase_sha256_hex(value) {
+        Ok(())
+    } else {
+        Err(StoreError::InvalidInput {
+            detail: format!("{field} must be a lowercase 64-character SHA-256 hex string"),
+        })
+    }
+}
+
+fn is_lowercase_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+}
+
+fn verify_staged_artifact_body(
+    project_home: &Path,
+    tmp_path: Option<&str>,
+    expected_sha256: &str,
+    expected_size_bytes: u64,
+) -> StoreResult<()> {
+    let tmp_path = tmp_path.ok_or_else(|| StoreError::SchemaInvariant {
+        database_kind: "project_state",
+        detail: "staged artifact body path is missing before promotion".to_owned(),
+    })?;
+    let relative = Path::new(tmp_path);
+    if relative.is_absolute()
+        || relative
+            .components()
+            .any(|component| matches!(component, Component::ParentDir | Component::Prefix(_)))
+    {
+        return Err(StoreError::SchemaInvariant {
+            database_kind: "project_state",
+            detail: "staged artifact body path is not a safe relative path".to_owned(),
+        });
+    }
+
+    let bytes = fs::read(project_home.join(relative))?;
+    if u64::try_from(bytes.len()).map_err(|_| StoreError::InvalidInput {
+        detail: "staged artifact body size does not fit in u64".to_owned(),
+    })? != expected_size_bytes
+    {
+        return Err(StoreError::SchemaInvariant {
+            database_kind: "project_state",
+            detail: "staged artifact body size changed before promotion".to_owned(),
+        });
+    }
+    let actual_sha256 = lowercase_sha256_hex(&bytes);
+    if actual_sha256 != expected_sha256 {
+        return Err(StoreError::SchemaInvariant {
+            database_kind: "project_state",
+            detail: "staged artifact body checksum changed before promotion".to_owned(),
+        });
+    }
+    Ok(())
+}
+
+fn lowercase_sha256_hex(bytes: &[u8]) -> String {
+    let digest = Sha256::digest(bytes);
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        output.push(HEX[(byte >> 4) as usize] as char);
+        output.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    output
 }
 
 fn validate_json_text(field: &'static str, text: &str) -> StoreResult<()> {
