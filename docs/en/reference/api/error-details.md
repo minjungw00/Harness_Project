@@ -41,7 +41,7 @@ Not allowed:
 - Do not render them as user-facing display wording.
 - Do not reuse them as blocker codes without owning method or schema support.
 
-Detail data must stay limited to stable diagnostic facts. It must not expose sensitive request bodies, duplicate method payloads, or define storage effects.
+Detail data must stay limited to stable diagnostic facts. It must not expose sensitive request bodies, duplicate method payloads, raw stored JSON, secrets, SQL text, sensitive absolute paths, or define storage effects.
 
 <a id="state-conflict-detail-fields"></a>
 
@@ -56,6 +56,19 @@ Stale Write Authorization basis details:
 Idempotency request-hash conflict details:
 - Identify the `idempotency_key` and request-hash mismatch without exposing sensitive request bodies.
 
+<a id="owner-state-corruption-detail-fields"></a>
+
+## Owner-state corruption detail fields
+
+When corrupt typed owner state is reported through the structured store/runtime-unavailability rejection, details may identify:
+
+- `owner_state_error.table`
+- `owner_state_error.record_ref`
+- `owner_state_error.logical_column`
+- `owner_state_error.corruption_category`
+
+These diagnostics must not include raw stored JSON, secrets, SQL text, or sensitive absolute paths. They do not make malformed JSON equivalent to absence.
+
 <a id="error-detail-helper-values"></a>
 
 ## Error detail helper values
@@ -64,7 +77,7 @@ Idempotency request-hash conflict details:
 
 ### `authorization_reason`
 
-`ToolError.details.authorization_reason` uses `missing`, `expired`, `stale`, `revoked`, `consumed`, or `incompatible`. A stale `WriteAuthorization.basis_state_version` uses `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`.
+`ToolError.details.authorization_reason` uses `missing`, `expired`, `stale`, `revoked`, `consumed`, or `incompatible`. Expired `Write Authorization` use sets `authorization_reason=expired` with public code `WRITE_AUTHORIZATION_INVALID`. A stale `WriteAuthorization.basis_state_version` uses `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`.
 
 <a id="artifact-input-error-reason"></a>
 

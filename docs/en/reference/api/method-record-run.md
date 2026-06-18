@@ -40,6 +40,8 @@ The method may also update compact evidence coverage, consume a compatible `Writ
 
 This method owns the top-level `params` request shape below. `envelope` is the shared [`ToolEnvelope`](schema-core.md#tool-envelope); this block does not redefine `ToolEnvelope` fields.
 
+All fields shown in this method-owned request block are required members of `params` unless a field note explicitly marks a member optional; `T | null` means the member must be present and may contain JSON `null`.
+
 ```yaml
 RecordRunRequest:
   envelope: ToolEnvelope
@@ -89,11 +91,14 @@ A compatible committed result increments `project_state.state_version` exactly o
 Product-write recording consumes the `Write Authorization` only when:
 
 - the current `project_state.state_version` equals `WriteAuthorization.basis_state_version` immediately before consumption
+- the authorization is not expired under the effective expiration rule: the earlier of stored `expires_at` and `created_at + 15 minutes`
 - observed changed paths, after Product Repository path normalization, are compatible with the authorized attempt
 
 An authorization created by `harness.prepare_write` is not stale immediately after creation when no intervening project state change has occurred. If `harness.prepare_write` commits from version `19` to version `20`, `harness.record_run` may consume that authorization while the current `project_state.state_version` and `WriteAuthorization.basis_state_version` are both `20`.
 
-The method rejects stale `expected_state_version` and stale authorization basis before consuming the `Write Authorization`.
+The method rejects stale `expected_state_version` and stale authorization basis before consuming the `Write Authorization`. A stale `WriteAuthorization.basis_state_version` retains higher-priority `STATE_VERSION_CONFLICT` routing even if the same authorization is also expired.
+
+Expiration is calculated using parsed UTC timestamps, not lexical string comparison. An expired authorization is never consumed. Expired authorization use returns `WRITE_AUTHORIZATION_INVALID` with `ToolError.details.authorization_reason=expired`.
 
 ## Method result fields
 
@@ -139,6 +144,7 @@ Returns `ToolRejectedResponse` for:
 - stale `expected_state_version`
 - stale `Write Authorization` basis
 - missing or invalid `Write Authorization` for product writes
+- expired `Write Authorization`
 - invalid staged handle
 - incompatible staged-handle provenance
 - missing artifact
@@ -153,6 +159,8 @@ Non-claim: invalid staged handles are validation failures with artifact-input de
 Public error code meaning, precedence, details, and rejected-response routing are owned by the error documents linked below.
 
 For a stale `Write Authorization` basis, rejection happens before consumption and creates no Run, evidence update, artifact link, artifact promotion, event, replay row, or `project_state.state_version` increment.
+
+For an expired `Write Authorization`, rejection happens before consumption and creates no Run, event, replay row, artifact promotion, evidence update, authorization consumption, or `project_state.state_version` increment.
 
 ## Dry-run behavior
 

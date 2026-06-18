@@ -323,6 +323,7 @@
 - 멱등 재실행.
 - `dry_run`.
 - 잘못된 요청.
+- 타입이 지정된 담당 상태 손상.
 - 커밋 전 실패.
 - 효과가 없는 거부 응답.
 
@@ -355,7 +356,8 @@
 - 저장소 고유 키는 정확히 `(project_id, tool_name, idempotency_key)`입니다.
 - `request_hash`는 공개 요청 페이로드의 충돌 판별자입니다. `surface_id`, `surface_instance_id`, `access_class`, `verification_basis`, `capability_profile` 같은 호출 맥락을 흡수하지 않습니다.
 - `tool_invocations.response_json`은 재실행 행을 만드는 상태 효과가 있는 커밋된 `dry_run=false` Core `MethodResult` 응답만 정확히 저장합니다.
-- 새로 커밋되는 재실행 행은 유효한 `VerifiedSurfaceContext`에서 온 `surface_id`, `surface_instance_id`, `access_class`를 저장합니다.
+- 새로 커밋되는 재실행 행은 유효한 `VerifiedSurfaceContext`에서 온 완전하고 null이 아닌 `surface_id`, `surface_instance_id`, `access_class`를 저장합니다.
+- 확인된 재실행 행은 [저장소 DDL](storage-ddl.md)이 담당하는 물리 복합 외래 키를 통해 유효한 참조 접점을 요구합니다.
 - `verification_basis`는 진단용으로 저장할 수 있지만 호출자 권한이 아닙니다.
 - 확인된 맥락이 없는 레거시 재실행 행은 보존할 수 있지만 재실행 적격이 아닙니다.
 
@@ -383,7 +385,7 @@
 
 - 현재 호출이 유효한 `VerifiedSurfaceContext`를 만들기 전에는 저장된 응답을 반환하면 안 됩니다.
 - 재실행 행이 있으면 Core는 요청 해시 호환성보다 먼저 맥락 호환성을 확인합니다.
-- 맥락 호환성에는 `replay_context_status='verified'`와 `surface_id`, `surface_instance_id`, `access_class`의 정확한 일치가 필요합니다.
+- 맥락 호환성에는 `replay_context_status='verified'`, 완전하고 null이 아닌 재실행 맥락, 유효한 참조 접점, `surface_id`, `surface_instance_id`, `access_class`의 정확한 일치가 필요합니다.
 - 맥락이 호환되지 않으면 문서화된 로컬 접근 불일치 거절인 `LOCAL_ACCESS_MISMATCH`를 반환하고 저장된 응답을 노출하면 안 됩니다.
 - 적격 재실행은 `expected_state_version`보다 먼저 확인하므로 유효한 재시도는 상태가 진행된 뒤에도 원래 응답을 반환할 수 있습니다.
 
@@ -469,6 +471,8 @@
 - 아티팩트 해시와 담당 연결을 보존하거나 영향을 받은 참조를 복구 대상으로 유효하지 않게 표시합니다.
 - 커밋된 `tool_invocations` 재실행 행을 보존해 마이그레이션 뒤 멱등성 키가 갈라지지 않게 합니다.
 - 확인된 재실행 맥락이 없는 재실행 행은 담당 문서가 정의한 복구로 완전한 확인 맥락을 붙이기 전까지 `legacy_unverified` 또는 동등한 재실행 부적격 상태로 보존합니다.
+- 재실행 접점 제약을 추가하거나 검증할 때는 열의 존재만이 아니라 물리 복합 키와 제한적 삭제 동작을 포함한 실제 SQLite 외래 키 정의를 검사합니다.
+- 오래된 재실행 스키마에서 마이그레이션할 때는 이력 행을 보존해야 하며, 유효하지 않은 확인된 재실행 행을 조용히 강등하지 말고 실패해야 합니다.
 
 이 문서는 기준 범위 밖 DDL 묶음, 마이그레이션 카탈로그, 프로필별 마이그레이션 세부사항을 의도적으로 제외합니다.
 
@@ -485,6 +489,7 @@
 - 오래된 `WriteAuthorization.basis_state_version`
 - 검증 실패
 - 잘못된 요청
+- 타입이 지정된 담당 상태 손상
 - 멱등 요청 해시 충돌
 
 증가하는 경우:
@@ -495,6 +500,8 @@
 
 - 이런 실패는 커밋 전에 `ToolRejectedResponse`로 끝납니다.
 - 새 커밋된 `dry_run=false` 상태 변경의 어느 한 부분이라도 실패합니다.
+
+공개 메서드가 타입이 지정된 담당 상태 손상을 만나면 문서화된 구조화 저장소/런타임 사용 불가 거절을 반환합니다. 손상에는 권한, 생명주기, 범위, 증거, 완료, 닫기 준비 상태, 쓰기 호환성에 쓰이는 타입 지정 담당 JSON을 디코드하지 못하는 경우가 포함됩니다. 이를 부재, 빈 값이나 기본값, "요구사항 없음"으로 취급하면 안 됩니다. 이 실패 분기는 상태 버전 증가, 이벤트, 재실행 행, 권한, 아티팩트 효과, 증거 갱신, 판단 효과, 닫기 효과, 생명주기 효과를 만들지 않습니다.
 
 새 커밋된 `dry_run=false` 상태 변경에서 어느 한 부분이라도 실패하면 아래 결과가 부분적으로 남지 않아야 합니다.
 

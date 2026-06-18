@@ -123,6 +123,24 @@ Consumption boundary:
 Detail fields:
 - Use [State conflict detail fields](error-details.md#state-conflict-detail-fields).
 
+### Expired `Write Authorization`
+
+Condition:
+- Before consumption, the authorization is expired under the effective expiration rule owned by [`harness.record_run`](method-record-run.md) and [`harness.prepare_write`](method-prepare-write.md), and `WriteAuthorization.basis_state_version` is not stale.
+
+Public code:
+- `WRITE_AUTHORIZATION_INVALID`
+
+Response path:
+- `ToolRejectedResponse.errors[]`
+
+Precedence boundary:
+- If `WriteAuthorization.basis_state_version` is stale, select `STATE_VERSION_CONFLICT` instead of expiration invalidity.
+- Expiration is not modeled as a result-side decision, blocker code, close-readiness blocker code, or planned blocker code.
+
+Detail fields:
+- Use `ToolError.details.authorization_reason=expired`.
+
 <a id="state-conflict-idempotency-hash"></a>
 ### Idempotency request-hash conflict
 

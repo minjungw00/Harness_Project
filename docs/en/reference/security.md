@@ -91,13 +91,14 @@ May claim:
 - Local runtime data location can be defined by storage/runtime owners.
 - Local surfaces can provide verified capability context when [Agent Integration](agent-integration.md) and this security owner allow the claim.
 - The baseline local access grant for a registered surface instance is the grant stored in `surfaces.local_access_json`.
+- Verification basis is diagnostic metadata composed from controlled registration and adapter-binding values. It is not an access grant, audit proof, or caller authority.
 
 Must not claim:
 - Local filesystem access proves Harness authority.
 - A local path, directory name, copied identifier, displayed identifier, or rendered text is a security token.
 - Direct local modification outside those documented Harness contracts creates valid Harness records, evidence, acceptance, residual-risk acceptance, `Write Authorization`, or artifact authority.
 - `Harness Runtime Home` is automatically an OS security boundary, sandbox, or isolation layer.
-- A caller-supplied `verified` flag, requested `access_class`, `capability_profile`, or copied `verification_basis` grants local access.
+- A caller-supplied `verified` flag, requested `access_class`, `capability_profile`, copied `verification_basis`, public request field, or environment variable grants local access or supplies trusted verification-basis text.
 
 ## Authority boundaries
 
@@ -142,6 +143,7 @@ Surface identity and capability context limit what may be claimed.
 
 May claim:
 - `VerifiedSurfaceContext`, `surface_id`, `surface_instance_id`, `access_class`, and capability checks can be used according to the API, agent-integration, and security owners after the current invocation access is verified against the registered local access grant.
+- A registered surface instance may hold multiple documented access-class grants when `surfaces.local_access_json.authorized_access_classes` contains those classes.
 
 Must not claim:
 - `surface_id` alone is an authority token.
@@ -149,6 +151,7 @@ Must not claim:
 - An `access_class` is OS permission or broad authority.
 - `capability_profile` grants an access class.
 - `verification_basis` is a caller authority token.
+- Environment-controlled labels, public request fields, or arbitrary caller text are trusted authority, audit facts, or verification-basis inputs.
 
 ### Generated displays and text
 

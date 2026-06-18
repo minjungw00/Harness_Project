@@ -122,6 +122,24 @@
 세부 필드:
 - [상태 충돌 세부 필드](error-details.md#state-conflict-detail-fields)를 사용합니다.
 
+### 만료된 `Write Authorization`
+
+조건:
+- 소비 전에 권한이 [`harness.record_run`](method-record-run.md)과 [`harness.prepare_write`](method-prepare-write.md)가 담당하는 유효 만료 규칙에 따라 만료되었고, `WriteAuthorization.basis_state_version`은 오래되지 않았습니다.
+
+공개 오류 코드:
+- `WRITE_AUTHORIZATION_INVALID`
+
+응답 경로:
+- `ToolRejectedResponse.errors[]`
+
+우선순위 경계:
+- `WriteAuthorization.basis_state_version`이 오래되었으면 만료 무효가 아니라 `STATE_VERSION_CONFLICT`를 선택합니다.
+- 만료는 결과 쪽 판단, 차단 사유 코드, 닫기 준비 상태 차단 사유 코드, 미리보기 차단 사유 코드로 모델링하지 않습니다.
+
+세부 필드:
+- `ToolError.details.authorization_reason=expired`를 사용합니다.
+
 <a id="state-conflict-idempotency-hash"></a>
 ### 멱등 요청 해시 충돌
 

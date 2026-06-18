@@ -325,6 +325,7 @@ Branches that do not append events:
 - idempotent replay
 - `dry_run`
 - malformed requests
+- corrupt typed owner state
 - pre-commit failures
 - no-effect rejected responses
 
@@ -357,7 +358,8 @@ Meaning:
 - The storage unique key is exactly `(project_id, tool_name, idempotency_key)`.
 - `request_hash` is the conflict discriminator for the public request payload. It does not absorb invocation context such as `surface_id`, `surface_instance_id`, `access_class`, `verification_basis`, or `capability_profile`.
 - `tool_invocations.response_json` stores only the exact committed `dry_run=false` Core `MethodResult` response for a replay-row-creating state effect.
-- Newly committed replay rows store `surface_id`, `surface_instance_id`, and `access_class` from the valid `VerifiedSurfaceContext`.
+- Newly committed replay rows store complete non-null `surface_id`, `surface_instance_id`, and `access_class` from the valid `VerifiedSurfaceContext`.
+- Verified replay rows require a valid referenced surface through the physical composite foreign key owned by [Storage DDL](storage-ddl.md).
 - `verification_basis` may be stored for diagnostics, but it is not caller authority.
 - Legacy replay rows without verified context may be preserved, but they are not replay eligible.
 
@@ -385,7 +387,7 @@ Replay eligibility:
 
 - A stored response must never be returned before the current invocation has produced a valid `VerifiedSurfaceContext`.
 - When a replay row exists, Core checks context compatibility before request-hash compatibility.
-- Context compatibility requires `replay_context_status='verified'` and an exact match for `surface_id`, `surface_instance_id`, and `access_class`.
+- Context compatibility requires `replay_context_status='verified'`, complete non-null replay context, a valid referenced surface, and an exact match for `surface_id`, `surface_instance_id`, and `access_class`.
 - Incompatible context returns `LOCAL_ACCESS_MISMATCH` as the documented local-access mismatch rejection and must not expose the stored response.
 - Eligible replay is checked before `expected_state_version`, so a valid retry can return the original response after state has advanced.
 
@@ -471,6 +473,8 @@ The baseline migration boundary is:
 - Preserve artifact hashes and owner links, or mark affected refs invalid for recovery.
 - Preserve committed `tool_invocations` replay rows so idempotency keys do not fork after migration.
 - Preserve replay rows that lack verified replay context as `legacy_unverified`, or an equivalent non-replay-eligible state, until an owner-defined repair attaches complete verified context.
+- When adding or validating the replay surface constraint, inspect the actual SQLite foreign-key definition, including the physical composite key and restrictive deletion behavior, not only column presence.
+- Migration from an older replay schema must preserve historical rows and fail rather than silently downgrade an invalid verified replay row.
 
 This document intentionally excludes DDL bundles, migration catalogs, and profile-specific migration details outside the supported baseline.
 
@@ -486,6 +490,7 @@ Examples:
 - stale `WriteAuthorization.basis_state_version`
 - validation failure
 - malformed request
+- corrupt typed owner state
 - idempotency request-hash conflict
 
 Increments when:
@@ -496,6 +501,8 @@ Does not increment when:
 
 - These failures end in `ToolRejectedResponse` before commit.
 - Any part of a new committed `dry_run=false` state change fails.
+
+A public method that encounters corrupt typed owner state returns the documented structured store/runtime-unavailability rejection. Corruption includes failure to decode typed owner JSON used for authority, lifecycle, scope, evidence, completion, close readiness, or write compatibility; it must not be treated as absence, an empty/default value, or "no requirement." The failure branch creates no state-version increment, event, replay row, authorization, artifact effect, evidence update, judgment effect, close effect, or lifecycle effect.
 
 If any part of a new committed `dry_run=false` state change fails, storage must not partially leave:
 

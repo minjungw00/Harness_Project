@@ -39,8 +39,12 @@ Does not imply:
 
 Notation:
 - `string` identifies the JSON scalar shape only. It does not by itself mean free-form text.
-- `string | null` means the field is present and may be null.
+- `T | null` means the field is required to be present and may contain either `T` or JSON `null`.
+- An optional field may be omitted only when the owning schema or method field note explicitly marks it optional.
+- Optionality and nullability are independent properties.
 - `Type[]` means an array of that type.
+- JSON Schema validation and typed decoder behavior must accept and reject the same payloads.
+- Canonical idempotency hashing uses the successfully decoded typed request, not raw JSON formatting.
 
 String-like field classes:
 - A controlled value string must use the supported values from its linked value-set owner.
@@ -57,9 +61,11 @@ Owner links:
 
 Meaning:
 - `ToolEnvelope` is the common request envelope used by public methods.
+- All fields shown in `ToolEnvelope` are required envelope members. Members typed as `T | null` must still be present and may contain JSON `null`.
 
 Does not imply:
 - It does not override narrower method-specific request rules.
+- It does not carry invocation access class, invocation `surface_instance_id`, capability profile, verification basis, or `VerifiedSurfaceContext`.
 
 Owner links:
 - Method-specific request rules: method owner documents routed from [API Methods](methods.md).
@@ -78,11 +84,14 @@ ToolEnvelope:
 ```
 
 Meaning:
-- `task_id` is an optional request-level Task selector.
+- `task_id` is a nullable request-level Task selector; the field is present and the value may be null.
 - `actor_kind` is a controlled value string.
 - `expected_state_version` is the request-level field for a project-wide state clock value.
-- `project_id`, `task_id`, `surface_id`, `request_id`, and `idempotency_key` are opaque identifiers.
-- `locale` is a locale tag string, not a Harness-controlled value set.
+- `idempotency_key` is a nullable opaque identifier; method owners define when a non-null value is required.
+- `expected_state_version` is nullable; method and storage owners define when a non-null value is required.
+- `project_id`, `task_id`, `surface_id`, `request_id`, and `idempotency_key` are opaque identifiers when non-null.
+- `locale` is a nullable locale tag string, not a Harness-controlled value set.
+- `surface_id` is a registered surface selector. The current invocation `surface_instance_id` and requested access class are derived by adapter/Core logic described by [Agent Integration](../agent-integration.md), not by public request fields.
 
 Does not imply:
 - This field list does not define conflict behavior, storage versioning, or method-specific selector precedence.

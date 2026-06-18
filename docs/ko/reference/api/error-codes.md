@@ -89,7 +89,7 @@
 - `ToolRejectedResponse.errors[]`
 
 조건:
-- 필요한 Core, MCP, 접점 도달 가능성을 사용할 수 없습니다.
+- 필요한 Core, MCP, 저장소, 타입이 지정된 담당 상태, 접점 도달 가능성을 사용할 수 없습니다. 여기에는 공개 메서드가 권한, 생명주기, 범위, 증거, 완료, 닫기 준비 상태, 쓰기 호환성을 평가하는 데 필요한 지속 타입 지정 담당 상태가 손상되었거나 읽을 수 없는 경우가 포함됩니다.
 
 <a id="errorcode-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
@@ -166,6 +166,10 @@
 
 조건:
 - 제공된 `Write Authorization`이 만료, 철회, 소비, 또는 버전 외 사유로 비호환입니다.
+
+참고:
+- 만료된 `Write Authorization` 사용은 `ToolError.details.authorization_reason=expired`와 함께 이 코드를 유지합니다.
+- 오래된 `WriteAuthorization.basis_state_version`은 이 코드가 아니라 `STATE_VERSION_CONFLICT`로 경로가 정해집니다.
 
 <a id="errorcode-approval-denied"></a>
 ### `APPROVAL_DENIED`

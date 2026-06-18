@@ -41,7 +41,7 @@
 - 사용자용 표시 문구로 렌더링하면 안 됩니다.
 - 담당 메서드나 스키마의 지원 없이 차단 사유 코드로 재사용하면 안 됩니다.
 
-세부 데이터는 안정적인 진단 사실로 제한해야 합니다. 민감한 요청 본문을 노출하거나, 메서드 요청 본문을 중복하거나, 저장 효과를 정의하면 안 됩니다.
+세부 데이터는 안정적인 진단 사실로 제한해야 합니다. 민감한 요청 본문을 노출하거나, 메서드 요청 본문을 중복하거나, 원본 저장 JSON, 비밀값, SQL 텍스트, 민감한 절대 경로를 노출하거나, 저장 효과를 정의하면 안 됩니다.
 
 <a id="state-conflict-detail-fields"></a>
 
@@ -56,6 +56,19 @@
 멱등 요청 해시 충돌 세부사항:
 - 민감한 요청 본문을 노출하지 않고 `idempotency_key`와 요청 해시 불일치를 식별합니다.
 
+<a id="owner-state-corruption-detail-fields"></a>
+
+## 담당 상태 손상 세부 필드
+
+타입이 지정된 담당 상태 손상을 구조화 저장소/런타임 사용 불가 거절로 보고할 때 세부사항은 아래 항목을 식별할 수 있습니다.
+
+- `owner_state_error.table`
+- `owner_state_error.record_ref`
+- `owner_state_error.logical_column`
+- `owner_state_error.corruption_category`
+
+이 진단은 원본 저장 JSON, 비밀값, SQL 텍스트, 민감한 절대 경로를 포함하면 안 됩니다. 형식이 잘못된 JSON을 부재와 동등하게 만들지 않습니다.
+
 <a id="error-detail-helper-values"></a>
 
 ## 오류 세부사항 보조 값
@@ -64,7 +77,7 @@
 
 ### `authorization_reason`
 
-`ToolError.details.authorization_reason`은 `missing`, `expired`, `stale`, `revoked`, `consumed`, `incompatible`만 사용합니다. 오래된 `WriteAuthorization.basis_state_version`은 `WRITE_AUTHORIZATION_INVALID`가 아니라 `STATE_VERSION_CONFLICT`를 사용합니다.
+`ToolError.details.authorization_reason`은 `missing`, `expired`, `stale`, `revoked`, `consumed`, `incompatible`만 사용합니다. 만료된 `Write Authorization` 사용은 공개 코드 `WRITE_AUTHORIZATION_INVALID`와 함께 `authorization_reason=expired`를 설정합니다. 오래된 `WriteAuthorization.basis_state_version`은 `WRITE_AUTHORIZATION_INVALID`가 아니라 `STATE_VERSION_CONFLICT`를 사용합니다.
 
 <a id="artifact-input-error-reason"></a>
 

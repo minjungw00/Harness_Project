@@ -59,6 +59,8 @@ The diagram is an implementation guide. It is not a storage layout, a security b
 
 Core owns authority decisions defined by the Reference owners. Adapters translate transport only. Core-facing code must stay independent of CLI and MCP adapter layers; adapters may depend on Core-facing interfaces.
 
+At guide level, an MCP adapter binds a project surface and surface instance for a session, then derives requested access per public method call from the method and typed params. Exact access derivation and grant rules stay with [Agent Integration](../reference/agent-integration.md) and the method owners.
+
 ## Rust Workspace Shape
 
 For Rust implementation work, keep the baseline workspace narrow and layered:

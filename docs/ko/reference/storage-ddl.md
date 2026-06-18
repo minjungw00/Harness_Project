@@ -33,7 +33,7 @@ PRAGMA foreign_keys = ON;
 
 기준 테이블은 `ON DELETE CASCADE`를 사용하지 않습니다. 담당 저장소 또는 마이그레이션 계약이 복구나 보존 경로를 정의하지 않는 한 권한 행은 계속 주소 지정 가능해야 합니다.
 
-`_json`으로 끝나는 SQLite `TEXT` 열은 JSON을 저장하는 표현 선택입니다. 타입을 아는 Core 코드는 커밋 전에 해당 API 스키마 담당 문서, 저장소 담당 문서, 또는 아티팩트 담당 문서에 맞게 이 열을 파싱하고 검증해야 합니다. `'{}'`, `'[]'` 같은 SQLite 기본값은 API 필드를 선택 필드로 만들지 않습니다.
+`_json`으로 끝나는 SQLite `TEXT` 열은 JSON을 저장하는 표현 선택입니다. 권한, 생명주기, 범위, 증거, 완료, 닫기 준비 상태, 쓰기 호환성에 쓰이는 JSON은 타입이 지정된 담당 상태입니다. 타입을 아는 Core 코드는 커밋 전에 해당 API 스키마 담당 문서, 저장소 담당 문서, 또는 아티팩트 담당 문서에 맞게 이 열을 파싱하고 검증해야 합니다. 타입이 지정된 담당 상태를 디코드하지 못하는 경우는 손상이며 빈 객체, 빈 배열, false 값, 기본 enum, 또는 "요구사항 없음" 해석으로 바꾸면 안 됩니다. SQL `NULL`은 담당 스키마가 그 필드를 명시적으로 선택 필드라고 표시할 때만 부재를 뜻할 수 있습니다. 선택 열의 형식이 잘못된 JSON도 부재가 아니라 손상입니다. 열린 표시 메타데이터는 권한이나 닫기 판단에 쓰이지 않을 때만 타입을 지정하지 않은 채로 둘 수 있습니다. 안전한 진단은 테이블, 기록 참조, 논리 열, 손상 범주를 식별할 수 있지만 원본 저장 JSON, 비밀값, SQL 텍스트, 민감한 절대 경로를 노출하면 안 됩니다. `'{}'`, `'[]'` 같은 SQLite 기본값은 API 필드를 선택 필드로 만들지 않습니다.
 
 `project_state.state_version`은 기준 범위의 유일한 공개 상태 시계입니다. 기준 SQLite DDL은 `tasks.state_version`을 만들면 안 됩니다.
 
@@ -455,7 +455,8 @@ CREATE TABLE tool_invocations (
     )
   ),
   FOREIGN KEY (project_id, surface_id, surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
+    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
+    ON DELETE RESTRICT,
   FOREIGN KEY (project_id) REFERENCES project_state (project_id)
 );
 ```
@@ -526,8 +527,8 @@ CREATE INDEX idx_task_events_task_seq
 접점 로컬 접근 허용:
 
 - `surfaces.local_access_json`은 등록된 로컬 접근 허용의 기준 저장 위치입니다.
-- 선호되는 허용 필드는 `authorized_access_classes: string[]`입니다. `access_class: string`은 하위 호환을 위한 단일 값 대체 필드입니다.
-- `verification_basis: string`은 허용이 어떻게 성립했는지 설명하는 신뢰된 등록 메타데이터입니다.
+- 선호되는 허용 필드는 `authorized_access_classes: string[]`입니다. 접점 인스턴스 하나에 대해 문서화된 접근 등급 여러 개를 담을 수 있습니다. `access_class: string`은 하위 호환을 위한 단일 값 대체 필드입니다.
+- `verification_basis: string`은 허용이 어떻게 성립했는지 설명하는 통제된 등록 또는 어댑터 바인딩 진단 메타데이터입니다. 호출자 권한이 아니며 허용을 추가하지 않습니다.
 - `surfaces.capability_profile_json`은 역량 선언이며 접근 등급 허용으로 취급하면 안 됩니다.
 
 멱등 재실행 행:
@@ -535,7 +536,9 @@ CREATE INDEX idx_task_events_task_seq
 - 재실행 고유 키는 정확히 `(project_id, tool_name, idempotency_key)`입니다.
 - `request_hash`는 공개 요청 충돌 판별자로 저장하지만 고유 키의 일부가 아니며 호출 맥락을 흡수하지 않습니다.
 - `tool_invocations.response_json`은 [저장 효과](storage-effects.md)가 재실행 행 생성을 정의한 커밋된 재실행 응답만 저장합니다.
-- 새로 쓰는 재실행 행은 `replay_context_status='verified'`를 사용하고 파생된 `VerifiedSurfaceContext`의 완전한 `surface_id`, `surface_instance_id`, `access_class` 값을 저장합니다.
+- 새로 쓰는 재실행 행은 `replay_context_status='verified'`를 사용하고 파생된 `VerifiedSurfaceContext`의 완전하고 null이 아닌 `surface_id`, `surface_instance_id`, `access_class` 값을 저장합니다.
+- 확인된 재실행 행은 `surfaces(project_id, surface_id, surface_instance_id)`를 참조하는 물리 복합 외래 키 `(project_id, surface_id, surface_instance_id)`를 통해 유효한 참조 접점을 요구합니다.
+- 재실행 접점 외래 키는 제한적 삭제 동작을 사용합니다. 스키마 검증은 열의 존재만이 아니라 실제 SQLite 외래 키 정의를 검사해야 합니다.
 - `verification_basis`는 진단용으로 재실행 행에 저장할 수 있지만 호출자 권한이 아닙니다.
 - 확인된 맥락이 없는 기존 재실행 행은 `replay_context_status='legacy_unverified'`와 null 또는 불완전한 맥락 필드로 표현할 수 있습니다. 재실행 적격성은 [저장소 버전 관리](storage-versioning.md)가 담당합니다.
 

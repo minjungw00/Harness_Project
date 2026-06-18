@@ -54,8 +54,10 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 - `surface_id`는 등록된 로컬 접점의 선택자입니다.
 - `surface_instance_id`는 메서드 담당 문서가 반환하거나 요구할 때 등록된 인스턴스를 구분합니다.
 - `surfaces.local_access_json`은 그 접점 인스턴스에 등록된 로컬 접근 허용의 기준 소스입니다.
-- 선호되는 허용 필드는 `authorized_access_classes: string[]`입니다. `access_class: string`은 하위 호환을 위한 단일 값 대체 필드입니다.
-- `verification_basis: string`은 허용이 어떻게 성립했는지 설명하는 신뢰된 등록 메타데이터입니다.
+- 선호되는 허용 필드는 `authorized_access_classes: string[]`입니다. 같은 접점 인스턴스에 대해 문서화된 접근 등급 여러 개를 담을 수 있습니다. `access_class: string`은 하위 호환을 위한 단일 값 대체 필드입니다.
+- 기준 워크플로 등록 프로필은 `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, `run_recording`의 명시적 접근 등급 집합으로 확장될 수 있습니다.
+- 전체 워크플로 프로필은 명시적으로 선택되어야 하며 암묵적 기본값이 되면 안 됩니다.
+- `verification_basis: string`은 허용이 어떻게 성립했는지 설명하는 통제된 등록 또는 어댑터 바인딩 진단 메타데이터입니다. 접근을 부여하지 않습니다.
 - 등록 사실은 현재 요청에 대해 담당 결과가 반환한 확인을 통해서만 사용할 수 있습니다.
 
 에이전트가 할 수 있는 것:
@@ -66,6 +68,7 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 - 호출자 산문, 복사된 식별자, 생성된 Markdown, 대화 텍스트, 상태 보기 텍스트, 에이전트 기억으로 로컬 도달 가능성, 접근 등급, `verified=true`, 아티팩트 출처를 추론하면 안 됩니다.
 - `surface_id`, `surface_instance_id`, 접점 이름을 권한 증거로 취급하면 안 됩니다.
 - `capability_profile`, 요청된 호출 접근, `verification_basis`를 접근 허용으로 취급하면 안 됩니다.
+- 환경 변수, 공개 요청 필드, 호출자가 제공한 라벨을 신뢰된 검증 근거 문구나 감사 사실로 취급하면 안 됩니다.
 
 담당 문서 링크:
 - [API 메서드](api/methods.md)와 메서드 담당 문서는 메서드 요청 조건을 정의합니다.
@@ -76,7 +79,26 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 
 `VerifiedSurfaceContext`는 한 번의 호출에 대해 내부에서 파생되는 맥락입니다. `Harness Server` 또는 로컬 어댑터는 등록된 접점 기록, 어댑터가 파생한 호출 맥락, 요청된 호출 접근에서 이를 파생하고, 그 뒤 메서드 담당 문서가 파생된 맥락이 요청과 호환되는지 판단합니다. 이는 공개 요청 페이로드가 아닙니다.
 
+MCP 세션은 프로젝트 접점과 호출 `surface_instance_id`에 묶입니다. 프로세스 전체에 고정된 접근 등급 하나에 묶이지 않습니다. MCP 어댑터는 현재 호출의 공개 메서드 이름과 타입이 지정된 params에서 요청된 호출 접근을 파생합니다. 공개 요청 params에는 호출 접근 등급, 호출 `surface_instance_id`, 역량 프로필, 검증 근거, `VerifiedSurfaceContext`가 들어가지 않습니다. Core는 `VerifiedSurfaceContext`를 파생하기 전에 메서드에서 파생된 요청 접근이 `surfaces.local_access_json`의 등록된 허용에 포함되는지 독립적으로 확인합니다.
+
+메서드에서 파생되는 요청 접근:
+
+| 공개 메서드와 타입이 지정된 params | 요청 접근 |
+|---|---|
+| `harness.status` | `read_status` |
+| `harness.intake` | `core_mutation` |
+| `harness.update_scope` | `core_mutation` |
+| `harness.prepare_write` | `write_authorization` |
+| `harness.stage_artifact` | `artifact_registration` |
+| `harness.record_run` | `run_recording` |
+| `harness.request_user_judgment` | `core_mutation` |
+| `harness.record_user_judgment` | `core_mutation` |
+| `harness.close_task` with `intent=check` | `read_status` |
+| Other `harness.close_task` intents | `core_mutation` |
+
 `InvocationContext.access_class` 또는 동등한 구현 개념은 현재 호출이 요청한 접근 등급입니다. 이는 권한이 아니며 접근 등급을 부여할 수 없습니다. `VerifiedSurfaceContext`는 요청된 호출 접근이 `surfaces.local_access_json`의 등록된 허용 목록에 포함될 때만 파생될 수 있습니다.
+
+새로 파생되는 맥락의 검증 근거는 통제된 등록 값과 어댑터 바인딩 값으로만 구성됩니다. 환경 변수와 공개 요청 필드는 임의의 검증 근거 문구를 제공할 수 없습니다. 통제된 예시는 `local_admin_registration`, `mcp_stdio_surface_binding`, `cli_direct_surface_binding`, `test_fixture_binding`입니다. 기존에 저장된 임의 근거 문자열은 이력 데이터로 남을 수 있지만, 새로 쓰는 값은 통제된 어휘를 사용합니다. 검증 근거는 진단 메타데이터이며 접근을 부여하지 않습니다.
 
 내부 형태이며 공개 API 스키마가 아닙니다.
 
@@ -106,6 +128,7 @@ VerifiedSurfaceContext:
 - `VerifiedSurfaceContext`를 요청 페이로드로 제출하면 안 됩니다.
 - `verified=true`를 스스로 주장하면 안 됩니다.
 - `surface_instance_id`를 확인 권한 근거로 제출하면 안 됩니다.
+- 접근 등급, 역량 프로필, 검증 근거를 공개 요청 권한으로 제출하면 안 됩니다.
 - 스테이징된 아티팩트 출처를 꾸며 내면 안 됩니다.
 - 복사된 식별자, 생성된 Markdown, 대화 텍스트, 상태 보기 텍스트, 에이전트 기억을 확인된 맥락의 대체물로 쓰면 안 됩니다.
 - `capability_profile`이나 요청된 호출 접근을 등록된 허용의 대체물로 쓰면 안 됩니다.
@@ -121,6 +144,7 @@ VerifiedSurfaceContext:
 조건:
 - 어떤 역량은 [범위 참조](scope.md)와 영향받는 담당 문서가 그 역량을 기준 범위 또는 프로필 조건부 지원 동작으로 정의할 때만 지원된다고 선언할 수 있습니다.
 - 보호된 읽기, 상태 변경, 아티팩트 동작, 보장 표시는 메서드 담당 문서의 지원을 받으며 호환되는 접점 맥락이 현재 적용될 때만 역량 선언을 사용할 수 있습니다.
+- 역량 선언은 권한이 아니며 `surfaces.local_access_json`에 허용을 추가할 수 없습니다.
 
 에이전트가 할 수 있는 것:
 - 지원되는 접근 등급을 설명할 수 있습니다.

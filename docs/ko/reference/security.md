@@ -91,13 +91,14 @@
 - 로컬 런타임 데이터 위치는 저장소/런타임 담당 문서가 정의할 수 있습니다.
 - 로컬 접점은 [에이전트 통합](agent-integration.md)과 이 보안 담당 문서가 허용할 때 확인된 역량 맥락을 제공할 수 있습니다.
 - 등록된 접점 인스턴스의 기준 로컬 접근 허용은 `surfaces.local_access_json`에 저장된 허용입니다.
+- 검증 근거는 통제된 등록 값과 어댑터 바인딩 값으로 구성되는 진단 메타데이터입니다. 접근 허용, 감사 증명, 호출자 권한이 아닙니다.
 
 주장하면 안 되는 것:
 - 로컬 파일시스템 접근이 하네스 권한을 증명한다는 주장.
 - 로컬 경로, 디렉터리 이름, 복사된 식별자, 표시된 식별자, 렌더링된 텍스트가 보안 토큰이라는 주장.
 - 문서화된 하네스 계약 밖의 직접 로컬 수정이 유효한 하네스 기록, 증거, 수락, 잔여 위험 수락, `Write Authorization`, 아티팩트 권한을 만든다는 주장.
 - `Harness Runtime Home`이 자동으로 OS 보안 경계, 샌드박스, 격리 계층이라는 주장.
-- 호출자가 제공한 `verified` 플래그, 요청된 `access_class`, `capability_profile`, 복사된 `verification_basis`가 로컬 접근을 부여한다는 주장.
+- 호출자가 제공한 `verified` 플래그, 요청된 `access_class`, `capability_profile`, 복사된 `verification_basis`, 공개 요청 필드, 환경 변수가 로컬 접근을 부여하거나 신뢰된 검증 근거 문구를 제공한다는 주장.
 
 ## 권한 경계
 
@@ -142,6 +143,7 @@
 
 주장할 수 있는 것:
 - `VerifiedSurfaceContext`, `surface_id`, `surface_instance_id`, `access_class`, 역량 확인은 현재 호출 접근을 등록된 로컬 접근 허용과 대조해 확인한 뒤 API, 에이전트 통합, 보안 담당 문서에 따라 사용할 수 있습니다.
+- `surfaces.local_access_json.authorized_access_classes`가 문서화된 여러 접근 등급을 담고 있으면 등록된 접점 인스턴스 하나가 그 여러 접근 등급 허용을 가질 수 있습니다.
 
 주장하면 안 되는 것:
 - `surface_id` 자체가 권한 토큰이라는 주장.
@@ -149,6 +151,7 @@
 - `access_class`가 OS 권한이나 포괄적 권한이라는 주장.
 - `capability_profile`이 접근 등급을 부여한다는 주장.
 - `verification_basis`가 호출자 권한 토큰이라는 주장.
+- 환경으로 제어되는 라벨, 공개 요청 필드, 임의 호출자 텍스트가 신뢰된 권한, 감사 사실, 검증 근거 입력이라는 주장.
 
 ### 생성된 표시와 텍스트
 

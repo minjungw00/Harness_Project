@@ -39,8 +39,12 @@
 
 표기:
 - `string`은 JSON 스칼라 형태만 나타냅니다. 이 표기만으로 자유 형식 텍스트라는 뜻이 되지 않습니다.
-- `string | null`은 필드가 존재하며 `null`일 수 있다는 뜻입니다.
+- `T | null`은 필드가 반드시 존재해야 하며 `T` 또는 JSON `null`을 담을 수 있다는 뜻입니다.
+- 선택 필드는 담당 스키마나 메서드 필드 참고가 명시적으로 선택 필드라고 표시할 때만 생략할 수 있습니다.
+- 선택성과 null 허용성은 서로 독립적인 속성입니다.
 - `Type[]`는 그 타입의 배열입니다.
+- JSON Schema 검증과 타입 지정 디코더 동작은 같은 페이로드를 받아들이고 거절해야 합니다.
+- 표준 멱등성 해싱은 원시 JSON 형식이 아니라 성공적으로 디코드된 타입 지정 요청을 사용합니다.
 
 문자열 형태 필드 분류:
 - 제어 값 문자열은 연결된 값 집합 담당 문서의 지원 값을 사용해야 합니다.
@@ -57,9 +61,11 @@
 
 의미:
 - `ToolEnvelope`는 공개 메서드가 사용하는 공통 요청 래퍼입니다.
+- `ToolEnvelope`에 표시된 모든 필드는 필수 래퍼 멤버입니다. `T | null`로 타입이 지정된 멤버도 반드시 있어야 하며 JSON `null`을 담을 수 있습니다.
 
 의미하지 않는 것:
 - 더 좁은 메서드별 요청 규칙을 덮어쓰지 않습니다.
+- 호출 접근 등급, 호출 `surface_instance_id`, 역량 프로필, 검증 근거, `VerifiedSurfaceContext`를 담지 않습니다.
 
 담당 문서 링크:
 - 메서드별 요청 규칙: [API 메서드](methods.md)가 안내하는 메서드 담당 문서.
@@ -78,11 +84,14 @@ ToolEnvelope:
 ```
 
 의미:
-- `task_id`는 요청 수준의 선택적 `Task` 선택자입니다.
+- `task_id`는 null 허용 요청 수준 `Task` 선택자입니다. 필드는 존재하며 값은 null일 수 있습니다.
 - `actor_kind`는 제어 값 문자열입니다.
 - `expected_state_version`은 프로젝트 전체 상태 시계 값을 담는 요청 수준 필드입니다.
-- `project_id`, `task_id`, `surface_id`, `request_id`, `idempotency_key`는 불투명 식별자입니다.
-- `locale`은 로캘 태그 문자열이며 하네스가 제어하는 값 집합이 아닙니다.
+- `idempotency_key`는 null 허용 불투명 식별자입니다. 메서드 담당 문서가 null이 아닌 값이 필요한 때를 정의합니다.
+- `expected_state_version`은 null 허용입니다. 메서드와 저장소 담당 문서가 null이 아닌 값이 필요한 때를 정의합니다.
+- `project_id`, `task_id`, `surface_id`, `request_id`, `idempotency_key`는 null이 아닐 때 불투명 식별자입니다.
+- `locale`은 null 허용 로캘 태그 문자열이며 하네스가 제어하는 값 집합이 아닙니다.
+- `surface_id`는 등록된 접점 선택자입니다. 현재 호출 `surface_instance_id`와 요청 접근 등급은 공개 요청 필드가 아니라 [에이전트 통합](../agent-integration.md)이 설명하는 어댑터/Core 로직에서 파생됩니다.
 
 의미하지 않는 것:
 - 이 필드 목록은 충돌 동작, 저장소 버전 관리, 메서드별 선택자 우선순위를 정의하지 않습니다.

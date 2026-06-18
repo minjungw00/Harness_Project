@@ -47,6 +47,8 @@ Security non-claims belong to [Security](../security.md).
 
 This method owns the top-level `params` request shape below. `envelope` is the shared [`ToolEnvelope`](schema-core.md#tool-envelope); this block does not redefine `ToolEnvelope` fields.
 
+All fields shown in this method-owned request block are required members of `params` unless a field note explicitly marks a member optional; `T | null` means the member must be present and may contain JSON `null`.
+
 ```yaml
 PrepareWriteRequest:
   envelope: ToolEnvelope
@@ -81,6 +83,12 @@ Requires:
 | Committed `decision=allowed` | Increments `project_state.state_version` exactly once. | Creates one `status=active` `Write Authorization`. |
 | Committed non-allow decision | Increments `project_state.state_version` exactly once. | Creates no consumable `Write Authorization`. |
 | Pre-commit rejection or dry run | Increments nothing. | Creates nothing. |
+
+## Write Authorization lifetime and ID allocation
+
+Newly created `Write Authorization` records have a default lifetime of 15 minutes. `expires_at` is an enforced authority condition, not display-only metadata. The effective expiration is the earlier of stored `expires_at` and `created_at + 15 minutes`; this same effective rule limits historical rows with far-future expiration timestamps. Expiration is calculated using parsed UTC timestamps, not lexical string comparison.
+
+A newly allowed committed authorization receives its durable `write_authorization_id` only when the allowed mutation is committed. Blocked, approval-required, decision-required, rejected, and `dry_run` paths do not allocate a durable `Write Authorization` ID.
 
 ## Method result fields
 

@@ -47,6 +47,8 @@
 
 이 메서드는 아래 최상위 `params` 요청 형태를 담당합니다. `envelope`는 [API 코어 스키마](schema-core.md#tool-envelope)의 공통 `ToolEnvelope`이며, 이 블록은 `ToolEnvelope` 필드를 다시 정의하지 않습니다.
 
+이 메서드 소유 요청 블록에 표시된 모든 필드는 필드 참고가 명시적으로 선택 필드라고 표시하지 않는 한 `params`의 필수 멤버입니다. `T | null`은 멤버가 반드시 있어야 하며 JSON `null`을 담을 수 있다는 뜻입니다.
+
 ```yaml
 PrepareWriteRequest:
   envelope: ToolEnvelope
@@ -81,6 +83,12 @@ PrepareWriteRequest:
 | 커밋된 `decision=allowed` | `project_state.state_version`을 정확히 한 번 올립니다. | `status=active`인 `Write Authorization` 하나를 만듭니다. |
 | 커밋된 비허용 결정 | `project_state.state_version`을 정확히 한 번 올립니다. | 소비 가능한 `Write Authorization`을 만들지 않습니다. |
 | 커밋 전 거절 또는 `dry_run` | 올리지 않습니다. | 만들지 않습니다. |
+
+## `Write Authorization` 수명과 ID 할당
+
+새로 만들어지는 `Write Authorization` 기록의 기본 수명은 15분입니다. `expires_at`은 표시 전용 메타데이터가 아니라 집행되는 권한 조건입니다. 유효 만료 시점은 저장된 `expires_at`과 `created_at + 15 minutes` 중 더 이른 시점입니다. 이 같은 유효 규칙은 먼 미래 만료 시각을 가진 이력 행도 제한합니다. 만료는 문자열 사전식 비교가 아니라 파싱한 UTC 타임스탬프로 계산합니다.
+
+새로 허용된 커밋 권한은 허용된 상태 변경이 커밋될 때만 지속 `write_authorization_id`를 받습니다. 차단, 승인 필요, 판단 필요, 거절, `dry_run` 경로는 지속 `Write Authorization` ID를 할당하지 않습니다.
 
 ## 메서드 결과 필드
 

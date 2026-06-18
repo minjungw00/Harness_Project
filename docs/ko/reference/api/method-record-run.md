@@ -40,6 +40,8 @@
 
 이 메서드는 아래 최상위 `params` 요청 형태를 담당합니다. `envelope`는 [API 코어 스키마](schema-core.md#tool-envelope)의 공통 `ToolEnvelope`이며, 이 블록은 `ToolEnvelope` 필드를 다시 정의하지 않습니다.
 
+이 메서드 소유 요청 블록에 표시된 모든 필드는 필드 참고가 명시적으로 선택 필드라고 표시하지 않는 한 `params`의 필수 멤버입니다. `T | null`은 멤버가 반드시 있어야 하며 JSON `null`을 담을 수 있다는 뜻입니다.
+
 ```yaml
 RecordRunRequest:
   envelope: ToolEnvelope
@@ -89,11 +91,14 @@ RecordRunRequest:
 제품 쓰기 기록이 `Write Authorization`을 소비하려면 아래 조건을 모두 만족해야 합니다.
 
 - 소비 직전 현재 `project_state.state_version`이 `WriteAuthorization.basis_state_version`과 같습니다.
+- 권한이 유효 만료 규칙, 즉 저장된 `expires_at`과 `created_at + 15 minutes` 중 더 이른 시점에 따라 만료되지 않았습니다.
 - `Product Repository` 경로 정규화 뒤의 관찰된 변경 경로가 권한 부여된 시도와 호환됩니다.
 
 `harness.prepare_write`가 만든 `Write Authorization`은 사이에 다른 프로젝트 상태 변경이 없으면 생성 직후 오래되지 않습니다. 예를 들어 `harness.prepare_write`가 버전 `19`에서 버전 `20`으로 커밋하면 현재 `project_state.state_version`과 `WriteAuthorization.basis_state_version`이 모두 `20`인 동안 `harness.record_run`이 그 권한을 소비할 수 있습니다.
 
-오래된 `expected_state_version`과 오래된 `Write Authorization` 근거는 `Write Authorization`을 소비하기 전에 거절됩니다.
+오래된 `expected_state_version`과 오래된 `Write Authorization` 근거는 `Write Authorization`을 소비하기 전에 거절됩니다. 오래된 `WriteAuthorization.basis_state_version`은 같은 권한이 함께 만료되었더라도 더 높은 우선순위의 `STATE_VERSION_CONFLICT` 경로를 유지합니다.
+
+만료는 문자열 사전식 비교가 아니라 파싱한 UTC 타임스탬프로 계산합니다. 만료된 권한은 절대 소비되지 않습니다. 만료된 권한 사용은 `ToolError.details.authorization_reason=expired`와 함께 `WRITE_AUTHORIZATION_INVALID`를 반환합니다.
 
 ## 메서드 결과 필드
 
@@ -139,6 +144,7 @@ RecordRunRequest:
 - 오래된 `expected_state_version`
 - 오래된 `Write Authorization` 기준
 - 제품 쓰기에 필요한 `Write Authorization` 누락 또는 무효
+- 만료된 `Write Authorization`
 - 유효하지 않은 스테이징 핸들
 - 스테이징 핸들 출처 불일치
 - 누락된 아티팩트
@@ -153,6 +159,8 @@ RecordRunRequest:
 공개 오류 코드 의미, 우선순위, 세부사항, 거절 응답 처리 경로는 아래 오류 담당 문서가 담당합니다.
 
 오래된 `Write Authorization` 근거에서는 소비 전에 거절되며 Run, 증거 갱신, 아티팩트 연결, 아티팩트 승격, 이벤트, 재실행 행, `project_state.state_version` 증가를 만들지 않습니다.
+
+만료된 `Write Authorization`에서는 소비 전에 거절되며 Run, 이벤트, 재실행 행, 아티팩트 승격, 증거 갱신, 권한 소비, `project_state.state_version` 증가를 만들지 않습니다.
 
 ## `dry_run` 동작
 

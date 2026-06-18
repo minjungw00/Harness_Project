@@ -33,7 +33,7 @@ Mutating transactions must use `BEGIN IMMEDIATE` or an equivalent serialized wri
 
 No baseline table uses `ON DELETE CASCADE`. Authority rows remain addressable unless an owning storage or migration contract defines a repair or retention path.
 
-SQLite `TEXT` columns ending in `_json` store JSON as a representation choice. Typed Core code must parse and validate those columns before commit against the applicable API schema owner, storage owner, or artifact owner. SQLite defaults such as `'{}'` and `'[]'` do not make API fields optional.
+SQLite `TEXT` columns ending in `_json` store JSON as a representation choice. JSON used for authority, lifecycle, scope, evidence, completion, close readiness, or write compatibility is typed owner state. Typed Core code must parse and validate those columns before commit against the applicable API schema owner, storage owner, or artifact owner. Failure to decode typed owner state is corruption and must never be converted to an empty object, empty array, false value, default enum, or "no requirement" interpretation. SQL `NULL` may mean absence only when the owning schema explicitly marks the field optional; malformed JSON in an optional column is corruption, not absence. Open-ended display metadata may remain untyped only when it is not used for authority or close decisions. Safe diagnostics may identify the table, record reference, logical column, and corruption category, but must not expose raw stored JSON, secrets, SQL text, or sensitive absolute paths. SQLite defaults such as `'{}'` and `'[]'` do not make API fields optional.
 
 `project_state.state_version` is the only public baseline state clock. Baseline SQLite DDL must not create `tasks.state_version`.
 
@@ -455,7 +455,8 @@ CREATE TABLE tool_invocations (
     )
   ),
   FOREIGN KEY (project_id, surface_id, surface_instance_id)
-    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
+    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
+    ON DELETE RESTRICT,
   FOREIGN KEY (project_id) REFERENCES project_state (project_id)
 );
 ```
@@ -526,8 +527,8 @@ Current Change Unit:
 Surface local access grants:
 
 - `surfaces.local_access_json` is the baseline storage location for registered local access grants.
-- The preferred grant field is `authorized_access_classes: string[]`; `access_class: string` is a backward-compatible single-value fallback.
-- `verification_basis: string` is trusted registration metadata for explaining how the grant was established.
+- The preferred grant field is `authorized_access_classes: string[]`; it may contain multiple documented access classes for one surface instance. `access_class: string` is a backward-compatible single-value fallback.
+- `verification_basis: string` is controlled registration or adapter-binding diagnostic metadata for explaining how the grant was established. It is not caller authority and does not add a grant.
 - `surfaces.capability_profile_json` is a capability declaration and must not be treated as an access-class grant.
 
 Idempotency replay rows:
@@ -535,7 +536,9 @@ Idempotency replay rows:
 - The replay uniqueness key is exactly `(project_id, tool_name, idempotency_key)`.
 - `request_hash` is stored as the public-request conflict discriminator, but it is not part of a unique key and does not absorb invocation context.
 - `tool_invocations.response_json` stores only committed replay responses that [Storage Effects](storage-effects.md) says create replay rows.
-- Newly written replay rows use `replay_context_status='verified'` and store complete `surface_id`, `surface_instance_id`, and `access_class` values from the derived `VerifiedSurfaceContext`.
+- Newly written replay rows use `replay_context_status='verified'` and store complete non-null `surface_id`, `surface_instance_id`, and `access_class` values from the derived `VerifiedSurfaceContext`.
+- Verified replay rows require a valid referenced surface through the physical composite foreign key `(project_id, surface_id, surface_instance_id)` referencing `surfaces(project_id, surface_id, surface_instance_id)`.
+- The replay surface foreign key uses restrictive deletion behavior. Schema validation must inspect the actual SQLite foreign-key definition, not only the presence of the columns.
 - `verification_basis` may be stored on replay rows for diagnostics, but it is not caller authority.
 - Existing replay rows that lack verified context may be represented with `replay_context_status='legacy_unverified'` and null or incomplete context fields; [Storage Versioning](storage-versioning.md) owns replay eligibility.
 

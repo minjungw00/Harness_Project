@@ -90,7 +90,7 @@ Used in:
 - `ToolRejectedResponse.errors[]`
 
 Condition:
-- Required Core, MCP, or surface reachability is unavailable.
+- Required Core, MCP, store, typed owner state, or surface reachability is unavailable. This includes corrupt or unreadable persisted typed owner state that a public method needs in order to evaluate authority, lifecycle, scope, evidence, completion, close readiness, or write compatibility.
 
 <a id="errorcode-local-access-mismatch"></a>
 ### `LOCAL_ACCESS_MISMATCH`
@@ -167,6 +167,10 @@ Used in:
 
 Condition:
 - Supplied `Write Authorization` is expired, revoked, consumed, or incompatible for a non-version reason.
+
+Notes:
+- Expired `Write Authorization` use stays on this code with `ToolError.details.authorization_reason=expired`.
+- Stale `WriteAuthorization.basis_state_version` is routed through `STATE_VERSION_CONFLICT`, not this code.
 
 <a id="errorcode-approval-denied"></a>
 ### `APPROVAL_DENIED`

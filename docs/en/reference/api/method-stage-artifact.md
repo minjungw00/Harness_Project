@@ -34,6 +34,8 @@ Staging is input preparation only. Evidence, persistent artifact links, acceptan
 
 This method owns the top-level `params` request shape below. `envelope` is the shared [`ToolEnvelope`](schema-core.md#tool-envelope); this block does not redefine `ToolEnvelope` fields.
 
+All fields shown in this method-owned request block are required members of `params` unless a field note explicitly marks a member optional; `T | null` means the member must be present and may contain JSON `null`.
+
 ```yaml
 StageArtifactRequest:
   envelope: ToolEnvelope
