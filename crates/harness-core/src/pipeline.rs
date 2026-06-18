@@ -5,6 +5,7 @@ use std::{
 };
 
 use harness_store::{
+    bootstrap::SurfaceRecord,
     core_pipeline::{
         commit_input, CommitMutationInput, CommittedEventRef, CoreProjectStore,
         CoreStorageMutation, MutationCommitOutcome, PendingTaskEvent, ProjectStateHeader,
@@ -68,8 +69,8 @@ impl From<serde_json::Error> for CorePipelineError {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InvocationContext {
     pub surface_instance_id: Option<SurfaceInstanceId>,
-    pub access_class: AccessClass,
-    pub verification_basis: String,
+    pub requested_access_class: AccessClass,
+    pub invocation_binding_basis: String,
 }
 
 /// Internal verified surface context derived for one invocation.
@@ -614,14 +615,116 @@ fn derive_verified_surface(
     let capability_profile = serde_json::from_str::<Value>(&surface.capability_profile_json)
         .map_err(|_| mcp_unavailable_error("surface capability profile is invalid"))?;
 
+    verified_surface_from_registered_surface(surface, invocation, capability_profile)
+        .map_err(|_| local_access_mismatch_error("surfaces.local_access_json"))
+}
+
+pub(crate) fn verified_surface_from_registered_surface(
+    surface: SurfaceRecord,
+    invocation: &InvocationContext,
+    capability_profile: Value,
+) -> Result<VerifiedSurfaceContext, ()> {
+    let grant = parse_registered_local_access_grant(&surface.local_access_json)?;
+    if !grant
+        .authorized_access_classes
+        .contains(&invocation.requested_access_class)
+    {
+        return Err(());
+    }
+
     Ok(VerifiedSurfaceContext {
         project_id: ProjectId::new(surface.project_id),
         surface_id: SurfaceId::new(surface.surface_id),
         surface_instance_id: SurfaceInstanceId::new(surface.surface_instance_id),
-        access_class: invocation.access_class,
+        access_class: invocation.requested_access_class,
         capability_profile,
-        verification_basis: invocation.verification_basis.clone(),
+        verification_basis: verified_surface_basis(
+            &grant.verification_basis,
+            &invocation.invocation_binding_basis,
+        ),
     })
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RegisteredLocalAccessGrant {
+    pub authorized_access_classes: Vec<AccessClass>,
+    pub verification_basis: String,
+}
+
+pub(crate) fn parse_registered_local_access_grant(
+    text: &str,
+) -> Result<RegisteredLocalAccessGrant, ()> {
+    let value = serde_json::from_str::<Value>(text).map_err(|_| ())?;
+    let object = value.as_object().ok_or(())?;
+    let authorized_access_classes = if let Some(value) = object.get("authorized_access_classes") {
+        parse_authorized_access_classes(value)?
+    } else {
+        vec![parse_access_class_field(
+            object.get("access_class").ok_or(())?,
+        )?]
+    };
+
+    if let Some(value) = object.get("access_class") {
+        let fallback_access_class = parse_access_class_field(value)?;
+        if !authorized_access_classes.contains(&fallback_access_class) {
+            return Err(());
+        }
+    }
+
+    let verification_basis = match object.get("verification_basis") {
+        Some(Value::String(value)) if !value.trim().is_empty() => value.clone(),
+        Some(_) => return Err(()),
+        None => "registered_local_access".to_owned(),
+    };
+
+    Ok(RegisteredLocalAccessGrant {
+        authorized_access_classes,
+        verification_basis,
+    })
+}
+
+fn parse_authorized_access_classes(value: &Value) -> Result<Vec<AccessClass>, ()> {
+    let values = value.as_array().ok_or(())?;
+    if values.is_empty() {
+        return Err(());
+    }
+
+    let mut access_classes = Vec::new();
+    for value in values {
+        let access_class = parse_access_class_field(value)?;
+        if !access_classes.contains(&access_class) {
+            access_classes.push(access_class);
+        }
+    }
+    if access_classes.is_empty() {
+        return Err(());
+    }
+    Ok(access_classes)
+}
+
+fn parse_access_class_field(value: &Value) -> Result<AccessClass, ()> {
+    let value = value.as_str().ok_or(())?;
+    if value.trim().is_empty() {
+        return Err(());
+    }
+    match value {
+        "read_status" => Ok(AccessClass::ReadStatus),
+        "core_mutation" => Ok(AccessClass::CoreMutation),
+        "write_authorization" => Ok(AccessClass::WriteAuthorization),
+        "run_recording" => Ok(AccessClass::RunRecording),
+        "artifact_registration" => Ok(AccessClass::ArtifactRegistration),
+        "artifact_read" => Ok(AccessClass::ArtifactRead),
+        _ => Err(()),
+    }
+}
+
+fn verified_surface_basis(registered_basis: &str, invocation_binding_basis: &str) -> String {
+    let invocation_binding_basis = invocation_binding_basis.trim();
+    if invocation_binding_basis.is_empty() {
+        registered_basis.to_owned()
+    } else {
+        format!("{registered_basis}; invocation_binding_basis={invocation_binding_basis}")
+    }
 }
 
 fn resolve_task(
@@ -1084,7 +1187,12 @@ mod tests {
                     surface_kind: "local_test".to_owned(),
                     display_name: Some("Pipeline Test Surface".to_owned()),
                     capability_profile_json: "{}".to_owned(),
-                    local_access_json: "{}".to_owned(),
+                    local_access_json: json!({
+                        "access_class": "core_mutation",
+                        "authorized_access_classes": ["read_status", "core_mutation"],
+                        "verification_basis": "pipeline_test_registration"
+                    })
+                    .to_string(),
                     metadata_json: "{}".to_owned(),
                 },
             )?;
@@ -1465,8 +1573,8 @@ mod tests {
     ) -> InvocationContext {
         InvocationContext {
             surface_instance_id: surface_instance_id.map(SurfaceInstanceId::new),
-            access_class,
-            verification_basis: "pipeline_test_invocation".to_owned(),
+            requested_access_class: access_class,
+            invocation_binding_basis: "pipeline_test_invocation".to_owned(),
         }
     }
 

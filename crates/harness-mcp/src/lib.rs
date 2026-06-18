@@ -74,17 +74,17 @@ pub struct McpToolDefinition {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct McpSessionContext {
     pub surface_instance_id: Option<SurfaceInstanceId>,
-    pub access_class: AccessClass,
-    pub verification_basis: String,
+    pub requested_access_class: AccessClass,
+    pub invocation_binding_basis: String,
 }
 
 impl McpSessionContext {
     /// Creates a local session context for the given request-level access class.
-    pub fn new(access_class: AccessClass) -> Self {
+    pub fn new(requested_access_class: AccessClass) -> Self {
         Self {
             surface_instance_id: None,
-            access_class,
-            verification_basis: DEFAULT_VERIFICATION_BASIS.to_owned(),
+            requested_access_class,
+            invocation_binding_basis: DEFAULT_VERIFICATION_BASIS.to_owned(),
         }
     }
 
@@ -96,7 +96,7 @@ impl McpSessionContext {
 
     /// Replaces the verification basis carried into Core for this local session.
     pub fn with_verification_basis(mut self, verification_basis: impl Into<String>) -> Self {
-        self.verification_basis = verification_basis.into();
+        self.invocation_binding_basis = verification_basis.into();
         self
     }
 
@@ -105,19 +105,19 @@ impl McpSessionContext {
     where
         F: Fn(&str) -> Option<OsString>,
     {
-        let access_class = match env_string(&env_var, "HARNESS_ACCESS_CLASS")? {
+        let requested_access_class = match env_string(&env_var, "HARNESS_ACCESS_CLASS")? {
             Some(value) => parse_access_class(&value)?,
             None => AccessClass::ReadStatus,
         };
         let surface_instance_id =
             env_string(&env_var, "HARNESS_SURFACE_INSTANCE_ID")?.map(SurfaceInstanceId::new);
-        let verification_basis = env_string(&env_var, "HARNESS_VERIFICATION_BASIS")?
+        let invocation_binding_basis = env_string(&env_var, "HARNESS_VERIFICATION_BASIS")?
             .unwrap_or_else(|| DEFAULT_VERIFICATION_BASIS.to_owned());
 
         Ok(Self {
             surface_instance_id,
-            access_class,
-            verification_basis,
+            requested_access_class,
+            invocation_binding_basis,
         })
     }
 }
@@ -128,16 +128,16 @@ pub struct McpDerivedInvocationContext {
     pub project_id: ProjectId,
     pub surface_id: SurfaceId,
     pub surface_instance_id: Option<SurfaceInstanceId>,
-    pub access_class: AccessClass,
-    pub verification_basis: String,
+    pub requested_access_class: AccessClass,
+    pub invocation_binding_basis: String,
 }
 
 impl McpDerivedInvocationContext {
     fn core_invocation(&self) -> InvocationContext {
         InvocationContext {
             surface_instance_id: self.surface_instance_id.clone(),
-            access_class: self.access_class,
-            verification_basis: self.verification_basis.clone(),
+            requested_access_class: self.requested_access_class,
+            invocation_binding_basis: self.invocation_binding_basis.clone(),
         }
     }
 }
@@ -172,8 +172,8 @@ impl McpAdapter {
             project_id: envelope.project_id.clone(),
             surface_id: envelope.surface_id.clone(),
             surface_instance_id: self.session.surface_instance_id.clone(),
-            access_class: self.session.access_class,
-            verification_basis: self.session.verification_basis.clone(),
+            requested_access_class: self.session.requested_access_class,
+            invocation_binding_basis: self.session.invocation_binding_basis.clone(),
         }
     }
 
@@ -601,6 +601,27 @@ mod tests {
 
     impl TestHarness {
         fn new(capability_profile: Value) -> Result<Self, Box<dyn Error>> {
+            Self::with_local_access(
+                capability_profile,
+                json!({
+                    "access_class": "core_mutation",
+                    "authorized_access_classes": [
+                        "read_status",
+                        "core_mutation",
+                        "write_authorization",
+                        "run_recording",
+                        "artifact_registration",
+                        "artifact_read"
+                    ],
+                    "verification_basis": "bootstrap_test_registration"
+                }),
+            )
+        }
+
+        fn with_local_access(
+            capability_profile: Value,
+            local_access: Value,
+        ) -> Result<Self, Box<dyn Error>> {
             let runtime_home = TempRuntimeHome::new("mcp")?;
             let repo_root = runtime_home.path().join("repo");
             fs::create_dir_all(&repo_root)?;
@@ -624,10 +645,7 @@ mod tests {
                     surface_kind: "mcp_test".to_owned(),
                     display_name: Some("MCP Test Surface".to_owned()),
                     capability_profile_json: capability_profile.to_string(),
-                    local_access_json: json!({
-                        "verification_basis": "bootstrap_test_registration"
-                    })
-                    .to_string(),
+                    local_access_json: local_access.to_string(),
                     metadata_json: "{}".to_owned(),
                 },
             )?;
@@ -716,7 +734,10 @@ mod tests {
         assert_eq!(verified.project_id.as_str(), PROJECT_ID);
         assert_eq!(verified.surface_id.as_str(), SURFACE_ID);
         assert_eq!(verified.surface_instance_id.as_str(), SURFACE_INSTANCE_ID);
-        assert_eq!(verified.verification_basis, "mcp_test_session");
+        assert_eq!(
+            verified.verification_basis,
+            "bootstrap_test_registration; invocation_binding_basis=mcp_test_session"
+        );
         Ok(())
     }
 
@@ -775,6 +796,40 @@ mod tests {
             response.response_value["errors"][0]["code"],
             "CAPABILITY_INSUFFICIENT"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn env_requested_access_class_cannot_elevate_registered_grant() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::with_local_access(
+            json!({
+                "access_class": "core_mutation",
+                "supported_access_classes": ["core_mutation"]
+            }),
+            json!({
+                "access_class": "read_status",
+                "authorized_access_classes": ["read_status"],
+                "verification_basis": "bootstrap_test_registration"
+            }),
+        )?;
+        let session = McpSessionContext::from_env(|name| match name {
+            "HARNESS_ACCESS_CLASS" => Some(OsString::from("core_mutation")),
+            "HARNESS_SURFACE_INSTANCE_ID" => Some(OsString::from(SURFACE_INSTANCE_ID)),
+            _ => None,
+        })?;
+        let adapter = McpAdapter::new(&harness.runtime_home_path, session);
+
+        let response = adapter.call_tool(
+            "harness.intake",
+            serde_json::to_value(intake_request("req_env_elevate", true, None))?,
+        )?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "LOCAL_ACCESS_MISMATCH"
+        );
+        assert!(response.verified_surface.is_none());
         Ok(())
     }
 
@@ -911,8 +966,8 @@ mod tests {
     fn invocation(access_class: AccessClass) -> InvocationContext {
         InvocationContext {
             surface_instance_id: Some(SurfaceInstanceId::new(SURFACE_INSTANCE_ID)),
-            access_class,
-            verification_basis: "mcp_test_session".to_owned(),
+            requested_access_class: access_class,
+            invocation_binding_basis: "mcp_test_session".to_owned(),
         }
     }
 

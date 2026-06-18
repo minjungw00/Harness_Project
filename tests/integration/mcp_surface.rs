@@ -8,8 +8,9 @@ use harness_core::{CoreService, InvocationContext};
 use harness_mcp::{
     public_method_tools, run_stdio, McpAdapter, McpSessionContext, PUBLIC_METHOD_TOOL_NAMES,
 };
+use harness_store::bootstrap::{register_surface, SurfaceRegistration};
 use harness_test_support::core_fixtures::CoreFixture;
-use harness_types::{AccessClass, SurfaceInstanceId};
+use harness_types::{AccessClass, SurfaceId, SurfaceInstanceId};
 use serde_json::{json, Value};
 
 #[test]
@@ -104,6 +105,188 @@ fn adapter_does_not_expand_access_class_for_method_calls() -> Result<(), Box<dyn
     Ok(())
 }
 
+#[test]
+fn registered_core_mutation_grant_rejects_requested_write_authorization(
+) -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("grant_reject")?;
+    fixture.set_surface_local_access(json!({
+        "access_class": "core_mutation",
+        "authorized_access_classes": ["core_mutation"],
+        "verification_basis": "integration_registration"
+    }))?;
+    let core = CoreService::new(fixture.runtime_home_path());
+
+    let response = core.prepare_write(
+        fixture.prepare_write_request("req_grant_reject", "idem_grant_reject", Some(0), None, None),
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(response.verified_surface.is_none());
+    Ok(())
+}
+
+#[test]
+fn capability_profile_cannot_override_registered_local_grant() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("capability_no_grant")?;
+    fixture.set_surface_local_access(json!({
+        "access_class": "core_mutation",
+        "authorized_access_classes": ["core_mutation"],
+        "verification_basis": "integration_registration"
+    }))?;
+    fixture.set_surface_capability(json!({
+        "access_class": "write_authorization",
+        "supported_access_classes": ["write_authorization"],
+        "write_authorization": true
+    }))?;
+    let core = CoreService::new(fixture.runtime_home_path());
+
+    let response = core.prepare_write(
+        fixture.prepare_write_request("req_cap_no_grant", "idem_cap_no_grant", Some(0), None, None),
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(response.verified_surface.is_none());
+    Ok(())
+}
+
+#[test]
+fn matching_registered_grant_and_requested_access_succeeds() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("grant_match")?;
+    fixture.set_surface_local_access(json!({
+        "access_class": "read_status",
+        "authorized_access_classes": ["read_status"],
+        "verification_basis": "integration_registration"
+    }))?;
+    let core = CoreService::new(fixture.runtime_home_path());
+
+    let response = core.status(
+        fixture.status_request("req_grant_match", None),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    let verified = response
+        .verified_surface
+        .as_ref()
+        .expect("matching grant should create verified surface context");
+    assert_eq!(verified.access_class, AccessClass::ReadStatus);
+    assert_eq!(
+        verified.verification_basis,
+        "integration_registration; invocation_binding_basis=integration_fixture"
+    );
+    Ok(())
+}
+
+#[test]
+fn unknown_surface_instance_is_rejected() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("unknown_instance")?;
+    let core = CoreService::new(fixture.runtime_home_path());
+
+    let response = core.status(
+        fixture.status_request("req_unknown_instance", None),
+        InvocationContext {
+            surface_instance_id: Some(SurfaceInstanceId::new("missing_surface_instance")),
+            requested_access_class: AccessClass::ReadStatus,
+            invocation_binding_basis: "integration_fixture".to_owned(),
+        },
+    )?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(response.verified_surface.is_none());
+    Ok(())
+}
+
+#[test]
+fn ambiguous_surface_id_without_usable_default_is_rejected() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("ambiguous_surface")?;
+    for surface_instance_id in [
+        "surface_instance_ambiguous_a",
+        "surface_instance_ambiguous_b",
+    ] {
+        register_surface(
+            fixture.runtime_home_path(),
+            SurfaceRegistration {
+                project_id: fixture.project_id().to_owned(),
+                surface_id: "surface_ambiguous".to_owned(),
+                surface_instance_id: surface_instance_id.to_owned(),
+                surface_kind: "local_test".to_owned(),
+                display_name: None,
+                capability_profile_json: json!({}).to_string(),
+                local_access_json: json!({
+                    "access_class": "read_status",
+                    "authorized_access_classes": ["read_status"],
+                    "verification_basis": "integration_registration"
+                })
+                .to_string(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+    }
+    let core = CoreService::new(fixture.runtime_home_path());
+    let mut request = fixture.status_request("req_ambiguous_surface", None);
+    request.envelope.surface_id = SurfaceId::new("surface_ambiguous");
+
+    let response = core.status(
+        request,
+        InvocationContext {
+            surface_instance_id: None,
+            requested_access_class: AccessClass::ReadStatus,
+            invocation_binding_basis: "integration_fixture".to_owned(),
+        },
+    )?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(response.verified_surface.is_none());
+    Ok(())
+}
+
+#[test]
+fn malformed_local_access_document_fails_closed() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("malformed_grant")?;
+    fixture.set_surface_local_access(json!({
+        "authorized_access_classes": [],
+        "verification_basis": "integration_registration"
+    }))?;
+    let core = CoreService::new(fixture.runtime_home_path());
+
+    let response = core.status(
+        fixture.status_request("req_malformed_grant", None),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(response.verified_surface.is_none());
+    Ok(())
+}
+
+#[test]
+fn legacy_single_access_class_grant_remains_readable() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("legacy_grant")?;
+    fixture.set_surface_local_access(json!({
+        "access_class": "read_status"
+    }))?;
+    let core = CoreService::new(fixture.runtime_home_path());
+
+    let response = core.status(
+        fixture.status_request("req_legacy_grant", None),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    let verified = response
+        .verified_surface
+        .as_ref()
+        .expect("legacy grant should create verified surface context");
+    assert_eq!(verified.access_class, AccessClass::ReadStatus);
+    assert_eq!(
+        verified.verification_basis,
+        "registered_local_access; invocation_binding_basis=integration_fixture"
+    );
+    Ok(())
+}
+
 fn adapter(fixture: &CoreFixture, access_class: AccessClass) -> McpAdapter {
     McpAdapter::new(
         fixture.runtime_home_path(),
@@ -116,7 +299,12 @@ fn adapter(fixture: &CoreFixture, access_class: AccessClass) -> McpAdapter {
 fn invocation(fixture: &CoreFixture, access_class: AccessClass) -> InvocationContext {
     InvocationContext {
         surface_instance_id: Some(SurfaceInstanceId::new(fixture.surface_instance_id())),
-        access_class,
-        verification_basis: "integration_fixture".to_owned(),
+        requested_access_class: access_class,
+        invocation_binding_basis: "integration_fixture".to_owned(),
     }
+}
+
+fn assert_rejected_code(response: &Value, code: &str) {
+    assert_eq!(response["base"]["response_kind"], "rejected");
+    assert_eq!(response["errors"][0]["code"], code);
 }

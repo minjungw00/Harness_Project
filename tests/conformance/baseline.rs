@@ -102,8 +102,8 @@ fn no_effect_branches_state_version_and_idempotency_are_stable() -> Result<(), B
             surface_instance_id: Some(harness_types::SurfaceInstanceId::new(
                 "missing_surface_instance",
             )),
-            access_class: AccessClass::ReadStatus,
-            verification_basis: "conformance_wrong_surface".to_owned(),
+            requested_access_class: AccessClass::ReadStatus,
+            invocation_binding_basis: "conformance_wrong_surface".to_owned(),
         },
     )?;
     assert_rejected_code(&surface_mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
@@ -767,8 +767,8 @@ fn invocation(fixture: &CoreFixture, access_class: AccessClass) -> InvocationCon
         surface_instance_id: Some(harness_types::SurfaceInstanceId::new(
             fixture.surface_instance_id(),
         )),
-        access_class,
-        verification_basis: "conformance_fixture".to_owned(),
+        requested_access_class: access_class,
+        invocation_binding_basis: "conformance_fixture".to_owned(),
     }
 }
 

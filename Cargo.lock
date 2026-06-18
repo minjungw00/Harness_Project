@@ -188,6 +188,7 @@ version = "0.1.0"
 dependencies = [
  "harness-core",
  "harness-mcp",
+ "harness-store",
  "harness-test-support",
  "harness-types",
  "serde_json",

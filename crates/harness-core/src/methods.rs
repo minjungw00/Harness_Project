@@ -40,9 +40,10 @@ use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 
 use crate::pipeline::{
-    dry_run_response, method_result_base, rejected_response, tool_error, CorePipelineError,
-    CoreResult, CoreService, InvocationContext, OwnerPipelineBranch, PipelineRequest,
-    PipelineResponse, TaskRequirement, VerifiedSurfaceContext,
+    dry_run_response, method_result_base, rejected_response, tool_error,
+    verified_surface_from_registered_surface, CorePipelineError, CoreResult, CoreService,
+    InvocationContext, OwnerPipelineBranch, PipelineRequest, PipelineResponse, TaskRequirement,
+    VerifiedSurfaceContext,
 };
 
 impl CoreService {
@@ -282,7 +283,7 @@ impl CoreService {
                 Err(PlanError::Core(error)) => return Err(error),
             };
 
-        let required_access_class = invocation.access_class;
+        let required_access_class = invocation.requested_access_class;
         if request.envelope.dry_run {
             return self.execute_pipeline(PipelineRequest {
                 method_name: MethodName::PrepareWrite,
@@ -1014,14 +1015,20 @@ fn verified_surface_context(
             ))
         })?;
 
-    Ok(VerifiedSurfaceContext {
-        project_id: ProjectId::new(surface.project_id),
-        surface_id: SurfaceId::new(surface.surface_id),
-        surface_instance_id: SurfaceInstanceId::new(surface.surface_instance_id),
-        access_class: invocation.access_class,
-        capability_profile,
-        verification_basis: invocation.verification_basis.clone(),
-    })
+    verified_surface_from_registered_surface(surface, invocation, capability_profile).map_err(
+        |_| {
+            Box::new(infallible_rejected_pipeline_response(
+                envelope.dry_run,
+                Some(project_state.state_version),
+                vec![tool_error(
+                    ErrorCode::LocalAccessMismatch,
+                    "local surface access grant does not authorize the requested invocation access",
+                    false,
+                    None,
+                )],
+            ))
+        },
+    )
 }
 
 const MAX_STAGED_BODY_BYTES: usize = 10 * 1024 * 1024;
@@ -6367,7 +6374,19 @@ mod tests {
                         "supported_access_classes": ["write_authorization"]
                     })
                     .to_string(),
-                    local_access_json: "{}".to_owned(),
+                    local_access_json: json!({
+                        "access_class": "core_mutation",
+                        "authorized_access_classes": [
+                            "read_status",
+                            "core_mutation",
+                            "write_authorization",
+                            "run_recording",
+                            "artifact_registration",
+                            "artifact_read"
+                        ],
+                        "verification_basis": "method_test_registration"
+                    })
+                    .to_string(),
                     metadata_json: "{}".to_owned(),
                 },
             )?;
@@ -8664,8 +8683,8 @@ mod tests {
     fn invocation(access_class: AccessClass) -> InvocationContext {
         InvocationContext {
             surface_instance_id: Some(SurfaceInstanceId::new(SURFACE_INSTANCE_ID)),
-            access_class,
-            verification_basis: "method_test_invocation".to_owned(),
+            requested_access_class: access_class,
+            invocation_binding_basis: "method_test_invocation".to_owned(),
         }
     }
 

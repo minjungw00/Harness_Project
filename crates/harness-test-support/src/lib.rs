@@ -159,6 +159,15 @@ pub mod core_fixtures {
                     display_name: Some("Shared Test Surface".to_owned()),
                     capability_profile_json: default_capability_profile().to_string(),
                     local_access_json: json!({
+                        "access_class": "core_mutation",
+                        "authorized_access_classes": [
+                            "read_status",
+                            "core_mutation",
+                            "write_authorization",
+                            "run_recording",
+                            "artifact_registration",
+                            "artifact_read"
+                        ],
                         "verification_basis": "shared_test_registration"
                     })
                     .to_string(),
@@ -228,6 +237,18 @@ pub mod core_fixtures {
                     self.surface_id,
                     capability_profile.to_string()
                 ],
+            )?;
+            Ok(())
+        }
+
+        /// Replaces the registered surface local access metadata.
+        pub fn set_surface_local_access(&self, local_access: Value) -> Result<(), StoreError> {
+            self.conn()?.execute(
+                "UPDATE surfaces
+                    SET local_access_json = ?3
+                  WHERE project_id = ?1
+                    AND surface_id = ?2",
+                rusqlite::params![self.project_id, self.surface_id, local_access.to_string()],
             )?;
             Ok(())
         }

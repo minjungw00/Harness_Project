@@ -391,17 +391,29 @@ fn capability_profile_json(
 fn local_access_json(access_class: &str) -> Result<String, CliError> {
     serde_json::to_string(&json!({
         "access_class": access_class,
+        "authorized_access_classes": [access_class],
         "verification_basis": "local_admin_registration"
     }))
     .map_err(|error| CliError::runtime(format!("failed to encode local access metadata: {error}")))
 }
 
 fn access_class_from_local_access(text: &str) -> Option<String> {
-    serde_json::from_str::<Value>(text)
-        .ok()?
-        .get("access_class")?
-        .as_str()
-        .map(str::to_owned)
+    let value = serde_json::from_str::<Value>(text).ok()?;
+    if let Some(access_class) = value.get("access_class").and_then(Value::as_str) {
+        return Some(access_class.to_owned());
+    }
+
+    let access_classes = value
+        .get("authorized_access_classes")?
+        .as_array()?
+        .iter()
+        .filter_map(Value::as_str)
+        .collect::<Vec<_>>();
+    if access_classes.is_empty() {
+        None
+    } else {
+        Some(access_classes.join(","))
+    }
 }
 
 fn validate_access_class(access_class: &str) -> Result<(), CliError> {
@@ -691,14 +703,14 @@ mod tests {
             "project_surface",
         ))
         .expect("state database should open");
-        let (default_surface_id, capability_profile): (String, String) = conn
+        let (default_surface_id, capability_profile, local_access): (String, String, String) = conn
             .query_row(
-                "SELECT default_surface_id, capability_profile_json
+                "SELECT default_surface_id, capability_profile_json, local_access_json
                    FROM project_state
                    JOIN surfaces USING (project_id)
                   WHERE project_id = 'project_surface'",
                 [],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
             )
             .expect("surface metadata should exist");
         assert_eq!(default_surface_id, "surface_cli");
@@ -706,6 +718,17 @@ mod tests {
             .expect("capability profile should be JSON");
         assert_eq!(capability["access_class"], "core_mutation");
         assert_eq!(capability["local_reachability"], true);
+        let local_access =
+            serde_json::from_str::<Value>(&local_access).expect("local access should be JSON");
+        assert_eq!(local_access["access_class"], "core_mutation");
+        assert_eq!(
+            local_access["authorized_access_classes"],
+            json!(["core_mutation"])
+        );
+        assert_eq!(
+            local_access["verification_basis"],
+            "local_admin_registration"
+        );
     }
 
     #[test]
