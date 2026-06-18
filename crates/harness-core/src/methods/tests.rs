@@ -492,6 +492,10 @@ fn status_renders_effective_authorization_expiration_without_mutating_row(
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(
+        response.response_value["write_authority_summary"]["status"],
+        "expired"
+    );
+    assert_eq!(
         response.response_value["active_task"]["write_authority_summary"]["status"],
         "expired"
     );
@@ -499,6 +503,316 @@ fn status_renders_effective_authorization_expiration_without_mutating_row(
         write_authorization_status(&harness, "wa_status_future")?,
         "active"
     );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_include_evidence_returns_current_coverage() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_evidence")?;
+    record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "status_evidence",
+        true,
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_evidence", None, false, None, Some(&task_id)),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: true,
+                close: false,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(
+        response.response_value["evidence_summary"]["status"],
+        "sufficient"
+    );
+    assert_eq!(
+        response.response_value["evidence_summary"]["coverage_items"][0]["claim"],
+        "Close claim supported."
+    );
+    assert_eq!(
+        response.response_value["active_task"]["evidence_summary"],
+        response.response_value["evidence_summary"]
+    );
+    assert!(response.response_value["current_close_basis"].is_null());
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_close_include_matches_close_task_check_blockers() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_close")?;
+    record_close_evidence(&harness, &task_id, &change_unit_id, 2, "status_close", true)?;
+    let before = harness.counts()?;
+
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_close", None, false, None, Some(&task_id)),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: true,
+                write_authority: false,
+                evidence: true,
+                close: true,
+                guarantees: true,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    let check = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_status_close_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(status.response_value["close_state"], "blocked");
+    assert!(status.response_value["current_close_basis"].is_object());
+    assert_eq!(
+        status.response_value["current_close_basis"],
+        check.response_value["current_close_basis"]
+    );
+    assert_eq!(
+        status.response_value["close_blockers"],
+        check.response_value["blockers"]
+    );
+    assert_close_blocker(&status.response_value, "missing_final_acceptance");
+    assert_eq!(
+        status.response_value["guarantee_display"]["level"],
+        "cooperative"
+    );
+    assert_ne!(
+        status.response_value["guarantee_display"]["level"],
+        "detective"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_include_false_omits_selected_sections_without_effect() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_flags")?;
+    record_close_evidence(&harness, &task_id, &change_unit_id, 2, "status_flags", true)?;
+    let before = harness.counts()?;
+
+    let none = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_flags_none", None, false, None, Some(&task_id)),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: false,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert!(none.response_value["active_task"].is_null());
+    assert!(none.response_value["write_authority_summary"].is_null());
+    assert!(none.response_value["evidence_summary"].is_null());
+    assert_eq!(none.response_value["close_state"], "none");
+    assert!(none.response_value["current_close_basis"].is_null());
+    assert_eq!(none.response_value["risk_acceptance_coverage"], json!([]));
+    assert_eq!(none.response_value["close_blockers"], json!([]));
+    assert!(none.response_value["guarantee_display"].is_null());
+
+    let evidence_only = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_flags_evidence",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: true,
+                close: false,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert!(evidence_only.response_value["active_task"].is_null());
+    assert_eq!(
+        evidence_only.response_value["evidence_summary"]["status"],
+        "sufficient"
+    );
+
+    let close_only = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_flags_close", None, false, None, Some(&task_id)),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: true,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert!(close_only.response_value["active_task"].is_null());
+    assert_close_blocker(&close_only.response_value, "missing_final_acceptance");
+
+    let guarantees_only = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_flags_guarantee",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: false,
+                guarantees: true,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert!(guarantees_only.response_value["active_task"].is_null());
+    assert_eq!(
+        guarantees_only.response_value["guarantee_display"]["level"],
+        "cooperative"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_close_reports_exact_missing_residual_risk_coverage() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_risk")?;
+    let (after_basis, risk_ids) = record_close_basis_with_risks(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "status_risk",
+        vec![
+            residual_risk_input("First status risk."),
+            residual_risk_input("Second status risk."),
+        ],
+    )?;
+    record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "status_risk",
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_risk", None, false, None, Some(&task_id)),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    let coverage = response.response_value["risk_acceptance_coverage"]
+        .as_array()
+        .expect("risk coverage should be an array");
+    let projected_ids = coverage
+        .iter()
+        .map(|item| item["risk_id"].as_str().expect("risk_id").to_owned())
+        .collect::<Vec<_>>();
+    assert_eq!(projected_ids, risk_ids);
+    assert!(coverage.iter().all(|item| item["accepted"] == false));
+    assert!(coverage
+        .iter()
+        .all(|item| item["missing_reason"] == "acceptance_required"));
+    assert_close_blocker(&response.response_value, "missing_residual_risk_acceptance");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_close_shows_stale_final_acceptance_blocker_context() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_stale_final")?;
+    let after_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "status_stale_final_old",
+        true,
+    )?;
+    let (after_final, final_judgment_id) = record_final_acceptance_with_id(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "status_stale_final",
+    )?;
+    record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_final,
+        "status_stale_final_new",
+        true,
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_stale_final", None, false, None, Some(&task_id)),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(user_judgment_status(&harness, &final_judgment_id)?, "stale");
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    let final_blocker = response.response_value["close_blockers"]
+        .as_array()
+        .expect("close blockers")
+        .iter()
+        .find(|blocker| blocker["code"] == "missing_final_acceptance")
+        .expect("final acceptance blocker");
+    assert!(final_blocker["related_refs"]
+        .as_array()
+        .expect("related refs")
+        .iter()
+        .any(|record_ref| record_ref["record_id"] == final_judgment_id));
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -5542,7 +5856,10 @@ fn assert_no_close_blocker(response_value: &Value, code: &str) {
 }
 
 fn close_blocker_codes(response_value: &Value) -> Vec<String> {
-    response_value["blockers"]
+    response_value
+        .get("blockers")
+        .or_else(|| response_value.get("close_blockers"))
+        .expect("blockers or close_blockers should be present")
         .as_array()
         .expect("blockers should be an array")
         .iter()

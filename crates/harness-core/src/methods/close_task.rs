@@ -254,7 +254,7 @@ fn close_task_dry_run_summary(intent: CloseIntent) -> DryRunSummary {
     dry_run_summary("task", action, description, Vec::new())
 }
 
-fn plan_close_task(
+pub(super) fn plan_close_task(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: CloseTaskRequest,
@@ -373,15 +373,20 @@ fn plan_close_task(
     state.close_state = Some(close_state);
     state.close_blockers = blockers.clone();
 
+    let result_state = state.clone();
+    let result_current_close_basis = context.current_close_basis.clone();
+    let result_risk_acceptance_coverage = risk_acceptance_coverage.clone();
+    let result_evidence_summary = context.evidence_summary.clone();
+    let result_artifact_refs = context.artifact_refs.clone();
     let result = CloseTaskResult {
         base: placeholder_base(),
         close_state,
-        current_close_basis: context.current_close_basis.clone(),
-        risk_acceptance_coverage,
-        state,
+        current_close_basis: result_current_close_basis.clone(),
+        risk_acceptance_coverage: result_risk_acceptance_coverage.clone(),
+        state: result_state.clone(),
         blockers: blockers.clone(),
-        evidence_summary: context.evidence_summary.clone(),
-        artifact_refs: context.artifact_refs.clone(),
+        evidence_summary: result_evidence_summary.clone(),
+        artifact_refs: result_artifact_refs.clone(),
     };
 
     Ok(CloseTaskPlan {
@@ -394,6 +399,9 @@ fn plan_close_task(
         event_kind,
         event_payload,
         result_fields: strip_base(serde_json::to_value(result)?)?,
+        close_state,
+        current_close_basis: result_current_close_basis,
+        risk_acceptance_coverage: result_risk_acceptance_coverage,
         blockers,
     })
 }
@@ -721,11 +729,20 @@ fn completion_close_blockers(
     if sensitive_approval_required(context)?
         && !has_current_sensitive_approval_for_close(store, project_state, request, context)?
     {
+        let related_refs = refs_with_context(
+            change_unit_ref.clone().into_iter().collect(),
+            non_current_judgment_refs_for_plan(
+                store,
+                project_state,
+                request,
+                JudgmentKind::SensitiveApproval,
+            )?,
+        );
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::SensitiveApproval,
             "missing_sensitive_approval",
             "A documented sensitive-action approval required for close is missing.",
-            change_unit_ref.clone().into_iter().collect(),
+            related_refs,
             vec![NextActionSummary {
                 action_kind: NextActionKind::RequestUserJudgment,
                 owner_method: Some(MethodName::RequestUserJudgment),
@@ -834,11 +851,20 @@ fn completion_close_blockers(
     }
 
     if !has_current_final_acceptance(store, project_state, request, context)? {
+        let related_refs = refs_with_context(
+            vec![task_ref.clone()],
+            non_current_judgment_refs_for_plan(
+                store,
+                project_state,
+                request,
+                JudgmentKind::FinalAcceptance,
+            )?,
+        );
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::FinalAcceptance,
             "missing_final_acceptance",
             "Final acceptance is required before completing the Task.",
-            vec![task_ref.clone()],
+            related_refs,
             vec![NextActionSummary {
                 action_kind: NextActionKind::RequestUserJudgment,
                 owner_method: Some(MethodName::RequestUserJudgment),
@@ -871,11 +897,20 @@ fn completion_close_blockers(
             .iter()
             .any(|coverage| !coverage.accepted)
     {
+        let related_refs = refs_with_context(
+            vec![task_ref.clone()],
+            non_current_judgment_refs_for_plan(
+                store,
+                project_state,
+                request,
+                JudgmentKind::ResidualRiskAcceptance,
+            )?,
+        );
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::ResidualRiskAcceptance,
             "missing_residual_risk_acceptance",
             "Visible residual risk requires distinct residual-risk acceptance.",
-            vec![task_ref.clone()],
+            related_refs,
             vec![NextActionSummary {
                 action_kind: NextActionKind::RequestUserJudgment,
                 owner_method: Some(MethodName::RequestUserJudgment),
@@ -889,7 +924,7 @@ fn completion_close_blockers(
     Ok(blockers)
 }
 
-fn close_evidence_summary(
+pub(super) fn close_evidence_summary(
     record: Option<&EvidenceSummaryRecord>,
     task: &TaskRecord,
     project_id: &ProjectId,
@@ -1272,6 +1307,33 @@ fn risk_acceptance_coverage(
         basis,
         &authorities,
     ))
+}
+
+fn non_current_judgment_refs_for_plan(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &CloseTaskRequest,
+    judgment_kind: JudgmentKind,
+) -> Result<Vec<StateRecordRef>, PlanError> {
+    let kind = storage_value(judgment_kind)?;
+    store
+        .non_current_user_judgment_refs(&request.task_id, &kind, project_state.state_version)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })
+        .map(stored_refs_to_state_refs)
+}
+
+fn refs_with_context(
+    mut refs: Vec<StateRecordRef>,
+    context_refs: Vec<StateRecordRef>,
+) -> Vec<StateRecordRef> {
+    refs.extend(context_refs);
+    refs
 }
 
 fn sensitive_approval_required(context: &CloseTaskContext) -> CoreResult<bool> {

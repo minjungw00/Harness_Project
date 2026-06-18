@@ -12,7 +12,8 @@ use crate::schema::{
     NextActionSummary, ObservedChanges, RecordUserJudgmentPayload, RequiredNullable,
     RiskAcceptanceCoverage, RunSummary, SensitiveActionScope, StagedArtifactHandle, StateRecordRef,
     StateSummary, ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
-    UserJudgmentContext, UserJudgmentOption, WriteAuthorizationSummary, WriteDecisionReason,
+    UserJudgmentContext, UserJudgmentOption, WriteAuthoritySummary, WriteAuthorizationSummary,
+    WriteDecisionReason,
 };
 use crate::values::{
     AccessClass, AuthorizationEffect, ChangeUnitOperation, CloseIntent, CloseReason, CloseState,
@@ -192,7 +193,11 @@ pub struct StatusResult {
     pub next_actions: Vec<NextActionSummary>,
     pub pending_user_judgments: Vec<StateRecordRef>,
     pub blocker_refs: Vec<StateRecordRef>,
+    pub write_authority_summary: Option<WriteAuthoritySummary>,
+    pub evidence_summary: Option<EvidenceSummary>,
     pub close_state: StatusCloseState,
+    pub current_close_basis: Option<CurrentCloseBasis>,
+    pub risk_acceptance_coverage: Vec<RiskAcceptanceCoverage>,
     pub close_blockers: Vec<CloseReadinessBlocker>,
     pub guarantee_display: Option<GuaranteeDisplay>,
 }

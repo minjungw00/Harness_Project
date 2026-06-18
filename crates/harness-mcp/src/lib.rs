@@ -866,8 +866,9 @@ mod tests {
     };
     use harness_test_support::TempRuntimeHome;
     use harness_types::{
-        ActorKind, InitialScope, RedactionState, RequestedMode, ResumePolicy, StatusInclude,
-        VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+        ActorKind, ChangeUnitOperation, InitialScope, RedactionState, RequestedMode, ResumePolicy,
+        StatusInclude, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
+        VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
     };
     use serde_json::json;
 
@@ -1106,8 +1107,10 @@ mod tests {
             "access_class": "read_status",
             "supported_access_classes": ["read_status"]
         }))?;
+        let task_id = create_task_with_change_unit(&harness, "status_equiv")?;
         let adapter = harness.adapter();
-        let request = status_request("req_status_equiv");
+        let mut request = status_request("req_status_equiv");
+        request.envelope.task_id = Some(harness_types::TaskId::new(&task_id)).into();
         let direct = harness
             .core()
             .status(request.clone(), invocation(AccessClass::ReadStatus))?;
@@ -1115,6 +1118,16 @@ mod tests {
 
         assert_eq!(adapted.response_value, direct.response_value);
         assert_eq!(adapted.response_json, direct.response_json);
+        assert_eq!(adapted.response_value["close_state"], "blocked");
+        assert!(adapted.response_value["close_blockers"]
+            .as_array()
+            .expect("close blockers")
+            .iter()
+            .any(|blocker| blocker["code"] == "missing_current_close_basis"));
+        assert_eq!(
+            adapted.response_value["guarantee_display"]["level"],
+            "cooperative"
+        );
         Ok(())
     }
 
@@ -1460,6 +1473,28 @@ mod tests {
             .to_owned())
     }
 
+    fn create_task_with_change_unit(
+        harness: &TestHarness,
+        suffix: &str,
+    ) -> Result<String, Box<dyn Error>> {
+        let task_id = create_task(
+            harness,
+            &format!("req_{suffix}_task"),
+            &format!("idem_{suffix}_task"),
+        )?;
+        let response = harness.core().update_scope(
+            update_scope_request(
+                &format!("req_{suffix}_scope"),
+                &format!("idem_{suffix}_scope"),
+                &task_id,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        assert_eq!(response.response_value["base"]["response_kind"], "result");
+        assert!(response.response_value["change_unit_ref"].is_object());
+        Ok(task_id)
+    }
+
     fn normalize_dry_run_required_ref_ids(mut value: Value) -> Value {
         let Some(next_actions) = value["dry_run_summary"]["next_actions"].as_array_mut() else {
             return value;
@@ -1510,6 +1545,42 @@ mod tests {
                 acceptance_criteria: vec!["Adapter calls return Core responses.".to_owned()],
             },
             initial_context_refs: Vec::new(),
+        }
+    }
+
+    fn update_scope_request(
+        request_id: &str,
+        idempotency_key: &str,
+        task_id: &str,
+    ) -> UpdateScopeRequest {
+        let fields = match json!({
+            "scope_summary": "MCP adapter status parity Change Unit.",
+            "affected_paths": ["src/mcp_adapter.rs"]
+        }) {
+            Value::Object(object) => object,
+            _ => unreachable!("literal object"),
+        };
+        UpdateScopeRequest {
+            envelope: envelope(
+                request_id,
+                Some(idempotency_key),
+                false,
+                Some(1),
+                Some(task_id),
+            ),
+            task_id: harness_types::TaskId::new(task_id),
+            goal_summary: None.into(),
+            scope_update: None.into(),
+            scope_boundary: Some("MCP adapter status parity scope.".to_owned()).into(),
+            non_goals: None.into(),
+            acceptance_criteria: None.into(),
+            autonomy_boundary: None.into(),
+            baseline_ref: Some(harness_types::BaselineRef::new("baseline_mcp")).into(),
+            change_unit: harness_types::ChangeUnitUpdate {
+                operation: ChangeUnitOperation::CreateCurrent,
+                fields,
+            },
+            related_scope_decision_refs: Vec::new(),
         }
     }
 

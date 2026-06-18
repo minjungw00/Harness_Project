@@ -696,6 +696,14 @@ impl CoreProjectStore {
         active_write_authorizations(&self.conn, &self.project.project_id, task_id.as_str())
     }
 
+    /// Lists Write Authorizations for a Task without mutating effective status.
+    pub fn write_authorizations_for_task(
+        &self,
+        task_id: &TaskId,
+    ) -> StoreResult<Vec<WriteAuthorizationRecord>> {
+        write_authorizations_for_task(&self.conn, &self.project.project_id, task_id.as_str())
+    }
+
     /// Reads one Write Authorization row by exact project-local identity.
     pub fn write_authorization_record(
         &self,
@@ -789,6 +797,22 @@ impl CoreProjectStore {
                 status_value: "pending",
                 state_version,
             },
+        )
+    }
+
+    /// Lists stale or superseded user-judgment refs for a Task and judgment kind.
+    pub fn non_current_user_judgment_refs(
+        &self,
+        task_id: &TaskId,
+        judgment_kind: &str,
+        state_version: u64,
+    ) -> StoreResult<Vec<StoredRecordRef>> {
+        non_current_user_judgment_refs(
+            &self.conn,
+            &self.project.project_id,
+            task_id.as_str(),
+            judgment_kind,
+            state_version,
         )
     }
 
@@ -2653,6 +2677,38 @@ fn active_write_authorizations(
     Ok(records)
 }
 
+fn write_authorizations_for_task(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+) -> StoreResult<Vec<WriteAuthorizationRecord>> {
+    let mut stmt = conn.prepare(
+        "SELECT
+            project_id,
+            write_authorization_id,
+            task_id,
+            change_unit_id,
+            basis_state_version,
+            status,
+            attempt_scope_json,
+            expires_at,
+            created_at
+         FROM write_authorizations
+         WHERE project_id = ?1
+           AND task_id = ?2
+         ORDER BY created_at DESC, write_authorization_id DESC",
+    )?;
+    let rows = stmt.query_map(
+        params![project_id, task_id],
+        write_authorization_record_from_row,
+    )?;
+    let mut records = Vec::new();
+    for row in rows {
+        records.push(row?);
+    }
+    Ok(records)
+}
+
 fn write_authorization_record(
     conn: &Connection,
     project_id: &str,
@@ -3083,6 +3139,38 @@ struct RefQuery<'a> {
     status_column: &'static str,
     status_value: &'static str,
     state_version: u64,
+}
+
+fn non_current_user_judgment_refs(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+    judgment_kind: &str,
+    state_version: u64,
+) -> StoreResult<Vec<StoredRecordRef>> {
+    let mut stmt = conn.prepare(
+        "SELECT judgment_id
+           FROM user_judgments
+          WHERE project_id = ?1
+            AND task_id = ?2
+            AND judgment_kind = ?3
+            AND status IN ('stale', 'superseded')
+          ORDER BY judgment_id",
+    )?;
+    let rows = stmt.query_map(params![project_id, task_id, judgment_kind], |row| {
+        Ok(StoredRecordRef {
+            record_kind: "user_judgment".to_owned(),
+            record_id: row.get(0)?,
+            project_id: project_id.to_owned(),
+            task_id: Some(task_id.to_owned()),
+            state_version: Some(state_version),
+        })
+    })?;
+    let mut refs = Vec::new();
+    for row in rows {
+        refs.push(row?);
+    }
+    Ok(refs)
 }
 
 fn task_scoped_refs(conn: &Connection, query: RefQuery<'_>) -> StoreResult<Vec<StoredRecordRef>> {

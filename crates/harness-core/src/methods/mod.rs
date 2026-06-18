@@ -23,19 +23,19 @@ use harness_types::{
     ChangeUnitOperation, CloseIntent, CloseReadinessBlocker, CloseReadinessBlockerCategory,
     CloseReason, CloseState, CloseTaskRequest, CloseTaskResult, CompletionPolicy,
     CurrentCloseBasis, DryRunSummary, DurableIdKind, EffectKind, ErrorCode, EvidenceCoverageItem,
-    EvidenceCoverageState, EvidenceStatus, EvidenceSummary, JsonObject, JudgmentBasis,
-    JudgmentBasisCompatibilityStatus, JudgmentKind, MethodAccessClass, MethodName, NextActionKind,
-    NextActionSummary, ObservedChanges, PlannedEffect, PrepareWriteRequest, PrepareWriteResult,
-    ProjectId, RecordId, RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload,
-    RecordUserJudgmentRequest, RedactionState, RequestedMode, RequiredNullable, ResidualRisk,
-    ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId, RunSummary, StageArtifactRequest,
-    StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind,
-    StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef, SurfaceId,
-    SurfaceInstanceId, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
-    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
-    UserJudgmentOption, UserJudgmentResolution, UserJudgmentStatus, WriteAuthoritySummary,
-    WriteAuthorizationId, WriteAuthorizationStatus, WriteAuthorizationSummary,
-    WriteDecisionCategory, WriteDecisionReason,
+    EvidenceCoverageState, EvidenceStatus, EvidenceSummary, GuaranteeDisplay, GuaranteeLevel,
+    JsonObject, JudgmentBasis, JudgmentBasisCompatibilityStatus, JudgmentKind, MethodAccessClass,
+    MethodName, NextActionKind, NextActionSummary, ObservedChanges, PlannedEffect,
+    PrepareWriteRequest, PrepareWriteResult, ProjectId, RecordId, RecordRunRequest,
+    RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
+    RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId,
+    RunId, RunSummary, StageArtifactRequest, StageArtifactResult, StagedArtifactHandle,
+    StagedArtifactHandleId, StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude,
+    StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId, TaskId, TaskLifecyclePhase,
+    TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
+    UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentResolution,
+    UserJudgmentStatus, WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
+    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
 };
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -105,6 +105,9 @@ struct CloseTaskPlan {
     event_kind: String,
     event_payload: JsonObject,
     result_fields: JsonObject,
+    close_state: CloseState,
+    current_close_basis: Option<CurrentCloseBasis>,
+    risk_acceptance_coverage: Vec<RiskAcceptanceCoverage>,
     blockers: Vec<CloseReadinessBlocker>,
 }
 
@@ -1191,36 +1194,11 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
     let write_authority_summary = if options.write_authority {
         active_write_authorization
             .map(|record| {
-                decode_required_json::<PersistedAuthorizedAttemptScope>(
-                    "write_authorizations",
-                    record.write_authorization_id.clone(),
-                    "attempt_scope_json",
-                    Some(&record.attempt_scope_json),
+                write_authority_summary_for_record(
+                    record,
+                    state_version,
+                    effective_authorization_now,
                 )
-                .and_then(|attempt_scope| {
-                    let is_effectively_expired =
-                        if let Some(now) = effective_authorization_now.as_ref() {
-                            write_authorization_is_expired(record, now.to_owned())
-                                .map_err(CorePipelineError::from)?
-                        } else {
-                            false
-                        };
-                    let status = if is_effectively_expired {
-                        WriteAuthorizationStatus::Expired
-                    } else {
-                        parse_storage_value("write_authorizations.status", &record.status)?
-                    };
-                    Ok(WriteAuthoritySummary {
-                        status,
-                        write_authorization_ref: Some(write_authorization_ref(
-                            record,
-                            state_version,
-                        )),
-                        basis_state_version: Some(record.basis_state_version),
-                        intended_paths: attempt_scope.intended_paths,
-                        guarantee_display: None,
-                    })
-                })
             })
             .transpose()?
     } else {
@@ -1262,6 +1240,58 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
         close_blockers: Vec::new(),
         guarantee_display: None,
     })
+}
+
+fn write_authority_summary_for_record(
+    record: &WriteAuthorizationRecord,
+    state_version: u64,
+    now: Option<DateTime<Utc>>,
+) -> CoreResult<WriteAuthoritySummary> {
+    let attempt_scope = decode_required_json::<PersistedAuthorizedAttemptScope>(
+        "write_authorizations",
+        record.write_authorization_id.clone(),
+        "attempt_scope_json",
+        Some(&record.attempt_scope_json),
+    )?;
+    Ok(WriteAuthoritySummary {
+        status: effective_write_authorization_status(record, state_version, now)?,
+        write_authorization_ref: Some(write_authorization_ref(record, state_version)),
+        basis_state_version: Some(record.basis_state_version),
+        intended_paths: attempt_scope.intended_paths,
+        guarantee_display: None,
+    })
+}
+
+fn effective_write_authorization_status(
+    record: &WriteAuthorizationRecord,
+    state_version: u64,
+    now: Option<DateTime<Utc>>,
+) -> CoreResult<WriteAuthorizationStatus> {
+    let stored_status = parse_storage_value("write_authorizations.status", &record.status)?;
+    if stored_status != WriteAuthorizationStatus::Active {
+        return Ok(stored_status);
+    }
+    if record.basis_state_version != state_version {
+        return Ok(WriteAuthorizationStatus::Stale);
+    }
+    if now
+        .map(|now| write_authorization_is_expired(record, now))
+        .transpose()
+        .map_err(CorePipelineError::from)?
+        .unwrap_or(false)
+    {
+        Ok(WriteAuthorizationStatus::Expired)
+    } else {
+        Ok(WriteAuthorizationStatus::Active)
+    }
+}
+
+fn status_guarantee_display() -> GuaranteeDisplay {
+    GuaranteeDisplay {
+        level: GuaranteeLevel::Cooperative,
+        basis: "No stronger local guarantee is currently applied.".to_owned(),
+        capability_refs: Vec::new(),
+    }
 }
 
 fn change_unit_insert(
