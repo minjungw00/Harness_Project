@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, fs, path::Path};
 
 use harness_core::{rejected_response, tool_error, CoreService, InvocationContext};
 use harness_test_support::core_fixtures::{
@@ -8,7 +8,7 @@ use harness_test_support::core_fixtures::{
 };
 use harness_types::{
     AccessClass, ChangeUnitOperation, CloseIntent, CloseReason, EffectKind, ErrorCode,
-    JudgmentKind, ResponseKind, StagedArtifactHandle, WriteAuthorizationId,
+    JudgmentKind, ResponseKind, StagedArtifactHandle, StatusRequest, WriteAuthorizationId,
 };
 use serde_json::{json, Value};
 
@@ -157,6 +157,69 @@ fn idempotency_replay_is_bound_to_verified_access_context() -> Result<(), Box<dy
     assert_rejected_code(&mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
     assert!(!mismatch.response_json.contains(&write_authorization_id));
     assert_eq!(fixture.counts()?, after_first);
+    Ok(())
+}
+
+#[test]
+fn direct_public_request_parsing_rejects_invocation_authority_fields() -> Result<(), Box<dyn Error>>
+{
+    let fixture = CoreFixture::new("strict_direct_parse")?;
+    let params = serde_json::to_value(fixture.status_request("req_strict_direct", None))?;
+
+    for (field_path, forged_value) in [
+        ("envelope.verified", json!(true)),
+        (
+            "envelope.surface_instance_id",
+            json!("surface_instance_forged"),
+        ),
+        ("verified_surface_context", json!({ "verified": true })),
+        ("access_class", json!("core_mutation")),
+        ("capability_profile", json!({ "write_authorization": true })),
+    ] {
+        let mut forged = params.clone();
+        if let Some(field) = field_path.strip_prefix("envelope.") {
+            forged["envelope"][field] = forged_value;
+        } else {
+            forged[field_path] = forged_value;
+        }
+
+        let decoded = serde_json::from_value::<StatusRequest>(forged);
+        assert!(
+            decoded.is_err(),
+            "{field_path} must not be accepted as public request authority"
+        );
+    }
+
+    assert_eq!(fixture.counts()?.state_version, 0);
+    Ok(())
+}
+
+#[test]
+fn structured_store_unavailability_does_not_expose_sql_or_local_paths() -> Result<(), Box<dyn Error>>
+{
+    let fixture = CoreFixture::new("store_unavailable")?;
+    fs::remove_file(
+        fixture
+            .runtime_home_path()
+            .join("projects")
+            .join(fixture.project_id())
+            .join("state.sqlite"),
+    )?;
+
+    let response = core(&fixture).status(
+        fixture.status_request("req_missing_state_db", None),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+
+    assert_rejected_code(&response.response_value, "MCP_UNAVAILABLE");
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["store_failure_category"],
+        "project_state_database_missing"
+    );
+    assert_public_response_has_no_internal_leak(
+        &response.response_json,
+        fixture.runtime_home_path(),
+    );
     Ok(())
 }
 
@@ -1091,4 +1154,22 @@ fn assert_close_blocker(response_value: &Value, code: &str) {
 fn assert_rejected_code(response_value: &Value, code: &str) {
     assert_eq!(response_value["base"]["response_kind"], "rejected");
     assert_eq!(response_value["errors"][0]["code"], code);
+}
+
+fn assert_public_response_has_no_internal_leak(body: &str, runtime_home_path: &Path) {
+    let runtime_home = runtime_home_path.to_string_lossy();
+    assert!(!body.contains(runtime_home.as_ref()));
+    for fragment in [
+        "SELECT ",
+        "INSERT INTO",
+        "UPDATE ",
+        "DELETE ",
+        "constraint failed",
+        "state.sqlite",
+    ] {
+        assert!(
+            !body.contains(fragment),
+            "public response leaked internal fragment {fragment}: {body}"
+        );
+    }
 }

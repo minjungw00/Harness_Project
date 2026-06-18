@@ -3026,6 +3026,117 @@ mod tests {
     }
 
     #[test]
+    fn transaction_replay_returns_stored_response_before_stale_expected_state(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let context = replay_context(SURFACE_INSTANCE_ID, "core_mutation");
+        let first_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_replay_stale")),
+            &RequestHash::new("sha256:replay"),
+            Some(context.clone()),
+            Some(0),
+            vec![pending_event("replay_stale_first")],
+        );
+        let first = store.commit_mutation(
+            first_input,
+            |mutation, facts| {
+                CoreStorageMutation::InsertTask(task_insert("task_replay_stale_first"))
+                    .apply(mutation, facts.committed_state_version)
+            },
+            response_json,
+        )?;
+        let MutationCommitOutcome::Committed {
+            response_json: stored_response,
+            ..
+        } = first
+        else {
+            panic!("first transaction should commit");
+        };
+        let before_replay = store.effect_counts()?;
+
+        let replay_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_replay_stale")),
+            &RequestHash::new("sha256:replay"),
+            Some(context),
+            Some(0),
+            vec![pending_event("replay_stale_second")],
+        );
+        let replay = store.commit_mutation(
+            replay_input,
+            |_, _| panic!("eligible replay must not apply a second mutation"),
+            |_| panic!("eligible replay must not build a fresh response"),
+        )?;
+
+        assert!(matches!(
+            replay,
+            MutationCommitOutcome::Replayed {
+                response_json,
+                ..
+            } if response_json == stored_response
+        ));
+        assert_eq!(store.effect_counts()?, before_replay);
+        Ok(())
+    }
+
+    #[test]
+    fn transaction_replay_hash_conflict_rejects_without_effect() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let context = replay_context(SURFACE_INSTANCE_ID, "core_mutation");
+        let first_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_hash_conflict")),
+            &RequestHash::new("sha256:first"),
+            Some(context.clone()),
+            Some(0),
+            vec![pending_event("hash_conflict_first")],
+        );
+        let first = store.commit_mutation(
+            first_input,
+            |mutation, facts| {
+                CoreStorageMutation::InsertTask(task_insert("task_hash_conflict_first"))
+                    .apply(mutation, facts.committed_state_version)
+            },
+            response_json,
+        )?;
+        assert!(matches!(first, MutationCommitOutcome::Committed { .. }));
+        let before_conflict = store.effect_counts()?;
+
+        let conflict_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_hash_conflict")),
+            &RequestHash::new("sha256:second"),
+            Some(context),
+            Some(1),
+            vec![pending_event("hash_conflict_second")],
+        );
+        let conflict = store.commit_mutation(
+            conflict_input,
+            |_, _| panic!("hash conflict must not apply a second mutation"),
+            |_| panic!("hash conflict must not build a fresh response"),
+        )?;
+
+        assert!(matches!(
+            conflict,
+            MutationCommitOutcome::IdempotencyConflict {
+                stored_request_hash,
+                attempted_request_hash,
+                ..
+            } if stored_request_hash == "sha256:first"
+                && attempted_request_hash == "sha256:second"
+        ));
+        assert_eq!(store.effect_counts()?, before_conflict);
+        Ok(())
+    }
+
+    #[test]
     fn foreign_key_constraint_failure_is_classified() -> Result<(), Box<dyn Error>> {
         let harness = StoreHarness::new()?;
         let mut store = harness.store()?;

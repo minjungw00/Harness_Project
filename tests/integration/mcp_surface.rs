@@ -1,6 +1,7 @@
 use std::{
     collections::BTreeSet,
     error::Error,
+    ffi::OsString,
     io::{BufReader, Cursor},
 };
 
@@ -49,6 +50,33 @@ fn stdio_tools_list_exposes_exactly_the_public_method_set() -> Result<(), Box<dy
 }
 
 #[test]
+fn mcp_tool_schemas_are_closed_top_level_objects() {
+    for tool in public_method_tools() {
+        assert_eq!(
+            tool.input_schema["type"], "object",
+            "{} schema should be a top-level object",
+            tool.name
+        );
+        assert_eq!(
+            tool.input_schema["additionalProperties"], false,
+            "{} schema should reject additional top-level properties",
+            tool.name
+        );
+        for forbidden in [
+            "verified_surface_context",
+            "access_class",
+            "capability_profile",
+        ] {
+            assert!(
+                tool.input_schema["properties"].get(forbidden).is_none(),
+                "{} schema should not expose request-level authority field {forbidden}",
+                tool.name
+            );
+        }
+    }
+}
+
+#[test]
 fn adapter_uses_session_surface_context_for_artifact_provenance() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_surface")?;
     let core = CoreService::new(fixture.runtime_home_path());
@@ -83,6 +111,34 @@ fn adapter_uses_session_surface_context_for_artifact_provenance() -> Result<(), 
     );
     assert_eq!(fixture.counts()?.state_version, 1);
     assert_eq!(fixture.counts()?.artifact_staging, 1);
+    Ok(())
+}
+
+#[test]
+fn mcp_environment_access_class_cannot_elevate_registered_grant() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_env_no_elevate")?;
+    fixture.set_surface_local_access(json!({
+        "access_class": "read_status",
+        "authorized_access_classes": ["read_status"],
+        "verification_basis": "integration_registration"
+    }))?;
+    let session = McpSessionContext::from_env(|name| match name {
+        "HARNESS_ACCESS_CLASS" => Some(OsString::from("core_mutation")),
+        "HARNESS_SURFACE_INSTANCE_ID" => Some(OsString::from(fixture.surface_instance_id())),
+        "HARNESS_VERIFICATION_BASIS" => Some(OsString::from("integration_env")),
+        _ => None,
+    })?;
+    let adapter = McpAdapter::new(fixture.runtime_home_path(), session);
+    let before = fixture.counts()?;
+
+    let response = adapter.call_tool(
+        "harness.status",
+        serde_json::to_value(fixture.status_request("req_env_no_elevate", None))?,
+    )?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(response.verified_surface.is_none());
+    assert_eq!(fixture.counts()?, before);
     Ok(())
 }
 

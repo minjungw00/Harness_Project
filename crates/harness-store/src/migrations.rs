@@ -705,4 +705,78 @@ mod tests {
         assert_eq!(response_json, "{\"legacy\":true}");
         Ok(())
     }
+
+    #[test]
+    fn fresh_project_state_database_has_complete_replay_context_schema(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-fresh-replay")?;
+        let path = project_state_db_path(runtime_home.path(), "project_fresh");
+        let conn = open_project_state_database(&path)?;
+
+        for column in [
+            "surface_id",
+            "surface_instance_id",
+            "access_class",
+            "verification_basis",
+            "replay_context_status",
+        ] {
+            assert!(
+                column_exists(&conn, "tool_invocations", column)?,
+                "tool_invocations.{column} should exist on fresh databases"
+            );
+        }
+        for trigger in [
+            "tool_invocations_verified_context_insert",
+            "tool_invocations_verified_context_update",
+        ] {
+            assert!(
+                sqlite_object_exists(&conn, "trigger", trigger)?,
+                "{trigger} should enforce verified replay context completeness"
+            );
+        }
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        Ok(())
+    }
+
+    fn column_exists(conn: &Connection, table: &str, column: &str) -> rusqlite::Result<bool> {
+        let escaped_table = table.replace('"', "\"\"");
+        let sql = format!("PRAGMA table_info(\"{escaped_table}\")");
+        let mut stmt = conn.prepare(&sql)?;
+        let mut rows = stmt.query([])?;
+        while let Some(row) = rows.next()? {
+            let name: String = row.get(1)?;
+            if name == column {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    fn sqlite_object_exists(
+        conn: &Connection,
+        object_type: &str,
+        name: &str,
+    ) -> rusqlite::Result<bool> {
+        conn.query_row(
+            "SELECT COUNT(*)
+               FROM sqlite_master
+              WHERE type = ?1
+                AND name = ?2",
+            params![object_type, name],
+            |row| Ok(row.get::<_, i64>(0)? == 1),
+        )
+    }
+
+    fn latest_migration_version(conn: &Connection, database_kind: &str) -> rusqlite::Result<i64> {
+        conn.query_row(
+            "SELECT COALESCE(MAX(version), 0)
+               FROM schema_migrations
+              WHERE database_kind = ?1",
+            [database_kind],
+            |row| row.get(0),
+        )
+    }
 }
