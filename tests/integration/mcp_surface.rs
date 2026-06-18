@@ -18,8 +18,9 @@ use harness_store::{
     core_pipeline::{CoreProjectStore, StorageEffectCounts},
 };
 use harness_test_support::core_fixtures::{
-    answer_payload, artifact_input_for_handle, CloseTaskFixture, CoreFixture,
-    RecordJudgmentFixture, UpdateScopeFixture, UserJudgmentFixture, DEFAULT_PRODUCT_PATH,
+    answer_payload, artifact_input_for_handle, supported_evidence_update, CloseTaskFixture,
+    CoreFixture, RecordJudgmentFixture, UpdateScopeFixture, UserJudgmentFixture,
+    DEFAULT_PRODUCT_PATH,
 };
 use harness_types::{
     AccessClass, ChangeUnitOperation, CloseAssessmentInput, CloseIntent, CloseReason, JudgmentKind,
@@ -452,9 +453,10 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         }))?,
     )?;
     assert_eq!(scope.response_value["base"]["response_kind"], "result");
-    let change_unit_id = fixture
-        .current_change_unit_id(&task_id)?
-        .expect("Change Unit should be current");
+    let change_unit_id = scope.response_value["change_unit_ref"]["record_id"]
+        .as_str()
+        .expect("update_scope response should carry current Change Unit")
+        .to_owned();
 
     let prepare = adapter.call_tool(
         "harness.prepare_write",
@@ -480,6 +482,15 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         AccessClass::WriteAuthorization
     );
 
+    let product_path = fixture.product_repo_path().join(DEFAULT_PRODUCT_PATH);
+    if let Some(parent) = product_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(
+        &product_path,
+        "fixture product write observed by record_run\n",
+    )?;
+
     let stage = adapter.call_tool(
         "harness.stage_artifact",
         serde_json::to_value(fixture.stage_artifact_request(
@@ -491,6 +502,14 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         ))?,
     )?;
     assert_eq!(stage.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        stage.response_value["staged_artifact_handle"]["created_by_surface_id"],
+        fixture.surface_id()
+    );
+    assert_eq!(
+        stage.response_value["staged_artifact_handle"]["created_by_surface_instance_id"],
+        fixture.surface_instance_id()
+    );
     let handle: StagedArtifactHandle =
         serde_json::from_value(stage.response_value["staged_artifact_handle"].clone())?;
 
@@ -508,6 +527,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         Some("workflow_trace"),
         Some("MCP workflow trace recorded."),
     )];
+    run_request.evidence_updates = vec![supported_evidence_update("MCP workflow trace recorded.")];
     run_request.observed_changes.product_file_write_observed = true;
     run_request.observed_changes.changed_paths = vec![DEFAULT_PRODUCT_PATH.to_owned()];
     run_request.write_authorization_id =
@@ -543,37 +563,35 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         AccessClass::RunRecording
     );
 
-    let judgment = adapter.call_tool(
-        "harness.request_user_judgment",
-        serde_json::to_value(fixture.user_judgment_request(UserJudgmentFixture {
-            request_id: "req_mcp_full_judgment",
-            idempotency_key: "idem_mcp_full_judgment",
-            dry_run: false,
-            expected_state_version: Some(4),
-            task_id: &task_id,
-            change_unit_id: Some(&change_unit_id),
-            judgment_kind: JudgmentKind::TechnicalDecision,
-        }))?,
+    let before_status = fixture.counts()?;
+    let status = adapter.call_tool(
+        "harness.status",
+        serde_json::to_value(
+            fixture.status_request("req_mcp_full_status_after_run", Some(&task_id)),
+        )?,
     )?;
-    assert_eq!(judgment.response_value["base"]["response_kind"], "result");
-    let judgment_id = judgment.response_value["user_judgment_ref"]["record_id"]
-        .as_str()
-        .expect("judgment id")
-        .to_owned();
-
-    let recorded = adapter.call_tool(
-        "harness.record_user_judgment",
-        serde_json::to_value(fixture.record_judgment_request(RecordJudgmentFixture {
-            request_id: "req_mcp_full_judgment_record",
-            idempotency_key: "idem_mcp_full_judgment_record",
-            expected_state_version: Some(5),
-            task_id: &task_id,
-            user_judgment_id: &judgment_id,
-            judgment_kind: JudgmentKind::TechnicalDecision,
-            answer: answer_payload(JudgmentKind::TechnicalDecision),
-        }))?,
-    )?;
-    assert_eq!(recorded.response_value["base"]["response_kind"], "result");
+    assert_eq!(status.response_value["base"]["effect_kind"], "read_only");
+    assert_eq!(
+        status.response_value["current_close_basis"],
+        run.response_value["current_close_basis"]
+    );
+    assert_eq!(
+        status.response_value["current_close_basis"]["residual_risks"][0]["risk_id"],
+        risk_id
+    );
+    assert_eq!(
+        status.response_value["evidence_summary"]["coverage_items"][0]["claim"],
+        "MCP workflow trace recorded."
+    );
+    assert_eq!(
+        status.response_value["guarantee_display"]["level"],
+        "cooperative"
+    );
+    assert_ne!(
+        status.response_value["guarantee_display"]["level"],
+        "detective"
+    );
+    assert_eq!(fixture.counts()?, before_status);
 
     let close_check = adapter.call_tool(
         "harness.close_task",
@@ -593,12 +611,62 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         "read_only"
     );
     assert_eq!(
+        status.response_value["close_blockers"],
+        close_check.response_value["blockers"]
+    );
+    assert_eq!(fixture.counts()?, before_status);
+    assert_eq!(
         close_check
             .verified_surface
             .as_ref()
             .expect("close check verified surface")
             .access_class,
         AccessClass::ReadStatus
+    );
+
+    let risk_judgment = adapter.call_tool(
+        "harness.request_user_judgment",
+        serde_json::to_value(fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_mcp_full_risk",
+            idempotency_key: "idem_mcp_full_risk",
+            dry_run: false,
+            expected_state_version: Some(4),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+        }))?,
+    )?;
+    assert_eq!(
+        risk_judgment.response_value["base"]["response_kind"],
+        "result"
+    );
+    let risk_judgment_id = risk_judgment.response_value["user_judgment_ref"]["record_id"]
+        .as_str()
+        .expect("risk judgment id")
+        .to_owned();
+    let risk_recorded = adapter.call_tool(
+        "harness.record_user_judgment",
+        serde_json::to_value(fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_mcp_full_risk_record",
+            idempotency_key: "idem_mcp_full_risk_record",
+            expected_state_version: Some(5),
+            task_id: &task_id,
+            user_judgment_id: &risk_judgment_id,
+            judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+            answer: {
+                let mut answer = answer_payload(JudgmentKind::ResidualRiskAcceptance);
+                answer.residual_risk_acceptance = Some(serde_json::from_value(json!({
+                    "risk_id": risk_id,
+                    "decision": "accepted"
+                }))?)
+                .into();
+                answer
+            },
+        }))?,
+    )?;
+    assert_eq!(
+        risk_recorded.response_value["base"]["response_kind"],
+        "result"
     );
 
     let final_judgment = adapter.call_tool(
@@ -638,50 +706,20 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         "result"
     );
 
-    let risk_judgment = adapter.call_tool(
-        "harness.request_user_judgment",
-        serde_json::to_value(fixture.user_judgment_request(UserJudgmentFixture {
-            request_id: "req_mcp_full_risk",
-            idempotency_key: "idem_mcp_full_risk",
+    let ready_check = adapter.call_tool(
+        "harness.close_task",
+        serde_json::to_value(fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_mcp_full_ready_check",
+            idempotency_key: None,
             dry_run: false,
-            expected_state_version: Some(8),
+            expected_state_version: None,
             task_id: &task_id,
-            change_unit_id: Some(&change_unit_id),
-            judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
         }))?,
     )?;
-    assert_eq!(
-        risk_judgment.response_value["base"]["response_kind"],
-        "result"
-    );
-    let risk_judgment_id = risk_judgment.response_value["user_judgment_ref"]["record_id"]
-        .as_str()
-        .expect("risk judgment id")
-        .to_owned();
-    let risk_recorded = adapter.call_tool(
-        "harness.record_user_judgment",
-        serde_json::to_value(fixture.record_judgment_request(RecordJudgmentFixture {
-            request_id: "req_mcp_full_risk_record",
-            idempotency_key: "idem_mcp_full_risk_record",
-            expected_state_version: Some(9),
-            task_id: &task_id,
-            user_judgment_id: &risk_judgment_id,
-            judgment_kind: JudgmentKind::ResidualRiskAcceptance,
-            answer: {
-                let mut answer = answer_payload(JudgmentKind::ResidualRiskAcceptance);
-                answer.residual_risk_acceptance = Some(serde_json::from_value(json!({
-                    "risk_id": risk_id,
-                    "decision": "accepted"
-                }))?)
-                .into();
-                answer
-            },
-        }))?,
-    )?;
-    assert_eq!(
-        risk_recorded.response_value["base"]["response_kind"],
-        "result"
-    );
+    assert_eq!(ready_check.response_value["close_state"], "ready");
 
     let complete = adapter.call_tool(
         "harness.close_task",
@@ -689,7 +727,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
             request_id: "req_mcp_full_close_complete",
             idempotency_key: Some("idem_mcp_full_close_complete"),
             dry_run: false,
-            expected_state_version: Some(10),
+            expected_state_version: Some(8),
             task_id: &task_id,
             intent: CloseIntent::Complete,
             close_reason: Some(CloseReason::CompletedWithRiskAccepted),

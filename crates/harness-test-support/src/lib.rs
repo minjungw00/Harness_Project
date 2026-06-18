@@ -190,6 +190,11 @@ pub mod core_fixtures {
             &self.runtime_home_path
         }
 
+        /// Returns the disposable Product Repository path for this fixture project.
+        pub fn product_repo_path(&self) -> PathBuf {
+            self.runtime_home_path.join("repo")
+        }
+
         /// Returns the registered project id.
         pub fn project_id(&self) -> &str {
             &self.project_id
@@ -590,6 +595,18 @@ pub mod core_fixtures {
             )?)
         }
 
+        /// Reads the current compatibility status for a user-owned judgment basis.
+        pub fn user_judgment_basis_status(&self, judgment_id: &str) -> Result<String, StoreError> {
+            Ok(self.conn()?.query_row(
+                "SELECT basis_status
+                   FROM user_judgments
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id],
+                |row| row.get(0),
+            )?)
+        }
+
         /// Reads the resolved answer JSON for a user-owned judgment row.
         pub fn user_judgment_resolution(&self, judgment_id: &str) -> Result<Value, Box<dyn Error>> {
             let text: String = self.conn()?.query_row(
@@ -642,6 +659,20 @@ pub mod core_fixtures {
                   WHERE project_id = ?1
                     AND handle_id = ?2",
                 rusqlite::params![self.project_id, handle_id],
+                |row| row.get(0),
+            )?)
+        }
+
+        /// Reads the latest evidence summary id for a Task.
+        pub fn latest_evidence_summary_id(&self, task_id: &str) -> Result<String, StoreError> {
+            Ok(self.conn()?.query_row(
+                "SELECT evidence_summary_id
+                   FROM evidence_summaries
+                  WHERE project_id = ?1
+                    AND task_id = ?2
+                  ORDER BY updated_at DESC, evidence_summary_id DESC
+                  LIMIT 1",
+                rusqlite::params![self.project_id, task_id],
                 |row| row.get(0),
             )?)
         }
@@ -798,6 +829,54 @@ pub mod core_fixtures {
             Ok(())
         }
 
+        /// Replaces a user-owned judgment request JSON value with raw text.
+        pub fn set_user_judgment_request_raw(
+            &self,
+            judgment_id: &str,
+            raw_json: &str,
+        ) -> Result<(), StoreError> {
+            self.conn()?.execute(
+                "UPDATE user_judgments
+                    SET request_json = ?3
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id, raw_json],
+            )?;
+            Ok(())
+        }
+
+        /// Replaces a user-owned judgment basis JSON value with raw text.
+        pub fn set_user_judgment_basis_raw(
+            &self,
+            judgment_id: &str,
+            raw_json: &str,
+        ) -> Result<(), StoreError> {
+            self.conn()?.execute(
+                "UPDATE user_judgments
+                    SET basis_json = ?3
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id, raw_json],
+            )?;
+            Ok(())
+        }
+
+        /// Converts an existing judgment to a legacy-unbound audit row.
+        pub fn set_user_judgment_legacy_unbound(
+            &self,
+            judgment_id: &str,
+        ) -> Result<(), StoreError> {
+            self.conn()?.execute(
+                "UPDATE user_judgments
+                    SET basis_json = NULL,
+                        basis_status = 'legacy_unbound'
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id],
+            )?;
+            Ok(())
+        }
+
         /// Replaces a Write Authorization attempt-scope JSON value with raw text.
         pub fn set_write_authorization_attempt_scope_raw(
             &self,
@@ -810,6 +889,80 @@ pub mod core_fixtures {
                   WHERE project_id = ?1
                     AND write_authorization_id = ?2",
                 rusqlite::params![self.project_id, write_authorization_id, raw_json],
+            )?;
+            Ok(())
+        }
+
+        /// Replaces artifact owner JSON with raw text for controlled corruption fixtures.
+        pub fn set_artifact_owner_json_raw(
+            &self,
+            artifact_id: &str,
+            logical_column: ArtifactOwnerJsonColumn,
+            raw_json: &str,
+        ) -> Result<(), StoreError> {
+            let column = logical_column.as_str();
+            let sql = format!(
+                "UPDATE artifacts
+                    SET {column} = ?3
+                  WHERE project_id = ?1
+                    AND artifact_id = ?2"
+            );
+            self.conn()?.execute(
+                &sql,
+                rusqlite::params![self.project_id, artifact_id, raw_json],
+            )?;
+            Ok(())
+        }
+
+        /// Replaces an artifact source staging handle for provenance corruption fixtures.
+        pub fn set_artifact_source_staging_handle_raw(
+            &self,
+            artifact_id: &str,
+            source_staging_handle_id: Option<&str>,
+        ) -> Result<(), StoreError> {
+            self.conn()?.execute(
+                "UPDATE artifacts
+                    SET source_staging_handle_id = ?3
+                  WHERE project_id = ?1
+                    AND artifact_id = ?2",
+                rusqlite::params![self.project_id, artifact_id, source_staging_handle_id],
+            )?;
+            Ok(())
+        }
+
+        /// Replaces evidence-summary owner JSON with raw text for corruption fixtures.
+        pub fn set_evidence_summary_owner_json_raw(
+            &self,
+            evidence_summary_id: &str,
+            logical_column: EvidenceSummaryOwnerJsonColumn,
+            raw_json: &str,
+        ) -> Result<(), StoreError> {
+            let column = logical_column.as_str();
+            let sql = format!(
+                "UPDATE evidence_summaries
+                    SET {column} = ?3
+                  WHERE project_id = ?1
+                    AND evidence_summary_id = ?2"
+            );
+            self.conn()?.execute(
+                &sql,
+                rusqlite::params![self.project_id, evidence_summary_id, raw_json],
+            )?;
+            Ok(())
+        }
+
+        /// Replaces a staged artifact expiration timestamp for timestamp fixtures.
+        pub fn set_staged_artifact_expires_at(
+            &self,
+            handle_id: &str,
+            expires_at: &str,
+        ) -> Result<(), StoreError> {
+            self.conn()?.execute(
+                "UPDATE artifact_staging
+                    SET expires_at = ?3
+                  WHERE project_id = ?1
+                    AND handle_id = ?2",
+                rusqlite::params![self.project_id, handle_id, expires_at],
             )?;
             Ok(())
         }
@@ -940,6 +1093,40 @@ pub mod core_fixtures {
                 Self::WriteBasis => "write_basis_json",
                 Self::CloseBasis => "close_basis_json",
                 Self::Lifecycle => "lifecycle_json",
+            }
+        }
+    }
+
+    /// Artifact owner JSON columns intentionally exposed for corruption fixtures.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum ArtifactOwnerJsonColumn {
+        Producer,
+        Metadata,
+    }
+
+    impl ArtifactOwnerJsonColumn {
+        fn as_str(self) -> &'static str {
+            match self {
+                Self::Producer => "producer_json",
+                Self::Metadata => "metadata_json",
+            }
+        }
+    }
+
+    /// Evidence-summary JSON columns intentionally exposed for corruption fixtures.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum EvidenceSummaryOwnerJsonColumn {
+        Coverage,
+        SupportingRefs,
+        Metadata,
+    }
+
+    impl EvidenceSummaryOwnerJsonColumn {
+        fn as_str(self) -> &'static str {
+            match self {
+                Self::Coverage => "coverage_json",
+                Self::SupportingRefs => "supporting_refs_json",
+                Self::Metadata => "metadata_json",
             }
         }
     }

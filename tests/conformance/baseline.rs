@@ -6,14 +6,15 @@ use harness_core::{
 };
 use harness_test_support::core_fixtures::{
     answer_payload, artifact_input_for_handle, supported_evidence_update,
-    unsupported_evidence_update, ChangeUnitOwnerJsonColumn, CloseTaskFixture, CoreFixture,
-    RecordJudgmentFixture, TaskOwnerJsonColumn, UpdateScopeFixture, UserJudgmentFixture,
-    DEFAULT_PRODUCT_PATH,
+    unsupported_evidence_update, ArtifactOwnerJsonColumn, ChangeUnitOwnerJsonColumn,
+    CloseTaskFixture, CoreFixture, EvidenceSummaryOwnerJsonColumn, RecordJudgmentFixture,
+    TaskOwnerJsonColumn, UpdateScopeFixture, UserJudgmentFixture, DEFAULT_PRODUCT_PATH,
 };
 use harness_types::{
-    AccessClass, ChangeUnitOperation, CloseAssessmentInput, CloseIntent, CloseReason, EffectKind,
-    ErrorCode, JudgmentKind, ResidualRiskInput, ResponseKind, StagedArtifactHandle, StatusRequest,
-    WriteAuthorizationId, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    AccessClass, ArtifactInput, ArtifactInputId, ArtifactInputSourceKind, ArtifactRef,
+    ChangeUnitOperation, CloseAssessmentInput, CloseIntent, CloseReason, EffectKind, ErrorCode,
+    JudgmentKind, ResidualRiskInput, ResponseKind, StagedArtifactHandle, StatusRequest,
+    UtcTimestamp, WriteAuthorizationId, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 use serde_json::{json, Value};
 
@@ -1449,6 +1450,1014 @@ fn prepare_write_allocates_authorization_only_on_committed_allowed_effect(
     Ok(())
 }
 
+#[test]
+fn current_close_basis_lifecycle_is_publicly_observable() -> Result<(), Box<dyn Error>> {
+    let risk_fixture = CoreFixture::new("basis_public_risk")?;
+    let risk_service = core(&risk_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&risk_fixture, &risk_service, "basis_public_risk")?;
+    let mut risk_run = risk_fixture.record_run_request(
+        "req_basis_public_risk",
+        "idem_basis_public_risk",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    risk_run.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    risk_run.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "Close basis with generated risk identity.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: vec![ResidualRiskInput {
+            summary: "Generated risk identity must not be caller text.".to_owned(),
+            consequence: "The exact risk id must be accepted.".to_owned(),
+            acceptance_required: true,
+            source_refs: Vec::new(),
+        }],
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let risk_response = risk_service.record_run(
+        risk_run,
+        invocation(&risk_fixture, AccessClass::RunRecording),
+    )?;
+    let risk_id = risk_response.response_value["current_close_basis"]["residual_risks"][0]
+        ["risk_id"]
+        .as_str()
+        .expect("risk id should be generated")
+        .to_owned();
+    assert_ne!(risk_id, "Generated risk identity must not be caller text.");
+
+    let before_status = risk_fixture.counts()?;
+    let status = risk_service.status(
+        risk_fixture.status_request("req_basis_public_status", Some(&task_id)),
+        invocation(&risk_fixture, AccessClass::ReadStatus),
+    )?;
+    assert_eq!(
+        status.response_value["current_close_basis"]["residual_risks"][0]["risk_id"],
+        risk_id
+    );
+    assert_eq!(risk_fixture.counts()?, before_status);
+
+    let empty_fixture = CoreFixture::new("basis_public_empty")?;
+    let empty_service = core(&empty_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&empty_fixture, &empty_service, "basis_public_empty")?;
+    let mut empty_run = empty_fixture.record_run_request(
+        "req_basis_public_empty",
+        "idem_basis_public_empty",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    empty_run.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    empty_run.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "Close basis with no identified residual risks.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    empty_service.record_run(
+        empty_run,
+        invocation(&empty_fixture, AccessClass::RunRecording),
+    )?;
+    let status = empty_service.status(
+        empty_fixture.status_request("req_basis_public_empty_status", Some(&task_id)),
+        invocation(&empty_fixture, AccessClass::ReadStatus),
+    )?;
+    assert!(status.response_value["current_close_basis"].is_object());
+    assert_eq!(
+        status.response_value["current_close_basis"]["residual_risks"],
+        json!([])
+    );
+
+    let clear = empty_fixture.record_run_request(
+        "req_basis_public_clear",
+        "idem_basis_public_clear",
+        false,
+        Some(3),
+        &task_id,
+        &change_unit_id,
+    );
+    let clear_response =
+        empty_service.record_run(clear, invocation(&empty_fixture, AccessClass::RunRecording))?;
+    assert!(clear_response.response_value["current_close_basis"].is_null());
+    let status = empty_service.status(
+        empty_fixture.status_request("req_basis_public_cleared_status", Some(&task_id)),
+        invocation(&empty_fixture, AccessClass::ReadStatus),
+    )?;
+    assert!(status.response_value["current_close_basis"].is_null());
+    let before_final = empty_fixture.counts()?;
+    let final_without_basis = empty_service.request_user_judgment(
+        empty_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_basis_public_final_without_basis",
+            idempotency_key: "idem_basis_public_final_without_basis",
+            dry_run: false,
+            expected_state_version: Some(4),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::FinalAcceptance,
+        }),
+        invocation(&empty_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_rejected_code(&final_without_basis.response_value, "DECISION_UNRESOLVED");
+    assert_eq!(empty_fixture.counts()?, before_final);
+
+    let scope_fixture = CoreFixture::new("basis_public_scope")?;
+    let scope_service = core(&scope_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&scope_fixture, &scope_service, "basis_public_scope")?;
+    record_close_evidence(
+        &scope_fixture,
+        &scope_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    let scope_change = scope_service.update_scope(
+        scope_fixture.update_scope_request(UpdateScopeFixture {
+            request_id: "req_basis_public_scope_change",
+            idempotency_key: "idem_basis_public_scope_change",
+            dry_run: false,
+            expected_state_version: Some(3),
+            task_id: &task_id,
+            operation: ChangeUnitOperation::KeepCurrent,
+            scope_summary: "Material scope change invalidates close basis.",
+        }),
+        invocation(&scope_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(
+        scope_change.response_value["base"]["response_kind"],
+        "result"
+    );
+    let status = scope_service.status(
+        scope_fixture.status_request("req_basis_public_scope_status", Some(&task_id)),
+        invocation(&scope_fixture, AccessClass::ReadStatus),
+    )?;
+    assert!(status.response_value["current_close_basis"].is_null());
+    Ok(())
+}
+
+#[test]
+fn judgment_compatibility_is_exact_for_close_and_write_requirements() -> Result<(), Box<dyn Error>>
+{
+    let scope_fixture = CoreFixture::new("compat_scope_final")?;
+    let scope_service = core(&scope_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&scope_fixture, &scope_service, "compat_scope_final")?;
+    let after_basis = record_close_evidence(
+        &scope_fixture,
+        &scope_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    let (after_final, final_id) = record_final_acceptance_with_id(
+        &scope_fixture,
+        &scope_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "compat_scope_final",
+    )?;
+    scope_service.update_scope(
+        scope_fixture.update_scope_request(UpdateScopeFixture {
+            request_id: "req_compat_scope_final_change",
+            idempotency_key: "idem_compat_scope_final_change",
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            operation: ChangeUnitOperation::KeepCurrent,
+            scope_summary: "Scope change makes final acceptance stale.",
+        }),
+        invocation(&scope_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(scope_fixture.user_judgment_status(&final_id)?, "stale");
+    assert_eq!(
+        scope_fixture.user_judgment_basis_status(&final_id)?,
+        "stale"
+    );
+
+    let run_fixture = CoreFixture::new("compat_run_final")?;
+    let run_service = core(&run_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&run_fixture, &run_service, "compat_run_final")?;
+    let after_basis = record_close_evidence(
+        &run_fixture,
+        &run_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    let (after_final, final_id) = record_final_acceptance_with_id(
+        &run_fixture,
+        &run_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "compat_run_final",
+    )?;
+    record_close_evidence(
+        &run_fixture,
+        &run_service,
+        &task_id,
+        &change_unit_id,
+        after_final,
+        true,
+    )?;
+    assert_eq!(run_fixture.user_judgment_status(&final_id)?, "stale");
+
+    let partial_fixture = CoreFixture::new("compat_risk_partial")?;
+    let partial_service = core(&partial_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&partial_fixture, &partial_service, "compat_risk_partial")?;
+    let (after_basis, risk_ids) = record_close_basis_with_risks(
+        &partial_fixture,
+        &partial_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "compat_risk_partial",
+        vec![
+            residual_risk_input("Risk A needs exact acceptance."),
+            residual_risk_input("Risk B needs exact acceptance."),
+        ],
+    )?;
+    let risk_judgment = partial_service.request_user_judgment(
+        partial_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_compat_risk_partial",
+            idempotency_key: "idem_compat_risk_partial",
+            dry_run: false,
+            expected_state_version: Some(after_basis),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+        }),
+        invocation(&partial_fixture, AccessClass::CoreMutation),
+    )?;
+    let risk_judgment_id = response_record_id(&risk_judgment.response_value, "user_judgment_ref");
+    let partial = partial_service.record_user_judgment(
+        partial_fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_compat_risk_partial_record",
+            idempotency_key: "idem_compat_risk_partial_record",
+            expected_state_version: Some(after_basis + 1),
+            task_id: &task_id,
+            user_judgment_id: &risk_judgment_id,
+            judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+            answer: residual_risk_acceptance_payload(&[risk_ids[0].clone()]),
+        }),
+        invocation(&partial_fixture, AccessClass::CoreMutation),
+    )?;
+    let after_partial = partial.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version");
+    let after_final = record_final_acceptance(
+        &partial_fixture,
+        &partial_service,
+        &task_id,
+        &change_unit_id,
+        after_partial,
+        "compat_risk_partial",
+    )?;
+    let close = partial_service.close_task(
+        partial_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_compat_risk_partial_close",
+            idempotency_key: Some("idem_compat_risk_partial_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedWithRiskAccepted),
+            superseding_task_id: None,
+        }),
+        invocation(&partial_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_close_blocker(&close.response_value, "missing_residual_risk_acceptance");
+
+    let text_fixture = CoreFixture::new("compat_risk_text")?;
+    let text_service = core(&text_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&text_fixture, &text_service, "compat_risk_text")?;
+    let (after_old, old_ids) = record_close_basis_with_risks(
+        &text_fixture,
+        &text_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "compat_risk_text_old",
+        vec![residual_risk_input("Same visible risk text.")],
+    )?;
+    let (after_current, current_ids) = record_close_basis_with_risks(
+        &text_fixture,
+        &text_service,
+        &task_id,
+        &change_unit_id,
+        after_old,
+        "compat_risk_text_current",
+        vec![residual_risk_input("Same visible risk text.")],
+    )?;
+    assert_ne!(old_ids[0], current_ids[0]);
+    let risk_judgment = text_service.request_user_judgment(
+        text_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_compat_risk_text",
+            idempotency_key: "idem_compat_risk_text",
+            dry_run: false,
+            expected_state_version: Some(after_current),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+        }),
+        invocation(&text_fixture, AccessClass::CoreMutation),
+    )?;
+    let risk_judgment_id = response_record_id(&risk_judgment.response_value, "user_judgment_ref");
+    let before_wrong = text_fixture.counts()?;
+    let wrong_risk = text_service.record_user_judgment(
+        text_fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_compat_risk_text_record",
+            idempotency_key: "idem_compat_risk_text_record",
+            expected_state_version: Some(after_current + 1),
+            task_id: &task_id,
+            user_judgment_id: &risk_judgment_id,
+            judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+            answer: residual_risk_acceptance_payload(&old_ids),
+        }),
+        invocation(&text_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_rejected_code(&wrong_risk.response_value, "VALIDATION_FAILED");
+    assert_eq!(text_fixture.counts()?, before_wrong);
+    assert_eq!(
+        text_fixture.user_judgment_status(&risk_judgment_id)?,
+        "pending"
+    );
+
+    assert_sensitive_approval_mismatch("path", |request| {
+        request.intended_paths = vec!["tests/export.rs".to_owned()];
+    })?;
+    assert_sensitive_approval_mismatch("category", |request| {
+        request.sensitive_categories = vec!["credential".to_owned()];
+    })?;
+    assert_sensitive_approval_change_unit_mismatch()?;
+
+    let pending_fixture = CoreFixture::new("compat_pending_superseded")?;
+    let pending_service = core(&pending_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &pending_fixture,
+        &pending_service,
+        "compat_pending_superseded",
+    )?;
+    let pending = pending_service.request_user_judgment(
+        pending_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_compat_pending",
+            idempotency_key: "idem_compat_pending",
+            dry_run: false,
+            expected_state_version: Some(2),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::ProductDecision,
+        }),
+        invocation(&pending_fixture, AccessClass::CoreMutation),
+    )?;
+    let pending_id = response_record_id(&pending.response_value, "user_judgment_ref");
+    pending_service.update_scope(
+        pending_fixture.update_scope_request(UpdateScopeFixture {
+            request_id: "req_compat_pending_scope",
+            idempotency_key: "idem_compat_pending_scope",
+            dry_run: false,
+            expected_state_version: Some(3),
+            task_id: &task_id,
+            operation: ChangeUnitOperation::KeepCurrent,
+            scope_summary: "Scope change supersedes pending judgment.",
+        }),
+        invocation(&pending_fixture, AccessClass::CoreMutation),
+    )?;
+    let before_answer = pending_fixture.counts()?;
+    let stale_answer = pending_service.record_user_judgment(
+        pending_fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_compat_pending_answer",
+            idempotency_key: "idem_compat_pending_answer",
+            expected_state_version: Some(4),
+            task_id: &task_id,
+            user_judgment_id: &pending_id,
+            judgment_kind: JudgmentKind::ProductDecision,
+            answer: answer_payload(JudgmentKind::ProductDecision),
+        }),
+        invocation(&pending_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_rejected_code(&stale_answer.response_value, "DECISION_UNRESOLVED");
+    assert_eq!(pending_fixture.counts()?, before_answer);
+
+    Ok(())
+}
+
+#[test]
+fn legacy_unbound_judgments_do_not_satisfy_current_close_or_write_requirements(
+) -> Result<(), Box<dyn Error>> {
+    let legacy_fixture = CoreFixture::new("compat_legacy_unbound")?;
+    let legacy_service = core(&legacy_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&legacy_fixture, &legacy_service, "compat_legacy_unbound")?;
+    let after_basis = record_close_evidence(
+        &legacy_fixture,
+        &legacy_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    let (after_final, final_id) = record_final_acceptance_with_id(
+        &legacy_fixture,
+        &legacy_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "compat_legacy",
+    )?;
+    legacy_fixture.set_user_judgment_legacy_unbound(&final_id)?;
+    let close = legacy_service.close_task(
+        legacy_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_compat_legacy_close",
+            idempotency_key: Some("idem_compat_legacy_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(&legacy_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_close_blocker(&close.response_value, "missing_final_acceptance");
+
+    let sensitive = legacy_service.request_user_judgment(
+        legacy_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_compat_legacy_sensitive",
+            idempotency_key: "idem_compat_legacy_sensitive",
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::SensitiveApproval,
+        }),
+        invocation(&legacy_fixture, AccessClass::CoreMutation),
+    )?;
+    let sensitive_id = response_record_id(&sensitive.response_value, "user_judgment_ref");
+    let sensitive_recorded = legacy_service.record_user_judgment(
+        legacy_fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_compat_legacy_sensitive_record",
+            idempotency_key: "idem_compat_legacy_sensitive_record",
+            expected_state_version: Some(after_final + 1),
+            task_id: &task_id,
+            user_judgment_id: &sensitive_id,
+            judgment_kind: JudgmentKind::SensitiveApproval,
+            answer: answer_payload(JudgmentKind::SensitiveApproval),
+        }),
+        invocation(&legacy_fixture, AccessClass::CoreMutation),
+    )?;
+    let after_sensitive = sensitive_recorded.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version");
+    legacy_fixture.set_user_judgment_legacy_unbound(&sensitive_id)?;
+    let mut prepare = legacy_fixture.prepare_write_request(
+        "req_compat_legacy_prepare",
+        "idem_compat_legacy_prepare",
+        Some(after_sensitive),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    prepare.sensitive_categories = vec!["network".to_owned()];
+    let write = legacy_service.prepare_write(
+        prepare,
+        invocation(&legacy_fixture, AccessClass::WriteAuthorization),
+    )?;
+    assert_eq!(write.response_value["decision"], "approval_required");
+    assert_prepare_reason(&write.response_value, "sensitive_approval_missing");
+    Ok(())
+}
+
+#[test]
+fn status_projection_matches_public_close_check_and_stays_read_only() -> Result<(), Box<dyn Error>>
+{
+    let fixture = CoreFixture::new("status_projection")?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "status_projection")?;
+    record_close_evidence(&fixture, &service, &task_id, &change_unit_id, 2, true)?;
+    let before = fixture.counts()?;
+
+    let status = service.status(
+        fixture.status_request("req_status_projection", Some(&task_id)),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+    let check = service.close_task(
+        fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_status_projection_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(status.response_value["base"]["effect_kind"], "read_only");
+    assert_eq!(
+        status.response_value["evidence_summary"]["coverage_items"][0]["coverage_state"],
+        "supported"
+    );
+    assert!(status.response_value["current_close_basis"].is_object());
+    assert_eq!(
+        status.response_value["close_blockers"],
+        check.response_value["blockers"]
+    );
+    assert_eq!(
+        status.response_value["guarantee_display"]["level"],
+        "cooperative"
+    );
+    assert_ne!(
+        status.response_value["guarantee_display"]["level"],
+        "detective"
+    );
+    assert_eq!(fixture.counts()?, before);
+
+    let t0 = fixed_time("2026-06-18T00:00:00Z")?;
+    let expired = prepared_write_fixture("status_expired_projection", t0)?;
+    let before_status = expired.fixture.counts()?;
+    let expired_status = service_at(&expired.fixture, t0 + Duration::minutes(15)).status(
+        expired
+            .fixture
+            .status_request("req_status_expired_projection", Some(&expired.task_id)),
+        invocation(&expired.fixture, AccessClass::ReadStatus),
+    )?;
+    assert_eq!(
+        expired_status.response_value["write_authority_summary"]["status"],
+        "expired"
+    );
+    assert_eq!(
+        expired
+            .fixture
+            .write_authorization_status(&expired.write_authorization_id)?,
+        "active"
+    );
+    assert_eq!(expired.fixture.counts()?, before_status);
+    Ok(())
+}
+
+#[test]
+fn persisted_state_corruption_public_entries_fail_closed_without_effects(
+) -> Result<(), Box<dyn Error>> {
+    let request_fixture = CoreFixture::new("corrupt_public_request")?;
+    let request_service = core(&request_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&request_fixture, &request_service, "corrupt_public_request")?;
+    let judgment = request_service.request_user_judgment(
+        request_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_corrupt_public_request",
+            idempotency_key: "idem_corrupt_public_request",
+            dry_run: false,
+            expected_state_version: Some(2),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::ProductDecision,
+        }),
+        invocation(&request_fixture, AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    request_fixture.set_user_judgment_request_raw(
+        &judgment_id,
+        r#"{"presentation":17,"question":"must not leak secret-request-path","required_for":"close","expires_at":null}"#,
+    )?;
+    let before = request_fixture.counts()?;
+    let response = request_service.record_user_judgment(
+        request_fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_corrupt_public_request_record",
+            idempotency_key: "idem_corrupt_public_request_record",
+            expected_state_version: Some(3),
+            task_id: &task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::ProductDecision,
+            answer: answer_payload(JudgmentKind::ProductDecision),
+        }),
+        invocation(&request_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_owner_state_unavailable(&response.response_value, "user_judgments", "request_json");
+    assert_eq!(request_fixture.counts()?, before);
+
+    let resolution_fixture = CoreFixture::new("corrupt_public_resolution")?;
+    let resolution_service = core(&resolution_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &resolution_fixture,
+        &resolution_service,
+        "corrupt_public_resolution",
+    )?;
+    let after_basis = record_close_evidence(
+        &resolution_fixture,
+        &resolution_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    record_final_acceptance(
+        &resolution_fixture,
+        &resolution_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "corrupt_public_resolution",
+    )?;
+    let judgment_id = latest_judgment_id(&resolution_fixture)?;
+    resolution_fixture.set_user_judgment_resolution_raw(&judgment_id, Some("{"))?;
+    let before = resolution_fixture.counts()?;
+    let response = resolution_service.close_task(
+        resolution_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_corrupt_public_resolution_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(&resolution_fixture, AccessClass::ReadStatus),
+    )?;
+    assert_owner_state_unavailable(
+        &response.response_value,
+        "user_judgments",
+        "resolution_json",
+    );
+    assert_eq!(resolution_fixture.counts()?, before);
+
+    let basis_fixture = CoreFixture::new("corrupt_public_basis")?;
+    let basis_service = core(&basis_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&basis_fixture, &basis_service, "corrupt_public_basis")?;
+    let judgment = basis_service.request_user_judgment(
+        basis_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_corrupt_public_basis",
+            idempotency_key: "idem_corrupt_public_basis",
+            dry_run: false,
+            expected_state_version: Some(2),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::ProductDecision,
+        }),
+        invocation(&basis_fixture, AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    basis_fixture.set_user_judgment_basis_raw(
+        &judgment_id,
+        r#"{"scope_revision":"bad","compatibility_status":"current"}"#,
+    )?;
+    let before = basis_fixture.counts()?;
+    let response = basis_service.record_user_judgment(
+        basis_fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_corrupt_public_basis_record",
+            idempotency_key: "idem_corrupt_public_basis_record",
+            expected_state_version: Some(3),
+            task_id: &task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::ProductDecision,
+            answer: answer_payload(JudgmentKind::ProductDecision),
+        }),
+        invocation(&basis_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_owner_state_unavailable(&response.response_value, "user_judgments", "basis_json");
+    assert_eq!(basis_fixture.counts()?, before);
+
+    let artifact_fixture = CoreFixture::new("corrupt_public_artifact")?;
+    let artifact_service = core(&artifact_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &artifact_fixture,
+        &artifact_service,
+        "corrupt_public_artifact",
+    )?;
+    let (state_version, artifact_ref) = promote_artifact_for_record_run(
+        &artifact_fixture,
+        &artifact_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "corrupt_public_artifact",
+    )?;
+    let artifact_id = artifact_ref.artifact_id.as_str().to_owned();
+    artifact_fixture.set_artifact_owner_json_raw(
+        &artifact_id,
+        ArtifactOwnerJsonColumn::Producer,
+        "{",
+    )?;
+    let mut run = artifact_fixture.record_run_request(
+        "req_corrupt_public_artifact_reuse",
+        "idem_corrupt_public_artifact_reuse",
+        false,
+        Some(state_version),
+        &task_id,
+        &change_unit_id,
+    );
+    run.artifact_inputs = vec![existing_artifact_input(
+        "artifact_input_corrupt_public",
+        artifact_ref,
+    )];
+    let before = artifact_fixture.counts()?;
+    let response = artifact_service.record_run(
+        run,
+        invocation(&artifact_fixture, AccessClass::RunRecording),
+    )?;
+    assert_owner_state_unavailable(&response.response_value, "artifacts", "producer_json");
+    assert_eq!(artifact_fixture.counts()?, before);
+
+    let provenance_fixture = CoreFixture::new("corrupt_public_provenance")?;
+    let provenance_service = core(&provenance_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &provenance_fixture,
+        &provenance_service,
+        "corrupt_public_provenance",
+    )?;
+    let (state_version, artifact_ref) = promote_artifact_for_record_run(
+        &provenance_fixture,
+        &provenance_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "corrupt_public_provenance",
+    )?;
+    let artifact_id = artifact_ref.artifact_id.as_str().to_owned();
+    let artifact_state_ref =
+        artifact_state_ref(&provenance_fixture, &task_id, &artifact_id, state_version);
+    let mut basis_run = provenance_fixture.record_run_request(
+        "req_corrupt_public_provenance_basis",
+        "idem_corrupt_public_provenance_basis",
+        false,
+        Some(state_version),
+        &task_id,
+        &change_unit_id,
+    );
+    basis_run.artifact_inputs = vec![existing_artifact_input(
+        "artifact_input_corrupt_public_provenance",
+        artifact_ref,
+    )];
+    basis_run.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "Close basis references corrupt provenance artifact.".to_owned(),
+        result_refs: vec![artifact_state_ref],
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    provenance_service.record_run(
+        basis_run,
+        invocation(&provenance_fixture, AccessClass::RunRecording),
+    )?;
+    provenance_fixture.set_artifact_source_staging_handle_raw(&artifact_id, None)?;
+    let before = provenance_fixture.counts()?;
+    let response = provenance_service.close_task(
+        provenance_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_corrupt_public_provenance_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(&provenance_fixture, AccessClass::ReadStatus),
+    )?;
+    assert_owner_state_unavailable(
+        &response.response_value,
+        "artifacts",
+        "source_staging_handle_id",
+    );
+    assert_eq!(provenance_fixture.counts()?, before);
+
+    let evidence_fixture = CoreFixture::new("corrupt_public_evidence")?;
+    let evidence_service = core(&evidence_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &evidence_fixture,
+        &evidence_service,
+        "corrupt_public_evidence",
+    )?;
+    record_close_evidence(
+        &evidence_fixture,
+        &evidence_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    let evidence_summary_id = evidence_fixture.latest_evidence_summary_id(&task_id)?;
+    evidence_fixture.set_evidence_summary_owner_json_raw(
+        &evidence_summary_id,
+        EvidenceSummaryOwnerJsonColumn::Metadata,
+        r#"{"updated_by_run_id":123}"#,
+    )?;
+    let before = evidence_fixture.counts()?;
+    let response = evidence_service.status(
+        evidence_fixture.status_request("req_corrupt_public_evidence_status", Some(&task_id)),
+        invocation(&evidence_fixture, AccessClass::ReadStatus),
+    )?;
+    assert_owner_state_unavailable(
+        &response.response_value,
+        "evidence_summaries",
+        "metadata_json",
+    );
+    assert_eq!(evidence_fixture.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn timestamp_semantics_use_rfc3339_instants_without_sleep() -> Result<(), Box<dyn Error>> {
+    let t0 = fixed_time("2026-06-18T00:00:00Z")?;
+
+    let invalid_fixture = CoreFixture::new("timestamp_invalid_judgment")?;
+    let invalid_service = service_at(&invalid_fixture, t0);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&invalid_fixture, &invalid_service, "timestamp_invalid")?;
+    let mut request = invalid_fixture.user_judgment_request(UserJudgmentFixture {
+        request_id: "req_timestamp_invalid",
+        idempotency_key: "idem_timestamp_invalid",
+        dry_run: false,
+        expected_state_version: Some(2),
+        task_id: &task_id,
+        change_unit_id: Some(&change_unit_id),
+        judgment_kind: JudgmentKind::ProductDecision,
+    });
+    request.expires_at = Some(UtcTimestamp::parse("2026-06-18T00:00:00Z")?).into();
+    let before = invalid_fixture.counts()?;
+    let response = invalid_service.request_user_judgment(
+        request,
+        invocation(&invalid_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_rejected_code(&response.response_value, "VALIDATION_FAILED");
+    assert_eq!(invalid_fixture.counts()?, before);
+
+    let offset_fixture = CoreFixture::new("timestamp_offset_judgment")?;
+    let offset_service = service_at(&offset_fixture, t0);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&offset_fixture, &offset_service, "timestamp_offset")?;
+    let mut request = offset_fixture.user_judgment_request(UserJudgmentFixture {
+        request_id: "req_timestamp_offset",
+        idempotency_key: "idem_timestamp_offset",
+        dry_run: false,
+        expected_state_version: Some(2),
+        task_id: &task_id,
+        change_unit_id: Some(&change_unit_id),
+        judgment_kind: JudgmentKind::ProductDecision,
+    });
+    request.expires_at = Some(UtcTimestamp::parse("2026-06-18T09:00:01+09:00")?).into();
+    let judgment = offset_service.request_user_judgment(
+        request,
+        invocation(&offset_fixture, AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let recorded = offset_service.record_user_judgment(
+        offset_fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_timestamp_offset_record",
+            idempotency_key: "idem_timestamp_offset_record",
+            expected_state_version: Some(3),
+            task_id: &task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::ProductDecision,
+            answer: answer_payload(JudgmentKind::ProductDecision),
+        }),
+        invocation(&offset_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(recorded.response_value["base"]["response_kind"], "result");
+
+    let boundary_fixture = CoreFixture::new("timestamp_judgment_boundary")?;
+    let boundary_service = service_at(&boundary_fixture, t0);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&boundary_fixture, &boundary_service, "timestamp_boundary")?;
+    let mut request = boundary_fixture.user_judgment_request(UserJudgmentFixture {
+        request_id: "req_timestamp_boundary",
+        idempotency_key: "idem_timestamp_boundary",
+        dry_run: false,
+        expected_state_version: Some(2),
+        task_id: &task_id,
+        change_unit_id: Some(&change_unit_id),
+        judgment_kind: JudgmentKind::ProductDecision,
+    });
+    request.expires_at = Some(UtcTimestamp::parse("2026-06-18T00:00:01Z")?).into();
+    let judgment = boundary_service.request_user_judgment(
+        request,
+        invocation(&boundary_fixture, AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let before = boundary_fixture.counts()?;
+    let expired = service_at(&boundary_fixture, t0 + Duration::seconds(1)).record_user_judgment(
+        boundary_fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_timestamp_boundary_record",
+            idempotency_key: "idem_timestamp_boundary_record",
+            expected_state_version: Some(3),
+            task_id: &task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::ProductDecision,
+            answer: answer_payload(JudgmentKind::ProductDecision),
+        }),
+        invocation(&boundary_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_rejected_code(&expired.response_value, "DECISION_UNRESOLVED");
+    assert_eq!(boundary_fixture.counts()?, before);
+
+    let stage_before = CoreFixture::new("timestamp_stage_before")?;
+    let stage_service = service_at(&stage_before, t0);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&stage_before, &stage_service, "timestamp_stage_before")?;
+    let mut handle = stage_artifact_for_record_run(&stage_before, &stage_service, &task_id)?;
+    handle.expires_at = UtcTimestamp::parse("2026-06-19T09:00:00+09:00")?;
+    let mut run = stage_before.record_run_request(
+        "req_timestamp_stage_before_run",
+        "idem_timestamp_stage_before_run",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    run.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_timestamp_stage_before",
+        handle,
+        Some("timestamp_report"),
+        Some("Timestamp staged artifact before boundary."),
+    )];
+    let before = stage_before.counts()?;
+    let recorded = service_at(
+        &stage_before,
+        t0 + Duration::hours(24) - Duration::seconds(1),
+    )
+    .record_run(run, invocation(&stage_before, AccessClass::RunRecording))?;
+    assert_eq!(recorded.response_value["base"]["response_kind"], "result");
+    assert_eq!(stage_before.counts()?.runs, before.runs + 1);
+
+    let stage_exact = CoreFixture::new("timestamp_stage_exact")?;
+    let stage_service = service_at(&stage_exact, t0);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&stage_exact, &stage_service, "timestamp_stage_exact")?;
+    let handle = stage_artifact_for_record_run(&stage_exact, &stage_service, &task_id)?;
+    let mut run = stage_exact.record_run_request(
+        "req_timestamp_stage_exact_run",
+        "idem_timestamp_stage_exact_run",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    run.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_timestamp_stage_exact",
+        handle,
+        Some("timestamp_report"),
+        Some("Timestamp staged artifact exact boundary."),
+    )];
+    let before = stage_exact.counts()?;
+    let expired = service_at(&stage_exact, t0 + Duration::hours(24))
+        .record_run(run, invocation(&stage_exact, AccessClass::RunRecording))?;
+    assert_rejected_code(&expired.response_value, "VALIDATION_FAILED");
+    assert_eq!(
+        expired.response_value["errors"][0]["details"]["artifact_input_error"]["reason"],
+        "staged_handle_expired"
+    );
+    assert_eq!(stage_exact.counts()?, before);
+
+    let corrupt_fixture = CoreFixture::new("timestamp_stage_corrupt")?;
+    let corrupt_service = service_at(&corrupt_fixture, t0);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &corrupt_fixture,
+        &corrupt_service,
+        "timestamp_stage_corrupt",
+    )?;
+    let handle = stage_artifact_for_record_run(&corrupt_fixture, &corrupt_service, &task_id)?;
+    corrupt_fixture.set_staged_artifact_expires_at(handle.handle_id.as_str(), "tomorrow")?;
+    let mut run = corrupt_fixture.record_run_request(
+        "req_timestamp_stage_corrupt_run",
+        "idem_timestamp_stage_corrupt_run",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    run.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_timestamp_stage_corrupt",
+        handle,
+        Some("timestamp_report"),
+        Some("Timestamp staged artifact corrupt expiration."),
+    )];
+    let before = corrupt_fixture.counts()?;
+    let response =
+        corrupt_service.record_run(run, invocation(&corrupt_fixture, AccessClass::RunRecording))?;
+    assert_owner_state_unavailable(&response.response_value, "artifact_staging", "expires_at");
+    assert_eq!(corrupt_fixture.counts()?, before);
+    Ok(())
+}
+
 fn core(fixture: &CoreFixture) -> CoreService {
     CoreService::new(fixture.runtime_home_path())
 }
@@ -1640,8 +2649,8 @@ fn record_close_evidence(
     supported: bool,
 ) -> Result<u64, Box<dyn Error>> {
     let mut request = fixture.record_run_request(
-        &format!("req_close_evidence_{supported}"),
-        &format!("idem_close_evidence_{supported}"),
+        &format!("req_close_evidence_{supported}_{expected_state_version}"),
+        &format!("idem_close_evidence_{supported}_{expected_state_version}"),
         false,
         Some(expected_state_version),
         task_id,
@@ -1707,6 +2716,307 @@ fn record_final_acceptance(
         .expect("state version should be present"))
 }
 
+fn record_final_acceptance_with_id(
+    fixture: &CoreFixture,
+    service: &CoreService,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+) -> Result<(u64, String), Box<dyn Error>> {
+    let judgment = service.request_user_judgment(
+        fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: &format!("req_final_id_{suffix}"),
+            idempotency_key: &format!("idem_final_id_{suffix}"),
+            dry_run: false,
+            expected_state_version: Some(expected_state_version),
+            task_id,
+            change_unit_id: Some(change_unit_id),
+            judgment_kind: JudgmentKind::FinalAcceptance,
+        }),
+        invocation(fixture, AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let response = service.record_user_judgment(
+        fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: &format!("req_final_id_record_{suffix}"),
+            idempotency_key: &format!("idem_final_id_record_{suffix}"),
+            expected_state_version: Some(expected_state_version + 1),
+            task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::FinalAcceptance,
+            answer: answer_payload(JudgmentKind::FinalAcceptance),
+        }),
+        invocation(fixture, AccessClass::CoreMutation),
+    )?;
+    Ok((
+        response.response_value["base"]["state_version"]
+            .as_u64()
+            .expect("state version should be present"),
+        judgment_id,
+    ))
+}
+
+fn record_close_basis_with_risks(
+    fixture: &CoreFixture,
+    service: &CoreService,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+    residual_risks: Vec<ResidualRiskInput>,
+) -> Result<(u64, Vec<String>), Box<dyn Error>> {
+    let mut request = fixture.record_run_request(
+        &format!("req_basis_risk_{suffix}"),
+        &format!("idem_basis_risk_{suffix}"),
+        false,
+        Some(expected_state_version),
+        task_id,
+        change_unit_id,
+    );
+    request.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    request.close_assessment = Some(CloseAssessmentInput {
+        result_summary: format!("Close basis for {suffix}."),
+        result_refs: Vec::new(),
+        residual_risks,
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let response = service.record_run(request, invocation(fixture, AccessClass::RunRecording))?;
+    let risk_ids = response.response_value["current_close_basis"]["residual_risks"]
+        .as_array()
+        .expect("residual risks should be present")
+        .iter()
+        .map(|risk| {
+            risk["risk_id"]
+                .as_str()
+                .expect("risk id should be present")
+                .to_owned()
+        })
+        .collect::<Vec<_>>();
+    Ok((
+        response.response_value["base"]["state_version"]
+            .as_u64()
+            .expect("state version should be present"),
+        risk_ids,
+    ))
+}
+
+fn residual_risk_input(summary: &str) -> ResidualRiskInput {
+    ResidualRiskInput {
+        summary: summary.to_owned(),
+        consequence: "The named residual risk remains close-relevant.".to_owned(),
+        acceptance_required: true,
+        source_refs: Vec::new(),
+    }
+}
+
+fn residual_risk_acceptance_payload(
+    risk_ids: &[String],
+) -> harness_types::RecordUserJudgmentPayload {
+    let mut payload = answer_payload(JudgmentKind::ResidualRiskAcceptance);
+    payload.residual_risk_acceptance = Some(json_object(json!({ "risk_ids": risk_ids }))).into();
+    payload
+}
+
+fn assert_sensitive_approval_mismatch<F>(suffix: &str, mutate: F) -> Result<(), Box<dyn Error>>
+where
+    F: FnOnce(&mut harness_types::PrepareWriteRequest),
+{
+    let fixture = CoreFixture::new(&format!("compat_sensitive_{suffix}"))?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, &format!("compat_sensitive_{suffix}"))?;
+    let (after_approval, _) =
+        record_sensitive_approval(&fixture, &service, &task_id, &change_unit_id, 2, suffix)?;
+    let mut request = fixture.prepare_write_request(
+        &format!("req_compat_sensitive_{suffix}"),
+        &format!("idem_compat_sensitive_{suffix}"),
+        Some(after_approval),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    request.sensitive_categories = vec!["network".to_owned()];
+    mutate(&mut request);
+    let response = service.prepare_write(
+        request,
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+    assert_eq!(response.response_value["decision"], "approval_required");
+    assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+    assert!(response.response_value["write_authorization"].is_null());
+    Ok(())
+}
+
+fn assert_sensitive_approval_change_unit_mismatch() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("compat_sensitive_change_unit")?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "compat_sensitive_change_unit")?;
+    let (after_approval, _) = record_sensitive_approval(
+        &fixture,
+        &service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "change_unit",
+    )?;
+    let replace = service.update_scope(
+        fixture.update_scope_request(UpdateScopeFixture {
+            request_id: "req_compat_sensitive_cu_replace",
+            idempotency_key: "idem_compat_sensitive_cu_replace",
+            dry_run: false,
+            expected_state_version: Some(after_approval),
+            task_id: &task_id,
+            operation: ChangeUnitOperation::ReplaceCurrent,
+            scope_summary: "Replacement scope for sensitive approval.",
+        }),
+        invocation(&fixture, AccessClass::CoreMutation),
+    )?;
+    let replacement_change_unit_id = response_record_id(&replace.response_value, "change_unit_ref");
+    let after_replace = replace.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version should be present");
+    let mut request = fixture.prepare_write_request(
+        "req_compat_sensitive_cu_prepare",
+        "idem_compat_sensitive_cu_prepare",
+        Some(after_replace),
+        Some(&task_id),
+        Some(&replacement_change_unit_id),
+    );
+    request.sensitive_categories = vec!["network".to_owned()];
+    let response = service.prepare_write(
+        request,
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+    assert_eq!(response.response_value["decision"], "approval_required");
+    assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+    assert!(response.response_value["write_authorization"].is_null());
+    Ok(())
+}
+
+fn record_sensitive_approval(
+    fixture: &CoreFixture,
+    service: &CoreService,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+) -> Result<(u64, String), Box<dyn Error>> {
+    let judgment = service.request_user_judgment(
+        fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: &format!("req_sensitive_approval_{suffix}"),
+            idempotency_key: &format!("idem_sensitive_approval_{suffix}"),
+            dry_run: false,
+            expected_state_version: Some(expected_state_version),
+            task_id,
+            change_unit_id: Some(change_unit_id),
+            judgment_kind: JudgmentKind::SensitiveApproval,
+        }),
+        invocation(fixture, AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let response = service.record_user_judgment(
+        fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: &format!("req_sensitive_approval_record_{suffix}"),
+            idempotency_key: &format!("idem_sensitive_approval_record_{suffix}"),
+            expected_state_version: Some(expected_state_version + 1),
+            task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::SensitiveApproval,
+            answer: answer_payload(JudgmentKind::SensitiveApproval),
+        }),
+        invocation(fixture, AccessClass::CoreMutation),
+    )?;
+    Ok((
+        response.response_value["base"]["state_version"]
+            .as_u64()
+            .expect("state version should be present"),
+        judgment_id,
+    ))
+}
+
+fn promote_artifact_for_record_run(
+    fixture: &CoreFixture,
+    service: &CoreService,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+) -> Result<(u64, ArtifactRef), Box<dyn Error>> {
+    let handle = stage_artifact_for_record_run(fixture, service, task_id)?;
+    let mut request = fixture.record_run_request(
+        &format!("req_promote_artifact_{suffix}"),
+        &format!("idem_promote_artifact_{suffix}"),
+        false,
+        Some(expected_state_version),
+        task_id,
+        change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        &format!("artifact_input_promote_{suffix}"),
+        handle,
+        Some("validation_report"),
+        Some("Artifact registered for corruption coverage."),
+    )];
+    let response = service.record_run(request, invocation(fixture, AccessClass::RunRecording))?;
+    let artifact_ref =
+        serde_json::from_value(response.response_value["registered_artifacts"][0].clone())?;
+    Ok((
+        response.response_value["base"]["state_version"]
+            .as_u64()
+            .expect("state version should be present"),
+        artifact_ref,
+    ))
+}
+
+fn existing_artifact_input(artifact_input_id: &str, artifact_ref: ArtifactRef) -> ArtifactInput {
+    let expected_sha256 = artifact_ref.sha256.clone();
+    let expected_size_bytes = artifact_ref.size_bytes;
+    let redaction_state = artifact_ref.redaction_state;
+    ArtifactInput {
+        artifact_input_id: ArtifactInputId::new(artifact_input_id),
+        source_kind: ArtifactInputSourceKind::ExistingArtifact,
+        staged_artifact_handle: None.into(),
+        existing_artifact_ref: Some(artifact_ref).into(),
+        relation_hint: Some("validation_report".to_owned()).into(),
+        claim: Some("Reused artifact for corruption coverage.".to_owned()).into(),
+        expected_sha256: Some(expected_sha256).into(),
+        expected_size_bytes: Some(expected_size_bytes).into(),
+        redaction_state: Some(redaction_state).into(),
+    }
+}
+
+fn artifact_state_ref(
+    fixture: &CoreFixture,
+    task_id: &str,
+    artifact_id: &str,
+    state_version: u64,
+) -> harness_types::StateRecordRef {
+    harness_types::StateRecordRef {
+        record_kind: harness_types::StateRecordKind::Artifact,
+        record_id: harness_types::RecordId::new(artifact_id),
+        project_id: harness_types::ProjectId::new(fixture.project_id()),
+        task_id: Some(harness_types::TaskId::new(task_id)).into(),
+        state_version: Some(state_version).into(),
+    }
+}
+
+fn response_record_id(response_value: &Value, field: &str) -> String {
+    response_value[field]["record_id"]
+        .as_str()
+        .expect("record_id should be present")
+        .to_owned()
+}
+
+fn json_object(value: Value) -> serde_json::Map<String, Value> {
+    match value {
+        Value::Object(object) => object,
+        _ => panic!("expected JSON object"),
+    }
+}
+
 fn assert_prepare_reason(response_value: &Value, code: &str) {
     let reasons = response_value["write_decision_reasons"]
         .as_array()
@@ -1744,7 +3054,11 @@ fn assert_latest_prepare_write_event(
 }
 
 fn assert_close_blocker(response_value: &Value, code: &str) {
-    let codes = response_value["blockers"]
+    let blockers = response_value
+        .get("blockers")
+        .or_else(|| response_value.get("close_blockers"))
+        .expect("blockers or close_blockers should be present");
+    let codes = blockers
         .as_array()
         .expect("blockers should be an array")
         .iter()
