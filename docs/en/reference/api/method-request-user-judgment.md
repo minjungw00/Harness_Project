@@ -25,6 +25,8 @@ This document does not own:
 
 The pending judgment is a request for a decision. It is not the decision itself, does not create evidence, does not change current scope, does not create `Write Authorization`, and does not close a `Task`.
 
+When this method creates a pending judgment, Core derives a `JudgmentBasis` from current state. Callers do not submit `scope_revision`, `close_basis_revision`, session-binding fields, access-class fields, or current close-basis authority fields.
+
 ## Required inputs
 
 - A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
@@ -73,11 +75,14 @@ A committed non-dry-run result:
 
 - increments `project_state.state_version` exactly once
 - creates one pending `UserJudgment`
+- stores a Core-derived `JudgmentBasis` with `basis.compatibility_status=current`
 - may update affected blocker state only as allowed by the storage-effect owner
 
 Non-claims:
 
 - A `UserJudgmentCandidate` returned by another method is not durable until `harness.request_user_judgment` commits.
+- For `judgment_kind=final_acceptance` or `judgment_kind=residual_risk_acceptance`, Core captures the current close basis in the judgment basis. If the required current close basis or current residual-risk IDs are unavailable, the request rejects before commit.
+- For residual-risk acceptance, visible risks in the request context must carry exact current `risk_id` values.
 - Dry run and rejection create no pending judgment, blocker update, event, replay row, or state-version increment.
 
 ## Success result
@@ -119,6 +124,8 @@ Returns `ToolRejectedResponse` for pre-commit failures such as:
 - unsupported or incompatible `judgment_kind`
 - missing or incompatible Task identity
 - unresolved prerequisite judgment
+- missing current close basis for final acceptance or residual-risk acceptance
+- missing or non-current residual-risk ID for residual-risk acceptance
 - local access failure
 - insufficient capability
 - stale `expected_state_version`
@@ -186,6 +193,17 @@ params:
       project_id: proj_banner_001
       task_id: task_banner_001
       state_version: 51
+  basis:
+    task_id: task_banner_001
+    change_unit_id: cu_banner_001
+    scope_revision: 1
+    close_basis_revision: null
+    baseline_ref: baseline_banner_001
+    result_refs: []
+    residual_risk_ids: []
+    sensitive_action_scope: null
+    created_at_state_version: 51
+    compatibility_status: current
   required_for: close
   expires_at: null
 ```

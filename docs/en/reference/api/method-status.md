@@ -79,6 +79,17 @@ When `include.close=true`, `StatusResult.close_blockers` are read-only `CloseRea
 
 Non-claim: `StatusResult.close_blockers` are not stored close results.
 
+Include projection contract:
+
+- `include.task` returns the selected `Task` summary and current Change Unit through `active_task`.
+- `include.pending_user_judgments` returns current pending judgment refs, and relevant stale or superseded judgment state appears through existing result fields such as `blocker_refs` and `next_actions.required_refs`.
+- `include.write_authority` returns effective active, expired, stale, and consumed write-authority states through `write_authority_summary`.
+- `include.evidence` returns current `EvidenceSummary` and coverage when available.
+- `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, and relevant next actions.
+- `include.guarantees` returns only guarantees supported by the active profile and verified surface context.
+
+`include.close=true` and [`harness.close_task`](method-close-task.md) with `intent=check` use the same close-readiness calculation. `harness.status` remains read-only and creates no replay row, event, state mutation, close mutation, or state-version increment.
+
 ## Method result fields
 
 `StatusResult` is the method-specific result branch for a successful status read. It carries `base: ToolResultBase` and these method-owned top-level fields:
@@ -92,10 +103,12 @@ Non-claim: `StatusResult.close_blockers` are not stored close results.
 | `pending_user_judgments` | `StateRecordRef[]` for pending user-judgment records selected into the status view. |
 | `blocker_refs` | `StateRecordRef[]` for blocker records visible in the current status view. |
 | `close_state` | Status close-state value for the current view. Supported values, including `none` when no current close state is available, are owned by [API Value Sets](schema-value-sets.md#task-lifecycle-values). |
+| `current_close_basis` | `CurrentCloseBasis | null` selected into the close status view. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
+| `risk_acceptance_coverage` | `RiskAcceptanceCoverage[]` for current residual-risk acceptance coverage in the close status view. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `close_blockers` | Read-only `CloseReadinessBlocker[]` observations for the current view. They are not stored close results. |
 | `guarantee_display` | `GuaranteeDisplay | null` for the current status view. |
 
-Nested `StateSummary`, `StateRecordRef`, `CloseReadinessBlocker`, `GuaranteeDisplay`, and `NextActionSummary` shapes are owned by [API State Schemas](schema-state.md).
+Nested `StateSummary`, `StateRecordRef`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `GuaranteeDisplay`, and `NextActionSummary` shapes are owned by [API State Schemas](schema-state.md).
 
 ## Blocked result
 
@@ -252,6 +265,8 @@ pending_user_judgments:
     state_version: 42
 blocker_refs: []
 close_state: blocked
+current_close_basis: null
+risk_acceptance_coverage: []
 close_blockers:
   - category: user_judgment
     code: missing_user_judgment
@@ -282,7 +297,7 @@ guarantee_display:
 ## Owner links
 
 - Request envelope and response branches: [API Schema Core](schema-core.md).
-- Status state, close-readiness shapes, evidence summaries, and guarantee display: [API State Schemas](schema-state.md).
+- Status state, current close basis, close-readiness shapes, evidence summaries, and guarantee display: [API State Schemas](schema-state.md).
 - Supported values and access classes: [API Value Sets](schema-value-sets.md).
 - Public errors, precedence, and rejected-response routing: [API error codes](error-codes.md), [API error precedence](error-precedence.md), and [API error routing](error-routing.md).
 - Close-readiness blocker routing: [API blocker routing](blocker-routing.md).

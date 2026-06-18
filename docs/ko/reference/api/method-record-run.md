@@ -7,7 +7,7 @@
 이 문서는 기준 범위의 `harness.record_run` 메서드 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 실행 기록, 증거 갱신, 차단 사유 갱신, 아티팩트 승격 메서드 동작
+- 실행 기록, 현재 닫기 근거 갱신, 증거 갱신, 차단 사유 갱신, 아티팩트 승격 메서드 동작
 - 실행 기록 예시
 
 ## 담당하지 않는 것
@@ -27,12 +27,12 @@
 - 직접 응답 또는 결과
 - 구현 작업
 
-이 메서드는 간결한 증거 범위를 갱신하고, 제품 쓰기를 기록할 때 호환되는 `Write Authorization`을 소비하며, 기존 아티팩트를 연결하고, 허용되는 경우 적격 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수도 있습니다.
+이 메서드는 현재 닫기 근거와 간결한 증거 범위를 갱신하고, 제품 쓰기를 기록할 때 호환되는 `Write Authorization`을 소비하며, 기존 아티팩트를 연결하고, 허용되는 경우 적격 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수도 있습니다.
 
 ## 필수 입력
 
 - 유효한 `ToolEnvelope`. 커밋되는 `dry_run`이 아닌 요청에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
-- `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`.
+- `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, `close_assessment`.
 - 제품 쓰기 실행은 `harness.prepare_write`가 만든 호환되는 `status=active` `Write Authorization`이 필요합니다.
 - 새 아티팩트 바이트는 이미 유효한 `StagedArtifactHandle`로 표현되어 있어야 합니다. `harness.record_run`은 새 바이트를 스테이징하지 않습니다.
 
@@ -55,10 +55,26 @@ RecordRunRequest:
   observed_changes: ObservedChanges
   artifact_inputs: ArtifactInput[]
   evidence_updates: EvidenceCoverageItem[]
+  close_assessment: CloseAssessmentInput | null
+
+CloseAssessmentInput:
+  result_summary: string
+  result_refs: StateRecordRef[]
+  residual_risks: ResidualRiskInput[]
+  sensitive_categories: string[]
+  recovery_constraints: string[]
+
+ResidualRiskInput:
+  summary: string
+  consequence: string
+  acceptance_required: boolean
+  source_refs: StateRecordRef[]
 ```
 
 중첩 형태 담당 문서:
 - `observed_changes`와 `evidence_updates`는 `ObservedChanges`와 `EvidenceCoverageItem`을 사용합니다. 이 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당합니다.
+- `close_assessment.result_refs`와 `ResidualRiskInput.source_refs`는 [API 상태 스키마](schema-state.md#state-references)가 담당하는 `StateRecordRef`를 사용합니다.
+- `CurrentCloseBasis`와 커밋된 `ResidualRisk` 출력 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. `ResidualRiskInput`에는 호출자 권한의 `risk_id`가 없습니다. Core는 새 현재 닫기 근거를 커밋할 때 불투명 `risk_id` 값을 생성합니다.
 - `artifact_inputs`는 `ArtifactInput[]`을 사용합니다. `ArtifactInput`, `StagedArtifactHandle`, `ArtifactRef` 형태는 [API 아티팩트 스키마](schema-artifacts.md#artifactinput)가 담당합니다.
 - `kind`, 아티팩트 출처 값, `redaction_state`, 증거 범위 값은 [API 값 집합](schema-value-sets.md)이 담당합니다.
 
@@ -88,6 +104,12 @@ RecordRunRequest:
 
 호환되는 커밋 결과는 `project_state.state_version`을 정확히 한 번 올립니다.
 
+호환되는 커밋 결과는 선택된 `Task.close_basis_revision`을 정확히 한 번 증가시킵니다. `close_assessment`가 `null`이 아니면 커밋은 커밋된 실행 기록, 평가 필드, 생성된 잔여 위험 ID, 선택된 현재 범위에서 새 `CurrentCloseBasis`를 만듭니다. `close_assessment=null`이면 커밋된 실행 기록이 현재 닫기 근거를 만들지 않음을 명시하며, 기존 현재 닫기 근거는 오래되거나 없어집니다.
+
+빈 `close_assessment.residual_risks` 목록은 현재 결과에 식별된 잔여 위험이 없다는 명시적 의미입니다. Core는 커밋된 `null`이 아닌 평가에 대해서만 불투명 `risk_id` 값을 생성합니다. `dry_run`은 지속 `risk_id` 값을 예약하지 않습니다.
+
+실행 기록, 현재 닫기 근거, 증거 갱신, 아티팩트 연결 또는 승격, `Write Authorization` 소비, 리비전 변경은 결과가 커밋될 때 원자적으로 커밋됩니다.
+
 제품 쓰기 기록이 `Write Authorization`을 소비하려면 아래 조건을 모두 만족해야 합니다.
 
 - 소비 직전 현재 `project_state.state_version`이 `WriteAuthorization.basis_state_version`과 같습니다.
@@ -110,6 +132,7 @@ RecordRunRequest:
 | `run_summary` | 기록된 Run의 `RunSummary`입니다. `RunSummary.kind`는 요청의 `kind`와 대응하며, 지원되는 실행 종류 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. |
 | `registered_artifacts` | 이 실행 결과가 만들거나 연결한 지속 아티팩트 참조의 `ArtifactRef[]`입니다. `ArtifactRef` 형태는 [API 아티팩트 스키마](schema-artifacts.md#artifactref)가 담당하고, 승격과 연결 생명주기 세부사항은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다. |
 | `evidence_summary` | 이 실행 결과가 갱신한 증거 범위의 `EvidenceSummary | null`입니다. 실행이 증거 갱신을 기록하지 않으면 `null`입니다. 형태는 [API 상태 스키마](schema-state.md)가 담당하고, 증거 권한 의미는 [Core 모델](../core-model.md#9-evidence-and-run-authority)이 담당합니다. |
+| `current_close_basis` | 이 실행이 기록된 뒤의 `CurrentCloseBasis | null`입니다. `null`이 아니면 이 실행이 현재 닫기 근거를 만들었다는 뜻입니다. `null`이면 이 실행이 현재 닫기 근거를 만들지 않았다는 뜻입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
 | `blocker_refs` | 이 결과 때문에 커밋되었거나 계속 관련되는 실행 또는 증거 관련 차단 사유의 `StateRecordRef[]`입니다. |
 | `state` | 실행이 기록된 뒤의 현재 `StateSummary`입니다. `Write Authorization` 소비 뒤의 `write_authority_summary`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
 
@@ -124,6 +147,7 @@ RecordRunRequest:
 - `run_summary`
 - 모든 `registered_artifacts`
 - 갱신된 `evidence_summary`
+- 만들어진 경우 `current_close_basis`, 아니면 `null`
 - `blocker_refs`
 - 현재 `state`
 
@@ -167,11 +191,11 @@ RecordRunRequest:
 `dry_run=true`에서 유효한 미리보기:
 
 - `ToolDryRunResponse`를 반환합니다.
-- Run, 증거 갱신, 차단 사유 갱신, 아티팩트 연결, 아티팩트 승격, `Write Authorization` 소비를 만들지 않습니다.
+- Run, 현재 닫기 근거, 잔여 위험 ID, 증거 갱신, 차단 사유 갱신, 아티팩트 연결, 아티팩트 승격, `Write Authorization` 소비를 만들지 않습니다.
 
 ## 저장 효과
 
-커밋 시 실행, 증거, 차단 사유, `Write Authorization` 소비, 아티팩트 연결 결과를 지속할 수 있습니다. 정확한 저장 효과와 아티팩트 승격 세부사항은 아래 저장 담당 문서가 담당합니다.
+커밋 시 실행, 현재 닫기 근거, 증거, 차단 사유, `Write Authorization` 소비, 아티팩트 연결 결과를 지속할 수 있습니다. 정확한 저장 효과와 아티팩트 승격 세부사항은 아래 저장 담당 문서가 담당합니다.
 
 아래 예시는 메서드 안에서만 성립하도록 짧게 구성했습니다. 대표 응답은 커밋된 실행, 승격된 아티팩트 참조, 갱신된 증거 요약, 차단 사유 참조, 상태 버전, 현재 상태 스냅샷을 보여 주는 데 필요한 필드로 축약했습니다.
 
@@ -232,6 +256,12 @@ params:
       supporting_refs: []
       supporting_artifact_refs: []
       gap_refs: []
+  close_assessment:
+    result_summary: "Search-result count validation passed."
+    result_refs: []
+    residual_risks: []
+    sensitive_categories: []
+    recovery_constraints: []
 ```
 
 ## 대표 응답
@@ -360,6 +390,30 @@ evidence_summary:
     project_id: proj_runprobe_001
     task_id: task_runprobe_001
     state_version: 32
+current_close_basis:
+  close_basis_revision: 4
+  scope_revision: 2
+  task_id: task_runprobe_001
+  change_unit_id: cu_runprobe_001
+  baseline_ref: baseline_runprobe_001
+  result_summary: "Search-result count validation passed."
+  result_refs:
+    - record_kind: run
+      record_id: run_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
+  evidence_summary_ref: null
+  residual_risks: []
+  sensitive_categories: []
+  recovery_constraints: []
+  source_run_ref:
+    record_kind: run
+    record_id: run_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
+    state_version: 32
+  updated_at: "<example-updated-at>"
 blocker_refs: []
 state:
   project_id: proj_runprobe_001
@@ -403,7 +457,7 @@ state:
 ## 담당 문서 링크
 
 - 요청 래퍼, 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
-- `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, 참조: [API 상태 스키마](schema-state.md).
+- `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `CurrentCloseBasis`, `ResidualRisk`, `StateSummary`, 참조: [API 상태 스키마](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md).
 - `Write Authorization`과 닫기 관련 증거 경계: [Core 모델](../core-model.md).
 - `Product Repository` 경로 정규화: [런타임 경계](../runtime-boundaries.md#product-repository-api-path-normalization).

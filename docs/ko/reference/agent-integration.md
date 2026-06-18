@@ -79,7 +79,11 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 
 `VerifiedSurfaceContext`는 한 번의 호출에 대해 내부에서 파생되는 맥락입니다. `Harness Server` 또는 로컬 어댑터는 등록된 접점 기록, 어댑터가 파생한 호출 맥락, 요청된 호출 접근에서 이를 파생하고, 그 뒤 메서드 담당 문서가 파생된 맥락이 요청과 호환되는지 판단합니다. 이는 공개 요청 페이로드가 아닙니다.
 
-MCP 세션은 프로젝트 접점과 호출 `surface_instance_id`에 묶입니다. 프로세스 전체에 고정된 접근 등급 하나에 묶이지 않습니다. MCP 어댑터는 현재 호출의 공개 메서드 이름과 타입이 지정된 params에서 요청된 호출 접근을 파생합니다. 공개 요청 params에는 호출 접근 등급, 호출 `surface_instance_id`, 역량 프로필, 검증 근거, `VerifiedSurfaceContext`가 들어가지 않습니다. Core는 `VerifiedSurfaceContext`를 파생하기 전에 메서드에서 파생된 요청 접근이 `surfaces.local_access_json`의 등록된 허용에 포함되는지 독립적으로 확인합니다.
+MCP 세션은 어댑터 시작 시 정확히 하나의 `project_id`, 하나의 `surface_id`, 하나의 `surface_instance_id`에 묶입니다. 이 바인딩 값은 세션 수명 동안 고정됩니다. 공개 `ToolEnvelope.project_id`와 `ToolEnvelope.surface_id` 필드는 프로토콜 일관성을 위해 남아 있지만, 각 요청 값은 세션 바인딩과 정확히 일치해야 합니다. 요청은 프로젝트, 접점, 접점 인스턴스를 바꿀 수 없습니다.
+
+`surface_instance_id`가 명시적으로 설정되지 않았을 때 어댑터 시작은 묶인 프로젝트와 접점에 등록된 기본값 또는 하나뿐인 명확한 등록 후보를 선택할 수 있습니다. 없거나 모호하면 시작 실패입니다. 서로 다른 프로젝트에 같은 `surface_instance_id` 값이 있어도 프로젝트 바인딩은 약해지지 않습니다. 묶인 `project_id`는 세션 식별성의 일부로 남으며 모든 요청은 이에 일치해야 합니다.
+
+MCP 세션은 프로세스 전체에 고정된 접근 등급 하나에 묶이지 않습니다. MCP 어댑터는 현재 호출의 공개 메서드 이름과 타입이 지정된 params에서 요청된 호출 접근을 파생합니다. 공개 요청 params에는 호출 접근 등급, 호출 `surface_instance_id`, 역량 프로필, 검증 근거, `VerifiedSurfaceContext`가 들어가지 않습니다. Core는 `VerifiedSurfaceContext`를 파생하기 전에 세션 바인딩과, 메서드에서 파생된 요청 접근이 `surfaces.local_access_json`의 등록된 허용에 포함되는지를 독립적으로 확인합니다.
 
 메서드에서 파생되는 요청 접근:
 
@@ -114,6 +118,7 @@ VerifiedSurfaceContext:
 
 조건:
 - 공개 API 요청 하나에는 요청 수준 `VerifiedSurfaceContext.access_class`가 정확히 하나 있습니다.
+- 공개 `ToolEnvelope.project_id`와 `ToolEnvelope.surface_id`는 고정된 세션 바인딩을 요청에서 되비추는 값입니다. 호출자가 선택하는 권한이 아니며 세션을 바꿀 수 없습니다.
 - `surface_instance_id`는 어댑터가 파생한 호출 맥락으로 남습니다. `ToolEnvelope`에는 `surface_instance_id`가 추가되지 않습니다. 공통 요청 래퍼는 [API 코어 스키마](api/schema-core.md#tool-envelope)에 둡니다.
 - `ArtifactInput`이나 `StagedArtifactHandle` 같은 중첩 페이로드는 두 번째 요청 수준 접근 등급을 추가하지 않습니다.
 - `created_by_surface_id`, `created_by_surface_instance_id` 같은 스테이징된 아티팩트 출처 필드는 호출자 텍스트나 중첩 아티팩트 입력이 아니라 스테이징 시점의 파생된 `VerifiedSurfaceContext`에서 옵니다.

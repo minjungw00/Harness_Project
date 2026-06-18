@@ -468,6 +468,21 @@ superseded
 incompatible
 ```
 
+`JudgmentBasis.compatibility_status` uses:
+
+```text
+current
+stale
+superseded
+legacy_unbound
+```
+
+Meaning:
+- `current` means the basis currently matches the requirement it may satisfy.
+- `stale` means the stored basis no longer matches current state; a resolved row may remain for audit but is ineligible for current requirements.
+- `superseded` means a pending judgment has been replaced by a newer question or basis and cannot be answered successfully.
+- `legacy_unbound` means a preserved judgment has no state basis and cannot satisfy current close, write, or sensitive-approval requirements.
+
 `UserJudgmentOption.option_id` is scoped to the judgment and is not a global value set. Rendered option labels are display text only.
 
 ## Error detail helper values

@@ -76,6 +76,8 @@ Requires:
 - any separate sensitive-action approval (`sensitive_approval`)
 - local surface capability needed for the intended product-file write check
 
+A separate sensitive-action approval satisfies this method only when its `JudgmentBasis` remains compatible with the current `scope_revision`, current Change Unit, intended operation, normalized `intended_paths`, sensitive categories, and `baseline_ref`. Legacy-unbound, stale, superseded, or incompatible judgments cannot satisfy sensitive-action approval. Callers do not submit revision fields to make an approval compatible.
+
 ## State version behavior
 
 | Result | State-version effect | `Write Authorization` effect |

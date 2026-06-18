@@ -35,7 +35,7 @@
 - 닫기 준비 상태 평가 전 요청 거절
 - 유효한 상태 변경 미리보기에 대한 공통 `dry_run` 미리보기 반환
 
-닫기는 보고서가 아니라 Core 상태 전이입니다. 이 메서드는 대화, 상태 텍스트, 최종 수락만, 잔여 위험 수락만, 증거만, `Write Authorization`, 렌더링된 보기에서 닫기를 추론하지 않습니다.
+닫기는 보고서가 아니라 Core 상태 전이입니다. 이 메서드는 `intent=complete`에서 현재 닫기 근거를 평가합니다. 대화, 상태 텍스트, 종료 닫기 요약, 최종 수락만, 잔여 위험 수락만, 증거만, `Write Authorization`, 렌더링된 보기에서 닫기를 추론하지 않습니다.
 
 ## 담당 경계
 
@@ -83,8 +83,10 @@ API 경계 블록:
 
 닫기 조건:
 
-- `intent=complete`는 사전 확인이 성공하고, 닫기 준비 상태 평가가 유효하며, 닫기 차단 사유가 남아 있지 않을 때만 닫을 수 있습니다.
+- `intent=complete`는 사전 확인이 성공하고, 현재 `CurrentCloseBasis`에 대한 닫기 준비 상태 평가가 유효하며, 닫기 차단 사유가 남아 있지 않을 때만 닫을 수 있습니다.
 - `intent=cancel`과 `intent=supersede`는 요청한 종료 경로를 평가합니다. 이 둘은 증거 충분성, 최종 수락, 잔여 위험 수락이 아닙니다.
+
+성공한 종료 닫기가 만드는 종료 닫기 요약은 현재 닫기 전 근거가 아니며 `CurrentCloseBasis`의 대체물로 쓰지 않습니다.
 
 ## 닫기 의도
 
@@ -152,9 +154,9 @@ CloseTaskRequest:
 1. 요청 래퍼, 메서드 필드, `intent` 필드 조합, 같은 프로젝트의 `Task` 식별자를 검증합니다. 형태 오류, 잘못된 프로젝트 식별자, 읽을 수 없는 `Task` 식별자는 `ToolRejectedResponse`를 반환합니다.
 2. 접점 맥락, 접근 등급, 로컬 역량, 요청한 종료 경로의 선행조건을 확인합니다.
 3. `dry_run=false`인 상태 변경 `intent`에서는 `idempotency_key`, 현재 `expected_state_version`, 멱등 요청 해시, 닫기 관련 `WriteAuthorization.basis_state_version`을 확인합니다. 오래되었거나 충돌하는 값은 `ToolRejectedResponse`를 반환합니다.
-4. `intent=check`는 현재 닫기 준비 상태를 계산하고 읽기 전용 `CloseTaskResult`를 반환합니다.
+4. `intent=check`는 [`harness.status`](method-status.md)의 `include.close=true`와 같은 계산으로 현재 닫기 준비 상태를 계산하고 읽기 전용 `CloseTaskResult`를 반환합니다.
 5. 상태 변경 `intent`와 `dry_run=true` 조합은 유효한 사전 확인 뒤 공통 미리보기 분기를 반환합니다.
-6. `intent=complete`는 닫기 준비 상태 평가를 실행합니다. 차단 사유가 남아 있으면 차단 분기를 반환하고, 없으면 `close_state=closed`를 커밋합니다.
+6. `intent=complete`는 현재 `CurrentCloseBasis`에 대한 닫기 준비 상태 평가를 실행합니다. 차단 사유가 남아 있으면 차단 분기를 반환하고, 없으면 `close_state=closed`와 종료 닫기 결과를 커밋합니다.
 7. `intent=cancel` 또는 `intent=supersede`는 요청한 종료 경로만 평가합니다. 종료 경로 차단 사유가 남아 있으면 차단 분기를 반환하고, 없으면 `close_state=cancelled` 또는 `close_state=superseded`를 커밋합니다.
 
 ## 상태 버전 동작
@@ -190,6 +192,8 @@ CloseTaskRequest:
 | `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 유효한 `CloseTaskResult` 분기는 `base.response_kind=result`를 사용합니다. 이 메서드는 `intent=check`에는 `base.effect_kind=read_only`를, 커밋된 종료 결과 또는 담당 문서가 허용한 커밋된 차단 결과에는 `base.effect_kind=core_committed`를 선택합니다. |
 | `close_state` | 요청한 경로에 대한 메서드 결과 닫기 상태입니다. 지원 값은 [API 값 집합](schema-value-sets.md#task-lifecycle-values)이 담당합니다. `close_state=blocked`는 유효한 닫기 또는 종료 경로 평가 뒤의 메서드 결과이지 `ToolRejectedResponse`가 아닙니다. |
 | `state` | 확인, 종료 상태 변경, 또는 담당 문서가 허용한 차단 결과 뒤 선택된 Task의 `StateSummary`입니다. `close_blockers`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
+| `current_close_basis` | 결과에 선택된 닫기 준비 상태에 사용한 `CurrentCloseBasis | null`입니다. `null`은 이 결과에 사용할 현재 닫기 근거가 없다는 뜻입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
+| `risk_acceptance_coverage` | 닫기 준비 상태 결과에서 현재 잔여 위험 수락 범위를 나타내는 `RiskAcceptanceCoverage[]`입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
 | `blockers` | 요청한 경로에 닫기 차단 사유 또는 종료 차단 사유가 있을 때 반환되는 `CloseReadinessBlocker[]`입니다. 형태와 중첩은 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당하며, `category` 값은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다. |
 | `evidence_summary` | 결과에 선택된 닫기 근거의 `EvidenceSummary | null`입니다. 결과에 증거 요약이 선택되지 않으면 `null`입니다. 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당합니다. |
 | `artifact_refs` | 결과에 선택된 닫기 관련 아티팩트의 `ArtifactRef[]`입니다. `ArtifactRef` 형태는 [API 아티팩트 스키마](schema-artifacts.md#artifactref)가 담당합니다. |
@@ -212,9 +216,9 @@ CloseTaskRequest:
 | `baseline_stale` | `baseline` | 닫기 관련 기준선 근거가 차단 사유 생성 경로에서 오래되었습니다. |
 | `evidence_claim_unsupported` | `evidence` | 필요한 닫기 주장이 지원되는 증거 범위를 갖지 못했습니다. |
 | `artifact_unavailable` | `artifact_availability` | 닫기 관련 아티팩트가 없거나, 사용할 수 없거나, 사용에 부적합하거나, 무결성에 실패했습니다. |
-| `missing_final_acceptance` | `final_acceptance` | 필요한 최종 수락이 없습니다. |
+| `missing_final_acceptance` | `final_acceptance` | 필요한 최종 수락이 없거나 현재 `Task`, Change Unit, `scope_revision`, `close_basis_revision`, 기준선, 결과 참조와 호환되지 않습니다. |
 | `residual_risk_not_visible` | `residual_risk_visibility` | 닫기 관련 잔여 위험이 보이지 않게 남아 있습니다. |
-| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | 필요한 잔여 위험 수락이 없습니다. |
+| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | 필요한 잔여 위험 수락이 없거나 현재 `close_basis_revision`과 정확한 잔여 위험 `risk_id` 값에 일치하지 않습니다. |
 | `recovery_required` | `recovery` | 요청한 닫기 경로를 진행하기 전에 복구 작업이 남아 있습니다. |
 
 이 코드는 메서드 로컬 `CloseReadinessBlocker.code` 값입니다. 공개 `ErrorCode` 값, `WriteDecisionReason.code` 값, 전역 값 집합 항목이 아닙니다.
@@ -286,7 +290,7 @@ CloseTaskRequest:
 
 `intent=check`에는 저장 효과가 없습니다. 차단 사유를 반환하거나 `dry_run=true`를 사용해도 마찬가지입니다.
 
-커밋되는 `dry_run=false` 상태 변경 `intent`는 메서드 결과에 따라 종료 결과나 차단 결과를 지속 저장할 수 있습니다. 정확한 저장 효과, 재실행 행, 이벤트, 상태 버전 증가, 차단 사유 지속 저장 규칙은 [저장 효과](../storage-effects.md)와 [저장소 버전 관리](../storage-versioning.md)가 담당합니다.
+커밋되는 `dry_run=false` 상태 변경 `intent`는 메서드 결과에 따라 종료 결과나 차단 결과를 지속 저장할 수 있습니다. 성공한 종료 닫기는 닫기 전 준비 상태에 사용한 현재 닫기 근거와 별개인 종료 닫기 요약을 지속 저장할 수 있습니다. 정확한 저장 효과, 재실행 행, 이벤트, 상태 버전 증가, 차단 사유 지속 저장 규칙은 [저장 효과](../storage-effects.md)와 [저장소 버전 관리](../storage-versioning.md)가 담당합니다.
 
 거절 응답과 유효한 `dry_run` 미리보기에는 저장 효과가 없습니다.
 
@@ -328,6 +332,8 @@ base:
   state_version: 72
   events: []
 close_state: blocked
+current_close_basis: null
+risk_acceptance_coverage: []
 state:
   project_id: proj_close_001
   state_version: 72
@@ -398,7 +404,7 @@ artifact_refs: []
 ## 담당 문서 링크
 
 - 요청 래퍼, 공통 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
-- `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, `NextActionSummary` 형태: [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes).
+- `CloseTaskResult.blockers`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, `NextActionSummary` 형태: [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes).
 - `ArtifactRef` 형태: [API 아티팩트 스키마](schema-artifacts.md#artifactref).
 - `intent` 값: [API 값 집합의 메서드 내부 값](schema-value-sets.md#method-local-values).
 - 닫기 상태, 생명주기, 닫기 이유 값: [API 값 집합의 Task 생명주기 값](schema-value-sets.md#task-lifecycle-values).

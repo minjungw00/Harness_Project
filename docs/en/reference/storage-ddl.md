@@ -154,6 +154,9 @@ CREATE TABLE tasks (
   shaping_summary_json TEXT NOT NULL DEFAULT '{}',
   bounded_context_json TEXT NOT NULL DEFAULT '[]',
   autonomy_boundary_json TEXT NOT NULL DEFAULT '{}',
+  scope_revision INTEGER NOT NULL DEFAULT 0 CHECK (scope_revision >= 0),
+  close_basis_revision INTEGER NOT NULL DEFAULT 0 CHECK (close_basis_revision >= 0),
+  close_basis_json TEXT,
   close_summary_json TEXT NOT NULL DEFAULT '{}',
   completion_policy_json TEXT NOT NULL DEFAULT '{}',
   current_change_unit_id TEXT,
@@ -180,7 +183,6 @@ CREATE TABLE change_units (
   scope_summary_json TEXT NOT NULL DEFAULT '{}',
   bounded_paths_json TEXT NOT NULL DEFAULT '[]',
   write_basis_json TEXT NOT NULL DEFAULT '{}',
-  close_basis_json TEXT NOT NULL DEFAULT '{}',
   lifecycle_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -208,6 +210,9 @@ CREATE TABLE user_judgments (
   affected_refs_json TEXT NOT NULL DEFAULT '[]',
   artifact_refs_json TEXT NOT NULL DEFAULT '[]',
   sensitive_action_scope_json TEXT NOT NULL DEFAULT '{}',
+  basis_json TEXT,
+  basis_status TEXT NOT NULL DEFAULT 'legacy_unbound'
+    CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound')),
   resolution_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
@@ -523,6 +528,22 @@ Current Change Unit:
 
 - `idx_change_units_one_current_active` permits at most one current Change Unit row with `status='active'` per `Task`.
 - When `tasks.current_change_unit_id` is set, typed Core code must ensure it points to the same row that is `status='active'` and `is_current=1`.
+
+Task revisions and close basis:
+
+- `tasks.scope_revision` and `tasks.close_basis_revision` are internal current-state coordinates, not public state clocks and not caller-selected authority.
+- Material current-scope or current Change Unit changes increment `tasks.scope_revision`; semantically identical normalized updates do not.
+- A committed `harness.record_run` increments `tasks.close_basis_revision` exactly once.
+- A material scope change invalidates `tasks.close_basis_json`, increments `tasks.close_basis_revision`, and may make judgment basis rows stale or superseded under their owners.
+- Recording a user judgment does not increment either task revision.
+- `tasks.close_basis_json` is nullable current `CurrentCloseBasis` storage. SQL `NULL` means no current close basis is available.
+- `tasks.close_summary_json` is preserved for successful terminal close results. Existing open Tasks do not automatically convert terminal or legacy summary JSON into a current close basis.
+
+Judgment basis storage:
+
+- `user_judgments.basis_json` stores the API `JudgmentBasis` snapshot when one exists.
+- `user_judgments.basis_status` stores the storage-owned compatibility state for the judgment basis: `current`, `stale`, `superseded`, or `legacy_unbound`.
+- Existing judgments without a basis are represented as `basis_json IS NULL` and `basis_status='legacy_unbound'`. They remain audit records and cannot satisfy current close, write, or sensitive-approval requirements.
 
 Surface local access grants:
 

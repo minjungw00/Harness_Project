@@ -1,6 +1,6 @@
 # API 상태 스키마
 
-이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ShapingReadiness`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
+이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ShapingReadiness`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
 
 ## 담당 경계
 
@@ -23,6 +23,7 @@
 - 응답 분기 선택: [공통 응답 분기](schema-core.md#common-response)
 - 메서드 동작과 효과: [API 메서드](methods.md)와 메서드 담당 문서
 
+<a id="state-references"></a>
 ## 상태 참조
 
 의미:
@@ -285,6 +286,34 @@ ObservedChanges:
 ## 닫기 준비 상태와 검증 형태
 
 ```yaml
+CurrentCloseBasis:
+  close_basis_revision: integer
+  scope_revision: integer
+  task_id: string
+  change_unit_id: string
+  baseline_ref: string | null
+  result_summary: string
+  result_refs: StateRecordRef[]
+  evidence_summary_ref: StateRecordRef | null
+  residual_risks: ResidualRisk[]
+  sensitive_categories: string[]
+  recovery_constraints: string[]
+  source_run_ref: StateRecordRef
+  updated_at: string
+
+ResidualRisk:
+  risk_id: string
+  summary: string
+  consequence: string
+  acceptance_required: boolean
+  source_refs: StateRecordRef[]
+
+RiskAcceptanceCoverage:
+  risk_id: string
+  accepted: boolean
+  accepted_by_judgment_refs: StateRecordRef[]
+  missing_reason: string | null
+
 CloseReadinessBlocker:
   category: string
   code: string
@@ -306,6 +335,13 @@ GuaranteeDisplay:
 ```
 
 의미:
+- `CurrentCloseBasis`는 닫기 준비 상태 응답이 사용하는 현재 결과와 잔여 위험 상태입니다. 종료 닫기 요약이 아닙니다.
+- `close_basis_revision`과 `scope_revision`은 호환성 확인을 위해 드러나는 내부 현재 상태 좌표입니다. 호출자가 선택하는 권한이 아닙니다.
+- `ResidualRisk.risk_id`는 Core가 생성한 불투명 식별자입니다. `ResidualRisk.summary`와 `ResidualRisk.consequence`는 표시 문자열이며 텍스트 일치를 권한으로 만들지 않습니다.
+- `result_refs`, `source_run_ref`, `source_refs`, `evidence_summary_ref`, `accepted_by_judgment_refs`는 `StateRecordRef`를 사용합니다.
+- `sensitive_categories`는 영향받는 메서드나 프로필 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 불투명 민감 범주 분류 문자열입니다.
+- `recovery_constraints`와 `RiskAcceptanceCoverage.missing_reason`은 자유 형식 표시 문자열입니다.
+- `RiskAcceptanceCoverage`는 현재 잔여 위험 요구사항이 호환되는 판단으로 덮였는지를 보고합니다.
 - `CloseReadinessBlocker`는 닫기 차단 사유를 표현하는 데이터 형태입니다.
 - `CloseReadinessBlocker.category`는 제어 값 문자열입니다.
 - `CloseReadinessBlocker.code`는 담당 문서가 정의하는 차단 사유 코드입니다. 차단 사유 또는 메서드 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 빠짐없는 전역 공개 enum이 아닙니다.
@@ -313,10 +349,12 @@ GuaranteeDisplay:
 - `ValidatorResult.validator_id`는 값 집합 담당 문서가 지원되는 안정 값을 공개하기 전까지 보고용 라벨입니다.
 - `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level`은 제어 값 문자열입니다.
 
-이 형태는 닫기 준비 상태 의미, 응답 처리 경로, 지속 동작을 정의하지 않습니다.
+이 형태들은 닫기 준비 상태 의미, 응답 처리 경로, 지속 동작을 정의하지 않습니다.
 
 담당 문서 링크:
 - 닫기 준비 상태 의미와 대체 금지 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)
+- 현재 닫기 근거 생성: [`harness.record_run`](method-record-run.md)
+- 판단 호환성과 수락된 위험 입력: [API 판단 스키마](schema-judgment.md)
 - 응답 분기 동작, 닫기 준비 상태 평가 순서, 커밋된 차단 결과: [`harness.close_task`](method-close-task.md)
 - 닫기 차단 사유와 API 응답 분기 사이의 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md)
 - 차단 사유 범주 값(`CloseReadinessBlocker.category`)과 지원되는 `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level` 값: [API 값 집합](schema-value-sets.md#state-and-blocker-values)

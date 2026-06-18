@@ -76,6 +76,8 @@ PrepareWriteRequest:
 - 필요한 경우 별도 민감 동작 승인(`sensitive_approval`)
 - 의도한 제품 파일 쓰기 확인에 필요한 로컬 접점 역량
 
+별도 민감 동작 승인은 그 `JudgmentBasis`가 현재 `scope_revision`, 현재 Change Unit, 의도한 동작, 정규화된 `intended_paths`, 민감 범주, `baseline_ref`와 계속 호환될 때만 이 메서드를 만족합니다. `legacy_unbound`, 오래됨, 대체됨, 비호환 판단은 민감 동작 승인을 만족할 수 없습니다. 호출자는 승인을 호환되게 만들기 위한 리비전 필드를 제출하지 않습니다.
+
 ## 상태 버전 동작
 
 | 결과 | 상태 버전 효과 | `Write Authorization` 효과 |

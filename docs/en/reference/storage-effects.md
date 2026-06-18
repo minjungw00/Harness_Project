@@ -189,7 +189,7 @@ Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker
 
 Read-only results are response-only and not replay rows.
 
-For response computation, `harness.status` and `harness.close_task intent=check` may compute blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response.
+For response computation, `harness.status` and `harness.close_task intent=check` may compute `CurrentCloseBasis`, close state, risk acceptance coverage, blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response.
 
 Storage must not persist those computed values merely because the read occurred.
 
@@ -293,7 +293,7 @@ This table summarizes persistence effects. Method behavior and response unions r
 | `harness.status` | read-only response | See [`harness.status`](#harnessstatus) |
 | `harness.prepare_write` | records write decision effects | See [`harness.prepare_write`](#harnessprepare_write) |
 | `harness.stage_artifact` | creates transient staging only | See [`harness.stage_artifact`](#harnessstage_artifact) |
-| `harness.record_run` | records run and evidence effects | See [`harness.record_run`](#harnessrecord_run) |
+| `harness.record_run` | records run, current close-basis, and evidence effects | See [`harness.record_run`](#harnessrecord_run) |
 | `harness.request_user_judgment` | creates pending judgment request | See [`harness.request_user_judgment`](#harnessrequest_user_judgment) |
 | `harness.record_user_judgment` | resolves user judgment | See [`harness.record_user_judgment`](#harnessrecord_user_judgment) |
 | `harness.close_task intent=check` | read-only close-readiness check | See [`harness.close_task intent=check`](#harnessclose_task-intentcheck) |
@@ -333,6 +333,9 @@ Committed `dry_run=false` may:
 
 - update current-scope Task fields
 - create or replace current `change_units`
+- increment `tasks.scope_revision` for material current-scope or current Change Unit changes
+- invalidate `tasks.close_basis_json` and increment `tasks.close_basis_revision` for material scope changes
+- mark incompatible judgment basis rows stale or superseded as owner-defined compatibility requires
 - update blockers or stale `Write Authorization` refs as the method owner allows
 - append events
 - create a replay row
@@ -344,6 +347,8 @@ No-effect branches:
 - rejected attempts
 
 Valid dry-run previews only describe scope, Change Unit, blocker, and stale authorization effects.
+
+Semantically identical normalized updates do not increment `tasks.scope_revision` or invalidate the current close basis.
 
 Owner links:
 
@@ -455,6 +460,7 @@ Committed `dry_run=false` may:
 - consume eligible `artifact_staging`
 - promote or link `artifacts`
 - update `evidence_summaries` or allowed blockers
+- update `tasks.close_basis_revision` and `tasks.close_basis_json` according to `close_assessment`
 - append events
 - create a replay row
 - increment `project_state.state_version` once
@@ -468,6 +474,8 @@ No-effect branches:
 Valid dry-run previews do not create:
 
 - `run_summary`
+- current close basis
+- persistent residual-risk IDs
 - persistent artifact
 - artifact link
 - evidence update
@@ -489,6 +497,13 @@ Product file write persistence boundary:
 - Test evidence persistence can promote staged artifacts and update evidence without implying a product file write observation.
 - Exact run classification belongs to the [`harness.record_run` method](api/method-record-run.md).
 
+Current close-basis persistence boundary:
+
+- A committed `harness.record_run` increments `tasks.close_basis_revision` exactly once.
+- A non-null `close_assessment` writes a new current `CurrentCloseBasis` in `tasks.close_basis_json` and stores Core-generated opaque residual-risk IDs.
+- `close_assessment=null` records that the committed Run does not establish a current close basis; any existing current basis becomes stale or absent.
+- Run, current close basis, evidence, artifact, authorization, replay, event, and revision effects commit atomically.
+
 Owner links:
 
 - [`harness.record_run` method](api/method-record-run.md)
@@ -501,6 +516,7 @@ Owner links:
 Committed `dry_run=false` may:
 
 - create a pending `user_judgments` row
+- store `basis_json` and `basis_status='current'` for the Core-derived judgment basis
 - update affected blockers
 - append events
 - create a replay row
@@ -531,6 +547,7 @@ Owner links:
 Committed `dry_run=false` may:
 
 - resolve a `user_judgments` row
+- update judgment resolution and basis status as allowed by the method owner
 - update dependent blockers or next actions
 - append events
 - create a replay row
@@ -549,6 +566,8 @@ Valid dry-run previews do not create:
 - replay row
 - `project_state.state_version` increment
 
+Recording a user judgment does not increment `tasks.scope_revision` or `tasks.close_basis_revision`.
+
 Owner links:
 
 - [`harness.record_user_judgment` method](api/method-record-user-judgment.md#harnessrecord_user_judgment)
@@ -560,6 +579,7 @@ Owner links:
 Read-only calls:
 
 - return computed close readiness
+- use the same close-readiness calculation as `harness.status include.close=true`
 - do not create replay rows
 - do not append events
 - do not create blocker rows
@@ -583,6 +603,7 @@ Owner links:
 Committed `dry_run=false` may:
 
 - persist the method-selected terminal completion effect
+- persist a terminal close summary distinct from `tasks.close_basis_json` when the method-selected completion effect succeeds
 - persist an owner-allowed blocked `complete` effect while the Task remains open
 - append events
 - create a replay row

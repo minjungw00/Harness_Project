@@ -79,6 +79,17 @@ StatusRequest:
 
 비주장: `StatusResult.close_blockers`는 저장된 `close_task` 결과가 아닙니다.
 
+`include` 상태 보기 계약:
+
+- `include.task`는 선택된 `Task` 요약과 현재 Change Unit을 `active_task`로 반환합니다.
+- `include.pending_user_judgments`는 현재 대기 판단 참조를 반환하며, 관련 있는 오래됨 또는 대체됨 판단 상태는 `blocker_refs`, `next_actions.required_refs` 같은 기존 결과 필드로 나타납니다.
+- `include.write_authority`는 유효한 활성, 만료, 오래됨, 소비됨 쓰기 권한 상태를 `write_authority_summary`로 반환합니다.
+- `include.evidence`는 사용할 수 있을 때 현재 `EvidenceSummary`와 범위를 반환합니다.
+- `include.close`는 `CurrentCloseBasis | null`, 닫기 상태, 계산된 차단 사유, 위험 수락 범위, 관련 다음 행동을 반환합니다.
+- `include.guarantees`는 활성 프로필과 확인된 접점 맥락이 지원하는 보장만 반환합니다.
+
+`include.close=true`와 [`harness.close_task`](method-close-task.md)의 `intent=check`는 같은 닫기 준비 상태 계산을 사용합니다. `harness.status`는 읽기 전용으로 남으며 재실행 행, 이벤트, 상태 변경, 닫기 변경, 상태 버전 증가를 만들지 않습니다.
+
 ## 메서드 결과 필드
 
 `StatusResult`는 성공적인 상태 조회에 대한 메서드별 결과 분기입니다. 이 결과는 `base: ToolResultBase`와 아래 메서드 소유 최상위 필드를 담습니다.
@@ -92,10 +103,12 @@ StatusRequest:
 | `pending_user_judgments` | 상태 조회 보기에 선택된 대기 중 사용자 판단 기록의 `StateRecordRef[]`입니다. |
 | `blocker_refs` | 현재 상태 조회 보기에 보이는 차단 사유 기록의 `StateRecordRef[]`입니다. |
 | `close_state` | 현재 보기의 닫기 상태 값입니다. 현재 닫기 상태가 없을 때의 `none`을 포함한 지원 값은 [API 값 집합](schema-value-sets.md#task-lifecycle-values)이 담당합니다. |
+| `current_close_basis` | 닫기 상태 조회 보기에 선택된 `CurrentCloseBasis | null`입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
+| `risk_acceptance_coverage` | 닫기 상태 조회 보기에서 현재 잔여 위험 수락 범위를 나타내는 `RiskAcceptanceCoverage[]`입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
 | `close_blockers` | 현재 보기에 대한 읽기 전용 `CloseReadinessBlocker[]` 관찰입니다. 저장된 `close_task` 결과가 아닙니다. |
 | `guarantee_display` | 현재 상태 조회 보기에 대한 `GuaranteeDisplay | null`입니다. |
 
-중첩된 `StateSummary`, `StateRecordRef`, `CloseReadinessBlocker`, `GuaranteeDisplay`, `NextActionSummary` 형태는 [API 상태 스키마](schema-state.md)가 담당합니다.
+중첩된 `StateSummary`, `StateRecordRef`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `GuaranteeDisplay`, `NextActionSummary` 형태는 [API 상태 스키마](schema-state.md)가 담당합니다.
 
 ## 차단 결과
 
@@ -252,6 +265,8 @@ pending_user_judgments:
     state_version: 42
 blocker_refs: []
 close_state: blocked
+current_close_basis: null
+risk_acceptance_coverage: []
 close_blockers:
   - category: user_judgment
     code: missing_user_judgment
@@ -282,7 +297,7 @@ guarantee_display:
 ## 담당 문서 링크
 
 - 요청 래퍼와 응답 분기: [API 코어 스키마](schema-core.md).
-- 상태, 닫기 준비 상태 형태, 증거 요약, 보장 표시: [API 상태 스키마](schema-state.md).
+- 상태, 현재 닫기 근거, 닫기 준비 상태 형태, 증거 요약, 보장 표시: [API 상태 스키마](schema-state.md).
 - 지원되는 값과 접근 등급: [API 값 집합](schema-value-sets.md).
 - 공개 오류, 우선순위, 거절 응답 처리 경로: [API 오류 코드](error-codes.md), [API 오류 우선순위](error-precedence.md), [API 오류 처리 경로](error-routing.md).
 - 닫기 준비 상태 차단 사유 처리 경로: [API 차단 사유 처리 경로](blocker-routing.md).

@@ -26,6 +26,8 @@
 
 이 메서드는 사용자의 답에 따라 지정된 대기 판단을 갱신합니다. 답변을 관련 없는 승인, 현재 적용 범위 확장, 최종 수락, 잔여 위험 수락, 민감 동작 승인, `Write Authorization`으로 넓히지 않습니다.
 
+답변을 기록하기 전에 Core는 대기 판단의 `JudgmentBasis`를 현재 상태와 비교합니다. 오래됨, 대체됨, 비호환, `legacy_unbound` 근거에는 성공적으로 답할 수 없습니다.
+
 ## 필수 입력
 
 - 유효한 `ToolEnvelope`. 커밋되는 `dry_run`이 아닌 요청에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
@@ -73,12 +75,20 @@ RecordUserJudgmentRequest:
 
 - `project_state.state_version`을 정확히 한 번 올립니다.
 - 지정된 `user_judgments` 행을 갱신합니다.
+- `scope_revision`이나 `close_basis_revision`을 증가시키지 않습니다.
 - 저장 효과 담당 문서가 허용하는 경우에만 종속 차단 사유 또는 요약 상태를 갱신할 수 있습니다.
 
 비주장:
 
 - `dry_run`과 거절은 판단 해결, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 - 기록된 `scope_decision`은 현재 적용 범위나 현재 적용 Change Unit 기록을 조용히 바꾸지 않습니다. 그 기록은 여전히 `harness.update_scope` 같은 범위 담당 문서가 정의한 전이가 필요합니다.
+
+호환성 요구사항:
+
+- 최종 수락은 판단 근거에 캡처된 현재 `Task`, Change Unit, `scope_revision`, `close_basis_revision`, 기준선, 결과 참조와 일치해야 합니다.
+- 잔여 위험 수락은 `AcceptedRiskInput`에 정확한 현재 `risk_id` 값을 포함해야 하며 현재 `close_basis_revision`과 일치해야 합니다.
+- 민감 승인은 현재 `scope_revision`, Change Unit, 동작, 정규화된 경로, 민감 범주, 기준선과 일치해야 합니다.
+- 범위 변경이나 실행 기록 변경은 이력 판단을 삭제하지 않습니다. 다만 호환되지 않는 판단은 현재 닫기, 쓰기, 민감 승인 요구사항에 사용할 수 없게 됩니다.
 
 ## 성공 결과
 
@@ -127,7 +137,9 @@ RecordUserJudgmentRequest:
 - 유효하지 않은 선택지
 - 유효하지 않은 답변 요청 본문
 - 만료된 대기 판단
+- 오래됨, 대체됨, 비호환, `legacy_unbound` 판단 근거
 - 대기 판단과 호환되지 않는 답변
+- 누락되었거나 현재와 일치하지 않는 잔여 위험 `risk_id`
 - 로컬 접근 실패
 - 검증기 실패
 
@@ -232,6 +244,17 @@ user_judgment:
       project_id: proj_empty_001
       task_id: task_empty_001
       state_version: 62
+  basis:
+    task_id: task_empty_001
+    change_unit_id: cu_empty_001
+    scope_revision: 1
+    close_basis_revision: null
+    baseline_ref: baseline_empty_001
+    result_refs: []
+    residual_risk_ids: []
+    sensitive_action_scope: null
+    created_at_state_version: 62
+    compatibility_status: current
   required_for: acceptance
   resolution:
     selected_option_id: keep

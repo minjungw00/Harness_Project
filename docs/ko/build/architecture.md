@@ -59,7 +59,7 @@ flowchart LR
 
 Core는 참조 담당 문서가 정의한 권한 결정을 담당합니다. 어댑터는 전송만 변환합니다. Core 쪽 코드는 CLI와 MCP 어댑터 계층에 의존하지 않아야 하며, 어댑터는 Core 쪽 인터페이스에 의존할 수 있습니다.
 
-가이드 수준에서 MCP 어댑터는 세션에 대해 프로젝트 접점과 접점 인스턴스를 바인딩한 뒤, 공개 메서드 호출마다 메서드와 타입 지정 params에서 요청 접근을 파생합니다. 정확한 접근 파생과 허용 규칙은 [에이전트 통합](../reference/agent-integration.md)과 메서드 담당 문서에 둡니다.
+가이드 수준에서 MCP 어댑터 시작은 세션에 대해 하나의 프로젝트, 하나의 접점, 하나의 접점 인스턴스를 선택한 뒤, 공개 메서드 호출마다 메서드와 타입 지정 params에서 요청 접근을 파생합니다. 정확한 세션 바인딩, 접근 파생, 허용 규칙은 [에이전트 통합](../reference/agent-integration.md)과 메서드 담당 문서에 둡니다.
 
 ## Rust 워크스페이스 형태
 
@@ -90,7 +90,7 @@ Rust 구현 작업에서는 기준 워크스페이스를 좁고 계층적으로 
 
 1. `harness.prepare_write`는 의도된 제품 파일 쓰기 시도 하나가 담당 문서가 정의한 현재 상태와 호환되는지 Core에 평가를 요청합니다. 메서드 담당 문서가 허용할 때 Core는 `Write Authorization` 권한 기록을 만듭니다.
 2. 실제 제품 파일 편집은 연결된 접점이나 로컬 도구를 통해 공개 Harness API 밖에서 일어납니다. 이 가이드는 파일 쓰기 방식을 정의하지 않으며 보안 보장을 만들지 않습니다.
-3. `harness.record_run`은 사후에 관찰된 작업을 기록하고, 담당 문서가 지원하는 증거, 차단 사유, 아티팩트 링크, 아티팩트 승격을 기록할 수 있습니다. Run 기록은 누락된 권한을 사후에 보충하지 않으며, 담당 문서가 정의한 기록 사실을 넘어 쓰기 발생을 증명하지 않습니다.
+3. `harness.record_run`은 사후에 관찰된 작업을 기록하고, 현재 닫기 근거를 갱신하거나 담당 문서가 지원하는 증거, 차단 사유, 아티팩트 링크, 아티팩트 승격을 기록할 수 있습니다. Run 기록은 누락된 권한을 사후에 보충하지 않으며, 담당 문서가 정의한 기록 사실을 넘어 쓰기 발생을 증명하지 않습니다. 종료 닫기 동작은 `harness.close_task`에 둡니다.
 
 정확한 동작은 메서드 담당 문서를 사용합니다. 지속 효과는 저장소 담당 문서를 사용합니다. 권한 의미는 Core 모델을 사용합니다.
 
@@ -103,6 +103,7 @@ Rust 구현 작업에서는 기준 워크스페이스를 좁고 계층적으로 
 | 지원되는 공개 메서드와 메서드별 동작 | [API 메서드](../reference/api/methods.md), 그다음 메서드 담당 문서 |
 | `harness.prepare_write` 동작 | [`harness.prepare_write`](../reference/api/method-prepare-write.md) |
 | `harness.record_run` 동작 | [`harness.record_run`](../reference/api/method-record-run.md) |
+| `harness.close_task` 동작 | [`harness.close_task`](../reference/api/method-close-task.md) |
 | 저장소 담당 문서 읽기 순서 | [저장소](../reference/storage.md) |
 | 저장 효과 | [저장 효과](../reference/storage-effects.md) |
 | 기록 레이아웃 | [저장소 기록](../reference/storage-records.md) |

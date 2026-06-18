@@ -154,6 +154,9 @@ CREATE TABLE tasks (
   shaping_summary_json TEXT NOT NULL DEFAULT '{}',
   bounded_context_json TEXT NOT NULL DEFAULT '[]',
   autonomy_boundary_json TEXT NOT NULL DEFAULT '{}',
+  scope_revision INTEGER NOT NULL DEFAULT 0 CHECK (scope_revision >= 0),
+  close_basis_revision INTEGER NOT NULL DEFAULT 0 CHECK (close_basis_revision >= 0),
+  close_basis_json TEXT,
   close_summary_json TEXT NOT NULL DEFAULT '{}',
   completion_policy_json TEXT NOT NULL DEFAULT '{}',
   current_change_unit_id TEXT,
@@ -180,7 +183,6 @@ CREATE TABLE change_units (
   scope_summary_json TEXT NOT NULL DEFAULT '{}',
   bounded_paths_json TEXT NOT NULL DEFAULT '[]',
   write_basis_json TEXT NOT NULL DEFAULT '{}',
-  close_basis_json TEXT NOT NULL DEFAULT '{}',
   lifecycle_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -208,6 +210,9 @@ CREATE TABLE user_judgments (
   affected_refs_json TEXT NOT NULL DEFAULT '[]',
   artifact_refs_json TEXT NOT NULL DEFAULT '[]',
   sensitive_action_scope_json TEXT NOT NULL DEFAULT '{}',
+  basis_json TEXT,
+  basis_status TEXT NOT NULL DEFAULT 'legacy_unbound'
+    CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound')),
   resolution_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
@@ -523,6 +528,22 @@ CREATE INDEX idx_task_events_task_seq
 
 - `idx_change_units_one_current_active`는 `Task`마다 `status='active'`이고 `is_current=1`인 현재 적용 Change Unit 행이 최대 하나만 있도록 합니다.
 - `tasks.current_change_unit_id`가 설정되어 있으면 타입을 아는 Core 코드는 그 포인터가 `status='active'`이고 `is_current=1`인 같은 행을 가리키는지 확인해야 합니다.
+
+Task 리비전과 닫기 근거:
+
+- `tasks.scope_revision`과 `tasks.close_basis_revision`은 내부 현재 상태 좌표이며 공개 상태 시계나 호출자가 선택하는 권한이 아닙니다.
+- 현재 적용 범위나 현재 적용 Change Unit의 실질적 변경은 `tasks.scope_revision`을 증가시킵니다. 의미가 같은 정규화된 갱신은 증가시키지 않습니다.
+- 커밋된 `harness.record_run`은 `tasks.close_basis_revision`을 정확히 한 번 증가시킵니다.
+- 실질적 범위 변경은 `tasks.close_basis_json`을 무효화하고, `tasks.close_basis_revision`을 증가시키며, 담당 문서에 따라 판단 근거 행을 오래됨 또는 대체됨으로 만들 수 있습니다.
+- 사용자 판단 기록은 어느 Task 리비전도 증가시키지 않습니다.
+- `tasks.close_basis_json`은 nullable 현재 `CurrentCloseBasis` 저장소입니다. SQL `NULL`은 사용할 수 있는 현재 닫기 근거가 없다는 뜻입니다.
+- `tasks.close_summary_json`은 성공한 종료 닫기 결과를 위해 보존됩니다. 기존 열린 Task는 종료 또는 레거시 요약 JSON을 현재 닫기 근거로 자동 변환하지 않습니다.
+
+판단 근거 저장:
+
+- `user_judgments.basis_json`은 있을 때 API `JudgmentBasis` 스냅샷을 저장합니다.
+- `user_judgments.basis_status`는 판단 근거의 저장소 소유 호환 상태인 `current`, `stale`, `superseded`, `legacy_unbound`를 저장합니다.
+- 근거가 없는 기존 판단은 `basis_json IS NULL`과 `basis_status='legacy_unbound'`로 표현합니다. 이 판단은 감사 기록으로 남으며 현재 닫기, 쓰기, 민감 승인 요구사항을 만족할 수 없습니다.
 
 접점 로컬 접근 허용:
 

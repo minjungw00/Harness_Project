@@ -470,6 +470,21 @@ superseded
 incompatible
 ```
 
+`JudgmentBasis.compatibility_status`는 아래 값을 사용합니다.
+
+```text
+current
+stale
+superseded
+legacy_unbound
+```
+
+의미:
+- `current`는 근거가 현재 만족할 수 있는 요구사항과 지금 일치한다는 뜻입니다.
+- `stale`은 저장된 근거가 더 이상 현재 상태와 일치하지 않는다는 뜻입니다. 해결된 행은 감사용으로 남을 수 있지만 현재 요구사항에는 사용할 수 없습니다.
+- `superseded`는 대기 판단이 더 새 질문이나 근거로 대체되어 성공적으로 답할 수 없다는 뜻입니다.
+- `legacy_unbound`는 보존된 판단에 상태 근거가 없어서 현재 닫기, 쓰기, 민감 승인 요구사항을 만족할 수 없다는 뜻입니다.
+
 `UserJudgmentOption.option_id`의 범위는 그 판단 안으로 제한되며 전역 값 집합이 아닙니다. 화면에 보이는 선택지 라벨은 기준 값이 아니라 표시 텍스트일 뿐입니다.
 
 ## 오류 세부사항 보조 값

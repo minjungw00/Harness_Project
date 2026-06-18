@@ -74,9 +74,9 @@ Baseline storage persists only the record families defined by this baseline stor
 | project home | `project.yaml` | Static configuration | Static project configuration for one registered project. |
 | `state.sqlite` | `project_state` | Project state header | Storage profile, `state_version`, current `Task` pointer, and default surface pointer. |
 | `state.sqlite` | `surfaces` | Surface facts | Registered local surface facts needed for API envelope compatibility, capability display, and local-access posture. |
-| `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, lifecycle/result/close summary, current `CompletionPolicy`, and current Change Unit pointer. |
-| `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, close basis, Change Unit lifecycle, and owning `Task` relation. |
-| `state.sqlite` | `user_judgments` | User-owned judgment state | Pending and resolved user-owned judgments, including sensitive-action approval scope when relevant. |
+| `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, and current Change Unit pointer. |
+| `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, Change Unit lifecycle, and owning `Task` relation. |
+| `state.sqlite` | `user_judgments` | User-owned judgment state | Pending, resolved, stale, superseded, and legacy-unbound user-owned judgments, including basis snapshot, basis status, and sensitive-action approval scope when relevant. |
 | `state.sqlite` | `write_authorizations` | Cooperative write authority | Single-use `Write Authorization`, basis version, attempt scope, expiration, and consumption state. |
 | `state.sqlite` | `runs` | Execution or observation record | Committed execution or observation record, compatible authorization consumption, and compact evidence updates. |
 | `state.sqlite` plus `artifacts/tmp/` | `artifact_staging` | Transient artifact staging | Staged handle metadata, safe staging facts, and transient bytes or notices. |
@@ -124,6 +124,14 @@ Ordinary baseline Core operations preserve authority rows through lifecycle or s
 
 This preservation applies to `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers`, `task_events`, and `tool_invocations`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
 
+### Current close basis and legacy state
+
+The current close basis is Task-owned current state stored with the `tasks` family. It is distinct from the terminal close summary stored for a successful terminal close result.
+
+Existing open Tasks do not automatically convert terminal close summary JSON or legacy summary JSON into a current close basis. Absence of a current close basis is represented as absence in the current-basis field, not as an empty generated basis.
+
+Judgments without a stored basis are preserved for audit as `legacy_unbound`. They remain addressable historical judgment records but cannot satisfy current close, write, or sensitive-approval requirements.
+
 ## Storage-owned values
 
 Closed storage-owned value sets are persistence constraints. Unknown values must not commit.
@@ -133,6 +141,7 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | Project registration `status` | `active` |
 | `change_units.status` | `proposed`, `active`, `replaced`, `closed` |
 | `write_authorizations.status` | `active`, `consumed`, `expired`, `stale`, `revoked` |
+| `user_judgments.basis_status` | `current`, `stale`, `superseded`, `legacy_unbound` |
 | `artifact_staging.status` | `staged`, `consumed`, `expired`, `discarded` |
 | `artifacts.status` | `available`, `missing`, `integrity_failed`, `unavailable` |
 | `artifact_links.owner_record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
@@ -155,9 +164,9 @@ Rules:
 | Record family | JSON `TEXT` category |
 |---|---|
 | `surfaces` | Surface capability profile data. |
-| `tasks` | Shaping summary, bounded lists, autonomy boundary, lifecycle/close summary, and `CompletionPolicy`. |
-| `change_units` | Scope summaries, bounded lists, write/close basis summaries, and lifecycle support data. |
-| `user_judgments` | Judgment request, context, option, affected-ref, artifact-ref, sensitive-action scope, and resolution data. |
+| `tasks` | Shaping summary, bounded lists, autonomy boundary, current close basis, terminal close summary, lifecycle summary, and `CompletionPolicy`. |
+| `change_units` | Scope summaries, bounded lists, write basis summaries, and lifecycle support data. |
+| `user_judgments` | Judgment request, context, option, affected-ref, artifact-ref, basis snapshot, sensitive-action scope, and resolution data. |
 | `write_authorizations` | `Write Authorization` attempt scope. |
 | `runs` | Observation and evidence-update data. |
 | `evidence_summaries` | Evidence coverage and gap references. |

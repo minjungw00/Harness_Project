@@ -25,6 +25,8 @@
 
 대기 중인 판단은 결정을 요청하는 기록입니다. 결정 자체가 아니며, 증거를 만들거나, 현재 적용 범위를 바꾸거나, `Write Authorization`을 만들거나, `Task`를 닫지 않습니다.
 
+이 메서드가 대기 판단을 만들 때 Core는 현재 상태에서 `JudgmentBasis`를 파생합니다. 호출자는 `scope_revision`, `close_basis_revision`, 세션 바인딩 필드, 접근 등급 필드, 현재 닫기 근거 권한 필드를 제출하지 않습니다.
+
 ## 필수 입력
 
 - 유효한 `ToolEnvelope`. 커밋되는 `dry_run`이 아닌 요청에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
@@ -73,11 +75,14 @@ RequestUserJudgmentRequest:
 
 - `project_state.state_version`을 정확히 한 번 올립니다.
 - 대기 중인 `UserJudgment` 하나를 만듭니다.
+- `basis.compatibility_status=current`인 Core 파생 `JudgmentBasis`를 저장합니다.
 - 저장 효과 담당 문서가 허용하는 경우에만 영향받은 차단 사유 상태를 갱신할 수 있습니다.
 
 비주장:
 
 - 다른 메서드가 반환한 `UserJudgmentCandidate`는 `harness.request_user_judgment`가 커밋하기 전까지 지속 판단이 아닙니다.
+- `judgment_kind=final_acceptance` 또는 `judgment_kind=residual_risk_acceptance`에서는 Core가 현재 닫기 근거를 판단 근거에 캡처합니다. 필요한 현재 닫기 근거 또는 현재 잔여 위험 ID를 사용할 수 없으면 요청은 커밋 전에 거절됩니다.
+- 잔여 위험 수락의 경우 요청 맥락의 보이는 위험은 정확한 현재 `risk_id` 값을 담아야 합니다.
 - `dry_run`과 거절은 대기 중인 판단, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
 ## 성공 결과
@@ -119,6 +124,8 @@ RequestUserJudgmentRequest:
 - 지원되지 않거나 호환되지 않는 `judgment_kind`
 - 없거나 호환되지 않는 `Task` 식별자
 - 미해결 선행 판단
+- 최종 수락 또는 잔여 위험 수락에 필요한 현재 닫기 근거 없음
+- 잔여 위험 수락에 필요한 현재 잔여 위험 ID 누락 또는 불일치
 - 로컬 접근 실패
 - 부족한 역량
 - 오래된 `expected_state_version`
@@ -186,6 +193,17 @@ params:
       project_id: proj_banner_001
       task_id: task_banner_001
       state_version: 51
+  basis:
+    task_id: task_banner_001
+    change_unit_id: cu_banner_001
+    scope_revision: 1
+    close_basis_revision: null
+    baseline_ref: baseline_banner_001
+    result_refs: []
+    residual_risk_ids: []
+    sensitive_action_scope: null
+    created_at_state_version: 51
+    compatibility_status: current
   required_for: close
   expires_at: null
 ```

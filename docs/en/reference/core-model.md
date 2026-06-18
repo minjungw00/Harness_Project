@@ -66,6 +66,14 @@ Acceptance and risk acceptance are specific.
 - Residual-risk acceptance is the user's acceptance of named visible residual risk for the requested close.
 - Neither fills evidence gaps, changes scope, grants write authority, proves verification, or makes the result risk-free.
 
+Scope and close-basis revisions are internal current-state coordinates.
+
+- Every `Task` has a `scope_revision` and a `close_basis_revision`.
+- Material current-scope or current Change Unit changes increment `scope_revision`; semantically identical normalized updates do not.
+- A committed Run recording increments `close_basis_revision`. A material scope change also invalidates the current close basis and increments `close_basis_revision`.
+- Recording a user-owned judgment does not increment either revision.
+- Callers do not choose these revisions, and a revision value is not authority by itself.
+
 ## 3. Core Concepts
 
 ### Core
@@ -136,6 +144,12 @@ Close readiness is the Core authority concept for whether the current `Task` can
 
 It considers the current `Task`, current scope, current Change Unit, required judgments, write and Run compatibility, evidence support, artifact availability, unresolved blockers, final acceptance, residual-risk visibility, residual-risk acceptance, and recovery constraints.
 
+### Current close basis
+
+`CurrentCloseBasis` is the current result and risk state used for close-readiness decisions. It contains the current `Task`, current Change Unit, `scope_revision`, `close_basis_revision`, baseline, result summary, result references, evidence-summary reference, residual risks, sensitive categories, recovery constraints, source Run reference, and update time.
+
+`CurrentCloseBasis` is pre-close authority input. A successful terminal close may produce a terminal close summary, but that terminal summary is not the current pre-close basis and must not be used to recreate one for an open `Task`.
+
 ### Final acceptance
 
 Final acceptance is a user-owned judgment that the visible close basis is acceptable for the requested close.
@@ -146,7 +160,7 @@ It does not create evidence, approve sensitive action, change scope, accept resi
 
 Residual risk is known remaining uncertainty, an unchecked condition, limitation, or trade-off that matters to close.
 
-Residual-risk acceptance applies only to the named visible risk for the requested close. It does not cover all unknowns, replace evidence, replace final acceptance, or make the result risk-free.
+Residual-risk acceptance applies only to the named visible risk for the requested close. Each current residual risk has an opaque Core-generated `risk_id`; display text is not authoritative identity. Residual-risk acceptance does not cover all unknowns, replace evidence, replace final acceptance, or make the result risk-free.
 
 ### Derived display
 
@@ -172,6 +186,19 @@ Final acceptance is the user's result judgment for the visible close basis.
 Residual-risk acceptance is the user's acceptance of a named visible residual risk for the requested close.
 
 Cancellation is a user-owned decision to stop the `Task` without a successful completed result.
+
+Core creates a basis snapshot for each stored judgment from current state. The basis ties the judgment to the current `Task`, Change Unit when applicable, `scope_revision`, close-basis revision when applicable, baseline, result references, named residual-risk IDs, sensitive-action scope when applicable, and creation state version. Callers do not submit scope revisions or close-basis revisions.
+
+Judgment compatibility:
+
+- Final acceptance must match the current `Task`, current Change Unit, `scope_revision`, `close_basis_revision`, baseline, and result references.
+- Residual-risk acceptance must match the current `close_basis_revision` and exact current `risk_id` values.
+- Sensitive-action approval must match the current `scope_revision`, current Change Unit, operation, normalized paths, sensitive categories, and baseline.
+- A scope decision records the user's decision but does not mutate current scope by itself.
+- A stale pending judgment cannot be answered successfully.
+- Scope changes and Run changes do not delete historical judgments; they make incompatible judgments ineligible for current close, write, or sensitive-approval requirements.
+
+Legacy judgments without a basis are preserved for audit as `legacy_unbound`. They cannot satisfy current close, write, or sensitive-approval requirements. Pending judgments may become `superseded`; resolved judgments may remain stored while becoming `stale`.
 
 Agent latitude:
 
@@ -317,6 +344,16 @@ Close readiness considers:
 - required final acceptance
 - residual-risk visibility and required residual-risk acceptance
 - recovery, repair, corruption, reconciliation, or other constraints that would make close dishonest
+
+Close readiness uses `CurrentCloseBasis` as the current close input. It does not use a terminal close summary as the current pre-close basis.
+
+The current close basis changes through owner-defined transitions:
+
+- A committed `record_run` increments `close_basis_revision` and either establishes a new current close basis from its close assessment or records that no current close basis is established.
+- A material scope or current Change Unit change increments `scope_revision`, invalidates the current close basis, and increments `close_basis_revision`.
+- Recording user-owned judgment may make a requirement satisfied, stale, or rejected, but it does not increment `scope_revision` or `close_basis_revision`.
+
+Residual-risk identity for close readiness uses opaque `risk_id` values from the current close basis. Risk summary or consequence text can explain the risk to the user, but text matching is not authority.
 
 Close readiness is not:
 

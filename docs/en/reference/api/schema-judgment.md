@@ -10,6 +10,7 @@ This document owns:
 - `UserJudgmentCandidate`
 - `UserJudgmentOption`
 - `UserJudgmentContext`
+- `JudgmentBasis`
 - `UserJudgmentResolution`
 - `RecordUserJudgmentPayload`
 - `SensitiveActionScope`
@@ -35,6 +36,7 @@ Judgment schemas preserve the field structure of a user-owned choice. They are n
 
 A `RecordUserJudgmentPayload` is not the schema for current scope, evidence, `Write Authorization`, a close result, or a broad approval.
 
+<a id="userjudgment"></a>
 ## `UserJudgment`
 
 ```yaml
@@ -50,6 +52,7 @@ UserJudgment:
   options: UserJudgmentOption[]
   context: UserJudgmentContext
   affected_refs: StateRecordRef[]
+  basis: JudgmentBasis | null
   required_for: string
   resolution: UserJudgmentResolution | null
   expires_at: string | null
@@ -61,6 +64,31 @@ UserJudgment:
 
 `judgment_id`, `project_id`, `task_id`, and `change_unit_id` are opaque identifiers. `question` is a free-form display string.
 
+`basis` is populated for newly created judgments. `basis=null` is only for preserved legacy or imported rows that lack a state basis; those rows are audit records and cannot satisfy current close, write, or sensitive-approval requirements.
+
+## `JudgmentBasis`
+
+`JudgmentBasis` is the Core-derived state snapshot used to decide whether a judgment can satisfy a current requirement.
+
+```yaml
+JudgmentBasis:
+  task_id: string
+  change_unit_id: string | null
+  scope_revision: integer
+  close_basis_revision: integer | null
+  baseline_ref: string | null
+  result_refs: StateRecordRef[]
+  residual_risk_ids: string[]
+  sensitive_action_scope: SensitiveActionScope | null
+  created_at_state_version: integer
+  compatibility_status: string
+```
+
+Core creates `JudgmentBasis` from current state when it creates the judgment. Callers do not submit `scope_revision`, `close_basis_revision`, current close-basis data, or session-binding data.
+
+`compatibility_status` values are owned by [judgment values](schema-value-sets.md#judgment-values). `legacy_unbound` marks a preserved judgment without a basis. `stale` and `superseded` judgments remain stored when needed for audit but are not eligible to satisfy current close, write, or sensitive-approval requirements.
+
+<a id="userjudgmentcandidate"></a>
 ## `UserJudgmentCandidate`
 
 `UserJudgmentCandidate` is the candidate shape for a proposed focused question. It has no `judgment_id`, `status`, `resolution`, `created_at`, or `resolved_at` field.
@@ -153,13 +181,14 @@ The presence of `SensitiveActionScope` does not define where sensitive-action ap
 
 `SensitiveActionScope.action_kind` and `sensitive_categories[]` are opaque sensitive-action classification strings unless an affected method or profile owner publishes a narrower local list. `description`, `command_or_tool_summary`, `network_or_host_summary`, `secret_or_credential_summary`, and `capability_claim` are display or claim strings; they are not canonical value sets or security authority.
 
+<a id="acceptedriskinput"></a>
 ## `AcceptedRiskInput`
 
 `AcceptedRiskInput` is the shape for naming a visible residual risk inside a judgment payload.
 
 ```yaml
 AcceptedRiskInput:
-  risk_id: string | null
+  risk_id: string
   summary: string
   consequence: string
   related_refs: StateRecordRef[]
@@ -168,7 +197,7 @@ AcceptedRiskInput:
 
 This shape is not verification, evidence sufficiency, QA, final acceptance, or proof that the result has no risk. Residual-risk meaning is owned by [Core Model](../core-model.md).
 
-`risk_id` is an opaque risk identifier when present. `summary` and `consequence` are free-form display strings.
+`risk_id` is the exact opaque risk identifier from the current close basis. It is required when accepting residual risk for close. `summary`, `consequence`, and `related_refs` are context for the user and audit trail; they do not authorize text matching.
 
 ## Related owners
 

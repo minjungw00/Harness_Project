@@ -10,6 +10,7 @@
 - `UserJudgmentCandidate`
 - `UserJudgmentOption`
 - `UserJudgmentContext`
+- `JudgmentBasis`
 - `UserJudgmentResolution`
 - `RecordUserJudgmentPayload`
 - `SensitiveActionScope`
@@ -35,6 +36,7 @@
 
 `RecordUserJudgmentPayload`는 현재 적용 범위, 증거, `Write Authorization`, 닫기 결과, 넓은 승인에 대한 스키마가 아닙니다.
 
+<a id="userjudgment"></a>
 ## `UserJudgment`
 
 ```yaml
@@ -50,6 +52,7 @@ UserJudgment:
   options: UserJudgmentOption[]
   context: UserJudgmentContext
   affected_refs: StateRecordRef[]
+  basis: JudgmentBasis | null
   required_for: string
   resolution: UserJudgmentResolution | null
   expires_at: string | null
@@ -61,6 +64,31 @@ UserJudgment:
 
 `judgment_id`, `project_id`, `task_id`, `change_unit_id`는 불투명 식별자입니다. `question`은 자유 형식 표시 문자열입니다.
 
+새로 만들어지는 판단에는 `basis`가 채워집니다. `basis=null`은 상태 근거가 없는 보존된 레거시 행이나 가져온 행에만 사용됩니다. 그런 행은 감사 기록이며 현재 닫기, 쓰기, 민감 승인 요구사항을 만족할 수 없습니다.
+
+## `JudgmentBasis`
+
+`JudgmentBasis`는 판단이 현재 요구사항을 만족할 수 있는지 정하는 데 쓰는 Core 파생 상태 스냅샷입니다.
+
+```yaml
+JudgmentBasis:
+  task_id: string
+  change_unit_id: string | null
+  scope_revision: integer
+  close_basis_revision: integer | null
+  baseline_ref: string | null
+  result_refs: StateRecordRef[]
+  residual_risk_ids: string[]
+  sensitive_action_scope: SensitiveActionScope | null
+  created_at_state_version: integer
+  compatibility_status: string
+```
+
+Core는 판단을 만들 때 현재 상태에서 `JudgmentBasis`를 만듭니다. 호출자는 `scope_revision`, `close_basis_revision`, 현재 닫기 근거 데이터, 세션 바인딩 데이터를 제출하지 않습니다.
+
+`compatibility_status` 값은 [판단 값](schema-value-sets.md#judgment-values)이 담당합니다. `legacy_unbound`는 근거가 없는 보존 판단을 표시합니다. `stale`과 `superseded` 판단은 감사에 필요할 때 저장된 채 남을 수 있지만 현재 닫기, 쓰기, 민감 승인 요구사항을 만족하는 데 사용할 수 없습니다.
+
+<a id="userjudgmentcandidate"></a>
 ## `UserJudgmentCandidate`
 
 `UserJudgmentCandidate`는 제안된 집중 질문의 후보 형태입니다. `judgment_id`, `status`, `resolution`, `created_at`, `resolved_at` 필드가 없습니다.
@@ -154,13 +182,14 @@ SensitiveActionScope:
 
 `SensitiveActionScope.action_kind`와 `sensitive_categories[]`는 영향받는 메서드나 프로필 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 불투명 민감 동작 분류 문자열입니다. `description`, `command_or_tool_summary`, `network_or_host_summary`, `secret_or_credential_summary`, `capability_claim`은 표시 또는 주장 문자열입니다. 기준 값 집합이나 보안 권한이 아닙니다.
 
+<a id="acceptedriskinput"></a>
 ## `AcceptedRiskInput`
 
 `AcceptedRiskInput`은 판단 요청 본문 안에서 보이는 잔여 위험의 이름을 담는 형태입니다.
 
 ```yaml
 AcceptedRiskInput:
-  risk_id: string | null
+  risk_id: string
   summary: string
   consequence: string
   related_refs: StateRecordRef[]
@@ -169,7 +198,7 @@ AcceptedRiskInput:
 
 이 형태는 검증, 증거 충분성, QA, 최종 수락, 결과에 위험이 없다는 증명이 아닙니다. 잔여 위험의 의미는 [Core 모델](../core-model.md)이 담당합니다.
 
-`risk_id`는 값이 있을 때 불투명 위험 식별자입니다. `summary`와 `consequence`는 자유 형식 표시 문자열입니다.
+`risk_id`는 현재 닫기 근거에 있는 정확한 불투명 위험 식별자입니다. 닫기를 위해 잔여 위험을 수락할 때 필수입니다. `summary`, `consequence`, `related_refs`는 사용자와 감사 기록을 위한 맥락이며 텍스트 일치를 권한으로 만들지 않습니다.
 
 ## 관련 담당 문서
 

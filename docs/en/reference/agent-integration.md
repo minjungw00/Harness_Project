@@ -79,7 +79,11 @@ Owner links:
 
 `VerifiedSurfaceContext` is the internal, derived context for one invocation. A `Harness Server` or local adapter derives it from registered surface records, adapter-derived invocation context, and the requested invocation access, then method owners decide whether the derived context is compatible with the request. It is not a public request payload.
 
-An MCP session binds a project surface and invocation `surface_instance_id`; it does not bind one fixed access class for the whole process. The MCP adapter derives the requested invocation access from the public method name and typed params for the current call. Public request params never contain an invocation access class, invocation `surface_instance_id`, capability profile, verification basis, or `VerifiedSurfaceContext`. Core independently verifies that the method-derived requested access is included in the registered grant in `surfaces.local_access_json` before it derives `VerifiedSurfaceContext`.
+An MCP session is bound at adapter startup to exactly one `project_id`, one `surface_id`, and one `surface_instance_id`. Those binding values remain fixed for the lifetime of the session. The public `ToolEnvelope.project_id` and `ToolEnvelope.surface_id` fields remain present for protocol consistency, but each request value must exactly match the session binding. A request cannot switch project, surface, or surface instance.
+
+When `surface_instance_id` is not configured explicitly, adapter startup may select a registered default for the bound project and surface, or a single unambiguous registered candidate. Absence or ambiguity is a startup failure. Identical `surface_instance_id` values in different projects do not weaken project binding; the bound `project_id` remains part of the session identity and every request must match it.
+
+An MCP session does not bind one fixed access class for the whole process. The MCP adapter derives the requested invocation access from the public method name and typed params for the current call. Public request params never contain an invocation access class, invocation `surface_instance_id`, capability profile, verification basis, or `VerifiedSurfaceContext`. Core independently verifies both the session binding and that the method-derived requested access is included in the registered grant in `surfaces.local_access_json` before it derives `VerifiedSurfaceContext`.
 
 Method-derived requested access:
 
@@ -114,6 +118,7 @@ VerifiedSurfaceContext:
 
 Condition:
 - A public API request has exactly one request-level `VerifiedSurfaceContext.access_class`.
+- Public `ToolEnvelope.project_id` and `ToolEnvelope.surface_id` are request echoes of the fixed session binding. They are not caller-selected authority and cannot change the session.
 - `surface_instance_id` remains adapter-derived invocation context. `ToolEnvelope` does not gain `surface_instance_id`; the shared request envelope stays with [API Schema Core](api/schema-core.md#tool-envelope).
 - Nested payloads such as `ArtifactInput` or `StagedArtifactHandle` do not add a second request-level access class.
 - Staged artifact provenance fields such as `created_by_surface_id` and `created_by_surface_instance_id` come from the derived `VerifiedSurfaceContext` at staging time, not caller text or nested artifact input.

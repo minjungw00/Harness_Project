@@ -59,7 +59,7 @@ The diagram is an implementation guide. It is not a storage layout, a security b
 
 Core owns authority decisions defined by the Reference owners. Adapters translate transport only. Core-facing code must stay independent of CLI and MCP adapter layers; adapters may depend on Core-facing interfaces.
 
-At guide level, an MCP adapter binds a project surface and surface instance for a session, then derives requested access per public method call from the method and typed params. Exact access derivation and grant rules stay with [Agent Integration](../reference/agent-integration.md) and the method owners.
+At guide level, MCP adapter startup selects one project, one surface, and one surface instance for a session, then derives requested access per public method call from the method and typed params. Exact session binding, access derivation, and grant rules stay with [Agent Integration](../reference/agent-integration.md) and the method owners.
 
 ## Rust Workspace Shape
 
@@ -90,7 +90,7 @@ At guide level, read the write path this way:
 
 1. `harness.prepare_write` asks Core to evaluate whether one intended product-file write attempt is compatible with current owner-defined state. When the method owner allows it, Core creates a `Write Authorization` authority record.
 2. Any actual product-file edit happens outside the public Harness API, through the connected surface or local tooling. This guide does not define the file-write mechanism and does not make a security guarantee.
-3. `harness.record_run` records observed work after the fact and may record owner-supported evidence, blockers, artifact links, or artifact promotion. A Run record does not retrofit missing authority or prove a write occurred beyond owner-defined recorded facts.
+3. `harness.record_run` records observed work after the fact and may update the current close basis or record owner-supported evidence, blockers, artifact links, or artifact promotion. A Run record does not retrofit missing authority or prove a write occurred beyond owner-defined recorded facts. Terminal close behavior stays with `harness.close_task`.
 
 Use the method owners for exact behavior. Use storage owners for persistence effects. Use Core Model for authority meaning.
 
@@ -103,6 +103,7 @@ Use the method owners for exact behavior. Use storage owners for persistence eff
 | Supported public methods and method-specific behavior | [API Methods](../reference/api/methods.md), then the method owner |
 | `harness.prepare_write` behavior | [`harness.prepare_write`](../reference/api/method-prepare-write.md) |
 | `harness.record_run` behavior | [`harness.record_run`](../reference/api/method-record-run.md) |
+| `harness.close_task` behavior | [`harness.close_task`](../reference/api/method-close-task.md) |
 | Storage owner reading order | [Storage](../reference/storage.md) |
 | Storage effects | [Storage Effects](../reference/storage-effects.md) |
 | Record layout | [Storage Records](../reference/storage-records.md) |

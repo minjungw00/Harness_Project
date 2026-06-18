@@ -1,6 +1,6 @@
 # API state schemas
 
-This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ShapingReadiness`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
+This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ShapingReadiness`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
 
 ## Owner boundary
 
@@ -23,6 +23,7 @@ Owner links:
 - Response branch selection: [Common response branches](schema-core.md#common-response)
 - Method behavior and effects: [API Methods](methods.md) and method owner documents
 
+<a id="state-references"></a>
 ## State references
 
 Meaning:
@@ -284,6 +285,34 @@ Owner links:
 ## Close readiness and validation shapes
 
 ```yaml
+CurrentCloseBasis:
+  close_basis_revision: integer
+  scope_revision: integer
+  task_id: string
+  change_unit_id: string
+  baseline_ref: string | null
+  result_summary: string
+  result_refs: StateRecordRef[]
+  evidence_summary_ref: StateRecordRef | null
+  residual_risks: ResidualRisk[]
+  sensitive_categories: string[]
+  recovery_constraints: string[]
+  source_run_ref: StateRecordRef
+  updated_at: string
+
+ResidualRisk:
+  risk_id: string
+  summary: string
+  consequence: string
+  acceptance_required: boolean
+  source_refs: StateRecordRef[]
+
+RiskAcceptanceCoverage:
+  risk_id: string
+  accepted: boolean
+  accepted_by_judgment_refs: StateRecordRef[]
+  missing_reason: string | null
+
 CloseReadinessBlocker:
   category: string
   code: string
@@ -305,6 +334,13 @@ GuaranteeDisplay:
 ```
 
 Meaning:
+- `CurrentCloseBasis` is the current result and residual-risk state used by close-readiness responses. It is not a terminal close summary.
+- `close_basis_revision` and `scope_revision` are internal current-state coordinates surfaced for compatibility checks. They are not caller-selected authority.
+- `ResidualRisk.risk_id` is an opaque Core-generated identifier. `ResidualRisk.summary` and `ResidualRisk.consequence` are display strings and do not authorize text matching.
+- `result_refs`, `source_run_ref`, `source_refs`, `evidence_summary_ref`, and `accepted_by_judgment_refs` use `StateRecordRef`.
+- `sensitive_categories` are opaque sensitive-category classification strings unless an affected method or profile owner publishes a narrower local list.
+- `recovery_constraints` and `RiskAcceptanceCoverage.missing_reason` are free-form display strings.
+- `RiskAcceptanceCoverage` reports whether the current residual-risk requirements are covered by compatible judgments.
 - `CloseReadinessBlocker` is a data shape for close-readiness findings.
 - `CloseReadinessBlocker.category` is a controlled value string.
 - `CloseReadinessBlocker.code` is an owner-defined blocker code. It is not an exhaustive global public enum unless the blocker or method owner publishes a narrower local list.
@@ -312,10 +348,12 @@ Meaning:
 - `ValidatorResult.validator_id` is a reporting label unless the value-set owner publishes a supported stable value.
 - `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` are controlled value strings.
 
-This shape does not define close-readiness meaning, response routing, or persistence behavior.
+These shapes do not define close-readiness meaning, response routing, or persistence behavior.
 
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)
+- Current close basis creation: [`harness.record_run`](method-record-run.md)
+- Judgment compatibility and accepted-risk input: [API Judgment Schemas](schema-judgment.md)
 - Response branch behavior, close-readiness evaluation order, and committed blocked outcomes: [`harness.close_task`](method-close-task.md)
 - Close-readiness blocker/API response routing semantics: [API blocker routing](blocker-routing.md)
 - Supported `CloseReadinessBlocker.category`, `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` values: [API Value Sets](schema-value-sets.md#state-and-blocker-values)

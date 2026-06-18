@@ -26,6 +26,8 @@ This document does not own:
 
 The method updates the addressed pending judgment according to the user's answer. It does not broaden the answer into unrelated approval, current scope expansion, final acceptance, residual-risk acceptance, sensitive-action approval, or `Write Authorization`.
 
+Before recording the answer, Core checks the pending judgment's `JudgmentBasis` against current state. A stale, superseded, incompatible, or legacy-unbound basis cannot be answered successfully.
+
 ## Required inputs
 
 - A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
@@ -73,12 +75,20 @@ A committed non-dry-run result:
 
 - increments `project_state.state_version` exactly once
 - updates the addressed `user_judgments` row
+- does not increment `scope_revision` or `close_basis_revision`
 - may update dependent blocker or summary state only as allowed by the storage-effect owner
 
 Non-claims:
 
 - Dry run and rejection create no judgment resolution, blocker update, event, replay row, or state-version increment.
 - A recorded `scope_decision` does not silently change current scope or currently applied Change Unit records. Those records still require the scope owner-defined transition, such as `harness.update_scope`.
+
+Compatibility requirements:
+
+- Final acceptance must match the current Task, Change Unit, `scope_revision`, `close_basis_revision`, baseline, and result refs captured in the judgment basis.
+- Residual-risk acceptance must include exact current `risk_id` values in `AcceptedRiskInput` and must match the current `close_basis_revision`.
+- Sensitive approval must match current `scope_revision`, Change Unit, operation, normalized paths, sensitive categories, and baseline.
+- Scope or Run changes do not delete historical judgments; they make incompatible judgments ineligible for current close, write, or sensitive-approval requirements.
 
 ## Success result
 
@@ -127,7 +137,9 @@ Returns `ToolRejectedResponse` for pre-commit failures, including:
 - invalid selected option
 - invalid answer payload
 - expired pending judgment
+- stale, superseded, incompatible, or legacy-unbound judgment basis
 - answer incompatible with the pending judgment
+- missing or non-current residual-risk `risk_id`
 - local access failure
 - validator failure
 
@@ -232,6 +244,17 @@ user_judgment:
       project_id: proj_empty_001
       task_id: task_empty_001
       state_version: 62
+  basis:
+    task_id: task_empty_001
+    change_unit_id: cu_empty_001
+    scope_revision: 1
+    close_basis_revision: null
+    baseline_ref: baseline_empty_001
+    result_refs: []
+    residual_risk_ids: []
+    sensitive_action_scope: null
+    created_at_state_version: 62
+    compatibility_status: current
   required_for: acceptance
   resolution:
     selected_option_id: keep

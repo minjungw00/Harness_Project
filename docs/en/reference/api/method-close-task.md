@@ -35,7 +35,7 @@ The method can:
 - reject the request before close readiness evaluation
 - return a common `dry_run` preview for valid mutating previews
 
-Close is a Core state transition, not a report. This method does not infer close from chat, status text, final acceptance alone, residual-risk acceptance alone, evidence alone, a `Write Authorization`, or a rendered view.
+Close is a Core state transition, not a report. This method evaluates the current close basis for `intent=complete`; it does not infer close from chat, status text, a terminal close summary, final acceptance alone, residual-risk acceptance alone, evidence alone, a `Write Authorization`, or a rendered view.
 
 ## Owner boundary
 
@@ -83,8 +83,10 @@ Mutation conditions:
 
 Close condition:
 
-- `intent=complete` can close only after preflight succeeds, the close readiness evaluation is valid, and no close blocker remains.
+- `intent=complete` can close only after preflight succeeds, the close readiness evaluation over the current `CurrentCloseBasis` is valid, and no close blocker remains.
 - `intent=cancel` and `intent=supersede` evaluate the requested terminal path. They are not evidence sufficiency, final acceptance, or residual-risk acceptance.
+
+The terminal close summary produced by a successful terminal close is not the current pre-close basis and is not used as a substitute for `CurrentCloseBasis`.
 
 ## Close intents
 
@@ -152,9 +154,9 @@ Implementations evaluate `harness.close_task` in this order:
 1. Validate the envelope, method fields, intent-field combination, and same-project `Task` identity. Shape failures, wrong-project identity, and unreadable `Task` identity return `ToolRejectedResponse`.
 2. Verify the surface context, access class, local capability, and requested terminal-path preconditions.
 3. For `dry_run=false` mutating intents, check `idempotency_key`, current `expected_state_version`, idempotency request hash, and close-relevant `WriteAuthorization.basis_state_version`. Stale or conflicting values return `ToolRejectedResponse`.
-4. For `intent=check`, compute current close readiness and return read-only `CloseTaskResult`.
+4. For `intent=check`, compute current close readiness with the same calculation used by [`harness.status`](method-status.md) when `include.close=true`, and return read-only `CloseTaskResult`.
 5. For mutating intents with `dry_run=true`, return the common preview branch after valid preflight.
-6. For `intent=complete`, run the close readiness evaluation. If blockers remain, return the blocked branch; otherwise commit `close_state=closed`.
+6. For `intent=complete`, run the close readiness evaluation over the current `CurrentCloseBasis`. If blockers remain, return the blocked branch; otherwise commit `close_state=closed` and the terminal close result.
 7. For `intent=cancel` or `intent=supersede`, evaluate only the requested terminal path. If terminal-path blockers remain, return the blocked branch; otherwise commit `close_state=cancelled` or `close_state=superseded`.
 
 ## State-version behavior
@@ -190,6 +192,8 @@ Returns `CloseTaskResult` with `base.response_kind=result`.
 | `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Valid `CloseTaskResult` branches use `base.response_kind=result`; this method selects `base.effect_kind=read_only` for `intent=check` and `base.effect_kind=core_committed` for committed terminal or owner-allowed committed blocked outcomes. |
 | `close_state` | Method result close state for the requested path. Supported values are owned by [API Value Sets](schema-value-sets.md#task-lifecycle-values). `close_state=blocked` is a method result after valid close or terminal-path evaluation, not `ToolRejectedResponse`. |
 | `state` | `StateSummary` for the selected Task after the check, terminal mutation, or owner-allowed blocked outcome. Nested state fields, including `close_blockers`, are owned by [API State Schemas](schema-state.md). |
+| `current_close_basis` | `CurrentCloseBasis | null` used for close readiness when selected into the result. `null` means no current close basis is available for this result. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
+| `risk_acceptance_coverage` | `RiskAcceptanceCoverage[]` for current residual-risk acceptance coverage in the close-readiness result. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `blockers` | `CloseReadinessBlocker[]` returned when the requested path has close or terminal blockers. Shape and nesting are owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes); `category` values are owned by [API Value Sets](schema-value-sets.md#state-and-blocker-values). |
 | `evidence_summary` | `EvidenceSummary | null` for the close basis visible in the result, or `null` when no evidence summary is selected into the result. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes). |
 | `artifact_refs` | `ArtifactRef[]` for close-relevant artifacts selected into the result. `ArtifactRef` shape is owned by [API Artifact Schemas](schema-artifacts.md#artifactref). |
@@ -212,9 +216,9 @@ The production meanings below apply only after the method reaches close-readines
 | `baseline_stale` | `baseline` | The close-relevant baseline basis is stale on a blocker-producing path. |
 | `evidence_claim_unsupported` | `evidence` | A required close claim lacks supported evidence coverage. |
 | `artifact_unavailable` | `artifact_availability` | A close-relevant artifact is missing, unavailable, unusable, or integrity-failed. |
-| `missing_final_acceptance` | `final_acceptance` | Required final acceptance is absent. |
+| `missing_final_acceptance` | `final_acceptance` | Required final acceptance is absent or incompatible with the current Task, Change Unit, `scope_revision`, `close_basis_revision`, baseline, or result refs. |
 | `residual_risk_not_visible` | `residual_risk_visibility` | Close-relevant residual risk has not been made visible. |
-| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | Required residual-risk acceptance is absent. |
+| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | Required residual-risk acceptance is absent or does not match the current `close_basis_revision` and exact residual-risk `risk_id` values. |
 | `recovery_required` | `recovery` | Recovery work remains required before the requested close path can proceed. |
 
 These codes are method-local `CloseReadinessBlocker.code` values. They are not public `ErrorCode` values, not `WriteDecisionReason.code` values, and not global value-set entries.
@@ -286,7 +290,7 @@ Branch shapes are owned by [API Schema Core](schema-core.md). Response-branch ro
 
 `intent=check` has no storage effect, including when it returns blockers or uses `dry_run=true`.
 
-Committed `dry_run=false` mutating intents may persist terminal or blocked outcomes according to the method result. Exact storage effects, replay rows, events, state-version increments, and blocker persistence rules are owned by [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).
+Committed `dry_run=false` mutating intents may persist terminal or blocked outcomes according to the method result. A successful terminal close may persist a terminal close summary, distinct from the current close basis used for pre-close readiness. Exact storage effects, replay rows, events, state-version increments, and blocker persistence rules are owned by [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).
 
 Rejected responses and valid `dry_run` previews have no storage effect.
 
@@ -328,6 +332,8 @@ base:
   state_version: 72
   events: []
 close_state: blocked
+current_close_basis: null
+risk_acceptance_coverage: []
 state:
   project_id: proj_close_001
   state_version: 72
@@ -398,7 +404,7 @@ artifact_refs: []
 ## Owner links
 
 - Request envelope, common response branches, and `dry_run` summaries: [API Schema Core](schema-core.md).
-- `CloseTaskResult.blockers`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, and `NextActionSummary` shapes: [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
+- `CloseTaskResult.blockers`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, and `NextActionSummary` shapes: [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
 - `ArtifactRef` shape: [API Artifact Schemas](schema-artifacts.md#artifactref).
 - `intent` values: [API Value Sets method-local values](schema-value-sets.md#method-local-values).
 - Close state, lifecycle, and close reason values: [API Value Sets task lifecycle values](schema-value-sets.md#task-lifecycle-values).
