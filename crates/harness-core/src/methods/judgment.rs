@@ -313,6 +313,7 @@ fn plan_request_user_judgment(
         pending_user_judgment_refs: pending_refs,
         blocker_refs: blocker_refs.clone(),
         active_write_authorization: None,
+        effective_authorization_now: None,
         options: SummaryOptions::mutation(),
     })?;
     let result = harness_types::RequestUserJudgmentResult {
@@ -554,6 +555,7 @@ fn plan_record_user_judgment(
         pending_user_judgment_refs: pending_refs,
         blocker_refs,
         active_write_authorization: None,
+        effective_authorization_now: None,
         options: SummaryOptions::mutation(),
     })?;
     let result = harness_types::RecordUserJudgmentResult {

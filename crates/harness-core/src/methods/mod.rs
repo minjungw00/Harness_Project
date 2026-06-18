@@ -1,5 +1,6 @@
 use std::{collections::BTreeSet, path::Path};
 
+use chrono::{DateTime, Utc};
 use harness_store::{
     artifacts::{ArtifactStagingInsert, StagedPayloadKind},
     core_pipeline::{
@@ -47,8 +48,9 @@ use crate::policy::{
     evidence::{evidence_status_for_items, unique_artifact_refs},
     path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
     write_authorization::{
-        prepare_write_decision, prepare_write_dry_run_summary, surface_supports_prepare_write,
-        write_authorization_guarantee, write_decision_reason,
+        format_utc_timestamp, prepare_write_decision, prepare_write_dry_run_summary,
+        surface_supports_prepare_write, write_authorization_expires_at,
+        write_authorization_guarantee, write_authorization_is_expired, write_decision_reason,
     },
 };
 
@@ -1060,6 +1062,7 @@ struct SummaryBuild<'a> {
     pending_user_judgment_refs: Vec<StateRecordRef>,
     blocker_refs: Vec<StateRecordRef>,
     active_write_authorization: Option<&'a WriteAuthorizationRecord>,
+    effective_authorization_now: Option<DateTime<Utc>>,
     options: SummaryOptions,
 }
 
@@ -1072,6 +1075,7 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
         pending_user_judgment_refs,
         blocker_refs,
         active_write_authorization,
+        effective_authorization_now,
         options,
     } = input;
     let task_id = TaskId::new(task.task_id.clone());
@@ -1113,12 +1117,29 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
                     "attempt_scope_json",
                     Some(&record.attempt_scope_json),
                 )
-                .map(|attempt_scope| WriteAuthoritySummary {
-                    status: WriteAuthorizationStatus::Active,
-                    write_authorization_ref: Some(write_authorization_ref(record, state_version)),
-                    basis_state_version: Some(record.basis_state_version),
-                    intended_paths: attempt_scope.intended_paths,
-                    guarantee_display: None,
+                .and_then(|attempt_scope| {
+                    let is_effectively_expired =
+                        if let Some(now) = effective_authorization_now.as_ref() {
+                            write_authorization_is_expired(record, now.to_owned())
+                                .map_err(CorePipelineError::from)?
+                        } else {
+                            false
+                        };
+                    let status = if is_effectively_expired {
+                        WriteAuthorizationStatus::Expired
+                    } else {
+                        parse_storage_value("write_authorizations.status", &record.status)?
+                    };
+                    Ok(WriteAuthoritySummary {
+                        status,
+                        write_authorization_ref: Some(write_authorization_ref(
+                            record,
+                            state_version,
+                        )),
+                        basis_state_version: Some(record.basis_state_version),
+                        intended_paths: attempt_scope.intended_paths,
+                        guarantee_display: None,
+                    })
                 })
             })
             .transpose()?

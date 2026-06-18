@@ -363,6 +363,7 @@ fn plan_close_task(
         pending_user_judgment_refs: context.pending_user_judgment_refs.clone(),
         blocker_refs: context.blocker_refs.clone(),
         active_write_authorization: None,
+        effective_authorization_now: None,
         options: SummaryOptions::mutation(),
     })?;
     state.evidence_summary = context.evidence_summary.clone();

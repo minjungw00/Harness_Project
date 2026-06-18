@@ -190,6 +190,7 @@ pub struct WriteAuthorizationInsert {
     pub created_by_surface_instance_id: String,
     pub created_by_judgment_id: Option<String>,
     pub expires_at: String,
+    pub created_at: String,
     pub metadata_json: String,
 }
 
@@ -396,6 +397,7 @@ pub struct WriteAuthorizationRecord {
     pub status: String,
     pub attempt_scope_json: String,
     pub expires_at: String,
+    pub created_at: String,
 }
 
 /// Stored staged artifact facts needed by `harness.record_run`.
@@ -1455,6 +1457,7 @@ impl ProjectMutation<'_> {
             validate_identifier("created_by_judgment_id", created_by_judgment_id)?;
         }
         validate_identifier("expires_at", &input.expires_at)?;
+        validate_identifier("created_at", &input.created_at)?;
         validate_json_text("write_authorizations.metadata_json", &input.metadata_json)?;
         let basis_state_version = u64_to_i64("basis_state_version", committed_state_version)?;
 
@@ -1492,8 +1495,8 @@ impl ProjectMutation<'_> {
                 NULL,
                 NULL,
                 NULL,
-                strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
-                ?11
+                ?11,
+                ?12
             )",
             params![
                 self.project_id,
@@ -1506,6 +1509,7 @@ impl ProjectMutation<'_> {
                 input.created_by_surface_instance_id,
                 input.created_by_judgment_id,
                 input.expires_at,
+                input.created_at,
                 input.metadata_json
             ],
         )?;
@@ -2252,7 +2256,8 @@ fn active_write_authorizations(
             basis_state_version,
             status,
             attempt_scope_json,
-            expires_at
+            expires_at,
+            created_at
          FROM write_authorizations
          WHERE project_id = ?1
            AND task_id = ?2
@@ -2284,7 +2289,8 @@ fn write_authorization_record(
             basis_state_version,
             status,
             attempt_scope_json,
-            expires_at
+            expires_at,
+            created_at
          FROM write_authorizations
          WHERE project_id = ?1
            AND write_authorization_id = ?2",
@@ -2311,6 +2317,7 @@ fn write_authorization_record_from_row(
         status: row.get(5)?,
         attempt_scope_json: row.get(6)?,
         expires_at: row.get(7)?,
+        created_at: row.get(8)?,
     })
 }
 

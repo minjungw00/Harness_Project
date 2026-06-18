@@ -199,6 +199,7 @@ fn plan_intake(
         pending_user_judgment_refs: pending_refs,
         blocker_refs,
         active_write_authorization: None,
+        effective_authorization_now: None,
         options: SummaryOptions::mutation(),
     })?;
     let result = harness_types::IntakeResult {

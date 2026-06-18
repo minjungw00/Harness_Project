@@ -1,9 +1,71 @@
+use chrono::{DateTime, Duration, SecondsFormat, Utc};
+use harness_store::{core_pipeline::WriteAuthorizationRecord, StoreError};
 use harness_types::{
     DryRunSummary, GuaranteeDisplay, GuaranteeLevel, PlannedBlocker, PlannedBlockerSourceKind,
     PlannedEffect, PrepareWriteDecision, StateRecordRef, WriteDecisionCategory,
     WriteDecisionReason,
 };
 use serde_json::Value;
+
+const WRITE_AUTHORIZATION_LIFETIME_MINUTES: i64 = 15;
+
+pub(crate) fn write_authorization_expires_at(created_at: DateTime<Utc>) -> DateTime<Utc> {
+    created_at + Duration::minutes(WRITE_AUTHORIZATION_LIFETIME_MINUTES)
+}
+
+pub(crate) fn format_utc_timestamp(timestamp: DateTime<Utc>) -> String {
+    timestamp.to_rfc3339_opts(SecondsFormat::Millis, true)
+}
+
+pub(crate) fn write_authorization_is_expired(
+    record: &WriteAuthorizationRecord,
+    now: DateTime<Utc>,
+) -> Result<bool, StoreError> {
+    Ok(now >= effective_write_authorization_expiration(record)?)
+}
+
+pub(crate) fn effective_write_authorization_expiration(
+    record: &WriteAuthorizationRecord,
+) -> Result<DateTime<Utc>, StoreError> {
+    let stored_expires_at = parse_write_authorization_timestamp(record, "expires_at")?;
+    let created_at = parse_write_authorization_timestamp(record, "created_at")?;
+    Ok(std::cmp::min(
+        stored_expires_at,
+        write_authorization_expires_at(created_at),
+    ))
+}
+
+fn parse_write_authorization_timestamp(
+    record: &WriteAuthorizationRecord,
+    logical_column: &'static str,
+) -> Result<DateTime<Utc>, StoreError> {
+    let raw = match logical_column {
+        "created_at" => &record.created_at,
+        "expires_at" => &record.expires_at,
+        _ => {
+            return Err(StoreError::corrupt_owner_state_value(
+                "write_authorizations",
+                record.write_authorization_id.clone(),
+                logical_column,
+            ));
+        }
+    };
+    let parsed = DateTime::parse_from_rfc3339(raw).map_err(|_| {
+        StoreError::corrupt_owner_state_value(
+            "write_authorizations",
+            record.write_authorization_id.clone(),
+            logical_column,
+        )
+    })?;
+    if parsed.offset().local_minus_utc() != 0 {
+        return Err(StoreError::corrupt_owner_state_value(
+            "write_authorizations",
+            record.write_authorization_id.clone(),
+            logical_column,
+        ));
+    }
+    Ok(parsed.with_timezone(&Utc))
+}
 
 pub(crate) fn surface_supports_prepare_write(capability_profile: &Value) -> bool {
     if capability_profile

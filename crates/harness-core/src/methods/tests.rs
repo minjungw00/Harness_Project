@@ -2,8 +2,10 @@ use std::{
     error::Error,
     fs,
     path::{Path, PathBuf},
+    sync::{Arc, Mutex},
 };
 
+use chrono::{DateTime, Duration, Utc};
 use harness_store::{
     bootstrap::{
         initialize_runtime_home, register_project, register_surface, ProjectRegistration,
@@ -14,7 +16,8 @@ use harness_store::{
 };
 use harness_test_support::TempRuntimeHome;
 use harness_types::{
-    ActorKind, ChangeUnitUpdate, IdempotencyKey, InitialScope, RequestId, ScopeUpdate,
+    prefixed_durable_id, ActorKind, ChangeUnitUpdate, DurableIdError, DurableIdGenerator,
+    DurableIdKind, IdempotencyKey, InitialScope, RequestId, ScopeUpdate,
     SequenceDurableIdGenerator, SurfaceId, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
     VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
@@ -25,6 +28,84 @@ use super::*;
 const PROJECT_ID: &str = "project_methods";
 const SURFACE_ID: &str = "surface_methods";
 const SURFACE_INSTANCE_ID: &str = "surface_instance_methods";
+
+#[derive(Debug, Clone)]
+struct ManualClock {
+    now: Arc<Mutex<DateTime<Utc>>>,
+}
+
+impl ManualClock {
+    fn at(timestamp: &str) -> Self {
+        let now = DateTime::parse_from_rfc3339(timestamp)
+            .expect("test timestamp should be RFC3339")
+            .with_timezone(&Utc);
+        Self {
+            now: Arc::new(Mutex::new(now)),
+        }
+    }
+
+    fn advance(&self, duration: Duration) {
+        let mut now = self
+            .now
+            .lock()
+            .expect("manual clock mutex should not be poisoned");
+        *now += duration;
+    }
+}
+
+impl crate::pipeline::Clock for ManualClock {
+    fn now(&self) -> DateTime<Utc> {
+        self.now
+            .lock()
+            .expect("manual clock mutex should not be poisoned")
+            .to_owned()
+    }
+}
+
+#[derive(Debug, Clone)]
+struct CountingDurableIdGenerator {
+    suffixes: Arc<Mutex<Vec<String>>>,
+    generated: Arc<Mutex<Vec<DurableIdKind>>>,
+}
+
+impl CountingDurableIdGenerator {
+    fn new(suffixes: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        let mut suffixes = suffixes
+            .into_iter()
+            .map(Into::into)
+            .collect::<Vec<String>>();
+        suffixes.reverse();
+        Self {
+            suffixes: Arc::new(Mutex::new(suffixes)),
+            generated: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+    fn count(&self, kind: DurableIdKind) -> usize {
+        self.generated
+            .lock()
+            .expect("generated id log mutex should not be poisoned")
+            .iter()
+            .filter(|candidate| **candidate == kind)
+            .count()
+    }
+}
+
+impl DurableIdGenerator for CountingDurableIdGenerator {
+    fn generate(&self, kind: DurableIdKind) -> Result<String, DurableIdError> {
+        self.generated
+            .lock()
+            .expect("generated id log mutex should not be poisoned")
+            .push(kind);
+        let suffix = self
+            .suffixes
+            .lock()
+            .expect("deterministic durable id generator mutex should not be poisoned")
+            .pop()
+            .ok_or(DurableIdError::DeterministicSequenceExhausted)?;
+        Ok(prefixed_durable_id(kind, &suffix))
+    }
+}
 
 struct MethodHarness {
     _runtime_home: TempRuntimeHome,
@@ -99,6 +180,15 @@ impl MethodHarness {
                 .join(PROJECT_ID)
                 .join("state.sqlite"),
         )?)
+    }
+
+    fn use_generator_and_clock(
+        &mut self,
+        generator: CountingDurableIdGenerator,
+        clock: ManualClock,
+    ) {
+        self.service =
+            CoreService::with_id_generator_and_clock(&self.runtime_home_path, generator, clock);
     }
 }
 
@@ -369,6 +459,46 @@ fn status_is_read_only_including_dry_run() -> Result<(), Box<dyn Error>> {
     assert_eq!(dry_run.response_value["base"]["response_kind"], "result");
     assert_eq!(dry_run.response_value["base"]["effect_kind"], "read_only");
     assert_eq!(dry_run.response_value["base"]["dry_run"], true);
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_renders_effective_authorization_expiration_without_mutating_row(
+) -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_auth_expired")?;
+    insert_active_write_authorization_with_timestamps(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        "wa_status_future",
+        2,
+        "2026-06-18T00:00:00.000Z",
+        "2999-01-01T00:00:00.000Z",
+    )?;
+    let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
+    let clock = ManualClock::at("2026-06-18T00:15:00Z");
+    harness.use_generator_and_clock(id_generator, clock);
+    let before = harness.counts()?;
+
+    let response = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_auth_expired", None, false, None, Some(&task_id)),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        response.response_value["active_task"]["write_authority_summary"]["status"],
+        "expired"
+    );
+    assert_eq!(
+        write_authorization_status(&harness, "wa_status_future")?,
+        "active"
+    );
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -865,7 +995,7 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
 #[test]
 fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
 ) -> Result<(), Box<dyn Error>> {
-    let harness = MethodHarness::new()?;
+    let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_allowed")?;
     let sensitive_judgment = harness.service.request_user_judgment(
         user_judgment_request(
@@ -893,6 +1023,10 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
         ),
         invocation(AccessClass::CoreMutation),
     )?;
+    let id_generator =
+        CountingDurableIdGenerator::new(["prepare_allowed_auth", "prepare_allowed_event"]);
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator.clone(), clock);
     let before = harness.counts()?;
 
     let mut request = prepare_write_request(
@@ -937,13 +1071,25 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
         write_authorization_basis(&harness, &write_authorization_id)?,
         5
     );
+    let (created_at, expires_at) =
+        write_authorization_timestamps(&harness, &write_authorization_id)?;
+    assert_eq!(created_at, "2026-06-18T00:00:00.000Z");
+    assert_eq!(expires_at, "2026-06-18T00:15:00.000Z");
+    assert_eq!(
+        response.response_value["write_authorization"]["expires_at"],
+        expires_at
+    );
+    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 1);
     Ok(())
 }
 
 #[test]
 fn prepare_write_blocked_path_creates_no_authorization() -> Result<(), Box<dyn Error>> {
-    let harness = MethodHarness::new()?;
+    let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_path")?;
+    let id_generator = CountingDurableIdGenerator::new(["prepare_blocked_event"]);
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator.clone(), clock);
     let before = harness.counts()?;
 
     let mut request = prepare_write_request(
@@ -974,6 +1120,7 @@ fn prepare_write_blocked_path_creates_no_authorization() -> Result<(), Box<dyn E
     assert_eq!(after.evidence_summaries, before.evidence_summaries);
     assert_eq!(after.blockers, before.blockers);
     assert_eq!(after.runs, before.runs);
+    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
     let event_payload = assert_latest_prepare_write_event(
         &harness,
         &response.response_value,
@@ -1035,7 +1182,7 @@ fn prepare_write_missing_change_unit_returns_decision_reason() -> Result<(), Box
 
 #[test]
 fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<dyn Error>> {
-    let harness = MethodHarness::new()?;
+    let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_judgment")?;
     harness.service.request_user_judgment(
         user_judgment_request(
@@ -1049,6 +1196,9 @@ fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<
         ),
         invocation(AccessClass::CoreMutation),
     )?;
+    let id_generator = CountingDurableIdGenerator::new(["prepare_decision_event"]);
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator.clone(), clock);
     let before = harness.counts()?;
 
     let request = prepare_write_request(
@@ -1069,6 +1219,7 @@ fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
+    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
     let event_payload = assert_latest_prepare_write_event(
         &harness,
         &response.response_value,
@@ -1091,8 +1242,11 @@ fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<
 
 #[test]
 fn prepare_write_missing_sensitive_approval_requires_approval() -> Result<(), Box<dyn Error>> {
-    let harness = MethodHarness::new()?;
+    let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_sensitive")?;
+    let id_generator = CountingDurableIdGenerator::new(["prepare_approval_event"]);
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator.clone(), clock);
     let before = harness.counts()?;
 
     let mut request = prepare_write_request(
@@ -1114,6 +1268,7 @@ fn prepare_write_missing_sensitive_approval_requires_approval() -> Result<(), Bo
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
+    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
     let event_payload = assert_latest_prepare_write_event(
         &harness,
         &response.response_value,
@@ -1280,8 +1435,11 @@ fn prepare_write_product_write_flag_mismatch_blocks_authorization() -> Result<()
 
 #[test]
 fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Error>> {
-    let harness = MethodHarness::new()?;
+    let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_dry")?;
+    let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator.clone(), clock);
     let before = harness.counts()?;
     let before_decision_events = write_decision_event_count(&harness)?;
 
@@ -1307,6 +1465,7 @@ fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Err
         write_decision_event_count(&harness)?,
         before_decision_events
     );
+    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
 
     let mut blocked_preview = prepare_write_request(
         "req_prepare_dry_blocked",
@@ -1333,6 +1492,7 @@ fn prepare_write_dry_run_has_no_authorization_effect() -> Result<(), Box<dyn Err
         write_decision_event_count(&harness)?,
         before_decision_events
     );
+    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
     Ok(())
 }
 
@@ -1374,8 +1534,11 @@ fn prepare_write_rejects_escaping_product_path_without_effect() -> Result<(), Bo
 
 #[test]
 fn prepare_write_stale_state_rejects_without_effect() -> Result<(), Box<dyn Error>> {
-    let harness = MethodHarness::new()?;
+    let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_stale")?;
+    let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator.clone(), clock);
     let before = harness.counts()?;
     let before_decision_events = write_decision_event_count(&harness)?;
 
@@ -1408,13 +1571,18 @@ fn prepare_write_stale_state_rejects_without_effect() -> Result<(), Box<dyn Erro
         write_decision_event_count(&harness)?,
         before_decision_events
     );
+    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 0);
     Ok(())
 }
 
 #[test]
 fn prepare_write_idempotency_replays_without_second_authorization() -> Result<(), Box<dyn Error>> {
-    let harness = MethodHarness::new()?;
+    let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_replay")?;
+    let id_generator =
+        CountingDurableIdGenerator::new(["prepare_replay_auth", "prepare_replay_event"]);
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator.clone(), clock.clone());
     let request = prepare_write_request(
         "req_prepare_replay",
         "idem_prepare_replay",
@@ -1427,6 +1595,7 @@ fn prepare_write_idempotency_replays_without_second_authorization() -> Result<()
         .service
         .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
     let after_first = harness.counts()?;
+    clock.advance(Duration::minutes(5));
     let second = harness
         .service
         .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
@@ -1436,6 +1605,11 @@ fn prepare_write_idempotency_replays_without_second_authorization() -> Result<()
     assert_eq!(second.response_json, first.response_json);
     assert_eq!(harness.counts()?, after_first);
     assert_eq!(write_authorization_count(&harness)?, 1);
+    assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 1);
+    assert_eq!(
+        second.response_value["write_authorization"]["expires_at"],
+        first.response_value["write_authorization"]["expires_at"]
+    );
     Ok(())
 }
 
@@ -1958,6 +2132,269 @@ fn record_run_product_write_consumes_valid_authorization_once() -> Result<(), Bo
     assert_eq!(after.write_authorizations, before.write_authorizations);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
+    Ok(())
+}
+
+#[test]
+fn record_run_consumes_authorization_at_fourteen_minutes_fifty_nine_seconds(
+) -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_1459")?;
+    let id_generator =
+        CountingDurableIdGenerator::new(["auth_1459", "prepare_event_1459", "record_event_1459"]);
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator, clock.clone());
+    let write_authorization_id =
+        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_auth_1459")?;
+    clock.advance(Duration::seconds(14 * 60 + 59));
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_auth_1459",
+            "idem_run_auth_1459",
+            3,
+            &task_id,
+            &change_unit_id,
+            &write_authorization_id,
+            "run_auth_1459",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+    let after = harness.counts()?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        write_authorization_status(&harness, &write_authorization_id)?,
+        "consumed"
+    );
+    assert_eq!(after.state_version, before.state_version + 1);
+    assert_eq!(after.runs, before.runs + 1);
+    assert_eq!(after.task_events, before.task_events + 1);
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_authorization_at_exactly_fifteen_minutes_without_effect(
+) -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_1500")?;
+    let id_generator = CountingDurableIdGenerator::new(["auth_1500", "prepare_event_1500"]);
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator, clock.clone());
+    let write_authorization_id =
+        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_auth_1500")?;
+    clock.advance(Duration::minutes(15));
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_auth_1500",
+            "idem_run_auth_1500",
+            3,
+            &task_id,
+            &change_unit_id,
+            &write_authorization_id,
+            "run_auth_1500",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "WRITE_AUTHORIZATION_INVALID"
+    );
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["authorization_reason"],
+        "expired"
+    );
+    assert_eq!(
+        write_authorization_status(&harness, &write_authorization_id)?,
+        "active"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_limits_historical_far_future_authorization_to_fifteen_minutes(
+) -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_legacy")?;
+    insert_active_write_authorization_with_timestamps(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        "wa_legacy_future",
+        2,
+        "2026-06-18T00:00:00.000Z",
+        "2999-01-01T00:00:00.000Z",
+    )?;
+    let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
+    let clock = ManualClock::at("2026-06-18T00:15:00Z");
+    harness.use_generator_and_clock(id_generator, clock);
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_auth_legacy",
+            "idem_run_auth_legacy",
+            2,
+            &task_id,
+            &change_unit_id,
+            "wa_legacy_future",
+            "run_auth_legacy",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["authorization_reason"],
+        "expired"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_honors_stored_expiration_earlier_than_fifteen_minutes() -> Result<(), Box<dyn Error>>
+{
+    let mut harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_early_exp")?;
+    insert_active_write_authorization_with_timestamps(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        "wa_early_expiration",
+        2,
+        "2026-06-18T00:00:00.000Z",
+        "2026-06-18T00:05:00.000Z",
+    )?;
+    let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
+    let clock = ManualClock::at("2026-06-18T00:05:00Z");
+    harness.use_generator_and_clock(id_generator, clock);
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_auth_early_exp",
+            "idem_run_auth_early_exp",
+            2,
+            &task_id,
+            &change_unit_id,
+            "wa_early_expiration",
+            "run_auth_early_exp",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["authorization_reason"],
+        "expired"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_treats_invalid_authorization_timestamp_as_corrupt_state() -> Result<(), Box<dyn Error>>
+{
+    let mut harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_bad_time")?;
+    insert_active_write_authorization_with_timestamps(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        "wa_bad_timestamp",
+        2,
+        "not-a-timestamp",
+        "2026-06-18T00:15:00.000Z",
+    )?;
+    let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_generator_and_clock(id_generator, clock);
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_auth_bad_time",
+            "idem_run_auth_bad_time",
+            2,
+            &task_id,
+            &change_unit_id,
+            "wa_bad_timestamp",
+            "run_auth_bad_time",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_store_rejection(&response, "MCP_UNAVAILABLE", "corrupt_stored_value");
+    let details = &response.response_value["errors"][0]["details"]["owner_state_error"];
+    assert_eq!(details["table"], "write_authorizations");
+    assert_eq!(details["record_ref"], "wa_bad_timestamp");
+    assert_eq!(details["logical_column"], "created_at");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_stale_basis_precedes_authorization_expiration() -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_stale_exp")?;
+    insert_active_write_authorization_with_timestamps(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        "wa_stale_and_expired",
+        2,
+        "2026-06-18T00:00:00.000Z",
+        "2999-01-01T00:00:00.000Z",
+    )?;
+    harness.service.update_scope(
+        update_scope_request(
+            "req_run_auth_stale_exp_touch",
+            "idem_run_auth_stale_exp_touch",
+            false,
+            Some(2),
+            &task_id,
+            ChangeUnitOperation::KeepCurrent,
+            "Initial current scope.",
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let id_generator = CountingDurableIdGenerator::new(Vec::<&str>::new());
+    let clock = ManualClock::at("2026-06-18T00:15:00Z");
+    harness.use_generator_and_clock(id_generator, clock);
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_auth_stale_exp",
+            "idem_run_auth_stale_exp",
+            3,
+            &task_id,
+            &change_unit_id,
+            "wa_stale_and_expired",
+            "run_auth_stale_exp",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "STATE_VERSION_CONFLICT"
+    );
+    assert_eq!(harness.counts()?, before);
     Ok(())
 }
 
@@ -3825,6 +4262,30 @@ fn record_run_request(
     }
 }
 
+fn product_write_record_run_request(
+    request_id: &str,
+    idempotency_key: &str,
+    expected_state_version: u64,
+    task_id: &str,
+    change_unit_id: &str,
+    write_authorization_id: &str,
+    run_id: &str,
+) -> RecordRunRequest {
+    let mut request = record_run_request(
+        request_id,
+        idempotency_key,
+        false,
+        Some(expected_state_version),
+        task_id,
+        change_unit_id,
+    );
+    request.run_id = Some(RunId::new(run_id)).into();
+    request.observed_changes.product_file_write_observed = true;
+    request.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
+    request.write_authorization_id = Some(WriteAuthorizationId::new(write_authorization_id)).into();
+    request
+}
+
 struct CloseTaskFixture<'a> {
     request_id: &'a str,
     idempotency_key: Option<&'a str>,
@@ -4433,7 +4894,37 @@ fn insert_active_write_authorization(
     task_id: &str,
     change_unit_id: &str,
 ) -> Result<(), Box<dyn Error>> {
+    insert_active_write_authorization_with_timestamps(
+        harness,
+        task_id,
+        change_unit_id,
+        "wa_replace",
+        2,
+        "2026-06-18T00:00:00.000Z",
+        "2026-06-18T00:15:00.000Z",
+    )
+}
+
+fn insert_active_write_authorization_with_timestamps(
+    harness: &MethodHarness,
+    task_id: &str,
+    change_unit_id: &str,
+    write_authorization_id: &str,
+    basis_state_version: u64,
+    created_at: &str,
+    expires_at: &str,
+) -> Result<(), Box<dyn Error>> {
     let conn = harness.conn()?;
+    let attempt_scope_json = json!({
+        "task_id": task_id,
+        "change_unit_id": change_unit_id,
+        "intended_operation": "local_sensitive_step",
+        "intended_paths": ["src/export.rs"],
+        "product_file_write_intended": true,
+        "sensitive_categories": [],
+        "baseline_ref": "baseline_test"
+    })
+    .to_string();
     conn.execute(
         "INSERT INTO write_authorizations (
                 project_id,
@@ -4450,23 +4941,28 @@ fn insert_active_write_authorization(
             )
             VALUES (
                 ?1,
-                'wa_replace',
                 ?2,
                 ?3,
-                2,
-                'active',
-                '{\"intended_paths\":[\"src/export.rs\"]}',
                 ?4,
                 ?5,
-                '2999-01-01T00:00:00Z',
-                't0'
+                'active',
+                ?6,
+                ?7,
+                ?8,
+                ?9,
+                ?10
             )",
         rusqlite::params![
             PROJECT_ID,
+            write_authorization_id,
             task_id,
             change_unit_id,
+            i64::try_from(basis_state_version)?,
+            attempt_scope_json,
             SURFACE_ID,
-            SURFACE_INSTANCE_ID
+            SURFACE_INSTANCE_ID,
+            expires_at,
+            created_at
         ],
     )?;
     Ok(())
@@ -4583,6 +5079,21 @@ fn write_authorization_basis(
         |row| row.get(0),
     )?;
     Ok(u64::try_from(basis)?)
+}
+
+fn write_authorization_timestamps(
+    harness: &MethodHarness,
+    write_authorization_id: &str,
+) -> Result<(String, String), Box<dyn Error>> {
+    let conn = harness.conn()?;
+    Ok(conn.query_row(
+        "SELECT created_at, expires_at
+               FROM write_authorizations
+              WHERE project_id = ?1
+                AND write_authorization_id = ?2",
+        rusqlite::params![PROJECT_ID, write_authorization_id],
+        |row| Ok((row.get(0)?, row.get(1)?)),
+    )?)
 }
 
 fn user_judgment_status(

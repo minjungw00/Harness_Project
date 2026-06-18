@@ -28,6 +28,13 @@ pub enum StoreError {
         record_ref: String,
         logical_column: &'static str,
     },
+    /// A persisted typed owner value could not be decoded for an authority decision.
+    CorruptOwnerStateValue {
+        database_kind: &'static str,
+        table: &'static str,
+        record_ref: String,
+        logical_column: &'static str,
+    },
     /// A stored owner field has a value outside the owner-defined set.
     CorruptStoredValue {
         database_kind: &'static str,
@@ -70,6 +77,19 @@ impl StoreError {
         logical_column: &'static str,
     ) -> Self {
         Self::CorruptOwnerStateJson {
+            database_kind: "project_state",
+            table,
+            record_ref: record_ref.into(),
+            logical_column,
+        }
+    }
+
+    pub fn corrupt_owner_state_value(
+        table: &'static str,
+        record_ref: impl Into<String>,
+        logical_column: &'static str,
+    ) -> Self {
+        Self::CorruptOwnerStateValue {
             database_kind: "project_state",
             table,
             record_ref: record_ref.into(),
@@ -184,6 +204,25 @@ impl StoreError {
                     record_ref: record_ref.clone(),
                     logical_column,
                     corruption_category: "corrupt_stored_json",
+                }),
+            },
+            Self::CorruptOwnerStateValue {
+                database_kind,
+                table,
+                record_ref,
+                logical_column,
+            } => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "corrupt_stored_value",
+                retryable: false,
+                database_kind: Some(database_kind),
+                entity: None,
+                field: None,
+                owner_state_error: Some(OwnerStateFailureDetails {
+                    table,
+                    record_ref: record_ref.clone(),
+                    logical_column,
+                    corruption_category: "corrupt_stored_value",
                 }),
             },
             Self::CorruptStoredValue {
@@ -328,6 +367,15 @@ impl fmt::Display for StoreError {
                 formatter,
                 "stored owner JSON {table}.{logical_column} for {record_ref} is invalid in {database_kind}"
             ),
+            Self::CorruptOwnerStateValue {
+                database_kind,
+                table,
+                record_ref,
+                logical_column,
+            } => write!(
+                formatter,
+                "stored owner value {table}.{logical_column} for {record_ref} is invalid in {database_kind}"
+            ),
             Self::CorruptStoredValue {
                 database_kind,
                 field,
@@ -366,6 +414,7 @@ impl Error for StoreError {
             | Self::NotFound { .. }
             | Self::CorruptStoredJson { .. }
             | Self::CorruptOwnerStateJson { .. }
+            | Self::CorruptOwnerStateValue { .. }
             | Self::CorruptStoredValue { .. }
             | Self::MigrationConflict { .. }
             | Self::SchemaInvariant { .. } => None,

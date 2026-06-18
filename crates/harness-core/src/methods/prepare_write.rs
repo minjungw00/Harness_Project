@@ -284,8 +284,12 @@ fn plan_prepare_write(
     });
     let decision = prepare_write_decision(&reasons);
     let allowed = reasons.is_empty();
-    let write_authorization_id =
-        allocate_write_authorization_id(service, store).map_err(PlanError::Core)?;
+    let create_write_authorization = allowed && !request.envelope.dry_run;
+    let write_authorization_id = if create_write_authorization {
+        Some(allocate_write_authorization_id(service, store).map_err(PlanError::Core)?)
+    } else {
+        None
+    };
     let authorized_attempt_scope = AuthorizedAttemptScope {
         task_id: task_id.clone(),
         change_unit_id: scope_change_unit_id.clone(),
@@ -296,16 +300,20 @@ fn plan_prepare_write(
         baseline_ref: Some(request.baseline_ref.clone()),
     };
     let attempt_scope_json = serde_json::to_string(&authorized_attempt_scope)?;
-    let expires_at = "2999-01-01T00:00:00Z".to_owned();
-    let write_authorization_ref = allowed.then(|| {
-        state_ref(
-            StateRecordKind::WriteAuthorization,
-            write_authorization_id.as_str(),
-            &request.envelope.project_id,
-            Some(&task_id),
-            Some(planned_state_version),
-        )
-    });
+    let created_at_timestamp = service.now();
+    let created_at = format_utc_timestamp(created_at_timestamp);
+    let expires_at = format_utc_timestamp(write_authorization_expires_at(created_at_timestamp));
+    let write_authorization_ref = write_authorization_id
+        .as_ref()
+        .map(|write_authorization_id| {
+            state_ref(
+                StateRecordKind::WriteAuthorization,
+                write_authorization_id.as_str(),
+                &request.envelope.project_id,
+                Some(&task_id),
+                Some(planned_state_version),
+            )
+        });
     let write_authorization = write_authorization_ref
         .as_ref()
         .map(|write_authorization_ref| WriteAuthorizationSummary {
@@ -315,16 +323,20 @@ fn plan_prepare_write(
             basis_state_version: planned_state_version,
             expires_at: Some(expires_at.clone()),
         });
-    let synthetic_write_authorization = allowed.then(|| WriteAuthorizationRecord {
-        project_id: request.envelope.project_id.as_str().to_owned(),
-        write_authorization_id: write_authorization_id.as_str().to_owned(),
-        task_id: task_id.as_str().to_owned(),
-        change_unit_id: Some(scope_change_unit_id.as_str().to_owned()),
-        basis_state_version: planned_state_version,
-        status: "active".to_owned(),
-        attempt_scope_json: attempt_scope_json.clone(),
-        expires_at: expires_at.clone(),
-    });
+    let synthetic_write_authorization =
+        write_authorization_id
+            .as_ref()
+            .map(|write_authorization_id| WriteAuthorizationRecord {
+                project_id: request.envelope.project_id.as_str().to_owned(),
+                write_authorization_id: write_authorization_id.as_str().to_owned(),
+                task_id: task_id.as_str().to_owned(),
+                change_unit_id: Some(scope_change_unit_id.as_str().to_owned()),
+                basis_state_version: planned_state_version,
+                status: "active".to_owned(),
+                attempt_scope_json: attempt_scope_json.clone(),
+                expires_at: expires_at.clone(),
+                created_at: created_at.clone(),
+            });
 
     let blocker_refs = store
         .active_blocker_refs(&task_id, planned_state_version)
@@ -346,6 +358,7 @@ fn plan_prepare_write(
         pending_user_judgment_refs,
         blocker_refs,
         active_write_authorization: synthetic_write_authorization.as_ref(),
+        effective_authorization_now: None,
         options: SummaryOptions::prepare_write(),
     })?;
     let result = PrepareWriteResult {
@@ -354,7 +367,7 @@ fn plan_prepare_write(
         state: Some(state),
         write_authorization_ref: write_authorization_ref.clone(),
         write_authorization,
-        authorization_effect: if allowed {
+        authorization_effect: if create_write_authorization {
             AuthorizationEffect::Created
         } else {
             AuthorizationEffect::None
@@ -365,7 +378,7 @@ fn plan_prepare_write(
         guarantee_display: guarantee_display.clone(),
     };
 
-    let storage_mutations = if allowed {
+    let storage_mutations = if let Some(write_authorization_id) = &write_authorization_id {
         vec![CoreStorageMutation::InsertWriteAuthorization(
             WriteAuthorizationInsert {
                 write_authorization_id: write_authorization_id.as_str().to_owned(),
@@ -379,6 +392,7 @@ fn plan_prepare_write(
                     .to_owned(),
                 created_by_judgment_id: None,
                 expires_at,
+                created_at,
                 metadata_json: serde_json::to_string(&json!({
                     "verification_basis": verified_surface.verification_basis.clone()
                 }))?,
@@ -397,7 +411,9 @@ fn plan_prepare_write(
         "task_id": task_id.clone(),
         "change_unit_id": branch_change_unit_id.clone(),
         "decision": decision,
-        "write_authorization_id": allowed.then(|| write_authorization_id.as_str().to_owned())
+        "write_authorization_id": write_authorization_id
+            .as_ref()
+            .map(|id| id.as_str().to_owned())
     }))?;
     if !allowed {
         event_payload.insert(

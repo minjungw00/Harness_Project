@@ -43,6 +43,7 @@ impl CoreService {
             prepared.context.project_state.state_version,
             task.as_ref(),
             &request.include,
+            self.now(),
         ) {
             Ok(result_fields) => result_fields,
             Err(error) => {
@@ -76,6 +77,7 @@ fn status_result_fields(
     state_version: u64,
     task: Option<&TaskRecord>,
     include: &StatusInclude,
+    now: DateTime<Utc>,
 ) -> CoreResult<JsonObject> {
     let active_task = if include.task {
         match task {
@@ -104,6 +106,7 @@ fn status_result_fields(
                     pending_user_judgment_refs: pending_refs,
                     blocker_refs,
                     active_write_authorization: active_write_auths.first(),
+                    effective_authorization_now: Some(now),
                     options: SummaryOptions::status(include),
                 })?)
             }

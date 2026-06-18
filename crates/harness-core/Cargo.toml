@@ -5,6 +5,7 @@ edition.workspace = true
 publish = false
 
 [dependencies]
+chrono = { version = "0.4", default-features = false, features = ["std"] }
 harness-store = { path = "../harness-store" }
 harness-types = { path = "../harness-types" }
 serde = "1"

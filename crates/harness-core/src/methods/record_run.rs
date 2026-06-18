@@ -318,6 +318,7 @@ fn plan_record_run(
             &request,
             &record,
             &normalized_observed_changes,
+            service.now(),
         )?;
         Some(record)
     } else {
@@ -371,6 +372,7 @@ fn plan_record_run(
             .collect(),
         blocker_refs: blocker_refs.clone(),
         active_write_authorization: None,
+        effective_authorization_now: None,
         options: SummaryOptions::mutation(),
     })?;
 
@@ -992,7 +994,32 @@ fn validate_write_authorization_for_run(
     request: &RecordRunRequest,
     record: &WriteAuthorizationRecord,
     observed_changes: &ObservedChanges,
+    now: DateTime<Utc>,
 ) -> Result<(), PlanError> {
+    if record.status == "consumed" || record.status == "revoked" {
+        let reason = if record.status == "consumed" {
+            "consumed"
+        } else {
+            "revoked"
+        };
+        return Err(PlanError::Response(Box::new(
+            write_authorization_invalid_response(
+                &request.envelope,
+                Some(project_state.state_version),
+                reason,
+                "Write Authorization is not active",
+            ),
+        )));
+    }
+    if record.basis_state_version != project_state.state_version {
+        return Err(PlanError::Response(Box::new(
+            stale_write_authorization_basis_response(
+                &request.envelope,
+                record,
+                project_state.state_version,
+            ),
+        )));
+    }
     if record.status != "active" {
         let reason = match record.status.as_str() {
             "consumed" => "consumed",
@@ -1010,29 +1037,13 @@ fn validate_write_authorization_for_run(
             ),
         )));
     }
-    let now = store.current_timestamp().map_err(|error| {
-        PlanError::Response(Box::new(store_error_response(
-            &request.envelope,
-            project_state,
-            error,
-        )))
-    })?;
-    if record.expires_at <= now {
+    if write_authorization_is_expired(record, now).map_err(CorePipelineError::from)? {
         return Err(PlanError::Response(Box::new(
             write_authorization_invalid_response(
                 &request.envelope,
                 Some(project_state.state_version),
                 "expired",
                 "Write Authorization is expired",
-            ),
-        )));
-    }
-    if record.basis_state_version != project_state.state_version {
-        return Err(PlanError::Response(Box::new(
-            stale_write_authorization_basis_response(
-                &request.envelope,
-                record,
-                project_state.state_version,
             ),
         )));
     }

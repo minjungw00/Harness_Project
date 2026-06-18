@@ -3,8 +3,10 @@ use std::{
     fmt,
     path::{Path, PathBuf},
     sync::Arc,
+    time::SystemTime,
 };
 
+use chrono::{DateTime, Utc};
 use harness_store::{
     core_pipeline::{
         commit_input, CommitMutationInput, CommittedEventRef, CoreProjectStore,
@@ -298,6 +300,7 @@ pub struct PipelineResponse {
 pub struct CoreService {
     runtime_home: PathBuf,
     id_generator: Arc<dyn DurableIdGenerator>,
+    clock: Arc<dyn Clock>,
 }
 
 impl fmt::Debug for CoreService {
@@ -306,6 +309,7 @@ impl fmt::Debug for CoreService {
             .debug_struct("CoreService")
             .field("runtime_home", &self.runtime_home)
             .field("id_generator", &self.id_generator)
+            .field("clock", &self.clock)
             .finish()
     }
 }
@@ -321,7 +325,7 @@ impl Eq for CoreService {}
 impl CoreService {
     /// Creates a service that reads and writes Core records under `runtime_home`.
     pub fn new(runtime_home: impl AsRef<Path>) -> Self {
-        Self::with_id_generator(runtime_home, RandomDurableIdGenerator)
+        Self::with_id_generator_and_clock(runtime_home, RandomDurableIdGenerator, SystemClock)
     }
 
     /// Creates a service with an injected durable ID generator.
@@ -329,10 +333,29 @@ impl CoreService {
         runtime_home: impl AsRef<Path>,
         id_generator: impl DurableIdGenerator + 'static,
     ) -> Self {
+        Self::with_id_generator_and_clock(runtime_home, id_generator, SystemClock)
+    }
+
+    /// Creates a service with an injected UTC clock.
+    pub fn with_clock(runtime_home: impl AsRef<Path>, clock: impl Clock + 'static) -> Self {
+        Self::with_id_generator_and_clock(runtime_home, RandomDurableIdGenerator, clock)
+    }
+
+    /// Creates a service with injected durable ID generation and UTC time.
+    pub fn with_id_generator_and_clock(
+        runtime_home: impl AsRef<Path>,
+        id_generator: impl DurableIdGenerator + 'static,
+        clock: impl Clock + 'static,
+    ) -> Self {
         Self {
             runtime_home: runtime_home.as_ref().to_path_buf(),
             id_generator: Arc::new(id_generator),
+            clock: Arc::new(clock),
         }
+    }
+
+    pub(crate) fn now(&self) -> DateTime<Utc> {
+        self.clock.now()
     }
 
     pub(crate) fn allocate_generated_id(
@@ -658,6 +681,22 @@ impl CoreService {
                 }
             }
         }
+    }
+}
+
+/// Injectable UTC clock used by Core authority checks.
+pub trait Clock: fmt::Debug + Send + Sync {
+    /// Returns the current UTC timestamp.
+    fn now(&self) -> DateTime<Utc>;
+}
+
+/// Production UTC clock backed by the system clock.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct SystemClock;
+
+impl Clock for SystemClock {
+    fn now(&self) -> DateTime<Utc> {
+        DateTime::<Utc>::from(SystemTime::now())
     }
 }
 
