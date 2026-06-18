@@ -270,7 +270,7 @@ fn plan_record_run(
     let normalized_observed_changes = ObservedChanges {
         changed_paths: normalized_changed_paths.clone(),
         product_file_write_observed: request.observed_changes.product_file_write_observed,
-        sensitive_categories: sorted_unique(request.observed_changes.sensitive_categories.clone()),
+        sensitive_categories: normalized_string_set(&request.observed_changes.sensitive_categories),
         baseline_ref: Some(request.baseline_ref.clone()).into(),
     };
 
@@ -289,7 +289,7 @@ fn plan_record_run(
         .map(|plan| plan.artifact_ref.clone())
         .collect::<Vec<_>>();
 
-    let authorization_record = if request.observed_changes.product_file_write_observed {
+    let authorization_scope = if request.observed_changes.product_file_write_observed {
         let Some(write_authorization_id) = request.write_authorization_id.as_ref() else {
             return Err(PlanError::Response(Box::new(
                 write_authorization_required_response(
@@ -315,7 +315,7 @@ fn plan_record_run(
                     "write_authorization_id does not identify a Write Authorization",
                 )))
             })?;
-        validate_write_authorization_for_run(
+        let scope = validate_write_authorization_for_run(
             store,
             project_state,
             &request,
@@ -323,7 +323,7 @@ fn plan_record_run(
             &normalized_observed_changes,
             *plan_now.as_datetime(),
         )?;
-        Some(record)
+        Some((record, scope))
     } else {
         if request.write_authorization_id.is_some() {
             return Err(PlanError::Response(Box::new(
@@ -366,6 +366,7 @@ fn plan_record_run(
         request: &request,
         task: &task,
         run_ref: &run_ref,
+        authorization_scope: authorization_scope.as_ref(),
         evidence_summary_ref: evidence_summary_ref.clone(),
         registered_artifacts: &registered_artifacts,
         close_basis_revision,
@@ -440,7 +441,7 @@ fn plan_record_run(
         evidence_updates_json: serde_json::to_string(&request.evidence_updates)?,
         authorization_effect_json: serde_json::to_string(&json!({
             "write_authorization_id": request.write_authorization_id,
-            "effect": if authorization_record.is_some() { "consumed" } else { "none" }
+            "effect": if authorization_scope.is_some() { "consumed" } else { "none" }
         }))?,
         created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
         created_by_surface_instance_id: verified_surface.surface_instance_id.as_str().to_owned(),
@@ -464,7 +465,7 @@ fn plan_record_run(
             ],
         },
     ));
-    if let Some(record) = &authorization_record {
+    if let Some((record, _scope)) = &authorization_scope {
         storage_mutations.push(CoreStorageMutation::ConsumeWriteAuthorization(
             WriteAuthorizationConsumption {
                 write_authorization_id: record.write_authorization_id.clone(),
@@ -542,9 +543,9 @@ fn plan_record_run(
         "residual_risk_ids": residual_risk_ids,
         "kind": request.kind,
         "product_file_write_observed": normalized_observed_changes.product_file_write_observed,
-        "write_authorization_id": authorization_record
+        "write_authorization_id": authorization_scope
             .as_ref()
-            .map(|record| record.write_authorization_id.clone()),
+            .map(|(record, _scope)| record.write_authorization_id.clone()),
         "artifact_ids": registered_artifacts
             .iter()
             .map(|artifact| artifact.artifact_id.as_str().to_owned())
@@ -609,6 +610,7 @@ struct RecordRunCloseBasisContext<'a> {
     request: &'a RecordRunRequest,
     task: &'a TaskRecord,
     run_ref: &'a StateRecordRef,
+    authorization_scope: Option<&'a (WriteAuthorizationRecord, AuthorizedAttemptScope)>,
     evidence_summary_ref: Option<StateRecordRef>,
     registered_artifacts: &'a [ArtifactRef],
     close_basis_revision: u64,
@@ -625,6 +627,7 @@ fn build_record_run_close_basis(
         request,
         task,
         run_ref,
+        authorization_scope,
         evidence_summary_ref,
         registered_artifacts,
         close_basis_revision,
@@ -697,6 +700,25 @@ fn build_record_run_close_basis(
             source_refs,
         });
     }
+    let sensitive_action_requirements = current_sensitive_action_requirements(
+        store,
+        project_state,
+        request,
+        task,
+        run_ref,
+        authorization_scope,
+    )?;
+    let derived_sensitive_categories = sensitive_category_summary(&sensitive_action_requirements);
+    let caller_sensitive_categories = normalize_string_list(&assessment.sensitive_categories);
+    if caller_sensitive_categories != derived_sensitive_categories {
+        validation_plan_error(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            "close_assessment.sensitive_categories",
+            "close_assessment.sensitive_categories must match Core-derived sensitive requirements",
+        )?;
+        unreachable!("validation_plan_error always returns Err");
+    }
 
     Ok(Some(CurrentCloseBasis {
         close_basis_revision,
@@ -708,11 +730,157 @@ fn build_record_run_close_basis(
         result_refs,
         evidence_summary_ref: evidence_summary_ref.into(),
         residual_risks,
-        sensitive_categories: normalize_string_list(&assessment.sensitive_categories),
+        sensitive_categories: derived_sensitive_categories,
+        sensitive_action_requirements,
         recovery_constraints: normalize_string_list(&assessment.recovery_constraints),
         source_run_ref: run_ref.clone(),
         updated_at: now.clone(),
     }))
+}
+
+fn current_sensitive_action_requirements(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &RecordRunRequest,
+    task: &TaskRecord,
+    run_ref: &StateRecordRef,
+    authorization_scope: Option<&(WriteAuthorizationRecord, AuthorizedAttemptScope)>,
+) -> Result<Vec<SensitiveActionRequirement>, PlanError> {
+    let mut requirements =
+        previous_current_sensitive_action_requirements(store, project_state, request, task)?;
+    if let Some((record, scope)) = authorization_scope {
+        if let Some(requirement) =
+            sensitive_action_requirement_from_authorization(store, run_ref, record, scope)?
+        {
+            requirements.push(requirement);
+        }
+    }
+    sorted_unique_sensitive_requirements(requirements)
+}
+
+fn previous_current_sensitive_action_requirements(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &RecordRunRequest,
+    task: &TaskRecord,
+) -> Result<Vec<SensitiveActionRequirement>, PlanError> {
+    let task_revision = store
+        .task_revision_record(&request.task_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?;
+    let Some(previous_basis) = task_revision.and_then(|record| record.current_close_basis) else {
+        return Ok(Vec::new());
+    };
+    if previous_basis.task_id == request.task_id
+        && previous_basis.change_unit_id == request.change_unit_id
+        && previous_basis.scope_revision == task.scope_revision
+        && previous_basis.close_basis_revision == task.close_basis_revision
+        && previous_basis.baseline_ref.as_ref() == Some(&request.baseline_ref)
+    {
+        Ok(previous_basis.sensitive_action_requirements)
+    } else {
+        Ok(Vec::new())
+    }
+}
+
+fn sensitive_action_requirement_from_authorization(
+    store: &CoreProjectStore,
+    run_ref: &StateRecordRef,
+    record: &WriteAuthorizationRecord,
+    scope: &AuthorizedAttemptScope,
+) -> Result<Option<SensitiveActionRequirement>, PlanError> {
+    let sensitive_categories = normalized_string_set(&scope.sensitive_categories);
+    if sensitive_categories.is_empty() {
+        return Ok(None);
+    }
+    let action_kind = scope.intended_operation.trim().to_owned();
+    if action_kind.is_empty() {
+        return Err(PlanError::Core(CorePipelineError::Store(
+            StoreError::corrupt_owner_state_json(
+                "write_authorizations",
+                record.write_authorization_id.clone(),
+                "attempt_scope_json",
+            ),
+        )));
+    }
+    let normalized_paths =
+        normalize_product_paths(&store.project_record().repo_root, &scope.intended_paths).map_err(
+            |_| {
+                PlanError::Core(CorePipelineError::Store(
+                    StoreError::corrupt_owner_state_json(
+                        "write_authorizations",
+                        record.write_authorization_id.clone(),
+                        "attempt_scope_json",
+                    ),
+                ))
+            },
+        )?;
+    if normalized_paths.is_empty() {
+        return Err(PlanError::Core(CorePipelineError::Store(
+            StoreError::corrupt_owner_state_json(
+                "write_authorizations",
+                record.write_authorization_id.clone(),
+                "attempt_scope_json",
+            ),
+        )));
+    }
+    Ok(Some(SensitiveActionRequirement {
+        action_kind,
+        normalized_paths,
+        sensitive_categories,
+        baseline_ref: scope.baseline_ref.clone().into(),
+        change_unit_id: scope.change_unit_id.clone(),
+        source_run_ref: run_ref.clone(),
+        source_write_authorization_ref: write_authorization_ref(
+            record,
+            run_ref
+                .state_version
+                .as_ref()
+                .copied()
+                .unwrap_or(record.basis_state_version),
+        ),
+    }))
+}
+
+fn sorted_unique_sensitive_requirements(
+    requirements: Vec<SensitiveActionRequirement>,
+) -> Result<Vec<SensitiveActionRequirement>, PlanError> {
+    let mut unique = BTreeMap::new();
+    for requirement in requirements {
+        unique
+            .entry(sensitive_requirement_key(&requirement)?)
+            .or_insert(requirement);
+    }
+    Ok(unique.into_values().collect())
+}
+
+fn sensitive_requirement_key(
+    requirement: &SensitiveActionRequirement,
+) -> Result<(String, String, String, Option<String>, String), PlanError> {
+    Ok((
+        requirement.action_kind.clone(),
+        serde_json::to_string(&requirement.normalized_paths)?,
+        serde_json::to_string(&requirement.sensitive_categories)?,
+        requirement
+            .baseline_ref
+            .as_ref()
+            .map(|baseline_ref| baseline_ref.as_str().to_owned()),
+        requirement.change_unit_id.as_str().to_owned(),
+    ))
+}
+
+fn sensitive_category_summary(requirements: &[SensitiveActionRequirement]) -> Vec<String> {
+    requirements
+        .iter()
+        .flat_map(|requirement| requirement.sensitive_categories.iter().cloned())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect()
 }
 
 fn validate_residual_risk_input(
@@ -1502,7 +1670,7 @@ fn validate_write_authorization_for_run(
     record: &WriteAuthorizationRecord,
     observed_changes: &ObservedChanges,
     now: DateTime<Utc>,
-) -> Result<(), PlanError> {
+) -> Result<AuthorizedAttemptScope, PlanError> {
     if record.status == "consumed" || record.status == "revoked" {
         let reason = if record.status == "consumed" {
             "consumed"
@@ -1579,7 +1747,7 @@ fn validate_write_authorization_for_run(
         || scope.change_unit_id != request.change_unit_id
         || !scope.product_file_write_intended
         || scope.baseline_ref.as_ref() != Some(&request.baseline_ref)
-        || string_set(&scope.sensitive_categories)
+        || string_set(&normalized_string_set(&scope.sensitive_categories))
             != string_set(&observed_changes.sensitive_categories)
         || !paths_are_authorized(&observed_changes.changed_paths, &scope_paths)
     {
@@ -1592,7 +1760,7 @@ fn validate_write_authorization_for_run(
             ),
         )));
     }
-    Ok(())
+    Ok(scope)
 }
 
 fn build_record_run_evidence_summary(

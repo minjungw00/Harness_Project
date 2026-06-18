@@ -1,12 +1,12 @@
 use std::path::Path;
 
 use harness_types::{
-    CurrentCloseBasis, EvidenceCoverageItem, IdempotencyKey, JudgmentBasis,
-    JudgmentBasisCompatibilityStatus, JudgmentResolutionOutcome, MethodName,
+    BaselineRef, ChangeUnitId, CurrentCloseBasis, EvidenceCoverageItem, IdempotencyKey,
+    JudgmentBasis, JudgmentBasisCompatibilityStatus, JudgmentResolutionOutcome, MethodName,
     PersistedArtifactProducer, PersistedArtifactProvenance, PersistedArtifactProvenanceMetadata,
     PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentRequest,
-    PersistedUserJudgmentResolution, ProjectId, RequestHash, RunId, StagedArtifactHandleId,
-    StateRecordRef, SurfaceId, TaskId, UtcTimestamp,
+    PersistedUserJudgmentResolution, ProjectId, RequestHash, RequiredNullable, ResidualRisk, RunId,
+    StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId, UtcTimestamp,
 };
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
@@ -435,6 +435,45 @@ pub struct TaskRevisionRecord {
     pub close_basis_revision: u64,
     pub close_basis_json: Option<String>,
     pub current_close_basis: Option<CurrentCloseBasis>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LegacyCategoryOnlyCloseBasis {
+    close_basis_revision: u64,
+    scope_revision: u64,
+    task_id: TaskId,
+    change_unit_id: ChangeUnitId,
+    baseline_ref: RequiredNullable<BaselineRef>,
+    result_summary: String,
+    result_refs: Vec<StateRecordRef>,
+    evidence_summary_ref: RequiredNullable<StateRecordRef>,
+    residual_risks: Vec<ResidualRisk>,
+    sensitive_categories: Vec<String>,
+    recovery_constraints: Vec<String>,
+    source_run_ref: StateRecordRef,
+    updated_at: UtcTimestamp,
+}
+
+impl From<LegacyCategoryOnlyCloseBasis> for CurrentCloseBasis {
+    fn from(value: LegacyCategoryOnlyCloseBasis) -> Self {
+        Self {
+            close_basis_revision: value.close_basis_revision,
+            scope_revision: value.scope_revision,
+            task_id: value.task_id,
+            change_unit_id: value.change_unit_id,
+            baseline_ref: value.baseline_ref,
+            result_summary: value.result_summary,
+            result_refs: value.result_refs,
+            evidence_summary_ref: value.evidence_summary_ref,
+            residual_risks: value.residual_risks,
+            sensitive_categories: value.sensitive_categories,
+            sensitive_action_requirements: Vec::new(),
+            recovery_constraints: value.recovery_constraints,
+            source_run_ref: value.source_run_ref,
+            updated_at: value.updated_at,
+        }
+    }
 }
 
 /// Current Change Unit row data needed by Core method implementations.
@@ -3693,10 +3732,19 @@ fn decode_current_close_basis_column(
     record_ref: &str,
     text: Option<&str>,
 ) -> StoreResult<Option<CurrentCloseBasis>> {
-    text.map(|value| {
-        decode_owner_json_text::<CurrentCloseBasis>("tasks", record_ref, "close_basis_json", value)
-    })
-    .transpose()
+    text.map(|value| decode_current_close_basis_text(record_ref, value))
+        .transpose()
+}
+
+fn decode_current_close_basis_text(record_ref: &str, text: &str) -> StoreResult<CurrentCloseBasis> {
+    match serde_json::from_str::<CurrentCloseBasis>(text) {
+        Ok(current) => Ok(current),
+        Err(_) => serde_json::from_str::<LegacyCategoryOnlyCloseBasis>(text)
+            .map(CurrentCloseBasis::from)
+            .map_err(|_| {
+                StoreError::corrupt_owner_state_json("tasks", record_ref, "close_basis_json")
+            }),
+    }
 }
 
 fn decode_judgment_basis_column(
@@ -4320,6 +4368,20 @@ mod tests {
                 source_refs: vec![state_ref(StateRecordKind::Run, "run_basis", task_id, 1)],
             }],
             sensitive_categories: vec!["network".to_owned()],
+            sensitive_action_requirements: vec![harness_types::SensitiveActionRequirement {
+                action_kind: "local_sensitive_step".to_owned(),
+                normalized_paths: vec!["src/export.rs".to_owned()],
+                sensitive_categories: vec!["network".to_owned()],
+                baseline_ref: RequiredNullable::some(BaselineRef::new("baseline_store")),
+                change_unit_id: ChangeUnitId::new("cu_basis"),
+                source_run_ref: state_ref(StateRecordKind::Run, "run_basis", task_id, 1),
+                source_write_authorization_ref: state_ref(
+                    StateRecordKind::WriteAuthorization,
+                    "wa_basis",
+                    task_id,
+                    1,
+                ),
+            }],
             recovery_constraints: vec!["Rollback requires operator action.".to_owned()],
             source_run_ref: state_ref(StateRecordKind::Run, "run_basis", task_id, 1),
             updated_at: UtcTimestamp::parse("2026-06-18T00:00:00Z")

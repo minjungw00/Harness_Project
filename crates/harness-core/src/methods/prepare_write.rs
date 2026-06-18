@@ -117,6 +117,8 @@ fn plan_prepare_write(
         )?;
         unreachable!("validation_plan_error always returns Err");
     }
+    let normalized_operation = request.intended_operation.trim().to_owned();
+    let normalized_sensitive_categories = normalized_string_set(&request.sensitive_categories);
 
     let normalized_paths = match normalize_product_paths(
         &store.project_record().repo_root,
@@ -230,7 +232,7 @@ fn plan_prepare_write(
     }
 
     let mut active_user_judgment_refs = Vec::new();
-    if !request.sensitive_categories.is_empty() {
+    if !normalized_sensitive_categories.is_empty() {
         let matching_sensitive_approval = matching_sensitive_approval(SensitiveApprovalSearch {
             store,
             project_state,
@@ -238,7 +240,9 @@ fn plan_prepare_write(
             task_id: &task_id,
             task: &task,
             change_unit,
+            intended_operation: &normalized_operation,
             normalized_paths: &normalized_paths,
+            sensitive_categories: &normalized_sensitive_categories,
             now: &plan_now,
         })?;
         if let Some(record) = matching_sensitive_approval {
@@ -296,10 +300,10 @@ fn plan_prepare_write(
     let authorized_attempt_scope = AuthorizedAttemptScope {
         task_id: task_id.clone(),
         change_unit_id: scope_change_unit_id.clone(),
-        intended_operation: request.intended_operation.clone(),
+        intended_operation: normalized_operation,
         intended_paths: normalized_paths.clone(),
         product_file_write_intended: request.product_file_write_intended,
-        sensitive_categories: request.sensitive_categories.clone(),
+        sensitive_categories: normalized_sensitive_categories,
         baseline_ref: Some(request.baseline_ref.clone()),
     };
     let attempt_scope_json = serde_json::to_string(&authorized_attempt_scope)?;

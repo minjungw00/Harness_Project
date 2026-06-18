@@ -479,9 +479,23 @@ pub struct CurrentCloseBasis {
     pub evidence_summary_ref: RequiredNullable<StateRecordRef>,
     pub residual_risks: Vec<ResidualRisk>,
     pub sensitive_categories: Vec<String>,
+    pub sensitive_action_requirements: Vec<SensitiveActionRequirement>,
     pub recovery_constraints: Vec<String>,
     pub source_run_ref: StateRecordRef,
     pub updated_at: UtcTimestamp,
+}
+
+/// Core-derived sensitive action requirement in a current close basis.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SensitiveActionRequirement {
+    pub action_kind: String,
+    pub normalized_paths: Vec<String>,
+    pub sensitive_categories: Vec<String>,
+    pub baseline_ref: RequiredNullable<BaselineRef>,
+    pub change_unit_id: ChangeUnitId,
+    pub source_run_ref: StateRecordRef,
+    pub source_write_authorization_ref: StateRecordRef,
 }
 
 /// Named visible residual risk in a current close basis.

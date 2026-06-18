@@ -4682,6 +4682,564 @@ fn sensitive_approval_requires_exact_path_category_and_change_unit() -> Result<(
 }
 
 #[test]
+fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "sensitive_public_lifecycle")?;
+
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_sensitive_public_status",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: true,
+                write_authority: true,
+                evidence: true,
+                close: true,
+                guarantees: true,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert_eq!(status.response_value["base"]["response_kind"], "result");
+
+    let (after_sensitive, _) =
+        record_sensitive_approval(&harness, &task_id, &change_unit_id, 2, "public_lifecycle")?;
+    let mut prepare = prepare_write_request(
+        "req_sensitive_public_prepare",
+        "idem_sensitive_public_prepare",
+        Some(after_sensitive),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    prepare.sensitive_categories = vec!["network".to_owned()];
+    let prepared = harness
+        .service
+        .prepare_write(prepare, invocation(AccessClass::WriteAuthorization))?;
+    assert_eq!(prepared.response_value["decision"], "allowed");
+    let write_authorization_id =
+        response_record_id(&prepared.response_value, "write_authorization_ref");
+    let after_prepare = prepared.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+
+    enable_record_run_capabilities(&harness)?;
+    let staged = stage_artifact_for_record_run(
+        &harness,
+        &task_id,
+        "sensitive_public_lifecycle",
+        after_prepare,
+    )?;
+    let mut run = product_write_record_run_request(
+        "req_sensitive_public_run",
+        "idem_sensitive_public_run",
+        after_prepare,
+        &task_id,
+        &change_unit_id,
+        &write_authorization_id,
+        "run_sensitive_public",
+    );
+    run.observed_changes.sensitive_categories = vec!["network".to_owned()];
+    run.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_sensitive_public",
+        staged,
+        Some("validation_report"),
+        Some("Close claim supported."),
+    )];
+    run.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    run.close_assessment = Some(harness_types::CloseAssessmentInput {
+        result_summary: "Sensitive product write is ready for close.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: vec!["network".to_owned()],
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let recorded = harness
+        .service
+        .record_run(run, invocation(AccessClass::RunRecording))?;
+    assert_eq!(recorded.response_value["base"]["response_kind"], "result");
+    let requirement =
+        &recorded.response_value["current_close_basis"]["sensitive_action_requirements"][0];
+    assert_eq!(requirement["action_kind"], "local_sensitive_step");
+    assert_eq!(requirement["normalized_paths"], json!(["src/export.rs"]));
+    assert_eq!(requirement["sensitive_categories"], json!(["network"]));
+    assert_eq!(requirement["change_unit_id"], change_unit_id);
+    assert_eq!(
+        requirement["source_write_authorization_ref"]["record_id"],
+        write_authorization_id
+    );
+    assert!(requirement["action_kind"]
+        .as_str()
+        .is_some_and(|value| !value.is_empty()));
+    assert!(!requirement["normalized_paths"]
+        .as_array()
+        .expect("paths should be an array")
+        .is_empty());
+    let after_run = recorded.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_sensitive_public_status_after_run",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: true,
+                write_authority: false,
+                evidence: true,
+                close: true,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert_eq!(
+        status.response_value["current_close_basis"]["sensitive_action_requirements"][0]
+            ["normalized_paths"],
+        json!(["src/export.rs"])
+    );
+
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_run,
+        "sensitive_public_lifecycle",
+    )?;
+    let closed = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_sensitive_public_close",
+            idempotency_key: Some("idem_sensitive_public_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    assert_eq!(closed.response_value["close_state"], "closed");
+    assert_no_close_blocker(&closed.response_value, "missing_sensitive_approval");
+    Ok(())
+}
+
+#[test]
+fn close_sensitive_approval_coverage_rejects_mismatched_approvals() -> Result<(), Box<dyn Error>> {
+    fn assert_mismatch(
+        suffix: &str,
+        requirement_categories: &[&str],
+        approval_scope: harness_types::SensitiveActionScope,
+        mutate_basis: Option<fn(&mut Value)>,
+        accepted: bool,
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, suffix)?;
+        let write_authorization_id = format!("wa_sensitive_{suffix}");
+        let recorded = record_sensitive_product_write_close_basis(
+            &harness,
+            SensitiveProductWriteBasisFixture {
+                task_id: &task_id,
+                change_unit_id: &change_unit_id,
+                expected_state_version: 2,
+                suffix,
+                write_authorization_id: &write_authorization_id,
+                intended_operation: "local_sensitive_step",
+                intended_paths: &["src/export.rs"],
+                observed_categories: requirement_categories,
+                assessment_categories: requirement_categories,
+            },
+        )?;
+        assert_eq!(recorded.response_value["base"]["response_kind"], "result");
+        let after_basis = recorded.response_value["base"]["state_version"]
+            .as_u64()
+            .expect("state_version should be present");
+        let (after_approval, judgment_id) = record_sensitive_approval_with_scope(
+            &harness,
+            &task_id,
+            &change_unit_id,
+            after_basis,
+            suffix,
+            approval_scope,
+            accepted,
+        )?;
+        if let Some(mutate_basis) = mutate_basis {
+            mutate_user_judgment_basis_json(&harness, &judgment_id, mutate_basis)?;
+        }
+        let after_final =
+            record_final_acceptance(&harness, &task_id, &change_unit_id, after_approval, suffix)?;
+        let close_request_id = format!("req_close_sensitive_{suffix}");
+        let close_idempotency_key = format!("idem_close_sensitive_{suffix}");
+        let response = harness.service.close_task(
+            close_task_request(CloseTaskFixture {
+                request_id: &close_request_id,
+                idempotency_key: Some(&close_idempotency_key),
+                dry_run: false,
+                expected_state_version: Some(after_final),
+                task_id: &task_id,
+                intent: CloseIntent::Complete,
+                close_reason: Some(CloseReason::CompletedSelfChecked),
+                superseding_task_id: None,
+            }),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        assert_eq!(response.response_value["close_state"], "blocked");
+        assert_close_blocker(&response.response_value, "missing_sensitive_approval");
+        Ok(())
+    }
+
+    assert_mismatch(
+        "sensitive_wrong_operation",
+        &["network"],
+        sensitive_scope(
+            "other_sensitive_step",
+            vec!["src/export.rs"],
+            vec!["network"],
+        ),
+        None,
+        true,
+    )?;
+    assert_mismatch(
+        "sensitive_wrong_path",
+        &["network"],
+        sensitive_scope(
+            "local_sensitive_step",
+            vec!["tests/export.rs"],
+            vec!["network"],
+        ),
+        None,
+        true,
+    )?;
+    assert_mismatch(
+        "sensitive_partial_category",
+        &["network", "credential"],
+        sensitive_scope(
+            "local_sensitive_step",
+            vec!["src/export.rs"],
+            vec!["network"],
+        ),
+        None,
+        true,
+    )?;
+    assert_mismatch(
+        "sensitive_wrong_baseline",
+        &["network"],
+        sensitive_scope(
+            "local_sensitive_step",
+            vec!["src/export.rs"],
+            vec!["network"],
+        ),
+        Some(|basis| basis["baseline_ref"] = json!("other_baseline")),
+        true,
+    )?;
+    assert_mismatch(
+        "sensitive_wrong_change_unit",
+        &["network"],
+        sensitive_scope(
+            "local_sensitive_step",
+            vec!["src/export.rs"],
+            vec!["network"],
+        ),
+        Some(|basis| basis["change_unit_id"] = json!("other_change_unit")),
+        true,
+    )?;
+    assert_mismatch(
+        "sensitive_rejected",
+        &["network"],
+        sensitive_scope(
+            "local_sensitive_step",
+            vec!["src/export.rs"],
+            vec!["network"],
+        ),
+        None,
+        false,
+    )?;
+    Ok(())
+}
+
+#[test]
+fn multiple_sensitive_requirements_require_complete_coverage() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "sensitive_multiple")?;
+    let first = record_sensitive_product_write_close_basis(
+        &harness,
+        SensitiveProductWriteBasisFixture {
+            task_id: &task_id,
+            change_unit_id: &change_unit_id,
+            expected_state_version: 2,
+            suffix: "multiple_network",
+            write_authorization_id: "wa_sensitive_multiple_network",
+            intended_operation: "local_sensitive_step",
+            intended_paths: &["src/export.rs"],
+            observed_categories: &["network"],
+            assessment_categories: &["network"],
+        },
+    )?;
+    let after_first = first.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+    let second = record_sensitive_product_write_close_basis(
+        &harness,
+        SensitiveProductWriteBasisFixture {
+            task_id: &task_id,
+            change_unit_id: &change_unit_id,
+            expected_state_version: after_first,
+            suffix: "multiple_credential",
+            write_authorization_id: "wa_sensitive_multiple_credential",
+            intended_operation: "local_sensitive_step",
+            intended_paths: &["src/export.rs"],
+            observed_categories: &["credential"],
+            assessment_categories: &["network", "credential"],
+        },
+    )?;
+    let requirements = second.response_value["current_close_basis"]
+        ["sensitive_action_requirements"]
+        .as_array()
+        .expect("requirements should be an array");
+    assert_eq!(requirements.len(), 2);
+    let after_second = second.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+
+    let (after_network, _) = record_sensitive_approval_with_scope(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_second,
+        "multiple_network_only",
+        sensitive_scope(
+            "local_sensitive_step",
+            vec!["src/export.rs"],
+            vec!["network"],
+        ),
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_network,
+        "multiple_network_only",
+    )?;
+    let blocked = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_sensitive_multiple_blocked",
+            idempotency_key: Some("idem_sensitive_multiple_blocked"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    assert_eq!(blocked.response_value["close_state"], "blocked");
+    assert_close_blocker(&blocked.response_value, "missing_sensitive_approval");
+
+    let (after_credential, _) = record_sensitive_approval_with_scope(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_final,
+        "multiple_credential",
+        sensitive_scope(
+            "local_sensitive_step",
+            vec!["src/export.rs"],
+            vec!["credential"],
+        ),
+        true,
+    )?;
+    let closed = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_sensitive_multiple_closed",
+            idempotency_key: Some("idem_sensitive_multiple_closed"),
+            dry_run: false,
+            expected_state_version: Some(after_credential),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    assert_eq!(closed.response_value["close_state"], "closed");
+    Ok(())
+}
+
+#[test]
+fn close_assessment_cannot_invent_or_erase_sensitive_requirements() -> Result<(), Box<dyn Error>> {
+    let invent_harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&invent_harness, "sensitive_invent")?;
+    enable_record_run_capabilities(&invent_harness)?;
+    let mut invent = record_run_request(
+        "req_sensitive_invent",
+        "idem_sensitive_invent",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    invent.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    invent.close_assessment = Some(harness_types::CloseAssessmentInput {
+        result_summary: "Caller tries to invent a sensitive category.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: vec!["network".to_owned()],
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let before_invent = invent_harness.counts()?;
+    let invented = invent_harness
+        .service
+        .record_run(invent, invocation(AccessClass::RunRecording))?;
+    assert_eq!(invented.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        invented.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(invent_harness.counts()?, before_invent);
+
+    let erase_harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&erase_harness, "sensitive_erase")?;
+    let first = record_sensitive_product_write_close_basis(
+        &erase_harness,
+        SensitiveProductWriteBasisFixture {
+            task_id: &task_id,
+            change_unit_id: &change_unit_id,
+            expected_state_version: 2,
+            suffix: "erase_initial",
+            write_authorization_id: "wa_sensitive_erase_initial",
+            intended_operation: "local_sensitive_step",
+            intended_paths: &["src/export.rs"],
+            observed_categories: &["network"],
+            assessment_categories: &["network"],
+        },
+    )?;
+    let after_first = first.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+    enable_record_run_capabilities(&erase_harness)?;
+    let mut erase = record_run_request(
+        "req_sensitive_erase",
+        "idem_sensitive_erase",
+        false,
+        Some(after_first),
+        &task_id,
+        &change_unit_id,
+    );
+    erase.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    erase.close_assessment = Some(harness_types::CloseAssessmentInput {
+        result_summary: "Caller tries to erase the sensitive requirement.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let before_erase = erase_harness.counts()?;
+    let erased = erase_harness
+        .service
+        .record_run(erase, invocation(AccessClass::RunRecording))?;
+    assert_eq!(erased.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        erased.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(erase_harness.counts()?, before_erase);
+    Ok(())
+}
+
+#[test]
+fn legacy_category_only_close_basis_cannot_complete_close() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "legacy_sensitive")?;
+    let after_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "legacy_sensitive",
+        true,
+    )?;
+    let revision = task_revision(&harness, &task_id)?;
+    let mut legacy_basis = serde_json::to_value(
+        revision
+            .current_close_basis
+            .expect("close basis should exist"),
+    )?;
+    legacy_basis["sensitive_categories"] = json!(["network"]);
+    legacy_basis
+        .as_object_mut()
+        .expect("close basis should be an object")
+        .remove("sensitive_action_requirements");
+    set_task_owner_json(
+        &harness,
+        &task_id,
+        "close_basis_json",
+        Some(&legacy_basis.to_string()),
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "legacy_sensitive",
+    )?;
+
+    let check = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_legacy_sensitive_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert_eq!(
+        check.response_value["current_close_basis"]["sensitive_action_requirements"],
+        json!([])
+    );
+    assert_close_blocker(&check.response_value, "stale_current_close_basis");
+
+    let close = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_legacy_sensitive_close",
+            idempotency_key: Some("idem_legacy_sensitive_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    assert_eq!(close.response_value["close_state"], "blocked");
+    assert_close_blocker(&close.response_value, "stale_current_close_basis");
+    Ok(())
+}
+
+#[test]
 fn scope_change_supersedes_pending_judgment_and_stale_pending_answer_has_no_effect(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
@@ -7269,6 +7827,89 @@ fn record_sensitive_approval(
     Ok((state_version, judgment_id))
 }
 
+fn record_sensitive_approval_with_scope(
+    harness: &MethodHarness,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+    scope: harness_types::SensitiveActionScope,
+    accepted: bool,
+) -> Result<(u64, String), Box<dyn Error>> {
+    let request_id = format!("req_sensitive_scope_{suffix}");
+    let idempotency_key = format!("idem_sensitive_scope_{suffix}");
+    let mut judgment_request = user_judgment_request(
+        &request_id,
+        &idempotency_key,
+        false,
+        Some(expected_state_version),
+        task_id,
+        Some(change_unit_id),
+        JudgmentKind::SensitiveApproval,
+    );
+    judgment_request.sensitive_action_scope = Some(scope.clone()).into();
+    let judgment = harness
+        .service
+        .request_user_judgment(judgment_request, invocation(AccessClass::CoreMutation))?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let record_request_id = format!("req_sensitive_scope_record_{suffix}");
+    let record_idempotency_key = format!("idem_sensitive_scope_record_{suffix}");
+    let mut record_request = record_judgment_request(
+        &record_request_id,
+        &record_idempotency_key,
+        Some(expected_state_version + 1),
+        task_id,
+        &judgment_id,
+        JudgmentKind::SensitiveApproval,
+        sensitive_approval_payload(scope),
+    );
+    if !accepted {
+        record_request.selected_option_id = harness_types::UserJudgmentOptionId::new("decline");
+    }
+    let response = harness
+        .service
+        .record_user_judgment(record_request, invocation(AccessClass::CoreMutation))?;
+    let state_version = response.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+    Ok((state_version, judgment_id))
+}
+
+fn sensitive_approval_payload(
+    scope: harness_types::SensitiveActionScope,
+) -> RecordUserJudgmentPayload {
+    RecordUserJudgmentPayload {
+        product_decision: None.into(),
+        technical_decision: None.into(),
+        scope_decision: None.into(),
+        sensitive_action_scope: Some(scope).into(),
+        final_acceptance: None.into(),
+        residual_risk_acceptance: None.into(),
+        cancellation: None.into(),
+    }
+}
+
+fn sensitive_scope(
+    action_kind: &str,
+    intended_paths: Vec<&str>,
+    sensitive_categories: Vec<&str>,
+) -> harness_types::SensitiveActionScope {
+    harness_types::SensitiveActionScope {
+        action_kind: action_kind.to_owned(),
+        description: "Allow the named sensitive step only.".to_owned(),
+        intended_paths: intended_paths.into_iter().map(str::to_owned).collect(),
+        sensitive_categories: sensitive_categories
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+        command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()).into(),
+        network_or_host_summary: Some("No remote host is authorized here.".to_owned()).into(),
+        secret_or_credential_summary: None.into(),
+        capability_claim: "This is not Write Authorization.".to_owned(),
+        expires_at: None.into(),
+    }
+}
+
 fn prepare_write_authorization(
     harness: &MethodHarness,
     task_id: &str,
@@ -7862,14 +8503,46 @@ fn insert_active_write_authorization_with_timestamps(
     created_at: &str,
     expires_at: &str,
 ) -> Result<(), Box<dyn Error>> {
+    insert_active_write_authorization_with_scope(
+        harness,
+        WriteAuthorizationScopeFixture {
+            task_id,
+            change_unit_id,
+            write_authorization_id,
+            basis_state_version,
+            created_at,
+            expires_at,
+            intended_operation: "local_sensitive_step",
+            intended_paths: &["src/export.rs"],
+            sensitive_categories: &[],
+        },
+    )
+}
+
+struct WriteAuthorizationScopeFixture<'a> {
+    task_id: &'a str,
+    change_unit_id: &'a str,
+    write_authorization_id: &'a str,
+    basis_state_version: u64,
+    created_at: &'a str,
+    expires_at: &'a str,
+    intended_operation: &'a str,
+    intended_paths: &'a [&'a str],
+    sensitive_categories: &'a [&'a str],
+}
+
+fn insert_active_write_authorization_with_scope(
+    harness: &MethodHarness,
+    input: WriteAuthorizationScopeFixture<'_>,
+) -> Result<(), Box<dyn Error>> {
     let conn = harness.conn()?;
     let attempt_scope_json = json!({
-        "task_id": task_id,
-        "change_unit_id": change_unit_id,
-        "intended_operation": "local_sensitive_step",
-        "intended_paths": ["src/export.rs"],
+        "task_id": input.task_id,
+        "change_unit_id": input.change_unit_id,
+        "intended_operation": input.intended_operation,
+        "intended_paths": input.intended_paths,
         "product_file_write_intended": true,
-        "sensitive_categories": [],
+        "sensitive_categories": input.sensitive_categories,
         "baseline_ref": "baseline_test"
     })
     .to_string();
@@ -7902,18 +8575,86 @@ fn insert_active_write_authorization_with_timestamps(
             )",
         rusqlite::params![
             PROJECT_ID,
-            write_authorization_id,
-            task_id,
-            change_unit_id,
-            i64::try_from(basis_state_version)?,
+            input.write_authorization_id,
+            input.task_id,
+            input.change_unit_id,
+            i64::try_from(input.basis_state_version)?,
             attempt_scope_json,
             SURFACE_ID,
             SURFACE_INSTANCE_ID,
-            expires_at,
-            created_at
+            input.expires_at,
+            input.created_at
         ],
     )?;
     Ok(())
+}
+
+struct SensitiveProductWriteBasisFixture<'a> {
+    task_id: &'a str,
+    change_unit_id: &'a str,
+    expected_state_version: u64,
+    suffix: &'a str,
+    write_authorization_id: &'a str,
+    intended_operation: &'a str,
+    intended_paths: &'a [&'a str],
+    observed_categories: &'a [&'a str],
+    assessment_categories: &'a [&'a str],
+}
+
+fn record_sensitive_product_write_close_basis(
+    harness: &MethodHarness,
+    input: SensitiveProductWriteBasisFixture<'_>,
+) -> Result<PipelineResponse, Box<dyn Error>> {
+    enable_record_run_capabilities(harness)?;
+    insert_active_write_authorization_with_scope(
+        harness,
+        WriteAuthorizationScopeFixture {
+            task_id: input.task_id,
+            change_unit_id: input.change_unit_id,
+            write_authorization_id: input.write_authorization_id,
+            basis_state_version: input.expected_state_version,
+            created_at: "2999-01-01T00:00:00.000Z",
+            expires_at: "2999-01-01T00:15:00.000Z",
+            intended_operation: input.intended_operation,
+            intended_paths: input.intended_paths,
+            sensitive_categories: input.observed_categories,
+        },
+    )?;
+    let mut request = product_write_record_run_request(
+        &format!("req_sensitive_run_{}", input.suffix),
+        &format!("idem_sensitive_run_{}", input.suffix),
+        input.expected_state_version,
+        input.task_id,
+        input.change_unit_id,
+        input.write_authorization_id,
+        &format!("run_sensitive_{}", input.suffix),
+    );
+    request.observed_changes.changed_paths = input
+        .intended_paths
+        .iter()
+        .map(|path| path.to_string())
+        .collect();
+    request.observed_changes.sensitive_categories = input
+        .observed_categories
+        .iter()
+        .map(|category| category.to_string())
+        .collect();
+    request.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    request.close_assessment = Some(harness_types::CloseAssessmentInput {
+        result_summary: "Sensitive product write is ready for close.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: input
+            .assessment_categories
+            .iter()
+            .map(|category| category.to_string())
+            .collect(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    Ok(harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?)
 }
 
 fn set_surface_capability(
@@ -8346,6 +9087,25 @@ fn set_user_judgment_owner_json(
         .conn()?
         .execute(sql, rusqlite::params![PROJECT_ID, judgment_id, value])?;
     Ok(())
+}
+
+fn mutate_user_judgment_basis_json(
+    harness: &MethodHarness,
+    judgment_id: &str,
+    mutate: impl FnOnce(&mut Value),
+) -> Result<(), Box<dyn Error>> {
+    let conn = harness.conn()?;
+    let text: String = conn.query_row(
+        "SELECT basis_json
+           FROM user_judgments
+          WHERE project_id = ?1
+            AND judgment_id = ?2",
+        rusqlite::params![PROJECT_ID, judgment_id],
+        |row| row.get(0),
+    )?;
+    let mut value: Value = serde_json::from_str(&text)?;
+    mutate(&mut value);
+    set_user_judgment_owner_json(harness, judgment_id, "basis_json", Some(&value.to_string()))
 }
 
 fn set_artifact_owner_json(

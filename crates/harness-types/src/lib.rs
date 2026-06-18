@@ -310,6 +310,21 @@ mod tests {
                 }
             ],
             "sensitive_categories": ["network"],
+            "sensitive_action_requirements": [
+                {
+                    "action_kind": "export customer data",
+                    "normalized_paths": ["src/exporter.ts"],
+                    "sensitive_categories": ["network"],
+                    "baseline_ref": "baseline_close_basis",
+                    "change_unit_id": "cu_close_basis_001",
+                    "source_run_ref": state_ref_json("run", "run_close_basis_001", "task_close_basis_001"),
+                    "source_write_authorization_ref": state_ref_json(
+                        "write_authorization",
+                        "wa_close_basis_001",
+                        "task_close_basis_001"
+                    )
+                }
+            ],
             "recovery_constraints": ["Rollback requires restoring the previous exporter."],
             "source_run_ref": state_ref_json("run", "run_close_basis_001", "task_close_basis_001"),
             "updated_at": "2026-06-18T00:00:00.000Z"

@@ -31,14 +31,14 @@ use harness_types::{
     PrepareWriteRequest, PrepareWriteResult, ProjectId, RecordId, RecordRunRequest,
     RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
     RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId,
-    RunId, RunSummary, StageArtifactRequest, StageArtifactResult, StagedArtifactHandle,
-    StagedArtifactHandleId, StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude,
-    StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId, TaskId, TaskLifecyclePhase,
-    TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
-    UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentResolution,
-    UserJudgmentStatus, UtcTimestamp, WriteAuthoritySummary, WriteAuthorizationId,
-    WriteAuthorizationStatus, WriteAuthorizationSummary, WriteDecisionCategory,
-    WriteDecisionReason,
+    RunId, RunSummary, SensitiveActionRequirement, StageArtifactRequest, StageArtifactResult,
+    StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind, StateRecordRef,
+    StatusCloseState, StatusInclude, StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId,
+    TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope,
+    ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext, UserJudgmentOption,
+    UserJudgmentResolution, UserJudgmentStatus, UtcTimestamp, WriteAuthoritySummary,
+    WriteAuthorizationId, WriteAuthorizationStatus, WriteAuthorizationSummary,
+    WriteDecisionCategory, WriteDecisionReason,
 };
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -63,11 +63,11 @@ use crate::policy::{
     evidence::{evidence_status_for_items, unique_artifact_refs},
     path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
     write_authorization::{
-        current_sensitive_approval, normalize_sensitive_action_scope, prepare_write_decision,
-        prepare_write_dry_run_summary, sensitive_action_scope_matches_requirement,
-        surface_supports_prepare_write, write_authorization_expires_at,
-        write_authorization_guarantee, write_authorization_is_expired, write_decision_reason,
-        SensitiveApprovalRequirement,
+        current_sensitive_approval, normalize_sensitive_action_scope, normalized_string_set,
+        prepare_write_decision, prepare_write_dry_run_summary,
+        sensitive_action_scope_matches_requirement, surface_supports_prepare_write,
+        write_authorization_expires_at, write_authorization_guarantee,
+        write_authorization_is_expired, write_decision_reason, SensitiveApprovalRequirement,
     },
 };
 
@@ -712,7 +712,9 @@ struct SensitiveApprovalSearch<'a> {
     task_id: &'a TaskId,
     task: &'a TaskRecord,
     change_unit: Option<&'a ChangeUnitRecord>,
+    intended_operation: &'a str,
     normalized_paths: &'a [String],
+    sensitive_categories: &'a [String],
     now: &'a UtcTimestamp,
 }
 
@@ -726,7 +728,9 @@ fn matching_sensitive_approval(
         task_id,
         task,
         change_unit,
+        intended_operation,
         normalized_paths,
+        sensitive_categories,
         now,
     } = search;
     let records = store
@@ -746,9 +750,9 @@ fn matching_sensitive_approval(
         task_id,
         change_unit_id: &change_unit_id,
         scope_revision: task.scope_revision,
-        operation: &request.intended_operation,
+        operation: intended_operation,
         normalized_paths,
-        sensitive_categories: &request.sensitive_categories,
+        sensitive_categories,
         baseline_ref: Some(&request.baseline_ref),
         now,
         repo_root: &store.project_record().repo_root,

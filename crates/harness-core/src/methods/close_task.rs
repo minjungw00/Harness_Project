@@ -1080,9 +1080,28 @@ fn current_close_basis_blocker(
                 required_refs: vec![task_ref],
             }],
         )))
+    } else if legacy_category_only_sensitive_basis(basis) {
+        Ok(Some(close_blocker(
+            CloseReadinessBlockerCategory::Scope,
+            "stale_current_close_basis",
+            "The current close basis contains legacy category-only sensitive data and must be re-recorded before completion.",
+            vec![basis.source_run_ref.clone()],
+            vec![NextActionSummary {
+                action_kind: NextActionKind::RecordRun,
+                owner_method: Some(MethodName::RecordRun),
+                label: "Record a fresh close basis with full sensitive-action requirements."
+                    .to_owned(),
+                blocking_question: None,
+                required_refs: vec![task_ref],
+            }],
+        )))
     } else {
         Ok(None)
     }
+}
+
+fn legacy_category_only_sensitive_basis(basis: &CurrentCloseBasis) -> bool {
+    !basis.sensitive_categories.is_empty() && basis.sensitive_action_requirements.is_empty()
 }
 
 fn task_completion_policy(task: &TaskRecord) -> CoreResult<CompletionPolicy> {
@@ -1298,9 +1317,9 @@ fn has_current_sensitive_approval_for_close(
     let Some(close_basis) = context.current_close_basis.as_ref() else {
         return Ok(false);
     };
-    let Some(current_change_unit) = context.current_change_unit.as_ref() else {
-        return Ok(false);
-    };
+    if close_basis.sensitive_action_requirements.is_empty() {
+        return Ok(true);
+    }
     let authorities = resolved_judgment_authorities_for_plan(
         store,
         project_state,
@@ -1308,21 +1327,28 @@ fn has_current_sensitive_approval_for_close(
         &request.task_id,
         JudgmentKind::SensitiveApproval,
     )?;
-    let change_unit_id = ChangeUnitId::new(current_change_unit.change_unit_id.clone());
-    let requirement = SensitiveApprovalRequirement {
-        task_id: &request.task_id,
-        change_unit_id: &change_unit_id,
-        scope_revision: context.task.scope_revision,
-        operation: "",
-        normalized_paths: &[],
-        sensitive_categories: &close_basis.sensitive_categories,
-        baseline_ref: close_basis.baseline_ref.as_ref(),
-        now,
-        repo_root: &store.project_record().repo_root,
-    };
-    Ok(authorities
+    Ok(close_basis
+        .sensitive_action_requirements
         .iter()
-        .any(|authority| current_sensitive_approval(authority, &requirement)))
+        .all(|close_requirement| {
+            if close_requirement.change_unit_id != close_basis.change_unit_id {
+                return false;
+            }
+            let requirement = SensitiveApprovalRequirement {
+                task_id: &request.task_id,
+                change_unit_id: &close_requirement.change_unit_id,
+                scope_revision: context.task.scope_revision,
+                operation: &close_requirement.action_kind,
+                normalized_paths: &close_requirement.normalized_paths,
+                sensitive_categories: &close_requirement.sensitive_categories,
+                baseline_ref: close_requirement.baseline_ref.as_ref(),
+                now,
+                repo_root: &store.project_record().repo_root,
+            };
+            authorities
+                .iter()
+                .any(|authority| current_sensitive_approval(authority, &requirement))
+        }))
 }
 
 fn risk_acceptance_coverage(
@@ -1381,7 +1407,7 @@ fn sensitive_approval_required(context: &CloseTaskContext) -> CoreResult<bool> {
     Ok(context
         .current_close_basis
         .as_ref()
-        .map(|basis| !basis.sensitive_categories.is_empty())
+        .map(|basis| !basis.sensitive_action_requirements.is_empty())
         .unwrap_or(false))
 }
 
