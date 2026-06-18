@@ -3,9 +3,9 @@ use std::collections::BTreeSet;
 use harness_types::{
     ActorKind, BaselineRef, ChangeUnitId, CloseReadinessBlocker, CloseReadinessBlockerCategory,
     CurrentCloseBasis, JsonObject, JudgmentBasis, JudgmentBasisCompatibilityStatus, JudgmentKind,
-    JudgmentResolutionOutcome, MethodName, NextActionKind, NextActionSummary, ProjectId,
-    RecordUserJudgmentPayload, RequiredNullable, RiskAcceptanceCoverage, RiskId, StateRecordKind,
-    StateRecordRef, TaskId, UserJudgmentResolution, UserJudgmentStatus,
+    JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName, NextActionKind, NextActionSummary,
+    ProjectId, RecordUserJudgmentPayload, RequiredNullable, RiskAcceptanceCoverage, RiskId,
+    StateRecordKind, StateRecordRef, TaskId, UserJudgmentResolution, UserJudgmentStatus,
 };
 use serde_json::Value;
 
@@ -48,6 +48,8 @@ pub(crate) struct JudgmentAuthority {
     pub(crate) task_id: TaskId,
     pub(crate) judgment_kind: JudgmentKind,
     pub(crate) status: UserJudgmentStatus,
+    pub(crate) required_for: Vec<JudgmentRequiredFor>,
+    pub(crate) affected_refs: Vec<StateRecordRef>,
     pub(crate) resolution_outcome: Option<JudgmentResolutionOutcome>,
     pub(crate) basis_status: JudgmentBasisCompatibilityStatus,
     pub(crate) basis: Option<JudgmentBasis>,
@@ -62,6 +64,13 @@ pub(crate) struct FinalAcceptanceRequirement<'a> {
     pub(crate) close_basis_revision: u64,
     pub(crate) baseline_ref: Option<&'a BaselineRef>,
     pub(crate) result_refs: &'a [StateRecordRef],
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct CancellationAuthorityRequirement<'a> {
+    pub(crate) task_id: &'a TaskId,
+    pub(crate) change_unit_id: Option<&'a ChangeUnitId>,
+    pub(crate) scope_revision: u64,
 }
 
 pub(crate) fn close_basis_is_current(
@@ -99,10 +108,36 @@ pub(crate) fn current_final_acceptance(
     if !accepted_current_user_authority(judgment, JudgmentKind::FinalAcceptance) {
         return false;
     }
+    if !judgment
+        .required_for
+        .contains(&JudgmentRequiredFor::CloseComplete)
+    {
+        return false;
+    }
     judgment
         .basis
         .as_ref()
         .is_some_and(|basis| final_acceptance_basis_matches_current(basis, requirement))
+}
+
+pub(crate) fn current_cancellation_authority(
+    judgment: &JudgmentAuthority,
+    requirement: &CancellationAuthorityRequirement<'_>,
+) -> bool {
+    if !accepted_current_user_authority(judgment, JudgmentKind::Cancellation) {
+        return false;
+    }
+    if !judgment
+        .required_for
+        .contains(&JudgmentRequiredFor::CloseCancel)
+    {
+        return false;
+    }
+    judgment.basis.as_ref().is_some_and(|basis| {
+        basis.task_id == *requirement.task_id
+            && basis.scope_revision == requirement.scope_revision
+            && basis.change_unit_id.as_ref() == requirement.change_unit_id
+    })
 }
 
 pub(crate) fn final_acceptance_basis_matches_current(
@@ -170,6 +205,12 @@ pub(crate) fn current_residual_risk_acceptance_covers(
     risk_id: &RiskId,
 ) -> bool {
     if !accepted_current_user_authority(judgment, JudgmentKind::ResidualRiskAcceptance) {
+        return false;
+    }
+    if !judgment
+        .required_for
+        .contains(&JudgmentRequiredFor::CloseComplete)
+    {
         return false;
     }
     let Some(basis) = judgment.basis.as_ref() else {

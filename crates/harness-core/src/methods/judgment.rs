@@ -166,6 +166,7 @@ fn plan_request_user_judgment(
         options: &request.options,
         context: &request.context,
         affected_refs: &request.affected_refs,
+        required_for: &request.required_for,
         project_id: &request.envelope.project_id,
         task_id: &request.task_id,
         expires_at: request.expires_at.as_ref(),
@@ -264,7 +265,7 @@ fn plan_request_user_judgment(
         context: judgment_context.clone(),
         affected_refs: request.affected_refs.clone(),
         basis: Some(basis.clone()),
-        required_for: request.required_for,
+        required_for: request.required_for.clone(),
         resolution: None,
         expires_at: request.expires_at.clone().into_option(),
         created_at: requested_at.clone(),
@@ -537,8 +538,7 @@ fn build_request_judgment_basis(
         }
         JudgmentKind::ProductDecision
         | JudgmentKind::TechnicalDecision
-        | JudgmentKind::ScopeDecision
-        | JudgmentKind::Cancellation => {
+        | JudgmentKind::ScopeDecision => {
             if request.sensitive_action_scope.is_some() {
                 return validation_plan_error(
                     request.envelope.dry_run,
@@ -551,6 +551,37 @@ fn build_request_judgment_basis(
             if let Some(requested_change_unit_id) = requested_change_unit_id {
                 basis.change_unit_id = Some(requested_change_unit_id.clone()).into();
             }
+        }
+        JudgmentKind::Cancellation => {
+            if request.sensitive_action_scope.is_some() {
+                return validation_plan_error(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    "sensitive_action_scope",
+                    "sensitive_action_scope is only valid for sensitive_approval judgments",
+                )
+                .map(|()| basis);
+            }
+            let Some(current_change_unit_id) = current_change_unit_id.as_ref() else {
+                return Err(PlanError::Response(Box::new(
+                    no_active_change_unit_response(
+                        &request.envelope,
+                        Some(project_state.state_version),
+                        "cancellation judgment requires a current Change Unit",
+                    ),
+                )));
+            };
+            if requested_change_unit_id.is_some_and(|requested| requested != current_change_unit_id)
+            {
+                return validation_plan_error(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    "change_unit_id",
+                    "cancellation judgment must address the current Change Unit",
+                )
+                .map(|()| basis);
+            }
+            basis.change_unit_id = Some(current_change_unit_id.clone()).into();
         }
     }
 
@@ -770,6 +801,7 @@ fn validate_pending_judgment_basis_for_answer(
                 normalized_paths: &stored_scope.intended_paths,
                 sensitive_categories: &stored_scope.sensitive_categories,
                 baseline_ref: basis.baseline_ref.as_ref(),
+                required_for: JudgmentRequiredFor::PrepareWrite,
                 now,
                 repo_root: &store.project_record().repo_root,
             };
@@ -1126,6 +1158,7 @@ struct UserJudgmentRequestValidation<'a> {
     options: &'a [UserJudgmentOption],
     context: &'a UserJudgmentContext,
     affected_refs: &'a [StateRecordRef],
+    required_for: &'a [JudgmentRequiredFor],
     project_id: &'a ProjectId,
     task_id: &'a TaskId,
     expires_at: Option<&'a UtcTimestamp>,
@@ -1219,6 +1252,14 @@ fn validate_user_judgment_request_fields(
                 "authority-bearing judgment options must not duplicate accepted or rejected machine outcomes",
             );
         }
+    }
+    if input.required_for.is_empty() {
+        return validation_plan_error(
+            input.dry_run,
+            input.state_version,
+            "required_for",
+            "required_for must include at least one operation target",
+        );
     }
     if input.context.summary.trim().is_empty() {
         return validation_plan_error(

@@ -1610,18 +1610,19 @@ fn prepare_write_missing_change_unit_returns_decision_reason() -> Result<(), Box
 fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_judgment")?;
-    harness.service.request_user_judgment(
-        user_judgment_request(
-            "req_prepare_judgment_pending",
-            "idem_prepare_judgment_pending",
-            false,
-            Some(2),
-            &task_id,
-            Some(&change_unit_id),
-            JudgmentKind::ProductDecision,
-        ),
-        invocation(AccessClass::CoreMutation),
-    )?;
+    let mut judgment_request = user_judgment_request(
+        "req_prepare_judgment_pending",
+        "idem_prepare_judgment_pending",
+        false,
+        Some(2),
+        &task_id,
+        Some(&change_unit_id),
+        JudgmentKind::ProductDecision,
+    );
+    judgment_request.required_for = vec![harness_types::JudgmentRequiredFor::PrepareWrite];
+    harness
+        .service
+        .request_user_judgment(judgment_request, invocation(AccessClass::CoreMutation))?;
     let id_generator = CountingDurableIdGenerator::new(["prepare_decision_event"]);
     let clock = ManualClock::at("2026-06-18T00:00:00Z");
     harness.use_generator_and_clock(id_generator.clone(), clock);
@@ -1663,6 +1664,197 @@ fn prepare_write_unresolved_user_judgment_requires_decision() -> Result<(), Box<
         .as_array()
         .expect("related_refs should be an array")
         .is_empty());
+    Ok(())
+}
+
+#[test]
+fn prepare_write_ignores_pending_final_acceptance() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_ignore_final")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "prepare_ignore_final",
+        true,
+    )?;
+    harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_prepare_ignore_final_pending",
+            "idem_prepare_ignore_final_pending",
+            false,
+            Some(after_evidence),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::FinalAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.prepare_write(
+        prepare_write_request(
+            "req_prepare_ignore_final",
+            "idem_prepare_ignore_final",
+            Some(after_evidence + 1),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+
+    assert_eq!(response.response_value["decision"], "allowed");
+    assert!(response.response_value["write_decision_reasons"]
+        .as_array()
+        .expect("write_decision_reasons should be an array")
+        .is_empty());
+    assert_eq!(
+        harness.counts()?.write_authorizations,
+        before.write_authorizations + 1
+    );
+    Ok(())
+}
+
+#[test]
+fn informational_judgment_does_not_block_prepare_write_or_close_check() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "informational_judgment")?;
+    let mut judgment_request = user_judgment_request(
+        "req_info_pending",
+        "idem_info_pending",
+        false,
+        Some(2),
+        &task_id,
+        Some(&change_unit_id),
+        JudgmentKind::TechnicalDecision,
+    );
+    judgment_request.required_for = vec![harness_types::JudgmentRequiredFor::Informational];
+    harness
+        .service
+        .request_user_judgment(judgment_request, invocation(AccessClass::CoreMutation))?;
+
+    let prepare = harness.service.prepare_write(
+        prepare_write_request(
+            "req_info_prepare",
+            "idem_info_prepare",
+            Some(3),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+    assert_eq!(prepare.response_value["decision"], "allowed");
+
+    let close = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_info_close_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert_no_close_blocker(&close.response_value, "pending_user_judgment");
+    Ok(())
+}
+
+#[test]
+fn prepare_write_ignores_another_change_unit_pending_judgment() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_other_cu")?;
+    let mut judgment_request = user_judgment_request(
+        "req_prepare_other_cu_pending",
+        "idem_prepare_other_cu_pending",
+        false,
+        Some(2),
+        &task_id,
+        Some(&change_unit_id),
+        JudgmentKind::ProductDecision,
+    );
+    judgment_request.required_for = vec![harness_types::JudgmentRequiredFor::PrepareWrite];
+    let judgment = harness
+        .service
+        .request_user_judgment(judgment_request, invocation(AccessClass::CoreMutation))?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    mutate_user_judgment_basis_json(&harness, &judgment_id, |basis| {
+        basis["change_unit_id"] = json!("cu_unrelated");
+    })?;
+    let before = harness.counts()?;
+
+    let response = harness.service.prepare_write(
+        prepare_write_request(
+            "req_prepare_other_cu",
+            "idem_prepare_other_cu",
+            Some(3),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+
+    assert_eq!(response.response_value["decision"], "allowed");
+    assert_no_prepare_reason(&response.response_value, "user_judgment_unresolved");
+    assert_eq!(
+        harness.counts()?.write_authorizations,
+        before.write_authorizations + 1
+    );
+    Ok(())
+}
+
+#[test]
+fn malformed_stored_required_for_rejects_prepare_write_without_effect() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "bad_required_for")?;
+    let judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_bad_required_for_pending",
+            "idem_bad_required_for_pending",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ProductDecision,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    set_user_judgment_owner_json(
+        &harness,
+        &judgment_id,
+        "request_json",
+        Some(
+            r#"{"presentation":"short","question":"Bad required_for","required_for":["not_a_target"],"expires_at":null}"#,
+        ),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.prepare_write(
+        prepare_write_request(
+            "req_bad_required_for_prepare",
+            "idem_bad_required_for_prepare",
+            Some(3),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "user_judgments",
+        &judgment_id,
+        "request_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
     Ok(())
 }
 
@@ -6197,7 +6389,7 @@ fn stored_judgment_request_wrong_field_type_rejects_record_without_effect(
         invocation(AccessClass::CoreMutation),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
-    let corrupt_request_json = r#"{"presentation":17,"question":"must not leak secret-request-path","required_for":"close","expires_at":null}"#;
+    let corrupt_request_json = r#"{"presentation":17,"question":"must not leak secret-request-path","required_for":["close_complete"],"expires_at":null}"#;
     set_user_judgment_owner_json(
         &harness,
         &judgment_id,
@@ -6372,7 +6564,7 @@ fn stored_judgment_request_invalid_expiration_rejects_record_without_effect(
         invocation(AccessClass::CoreMutation),
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
-    let corrupt_request_json = r#"{"presentation":"short","question":"must not leak secret-expiry-path","required_for":"close","expires_at":"tomorrow"}"#;
+    let corrupt_request_json = r#"{"presentation":"short","question":"must not leak secret-expiry-path","required_for":["close_complete"],"expires_at":"tomorrow"}"#;
     set_user_judgment_owner_json(
         &harness,
         &judgment_id,
@@ -6426,7 +6618,7 @@ fn stored_judgment_request_missing_required_field_rejects_record_without_effect(
     )?;
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     let corrupt_request_json =
-        r#"{"presentation":"short","required_for":"close","expires_at":null}"#;
+        r#"{"presentation":"short","required_for":["close_complete"],"expires_at":null}"#;
     set_user_judgment_owner_json(
         &harness,
         &judgment_id,
@@ -7007,6 +7199,105 @@ fn close_task_complete_blocks_missing_final_acceptance() -> Result<(), Box<dyn E
 }
 
 #[test]
+fn close_complete_blocks_only_relevant_pending_judgments() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_pending_kind")?;
+    let after_evidence =
+        record_close_evidence(&harness, &task_id, &change_unit_id, 2, "pending_kind", true)?;
+    let mut product_request = user_judgment_request(
+        "req_close_product_pending",
+        "idem_close_product_pending",
+        false,
+        Some(after_evidence),
+        &task_id,
+        Some(&change_unit_id),
+        JudgmentKind::ProductDecision,
+    );
+    product_request.required_for = vec![harness_types::JudgmentRequiredFor::CloseComplete];
+    harness
+        .service
+        .request_user_judgment(product_request, invocation(AccessClass::CoreMutation))?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence + 1,
+        "pending_kind",
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_product_pending_attempt",
+            idempotency_key: Some("idem_close_product_pending_attempt"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "pending_user_judgment");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn close_complete_ignores_pending_cancellation_authority() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_ignore_cancel")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "ignore_cancel",
+        true,
+    )?;
+    harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_close_cancel_pending",
+            "idem_close_cancel_pending",
+            false,
+            Some(after_evidence),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::Cancellation,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence + 1,
+        "ignore_cancel",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_ignore_cancel",
+            idempotency_key: Some("idem_close_ignore_cancel"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "closed");
+    assert_no_close_blocker(&response.response_value, "pending_user_judgment");
+    Ok(())
+}
+
+#[test]
 fn close_task_complete_blocks_unsupported_evidence_claim() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_bad_evidence")?;
@@ -7095,7 +7386,15 @@ fn close_task_complete_success() -> Result<(), Box<dyn Error>> {
 #[test]
 fn close_task_cancel_success_despite_missing_completion_evidence() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    let (task_id, _) = create_task_with_change_unit(&harness, "close_cancel")?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_cancel")?;
+    let (after_authority, _) = record_cancellation_authority(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "close_cancel",
+        true,
+    )?;
     let before = harness.counts()?;
 
     let response = harness.service.close_task(
@@ -7103,7 +7402,7 @@ fn close_task_cancel_success_despite_missing_completion_evidence() -> Result<(),
             request_id: "req_close_cancel",
             idempotency_key: Some("idem_close_cancel"),
             dry_run: false,
-            expected_state_version: Some(2),
+            expected_state_version: Some(after_authority),
             task_id: &task_id,
             intent: CloseIntent::Cancel,
             close_reason: Some(CloseReason::Cancelled),
@@ -7122,6 +7421,154 @@ fn close_task_cancel_success_despite_missing_completion_evidence() -> Result<(),
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.task_events, before.task_events + 1);
     assert_eq!(after.tool_invocations, before.tool_invocations + 1);
+    Ok(())
+}
+
+#[test]
+fn close_task_cancel_requires_current_user_cancellation_authority() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "cancel_missing_authority")?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_cancel_missing_authority",
+            idempotency_key: Some("idem_cancel_missing_authority"),
+            dry_run: false,
+            expected_state_version: Some(2),
+            task_id: &task_id,
+            intent: CloseIntent::Cancel,
+            close_reason: Some(CloseReason::Cancelled),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "missing_cancellation_authority");
+    assert_eq!(response.response_value["base"]["effect_kind"], "no_effect");
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(
+        task_terminal_fields(&harness, &task_id)?.lifecycle_phase,
+        "ready"
+    );
+    Ok(())
+}
+
+#[test]
+fn rejected_cancellation_authority_does_not_cancel_task() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "cancel_rejected")?;
+    let (after_rejection, judgment_id) = record_cancellation_authority(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "cancel_rejected",
+        false,
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_cancel_rejected",
+            idempotency_key: Some("idem_cancel_rejected"),
+            dry_run: false,
+            expected_state_version: Some(after_rejection),
+            task_id: &task_id,
+            intent: CloseIntent::Cancel,
+            close_reason: Some(CloseReason::Cancelled),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(
+        user_judgment_resolution_outcome(&harness, &judgment_id)?,
+        Some("rejected".to_owned())
+    );
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "cancellation_rejected");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn deferred_or_blocked_cancellation_outcomes_do_not_cancel_task() -> Result<(), Box<dyn Error>> {
+    for outcome in ["deferred", "blocked"] {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&harness, &format!("cancel_{outcome}"))?;
+        let (after_authority, judgment_id) =
+            record_cancellation_authority(&harness, &task_id, &change_unit_id, 2, outcome, true)?;
+        set_user_judgment_resolution_outcome(&harness, &judgment_id, outcome)?;
+        let before = harness.counts()?;
+        let request_id = format!("req_cancel_{outcome}");
+        let idempotency_key = format!("idem_cancel_{outcome}");
+
+        let response = harness.service.close_task(
+            close_task_request(CloseTaskFixture {
+                request_id: &request_id,
+                idempotency_key: Some(&idempotency_key),
+                dry_run: false,
+                expected_state_version: Some(after_authority),
+                task_id: &task_id,
+                intent: CloseIntent::Cancel,
+                close_reason: Some(CloseReason::Cancelled),
+                superseding_task_id: None,
+            }),
+            invocation(AccessClass::CoreMutation),
+        )?;
+
+        assert_eq!(response.response_value["close_state"], "blocked");
+        assert_close_blocker(&response.response_value, "missing_cancellation_authority");
+        assert_eq!(harness.counts()?, before);
+    }
+    Ok(())
+}
+
+#[test]
+fn scope_change_stales_cancellation_authority() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "cancel_stale_scope")?;
+    let (after_authority, judgment_id) =
+        record_cancellation_authority(&harness, &task_id, &change_unit_id, 2, "stale_scope", true)?;
+    let scope = harness.service.update_scope(
+        update_scope_request(
+            "req_cancel_stale_scope_update",
+            "idem_cancel_stale_scope_update",
+            false,
+            Some(after_authority),
+            &task_id,
+            ChangeUnitOperation::ReplaceCurrent,
+            "Replacement scope after cancellation judgment.",
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let after_scope = scope.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+    assert_eq!(user_judgment_status(&harness, &judgment_id)?, "stale");
+    assert_eq!(user_judgment_basis_status(&harness, &judgment_id)?, "stale");
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_cancel_stale_scope",
+            idempotency_key: Some("idem_cancel_stale_scope"),
+            dry_run: false,
+            expected_state_version: Some(after_scope),
+            task_id: &task_id,
+            intent: CloseIntent::Cancel,
+            close_reason: Some(CloseReason::Cancelled),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "cancellation_judgment_stale");
+    assert_eq!(harness.counts()?, before);
     Ok(())
 }
 
@@ -7785,6 +8232,57 @@ fn record_final_acceptance_with_id(
     Ok((state_version, judgment_id))
 }
 
+fn record_cancellation_authority(
+    harness: &MethodHarness,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+    accepted: bool,
+) -> Result<(u64, String), Box<dyn Error>> {
+    let request_id = format!("req_cancel_authority_{suffix}");
+    let idempotency_key = format!("idem_cancel_authority_{suffix}");
+    let judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            &request_id,
+            &idempotency_key,
+            false,
+            Some(expected_state_version),
+            task_id,
+            Some(change_unit_id),
+            JudgmentKind::Cancellation,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let record_request_id = format!("req_cancel_authority_record_{suffix}");
+    let record_idempotency_key = format!("idem_cancel_authority_record_{suffix}");
+    let mut request = record_judgment_request(
+        &record_request_id,
+        &record_idempotency_key,
+        Some(expected_state_version + 1),
+        task_id,
+        &judgment_id,
+        JudgmentKind::Cancellation,
+        answer_payload(JudgmentKind::Cancellation),
+    );
+    if !accepted {
+        request.selected_option_id = harness_types::UserJudgmentOptionId::new("decline");
+        request.answer.cancellation = Some(json_object(json!({
+            "decision": "rejected",
+            "reason": "The user chose not to cancel the Task."
+        })))
+        .into();
+    }
+    let response = harness
+        .service
+        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+    let state_version = response.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+    Ok((state_version, judgment_id))
+}
+
 fn record_sensitive_approval(
     harness: &MethodHarness,
     task_id: &str,
@@ -8081,6 +8579,16 @@ fn assert_prepare_reason(response_value: &Value, code: &str) {
     );
 }
 
+fn assert_no_prepare_reason(response_value: &Value, code: &str) {
+    let reasons = response_value["write_decision_reasons"]
+        .as_array()
+        .expect("write_decision_reasons should be an array");
+    assert!(
+        reasons.iter().all(|reason| reason["code"] != code),
+        "did not expect prepare_write reason code {code}, got {reasons:?}"
+    );
+}
+
 fn create_task_with_change_unit(
     harness: &MethodHarness,
     prefix: &str,
@@ -8319,8 +8827,25 @@ fn user_judgment_request(
             state_version: expected_state_version.into(),
         }],
         sensitive_action_scope: sensitive_action_scope_for_kind(judgment_kind).into(),
-        required_for: harness_types::JudgmentRequiredFor::Close,
+        required_for: required_for_for_kind(judgment_kind),
         expires_at: None.into(),
+    }
+}
+
+fn required_for_for_kind(judgment_kind: JudgmentKind) -> Vec<harness_types::JudgmentRequiredFor> {
+    match judgment_kind {
+        JudgmentKind::ScopeDecision => vec![harness_types::JudgmentRequiredFor::ScopeUpdate],
+        JudgmentKind::SensitiveApproval => vec![
+            harness_types::JudgmentRequiredFor::PrepareWrite,
+            harness_types::JudgmentRequiredFor::CloseComplete,
+        ],
+        JudgmentKind::FinalAcceptance | JudgmentKind::ResidualRiskAcceptance => {
+            vec![harness_types::JudgmentRequiredFor::CloseComplete]
+        }
+        JudgmentKind::Cancellation => vec![harness_types::JudgmentRequiredFor::CloseCancel],
+        JudgmentKind::ProductDecision | JudgmentKind::TechnicalDecision => {
+            vec![harness_types::JudgmentRequiredFor::CloseComplete]
+        }
     }
 }
 

@@ -329,7 +329,7 @@ pub struct RequestUserJudgmentRequest {
     pub options: Vec<UserJudgmentOption>,
     pub context: UserJudgmentContext,
     pub affected_refs: Vec<StateRecordRef>,
-    pub required_for: JudgmentRequiredFor,
+    pub required_for: Vec<JudgmentRequiredFor>,
     pub expires_at: RequiredNullable<UtcTimestamp>,
 }
 

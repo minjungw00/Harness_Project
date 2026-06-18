@@ -1514,7 +1514,7 @@ mod tests {
                 "constraints": ["Only banner copy length is in scope."]
             },
             "affected_refs": [],
-            "required_for": "close",
+            "required_for": ["close_complete"],
             "expires_at": null
         })
     }

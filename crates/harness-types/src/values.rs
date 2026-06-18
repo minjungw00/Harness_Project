@@ -540,12 +540,13 @@ pub enum JudgmentPresentation {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum JudgmentRequiredFor {
-    NextAction,
-    Write,
-    Run,
-    Close,
-    Acceptance,
-    Risk,
+    ScopeUpdate,
+    PrepareWrite,
+    RecordRun,
+    CloseComplete,
+    CloseCancel,
+    CloseSupersede,
+    Informational,
 }
 
 /// User judgment status values.

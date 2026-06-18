@@ -496,7 +496,7 @@ pub mod core_fixtures {
                 },
                 affected_refs: vec![self.task_ref(input.task_id, input.expected_state_version)],
                 sensitive_action_scope: sensitive_action_scope_for_kind(input.judgment_kind).into(),
-                required_for: JudgmentRequiredFor::Close,
+                required_for: required_for_for_kind(input.judgment_kind),
                 expires_at: None.into(),
             }
         }
@@ -1155,6 +1155,23 @@ pub mod core_fixtures {
         pub task_id: &'a str,
         pub change_unit_id: Option<&'a str>,
         pub judgment_kind: JudgmentKind,
+    }
+
+    fn required_for_for_kind(judgment_kind: JudgmentKind) -> Vec<JudgmentRequiredFor> {
+        match judgment_kind {
+            JudgmentKind::ScopeDecision => vec![JudgmentRequiredFor::ScopeUpdate],
+            JudgmentKind::SensitiveApproval => vec![
+                JudgmentRequiredFor::PrepareWrite,
+                JudgmentRequiredFor::CloseComplete,
+            ],
+            JudgmentKind::FinalAcceptance | JudgmentKind::ResidualRiskAcceptance => {
+                vec![JudgmentRequiredFor::CloseComplete]
+            }
+            JudgmentKind::Cancellation => vec![JudgmentRequiredFor::CloseCancel],
+            JudgmentKind::ProductDecision | JudgmentKind::TechnicalDecision => {
+                vec![JudgmentRequiredFor::CloseComplete]
+            }
+        }
     }
 
     /// Input object for record-user-judgment request builders.

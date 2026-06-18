@@ -25,8 +25,8 @@ use harness_types::{
     CompletionPolicy, CurrentCloseBasis, DryRunSummary, DurableIdKind, EffectKind, ErrorCode,
     EvidenceCoverageItem, EvidenceCoverageState, EvidenceStatus, EvidenceSummary, GuaranteeDisplay,
     GuaranteeLevel, JsonObject, JudgmentBasis, JudgmentBasisCompatibilityStatus, JudgmentKind,
-    JudgmentResolutionOutcome, MethodAccessClass, MethodName, NextActionKind, NextActionSummary,
-    ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
+    JudgmentRequiredFor, JudgmentResolutionOutcome, MethodAccessClass, MethodName, NextActionKind,
+    NextActionSummary, ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
     PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, PlannedEffect,
     PrepareWriteRequest, PrepareWriteResult, ProjectId, RecordId, RecordRunRequest,
     RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
@@ -54,13 +54,17 @@ use crate::pipeline::{
 use crate::policy::{
     close_readiness::{
         accepted_risk_ids_within_basis, close_basis_is_current, close_blocker, close_next_action,
-        current_acceptance_required_risk_ids, current_final_acceptance,
-        current_residual_risk_acceptance_coverage, current_scope_decision,
-        final_acceptance_basis_matches_current, final_acceptance_requirement,
-        is_terminal_lifecycle, judgment_has_current_basis, residual_risk_basis_matches_current,
-        JudgmentAuthority,
+        current_acceptance_required_risk_ids, current_cancellation_authority,
+        current_final_acceptance, current_residual_risk_acceptance_coverage,
+        current_scope_decision, final_acceptance_basis_matches_current,
+        final_acceptance_requirement, is_terminal_lifecycle, judgment_has_current_basis,
+        residual_risk_basis_matches_current, CancellationAuthorityRequirement, JudgmentAuthority,
     },
     evidence::{evidence_status_for_items, unique_artifact_refs},
+    judgment_relevance::{
+        judgment_blocks_operation, judgment_required_for, JudgmentOperation,
+        JudgmentOperationContext,
+    },
     path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
     write_authorization::{
         current_sensitive_approval, normalize_sensitive_action_scope, normalized_string_set,
@@ -406,11 +410,17 @@ fn user_judgment_authority_from_record(
         "basis_json",
         record.basis_json.as_deref(),
     )?;
-    let _request: PersistedUserJudgmentRequest = decode_required_json(
+    let request: PersistedUserJudgmentRequest = decode_required_json(
         "user_judgments",
         record.judgment_id.clone(),
         "request_json",
         Some(&record.request_json),
+    )?;
+    let affected_refs: Vec<StateRecordRef> = decode_required_json(
+        "user_judgments",
+        record.judgment_id.clone(),
+        "affected_refs_json",
+        Some(&record.affected_refs_json),
     )?;
     if let Some(basis) = &mut basis {
         basis.compatibility_status = basis_status;
@@ -462,6 +472,8 @@ fn user_judgment_authority_from_record(
         task_id: TaskId::new(record.task_id.clone()),
         judgment_kind,
         status,
+        required_for: request.required_for,
+        affected_refs,
         resolution_outcome,
         basis_status,
         basis,
@@ -494,6 +506,27 @@ fn resolved_judgment_authorities_for_plan(
     let kind = storage_value(judgment_kind)?;
     store
         .resolved_user_judgment_records(task_id, &kind)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .iter()
+        .map(user_judgment_authority_from_record)
+        .collect::<CoreResult<Vec<_>>>()
+        .map_err(PlanError::Core)
+}
+
+fn pending_judgment_authorities_for_plan(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    envelope: &ToolEnvelope,
+    task_id: &TaskId,
+) -> Result<Vec<JudgmentAuthority>, PlanError> {
+    store
+        .pending_user_judgment_records(task_id)
         .map_err(|error| {
             PlanError::Response(Box::new(store_error_response(
                 envelope,
@@ -754,6 +787,7 @@ fn matching_sensitive_approval(
         normalized_paths,
         sensitive_categories,
         baseline_ref: Some(&request.baseline_ref),
+        required_for: JudgmentRequiredFor::PrepareWrite,
         now,
         repo_root: &store.project_record().repo_root,
     };

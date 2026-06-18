@@ -909,14 +909,23 @@ fn close_readiness_reports_distinct_blockers_without_substitution() -> Result<()
 fn cancel_and_supersede_terminal_paths_commit_once() -> Result<(), Box<dyn Error>> {
     let cancel_fixture = CoreFixture::new("cancel")?;
     let cancel_service = core(&cancel_fixture);
-    let (task_id, _) = create_task_with_change_unit(&cancel_fixture, &cancel_service, "cancel")?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&cancel_fixture, &cancel_service, "cancel")?;
+    let after_authority = record_cancellation_authority(
+        &cancel_fixture,
+        &cancel_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "terminal",
+    )?;
     let before_cancel = cancel_fixture.counts()?;
     let cancel = cancel_service.close_task(
         cancel_fixture.close_task_request(CloseTaskFixture {
             request_id: "req_cancel",
             idempotency_key: Some("idem_cancel"),
             dry_run: false,
-            expected_state_version: Some(2),
+            expected_state_version: Some(after_authority),
             task_id: &task_id,
             intent: CloseIntent::Cancel,
             close_reason: Some(CloseReason::Cancelled),
@@ -2034,7 +2043,7 @@ fn persisted_state_corruption_public_entries_fail_closed_without_effects(
     let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
     request_fixture.set_user_judgment_request_raw(
         &judgment_id,
-        r#"{"presentation":17,"question":"must not leak secret-request-path","required_for":"close","expires_at":null}"#,
+        r#"{"presentation":17,"question":"must not leak secret-request-path","required_for":["close_complete"],"expires_at":null}"#,
     )?;
     let before = request_fixture.counts()?;
     let response = request_service.record_user_judgment(
@@ -2708,6 +2717,44 @@ fn record_final_acceptance(
             user_judgment_id: &judgment_id,
             judgment_kind: JudgmentKind::FinalAcceptance,
             answer: answer_payload(JudgmentKind::FinalAcceptance),
+        }),
+        invocation(fixture, AccessClass::CoreMutation),
+    )?;
+    Ok(response.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version should be present"))
+}
+
+fn record_cancellation_authority(
+    fixture: &CoreFixture,
+    service: &CoreService,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+) -> Result<u64, Box<dyn Error>> {
+    let judgment = service.request_user_judgment(
+        fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: &format!("req_cancel_auth_{suffix}"),
+            idempotency_key: &format!("idem_cancel_auth_{suffix}"),
+            dry_run: false,
+            expected_state_version: Some(expected_state_version),
+            task_id,
+            change_unit_id: Some(change_unit_id),
+            judgment_kind: JudgmentKind::Cancellation,
+        }),
+        invocation(fixture, AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let response = service.record_user_judgment(
+        fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: &format!("req_cancel_auth_record_{suffix}"),
+            idempotency_key: &format!("idem_cancel_auth_record_{suffix}"),
+            expected_state_version: Some(expected_state_version + 1),
+            task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::Cancellation,
+            answer: answer_payload(JudgmentKind::Cancellation),
         }),
         invocation(fixture, AccessClass::CoreMutation),
     )?;

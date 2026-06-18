@@ -4,9 +4,9 @@ use chrono::{DateTime, Duration, Utc};
 use harness_store::{core_pipeline::WriteAuthorizationRecord, StoreError};
 use harness_types::{
     BaselineRef, ChangeUnitId, DryRunSummary, GuaranteeDisplay, GuaranteeLevel, JudgmentKind,
-    PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect, PrepareWriteDecision,
-    SensitiveActionScope, StateRecordRef, TaskId, UtcTimestamp, WriteDecisionCategory,
-    WriteDecisionReason,
+    JudgmentRequiredFor, PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect,
+    PrepareWriteDecision, SensitiveActionScope, StateRecordRef, TaskId, UtcTimestamp,
+    WriteDecisionCategory, WriteDecisionReason,
 };
 use serde_json::Value;
 
@@ -188,6 +188,7 @@ pub(crate) struct SensitiveApprovalRequirement<'a> {
     pub(crate) normalized_paths: &'a [String],
     pub(crate) sensitive_categories: &'a [String],
     pub(crate) baseline_ref: Option<&'a BaselineRef>,
+    pub(crate) required_for: JudgmentRequiredFor,
     pub(crate) now: &'a UtcTimestamp,
     pub(crate) repo_root: &'a Path,
 }
@@ -197,6 +198,9 @@ pub(crate) fn current_sensitive_approval(
     requirement: &SensitiveApprovalRequirement<'_>,
 ) -> bool {
     if !accepted_current_user_authority(judgment, JudgmentKind::SensitiveApproval) {
+        return false;
+    }
+    if !judgment.required_for.contains(&requirement.required_for) {
         return false;
     }
     let Some(basis) = judgment.basis.as_ref() else {

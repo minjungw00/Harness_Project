@@ -210,17 +210,65 @@ fn plan_prepare_write(
         }
     }
 
-    let pending_user_judgment_refs = store
-        .pending_user_judgment_refs(&task_id, project_state.state_version)
-        .map_err(|error| {
-            PlanError::Response(Box::new(store_error_response(
-                &request.envelope,
-                project_state,
-                error,
-            )))
-        })?
-        .into_iter()
-        .map(state_ref_from_stored)
+    let current_change_unit_id =
+        change_unit.map(|record| ChangeUnitId::new(record.change_unit_id.clone()));
+    let task_ref = state_ref(
+        StateRecordKind::Task,
+        task_id.as_str(),
+        &request.envelope.project_id,
+        Some(&task_id),
+        Some(project_state.state_version),
+    );
+    let mut operation_refs = vec![task_ref.clone()];
+    if let Some(change_unit) = change_unit {
+        operation_refs.push(change_unit_ref(
+            &request.envelope.project_id,
+            &task_id,
+            change_unit,
+            project_state.state_version,
+        ));
+    }
+    let sensitive_requirement = if normalized_sensitive_categories.is_empty() {
+        None
+    } else {
+        current_change_unit_id
+            .as_ref()
+            .map(|change_unit_id| SensitiveApprovalRequirement {
+                task_id: &task_id,
+                change_unit_id,
+                scope_revision: task.scope_revision,
+                operation: &normalized_operation,
+                normalized_paths: &normalized_paths,
+                sensitive_categories: &normalized_sensitive_categories,
+                baseline_ref: Some(&request.baseline_ref),
+                required_for: JudgmentRequiredFor::PrepareWrite,
+                now: &plan_now,
+                repo_root: &store.project_record().repo_root,
+            })
+    };
+    let pending_authorities =
+        pending_judgment_authorities_for_plan(store, project_state, &request.envelope, &task_id)?;
+    let operation_context = JudgmentOperationContext {
+        operation: JudgmentOperation::PrepareWrite,
+        task_id: &task_id,
+        change_unit_id: current_change_unit_id.as_ref(),
+        scope_revision: task.scope_revision,
+        close_basis: None,
+        operation_refs: &operation_refs,
+        sensitive_approval: sensitive_requirement.as_ref(),
+    };
+    let pending_user_judgment_refs = pending_authorities
+        .iter()
+        .filter(|authority| judgment_blocks_operation(authority, &operation_context))
+        .map(|authority| {
+            state_ref(
+                StateRecordKind::UserJudgment,
+                &authority.judgment_id,
+                &request.envelope.project_id,
+                Some(&task_id),
+                Some(project_state.state_version),
+            )
+        })
         .collect::<Vec<_>>();
     if !pending_user_judgment_refs.is_empty() {
         reasons.push(write_decision_reason(

@@ -646,7 +646,7 @@ pub struct UserJudgment {
     pub context: UserJudgmentContext,
     pub affected_refs: Vec<StateRecordRef>,
     pub basis: Option<JudgmentBasis>,
-    pub required_for: JudgmentRequiredFor,
+    pub required_for: Vec<JudgmentRequiredFor>,
     pub resolution: Option<UserJudgmentResolution>,
     pub expires_at: Option<UtcTimestamp>,
     pub created_at: UtcTimestamp,
@@ -678,7 +678,7 @@ pub type PersistedJudgmentBasis = JudgmentBasis;
 pub struct PersistedUserJudgmentRequest {
     pub presentation: JudgmentPresentation,
     pub question: String,
-    pub required_for: JudgmentRequiredFor,
+    pub required_for: Vec<JudgmentRequiredFor>,
     pub expires_at: RequiredNullable<UtcTimestamp>,
 }
 
@@ -691,7 +691,7 @@ pub struct UserJudgmentCandidate {
     pub options: Vec<UserJudgmentOption>,
     pub context: UserJudgmentContext,
     pub affected_refs: Vec<StateRecordRef>,
-    pub required_for: JudgmentRequiredFor,
+    pub required_for: Vec<JudgmentRequiredFor>,
     pub expires_at: Option<UtcTimestamp>,
 }
 

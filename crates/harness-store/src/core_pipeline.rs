@@ -865,6 +865,14 @@ impl CoreProjectStore {
         )
     }
 
+    /// Lists pending user-owned judgment records for a Task.
+    pub fn pending_user_judgment_records(
+        &self,
+        task_id: &TaskId,
+    ) -> StoreResult<Vec<UserJudgmentRecord>> {
+        pending_user_judgment_records(&self.conn, &self.project.project_id, task_id.as_str())
+    }
+
     /// Lists stale or superseded user-judgment refs for a Task and judgment kind.
     pub fn non_current_user_judgment_refs(
         &self,
@@ -3189,6 +3197,48 @@ fn resolved_user_judgment_records(
     Ok(records)
 }
 
+fn pending_user_judgment_records(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+) -> StoreResult<Vec<UserJudgmentRecord>> {
+    let mut stmt = conn.prepare(
+        "SELECT
+            project_id,
+            judgment_id,
+            task_id,
+            change_unit_id,
+            judgment_kind,
+            status,
+            request_json,
+            context_json,
+            options_json,
+            affected_refs_json,
+            artifact_refs_json,
+            sensitive_action_scope_json,
+            basis_json,
+            basis_status,
+            resolution_outcome,
+            resolution_json,
+            requested_by_surface_id,
+            requested_by_surface_instance_id,
+            requested_at,
+            resolved_at,
+            metadata_json
+         FROM user_judgments
+         WHERE project_id = ?1
+           AND task_id = ?2
+           AND status = 'pending'
+         ORDER BY judgment_id",
+    )?;
+    let rows = stmt.query_map(params![project_id, task_id], user_judgment_record_from_row)?;
+    let mut records = Vec::new();
+    for row in rows {
+        records.push(row?);
+    }
+    Ok(records)
+}
+
 fn user_judgment_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<UserJudgmentRecord> {
     Ok(UserJudgmentRecord {
         project_id: row.get(0)?,
@@ -4320,7 +4370,7 @@ mod tests {
             request_json: json!({
                 "presentation": "short",
                 "question": "Accept the current close basis?",
-                "required_for": "close",
+                "required_for": ["close_complete"],
                 "expires_at": Value::Null
             })
             .to_string(),
