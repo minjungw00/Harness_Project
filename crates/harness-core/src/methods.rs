@@ -17,33 +17,32 @@ use harness_store::{
     StoreError,
 };
 use harness_types::{
-    canonical_request_hash, AccessClass, ArtifactAvailability, ArtifactId, ArtifactInput,
-    ArtifactInputSourceKind, ArtifactRef, AuthorizationEffect, AuthorizedAttemptScope, BaselineRef,
-    ChangeUnitId, ChangeUnitOperation, CloseIntent, CloseReadinessBlocker,
-    CloseReadinessBlockerCategory, CloseReason, CloseState, CloseTaskRequest, CloseTaskResult,
-    CompletionPolicy, DryRunSummary, EffectKind, ErrorCode, EvidenceCoverageItem,
-    EvidenceCoverageState, EvidenceStatus, EvidenceSummary, GuaranteeDisplay, GuaranteeLevel,
-    JsonObject, JudgmentKind, MethodName, NextActionKind, NextActionSummary, ObservedChanges,
-    PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect, PrepareWriteDecision,
-    PrepareWriteRequest, PrepareWriteResult, ProjectId, RecordId, RecordRunRequest,
-    RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
-    RequestedMode, ResumePolicy, RunId, RunSummary, SensitiveActionScope, StageArtifactRequest,
-    StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind,
-    StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef, SurfaceId,
-    SurfaceInstanceId, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
-    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
-    UserJudgmentOption, UserJudgmentResolution, UserJudgmentStatus, WriteAuthoritySummary,
-    WriteAuthorizationId, WriteAuthorizationStatus, WriteAuthorizationSummary,
-    WriteDecisionCategory, WriteDecisionReason,
+    AccessClass, ArtifactAvailability, ArtifactId, ArtifactInput, ArtifactInputSourceKind,
+    ArtifactRef, AuthorizationEffect, AuthorizedAttemptScope, BaselineRef, ChangeUnitId,
+    ChangeUnitOperation, CloseIntent, CloseReadinessBlocker, CloseReadinessBlockerCategory,
+    CloseReason, CloseState, CloseTaskRequest, CloseTaskResult, CompletionPolicy, DryRunSummary,
+    EffectKind, ErrorCode, EvidenceCoverageItem, EvidenceCoverageState, EvidenceStatus,
+    EvidenceSummary, GuaranteeDisplay, GuaranteeLevel, JsonObject, JudgmentKind, MethodName,
+    NextActionKind, NextActionSummary, ObservedChanges, PlannedBlocker, PlannedBlockerSourceKind,
+    PlannedEffect, PrepareWriteDecision, PrepareWriteRequest, PrepareWriteResult, ProjectId,
+    RecordId, RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload,
+    RecordUserJudgmentRequest, RedactionState, RequestedMode, ResumePolicy, RunId, RunSummary,
+    SensitiveActionScope, StageArtifactRequest, StageArtifactResult, StagedArtifactHandle,
+    StagedArtifactHandleId, StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude,
+    StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId, TaskId, TaskLifecyclePhase,
+    TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
+    UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentResolution,
+    UserJudgmentStatus, WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
+    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
 };
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 
 use crate::pipeline::{
-    dry_run_response, method_result_base, rejected_response, replay_context_from_verified_surface,
-    replay_context_mismatch_response, tool_error, verified_surface_from_registered_surface,
-    CorePipelineError, CoreResult, CoreService, InvocationContext, OwnerPipelineBranch,
-    PipelineRequest, PipelineResponse, TaskRequirement, VerifiedSurfaceContext,
+    dry_run_response, method_result_base, rejected_response, tool_error, CorePipelineError,
+    CoreResult, CoreService, FreshnessPolicy, InvocationContext, MethodEffectPolicy, MethodPolicy,
+    OwnerPipelineBranch, PipelinePreflightOutcome, PipelinePreflightRequest, PipelineResponse,
+    PreparedRequest, ReplayPolicy, TaskRequirement, VerifiedSurfaceContext,
 };
 
 impl CoreService {
@@ -54,29 +53,38 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
+        let prepared = match prepare_or_response(
+            self,
+            MethodName::Status,
+            request.envelope.clone(),
+            request_json,
+            invocation,
+            MethodPolicy::exact(
+                AccessClass::ReadStatus,
+                TaskRequirement::Optional,
+                ReplayPolicy::None,
+                FreshnessPolicy::None,
+                MethodEffectPolicy::ReadOnly,
+            ),
+        )? {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
         };
 
-        let task = status_task(&store, &project_state, request.envelope.task_id.as_ref())?;
+        let task = status_task(
+            &prepared.store,
+            &prepared.context.project_state,
+            request.envelope.task_id.as_ref(),
+        )?;
         let result_fields = status_result_fields(
-            &store,
+            &prepared.store,
             &request.envelope.project_id,
-            project_state.state_version,
+            prepared.context.project_state.state_version,
             task.as_ref(),
             &request.include,
         )?;
 
-        self.execute_pipeline(PipelineRequest {
-            method_name: MethodName::Status,
-            envelope: request.envelope,
-            request_json,
-            invocation,
-            required_access_class: AccessClass::ReadStatus,
-            task_requirement: TaskRequirement::Optional,
-            branch: OwnerPipelineBranch::ReadOnly { result_fields },
-        })
+        self.execute_prepared_request(prepared, OwnerPipelineBranch::ReadOnly { result_fields })
     }
 
     /// Executes `harness.intake` through the shared Core mutation pipeline.
@@ -86,22 +94,24 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        if !request.envelope.dry_run {
-            if let Some(response) = validate_committed_envelope(&request.envelope)? {
-                return Ok(response);
-            }
-        }
-
-        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
+        let policy = mutation_method_policy(
+            AccessClass::CoreMutation,
+            TaskRequirement::None,
+            request.envelope.dry_run,
+        );
+        let prepared = match prepare_or_response(
+            self,
+            MethodName::Intake,
+            request.envelope.clone(),
+            request_json,
+            invocation,
+            policy,
+        )? {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
         };
-        let selected_surface_instance =
-            match selected_surface_instance(&store, &project_state, &request.envelope, &invocation)
-            {
-                Ok(surface_instance_id) => surface_instance_id,
-                Err(response) => return Ok(*response),
-            };
+        let store = &prepared.store;
+        let project_state = &prepared.context.project_state;
         if request.resume_policy == ResumePolicy::RejectIfActive
             && project_state.active_task_id.is_some()
         {
@@ -114,21 +124,16 @@ impl CoreService {
         }
 
         let plan = plan_intake(
-            &store,
-            &project_state,
+            store,
+            project_state,
             request.clone(),
-            &selected_surface_instance,
+            &prepared.context.verified_surface,
         )?;
 
         if request.envelope.dry_run {
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::Intake,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class: AccessClass::CoreMutation,
-                task_requirement: TaskRequirement::None,
-                branch: OwnerPipelineBranch::DryRunPreview {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::DryRunPreview {
                     dry_run_summary: dry_run_summary(
                         "task",
                         "commit",
@@ -136,17 +141,12 @@ impl CoreService {
                         plan.next_actions,
                     ),
                 },
-            });
+            );
         }
 
-        self.execute_pipeline(PipelineRequest {
-            method_name: MethodName::Intake,
-            envelope: request.envelope,
-            request_json,
-            invocation,
-            required_access_class: AccessClass::CoreMutation,
-            task_requirement: TaskRequirement::None,
-            branch: OwnerPipelineBranch::CommitMutation {
+        self.execute_prepared_request(
+            prepared,
+            OwnerPipelineBranch::CommitMutation {
                 result_fields: plan.result_fields,
                 event_kind: "task_intake".to_owned(),
                 event_payload: plan.event_payload,
@@ -154,7 +154,7 @@ impl CoreService {
                 change_unit_id: None,
                 storage_mutations: plan.storage_mutations,
             },
-        })
+        )
     }
 
     /// Executes `harness.update_scope` through the shared Core mutation pipeline.
@@ -174,31 +174,36 @@ impl CoreService {
                 );
             }
         }
-        if !request.envelope.dry_run {
-            if let Some(response) = validate_committed_envelope(&request.envelope)? {
-                return Ok(response);
-            }
-        }
-
-        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
+        let policy = mutation_method_policy(
+            AccessClass::CoreMutation,
+            TaskRequirement::Exact(request.task_id.clone()),
+            request.envelope.dry_run,
+        );
+        let prepared = match prepare_or_response(
+            self,
+            MethodName::UpdateScope,
+            request.envelope.clone(),
+            request_json,
+            invocation,
+            policy,
+        )? {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
         };
-        let plan = match plan_update_scope(&store, &project_state, request.clone()) {
+        let plan = match plan_update_scope(
+            &prepared.store,
+            &prepared.context.project_state,
+            request.clone(),
+        ) {
             Ok(plan) => plan,
             Err(PlanError::Response(response)) => return Ok(*response),
             Err(PlanError::Core(error)) => return Err(error),
         };
 
         if request.envelope.dry_run {
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::UpdateScope,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class: AccessClass::CoreMutation,
-                task_requirement: TaskRequirement::None,
-                branch: OwnerPipelineBranch::DryRunPreview {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::DryRunPreview {
                     dry_run_summary: dry_run_summary(
                         "scope",
                         "commit",
@@ -206,17 +211,12 @@ impl CoreService {
                         plan.next_actions,
                     ),
                 },
-            });
+            );
         }
 
-        self.execute_pipeline(PipelineRequest {
-            method_name: MethodName::UpdateScope,
-            envelope: request.envelope,
-            request_json,
-            invocation,
-            required_access_class: AccessClass::CoreMutation,
-            task_requirement: TaskRequirement::None,
-            branch: OwnerPipelineBranch::CommitMutation {
+        self.execute_prepared_request(
+            prepared,
+            OwnerPipelineBranch::CommitMutation {
                 result_fields: plan.result_fields,
                 event_kind: "scope_updated".to_owned(),
                 event_payload: plan.event_payload,
@@ -224,7 +224,7 @@ impl CoreService {
                 change_unit_id: plan.change_unit_id,
                 storage_mutations: plan.storage_mutations,
             },
-        })
+        )
     }
 
     /// Executes `harness.prepare_write` through the shared Core mutation pipeline.
@@ -248,65 +248,41 @@ impl CoreService {
                 );
             }
         }
-        if !request.envelope.dry_run {
-            if let Some(response) = validate_committed_envelope(&request.envelope)? {
-                return Ok(response);
-            }
-        }
-
-        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
-        };
-        let verified_surface = match verified_surface_context(
-            &store,
-            &project_state,
-            &request.envelope,
-            &invocation,
-        ) {
-            Ok(context) => context,
-            Err(response) => return Ok(*response),
-        };
-        if let Some(response) = early_idempotency_replay(
-            &store,
-            &project_state,
+        let policy = prepare_write_policy(&request);
+        let prepared = match prepare_or_response(
+            self,
             MethodName::PrepareWrite,
-            &request.envelope,
-            &request_json,
-            &verified_surface,
-        )? {
-            return Ok(response);
-        }
-        let plan =
-            match plan_prepare_write(&store, &project_state, request.clone(), &verified_surface) {
-                Ok(plan) => plan,
-                Err(PlanError::Response(response)) => return Ok(*response),
-                Err(PlanError::Core(error)) => return Err(error),
-            };
-
-        let required_access_class = invocation.requested_access_class;
-        if request.envelope.dry_run {
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::PrepareWrite,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class,
-                task_requirement: TaskRequirement::None,
-                branch: OwnerPipelineBranch::DryRunPreview {
-                    dry_run_summary: plan.dry_run_summary,
-                },
-            });
-        }
-
-        self.execute_pipeline(PipelineRequest {
-            method_name: MethodName::PrepareWrite,
-            envelope: request.envelope,
+            request.envelope.clone(),
             request_json,
             invocation,
-            required_access_class,
-            task_requirement: TaskRequirement::None,
-            branch: OwnerPipelineBranch::CommitMutation {
+            policy,
+        )? {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
+        };
+        let plan = match plan_prepare_write(
+            &prepared.store,
+            &prepared.context.project_state,
+            request.clone(),
+            &prepared.context.verified_surface,
+        ) {
+            Ok(plan) => plan,
+            Err(PlanError::Response(response)) => return Ok(*response),
+            Err(PlanError::Core(error)) => return Err(error),
+        };
+
+        if request.envelope.dry_run {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::DryRunPreview {
+                    dry_run_summary: plan.dry_run_summary,
+                },
+            );
+        }
+
+        self.execute_prepared_request(
+            prepared,
+            OwnerPipelineBranch::CommitMutation {
                 result_fields: plan.result_fields,
                 event_kind: plan.event_kind,
                 event_payload: plan.event_payload,
@@ -314,7 +290,7 @@ impl CoreService {
                 change_unit_id: plan.change_unit_id,
                 storage_mutations: plan.storage_mutations,
             },
-        })
+        )
     }
 
     /// Executes `harness.stage_artifact` as storage-owned transient staging.
@@ -323,12 +299,7 @@ impl CoreService {
         request: StageArtifactRequest,
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
-        let stage_input = match validate_stage_artifact_input(&request) {
-            Ok(input) => input,
-            Err(errors) => {
-                return rejected_pipeline_response(request.envelope.dry_run, None, errors);
-            }
-        };
+        let request_json = serde_json::to_value(&request)?;
         if let Some(envelope_task_id) = &request.envelope.task_id {
             if envelope_task_id != &request.task_id {
                 return validation_rejected(
@@ -340,42 +311,41 @@ impl CoreService {
             }
         }
 
-        let (mut store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
+        let policy = MethodPolicy::exact(
+            AccessClass::ArtifactRegistration,
+            TaskRequirement::Exact(request.task_id.clone()),
+            ReplayPolicy::None,
+            FreshnessPolicy::IfPresent,
+            if request.envelope.dry_run {
+                MethodEffectPolicy::DryRunPreview
+            } else {
+                MethodEffectPolicy::Staging
+            },
+        );
+        let mut prepared = match prepare_or_response(
+            self,
+            MethodName::StageArtifact,
+            request.envelope.clone(),
+            request_json,
+            invocation,
+            policy,
+        )? {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
         };
-        if let Some(expected_state_version) = request.envelope.expected_state_version {
-            if expected_state_version != project_state.state_version {
-                return Ok(stale_expected_state_response(
-                    &request.envelope,
-                    &project_state,
-                    expected_state_version,
-                ));
-            }
-        }
+        let project_state = prepared.context.project_state.clone();
+        let verified_surface = prepared.context.verified_surface.clone();
 
-        let verified_surface = match verified_surface_context(
-            &store,
-            &project_state,
-            &request.envelope,
-            &invocation,
-        ) {
-            Ok(context) => context,
-            Err(response) => return Ok(*response),
+        let stage_input = match validate_stage_artifact_input(&request) {
+            Ok(input) => input,
+            Err(errors) => {
+                return rejected_pipeline_response(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    errors,
+                );
+            }
         };
-        if verified_surface.access_class != AccessClass::ArtifactRegistration {
-            return rejected_pipeline_response(
-                request.envelope.dry_run,
-                Some(project_state.state_version),
-                vec![capability_error(
-                    "surface access class is insufficient for artifact staging",
-                    Some(json!({
-                        "required_access_class": "artifact_registration",
-                        "actual_access_class": verified_surface.access_class
-                    })),
-                )],
-            );
-        }
         if !surface_supports_artifact_staging(&verified_surface.capability_profile) {
             return rejected_pipeline_response(
                 request.envelope.dry_run,
@@ -387,20 +357,6 @@ impl CoreService {
                     })),
                 )],
             );
-        }
-
-        match store.task_record(&request.task_id) {
-            Ok(Some(_)) => {}
-            Ok(None) => {
-                return Ok(no_active_task_response(&request.envelope, &project_state));
-            }
-            Err(error) => {
-                return Ok(store_error_response(
-                    &request.envelope,
-                    &project_state,
-                    error,
-                ))
-            }
         }
 
         if request.envelope.dry_run {
@@ -424,23 +380,25 @@ impl CoreService {
             });
         }
 
-        let staging_record = store.create_artifact_staging(ArtifactStagingInsert {
-            handle_prefix: format!("staged_{}", request.envelope.request_id.as_str()),
-            task_id: request.task_id.as_str().to_owned(),
-            created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
-            created_by_surface_instance_id: verified_surface
-                .surface_instance_id
-                .as_str()
-                .to_owned(),
-            display_name: request.display_name,
-            content_type: request.content_type,
-            sha256: stage_input.sha256.clone(),
-            size_bytes: stage_input.size_bytes,
-            redaction_state: redaction_state_value(request.redaction_state).to_owned(),
-            relation_hint: request.relation_hint,
-            payload_kind: stage_input.payload_kind,
-            safe_bytes_or_notice: stage_input.safe_bytes,
-        })?;
+        let staging_record = prepared
+            .store
+            .create_artifact_staging(ArtifactStagingInsert {
+                handle_prefix: format!("staged_{}", request.envelope.request_id.as_str()),
+                task_id: request.task_id.as_str().to_owned(),
+                created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
+                created_by_surface_instance_id: verified_surface
+                    .surface_instance_id
+                    .as_str()
+                    .to_owned(),
+                display_name: request.display_name,
+                content_type: request.content_type,
+                sha256: stage_input.sha256.clone(),
+                size_bytes: stage_input.size_bytes,
+                redaction_state: redaction_state_value(request.redaction_state).to_owned(),
+                relation_hint: request.relation_hint,
+                payload_kind: stage_input.payload_kind,
+                safe_bytes_or_notice: stage_input.safe_bytes,
+            })?;
 
         let resolved_task_id = TaskId::new(staging_record.task_id.clone());
         let handle = StagedArtifactHandle {
@@ -496,51 +454,36 @@ impl CoreService {
                 );
             }
         }
-        if !request.envelope.dry_run {
-            if let Some(response) = validate_committed_envelope(&request.envelope)? {
-                return Ok(response);
-            }
-        }
-
-        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
-        };
-        let verified_surface = match verified_surface_context(
-            &store,
-            &project_state,
-            &request.envelope,
-            &invocation,
-        ) {
-            Ok(context) => context,
-            Err(response) => return Ok(*response),
-        };
-        if let Some(response) = early_idempotency_replay(
-            &store,
-            &project_state,
+        let prepared = match prepare_or_response(
+            self,
             MethodName::RecordRun,
-            &request.envelope,
-            &request_json,
-            &verified_surface,
+            request.envelope.clone(),
+            request_json,
+            invocation,
+            mutation_method_policy(
+                AccessClass::RunRecording,
+                TaskRequirement::Exact(request.task_id.clone()),
+                request.envelope.dry_run,
+            ),
         )? {
-            return Ok(response);
-        }
-        let plan = match plan_record_run(&store, &project_state, request.clone(), &verified_surface)
-        {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
+        };
+        let plan = match plan_record_run(
+            &prepared.store,
+            &prepared.context.project_state,
+            request.clone(),
+            &prepared.context.verified_surface,
+        ) {
             Ok(plan) => plan,
             Err(PlanError::Response(response)) => return Ok(*response),
             Err(PlanError::Core(error)) => return Err(error),
         };
 
         if request.envelope.dry_run {
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::RecordRun,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class: AccessClass::RunRecording,
-                task_requirement: TaskRequirement::None,
-                branch: OwnerPipelineBranch::DryRunPreview {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::DryRunPreview {
                     dry_run_summary: dry_run_summary(
                         "run",
                         "would_record",
@@ -548,17 +491,12 @@ impl CoreService {
                         Vec::new(),
                     ),
                 },
-            });
+            );
         }
 
-        self.execute_pipeline(PipelineRequest {
-            method_name: MethodName::RecordRun,
-            envelope: request.envelope,
-            request_json,
-            invocation,
-            required_access_class: AccessClass::RunRecording,
-            task_requirement: TaskRequirement::None,
-            branch: OwnerPipelineBranch::CommitMutation {
+        self.execute_prepared_request(
+            prepared,
+            OwnerPipelineBranch::CommitMutation {
                 result_fields: plan.result_fields,
                 event_kind: "run_recorded".to_owned(),
                 event_payload: plan.event_payload,
@@ -566,7 +504,7 @@ impl CoreService {
                 change_unit_id: plan.change_unit_id,
                 storage_mutations: plan.storage_mutations,
             },
-        })
+        )
     }
 
     /// Executes `harness.request_user_judgment` through the shared Core mutation pipeline.
@@ -586,27 +524,26 @@ impl CoreService {
                 );
             }
         }
-        if !request.envelope.dry_run {
-            if let Some(response) = validate_committed_envelope(&request.envelope)? {
-                return Ok(response);
-            }
-        }
-
-        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
+        let prepared = match prepare_or_response(
+            self,
+            MethodName::RequestUserJudgment,
+            request.envelope.clone(),
+            request_json,
+            invocation,
+            mutation_method_policy(
+                AccessClass::CoreMutation,
+                TaskRequirement::Exact(request.task_id.clone()),
+                request.envelope.dry_run,
+            ),
+        )? {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
         };
-        let selected_surface_instance =
-            match selected_surface_instance(&store, &project_state, &request.envelope, &invocation)
-            {
-                Ok(surface_instance_id) => surface_instance_id,
-                Err(response) => return Ok(*response),
-            };
         let plan = match plan_request_user_judgment(
-            &store,
-            &project_state,
+            &prepared.store,
+            &prepared.context.project_state,
             request.clone(),
-            &selected_surface_instance,
+            &prepared.context.verified_surface,
         ) {
             Ok(plan) => plan,
             Err(PlanError::Response(response)) => return Ok(*response),
@@ -614,14 +551,9 @@ impl CoreService {
         };
 
         if request.envelope.dry_run {
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::RequestUserJudgment,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class: AccessClass::CoreMutation,
-                task_requirement: TaskRequirement::None,
-                branch: OwnerPipelineBranch::DryRunPreview {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::DryRunPreview {
                     dry_run_summary: dry_run_summary(
                         "user_judgment",
                         "create_pending",
@@ -629,17 +561,12 @@ impl CoreService {
                         plan.next_actions,
                     ),
                 },
-            });
+            );
         }
 
-        self.execute_pipeline(PipelineRequest {
-            method_name: MethodName::RequestUserJudgment,
-            envelope: request.envelope,
-            request_json,
-            invocation,
-            required_access_class: AccessClass::CoreMutation,
-            task_requirement: TaskRequirement::None,
-            branch: OwnerPipelineBranch::CommitMutation {
+        self.execute_prepared_request(
+            prepared,
+            OwnerPipelineBranch::CommitMutation {
                 result_fields: plan.result_fields,
                 event_kind: "user_judgment_requested".to_owned(),
                 event_payload: plan.event_payload,
@@ -647,7 +574,7 @@ impl CoreService {
                 change_unit_id: plan.change_unit_id,
                 storage_mutations: plan.storage_mutations,
             },
-        })
+        )
     }
 
     /// Executes `harness.record_user_judgment` through the shared Core mutation pipeline.
@@ -657,50 +584,41 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        if !request.envelope.dry_run {
-            if let Some(response) = validate_committed_envelope(&request.envelope)? {
-                return Ok(response);
-            }
-        }
-
-        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
-        };
-        let verified_surface = match verified_surface_context(
-            &store,
-            &project_state,
-            &request.envelope,
-            &invocation,
-        ) {
-            Ok(context) => context,
-            Err(response) => return Ok(*response),
-        };
-        if let Some(response) = early_idempotency_replay(
-            &store,
-            &project_state,
+        let task_requirement = request
+            .envelope
+            .task_id
+            .clone()
+            .map(TaskRequirement::Exact)
+            .unwrap_or(TaskRequirement::None);
+        let prepared = match prepare_or_response(
+            self,
             MethodName::RecordUserJudgment,
-            &request.envelope,
-            &request_json,
-            &verified_surface,
+            request.envelope.clone(),
+            request_json,
+            invocation,
+            mutation_method_policy(
+                AccessClass::CoreMutation,
+                task_requirement,
+                request.envelope.dry_run,
+            ),
         )? {
-            return Ok(response);
-        }
-        let plan = match plan_record_user_judgment(&store, &project_state, request.clone()) {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
+        };
+        let plan = match plan_record_user_judgment(
+            &prepared.store,
+            &prepared.context.project_state,
+            request.clone(),
+        ) {
             Ok(plan) => plan,
             Err(PlanError::Response(response)) => return Ok(*response),
             Err(PlanError::Core(error)) => return Err(error),
         };
 
         if request.envelope.dry_run {
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::RecordUserJudgment,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class: AccessClass::CoreMutation,
-                task_requirement: TaskRequirement::None,
-                branch: OwnerPipelineBranch::DryRunPreview {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::DryRunPreview {
                     dry_run_summary: dry_run_summary(
                         "user_judgment",
                         "resolve_pending",
@@ -708,17 +626,12 @@ impl CoreService {
                         plan.next_actions,
                     ),
                 },
-            });
+            );
         }
 
-        self.execute_pipeline(PipelineRequest {
-            method_name: MethodName::RecordUserJudgment,
-            envelope: request.envelope,
-            request_json,
-            invocation,
-            required_access_class: AccessClass::CoreMutation,
-            task_requirement: TaskRequirement::None,
-            branch: OwnerPipelineBranch::CommitMutation {
+        self.execute_prepared_request(
+            prepared,
+            OwnerPipelineBranch::CommitMutation {
                 result_fields: plan.result_fields,
                 event_kind: "user_judgment_recorded".to_owned(),
                 event_payload: plan.event_payload,
@@ -726,7 +639,7 @@ impl CoreService {
                 change_unit_id: plan.change_unit_id,
                 storage_mutations: plan.storage_mutations,
             },
-        })
+        )
     }
 
     /// Executes `harness.close_task` through close-readiness and terminal transition rules.
@@ -756,104 +669,77 @@ impl CoreService {
         if let Some(response) = validate_close_intent_fields(&request)? {
             return Ok(response);
         }
-        if request.intent != CloseIntent::Check && !request.envelope.dry_run {
-            if let Some(response) = validate_committed_envelope(&request.envelope)? {
-                return Ok(response);
-            }
-        }
-
-        let (store, project_state) = match open_store_with_state(self, &request.envelope) {
-            Ok(opened) => opened,
-            Err(response) => return Ok(*response),
+        let close_policy = close_task_policy(&request);
+        let prepared = match prepare_or_response(
+            self,
+            MethodName::CloseTask,
+            request.envelope.clone(),
+            request_json,
+            invocation,
+            close_policy,
+        )? {
+            Ok(prepared) => prepared,
+            Err(response) => return Ok(response),
         };
         if request.intent != CloseIntent::Check {
-            let verified_surface = match verified_surface_context(
-                &store,
-                &project_state,
-                &request.envelope,
-                &invocation,
-            ) {
-                Ok(context) => context,
-                Err(response) => return Ok(*response),
-            };
-            if let Some(response) = early_idempotency_replay(
-                &store,
-                &project_state,
-                MethodName::CloseTask,
-                &request.envelope,
-                &request_json,
-                &verified_surface,
+            if let Some(response) = reject_stale_close_write_authorization(
+                &prepared.store,
+                &prepared.context.project_state,
+                &request,
             )? {
-                return Ok(response);
-            }
-            if let Some(response) =
-                reject_stale_close_write_authorization(&store, &project_state, &request)?
-            {
                 return Ok(response);
             }
         }
 
         if request.intent == CloseIntent::Check {
-            let plan = match plan_close_task(&store, &project_state, request.clone()) {
+            let plan = match plan_close_task(
+                &prepared.store,
+                &prepared.context.project_state,
+                request.clone(),
+            ) {
                 Ok(plan) => plan,
                 Err(PlanError::Response(response)) => return Ok(*response),
                 Err(PlanError::Core(error)) => return Err(error),
             };
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::CloseTask,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class: AccessClass::ReadStatus,
-                task_requirement: TaskRequirement::Required,
-                branch: OwnerPipelineBranch::ReadOnly {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::ReadOnly {
                     result_fields: plan.result_fields,
                 },
-            });
+            );
         }
 
         if request.envelope.dry_run {
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::CloseTask,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class: AccessClass::CoreMutation,
-                task_requirement: TaskRequirement::Required,
-                branch: OwnerPipelineBranch::DryRunPreview {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::DryRunPreview {
                     dry_run_summary: close_task_dry_run_summary(request.intent),
                 },
-            });
+            );
         }
 
-        let plan = match plan_close_task(&store, &project_state, request.clone()) {
+        let plan = match plan_close_task(
+            &prepared.store,
+            &prepared.context.project_state,
+            request.clone(),
+        ) {
             Ok(plan) => plan,
             Err(PlanError::Response(response)) => return Ok(*response),
             Err(PlanError::Core(error)) => return Err(error),
         };
 
         if !plan.blockers.is_empty() {
-            return self.execute_pipeline(PipelineRequest {
-                method_name: MethodName::CloseTask,
-                envelope: request.envelope,
-                request_json,
-                invocation,
-                required_access_class: AccessClass::CoreMutation,
-                task_requirement: TaskRequirement::Required,
-                branch: OwnerPipelineBranch::NoEffectResult {
+            return self.execute_prepared_request(
+                prepared,
+                OwnerPipelineBranch::NoEffectResult {
                     result_fields: plan.result_fields,
                 },
-            });
+            );
         }
 
-        self.execute_pipeline(PipelineRequest {
-            method_name: MethodName::CloseTask,
-            envelope: request.envelope,
-            request_json,
-            invocation,
-            required_access_class: AccessClass::CoreMutation,
-            task_requirement: TaskRequirement::Required,
-            branch: OwnerPipelineBranch::CommitMutation {
+        self.execute_prepared_request(
+            prepared,
+            OwnerPipelineBranch::CommitMutation {
                 result_fields: plan.result_fields,
                 event_kind: plan.event_kind,
                 event_payload: plan.event_payload,
@@ -861,7 +747,7 @@ impl CoreService {
                 change_unit_id: plan.change_unit_id,
                 storage_mutations: plan.storage_mutations,
             },
-        })
+        )
     }
 }
 
@@ -927,130 +813,88 @@ impl From<serde_json::Error> for PlanError {
     }
 }
 
-fn open_store_with_state(
+fn prepare_or_response(
     service: &CoreService,
-    envelope: &ToolEnvelope,
-) -> Result<(CoreProjectStore, ProjectStateHeader), Box<PipelineResponse>> {
-    let store = match CoreProjectStore::open(service.runtime_home(), &envelope.project_id) {
-        Ok(store) => store,
-        Err(error) => {
-            return Err(Box::new(infallible_rejected_pipeline_response(
-                envelope.dry_run,
-                None,
-                vec![store_unavailable_error(error)],
-            )))
-        }
-    };
-    let project_state = match store.project_state() {
-        Ok(project_state) => project_state,
-        Err(error) => {
-            return Err(Box::new(infallible_rejected_pipeline_response(
-                envelope.dry_run,
-                None,
-                vec![store_unavailable_error(error)],
-            )))
-        }
-    };
-    Ok((store, project_state))
-}
-
-fn selected_surface_instance(
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    envelope: &ToolEnvelope,
-    invocation: &InvocationContext,
-) -> Result<SurfaceInstanceId, Box<PipelineResponse>> {
-    if let Some(surface_instance_id) = &invocation.surface_instance_id {
-        return Ok(surface_instance_id.clone());
-    }
-    if project_state.default_surface_id.as_deref() == Some(envelope.surface_id.as_str()) {
-        if let Some(surface_instance_id) = &project_state.default_surface_instance_id {
-            return Ok(SurfaceInstanceId::new(surface_instance_id.clone()));
-        }
-    }
-    let candidates = match store.surface_candidates(&envelope.surface_id) {
-        Ok(candidates) => candidates,
-        Err(error) => {
-            return Err(Box::new(infallible_rejected_pipeline_response(
-                envelope.dry_run,
-                Some(project_state.state_version),
-                vec![store_unavailable_error(error)],
-            )))
-        }
-    };
-    match candidates.as_slice() {
-        [surface] => Ok(SurfaceInstanceId::new(surface.surface_instance_id.clone())),
-        _ => Err(Box::new(infallible_rejected_pipeline_response(
-            envelope.dry_run,
-            Some(project_state.state_version),
-            vec![tool_error(
-                ErrorCode::LocalAccessMismatch,
-                "local surface context does not match the registered surface",
-                false,
-                None,
-            )],
-        ))),
+    method_name: MethodName,
+    envelope: ToolEnvelope,
+    request_json: Value,
+    invocation: InvocationContext,
+    policy: MethodPolicy,
+) -> CoreResult<Result<PreparedRequest, PipelineResponse>> {
+    match service.prepare_request(PipelinePreflightRequest {
+        method_name,
+        envelope,
+        request_json,
+        invocation,
+        policy,
+    })? {
+        PipelinePreflightOutcome::Prepared(prepared) => Ok(Ok(*prepared)),
+        PipelinePreflightOutcome::Response(response) => Ok(Err(*response)),
     }
 }
 
-fn verified_surface_context(
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    envelope: &ToolEnvelope,
-    invocation: &InvocationContext,
-) -> Result<VerifiedSurfaceContext, Box<PipelineResponse>> {
-    let surface_instance_id =
-        selected_surface_instance(store, project_state, envelope, invocation)?;
-    let surface = match store.surface(&envelope.surface_id, surface_instance_id.as_str()) {
-        Ok(Some(surface)) => surface,
-        Ok(None) => {
-            return Err(Box::new(infallible_rejected_pipeline_response(
-                envelope.dry_run,
-                Some(project_state.state_version),
-                vec![tool_error(
-                    ErrorCode::LocalAccessMismatch,
-                    "local surface context does not match the registered surface",
-                    false,
-                    None,
-                )],
-            )))
-        }
-        Err(error) => {
-            return Err(Box::new(store_error_response(
-                envelope,
-                project_state,
-                error,
-            )))
-        }
-    };
-    let capability_profile = serde_json::from_str::<Value>(&surface.capability_profile_json)
-        .map_err(|_| {
-            Box::new(infallible_rejected_pipeline_response(
-                envelope.dry_run,
-                Some(project_state.state_version),
-                vec![tool_error(
-                    ErrorCode::McpUnavailable,
-                    "surface capability profile is invalid",
-                    true,
-                    None,
-                )],
-            ))
-        })?;
+fn mutation_method_policy(
+    access_class: AccessClass,
+    task: TaskRequirement,
+    dry_run: bool,
+) -> MethodPolicy {
+    if dry_run {
+        MethodPolicy::exact(
+            access_class,
+            task,
+            ReplayPolicy::None,
+            FreshnessPolicy::IfPresent,
+            MethodEffectPolicy::DryRunPreview,
+        )
+    } else {
+        MethodPolicy::exact(
+            access_class,
+            task,
+            ReplayPolicy::Committed,
+            FreshnessPolicy::IfPresent,
+            MethodEffectPolicy::CoreMutation,
+        )
+    }
+}
 
-    verified_surface_from_registered_surface(surface, invocation, capability_profile).map_err(
-        |_| {
-            Box::new(infallible_rejected_pipeline_response(
-                envelope.dry_run,
-                Some(project_state.state_version),
-                vec![tool_error(
-                    ErrorCode::LocalAccessMismatch,
-                    "local surface access grant does not authorize the requested invocation access",
-                    false,
-                    None,
-                )],
-            ))
-        },
-    )
+fn prepare_write_policy(request: &PrepareWriteRequest) -> MethodPolicy {
+    let task = request
+        .task_id
+        .clone()
+        .or_else(|| request.envelope.task_id.clone())
+        .map(TaskRequirement::Exact)
+        .unwrap_or(TaskRequirement::Required);
+
+    if request.envelope.dry_run {
+        MethodPolicy::verified_grant_only(
+            task,
+            ReplayPolicy::None,
+            FreshnessPolicy::IfPresent,
+            MethodEffectPolicy::DryRunPreview,
+        )
+    } else {
+        MethodPolicy::verified_grant_only(
+            task,
+            ReplayPolicy::Committed,
+            FreshnessPolicy::IfPresent,
+            MethodEffectPolicy::CoreMutation,
+        )
+    }
+}
+
+fn close_task_policy(request: &CloseTaskRequest) -> MethodPolicy {
+    let task = TaskRequirement::Exact(request.task_id.clone());
+    if request.intent == CloseIntent::Check {
+        MethodPolicy::exact(
+            AccessClass::ReadStatus,
+            task,
+            ReplayPolicy::None,
+            FreshnessPolicy::None,
+            MethodEffectPolicy::ReadOnly,
+        )
+    } else {
+        mutation_method_policy(AccessClass::CoreMutation, task, request.envelope.dry_run)
+    }
 }
 
 const MAX_STAGED_BODY_BYTES: usize = 10 * 1024 * 1024;
@@ -1257,46 +1101,6 @@ fn stage_validation_error(field: &'static str, message: &'static str) -> harness
     tool_error(ErrorCode::ValidationFailed, message, false, Some(details))
 }
 
-fn stale_expected_state_response(
-    envelope: &ToolEnvelope,
-    project_state: &ProjectStateHeader,
-    expected_state_version: u64,
-) -> PipelineResponse {
-    let mut details = Map::new();
-    details.insert(
-        "state_clock".to_owned(),
-        Value::String("project_state.state_version".to_owned()),
-    );
-    details.insert(
-        "current_state_version".to_owned(),
-        Value::from(project_state.state_version),
-    );
-    details.insert(
-        "expected_state_version".to_owned(),
-        Value::from(expected_state_version),
-    );
-    details.insert(
-        "project_id".to_owned(),
-        Value::String(envelope.project_id.as_str().to_owned()),
-    );
-    if let Some(task_id) = &envelope.task_id {
-        details.insert(
-            "task_id".to_owned(),
-            Value::String(task_id.as_str().to_owned()),
-        );
-    }
-    infallible_rejected_pipeline_response(
-        envelope.dry_run,
-        Some(project_state.state_version),
-        vec![tool_error(
-            ErrorCode::StateVersionConflict,
-            "expected_state_version is stale",
-            true,
-            Some(details),
-        )],
-    )
-}
-
 fn capability_error(message: &'static str, details: Option<Value>) -> harness_types::ToolError {
     let details = details.and_then(|value| match value {
         Value::Object(object) => Some(object),
@@ -1350,100 +1154,6 @@ fn redaction_state_value(redaction_state: RedactionState) -> &'static str {
         RedactionState::SecretOmitted => "secret_omitted",
         RedactionState::Blocked => "blocked",
     }
-}
-
-fn early_idempotency_replay(
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    method_name: MethodName,
-    envelope: &ToolEnvelope,
-    request_json: &Value,
-    verified_surface: &VerifiedSurfaceContext,
-) -> CoreResult<Option<PipelineResponse>> {
-    if envelope.dry_run {
-        return Ok(None);
-    }
-    let Some(idempotency_key) = &envelope.idempotency_key else {
-        return Ok(None);
-    };
-    let request_hash = canonical_request_hash(request_json)?;
-    let Some(record) = store
-        .tool_invocation(method_name, idempotency_key)
-        .map_err(CorePipelineError::from)?
-    else {
-        return Ok(None);
-    };
-
-    let replay_context = replay_context_from_verified_surface(verified_surface);
-    if !record.matches_verified_replay_context(&replay_context) {
-        let response = replay_context_mismatch_response(false, project_state.state_version);
-        let response_value = serde_json::to_value(response)?;
-        let response_json = serde_json::to_string(&response_value)?;
-        return Ok(Some(PipelineResponse {
-            response_json,
-            response_value,
-            verified_surface: Some(verified_surface.clone()),
-            resolved_task_id: None,
-            replayed: false,
-        }));
-    }
-
-    if record.request_hash == request_hash.as_str() {
-        let response_value = serde_json::from_str(&record.response_json)?;
-        return Ok(Some(PipelineResponse {
-            response_json: record.response_json,
-            response_value,
-            verified_surface: Some(verified_surface.clone()),
-            resolved_task_id: None,
-            replayed: true,
-        }));
-    }
-
-    let mut details = Map::new();
-    details.insert(
-        "idempotency_key".to_owned(),
-        Value::String(idempotency_key.as_str().to_owned()),
-    );
-    details.insert(
-        "stored_request_hash".to_owned(),
-        Value::String(record.request_hash),
-    );
-    details.insert(
-        "attempted_request_hash".to_owned(),
-        Value::String(request_hash.as_str().to_owned()),
-    );
-    Ok(Some(rejected_pipeline_response(
-        false,
-        Some(project_state.state_version),
-        vec![tool_error(
-            ErrorCode::StateVersionConflict,
-            "idempotency_key was reused with a different request hash",
-            false,
-            Some(details),
-        )],
-    )?))
-}
-
-fn validate_committed_envelope(envelope: &ToolEnvelope) -> CoreResult<Option<PipelineResponse>> {
-    if envelope.idempotency_key.is_none() {
-        return validation_rejected(
-            false,
-            None,
-            "idempotency_key",
-            "committed mutations require idempotency_key",
-        )
-        .map(Some);
-    }
-    if envelope.expected_state_version.is_none() {
-        return validation_rejected(
-            false,
-            None,
-            "expected_state_version",
-            "committed mutations require expected_state_version",
-        )
-        .map(Some);
-    }
-    Ok(None)
 }
 
 fn validate_close_intent_fields(
@@ -2514,7 +2224,7 @@ fn plan_intake(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: harness_types::IntakeRequest,
-    surface_instance_id: &SurfaceInstanceId,
+    verified_surface: &VerifiedSurfaceContext,
 ) -> CoreResult<MethodPlan> {
     let planned_state_version = project_state.state_version + 1;
     let mode = resolve_requested_mode(request.requested_mode);
@@ -2582,8 +2292,11 @@ fn plan_intake(
         };
         storage_mutations.push(CoreStorageMutation::InsertTask(TaskInsert {
             task_id: task.task_id.clone(),
-            created_by_surface_id: request.envelope.surface_id.as_str().to_owned(),
-            created_by_surface_instance_id: surface_instance_id.as_str().to_owned(),
+            created_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
+            created_by_surface_instance_id: verified_surface
+                .surface_instance_id
+                .as_str()
+                .to_owned(),
             mode: task.mode.clone(),
             lifecycle_phase: task.lifecycle_phase.clone(),
             result: task.result.clone(),
@@ -4971,7 +4684,7 @@ fn plan_request_user_judgment(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: harness_types::RequestUserJudgmentRequest,
-    surface_instance_id: &SurfaceInstanceId,
+    verified_surface: &VerifiedSurfaceContext,
 ) -> Result<MethodPlan, PlanError> {
     validate_user_judgment_request_fields(UserJudgmentRequestValidation {
         dry_run: request.envelope.dry_run,
@@ -5159,8 +4872,11 @@ fn plan_request_user_judgment(
             affected_refs_json: serde_json::to_string(&request.affected_refs)?,
             artifact_refs_json: serde_json::to_string(&request.context.artifact_refs)?,
             sensitive_action_scope_json: "{}".to_owned(),
-            requested_by_surface_id: request.envelope.surface_id.as_str().to_owned(),
-            requested_by_surface_instance_id: surface_instance_id.as_str().to_owned(),
+            requested_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
+            requested_by_surface_instance_id: verified_surface
+                .surface_instance_id
+                .as_str()
+                .to_owned(),
             requested_at,
             metadata_json: serde_json::to_string(&json!({
                 "requested_by_actor_kind": request.envelope.actor_kind
@@ -6494,6 +6210,144 @@ mod tests {
     }
 
     #[test]
+    fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_record_run_capabilities(&harness)?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "verified_context")?;
+
+        let status = harness.service.status(
+            StatusRequest {
+                envelope: envelope("req_verified_status", None, false, None, Some(&task_id)),
+                include: status_include(),
+            },
+            invocation(AccessClass::ReadStatus),
+        )?;
+        assert_verified_surface(&status, AccessClass::ReadStatus);
+
+        let intake = harness.service.intake(
+            intake_request(
+                "req_verified_intake",
+                "idem_verified_intake",
+                true,
+                Some(2),
+                RequestedMode::Work,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        assert_verified_surface(&intake, AccessClass::CoreMutation);
+
+        let update_scope = harness.service.update_scope(
+            update_scope_request(
+                "req_verified_scope",
+                "idem_verified_scope",
+                true,
+                Some(2),
+                &task_id,
+                ChangeUnitOperation::KeepCurrent,
+                "Initial current scope.",
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        assert_verified_surface(&update_scope, AccessClass::CoreMutation);
+
+        let mut prepare_write = prepare_write_request(
+            "req_verified_prepare",
+            "idem_verified_prepare",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        prepare_write.envelope.dry_run = true;
+        let prepare_write = harness
+            .service
+            .prepare_write(prepare_write, invocation(AccessClass::WriteAuthorization))?;
+        assert_verified_surface(&prepare_write, AccessClass::WriteAuthorization);
+
+        let stage_artifact = harness.service.stage_artifact(
+            stage_artifact_request(
+                "req_verified_stage",
+                Some("idem_verified_stage"),
+                true,
+                Some(2),
+                &task_id,
+            ),
+            invocation(AccessClass::ArtifactRegistration),
+        )?;
+        assert_verified_surface(&stage_artifact, AccessClass::ArtifactRegistration);
+
+        let record_run = harness.service.record_run(
+            record_run_request(
+                "req_verified_run",
+                "idem_verified_run",
+                true,
+                Some(2),
+                &task_id,
+                &change_unit_id,
+            ),
+            invocation(AccessClass::RunRecording),
+        )?;
+        assert_verified_surface(&record_run, AccessClass::RunRecording);
+
+        let request_judgment = harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_verified_judgment_preview",
+                "idem_verified_judgment_preview",
+                true,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        assert_verified_surface(&request_judgment, AccessClass::CoreMutation);
+
+        harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_verified_judgment_pending",
+                "idem_verified_judgment_pending",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let mut record_judgment = record_judgment_request(
+            "req_verified_record_judgment",
+            "idem_verified_record_judgment",
+            Some(3),
+            &task_id,
+            "uj_req_verified_judgment_pending",
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        );
+        record_judgment.envelope.dry_run = true;
+        let record_judgment = harness
+            .service
+            .record_user_judgment(record_judgment, invocation(AccessClass::CoreMutation))?;
+        assert_verified_surface(&record_judgment, AccessClass::CoreMutation);
+
+        let close_check = harness.service.close_task(
+            close_task_request(CloseTaskFixture {
+                request_id: "req_verified_close",
+                idempotency_key: None,
+                dry_run: false,
+                expected_state_version: None,
+                task_id: &task_id,
+                intent: CloseIntent::Check,
+                close_reason: None,
+                superseding_task_id: None,
+            }),
+            invocation(AccessClass::ReadStatus),
+        )?;
+        assert_verified_surface(&close_check, AccessClass::ReadStatus);
+
+        Ok(())
+    }
+
+    #[test]
     fn intake_commits_once_and_replays_without_effect() -> Result<(), Box<dyn Error>> {
         let harness = MethodHarness::new()?;
         let before = harness.counts()?;
@@ -7017,6 +6871,45 @@ mod tests {
     }
 
     #[test]
+    fn prepare_write_unregistered_grant_fails_before_method_decision() -> Result<(), Box<dyn Error>>
+    {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&harness, "prepare_grant_fail")?;
+        set_surface_local_access(
+            &harness,
+            json!({
+                "authorized_access_classes": ["core_mutation"],
+                "verification_basis": "method_test_registration"
+            }),
+        )?;
+        let before = harness.counts()?;
+
+        let request = prepare_write_request(
+            "req_prepare_grant_fail",
+            "idem_prepare_grant_fail",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        let response = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "LOCAL_ACCESS_MISMATCH"
+        );
+        assert!(response
+            .response_value
+            .get("write_decision_reasons")
+            .is_none());
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
     fn prepare_write_surface_capability_insufficient_is_method_decision(
     ) -> Result<(), Box<dyn Error>> {
         let harness = MethodHarness::new()?;
@@ -7174,6 +7067,46 @@ mod tests {
         assert_eq!(second.response_json, first.response_json);
         assert_eq!(harness.counts()?, after_first);
         assert_eq!(write_authorization_count(&harness)?, 1);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_replay_requires_current_verified_grant() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&harness, "prepare_replay_verify")?;
+        let request = prepare_write_request(
+            "req_prepare_replay_verify",
+            "idem_prepare_replay_verify",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        let first = harness
+            .service
+            .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
+        let after_first = harness.counts()?;
+        set_surface_local_access(
+            &harness,
+            json!({
+                "authorized_access_classes": ["core_mutation"],
+                "verification_basis": "method_test_registration"
+            }),
+        )?;
+
+        let second = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+
+        assert_eq!(first.response_value["decision"], "allowed");
+        assert!(!second.replayed);
+        assert_eq!(second.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            second.response_value["errors"][0]["code"],
+            "LOCAL_ACCESS_MISMATCH"
+        );
+        assert_ne!(second.response_json, first.response_json);
+        assert_eq!(harness.counts()?, after_first);
         Ok(())
     }
 
@@ -7401,6 +7334,62 @@ mod tests {
             .response_value
             .get("staged_artifact_handle")
             .is_none());
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_dry_run_still_checks_stale_state() -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_dry_stale")?;
+        let before = harness.counts()?;
+
+        let request = stage_artifact_request(
+            "req_stage_dry_stale",
+            Some("idem_stage_dry_stale"),
+            true,
+            Some(1),
+            &task_id,
+        );
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "STATE_VERSION_CONFLICT"
+        );
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_invalid_input_does_not_bypass_access_preflight() -> Result<(), Box<dyn Error>>
+    {
+        let harness = MethodHarness::new()?;
+        enable_stage_artifact_capability(&harness)?;
+        let (task_id, _) = create_task_with_change_unit(&harness, "stage_access_first")?;
+        let before = harness.counts()?;
+
+        let mut request = stage_artifact_request(
+            "req_stage_access_first",
+            Some("idem_stage_access_first"),
+            true,
+            Some(2),
+            &task_id,
+        );
+        request.safe_bytes_or_notice = String::new();
+        let response = harness
+            .service
+            .stage_artifact(request, invocation(AccessClass::ReadStatus))?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "CAPABILITY_INSUFFICIENT"
+        );
         assert_eq!(harness.counts()?, before);
         Ok(())
     }
@@ -8725,6 +8714,23 @@ mod tests {
         }
     }
 
+    fn assert_verified_surface(response: &PipelineResponse, access_class: AccessClass) {
+        let verified = response
+            .verified_surface
+            .as_ref()
+            .expect("method response should carry verified surface context");
+        assert_eq!(verified.project_id.as_str(), PROJECT_ID);
+        assert_eq!(verified.surface_id.as_str(), SURFACE_ID);
+        assert_eq!(verified.surface_instance_id.as_str(), SURFACE_INSTANCE_ID);
+        assert_eq!(verified.access_class, access_class);
+        assert!(verified
+            .verification_basis
+            .contains("method_test_registration"));
+        assert!(verified
+            .verification_basis
+            .contains("method_test_invocation"));
+    }
+
     fn status_include() -> StatusInclude {
         StatusInclude {
             task: true,
@@ -9539,6 +9545,21 @@ mod tests {
               WHERE project_id = ?1
                 AND surface_id = ?2",
             rusqlite::params![PROJECT_ID, SURFACE_ID, capability_profile_json],
+        )?;
+        Ok(())
+    }
+
+    fn set_surface_local_access(
+        harness: &MethodHarness,
+        local_access: Value,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = harness.conn()?;
+        conn.execute(
+            "UPDATE surfaces
+                SET local_access_json = ?3
+              WHERE project_id = ?1
+                AND surface_id = ?2",
+            rusqlite::params![PROJECT_ID, SURFACE_ID, local_access.to_string()],
         )?;
         Ok(())
     }

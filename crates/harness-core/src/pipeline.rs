@@ -86,11 +86,123 @@ pub struct VerifiedSurfaceContext {
 }
 
 /// Task selector behavior required by the owner-selected branch.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaskRequirement {
     None,
     Optional,
     Required,
+    Exact(TaskId),
+}
+
+/// Idempotency replay behavior for the selected method/effect branch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ReplayPolicy {
+    None,
+    Committed,
+}
+
+/// State-version freshness behavior for the selected method/effect branch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum FreshnessPolicy {
+    None,
+    IfPresent,
+}
+
+/// Method access behavior after the invocation has a verified registered grant.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum MethodAccessPolicy {
+    Exact(AccessClass),
+    VerifiedGrantOnly,
+}
+
+/// Storage/effect family selected before method-specific planning runs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum MethodEffectPolicy {
+    ReadOnly,
+    NoEffect,
+    Staging,
+    DryRunPreview,
+    CoreMutation,
+}
+
+/// Authoritative preflight policy for a public method branch.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct MethodPolicy {
+    pub(crate) access: MethodAccessPolicy,
+    pub(crate) task: TaskRequirement,
+    pub(crate) replay: ReplayPolicy,
+    pub(crate) freshness: FreshnessPolicy,
+    pub(crate) effect: MethodEffectPolicy,
+}
+
+impl MethodPolicy {
+    pub(crate) fn exact(
+        access_class: AccessClass,
+        task: TaskRequirement,
+        replay: ReplayPolicy,
+        freshness: FreshnessPolicy,
+        effect: MethodEffectPolicy,
+    ) -> Self {
+        Self {
+            access: MethodAccessPolicy::Exact(access_class),
+            task,
+            replay,
+            freshness,
+            effect,
+        }
+    }
+
+    pub(crate) fn verified_grant_only(
+        task: TaskRequirement,
+        replay: ReplayPolicy,
+        freshness: FreshnessPolicy,
+        effect: MethodEffectPolicy,
+    ) -> Self {
+        Self {
+            access: MethodAccessPolicy::VerifiedGrantOnly,
+            task,
+            replay,
+            freshness,
+            effect,
+        }
+    }
+
+    fn for_branch(
+        access_class: AccessClass,
+        task: TaskRequirement,
+        branch: &OwnerPipelineBranch,
+    ) -> Self {
+        match branch {
+            OwnerPipelineBranch::ReadOnly { .. } => Self::exact(
+                access_class,
+                task,
+                ReplayPolicy::None,
+                FreshnessPolicy::None,
+                MethodEffectPolicy::ReadOnly,
+            ),
+            OwnerPipelineBranch::NoEffectResult { .. } => Self::exact(
+                access_class,
+                task,
+                ReplayPolicy::None,
+                FreshnessPolicy::IfPresent,
+                MethodEffectPolicy::NoEffect,
+            ),
+            OwnerPipelineBranch::DryRunPreview { .. } => Self::exact(
+                access_class,
+                task,
+                ReplayPolicy::None,
+                FreshnessPolicy::IfPresent,
+                MethodEffectPolicy::DryRunPreview,
+            ),
+            OwnerPipelineBranch::CommitMutation { .. } => Self::exact(
+                access_class,
+                task,
+                ReplayPolicy::Committed,
+                FreshnessPolicy::IfPresent,
+                MethodEffectPolicy::CoreMutation,
+            ),
+        }
+    }
 }
 
 /// Owner-selected branch shape used by the shared pipeline.
@@ -127,6 +239,39 @@ pub struct PipelineRequest {
     pub branch: OwnerPipelineBranch,
 }
 
+/// Input to the shared preflight boundary before method-specific planning.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct PipelinePreflightRequest {
+    pub method_name: MethodName,
+    pub envelope: ToolEnvelope,
+    pub request_json: Value,
+    pub invocation: InvocationContext,
+    pub policy: MethodPolicy,
+}
+
+/// Verified request context produced by the shared preflight boundary.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct VerifiedRequestContext {
+    pub project_state: ProjectStateHeader,
+    pub verified_surface: VerifiedSurfaceContext,
+    pub resolved_task_id: Option<TaskId>,
+}
+
+/// Store-backed request prepared for method-specific planning or effect routing.
+pub(crate) struct PreparedRequest {
+    pub method_name: MethodName,
+    pub envelope: ToolEnvelope,
+    pub request_hash: RequestHash,
+    pub store: CoreProjectStore,
+    pub context: VerifiedRequestContext,
+}
+
+/// Preflight may either prepare a request or return an authoritative response.
+pub(crate) enum PipelinePreflightOutcome {
+    Prepared(Box<PreparedRequest>),
+    Response(Box<PipelineResponse>),
+}
+
 /// Shared pipeline response with exact stored JSON when replayed.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PipelineResponse {
@@ -151,44 +296,74 @@ impl CoreService {
         }
     }
 
-    pub(crate) fn runtime_home(&self) -> &Path {
-        &self.runtime_home
-    }
-
     /// Runs the shared envelope, context, freshness, replay, and effect pipeline.
     pub fn execute_pipeline(&self, request: PipelineRequest) -> CoreResult<PipelineResponse> {
+        validate_branch_shape(&request.branch, request.envelope.dry_run)?;
+        let policy = MethodPolicy::for_branch(
+            request.required_access_class,
+            request.task_requirement,
+            &request.branch,
+        );
+        let preflight = PipelinePreflightRequest {
+            method_name: request.method_name,
+            envelope: request.envelope,
+            request_json: request.request_json,
+            invocation: request.invocation,
+            policy,
+        };
+        match self.prepare_request(preflight)? {
+            PipelinePreflightOutcome::Prepared(prepared) => {
+                self.execute_prepared_request(*prepared, request.branch)
+            }
+            PipelinePreflightOutcome::Response(response) => Ok(*response),
+        }
+    }
+
+    /// Runs the authoritative preflight sequence before method-specific planning.
+    pub(crate) fn prepare_request(
+        &self,
+        request: PipelinePreflightRequest,
+    ) -> CoreResult<PipelinePreflightOutcome> {
         let envelope_errors = validate_envelope(&request.envelope, &request.request_json);
         if !envelope_errors.is_empty() {
-            return response_from_rejected(
+            return response_outcome_from_rejected(
                 rejected_response(request.envelope.dry_run, None, envelope_errors),
                 None,
                 None,
             );
         }
 
-        validate_branch_shape(&request.branch, request.envelope.dry_run)?;
+        let committed_envelope_errors =
+            validate_committed_effect_envelope(&request.envelope, &request.policy);
+        if !committed_envelope_errors.is_empty() {
+            return response_outcome_from_rejected(
+                rejected_response(request.envelope.dry_run, None, committed_envelope_errors),
+                None,
+                None,
+            );
+        }
+
         let request_hash = canonical_request_hash(&request.request_json)?;
 
-        let mut store =
-            match CoreProjectStore::open(&self.runtime_home, &request.envelope.project_id) {
-                Ok(store) => store,
-                Err(error) => {
-                    return response_from_rejected(
-                        rejected_response(
-                            request.envelope.dry_run,
-                            None,
-                            vec![store_unavailable_error(error)],
-                        ),
+        let store = match CoreProjectStore::open(&self.runtime_home, &request.envelope.project_id) {
+            Ok(store) => store,
+            Err(error) => {
+                return response_outcome_from_rejected(
+                    rejected_response(
+                        request.envelope.dry_run,
                         None,
-                        None,
-                    );
-                }
-            };
+                        vec![store_unavailable_error(error)],
+                    ),
+                    None,
+                    None,
+                );
+            }
+        };
 
         let project_state = match store.project_state() {
             Ok(project_state) => project_state,
             Err(error) => {
-                return response_from_rejected(
+                return response_outcome_from_rejected(
                     rejected_response(
                         request.envelope.dry_run,
                         None,
@@ -208,7 +383,7 @@ impl CoreService {
         ) {
             Ok(context) => context,
             Err(error) => {
-                return response_from_rejected(
+                return response_outcome_from_rejected(
                     rejected_response(
                         request.envelope.dry_run,
                         Some(project_state.state_version),
@@ -220,25 +395,27 @@ impl CoreService {
             }
         };
 
-        if let Some(precedence_response) = precedence_response(
+        if let Some(replay_response) = replay_preflight_response(
             &store,
             &request,
             &request_hash,
             &project_state,
             &verified_surface,
         )? {
-            return Ok(precedence_response);
+            return Ok(PipelinePreflightOutcome::Response(Box::new(
+                replay_response,
+            )));
         }
 
         let resolved_task_id = match resolve_task(
             &store,
             &project_state,
             &request.envelope,
-            request.task_requirement,
+            request.policy.task.clone(),
         ) {
             Ok(task_id) => task_id,
             Err(error) => {
-                return response_from_rejected(
+                return response_outcome_from_rejected(
                     rejected_response(
                         request.envelope.dry_run,
                         Some(project_state.state_version),
@@ -250,26 +427,60 @@ impl CoreService {
             }
         };
 
-        if verified_surface.access_class != request.required_access_class {
-            return response_from_rejected(
+        if let Some(freshness_response) = freshness_preflight_response(
+            &request,
+            &project_state,
+            Some(verified_surface.clone()),
+            resolved_task_id.clone(),
+        )? {
+            return Ok(PipelinePreflightOutcome::Response(Box::new(
+                freshness_response,
+            )));
+        }
+
+        if let Some(error) = method_access_error(request.policy.access, &verified_surface) {
+            return response_outcome_from_rejected(
                 rejected_response(
                     request.envelope.dry_run,
                     Some(project_state.state_version),
-                    vec![capability_insufficient_error(
-                        request.required_access_class,
-                        verified_surface.access_class,
-                    )],
+                    vec![error],
                 ),
                 Some(verified_surface),
                 resolved_task_id,
             );
         }
 
-        match request.branch {
+        Ok(PipelinePreflightOutcome::Prepared(Box::new(
+            PreparedRequest {
+                method_name: request.method_name,
+                envelope: request.envelope,
+                request_hash,
+                store,
+                context: VerifiedRequestContext {
+                    project_state,
+                    verified_surface,
+                    resolved_task_id,
+                },
+            },
+        )))
+    }
+
+    /// Routes a prepared request to the selected storage/effect branch.
+    pub(crate) fn execute_prepared_request(
+        &self,
+        mut prepared: PreparedRequest,
+        branch: OwnerPipelineBranch,
+    ) -> CoreResult<PipelineResponse> {
+        validate_branch_shape(&branch, prepared.envelope.dry_run)?;
+        let project_state = prepared.context.project_state.clone();
+        let verified_surface = prepared.context.verified_surface.clone();
+        let resolved_task_id = prepared.context.resolved_task_id.clone();
+
+        match branch {
             OwnerPipelineBranch::ReadOnly { result_fields } => {
                 let base = method_result_base(
                     EffectKind::ReadOnly,
-                    request.envelope.dry_run,
+                    prepared.envelope.dry_run,
                     Some(project_state.state_version),
                     Vec::new(),
                 );
@@ -322,11 +533,11 @@ impl CoreService {
                     }
                 };
                 commit_mutation(
-                    &mut store,
+                    &mut prepared.store,
                     CommitPipelineArgs {
-                        envelope: &request.envelope,
-                        method_name: request.method_name,
-                        request_hash: &request_hash,
+                        envelope: &prepared.envelope,
+                        method_name: prepared.method_name,
+                        request_hash: &prepared.request_hash,
                         result_fields,
                         event_kind,
                         event_payload,
@@ -464,6 +675,28 @@ fn validate_envelope(envelope: &ToolEnvelope, request_json: &Value) -> Vec<ToolE
     errors
 }
 
+fn validate_committed_effect_envelope(
+    envelope: &ToolEnvelope,
+    policy: &MethodPolicy,
+) -> Vec<ToolError> {
+    if envelope.dry_run || policy.effect != MethodEffectPolicy::CoreMutation {
+        return Vec::new();
+    }
+    if envelope.idempotency_key.is_none() {
+        return vec![validation_error(
+            "idempotency_key",
+            "committed mutations require idempotency_key",
+        )];
+    }
+    if envelope.expected_state_version.is_none() {
+        return vec![validation_error(
+            "expected_state_version",
+            "committed mutations require expected_state_version",
+        )];
+    }
+    Vec::new()
+}
+
 fn validate_branch_shape(branch: &OwnerPipelineBranch, dry_run: bool) -> CoreResult<()> {
     match (branch, dry_run) {
         (OwnerPipelineBranch::ReadOnly { result_fields }, _) => ensure_no_base_field(result_fields),
@@ -515,84 +748,104 @@ fn ensure_no_base_field(result_fields: &JsonObject) -> CoreResult<()> {
     }
 }
 
-fn precedence_response(
+fn replay_preflight_response(
     store: &CoreProjectStore,
-    request: &PipelineRequest,
+    request: &PipelinePreflightRequest,
     request_hash: &RequestHash,
     project_state: &ProjectStateHeader,
     verified_surface: &VerifiedSurfaceContext,
 ) -> CoreResult<Option<PipelineResponse>> {
-    let branch_needs_freshness = matches!(
-        request.branch,
-        OwnerPipelineBranch::CommitMutation { .. }
-            | OwnerPipelineBranch::DryRunPreview { .. }
-            | OwnerPipelineBranch::NoEffectResult { .. }
-    );
+    if request.policy.replay != ReplayPolicy::Committed || request.envelope.dry_run {
+        return Ok(None);
+    }
+    let Some(idempotency_key) = &request.envelope.idempotency_key else {
+        return Ok(None);
+    };
+    let Some(record) = store.tool_invocation(request.method_name, idempotency_key)? else {
+        return Ok(None);
+    };
 
-    if matches!(request.branch, OwnerPipelineBranch::CommitMutation { .. }) {
-        if let Some(idempotency_key) = &request.envelope.idempotency_key {
-            if let Some(record) = store.tool_invocation(request.method_name, idempotency_key)? {
-                let replay_context = replay_context_from_verified_surface(verified_surface);
-                if !record.matches_verified_replay_context(&replay_context) {
-                    return Ok(Some(response_from_rejected(
-                        replay_context_mismatch_response(
-                            request.envelope.dry_run,
-                            project_state.state_version,
-                        ),
-                        Some(verified_surface.clone()),
-                        None,
-                    )?));
-                }
-                if record.request_hash == request_hash.as_str() {
-                    return Ok(Some(response_from_json_string(
-                        record.response_json,
-                        Some(verified_surface.clone()),
-                        None,
-                        true,
-                    )?));
-                }
-                return Ok(Some(response_from_rejected(
-                    rejected_response(
-                        request.envelope.dry_run,
-                        Some(project_state.state_version),
-                        vec![idempotency_conflict_error(
-                            project_state.state_version,
-                            &request.envelope.project_id,
-                            request.envelope.task_id.as_ref(),
-                            idempotency_key,
-                            &record.request_hash,
-                            request_hash.as_str(),
-                        )],
-                    ),
-                    Some(verified_surface.clone()),
-                    None,
-                )?));
-            }
-        }
+    let replay_context = replay_context_from_verified_surface(verified_surface);
+    if !record.matches_verified_replay_context(&replay_context) {
+        return Ok(Some(response_from_rejected(
+            replay_context_mismatch_response(request.envelope.dry_run, project_state.state_version),
+            Some(verified_surface.clone()),
+            None,
+        )?));
+    }
+    if record.request_hash == request_hash.as_str() {
+        return Ok(Some(response_from_json_string(
+            record.response_json,
+            Some(verified_surface.clone()),
+            None,
+            true,
+        )?));
+    }
+    Ok(Some(response_from_rejected(
+        rejected_response(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            vec![idempotency_conflict_error(
+                project_state.state_version,
+                &request.envelope.project_id,
+                request.envelope.task_id.as_ref(),
+                idempotency_key,
+                &record.request_hash,
+                request_hash.as_str(),
+            )],
+        ),
+        Some(verified_surface.clone()),
+        None,
+    )?))
+}
+
+fn freshness_preflight_response(
+    request: &PipelinePreflightRequest,
+    project_state: &ProjectStateHeader,
+    verified_surface: Option<VerifiedSurfaceContext>,
+    resolved_task_id: Option<TaskId>,
+) -> CoreResult<Option<PipelineResponse>> {
+    if request.policy.freshness == FreshnessPolicy::None {
+        return Ok(None);
+    }
+    let Some(expected_state_version) = request.envelope.expected_state_version else {
+        return Ok(None);
+    };
+    if expected_state_version == project_state.state_version {
+        return Ok(None);
     }
 
-    if branch_needs_freshness {
-        if let Some(expected_state_version) = request.envelope.expected_state_version {
-            if expected_state_version != project_state.state_version {
-                return Ok(Some(response_from_rejected(
-                    rejected_response(
-                        request.envelope.dry_run,
-                        Some(project_state.state_version),
-                        vec![stale_expected_state_error(
-                            project_state.state_version,
-                            expected_state_version,
-                            &request.envelope.project_id,
-                            request.envelope.task_id.as_ref(),
-                        )],
-                    ),
-                    None,
-                    None,
-                )?));
-            }
-        }
-    }
+    Ok(Some(response_from_rejected(
+        rejected_response(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            vec![stale_expected_state_error(
+                project_state.state_version,
+                expected_state_version,
+                &request.envelope.project_id,
+                request.envelope.task_id.as_ref(),
+            )],
+        ),
+        verified_surface,
+        resolved_task_id,
+    )?))
+}
 
-    Ok(None)
+fn method_access_error(
+    policy: MethodAccessPolicy,
+    verified_surface: &VerifiedSurfaceContext,
+) -> Option<ToolError> {
+    match policy {
+        MethodAccessPolicy::Exact(required_access_class)
+            if verified_surface.access_class != required_access_class =>
+        {
+            Some(capability_insufficient_error(
+                required_access_class,
+                verified_surface.access_class,
+            ))
+        }
+        MethodAccessPolicy::Exact(_) | MethodAccessPolicy::VerifiedGrantOnly => None,
+    }
 }
 
 fn derive_verified_surface(
@@ -791,6 +1044,7 @@ fn resolve_task(
             let task_id = TaskId::new(active_task_id.clone());
             ensure_task_exists(store, &task_id).map(Some)
         }
+        TaskRequirement::Exact(task_id) => ensure_task_exists(store, &task_id).map(Some),
     }
 }
 
@@ -960,6 +1214,15 @@ fn response_from_rejected(
         resolved_task_id,
         false,
     )
+}
+
+fn response_outcome_from_rejected(
+    response: ToolRejectedResponse,
+    verified_surface: Option<VerifiedSurfaceContext>,
+    resolved_task_id: Option<TaskId>,
+) -> CoreResult<PipelinePreflightOutcome> {
+    response_from_rejected(response, verified_surface, resolved_task_id)
+        .map(|response| PipelinePreflightOutcome::Response(Box::new(response)))
 }
 
 fn response_from_dry_run(
