@@ -11,9 +11,9 @@ use harness_store::{
         CoreProjectStore, CoreStorageMutation, EvidenceSummaryRecord, EvidenceSummaryUpsert,
         ProjectStateHeader, RunInsert, StoredArtifactRecord, StoredArtifactStagingRecord,
         StoredRecordRef, TaskCloseBasisUpdate, TaskCloseUpdate, TaskInsert, TaskRecord,
-        TaskScopeRevisionUpdate, TaskScopeUpdate, UserJudgmentInsert, UserJudgmentRecord,
-        UserJudgmentResolutionUpdate, WriteAuthorizationConsumption, WriteAuthorizationInsert,
-        WriteAuthorizationRecord,
+        TaskScopeRevisionUpdate, TaskScopeUpdate, UserJudgmentInsert, UserJudgmentInvalidation,
+        UserJudgmentRecord, UserJudgmentResolutionUpdate, WriteAuthorizationConsumption,
+        WriteAuthorizationInsert, WriteAuthorizationRecord,
     },
     StoreError,
 };
@@ -23,18 +23,19 @@ use harness_types::{
     ChangeUnitOperation, CloseIntent, CloseReadinessBlocker, CloseReadinessBlockerCategory,
     CloseReason, CloseState, CloseTaskRequest, CloseTaskResult, CompletionPolicy,
     CurrentCloseBasis, DryRunSummary, DurableIdKind, EffectKind, ErrorCode, EvidenceCoverageItem,
-    EvidenceCoverageState, EvidenceStatus, EvidenceSummary, JsonObject, JudgmentKind,
-    MethodAccessClass, MethodName, NextActionKind, NextActionSummary, ObservedChanges,
-    PlannedEffect, PrepareWriteRequest, PrepareWriteResult, ProjectId, RecordId, RecordRunRequest,
-    RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
-    RequestedMode, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId, RunSummary,
-    SensitiveActionScope, StageArtifactRequest, StageArtifactResult, StagedArtifactHandle,
-    StagedArtifactHandleId, StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude,
-    StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId, TaskId, TaskLifecyclePhase,
-    TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
-    UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentResolution,
-    UserJudgmentStatus, WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
-    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
+    EvidenceCoverageState, EvidenceStatus, EvidenceSummary, JsonObject, JudgmentBasis,
+    JudgmentBasisCompatibilityStatus, JudgmentKind, MethodAccessClass, MethodName, NextActionKind,
+    NextActionSummary, ObservedChanges, PlannedEffect, PrepareWriteRequest, PrepareWriteResult,
+    ProjectId, RecordId, RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload,
+    RecordUserJudgmentRequest, RedactionState, RequestedMode, RequiredNullable, ResidualRisk,
+    ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId, RunSummary, StageArtifactRequest,
+    StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind,
+    StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef, SurfaceId,
+    SurfaceInstanceId, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
+    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
+    UserJudgmentOption, UserJudgmentResolution, UserJudgmentStatus, WriteAuthoritySummary,
+    WriteAuthorizationId, WriteAuthorizationStatus, WriteAuthorizationSummary,
+    WriteDecisionCategory, WriteDecisionReason,
 };
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -48,13 +49,22 @@ use crate::pipeline::{
     VerifiedSurfaceContext,
 };
 use crate::policy::{
-    close_readiness::{close_blocker, close_next_action, is_terminal_lifecycle},
+    close_readiness::{
+        accepted_risk_ids_within_basis, close_basis_is_current, close_blocker, close_next_action,
+        current_acceptance_required_risk_ids, current_final_acceptance,
+        current_residual_risk_acceptance_coverage, current_scope_decision,
+        final_acceptance_basis_matches_current, final_acceptance_requirement,
+        is_terminal_lifecycle, judgment_has_current_basis, residual_risk_basis_matches_current,
+        JudgmentAuthority,
+    },
     evidence::{evidence_status_for_items, unique_artifact_refs},
     path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
     write_authorization::{
-        format_utc_timestamp, prepare_write_decision, prepare_write_dry_run_summary,
-        surface_supports_prepare_write, write_authorization_expires_at,
-        write_authorization_guarantee, write_authorization_is_expired, write_decision_reason,
+        current_sensitive_approval, format_utc_timestamp, normalize_sensitive_action_scope,
+        prepare_write_decision, prepare_write_dry_run_summary,
+        sensitive_action_scope_matches_requirement, surface_supports_prepare_write,
+        write_authorization_expires_at, write_authorization_guarantee,
+        write_authorization_is_expired, write_decision_reason, SensitiveApprovalRequirement,
     },
 };
 
@@ -346,6 +356,58 @@ fn decode_required_json_object(
     decode_required_json(table, record_ref, logical_column, raw)
 }
 
+fn user_judgment_authority_from_record(
+    record: &UserJudgmentRecord,
+) -> CoreResult<JudgmentAuthority> {
+    let basis_status = parse_storage_value("user_judgments.basis_status", &record.basis_status)?;
+    let mut basis: Option<JudgmentBasis> = decode_optional_json(
+        "user_judgments",
+        record.judgment_id.clone(),
+        "basis_json",
+        record.basis_json.as_deref(),
+    )?;
+    if let Some(basis) = &mut basis {
+        basis.compatibility_status = basis_status;
+    }
+    Ok(JudgmentAuthority {
+        judgment_id: record.judgment_id.clone(),
+        task_id: TaskId::new(record.task_id.clone()),
+        judgment_kind: parse_storage_value("user_judgments.judgment_kind", &record.judgment_kind)?,
+        status: parse_storage_value("user_judgments.status", &record.status)?,
+        basis_status,
+        basis,
+        resolution: decode_optional_json(
+            "user_judgments",
+            record.judgment_id.clone(),
+            "resolution_json",
+            record.resolution_json.as_deref(),
+        )?,
+    })
+}
+
+fn resolved_judgment_authorities_for_plan(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    envelope: &ToolEnvelope,
+    task_id: &TaskId,
+    judgment_kind: JudgmentKind,
+) -> Result<Vec<JudgmentAuthority>, PlanError> {
+    let kind = storage_value(judgment_kind)?;
+    store
+        .resolved_user_judgment_records(task_id, &kind)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .iter()
+        .map(user_judgment_authority_from_record)
+        .collect::<CoreResult<Vec<_>>>()
+        .map_err(PlanError::Core)
+}
+
 fn storage_value<T>(value: T) -> CoreResult<String>
 where
     T: serde::Serialize,
@@ -549,6 +611,7 @@ fn matching_sensitive_approval(
     project_state: &ProjectStateHeader,
     request: &PrepareWriteRequest,
     task_id: &TaskId,
+    task: &TaskRecord,
     change_unit: Option<&ChangeUnitRecord>,
     normalized_paths: &[String],
 ) -> Result<Option<UserJudgmentRecord>, PlanError> {
@@ -569,57 +632,30 @@ fn matching_sensitive_approval(
         )))
     })?;
 
+    let Some(change_unit) = change_unit else {
+        return Ok(None);
+    };
+    let change_unit_id = ChangeUnitId::new(change_unit.change_unit_id.clone());
+    let requirement = SensitiveApprovalRequirement {
+        task_id,
+        change_unit_id: &change_unit_id,
+        scope_revision: task.scope_revision,
+        operation: &request.intended_operation,
+        normalized_paths,
+        sensitive_categories: &request.sensitive_categories,
+        baseline_ref: Some(&request.baseline_ref),
+        now: &now,
+        repo_root: &store.project_record().repo_root,
+    };
+
     for record in records {
-        if !record
-            .change_unit_id
-            .as_deref()
-            .map(|record_change_unit_id| {
-                change_unit.map(|change_unit| change_unit.change_unit_id.as_str())
-                    == Some(record_change_unit_id)
-            })
-            .unwrap_or(true)
-        {
-            continue;
-        }
-        let scope = decode_required_json::<SensitiveActionScope>(
-            "user_judgments",
-            record.judgment_id.clone(),
-            "sensitive_action_scope_json",
-            Some(&record.sensitive_action_scope_json),
-        )?;
-        if sensitive_scope_matches(
-            &store.project_record().repo_root,
-            &request.sensitive_categories,
-            normalized_paths,
-            &scope,
-            &now,
-        ) {
+        let authority = user_judgment_authority_from_record(&record)?;
+        if current_sensitive_approval(&authority, &requirement) {
             return Ok(Some(record));
         }
     }
 
     Ok(None)
-}
-
-fn sensitive_scope_matches(
-    repo_root: &Path,
-    sensitive_categories: &[String],
-    normalized_paths: &[String],
-    scope: &SensitiveActionScope,
-    now: &str,
-) -> bool {
-    if scope
-        .expires_at
-        .as_deref()
-        .is_some_and(|expires_at| expires_at <= now)
-    {
-        return false;
-    }
-    let Ok(scope_paths) = normalize_product_paths(repo_root, &scope.intended_paths) else {
-        return false;
-    };
-    string_set(sensitive_categories) == string_set(&scope.sensitive_categories)
-        && string_set(normalized_paths) == string_set(&scope_paths)
 }
 
 fn string_set(values: &[String]) -> BTreeSet<&str> {
@@ -816,6 +852,23 @@ fn no_active_change_unit_response(
         state_version,
         vec![tool_error(
             ErrorCode::NoActiveChangeUnit,
+            message,
+            false,
+            None,
+        )],
+    )
+}
+
+fn decision_rejected_response(
+    envelope: &ToolEnvelope,
+    state_version: Option<u64>,
+    message: &'static str,
+) -> PipelineResponse {
+    infallible_rejected_pipeline_response(
+        envelope.dry_run,
+        state_version,
+        vec![tool_error(
+            ErrorCode::DecisionUnresolved,
             message,
             false,
             None,

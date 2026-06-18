@@ -10,8 +10,8 @@ use crate::schema::{
     AcceptedRiskInput, ArtifactInput, ArtifactRef, CloseAssessmentInput, CloseReadinessBlocker,
     CurrentCloseBasis, EvidenceCoverageItem, EvidenceSummary, GuaranteeDisplay, JsonObject,
     NextActionSummary, ObservedChanges, RecordUserJudgmentPayload, RequiredNullable,
-    RiskAcceptanceCoverage, RunSummary, StagedArtifactHandle, StateRecordRef, StateSummary,
-    ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
+    RiskAcceptanceCoverage, RunSummary, SensitiveActionScope, StagedArtifactHandle, StateRecordRef,
+    StateSummary, ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
     UserJudgmentContext, UserJudgmentOption, WriteAuthorizationSummary, WriteDecisionReason,
 };
 use crate::values::{
@@ -316,6 +316,8 @@ pub struct RequestUserJudgmentRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
     pub change_unit_id: RequiredNullable<ChangeUnitId>,
+    #[serde(default)]
+    pub sensitive_action_scope: RequiredNullable<SensitiveActionScope>,
     pub judgment_kind: JudgmentKind,
     pub presentation: JudgmentPresentation,
     pub question: String,

@@ -103,6 +103,12 @@ impl<T> From<Option<T>> for RequiredNullable<T> {
     }
 }
 
+impl<T> Default for RequiredNullable<T> {
+    fn default() -> Self {
+        Self::null()
+    }
+}
+
 impl<T> From<T> for RequiredNullable<T> {
     fn from(value: T) -> Self {
         Self::some(value)

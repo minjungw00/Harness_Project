@@ -200,7 +200,7 @@ fn plan_request_user_judgment(
                 error,
             )))
         })?;
-    let branch_change_unit_id = if let Some(change_unit_id) = request.change_unit_id.as_ref() {
+    let requested_change_unit_id = if let Some(change_unit_id) = request.change_unit_id.as_ref() {
         let existing = store
             .change_unit_record(&request.task_id, change_unit_id.as_str())
             .map_err(|error| {
@@ -228,6 +228,23 @@ fn plan_request_user_judgment(
     } else {
         None
     };
+    let mut judgment_context = request.context.clone();
+    let basis = build_request_judgment_basis(
+        store,
+        project_state,
+        &request,
+        &task,
+        current_change_unit.as_ref(),
+        requested_change_unit_id.as_ref(),
+        &mut judgment_context,
+    )?;
+    let branch_change_unit_id = basis.change_unit_id.as_ref().cloned();
+    let stored_sensitive_action_scope_json = basis
+        .sensitive_action_scope
+        .as_ref()
+        .map(serde_json::to_string)
+        .transpose()?
+        .unwrap_or_else(|| "{}".to_owned());
 
     let requested_at = store.current_timestamp().map_err(|error| {
         PlanError::Response(Box::new(store_error_response(
@@ -248,15 +265,15 @@ fn plan_request_user_judgment(
         judgment_id: judgment_id.clone(),
         project_id: request.envelope.project_id.clone(),
         task_id: request.task_id.clone(),
-        change_unit_id: request.change_unit_id.clone().into_option(),
+        change_unit_id: branch_change_unit_id.clone(),
         judgment_kind: request.judgment_kind,
         status: UserJudgmentStatus::Pending,
         presentation: request.presentation,
         question: request.question.clone(),
         options: request.options.clone(),
-        context: request.context.clone(),
+        context: judgment_context.clone(),
         affected_refs: request.affected_refs.clone(),
-        basis: None,
+        basis: Some(basis.clone()),
         required_for: request.required_for,
         resolution: None,
         expires_at: request.expires_at.clone().into_option(),
@@ -328,8 +345,7 @@ fn plan_request_user_judgment(
         UserJudgmentInsert {
             judgment_id: judgment_id.as_str().to_owned(),
             task_id: request.task_id.as_str().to_owned(),
-            change_unit_id: request
-                .change_unit_id
+            change_unit_id: branch_change_unit_id
                 .as_ref()
                 .map(|id| id.as_str().to_owned()),
             judgment_kind: storage_value(request.judgment_kind)?,
@@ -339,13 +355,13 @@ fn plan_request_user_judgment(
                 "required_for": request.required_for,
                 "expires_at": request.expires_at
             }))?,
-            context_json: serde_json::to_string(&request.context)?,
+            context_json: serde_json::to_string(&judgment_context)?,
             options_json: serde_json::to_string(&request.options)?,
             affected_refs_json: serde_json::to_string(&request.affected_refs)?,
-            artifact_refs_json: serde_json::to_string(&request.context.artifact_refs)?,
-            sensitive_action_scope_json: "{}".to_owned(),
-            basis_json: None,
-            basis_status: harness_types::JudgmentBasisCompatibilityStatus::LegacyUnbound,
+            artifact_refs_json: serde_json::to_string(&judgment_context.artifact_refs)?,
+            sensitive_action_scope_json: stored_sensitive_action_scope_json,
+            basis_json: Some(serde_json::to_string(&basis)?),
+            basis_status: harness_types::JudgmentBasisCompatibilityStatus::Current,
             requested_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
             requested_by_surface_instance_id: verified_surface
                 .surface_instance_id
@@ -376,6 +392,491 @@ fn plan_request_user_judgment(
         result_fields: strip_base(serde_json::to_value(result)?)?,
         next_actions,
     })
+}
+
+fn build_request_judgment_basis(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &harness_types::RequestUserJudgmentRequest,
+    task: &TaskRecord,
+    current_change_unit: Option<&ChangeUnitRecord>,
+    requested_change_unit_id: Option<&ChangeUnitId>,
+    context: &mut UserJudgmentContext,
+) -> Result<JudgmentBasis, PlanError> {
+    let current_scope = StoredScope::from_task(task)?;
+    let current_baseline = current_scope.baseline_ref.clone().map(BaselineRef::new);
+    let current_change_unit_id = current_change_unit
+        .as_ref()
+        .map(|record| ChangeUnitId::new(record.change_unit_id.clone()));
+
+    let mut basis = JudgmentBasis {
+        task_id: request.task_id.clone(),
+        change_unit_id: current_change_unit_id.clone().into(),
+        scope_revision: task.scope_revision,
+        close_basis_revision: RequiredNullable::null(),
+        baseline_ref: current_baseline.clone().into(),
+        result_refs: Vec::new(),
+        residual_risk_ids: Vec::new(),
+        sensitive_action_scope: RequiredNullable::null(),
+        created_at_state_version: project_state.state_version,
+        compatibility_status: JudgmentBasisCompatibilityStatus::Current,
+    };
+
+    match request.judgment_kind {
+        JudgmentKind::FinalAcceptance => {
+            let close_basis = current_close_basis_for_judgment(
+                store,
+                project_state,
+                request,
+                task,
+                current_change_unit,
+            )?;
+            basis.change_unit_id = Some(close_basis.change_unit_id.clone()).into();
+            basis.close_basis_revision = Some(close_basis.close_basis_revision).into();
+            basis.baseline_ref = close_basis.baseline_ref.clone();
+            basis.result_refs = close_basis.result_refs.clone();
+            basis.residual_risk_ids = close_basis
+                .residual_risks
+                .iter()
+                .map(|risk| risk.risk_id.clone())
+                .collect();
+        }
+        JudgmentKind::ResidualRiskAcceptance => {
+            let close_basis = current_close_basis_for_judgment(
+                store,
+                project_state,
+                request,
+                task,
+                current_change_unit,
+            )?;
+            let required_risk_ids = current_acceptance_required_risk_ids(&close_basis);
+            if required_risk_ids.is_empty() {
+                let response = rejected_pipeline_response(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    vec![tool_error(
+                        ErrorCode::AcceptanceRequired,
+                        "residual-risk acceptance requires at least one current acceptance-required risk",
+                        false,
+                        None,
+                    )],
+                )
+                .map_err(PlanError::Core)?;
+                return Err(PlanError::Response(Box::new(response)));
+            }
+            basis.change_unit_id = Some(close_basis.change_unit_id.clone()).into();
+            basis.close_basis_revision = Some(close_basis.close_basis_revision).into();
+            basis.baseline_ref = close_basis.baseline_ref.clone();
+            basis.result_refs = close_basis.result_refs.clone();
+            basis.residual_risk_ids = close_basis
+                .residual_risks
+                .iter()
+                .filter(|risk| risk.acceptance_required)
+                .map(|risk| risk.risk_id.clone())
+                .collect();
+            context.visible_risks = close_basis
+                .residual_risks
+                .iter()
+                .filter(|risk| risk.acceptance_required)
+                .map(|risk| harness_types::AcceptedRiskInput {
+                    risk_id: risk.risk_id.clone(),
+                    summary: risk.summary.clone(),
+                    consequence: risk.consequence.clone(),
+                    related_refs: risk.source_refs.clone(),
+                    accepted_for_close: true,
+                })
+                .collect();
+        }
+        JudgmentKind::SensitiveApproval => {
+            let Some(current_change_unit_id) = current_change_unit_id.as_ref() else {
+                return Err(PlanError::Response(Box::new(
+                    no_active_change_unit_response(
+                        &request.envelope,
+                        Some(project_state.state_version),
+                        "sensitive approval requires a current Change Unit",
+                    ),
+                )));
+            };
+            if requested_change_unit_id.is_some_and(|requested| requested != current_change_unit_id)
+            {
+                return validation_plan_error(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    "change_unit_id",
+                    "sensitive approval must address the current Change Unit",
+                )
+                .map(|()| basis);
+            }
+            let Some(scope) = request.sensitive_action_scope.as_ref() else {
+                return validation_plan_error(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    "sensitive_action_scope",
+                    "sensitive approval requests must include the exact SensitiveActionScope",
+                )
+                .map(|()| basis);
+            };
+            let normalized_scope =
+                normalize_sensitive_action_scope(&store.project_record().repo_root, scope)
+                    .map_err(|error| match error {
+                        ProductPathError::Invalid => PlanError::Response(Box::new(
+                            validation_rejected(
+                                request.envelope.dry_run,
+                                Some(project_state.state_version),
+                                "sensitive_action_scope.intended_paths",
+                                "sensitive action paths must be valid Product Repository paths",
+                            )
+                            .expect("validation response should serialize"),
+                        )),
+                        ProductPathError::LocalAccess => PlanError::Response(Box::new(
+                            rejected_pipeline_response(
+                                request.envelope.dry_run,
+                                Some(project_state.state_version),
+                                vec![tool_error(
+                                    ErrorCode::LocalAccessMismatch,
+                                    "sensitive action paths resolve outside the Product Repository",
+                                    false,
+                                    None,
+                                )],
+                            )
+                            .expect("rejected response should serialize"),
+                        )),
+                    })?;
+            basis.change_unit_id = Some(current_change_unit_id.clone()).into();
+            basis.sensitive_action_scope = Some(normalized_scope).into();
+        }
+        JudgmentKind::ProductDecision
+        | JudgmentKind::TechnicalDecision
+        | JudgmentKind::ScopeDecision
+        | JudgmentKind::Cancellation => {
+            if request.sensitive_action_scope.is_some() {
+                return validation_plan_error(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    "sensitive_action_scope",
+                    "sensitive_action_scope is only valid for sensitive_approval judgments",
+                )
+                .map(|()| basis);
+            }
+            if let Some(requested_change_unit_id) = requested_change_unit_id {
+                basis.change_unit_id = Some(requested_change_unit_id.clone()).into();
+            }
+        }
+    }
+
+    Ok(basis)
+}
+
+fn current_close_basis_for_judgment(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &harness_types::RequestUserJudgmentRequest,
+    task: &TaskRecord,
+    current_change_unit: Option<&ChangeUnitRecord>,
+) -> Result<CurrentCloseBasis, PlanError> {
+    if current_change_unit.is_none() {
+        return Err(PlanError::Response(Box::new(
+            no_active_change_unit_response(
+                &request.envelope,
+                Some(project_state.state_version),
+                "close-basis judgments require a current Change Unit",
+            ),
+        )));
+    }
+    let task_revision = store
+        .task_revision_record(&request.task_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .ok_or_else(|| {
+            PlanError::Response(Box::new(no_active_task_response(
+                &request.envelope,
+                project_state,
+            )))
+        })?;
+    let Some(close_basis) = task_revision.current_close_basis else {
+        return Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "current close basis is required before requesting this judgment",
+        ))));
+    };
+    let current_baseline = StoredScope::from_task(task)?.baseline_ref;
+    if !close_basis_is_current(
+        &close_basis,
+        &request.task_id,
+        current_change_unit.map(|record| record.change_unit_id.as_str()),
+        task.scope_revision,
+        task.close_basis_revision,
+        current_baseline.as_deref(),
+    ) {
+        return Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "current close basis is stale for this judgment request",
+        ))));
+    }
+    if request
+        .change_unit_id
+        .as_ref()
+        .is_some_and(|change_unit_id| change_unit_id != &close_basis.change_unit_id)
+    {
+        return validation_plan_error(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            "change_unit_id",
+            "close-basis judgments must address the current close-basis Change Unit",
+        )
+        .map(|()| close_basis);
+    }
+    Ok(close_basis)
+}
+
+fn validate_pending_judgment_basis_for_answer(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &RecordUserJudgmentRequest,
+    record: &UserJudgmentRecord,
+    task: &TaskRecord,
+    current_change_unit: Option<&ChangeUnitRecord>,
+) -> Result<RecordUserJudgmentPayload, PlanError> {
+    let authority = user_judgment_authority_from_record(record)?;
+    if !judgment_has_current_basis(&authority) {
+        return Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "pending user-owned judgment basis is not current",
+        ))));
+    }
+    if request.judgment_kind != JudgmentKind::ResidualRiskAcceptance
+        && !request.accepted_risks.is_empty()
+    {
+        return validation_plan_error(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            "accepted_risks",
+            "accepted_risks may only be supplied for residual_risk_acceptance judgments",
+        )
+        .map(|()| request.answer.clone());
+    }
+
+    let Some(basis) = authority.basis.as_ref() else {
+        return Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "pending user-owned judgment basis is unavailable",
+        ))));
+    };
+
+    match request.judgment_kind {
+        JudgmentKind::FinalAcceptance => {
+            let close_basis = current_close_basis_for_answer(
+                store,
+                project_state,
+                request,
+                task,
+                current_change_unit,
+            )?;
+            let requirement = final_acceptance_requirement(&close_basis);
+            if !final_acceptance_basis_matches_current(basis, &requirement) {
+                return Err(PlanError::Response(Box::new(decision_rejected_response(
+                    &request.envelope,
+                    Some(project_state.state_version),
+                    "pending final-acceptance judgment is stale against the current close basis",
+                ))));
+            }
+            Ok(request.answer.clone())
+        }
+        JudgmentKind::ResidualRiskAcceptance => {
+            let close_basis = current_close_basis_for_answer(
+                store,
+                project_state,
+                request,
+                task,
+                current_change_unit,
+            )?;
+            if !residual_risk_basis_matches_current(basis, &close_basis) {
+                return Err(PlanError::Response(Box::new(decision_rejected_response(
+                    &request.envelope,
+                    Some(project_state.state_version),
+                    "pending residual-risk judgment is stale against the current close basis",
+                ))));
+            }
+            if !accepted_risk_ids_within_basis(&request.answer, &request.accepted_risks, basis) {
+                return validation_plan_error(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    "accepted_risks",
+                    "accepted risk IDs must be inside the pending judgment basis",
+                )
+                .map(|()| request.answer.clone());
+            }
+            Ok(request.answer.clone())
+        }
+        JudgmentKind::SensitiveApproval => {
+            let Some(current_change_unit) = current_change_unit else {
+                return Err(PlanError::Response(Box::new(
+                    no_active_change_unit_response(
+                        &request.envelope,
+                        Some(project_state.state_version),
+                        "sensitive approval requires a current Change Unit",
+                    ),
+                )));
+            };
+            let Some(stored_scope) = basis.sensitive_action_scope.as_ref() else {
+                return Err(PlanError::Response(Box::new(decision_rejected_response(
+                    &request.envelope,
+                    Some(project_state.state_version),
+                    "pending sensitive approval has no bound SensitiveActionScope",
+                ))));
+            };
+            let Some(answer_scope) = request.answer.sensitive_action_scope.as_ref() else {
+                return validation_plan_error(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    "answer.sensitive_action_scope",
+                    "sensitive approval answers must include SensitiveActionScope",
+                )
+                .map(|()| request.answer.clone());
+            };
+            let normalized_answer_scope =
+                normalize_sensitive_action_scope(&store.project_record().repo_root, answer_scope)
+                    .map_err(|error| match error {
+                    ProductPathError::Invalid => PlanError::Response(Box::new(
+                        validation_rejected(
+                            request.envelope.dry_run,
+                            Some(project_state.state_version),
+                            "answer.sensitive_action_scope.intended_paths",
+                            "sensitive action paths must be valid Product Repository paths",
+                        )
+                        .expect("validation response should serialize"),
+                    )),
+                    ProductPathError::LocalAccess => PlanError::Response(Box::new(
+                        rejected_pipeline_response(
+                            request.envelope.dry_run,
+                            Some(project_state.state_version),
+                            vec![tool_error(
+                                ErrorCode::LocalAccessMismatch,
+                                "sensitive action paths resolve outside the Product Repository",
+                                false,
+                                None,
+                            )],
+                        )
+                        .expect("rejected response should serialize"),
+                    )),
+                })?;
+            let current_change_unit_id =
+                ChangeUnitId::new(current_change_unit.change_unit_id.clone());
+            let now = store.current_timestamp().map_err(|error| {
+                PlanError::Response(Box::new(store_error_response(
+                    &request.envelope,
+                    project_state,
+                    error,
+                )))
+            })?;
+            let requirement = SensitiveApprovalRequirement {
+                task_id: &authority.task_id,
+                change_unit_id: &current_change_unit_id,
+                scope_revision: task.scope_revision,
+                operation: &stored_scope.action_kind,
+                normalized_paths: &stored_scope.intended_paths,
+                sensitive_categories: &stored_scope.sensitive_categories,
+                baseline_ref: basis.baseline_ref.as_ref(),
+                now: &now,
+                repo_root: &store.project_record().repo_root,
+            };
+            if basis.task_id != authority.task_id
+                || basis.change_unit_id.as_ref() != Some(&current_change_unit_id)
+                || basis.scope_revision != task.scope_revision
+                || !sensitive_action_scope_matches_requirement(stored_scope, &requirement)
+                || normalized_answer_scope != *stored_scope
+            {
+                return validation_plan_error(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    "answer.sensitive_action_scope",
+                    "sensitive approval answer must match the stored judgment basis",
+                )
+                .map(|()| request.answer.clone());
+            }
+            let mut answer = request.answer.clone();
+            answer.sensitive_action_scope = Some(stored_scope.clone()).into();
+            Ok(answer)
+        }
+        JudgmentKind::ProductDecision
+        | JudgmentKind::TechnicalDecision
+        | JudgmentKind::ScopeDecision
+        | JudgmentKind::Cancellation => {
+            let current_change_unit_id =
+                current_change_unit.map(|record| ChangeUnitId::new(record.change_unit_id.clone()));
+            let basis_change_unit_is_current = basis.change_unit_id.as_ref().is_none()
+                || basis.change_unit_id.as_ref() == current_change_unit_id.as_ref();
+            if basis.task_id != authority.task_id
+                || basis.scope_revision != task.scope_revision
+                || !basis_change_unit_is_current
+            {
+                return Err(PlanError::Response(Box::new(decision_rejected_response(
+                    &request.envelope,
+                    Some(project_state.state_version),
+                    "pending user-owned judgment is stale against current scope",
+                ))));
+            }
+            Ok(request.answer.clone())
+        }
+    }
+}
+
+fn current_close_basis_for_answer(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &RecordUserJudgmentRequest,
+    task: &TaskRecord,
+    current_change_unit: Option<&ChangeUnitRecord>,
+) -> Result<CurrentCloseBasis, PlanError> {
+    let task_id = TaskId::new(task.task_id.clone());
+    let task_revision = store
+        .task_revision_record(&task_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+        .ok_or_else(|| {
+            PlanError::Response(Box::new(no_active_task_response(
+                &request.envelope,
+                project_state,
+            )))
+        })?;
+    let Some(close_basis) = task_revision.current_close_basis else {
+        return Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "current close basis is required for this judgment answer",
+        ))));
+    };
+    let current_baseline = StoredScope::from_task(task)?.baseline_ref;
+    if close_basis_is_current(
+        &close_basis,
+        &task_id,
+        current_change_unit.map(|record| record.change_unit_id.as_str()),
+        task.scope_revision,
+        task.close_basis_revision,
+        current_baseline.as_deref(),
+    ) {
+        Ok(close_basis)
+    } else {
+        Err(PlanError::Response(Box::new(decision_rejected_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            "current close basis is stale for this judgment answer",
+        ))))
+    }
 }
 
 fn plan_record_user_judgment(
@@ -490,9 +991,17 @@ fn plan_record_user_judgment(
             error,
         )))
     })?;
+    let answer = validate_pending_judgment_basis_for_answer(
+        store,
+        project_state,
+        &request,
+        &record,
+        &task,
+        current_change_unit.as_ref(),
+    )?;
     let resolution = UserJudgmentResolution {
         selected_option_id: request.selected_option_id.clone(),
-        answer: request.answer.clone(),
+        answer,
         note: request.note.clone().into_option(),
         accepted_risks: request.accepted_risks.clone(),
         resolved_by_actor_kind: request.envelope.actor_kind,
@@ -569,7 +1078,7 @@ fn plan_record_user_judgment(
         state,
         next_actions: next_actions.clone(),
     };
-    let sensitive_action_scope_json = request
+    let sensitive_action_scope_json = resolution
         .answer
         .sensitive_action_scope
         .as_ref()
@@ -769,13 +1278,14 @@ fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudg
         "request_json",
         Some(&record.request_json),
     )?;
+    let authority = user_judgment_authority_from_record(record)?;
     Ok(UserJudgment {
         judgment_id: harness_types::UserJudgmentId::new(record.judgment_id.clone()),
         project_id: ProjectId::new(record.project_id.clone()),
         task_id: TaskId::new(record.task_id.clone()),
         change_unit_id: record.change_unit_id.clone().map(ChangeUnitId::new),
-        judgment_kind: parse_storage_value("user_judgments.judgment_kind", &record.judgment_kind)?,
-        status: parse_storage_value("user_judgments.status", &record.status)?,
+        judgment_kind: authority.judgment_kind,
+        status: authority.status,
         presentation: request_member(
             "user_judgments.request_json.presentation",
             &request,
@@ -792,18 +1302,13 @@ fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudg
             "user_judgments.affected_refs_json",
             &record.affected_refs_json,
         )?,
-        basis: None,
+        basis: authority.basis,
         required_for: request_member(
             "user_judgments.request_json.required_for",
             &request,
             "required_for",
         )?,
-        resolution: decode_optional_json(
-            "user_judgments",
-            record.judgment_id.clone(),
-            "resolution_json",
-            record.resolution_json.as_deref(),
-        )?,
+        resolution: authority.resolution,
         expires_at: request
             .get("expires_at")
             .and_then(Value::as_str)

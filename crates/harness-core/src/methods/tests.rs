@@ -1029,13 +1029,33 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
         .as_str()
         .expect("task ref should be present")
         .to_owned();
-    let decision_ref = StateRecordRef {
-        record_kind: StateRecordKind::UserJudgment,
-        record_id: RecordId::new("uj_scope_decision"),
-        project_id: ProjectId::new(PROJECT_ID),
-        task_id: Some(TaskId::new(&task_id)).into(),
-        state_version: Some(1).into(),
-    };
+    let decision = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_scope_decision_ref_only",
+            "idem_scope_decision_ref_only",
+            false,
+            Some(1),
+            &task_id,
+            None,
+            JudgmentKind::ScopeDecision,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let decision_ref: StateRecordRef =
+        serde_json::from_value(decision.response_value["user_judgment_ref"].clone())?;
+    let decision_id = decision_ref.record_id.as_str().to_owned();
+    harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_scope_decision_ref_only_record",
+            "idem_scope_decision_ref_only_record",
+            Some(2),
+            &task_id,
+            &decision_id,
+            JudgmentKind::ScopeDecision,
+            answer_payload(JudgmentKind::ScopeDecision),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
 
     let response = harness.service.update_scope(
         UpdateScopeRequest {
@@ -1043,7 +1063,7 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
                 "req_decision_only",
                 Some("idem_decision_only"),
                 false,
-                Some(1),
+                Some(3),
                 Some(&task_id),
             ),
             task_id: TaskId::new(&task_id),
@@ -3221,12 +3241,35 @@ fn final_acceptance_does_not_substitute_for_residual_risk_acceptance() -> Result
 {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "risk")?;
+    enable_record_run_capabilities(&harness)?;
+    let mut basis_request = record_run_request(
+        "req_judgment_risk_basis",
+        "idem_judgment_risk_basis",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    basis_request.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    basis_request.close_assessment = Some(close_assessment_with_risks(
+        "Close claim supported with a residual risk.",
+        vec![residual_risk_input(
+            "Risk that still needs user acceptance.",
+        )],
+    ))
+    .into();
+    let basis_response = harness
+        .service
+        .record_run(basis_request, invocation(AccessClass::RunRecording))?;
+    let after_basis = basis_response.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version should be present");
     let pending_judgment = harness.service.request_user_judgment(
         user_judgment_request(
             "req_judgment_risk",
             "idem_judgment_risk",
             false,
-            Some(2),
+            Some(after_basis),
             &task_id,
             Some(&change_unit_id),
             JudgmentKind::ResidualRiskAcceptance,
@@ -3241,7 +3284,7 @@ fn final_acceptance_does_not_substitute_for_residual_risk_acceptance() -> Result
         record_judgment_request(
             "req_record_final_for_risk",
             "idem_record_final_for_risk",
-            Some(3),
+            Some(after_basis + 1),
             &task_id,
             &pending_judgment_id,
             JudgmentKind::ResidualRiskAcceptance,
@@ -3249,6 +3292,510 @@ fn final_acceptance_does_not_substitute_for_residual_risk_acceptance() -> Result
         ),
         invocation(AccessClass::CoreMutation),
     )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(
+        user_judgment_status(&harness, &pending_judgment_id)?,
+        "pending"
+    );
+    Ok(())
+}
+
+#[test]
+fn final_acceptance_for_old_scope_revision_is_rejected_for_close() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "final_old_scope")?;
+    let after_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "final_old_scope_initial",
+        true,
+    )?;
+    let (after_final, final_judgment_id) = record_final_acceptance_with_id(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "old_scope",
+    )?;
+
+    let scope_response = harness.service.update_scope(
+        update_scope_request(
+            "req_final_old_scope_change",
+            "idem_final_old_scope_change",
+            false,
+            Some(after_final),
+            &task_id,
+            ChangeUnitOperation::KeepCurrent,
+            "Materially changed scope after final acceptance.",
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let after_scope = scope_response.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version should be present");
+    assert_eq!(user_judgment_status(&harness, &final_judgment_id)?, "stale");
+    assert_eq!(
+        user_judgment_basis_status(&harness, &final_judgment_id)?,
+        "stale"
+    );
+
+    let after_new_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_scope,
+        "final_old_scope_new_basis",
+        true,
+    )?;
+    let before_close = harness.counts()?;
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_final_old_scope_close",
+            idempotency_key: Some("idem_final_old_scope_close"),
+            dry_run: false,
+            expected_state_version: Some(after_new_basis),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_eq!(harness.counts()?, before_close);
+    Ok(())
+}
+
+#[test]
+fn final_acceptance_for_old_close_basis_revision_is_rejected_for_close(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "final_old_basis")?;
+    let after_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "final_old_basis_initial",
+        true,
+    )?;
+    let (after_final, final_judgment_id) = record_final_acceptance_with_id(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "old_basis",
+    )?;
+    let after_new_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_final,
+        "final_old_basis_new_run",
+        true,
+    )?;
+
+    assert_eq!(user_judgment_status(&harness, &final_judgment_id)?, "stale");
+    assert_eq!(
+        user_judgment_basis_status(&harness, &final_judgment_id)?,
+        "stale"
+    );
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_final_old_basis_close",
+            idempotency_key: Some("idem_final_old_basis_close"),
+            dry_run: false,
+            expected_state_version: Some(after_new_basis),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    Ok(())
+}
+
+#[test]
+fn partial_residual_risk_acceptance_leaves_current_risk_blocker() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "risk_partial")?;
+    let (after_basis, risk_ids) = record_close_basis_with_risks(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "partial",
+        vec![
+            residual_risk_input("First risk needing acceptance."),
+            residual_risk_input("Second risk needing acceptance."),
+        ],
+    )?;
+    let accepted_risk_ids = vec![risk_ids[0].clone()];
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_risk_partial",
+            "idem_risk_partial",
+            false,
+            Some(after_basis),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ResidualRiskAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let accepted = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_risk_partial_record",
+            "idem_risk_partial_record",
+            Some(after_basis + 1),
+            &task_id,
+            &pending_judgment_id,
+            JudgmentKind::ResidualRiskAcceptance,
+            residual_risk_acceptance_payload(&accepted_risk_ids),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let after_partial = accepted.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version should be present");
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_partial,
+        "risk_partial",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_risk_partial_close",
+            idempotency_key: Some("idem_risk_partial_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "missing_residual_risk_acceptance");
+    Ok(())
+}
+
+#[test]
+fn residual_risk_answer_rejects_identical_text_with_different_risk_id() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "risk_identity")?;
+    let (after_old_basis, old_risk_ids) = record_close_basis_with_risks(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "old_identity",
+        vec![residual_risk_input("Same visible risk text.")],
+    )?;
+    let (after_current_basis, current_risk_ids) = record_close_basis_with_risks(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_old_basis,
+        "current_identity",
+        vec![residual_risk_input("Same visible risk text.")],
+    )?;
+    assert_ne!(old_risk_ids[0], current_risk_ids[0]);
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_risk_wrong_id",
+            "idem_risk_wrong_id",
+            false,
+            Some(after_current_basis),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ResidualRiskAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let before = harness.counts()?;
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_risk_wrong_id_record",
+            "idem_risk_wrong_id_record",
+            Some(after_current_basis + 1),
+            &task_id,
+            &pending_judgment_id,
+            JudgmentKind::ResidualRiskAcceptance,
+            residual_risk_acceptance_payload(&old_risk_ids),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(
+        user_judgment_status(&harness, &pending_judgment_id)?,
+        "pending"
+    );
+    Ok(())
+}
+
+#[test]
+fn sensitive_approval_requires_exact_path_category_and_change_unit() -> Result<(), Box<dyn Error>> {
+    let path_harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&path_harness, "sensitive_path")?;
+    let (after_approval, _) =
+        record_sensitive_approval(&path_harness, &task_id, &change_unit_id, 2, "path")?;
+    let mut request = prepare_write_request(
+        "req_sensitive_path_prepare",
+        "idem_sensitive_path_prepare",
+        Some(after_approval),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    request.intended_paths = vec!["tests/export.rs".to_owned()];
+    request.sensitive_categories = vec!["network".to_owned()];
+    let response = path_harness
+        .service
+        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+    assert_eq!(response.response_value["decision"], "approval_required");
+    assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+    assert!(response.response_value["write_authorization"].is_null());
+
+    let category_harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&category_harness, "sensitive_category")?;
+    let (after_approval, _) =
+        record_sensitive_approval(&category_harness, &task_id, &change_unit_id, 2, "category")?;
+    let mut request = prepare_write_request(
+        "req_sensitive_category_prepare",
+        "idem_sensitive_category_prepare",
+        Some(after_approval),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    request.sensitive_categories = vec!["credential".to_owned()];
+    let response = category_harness
+        .service
+        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+    assert_eq!(response.response_value["decision"], "approval_required");
+    assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+    assert!(response.response_value["write_authorization"].is_null());
+
+    let cu_harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&cu_harness, "sensitive_change_unit")?;
+    let (after_approval, _) =
+        record_sensitive_approval(&cu_harness, &task_id, &change_unit_id, 2, "change_unit")?;
+    let replace = cu_harness.service.update_scope(
+        update_scope_request(
+            "req_sensitive_cu_replace",
+            "idem_sensitive_cu_replace",
+            false,
+            Some(after_approval),
+            &task_id,
+            ChangeUnitOperation::ReplaceCurrent,
+            "Replacement scope for sensitive approval.",
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let replacement_change_unit_id = response_record_id(&replace.response_value, "change_unit_ref");
+    let after_replace = replace.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version should be present");
+    let mut request = prepare_write_request(
+        "req_sensitive_cu_prepare",
+        "idem_sensitive_cu_prepare",
+        Some(after_replace),
+        Some(&task_id),
+        Some(&replacement_change_unit_id),
+    );
+    request.sensitive_categories = vec!["network".to_owned()];
+    let response = cu_harness
+        .service
+        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+    assert_eq!(response.response_value["decision"], "approval_required");
+    assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+    assert!(response.response_value["write_authorization"].is_null());
+    Ok(())
+}
+
+#[test]
+fn scope_change_supersedes_pending_judgment_and_stale_pending_answer_has_no_effect(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "pending_superseded")?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_pending_superseded",
+            "idem_pending_superseded",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ProductDecision,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    assert_eq!(
+        user_judgment_basis_status(&harness, &pending_judgment_id)?,
+        "current"
+    );
+    let scope_response = harness.service.update_scope(
+        update_scope_request(
+            "req_pending_superseded_material_scope",
+            "idem_pending_superseded_material_scope",
+            false,
+            Some(3),
+            &task_id,
+            ChangeUnitOperation::KeepCurrent,
+            "Material scope change after pending judgment.",
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    assert_eq!(
+        scope_response.response_value["base"]["response_kind"], "result",
+        "{:?}",
+        scope_response.response_value
+    );
+    assert_eq!(scope_response.response_value["base"]["state_version"], 4);
+    assert_eq!(
+        scope_response.response_value["state"]["pending_user_judgment_refs"],
+        json!([])
+    );
+
+    assert_eq!(
+        user_judgment_status(&harness, &pending_judgment_id)?,
+        "superseded"
+    );
+    assert_eq!(
+        user_judgment_basis_status(&harness, &pending_judgment_id)?,
+        "superseded"
+    );
+    let before = harness.counts()?;
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_pending_superseded_answer",
+            "idem_pending_superseded_answer",
+            Some(4),
+            &task_id,
+            &pending_judgment_id,
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "DECISION_UNRESOLVED"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn legacy_unbound_resolved_judgment_remains_audit_only() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "legacy_final")?;
+    let after_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "legacy_final_basis",
+        true,
+    )?;
+    let (after_final, final_judgment_id) = record_final_acceptance_with_id(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "legacy",
+    )?;
+    mark_user_judgment_legacy_unbound(&harness, &final_judgment_id)?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_legacy_final_close",
+            idempotency_key: Some("idem_legacy_final_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_user_judgment_rejects_selected_option_outside_original_request(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "judgment_option")?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_judgment_option",
+            "idem_judgment_option",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ProductDecision,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let mut request = record_judgment_request(
+        "req_judgment_option_record",
+        "idem_judgment_option_record",
+        Some(3),
+        &task_id,
+        &pending_judgment_id,
+        JudgmentKind::ProductDecision,
+        answer_payload(JudgmentKind::ProductDecision),
+    );
+    request.selected_option_id = harness_types::UserJudgmentOptionId::new("not_an_option");
+    let before = harness.counts()?;
+    let response = harness
+        .service
+        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
@@ -3940,12 +4487,20 @@ fn status_read_only_rejects_corrupt_owner_state_without_effect() -> Result<(), B
 fn optional_resolution_null_remains_absent_not_corrupt() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "null_resolution")?;
+    let after_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "null_resolution",
+        true,
+    )?;
     let judgment = harness.service.request_user_judgment(
         user_judgment_request(
             "req_null_resolution_judgment",
             "idem_null_resolution_judgment",
             false,
-            Some(2),
+            Some(after_basis),
             &task_id,
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
@@ -3980,12 +4535,20 @@ fn optional_resolution_null_remains_absent_not_corrupt() -> Result<(), Box<dyn E
 fn malformed_optional_resolution_json_rejects_close_readiness() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "bad_resolution")?;
+    let after_basis = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "bad_resolution",
+        true,
+    )?;
     let judgment = harness.service.request_user_judgment(
         user_judgment_request(
             "req_bad_resolution_judgment",
             "idem_bad_resolution_judgment",
             false,
-            Some(2),
+            Some(after_basis),
             &task_id,
             Some(&change_unit_id),
             JudgmentKind::FinalAcceptance,
@@ -4679,6 +5242,52 @@ fn record_close_evidence(
         .expect("state_version should be present"))
 }
 
+fn record_close_basis_with_risks(
+    harness: &MethodHarness,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+    residual_risks: Vec<harness_types::ResidualRiskInput>,
+) -> Result<(u64, Vec<String>), Box<dyn Error>> {
+    enable_record_run_capabilities(harness)?;
+    let request_id = format!("req_close_risk_basis_{suffix}");
+    let idempotency_key = format!("idem_close_risk_basis_{suffix}");
+    let mut request = record_run_request(
+        &request_id,
+        &idempotency_key,
+        false,
+        Some(expected_state_version),
+        task_id,
+        change_unit_id,
+    );
+    request.run_id = Some(RunId::new(format!("run_close_risk_basis_{suffix}"))).into();
+    request.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    request.close_assessment = Some(close_assessment_with_risks(
+        "Close claim supported with visible residual risks.",
+        residual_risks,
+    ))
+    .into();
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+    let state_version = response.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+    let risk_ids = response.response_value["current_close_basis"]["residual_risks"]
+        .as_array()
+        .expect("residual_risks should be present")
+        .iter()
+        .map(|risk| {
+            risk["risk_id"]
+                .as_str()
+                .expect("risk_id should be present")
+                .to_owned()
+        })
+        .collect();
+    Ok((state_version, risk_ids))
+}
+
 fn record_final_acceptance(
     harness: &MethodHarness,
     task_id: &str,
@@ -4686,6 +5295,23 @@ fn record_final_acceptance(
     expected_state_version: u64,
     suffix: &str,
 ) -> Result<u64, Box<dyn Error>> {
+    Ok(record_final_acceptance_with_id(
+        harness,
+        task_id,
+        change_unit_id,
+        expected_state_version,
+        suffix,
+    )?
+    .0)
+}
+
+fn record_final_acceptance_with_id(
+    harness: &MethodHarness,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+) -> Result<(u64, String), Box<dyn Error>> {
     let request_id = format!("req_close_final_{suffix}");
     let idempotency_key = format!("idem_close_final_{suffix}");
     let judgment = harness.service.request_user_judgment(
@@ -4718,9 +5344,52 @@ fn record_final_acceptance(
         ),
         invocation(AccessClass::CoreMutation),
     )?;
-    Ok(response.response_value["base"]["state_version"]
+    let state_version = response.response_value["base"]["state_version"]
         .as_u64()
-        .expect("state_version should be present"))
+        .expect("state_version should be present");
+    Ok((state_version, judgment_id))
+}
+
+fn record_sensitive_approval(
+    harness: &MethodHarness,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+) -> Result<(u64, String), Box<dyn Error>> {
+    let request_id = format!("req_sensitive_approval_{suffix}");
+    let idempotency_key = format!("idem_sensitive_approval_{suffix}");
+    let judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            &request_id,
+            &idempotency_key,
+            false,
+            Some(expected_state_version),
+            task_id,
+            Some(change_unit_id),
+            JudgmentKind::SensitiveApproval,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let record_request_id = format!("req_sensitive_approval_record_{suffix}");
+    let record_idempotency_key = format!("idem_sensitive_approval_record_{suffix}");
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            &record_request_id,
+            &record_idempotency_key,
+            Some(expected_state_version + 1),
+            task_id,
+            &judgment_id,
+            JudgmentKind::SensitiveApproval,
+            answer_payload(JudgmentKind::SensitiveApproval),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let state_version = response.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+    Ok((state_version, judgment_id))
 }
 
 fn prepare_write_authorization(
@@ -5126,8 +5795,28 @@ fn user_judgment_request(
             task_id: Some(TaskId::new(task_id)).into(),
             state_version: expected_state_version.into(),
         }],
+        sensitive_action_scope: sensitive_action_scope_for_kind(judgment_kind).into(),
         required_for: harness_types::JudgmentRequiredFor::Close,
         expires_at: None.into(),
+    }
+}
+
+fn sensitive_action_scope_for_kind(
+    judgment_kind: JudgmentKind,
+) -> Option<harness_types::SensitiveActionScope> {
+    match judgment_kind {
+        JudgmentKind::SensitiveApproval => Some(harness_types::SensitiveActionScope {
+            action_kind: "local_sensitive_step".to_owned(),
+            description: "Allow the named sensitive step only.".to_owned(),
+            intended_paths: vec!["src/export.rs".to_owned()],
+            sensitive_categories: vec!["network".to_owned()],
+            command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()).into(),
+            network_or_host_summary: Some("No remote host is authorized here.".to_owned()).into(),
+            secret_or_credential_summary: None.into(),
+            capability_claim: "This is not Write Authorization.".to_owned(),
+            expires_at: None.into(),
+        }),
+        _ => None,
     }
 }
 
@@ -5157,6 +5846,20 @@ fn record_judgment_request(
         note: Some("Recorded by the focused judgment test.".to_owned()).into(),
         accepted_risks: Vec::new(),
     }
+}
+
+fn residual_risk_acceptance_payload(risk_ids: &[String]) -> RecordUserJudgmentPayload {
+    let mut payload = RecordUserJudgmentPayload {
+        product_decision: None.into(),
+        technical_decision: None.into(),
+        scope_decision: None.into(),
+        sensitive_action_scope: None.into(),
+        final_acceptance: None.into(),
+        residual_risk_acceptance: None.into(),
+        cancellation: None.into(),
+    };
+    payload.residual_risk_acceptance = Some(json_object(json!({ "risk_ids": risk_ids }))).into();
+    payload
 }
 
 fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
@@ -5196,19 +5899,7 @@ fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
             .into();
         }
         JudgmentKind::SensitiveApproval => {
-            payload.sensitive_action_scope = Some(harness_types::SensitiveActionScope {
-                action_kind: "local_sensitive_step".to_owned(),
-                description: "Allow the named sensitive step only.".to_owned(),
-                intended_paths: vec!["src/export.rs".to_owned()],
-                sensitive_categories: vec!["network".to_owned()],
-                command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()).into(),
-                network_or_host_summary: Some("No remote host is authorized here.".to_owned())
-                    .into(),
-                secret_or_credential_summary: None.into(),
-                capability_claim: "This is not Write Authorization.".to_owned(),
-                expires_at: None.into(),
-            })
-            .into();
+            payload.sensitive_action_scope = sensitive_action_scope_for_kind(judgment_kind).into();
         }
         JudgmentKind::FinalAcceptance => {
             payload.final_acceptance = Some(json_object(json!({
@@ -5464,6 +6155,36 @@ fn user_judgment_status(
         rusqlite::params![PROJECT_ID, user_judgment_id],
         |row| row.get(0),
     )?)
+}
+
+fn user_judgment_basis_status(
+    harness: &MethodHarness,
+    user_judgment_id: &str,
+) -> Result<String, Box<dyn Error>> {
+    let conn = harness.conn()?;
+    Ok(conn.query_row(
+        "SELECT basis_status
+               FROM user_judgments
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+        rusqlite::params![PROJECT_ID, user_judgment_id],
+        |row| row.get(0),
+    )?)
+}
+
+fn mark_user_judgment_legacy_unbound(
+    harness: &MethodHarness,
+    user_judgment_id: &str,
+) -> Result<(), Box<dyn Error>> {
+    harness.conn()?.execute(
+        "UPDATE user_judgments
+                SET basis_json = NULL,
+                    basis_status = 'legacy_unbound'
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+        rusqlite::params![PROJECT_ID, user_judgment_id],
+    )?;
+    Ok(())
 }
 
 fn resolution_json(

@@ -719,7 +719,7 @@ fn completion_close_blockers(
     }
 
     if sensitive_approval_required(context)?
-        && !has_resolved_judgment(store, project_state, request, "sensitive_approval")?
+        && !has_current_sensitive_approval_for_close(store, project_state, request, context)?
     {
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::SensitiveApproval,
@@ -833,13 +833,7 @@ fn completion_close_blockers(
         ));
     }
 
-    if !has_resolved_judgment_with_answer(
-        store,
-        project_state,
-        request,
-        "final_acceptance",
-        |resolution| resolution.answer.final_acceptance.is_some(),
-    )? {
+    if !has_current_final_acceptance(store, project_state, request, context)? {
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::FinalAcceptance,
             "missing_final_acceptance",
@@ -1007,12 +1001,14 @@ fn current_close_basis_blocker(
         .as_ref()
         .map(|record| record.change_unit_id.as_str());
     let current_baseline = StoredScope::from_task(&context.task)?.baseline_ref;
-    let stale = basis.task_id != request.task_id
-        || current_change_unit_id != Some(basis.change_unit_id.as_str())
-        || basis.scope_revision != context.task.scope_revision
-        || basis.close_basis_revision != context.task.close_basis_revision
-        || basis.baseline_ref.as_ref().map(BaselineRef::as_str) != current_baseline.as_deref();
-    if stale {
+    if !close_basis_is_current(
+        basis,
+        &request.task_id,
+        current_change_unit_id,
+        context.task.scope_revision,
+        context.task.close_basis_revision,
+        current_baseline.as_deref(),
+    ) {
         Ok(Some(close_blocker(
             CloseReadinessBlockerCategory::Scope,
             "stale_current_close_basis",
@@ -1188,49 +1184,69 @@ fn close_basis_artifact_ref_unavailable(
         .unwrap_or(true))
 }
 
-fn has_resolved_judgment(
+fn has_current_final_acceptance(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: &CloseTaskRequest,
-    judgment_kind: &str,
+    context: &CloseTaskContext,
 ) -> Result<bool, PlanError> {
-    has_resolved_judgment_with_answer(store, project_state, request, judgment_kind, |_| true)
+    let Some(close_basis) = context.current_close_basis.as_ref() else {
+        return Ok(false);
+    };
+    let requirement = final_acceptance_requirement(close_basis);
+    let authorities = resolved_judgment_authorities_for_plan(
+        store,
+        project_state,
+        &request.envelope,
+        &request.task_id,
+        JudgmentKind::FinalAcceptance,
+    )?;
+    Ok(authorities
+        .iter()
+        .any(|authority| current_final_acceptance(authority, &requirement)))
 }
 
-fn has_resolved_judgment_with_answer<F>(
+fn has_current_sensitive_approval_for_close(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: &CloseTaskRequest,
-    judgment_kind: &str,
-    predicate: F,
-) -> Result<bool, PlanError>
-where
-    F: Fn(&UserJudgmentResolution) -> bool,
-{
-    let records = store
-        .resolved_user_judgment_records(&request.task_id, judgment_kind)
-        .map_err(|error| {
-            PlanError::Response(Box::new(store_error_response(
-                &request.envelope,
-                project_state,
-                error,
-            )))
-        })?;
-    for record in records {
-        let Some(resolution) = decode_optional_json::<UserJudgmentResolution>(
-            "user_judgments",
-            record.judgment_id.clone(),
-            "resolution_json",
-            record.resolution_json.as_deref(),
-        )?
-        else {
-            continue;
-        };
-        if predicate(&resolution) {
-            return Ok(true);
-        }
-    }
-    Ok(false)
+    context: &CloseTaskContext,
+) -> Result<bool, PlanError> {
+    let Some(close_basis) = context.current_close_basis.as_ref() else {
+        return Ok(false);
+    };
+    let Some(current_change_unit) = context.current_change_unit.as_ref() else {
+        return Ok(false);
+    };
+    let authorities = resolved_judgment_authorities_for_plan(
+        store,
+        project_state,
+        &request.envelope,
+        &request.task_id,
+        JudgmentKind::SensitiveApproval,
+    )?;
+    let now = store.current_timestamp().map_err(|error| {
+        PlanError::Response(Box::new(store_error_response(
+            &request.envelope,
+            project_state,
+            error,
+        )))
+    })?;
+    let change_unit_id = ChangeUnitId::new(current_change_unit.change_unit_id.clone());
+    let requirement = SensitiveApprovalRequirement {
+        task_id: &request.task_id,
+        change_unit_id: &change_unit_id,
+        scope_revision: context.task.scope_revision,
+        operation: "",
+        normalized_paths: &[],
+        sensitive_categories: &close_basis.sensitive_categories,
+        baseline_ref: close_basis.baseline_ref.as_ref(),
+        now: &now,
+        repo_root: &store.project_record().repo_root,
+    };
+    Ok(authorities
+        .iter()
+        .any(|authority| current_sensitive_approval(authority, &requirement)))
 }
 
 fn risk_acceptance_coverage(
@@ -1242,81 +1258,20 @@ fn risk_acceptance_coverage(
     let Some(basis) = context.current_close_basis.as_ref() else {
         return Ok(Vec::new());
     };
-    let records = store
-        .resolved_user_judgment_records(&request.task_id, "residual_risk_acceptance")
-        .map_err(|error| {
-            PlanError::Response(Box::new(store_error_response(
-                &request.envelope,
-                project_state,
-                error,
-            )))
-        })?;
-    let mut coverage = Vec::new();
-    for risk in &basis.residual_risks {
-        let mut accepted_by = Vec::new();
-        if risk.acceptance_required {
-            for record in &records {
-                let Some(resolution) = decode_optional_json::<UserJudgmentResolution>(
-                    "user_judgments",
-                    record.judgment_id.clone(),
-                    "resolution_json",
-                    record.resolution_json.as_deref(),
-                )?
-                else {
-                    continue;
-                };
-                if residual_risk_resolution_accepts(&resolution, &risk.risk_id) {
-                    accepted_by.push(state_ref(
-                        StateRecordKind::UserJudgment,
-                        &record.judgment_id,
-                        &request.envelope.project_id,
-                        Some(&request.task_id),
-                        Some(project_state.state_version),
-                    ));
-                }
-            }
-        }
-        let accepted = !risk.acceptance_required || !accepted_by.is_empty();
-        coverage.push(RiskAcceptanceCoverage {
-            risk_id: risk.risk_id.clone(),
-            accepted,
-            accepted_by_judgment_refs: accepted_by,
-            missing_reason: if accepted {
-                None.into()
-            } else {
-                Some("acceptance_required".to_owned()).into()
-            },
-        });
-    }
-    Ok(coverage)
-}
-
-fn residual_risk_resolution_accepts(resolution: &UserJudgmentResolution, risk_id: &RiskId) -> bool {
-    resolution
-        .accepted_risks
-        .iter()
-        .any(|risk| risk.accepted_for_close && risk.risk_id == *risk_id)
-        || resolution
-            .answer
-            .residual_risk_acceptance
-            .as_ref()
-            .is_some_and(|answer| residual_risk_answer_names(answer, risk_id))
-}
-
-fn residual_risk_answer_names(answer: &JsonObject, risk_id: &RiskId) -> bool {
-    answer
-        .get("risk_id")
-        .and_then(Value::as_str)
-        .is_some_and(|value| value == risk_id.as_str())
-        || answer
-            .get("risk_ids")
-            .and_then(Value::as_array)
-            .is_some_and(|values| {
-                values
-                    .iter()
-                    .filter_map(Value::as_str)
-                    .any(|value| value == risk_id.as_str())
-            })
+    let authorities = resolved_judgment_authorities_for_plan(
+        store,
+        project_state,
+        &request.envelope,
+        &request.task_id,
+        JudgmentKind::ResidualRiskAcceptance,
+    )?;
+    Ok(current_residual_risk_acceptance_coverage(
+        &request.envelope.project_id,
+        &request.task_id,
+        project_state.state_version,
+        basis,
+        &authorities,
+    ))
 }
 
 fn sensitive_approval_required(context: &CloseTaskContext) -> CoreResult<bool> {

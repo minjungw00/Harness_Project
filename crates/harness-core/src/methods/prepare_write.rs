@@ -235,6 +235,7 @@ fn plan_prepare_write(
             project_state,
             &request,
             &task_id,
+            &task,
             change_unit,
             &normalized_paths,
         )?;

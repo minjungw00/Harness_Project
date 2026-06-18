@@ -488,6 +488,7 @@ pub mod core_fixtures {
                     ],
                 },
                 affected_refs: vec![self.task_ref(input.task_id, input.expected_state_version)],
+                sensitive_action_scope: sensitive_action_scope_for_kind(input.judgment_kind).into(),
                 required_for: JudgmentRequiredFor::Close,
                 expires_at: None.into(),
             }
@@ -1065,6 +1066,26 @@ pub mod core_fixtures {
         }
     }
 
+    fn sensitive_action_scope_for_kind(
+        judgment_kind: JudgmentKind,
+    ) -> Option<SensitiveActionScope> {
+        match judgment_kind {
+            JudgmentKind::SensitiveApproval => Some(SensitiveActionScope {
+                action_kind: "local_sensitive_step".to_owned(),
+                description: "Allow the named sensitive step only.".to_owned(),
+                intended_paths: vec![DEFAULT_PRODUCT_PATH.to_owned()],
+                sensitive_categories: vec!["network".to_owned()],
+                command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()).into(),
+                network_or_host_summary: Some("No remote host is authorized here.".to_owned())
+                    .into(),
+                secret_or_credential_summary: None.into(),
+                capability_claim: "This is not Write Authorization.".to_owned(),
+                expires_at: None.into(),
+            }),
+            _ => None,
+        }
+    }
+
     /// Builds a judgment answer payload with exactly one branch populated.
     pub fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
         let mut payload = RecordUserJudgmentPayload {
@@ -1103,20 +1124,8 @@ pub mod core_fixtures {
                 .into();
             }
             JudgmentKind::SensitiveApproval => {
-                payload.sensitive_action_scope = Some(SensitiveActionScope {
-                    action_kind: "local_sensitive_step".to_owned(),
-                    description: "Allow the named sensitive step only.".to_owned(),
-                    intended_paths: vec![DEFAULT_PRODUCT_PATH.to_owned()],
-                    sensitive_categories: vec!["network".to_owned()],
-                    command_or_tool_summary: Some("Run a local diagnostic command.".to_owned())
-                        .into(),
-                    network_or_host_summary: Some("No remote host is authorized here.".to_owned())
-                        .into(),
-                    secret_or_credential_summary: None.into(),
-                    capability_claim: "This is not Write Authorization.".to_owned(),
-                    expires_at: None.into(),
-                })
-                .into();
+                payload.sensitive_action_scope =
+                    sensitive_action_scope_for_kind(judgment_kind).into();
             }
             JudgmentKind::FinalAcceptance => {
                 payload.final_acceptance = Some(json_object(json!({

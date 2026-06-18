@@ -109,6 +109,13 @@ fn plan_update_scope(
                 error,
             )))
         })?;
+    validate_related_scope_decisions(
+        store,
+        project_state,
+        &request,
+        current_change_unit.as_ref(),
+        task.scope_revision,
+    )?;
 
     let current_scope = StoredScope::from_task(&task)?;
     let next_scope = current_scope.apply_request(&request);
@@ -282,19 +289,31 @@ fn plan_update_scope(
             task_id: request.task_id.as_str().to_owned(),
         });
     }
+    if scope_changed {
+        storage_mutations.push(CoreStorageMutation::MarkUserJudgmentsSupersededOrStale(
+            UserJudgmentInvalidation {
+                task_id: request.task_id.as_str().to_owned(),
+                judgment_kinds: Vec::new(),
+            },
+        ));
+    }
 
-    let pending_refs = store
-        .pending_user_judgment_refs(&request.task_id, planned_state_version)
-        .map_err(|error| {
-            PlanError::Response(Box::new(store_error_response(
-                &request.envelope,
-                project_state,
-                error,
-            )))
-        })?
-        .into_iter()
-        .map(state_ref_from_stored)
-        .collect::<Vec<_>>();
+    let pending_refs = if scope_changed {
+        Vec::new()
+    } else {
+        store
+            .pending_user_judgment_refs(&request.task_id, planned_state_version)
+            .map_err(|error| {
+                PlanError::Response(Box::new(store_error_response(
+                    &request.envelope,
+                    project_state,
+                    error,
+                )))
+            })?
+            .into_iter()
+            .map(state_ref_from_stored)
+            .collect::<Vec<_>>()
+    };
     let blocker_refs = store
         .active_blocker_refs(&request.task_id, planned_state_version)
         .map_err(|error| {
@@ -352,4 +371,58 @@ fn plan_update_scope(
         result_fields: strip_base(serde_json::to_value(result)?)?,
         next_actions,
     })
+}
+
+fn validate_related_scope_decisions(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &UpdateScopeRequest,
+    current_change_unit: Option<&ChangeUnitRecord>,
+    scope_revision: u64,
+) -> Result<(), PlanError> {
+    let current_change_unit_id =
+        current_change_unit.map(|record| ChangeUnitId::new(record.change_unit_id.clone()));
+    for related_ref in &request.related_scope_decision_refs {
+        if related_ref.record_kind != StateRecordKind::UserJudgment
+            || related_ref.project_id != request.envelope.project_id
+            || related_ref.task_id.as_ref() != Some(&request.task_id)
+        {
+            return validation_plan_error(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                "related_scope_decision_refs",
+                "related scope decision refs must identify user judgments for this Task",
+            );
+        }
+        let record = store
+            .user_judgment_record(related_ref.record_id.as_str())
+            .map_err(|error| {
+                PlanError::Response(Box::new(store_error_response(
+                    &request.envelope,
+                    project_state,
+                    error,
+                )))
+            })?
+            .ok_or_else(|| {
+                PlanError::Response(Box::new(decision_rejected_response(
+                    &request.envelope,
+                    Some(project_state.state_version),
+                    "related scope decision judgment is missing",
+                )))
+            })?;
+        let authority = user_judgment_authority_from_record(&record)?;
+        if !current_scope_decision(
+            &authority,
+            &request.task_id,
+            scope_revision,
+            current_change_unit_id.as_ref(),
+        ) {
+            return Err(PlanError::Response(Box::new(decision_rejected_response(
+                &request.envelope,
+                Some(project_state.state_version),
+                "related scope decision judgment is not current",
+            ))));
+        }
+    }
+    Ok(())
 }

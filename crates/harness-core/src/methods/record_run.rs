@@ -384,23 +384,18 @@ fn plan_record_run(
         .into_iter()
         .map(state_ref_from_stored)
         .collect::<Vec<_>>();
+    let pending_user_judgment_refs = pending_refs_after_record_run_invalidation(
+        store,
+        project_state,
+        &request,
+        planned_state_version,
+    )?;
     let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: planned_state_version,
         task: &task,
         current_change_unit: Some(&change_unit),
-        pending_user_judgment_refs: store
-            .pending_user_judgment_refs(&request.task_id, planned_state_version)
-            .map_err(|error| {
-                PlanError::Response(Box::new(store_error_response(
-                    &request.envelope,
-                    project_state,
-                    error,
-                )))
-            })?
-            .into_iter()
-            .map(state_ref_from_stored)
-            .collect(),
+        pending_user_judgment_refs,
         blocker_refs: blocker_refs.clone(),
         active_write_authorization: None,
         effective_authorization_now: None,
@@ -454,6 +449,15 @@ fn plan_record_run(
             task_id: request.task_id.as_str().to_owned(),
             close_basis_revision,
             close_basis_json,
+        },
+    ));
+    storage_mutations.push(CoreStorageMutation::MarkUserJudgmentsSupersededOrStale(
+        UserJudgmentInvalidation {
+            task_id: request.task_id.as_str().to_owned(),
+            judgment_kinds: vec![
+                storage_value(JudgmentKind::FinalAcceptance)?,
+                storage_value(JudgmentKind::ResidualRiskAcceptance)?,
+            ],
         },
     ));
     if let Some(record) = &authorization_record {
@@ -551,6 +555,47 @@ fn plan_record_run(
         result_fields: strip_base(serde_json::to_value(result)?)?,
         next_actions: Vec::new(),
     })
+}
+
+fn pending_refs_after_record_run_invalidation(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &RecordRunRequest,
+    planned_state_version: u64,
+) -> Result<Vec<StateRecordRef>, PlanError> {
+    let invalidated_kinds = BTreeSet::from([
+        storage_value(JudgmentKind::FinalAcceptance)?,
+        storage_value(JudgmentKind::ResidualRiskAcceptance)?,
+    ]);
+    let mut refs = Vec::new();
+    for record_ref in store
+        .pending_user_judgment_refs(&request.task_id, planned_state_version)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                project_state,
+                error,
+            )))
+        })?
+    {
+        let record = store
+            .user_judgment_record(&record_ref.record_id)
+            .map_err(|error| {
+                PlanError::Response(Box::new(store_error_response(
+                    &request.envelope,
+                    project_state,
+                    error,
+                )))
+            })?;
+        if record
+            .as_ref()
+            .is_some_and(|record| invalidated_kinds.contains(&record.judgment_kind))
+        {
+            continue;
+        }
+        refs.push(state_ref_from_stored(record_ref));
+    }
+    Ok(refs)
 }
 
 struct RecordRunCloseBasisContext<'a> {

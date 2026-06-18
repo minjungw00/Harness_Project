@@ -651,12 +651,40 @@ fn user_judgment_kinds_remain_separate_from_scope_and_write_authority() -> Resul
         before_sensitive.write_authorizations
     );
 
+    let mut risk_basis = fixture.record_run_request(
+        "req_risk_judgment_basis",
+        "idem_risk_judgment_basis",
+        false,
+        Some(6),
+        &task_id,
+        &change_unit_id,
+    );
+    risk_basis.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    risk_basis.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "Close claim supported with a visible residual risk.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: vec![ResidualRiskInput {
+            summary: "Manual verification remains partial.".to_owned(),
+            consequence: "The user must accept the remaining manual verification risk.".to_owned(),
+            acceptance_required: true,
+            source_refs: Vec::new(),
+        }],
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let risk_basis =
+        service.record_run(risk_basis, invocation(&fixture, AccessClass::RunRecording))?;
+    let after_risk_basis = risk_basis.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("risk basis state version should be present");
+
     let risk_judgment = service.request_user_judgment(
         fixture.user_judgment_request(UserJudgmentFixture {
             request_id: "req_risk_judgment",
             idempotency_key: "idem_risk_judgment",
             dry_run: false,
-            expected_state_version: Some(6),
+            expected_state_version: Some(after_risk_basis),
             task_id: &task_id,
             change_unit_id: Some(&change_unit_id),
             judgment_kind: JudgmentKind::ResidualRiskAcceptance,
@@ -672,7 +700,7 @@ fn user_judgment_kinds_remain_separate_from_scope_and_write_authority() -> Resul
         fixture.record_judgment_request(RecordJudgmentFixture {
             request_id: "req_risk_wrong_answer",
             idempotency_key: "idem_risk_wrong_answer",
-            expected_state_version: Some(7),
+            expected_state_version: Some(after_risk_basis + 1),
             task_id: &task_id,
             user_judgment_id: &risk_judgment_id,
             judgment_kind: JudgmentKind::ResidualRiskAcceptance,
@@ -1133,12 +1161,20 @@ fn optional_owner_json_null_is_absent_but_malformed_text_fails_closed() -> Resul
     let null_service = core(&null_fixture);
     let (task_id, change_unit_id) =
         create_task_with_change_unit(&null_fixture, &null_service, "optional_null")?;
-    let final_version = record_final_acceptance(
+    let after_basis = record_close_evidence(
         &null_fixture,
         &null_service,
         &task_id,
         &change_unit_id,
         2,
+        true,
+    )?;
+    let final_version = record_final_acceptance(
+        &null_fixture,
+        &null_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
         "optional_null",
     )?;
     let final_judgment_id = latest_judgment_id(&null_fixture)?;
@@ -1167,12 +1203,20 @@ fn optional_owner_json_null_is_absent_but_malformed_text_fails_closed() -> Resul
     let malformed_service = core(&malformed_fixture);
     let (task_id, change_unit_id) =
         create_task_with_change_unit(&malformed_fixture, &malformed_service, "optional_bad")?;
-    record_final_acceptance(
+    let after_basis = record_close_evidence(
         &malformed_fixture,
         &malformed_service,
         &task_id,
         &change_unit_id,
         2,
+        true,
+    )?;
+    record_final_acceptance(
+        &malformed_fixture,
+        &malformed_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
         "optional_bad",
     )?;
     let final_judgment_id = latest_judgment_id(&malformed_fixture)?;

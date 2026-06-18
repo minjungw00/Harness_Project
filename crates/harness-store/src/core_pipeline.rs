@@ -99,6 +99,7 @@ pub enum CoreStorageMutation {
     ResolveUserJudgment(UserJudgmentResolutionUpdate),
     UpdateUserJudgmentBasis(UserJudgmentBasisUpdate),
     MarkUserJudgmentBasesStatus(UserJudgmentBasisStatusMark),
+    MarkUserJudgmentsSupersededOrStale(UserJudgmentInvalidation),
 }
 
 /// Storage input for inserting a Task current row.
@@ -216,6 +217,13 @@ pub struct UserJudgmentBasisUpdate {
 pub struct UserJudgmentBasisStatusMark {
     pub judgment_ids: Vec<String>,
     pub basis_status: JudgmentBasisCompatibilityStatus,
+}
+
+/// Storage input for invalidating current judgment authority after state changes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UserJudgmentInvalidation {
+    pub task_id: String,
+    pub judgment_kinds: Vec<String>,
 }
 
 /// Storage input for inserting one active Write Authorization.
@@ -1216,6 +1224,9 @@ impl CoreStorageMutation {
             Self::UpdateUserJudgmentBasis(input) => mutation.update_user_judgment_basis(input),
             Self::MarkUserJudgmentBasesStatus(input) => {
                 mutation.mark_user_judgment_bases_status(input)
+            }
+            Self::MarkUserJudgmentsSupersededOrStale(input) => {
+                mutation.mark_user_judgments_superseded_or_stale(input)
             }
         }
     }
@@ -2240,6 +2251,81 @@ impl ProjectMutation<'_> {
             }
         }
 
+        Ok(())
+    }
+
+    fn mark_user_judgments_superseded_or_stale(
+        &mut self,
+        input: &UserJudgmentInvalidation,
+    ) -> StoreResult<()> {
+        validate_identifier("task_id", &input.task_id)?;
+        if input.judgment_kinds.is_empty() {
+            self.mark_user_judgments_superseded_or_stale_for_kind(&input.task_id, None)?;
+        } else {
+            for judgment_kind in &input.judgment_kinds {
+                validate_identifier("judgment_kind", judgment_kind)?;
+                self.mark_user_judgments_superseded_or_stale_for_kind(
+                    &input.task_id,
+                    Some(judgment_kind),
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    fn mark_user_judgments_superseded_or_stale_for_kind(
+        &mut self,
+        task_id: &str,
+        judgment_kind: Option<&str>,
+    ) -> StoreResult<()> {
+        match judgment_kind {
+            Some(judgment_kind) => {
+                self.tx.execute(
+                    "UPDATE user_judgments
+                        SET status = 'superseded',
+                            basis_status = 'superseded'
+                      WHERE project_id = ?1
+                        AND task_id = ?2
+                        AND judgment_kind = ?3
+                        AND status = 'pending'
+                        AND basis_status = 'current'",
+                    params![self.project_id, task_id, judgment_kind],
+                )?;
+                self.tx.execute(
+                    "UPDATE user_judgments
+                        SET status = 'stale',
+                            basis_status = 'stale'
+                      WHERE project_id = ?1
+                        AND task_id = ?2
+                        AND judgment_kind = ?3
+                        AND status = 'resolved'
+                        AND basis_status = 'current'",
+                    params![self.project_id, task_id, judgment_kind],
+                )?;
+            }
+            None => {
+                self.tx.execute(
+                    "UPDATE user_judgments
+                        SET status = 'superseded',
+                            basis_status = 'superseded'
+                      WHERE project_id = ?1
+                        AND task_id = ?2
+                        AND status = 'pending'
+                        AND basis_status = 'current'",
+                    params![self.project_id, task_id],
+                )?;
+                self.tx.execute(
+                    "UPDATE user_judgments
+                        SET status = 'stale',
+                            basis_status = 'stale'
+                      WHERE project_id = ?1
+                        AND task_id = ?2
+                        AND status = 'resolved'
+                        AND basis_status = 'current'",
+                    params![self.project_id, task_id],
+                )?;
+            }
+        }
         Ok(())
     }
 
