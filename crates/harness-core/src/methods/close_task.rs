@@ -49,12 +49,14 @@ impl CoreService {
                 return Ok(response);
             }
         }
+        let plan_now = utc_timestamp(self.now());
 
         if request.intent == CloseIntent::Check {
             let plan = match plan_close_task(
                 &prepared.store,
                 &prepared.context.project_state,
                 request.clone(),
+                &plan_now,
             ) {
                 Ok(plan) => plan,
                 Err(error) => {
@@ -86,6 +88,7 @@ impl CoreService {
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
+            &plan_now,
         ) {
             Ok(plan) => plan,
             Err(error) => {
@@ -258,6 +261,7 @@ pub(super) fn plan_close_task(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: CloseTaskRequest,
+    now: &UtcTimestamp,
 ) -> Result<CloseTaskPlan, PlanError> {
     let context = load_close_task_context(store, project_state, &request)?;
     let risk_acceptance_coverage =
@@ -270,6 +274,7 @@ pub(super) fn plan_close_task(
             &request,
             &context,
             &risk_acceptance_coverage,
+            now,
         )?);
     }
 
@@ -315,13 +320,7 @@ pub(super) fn plan_close_task(
     let mut event_kind = String::new();
     let mut event_payload = Map::new();
     let closed_at = if committed_terminal {
-        Some(store.current_timestamp().map_err(|error| {
-            PlanError::Response(Box::new(store_error_response(
-                &request.envelope,
-                project_state,
-                error,
-            )))
-        })?)
+        Some(now.clone())
     } else {
         None
     };
@@ -332,13 +331,13 @@ pub(super) fn plan_close_task(
         synthetic_task.lifecycle_phase = terminal.lifecycle_phase.to_owned();
         synthetic_task.result = Some(terminal.result.to_owned());
         synthetic_task.close_summary_json = close_summary_json.clone();
-        synthetic_task.closed_at = Some(closed_at.clone());
+        synthetic_task.closed_at = Some(closed_at.to_string());
         storage_mutations.push(CoreStorageMutation::CloseTask(TaskCloseUpdate {
             task_id: request.task_id.as_str().to_owned(),
             lifecycle_phase: terminal.lifecycle_phase.to_owned(),
             result: terminal.result.to_owned(),
             close_summary_json,
-            closed_at: closed_at.clone(),
+            closed_at: closed_at.to_string(),
         }));
         if request.intent == CloseIntent::Supersede {
             if let Some(superseding_task_id) = request.superseding_task_id.as_ref() {
@@ -440,7 +439,7 @@ fn close_terminal_storage(intent: CloseIntent) -> CloseTerminalStorage {
 fn terminal_close_summary_json(
     task: &TaskRecord,
     request: &CloseTaskRequest,
-    closed_at: &str,
+    closed_at: &UtcTimestamp,
 ) -> CoreResult<String> {
     let mut close_summary = decode_required_json_object(
         "tasks",
@@ -457,7 +456,7 @@ fn terminal_close_summary_json(
                 .expect("validated terminal close_reason is present"),
         )?,
     );
-    close_summary.insert("closed_at".to_owned(), Value::String(closed_at.to_owned()));
+    close_summary.insert("closed_at".to_owned(), serde_json::to_value(closed_at)?);
     close_summary.insert("intent".to_owned(), serde_json::to_value(request.intent)?);
     close_summary.insert(
         "user_note".to_owned(),
@@ -673,6 +672,7 @@ fn completion_close_blockers(
     request: &CloseTaskRequest,
     context: &CloseTaskContext,
     risk_acceptance_coverage: &[RiskAcceptanceCoverage],
+    now: &UtcTimestamp,
 ) -> Result<Vec<CloseReadinessBlocker>, PlanError> {
     let mut blockers = Vec::new();
     let task_ref = task_ref_for_close(request, project_state.state_version);
@@ -727,7 +727,7 @@ fn completion_close_blockers(
     }
 
     if sensitive_approval_required(context)?
-        && !has_current_sensitive_approval_for_close(store, project_state, request, context)?
+        && !has_current_sensitive_approval_for_close(store, project_state, request, context, now)?
     {
         let related_refs = refs_with_context(
             change_unit_ref.clone().into_iter().collect(),
@@ -1293,6 +1293,7 @@ fn has_current_sensitive_approval_for_close(
     project_state: &ProjectStateHeader,
     request: &CloseTaskRequest,
     context: &CloseTaskContext,
+    now: &UtcTimestamp,
 ) -> Result<bool, PlanError> {
     let Some(close_basis) = context.current_close_basis.as_ref() else {
         return Ok(false);
@@ -1307,13 +1308,6 @@ fn has_current_sensitive_approval_for_close(
         &request.task_id,
         JudgmentKind::SensitiveApproval,
     )?;
-    let now = store.current_timestamp().map_err(|error| {
-        PlanError::Response(Box::new(store_error_response(
-            &request.envelope,
-            project_state,
-            error,
-        )))
-    })?;
     let change_unit_id = ChangeUnitId::new(current_change_unit.change_unit_id.clone());
     let requirement = SensitiveApprovalRequirement {
         task_id: &request.task_id,
@@ -1323,7 +1317,7 @@ fn has_current_sensitive_approval_for_close(
         normalized_paths: &[],
         sensitive_categories: &close_basis.sensitive_categories,
         baseline_ref: close_basis.baseline_ref.as_ref(),
-        now: &now,
+        now,
         repo_root: &store.project_record().repo_root,
     };
     Ok(authorities

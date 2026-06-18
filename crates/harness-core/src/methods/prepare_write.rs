@@ -149,6 +149,7 @@ fn plan_prepare_write(
     };
 
     let planned_state_version = project_state.state_version + 1;
+    let plan_now = utc_timestamp(service.now());
     let (task_id, task, mut reasons) = resolve_prepare_write_task(store, project_state, &request)?;
     let current_change_unit = store.current_change_unit(&task_id).map_err(|error| {
         PlanError::Response(Box::new(store_error_response(
@@ -230,15 +231,16 @@ fn plan_prepare_write(
 
     let mut active_user_judgment_refs = Vec::new();
     if !request.sensitive_categories.is_empty() {
-        let matching_sensitive_approval = matching_sensitive_approval(
+        let matching_sensitive_approval = matching_sensitive_approval(SensitiveApprovalSearch {
             store,
             project_state,
-            &request,
-            &task_id,
-            &task,
+            request: &request,
+            task_id: &task_id,
+            task: &task,
             change_unit,
-            &normalized_paths,
-        )?;
+            normalized_paths: &normalized_paths,
+            now: &plan_now,
+        })?;
         if let Some(record) = matching_sensitive_approval {
             active_user_judgment_refs.push(state_ref(
                 StateRecordKind::UserJudgment,
@@ -301,9 +303,10 @@ fn plan_prepare_write(
         baseline_ref: Some(request.baseline_ref.clone()),
     };
     let attempt_scope_json = serde_json::to_string(&authorized_attempt_scope)?;
-    let created_at_timestamp = service.now();
-    let created_at = format_utc_timestamp(created_at_timestamp);
-    let expires_at = format_utc_timestamp(write_authorization_expires_at(created_at_timestamp));
+    let created_at = plan_now.to_string();
+    let expires_at_timestamp =
+        utc_timestamp(write_authorization_expires_at(*plan_now.as_datetime()));
+    let expires_at = expires_at_timestamp.to_string();
     let write_authorization_ref = write_authorization_id
         .as_ref()
         .map(|write_authorization_id| {
@@ -322,7 +325,7 @@ fn plan_prepare_write(
             status: WriteAuthorizationStatus::Active,
             authorized_attempt_scope: authorized_attempt_scope.clone(),
             basis_state_version: planned_state_version,
-            expires_at: Some(expires_at.clone()),
+            expires_at: Some(expires_at_timestamp.clone()),
         });
     let synthetic_write_authorization =
         write_authorization_id

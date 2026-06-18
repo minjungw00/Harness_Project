@@ -6,6 +6,7 @@ use harness_types::{
     PersistedArtifactProvenance, PersistedArtifactProvenanceMetadata, PersistedEvidenceMetadata,
     PersistedJudgmentBasis, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
     ProjectId, RequestHash, RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId,
+    UtcTimestamp,
 };
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
@@ -282,6 +283,7 @@ pub struct ArtifactPromotion {
     pub expected_sha256: String,
     pub expected_size_bytes: u64,
     pub expected_redaction_state: String,
+    pub expected_expires_at: String,
     pub uri: String,
     pub retention_json: String,
     pub producer_json: String,
@@ -1867,6 +1869,7 @@ impl ProjectMutation<'_> {
         )?;
         validate_identifier("expected_sha256", &input.expected_sha256)?;
         validate_identifier("expected_redaction_state", &input.expected_redaction_state)?;
+        validate_timestamp("expected_expires_at", &input.expected_expires_at)?;
         validate_identifier("artifacts.uri", &input.uri)?;
         validate_json_text("artifacts.retention_json", &input.retention_json)?;
         validate_artifact_producer_json("artifacts.producer_json", &input.producer_json)?;
@@ -1888,21 +1891,11 @@ impl ProjectMutation<'_> {
             || staging.sha256.as_deref() != Some(input.expected_sha256.as_str())
             || staging.size_bytes != Some(input.expected_size_bytes)
             || staging.redaction_state != input.expected_redaction_state
+            || staging.expires_at != input.expected_expires_at
         {
             return Err(StoreError::SchemaInvariant {
                 database_kind: "project_state",
                 detail: "staged artifact changed before promotion".to_owned(),
-            });
-        }
-        let expired: bool = self.tx.query_row(
-            "SELECT ?1 <= strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
-            params![staging.expires_at],
-            |row| row.get::<_, i64>(0).map(|value| value != 0),
-        )?;
-        if expired {
-            return Err(StoreError::SchemaInvariant {
-                database_kind: "project_state",
-                detail: "staged artifact expired before promotion".to_owned(),
             });
         }
 
@@ -3547,6 +3540,14 @@ fn validate_identifier(field: &'static str, value: &str) -> StoreResult<()> {
     }
 }
 
+fn validate_timestamp(field: &'static str, value: &str) -> StoreResult<()> {
+    UtcTimestamp::parse(value)
+        .map(|_| ())
+        .map_err(|_| StoreError::InvalidInput {
+            detail: format!("{field} must be a valid RFC 3339 timestamp"),
+        })
+}
+
 fn validate_json_text(field: &'static str, text: &str) -> StoreResult<()> {
     serde_json::from_str::<Value>(text).map_err(|error| StoreError::InvalidInput {
         detail: format!("{field} must be JSON text: {error}"),
@@ -4263,7 +4264,8 @@ mod tests {
             sensitive_categories: vec!["network".to_owned()],
             recovery_constraints: vec!["Rollback requires operator action.".to_owned()],
             source_run_ref: state_ref(StateRecordKind::Run, "run_basis", task_id, 1),
-            updated_at: "2026-06-18T00:00:00.000Z".to_owned(),
+            updated_at: UtcTimestamp::parse("2026-06-18T00:00:00Z")
+                .expect("test timestamp should parse"),
         }
     }
 

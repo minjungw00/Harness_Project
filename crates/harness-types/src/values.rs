@@ -1,5 +1,110 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use std::{error::Error, fmt, str::FromStr};
+
+use chrono::{DateTime, SecondsFormat, Utc};
+use schemars::{
+    gen::SchemaGenerator,
+    schema::{InstanceType, Schema, SchemaObject, SingleOrVec},
+    JsonSchema,
+};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+
+/// Parsed RFC 3339 timestamp normalized to a UTC instant.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UtcTimestamp(DateTime<Utc>);
+
+impl UtcTimestamp {
+    /// Parses an RFC 3339 timestamp with an explicit offset and normalizes it to UTC.
+    pub fn parse(raw: &str) -> Result<Self, UtcTimestampParseError> {
+        DateTime::parse_from_rfc3339(raw)
+            .map(|timestamp| Self(timestamp.with_timezone(&Utc)))
+            .map_err(|_| UtcTimestampParseError)
+    }
+
+    /// Wraps an already-UTC timestamp.
+    pub fn from_datetime(timestamp: DateTime<Utc>) -> Self {
+        Self(timestamp)
+    }
+
+    /// Returns the UTC instant.
+    pub fn as_datetime(&self) -> &DateTime<Utc> {
+        &self.0
+    }
+
+    /// Consumes the wrapper and returns the UTC instant.
+    pub fn into_datetime(self) -> DateTime<Utc> {
+        self.0
+    }
+
+    /// Returns the deterministic RFC 3339 UTC wire representation.
+    pub fn to_canonical_string(&self) -> String {
+        self.0.to_rfc3339_opts(SecondsFormat::AutoSi, true)
+    }
+}
+
+impl fmt::Display for UtcTimestamp {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.to_canonical_string())
+    }
+}
+
+impl From<DateTime<Utc>> for UtcTimestamp {
+    fn from(timestamp: DateTime<Utc>) -> Self {
+        Self::from_datetime(timestamp)
+    }
+}
+
+impl FromStr for UtcTimestamp {
+    type Err = UtcTimestampParseError;
+
+    fn from_str(raw: &str) -> Result<Self, Self::Err> {
+        Self::parse(raw)
+    }
+}
+
+impl Serialize for UtcTimestamp {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_canonical_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for UtcTimestamp {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw = String::deserialize(deserializer)?;
+        Self::parse(&raw).map_err(de::Error::custom)
+    }
+}
+
+impl JsonSchema for UtcTimestamp {
+    fn schema_name() -> String {
+        "UtcTimestamp".to_owned()
+    }
+
+    fn json_schema(_generator: &mut SchemaGenerator) -> Schema {
+        Schema::Object(SchemaObject {
+            instance_type: Some(SingleOrVec::Single(Box::new(InstanceType::String))),
+            format: Some("date-time".to_owned()),
+            ..Default::default()
+        })
+    }
+}
+
+/// Error returned when a public or persisted timestamp is not RFC 3339.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct UtcTimestampParseError;
+
+impl fmt::Display for UtcTimestampParseError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("timestamp must be a valid RFC 3339 string with an explicit offset")
+    }
+}
+
+impl Error for UtcTimestampParseError {}
 
 /// Supported public Harness method names.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]

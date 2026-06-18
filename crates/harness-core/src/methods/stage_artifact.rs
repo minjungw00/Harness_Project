@@ -98,6 +98,8 @@ impl CoreService {
                 )
             }
         };
+        let created_at = utc_timestamp(self.now());
+        let expires_at = utc_timestamp(*created_at.as_datetime() + Duration::hours(24));
         let staging_record = match prepared
             .store
             .create_artifact_staging(ArtifactStagingInsert {
@@ -116,6 +118,8 @@ impl CoreService {
                 relation_hint: request.relation_hint.into_option(),
                 payload_kind: stage_input.payload_kind,
                 safe_bytes_or_notice: stage_input.safe_bytes,
+                created_at: created_at.to_string(),
+                expires_at: expires_at.to_string(),
             }) {
             Ok(record) => record,
             Err(error) => {
@@ -123,6 +127,21 @@ impl CoreService {
                     request.envelope.dry_run,
                     Some(project_state.state_version),
                     vec![store_failure_error(error)],
+                )
+            }
+        };
+        let staged_expires_at: UtcTimestamp = match parse_owner_storage_value(
+            "artifact_staging",
+            staging_record.handle_id.clone(),
+            "expires_at",
+            &staging_record.expires_at,
+        ) {
+            Ok(expires_at) => expires_at,
+            Err(error) => {
+                return core_error_response(
+                    &request.envelope,
+                    Some(project_state.state_version),
+                    error,
                 )
             }
         };
@@ -140,7 +159,7 @@ impl CoreService {
             sha256: staging_record.sha256,
             size_bytes: staging_record.size_bytes,
             redaction_state: request.redaction_state,
-            expires_at: staging_record.expires_at.clone(),
+            expires_at: staged_expires_at.clone(),
             consumed: false,
         };
         let result = StageArtifactResult {
@@ -151,7 +170,7 @@ impl CoreService {
                 Vec::new(),
             ),
             staged_artifact_handle: handle,
-            expires_at: staging_record.expires_at,
+            expires_at: staged_expires_at,
         };
         let response_value = serde_json::to_value(result)?;
         let response_json = serde_json::to_string(&response_value)?;

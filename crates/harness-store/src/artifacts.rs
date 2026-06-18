@@ -1,5 +1,6 @@
 use std::{fs, path::PathBuf};
 
+use harness_types::UtcTimestamp;
 use rusqlite::{params, Transaction};
 use serde_json::{json, Value};
 
@@ -46,6 +47,8 @@ pub struct ArtifactStagingInsert {
     pub relation_hint: Option<String>,
     pub payload_kind: StagedPayloadKind,
     pub safe_bytes_or_notice: Vec<u8>,
+    pub created_at: String,
+    pub expires_at: String,
 }
 
 /// Stored staged-handle facts returned after staging creation.
@@ -108,7 +111,6 @@ fn insert_artifact_staging_tx(
     let file_name = format!("{}.txt", path_component(&handle_id));
     let relative_tmp_path = format!("{ARTIFACTS_DIR}/{ARTIFACTS_TMP_DIR}/{file_name}");
     let write_path = tmp_dir.join(&file_name);
-    let (created_at, expires_at) = staging_timestamps(tx)?;
     let artifact_json = json_text(json!({
         "display_name": input.display_name,
         "relation_hint": input.relation_hint
@@ -180,8 +182,8 @@ fn insert_artifact_staging_tx(
             size_bytes,
             input.content_type,
             input.redaction_state,
-            expires_at,
-            created_at,
+            input.expires_at,
+            input.created_at,
             metadata_json
         ],
     );
@@ -201,7 +203,7 @@ fn insert_artifact_staging_tx(
             sha256: input.sha256,
             size_bytes: input.size_bytes,
             redaction_state: input.redaction_state,
-            expires_at,
+            expires_at: input.expires_at,
             tmp_path: relative_tmp_path,
         },
         write_path,
@@ -225,18 +227,9 @@ fn validate_insert(input: &ArtifactStagingInsert) -> StoreResult<()> {
             detail: "safe_bytes_or_notice must not be empty".to_owned(),
         });
     }
+    validate_timestamp("created_at", &input.created_at)?;
+    validate_timestamp("expires_at", &input.expires_at)?;
     Ok(())
-}
-
-fn staging_timestamps(tx: &Transaction<'_>) -> StoreResult<(String, String)> {
-    tx.query_row(
-        "SELECT
-            strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
-            strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '+24 hours')",
-        [],
-        |row| Ok((row.get(0)?, row.get(1)?)),
-    )
-    .map_err(StoreError::from)
 }
 
 fn path_component(value: &str) -> String {
@@ -264,6 +257,14 @@ fn validate_identifier(field: &'static str, value: &str) -> StoreResult<()> {
     } else {
         Ok(())
     }
+}
+
+fn validate_timestamp(field: &'static str, value: &str) -> StoreResult<()> {
+    UtcTimestamp::parse(value)
+        .map(|_| ())
+        .map_err(|_| StoreError::InvalidInput {
+            detail: format!("{field} must be a valid RFC 3339 timestamp"),
+        })
 }
 
 fn validate_nonempty_text(field: &'static str, value: &str) -> StoreResult<()> {

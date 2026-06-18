@@ -190,6 +190,10 @@ impl MethodHarness {
         self.service =
             CoreService::with_id_generator_and_clock(&self.runtime_home_path, generator, clock);
     }
+
+    fn use_clock(&mut self, clock: ManualClock) {
+        self.service = CoreService::with_clock(&self.runtime_home_path, clock);
+    }
 }
 
 #[test]
@@ -1495,8 +1499,8 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
     );
     let (created_at, expires_at) =
         write_authorization_timestamps(&harness, &write_authorization_id)?;
-    assert_eq!(created_at, "2026-06-18T00:00:00.000Z");
-    assert_eq!(expires_at, "2026-06-18T00:15:00.000Z");
+    assert_eq!(created_at, "2026-06-18T00:00:00Z");
+    assert_eq!(expires_at, "2026-06-18T00:15:00Z");
     assert_eq!(
         response.response_value["write_authorization"]["expires_at"],
         expires_at
@@ -2563,7 +2567,7 @@ fn record_run_non_null_close_assessment_creates_current_basis() -> Result<(), Bo
     assert_eq!(basis.close_basis_revision, revision.close_basis_revision);
     assert_eq!(basis.result_summary, "Recorded close basis.");
     assert!(basis.residual_risks.is_empty());
-    assert_eq!(basis.updated_at, "2026-06-18T12:00:00.000Z");
+    assert_eq!(basis.updated_at.to_string(), "2026-06-18T12:00:00Z");
     assert_eq!(
         response.response_value["current_close_basis"]["residual_risks"],
         json!([])
@@ -3314,6 +3318,150 @@ fn record_run_expired_staged_artifact_rejects_without_effect() -> Result<(), Box
         "staged_handle_expired"
     );
     assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_staged_artifact_uses_semantic_expiry_boundary() -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_clock(clock.clone());
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_stage_boundary")?;
+    let handle = stage_artifact_for_record_run(&harness, &task_id, "run_stage_boundary", 2)?;
+    clock.advance(Duration::seconds(24 * 60 * 60 - 1));
+
+    let mut request = record_run_request(
+        "req_run_stage_boundary_before",
+        "idem_run_stage_boundary_before",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_boundary_before",
+        handle,
+        None,
+        None,
+    )];
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+
+    let mut harness = MethodHarness::new()?;
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_clock(clock.clone());
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "run_stage_boundary_exact")?;
+    let handle = stage_artifact_for_record_run(&harness, &task_id, "run_stage_boundary_exact", 2)?;
+    clock.advance(Duration::hours(24));
+    let before = harness.counts()?;
+
+    let mut request = record_run_request(
+        "req_run_stage_boundary_exact",
+        "idem_run_stage_boundary_exact",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_boundary_exact",
+        handle,
+        None,
+        None,
+    )];
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["artifact_input_error"]["reason"],
+        "staged_handle_expired"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_staged_artifact_accepts_equivalent_offset_expiration() -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_clock(clock);
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_stage_offset")?;
+    let mut handle = stage_artifact_for_record_run(&harness, &task_id, "run_stage_offset", 2)?;
+    handle.expires_at = harness_types::UtcTimestamp::parse("2026-06-19T09:00:00+09:00")?;
+
+    let mut request = record_run_request(
+        "req_run_stage_offset",
+        "idem_run_stage_offset",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_offset",
+        handle,
+        None,
+        None,
+    )];
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    Ok(())
+}
+
+#[test]
+fn record_run_invalid_stored_staged_artifact_expiration_is_corrupt_state(
+) -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_clock(clock);
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "run_stage_bad_expires")?;
+    let handle = stage_artifact_for_record_run(&harness, &task_id, "run_stage_bad_expires", 2)?;
+    set_staged_artifact_expires_at(&harness, handle.handle_id.as_str(), "tomorrow")?;
+    let before = harness.counts()?;
+
+    let mut request = record_run_request(
+        "req_run_stage_bad_expires",
+        "idem_run_stage_bad_expires",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_bad_expires",
+        handle.clone(),
+        None,
+        None,
+    )];
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_owner_state_value_rejection(
+        &response,
+        "artifact_staging",
+        handle.handle_id.as_str(),
+        "expires_at",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(
+        artifact_staging_status(&harness, handle.handle_id.as_str())?,
+        "staged"
+    );
     Ok(())
 }
 
@@ -4949,6 +5097,181 @@ fn stored_judgment_request_wrong_field_type_rejects_record_without_effect(
         &harness.runtime_home_path,
     );
     assert_public_response_omits(&response, "secret-request-path");
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(user_judgment_status(&harness, &judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn request_user_judgment_rejects_expiration_at_clock_boundary() -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_clock(clock);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "judgment_expiry_request_exact")?;
+    let before = harness.counts()?;
+    let mut request = user_judgment_request(
+        "req_judgment_expiry_request_exact",
+        "idem_judgment_expiry_request_exact",
+        false,
+        Some(2),
+        &task_id,
+        Some(&change_unit_id),
+        JudgmentKind::ProductDecision,
+    );
+    request.expires_at = Some(harness_types::UtcTimestamp::parse("2026-06-18T00:00:00Z")?).into();
+
+    let response = harness
+        .service
+        .request_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["field"],
+        "expires_at"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_user_judgment_uses_semantic_expiry_boundary() -> Result<(), Box<dyn Error>> {
+    let mut harness = MethodHarness::new()?;
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_clock(clock);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "judgment_expiry_before")?;
+    let mut request = user_judgment_request(
+        "req_judgment_expiry_before",
+        "idem_judgment_expiry_before",
+        false,
+        Some(2),
+        &task_id,
+        Some(&change_unit_id),
+        JudgmentKind::ProductDecision,
+    );
+    request.expires_at = Some(harness_types::UtcTimestamp::parse(
+        "2026-06-18T09:00:01+09:00",
+    )?)
+    .into();
+    let judgment = harness
+        .service
+        .request_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_record_judgment_expiry_before",
+            "idem_record_judgment_expiry_before",
+            Some(3),
+            &task_id,
+            &judgment_id,
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(user_judgment_status(&harness, &judgment_id)?, "resolved");
+
+    let mut harness = MethodHarness::new()?;
+    let clock = ManualClock::at("2026-06-18T00:00:00Z");
+    harness.use_clock(clock.clone());
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "judgment_expiry_exact")?;
+    let mut request = user_judgment_request(
+        "req_judgment_expiry_exact",
+        "idem_judgment_expiry_exact",
+        false,
+        Some(2),
+        &task_id,
+        Some(&change_unit_id),
+        JudgmentKind::ProductDecision,
+    );
+    request.expires_at = Some(harness_types::UtcTimestamp::parse("2026-06-18T00:00:01Z")?).into();
+    let judgment = harness
+        .service
+        .request_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    clock.advance(Duration::seconds(1));
+    let before = harness.counts()?;
+
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_record_judgment_expiry_exact",
+            "idem_record_judgment_expiry_exact",
+            Some(3),
+            &task_id,
+            &judgment_id,
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "DECISION_UNRESOLVED"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(user_judgment_status(&harness, &judgment_id)?, "pending");
+    Ok(())
+}
+
+#[test]
+fn stored_judgment_request_invalid_expiration_rejects_record_without_effect(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "bad_request_expiration")?;
+    let judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_bad_request_expiration",
+            "idem_bad_request_expiration",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ProductDecision,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let corrupt_request_json = r#"{"presentation":"short","question":"must not leak secret-expiry-path","required_for":"close","expires_at":"tomorrow"}"#;
+    set_user_judgment_owner_json(
+        &harness,
+        &judgment_id,
+        "request_json",
+        Some(corrupt_request_json),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_record_bad_request_expiration",
+            "idem_record_bad_request_expiration",
+            Some(3),
+            &task_id,
+            &judgment_id,
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "user_judgments",
+        &judgment_id,
+        "request_json",
+        &harness.runtime_home_path,
+    );
+    assert_public_response_omits(&response, "secret-expiry-path");
     assert_eq!(harness.counts()?, before);
     assert_eq!(user_judgment_status(&harness, &judgment_id)?, "pending");
     Ok(())
@@ -7597,6 +7920,22 @@ fn expire_staged_artifact(harness: &MethodHarness, handle_id: &str) -> Result<()
               WHERE project_id = ?1
                 AND handle_id = ?2",
         rusqlite::params![PROJECT_ID, handle_id],
+    )?;
+    Ok(())
+}
+
+fn set_staged_artifact_expires_at(
+    harness: &MethodHarness,
+    handle_id: &str,
+    expires_at: &str,
+) -> Result<(), Box<dyn Error>> {
+    let conn = harness.conn()?;
+    conn.execute(
+        "UPDATE artifact_staging
+                SET expires_at = ?3
+              WHERE project_id = ?1
+                AND handle_id = ?2",
+        rusqlite::params![PROJECT_ID, handle_id, expires_at],
     )?;
     Ok(())
 }

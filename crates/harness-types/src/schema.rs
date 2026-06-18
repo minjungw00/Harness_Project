@@ -15,7 +15,7 @@ use crate::values::{
     GuaranteeLevel, JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation,
     JudgmentRequiredFor, MethodName, NextActionKind, PlannedBlockerSourceKind, RedactionState,
     ResponseKind, RunKind, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult,
-    UserJudgmentStatus, ValidatorSeverity, ValidatorStatus, WriteAuthorizationStatus,
+    UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus, WriteAuthorizationStatus,
     WriteDecisionCategory,
 };
 
@@ -310,7 +310,7 @@ pub struct TaskLifecycleState {
     pub lifecycle_phase: TaskLifecyclePhase,
     pub close_reason: CloseReason,
     pub result: TaskResult,
-    pub closed_at: Option<String>,
+    pub closed_at: Option<UtcTimestamp>,
 }
 
 /// Shaping-readiness view over current Task and Change Unit state.
@@ -364,7 +364,7 @@ pub struct WriteAuthorizationSummary {
     pub status: WriteAuthorizationStatus,
     pub authorized_attempt_scope: AuthorizedAttemptScope,
     pub basis_state_version: u64,
-    pub expires_at: Option<String>,
+    pub expires_at: Option<UtcTimestamp>,
 }
 
 /// One-attempt boundary captured by a Write Authorization.
@@ -481,7 +481,7 @@ pub struct CurrentCloseBasis {
     pub sensitive_categories: Vec<String>,
     pub recovery_constraints: Vec<String>,
     pub source_run_ref: StateRecordRef,
-    pub updated_at: String,
+    pub updated_at: UtcTimestamp,
 }
 
 /// Named visible residual risk in a current close basis.
@@ -598,7 +598,7 @@ pub struct StagedArtifactHandle {
     pub sha256: String,
     pub size_bytes: u64,
     pub redaction_state: RedactionState,
-    pub expires_at: String,
+    pub expires_at: UtcTimestamp,
     pub consumed: bool,
 }
 
@@ -634,9 +634,9 @@ pub struct UserJudgment {
     pub basis: Option<JudgmentBasis>,
     pub required_for: JudgmentRequiredFor,
     pub resolution: Option<UserJudgmentResolution>,
-    pub expires_at: Option<String>,
-    pub created_at: String,
-    pub resolved_at: Option<String>,
+    pub expires_at: Option<UtcTimestamp>,
+    pub created_at: UtcTimestamp,
+    pub resolved_at: Option<UtcTimestamp>,
 }
 
 /// Core-derived state snapshot used to decide whether a judgment is compatible.
@@ -665,7 +665,7 @@ pub struct PersistedUserJudgmentRequest {
     pub presentation: JudgmentPresentation,
     pub question: String,
     pub required_for: JudgmentRequiredFor,
-    pub expires_at: RequiredNullable<String>,
+    pub expires_at: RequiredNullable<UtcTimestamp>,
 }
 
 /// Proposed focused judgment shape.
@@ -678,7 +678,7 @@ pub struct UserJudgmentCandidate {
     pub context: UserJudgmentContext,
     pub affected_refs: Vec<StateRecordRef>,
     pub required_for: JudgmentRequiredFor,
-    pub expires_at: Option<String>,
+    pub expires_at: Option<UtcTimestamp>,
 }
 
 /// User judgment option.
@@ -791,7 +791,7 @@ pub struct SensitiveActionScope {
     pub network_or_host_summary: RequiredNullable<String>,
     pub secret_or_credential_summary: RequiredNullable<String>,
     pub capability_claim: String,
-    pub expires_at: RequiredNullable<String>,
+    pub expires_at: RequiredNullable<UtcTimestamp>,
 }
 
 /// Visible residual-risk input shape.

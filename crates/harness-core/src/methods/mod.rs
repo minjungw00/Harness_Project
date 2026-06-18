@@ -3,7 +3,7 @@ use std::{
     path::Path,
 };
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use harness_store::{
     artifacts::{ArtifactStagingInsert, StagedPayloadKind},
     core_pipeline::{
@@ -35,8 +35,9 @@ use harness_types::{
     StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId, TaskId, TaskLifecyclePhase,
     TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
     UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentResolution,
-    UserJudgmentStatus, WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
-    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
+    UserJudgmentStatus, UtcTimestamp, WriteAuthoritySummary, WriteAuthorizationId,
+    WriteAuthorizationStatus, WriteAuthorizationSummary, WriteDecisionCategory,
+    WriteDecisionReason,
 };
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -61,11 +62,11 @@ use crate::policy::{
     evidence::{evidence_status_for_items, unique_artifact_refs},
     path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
     write_authorization::{
-        current_sensitive_approval, format_utc_timestamp, normalize_sensitive_action_scope,
-        prepare_write_decision, prepare_write_dry_run_summary,
-        sensitive_action_scope_matches_requirement, surface_supports_prepare_write,
-        write_authorization_expires_at, write_authorization_guarantee,
-        write_authorization_is_expired, write_decision_reason, SensitiveApprovalRequirement,
+        current_sensitive_approval, normalize_sensitive_action_scope, prepare_write_decision,
+        prepare_write_dry_run_summary, sensitive_action_scope_matches_requirement,
+        surface_supports_prepare_write, write_authorization_expires_at,
+        write_authorization_guarantee, write_authorization_is_expired, write_decision_reason,
+        SensitiveApprovalRequirement,
     },
 };
 
@@ -283,6 +284,10 @@ where
     serde_json::from_value(Value::String(value.to_owned())).map_err(|_| {
         CorePipelineError::Store(StoreError::corrupt_stored_value("project_state", field))
     })
+}
+
+fn utc_timestamp(timestamp: DateTime<Utc>) -> UtcTimestamp {
+    UtcTimestamp::from_datetime(timestamp)
 }
 
 fn parse_owner_storage_value<T>(
@@ -661,15 +666,30 @@ fn paths_match_current_change_unit(
         }))
 }
 
+struct SensitiveApprovalSearch<'a> {
+    store: &'a CoreProjectStore,
+    project_state: &'a ProjectStateHeader,
+    request: &'a PrepareWriteRequest,
+    task_id: &'a TaskId,
+    task: &'a TaskRecord,
+    change_unit: Option<&'a ChangeUnitRecord>,
+    normalized_paths: &'a [String],
+    now: &'a UtcTimestamp,
+}
+
 fn matching_sensitive_approval(
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    request: &PrepareWriteRequest,
-    task_id: &TaskId,
-    task: &TaskRecord,
-    change_unit: Option<&ChangeUnitRecord>,
-    normalized_paths: &[String],
+    search: SensitiveApprovalSearch<'_>,
 ) -> Result<Option<UserJudgmentRecord>, PlanError> {
+    let SensitiveApprovalSearch {
+        store,
+        project_state,
+        request,
+        task_id,
+        task,
+        change_unit,
+        normalized_paths,
+        now,
+    } = search;
     let records = store
         .resolved_user_judgment_records(task_id, "sensitive_approval")
         .map_err(|error| {
@@ -679,14 +699,6 @@ fn matching_sensitive_approval(
                 error,
             )))
         })?;
-    let now = store.current_timestamp().map_err(|error| {
-        PlanError::Response(Box::new(infallible_rejected_pipeline_response(
-            request.envelope.dry_run,
-            Some(project_state.state_version),
-            vec![store_failure_error(error)],
-        )))
-    })?;
-
     let Some(change_unit) = change_unit else {
         return Ok(None);
     };
@@ -699,7 +711,7 @@ fn matching_sensitive_approval(
         normalized_paths,
         sensitive_categories: &request.sensitive_categories,
         baseline_ref: Some(&request.baseline_ref),
-        now: &now,
+        now,
         repo_root: &store.project_record().repo_root,
     };
 
@@ -1001,7 +1013,7 @@ struct PersistedCloseSummary {
     #[serde(default)]
     close_reason: Option<CloseReason>,
     #[serde(default)]
-    closed_at: Option<String>,
+    closed_at: Option<UtcTimestamp>,
     #[serde(default)]
     intent: Option<CloseIntent>,
     #[serde(default)]
@@ -1266,7 +1278,13 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
             lifecycle_phase: parse_lifecycle_phase(&task.lifecycle_phase)?,
             close_reason: parse_close_reason(task)?,
             result: parse_task_result(task.result.as_deref().unwrap_or("none"))?,
-            closed_at: task.closed_at.clone(),
+            closed_at: task
+                .closed_at
+                .as_ref()
+                .map(|closed_at| {
+                    parse_owner_storage_value("tasks", task.task_id.clone(), "closed_at", closed_at)
+                })
+                .transpose()?,
         }),
         goal_summary: scope.goal_summary,
         scope_summary: change_unit_scope.or(scope.scope_summary),

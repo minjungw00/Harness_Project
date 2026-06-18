@@ -107,6 +107,7 @@ impl CoreService {
             Err(response) => return Ok(response),
         };
         let plan = match plan_record_user_judgment(
+            self,
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
@@ -156,6 +157,7 @@ fn plan_request_user_judgment(
     request: harness_types::RequestUserJudgmentRequest,
     verified_surface: &VerifiedSurfaceContext,
 ) -> Result<MethodPlan, PlanError> {
+    let requested_at = utc_timestamp(service.now());
     validate_user_judgment_request_fields(UserJudgmentRequestValidation {
         dry_run: request.envelope.dry_run,
         state_version: Some(project_state.state_version),
@@ -165,14 +167,8 @@ fn plan_request_user_judgment(
         affected_refs: &request.affected_refs,
         project_id: &request.envelope.project_id,
         task_id: &request.task_id,
-        expires_at: request.expires_at.as_deref(),
-        current_timestamp: store.current_timestamp().map_err(|error| {
-            PlanError::Response(Box::new(store_error_response(
-                &request.envelope,
-                project_state,
-                error,
-            )))
-        })?,
+        expires_at: request.expires_at.as_ref(),
+        current_timestamp: requested_at.clone(),
     })?;
 
     let planned_state_version = project_state.state_version + 1;
@@ -246,13 +242,6 @@ fn plan_request_user_judgment(
         .transpose()?
         .unwrap_or_else(|| "{}".to_owned());
 
-    let requested_at = store.current_timestamp().map_err(|error| {
-        PlanError::Response(Box::new(store_error_response(
-            &request.envelope,
-            project_state,
-            error,
-        )))
-    })?;
     let judgment_id = allocate_user_judgment_id(service, store).map_err(PlanError::Core)?;
     let user_judgment_ref = state_ref(
         StateRecordKind::UserJudgment,
@@ -367,7 +356,7 @@ fn plan_request_user_judgment(
                 .surface_instance_id
                 .as_str()
                 .to_owned(),
-            requested_at,
+            requested_at: requested_at.to_string(),
             metadata_json: serde_json::to_string(&json!({
                 "requested_by_actor_kind": request.envelope.actor_kind
             }))?,
@@ -643,6 +632,7 @@ fn validate_pending_judgment_basis_for_answer(
     record: &UserJudgmentRecord,
     task: &TaskRecord,
     current_change_unit: Option<&ChangeUnitRecord>,
+    now: &UtcTimestamp,
 ) -> Result<RecordUserJudgmentPayload, PlanError> {
     let authority = user_judgment_authority_from_record(record)?;
     if !judgment_has_current_basis(&authority) {
@@ -771,13 +761,6 @@ fn validate_pending_judgment_basis_for_answer(
                 })?;
             let current_change_unit_id =
                 ChangeUnitId::new(current_change_unit.change_unit_id.clone());
-            let now = store.current_timestamp().map_err(|error| {
-                PlanError::Response(Box::new(store_error_response(
-                    &request.envelope,
-                    project_state,
-                    error,
-                )))
-            })?;
             let requirement = SensitiveApprovalRequirement {
                 task_id: &authority.task_id,
                 change_unit_id: &current_change_unit_id,
@@ -786,7 +769,7 @@ fn validate_pending_judgment_basis_for_answer(
                 normalized_paths: &stored_scope.intended_paths,
                 sensitive_categories: &stored_scope.sensitive_categories,
                 baseline_ref: basis.baseline_ref.as_ref(),
-                now: &now,
+                now,
                 repo_root: &store.project_record().repo_root,
             };
             if basis.task_id != authority.task_id
@@ -880,11 +863,13 @@ fn current_close_basis_for_answer(
 }
 
 fn plan_record_user_judgment(
+    service: &CoreService,
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: RecordUserJudgmentRequest,
 ) -> Result<MethodPlan, PlanError> {
     let planned_state_version = project_state.state_version + 1;
+    let now = utc_timestamp(service.now());
     let record = store
         .user_judgment_record(request.user_judgment_id.as_str())
         .map_err(|error| {
@@ -922,17 +907,10 @@ fn plan_record_user_judgment(
     }
 
     let mut user_judgment = user_judgment_from_record(&record)?;
-    let now = store.current_timestamp().map_err(|error| {
-        PlanError::Response(Box::new(store_error_response(
-            &request.envelope,
-            project_state,
-            error,
-        )))
-    })?;
     if user_judgment
         .expires_at
-        .as_deref()
-        .is_some_and(|expires_at| expires_at <= now.as_str())
+        .as_ref()
+        .is_some_and(|expires_at| &now >= expires_at)
     {
         return Err(PlanError::Response(Box::new(decision_rejected_response(
             &request.envelope,
@@ -998,6 +976,7 @@ fn plan_record_user_judgment(
         &record,
         &task,
         current_change_unit.as_ref(),
+        &now,
     )?;
     let resolution = UserJudgmentResolution {
         selected_option_id: request.selected_option_id.clone(),
@@ -1090,7 +1069,7 @@ fn plan_record_user_judgment(
             status: storage_value(UserJudgmentStatus::Resolved)?,
             resolution_json: serde_json::to_string(&resolution)?,
             sensitive_action_scope_json,
-            resolved_at: now,
+            resolved_at: now.to_string(),
         },
     )];
     let event_payload = object_from_value(json!({
@@ -1120,8 +1099,8 @@ struct UserJudgmentRequestValidation<'a> {
     affected_refs: &'a [StateRecordRef],
     project_id: &'a ProjectId,
     task_id: &'a TaskId,
-    expires_at: Option<&'a str>,
-    current_timestamp: String,
+    expires_at: Option<&'a UtcTimestamp>,
+    current_timestamp: UtcTimestamp,
 }
 
 fn validate_user_judgment_request_fields(
@@ -1201,15 +1180,7 @@ fn validate_user_judgment_request_fields(
         }
     }
     if let Some(expires_at) = input.expires_at {
-        if expires_at.trim().is_empty() {
-            return validation_plan_error(
-                input.dry_run,
-                input.state_version,
-                "expires_at",
-                "expires_at must be null or a non-empty timestamp string",
-            );
-        }
-        if expires_at <= input.current_timestamp.as_str() {
+        if expires_at <= &input.current_timestamp {
             return validation_plan_error(
                 input.dry_run,
                 input.state_version,
@@ -1285,6 +1256,24 @@ fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudg
         Some(&record.artifact_refs_json),
     )?;
     let authority = user_judgment_authority_from_record(record)?;
+    let created_at = parse_owner_storage_value(
+        "user_judgments",
+        record.judgment_id.clone(),
+        "requested_at",
+        &record.requested_at,
+    )?;
+    let resolved_at = record
+        .resolved_at
+        .as_ref()
+        .map(|resolved_at| {
+            parse_owner_storage_value(
+                "user_judgments",
+                record.judgment_id.clone(),
+                "resolved_at",
+                resolved_at,
+            )
+        })
+        .transpose()?;
     Ok(UserJudgment {
         judgment_id: harness_types::UserJudgmentId::new(record.judgment_id.clone()),
         project_id: ProjectId::new(record.project_id.clone()),
@@ -1316,8 +1305,8 @@ fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudg
         required_for: request.required_for,
         resolution: authority.resolution,
         expires_at: request.expires_at.into_option(),
-        created_at: record.requested_at.clone(),
-        resolved_at: record.resolved_at.clone(),
+        created_at,
+        resolved_at,
     })
 }
 

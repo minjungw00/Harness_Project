@@ -1,12 +1,12 @@
 use std::{collections::BTreeSet, path::Path};
 
-use chrono::{DateTime, Duration, SecondsFormat, Utc};
+use chrono::{DateTime, Duration, Utc};
 use harness_store::{core_pipeline::WriteAuthorizationRecord, StoreError};
 use harness_types::{
     BaselineRef, ChangeUnitId, DryRunSummary, GuaranteeDisplay, GuaranteeLevel,
     JudgmentBasisCompatibilityStatus, JudgmentKind, PlannedBlocker, PlannedBlockerSourceKind,
     PlannedEffect, PrepareWriteDecision, SensitiveActionScope, StateRecordRef, TaskId,
-    UserJudgmentStatus, WriteDecisionCategory, WriteDecisionReason,
+    UserJudgmentStatus, UtcTimestamp, WriteDecisionCategory, WriteDecisionReason,
 };
 use serde_json::Value;
 
@@ -21,32 +21,28 @@ pub(crate) fn write_authorization_expires_at(created_at: DateTime<Utc>) -> DateT
     created_at + Duration::minutes(WRITE_AUTHORIZATION_LIFETIME_MINUTES)
 }
 
-pub(crate) fn format_utc_timestamp(timestamp: DateTime<Utc>) -> String {
-    timestamp.to_rfc3339_opts(SecondsFormat::Millis, true)
-}
-
 pub(crate) fn write_authorization_is_expired(
     record: &WriteAuthorizationRecord,
     now: DateTime<Utc>,
 ) -> Result<bool, StoreError> {
-    Ok(now >= effective_write_authorization_expiration(record)?)
+    Ok(UtcTimestamp::from_datetime(now) >= effective_write_authorization_expiration(record)?)
 }
 
 pub(crate) fn effective_write_authorization_expiration(
     record: &WriteAuthorizationRecord,
-) -> Result<DateTime<Utc>, StoreError> {
+) -> Result<UtcTimestamp, StoreError> {
     let stored_expires_at = parse_write_authorization_timestamp(record, "expires_at")?;
     let created_at = parse_write_authorization_timestamp(record, "created_at")?;
     Ok(std::cmp::min(
         stored_expires_at,
-        write_authorization_expires_at(created_at),
+        UtcTimestamp::from_datetime(write_authorization_expires_at(*created_at.as_datetime())),
     ))
 }
 
 fn parse_write_authorization_timestamp(
     record: &WriteAuthorizationRecord,
     logical_column: &'static str,
-) -> Result<DateTime<Utc>, StoreError> {
+) -> Result<UtcTimestamp, StoreError> {
     let raw = match logical_column {
         "created_at" => &record.created_at,
         "expires_at" => &record.expires_at,
@@ -58,21 +54,13 @@ fn parse_write_authorization_timestamp(
             ));
         }
     };
-    let parsed = DateTime::parse_from_rfc3339(raw).map_err(|_| {
+    UtcTimestamp::parse(raw).map_err(|_| {
         StoreError::corrupt_owner_state_value(
             "write_authorizations",
             record.write_authorization_id.clone(),
             logical_column,
         )
-    })?;
-    if parsed.offset().local_minus_utc() != 0 {
-        return Err(StoreError::corrupt_owner_state_value(
-            "write_authorizations",
-            record.write_authorization_id.clone(),
-            logical_column,
-        ));
-    }
-    Ok(parsed.with_timezone(&Utc))
+    })
 }
 
 pub(crate) fn surface_supports_prepare_write(capability_profile: &Value) -> bool {
@@ -200,7 +188,7 @@ pub(crate) struct SensitiveApprovalRequirement<'a> {
     pub(crate) normalized_paths: &'a [String],
     pub(crate) sensitive_categories: &'a [String],
     pub(crate) baseline_ref: Option<&'a BaselineRef>,
-    pub(crate) now: &'a str,
+    pub(crate) now: &'a UtcTimestamp,
     pub(crate) repo_root: &'a Path,
 }
 
@@ -237,8 +225,8 @@ pub(crate) fn sensitive_action_scope_matches_requirement(
 ) -> bool {
     if scope
         .expires_at
-        .as_deref()
-        .is_some_and(|expires_at| expires_at <= requirement.now)
+        .as_ref()
+        .is_some_and(|expires_at| requirement.now >= expires_at)
     {
         return false;
     }
@@ -293,12 +281,7 @@ pub(crate) fn normalize_sensitive_action_scope(
             .filter(|value| !value.is_empty())
             .into(),
         capability_claim: normalize_sensitive_text(&scope.capability_claim),
-        expires_at: scope
-            .expires_at
-            .as_ref()
-            .map(|value| normalize_sensitive_text(value))
-            .filter(|value| !value.is_empty())
-            .into(),
+        expires_at: scope.expires_at.clone(),
     })
 }
 

@@ -144,6 +144,7 @@ fn status_result_fields(
                     superseding_task_id: RequiredNullable::null(),
                     user_note: RequiredNullable::null(),
                 },
+                &utc_timestamp(now),
             )?)
         } else {
             None

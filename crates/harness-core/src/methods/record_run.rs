@@ -92,6 +92,7 @@ struct RecordRunArtifactContext<'a> {
     verified_surface: &'a VerifiedSurfaceContext,
     run_id: &'a RunId,
     run_ref: &'a StateRecordRef,
+    now: &'a UtcTimestamp,
 }
 
 fn plan_record_run(
@@ -236,6 +237,7 @@ fn plan_record_run(
     }
 
     let planned_state_version = project_state.state_version + 1;
+    let plan_now = utc_timestamp(service.now());
     let run_id = match request.run_id.clone().into_option() {
         Some(run_id) => run_id,
         None => allocate_run_id(service, store).map_err(PlanError::Core)?,
@@ -272,15 +274,16 @@ fn plan_record_run(
         baseline_ref: Some(request.baseline_ref.clone()).into(),
     };
 
-    let artifact_plans = plan_record_run_artifacts(
-        service,
+    let artifact_context = RecordRunArtifactContext {
         store,
         project_state,
-        &request,
+        request: &request,
         verified_surface,
-        &run_id,
-        &run_ref,
-    )?;
+        run_id: &run_id,
+        run_ref: &run_ref,
+        now: &plan_now,
+    };
+    let artifact_plans = plan_record_run_artifacts(service, artifact_context)?;
     let registered_artifacts = artifact_plans
         .iter()
         .map(|plan| plan.artifact_ref.clone())
@@ -318,7 +321,7 @@ fn plan_record_run(
             &request,
             &record,
             &normalized_observed_changes,
-            service.now(),
+            *plan_now.as_datetime(),
         )?;
         Some(record)
     } else {
@@ -366,6 +369,7 @@ fn plan_record_run(
         evidence_summary_ref: evidence_summary_ref.clone(),
         registered_artifacts: &registered_artifacts,
         close_basis_revision,
+        now: &plan_now,
     };
     let current_close_basis = build_record_run_close_basis(close_basis_context)?;
     let close_basis_json = current_close_basis
@@ -608,6 +612,7 @@ struct RecordRunCloseBasisContext<'a> {
     evidence_summary_ref: Option<StateRecordRef>,
     registered_artifacts: &'a [ArtifactRef],
     close_basis_revision: u64,
+    now: &'a UtcTimestamp,
 }
 
 fn build_record_run_close_basis(
@@ -623,6 +628,7 @@ fn build_record_run_close_basis(
         evidence_summary_ref,
         registered_artifacts,
         close_basis_revision,
+        now,
     } = context;
     let Some(assessment) = request.close_assessment.as_ref() else {
         return Ok(None);
@@ -705,7 +711,7 @@ fn build_record_run_close_basis(
         sensitive_categories: normalize_string_list(&assessment.sensitive_categories),
         recovery_constraints: normalize_string_list(&assessment.recovery_constraints),
         source_run_ref: run_ref.clone(),
-        updated_at: format_utc_timestamp(service.now()),
+        updated_at: now.clone(),
     }))
 }
 
@@ -997,21 +1003,10 @@ fn normalize_string_list(values: &[String]) -> Vec<String> {
 
 fn plan_record_run_artifacts(
     service: &CoreService,
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    request: &RecordRunRequest,
-    verified_surface: &VerifiedSurfaceContext,
-    run_id: &RunId,
-    run_ref: &StateRecordRef,
+    context: RecordRunArtifactContext<'_>,
 ) -> Result<Vec<RecordRunArtifactPlan>, PlanError> {
-    let context = RecordRunArtifactContext {
-        store,
-        project_state,
-        request,
-        verified_surface,
-        run_id,
-        run_ref,
-    };
+    let request = context.request;
+    let project_state = context.project_state;
     let mut input_ids = BTreeSet::new();
     let mut staged_handles = BTreeSet::new();
     let mut plans = Vec::new();
@@ -1144,14 +1139,14 @@ fn plan_staged_artifact_input(
                 "staged artifact handle cannot be found",
             )))
         })?;
-    validate_staged_artifact_record(
-        store,
+    let stored_expires_at = validate_staged_artifact_record(
         project_state,
         request,
         verified_surface,
         input,
         handle,
         &record,
+        context.now,
     )?;
 
     let artifact_id = allocate_artifact_id(service, store).map_err(PlanError::Core)?;
@@ -1206,6 +1201,7 @@ fn plan_staged_artifact_input(
             expected_sha256: sha256,
             expected_size_bytes: size_bytes,
             expected_redaction_state: record.redaction_state.clone(),
+            expected_expires_at: stored_expires_at.to_string(),
             uri,
             retention_json: "{}".to_owned(),
             producer_json: serde_json::to_string(&json!({
@@ -1240,14 +1236,14 @@ fn plan_staged_artifact_input(
 }
 
 fn validate_staged_artifact_record(
-    store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: &RecordRunRequest,
     verified_surface: &VerifiedSurfaceContext,
     input: &ArtifactInput,
     handle: &StagedArtifactHandle,
     record: &StoredArtifactStagingRecord,
-) -> Result<(), PlanError> {
+    now: &UtcTimestamp,
+) -> Result<UtcTimestamp, PlanError> {
     if record.project_id != request.envelope.project_id.as_str() {
         return artifact_input_validation_plan_error(
             request,
@@ -1288,20 +1284,28 @@ fn validate_staged_artifact_record(
             "staged artifact handle is already consumed",
         );
     }
-    let now = store.current_timestamp().map_err(|error| {
-        PlanError::Response(Box::new(store_error_response(
-            &request.envelope,
-            project_state,
-            error,
-        )))
-    })?;
-    if record.status == "expired" || record.expires_at <= now {
+    let stored_expires_at: UtcTimestamp = parse_owner_storage_value(
+        "artifact_staging",
+        record.handle_id.clone(),
+        "expires_at",
+        &record.expires_at,
+    )?;
+    if record.status == "expired" || now >= &stored_expires_at {
         return artifact_input_validation_plan_error(
             request,
             project_state,
             input,
             "staged_handle_expired",
             "staged artifact handle is expired",
+        );
+    }
+    if stored_expires_at != handle.expires_at {
+        return artifact_input_validation_plan_error(
+            request,
+            project_state,
+            input,
+            "staged_handle_checksum_mismatch",
+            "staged artifact expiration does not match the submitted handle",
         );
     }
     if record.status != "staged" {
@@ -1363,7 +1367,7 @@ fn validate_staged_artifact_record(
             "staged artifact content_type does not match the submitted handle",
         );
     }
-    Ok(())
+    Ok(stored_expires_at)
 }
 
 fn plan_existing_artifact_input(

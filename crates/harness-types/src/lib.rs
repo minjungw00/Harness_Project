@@ -46,6 +46,10 @@ mod tests {
 
     use super::*;
 
+    fn timestamp(value: &str) -> UtcTimestamp {
+        UtcTimestamp::parse(value).expect("test timestamp should be RFC 3339")
+    }
+
     #[test]
     fn boundary_labels_are_stable() {
         assert_eq!(TypeBoundary::Api.label(), "api");
@@ -220,10 +224,10 @@ mod tests {
                 sha256: "sha256:example-trace".to_owned(),
                 size_bytes: 42,
                 redaction_state: RedactionState::None,
-                expires_at: "<future-expiration-timestamp>".to_owned(),
+                expires_at: timestamp("2026-06-19T00:00:00Z"),
                 consumed: false,
             },
-            expires_at: "<future-expiration-timestamp>".to_owned(),
+            expires_at: timestamp("2026-06-19T00:00:00Z"),
         };
 
         let encoded = serde_json::to_value(&result).expect("result should serialize");
@@ -516,6 +520,79 @@ mod tests {
     }
 
     #[test]
+    fn public_timestamp_inputs_reject_invalid_strings() {
+        for invalid in ["zzzz", "tomorrow", "9999"] {
+            let mut request = request_user_judgment_request_json();
+            request["expires_at"] = json!(invalid);
+            assert!(
+                deserialize_public_request("harness.request_user_judgment", request).is_err(),
+                "request_user_judgment expires_at should reject {invalid}"
+            );
+        }
+
+        let mut request = request_user_judgment_request_json();
+        request["sensitive_action_scope"] = sensitive_action_scope_json(json!("zzzz"));
+        assert!(
+            deserialize_public_request("harness.request_user_judgment", request).is_err(),
+            "request_user_judgment sensitive_action_scope.expires_at should reject invalid text"
+        );
+
+        let mut answer = record_user_judgment_request_json();
+        answer["answer"]["product_decision"] = Value::Null;
+        answer["answer"]["sensitive_action_scope"] = sensitive_action_scope_json(json!("tomorrow"));
+        assert!(
+            deserialize_public_request("harness.record_user_judgment", answer).is_err(),
+            "record_user_judgment answer.sensitive_action_scope.expires_at should reject invalid text"
+        );
+
+        let mut run = record_run_request_json();
+        run["artifact_inputs"] = json!([staged_artifact_input_json("9999")]);
+        assert!(
+            deserialize_public_request("harness.record_run", run).is_err(),
+            "record_run staged_artifact_handle.expires_at should reject invalid text"
+        );
+    }
+
+    #[test]
+    fn timestamp_serialization_normalizes_to_canonical_utc() {
+        let without_fraction: UtcTimestamp =
+            serde_json::from_value(json!("2026-06-18T09:00:00+09:00"))
+                .expect("offset timestamp should decode");
+        assert_eq!(
+            serde_json::to_value(&without_fraction).expect("timestamp should serialize"),
+            json!("2026-06-18T00:00:00Z")
+        );
+
+        let with_fraction: UtcTimestamp =
+            serde_json::from_value(json!("2026-06-18T09:00:00.123400+09:00"))
+                .expect("fractional offset timestamp should decode");
+        assert_eq!(
+            serde_json::to_value(&with_fraction).expect("timestamp should serialize"),
+            json!("2026-06-18T00:00:00.123400Z")
+        );
+    }
+
+    #[test]
+    fn equivalent_timestamp_offsets_have_equal_canonical_request_hashes() {
+        let mut zulu = request_user_judgment_request_json();
+        zulu["expires_at"] = json!("2026-06-18T00:00:00Z");
+        let mut offset = request_user_judgment_request_json();
+        offset["expires_at"] = json!("2026-06-18T09:00:00+09:00");
+
+        assert_eq!(
+            typed_request_hash("harness.request_user_judgment", zulu),
+            typed_request_hash("harness.request_user_judgment", offset.clone())
+        );
+
+        let decoded: RequestUserJudgmentRequest =
+            serde_json::from_value(offset).expect("offset request should decode");
+        assert_eq!(
+            serde_json::to_value(decoded.expires_at).expect("expires_at should serialize"),
+            json!("2026-06-18T00:00:00Z")
+        );
+    }
+
+    #[test]
     fn generated_request_schemas_mark_only_documented_fields_required() {
         for (method_name, _) in public_request_json_samples() {
             let schema = public_request_schema(method_name).expect("schema should exist");
@@ -616,6 +693,37 @@ mod tests {
                 "cancellation",
             ],
             "RecordUserJudgmentPayload",
+        );
+    }
+
+    #[test]
+    fn timestamp_json_schemas_are_date_time_strings() {
+        let judgment =
+            public_request_schema("harness.request_user_judgment").expect("judgment schema");
+        assert_date_time_schema(
+            &judgment,
+            &judgment["properties"]["expires_at"],
+            "RequestUserJudgmentRequest.expires_at",
+        );
+        assert_date_time_schema(
+            &judgment,
+            &definition(&judgment, "SensitiveActionScope")["properties"]["expires_at"],
+            "SensitiveActionScope.expires_at",
+        );
+
+        let run = public_request_schema("harness.record_run").expect("record_run schema");
+        assert_date_time_schema(
+            &run,
+            &definition(&run, "StagedArtifactHandle")["properties"]["expires_at"],
+            "StagedArtifactHandle.expires_at",
+        );
+
+        let stage_result = serde_json::to_value(schemars::schema_for!(StageArtifactResult))
+            .expect("stage result schema should serialize");
+        assert_date_time_schema(
+            &stage_result,
+            &stage_result["properties"]["expires_at"],
+            "StageArtifactResult.expires_at",
         );
     }
 
@@ -960,6 +1068,34 @@ mod tests {
         );
     }
 
+    fn schema_contains_date_time(root: &Value, schema: &Value) -> bool {
+        if schema.get("format").and_then(Value::as_str) == Some("date-time") {
+            return true;
+        }
+        if let Some(reference) = schema.get("$ref").and_then(Value::as_str) {
+            return resolve_ref(root, reference)
+                .map(|schema| schema_contains_date_time(root, schema))
+                .unwrap_or(false);
+        }
+        ["anyOf", "oneOf", "allOf"].iter().any(|keyword| {
+            schema
+                .get(*keyword)
+                .and_then(Value::as_array)
+                .is_some_and(|schemas| {
+                    schemas
+                        .iter()
+                        .any(|schema| schema_contains_date_time(root, schema))
+                })
+        })
+    }
+
+    fn assert_date_time_schema(root: &Value, schema: &Value, label: &str) {
+        assert!(
+            schema_contains_date_time(root, schema),
+            "{label} should include JSON Schema format=date-time, got {schema:?}"
+        );
+    }
+
     fn required_nullable_request_paths() -> Vec<(&'static str, &'static [&'static str])> {
         vec![
             ("harness.update_scope", &["goal_summary"]),
@@ -1300,6 +1436,32 @@ mod tests {
         })
     }
 
+    fn staged_artifact_input_json(expires_at: &str) -> Value {
+        json!({
+            "artifact_input_id": "artifact_input_trace_001",
+            "source_kind": "staged_artifact",
+            "staged_artifact_handle": {
+                "handle_id": "staged_trace_001",
+                "project_id": "proj_empty_001",
+                "task_id": "task_empty_001",
+                "created_by_surface_id": "surface_empty",
+                "created_by_surface_instance_id": "surface_instance_empty",
+                "content_type": "text/plain",
+                "sha256": "sha256:trace",
+                "size_bytes": 18,
+                "redaction_state": "none",
+                "expires_at": expires_at,
+                "consumed": false
+            },
+            "existing_artifact_ref": null,
+            "relation_hint": "diagnostic_log",
+            "claim": null,
+            "expected_sha256": "sha256:trace",
+            "expected_size_bytes": 18,
+            "redaction_state": "none"
+        })
+    }
+
     fn request_user_judgment_request_json() -> Value {
         json!({
             "envelope": envelope_json("agent"),
@@ -1327,6 +1489,20 @@ mod tests {
             "affected_refs": [],
             "required_for": "close",
             "expires_at": null
+        })
+    }
+
+    fn sensitive_action_scope_json(expires_at: Value) -> Value {
+        json!({
+            "action_kind": "write_files",
+            "description": "Apply the approved product-file edit.",
+            "intended_paths": ["src/preferences/profile-save.ts"],
+            "sensitive_categories": ["product_file_write"],
+            "command_or_tool_summary": null,
+            "network_or_host_summary": null,
+            "secret_or_credential_summary": null,
+            "capability_claim": "Local file update only.",
+            "expires_at": expires_at
         })
     }
 

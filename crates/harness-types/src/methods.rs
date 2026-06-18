@@ -18,7 +18,7 @@ use crate::schema::{
 use crate::values::{
     AccessClass, AuthorizationEffect, ChangeUnitOperation, CloseIntent, CloseReason, CloseState,
     JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, MethodName, PrepareWriteDecision,
-    RedactionState, RequestedMode, ResumePolicy, RunKind, StatusCloseState,
+    RedactionState, RequestedMode, ResumePolicy, RunKind, StatusCloseState, UtcTimestamp,
 };
 
 /// Shared typed mapping from a public request to its request-level access class.
@@ -271,7 +271,7 @@ impl MethodAccessClass for StageArtifactRequest {
 pub struct StageArtifactResult {
     pub base: ToolResultBase,
     pub staged_artifact_handle: StagedArtifactHandle,
-    pub expires_at: String,
+    pub expires_at: UtcTimestamp,
 }
 
 /// `harness.record_run` request params.
@@ -330,7 +330,7 @@ pub struct RequestUserJudgmentRequest {
     pub context: UserJudgmentContext,
     pub affected_refs: Vec<StateRecordRef>,
     pub required_for: JudgmentRequiredFor,
-    pub expires_at: RequiredNullable<String>,
+    pub expires_at: RequiredNullable<UtcTimestamp>,
 }
 
 impl MethodAccessClass for RequestUserJudgmentRequest {
