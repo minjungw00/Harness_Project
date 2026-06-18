@@ -15,16 +15,23 @@ use std::{
 };
 
 use harness_core::{
-    CoreBoundary, CorePipelineError, CoreService, InvocationContext, PipelineResponse,
+    rejected_response, tool_error, AdapterSessionBinding, CoreBoundary, CorePipelineError,
+    CoreService, InvocationContext, PipelineResponse,
+};
+use harness_store::{
+    bootstrap::{list_surfaces, project_record, SurfaceRecord, ACTIVE_PROJECT_STATUS},
+    core_pipeline::CoreProjectStore,
+    StoreError,
 };
 use harness_types::{
-    public_request_schema, AccessClass, CloseTaskRequest, IntakeRequest, MethodAccessClass,
-    PrepareWriteRequest, ProjectId, RecordRunRequest, RecordUserJudgmentRequest,
+    public_request_schema, AccessClass, CloseTaskRequest, ErrorCode, IntakeRequest,
+    MethodAccessClass, PrepareWriteRequest, ProjectId, RecordRunRequest, RecordUserJudgmentRequest,
     RequestUserJudgmentRequest, StageArtifactRequest, StatusRequest, SurfaceId, SurfaceInstanceId,
-    ToolEnvelope, UpdateScopeRequest, VERIFICATION_BASIS_MCP_STDIO_SURFACE_BINDING,
+    ToolEnvelope, ToolError, UpdateScopeRequest, VERIFICATION_BASIS_MCP_STDIO_SURFACE_BINDING,
+    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 
 const DEFAULT_PROTOCOL_VERSION: &str = "2024-11-05";
 const SERVER_NAME: &str = "harness-mcp";
@@ -74,49 +81,116 @@ pub struct McpToolDefinition {
 /// Local adapter session facts that are not accepted from tool arguments.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct McpSessionContext {
-    pub surface_instance_id: Option<SurfaceInstanceId>,
+    pub project_id: ProjectId,
+    pub surface_id: SurfaceId,
+    pub surface_instance_id: SurfaceInstanceId,
     pub invocation_binding_basis: String,
 }
 
 impl McpSessionContext {
-    /// Creates a local session context without a session-wide access class.
-    pub fn new() -> Self {
+    /// Creates a local session context for an already resolved surface binding.
+    pub fn new(
+        project_id: ProjectId,
+        surface_id: SurfaceId,
+        surface_instance_id: SurfaceInstanceId,
+    ) -> Self {
         Self {
-            surface_instance_id: None,
+            project_id,
+            surface_id,
+            surface_instance_id,
             invocation_binding_basis: DEFAULT_INVOCATION_BINDING_BASIS.to_owned(),
         }
     }
 
-    /// Adds the local surface instance selected for this adapter session.
-    pub fn with_surface_instance_id(mut self, surface_instance_id: SurfaceInstanceId) -> Self {
-        self.surface_instance_id = Some(surface_instance_id);
-        self
-    }
-
     /// Replaces the controlled adapter-binding basis carried into Core.
     pub fn with_invocation_binding_basis(mut self, basis: impl Into<String>) -> Self {
-        self.invocation_binding_basis = basis.into();
+        let basis = basis.into();
+        self.invocation_binding_basis = controlled_invocation_binding_basis(&basis).to_owned();
         self
     }
 
     /// Builds session context from process environment.
-    pub fn from_env<F>(env_var: F) -> Result<Self, McpAdapterError>
+    pub fn from_env<F>(runtime_home: impl AsRef<Path>, env_var: F) -> Result<Self, McpAdapterError>
     where
         F: Fn(&str) -> Option<OsString>,
     {
-        let surface_instance_id =
-            env_string(&env_var, "HARNESS_SURFACE_INSTANCE_ID")?.map(SurfaceInstanceId::new);
+        let project_id = required_env_string(&env_var, "HARNESS_PROJECT_ID")?;
+        let surface_id = required_env_string(&env_var, "HARNESS_SURFACE_ID")?;
+        let surface_instance_id = env_string(&env_var, "HARNESS_SURFACE_INSTANCE_ID")?;
 
-        Ok(Self {
-            surface_instance_id,
-            invocation_binding_basis: DEFAULT_INVOCATION_BINDING_BASIS.to_owned(),
-        })
+        Self::resolve(
+            runtime_home,
+            ProjectId::new(project_id),
+            SurfaceId::new(surface_id),
+            surface_instance_id.map(SurfaceInstanceId::new),
+        )
     }
-}
 
-impl Default for McpSessionContext {
-    fn default() -> Self {
-        Self::new()
+    /// Resolves and validates one configured MCP session binding.
+    pub fn resolve(
+        runtime_home: impl AsRef<Path>,
+        project_id: ProjectId,
+        surface_id: SurfaceId,
+        configured_surface_instance_id: Option<SurfaceInstanceId>,
+    ) -> Result<Self, McpAdapterError> {
+        let runtime_home = runtime_home.as_ref();
+        let project = project_record(runtime_home, project_id.as_str())
+            .map_err(McpAdapterError::Store)?
+            .ok_or_else(|| {
+                McpAdapterError::Environment("configured project is not registered".to_owned())
+            })?;
+        if project.status != ACTIVE_PROJECT_STATUS {
+            return Err(McpAdapterError::Environment(
+                "configured project is not active".to_owned(),
+            ));
+        }
+
+        let store =
+            CoreProjectStore::open(runtime_home, &project_id).map_err(McpAdapterError::Store)?;
+        let project_state = store.project_state().map_err(McpAdapterError::Store)?;
+        let surfaces =
+            list_surfaces(runtime_home, project_id.as_str()).map_err(McpAdapterError::Store)?;
+        let candidates = surfaces
+            .into_iter()
+            .filter(|surface| surface.surface_id == surface_id.as_str())
+            .map(valid_startup_surface)
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let selected = if let Some(configured) = configured_surface_instance_id {
+            candidates
+                .into_iter()
+                .find(|surface| surface.surface_instance_id == configured.as_str())
+                .ok_or_else(|| {
+                    McpAdapterError::Environment(
+                        "configured surface instance is not registered".to_owned(),
+                    )
+                })?
+        } else {
+            let default_candidate =
+                if project_state.default_surface_id.as_deref() == Some(surface_id.as_str()) {
+                    project_state
+                        .default_surface_instance_id
+                        .as_deref()
+                        .and_then(|default_instance| {
+                            candidates
+                                .iter()
+                                .find(|surface| surface.surface_instance_id == default_instance)
+                                .cloned()
+                        })
+                } else {
+                    None
+                };
+            match default_candidate {
+                Some(surface) => surface,
+                None => select_single_startup_candidate(candidates)?,
+            }
+        };
+
+        Ok(Self::new(
+            ProjectId::new(selected.project_id),
+            SurfaceId::new(selected.surface_id),
+            SurfaceInstanceId::new(selected.surface_instance_id),
+        ))
     }
 }
 
@@ -125,7 +199,7 @@ impl Default for McpSessionContext {
 pub struct McpDerivedInvocationContext {
     pub project_id: ProjectId,
     pub surface_id: SurfaceId,
-    pub surface_instance_id: Option<SurfaceInstanceId>,
+    pub surface_instance_id: SurfaceInstanceId,
     pub requested_access_class: AccessClass,
     pub invocation_binding_basis: String,
 }
@@ -133,9 +207,13 @@ pub struct McpDerivedInvocationContext {
 impl McpDerivedInvocationContext {
     fn core_invocation(&self) -> InvocationContext {
         InvocationContext {
-            surface_instance_id: self.surface_instance_id.clone(),
+            binding: AdapterSessionBinding::new(
+                self.project_id.clone(),
+                self.surface_id.clone(),
+                self.surface_instance_id.clone(),
+                self.invocation_binding_basis.clone(),
+            ),
             requested_access_class: self.requested_access_class,
-            invocation_binding_basis: self.invocation_binding_basis.clone(),
         }
     }
 }
@@ -166,14 +244,21 @@ impl McpAdapter {
         &self,
         envelope: &ToolEnvelope,
         requested_access_class: AccessClass,
-    ) -> McpDerivedInvocationContext {
-        McpDerivedInvocationContext {
-            project_id: envelope.project_id.clone(),
-            surface_id: envelope.surface_id.clone(),
+    ) -> Result<McpDerivedInvocationContext, ToolError> {
+        if envelope.project_id != self.session.project_id {
+            return Err(local_access_mismatch_error("envelope.project_id"));
+        }
+        if envelope.surface_id != self.session.surface_id {
+            return Err(local_access_mismatch_error("envelope.surface_id"));
+        }
+
+        Ok(McpDerivedInvocationContext {
+            project_id: self.session.project_id.clone(),
+            surface_id: self.session.surface_id.clone(),
             surface_instance_id: self.session.surface_instance_id.clone(),
             requested_access_class,
             invocation_binding_basis: self.session.invocation_binding_basis.clone(),
-        }
+        })
     }
 
     /// Calls one public Harness method tool and returns Core's response.
@@ -185,63 +270,108 @@ impl McpAdapter {
         match tool_name {
             "harness.intake" => {
                 let request: IntakeRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .intake(request, invocation)
                     .map_err(McpAdapterError::Core)
             }
             "harness.update_scope" => {
                 let request: UpdateScopeRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .update_scope(request, invocation)
                     .map_err(McpAdapterError::Core)
             }
             "harness.status" => {
                 let request: StatusRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .status(request, invocation)
                     .map_err(McpAdapterError::Core)
             }
             "harness.prepare_write" => {
                 let request: PrepareWriteRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .prepare_write(request, invocation)
                     .map_err(McpAdapterError::Core)
             }
             "harness.stage_artifact" => {
                 let request: StageArtifactRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .stage_artifact(request, invocation)
                     .map_err(McpAdapterError::Core)
             }
             "harness.record_run" => {
                 let request: RecordRunRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .record_run(request, invocation)
                     .map_err(McpAdapterError::Core)
             }
             "harness.request_user_judgment" => {
                 let request: RequestUserJudgmentRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .request_user_judgment(request, invocation)
                     .map_err(McpAdapterError::Core)
             }
             "harness.record_user_judgment" => {
                 let request: RecordUserJudgmentRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .record_user_judgment(request, invocation)
                     .map_err(McpAdapterError::Core)
             }
             "harness.close_task" => {
                 let request: CloseTaskRequest = self.decode_params(tool_name, params)?;
-                let invocation = self.typed_invocation(&request).core_invocation();
+                let invocation = match self.typed_invocation(&request) {
+                    Ok(invocation) => invocation.core_invocation(),
+                    Err(error) => {
+                        return rejected_pipeline_response(request.envelope.dry_run, error)
+                    }
+                };
                 self.core
                     .close_task(request, invocation)
                     .map_err(McpAdapterError::Core)
@@ -260,7 +390,7 @@ impl McpAdapter {
         })
     }
 
-    fn typed_invocation<T>(&self, request: &T) -> McpDerivedInvocationContext
+    fn typed_invocation<T>(&self, request: &T) -> Result<McpDerivedInvocationContext, ToolError>
     where
         T: MethodAccessClass + HasEnvelope,
     {
@@ -344,7 +474,7 @@ where
 /// Runs the MCP stdio adapter from process environment and stdin/stdout.
 pub fn run_stdio_from_env() -> Result<(), McpAdapterError> {
     let runtime_home = resolve_runtime_home_from_env(|name| std::env::var_os(name))?;
-    let session = McpSessionContext::from_env(|name| std::env::var_os(name))?;
+    let session = McpSessionContext::from_env(&runtime_home, |name| std::env::var_os(name))?;
     let adapter = McpAdapter::new(runtime_home, session);
     let stdin = io::stdin();
     let stdout = io::stdout();
@@ -363,6 +493,138 @@ where
     let home = env_string(&env_var, "HOME")?
         .ok_or_else(|| McpAdapterError::Environment("HOME is not set".to_owned()))?;
     Ok(PathBuf::from(home).join(".harness"))
+}
+
+fn valid_startup_surface(surface: SurfaceRecord) -> Result<SurfaceRecord, McpAdapterError> {
+    match serde_json::from_str::<Value>(&surface.capability_profile_json) {
+        Ok(Value::Object(_)) => (),
+        Ok(_) => {
+            return Err(McpAdapterError::Environment(
+                "registered surface capability profile is not an object".to_owned(),
+            ));
+        }
+        Err(error) => return Err(McpAdapterError::Json(error)),
+    };
+    match serde_json::from_str::<Value>(&surface.metadata_json) {
+        Ok(Value::Object(_)) => (),
+        Ok(_) => {
+            return Err(McpAdapterError::Environment(
+                "registered surface metadata is not an object".to_owned(),
+            ));
+        }
+        Err(error) => return Err(McpAdapterError::Json(error)),
+    };
+    match startup_authorized_access_classes(&surface.local_access_json) {
+        Ok(access_classes) if !access_classes.is_empty() => Ok(surface),
+        Ok(_) => Err(McpAdapterError::Environment(
+            "registered surface local access grant is empty".to_owned(),
+        )),
+        Err(error) => Err(error),
+    }
+}
+
+fn startup_authorized_access_classes(text: &str) -> Result<Vec<AccessClass>, McpAdapterError> {
+    let value = serde_json::from_str::<Value>(text).map_err(McpAdapterError::Json)?;
+    let object = value.as_object().ok_or_else(|| {
+        McpAdapterError::Environment("registered surface local access is not an object".to_owned())
+    })?;
+    let mut access_classes = Vec::new();
+    if let Some(value) = object.get("authorized_access_classes") {
+        let values = value.as_array().ok_or_else(|| {
+            McpAdapterError::Environment(
+                "registered surface authorized access classes are not an array".to_owned(),
+            )
+        })?;
+        for value in values {
+            let access_class = startup_access_class(value)?;
+            if !access_classes.contains(&access_class) {
+                access_classes.push(access_class);
+            }
+        }
+    } else if let Some(value) = object.get("access_class") {
+        access_classes.push(startup_access_class(value)?);
+    } else {
+        return Err(McpAdapterError::Environment(
+            "registered surface local access grant is missing".to_owned(),
+        ));
+    }
+
+    if let Some(value) = object.get("access_class") {
+        let fallback_access_class = startup_access_class(value)?;
+        if !access_classes.contains(&fallback_access_class) {
+            return Err(McpAdapterError::Environment(
+                "registered surface local access fallback grant is inconsistent".to_owned(),
+            ));
+        }
+    }
+
+    if let Some(value) = object.get("verification_basis") {
+        match value {
+            Value::String(text) if !text.trim().is_empty() => (),
+            _ => {
+                return Err(McpAdapterError::Environment(
+                    "registered surface verification basis is invalid".to_owned(),
+                ));
+            }
+        }
+    }
+
+    Ok(access_classes)
+}
+
+fn startup_access_class(value: &Value) -> Result<AccessClass, McpAdapterError> {
+    serde_json::from_value(value.clone()).map_err(McpAdapterError::Json)
+}
+
+fn select_single_startup_candidate(
+    candidates: Vec<SurfaceRecord>,
+) -> Result<SurfaceRecord, McpAdapterError> {
+    match candidates.as_slice() {
+        [candidate] => Ok(candidate.clone()),
+        [] => Err(McpAdapterError::Environment(
+            "configured surface has no usable registered instance".to_owned(),
+        )),
+        _ => Err(McpAdapterError::Environment(
+            "configured surface has multiple usable registered instances".to_owned(),
+        )),
+    }
+}
+
+fn rejected_pipeline_response(
+    dry_run: bool,
+    error: ToolError,
+) -> Result<PipelineResponse, McpAdapterError> {
+    let response = rejected_response(dry_run, None, vec![error]);
+    let response_value = serde_json::to_value(&response).map_err(McpAdapterError::Json)?;
+    let response_json = serde_json::to_string(&response_value).map_err(McpAdapterError::Json)?;
+    Ok(PipelineResponse {
+        response_json,
+        response_value,
+        verified_surface: None,
+        resolved_task_id: None,
+        replayed: false,
+    })
+}
+
+fn local_access_mismatch_error(field: &'static str) -> ToolError {
+    let mut details = Map::new();
+    details.insert("field".to_owned(), Value::String(field.to_owned()));
+    tool_error(
+        ErrorCode::LocalAccessMismatch,
+        "local surface context does not match the registered surface",
+        false,
+        Some(details),
+    )
+}
+
+fn controlled_invocation_binding_basis(value: &str) -> &'static str {
+    match value.trim() {
+        VERIFICATION_BASIS_MCP_STDIO_SURFACE_BINDING => {
+            VERIFICATION_BASIS_MCP_STDIO_SURFACE_BINDING
+        }
+        VERIFICATION_BASIS_TEST_FIXTURE_BINDING => VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+        _ => DEFAULT_INVOCATION_BINDING_BASIS,
+    }
 }
 
 fn handle_json_rpc_message(adapter: &McpAdapter, message: Value) -> Option<Vec<Value>> {
@@ -474,9 +736,10 @@ fn json_rpc_error_for_adapter(id: Value, error: McpAdapterError) -> Value {
         McpAdapterError::Protocol(_) | McpAdapterError::Environment(_) => {
             (-32602, "Invalid params")
         }
-        McpAdapterError::Core(_) | McpAdapterError::Json(_) | McpAdapterError::Io(_) => {
-            (-32603, "Internal error")
-        }
+        McpAdapterError::Core(_)
+        | McpAdapterError::Json(_)
+        | McpAdapterError::Io(_)
+        | McpAdapterError::Store(_) => (-32603, "Internal error"),
     };
     json_rpc_error(id, code, message, Some(error.to_string()))
 }
@@ -530,6 +793,15 @@ where
         .transpose()
 }
 
+fn required_env_string<F>(env_var: &F, name: &str) -> Result<String, McpAdapterError>
+where
+    F: Fn(&str) -> Option<OsString>,
+{
+    env_string(env_var, name)?.ok_or_else(|| {
+        McpAdapterError::Environment(format!("{name} is required for MCP session binding"))
+    })
+}
+
 /// Adapter and stdio errors that occur before or outside public Core responses.
 #[derive(Debug)]
 pub enum McpAdapterError {
@@ -539,6 +811,7 @@ pub enum McpAdapterError {
         source: serde_json::Error,
     },
     Core(CorePipelineError),
+    Store(StoreError),
     Io(io::Error),
     Json(serde_json::Error),
     Protocol(String),
@@ -553,6 +826,7 @@ impl fmt::Display for McpAdapterError {
                 write!(formatter, "invalid params for {tool_name}: {source}")
             }
             Self::Core(error) => write!(formatter, "{error}"),
+            Self::Store(error) => write!(formatter, "store error: {error}"),
             Self::Io(error) => write!(formatter, "{error}"),
             Self::Json(error) => write!(formatter, "{error}"),
             Self::Protocol(message) | Self::Environment(message) => formatter.write_str(message),
@@ -565,6 +839,7 @@ impl Error for McpAdapterError {
         match self {
             Self::InvalidParams { source, .. } => Some(source),
             Self::Core(error) => Some(error),
+            Self::Store(error) => Some(error),
             Self::Io(error) => Some(error),
             Self::Json(error) => Some(error),
             Self::UnknownTool(_) | Self::Protocol(_) | Self::Environment(_) => None,
@@ -581,7 +856,7 @@ mod tests {
         path::{Path, PathBuf},
     };
 
-    use harness_core::{CoreBoundary, CoreService, InvocationContext};
+    use harness_core::{AdapterSessionBinding, CoreBoundary, CoreService, InvocationContext};
     use harness_store::{
         bootstrap::{
             initialize_runtime_home, register_project, register_surface, ProjectRegistration,
@@ -667,9 +942,12 @@ mod tests {
         fn adapter(&self) -> McpAdapter {
             McpAdapter::new(
                 &self.runtime_home_path,
-                McpSessionContext::new()
-                    .with_surface_instance_id(SurfaceInstanceId::new(SURFACE_INSTANCE_ID))
-                    .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING),
+                McpSessionContext::new(
+                    ProjectId::new(PROJECT_ID),
+                    SurfaceId::new(SURFACE_ID),
+                    SurfaceInstanceId::new(SURFACE_INSTANCE_ID),
+                )
+                .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING),
             )
         }
 
@@ -890,7 +1168,9 @@ mod tests {
                 "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
             }),
         )?;
-        let session = McpSessionContext::from_env(|name| match name {
+        let session = McpSessionContext::from_env(&harness.runtime_home_path, |name| match name {
+            "HARNESS_PROJECT_ID" => Some(OsString::from(PROJECT_ID)),
+            "HARNESS_SURFACE_ID" => Some(OsString::from(SURFACE_ID)),
             "HARNESS_ACCESS_CLASS" => Some(OsString::from("core_mutation")),
             "HARNESS_SURFACE_INSTANCE_ID" => Some(OsString::from(SURFACE_INSTANCE_ID)),
             _ => None,
@@ -1270,9 +1550,13 @@ mod tests {
 
     fn invocation(access_class: AccessClass) -> InvocationContext {
         InvocationContext {
-            surface_instance_id: Some(SurfaceInstanceId::new(SURFACE_INSTANCE_ID)),
+            binding: AdapterSessionBinding::new(
+                ProjectId::new(PROJECT_ID),
+                SurfaceId::new(SURFACE_ID),
+                SurfaceInstanceId::new(SURFACE_INSTANCE_ID),
+                VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+            ),
             requested_access_class: access_class,
-            invocation_binding_basis: VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned(),
         }
     }
 

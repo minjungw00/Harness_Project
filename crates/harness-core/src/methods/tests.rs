@@ -4007,9 +4007,13 @@ fn envelope(
 
 fn invocation(access_class: AccessClass) -> InvocationContext {
     InvocationContext {
-        surface_instance_id: Some(SurfaceInstanceId::new(SURFACE_INSTANCE_ID)),
+        binding: crate::pipeline::AdapterSessionBinding::new(
+            ProjectId::new(PROJECT_ID),
+            SurfaceId::new(SURFACE_ID),
+            SurfaceInstanceId::new(SURFACE_INSTANCE_ID),
+            VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+        ),
         requested_access_class: access_class,
-        invocation_binding_basis: VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned(),
     }
 }
 

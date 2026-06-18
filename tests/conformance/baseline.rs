@@ -1,7 +1,9 @@
 use std::{error::Error, fs, path::Path};
 
 use chrono::{DateTime, Duration, Utc};
-use harness_core::{rejected_response, tool_error, Clock, CoreService, InvocationContext};
+use harness_core::{
+    rejected_response, tool_error, AdapterSessionBinding, Clock, CoreService, InvocationContext,
+};
 use harness_test_support::core_fixtures::{
     answer_payload, artifact_input_for_handle, supported_evidence_update,
     unsupported_evidence_update, ChangeUnitOwnerJsonColumn, CloseTaskFixture, CoreFixture,
@@ -102,11 +104,13 @@ fn no_effect_branches_state_version_and_idempotency_are_stable() -> Result<(), B
     let surface_mismatch = service.status(
         fixture.status_request("req_status_wrong_surface", Some(&task_id)),
         InvocationContext {
-            surface_instance_id: Some(harness_types::SurfaceInstanceId::new(
-                "missing_surface_instance",
-            )),
+            binding: AdapterSessionBinding::new(
+                harness_types::ProjectId::new(fixture.project_id()),
+                harness_types::SurfaceId::new(fixture.surface_id()),
+                harness_types::SurfaceInstanceId::new("missing_surface_instance"),
+                VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+            ),
             requested_access_class: AccessClass::ReadStatus,
-            invocation_binding_basis: VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned(),
         },
     )?;
     assert_rejected_code(&surface_mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
@@ -1395,11 +1399,13 @@ fn core(fixture: &CoreFixture) -> CoreService {
 
 fn invocation(fixture: &CoreFixture, access_class: AccessClass) -> InvocationContext {
     InvocationContext {
-        surface_instance_id: Some(harness_types::SurfaceInstanceId::new(
-            fixture.surface_instance_id(),
-        )),
+        binding: AdapterSessionBinding::new(
+            harness_types::ProjectId::new(fixture.project_id()),
+            harness_types::SurfaceId::new(fixture.surface_id()),
+            harness_types::SurfaceInstanceId::new(fixture.surface_instance_id()),
+            VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+        ),
         requested_access_class: access_class,
-        invocation_binding_basis: VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned(),
     }
 }
 

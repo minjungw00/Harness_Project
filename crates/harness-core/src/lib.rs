@@ -15,8 +15,8 @@ mod policy;
 
 pub use pipeline::{
     dry_run_response, method_result_base, method_result_value, rejected_response, tool_error,
-    Clock, CorePipelineError, CoreResult, CoreService, InvocationContext, PipelineResponse,
-    SystemClock, VerifiedSurfaceContext,
+    AdapterSessionBinding, Clock, CorePipelineError, CoreResult, CoreService, InvocationContext,
+    PipelineResponse, SystemClock, VerifiedSurfaceContext,
 };
 
 /// Minimal Core service marker for validating crate boundaries.

@@ -2,21 +2,28 @@ use std::{
     collections::BTreeSet,
     error::Error,
     ffi::OsString,
+    fs,
     io::{BufReader, Cursor},
 };
 
-use harness_core::{CoreService, InvocationContext};
+use harness_core::{AdapterSessionBinding, CoreService, InvocationContext};
 use harness_mcp::{
     public_method_tools, run_stdio, McpAdapter, McpSessionContext, PUBLIC_METHOD_TOOL_NAMES,
 };
-use harness_store::bootstrap::{register_surface, SurfaceRegistration};
+use harness_store::{
+    bootstrap::{
+        register_project, register_surface, ProjectRegistration, SurfaceRegistration,
+        ACTIVE_PROJECT_STATUS,
+    },
+    core_pipeline::{CoreProjectStore, StorageEffectCounts},
+};
 use harness_test_support::core_fixtures::{
     answer_payload, artifact_input_for_handle, CloseTaskFixture, CoreFixture,
     RecordJudgmentFixture, UpdateScopeFixture, UserJudgmentFixture, DEFAULT_PRODUCT_PATH,
 };
 use harness_types::{
-    AccessClass, ChangeUnitOperation, CloseIntent, CloseReason, JudgmentKind, StagedArtifactHandle,
-    SurfaceId, SurfaceInstanceId, WriteAuthorizationId,
+    AccessClass, ChangeUnitOperation, CloseIntent, CloseReason, JudgmentKind, ProjectId,
+    StagedArtifactHandle, SurfaceId, SurfaceInstanceId, WriteAuthorizationId,
     VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 use serde_json::{json, Value};
@@ -119,6 +126,272 @@ fn adapter_uses_session_surface_context_for_artifact_provenance() -> Result<(), 
     );
     assert_eq!(fixture.counts()?.state_version, 1);
     assert_eq!(fixture.counts()?.artifact_staging, 1);
+    Ok(())
+}
+
+#[test]
+fn bound_session_rejects_different_request_project_without_effect() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_project_binding")?;
+    let other_project_id = "project_other_binding";
+    register_extra_project_surface(
+        &fixture,
+        other_project_id,
+        fixture.surface_id(),
+        "surface_instance_other_project",
+    )?;
+    let adapter = adapter(&fixture);
+    let mut request = fixture.status_request("req_project_mismatch", None);
+    request.envelope.project_id = ProjectId::new(other_project_id);
+    let before_bound = fixture.counts()?;
+    let before_other = counts_for_project(&fixture, other_project_id)?;
+
+    let response = adapter.call_tool("harness.status", serde_json::to_value(request)?)?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_field(&response.response_value, "envelope.project_id");
+    assert!(response.verified_surface.is_none());
+    assert_eq!(fixture.counts()?, before_bound);
+    assert_eq!(
+        counts_for_project(&fixture, other_project_id)?,
+        before_other
+    );
+    Ok(())
+}
+
+#[test]
+fn bound_session_rejects_different_request_surface_without_effect() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_surface_binding")?;
+    register_surface(
+        fixture.runtime_home_path(),
+        SurfaceRegistration {
+            project_id: fixture.project_id().to_owned(),
+            surface_id: "surface_other_binding".to_owned(),
+            surface_instance_id: "surface_instance_other_binding".to_owned(),
+            surface_kind: "local_test".to_owned(),
+            display_name: Some("Other binding surface".to_owned()),
+            capability_profile_json: default_capability_profile().to_string(),
+            local_access_json: local_access_without(&[]).to_string(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    let adapter = adapter(&fixture);
+    let mut request = fixture.status_request("req_surface_mismatch", None);
+    request.envelope.surface_id = SurfaceId::new("surface_other_binding");
+    let before = fixture.counts()?;
+
+    let response = adapter.call_tool("harness.status", serde_json::to_value(request)?)?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_field(&response.response_value, "envelope.surface_id");
+    assert!(response.verified_surface.is_none());
+    assert_eq!(fixture.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn same_surface_instance_id_in_another_project_does_not_permit_access() -> Result<(), Box<dyn Error>>
+{
+    let fixture = CoreFixture::new("mcp_same_instance_other_project")?;
+    let other_project_id = "project_same_instance";
+    register_extra_project_surface(
+        &fixture,
+        other_project_id,
+        fixture.surface_id(),
+        fixture.surface_instance_id(),
+    )?;
+    let adapter = adapter(&fixture);
+    let mut request = fixture.status_request("req_same_instance_other_project", None);
+    request.envelope.project_id = ProjectId::new(other_project_id);
+    let before_bound = fixture.counts()?;
+    let before_other = counts_for_project(&fixture, other_project_id)?;
+
+    let response = adapter.call_tool("harness.status", serde_json::to_value(request)?)?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_field(&response.response_value, "envelope.project_id");
+    assert!(response.verified_surface.is_none());
+    assert_eq!(fixture.counts()?, before_bound);
+    assert_eq!(
+        counts_for_project(&fixture, other_project_id)?,
+        before_other
+    );
+    Ok(())
+}
+
+#[test]
+fn same_surface_id_in_another_project_does_not_permit_access() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_same_surface_other_project")?;
+    let other_project_id = "project_same_surface";
+    register_extra_project_surface(
+        &fixture,
+        other_project_id,
+        fixture.surface_id(),
+        "surface_instance_same_surface_other_project",
+    )?;
+    let adapter = adapter(&fixture);
+    let mut request = fixture.status_request("req_same_surface_other_project", None);
+    request.envelope.project_id = ProjectId::new(other_project_id);
+    let before_bound = fixture.counts()?;
+    let before_other = counts_for_project(&fixture, other_project_id)?;
+
+    let response = adapter.call_tool("harness.status", serde_json::to_value(request)?)?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_field(&response.response_value, "envelope.project_id");
+    assert!(response.verified_surface.is_none());
+    assert_eq!(fixture.counts()?, before_bound);
+    assert_eq!(
+        counts_for_project(&fixture, other_project_id)?,
+        before_other
+    );
+    Ok(())
+}
+
+#[test]
+fn deleted_bound_surface_fails_later_calls_closed_without_effect() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_deleted_bound_surface")?;
+    register_surface(
+        fixture.runtime_home_path(),
+        SurfaceRegistration {
+            project_id: fixture.project_id().to_owned(),
+            surface_id: "surface_deleted_binding".to_owned(),
+            surface_instance_id: "surface_instance_deleted_binding".to_owned(),
+            surface_kind: "local_test".to_owned(),
+            display_name: Some("Deleted binding surface".to_owned()),
+            capability_profile_json: default_capability_profile().to_string(),
+            local_access_json: local_access_without(&[]).to_string(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    let adapter = McpAdapter::new(
+        fixture.runtime_home_path(),
+        McpSessionContext::new(
+            ProjectId::new(fixture.project_id()),
+            SurfaceId::new("surface_deleted_binding"),
+            SurfaceInstanceId::new("surface_instance_deleted_binding"),
+        )
+        .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING),
+    );
+    fixture.conn()?.execute(
+        "DELETE FROM surfaces
+          WHERE project_id = ?1
+            AND surface_id = ?2
+            AND surface_instance_id = ?3",
+        rusqlite::params![
+            fixture.project_id(),
+            "surface_deleted_binding",
+            "surface_instance_deleted_binding"
+        ],
+    )?;
+    let before = fixture.counts()?;
+    let mut request = fixture.status_request("req_deleted_bound_surface", None);
+    request.envelope.surface_id = SurfaceId::new("surface_deleted_binding");
+
+    let response = adapter.call_tool("harness.status", serde_json::to_value(request)?)?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(response.verified_surface.is_none());
+    assert_eq!(fixture.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn missing_configured_instance_resolves_single_valid_candidate() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_single_candidate")?;
+    register_surface(
+        fixture.runtime_home_path(),
+        SurfaceRegistration {
+            project_id: fixture.project_id().to_owned(),
+            surface_id: "surface_single_candidate".to_owned(),
+            surface_instance_id: "surface_instance_single_candidate".to_owned(),
+            surface_kind: "local_test".to_owned(),
+            display_name: Some("Single candidate surface".to_owned()),
+            capability_profile_json: default_capability_profile().to_string(),
+            local_access_json: local_access_without(&[]).to_string(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+
+    let session = McpSessionContext::resolve(
+        fixture.runtime_home_path(),
+        ProjectId::new(fixture.project_id()),
+        SurfaceId::new("surface_single_candidate"),
+        None,
+    )?;
+
+    assert_eq!(session.project_id.as_str(), fixture.project_id());
+    assert_eq!(session.surface_id.as_str(), "surface_single_candidate");
+    assert_eq!(
+        session.surface_instance_id.as_str(),
+        "surface_instance_single_candidate"
+    );
+    Ok(())
+}
+
+#[test]
+fn missing_configured_instance_with_multiple_candidates_fails_startup() -> Result<(), Box<dyn Error>>
+{
+    let fixture = CoreFixture::new("mcp_multiple_candidates")?;
+    for instance_id in [
+        "surface_instance_multi_candidate_a",
+        "surface_instance_multi_candidate_b",
+    ] {
+        register_surface(
+            fixture.runtime_home_path(),
+            SurfaceRegistration {
+                project_id: fixture.project_id().to_owned(),
+                surface_id: "surface_multi_candidate".to_owned(),
+                surface_instance_id: instance_id.to_owned(),
+                surface_kind: "local_test".to_owned(),
+                display_name: None,
+                capability_profile_json: default_capability_profile().to_string(),
+                local_access_json: local_access_without(&[]).to_string(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+    }
+
+    let error = McpSessionContext::resolve(
+        fixture.runtime_home_path(),
+        ProjectId::new(fixture.project_id()),
+        SurfaceId::new("surface_multi_candidate"),
+        None,
+    )
+    .expect_err("ambiguous missing instance should fail startup");
+
+    assert!(error.to_string().contains("multiple usable"));
+    Ok(())
+}
+
+#[test]
+fn unknown_configured_instance_fails_startup() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_unknown_configured_instance")?;
+
+    let error = McpSessionContext::resolve(
+        fixture.runtime_home_path(),
+        ProjectId::new(fixture.project_id()),
+        SurfaceId::new(fixture.surface_id()),
+        Some(SurfaceInstanceId::new("surface_instance_missing")),
+    )
+    .expect_err("unknown configured instance should fail startup");
+
+    assert!(error.to_string().contains("not registered"));
+    Ok(())
+}
+
+#[test]
+fn exact_idempotency_replay_succeeds_inside_bound_session() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_bound_replay")?;
+    let adapter = adapter(&fixture);
+    let request = fixture.intake_request("req_bound_replay", "idem_bound_replay", false, Some(0));
+
+    let first = adapter.call_tool("harness.intake", serde_json::to_value(request.clone())?)?;
+    let after_first = fixture.counts()?;
+    let second = adapter.call_tool("harness.intake", serde_json::to_value(request)?)?;
+
+    assert!(second.replayed);
+    assert_eq!(second.response_json, first.response_json);
+    assert_eq!(fixture.counts()?, after_first);
     Ok(())
 }
 
@@ -956,7 +1229,9 @@ fn mcp_environment_access_class_and_basis_do_not_override_derived_context(
         "authorized_access_classes": ["read_status"],
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))?;
-    let session = McpSessionContext::from_env(|name| match name {
+    let session = McpSessionContext::from_env(fixture.runtime_home_path(), |name| match name {
+        "HARNESS_PROJECT_ID" => Some(OsString::from(fixture.project_id())),
+        "HARNESS_SURFACE_ID" => Some(OsString::from(fixture.surface_id())),
         "HARNESS_ACCESS_CLASS" => Some(OsString::from("core_mutation")),
         "HARNESS_SURFACE_INSTANCE_ID" => Some(OsString::from(fixture.surface_instance_id())),
         "HARNESS_VERIFICATION_BASIS" => Some(OsString::from("integration_env")),
@@ -988,7 +1263,9 @@ fn mcp_environment_access_class_and_basis_do_not_override_derived_context(
 #[test]
 fn mcp_environment_basis_does_not_alter_newly_stored_trusted_basis() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_env_basis_storage")?;
-    let session = McpSessionContext::from_env(|name| match name {
+    let session = McpSessionContext::from_env(fixture.runtime_home_path(), |name| match name {
+        "HARNESS_PROJECT_ID" => Some(OsString::from(fixture.project_id())),
+        "HARNESS_SURFACE_ID" => Some(OsString::from(fixture.surface_id())),
         "HARNESS_ACCESS_CLASS" => Some(OsString::from("read_status")),
         "HARNESS_SURFACE_INSTANCE_ID" => Some(OsString::from(fixture.surface_instance_id())),
         "HARNESS_VERIFICATION_BASIS" => Some(OsString::from("caller_env_basis")),
@@ -1310,9 +1587,13 @@ fn unknown_surface_instance_is_rejected() -> Result<(), Box<dyn Error>> {
     let response = core.status(
         fixture.status_request("req_unknown_instance", None),
         InvocationContext {
-            surface_instance_id: Some(SurfaceInstanceId::new("missing_surface_instance")),
+            binding: AdapterSessionBinding::new(
+                ProjectId::new(fixture.project_id()),
+                SurfaceId::new(fixture.surface_id()),
+                SurfaceInstanceId::new("missing_surface_instance"),
+                VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+            ),
             requested_access_class: AccessClass::ReadStatus,
-            invocation_binding_basis: VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned(),
         },
     )?;
 
@@ -1322,46 +1603,35 @@ fn unknown_surface_instance_is_rejected() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn ambiguous_surface_id_without_usable_default_is_rejected() -> Result<(), Box<dyn Error>> {
-    let fixture = CoreFixture::new("ambiguous_surface")?;
-    for surface_instance_id in [
-        "surface_instance_ambiguous_a",
-        "surface_instance_ambiguous_b",
-    ] {
-        register_surface(
-            fixture.runtime_home_path(),
-            SurfaceRegistration {
-                project_id: fixture.project_id().to_owned(),
-                surface_id: "surface_ambiguous".to_owned(),
-                surface_instance_id: surface_instance_id.to_owned(),
-                surface_kind: "local_test".to_owned(),
-                display_name: None,
-                capability_profile_json: json!({}).to_string(),
-                local_access_json: json!({
-                    "access_class": "read_status",
-                    "authorized_access_classes": ["read_status"],
-                    "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
-                })
-                .to_string(),
-                metadata_json: "{}".to_owned(),
-            },
-        )?;
-    }
+fn direct_core_rejects_envelope_surface_mismatch() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("core_surface_binding")?;
     let core = CoreService::new(fixture.runtime_home_path());
-    let mut request = fixture.status_request("req_ambiguous_surface", None);
-    request.envelope.surface_id = SurfaceId::new("surface_ambiguous");
+    let mut request = fixture.status_request("req_core_surface_mismatch", None);
+    request.envelope.surface_id = SurfaceId::new("surface_unbound");
 
-    let response = core.status(
-        request,
-        InvocationContext {
-            surface_instance_id: None,
-            requested_access_class: AccessClass::ReadStatus,
-            invocation_binding_basis: VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned(),
-        },
-    )?;
+    let response = core.status(request, invocation(&fixture, AccessClass::ReadStatus))?;
 
     assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_field(&response.response_value, "envelope.surface_id");
     assert!(response.verified_surface.is_none());
+    Ok(())
+}
+
+#[test]
+fn direct_core_rejects_envelope_project_mismatch_without_opening_target(
+) -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("core_project_binding")?;
+    let core = CoreService::new(fixture.runtime_home_path());
+    let mut request = fixture.status_request("req_core_project_mismatch", None);
+    request.envelope.project_id = ProjectId::new("project_unbound");
+    let before = fixture.counts()?;
+
+    let response = core.status(request, invocation(&fixture, AccessClass::ReadStatus))?;
+
+    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_field(&response.response_value, "envelope.project_id");
+    assert!(response.verified_surface.is_none());
+    assert_eq!(fixture.counts()?, before);
     Ok(())
 }
 
@@ -1562,9 +1832,58 @@ fn replay_surface_foreign_key_is_physical_restrictive_and_legacy_safe() -> Resul
 fn adapter(fixture: &CoreFixture) -> McpAdapter {
     McpAdapter::new(
         fixture.runtime_home_path(),
-        McpSessionContext::new()
-            .with_surface_instance_id(SurfaceInstanceId::new(fixture.surface_instance_id()))
-            .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING),
+        McpSessionContext::new(
+            ProjectId::new(fixture.project_id()),
+            SurfaceId::new(fixture.surface_id()),
+            SurfaceInstanceId::new(fixture.surface_instance_id()),
+        )
+        .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING),
+    )
+}
+
+fn register_extra_project_surface(
+    fixture: &CoreFixture,
+    project_id: &str,
+    surface_id: &str,
+    surface_instance_id: &str,
+) -> Result<(), Box<dyn Error>> {
+    let repo_root = fixture
+        .runtime_home_path()
+        .join(format!("repo-{project_id}"));
+    fs::create_dir_all(&repo_root)?;
+    register_project(
+        fixture.runtime_home_path(),
+        ProjectRegistration {
+            project_id: project_id.to_owned(),
+            repo_root,
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    register_surface(
+        fixture.runtime_home_path(),
+        SurfaceRegistration {
+            project_id: project_id.to_owned(),
+            surface_id: surface_id.to_owned(),
+            surface_instance_id: surface_instance_id.to_owned(),
+            surface_kind: "local_test".to_owned(),
+            display_name: Some(format!("Extra project surface {surface_instance_id}")),
+            capability_profile_json: default_capability_profile().to_string(),
+            local_access_json: local_access_without(&[]).to_string(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(())
+}
+
+fn counts_for_project(
+    fixture: &CoreFixture,
+    project_id: &str,
+) -> Result<StorageEffectCounts, Box<dyn Error>> {
+    Ok(
+        CoreProjectStore::open(fixture.runtime_home_path(), &ProjectId::new(project_id))?
+            .effect_counts()?,
     )
 }
 
@@ -1602,15 +1921,23 @@ fn default_capability_profile() -> Value {
 
 fn invocation(fixture: &CoreFixture, access_class: AccessClass) -> InvocationContext {
     InvocationContext {
-        surface_instance_id: Some(SurfaceInstanceId::new(fixture.surface_instance_id())),
+        binding: AdapterSessionBinding::new(
+            ProjectId::new(fixture.project_id()),
+            SurfaceId::new(fixture.surface_id()),
+            SurfaceInstanceId::new(fixture.surface_instance_id()),
+            VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+        ),
         requested_access_class: access_class,
-        invocation_binding_basis: VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned(),
     }
 }
 
 fn assert_rejected_code(response: &Value, code: &str) {
     assert_eq!(response["base"]["response_kind"], "rejected");
     assert_eq!(response["errors"][0]["code"], code);
+}
+
+fn assert_rejected_field(response: &Value, field: &str) {
+    assert_eq!(response["errors"][0]["details"]["field"], field);
 }
 
 fn assert_replay_surface_foreign_key(conn: &rusqlite::Connection) -> rusqlite::Result<()> {

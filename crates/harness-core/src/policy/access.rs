@@ -32,37 +32,17 @@ pub(crate) fn method_access_error(
 
 pub(crate) fn derive_verified_surface(
     store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    envelope: &ToolEnvelope,
+    _project_state: &ProjectStateHeader,
+    _envelope: &ToolEnvelope,
     invocation: &InvocationContext,
 ) -> Result<VerifiedSurfaceContext, ToolError> {
-    let surface = if let Some(surface_instance_id) = &invocation.surface_instance_id {
-        store
-            .surface(&envelope.surface_id, surface_instance_id.as_str())
-            .map_err(store_failure_error)?
-            .ok_or_else(|| local_access_mismatch_error("surface_instance_id"))?
-    } else if project_state.default_surface_id.as_deref() == Some(envelope.surface_id.as_str()) {
-        let default_instance = project_state
-            .default_surface_instance_id
-            .as_deref()
-            .ok_or_else(|| local_access_mismatch_error("default_surface_instance_id"))?;
-        store
-            .surface(&envelope.surface_id, default_instance)
-            .map_err(store_failure_error)?
-            .ok_or_else(|| local_access_mismatch_error("default_surface_instance_id"))?
-    } else {
-        let candidates = store
-            .surface_candidates(&envelope.surface_id)
-            .map_err(store_failure_error)?;
-        if candidates.len() == 1 {
-            candidates
-                .into_iter()
-                .next()
-                .ok_or_else(|| local_access_mismatch_error("surface_id"))?
-        } else {
-            return Err(local_access_mismatch_error("surface_id"));
-        }
-    };
+    let surface = store
+        .surface(
+            &invocation.binding.surface_id,
+            invocation.binding.surface_instance_id.as_str(),
+        )
+        .map_err(store_failure_error)?
+        .ok_or_else(|| local_access_mismatch_error("adapter_session_binding"))?;
 
     let capability_profile = serde_json::from_str::<Value>(&surface.capability_profile_json)
         .map_err(|_| {
@@ -105,7 +85,7 @@ pub(crate) fn verified_surface_from_registered_surface(
         capability_profile,
         verification_basis: verified_surface_basis(
             &grant.verification_basis,
-            &invocation.invocation_binding_basis,
+            &invocation.binding.invocation_binding_basis,
         ),
     })
 }

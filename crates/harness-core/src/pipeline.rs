@@ -92,12 +92,37 @@ impl From<DurableIdError> for CorePipelineError {
     }
 }
 
+/// Trusted adapter/session binding supplied outside `ToolEnvelope`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AdapterSessionBinding {
+    pub project_id: ProjectId,
+    pub surface_id: SurfaceId,
+    pub surface_instance_id: SurfaceInstanceId,
+    pub invocation_binding_basis: String,
+}
+
+impl AdapterSessionBinding {
+    /// Creates a trusted adapter/session binding for one local surface instance.
+    pub fn new(
+        project_id: ProjectId,
+        surface_id: SurfaceId,
+        surface_instance_id: SurfaceInstanceId,
+        invocation_binding_basis: impl Into<String>,
+    ) -> Self {
+        Self {
+            project_id,
+            surface_id,
+            surface_instance_id,
+            invocation_binding_basis: invocation_binding_basis.into(),
+        }
+    }
+}
+
 /// Local invocation facts supplied by an adapter outside `ToolEnvelope`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InvocationContext {
-    pub surface_instance_id: Option<SurfaceInstanceId>,
+    pub binding: AdapterSessionBinding,
     pub requested_access_class: AccessClass,
-    pub invocation_binding_basis: String,
 }
 
 /// Internal verified surface context derived for one invocation.
@@ -417,6 +442,15 @@ impl CoreService {
             );
         }
 
+        if let Some(error) = adapter_binding_mismatch_error(&request.envelope, &request.invocation)
+        {
+            return response_outcome_from_rejected(
+                rejected_response(request.envelope.dry_run, None, vec![error]),
+                None,
+                None,
+            );
+        }
+
         let committed_envelope_errors =
             validate_committed_effect_envelope(&request.envelope, &request.policy);
         if !committed_envelope_errors.is_empty() {
@@ -429,7 +463,10 @@ impl CoreService {
 
         let request_hash = canonical_request_hash(&request.request_json)?;
 
-        let store = match CoreProjectStore::open(&self.runtime_home, &request.envelope.project_id) {
+        let store = match CoreProjectStore::open(
+            &self.runtime_home,
+            &request.invocation.binding.project_id,
+        ) {
             Ok(store) => store,
             Err(error) => {
                 return response_outcome_from_rejected(
@@ -843,6 +880,23 @@ fn validate_committed_effect_envelope(
         )];
     }
     Vec::new()
+}
+
+fn adapter_binding_mismatch_error(
+    envelope: &ToolEnvelope,
+    invocation: &InvocationContext,
+) -> Option<ToolError> {
+    if envelope.project_id != invocation.binding.project_id {
+        Some(crate::policy::access::local_access_mismatch_error(
+            "envelope.project_id",
+        ))
+    } else if envelope.surface_id != invocation.binding.surface_id {
+        Some(crate::policy::access::local_access_mismatch_error(
+            "envelope.surface_id",
+        ))
+    } else {
+        None
+    }
 }
 
 fn validate_branch_shape(branch: &OwnerPipelineBranch, dry_run: bool) -> CoreResult<()> {
@@ -2280,10 +2334,16 @@ mod tests {
         access_class: AccessClass,
         surface_instance_id: Option<&str>,
     ) -> InvocationContext {
+        let surface_instance_id =
+            SurfaceInstanceId::new(surface_instance_id.unwrap_or(SURFACE_INSTANCE_ID));
         InvocationContext {
-            surface_instance_id: surface_instance_id.map(SurfaceInstanceId::new),
+            binding: AdapterSessionBinding::new(
+                ProjectId::new(PROJECT_ID),
+                SurfaceId::new(SURFACE_ID),
+                surface_instance_id,
+                VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+            ),
             requested_access_class: access_class,
-            invocation_binding_basis: VERIFICATION_BASIS_TEST_FIXTURE_BINDING.to_owned(),
         }
     }
 
