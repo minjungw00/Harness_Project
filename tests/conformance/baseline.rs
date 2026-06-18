@@ -161,6 +161,79 @@ fn idempotency_replay_is_bound_to_verified_access_context() -> Result<(), Box<dy
 }
 
 #[test]
+fn committed_non_allow_prepare_write_audit_and_replay_are_exact() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("prepare_non_allow_audit")?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "prepare_non_allow_audit")?;
+    let before = fixture.counts()?;
+    let mut request = fixture.prepare_write_request(
+        "req_prepare_non_allow_audit",
+        "idem_prepare_non_allow_audit",
+        Some(2),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    request.intended_paths = vec!["src/other.rs".to_owned()];
+
+    let first = service.prepare_write(
+        request.clone(),
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+    let after_first = fixture.counts()?;
+    let event_payload =
+        assert_latest_prepare_write_event(&fixture, &first.response_value, "blocked")?;
+
+    assert_eq!(first.response_value["decision"], "blocked");
+    assert_prepare_reason(&first.response_value, "path_out_of_scope");
+    assert_eq!(first.response_value["write_authorization"], Value::Null);
+    assert_eq!(after_first.state_version, before.state_version + 1);
+    assert_eq!(after_first.task_events, before.task_events + 1);
+    assert_eq!(after_first.tool_invocations, before.tool_invocations + 1);
+    assert_eq!(
+        after_first.write_authorizations,
+        before.write_authorizations
+    );
+    assert_eq!(after_first.artifact_staging, before.artifact_staging);
+    assert_eq!(after_first.artifacts, before.artifacts);
+    assert_eq!(after_first.artifact_links, before.artifact_links);
+    assert_eq!(after_first.evidence_summaries, before.evidence_summaries);
+    assert_eq!(after_first.blockers, before.blockers);
+    assert_eq!(
+        event_payload["write_decision_reasons"][0]["category"],
+        "scope"
+    );
+    assert_eq!(
+        event_payload["write_decision_reasons"][0]["code"],
+        "path_out_of_scope"
+    );
+    assert!(!event_payload["write_decision_reasons"][0]["related_refs"]
+        .as_array()
+        .expect("related_refs should be present")
+        .is_empty());
+
+    let replay = service.prepare_write(
+        request.clone(),
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+    assert!(replay.replayed);
+    assert_eq!(replay.response_json, first.response_json);
+    assert_eq!(fixture.counts()?, after_first);
+
+    let mismatch =
+        service.prepare_write(request, invocation(&fixture, AccessClass::CoreMutation))?;
+    assert!(!mismatch.replayed);
+    assert_rejected_code(&mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(mismatch
+        .response_value
+        .get("write_decision_reasons")
+        .is_none());
+    assert!(!mismatch.response_json.contains("path_out_of_scope"));
+    assert_eq!(fixture.counts()?, after_first);
+    Ok(())
+}
+
+#[test]
 fn write_authorization_lifecycle_is_single_use_and_state_bound() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("write_lifecycle")?;
     let service = core(&fixture);
@@ -974,6 +1047,32 @@ fn assert_prepare_reason(response_value: &Value, code: &str) {
         reasons.iter().any(|reason| reason["code"] == code),
         "expected prepare_write reason code {code}, got {reasons:?}"
     );
+}
+
+fn assert_latest_prepare_write_event(
+    fixture: &CoreFixture,
+    response_value: &Value,
+    decision: &str,
+) -> Result<Value, Box<dyn Error>> {
+    let event = fixture.latest_task_event()?;
+    assert_eq!(event.event_kind, "write_decision_recorded");
+    assert_eq!(
+        event.state_version,
+        response_value["base"]["state_version"]
+            .as_u64()
+            .expect("state_version should be present")
+    );
+    assert_eq!(event.event_payload["decision"], decision);
+    assert!(event.event_payload["write_authorization_id"].is_null());
+    assert!(event.event_payload.get("reason_codes").is_none());
+    assert!(event.event_payload.get("intended_paths").is_none());
+    assert!(event.event_payload.get("intended_operation").is_none());
+    assert!(event.event_payload.get("sensitive_categories").is_none());
+    assert_eq!(
+        event.event_payload["write_decision_reasons"],
+        response_value["write_decision_reasons"]
+    );
+    Ok(event.event_payload)
 }
 
 fn assert_close_blocker(response_value: &Value, code: &str) {

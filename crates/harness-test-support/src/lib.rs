@@ -777,6 +777,25 @@ pub mod core_fixtures {
                 closed_at,
             })
         }
+
+        /// Reads the most recently appended task event for this fixture project.
+        pub fn latest_task_event(&self) -> Result<TaskEventFixtureRow, Box<dyn Error>> {
+            let (event_kind, event_payload_text, state_version): (String, String, i64) =
+                self.conn()?.query_row(
+                    "SELECT event_kind, event_payload_json, state_version
+                       FROM task_events
+                      WHERE project_id = ?1
+                      ORDER BY event_seq DESC
+                      LIMIT 1",
+                    rusqlite::params![self.project_id],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                )?;
+            Ok(TaskEventFixtureRow {
+                event_kind,
+                event_payload: serde_json::from_str(&event_payload_text)?,
+                state_version: u64::try_from(state_version)?,
+            })
+        }
     }
 
     /// Input object for update-scope request builders.
@@ -835,6 +854,14 @@ pub mod core_fixtures {
         pub result: Option<String>,
         pub close_summary: Value,
         pub closed_at: Option<String>,
+    }
+
+    /// Task event fields read from storage for audit assertions.
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct TaskEventFixtureRow {
+        pub event_kind: String,
+        pub event_payload: Value,
+        pub state_version: u64,
     }
 
     /// Returns a status include object with every supported flag enabled.

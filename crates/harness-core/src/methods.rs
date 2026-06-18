@@ -3085,13 +3085,18 @@ fn plan_prepare_write(
         "write_decision_recorded"
     }
     .to_owned();
-    let event_payload = object_from_value(json!({
+    let mut event_payload = object_from_value(json!({
         "task_id": task_id.clone(),
         "change_unit_id": branch_change_unit_id.clone(),
         "decision": decision,
-        "write_authorization_id": allowed.then(|| write_authorization_id.as_str().to_owned()),
-        "reason_codes": reasons.iter().map(|reason| reason.code.clone()).collect::<Vec<_>>()
+        "write_authorization_id": allowed.then(|| write_authorization_id.as_str().to_owned())
     }))?;
+    if !allowed {
+        event_payload.insert(
+            "write_decision_reasons".to_owned(),
+            serde_json::to_value(&reasons)?,
+        );
+    }
 
     Ok(PrepareWritePlan {
         task_id,
@@ -7203,8 +7208,37 @@ mod tests {
         assert_eq!(response.response_value["decision"], "blocked");
         assert_prepare_reason(&response.response_value, "path_out_of_scope");
         assert!(response.response_value["write_authorization"].is_null());
+        assert!(response.response_value["write_authorization_ref"].is_null());
+        assert_eq!(response.response_value["authorization_effect"], "none");
         assert_eq!(after.state_version, before.state_version + 1);
         assert_eq!(after.write_authorizations, before.write_authorizations);
+        assert_eq!(after.task_events, before.task_events + 1);
+        assert_eq!(after.tool_invocations, before.tool_invocations + 1);
+        assert_eq!(after.artifact_staging, before.artifact_staging);
+        assert_eq!(after.artifacts, before.artifacts);
+        assert_eq!(after.artifact_links, before.artifact_links);
+        assert_eq!(after.evidence_summaries, before.evidence_summaries);
+        assert_eq!(after.blockers, before.blockers);
+        assert_eq!(after.runs, before.runs);
+        let event_payload = assert_latest_prepare_write_event(
+            &harness,
+            &response.response_value,
+            "blocked",
+            "path_out_of_scope",
+        )?;
+        assert_eq!(event_payload["task_id"], task_id);
+        assert_eq!(event_payload["change_unit_id"], change_unit_id);
+        let reason = event_payload["write_decision_reasons"][0].clone();
+        assert_eq!(reason["category"], "scope");
+        assert_eq!(reason["code"], "path_out_of_scope");
+        assert!(reason["message"]
+            .as_str()
+            .expect("reason message should be present")
+            .contains("outside the current Change Unit path scope"));
+        assert!(!reason["related_refs"]
+            .as_array()
+            .expect("related_refs should be an array")
+            .is_empty());
         Ok(())
     }
 
@@ -7278,6 +7312,26 @@ mod tests {
         assert_eq!(response.response_value["decision"], "decision_required");
         assert_prepare_reason(&response.response_value, "user_judgment_unresolved");
         assert_eq!(after.write_authorizations, before.write_authorizations);
+        assert_eq!(after.state_version, before.state_version + 1);
+        assert_eq!(after.task_events, before.task_events + 1);
+        assert_eq!(after.tool_invocations, before.tool_invocations + 1);
+        let event_payload = assert_latest_prepare_write_event(
+            &harness,
+            &response.response_value,
+            "decision_required",
+            "user_judgment_unresolved",
+        )?;
+        let reason = event_payload["write_decision_reasons"][0].clone();
+        assert_eq!(reason["category"], "user_judgment");
+        assert_eq!(reason["code"], "user_judgment_unresolved");
+        assert!(reason["message"]
+            .as_str()
+            .expect("reason message should be present")
+            .contains("user-owned judgment"));
+        assert!(!reason["related_refs"]
+            .as_array()
+            .expect("related_refs should be an array")
+            .is_empty());
         Ok(())
     }
 
@@ -7304,6 +7358,26 @@ mod tests {
         assert_eq!(response.response_value["decision"], "approval_required");
         assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
         assert_eq!(after.write_authorizations, before.write_authorizations);
+        assert_eq!(after.state_version, before.state_version + 1);
+        assert_eq!(after.task_events, before.task_events + 1);
+        assert_eq!(after.tool_invocations, before.tool_invocations + 1);
+        let event_payload = assert_latest_prepare_write_event(
+            &harness,
+            &response.response_value,
+            "approval_required",
+            "sensitive_approval_missing",
+        )?;
+        let reason = event_payload["write_decision_reasons"][0].clone();
+        assert_eq!(reason["category"], "sensitive_approval");
+        assert_eq!(reason["code"], "sensitive_approval_missing");
+        assert!(reason["message"]
+            .as_str()
+            .expect("reason message should be present")
+            .contains("sensitive-action approval"));
+        assert!(reason["related_refs"]
+            .as_array()
+            .expect("related_refs should be an array")
+            .is_empty());
         Ok(())
     }
 
@@ -7453,6 +7527,7 @@ mod tests {
         let harness = MethodHarness::new()?;
         let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_dry")?;
         let before = harness.counts()?;
+        let before_decision_events = write_decision_event_count(&harness)?;
 
         let mut request = prepare_write_request(
             "req_prepare_dry",
@@ -7472,6 +7547,36 @@ mod tests {
             "would_create"
         );
         assert_eq!(harness.counts()?, before);
+        assert_eq!(
+            write_decision_event_count(&harness)?,
+            before_decision_events
+        );
+
+        let mut blocked_preview = prepare_write_request(
+            "req_prepare_dry_blocked",
+            "idem_prepare_dry_blocked",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        blocked_preview.envelope.dry_run = true;
+        blocked_preview.intended_paths = vec!["src/other.rs".to_owned()];
+        let blocked_preview = harness
+            .service
+            .prepare_write(blocked_preview, invocation(AccessClass::WriteAuthorization))?;
+        assert_eq!(
+            blocked_preview.response_value["base"]["response_kind"],
+            "dry_run"
+        );
+        assert_eq!(
+            blocked_preview.response_value["dry_run_summary"]["would_blockers"][0]["code"],
+            "path_out_of_scope"
+        );
+        assert_eq!(harness.counts()?, before);
+        assert_eq!(
+            write_decision_event_count(&harness)?,
+            before_decision_events
+        );
         Ok(())
     }
 
@@ -7480,6 +7585,7 @@ mod tests {
         let harness = MethodHarness::new()?;
         let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_escape")?;
         let before = harness.counts()?;
+        let before_decision_events = write_decision_event_count(&harness)?;
 
         let mut request = prepare_write_request(
             "req_prepare_escape",
@@ -7498,7 +7604,15 @@ mod tests {
             response.response_value["errors"][0]["code"],
             "VALIDATION_FAILED"
         );
+        assert!(response
+            .response_value
+            .get("write_decision_reasons")
+            .is_none());
         assert_eq!(harness.counts()?, before);
+        assert_eq!(
+            write_decision_event_count(&harness)?,
+            before_decision_events
+        );
         Ok(())
     }
 
@@ -7507,6 +7621,7 @@ mod tests {
         let harness = MethodHarness::new()?;
         let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_stale")?;
         let before = harness.counts()?;
+        let before_decision_events = write_decision_event_count(&harness)?;
 
         let request = prepare_write_request(
             "req_prepare_stale",
@@ -7524,7 +7639,19 @@ mod tests {
             response.response_value["errors"][0]["code"],
             "STATE_VERSION_CONFLICT"
         );
+        assert!(response
+            .response_value
+            .get("write_decision_reasons")
+            .is_none());
+        assert!(!response.response_json.contains("write_decision_reasons"));
+        assert!(!response
+            .response_json
+            .contains("STATE_VERSION_CONFLICT\",\"category"));
         assert_eq!(harness.counts()?, before);
+        assert_eq!(
+            write_decision_event_count(&harness)?,
+            before_decision_events
+        );
         Ok(())
     }
 
@@ -7554,6 +7681,69 @@ mod tests {
         assert_eq!(second.response_json, first.response_json);
         assert_eq!(harness.counts()?, after_first);
         assert_eq!(write_authorization_count(&harness)?, 1);
+        Ok(())
+    }
+
+    #[test]
+    fn prepare_write_non_allow_replay_returns_original_response_without_effect(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&harness, "prepare_non_allow_replay")?;
+        let mut request = prepare_write_request(
+            "req_prepare_non_allow_replay",
+            "idem_prepare_non_allow_replay",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        request.intended_paths = vec!["src/other.rs".to_owned()];
+        let before = harness.counts()?;
+
+        let first = harness
+            .service
+            .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
+        let after_first = harness.counts()?;
+        let same_context = harness
+            .service
+            .prepare_write(request.clone(), invocation(AccessClass::WriteAuthorization))?;
+        let context_mismatch = harness
+            .service
+            .prepare_write(request, invocation(AccessClass::CoreMutation))?;
+
+        assert_eq!(first.response_value["decision"], "blocked");
+        assert_prepare_reason(&first.response_value, "path_out_of_scope");
+        assert_eq!(after_first.state_version, before.state_version + 1);
+        assert_eq!(after_first.task_events, before.task_events + 1);
+        assert_eq!(after_first.tool_invocations, before.tool_invocations + 1);
+        assert_eq!(
+            after_first.write_authorizations,
+            before.write_authorizations
+        );
+        assert_latest_prepare_write_event(
+            &harness,
+            &first.response_value,
+            "blocked",
+            "path_out_of_scope",
+        )?;
+        assert!(same_context.replayed);
+        assert_eq!(same_context.response_json, first.response_json);
+        assert_eq!(harness.counts()?, after_first);
+        assert!(!context_mismatch.replayed);
+        assert_eq!(
+            context_mismatch.response_value["base"]["response_kind"],
+            "rejected"
+        );
+        assert_eq!(
+            context_mismatch.response_value["errors"][0]["code"],
+            "LOCAL_ACCESS_MISMATCH"
+        );
+        assert!(!context_mismatch.response_json.contains("path_out_of_scope"));
+        assert!(context_mismatch
+            .response_value
+            .get("write_decision_reasons")
+            .is_none());
+        assert_eq!(harness.counts()?, after_first);
         Ok(())
     }
 
@@ -10125,6 +10315,62 @@ mod tests {
             |row| row.get(0),
         )?;
         Ok(u64::try_from(count)?)
+    }
+
+    fn write_decision_event_count(harness: &MethodHarness) -> Result<u64, Box<dyn Error>> {
+        let conn = harness.conn()?;
+        let count: i64 = conn.query_row(
+            "SELECT COUNT(*)
+               FROM task_events
+              WHERE project_id = ?1
+                AND event_kind = 'write_decision_recorded'",
+            rusqlite::params![PROJECT_ID],
+            |row| row.get(0),
+        )?;
+        Ok(u64::try_from(count)?)
+    }
+
+    fn latest_task_event(harness: &MethodHarness) -> Result<(String, Value, u64), Box<dyn Error>> {
+        let conn = harness.conn()?;
+        let (event_kind, event_payload_text, state_version): (String, String, i64) = conn
+            .query_row(
+                "SELECT event_kind, event_payload_json, state_version
+                   FROM task_events
+                  WHERE project_id = ?1
+                  ORDER BY event_seq DESC
+                  LIMIT 1",
+                rusqlite::params![PROJECT_ID],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )?;
+        Ok((
+            event_kind,
+            serde_json::from_str(&event_payload_text)?,
+            u64::try_from(state_version)?,
+        ))
+    }
+
+    fn assert_latest_prepare_write_event(
+        harness: &MethodHarness,
+        response_value: &Value,
+        expected_decision: &str,
+        expected_reason_code: &str,
+    ) -> Result<Value, Box<dyn Error>> {
+        let (event_kind, payload, event_state_version) = latest_task_event(harness)?;
+        assert_eq!(event_kind, "write_decision_recorded");
+        assert_eq!(event_state_version, response_value["base"]["state_version"]);
+        assert_eq!(payload["decision"], expected_decision);
+        assert!(payload["write_authorization_id"].is_null());
+        assert!(payload.get("reason_codes").is_none());
+        assert!(payload.get("intended_paths").is_none());
+        assert!(payload.get("intended_operation").is_none());
+        assert!(payload.get("sensitive_categories").is_none());
+        assert!(payload.get("baseline_ref").is_none());
+        assert_eq!(
+            payload["write_decision_reasons"],
+            response_value["write_decision_reasons"]
+        );
+        assert_prepare_reason(&payload, expected_reason_code);
+        Ok(payload)
     }
 
     fn write_authorization_basis(
