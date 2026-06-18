@@ -147,6 +147,9 @@ fn plan_intake(
             autonomy_boundary_json: serde_json::to_string(&json!({
                 "autonomy_boundary": Value::Null
             }))?,
+            scope_revision: 0,
+            close_basis_revision: 0,
+            close_basis_json: None,
             close_summary_json: serde_json::to_string(&json!({
                 "close_reason": "none"
             }))?,

@@ -457,6 +457,16 @@ pub enum UserJudgmentStatus {
     Incompatible,
 }
 
+/// Judgment-basis compatibility status values.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum JudgmentBasisCompatibilityStatus {
+    Current,
+    Stale,
+    Superseded,
+    LegacyUnbound,
+}
+
 /// Public API error code values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

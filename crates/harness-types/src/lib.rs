@@ -282,6 +282,77 @@ mod tests {
     }
 
     #[test]
+    fn close_basis_and_judgment_basis_round_trip_json() {
+        let close_basis: CurrentCloseBasis = serde_json::from_value(json!({
+            "close_basis_revision": 4,
+            "scope_revision": 2,
+            "task_id": "task_close_basis_001",
+            "change_unit_id": "cu_close_basis_001",
+            "baseline_ref": "baseline_close_basis",
+            "result_summary": "The requested export is implemented.",
+            "result_refs": [
+                state_ref_json("run", "run_close_basis_001", "task_close_basis_001")
+            ],
+            "evidence_summary_ref": null,
+            "residual_risks": [
+                {
+                    "risk_id": "risk_close_basis_001",
+                    "summary": "The downstream importer may reject older files.",
+                    "consequence": "A manual retry may be needed.",
+                    "acceptance_required": true,
+                    "source_refs": [
+                        state_ref_json("run", "run_close_basis_001", "task_close_basis_001")
+                    ]
+                }
+            ],
+            "sensitive_categories": ["network"],
+            "recovery_constraints": ["Rollback requires restoring the previous exporter."],
+            "source_run_ref": state_ref_json("run", "run_close_basis_001", "task_close_basis_001"),
+            "updated_at": "2026-06-18T00:00:00.000Z"
+        }))
+        .expect("CurrentCloseBasis should deserialize");
+
+        assert_eq!(
+            close_basis.residual_risks[0].risk_id.as_str(),
+            "risk_close_basis_001"
+        );
+        let encoded = serde_json::to_value(&close_basis).expect("CurrentCloseBasis serializes");
+        assert_eq!(
+            encoded["residual_risks"][0]["risk_id"],
+            "risk_close_basis_001"
+        );
+        let decoded: CurrentCloseBasis =
+            serde_json::from_value(encoded).expect("CurrentCloseBasis round-trips");
+        assert_eq!(decoded, close_basis);
+
+        let judgment_basis: JudgmentBasis = serde_json::from_value(json!({
+            "task_id": "task_close_basis_001",
+            "change_unit_id": "cu_close_basis_001",
+            "scope_revision": 2,
+            "close_basis_revision": 4,
+            "baseline_ref": "baseline_close_basis",
+            "result_refs": [
+                state_ref_json("run", "run_close_basis_001", "task_close_basis_001")
+            ],
+            "residual_risk_ids": ["risk_close_basis_001"],
+            "sensitive_action_scope": null,
+            "created_at_state_version": 11,
+            "compatibility_status": "current"
+        }))
+        .expect("JudgmentBasis should deserialize");
+
+        assert_eq!(
+            judgment_basis.residual_risk_ids[0].as_str(),
+            "risk_close_basis_001"
+        );
+        let encoded = serde_json::to_value(&judgment_basis).expect("JudgmentBasis serializes");
+        assert_eq!(encoded["compatibility_status"], "current");
+        let decoded: JudgmentBasis =
+            serde_json::from_value(encoded).expect("JudgmentBasis round-trips");
+        assert_eq!(decoded, judgment_basis);
+    }
+
+    #[test]
     fn method_local_reason_codes_remain_strings() {
         let reason: WriteDecisionReason = serde_json::from_value(json!({
             "category": "sensitive_approval",
@@ -645,6 +716,16 @@ mod tests {
             "expected_state_version": 62,
             "dry_run": false,
             "locale": "en-US"
+        })
+    }
+
+    fn state_ref_json(record_kind: &str, record_id: &str, task_id: &str) -> Value {
+        json!({
+            "record_kind": record_kind,
+            "record_id": record_id,
+            "project_id": "proj_empty_001",
+            "task_id": task_id,
+            "state_version": 11
         })
     }
 

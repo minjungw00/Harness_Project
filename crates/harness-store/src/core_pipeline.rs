@@ -1,6 +1,9 @@
 use std::path::Path;
 
-use harness_types::{IdempotencyKey, MethodName, ProjectId, RequestHash, SurfaceId, TaskId};
+use harness_types::{
+    CurrentCloseBasis, IdempotencyKey, JudgmentBasis, JudgmentBasisCompatibilityStatus, MethodName,
+    ProjectId, RequestHash, SurfaceId, TaskId,
+};
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
 
@@ -81,6 +84,8 @@ pub enum CoreStorageMutation {
     SupersedeTask { task_id: String },
     CloseTask(TaskCloseUpdate),
     UpdateTaskScope(TaskScopeUpdate),
+    UpdateTaskScopeRevision(TaskScopeRevisionUpdate),
+    UpdateTaskCloseBasis(TaskCloseBasisUpdate),
     InsertCurrentChangeUnit(ChangeUnitInsert),
     ReplaceCurrentChangeUnit(ChangeUnitInsert),
     MarkActiveWriteAuthorizationsStale { task_id: String },
@@ -92,6 +97,8 @@ pub enum CoreStorageMutation {
     UpsertEvidenceSummary(EvidenceSummaryUpsert),
     InsertUserJudgment(UserJudgmentInsert),
     ResolveUserJudgment(UserJudgmentResolutionUpdate),
+    UpdateUserJudgmentBasis(UserJudgmentBasisUpdate),
+    MarkUserJudgmentBasesStatus(UserJudgmentBasisStatusMark),
 }
 
 /// Storage input for inserting a Task current row.
@@ -126,6 +133,21 @@ pub struct TaskScopeUpdate {
     pub autonomy_boundary_json: Option<String>,
     pub close_summary_json: Option<String>,
     pub completion_policy_json: Option<String>,
+}
+
+/// Storage input for updating a Task scope revision coordinate.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskScopeRevisionUpdate {
+    pub task_id: String,
+    pub scope_revision: u64,
+}
+
+/// Storage input for atomically replacing a Task close-basis coordinate and JSON.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskCloseBasisUpdate {
+    pub task_id: String,
+    pub close_basis_revision: u64,
+    pub close_basis_json: Option<String>,
 }
 
 /// Storage input for applying one terminal Task close transition.
@@ -163,6 +185,8 @@ pub struct UserJudgmentInsert {
     pub affected_refs_json: String,
     pub artifact_refs_json: String,
     pub sensitive_action_scope_json: String,
+    pub basis_json: Option<String>,
+    pub basis_status: JudgmentBasisCompatibilityStatus,
     pub requested_by_surface_id: String,
     pub requested_by_surface_instance_id: String,
     pub requested_at: String,
@@ -177,6 +201,21 @@ pub struct UserJudgmentResolutionUpdate {
     pub resolution_json: String,
     pub sensitive_action_scope_json: Option<String>,
     pub resolved_at: String,
+}
+
+/// Storage input for replacing one judgment basis snapshot and compatibility status.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UserJudgmentBasisUpdate {
+    pub judgment_id: String,
+    pub basis_json: Option<String>,
+    pub basis_status: JudgmentBasisCompatibilityStatus,
+}
+
+/// Storage input for marking selected judgment basis rows stale or superseded.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UserJudgmentBasisStatusMark {
+    pub judgment_ids: Vec<String>,
+    pub basis_status: JudgmentBasisCompatibilityStatus,
 }
 
 /// Storage input for inserting one active Write Authorization.
@@ -364,10 +403,24 @@ pub struct TaskRecord {
     pub shaping_summary_json: String,
     pub bounded_context_json: String,
     pub autonomy_boundary_json: String,
+    pub scope_revision: u64,
+    pub close_basis_revision: u64,
+    pub close_basis_json: Option<String>,
     pub close_summary_json: String,
     pub completion_policy_json: String,
     pub current_change_unit_id: Option<String>,
     pub closed_at: Option<String>,
+}
+
+/// Current Task revision coordinates and optional strict-decoded close basis.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TaskRevisionRecord {
+    pub project_id: String,
+    pub task_id: String,
+    pub scope_revision: u64,
+    pub close_basis_revision: u64,
+    pub close_basis_json: Option<String>,
+    pub current_close_basis: Option<CurrentCloseBasis>,
 }
 
 /// Current Change Unit row data needed by Core method implementations.
@@ -451,12 +504,24 @@ pub struct UserJudgmentRecord {
     pub affected_refs_json: String,
     pub artifact_refs_json: String,
     pub sensitive_action_scope_json: String,
+    pub basis_json: Option<String>,
+    pub basis_status: String,
     pub resolution_json: Option<String>,
     pub requested_by_surface_id: String,
     pub requested_by_surface_instance_id: String,
     pub requested_at: String,
     pub resolved_at: Option<String>,
     pub metadata_json: String,
+}
+
+/// Stored judgment-basis facts with strict-decoded typed JSON when present.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserJudgmentBasisRecord {
+    pub project_id: String,
+    pub judgment_id: String,
+    pub basis_json: Option<String>,
+    pub basis_status: JudgmentBasisCompatibilityStatus,
+    pub basis: Option<JudgmentBasis>,
 }
 
 /// Public record reference facts read from storage rows.
@@ -566,6 +631,14 @@ impl CoreProjectStore {
     /// Reads one Task current row.
     pub fn task_record(&self, task_id: &TaskId) -> StoreResult<Option<TaskRecord>> {
         task_record(&self.conn, &self.project.project_id, task_id.as_str())
+    }
+
+    /// Reads Task revision coordinates and the current close basis, when present.
+    pub fn task_revision_record(
+        &self,
+        task_id: &TaskId,
+    ) -> StoreResult<Option<TaskRevisionRecord>> {
+        task_revision_record(&self.conn, &self.project.project_id, task_id.as_str())
     }
 
     /// Reads the current active Task row, when `project_state.active_task_id` is set.
@@ -705,6 +778,14 @@ impl CoreProjectStore {
         judgment_id: &str,
     ) -> StoreResult<Option<UserJudgmentRecord>> {
         user_judgment_record(&self.conn, &self.project.project_id, judgment_id)
+    }
+
+    /// Reads one user-owned judgment basis row with strict typed JSON decoding.
+    pub fn user_judgment_basis_record(
+        &self,
+        judgment_id: &str,
+    ) -> StoreResult<Option<UserJudgmentBasisRecord>> {
+        user_judgment_basis_record(&self.conn, &self.project.project_id, judgment_id)
     }
 
     /// Lists resolved user-owned judgment records for a Task and judgment kind.
@@ -1091,6 +1172,8 @@ impl CoreStorageMutation {
             Self::SupersedeTask { task_id } => mutation.supersede_task(task_id),
             Self::CloseTask(input) => mutation.close_task(input),
             Self::UpdateTaskScope(input) => mutation.update_task_scope(input),
+            Self::UpdateTaskScopeRevision(input) => mutation.update_task_scope_revision(input),
+            Self::UpdateTaskCloseBasis(input) => mutation.update_task_close_basis(input),
             Self::InsertCurrentChangeUnit(input) => {
                 mutation.insert_current_change_unit(input, committed_state_version)
             }
@@ -1110,6 +1193,10 @@ impl CoreStorageMutation {
             Self::UpsertEvidenceSummary(input) => mutation.upsert_evidence_summary(input),
             Self::InsertUserJudgment(input) => mutation.insert_user_judgment(input),
             Self::ResolveUserJudgment(input) => mutation.resolve_user_judgment(input),
+            Self::UpdateUserJudgmentBasis(input) => mutation.update_user_judgment_basis(input),
+            Self::MarkUserJudgmentBasesStatus(input) => {
+                mutation.mark_user_judgment_bases_status(input)
+            }
         }
     }
 }
@@ -1303,6 +1390,58 @@ impl ProjectMutation<'_> {
             self.update_task_nullable_text_column(&input.task_id, "summary", Some(value))?;
         }
         Ok(())
+    }
+
+    fn update_task_scope_revision(&mut self, input: &TaskScopeRevisionUpdate) -> StoreResult<()> {
+        validate_identifier("task_id", &input.task_id)?;
+        let scope_revision = u64_to_i64("tasks.scope_revision", input.scope_revision)?;
+        let changed = self.tx.execute(
+            "UPDATE tasks
+                SET scope_revision = ?3,
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+              WHERE project_id = ?1
+                AND task_id = ?2",
+            params![self.project_id, input.task_id, scope_revision],
+        )?;
+        if changed == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::SchemaInvariant {
+                database_kind: "project_state",
+                detail: "Task scope revision update changed no rows".to_owned(),
+            })
+        }
+    }
+
+    fn update_task_close_basis(&mut self, input: &TaskCloseBasisUpdate) -> StoreResult<()> {
+        validate_identifier("task_id", &input.task_id)?;
+        if let Some(value) = &input.close_basis_json {
+            validate_current_close_basis_json("tasks.close_basis_json", value)?;
+        }
+        let close_basis_revision =
+            u64_to_i64("tasks.close_basis_revision", input.close_basis_revision)?;
+        let changed = self.tx.execute(
+            "UPDATE tasks
+                SET close_basis_revision = ?3,
+                    close_basis_json = ?4,
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+              WHERE project_id = ?1
+                AND task_id = ?2",
+            params![
+                self.project_id,
+                input.task_id,
+                close_basis_revision,
+                input.close_basis_json
+            ],
+        )?;
+        if changed == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::SchemaInvariant {
+                database_kind: "project_state",
+                detail: "Task close-basis update changed no rows".to_owned(),
+            })
+        }
     }
 
     fn insert_current_change_unit(
@@ -1901,6 +2040,9 @@ impl ProjectMutation<'_> {
             "user_judgments.sensitive_action_scope_json",
             &input.sensitive_action_scope_json,
         )?;
+        if let Some(value) = &input.basis_json {
+            validate_judgment_basis_json("user_judgments.basis_json", value)?;
+        }
         validate_identifier("requested_by_surface_id", &input.requested_by_surface_id)?;
         validate_identifier(
             "requested_by_surface_instance_id",
@@ -1923,6 +2065,8 @@ impl ProjectMutation<'_> {
                 affected_refs_json,
                 artifact_refs_json,
                 sensitive_action_scope_json,
+                basis_json,
+                basis_status,
                 resolution_json,
                 requested_by_surface_id,
                 requested_by_surface_instance_id,
@@ -1943,12 +2087,14 @@ impl ProjectMutation<'_> {
                 ?9,
                 ?10,
                 ?11,
-                NULL,
                 ?12,
                 ?13,
-                ?14,
                 NULL,
-                ?15
+                ?14,
+                ?15,
+                ?16,
+                NULL,
+                ?17
             )",
             params![
                 self.project_id,
@@ -1962,6 +2108,8 @@ impl ProjectMutation<'_> {
                 input.affected_refs_json,
                 input.artifact_refs_json,
                 input.sensitive_action_scope_json,
+                input.basis_json,
+                judgment_basis_status_as_str(input.basis_status),
                 input.requested_by_surface_id,
                 input.requested_by_surface_instance_id,
                 input.requested_at,
@@ -2006,6 +2154,73 @@ impl ProjectMutation<'_> {
                 detail: "pending user judgment resolution changed no rows".to_owned(),
             })
         }
+    }
+
+    fn update_user_judgment_basis(&mut self, input: &UserJudgmentBasisUpdate) -> StoreResult<()> {
+        validate_identifier("judgment_id", &input.judgment_id)?;
+        if let Some(value) = &input.basis_json {
+            validate_judgment_basis_json("user_judgments.basis_json", value)?;
+        }
+        let changed = self.tx.execute(
+            "UPDATE user_judgments
+                SET basis_json = ?3,
+                    basis_status = ?4
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+            params![
+                self.project_id,
+                input.judgment_id,
+                input.basis_json,
+                judgment_basis_status_as_str(input.basis_status)
+            ],
+        )?;
+        if changed == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::SchemaInvariant {
+                database_kind: "project_state",
+                detail: "user judgment basis update changed no rows".to_owned(),
+            })
+        }
+    }
+
+    fn mark_user_judgment_bases_status(
+        &mut self,
+        input: &UserJudgmentBasisStatusMark,
+    ) -> StoreResult<()> {
+        let status = match input.basis_status {
+            JudgmentBasisCompatibilityStatus::Stale
+            | JudgmentBasisCompatibilityStatus::Superseded => {
+                judgment_basis_status_as_str(input.basis_status)
+            }
+            _ => {
+                return Err(StoreError::InvalidInput {
+                    detail: "selected judgment bases may only be marked stale or superseded"
+                        .to_owned(),
+                })
+            }
+        };
+
+        for judgment_id in &input.judgment_ids {
+            validate_identifier("judgment_id", judgment_id)?;
+            let changed = self.tx.execute(
+                "UPDATE user_judgments
+                    SET basis_status = ?3
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                params![self.project_id, judgment_id, status],
+            )?;
+            if changed != 1 {
+                return Err(StoreError::SchemaInvariant {
+                    database_kind: "project_state",
+                    detail: format!(
+                        "selected user judgment basis status update changed {changed} rows"
+                    ),
+                });
+            }
+        }
+
+        Ok(())
     }
 
     fn update_task_text_column(
@@ -2125,6 +2340,9 @@ fn task_record(
             shaping_summary_json,
             bounded_context_json,
             autonomy_boundary_json,
+            scope_revision,
+            close_basis_revision,
+            close_basis_json,
             close_summary_json,
             completion_policy_json,
             current_change_unit_id,
@@ -2151,11 +2369,65 @@ fn task_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<TaskRecord>
         shaping_summary_json: row.get(7)?,
         bounded_context_json: row.get(8)?,
         autonomy_boundary_json: row.get(9)?,
-        close_summary_json: row.get(10)?,
-        completion_policy_json: row.get(11)?,
-        current_change_unit_id: row.get(12)?,
-        closed_at: row.get(13)?,
+        scope_revision: nonnegative_i64_to_u64("tasks.scope_revision", row.get(10)?)?,
+        close_basis_revision: nonnegative_i64_to_u64("tasks.close_basis_revision", row.get(11)?)?,
+        close_basis_json: row.get(12)?,
+        close_summary_json: row.get(13)?,
+        completion_policy_json: row.get(14)?,
+        current_change_unit_id: row.get(15)?,
+        closed_at: row.get(16)?,
     })
+}
+
+fn task_revision_record(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+) -> StoreResult<Option<TaskRevisionRecord>> {
+    let row = conn
+        .query_row(
+            "SELECT
+                project_id,
+                task_id,
+                scope_revision,
+                close_basis_revision,
+                close_basis_json
+             FROM tasks
+             WHERE project_id = ?1
+               AND task_id = ?2",
+            params![project_id, task_id],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, Option<String>>(4)?,
+                ))
+            },
+        )
+        .optional()?;
+
+    let Some((project_id, task_id, scope_revision, close_basis_revision, close_basis_json)) = row
+    else {
+        return Ok(None);
+    };
+    let current_close_basis =
+        decode_current_close_basis_column(&task_id, close_basis_json.as_deref())?;
+
+    Ok(Some(TaskRevisionRecord {
+        project_id,
+        task_id,
+        scope_revision: nonnegative_i64_to_u64("tasks.scope_revision", scope_revision)
+            .map_err(StoreError::from)?,
+        close_basis_revision: nonnegative_i64_to_u64(
+            "tasks.close_basis_revision",
+            close_basis_revision,
+        )
+        .map_err(StoreError::from)?,
+        close_basis_json,
+        current_close_basis,
+    }))
 }
 
 fn current_change_unit(
@@ -2538,6 +2810,8 @@ fn user_judgment_record(
             affected_refs_json,
             artifact_refs_json,
             sensitive_action_scope_json,
+            basis_json,
+            basis_status,
             resolution_json,
             requested_by_surface_id,
             requested_by_surface_instance_id,
@@ -2574,6 +2848,8 @@ fn resolved_user_judgment_records(
             affected_refs_json,
             artifact_refs_json,
             sensitive_action_scope_json,
+            basis_json,
+            basis_status,
             resolution_json,
             requested_by_surface_id,
             requested_by_surface_instance_id,
@@ -2612,13 +2888,58 @@ fn user_judgment_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Us
         affected_refs_json: row.get(9)?,
         artifact_refs_json: row.get(10)?,
         sensitive_action_scope_json: row.get(11)?,
-        resolution_json: row.get(12)?,
-        requested_by_surface_id: row.get(13)?,
-        requested_by_surface_instance_id: row.get(14)?,
-        requested_at: row.get(15)?,
-        resolved_at: row.get(16)?,
-        metadata_json: row.get(17)?,
+        basis_json: row.get(12)?,
+        basis_status: row.get(13)?,
+        resolution_json: row.get(14)?,
+        requested_by_surface_id: row.get(15)?,
+        requested_by_surface_instance_id: row.get(16)?,
+        requested_at: row.get(17)?,
+        resolved_at: row.get(18)?,
+        metadata_json: row.get(19)?,
     })
+}
+
+fn user_judgment_basis_record(
+    conn: &Connection,
+    project_id: &str,
+    judgment_id: &str,
+) -> StoreResult<Option<UserJudgmentBasisRecord>> {
+    let row = conn
+        .query_row(
+            "SELECT
+                project_id,
+                judgment_id,
+                basis_json,
+                basis_status
+             FROM user_judgments
+             WHERE project_id = ?1
+               AND judgment_id = ?2",
+            params![project_id, judgment_id],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, Option<String>>(2)?,
+                    row.get::<_, String>(3)?,
+                ))
+            },
+        )
+        .optional()?;
+
+    let Some((project_id, judgment_id, basis_json, basis_status)) = row else {
+        return Ok(None);
+    };
+    let basis_status =
+        parse_judgment_basis_status(&judgment_id, "user_judgments.basis_status", &basis_status)?;
+    let basis = decode_judgment_basis_column(&judgment_id, basis_json.as_deref())?;
+
+    Ok(Some(UserJudgmentBasisRecord {
+        project_id,
+        judgment_id,
+        basis_json,
+        basis_status,
+        basis,
+    }))
 }
 
 struct RefQuery<'a> {
@@ -2905,6 +3226,71 @@ fn validate_json_text(field: &'static str, text: &str) -> StoreResult<()> {
     Ok(())
 }
 
+fn validate_current_close_basis_json(field: &'static str, text: &str) -> StoreResult<()> {
+    serde_json::from_str::<CurrentCloseBasis>(text).map_err(|error| StoreError::InvalidInput {
+        detail: format!("{field} must be CurrentCloseBasis JSON: {error}"),
+    })?;
+    Ok(())
+}
+
+fn validate_judgment_basis_json(field: &'static str, text: &str) -> StoreResult<()> {
+    serde_json::from_str::<JudgmentBasis>(text).map_err(|error| StoreError::InvalidInput {
+        detail: format!("{field} must be JudgmentBasis JSON: {error}"),
+    })?;
+    Ok(())
+}
+
+fn decode_current_close_basis_column(
+    record_ref: &str,
+    text: Option<&str>,
+) -> StoreResult<Option<CurrentCloseBasis>> {
+    text.map(|value| {
+        serde_json::from_str::<CurrentCloseBasis>(value).map_err(|_| {
+            StoreError::corrupt_owner_state_json("tasks", record_ref, "close_basis_json")
+        })
+    })
+    .transpose()
+}
+
+fn decode_judgment_basis_column(
+    record_ref: &str,
+    text: Option<&str>,
+) -> StoreResult<Option<JudgmentBasis>> {
+    text.map(|value| {
+        serde_json::from_str::<JudgmentBasis>(value).map_err(|_| {
+            StoreError::corrupt_owner_state_json("user_judgments", record_ref, "basis_json")
+        })
+    })
+    .transpose()
+}
+
+fn judgment_basis_status_as_str(status: JudgmentBasisCompatibilityStatus) -> &'static str {
+    match status {
+        JudgmentBasisCompatibilityStatus::Current => "current",
+        JudgmentBasisCompatibilityStatus::Stale => "stale",
+        JudgmentBasisCompatibilityStatus::Superseded => "superseded",
+        JudgmentBasisCompatibilityStatus::LegacyUnbound => "legacy_unbound",
+    }
+}
+
+fn parse_judgment_basis_status(
+    record_ref: &str,
+    logical_column: &'static str,
+    value: &str,
+) -> StoreResult<JudgmentBasisCompatibilityStatus> {
+    match value {
+        "current" => Ok(JudgmentBasisCompatibilityStatus::Current),
+        "stale" => Ok(JudgmentBasisCompatibilityStatus::Stale),
+        "superseded" => Ok(JudgmentBasisCompatibilityStatus::Superseded),
+        "legacy_unbound" => Ok(JudgmentBasisCompatibilityStatus::LegacyUnbound),
+        _ => Err(StoreError::corrupt_owner_state_value(
+            "user_judgments",
+            record_ref,
+            logical_column,
+        )),
+    }
+}
+
 fn nonnegative_i64_to_u64(field: &'static str, value: i64) -> Result<u64, rusqlite::Error> {
     u64::try_from(value).map_err(|_| {
         rusqlite::Error::FromSqlConversionFailure(
@@ -2926,8 +3312,12 @@ mod tests {
     use std::{error::Error, path::PathBuf};
 
     use harness_test_support::TempRuntimeHome;
-    use harness_types::{IdempotencyKey, MethodName, ProjectId, RequestHash};
-    use serde_json::json;
+    use harness_types::{
+        BaselineRef, ChangeUnitId, IdempotencyKey, JudgmentBasisCompatibilityStatus, MethodName,
+        ProjectId, RecordId, RequestHash, RequiredNullable, RiskId, StateRecordKind,
+        StateRecordRef, TaskId,
+    };
+    use serde_json::{json, Value};
 
     use super::*;
     use crate::bootstrap::{
@@ -3144,6 +3534,196 @@ mod tests {
     }
 
     #[test]
+    fn task_and_judgment_basis_store_apis_round_trip() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_basis_round_trip";
+        let close_basis = current_close_basis(task_id, 2, 3);
+        let close_basis_json = serde_json::to_string(&close_basis)?;
+        let judgment_basis = judgment_basis(task_id, 2, Some(3));
+        let judgment_basis_json = serde_json::to_string(&judgment_basis)?;
+
+        let first_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_basis_initial")),
+            &RequestHash::new("sha256:basis-initial"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("basis_initial", task_id)],
+        );
+        let first = store.commit_mutation(
+            first_input,
+            |mutation, facts| {
+                for storage_mutation in [
+                    CoreStorageMutation::InsertTask(task_insert(task_id)),
+                    CoreStorageMutation::UpdateTaskScopeRevision(TaskScopeRevisionUpdate {
+                        task_id: task_id.to_owned(),
+                        scope_revision: 2,
+                    }),
+                    CoreStorageMutation::UpdateTaskCloseBasis(TaskCloseBasisUpdate {
+                        task_id: task_id.to_owned(),
+                        close_basis_revision: 3,
+                        close_basis_json: Some(close_basis_json.clone()),
+                    }),
+                    CoreStorageMutation::InsertUserJudgment(user_judgment_insert(
+                        "judgment_basis_round_trip",
+                        task_id,
+                        Some(judgment_basis_json.clone()),
+                        JudgmentBasisCompatibilityStatus::Current,
+                    )),
+                ] {
+                    storage_mutation.apply(mutation, facts.committed_state_version)?;
+                }
+                Ok(())
+            },
+            response_json,
+        )?;
+        assert!(matches!(first, MutationCommitOutcome::Committed { .. }));
+
+        let task_revisions = store
+            .task_revision_record(&TaskId::new(task_id))?
+            .expect("task revisions should be readable");
+        assert_eq!(task_revisions.scope_revision, 2);
+        assert_eq!(task_revisions.close_basis_revision, 3);
+        assert_eq!(task_revisions.current_close_basis, Some(close_basis));
+
+        let basis_record = store
+            .user_judgment_basis_record("judgment_basis_round_trip")?
+            .expect("judgment basis should be readable");
+        assert_eq!(
+            basis_record.basis_status,
+            JudgmentBasisCompatibilityStatus::Current
+        );
+        assert_eq!(basis_record.basis, Some(judgment_basis));
+
+        let stale_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_basis_stale")),
+            &RequestHash::new("sha256:basis-stale"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(1),
+            vec![pending_event_for_task("basis_stale", task_id)],
+        );
+        let stale = store.commit_mutation(
+            stale_input,
+            |mutation, facts| {
+                CoreStorageMutation::MarkUserJudgmentBasesStatus(UserJudgmentBasisStatusMark {
+                    judgment_ids: vec!["judgment_basis_round_trip".to_owned()],
+                    basis_status: JudgmentBasisCompatibilityStatus::Stale,
+                })
+                .apply(mutation, facts.committed_state_version)
+            },
+            response_json,
+        )?;
+        assert!(matches!(stale, MutationCommitOutcome::Committed { .. }));
+        assert_eq!(
+            store
+                .user_judgment_basis_record("judgment_basis_round_trip")?
+                .expect("judgment basis should remain readable")
+                .basis_status,
+            JudgmentBasisCompatibilityStatus::Stale
+        );
+
+        let superseded_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_basis_superseded")),
+            &RequestHash::new("sha256:basis-superseded"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(2),
+            vec![pending_event_for_task("basis_superseded", task_id)],
+        );
+        let superseded = store.commit_mutation(
+            superseded_input,
+            |mutation, facts| {
+                CoreStorageMutation::MarkUserJudgmentBasesStatus(UserJudgmentBasisStatusMark {
+                    judgment_ids: vec!["judgment_basis_round_trip".to_owned()],
+                    basis_status: JudgmentBasisCompatibilityStatus::Superseded,
+                })
+                .apply(mutation, facts.committed_state_version)
+            },
+            response_json,
+        )?;
+        assert!(matches!(
+            superseded,
+            MutationCommitOutcome::Committed { .. }
+        ));
+        assert_eq!(
+            store
+                .user_judgment_basis_record("judgment_basis_round_trip")?
+                .expect("judgment basis should remain readable")
+                .basis_status,
+            JudgmentBasisCompatibilityStatus::Superseded
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn malformed_stored_judgment_basis_json_is_store_data_error() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_malformed_basis";
+        let basis_json = serde_json::to_string(&judgment_basis(task_id, 0, None))?;
+
+        let input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_basis_malformed")),
+            &RequestHash::new("sha256:basis-malformed"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("basis_malformed", task_id)],
+        );
+        store.commit_mutation(
+            input,
+            |mutation, facts| {
+                CoreStorageMutation::InsertTask(task_insert(task_id))
+                    .apply(mutation, facts.committed_state_version)?;
+                CoreStorageMutation::InsertUserJudgment(user_judgment_insert(
+                    "judgment_malformed_basis",
+                    task_id,
+                    Some(basis_json),
+                    JudgmentBasisCompatibilityStatus::Current,
+                ))
+                .apply(mutation, facts.committed_state_version)
+            },
+            response_json,
+        )?;
+
+        let conn = open_project_state_database(
+            harness
+                .runtime_home_path
+                .join("projects")
+                .join(PROJECT_ID)
+                .join("state.sqlite"),
+        )?;
+        conn.execute(
+            "UPDATE user_judgments
+                SET basis_json = 'not-json'
+              WHERE project_id = ?1
+                AND judgment_id = 'judgment_malformed_basis'",
+            [PROJECT_ID],
+        )?;
+        drop(conn);
+
+        let store = harness.store()?;
+        let error = store
+            .user_judgment_basis_record("judgment_malformed_basis")
+            .expect_err("malformed persisted basis JSON should be corruption");
+        assert!(matches!(
+            error,
+            StoreError::CorruptOwnerStateJson {
+                table: "user_judgments",
+                logical_column: "basis_json",
+                ..
+            }
+        ));
+        Ok(())
+    }
+
+    #[test]
     fn foreign_key_constraint_failure_is_classified() -> Result<(), Box<dyn Error>> {
         let harness = StoreHarness::new()?;
         let mut store = harness.store()?;
@@ -3187,9 +3767,13 @@ mod tests {
     }
 
     fn pending_event(marker: &str) -> PendingTaskEvent {
+        pending_event_for_task(marker, &format!("task_{marker}"))
+    }
+
+    fn pending_event_for_task(marker: &str, task_id: &str) -> PendingTaskEvent {
         PendingTaskEvent {
             event_id: format!("evt_{marker}"),
-            task_id: format!("task_{marker}"),
+            task_id: task_id.to_owned(),
             change_unit_id: None,
             event_kind: "store_test_event".to_owned(),
             event_payload_json: "{}".to_owned(),
@@ -3212,6 +3796,100 @@ mod tests {
             close_summary_json: "{}".to_owned(),
             completion_policy_json: "{}".to_owned(),
             current_change_unit_id: None,
+        }
+    }
+
+    fn user_judgment_insert(
+        judgment_id: &str,
+        task_id: &str,
+        basis_json: Option<String>,
+        basis_status: JudgmentBasisCompatibilityStatus,
+    ) -> UserJudgmentInsert {
+        UserJudgmentInsert {
+            judgment_id: judgment_id.to_owned(),
+            task_id: task_id.to_owned(),
+            change_unit_id: None,
+            judgment_kind: "final_acceptance".to_owned(),
+            request_json: json!({
+                "presentation": "short",
+                "question": "Accept the current close basis?",
+                "required_for": "close",
+                "expires_at": Value::Null
+            })
+            .to_string(),
+            context_json: "{}".to_owned(),
+            options_json: "[]".to_owned(),
+            affected_refs_json: "[]".to_owned(),
+            artifact_refs_json: "[]".to_owned(),
+            sensitive_action_scope_json: "{}".to_owned(),
+            basis_json,
+            basis_status,
+            requested_by_surface_id: SURFACE_ID.to_owned(),
+            requested_by_surface_instance_id: SURFACE_INSTANCE_ID.to_owned(),
+            requested_at: "t0".to_owned(),
+            metadata_json: "{}".to_owned(),
+        }
+    }
+
+    fn current_close_basis(
+        task_id: &str,
+        scope_revision: u64,
+        close_basis_revision: u64,
+    ) -> CurrentCloseBasis {
+        CurrentCloseBasis {
+            close_basis_revision,
+            scope_revision,
+            task_id: TaskId::new(task_id),
+            change_unit_id: ChangeUnitId::new("cu_basis"),
+            baseline_ref: RequiredNullable::some(BaselineRef::new("baseline_store")),
+            result_summary: "Store basis result summary.".to_owned(),
+            result_refs: vec![state_ref(StateRecordKind::Run, "run_basis", task_id, 1)],
+            evidence_summary_ref: RequiredNullable::null(),
+            residual_risks: vec![harness_types::ResidualRisk {
+                risk_id: RiskId::new("risk_store_001"),
+                summary: "Known visible risk.".to_owned(),
+                consequence: "The user may accept this named risk.".to_owned(),
+                acceptance_required: true,
+                source_refs: vec![state_ref(StateRecordKind::Run, "run_basis", task_id, 1)],
+            }],
+            sensitive_categories: vec!["network".to_owned()],
+            recovery_constraints: vec!["Rollback requires operator action.".to_owned()],
+            source_run_ref: state_ref(StateRecordKind::Run, "run_basis", task_id, 1),
+            updated_at: "2026-06-18T00:00:00.000Z".to_owned(),
+        }
+    }
+
+    fn judgment_basis(
+        task_id: &str,
+        scope_revision: u64,
+        close_basis_revision: Option<u64>,
+    ) -> JudgmentBasis {
+        JudgmentBasis {
+            task_id: TaskId::new(task_id),
+            change_unit_id: RequiredNullable::some(ChangeUnitId::new("cu_basis")),
+            scope_revision,
+            close_basis_revision: RequiredNullable::new(close_basis_revision),
+            baseline_ref: RequiredNullable::some(BaselineRef::new("baseline_store")),
+            result_refs: vec![state_ref(StateRecordKind::Run, "run_basis", task_id, 1)],
+            residual_risk_ids: vec![RiskId::new("risk_store_001")],
+            sensitive_action_scope: RequiredNullable::null(),
+            created_at_state_version: 1,
+            compatibility_status: JudgmentBasisCompatibilityStatus::Current,
+        }
+    }
+
+    fn state_ref(
+        record_kind: StateRecordKind,
+        record_id: &str,
+        task_id: &str,
+        state_version: u64,
+    ) -> StateRecordRef {
+        StateRecordRef {
+            record_kind,
+            record_id: RecordId::new(record_id),
+            project_id: ProjectId::new(PROJECT_ID),
+            task_id: RequiredNullable::some(TaskId::new(task_id)),
+            state_version: RequiredNullable::some(state_version),
         }
     }
 

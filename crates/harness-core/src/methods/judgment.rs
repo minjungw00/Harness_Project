@@ -256,6 +256,7 @@ fn plan_request_user_judgment(
         options: request.options.clone(),
         context: request.context.clone(),
         affected_refs: request.affected_refs.clone(),
+        basis: None,
         required_for: request.required_for,
         resolution: None,
         expires_at: request.expires_at.clone().into_option(),
@@ -343,6 +344,8 @@ fn plan_request_user_judgment(
             affected_refs_json: serde_json::to_string(&request.affected_refs)?,
             artifact_refs_json: serde_json::to_string(&request.context.artifact_refs)?,
             sensitive_action_scope_json: "{}".to_owned(),
+            basis_json: None,
+            basis_status: harness_types::JudgmentBasisCompatibilityStatus::LegacyUnbound,
             requested_by_surface_id: verified_surface.surface_id.as_str().to_owned(),
             requested_by_surface_instance_id: verified_surface
                 .surface_instance_id
@@ -789,6 +792,7 @@ fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudg
             "user_judgments.affected_refs_json",
             &record.affected_refs_json,
         )?,
+        basis: None,
         required_for: request_member(
             "user_judgments.request_json.required_for",
             &request,

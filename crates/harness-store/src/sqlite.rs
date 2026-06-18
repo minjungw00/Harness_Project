@@ -7,8 +7,10 @@ use rusqlite::{Connection, Transaction, TransactionBehavior};
 
 use crate::{
     migrations::{
-        apply_project_state_migrations, apply_registry_migrations, PROJECT_STATE_DATABASE_KIND,
-        PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND, REGISTRY_SCHEMA_VERSION,
+        apply_project_state_migrations, apply_registry_migrations,
+        expected_project_state_migrations, expected_registry_migrations,
+        PROJECT_STATE_DATABASE_KIND, PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND,
+        REGISTRY_SCHEMA_VERSION, STORAGE_PROFILE,
     },
     StoreError, StoreResult,
 };
@@ -114,6 +116,11 @@ pub fn with_immediate_transaction<T>(
 pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
     validate_foreign_keys_enabled(conn, REGISTRY_DATABASE_KIND)?;
     validate_latest_migration(conn, REGISTRY_DATABASE_KIND, REGISTRY_SCHEMA_VERSION)?;
+    validate_migration_history(
+        conn,
+        REGISTRY_DATABASE_KIND,
+        &expected_registry_migrations(),
+    )?;
     require_tables(
         conn,
         REGISTRY_DATABASE_KIND,
@@ -135,6 +142,11 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         conn,
         PROJECT_STATE_DATABASE_KIND,
         PROJECT_STATE_SCHEMA_VERSION,
+    )?;
+    validate_migration_history(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        &expected_project_state_migrations(),
     )?;
     require_tables(
         conn,
@@ -189,6 +201,67 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         "project_state",
         "state_version",
     )?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "tasks",
+        ColumnSpec {
+            name: "scope_revision",
+            type_name: "INTEGER",
+            not_null: true,
+            default_value: Some("0"),
+            primary_key_position: 0,
+        },
+    )?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "tasks",
+        ColumnSpec {
+            name: "close_basis_revision",
+            type_name: "INTEGER",
+            not_null: true,
+            default_value: Some("0"),
+            primary_key_position: 0,
+        },
+    )?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "tasks",
+        ColumnSpec {
+            name: "close_basis_json",
+            type_name: "TEXT",
+            not_null: false,
+            default_value: None,
+            primary_key_position: 0,
+        },
+    )?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "user_judgments",
+        ColumnSpec {
+            name: "basis_json",
+            type_name: "TEXT",
+            not_null: false,
+            default_value: None,
+            primary_key_position: 0,
+        },
+    )?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "user_judgments",
+        ColumnSpec {
+            name: "basis_status",
+            type_name: "TEXT",
+            not_null: true,
+            default_value: Some("'legacy_unbound'"),
+            primary_key_position: 0,
+        },
+    )?;
+    validate_user_judgments_basis_status_constraint(conn)?;
     reject_column(conn, PROJECT_STATE_DATABASE_KIND, "tasks", "state_version")?;
     require_column(
         conn,
@@ -342,6 +415,63 @@ fn validate_latest_migration(
     }
 }
 
+fn validate_migration_history(
+    conn: &Connection,
+    database_kind: &'static str,
+    expected: &[crate::migrations::ExpectedMigration],
+) -> StoreResult<()> {
+    let mut stmt = conn.prepare(
+        "SELECT version, name, storage_profile
+           FROM schema_migrations
+          WHERE database_kind = ?1
+          ORDER BY version",
+    )?;
+    let rows = stmt.query_map([database_kind], |row| {
+        Ok((
+            row.get::<_, i64>(0)?,
+            row.get::<_, String>(1)?,
+            row.get::<_, String>(2)?,
+        ))
+    })?;
+
+    let mut actual = Vec::new();
+    for row in rows {
+        actual.push(row?);
+    }
+
+    if actual.len() != expected.len() {
+        return Err(StoreError::schema_invariant(
+            database_kind,
+            format!(
+                "migration history has {} rows, expected {}",
+                actual.len(),
+                expected.len()
+            ),
+        ));
+    }
+
+    for (index, (actual_version, actual_name, actual_profile)) in actual.iter().enumerate() {
+        let expected_row = expected[index];
+        if expected_row.database_kind != database_kind
+            || *actual_version != expected_row.version
+            || actual_name != expected_row.name
+            || actual_profile != STORAGE_PROFILE
+        {
+            return Err(StoreError::schema_invariant(
+                database_kind,
+                format!(
+                    "migration row {index} is version={actual_version} name={actual_name} profile={actual_profile}, expected version={} name={} profile={}",
+                    expected_row.version,
+                    expected_row.name,
+                    STORAGE_PROFILE
+                ),
+            ));
+        }
+    }
+
+    Ok(())
+}
+
 fn validate_project_state_versions(conn: &Connection) -> StoreResult<()> {
     let stale_count: i64 = conn.query_row(
         "SELECT COUNT(*)
@@ -356,6 +486,114 @@ fn validate_project_state_versions(conn: &Connection) -> StoreResult<()> {
         Err(StoreError::schema_invariant(
             PROJECT_STATE_DATABASE_KIND,
             "project_state.schema_version does not match the latest applied migration",
+        ))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ColumnSpec {
+    name: &'static str,
+    type_name: &'static str,
+    not_null: bool,
+    default_value: Option<&'static str>,
+    primary_key_position: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ColumnInfo {
+    type_name: String,
+    not_null: bool,
+    default_value: Option<String>,
+    primary_key_position: i64,
+}
+
+fn require_column_spec(
+    conn: &Connection,
+    database_kind: &'static str,
+    table: &str,
+    expected: ColumnSpec,
+) -> StoreResult<()> {
+    let info = column_info(conn, table, expected.name)?.ok_or_else(|| {
+        StoreError::schema_invariant(
+            database_kind,
+            format!("missing column {table}.{}", expected.name),
+        )
+    })?;
+
+    if info.type_name.eq_ignore_ascii_case(expected.type_name)
+        && info.not_null == expected.not_null
+        && info.default_value.as_deref() == expected.default_value
+        && info.primary_key_position == expected.primary_key_position
+    {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            database_kind,
+            format!(
+                "column {table}.{} has type={} not_null={} default={:?} pk={}, expected type={} not_null={} default={:?} pk={}",
+                expected.name,
+                info.type_name,
+                info.not_null,
+                info.default_value,
+                info.primary_key_position,
+                expected.type_name,
+                expected.not_null,
+                expected.default_value,
+                expected.primary_key_position
+            ),
+        ))
+    }
+}
+
+fn column_info(
+    conn: &Connection,
+    table: &str,
+    column: &str,
+) -> rusqlite::Result<Option<ColumnInfo>> {
+    let escaped_table = table.replace('"', "\"\"");
+    let sql = format!("PRAGMA table_info(\"{escaped_table}\")");
+    let mut stmt = conn.prepare(&sql)?;
+    let mut rows = stmt.query([])?;
+
+    while let Some(row) = rows.next()? {
+        let name: String = row.get(1)?;
+        if name == column {
+            return Ok(Some(ColumnInfo {
+                type_name: row.get(2)?,
+                not_null: row.get::<_, i64>(3)? != 0,
+                default_value: row.get(4)?,
+                primary_key_position: row.get(5)?,
+            }));
+        }
+    }
+
+    Ok(None)
+}
+
+fn validate_user_judgments_basis_status_constraint(conn: &Connection) -> StoreResult<()> {
+    let table_sql: String = conn.query_row(
+        "SELECT sql
+           FROM sqlite_master
+          WHERE type = 'table'
+            AND name = 'user_judgments'",
+        [],
+        |row| row.get(0),
+    )?;
+    let normalized = table_sql
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase();
+    let has_constraint = normalized
+        .contains("basis_status in ('current', 'stale', 'superseded', 'legacy_unbound')")
+        || normalized
+            .contains("basis_status in('current', 'stale', 'superseded', 'legacy_unbound')");
+    if has_constraint {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "user_judgments.basis_status constraint is missing or malformed",
         ))
     }
 }
@@ -559,7 +797,7 @@ mod tests {
         let path = project_state_db_path(runtime_home.path(), "PRJ-0001");
 
         let conn = open_project_state_database(&path)?;
-        assert_eq!(migration_count(&conn)?, 3);
+        assert_eq!(migration_count(&conn)?, 4);
         assert_eq!(
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
@@ -574,12 +812,12 @@ mod tests {
             &conn,
             PROJECT_STATE_DATABASE_KIND,
             PROJECT_STATE_SCHEMA_VERSION,
-            "project_state_replay_surface_fk_v3"
+            "project_state_close_basis_judgment_basis_v4"
         )?);
         drop(conn);
 
         let conn = open_project_state_database(&path)?;
-        assert_eq!(migration_count(&conn)?, 3);
+        assert_eq!(migration_count(&conn)?, 4);
         assert!(foreign_keys_enabled(&conn)?);
         assert!(sqlite_object_exists(&conn, "table", "tool_invocations")?);
         assert!(column_exists(

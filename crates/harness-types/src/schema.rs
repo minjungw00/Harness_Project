@@ -12,10 +12,11 @@ use crate::ids::{
 use crate::values::{
     ActorKind, ArtifactAvailability, ArtifactInputSourceKind, CloseReadinessBlockerCategory,
     CloseReason, CloseState, EffectKind, ErrorCode, EvidenceCoverageState, EvidenceStatus,
-    GuaranteeLevel, JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, MethodName,
-    NextActionKind, PlannedBlockerSourceKind, RedactionState, ResponseKind, RunKind,
-    StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentStatus,
-    ValidatorSeverity, ValidatorStatus, WriteAuthorizationStatus, WriteDecisionCategory,
+    GuaranteeLevel, JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation,
+    JudgmentRequiredFor, MethodName, NextActionKind, PlannedBlockerSourceKind, RedactionState,
+    ResponseKind, RunKind, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult,
+    UserJudgmentStatus, ValidatorSeverity, ValidatorStatus, WriteAuthorizationStatus,
+    WriteDecisionCategory,
 };
 
 /// JSON object used where an owner document defines a field as `object`.
@@ -430,6 +431,46 @@ pub struct ObservedChanges {
     pub baseline_ref: RequiredNullable<BaselineRef>,
 }
 
+/// Current result and residual-risk state used for close-readiness responses.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct CurrentCloseBasis {
+    pub close_basis_revision: u64,
+    pub scope_revision: u64,
+    pub task_id: TaskId,
+    pub change_unit_id: ChangeUnitId,
+    pub baseline_ref: RequiredNullable<BaselineRef>,
+    pub result_summary: String,
+    pub result_refs: Vec<StateRecordRef>,
+    pub evidence_summary_ref: RequiredNullable<StateRecordRef>,
+    pub residual_risks: Vec<ResidualRisk>,
+    pub sensitive_categories: Vec<String>,
+    pub recovery_constraints: Vec<String>,
+    pub source_run_ref: StateRecordRef,
+    pub updated_at: String,
+}
+
+/// Named visible residual risk in a current close basis.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ResidualRisk {
+    pub risk_id: RiskId,
+    pub summary: String,
+    pub consequence: String,
+    pub acceptance_required: bool,
+    pub source_refs: Vec<StateRecordRef>,
+}
+
+/// Residual-risk acceptance coverage for a current close basis.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct RiskAcceptanceCoverage {
+    pub risk_id: RiskId,
+    pub accepted: bool,
+    pub accepted_by_judgment_refs: Vec<StateRecordRef>,
+    pub missing_reason: RequiredNullable<String>,
+}
+
 /// Close-readiness blocker data shape.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct CloseReadinessBlocker {
@@ -523,11 +564,28 @@ pub struct UserJudgment {
     pub options: Vec<UserJudgmentOption>,
     pub context: UserJudgmentContext,
     pub affected_refs: Vec<StateRecordRef>,
+    pub basis: Option<JudgmentBasis>,
     pub required_for: JudgmentRequiredFor,
     pub resolution: Option<UserJudgmentResolution>,
     pub expires_at: Option<String>,
     pub created_at: String,
     pub resolved_at: Option<String>,
+}
+
+/// Core-derived state snapshot used to decide whether a judgment is compatible.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct JudgmentBasis {
+    pub task_id: TaskId,
+    pub change_unit_id: RequiredNullable<ChangeUnitId>,
+    pub scope_revision: u64,
+    pub close_basis_revision: RequiredNullable<u64>,
+    pub baseline_ref: RequiredNullable<BaselineRef>,
+    pub result_refs: Vec<StateRecordRef>,
+    pub residual_risk_ids: Vec<RiskId>,
+    pub sensitive_action_scope: RequiredNullable<SensitiveActionScope>,
+    pub created_at_state_version: u64,
+    pub compatibility_status: JudgmentBasisCompatibilityStatus,
 }
 
 /// Proposed focused judgment shape.
@@ -607,7 +665,7 @@ pub struct SensitiveActionScope {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct AcceptedRiskInput {
-    pub risk_id: RequiredNullable<RiskId>,
+    pub risk_id: RiskId,
     pub summary: String,
     pub consequence: String,
     pub related_refs: Vec<StateRecordRef>,

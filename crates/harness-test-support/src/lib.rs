@@ -918,6 +918,7 @@ pub mod core_fixtures {
         ShapingSummary,
         BoundedContext,
         AutonomyBoundary,
+        CurrentCloseBasis,
         CloseSummary,
         CompletionPolicy,
     }
@@ -928,6 +929,7 @@ pub mod core_fixtures {
                 Self::ShapingSummary => "shaping_summary_json",
                 Self::BoundedContext => "bounded_context_json",
                 Self::AutonomyBoundary => "autonomy_boundary_json",
+                Self::CurrentCloseBasis => "close_basis_json",
                 Self::CloseSummary => "close_summary_json",
                 Self::CompletionPolicy => "completion_policy_json",
             }
@@ -1161,7 +1163,7 @@ pub mod core_fixtures {
     /// Builds an accepted-risk input for close-readiness fixtures.
     pub fn accepted_risk(summary: &str) -> AcceptedRiskInput {
         AcceptedRiskInput {
-            risk_id: Some(harness_types::RiskId::new("risk_visible_001")).into(),
+            risk_id: harness_types::RiskId::new("risk_visible_001"),
             summary: summary.to_owned(),
             consequence: "The named residual risk remains after close.".to_owned(),
             related_refs: Vec::new(),

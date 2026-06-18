@@ -15,10 +15,11 @@ pub const BASELINE_SCHEMA_VERSION: i64 = 1;
 pub const REGISTRY_SCHEMA_VERSION: i64 = 1;
 
 /// Latest schema version for project `state.sqlite`.
-pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 3;
+pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 4;
 
 const PROJECT_STATE_REPLAY_CONTEXT_SCHEMA_VERSION: i64 = 2;
 const PROJECT_STATE_REPLAY_SURFACE_FK_SCHEMA_VERSION: i64 = 3;
+const PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_SCHEMA_VERSION: i64 = 4;
 
 /// `schema_migrations.database_kind` for `registry.sqlite`.
 pub const REGISTRY_DATABASE_KIND: &str = "registry";
@@ -52,6 +53,12 @@ const PROJECT_STATE_MIGRATIONS: &[Migration] = &[
         name: "project_state_replay_surface_fk_v3",
         kind: MigrationKind::Custom(apply_project_state_replay_surface_fk_v3),
     },
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_SCHEMA_VERSION,
+        name: "project_state_close_basis_judgment_basis_v4",
+        kind: MigrationKind::Sql(PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_V4_SQL),
+    },
 ];
 
 struct Migration {
@@ -67,6 +74,13 @@ enum MigrationKind {
     Custom(fn(&mut Connection, &Migration) -> StoreResult<()>),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ExpectedMigration {
+    pub database_kind: &'static str,
+    pub version: i64,
+    pub name: &'static str,
+}
+
 /// Applies the executable baseline migration for `registry.sqlite`.
 pub fn apply_registry_migrations(conn: &mut Connection) -> StoreResult<()> {
     apply_ordered_migrations(conn, REGISTRY_MIGRATIONS)
@@ -75,6 +89,25 @@ pub fn apply_registry_migrations(conn: &mut Connection) -> StoreResult<()> {
 /// Applies the executable baseline migration for project `state.sqlite`.
 pub fn apply_project_state_migrations(conn: &mut Connection) -> StoreResult<()> {
     apply_ordered_migrations(conn, PROJECT_STATE_MIGRATIONS)
+}
+
+pub(crate) fn expected_registry_migrations() -> Vec<ExpectedMigration> {
+    expected_migrations(REGISTRY_MIGRATIONS)
+}
+
+pub(crate) fn expected_project_state_migrations() -> Vec<ExpectedMigration> {
+    expected_migrations(PROJECT_STATE_MIGRATIONS)
+}
+
+fn expected_migrations(migrations: &[Migration]) -> Vec<ExpectedMigration> {
+    migrations
+        .iter()
+        .map(|migration| ExpectedMigration {
+            database_kind: migration.database_kind,
+            version: migration.version,
+            name: migration.name,
+        })
+        .collect()
 }
 
 fn apply_ordered_migrations(conn: &mut Connection, migrations: &[Migration]) -> StoreResult<()> {
@@ -830,12 +863,35 @@ UPDATE project_state
  WHERE schema_version < 3;
 "#;
 
+const PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_V4_SQL: &str = r#"
+ALTER TABLE tasks
+  ADD COLUMN scope_revision INTEGER NOT NULL DEFAULT 0 CHECK (scope_revision >= 0);
+
+ALTER TABLE tasks
+  ADD COLUMN close_basis_revision INTEGER NOT NULL DEFAULT 0 CHECK (close_basis_revision >= 0);
+
+ALTER TABLE tasks
+  ADD COLUMN close_basis_json TEXT;
+
+ALTER TABLE user_judgments
+  ADD COLUMN basis_json TEXT;
+
+ALTER TABLE user_judgments
+  ADD COLUMN basis_status TEXT NOT NULL DEFAULT 'legacy_unbound'
+    CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound'));
+
+UPDATE project_state
+   SET schema_version = 4,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version < 4;
+"#;
+
 #[cfg(test)]
 mod tests {
     use std::{error::Error, fs};
 
     use harness_test_support::TempRuntimeHome;
-    use rusqlite::{params, Connection};
+    use rusqlite::{params, Connection, Error as SqliteError, ErrorCode};
 
     use super::*;
     use crate::sqlite::{
@@ -911,7 +967,7 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?)),
         )?;
         assert_eq!(schema_version, PROJECT_STATE_SCHEMA_VERSION);
-        assert_eq!(migration_count, 3);
+        assert_eq!(migration_count, 4);
         assert_integrity_check_clean(&conn)?;
         assert_tool_invocations_surface_foreign_key(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
@@ -1019,7 +1075,7 @@ mod tests {
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
         );
-        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 3);
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 4);
         assert_integrity_check_clean(&conn)?;
         assert_tool_invocations_surface_foreign_key(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
@@ -1156,6 +1212,147 @@ mod tests {
     }
 
     #[test]
+    fn version_three_project_state_close_basis_and_judgment_basis_upgrade(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-v3-close-basis")?;
+        let path = project_state_db_path(runtime_home.path(), "project_v3_close");
+        fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+        let mut conn = Connection::open(&path)?;
+        enable_foreign_keys(&conn)?;
+        create_project_state_v3(&conn, "project_v3_close")?;
+        insert_surface(&conn, "project_v3_close")?;
+        insert_task_v3(
+            &conn,
+            "project_v3_close",
+            "task_open",
+            "shaping",
+            None,
+            "{\"legacy_summary\":\"open\"}",
+            None,
+        )?;
+        insert_task_v3(
+            &conn,
+            "project_v3_close",
+            "task_closed",
+            "completed",
+            Some("completed"),
+            "{\"terminal\":true}",
+            Some("t_closed"),
+        )?;
+        insert_user_judgment_v3(
+            &conn,
+            "project_v3_close",
+            "judgment_legacy",
+            "task_closed",
+            Some("{\"selected_option_id\":\"accept\"}"),
+        )?;
+
+        apply_project_state_migrations(&mut conn)?;
+        validate_project_state_schema(&conn)?;
+
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 4);
+        assert_integrity_check_clean(&conn)?;
+        assert_foreign_key_check_clean(&conn)?;
+
+        let open_task: (i64, i64, Option<String>, String) = conn.query_row(
+            "SELECT
+                scope_revision,
+                close_basis_revision,
+                close_basis_json,
+                close_summary_json
+               FROM tasks
+              WHERE task_id = 'task_open'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )?;
+        assert_eq!(
+            open_task,
+            (0, 0, None, "{\"legacy_summary\":\"open\"}".to_owned(),)
+        );
+
+        let closed_task: (i64, i64, Option<String>, String, Option<String>) = conn.query_row(
+            "SELECT
+                scope_revision,
+                close_basis_revision,
+                close_basis_json,
+                close_summary_json,
+                closed_at
+               FROM tasks
+              WHERE task_id = 'task_closed'",
+            [],
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                ))
+            },
+        )?;
+        assert_eq!(
+            closed_task,
+            (
+                0,
+                0,
+                None,
+                "{\"terminal\":true}".to_owned(),
+                Some("t_closed".to_owned()),
+            )
+        );
+
+        let judgment: (Option<String>, String, Option<String>) = conn.query_row(
+            "SELECT basis_json, basis_status, resolution_json
+               FROM user_judgments
+              WHERE judgment_id = 'judgment_legacy'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        assert_eq!(
+            judgment,
+            (
+                None,
+                "legacy_unbound".to_owned(),
+                Some("{\"selected_option_id\":\"accept\"}".to_owned()),
+            )
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn close_basis_judgment_basis_migration_rolls_back_atomically() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-v4-rollback")?;
+        let path = project_state_db_path(runtime_home.path(), "project_v4_rollback");
+        fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+        let mut conn = Connection::open(&path)?;
+        enable_foreign_keys(&conn)?;
+        create_project_state_v3(&conn, "project_v4_rollback")?;
+        conn.execute(
+            "ALTER TABLE tasks ADD COLUMN close_basis_revision INTEGER",
+            [],
+        )?;
+
+        let error = apply_project_state_migrations(&mut conn)
+            .expect_err("duplicate v4 column should fail migration");
+        assert!(matches!(error, StoreError::Sqlite(_)));
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_REPLAY_SURFACE_FK_SCHEMA_VERSION
+        );
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 3);
+        assert_eq!(project_schema_version(&conn, "project_v4_rollback")?, 3);
+        assert!(!column_exists(&conn, "tasks", "scope_revision")?);
+        assert!(!column_exists(&conn, "tasks", "close_basis_json")?);
+        assert!(!column_exists(&conn, "user_judgments", "basis_status")?);
+        assert_integrity_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
     fn fresh_project_state_database_has_complete_replay_context_schema(
     ) -> Result<(), Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("migration-fresh-replay")?;
@@ -1187,10 +1384,97 @@ mod tests {
             latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
             PROJECT_STATE_SCHEMA_VERSION
         );
-        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 3);
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 4);
         assert_integrity_check_clean(&conn)?;
         assert_tool_invocations_surface_foreign_key(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn fresh_project_state_database_has_close_basis_and_judgment_basis_schema(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-fresh-close-basis")?;
+        let path = project_state_db_path(runtime_home.path(), "project_fresh_close");
+        let conn = open_project_state_database(&path)?;
+
+        for (table, column) in [
+            ("tasks", "scope_revision"),
+            ("tasks", "close_basis_revision"),
+            ("tasks", "close_basis_json"),
+            ("user_judgments", "basis_json"),
+            ("user_judgments", "basis_status"),
+        ] {
+            assert!(
+                column_exists(&conn, table, column)?,
+                "{table}.{column} should exist on fresh databases"
+            );
+        }
+        assert!(table_sql(&conn, "user_judgments")?
+            .contains("basis_status TEXT NOT NULL DEFAULT 'legacy_unbound'"));
+        assert!(table_sql(&conn, "user_judgments")?.contains(
+            "CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound'))"
+        ));
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?, 4);
+        assert_integrity_check_clean(&conn)?;
+        assert_foreign_key_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_judgment_basis_status_is_rejected() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-invalid-basis-status")?;
+        let conn = open_project_state_database(
+            runtime_home.project_state_db_path("project_invalid_basis_status"),
+        )?;
+        insert_project_state(&conn, "project_invalid_basis_status")?;
+        insert_surface(&conn, "project_invalid_basis_status")?;
+        insert_task_current(&conn, "project_invalid_basis_status", "task_basis_status")?;
+
+        let error = conn
+            .execute(
+                "INSERT INTO user_judgments (
+                    project_id,
+                    judgment_id,
+                    task_id,
+                    judgment_kind,
+                    status,
+                    requested_by_surface_id,
+                    requested_by_surface_instance_id,
+                    requested_at,
+                    basis_status
+                )
+                VALUES (
+                    'project_invalid_basis_status',
+                    'judgment_invalid_status',
+                    'task_basis_status',
+                    'final_acceptance',
+                    'pending',
+                    'surface_main',
+                    'surface_instance_1',
+                    't0',
+                    'invalid'
+                )",
+                [],
+            )
+            .expect_err("basis_status must be constrained");
+        assert_constraint_error(error);
+        Ok(())
+    }
+
+    fn create_project_state_v3(conn: &Connection, project_id: &str) -> rusqlite::Result<()> {
+        create_project_state_v2(conn, project_id)?;
+        conn.execute_batch(PROJECT_STATE_REPLAY_SURFACE_FK_V3_CREATE_COPY_SQL)?;
+        conn.execute_batch(PROJECT_STATE_REPLAY_SURFACE_FK_V3_SWAP_SQL)?;
+        insert_migration_row(
+            conn,
+            PROJECT_STATE_REPLAY_SURFACE_FK_SCHEMA_VERSION,
+            "project_state_replay_surface_fk_v3",
+        )?;
         Ok(())
     }
 
@@ -1213,6 +1497,154 @@ mod tests {
             )
             VALUES (?1, ?2, 2, 't0', 't0')",
             params![project_id, STORAGE_PROFILE],
+        )?;
+        Ok(())
+    }
+
+    fn insert_project_state(conn: &Connection, project_id: &str) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO project_state (
+                project_id,
+                storage_profile,
+                schema_version,
+                created_at,
+                updated_at
+            )
+            VALUES (?1, ?2, ?3, 't0', 't0')",
+            params![project_id, STORAGE_PROFILE, PROJECT_STATE_SCHEMA_VERSION],
+        )?;
+        Ok(())
+    }
+
+    fn insert_surface(conn: &Connection, project_id: &str) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO surfaces (
+                project_id,
+                surface_id,
+                surface_instance_id,
+                surface_kind,
+                registered_at
+            )
+            VALUES (?1, 'surface_main', 'surface_instance_1', 'cli', 't0')",
+            [project_id],
+        )?;
+        Ok(())
+    }
+
+    fn insert_task_current(
+        conn: &Connection,
+        project_id: &str,
+        task_id: &str,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO tasks (
+                project_id,
+                task_id,
+                created_by_surface_id,
+                created_by_surface_instance_id,
+                mode,
+                lifecycle_phase,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                'surface_main',
+                'surface_instance_1',
+                'work',
+                'shaping',
+                't0',
+                't0'
+            )",
+            params![project_id, task_id],
+        )?;
+        Ok(())
+    }
+
+    fn insert_task_v3(
+        conn: &Connection,
+        project_id: &str,
+        task_id: &str,
+        lifecycle_phase: &str,
+        result: Option<&str>,
+        close_summary_json: &str,
+        closed_at: Option<&str>,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO tasks (
+                project_id,
+                task_id,
+                created_by_surface_id,
+                created_by_surface_instance_id,
+                mode,
+                lifecycle_phase,
+                result,
+                close_summary_json,
+                created_at,
+                updated_at,
+                closed_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                'surface_main',
+                'surface_instance_1',
+                'work',
+                ?3,
+                ?4,
+                ?5,
+                't0',
+                't0',
+                ?6
+            )",
+            params![
+                project_id,
+                task_id,
+                lifecycle_phase,
+                result,
+                close_summary_json,
+                closed_at
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn insert_user_judgment_v3(
+        conn: &Connection,
+        project_id: &str,
+        judgment_id: &str,
+        task_id: &str,
+        resolution_json: Option<&str>,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO user_judgments (
+                project_id,
+                judgment_id,
+                task_id,
+                judgment_kind,
+                status,
+                request_json,
+                requested_by_surface_id,
+                requested_by_surface_instance_id,
+                requested_at,
+                resolution_json,
+                resolved_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                'final_acceptance',
+                'resolved',
+                '{\"question\":\"Accept?\"}',
+                'surface_main',
+                'surface_instance_1',
+                't0',
+                ?4,
+                't1'
+            )",
+            params![project_id, judgment_id, task_id, resolution_json],
         )?;
         Ok(())
     }
@@ -1249,6 +1681,17 @@ mod tests {
               WHERE type = 'table'
                 AND name = 'tool_invocations'",
             [],
+            |row| row.get(0),
+        )
+    }
+
+    fn table_sql(conn: &Connection, table: &str) -> rusqlite::Result<String> {
+        conn.query_row(
+            "SELECT sql
+               FROM sqlite_master
+              WHERE type = 'table'
+                AND name = ?1",
+            [table],
             |row| row.get(0),
         )
     }
@@ -1317,6 +1760,15 @@ mod tests {
             }
         }
         Ok(false)
+    }
+
+    fn assert_constraint_error(err: SqliteError) {
+        match err {
+            SqliteError::SqliteFailure(error, _) => {
+                assert_eq!(error.code, ErrorCode::ConstraintViolation);
+            }
+            other => panic!("expected SQLite constraint error, got {other:?}"),
+        }
     }
 
     fn column_exists(conn: &Connection, table: &str, column: &str) -> rusqlite::Result<bool> {
