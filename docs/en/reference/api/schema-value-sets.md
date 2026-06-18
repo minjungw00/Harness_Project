@@ -12,7 +12,7 @@ This document owns:
 - API `response_kind` and `effect_kind` values
 - supported `access_class` values
 - record/reference discriminator values used by shared state references
-- supported lifecycle, close-state, source-kind, write-decision category, judgment-kind, presentation, required-for, artifact redaction, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
+- supported lifecycle, close-state, source-kind, write-decision category, judgment-kind, presentation, required-for, judgment resolution outcome, artifact redaction, artifact integrity, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
 - supported `change_unit.operation` values
 - the boundary for supported public `ValidatorResult.validator_id` values
 - the value-set boundary for method-scoped reason codes and opaque classification strings
@@ -421,6 +421,16 @@ blocked
 unusable
 ```
 
+`ArtifactIntegrityStatus` uses:
+
+```text
+verified
+legacy_unknown
+corrupt
+```
+
+`verified` means persisted artifact facts are complete enough for integrity-aware use. `legacy_unknown` means preserved artifact metadata lacks the complete facts required for verification. `corrupt` means stored bytes or metadata are known not to match persisted integrity facts.
+
 Artifact storage lifecycle and body-read eligibility are owned by [Artifact Storage](../storage-artifacts.md).
 
 <a id="judgment-values"></a>
@@ -444,15 +454,16 @@ cancellation
 short
 ```
 
-`required_for` uses:
+`required_for` uses operation-target values:
 
 ```text
-next_action
-write
-run
-close
-acceptance
-risk
+scope_update
+prepare_write
+record_run
+close_complete
+close_cancel
+close_supersede
+informational
 ```
 
 `UserJudgment.status` uses:
@@ -460,12 +471,20 @@ risk
 ```text
 pending
 resolved
+stale
+superseded
+expired
+```
+
+Status values describe the judgment lifecycle. `resolved` means an answer was recorded; it does not by itself mean approval, acceptance, or authorization.
+
+`JudgmentResolutionOutcome` uses:
+
+```text
+accepted
 rejected
 deferred
 blocked
-stale
-superseded
-incompatible
 ```
 
 `JudgmentBasis.compatibility_status` uses:
@@ -483,7 +502,17 @@ Meaning:
 - `superseded` means a pending judgment has been replaced by a newer question or basis and cannot be answered successfully.
 - `legacy_unbound` means a preserved judgment has no state basis and cannot satisfy current close, write, or sensitive-approval requirements.
 
-`UserJudgmentOption.option_id` is scoped to the judgment and is not a global value set. Rendered option labels are display text only.
+Resolution outcome meaning:
+- `accepted` is the only outcome that can satisfy an authority-bearing judgment requirement when the judgment kind, basis, actor, and selected option are otherwise compatible.
+- `rejected`, `deferred`, and `blocked` are durable user decisions but do not approve, accept, authorize, waive, or close anything.
+- Absence of a machine-readable outcome must never be interpreted as `accepted`.
+
+Pending-judgment relevance:
+- A pending judgment blocks an operation only when its current `required_for` target includes that operation, its `judgment_kind` is relevant to that operation, and its Task, Change Unit, affected refs, and basis are compatible.
+- For sensitive approval, the pending question is relevant only when its sensitive-action scope overlaps the current sensitive action requirement.
+- `informational` judgments are audit or display context and do not block write, run, or close operations by themselves.
+
+`UserJudgmentOption.option_id` is scoped to the judgment and is not a global value set. Rendered option labels are display text only. `UserJudgmentOption.resolution_outcome` uses `JudgmentResolutionOutcome`; option labels and explanatory text must not invert the machine-readable outcome.
 
 ## Error detail helper values
 

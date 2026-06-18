@@ -33,6 +33,7 @@
 - `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `question`, `options`, `context`, `affected_refs`, `required_for`, `expires_at`.
 - 서로 이해할 수 있는 `options`를 가진 초점이 분명한 `question`.
 - 사용자가 숨은 대화 상태에 기대지 않고 정확한 사안을 판단할 수 있는 충분한 `context`.
+- 각 선택지는 기계 판독 가능한 `resolution_outcome`을 가져야 합니다. 권한을 지니는 판단 종류에서는 Core가 기준 선택지-결과 매핑을 검증하거나 제공합니다.
 
 ## 요청 스키마
 
@@ -51,7 +52,7 @@ RequestUserJudgmentRequest:
   options: UserJudgmentOption[]
   context: UserJudgmentContext
   affected_refs: StateRecordRef[]
-  required_for: string
+  required_for: string[]
   expires_at: string | null
 ```
 
@@ -82,6 +83,7 @@ RequestUserJudgmentRequest:
 
 - 다른 메서드가 반환한 `UserJudgmentCandidate`는 `harness.request_user_judgment`가 커밋하기 전까지 지속 판단이 아닙니다.
 - `judgment_kind=final_acceptance` 또는 `judgment_kind=residual_risk_acceptance`에서는 Core가 현재 닫기 근거를 판단 근거에 캡처합니다. 필요한 현재 닫기 근거 또는 현재 잔여 위험 ID를 사용할 수 없으면 요청은 커밋 전에 거절됩니다.
+- 권한을 지니는 판단 종류에서는 생성되는 선택지 집합에 `accepted` 경로와 `rejected` 경로가 있어야 합니다. 라벨과 설명 문구는 `resolution_outcome`을 덮어쓰지 않습니다.
 - 잔여 위험 수락의 경우 요청 맥락의 보이는 위험은 정확한 현재 `risk_id` 값을 담아야 합니다.
 - `dry_run`과 거절은 대기 중인 판단, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
@@ -174,11 +176,13 @@ params:
       label: "Use concise copy"
       description: "Record the user-owned product decision to keep the shorter banner copy."
       consequence: "The pending banner-copy decision can be treated as resolved."
+      resolution_outcome: accepted
       is_default: true
     - option_id: expanded
       label: "Use expanded copy"
       description: "Record that the banner copy should include a longer explanation."
       consequence: "The Task remains open for the expanded banner-copy change."
+      resolution_outcome: rejected
       is_default: false
   context:
     summary: "The dashboard banner has two candidate copy lengths and needs a user-owned product decision."
@@ -193,18 +197,8 @@ params:
       project_id: proj_banner_001
       task_id: task_banner_001
       state_version: 51
-  basis:
-    task_id: task_banner_001
-    change_unit_id: cu_banner_001
-    scope_revision: 1
-    close_basis_revision: null
-    baseline_ref: baseline_banner_001
-    result_refs: []
-    residual_risk_ids: []
-    sensitive_action_scope: null
-    created_at_state_version: 51
-    compatibility_status: current
-  required_for: close
+  required_for:
+    - close_complete
   expires_at: null
 ```
 
@@ -241,11 +235,13 @@ user_judgment:
       label: "Use concise copy"
       description: "Record the user-owned product decision to keep the shorter banner copy."
       consequence: "The pending banner-copy decision can be treated as resolved."
+      resolution_outcome: accepted
       is_default: true
     - option_id: expanded
       label: "Use expanded copy"
       description: "Record that the banner copy should include a longer explanation."
       consequence: "The Task remains open for the expanded banner-copy change."
+      resolution_outcome: rejected
       is_default: false
   context:
     summary: "The dashboard banner has two candidate copy lengths and needs a user-owned product decision."
@@ -260,7 +256,19 @@ user_judgment:
       project_id: proj_banner_001
       task_id: task_banner_001
       state_version: 51
-  required_for: close
+  basis:
+    task_id: task_banner_001
+    change_unit_id: cu_banner_001
+    scope_revision: 1
+    close_basis_revision: null
+    baseline_ref: baseline_banner_001
+    result_refs: []
+    residual_risk_ids: []
+    sensitive_action_scope: null
+    created_at_state_version: 51
+    compatibility_status: current
+  required_for:
+    - close_complete
   resolution: null
   expires_at: null
   created_at: "<example-created-at>"

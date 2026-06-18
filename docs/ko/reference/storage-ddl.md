@@ -203,7 +203,7 @@ CREATE TABLE user_judgments (
   task_id TEXT NOT NULL,
   change_unit_id TEXT,
   judgment_kind TEXT NOT NULL,
-  status TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'resolved', 'stale', 'superseded', 'expired')),
   request_json TEXT NOT NULL DEFAULT '{}',
   context_json TEXT NOT NULL DEFAULT '{}',
   options_json TEXT NOT NULL DEFAULT '[]',
@@ -213,6 +213,8 @@ CREATE TABLE user_judgments (
   basis_json TEXT,
   basis_status TEXT NOT NULL DEFAULT 'legacy_unbound'
     CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound')),
+  resolution_outcome TEXT
+    CHECK (resolution_outcome IS NULL OR resolution_outcome IN ('accepted', 'rejected', 'deferred', 'blocked')),
   resolution_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
@@ -341,6 +343,8 @@ CREATE TABLE artifacts (
   sha256 TEXT,
   size_bytes INTEGER CHECK (size_bytes IS NULL OR size_bytes >= 0),
   content_type TEXT,
+  integrity_status TEXT NOT NULL DEFAULT 'verified'
+    CHECK (integrity_status IN ('verified', 'legacy_unknown', 'corrupt')),
   redaction_state TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('available', 'missing', 'integrity_failed', 'unavailable')),
   retention_json TEXT NOT NULL DEFAULT '{}',
@@ -349,6 +353,18 @@ CREATE TABLE artifacts (
   updated_at TEXT NOT NULL,
   metadata_json TEXT NOT NULL DEFAULT '{}',
   PRIMARY KEY (project_id, artifact_id),
+  CHECK (
+    integrity_status <> 'verified'
+    OR (
+      content_type IS NOT NULL
+      AND length(trim(content_type)) > 0
+      AND sha256 IS NOT NULL
+      AND length(sha256) = 64
+      AND sha256 NOT GLOB '*[^0-9a-f]*'
+      AND size_bytes IS NOT NULL
+      AND size_bytes >= 0
+    )
+  ),
   FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
   FOREIGN KEY (project_id, producer_run_id) REFERENCES runs (project_id, run_id),
   FOREIGN KEY (project_id, source_staging_handle_id)
@@ -544,6 +560,7 @@ Task 리비전과 닫기 근거:
 - `user_judgments.basis_json`은 있을 때 API `JudgmentBasis` 스냅샷을 저장합니다.
 - `user_judgments.basis_status`는 판단 근거의 저장소 소유 호환 상태인 `current`, `stale`, `superseded`, `legacy_unbound`를 저장합니다.
 - 근거가 없는 기존 판단은 `basis_json IS NULL`과 `basis_status='legacy_unbound'`로 표현합니다. 이 판단은 감사 기록으로 남으며 현재 닫기, 쓰기, 민감 승인 요구사항을 만족할 수 없습니다.
+- `user_judgments.resolution_outcome`은 있을 때 선택된 선택지의 기계 판독 가능 결과를 저장합니다. `resolution_outcome`이 null인 `status='resolved'`는 권한을 지니는 요구사항에서는 이력 감사 기록이며 수락으로 해석할 수 없습니다.
 
 접점 로컬 접근 허용:
 
@@ -574,6 +591,12 @@ Task 리비전과 닫기 근거:
 - `artifact_staging.created_by_surface_id`와 `artifact_staging.created_by_surface_instance_id`는 필수이며 `surfaces`에 외래 키로 연결됩니다.
 - 스테이징 핸들을 소비하기 전에는 저장된 접점 출처, 같은 프로젝트, 같은 `Task`, 만료, 생명주기 상태, `sha256`, `size_bytes`, `redaction_state`를 검증해야 합니다.
 - `artifact_staging`과 `artifacts`의 고유 인덱스는 하나의 스테이징 핸들이 여러 아티팩트 행으로 승격되는 것을 막습니다.
+
+지속 아티팩트 무결성:
+
+- `artifacts.integrity_status='verified'`는 비어 있지 않은 `content_type`, 소문자 16진수 64자 `sha256`, 음수가 아닌 `size_bytes`를 요구합니다.
+- `integrity_status='legacy_unknown'`은 사실이 불완전한 레거시 행을 보존합니다. 타입을 아는 Core 코드는 그런 행이 verified처럼 보이도록 빈 해시, 0바이트 크기, 콘텐츠 타입을 만들어 내면 안 됩니다.
+- `integrity_status='corrupt'`는 알려진 무결성 실패를 기록합니다. `legacy_unknown` 또는 `corrupt` 아티팩트는 증거 또는 닫기 권한 요구사항을 만족할 수 없습니다.
 
 마이그레이션 기록:
 

@@ -12,6 +12,7 @@ This document owns:
 - `UserJudgmentContext`
 - `JudgmentBasis`
 - `UserJudgmentResolution`
+- `JudgmentResolutionOutcome`
 - `RecordUserJudgmentPayload`
 - `SensitiveActionScope`
 - `AcceptedRiskInput`
@@ -22,7 +23,7 @@ This document does not own:
 - the product meaning and non-substitution rules for user-owned judgment; see [Core Model](../core-model.md)
 - method behavior for requesting judgment; see [Request-user-judgment method](method-request-user-judgment.md)
 - method behavior for recording judgment; see [Record-user-judgment method](method-record-user-judgment.md)
-- supported judgment-kind values, status values, presentation values, and required-for values; see [API Value Sets](schema-value-sets.md)
+- supported judgment-kind values, status values, presentation values, required-for values, and resolution-outcome values; see [API Value Sets](schema-value-sets.md)
 - final acceptance or residual-risk close effects; see [Core Model](../core-model.md) and [Close-task method](method-close-task.md)
 - public error semantics for missing, unresolved, denied, or expired judgment; see [API error codes](error-codes.md)
 
@@ -53,14 +54,16 @@ UserJudgment:
   context: UserJudgmentContext
   affected_refs: StateRecordRef[]
   basis: JudgmentBasis | null
-  required_for: string
+  required_for: string[]
   resolution: UserJudgmentResolution | null
   expires_at: string | null
   created_at: string
   resolved_at: string | null
 ```
 
-`judgment_kind`, `status`, `presentation`, and `required_for` values are owned by [judgment values](schema-value-sets.md#judgment-values). Product meaning is owned by [Core Model user-owned judgment](../core-model.md#4-user-owned-judgment).
+`judgment_kind`, `status`, `presentation`, `required_for`, and `resolution_outcome` values are owned by [judgment values](schema-value-sets.md#judgment-values). Product meaning is owned by [Core Model user-owned judgment](../core-model.md#4-user-owned-judgment).
+
+`status=resolved` means an answer was recorded. It does not by itself mean approval, acceptance, authorization, final acceptance, residual-risk acceptance, sensitive approval, or cancellation authority. Only the stored `resolution.resolution_outcome` from the selected option can carry a machine-readable outcome, and outcome absence must never be interpreted as acceptance.
 
 `judgment_id`, `project_id`, `task_id`, and `change_unit_id` are opaque identifiers. `question` is a free-form display string.
 
@@ -101,7 +104,7 @@ UserJudgmentCandidate:
   options: UserJudgmentOption[]
   context: UserJudgmentContext
   affected_refs: StateRecordRef[]
-  required_for: string
+  required_for: string[]
   expires_at: string | null
 ```
 
@@ -113,6 +116,7 @@ UserJudgmentOption:
   label: string
   description: string
   consequence: string
+  resolution_outcome: string
   is_default: boolean
 
 UserJudgmentContext:
@@ -125,11 +129,14 @@ UserJudgmentContext:
 
 `option_id` is scoped to the judgment. `label`, `description`, `consequence`, `summary`, and `constraints` entries are free-form display strings. Rendered labels are display text, not canonical schema values.
 
+`resolution_outcome` is the canonical machine-readable outcome for the option. For authority-bearing judgment kinds, Core validates or supplies stable option-to-outcome mappings, and option labels or explanatory text must not invert the machine-readable outcome. At minimum, authority-bearing prompts provide one `accepted` path and one `rejected` path; a `deferred` path may appear only where the method or semantic owner documents it.
+
 ## Resolution and answer payload
 
 ```yaml
 UserJudgmentResolution:
   selected_option_id: string
+  resolution_outcome: string
   answer: RecordUserJudgmentPayload
   note: string | null
   accepted_risks: AcceptedRiskInput[]
@@ -147,7 +154,14 @@ RecordUserJudgmentPayload:
 
 `selected_option_id` and `note` are request-level and resolution-level fields. `selected_option_id` is scoped to the judgment option set. `note` is a free-form display string.
 
+`resolution_outcome` is copied from the selected `UserJudgmentOption.resolution_outcome`. The selected option's stored outcome is authoritative. Any outcome, decision, or acceptance field inside `answer` must agree with the selected option; free-form answer text cannot grant authority.
+
 `resolved_by_actor_kind` uses the same controlled value set as `ToolEnvelope.actor_kind`; see [actor values](schema-value-sets.md#actor-values).
+
+Authority-bearing resolution rule:
+- `judgment_kind=final_acceptance`, `residual_risk_acceptance`, `sensitive_approval`, or `cancellation` requires a selected option, `resolution_outcome=accepted`, `resolved_by_actor_kind=user`, and a compatible current basis before it can satisfy an authority requirement.
+- `resolution_outcome=rejected`, `deferred`, or `blocked` remains a durable user decision but does not approve, accept, authorize, waive, or close anything.
+- Existing resolved judgments without a machine-readable `resolution_outcome` are historical audit records and cannot satisfy current authority requirements.
 
 Shape rule:
 - Exactly one decision-specific payload branch is populated for the selected `judgment_kind`.

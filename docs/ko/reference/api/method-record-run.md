@@ -82,6 +82,13 @@ ResidualRiskInput:
 - `observed_changes.changed_paths` 항목은 `Product Repository` API 제품 경로입니다. `Product Repository` 경로 정규화는 [런타임 경계](../runtime-boundaries.md#product-repository-api-path-normalization)가 담당합니다.
 - `ArtifactInput[]`와 스테이징 핸들은 두 번째 요청 수준 접근 등급을 만들지 않습니다. 요청 수준 접근 등급은 파생된 `VerifiedSurfaceContext`의 접근 등급 하나로 유지됩니다.
 
+닫기 평가 참조 규칙:
+- 호출자가 제공한 `close_assessment.result_refs`와 `ResidualRiskInput.source_refs`는 담당 문서가 다른 종류를 명시적으로 추가하지 않는 한 `record_kind=run`, `artifact`, `evidence_summary`, `change_unit`으로 제한됩니다.
+- 담당 문서가 명시적으로 추가하지 않는 한 이 메서드는 호출자가 제공한 `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, `task` 참조를 닫기 근거에서 거절하거나 제외합니다.
+- 받아들인 모든 참조는 존재해야 하고 같은 프로젝트와 `Task`에 속해야 합니다. 아티팩트 참조는 `Task`에 연결되어 있고 `integrity_status=verified`여야 합니다. 증거 참조는 현재 `Task` 증거 요약을 식별해야 합니다. 실행 기록 참조는 호환되는 실행 기록과 Change Unit을 식별해야 합니다.
+- Core는 `CurrentCloseBasis`에 기준 참조를 저장하며 호출자가 보낸 `state_version` 메타데이터를 권한으로 보존하지 않습니다.
+- Core는 기준 닫기 근거를 만들면서 현재 실행 기록, 현재 Change Unit, 현재 EvidenceSummary 참조를 추가할 수 있습니다.
+
 ## 접근 요구사항
 
 요구사항:
@@ -107,6 +114,8 @@ ResidualRiskInput:
 호환되는 커밋 결과는 선택된 `Task.close_basis_revision`을 정확히 한 번 증가시킵니다. `close_assessment`가 `null`이 아니면 커밋은 커밋된 실행 기록, 평가 필드, 생성된 잔여 위험 ID, 선택된 현재 범위에서 새 `CurrentCloseBasis`를 만듭니다. `close_assessment=null`이면 커밋된 실행 기록이 현재 닫기 근거를 만들지 않음을 명시하며, 기존 현재 닫기 근거는 오래되거나 없어집니다.
 
 빈 `close_assessment.residual_risks` 목록은 현재 결과에 식별된 잔여 위험이 없다는 명시적 의미입니다. Core는 커밋된 `null`이 아닌 평가에 대해서만 불투명 `risk_id` 값을 생성합니다. `dry_run`은 지속 `risk_id` 값을 예약하지 않습니다.
+
+결과 `CurrentCloseBasis` 안의 민감 동작 요구사항은 커밋된 실행 기록과 소비된 `Write Authorization`에서 Core가 파생합니다. `close_assessment.sensitive_categories` 안의 범주만 담은 호출자 입력은 표시 맥락에는 기여할 수 있지만 민감 승인 요구사항을 만들거나, 만족하거나, 지울 수 없습니다.
 
 실행 기록, 현재 닫기 근거, 증거 갱신, 아티팩트 연결 또는 승격, `Write Authorization` 소비, 리비전 변경은 결과가 커밋될 때 원자적으로 커밋됩니다.
 
@@ -238,7 +247,7 @@ params:
         created_by_surface_id: surface_run_probe
         created_by_surface_instance_id: surface_instance_run_probe_01
         content_type: application/json
-        sha256: sha256:example-runprobe
+        sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
         size_bytes: 96
         redaction_state: none
         expires_at: "<future-expiration-timestamp>"
@@ -246,7 +255,7 @@ params:
       existing_artifact_ref: null
       relation_hint: "validation_report"
       claim: "Search-result count validation passed."
-      expected_sha256: "sha256:example-runprobe"
+      expected_sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
       expected_size_bytes: 96
       redaction_state: none
   evidence_updates:
@@ -297,8 +306,9 @@ run_summary:
       task_id: task_runprobe_001
       display_name: "search-result-count-validation.json"
       content_type: application/json
-      sha256: sha256:example-runprobe
+      sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       size_bytes: 96
+      integrity_status: verified
       redaction_state: none
       availability: available
       created_by_run_ref:
@@ -316,8 +326,9 @@ registered_artifacts:
     task_id: task_runprobe_001
     display_name: "search-result-count-validation.json"
     content_type: application/json
-    sha256: sha256:example-runprobe
+    sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     size_bytes: 96
+    integrity_status: verified
     redaction_state: none
     availability: available
     created_by_run_ref:
@@ -351,8 +362,9 @@ evidence_summary:
           task_id: task_runprobe_001
           display_name: "search-result-count-validation.json"
           content_type: application/json
-          sha256: sha256:example-runprobe
+          sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           size_bytes: 96
+          integrity_status: verified
           redaction_state: none
           availability: available
           created_by_run_ref:
@@ -371,8 +383,9 @@ evidence_summary:
       task_id: task_runprobe_001
       display_name: "search-result-count-validation.json"
       content_type: application/json
-      sha256: sha256:example-runprobe
+      sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       size_bytes: 96
+      integrity_status: verified
       redaction_state: none
       availability: available
       created_by_run_ref:
@@ -406,6 +419,7 @@ current_close_basis:
   evidence_summary_ref: null
   residual_risks: []
   sensitive_categories: []
+  sensitive_action_requirements: []
   recovery_constraints: []
   source_run_ref:
     record_kind: run

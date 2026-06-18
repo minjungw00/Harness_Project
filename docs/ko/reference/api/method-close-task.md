@@ -84,7 +84,8 @@ API 경계 블록:
 닫기 조건:
 
 - `intent=complete`는 사전 확인이 성공하고, 현재 `CurrentCloseBasis`에 대한 닫기 준비 상태 평가가 유효하며, 닫기 차단 사유가 남아 있지 않을 때만 닫을 수 있습니다.
-- `intent=cancel`과 `intent=supersede`는 요청한 종료 경로를 평가합니다. 이 둘은 증거 충분성, 최종 수락, 잔여 위험 수락이 아닙니다.
+- `intent=cancel`은 `Task`, 현재 범위 리비전, 현재 적용 Change Unit, 사용자 행위자에 묶인 현재 `accepted` 취소 판단을 요구합니다. 완료 전용 증거, 최종 수락, 잔여 위험 수락은 필요하지 않습니다.
+- `intent=supersede`는 요청한 종료 경로를 평가합니다. 증거 충분성, 최종 수락, 잔여 위험 수락이 아닙니다.
 
 성공한 종료 닫기가 만드는 종료 닫기 요약은 현재 닫기 전 근거가 아니며 `CurrentCloseBasis`의 대체물로 쓰지 않습니다.
 
@@ -96,7 +97,7 @@ API 경계 블록:
 |---|---|---|---|
 | `check` | `null` | `null` | 읽기 전용 닫기 준비 상태 관찰입니다. |
 | `complete` | `completed_self_checked` 또는 `completed_with_risk_accepted` | `null` | 완료 경로이며 닫기 준비 상태 평가를 실행합니다. |
-| `cancel` | `cancelled` | `null` | 취소 경로이며 취소 전용 종료 제약을 평가합니다. |
+| `cancel` | `cancelled` | `null` | 취소 경로이며 호환되는 `accepted` 취소 권한을 요구하고 취소 전용 종료 제약을 평가합니다. |
 | `supersede` | `superseded` | `null`이 아닌 같은 프로젝트의 대체 `Task` 참조 | 대체 경로이며 대체 전용 종료 제약을 평가합니다. |
 
 ## 필수 입력
@@ -157,7 +158,8 @@ CloseTaskRequest:
 4. `intent=check`는 [`harness.status`](method-status.md)의 `include.close=true`와 같은 계산으로 현재 닫기 준비 상태를 계산하고 읽기 전용 `CloseTaskResult`를 반환합니다.
 5. 상태 변경 `intent`와 `dry_run=true` 조합은 유효한 사전 확인 뒤 공통 미리보기 분기를 반환합니다.
 6. `intent=complete`는 현재 `CurrentCloseBasis`에 대한 닫기 준비 상태 평가를 실행합니다. 차단 사유가 남아 있으면 차단 분기를 반환하고, 없으면 `close_state=closed`와 종료 닫기 결과를 커밋합니다.
-7. `intent=cancel` 또는 `intent=supersede`는 요청한 종료 경로만 평가합니다. 종료 경로 차단 사유가 남아 있으면 차단 분기를 반환하고, 없으면 `close_state=cancelled` 또는 `close_state=superseded`를 커밋합니다.
+7. `intent=cancel`은 사용자가 해결했고 현재 `Task`, 범위 리비전, Change Unit과 호환되며 `accepted` 결과인 현재 `judgment_kind=cancellation`을 요구합니다. 취소 권한이 없거나 호환되지 않으면 차단 분기를 반환합니다.
+8. `intent=cancel` 또는 `intent=supersede`는 요청한 종료 경로만 평가합니다. 종료 경로 차단 사유가 남아 있으면 차단 분기를 반환하고, 없으면 `close_state=cancelled` 또는 `close_state=superseded`를 커밋합니다.
 
 ## 상태 버전 동작
 
@@ -212,6 +214,7 @@ CloseTaskRequest:
 | `missing_active_change_unit` | `scope` | 닫기 경로에 현재 적용 Change Unit이 필요하지만 사용할 수 없습니다. |
 | `pending_user_judgment` | `user_judgment` | 필요한 사용자 소유 판단이 아직 대기 중이거나 해결되지 않았습니다. |
 | `missing_sensitive_approval` | `sensitive_approval` | 필요한 별도 민감 동작 승인이 없습니다. |
+| `missing_cancellation_authority` | `user_judgment` | `intent=cancel`에 현재 `Task`, 범위 리비전, Change Unit에 묶인 현재 `accepted` 사용자 취소 판단이 없습니다. |
 | `write_authorization_stale` | `write_compatibility` | 닫기 관련 `Write Authorization`이 `STATE_VERSION_CONFLICT`로 처리되지 않는 최신성 사유로 사용할 수 없습니다. |
 | `baseline_stale` | `baseline` | 닫기 관련 기준선 근거가 차단 사유 생성 경로에서 오래되었습니다. |
 | `evidence_claim_unsupported` | `evidence` | 필요한 닫기 주장이 지원되는 증거 범위를 갖지 못했습니다. |
@@ -243,7 +246,7 @@ CloseTaskRequest:
 |---|---|
 | `intent=check` | 현재 닫기 준비 상태 차단 사유를 읽기 전용 관찰 데이터로 반환합니다. |
 | `intent=complete` | 완료 경로가 닫기 준비 상태 평가에 도달했고 담당 문서가 정의한 닫기 요구사항이 해결되지 않았을 때 닫기 차단 사유를 만듭니다. |
-| `intent=cancel` | 취소 전용 종료 제약에 대해서만 차단 사유를 만듭니다. 완료 전용 증거, 최종 수락, 잔여 위험 공백은 그 자체로 취소를 막지 않습니다. |
+| `intent=cancel` | 취소 권한 누락이나 비호환을 포함해 취소 전용 종료 제약에 대해서만 차단 사유를 만듭니다. 완료 전용 증거, 최종 수락, 잔여 위험 공백은 그 자체로 취소를 막지 않습니다. |
 | `intent=supersede` | 대체 전용 종료 제약에 대해서만 차단 사유를 만듭니다. 완료 전용 증거, 최종 수락, 잔여 위험 공백은 그 자체로 대체를 막지 않습니다. |
 
 비주장:
@@ -252,6 +255,7 @@ CloseTaskRequest:
 - `STATE_VERSION_CONFLICT`는 절대 `CloseReadinessBlocker.code`가 아닙니다.
 - `STATE_VERSION_CONFLICT`는 거절 응답 `ErrorCode`이며 메서드 로컬 차단 사유 코드나 결정 코드가 아닙니다.
 - 차단 사유 범주는 사용자 판단, 승인, 증거, 아티팩트 가용성, 최종 수락, 잔여 위험 수락, 복구 상태 자체를 만들지 않습니다.
+- 거절, 연기, 오래됨, 대체됨, 레거시 미결속, 비사용자, 결과 없음 취소 판단은 취소를 허용하지 않습니다.
 
 ## 거절 결과
 

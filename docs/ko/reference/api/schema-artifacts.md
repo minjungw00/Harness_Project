@@ -12,7 +12,7 @@
 - 스테이징된 아티팩트 입력과 기존 아티팩트 입력의 구분
 - 스테이징, 연결, 본문 읽기 참조에 쓰이는 아티팩트 형태 요청/응답 필드
 - 스키마 검증에 필요한 아티팩트 참조 제약
-- 아티팩트 형태 API 응답에 나타나는 가림 처리, 가용성, 체크섬, 크기 필드
+- 아티팩트 형태 API 응답에 나타나는 가림 처리, 가용성, 무결성, 체크섬, 크기 필드
 
 이 문서는 담당하지 않습니다.
 
@@ -45,6 +45,7 @@ ArtifactRef:
   content_type: string
   sha256: string
   size_bytes: integer
+  integrity_status: string
   redaction_state: string
   availability: string
   created_by_run_ref: StateRecordRef | null
@@ -55,7 +56,9 @@ ArtifactRef:
 
 `ArtifactRef`는 참조와 메타데이터 형태입니다. 이 값만으로 아티팩트 본문을 읽을 수 있는 것도 아니고, 그 본문이 닫기에 충분한 증거라는 뜻도 아닙니다.
 
-`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `storage_ref`는 불투명 식별자입니다. `display_name`은 자유 형식 표시 문자열입니다. `content_type`은 미디어 타입 메타데이터이고, `sha256`은 체크섬 문자열입니다. `redaction_state`와 `availability`는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당하는 제어 값 문자열입니다.
+`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `storage_ref`는 불투명 식별자입니다. `display_name`은 자유 형식 표시 문자열입니다. `content_type`은 미디어 타입 메타데이터이고, `sha256`은 체크섬 문자열이며, `size_bytes`는 바이트 크기 메타데이터입니다. `integrity_status`, `redaction_state`, `availability`는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당하는 제어 값 문자열입니다.
+
+`integrity_status=verified`에서는 `content_type`이 비어 있지 않고, `sha256`이 유효한 소문자 16진수 SHA-256 문자열이며, `size_bytes`가 음수가 아니어야 합니다. 빠진 사실을 빈 해시, 0바이트 크기, 만들어 낸 콘텐츠 타입으로 표현하면 안 됩니다. 사실이 불완전한 레거시 아티팩트는 `integrity_status=legacy_unknown`을 사용하고, 알려진 불일치는 `integrity_status=corrupt`를 사용합니다.
 
 ## `StagedArtifactHandle`
 

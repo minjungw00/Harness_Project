@@ -73,10 +73,10 @@ Requires:
 - compatible current scope
 - compatible baseline
 - required user-owned judgments
-- any separate sensitive-action approval (`sensitive_approval`)
+- any separate accepted sensitive-action approval (`sensitive_approval`)
 - local surface capability needed for the intended product-file write check
 
-A separate sensitive-action approval satisfies this method only when its `JudgmentBasis` remains compatible with the current `scope_revision`, current Change Unit, intended operation, normalized `intended_paths`, sensitive categories, and `baseline_ref`. Legacy-unbound, stale, superseded, or incompatible judgments cannot satisfy sensitive-action approval. Callers do not submit revision fields to make an approval compatible.
+A separate sensitive-action approval satisfies this method only when the judgment is current, resolved by `actor_kind=user`, selected an option with `resolution_outcome=accepted`, and its `JudgmentBasis` remains compatible with the current `scope_revision`, current Change Unit, intended operation, normalized `intended_paths`, sensitive categories, and `baseline_ref`. Legacy-unbound, stale, superseded, expired, rejected, deferred, blocked, or incompatible judgments cannot satisfy sensitive-action approval. Callers do not submit revision fields to make an approval compatible.
 
 ## State version behavior
 
@@ -104,7 +104,7 @@ A newly allowed committed authorization receives its durable `write_authorizatio
 | `write_authorization_ref` | `StateRecordRef | null` for the consumable `Write Authorization` in an allowed decision result. A new allowed commit creates it; idempotent replay returns the stored original result without changing this field. It is `null` for non-allow decisions. |
 | `write_authorization` | `WriteAuthorizationSummary | null` for the `Write Authorization` in an allowed decision result. A new allowed commit creates it; idempotent replay returns the stored original result without changing this field. It is `null` for non-allow decisions. |
 | `authorization_effect` | Method result effect for the `Write Authorization` path. Supported values are owned by [API Value Sets](schema-value-sets.md#method-local-values). |
-| `active_user_judgment_refs` | `StateRecordRef[]` for resolved user-owned judgments applied to the write-preparation decision, including matching `sensitive_approval` judgments when present. |
+| `active_user_judgment_refs` | `StateRecordRef[]` for current accepted user-owned judgments applied to the write-preparation decision, including matching `sensitive_approval` judgments when present. |
 | `write_decision_reasons` | `WriteDecisionReason[]` explaining non-allow decisions. The shape is owned by [API State Schemas](schema-state.md#current-position-display-shapes). |
 | `user_judgment_candidate` | `UserJudgmentCandidate | null` when the method proposes a focused user-owned judgment instead of creating `Write Authorization`; otherwise `null`. The shape is owned by [API Judgment Schemas](schema-judgment.md#userjudgmentcandidate). |
 | `guarantee_display` | `GuaranteeDisplay | null` for the method's compatibility display. The display shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes); security guarantee meaning is owned by [Security](../security.md). |
@@ -125,7 +125,7 @@ For `decision=allowed`:
 - `authorization_effect` is `created` for a new committed `decision=allowed` response
 - idempotent replay returns the stored original committed `PrepareWriteResult` exactly; it does not recompute or reclassify `authorization_effect`, `base.state_version`, `base.events`, or any other response field, and it does not create another `Write Authorization` or repeat the storage effect
 - the authorization is scoped to the path-level `AuthorizedAttemptScope` using normalized repo-relative `intended_paths`
-- `active_user_judgment_refs` may cite resolved user-owned judgments that satisfy write preconditions, including a separate `sensitive_approval`
+- `active_user_judgment_refs` may cite current accepted user-owned judgments that satisfy write preconditions, including a separate `sensitive_approval`
 
 ## Blocked result
 
@@ -241,7 +241,7 @@ params:
 
 This branch applies after the separate sensitive-action approval is already present.
 
-`uj_sensitive_pref_001` represents an existing resolved `judgment_kind=sensitive_approval` whose `SensitiveActionScope` matches the profile preference update. It is not ordinary write approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
+`uj_sensitive_pref_001` represents an existing current `judgment_kind=sensitive_approval` resolved by the user with `resolution_outcome=accepted` and a `SensitiveActionScope` that matches the profile preference update. It is not ordinary write approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
 
 In this example, the request carries `expected_state_version: 19`; the allowed commit advances the project to `state_version: 20` and creates an active `Write Authorization` with `basis_state_version: 20`.
 

@@ -19,6 +19,12 @@
 
 상태 스키마는 API 데이터 형태만 설명합니다. 상태처럼 보이는 필드가 있다고 해서 응답 분기가 선택되거나 지속 저장, Core 전이, 재실행 행, `task_events`, 아티팩트 효과, `Write Authorization` 효과, `state_version` 증가가 생기지는 않습니다.
 
+상태 보기는 계산된 상태를 정직하게 드러내야 합니다.
+- `null` 또는 생략된 필드는 메서드가 값을 선택하지 않았거나, 값을 사용할 수 없거나, 담당 스키마가 부재를 명시적으로 허용한다는 뜻입니다. "계산했고 없음"을 암시하는 빈 값으로 바꾸면 안 됩니다.
+- `close_blockers: []`나 `risk_acceptance_coverage: []` 같은 빈 배열은 관련 계산을 실행했고 항목이 없었다는 뜻입니다.
+- 변경 결과와 `harness.status` 상태 보기는 겹치는 스키마 영역에서 같은 현재 상태를 설명해야 합니다.
+- 계산된 차단 사유는 공유 닫기 준비 상태 엔진과 같은 계산을 사용합니다. 메서드 담당 문서는 분기가 효과를 지속하는지만 결정합니다.
+
 담당 문서 링크:
 - 응답 분기 선택: [공통 응답 분기](schema-core.md#common-response)
 - 메서드 동작과 효과: [API 메서드](methods.md)와 메서드 담당 문서
@@ -80,6 +86,7 @@ StateSummary:
 - `mode`와 `close_state`는 값이 있을 때 제어 값 문자열입니다.
 - `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, `autonomy_boundary`는 자유 형식 표시 문자열입니다.
 - `baseline_ref`는 불투명 기준선 식별자입니다.
+- `pending_user_judgment_refs`는 응답 보기에 관련된 현재 대기 판단을 나열합니다. 대기 판단은 `required_for` 대상, 판단 종류, `Task`, Change Unit, 영향받는 참조, 근거가 해당 작업과 호환될 때만 작업을 차단합니다.
 
 의미하지 않는 것:
 - `StateSummary` 필드가 있다는 사실만으로 메서드 커밋 여부가 정의되지 않습니다.
@@ -297,9 +304,19 @@ CurrentCloseBasis:
   evidence_summary_ref: StateRecordRef | null
   residual_risks: ResidualRisk[]
   sensitive_categories: string[]
+  sensitive_action_requirements: SensitiveActionRequirement[]
   recovery_constraints: string[]
   source_run_ref: StateRecordRef
   updated_at: string
+
+SensitiveActionRequirement:
+  action_kind: string
+  normalized_paths: string[]
+  sensitive_categories: string[]
+  baseline_ref: string | null
+  change_unit_id: string
+  source_run_ref: StateRecordRef
+  source_write_authorization_ref: StateRecordRef
 
 ResidualRisk:
   risk_id: string
@@ -340,6 +357,7 @@ GuaranteeDisplay:
 - `ResidualRisk.risk_id`는 Core가 생성한 불투명 식별자입니다. `ResidualRisk.summary`와 `ResidualRisk.consequence`는 표시 문자열이며 텍스트 일치를 권한으로 만들지 않습니다.
 - `result_refs`, `source_run_ref`, `source_refs`, `evidence_summary_ref`, `accepted_by_judgment_refs`는 `StateRecordRef`를 사용합니다.
 - `sensitive_categories`는 영향받는 메서드나 프로필 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 불투명 민감 범주 분류 문자열입니다.
+- `sensitive_action_requirements`는 커밋된 실행 기록과 소비된 `Write Authorization` 기록에서 Core가 파생한 닫기 요구사항입니다. 범주만 담은 호출자 입력은 이 요구사항을 만들거나 지울 수 없습니다.
 - `recovery_constraints`와 `RiskAcceptanceCoverage.missing_reason`은 자유 형식 표시 문자열입니다.
 - `RiskAcceptanceCoverage`는 현재 잔여 위험 요구사항이 호환되는 판단으로 덮였는지를 보고합니다.
 - `CloseReadinessBlocker`는 닫기 차단 사유를 표현하는 데이터 형태입니다.
@@ -350,6 +368,20 @@ GuaranteeDisplay:
 - `ValidatorResult.status`, `ValidatorResult.severity`, `GuaranteeDisplay.level`은 제어 값 문자열입니다.
 
 이 형태들은 닫기 준비 상태 의미, 응답 처리 경로, 지속 동작을 정의하지 않습니다.
+
+닫기 근거 참조 규칙:
+- `CurrentCloseBasis.result_refs`나 `ResidualRisk.source_refs`로 받아들일 수 있는 호출자 제공 닫기 평가 참조는 담당 문서가 다른 종류를 명시적으로 추가하지 않는 한 결과/증거 기록 종류인 `run`, `artifact`, `evidence_summary`, `change_unit`으로 제한됩니다.
+- 담당 문서가 명시적으로 추가하지 않는 한 `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, `task`는 호출자 제공 결과 참조가 아닙니다.
+- 받아들인 모든 참조는 존재해야 하고 같은 프로젝트와 `Task`에 속해야 하며 Core가 정규화해야 합니다. Core는 호출자가 보낸 `state_version` 메타데이터를 권한으로 보존하지 않습니다.
+- 닫기 증거에 쓰이는 아티팩트 참조는 `Task`에 연결되어 있고 `integrity_status=verified`여야 합니다.
+- 증거 참조는 현재 `Task` 증거 요약을 식별해야 합니다. 실행 기록 참조는 호환되는 실행 기록과 Change Unit을 식별해야 합니다.
+- Core는 기준 닫기 근거를 구성하면서 현재 실행 기록, 현재 Change Unit, 현재 EvidenceSummary 참조를 추가할 수 있습니다.
+- 범주만 담은 레거시 민감 데이터가 비어 있지 않지만 동작 범위를 재구성할 수 없는 레거시 닫기 근거는 완료 닫기를 만족할 수 없습니다.
+
+보장 표시 규칙:
+- `GuaranteeDisplay`는 실제 런타임 프로필, 확인된 접점 등록, 활성화된 강제 사실에서 파생됩니다.
+- 역량 선언만으로 보장이 생기지 않으며, 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
+- 해당 참조를 사용할 수 있으면 `capability_refs`는 실제 프로필이나 접점 사실을 식별해야 합니다.
 
 담당 문서 링크:
 - 닫기 준비 상태 의미와 대체 금지 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)

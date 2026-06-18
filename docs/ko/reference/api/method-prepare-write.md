@@ -73,10 +73,10 @@ PrepareWriteRequest:
 - 호환되는 현재 적용 범위
 - 호환되는 기준선
 - 필요한 사용자 소유 판단
-- 필요한 경우 별도 민감 동작 승인(`sensitive_approval`)
+- 필요한 경우 `accepted` 결과의 별도 민감 동작 승인(`sensitive_approval`)
 - 의도한 제품 파일 쓰기 확인에 필요한 로컬 접점 역량
 
-별도 민감 동작 승인은 그 `JudgmentBasis`가 현재 `scope_revision`, 현재 Change Unit, 의도한 동작, 정규화된 `intended_paths`, 민감 범주, `baseline_ref`와 계속 호환될 때만 이 메서드를 만족합니다. `legacy_unbound`, 오래됨, 대체됨, 비호환 판단은 민감 동작 승인을 만족할 수 없습니다. 호출자는 승인을 호환되게 만들기 위한 리비전 필드를 제출하지 않습니다.
+별도 민감 동작 승인은 그 판단이 현재 상태이고, `actor_kind=user`로 해결되었으며, `resolution_outcome=accepted`인 선택지를 골랐고, 그 `JudgmentBasis`가 현재 `scope_revision`, 현재 Change Unit, 의도한 동작, 정규화된 `intended_paths`, 민감 범주, `baseline_ref`와 계속 호환될 때만 이 메서드를 만족합니다. `legacy_unbound`, 오래됨, 대체됨, 만료됨, 거절, 연기, 차단, 비호환 판단은 민감 동작 승인을 만족할 수 없습니다. 호출자는 승인을 호환되게 만들기 위한 리비전 필드를 제출하지 않습니다.
 
 ## 상태 버전 동작
 
@@ -104,7 +104,7 @@ PrepareWriteRequest:
 | `write_authorization_ref` | 허용 결정 결과에 포함되는 소비 가능한 `Write Authorization`의 `StateRecordRef | null`입니다. 새로 커밋된 허용 결정은 이를 만들고, 멱등 재실행은 이 필드를 바꾸지 않은 원래 커밋 응답을 반환합니다. 비허용 결정에서는 `null`입니다. |
 | `write_authorization` | 허용 결정 결과에 포함되는 `Write Authorization`의 `WriteAuthorizationSummary | null`입니다. 새로 커밋된 허용 결정은 이를 만들고, 멱등 재실행은 이 필드를 바꾸지 않은 원래 커밋 응답을 반환합니다. 비허용 결정에서는 `null`입니다. |
 | `authorization_effect` | `Write Authorization` 경로에 대한 메서드 결과 효과입니다. 지원되는 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. |
-| `active_user_judgment_refs` | 쓰기 준비 결정에 적용된 해결된 사용자 소유 판단의 `StateRecordRef[]`입니다. 일치하는 `sensitive_approval` 판단이 있으면 그 판단도 포함합니다. |
+| `active_user_judgment_refs` | 쓰기 준비 결정에 적용된 현재 `accepted` 결과의 사용자 소유 판단에 대한 `StateRecordRef[]`입니다. 일치하는 `sensitive_approval` 판단이 있으면 그 판단도 포함합니다. |
 | `write_decision_reasons` | 비허용 결정을 설명하는 `WriteDecisionReason[]`입니다. 형태는 [API 상태 스키마](schema-state.md#current-position-display-shapes)가 담당합니다. |
 | `user_judgment_candidate` | 메서드가 `Write Authorization`을 만들지 않고 집중된 사용자 소유 판단을 제안할 때의 `UserJudgmentCandidate | null`입니다. 그 밖의 경우에는 `null`입니다. 형태는 [API 판단 스키마](schema-judgment.md#userjudgmentcandidate)가 담당합니다. |
 | `guarantee_display` | 메서드의 호환성 표시를 위한 `GuaranteeDisplay | null`입니다. 표시 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당하고, 보안 보장 의미는 [보안](../security.md)이 담당합니다. |
@@ -125,7 +125,7 @@ PrepareWriteRequest:
 - `authorization_effect`는 새로 커밋된 `decision=allowed` 응답에서 `created`입니다.
 - 멱등 재실행은 저장된 원래 커밋 `PrepareWriteResult`를 그대로 반환합니다. `authorization_effect`, `base.state_version`, `base.events`나 다른 응답 필드를 다시 계산하거나 재분류하지 않으며, `Write Authorization`을 새로 만들거나 저장 효과를 반복하지 않습니다.
 - `Write Authorization`은 정규화된 저장소 상대 `intended_paths`를 사용하는 경로 수준 `AuthorizedAttemptScope`에 묶입니다.
-- `active_user_judgment_refs`는 별도 `sensitive_approval`을 포함해 쓰기 선행조건을 만족하는 해결된 사용자 소유 판단을 가리킬 수 있습니다.
+- `active_user_judgment_refs`는 별도 `sensitive_approval`을 포함해 쓰기 선행조건을 만족하는 현재 `accepted` 결과의 사용자 소유 판단을 가리킬 수 있습니다.
 
 ## 차단 결과
 
@@ -241,7 +241,7 @@ params:
 
 별도의 민감 동작 승인이 이미 있을 때 적용되는 분기입니다.
 
-`uj_sensitive_pref_001`은 프로필 환경설정 갱신에 맞는 `SensitiveActionScope`를 가진 기존의 해결된 `judgment_kind=sensitive_approval`을 나타냅니다. 이는 일반 쓰기 승인, 최종 수락, 잔여 위험 수락, `Write Authorization`이 아닙니다.
+`uj_sensitive_pref_001`은 사용자가 `resolution_outcome=accepted`로 해결했고 프로필 환경설정 갱신에 맞는 `SensitiveActionScope`를 가진 현재 `judgment_kind=sensitive_approval`을 나타냅니다. 이는 일반 쓰기 승인, 최종 수락, 잔여 위험 수락, `Write Authorization`이 아닙니다.
 
 이 예시에서 요청은 `expected_state_version: 19`를 담습니다. 허용 커밋은 프로젝트 전체 상태를 `state_version: 20`으로 올리고, 권한 생성 커밋 뒤 결과 버전인 `basis_state_version: 20`을 가진 활성 `Write Authorization`을 만듭니다.
 

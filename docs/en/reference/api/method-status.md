@@ -85,8 +85,14 @@ Include projection contract:
 - `include.pending_user_judgments` returns current pending judgment refs, and relevant stale or superseded judgment state appears through existing result fields such as `blocker_refs` and `next_actions.required_refs`.
 - `include.write_authority` returns effective active, expired, stale, and consumed write-authority states through `write_authority_summary`.
 - `include.evidence` returns current `EvidenceSummary` and coverage when available.
-- `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, and relevant next actions.
-- `include.guarantees` returns only guarantees supported by the active profile and verified surface context.
+- `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, and relevant next actions. The blockers use the same close-readiness calculation as `harness.close_task intent=check`.
+- `include.guarantees` returns only guarantees derived from the actual runtime profile, verified surface registration, and enabled enforcement facts.
+
+Truthful projection rules:
+- Uncomputed, unselected, or unavailable data is `null` or omitted where the schema permits, not an empty value that implies "computed and none."
+- Empty arrays mean the method computed that field and found no entries.
+- Capability declarations do not create guarantees. A cooperative-only deployment must not claim `detective`.
+- `GuaranteeDisplay.capability_refs` should identify actual profile or surface facts when those refs are available.
 
 `include.close=true` and [`harness.close_task`](method-close-task.md) with `intent=check` use the same close-readiness calculation. `harness.status` remains read-only and creates no replay row, event, state mutation, close mutation, or state-version increment.
 
@@ -222,7 +228,7 @@ active_task:
   close_state: blocked
   close_blockers:
     - category: user_judgment
-      code: missing_user_judgment
+      code: pending_user_judgment
       message: "User-owned product decision about CSV column order is still pending."
       related_refs:
         - record_kind: user_judgment
@@ -269,7 +275,7 @@ current_close_basis: null
 risk_acceptance_coverage: []
 close_blockers:
   - category: user_judgment
-    code: missing_user_judgment
+    code: pending_user_judgment
     message: "User-owned product decision about CSV column order is still pending."
     related_refs:
       - record_kind: user_judgment

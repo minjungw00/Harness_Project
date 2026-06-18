@@ -19,6 +19,12 @@ This document owns state-shaped API fields, nesting, references, summaries, snap
 
 State schemas describe API data shapes only. A state-shaped field does not choose a response branch or create persistence, Core transitions, replay rows, `task_events`, artifact effects, `Write Authorization` effects, or a `state_version` increment.
 
+State projections must be truthful about computed state:
+- A `null` or omitted field means the method did not select a value, the value is unavailable, or the owning schema explicitly allows absence. It must not be replaced with an empty value that implies "computed and none."
+- Empty arrays such as `close_blockers: []` or `risk_acceptance_coverage: []` mean the relevant computation ran and found no entries.
+- Mutation results and `harness.status` projections must describe the same current state where their schemas overlap.
+- Computed blockers use the same close-readiness calculation as the shared close-readiness engine; method owners decide only whether a branch persists an effect.
+
 Owner links:
 - Response branch selection: [Common response branches](schema-core.md#common-response)
 - Method behavior and effects: [API Methods](methods.md) and method owner documents
@@ -80,6 +86,7 @@ Meaning:
 - `mode` and `close_state` are controlled value strings when present.
 - `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, and `autonomy_boundary` are free-form display strings.
 - `baseline_ref` is an opaque baseline identifier.
+- `pending_user_judgment_refs` lists current pending judgments relevant to the response view. A pending judgment is operation-blocking only when its `required_for` target, judgment kind, Task, Change Unit, affected refs, and basis are compatible with that operation.
 
 Does not imply:
 - `StateSummary` field presence does not define whether a method committed.
@@ -296,9 +303,19 @@ CurrentCloseBasis:
   evidence_summary_ref: StateRecordRef | null
   residual_risks: ResidualRisk[]
   sensitive_categories: string[]
+  sensitive_action_requirements: SensitiveActionRequirement[]
   recovery_constraints: string[]
   source_run_ref: StateRecordRef
   updated_at: string
+
+SensitiveActionRequirement:
+  action_kind: string
+  normalized_paths: string[]
+  sensitive_categories: string[]
+  baseline_ref: string | null
+  change_unit_id: string
+  source_run_ref: StateRecordRef
+  source_write_authorization_ref: StateRecordRef
 
 ResidualRisk:
   risk_id: string
@@ -339,6 +356,7 @@ Meaning:
 - `ResidualRisk.risk_id` is an opaque Core-generated identifier. `ResidualRisk.summary` and `ResidualRisk.consequence` are display strings and do not authorize text matching.
 - `result_refs`, `source_run_ref`, `source_refs`, `evidence_summary_ref`, and `accepted_by_judgment_refs` use `StateRecordRef`.
 - `sensitive_categories` are opaque sensitive-category classification strings unless an affected method or profile owner publishes a narrower local list.
+- `sensitive_action_requirements` are Core-derived close requirements from committed Runs and consumed `Write Authorization` records. Category-only caller input cannot establish or erase these requirements.
 - `recovery_constraints` and `RiskAcceptanceCoverage.missing_reason` are free-form display strings.
 - `RiskAcceptanceCoverage` reports whether the current residual-risk requirements are covered by compatible judgments.
 - `CloseReadinessBlocker` is a data shape for close-readiness findings.
@@ -349,6 +367,20 @@ Meaning:
 - `ValidatorResult.status`, `ValidatorResult.severity`, and `GuaranteeDisplay.level` are controlled value strings.
 
 These shapes do not define close-readiness meaning, response routing, or persistence behavior.
+
+Close-basis reference rules:
+- Caller-supplied close-assessment refs accepted into `CurrentCloseBasis.result_refs` or `ResidualRisk.source_refs` are limited to result/evidence record kinds `run`, `artifact`, `evidence_summary`, and `change_unit` unless an owner document explicitly adds another kind.
+- `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, and `task` are not caller-supplied result refs for a close basis unless an owner document explicitly adds them.
+- Every accepted ref must exist, belong to the same project and Task, and be canonicalized by Core. Core never preserves caller-supplied `state_version` metadata as authority.
+- Artifact refs used for close evidence must be linked to the Task and have `integrity_status=verified`.
+- Evidence refs must identify the current Task evidence summary. Run refs must identify a compatible Run and Change Unit.
+- Core may add the current Run, current Change Unit, and current EvidenceSummary refs when constructing the canonical close basis.
+- Legacy close bases with non-empty category-only sensitive data but no reconstructable action scope cannot satisfy complete close.
+
+Guarantee display rules:
+- `GuaranteeDisplay` is derived from actual runtime profile, verified surface registration, and enabled enforcement facts.
+- Capability declarations do not create guarantees, and cooperative-only deployments must not claim `detective`.
+- `capability_refs` should identify the actual profile or surface facts when such refs are available.
 
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)

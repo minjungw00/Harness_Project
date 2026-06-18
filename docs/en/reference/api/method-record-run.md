@@ -82,6 +82,13 @@ Path and access notes:
 - `observed_changes.changed_paths` entries are `Product Repository` API product paths. Product Repository path normalization is owned by [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization).
 - `ArtifactInput[]` and staged handles do not create a second request-level access class; the request-level access class remains the one in the derived `VerifiedSurfaceContext`.
 
+Close-assessment ref rules:
+- Caller-supplied `close_assessment.result_refs` and `ResidualRiskInput.source_refs` are restricted to `record_kind=run`, `artifact`, `evidence_summary`, or `change_unit` unless an owner explicitly adds another kind.
+- The method rejects or excludes caller-supplied `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, and `task` refs from the close basis unless an owner explicitly adds them.
+- Every accepted ref must exist and belong to the same project and Task. Artifact refs must be linked to the Task and have `integrity_status=verified`; evidence refs must identify the current Task evidence summary; Run refs must identify a compatible Run and Change Unit.
+- Core stores canonical refs in `CurrentCloseBasis` and never preserves caller-supplied `state_version` metadata as authority.
+- Core may add the current Run, current Change Unit, and current EvidenceSummary refs while constructing the canonical close basis.
+
 ## Access requirements
 
 Requires:
@@ -107,6 +114,8 @@ A compatible committed result increments `project_state.state_version` exactly o
 A compatible committed result increments the selected `Task.close_basis_revision` exactly once. When `close_assessment` is non-null, the commit establishes a new `CurrentCloseBasis` from the committed Run, the assessment fields, generated residual-risk IDs, and the selected current scope. When `close_assessment=null`, the committed Run explicitly does not establish a current close basis, and any existing current close basis becomes stale or absent.
 
 An empty `close_assessment.residual_risks` list explicitly means the current result has no identified residual risks. Core generates opaque `risk_id` values only for committed non-null assessments. A dry-run never reserves persistent `risk_id` values.
+
+Sensitive action requirements in the resulting `CurrentCloseBasis` are derived by Core from the committed Run and any consumed `Write Authorization`. Category-only caller input in `close_assessment.sensitive_categories` can contribute display context but cannot establish, satisfy, or erase a sensitive approval requirement.
 
 The Run, current close basis, evidence updates, artifact links or promotions, `Write Authorization` consumption, and revision changes are committed atomically when the result commits.
 
@@ -238,7 +247,7 @@ params:
         created_by_surface_id: surface_run_probe
         created_by_surface_instance_id: surface_instance_run_probe_01
         content_type: application/json
-        sha256: sha256:example-runprobe
+        sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
         size_bytes: 96
         redaction_state: none
         expires_at: "<future-expiration-timestamp>"
@@ -246,7 +255,7 @@ params:
       existing_artifact_ref: null
       relation_hint: "validation_report"
       claim: "Search-result count validation passed."
-      expected_sha256: "sha256:example-runprobe"
+      expected_sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
       expected_size_bytes: 96
       redaction_state: none
   evidence_updates:
@@ -297,8 +306,9 @@ run_summary:
       task_id: task_runprobe_001
       display_name: "search-result-count-validation.json"
       content_type: application/json
-      sha256: sha256:example-runprobe
+      sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       size_bytes: 96
+      integrity_status: verified
       redaction_state: none
       availability: available
       created_by_run_ref:
@@ -316,8 +326,9 @@ registered_artifacts:
     task_id: task_runprobe_001
     display_name: "search-result-count-validation.json"
     content_type: application/json
-    sha256: sha256:example-runprobe
+    sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     size_bytes: 96
+    integrity_status: verified
     redaction_state: none
     availability: available
     created_by_run_ref:
@@ -351,8 +362,9 @@ evidence_summary:
           task_id: task_runprobe_001
           display_name: "search-result-count-validation.json"
           content_type: application/json
-          sha256: sha256:example-runprobe
+          sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           size_bytes: 96
+          integrity_status: verified
           redaction_state: none
           availability: available
           created_by_run_ref:
@@ -371,8 +383,9 @@ evidence_summary:
       task_id: task_runprobe_001
       display_name: "search-result-count-validation.json"
       content_type: application/json
-      sha256: sha256:example-runprobe
+      sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       size_bytes: 96
+      integrity_status: verified
       redaction_state: none
       availability: available
       created_by_run_ref:
@@ -406,6 +419,7 @@ current_close_basis:
   evidence_summary_ref: null
   residual_risks: []
   sensitive_categories: []
+  sensitive_action_requirements: []
   recovery_constraints: []
   source_run_ref:
     record_kind: run

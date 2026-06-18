@@ -38,6 +38,8 @@
 
 `selected_option_id`와 `note`는 요청 수준에 남습니다. `RecordUserJudgmentPayload`는 판단별 답변 분기 안에서 이 필드를 반복하면 안 됩니다.
 
+선택된 선택지의 저장된 `resolution_outcome`이 기준입니다. 답변 본문에 결과, 결정, 수락 필드가 있으면 선택된 선택지와 일치해야 합니다. 자유 형식 답변 텍스트, 라벨, 메모는 권한을 부여할 수 없습니다.
+
 ## 요청 스키마
 
 이 메서드는 아래 최상위 `params` 요청 형태를 담당합니다. `envelope`는 [API 코어 스키마](schema-core.md#tool-envelope)의 공통 `ToolEnvelope`이며, 이 블록은 `ToolEnvelope` 필드를 다시 정의하지 않습니다.
@@ -88,6 +90,7 @@ RecordUserJudgmentRequest:
 - 최종 수락은 판단 근거에 캡처된 현재 `Task`, Change Unit, `scope_revision`, `close_basis_revision`, 기준선, 결과 참조와 일치해야 합니다.
 - 잔여 위험 수락은 `AcceptedRiskInput`에 정확한 현재 `risk_id` 값을 포함해야 하며 현재 `close_basis_revision`과 일치해야 합니다.
 - 민감 승인은 현재 `scope_revision`, Change Unit, 동작, 정규화된 경로, 민감 범주, 기준선과 일치해야 합니다.
+- 권한을 지니는 판단은 권한 요구사항을 만족하려면 `resolved_by_actor_kind=user`와 `resolution_outcome=accepted`가 필요합니다.
 - 범위 변경이나 실행 기록 변경은 이력 판단을 삭제하지 않습니다. 다만 호환되지 않는 판단은 현재 닫기, 쓰기, 민감 승인 요구사항에 사용할 수 없게 됩니다.
 
 ## 성공 결과
@@ -102,9 +105,9 @@ RecordUserJudgmentRequest:
 - 현재 `state`
 - `next_actions`
 
-사용자의 답이 그렇거나 초점이 맞는 판단의 호환 결과가 그렇다면 이 메서드는 지정된 판단을 `resolved`, `rejected`, `deferred`, `blocked` 또는 다른 지원 판단 상태로 커밋할 수 있습니다.
+답변이 성공적으로 기록되면 이 메서드는 지정된 판단을 `status=resolved`로 커밋합니다. 기록된 `resolution_outcome`은 `accepted`, `rejected`, `deferred`, `blocked`일 수 있습니다.
 
-결과는 포함된 차단 사유와 판단에 의존하는 요약만 갱신합니다. 관련 없는 승인, 증거, 범위 갱신, `Write Authorization`, 닫기 상태, 기록된 판단 자체를 넘어서는 잔여 위험 수락을 만들지 않습니다.
+결과는 포함된 차단 사유와 판단에 의존하는 요약만 갱신합니다. `accepted`이고 호환되는 권한 판단 자체를 넘어 관련 없는 승인, 증거, 범위 갱신, `Write Authorization`, 닫기 상태, 최종 수락, 잔여 위험 수락, 민감 승인, 취소 권한을 만들지 않습니다.
 
 ## 메서드 결과 필드
 
@@ -125,7 +128,7 @@ RecordUserJudgmentRequest:
 
 이 메서드에는 별도의 커밋된 차단 응답 분기가 없습니다.
 
-커밋된 `user_judgment.status=blocked`는 기록된 판단 결과이지, `ToolRejectedResponse`도 아니고 `PrepareWriteResult` 방식의 차단 결정도 아닙니다.
+커밋된 `resolution_outcome=blocked`는 기록된 판단 결과이지, `ToolRejectedResponse`도 아니고 `PrepareWriteResult` 방식의 차단 결정도 아닙니다.
 
 ## 거절 결과
 
@@ -225,11 +228,13 @@ user_judgment:
       label: "Keep illustration"
       description: "Record the user-owned product decision to keep the illustration."
       consequence: "The pending empty-state decision can be treated as resolved."
+      resolution_outcome: accepted
       is_default: true
     - option_id: replace
       label: "Replace illustration"
       description: "Record that the illustration should be replaced."
       consequence: "The Task remains open for an illustration replacement."
+      resolution_outcome: rejected
       is_default: false
   context:
     summary: "The empty-state screen has a proposed illustration and needs a user-owned product decision."
@@ -255,9 +260,11 @@ user_judgment:
     sensitive_action_scope: null
     created_at_state_version: 62
     compatibility_status: current
-  required_for: acceptance
+  required_for:
+    - close_complete
   resolution:
     selected_option_id: keep
+    resolution_outcome: accepted
     answer:
       product_decision:
         judgment:

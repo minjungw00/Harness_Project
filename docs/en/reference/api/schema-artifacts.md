@@ -12,7 +12,7 @@ This document owns:
 - staged versus existing artifact input distinctions
 - artifact-shaped request and response fields for staging, linking, and body-read references
 - artifact-shaped reference constraints needed to validate the schema
-- redaction, availability, checksum, and size fields that appear on artifact-shaped API responses
+- redaction, availability, integrity, checksum, and size fields that appear on artifact-shaped API responses
 
 This document does not own:
 
@@ -45,6 +45,7 @@ ArtifactRef:
   content_type: string
   sha256: string
   size_bytes: integer
+  integrity_status: string
   redaction_state: string
   availability: string
   created_by_run_ref: StateRecordRef | null
@@ -55,7 +56,9 @@ ArtifactRef:
 
 `ArtifactRef` is a reference and metadata shape. It does not make artifact body content readable by default and does not prove that the content is sufficient evidence for close.
 
-`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, and `storage_ref` are opaque identifiers. `display_name` is a free-form display string. `content_type` is media-type metadata, and `sha256` is a checksum string. `redaction_state` and `availability` are controlled value strings owned by [artifact values](schema-value-sets.md#artifact-values).
+`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, and `storage_ref` are opaque identifiers. `display_name` is a free-form display string. `content_type` is media-type metadata, `sha256` is a checksum string, and `size_bytes` is byte-size metadata. `integrity_status`, `redaction_state`, and `availability` are controlled value strings owned by [artifact values](schema-value-sets.md#artifact-values).
+
+For `integrity_status=verified`, `content_type` is non-empty, `sha256` is a valid lowercase hexadecimal SHA-256 string, and `size_bytes` is nonnegative. Missing facts must not be represented as an empty hash, zero-byte size, or invented content type. Legacy artifacts with incomplete facts use `integrity_status=legacy_unknown`; known mismatches use `integrity_status=corrupt`.
 
 ## `StagedArtifactHandle`
 

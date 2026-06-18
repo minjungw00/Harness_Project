@@ -38,6 +38,8 @@ Before recording the answer, Core checks the pending judgment's `JudgmentBasis` 
 
 `selected_option_id` and `note` stay at request level. `RecordUserJudgmentPayload` must not repeat them inside the decision-specific answer branch.
 
+The selected option's stored `resolution_outcome` is authoritative. If the answer payload contains an outcome, decision, or acceptance field, it must agree with that selected option. Free-form answer text, labels, or notes cannot grant authority.
+
 ## Request schema
 
 This method owns the top-level `params` request shape below. `envelope` is the shared [`ToolEnvelope`](schema-core.md#tool-envelope); this block does not redefine `ToolEnvelope` fields.
@@ -88,6 +90,7 @@ Compatibility requirements:
 - Final acceptance must match the current Task, Change Unit, `scope_revision`, `close_basis_revision`, baseline, and result refs captured in the judgment basis.
 - Residual-risk acceptance must include exact current `risk_id` values in `AcceptedRiskInput` and must match the current `close_basis_revision`.
 - Sensitive approval must match current `scope_revision`, Change Unit, operation, normalized paths, sensitive categories, and baseline.
+- Authority-bearing judgments require `resolved_by_actor_kind=user` and `resolution_outcome=accepted` to satisfy the authority requirement.
 - Scope or Run changes do not delete historical judgments; they make incompatible judgments ineligible for current close, write, or sensitive-approval requirements.
 
 ## Success result
@@ -102,9 +105,9 @@ Returns `RecordUserJudgmentResult` with:
 - current `state`
 - `next_actions`
 
-The method may commit the addressed judgment as `resolved`, `rejected`, `deferred`, `blocked`, or another supported judgment status when that status is the user's answer or the compatible result of the focused judgment.
+The method commits the addressed judgment as `status=resolved` when an answer is recorded successfully. The recorded `resolution_outcome` may be `accepted`, `rejected`, `deferred`, or `blocked`.
 
-The result updates only covered blockers and judgment-dependent summaries. It does not create unrelated approvals, evidence, scope updates, `Write Authorization`, close state, or residual-risk acceptance beyond the recorded judgment itself.
+The result updates only covered blockers and judgment-dependent summaries. It does not create unrelated approvals, evidence, scope updates, `Write Authorization`, close state, final acceptance, residual-risk acceptance, sensitive approval, or cancellation authority beyond an accepted, compatible authority-bearing judgment itself.
 
 ## Method result fields
 
@@ -125,7 +128,7 @@ The result updates only covered blockers and judgment-dependent summaries. It do
 
 There is no separate committed blocked response branch for this method.
 
-A committed `user_judgment.status=blocked` is a recorded judgment outcome, not `ToolRejectedResponse` and not a `PrepareWriteResult`-style blocked decision.
+A committed `resolution_outcome=blocked` is a recorded judgment outcome, not `ToolRejectedResponse` and not a `PrepareWriteResult`-style blocked decision.
 
 ## Rejected result
 
@@ -225,11 +228,13 @@ user_judgment:
       label: "Keep illustration"
       description: "Record the user-owned product decision to keep the illustration."
       consequence: "The pending empty-state decision can be treated as resolved."
+      resolution_outcome: accepted
       is_default: true
     - option_id: replace
       label: "Replace illustration"
       description: "Record that the illustration should be replaced."
       consequence: "The Task remains open for an illustration replacement."
+      resolution_outcome: rejected
       is_default: false
   context:
     summary: "The empty-state screen has a proposed illustration and needs a user-owned product decision."
@@ -255,9 +260,11 @@ user_judgment:
     sensitive_action_scope: null
     created_at_state_version: 62
     compatibility_status: current
-  required_for: acceptance
+  required_for:
+    - close_complete
   resolution:
     selected_option_id: keep
+    resolution_outcome: accepted
     answer:
       product_decision:
         judgment:

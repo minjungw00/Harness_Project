@@ -193,6 +193,8 @@ For response computation, `harness.status` and `harness.close_task intent=check`
 
 Storage must not persist those computed values merely because the read occurred.
 
+Read-time projections must distinguish uncomputed, unavailable, empty, and verified state. Storage must not write empty arrays, empty hashes, zero sizes, invented content types, or stronger guarantee displays merely because a read path could not compute the underlying facts.
+
 `harness.status` with `close_blockers: CloseReadinessBlocker[]` is a read-only observation. It does not create:
 
 - `task_event` or `task_events` append
@@ -501,6 +503,8 @@ Current close-basis persistence boundary:
 
 - A committed `harness.record_run` increments `tasks.close_basis_revision` exactly once.
 - A non-null `close_assessment` writes a new current `CurrentCloseBasis` in `tasks.close_basis_json` and stores Core-generated opaque residual-risk IDs.
+- Sensitive action requirements stored in that `CurrentCloseBasis` are derived by Core from the committed Run and any consumed `Write Authorization`, preserving operation, normalized paths, sensitive categories, baseline, Change Unit, source Run ref, and source `Write Authorization` ref through close.
+- Category-only caller input cannot establish, satisfy, or erase a sensitive action requirement.
 - `close_assessment=null` records that the committed Run does not establish a current close basis; any existing current basis becomes stale or absent.
 - Run, current close basis, evidence, artifact, authorization, replay, event, and revision effects commit atomically.
 
@@ -546,8 +550,8 @@ Owner links:
 
 Committed `dry_run=false` may:
 
-- resolve a `user_judgments` row
-- update judgment resolution and basis status as allowed by the method owner
+- set a `user_judgments` row to `status='resolved'`
+- store the selected option, `resolution_outcome`, resolution actor, answer payload, and basis status as allowed by the method owner
 - update dependent blockers or next actions
 - append events
 - create a replay row
@@ -567,6 +571,8 @@ Valid dry-run previews do not create:
 - `project_state.state_version` increment
 
 Recording a user judgment does not increment `tasks.scope_revision` or `tasks.close_basis_revision`.
+
+`status='resolved'` records that an answer was recorded; it is not acceptance by itself. Existing resolved rows without stored `resolution_outcome` remain historical audit records and cannot satisfy current authority requirements.
 
 Owner links:
 
@@ -638,6 +644,8 @@ No-effect branches:
 - preflight failures
 
 Valid `dry_run=true` returns `ToolDryRunResponse`.
+
+Cancellation effects require the method-owned current accepted cancellation judgment. Missing or incompatible cancellation authority may produce an owner-allowed blocked cancellation effect, but must not fabricate acceptance or completion-only close evidence.
 
 Owner links:
 

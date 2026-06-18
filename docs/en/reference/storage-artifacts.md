@@ -270,7 +270,7 @@ Not allowed:
 An artifact is evidence-eligible only when storage has:
 
 - registered bytes or a safe metadata notice under the artifact store
-- integrity facts such as `sha256`, `size_bytes`, and `content_type`
+- integrity facts: `content_type`, `sha256`, `size_bytes`, and `integrity_status`
 - a `redaction_state`
 - producer and retention facts
 - an availability `status`
@@ -280,7 +280,7 @@ Evidence eligibility, artifact availability, and evidence sufficiency remain sep
 
 Allowed:
 
-- An `artifacts.status=available` row with a valid owner link can support a coverage item.
+- An `artifacts.status=available` row with `integrity_status=verified` and a valid owner link can support a coverage item.
 - The coverage item can make `EvidenceSummary.status=sufficient` only when the required coverage item links that artifact to the claim and the item is `supported` or `not_applicable`.
 
 Required validation:
@@ -346,7 +346,31 @@ Storage meaning:
 
 - The artifact store or required retrieval path cannot currently provide the registered bytes or safe metadata notice.
 
-`artifacts.redaction_state` uses the supported `ArtifactRef.redaction_state` values from [API Value Sets](api/schema-value-sets.md#artifact-values). `sha256`, `size_bytes`, and `content_type` are artifact integrity facts for comparison and availability handling.
+`artifacts.redaction_state` uses the supported `ArtifactRef.redaction_state` values from [API Value Sets](api/schema-value-sets.md#artifact-values). `sha256`, `size_bytes`, `content_type`, and `integrity_status` are artifact integrity facts for comparison and availability handling.
+
+`ArtifactIntegrityStatus` values:
+
+| Value | Meaning |
+|---|---|
+| `verified` | Persistent artifact facts are complete and integrity-aware. |
+| `legacy_unknown` | A preserved artifact lacks complete integrity facts. |
+| `corrupt` | The stored bytes or metadata are known not to match persisted integrity facts. |
+
+Persistent artifact facts:
+
+- `content_type`
+- `sha256`
+- `size_bytes`
+- `integrity_status`
+
+Rules:
+
+- New persistent artifacts must use `integrity_status=verified`.
+- `verified` requires a non-empty `content_type`, a valid lowercase hexadecimal SHA-256 string, and nonnegative `size_bytes`.
+- Missing facts must not be represented as an empty hash, zero-byte size, or invented content type.
+- Legacy artifacts with incomplete facts remain `legacy_unknown`.
+- `legacy_unknown` or `corrupt` artifacts cannot satisfy evidence or close authority requirements.
+- Status displays may show that artifact facts are unavailable or corrupt without inventing facts.
 
 Allowed:
 
@@ -359,6 +383,7 @@ Not allowed:
 - Do not treat `blocked` as an artifact availability status.
 - Do not use `sha256`, `size_bytes`, or `content_type` as security guarantee claims.
 - Do not treat `uri` as a caller-supplied arbitrary filesystem path.
+- Do not treat `legacy_unknown` or `corrupt` as evidence-eligible integrity states.
 - Raw secrets, tokens, and full sensitive logs must not be stored as evidence bytes.
 
 Owner links:

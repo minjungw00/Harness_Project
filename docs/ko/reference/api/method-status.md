@@ -85,8 +85,14 @@ StatusRequest:
 - `include.pending_user_judgments`는 현재 대기 판단 참조를 반환하며, 관련 있는 오래됨 또는 대체됨 판단 상태는 `blocker_refs`, `next_actions.required_refs` 같은 기존 결과 필드로 나타납니다.
 - `include.write_authority`는 유효한 활성, 만료, 오래됨, 소비됨 쓰기 권한 상태를 `write_authority_summary`로 반환합니다.
 - `include.evidence`는 사용할 수 있을 때 현재 `EvidenceSummary`와 범위를 반환합니다.
-- `include.close`는 `CurrentCloseBasis | null`, 닫기 상태, 계산된 차단 사유, 위험 수락 범위, 관련 다음 행동을 반환합니다.
-- `include.guarantees`는 활성 프로필과 확인된 접점 맥락이 지원하는 보장만 반환합니다.
+- `include.close`는 `CurrentCloseBasis | null`, 닫기 상태, 계산된 차단 사유, 위험 수락 범위, 관련 다음 행동을 반환합니다. 차단 사유는 `harness.close_task intent=check`와 같은 닫기 준비 상태 계산을 사용합니다.
+- `include.guarantees`는 실제 런타임 프로필, 확인된 접점 등록, 활성화된 강제 사실에서 파생된 보장만 반환합니다.
+
+정직한 상태 보기 규칙:
+- 계산하지 않았거나, 선택하지 않았거나, 사용할 수 없는 데이터는 스키마가 허용하는 곳에서 `null` 또는 생략으로 표현합니다. "계산했고 없음"을 암시하는 빈 값으로 표현하면 안 됩니다.
+- 빈 배열은 메서드가 그 필드를 계산했고 항목이 없었다는 뜻입니다.
+- 역량 선언은 보장을 만들지 않습니다. 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
+- `GuaranteeDisplay.capability_refs`는 해당 참조를 사용할 수 있을 때 실제 프로필이나 접점 사실을 식별해야 합니다.
 
 `include.close=true`와 [`harness.close_task`](method-close-task.md)의 `intent=check`는 같은 닫기 준비 상태 계산을 사용합니다. `harness.status`는 읽기 전용으로 남으며 재실행 행, 이벤트, 상태 변경, 닫기 변경, 상태 버전 증가를 만들지 않습니다.
 
@@ -222,7 +228,7 @@ active_task:
   close_state: blocked
   close_blockers:
     - category: user_judgment
-      code: missing_user_judgment
+      code: pending_user_judgment
       message: "User-owned product decision about CSV column order is still pending."
       related_refs:
         - record_kind: user_judgment
@@ -269,7 +275,7 @@ current_close_basis: null
 risk_acceptance_coverage: []
 close_blockers:
   - category: user_judgment
-    code: missing_user_judgment
+    code: pending_user_judgment
     message: "User-owned product decision about CSV column order is still pending."
     related_refs:
       - record_kind: user_judgment

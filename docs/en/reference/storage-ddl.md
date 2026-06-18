@@ -203,7 +203,7 @@ CREATE TABLE user_judgments (
   task_id TEXT NOT NULL,
   change_unit_id TEXT,
   judgment_kind TEXT NOT NULL,
-  status TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'resolved', 'stale', 'superseded', 'expired')),
   request_json TEXT NOT NULL DEFAULT '{}',
   context_json TEXT NOT NULL DEFAULT '{}',
   options_json TEXT NOT NULL DEFAULT '[]',
@@ -213,6 +213,8 @@ CREATE TABLE user_judgments (
   basis_json TEXT,
   basis_status TEXT NOT NULL DEFAULT 'legacy_unbound'
     CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound')),
+  resolution_outcome TEXT
+    CHECK (resolution_outcome IS NULL OR resolution_outcome IN ('accepted', 'rejected', 'deferred', 'blocked')),
   resolution_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
@@ -341,6 +343,8 @@ CREATE TABLE artifacts (
   sha256 TEXT,
   size_bytes INTEGER CHECK (size_bytes IS NULL OR size_bytes >= 0),
   content_type TEXT,
+  integrity_status TEXT NOT NULL DEFAULT 'verified'
+    CHECK (integrity_status IN ('verified', 'legacy_unknown', 'corrupt')),
   redaction_state TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('available', 'missing', 'integrity_failed', 'unavailable')),
   retention_json TEXT NOT NULL DEFAULT '{}',
@@ -349,6 +353,18 @@ CREATE TABLE artifacts (
   updated_at TEXT NOT NULL,
   metadata_json TEXT NOT NULL DEFAULT '{}',
   PRIMARY KEY (project_id, artifact_id),
+  CHECK (
+    integrity_status <> 'verified'
+    OR (
+      content_type IS NOT NULL
+      AND length(trim(content_type)) > 0
+      AND sha256 IS NOT NULL
+      AND length(sha256) = 64
+      AND sha256 NOT GLOB '*[^0-9a-f]*'
+      AND size_bytes IS NOT NULL
+      AND size_bytes >= 0
+    )
+  ),
   FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
   FOREIGN KEY (project_id, producer_run_id) REFERENCES runs (project_id, run_id),
   FOREIGN KEY (project_id, source_staging_handle_id)
@@ -544,6 +560,7 @@ Judgment basis storage:
 - `user_judgments.basis_json` stores the API `JudgmentBasis` snapshot when one exists.
 - `user_judgments.basis_status` stores the storage-owned compatibility state for the judgment basis: `current`, `stale`, `superseded`, or `legacy_unbound`.
 - Existing judgments without a basis are represented as `basis_json IS NULL` and `basis_status='legacy_unbound'`. They remain audit records and cannot satisfy current close, write, or sensitive-approval requirements.
+- `user_judgments.resolution_outcome` stores the selected option's machine-readable outcome when one exists. `status='resolved'` without a non-null `resolution_outcome` remains a historical audit record for authority-bearing requirements and cannot be interpreted as acceptance.
 
 Surface local access grants:
 
@@ -574,6 +591,12 @@ Staged artifact provenance:
 - `artifact_staging.created_by_surface_id` and `artifact_staging.created_by_surface_instance_id` are required and foreign-keyed to `surfaces`.
 - Staged-handle consumption must validate stored surface provenance, same project, same `Task`, expiration, lifecycle status, `sha256`, `size_bytes`, and `redaction_state` before commit.
 - The `artifact_staging` and `artifacts` unique indexes prevent one staged handle from promoting to multiple artifact rows.
+
+Persistent artifact integrity:
+
+- `artifacts.integrity_status='verified'` requires a non-empty `content_type`, a lowercase hexadecimal 64-character `sha256`, and nonnegative `size_bytes`.
+- `integrity_status='legacy_unknown'` preserves legacy rows with incomplete facts; typed Core code must not invent an empty hash, zero-byte size, or content type to make such rows look verified.
+- `integrity_status='corrupt'` records a known integrity failure. `legacy_unknown` or `corrupt` artifacts cannot satisfy evidence or close authority requirements.
 
 Migration records:
 

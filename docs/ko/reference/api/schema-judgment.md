@@ -12,6 +12,7 @@
 - `UserJudgmentContext`
 - `JudgmentBasis`
 - `UserJudgmentResolution`
+- `JudgmentResolutionOutcome`
 - `RecordUserJudgmentPayload`
 - `SensitiveActionScope`
 - `AcceptedRiskInput`
@@ -22,7 +23,7 @@
 - 사용자 소유 판단의 제품 의미와 비대체 규칙: [Core 모델](../core-model.md)
 - 판단 요청 메서드 동작: [사용자 소유 판단 요청 메서드](method-request-user-judgment.md)
 - 판단 기록 메서드 동작: [사용자 소유 판단 기록 메서드](method-record-user-judgment.md)
-- 지원되는 판단 종류 값, 상태 값, 표시 형식 값, 필요 판단 위치 값: [API 값 집합](schema-value-sets.md)
+- 지원되는 판단 종류 값, 상태 값, 표시 형식 값, 필요 판단 위치 값, 해결 결과 값: [API 값 집합](schema-value-sets.md)
 - 최종 수락이나 잔여 위험 수락의 닫기 효과: [Core 모델](../core-model.md), [Task 닫기 메서드](method-close-task.md)
 - 판단 누락, 미해결, 거절, 만료에 대한 공개 오류 의미: [API 오류 코드](error-codes.md)
 
@@ -53,14 +54,16 @@ UserJudgment:
   context: UserJudgmentContext
   affected_refs: StateRecordRef[]
   basis: JudgmentBasis | null
-  required_for: string
+  required_for: string[]
   resolution: UserJudgmentResolution | null
   expires_at: string | null
   created_at: string
   resolved_at: string | null
 ```
 
-`judgment_kind`, `status`, `presentation`, `required_for` 값은 [판단 값](schema-value-sets.md#judgment-values)이 담당합니다. 제품 의미는 [Core 모델의 사용자 소유 판단](../core-model.md#4-user-owned-judgment)이 담당합니다.
+`judgment_kind`, `status`, `presentation`, `required_for`, `resolution_outcome` 값은 [판단 값](schema-value-sets.md#judgment-values)이 담당합니다. 제품 의미는 [Core 모델의 사용자 소유 판단](../core-model.md#4-user-owned-judgment)이 담당합니다.
+
+`status=resolved`는 답변이 기록되었다는 뜻입니다. 그 자체로 승인, 수락, 권한 부여, 최종 수락, 잔여 위험 수락, 민감 승인, 취소 권한을 뜻하지 않습니다. 선택된 선택지에서 저장된 `resolution.resolution_outcome`만 기계 판독 가능한 결과를 지닐 수 있으며, 결과 부재를 절대 수락으로 해석하면 안 됩니다.
 
 `judgment_id`, `project_id`, `task_id`, `change_unit_id`는 불투명 식별자입니다. `question`은 자유 형식 표시 문자열입니다.
 
@@ -101,7 +104,7 @@ UserJudgmentCandidate:
   options: UserJudgmentOption[]
   context: UserJudgmentContext
   affected_refs: StateRecordRef[]
-  required_for: string
+  required_for: string[]
   expires_at: string | null
 ```
 
@@ -113,6 +116,7 @@ UserJudgmentOption:
   label: string
   description: string
   consequence: string
+  resolution_outcome: string
   is_default: boolean
 
 UserJudgmentContext:
@@ -125,12 +129,15 @@ UserJudgmentContext:
 
 `option_id`는 그 판단 안에서만 유효합니다. `label`, `description`, `consequence`, `summary`, `constraints` 항목은 자유 형식 표시 문자열입니다. 화면에 보이는 라벨은 표시 텍스트이며 기준 스키마 값이 아닙니다.
 
+`resolution_outcome`은 선택지의 기준 기계 판독 가능 결과입니다. 권한을 지니는 판단 종류에서 Core는 안정적인 선택지-결과 매핑을 검증하거나 제공합니다. 선택지 라벨이나 설명 문구가 기계 판독 가능 결과를 뒤집으면 안 됩니다. 권한을 지니는 프롬프트는 최소한 `accepted` 경로와 `rejected` 경로를 제공합니다. `deferred` 경로는 메서드나 의미 담당 문서가 문서화한 곳에서만 나타날 수 있습니다.
+
 <a id="resolution-and-answer-payload"></a>
 ## 해결과 답변 요청 본문
 
 ```yaml
 UserJudgmentResolution:
   selected_option_id: string
+  resolution_outcome: string
   answer: RecordUserJudgmentPayload
   note: string | null
   accepted_risks: AcceptedRiskInput[]
@@ -148,7 +155,14 @@ RecordUserJudgmentPayload:
 
 `selected_option_id`와 `note`는 요청 수준이자 해결 수준의 필드입니다. `selected_option_id`는 판단 선택지 집합 안에서만 유효합니다. `note`는 자유 형식 표시 문자열입니다.
 
+`resolution_outcome`은 선택된 `UserJudgmentOption.resolution_outcome`에서 복사됩니다. 선택된 선택지의 저장 결과가 기준입니다. `answer` 안의 결과, 결정, 수락 필드는 선택된 선택지와 일치해야 합니다. 자유 형식 답변 텍스트는 권한을 부여할 수 없습니다.
+
 `resolved_by_actor_kind`는 `ToolEnvelope.actor_kind`와 같은 제어 값 집합을 사용합니다. [행위자 값](schema-value-sets.md#actor-values)을 보세요.
+
+권한을 지니는 해결 규칙:
+- `judgment_kind=final_acceptance`, `residual_risk_acceptance`, `sensitive_approval`, `cancellation`은 현재 권한 요구사항을 만족하려면 선택된 선택지, `resolution_outcome=accepted`, `resolved_by_actor_kind=user`, 호환되는 현재 근거가 필요합니다.
+- `resolution_outcome=rejected`, `deferred`, `blocked`는 지속되는 사용자 결정이지만 어떤 것도 승인, 수락, 권한 부여, 면제, 닫기를 만들지 않습니다.
+- 기계 판독 가능한 `resolution_outcome`이 없는 기존 `resolved` 판단은 이력 감사 기록이며 현재 권한 요구사항을 만족할 수 없습니다.
 
 형태 규칙:
 - 선택된 `judgment_kind`에 맞는 판단별 요청 본문 분기 하나만 채웁니다.

@@ -270,7 +270,7 @@ expires_at: "<future-expiration-timestamp>"
 아티팩트가 증거로 쓰일 수 있으려면 저장소에 아래 항목이 있어야 합니다.
 
 - 아티팩트 저장소 아래 등록된 아티팩트 바이트 또는 안전한 메타데이터 알림.
-- `sha256`, `size_bytes`, `content_type` 같은 무결성 사실.
+- 무결성 사실인 `content_type`, `sha256`, `size_bytes`, `integrity_status`.
 - `redaction_state`.
 - 생산자와 보존 사실.
 - 가용성 `status`.
@@ -280,7 +280,7 @@ expires_at: "<future-expiration-timestamp>"
 
 허용되는 것:
 
-- 유효한 담당 연결이 있는 `artifacts.status=available` 행은 증거 범위 항목을 뒷받침할 수 있습니다.
+- `integrity_status=verified`이고 유효한 담당 연결이 있는 `artifacts.status=available` 행은 증거 범위 항목을 뒷받침할 수 있습니다.
 - 필수 범위 항목이 그 아티팩트를 주장에 연결하고 항목 상태가 `supported` 또는 `not_applicable`일 때만 `EvidenceSummary.status=sufficient`가 될 수 있습니다.
 
 필수 검증:
@@ -346,7 +346,31 @@ expires_at: "<future-expiration-timestamp>"
 
 - 아티팩트 저장소 또는 필요한 조회 경로가 현재 등록된 바이트 또는 안전한 메타데이터 알림을 제공할 수 없습니다.
 
-`artifacts.redaction_state`는 [API 값 집합](api/schema-value-sets.md#artifact-values)의 지원되는 `ArtifactRef.redaction_state` 값을 사용합니다. `sha256`, `size_bytes`, `content_type`은 저장된 바이트 비교와 가용성 처리를 위한 무결성 사실입니다.
+`artifacts.redaction_state`는 [API 값 집합](api/schema-value-sets.md#artifact-values)의 지원되는 `ArtifactRef.redaction_state` 값을 사용합니다. `sha256`, `size_bytes`, `content_type`, `integrity_status`는 저장된 바이트 비교와 가용성 처리를 위한 무결성 사실입니다.
+
+`ArtifactIntegrityStatus` 값:
+
+| 값 | 의미 |
+|---|---|
+| `verified` | 지속 아티팩트 사실이 완전하고 무결성 확인이 가능합니다. |
+| `legacy_unknown` | 보존된 아티팩트에 완전한 무결성 사실이 없습니다. |
+| `corrupt` | 저장된 바이트나 메타데이터가 지속 저장된 무결성 사실과 맞지 않는다고 알려져 있습니다. |
+
+지속 아티팩트 사실:
+
+- `content_type`
+- `sha256`
+- `size_bytes`
+- `integrity_status`
+
+규칙:
+
+- 새 지속 아티팩트는 `integrity_status=verified`를 사용해야 합니다.
+- `verified`는 비어 있지 않은 `content_type`, 유효한 소문자 16진수 SHA-256 문자열, 음수가 아닌 `size_bytes`를 요구합니다.
+- 빠진 사실을 빈 해시, 0바이트 크기, 만들어 낸 콘텐츠 타입으로 표현하면 안 됩니다.
+- 사실이 불완전한 레거시 아티팩트는 `legacy_unknown`으로 남습니다.
+- `legacy_unknown` 또는 `corrupt` 아티팩트는 증거 또는 닫기 권한 요구사항을 만족할 수 없습니다.
+- 상태 표시는 사실을 만들어 내지 않고 아티팩트 사실을 사용할 수 없거나 손상되었음을 보여 줄 수 있습니다.
 
 허용되는 것:
 
@@ -359,6 +383,7 @@ expires_at: "<future-expiration-timestamp>"
 - `blocked`를 아티팩트 가용성 상태로 취급하면 안 됩니다.
 - `sha256`, `size_bytes`, `content_type`을 보안 보장 주장으로 사용하면 안 됩니다.
 - `uri`를 호출자가 제공한 임의 파일시스템 경로로 취급하면 안 됩니다.
+- `legacy_unknown` 또는 `corrupt`를 증거 자격이 있는 무결성 상태로 취급하면 안 됩니다.
 - 원시 비밀값, 토큰, 민감한 전체 로그는 증거로 쓰일 아티팩트 바이트로 저장하면 안 됩니다.
 
 담당 문서 링크:

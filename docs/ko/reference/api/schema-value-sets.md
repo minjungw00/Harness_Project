@@ -12,7 +12,7 @@
 - API `response_kind`와 `effect_kind` 값
 - 지원되는 `access_class` 값
 - 공유 상태 참조에서 쓰는 기록/참조 판별 값
-- 지원되는 생명주기, 닫기 상태, 출처 종류, 쓰기 결정 범주, 판단 종류, 표시 형식, 필요 판단 위치, 아티팩트 가림 처리, 아티팩트 가용성 표시, `ValidatorResult.status`, `ValidatorResult.severity`, 보장 표시 등 API 값 집합
+- 지원되는 생명주기, 닫기 상태, 출처 종류, 쓰기 결정 범주, 판단 종류, 표시 형식, 필요 판단 위치, 판단 해결 결과, 아티팩트 가림 처리, 아티팩트 무결성, 아티팩트 가용성 표시, `ValidatorResult.status`, `ValidatorResult.severity`, 보장 표시 등 API 값 집합
 - 지원되는 `change_unit.operation` 값
 - 지원되는 공개 `ValidatorResult.validator_id` 값의 경계
 - 메서드 범위 사유 코드와 불투명 분류 문자열에 대한 값 집합 경계
@@ -423,6 +423,16 @@ blocked
 unusable
 ```
 
+`ArtifactIntegrityStatus`는 아래 값을 사용합니다.
+
+```text
+verified
+legacy_unknown
+corrupt
+```
+
+`verified`는 지속 아티팩트 사실이 무결성을 확인할 수 있을 만큼 완전하다는 뜻입니다. `legacy_unknown`은 보존된 아티팩트 메타데이터에 검증에 필요한 사실이 완전하지 않다는 뜻입니다. `corrupt`는 저장된 바이트나 메타데이터가 지속 저장된 무결성 사실과 맞지 않는다고 알려진 상태입니다.
+
 아티팩트 저장소 생명주기와 본문 읽기 자격은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
 <a id="judgment-values"></a>
@@ -446,15 +456,16 @@ cancellation
 short
 ```
 
-`required_for`는 아래 값을 사용합니다.
+`required_for`는 아래 작업 대상 값을 사용합니다.
 
 ```text
-next_action
-write
-run
-close
-acceptance
-risk
+scope_update
+prepare_write
+record_run
+close_complete
+close_cancel
+close_supersede
+informational
 ```
 
 `UserJudgment.status`는 아래 값을 사용합니다.
@@ -462,12 +473,20 @@ risk
 ```text
 pending
 resolved
+stale
+superseded
+expired
+```
+
+상태 값은 판단 생명주기를 설명합니다. `resolved`는 답변이 기록되었다는 뜻이며, 그 자체로 승인, 수락, 권한 부여를 뜻하지 않습니다.
+
+`JudgmentResolutionOutcome`은 아래 값을 사용합니다.
+
+```text
+accepted
 rejected
 deferred
 blocked
-stale
-superseded
-incompatible
 ```
 
 `JudgmentBasis.compatibility_status`는 아래 값을 사용합니다.
@@ -485,7 +504,17 @@ legacy_unbound
 - `superseded`는 대기 판단이 더 새 질문이나 근거로 대체되어 성공적으로 답할 수 없다는 뜻입니다.
 - `legacy_unbound`는 보존된 판단에 상태 근거가 없어서 현재 닫기, 쓰기, 민감 승인 요구사항을 만족할 수 없다는 뜻입니다.
 
-`UserJudgmentOption.option_id`의 범위는 그 판단 안으로 제한되며 전역 값 집합이 아닙니다. 화면에 보이는 선택지 라벨은 기준 값이 아니라 표시 텍스트일 뿐입니다.
+해결 결과 의미:
+- `accepted`는 판단 종류, 근거, 행위자, 선택된 선택지가 모두 호환될 때 권한을 지니는 판단 요구사항을 만족할 수 있는 유일한 결과입니다.
+- `rejected`, `deferred`, `blocked`는 지속되는 사용자 결정이지만 어떤 것도 승인, 수락, 권한 부여, 면제, 닫기를 만들지 않습니다.
+- 기계 판독 가능한 결과가 없으면 절대 `accepted`로 해석하면 안 됩니다.
+
+대기 판단 관련성:
+- 대기 판단은 현재 `required_for` 대상이 해당 작업을 포함하고, `judgment_kind`가 그 작업과 관련 있으며, `Task`, Change Unit, 영향받는 참조, 근거가 호환될 때만 작업을 차단합니다.
+- 민감 승인 질문은 민감 동작 범위가 현재 민감 동작 요구사항과 겹칠 때만 관련됩니다.
+- `informational` 판단은 감사 또는 표시 맥락이며 그 자체로 쓰기, 실행 기록, 닫기를 차단하지 않습니다.
+
+`UserJudgmentOption.option_id`의 범위는 그 판단 안으로 제한되며 전역 값 집합이 아닙니다. 화면에 보이는 선택지 라벨은 기준 값이 아니라 표시 텍스트일 뿐입니다. `UserJudgmentOption.resolution_outcome`은 `JudgmentResolutionOutcome`을 사용합니다. 선택지 라벨과 설명 문구가 기계 판독 가능한 결과를 뒤집으면 안 됩니다.
 
 ## 오류 세부사항 보조 값
 

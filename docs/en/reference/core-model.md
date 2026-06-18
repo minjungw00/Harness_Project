@@ -44,6 +44,7 @@ User-owned judgment stays user-owned.
 
 - Core must ask for or preserve a user-owned judgment instead of inferring it from agent confidence, broad approval, evidence, display text, or a generated summary.
 - One user answer can satisfy multiple authority needs only when those distinct questions were made visible and the recorded judgment remains compatible with each affected object, scope, consequence, and close or write impact.
+- A recorded response is not automatically approval. Judgment lifecycle status and resolution outcome are separate: `status=resolved` means an answer was recorded, while only `resolution_outcome=accepted` can satisfy an authority-bearing requirement.
 
 `Write Authorization` is narrow.
 
@@ -187,18 +188,29 @@ Residual-risk acceptance is the user's acceptance of a named visible residual ri
 
 Cancellation is a user-owned decision to stop the `Task` without a successful completed result.
 
+Authority-bearing judgment kinds are final acceptance, residual-risk acceptance, sensitive approval, and cancellation. These judgments require a selected option, a stored `resolution_outcome=accepted`, `resolved_by_actor_kind=user`, and a compatible current basis. Rejected, deferred, or blocked outcomes remain durable user decisions but do not approve, accept, authorize, waive, or close anything. Existing resolved judgments without a machine-readable outcome are historical audit records and cannot satisfy current authority requirements.
+
+For authority-bearing prompts, Core validates or supplies canonical option-to-outcome mappings. Option labels, explanatory text, free-form notes, or answer-payload prose must not invert the selected option's machine-readable outcome. At minimum, an authority-bearing prompt provides an accepted path and a rejected path; a deferred path may be supported only where an owner documents it.
+
 Core creates a basis snapshot for each stored judgment from current state. The basis ties the judgment to the current `Task`, Change Unit when applicable, `scope_revision`, close-basis revision when applicable, baseline, result references, named residual-risk IDs, sensitive-action scope when applicable, and creation state version. Callers do not submit scope revisions or close-basis revisions.
 
 Judgment compatibility:
 
 - Final acceptance must match the current `Task`, current Change Unit, `scope_revision`, `close_basis_revision`, baseline, and result references.
 - Residual-risk acceptance must match the current `close_basis_revision` and exact current `risk_id` values.
-- Sensitive-action approval must match the current `scope_revision`, current Change Unit, operation, normalized paths, sensitive categories, and baseline.
+- Sensitive-action approval must match the current `scope_revision`, current Change Unit, operation, normalized paths, sensitive categories, baseline, and Change Unit-linked sensitive action requirement.
+- Cancellation authority must match the current `Task`, current scope revision, current Change Unit, and user actor. Rejected, deferred, stale, superseded, legacy-unbound, or non-user cancellation judgments do not permit cancellation.
 - A scope decision records the user's decision but does not mutate current scope by itself.
 - A stale pending judgment cannot be answered successfully.
 - Scope changes and Run changes do not delete historical judgments; they make incompatible judgments ineligible for current close, write, or sensitive-approval requirements.
 
-Legacy judgments without a basis are preserved for audit as `legacy_unbound`. They cannot satisfy current close, write, or sensitive-approval requirements. Pending judgments may become `superseded`; resolved judgments may remain stored while becoming `stale`.
+Legacy judgments without a basis are preserved for audit as `legacy_unbound`. They cannot satisfy current close, write, sensitive-approval, cancellation, final-acceptance, or residual-risk-acceptance requirements. Pending judgments may become `superseded`; resolved judgments may remain stored while becoming `stale`.
+
+Pending-judgment relevance:
+
+- A pending judgment blocks an operation only when it is current and pending, its `required_for` operation target includes that operation, its judgment kind is relevant to that operation, and its `Task`, Change Unit, affected refs, and basis are compatible.
+- Sensitive approval questions block only when they overlap the current sensitive action requirement.
+- Informational judgments do not block write, Run recording, or close by themselves.
 
 Agent latitude:
 
@@ -219,6 +231,10 @@ Evidence does not substitute for user judgment.
 User judgment does not substitute for evidence.
 
 - Final acceptance, residual-risk acceptance, sensitive-action approval, and broad approval do not create missing evidence, prove correctness, satisfy separate verification, or make a close blocker disappear.
+
+Recorded judgment status does not substitute for accepted outcome.
+
+- `status=resolved` records that an answer exists. It does not by itself create final acceptance, residual-risk acceptance, sensitive approval, cancellation authority, or any other approval.
 
 Sensitive-action approval does not substitute for `Write Authorization`.
 
@@ -259,7 +275,7 @@ Authority checks summarize whether a Core action or close claim can proceed hone
 | Check area | Authority meaning |
 |---|---|
 | Scope | The requested work, write, evidence claim, or close claim must fit the current `Task` scope and current Change Unit. |
-| User-owned judgment | Required product, technical, scope, sensitive-action, final-acceptance, residual-risk, or cancellation judgment must be resolved by the user and compatible with the affected object and consequence. |
+| User-owned judgment | Required product, technical, scope, sensitive-action, final-acceptance, residual-risk, or cancellation judgment must be resolved by the user with the required stored outcome and compatible with the affected object and consequence. |
 | Sensitive action | A named sensitive step must have its own compatible user approval when that approval is required. |
 | Write compatibility | A product-file write attempt must be compatible with current scope and a consumable `Write Authorization`. |
 | Run and evidence | Recorded Runs, evidence summaries, and evidence-eligible artifacts must support the claims they are used for. |
@@ -347,6 +363,16 @@ Close readiness considers:
 
 Close readiness uses `CurrentCloseBasis` as the current close input. It does not use a terminal close summary as the current pre-close basis.
 
+Close-basis authority:
+
+- Caller-supplied close-basis result and risk refs must be accepted only from owner-allowed result/evidence kinds and must exist, belong to the same project and `Task`, and be canonicalized by Core.
+- Baseline allowed caller-supplied result/evidence kinds are Run, Artifact, EvidenceSummary, and ChangeUnit unless an owner explicitly adds another kind.
+- ProjectState, `Write Authorization`, UserJudgment, Blocker, TaskEvent, LocalSurfaceRegistration, and Task are not caller-supplied result refs unless an owner explicitly adds them.
+- Artifact refs used for close evidence must be linked to the `Task` and have verified integrity. Evidence refs must identify the current `Task` evidence summary. Run refs must identify a compatible Run and Change Unit.
+- Core stores canonical refs and never treats caller-supplied state-version metadata as authority. Core may add the current Run, current Change Unit, and current EvidenceSummary refs.
+- Sensitive action requirements in the current close basis are derived by Core from committed Runs and consumed `Write Authorization` records. Category-only caller input cannot establish or erase a requirement.
+- Legacy close bases with non-empty category-only sensitive data but no reconstructable action scope cannot satisfy complete close.
+
 The current close basis changes through owner-defined transitions:
 
 - A committed `record_run` increments `close_basis_revision` and either establishes a new current close basis from its close assessment or records that no current close basis is established.
@@ -354,6 +380,12 @@ The current close basis changes through owner-defined transitions:
 - Recording user-owned judgment may make a requirement satisfied, stale, or rejected, but it does not increment `scope_revision` or `close_basis_revision`.
 
 Residual-risk identity for close readiness uses opaque `risk_id` values from the current close basis. Risk summary or consequence text can explain the risk to the user, but text matching is not authority.
+
+Cancellation path:
+
+- `intent=cancel` requires a current accepted cancellation judgment bound to the `Task`, current scope revision, current Change Unit, and user actor.
+- Cancellation does not require completion-only evidence, final acceptance, or residual-risk acceptance.
+- Missing or incompatible cancellation authority is a close-readiness blocker for cancellation, not fabricated acceptance.
 
 Close readiness is not:
 
