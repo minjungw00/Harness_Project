@@ -8,7 +8,7 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        if let Some(envelope_task_id) = &request.envelope.task_id {
+        if let Some(envelope_task_id) = request.envelope.task_id.as_ref() {
             if envelope_task_id != &request.task_id {
                 return validation_rejected(
                     request.envelope.dry_run,
@@ -113,7 +113,7 @@ impl CoreService {
                 sha256: stage_input.sha256.clone(),
                 size_bytes: stage_input.size_bytes,
                 redaction_state: redaction_state_value(request.redaction_state).to_owned(),
-                relation_hint: request.relation_hint,
+                relation_hint: request.relation_hint.into_option(),
                 payload_kind: stage_input.payload_kind,
                 safe_bytes_or_notice: stage_input.safe_bytes,
             }) {
@@ -227,7 +227,7 @@ fn validate_stage_artifact_input(
     }
 
     let size_bytes = safe_bytes.len() as u64;
-    if let Some(expected_size_bytes) = request.expected_size_bytes {
+    if let Some(expected_size_bytes) = request.expected_size_bytes.as_ref().copied() {
         if expected_size_bytes != size_bytes {
             errors.push(stage_validation_error(
                 "expected_size_bytes",
@@ -236,7 +236,7 @@ fn validate_stage_artifact_input(
         }
     }
     let sha256 = sha256_string(&safe_bytes);
-    if let Some(expected_sha256) = &request.expected_sha256 {
+    if let Some(expected_sha256) = request.expected_sha256.as_ref() {
         if expected_sha256.trim().is_empty() {
             errors.push(stage_validation_error(
                 "expected_sha256",
@@ -264,12 +264,12 @@ fn validate_stage_artifact_input(
 
 fn validate_stage_envelope(envelope: &ToolEnvelope, errors: &mut Vec<harness_types::ToolError>) {
     validate_stage_text_field("project_id", envelope.project_id.as_str(), errors);
-    if let Some(task_id) = &envelope.task_id {
+    if let Some(task_id) = envelope.task_id.as_ref() {
         validate_stage_text_field("envelope.task_id", task_id.as_str(), errors);
     }
     validate_stage_text_field("surface_id", envelope.surface_id.as_str(), errors);
     validate_stage_text_field("request_id", envelope.request_id.as_str(), errors);
-    if let Some(idempotency_key) = &envelope.idempotency_key {
+    if let Some(idempotency_key) = envelope.idempotency_key.as_ref() {
         validate_stage_text_field("idempotency_key", idempotency_key.as_str(), errors);
     }
 }

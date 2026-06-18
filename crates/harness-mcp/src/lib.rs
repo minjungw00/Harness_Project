@@ -959,6 +959,86 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn missing_required_nullable_param_is_rejected_before_core() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({
+            "access_class": "artifact_registration",
+            "supported_access_classes": ["artifact_registration"],
+            "manual_artifact_attachment_supported": true
+        }))?;
+        let task_id = create_task(
+            &harness,
+            "req_stage_missing_required_task",
+            "idem_stage_missing_required_task",
+        )?;
+        let adapter = harness.adapter();
+        let mut params = serde_json::to_value(stage_artifact_request(
+            "req_stage_missing_required_nullable",
+            &task_id,
+        ))?;
+        params
+            .as_object_mut()
+            .expect("params should be an object")
+            .remove("expected_sha256");
+        let before = harness.counts()?;
+
+        let error = adapter
+            .call_tool("harness.stage_artifact", params)
+            .expect_err("missing required nullable field should be invalid params");
+
+        assert!(matches!(error, McpAdapterError::InvalidParams { .. }));
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn replay_hash_uses_decoded_typed_request_not_raw_property_order() -> Result<(), Box<dyn Error>>
+    {
+        let harness = TestHarness::new(json!({
+            "access_class": "core_mutation",
+            "supported_access_classes": ["core_mutation"]
+        }))?;
+        let adapter = harness.adapter();
+        let first = serde_json::to_value(intake_request(
+            "req_intake_order_replay",
+            false,
+            Some("idem_intake_order_replay"),
+        ))?;
+        let second: Value = serde_json::from_str(
+            r#"{
+                "initial_context_refs": [],
+                "initial_scope": {
+                    "acceptance_criteria": ["Adapter calls return Core responses."],
+                    "non_goals": ["Changing Core method semantics."],
+                    "boundary": "Local MCP adapter behavior."
+                },
+                "resume_policy": "create_new",
+                "requested_mode": "work",
+                "plain_language_request": "Prepare a local MCP adapter test task.",
+                "envelope": {
+                    "locale": "en-US",
+                    "dry_run": false,
+                    "expected_state_version": 0,
+                    "idempotency_key": "idem_intake_order_replay",
+                    "request_id": "req_intake_order_replay",
+                    "surface_id": "surface_mcp",
+                    "actor_kind": "agent",
+                    "task_id": null,
+                    "project_id": "project_mcp"
+                }
+            }"#,
+        )?;
+
+        let first = adapter.call_tool("harness.intake", first)?;
+        let after_first = harness.counts()?;
+        let second = adapter.call_tool("harness.intake", second)?;
+
+        assert!(second.replayed);
+        assert_eq!(second.response_json, first.response_json);
+        assert_eq!(harness.counts()?, after_first);
+        Ok(())
+    }
+
     fn assert_required_fields(tool_name: &str, schema: &Value) {
         let required = schema["required"]
             .as_array()
@@ -1160,9 +1240,9 @@ mod tests {
             content_type: "text/plain".to_owned(),
             redaction_state: RedactionState::None,
             safe_bytes_or_notice: "Adapter staging test note.".to_owned(),
-            expected_sha256: None,
-            expected_size_bytes: None,
-            relation_hint: Some("adapter_test".to_owned()),
+            expected_sha256: None.into(),
+            expected_size_bytes: None.into(),
+            relation_hint: Some("adapter_test".to_owned()).into(),
         }
     }
 
@@ -1175,14 +1255,16 @@ mod tests {
     ) -> ToolEnvelope {
         ToolEnvelope {
             project_id: ProjectId::new(PROJECT_ID),
-            task_id: task_id.map(harness_types::TaskId::new),
+            task_id: task_id.map(harness_types::TaskId::new).into(),
             actor_kind: ActorKind::Agent,
             surface_id: SurfaceId::new(SURFACE_ID),
             request_id: harness_types::RequestId::new(request_id),
-            idempotency_key: idempotency_key.map(harness_types::IdempotencyKey::new),
-            expected_state_version,
+            idempotency_key: idempotency_key
+                .map(harness_types::IdempotencyKey::new)
+                .into(),
+            expected_state_version: expected_state_version.into(),
             dry_run,
-            locale: Some("en-US".to_owned()),
+            locale: Some("en-US".to_owned()).into(),
         }
     }
 

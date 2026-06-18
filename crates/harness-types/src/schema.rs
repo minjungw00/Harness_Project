@@ -1,5 +1,7 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use std::{borrow::Cow, ops::Deref};
+
+use schemars::{gen::SchemaGenerator, schema::Schema, JsonSchema};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value};
 
 use crate::ids::{
@@ -19,19 +21,167 @@ use crate::values::{
 /// JSON object used where an owner document defines a field as `object`.
 pub type JsonObject = Map<String, Value>;
 
+/// Required public field that may contain JSON `null`.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct RequiredNullable<T>(Option<T>);
+
+impl<T> RequiredNullable<T> {
+    /// Creates a required-nullable wrapper from an optional semantic value.
+    pub fn new(value: Option<T>) -> Self {
+        Self(value)
+    }
+
+    /// Creates a present field carrying a non-null value.
+    pub fn some(value: T) -> Self {
+        Self(Some(value))
+    }
+
+    /// Creates a present field carrying JSON `null`.
+    pub fn null() -> Self {
+        Self(None)
+    }
+
+    /// Returns the semantic optional value by reference.
+    pub fn as_ref(&self) -> Option<&T> {
+        self.0.as_ref()
+    }
+
+    /// Returns the semantic optional value by mutable reference.
+    pub fn as_mut(&mut self) -> Option<&mut T> {
+        self.0.as_mut()
+    }
+
+    /// Returns true when the present field carries a non-null value.
+    pub fn is_some(&self) -> bool {
+        self.0.is_some()
+    }
+
+    /// Returns true when the present field carries JSON `null`.
+    pub fn is_none(&self) -> bool {
+        self.0.is_none()
+    }
+
+    /// Consumes the wrapper and returns the semantic optional value.
+    pub fn into_option(self) -> Option<T> {
+        self.0
+    }
+
+    /// Maps a non-null value to another value.
+    pub fn map<U, F>(self, f: F) -> Option<U>
+    where
+        F: FnOnce(T) -> U,
+    {
+        self.0.map(f)
+    }
+
+    /// Returns this value or computes a fallback.
+    pub fn or_else<F>(self, f: F) -> Option<T>
+    where
+        F: FnOnce() -> Option<T>,
+    {
+        self.0.or_else(f)
+    }
+
+    /// Returns the non-null value or computes a fallback.
+    pub fn unwrap_or_else<F>(self, f: F) -> T
+    where
+        F: FnOnce() -> T,
+    {
+        self.0.unwrap_or_else(f)
+    }
+
+    /// Returns the non-null value or panics with the provided message.
+    pub fn expect(self, message: &str) -> T {
+        self.0.expect(message)
+    }
+}
+
+impl<T> From<Option<T>> for RequiredNullable<T> {
+    fn from(value: Option<T>) -> Self {
+        Self::new(value)
+    }
+}
+
+impl<T> From<T> for RequiredNullable<T> {
+    fn from(value: T) -> Self {
+        Self::some(value)
+    }
+}
+
+impl<T> Deref for RequiredNullable<T> {
+    type Target = Option<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> Serialize for RequiredNullable<T>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+impl<'de, T> Deserialize<'de> for RequiredNullable<T>
+where
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = Value::deserialize(deserializer)?;
+        if value.is_null() {
+            Ok(Self(None))
+        } else {
+            T::deserialize(value)
+                .map(Some)
+                .map(Self)
+                .map_err(serde::de::Error::custom)
+        }
+    }
+}
+
+impl<T> JsonSchema for RequiredNullable<T>
+where
+    T: JsonSchema,
+{
+    fn is_referenceable() -> bool {
+        false
+    }
+
+    fn schema_name() -> String {
+        format!("RequiredNullable_{}", T::schema_name())
+    }
+
+    fn schema_id() -> Cow<'static, str> {
+        Cow::Owned(format!("RequiredNullable<{}>", T::schema_id()))
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        Option::<T>::json_schema(generator)
+    }
+}
+
 /// Common public-method request envelope.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ToolEnvelope {
     pub project_id: ProjectId,
-    pub task_id: Option<TaskId>,
+    pub task_id: RequiredNullable<TaskId>,
     pub actor_kind: ActorKind,
     pub surface_id: SurfaceId,
     pub request_id: RequestId,
-    pub idempotency_key: Option<IdempotencyKey>,
-    pub expected_state_version: Option<u64>,
+    pub idempotency_key: RequiredNullable<IdempotencyKey>,
+    pub expected_state_version: RequiredNullable<u64>,
     pub dry_run: bool,
-    pub locale: Option<String>,
+    pub locale: RequiredNullable<String>,
 }
 
 /// Common result metadata carried by each concrete response branch.
@@ -118,8 +268,8 @@ pub struct StateRecordRef {
     pub record_kind: StateRecordKind,
     pub record_id: RecordId,
     pub project_id: ProjectId,
-    pub task_id: Option<TaskId>,
-    pub state_version: Option<u64>,
+    pub task_id: RequiredNullable<TaskId>,
+    pub state_version: RequiredNullable<u64>,
 }
 
 /// Compact current-position state returned by public methods.
@@ -277,7 +427,7 @@ pub struct ObservedChanges {
     pub changed_paths: Vec<String>,
     pub product_file_write_observed: bool,
     pub sensitive_categories: Vec<String>,
-    pub baseline_ref: Option<BaselineRef>,
+    pub baseline_ref: RequiredNullable<BaselineRef>,
 }
 
 /// Close-readiness blocker data shape.
@@ -321,10 +471,10 @@ pub struct ArtifactRef {
     pub size_bytes: u64,
     pub redaction_state: RedactionState,
     pub availability: ArtifactAvailability,
-    pub created_by_run_ref: Option<StateRecordRef>,
-    pub created_by_surface_id: Option<SurfaceId>,
-    pub created_by_surface_instance_id: Option<SurfaceInstanceId>,
-    pub storage_ref: Option<StorageRef>,
+    pub created_by_run_ref: RequiredNullable<StateRecordRef>,
+    pub created_by_surface_id: RequiredNullable<SurfaceId>,
+    pub created_by_surface_instance_id: RequiredNullable<SurfaceInstanceId>,
+    pub storage_ref: RequiredNullable<StorageRef>,
 }
 
 /// Transient staged-artifact handle shape.
@@ -350,13 +500,13 @@ pub struct StagedArtifactHandle {
 pub struct ArtifactInput {
     pub artifact_input_id: ArtifactInputId,
     pub source_kind: ArtifactInputSourceKind,
-    pub staged_artifact_handle: Option<StagedArtifactHandle>,
-    pub existing_artifact_ref: Option<ArtifactRef>,
-    pub relation_hint: Option<String>,
-    pub claim: Option<String>,
-    pub expected_sha256: Option<String>,
-    pub expected_size_bytes: Option<u64>,
-    pub redaction_state: Option<RedactionState>,
+    pub staged_artifact_handle: RequiredNullable<StagedArtifactHandle>,
+    pub existing_artifact_ref: RequiredNullable<ArtifactRef>,
+    pub relation_hint: RequiredNullable<String>,
+    pub claim: RequiredNullable<String>,
+    pub expected_sha256: RequiredNullable<String>,
+    pub expected_size_bytes: RequiredNullable<u64>,
+    pub redaction_state: RequiredNullable<RedactionState>,
 }
 
 /// Durable user-owned judgment shape.
@@ -429,13 +579,13 @@ pub struct UserJudgmentResolution {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RecordUserJudgmentPayload {
-    pub product_decision: Option<JsonObject>,
-    pub technical_decision: Option<JsonObject>,
-    pub scope_decision: Option<JsonObject>,
-    pub sensitive_action_scope: Option<SensitiveActionScope>,
-    pub final_acceptance: Option<JsonObject>,
-    pub residual_risk_acceptance: Option<JsonObject>,
-    pub cancellation: Option<JsonObject>,
+    pub product_decision: RequiredNullable<JsonObject>,
+    pub technical_decision: RequiredNullable<JsonObject>,
+    pub scope_decision: RequiredNullable<JsonObject>,
+    pub sensitive_action_scope: RequiredNullable<SensitiveActionScope>,
+    pub final_acceptance: RequiredNullable<JsonObject>,
+    pub residual_risk_acceptance: RequiredNullable<JsonObject>,
+    pub cancellation: RequiredNullable<JsonObject>,
 }
 
 /// Sensitive-action approval context shape.
@@ -446,18 +596,18 @@ pub struct SensitiveActionScope {
     pub description: String,
     pub intended_paths: Vec<String>,
     pub sensitive_categories: Vec<String>,
-    pub command_or_tool_summary: Option<String>,
-    pub network_or_host_summary: Option<String>,
-    pub secret_or_credential_summary: Option<String>,
+    pub command_or_tool_summary: RequiredNullable<String>,
+    pub network_or_host_summary: RequiredNullable<String>,
+    pub secret_or_credential_summary: RequiredNullable<String>,
     pub capability_claim: String,
-    pub expires_at: Option<String>,
+    pub expires_at: RequiredNullable<String>,
 }
 
 /// Visible residual-risk input shape.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct AcceptedRiskInput {
-    pub risk_id: Option<RiskId>,
+    pub risk_id: RequiredNullable<RiskId>,
     pub summary: String,
     pub consequence: String,
     pub related_refs: Vec<StateRecordRef>,

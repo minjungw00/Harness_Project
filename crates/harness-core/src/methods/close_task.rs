@@ -8,7 +8,7 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        if let Some(envelope_task_id) = &request.envelope.task_id {
+        if let Some(envelope_task_id) = request.envelope.task_id.as_ref() {
             if envelope_task_id != &request.task_id {
                 return validation_rejected(
                     request.envelope.dry_run,
@@ -159,7 +159,7 @@ fn validate_close_intent_fields(
         }
         CloseIntent::Complete => {
             if !matches!(
-                request.close_reason,
+                request.close_reason.as_ref(),
                 Some(CloseReason::CompletedSelfChecked | CloseReason::CompletedWithRiskAccepted)
             ) {
                 return invalid(
@@ -175,7 +175,7 @@ fn validate_close_intent_fields(
             }
         }
         CloseIntent::Cancel => {
-            if request.close_reason != Some(CloseReason::Cancelled) {
+            if request.close_reason.as_ref() != Some(&CloseReason::Cancelled) {
                 return invalid(
                     "close_reason",
                     "intent=cancel requires close_reason=cancelled",
@@ -189,13 +189,13 @@ fn validate_close_intent_fields(
             }
         }
         CloseIntent::Supersede => {
-            if request.close_reason != Some(CloseReason::Superseded) {
+            if request.close_reason.as_ref() != Some(&CloseReason::Superseded) {
                 return invalid(
                     "close_reason",
                     "intent=supersede requires close_reason=superseded",
                 );
             }
-            let Some(superseding_task_id) = &request.superseding_task_id else {
+            let Some(superseding_task_id) = request.superseding_task_id.as_ref() else {
                 return invalid(
                     "superseding_task_id",
                     "intent=supersede requires superseding_task_id",
@@ -338,7 +338,7 @@ fn plan_close_task(
             closed_at: closed_at.clone(),
         }));
         if request.intent == CloseIntent::Supersede {
-            if let Some(superseding_task_id) = &request.superseding_task_id {
+            if let Some(superseding_task_id) = request.superseding_task_id.as_ref() {
                 storage_mutations.push(CoreStorageMutation::SetActiveTask {
                     task_id: superseding_task_id.as_str().to_owned(),
                 });
@@ -439,6 +439,7 @@ fn terminal_close_summary_json(
         serde_json::to_value(
             request
                 .close_reason
+                .as_ref()
                 .expect("validated terminal close_reason is present"),
         )?,
     );

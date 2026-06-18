@@ -9,8 +9,8 @@ use crate::ids::{
 use crate::schema::{
     AcceptedRiskInput, ArtifactInput, ArtifactRef, CloseReadinessBlocker, EvidenceCoverageItem,
     EvidenceSummary, GuaranteeDisplay, JsonObject, NextActionSummary, ObservedChanges,
-    RecordUserJudgmentPayload, RunSummary, StagedArtifactHandle, StateRecordRef, StateSummary,
-    ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
+    RecordUserJudgmentPayload, RequiredNullable, RunSummary, StagedArtifactHandle, StateRecordRef,
+    StateSummary, ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
     UserJudgmentContext, UserJudgmentOption, WriteAuthorizationSummary, WriteDecisionReason,
 };
 use crate::values::{
@@ -102,13 +102,13 @@ pub struct IntakeResult {
 pub struct UpdateScopeRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
-    pub goal_summary: Option<String>,
-    pub scope_update: Option<ScopeUpdate>,
-    pub scope_boundary: Option<String>,
-    pub non_goals: Option<Vec<String>>,
-    pub acceptance_criteria: Option<Vec<String>>,
-    pub autonomy_boundary: Option<String>,
-    pub baseline_ref: Option<BaselineRef>,
+    pub goal_summary: RequiredNullable<String>,
+    pub scope_update: RequiredNullable<ScopeUpdate>,
+    pub scope_boundary: RequiredNullable<String>,
+    pub non_goals: RequiredNullable<Vec<String>>,
+    pub acceptance_criteria: RequiredNullable<Vec<String>>,
+    pub autonomy_boundary: RequiredNullable<String>,
+    pub baseline_ref: RequiredNullable<BaselineRef>,
     pub change_unit: ChangeUnitUpdate,
     pub related_scope_decision_refs: Vec<StateRecordRef>,
 }
@@ -201,8 +201,8 @@ pub struct StatusResult {
 #[serde(deny_unknown_fields)]
 pub struct PrepareWriteRequest {
     pub envelope: ToolEnvelope,
-    pub task_id: Option<TaskId>,
-    pub change_unit_id: Option<ChangeUnitId>,
+    pub task_id: RequiredNullable<TaskId>,
+    pub change_unit_id: RequiredNullable<ChangeUnitId>,
     pub intended_operation: String,
     pub intended_paths: Vec<String>,
     pub product_file_write_intended: bool,
@@ -245,9 +245,9 @@ pub struct StageArtifactRequest {
     pub content_type: String,
     pub redaction_state: RedactionState,
     pub safe_bytes_or_notice: String,
-    pub expected_sha256: Option<String>,
-    pub expected_size_bytes: Option<u64>,
-    pub relation_hint: Option<String>,
+    pub expected_sha256: RequiredNullable<String>,
+    pub expected_size_bytes: RequiredNullable<u64>,
+    pub relation_hint: RequiredNullable<String>,
 }
 
 impl MethodAccessClass for StageArtifactRequest {
@@ -276,9 +276,9 @@ pub struct RecordRunRequest {
     pub task_id: TaskId,
     pub change_unit_id: ChangeUnitId,
     pub kind: RunKind,
-    pub run_id: Option<RunId>,
+    pub run_id: RequiredNullable<RunId>,
     pub baseline_ref: BaselineRef,
-    pub write_authorization_id: Option<WriteAuthorizationId>,
+    pub write_authorization_id: RequiredNullable<WriteAuthorizationId>,
     pub summary: String,
     pub observed_changes: ObservedChanges,
     pub artifact_inputs: Vec<ArtifactInput>,
@@ -312,7 +312,7 @@ pub struct RecordRunResult {
 pub struct RequestUserJudgmentRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
-    pub change_unit_id: Option<ChangeUnitId>,
+    pub change_unit_id: RequiredNullable<ChangeUnitId>,
     pub judgment_kind: JudgmentKind,
     pub presentation: JudgmentPresentation,
     pub question: String,
@@ -320,7 +320,7 @@ pub struct RequestUserJudgmentRequest {
     pub context: UserJudgmentContext,
     pub affected_refs: Vec<StateRecordRef>,
     pub required_for: JudgmentRequiredFor,
-    pub expires_at: Option<String>,
+    pub expires_at: RequiredNullable<String>,
 }
 
 impl MethodAccessClass for RequestUserJudgmentRequest {
@@ -352,7 +352,7 @@ pub struct RecordUserJudgmentRequest {
     pub judgment_kind: JudgmentKind,
     pub selected_option_id: UserJudgmentOptionId,
     pub answer: RecordUserJudgmentPayload,
-    pub note: Option<String>,
+    pub note: RequiredNullable<String>,
     pub accepted_risks: Vec<AcceptedRiskInput>,
 }
 
@@ -384,9 +384,9 @@ pub struct CloseTaskRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
     pub intent: CloseIntent,
-    pub close_reason: Option<CloseReason>,
-    pub superseding_task_id: Option<TaskId>,
-    pub user_note: Option<String>,
+    pub close_reason: RequiredNullable<CloseReason>,
+    pub superseding_task_id: RequiredNullable<TaskId>,
+    pub user_note: RequiredNullable<String>,
 }
 
 impl MethodAccessClass for CloseTaskRequest {
@@ -432,33 +432,5 @@ pub fn public_request_schema(method_name: &str) -> Option<Value> {
 }
 
 fn request_schema<T: JsonSchema>() -> Value {
-    let mut schema = serde_json::to_value(schema_for!(T)).expect("request schema should serialize");
-    require_declared_properties(&mut schema);
-    schema
-}
-
-fn require_declared_properties(value: &mut Value) {
-    match value {
-        Value::Object(object) => {
-            if let Some(Value::Object(properties)) = object.get("properties") {
-                let mut required = properties
-                    .keys()
-                    .cloned()
-                    .map(Value::String)
-                    .collect::<Vec<_>>();
-                required.sort_by(|left, right| left.as_str().cmp(&right.as_str()));
-                object.insert("required".to_owned(), Value::Array(required));
-            }
-
-            for child in object.values_mut() {
-                require_declared_properties(child);
-            }
-        }
-        Value::Array(items) => {
-            for child in items {
-                require_declared_properties(child);
-            }
-        }
-        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
-    }
+    serde_json::to_value(schema_for!(T)).expect("request schema should serialize")
 }

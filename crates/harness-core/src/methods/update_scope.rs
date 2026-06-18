@@ -8,7 +8,7 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        if let Some(envelope_task_id) = &request.envelope.task_id {
+        if let Some(envelope_task_id) = request.envelope.task_id.as_ref() {
             if envelope_task_id != &request.task_id {
                 return validation_rejected(
                     request.envelope.dry_run,

@@ -8,7 +8,7 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        if let Some(envelope_task_id) = &request.envelope.task_id {
+        if let Some(envelope_task_id) = request.envelope.task_id.as_ref() {
             if envelope_task_id != &request.task_id {
                 return validation_rejected(
                     request.envelope.dry_run,
@@ -236,7 +236,7 @@ fn plan_record_run(
     }
 
     let planned_state_version = project_state.state_version + 1;
-    let run_id = match request.run_id.clone() {
+    let run_id = match request.run_id.clone().into_option() {
         Some(run_id) => run_id,
         None => allocate_run_id(service, store).map_err(PlanError::Core)?,
     };
@@ -269,7 +269,7 @@ fn plan_record_run(
         changed_paths: normalized_changed_paths.clone(),
         product_file_write_observed: request.observed_changes.product_file_write_observed,
         sensitive_categories: sorted_unique(request.observed_changes.sensitive_categories.clone()),
-        baseline_ref: Some(request.baseline_ref.clone()),
+        baseline_ref: Some(request.baseline_ref.clone()).into(),
     };
 
     let artifact_plans = plan_record_run_artifacts(
@@ -287,7 +287,7 @@ fn plan_record_run(
         .collect::<Vec<_>>();
 
     let authorization_record = if request.observed_changes.product_file_write_observed {
-        let Some(write_authorization_id) = &request.write_authorization_id else {
+        let Some(write_authorization_id) = request.write_authorization_id.as_ref() else {
             return Err(PlanError::Response(Box::new(
                 write_authorization_required_response(
                     &request.envelope,
@@ -687,12 +687,13 @@ fn plan_staged_artifact_input(
         size_bytes,
         redaction_state,
         availability: ArtifactAvailability::Available,
-        created_by_run_ref: Some(run_ref.clone()),
-        created_by_surface_id: Some(SurfaceId::new(record.created_by_surface_id.clone())),
+        created_by_run_ref: Some(run_ref.clone()).into(),
+        created_by_surface_id: Some(SurfaceId::new(record.created_by_surface_id.clone())).into(),
         created_by_surface_instance_id: Some(SurfaceInstanceId::new(
             record.created_by_surface_instance_id.clone(),
-        )),
-        storage_ref: Some(StorageRef::new(uri.clone())),
+        ))
+        .into(),
+        storage_ref: Some(StorageRef::new(uri.clone())).into(),
     };
     let source_mutation = Some(CoreStorageMutation::PromoteStagedArtifact(
         ArtifactPromotion {
@@ -735,7 +736,7 @@ fn plan_staged_artifact_input(
 
     Ok(RecordRunArtifactPlan {
         artifact_ref,
-        claim: input.claim.clone(),
+        claim: input.claim.as_ref().cloned(),
         source_mutation,
         run_link,
     })
@@ -979,7 +980,7 @@ fn plan_existing_artifact_input(
     });
     Ok(RecordRunArtifactPlan {
         artifact_ref,
-        claim: input.claim.clone(),
+        claim: input.claim.as_ref().cloned(),
         source_mutation: None,
         run_link,
     })
@@ -1163,20 +1164,26 @@ fn artifact_ref_from_stored_record(
             "unavailable" => ArtifactAvailability::Unavailable,
             _ => ArtifactAvailability::Unusable,
         },
-        created_by_run_ref: record.producer_run_id.as_ref().map(|run_id| {
-            state_ref(
-                StateRecordKind::Run,
-                run_id,
-                &ProjectId::new(record.project_id.clone()),
-                Some(&task_id),
-                None,
-            )
-        }),
+        created_by_run_ref: record
+            .producer_run_id
+            .as_ref()
+            .map(|run_id| {
+                state_ref(
+                    StateRecordKind::Run,
+                    run_id,
+                    &ProjectId::new(record.project_id.clone()),
+                    Some(&task_id),
+                    None,
+                )
+            })
+            .into(),
         created_by_surface_id: string_member(&producer, "created_by_surface_id")
-            .map(SurfaceId::new),
+            .map(SurfaceId::new)
+            .into(),
         created_by_surface_instance_id: string_member(&producer, "created_by_surface_instance_id")
-            .map(SurfaceInstanceId::new),
-        storage_ref: Some(StorageRef::new(record.uri.clone())),
+            .map(SurfaceInstanceId::new)
+            .into(),
+        storage_ref: Some(StorageRef::new(record.uri.clone())).into(),
     })
 }
 

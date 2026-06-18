@@ -818,8 +818,8 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
         record_kind: StateRecordKind::UserJudgment,
         record_id: RecordId::new("uj_scope_decision"),
         project_id: ProjectId::new(PROJECT_ID),
-        task_id: Some(TaskId::new(&task_id)),
-        state_version: Some(1),
+        task_id: Some(TaskId::new(&task_id)).into(),
+        state_version: Some(1).into(),
     };
 
     let response = harness.service.update_scope(
@@ -832,13 +832,13 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
                 Some(&task_id),
             ),
             task_id: TaskId::new(&task_id),
-            goal_summary: None,
-            scope_update: None,
-            scope_boundary: None,
-            non_goals: None,
-            acceptance_criteria: None,
-            autonomy_boundary: None,
-            baseline_ref: None,
+            goal_summary: None.into(),
+            scope_update: None.into(),
+            scope_boundary: None.into(),
+            non_goals: None.into(),
+            acceptance_criteria: None.into(),
+            autonomy_boundary: None.into(),
+            baseline_ref: None.into(),
             change_unit: ChangeUnitUpdate {
                 operation: ChangeUnitOperation::KeepCurrent,
                 fields: Map::new(),
@@ -1620,7 +1620,7 @@ fn stage_artifact_rejects_checksum_mismatch_without_effect() -> Result<(), Box<d
         &task_id,
     );
     request.safe_bytes_or_notice = "checksum mismatch sample".to_owned();
-    request.expected_sha256 = Some("sha256:0000".to_owned());
+    request.expected_sha256 = Some("sha256:0000".to_owned()).into();
     let response = harness
         .service
         .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
@@ -1649,7 +1649,7 @@ fn stage_artifact_rejects_size_mismatch_without_effect() -> Result<(), Box<dyn E
         &task_id,
     );
     request.safe_bytes_or_notice = "size mismatch sample".to_owned();
-    request.expected_size_bytes = Some(999);
+    request.expected_size_bytes = Some(999).into();
     let response = harness
         .service
         .stage_artifact(request, invocation(AccessClass::ArtifactRegistration))?;
@@ -1941,7 +1941,8 @@ fn record_run_product_write_consumes_valid_authorization_once() -> Result<(), Bo
     );
     request.observed_changes.product_file_write_observed = true;
     request.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    request.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id));
+    request.write_authorization_id =
+        Some(WriteAuthorizationId::new(&write_authorization_id)).into();
     let response = harness
         .service
         .record_run(request, invocation(AccessClass::RunRecording))?;
@@ -2022,7 +2023,8 @@ fn record_run_stale_authorization_basis_rejects_before_consumption() -> Result<(
     );
     request.observed_changes.product_file_write_observed = true;
     request.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    request.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id));
+    request.write_authorization_id =
+        Some(WriteAuthorizationId::new(&write_authorization_id)).into();
     let response = harness
         .service
         .record_run(request, invocation(AccessClass::RunRecording))?;
@@ -2058,7 +2060,7 @@ fn record_run_consumed_authorization_reuse_rejects_without_effect() -> Result<()
     );
     first.observed_changes.product_file_write_observed = true;
     first.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    first.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id));
+    first.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id)).into();
     harness
         .service
         .record_run(first, invocation(AccessClass::RunRecording))?;
@@ -2074,7 +2076,7 @@ fn record_run_consumed_authorization_reuse_rejects_without_effect() -> Result<()
     );
     second.observed_changes.product_file_write_observed = true;
     second.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
-    second.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id));
+    second.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id)).into();
     let response = harness
         .service
         .record_run(second, invocation(AccessClass::RunRecording))?;
@@ -2112,7 +2114,8 @@ fn record_run_path_mismatch_rejects_without_consuming_authorization() -> Result<
     );
     request.observed_changes.product_file_write_observed = true;
     request.observed_changes.changed_paths = vec!["tests/export.rs".to_owned()];
-    request.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id));
+    request.write_authorization_id =
+        Some(WriteAuthorizationId::new(&write_authorization_id)).into();
     let response = harness
         .service
         .record_run(request, invocation(AccessClass::RunRecording))?;
@@ -2273,7 +2276,7 @@ fn record_run_checksum_mismatch_rejects_and_rolls_back_all_effects() -> Result<(
     let before = harness.counts()?;
 
     let mut input = artifact_input_for_handle("artifact_input_sha", handle, None, None);
-    input.expected_sha256 = Some("sha256:0000".to_owned());
+    input.expected_sha256 = Some("sha256:0000".to_owned()).into();
     let mut request = record_run_request(
         "req_run_stage_sha",
         "idem_run_stage_sha",
@@ -3554,14 +3557,14 @@ fn envelope(
 ) -> ToolEnvelope {
     ToolEnvelope {
         project_id: ProjectId::new(PROJECT_ID),
-        task_id: task_id.map(TaskId::new),
+        task_id: task_id.map(TaskId::new).into(),
         actor_kind: ActorKind::Agent,
         surface_id: SurfaceId::new(SURFACE_ID),
         request_id: RequestId::new(request_id),
-        idempotency_key: idempotency_key.map(IdempotencyKey::new),
-        expected_state_version,
+        idempotency_key: idempotency_key.map(IdempotencyKey::new).into(),
+        expected_state_version: expected_state_version.into(),
         dry_run,
-        locale: None,
+        locale: None.into(),
     }
 }
 
@@ -3721,16 +3724,17 @@ fn update_scope_request(
             Some(task_id),
         ),
         task_id: TaskId::new(task_id),
-        goal_summary: Some(scope_summary.to_owned()),
+        goal_summary: Some(scope_summary.to_owned()).into(),
         scope_update: Some(ScopeUpdate {
             include: vec![scope_summary.to_owned()],
             exclude: vec!["Unrelated behavior.".to_owned()],
-        }),
-        scope_boundary: Some(scope_summary.to_owned()),
-        non_goals: Some(vec!["Unrelated behavior.".to_owned()]),
-        acceptance_criteria: Some(vec!["The scoped behavior is represented.".to_owned()]),
-        autonomy_boundary: Some("Stay inside the scoped test behavior.".to_owned()),
-        baseline_ref: Some(BaselineRef::new("baseline_test")),
+        })
+        .into(),
+        scope_boundary: Some(scope_summary.to_owned()).into(),
+        non_goals: Some(vec!["Unrelated behavior.".to_owned()]).into(),
+        acceptance_criteria: Some(vec!["The scoped behavior is represented.".to_owned()]).into(),
+        autonomy_boundary: Some("Stay inside the scoped test behavior.".to_owned()).into(),
+        baseline_ref: Some(BaselineRef::new("baseline_test")).into(),
         change_unit: ChangeUnitUpdate { operation, fields },
         related_scope_decision_refs: Vec::new(),
     }
@@ -3751,8 +3755,8 @@ fn prepare_write_request(
             expected_state_version,
             task_id,
         ),
-        task_id: task_id.map(TaskId::new),
-        change_unit_id: change_unit_id.map(ChangeUnitId::new),
+        task_id: task_id.map(TaskId::new).into(),
+        change_unit_id: change_unit_id.map(ChangeUnitId::new).into(),
         intended_operation: "local_sensitive_step".to_owned(),
         intended_paths: vec!["src/export.rs".to_owned()],
         product_file_write_intended: true,
@@ -3781,9 +3785,9 @@ fn stage_artifact_request(
         content_type: "text/plain".to_owned(),
         redaction_state: RedactionState::None,
         safe_bytes_or_notice: "staging sample".to_owned(),
-        expected_sha256: None,
-        expected_size_bytes: None,
-        relation_hint: Some("diagnostic_log".to_owned()),
+        expected_sha256: None.into(),
+        expected_size_bytes: None.into(),
+        relation_hint: Some("diagnostic_log".to_owned()).into(),
     }
 }
 
@@ -3806,15 +3810,15 @@ fn record_run_request(
         task_id: TaskId::new(task_id),
         change_unit_id: ChangeUnitId::new(change_unit_id),
         kind: harness_types::RunKind::Implementation,
-        run_id: None,
+        run_id: None.into(),
         baseline_ref: BaselineRef::new("baseline_test"),
-        write_authorization_id: None,
+        write_authorization_id: None.into(),
         summary: "Recorded implementation run.".to_owned(),
         observed_changes: ObservedChanges {
             changed_paths: Vec::new(),
             product_file_write_observed: false,
             sensitive_categories: Vec::new(),
-            baseline_ref: Some(BaselineRef::new("baseline_test")),
+            baseline_ref: Some(BaselineRef::new("baseline_test")).into(),
         },
         artifact_inputs: Vec::new(),
         evidence_updates: Vec::new(),
@@ -3843,9 +3847,9 @@ fn close_task_request(input: CloseTaskFixture<'_>) -> CloseTaskRequest {
         ),
         task_id: TaskId::new(input.task_id),
         intent: input.intent,
-        close_reason: input.close_reason,
-        superseding_task_id: input.superseding_task_id.map(TaskId::new),
-        user_note: Some("Focused close-task test.".to_owned()),
+        close_reason: input.close_reason.into(),
+        superseding_task_id: input.superseding_task_id.map(TaskId::new).into(),
+        user_note: Some("Focused close-task test.".to_owned()).into(),
     }
 }
 
@@ -3988,13 +3992,13 @@ fn artifact_input_for_handle(
     ArtifactInput {
         artifact_input_id: harness_types::ArtifactInputId::new(artifact_input_id),
         source_kind: ArtifactInputSourceKind::StagedArtifact,
-        staged_artifact_handle: Some(handle.clone()),
-        existing_artifact_ref: None,
-        relation_hint: relation_hint.map(str::to_owned),
-        claim: claim.map(str::to_owned),
-        expected_sha256: Some(handle.sha256),
-        expected_size_bytes: Some(handle.size_bytes),
-        redaction_state: Some(handle.redaction_state),
+        staged_artifact_handle: Some(handle.clone()).into(),
+        existing_artifact_ref: None.into(),
+        relation_hint: relation_hint.map(str::to_owned).into(),
+        claim: claim.map(str::to_owned).into(),
+        expected_sha256: Some(handle.sha256).into(),
+        expected_size_bytes: Some(handle.size_bytes).into(),
+        redaction_state: Some(handle.redaction_state).into(),
     }
 }
 
@@ -4272,7 +4276,7 @@ fn user_judgment_request(
             Some(task_id),
         ),
         task_id: TaskId::new(task_id),
-        change_unit_id: change_unit_id.map(ChangeUnitId::new),
+        change_unit_id: change_unit_id.map(ChangeUnitId::new).into(),
         judgment_kind,
         presentation: harness_types::JudgmentPresentation::Short,
         question: "Choose the focused test judgment outcome.".to_owned(),
@@ -4303,11 +4307,11 @@ fn user_judgment_request(
             record_kind: StateRecordKind::Task,
             record_id: RecordId::new(task_id),
             project_id: ProjectId::new(PROJECT_ID),
-            task_id: Some(TaskId::new(task_id)),
-            state_version: expected_state_version,
+            task_id: Some(TaskId::new(task_id)).into(),
+            state_version: expected_state_version.into(),
         }],
         required_for: harness_types::JudgmentRequiredFor::Close,
-        expires_at: None,
+        expires_at: None.into(),
     }
 }
 
@@ -4334,20 +4338,20 @@ fn record_judgment_request(
         judgment_kind,
         selected_option_id: harness_types::UserJudgmentOptionId::new("accept"),
         answer,
-        note: Some("Recorded by the focused judgment test.".to_owned()),
+        note: Some("Recorded by the focused judgment test.".to_owned()).into(),
         accepted_risks: Vec::new(),
     }
 }
 
 fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
     let mut payload = RecordUserJudgmentPayload {
-        product_decision: None,
-        technical_decision: None,
-        scope_decision: None,
-        sensitive_action_scope: None,
-        final_acceptance: None,
-        residual_risk_acceptance: None,
-        cancellation: None,
+        product_decision: None.into(),
+        technical_decision: None.into(),
+        scope_decision: None.into(),
+        sensitive_action_scope: None.into(),
+        final_acceptance: None.into(),
+        residual_risk_acceptance: None.into(),
+        cancellation: None.into(),
     };
     match judgment_kind {
         JudgmentKind::ProductDecision => {
@@ -4356,7 +4360,8 @@ fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
                     "decision": "accepted",
                     "rationale": "The product direction is accepted for this focused test."
                 }
-            })));
+            })))
+            .into();
         }
         JudgmentKind::TechnicalDecision => {
             payload.technical_decision = Some(json_object(json!({
@@ -4364,13 +4369,15 @@ fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
                     "decision": "accepted",
                     "rationale": "The technical direction is accepted for this focused test."
                 }
-            })));
+            })))
+            .into();
         }
         JudgmentKind::ScopeDecision => {
             payload.scope_decision = Some(json_object(json!({
                 "requested_scope_summary": "Expanded scope that must not apply silently.",
                 "decision": "accepted"
-            })));
+            })))
+            .into();
         }
         JudgmentKind::SensitiveApproval => {
             payload.sensitive_action_scope = Some(harness_types::SensitiveActionScope {
@@ -4378,12 +4385,14 @@ fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
                 description: "Allow the named sensitive step only.".to_owned(),
                 intended_paths: vec!["src/export.rs".to_owned()],
                 sensitive_categories: vec!["network".to_owned()],
-                command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()),
-                network_or_host_summary: Some("No remote host is authorized here.".to_owned()),
-                secret_or_credential_summary: None,
+                command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()).into(),
+                network_or_host_summary: Some("No remote host is authorized here.".to_owned())
+                    .into(),
+                secret_or_credential_summary: None.into(),
                 capability_claim: "This is not Write Authorization.".to_owned(),
-                expires_at: None,
-            });
+                expires_at: None.into(),
+            })
+            .into();
         }
         JudgmentKind::FinalAcceptance => {
             payload.final_acceptance = Some(json_object(json!({
@@ -4391,19 +4400,22 @@ fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
                     "decision": "accepted",
                     "basis": "The visible close basis is acceptable."
                 }
-            })));
+            })))
+            .into();
         }
         JudgmentKind::ResidualRiskAcceptance => {
             payload.residual_risk_acceptance = Some(json_object(json!({
                 "risk_id": "risk_visible_001",
                 "decision": "accepted"
-            })));
+            })))
+            .into();
         }
         JudgmentKind::Cancellation => {
             payload.cancellation = Some(json_object(json!({
                 "decision": "cancel",
                 "reason": "The user chose to stop the Task."
-            })));
+            })))
+            .into();
         }
     }
     payload

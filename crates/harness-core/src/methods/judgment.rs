@@ -8,7 +8,7 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        if let Some(envelope_task_id) = &request.envelope.task_id {
+        if let Some(envelope_task_id) = request.envelope.task_id.as_ref() {
             if envelope_task_id != &request.task_id {
                 return validation_rejected(
                     request.envelope.dry_run,
@@ -87,7 +87,8 @@ impl CoreService {
         let task_requirement = request
             .envelope
             .task_id
-            .clone()
+            .as_ref()
+            .cloned()
             .map(TaskRequirement::Exact)
             .unwrap_or(TaskRequirement::None);
         let prepared = match prepare_or_response(
@@ -199,7 +200,7 @@ fn plan_request_user_judgment(
                 error,
             )))
         })?;
-    let branch_change_unit_id = if let Some(change_unit_id) = &request.change_unit_id {
+    let branch_change_unit_id = if let Some(change_unit_id) = request.change_unit_id.as_ref() {
         let existing = store
             .change_unit_record(&request.task_id, change_unit_id.as_str())
             .map_err(|error| {
@@ -247,7 +248,7 @@ fn plan_request_user_judgment(
         judgment_id: judgment_id.clone(),
         project_id: request.envelope.project_id.clone(),
         task_id: request.task_id.clone(),
-        change_unit_id: request.change_unit_id.clone(),
+        change_unit_id: request.change_unit_id.clone().into_option(),
         judgment_kind: request.judgment_kind,
         status: UserJudgmentStatus::Pending,
         presentation: request.presentation,
@@ -257,7 +258,7 @@ fn plan_request_user_judgment(
         affected_refs: request.affected_refs.clone(),
         required_for: request.required_for,
         resolution: None,
-        expires_at: request.expires_at.clone(),
+        expires_at: request.expires_at.clone().into_option(),
         created_at: requested_at.clone(),
         resolved_at: None,
     };
@@ -395,7 +396,7 @@ fn plan_record_user_judgment(
                 "user_judgment_id does not identify a pending user-owned judgment",
             )))
         })?;
-    if let Some(envelope_task_id) = &request.envelope.task_id {
+    if let Some(envelope_task_id) = request.envelope.task_id.as_ref() {
         if envelope_task_id.as_str() != record.task_id {
             let response = validation_rejected(
                 request.envelope.dry_run,
@@ -488,7 +489,7 @@ fn plan_record_user_judgment(
     let resolution = UserJudgmentResolution {
         selected_option_id: request.selected_option_id.clone(),
         answer: request.answer.clone(),
-        note: request.note.clone(),
+        note: request.note.clone().into_option(),
         accepted_risks: request.accepted_risks.clone(),
         resolved_by_actor_kind: request.envelope.actor_kind,
     };

@@ -264,14 +264,14 @@ pub mod core_fixtures {
         ) -> ToolEnvelope {
             ToolEnvelope {
                 project_id: ProjectId::new(&self.project_id),
-                task_id: task_id.map(TaskId::new),
+                task_id: task_id.map(TaskId::new).into(),
                 actor_kind: ActorKind::Agent,
                 surface_id: SurfaceId::new(&self.surface_id),
                 request_id: RequestId::new(request_id),
-                idempotency_key: idempotency_key.map(IdempotencyKey::new),
-                expected_state_version,
+                idempotency_key: idempotency_key.map(IdempotencyKey::new).into(),
+                expected_state_version: expected_state_version.into(),
                 dry_run,
-                locale: Some("en-US".to_owned()),
+                locale: Some("en-US".to_owned()).into(),
             }
         }
 
@@ -331,16 +331,18 @@ pub mod core_fixtures {
                     Some(input.task_id),
                 ),
                 task_id: TaskId::new(input.task_id),
-                goal_summary: Some(input.scope_summary.to_owned()),
+                goal_summary: Some(input.scope_summary.to_owned()).into(),
                 scope_update: Some(ScopeUpdate {
                     include: vec![input.scope_summary.to_owned()],
                     exclude: vec!["Unrelated behavior.".to_owned()],
-                }),
-                scope_boundary: Some(input.scope_summary.to_owned()),
-                non_goals: Some(vec!["Unrelated behavior.".to_owned()]),
-                acceptance_criteria: Some(vec!["The scoped behavior is represented.".to_owned()]),
-                autonomy_boundary: Some("Stay inside the scoped test behavior.".to_owned()),
-                baseline_ref: Some(BaselineRef::new(DEFAULT_BASELINE_REF)),
+                })
+                .into(),
+                scope_boundary: Some(input.scope_summary.to_owned()).into(),
+                non_goals: Some(vec!["Unrelated behavior.".to_owned()]).into(),
+                acceptance_criteria: Some(vec!["The scoped behavior is represented.".to_owned()])
+                    .into(),
+                autonomy_boundary: Some("Stay inside the scoped test behavior.".to_owned()).into(),
+                baseline_ref: Some(BaselineRef::new(DEFAULT_BASELINE_REF)).into(),
                 change_unit: ChangeUnitUpdate {
                     operation: input.operation,
                     fields,
@@ -366,8 +368,8 @@ pub mod core_fixtures {
                     expected_state_version,
                     task_id,
                 ),
-                task_id: task_id.map(TaskId::new),
-                change_unit_id: change_unit_id.map(ChangeUnitId::new),
+                task_id: task_id.map(TaskId::new).into(),
+                change_unit_id: change_unit_id.map(ChangeUnitId::new).into(),
                 intended_operation: "local_product_file_update".to_owned(),
                 intended_paths: vec![DEFAULT_PRODUCT_PATH.to_owned()],
                 product_file_write_intended: true,
@@ -398,9 +400,9 @@ pub mod core_fixtures {
                 content_type: "text/plain".to_owned(),
                 redaction_state: RedactionState::None,
                 safe_bytes_or_notice: "staging sample".to_owned(),
-                expected_sha256: None,
-                expected_size_bytes: None,
-                relation_hint: Some("diagnostic_log".to_owned()),
+                expected_sha256: None.into(),
+                expected_size_bytes: None.into(),
+                relation_hint: Some("diagnostic_log".to_owned()).into(),
             }
         }
 
@@ -425,15 +427,15 @@ pub mod core_fixtures {
                 task_id: TaskId::new(task_id),
                 change_unit_id: ChangeUnitId::new(change_unit_id),
                 kind: RunKind::Implementation,
-                run_id: None,
+                run_id: None.into(),
                 baseline_ref: BaselineRef::new(DEFAULT_BASELINE_REF),
-                write_authorization_id: None,
+                write_authorization_id: None.into(),
                 summary: "Recorded implementation run.".to_owned(),
                 observed_changes: ObservedChanges {
                     changed_paths: Vec::new(),
                     product_file_write_observed: false,
                     sensitive_categories: Vec::new(),
-                    baseline_ref: Some(BaselineRef::new(DEFAULT_BASELINE_REF)),
+                    baseline_ref: Some(BaselineRef::new(DEFAULT_BASELINE_REF)).into(),
                 },
                 artifact_inputs: Vec::new(),
                 evidence_updates: Vec::new(),
@@ -454,7 +456,7 @@ pub mod core_fixtures {
                     Some(input.task_id),
                 ),
                 task_id: TaskId::new(input.task_id),
-                change_unit_id: input.change_unit_id.map(ChangeUnitId::new),
+                change_unit_id: input.change_unit_id.map(ChangeUnitId::new).into(),
                 judgment_kind: input.judgment_kind,
                 presentation: JudgmentPresentation::Short,
                 question: "Choose the focused test judgment outcome.".to_owned(),
@@ -486,7 +488,7 @@ pub mod core_fixtures {
                 },
                 affected_refs: vec![self.task_ref(input.task_id, input.expected_state_version)],
                 required_for: JudgmentRequiredFor::Close,
-                expires_at: None,
+                expires_at: None.into(),
             }
         }
 
@@ -509,7 +511,7 @@ pub mod core_fixtures {
                 judgment_kind: input.judgment_kind,
                 selected_option_id: UserJudgmentOptionId::new("accept"),
                 answer: input.answer,
-                note: Some("Recorded by a focused conformance fixture.".to_owned()),
+                note: Some("Recorded by a focused conformance fixture.".to_owned()).into(),
                 accepted_risks: Vec::new(),
             }
         }
@@ -526,9 +528,9 @@ pub mod core_fixtures {
                 ),
                 task_id: TaskId::new(input.task_id),
                 intent: input.intent,
-                close_reason: input.close_reason,
-                superseding_task_id: input.superseding_task_id.map(TaskId::new),
-                user_note: Some("Focused close-task fixture.".to_owned()),
+                close_reason: input.close_reason.into(),
+                superseding_task_id: input.superseding_task_id.map(TaskId::new).into(),
+                user_note: Some("Focused close-task fixture.".to_owned()).into(),
             }
         }
 
@@ -538,8 +540,8 @@ pub mod core_fixtures {
                 record_kind: StateRecordKind::Task,
                 record_id: RecordId::new(task_id),
                 project_id: ProjectId::new(&self.project_id),
-                task_id: Some(TaskId::new(task_id)),
-                state_version,
+                task_id: Some(TaskId::new(task_id)).into(),
+                state_version: state_version.into(),
             }
         }
 
@@ -886,13 +888,13 @@ pub mod core_fixtures {
         ArtifactInput {
             artifact_input_id: ArtifactInputId::new(artifact_input_id),
             source_kind: ArtifactInputSourceKind::StagedArtifact,
-            staged_artifact_handle: Some(handle.clone()),
-            existing_artifact_ref: None,
-            relation_hint: relation_hint.map(str::to_owned),
-            claim: claim.map(str::to_owned),
-            expected_sha256: Some(handle.sha256),
-            expected_size_bytes: Some(handle.size_bytes),
-            redaction_state: Some(handle.redaction_state),
+            staged_artifact_handle: Some(handle.clone()).into(),
+            existing_artifact_ref: None.into(),
+            relation_hint: relation_hint.map(str::to_owned).into(),
+            claim: claim.map(str::to_owned).into(),
+            expected_sha256: Some(handle.sha256).into(),
+            expected_size_bytes: Some(handle.size_bytes).into(),
+            redaction_state: Some(handle.redaction_state).into(),
         }
     }
 
@@ -923,13 +925,13 @@ pub mod core_fixtures {
     /// Builds a judgment answer payload with exactly one branch populated.
     pub fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
         let mut payload = RecordUserJudgmentPayload {
-            product_decision: None,
-            technical_decision: None,
-            scope_decision: None,
-            sensitive_action_scope: None,
-            final_acceptance: None,
-            residual_risk_acceptance: None,
-            cancellation: None,
+            product_decision: None.into(),
+            technical_decision: None.into(),
+            scope_decision: None.into(),
+            sensitive_action_scope: None.into(),
+            final_acceptance: None.into(),
+            residual_risk_acceptance: None.into(),
+            cancellation: None.into(),
         };
         match judgment_kind {
             JudgmentKind::ProductDecision => {
@@ -938,7 +940,8 @@ pub mod core_fixtures {
                         "decision": "accepted",
                         "rationale": "The product direction is accepted for this focused test."
                     }
-                })));
+                })))
+                .into();
             }
             JudgmentKind::TechnicalDecision => {
                 payload.technical_decision = Some(json_object(json!({
@@ -946,13 +949,15 @@ pub mod core_fixtures {
                         "decision": "accepted",
                         "rationale": "The technical direction is accepted for this focused test."
                     }
-                })));
+                })))
+                .into();
             }
             JudgmentKind::ScopeDecision => {
                 payload.scope_decision = Some(json_object(json!({
                     "requested_scope_summary": "Expanded scope that must not apply silently.",
                     "decision": "accepted"
-                })));
+                })))
+                .into();
             }
             JudgmentKind::SensitiveApproval => {
                 payload.sensitive_action_scope = Some(SensitiveActionScope {
@@ -960,12 +965,15 @@ pub mod core_fixtures {
                     description: "Allow the named sensitive step only.".to_owned(),
                     intended_paths: vec![DEFAULT_PRODUCT_PATH.to_owned()],
                     sensitive_categories: vec!["network".to_owned()],
-                    command_or_tool_summary: Some("Run a local diagnostic command.".to_owned()),
-                    network_or_host_summary: Some("No remote host is authorized here.".to_owned()),
-                    secret_or_credential_summary: None,
+                    command_or_tool_summary: Some("Run a local diagnostic command.".to_owned())
+                        .into(),
+                    network_or_host_summary: Some("No remote host is authorized here.".to_owned())
+                        .into(),
+                    secret_or_credential_summary: None.into(),
                     capability_claim: "This is not Write Authorization.".to_owned(),
-                    expires_at: None,
-                });
+                    expires_at: None.into(),
+                })
+                .into();
             }
             JudgmentKind::FinalAcceptance => {
                 payload.final_acceptance = Some(json_object(json!({
@@ -973,19 +981,22 @@ pub mod core_fixtures {
                         "decision": "accepted",
                         "basis": "The visible close basis is acceptable."
                     }
-                })));
+                })))
+                .into();
             }
             JudgmentKind::ResidualRiskAcceptance => {
                 payload.residual_risk_acceptance = Some(json_object(json!({
                     "risk_id": "risk_visible_001",
                     "decision": "accepted"
-                })));
+                })))
+                .into();
             }
             JudgmentKind::Cancellation => {
                 payload.cancellation = Some(json_object(json!({
                     "decision": "cancel",
                     "reason": "The user chose to stop the Task."
-                })));
+                })))
+                .into();
             }
         }
         payload
@@ -994,7 +1005,7 @@ pub mod core_fixtures {
     /// Builds an accepted-risk input for close-readiness fixtures.
     pub fn accepted_risk(summary: &str) -> AcceptedRiskInput {
         AcceptedRiskInput {
-            risk_id: Some(harness_types::RiskId::new("risk_visible_001")),
+            risk_id: Some(harness_types::RiskId::new("risk_visible_001")).into(),
             summary: summary.to_owned(),
             consequence: "The named residual risk remains after close.".to_owned(),
             related_refs: Vec::new(),

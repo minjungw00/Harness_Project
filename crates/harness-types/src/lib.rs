@@ -40,6 +40,8 @@ impl TypeBoundary {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use serde_json::{json, Value};
 
     use super::*;
@@ -338,6 +340,216 @@ mod tests {
         );
     }
 
+    #[test]
+    fn generated_schema_and_serde_agree_for_public_requests() {
+        for (method_name, valid) in public_request_json_samples() {
+            assert_schema_and_serde(method_name, valid.clone(), true);
+
+            let mut missing_required = valid.clone();
+            missing_required
+                .as_object_mut()
+                .expect("sample request should be an object")
+                .remove(first_required_field(method_name));
+            assert_schema_and_serde(method_name, missing_required, false);
+
+            let mut unknown = valid.clone();
+            unknown["unknown_public_field"] = json!(true);
+            assert_schema_and_serde(method_name, unknown, false);
+        }
+    }
+
+    #[test]
+    fn required_nullable_fields_must_be_present_but_accept_null() {
+        let mut stage = stage_artifact_request_json();
+        stage["expected_sha256"] = Value::Null;
+        assert_schema_and_serde("harness.stage_artifact", stage.clone(), true);
+        stage
+            .as_object_mut()
+            .expect("stage request should be an object")
+            .remove("expected_sha256");
+        assert_schema_and_serde("harness.stage_artifact", stage, false);
+
+        let mut envelope_missing_nullable = status_request_json();
+        envelope_missing_nullable["envelope"]
+            .as_object_mut()
+            .expect("envelope should be an object")
+            .remove("idempotency_key");
+        assert_schema_and_serde("harness.status", envelope_missing_nullable, false);
+
+        let mut answer_missing_branch = record_user_judgment_request_json();
+        answer_missing_branch["answer"]
+            .as_object_mut()
+            .expect("answer should be an object")
+            .remove("technical_decision");
+        assert_schema_and_serde("harness.record_user_judgment", answer_missing_branch, false);
+    }
+
+    #[test]
+    fn generated_request_schemas_mark_only_documented_fields_required() {
+        for (method_name, _) in public_request_json_samples() {
+            let schema = public_request_schema(method_name).expect("schema should exist");
+            assert_required(
+                &schema,
+                expected_required_fields(method_name),
+                &format!("{method_name} root"),
+            );
+            assert_eq!(
+                schema["additionalProperties"], false,
+                "{method_name} should be an exact request object"
+            );
+        }
+
+        let stage = public_request_schema("harness.stage_artifact").expect("stage schema");
+        assert_required(
+            definition(&stage, "ToolEnvelope"),
+            &[
+                "project_id",
+                "task_id",
+                "actor_kind",
+                "surface_id",
+                "request_id",
+                "idempotency_key",
+                "expected_state_version",
+                "dry_run",
+                "locale",
+            ],
+            "ToolEnvelope",
+        );
+        assert_required(
+            &stage,
+            expected_required_fields("harness.stage_artifact"),
+            "StageArtifactRequest",
+        );
+        assert_schema_allows_null_property(&stage, "expected_sha256");
+
+        let record = public_request_schema("harness.record_run").expect("record_run schema");
+        assert_required(
+            definition(&record, "ObservedChanges"),
+            &[
+                "changed_paths",
+                "product_file_write_observed",
+                "sensitive_categories",
+                "baseline_ref",
+            ],
+            "ObservedChanges",
+        );
+        assert_required(
+            definition(&record, "ArtifactInput"),
+            &[
+                "artifact_input_id",
+                "source_kind",
+                "staged_artifact_handle",
+                "existing_artifact_ref",
+                "relation_hint",
+                "claim",
+                "expected_sha256",
+                "expected_size_bytes",
+                "redaction_state",
+            ],
+            "ArtifactInput",
+        );
+
+        let judgment =
+            public_request_schema("harness.record_user_judgment").expect("judgment schema");
+        assert_required(
+            definition(&judgment, "RecordUserJudgmentPayload"),
+            &[
+                "product_decision",
+                "technical_decision",
+                "scope_decision",
+                "sensitive_action_scope",
+                "final_acceptance",
+                "residual_risk_acceptance",
+                "cancellation",
+            ],
+            "RecordUserJudgmentPayload",
+        );
+    }
+
+    #[test]
+    fn exact_request_objects_are_closed_but_open_payload_objects_stay_open() {
+        let record = public_request_schema("harness.record_run").expect("record_run schema");
+        for definition_name in [
+            "ToolEnvelope",
+            "ObservedChanges",
+            "ArtifactInput",
+            "StateRecordRef",
+            "ArtifactRef",
+            "StagedArtifactHandle",
+            "EvidenceCoverageItem",
+        ] {
+            assert_eq!(
+                definition(&record, definition_name)["additionalProperties"],
+                false,
+                "{definition_name} should be closed"
+            );
+        }
+
+        let update = public_request_schema("harness.update_scope").expect("update schema");
+        assert_ne!(
+            definition(&update, "ChangeUnitUpdate")["additionalProperties"],
+            false,
+            "ChangeUnitUpdate intentionally carries open owner-defined fields"
+        );
+
+        let judgment =
+            public_request_schema("harness.record_user_judgment").expect("judgment schema");
+        let payload = definition(&judgment, "RecordUserJudgmentPayload");
+        let product_decision = &payload["properties"]["product_decision"];
+        assert!(
+            validate_against(
+                &judgment,
+                product_decision,
+                &json!({ "owner_defined": true }),
+                "$.answer.product_decision",
+            )
+            .is_ok(),
+            "decision-specific payload objects intentionally remain open"
+        );
+    }
+
+    #[test]
+    fn typed_request_hash_ignores_raw_order_and_preserves_semantic_differences() {
+        let first_json = r#"{
+            "safe_bytes_or_notice": "Local trace sample.",
+            "relation_hint": "diagnostic_log",
+            "expected_size_bytes": null,
+            "expected_sha256": null,
+            "redaction_state": "none",
+            "content_type": "text/plain",
+            "display_name": "diagnostic_trace.log",
+            "task_id": "task_empty_001",
+            "envelope": {
+                "locale": "en-US",
+                "dry_run": false,
+                "expected_state_version": 62,
+                "idempotency_key": "idem_empty_answer_001",
+                "request_id": "req_empty_answer_001",
+                "surface_id": "surface_empty",
+                "actor_kind": "agent",
+                "task_id": "task_empty_001",
+                "project_id": "proj_empty_001"
+            }
+        }"#;
+        let second_json = serde_json::to_string_pretty(&stage_artifact_request_json())
+            .expect("sample should serialize");
+        let first: StageArtifactRequest =
+            serde_json::from_str(first_json).expect("first request should decode");
+        let second: StageArtifactRequest =
+            serde_json::from_str(&second_json).expect("second request should decode");
+
+        let first_hash = canonical_request_hash(&first).expect("first hash");
+        let second_hash = canonical_request_hash(&second).expect("second hash");
+        assert_eq!(first_hash, second_hash);
+
+        let mut changed = stage_artifact_request_json();
+        changed["relation_hint"] = json!("other_relation");
+        let changed: StageArtifactRequest =
+            serde_json::from_value(changed).expect("changed request should decode");
+        let changed_hash = canonical_request_hash(&changed).expect("changed hash");
+        assert_ne!(first_hash, changed_hash);
+    }
+
     fn envelope_json(actor_kind: &str) -> Value {
         json!({
             "project_id": "proj_empty_001",
@@ -370,6 +582,289 @@ mod tests {
             ),
             ("harness.close_task", close_task_request_json()),
         ]
+    }
+
+    fn assert_schema_and_serde(method_name: &str, value: Value, should_accept: bool) {
+        let schema = public_request_schema(method_name).expect("schema should exist");
+        let schema_result = validate_json_schema(&schema, &value);
+        let serde_result = deserialize_public_request(method_name, value);
+        assert_eq!(
+            schema_result.is_ok(),
+            should_accept,
+            "{method_name} schema result: {schema_result:?}"
+        );
+        assert_eq!(
+            serde_result.is_ok(),
+            should_accept,
+            "{method_name} serde result: {serde_result:?}"
+        );
+        assert_eq!(
+            schema_result.is_ok(),
+            serde_result.is_ok(),
+            "{method_name} schema and serde should agree"
+        );
+    }
+
+    fn validate_json_schema(schema: &Value, instance: &Value) -> Result<(), String> {
+        validate_against(schema, schema, instance, "$")
+    }
+
+    fn validate_against(
+        root: &Value,
+        schema: &Value,
+        instance: &Value,
+        path: &str,
+    ) -> Result<(), String> {
+        match schema {
+            Value::Bool(true) => return Ok(()),
+            Value::Bool(false) => return Err(format!("{path}: schema is false")),
+            Value::Object(_) => {}
+            _ => return Err(format!("{path}: schema must be object or bool")),
+        }
+
+        if schema.get("nullable").and_then(Value::as_bool) == Some(true) && instance.is_null() {
+            return Ok(());
+        }
+        if let Some(reference) = schema.get("$ref").and_then(Value::as_str) {
+            return validate_against(root, resolve_ref(root, reference)?, instance, path);
+        }
+        if let Some(any_of) = schema.get("anyOf").and_then(Value::as_array) {
+            if any_of
+                .iter()
+                .any(|candidate| validate_against(root, candidate, instance, path).is_ok())
+            {
+                return Ok(());
+            }
+            return Err(format!("{path}: did not match anyOf"));
+        }
+        if let Some(one_of) = schema.get("oneOf").and_then(Value::as_array) {
+            let matches = one_of
+                .iter()
+                .filter(|candidate| validate_against(root, candidate, instance, path).is_ok())
+                .count();
+            if matches != 1 {
+                return Err(format!("{path}: matched {matches} oneOf branches"));
+            }
+        }
+        if let Some(all_of) = schema.get("allOf").and_then(Value::as_array) {
+            for candidate in all_of {
+                validate_against(root, candidate, instance, path)?;
+            }
+        }
+        if let Some(values) = schema.get("enum").and_then(Value::as_array) {
+            if !values.iter().any(|value| value == instance) {
+                return Err(format!("{path}: enum mismatch"));
+            }
+        }
+        if let Some(schema_type) = schema.get("type") {
+            validate_type(schema_type, instance, path)?;
+        }
+
+        if instance.is_object()
+            && (schema.get("properties").is_some()
+                || schema.get("required").is_some()
+                || schema.get("additionalProperties").is_some())
+        {
+            validate_object(root, schema, instance, path)?;
+        }
+        if let (Some(items), Some(array)) = (schema.get("items"), instance.as_array()) {
+            for (index, item) in array.iter().enumerate() {
+                validate_against(root, items, item, &format!("{path}[{index}]"))?;
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_type(schema_type: &Value, instance: &Value, path: &str) -> Result<(), String> {
+        let accepts = match schema_type {
+            Value::String(kind) => json_type_matches(kind, instance),
+            Value::Array(kinds) => kinds
+                .iter()
+                .filter_map(Value::as_str)
+                .any(|kind| json_type_matches(kind, instance)),
+            _ => return Err(format!("{path}: invalid type schema")),
+        };
+        if accepts {
+            Ok(())
+        } else {
+            Err(format!("{path}: type mismatch for {schema_type}"))
+        }
+    }
+
+    fn json_type_matches(kind: &str, value: &Value) -> bool {
+        match kind {
+            "null" => value.is_null(),
+            "boolean" => value.is_boolean(),
+            "integer" => value.as_i64().is_some() || value.as_u64().is_some(),
+            "number" => value.is_number(),
+            "string" => value.is_string(),
+            "array" => value.is_array(),
+            "object" => value.is_object(),
+            _ => false,
+        }
+    }
+
+    fn validate_object(
+        root: &Value,
+        schema: &Value,
+        instance: &Value,
+        path: &str,
+    ) -> Result<(), String> {
+        let object = instance
+            .as_object()
+            .ok_or_else(|| format!("{path}: expected object"))?;
+        if let Some(required) = schema.get("required").and_then(Value::as_array) {
+            for field in required.iter().filter_map(Value::as_str) {
+                if !object.contains_key(field) {
+                    return Err(format!("{path}: missing required {field}"));
+                }
+            }
+        }
+
+        let empty = serde_json::Map::new();
+        let properties = schema
+            .get("properties")
+            .and_then(Value::as_object)
+            .unwrap_or(&empty);
+        for (field, value) in object {
+            if let Some(field_schema) = properties.get(field) {
+                validate_against(root, field_schema, value, &format!("{path}.{field}"))?;
+            } else if schema.get("additionalProperties") == Some(&Value::Bool(false)) {
+                return Err(format!("{path}: unknown property {field}"));
+            } else if let Some(additional) = schema.get("additionalProperties") {
+                validate_against(root, additional, value, &format!("{path}.{field}"))?;
+            }
+        }
+        Ok(())
+    }
+
+    fn resolve_ref<'a>(root: &'a Value, reference: &str) -> Result<&'a Value, String> {
+        let Some(name) = reference.strip_prefix("#/definitions/") else {
+            return Err(format!("unsupported ref {reference}"));
+        };
+        root.pointer(&format!("/definitions/{name}"))
+            .ok_or_else(|| format!("missing definition {name}"))
+    }
+
+    fn definition<'a>(schema: &'a Value, name: &str) -> &'a Value {
+        schema
+            .pointer(&format!("/definitions/{name}"))
+            .unwrap_or_else(|| panic!("missing schema definition {name}"))
+    }
+
+    fn assert_required(schema: &Value, expected: &[&str], label: &str) {
+        let actual = schema["required"]
+            .as_array()
+            .expect("schema should have required array")
+            .iter()
+            .map(|value| value.as_str().expect("required field"))
+            .collect::<BTreeSet<_>>();
+        let expected = expected.iter().copied().collect::<BTreeSet<_>>();
+        assert_eq!(actual, expected, "{label}");
+    }
+
+    fn assert_schema_allows_null_property(schema: &Value, field: &str) {
+        let property = &schema["properties"][field];
+        assert!(
+            validate_against(schema, property, &Value::Null, field).is_ok(),
+            "{field} should allow null"
+        );
+    }
+
+    fn first_required_field(method_name: &str) -> &'static str {
+        expected_required_fields(method_name)[0]
+    }
+
+    fn expected_required_fields(method_name: &str) -> &'static [&'static str] {
+        match method_name {
+            "harness.intake" => &[
+                "envelope",
+                "plain_language_request",
+                "requested_mode",
+                "resume_policy",
+                "initial_scope",
+                "initial_context_refs",
+            ],
+            "harness.update_scope" => &[
+                "envelope",
+                "task_id",
+                "goal_summary",
+                "scope_update",
+                "scope_boundary",
+                "non_goals",
+                "acceptance_criteria",
+                "autonomy_boundary",
+                "baseline_ref",
+                "change_unit",
+                "related_scope_decision_refs",
+            ],
+            "harness.status" => &["envelope", "include"],
+            "harness.prepare_write" => &[
+                "envelope",
+                "task_id",
+                "change_unit_id",
+                "intended_operation",
+                "intended_paths",
+                "product_file_write_intended",
+                "sensitive_categories",
+                "baseline_ref",
+            ],
+            "harness.stage_artifact" => &[
+                "envelope",
+                "task_id",
+                "display_name",
+                "content_type",
+                "redaction_state",
+                "safe_bytes_or_notice",
+                "expected_sha256",
+                "expected_size_bytes",
+                "relation_hint",
+            ],
+            "harness.record_run" => &[
+                "envelope",
+                "task_id",
+                "change_unit_id",
+                "kind",
+                "run_id",
+                "baseline_ref",
+                "write_authorization_id",
+                "summary",
+                "observed_changes",
+                "artifact_inputs",
+                "evidence_updates",
+            ],
+            "harness.request_user_judgment" => &[
+                "envelope",
+                "task_id",
+                "change_unit_id",
+                "judgment_kind",
+                "presentation",
+                "question",
+                "options",
+                "context",
+                "affected_refs",
+                "required_for",
+                "expires_at",
+            ],
+            "harness.record_user_judgment" => &[
+                "envelope",
+                "user_judgment_id",
+                "judgment_kind",
+                "selected_option_id",
+                "answer",
+                "note",
+                "accepted_risks",
+            ],
+            "harness.close_task" => &[
+                "envelope",
+                "task_id",
+                "intent",
+                "close_reason",
+                "superseding_task_id",
+                "user_note",
+            ],
+            other => panic!("unsupported method: {other}"),
+        }
     }
 
     fn deserialize_public_request(

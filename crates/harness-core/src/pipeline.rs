@@ -756,7 +756,7 @@ fn validate_envelope(envelope: &ToolEnvelope, request_json: &Value) -> Vec<ToolE
             "project_id must not be empty",
         ));
     }
-    if let Some(task_id) = &envelope.task_id {
+    if let Some(task_id) = envelope.task_id.as_ref() {
         if task_id.as_str().trim().is_empty() {
             errors.push(validation_error("task_id", "task_id must not be empty"));
         }
@@ -773,7 +773,7 @@ fn validate_envelope(envelope: &ToolEnvelope, request_json: &Value) -> Vec<ToolE
             "request_id must not be empty",
         ));
     }
-    if let Some(idempotency_key) = &envelope.idempotency_key {
+    if let Some(idempotency_key) = envelope.idempotency_key.as_ref() {
         if idempotency_key.as_str().trim().is_empty() {
             errors.push(validation_error(
                 "idempotency_key",
@@ -867,7 +867,7 @@ fn replay_preflight_response(
     if request.policy.replay != ReplayPolicy::Committed || request.envelope.dry_run {
         return Ok(None);
     }
-    let Some(idempotency_key) = &request.envelope.idempotency_key else {
+    let Some(idempotency_key) = request.envelope.idempotency_key.as_ref() else {
         return Ok(None);
     };
     let Some(record) = store.tool_invocation(request.method_name, idempotency_key)? else {
@@ -917,7 +917,8 @@ fn freshness_preflight_response(
     if request.policy.freshness == FreshnessPolicy::None {
         return Ok(None);
     }
-    let Some(expected_state_version) = request.envelope.expected_state_version else {
+    let Some(expected_state_version) = request.envelope.expected_state_version.as_ref().copied()
+    else {
         return Ok(None);
     };
     if expected_state_version == project_state.state_version {
@@ -948,12 +949,12 @@ fn resolve_task(
 ) -> Result<Option<TaskId>, ToolError> {
     match requirement {
         TaskRequirement::None => Ok(None),
-        TaskRequirement::Optional => match &envelope.task_id {
+        TaskRequirement::Optional => match envelope.task_id.as_ref() {
             Some(task_id) => ensure_task_exists(store, task_id).map(Some),
             None => Ok(None),
         },
         TaskRequirement::Required => {
-            if let Some(task_id) = &envelope.task_id {
+            if let Some(task_id) = envelope.task_id.as_ref() {
                 return ensure_task_exists(store, task_id).map(Some);
             }
 
@@ -1017,7 +1018,7 @@ fn commit_mutation(
             .idempotency_key
             .as_ref()
             .map(|_| replay_context_from_verified_surface(&verified_surface)),
-        envelope.expected_state_version,
+        envelope.expected_state_version.as_ref().copied(),
         vec![PendingTaskEvent {
             event_id,
             task_id: task_id.as_str().to_owned(),
@@ -2225,14 +2226,14 @@ mod tests {
     ) -> ToolEnvelope {
         ToolEnvelope {
             project_id: ProjectId::new(PROJECT_ID),
-            task_id: task_id.map(TaskId::new),
+            task_id: task_id.map(TaskId::new).into(),
             actor_kind: ActorKind::Agent,
             surface_id: SurfaceId::new(SURFACE_ID),
             request_id: RequestId::new(request_id),
-            idempotency_key: idempotency_key.map(IdempotencyKey::new),
-            expected_state_version,
+            idempotency_key: idempotency_key.map(IdempotencyKey::new).into(),
+            expected_state_version: expected_state_version.into(),
             dry_run,
-            locale: None,
+            locale: None.into(),
         }
     }
 

@@ -392,7 +392,7 @@ fn resolve_prepare_write_task(
     let task_id = request
         .task_id
         .clone()
-        .or_else(|| request.envelope.task_id.clone())
+        .or_else(|| request.envelope.task_id.as_ref().cloned())
         .or_else(|| project_state.active_task_id.clone().map(TaskId::new))
         .ok_or_else(|| {
             PlanError::Response(Box::new(no_active_task_response(
@@ -749,7 +749,7 @@ fn stale_write_authorization_basis_response(
         "project_id".to_owned(),
         Value::String(envelope.project_id.as_str().to_owned()),
     );
-    if let Some(task_id) = &envelope.task_id {
+    if let Some(task_id) = envelope.task_id.as_ref() {
         details.insert(
             "task_id".to_owned(),
             Value::String(task_id.as_str().to_owned()),
@@ -1169,7 +1169,7 @@ fn change_unit_insert(
 ) -> CoreResult<ChangeUnitInsert> {
     let fields = &request.change_unit.fields;
     let scope_summary = string_member(fields, "scope_summary")
-        .or_else(|| request.scope_boundary.clone())
+        .or_else(|| request.scope_boundary.as_ref().cloned())
         .unwrap_or_else(|| "Current Change Unit".to_owned());
     let affected_areas = string_array_member(fields, "affected_areas");
     let affected_paths = string_array_member(fields, "affected_paths");
@@ -1285,8 +1285,8 @@ fn state_ref(
         record_kind,
         record_id: RecordId::new(record_id),
         project_id: project_id.clone(),
-        task_id: task_id.cloned(),
-        state_version,
+        task_id: task_id.cloned().into(),
+        state_version: state_version.into(),
     }
 }
 
@@ -1316,8 +1316,8 @@ fn state_ref_from_stored(record: StoredRecordRef) -> StateRecordRef {
         record_kind: kind,
         record_id: RecordId::new(record.record_id),
         project_id: ProjectId::new(record.project_id),
-        task_id: record.task_id.map(TaskId::new),
-        state_version: record.state_version,
+        task_id: record.task_id.map(TaskId::new).into(),
+        state_version: record.state_version.into(),
     }
 }
 

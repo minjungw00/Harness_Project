@@ -387,7 +387,7 @@ fn write_authorization_lifecycle_is_single_use_and_state_bound() -> Result<(), B
     );
     run.observed_changes.product_file_write_observed = true;
     run.observed_changes.changed_paths = vec![DEFAULT_PRODUCT_PATH.to_owned()];
-    run.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id));
+    run.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id)).into();
     let consumed = service.record_run(run, invocation(&fixture, AccessClass::RunRecording))?;
     assert_eq!(consumed.response_value["base"]["state_version"], 6);
     assert_eq!(
@@ -412,7 +412,7 @@ fn write_authorization_lifecycle_is_single_use_and_state_bound() -> Result<(), B
     );
     reuse.observed_changes.product_file_write_observed = true;
     reuse.observed_changes.changed_paths = vec![DEFAULT_PRODUCT_PATH.to_owned()];
-    reuse.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id));
+    reuse.write_authorization_id = Some(WriteAuthorizationId::new(&write_authorization_id)).into();
     let rejected = service.record_run(reuse, invocation(&fixture, AccessClass::RunRecording))?;
     assert_rejected_code(&rejected.response_value, "WRITE_AUTHORIZATION_INVALID");
     assert_eq!(fixture.counts()?, before_reuse);
@@ -494,7 +494,7 @@ fn artifact_lifecycle_promotes_valid_handles_and_rolls_back_invalid_ones(
         Some("validation_report"),
         Some("Validation passed."),
     );
-    invalid_input.expected_sha256 = Some("sha256:0000".to_owned());
+    invalid_input.expected_sha256 = Some("sha256:0000".to_owned()).into();
     let mut invalid_run = fixture.record_run_request(
         "req_run_invalid_artifact",
         "idem_run_invalid_artifact",

@@ -8,7 +8,7 @@ impl CoreService {
         invocation: InvocationContext,
     ) -> CoreResult<PipelineResponse> {
         let request_json = serde_json::to_value(&request)?;
-        if let Some(envelope_task_id) = &request.envelope.task_id {
+        if let Some(envelope_task_id) = request.envelope.task_id.as_ref() {
             if request
                 .task_id
                 .as_ref()
@@ -78,7 +78,7 @@ fn prepare_write_policy(request: &PrepareWriteRequest) -> MethodPolicy {
     let task = request
         .task_id
         .clone()
-        .or_else(|| request.envelope.task_id.clone())
+        .or_else(|| request.envelope.task_id.as_ref().cloned())
         .map(TaskRequirement::Exact)
         .unwrap_or(TaskRequirement::Required);
 

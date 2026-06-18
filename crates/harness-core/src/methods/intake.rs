@@ -99,7 +99,7 @@ fn plan_intake(
         ResumePolicy::SupersedeActive => true,
     };
     let task_id = if create_new {
-        match request.envelope.task_id.clone() {
+        match request.envelope.task_id.as_ref().cloned() {
             Some(task_id) => task_id,
             None => allocate_task_id(service, store)?,
         }
