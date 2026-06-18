@@ -12,7 +12,7 @@ use harness_store::{
         CoreStorageMutation, MutationCommitOutcome, PendingTaskEvent, ProjectStateHeader,
         VerifiedReplayContext,
     },
-    StoreError,
+    StoreError, StoreFailureRoute,
 };
 use harness_types::{
     canonical_request_hash, AccessClass, ChangeUnitId, DryRunSummary, DurableIdError,
@@ -419,7 +419,7 @@ impl CoreService {
                     rejected_response(
                         request.envelope.dry_run,
                         None,
-                        vec![store_unavailable_error(error)],
+                        vec![store_failure_error(error)],
                     ),
                     None,
                     None,
@@ -434,7 +434,7 @@ impl CoreService {
                     rejected_response(
                         request.envelope.dry_run,
                         None,
-                        vec![store_unavailable_error(error)],
+                        vec![store_failure_error(error)],
                     ),
                     None,
                     None,
@@ -462,13 +462,28 @@ impl CoreService {
             }
         };
 
-        if let Some(replay_response) = replay_preflight_response(
+        let replay_response = match replay_preflight_response(
             &store,
             &request,
             &request_hash,
             &project_state,
             &verified_surface,
-        )? {
+        ) {
+            Ok(response) => response,
+            Err(CorePipelineError::Store(error)) => {
+                return response_outcome_from_rejected(
+                    rejected_response(
+                        request.envelope.dry_run,
+                        Some(project_state.state_version),
+                        vec![store_failure_error(error)],
+                    ),
+                    Some(verified_surface),
+                    None,
+                );
+            }
+            Err(error) => return Err(error),
+        };
+        if let Some(replay_response) = replay_response {
             return Ok(PipelinePreflightOutcome::Response(Box::new(
                 replay_response,
             )));
@@ -599,13 +614,27 @@ impl CoreService {
                         );
                     }
                 };
-                let event_id = self.allocate_generated_id(DurableIdKind::Event, |candidate| {
+                let event_id = match self.allocate_generated_id(DurableIdKind::Event, |candidate| {
                     prepared
                         .store
                         .event_id_exists(candidate)
                         .map_err(CorePipelineError::from)
-                })?;
-                commit_mutation(
+                }) {
+                    Ok(event_id) => event_id,
+                    Err(CorePipelineError::Store(error)) => {
+                        return response_from_rejected(
+                            rejected_response(
+                                false,
+                                Some(project_state.state_version),
+                                vec![store_failure_error(error)],
+                            ),
+                            Some(verified_surface),
+                            Some(task_id),
+                        );
+                    }
+                    Err(error) => return Err(error),
+                };
+                match commit_mutation(
                     &mut prepared.store,
                     CommitPipelineArgs {
                         envelope: &prepared.envelope,
@@ -618,9 +647,21 @@ impl CoreService {
                         change_unit_id,
                         storage_mutations,
                         task_id: &task_id,
-                        verified_surface,
+                        verified_surface: verified_surface.clone(),
                     },
-                )
+                ) {
+                    Ok(response) => Ok(response),
+                    Err(CorePipelineError::Store(error)) => response_from_rejected(
+                        rejected_response(
+                            false,
+                            Some(project_state.state_version),
+                            vec![store_failure_error(error)],
+                        ),
+                        Some(verified_surface),
+                        Some(task_id),
+                    ),
+                    Err(error) => Err(error),
+                }
             }
         }
     }
@@ -931,7 +972,7 @@ fn derive_verified_surface(
     let surface = if let Some(surface_instance_id) = &invocation.surface_instance_id {
         store
             .surface(&envelope.surface_id, surface_instance_id.as_str())
-            .map_err(|_| mcp_unavailable_error("surface lookup failed"))?
+            .map_err(store_failure_error)?
             .ok_or_else(|| local_access_mismatch_error("surface_instance_id"))?
     } else if project_state.default_surface_id.as_deref() == Some(envelope.surface_id.as_str()) {
         let default_instance = project_state
@@ -940,12 +981,12 @@ fn derive_verified_surface(
             .ok_or_else(|| local_access_mismatch_error("default_surface_instance_id"))?;
         store
             .surface(&envelope.surface_id, default_instance)
-            .map_err(|_| mcp_unavailable_error("surface lookup failed"))?
+            .map_err(store_failure_error)?
             .ok_or_else(|| local_access_mismatch_error("default_surface_instance_id"))?
     } else {
         let candidates = store
             .surface_candidates(&envelope.surface_id)
-            .map_err(|_| mcp_unavailable_error("surface lookup failed"))?;
+            .map_err(store_failure_error)?;
         if candidates.len() == 1 {
             candidates
                 .into_iter()
@@ -957,23 +998,36 @@ fn derive_verified_surface(
     };
 
     let capability_profile = serde_json::from_str::<Value>(&surface.capability_profile_json)
-        .map_err(|_| mcp_unavailable_error("surface capability profile is invalid"))?;
+        .map_err(|_| {
+            store_failure_error(StoreError::corrupt_stored_json(
+                "project_state",
+                "surfaces.capability_profile_json",
+            ))
+        })?;
 
     verified_surface_from_registered_surface(surface, invocation, capability_profile)
-        .map_err(|_| local_access_mismatch_error("surfaces.local_access_json"))
 }
 
 pub(crate) fn verified_surface_from_registered_surface(
     surface: SurfaceRecord,
     invocation: &InvocationContext,
     capability_profile: Value,
-) -> Result<VerifiedSurfaceContext, ()> {
-    let grant = parse_registered_local_access_grant(&surface.local_access_json)?;
+) -> Result<VerifiedSurfaceContext, ToolError> {
+    let grant = parse_registered_local_access_grant(&surface.local_access_json).map_err(
+        |error| match error {
+            RegisteredLocalAccessGrantError::InvalidJson => store_failure_error(
+                StoreError::corrupt_stored_json("project_state", "surfaces.local_access_json"),
+            ),
+            RegisteredLocalAccessGrantError::InvalidShape => store_failure_error(
+                StoreError::corrupt_stored_value("project_state", "surfaces.local_access_json"),
+            ),
+        },
+    )?;
     if !grant
         .authorized_access_classes
         .contains(&invocation.requested_access_class)
     {
-        return Err(());
+        return Err(local_access_mismatch_error("surfaces.local_access_json"));
     }
 
     Ok(VerifiedSurfaceContext {
@@ -995,29 +1049,40 @@ pub(crate) struct RegisteredLocalAccessGrant {
     pub verification_basis: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RegisteredLocalAccessGrantError {
+    InvalidJson,
+    InvalidShape,
+}
+
 pub(crate) fn parse_registered_local_access_grant(
     text: &str,
-) -> Result<RegisteredLocalAccessGrant, ()> {
-    let value = serde_json::from_str::<Value>(text).map_err(|_| ())?;
-    let object = value.as_object().ok_or(())?;
+) -> Result<RegisteredLocalAccessGrant, RegisteredLocalAccessGrantError> {
+    let value = serde_json::from_str::<Value>(text)
+        .map_err(|_| RegisteredLocalAccessGrantError::InvalidJson)?;
+    let object = value
+        .as_object()
+        .ok_or(RegisteredLocalAccessGrantError::InvalidShape)?;
     let authorized_access_classes = if let Some(value) = object.get("authorized_access_classes") {
         parse_authorized_access_classes(value)?
     } else {
         vec![parse_access_class_field(
-            object.get("access_class").ok_or(())?,
+            object
+                .get("access_class")
+                .ok_or(RegisteredLocalAccessGrantError::InvalidShape)?,
         )?]
     };
 
     if let Some(value) = object.get("access_class") {
         let fallback_access_class = parse_access_class_field(value)?;
         if !authorized_access_classes.contains(&fallback_access_class) {
-            return Err(());
+            return Err(RegisteredLocalAccessGrantError::InvalidShape);
         }
     }
 
     let verification_basis = match object.get("verification_basis") {
         Some(Value::String(value)) if !value.trim().is_empty() => value.clone(),
-        Some(_) => return Err(()),
+        Some(_) => return Err(RegisteredLocalAccessGrantError::InvalidShape),
         None => "registered_local_access".to_owned(),
     };
 
@@ -1027,11 +1092,12 @@ pub(crate) fn parse_registered_local_access_grant(
     })
 }
 
-fn parse_authorized_access_classes(value: &Value) -> Result<Vec<AccessClass>, ()> {
-    let values = value.as_array().ok_or(())?;
-    if values.is_empty() {
-        return Err(());
-    }
+fn parse_authorized_access_classes(
+    value: &Value,
+) -> Result<Vec<AccessClass>, RegisteredLocalAccessGrantError> {
+    let values = value
+        .as_array()
+        .ok_or(RegisteredLocalAccessGrantError::InvalidShape)?;
 
     let mut access_classes = Vec::new();
     for value in values {
@@ -1040,16 +1106,15 @@ fn parse_authorized_access_classes(value: &Value) -> Result<Vec<AccessClass>, ()
             access_classes.push(access_class);
         }
     }
-    if access_classes.is_empty() {
-        return Err(());
-    }
     Ok(access_classes)
 }
 
-fn parse_access_class_field(value: &Value) -> Result<AccessClass, ()> {
-    let value = value.as_str().ok_or(())?;
+fn parse_access_class_field(value: &Value) -> Result<AccessClass, RegisteredLocalAccessGrantError> {
+    let value = value
+        .as_str()
+        .ok_or(RegisteredLocalAccessGrantError::InvalidShape)?;
     if value.trim().is_empty() {
-        return Err(());
+        return Err(RegisteredLocalAccessGrantError::InvalidShape);
     }
     match value {
         "read_status" => Ok(AccessClass::ReadStatus),
@@ -1058,7 +1123,7 @@ fn parse_access_class_field(value: &Value) -> Result<AccessClass, ()> {
         "run_recording" => Ok(AccessClass::RunRecording),
         "artifact_registration" => Ok(AccessClass::ArtifactRegistration),
         "artifact_read" => Ok(AccessClass::ArtifactRead),
-        _ => Err(()),
+        _ => Err(RegisteredLocalAccessGrantError::InvalidShape),
     }
 }
 
@@ -1438,20 +1503,37 @@ fn state_conflict_details(
     details
 }
 
-fn store_unavailable_error(error: StoreError) -> ToolError {
-    tool_error(
-        match error {
-            StoreError::NotFound { .. } => ErrorCode::LocalAccessMismatch,
-            StoreError::InvalidInput { .. }
-            | StoreError::Io(_)
-            | StoreError::Sqlite(_)
-            | StoreError::MigrationConflict { .. }
-            | StoreError::SchemaInvariant { .. } => ErrorCode::McpUnavailable,
-        },
-        "Core storage or project binding is unavailable",
-        true,
-        None,
-    )
+pub(crate) fn store_failure_error(error: StoreError) -> ToolError {
+    let classification = error.classification();
+    let mut details = Map::new();
+    details.insert(
+        "store_failure_category".to_owned(),
+        Value::String(classification.category.to_owned()),
+    );
+    if let Some(database_kind) = classification.database_kind {
+        details.insert(
+            "database_kind".to_owned(),
+            Value::String(database_kind.to_owned()),
+        );
+    }
+    if let Some(entity) = classification.entity {
+        details.insert("entity".to_owned(), Value::String(entity.to_owned()));
+    }
+    if let Some(field) = classification.field {
+        details.insert("field".to_owned(), Value::String(field.to_owned()));
+    }
+    let code = match classification.route {
+        StoreFailureRoute::OperationalUnavailable => ErrorCode::McpUnavailable,
+        StoreFailureRoute::LocalAccessMismatch => ErrorCode::LocalAccessMismatch,
+    };
+    let message = match code {
+        ErrorCode::McpUnavailable => "Core storage is unavailable",
+        ErrorCode::LocalAccessMismatch => {
+            "local project or surface binding does not match registration"
+        }
+        _ => "Core storage is unavailable",
+    };
+    tool_error(code, message, classification.retryable, Some(details))
 }
 
 fn mcp_unavailable_error(message: &'static str) -> ToolError {
@@ -1539,14 +1621,18 @@ fn _assert_commit_input_sendable(_: CommitMutationInput) {}
 
 #[cfg(test)]
 mod tests {
-    use std::{error::Error, path::PathBuf};
+    use std::{
+        error::Error,
+        fs,
+        path::{Path, PathBuf},
+    };
 
     use harness_store::{
         bootstrap::{
             initialize_runtime_home, register_project, register_surface, ProjectRegistration,
             SurfaceRegistration, ACTIVE_PROJECT_STATUS,
         },
-        core_pipeline::{CoreProjectStore, StorageEffectCounts},
+        core_pipeline::{ChangeUnitInsert, CoreProjectStore, StorageEffectCounts},
         sqlite::open_project_state_database,
     };
     use harness_test_support::TempRuntimeHome;
@@ -1685,6 +1771,13 @@ mod tests {
         fn execute(&self, request: PipelineRequest) -> CoreResult<PipelineResponse> {
             self.service.execute_pipeline(request)
         }
+
+        fn state_db_path(&self) -> PathBuf {
+            self.runtime_home_path
+                .join("projects")
+                .join(PROJECT_ID)
+                .join("state.sqlite")
+        }
     }
 
     #[test]
@@ -1769,6 +1862,145 @@ mod tests {
         assert_eq!(response.response_value["base"]["response_kind"], "result");
         assert_eq!(response.response_value["base"]["effect_kind"], "read_only");
         assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn missing_project_state_database_routes_to_structured_unavailability(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        fs::remove_file(harness.state_db_path())?;
+
+        let response = harness.execute(PipelineRequest {
+            method_name: MethodName::Status,
+            request_json: request_json(
+                MethodName::Status,
+                &envelope("req_missing_db", None, false, None, None),
+                "missing-db",
+            ),
+            envelope: envelope("req_missing_db", None, false, None, None),
+            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::ReadStatus,
+            task_requirement: TaskRequirement::Optional,
+            branch: OwnerPipelineBranch::ReadOnly {
+                result_fields: result_fields("missing_db"),
+            },
+        })?;
+
+        assert_store_rejection(
+            &response,
+            "MCP_UNAVAILABLE",
+            "project_state_database_missing",
+        );
+        assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
+        Ok(())
+    }
+
+    #[test]
+    fn migration_conflict_routes_to_structured_unavailability() -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        harness.conn()?.execute(
+            "UPDATE schema_migrations
+                SET name = 'conflicting_project_state_replay_context'
+              WHERE database_kind = 'project_state'
+                AND version = 2",
+            [],
+        )?;
+
+        let response = harness.execute(PipelineRequest {
+            method_name: MethodName::Status,
+            request_json: request_json(
+                MethodName::Status,
+                &envelope("req_migration_conflict", None, false, None, None),
+                "migration-conflict",
+            ),
+            envelope: envelope("req_migration_conflict", None, false, None, None),
+            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::ReadStatus,
+            task_requirement: TaskRequirement::Optional,
+            branch: OwnerPipelineBranch::ReadOnly {
+                result_fields: result_fields("migration_conflict"),
+            },
+        })?;
+
+        assert_store_rejection(&response, "MCP_UNAVAILABLE", "migration_conflict");
+        assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_stored_capability_profile_json_routes_to_structured_unavailability(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        harness.conn()?.execute(
+            "UPDATE surfaces
+                SET capability_profile_json = '{not-json'
+              WHERE project_id = ?1
+                AND surface_id = ?2
+                AND surface_instance_id = ?3",
+            rusqlite::params![PROJECT_ID, SURFACE_ID, SURFACE_INSTANCE_ID],
+        )?;
+
+        let response = harness.execute(PipelineRequest {
+            method_name: MethodName::Status,
+            request_json: request_json(
+                MethodName::Status,
+                &envelope("req_bad_capability_json", None, false, None, None),
+                "bad-capability",
+            ),
+            envelope: envelope("req_bad_capability_json", None, false, None, None),
+            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::ReadStatus,
+            task_requirement: TaskRequirement::Optional,
+            branch: OwnerPipelineBranch::ReadOnly {
+                result_fields: result_fields("bad_capability"),
+            },
+        })?;
+
+        assert_store_rejection(&response, "MCP_UNAVAILABLE", "corrupt_stored_json");
+        assert_eq!(
+            response.response_value["errors"][0]["details"]["field"],
+            "surfaces.capability_profile_json"
+        );
+        assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_stored_local_access_json_routes_to_structured_unavailability(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        harness.conn()?.execute(
+            "UPDATE surfaces
+                SET local_access_json = '{not-json'
+              WHERE project_id = ?1
+                AND surface_id = ?2
+                AND surface_instance_id = ?3",
+            rusqlite::params![PROJECT_ID, SURFACE_ID, SURFACE_INSTANCE_ID],
+        )?;
+
+        let response = harness.execute(PipelineRequest {
+            method_name: MethodName::Status,
+            request_json: request_json(
+                MethodName::Status,
+                &envelope("req_bad_access_json", None, false, None, None),
+                "bad-access",
+            ),
+            envelope: envelope("req_bad_access_json", None, false, None, None),
+            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::ReadStatus,
+            task_requirement: TaskRequirement::Optional,
+            branch: OwnerPipelineBranch::ReadOnly {
+                result_fields: result_fields("bad_access"),
+            },
+        })?;
+
+        assert_store_rejection(&response, "MCP_UNAVAILABLE", "corrupt_stored_json");
+        assert_eq!(
+            response.response_value["errors"][0]["details"]["field"],
+            "surfaces.local_access_json"
+        );
+        assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
         Ok(())
     }
 
@@ -2101,6 +2333,51 @@ mod tests {
     }
 
     #[test]
+    fn unexpected_uniqueness_failure_routes_to_structured_unavailability(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        let first_envelope = envelope(
+            "req_unique_first",
+            Some("idem_unique_first"),
+            false,
+            Some(0),
+            Some(TASK_ID),
+        );
+        harness.execute(PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json: request_json(MethodName::UpdateScope, &first_envelope, "unique-first"),
+            envelope: first_envelope,
+            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: change_unit_commit_branch("change_unit_unique_first", "unique_first"),
+        })?;
+        let after_first = harness.counts()?;
+
+        let second_envelope = envelope(
+            "req_unique_second",
+            Some("idem_unique_second"),
+            false,
+            Some(1),
+            Some(TASK_ID),
+        );
+        let response = harness.execute(PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json: request_json(MethodName::UpdateScope, &second_envelope, "unique-second"),
+            envelope: second_envelope,
+            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: change_unit_commit_branch("change_unit_unique_second", "unique_second"),
+        })?;
+
+        assert_store_rejection(&response, "MCP_UNAVAILABLE", "constraint_unique");
+        assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
+        assert_eq!(harness.counts()?, after_first);
+        Ok(())
+    }
+
+    #[test]
     fn stale_expected_state_version_is_rejected_without_effect() -> Result<(), Box<dyn Error>> {
         let harness = PipelineHarness::new()?;
         let before = harness.counts()?;
@@ -2245,6 +2522,62 @@ mod tests {
             task_id: None,
             change_unit_id: None,
             storage_mutations: Vec::new(),
+        }
+    }
+
+    fn change_unit_commit_branch(change_unit_id: &str, marker: &str) -> OwnerPipelineBranch {
+        OwnerPipelineBranch::CommitMutation {
+            result_fields: result_fields(marker),
+            event_kind: "core.pipeline_placeholder_commit".to_owned(),
+            event_payload: result_fields(marker),
+            task_id: None,
+            change_unit_id: None,
+            storage_mutations: vec![CoreStorageMutation::InsertCurrentChangeUnit(
+                ChangeUnitInsert {
+                    change_unit_id: change_unit_id.to_owned(),
+                    task_id: TASK_ID.to_owned(),
+                    scope_summary_json: json!({"goal_summary": marker}).to_string(),
+                    bounded_paths_json: "[]".to_owned(),
+                    write_basis_json: "{}".to_owned(),
+                    close_basis_json: "{}".to_owned(),
+                    lifecycle_json: "{}".to_owned(),
+                },
+            )],
+        }
+    }
+
+    fn assert_store_rejection(
+        response: &PipelineResponse,
+        expected_code: &str,
+        expected_category: &str,
+    ) {
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(response.response_value["errors"][0]["code"], expected_code);
+        assert_eq!(
+            response.response_value["errors"][0]["details"]["store_failure_category"],
+            expected_category
+        );
+    }
+
+    fn assert_public_response_has_no_internal_leak(
+        response: &PipelineResponse,
+        runtime_home_path: &Path,
+    ) {
+        let body = &response.response_json;
+        let runtime_home = runtime_home_path.to_string_lossy();
+        assert!(!body.contains(runtime_home.as_ref()));
+        for fragment in [
+            "SELECT ",
+            "INSERT INTO",
+            "UPDATE ",
+            "DELETE ",
+            "constraint failed",
+            "state.sqlite",
+        ] {
+            assert!(
+                !body.contains(fragment),
+                "public response leaked internal fragment {fragment}: {body}"
+            );
         }
     }
 

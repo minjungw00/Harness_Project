@@ -14,7 +14,7 @@ pub mod error;
 pub mod migrations;
 pub mod sqlite;
 
-pub use error::{StoreError, StoreResult};
+pub use error::{StoreError, StoreFailureRoute, StoreResult};
 
 /// Identifies the shared type boundary this crate depends on.
 pub const fn shared_type_boundary() -> TypeBoundary {

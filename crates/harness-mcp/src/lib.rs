@@ -777,6 +777,43 @@ mod tests {
     }
 
     #[test]
+    fn adapter_preserves_structured_core_store_rejection() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({
+            "access_class": "read_status",
+            "supported_access_classes": ["read_status"]
+        }))?;
+        fs::remove_file(
+            harness
+                .runtime_home_path
+                .join("projects")
+                .join(PROJECT_ID)
+                .join("state.sqlite"),
+        )?;
+        let adapter = harness.adapter(AccessClass::ReadStatus);
+
+        let response = adapter.call_tool(
+            "harness.status",
+            serde_json::to_value(status_request("req_status_missing_db_adapter"))?,
+        )?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "MCP_UNAVAILABLE"
+        );
+        assert_eq!(
+            response.response_value["errors"][0]["details"]["store_failure_category"],
+            "project_state_database_missing"
+        );
+        let body = &response.response_json;
+        let runtime_home = harness.runtime_home_path.to_string_lossy();
+        assert!(!body.contains(runtime_home.as_ref()));
+        assert!(!body.contains("state.sqlite"));
+        assert!(!body.contains("SELECT "));
+        Ok(())
+    }
+
+    #[test]
     fn adapter_and_direct_core_status_have_equivalent_response_meaning(
     ) -> Result<(), Box<dyn Error>> {
         let harness = TestHarness::new(json!({

@@ -1,5 +1,7 @@
 use std::{error::Error, fmt, io};
 
+use rusqlite::{ffi, ErrorCode as SqliteErrorCode};
+
 /// Store-layer result type.
 pub type StoreResult<T> = Result<T, StoreError>;
 
@@ -14,6 +16,16 @@ pub enum StoreError {
     InvalidInput { detail: String },
     /// A required local setup record was not found.
     NotFound { entity: &'static str, id: String },
+    /// Stored owner JSON could not be parsed or validated.
+    CorruptStoredJson {
+        database_kind: &'static str,
+        field: &'static str,
+    },
+    /// A stored owner field has a value outside the owner-defined set.
+    CorruptStoredValue {
+        database_kind: &'static str,
+        field: &'static str,
+    },
     /// A recorded migration row conflicts with the compiled migration catalog.
     MigrationConflict {
         database_kind: &'static str,
@@ -37,6 +49,204 @@ impl StoreError {
             detail: detail.into(),
         }
     }
+
+    pub fn corrupt_stored_json(database_kind: &'static str, field: &'static str) -> Self {
+        Self::CorruptStoredJson {
+            database_kind,
+            field,
+        }
+    }
+
+    pub fn corrupt_stored_value(database_kind: &'static str, field: &'static str) -> Self {
+        Self::CorruptStoredValue {
+            database_kind,
+            field,
+        }
+    }
+
+    /// Classifies a store failure for safe public error routing.
+    pub fn classification(&self) -> StoreFailureClassification {
+        match self {
+            Self::Io(_) => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "runtime_home_io",
+                retryable: true,
+                database_kind: None,
+                entity: None,
+                field: None,
+            },
+            Self::Sqlite(error) => sqlite_classification(error),
+            Self::InvalidInput { .. } => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "invalid_store_input",
+                retryable: false,
+                database_kind: None,
+                entity: None,
+                field: None,
+            },
+            Self::NotFound { entity, .. } => {
+                let (route, category, retryable, database_kind) = match *entity {
+                    "project" => (
+                        StoreFailureRoute::LocalAccessMismatch,
+                        "project_binding_missing",
+                        false,
+                        None,
+                    ),
+                    "surface" => (
+                        StoreFailureRoute::LocalAccessMismatch,
+                        "surface_binding_missing",
+                        false,
+                        Some("project_state"),
+                    ),
+                    "project_state_database" => (
+                        StoreFailureRoute::OperationalUnavailable,
+                        "project_state_database_missing",
+                        true,
+                        Some("project_state"),
+                    ),
+                    "project_state" => (
+                        StoreFailureRoute::OperationalUnavailable,
+                        "project_state_missing",
+                        true,
+                        Some("project_state"),
+                    ),
+                    "runtime_home" => (
+                        StoreFailureRoute::OperationalUnavailable,
+                        "runtime_home_missing",
+                        true,
+                        Some("registry"),
+                    ),
+                    _ => (
+                        StoreFailureRoute::OperationalUnavailable,
+                        "store_record_missing",
+                        true,
+                        None,
+                    ),
+                };
+                StoreFailureClassification {
+                    route,
+                    category,
+                    retryable,
+                    database_kind,
+                    entity: Some(entity),
+                    field: None,
+                }
+            }
+            Self::CorruptStoredJson {
+                database_kind,
+                field,
+            } => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "corrupt_stored_json",
+                retryable: false,
+                database_kind: Some(database_kind),
+                entity: None,
+                field: Some(field),
+            },
+            Self::CorruptStoredValue {
+                database_kind,
+                field,
+            } => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "corrupt_stored_value",
+                retryable: false,
+                database_kind: Some(database_kind),
+                entity: None,
+                field: Some(field),
+            },
+            Self::MigrationConflict { database_kind, .. } => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "migration_conflict",
+                retryable: false,
+                database_kind: Some(database_kind),
+                entity: None,
+                field: None,
+            },
+            Self::SchemaInvariant { database_kind, .. } => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "schema_invariant",
+                retryable: false,
+                database_kind: Some(database_kind),
+                entity: None,
+                field: None,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StoreFailureRoute {
+    OperationalUnavailable,
+    LocalAccessMismatch,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StoreFailureClassification {
+    pub route: StoreFailureRoute,
+    pub category: &'static str,
+    pub retryable: bool,
+    pub database_kind: Option<&'static str>,
+    pub entity: Option<&'static str>,
+    pub field: Option<&'static str>,
+}
+
+fn sqlite_classification(error: &rusqlite::Error) -> StoreFailureClassification {
+    let (category, retryable) = match error {
+        rusqlite::Error::SqliteFailure(sqlite_error, _) => match sqlite_error.code {
+            SqliteErrorCode::ConstraintViolation => (
+                sqlite_constraint_category(sqlite_error.extended_code),
+                false,
+            ),
+            SqliteErrorCode::CannotOpen => ("database_open_failed", true),
+            SqliteErrorCode::DatabaseCorrupt | SqliteErrorCode::NotADatabase => {
+                ("database_corrupt", false)
+            }
+            SqliteErrorCode::DatabaseBusy | SqliteErrorCode::DatabaseLocked => {
+                ("database_locked", true)
+            }
+            SqliteErrorCode::ReadOnly | SqliteErrorCode::PermissionDenied => {
+                ("database_access_denied", false)
+            }
+            SqliteErrorCode::SystemIoFailure | SqliteErrorCode::DiskFull => ("database_io", true),
+            SqliteErrorCode::SchemaChanged => ("database_schema_changed", true),
+            _ => ("sqlite_driver_error", true),
+        },
+        rusqlite::Error::FromSqlConversionFailure(_, _, _)
+        | rusqlite::Error::IntegralValueOutOfRange(_, _)
+        | rusqlite::Error::Utf8Error(_)
+        | rusqlite::Error::InvalidColumnType(_, _, _) => ("stored_value_decode_failed", false),
+        rusqlite::Error::QueryReturnedNoRows => ("store_record_missing", true),
+        rusqlite::Error::InvalidPath(_) => ("runtime_path_invalid", false),
+        rusqlite::Error::InvalidColumnIndex(_)
+        | rusqlite::Error::InvalidColumnName(_)
+        | rusqlite::Error::StatementChangedRows(_)
+        | rusqlite::Error::InvalidQuery
+        | rusqlite::Error::MultipleStatement
+        | rusqlite::Error::InvalidParameterCount(_, _)
+        | rusqlite::Error::InvalidParameterName(_)
+        | rusqlite::Error::ExecuteReturnedResults => ("store_programming_error", false),
+        _ => ("sqlite_driver_error", true),
+    };
+
+    StoreFailureClassification {
+        route: StoreFailureRoute::OperationalUnavailable,
+        category,
+        retryable,
+        database_kind: None,
+        entity: None,
+        field: None,
+    }
+}
+
+fn sqlite_constraint_category(extended_code: i32) -> &'static str {
+    match extended_code {
+        ffi::SQLITE_CONSTRAINT_UNIQUE => "constraint_unique",
+        ffi::SQLITE_CONSTRAINT_PRIMARYKEY => "constraint_primary_key",
+        ffi::SQLITE_CONSTRAINT_FOREIGNKEY => "constraint_foreign_key",
+        ffi::SQLITE_CONSTRAINT_NOTNULL => "constraint_not_null",
+        ffi::SQLITE_CONSTRAINT_CHECK => "constraint_check",
+        _ => "constraint_violation",
+    }
 }
 
 impl fmt::Display for StoreError {
@@ -46,6 +256,20 @@ impl fmt::Display for StoreError {
             Self::Sqlite(error) => write!(formatter, "sqlite error: {error}"),
             Self::InvalidInput { detail } => write!(formatter, "invalid setup input: {detail}"),
             Self::NotFound { entity, id } => write!(formatter, "{entity} not found: {id}"),
+            Self::CorruptStoredJson {
+                database_kind,
+                field,
+            } => write!(
+                formatter,
+                "stored JSON field {field} is invalid in {database_kind}"
+            ),
+            Self::CorruptStoredValue {
+                database_kind,
+                field,
+            } => write!(
+                formatter,
+                "stored field {field} has an unsupported value in {database_kind}"
+            ),
             Self::MigrationConflict {
                 database_kind,
                 version,
@@ -75,6 +299,8 @@ impl Error for StoreError {
             Self::Sqlite(error) => Some(error),
             Self::InvalidInput { .. }
             | Self::NotFound { .. }
+            | Self::CorruptStoredJson { .. }
+            | Self::CorruptStoredValue { .. }
             | Self::MigrationConflict { .. }
             | Self::SchemaInvariant { .. } => None,
         }

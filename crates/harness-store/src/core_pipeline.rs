@@ -3025,6 +3025,40 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn foreign_key_constraint_failure_is_classified() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::RecordRun,
+            Some(&IdempotencyKey::new("idem_store_foreign_key")),
+            &RequestHash::new("sha256:foreign-key"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event("foreign_key")],
+        );
+
+        let error = store
+            .commit_mutation(
+                input,
+                |mutation, facts| {
+                    CoreStorageMutation::InsertRun(run_insert_with_missing_task())
+                        .apply(mutation, facts.committed_state_version)
+                },
+                response_json,
+            )
+            .expect_err("missing run task should fail a foreign-key constraint");
+        let classification = error.classification();
+
+        assert_eq!(classification.category, "constraint_foreign_key");
+        assert!(matches!(
+            classification.route,
+            crate::StoreFailureRoute::OperationalUnavailable
+        ));
+        Ok(())
+    }
+
     fn replay_context(surface_instance_id: &str, access_class: &str) -> VerifiedReplayContext {
         VerifiedReplayContext {
             surface_id: SURFACE_ID.to_owned(),
@@ -3060,6 +3094,24 @@ mod tests {
             close_summary_json: "{}".to_owned(),
             completion_policy_json: "{}".to_owned(),
             current_change_unit_id: None,
+        }
+    }
+
+    fn run_insert_with_missing_task() -> RunInsert {
+        RunInsert {
+            run_id: "run_missing_task".to_owned(),
+            task_id: "missing_task".to_owned(),
+            change_unit_id: None,
+            write_authorization_id: None,
+            kind: "implementation".to_owned(),
+            status: "completed".to_owned(),
+            summary_json: "{}".to_owned(),
+            observed_changes_json: "{}".to_owned(),
+            evidence_updates_json: "[]".to_owned(),
+            authorization_effect_json: "{}".to_owned(),
+            created_by_surface_id: SURFACE_ID.to_owned(),
+            created_by_surface_instance_id: SURFACE_INSTANCE_ID.to_owned(),
+            metadata_json: "{}".to_owned(),
         }
     }
 

@@ -40,10 +40,11 @@ use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 
 use crate::pipeline::{
-    dry_run_response, method_result_base, rejected_response, tool_error, CorePipelineError,
-    CoreResult, CoreService, FreshnessPolicy, InvocationContext, MethodEffectPolicy, MethodPolicy,
-    OwnerPipelineBranch, PipelinePreflightOutcome, PipelinePreflightRequest, PipelineResponse,
-    PreparedRequest, ReplayPolicy, TaskRequirement, VerifiedSurfaceContext,
+    dry_run_response, method_result_base, rejected_response, store_failure_error, tool_error,
+    CorePipelineError, CoreResult, CoreService, FreshnessPolicy, InvocationContext,
+    MethodEffectPolicy, MethodPolicy, OwnerPipelineBranch, PipelinePreflightOutcome,
+    PipelinePreflightRequest, PipelineResponse, PreparedRequest, ReplayPolicy, TaskRequirement,
+    VerifiedSurfaceContext,
 };
 
 impl CoreService {
@@ -71,21 +72,37 @@ impl CoreService {
             Ok(prepared) => prepared,
             Err(response) => return Ok(response),
         };
+        let state_version = prepared.context.project_state.state_version;
 
-        let task = status_task(
+        let task = match status_task(
             &prepared.store,
             &prepared.context.project_state,
             request.envelope.task_id.as_ref(),
-        )?;
-        let result_fields = status_result_fields(
+        ) {
+            Ok(task) => task,
+            Err(error) => {
+                return core_error_response(&request.envelope, Some(state_version), error)
+            }
+        };
+        let result_fields = match status_result_fields(
             &prepared.store,
             &request.envelope.project_id,
             prepared.context.project_state.state_version,
             task.as_ref(),
             &request.include,
-        )?;
+        ) {
+            Ok(result_fields) => result_fields,
+            Err(error) => {
+                return core_error_response(&request.envelope, Some(state_version), error)
+            }
+        };
 
-        self.execute_prepared_request(prepared, OwnerPipelineBranch::ReadOnly { result_fields })
+        match self
+            .execute_prepared_request(prepared, OwnerPipelineBranch::ReadOnly { result_fields })
+        {
+            Ok(response) => Ok(response),
+            Err(error) => core_error_response(&request.envelope, Some(state_version), error),
+        }
     }
 
     /// Executes `harness.intake` through the shared Core mutation pipeline.
@@ -124,13 +141,22 @@ impl CoreService {
             );
         }
 
-        let plan = plan_intake(
+        let plan = match plan_intake(
             self,
             store,
             project_state,
             request.clone(),
             &prepared.context.verified_surface,
-        )?;
+        ) {
+            Ok(plan) => plan,
+            Err(error) => {
+                return core_error_response(
+                    &request.envelope,
+                    Some(project_state.state_version),
+                    error,
+                )
+            }
+        };
 
         if request.envelope.dry_run {
             return self.execute_prepared_request(
@@ -199,8 +225,13 @@ impl CoreService {
             request.clone(),
         ) {
             Ok(plan) => plan,
-            Err(PlanError::Response(response)) => return Ok(*response),
-            Err(PlanError::Core(error)) => return Err(error),
+            Err(error) => {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    error,
+                )
+            }
         };
 
         if request.envelope.dry_run {
@@ -271,8 +302,13 @@ impl CoreService {
             &prepared.context.verified_surface,
         ) {
             Ok(plan) => plan,
-            Err(PlanError::Response(response)) => return Ok(*response),
-            Err(PlanError::Core(error)) => return Err(error),
+            Err(error) => {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    error,
+                )
+            }
         };
 
         if request.envelope.dry_run {
@@ -384,8 +420,17 @@ impl CoreService {
             });
         }
 
-        let handle_id = allocate_staged_artifact_handle_id(self, &prepared.store)?;
-        let staging_record = prepared
+        let handle_id = match allocate_staged_artifact_handle_id(self, &prepared.store) {
+            Ok(handle_id) => handle_id,
+            Err(error) => {
+                return core_error_response(
+                    &request.envelope,
+                    Some(project_state.state_version),
+                    error,
+                )
+            }
+        };
+        let staging_record = match prepared
             .store
             .create_artifact_staging(ArtifactStagingInsert {
                 handle_id: handle_id.into_inner(),
@@ -403,7 +448,16 @@ impl CoreService {
                 relation_hint: request.relation_hint,
                 payload_kind: stage_input.payload_kind,
                 safe_bytes_or_notice: stage_input.safe_bytes,
-            })?;
+            }) {
+            Ok(record) => record,
+            Err(error) => {
+                return rejected_pipeline_response(
+                    request.envelope.dry_run,
+                    Some(project_state.state_version),
+                    vec![store_failure_error(error)],
+                )
+            }
+        };
 
         let resolved_task_id = TaskId::new(staging_record.task_id.clone());
         let handle = StagedArtifactHandle {
@@ -482,8 +536,13 @@ impl CoreService {
             &prepared.context.verified_surface,
         ) {
             Ok(plan) => plan,
-            Err(PlanError::Response(response)) => return Ok(*response),
-            Err(PlanError::Core(error)) => return Err(error),
+            Err(error) => {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    error,
+                )
+            }
         };
 
         if request.envelope.dry_run {
@@ -553,8 +612,13 @@ impl CoreService {
             &prepared.context.verified_surface,
         ) {
             Ok(plan) => plan,
-            Err(PlanError::Response(response)) => return Ok(*response),
-            Err(PlanError::Core(error)) => return Err(error),
+            Err(error) => {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    error,
+                )
+            }
         };
 
         if request.envelope.dry_run {
@@ -618,8 +682,13 @@ impl CoreService {
             request.clone(),
         ) {
             Ok(plan) => plan,
-            Err(PlanError::Response(response)) => return Ok(*response),
-            Err(PlanError::Core(error)) => return Err(error),
+            Err(error) => {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    error,
+                )
+            }
         };
 
         if request.envelope.dry_run {
@@ -705,8 +774,13 @@ impl CoreService {
                 request.clone(),
             ) {
                 Ok(plan) => plan,
-                Err(PlanError::Response(response)) => return Ok(*response),
-                Err(PlanError::Core(error)) => return Err(error),
+                Err(error) => {
+                    return plan_error_response(
+                        &request.envelope,
+                        &prepared.context.project_state,
+                        error,
+                    )
+                }
             };
             return self.execute_prepared_request(
                 prepared,
@@ -731,8 +805,13 @@ impl CoreService {
             request.clone(),
         ) {
             Ok(plan) => plan,
-            Err(PlanError::Response(response)) => return Ok(*response),
-            Err(PlanError::Core(error)) => return Err(error),
+            Err(error) => {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    error,
+                )
+            }
         };
 
         if !plan.blockers.is_empty() {
@@ -3262,7 +3341,7 @@ fn matching_sensitive_approval(
         PlanError::Response(Box::new(infallible_rejected_pipeline_response(
             request.envelope.dry_run,
             Some(project_state.state_version),
-            vec![store_unavailable_error(error)],
+            vec![store_failure_error(error)],
         )))
     })?;
 
@@ -5456,10 +5535,8 @@ fn parse_storage_value<T>(field: &'static str, value: &str) -> CoreResult<T>
 where
     T: serde::de::DeserializeOwned,
 {
-    serde_json::from_value(Value::String(value.to_owned())).map_err(|error| {
-        CorePipelineError::InvalidDispatch {
-            detail: format!("{field} contains unsupported value {value}: {error}"),
-        }
+    serde_json::from_value(Value::String(value.to_owned())).map_err(|_| {
+        CorePipelineError::Store(StoreError::corrupt_stored_value("project_state", field))
     })
 }
 
@@ -5467,8 +5544,8 @@ fn parse_json_text<T>(field: &'static str, text: &str) -> CoreResult<T>
 where
     T: serde::de::DeserializeOwned,
 {
-    serde_json::from_str(text).map_err(|error| CorePipelineError::InvalidDispatch {
-        detail: format!("{field} is not valid stored JSON: {error}"),
+    serde_json::from_str(text).map_err(|_| {
+        CorePipelineError::Store(StoreError::corrupt_stored_json("project_state", field))
     })
 }
 
@@ -6025,9 +6102,37 @@ fn store_error_response(
     rejected_pipeline_response(
         envelope.dry_run,
         Some(project_state.state_version),
-        vec![store_unavailable_error(error)],
+        vec![store_failure_error(error)],
     )
     .expect("rejected response serialization should succeed")
+}
+
+fn core_error_response(
+    envelope: &ToolEnvelope,
+    state_version: Option<u64>,
+    error: CorePipelineError,
+) -> CoreResult<PipelineResponse> {
+    match error {
+        CorePipelineError::Store(error) => rejected_pipeline_response(
+            envelope.dry_run,
+            state_version,
+            vec![store_failure_error(error)],
+        ),
+        error => Err(error),
+    }
+}
+
+fn plan_error_response(
+    envelope: &ToolEnvelope,
+    project_state: &ProjectStateHeader,
+    error: PlanError,
+) -> CoreResult<PipelineResponse> {
+    match error {
+        PlanError::Response(response) => Ok(*response),
+        PlanError::Core(error) => {
+            core_error_response(envelope, Some(project_state.state_version), error)
+        }
+    }
 }
 
 fn no_active_task_response(
@@ -6045,22 +6150,6 @@ fn no_active_task_response(
         )],
     )
     .expect("rejected response serialization should succeed")
-}
-
-fn store_unavailable_error(error: StoreError) -> harness_types::ToolError {
-    tool_error(
-        match error {
-            StoreError::NotFound { .. } => ErrorCode::LocalAccessMismatch,
-            StoreError::InvalidInput { .. }
-            | StoreError::Io(_)
-            | StoreError::Sqlite(_)
-            | StoreError::MigrationConflict { .. }
-            | StoreError::SchemaInvariant { .. } => ErrorCode::McpUnavailable,
-        },
-        "Core storage or project binding is unavailable",
-        true,
-        None,
-    )
 }
 
 fn resolve_requested_mode(requested_mode: RequestedMode) -> TaskMode {
@@ -6084,7 +6173,7 @@ fn parse_task_mode(value: &str) -> CoreResult<Option<TaskMode>> {
         "advisor" => Ok(Some(TaskMode::Advisor)),
         "direct" => Ok(Some(TaskMode::Direct)),
         "work" => Ok(Some(TaskMode::Work)),
-        _ => invalid_storage(format!("unsupported Task mode {value}")),
+        _ => invalid_storage("tasks.mode"),
     }
 }
 
@@ -6098,7 +6187,7 @@ fn parse_lifecycle_phase(value: &str) -> CoreResult<TaskLifecyclePhase> {
         "completed" => Ok(TaskLifecyclePhase::Completed),
         "cancelled" => Ok(TaskLifecyclePhase::Cancelled),
         "superseded" => Ok(TaskLifecyclePhase::Superseded),
-        _ => invalid_storage(format!("unsupported Task lifecycle_phase {value}")),
+        _ => invalid_storage("tasks.lifecycle_phase"),
     }
 }
 
@@ -6109,7 +6198,7 @@ fn parse_task_result(value: &str) -> CoreResult<TaskResult> {
         "completed" => Ok(TaskResult::Completed),
         "cancelled" => Ok(TaskResult::Cancelled),
         "superseded" => Ok(TaskResult::Superseded),
-        _ => invalid_storage(format!("unsupported Task result {value}")),
+        _ => invalid_storage("tasks.result"),
     }
 }
 
@@ -6124,8 +6213,11 @@ fn parse_close_reason(close_summary_json: &str) -> CloseReason {
     }
 }
 
-fn invalid_storage<T>(detail: String) -> CoreResult<T> {
-    Err(CorePipelineError::InvalidDispatch { detail })
+fn invalid_storage<T>(field: &'static str) -> CoreResult<T> {
+    Err(CorePipelineError::Store(StoreError::corrupt_stored_value(
+        "project_state",
+        field,
+    )))
 }
 
 fn parse_json_object(text: &str) -> JsonObject {
@@ -6169,7 +6261,11 @@ fn json_array_nonempty_member(object: &JsonObject, key: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::{error::Error, fs, path::PathBuf};
+    use std::{
+        error::Error,
+        fs,
+        path::{Path, PathBuf},
+    };
 
     use harness_store::{
         bootstrap::{
@@ -6543,6 +6639,54 @@ mod tests {
         assert_eq!(dry_run.response_value["base"]["effect_kind"], "read_only");
         assert_eq!(dry_run.response_value["base"]["dry_run"], true);
         assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_stored_method_owned_json_routes_to_structured_unavailability(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "bad_method_json")?;
+        let judgment = harness.service.request_user_judgment(
+            user_judgment_request(
+                "req_bad_method_json_judgment",
+                "idem_bad_method_json_judgment",
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                JudgmentKind::ProductDecision,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+        harness.conn()?.execute(
+            "UPDATE user_judgments
+                SET options_json = '{not-json'
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+            rusqlite::params![PROJECT_ID, judgment_id],
+        )?;
+
+        let response = harness.service.record_user_judgment(
+            record_judgment_request(
+                "req_bad_method_json_record",
+                "idem_bad_method_json_record",
+                Some(3),
+                &task_id,
+                &judgment_id,
+                JudgmentKind::ProductDecision,
+                answer_payload(JudgmentKind::ProductDecision),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+
+        assert_store_rejection(&response, "MCP_UNAVAILABLE", "corrupt_stored_json");
+        assert_eq!(
+            response.response_value["errors"][0]["details"]["field"],
+            "user_judgments.options_json"
+        );
+        assert_public_response_has_no_internal_leak(&response, &harness.runtime_home_path);
         Ok(())
     }
 
@@ -9097,6 +9241,41 @@ mod tests {
         assert!(verified
             .verification_basis
             .contains("method_test_invocation"));
+    }
+
+    fn assert_store_rejection(
+        response: &PipelineResponse,
+        expected_code: &str,
+        expected_category: &str,
+    ) {
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(response.response_value["errors"][0]["code"], expected_code);
+        assert_eq!(
+            response.response_value["errors"][0]["details"]["store_failure_category"],
+            expected_category
+        );
+    }
+
+    fn assert_public_response_has_no_internal_leak(
+        response: &PipelineResponse,
+        runtime_home_path: &Path,
+    ) {
+        let body = &response.response_json;
+        let runtime_home = runtime_home_path.to_string_lossy();
+        assert!(!body.contains(runtime_home.as_ref()));
+        for fragment in [
+            "SELECT ",
+            "INSERT INTO",
+            "UPDATE ",
+            "DELETE ",
+            "constraint failed",
+            "state.sqlite",
+        ] {
+            assert!(
+                !body.contains(fragment),
+                "public response leaked internal fragment {fragment}: {body}"
+            );
+        }
     }
 
     fn status_include() -> StatusInclude {
