@@ -18,9 +18,10 @@ use harness_core::{
     CoreBoundary, CorePipelineError, CoreService, InvocationContext, PipelineResponse,
 };
 use harness_types::{
-    AccessClass, CloseTaskRequest, IntakeRequest, PrepareWriteRequest, ProjectId, RecordRunRequest,
-    RecordUserJudgmentRequest, RequestUserJudgmentRequest, StageArtifactRequest, StatusRequest,
-    SurfaceId, SurfaceInstanceId, ToolEnvelope, UpdateScopeRequest,
+    public_request_schema, AccessClass, CloseTaskRequest, IntakeRequest, PrepareWriteRequest,
+    ProjectId, RecordRunRequest, RecordUserJudgmentRequest, RequestUserJudgmentRequest,
+    StageArtifactRequest, StatusRequest, SurfaceId, SurfaceInstanceId, ToolEnvelope,
+    UpdateScopeRequest,
 };
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -287,10 +288,7 @@ pub fn public_method_tools() -> Vec<McpToolDefinition> {
         .map(|name| McpToolDefinition {
             name,
             description: tool_description(name),
-            input_schema: json!({
-                "type": "object",
-                "additionalProperties": true
-            }),
+            input_schema: public_request_schema(name).expect("public method schema should exist"),
         })
         .collect()
 }
@@ -578,9 +576,12 @@ mod tests {
     };
 
     use harness_core::{CoreBoundary, CoreService, InvocationContext};
-    use harness_store::bootstrap::{
-        initialize_runtime_home, register_project, register_surface, ProjectRegistration,
-        SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+    use harness_store::{
+        bootstrap::{
+            initialize_runtime_home, register_project, register_surface, ProjectRegistration,
+            SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+        },
+        core_pipeline::{CoreProjectStore, StorageEffectCounts},
     };
     use harness_test_support::TempRuntimeHome;
     use harness_types::{
@@ -668,6 +669,13 @@ mod tests {
         fn core(&self) -> CoreService {
             CoreService::new(&self.runtime_home_path)
         }
+
+        fn counts(&self) -> Result<StorageEffectCounts, Box<dyn Error>> {
+            Ok(
+                CoreProjectStore::open(&self.runtime_home_path, &ProjectId::new(PROJECT_ID))?
+                    .effect_counts()?,
+            )
+        }
     }
 
     #[test]
@@ -687,6 +695,33 @@ mod tests {
         assert_eq!(names, PUBLIC_METHOD_TOOL_NAMES);
         assert_eq!(tools.len(), 9);
         assert_eq!(unique_names.len(), 9);
+    }
+
+    #[test]
+    fn public_method_tool_schemas_are_closed_request_shapes() {
+        let tools = public_method_tools();
+
+        for tool in &tools {
+            assert_eq!(
+                tool.input_schema["additionalProperties"], false,
+                "{} should reject additional top-level properties",
+                tool.name
+            );
+            assert_required_fields(tool.name, &tool.input_schema);
+            for forbidden in [
+                "verified",
+                "surface_instance_id",
+                "verified_surface_context",
+                "access_class",
+                "capability_profile",
+            ] {
+                assert!(
+                    !schema_has_property(&tool.input_schema, forbidden),
+                    "{} schema should not expose invocation-only field {forbidden}",
+                    tool.name
+                );
+            }
+        }
     }
 
     #[test]
@@ -859,7 +894,7 @@ mod tests {
     }
 
     #[test]
-    fn caller_submitted_surface_instance_is_not_staging_provenance() -> Result<(), Box<dyn Error>> {
+    fn caller_submitted_invocation_context_is_rejected_before_core() -> Result<(), Box<dyn Error>> {
         let harness = TestHarness::new(json!({
             "access_class": "artifact_registration",
             "supported_access_classes": ["artifact_registration"],
@@ -872,15 +907,139 @@ mod tests {
             "task_req_stage_task_forged",
         ))?;
         params["surface_instance_id"] = json!("forged_surface_instance");
+        let before = harness.counts()?;
 
-        let response = adapter.call_tool("harness.stage_artifact", params)?;
+        let error = adapter
+            .call_tool("harness.stage_artifact", params)
+            .expect_err("forged invocation context should be invalid params");
 
-        assert_eq!(response.response_value["base"]["response_kind"], "result");
-        assert_eq!(
-            response.response_value["staged_artifact_handle"]["created_by_surface_instance_id"],
-            SURFACE_INSTANCE_ID
-        );
+        assert!(matches!(error, McpAdapterError::InvalidParams { .. }));
+        assert_eq!(harness.counts()?, before);
         Ok(())
+    }
+
+    fn assert_required_fields(tool_name: &str, schema: &Value) {
+        let required = schema["required"]
+            .as_array()
+            .expect("schema should have required fields")
+            .iter()
+            .map(|value| value.as_str().expect("required field name"))
+            .collect::<BTreeSet<_>>();
+        let expected = expected_required_fields(tool_name)
+            .iter()
+            .copied()
+            .collect::<BTreeSet<_>>();
+        assert_eq!(required, expected, "{tool_name} required fields");
+    }
+
+    fn expected_required_fields(tool_name: &str) -> &'static [&'static str] {
+        match tool_name {
+            "harness.intake" => &[
+                "envelope",
+                "plain_language_request",
+                "requested_mode",
+                "resume_policy",
+                "initial_scope",
+                "initial_context_refs",
+            ],
+            "harness.update_scope" => &[
+                "envelope",
+                "task_id",
+                "goal_summary",
+                "scope_update",
+                "scope_boundary",
+                "non_goals",
+                "acceptance_criteria",
+                "autonomy_boundary",
+                "baseline_ref",
+                "change_unit",
+                "related_scope_decision_refs",
+            ],
+            "harness.status" => &["envelope", "include"],
+            "harness.prepare_write" => &[
+                "envelope",
+                "task_id",
+                "change_unit_id",
+                "intended_operation",
+                "intended_paths",
+                "product_file_write_intended",
+                "sensitive_categories",
+                "baseline_ref",
+            ],
+            "harness.stage_artifact" => &[
+                "envelope",
+                "task_id",
+                "display_name",
+                "content_type",
+                "redaction_state",
+                "safe_bytes_or_notice",
+                "expected_sha256",
+                "expected_size_bytes",
+                "relation_hint",
+            ],
+            "harness.record_run" => &[
+                "envelope",
+                "task_id",
+                "change_unit_id",
+                "kind",
+                "run_id",
+                "baseline_ref",
+                "write_authorization_id",
+                "summary",
+                "observed_changes",
+                "artifact_inputs",
+                "evidence_updates",
+            ],
+            "harness.request_user_judgment" => &[
+                "envelope",
+                "task_id",
+                "change_unit_id",
+                "judgment_kind",
+                "presentation",
+                "question",
+                "options",
+                "context",
+                "affected_refs",
+                "required_for",
+                "expires_at",
+            ],
+            "harness.record_user_judgment" => &[
+                "envelope",
+                "user_judgment_id",
+                "judgment_kind",
+                "selected_option_id",
+                "answer",
+                "note",
+                "accepted_risks",
+            ],
+            "harness.close_task" => &[
+                "envelope",
+                "task_id",
+                "intent",
+                "close_reason",
+                "superseding_task_id",
+                "user_note",
+            ],
+            other => panic!("unexpected tool name: {other}"),
+        }
+    }
+
+    fn schema_has_property(schema: &Value, property_name: &str) -> bool {
+        match schema {
+            Value::Object(object) => {
+                object
+                    .get("properties")
+                    .and_then(Value::as_object)
+                    .is_some_and(|properties| properties.contains_key(property_name))
+                    || object
+                        .values()
+                        .any(|child| schema_has_property(child, property_name))
+            }
+            Value::Array(items) => items
+                .iter()
+                .any(|child| schema_has_property(child, property_name)),
+            Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => false,
+        }
     }
 
     fn create_task(

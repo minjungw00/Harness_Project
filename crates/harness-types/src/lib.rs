@@ -82,6 +82,67 @@ mod tests {
     }
 
     #[test]
+    fn authority_looking_request_fields_are_rejected() {
+        let mut envelope_value = envelope_json("agent");
+        envelope_value["verified"] = json!(true);
+        assert_unknown::<ToolEnvelope>(envelope_value, "verified");
+
+        let mut envelope_value = envelope_json("agent");
+        envelope_value["surface_instance_id"] = json!("surface_instance_forged");
+        assert_unknown::<ToolEnvelope>(envelope_value, "surface_instance_id");
+
+        for field in [
+            "verified_surface_context",
+            "access_class",
+            "capability_profile",
+        ] {
+            let mut request = status_request_json();
+            request[field] = json!({ "forged": true });
+            assert_unknown::<StatusRequest>(request, field);
+        }
+    }
+
+    #[test]
+    fn unknown_top_level_fields_are_rejected_on_public_requests() {
+        for (method_name, mut request) in public_request_json_samples() {
+            request["ordinary_unknown_field"] = json!("not documented");
+            let error = deserialize_public_request(method_name, request).unwrap_err();
+            assert!(
+                error.to_string().contains("ordinary_unknown_field"),
+                "unexpected error for {method_name}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn documented_extension_objects_remain_usable() {
+        let mut update_scope = update_scope_request_json();
+        update_scope["change_unit"]["owner_defined_note"] = json!({
+            "kept": true,
+            "reason": "change_unit carries method-owned object data"
+        });
+        let request: UpdateScopeRequest =
+            serde_json::from_value(update_scope).expect("change_unit object fields remain open");
+        assert!(request
+            .change_unit
+            .fields
+            .contains_key("owner_defined_note"));
+
+        let mut judgment = record_user_judgment_request_json();
+        judgment["answer"]["product_decision"]["owner_defined"] = json!({
+            "nested": ["payload", "data"]
+        });
+        let request: RecordUserJudgmentRequest = serde_json::from_value(judgment)
+            .expect("decision-specific payload objects remain open");
+        assert!(request
+            .answer
+            .product_decision
+            .as_ref()
+            .expect("product decision branch")
+            .contains_key("owner_defined"));
+    }
+
+    #[test]
     fn stage_artifact_result_serializes_documented_shape() {
         let result = StageArtifactResult {
             base: ToolResultBase {
@@ -232,6 +293,229 @@ mod tests {
             "expected_state_version": 62,
             "dry_run": false,
             "locale": "en-US"
+        })
+    }
+
+    fn public_request_json_samples() -> Vec<(&'static str, Value)> {
+        vec![
+            ("harness.intake", intake_request_json()),
+            ("harness.update_scope", update_scope_request_json()),
+            ("harness.status", status_request_json()),
+            ("harness.prepare_write", prepare_write_request_json()),
+            ("harness.stage_artifact", stage_artifact_request_json()),
+            ("harness.record_run", record_run_request_json()),
+            (
+                "harness.request_user_judgment",
+                request_user_judgment_request_json(),
+            ),
+            (
+                "harness.record_user_judgment",
+                record_user_judgment_request_json(),
+            ),
+            ("harness.close_task", close_task_request_json()),
+        ]
+    }
+
+    fn deserialize_public_request(
+        method_name: &str,
+        value: Value,
+    ) -> Result<(), serde_json::Error> {
+        match method_name {
+            "harness.intake" => serde_json::from_value::<IntakeRequest>(value).map(drop),
+            "harness.update_scope" => serde_json::from_value::<UpdateScopeRequest>(value).map(drop),
+            "harness.status" => serde_json::from_value::<StatusRequest>(value).map(drop),
+            "harness.prepare_write" => {
+                serde_json::from_value::<PrepareWriteRequest>(value).map(drop)
+            }
+            "harness.stage_artifact" => {
+                serde_json::from_value::<StageArtifactRequest>(value).map(drop)
+            }
+            "harness.record_run" => serde_json::from_value::<RecordRunRequest>(value).map(drop),
+            "harness.request_user_judgment" => {
+                serde_json::from_value::<RequestUserJudgmentRequest>(value).map(drop)
+            }
+            "harness.record_user_judgment" => {
+                serde_json::from_value::<RecordUserJudgmentRequest>(value).map(drop)
+            }
+            "harness.close_task" => serde_json::from_value::<CloseTaskRequest>(value).map(drop),
+            other => panic!("unsupported method sample: {other}"),
+        }
+    }
+
+    fn assert_unknown<T>(value: Value, field: &str)
+    where
+        T: serde::de::DeserializeOwned + std::fmt::Debug,
+    {
+        let error = serde_json::from_value::<T>(value).expect_err("unknown field should fail");
+        assert!(
+            error.to_string().contains(field),
+            "expected error to mention {field}, got {error}"
+        );
+    }
+
+    fn intake_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("agent"),
+            "plain_language_request": "Create a first-run checklist.",
+            "requested_mode": "work",
+            "resume_policy": "create_new",
+            "initial_scope": {
+                "boundary": "First-run checklist.",
+                "non_goals": ["Changing account creation."],
+                "acceptance_criteria": ["Checklist appears for new workspaces."]
+            },
+            "initial_context_refs": []
+        })
+    }
+
+    fn update_scope_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("agent"),
+            "task_id": "task_empty_001",
+            "goal_summary": "Limit saved search filters.",
+            "scope_update": {
+                "include": ["Saved-filter owner and label edits."],
+                "exclude": ["Search indexing behavior."]
+            },
+            "scope_boundary": "Saved-filter owner and label edits.",
+            "non_goals": ["Search indexing behavior."],
+            "acceptance_criteria": ["Saved filters reject out-of-scope edits."],
+            "autonomy_boundary": "Stay within saved-filter validation.",
+            "baseline_ref": "baseline_empty_001",
+            "change_unit": {
+                "operation": "create_current",
+                "scope_summary": "Saved-filter validation.",
+                "affected_paths": ["src/search/saved-filter.ts"]
+            },
+            "related_scope_decision_refs": []
+        })
+    }
+
+    fn status_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("agent"),
+            "include": {
+                "task": true,
+                "pending_user_judgments": true,
+                "write_authority": false,
+                "evidence": false,
+                "close": true,
+                "guarantees": true
+            }
+        })
+    }
+
+    fn prepare_write_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("agent"),
+            "task_id": "task_empty_001",
+            "change_unit_id": "cu_empty_001",
+            "intended_operation": "update profile preference save flow",
+            "intended_paths": ["src/preferences/profile-save.ts"],
+            "product_file_write_intended": true,
+            "sensitive_categories": [],
+            "baseline_ref": "baseline_empty_001"
+        })
+    }
+
+    fn stage_artifact_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("agent"),
+            "task_id": "task_empty_001",
+            "display_name": "diagnostic_trace.log",
+            "content_type": "text/plain",
+            "redaction_state": "none",
+            "safe_bytes_or_notice": "Local trace sample.",
+            "expected_sha256": null,
+            "expected_size_bytes": null,
+            "relation_hint": "diagnostic_log"
+        })
+    }
+
+    fn record_run_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("agent"),
+            "task_id": "task_empty_001",
+            "change_unit_id": "cu_empty_001",
+            "kind": "implementation",
+            "run_id": null,
+            "baseline_ref": "baseline_empty_001",
+            "write_authorization_id": null,
+            "summary": "Search-result count validation passed.",
+            "observed_changes": {
+                "changed_paths": [],
+                "product_file_write_observed": false,
+                "sensitive_categories": [],
+                "baseline_ref": "baseline_empty_001"
+            },
+            "artifact_inputs": [],
+            "evidence_updates": []
+        })
+    }
+
+    fn request_user_judgment_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("agent"),
+            "task_id": "task_empty_001",
+            "change_unit_id": "cu_empty_001",
+            "judgment_kind": "product_decision",
+            "presentation": "short",
+            "question": "Should the dashboard banner use concise copy?",
+            "options": [
+                {
+                    "option_id": "concise",
+                    "label": "Use concise copy",
+                    "description": "Record the focused product decision.",
+                    "consequence": "The pending decision can be resolved.",
+                    "is_default": true
+                }
+            ],
+            "context": {
+                "summary": "The banner has two candidate copy lengths.",
+                "related_refs": [],
+                "artifact_refs": [],
+                "visible_risks": [],
+                "constraints": ["Only banner copy length is in scope."]
+            },
+            "affected_refs": [],
+            "required_for": "close",
+            "expires_at": null
+        })
+    }
+
+    fn record_user_judgment_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("user"),
+            "user_judgment_id": "uj_empty_001",
+            "judgment_kind": "product_decision",
+            "selected_option_id": "keep",
+            "answer": {
+                "product_decision": {
+                    "judgment": {
+                        "decision": "accepted",
+                        "rationale": "The illustration is suitable."
+                    }
+                },
+                "technical_decision": null,
+                "scope_decision": null,
+                "sensitive_action_scope": null,
+                "final_acceptance": null,
+                "residual_risk_acceptance": null,
+                "cancellation": null
+            },
+            "note": null,
+            "accepted_risks": []
+        })
+    }
+
+    fn close_task_request_json() -> Value {
+        json!({
+            "envelope": envelope_json("agent"),
+            "task_id": "task_empty_001",
+            "intent": "check",
+            "close_reason": null,
+            "superseding_task_id": null,
+            "user_note": null
         })
     }
 }

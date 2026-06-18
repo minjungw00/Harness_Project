@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -19,7 +20,8 @@ use crate::values::{
 pub type JsonObject = Map<String, Value>;
 
 /// Common public-method request envelope.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ToolEnvelope {
     pub project_id: ProjectId,
     pub task_id: Option<TaskId>,
@@ -33,7 +35,7 @@ pub struct ToolEnvelope {
 }
 
 /// Common result metadata carried by each concrete response branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ToolResultBase {
     pub response_kind: ResponseKind,
     pub effect_kind: EffectKind,
@@ -43,21 +45,21 @@ pub struct ToolResultBase {
 }
 
 /// Rejected response branch shared by public methods.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ToolRejectedResponse {
     pub base: ToolResultBase,
     pub errors: Vec<ToolError>,
 }
 
 /// Dry-run preview response branch shared by methods that define one.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ToolDryRunResponse {
     pub base: ToolResultBase,
     pub dry_run_summary: DryRunSummary,
 }
 
 /// Method response branch wrapper.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(untagged)]
 pub enum ToolResponse<T> {
     Result(T),
@@ -66,7 +68,7 @@ pub enum ToolResponse<T> {
 }
 
 /// Public API error item.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ToolError {
     pub code: ErrorCode,
     pub message: String,
@@ -75,14 +77,14 @@ pub struct ToolError {
 }
 
 /// Event reference emitted in common result metadata.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct EventRef {
     pub event_id: EventId,
     pub event_kind: String,
 }
 
 /// Common dry-run summary shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct DryRunSummary {
     pub planned_effects: Vec<PlannedEffect>,
     pub would_blockers: Vec<PlannedBlocker>,
@@ -92,7 +94,7 @@ pub struct DryRunSummary {
 }
 
 /// Descriptive planned effect in a dry-run summary.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct PlannedEffect {
     pub target_kind: String,
     pub action: String,
@@ -100,7 +102,7 @@ pub struct PlannedEffect {
 }
 
 /// Descriptive planned blocker in a dry-run summary.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct PlannedBlocker {
     pub source_kind: PlannedBlockerSourceKind,
     pub category: String,
@@ -110,7 +112,8 @@ pub struct PlannedBlocker {
 }
 
 /// Common public reference for Core-owned state records.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct StateRecordRef {
     pub record_kind: StateRecordKind,
     pub record_id: RecordId,
@@ -120,7 +123,7 @@ pub struct StateRecordRef {
 }
 
 /// Compact current-position state returned by public methods.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct StateSummary {
     pub project_id: ProjectId,
     pub state_version: u64,
@@ -145,7 +148,7 @@ pub struct StateSummary {
 }
 
 /// Task lifecycle state shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct TaskLifecycleState {
     pub lifecycle_phase: TaskLifecyclePhase,
     pub close_reason: CloseReason,
@@ -154,7 +157,7 @@ pub struct TaskLifecycleState {
 }
 
 /// Shaping-readiness view over current Task and Change Unit state.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ShapingReadiness {
     pub goal_summary_known: bool,
     pub scope_boundary_known: bool,
@@ -169,7 +172,7 @@ pub struct ShapingReadiness {
 }
 
 /// Shaping gap display item.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ShapingGap {
     pub gap_kind: String,
     pub message: String,
@@ -178,7 +181,7 @@ pub struct ShapingGap {
 }
 
 /// Canonical next-action display shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct NextActionSummary {
     pub action_kind: NextActionKind,
     pub owner_method: Option<MethodName>,
@@ -188,7 +191,7 @@ pub struct NextActionSummary {
 }
 
 /// Current write-authority display summary.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct WriteAuthoritySummary {
     pub status: WriteAuthorizationStatus,
     pub write_authorization_ref: Option<StateRecordRef>,
@@ -198,7 +201,7 @@ pub struct WriteAuthoritySummary {
 }
 
 /// Write Authorization summary returned by prepare-write.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct WriteAuthorizationSummary {
     pub write_authorization_ref: StateRecordRef,
     pub status: WriteAuthorizationStatus,
@@ -208,7 +211,7 @@ pub struct WriteAuthorizationSummary {
 }
 
 /// One-attempt boundary captured by a Write Authorization.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct AuthorizedAttemptScope {
     pub task_id: TaskId,
     pub change_unit_id: ChangeUnitId,
@@ -220,7 +223,7 @@ pub struct AuthorizedAttemptScope {
 }
 
 /// Method-scoped prepare-write decision reason.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct WriteDecisionReason {
     pub category: WriteDecisionCategory,
     pub code: String,
@@ -229,7 +232,7 @@ pub struct WriteDecisionReason {
 }
 
 /// Evidence coverage summary.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct EvidenceSummary {
     pub status: EvidenceStatus,
     pub completion_policy: CompletionPolicy,
@@ -239,14 +242,15 @@ pub struct EvidenceSummary {
 }
 
 /// Evidence completion policy display shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct CompletionPolicy {
     pub evidence_required: bool,
     pub required_claims: Vec<String>,
 }
 
 /// Evidence claim coverage item.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct EvidenceCoverageItem {
     pub claim: String,
     pub required_for_close: bool,
@@ -257,7 +261,7 @@ pub struct EvidenceCoverageItem {
 }
 
 /// Recorded run summary.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RunSummary {
     pub run_ref: StateRecordRef,
     pub kind: RunKind,
@@ -267,7 +271,8 @@ pub struct RunSummary {
 }
 
 /// Observed changes for a recorded run.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ObservedChanges {
     pub changed_paths: Vec<String>,
     pub product_file_write_observed: bool,
@@ -276,7 +281,7 @@ pub struct ObservedChanges {
 }
 
 /// Close-readiness blocker data shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct CloseReadinessBlocker {
     pub category: CloseReadinessBlockerCategory,
     pub code: String,
@@ -286,7 +291,7 @@ pub struct CloseReadinessBlocker {
 }
 
 /// Validator result display shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ValidatorResult {
     pub validator_id: String,
     pub status: ValidatorStatus,
@@ -296,7 +301,7 @@ pub struct ValidatorResult {
 }
 
 /// Security or capability guarantee display shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct GuaranteeDisplay {
     pub level: GuaranteeLevel,
     pub basis: String,
@@ -304,7 +309,8 @@ pub struct GuaranteeDisplay {
 }
 
 /// Public artifact reference and metadata shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ArtifactRef {
     pub artifact_id: ArtifactId,
     pub project_id: ProjectId,
@@ -322,7 +328,8 @@ pub struct ArtifactRef {
 }
 
 /// Transient staged-artifact handle shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct StagedArtifactHandle {
     pub handle_id: StagedArtifactHandleId,
     pub project_id: ProjectId,
@@ -338,7 +345,8 @@ pub struct StagedArtifactHandle {
 }
 
 /// Request-side artifact link input.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ArtifactInput {
     pub artifact_input_id: ArtifactInputId,
     pub source_kind: ArtifactInputSourceKind,
@@ -352,7 +360,7 @@ pub struct ArtifactInput {
 }
 
 /// Durable user-owned judgment shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct UserJudgment {
     pub judgment_id: UserJudgmentId,
     pub project_id: ProjectId,
@@ -373,7 +381,7 @@ pub struct UserJudgment {
 }
 
 /// Proposed focused judgment shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct UserJudgmentCandidate {
     pub judgment_kind: JudgmentKind,
     pub presentation: JudgmentPresentation,
@@ -386,7 +394,8 @@ pub struct UserJudgmentCandidate {
 }
 
 /// User judgment option.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct UserJudgmentOption {
     pub option_id: UserJudgmentOptionId,
     pub label: String,
@@ -396,7 +405,8 @@ pub struct UserJudgmentOption {
 }
 
 /// User judgment context.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct UserJudgmentContext {
     pub summary: String,
     pub related_refs: Vec<StateRecordRef>,
@@ -406,7 +416,7 @@ pub struct UserJudgmentContext {
 }
 
 /// Recorded judgment resolution.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct UserJudgmentResolution {
     pub selected_option_id: UserJudgmentOptionId,
     pub answer: RecordUserJudgmentPayload,
@@ -416,7 +426,8 @@ pub struct UserJudgmentResolution {
 }
 
 /// Decision-specific judgment payload branches.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct RecordUserJudgmentPayload {
     pub product_decision: Option<JsonObject>,
     pub technical_decision: Option<JsonObject>,
@@ -428,7 +439,8 @@ pub struct RecordUserJudgmentPayload {
 }
 
 /// Sensitive-action approval context shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct SensitiveActionScope {
     pub action_kind: String,
     pub description: String,
@@ -442,7 +454,8 @@ pub struct SensitiveActionScope {
 }
 
 /// Visible residual-risk input shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct AcceptedRiskInput {
     pub risk_id: Option<RiskId>,
     pub summary: String,

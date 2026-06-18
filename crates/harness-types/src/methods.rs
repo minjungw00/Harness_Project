@@ -1,4 +1,6 @@
+use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::ids::{
     BaselineRef, ChangeUnitId, RunId, TaskId, UserJudgmentId, UserJudgmentOptionId,
@@ -45,7 +47,8 @@ pub type RecordUserJudgmentResponse = ToolResponse<RecordUserJudgmentResult>;
 pub type CloseTaskResponse = ToolResponse<CloseTaskResult>;
 
 /// `harness.intake` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct IntakeRequest {
     pub envelope: ToolEnvelope,
     pub plain_language_request: String,
@@ -56,7 +59,8 @@ pub struct IntakeRequest {
 }
 
 /// Intake initial scope object.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct InitialScope {
     pub boundary: String,
     pub non_goals: Vec<String>,
@@ -64,7 +68,7 @@ pub struct InitialScope {
 }
 
 /// `harness.intake` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct IntakeResult {
     pub base: ToolResultBase,
     pub task_ref: StateRecordRef,
@@ -74,7 +78,8 @@ pub struct IntakeResult {
 }
 
 /// `harness.update_scope` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct UpdateScopeRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
@@ -90,14 +95,15 @@ pub struct UpdateScopeRequest {
 }
 
 /// Include/exclude scope-update object.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ScopeUpdate {
     pub include: Vec<String>,
     pub exclude: Vec<String>,
 }
 
 /// Change Unit update object. Additional method-owned fields remain object data.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ChangeUnitUpdate {
     pub operation: ChangeUnitOperation,
     #[serde(flatten)]
@@ -105,7 +111,7 @@ pub struct ChangeUnitUpdate {
 }
 
 /// `harness.update_scope` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct UpdateScopeResult {
     pub base: ToolResultBase,
     pub task_ref: StateRecordRef,
@@ -118,14 +124,16 @@ pub struct UpdateScopeResult {
 }
 
 /// `harness.status` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct StatusRequest {
     pub envelope: ToolEnvelope,
     pub include: StatusInclude,
 }
 
 /// Status include flags shown by the method owner.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct StatusInclude {
     pub task: bool,
     pub pending_user_judgments: bool,
@@ -136,7 +144,7 @@ pub struct StatusInclude {
 }
 
 /// `harness.status` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct StatusResult {
     pub base: ToolResultBase,
     pub active_task: Option<StateSummary>,
@@ -150,7 +158,8 @@ pub struct StatusResult {
 }
 
 /// `harness.prepare_write` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct PrepareWriteRequest {
     pub envelope: ToolEnvelope,
     pub task_id: Option<TaskId>,
@@ -163,7 +172,7 @@ pub struct PrepareWriteRequest {
 }
 
 /// `harness.prepare_write` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct PrepareWriteResult {
     pub base: ToolResultBase,
     pub decision: PrepareWriteDecision,
@@ -178,7 +187,8 @@ pub struct PrepareWriteResult {
 }
 
 /// `harness.stage_artifact` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct StageArtifactRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
@@ -192,7 +202,7 @@ pub struct StageArtifactRequest {
 }
 
 /// `harness.stage_artifact` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct StageArtifactResult {
     pub base: ToolResultBase,
     pub staged_artifact_handle: StagedArtifactHandle,
@@ -200,7 +210,8 @@ pub struct StageArtifactResult {
 }
 
 /// `harness.record_run` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct RecordRunRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
@@ -216,7 +227,7 @@ pub struct RecordRunRequest {
 }
 
 /// `harness.record_run` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RecordRunResult {
     pub base: ToolResultBase,
     pub run_summary: RunSummary,
@@ -227,7 +238,8 @@ pub struct RecordRunResult {
 }
 
 /// `harness.request_user_judgment` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct RequestUserJudgmentRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
@@ -243,7 +255,7 @@ pub struct RequestUserJudgmentRequest {
 }
 
 /// `harness.request_user_judgment` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RequestUserJudgmentResult {
     pub base: ToolResultBase,
     pub user_judgment_ref: StateRecordRef,
@@ -253,7 +265,8 @@ pub struct RequestUserJudgmentResult {
 }
 
 /// `harness.record_user_judgment` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct RecordUserJudgmentRequest {
     pub envelope: ToolEnvelope,
     pub user_judgment_id: UserJudgmentId,
@@ -265,7 +278,7 @@ pub struct RecordUserJudgmentRequest {
 }
 
 /// `harness.record_user_judgment` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RecordUserJudgmentResult {
     pub base: ToolResultBase,
     pub user_judgment_ref: StateRecordRef,
@@ -276,7 +289,8 @@ pub struct RecordUserJudgmentResult {
 }
 
 /// `harness.close_task` request params.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct CloseTaskRequest {
     pub envelope: ToolEnvelope,
     pub task_id: TaskId,
@@ -287,7 +301,7 @@ pub struct CloseTaskRequest {
 }
 
 /// `harness.close_task` method result branch.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct CloseTaskResult {
     pub base: ToolResultBase,
     pub close_state: CloseState,
@@ -295,4 +309,52 @@ pub struct CloseTaskResult {
     pub blockers: Vec<CloseReadinessBlocker>,
     pub evidence_summary: Option<EvidenceSummary>,
     pub artifact_refs: Vec<ArtifactRef>,
+}
+
+/// Returns the generated JSON Schema for one public method request shape.
+pub fn public_request_schema(method_name: &str) -> Option<Value> {
+    match method_name {
+        "harness.intake" => Some(request_schema::<IntakeRequest>()),
+        "harness.update_scope" => Some(request_schema::<UpdateScopeRequest>()),
+        "harness.status" => Some(request_schema::<StatusRequest>()),
+        "harness.prepare_write" => Some(request_schema::<PrepareWriteRequest>()),
+        "harness.stage_artifact" => Some(request_schema::<StageArtifactRequest>()),
+        "harness.record_run" => Some(request_schema::<RecordRunRequest>()),
+        "harness.request_user_judgment" => Some(request_schema::<RequestUserJudgmentRequest>()),
+        "harness.record_user_judgment" => Some(request_schema::<RecordUserJudgmentRequest>()),
+        "harness.close_task" => Some(request_schema::<CloseTaskRequest>()),
+        _ => None,
+    }
+}
+
+fn request_schema<T: JsonSchema>() -> Value {
+    let mut schema = serde_json::to_value(schema_for!(T)).expect("request schema should serialize");
+    require_declared_properties(&mut schema);
+    schema
+}
+
+fn require_declared_properties(value: &mut Value) {
+    match value {
+        Value::Object(object) => {
+            if let Some(Value::Object(properties)) = object.get("properties") {
+                let mut required = properties
+                    .keys()
+                    .cloned()
+                    .map(Value::String)
+                    .collect::<Vec<_>>();
+                required.sort_by(|left, right| left.as_str().cmp(&right.as_str()));
+                object.insert("required".to_owned(), Value::Array(required));
+            }
+
+            for child in object.values_mut() {
+                require_declared_properties(child);
+            }
+        }
+        Value::Array(items) => {
+            for child in items {
+                require_declared_properties(child);
+            }
+        }
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
+    }
 }

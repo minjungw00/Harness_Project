@@ -62,15 +62,13 @@ fn adapter_uses_session_surface_context_for_artifact_provenance() -> Result<(), 
         .to_owned();
 
     let adapter = adapter(&fixture, AccessClass::ArtifactRegistration);
-    let mut params = serde_json::to_value(fixture.stage_artifact_request(
+    let params = serde_json::to_value(fixture.stage_artifact_request(
         "req_mcp_stage",
         None,
         false,
         Some(1),
         &task_id,
     ))?;
-    params["surface_instance_id"] = json!("forged_surface_instance");
-    params["access_class"] = json!("core_mutation");
 
     let response = adapter.call_tool("harness.stage_artifact", params)?;
 
@@ -85,6 +83,87 @@ fn adapter_uses_session_surface_context_for_artifact_provenance() -> Result<(), 
     );
     assert_eq!(fixture.counts()?.state_version, 1);
     assert_eq!(fixture.counts()?.artifact_staging, 1);
+    Ok(())
+}
+
+#[test]
+fn invalid_mcp_authority_fields_are_rejected_before_core() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_invalid_fields")?;
+    let core = CoreService::new(fixture.runtime_home_path());
+    let intake = core.intake(
+        fixture.intake_request("req_invalid_task", "idem_invalid_task", false, Some(0)),
+        invocation(&fixture, AccessClass::CoreMutation),
+    )?;
+    let task_id = intake.response_value["task_ref"]["record_id"]
+        .as_str()
+        .expect("task ref should be present")
+        .to_owned();
+    let adapter = adapter(&fixture, AccessClass::ArtifactRegistration);
+
+    for (field_path, forged_value) in [
+        ("envelope.verified", json!(true)),
+        (
+            "envelope.surface_instance_id",
+            json!("surface_instance_forged"),
+        ),
+        ("verified_surface_context", json!({ "verified": true })),
+        ("access_class", json!("core_mutation")),
+        (
+            "capability_profile",
+            json!({ "artifact_registration": true }),
+        ),
+    ] {
+        let mut params = serde_json::to_value(fixture.stage_artifact_request(
+            &format!("req_invalid_{}", field_path.replace('.', "_")),
+            None,
+            false,
+            Some(1),
+            &task_id,
+        ))?;
+        if let Some(field) = field_path.strip_prefix("envelope.") {
+            params["envelope"][field] = forged_value;
+        } else {
+            params[field_path] = forged_value;
+        }
+        let before = fixture.counts()?;
+
+        let error = adapter
+            .call_tool("harness.stage_artifact", params)
+            .expect_err("invalid request params should fail before Core");
+
+        assert!(matches!(
+            error,
+            harness_mcp::McpAdapterError::InvalidParams { .. }
+        ));
+        assert_eq!(
+            fixture.counts()?,
+            before,
+            "{field_path} should create no storage effect"
+        );
+    }
+
+    Ok(())
+}
+
+#[test]
+fn stdio_invalid_params_returns_protocol_error_without_storage_effect() -> Result<(), Box<dyn Error>>
+{
+    let fixture = CoreFixture::new("mcp_stdio_invalid")?;
+    let adapter = adapter(&fixture, AccessClass::ReadStatus);
+    let before = fixture.counts()?;
+    let input = Cursor::new(
+        br#"{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"project_fixture","task_id":null,"actor_kind":"agent","surface_id":"surface_fixture","request_id":"req_stdio_invalid","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":true,"evidence":true,"close":true,"guarantees":true},"access_class":"core_mutation"}}}
+"#
+        .to_vec(),
+    );
+    let mut output = Vec::new();
+
+    run_stdio(adapter, BufReader::new(input), &mut output)?;
+
+    let response: Value = serde_json::from_slice(&output)?;
+    assert_eq!(response["error"]["code"], -32602);
+    assert_eq!(response["error"]["message"], "Invalid params");
+    assert_eq!(fixture.counts()?, before);
     Ok(())
 }
 

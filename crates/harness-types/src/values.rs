@@ -1,7 +1,8 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Supported public Harness method names.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub enum MethodName {
     #[serde(rename = "harness.intake")]
     Intake,
@@ -41,7 +42,7 @@ impl MethodName {
 }
 
 /// Controlled API actor kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ActorKind {
     Agent,
@@ -49,7 +50,7 @@ pub enum ActorKind {
 }
 
 /// Controlled next-action category.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum NextActionKind {
     UpdateScope,
@@ -62,7 +63,7 @@ pub enum NextActionKind {
 }
 
 /// Common API response branch metadata.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ResponseKind {
     Result,
@@ -71,7 +72,7 @@ pub enum ResponseKind {
 }
 
 /// Common API effect metadata.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum EffectKind {
     ReadOnly,
@@ -81,7 +82,7 @@ pub enum EffectKind {
 }
 
 /// Request-level API compatibility access class.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AccessClass {
     ReadStatus,
@@ -93,7 +94,7 @@ pub enum AccessClass {
 }
 
 /// State reference discriminator values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum StateRecordKind {
     ProjectState,
@@ -110,7 +111,7 @@ pub enum StateRecordKind {
 }
 
 /// Concrete output Task modes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskMode {
     Advisor,
@@ -119,7 +120,7 @@ pub enum TaskMode {
 }
 
 /// Intake input mode, including the input-only `auto` value.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RequestedMode {
     Advisor,
@@ -129,7 +130,7 @@ pub enum RequestedMode {
 }
 
 /// Task lifecycle phase values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskLifecyclePhase {
     Shaping,
@@ -143,7 +144,7 @@ pub enum TaskLifecyclePhase {
 }
 
 /// Close-state values returned by close-task result paths.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CloseState {
     Ready,
@@ -154,7 +155,7 @@ pub enum CloseState {
 }
 
 /// Status close-state values, including `none` for no current close state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum StatusCloseState {
     Ready,
@@ -166,7 +167,7 @@ pub enum StatusCloseState {
 }
 
 /// Task close-reason values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CloseReason {
     None,
@@ -177,7 +178,7 @@ pub enum CloseReason {
 }
 
 /// Task result values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskResult {
     None,
@@ -188,7 +189,7 @@ pub enum TaskResult {
 }
 
 /// Intake resume-policy values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ResumePolicy {
     ResumeActive,
@@ -198,7 +199,7 @@ pub enum ResumePolicy {
 }
 
 /// Update-scope Change Unit operation values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ChangeUnitOperation {
     KeepCurrent,
@@ -207,7 +208,7 @@ pub enum ChangeUnitOperation {
 }
 
 /// Close-task intent values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CloseIntent {
     Check,
@@ -217,7 +218,7 @@ pub enum CloseIntent {
 }
 
 /// Prepare-write decision values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum PrepareWriteDecision {
     Allowed,
@@ -227,7 +228,7 @@ pub enum PrepareWriteDecision {
 }
 
 /// Prepare-write authorization-effect values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthorizationEffect {
     None,
@@ -236,7 +237,7 @@ pub enum AuthorizationEffect {
 }
 
 /// Write Authorization status values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum WriteAuthorizationStatus {
     Active,
@@ -247,7 +248,7 @@ pub enum WriteAuthorizationStatus {
 }
 
 /// Run kind values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RunKind {
     ShapingUpdate,
@@ -256,7 +257,7 @@ pub enum RunKind {
 }
 
 /// Dry-run planned blocker source values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum PlannedBlockerSourceKind {
     WriteDecision,
@@ -264,7 +265,7 @@ pub enum PlannedBlockerSourceKind {
 }
 
 /// Write-decision reason category values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum WriteDecisionCategory {
     Scope,
@@ -276,7 +277,7 @@ pub enum WriteDecisionCategory {
 }
 
 /// Close-readiness blocker category values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CloseReadinessBlockerCategory {
     Task,
@@ -296,7 +297,7 @@ pub enum CloseReadinessBlockerCategory {
 }
 
 /// Evidence summary status values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum EvidenceStatus {
     Unknown,
@@ -306,7 +307,7 @@ pub enum EvidenceStatus {
 }
 
 /// Evidence coverage item state values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum EvidenceCoverageState {
     Unsupported,
@@ -318,7 +319,7 @@ pub enum EvidenceCoverageState {
 }
 
 /// Validator status values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ValidatorStatus {
     Passed,
@@ -328,7 +329,7 @@ pub enum ValidatorStatus {
 }
 
 /// Validator severity values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ValidatorSeverity {
     Info,
@@ -338,7 +339,7 @@ pub enum ValidatorSeverity {
 }
 
 /// Guarantee-display level values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum GuaranteeLevel {
     Cooperative,
@@ -346,7 +347,7 @@ pub enum GuaranteeLevel {
 }
 
 /// Artifact input source values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ArtifactInputSourceKind {
     StagedArtifact,
@@ -354,7 +355,7 @@ pub enum ArtifactInputSourceKind {
 }
 
 /// Artifact redaction-state values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RedactionState {
     None,
@@ -364,7 +365,7 @@ pub enum RedactionState {
 }
 
 /// Artifact availability display values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ArtifactAvailability {
     Available,
@@ -376,7 +377,7 @@ pub enum ArtifactAvailability {
 }
 
 /// Judgment-kind values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum JudgmentKind {
     ProductDecision,
@@ -389,14 +390,14 @@ pub enum JudgmentKind {
 }
 
 /// Judgment presentation values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum JudgmentPresentation {
     Short,
 }
 
 /// Judgment required-for values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum JudgmentRequiredFor {
     NextAction,
@@ -408,7 +409,7 @@ pub enum JudgmentRequiredFor {
 }
 
 /// User judgment status values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum UserJudgmentStatus {
     Pending,
@@ -422,7 +423,7 @@ pub enum UserJudgmentStatus {
 }
 
 /// Public API error code values.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ErrorCode {
     ValidationFailed,

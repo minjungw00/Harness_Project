@@ -7411,10 +7411,6 @@ mod tests {
         request.content_type = "application/octet-stream".to_owned();
         request.redaction_state = RedactionState::Blocked;
         request.safe_bytes_or_notice = "Binary output omitted; see local run context.".to_owned();
-        let mut value = serde_json::to_value(request)?;
-        value["created_by_surface_id"] = json!("forged_surface");
-        value["created_by_surface_instance_id"] = json!("forged_instance");
-        let request: StageArtifactRequest = serde_json::from_value(value)?;
 
         let response = harness
             .service
@@ -7438,6 +7434,25 @@ mod tests {
         let row = staged_artifact_row(&harness, handle_id)?;
         assert_eq!(row.created_by_surface_id, SURFACE_ID);
         assert_eq!(row.created_by_surface_instance_id, SURFACE_INSTANCE_ID);
+        Ok(())
+    }
+
+    #[test]
+    fn stage_artifact_rejects_caller_submitted_provenance_fields() -> Result<(), Box<dyn Error>> {
+        let mut value = serde_json::to_value(stage_artifact_request(
+            "req_stage_forged_provenance",
+            Some("idem_stage_forged_provenance"),
+            false,
+            Some(2),
+            "task_forged_provenance",
+        ))?;
+        value["created_by_surface_id"] = json!("forged_surface");
+        value["created_by_surface_instance_id"] = json!("forged_instance");
+
+        let error = serde_json::from_value::<StageArtifactRequest>(value)
+            .expect_err("caller-submitted provenance fields should be rejected");
+
+        assert!(error.to_string().contains("created_by_surface_id"));
         Ok(())
     }
 
