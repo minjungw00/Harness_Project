@@ -757,7 +757,12 @@ fn answer_branch_matches_kind(
 }
 
 fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudgment> {
-    let request = parse_json_object(&record.request_json);
+    let request = decode_required_json_object(
+        "user_judgments",
+        record.judgment_id.clone(),
+        "request_json",
+        Some(&record.request_json),
+    )?;
     Ok(UserJudgment {
         judgment_id: harness_types::UserJudgmentId::new(record.judgment_id.clone()),
         project_id: ProjectId::new(record.project_id.clone()),
@@ -786,11 +791,12 @@ fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudg
             &request,
             "required_for",
         )?,
-        resolution: record
-            .resolution_json
-            .as_deref()
-            .map(|text| parse_json_text("user_judgments.resolution_json", text))
-            .transpose()?,
+        resolution: decode_optional_json(
+            "user_judgments",
+            record.judgment_id.clone(),
+            "resolution_json",
+            record.resolution_json.as_deref(),
+        )?,
         expires_at: request
             .get("expires_at")
             .and_then(Value::as_str)

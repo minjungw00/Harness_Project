@@ -227,7 +227,7 @@ fn plan_record_run(
             ),
         )));
     }
-    if !baseline_matches(&change_unit, &task, &request.baseline_ref) {
+    if !baseline_matches(&change_unit, &task, &request.baseline_ref)? {
         return Err(PlanError::Response(Box::new(baseline_stale_response(
             &request.envelope,
             Some(project_state.state_version),
@@ -1035,13 +1035,25 @@ fn validate_write_authorization_for_run(
             ),
         )));
     }
-    let scope: AuthorizedAttemptScope = parse_json_text(
-        "write_authorizations.attempt_scope_json",
-        &record.attempt_scope_json,
-    )?;
+    let scope: AuthorizedAttemptScope = decode_required_json::<PersistedAuthorizedAttemptScope>(
+        "write_authorizations",
+        record.write_authorization_id.clone(),
+        "attempt_scope_json",
+        Some(&record.attempt_scope_json),
+    )?
+    .into();
     let scope_paths =
-        normalize_product_paths(&store.project_record().repo_root, &scope.intended_paths)
-            .unwrap_or_default();
+        normalize_product_paths(&store.project_record().repo_root, &scope.intended_paths).map_err(
+            |_| {
+                PlanError::Core(CorePipelineError::Store(
+                    StoreError::corrupt_owner_state_json(
+                        "write_authorizations",
+                        record.write_authorization_id.clone(),
+                        "attempt_scope_json",
+                    ),
+                ))
+            },
+        )?;
     if record.task_id != request.task_id.as_str()
         || record.change_unit_id.as_deref() != Some(request.change_unit_id.as_str())
         || scope.task_id != request.task_id
@@ -1128,7 +1140,7 @@ fn artifact_ref_from_stored_record(
     record: &StoredArtifactRecord,
     display_name: Option<String>,
 ) -> CoreResult<ArtifactRef> {
-    let producer = parse_json_object(&record.producer_json);
+    let producer = display_json_object_lossy(&record.producer_json);
     let task_id = TaskId::new(record.task_id.clone());
     Ok(ArtifactRef {
         artifact_id: ArtifactId::new(record.artifact_id.clone()),
@@ -1169,8 +1181,11 @@ fn artifact_ref_from_stored_record(
 }
 
 fn staged_artifact_display_name(record: &StoredArtifactStagingRecord) -> String {
-    string_member(&parse_json_object(&record.artifact_json), "display_name")
-        .unwrap_or_else(|| record.handle_id.clone())
+    string_member(
+        &display_json_object_lossy(&record.artifact_json),
+        "display_name",
+    )
+    .unwrap_or_else(|| record.handle_id.clone())
 }
 
 fn artifact_link_metadata(input: &ArtifactInput) -> CoreResult<String> {

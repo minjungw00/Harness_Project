@@ -424,7 +424,12 @@ fn terminal_close_summary_json(
     request: &CloseTaskRequest,
     closed_at: &str,
 ) -> CoreResult<String> {
-    let mut close_summary = parse_json_object(&task.close_summary_json);
+    let mut close_summary = decode_required_json_object(
+        "tasks",
+        task.task_id.clone(),
+        "close_summary_json",
+        Some(&task.close_summary_json),
+    )?;
     close_summary.insert(
         "close_reason".to_owned(),
         serde_json::to_value(
@@ -603,7 +608,7 @@ fn terminal_close_blockers(
         }
     }
 
-    if recovery_required(context) {
+    if recovery_required(context)? {
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::Recovery,
             "recovery_required",
@@ -673,7 +678,7 @@ fn completion_close_blockers(
         ));
     }
 
-    if sensitive_approval_required(context)
+    if sensitive_approval_required(context)?
         && !has_resolved_judgment(store, project_state, request, "sensitive_approval")?
     {
         blockers.push(close_blocker(
@@ -718,7 +723,7 @@ fn completion_close_blockers(
         ));
     }
 
-    if baseline_stale_for_close(context) {
+    if baseline_stale_for_close(context)? {
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::Baseline,
             "baseline_stale",
@@ -799,7 +804,7 @@ fn completion_close_blockers(
         ));
     }
 
-    let residual_risk = residual_risk_state(context);
+    let residual_risk = residual_risk_state(context)?;
     if residual_risk.known && !residual_risk.visible {
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::ResidualRiskVisibility,
@@ -844,7 +849,7 @@ fn close_evidence_summary(
     task_id: &TaskId,
     state_version: u64,
 ) -> CoreResult<Option<EvidenceSummary>> {
-    let policy = task_completion_policy(task);
+    let policy = task_completion_policy(task)?;
     let mut required_claims = sorted_unique(policy.required_claims);
     if policy.evidence_required && required_claims.is_empty() {
         required_claims.push("completion_evidence".to_owned());
@@ -852,9 +857,11 @@ fn close_evidence_summary(
     let required_set = required_claims.iter().cloned().collect::<BTreeSet<_>>();
     let mut coverage_items = record
         .map(|record| {
-            parse_json_text::<Vec<EvidenceCoverageItem>>(
-                "evidence_summaries.coverage_json",
-                &record.coverage_json,
+            decode_required_json::<Vec<EvidenceCoverageItem>>(
+                "evidence_summaries",
+                record.evidence_summary_id.clone(),
+                "coverage_json",
+                Some(&record.coverage_json),
             )
         })
         .transpose()?
@@ -895,7 +902,7 @@ fn close_evidence_summary(
     };
     let updated_by_run_ref = record.and_then(|record| {
         string_member(
-            &parse_json_object(&record.metadata_json),
+            &display_json_object_lossy(&record.metadata_json),
             "updated_by_run_id",
         )
         .map(|run_id| {
@@ -921,17 +928,17 @@ fn close_evidence_summary(
     }))
 }
 
-fn task_completion_policy(task: &TaskRecord) -> CompletionPolicy {
-    let object = parse_json_object(&task.completion_policy_json);
-    let required_claims = string_array_member(&object, "required_claims");
-    CompletionPolicy {
-        evidence_required: object
-            .get("evidence_required")
-            .and_then(Value::as_bool)
-            .unwrap_or(false)
-            || !required_claims.is_empty(),
-        required_claims,
-    }
+fn task_completion_policy(task: &TaskRecord) -> CoreResult<CompletionPolicy> {
+    let persisted: PersistedCompletionPolicy = decode_required_json(
+        "tasks",
+        task.task_id.clone(),
+        "completion_policy_json",
+        Some(&task.completion_policy_json),
+    )?;
+    Ok(CompletionPolicy {
+        evidence_required: persisted.evidence_required || !persisted.required_claims.is_empty(),
+        required_claims: persisted.required_claims,
+    })
 }
 
 fn unsupported_close_evidence_items(
@@ -1053,11 +1060,15 @@ where
             )))
         })?;
     for record in records {
-        let Some(resolution_json) = &record.resolution_json else {
+        let Some(resolution) = decode_optional_json::<UserJudgmentResolution>(
+            "user_judgments",
+            record.judgment_id.clone(),
+            "resolution_json",
+            record.resolution_json.as_deref(),
+        )?
+        else {
             continue;
         };
-        let resolution: UserJudgmentResolution =
-            parse_json_text("user_judgments.resolution_json", resolution_json)?;
         if predicate(&resolution) {
             return Ok(true);
         }
@@ -1085,51 +1096,99 @@ fn has_residual_risk_acceptance(
     )
 }
 
-fn sensitive_approval_required(context: &CloseTaskContext) -> bool {
-    let close_summary = parse_json_object(&context.task.close_summary_json);
-    if !string_array_member(&close_summary, "required_sensitive_categories").is_empty()
-        || !string_array_member(&close_summary, "sensitive_categories").is_empty()
+fn sensitive_approval_required(context: &CloseTaskContext) -> CoreResult<bool> {
+    let close_summary: PersistedCloseSummary = decode_required_json(
+        "tasks",
+        context.task.task_id.clone(),
+        "close_summary_json",
+        Some(&context.task.close_summary_json),
+    )?;
+    if !close_summary.required_sensitive_categories.is_empty()
+        || !close_summary.sensitive_categories.is_empty()
     {
-        return true;
+        return Ok(true);
     }
-    context.current_change_unit.as_ref().is_some_and(|record| {
-        let close_basis = parse_json_object(&record.close_basis_json);
-        !string_array_member(&close_basis, "required_sensitive_categories").is_empty()
-            || !string_array_member(&close_basis, "sensitive_categories").is_empty()
-    })
+    context
+        .current_change_unit
+        .as_ref()
+        .map(|record| {
+            decode_required_json::<PersistedCloseBasis>(
+                "change_units",
+                record.change_unit_id.clone(),
+                "close_basis_json",
+                Some(&record.close_basis_json),
+            )
+            .map(|close_basis| {
+                !close_basis.required_sensitive_categories.is_empty()
+                    || !close_basis.sensitive_categories.is_empty()
+            })
+        })
+        .transpose()
+        .map(|value| value.unwrap_or(false))
 }
 
-fn baseline_stale_for_close(context: &CloseTaskContext) -> bool {
-    let close_summary = parse_json_object(&context.task.close_summary_json);
-    if bool_member(&close_summary, "baseline_stale")
-        || string_member(&close_summary, "baseline_status").as_deref() == Some("stale")
-    {
-        return true;
+fn baseline_stale_for_close(context: &CloseTaskContext) -> CoreResult<bool> {
+    let close_summary: PersistedCloseSummary = decode_required_json(
+        "tasks",
+        context.task.task_id.clone(),
+        "close_summary_json",
+        Some(&context.task.close_summary_json),
+    )?;
+    if close_summary.baseline_stale || close_summary.baseline_status.as_deref() == Some("stale") {
+        return Ok(true);
     }
-    context.current_change_unit.as_ref().is_some_and(|record| {
-        let close_basis = parse_json_object(&record.close_basis_json);
-        bool_member(&close_basis, "baseline_stale")
-            || string_member(&close_basis, "baseline_status").as_deref() == Some("stale")
-    })
+    context
+        .current_change_unit
+        .as_ref()
+        .map(|record| {
+            decode_required_json::<PersistedCloseBasis>(
+                "change_units",
+                record.change_unit_id.clone(),
+                "close_basis_json",
+                Some(&record.close_basis_json),
+            )
+            .map(|close_basis| {
+                close_basis.baseline_stale
+                    || close_basis.baseline_status.as_deref() == Some("stale")
+            })
+        })
+        .transpose()
+        .map(|value| value.unwrap_or(false))
 }
 
-fn recovery_required(context: &CloseTaskContext) -> bool {
+fn recovery_required(context: &CloseTaskContext) -> CoreResult<bool> {
     if !context.blocker_refs.is_empty() {
-        return true;
+        return Ok(true);
     }
-    let close_summary = parse_json_object(&context.task.close_summary_json);
-    if bool_member(&close_summary, "recovery_required") {
-        return true;
+    let close_summary: PersistedCloseSummary = decode_required_json(
+        "tasks",
+        context.task.task_id.clone(),
+        "close_summary_json",
+        Some(&context.task.close_summary_json),
+    )?;
+    if close_summary.recovery_required {
+        return Ok(true);
     }
-    context.current_change_unit.as_ref().is_some_and(|record| {
-        bool_member(
-            &parse_json_object(&record.lifecycle_json),
-            "recovery_required",
-        ) || bool_member(
-            &parse_json_object(&record.close_basis_json),
-            "recovery_required",
-        )
-    })
+    context
+        .current_change_unit
+        .as_ref()
+        .map(|record| {
+            let lifecycle: PersistedLifecycleState = decode_required_json(
+                "change_units",
+                record.change_unit_id.clone(),
+                "lifecycle_json",
+                Some(&record.lifecycle_json),
+            )?;
+            let close_basis: PersistedCloseBasis = decode_required_json(
+                "change_units",
+                record.change_unit_id.clone(),
+                "close_basis_json",
+                Some(&record.close_basis_json),
+            )?;
+            Ok(lifecycle.recovery_required || close_basis.recovery_required)
+        })
+        .transpose()
+        .map(|value| value.unwrap_or(false))
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1138,14 +1197,17 @@ struct ResidualRiskState {
     visible: bool,
 }
 
-fn residual_risk_state(context: &CloseTaskContext) -> ResidualRiskState {
-    let close_summary = parse_json_object(&context.task.close_summary_json);
-    let visible = json_array_nonempty_member(&close_summary, "visible_risks")
-        || bool_member(&close_summary, "residual_risk_visible");
-    let known = visible
-        || json_array_nonempty_member(&close_summary, "residual_risks")
-        || bool_member(&close_summary, "residual_risk_present");
-    ResidualRiskState { known, visible }
+fn residual_risk_state(context: &CloseTaskContext) -> CoreResult<ResidualRiskState> {
+    let close_summary: PersistedCloseSummary = decode_required_json(
+        "tasks",
+        context.task.task_id.clone(),
+        "close_summary_json",
+        Some(&context.task.close_summary_json),
+    )?;
+    let visible = !close_summary.visible_risks.is_empty() || close_summary.residual_risk_visible;
+    let known =
+        visible || !close_summary.residual_risks.is_empty() || close_summary.residual_risk_present;
+    Ok(ResidualRiskState { known, visible })
 }
 
 fn task_ref_for_close(request: &CloseTaskRequest, state_version: u64) -> StateRecordRef {

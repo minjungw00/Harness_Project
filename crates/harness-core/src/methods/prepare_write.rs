@@ -172,7 +172,7 @@ fn plan_prepare_write(
     }
 
     if let Some(change_unit) = change_unit {
-        if !baseline_matches(change_unit, &task, &request.baseline_ref) {
+        if !baseline_matches(change_unit, &task, &request.baseline_ref)? {
             reasons.push(write_decision_reason(
                 WriteDecisionCategory::Baseline,
                 "baseline_mismatch",
@@ -190,7 +190,7 @@ fn plan_prepare_write(
             &store.project_record().repo_root,
             &normalized_paths,
             change_unit,
-        ) {
+        )? {
             reasons.push(write_decision_reason(
                 WriteDecisionCategory::Scope,
                 "path_out_of_scope",

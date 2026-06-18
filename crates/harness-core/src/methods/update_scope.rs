@@ -110,7 +110,7 @@ fn plan_update_scope(
             )))
         })?;
 
-    let current_scope = StoredScope::from_task(&task);
+    let current_scope = StoredScope::from_task(&task)?;
     let next_scope = current_scope.apply_request(&request);
     let scope_changed = current_scope != next_scope
         || request.change_unit.operation == ChangeUnitOperation::CreateCurrent

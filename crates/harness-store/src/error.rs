@@ -21,6 +21,13 @@ pub enum StoreError {
         database_kind: &'static str,
         field: &'static str,
     },
+    /// Persisted typed owner JSON could not be decoded for an authority decision.
+    CorruptOwnerStateJson {
+        database_kind: &'static str,
+        table: &'static str,
+        record_ref: String,
+        logical_column: &'static str,
+    },
     /// A stored owner field has a value outside the owner-defined set.
     CorruptStoredValue {
         database_kind: &'static str,
@@ -57,6 +64,19 @@ impl StoreError {
         }
     }
 
+    pub fn corrupt_owner_state_json(
+        table: &'static str,
+        record_ref: impl Into<String>,
+        logical_column: &'static str,
+    ) -> Self {
+        Self::CorruptOwnerStateJson {
+            database_kind: "project_state",
+            table,
+            record_ref: record_ref.into(),
+            logical_column,
+        }
+    }
+
     pub fn corrupt_stored_value(database_kind: &'static str, field: &'static str) -> Self {
         Self::CorruptStoredValue {
             database_kind,
@@ -74,6 +94,7 @@ impl StoreError {
                 database_kind: None,
                 entity: None,
                 field: None,
+                owner_state_error: None,
             },
             Self::Sqlite(error) => sqlite_classification(error),
             Self::InvalidInput { .. } => StoreFailureClassification {
@@ -83,6 +104,7 @@ impl StoreError {
                 database_kind: None,
                 entity: None,
                 field: None,
+                owner_state_error: None,
             },
             Self::NotFound { entity, .. } => {
                 let (route, category, retryable, database_kind) = match *entity {
@@ -130,6 +152,7 @@ impl StoreError {
                     database_kind,
                     entity: Some(entity),
                     field: None,
+                    owner_state_error: None,
                 }
             }
             Self::CorruptStoredJson {
@@ -142,6 +165,26 @@ impl StoreError {
                 database_kind: Some(database_kind),
                 entity: None,
                 field: Some(field),
+                owner_state_error: None,
+            },
+            Self::CorruptOwnerStateJson {
+                database_kind,
+                table,
+                record_ref,
+                logical_column,
+            } => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "corrupt_stored_json",
+                retryable: false,
+                database_kind: Some(database_kind),
+                entity: None,
+                field: None,
+                owner_state_error: Some(OwnerStateFailureDetails {
+                    table,
+                    record_ref: record_ref.clone(),
+                    logical_column,
+                    corruption_category: "corrupt_stored_json",
+                }),
             },
             Self::CorruptStoredValue {
                 database_kind,
@@ -153,6 +196,7 @@ impl StoreError {
                 database_kind: Some(database_kind),
                 entity: None,
                 field: Some(field),
+                owner_state_error: None,
             },
             Self::MigrationConflict { database_kind, .. } => StoreFailureClassification {
                 route: StoreFailureRoute::OperationalUnavailable,
@@ -161,6 +205,7 @@ impl StoreError {
                 database_kind: Some(database_kind),
                 entity: None,
                 field: None,
+                owner_state_error: None,
             },
             Self::SchemaInvariant { database_kind, .. } => StoreFailureClassification {
                 route: StoreFailureRoute::OperationalUnavailable,
@@ -169,6 +214,7 @@ impl StoreError {
                 database_kind: Some(database_kind),
                 entity: None,
                 field: None,
+                owner_state_error: None,
             },
         }
     }
@@ -180,7 +226,7 @@ pub enum StoreFailureRoute {
     LocalAccessMismatch,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StoreFailureClassification {
     pub route: StoreFailureRoute,
     pub category: &'static str,
@@ -188,6 +234,15 @@ pub struct StoreFailureClassification {
     pub database_kind: Option<&'static str>,
     pub entity: Option<&'static str>,
     pub field: Option<&'static str>,
+    pub owner_state_error: Option<OwnerStateFailureDetails>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OwnerStateFailureDetails {
+    pub table: &'static str,
+    pub record_ref: String,
+    pub logical_column: &'static str,
+    pub corruption_category: &'static str,
 }
 
 fn sqlite_classification(error: &rusqlite::Error) -> StoreFailureClassification {
@@ -235,6 +290,7 @@ fn sqlite_classification(error: &rusqlite::Error) -> StoreFailureClassification 
         database_kind: None,
         entity: None,
         field: None,
+        owner_state_error: None,
     }
 }
 
@@ -262,6 +318,15 @@ impl fmt::Display for StoreError {
             } => write!(
                 formatter,
                 "stored JSON field {field} is invalid in {database_kind}"
+            ),
+            Self::CorruptOwnerStateJson {
+                database_kind,
+                table,
+                record_ref,
+                logical_column,
+            } => write!(
+                formatter,
+                "stored owner JSON {table}.{logical_column} for {record_ref} is invalid in {database_kind}"
             ),
             Self::CorruptStoredValue {
                 database_kind,
@@ -300,6 +365,7 @@ impl Error for StoreError {
             Self::InvalidInput { .. }
             | Self::NotFound { .. }
             | Self::CorruptStoredJson { .. }
+            | Self::CorruptOwnerStateJson { .. }
             | Self::CorruptStoredValue { .. }
             | Self::MigrationConflict { .. }
             | Self::SchemaInvariant { .. } => None,

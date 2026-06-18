@@ -30,6 +30,7 @@ use harness_types::{
     UserJudgmentStatus, WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
     WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
 };
+use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 
@@ -273,6 +274,59 @@ where
     })
 }
 
+fn decode_required_json<T>(
+    table: &'static str,
+    record_ref: impl Into<String>,
+    logical_column: &'static str,
+    raw: Option<&str>,
+) -> CoreResult<T>
+where
+    T: serde::de::DeserializeOwned,
+{
+    let record_ref = record_ref.into();
+    let Some(raw) = raw else {
+        return Err(CorePipelineError::Store(
+            StoreError::corrupt_owner_state_json(table, record_ref, logical_column),
+        ));
+    };
+    if raw.trim().is_empty() {
+        return Err(CorePipelineError::Store(
+            StoreError::corrupt_owner_state_json(table, record_ref, logical_column),
+        ));
+    }
+    serde_json::from_str(raw).map_err(|_| {
+        CorePipelineError::Store(StoreError::corrupt_owner_state_json(
+            table,
+            record_ref,
+            logical_column,
+        ))
+    })
+}
+
+fn decode_optional_json<T>(
+    table: &'static str,
+    record_ref: impl Into<String>,
+    logical_column: &'static str,
+    raw: Option<&str>,
+) -> CoreResult<Option<T>>
+where
+    T: serde::de::DeserializeOwned,
+{
+    match raw {
+        Some(raw) => decode_required_json(table, record_ref, logical_column, Some(raw)).map(Some),
+        None => Ok(None),
+    }
+}
+
+fn decode_required_json_object(
+    table: &'static str,
+    record_ref: impl Into<String>,
+    logical_column: &'static str,
+    raw: Option<&str>,
+) -> CoreResult<JsonObject> {
+    decode_required_json(table, record_ref, logical_column, raw)
+}
+
 fn storage_value<T>(value: T) -> CoreResult<String>
 where
     T: serde::Serialize,
@@ -425,33 +479,50 @@ fn baseline_matches(
     change_unit: &ChangeUnitRecord,
     task: &TaskRecord,
     baseline_ref: &BaselineRef,
-) -> bool {
-    let write_basis = parse_json_object(&change_unit.write_basis_json);
-    let baseline = string_member(&write_basis, "baseline_ref")
-        .or_else(|| StoredScope::from_task(task).baseline_ref);
-    baseline.as_deref() == Some(baseline_ref.as_str())
+) -> CoreResult<bool> {
+    let write_basis: PersistedWriteBasis = decode_required_json(
+        "change_units",
+        change_unit.change_unit_id.clone(),
+        "write_basis_json",
+        Some(&change_unit.write_basis_json),
+    )?;
+    let baseline = match write_basis.baseline_ref {
+        Some(value) => Some(value.as_str().to_owned()),
+        None => StoredScope::from_task(task)?.baseline_ref,
+    };
+    Ok(baseline.as_deref() == Some(baseline_ref.as_str()))
 }
 
 fn paths_match_current_change_unit(
     repo_root: &Path,
     intended_paths: &[String],
     change_unit: &ChangeUnitRecord,
-) -> bool {
+) -> CoreResult<bool> {
     if intended_paths.is_empty() {
-        return true;
+        return Ok(true);
     }
-    let raw_bounded_paths =
-        serde_json::from_str::<Vec<String>>(&change_unit.bounded_paths_json).unwrap_or_default();
+    let raw_bounded_paths: Vec<String> = decode_required_json(
+        "change_units",
+        change_unit.change_unit_id.clone(),
+        "bounded_paths_json",
+        Some(&change_unit.bounded_paths_json),
+    )?;
     if raw_bounded_paths.is_empty() {
-        return false;
+        return Ok(false);
     }
-    let bounded_paths = normalize_product_paths(repo_root, &raw_bounded_paths).unwrap_or_default();
-    !bounded_paths.is_empty()
+    let bounded_paths = normalize_product_paths(repo_root, &raw_bounded_paths).map_err(|_| {
+        CorePipelineError::Store(StoreError::corrupt_owner_state_json(
+            "change_units",
+            change_unit.change_unit_id.clone(),
+            "bounded_paths_json",
+        ))
+    })?;
+    Ok(!bounded_paths.is_empty()
         && intended_paths.iter().all(|path| {
             bounded_paths
                 .iter()
                 .any(|scope| path_is_within(path, scope))
-        })
+        }))
 }
 
 fn matching_sensitive_approval(
@@ -491,11 +562,12 @@ fn matching_sensitive_approval(
         {
             continue;
         }
-        let Ok(scope) =
-            serde_json::from_str::<SensitiveActionScope>(&record.sensitive_action_scope_json)
-        else {
-            continue;
-        };
+        let scope = decode_required_json::<SensitiveActionScope>(
+            "user_judgments",
+            record.judgment_id.clone(),
+            "sensitive_action_scope_json",
+            Some(&record.sensitive_action_scope_json),
+        )?;
         if sensitive_scope_matches(
             &store.project_record().repo_root,
             &request.sensitive_categories,
@@ -742,18 +814,165 @@ struct StoredScope {
     baseline_ref: Option<String>,
 }
 
-impl StoredScope {
-    fn from_task(task: &TaskRecord) -> Self {
-        let shaping = parse_json_object(&task.shaping_summary_json);
-        let autonomy = parse_json_object(&task.autonomy_boundary_json);
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[allow(dead_code)]
+struct PersistedTaskShaping {
+    #[serde(default)]
+    goal_summary: Option<String>,
+    #[serde(default)]
+    scope_summary: Option<String>,
+    #[serde(default)]
+    non_goals: Vec<String>,
+    #[serde(default)]
+    acceptance_criteria: Vec<String>,
+    #[serde(default)]
+    baseline_ref: Option<String>,
+    #[serde(default)]
+    autonomy_boundary: Option<String>,
+    #[serde(default)]
+    initial_context_refs: Option<Value>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PersistedAutonomyBoundary {
+    #[serde(default)]
+    autonomy_boundary: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[allow(dead_code)]
+struct PersistedScopeSummary {
+    #[serde(default)]
+    scope_summary: Option<String>,
+    #[serde(default)]
+    affected_areas: Vec<String>,
+    #[serde(default)]
+    constraints: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PersistedWriteBasis {
+    #[serde(default)]
+    baseline_ref: Option<BaselineRef>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PersistedCloseBasis {
+    #[serde(default)]
+    required_sensitive_categories: Vec<String>,
+    #[serde(default)]
+    sensitive_categories: Vec<String>,
+    #[serde(default)]
+    baseline_stale: bool,
+    #[serde(default)]
+    baseline_status: Option<String>,
+    #[serde(default)]
+    recovery_required: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PersistedLifecycleState {
+    #[serde(default)]
+    recovery_required: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[allow(dead_code)]
+struct PersistedCloseSummary {
+    #[serde(default)]
+    close_reason: Option<CloseReason>,
+    #[serde(default)]
+    closed_at: Option<String>,
+    #[serde(default)]
+    intent: Option<CloseIntent>,
+    #[serde(default)]
+    user_note: Option<String>,
+    #[serde(default)]
+    superseding_task_id: Option<TaskId>,
+    #[serde(default)]
+    required_sensitive_categories: Vec<String>,
+    #[serde(default)]
+    sensitive_categories: Vec<String>,
+    #[serde(default)]
+    baseline_stale: bool,
+    #[serde(default)]
+    baseline_status: Option<String>,
+    #[serde(default)]
+    recovery_required: bool,
+    #[serde(default)]
+    visible_risks: Vec<Value>,
+    #[serde(default)]
+    residual_risk_visible: bool,
+    #[serde(default)]
+    residual_risks: Vec<Value>,
+    #[serde(default)]
+    residual_risk_present: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PersistedCompletionPolicy {
+    #[serde(default)]
+    evidence_required: bool,
+    #[serde(default)]
+    required_claims: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PersistedAuthorizedAttemptScope {
+    task_id: TaskId,
+    change_unit_id: ChangeUnitId,
+    intended_operation: String,
+    intended_paths: Vec<String>,
+    product_file_write_intended: bool,
+    sensitive_categories: Vec<String>,
+    baseline_ref: Option<BaselineRef>,
+}
+
+impl From<PersistedAuthorizedAttemptScope> for AuthorizedAttemptScope {
+    fn from(scope: PersistedAuthorizedAttemptScope) -> Self {
         Self {
-            goal_summary: string_member(&shaping, "goal_summary").or_else(|| task.summary.clone()),
-            scope_summary: string_member(&shaping, "scope_summary"),
-            non_goals: string_array_member(&shaping, "non_goals"),
-            acceptance_criteria: string_array_member(&shaping, "acceptance_criteria"),
-            autonomy_boundary: string_member(&autonomy, "autonomy_boundary"),
-            baseline_ref: string_member(&shaping, "baseline_ref"),
+            task_id: scope.task_id,
+            change_unit_id: scope.change_unit_id,
+            intended_operation: scope.intended_operation,
+            intended_paths: scope.intended_paths,
+            product_file_write_intended: scope.product_file_write_intended,
+            sensitive_categories: scope.sensitive_categories,
+            baseline_ref: scope.baseline_ref,
         }
+    }
+}
+
+impl StoredScope {
+    fn from_task(task: &TaskRecord) -> CoreResult<Self> {
+        let shaping: PersistedTaskShaping = decode_required_json(
+            "tasks",
+            task.task_id.clone(),
+            "shaping_summary_json",
+            Some(&task.shaping_summary_json),
+        )?;
+        let autonomy: PersistedAutonomyBoundary = decode_required_json(
+            "tasks",
+            task.task_id.clone(),
+            "autonomy_boundary_json",
+            Some(&task.autonomy_boundary_json),
+        )?;
+        Ok(Self {
+            goal_summary: shaping.goal_summary.or_else(|| task.summary.clone()),
+            scope_summary: shaping.scope_summary,
+            non_goals: shaping.non_goals,
+            acceptance_criteria: shaping.acceptance_criteria,
+            autonomy_boundary: autonomy.autonomy_boundary.or(shaping.autonomy_boundary),
+            baseline_ref: shaping.baseline_ref,
+        })
     }
 
     fn apply_request(&self, request: &UpdateScopeRequest) -> Self {
@@ -871,24 +1090,37 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
             Some(record.basis_state_version.unwrap_or(state_version)),
         )
     });
-    let scope = StoredScope::from_task(task);
-    let change_unit_scope = current_change_unit.and_then(|record| {
-        string_member(
-            &parse_json_object(&record.scope_summary_json),
-            "scope_summary",
-        )
-    });
-    let write_authority_summary = if options.write_authority {
-        active_write_authorization.map(|record| WriteAuthoritySummary {
-            status: WriteAuthorizationStatus::Active,
-            write_authorization_ref: Some(write_authorization_ref(record, state_version)),
-            basis_state_version: Some(record.basis_state_version),
-            intended_paths: string_array_member(
-                &parse_json_object(&record.attempt_scope_json),
-                "intended_paths",
-            ),
-            guarantee_display: None,
+    let scope = StoredScope::from_task(task)?;
+    let change_unit_scope = current_change_unit
+        .map(|record| {
+            decode_required_json::<PersistedScopeSummary>(
+                "change_units",
+                record.change_unit_id.clone(),
+                "scope_summary_json",
+                Some(&record.scope_summary_json),
+            )
+            .map(|summary| summary.scope_summary)
         })
+        .transpose()?
+        .flatten();
+    let write_authority_summary = if options.write_authority {
+        active_write_authorization
+            .map(|record| {
+                decode_required_json::<PersistedAuthorizedAttemptScope>(
+                    "write_authorizations",
+                    record.write_authorization_id.clone(),
+                    "attempt_scope_json",
+                    Some(&record.attempt_scope_json),
+                )
+                .map(|attempt_scope| WriteAuthoritySummary {
+                    status: WriteAuthorizationStatus::Active,
+                    write_authorization_ref: Some(write_authorization_ref(record, state_version)),
+                    basis_state_version: Some(record.basis_state_version),
+                    intended_paths: attempt_scope.intended_paths,
+                    guarantee_display: None,
+                })
+            })
+            .transpose()?
     } else {
         None
     };
@@ -900,7 +1132,7 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
         mode: parse_task_mode(&task.mode)?,
         lifecycle: Some(TaskLifecycleState {
             lifecycle_phase: parse_lifecycle_phase(&task.lifecycle_phase)?,
-            close_reason: parse_close_reason(&task.close_summary_json),
+            close_reason: parse_close_reason(task)?,
             result: parse_task_result(task.result.as_deref().unwrap_or("none"))?,
             closed_at: task.closed_at.clone(),
         }),
@@ -1265,15 +1497,14 @@ fn parse_task_result(value: &str) -> CoreResult<TaskResult> {
     }
 }
 
-fn parse_close_reason(close_summary_json: &str) -> CloseReason {
-    let value = parse_json_object(close_summary_json);
-    match string_member(&value, "close_reason").as_deref() {
-        Some("completed_self_checked") => CloseReason::CompletedSelfChecked,
-        Some("completed_with_risk_accepted") => CloseReason::CompletedWithRiskAccepted,
-        Some("cancelled") => CloseReason::Cancelled,
-        Some("superseded") => CloseReason::Superseded,
-        _ => CloseReason::None,
-    }
+fn parse_close_reason(task: &TaskRecord) -> CoreResult<CloseReason> {
+    let value: PersistedCloseSummary = decode_required_json(
+        "tasks",
+        task.task_id.clone(),
+        "close_summary_json",
+        Some(&task.close_summary_json),
+    )?;
+    Ok(value.close_reason.unwrap_or(CloseReason::None))
 }
 
 fn invalid_storage<T>(field: &'static str) -> CoreResult<T> {
@@ -1283,7 +1514,7 @@ fn invalid_storage<T>(field: &'static str) -> CoreResult<T> {
     )))
 }
 
-fn parse_json_object(text: &str) -> JsonObject {
+fn display_json_object_lossy(text: &str) -> JsonObject {
     serde_json::from_str::<Value>(text)
         .ok()
         .and_then(|value| match value {
@@ -1309,15 +1540,4 @@ fn string_array_member(object: &JsonObject, key: &str) -> Vec<String> {
                 .collect()
         })
         .unwrap_or_default()
-}
-
-fn bool_member(object: &JsonObject, key: &str) -> bool {
-    object.get(key).and_then(Value::as_bool).unwrap_or(false)
-}
-
-fn json_array_nonempty_member(object: &JsonObject, key: &str) -> bool {
-    object
-        .get(key)
-        .and_then(Value::as_array)
-        .is_some_and(|items| !items.is_empty())
 }

@@ -19,7 +19,7 @@ use harness_types::{
     SurfaceId, SurfaceInstanceId, TaskId, ToolDryRunResponse, ToolEnvelope, ToolError,
     ToolRejectedResponse, ToolResultBase, DURABLE_ID_RETRY_LIMIT,
 };
-use serde_json::{Map, Value};
+use serde_json::{json, Map, Value};
 
 use crate::policy::{
     access::{derive_verified_surface, method_access_error},
@@ -1300,6 +1300,17 @@ pub(crate) fn store_failure_error(error: StoreError) -> ToolError {
     }
     if let Some(field) = classification.field {
         details.insert("field".to_owned(), Value::String(field.to_owned()));
+    }
+    if let Some(owner_state_error) = classification.owner_state_error {
+        details.insert(
+            "owner_state_error".to_owned(),
+            json!({
+                "table": owner_state_error.table,
+                "record_ref": owner_state_error.record_ref,
+                "logical_column": owner_state_error.logical_column,
+                "corruption_category": owner_state_error.corruption_category
+            }),
+        );
     }
     let code = match classification.route {
         StoreFailureRoute::OperationalUnavailable => ErrorCode::McpUnavailable,

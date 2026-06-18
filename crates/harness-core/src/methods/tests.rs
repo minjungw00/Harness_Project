@@ -421,6 +421,35 @@ fn invalid_stored_method_owned_json_routes_to_structured_unavailability(
 }
 
 #[test]
+fn authority_owner_json_decode_paths_do_not_reintroduce_fail_open_patterns() {
+    let sources = [
+        ("methods/mod.rs", include_str!("mod.rs")),
+        ("methods/close_task.rs", include_str!("close_task.rs")),
+        ("methods/prepare_write.rs", include_str!("prepare_write.rs")),
+        ("methods/record_run.rs", include_str!("record_run.rs")),
+        ("methods/update_scope.rs", include_str!("update_scope.rs")),
+        ("methods/status.rs", include_str!("status.rs")),
+    ];
+    let forbidden = [
+        "parse_json_object(&task.completion_policy_json)",
+        "parse_json_object(&context.task.close_summary_json)",
+        "parse_json_object(&record.close_basis_json)",
+        "parse_json_object(&record.lifecycle_json)",
+        "parse_json_object(&change_unit.write_basis_json)",
+        "serde_json::from_str::<Vec<String>>(&change_unit.bounded_paths_json).unwrap_or_default()",
+    ];
+
+    for (path, source) in sources {
+        for pattern in forbidden {
+            assert!(
+                !source.contains(pattern),
+                "{path} reintroduced fail-open owner-state JSON decoding: {pattern}"
+            );
+        }
+    }
+}
+
+#[test]
 fn public_methods_use_same_verified_surface_context() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -2813,6 +2842,419 @@ fn close_task_check_dry_run_is_read_only() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn malformed_completion_policy_rejects_close_check_without_effect() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "bad_policy_check")?;
+    set_task_owner_json(
+        &harness,
+        &task_id,
+        "completion_policy_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_bad_policy_check",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "tasks",
+        &task_id,
+        "completion_policy_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn malformed_completion_policy_rejects_close_complete_without_effect() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "bad_policy_complete")?;
+    set_task_owner_json(
+        &harness,
+        &task_id,
+        "completion_policy_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_bad_policy_complete",
+            idempotency_key: Some("idem_bad_policy_complete"),
+            dry_run: false,
+            expected_state_version: Some(2),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "tasks",
+        &task_id,
+        "completion_policy_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn schema_invalid_close_summary_rejects_instead_of_hiding_residual_risk(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "bad_close_summary")?;
+    set_task_owner_json(
+        &harness,
+        &task_id,
+        "close_summary_json",
+        Some(r#"{"residual_risks":"known-but-wrong-shape"}"#),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_bad_close_summary",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "tasks",
+        &task_id,
+        "close_summary_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn malformed_close_basis_stops_close_readiness_without_effect() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "bad_close_basis")?;
+    set_change_unit_owner_json(
+        &harness,
+        &change_unit_id,
+        "close_basis_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_bad_close_basis",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "change_units",
+        &change_unit_id,
+        "close_basis_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn malformed_lifecycle_state_does_not_default_close_phase() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "bad_lifecycle")?;
+    set_change_unit_owner_json(
+        &harness,
+        &change_unit_id,
+        "lifecycle_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_bad_lifecycle",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "change_units",
+        &change_unit_id,
+        "lifecycle_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn malformed_write_basis_rejects_prepare_write_without_effect() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "bad_write_basis")?;
+    set_change_unit_owner_json(
+        &harness,
+        &change_unit_id,
+        "write_basis_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.prepare_write(
+        prepare_write_request(
+            "req_bad_write_basis",
+            "idem_bad_write_basis",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "change_units",
+        &change_unit_id,
+        "write_basis_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn malformed_bounded_paths_rejects_prepare_write_without_empty_scope() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "bad_paths")?;
+    set_change_unit_owner_json(
+        &harness,
+        &change_unit_id,
+        "bounded_paths_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.prepare_write(
+        prepare_write_request(
+            "req_bad_paths",
+            "idem_bad_paths",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "change_units",
+        &change_unit_id,
+        "bounded_paths_json",
+        &harness.runtime_home_path,
+    );
+    assert!(response
+        .response_value
+        .get("write_decision_reasons")
+        .is_none());
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn prepare_write_dry_run_with_corrupt_owner_state_is_rejected_no_effect(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "dry_bad_owner")?;
+    set_change_unit_owner_json(
+        &harness,
+        &change_unit_id,
+        "write_basis_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+    let mut request = prepare_write_request(
+        "req_dry_bad_owner",
+        "idem_dry_bad_owner",
+        Some(2),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    request.envelope.dry_run = true;
+
+    let response = harness
+        .service
+        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+
+    assert_owner_state_rejection(
+        &response,
+        "change_units",
+        &change_unit_id,
+        "write_basis_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(response.response_value["base"]["dry_run"], true);
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_read_only_rejects_corrupt_owner_state_without_effect() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "status_bad_owner")?;
+    set_task_owner_json(
+        &harness,
+        &task_id,
+        "close_summary_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_bad_owner", None, false, None, Some(&task_id)),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "tasks",
+        &task_id,
+        "close_summary_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn optional_resolution_null_remains_absent_not_corrupt() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "null_resolution")?;
+    let judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_null_resolution_judgment",
+            "idem_null_resolution_judgment",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::FinalAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    set_user_judgment_resolution_json(&harness, &judgment_id, None)?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_null_resolution_close",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn malformed_optional_resolution_json_rejects_close_readiness() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "bad_resolution")?;
+    let judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_bad_resolution_judgment",
+            "idem_bad_resolution_judgment",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::FinalAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    set_user_judgment_resolution_json(&harness, &judgment_id, Some(corrupt_owner_json()))?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_bad_resolution_close",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "user_judgments",
+        &judgment_id,
+        "resolution_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
 fn close_task_complete_blocks_missing_final_acceptance() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_no_final")?;
@@ -3154,6 +3596,33 @@ fn assert_store_rejection(
     );
 }
 
+fn assert_owner_state_rejection(
+    response: &PipelineResponse,
+    table: &str,
+    record_ref: &str,
+    logical_column: &str,
+    runtime_home_path: &Path,
+) {
+    assert_store_rejection(response, "MCP_UNAVAILABLE", "corrupt_stored_json");
+    assert_eq!(response.response_value["base"]["effect_kind"], "no_effect");
+    let details = &response.response_value["errors"][0]["details"];
+    assert_eq!(details["owner_state_error"]["table"], table);
+    assert_eq!(details["owner_state_error"]["record_ref"], record_ref);
+    assert_eq!(
+        details["owner_state_error"]["logical_column"],
+        logical_column
+    );
+    assert_eq!(
+        details["owner_state_error"]["corruption_category"],
+        "corrupt_stored_json"
+    );
+    assert!(!response.response_json.contains(corrupt_owner_json()));
+    assert!(!response
+        .response_json
+        .contains("/home/minjungw00/Projects/Harness_Project/secret"));
+    assert_public_response_has_no_internal_leak(response, runtime_home_path);
+}
+
 fn assert_public_response_has_no_internal_leak(
     response: &PipelineResponse,
     runtime_home_path: &Path,
@@ -3174,6 +3643,10 @@ fn assert_public_response_has_no_internal_leak(
             "public response leaked internal fragment {fragment}: {body}"
         );
     }
+}
+
+fn corrupt_owner_json() -> &'static str {
+    "{not-json /home/minjungw00/Projects/Harness_Project/secret"
 }
 
 fn status_include() -> StatusInclude {
@@ -4159,6 +4632,107 @@ fn current_change_unit_scope(
         .as_str()
         .expect("scope_summary should be a string")
         .to_owned())
+}
+
+fn set_task_owner_json(
+    harness: &MethodHarness,
+    task_id: &str,
+    logical_column: &str,
+    value: Option<&str>,
+) -> Result<(), Box<dyn Error>> {
+    let sql = match logical_column {
+        "shaping_summary_json" => {
+            "UPDATE tasks
+                SET shaping_summary_json = ?3
+              WHERE project_id = ?1
+                AND task_id = ?2"
+        }
+        "autonomy_boundary_json" => {
+            "UPDATE tasks
+                SET autonomy_boundary_json = ?3
+              WHERE project_id = ?1
+                AND task_id = ?2"
+        }
+        "close_summary_json" => {
+            "UPDATE tasks
+                SET close_summary_json = ?3
+              WHERE project_id = ?1
+                AND task_id = ?2"
+        }
+        "completion_policy_json" => {
+            "UPDATE tasks
+                SET completion_policy_json = ?3
+              WHERE project_id = ?1
+                AND task_id = ?2"
+        }
+        _ => panic!("unsupported task owner JSON column {logical_column}"),
+    };
+    harness
+        .conn()?
+        .execute(sql, rusqlite::params![PROJECT_ID, task_id, value])?;
+    Ok(())
+}
+
+fn set_change_unit_owner_json(
+    harness: &MethodHarness,
+    change_unit_id: &str,
+    logical_column: &str,
+    value: Option<&str>,
+) -> Result<(), Box<dyn Error>> {
+    let sql = match logical_column {
+        "scope_summary_json" => {
+            "UPDATE change_units
+                SET scope_summary_json = ?3
+              WHERE project_id = ?1
+                AND change_unit_id = ?2"
+        }
+        "bounded_paths_json" => {
+            "UPDATE change_units
+                SET bounded_paths_json = ?3
+              WHERE project_id = ?1
+                AND change_unit_id = ?2"
+        }
+        "write_basis_json" => {
+            "UPDATE change_units
+                SET write_basis_json = ?3
+              WHERE project_id = ?1
+                AND change_unit_id = ?2"
+        }
+        "close_basis_json" => {
+            "UPDATE change_units
+                SET close_basis_json = ?3
+              WHERE project_id = ?1
+                AND change_unit_id = ?2"
+        }
+        "lifecycle_json" => {
+            "UPDATE change_units
+                SET lifecycle_json = ?3
+              WHERE project_id = ?1
+                AND change_unit_id = ?2"
+        }
+        _ => panic!("unsupported change-unit owner JSON column {logical_column}"),
+    };
+    harness
+        .conn()?
+        .execute(sql, rusqlite::params![PROJECT_ID, change_unit_id, value])?;
+    Ok(())
+}
+
+fn set_user_judgment_resolution_json(
+    harness: &MethodHarness,
+    judgment_id: &str,
+    value: Option<&str>,
+) -> Result<(), Box<dyn Error>> {
+    harness.conn()?.execute(
+        "UPDATE user_judgments
+            SET status = 'resolved',
+                resolution_json = ?3,
+                resolved_at = 't1'
+          WHERE project_id = ?1
+            AND judgment_id = ?2",
+        rusqlite::params![PROJECT_ID, judgment_id, value],
+    )?;
+    Ok(())
 }
 
 fn active_current_change_units(
