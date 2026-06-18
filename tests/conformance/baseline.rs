@@ -127,6 +127,40 @@ fn no_effect_branches_state_version_and_idempotency_are_stable() -> Result<(), B
 }
 
 #[test]
+fn idempotency_replay_is_bound_to_verified_access_context() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("replay_context")?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "replay_context")?;
+    let request = fixture.prepare_write_request(
+        "req_prepare_replay_context",
+        "idem_prepare_replay_context",
+        Some(2),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+
+    let first = service.prepare_write(
+        request.clone(),
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+    let after_first = fixture.counts()?;
+    let write_authorization_id = first.response_value["write_authorization_ref"]["record_id"]
+        .as_str()
+        .expect("prepare_write should return an authorization id")
+        .to_owned();
+
+    let mismatch =
+        service.prepare_write(request, invocation(&fixture, AccessClass::CoreMutation))?;
+
+    assert!(!mismatch.replayed);
+    assert_rejected_code(&mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(!mismatch.response_json.contains(&write_authorization_id));
+    assert_eq!(fixture.counts()?, after_first);
+    Ok(())
+}
+
+#[test]
 fn write_authorization_lifecycle_is_single_use_and_state_bound() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("write_lifecycle")?;
     let service = core(&fixture);

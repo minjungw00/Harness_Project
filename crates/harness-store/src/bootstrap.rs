@@ -4,7 +4,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
 use crate::{
-    migrations::{BASELINE_SCHEMA_VERSION, STORAGE_PROFILE},
+    migrations::{PROJECT_STATE_SCHEMA_VERSION, REGISTRY_SCHEMA_VERSION, STORAGE_PROFILE},
     sqlite::{
         open_project_state_database, open_registry_database, project_home_path, registry_db_path,
         with_immediate_transaction, PROJECT_STATE_DB_FILE,
@@ -109,7 +109,7 @@ pub fn initialize_runtime_home(
             params![
                 runtime_home_id,
                 STORAGE_PROFILE,
-                BASELINE_SCHEMA_VERSION,
+                REGISTRY_SCHEMA_VERSION,
                 metadata_json
             ],
         )?;
@@ -195,7 +195,7 @@ pub fn register_project(
             params![
                 registration.project_id,
                 STORAGE_PROFILE,
-                BASELINE_SCHEMA_VERSION,
+                PROJECT_STATE_SCHEMA_VERSION,
                 registration.metadata_json
             ],
         )?;

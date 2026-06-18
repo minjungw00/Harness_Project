@@ -9,8 +9,8 @@ use harness_mcp::{
     public_method_tools, run_stdio, McpAdapter, McpSessionContext, PUBLIC_METHOD_TOOL_NAMES,
 };
 use harness_store::bootstrap::{register_surface, SurfaceRegistration};
-use harness_test_support::core_fixtures::CoreFixture;
-use harness_types::{AccessClass, SurfaceId, SurfaceInstanceId};
+use harness_test_support::core_fixtures::{CoreFixture, UpdateScopeFixture};
+use harness_types::{AccessClass, ChangeUnitOperation, SurfaceId, SurfaceInstanceId};
 use serde_json::{json, Value};
 
 #[test]
@@ -102,6 +102,66 @@ fn adapter_does_not_expand_access_class_for_method_calls() -> Result<(), Box<dyn
         response.response_value["errors"][0]["code"],
         "CAPABILITY_INSUFFICIENT"
     );
+    Ok(())
+}
+
+#[test]
+fn mcp_replay_rejects_different_session_access_class_without_stored_response(
+) -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_replay_context")?;
+    let core = CoreService::new(fixture.runtime_home_path());
+    let intake = core.intake(
+        fixture.intake_request(
+            "req_mcp_replay_task",
+            "idem_mcp_replay_task",
+            false,
+            Some(0),
+        ),
+        invocation(&fixture, AccessClass::CoreMutation),
+    )?;
+    let task_id = intake.response_value["task_ref"]["record_id"]
+        .as_str()
+        .expect("task ref should be present")
+        .to_owned();
+    core.update_scope(
+        fixture.update_scope_request(UpdateScopeFixture {
+            request_id: "req_mcp_replay_scope",
+            idempotency_key: "idem_mcp_replay_scope",
+            dry_run: false,
+            expected_state_version: Some(1),
+            task_id: &task_id,
+            operation: ChangeUnitOperation::CreateCurrent,
+            scope_summary: "MCP replay context scope.",
+        }),
+        invocation(&fixture, AccessClass::CoreMutation),
+    )?;
+    let change_unit_id = fixture
+        .current_change_unit_id(&task_id)?
+        .expect("Change Unit should be current");
+    let request = fixture.prepare_write_request(
+        "req_mcp_prepare_replay",
+        "idem_mcp_prepare_replay",
+        Some(2),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+
+    let first = adapter(&fixture, AccessClass::WriteAuthorization).call_tool(
+        "harness.prepare_write",
+        serde_json::to_value(request.clone())?,
+    )?;
+    let after_first = fixture.counts()?;
+    let write_authorization_id = first.response_value["write_authorization_ref"]["record_id"]
+        .as_str()
+        .expect("prepare_write should return an authorization id")
+        .to_owned();
+
+    let mismatch = adapter(&fixture, AccessClass::CoreMutation)
+        .call_tool("harness.prepare_write", serde_json::to_value(request)?)?;
+
+    assert_rejected_code(&mismatch.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert!(!mismatch.response_json.contains(&write_authorization_id));
+    assert_eq!(fixture.counts()?, after_first);
     Ok(())
 }
 

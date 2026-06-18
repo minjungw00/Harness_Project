@@ -40,10 +40,10 @@ use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 
 use crate::pipeline::{
-    dry_run_response, method_result_base, rejected_response, tool_error,
-    verified_surface_from_registered_surface, CorePipelineError, CoreResult, CoreService,
-    InvocationContext, OwnerPipelineBranch, PipelineRequest, PipelineResponse, TaskRequirement,
-    VerifiedSurfaceContext,
+    dry_run_response, method_result_base, rejected_response, replay_context_from_verified_surface,
+    replay_context_mismatch_response, tool_error, verified_surface_from_registered_surface,
+    CorePipelineError, CoreResult, CoreService, InvocationContext, OwnerPipelineBranch,
+    PipelineRequest, PipelineResponse, TaskRequirement, VerifiedSurfaceContext,
 };
 
 impl CoreService {
@@ -258,15 +258,6 @@ impl CoreService {
             Ok(opened) => opened,
             Err(response) => return Ok(*response),
         };
-        if let Some(response) = early_idempotency_replay(
-            &store,
-            &project_state,
-            MethodName::PrepareWrite,
-            &request.envelope,
-            &request_json,
-        )? {
-            return Ok(response);
-        }
         let verified_surface = match verified_surface_context(
             &store,
             &project_state,
@@ -276,6 +267,16 @@ impl CoreService {
             Ok(context) => context,
             Err(response) => return Ok(*response),
         };
+        if let Some(response) = early_idempotency_replay(
+            &store,
+            &project_state,
+            MethodName::PrepareWrite,
+            &request.envelope,
+            &request_json,
+            &verified_surface,
+        )? {
+            return Ok(response);
+        }
         let plan =
             match plan_prepare_write(&store, &project_state, request.clone(), &verified_surface) {
                 Ok(plan) => plan,
@@ -505,15 +506,6 @@ impl CoreService {
             Ok(opened) => opened,
             Err(response) => return Ok(*response),
         };
-        if let Some(response) = early_idempotency_replay(
-            &store,
-            &project_state,
-            MethodName::RecordRun,
-            &request.envelope,
-            &request_json,
-        )? {
-            return Ok(response);
-        }
         let verified_surface = match verified_surface_context(
             &store,
             &project_state,
@@ -523,6 +515,16 @@ impl CoreService {
             Ok(context) => context,
             Err(response) => return Ok(*response),
         };
+        if let Some(response) = early_idempotency_replay(
+            &store,
+            &project_state,
+            MethodName::RecordRun,
+            &request.envelope,
+            &request_json,
+            &verified_surface,
+        )? {
+            return Ok(response);
+        }
         let plan = match plan_record_run(&store, &project_state, request.clone(), &verified_surface)
         {
             Ok(plan) => plan,
@@ -665,12 +667,22 @@ impl CoreService {
             Ok(opened) => opened,
             Err(response) => return Ok(*response),
         };
+        let verified_surface = match verified_surface_context(
+            &store,
+            &project_state,
+            &request.envelope,
+            &invocation,
+        ) {
+            Ok(context) => context,
+            Err(response) => return Ok(*response),
+        };
         if let Some(response) = early_idempotency_replay(
             &store,
             &project_state,
             MethodName::RecordUserJudgment,
             &request.envelope,
             &request_json,
+            &verified_surface,
         )? {
             return Ok(response);
         }
@@ -755,12 +767,22 @@ impl CoreService {
             Err(response) => return Ok(*response),
         };
         if request.intent != CloseIntent::Check {
+            let verified_surface = match verified_surface_context(
+                &store,
+                &project_state,
+                &request.envelope,
+                &invocation,
+            ) {
+                Ok(context) => context,
+                Err(response) => return Ok(*response),
+            };
             if let Some(response) = early_idempotency_replay(
                 &store,
                 &project_state,
                 MethodName::CloseTask,
                 &request.envelope,
                 &request_json,
+                &verified_surface,
             )? {
                 return Ok(response);
             }
@@ -1336,6 +1358,7 @@ fn early_idempotency_replay(
     method_name: MethodName,
     envelope: &ToolEnvelope,
     request_json: &Value,
+    verified_surface: &VerifiedSurfaceContext,
 ) -> CoreResult<Option<PipelineResponse>> {
     if envelope.dry_run {
         return Ok(None);
@@ -1351,12 +1374,26 @@ fn early_idempotency_replay(
         return Ok(None);
     };
 
+    let replay_context = replay_context_from_verified_surface(verified_surface);
+    if !record.matches_verified_replay_context(&replay_context) {
+        let response = replay_context_mismatch_response(false, project_state.state_version);
+        let response_value = serde_json::to_value(response)?;
+        let response_json = serde_json::to_string(&response_value)?;
+        return Ok(Some(PipelineResponse {
+            response_json,
+            response_value,
+            verified_surface: Some(verified_surface.clone()),
+            resolved_task_id: None,
+            replayed: false,
+        }));
+    }
+
     if record.request_hash == request_hash.as_str() {
         let response_value = serde_json::from_str(&record.response_json)?;
         return Ok(Some(PipelineResponse {
             response_json: record.response_json,
             response_value,
-            verified_surface: None,
+            verified_surface: Some(verified_surface.clone()),
             resolved_task_id: None,
             replayed: true,
         }));

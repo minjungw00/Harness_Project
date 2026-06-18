@@ -8,7 +8,7 @@ use rusqlite::{Connection, Transaction, TransactionBehavior};
 use crate::{
     migrations::{
         apply_project_state_migrations, apply_registry_migrations, PROJECT_STATE_DATABASE_KIND,
-        REGISTRY_DATABASE_KIND,
+        PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND, REGISTRY_SCHEMA_VERSION,
     },
     StoreError, StoreResult,
 };
@@ -108,6 +108,7 @@ pub fn with_immediate_transaction<T>(
 /// Validates baseline registry schema invariants after migration.
 pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
     validate_foreign_keys_enabled(conn, REGISTRY_DATABASE_KIND)?;
+    validate_latest_migration(conn, REGISTRY_DATABASE_KIND, REGISTRY_SCHEMA_VERSION)?;
     require_tables(
         conn,
         REGISTRY_DATABASE_KIND,
@@ -125,6 +126,11 @@ pub fn validate_registry_schema(conn: &Connection) -> StoreResult<()> {
 /// Validates baseline project-state schema invariants after migration.
 pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
     validate_foreign_keys_enabled(conn, PROJECT_STATE_DATABASE_KIND)?;
+    validate_latest_migration(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        PROJECT_STATE_SCHEMA_VERSION,
+    )?;
     require_tables(
         conn,
         PROJECT_STATE_DATABASE_KIND,
@@ -185,6 +191,21 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         "tool_invocations",
         "request_hash",
     )?;
+    for column in [
+        "surface_id",
+        "surface_instance_id",
+        "access_class",
+        "verification_basis",
+        "replay_context_status",
+    ] {
+        require_column(
+            conn,
+            PROJECT_STATE_DATABASE_KIND,
+            "tool_invocations",
+            column,
+        )?;
+    }
+    validate_project_state_versions(conn)?;
     validate_foreign_key_check(conn, PROJECT_STATE_DATABASE_KIND)?;
     Ok(())
 }
@@ -265,6 +286,48 @@ fn sqlite_object_exists(
     )
 }
 
+fn validate_latest_migration(
+    conn: &Connection,
+    database_kind: &'static str,
+    latest_version: i64,
+) -> StoreResult<()> {
+    let version = conn
+        .query_row(
+            "SELECT COALESCE(MAX(version), 0)
+               FROM schema_migrations
+              WHERE database_kind = ?1",
+            [database_kind],
+            |row| row.get::<_, i64>(0),
+        )
+        .map_err(StoreError::from)?;
+    if version == latest_version {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            database_kind,
+            format!("latest migration is {version}, expected {latest_version}"),
+        ))
+    }
+}
+
+fn validate_project_state_versions(conn: &Connection) -> StoreResult<()> {
+    let stale_count: i64 = conn.query_row(
+        "SELECT COUNT(*)
+           FROM project_state
+          WHERE schema_version != ?1",
+        [PROJECT_STATE_SCHEMA_VERSION],
+        |row| row.get(0),
+    )?;
+    if stale_count == 0 {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "project_state.schema_version does not match the latest applied migration",
+        ))
+    }
+}
+
 fn require_column(
     conn: &Connection,
     database_kind: &'static str,
@@ -335,7 +398,9 @@ mod tests {
     use rusqlite::{params, Error, ErrorCode};
 
     use super::*;
-    use crate::migrations::{BASELINE_SCHEMA_VERSION, STORAGE_PROFILE};
+    use crate::migrations::{
+        BASELINE_SCHEMA_VERSION, PROJECT_STATE_SCHEMA_VERSION, STORAGE_PROFILE,
+    };
 
     #[test]
     fn registry_migrations_are_idempotent() -> StoreResult<()> {
@@ -359,13 +424,28 @@ mod tests {
         let path = project_state_db_path(runtime_home.path(), "PRJ-0001");
 
         let conn = open_project_state_database(&path)?;
-        assert_eq!(migration_count(&conn)?, 1);
+        assert_eq!(migration_count(&conn)?, 2);
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert!(migration_exists(
+            &conn,
+            PROJECT_STATE_DATABASE_KIND,
+            BASELINE_SCHEMA_VERSION,
+            "project_state_baseline_v1"
+        )?);
         drop(conn);
 
         let conn = open_project_state_database(&path)?;
-        assert_eq!(migration_count(&conn)?, 1);
+        assert_eq!(migration_count(&conn)?, 2);
         assert!(foreign_keys_enabled(&conn)?);
         assert!(sqlite_object_exists(&conn, "table", "tool_invocations")?);
+        assert!(column_exists(
+            &conn,
+            "tool_invocations",
+            "replay_context_status"
+        )?);
         Ok(())
     }
 
@@ -459,6 +539,10 @@ mod tests {
                     request_hash,
                     basis_state_version,
                     committed_state_version,
+                    surface_id,
+                    surface_instance_id,
+                    access_class,
+                    replay_context_status,
                     response_json,
                     created_at
                 )
@@ -469,12 +553,54 @@ mod tests {
                     'sha256:second',
                     0,
                     3,
+                    'surface_main',
+                    'surface_instance_1',
+                    'core_mutation',
+                    'verified',
                     '{}',
                     't2'
                 )",
                 [],
             )
             .expect_err("same project/tool/idempotency key must be unique");
+        assert_constraint_error(err);
+        Ok(())
+    }
+
+    #[test]
+    fn verified_tool_invocation_requires_complete_replay_context() -> StoreResult<()> {
+        let runtime_home = TempRuntimeHome::new("tool-invocations-context")?;
+        let conn =
+            open_project_state_database(runtime_home.project_state_db_path("PRJ-tools-context"))?;
+        insert_project_state(&conn)?;
+
+        let err = conn
+            .execute(
+                "INSERT INTO tool_invocations (
+                    project_id,
+                    tool_name,
+                    idempotency_key,
+                    request_hash,
+                    basis_state_version,
+                    committed_state_version,
+                    replay_context_status,
+                    response_json,
+                    created_at
+                )
+                VALUES (
+                    'project_a',
+                    'harness.intake',
+                    'idem_missing_context',
+                    'sha256:first',
+                    0,
+                    1,
+                    'verified',
+                    '{}',
+                    't0'
+                )",
+                [],
+            )
+            .expect_err("verified replay context must include identity fields");
         assert_constraint_error(err);
         Ok(())
     }
@@ -512,7 +638,7 @@ mod tests {
                     updated_at
                 )
                 VALUES (?1, ?2, ?3, 't0', 't0')",
-                params!["project_tx", STORAGE_PROFILE, BASELINE_SCHEMA_VERSION],
+                params!["project_tx", STORAGE_PROFILE, PROJECT_STATE_SCHEMA_VERSION],
             )?;
             Ok(())
         })?;
@@ -532,6 +658,33 @@ mod tests {
         })
     }
 
+    fn latest_migration_version(conn: &Connection, database_kind: &str) -> rusqlite::Result<i64> {
+        conn.query_row(
+            "SELECT COALESCE(MAX(version), 0)
+               FROM schema_migrations
+              WHERE database_kind = ?1",
+            [database_kind],
+            |row| row.get(0),
+        )
+    }
+
+    fn migration_exists(
+        conn: &Connection,
+        database_kind: &str,
+        version: i64,
+        name: &str,
+    ) -> rusqlite::Result<bool> {
+        conn.query_row(
+            "SELECT COUNT(*)
+               FROM schema_migrations
+              WHERE database_kind = ?1
+                AND version = ?2
+                AND name = ?3",
+            params![database_kind, version, name],
+            |row| Ok(row.get::<_, i64>(0)? == 1),
+        )
+    }
+
     fn insert_project_state(conn: &Connection) -> rusqlite::Result<()> {
         conn.execute(
             "INSERT INTO project_state (
@@ -542,7 +695,7 @@ mod tests {
                 updated_at
             )
             VALUES (?1, ?2, ?3, 't0', 't0')",
-            params!["project_a", STORAGE_PROFILE, BASELINE_SCHEMA_VERSION],
+            params!["project_a", STORAGE_PROFILE, PROJECT_STATE_SCHEMA_VERSION],
         )?;
         Ok(())
     }
@@ -600,6 +753,10 @@ mod tests {
                 request_hash,
                 basis_state_version,
                 committed_state_version,
+                surface_id,
+                surface_instance_id,
+                access_class,
+                replay_context_status,
                 response_json,
                 created_at
             )
@@ -610,6 +767,10 @@ mod tests {
                 ?2,
                 0,
                 ?3,
+                'surface_main',
+                'surface_instance_1',
+                'core_mutation',
+                'verified',
                 '{}',
                 't0'
             )",

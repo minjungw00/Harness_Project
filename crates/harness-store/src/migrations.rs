@@ -5,8 +5,14 @@ use crate::{sqlite::begin_immediate_transaction, StoreError, StoreResult};
 /// Baseline storage profile recorded by schema migrations.
 pub const STORAGE_PROFILE: &str = "baseline_sqlite";
 
-/// Baseline schema version for both SQLite databases.
+/// Historical baseline schema version used by the first SQLite migrations.
 pub const BASELINE_SCHEMA_VERSION: i64 = 1;
+
+/// Latest schema version for `registry.sqlite`.
+pub const REGISTRY_SCHEMA_VERSION: i64 = 1;
+
+/// Latest schema version for project `state.sqlite`.
+pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 2;
 
 /// `schema_migrations.database_kind` for `registry.sqlite`.
 pub const REGISTRY_DATABASE_KIND: &str = "registry";
@@ -14,21 +20,29 @@ pub const REGISTRY_DATABASE_KIND: &str = "registry";
 /// `schema_migrations.database_kind` for project `state.sqlite`.
 pub const PROJECT_STATE_DATABASE_KIND: &str = "project_state";
 
-const REGISTRY_BASELINE: BaselineMigration = BaselineMigration {
+const REGISTRY_MIGRATIONS: &[Migration] = &[Migration {
     database_kind: REGISTRY_DATABASE_KIND,
     version: BASELINE_SCHEMA_VERSION,
     name: "registry_baseline_v1",
     sql: REGISTRY_BASELINE_SQL,
-};
+}];
 
-const PROJECT_STATE_BASELINE: BaselineMigration = BaselineMigration {
-    database_kind: PROJECT_STATE_DATABASE_KIND,
-    version: BASELINE_SCHEMA_VERSION,
-    name: "project_state_baseline_v1",
-    sql: PROJECT_STATE_BASELINE_SQL,
-};
+const PROJECT_STATE_MIGRATIONS: &[Migration] = &[
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: BASELINE_SCHEMA_VERSION,
+        name: "project_state_baseline_v1",
+        sql: PROJECT_STATE_BASELINE_SQL,
+    },
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: PROJECT_STATE_SCHEMA_VERSION,
+        name: "project_state_replay_context_v2",
+        sql: PROJECT_STATE_REPLAY_CONTEXT_V2_SQL,
+    },
+];
 
-struct BaselineMigration {
+struct Migration {
     database_kind: &'static str,
     version: i64,
     name: &'static str,
@@ -37,60 +51,58 @@ struct BaselineMigration {
 
 /// Applies the executable baseline migration for `registry.sqlite`.
 pub fn apply_registry_migrations(conn: &mut Connection) -> StoreResult<()> {
-    apply_baseline_migration(conn, &REGISTRY_BASELINE)
+    apply_ordered_migrations(conn, REGISTRY_MIGRATIONS)
 }
 
 /// Applies the executable baseline migration for project `state.sqlite`.
 pub fn apply_project_state_migrations(conn: &mut Connection) -> StoreResult<()> {
-    apply_baseline_migration(conn, &PROJECT_STATE_BASELINE)
+    apply_ordered_migrations(conn, PROJECT_STATE_MIGRATIONS)
 }
 
-fn apply_baseline_migration(
-    conn: &mut Connection,
-    migration: &BaselineMigration,
-) -> StoreResult<()> {
+fn apply_ordered_migrations(conn: &mut Connection, migrations: &[Migration]) -> StoreResult<()> {
     let tx = begin_immediate_transaction(conn)?;
 
-    if let Some((actual_name, actual_storage_profile)) = existing_migration(&tx, migration)? {
-        if actual_name != migration.name || actual_storage_profile != STORAGE_PROFILE {
-            return Err(StoreError::MigrationConflict {
-                database_kind: migration.database_kind,
-                version: migration.version,
-                expected_name: migration.name,
-                actual_name,
-                expected_storage_profile: STORAGE_PROFILE,
-                actual_storage_profile,
-            });
+    for migration in migrations {
+        if let Some((actual_name, actual_storage_profile)) = existing_migration(&tx, migration)? {
+            if actual_name != migration.name || actual_storage_profile != STORAGE_PROFILE {
+                return Err(StoreError::MigrationConflict {
+                    database_kind: migration.database_kind,
+                    version: migration.version,
+                    expected_name: migration.name,
+                    actual_name,
+                    expected_storage_profile: STORAGE_PROFILE,
+                    actual_storage_profile,
+                });
+            }
+            continue;
         }
 
-        tx.commit()?;
-        return Ok(());
+        tx.execute_batch(migration.sql)?;
+        tx.execute(
+            "INSERT INTO schema_migrations (
+                database_kind,
+                version,
+                name,
+                storage_profile,
+                applied_at
+            )
+            VALUES (?1, ?2, ?3, ?4, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
+            params![
+                migration.database_kind,
+                migration.version,
+                migration.name,
+                STORAGE_PROFILE
+            ],
+        )?;
     }
 
-    tx.execute_batch(migration.sql)?;
-    tx.execute(
-        "INSERT INTO schema_migrations (
-            database_kind,
-            version,
-            name,
-            storage_profile,
-            applied_at
-        )
-        VALUES (?1, ?2, ?3, ?4, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
-        params![
-            migration.database_kind,
-            migration.version,
-            migration.name,
-            STORAGE_PROFILE
-        ],
-    )?;
     tx.commit()?;
     Ok(())
 }
 
 fn existing_migration(
     tx: &Transaction<'_>,
-    migration: &BaselineMigration,
+    migration: &Migration,
 ) -> rusqlite::Result<Option<(String, String)>> {
     let schema_table_exists = tx.query_row(
         "SELECT COUNT(*)
@@ -548,3 +560,149 @@ CREATE INDEX idx_blockers_task_status
 CREATE INDEX idx_task_events_task_seq
   ON task_events (project_id, task_id, event_seq);
 "#;
+
+const PROJECT_STATE_REPLAY_CONTEXT_V2_SQL: &str = r#"
+ALTER TABLE tool_invocations
+  ADD COLUMN surface_id TEXT;
+
+ALTER TABLE tool_invocations
+  ADD COLUMN surface_instance_id TEXT;
+
+ALTER TABLE tool_invocations
+  ADD COLUMN access_class TEXT;
+
+ALTER TABLE tool_invocations
+  ADD COLUMN verification_basis TEXT;
+
+ALTER TABLE tool_invocations
+  ADD COLUMN replay_context_status TEXT NOT NULL DEFAULT 'legacy_unverified'
+    CHECK (replay_context_status IN ('verified', 'legacy_unverified'));
+
+CREATE TRIGGER tool_invocations_verified_context_insert
+BEFORE INSERT ON tool_invocations
+FOR EACH ROW
+WHEN NEW.replay_context_status = 'verified'
+  AND (
+    NEW.surface_id IS NULL
+    OR NEW.surface_instance_id IS NULL
+    OR NEW.access_class IS NULL
+  )
+BEGIN
+  SELECT RAISE(ABORT, 'verified replay context requires surface_id, surface_instance_id, and access_class');
+END;
+
+CREATE TRIGGER tool_invocations_verified_context_update
+BEFORE UPDATE ON tool_invocations
+FOR EACH ROW
+WHEN NEW.replay_context_status = 'verified'
+  AND (
+    NEW.surface_id IS NULL
+    OR NEW.surface_instance_id IS NULL
+    OR NEW.access_class IS NULL
+  )
+BEGIN
+  SELECT RAISE(ABORT, 'verified replay context requires surface_id, surface_instance_id, and access_class');
+END;
+
+UPDATE project_state
+   SET schema_version = 2,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version < 2;
+"#;
+
+#[cfg(test)]
+mod tests {
+    use std::{error::Error, fs};
+
+    use harness_test_support::TempRuntimeHome;
+    use rusqlite::{params, Connection};
+
+    use super::*;
+    use crate::sqlite::{open_project_state_database, project_state_db_path};
+
+    #[test]
+    fn version_one_project_state_replay_rows_become_legacy_unverified() -> Result<(), Box<dyn Error>>
+    {
+        let runtime_home = TempRuntimeHome::new("migration-v1-replay")?;
+        let path = project_state_db_path(runtime_home.path(), "project_v1");
+        fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+        let conn = Connection::open(&path)?;
+        conn.execute_batch(PROJECT_STATE_BASELINE_SQL)?;
+        conn.execute(
+            "INSERT INTO schema_migrations (
+                database_kind,
+                version,
+                name,
+                storage_profile,
+                applied_at
+            )
+            VALUES (?1, ?2, 'project_state_baseline_v1', ?3, 't0')",
+            params![
+                PROJECT_STATE_DATABASE_KIND,
+                BASELINE_SCHEMA_VERSION,
+                STORAGE_PROFILE
+            ],
+        )?;
+        conn.execute(
+            "INSERT INTO project_state (
+                project_id,
+                storage_profile,
+                schema_version,
+                created_at,
+                updated_at
+            )
+            VALUES ('project_v1', ?1, 1, 't0', 't0')",
+            [STORAGE_PROFILE],
+        )?;
+        conn.execute(
+            "INSERT INTO tool_invocations (
+                project_id,
+                tool_name,
+                idempotency_key,
+                request_hash,
+                basis_state_version,
+                committed_state_version,
+                response_json,
+                created_at
+            )
+            VALUES (
+                'project_v1',
+                'harness.update_scope',
+                'idem_legacy',
+                'sha256:legacy',
+                0,
+                1,
+                '{\"legacy\":true}',
+                't0'
+            )",
+            [],
+        )?;
+        drop(conn);
+
+        let conn = open_project_state_database(&path)?;
+        let (schema_version, migration_count): (i64, i64) = conn.query_row(
+            "SELECT
+                (SELECT schema_version FROM project_state WHERE project_id = 'project_v1'),
+                (SELECT COUNT(*) FROM schema_migrations WHERE database_kind = ?1)",
+            [PROJECT_STATE_DATABASE_KIND],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        assert_eq!(schema_version, PROJECT_STATE_SCHEMA_VERSION);
+        assert_eq!(migration_count, 2);
+
+        let (status, surface_id, response_json): (String, Option<String>, String) = conn
+            .query_row(
+                "SELECT replay_context_status, surface_id, response_json
+                   FROM tool_invocations
+                  WHERE project_id = 'project_v1'
+                    AND tool_name = 'harness.update_scope'
+                    AND idempotency_key = 'idem_legacy'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )?;
+        assert_eq!(status, "legacy_unverified");
+        assert!(surface_id.is_none());
+        assert_eq!(response_json, "{\"legacy\":true}");
+        Ok(())
+    }
+}

@@ -9,6 +9,7 @@ use harness_store::{
     core_pipeline::{
         commit_input, CommitMutationInput, CommittedEventRef, CoreProjectStore,
         CoreStorageMutation, MutationCommitOutcome, PendingTaskEvent, ProjectStateHeader,
+        VerifiedReplayContext,
     },
     StoreError,
 };
@@ -199,12 +200,6 @@ impl CoreService {
             }
         };
 
-        if let Some(precedence_response) =
-            precedence_response(&store, &request, &request_hash, &project_state)?
-        {
-            return Ok(precedence_response);
-        }
-
         let verified_surface = match derive_verified_surface(
             &store,
             &project_state,
@@ -224,6 +219,16 @@ impl CoreService {
                 );
             }
         };
+
+        if let Some(precedence_response) = precedence_response(
+            &store,
+            &request,
+            &request_hash,
+            &project_state,
+            &verified_surface,
+        )? {
+            return Ok(precedence_response);
+        }
 
         let resolved_task_id = match resolve_task(
             &store,
@@ -515,6 +520,7 @@ fn precedence_response(
     request: &PipelineRequest,
     request_hash: &RequestHash,
     project_state: &ProjectStateHeader,
+    verified_surface: &VerifiedSurfaceContext,
 ) -> CoreResult<Option<PipelineResponse>> {
     let branch_needs_freshness = matches!(
         request.branch,
@@ -526,10 +532,21 @@ fn precedence_response(
     if matches!(request.branch, OwnerPipelineBranch::CommitMutation { .. }) {
         if let Some(idempotency_key) = &request.envelope.idempotency_key {
             if let Some(record) = store.tool_invocation(request.method_name, idempotency_key)? {
+                let replay_context = replay_context_from_verified_surface(verified_surface);
+                if !record.matches_verified_replay_context(&replay_context) {
+                    return Ok(Some(response_from_rejected(
+                        replay_context_mismatch_response(
+                            request.envelope.dry_run,
+                            project_state.state_version,
+                        ),
+                        Some(verified_surface.clone()),
+                        None,
+                    )?));
+                }
                 if record.request_hash == request_hash.as_str() {
                     return Ok(Some(response_from_json_string(
                         record.response_json,
-                        None,
+                        Some(verified_surface.clone()),
                         None,
                         true,
                     )?));
@@ -547,7 +564,7 @@ fn precedence_response(
                             request_hash.as_str(),
                         )],
                     ),
-                    None,
+                    Some(verified_surface.clone()),
                     None,
                 )?));
             }
@@ -727,6 +744,29 @@ fn verified_surface_basis(registered_basis: &str, invocation_binding_basis: &str
     }
 }
 
+pub(crate) fn replay_context_from_verified_surface(
+    verified_surface: &VerifiedSurfaceContext,
+) -> VerifiedReplayContext {
+    VerifiedReplayContext {
+        surface_id: verified_surface.surface_id.as_str().to_owned(),
+        surface_instance_id: verified_surface.surface_instance_id.as_str().to_owned(),
+        access_class: access_class_value(verified_surface.access_class).to_owned(),
+        verification_basis: (!verified_surface.verification_basis.trim().is_empty())
+            .then(|| verified_surface.verification_basis.clone()),
+    }
+}
+
+pub(crate) fn access_class_value(access_class: AccessClass) -> &'static str {
+    match access_class {
+        AccessClass::ReadStatus => "read_status",
+        AccessClass::CoreMutation => "core_mutation",
+        AccessClass::WriteAuthorization => "write_authorization",
+        AccessClass::RunRecording => "run_recording",
+        AccessClass::ArtifactRegistration => "artifact_registration",
+        AccessClass::ArtifactRead => "artifact_read",
+    }
+}
+
 fn resolve_task(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
@@ -797,6 +837,10 @@ fn commit_mutation(
         method_name,
         envelope.idempotency_key.as_ref(),
         request_hash,
+        envelope
+            .idempotency_key
+            .as_ref()
+            .map(|_| replay_context_from_verified_surface(&verified_surface)),
         envelope.expected_state_version,
         vec![PendingTaskEvent {
             event_id: format!("evt_{}", envelope.request_id.as_str()),
@@ -822,9 +866,20 @@ fn commit_mutation(
     )?;
 
     match outcome {
-        MutationCommitOutcome::Replayed { response_json, .. } => {
-            response_from_json_string(response_json, None, None, true)
-        }
+        MutationCommitOutcome::Replayed { response_json, .. } => response_from_json_string(
+            response_json,
+            Some(verified_surface),
+            Some(task_id.clone()),
+            true,
+        ),
+        MutationCommitOutcome::ReplayContextMismatch {
+            current_state_version,
+            ..
+        } => response_from_rejected(
+            replay_context_mismatch_response(false, current_state_version),
+            Some(verified_surface),
+            Some(task_id.clone()),
+        ),
         MutationCommitOutcome::IdempotencyConflict {
             current_state_version,
             idempotency_key,
@@ -1003,6 +1058,17 @@ fn idempotency_conflict_error(
         "idempotency_key was reused with a different request hash",
         false,
         Some(details),
+    )
+}
+
+pub(crate) fn replay_context_mismatch_response(
+    dry_run: bool,
+    current_state_version: u64,
+) -> ToolRejectedResponse {
+    rejected_response(
+        dry_run,
+        Some(current_state_version),
+        vec![local_access_mismatch_error("idempotency_replay_context")],
     )
 }
 
@@ -1243,6 +1309,40 @@ mod tests {
             Ok(store.effect_counts()?)
         }
 
+        fn register_surface_instance(
+            &self,
+            surface_instance_id: &str,
+            authorized_access_classes: Vec<&str>,
+        ) -> Result<(), Box<dyn Error>> {
+            register_surface(
+                &self.runtime_home_path,
+                SurfaceRegistration {
+                    project_id: PROJECT_ID.to_owned(),
+                    surface_id: SURFACE_ID.to_owned(),
+                    surface_instance_id: surface_instance_id.to_owned(),
+                    surface_kind: "local_test".to_owned(),
+                    display_name: Some(format!("Pipeline Test Surface {surface_instance_id}")),
+                    capability_profile_json: "{}".to_owned(),
+                    local_access_json: json!({
+                        "authorized_access_classes": authorized_access_classes,
+                        "verification_basis": "pipeline_test_registration"
+                    })
+                    .to_string(),
+                    metadata_json: "{}".to_owned(),
+                },
+            )?;
+            Ok(())
+        }
+
+        fn conn(&self) -> Result<rusqlite::Connection, StoreError> {
+            open_project_state_database(
+                self.runtime_home_path
+                    .join("projects")
+                    .join(PROJECT_ID)
+                    .join("state.sqlite"),
+            )
+        }
+
         fn execute(&self, request: PipelineRequest) -> CoreResult<PipelineResponse> {
             self.service.execute_pipeline(request)
         }
@@ -1405,6 +1505,209 @@ mod tests {
         assert!(second.replayed);
         assert_eq!(second.response_json, first.response_json);
         assert_eq!(after_second, after_first);
+        Ok(())
+    }
+
+    #[test]
+    fn idempotency_replay_rejects_other_surface_instance_without_stored_response(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        harness.register_surface_instance(
+            "surface_instance_other",
+            vec!["read_status", "core_mutation"],
+        )?;
+        let envelope = envelope(
+            "req_replay_surface",
+            Some("idem_replay_surface"),
+            false,
+            Some(0),
+            Some(TASK_ID),
+        );
+        let request_json = request_json(MethodName::UpdateScope, &envelope, "surface-secret");
+        let first_request = PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json: request_json.clone(),
+            envelope: envelope.clone(),
+            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: commit_branch("surface-secret"),
+        };
+        let first = harness.execute(first_request)?;
+        let after_first = harness.counts()?;
+
+        let mismatch = harness.execute(PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json,
+            envelope,
+            invocation: invocation(AccessClass::CoreMutation, Some("surface_instance_other")),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: commit_branch("surface-secret"),
+        })?;
+
+        assert!(!mismatch.replayed);
+        assert_eq!(mismatch.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            mismatch.response_value["errors"][0]["code"],
+            "LOCAL_ACCESS_MISMATCH"
+        );
+        assert!(!mismatch.response_json.contains("surface-secret"));
+        assert_ne!(mismatch.response_json, first.response_json);
+        assert_eq!(harness.counts()?, after_first);
+        Ok(())
+    }
+
+    #[test]
+    fn idempotency_replay_rejects_other_access_class() -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        let envelope = envelope(
+            "req_replay_access",
+            Some("idem_replay_access"),
+            false,
+            Some(0),
+            Some(TASK_ID),
+        );
+        let request_json = request_json(MethodName::UpdateScope, &envelope, "access-secret");
+        let first_request = PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json: request_json.clone(),
+            envelope: envelope.clone(),
+            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: commit_branch("access-secret"),
+        };
+        harness.execute(first_request)?;
+        let after_first = harness.counts()?;
+
+        let mismatch = harness.execute(PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json,
+            envelope,
+            invocation: invocation(AccessClass::ReadStatus, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: commit_branch("access-secret"),
+        })?;
+
+        assert_eq!(
+            mismatch.response_value["errors"][0]["code"],
+            "LOCAL_ACCESS_MISMATCH"
+        );
+        assert!(!mismatch.response_json.contains("access-secret"));
+        assert_eq!(harness.counts()?, after_first);
+        Ok(())
+    }
+
+    #[test]
+    fn replay_context_mismatch_precedes_request_hash_conflict() -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        harness.register_surface_instance(
+            "surface_instance_hash_mismatch",
+            vec!["read_status", "core_mutation"],
+        )?;
+        let first_envelope = envelope(
+            "req_context_precedence_first",
+            Some("idem_context_precedence"),
+            false,
+            Some(0),
+            Some(TASK_ID),
+        );
+        harness.execute(PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json: request_json(MethodName::UpdateScope, &first_envelope, "stored-secret"),
+            envelope: first_envelope,
+            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: commit_branch("stored-secret"),
+        })?;
+        let after_first = harness.counts()?;
+
+        let second_envelope = envelope(
+            "req_context_precedence_second",
+            Some("idem_context_precedence"),
+            false,
+            Some(1),
+            Some(TASK_ID),
+        );
+        let mismatch = harness.execute(PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json: request_json(MethodName::UpdateScope, &second_envelope, "different"),
+            envelope: second_envelope,
+            invocation: invocation(
+                AccessClass::CoreMutation,
+                Some("surface_instance_hash_mismatch"),
+            ),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: commit_branch("different"),
+        })?;
+
+        assert_eq!(
+            mismatch.response_value["errors"][0]["code"],
+            "LOCAL_ACCESS_MISMATCH"
+        );
+        assert!(!mismatch.response_json.contains("stored-secret"));
+        assert_eq!(harness.counts()?, after_first);
+        Ok(())
+    }
+
+    #[test]
+    fn legacy_replay_row_is_preserved_but_not_replayed() -> Result<(), Box<dyn Error>> {
+        let harness = PipelineHarness::new()?;
+        let envelope = envelope(
+            "req_legacy_replay",
+            Some("idem_legacy_replay"),
+            false,
+            Some(0),
+            Some(TASK_ID),
+        );
+        let request_json = request_json(MethodName::UpdateScope, &envelope, "legacy-attempt");
+        let request_hash = canonical_request_hash(&request_json)?;
+        harness.conn()?.execute(
+            "INSERT INTO tool_invocations (
+                project_id,
+                tool_name,
+                idempotency_key,
+                request_hash,
+                basis_state_version,
+                committed_state_version,
+                response_json,
+                created_at
+            )
+            VALUES (
+                ?1,
+                'harness.update_scope',
+                'idem_legacy_replay',
+                ?2,
+                0,
+                1,
+                '{\"stored\":\"legacy-secret\"}',
+                't0'
+            )",
+            rusqlite::params![PROJECT_ID, request_hash.as_str()],
+        )?;
+        let before = harness.counts()?;
+
+        let response = harness.execute(PipelineRequest {
+            method_name: MethodName::UpdateScope,
+            request_json,
+            envelope,
+            invocation: invocation(AccessClass::CoreMutation, Some(SURFACE_INSTANCE_ID)),
+            required_access_class: AccessClass::CoreMutation,
+            task_requirement: TaskRequirement::Required,
+            branch: commit_branch("legacy-attempt"),
+        })?;
+
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "LOCAL_ACCESS_MISMATCH"
+        );
+        assert!(!response.response_json.contains("legacy-secret"));
+        assert_eq!(harness.counts()?, before);
         Ok(())
     }
 

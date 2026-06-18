@@ -36,7 +36,31 @@ pub struct ToolInvocationRecord {
     pub request_hash: String,
     pub basis_state_version: u64,
     pub committed_state_version: u64,
+    pub surface_id: Option<String>,
+    pub surface_instance_id: Option<String>,
+    pub access_class: Option<String>,
+    pub verification_basis: Option<String>,
+    pub replay_context_status: String,
     pub response_json: String,
+}
+
+/// Verified replay identity derived from the current surface context.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerifiedReplayContext {
+    pub surface_id: String,
+    pub surface_instance_id: String,
+    pub access_class: String,
+    pub verification_basis: Option<String>,
+}
+
+impl ToolInvocationRecord {
+    /// Returns whether this replay row is eligible for the supplied verified context.
+    pub fn matches_verified_replay_context(&self, context: &VerifiedReplayContext) -> bool {
+        self.replay_context_status == "verified"
+            && self.surface_id.as_deref() == Some(context.surface_id.as_str())
+            && self.surface_instance_id.as_deref() == Some(context.surface_instance_id.as_str())
+            && self.access_class.as_deref() == Some(context.access_class.as_str())
+    }
 }
 
 /// Pending event supplied by a method-specific commit branch.
@@ -273,6 +297,7 @@ pub struct CommitMutationInput {
     pub tool_name: String,
     pub idempotency_key: Option<String>,
     pub request_hash: String,
+    pub replay_context: Option<VerifiedReplayContext>,
     pub expected_state_version: Option<u64>,
     pub events: Vec<PendingTaskEvent>,
 }
@@ -284,6 +309,10 @@ pub enum MutationCommitOutcome {
         response_json: String,
         basis_state_version: u64,
         committed_state_version: u64,
+    },
+    ReplayContextMismatch {
+        current_state_version: u64,
+        idempotency_key: String,
     },
     IdempotencyConflict {
         current_state_version: u64,
@@ -760,6 +789,16 @@ impl CoreProjectStore {
         }
         validate_identifier("tool_name", &input.tool_name)?;
         validate_identifier("request_hash", &input.request_hash)?;
+        if input.idempotency_key.is_some() {
+            let replay_context =
+                input
+                    .replay_context
+                    .as_ref()
+                    .ok_or_else(|| StoreError::InvalidInput {
+                        detail: "idempotent commits require verified replay context".to_owned(),
+                    })?;
+            validate_replay_context(replay_context)?;
+        }
         for event in &input.events {
             validate_pending_event(event)?;
         }
@@ -776,6 +815,19 @@ impl CoreProjectStore {
                 idempotency_key,
             )? {
                 tx.rollback()?;
+                let replay_context =
+                    input
+                        .replay_context
+                        .as_ref()
+                        .ok_or_else(|| StoreError::InvalidInput {
+                            detail: "idempotent commits require verified replay context".to_owned(),
+                        })?;
+                if !record.matches_verified_replay_context(replay_context) {
+                    return Ok(MutationCommitOutcome::ReplayContextMismatch {
+                        current_state_version: current.state_version,
+                        idempotency_key: idempotency_key.clone(),
+                    });
+                }
                 if record.request_hash == input.request_hash {
                     return Ok(MutationCommitOutcome::Replayed {
                         response_json: record.response_json,
@@ -898,6 +950,10 @@ impl CoreProjectStore {
         validate_json_text("tool_invocations.response_json", &response_json)?;
 
         if let Some(idempotency_key) = &input.idempotency_key {
+            let replay_context = input
+                .replay_context
+                .as_ref()
+                .expect("validated replay_context is present");
             tx.execute(
                 "INSERT INTO tool_invocations (
                     project_id,
@@ -906,6 +962,11 @@ impl CoreProjectStore {
                     request_hash,
                     basis_state_version,
                     committed_state_version,
+                    surface_id,
+                    surface_instance_id,
+                    access_class,
+                    verification_basis,
+                    replay_context_status,
                     response_json,
                     created_at
                 )
@@ -917,6 +978,11 @@ impl CoreProjectStore {
                     ?5,
                     ?6,
                     ?7,
+                    ?8,
+                    ?9,
+                    ?10,
+                    'verified',
+                    ?11,
                     strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
                 )",
                 params![
@@ -926,6 +992,10 @@ impl CoreProjectStore {
                     input.request_hash,
                     current_state_i64,
                     committed_state_i64,
+                    replay_context.surface_id.as_str(),
+                    replay_context.surface_instance_id.as_str(),
+                    replay_context.access_class.as_str(),
+                    replay_context.verification_basis.as_deref(),
                     response_json
                 ],
             )?;
@@ -947,6 +1017,7 @@ pub fn commit_input(
     method_name: MethodName,
     idempotency_key: Option<&IdempotencyKey>,
     request_hash: &RequestHash,
+    replay_context: Option<VerifiedReplayContext>,
     expected_state_version: Option<u64>,
     events: Vec<PendingTaskEvent>,
 ) -> CommitMutationInput {
@@ -955,6 +1026,7 @@ pub fn commit_input(
         tool_name: method_name.as_str().to_owned(),
         idempotency_key: idempotency_key.map(|key| key.as_str().to_owned()),
         request_hash: request_hash.as_str().to_owned(),
+        replay_context,
         expected_state_version,
         events,
     }
@@ -2627,31 +2699,18 @@ fn tool_invocation_tx(
             request_hash,
             basis_state_version,
             committed_state_version,
+            surface_id,
+            surface_instance_id,
+            access_class,
+            verification_basis,
+            replay_context_status,
             response_json
          FROM tool_invocations
          WHERE project_id = ?1
            AND tool_name = ?2
            AND idempotency_key = ?3",
         params![project_id, tool_name, idempotency_key],
-        |row| {
-            let basis_state_version = row.get::<_, i64>(4)?;
-            let committed_state_version = row.get::<_, i64>(5)?;
-            Ok(ToolInvocationRecord {
-                project_id: row.get(0)?,
-                tool_name: row.get(1)?,
-                idempotency_key: row.get(2)?,
-                request_hash: row.get(3)?,
-                basis_state_version: nonnegative_i64_to_u64(
-                    "tool_invocations.basis_state_version",
-                    basis_state_version,
-                )?,
-                committed_state_version: nonnegative_i64_to_u64(
-                    "tool_invocations.committed_state_version",
-                    committed_state_version,
-                )?,
-                response_json: row.get(6)?,
-            })
-        },
+        tool_invocation_from_row,
     )
     .optional()
     .map_err(StoreError::from)
@@ -2671,34 +2730,46 @@ fn tool_invocation(
             request_hash,
             basis_state_version,
             committed_state_version,
+            surface_id,
+            surface_instance_id,
+            access_class,
+            verification_basis,
+            replay_context_status,
             response_json
          FROM tool_invocations
          WHERE project_id = ?1
            AND tool_name = ?2
            AND idempotency_key = ?3",
         params![project_id, tool_name, idempotency_key],
-        |row| {
-            let basis_state_version = row.get::<_, i64>(4)?;
-            let committed_state_version = row.get::<_, i64>(5)?;
-            Ok(ToolInvocationRecord {
-                project_id: row.get(0)?,
-                tool_name: row.get(1)?,
-                idempotency_key: row.get(2)?,
-                request_hash: row.get(3)?,
-                basis_state_version: nonnegative_i64_to_u64(
-                    "tool_invocations.basis_state_version",
-                    basis_state_version,
-                )?,
-                committed_state_version: nonnegative_i64_to_u64(
-                    "tool_invocations.committed_state_version",
-                    committed_state_version,
-                )?,
-                response_json: row.get(6)?,
-            })
-        },
+        tool_invocation_from_row,
     )
     .optional()
     .map_err(StoreError::from)
+}
+
+fn tool_invocation_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ToolInvocationRecord> {
+    let basis_state_version = row.get::<_, i64>(4)?;
+    let committed_state_version = row.get::<_, i64>(5)?;
+    Ok(ToolInvocationRecord {
+        project_id: row.get(0)?,
+        tool_name: row.get(1)?,
+        idempotency_key: row.get(2)?,
+        request_hash: row.get(3)?,
+        basis_state_version: nonnegative_i64_to_u64(
+            "tool_invocations.basis_state_version",
+            basis_state_version,
+        )?,
+        committed_state_version: nonnegative_i64_to_u64(
+            "tool_invocations.committed_state_version",
+            committed_state_version,
+        )?,
+        surface_id: row.get(6)?,
+        surface_instance_id: row.get(7)?,
+        access_class: row.get(8)?,
+        verification_basis: row.get(9)?,
+        replay_context_status: row.get(10)?,
+        response_json: row.get(11)?,
+    })
 }
 
 fn next_event_seq(tx: &Transaction<'_>, project_id: &str) -> StoreResult<i64> {
@@ -2735,6 +2806,16 @@ fn validate_pending_event(event: &PendingTaskEvent) -> StoreResult<()> {
     validate_json_text("task_events.event_payload_json", &event.event_payload_json)
 }
 
+fn validate_replay_context(context: &VerifiedReplayContext) -> StoreResult<()> {
+    validate_identifier("surface_id", &context.surface_id)?;
+    validate_identifier("surface_instance_id", &context.surface_instance_id)?;
+    validate_identifier("access_class", &context.access_class)?;
+    if let Some(verification_basis) = &context.verification_basis {
+        validate_identifier("verification_basis", verification_basis)?;
+    }
+    Ok(())
+}
+
 fn validate_identifier(field: &'static str, value: &str) -> StoreResult<()> {
     if value.trim().is_empty() {
         Err(StoreError::InvalidInput {
@@ -2766,4 +2847,164 @@ fn u64_to_i64(field: &'static str, value: u64) -> StoreResult<i64> {
     i64::try_from(value).map_err(|_| StoreError::InvalidInput {
         detail: format!("{field} does not fit in SQLite integer"),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{error::Error, path::PathBuf};
+
+    use harness_test_support::TempRuntimeHome;
+    use harness_types::{IdempotencyKey, MethodName, ProjectId, RequestHash};
+    use serde_json::json;
+
+    use super::*;
+    use crate::bootstrap::{
+        initialize_runtime_home, register_project, register_surface, ProjectRegistration,
+        SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+    };
+
+    const PROJECT_ID: &str = "project_store";
+    const SURFACE_ID: &str = "surface_store";
+    const SURFACE_INSTANCE_ID: &str = "surface_instance_store";
+
+    struct StoreHarness {
+        _runtime_home: TempRuntimeHome,
+        runtime_home_path: PathBuf,
+    }
+
+    impl StoreHarness {
+        fn new() -> Result<Self, Box<dyn Error>> {
+            let runtime_home = TempRuntimeHome::new("store-replay-context")?;
+            initialize_runtime_home(runtime_home.path(), "runtime_home_store", "{}")?;
+            register_project(
+                runtime_home.path(),
+                ProjectRegistration {
+                    project_id: PROJECT_ID.to_owned(),
+                    repo_root: runtime_home.path().join("repo"),
+                    project_home: None,
+                    status: ACTIVE_PROJECT_STATUS.to_owned(),
+                    metadata_json: "{}".to_owned(),
+                },
+            )?;
+            register_surface(
+                runtime_home.path(),
+                SurfaceRegistration {
+                    project_id: PROJECT_ID.to_owned(),
+                    surface_id: SURFACE_ID.to_owned(),
+                    surface_instance_id: SURFACE_INSTANCE_ID.to_owned(),
+                    surface_kind: "local_test".to_owned(),
+                    display_name: None,
+                    capability_profile_json: "{}".to_owned(),
+                    local_access_json: json!({
+                        "authorized_access_classes": ["core_mutation"],
+                        "verification_basis": "store_test_registration"
+                    })
+                    .to_string(),
+                    metadata_json: "{}".to_owned(),
+                },
+            )?;
+
+            Ok(Self {
+                runtime_home_path: runtime_home.path().to_path_buf(),
+                _runtime_home: runtime_home,
+            })
+        }
+
+        fn store(&self) -> StoreResult<CoreProjectStore> {
+            CoreProjectStore::open(&self.runtime_home_path, &ProjectId::new(PROJECT_ID))
+        }
+    }
+
+    #[test]
+    fn transaction_replay_context_mismatch_precedes_request_hash_conflict(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let first_context = replay_context(SURFACE_INSTANCE_ID, "core_mutation");
+        let first_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_context")),
+            &RequestHash::new("sha256:first"),
+            Some(first_context),
+            Some(0),
+            vec![pending_event("first")],
+        );
+        let first = store.commit_mutation(
+            first_input,
+            |mutation, facts| {
+                CoreStorageMutation::InsertTask(task_insert("task_first"))
+                    .apply(mutation, facts.committed_state_version)
+            },
+            response_json,
+        )?;
+        assert!(matches!(first, MutationCommitOutcome::Committed { .. }));
+        let before = store.effect_counts()?;
+
+        let mismatch_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_context")),
+            &RequestHash::new("sha256:second"),
+            Some(replay_context("surface_instance_other", "core_mutation")),
+            Some(1),
+            vec![pending_event("second")],
+        );
+        let mismatch = store.commit_mutation(mismatch_input, |_, _| Ok(()), response_json)?;
+
+        assert!(matches!(
+            mismatch,
+            MutationCommitOutcome::ReplayContextMismatch { .. }
+        ));
+        assert_eq!(store.effect_counts()?, before);
+        Ok(())
+    }
+
+    fn replay_context(surface_instance_id: &str, access_class: &str) -> VerifiedReplayContext {
+        VerifiedReplayContext {
+            surface_id: SURFACE_ID.to_owned(),
+            surface_instance_id: surface_instance_id.to_owned(),
+            access_class: access_class.to_owned(),
+            verification_basis: Some("store_test_registration".to_owned()),
+        }
+    }
+
+    fn pending_event(marker: &str) -> PendingTaskEvent {
+        PendingTaskEvent {
+            event_id: format!("evt_{marker}"),
+            task_id: format!("task_{marker}"),
+            change_unit_id: None,
+            event_kind: "store_test_event".to_owned(),
+            event_payload_json: "{}".to_owned(),
+        }
+    }
+
+    fn task_insert(task_id: &str) -> TaskInsert {
+        TaskInsert {
+            task_id: task_id.to_owned(),
+            created_by_surface_id: SURFACE_ID.to_owned(),
+            created_by_surface_instance_id: SURFACE_INSTANCE_ID.to_owned(),
+            mode: "work".to_owned(),
+            lifecycle_phase: "shaping".to_owned(),
+            result: None,
+            title: None,
+            summary: None,
+            shaping_summary_json: "{}".to_owned(),
+            bounded_context_json: "[]".to_owned(),
+            autonomy_boundary_json: "{}".to_owned(),
+            close_summary_json: "{}".to_owned(),
+            completion_policy_json: "{}".to_owned(),
+            current_change_unit_id: None,
+        }
+    }
+
+    fn response_json(facts: CommittedMutationFacts) -> StoreResult<String> {
+        Ok(json!({
+            "base": {
+                "state_version": facts.committed_state_version
+            },
+            "stored_response": "must_not_leak_on_mismatch"
+        })
+        .to_string())
+    }
 }
