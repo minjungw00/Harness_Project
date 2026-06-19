@@ -253,8 +253,12 @@ documents:
     path_ko: "docs/ko/use/local-mcp-quickstart.md"
     role: "use"
     owner_for:
-      - "executable local MCP setup sequence for operators"
-      - "guide-level order for building local executables, initializing a Runtime Home, registering a project and MCP surfaces, running preflight, configuring an MCP host, verifying tool discovery, interpreting wrapped responses, and reconnecting"
+      - "one-command executable local MCP setup for operators"
+      - "generated host-neutral local MCP configuration guidance"
+      - "optional local MCP interactive wizard usage"
+      - "optional user-interaction connector setup guidance"
+      - "guide-level local MCP connection verification and reconnection"
+      - "manual fallback and troubleshooting order for local MCP setup"
     not_owner_for:
       - "CLI command contracts"
       - "MCP wire contracts"

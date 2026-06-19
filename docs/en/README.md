@@ -6,7 +6,8 @@ Reading paths:
 
 - New users: [Start](start.md), then [User Guide](use/user-guide.md).
 - Working users: [User Guide](use/user-guide.md), [Judgment Examples](use/judgment-examples.md), and [Surface Recipes](use/surface-recipes.md).
-- Agents and operators: [Agent Guide](use/agent-guide.md), [Local MCP Quickstart](use/local-mcp-quickstart.md), with repository working rules in [AGENTS.md](../../AGENTS.md).
+- Local MCP operators: [Local MCP Quickstart](use/local-mcp-quickstart.md) for the one-command setup path.
+- Agents: [Agent Guide](use/agent-guide.md), with repository working rules in [AGENTS.md](../../AGENTS.md).
 - Implementers and reviewers: [Implementation Guide](build/implementation-guide.md), then [Reference Index](reference/README.md).
 - Documentation maintainers: [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain/translation-guide.md), [Checks Index](maintain/checks.md), [doc-index.yaml](../doc-index.yaml), and [Terminology Map](../terminology-map.yaml).
 

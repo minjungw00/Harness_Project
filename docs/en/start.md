@@ -106,7 +106,7 @@ The baseline scope is intentionally narrow. Use [Scope](reference/scope.md) for 
 |---|---|
 | New user | [User Guide](use/user-guide.md) |
 | Working user | [User Guide](use/user-guide.md) -> [Judgment Examples](use/judgment-examples.md) -> [Scope](reference/scope.md) |
-| Agent author or operator | [Agent Guide](use/agent-guide.md) -> [Local MCP Quickstart](use/local-mcp-quickstart.md) -> [Agent Integration Reference](reference/agent-integration.md) |
+| Local MCP operator or agent author | [Local MCP Quickstart](use/local-mcp-quickstart.md) -> [Agent Guide](use/agent-guide.md) -> [Agent Integration Reference](reference/agent-integration.md) |
 | Implementer | [Reference Index](reference/README.md) -> baseline scope -> API methods -> schema owners -> storage effects |
 | Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) -> [Translation Guide](maintain/translation-guide.md) -> [Checks](maintain/checks.md) |
 
