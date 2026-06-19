@@ -11,7 +11,7 @@
 - `harness` 명령 이름, 명령줄 인자, 기본값, stdout/stderr 처리, 프로세스 종료 코드
 - `harness` 관리 명령의 Runtime Home 경로 선택
 - 관리용 프로젝트와 접점 등록 기본값
-- 로컬 MCP 설정 오케스트레이션, 설정 옵션 기본값, 충돌 처리, dry-run 동작, 출력 형식, 호스트 중립 설정 생성
+- 로컬 MCP 설정 오케스트레이션, 선택적 대화형 설정 프런트엔드, 설정 옵션 기본값, 충돌 처리, dry-run 동작, 출력 형식, 호스트 중립 설정 생성
 - `baseline-workflow` 로컬 등록 프로필 확장
 - 관리 명령과 공개 하네스 API 메서드 사이의 경계
 
@@ -76,11 +76,12 @@ harness surface list --project-id ID
 <a id="local-mcp-setup-orchestration"></a>
 ## 로컬 MCP 설정 오케스트레이션
 
-`harness setup local-mcp [OPTIONS]`는 일반적인 `Product Repository` 루트 로컬 MCP 설정 경로를 위한 비대화식 로컬 관리 오케스트레이션 명령입니다. 낮은 수준의 `harness init`, `harness project register`, `harness surface register` 명령은 그대로 유지됩니다.
+`harness setup local-mcp [OPTIONS]`는 일반적인 `Product Repository` 루트 로컬 MCP 설정 경로를 위한 로컬 관리 오케스트레이션 명령입니다. 이 명령은 비대화식 명령 경로와 선택적 대화형 프런트엔드를 지원합니다. 낮은 수준의 `harness init`, `harness project register`, `harness surface register` 명령은 그대로 유지됩니다.
 
 지원 옵션:
 
 ```text
+--interactive
 --runtime-home PATH
 --repo-root PATH
 --project-id ID
@@ -93,15 +94,68 @@ harness surface list --project-id ID
 --overwrite-config
 ```
 
-참/거짓 옵션은 존재 여부로 켜지는 플래그입니다. `--dry-run=true` 같은 형식은 사용법 오류입니다. `--interactive`는 이 계약에 포함되지 않습니다.
+참/거짓 옵션은 존재 여부로 켜지는 플래그입니다. `--dry-run=true` 같은 형식은 사용법 오류입니다.
 
 기본값:
 
 - `--repo-root`의 기본값은 프로세스 현재 작업 디렉터리입니다.
 - `--output`의 기본값은 `text`입니다.
+- `--interactive`는 있을 때만 켜집니다.
 - `--with-user-interaction`이 있을 때만 사용자 상호작용 설정을 수행합니다.
 - 에이전트 MCP 접점 대상은 `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`, `surface_kind=mcp`, `interaction_role=agent`이고 `baseline-workflow` 접근 집합을 사용합니다.
 - 선택적 사용자 상호작용 MCP 접점 대상은 `surface_id=user_ui`, `surface_instance_id=user_ui_local`, `surface_kind=mcp`, `interaction_role=user_interaction`이고 `read_status`와 `core_mutation`을 사용합니다.
+
+### 대화형 설정 프런트엔드
+
+`--interactive`는 같은 설정 명령을 위한 텍스트 전용 마법사를 시작합니다. 마법사는 설정 입력을 수집하거나 확인하고, 계획된 바인딩과 접근 등급을 보여 주며, 최종 확인 전에 파괴적 결정을 따로 묻고, 그 뒤 비대화식 실행이 쓰는 것과 같은 설정 계획 및 적용 경로를 호출합니다. 이는 선택 사항이며 유일한 지원 온보딩 경로가 되면 안 됩니다.
+
+대화형 모드 규칙:
+
+- `--interactive`는 텍스트 출력만 사용합니다.
+- `--interactive --output json`은 사용법 오류입니다.
+- `--interactive`는 `--dry-run`과 함께 쓸 수 있습니다.
+- 명시한 설정 옵션은 마법사의 기본값이 됩니다.
+- 설정 적용이나 dry-run 출력 전에 최종 계획을 항상 보여 줍니다.
+- 취소하면 `0`으로 끝나고 stdout에 `setup: cancelled`를 쓰며 등록, 사전 점검, 설정 파일 쓰기, Runtime Home 초기화를 수행하지 않습니다.
+
+터미널과 스트림 동작:
+
+- 대화형 모드는 바이너리 경계에서 표준 터미널 감지로 확인한 사용 가능한 대화형 터미널 입력이 필요합니다.
+- 대화형 입력을 사용할 수 없으면 명령은 stderr에 사용법 진단을 쓰고, 비대화식 플래그를 제안하고, `2`로 끝나며, 입력을 기다리지 않고 상태를 바꾸지 않습니다.
+- 프롬프트, 접근 검토, 충돌 확인, 최종 확인은 stderr에 씁니다.
+- 정상 최종 설정 출력은 기존 텍스트 렌더러를 통해 stdout에 씁니다.
+- 대화형 프롬프트는 JSON 출력에 섞이면 안 되며, 마법사는 비밀값이나 관련 없는 원시 환경 값을 출력하면 안 됩니다.
+
+마법사 프롬프트 순서:
+
+1. Runtime Home
+2. Product Repository
+3. project ID
+4. 에이전트 바인딩과 접근 검토
+5. 사용자 상호작용 커넥터 선택
+6. 설정 출력 위치
+7. 필요한 경우 충돌 결정
+8. 전체 계획 검토
+9. 최종 확인
+
+프롬프트 동작:
+
+- Runtime Home 프롬프트는 설정 우선순위가 선택한 경로를 기본값으로 보여 줍니다. 빈 입력은 기본값을 받아들이고, 입력한 값은 기존 Runtime Home 규칙을 따르며, 프롬프트 중에는 경로를 만들지 않습니다.
+- 저장소 프롬프트는 `--repo-root` 또는 프로세스 현재 작업 디렉터리를 기본값으로 씁니다. 빈 입력은 기본값을 받아들입니다. 입력한 경로는 검증하고 정규화하며, 접근할 수 없거나 디렉터리가 아니면 상태를 바꾸지 않고 다시 입력하게 합니다.
+- 저장소 선택 뒤 프로젝트 프롬프트는 설정 플래너를 사용해 정확히 하나의 일치 프로젝트 ID가 있으면 그것을 제안하고, 없으면 유효할 때 최종 디렉터리 이름을 제안합니다. 유효한 제안이 없으면 명시 입력을 요구하고, 여러 일치 항목 중 하나를 고르지 않고 모호함을 드러내며, 프로젝트 ID와 저장소의 충돌을 분명히 보여 줍니다. 프로젝트 재바인딩은 계속 지원하지 않습니다.
+- 에이전트 바인딩 검토는 `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`, `interaction_role=agent`와 접근 등급 `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, `run_recording`을 보여 줍니다. 이 목록은 등록 입력이지 사용자 신원, 신뢰, Core 권한이 아닙니다.
+- 사용자 상호작용 커넥터 프롬프트의 기본값은 no입니다. 선택하면 `surface_id=user_ui`, `surface_instance_id=user_ui_local`, `interaction_role=user_interaction`과 `read_status`, `core_mutation`을 가진 별도 바인딩을 보여 줍니다. 프롬프트는 이것이 별도 커넥터 바인딩이며 에이전트 역할의 확장이 아니고, 실제 사용자 대상 UI나 커넥터가 사용자 동작을 제출할 때만 필요하며, `actor_kind=user`만으로는 사용자 권한이 성립하지 않고, 그 설정은 에이전트 설정과 분리되어 남는다고 설명합니다.
+- 설정 프롬프트는 `--config-dir`가 기본값을 주지 않는 한 stdout 전용을 기본값으로 씁니다. 설정 디렉터리를 받을 수 있습니다. 제3자 호스트 설정 경로를 묻거나 추론하지 않습니다.
+
+충돌과 최종 확인 동작:
+
+- 접점 교체 확인은 설정 계획이 만든 구조화 충돌을 사용합니다. 호환되지 않는 각 대상 접점마다 마법사는 현재 역할, 종류, 정규화된 접근 등급과 원하는 역할, 종류, 정규화된 접근 등급을 보여 준 뒤, 정확히 그 대상 접점을 교체할지 따로 묻습니다. 기본값은 no이며, 명시한 파괴적 플래그가 있으면 제안 답변의 기본값으로 사용할 수 있습니다.
+- 기존 생성 설정 파일은 정확한 경로로 보여 주고, 덮어쓸지 따로 확인해야 합니다. 기본값은 no이며, `--overwrite-config`가 있으면 제안 답변의 기본값으로 사용할 수 있습니다.
+- 일반 최종 확인만으로는 파괴적인 접점 교체나 설정 덮어쓰기를 승인한 것으로 충분하지 않습니다.
+- 필요한 파괴적 동작을 거절하면 설정은 상태를 바꾸지 않고 취소됩니다.
+- 최종 계획은 Runtime Home, 저장소, 프로젝트 ID와 작업, 각 접점과 작업, MCP 실행 파일, 사전 점검 바인딩, 설정 대상, dry-run 여부, 파괴적 갱신을 보여 줍니다. 최종 확인의 기본값은 no입니다.
+
+`--interactive --dry-run`에서는 마법사가 같은 입력을 수집하고 확인하며 계획을 보여 주고, 상태를 바꾸지 않으며, 사전 점검을 실행하지 않고, 최종 확인 뒤 정상 dry-run 출력을 냅니다.
 
 ### Runtime Home 설정 선택
 

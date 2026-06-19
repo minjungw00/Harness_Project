@@ -2,7 +2,8 @@
 
 use std::{
     collections::BTreeMap,
-    env, fmt, fs,
+    env, fmt, fs, io,
+    io::IsTerminal,
     path::{Path, PathBuf},
     process,
     time::{SystemTime, UNIX_EPOCH},
@@ -10,7 +11,7 @@ use std::{
 
 use harness_cli::{
     local_mcp_command::{
-        run_setup_command, setup_usage, LocalMcpCommandError, ProductionLocalMcpProcess,
+        run_setup_command_with_wizard, setup_usage, LocalMcpCommandError, ProductionLocalMcpProcess,
     },
     registration::{
         access_class_from_local_access, capability_profile_json, local_access_json,
@@ -18,6 +19,7 @@ use harness_cli::{
         RegistrationMetadataError, ADMIN_METADATA_JSON, BASELINE_WORKFLOW_PROFILE,
         DEFAULT_ACCESS_CLASS, DEFAULT_SURFACE_KIND,
     },
+    wizard::{TerminalWizardIo, WizardIo},
 };
 use harness_store::bootstrap::{
     initialize_runtime_home, list_projects, list_surfaces, register_project, register_surface,
@@ -39,7 +41,19 @@ fn main() {
         }
     };
 
-    match run_cli(args, |name| env::var_os(name), &current_dir) {
+    let mut setup_process = ProductionLocalMcpProcess;
+    let stdin = io::stdin();
+    let stderr = io::stderr();
+    let input_is_terminal = stdin.is_terminal();
+    let mut wizard_io = TerminalWizardIo::new(stdin.lock(), stderr.lock(), input_is_terminal);
+
+    match run_cli_with_setup_process_and_wizard(
+        args,
+        |name| env::var_os(name),
+        &current_dir,
+        &mut setup_process,
+        &mut wizard_io,
+    ) {
         Ok(output) => print!("{output}"),
         Err(CliError::Usage(message)) => {
             eprintln!("{message}");
@@ -52,6 +66,7 @@ fn main() {
     }
 }
 
+#[cfg(test)]
 fn run_cli<I, S, F>(args: I, env_var: F, current_dir: &Path) -> Result<String, CliError>
 where
     I: IntoIterator<Item = S>,
@@ -59,14 +74,22 @@ where
     F: Fn(&str) -> Option<std::ffi::OsString>,
 {
     let mut setup_process = ProductionLocalMcpProcess;
-    run_cli_with_setup_process(args, env_var, current_dir, &mut setup_process)
+    let mut wizard_io = harness_cli::wizard::NoWizardIo;
+    run_cli_with_setup_process_and_wizard(
+        args,
+        env_var,
+        current_dir,
+        &mut setup_process,
+        &mut wizard_io,
+    )
 }
 
-fn run_cli_with_setup_process<I, S, F>(
+fn run_cli_with_setup_process_and_wizard<I, S, F>(
     args: I,
     env_var: F,
     current_dir: &Path,
     setup_process: &mut impl harness_cli::local_mcp_command::LocalMcpProcess,
+    wizard_io: &mut dyn WizardIo,
 ) -> Result<String, CliError>
 where
     I: IntoIterator<Item = S>,
@@ -89,9 +112,8 @@ where
             }
         }
         "init" => command_init(&args[2..], env_var, current_dir),
-        "setup" => {
-            run_setup_command(&args[2..], current_dir, setup_process).map_err(CliError::from)
-        }
+        "setup" => run_setup_command_with_wizard(&args[2..], current_dir, setup_process, wizard_io)
+            .map_err(CliError::from),
         "project" => command_project(&args[2..], env_var, current_dir),
         "surface" => command_surface(&args[2..], env_var, current_dir),
         other => Err(CliError::usage(format!(

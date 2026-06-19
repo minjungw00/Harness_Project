@@ -231,6 +231,17 @@ pub struct SetupConflict {
     pub project_id: Option<String>,
     pub surface_id: Option<String>,
     pub surface_instance_id: Option<String>,
+    pub surface_details: Option<SetupSurfaceConflictDetails>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SetupSurfaceConflictDetails {
+    pub current_kind: String,
+    pub desired_kind: String,
+    pub current_role: String,
+    pub desired_role: String,
+    pub current_access_classes: Option<Vec<String>>,
+    pub desired_access_classes: Vec<String>,
 }
 
 impl SetupConflict {
@@ -246,6 +257,7 @@ impl SetupConflict {
             project_id,
             surface_id: None,
             surface_instance_id: None,
+            surface_details: None,
         }
     }
 
@@ -262,7 +274,13 @@ impl SetupConflict {
             project_id: Some(project_id.to_owned()),
             surface_id: Some(binding.surface_id().to_owned()),
             surface_instance_id: Some(binding.surface_instance_id().to_owned()),
+            surface_details: None,
         }
+    }
+
+    fn with_surface_details(mut self, details: SetupSurfaceConflictDetails) -> Self {
+        self.surface_details = Some(details);
+        self
     }
 }
 
@@ -903,16 +921,20 @@ fn surface_conflict(
     surface: &SurfaceRecord,
     binding: SetupSurfaceBinding,
 ) -> Option<SetupConflict> {
+    let details = surface_conflict_details(surface, binding);
     if surface.surface_kind != LOCAL_MCP_SURFACE_KIND {
-        return Some(SetupConflict::surface(
-            SetupConflictKind::SurfaceKindMismatch,
-            binding,
-            &surface.project_id,
-            format!(
-                "surface kind is {}, expected {}",
-                surface.surface_kind, LOCAL_MCP_SURFACE_KIND
-            ),
-        ));
+        return Some(
+            SetupConflict::surface(
+                SetupConflictKind::SurfaceKindMismatch,
+                binding,
+                &surface.project_id,
+                format!(
+                    "surface kind is {}, expected {}",
+                    surface.surface_kind, LOCAL_MCP_SURFACE_KIND
+                ),
+            )
+            .with_surface_details(details),
+        );
     }
 
     let role = parse_surface_role(&surface.interaction_role).map_err(|message| {
@@ -922,72 +944,113 @@ fn surface_conflict(
             &surface.project_id,
             message,
         )
+        .with_surface_details(details.clone())
     });
     let role = match role {
         Ok(role) => role,
         Err(conflict) => return Some(conflict),
     };
     if role != binding.interaction_role() {
-        return Some(SetupConflict::surface(
-            SetupConflictKind::SurfaceRoleMismatch,
-            binding,
-            &surface.project_id,
-            format!(
-                "surface interaction_role is {}, expected {}",
-                surface.interaction_role,
-                binding.interaction_role().as_str()
-            ),
-        ));
+        return Some(
+            SetupConflict::surface(
+                SetupConflictKind::SurfaceRoleMismatch,
+                binding,
+                &surface.project_id,
+                format!(
+                    "surface interaction_role is {}, expected {}",
+                    surface.interaction_role,
+                    binding.interaction_role().as_str()
+                ),
+            )
+            .with_surface_details(details),
+        );
     }
 
     if let Err(error) = parse_json_object(
         "surfaces.capability_profile_json",
         &surface.capability_profile_json,
     ) {
-        return Some(SetupConflict::surface(
-            SetupConflictKind::SurfaceCapabilityMalformed,
-            binding,
-            &surface.project_id,
-            error.to_string(),
-        ));
+        return Some(
+            SetupConflict::surface(
+                SetupConflictKind::SurfaceCapabilityMalformed,
+                binding,
+                &surface.project_id,
+                error.to_string(),
+            )
+            .with_surface_details(details),
+        );
     }
 
     let actual_access =
         match normalized_access_classes_from_local_access(&surface.local_access_json) {
             Ok(access_classes) => access_classes,
             Err(error) => {
-                return Some(SetupConflict::surface(
-                    SetupConflictKind::SurfaceAccessMalformed,
-                    binding,
-                    &surface.project_id,
-                    error.to_string(),
-                ));
+                return Some(
+                    SetupConflict::surface(
+                        SetupConflictKind::SurfaceAccessMalformed,
+                        binding,
+                        &surface.project_id,
+                        error.to_string(),
+                    )
+                    .with_surface_details(details),
+                );
             }
         };
     let expected_access = binding.expected_access_classes();
     if !access_classes_match(&actual_access, &expected_access) {
-        return Some(SetupConflict::surface(
-            SetupConflictKind::SurfaceAccessMismatch,
-            binding,
-            &surface.project_id,
-            format!(
-                "surface access classes are {}, expected {}",
-                format_access_classes(&actual_access),
-                format_access_classes(&expected_access)
-            ),
-        ));
+        return Some(
+            SetupConflict::surface(
+                SetupConflictKind::SurfaceAccessMismatch,
+                binding,
+                &surface.project_id,
+                format!(
+                    "surface access classes are {}, expected {}",
+                    format_access_classes(&actual_access),
+                    format_access_classes(&expected_access)
+                ),
+            )
+            .with_surface_details(details),
+        );
     }
 
     if let Err(error) = parse_json_object("surfaces.metadata_json", &surface.metadata_json) {
-        return Some(SetupConflict::surface(
-            SetupConflictKind::SurfaceMetadataMalformed,
-            binding,
-            &surface.project_id,
-            error.to_string(),
-        ));
+        return Some(
+            SetupConflict::surface(
+                SetupConflictKind::SurfaceMetadataMalformed,
+                binding,
+                &surface.project_id,
+                error.to_string(),
+            )
+            .with_surface_details(details),
+        );
     }
 
     None
+}
+
+fn surface_conflict_details(
+    surface: &SurfaceRecord,
+    binding: SetupSurfaceBinding,
+) -> SetupSurfaceConflictDetails {
+    SetupSurfaceConflictDetails {
+        current_kind: surface.surface_kind.clone(),
+        desired_kind: LOCAL_MCP_SURFACE_KIND.to_owned(),
+        current_role: surface.interaction_role.clone(),
+        desired_role: binding.interaction_role().as_str().to_owned(),
+        current_access_classes: normalized_access_classes_from_local_access(
+            &surface.local_access_json,
+        )
+        .ok()
+        .map(|access_classes| access_class_names(&access_classes)),
+        desired_access_classes: access_class_names(&binding.expected_access_classes()),
+    }
+}
+
+fn access_class_names(access_classes: &[AccessClass]) -> Vec<String> {
+    access_classes
+        .iter()
+        .map(|access_class| access_class.as_str().to_owned())
+        .collect()
 }
 
 fn parse_surface_role(value: &str) -> Result<SurfaceInteractionRole, String> {

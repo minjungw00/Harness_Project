@@ -185,6 +185,7 @@ fn harness_binary_setup_help_and_usage_errors() -> Result<(), Box<dyn Error>> {
 
     let local_help = run_without_home(["setup", "local-mcp", "--help"])?;
     assert_success(&local_help);
+    assert!(stdout(&local_help).contains("--interactive"));
     assert!(stdout(&local_help).contains("--runtime-home PATH"));
     assert!(stdout(&local_help).contains("--dry-run"));
 
@@ -192,6 +193,16 @@ fn harness_binary_setup_help_and_usage_errors() -> Result<(), Box<dyn Error>> {
     assert_eq!(invalid.status.code(), Some(2));
     assert!(stderr(&invalid).contains("unknown option"));
 
+    Ok(())
+}
+
+#[test]
+fn harness_binary_interactive_rejects_non_terminal_input() -> Result<(), Box<dyn Error>> {
+    let output = run_without_home(["setup", "local-mcp", "--interactive"])?;
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(stdout(&output).is_empty());
+    assert!(stderr(&output).contains("requires terminal input"));
     Ok(())
 }
 

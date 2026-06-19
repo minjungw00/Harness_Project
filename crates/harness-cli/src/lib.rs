@@ -9,3 +9,4 @@ pub mod host_config;
 pub mod local_mcp_command;
 pub mod registration;
 pub mod setup;
+pub mod wizard;

@@ -11,7 +11,7 @@ This document owns:
 - `harness` command names, command-line arguments, defaults, stdout/stderr routing, and process exit codes
 - Runtime Home path selection for `harness` administrative commands
 - administrative project and surface registration defaults
-- local MCP setup orchestration, setup option defaults, conflict handling, dry-run behavior, output formats, and host-neutral configuration generation
+- local MCP setup orchestration, optional interactive setup frontend, setup option defaults, conflict handling, dry-run behavior, output formats, and host-neutral configuration generation
 - local registration profile expansion for `baseline-workflow`
 - the boundary between administrative commands and public Harness API methods
 
@@ -74,11 +74,12 @@ Resolution order:
 
 ## Local MCP setup orchestration
 
-`harness setup local-mcp [OPTIONS]` is a non-interactive local administrative orchestration command for the common Product Repository-root local MCP setup path. It preserves the lower-level `harness init`, `harness project register`, and `harness surface register` commands.
+`harness setup local-mcp [OPTIONS]` is a local administrative orchestration command for the common Product Repository-root local MCP setup path. It supports the non-interactive command path and an optional interactive frontend. It preserves the lower-level `harness init`, `harness project register`, and `harness surface register` commands.
 
 Supported options:
 
 ```text
+--interactive
 --runtime-home PATH
 --repo-root PATH
 --project-id ID
@@ -91,15 +92,68 @@ Supported options:
 --overwrite-config
 ```
 
-Boolean options are presence flags. Forms such as `--dry-run=true` are usage errors. `--interactive` is not part of this contract.
+Boolean options are presence flags. Forms such as `--dry-run=true` are usage errors.
 
 Defaults:
 
 - `--repo-root` defaults to the process current working directory.
 - `--output` defaults to `text`.
+- `--interactive` is disabled unless present.
 - User-interaction setup is disabled unless `--with-user-interaction` is present.
 - The agent MCP surface target is `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`, `surface_kind=mcp`, `interaction_role=agent`, with the `baseline-workflow` access set.
 - The optional user-interaction MCP surface target is `surface_id=user_ui`, `surface_instance_id=user_ui_local`, `surface_kind=mcp`, `interaction_role=user_interaction`, with `read_status` and `core_mutation`.
+
+### Interactive setup frontend
+
+`--interactive` starts a text-only wizard for the same setup command. The wizard gathers or confirms setup inputs, shows the planned bindings and access classes, asks for destructive decisions before final confirmation, and then invokes the same setup planning and application path used by non-interactive execution. It is optional and must not become the only supported onboarding path.
+
+Interactive mode rules:
+
+- `--interactive` uses text output only.
+- `--interactive --output json` is a usage error.
+- `--interactive` may be combined with `--dry-run`.
+- Explicit setup options seed the wizard defaults.
+- The final plan is always shown before setup application or dry-run output.
+- Cancellation exits `0`, writes `setup: cancelled` to stdout, and performs no registration, preflight, configuration-file write, or Runtime Home initialization.
+
+Terminal and stream behavior:
+
+- Interactive mode requires usable interactive terminal input checked through standard terminal detection at the binary boundary.
+- When interactive input is unavailable, the command writes a usage diagnostic to stderr, suggests non-interactive flags, exits `2`, does not wait for input, and does not mutate state.
+- Prompts, access reviews, conflict confirmations, and final confirmation are written to stderr.
+- Normal final setup output is written to stdout through the existing text renderer.
+- Interactive prompts must not be mixed into JSON output, and the wizard must not print secrets or raw unrelated environment values.
+
+Wizard prompt order:
+
+1. Runtime Home
+2. Product Repository
+3. project ID
+4. agent binding and access review
+5. user-interaction connector choice
+6. configuration output location
+7. conflict decisions when applicable
+8. complete plan review
+9. final confirmation
+
+Prompt behavior:
+
+- The Runtime Home prompt shows the path selected by setup precedence as the default. Empty input accepts the default, entered values follow the existing Runtime Home rules, and prompting does not create the path.
+- The repository prompt defaults to `--repo-root` or the process current working directory. Empty input accepts the default. Entered paths are validated and canonicalized with a retryable prompt when inaccessible or not a directory, without mutating state.
+- After repository selection, the project prompt uses the setup planner to suggest one exact matching project ID when available, otherwise the final directory name when valid. It requires explicit input when no valid suggestion exists, surfaces ambiguity instead of choosing among several matches, and shows project-ID-to-repository conflicts clearly. Project rebinding remains unsupported.
+- The agent binding review shows `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`, `interaction_role=agent`, and the access classes `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, and `run_recording`. This list is registration input, not user identity, trust, or Core authority.
+- The user-interaction connector prompt defaults to no. When selected, it shows a separate `surface_id=user_ui`, `surface_instance_id=user_ui_local`, `interaction_role=user_interaction` binding with `read_status` and `core_mutation`. The prompt explains that this is a separate connector binding, not an extension of the agent role; it is needed only when a real user-facing UI or connector submits the user action; `actor_kind=user` alone does not establish user authority; and its configuration remains separate from the agent configuration.
+- The configuration prompt defaults to stdout-only unless `--config-dir` supplies a default. It may accept a configuration directory. It does not ask for or infer a third-party host settings path.
+
+Conflict and final-confirmation behavior:
+
+- Surface replacement confirmations use the structured conflicts produced by setup planning. For each incompatible target surface, the wizard shows the current and desired role, kind, and normalized access classes, then asks separately whether to replace that exact target surface. The default is no unless an explicit destructive flag seeds the proposed answer.
+- Existing generated configuration files are shown by exact path and require a separate overwrite confirmation. The default is no unless `--overwrite-config` seeds the proposed answer.
+- A general final confirmation is not sufficient authorization for a destructive surface replacement or configuration overwrite.
+- Declining a required destructive action cancels setup without mutation.
+- The final plan shows the Runtime Home, repository, project ID and action, each surface and action, MCP executable, preflight bindings, configuration destinations, dry-run status, and destructive updates. Final confirmation defaults to no.
+
+With `--interactive --dry-run`, the wizard gathers and confirms the same inputs, shows the plan, performs no mutation, does not run preflight, and emits the normal dry-run output after final confirmation.
 
 ### Runtime Home setup selection
 

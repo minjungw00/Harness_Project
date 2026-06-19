@@ -21,6 +21,7 @@ use crate::{
         AGENT_SURFACE_INSTANCE_ID, USER_INTERACTION_SURFACE_ID,
         USER_INTERACTION_SURFACE_INSTANCE_ID,
     },
+    wizard::{run_local_mcp_wizard, NoWizardIo, WizardIo},
 };
 
 const HARNESS_HOME: &str = "HARNESS_HOME";
@@ -33,11 +34,11 @@ pub enum LocalMcpCommandError {
 }
 
 impl LocalMcpCommandError {
-    fn usage(message: impl Into<String>) -> Self {
+    pub(crate) fn usage(message: impl Into<String>) -> Self {
         Self::Usage(message.into())
     }
 
-    fn runtime(message: impl Into<String>) -> Self {
+    pub(crate) fn runtime(message: impl Into<String>) -> Self {
         Self::Runtime(message.into())
     }
 }
@@ -53,23 +54,24 @@ impl fmt::Display for LocalMcpCommandError {
 impl std::error::Error for LocalMcpCommandError {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum OutputFormat {
+pub(crate) enum OutputFormat {
     Text,
     Json,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct ParsedLocalMcpOptions {
-    runtime_home: Option<PathBuf>,
-    repo_root: Option<PathBuf>,
-    project_id: Option<String>,
-    include_user_interaction: bool,
-    mcp_command: Option<PathBuf>,
-    config_dir: Option<PathBuf>,
-    output: OutputFormat,
-    dry_run: bool,
-    replace_conflicting_surfaces: bool,
-    overwrite_config: bool,
+pub(crate) struct ParsedLocalMcpOptions {
+    pub(crate) runtime_home: Option<PathBuf>,
+    pub(crate) repo_root: Option<PathBuf>,
+    pub(crate) project_id: Option<String>,
+    pub(crate) include_user_interaction: bool,
+    pub(crate) mcp_command: Option<PathBuf>,
+    pub(crate) config_dir: Option<PathBuf>,
+    pub(crate) output: OutputFormat,
+    pub(crate) dry_run: bool,
+    pub(crate) replace_conflicting_surfaces: bool,
+    pub(crate) overwrite_config: bool,
+    pub(crate) interactive: bool,
 }
 
 impl Default for ParsedLocalMcpOptions {
@@ -85,6 +87,7 @@ impl Default for ParsedLocalMcpOptions {
             dry_run: false,
             replace_conflicting_surfaces: false,
             overwrite_config: false,
+            interactive: false,
         }
     }
 }
@@ -184,7 +187,7 @@ pub fn setup_usage() -> String {
 }
 
 pub fn local_mcp_usage() -> String {
-    "harness setup local-mcp [--runtime-home PATH] [--repo-root PATH] [--project-id ID] [--with-user-interaction] [--mcp-command PATH] [--config-dir PATH] [--output text|json] [--dry-run] [--replace-conflicting-surfaces] [--overwrite-config]\n"
+    "harness setup local-mcp [--interactive] [--runtime-home PATH] [--repo-root PATH] [--project-id ID] [--with-user-interaction] [--mcp-command PATH] [--config-dir PATH] [--output text|json] [--dry-run] [--replace-conflicting-surfaces] [--overwrite-config]\n"
         .to_owned()
 }
 
@@ -192,6 +195,16 @@ pub fn run_setup_command(
     args: &[String],
     current_dir: &Path,
     process: &mut impl LocalMcpProcess,
+) -> Result<String, LocalMcpCommandError> {
+    let mut wizard_io = NoWizardIo;
+    run_setup_command_with_wizard(args, current_dir, process, &mut wizard_io)
+}
+
+pub fn run_setup_command_with_wizard(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl LocalMcpProcess,
+    wizard_io: &mut dyn WizardIo,
 ) -> Result<String, LocalMcpCommandError> {
     let Some(subcommand) = args.first().map(String::as_str) else {
         return Ok(setup_usage());
@@ -223,7 +236,7 @@ pub fn run_setup_command(
                     local_mcp_usage()
                 )));
             }
-            run_local_mcp_command(&args[1..], current_dir, process)
+            run_local_mcp_command(&args[1..], current_dir, process, wizard_io)
         }
         other => Err(LocalMcpCommandError::usage(format!(
             "unknown setup command: {other}\n\n{}",
@@ -236,8 +249,20 @@ fn run_local_mcp_command(
     args: &[String],
     current_dir: &Path,
     process: &mut impl LocalMcpProcess,
+    wizard_io: &mut dyn WizardIo,
 ) -> Result<String, LocalMcpCommandError> {
     let parsed = parse_local_mcp_options(args)?;
+    if parsed.interactive {
+        return run_local_mcp_wizard(parsed, current_dir, process, wizard_io);
+    }
+    execute_local_mcp_setup(parsed, current_dir, process)
+}
+
+pub(crate) fn execute_local_mcp_setup(
+    parsed: ParsedLocalMcpOptions,
+    current_dir: &Path,
+    process: &mut impl LocalMcpProcess,
+) -> Result<String, LocalMcpCommandError> {
     let runtime_home = resolve_setup_runtime_home(&parsed, current_dir, process)?;
     let repo_root = parsed
         .repo_root
@@ -329,7 +354,9 @@ fn run_local_mcp_command(
     })
 }
 
-fn parse_local_mcp_options(args: &[String]) -> Result<ParsedLocalMcpOptions, LocalMcpCommandError> {
+pub(crate) fn parse_local_mcp_options(
+    args: &[String],
+) -> Result<ParsedLocalMcpOptions, LocalMcpCommandError> {
     let mut parsed = ParsedLocalMcpOptions::default();
     let mut seen = BTreeMap::<String, ()>::new();
     let mut index = 0;
@@ -413,13 +440,18 @@ fn is_allowed_option(name: &str) -> bool {
             | "dry-run"
             | "replace-conflicting-surfaces"
             | "overwrite-config"
+            | "interactive"
     )
 }
 
 fn is_boolean_option(name: &str) -> bool {
     matches!(
         name,
-        "with-user-interaction" | "dry-run" | "replace-conflicting-surfaces" | "overwrite-config"
+        "with-user-interaction"
+            | "dry-run"
+            | "replace-conflicting-surfaces"
+            | "overwrite-config"
+            | "interactive"
     )
 }
 
@@ -429,6 +461,7 @@ fn set_boolean_option(parsed: &mut ParsedLocalMcpOptions, name: &str) {
         "dry-run" => parsed.dry_run = true,
         "replace-conflicting-surfaces" => parsed.replace_conflicting_surfaces = true,
         "overwrite-config" => parsed.overwrite_config = true,
+        "interactive" => parsed.interactive = true,
         _ => unreachable!("unknown boolean option validated earlier"),
     }
 }
@@ -489,7 +522,7 @@ fn reject_empty_path(name: &str, value: &str) -> Result<(), LocalMcpCommandError
     }
 }
 
-fn resolve_setup_runtime_home(
+pub(crate) fn resolve_setup_runtime_home(
     parsed: &ParsedLocalMcpOptions,
     current_dir: &Path,
     process: &impl LocalMcpProcess,
@@ -520,7 +553,7 @@ fn runtime_home_error(error: RuntimeHomeResolutionError) -> LocalMcpCommandError
     LocalMcpCommandError::runtime(error.to_string())
 }
 
-fn discover_selected_mcp_command(
+pub(crate) fn discover_selected_mcp_command(
     parsed: &ParsedLocalMcpOptions,
     current_dir: &Path,
     process: &impl LocalMcpProcess,
@@ -636,7 +669,7 @@ fn executable_file_names(base: &str) -> Vec<OsString> {
     }
 }
 
-fn absolute_path(current_dir: &Path, path: PathBuf) -> PathBuf {
+pub(crate) fn absolute_path(current_dir: &Path, path: PathBuf) -> PathBuf {
     if path.is_absolute() {
         path
     } else {
@@ -789,7 +822,7 @@ fn expect_field(
     }
 }
 
-fn validate_config_destinations(
+pub(crate) fn validate_config_destinations(
     config_dir: Option<&Path>,
     include_user_interaction: bool,
     overwrite: bool,
@@ -1193,7 +1226,7 @@ fn preflight_status_text(status: PreflightStatus) -> &'static str {
     }
 }
 
-fn action_kind_text(kind: SetupActionKind) -> &'static str {
+pub(crate) fn action_kind_text(kind: SetupActionKind) -> &'static str {
     match kind {
         SetupActionKind::Create => "created",
         SetupActionKind::Reuse => "reused",
@@ -1202,7 +1235,7 @@ fn action_kind_text(kind: SetupActionKind) -> &'static str {
     }
 }
 
-fn action_target_name(target: SetupActionTarget) -> &'static str {
+pub(crate) fn action_target_name(target: SetupActionTarget) -> &'static str {
     match target {
         SetupActionTarget::RuntimeHome => "runtime_home",
         SetupActionTarget::Project => "project",
@@ -1274,6 +1307,7 @@ mod tests {
         assert!(!parsed.dry_run);
         assert!(!parsed.replace_conflicting_surfaces);
         assert!(!parsed.overwrite_config);
+        assert!(!parsed.interactive);
         Ok(())
     }
 
@@ -1286,12 +1320,14 @@ mod tests {
             "--config-dir",
             "out",
             "--overwrite-config",
+            "--interactive",
         ]))?;
 
         assert!(parsed.include_user_interaction);
         assert!(parsed.dry_run);
         assert!(parsed.replace_conflicting_surfaces);
         assert!(parsed.overwrite_config);
+        assert!(parsed.interactive);
         Ok(())
     }
 
@@ -1303,7 +1339,7 @@ mod tests {
         assert_usage(["--repo-root"], "missing value");
         assert_usage(["--output", "yaml"], "unsupported output format");
         assert_usage(["--overwrite-config"], "requires --config-dir");
-        assert_usage(["--interactive"], "unknown option");
+        assert_usage(["--interactive=true"], "does not take a value");
         assert_usage(["extra"], "unexpected argument");
     }
 

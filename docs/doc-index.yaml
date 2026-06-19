@@ -437,6 +437,7 @@ documents:
       - "administrative project registration command behavior"
       - "administrative surface registration command behavior"
       - "local MCP setup orchestration"
+      - "local MCP interactive setup orchestration"
       - "local MCP setup option defaults"
       - "local MCP setup project and surface conflict behavior"
       - "local MCP setup dry-run behavior"
