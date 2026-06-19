@@ -1369,13 +1369,13 @@ UPDATE project_state
  WHERE schema_version < 9;
 "#;
 
-#[cfg(test)]
-pub(crate) mod test_support {
+#[cfg(any(test, feature = "test-support"))]
+pub mod test_support {
     use rusqlite::{params, Connection};
 
     use super::*;
 
-    pub(crate) fn create_project_state_fixture_version(
+    pub fn create_project_state_fixture_version(
         conn: &mut Connection,
         project_id: &str,
         version: i64,

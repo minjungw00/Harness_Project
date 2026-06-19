@@ -356,6 +356,7 @@ fn prompt_surface_conflicts(
 ) -> WizardResult<LocalMcpSetupPlan> {
     let mut conflict_probe = parsed.clone();
     conflict_probe.replace_conflicting_surfaces = false;
+    conflict_probe.authorized_surface_replacements.clear();
     let plan = plan_setup(&conflict_probe, runtime_home, repo_root)?;
     let project_conflicts = plan
         .conflicts
@@ -394,8 +395,14 @@ fn prompt_surface_conflicts(
         if !prompt_yes_no(io, "Replace this exact target surface?", default_replace)? {
             return Err(WizardError::Cancelled);
         }
+        if !parsed
+            .authorized_surface_replacements
+            .contains(&conflict.target)
+        {
+            parsed.authorized_surface_replacements.push(conflict.target);
+        }
     }
-    parsed.replace_conflicting_surfaces = true;
+    parsed.replace_conflicting_surfaces = false;
     Ok(plan_setup(parsed, runtime_home, repo_root)?)
 }
 
@@ -619,6 +626,7 @@ fn plan_setup(
     setup_options.project_id = parsed.project_id.clone();
     setup_options.include_user_interaction = parsed.include_user_interaction;
     setup_options.replace_conflicting_surfaces = parsed.replace_conflicting_surfaces;
+    setup_options.authorized_surface_replacements = parsed.authorized_surface_replacements.clone();
     plan_local_mcp_setup(setup_options).map_err(plan_error)
 }
 
@@ -720,10 +728,15 @@ mod tests {
             initialize_runtime_home, list_projects, list_surfaces, register_project,
             register_surface, ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
         },
-        sqlite::registry_db_path,
+        migrations::{
+            test_support::create_project_state_fixture_version, PROJECT_STATE_DATABASE_KIND,
+            PROJECT_STATE_SCHEMA_VERSION,
+        },
+        sqlite::{open_read_only_database, project_state_db_path, registry_db_path},
     };
     use harness_test_support::TempRuntimeHome;
     use harness_types::{AccessClass, SurfaceInteractionRole};
+    use rusqlite::{params, Connection};
     use serde_json::Value;
 
     use super::*;
@@ -989,6 +1002,92 @@ mod tests {
     }
 
     #[test]
+    fn historical_final_confirmation_decline_does_not_migrate() -> Result<(), Box<dyn Error>> {
+        let fixture = HistoricalWizardFixture::new(
+            "wizard-historical-final-decline",
+            &crate::registration::baseline_workflow_access_classes(),
+        )?;
+        let before = migration_count(fixture.state_path())?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+        let mut io = TestWizardIo::new("\n\n\n\n\nn\n", true);
+
+        let output =
+            run_local_mcp_wizard(fixture.parsed(), fixture.repo_root(), &mut process, &mut io)?;
+
+        assert_eq!(output, "setup: cancelled\n");
+        assert_eq!(migration_count(fixture.state_path())?, before);
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn historical_surface_replacement_decline_does_not_migrate() -> Result<(), Box<dyn Error>> {
+        let fixture = HistoricalWizardFixture::new(
+            "wizard-historical-surface-decline",
+            &[AccessClass::ReadStatus],
+        )?;
+        let before = migration_count(fixture.state_path())?;
+        let original_access = surface_local_access(fixture.state_path())?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+        let mut io = TestWizardIo::new("\n\n\n\n\nn\n", true);
+
+        let output =
+            run_local_mcp_wizard(fixture.parsed(), fixture.repo_root(), &mut process, &mut io)?;
+
+        assert_eq!(output, "setup: cancelled\n");
+        assert!(io.prompts().contains("Replace this exact target surface?"));
+        assert_eq!(migration_count(fixture.state_path())?, before);
+        assert_eq!(surface_local_access(fixture.state_path())?, original_access);
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn historical_config_overwrite_decline_does_not_migrate() -> Result<(), Box<dyn Error>> {
+        let fixture = HistoricalWizardFixture::new(
+            "wizard-historical-config-decline",
+            &crate::registration::baseline_workflow_access_classes(),
+        )?;
+        let config_dir = fixture.temp.path().join("configs");
+        fs::create_dir_all(&config_dir)?;
+        let target = config_dir.join("harness-agent.mcp.json");
+        fs::write(&target, "old")?;
+        let mut parsed = fixture.parsed();
+        parsed.config_dir = Some(config_dir);
+        let before = migration_count(fixture.state_path())?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+        let mut io = TestWizardIo::new("\n\n\n\n\nn\n", true);
+
+        let output = run_local_mcp_wizard(parsed, fixture.repo_root(), &mut process, &mut io)?;
+
+        assert_eq!(output, "setup: cancelled\n");
+        assert_eq!(fs::read_to_string(target)?, "old");
+        assert_eq!(migration_count(fixture.state_path())?, before);
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn historical_interactive_dry_run_does_not_migrate() -> Result<(), Box<dyn Error>> {
+        let fixture = HistoricalWizardFixture::new(
+            "wizard-historical-dry-run",
+            &crate::registration::baseline_workflow_access_classes(),
+        )?;
+        let mut parsed = fixture.parsed();
+        parsed.dry_run = true;
+        let before = migration_count(fixture.state_path())?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+        let mut io = TestWizardIo::new("\n\n\n\n\ny\n", true);
+
+        let output = run_local_mcp_wizard(parsed, fixture.repo_root(), &mut process, &mut io)?;
+
+        assert!(output.contains("setup: dry_run\n"));
+        assert_eq!(migration_count(fixture.state_path())?, before);
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
     fn prompt_output_is_separate_from_final_output() -> Result<(), Box<dyn Error>> {
         let fixture = WizardFixture::new("wizard-streams")?;
         let mut process = FakeProcess::new(fixture.repo_root());
@@ -1137,6 +1236,122 @@ mod tests {
                 ..Default::default()
             }
         }
+    }
+
+    struct HistoricalWizardFixture {
+        temp: TempRuntimeHome,
+        runtime_home: PathBuf,
+        repo_root: PathBuf,
+        mcp_command: PathBuf,
+        state_path: PathBuf,
+    }
+
+    impl HistoricalWizardFixture {
+        fn new(prefix: &str, access_classes: &[AccessClass]) -> Result<Self, Box<dyn Error>> {
+            let temp = TempRuntimeHome::new(prefix)?;
+            let runtime_home = temp.path().join("runtime-home");
+            let repo_root = temp.path().join("repo");
+            fs::create_dir_all(&repo_root)?;
+            let mcp_command = temp.path().join("harness-mcp");
+            fs::write(&mcp_command, "test")?;
+            initialize_runtime_home(&runtime_home, "runtime_home_wizard_historical", "{}")?;
+            register_project(
+                &runtime_home,
+                ProjectRegistration {
+                    project_id: "repo".to_owned(),
+                    repo_root: fs::canonicalize(&repo_root)?,
+                    project_home: None,
+                    status: ACTIVE_PROJECT_STATUS.to_owned(),
+                    metadata_json: "{}".to_owned(),
+                },
+            )?;
+            let state_path = project_state_db_path(&runtime_home, "repo");
+            fs::remove_file(&state_path)?;
+            let mut conn = Connection::open(&state_path)?;
+            create_project_state_fixture_version(
+                &mut conn,
+                "repo",
+                PROJECT_STATE_SCHEMA_VERSION - 1,
+            )?;
+            insert_historical_agent_surface(&conn, access_classes)?;
+            drop(conn);
+            Ok(Self {
+                temp,
+                runtime_home,
+                repo_root,
+                mcp_command,
+                state_path,
+            })
+        }
+
+        fn repo_root(&self) -> &Path {
+            &self.repo_root
+        }
+
+        fn state_path(&self) -> &Path {
+            &self.state_path
+        }
+
+        fn parsed(&self) -> ParsedLocalMcpOptions {
+            ParsedLocalMcpOptions {
+                interactive: true,
+                runtime_home: Some(self.runtime_home.clone()),
+                repo_root: Some(self.repo_root.clone()),
+                mcp_command: Some(self.mcp_command.clone()),
+                ..Default::default()
+            }
+        }
+    }
+
+    fn insert_historical_agent_surface(
+        conn: &Connection,
+        access_classes: &[AccessClass],
+    ) -> Result<(), Box<dyn Error>> {
+        conn.execute(
+            "INSERT INTO surfaces (
+                project_id,
+                surface_id,
+                surface_instance_id,
+                surface_kind,
+                display_name,
+                capability_profile_json,
+                local_access_json,
+                registered_at,
+                metadata_json
+            )
+            VALUES ('repo', ?1, ?2, ?3, 'Agent MCP', ?4, ?5, 't0', '{}')",
+            params![
+                AGENT_SURFACE_ID,
+                AGENT_SURFACE_INSTANCE_ID,
+                LOCAL_MCP_SURFACE_KIND,
+                capability_profile_json(access_classes, None)?,
+                local_access_json(access_classes)?
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn migration_count(path: &Path) -> Result<i64, Box<dyn Error>> {
+        let conn = open_read_only_database(path)?;
+        Ok(conn.query_row(
+            "SELECT COUNT(*)
+               FROM schema_migrations
+              WHERE database_kind = ?1",
+            params![PROJECT_STATE_DATABASE_KIND],
+            |row| row.get(0),
+        )?)
+    }
+
+    fn surface_local_access(path: &Path) -> Result<String, Box<dyn Error>> {
+        Ok(open_read_only_database(path)?.query_row(
+            "SELECT local_access_json
+               FROM surfaces
+              WHERE project_id = 'repo'
+                AND surface_id = ?1
+                AND surface_instance_id = ?2",
+            params![AGENT_SURFACE_ID, AGENT_SURFACE_INSTANCE_ID],
+            |row| row.get(0),
+        )?)
     }
 
     #[derive(Debug)]

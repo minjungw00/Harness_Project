@@ -3,21 +3,33 @@
 use std::{
     error::Error,
     fs,
+    hash::{Hash, Hasher},
     path::Path,
     process::{Command, Output},
 };
 
-use harness_cli::setup::{
-    AGENT_SURFACE_ID as SETUP_AGENT_SURFACE_ID,
-    AGENT_SURFACE_INSTANCE_ID as SETUP_AGENT_SURFACE_INSTANCE_ID,
-    USER_INTERACTION_SURFACE_ID as SETUP_USER_SURFACE_ID,
-    USER_INTERACTION_SURFACE_INSTANCE_ID as SETUP_USER_INSTANCE_ID,
+use harness_cli::{
+    registration::{baseline_workflow_access_classes, capability_profile_json, local_access_json},
+    setup::{
+        AGENT_SURFACE_ID as SETUP_AGENT_SURFACE_ID,
+        AGENT_SURFACE_INSTANCE_ID as SETUP_AGENT_SURFACE_INSTANCE_ID,
+        USER_INTERACTION_SURFACE_ID as SETUP_USER_SURFACE_ID,
+        USER_INTERACTION_SURFACE_INSTANCE_ID as SETUP_USER_INSTANCE_ID,
+    },
 };
 use harness_store::{
-    bootstrap::{list_projects, list_surfaces},
-    sqlite::{project_state_db_path, registry_db_path},
+    bootstrap::{
+        initialize_runtime_home, list_projects, list_surfaces, register_project,
+        ProjectRegistration, ACTIVE_PROJECT_STATUS,
+    },
+    migrations::{
+        test_support::create_project_state_fixture_version, PROJECT_STATE_DATABASE_KIND,
+        PROJECT_STATE_SCHEMA_VERSION,
+    },
+    sqlite::{open_read_only_database, project_state_db_path, registry_db_path},
 };
 use harness_test_support::TempRuntimeHome;
+use rusqlite::{params, Connection};
 use serde_json::{json, Value};
 
 const PROJECT_ID: &str = "project_binary_admin";
@@ -238,6 +250,67 @@ fn harness_binary_json_dry_run_is_parseable_and_does_not_register() -> Result<()
 
 #[cfg(unix)]
 #[test]
+fn harness_binary_historical_setup_dry_run_and_real_execution() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-setup-historical")?;
+    let repo_root = runtime_home.path().join("product-repo");
+    let marker = runtime_home.path().join("preflight-marker.txt");
+    fs::create_dir_all(&repo_root)?;
+    initialize_historical_setup(runtime_home.path(), &repo_root, "product-repo")?;
+    let state_path = project_state_db_path(runtime_home.path(), "product-repo");
+    let before_migrations = migration_count(&state_path)?;
+    let before_hash = file_hash(&state_path)?;
+    let mcp_command = write_test_mcp(runtime_home.path(), &marker)?;
+
+    let dry_run = run_without_home([
+        "setup",
+        "local-mcp",
+        "--runtime-home",
+        path_text(runtime_home.path()).as_str(),
+        "--repo-root",
+        path_text(&repo_root).as_str(),
+        "--mcp-command",
+        path_text(&mcp_command).as_str(),
+        "--dry-run",
+    ])?;
+    assert_success(&dry_run);
+    assert!(stdout(&dry_run).contains("setup: dry_run"));
+    assert_eq!(migration_count(&state_path)?, before_migrations);
+    assert_eq!(file_hash(&state_path)?, before_hash);
+    assert!(!marker.exists());
+
+    let first = run_without_home([
+        "setup",
+        "local-mcp",
+        "--runtime-home",
+        path_text(runtime_home.path()).as_str(),
+        "--repo-root",
+        path_text(&repo_root).as_str(),
+        "--mcp-command",
+        path_text(&mcp_command).as_str(),
+    ])?;
+    assert_success(&first);
+    assert!(stdout(&first).contains("setup: complete"));
+    assert_eq!(migration_count(&state_path)?, PROJECT_STATE_SCHEMA_VERSION);
+    assert_eq!(fs::read_to_string(&marker)?.lines().count(), 1);
+
+    let repeated = run_without_home([
+        "setup",
+        "local-mcp",
+        "--runtime-home",
+        path_text(runtime_home.path()).as_str(),
+        "--repo-root",
+        path_text(&repo_root).as_str(),
+        "--mcp-command",
+        path_text(&mcp_command).as_str(),
+    ])?;
+    assert_success(&repeated);
+    assert!(stdout(&repeated).contains("project: reused"));
+    assert!(stdout(&repeated).contains("agent_surface: reused"));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
 fn harness_binary_local_mcp_setup_flow() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-setup-real")?;
     let repo_root = runtime_home.path().join("product-repo");
@@ -395,6 +468,67 @@ fn harness_binary_preflight_failure_writes_no_configuration() -> Result<(), Box<
     assert!(stderr(&failed).contains("completed registration actions"));
     assert!(!config_dir.join("harness-agent.mcp.json").exists());
     Ok(())
+}
+
+fn initialize_historical_setup(
+    runtime_home: &Path,
+    repo_root: &Path,
+    project_id: &str,
+) -> Result<(), Box<dyn Error>> {
+    initialize_runtime_home(runtime_home, "runtime_home_binary_historical", "{}")?;
+    register_project(
+        runtime_home,
+        ProjectRegistration {
+            project_id: project_id.to_owned(),
+            repo_root: fs::canonicalize(repo_root)?,
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    let state_path = project_state_db_path(runtime_home, project_id);
+    fs::remove_file(&state_path)?;
+    let mut conn = Connection::open(&state_path)?;
+    create_project_state_fixture_version(&mut conn, project_id, PROJECT_STATE_SCHEMA_VERSION - 1)?;
+    conn.execute(
+        "INSERT INTO surfaces (
+            project_id,
+            surface_id,
+            surface_instance_id,
+            surface_kind,
+            display_name,
+            capability_profile_json,
+            local_access_json,
+            registered_at,
+            metadata_json
+        )
+        VALUES (?1, ?2, ?3, 'mcp', 'Agent MCP', ?4, ?5, 't0', '{}')",
+        params![
+            project_id,
+            SETUP_AGENT_SURFACE_ID,
+            SETUP_AGENT_SURFACE_INSTANCE_ID,
+            capability_profile_json(&baseline_workflow_access_classes(), None)?,
+            local_access_json(&baseline_workflow_access_classes())?
+        ],
+    )?;
+    Ok(())
+}
+
+fn migration_count(path: &Path) -> Result<i64, Box<dyn Error>> {
+    let conn = open_read_only_database(path)?;
+    Ok(conn.query_row(
+        "SELECT COUNT(*)
+           FROM schema_migrations
+          WHERE database_kind = ?1",
+        [PROJECT_STATE_DATABASE_KIND],
+        |row| row.get(0),
+    )?)
+}
+
+fn file_hash(path: &Path) -> Result<u64, Box<dyn Error>> {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    fs::read(path)?.hash(&mut hasher);
+    Ok(hasher.finish())
 }
 
 fn run_without_home<const N: usize>(args: [&str; N]) -> Result<Output, Box<dyn Error>> {

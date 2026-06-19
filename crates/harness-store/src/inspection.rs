@@ -7,7 +7,6 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
 use crate::{
-    bootstrap::ACTIVE_PROJECT_STATUS,
     migrations::{
         expected_project_state_migrations, expected_registry_migrations,
         PROJECT_STATE_DATABASE_KIND, PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND,
@@ -764,11 +763,7 @@ fn read_project_rows(
                 row_runtime_home_id
             )));
         }
-        if status != ACTIVE_PROJECT_STATUS {
-            return Err(InspectionIssue::Malformed(format!(
-                "project {project_id} has unsupported status {status}"
-            )));
-        }
+        require_nonempty("projects.status", &status)?;
         validate_json_object("projects.metadata_json", &metadata_json)?;
 
         projects.push(ProjectRegistryRow {
@@ -931,24 +926,7 @@ fn validate_surface_row(surface: &SurfaceInspectionRecord) -> Result<(), Inspect
     require_nonempty("surfaces.surface_id", &surface.surface_id)?;
     require_nonempty("surfaces.surface_instance_id", &surface.surface_instance_id)?;
     require_nonempty("surfaces.surface_kind", &surface.surface_kind)?;
-    match surface.interaction_role.as_str() {
-        "agent" | "user_interaction" => {}
-        _ => {
-            return Err(InspectionIssue::Malformed(format!(
-                "surface {}/{}/{} has unsupported interaction_role {}",
-                surface.project_id,
-                surface.surface_id,
-                surface.surface_instance_id,
-                surface.interaction_role
-            )));
-        }
-    }
-    validate_json_object(
-        "surfaces.capability_profile_json",
-        &surface.capability_profile_json,
-    )?;
-    validate_json_object("surfaces.local_access_json", &surface.local_access_json)?;
-    validate_json_object("surfaces.metadata_json", &surface.metadata_json)?;
+    require_nonempty("surfaces.interaction_role", &surface.interaction_role)?;
     Ok(())
 }
 
@@ -1016,7 +994,7 @@ mod tests {
     use crate::{
         bootstrap::{
             initialize_runtime_home, register_project, register_surface, ProjectRecord,
-            ProjectRegistration, SurfaceRegistration,
+            ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
         },
         migrations::test_support::create_project_state_fixture_version,
         sqlite::{open_read_only_database, project_state_db_path},
@@ -1218,7 +1196,7 @@ mod tests {
     }
 
     #[test]
-    fn malformed_surface_registration_row_is_rejected() -> Result<(), Box<dyn Error>> {
+    fn setup_relevant_surface_registration_values_are_returned_raw() -> Result<(), Box<dyn Error>> {
         let fixture = current_fixture("inspect-malformed-surface-row")?;
         Connection::open(&fixture.project.state_db_path)?.execute(
             "UPDATE surfaces
@@ -1228,8 +1206,9 @@ mod tests {
         )?;
 
         let state = inspect_project_state_database(&fixture.project.state_db_path, PROJECT_ID);
+        let snapshot = present_project_state(&state);
 
-        assert!(matches!(state, DatabaseInspection::Malformed { .. }));
+        assert_eq!(snapshot.surfaces[0].metadata_json, "[]");
         Ok(())
     }
 

@@ -15,11 +15,11 @@ use crate::{
         binding_name, config_file_name, path_text, pretty_json, render_configs, GeneratedConfig,
     },
     setup::{
-        apply_local_mcp_setup_plan, plan_local_mcp_setup, LocalMcpSetupOptions, LocalMcpSetupPlan,
-        SetupAction, SetupActionKind, SetupActionTarget, SetupApplyError, SetupConflict,
-        SetupPlanError, SetupResource, SetupSurfaceBinding, AGENT_SURFACE_ID,
-        AGENT_SURFACE_INSTANCE_ID, USER_INTERACTION_SURFACE_ID,
-        USER_INTERACTION_SURFACE_INSTANCE_ID,
+        apply_local_mcp_setup_plan, plan_local_mcp_setup, prepare_local_mcp_setup_storage,
+        LocalMcpSetupOptions, LocalMcpSetupPlan, SetupAction, SetupActionKind, SetupActionTarget,
+        SetupApplyError, SetupConflict, SetupConflictKind, SetupPlanError, SetupPreparationResult,
+        SetupResource, SetupSurfaceBinding, AGENT_SURFACE_ID, AGENT_SURFACE_INSTANCE_ID,
+        USER_INTERACTION_SURFACE_ID, USER_INTERACTION_SURFACE_INSTANCE_ID,
     },
     wizard::{run_local_mcp_wizard, NoWizardIo, WizardIo},
 };
@@ -70,6 +70,7 @@ pub(crate) struct ParsedLocalMcpOptions {
     pub(crate) output: OutputFormat,
     pub(crate) dry_run: bool,
     pub(crate) replace_conflicting_surfaces: bool,
+    pub(crate) authorized_surface_replacements: Vec<SetupActionTarget>,
     pub(crate) overwrite_config: bool,
     pub(crate) interactive: bool,
 }
@@ -86,6 +87,7 @@ impl Default for ParsedLocalMcpOptions {
             output: OutputFormat::Text,
             dry_run: false,
             replace_conflicting_surfaces: false,
+            authorized_surface_replacements: Vec::new(),
             overwrite_config: false,
             interactive: false,
         }
@@ -263,6 +265,15 @@ pub(crate) fn execute_local_mcp_setup(
     current_dir: &Path,
     process: &mut impl LocalMcpProcess,
 ) -> Result<String, LocalMcpCommandError> {
+    execute_local_mcp_setup_with_revalidation_hook(parsed, current_dir, process, |_| Ok(()))
+}
+
+fn execute_local_mcp_setup_with_revalidation_hook(
+    parsed: ParsedLocalMcpOptions,
+    current_dir: &Path,
+    process: &mut impl LocalMcpProcess,
+    after_preparation: impl FnOnce(&SetupPreparationResult) -> Result<(), LocalMcpCommandError>,
+) -> Result<String, LocalMcpCommandError> {
     let runtime_home = resolve_setup_runtime_home(&parsed, current_dir, process)?;
     let repo_root = parsed
         .repo_root
@@ -276,11 +287,8 @@ pub(crate) fn execute_local_mcp_setup(
 
     let mcp_command = discover_selected_mcp_command(&parsed, current_dir, process)?;
 
-    let mut setup_options = LocalMcpSetupOptions::new(&runtime_home, &repo_root);
-    setup_options.project_id = parsed.project_id.clone();
-    setup_options.include_user_interaction = parsed.include_user_interaction;
-    setup_options.replace_conflicting_surfaces = parsed.replace_conflicting_surfaces;
-    let plan = plan_local_mcp_setup(setup_options).map_err(plan_error)?;
+    let setup_options = setup_options_from_parsed(&parsed, &runtime_home, &repo_root);
+    let plan = plan_local_mcp_setup(setup_options.clone()).map_err(plan_error)?;
     if !plan.conflicts.is_empty() {
         return Err(LocalMcpCommandError::runtime(format_conflicts(
             &plan.conflicts,
@@ -319,9 +327,22 @@ pub(crate) fn execute_local_mcp_setup(
         });
     }
 
-    let result = apply_local_mcp_setup_plan(&plan).map_err(apply_error)?;
+    let preparation = prepare_local_mcp_setup_storage(&plan).map_err(apply_error)?;
+    after_preparation(&preparation)?;
+
+    let refreshed_plan = plan_local_mcp_setup(setup_options).map_err(plan_error)?;
+    let revalidation_conflicts = refreshed_plan_conflicts(&plan, &refreshed_plan);
+    if !revalidation_conflicts.is_empty() {
+        return Err(apply_error(SetupApplyError::RevalidationFailed {
+            conflicts: revalidation_conflicts,
+            completed_actions: preparation.completed_actions,
+        }));
+    }
+
+    let result = apply_local_mcp_setup_plan(&refreshed_plan).map_err(apply_error)?;
+    let completed_actions = merge_preparation_actions(&preparation, result.completed_actions);
     let mut preflights = Vec::new();
-    for binding in setup_bindings_from_plan(&plan) {
+    for binding in setup_bindings_from_plan(&refreshed_plan) {
         match run_preflight(
             &mcp_command,
             &runtime_home,
@@ -331,7 +352,7 @@ pub(crate) fn execute_local_mcp_setup(
         ) {
             Ok(preflight) => preflights.push(preflight),
             Err(error) => {
-                let completed = format_action_lines(result.completed_actions.as_slice());
+                let completed = format_action_lines(completed_actions.as_slice());
                 return Err(LocalMcpCommandError::runtime(format!(
                     "{error}\ncompleted registration actions:\n{completed}"
                 )));
@@ -347,11 +368,24 @@ pub(crate) fn execute_local_mcp_setup(
         repo_root: &result.repo_root,
         project_id: &result.project_id,
         mcp_command: &mcp_command,
-        actions: result.completed_actions,
+        actions: completed_actions,
         preflights,
         configs: &configs,
         output: parsed.output,
     })
+}
+
+fn setup_options_from_parsed(
+    parsed: &ParsedLocalMcpOptions,
+    runtime_home: &Path,
+    repo_root: &Path,
+) -> LocalMcpSetupOptions {
+    let mut setup_options = LocalMcpSetupOptions::new(runtime_home, repo_root);
+    setup_options.project_id = parsed.project_id.clone();
+    setup_options.include_user_interaction = parsed.include_user_interaction;
+    setup_options.replace_conflicting_surfaces = parsed.replace_conflicting_surfaces;
+    setup_options.authorized_surface_replacements = parsed.authorized_surface_replacements.clone();
+    setup_options
 }
 
 pub(crate) fn parse_local_mcp_options(
@@ -701,6 +735,51 @@ fn planned_preflights(include_user_interaction: bool) -> Vec<BindingPreflight> {
 
 fn setup_bindings_from_plan(plan: &LocalMcpSetupPlan) -> Vec<SetupSurfaceBinding> {
     setup_bindings_from_include(plan.include_user_interaction)
+}
+
+fn refreshed_plan_conflicts(
+    original: &LocalMcpSetupPlan,
+    refreshed: &LocalMcpSetupPlan,
+) -> Vec<SetupConflict> {
+    let mut conflicts = refreshed.conflicts.clone();
+    if original.selected_project_id != refreshed.selected_project_id {
+        conflicts.push(SetupConflict {
+            target: SetupActionTarget::Project,
+            kind: SetupConflictKind::ProjectSelectionChanged,
+            message: format!(
+                "project selection changed during setup revalidation from {} to {}",
+                optional_project_id(original.selected_project_id.as_deref()),
+                optional_project_id(refreshed.selected_project_id.as_deref())
+            ),
+            project_id: refreshed.selected_project_id.clone(),
+            surface_id: None,
+            surface_instance_id: None,
+            surface_details: None,
+        });
+    }
+    conflicts
+}
+
+fn optional_project_id(project_id: Option<&str>) -> &str {
+    project_id.unwrap_or("<none>")
+}
+
+fn merge_preparation_actions(
+    preparation: &SetupPreparationResult,
+    registration_actions: Vec<SetupAction>,
+) -> Vec<SetupAction> {
+    let mut actions = registration_actions;
+    for prepared in &preparation.completed_actions {
+        if let Some(existing) = actions
+            .iter_mut()
+            .find(|action| action.target == prepared.target)
+        {
+            *existing = prepared.clone();
+        } else {
+            actions.push(prepared.clone());
+        }
+    }
+    actions
 }
 
 fn setup_bindings_from_include(include_user_interaction: bool) -> Vec<SetupSurfaceBinding> {
@@ -1257,6 +1336,12 @@ fn apply_error(error: SetupApplyError) -> LocalMcpCommandError {
         SetupApplyError::UnresolvedConflicts { conflicts } => {
             LocalMcpCommandError::runtime(format_conflicts(&conflicts))
         }
+        SetupApplyError::RevalidationFailed { conflicts, .. } => {
+            LocalMcpCommandError::runtime(format!(
+                "storage preparation or migration was completed; project and surface registration did not continue\n{}completed setup actions:\n{completed}",
+                format_conflicts(&conflicts)
+            ))
+        }
         SetupApplyError::InvalidPlan { message, .. } => LocalMcpCommandError::runtime(format!(
             "{message}\ncompleted registration actions:\n{completed}"
         )),
@@ -1284,14 +1369,28 @@ mod tests {
         collections::BTreeMap,
         error::Error,
         fs,
+        hash::{Hash, Hasher},
         path::{Path, PathBuf},
     };
 
-    use harness_store::sqlite::registry_db_path;
+    use harness_store::{
+        bootstrap::{
+            initialize_runtime_home, register_project, ProjectRegistration, ACTIVE_PROJECT_STATUS,
+        },
+        migrations::{
+            test_support::create_project_state_fixture_version, PROJECT_STATE_DATABASE_KIND,
+            PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND,
+        },
+        sqlite::{open_read_only_database, project_state_db_path, registry_db_path},
+    };
     use harness_test_support::TempRuntimeHome;
+    use rusqlite::{params, Connection};
     use serde_json::Value;
 
     use super::*;
+    use crate::registration::{
+        baseline_workflow_access_classes, capability_profile_json, local_access_json,
+    };
 
     #[test]
     fn option_defaults_are_applied() -> Result<(), Box<dyn Error>> {
@@ -1507,6 +1606,42 @@ mod tests {
     }
 
     #[test]
+    fn dry_run_against_historical_state_preserves_persistent_state() -> Result<(), Box<dyn Error>> {
+        let fixture = HistoricalCommandFixture::new(
+            "setup-dry-run-historical",
+            PROJECT_STATE_SCHEMA_VERSION - 1,
+            &baseline_workflow_access_classes(),
+        )?;
+        let config_dir = fixture.temp.path().join("configs");
+        let before = PersistentStateSnapshot::read(fixture.runtime_home(), Some(&config_dir))?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+
+        let output = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                fixture.runtime_home_text(),
+                "--repo-root",
+                fixture.repo_root_text(),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+                "--config-dir",
+                config_dir.to_str().expect("utf8 path"),
+                "--dry-run",
+            ]),
+            fixture.repo_root(),
+            &mut process,
+        )?;
+        let after = PersistentStateSnapshot::read(fixture.runtime_home(), Some(&config_dir))?;
+
+        assert!(output.contains("setup: dry_run\n"));
+        assert!(output.contains("preflight: planned\n"));
+        assert_eq!(after, before);
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
     fn json_dry_run_stdout_is_parseable() -> Result<(), Box<dyn Error>> {
         let fixture = CommandFixture::new("setup-json-dry-run")?;
         let mut process = FakeProcess::new(fixture.repo_root());
@@ -1646,6 +1781,134 @@ mod tests {
         assert!(error.to_string().contains("preflight failed for agent"));
         assert!(error.to_string().contains("completed registration actions"));
         assert!(registry_db_path(fixture.runtime_home()).exists());
+        Ok(())
+    }
+
+    #[test]
+    fn real_setup_migrates_historical_state_then_replans_and_reuses() -> Result<(), Box<dyn Error>>
+    {
+        let fixture = HistoricalCommandFixture::new(
+            "setup-real-historical",
+            PROJECT_STATE_SCHEMA_VERSION - 1,
+            &baseline_workflow_access_classes(),
+        )?;
+        let state_path = project_state_db_path(fixture.runtime_home(), "repo");
+        assert_eq!(
+            migration_count(&state_path, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION - 1
+        );
+        let mut process = FakeProcess::new(fixture.repo_root());
+
+        let first = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                fixture.runtime_home_text(),
+                "--repo-root",
+                fixture.repo_root_text(),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+            ]),
+            fixture.repo_root(),
+            &mut process,
+        )?;
+
+        assert!(first.contains("setup: complete\n"));
+        assert!(first.contains("project: reused\n"));
+        assert!(first.contains("agent_surface: reused\n"));
+        assert_eq!(
+            migration_count(&state_path, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(process.calls.len(), 1);
+
+        let second = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                fixture.runtime_home_text(),
+                "--repo-root",
+                fixture.repo_root_text(),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+            ]),
+            fixture.repo_root(),
+            &mut process,
+        )?;
+
+        assert!(second.contains("project: reused\n"));
+        assert!(second.contains("agent_surface: reused\n"));
+        assert_eq!(process.calls.len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn post_migration_revalidation_conflict_stops_before_registration_and_config(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = HistoricalCommandFixture::new(
+            "setup-revalidation-conflict",
+            PROJECT_STATE_SCHEMA_VERSION - 1,
+            &baseline_workflow_access_classes(),
+        )?;
+        let state_path = project_state_db_path(fixture.runtime_home(), "repo");
+        let config_dir = fixture.temp.path().join("configs");
+        let parsed = parse_local_mcp_options(&args([
+            "--runtime-home",
+            fixture.runtime_home_text(),
+            "--repo-root",
+            fixture.repo_root_text(),
+            "--mcp-command",
+            fixture.mcp_command_text(),
+            "--config-dir",
+            config_dir.to_str().expect("utf8 path"),
+        ]))?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+
+        let error = execute_local_mcp_setup_with_revalidation_hook(
+            parsed,
+            fixture.repo_root(),
+            &mut process,
+            |_| {
+                Connection::open(&state_path)
+                    .map_err(|error| LocalMcpCommandError::runtime(error.to_string()))?
+                    .execute(
+                        "UPDATE surfaces
+                            SET local_access_json = ?4
+                          WHERE project_id = ?1
+                            AND surface_id = ?2
+                            AND surface_instance_id = ?3",
+                        params![
+                            "repo",
+                            AGENT_SURFACE_ID,
+                            AGENT_SURFACE_INSTANCE_ID,
+                            local_access_json(&[harness_types::AccessClass::ReadStatus]).map_err(
+                                |error| { LocalMcpCommandError::runtime(error.to_string()) }
+                            )?
+                        ],
+                    )
+                    .map_err(|error| LocalMcpCommandError::runtime(error.to_string()))?;
+                Ok(())
+            },
+        )
+        .expect_err("refreshed surface conflict should stop setup");
+
+        assert!(error
+            .to_string()
+            .contains("storage preparation or migration was completed"));
+        assert!(error
+            .to_string()
+            .contains("project and surface registration did not continue"));
+        assert!(error.to_string().contains("surface access classes"));
+        assert_eq!(
+            migration_count(&state_path, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(process.calls.len(), 0);
+        assert!(!config_dir.join("harness-agent.mcp.json").exists());
+        assert_eq!(
+            surface_local_access(&state_path, "repo")?,
+            local_access_json(&[harness_types::AccessClass::ReadStatus])?
+        );
         Ok(())
     }
 
@@ -1885,6 +2148,242 @@ mod tests {
         fn mcp_command_text(&self) -> &str {
             &self.mcp_command_text
         }
+    }
+
+    #[derive(Debug)]
+    struct HistoricalCommandFixture {
+        temp: TempRuntimeHome,
+        runtime_home: PathBuf,
+        repo_root: PathBuf,
+        runtime_home_text: String,
+        repo_root_text: String,
+        mcp_command_text: String,
+    }
+
+    impl HistoricalCommandFixture {
+        fn new(
+            prefix: &str,
+            version: i64,
+            access_classes: &[harness_types::AccessClass],
+        ) -> Result<Self, Box<dyn Error>> {
+            let temp = TempRuntimeHome::new(prefix)?;
+            let runtime_home = temp.path().join("runtime-home");
+            let repo_root = temp.path().join("repo");
+            let bin = temp.path().join("bin");
+            fs::create_dir_all(&repo_root)?;
+            fs::create_dir_all(&bin)?;
+            initialize_runtime_home(&runtime_home, "runtime_home_historical", "{}")?;
+            register_project(
+                &runtime_home,
+                ProjectRegistration {
+                    project_id: "repo".to_owned(),
+                    repo_root: fs::canonicalize(&repo_root)?,
+                    project_home: None,
+                    status: ACTIVE_PROJECT_STATUS.to_owned(),
+                    metadata_json: "{}".to_owned(),
+                },
+            )?;
+            let state_path = project_state_db_path(&runtime_home, "repo");
+            fs::remove_file(&state_path)?;
+            let mut conn = Connection::open(&state_path)?;
+            create_project_state_fixture_version(&mut conn, "repo", version)?;
+            insert_historical_agent_surface(&conn, "repo", access_classes)?;
+            drop(conn);
+            let mcp_command = write_dummy_command(&bin, "harness-mcp")?;
+            let runtime_home_text = runtime_home.display().to_string();
+            let repo_root_text = repo_root.display().to_string();
+            let mcp_command_text = mcp_command.display().to_string();
+            Ok(Self {
+                temp,
+                runtime_home,
+                repo_root,
+                runtime_home_text,
+                repo_root_text,
+                mcp_command_text,
+            })
+        }
+
+        fn runtime_home(&self) -> &Path {
+            &self.runtime_home
+        }
+
+        fn repo_root(&self) -> &Path {
+            &self.repo_root
+        }
+
+        fn runtime_home_text(&self) -> &str {
+            &self.runtime_home_text
+        }
+
+        fn repo_root_text(&self) -> &str {
+            &self.repo_root_text
+        }
+
+        fn mcp_command_text(&self) -> &str {
+            &self.mcp_command_text
+        }
+    }
+
+    fn insert_historical_agent_surface(
+        conn: &Connection,
+        project_id: &str,
+        access_classes: &[harness_types::AccessClass],
+    ) -> Result<(), Box<dyn Error>> {
+        conn.execute(
+            "INSERT INTO surfaces (
+                project_id,
+                surface_id,
+                surface_instance_id,
+                surface_kind,
+                display_name,
+                capability_profile_json,
+                local_access_json,
+                registered_at,
+                metadata_json
+            )
+            VALUES (?1, ?2, ?3, 'mcp', 'Agent MCP', ?4, ?5, 't0', '{}')",
+            params![
+                project_id,
+                AGENT_SURFACE_ID,
+                AGENT_SURFACE_INSTANCE_ID,
+                capability_profile_json(access_classes, None)?,
+                local_access_json(access_classes)?
+            ],
+        )?;
+        Ok(())
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct PersistentStateSnapshot {
+        runtime_tree: Vec<String>,
+        registry_hash: u64,
+        state_hash: u64,
+        registry_migrations: i64,
+        state_migrations: i64,
+        project_count: i64,
+        surface_count: i64,
+        state_version: i64,
+        task_count: i64,
+        run_count: i64,
+        tool_invocation_count: i64,
+        config_dir_exists: bool,
+        config_files: Vec<String>,
+        sqlite_sidecars: Vec<String>,
+    }
+
+    impl PersistentStateSnapshot {
+        fn read(runtime_home: &Path, config_dir: Option<&Path>) -> Result<Self, Box<dyn Error>> {
+            let registry_path = registry_db_path(runtime_home);
+            let state_path = project_state_db_path(runtime_home, "repo");
+            let registry = open_read_only_database(&registry_path)?;
+            let state = open_read_only_database(&state_path)?;
+            Ok(Self {
+                runtime_tree: relative_tree(runtime_home)?,
+                registry_hash: file_hash(&registry_path)?,
+                state_hash: file_hash(&state_path)?,
+                registry_migrations: migration_count(&registry_path, REGISTRY_DATABASE_KIND)?,
+                state_migrations: migration_count(&state_path, PROJECT_STATE_DATABASE_KIND)?,
+                project_count: registry
+                    .query_row("SELECT COUNT(*) FROM projects", [], |row| row.get(0))?,
+                surface_count: state
+                    .query_row("SELECT COUNT(*) FROM surfaces", [], |row| row.get(0))?,
+                state_version: state.query_row(
+                    "SELECT state_version FROM project_state WHERE project_id = 'repo'",
+                    [],
+                    |row| row.get(0),
+                )?,
+                task_count: state.query_row("SELECT COUNT(*) FROM tasks", [], |row| row.get(0))?,
+                run_count: state.query_row("SELECT COUNT(*) FROM runs", [], |row| row.get(0))?,
+                tool_invocation_count: state.query_row(
+                    "SELECT COUNT(*) FROM tool_invocations",
+                    [],
+                    |row| row.get(0),
+                )?,
+                config_dir_exists: config_dir.is_some_and(Path::exists),
+                config_files: config_dir
+                    .map(relative_tree)
+                    .transpose()?
+                    .unwrap_or_default(),
+                sqlite_sidecars: existing_sidecars(&[registry_path, state_path]),
+            })
+        }
+    }
+
+    fn relative_tree(root: &Path) -> Result<Vec<String>, Box<dyn Error>> {
+        if !root.exists() {
+            return Ok(Vec::new());
+        }
+        let mut entries = Vec::new();
+        collect_relative_tree(root, root, &mut entries)?;
+        entries.sort();
+        Ok(entries)
+    }
+
+    fn collect_relative_tree(
+        root: &Path,
+        current: &Path,
+        entries: &mut Vec<String>,
+    ) -> Result<(), Box<dyn Error>> {
+        for entry in fs::read_dir(current)? {
+            let entry = entry?;
+            let path = entry.path();
+            let relative = path
+                .strip_prefix(root)?
+                .components()
+                .map(|component| component.as_os_str().to_string_lossy())
+                .collect::<Vec<_>>()
+                .join("/");
+            if path.is_dir() {
+                entries.push(format!("{relative}/"));
+                collect_relative_tree(root, &path, entries)?;
+            } else {
+                entries.push(relative);
+            }
+        }
+        Ok(())
+    }
+
+    fn file_hash(path: &Path) -> Result<u64, Box<dyn Error>> {
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        fs::read(path)?.hash(&mut hasher);
+        Ok(hasher.finish())
+    }
+
+    fn migration_count(path: &Path, database_kind: &str) -> Result<i64, Box<dyn Error>> {
+        let conn = open_read_only_database(path)?;
+        Ok(conn.query_row(
+            "SELECT COUNT(*)
+               FROM schema_migrations
+              WHERE database_kind = ?1",
+            [database_kind],
+            |row| row.get(0),
+        )?)
+    }
+
+    fn existing_sidecars(paths: &[PathBuf]) -> Vec<String> {
+        let mut sidecars = Vec::new();
+        for path in paths {
+            for suffix in ["-wal", "-shm", "-journal"] {
+                let sidecar = PathBuf::from(format!("{}{}", path.display(), suffix));
+                if sidecar.exists() {
+                    sidecars.push(sidecar.display().to_string());
+                }
+            }
+        }
+        sidecars.sort();
+        sidecars
+    }
+
+    fn surface_local_access(path: &Path, project_id: &str) -> Result<String, Box<dyn Error>> {
+        Ok(open_read_only_database(path)?.query_row(
+            "SELECT local_access_json
+               FROM surfaces
+              WHERE project_id = ?1
+                AND surface_id = ?2
+                AND surface_instance_id = ?3",
+            params![project_id, AGENT_SURFACE_ID, AGENT_SURFACE_INSTANCE_ID],
+            |row| row.get(0),
+        )?)
     }
 
     #[derive(Debug, Clone, PartialEq, Eq)]

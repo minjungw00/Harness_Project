@@ -6,10 +6,15 @@ use std::{
 
 use harness_store::{
     bootstrap::{
-        initialize_runtime_home, list_projects, list_surfaces, register_project, register_surface,
-        runtime_home_record, ProjectRecord, ProjectRegistration, SurfaceRecord,
-        SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+        initialize_runtime_home, project_record, register_project, register_surface, ProjectRecord,
+        ProjectRegistration, SurfaceRecord, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
     },
+    inspection::{
+        inspect_project_state_database, inspect_runtime_home, DatabaseInspection,
+        ProjectInspectionRecord, ProjectStateInspectionSnapshot, RegistryInspectionSnapshot,
+        SurfaceInspectionRecord,
+    },
+    sqlite::{open_project_state_database, open_registry_database, registry_db_path},
     StoreError,
 };
 use harness_types::{AccessClass, SurfaceInteractionRole};
@@ -38,6 +43,7 @@ pub struct LocalMcpSetupOptions {
     pub project_id: Option<String>,
     pub include_user_interaction: bool,
     pub replace_conflicting_surfaces: bool,
+    pub authorized_surface_replacements: Vec<SetupActionTarget>,
 }
 
 impl LocalMcpSetupOptions {
@@ -48,6 +54,7 @@ impl LocalMcpSetupOptions {
             project_id: None,
             include_user_interaction: false,
             replace_conflicting_surfaces: false,
+            authorized_surface_replacements: Vec::new(),
         }
     }
 }
@@ -214,6 +221,7 @@ pub enum SetupConflictKind {
     AmbiguousRepositoryProjects,
     ExplicitProjectIdRequired,
     DerivedProjectIdCollision,
+    ProjectSelectionChanged,
     SurfaceKindMismatch,
     SurfaceRoleMalformed,
     SurfaceRoleMismatch,
@@ -288,6 +296,7 @@ impl SetupConflict {
 pub enum SetupPlanError {
     InvalidOptions { detail: String },
     RepositoryUnavailable { repo_root: PathBuf, detail: String },
+    StorageInspection { detail: String },
     Store(StoreError),
 }
 
@@ -302,6 +311,7 @@ impl fmt::Display for SetupPlanError {
                     repo_root.display()
                 )
             }
+            Self::StorageInspection { detail } => formatter.write_str(detail),
             Self::Store(error) => write!(formatter, "{error}"),
         }
     }
@@ -311,7 +321,9 @@ impl Error for SetupPlanError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Store(error) => Some(error),
-            Self::InvalidOptions { .. } | Self::RepositoryUnavailable { .. } => None,
+            Self::InvalidOptions { .. }
+            | Self::RepositoryUnavailable { .. }
+            | Self::StorageInspection { .. } => None,
         }
     }
 }
@@ -327,6 +339,10 @@ pub enum SetupApplyError {
     UnresolvedConflicts {
         conflicts: Vec<SetupConflict>,
     },
+    RevalidationFailed {
+        conflicts: Vec<SetupConflict>,
+        completed_actions: Vec<SetupAction>,
+    },
     InvalidPlan {
         message: String,
         completed_actions: Vec<SetupAction>,
@@ -341,7 +357,10 @@ impl SetupApplyError {
     pub fn completed_actions(&self) -> &[SetupAction] {
         match self {
             Self::UnresolvedConflicts { .. } => &[],
-            Self::InvalidPlan {
+            Self::RevalidationFailed {
+                completed_actions, ..
+            }
+            | Self::InvalidPlan {
                 completed_actions, ..
             }
             | Self::OperationFailed {
@@ -361,6 +380,13 @@ impl fmt::Display for SetupApplyError {
                     conflicts.len()
                 )
             }
+            Self::RevalidationFailed { conflicts, .. } => {
+                write!(
+                    formatter,
+                    "setup revalidation found conflict(s) after storage preparation: {}",
+                    conflicts.len()
+                )
+            }
             Self::InvalidPlan { message, .. } => formatter.write_str(message),
             Self::OperationFailed { source, .. } => write!(formatter, "{source}"),
         }
@@ -371,7 +397,9 @@ impl Error for SetupApplyError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::OperationFailed { source, .. } => Some(source.as_ref()),
-            Self::UnresolvedConflicts { .. } | Self::InvalidPlan { .. } => None,
+            Self::UnresolvedConflicts { .. }
+            | Self::RevalidationFailed { .. }
+            | Self::InvalidPlan { .. } => None,
         }
     }
 }
@@ -408,7 +436,17 @@ pub fn plan_local_mcp_setup(
         });
     }
 
-    let runtime_home_exists = runtime_home_record(&options.runtime_home)?.is_some();
+    let inspection = inspect_runtime_home(&options.runtime_home);
+    let registry_snapshot = match &inspection.registry {
+        DatabaseInspection::Missing { .. } => None,
+        DatabaseInspection::Present(snapshot) => Some(snapshot),
+        other => {
+            return Err(SetupPlanError::StorageInspection {
+                detail: database_inspection_failure("registry", other),
+            });
+        }
+    };
+    let runtime_home_exists = registry_snapshot.is_some();
     let runtime_home_action = SetupAction::runtime_home(
         if runtime_home_exists {
             SetupActionKind::Reuse
@@ -418,7 +456,9 @@ pub fn plan_local_mcp_setup(
         options.runtime_home.clone(),
     );
 
-    let projects = list_projects(&options.runtime_home)?;
+    let projects = registry_snapshot
+        .map(project_records_from_registry_inspection)
+        .unwrap_or_default();
     let project_plan = plan_project(&projects, &repo_root, options.project_id.as_deref());
     let mut conflicts = project_plan.conflicts;
     let project_action = project_plan.action;
@@ -427,7 +467,9 @@ pub fn plan_local_mcp_setup(
     if project_action.kind != SetupActionKind::Conflict {
         if let Some(project_id) = project_plan.selected_project_id.as_deref() {
             let existing_surfaces = if project_action.kind == SetupActionKind::Reuse {
-                list_surfaces(&options.runtime_home, project_id)?
+                let project = selected_project_inspection(registry_snapshot, project_id)?;
+                let project_state = present_project_state_inspection(project)?;
+                surface_records_from_project_state_inspection(project_state)
             } else {
                 Vec::new()
             };
@@ -438,6 +480,7 @@ pub fn plan_local_mcp_setup(
                 project_id,
                 SetupSurfaceBinding::Agent,
                 options.replace_conflicting_surfaces,
+                &options.authorized_surface_replacements,
             );
             if options.include_user_interaction {
                 plan_surface(
@@ -447,6 +490,7 @@ pub fn plan_local_mcp_setup(
                     project_id,
                     SetupSurfaceBinding::UserInteraction,
                     options.replace_conflicting_surfaces,
+                    &options.authorized_surface_replacements,
                 );
             }
         }
@@ -464,6 +508,226 @@ pub fn plan_local_mcp_setup(
         replace_conflicting_surfaces: options.replace_conflicting_surfaces,
     })
 }
+
+fn project_records_from_registry_inspection(
+    snapshot: &RegistryInspectionSnapshot,
+) -> Vec<ProjectRecord> {
+    snapshot
+        .projects
+        .iter()
+        .map(|project| ProjectRecord {
+            project_id: project.project_id.clone(),
+            runtime_home_id: project.runtime_home_id.clone(),
+            repo_root: project.repo_root.clone(),
+            project_home: project.project_home.clone(),
+            state_db_path: project.state_db_path.clone(),
+            status: project.status.clone(),
+            metadata_json: project.metadata_json.clone(),
+        })
+        .collect()
+}
+
+fn selected_project_inspection<'a>(
+    registry: Option<&'a RegistryInspectionSnapshot>,
+    project_id: &str,
+) -> Result<&'a ProjectInspectionRecord, SetupPlanError> {
+    registry
+        .and_then(|snapshot| {
+            snapshot
+                .projects
+                .iter()
+                .find(|project| project.project_id == project_id)
+        })
+        .ok_or_else(|| SetupPlanError::StorageInspection {
+            detail: format!("selected project {project_id} was not found during setup inspection"),
+        })
+}
+
+fn present_project_state_inspection(
+    project: &ProjectInspectionRecord,
+) -> Result<&ProjectStateInspectionSnapshot, SetupPlanError> {
+    match &project.project_state {
+        DatabaseInspection::Present(snapshot) => Ok(snapshot),
+        other => Err(SetupPlanError::StorageInspection {
+            detail: database_inspection_failure("project_state", other),
+        }),
+    }
+}
+
+fn surface_records_from_project_state_inspection(
+    snapshot: &ProjectStateInspectionSnapshot,
+) -> Vec<SurfaceRecord> {
+    snapshot
+        .surfaces
+        .iter()
+        .map(surface_record_from_inspection)
+        .collect()
+}
+
+fn surface_record_from_inspection(surface: &SurfaceInspectionRecord) -> SurfaceRecord {
+    SurfaceRecord {
+        project_id: surface.project_id.clone(),
+        surface_id: surface.surface_id.clone(),
+        surface_instance_id: surface.surface_instance_id.clone(),
+        surface_kind: surface.surface_kind.clone(),
+        interaction_role: surface.interaction_role.clone(),
+        display_name: surface.display_name.clone(),
+        capability_profile_json: surface.capability_profile_json.clone(),
+        local_access_json: surface.local_access_json.clone(),
+        metadata_json: surface.metadata_json.clone(),
+    }
+}
+
+fn database_inspection_failure<T>(label: &str, inspection: &DatabaseInspection<T>) -> String {
+    match inspection {
+        DatabaseInspection::Missing { path } => {
+            format!("{label} database is missing: {}", path.display())
+        }
+        DatabaseInspection::Present(_) => {
+            format!("{label} database inspection unexpectedly succeeded")
+        }
+        DatabaseInspection::Unsupported {
+            path,
+            detected_version,
+            latest_supported_version,
+            detail,
+        } => format!(
+            "{label} database {} has unsupported schema version {detected_version}; latest supported is {latest_supported_version}: {detail}",
+            path.display()
+        ),
+        DatabaseInspection::Malformed { path, detail } => {
+            format!("{label} database {} is incomplete or malformed: {detail}", path.display())
+        }
+        DatabaseInspection::Unreadable { path, detail } => {
+            format!("{label} database {} is unreadable: {detail}", path.display())
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SetupPreparationResult {
+    pub completed_actions: Vec<SetupAction>,
+}
+
+pub fn prepare_local_mcp_setup_storage(
+    plan: &LocalMcpSetupPlan,
+) -> Result<SetupPreparationResult, SetupApplyError> {
+    let mut completed_actions = Vec::new();
+    prepare_runtime_home(plan, &mut completed_actions)?;
+    prepare_selected_existing_project_state(plan, &mut completed_actions)?;
+    Ok(SetupPreparationResult { completed_actions })
+}
+
+fn prepare_runtime_home(
+    plan: &LocalMcpSetupPlan,
+    completed_actions: &mut Vec<SetupAction>,
+) -> Result<(), SetupApplyError> {
+    match plan.runtime_home_action.kind {
+        SetupActionKind::Create => {
+            initialize_runtime_home(
+                &plan.runtime_home,
+                SETUP_RUNTIME_HOME_ID,
+                SETUP_METADATA_JSON,
+            )
+            .map_err(|source| operation_failed(Box::new(source), completed_actions.as_slice()))?;
+            completed_actions.push(plan.runtime_home_action.clone());
+            Ok(())
+        }
+        SetupActionKind::Reuse => {
+            let registry_path = registry_db_path(&plan.runtime_home);
+            if !registry_path.exists() {
+                return Err(operation_failed(
+                    Box::new(StoreError::NotFound {
+                        entity: "registry",
+                        id: registry_path.display().to_string(),
+                    }),
+                    completed_actions.as_slice(),
+                ));
+            }
+            let conn = open_registry_database(&registry_path).map_err(|source| {
+                operation_failed(Box::new(source), completed_actions.as_slice())
+            })?;
+            drop(conn);
+            completed_actions.push(plan.runtime_home_action.clone());
+            Ok(())
+        }
+        SetupActionKind::Update | SetupActionKind::Conflict => Err(SetupApplyError::InvalidPlan {
+            message: "runtime_home preparation requires a create or reuse action".to_owned(),
+            completed_actions: completed_actions.clone(),
+        }),
+    }
+}
+
+fn prepare_selected_existing_project_state(
+    plan: &LocalMcpSetupPlan,
+    completed_actions: &mut Vec<SetupAction>,
+) -> Result<(), SetupApplyError> {
+    if plan.project_action.kind != SetupActionKind::Reuse {
+        return Ok(());
+    }
+    let Some(project_id) = plan.selected_project_id.as_deref() else {
+        return Err(SetupApplyError::InvalidPlan {
+            message: "setup plan has no selected project_id".to_owned(),
+            completed_actions: completed_actions.clone(),
+        });
+    };
+
+    let project = project_record(&plan.runtime_home, project_id)
+        .map_err(|source| operation_failed(Box::new(source), completed_actions.as_slice()))?
+        .ok_or_else(|| {
+            operation_failed(
+                Box::new(StoreError::NotFound {
+                    entity: "project",
+                    id: project_id.to_owned(),
+                }),
+                completed_actions.as_slice(),
+            )
+        })?;
+    if !project.state_db_path.exists() {
+        return Err(operation_failed(
+            Box::new(StoreError::NotFound {
+                entity: "project_state_database",
+                id: project.state_db_path.display().to_string(),
+            }),
+            completed_actions.as_slice(),
+        ));
+    }
+
+    let inspection = inspect_project_state_database(&project.state_db_path, project_id);
+    if let Err(detail) = ensure_database_present_for_preparation("project_state", &inspection) {
+        return Err(operation_failed(
+            Box::new(SetupStoragePreparationError(detail)),
+            completed_actions.as_slice(),
+        ));
+    }
+
+    let conn = open_project_state_database(&project.state_db_path)
+        .map_err(|source| operation_failed(Box::new(source), completed_actions.as_slice()))?;
+    drop(conn);
+    completed_actions.push(plan.project_action.clone());
+    Ok(())
+}
+
+fn ensure_database_present_for_preparation<T>(
+    label: &str,
+    inspection: &DatabaseInspection<T>,
+) -> Result<(), String> {
+    match inspection {
+        DatabaseInspection::Present(_) => Ok(()),
+        other => Err(database_inspection_failure(label, other)),
+    }
+}
+
+#[derive(Debug)]
+struct SetupStoragePreparationError(String);
+
+impl fmt::Display for SetupStoragePreparationError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+impl Error for SetupStoragePreparationError {}
 
 pub fn apply_local_mcp_setup_plan(
     plan: &LocalMcpSetupPlan,
@@ -876,6 +1140,7 @@ fn plan_surface(
     project_id: &str,
     binding: SetupSurfaceBinding,
     replace_conflicting_surfaces: bool,
+    authorized_surface_replacements: &[SetupActionTarget],
 ) {
     let existing = existing_surfaces.iter().find(|surface| {
         surface.project_id == project_id
@@ -893,7 +1158,11 @@ fn plan_surface(
     };
 
     if let Some(conflict) = surface_conflict(surface, binding) {
-        if replace_conflicting_surfaces {
+        if surface_replacement_authorized(
+            binding,
+            replace_conflicting_surfaces,
+            authorized_surface_replacements,
+        ) {
             actions.push(SetupAction::surface(
                 SetupActionKind::Update,
                 binding,
@@ -915,6 +1184,14 @@ fn plan_surface(
         binding,
         project_id.to_owned(),
     ));
+}
+
+fn surface_replacement_authorized(
+    binding: SetupSurfaceBinding,
+    replace_conflicting_surfaces: bool,
+    authorized_surface_replacements: &[SetupActionTarget],
+) -> bool {
+    replace_conflicting_surfaces || authorized_surface_replacements.contains(&binding.target())
 }
 
 fn surface_conflict(
@@ -1099,7 +1376,11 @@ mod tests {
 
     use harness_store::{
         bootstrap::{initialize_runtime_home, list_surfaces, register_project, register_surface},
-        sqlite::{project_state_db_path, registry_db_path},
+        migrations::{
+            test_support::create_project_state_fixture_version, PROJECT_STATE_DATABASE_KIND,
+            PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND,
+        },
+        sqlite::{open_read_only_database, project_state_db_path, registry_db_path},
     };
     use harness_test_support::TempRuntimeHome;
     use rusqlite::{params, Connection};
@@ -1708,6 +1989,135 @@ mod tests {
     }
 
     #[test]
+    fn planning_supported_historical_project_state_does_not_migrate() -> Result<(), Box<dyn Error>>
+    {
+        let runtime_home = TempRuntimeHome::new("setup-plan-historical-state")?;
+        let repo_root = registered_historical_project_state(
+            runtime_home.path(),
+            "project_historical",
+            PROJECT_STATE_SCHEMA_VERSION - 1,
+            &baseline_workflow_access_classes(),
+        )?;
+        let before = migration_count(&project_state_db_path(
+            runtime_home.path(),
+            "project_historical",
+        ))?;
+
+        let plan =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))?;
+
+        assert_eq!(plan.project_action.kind, SetupActionKind::Reuse);
+        assert_eq!(plan.surface_actions[0].kind, SetupActionKind::Reuse);
+        assert_eq!(
+            migration_count(&project_state_db_path(
+                runtime_home.path(),
+                "project_historical"
+            ))?,
+            before
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn planning_unsupported_project_state_schema_fails_without_migration(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("setup-plan-unsupported-state")?;
+        let repo_root = registered_project(runtime_home.path(), "project_unsupported")?;
+        let state_path = project_state_db_path(runtime_home.path(), "project_unsupported");
+        let before = migration_count(&state_path)?;
+        Connection::open(&state_path)?.execute(
+            "INSERT INTO schema_migrations (
+                database_kind,
+                version,
+                name,
+                storage_profile,
+                applied_at
+            )
+            VALUES (?1, 999, 'project_state_future_v999', 'baseline_sqlite', 't_future')",
+            params![PROJECT_STATE_DATABASE_KIND],
+        )?;
+        let after_fixture_change = migration_count(&state_path)?;
+
+        let error =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))
+                .expect_err("unsupported schema should fail planning");
+
+        assert!(error.to_string().contains("unsupported schema version"));
+        assert_eq!(migration_count(&state_path)?, after_fixture_change);
+        assert_eq!(after_fixture_change, before + 1);
+        Ok(())
+    }
+
+    #[test]
+    fn planning_unsupported_registry_schema_fails_without_migration() -> Result<(), Box<dyn Error>>
+    {
+        let runtime_home = TempRuntimeHome::new("setup-plan-unsupported-registry")?;
+        initialize(runtime_home.path())?;
+        let repo_root = repo_dir(runtime_home.path(), "product-unsupported-registry")?;
+        let registry_path = registry_db_path(runtime_home.path());
+        let before = registry_migration_count(&registry_path)?;
+        Connection::open(&registry_path)?.execute(
+            "INSERT INTO schema_migrations (
+                database_kind,
+                version,
+                name,
+                storage_profile,
+                applied_at
+            )
+            VALUES (?1, 999, 'registry_future_v999', 'baseline_sqlite', 't_future')",
+            params![REGISTRY_DATABASE_KIND],
+        )?;
+        let after_fixture_change = registry_migration_count(&registry_path)?;
+
+        let error =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))
+                .expect_err("unsupported registry schema should fail planning");
+
+        assert!(error.to_string().contains("unsupported schema version"));
+        assert_eq!(
+            registry_migration_count(&registry_path)?,
+            after_fixture_change
+        );
+        assert_eq!(after_fixture_change, before + 1);
+        Ok(())
+    }
+
+    #[test]
+    fn planning_incomplete_project_state_schema_fails_without_migration(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("setup-plan-incomplete-state")?;
+        let repo_root = registered_project(runtime_home.path(), "project_incomplete")?;
+        let state_path = project_state_db_path(runtime_home.path(), "project_incomplete");
+        let before = migration_count(&state_path)?;
+        Connection::open(&state_path)?.execute("DROP TABLE surfaces", [])?;
+
+        let error =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))
+                .expect_err("incomplete schema should fail planning");
+
+        assert!(error.to_string().contains("incomplete or malformed"));
+        assert_eq!(migration_count(&state_path)?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn planning_corrupt_project_state_database_fails_without_migration(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("setup-plan-corrupt-state")?;
+        let repo_root = registered_project(runtime_home.path(), "project_corrupt")?;
+        let state_path = project_state_db_path(runtime_home.path(), "project_corrupt");
+        fs::write(&state_path, b"this is not sqlite")?;
+
+        let error =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))
+                .expect_err("corrupt database should fail planning");
+
+        assert!(error.to_string().contains("unreadable"));
+        assert_eq!(fs::read(&state_path)?, b"this is not sqlite");
+        Ok(())
+    }
+
+    #[test]
     fn compatible_project_and_surface_metadata_are_preserved() -> Result<(), Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("setup-preserve-metadata")?;
         initialize(runtime_home.path())?;
@@ -1768,6 +2178,52 @@ mod tests {
         let repo_root = repo_dir(runtime_home, &format!("repo-{project_id}"))?;
         register_test_project(runtime_home, project_id, &repo_root)?;
         Ok(repo_root)
+    }
+
+    fn registered_historical_project_state(
+        runtime_home: &Path,
+        project_id: &str,
+        version: i64,
+        access_classes: &[AccessClass],
+    ) -> Result<PathBuf, Box<dyn Error>> {
+        let repo_root = registered_project(runtime_home, project_id)?;
+        let state_path = project_state_db_path(runtime_home, project_id);
+        fs::remove_file(&state_path)?;
+        let mut conn = Connection::open(&state_path)?;
+        create_project_state_fixture_version(&mut conn, project_id, version)?;
+        insert_historical_agent_surface(&conn, project_id, access_classes)?;
+        drop(conn);
+        Ok(repo_root)
+    }
+
+    fn insert_historical_agent_surface(
+        conn: &Connection,
+        project_id: &str,
+        access_classes: &[AccessClass],
+    ) -> Result<(), Box<dyn Error>> {
+        conn.execute(
+            "INSERT INTO surfaces (
+                project_id,
+                surface_id,
+                surface_instance_id,
+                surface_kind,
+                display_name,
+                capability_profile_json,
+                local_access_json,
+                registered_at,
+                metadata_json
+            )
+            VALUES (?1, ?2, ?3, ?4, 'Agent MCP', ?5, ?6, 't0', '{}')",
+            params![
+                project_id,
+                AGENT_SURFACE_ID,
+                AGENT_SURFACE_INSTANCE_ID,
+                LOCAL_MCP_SURFACE_KIND,
+                capability_profile_json(access_classes, None)?,
+                local_access_json(access_classes)?
+            ],
+        )?;
+        Ok(())
     }
 
     fn register_test_project(
@@ -1996,6 +2452,28 @@ mod tests {
             other => panic!("unsupported count table: {other}"),
         };
         Ok(conn.query_row(sql, [], |row| row.get(0))?)
+    }
+
+    fn migration_count(path: &Path) -> Result<i64, Box<dyn Error>> {
+        let conn = open_read_only_database(path)?;
+        Ok(conn.query_row(
+            "SELECT COUNT(*)
+               FROM schema_migrations
+              WHERE database_kind = ?1",
+            params![PROJECT_STATE_DATABASE_KIND],
+            |row| row.get(0),
+        )?)
+    }
+
+    fn registry_migration_count(path: &Path) -> Result<i64, Box<dyn Error>> {
+        let conn = open_read_only_database(path)?;
+        Ok(conn.query_row(
+            "SELECT COUNT(*)
+               FROM schema_migrations
+              WHERE database_kind = ?1",
+            params![REGISTRY_DATABASE_KIND],
+            |row| row.get(0),
+        )?)
     }
 
     #[derive(Debug)]
