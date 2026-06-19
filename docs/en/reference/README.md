@@ -8,6 +8,7 @@ This README is route-only. It does not define term meanings, terminology metadat
 
 - Product/system boundaries: [Scope](scope.md), [Core Model](core-model.md), [Runtime Boundaries](runtime-boundaries.md), and [Security](security.md).
 - Local executables: [Administrative CLI](admin-cli.md) for `harness` setup commands and Runtime Home selection, and [MCP Transport](mcp-transport.md) for `harness-mcp` stdio startup, preflight, response wrapping, and shutdown.
+- Operational local MCP setup: [Local MCP Quickstart](../use/local-mcp-quickstart.md).
 - API method behavior: [API Methods](api/methods.md), then the linked method owner.
 - API schema families: [Schema Core](api/schema-core.md), [State Schemas](api/schema-state.md), [Artifact Schemas](api/schema-artifacts.md), [Judgment Schemas](api/schema-judgment.md), and [Value Sets](api/schema-value-sets.md).
 - API error families: [API Errors](api/errors.md), which routes to error codes, precedence, response routing, blocker routing, and machine-readable details.

@@ -248,6 +248,35 @@ documents:
       - "agents"
       - "connector authors"
 
+  - doc_id: "use.local-mcp-quickstart"
+    path_en: "docs/en/use/local-mcp-quickstart.md"
+    path_ko: "docs/ko/use/local-mcp-quickstart.md"
+    role: "use"
+    owner_for:
+      - "executable local MCP setup sequence for operators"
+      - "guide-level order for building local executables, initializing a Runtime Home, registering a project and MCP surfaces, running preflight, configuring an MCP host, verifying tool discovery, interpreting wrapped responses, and reconnecting"
+    not_owner_for:
+      - "CLI command contracts"
+      - "MCP wire contracts"
+      - "public API behavior"
+      - "public API method list"
+      - "request or response schemas"
+      - "storage semantics"
+      - "security guarantees"
+      - "access-class value meanings"
+      - "Core authority semantics"
+    depends_on:
+      - "reference.admin-cli"
+      - "reference.mcp-transport"
+      - "reference.runtime-boundaries"
+      - "reference.agent-integration"
+      - "reference.api.methods"
+    normative_level: "guide"
+    audience:
+      - "operators"
+      - "agent integrators"
+      - "implementers"
+
   - doc_id: "build.implementation-guide"
     path_en: "docs/en/build/implementation-guide.md"
     path_ko: "docs/ko/build/implementation-guide.md"

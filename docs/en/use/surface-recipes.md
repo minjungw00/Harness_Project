@@ -101,6 +101,8 @@ A local MCP surface is the practical route for supported Harness methods.
 
 Use it for status, scope updates, write checks, run/evidence recording, user-judgment capture, artifact staging, and close checks.
 
+For executable local setup, use [Local MCP Quickstart](local-mcp-quickstart.md).
+
 This recipe does not define the supported method list, surface registration, context exchange, storage effects, or security guarantees. Use the Reference owners for those details.
 
 For local MCP work:

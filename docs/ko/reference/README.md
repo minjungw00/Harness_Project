@@ -8,6 +8,7 @@
 
 - 제품/시스템 경계: [범위](scope.md), [Core 모델](core-model.md), [런타임 경계](runtime-boundaries.md), [보안](security.md).
 - 로컬 실행 파일: `harness` 설정 명령과 Runtime Home 선택은 [관리 CLI](admin-cli.md), `harness-mcp` stdio 시작, 사전 점검, 응답 래핑, 종료는 [MCP 전송](mcp-transport.md)에 있습니다.
+- 운영자가 수행하는 로컬 MCP 설정: [로컬 MCP 빠른 시작](../use/local-mcp-quickstart.md).
 - API 메서드 동작: [API 메서드](api/methods.md)에서 연결된 메서드 담당 문서.
 - API 스키마 묶음: [API 코어 스키마](api/schema-core.md), [상태 스키마](api/schema-state.md), [아티팩트 스키마](api/schema-artifacts.md), [판단 스키마](api/schema-judgment.md), [값 집합](api/schema-value-sets.md).
 - API 오류 묶음: [API 오류](api/errors.md). 오류 코드, 우선순위, 응답 처리 경로, 차단 사유 처리 경로, 기계 판독 세부사항으로 안내합니다.
