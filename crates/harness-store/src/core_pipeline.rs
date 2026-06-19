@@ -3983,7 +3983,12 @@ fn validate_user_judgment_options_json(field: &'static str, text: &str) -> Store
                     detail: format!("{field} current options must include machine_action"),
                 });
             };
-            if option.resolution_outcome != Some(action.resolution_outcome()) {
+            let Some(outcome) = option.resolution_outcome else {
+                return Err(StoreError::InvalidInput {
+                    detail: format!("{field} current options must include resolution_outcome"),
+                });
+            };
+            if outcome != action.resolution_outcome() {
                 return Err(StoreError::InvalidInput {
                     detail: format!(
                         "{field} current option resolution_outcome must match machine_action"

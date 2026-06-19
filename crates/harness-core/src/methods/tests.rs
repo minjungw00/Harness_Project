@@ -5101,6 +5101,42 @@ fn corrupt_artifact_is_not_linkable_as_existing_artifact() -> Result<(), Box<dyn
 }
 
 #[test]
+fn verified_existing_artifact_ref_missing_integrity_fact_is_rejected() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "missing_ref_fact")?;
+    let (state_version, mut artifact_ref) =
+        promote_artifact_for_record_run(&harness, &task_id, &change_unit_id, 2, "missing_ref")?;
+    artifact_ref.sha256 = RequiredNullable::null();
+    let before = harness.counts()?;
+
+    let mut request = record_run_request(
+        "req_run_missing_existing_ref_fact",
+        "idem_run_missing_existing_ref_fact",
+        false,
+        Some(state_version),
+        &task_id,
+        &change_unit_id,
+    );
+    request.artifact_inputs = vec![existing_artifact_input(
+        "artifact_input_missing_existing_ref_fact",
+        artifact_ref,
+    )];
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
 fn missing_persistent_artifact_body_blocks_evidence_and_close_without_mutation(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;

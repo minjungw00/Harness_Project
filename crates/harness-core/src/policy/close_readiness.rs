@@ -321,8 +321,8 @@ pub(crate) fn accepted_current_user_authority(
     let Some(resolution) = judgment.resolution.as_ref() else {
         return false;
     };
-    resolution.machine_action == Some(UserJudgmentOptionAction::Accept)
-        && resolution.resolution_outcome == Some(JudgmentResolutionOutcome::Accepted)
+    resolution.machine_action.as_ref().copied() == Some(UserJudgmentOptionAction::Accept)
+        && resolution.resolution_outcome == JudgmentResolutionOutcome::Accepted
         && resolution.resolved_by_actor_kind == ActorKind::User
         && verified_user_interaction_provenance(judgment)
         && resolution_answer_matches_kind(required_kind, &resolution.answer)

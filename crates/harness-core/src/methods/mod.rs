@@ -531,11 +531,14 @@ fn decode_optional_persisted_resolution(
         logical_column,
         raw,
     )?;
-    let Some(mut resolution) = resolution else {
+    let Some(resolution) = resolution else {
+        return Ok(None);
+    };
+    let Some(stored_resolution_outcome) = stored_resolution_outcome else {
         return Ok(None);
     };
     if resolution.resolution_outcome.is_some()
-        && resolution.resolution_outcome != stored_resolution_outcome
+        && resolution.resolution_outcome != Some(stored_resolution_outcome)
     {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(table, record_ref, "resolution_outcome"),
@@ -543,14 +546,22 @@ fn decode_optional_persisted_resolution(
     }
     if resolution
         .machine_action
-        .is_some_and(|action| Some(action.resolution_outcome()) != stored_resolution_outcome)
+        .is_some_and(|action| action.resolution_outcome() != stored_resolution_outcome)
     {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(table, record_ref, "machine_action"),
         ));
     }
-    resolution.resolution_outcome = stored_resolution_outcome;
-    Ok(Some(resolution.into()))
+    resolution
+        .into_current_with_outcome(stored_resolution_outcome)
+        .map(Some)
+        .map_err(|_| {
+            CorePipelineError::Store(StoreError::corrupt_owner_state_value(
+                table,
+                record_ref,
+                logical_column,
+            ))
+        })
 }
 
 fn decode_required_json_object(
@@ -686,7 +697,7 @@ fn user_judgment_authority_from_record(
         affected_refs,
         machine_action: resolution
             .as_ref()
-            .and_then(|resolution| resolution.machine_action),
+            .and_then(|resolution| resolution.machine_action.as_ref().copied()),
         resolution_outcome,
         resolved_actor_role,
         resolved_by_surface_id,
@@ -714,11 +725,11 @@ fn user_judgment_authority_from_state(
         machine_action: judgment
             .resolution
             .as_ref()
-            .and_then(|resolution| resolution.machine_action),
+            .and_then(|resolution| resolution.machine_action.as_ref().copied()),
         resolution_outcome: judgment
             .resolution
             .as_ref()
-            .and_then(|resolution| resolution.resolution_outcome),
+            .map(|resolution| resolution.resolution_outcome),
         resolved_actor_role: actor_context.map(|context| context.role),
         resolved_by_surface_id: actor_context.map(|context| context.surface_id.clone()),
         resolved_by_surface_instance_id: actor_context

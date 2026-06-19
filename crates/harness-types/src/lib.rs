@@ -751,6 +751,178 @@ mod tests {
     }
 
     #[test]
+    fn current_user_judgment_option_requires_action_and_outcome() {
+        let schema = serde_json::to_value(schemars::schema_for!(UserJudgmentOption))
+            .expect("option schema should serialize");
+        assert_required(
+            &schema,
+            &[
+                "option_id",
+                "label",
+                "description",
+                "consequence",
+                "machine_action",
+                "resolution_outcome",
+                "is_default",
+            ],
+            "UserJudgmentOption",
+        );
+        assert_eq!(
+            schema["additionalProperties"], false,
+            "UserJudgmentOption should be closed"
+        );
+
+        let valid = user_judgment_option_json();
+        assert!(serde_json::from_value::<UserJudgmentOption>(valid.clone()).is_ok());
+        assert!(validate_json_schema(&schema, &valid).is_ok());
+
+        let mut missing_action = user_judgment_option_json();
+        remove_path(&mut missing_action, &["machine_action"]);
+        assert!(serde_json::from_value::<UserJudgmentOption>(missing_action.clone()).is_err());
+        assert!(validate_json_schema(&schema, &missing_action).is_err());
+
+        let mut missing_outcome = user_judgment_option_json();
+        remove_path(&mut missing_outcome, &["resolution_outcome"]);
+        assert!(serde_json::from_value::<UserJudgmentOption>(missing_outcome.clone()).is_err());
+        assert!(validate_json_schema(&schema, &missing_outcome).is_err());
+
+        let mut unknown = user_judgment_option_json();
+        unknown["legacy_note"] = json!("not current public shape");
+        assert_unknown::<UserJudgmentOption>(unknown, "legacy_note");
+    }
+
+    #[test]
+    fn legacy_persisted_option_without_outcome_decodes_but_does_not_emit_current() {
+        let legacy: PersistedUserJudgmentOptions = serde_json::from_value(json!([
+            {
+                "option_id": "legacy_accept",
+                "label": "Accept",
+                "description": "Legacy option with no outcome.",
+                "consequence": "Audit only.",
+                "machine_action": "accept",
+                "is_default": true
+            }
+        ]))
+        .expect("legacy option array should decode internally");
+
+        assert_eq!(legacy.schema_version, 0);
+        assert_eq!(
+            legacy.options[0].machine_action,
+            Some(UserJudgmentOptionAction::Accept)
+        );
+        assert_eq!(legacy.options[0].resolution_outcome, None);
+        assert_eq!(
+            legacy.into_current_options().unwrap_err(),
+            PersistedUserJudgmentCompatibilityError::MissingResolutionOutcome
+        );
+    }
+
+    #[test]
+    fn current_user_judgment_resolution_requires_non_null_outcome() {
+        let schema = serde_json::to_value(schemars::schema_for!(UserJudgmentResolution))
+            .expect("resolution schema should serialize");
+        assert_required(
+            &schema,
+            &[
+                "selected_option_id",
+                "machine_action",
+                "resolution_outcome",
+                "answer",
+                "note",
+                "accepted_risks",
+                "resolved_by_actor_kind",
+            ],
+            "UserJudgmentResolution",
+        );
+        assert_eq!(
+            schema["additionalProperties"], false,
+            "UserJudgmentResolution should be closed"
+        );
+
+        let valid = user_judgment_resolution_json(json!("accept"), json!("accepted"));
+        assert!(serde_json::from_value::<UserJudgmentResolution>(valid.clone()).is_ok());
+        assert!(validate_json_schema(&schema, &valid).is_ok());
+
+        let blocked = user_judgment_resolution_json(Value::Null, json!("blocked"));
+        assert!(serde_json::from_value::<UserJudgmentResolution>(blocked.clone()).is_ok());
+        assert!(validate_json_schema(&schema, &blocked).is_ok());
+
+        let mut missing_outcome = user_judgment_resolution_json(json!("accept"), json!("accepted"));
+        remove_path(&mut missing_outcome, &["resolution_outcome"]);
+        assert!(serde_json::from_value::<UserJudgmentResolution>(missing_outcome.clone()).is_err());
+        assert!(validate_json_schema(&schema, &missing_outcome).is_err());
+
+        let null_outcome = user_judgment_resolution_json(json!("accept"), Value::Null);
+        assert!(serde_json::from_value::<UserJudgmentResolution>(null_outcome.clone()).is_err());
+        assert!(validate_json_schema(&schema, &null_outcome).is_err());
+    }
+
+    #[test]
+    fn artifact_ref_requires_integrity_status_and_allows_null_legacy_facts() {
+        let schema = serde_json::to_value(schemars::schema_for!(ArtifactRef))
+            .expect("artifact schema should serialize");
+        assert_required(
+            &schema,
+            &[
+                "artifact_id",
+                "project_id",
+                "task_id",
+                "display_name",
+                "content_type",
+                "sha256",
+                "size_bytes",
+                "integrity_status",
+                "redaction_state",
+                "availability",
+                "created_by_run_ref",
+                "created_by_surface_id",
+                "created_by_surface_instance_id",
+                "storage_ref",
+            ],
+            "ArtifactRef",
+        );
+        assert_eq!(
+            schema["additionalProperties"], false,
+            "ArtifactRef should be closed"
+        );
+
+        let legacy_unknown =
+            artifact_ref_json("legacy_unknown", Value::Null, Value::Null, Value::Null);
+        assert!(serde_json::from_value::<ArtifactRef>(legacy_unknown.clone()).is_ok());
+        assert!(validate_json_schema(&schema, &legacy_unknown).is_ok());
+
+        let mut missing_integrity =
+            artifact_ref_json("legacy_unknown", Value::Null, Value::Null, Value::Null);
+        remove_path(&mut missing_integrity, &["integrity_status"]);
+        assert!(serde_json::from_value::<ArtifactRef>(missing_integrity.clone()).is_err());
+        assert!(validate_json_schema(&schema, &missing_integrity).is_err());
+    }
+
+    #[test]
+    fn record_run_schema_and_serde_reject_existing_artifact_ref_missing_integrity_status() {
+        let mut valid = record_run_request_json();
+        valid["artifact_inputs"] = json!([existing_artifact_input_json(artifact_ref_json(
+            "verified",
+            json!("text/plain"),
+            json!("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+            json!(18)
+        ))]);
+        assert_schema_and_serde("harness.record_run", valid.clone(), true);
+
+        let mut missing = valid;
+        remove_path(
+            &mut missing,
+            &[
+                "artifact_inputs",
+                "0",
+                "existing_artifact_ref",
+                "integrity_status",
+            ],
+        );
+        assert_schema_and_serde("harness.record_run", missing, false);
+    }
+
+    #[test]
     fn timestamp_json_schemas_are_date_time_strings() {
         let judgment =
             public_request_schema("harness.request_user_judgment").expect("judgment schema");
@@ -1512,6 +1684,81 @@ mod tests {
             "expected_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
             "expected_size_bytes": 18,
             "redaction_state": "none"
+        })
+    }
+
+    fn existing_artifact_input_json(artifact_ref: Value) -> Value {
+        json!({
+            "artifact_input_id": "artifact_input_existing_001",
+            "source_kind": "existing_artifact",
+            "staged_artifact_handle": null,
+            "existing_artifact_ref": artifact_ref,
+            "relation_hint": "diagnostic_log",
+            "claim": null,
+            "expected_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "expected_size_bytes": 18,
+            "redaction_state": "none"
+        })
+    }
+
+    fn artifact_ref_json(
+        integrity_status: &str,
+        content_type: Value,
+        sha256: Value,
+        size_bytes: Value,
+    ) -> Value {
+        json!({
+            "artifact_id": "artifact_trace_001",
+            "project_id": "proj_empty_001",
+            "task_id": "task_empty_001",
+            "display_name": "diagnostic_trace.log",
+            "content_type": content_type,
+            "sha256": sha256,
+            "size_bytes": size_bytes,
+            "integrity_status": integrity_status,
+            "redaction_state": "none",
+            "availability": "available",
+            "created_by_run_ref": state_ref_json("run", "run_trace_001", "task_empty_001"),
+            "created_by_surface_id": "surface_empty",
+            "created_by_surface_instance_id": "surface_instance_empty",
+            "storage_ref": "harness-artifact://proj_empty_001/artifact_trace_001"
+        })
+    }
+
+    fn user_judgment_option_json() -> Value {
+        json!({
+            "option_id": "accept",
+            "label": "Accept",
+            "description": "Accept the focused judgment.",
+            "consequence": "The accepted option is recorded.",
+            "machine_action": "accept",
+            "resolution_outcome": "accepted",
+            "is_default": true
+        })
+    }
+
+    fn user_judgment_resolution_json(machine_action: Value, resolution_outcome: Value) -> Value {
+        json!({
+            "selected_option_id": "accept",
+            "machine_action": machine_action,
+            "resolution_outcome": resolution_outcome,
+            "answer": {
+                "product_decision": {
+                    "judgment": {
+                        "decision": "accepted",
+                        "rationale": "The focused judgment is accepted."
+                    }
+                },
+                "technical_decision": null,
+                "scope_decision": null,
+                "sensitive_action_scope": null,
+                "final_acceptance": null,
+                "residual_risk_acceptance": null,
+                "cancellation": null
+            },
+            "note": null,
+            "accepted_risks": [],
+            "resolved_by_actor_kind": "user"
         })
     }
 

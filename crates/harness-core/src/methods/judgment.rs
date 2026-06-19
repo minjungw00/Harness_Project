@@ -1001,8 +1001,8 @@ fn plan_record_user_judgment(
         ))));
     }
 
-    let mut user_judgment = user_judgment_from_record(&record)?;
-    if user_judgment
+    let authority = user_judgment_authority_from_record(&record)?;
+    if authority
         .expires_at
         .as_ref()
         .is_some_and(|expires_at| &now >= expires_at)
@@ -1013,14 +1013,20 @@ fn plan_record_user_judgment(
             "pending user-owned judgment is expired",
         ))));
     }
-    if request.judgment_kind != user_judgment.judgment_kind {
+    if request.judgment_kind != authority.judgment_kind {
         return Err(PlanError::Response(Box::new(decision_rejected_response(
             &request.envelope,
             Some(project_state.state_version),
             "judgment_kind is incompatible with the pending user-owned judgment",
         ))));
     }
-    let Some(selected_option) = user_judgment
+    let persisted_options = decode_required_json::<PersistedUserJudgmentOptions>(
+        "user_judgments",
+        record.judgment_id.clone(),
+        "options_json",
+        Some(&record.options_json),
+    )?;
+    let Some(persisted_selected_option) = persisted_options
         .options
         .iter()
         .find(|option| option.option_id == request.selected_option_id)
@@ -1034,15 +1040,33 @@ fn plan_record_user_judgment(
         .map_err(PlanError::Core)?;
         return Err(PlanError::Response(Box::new(response)));
     };
-    let Some(machine_action) = selected_option.machine_action else {
-        return Err(PlanError::Response(Box::new(decision_rejected_response(
-            &request.envelope,
-            Some(project_state.state_version),
-            "pending user-owned judgment option lacks a machine-readable action",
-        ))));
+    let selected_option = match persisted_selected_option.clone().into_current() {
+        Ok(option) => option,
+        Err(
+            harness_types::PersistedUserJudgmentCompatibilityError::MissingMachineAction
+            | harness_types::PersistedUserJudgmentCompatibilityError::MissingResolutionOutcome,
+        ) => {
+            return Err(PlanError::Response(Box::new(decision_rejected_response(
+                &request.envelope,
+                Some(project_state.state_version),
+                "pending user-owned judgment option lacks current machine-readable authority facts",
+            ))));
+        }
+        Err(
+            harness_types::PersistedUserJudgmentCompatibilityError::MismatchedResolutionOutcome,
+        ) => {
+            return Err(PlanError::Core(CorePipelineError::Store(
+                StoreError::corrupt_owner_state_value(
+                    "user_judgments",
+                    record.judgment_id.clone(),
+                    "options_json",
+                ),
+            )));
+        }
     };
+    let machine_action = selected_option.machine_action;
     let resolution_outcome = machine_action.resolution_outcome();
-    if selected_option.resolution_outcome != Some(resolution_outcome) {
+    if selected_option.resolution_outcome != resolution_outcome {
         return Err(PlanError::Core(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(
                 "user_judgments",
@@ -1120,12 +1144,13 @@ fn plan_record_user_judgment(
         current_change_unit.as_ref(),
         &now,
     )?;
+    let mut user_judgment = user_judgment_from_record(&record)?;
     let resolution = UserJudgmentResolution {
         selected_option_id: request.selected_option_id.clone(),
-        machine_action: Some(machine_action),
-        resolution_outcome: Some(resolution_outcome),
+        machine_action: Some(machine_action).into(),
+        resolution_outcome,
         answer,
-        note: request.note.clone().into_option(),
+        note: request.note.clone(),
         accepted_risks: request.accepted_risks.clone(),
         resolved_by_actor_kind: request.envelope.actor_kind,
     };
@@ -1320,8 +1345,8 @@ fn current_options_for_request(
             label: option.label.clone(),
             description: option.description.clone(),
             consequence: option.consequence.clone(),
-            machine_action: Some(UserJudgmentOptionAction::Accept),
-            resolution_outcome: Some(JudgmentResolutionOutcome::Accepted),
+            machine_action: UserJudgmentOptionAction::Accept,
+            resolution_outcome: JudgmentResolutionOutcome::Accepted,
             is_default: option.is_default,
         })
         .collect()
@@ -1376,8 +1401,8 @@ fn canonical_authority_option(
         label: template.label.to_owned(),
         description: template.description.to_owned(),
         consequence: template.consequence.to_owned(),
-        machine_action: Some(action),
-        resolution_outcome: Some(action.resolution_outcome()),
+        machine_action: action,
+        resolution_outcome: action.resolution_outcome(),
         is_default,
     }
 }
@@ -1941,7 +1966,14 @@ fn user_judgment_from_record(record: &UserJudgmentRecord) -> CoreResult<UserJudg
             "options_json",
             Some(&record.options_json),
         )?
-        .into_options(),
+        .into_current_options()
+        .map_err(|_| {
+            CorePipelineError::Store(StoreError::corrupt_owner_state_value(
+                "user_judgments",
+                record.judgment_id.clone(),
+                "options_json",
+            ))
+        })?,
         context: decode_required_json(
             "user_judgments",
             record.judgment_id.clone(),
