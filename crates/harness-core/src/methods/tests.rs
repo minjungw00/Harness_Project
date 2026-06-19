@@ -580,7 +580,12 @@ fn status_include_evidence_returns_current_coverage() -> Result<(), Box<dyn Erro
         response.response_value["active_task"]["evidence_summary"],
         response.response_value["evidence_summary"]
     );
-    assert!(response.response_value["current_close_basis"].is_null());
+    assert_field_absent(&response.response_value, "current_close_basis");
+    assert_field_absent(&response.response_value, "close_state");
+    assert_field_absent(&response.response_value, "close_blockers");
+    assert_field_absent(&response.response_value, "risk_acceptance_coverage");
+    assert_field_absent(&response.response_value["active_task"], "close_state");
+    assert_field_absent(&response.response_value["active_task"], "close_blockers");
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -708,12 +713,13 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
 
     assert!(none.response_value["active_task"].is_null());
     assert!(none.response_value["write_authority_summary"].is_null());
-    assert!(none.response_value["evidence_summary"].is_null());
-    assert_eq!(none.response_value["close_state"], "blocked");
-    assert!(none.response_value["current_close_basis"].is_null());
-    assert_eq!(none.response_value["risk_acceptance_coverage"], json!([]));
-    assert_close_blocker(&none.response_value, "missing_final_acceptance");
-    assert!(none.response_value["guarantee_display"].is_null());
+    assert_field_absent(&none.response_value, "evidence_summary");
+    assert_field_absent(&none.response_value, "close_state");
+    assert_field_absent(&none.response_value, "current_close_basis");
+    assert_field_absent(&none.response_value, "risk_acceptance_coverage");
+    assert_field_absent(&none.response_value, "close_blockers");
+    assert_field_absent(&none.response_value, "guarantee_display");
+    assert_no_close_next_actions(&none.response_value);
 
     let evidence_only = harness.service.status(
         StatusRequest {
@@ -740,6 +746,10 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
         evidence_only.response_value["evidence_summary"]["status"],
         "sufficient"
     );
+    assert_field_absent(&evidence_only.response_value, "close_state");
+    assert_field_absent(&evidence_only.response_value, "close_blockers");
+    assert_field_absent(&evidence_only.response_value, "guarantee_display");
+    assert_no_close_next_actions(&evidence_only.response_value);
 
     let close_only = harness.service.status(
         StatusRequest {
@@ -756,6 +766,8 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
         invocation(AccessClass::ReadStatus),
     )?;
     assert!(close_only.response_value["active_task"].is_null());
+    assert_field_absent(&close_only.response_value, "evidence_summary");
+    assert_field_absent(&close_only.response_value, "guarantee_display");
     assert_close_blocker(&close_only.response_value, "missing_final_acceptance");
 
     let guarantees_only = harness.service.status(
@@ -779,9 +791,86 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
         invocation(AccessClass::ReadStatus),
     )?;
     assert!(guarantees_only.response_value["active_task"].is_null());
+    assert_field_absent(&guarantees_only.response_value, "evidence_summary");
+    assert_field_absent(&guarantees_only.response_value, "close_state");
+    assert_field_absent(&guarantees_only.response_value, "close_blockers");
     assert_eq!(
         guarantees_only.response_value["guarantee_display"]["level"],
         "cooperative"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_close_false_does_not_read_corrupt_close_basis() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_change_unit(&harness, "status_close_not_read")?;
+    set_task_owner_json(
+        &harness,
+        &task_id,
+        "close_basis_json",
+        Some(corrupt_owner_json()),
+    )?;
+    let before = harness.counts()?;
+
+    let excluded = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_close_not_read_excluded",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: false,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(excluded.response_value["base"]["response_kind"], "result");
+    assert_field_absent(&excluded.response_value, "close_state");
+    assert_field_absent(&excluded.response_value, "current_close_basis");
+    assert_field_absent(&excluded.response_value, "close_blockers");
+    assert_field_absent(&excluded.response_value["active_task"], "close_state");
+    assert_field_absent(&excluded.response_value["active_task"], "close_blockers");
+    assert_no_close_next_actions(&excluded.response_value);
+    assert_eq!(harness.counts()?, before);
+
+    let selected = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_close_not_read_selected",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: true,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &selected,
+        "tasks",
+        &task_id,
+        "close_basis_json",
+        &harness.runtime_home_path,
     );
     assert_eq!(harness.counts()?, before);
     Ok(())
@@ -10979,6 +11068,25 @@ fn assert_no_close_blocker(response_value: &Value, code: &str) {
     assert!(
         codes.iter().all(|candidate| candidate != code),
         "did not expect close blocker code {code}, got {codes:?}"
+    );
+}
+
+fn assert_field_absent(value: &Value, field: &str) {
+    assert!(
+        value.get(field).is_none(),
+        "expected field {field} to be absent, got {value:?}"
+    );
+}
+
+fn assert_no_close_next_actions(response_value: &Value) {
+    let actions = response_value["next_actions"]
+        .as_array()
+        .expect("next_actions should be an array");
+    assert!(
+        actions.iter().all(|action| {
+            action["owner_method"] != "harness.close_task" && action["action_kind"] != "close_task"
+        }),
+        "close-only next actions should not be present when close is excluded: {actions:?}"
     );
 }
 

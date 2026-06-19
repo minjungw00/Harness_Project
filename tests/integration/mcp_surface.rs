@@ -24,9 +24,9 @@ use harness_test_support::core_fixtures::{
 };
 use harness_types::{
     AccessClass, ChangeUnitOperation, CloseAssessmentInput, CloseIntent, CloseReason, JudgmentKind,
-    ProjectId, ResidualRiskInput, StagedArtifactHandle, SurfaceId, SurfaceInstanceId,
-    SurfaceInteractionRole, WriteAuthorizationId, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
-    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    ProjectId, ResidualRiskInput, StagedArtifactHandle, StatusInclude, SurfaceId,
+    SurfaceInstanceId, SurfaceInteractionRole, WriteAuthorizationId,
+    VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 use serde_json::{json, Value};
 
@@ -1743,6 +1743,58 @@ fn matching_registered_grant_and_requested_access_succeeds() -> Result<(), Box<d
         verified.verification_basis,
         "local_admin_registration:test_fixture_binding"
     );
+    Ok(())
+}
+
+#[test]
+fn mcp_and_direct_status_omit_same_excluded_projection_fields() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_status_omitted")?;
+    let core = CoreService::new(fixture.runtime_home_path());
+    let intake = core.intake(
+        fixture.intake_request(
+            "req_status_omit_task",
+            "idem_status_omit_task",
+            false,
+            Some(0),
+        ),
+        invocation(&fixture, AccessClass::CoreMutation),
+    )?;
+    let task_id = intake.response_value["task_ref"]["record_id"]
+        .as_str()
+        .expect("task id")
+        .to_owned();
+    let mut request = fixture.status_request("req_status_omit_direct", Some(&task_id));
+    request.include = StatusInclude {
+        task: true,
+        pending_user_judgments: false,
+        write_authority: false,
+        evidence: false,
+        close: false,
+        guarantees: false,
+    };
+    let before = fixture.counts()?;
+
+    let direct = core.status(
+        request.clone(),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+    let mcp = adapter(&fixture).call_tool("harness.status", serde_json::to_value(request)?)?;
+
+    assert_eq!(direct.response_value, mcp.response_value);
+    for field in [
+        "evidence_summary",
+        "close_state",
+        "current_close_basis",
+        "risk_acceptance_coverage",
+        "close_blockers",
+        "guarantee_display",
+    ] {
+        assert!(direct.response_value.get(field).is_none());
+    }
+    assert!(direct.response_value["active_task"]
+        .get("close_blockers")
+        .is_none());
+    assert_eq!(fixture.counts()?, before);
     Ok(())
 }
 

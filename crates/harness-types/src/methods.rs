@@ -194,12 +194,18 @@ pub struct StatusResult {
     pub pending_user_judgments: Vec<StateRecordRef>,
     pub blocker_refs: Vec<StateRecordRef>,
     pub write_authority_summary: Option<WriteAuthoritySummary>,
-    pub evidence_summary: Option<EvidenceSummary>,
-    pub close_state: StatusCloseState,
-    pub current_close_basis: Option<CurrentCloseBasis>,
-    pub risk_acceptance_coverage: Vec<RiskAcceptanceCoverage>,
-    pub close_blockers: Vec<CloseReadinessBlocker>,
-    pub guarantee_display: Option<GuaranteeDisplay>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub evidence_summary: Option<RequiredNullable<EvidenceSummary>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub close_state: Option<StatusCloseState>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub current_close_basis: Option<RequiredNullable<CurrentCloseBasis>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub risk_acceptance_coverage: Option<Vec<RiskAcceptanceCoverage>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub close_blockers: Option<Vec<CloseReadinessBlocker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guarantee_display: Option<RequiredNullable<GuaranteeDisplay>>,
 }
 
 /// `harness.prepare_write` request params.
