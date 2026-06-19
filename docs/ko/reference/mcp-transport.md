@@ -1,6 +1,6 @@
 # MCP 전송 참조
 
-이 문서는 로컬 `harness-mcp` 프로세스 계약을 담당합니다. 여기에는 프로세스 시작, stdio 전송 프레이밍, 시작 바인딩, 설정 사전 점검, MCP 응답 래핑, 종료와 재연결 동작이 포함됩니다.
+이 문서는 로컬 `harness-mcp` 프로세스 계약을 담당합니다. 여기에는 프로세스 시작, 프로세스 환경, stdio 전송 프레이밍, 시작 바인딩과 검증, MCP 응답 래핑, 종료와 재연결 동작이 포함됩니다.
 
 이 문서는 공개 하네스 API 메서드 동작, 공개 요청/응답 스키마, 접근 등급 의미, 접점 등록 의미, 저장소 기록 배치, 보안 보장, Core 권한 의미를 정의하지 않습니다.
 
@@ -8,11 +8,10 @@
 
 이 문서가 담당합니다.
 
-- `harness-mcp` 명령줄 동작과 종료 코드
-- 필수 및 선택 프로세스 환경 변수
+- `harness-mcp` 프로세스 시작과 종료 동작
+- MCP Runtime Home 경로 해석을 포함한 필수 및 선택 프로세스 환경 변수
 - stdio JSON-RPC 프레이밍과 지원되는 MCP 요청 메서드
 - MCP 시작 검증, 고정 프로세스 바인딩, 인스턴스 선택
-- `harness-mcp --check` 진단 출력
 - MCP `tools/call` 응답 래핑
 - 프로세스 종료와 재연결 동작
 
@@ -22,26 +21,24 @@
 - 공개 하네스 요청/응답 스키마: [API 코어 스키마](api/schema-core.md)
 - 접근 등급 값 의미: [API 값 집합](api/schema-value-sets.md#access-class-values)
 - 접점 등록 의미, 접근 파생, 고정 접점 맥락 의미, 행위자 출처: [에이전트 통합](agent-integration.md)
-- Runtime Home 경로 해석: [관리 CLI](admin-cli.md#runtime-home-selection)
+- 관리 Runtime Home 명령, 프로젝트 등록, 접점 등록: [관리 CLI](admin-cli.md)
 - 저장소 배치, 마이그레이션, 저장 효과: [저장소](storage.md)가 안내하는 저장소 담당 문서
 
 ## 프로세스 모델
 
-`harness-mcp`는 로컬 MCP stdio 프로세스입니다. 명령줄 인자가 없으면 MCP 호스트가 이를 자식 프로세스로 시작하고 stdin/stdout으로 통신합니다. TCP 리스너나 HTTP 리스너가 아닙니다.
+`harness-mcp`는 로컬 MCP stdio 프로세스입니다. MCP 호스트는 이를 자식 프로세스로 시작하고 stdin/stdout으로 통신합니다. TCP 리스너, HTTP 리스너, Unix-domain socket 리스너, 또는 그 밖의 네트워크 리스너가 아닙니다.
 
 명령줄 동작:
 
-- 명령줄 인자가 없으면 stdio MCP 루프를 시작합니다.
-- `harness-mcp --help`는 종료 코드 `0`으로 끝나며 하네스 환경 변수를 요구하지 않습니다.
-- `harness-mcp --version`은 `harness-mcp <package-version>`을 출력하고 종료 코드 `0`으로 끝나며 하네스 환경 변수를 요구하지 않습니다.
-- `harness-mcp --check`는 stdin 루프에 들어가지 않고 설정을 검증합니다.
-- 알 수 없는 옵션이나 추가 위치 인자는 사용법 오류입니다.
+- `harness-mcp`는 명령줄 인자 없이 시작합니다.
+- help, version, 서버 시작, 사전 점검을 위한 명령줄 플래그 모드는 기준 구현에 없습니다.
+- 현재 Rust 진입점은 명령줄 인자를 지원되는 모드 선택자로 사용하지 않습니다.
 
 종료 코드와 스트림 동작:
 
-- 성공한 help, version, 사전 점검, 정상 EOF 종료는 종료 코드 `0`으로 끝납니다.
-- 사용법 오류는 진단을 stderr에 쓰고 종료 코드 `2`로 끝납니다.
-- 시작 또는 사전 점검 중 환경/저장소 실패는 진단을 stderr에 쓰고 종료 코드 `1`로 끝납니다.
+- stdin EOF로 정상 종료하면 stdout을 플러시하고 종료 코드 `0`으로 끝납니다.
+- 시작 중 환경, JSON, 저장소 오류는 진단을 stderr에 쓰고 종료 코드 `1`로 끝납니다.
+- stdio 루프가 실행 중일 때 잘못된 JSON과 지원하지 않는 JSON-RPC 요청은 응답을 쓸 수 있으면 JSON-RPC 오류를 반환합니다.
 
 <a id="process-environment"></a>
 ## 프로세스 환경
@@ -56,9 +53,14 @@
 - `HARNESS_HOME`
 - `HARNESS_SURFACE_INSTANCE_ID`
 
-`harness-mcp --help`와 `harness-mcp --version`은 이 변수를 읽지 않습니다. stdio 루프와 `harness-mcp --check`는 설정된 Runtime Home과 바인딩 변수를 사용합니다.
+stdio 프로세스는 stdin 루프에 들어가기 전에 이 변수들을 사용합니다.
 
-Runtime Home 경로 해석은 관리 CLI와 공유되며 [관리 CLI](admin-cli.md#runtime-home-selection)가 담당합니다. 두 실행 파일은 같은 `HARNESS_HOME`과 기본 사용자 홈 규칙을 사용합니다.
+현재 MCP Runtime Home 경로 해석:
+
+1. `HARNESS_HOME`이 있으면 제공된 값을 그대로 사용합니다.
+2. `HARNESS_HOME`이 없으면 `HOME`이 필요하며 `HOME/.harness`를 사용합니다.
+3. MCP 프로세스는 `USERPROFILE`, `HOMEDRIVE`, `HOMEPATH` 대체 규칙을 사용하지 않습니다.
+4. MCP 프로세스는 시작 검증 전에 선택된 Runtime Home을 정규화하지 않습니다.
 
 ## 시작 검증
 
@@ -96,44 +98,15 @@ Runtime Home 경로 해석은 관리 CLI와 공유되며 [관리 CLI](admin-cli.
 
 ## 설정 사전 점검
 
-`harness-mcp --check`는 stdin 루프에 들어가지 않고 설정을 검증합니다.
+현재 Rust 실행 파일은 별도의 `harness-mcp --check` 사전 점검 모드를 구현하지 않습니다. 시작 검증은 프로세스 시작의 일부로 stdin 루프에 들어가기 전에 수행됩니다.
 
-성공 시 안정 출력은 줄 단위이며 아래 순서를 사용합니다.
+시작 검증 실패:
 
-```text
-configuration: valid
-transport: stdio
-runtime_home: <absolute path>
-project_id: <value>
-surface_id: <value>
-surface_instance_id: <value>
-interaction_role: agent|user_interaction
-access_classes: <comma-separated registered grants>
-baseline_workflow_access: full|partial|not_applicable
-missing_access_classes: <comma-separated values or empty>
-```
+- 프로세스 진입점을 통해 stderr에 진단을 씁니다.
+- 종료 코드 `1`로 끝납니다.
+- stdio 루프에 들어가지 않습니다.
 
-`agent` 접점의 경우:
-
-- `full`은 `baseline-workflow` 접근 등급 다섯 개가 모두 있음을 뜻합니다.
-- `partial`은 하나 이상이 없음을 뜻합니다.
-- `missing_access_classes`는 `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, `run_recording`의 표준 프로필 순서를 사용합니다.
-
-`user_interaction` 접점의 경우:
-
-- `baseline_workflow_access`는 `not_applicable`입니다.
-- `missing_access_classes`는 비워 둡니다.
-
-이 출력은 진단용 등록 정보입니다. 그 자체로 권한을 부여하지 않습니다.
-
-`--check` 동작:
-
-- stdin을 읽지 않습니다.
-- `Task`를 만들지 않습니다.
-- `state_version`을 증가시키지 않습니다.
-- 프로젝트나 접점을 등록하지 않습니다.
-- 애플리케이션 기록을 만들지 않습니다.
-- 일반적인 데이터베이스 열기 과정의 일부로 이미 정의된 저장소 스키마 검증이나 마이그레이션을 수행할 수 있습니다.
+시작 검증은 일반적인 데이터베이스 열기 과정의 일부로 이미 정의된 저장소 스키마 검증이나 마이그레이션을 수행할 수 있습니다. 그 자체로 프로젝트나 접점을 등록하거나, `Task`를 만들거나, `state_version`을 증가시키거나, 애플리케이션 기록을 만들지는 않습니다.
 
 ## MCP 와이어 동작
 

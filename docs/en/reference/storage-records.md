@@ -35,7 +35,6 @@ Harness stores baseline records in one local `Harness Runtime Home` and one proj
   registry.sqlite
   projects/
     PRJ-0001/
-      project.yaml
       state.sqlite
       artifacts/
         tmp/
@@ -43,11 +42,10 @@ Harness stores baseline records in one local `Harness Runtime Home` and one proj
 
 Storage placement:
 
-- `registry.sqlite` stores Runtime Home identity and minimal project registration.
+- `registry.sqlite` stores Runtime Home identity and project registration mapping, including the registered `repo_root`, `project_home`, project `state.sqlite` path, status, and storage metadata.
 - `projects/{project_id}/` is the Harness project home for one registered project. It is not the same location or authority as `repo_root`.
-- `project.yaml` stores static project configuration only.
 - `state.sqlite` stores project-local Core state for the registered project.
-- `artifacts/` is the project artifact store. `artifacts/tmp/` is transient staging space, not evidence authority.
+- `artifacts/` is the project artifact store when artifact storage is used. `artifacts/tmp/` is transient staging space when artifact staging requires it, not evidence authority. These directories need not exist immediately after project registration.
 
 Baseline SQLite table shape, indexes, foreign keys, migration tables, and constraints belong to [Storage DDL](storage-ddl.md).
 
@@ -71,7 +69,6 @@ Baseline storage persists only the record families defined by this baseline stor
 |---|---|---|---|
 | `registry.sqlite` | Runtime Home identity | Runtime identity | One stored `runtime_home_id`, schema/storage profile, and local registry metadata. |
 | `registry.sqlite` | Project registration | Project mapping | Registered project identity mapped to `repo_root` and `project_home`. |
-| project home | `project.yaml` | Static configuration | Static project configuration for one registered project. |
 | `state.sqlite` | `project_state` | Project state header | Storage profile, `state_version`, current `Task` pointer, and default surface pointer. |
 | `state.sqlite` | `surfaces` | Surface facts | Registered local surface facts needed for API envelope compatibility, actor-provenance role, capability display, and local-access posture. |
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, and current Change Unit pointer. |

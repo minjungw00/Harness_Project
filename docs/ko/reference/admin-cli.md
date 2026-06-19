@@ -9,7 +9,7 @@
 이 문서가 담당합니다.
 
 - `harness` 명령 이름, 명령줄 인자, 기본값, stdout/stderr 처리, 프로세스 종료 코드
-- 로컬 실행 파일의 Runtime Home 경로 선택
+- `harness` 관리 명령의 Runtime Home 경로 선택
 - 관리용 프로젝트와 접점 등록 기본값
 - `baseline-workflow` 로컬 등록 프로필 확장
 - 관리 명령과 공개 하네스 API 메서드 사이의 경계
@@ -20,7 +20,7 @@
 - `access_class` 값의 API 값 의미: [API 값 집합](api/schema-value-sets.md#access-class-values)
 - 접점 등록 의미, 확인된 접점 맥락, 행위자 출처, 역량 선언 경계: [에이전트 통합](agent-integration.md)
 - 런타임 데이터 경계 의미: [런타임 경계](runtime-boundaries.md)
-- MCP 프로세스 시작, stdio 프레이밍, `--check`, 응답 래핑, 종료: [MCP 전송](mcp-transport.md)
+- MCP 프로세스 시작, stdio 프레이밍, 응답 래핑, 종료: [MCP 전송](mcp-transport.md)
 
 ## 명령 모델
 
@@ -30,7 +30,6 @@
 
 ```text
 harness --help
-harness --version
 harness init [--runtime-home-id ID]
 harness project register --project-id ID --repo-root PATH [--status active]
 harness project list
@@ -43,7 +42,6 @@ harness surface list --project-id ID
 - 성공한 명령은 성공 출력을 stdout에 쓰고 종료 코드 `0`으로 끝납니다.
 - 사용법 오류는 진단을 stderr에 쓰고 종료 코드 `2`로 끝납니다.
 - 런타임, 환경, 저장소 오류는 진단을 stderr에 쓰고 종료 코드 `1`로 끝납니다.
-- `harness --version`은 `harness <package-version>`을 출력하고 종료 코드 `0`으로 끝나며 `Harness Runtime Home`을 요구하지 않습니다.
 
 지원하지 않는 것:
 
@@ -53,7 +51,7 @@ harness surface list --project-id ID
 <a id="runtime-home-selection"></a>
 ## Runtime Home 선택
 
-`harness`와 `harness-mcp`는 같은 Runtime Home 경로 해석 규칙을 사용합니다. `harness` 관리 CLI가 이 규칙을 담당하며, [MCP 전송](mcp-transport.md#process-environment)은 이 절로 연결합니다.
+`harness` 관리 CLI는 아래 Runtime Home 경로 해석 규칙을 사용합니다. `harness-mcp` 프로세스 환경과 현재 MCP Runtime Home 경로 해석은 [MCP 전송](mcp-transport.md#process-environment)이 담당합니다.
 
 해석 순서:
 

@@ -13,7 +13,7 @@
 제품 범위를 구현 작업으로 옮길 때는 아래 순서로 읽습니다.
 
 1. [범위](../reference/scope.md)에서 기준 범위와 지원 동작의 경계를 확인합니다.
-2. [구현 아키텍처](architecture.md)에서 가이드 수준의 계층 분리와 계획된 Rust 워크스페이스 형태를 확인합니다.
+2. [구현 아키텍처](architecture.md)에서 가이드 수준의 계층 분리와 현재 Rust 워크스페이스 형태를 확인합니다.
 3. 계약 질문마다 [참조 색인](../reference/README.md)과 [`docs/doc-index.yaml`](../../doc-index.yaml)에서 적용되는 담당 문서를 찾습니다.
 4. API, 저장소, 현재 적용 범위, 사용자 소유 판단, 닫기 준비 상태를 가로지르는 권한 개념은 [Core 모델](../reference/core-model.md)에서 확인합니다.
 5. 지원되는 공개 메서드 목록과 메서드 담당 문서 경로는 [API 메서드](../reference/api/methods.md)를 사용합니다.

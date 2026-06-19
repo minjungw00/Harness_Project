@@ -19,28 +19,31 @@ Harness is the local work-authority product/system for AI-assisted product work.
 
 ```mermaid
 flowchart LR
-  surface[Agent/User Surface]
-  mcp[MCP Adapter]
-  cli[CLI Adapter]
+  host[Agent or MCP Host]
+  mcp[harness-mcp MCP stdio adapter]
+  operator[Operator or Administrator]
+  cli[harness administrative CLI]
   core[Harness Core]
-  sqlite[(SQLite Store)]
+  sqlite[(Project state SQLite)]
+  bootstrap[(Runtime Home bootstrap storage)]
   artifacts[(Artifact Store)]
   runtime[Harness Runtime Home]
   product[Product Repository]
 
-  surface --> mcp
-  surface --> cli
+  host --> mcp
   mcp --> core
-  cli --> core
+  operator --> cli
+  cli --> bootstrap
   core --> sqlite
   core --> artifacts
+  bootstrap --> runtime
   sqlite --> runtime
   artifacts --> runtime
   product -. read or observed product context .-> core
-  surface -. product-file tools outside public API .-> product
+  host -. product-file tools outside public API .-> product
 ```
 
-Read the solid path as the implementation call path: an agent or user surface reaches Core through an MCP or CLI adapter, and Core uses storage-facing implementations under `Harness Runtime Home`. Read the dotted paths as boundary reminders: `Product Repository` is a separate product-file boundary that Core may read or observe through owner-defined inputs, while actual product-file tools run outside the public Harness API.
+Read the solid paths as two distinct current implementation paths. An agent or MCP host starts `harness-mcp`, reaches Harness Core through the MCP stdio adapter, and Core uses project-state and artifact storage under `Harness Runtime Home`. An operator or administrator uses the `harness` administrative CLI for Runtime Home, project, and surface bootstrap storage; that path is not a public Harness workflow-method adapter and does not imply that the CLI invokes public Core method services. Read the dotted paths as boundary reminders: `Product Repository` is a separate product-file boundary that Core may read or observe through owner-defined inputs, while actual product-file tools run outside the public Harness API.
 
 The diagram is an implementation guide. It is not a storage layout, a security boundary, a method contract, or proof that any runtime exists.
 
@@ -48,16 +51,16 @@ The diagram is an implementation guide. It is not a storage layout, a security b
 
 | Layer | Guide-level responsibility | Does not own |
 |---|---|---|
-| Agent/User Surface | Presents Harness context to a user or agent and invokes a supported adapter. | Core authority, storage authority, security guarantees, or product-file authority. |
-| MCP Adapter | Translates MCP transport into Core-facing calls and returns owner-shaped results. | Core meaning, method behavior, schema meaning, or storage effects. |
-| CLI Adapter | Translates command-line input and output into Core-facing calls. | Core meaning, method behavior, schema meaning, or storage effects. |
+| Agent or MCP Host | Starts or communicates with a supported MCP adapter and may use product-file tools outside the public API path. | Core authority, storage authority, security guarantees, or product-file authority. |
+| MCP Adapter | Translates MCP stdio transport into Core-facing calls and returns owner-shaped results. | Core meaning, method behavior, schema meaning, or storage effects. |
+| Administrative CLI | Initializes and registers local Runtime Home, project, and surface bootstrap records. | Public Harness workflow methods, Core meaning, method behavior, schema meaning, or storage effects. |
 | Harness Core | Evaluates owner-defined authority decisions and coordinates storage-facing interfaces. | Adapter transport, DDL, artifact byte lifecycle, or security guarantee wording. |
 | SQLite Store | Implements the record store behind Core according to storage owners. | API behavior, Core semantics, or table detail in this guide. |
 | Artifact Store | Implements staged and persistent artifact storage support according to artifact owners. | Artifact lifecycle contracts or schema fields in this guide. |
 | `Harness Runtime Home` | Holds Harness runtime data as runtime and storage owners define. | `Product Repository`, server installation storage by default, or a security boundary by itself. |
 | `Product Repository` | Holds the user's product files that may be read, observed, or changed outside the public API path. | Harness runtime state, Core records, artifact authority, or `Harness Runtime Home`. |
 
-Core owns authority decisions defined by the Reference owners. Adapters translate transport only. Core-facing code must stay independent of CLI and MCP adapter layers; adapters may depend on Core-facing interfaces.
+Core owns authority decisions defined by the Reference owners. The MCP adapter translates public-method transport only. The administrative CLI performs local bootstrap and registration work only. Core-facing code must stay independent of CLI and MCP adapter layers; the MCP adapter may depend on Core-facing interfaces.
 
 At guide level, MCP adapter startup selects one project, one surface, and one surface instance for a session, then derives requested access per public method call from the method and typed params. Exact session binding, access derivation, and grant rules stay with [Agent Integration](../reference/agent-integration.md) and the method owners.
 
@@ -70,8 +73,8 @@ For Rust implementation work, keep the baseline workspace narrow and layered:
 | `crates/harness-types` | Shared Rust types, identifiers, result enums, and serialization helpers that mirror owner-defined schemas without becoming the schema owner. |
 | `crates/harness-store` | SQLite-backed record-store interfaces, artifact-store plumbing, migrations, and storage test helpers routed to storage owners. |
 | `crates/harness-core` | Core-facing services that apply owner-defined transitions, authority checks, idempotency calls, and store coordination. |
-| `crates/harness-cli` | CLI adapter commands that call Core-facing services and format user-visible output. |
-| `crates/harness-mcp` | MCP adapter surface that maps MCP requests to Core-facing services and returns owner-shaped responses. |
+| `crates/harness-cli` | Local administrative/bootstrap commands for Runtime Home initialization, project registration, and surface registration. |
+| `crates/harness-mcp` | MCP stdio adapter that maps public Harness tools to Core-facing services and returns owner-shaped responses. |
 | `crates/harness-test-support` | Test fixtures, disposable runtime-home helpers, and shared assertions for implementation tests. |
 
 Crate names and module boundaries are implementation placement guidance. Public method names, schemas, storage effects, and value meanings still come from the Reference owners.
@@ -100,6 +103,8 @@ Use the method owners for exact behavior. Use storage owners for persistence eff
 |---|---|
 | Core authority concepts, `Write Authorization`, user-owned judgment, evidence, acceptance, and residual-risk boundaries | [Core Model](../reference/core-model.md) |
 | `Product Repository`, `Harness Runtime Home`, `Harness Server`, and runtime location separation | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| `harness` administrative/bootstrap CLI behavior | [Administrative CLI](../reference/admin-cli.md) |
+| `harness-mcp` MCP stdio process behavior | [MCP Transport](../reference/mcp-transport.md) |
 | Supported public methods and method-specific behavior | [API Methods](../reference/api/methods.md), then the method owner |
 | `harness.prepare_write` behavior | [`harness.prepare_write`](../reference/api/method-prepare-write.md) |
 | `harness.record_run` behavior | [`harness.record_run`](../reference/api/method-record-run.md) |

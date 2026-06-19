@@ -1,6 +1,6 @@
 # MCP transport reference
 
-This document owns the local `harness-mcp` process contract: process startup, stdio transport framing, startup binding, configuration preflight, MCP response wrapping, and shutdown/reconnection behavior.
+This document owns the local `harness-mcp` process contract: process startup, process environment, stdio transport framing, startup binding and validation, MCP response wrapping, and shutdown/reconnection behavior.
 
 It does not define public Harness API method behavior, public request or response schemas, access-class meanings, surface registration meaning, storage record layout, security guarantees, or Core authority semantics.
 
@@ -8,11 +8,10 @@ It does not define public Harness API method behavior, public request or respons
 
 This document owns:
 
-- `harness-mcp` command-line behavior and exit codes
-- required and optional process environment variables
+- `harness-mcp` process startup and exit behavior
+- required and optional process environment variables, including MCP Runtime Home resolution
 - stdio JSON-RPC framing and supported MCP request methods
 - MCP startup validation, fixed process binding, and instance selection
-- `harness-mcp --check` diagnostic output
 - MCP `tools/call` response wrapping
 - process shutdown and reconnection behavior
 
@@ -22,26 +21,24 @@ This document does not own:
 - public Harness request and response schemas; see [API Schema Core](api/schema-core.md)
 - access-class value meanings; see [API Value Sets](api/schema-value-sets.md#access-class-values)
 - surface registration meaning, access derivation, fixed surface-context meaning, and actor provenance; see [Agent Integration](agent-integration.md)
-- Runtime Home path resolution; see [Administrative CLI](admin-cli.md#runtime-home-selection)
+- administrative Runtime Home commands, project registration, and surface registration; see [Administrative CLI](admin-cli.md)
 - storage layout, migrations, and storage effects; see the storage owners through [Storage](storage.md)
 
 ## Process model
 
-`harness-mcp` is a local MCP stdio process. With no command-line arguments, an MCP host starts it as a child process and communicates through stdin/stdout. It is not a TCP listener or HTTP listener.
+`harness-mcp` is a local MCP stdio process. An MCP host starts it as a child process and communicates through stdin/stdout. It is not a TCP listener, HTTP listener, Unix-domain socket listener, or other network listener.
 
 Command-line behavior:
 
-- No command-line arguments starts the stdio MCP loop.
-- `harness-mcp --help` exits with code `0` and requires no Harness environment variables.
-- `harness-mcp --version` prints `harness-mcp <package-version>`, exits with code `0`, and requires no Harness environment variables.
-- `harness-mcp --check` validates configuration without entering the stdin loop.
-- Unknown options or extra positional arguments are usage errors.
+- Launch `harness-mcp` without command-line arguments.
+- No command-line flag mode is baseline-implemented for help, version, server startup, or preflight.
+- The current Rust entry point does not use command-line arguments as a supported mode selector.
 
 Exit and stream behavior:
 
-- Successful help, version, preflight, or normal EOF shutdown exits with code `0`.
-- Usage errors write diagnostics to stderr and exit with code `2`.
-- Startup or preflight environment/storage failures write diagnostics to stderr and exit with code `1`.
+- Normal stdin EOF shutdown flushes stdout and exits with code `0`.
+- Startup environment, JSON, or storage failures write diagnostics to stderr and exit with code `1`.
+- Once the stdio loop is running, malformed JSON and unsupported JSON-RPC requests return JSON-RPC errors when a response can be written.
 
 ## Process environment
 
@@ -55,9 +52,14 @@ Optional:
 - `HARNESS_HOME`
 - `HARNESS_SURFACE_INSTANCE_ID`
 
-`harness-mcp --help` and `harness-mcp --version` do not read these variables. The stdio loop and `harness-mcp --check` use the configured Runtime Home and binding variables.
+The stdio process uses these variables before entering the stdin loop.
 
-Runtime Home path resolution is shared with the administrative CLI and is owned by [Administrative CLI](admin-cli.md#runtime-home-selection). Both executables use the same `HARNESS_HOME` and default user-home rules.
+Current MCP Runtime Home resolution:
+
+1. If `HARNESS_HOME` is present, use it as supplied.
+2. If `HARNESS_HOME` is absent, require `HOME` and use `HOME/.harness`.
+3. The MCP process does not use `USERPROFILE`, `HOMEDRIVE`, or `HOMEPATH` fallback rules.
+4. The MCP process does not canonicalize the selected Runtime Home before startup validation.
 
 ## Startup validation
 
@@ -95,44 +97,15 @@ The public `ToolEnvelope.project_id` and `ToolEnvelope.surface_id` values in eac
 
 ## Configuration preflight
 
-`harness-mcp --check` validates configuration without entering the stdin loop.
+The current Rust executable does not implement a separate `harness-mcp --check` preflight mode. Startup validation happens as part of process startup before entering the stdin loop.
 
-Stable successful output is line-oriented and uses this order:
+Startup validation failure:
 
-```text
-configuration: valid
-transport: stdio
-runtime_home: <absolute path>
-project_id: <value>
-surface_id: <value>
-surface_instance_id: <value>
-interaction_role: agent|user_interaction
-access_classes: <comma-separated registered grants>
-baseline_workflow_access: full|partial|not_applicable
-missing_access_classes: <comma-separated values or empty>
-```
+- writes a diagnostic to stderr through the process entry point
+- exits with code `1`
+- does not enter the stdio loop
 
-For an `agent` surface:
-
-- `full` means all five `baseline-workflow` access classes are present.
-- `partial` means at least one is absent.
-- `missing_access_classes` uses the canonical profile order: `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, `run_recording`.
-
-For a `user_interaction` surface:
-
-- `baseline_workflow_access` is `not_applicable`.
-- `missing_access_classes` is empty.
-
-This output is diagnostic registration information. It does not itself grant authority.
-
-`--check` behavior:
-
-- It does not read stdin.
-- It does not create a `Task`.
-- It does not increment `state_version`.
-- It does not register a project or surface.
-- It does not create application records.
-- It may perform already-defined storage schema validation or migration as part of normal database opening.
+Startup validation may perform already-defined storage schema validation or migration as part of normal database opening. It does not by itself register a project or surface, create a `Task`, increment `state_version`, or create application records.
 
 ## MCP wire behavior
 

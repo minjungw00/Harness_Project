@@ -19,28 +19,31 @@
 
 ```mermaid
 flowchart LR
-  surface[에이전트/사용자 접점]
-  mcp[MCP 어댑터]
-  cli[CLI 어댑터]
+  host[에이전트 또는 MCP 호스트]
+  mcp[harness-mcp MCP stdio 어댑터]
+  operator[운영자 또는 관리자]
+  cli[harness 관리 CLI]
   core[Harness Core]
-  sqlite[(SQLite Store)]
+  sqlite[(프로젝트 상태 SQLite)]
+  bootstrap[(Runtime Home 부트스트랩 저장소)]
   artifacts[(Artifact Store)]
   runtime[Harness Runtime Home]
   product[Product Repository]
 
-  surface --> mcp
-  surface --> cli
+  host --> mcp
   mcp --> core
-  cli --> core
+  operator --> cli
+  cli --> bootstrap
   core --> sqlite
   core --> artifacts
+  bootstrap --> runtime
   sqlite --> runtime
   artifacts --> runtime
   product -. 읽기 또는 관찰된 제품 맥락 .-> core
-  surface -. 공개 API 밖의 제품 파일 도구 .-> product
+  host -. 공개 API 밖의 제품 파일 도구 .-> product
 ```
 
-실선 경로는 구현 호출 경로로 읽습니다. 에이전트나 사용자 접점은 MCP 또는 CLI 어댑터를 통해 Core에 도달하고, Core는 `Harness Runtime Home` 아래의 저장소 쪽 구현을 사용합니다. 점선 경로는 경계 알림입니다. `Product Repository`는 별도의 제품 파일 경계이며, Core는 담당 문서가 정의한 입력을 통해 그 내용을 읽거나 관찰할 수 있습니다. 실제 제품 파일 도구는 공개 Harness API 밖에서 실행됩니다.
+실선 경로는 현재 구현에 있는 두 경로로 나누어 읽습니다. 에이전트 또는 MCP 호스트는 `harness-mcp`를 시작하고 MCP stdio 어댑터를 통해 Harness Core에 도달하며, Core는 `Harness Runtime Home` 아래의 프로젝트 상태 저장소와 아티팩트 저장소를 사용합니다. 운영자 또는 관리자는 `harness` 관리 CLI로 Runtime Home, 프로젝트, 접점 부트스트랩 저장소를 초기화하거나 등록합니다. 이 경로는 공개 Harness 워크플로 메서드 어댑터가 아니며 CLI가 공개 Core 메서드 서비스를 호출한다는 뜻이 아닙니다. 점선 경로는 경계 알림입니다. `Product Repository`는 별도의 제품 파일 경계이며, Core는 담당 문서가 정의한 입력을 통해 그 내용을 읽거나 관찰할 수 있습니다. 실제 제품 파일 도구는 공개 Harness API 밖에서 실행됩니다.
 
 이 다이어그램은 구현 가이드입니다. 저장소 레이아웃, 보안 경계, 메서드 계약, 어떤 런타임이 존재한다는 증명이 아닙니다.
 
@@ -48,16 +51,16 @@ flowchart LR
 
 | 계층 | 가이드 수준 책임 | 담당하지 않는 것 |
 |---|---|---|
-| 에이전트/사용자 접점 | 사용자나 에이전트에게 하네스 맥락을 보여 주고 지원되는 어댑터를 호출합니다. | Core 권한, 저장소 권한, 보안 보장, 제품 파일 권한. |
-| MCP 어댑터 | MCP 전송을 Core 쪽 호출로 바꾸고 담당 문서가 정한 형태의 결과를 돌려줍니다. | Core 의미, 메서드 동작, 스키마 의미, 저장 효과. |
-| CLI 어댑터 | 명령줄 입력과 출력을 Core 쪽 호출로 바꿉니다. | Core 의미, 메서드 동작, 스키마 의미, 저장 효과. |
+| 에이전트 또는 MCP 호스트 | 지원되는 MCP 어댑터를 시작하거나 통신하며 공개 API 경로 밖에서 제품 파일 도구를 사용할 수 있습니다. | Core 권한, 저장소 권한, 보안 보장, 제품 파일 권한. |
+| MCP 어댑터 | MCP stdio 전송을 Core 쪽 호출로 바꾸고 담당 문서가 정한 형태의 결과를 돌려줍니다. | Core 의미, 메서드 동작, 스키마 의미, 저장 효과. |
+| 관리 CLI | 로컬 Runtime Home, 프로젝트, 접점 부트스트랩 기록을 초기화하고 등록합니다. | 공개 Harness 워크플로 메서드, Core 의미, 메서드 동작, 스키마 의미, 저장 효과. |
 | Harness Core | 담당 문서가 정의한 권한 결정을 평가하고 저장소 쪽 인터페이스를 조율합니다. | 어댑터 전송, DDL, 아티팩트 본문 바이트 생명주기, 보안 보장 표현. |
 | SQLite Store | 저장소 담당 문서에 따라 Core 뒤의 기록 저장 계층을 구현합니다. | API 동작, Core 의미, 이 가이드 안의 테이블 세부사항. |
 | Artifact Store | 아티팩트 담당 문서에 따라 스테이징된 아티팩트와 영구 아티팩트 저장소 지원을 구현합니다. | 이 가이드 안의 아티팩트 생명주기 계약이나 스키마 필드. |
 | `Harness Runtime Home` | 런타임과 저장소 담당 문서가 정의하는 하네스 런타임 데이터를 담습니다. | `Product Repository`, 기본 서버 설치 저장소, 그 자체만으로 성립하는 보안 경계. |
 | `Product Repository` | 공개 API 경로 밖에서 읽거나 관찰하거나 바뀔 수 있는 사용자의 제품 파일을 담습니다. | 하네스 런타임 상태, Core 기록, 아티팩트 권한, `Harness Runtime Home`. |
 
-Core는 참조 담당 문서가 정의한 권한 결정을 담당합니다. 어댑터는 전송만 변환합니다. Core 쪽 코드는 CLI와 MCP 어댑터 계층에 의존하지 않아야 하며, 어댑터는 Core 쪽 인터페이스에 의존할 수 있습니다.
+Core는 참조 담당 문서가 정의한 권한 결정을 담당합니다. MCP 어댑터는 공개 메서드 전송만 변환합니다. 관리 CLI는 로컬 부트스트랩과 등록 작업만 수행합니다. Core 쪽 코드는 CLI와 MCP 어댑터 계층에 의존하지 않아야 하며, MCP 어댑터는 Core 쪽 인터페이스에 의존할 수 있습니다.
 
 가이드 수준에서 MCP 어댑터 시작은 세션에 대해 하나의 프로젝트, 하나의 접점, 하나의 접점 인스턴스를 선택한 뒤, 공개 메서드 호출마다 메서드와 타입 지정 params에서 요청 접근을 파생합니다. 정확한 세션 바인딩, 접근 파생, 허용 규칙은 [에이전트 통합](../reference/agent-integration.md)과 메서드 담당 문서에 둡니다.
 
@@ -70,8 +73,8 @@ Rust 구현 작업에서는 기준 워크스페이스를 좁고 계층적으로 
 | `crates/harness-types` | 담당 문서가 정의한 스키마를 반영하되 스키마 담당 문서가 되지는 않는 공유 Rust 타입, 식별자, 결과 enum, 직렬화 보조 도구. |
 | `crates/harness-store` | SQLite 기반 기록 저장소 인터페이스, 아티팩트 저장소 연결부, 마이그레이션, 저장소 담당 문서로 경로가 이어지는 저장소 테스트 보조 도구. |
 | `crates/harness-core` | 담당 문서가 정의한 전이, 권한 점검, idempotency 호출, 저장소 조율을 적용하는 Core 쪽 서비스. |
-| `crates/harness-cli` | Core 쪽 서비스를 호출하고 사용자에게 보이는 출력을 형식화하는 CLI 어댑터 명령. |
-| `crates/harness-mcp` | MCP 요청을 Core 쪽 서비스로 연결하고 담당 문서가 정한 형태의 응답을 돌려주는 MCP 어댑터 접점. |
+| `crates/harness-cli` | Runtime Home 초기화, 프로젝트 등록, 접점 등록을 위한 로컬 관리/부트스트랩 명령. |
+| `crates/harness-mcp` | 공개 Harness 도구를 Core 쪽 서비스로 연결하고 담당 문서가 정한 형태의 응답을 돌려주는 MCP stdio 어댑터. |
 | `crates/harness-test-support` | 구현 테스트를 위한 픽스처, 폐기 가능한 런타임 홈 보조 도구, 공유 검증 도우미. |
 
 크레이트 이름과 모듈 경계는 구현 배치 지침입니다. 공개 메서드 이름, 스키마, 저장 효과, 값 의미는 계속 참조 담당 문서에서 나옵니다.
@@ -100,6 +103,8 @@ Rust 구현 작업에서는 기준 워크스페이스를 좁고 계층적으로 
 |---|---|
 | Core 권한 개념, `Write Authorization`, 사용자 소유 판단, 증거, 수락, 잔여 위험 경계 | [Core 모델](../reference/core-model.md) |
 | `Product Repository`, `Harness Runtime Home`, `Harness Server`, 런타임 위치 분리 | [런타임 경계](../reference/runtime-boundaries.md) |
+| `harness` 관리/부트스트랩 CLI 동작 | [관리 CLI](../reference/admin-cli.md) |
+| `harness-mcp` MCP stdio 프로세스 동작 | [MCP 전송](../reference/mcp-transport.md) |
 | 지원되는 공개 메서드와 메서드별 동작 | [API 메서드](../reference/api/methods.md), 그다음 메서드 담당 문서 |
 | `harness.prepare_write` 동작 | [`harness.prepare_write`](../reference/api/method-prepare-write.md) |
 | `harness.record_run` 동작 | [`harness.record_run`](../reference/api/method-record-run.md) |

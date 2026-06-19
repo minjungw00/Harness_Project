@@ -9,7 +9,7 @@ It does not define public API method behavior, API schemas, access-class value m
 This document owns:
 
 - `harness` command names, command-line arguments, defaults, stdout/stderr routing, and process exit codes
-- Runtime Home path selection for local executables
+- Runtime Home path selection for `harness` administrative commands
 - administrative project and surface registration defaults
 - local registration profile expansion for `baseline-workflow`
 - the boundary between administrative commands and public Harness API methods
@@ -20,7 +20,7 @@ This document does not own:
 - API value meanings for `access_class` values; see [API Value Sets](api/schema-value-sets.md#access-class-values)
 - surface registration meaning, verified surface context, actor provenance, and capability declaration boundaries; see [Agent Integration](agent-integration.md)
 - runtime data boundary meaning; see [Runtime Boundaries](runtime-boundaries.md)
-- MCP process startup, stdio framing, `--check`, response wrapping, and shutdown; see [MCP Transport](mcp-transport.md)
+- MCP process startup, stdio framing, response wrapping, and shutdown; see [MCP Transport](mcp-transport.md)
 
 ## Command model
 
@@ -30,7 +30,6 @@ Supported baseline commands:
 
 ```text
 harness --help
-harness --version
 harness init [--runtime-home-id ID]
 harness project register --project-id ID --repo-root PATH [--status active]
 harness project list
@@ -43,7 +42,6 @@ Exit and stream behavior:
 - Successful commands write success output to stdout and exit with code `0`.
 - Usage errors write diagnostics to stderr and exit with code `2`.
 - Runtime, environment, or storage errors write diagnostics to stderr and exit with code `1`.
-- `harness --version` prints `harness <package-version>`, exits with code `0`, and does not require a `Harness Runtime Home`.
 
 Not supported:
 
@@ -52,7 +50,7 @@ Not supported:
 
 ## Runtime Home selection
 
-Both `harness` and `harness-mcp` use the same Runtime Home path resolution rules. The `harness` administrative CLI is the owner for these rules; [MCP Transport](mcp-transport.md#process-environment) routes here.
+The `harness` administrative CLI uses these Runtime Home path resolution rules. `harness-mcp` process environment and current MCP Runtime Home resolution are owned by [MCP Transport](mcp-transport.md#process-environment).
 
 Resolution order:
 

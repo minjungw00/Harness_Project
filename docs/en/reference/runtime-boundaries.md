@@ -21,7 +21,7 @@ Harness keeps product-file, server/runtime, and runtime-data boundaries distinct
 | Boundary | Definition | Must not infer |
 |---|---|---|
 | `Product Repository` | The user's product-file boundary: project source, product documentation, tests, configuration, and other project files. | It is not Harness runtime state, not `Harness Runtime Home`, and not proof of Harness authority. |
-| `Harness Server` or other runtime process resources | The serving/runtime component, process, package, application resources, and configuration used to run Harness behavior. | It is not Harness as a whole, not Core, not the local authority record, and not automatically the runtime data location. |
+| `Harness Server` or other runtime process resources | The serving/runtime component, process, package, application resources, and configuration used to run Harness behavior. | It is not Harness as a whole, not Core, not the local authority record, not automatically the runtime data location, and not inherently a network listener. |
 | `Harness Runtime Home` | The runtime storage location for Harness-owned records, local runtime metadata, and artifact data as storage/runtime owners define them. | It is not the `Product Repository`, not automatically a security boundary, and not isolation by default. |
 
 <a id="runtime-location-product-repository"></a>
@@ -64,6 +64,7 @@ Does not imply:
 May claim:
 - The runtime process mediates Harness API behavior and Harness records through documented owner contracts.
 - Installation resources and runtime data can live in different locations.
+- In the baseline local Rust implementation, an MCP host starts `harness-mcp` as a child process and communicates through stdio.
 
 Must not claim:
 - `Harness Server` is the Harness product/system as a whole.
@@ -71,6 +72,13 @@ Must not claim:
 - Installing or running Harness from a directory makes that directory `Harness Runtime Home`.
 - The installation location proves that runtime data exists there.
 - The installation path grants Harness authority, security authority, or product-file write authority.
+- The term `Harness Server` by itself means a TCP, HTTP, socket, or other network listener.
+
+### Baseline local MCP process
+
+The current local Rust MCP runtime is the `harness-mcp` stdio process. An MCP host starts it as a child process, passes configuration through process environment, and exchanges line-delimited JSON-RPC through stdin/stdout. The baseline process opens no TCP, HTTP, Unix-domain socket, or other network listener.
+
+Exact executable behavior, environment variables, framing, startup validation or preflight behavior, response wrapping, shutdown, and reconnection rules belong to [MCP Transport](mcp-transport.md). This runtime-boundaries owner only keeps the process, location, and non-inference boundaries distinct.
 
 <a id="runtime-location-runtime-home"></a>
 ### `Harness Runtime Home`

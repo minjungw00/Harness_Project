@@ -13,7 +13,7 @@ Harness is the local work-authority product/system for AI-assisted product work.
 Use this path when turning product scope into implementation work:
 
 1. Confirm the baseline scope and supported behavior boundary in [Scope](../reference/scope.md).
-2. Read [Implementation Architecture](architecture.md) for guide-level layer separation and the planned Rust workspace shape.
+2. Read [Implementation Architecture](architecture.md) for guide-level layer separation and the current Rust workspace shape.
 3. Use the [Reference Index](../reference/README.md) and [`docs/doc-index.yaml`](../../doc-index.yaml) to choose the applicable owner for each contract question.
 4. Read [Core Model](../reference/core-model.md) for authority concepts that cross APIs, storage, current scope, user-owned judgment, and close readiness.
 5. Use [API Methods](../reference/api/methods.md) for the supported public method list and method-owner routing.

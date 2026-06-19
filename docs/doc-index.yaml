@@ -404,7 +404,7 @@ documents:
     owner_for:
       - "local `harness` administrative and bootstrap CLI command contract"
       - "`harness` command-line arguments, defaults, stdout and stderr routing, and exit codes"
-      - "Runtime Home path selection rules for local executables"
+      - "Runtime Home path selection rules for `harness` administrative commands"
       - "administrative project registration command behavior"
       - "administrative surface registration command behavior"
       - "`baseline-workflow` local registration profile expansion"
@@ -417,7 +417,7 @@ documents:
       - "storage record layout or storage effects"
       - "security guarantee meanings"
       - "Core authority semantics"
-      - "MCP stdio transport framing, response wrapping, preflight output, or shutdown"
+      - "MCP stdio transport framing, response wrapping, startup validation, or shutdown"
     depends_on:
       - "reference.runtime-boundaries"
       - "reference.agent-integration"
@@ -438,7 +438,7 @@ documents:
       - "MCP stdio process startup and exit behavior"
       - "MCP process environment variables"
       - "MCP startup validation and fixed process binding"
-      - "`harness-mcp --check` diagnostic preflight output"
+      - "MCP Runtime Home environment resolution"
       - "line-delimited JSON-RPC over stdio"
       - "MCP supported request method set"
       - "`tools/call` Harness response wrapping"

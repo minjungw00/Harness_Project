@@ -19,7 +19,7 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 
 - 접점별 사용 흐름: [접점별 사용 레시피](../use/surface-recipes.md)
 - API 요청 래퍼, 응답 분기, 스키마 형태, 메서드 접근 요구사항, 접근 등급 값 이름: [API 코어 스키마](api/schema-core.md), [API 메서드](api/methods.md), 메서드 담당 문서, [API 값 집합](api/schema-value-sets.md)
-- `harness-mcp` 실행 파일 시작, 프로세스 환경, stdio 프레이밍, 설정 사전 점검, 응답 래핑, 종료: [MCP 전송](mcp-transport.md)
+- `harness-mcp` 실행 파일 시작, 프로세스 환경, stdio 프레이밍, 시작 검증, 응답 래핑, 종료: [MCP 전송](mcp-transport.md)
 - 저장소 배치, 아티팩트 생명주기, 스테이징 핸들 검증: [참조 색인](README.md)에서 고르는 저장소와 아티팩트 담당 문서
 - 보안 보장 의미나 접근 경계 표현: [보안](security.md)
 - 권한과 파생 표시의 구분 규칙: [상태 보기와 템플릿 표시 경계](projection-and-templates.md)
@@ -163,7 +163,7 @@ VerifiedActorContext:
 담당 문서 링크:
 - 정확한 요청 래퍼와 응답 형태는 [API 코어 스키마](api/schema-core.md), [API 메서드](api/methods.md), 메서드 담당 문서가 담당합니다.
 - 접근 등급 값은 [API 값 집합](api/schema-value-sets.md)이 담당합니다.
-- `harness-mcp` 시작, 환경 변수, stdio 프레이밍, 사전 점검 진단, 응답 래핑, 종료는 [MCP 전송](mcp-transport.md)이 담당합니다.
+- `harness-mcp` 시작, 환경 변수, stdio 프레이밍, 시작 검증, 응답 래핑, 종료는 [MCP 전송](mcp-transport.md)이 담당합니다.
 
 ## 역량 선언
 
