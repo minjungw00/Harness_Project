@@ -276,6 +276,16 @@ pub struct RunInsert {
     pub metadata_json: String,
 }
 
+/// Stored Run facts needed when resolving close-basis references.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RunRecord {
+    pub project_id: String,
+    pub run_id: String,
+    pub task_id: String,
+    pub change_unit_id: Option<String>,
+    pub status: String,
+}
+
 /// Storage input for promoting one staged artifact to a persistent artifact.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArtifactPromotion {
@@ -805,6 +815,11 @@ impl CoreProjectStore {
             run_id,
             task_id,
         )
+    }
+
+    /// Reads one committed Run row by exact project-local identity.
+    pub fn run_record(&self, run_id: &str) -> StoreResult<Option<RunRecord>> {
+        run_record(&self.conn, &self.project.project_id, run_id)
     }
 
     /// Reads one staged artifact row by exact project-local handle identity.
@@ -2844,6 +2859,34 @@ fn write_authorization_record_from_row(
         attempt_scope_json: row.get(6)?,
         expires_at: row.get(7)?,
         created_at: row.get(8)?,
+    })
+}
+
+fn run_record(conn: &Connection, project_id: &str, run_id: &str) -> StoreResult<Option<RunRecord>> {
+    conn.query_row(
+        "SELECT
+            project_id,
+            run_id,
+            task_id,
+            change_unit_id,
+            status
+         FROM runs
+         WHERE project_id = ?1
+           AND run_id = ?2",
+        params![project_id, run_id],
+        run_record_from_row,
+    )
+    .optional()
+    .map_err(StoreError::from)
+}
+
+fn run_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<RunRecord> {
+    Ok(RunRecord {
+        project_id: row.get(0)?,
+        run_id: row.get(1)?,
+        task_id: row.get(2)?,
+        change_unit_id: row.get(3)?,
+        status: row.get(4)?,
     })
 }
 

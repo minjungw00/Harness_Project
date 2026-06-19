@@ -356,13 +356,21 @@ fn risk_id_set(ids: &[RiskId]) -> BTreeSet<RiskId> {
 }
 
 fn state_refs_match(left: &[StateRecordRef], right: &[StateRecordRef]) -> bool {
-    let mut left_keys = left.iter().map(state_ref_sort_key).collect::<Vec<_>>();
-    let mut right_keys = right.iter().map(state_ref_sort_key).collect::<Vec<_>>();
+    let mut left_keys = left.iter().map(state_ref_identity_key).collect::<Vec<_>>();
+    let mut right_keys = right.iter().map(state_ref_identity_key).collect::<Vec<_>>();
     left_keys.sort();
     right_keys.sort();
     left_keys == right_keys
 }
 
-fn state_ref_sort_key(record_ref: &StateRecordRef) -> String {
-    serde_json::to_string(record_ref).unwrap_or_default()
+fn state_ref_identity_key(record_ref: &StateRecordRef) -> (String, String, String, Option<String>) {
+    (
+        serde_json::to_string(&record_ref.record_kind).unwrap_or_default(),
+        record_ref.record_id.as_str().to_owned(),
+        record_ref.project_id.as_str().to_owned(),
+        record_ref
+            .task_id
+            .as_ref()
+            .map(|task_id| task_id.as_str().to_owned()),
+    )
 }

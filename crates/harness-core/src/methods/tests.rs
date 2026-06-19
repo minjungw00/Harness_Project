@@ -427,6 +427,22 @@ fn response_event_id(response_value: &Value) -> String {
         .to_owned()
 }
 
+fn test_state_record_ref(
+    record_kind: StateRecordKind,
+    record_id: &str,
+    project_id: &str,
+    task_id: &str,
+    state_version: Option<u64>,
+) -> StateRecordRef {
+    StateRecordRef {
+        record_kind,
+        record_id: RecordId::new(record_id),
+        project_id: ProjectId::new(project_id),
+        task_id: Some(TaskId::new(task_id)).into(),
+        state_version: state_version.into(),
+    }
+}
+
 #[test]
 fn status_is_read_only_including_dry_run() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
@@ -2795,9 +2811,13 @@ fn record_run_non_null_close_assessment_creates_current_basis() -> Result<(), Bo
         response.response_value["current_close_basis"]["residual_risks"],
         json!([])
     );
-    assert_eq!(
-        response.response_value["current_close_basis"]["result_refs"][0]["record_kind"],
-        "run"
+    assert!(
+        response.response_value["current_close_basis"]["result_refs"]
+            .as_array()
+            .expect("result_refs should be present")
+            .iter()
+            .filter_map(|record_ref| record_ref["record_kind"].as_str())
+            .any(|kind| kind == "run")
     );
     Ok(())
 }
@@ -2853,6 +2873,414 @@ fn record_run_generates_opaque_residual_risk_ids_on_commit() -> Result<(), Box<d
     );
     assert_eq!(event_payload["scope_revision"], 1);
     assert_eq!(event_payload["close_basis_revision"], 2);
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_unsupported_close_basis_ref_kinds_without_effect(
+) -> Result<(), Box<dyn Error>> {
+    let unsupported = [
+        (StateRecordKind::WriteAuthorization, "wa_fabricated"),
+        (StateRecordKind::UserJudgment, "uj_fabricated"),
+        (StateRecordKind::Blocker, "blocker_fabricated"),
+        (StateRecordKind::TaskEvent, "evt_fabricated"),
+        (StateRecordKind::ProjectState, "project_state_fabricated"),
+        (StateRecordKind::Task, "task_fabricated"),
+        (
+            StateRecordKind::LocalSurfaceRegistration,
+            "surface_fabricated",
+        ),
+    ];
+
+    for (index, (record_kind, record_id)) in unsupported.into_iter().enumerate() {
+        let harness = MethodHarness::new()?;
+        enable_record_run_capabilities(&harness)?;
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&harness, &format!("unsupported_ref_{index}"))?;
+        let before = harness.counts()?;
+
+        let mut request = record_run_request(
+            &format!("req_unsupported_ref_{index}"),
+            &format!("idem_unsupported_ref_{index}"),
+            false,
+            Some(2),
+            &task_id,
+            &change_unit_id,
+        );
+        request.close_assessment = Some(harness_types::CloseAssessmentInput {
+            result_summary: "Unsupported refs must not enter close authority.".to_owned(),
+            result_refs: vec![test_state_record_ref(
+                record_kind,
+                record_id,
+                PROJECT_ID,
+                &task_id,
+                Some(999),
+            )],
+            residual_risks: Vec::new(),
+            sensitive_categories: Vec::new(),
+            recovery_constraints: Vec::new(),
+        })
+        .into();
+
+        let response = harness
+            .service
+            .record_run(request, invocation(AccessClass::RunRecording))?;
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+    }
+
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_nonexistent_allowed_close_basis_refs_without_effect(
+) -> Result<(), Box<dyn Error>> {
+    let allowed_but_missing = [
+        (StateRecordKind::Run, "run_missing"),
+        (StateRecordKind::Artifact, "artifact_missing"),
+        (StateRecordKind::EvidenceSummary, "evidence_missing"),
+        (StateRecordKind::ChangeUnit, "cu_missing"),
+    ];
+
+    for (index, (record_kind, record_id)) in allowed_but_missing.into_iter().enumerate() {
+        let harness = MethodHarness::new()?;
+        enable_record_run_capabilities(&harness)?;
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&harness, &format!("missing_ref_{index}"))?;
+        let before = harness.counts()?;
+
+        let mut request = record_run_request(
+            &format!("req_missing_ref_{index}"),
+            &format!("idem_missing_ref_{index}"),
+            false,
+            Some(2),
+            &task_id,
+            &change_unit_id,
+        );
+        request.close_assessment = Some(harness_types::CloseAssessmentInput {
+            result_summary: "Missing allowed refs still need stored records.".to_owned(),
+            result_refs: vec![test_state_record_ref(
+                record_kind,
+                record_id,
+                PROJECT_ID,
+                &task_id,
+                Some(2),
+            )],
+            residual_risks: Vec::new(),
+            sensitive_categories: Vec::new(),
+            recovery_constraints: Vec::new(),
+        })
+        .into();
+
+        let response = harness
+            .service
+            .record_run(request, invocation(AccessClass::RunRecording))?;
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+    }
+
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_cross_project_artifact_and_cross_task_run_refs_without_effect(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "cross_refs")?;
+
+    for (index, record_ref) in [
+        test_state_record_ref(
+            StateRecordKind::Artifact,
+            "artifact_cross_project",
+            "project_other",
+            &task_id,
+            Some(2),
+        ),
+        test_state_record_ref(
+            StateRecordKind::Run,
+            "run_cross_task",
+            PROJECT_ID,
+            "task_other",
+            Some(2),
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let before = harness.counts()?;
+        let mut request = record_run_request(
+            &format!("req_cross_ref_{index}"),
+            &format!("idem_cross_ref_{index}"),
+            false,
+            Some(2),
+            &task_id,
+            &change_unit_id,
+        );
+        request.run_id = Some(RunId::new(format!("run_cross_ref_{index}"))).into();
+        request.close_assessment = Some(harness_types::CloseAssessmentInput {
+            result_summary: "Cross-owner refs must not enter close authority.".to_owned(),
+            result_refs: vec![record_ref],
+            residual_risks: Vec::new(),
+            sensitive_categories: Vec::new(),
+            recovery_constraints: Vec::new(),
+        })
+        .into();
+
+        let response = harness
+            .service
+            .record_run(request, invocation(AccessClass::RunRecording))?;
+        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+        assert_eq!(
+            response.response_value["errors"][0]["code"],
+            "VALIDATION_FAILED"
+        );
+        assert_eq!(harness.counts()?, before);
+    }
+
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_unverified_artifact_close_basis_ref_without_effect(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "unverified_artifact")?;
+    let (state_version, artifact_ref) = promote_artifact_for_record_run(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "unverified_artifact",
+    )?;
+    let artifact_id = artifact_ref.artifact_id.as_str().to_owned();
+    set_artifact_integrity(
+        &harness,
+        &artifact_id,
+        "legacy_unknown",
+        artifact_ref.content_type.as_deref(),
+        artifact_ref.sha256.as_deref(),
+        artifact_ref.size_bytes.as_ref().copied(),
+    )?;
+    let before = harness.counts()?;
+
+    let mut request = record_run_request(
+        "req_unverified_artifact_basis",
+        "idem_unverified_artifact_basis",
+        false,
+        Some(state_version),
+        &task_id,
+        &change_unit_id,
+    );
+    request.close_assessment = Some(harness_types::CloseAssessmentInput {
+        result_summary: "Unverified artifact must not enter close authority.".to_owned(),
+        result_refs: vec![test_state_record_ref(
+            StateRecordKind::Artifact,
+            &artifact_id,
+            PROJECT_ID,
+            &task_id,
+            Some(999),
+        )],
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_noncurrent_evidence_summary_close_basis_ref_without_effect(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "noncurrent_evidence")?;
+    let first_state =
+        record_close_evidence(&harness, &task_id, &change_unit_id, 2, "old_evidence", true)?;
+    let old_evidence_summary_id = latest_evidence_summary_id(&harness, &task_id)?;
+    let current_state = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        first_state,
+        "new_evidence",
+        true,
+    )?;
+    let before = harness.counts()?;
+
+    let mut request = record_run_request(
+        "req_noncurrent_evidence_basis",
+        "idem_noncurrent_evidence_basis",
+        false,
+        Some(current_state),
+        &task_id,
+        &change_unit_id,
+    );
+    request.close_assessment = Some(harness_types::CloseAssessmentInput {
+        result_summary: "Old evidence summary must not enter current close authority.".to_owned(),
+        result_refs: vec![test_state_record_ref(
+            StateRecordKind::EvidenceSummary,
+            &old_evidence_summary_id,
+            PROJECT_ID,
+            &task_id,
+            Some(first_state),
+        )],
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_canonicalizes_deduplicates_and_adds_current_close_basis_refs(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "canonical_refs")?;
+    let mut request = record_run_request(
+        "req_canonical_refs",
+        "idem_canonical_refs",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.run_id = Some(RunId::new("run_canonical_refs")).into();
+    request.evidence_updates = vec![supported_evidence_update("Canonical close basis claim.")];
+    let future_run_ref = test_state_record_ref(
+        StateRecordKind::Run,
+        "run_canonical_refs",
+        PROJECT_ID,
+        &task_id,
+        Some(999),
+    );
+    let past_run_ref = test_state_record_ref(
+        StateRecordKind::Run,
+        "run_canonical_refs",
+        PROJECT_ID,
+        &task_id,
+        Some(1),
+    );
+    let mut risk = residual_risk_input("Caller-versioned risk source.");
+    risk.acceptance_required = false;
+    risk.source_refs = vec![future_run_ref.clone(), past_run_ref.clone()];
+    request.close_assessment = Some(harness_types::CloseAssessmentInput {
+        result_summary: "Canonical refs are stored.".to_owned(),
+        result_refs: vec![future_run_ref, past_run_ref],
+        residual_risks: vec![risk],
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+    let revision = task_revision(&harness, &task_id)?;
+    let basis = revision
+        .current_close_basis
+        .expect("current close basis should be stored");
+
+    assert_eq!(response.response_value["base"]["state_version"], 3);
+    assert_eq!(basis.result_refs.len(), 3);
+    assert!(basis.result_refs.iter().any(|record_ref| {
+        record_ref.record_kind == StateRecordKind::Run
+            && record_ref.record_id.as_str() == "run_canonical_refs"
+            && record_ref.state_version.as_ref() == Some(&3)
+    }));
+    assert!(basis.result_refs.iter().any(|record_ref| {
+        record_ref.record_kind == StateRecordKind::ChangeUnit
+            && record_ref.record_id.as_str() == change_unit_id
+            && record_ref.state_version.as_ref() == Some(&3)
+    }));
+    assert!(basis.result_refs.iter().any(|record_ref| {
+        record_ref.record_kind == StateRecordKind::EvidenceSummary
+            && record_ref.state_version.as_ref() == Some(&3)
+    }));
+    assert_eq!(
+        basis
+            .evidence_summary_ref
+            .as_ref()
+            .and_then(|record_ref| record_ref.state_version.as_ref().copied()),
+        Some(3)
+    );
+    assert_eq!(basis.residual_risks[0].source_refs.len(), 1);
+    assert_eq!(
+        basis.residual_risks[0].source_refs[0]
+            .state_version
+            .as_ref(),
+        Some(&3)
+    );
+    Ok(())
+}
+
+#[test]
+fn final_acceptance_judgment_basis_uses_canonical_close_basis_refs() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "canonical_final")?;
+    let state_version = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "canonical_final",
+        true,
+    )?;
+    let close_basis = task_revision(&harness, &task_id)?
+        .current_close_basis
+        .expect("current close basis should be stored");
+
+    let response = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_canonical_final",
+            "idem_canonical_final",
+            false,
+            Some(state_version),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::FinalAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        response.response_value["user_judgment"]["basis"]["result_refs"],
+        serde_json::to_value(&close_basis.result_refs)?
+    );
+    assert!(close_basis
+        .result_refs
+        .iter()
+        .all(|record_ref| record_ref.state_version.as_ref() == Some(&state_version)));
     Ok(())
 }
 

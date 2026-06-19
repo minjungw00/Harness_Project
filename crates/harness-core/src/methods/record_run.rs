@@ -370,6 +370,7 @@ fn plan_record_run(
         evidence_summary_ref: evidence_summary_ref.clone(),
         registered_artifacts: &registered_artifacts,
         close_basis_revision,
+        snapshot_state_version: planned_state_version,
         now: &plan_now,
     };
     let current_close_basis = build_record_run_close_basis(close_basis_context)?;
@@ -614,7 +615,19 @@ struct RecordRunCloseBasisContext<'a> {
     evidence_summary_ref: Option<StateRecordRef>,
     registered_artifacts: &'a [ArtifactRef],
     close_basis_revision: u64,
+    snapshot_state_version: u64,
     now: &'a UtcTimestamp,
+}
+
+struct CloseBasisRefResolutionContext<'a> {
+    store: &'a CoreProjectStore,
+    project_state: &'a ProjectStateHeader,
+    request: &'a RecordRunRequest,
+    field: &'static str,
+    run_ref: &'a StateRecordRef,
+    evidence_summary_ref: Option<&'a StateRecordRef>,
+    registered_artifacts: &'a [ArtifactRef],
+    snapshot_state_version: u64,
 }
 
 fn build_record_run_close_basis(
@@ -631,6 +644,7 @@ fn build_record_run_close_basis(
         evidence_summary_ref,
         registered_artifacts,
         close_basis_revision,
+        snapshot_state_version,
         now,
     } = context;
     let Some(assessment) = request.close_assessment.as_ref() else {
@@ -647,33 +661,44 @@ fn build_record_run_close_basis(
     }
 
     let mut result_refs = assessment.result_refs.clone();
-    if !result_refs.iter().any(|record_ref| {
-        record_ref.record_kind == StateRecordKind::Run
-            && record_ref.record_id == run_ref.record_id
-            && record_ref.project_id == run_ref.project_id
-            && record_ref.task_id == run_ref.task_id
-    }) {
-        result_refs.push(run_ref.clone());
-    }
-    let result_refs = normalize_close_assessment_refs(
-        store,
-        project_state,
+    result_refs.push(run_ref.clone());
+    result_refs.push(canonical_close_basis_ref(
         request,
+        StateRecordKind::ChangeUnit,
+        request.change_unit_id.as_str(),
+        snapshot_state_version,
+    ));
+    if let Some(ref evidence_summary_ref) = evidence_summary_ref {
+        result_refs.push(evidence_summary_ref.clone());
+    }
+    let result_refs = canonicalize_close_basis_refs(
+        CloseBasisRefResolutionContext {
+            store,
+            project_state,
+            request,
+            field: "close_assessment.result_refs",
+            run_ref,
+            evidence_summary_ref: evidence_summary_ref.as_ref(),
+            registered_artifacts,
+            snapshot_state_version,
+        },
         &result_refs,
-        "close_assessment.result_refs",
-        run_ref,
-        registered_artifacts,
     )?;
 
     if request.envelope.dry_run {
         for risk in &assessment.residual_risks {
             validate_residual_risk_input(
-                store,
-                project_state,
-                request,
+                CloseBasisRefResolutionContext {
+                    store,
+                    project_state,
+                    request,
+                    field: "close_assessment.residual_risks[].source_refs",
+                    run_ref,
+                    evidence_summary_ref: evidence_summary_ref.as_ref(),
+                    registered_artifacts,
+                    snapshot_state_version,
+                },
                 risk,
-                run_ref,
-                registered_artifacts,
             )?;
         }
         return Ok(None);
@@ -683,12 +708,17 @@ fn build_record_run_close_basis(
     let mut residual_risks = Vec::new();
     for risk in &assessment.residual_risks {
         let source_refs = validate_residual_risk_input(
-            store,
-            project_state,
-            request,
+            CloseBasisRefResolutionContext {
+                store,
+                project_state,
+                request,
+                field: "close_assessment.residual_risks[].source_refs",
+                run_ref,
+                evidence_summary_ref: evidence_summary_ref.as_ref(),
+                registered_artifacts,
+                snapshot_state_version,
+            },
             risk,
-            run_ref,
-            registered_artifacts,
         )?;
         let risk_id = allocate_risk_id(service, &allocated_risk_ids).map_err(PlanError::Core)?;
         allocated_risk_ids.insert(risk_id.as_str().to_owned());
@@ -884,13 +914,11 @@ fn sensitive_category_summary(requirements: &[SensitiveActionRequirement]) -> Ve
 }
 
 fn validate_residual_risk_input(
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    request: &RecordRunRequest,
+    context: CloseBasisRefResolutionContext<'_>,
     risk: &harness_types::ResidualRiskInput,
-    run_ref: &StateRecordRef,
-    registered_artifacts: &[ArtifactRef],
 ) -> Result<Vec<StateRecordRef>, PlanError> {
+    let request = context.request;
+    let project_state = context.project_state;
     if risk.summary.trim().is_empty() {
         validation_plan_error(
             request.envelope.dry_run,
@@ -909,57 +937,61 @@ fn validate_residual_risk_input(
         )?;
         unreachable!("validation_plan_error always returns Err");
     }
-    normalize_close_assessment_refs(
-        store,
-        project_state,
-        request,
-        &risk.source_refs,
-        "close_assessment.residual_risks[].source_refs",
-        run_ref,
-        registered_artifacts,
-    )
+    canonicalize_close_basis_refs(context, &risk.source_refs)
 }
 
-fn normalize_close_assessment_refs(
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    request: &RecordRunRequest,
+fn canonicalize_close_basis_refs(
+    context: CloseBasisRefResolutionContext<'_>,
     refs: &[StateRecordRef],
-    field: &'static str,
-    run_ref: &StateRecordRef,
-    registered_artifacts: &[ArtifactRef],
 ) -> Result<Vec<StateRecordRef>, PlanError> {
     let mut normalized = BTreeMap::new();
     for record_ref in refs {
-        let normalized_ref = normalize_close_assessment_ref(
-            store,
-            project_state,
-            request,
-            record_ref,
-            field,
-            run_ref,
-            registered_artifacts,
-        )?;
-        normalized.insert(state_ref_key(&normalized_ref), normalized_ref);
+        let normalized_ref = resolve_close_basis_ref(&context, record_ref)?;
+        let key = close_basis_ref_identity_key(&normalized_ref);
+        if let Some(previous) = normalized.get(&key) {
+            if previous != &normalized_ref {
+                validation_plan_error(
+                    context.request.envelope.dry_run,
+                    Some(context.project_state.state_version),
+                    context.field,
+                    "duplicate close assessment refs must resolve to the same canonical record",
+                )?;
+                unreachable!("validation_plan_error always returns Err");
+            }
+        } else {
+            normalized.insert(key, normalized_ref);
+        }
     }
     Ok(normalized.into_values().collect())
 }
 
-fn normalize_close_assessment_ref(
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    request: &RecordRunRequest,
+fn resolve_close_basis_ref(
+    context: &CloseBasisRefResolutionContext<'_>,
     record_ref: &StateRecordRef,
-    field: &'static str,
-    run_ref: &StateRecordRef,
-    registered_artifacts: &[ArtifactRef],
 ) -> Result<StateRecordRef, PlanError> {
+    let request = context.request;
+    let project_state = context.project_state;
     if record_ref.record_id.as_str().trim().is_empty() {
         validation_plan_error(
             request.envelope.dry_run,
             Some(project_state.state_version),
-            field,
+            context.field,
             "close assessment refs must use non-empty record_id values",
+        )?;
+        unreachable!("validation_plan_error always returns Err");
+    }
+    if !matches!(
+        record_ref.record_kind,
+        StateRecordKind::Run
+            | StateRecordKind::Artifact
+            | StateRecordKind::EvidenceSummary
+            | StateRecordKind::ChangeUnit
+    ) {
+        validation_plan_error(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            context.field,
+            "close assessment refs may only use run, artifact, evidence_summary, or change_unit record_kind",
         )?;
         unreachable!("validation_plan_error always returns Err");
     }
@@ -967,150 +999,229 @@ fn normalize_close_assessment_ref(
         validation_plan_error(
             request.envelope.dry_run,
             Some(project_state.state_version),
-            field,
+            context.field,
             "close assessment refs must belong to the request project",
         )?;
         unreachable!("validation_plan_error always returns Err");
     }
-    let task_scoped = !matches!(
-        record_ref.record_kind,
-        StateRecordKind::ProjectState | StateRecordKind::LocalSurfaceRegistration
-    );
-    if task_scoped && record_ref.task_id.as_ref() != Some(&request.task_id) {
+    if record_ref.task_id.as_ref() != Some(&request.task_id) {
         validation_plan_error(
             request.envelope.dry_run,
             Some(project_state.state_version),
-            field,
+            context.field,
             "close assessment refs must belong to the request Task",
         )?;
         unreachable!("validation_plan_error always returns Err");
     }
 
-    if record_ref.record_kind == StateRecordKind::Task
-        && record_ref.record_id.as_str() != request.task_id.as_str()
-    {
+    match record_ref.record_kind {
+        StateRecordKind::Run => resolve_close_basis_run_ref(context, record_ref),
+        StateRecordKind::ChangeUnit => resolve_close_basis_change_unit_ref(context, record_ref),
+        StateRecordKind::EvidenceSummary => {
+            resolve_close_basis_evidence_summary_ref(context, record_ref)
+        }
+        StateRecordKind::Artifact => resolve_close_basis_artifact_ref(context, record_ref),
+        _ => unreachable!("unsupported close-basis record kind rejected above"),
+    }
+}
+
+fn resolve_close_basis_run_ref(
+    context: &CloseBasisRefResolutionContext<'_>,
+    record_ref: &StateRecordRef,
+) -> Result<StateRecordRef, PlanError> {
+    let request = context.request;
+    if record_ref.record_id == context.run_ref.record_id {
+        return Ok(context.run_ref.clone());
+    }
+    let record = context
+        .store
+        .run_record(record_ref.record_id.as_str())
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                context.project_state,
+                error,
+            )))
+        })?;
+    let compatible = match record.as_ref() {
+        Some(record) => run_record_is_close_basis_compatible(context, record)?,
+        None => false,
+    };
+    if !compatible {
         validation_plan_error(
             request.envelope.dry_run,
-            Some(project_state.state_version),
-            field,
-            "Task refs in close_assessment must identify the request Task",
+            Some(context.project_state.state_version),
+            context.field,
+            "Run refs in close_assessment must exist for the request Task and compatible Change Unit",
         )?;
         unreachable!("validation_plan_error always returns Err");
     }
-
-    if record_ref.record_kind == StateRecordKind::Run && record_ref.record_id == run_ref.record_id {
-        return Ok(run_ref.clone());
-    }
-
-    if record_ref.record_kind == StateRecordKind::Run {
-        let exists_for_task = store
-            .run_belongs_to_task(record_ref.record_id.as_str(), request.task_id.as_str())
-            .map_err(|error| {
-                PlanError::Response(Box::new(store_error_response(
-                    &request.envelope,
-                    project_state,
-                    error,
-                )))
-            })?;
-        if !exists_for_task {
-            validation_plan_error(
-                request.envelope.dry_run,
-                Some(project_state.state_version),
-                field,
-                "Run refs in close_assessment must exist for the request Task",
-            )?;
-            unreachable!("validation_plan_error always returns Err");
-        }
-    }
-
-    if record_ref.record_kind == StateRecordKind::ChangeUnit {
-        let record = store
-            .change_unit_record(&request.task_id, record_ref.record_id.as_str())
-            .map_err(|error| {
-                PlanError::Response(Box::new(store_error_response(
-                    &request.envelope,
-                    project_state,
-                    error,
-                )))
-            })?;
-        if record.is_none() {
-            validation_plan_error(
-                request.envelope.dry_run,
-                Some(project_state.state_version),
-                field,
-                "Change Unit refs in close_assessment must exist for the request Task",
-            )?;
-            unreachable!("validation_plan_error always returns Err");
-        }
-    }
-
-    if record_ref.record_kind == StateRecordKind::EvidenceSummary {
-        let record = store
-            .evidence_summary_record(record_ref.record_id.as_str())
-            .map_err(|error| {
-                PlanError::Response(Box::new(store_error_response(
-                    &request.envelope,
-                    project_state,
-                    error,
-                )))
-            })?;
-        if record
-            .as_ref()
-            .is_none_or(|record| record.task_id != request.task_id.as_str())
-        {
-            validation_plan_error(
-                request.envelope.dry_run,
-                Some(project_state.state_version),
-                field,
-                "Evidence Summary refs in close_assessment must exist for the request Task",
-            )?;
-            unreachable!("validation_plan_error always returns Err");
-        }
-    }
-
-    if record_ref.record_kind == StateRecordKind::Artifact {
-        validate_close_assessment_artifact_ref(
-            store,
-            project_state,
-            request,
-            record_ref,
-            field,
-            registered_artifacts,
-        )?;
-    }
-
-    Ok(record_ref.clone())
+    let record = record.expect("compatible run record is present");
+    Ok(canonical_close_basis_ref(
+        request,
+        StateRecordKind::Run,
+        &record.run_id,
+        context.snapshot_state_version,
+    ))
 }
 
-fn validate_close_assessment_artifact_ref(
-    store: &CoreProjectStore,
-    project_state: &ProjectStateHeader,
-    request: &RecordRunRequest,
+fn run_record_is_close_basis_compatible(
+    context: &CloseBasisRefResolutionContext<'_>,
+    record: &RunRecord,
+) -> Result<bool, PlanError> {
+    let Some(change_unit_id) = record.change_unit_id.as_deref() else {
+        return Ok(false);
+    };
+    if record.project_id != context.request.envelope.project_id.as_str()
+        || record.task_id != context.request.task_id.as_str()
+        || record.status != "recorded"
+    {
+        return Ok(false);
+    }
+    Ok(context
+        .store
+        .change_unit_record(&context.request.task_id, change_unit_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &context.request.envelope,
+                context.project_state,
+                error,
+            )))
+        })?
+        .is_some())
+}
+
+fn resolve_close_basis_change_unit_ref(
+    context: &CloseBasisRefResolutionContext<'_>,
     record_ref: &StateRecordRef,
-    field: &'static str,
-    registered_artifacts: &[ArtifactRef],
-) -> Result<(), PlanError> {
-    if registered_artifacts
+) -> Result<StateRecordRef, PlanError> {
+    let request = context.request;
+    let record = context
+        .store
+        .change_unit_record(&request.task_id, record_ref.record_id.as_str())
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                context.project_state,
+                error,
+            )))
+        })?;
+    if record.as_ref().is_none_or(|record| {
+        record.project_id != request.envelope.project_id.as_str()
+            || record.task_id != request.task_id.as_str()
+            || record.change_unit_id != request.change_unit_id.as_str()
+            || record.status != "active"
+            || !record.is_current
+    }) {
+        validation_plan_error(
+            request.envelope.dry_run,
+            Some(context.project_state.state_version),
+            context.field,
+            "Change Unit refs in close_assessment must identify the current Change Unit",
+        )?;
+        unreachable!("validation_plan_error always returns Err");
+    }
+    let record = record.expect("current Change Unit record is present");
+    Ok(canonical_close_basis_ref(
+        request,
+        StateRecordKind::ChangeUnit,
+        &record.change_unit_id,
+        context.snapshot_state_version,
+    ))
+}
+
+fn resolve_close_basis_evidence_summary_ref(
+    context: &CloseBasisRefResolutionContext<'_>,
+    record_ref: &StateRecordRef,
+) -> Result<StateRecordRef, PlanError> {
+    let request = context.request;
+    if context
+        .evidence_summary_ref
+        .is_some_and(|summary_ref| summary_ref.record_id == record_ref.record_id)
+    {
+        return Ok(context
+            .evidence_summary_ref
+            .expect("checked evidence summary ref is present")
+            .clone());
+    }
+    let record = context
+        .store
+        .evidence_summary_record(record_ref.record_id.as_str())
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                context.project_state,
+                error,
+            )))
+        })?;
+    let latest = context
+        .store
+        .latest_evidence_summary(&request.task_id)
+        .map_err(|error| {
+            PlanError::Response(Box::new(store_error_response(
+                &request.envelope,
+                context.project_state,
+                error,
+            )))
+        })?;
+    if record.as_ref().is_none_or(|record| {
+        record.project_id != request.envelope.project_id.as_str()
+            || record.task_id != request.task_id.as_str()
+            || latest
+                .as_ref()
+                .is_none_or(|latest| latest.evidence_summary_id != record.evidence_summary_id)
+    }) {
+        validation_plan_error(
+            request.envelope.dry_run,
+            Some(context.project_state.state_version),
+            context.field,
+            "Evidence Summary refs in close_assessment must identify the current Task evidence summary",
+        )?;
+        unreachable!("validation_plan_error always returns Err");
+    }
+    let record = record.expect("current Evidence Summary record is present");
+    Ok(canonical_close_basis_ref(
+        request,
+        StateRecordKind::EvidenceSummary,
+        &record.evidence_summary_id,
+        context.snapshot_state_version,
+    ))
+}
+
+fn resolve_close_basis_artifact_ref(
+    context: &CloseBasisRefResolutionContext<'_>,
+    record_ref: &StateRecordRef,
+) -> Result<StateRecordRef, PlanError> {
+    let request = context.request;
+    if context
+        .registered_artifacts
         .iter()
         .any(|artifact| artifact.artifact_id.as_str() == record_ref.record_id.as_str())
     {
-        return Ok(());
+        return Ok(canonical_close_basis_ref(
+            request,
+            StateRecordKind::Artifact,
+            record_ref.record_id.as_str(),
+            context.snapshot_state_version,
+        ));
     }
-    let record = store
+    let record = context
+        .store
         .artifact_record(record_ref.record_id.as_str())
         .map_err(|error| {
             PlanError::Response(Box::new(store_error_response(
                 &request.envelope,
-                project_state,
+                context.project_state,
                 error,
             )))
         })?;
-    let owner_link_exists = store
+    let owner_link_exists = context
+        .store
         .artifact_has_task_owner_link(record_ref.record_id.as_str(), request.task_id.as_str())
         .map_err(|error| {
             PlanError::Response(Box::new(store_error_response(
                 &request.envelope,
-                project_state,
+                context.project_state,
                 error,
             )))
         })?;
@@ -1128,19 +1239,40 @@ fn validate_close_assessment_artifact_ref(
         .transpose()?
         .unwrap_or(false)
     {
-        Ok(())
+        let record = record.expect("verified artifact record is present");
+        Ok(canonical_close_basis_ref(
+            request,
+            StateRecordKind::Artifact,
+            &record.artifact_id,
+            context.snapshot_state_version,
+        ))
     } else {
         validation_plan_error(
             request.envelope.dry_run,
-            Some(project_state.state_version),
-            field,
-            "Artifact refs in close_assessment must identify available artifacts owned by the request Task",
+            Some(context.project_state.state_version),
+            context.field,
+            "Artifact refs in close_assessment must identify verified available artifacts owned by the request Task",
         )?;
         unreachable!("validation_plan_error always returns Err");
     }
 }
 
-fn state_ref_key(record_ref: &StateRecordRef) -> (String, String, String, String, Option<u64>) {
+fn canonical_close_basis_ref(
+    request: &RecordRunRequest,
+    record_kind: StateRecordKind,
+    record_id: &str,
+    snapshot_state_version: u64,
+) -> StateRecordRef {
+    state_ref(
+        record_kind,
+        record_id,
+        &request.envelope.project_id,
+        Some(&request.task_id),
+        Some(snapshot_state_version),
+    )
+}
+
+fn close_basis_ref_identity_key(record_ref: &StateRecordRef) -> (String, String, String, String) {
     (
         storage_value(record_ref.record_kind).unwrap_or_else(|_| "unknown".to_owned()),
         record_ref.record_id.as_str().to_owned(),
@@ -1150,7 +1282,6 @@ fn state_ref_key(record_ref: &StateRecordRef) -> (String, String, String, String
             .as_ref()
             .map(|task_id| task_id.as_str().to_owned())
             .unwrap_or_default(),
-        record_ref.state_version.as_ref().copied(),
     )
 }
 

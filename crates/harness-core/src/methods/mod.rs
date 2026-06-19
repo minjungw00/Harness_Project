@@ -9,11 +9,11 @@ use harness_store::{
     core_pipeline::{
         ArtifactLinkInsert, ArtifactPromotion, ChangeUnitInsert, ChangeUnitRecord,
         CoreProjectStore, CoreStorageMutation, EvidenceSummaryRecord, EvidenceSummaryUpsert,
-        ProjectStateHeader, RunInsert, StoredArtifactRecord, StoredArtifactStagingRecord,
-        StoredRecordRef, TaskCloseBasisUpdate, TaskCloseUpdate, TaskInsert, TaskRecord,
-        TaskScopeRevisionUpdate, TaskScopeUpdate, UserJudgmentInsert, UserJudgmentInvalidation,
-        UserJudgmentRecord, UserJudgmentResolutionUpdate, WriteAuthorizationConsumption,
-        WriteAuthorizationInsert, WriteAuthorizationRecord,
+        ProjectStateHeader, RunInsert, RunRecord, StoredArtifactRecord,
+        StoredArtifactStagingRecord, StoredRecordRef, TaskCloseBasisUpdate, TaskCloseUpdate,
+        TaskInsert, TaskRecord, TaskScopeRevisionUpdate, TaskScopeUpdate, UserJudgmentInsert,
+        UserJudgmentInvalidation, UserJudgmentRecord, UserJudgmentResolutionUpdate,
+        WriteAuthorizationConsumption, WriteAuthorizationInsert, WriteAuthorizationRecord,
     },
     StoreError,
 };
