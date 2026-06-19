@@ -11,7 +11,7 @@ This document owns:
 - `harness` command names, command-line arguments, defaults, stdout/stderr routing, and process exit codes
 - Runtime Home path selection for `harness` administrative commands
 - administrative project and surface registration defaults
-- local MCP setup orchestration, optional interactive setup frontend, setup option defaults, conflict handling, dry-run behavior, output formats, and host-neutral configuration generation
+- local MCP setup orchestration, optional interactive setup frontend, setup option defaults, conflict handling, dry-run behavior, preview and cancellation guarantees, storage preparation and migration sequencing, post-preparation revalidation, project-ID validation, generated-configuration path validation, partial-failure reporting, output formats, and host-neutral configuration generation
 - local registration profile expansion for `baseline-workflow`
 - the boundary between administrative commands and public Harness API methods
 
@@ -23,7 +23,7 @@ This document does not own:
 - runtime data boundary meaning; see [Runtime Boundaries](runtime-boundaries.md)
 - MCP process startup, stdio framing, wire behavior, response wrapping, preflight internals, and shutdown; see [MCP Transport](mcp-transport.md)
 - external MCP host installation schemas or host-specific configuration locations
-- storage record layout, Core authority semantics, and security guarantee meanings
+- storage record layout, SQLite DDL, general storage migration definitions, Core authority semantics, and security guarantee meanings
 
 ## Command model
 
@@ -114,7 +114,8 @@ Interactive mode rules:
 - `--interactive` may be combined with `--dry-run`.
 - Explicit setup options seed the wizard defaults.
 - The final plan is always shown before setup application or dry-run output.
-- Cancellation exits `0`, writes `setup: cancelled` to stdout, and performs no registration, preflight, configuration-file write, or Runtime Home initialization.
+- Before final affirmative confirmation, the wizard uses the same read-only planning path as dry-run. It does not initialize or migrate storage, run preflight, create configuration directories or files, register projects or surfaces, create application records, or change project `state_version`.
+- Cancellation exits `0`, writes `setup: cancelled` to stdout, and performs no persistent setup change. The same no-persistent-change guarantee applies when the user declines a conflicting-surface replacement, declines configuration overwrite, declines the final plan, cancels the wizard, or uses interactive dry-run. This guarantee does not claim that screen output or ordinary process-local prompt state is unchanged.
 
 Terminal and stream behavior:
 
@@ -150,10 +151,10 @@ Conflict and final-confirmation behavior:
 - Surface replacement confirmations use the structured conflicts produced by setup planning. For each incompatible target surface, the wizard shows the current and desired role, kind, and normalized access classes, then asks separately whether to replace that exact target surface. The default is no unless an explicit destructive flag seeds the proposed answer.
 - Existing generated configuration files are shown by exact path and require a separate overwrite confirmation. The default is no unless `--overwrite-config` seeds the proposed answer.
 - A general final confirmation is not sufficient authorization for a destructive surface replacement or configuration overwrite.
-- Declining a required destructive action cancels setup without mutation.
+- Declining a required destructive action cancels setup before storage preparation, registration, preflight, or configuration-file creation.
 - The final plan shows the Runtime Home, repository, project ID and action, each surface and action, MCP executable, preflight bindings, configuration destinations, dry-run status, and destructive updates. Final confirmation defaults to no.
 
-With `--interactive --dry-run`, the wizard gathers and confirms the same inputs, shows the plan, performs no mutation, does not run preflight, and emits the normal dry-run output after final confirmation.
+With `--interactive --dry-run`, the wizard gathers and confirms the same inputs, shows the plan, performs no persistent setup change or migration, does not run preflight, and emits the normal dry-run output after final confirmation.
 
 ### Runtime Home setup selection
 
@@ -175,6 +176,17 @@ The setup command initializes the Runtime Home when it is not already initialize
 ### Project selection
 
 The selected `repo_root` must be an existing accessible directory and must be canonicalized before comparison.
+
+Explicit and derived project IDs are validated before Runtime Home initialization, storage migration, project registration, surface registration, MCP preflight, or configuration-file creation. Invalid derived path-component IDs require an explicit valid `--project-id`.
+
+Project ID validation rules:
+
+- empty and whitespace-only values are invalid
+- `.` and `..` are invalid
+- `/`, `\`, and NUL are invalid
+- setup does not silently trim, slugify, rewrite, or replace an invalid ID
+- the same validation is shared by `harness setup local-mcp` and the lower-level project registration path
+- setup does not define a broader character whitelist beyond the implemented path-component exclusions
 
 When `--project-id` is present:
 
@@ -216,6 +228,40 @@ Differences in unrelated display text or pre-existing non-authoritative setup me
 
 `--replace-conflicting-surfaces` applies only to the fixed target surface instances. It does not permit project rebinding or changes to public Harness authority rules.
 
+### Preview inspection and historical schemas
+
+Setup planning and dry-run inspect existing Runtime Home databases through a read-only, no-migration path. Supported historical schemas may be inspected without migration and classified internally as requiring migration for a later real setup path. This inspection does not create authority, change registration meaning, or apply storage repair.
+
+Unsupported, inconsistent, corrupt, or unsafe-to-inspect schemas fail planning without repair or modification. Read-only inspection normalizes historical registration meaning only where an existing migration defines an unambiguous default; for example, older surface rows without stored `interaction_role` are inspected as `agent` for compatibility analysis without changing the database.
+
+Detailed storage migration semantics belong to [Storage Versioning](storage-versioning.md). Storage record families and record-layout ownership belong to [Storage Records](storage-records.md).
+
+### Real approved setup sequence
+
+A non-dry-run setup path reaches mutation only after non-interactive execution or final affirmative interactive confirmation. The sequence is:
+
+```text
+read-only planning
+-> execution approval
+-> required recognized storage initialization or migration
+-> refreshed planning and conflict validation
+-> project and surface registration
+-> MCP preflight
+-> generated configuration output
+```
+
+Rules:
+
+- migrations occur only on a real approved setup path
+- a pre-migration plan is not applied blindly
+- the plan is rebuilt after storage preparation or migration
+- newly observed conflicts stop project and surface registration
+- a completed migration is not rolled back merely because later revalidation, registration, preflight, or configuration output fails
+- diagnostics identify completed storage preparation or migration where relevant
+- the command remains rerunnable after partial failure
+- there is no cross-database, cross-file, or cross-system rollback guarantee
+- migration itself does not create Core authority, user identity, surface trust, or user-owned judgment
+
 ### Idempotency and partial failure
 
 An exact repeated setup:
@@ -227,9 +273,9 @@ An exact repeated setup:
 - does not increment project `state_version`
 - generates deterministic host configuration
 
-The command performs all discoverable validation before mutation.
+Before registration changes, the command detects currently observable deterministic input errors, registration conflicts, executable-discovery failures, configuration-rendering failures, and output-path structure conflicts. Project-ID validation and generated-configuration path structure validation occur before storage initialization or migration.
 
-Registration spans more than one SQLite database, so this command does not claim a cross-database rollback guarantee. If a later preflight fails after registration, setup fails, reports completed actions, and remains safely rerunnable.
+This pre-mutation validation is not a race-free or failure-free guarantee. External filesystem changes, permission changes, storage exhaustion, operating-system errors, MCP preflight failures, and other runtime failures may still occur after storage preparation or registration begins. File checks cannot eliminate time-of-check/time-of-use races. A later failure reports completed actions where relevant, generated destination files continue to use same-directory temporary-file replacement behavior, and no cross-system transaction is promised.
 
 New records created by setup may use non-authoritative diagnostic metadata equivalent to:
 
@@ -307,13 +353,19 @@ harness-user-interaction.mcp.json
 
 Configuration directory rules:
 
+- before storage preparation or registration, validate whether `--config-dir` is an existing directory or can be created beneath existing directory ancestors
+- before storage preparation or registration, reject a non-directory or unsupported existing ancestor
+- before storage preparation or registration, reject target paths that are directories or unsupported filesystem objects
+- before storage preparation or registration, check whether target files already exist
+- before storage preparation or registration, require explicit overwrite authorization for existing regular target files
+- validate all requested agent and user-interaction targets before writing any target
 - create the destination directory when needed
 - write valid deterministic JSON
 - use a same-directory replacement file rather than truncating a destination in place
 - do not overwrite existing files by default
 - require `--overwrite-config` to replace existing generated files
-- validate all target-file conflicts before registration writes
 - treat `--overwrite-config` without `--config-dir` as a usage error
+- dry-run performs the same structural checks without creating directories or files
 
 The command must not claim atomic behavior stronger than the implementation can provide across supported platforms. At minimum, a partially written destination file must never be exposed as a completed configuration.
 
@@ -325,14 +377,18 @@ The command must not claim atomic behavior stronger than the implementation can 
 - repository canonicalization
 - project selection
 - surface compatibility and conflict analysis
+- read-only inspection of existing Runtime Home databases through the no-migration inspection path
+- identification of supported historical schemas that may require migration on a later real setup path
 - MCP executable discovery
 - configuration rendering
-- configuration-file conflict analysis
+- configuration-output structure and target-file conflict analysis
 
 It does not:
 
 - create a Runtime Home
-- write SQLite records
+- create or modify SQLite databases
+- apply migrations
+- change `schema_migrations`
 - register or update a project
 - register or update a surface
 - create a configuration directory or file
