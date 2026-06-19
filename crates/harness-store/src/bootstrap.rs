@@ -146,10 +146,7 @@ pub fn register_project(
     runtime_home: impl AsRef<Path>,
     registration: ProjectRegistration,
 ) -> StoreResult<ProjectRecord> {
-    validate_identifier("project_id", &registration.project_id)?;
-    if registration.project_home.is_none() {
-        validate_path_component("project_id", &registration.project_id)?;
-    }
+    validate_project_id(&registration.project_id)?;
     validate_project_status(&registration.status)?;
     validate_json_object("projects.metadata_json", &registration.metadata_json)?;
 
@@ -294,7 +291,7 @@ pub fn project_record(
     runtime_home: impl AsRef<Path>,
     project_id: &str,
 ) -> StoreResult<Option<ProjectRecord>> {
-    validate_identifier("project_id", project_id)?;
+    validate_project_id(project_id)?;
     let registry_path = registry_db_path(runtime_home);
     if !registry_path.exists() {
         return Ok(None);
@@ -309,7 +306,7 @@ pub fn register_surface(
     runtime_home: impl AsRef<Path>,
     registration: SurfaceRegistration,
 ) -> StoreResult<SurfaceRecord> {
-    validate_identifier("project_id", &registration.project_id)?;
+    validate_project_id(&registration.project_id)?;
     validate_identifier("surface_id", &registration.surface_id)?;
     validate_identifier("surface_instance_id", &registration.surface_instance_id)?;
     validate_identifier("surface_kind", &registration.surface_kind)?;
@@ -425,7 +422,7 @@ pub fn list_surfaces(
     runtime_home: impl AsRef<Path>,
     project_id: &str,
 ) -> StoreResult<Vec<SurfaceRecord>> {
-    validate_identifier("project_id", project_id)?;
+    validate_project_id(project_id)?;
     let project =
         project_record(runtime_home, project_id)?.ok_or_else(|| StoreError::NotFound {
             entity: "project",
@@ -562,6 +559,12 @@ fn validate_surface_interaction_role(role: SurfaceInteractionRole) -> StoreResul
     }
 }
 
+/// Validates a project id that may become one `projects/{project_id}` path component.
+pub fn validate_project_id(project_id: &str) -> StoreResult<()> {
+    validate_identifier("project_id", project_id)?;
+    validate_path_component("project_id", project_id)
+}
+
 fn validate_identifier(field: &'static str, value: &str) -> StoreResult<()> {
     if value.trim().is_empty() {
         Err(StoreError::InvalidInput {
@@ -573,7 +576,12 @@ fn validate_identifier(field: &'static str, value: &str) -> StoreResult<()> {
 }
 
 fn validate_path_component(field: &'static str, value: &str) -> StoreResult<()> {
-    if value == "." || value == ".." || value.contains('/') || value.contains('\\') {
+    if value == "."
+        || value == ".."
+        || value.contains('/')
+        || value.contains('\\')
+        || value.contains('\0')
+    {
         Err(StoreError::InvalidInput {
             detail: format!("{field} must be a single path component"),
         })
@@ -623,4 +631,56 @@ fn path_to_text(field: &'static str, path: &Path) -> StoreResult<String> {
         .ok_or_else(|| StoreError::InvalidInput {
             detail: format!("{field} must be valid UTF-8"),
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{error::Error, fs};
+
+    use harness_test_support::TempRuntimeHome;
+
+    use super::*;
+
+    #[test]
+    fn project_id_validator_rejects_unsafe_path_components() {
+        for invalid in ["", "   ", ".", "..", "a/b", "a\\b", "a\0b"] {
+            let error = validate_project_id(invalid).expect_err("project_id should be rejected");
+            assert!(
+                matches!(error, StoreError::InvalidInput { .. }),
+                "unexpected error for {invalid:?}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn project_id_validator_accepts_normal_ascii_and_utf8() -> Result<(), Box<dyn Error>> {
+        validate_project_id("project_alpha")?;
+        validate_project_id("프로젝트")?;
+        Ok(())
+    }
+
+    #[test]
+    fn project_registration_uses_project_id_validator_even_with_custom_home(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("store-project-id-validation")?;
+        let repo_root = runtime_home.path().join("repo");
+        fs::create_dir_all(&repo_root)?;
+        initialize_runtime_home(runtime_home.path(), "runtime_home_validation", "{}")?;
+
+        let error = register_project(
+            runtime_home.path(),
+            ProjectRegistration {
+                project_id: "a/b".to_owned(),
+                repo_root,
+                project_home: Some(runtime_home.path().join("custom-project-home")),
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )
+        .expect_err("invalid project_id should be rejected before registration");
+
+        assert!(matches!(error, StoreError::InvalidInput { .. }));
+        assert!(!runtime_home.path().join("custom-project-home").exists());
+        Ok(())
+    }
 }

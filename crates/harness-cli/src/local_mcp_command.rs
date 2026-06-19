@@ -723,6 +723,33 @@ enum PreflightStatus {
     Passed,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ConfigDestinationPlan {
+    pub(crate) config_dir: PathBuf,
+    pub(crate) targets: Vec<ConfigDestinationTarget>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ConfigDestinationTarget {
+    pub(crate) binding: SetupSurfaceBinding,
+    pub(crate) path: PathBuf,
+    pub(crate) status: ConfigDestinationStatus,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ConfigDestinationStatus {
+    Missing,
+    ExistingRegularFile,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PathState {
+    Missing,
+    Directory,
+    RegularFile,
+    Other,
+}
+
 fn planned_preflights(include_user_interaction: bool) -> Vec<BindingPreflight> {
     setup_bindings_from_include(include_user_interaction)
         .into_iter()
@@ -905,49 +932,130 @@ pub(crate) fn validate_config_destinations(
     config_dir: Option<&Path>,
     include_user_interaction: bool,
     overwrite: bool,
-) -> Result<(), LocalMcpCommandError> {
+) -> Result<Option<ConfigDestinationPlan>, LocalMcpCommandError> {
     let Some(config_dir) = config_dir else {
-        return Ok(());
+        return Ok(None);
     };
 
-    if config_dir.exists() && !config_dir.is_dir() {
-        return Err(LocalMcpCommandError::runtime(format!(
-            "config-dir must be a directory: {}",
-            config_dir.display()
-        )));
-    }
+    validate_config_dir_structure(config_dir)?;
 
+    let mut targets = Vec::new();
     for binding in setup_bindings_from_include(include_user_interaction) {
         let path = config_dir.join(config_file_name(binding));
-        validate_config_destination(&path, overwrite)?;
+        let status = validate_config_target(&path, overwrite)?;
+        targets.push(ConfigDestinationTarget {
+            binding,
+            path,
+            status,
+        });
     }
-    Ok(())
+    Ok(Some(ConfigDestinationPlan {
+        config_dir: config_dir.to_path_buf(),
+        targets,
+    }))
 }
 
-fn validate_config_destination(path: &Path, overwrite: bool) -> Result<(), LocalMcpCommandError> {
-    if path.exists() {
-        if path.is_dir() {
+fn validate_config_dir_structure(config_dir: &Path) -> Result<(), LocalMcpCommandError> {
+    match path_state(config_dir, "config-dir")? {
+        PathState::Directory => Ok(()),
+        PathState::RegularFile => Err(LocalMcpCommandError::runtime(format!(
+            "config-dir must be a directory: {}",
+            config_dir.display()
+        ))),
+        PathState::Other => Err(LocalMcpCommandError::runtime(format!(
+            "config-dir has unsupported filesystem object type: {}",
+            config_dir.display()
+        ))),
+        PathState::Missing => validate_missing_config_dir(config_dir),
+    }
+}
+
+fn validate_missing_config_dir(config_dir: &Path) -> Result<(), LocalMcpCommandError> {
+    let mut candidate = config_dir;
+    loop {
+        let Some(parent) = candidate.parent() else {
             return Err(LocalMcpCommandError::runtime(format!(
-                "configuration destination is a directory: {}",
-                path.display()
+                "config-dir has no existing directory ancestor: {}",
+                config_dir.display()
             )));
-        }
-        if !overwrite {
-            return Err(LocalMcpCommandError::runtime(format!(
-                "configuration file already exists: {}",
-                path.display()
-            )));
+        };
+        candidate = parent;
+        match path_state(candidate, "configuration ancestor")? {
+            PathState::Directory => return Ok(()),
+            PathState::RegularFile => {
+                return Err(LocalMcpCommandError::runtime(format!(
+                    "configuration ancestor is not a directory: {}",
+                    candidate.display()
+                )));
+            }
+            PathState::Other => {
+                return Err(LocalMcpCommandError::runtime(format!(
+                    "configuration ancestor has unsupported filesystem object type: {}",
+                    candidate.display()
+                )));
+            }
+            PathState::Missing => continue,
         }
     }
-    if let Some(parent) = path.parent() {
-        if parent.exists() && !parent.is_dir() {
-            return Err(LocalMcpCommandError::runtime(format!(
-                "configuration parent is not a directory: {}",
-                parent.display()
-            )));
-        }
+}
+
+fn validate_config_target(
+    path: &Path,
+    overwrite: bool,
+) -> Result<ConfigDestinationStatus, LocalMcpCommandError> {
+    match path_state(path, "configuration destination")? {
+        PathState::Missing => Ok(ConfigDestinationStatus::Missing),
+        PathState::Directory => Err(LocalMcpCommandError::runtime(format!(
+            "configuration destination is a directory: {}",
+            path.display()
+        ))),
+        PathState::RegularFile if overwrite => Ok(ConfigDestinationStatus::ExistingRegularFile),
+        PathState::RegularFile => Err(LocalMcpCommandError::runtime(format!(
+            "configuration file already exists: {}",
+            path.display()
+        ))),
+        PathState::Other => Err(LocalMcpCommandError::runtime(format!(
+            "configuration destination has unsupported filesystem object type: {}",
+            path.display()
+        ))),
     }
-    Ok(())
+}
+
+fn path_state(path: &Path, label: &str) -> Result<PathState, LocalMcpCommandError> {
+    match fs::metadata(path) {
+        Ok(metadata) if metadata.is_dir() => Ok(PathState::Directory),
+        Ok(metadata) if metadata.is_file() => Ok(PathState::RegularFile),
+        Ok(_) => Ok(PathState::Other),
+        Err(error)
+            if matches!(
+                error.kind(),
+                io::ErrorKind::NotFound | io::ErrorKind::NotADirectory
+            ) =>
+        {
+            match fs::symlink_metadata(path) {
+                Ok(_) => Err(LocalMcpCommandError::runtime(format!(
+                    "{label} exists but is not usable: {}",
+                    path.display()
+                ))),
+                Err(lstat_error)
+                    if matches!(
+                        lstat_error.kind(),
+                        io::ErrorKind::NotFound | io::ErrorKind::NotADirectory
+                    ) =>
+                {
+                    Ok(PathState::Missing)
+                }
+                Err(lstat_error) => Err(LocalMcpCommandError::runtime(format!(
+                    "{label} is not accessible: {}: {lstat_error}",
+                    path.display()
+                ))),
+            }
+        }
+        Err(error) => Err(LocalMcpCommandError::runtime(format!(
+            "{label} is not accessible: {}: {error}",
+            path.display()
+        ))),
+    }
 }
 
 fn write_config_files(
@@ -963,7 +1071,10 @@ fn write_config_files(
     }
 
     for (_, target) in &targets {
-        validate_config_destination(target, overwrite)?;
+        if let Some(parent) = target.parent() {
+            validate_config_dir_structure(parent)?;
+        }
+        validate_config_target(target, overwrite)?;
     }
     for (_, target) in &targets {
         if let Some(parent) = target.parent() {
@@ -976,7 +1087,10 @@ fn write_config_files(
         }
     }
     for (config, target) in targets {
-        validate_config_destination(target, overwrite)?;
+        if let Some(parent) = target.parent() {
+            validate_config_dir_structure(parent)?;
+        }
+        validate_config_target(target, overwrite)?;
         let text = pretty_json(&config.value).map_err(|error| {
             LocalMcpCommandError::runtime(format!("failed to render configuration JSON: {error}"))
         })?;
@@ -1943,6 +2057,298 @@ mod tests {
     }
 
     #[test]
+    fn invalid_explicit_setup_project_ids_stop_before_persistent_mutation(
+    ) -> Result<(), Box<dyn Error>> {
+        for (index, invalid_project_id) in ["", "   ", ".", "..", "a/b", "a\\b"]
+            .into_iter()
+            .enumerate()
+        {
+            let fixture = CommandFixture::new(&format!("setup-invalid-project-id-{index}"))?;
+            let config_dir = fixture.temp.path().join("configs");
+            let before = InvalidSetupSnapshot::read(fixture.runtime_home(), &config_dir)?;
+            let mut process = FakeProcess::new(fixture.repo_root());
+
+            let error = run_setup_command(
+                &args([
+                    "local-mcp",
+                    "--runtime-home",
+                    fixture.runtime_home_text(),
+                    "--repo-root",
+                    fixture.repo_root_text(),
+                    "--project-id",
+                    invalid_project_id,
+                    "--mcp-command",
+                    fixture.mcp_command_text(),
+                    "--config-dir",
+                    config_dir.to_str().expect("utf8 path"),
+                ]),
+                fixture.repo_root(),
+                &mut process,
+            )
+            .expect_err("invalid project_id should fail setup");
+            let after = InvalidSetupSnapshot::read(fixture.runtime_home(), &config_dir)?;
+
+            assert!(
+                matches!(error, LocalMcpCommandError::Usage(_)),
+                "unexpected error for {invalid_project_id:?}: {error}"
+            );
+            assert_eq!(after, before, "state changed for {invalid_project_id:?}");
+            assert!(process.calls.is_empty());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_repository_derived_project_id_stops_before_persistent_mutation(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-invalid-derived-project-id")?;
+        let repo_root = fixture.temp.path().join("   ");
+        fs::create_dir_all(&repo_root)?;
+        let config_dir = fixture.temp.path().join("configs");
+        let before = InvalidSetupSnapshot::read(fixture.runtime_home(), &config_dir)?;
+        let mut process = FakeProcess::new(&repo_root);
+
+        let error = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                fixture.runtime_home_text(),
+                "--repo-root",
+                repo_root.to_str().expect("utf8 path"),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+                "--config-dir",
+                config_dir.to_str().expect("utf8 path"),
+            ]),
+            &repo_root,
+            &mut process,
+        )
+        .expect_err("invalid derived project_id should fail setup");
+        let after = InvalidSetupSnapshot::read(fixture.runtime_home(), &config_dir)?;
+
+        assert!(matches!(error, LocalMcpCommandError::Runtime(_)));
+        assert!(error.to_string().contains("repository directory name"));
+        assert_eq!(after, before);
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn config_destination_validation_accepts_existing_and_missing_directories(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-config-valid-dirs")?;
+        let existing = fixture.temp.path().join("existing-configs");
+        fs::create_dir_all(&existing)?;
+        let existing_plan = validate_config_destinations(Some(&existing), false, false)?
+            .expect("existing config dir should produce a plan");
+
+        assert_eq!(existing_plan.config_dir, existing);
+        assert_eq!(existing_plan.targets.len(), 1);
+        assert_eq!(
+            existing_plan.targets[0].status,
+            ConfigDestinationStatus::Missing
+        );
+
+        let missing = fixture.temp.path().join("missing-configs");
+        let missing_plan = validate_config_destinations(Some(&missing), true, false)?
+            .expect("missing config dir should produce a plan");
+
+        assert_eq!(missing_plan.targets.len(), 2);
+        assert!(!missing.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn config_destination_validation_rejects_directory_structure_conflicts(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-config-structure-conflicts")?;
+
+        let config_dir_file = fixture.temp.path().join("config-file");
+        fs::write(&config_dir_file, "not a directory")?;
+        assert_config_error(
+            &config_dir_file,
+            false,
+            false,
+            "config-dir must be a directory",
+        );
+
+        let file_ancestor = fixture.temp.path().join("output-root");
+        fs::write(&file_ancestor, "not a directory")?;
+        assert_config_error(
+            &file_ancestor.join("mcp"),
+            false,
+            false,
+            "configuration ancestor is not a directory",
+        );
+
+        let deeper_dir = fixture.temp.path().join("deep");
+        fs::create_dir_all(&deeper_dir)?;
+        let deeper_file = deeper_dir.join("file-ancestor");
+        fs::write(&deeper_file, "not a directory")?;
+        assert_config_error(
+            &deeper_file.join("mcp").join("configs"),
+            false,
+            false,
+            "configuration ancestor is not a directory",
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn config_destination_validation_rejects_target_conflicts() -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-config-target-conflicts")?;
+
+        let agent_dir = fixture.temp.path().join("agent-dir-target");
+        fs::create_dir_all(agent_dir.join("harness-agent.mcp.json"))?;
+        assert_config_error(
+            &agent_dir,
+            false,
+            false,
+            "configuration destination is a directory",
+        );
+
+        let user_dir = fixture.temp.path().join("user-dir-target");
+        fs::create_dir_all(user_dir.join("harness-user-interaction.mcp.json"))?;
+        assert_config_error(&user_dir, true, false, "harness-user-interaction.mcp.json");
+
+        let agent_file = fixture.temp.path().join("agent-file-target");
+        fs::create_dir_all(&agent_file)?;
+        fs::write(agent_file.join("harness-agent.mcp.json"), "{}")?;
+        assert_config_error(&agent_file, false, false, "already exists");
+
+        let user_file = fixture.temp.path().join("user-file-target");
+        fs::create_dir_all(&user_file)?;
+        fs::write(user_file.join("harness-user-interaction.mcp.json"), "{}")?;
+        assert_config_error(&user_file, true, false, "harness-user-interaction.mcp.json");
+
+        let second_conflict = fixture.temp.path().join("second-conflict");
+        fs::create_dir_all(&second_conflict)?;
+        fs::write(
+            second_conflict.join("harness-user-interaction.mcp.json"),
+            "{}",
+        )?;
+        let error = validate_config_destinations(Some(&second_conflict), true, false)
+            .expect_err("second generated target should be rejected");
+        assert!(error
+            .to_string()
+            .contains("harness-user-interaction.mcp.json"));
+        assert!(!second_conflict.join("harness-agent.mcp.json").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn overwrite_authorizes_only_existing_regular_config_files() -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-config-overwrite-validation")?;
+        let config_dir = fixture.temp.path().join("configs");
+        fs::create_dir_all(&config_dir)?;
+        fs::write(config_dir.join("harness-agent.mcp.json"), "old")?;
+        fs::write(config_dir.join("harness-user-interaction.mcp.json"), "old")?;
+
+        let plan = validate_config_destinations(Some(&config_dir), true, true)?
+            .expect("overwriteable regular targets should produce a plan");
+
+        assert_eq!(
+            plan.targets
+                .iter()
+                .map(|target| (target.binding, target.status))
+                .collect::<Vec<_>>(),
+            vec![
+                (
+                    SetupSurfaceBinding::Agent,
+                    ConfigDestinationStatus::ExistingRegularFile
+                ),
+                (
+                    SetupSurfaceBinding::UserInteraction,
+                    ConfigDestinationStatus::ExistingRegularFile
+                )
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn dry_run_detects_config_path_conflict_without_creating_directories(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-dry-run-config-path-conflict")?;
+        let file_ancestor = fixture.temp.path().join("output-root");
+        fs::write(&file_ancestor, "not a directory")?;
+        let config_dir = file_ancestor.join("mcp");
+        let mut process = FakeProcess::new(fixture.repo_root());
+
+        let error = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                fixture.runtime_home_text(),
+                "--repo-root",
+                fixture.repo_root_text(),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+                "--config-dir",
+                config_dir.to_str().expect("utf8 path"),
+                "--dry-run",
+            ]),
+            fixture.repo_root(),
+            &mut process,
+        )
+        .expect_err("dry-run should still reject config path conflicts");
+
+        assert!(error
+            .to_string()
+            .contains("configuration ancestor is not a directory"));
+        assert!(!registry_db_path(fixture.runtime_home()).exists());
+        assert!(!config_dir.exists());
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn config_path_conflict_prevents_migration_registration_preflight_and_output(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = HistoricalCommandFixture::new(
+            "setup-config-path-conflict-before-mutation",
+            PROJECT_STATE_SCHEMA_VERSION - 1,
+            &baseline_workflow_access_classes(),
+        )?;
+        let state_path = project_state_db_path(fixture.runtime_home(), "repo");
+        let before_migrations = migration_count(&state_path, PROJECT_STATE_DATABASE_KIND)?;
+        let before_access = surface_local_access(&state_path, "repo")?;
+        let file_ancestor = fixture.temp.path().join("output-root");
+        fs::write(&file_ancestor, "not a directory")?;
+        let config_dir = file_ancestor.join("mcp");
+        let mut process = FakeProcess::new(fixture.repo_root());
+
+        let error = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                fixture.runtime_home_text(),
+                "--repo-root",
+                fixture.repo_root_text(),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+                "--config-dir",
+                config_dir.to_str().expect("utf8 path"),
+            ]),
+            fixture.repo_root(),
+            &mut process,
+        )
+        .expect_err("path conflict should fail before storage preparation");
+
+        assert!(error
+            .to_string()
+            .contains("configuration ancestor is not a directory"));
+        assert_eq!(
+            migration_count(&state_path, PROJECT_STATE_DATABASE_KIND)?,
+            before_migrations
+        );
+        assert_eq!(surface_local_access(&state_path, "repo")?, before_access);
+        assert!(process.calls.is_empty());
+        assert!(!config_dir.exists());
+        Ok(())
+    }
+
+    #[test]
     fn overwrite_replaces_existing_configuration_and_cleans_temp() -> Result<(), Box<dyn Error>> {
         let fixture = CommandFixture::new("setup-config-overwrite")?;
         let config_dir = fixture.temp.path().join("configs");
@@ -2074,6 +2480,21 @@ mod tests {
         Ok(files)
     }
 
+    fn assert_config_error(
+        config_dir: &Path,
+        include_user_interaction: bool,
+        overwrite: bool,
+        expected: &str,
+    ) {
+        let error =
+            validate_config_destinations(Some(config_dir), include_user_interaction, overwrite)
+                .expect_err("configuration destination should be rejected");
+        assert!(
+            error.to_string().contains(expected),
+            "expected {expected:?} in {error}"
+        );
+    }
+
     fn success_report(environment: &PreflightEnvironment) -> String {
         let (role, baseline) = if environment.surface_id == USER_INTERACTION_SURFACE_ID {
             ("user_interaction", "not_applicable")
@@ -2089,6 +2510,93 @@ mod tests {
             role,
             baseline
         )
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct InvalidSetupSnapshot {
+        runtime_home_dir_exists: bool,
+        registry_db_exists: bool,
+        registry_migrations: i64,
+        project_count: i64,
+        state_db_count: usize,
+        state_migrations: i64,
+        surface_count: i64,
+        config_dir_exists: bool,
+        generated_config_files: Vec<String>,
+    }
+
+    impl InvalidSetupSnapshot {
+        fn read(runtime_home: &Path, config_dir: &Path) -> Result<Self, Box<dyn Error>> {
+            let registry_path = registry_db_path(runtime_home);
+            let (registry_migrations, project_count) = if registry_path.exists() {
+                let registry = open_read_only_database(&registry_path)?;
+                (
+                    migration_count(&registry_path, REGISTRY_DATABASE_KIND)?,
+                    registry.query_row("SELECT COUNT(*) FROM projects", [], |row| row.get(0))?,
+                )
+            } else {
+                (0, 0)
+            };
+
+            let state_paths = state_database_paths(runtime_home)?;
+            let mut state_migrations = 0;
+            let mut surface_count = 0;
+            for path in &state_paths {
+                let state = open_read_only_database(path)?;
+                state_migrations += migration_count(path, PROJECT_STATE_DATABASE_KIND)?;
+                surface_count += state.query_row("SELECT COUNT(*) FROM surfaces", [], |row| {
+                    row.get::<_, i64>(0)
+                })?;
+            }
+
+            Ok(Self {
+                runtime_home_dir_exists: runtime_home.exists(),
+                registry_db_exists: registry_path.exists(),
+                registry_migrations,
+                project_count,
+                state_db_count: state_paths.len(),
+                state_migrations,
+                surface_count,
+                config_dir_exists: config_dir.exists(),
+                generated_config_files: generated_config_files(config_dir)?,
+            })
+        }
+    }
+
+    fn state_database_paths(runtime_home: &Path) -> Result<Vec<PathBuf>, Box<dyn Error>> {
+        let projects_dir = runtime_home.join("projects");
+        if !projects_dir.exists() {
+            return Ok(Vec::new());
+        }
+        let mut paths = Vec::new();
+        collect_state_database_paths(&projects_dir, &mut paths)?;
+        paths.sort();
+        Ok(paths)
+    }
+
+    fn collect_state_database_paths(
+        current: &Path,
+        paths: &mut Vec<PathBuf>,
+    ) -> Result<(), Box<dyn Error>> {
+        for entry in fs::read_dir(current)? {
+            let path = entry?.path();
+            if path.is_dir() {
+                collect_state_database_paths(&path, paths)?;
+            } else if path.file_name().is_some_and(|name| name == "state.sqlite") {
+                paths.push(path);
+            }
+        }
+        Ok(())
+    }
+
+    fn generated_config_files(config_dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
+        if !config_dir.exists() {
+            return Ok(Vec::new());
+        }
+        Ok(relative_tree(config_dir)?
+            .into_iter()
+            .filter(|path| path.ends_with(".mcp.json"))
+            .collect())
     }
 
     #[derive(Debug)]

@@ -6,8 +6,9 @@ use std::{
 
 use harness_store::{
     bootstrap::{
-        initialize_runtime_home, project_record, register_project, register_surface, ProjectRecord,
-        ProjectRegistration, SurfaceRecord, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+        initialize_runtime_home, project_record, register_project, register_surface,
+        validate_project_id, ProjectRecord, ProjectRegistration, SurfaceRecord,
+        SurfaceRegistration, ACTIVE_PROJECT_STATUS,
     },
     inspection::{
         inspect_project_state_database, inspect_runtime_home, DatabaseInspection,
@@ -426,14 +427,8 @@ pub fn plan_local_mcp_setup(
         });
     }
 
-    if options
-        .project_id
-        .as_deref()
-        .is_some_and(|project_id| project_id.trim().is_empty())
-    {
-        return Err(SetupPlanError::InvalidOptions {
-            detail: "project_id must not be empty".to_owned(),
-        });
+    if let Some(project_id) = options.project_id.as_deref() {
+        validate_project_id(project_id).map_err(project_id_options_error)?;
     }
 
     let inspection = inspect_runtime_home(&options.runtime_home);
@@ -798,6 +793,12 @@ fn apply_local_mcp_setup_plan_with_store(
             completed_actions: Vec::new(),
         });
     };
+    if let Err(error) = validate_project_id(&project_id) {
+        return Err(SetupApplyError::InvalidPlan {
+            message: error.to_string(),
+            completed_actions: Vec::new(),
+        });
+    }
 
     let mut completed_actions = Vec::new();
     for action in plan.ordered_actions() {
@@ -1073,6 +1074,21 @@ fn plan_derived_project(projects: &[ProjectRecord], repo_root: &Path) -> Project
         };
     };
 
+    if validate_project_id(&project_id).is_err() {
+        let conflict = SetupConflict::project(
+            SetupConflictKind::ExplicitProjectIdRequired,
+            None,
+            format!(
+                "repository directory name {project_id:?} cannot be used as a project_id; pass --project-id with a valid project id"
+            ),
+        );
+        return ProjectPlan {
+            selected_project_id: None,
+            action: SetupAction::project(SetupActionKind::Conflict, None, repo_root.to_path_buf()),
+            conflicts: vec![conflict],
+        };
+    }
+
     if let Some(existing) = projects
         .iter()
         .find(|project| project.project_id == project_id)
@@ -1121,6 +1137,13 @@ fn plan_derived_project(projects: &[ProjectRecord], repo_root: &Path) -> Project
             repo_root.to_path_buf(),
         ),
         conflicts: Vec::new(),
+    }
+}
+
+fn project_id_options_error(error: StoreError) -> SetupPlanError {
+    match error {
+        StoreError::InvalidInput { detail } => SetupPlanError::InvalidOptions { detail },
+        other => SetupPlanError::Store(other),
     }
 }
 
@@ -1440,6 +1463,42 @@ mod tests {
             Some("project_explicit")
         );
         assert_eq!(plan.project_action.kind, SetupActionKind::Create);
+        Ok(())
+    }
+
+    #[test]
+    fn explicit_invalid_project_id_fails_setup_planning() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("setup-explicit-invalid-project")?;
+        initialize(runtime_home.path())?;
+        let repo_root = repo_dir(runtime_home.path(), "product-explicit-invalid")?;
+        let mut options = LocalMcpSetupOptions::new(runtime_home.path(), &repo_root);
+        options.project_id = Some("a/b".to_owned());
+
+        let error = plan_local_mcp_setup(options)
+            .expect_err("invalid explicit project_id should fail planning");
+
+        assert!(matches!(error, SetupPlanError::InvalidOptions { .. }));
+        assert!(error.to_string().contains("project_id"));
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_repository_directory_name_requires_explicit_project_id() -> Result<(), Box<dyn Error>>
+    {
+        let runtime_home = TempRuntimeHome::new("setup-invalid-derived-project")?;
+        let repo_root = repo_dir(runtime_home.path(), "   ")?;
+
+        let plan =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))?;
+
+        assert_eq!(
+            conflict_kinds(&plan),
+            vec![SetupConflictKind::ExplicitProjectIdRequired]
+        );
+        assert!(plan.conflicts[0]
+            .message
+            .contains("repository directory name"));
+        assert!(!registry_db_path(runtime_home.path()).exists());
         Ok(())
     }
 

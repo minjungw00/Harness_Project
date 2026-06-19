@@ -3,12 +3,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use harness_store::bootstrap::validate_project_id;
+
 use crate::{
     host_config::{binding_name, render_configs},
     local_mcp_command::{
         absolute_path, action_kind_text, action_target_name, discover_selected_mcp_command,
         execute_local_mcp_setup, resolve_setup_runtime_home, validate_config_destinations,
-        LocalMcpCommandError, LocalMcpProcess, OutputFormat, ParsedLocalMcpOptions,
+        ConfigDestinationStatus, LocalMcpCommandError, LocalMcpProcess, OutputFormat,
+        ParsedLocalMcpOptions,
     },
     setup::{
         plan_local_mcp_setup, LocalMcpSetupOptions, LocalMcpSetupPlan, SetupActionKind,
@@ -158,7 +161,7 @@ fn run_local_mcp_wizard_inner(
         &mcp_command,
         config_dir.as_deref(),
     );
-    prompt_config_conflicts(&configs, &mut parsed, io)?;
+    prompt_config_conflicts(&mut parsed, io)?;
 
     plan = plan_setup(&parsed, &runtime_home, &repo_root)?;
     render_final_plan(&plan, &mcp_command, &configs, parsed.dry_run, io)?;
@@ -260,8 +263,8 @@ fn prompt_project_id(
             }
             PromptValue::Text(value) => value,
         };
-        if candidate.trim().is_empty() {
-            write(io, "Project ID must not be empty.\n")?;
+        if let Err(error) = validate_project_id(&candidate) {
+            write(io, &format!("{error}\n"))?;
             initial_default = None;
             continue;
         }
@@ -407,34 +410,35 @@ fn prompt_surface_conflicts(
 }
 
 fn prompt_config_conflicts(
-    configs: &[crate::host_config::GeneratedConfig],
     parsed: &mut ParsedLocalMcpOptions,
     io: &mut dyn WizardIo,
 ) -> WizardResult<()> {
     let Some(config_dir) = parsed.config_dir.clone() else {
         return Ok(());
     };
-    validate_config_destinations(Some(&config_dir), parsed.include_user_interaction, true)?;
+    let destination_plan =
+        validate_config_destinations(Some(&config_dir), parsed.include_user_interaction, true)?
+            .ok_or_else(|| {
+                LocalMcpCommandError::runtime("configuration destination plan was not produced")
+            })?;
 
     let mut overwrite_any = parsed.overwrite_config;
-    for config in configs {
-        let Some(path) = config.output_path.as_ref() else {
+    for target in destination_plan.targets {
+        if target.status != ConfigDestinationStatus::ExistingRegularFile {
             continue;
-        };
-        if path.exists() {
-            write(
-                io,
-                &format!("Configuration file exists: {}\n", path.display()),
-            )?;
-            if !prompt_yes_no(
-                io,
-                "Overwrite this generated configuration file?",
-                parsed.overwrite_config,
-            )? {
-                return Err(WizardError::Cancelled);
-            }
-            overwrite_any = true;
         }
+        write(
+            io,
+            &format!("Configuration file exists: {}\n", target.path.display()),
+        )?;
+        if !prompt_yes_no(
+            io,
+            "Overwrite this generated configuration file?",
+            parsed.overwrite_config,
+        )? {
+            return Err(WizardError::Cancelled);
+        }
+        overwrite_any = true;
     }
     parsed.overwrite_config = overwrite_any;
     validate_config_destinations(
@@ -852,6 +856,26 @@ mod tests {
 
         assert_eq!(output, "setup: cancelled\n");
         assert!(io.prompts().contains("not accessible"));
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_project_id_retries_before_valid_input() -> Result<(), Box<dyn Error>> {
+        let fixture = WizardFixture::new("wizard-invalid-project-retry")?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+        let mut io = TestWizardIo::new("\n\na/b\nproject_valid\nn\n\ny\n", true);
+
+        let output =
+            run_local_mcp_wizard(fixture.parsed(), fixture.repo_root(), &mut process, &mut io)?;
+
+        assert!(output.contains("setup: complete\n"));
+        assert!(output.contains("project_id: project_valid\n"));
+        assert!(io
+            .prompts()
+            .contains("project_id must be a single path component"));
+        assert_eq!(process.calls.len(), 1);
+        let projects = list_projects(fixture.runtime_home())?;
+        assert_eq!(projects[0].project_id, "project_valid");
         Ok(())
     }
 

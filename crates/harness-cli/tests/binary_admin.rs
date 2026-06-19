@@ -209,6 +209,36 @@ fn harness_binary_setup_help_and_usage_errors() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn harness_binary_project_register_rejects_invalid_project_id() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-invalid-project-id")?;
+    let repo_root = runtime_home.path().join("product-repo");
+    fs::create_dir_all(&repo_root)?;
+    let init = run_with_home(
+        runtime_home.path(),
+        ["init", "--runtime-home-id", "runtime_home_invalid_project"],
+    )?;
+    assert_success(&init);
+
+    let output = run_with_home(
+        runtime_home.path(),
+        [
+            "project",
+            "register",
+            "--project-id",
+            "a/b",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+        ],
+    )?;
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(stderr(&output).contains("project_id must be a single path component"));
+    assert!(list_projects(runtime_home.path())?.is_empty());
+    assert!(!runtime_home.path().join("projects").exists());
+    Ok(())
+}
+
+#[test]
 fn harness_binary_interactive_rejects_non_terminal_input() -> Result<(), Box<dyn Error>> {
     let output = run_without_home(["setup", "local-mcp", "--interactive"])?;
 
@@ -245,6 +275,37 @@ fn harness_binary_json_dry_run_is_parseable_and_does_not_register() -> Result<()
     assert_eq!(value["status"], "dry_run");
     assert_eq!(value["preflight"][0]["status"], "planned");
     assert!(!registry_db_path(runtime_home.path()).exists());
+    Ok(())
+}
+
+#[test]
+fn harness_binary_setup_config_file_ancestor_fails_before_runtime_home_creation(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-setup-config-ancestor")?;
+    let repo_root = runtime_home.path().join("product-repo");
+    let mcp_command = runtime_home.path().join("harness-mcp");
+    let output_root = runtime_home.path().join("output-root");
+    fs::create_dir_all(&repo_root)?;
+    fs::write(&mcp_command, "not executed")?;
+    fs::write(&output_root, "not a directory")?;
+
+    let output = run_without_home([
+        "setup",
+        "local-mcp",
+        "--runtime-home",
+        path_text(runtime_home.path()).as_str(),
+        "--repo-root",
+        path_text(&repo_root).as_str(),
+        "--mcp-command",
+        path_text(&mcp_command).as_str(),
+        "--config-dir",
+        path_text(&output_root.join("mcp")).as_str(),
+    ])?;
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(stderr(&output).contains("configuration ancestor is not a directory"));
+    assert!(!registry_db_path(runtime_home.path()).exists());
+    assert!(!output_root.join("mcp").exists());
     Ok(())
 }
 
