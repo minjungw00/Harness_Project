@@ -15,7 +15,7 @@ This document owns Harness security guarantee wording, local-access assumptions,
 ## Supported security guarantees
 
 <a id="honest-guarantee-display"></a>
-Harness may describe a guarantee only when [Scope](scope.md) and this security owner both support the guarantee level. If the claim depends on a surface capability, the relevant surface capability check must also pass for the named surface and observed scope.
+Harness may describe a guarantee only when [Scope](scope.md) and this security owner both support the guarantee level. Guarantee display is derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope. If the claim depends on a surface capability, the relevant surface capability check must also pass for the named surface and observed scope.
 
 The supported guarantee display labels are `cooperative` and `detective`; the value names are owned by [API Value Sets](api/schema-value-sets.md).
 
@@ -41,7 +41,8 @@ Must not claim:
 
 Conditions:
 - The claim names the surface.
-- The relevant capability check has passed.
+- The project enforcement profile and verified bound surface registration support the claim.
+- The relevant capability or enforcement check has passed and produced supported facts for the observed operation.
 - The observed scope is documented.
 - Changed-path wording is used only when the surface reports changed paths for the relevant operation.
 
@@ -52,6 +53,7 @@ May claim:
 
 Must not claim:
 - A copied `surface_id`, `access_class`, connector description, `Projection`, generated display, chat message, or agent memory proves capability.
+- Capability declarations alone raise a guarantee above `cooperative`.
 - `detective` wording becomes prevention, sandboxing, OS permission enforcement, full monitoring, or tamper-proof storage.
 
 ### Preventive guarantees
@@ -92,6 +94,7 @@ May claim:
 - Local surfaces can provide verified capability context when [Agent Integration](agent-integration.md) and this security owner allow the claim.
 - The baseline local access grant for a registered surface instance is the grant stored in `surfaces.local_access_json`.
 - Verification basis is diagnostic metadata composed from controlled registration and adapter-binding values. It is not an access grant, audit proof, or caller authority.
+- Baseline verified actor assurance is cooperative registered-surface provenance, not cryptographic human identity.
 
 Must not claim:
 - Local filesystem access proves Harness authority.
@@ -99,6 +102,7 @@ Must not claim:
 - Direct local modification outside those documented Harness contracts creates valid Harness records, evidence, acceptance, residual-risk acceptance, `Write Authorization`, or artifact authority.
 - `Harness Runtime Home` is automatically an OS security boundary, sandbox, or isolation layer.
 - A caller-supplied `verified` flag, requested `access_class`, `capability_profile`, copied `verification_basis`, public request field, or environment variable grants local access or supplies trusted verification-basis text.
+- `ToolEnvelope.actor_kind=user` proves human identity or supplies user authority without a compatible `VerifiedActorContext`.
 
 ## Authority boundaries
 
@@ -143,6 +147,7 @@ Surface identity and capability context limit what may be claimed.
 
 May claim:
 - `VerifiedSurfaceContext`, `surface_id`, `surface_instance_id`, `access_class`, and capability checks can be used according to the API, agent-integration, and security owners after the current invocation access is verified against the registered local access grant.
+- `VerifiedActorContext` can supply authority provenance only when the agent-integration and method owners accept the bound surface role, surface instance, verification basis, and assurance level for the current authority-resolution operation.
 - A registered surface instance may hold multiple documented access-class grants when `surfaces.local_access_json.authorized_access_classes` contains those classes.
 
 Must not claim:
@@ -151,6 +156,7 @@ Must not claim:
 - An `access_class` is OS permission or broad authority.
 - `capability_profile` grants an access class.
 - `verification_basis` is a caller authority token.
+- `ToolEnvelope.actor_kind` is proof of identity or authority.
 - Environment-controlled labels, public request fields, or arbitrary caller text are trusted authority, audit facts, or verification-basis inputs.
 
 ### Generated displays and text

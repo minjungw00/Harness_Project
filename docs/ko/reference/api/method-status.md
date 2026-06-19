@@ -86,12 +86,15 @@ StatusRequest:
 - `include.write_authority`는 유효한 활성, 만료, 오래됨, 소비됨 쓰기 권한 상태를 `write_authority_summary`로 반환합니다.
 - `include.evidence`는 사용할 수 있을 때 현재 `EvidenceSummary`와 범위를 반환합니다.
 - `include.close`는 `CurrentCloseBasis | null`, 닫기 상태, 계산된 차단 사유, 위험 수락 범위, 관련 다음 행동을 반환합니다. 차단 사유는 `harness.close_task intent=check`와 같은 닫기 준비 상태 계산을 사용합니다.
-- `include.guarantees`는 실제 런타임 프로필, 확인된 접점 등록, 활성화된 강제 사실에서 파생된 보장만 반환합니다.
+- `include.guarantees`는 프로젝트 강제 프로필, 확인된 묶인 접점 등록, 활성화된 강제 메커니즘, 지원되는 기준 범위에서 파생된 보장만 반환합니다.
+- `include.evidence=false`는 증거 요약, 범위, 아티팩트 증거 참조, 증거 전용 다음 행동을 계산하지도 반환하지도 않는다는 뜻입니다.
+- `include.close=false`는 닫기 준비 상태를 계산하지 않고 `CurrentCloseBasis`, 닫기 상태, 닫기 차단 사유, 잔여 위험 범위, 닫기 전용 다음 행동을 반환하지 않는다는 뜻입니다.
+- `include.guarantees=false`는 보장 표시를 파생하지도 반환하지도 않는다는 뜻입니다.
 
 정직한 상태 보기 규칙:
-- 계산하지 않았거나, 선택하지 않았거나, 사용할 수 없는 데이터는 스키마가 허용하는 곳에서 `null` 또는 생략으로 표현합니다. "계산했고 없음"을 암시하는 빈 값으로 표현하면 안 됩니다.
-- 빈 배열은 메서드가 그 필드를 계산했고 항목이 없었다는 뜻입니다.
-- 역량 선언은 보장을 만들지 않습니다. 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
+- 계산하지 않았거나, 선택하지 않은 데이터는 스키마가 허용하는 곳에서 생략합니다. 선택된 상태 보기를 계산했지만 사용할 수 없을 때만 `null`을 사용합니다. "계산했고 없음"을 암시하는 빈 값으로 표현하면 안 됩니다.
+- 닫기 차단 사유의 빈 배열을 포함한 빈 배열은 메서드가 그 필드를 계산했고 항목이 없었다는 뜻입니다.
+- 역량 선언만으로 보장이 생기지 않습니다. 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
 - `GuaranteeDisplay.capability_refs`는 해당 참조를 사용할 수 있을 때 실제 프로필이나 접점 사실을 식별해야 합니다.
 
 `include.close=true`와 [`harness.close_task`](method-close-task.md)의 `intent=check`는 같은 닫기 준비 상태 계산을 사용합니다. `harness.status`는 읽기 전용으로 남으며 재실행 행, 이벤트, 상태 변경, 닫기 변경, 상태 버전 증가를 만들지 않습니다.
@@ -170,7 +173,7 @@ params:
     task: true
     pending_user_judgments: true
     write_authority: false
-    evidence: false
+    evidence: true
     close: true
     guarantees: true
 ```

@@ -86,12 +86,15 @@ Include projection contract:
 - `include.write_authority` returns effective active, expired, stale, and consumed write-authority states through `write_authority_summary`.
 - `include.evidence` returns current `EvidenceSummary` and coverage when available.
 - `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, and relevant next actions. The blockers use the same close-readiness calculation as `harness.close_task intent=check`.
-- `include.guarantees` returns only guarantees derived from the actual runtime profile, verified surface registration, and enabled enforcement facts.
+- `include.guarantees` returns only guarantees derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope.
+- `include.evidence=false` means evidence summaries, coverage, artifact evidence refs, and evidence-only next actions are not computed and not returned.
+- `include.close=false` means close readiness is not computed and `CurrentCloseBasis`, close state, close blockers, residual-risk coverage, and close-only next actions are not returned.
+- `include.guarantees=false` means guarantee display is not derived and not returned.
 
 Truthful projection rules:
-- Uncomputed, unselected, or unavailable data is `null` or omitted where the schema permits, not an empty value that implies "computed and none."
-- Empty arrays mean the method computed that field and found no entries.
-- Capability declarations do not create guarantees. A cooperative-only deployment must not claim `detective`.
+- Uncomputed, unselected, or unavailable data is omitted where the schema permits, or `null` only when the selected projection was computed and unavailable. It is not an empty value that implies "computed and none."
+- Empty arrays, including empty close blockers, mean the method computed that field and found no entries.
+- Capability declarations alone do not create guarantees. A cooperative-only deployment must not claim `detective`.
 - `GuaranteeDisplay.capability_refs` should identify actual profile or surface facts when those refs are available.
 
 `include.close=true` and [`harness.close_task`](method-close-task.md) with `intent=check` use the same close-readiness calculation. `harness.status` remains read-only and creates no replay row, event, state mutation, close mutation, or state-version increment.
@@ -170,7 +173,7 @@ params:
     task: true
     pending_user_judgments: true
     write_authority: false
-    evidence: false
+    evidence: true
     close: true
     guarantees: true
 ```

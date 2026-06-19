@@ -9,7 +9,7 @@ It does not define API schemas, method behavior, storage effects, security guara
 This document owns:
 
 - surface registration inputs and selector meaning for agent integration
-- current surface context boundaries, including `surface_id`, `surface_instance_id`, and request-level `VerifiedSurfaceContext`
+- current surface and actor context boundaries, including `surface_id`, `surface_instance_id`, request-level `VerifiedSurfaceContext`, and authority-resolution `VerifiedActorContext`
 - capability declaration boundaries for `capability_profile`
 - agent context transfer rules between owner results and a surface
 - fallback display when the selected surface or current surface context is unavailable, mismatched, stale, or capability-limited
@@ -58,6 +58,7 @@ Condition:
 - A baseline-workflow registration profile may expand to the explicit access-class set `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, and `run_recording`.
 - A full-workflow profile must be explicitly selected and must not be the implicit default.
 - `verification_basis: string` is controlled registration or adapter-binding diagnostic metadata that explains how the grant was established. It does not grant access.
+- `interaction_role: string` identifies whether the surface instance acts as `agent` or `user_interaction` for authority-resolution purposes. Baseline registration has no mixed-role surface instance.
 - Registration facts are usable only through owner-returned verification for the current request.
 
 Agent may:
@@ -104,7 +105,7 @@ Method-derived requested access:
 
 Verification basis for newly derived contexts is composed only from controlled registration and adapter-binding values. Environment variables and public request fields cannot supply arbitrary verification-basis text. Controlled examples include `local_admin_registration`, `mcp_stdio_surface_binding`, `cli_direct_surface_binding`, and `test_fixture_binding`. Existing stored arbitrary basis strings may remain historical data, but newly written values use the controlled vocabulary. Verification basis is diagnostic metadata and never grants access.
 
-Internal shape, not a public API schema:
+Internal surface shape, not a public API schema:
 
 ```yaml
 VerifiedSurfaceContext:
@@ -116,12 +117,29 @@ VerifiedSurfaceContext:
   verification_basis: string
 ```
 
+`VerifiedActorContext` is the internal, derived actor-provenance context used when a method resolves authority-bearing user judgments. It is derived from the bound surface instance, registration role, adapter invocation context, and the public `ToolEnvelope.actor_kind` attribution. It is not a public request payload.
+
+Internal actor shape, not a public API schema:
+
+```yaml
+VerifiedActorContext:
+  role: agent | user_interaction
+  surface_id: string
+  surface_instance_id: string
+  verification_basis: string
+  assurance_level: string
+```
+
+Baseline `assurance_level` means cooperative registered-surface provenance, not cryptographic human identity. Authority-bearing resolution requires a `VerifiedActorContext.role=user_interaction`, a matching bound `surface_id` and `surface_instance_id`, and public `actor_kind=user`. `ToolEnvelope.actor_kind` is attribution only; an agent-role surface cannot gain user authority by submitting `actor_kind=user`.
+
 Condition:
 - A public API request has exactly one request-level `VerifiedSurfaceContext.access_class`.
+- A public API request has at most one authority-relevant `VerifiedActorContext`, and only authority-resolution method owners consume it.
 - Public `ToolEnvelope.project_id` and `ToolEnvelope.surface_id` are request echoes of the fixed session binding. They are not caller-selected authority and cannot change the session.
 - `surface_instance_id` remains adapter-derived invocation context. `ToolEnvelope` does not gain `surface_instance_id`; the shared request envelope stays with [API Schema Core](api/schema-core.md#tool-envelope).
 - Nested payloads such as `ArtifactInput` or `StagedArtifactHandle` do not add a second request-level access class.
 - Staged artifact provenance fields such as `created_by_surface_id` and `created_by_surface_instance_id` come from the derived `VerifiedSurfaceContext` at staging time, not caller text or nested artifact input.
+- Authority-provenance fields for resolved authority-bearing judgments come from `VerifiedActorContext.surface_id` and `VerifiedActorContext.surface_instance_id`, not caller text, labels, answer payloads, or copied refs.
 - Protected reads, mutations, and artifact operations can rely on a surface only when the method owner accepts the derived verified context.
 - `capability_profile` can describe support, but it cannot grant or elevate `VerifiedSurfaceContext.access_class`.
 
@@ -131,8 +149,10 @@ Agent may:
 
 Agent must not:
 - submit `VerifiedSurfaceContext` as a request payload
+- submit `VerifiedActorContext` as a request payload
 - assert `verified=true`
 - submit `surface_instance_id` as verification authority
+- submit `actor_kind=user` from an `agent` role surface to satisfy user authority
 - submit access class, capability profile, or verification basis as public request authority
 - fabricate staged artifact provenance
 - use copied identifiers, generated Markdown, chat text, projection text, or agent memory as substitutes for verified context

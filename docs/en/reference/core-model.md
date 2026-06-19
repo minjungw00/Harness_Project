@@ -188,9 +188,9 @@ Residual-risk acceptance is the user's acceptance of a named visible residual ri
 
 Cancellation is a user-owned decision to stop the `Task` without a successful completed result.
 
-Authority-bearing judgment kinds are final acceptance, residual-risk acceptance, sensitive approval, and cancellation. These judgments require a selected option, a stored `resolution_outcome=accepted`, `resolved_by_actor_kind=user`, and a compatible current basis. Rejected, deferred, or blocked outcomes remain durable user decisions but do not approve, accept, authorize, waive, or close anything. Existing resolved judgments without a machine-readable outcome are historical audit records and cannot satisfy current authority requirements.
+Authority-bearing judgment kinds are scope decision, sensitive approval, final acceptance, residual-risk acceptance, and cancellation. These judgments require a selected Core-created authority option, a stored `machine_action` that maps to `resolution_outcome=accepted`, a compatible current basis, `resolved_by_actor_kind=user`, and verified actor provenance for a bound surface whose role is `user_interaction`. Rejected, deferred, or blocked outcomes remain durable user decisions but do not approve, accept, authorize, waive, or close anything. Existing resolved judgments without a machine-readable outcome or without required verified actor provenance are historical audit records and cannot satisfy current authority requirements.
 
-For authority-bearing prompts, Core validates or supplies canonical option-to-outcome mappings. Option labels, explanatory text, free-form notes, or answer-payload prose must not invert the selected option's machine-readable outcome. At minimum, an authority-bearing prompt provides an accepted path and a rejected path; a deferred path may be supported only where an owner documents it.
+For authority-bearing prompts, callers do not define visible-label-to-machine-outcome mappings. Core creates the canonical authority options: `machine_action=accept` maps to `resolution_outcome=accepted`, `machine_action=reject` maps to `resolution_outcome=rejected`, and `machine_action=defer` maps to `resolution_outcome=deferred` only where the method or semantic owner permits deferral. `blocked` is not a caller-selected authority option unless the method owner explicitly defines that path. Core also creates localized labels and consequences; labels, explanatory text, free-form notes, or answer-payload prose are display-only and must not invert the selected option's machine-readable action or outcome.
 
 Core creates a basis snapshot for each stored judgment from current state. The basis ties the judgment to the current `Task`, Change Unit when applicable, `scope_revision`, close-basis revision when applicable, baseline, result references, named residual-risk IDs, sensitive-action scope when applicable, and creation state version. Callers do not submit scope revisions or close-basis revisions.
 
@@ -199,12 +199,13 @@ Judgment compatibility:
 - Final acceptance must match the current `Task`, current Change Unit, `scope_revision`, `close_basis_revision`, baseline, and result references.
 - Residual-risk acceptance must match the current `close_basis_revision` and exact current `risk_id` values.
 - Sensitive-action approval must match the current `scope_revision`, current Change Unit, operation, normalized paths, sensitive categories, baseline, and Change Unit-linked sensitive action requirement.
-- Cancellation authority must match the current `Task`, current scope revision, current Change Unit, and user actor. Rejected, deferred, stale, superseded, legacy-unbound, or non-user cancellation judgments do not permit cancellation.
+- Scope decision authority for a scope update must have `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, a current basis, `required_for` that includes scope update, verified actor provenance for `user_interaction`, and compatible `Task`, Change Unit, `scope_revision`, and affected refs. Rejected, deferred, blocked, stale, superseded, expired, legacy-unbound, or agent-recorded scope decisions do not authorize a scope transition.
+- Cancellation authority must have `machine_action=accept`, `resolution_outcome=accepted`, and match the current `Task`, current scope revision, current Change Unit, and verified `user_interaction` actor provenance. Rejected, deferred, stale, superseded, legacy-unbound, or agent-recorded cancellation judgments do not permit cancellation.
 - A scope decision records the user's decision but does not mutate current scope by itself.
 - A stale pending judgment cannot be answered successfully.
 - Scope changes and Run changes do not delete historical judgments; they make incompatible judgments ineligible for current close, write, or sensitive-approval requirements.
 
-Legacy judgments without a basis are preserved for audit as `legacy_unbound`. They cannot satisfy current close, write, sensitive-approval, cancellation, final-acceptance, or residual-risk-acceptance requirements. Pending judgments may become `superseded`; resolved judgments may remain stored while becoming `stale`.
+Legacy judgments without a basis are preserved for audit as `legacy_unbound`. They cannot satisfy current close, write, scope-decision, sensitive-approval, cancellation, final-acceptance, or residual-risk-acceptance requirements. Pending judgments may become `superseded`; resolved judgments may remain stored while becoming `stale`.
 
 Pending-judgment relevance:
 
@@ -368,7 +369,7 @@ Close-basis authority:
 - Caller-supplied close-basis result and risk refs must be accepted only from owner-allowed result/evidence kinds and must exist, belong to the same project and `Task`, and be canonicalized by Core.
 - Baseline allowed caller-supplied result/evidence kinds are Run, Artifact, EvidenceSummary, and ChangeUnit unless an owner explicitly adds another kind.
 - ProjectState, `Write Authorization`, UserJudgment, Blocker, TaskEvent, LocalSurfaceRegistration, and Task are not caller-supplied result refs unless an owner explicitly adds them.
-- Artifact refs used for close evidence must be linked to the `Task` and have verified integrity. Evidence refs must identify the current `Task` evidence summary. Run refs must identify a compatible Run and Change Unit.
+- Artifact refs used for close evidence must be linked to the `Task` and have current-byte verified integrity at use time. Evidence refs must identify the current `Task` evidence summary. Run refs must identify a recorded current Run compatible with the current `Task`, current Change Unit, current scope revision, and compatible baseline. Historical Runs are audit records unless a current Run explicitly reuses their verified artifacts or evidence and records that reuse.
 - Core stores canonical refs and never treats caller-supplied state-version metadata as authority. Core may add the current Run, current Change Unit, and current EvidenceSummary refs.
 - Sensitive action requirements in the current close basis are derived by Core from committed Runs and consumed `Write Authorization` records. Category-only caller input cannot establish or erase a requirement.
 - Legacy close bases with non-empty category-only sensitive data but no reconstructable action scope cannot satisfy complete close.
@@ -383,7 +384,7 @@ Residual-risk identity for close readiness uses opaque `risk_id` values from the
 
 Cancellation path:
 
-- `intent=cancel` requires a current accepted cancellation judgment bound to the `Task`, current scope revision, current Change Unit, and user actor.
+- `intent=cancel` requires a current accepted cancellation judgment with `machine_action=accept`, `resolution_outcome=accepted`, bound to the `Task`, current scope revision, current Change Unit, and verified `user_interaction` actor provenance.
 - Cancellation does not require completion-only evidence, final acceptance, or residual-risk acceptance.
 - Missing or incompatible cancellation authority is a close-readiness blocker for cancellation, not fabricated acceptance.
 

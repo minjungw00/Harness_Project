@@ -85,7 +85,8 @@ Path and access notes:
 Close-assessment ref rules:
 - Caller-supplied `close_assessment.result_refs` and `ResidualRiskInput.source_refs` are restricted to `record_kind=run`, `artifact`, `evidence_summary`, or `change_unit` unless an owner explicitly adds another kind.
 - The method rejects or excludes caller-supplied `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, and `task` refs from the close basis unless an owner explicitly adds them.
-- Every accepted ref must exist and belong to the same project and Task. Artifact refs must be linked to the Task and have `integrity_status=verified`; evidence refs must identify the current Task evidence summary; Run refs must identify a compatible Run and Change Unit.
+- Every accepted ref must exist and belong to the same project and Task. Artifact refs must be linked to the Task and pass current-byte verification with `integrity_status=verified`; evidence refs must identify the current Task evidence summary; Run refs used as current close-basis result refs must identify a recorded current Run compatible with the current Task, current Change Unit, current scope revision, compatible baseline, and recorded status.
+- Historical Run refs are audit records for close-basis purposes unless this new current Run explicitly reuses verified artifacts or evidence from history and records that reuse in its committed evidence or close assessment.
 - Core stores canonical refs in `CurrentCloseBasis` and never preserves caller-supplied `state_version` metadata as authority.
 - Core may add the current Run, current Change Unit, and current EvidenceSummary refs while constructing the canonical close basis.
 
@@ -111,7 +112,7 @@ Non-claims:
 
 A compatible committed result increments `project_state.state_version` exactly once.
 
-A compatible committed result increments the selected `Task.close_basis_revision` exactly once. When `close_assessment` is non-null, the commit establishes a new `CurrentCloseBasis` from the committed Run, the assessment fields, generated residual-risk IDs, and the selected current scope. When `close_assessment=null`, the committed Run explicitly does not establish a current close basis, and any existing current close basis becomes stale or absent.
+A compatible committed result increments the selected `Task.close_basis_revision` exactly once. When `close_assessment` is non-null, the commit establishes a new `CurrentCloseBasis` from the committed current Run, the assessment fields, generated residual-risk IDs, current Task, current Change Unit, selected current scope revision, and compatible baseline. When `close_assessment=null`, the committed Run explicitly does not establish a current close basis, and any existing current close basis becomes stale or absent.
 
 An empty `close_assessment.residual_risks` list explicitly means the current result has no identified residual risks. Core generates opaque `risk_id` values only for committed non-null assessments. A dry-run never reserves persistent `risk_id` values.
 

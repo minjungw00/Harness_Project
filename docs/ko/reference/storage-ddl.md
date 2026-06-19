@@ -131,6 +131,7 @@ CREATE TABLE surfaces (
   surface_id TEXT NOT NULL,
   surface_instance_id TEXT NOT NULL,
   surface_kind TEXT NOT NULL,
+  interaction_role TEXT NOT NULL DEFAULT 'agent' CHECK (interaction_role IN ('agent', 'user_interaction')),
   display_name TEXT,
   capability_profile_json TEXT NOT NULL DEFAULT '{}',
   local_access_json TEXT NOT NULL DEFAULT '{}',
@@ -215,9 +216,17 @@ CREATE TABLE user_judgments (
     CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound')),
   resolution_outcome TEXT
     CHECK (resolution_outcome IS NULL OR resolution_outcome IN ('accepted', 'rejected', 'deferred', 'blocked')),
+  resolution_machine_action TEXT
+    CHECK (resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')),
   resolution_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
+  resolved_by_actor_kind TEXT CHECK (resolved_by_actor_kind IS NULL OR resolved_by_actor_kind IN ('agent', 'user')),
+  resolved_actor_role TEXT CHECK (resolved_actor_role IS NULL OR resolved_actor_role IN ('agent', 'user_interaction')),
+  resolved_by_surface_id TEXT,
+  resolved_by_surface_instance_id TEXT,
+  resolved_verification_basis TEXT,
+  resolved_assurance_level TEXT,
   requested_at TEXT NOT NULL,
   resolved_at TEXT,
   metadata_json TEXT NOT NULL DEFAULT '{}',
@@ -226,6 +235,8 @@ CREATE TABLE user_judgments (
   FOREIGN KEY (project_id, task_id, change_unit_id)
     REFERENCES change_units (project_id, task_id, change_unit_id),
   FOREIGN KEY (project_id, requested_by_surface_id, requested_by_surface_instance_id)
+    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
+  FOREIGN KEY (project_id, resolved_by_surface_id, resolved_by_surface_instance_id)
     REFERENCES surfaces (project_id, surface_id, surface_instance_id)
 );
 
@@ -561,10 +572,13 @@ Task 리비전과 닫기 근거:
 - `user_judgments.basis_status`는 판단 근거의 저장소 소유 호환 상태인 `current`, `stale`, `superseded`, `legacy_unbound`를 저장합니다.
 - 근거가 없는 기존 판단은 `basis_json IS NULL`과 `basis_status='legacy_unbound'`로 표현합니다. 이 판단은 감사 기록으로 남으며 현재 닫기, 쓰기, 민감 승인 요구사항을 만족할 수 없습니다.
 - `user_judgments.resolution_outcome`은 있을 때 선택된 선택지의 기계 판독 가능 결과를 저장합니다. `resolution_outcome`이 null인 `status='resolved'`는 권한을 지니는 요구사항에서는 이력 감사 기록이며 수락으로 해석할 수 없습니다.
+- `user_judgments.resolution_machine_action`은 있을 때 선택된 Core 생성 권한 동작을 저장합니다. 현재 권한을 지니는 해결은 null이 아닌 `resolution_machine_action`과 null이 아닌 `resolution_outcome`을 요구합니다. 레거시 행은 감사 전용 읽기를 위해 둘 중 하나를 null로 둘 수 있습니다.
+- `resolved_by_actor_kind`, `resolved_actor_role`, `resolved_by_surface_id`, `resolved_by_surface_instance_id`, `resolved_verification_basis`, `resolved_assurance_level`은 해결 시점에 파생된 `VerifiedActorContext` 출처를 저장합니다. 권한을 지니는 행은 `resolved_by_actor_kind='user'`, `resolved_actor_role='user_interaction'`, 유효한 해결 접점/인스턴스 참조, null이 아닌 출처 필드가 필요합니다. 그 출처가 없는 행은 읽을 수 있는 이력 기록일 뿐입니다.
 
 접점 로컬 접근 허용:
 
 - `surfaces.local_access_json`은 등록된 로컬 접근 허용의 기준 저장 위치입니다.
+- `surfaces.interaction_role`은 등록된 접점 인스턴스가 `agent` 또는 `user_interaction` 행위자 출처를 제공하는지를 기록합니다. 기준 저장소는 혼합 역할 접점 인스턴스를 지원하지 않습니다.
 - 선호되는 허용 필드는 `authorized_access_classes: string[]`입니다. 접점 인스턴스 하나에 대해 문서화된 접근 등급 여러 개를 담을 수 있습니다. `access_class: string`은 하위 호환을 위한 단일 값 대체 필드입니다.
 - `verification_basis: string`은 허용이 어떻게 성립했는지 설명하는 통제된 등록 또는 어댑터 바인딩 진단 메타데이터입니다. 호출자 권한이 아니며 허용을 추가하지 않습니다.
 - `surfaces.capability_profile_json`은 역량 선언이며 접근 등급 허용으로 취급하면 안 됩니다.
@@ -597,6 +611,7 @@ Task 리비전과 닫기 근거:
 - `artifacts.integrity_status='verified'`는 비어 있지 않은 `content_type`, 소문자 16진수 64자 `sha256`, 음수가 아닌 `size_bytes`를 요구합니다.
 - `integrity_status='legacy_unknown'`은 사실이 불완전한 레거시 행을 보존합니다. 타입을 아는 Core 코드는 그런 행이 verified처럼 보이도록 빈 해시, 0바이트 크기, 콘텐츠 타입을 만들어 내면 안 됩니다.
 - `integrity_status='corrupt'`는 알려진 무결성 실패를 기록합니다. `legacy_unknown` 또는 `corrupt` 아티팩트는 증거 또는 닫기 권한 요구사항을 만족할 수 없습니다.
+- DDL 제약은 메타데이터 형태만 검증합니다. 권한 사용 전 현재 바이트 검증은 아티팩트 저장소가 담당합니다. 마이그레이션은 메타데이터 열 형태가 올바르다는 이유만으로 레거시 행을 `verified`로 표시하면 안 됩니다.
 
 마이그레이션 기록:
 

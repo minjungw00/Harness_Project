@@ -33,7 +33,8 @@
 - `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `question`, `options`, `context`, `affected_refs`, `required_for`, `expires_at`.
 - 서로 이해할 수 있는 `options`를 가진 초점이 분명한 `question`.
 - 사용자가 숨은 대화 상태에 기대지 않고 정확한 사안을 판단할 수 있는 충분한 `context`.
-- 각 선택지는 기계 판독 가능한 `resolution_outcome`을 가져야 합니다. 권한을 지니는 판단 종류에서는 Core가 기준 선택지-결과 매핑을 검증하거나 제공합니다.
+- 권한을 지니지 않는 판단 종류에서는 호출자가 작성한 각 선택지가 기계 판독 가능한 `resolution_outcome`을 가져야 합니다. 담당 문서가 더 좁은 선택지 집합을 정의하지 않는 한 `machine_action`은 null입니다.
+- 권한을 지니는 판단 종류에서는 요청 입력에 호출자가 작성한 `machine_action` 또는 `resolution_outcome` 매핑이 들어가지 않습니다. 메서드 담당 문서가 권한이 아닌 표시 후보를 정의하지 않는 한 호출자는 `options: []`를 사용하며, Core가 기준 권한 선택지, 현지화된 라벨, 결과 설명, `machine_action`, `resolution_outcome`을 만듭니다.
 
 ## 요청 스키마
 
@@ -83,7 +84,7 @@ RequestUserJudgmentRequest:
 
 - 다른 메서드가 반환한 `UserJudgmentCandidate`는 `harness.request_user_judgment`가 커밋하기 전까지 지속 판단이 아닙니다.
 - `judgment_kind=final_acceptance` 또는 `judgment_kind=residual_risk_acceptance`에서는 Core가 현재 닫기 근거를 판단 근거에 캡처합니다. 필요한 현재 닫기 근거 또는 현재 잔여 위험 ID를 사용할 수 없으면 요청은 커밋 전에 거절됩니다.
-- 권한을 지니는 판단 종류에서는 생성되는 선택지 집합에 `accepted` 경로와 `rejected` 경로가 있어야 합니다. 라벨과 설명 문구는 `resolution_outcome`을 덮어쓰지 않습니다.
+- 권한을 지니는 판단 종류에서는 Core가 생성하는 선택지 집합에 `machine_action=accept`와 `machine_action=reject`가 있어야 합니다. `machine_action=defer`는 담당 문서가 연기를 허용하는 곳에서만 나타납니다. 라벨과 설명 문구는 `machine_action`이나 `resolution_outcome`을 덮어쓰지 않습니다.
 - 잔여 위험 수락의 경우 요청 맥락의 보이는 위험은 정확한 현재 `risk_id` 값을 담아야 합니다.
 - `dry_run`과 거절은 대기 중인 판단, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 
@@ -176,12 +177,14 @@ params:
       label: "Use concise copy"
       description: "Record the user-owned product decision to keep the shorter banner copy."
       consequence: "The pending banner-copy decision can be treated as resolved."
+      machine_action: null
       resolution_outcome: accepted
       is_default: true
     - option_id: expanded
       label: "Use expanded copy"
       description: "Record that the banner copy should include a longer explanation."
       consequence: "The Task remains open for the expanded banner-copy change."
+      machine_action: null
       resolution_outcome: rejected
       is_default: false
   context:
@@ -235,12 +238,14 @@ user_judgment:
       label: "Use concise copy"
       description: "Record the user-owned product decision to keep the shorter banner copy."
       consequence: "The pending banner-copy decision can be treated as resolved."
+      machine_action: null
       resolution_outcome: accepted
       is_default: true
     - option_id: expanded
       label: "Use expanded copy"
       description: "Record that the banner copy should include a longer explanation."
       consequence: "The Task remains open for the expanded banner-copy change."
+      machine_action: null
       resolution_outcome: rejected
       is_default: false
   context:

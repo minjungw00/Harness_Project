@@ -42,9 +42,9 @@ ArtifactRef:
   project_id: string
   task_id: string
   display_name: string
-  content_type: string
-  sha256: string
-  size_bytes: integer
+  content_type: string | null
+  sha256: string | null
+  size_bytes: integer | null
   integrity_status: string
   redaction_state: string
   availability: string
@@ -56,9 +56,11 @@ ArtifactRef:
 
 `ArtifactRef` is a reference and metadata shape. It does not make artifact body content readable by default and does not prove that the content is sufficient evidence for close.
 
-`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, and `storage_ref` are opaque identifiers. `display_name` is a free-form display string. `content_type` is media-type metadata, `sha256` is a checksum string, and `size_bytes` is byte-size metadata. `integrity_status`, `redaction_state`, and `availability` are controlled value strings owned by [artifact values](schema-value-sets.md#artifact-values).
+`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, and `storage_ref` are opaque identifiers. `display_name` is a free-form display string. `content_type` is media-type metadata when known, `sha256` is a checksum string when known, and `size_bytes` is byte-size metadata when known. `integrity_status`, `redaction_state`, and `availability` are controlled value strings owned by [artifact values](schema-value-sets.md#artifact-values).
 
-For `integrity_status=verified`, `content_type` is non-empty, `sha256` is a valid lowercase hexadecimal SHA-256 string, and `size_bytes` is nonnegative. Missing facts must not be represented as an empty hash, zero-byte size, or invented content type. Legacy artifacts with incomplete facts use `integrity_status=legacy_unknown`; known mismatches use `integrity_status=corrupt`.
+`integrity_status` is required. Null `content_type`, `sha256`, or `size_bytes` means the fact is unknown, not empty, not zero, and not defaulted. Missing facts must not be represented as an empty hash, zero-byte size, or invented content type. A real zero-byte artifact has `size_bytes: 0` and the SHA-256 of empty bytes, `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+
+For `integrity_status=verified`, `content_type` is non-empty, `sha256` is a valid lowercase hexadecimal SHA-256 string, and `size_bytes` is nonnegative. Authority-bearing evidence and close use also require current-byte verification by [Artifact Storage](../storage-artifacts.md). Legacy artifacts with incomplete facts use `integrity_status=legacy_unknown`; known mismatches use `integrity_status=corrupt`.
 
 ## `StagedArtifactHandle`
 

@@ -42,9 +42,9 @@ ArtifactRef:
   project_id: string
   task_id: string
   display_name: string
-  content_type: string
-  sha256: string
-  size_bytes: integer
+  content_type: string | null
+  sha256: string | null
+  size_bytes: integer | null
   integrity_status: string
   redaction_state: string
   availability: string
@@ -56,9 +56,11 @@ ArtifactRef:
 
 `ArtifactRef`는 참조와 메타데이터 형태입니다. 이 값만으로 아티팩트 본문을 읽을 수 있는 것도 아니고, 그 본문이 닫기에 충분한 증거라는 뜻도 아닙니다.
 
-`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `storage_ref`는 불투명 식별자입니다. `display_name`은 자유 형식 표시 문자열입니다. `content_type`은 미디어 타입 메타데이터이고, `sha256`은 체크섬 문자열이며, `size_bytes`는 바이트 크기 메타데이터입니다. `integrity_status`, `redaction_state`, `availability`는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당하는 제어 값 문자열입니다.
+`artifact_id`, `project_id`, `task_id`, `created_by_surface_id`, `created_by_surface_instance_id`, `storage_ref`는 불투명 식별자입니다. `display_name`은 자유 형식 표시 문자열입니다. `content_type`은 알 때의 미디어 타입 메타데이터이고, `sha256`은 알 때의 체크섬 문자열이며, `size_bytes`는 알 때의 바이트 크기 메타데이터입니다. `integrity_status`, `redaction_state`, `availability`는 [아티팩트 값](schema-value-sets.md#artifact-values)이 담당하는 제어 값 문자열입니다.
 
-`integrity_status=verified`에서는 `content_type`이 비어 있지 않고, `sha256`이 유효한 소문자 16진수 SHA-256 문자열이며, `size_bytes`가 음수가 아니어야 합니다. 빠진 사실을 빈 해시, 0바이트 크기, 만들어 낸 콘텐츠 타입으로 표현하면 안 됩니다. 사실이 불완전한 레거시 아티팩트는 `integrity_status=legacy_unknown`을 사용하고, 알려진 불일치는 `integrity_status=corrupt`를 사용합니다.
+`integrity_status`는 필수입니다. `content_type`, `sha256`, `size_bytes`가 null이면 그 사실을 모른다는 뜻이며, 비어 있음, 0, 기본값이 아닙니다. 빠진 사실을 빈 해시, 0바이트 크기, 만들어 낸 콘텐츠 타입으로 표현하면 안 됩니다. 실제 0바이트 아티팩트는 `size_bytes: 0`과 빈 바이트의 SHA-256인 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`를 가집니다.
+
+`integrity_status=verified`에서는 `content_type`이 비어 있지 않고, `sha256`이 유효한 소문자 16진수 SHA-256 문자열이며, `size_bytes`가 음수가 아니어야 합니다. 권한을 지니는 증거와 닫기 사용은 [아티팩트 저장소](../storage-artifacts.md)의 현재 바이트 검증도 요구합니다. 사실이 불완전한 레거시 아티팩트는 `integrity_status=legacy_unknown`을 사용하고, 알려진 불일치는 `integrity_status=corrupt`를 사용합니다.
 
 ## `StagedArtifactHandle`
 

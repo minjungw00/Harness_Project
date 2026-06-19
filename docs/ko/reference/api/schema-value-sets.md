@@ -69,7 +69,7 @@ harness.close_task
 | `agent` | 요청 래퍼와 판단 해결 형태. | 형태 담당 문서: [API 코어 스키마](schema-core.md#tool-envelope). 해결 형태 담당 문서: [API 판단 스키마](schema-judgment.md). |
 | `user` | 요청 래퍼와 판단 해결 형태. | 형태 담당 문서: [API 코어 스키마](schema-core.md#tool-envelope). 해결 형태 담당 문서: [API 판단 스키마](schema-judgment.md). |
 
-이 값들은 요청이나 해결 형태가 이름 붙이는 API 행위자를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 최종 수락, 잔여 위험 수락, `Write Authorization`이 생기지는 않습니다.
+이 값들은 요청이나 해결 형태가 이름 붙이는 API 행위자를 분류합니다. 이 값만으로 사용자 소유 판단, 승인, 범위 결정 권한, 최종 수락, 잔여 위험 수락, `Write Authorization`이 생기지는 않습니다. `actor_kind=user`는 귀속이지 증명이 아닙니다. 권한을 지니는 해결은 [에이전트 통합](../agent-integration.md)의 호환되는 내부 `VerifiedActorContext` 출처도 요구합니다.
 
 <a id="next-action-values"></a>
 ## 다음 행동 값
@@ -385,6 +385,8 @@ cooperative
 detective
 ```
 
+`cooperative`는 기준 대체값입니다. `detective`는 보안 담당 문서가 그 주장을 지원하고, 프로젝트 강제 프로필, 확인된 묶인 접점 등록, 활성화된 강제 메커니즘, 관찰 범위 사실이 이를 뒷받침할 때만 표시할 수 있습니다. 역량 선언만으로 표시 보장을 높일 수 없습니다.
+
 <a id="artifact-values"></a>
 ## 아티팩트 값
 
@@ -431,7 +433,7 @@ legacy_unknown
 corrupt
 ```
 
-`verified`는 지속 아티팩트 사실이 무결성을 확인할 수 있을 만큼 완전하다는 뜻입니다. `legacy_unknown`은 보존된 아티팩트 메타데이터에 검증에 필요한 사실이 완전하지 않다는 뜻입니다. `corrupt`는 저장된 바이트나 메타데이터가 지속 저장된 무결성 사실과 맞지 않는다고 알려진 상태입니다.
+`verified`는 지속 아티팩트 사실이 무결성을 확인할 수 있을 만큼 완전하고 권한 사용 전에 현재 바이트 검증을 수행할 수 있다는 뜻입니다. `legacy_unknown`은 보존된 아티팩트 메타데이터에 검증에 필요한 사실이 완전하지 않다는 뜻입니다. `corrupt`는 저장된 바이트나 메타데이터가 지속 저장된 무결성 사실과 맞지 않는다고 알려진 상태입니다. 아티팩트를 증거나 닫기에 사용할 때 필요한 현재 바이트 확인은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
 아티팩트 저장소 생명주기와 본문 읽기 자격은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다.
 
@@ -502,10 +504,16 @@ legacy_unbound
 - `current`는 근거가 현재 만족할 수 있는 요구사항과 지금 일치한다는 뜻입니다.
 - `stale`은 저장된 근거가 더 이상 현재 상태와 일치하지 않는다는 뜻입니다. 해결된 행은 감사용으로 남을 수 있지만 현재 요구사항에는 사용할 수 없습니다.
 - `superseded`는 대기 판단이 더 새 질문이나 근거로 대체되어 성공적으로 답할 수 없다는 뜻입니다.
-- `legacy_unbound`는 보존된 판단에 상태 근거가 없어서 현재 닫기, 쓰기, 민감 승인 요구사항을 만족할 수 없다는 뜻입니다.
+- `legacy_unbound`는 보존된 판단에 상태 근거가 없어서 현재 닫기, 쓰기, 범위 결정, 민감 승인 요구사항을 만족할 수 없다는 뜻입니다.
+
+권한 선택지 동작 값:
+- `accept`는 `accepted`로 매핑됩니다.
+- `reject`는 `rejected`로 매핑됩니다.
+- `defer`는 메서드나 의미 담당 문서가 연기를 허용하는 곳에서만 `deferred`로 매핑됩니다.
+- `blocked`는 메서드 담당 문서가 그 경로를 명시적으로 정의하지 않는 한 호출자가 선택하는 권한 선택지가 아닙니다.
 
 해결 결과 의미:
-- `accepted`는 판단 종류, 근거, 행위자, 선택된 선택지가 모두 호환될 때 권한을 지니는 판단 요구사항을 만족할 수 있는 유일한 결과입니다.
+- `accepted`는 판단 종류, 근거, 확인된 행위자 출처, 선택된 선택지, `machine_action=accept`가 모두 호환될 때 권한을 지니는 판단 요구사항을 만족할 수 있는 유일한 결과입니다.
 - `rejected`, `deferred`, `blocked`는 지속되는 사용자 결정이지만 어떤 것도 승인, 수락, 권한 부여, 면제, 닫기를 만들지 않습니다.
 - 기계 판독 가능한 결과가 없으면 절대 `accepted`로 해석하면 안 됩니다.
 
@@ -514,7 +522,7 @@ legacy_unbound
 - 민감 승인 질문은 민감 동작 범위가 현재 민감 동작 요구사항과 겹칠 때만 관련됩니다.
 - `informational` 판단은 감사 또는 표시 맥락이며 그 자체로 쓰기, 실행 기록, 닫기를 차단하지 않습니다.
 
-`UserJudgmentOption.option_id`의 범위는 그 판단 안으로 제한되며 전역 값 집합이 아닙니다. 화면에 보이는 선택지 라벨은 기준 값이 아니라 표시 텍스트일 뿐입니다. `UserJudgmentOption.resolution_outcome`은 `JudgmentResolutionOutcome`을 사용합니다. 선택지 라벨과 설명 문구가 기계 판독 가능한 결과를 뒤집으면 안 됩니다.
+`UserJudgmentOption.option_id`의 범위는 그 판단 안으로 제한되며 전역 값 집합이 아닙니다. 화면에 보이는 선택지 라벨은 기준 값이 아니라 표시 텍스트일 뿐입니다. `UserJudgmentOption.machine_action`은 값이 있을 때 위의 권한 선택지 동작 값을 사용합니다. `UserJudgmentOption.resolution_outcome`은 `JudgmentResolutionOutcome`을 사용합니다. 선택지 라벨과 설명 문구가 기계 판독 가능한 동작이나 결과를 뒤집으면 안 됩니다.
 
 ## 오류 세부사항 보조 값
 

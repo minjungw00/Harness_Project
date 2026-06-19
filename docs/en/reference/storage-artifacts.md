@@ -352,7 +352,7 @@ Storage meaning:
 
 | Value | Meaning |
 |---|---|
-| `verified` | Persistent artifact facts are complete and integrity-aware. |
+| `verified` | Persistent artifact facts are complete, and current bytes can be integrity-checked before authority use. |
 | `legacy_unknown` | A preserved artifact lacks complete integrity facts. |
 | `corrupt` | The stored bytes or metadata are known not to match persisted integrity facts. |
 
@@ -367,9 +367,11 @@ Rules:
 
 - New persistent artifacts must use `integrity_status=verified`.
 - `verified` requires a non-empty `content_type`, a valid lowercase hexadecimal SHA-256 string, and nonnegative `size_bytes`.
+- Authority-bearing artifact use also requires current-byte verification at use time: the body or safe notice exists inside the artifact-store boundary, no symlink or path escape is followed, the stored target is a regular file or owner-approved safe representation, `artifacts.status=available`, current byte size equals stored `size_bytes`, current SHA-256 equals stored `sha256`, and the stored content-type and integrity facts remain valid.
 - Missing facts must not be represented as an empty hash, zero-byte size, or invented content type.
-- Legacy artifacts with incomplete facts remain `legacy_unknown`.
-- `legacy_unknown` or `corrupt` artifacts cannot satisfy evidence or close authority requirements.
+- Legacy artifacts with incomplete facts remain `legacy_unknown`; migration must not mark a legacy artifact `verified` merely because metadata columns have the right shape.
+- `legacy_unknown`, `corrupt`, deleted, missing, unavailable, or modified artifacts cannot satisfy evidence or close authority requirements.
+- Read-only status and close paths may compute an effective missing or integrity-failed result for the response without mutating stored artifact lifecycle state.
 - Status displays may show that artifact facts are unavailable or corrupt without inventing facts.
 
 Allowed:

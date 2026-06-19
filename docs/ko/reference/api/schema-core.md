@@ -85,7 +85,7 @@ ToolEnvelope:
 
 의미:
 - `task_id`는 null 허용 요청 수준 `Task` 선택자입니다. 필드는 존재하며 값은 null일 수 있습니다.
-- `actor_kind`는 제어 값 문자열입니다.
+- `actor_kind`는 요청 귀속을 위한 제어 값 문자열입니다. 인간 신원 증명이 아니며 그 자체로 사용자 권한을 만족하지 않습니다. 권한을 지니는 판단 해결은 [에이전트 통합](../agent-integration.md)이 정의하는 내부 `VerifiedActorContext`를 사용합니다.
 - `expected_state_version`은 프로젝트 전체 상태 시계 값을 담는 요청 수준 필드입니다.
 - `idempotency_key`는 null 허용 불투명 식별자입니다. 메서드 담당 문서가 null이 아닌 값이 필요한 때를 정의합니다.
 - `expected_state_version`은 null 허용입니다. 메서드와 저장소 담당 문서가 null이 아닌 값이 필요한 때를 정의합니다.

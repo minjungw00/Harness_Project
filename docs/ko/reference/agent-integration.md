@@ -9,7 +9,7 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 이 문서가 담당합니다.
 
 - 에이전트 통합에서 쓰는 접점 등록 입력과 선택자 의미
-- `surface_id`, `surface_instance_id`, 요청 수준 `VerifiedSurfaceContext`를 포함한 현재 적용 접점 맥락 경계
+- `surface_id`, `surface_instance_id`, 요청 수준 `VerifiedSurfaceContext`, 권한 해결용 `VerifiedActorContext`를 포함한 현재 적용 접점과 행위자 맥락 경계
 - `capability_profile`의 역량 선언 경계
 - 담당 결과와 접점 사이의 에이전트 맥락 전달 규칙
 - 선택된 접점이나 현재 적용 접점 맥락을 사용할 수 없거나, 맞지 않거나, 오래되었거나, 역량이 부족할 때의 대체 표시
@@ -58,6 +58,7 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 - 기준 워크플로 등록 프로필은 `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, `run_recording`의 명시적 접근 등급 집합으로 확장될 수 있습니다.
 - 전체 워크플로 프로필은 명시적으로 선택되어야 하며 암묵적 기본값이 되면 안 됩니다.
 - `verification_basis: string`은 허용이 어떻게 성립했는지 설명하는 통제된 등록 또는 어댑터 바인딩 진단 메타데이터입니다. 접근을 부여하지 않습니다.
+- `interaction_role: string`은 그 접점 인스턴스가 권한 해결에서 `agent`로 동작하는지 `user_interaction`으로 동작하는지를 식별합니다. 기준 등록에는 혼합 역할 접점 인스턴스가 없습니다.
 - 등록 사실은 현재 요청에 대해 담당 결과가 반환한 확인을 통해서만 사용할 수 있습니다.
 
 에이전트가 할 수 있는 것:
@@ -104,7 +105,7 @@ MCP 세션은 프로세스 전체에 고정된 접근 등급 하나에 묶이지
 
 새로 파생되는 맥락의 검증 근거는 통제된 등록 값과 어댑터 바인딩 값으로만 구성됩니다. 환경 변수와 공개 요청 필드는 임의의 검증 근거 문구를 제공할 수 없습니다. 통제된 예시는 `local_admin_registration`, `mcp_stdio_surface_binding`, `cli_direct_surface_binding`, `test_fixture_binding`입니다. 기존에 저장된 임의 근거 문자열은 이력 데이터로 남을 수 있지만, 새로 쓰는 값은 통제된 어휘를 사용합니다. 검증 근거는 진단 메타데이터이며 접근을 부여하지 않습니다.
 
-내부 형태이며 공개 API 스키마가 아닙니다.
+내부 접점 형태이며 공개 API 스키마가 아닙니다.
 
 ```yaml
 VerifiedSurfaceContext:
@@ -116,12 +117,29 @@ VerifiedSurfaceContext:
   verification_basis: string
 ```
 
+`VerifiedActorContext`는 메서드가 권한을 지니는 사용자 판단을 해결할 때 사용하는 내부 파생 행위자 출처 맥락입니다. 묶인 접점 인스턴스, 등록 역할, 어댑터 호출 맥락, 공개 `ToolEnvelope.actor_kind` 귀속값에서 파생됩니다. 공개 요청 페이로드가 아닙니다.
+
+내부 행위자 형태이며 공개 API 스키마가 아닙니다.
+
+```yaml
+VerifiedActorContext:
+  role: agent | user_interaction
+  surface_id: string
+  surface_instance_id: string
+  verification_basis: string
+  assurance_level: string
+```
+
+기준 `assurance_level`은 협력적 등록 접점 출처를 뜻하며 암호학적 인간 신원 증명이 아닙니다. 권한을 지니는 해결에는 `VerifiedActorContext.role=user_interaction`, 묶인 `surface_id`와 `surface_instance_id`의 일치, 공개 `actor_kind=user`가 필요합니다. `ToolEnvelope.actor_kind`는 귀속일 뿐입니다. `agent` 역할 접점은 `actor_kind=user`를 제출해도 사용자 권한을 얻을 수 없습니다.
+
 조건:
 - 공개 API 요청 하나에는 요청 수준 `VerifiedSurfaceContext.access_class`가 정확히 하나 있습니다.
+- 공개 API 요청 하나에는 권한과 관련된 `VerifiedActorContext`가 최대 하나 있으며, 권한 해결 메서드 담당 문서만 이를 소비합니다.
 - 공개 `ToolEnvelope.project_id`와 `ToolEnvelope.surface_id`는 고정된 세션 바인딩을 요청에서 되비추는 값입니다. 호출자가 선택하는 권한이 아니며 세션을 바꿀 수 없습니다.
 - `surface_instance_id`는 어댑터가 파생한 호출 맥락으로 남습니다. `ToolEnvelope`에는 `surface_instance_id`가 추가되지 않습니다. 공통 요청 래퍼는 [API 코어 스키마](api/schema-core.md#tool-envelope)에 둡니다.
 - `ArtifactInput`이나 `StagedArtifactHandle` 같은 중첩 페이로드는 두 번째 요청 수준 접근 등급을 추가하지 않습니다.
 - `created_by_surface_id`, `created_by_surface_instance_id` 같은 스테이징된 아티팩트 출처 필드는 호출자 텍스트나 중첩 아티팩트 입력이 아니라 스테이징 시점의 파생된 `VerifiedSurfaceContext`에서 옵니다.
+- 해결된 권한 판단의 권한 출처 필드는 호출자 텍스트, 라벨, 답변 본문, 복사된 참조가 아니라 `VerifiedActorContext.surface_id`와 `VerifiedActorContext.surface_instance_id`에서 옵니다.
 - 보호된 읽기, 상태 변경, 아티팩트 동작은 메서드 담당 문서가 파생된 확인 맥락을 받아들일 때만 접점에 의존할 수 있습니다.
 - `capability_profile`은 지원 역량을 설명할 수 있지만 `VerifiedSurfaceContext.access_class`를 부여하거나 높일 수 없습니다.
 
@@ -131,8 +149,10 @@ VerifiedSurfaceContext:
 
 에이전트가 하면 안 되는 것:
 - `VerifiedSurfaceContext`를 요청 페이로드로 제출하면 안 됩니다.
+- `VerifiedActorContext`를 요청 페이로드로 제출하면 안 됩니다.
 - `verified=true`를 스스로 주장하면 안 됩니다.
 - `surface_instance_id`를 확인 권한 근거로 제출하면 안 됩니다.
+- `agent` 역할 접점에서 `actor_kind=user`를 제출해 사용자 권한을 만족시키면 안 됩니다.
 - 접근 등급, 역량 프로필, 검증 근거를 공개 요청 권한으로 제출하면 안 됩니다.
 - 스테이징된 아티팩트 출처를 꾸며 내면 안 됩니다.
 - 복사된 식별자, 생성된 Markdown, 대화 텍스트, 상태 보기 텍스트, 에이전트 기억을 확인된 맥락의 대체물로 쓰면 안 됩니다.

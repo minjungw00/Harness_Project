@@ -83,6 +83,7 @@ StateSummary:
 
 Meaning:
 - `StateSummary` is a compact response shape for state references, summaries, and close-readiness fields.
+- Method include flags may select only part of this shape. When a method owner says a projection is not selected, include-controlled fields such as `evidence_summary`, `close_state`, `close_blockers`, or `guarantee_display` are omitted instead of being returned as null or empty. A returned empty array means the projection was computed and found empty.
 - `mode` and `close_state` are controlled value strings when present.
 - `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, and `autonomy_boundary` are free-form display strings.
 - `baseline_ref` is an opaque baseline identifier.
@@ -372,14 +373,15 @@ Close-basis reference rules:
 - Caller-supplied close-assessment refs accepted into `CurrentCloseBasis.result_refs` or `ResidualRisk.source_refs` are limited to result/evidence record kinds `run`, `artifact`, `evidence_summary`, and `change_unit` unless an owner document explicitly adds another kind.
 - `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, and `task` are not caller-supplied result refs for a close basis unless an owner document explicitly adds them.
 - Every accepted ref must exist, belong to the same project and Task, and be canonicalized by Core. Core never preserves caller-supplied `state_version` metadata as authority.
-- Artifact refs used for close evidence must be linked to the Task and have `integrity_status=verified`.
-- Evidence refs must identify the current Task evidence summary. Run refs must identify a compatible Run and Change Unit.
+- Artifact refs used for close evidence must be linked to the Task and have `integrity_status=verified` plus current-byte verification at use time under [Artifact Storage](../storage-artifacts.md).
+- Evidence refs must identify the current Task evidence summary. Run refs used as current close-basis result refs must identify a recorded current Run compatible with the current Task, current Change Unit, current scope revision, compatible baseline, and recorded status. Historical Runs are audit records unless a current Run explicitly reuses their verified artifacts or evidence and records that reuse.
 - Core may add the current Run, current Change Unit, and current EvidenceSummary refs when constructing the canonical close basis.
 - Legacy close bases with non-empty category-only sensitive data but no reconstructable action scope cannot satisfy complete close.
 
 Guarantee display rules:
-- `GuaranteeDisplay` is derived from actual runtime profile, verified surface registration, and enabled enforcement facts.
-- Capability declarations do not create guarantees, and cooperative-only deployments must not claim `detective`.
+- `GuaranteeDisplay` is derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope.
+- Capability declarations alone do not create guarantees, and cooperative-only deployments must not claim `detective`.
+- `detective` requires supported enforcement or observation facts for the named surface and observed scope, not only text in a capability profile.
 - `capability_refs` should identify the actual profile or surface facts when such refs are available.
 
 Owner links:

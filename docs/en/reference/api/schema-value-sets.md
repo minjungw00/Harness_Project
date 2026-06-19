@@ -69,7 +69,7 @@ Method behavior is owned by method owner documents routed from [API Methods](met
 | `agent` | Request envelopes and judgment resolution shapes. | Shape owner: [API Schema Core](schema-core.md#tool-envelope); resolution shape owner: [API Judgment Schemas](schema-judgment.md). |
 | `user` | Request envelopes and judgment resolution shapes. | Shape owner: [API Schema Core](schema-core.md#tool-envelope); resolution shape owner: [API Judgment Schemas](schema-judgment.md). |
 
-These values classify the API actor named by the request or resolution shape. They do not by themselves create user-owned judgment, approval, final acceptance, residual-risk acceptance, or `Write Authorization`.
+These values classify the API actor named by the request or resolution shape. They do not by themselves create user-owned judgment, approval, scope-decision authority, final acceptance, residual-risk acceptance, or `Write Authorization`. `actor_kind=user` is attribution, not proof; authority-bearing resolution also requires compatible internal `VerifiedActorContext` provenance from [Agent Integration](../agent-integration.md).
 
 <a id="next-action-values"></a>
 ## Next-action values
@@ -383,6 +383,8 @@ cooperative
 detective
 ```
 
+`cooperative` is the baseline fallback. `detective` may be displayed only when the security owner supports the claim and the project enforcement profile, verified bound surface registration, enabled enforcement mechanism, and observed-scope facts support it. Capability declarations alone cannot raise the displayed guarantee.
+
 <a id="artifact-values"></a>
 ## Artifact values
 
@@ -429,7 +431,7 @@ legacy_unknown
 corrupt
 ```
 
-`verified` means persisted artifact facts are complete enough for integrity-aware use. `legacy_unknown` means preserved artifact metadata lacks the complete facts required for verification. `corrupt` means stored bytes or metadata are known not to match persisted integrity facts.
+`verified` means persisted artifact facts are complete enough for integrity-aware use and current-byte verification may be performed before authority use. `legacy_unknown` means preserved artifact metadata lacks the complete facts required for verification. `corrupt` means stored bytes or metadata are known not to match persisted integrity facts. Artifact evidence and close use require the current-byte checks owned by [Artifact Storage](../storage-artifacts.md).
 
 Artifact storage lifecycle and body-read eligibility are owned by [Artifact Storage](../storage-artifacts.md).
 
@@ -500,10 +502,16 @@ Meaning:
 - `current` means the basis currently matches the requirement it may satisfy.
 - `stale` means the stored basis no longer matches current state; a resolved row may remain for audit but is ineligible for current requirements.
 - `superseded` means a pending judgment has been replaced by a newer question or basis and cannot be answered successfully.
-- `legacy_unbound` means a preserved judgment has no state basis and cannot satisfy current close, write, or sensitive-approval requirements.
+- `legacy_unbound` means a preserved judgment has no state basis and cannot satisfy current close, write, scope-decision, or sensitive-approval requirements.
+
+Authority option action values:
+- `accept` maps to `accepted`.
+- `reject` maps to `rejected`.
+- `defer` maps to `deferred` only where the method or semantic owner permits deferral.
+- `blocked` is not a caller-selected authority option unless the method owner explicitly defines that path.
 
 Resolution outcome meaning:
-- `accepted` is the only outcome that can satisfy an authority-bearing judgment requirement when the judgment kind, basis, actor, and selected option are otherwise compatible.
+- `accepted` is the only outcome that can satisfy an authority-bearing judgment requirement when the judgment kind, basis, verified actor provenance, selected option, and `machine_action=accept` are otherwise compatible.
 - `rejected`, `deferred`, and `blocked` are durable user decisions but do not approve, accept, authorize, waive, or close anything.
 - Absence of a machine-readable outcome must never be interpreted as `accepted`.
 
@@ -512,7 +520,7 @@ Pending-judgment relevance:
 - For sensitive approval, the pending question is relevant only when its sensitive-action scope overlaps the current sensitive action requirement.
 - `informational` judgments are audit or display context and do not block write, run, or close operations by themselves.
 
-`UserJudgmentOption.option_id` is scoped to the judgment and is not a global value set. Rendered option labels are display text only. `UserJudgmentOption.resolution_outcome` uses `JudgmentResolutionOutcome`; option labels and explanatory text must not invert the machine-readable outcome.
+`UserJudgmentOption.option_id` is scoped to the judgment and is not a global value set. Rendered option labels are display text only. `UserJudgmentOption.machine_action` uses the authority option action values above when present. `UserJudgmentOption.resolution_outcome` uses `JudgmentResolutionOutcome`; option labels and explanatory text must not invert the machine-readable action or outcome.
 
 ## Error detail helper values
 

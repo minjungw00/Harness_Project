@@ -131,6 +131,7 @@ CREATE TABLE surfaces (
   surface_id TEXT NOT NULL,
   surface_instance_id TEXT NOT NULL,
   surface_kind TEXT NOT NULL,
+  interaction_role TEXT NOT NULL DEFAULT 'agent' CHECK (interaction_role IN ('agent', 'user_interaction')),
   display_name TEXT,
   capability_profile_json TEXT NOT NULL DEFAULT '{}',
   local_access_json TEXT NOT NULL DEFAULT '{}',
@@ -215,9 +216,17 @@ CREATE TABLE user_judgments (
     CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound')),
   resolution_outcome TEXT
     CHECK (resolution_outcome IS NULL OR resolution_outcome IN ('accepted', 'rejected', 'deferred', 'blocked')),
+  resolution_machine_action TEXT
+    CHECK (resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')),
   resolution_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
+  resolved_by_actor_kind TEXT CHECK (resolved_by_actor_kind IS NULL OR resolved_by_actor_kind IN ('agent', 'user')),
+  resolved_actor_role TEXT CHECK (resolved_actor_role IS NULL OR resolved_actor_role IN ('agent', 'user_interaction')),
+  resolved_by_surface_id TEXT,
+  resolved_by_surface_instance_id TEXT,
+  resolved_verification_basis TEXT,
+  resolved_assurance_level TEXT,
   requested_at TEXT NOT NULL,
   resolved_at TEXT,
   metadata_json TEXT NOT NULL DEFAULT '{}',
@@ -226,6 +235,8 @@ CREATE TABLE user_judgments (
   FOREIGN KEY (project_id, task_id, change_unit_id)
     REFERENCES change_units (project_id, task_id, change_unit_id),
   FOREIGN KEY (project_id, requested_by_surface_id, requested_by_surface_instance_id)
+    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
+  FOREIGN KEY (project_id, resolved_by_surface_id, resolved_by_surface_instance_id)
     REFERENCES surfaces (project_id, surface_id, surface_instance_id)
 );
 
@@ -561,10 +572,13 @@ Judgment basis storage:
 - `user_judgments.basis_status` stores the storage-owned compatibility state for the judgment basis: `current`, `stale`, `superseded`, or `legacy_unbound`.
 - Existing judgments without a basis are represented as `basis_json IS NULL` and `basis_status='legacy_unbound'`. They remain audit records and cannot satisfy current close, write, or sensitive-approval requirements.
 - `user_judgments.resolution_outcome` stores the selected option's machine-readable outcome when one exists. `status='resolved'` without a non-null `resolution_outcome` remains a historical audit record for authority-bearing requirements and cannot be interpreted as acceptance.
+- `user_judgments.resolution_machine_action` stores the selected Core-created authority action when one exists. Current authority-bearing resolutions require a non-null `resolution_machine_action` and non-null `resolution_outcome`; legacy rows may leave either null for audit-only reads.
+- `resolved_by_actor_kind`, `resolved_actor_role`, `resolved_by_surface_id`, `resolved_by_surface_instance_id`, `resolved_verification_basis`, and `resolved_assurance_level` store derived `VerifiedActorContext` provenance for resolution. Authority-bearing rows require `resolved_by_actor_kind='user'`, `resolved_actor_role='user_interaction'`, a valid resolved surface/instance reference, and non-null provenance fields. Rows without that provenance are readable historical records only.
 
 Surface local access grants:
 
 - `surfaces.local_access_json` is the baseline storage location for registered local access grants.
+- `surfaces.interaction_role` records whether the registered surface instance supplies `agent` or `user_interaction` actor provenance. Baseline storage does not support mixed-role surface instances.
 - The preferred grant field is `authorized_access_classes: string[]`; it may contain multiple documented access classes for one surface instance. `access_class: string` is a backward-compatible single-value fallback.
 - `verification_basis: string` is controlled registration or adapter-binding diagnostic metadata for explaining how the grant was established. It is not caller authority and does not add a grant.
 - `surfaces.capability_profile_json` is a capability declaration and must not be treated as an access-class grant.
@@ -597,6 +611,7 @@ Persistent artifact integrity:
 - `artifacts.integrity_status='verified'` requires a non-empty `content_type`, a lowercase hexadecimal 64-character `sha256`, and nonnegative `size_bytes`.
 - `integrity_status='legacy_unknown'` preserves legacy rows with incomplete facts; typed Core code must not invent an empty hash, zero-byte size, or content type to make such rows look verified.
 - `integrity_status='corrupt'` records a known integrity failure. `legacy_unknown` or `corrupt` artifacts cannot satisfy evidence or close authority requirements.
+- The DDL check validates metadata shape only. Artifact Storage owns current-byte validation before authority use; migrations must not mark legacy rows `verified` merely because metadata columns are well formed.
 
 Migration records:
 

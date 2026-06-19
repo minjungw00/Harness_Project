@@ -85,7 +85,7 @@ ToolEnvelope:
 
 Meaning:
 - `task_id` is a nullable request-level Task selector; the field is present and the value may be null.
-- `actor_kind` is a controlled value string.
+- `actor_kind` is a controlled value string for request attribution. It is not proof of human identity and does not by itself satisfy user authority; authority-bearing judgment resolution uses the internal `VerifiedActorContext` defined by [Agent Integration](../agent-integration.md).
 - `expected_state_version` is the request-level field for a project-wide state clock value.
 - `idempotency_key` is a nullable opaque identifier; method owners define when a non-null value is required.
 - `expected_state_version` is nullable; method and storage owners define when a non-null value is required.

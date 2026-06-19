@@ -32,7 +32,8 @@ When this method creates a pending judgment, Core derives a `JudgmentBasis` from
 - A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
 - `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `question`, `options`, `context`, `affected_refs`, `required_for`, and `expires_at`.
 - A focused `question` with mutually understandable `options`.
-- Each option must carry a machine-readable `resolution_outcome`; for authority-bearing judgment kinds, Core validates or supplies the canonical option-to-outcome mapping.
+- For non-authority judgment kinds, each caller-authored option must carry a machine-readable `resolution_outcome`; `machine_action` is null unless an owner defines a narrower option set.
+- For authority-bearing judgment kinds, request input does not contain caller-authored `machine_action` or `resolution_outcome` mappings. Callers use `options: []` unless a method owner defines non-authoritative display candidates, and Core creates the canonical authority options, localized labels, consequences, `machine_action`, and `resolution_outcome`.
 - Enough `context` for the user to judge the exact issue without relying on hidden chat state.
 
 ## Request schema
@@ -83,7 +84,7 @@ Non-claims:
 
 - A `UserJudgmentCandidate` returned by another method is not durable until `harness.request_user_judgment` commits.
 - For `judgment_kind=final_acceptance` or `judgment_kind=residual_risk_acceptance`, Core captures the current close basis in the judgment basis. If the required current close basis or current residual-risk IDs are unavailable, the request rejects before commit.
-- For authority-bearing judgment kinds, the created option set must include an accepted path and a rejected path. Labels and explanatory text do not override `resolution_outcome`.
+- For authority-bearing judgment kinds, the Core-created option set must include `machine_action=accept` and `machine_action=reject`. `machine_action=defer` appears only where an owner permits deferral. Labels and explanatory text do not override `machine_action` or `resolution_outcome`.
 - For residual-risk acceptance, visible risks in the request context must carry exact current `risk_id` values.
 - Dry run and rejection create no pending judgment, blocker update, event, replay row, or state-version increment.
 
@@ -176,12 +177,14 @@ params:
       label: "Use concise copy"
       description: "Record the user-owned product decision to keep the shorter banner copy."
       consequence: "The pending banner-copy decision can be treated as resolved."
+      machine_action: null
       resolution_outcome: accepted
       is_default: true
     - option_id: expanded
       label: "Use expanded copy"
       description: "Record that the banner copy should include a longer explanation."
       consequence: "The Task remains open for the expanded banner-copy change."
+      machine_action: null
       resolution_outcome: rejected
       is_default: false
   context:
@@ -246,12 +249,14 @@ user_judgment:
       label: "Use concise copy"
       description: "Record the user-owned product decision to keep the shorter banner copy."
       consequence: "The pending banner-copy decision can be treated as resolved."
+      machine_action: null
       resolution_outcome: accepted
       is_default: true
     - option_id: expanded
       label: "Use expanded copy"
       description: "Record that the banner copy should include a longer explanation."
       consequence: "The Task remains open for the expanded banner-copy change."
+      machine_action: null
       resolution_outcome: rejected
       is_default: false
   context:

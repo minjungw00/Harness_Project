@@ -83,6 +83,7 @@ StateSummary:
 
 의미:
 - `StateSummary`는 상태 참조, 요약, 닫기 준비 상태 필드를 담는 간결한 응답 형태입니다.
+- 메서드 include 플래그는 이 형태의 일부만 선택할 수 있습니다. 메서드 담당 문서가 어떤 상태 보기를 선택하지 않는다고 말하면 `evidence_summary`, `close_state`, `close_blockers`, `guarantee_display` 같은 include 제어 필드는 null이나 빈 값으로 반환하지 않고 생략합니다. 반환된 빈 배열은 그 상태 보기를 계산했고 비어 있음을 뜻합니다.
 - `mode`와 `close_state`는 값이 있을 때 제어 값 문자열입니다.
 - `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, `autonomy_boundary`는 자유 형식 표시 문자열입니다.
 - `baseline_ref`는 불투명 기준선 식별자입니다.
@@ -373,14 +374,15 @@ GuaranteeDisplay:
 - `CurrentCloseBasis.result_refs`나 `ResidualRisk.source_refs`로 받아들일 수 있는 호출자 제공 닫기 평가 참조는 담당 문서가 다른 종류를 명시적으로 추가하지 않는 한 결과/증거 기록 종류인 `run`, `artifact`, `evidence_summary`, `change_unit`으로 제한됩니다.
 - 담당 문서가 명시적으로 추가하지 않는 한 `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, `task`는 호출자 제공 결과 참조가 아닙니다.
 - 받아들인 모든 참조는 존재해야 하고 같은 프로젝트와 `Task`에 속해야 하며 Core가 정규화해야 합니다. Core는 호출자가 보낸 `state_version` 메타데이터를 권한으로 보존하지 않습니다.
-- 닫기 증거에 쓰이는 아티팩트 참조는 `Task`에 연결되어 있고 `integrity_status=verified`여야 합니다.
-- 증거 참조는 현재 `Task` 증거 요약을 식별해야 합니다. 실행 기록 참조는 호환되는 실행 기록과 Change Unit을 식별해야 합니다.
+- 닫기 증거에 쓰이는 아티팩트 참조는 `Task`에 연결되어 있고 `integrity_status=verified`여야 하며 [아티팩트 저장소](../storage-artifacts.md)에 따라 사용 시점의 현재 바이트 검증을 통과해야 합니다.
+- 증거 참조는 현재 `Task` 증거 요약을 식별해야 합니다. 현재 닫기 근거 결과 참조로 쓰이는 실행 기록 참조는 현재 `Task`, 현재 적용 Change Unit, 현재 범위 리비전, 호환되는 기준선, 기록된 상태와 호환되는 기록된 현재 실행 기록을 식별해야 합니다. 이력 실행 기록은 현재 실행 기록이 그 verified 아티팩트나 증거를 명시적으로 재사용하고 그 재사용을 기록하지 않는 한 감사 기록입니다.
 - Core는 기준 닫기 근거를 구성하면서 현재 실행 기록, 현재 Change Unit, 현재 EvidenceSummary 참조를 추가할 수 있습니다.
 - 범주만 담은 레거시 민감 데이터가 비어 있지 않지만 동작 범위를 재구성할 수 없는 레거시 닫기 근거는 완료 닫기를 만족할 수 없습니다.
 
 보장 표시 규칙:
-- `GuaranteeDisplay`는 실제 런타임 프로필, 확인된 접점 등록, 활성화된 강제 사실에서 파생됩니다.
+- `GuaranteeDisplay`는 프로젝트 강제 프로필, 확인된 묶인 접점 등록, 활성화된 강제 메커니즘, 지원되는 기준 범위에서 파생됩니다.
 - 역량 선언만으로 보장이 생기지 않으며, 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
+- `detective`는 이름 붙은 접점과 관찰 범위에 대한 지원되는 강제 또는 관찰 사실을 요구하며, `capability_profile` 안의 텍스트만으로는 부족합니다.
 - 해당 참조를 사용할 수 있으면 `capability_refs`는 실제 프로필이나 접점 사실을 식별해야 합니다.
 
 담당 문서 링크:

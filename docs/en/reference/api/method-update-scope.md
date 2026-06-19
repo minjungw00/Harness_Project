@@ -41,6 +41,8 @@ This method is the supported path that turns shaping into a first safe Change Un
 - `change_unit.operation` and the fields needed by that operation; supported operation values and their meanings are owned by [API Value Sets](schema-value-sets.md#method-local-values).
 - `related_scope_decision_refs` when the update applies a resolved `judgment_kind=scope_decision`.
 
+When a scope update applies a `scope_decision`, each referenced judgment must have `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, `basis.compatibility_status=current`, `required_for` that includes scope update, verified actor provenance for `user_interaction`, and a basis compatible with the current Task, Change Unit, `scope_revision`, and affected refs. Rejected, deferred, blocked, stale, superseded, expired, legacy-unbound, or agent-recorded scope decisions do not authorize a scope transition.
+
 ## Request schema
 
 This method owns the top-level `params` request shape below. `envelope` is the shared [`ToolEnvelope`](schema-core.md#tool-envelope); this block does not redefine `ToolEnvelope` fields.
@@ -120,6 +122,8 @@ Returns `UpdateScopeResult` with:
 | `next_actions` | `NextActionSummary[]` describing the next safe API steps. |
 
 The supported `change_unit.operation` values are owned by [API Value Sets](schema-value-sets.md#method-local-values). This method owns how each operation is reflected in `change_unit_ref`, `state.active_change_unit_ref`, stale `Write Authorization` refs, blocker refs, and `next_actions`.
+
+`linked_scope_decision_refs` contains only scope decisions that passed the compatibility and provenance checks above. Historical or rejected scope decisions may remain addressable judgment records, but they are not linked as applied authority.
 
 ## Blocked result
 

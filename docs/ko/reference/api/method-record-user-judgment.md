@@ -38,7 +38,7 @@
 
 `selected_option_id`와 `note`는 요청 수준에 남습니다. `RecordUserJudgmentPayload`는 판단별 답변 분기 안에서 이 필드를 반복하면 안 됩니다.
 
-선택된 선택지의 저장된 `resolution_outcome`이 기준입니다. 답변 본문에 결과, 결정, 수락 필드가 있으면 선택된 선택지와 일치해야 합니다. 자유 형식 답변 텍스트, 라벨, 메모는 권한을 부여할 수 없습니다.
+선택된 선택지의 저장된 `machine_action`과 `resolution_outcome`이 기준입니다. 답변 본문에 결과, 결정, 수락 필드가 있으면 선택된 선택지와 일치해야 합니다. 자유 형식 답변 텍스트, 라벨, 메모는 권한을 부여할 수 없습니다.
 
 ## 요청 스키마
 
@@ -71,6 +71,8 @@ RecordUserJudgmentRequest:
 
 로컬 접근 실패, 읽을 수 없는 판단 식별자, 부족한 로컬 역량은 커밋 전에 거절됩니다.
 
+권한을 지니는 해결에는 묶인 접점 인스턴스에 대해 파생된 `VerifiedActorContext.role=user_interaction`과 `envelope.actor_kind=user`도 필요합니다. `interaction_role=agent`로 등록된 접점은 `actor_kind=user`를 제출해 사용자 권한을 만족할 수 없습니다.
+
 ## 상태 버전 동작
 
 커밋된 `dry_run`이 아닌 결과:
@@ -90,8 +92,10 @@ RecordUserJudgmentRequest:
 - 최종 수락은 판단 근거에 캡처된 현재 `Task`, Change Unit, `scope_revision`, `close_basis_revision`, 기준선, 결과 참조와 일치해야 합니다.
 - 잔여 위험 수락은 `AcceptedRiskInput`에 정확한 현재 `risk_id` 값을 포함해야 하며 현재 `close_basis_revision`과 일치해야 합니다.
 - 민감 승인은 현재 `scope_revision`, Change Unit, 동작, 정규화된 경로, 민감 범주, 기준선과 일치해야 합니다.
-- 권한을 지니는 판단은 권한 요구사항을 만족하려면 `resolved_by_actor_kind=user`와 `resolution_outcome=accepted`가 필요합니다.
-- 범위 변경이나 실행 기록 변경은 이력 판단을 삭제하지 않습니다. 다만 호환되지 않는 판단은 현재 닫기, 쓰기, 민감 승인 요구사항에 사용할 수 없게 됩니다.
+- 나중의 범위 갱신에 쓰이는 범위 결정 권한은 `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, 현재 근거, scope update를 포함하는 `required_for`, 확인된 `user_interaction` 행위자 출처, 호환되는 Task, Change Unit, `scope_revision`, 영향받는 참조가 필요합니다.
+- 권한을 지니는 판단은 권한 요구사항을 만족하려면 `resolved_by_actor_kind=user`, 호환되는 확인된 행위자 출처, `machine_action=accept`, `resolution_outcome=accepted`가 필요합니다.
+- 거절, 연기, 차단, 오래됨, 대체됨, 만료됨, 레거시 미결속, 에이전트가 기록한 권한 판단은 감사 또는 결정 기록으로 남지만 현재 전이를 허가할 수 없습니다.
+- 범위 변경이나 실행 기록 변경은 이력 판단을 삭제하지 않습니다. 다만 호환되지 않는 판단은 현재 닫기, 쓰기, 범위 결정, 민감 승인 요구사항에 사용할 수 없게 됩니다.
 
 ## 성공 결과
 
@@ -105,7 +109,7 @@ RecordUserJudgmentRequest:
 - 현재 `state`
 - `next_actions`
 
-답변이 성공적으로 기록되면 이 메서드는 지정된 판단을 `status=resolved`로 커밋합니다. 기록된 `resolution_outcome`은 `accepted`, `rejected`, `deferred`, `blocked`일 수 있습니다.
+답변이 성공적으로 기록되면 이 메서드는 지정된 판단을 `status=resolved`로 커밋합니다. 기록된 `machine_action`은 값이 있을 때 선택된 선택지에서 복사됩니다. 기록된 `resolution_outcome`은 `accepted`, `rejected`, `deferred`, `blocked`일 수 있습니다.
 
 결과는 포함된 차단 사유와 판단에 의존하는 요약만 갱신합니다. `accepted`이고 호환되는 권한 판단 자체를 넘어 관련 없는 승인, 증거, 범위 갱신, `Write Authorization`, 닫기 상태, 최종 수락, 잔여 위험 수락, 민감 승인, 취소 권한을 만들지 않습니다.
 
@@ -228,12 +232,14 @@ user_judgment:
       label: "Keep illustration"
       description: "Record the user-owned product decision to keep the illustration."
       consequence: "The pending empty-state decision can be treated as resolved."
+      machine_action: null
       resolution_outcome: accepted
       is_default: true
     - option_id: replace
       label: "Replace illustration"
       description: "Record that the illustration should be replaced."
       consequence: "The Task remains open for an illustration replacement."
+      machine_action: null
       resolution_outcome: rejected
       is_default: false
   context:
@@ -264,6 +270,7 @@ user_judgment:
     - close_complete
   resolution:
     selected_option_id: keep
+    machine_action: null
     resolution_outcome: accepted
     answer:
       product_decision:

@@ -83,8 +83,8 @@ Mutation conditions:
 
 Close condition:
 
-- `intent=complete` can close only after preflight succeeds, the close readiness evaluation over the current `CurrentCloseBasis` is valid, and no close blocker remains.
-- `intent=cancel` requires a current accepted cancellation judgment bound to the Task, current scope revision, current Change Unit, and user actor. It does not require completion-only evidence, final acceptance, or residual-risk acceptance.
+- `intent=complete` can close only after preflight succeeds, the close readiness evaluation over the current `CurrentCloseBasis` is valid, current close-basis refs satisfy their artifact and Run compatibility rules, and no close blocker remains.
+- `intent=cancel` requires a current accepted cancellation judgment with `machine_action=accept`, `resolution_outcome=accepted`, verified `user_interaction` actor provenance, and a basis bound to the Task, current scope revision, and current Change Unit. It does not require completion-only evidence, final acceptance, or residual-risk acceptance.
 - `intent=supersede` evaluates the requested terminal path. It is not evidence sufficiency, final acceptance, or residual-risk acceptance.
 
 The terminal close summary produced by a successful terminal close is not the current pre-close basis and is not used as a substitute for `CurrentCloseBasis`.
@@ -158,7 +158,7 @@ Implementations evaluate `harness.close_task` in this order:
 4. For `intent=check`, compute current close readiness with the same calculation used by [`harness.status`](method-status.md) when `include.close=true`, and return read-only `CloseTaskResult`.
 5. For mutating intents with `dry_run=true`, return the common preview branch after valid preflight.
 6. For `intent=complete`, run the close readiness evaluation over the current `CurrentCloseBasis`. If blockers remain, return the blocked branch; otherwise commit `close_state=closed` and the terminal close result.
-7. For `intent=cancel`, require a current accepted `judgment_kind=cancellation` resolved by the user and compatible with the current Task, scope revision, and Change Unit. Missing or incompatible cancellation authority returns the blocked branch.
+7. For `intent=cancel`, require a current accepted `judgment_kind=cancellation` with `machine_action=accept`, `resolution_outcome=accepted`, verified `user_interaction` actor provenance, and compatibility with the current Task, scope revision, and Change Unit. Missing or incompatible cancellation authority returns the blocked branch.
 8. For `intent=cancel` or `intent=supersede`, evaluate only the requested terminal path. If terminal-path blockers remain, return the blocked branch; otherwise commit `close_state=cancelled` or `close_state=superseded`.
 
 ## State-version behavior
@@ -214,7 +214,7 @@ The production meanings below apply only after the method reaches close-readines
 | `missing_active_change_unit` | `scope` | A close path requires a current Change Unit, but none is available. |
 | `pending_user_judgment` | `user_judgment` | A required user-owned judgment remains pending or unresolved. |
 | `missing_sensitive_approval` | `sensitive_approval` | A required separate sensitive-action approval is absent. |
-| `missing_cancellation_authority` | `user_judgment` | `intent=cancel` lacks a current accepted user cancellation judgment bound to the current Task, scope revision, and Change Unit. |
+| `missing_cancellation_authority` | `user_judgment` | `intent=cancel` lacks a current accepted user cancellation judgment with verified `user_interaction` actor provenance, bound to the current Task, scope revision, and Change Unit. |
 | `write_authorization_stale` | `write_compatibility` | A close-relevant `Write Authorization` is unusable for a freshness reason that is not routed as `STATE_VERSION_CONFLICT`. |
 | `baseline_stale` | `baseline` | The close-relevant baseline basis is stale on a blocker-producing path. |
 | `evidence_claim_unsupported` | `evidence` | A required close claim lacks supported evidence coverage. |
@@ -255,7 +255,7 @@ Non-claims:
 - `STATE_VERSION_CONFLICT` is never a `CloseReadinessBlocker.code`.
 - `STATE_VERSION_CONFLICT` is a rejected-response `ErrorCode`, not a method-local blocker or decision code.
 - A blocker category does not create the underlying user judgment, approval, evidence, artifact availability, final acceptance, residual-risk acceptance, or recovery state.
-- Rejected, deferred, stale, superseded, legacy-unbound, non-user, or outcome-absent cancellation judgments do not permit cancellation.
+- Rejected, deferred, blocked, stale, superseded, expired, legacy-unbound, agent-recorded, provenance-missing, or outcome-absent cancellation judgments do not permit cancellation.
 
 ## Rejected result
 
