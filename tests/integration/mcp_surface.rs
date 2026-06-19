@@ -868,6 +868,224 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
 }
 
 #[test]
+fn authority_resolution_requires_user_interaction_mcp_session() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_authority_sessions")?;
+    let agent_surface_id = "surface_authority_agent";
+    let agent_instance_id = "surface_instance_authority_agent";
+    register_surface(
+        fixture.runtime_home_path(),
+        SurfaceRegistration {
+            project_id: fixture.project_id().to_owned(),
+            surface_id: agent_surface_id.to_owned(),
+            surface_instance_id: agent_instance_id.to_owned(),
+            surface_kind: "local_test".to_owned(),
+            interaction_role: SurfaceInteractionRole::Agent,
+            display_name: Some("Authority agent surface".to_owned()),
+            capability_profile_json: default_capability_profile().to_string(),
+            local_access_json: local_access_without(&[]).to_string(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    let other_project_id = "project_authority_other";
+    let other_surface_id = "surface_authority_other_user";
+    let other_instance_id = "surface_instance_authority_other_user";
+    register_extra_project_surface_with_role(
+        &fixture,
+        other_project_id,
+        other_surface_id,
+        other_instance_id,
+        SurfaceInteractionRole::UserInteraction,
+    )?;
+
+    let user_adapter = adapter(&fixture);
+    let agent_adapter = adapter_for_surface(
+        &fixture,
+        fixture.project_id(),
+        agent_surface_id,
+        agent_instance_id,
+    );
+    let other_user_adapter = adapter_for_surface(
+        &fixture,
+        other_project_id,
+        other_surface_id,
+        other_instance_id,
+    );
+
+    let intake = user_adapter.call_tool(
+        "harness.intake",
+        serde_json::to_value(fixture.intake_request(
+            "req_mcp_authority_task",
+            "idem_mcp_authority_task",
+            false,
+            Some(0),
+        ))?,
+    )?;
+    let task_id = response_record_id(&intake.response_value, "task_ref");
+    let scope = user_adapter.call_tool(
+        "harness.update_scope",
+        serde_json::to_value(fixture.update_scope_request(UpdateScopeFixture {
+            request_id: "req_mcp_authority_scope",
+            idempotency_key: "idem_mcp_authority_scope",
+            dry_run: false,
+            expected_state_version: Some(1),
+            task_id: &task_id,
+            operation: ChangeUnitOperation::CreateCurrent,
+            scope_summary: "Authority session proof scope.",
+        }))?,
+    )?;
+    let change_unit_id = response_record_id(&scope.response_value, "change_unit_ref");
+    let mut run_request = fixture.record_run_request(
+        "req_mcp_authority_run",
+        "idem_mcp_authority_run",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    run_request.evidence_updates = vec![supported_evidence_update(
+        "MCP authority session proof recorded.",
+    )];
+    run_request.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "MCP authority session proof recorded.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let run = user_adapter.call_tool("harness.record_run", serde_json::to_value(run_request)?)?;
+    assert_eq!(run.response_value["base"]["response_kind"], "result");
+
+    let mut judgment_request = fixture.user_judgment_request(UserJudgmentFixture {
+        request_id: "req_mcp_authority_final",
+        idempotency_key: "idem_mcp_authority_final",
+        dry_run: false,
+        expected_state_version: Some(3),
+        task_id: &task_id,
+        change_unit_id: Some(&change_unit_id),
+        judgment_kind: JudgmentKind::FinalAcceptance,
+    });
+    judgment_request.envelope.surface_id = SurfaceId::new(agent_surface_id);
+    let judgment = agent_adapter.call_tool(
+        "harness.request_user_judgment",
+        serde_json::to_value(judgment_request)?,
+    )?;
+    assert_eq!(judgment.response_value["base"]["response_kind"], "result");
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+
+    let mut agent_record = fixture.record_judgment_request(RecordJudgmentFixture {
+        request_id: "req_mcp_authority_agent_record",
+        idempotency_key: "idem_mcp_authority_agent_record",
+        expected_state_version: Some(4),
+        task_id: &task_id,
+        user_judgment_id: &judgment_id,
+        judgment_kind: JudgmentKind::FinalAcceptance,
+        answer: answer_payload(JudgmentKind::FinalAcceptance),
+    });
+    agent_record.envelope.surface_id = SurfaceId::new(agent_surface_id);
+    let before_agent = fixture.counts()?;
+    let agent_rejected = agent_adapter.call_tool(
+        "harness.record_user_judgment",
+        serde_json::to_value(agent_record)?,
+    )?;
+    assert_rejected_code(&agent_rejected.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_field(&agent_rejected.response_value, "surfaces.interaction_role");
+    assert_eq!(fixture.user_judgment_status(&judgment_id)?, "pending");
+    assert_eq!(fixture.counts()?, before_agent);
+
+    let other_before = counts_for_project(&fixture, other_project_id)?;
+    let original_before = fixture.counts()?;
+    let other_project_rejected = other_user_adapter.call_tool(
+        "harness.record_user_judgment",
+        serde_json::to_value(fixture.record_judgment_request(RecordJudgmentFixture {
+            request_id: "req_mcp_authority_other_record",
+            idempotency_key: "idem_mcp_authority_other_record",
+            expected_state_version: Some(4),
+            task_id: &task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::FinalAcceptance,
+            answer: answer_payload(JudgmentKind::FinalAcceptance),
+        }))?,
+    )?;
+    assert_rejected_code(
+        &other_project_rejected.response_value,
+        "LOCAL_ACCESS_MISMATCH",
+    );
+    assert_rejected_field(
+        &other_project_rejected.response_value,
+        "envelope.project_id",
+    );
+    assert_eq!(fixture.user_judgment_status(&judgment_id)?, "pending");
+    assert_eq!(fixture.counts()?, original_before);
+    assert_eq!(
+        counts_for_project(&fixture, other_project_id)?,
+        other_before
+    );
+
+    let mut wrong_actor_record = fixture.record_judgment_request(RecordJudgmentFixture {
+        request_id: "req_mcp_authority_wrong_actor",
+        idempotency_key: "idem_mcp_authority_wrong_actor",
+        expected_state_version: Some(4),
+        task_id: &task_id,
+        user_judgment_id: &judgment_id,
+        judgment_kind: JudgmentKind::FinalAcceptance,
+        answer: answer_payload(JudgmentKind::FinalAcceptance),
+    });
+    wrong_actor_record.envelope.actor_kind = harness_types::ActorKind::Agent;
+    let before_wrong_actor = fixture.counts()?;
+    let wrong_actor_rejected = user_adapter.call_tool(
+        "harness.record_user_judgment",
+        serde_json::to_value(wrong_actor_record)?,
+    )?;
+    assert_rejected_code(&wrong_actor_rejected.response_value, "VALIDATION_FAILED");
+    assert_eq!(fixture.user_judgment_status(&judgment_id)?, "pending");
+    assert_eq!(fixture.counts()?, before_wrong_actor);
+
+    let user_record = fixture.record_judgment_request(RecordJudgmentFixture {
+        request_id: "req_mcp_authority_user_record",
+        idempotency_key: "idem_mcp_authority_user_record",
+        expected_state_version: Some(4),
+        task_id: &task_id,
+        user_judgment_id: &judgment_id,
+        judgment_kind: JudgmentKind::FinalAcceptance,
+        answer: answer_payload(JudgmentKind::FinalAcceptance),
+    });
+    let user_record_params = serde_json::to_value(user_record)?;
+    let recorded =
+        user_adapter.call_tool("harness.record_user_judgment", user_record_params.clone())?;
+    assert_eq!(recorded.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        recorded.response_value["user_judgment"]["resolution"]["resolution_outcome"],
+        "accepted"
+    );
+    assert_eq!(fixture.user_judgment_status(&judgment_id)?, "resolved");
+
+    let after_user_record = fixture.counts()?;
+    let replay_from_agent =
+        agent_adapter.call_tool("harness.record_user_judgment", user_record_params)?;
+    assert_rejected_code(&replay_from_agent.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_field(&replay_from_agent.response_value, "envelope.surface_id");
+    assert!(!replay_from_agent.replayed);
+    assert_eq!(fixture.counts()?, after_user_record);
+
+    let closed = user_adapter.call_tool(
+        "harness.close_task",
+        serde_json::to_value(fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_mcp_authority_close",
+            idempotency_key: Some("idem_mcp_authority_close"),
+            dry_run: false,
+            expected_state_version: Some(5),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }))?,
+    )?;
+    assert_eq!(closed.response_value["close_state"], "closed");
+    Ok(())
+}
+
+#[test]
 fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_missing_run")?;
     fixture.set_surface_local_access(json!({
@@ -2050,12 +2268,26 @@ fn replay_surface_foreign_key_is_physical_restrictive_and_legacy_safe() -> Resul
 }
 
 fn adapter(fixture: &CoreFixture) -> McpAdapter {
+    adapter_for_surface(
+        fixture,
+        fixture.project_id(),
+        fixture.surface_id(),
+        fixture.surface_instance_id(),
+    )
+}
+
+fn adapter_for_surface(
+    fixture: &CoreFixture,
+    project_id: &str,
+    surface_id: &str,
+    surface_instance_id: &str,
+) -> McpAdapter {
     McpAdapter::new(
         fixture.runtime_home_path(),
         McpSessionContext::new(
-            ProjectId::new(fixture.project_id()),
-            SurfaceId::new(fixture.surface_id()),
-            SurfaceInstanceId::new(fixture.surface_instance_id()),
+            ProjectId::new(project_id),
+            SurfaceId::new(surface_id),
+            SurfaceInstanceId::new(surface_instance_id),
         )
         .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING),
     )
@@ -2066,6 +2298,22 @@ fn register_extra_project_surface(
     project_id: &str,
     surface_id: &str,
     surface_instance_id: &str,
+) -> Result<(), Box<dyn Error>> {
+    register_extra_project_surface_with_role(
+        fixture,
+        project_id,
+        surface_id,
+        surface_instance_id,
+        SurfaceInteractionRole::Agent,
+    )
+}
+
+fn register_extra_project_surface_with_role(
+    fixture: &CoreFixture,
+    project_id: &str,
+    surface_id: &str,
+    surface_instance_id: &str,
+    interaction_role: SurfaceInteractionRole,
 ) -> Result<(), Box<dyn Error>> {
     let repo_root = fixture
         .runtime_home_path()
@@ -2088,7 +2336,7 @@ fn register_extra_project_surface(
             surface_id: surface_id.to_owned(),
             surface_instance_id: surface_instance_id.to_owned(),
             surface_kind: "local_test".to_owned(),
-            interaction_role: SurfaceInteractionRole::Agent,
+            interaction_role,
             display_name: Some(format!("Extra project surface {surface_instance_id}")),
             capability_profile_json: default_capability_profile().to_string(),
             local_access_json: local_access_without(&[]).to_string(),
@@ -2096,6 +2344,13 @@ fn register_extra_project_surface(
         },
     )?;
     Ok(())
+}
+
+fn response_record_id(response_value: &Value, field: &str) -> String {
+    response_value[field]["record_id"]
+        .as_str()
+        .expect("record_id should be present")
+        .to_owned()
 }
 
 fn counts_for_project(

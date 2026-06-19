@@ -1872,50 +1872,39 @@ fn accepted_current_user_scope_decision_links_scope_update() -> Result<(), Box<d
 }
 
 #[test]
-fn negative_scope_decision_outcomes_cannot_be_linked() -> Result<(), Box<dyn Error>> {
-    for outcome in ["rejected", "deferred", "blocked"] {
-        let harness = MethodHarness::new()?;
-        let suffix = format!("scope_link_{outcome}");
-        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, &suffix)?;
-        let (state_version, decision_ref, decision_id) = record_scope_decision_authority(
-            &harness,
-            &task_id,
-            &change_unit_id,
-            2,
-            &suffix,
-            outcome != "rejected",
-        )?;
-        if outcome != "rejected" {
-            set_user_judgment_resolution_outcome(&harness, &decision_id, outcome)?;
-        }
-        let before = harness.counts()?;
-        let mut request = update_scope_request(
-            &format!("req_{suffix}_update"),
-            &format!("idem_{suffix}_update"),
-            false,
-            Some(state_version),
-            &task_id,
-            ChangeUnitOperation::KeepCurrent,
-            "Rejected scope decision must not link.",
-        );
-        request.related_scope_decision_refs = vec![decision_ref];
+fn rejected_scope_decision_cannot_be_linked() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let suffix = "scope_link_rejected";
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, suffix)?;
+    let (state_version, decision_ref, decision_id) =
+        record_scope_decision_authority(&harness, &task_id, &change_unit_id, 2, suffix, false)?;
+    let before = harness.counts()?;
+    let mut request = update_scope_request(
+        "req_scope_link_rejected_update",
+        "idem_scope_link_rejected_update",
+        false,
+        Some(state_version),
+        &task_id,
+        ChangeUnitOperation::KeepCurrent,
+        "Rejected scope decision must not link.",
+    );
+    request.related_scope_decision_refs = vec![decision_ref];
 
-        let response = harness
-            .service
-            .update_scope(request, invocation(AccessClass::CoreMutation))?;
+    let response = harness
+        .service
+        .update_scope(request, invocation(AccessClass::CoreMutation))?;
 
-        assert_eq!(response.response_value["base"]["response_kind"], "rejected");
-        assert_eq!(
-            response.response_value["errors"][0]["code"],
-            "DECISION_UNRESOLVED"
-        );
-        assert_eq!(harness.counts()?, before);
-        assert_eq!(
-            user_judgment_resolution_outcome(&harness, &decision_id)?,
-            Some(outcome.to_owned())
-        );
-        assert_eq!(user_judgment_status(&harness, &decision_id)?, "resolved");
-    }
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "DECISION_UNRESOLVED"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(
+        user_judgment_resolution_outcome(&harness, &decision_id)?,
+        Some("rejected".to_owned())
+    );
+    assert_eq!(user_judgment_status(&harness, &decision_id)?, "resolved");
     Ok(())
 }
 
@@ -6713,50 +6702,67 @@ fn stored_final_acceptance_without_actor_provenance_does_not_authorize_close(
 }
 
 #[test]
-fn stored_final_acceptance_negative_outcomes_do_not_authorize_close() -> Result<(), Box<dyn Error>>
-{
-    for outcome in ["rejected", "deferred", "blocked"] {
-        let harness = MethodHarness::new()?;
-        let suffix = format!("final_negative_{outcome}");
-        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, &suffix)?;
-        let after_basis =
-            record_close_evidence(&harness, &task_id, &change_unit_id, 2, &suffix, true)?;
-        let (after_final, final_judgment_id) = record_final_acceptance_with_id(
-            &harness,
+fn rejected_final_acceptance_does_not_authorize_close() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let suffix = "final_negative_rejected";
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, suffix)?;
+    let after_basis = record_close_evidence(&harness, &task_id, &change_unit_id, 2, suffix, true)?;
+    let judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_final_negative_rejected",
+            "idem_final_negative_rejected",
+            false,
+            Some(after_basis),
             &task_id,
-            &change_unit_id,
-            after_basis,
-            &suffix,
-        )?;
-        set_user_judgment_resolution_outcome(&harness, &final_judgment_id, outcome)?;
-        let before = harness.counts()?;
+            Some(&change_unit_id),
+            JudgmentKind::FinalAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let final_judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let mut record = record_judgment_request(
+        "req_final_negative_rejected_record",
+        "idem_final_negative_rejected_record",
+        Some(after_basis + 1),
+        &task_id,
+        &final_judgment_id,
+        JudgmentKind::FinalAcceptance,
+        rejected_final_acceptance_payload(),
+    );
+    record.selected_option_id = harness_types::UserJudgmentOptionId::new("reject");
+    let recorded = harness
+        .service
+        .record_user_judgment(record, invocation(AccessClass::CoreMutation))?;
+    let after_final = recorded.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+    let before = harness.counts()?;
 
-        let response = harness.service.close_task(
-            close_task_request(CloseTaskFixture {
-                request_id: &format!("req_close_{suffix}"),
-                idempotency_key: Some(&format!("idem_close_{suffix}")),
-                dry_run: false,
-                expected_state_version: Some(after_final),
-                task_id: &task_id,
-                intent: CloseIntent::Complete,
-                close_reason: Some(CloseReason::CompletedSelfChecked),
-                superseding_task_id: None,
-            }),
-            invocation(AccessClass::CoreMutation),
-        )?;
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_final_negative_rejected",
+            idempotency_key: Some("idem_close_final_negative_rejected"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
 
-        assert_eq!(response.response_value["close_state"], "blocked");
-        assert_close_blocker(&response.response_value, "missing_final_acceptance");
-        assert_eq!(
-            user_judgment_resolution_outcome(&harness, &final_judgment_id)?,
-            Some(outcome.to_owned())
-        );
-        assert_eq!(
-            user_judgment_status(&harness, &final_judgment_id)?,
-            "resolved"
-        );
-        assert_eq!(harness.counts()?, before);
-    }
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_eq!(
+        user_judgment_resolution_outcome(&harness, &final_judgment_id)?,
+        Some("rejected".to_owned())
+    );
+    assert_eq!(
+        user_judgment_status(&harness, &final_judgment_id)?,
+        "resolved"
+    );
+    assert_eq!(harness.counts()?, before);
     Ok(())
 }
 
@@ -10155,40 +10161,6 @@ fn rejected_cancellation_authority_does_not_cancel_task() -> Result<(), Box<dyn 
 }
 
 #[test]
-fn deferred_or_blocked_cancellation_outcomes_do_not_cancel_task() -> Result<(), Box<dyn Error>> {
-    for outcome in ["deferred", "blocked"] {
-        let harness = MethodHarness::new()?;
-        let (task_id, change_unit_id) =
-            create_task_with_change_unit(&harness, &format!("cancel_{outcome}"))?;
-        let (after_authority, judgment_id) =
-            record_cancellation_authority(&harness, &task_id, &change_unit_id, 2, outcome, true)?;
-        set_user_judgment_resolution_outcome(&harness, &judgment_id, outcome)?;
-        let before = harness.counts()?;
-        let request_id = format!("req_cancel_{outcome}");
-        let idempotency_key = format!("idem_cancel_{outcome}");
-
-        let response = harness.service.close_task(
-            close_task_request(CloseTaskFixture {
-                request_id: &request_id,
-                idempotency_key: Some(&idempotency_key),
-                dry_run: false,
-                expected_state_version: Some(after_authority),
-                task_id: &task_id,
-                intent: CloseIntent::Cancel,
-                close_reason: Some(CloseReason::Cancelled),
-                superseding_task_id: None,
-            }),
-            invocation(AccessClass::CoreMutation),
-        )?;
-
-        assert_eq!(response.response_value["close_state"], "blocked");
-        assert_close_blocker(&response.response_value, "missing_cancellation_authority");
-        assert_eq!(harness.counts()?, before);
-    }
-    Ok(())
-}
-
-#[test]
 fn scope_change_stales_cancellation_authority() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "cancel_stale_scope")?;
@@ -11751,6 +11723,18 @@ fn scope_decision_payload(decision: &str) -> RecordUserJudgmentPayload {
     payload
 }
 
+fn rejected_final_acceptance_payload() -> RecordUserJudgmentPayload {
+    let mut payload = answer_payload(JudgmentKind::FinalAcceptance);
+    payload.final_acceptance = Some(json_object(json!({
+        "judgment": {
+            "decision": "rejected",
+            "basis": "The visible close basis is not accepted."
+        }
+    })))
+    .into();
+    payload
+}
+
 fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
     let mut payload = RecordUserJudgmentPayload {
         product_decision: None.into(),
@@ -12499,31 +12483,6 @@ fn set_user_judgment_resolution_json(
           WHERE project_id = ?1
             AND judgment_id = ?2",
         rusqlite::params![PROJECT_ID, judgment_id, value],
-    )?;
-    Ok(())
-}
-
-fn set_user_judgment_resolution_outcome(
-    harness: &MethodHarness,
-    judgment_id: &str,
-    outcome: &str,
-) -> Result<(), Box<dyn Error>> {
-    let mut resolution = resolution_json(harness, judgment_id)?;
-    resolution["resolution_outcome"] = json!(outcome);
-    resolution["machine_action"] = match outcome {
-        "accepted" => json!("accept"),
-        "rejected" => json!("reject"),
-        "deferred" => json!("defer"),
-        "blocked" => Value::Null,
-        _ => panic!("unsupported test outcome {outcome}"),
-    };
-    harness.conn()?.execute(
-        "UPDATE user_judgments
-            SET resolution_outcome = ?3,
-                resolution_json = ?4
-          WHERE project_id = ?1
-            AND judgment_id = ?2",
-        rusqlite::params![PROJECT_ID, judgment_id, outcome, resolution.to_string()],
     )?;
     Ok(())
 }

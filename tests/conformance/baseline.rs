@@ -2023,7 +2023,8 @@ fn status_projection_matches_public_close_check_and_stays_read_only() -> Result<
 }
 
 #[test]
-fn negative_authority_judgment_outcomes_remain_non_authoritative() -> Result<(), Box<dyn Error>> {
+fn public_negative_authority_option_selection_remains_non_authoritative(
+) -> Result<(), Box<dyn Error>> {
     let accepted_fixture = CoreFixture::new("negative_final_accepted")?;
     let accepted_service = core(&accepted_fixture);
     let (task_id, change_unit_id) =
@@ -2059,45 +2060,51 @@ fn negative_authority_judgment_outcomes_remain_non_authoritative() -> Result<(),
     )?;
     assert_eq!(closed.response_value["close_state"], "closed");
 
-    for outcome in [Some("rejected"), Some("deferred"), Some("blocked"), None] {
-        let suffix = outcome.unwrap_or("outcome_null");
-        let fixture = CoreFixture::new(&format!("negative_final_{suffix}"))?;
-        let service = core(&fixture);
-        let (task_id, change_unit_id) =
-            create_task_with_change_unit(&fixture, &service, &format!("negative_final_{suffix}"))?;
-        let after_basis =
-            record_close_evidence(&fixture, &service, &task_id, &change_unit_id, 2, true)?;
-        let (after_final, judgment_id) = record_final_acceptance_with_id(
-            &fixture,
-            &service,
-            &task_id,
-            &change_unit_id,
-            after_basis,
-            suffix,
-        )?;
-        fixture.set_user_judgment_resolution_outcome(&judgment_id, outcome)?;
-
-        let response = service.close_task(
-            fixture.close_task_request(CloseTaskFixture {
-                request_id: &format!("req_negative_final_close_{suffix}"),
-                idempotency_key: Some(&format!("idem_negative_final_close_{suffix}")),
-                dry_run: false,
-                expected_state_version: Some(after_final),
-                task_id: &task_id,
-                intent: CloseIntent::Complete,
-                close_reason: Some(CloseReason::CompletedSelfChecked),
-                superseding_task_id: None,
-            }),
-            invocation(&fixture, AccessClass::CoreMutation),
-        )?;
-
-        assert_eq!(response.response_value["close_state"], "blocked");
-        assert_close_blocker(&response.response_value, "missing_final_acceptance");
-        assert_eq!(
-            fixture.user_judgment_resolution_outcome(&judgment_id)?,
-            outcome.map(str::to_owned)
-        );
-    }
+    let rejected_fixture = CoreFixture::new("negative_final_rejected")?;
+    let rejected_service = core(&rejected_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &rejected_fixture,
+        &rejected_service,
+        "negative_final_rejected",
+    )?;
+    let after_basis = record_close_evidence(
+        &rejected_fixture,
+        &rejected_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    let (after_final, judgment_id) = record_authority_judgment_with_option(
+        &rejected_fixture,
+        &rejected_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "negative_final_rejected",
+        JudgmentKind::FinalAcceptance,
+        "reject",
+        rejected_authority_answer_payload(JudgmentKind::FinalAcceptance, &[]),
+    )?;
+    let response = rejected_service.close_task(
+        rejected_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_negative_final_close_rejected",
+            idempotency_key: Some("idem_negative_final_close_rejected"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(&rejected_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_eq!(
+        rejected_fixture.user_judgment_resolution_outcome(&judgment_id)?,
+        Some("rejected".to_owned())
+    );
 
     let actor_fixture = CoreFixture::new("negative_final_actor")?;
     let actor_service = core(&actor_fixture);
@@ -2111,21 +2118,44 @@ fn negative_authority_judgment_outcomes_remain_non_authoritative() -> Result<(),
         2,
         true,
     )?;
-    let (after_final, judgment_id) = record_final_acceptance_with_id(
-        &actor_fixture,
-        &actor_service,
-        &task_id,
-        &change_unit_id,
-        after_basis,
-        "negative_actor",
+    let judgment = actor_service.request_user_judgment(
+        actor_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_negative_actor_final",
+            idempotency_key: "idem_negative_actor_final",
+            dry_run: false,
+            expected_state_version: Some(after_basis),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::FinalAcceptance,
+        }),
+        invocation(&actor_fixture, AccessClass::CoreMutation),
     )?;
-    actor_fixture.set_user_judgment_resolution_actor(&judgment_id, "agent")?;
+    assert_current_authority_options(&judgment.response_value);
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let mut agent_record = actor_fixture.record_judgment_request(RecordJudgmentFixture {
+        request_id: "req_negative_actor_final_record",
+        idempotency_key: "idem_negative_actor_final_record",
+        expected_state_version: Some(after_basis + 1),
+        task_id: &task_id,
+        user_judgment_id: &judgment_id,
+        judgment_kind: JudgmentKind::FinalAcceptance,
+        answer: answer_payload(JudgmentKind::FinalAcceptance),
+    });
+    agent_record.envelope.actor_kind = harness_types::ActorKind::Agent;
+    let before_agent_record = actor_fixture.counts()?;
+    let agent_rejected = actor_service.record_user_judgment(
+        agent_record,
+        invocation(&actor_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_rejected_code(&agent_rejected.response_value, "VALIDATION_FAILED");
+    assert_eq!(actor_fixture.counts()?, before_agent_record);
+    assert_eq!(actor_fixture.user_judgment_status(&judgment_id)?, "pending");
     let actor_blocked = actor_service.close_task(
         actor_fixture.close_task_request(CloseTaskFixture {
             request_id: "req_negative_actor_close",
             idempotency_key: Some("idem_negative_actor_close"),
             dry_run: false,
-            expected_state_version: Some(after_final),
+            expected_state_version: Some(after_basis + 1),
             task_id: &task_id,
             intent: CloseIntent::Complete,
             close_reason: Some(CloseReason::CompletedSelfChecked),
@@ -2136,69 +2166,50 @@ fn negative_authority_judgment_outcomes_remain_non_authoritative() -> Result<(),
     assert_eq!(actor_blocked.response_value["close_state"], "blocked");
     assert_close_blocker(&actor_blocked.response_value, "missing_final_acceptance");
 
-    for outcome in ["rejected", "deferred", "blocked"] {
-        let fixture = CoreFixture::new(&format!("negative_risk_{outcome}"))?;
-        let service = core(&fixture);
-        let (task_id, change_unit_id) =
-            create_task_with_change_unit(&fixture, &service, &format!("negative_risk_{outcome}"))?;
-        let (after_basis, risk_ids) = record_close_basis_with_risks(
-            &fixture,
-            &service,
-            &task_id,
-            &change_unit_id,
-            2,
-            outcome,
-            vec![residual_risk_input(
-                "Risk needs exact accepted user coverage.",
-            )],
-        )?;
-        let judgment = service.request_user_judgment(
-            fixture.user_judgment_request(UserJudgmentFixture {
-                request_id: &format!("req_negative_risk_{outcome}"),
-                idempotency_key: &format!("idem_negative_risk_{outcome}"),
-                dry_run: false,
-                expected_state_version: Some(after_basis),
-                task_id: &task_id,
-                change_unit_id: Some(&change_unit_id),
-                judgment_kind: JudgmentKind::ResidualRiskAcceptance,
-            }),
-            invocation(&fixture, AccessClass::CoreMutation),
-        )?;
-        let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
-        let recorded = service.record_user_judgment(
-            fixture.record_judgment_request(RecordJudgmentFixture {
-                request_id: &format!("req_negative_risk_record_{outcome}"),
-                idempotency_key: &format!("idem_negative_risk_record_{outcome}"),
-                expected_state_version: Some(after_basis + 1),
-                task_id: &task_id,
-                user_judgment_id: &judgment_id,
-                judgment_kind: JudgmentKind::ResidualRiskAcceptance,
-                answer: residual_risk_acceptance_payload(&risk_ids),
-            }),
-            invocation(&fixture, AccessClass::CoreMutation),
-        )?;
-        fixture.set_user_judgment_resolution_outcome(&judgment_id, Some(outcome))?;
-        let after_record = recorded.response_value["base"]["state_version"]
-            .as_u64()
-            .expect("state version should be present");
-        let status = service.status(
-            fixture.status_request(
-                &format!("req_negative_risk_status_{outcome}"),
-                Some(&task_id),
-            ),
-            invocation(&fixture, AccessClass::ReadStatus),
-        )?;
-        assert_eq!(status.response_value["base"]["state_version"], after_record);
-        assert_eq!(
-            status.response_value["risk_acceptance_coverage"][0]["accepted"],
-            false
-        );
-        assert_eq!(
-            status.response_value["risk_acceptance_coverage"][0]["accepted_by_judgment_refs"],
-            json!([])
-        );
-        assert_close_blocker(&status.response_value, "missing_residual_risk_acceptance");
-    }
+    let fixture = CoreFixture::new("negative_risk_rejected")?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "negative_risk_rejected")?;
+    let (after_basis, risk_ids) = record_close_basis_with_risks(
+        &fixture,
+        &service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "rejected",
+        vec![residual_risk_input(
+            "Risk needs exact accepted user coverage.",
+        )],
+    )?;
+    let (after_record, judgment_id) = record_authority_judgment_with_option(
+        &fixture,
+        &service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "negative_risk_rejected",
+        JudgmentKind::ResidualRiskAcceptance,
+        "reject",
+        rejected_authority_answer_payload(JudgmentKind::ResidualRiskAcceptance, &risk_ids),
+    )?;
+    let status = service.status(
+        fixture.status_request("req_negative_risk_status_rejected", Some(&task_id)),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+    assert_eq!(status.response_value["base"]["state_version"], after_record);
+    assert_eq!(
+        fixture.user_judgment_resolution_outcome(&judgment_id)?,
+        Some("rejected".to_owned())
+    );
+    assert_eq!(
+        status.response_value["risk_acceptance_coverage"][0]["accepted"],
+        false
+    );
+    assert_eq!(
+        status.response_value["risk_acceptance_coverage"][0]["accepted_by_judgment_refs"],
+        json!([])
+    );
+    assert_close_blocker(&status.response_value, "missing_residual_risk_acceptance");
 
     let sensitive_fixture = CoreFixture::new("negative_sensitive_accepted")?;
     let sensitive_service = core(&sensitive_fixture);
@@ -2234,34 +2245,41 @@ fn negative_authority_judgment_outcomes_remain_non_authoritative() -> Result<(),
         judgment_id
     );
 
-    for outcome in ["rejected", "deferred", "blocked"] {
-        let fixture = CoreFixture::new(&format!("negative_sensitive_{outcome}"))?;
-        let service = core(&fixture);
-        let (task_id, change_unit_id) = create_task_with_change_unit(
-            &fixture,
-            &service,
-            &format!("negative_sensitive_{outcome}"),
-        )?;
-        let (after_approval, judgment_id) =
-            record_sensitive_approval(&fixture, &service, &task_id, &change_unit_id, 2, outcome)?;
-        fixture.set_user_judgment_resolution_outcome(&judgment_id, Some(outcome))?;
-        let mut prepare = fixture.prepare_write_request(
-            &format!("req_negative_sensitive_prepare_{outcome}"),
-            &format!("idem_negative_sensitive_prepare_{outcome}"),
-            Some(after_approval),
-            Some(&task_id),
-            Some(&change_unit_id),
-        );
-        prepare.intended_operation = "local_sensitive_step".to_owned();
-        prepare.sensitive_categories = vec!["network".to_owned()];
-        let response = service.prepare_write(
-            prepare,
-            invocation(&fixture, AccessClass::WriteAuthorization),
-        )?;
-        assert_eq!(response.response_value["decision"], "approval_required");
-        assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
-        assert!(response.response_value["write_authorization"].is_null());
-    }
+    let fixture = CoreFixture::new("negative_sensitive_rejected")?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "negative_sensitive_rejected")?;
+    let (after_approval, judgment_id) = record_authority_judgment_with_option(
+        &fixture,
+        &service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "negative_sensitive_rejected",
+        JudgmentKind::SensitiveApproval,
+        "reject",
+        rejected_authority_answer_payload(JudgmentKind::SensitiveApproval, &[]),
+    )?;
+    let mut prepare = fixture.prepare_write_request(
+        "req_negative_sensitive_prepare_rejected",
+        "idem_negative_sensitive_prepare_rejected",
+        Some(after_approval),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    prepare.intended_operation = "local_sensitive_step".to_owned();
+    prepare.sensitive_categories = vec!["network".to_owned()];
+    let response = service.prepare_write(
+        prepare,
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+    assert_eq!(
+        fixture.user_judgment_resolution_outcome(&judgment_id)?,
+        Some("rejected".to_owned())
+    );
+    assert_eq!(response.response_value["decision"], "approval_required");
+    assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+    assert!(response.response_value["write_authorization"].is_null());
 
     let conflict_fixture = CoreFixture::new("negative_answer_conflict")?;
     let conflict_service = core(&conflict_fixture);
@@ -2453,39 +2471,40 @@ fn cancellation_and_pending_relevance_are_operation_specific() -> Result<(), Box
     assert_eq!(missing.response_value["close_state"], "blocked");
     assert_close_blocker(&missing.response_value, "missing_cancellation_authority");
 
-    for outcome in ["rejected", "deferred", "blocked"] {
-        let fixture = CoreFixture::new(&format!("cancel_negative_{outcome}"))?;
-        let service = core(&fixture);
-        let (task_id, change_unit_id) = create_task_with_change_unit(
-            &fixture,
-            &service,
-            &format!("cancel_negative_{outcome}"),
-        )?;
-        let after_authority = record_cancellation_authority(
-            &fixture,
-            &service,
-            &task_id,
-            &change_unit_id,
-            2,
-            outcome,
-        )?;
-        let judgment_id = latest_judgment_id(&fixture)?;
-        fixture.set_user_judgment_resolution_outcome(&judgment_id, Some(outcome))?;
-        let response = service.close_task(
-            fixture.close_task_request(CloseTaskFixture {
-                request_id: &format!("req_cancel_negative_{outcome}"),
-                idempotency_key: Some(&format!("idem_cancel_negative_{outcome}")),
-                dry_run: false,
-                expected_state_version: Some(after_authority),
-                task_id: &task_id,
-                intent: CloseIntent::Cancel,
-                close_reason: Some(CloseReason::Cancelled),
-                superseding_task_id: None,
-            }),
-            invocation(&fixture, AccessClass::CoreMutation),
-        )?;
-        assert_eq!(response.response_value["close_state"], "blocked");
-    }
+    let fixture = CoreFixture::new("cancel_negative_rejected")?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "cancel_negative_rejected")?;
+    let (after_authority, judgment_id) = record_authority_judgment_with_option(
+        &fixture,
+        &service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "cancel_negative_rejected",
+        JudgmentKind::Cancellation,
+        "reject",
+        rejected_authority_answer_payload(JudgmentKind::Cancellation, &[]),
+    )?;
+    let response = service.close_task(
+        fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_cancel_negative_rejected",
+            idempotency_key: Some("idem_cancel_negative_rejected"),
+            dry_run: false,
+            expected_state_version: Some(after_authority),
+            task_id: &task_id,
+            intent: CloseIntent::Cancel,
+            close_reason: Some(CloseReason::Cancelled),
+            superseding_task_id: None,
+        }),
+        invocation(&fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(
+        fixture.user_judgment_resolution_outcome(&judgment_id)?,
+        Some("rejected".to_owned())
+    );
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "cancellation_rejected");
 
     let stale_fixture = CoreFixture::new("cancel_scope_stale")?;
     let stale_service = core(&stale_fixture);
@@ -3889,6 +3908,71 @@ fn record_final_acceptance_with_id(
     ))
 }
 
+#[allow(clippy::too_many_arguments)]
+fn record_authority_judgment_with_option(
+    fixture: &CoreFixture,
+    service: &CoreService,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+    judgment_kind: JudgmentKind,
+    selected_option_id: &str,
+    answer: harness_types::RecordUserJudgmentPayload,
+) -> Result<(u64, String), Box<dyn Error>> {
+    let judgment = service.request_user_judgment(
+        fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: &format!("req_authority_{suffix}"),
+            idempotency_key: &format!("idem_authority_{suffix}"),
+            dry_run: false,
+            expected_state_version: Some(expected_state_version),
+            task_id,
+            change_unit_id: Some(change_unit_id),
+            judgment_kind,
+        }),
+        invocation(fixture, AccessClass::CoreMutation),
+    )?;
+    assert_current_authority_options(&judgment.response_value);
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let mut request = fixture.record_judgment_request(RecordJudgmentFixture {
+        request_id: &format!("req_authority_record_{suffix}"),
+        idempotency_key: &format!("idem_authority_record_{suffix}"),
+        expected_state_version: Some(expected_state_version + 1),
+        task_id,
+        user_judgment_id: &judgment_id,
+        judgment_kind,
+        answer,
+    });
+    request.selected_option_id = harness_types::UserJudgmentOptionId::new(selected_option_id);
+    let response =
+        service.record_user_judgment(request, invocation(fixture, AccessClass::CoreMutation))?;
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        response.response_value["user_judgment"]["resolution"]["selected_option_id"],
+        selected_option_id
+    );
+    assert_eq!(
+        response.response_value["user_judgment"]["resolution"]["machine_action"],
+        selected_option_id
+    );
+    let expected_outcome = match selected_option_id {
+        "accept" => "accepted",
+        "reject" => "rejected",
+        "defer" => "deferred",
+        _ => panic!("unexpected authority option id {selected_option_id}"),
+    };
+    assert_eq!(
+        response.response_value["user_judgment"]["resolution"]["resolution_outcome"],
+        expected_outcome
+    );
+    Ok((
+        response.response_value["base"]["state_version"]
+            .as_u64()
+            .expect("state version should be present"),
+        judgment_id,
+    ))
+}
+
 fn record_close_basis_with_risks(
     fixture: &CoreFixture,
     service: &CoreService,
@@ -3949,6 +4033,50 @@ fn residual_risk_acceptance_payload(
 ) -> harness_types::RecordUserJudgmentPayload {
     let mut payload = answer_payload(JudgmentKind::ResidualRiskAcceptance);
     payload.residual_risk_acceptance = Some(json_object(json!({ "risk_ids": risk_ids }))).into();
+    payload
+}
+
+fn rejected_authority_answer_payload(
+    judgment_kind: JudgmentKind,
+    risk_ids: &[String],
+) -> harness_types::RecordUserJudgmentPayload {
+    let mut payload = answer_payload(judgment_kind);
+    match judgment_kind {
+        JudgmentKind::ScopeDecision => {
+            payload.scope_decision = Some(json_object(json!({
+                "requested_scope_summary": "Expanded scope that must not apply silently.",
+                "decision": "rejected"
+            })))
+            .into();
+        }
+        JudgmentKind::SensitiveApproval => {}
+        JudgmentKind::FinalAcceptance => {
+            payload.final_acceptance = Some(json_object(json!({
+                "judgment": {
+                    "decision": "rejected",
+                    "basis": "The visible close basis is not accepted."
+                }
+            })))
+            .into();
+        }
+        JudgmentKind::ResidualRiskAcceptance => {
+            payload.residual_risk_acceptance = Some(json_object(json!({
+                "risk_ids": risk_ids,
+                "decision": "rejected"
+            })))
+            .into();
+        }
+        JudgmentKind::Cancellation => {
+            payload.cancellation = Some(json_object(json!({
+                "decision": "rejected",
+                "reason": "The user rejected cancellation."
+            })))
+            .into();
+        }
+        JudgmentKind::ProductDecision | JudgmentKind::TechnicalDecision => {
+            panic!("non-authority judgment kind does not use rejected authority payloads")
+        }
+    }
     payload
 }
 
@@ -4176,6 +4304,32 @@ fn response_record_id(response_value: &Value, field: &str) -> String {
         .as_str()
         .expect("record_id should be present")
         .to_owned()
+}
+
+fn assert_current_authority_options(response_value: &Value) {
+    let options = response_value["user_judgment"]["options"]
+        .as_array()
+        .expect("authority judgment options should be present");
+    let option_ids = options
+        .iter()
+        .map(|option| option["option_id"].as_str().expect("option id"))
+        .collect::<Vec<_>>();
+    assert_eq!(option_ids, vec!["accept", "reject"]);
+    for option in options {
+        match option["option_id"].as_str().expect("option id") {
+            "accept" => {
+                assert_eq!(option["machine_action"], "accept");
+                assert_eq!(option["resolution_outcome"], "accepted");
+                assert_eq!(option["is_default"], true);
+            }
+            "reject" => {
+                assert_eq!(option["machine_action"], "reject");
+                assert_eq!(option["resolution_outcome"], "rejected");
+                assert_eq!(option["is_default"], false);
+            }
+            other => panic!("unexpected authority option id {other}"),
+        }
+    }
 }
 
 fn json_object(value: Value) -> serde_json::Map<String, Value> {
