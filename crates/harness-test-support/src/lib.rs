@@ -622,6 +622,21 @@ pub mod core_fixtures {
             Ok(serde_json::from_str(&text)?)
         }
 
+        /// Reads the stored machine-readable resolution outcome for a user-owned judgment row.
+        pub fn user_judgment_resolution_outcome(
+            &self,
+            judgment_id: &str,
+        ) -> Result<Option<String>, StoreError> {
+            Ok(self.conn()?.query_row(
+                "SELECT resolution_outcome
+                   FROM user_judgments
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id],
+                |row| row.get(0),
+            )?)
+        }
+
         /// Reads the currently applied Change Unit id for a Task.
         pub fn current_change_unit_id(&self, task_id: &str) -> Result<Option<String>, StoreError> {
             Ok(self.conn()?.query_row(
@@ -813,6 +828,36 @@ pub mod core_fixtures {
             Ok(())
         }
 
+        /// Rewrites persisted artifact integrity facts for controlled integrity fixtures.
+        pub fn set_artifact_integrity(
+            &self,
+            artifact_id: &str,
+            integrity_status: &str,
+            content_type: Option<&str>,
+            sha256: Option<&str>,
+            size_bytes: Option<u64>,
+        ) -> Result<(), StoreError> {
+            let size_bytes = size_bytes.and_then(|value| i64::try_from(value).ok());
+            self.conn()?.execute(
+                "UPDATE artifacts
+                    SET integrity_status = ?3,
+                        content_type = ?4,
+                        sha256 = ?5,
+                        size_bytes = ?6
+                  WHERE project_id = ?1
+                    AND artifact_id = ?2",
+                rusqlite::params![
+                    self.project_id,
+                    artifact_id,
+                    integrity_status,
+                    content_type,
+                    sha256,
+                    size_bytes
+                ],
+            )?;
+            Ok(())
+        }
+
         /// Replaces a user-owned judgment resolution JSON value with SQL NULL or raw text.
         pub fn set_user_judgment_resolution_raw(
             &self,
@@ -827,6 +872,66 @@ pub mod core_fixtures {
                   WHERE project_id = ?1
                     AND judgment_id = ?2",
                 rusqlite::params![self.project_id, judgment_id, raw_json],
+            )?;
+            Ok(())
+        }
+
+        /// Rewrites the stored machine-readable outcome for controlled authority fixtures.
+        pub fn set_user_judgment_resolution_outcome(
+            &self,
+            judgment_id: &str,
+            outcome: Option<&str>,
+        ) -> Result<(), Box<dyn Error>> {
+            let current_json: Option<String> = self.conn()?.query_row(
+                "SELECT resolution_json
+                   FROM user_judgments
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id],
+                |row| row.get(0),
+            )?;
+            let updated_json = current_json
+                .map(|text| -> Result<String, Box<dyn Error>> {
+                    let mut value: Value = serde_json::from_str(&text)?;
+                    value["resolution_outcome"] = outcome
+                        .map(|value| Value::String(value.to_owned()))
+                        .unwrap_or(Value::Null);
+                    Ok(serde_json::to_string(&value)?)
+                })
+                .transpose()?;
+            self.conn()?.execute(
+                "UPDATE user_judgments
+                    SET resolution_outcome = ?3,
+                        resolution_json = ?4
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id, outcome, updated_json],
+            )?;
+            Ok(())
+        }
+
+        /// Rewrites the stored resolving actor for controlled authority fixtures.
+        pub fn set_user_judgment_resolution_actor(
+            &self,
+            judgment_id: &str,
+            actor_kind: &str,
+        ) -> Result<(), Box<dyn Error>> {
+            let text: String = self.conn()?.query_row(
+                "SELECT resolution_json
+                   FROM user_judgments
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id],
+                |row| row.get(0),
+            )?;
+            let mut value: Value = serde_json::from_str(&text)?;
+            value["resolved_by_actor_kind"] = Value::String(actor_kind.to_owned());
+            self.conn()?.execute(
+                "UPDATE user_judgments
+                    SET resolution_json = ?3
+                  WHERE project_id = ?1
+                    AND judgment_id = ?2",
+                rusqlite::params![self.project_id, judgment_id, serde_json::to_string(&value)?],
             )?;
             Ok(())
         }

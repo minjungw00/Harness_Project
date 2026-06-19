@@ -13,8 +13,9 @@ use harness_test_support::core_fixtures::{
 use harness_types::{
     AccessClass, ArtifactInput, ArtifactInputId, ArtifactInputSourceKind, ArtifactRef,
     ChangeUnitOperation, CloseAssessmentInput, CloseIntent, CloseReason, EffectKind, ErrorCode,
-    JudgmentKind, ResidualRiskInput, ResponseKind, StagedArtifactHandle, StatusRequest,
-    UtcTimestamp, WriteAuthorizationId, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    JudgmentKind, ResidualRiskInput, ResponseKind, RunId, StagedArtifactHandle, StateRecordKind,
+    StateRecordRef, StatusRequest, UtcTimestamp, WriteAuthorizationId,
+    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 use serde_json::{json, Value};
 
@@ -2022,6 +2023,1090 @@ fn status_projection_matches_public_close_check_and_stays_read_only() -> Result<
 }
 
 #[test]
+fn negative_authority_judgment_outcomes_remain_non_authoritative() -> Result<(), Box<dyn Error>> {
+    let accepted_fixture = CoreFixture::new("negative_final_accepted")?;
+    let accepted_service = core(&accepted_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&accepted_fixture, &accepted_service, "negative_accepted")?;
+    let after_basis = record_close_evidence(
+        &accepted_fixture,
+        &accepted_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &accepted_fixture,
+        &accepted_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "negative_accepted",
+    )?;
+    let closed = accepted_service.close_task(
+        accepted_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_negative_accepted_close",
+            idempotency_key: Some("idem_negative_accepted_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(&accepted_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(closed.response_value["close_state"], "closed");
+
+    for outcome in [Some("rejected"), Some("deferred"), Some("blocked"), None] {
+        let suffix = outcome.unwrap_or("outcome_null");
+        let fixture = CoreFixture::new(&format!("negative_final_{suffix}"))?;
+        let service = core(&fixture);
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&fixture, &service, &format!("negative_final_{suffix}"))?;
+        let after_basis =
+            record_close_evidence(&fixture, &service, &task_id, &change_unit_id, 2, true)?;
+        let (after_final, judgment_id) = record_final_acceptance_with_id(
+            &fixture,
+            &service,
+            &task_id,
+            &change_unit_id,
+            after_basis,
+            suffix,
+        )?;
+        fixture.set_user_judgment_resolution_outcome(&judgment_id, outcome)?;
+
+        let response = service.close_task(
+            fixture.close_task_request(CloseTaskFixture {
+                request_id: &format!("req_negative_final_close_{suffix}"),
+                idempotency_key: Some(&format!("idem_negative_final_close_{suffix}")),
+                dry_run: false,
+                expected_state_version: Some(after_final),
+                task_id: &task_id,
+                intent: CloseIntent::Complete,
+                close_reason: Some(CloseReason::CompletedSelfChecked),
+                superseding_task_id: None,
+            }),
+            invocation(&fixture, AccessClass::CoreMutation),
+        )?;
+
+        assert_eq!(response.response_value["close_state"], "blocked");
+        assert_close_blocker(&response.response_value, "missing_final_acceptance");
+        assert_eq!(
+            fixture.user_judgment_resolution_outcome(&judgment_id)?,
+            outcome.map(str::to_owned)
+        );
+    }
+
+    let actor_fixture = CoreFixture::new("negative_final_actor")?;
+    let actor_service = core(&actor_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&actor_fixture, &actor_service, "negative_actor")?;
+    let after_basis = record_close_evidence(
+        &actor_fixture,
+        &actor_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    let (after_final, judgment_id) = record_final_acceptance_with_id(
+        &actor_fixture,
+        &actor_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "negative_actor",
+    )?;
+    actor_fixture.set_user_judgment_resolution_actor(&judgment_id, "agent")?;
+    let actor_blocked = actor_service.close_task(
+        actor_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_negative_actor_close",
+            idempotency_key: Some("idem_negative_actor_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(&actor_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(actor_blocked.response_value["close_state"], "blocked");
+    assert_close_blocker(&actor_blocked.response_value, "missing_final_acceptance");
+
+    for outcome in ["rejected", "deferred", "blocked"] {
+        let fixture = CoreFixture::new(&format!("negative_risk_{outcome}"))?;
+        let service = core(&fixture);
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&fixture, &service, &format!("negative_risk_{outcome}"))?;
+        let (after_basis, risk_ids) = record_close_basis_with_risks(
+            &fixture,
+            &service,
+            &task_id,
+            &change_unit_id,
+            2,
+            outcome,
+            vec![residual_risk_input(
+                "Risk needs exact accepted user coverage.",
+            )],
+        )?;
+        let judgment = service.request_user_judgment(
+            fixture.user_judgment_request(UserJudgmentFixture {
+                request_id: &format!("req_negative_risk_{outcome}"),
+                idempotency_key: &format!("idem_negative_risk_{outcome}"),
+                dry_run: false,
+                expected_state_version: Some(after_basis),
+                task_id: &task_id,
+                change_unit_id: Some(&change_unit_id),
+                judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+            }),
+            invocation(&fixture, AccessClass::CoreMutation),
+        )?;
+        let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+        let recorded = service.record_user_judgment(
+            fixture.record_judgment_request(RecordJudgmentFixture {
+                request_id: &format!("req_negative_risk_record_{outcome}"),
+                idempotency_key: &format!("idem_negative_risk_record_{outcome}"),
+                expected_state_version: Some(after_basis + 1),
+                task_id: &task_id,
+                user_judgment_id: &judgment_id,
+                judgment_kind: JudgmentKind::ResidualRiskAcceptance,
+                answer: residual_risk_acceptance_payload(&risk_ids),
+            }),
+            invocation(&fixture, AccessClass::CoreMutation),
+        )?;
+        fixture.set_user_judgment_resolution_outcome(&judgment_id, Some(outcome))?;
+        let after_record = recorded.response_value["base"]["state_version"]
+            .as_u64()
+            .expect("state version should be present");
+        let status = service.status(
+            fixture.status_request(
+                &format!("req_negative_risk_status_{outcome}"),
+                Some(&task_id),
+            ),
+            invocation(&fixture, AccessClass::ReadStatus),
+        )?;
+        assert_eq!(status.response_value["base"]["state_version"], after_record);
+        assert_eq!(
+            status.response_value["risk_acceptance_coverage"][0]["accepted"],
+            false
+        );
+        assert_eq!(
+            status.response_value["risk_acceptance_coverage"][0]["accepted_by_judgment_refs"],
+            json!([])
+        );
+        assert_close_blocker(&status.response_value, "missing_residual_risk_acceptance");
+    }
+
+    let sensitive_fixture = CoreFixture::new("negative_sensitive_accepted")?;
+    let sensitive_service = core(&sensitive_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &sensitive_fixture,
+        &sensitive_service,
+        "negative_sensitive_accepted",
+    )?;
+    let (after_approval, judgment_id) = record_sensitive_approval(
+        &sensitive_fixture,
+        &sensitive_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "negative_sensitive_accepted",
+    )?;
+    let mut prepare = sensitive_fixture.prepare_write_request(
+        "req_negative_sensitive_allowed",
+        "idem_negative_sensitive_allowed",
+        Some(after_approval),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    prepare.intended_operation = "local_sensitive_step".to_owned();
+    prepare.sensitive_categories = vec!["network".to_owned()];
+    let allowed = sensitive_service.prepare_write(
+        prepare,
+        invocation(&sensitive_fixture, AccessClass::WriteAuthorization),
+    )?;
+    assert_eq!(allowed.response_value["decision"], "allowed");
+    assert_eq!(
+        allowed.response_value["active_user_judgment_refs"][0]["record_id"],
+        judgment_id
+    );
+
+    for outcome in ["rejected", "deferred", "blocked"] {
+        let fixture = CoreFixture::new(&format!("negative_sensitive_{outcome}"))?;
+        let service = core(&fixture);
+        let (task_id, change_unit_id) = create_task_with_change_unit(
+            &fixture,
+            &service,
+            &format!("negative_sensitive_{outcome}"),
+        )?;
+        let (after_approval, judgment_id) =
+            record_sensitive_approval(&fixture, &service, &task_id, &change_unit_id, 2, outcome)?;
+        fixture.set_user_judgment_resolution_outcome(&judgment_id, Some(outcome))?;
+        let mut prepare = fixture.prepare_write_request(
+            &format!("req_negative_sensitive_prepare_{outcome}"),
+            &format!("idem_negative_sensitive_prepare_{outcome}"),
+            Some(after_approval),
+            Some(&task_id),
+            Some(&change_unit_id),
+        );
+        prepare.intended_operation = "local_sensitive_step".to_owned();
+        prepare.sensitive_categories = vec!["network".to_owned()];
+        let response = service.prepare_write(
+            prepare,
+            invocation(&fixture, AccessClass::WriteAuthorization),
+        )?;
+        assert_eq!(response.response_value["decision"], "approval_required");
+        assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+        assert!(response.response_value["write_authorization"].is_null());
+    }
+
+    let conflict_fixture = CoreFixture::new("negative_answer_conflict")?;
+    let conflict_service = core(&conflict_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&conflict_fixture, &conflict_service, "answer_conflict")?;
+    let judgment = conflict_service.request_user_judgment(
+        conflict_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_negative_answer_conflict",
+            idempotency_key: "idem_negative_answer_conflict",
+            dry_run: false,
+            expected_state_version: Some(2),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::ProductDecision,
+        }),
+        invocation(&conflict_fixture, AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&judgment.response_value, "user_judgment_ref");
+    let mut request = conflict_fixture.record_judgment_request(RecordJudgmentFixture {
+        request_id: "req_negative_answer_conflict_record",
+        idempotency_key: "idem_negative_answer_conflict_record",
+        expected_state_version: Some(3),
+        task_id: &task_id,
+        user_judgment_id: &judgment_id,
+        judgment_kind: JudgmentKind::ProductDecision,
+        answer: answer_payload(JudgmentKind::ProductDecision),
+    });
+    request.selected_option_id = harness_types::UserJudgmentOptionId::new("decline");
+    let before = conflict_fixture.counts()?;
+    let rejected = conflict_service.record_user_judgment(
+        request,
+        invocation(&conflict_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_rejected_code(&rejected.response_value, "VALIDATION_FAILED");
+    assert_eq!(conflict_fixture.counts()?, before);
+    assert_eq!(
+        conflict_fixture.user_judgment_status(&judgment_id)?,
+        "pending"
+    );
+
+    let mut missing_selected = serde_json::to_value(conflict_fixture.record_judgment_request(
+        RecordJudgmentFixture {
+            request_id: "req_negative_missing_option",
+            idempotency_key: "idem_negative_missing_option",
+            expected_state_version: Some(3),
+            task_id: &task_id,
+            user_judgment_id: &judgment_id,
+            judgment_kind: JudgmentKind::FinalAcceptance,
+            answer: answer_payload(JudgmentKind::FinalAcceptance),
+        },
+    ))?;
+    missing_selected
+        .as_object_mut()
+        .expect("record judgment request should be an object")
+        .remove("selected_option_id");
+    assert!(
+        serde_json::from_value::<harness_types::RecordUserJudgmentRequest>(missing_selected)
+            .is_err()
+    );
+    Ok(())
+}
+
+#[test]
+fn public_sensitive_lifecycle_preserves_full_scope_through_close() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("sensitive_public_lifecycle_conf")?;
+    let service = core(&fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&fixture, &service, "sensitive_public_lifecycle")?;
+
+    let (after_sensitive, _) = record_sensitive_approval(
+        &fixture,
+        &service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "public_lifecycle",
+    )?;
+    let mut prepare = fixture.prepare_write_request(
+        "req_sensitive_public_prepare",
+        "idem_sensitive_public_prepare",
+        Some(after_sensitive),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    prepare.intended_operation = "local_sensitive_step".to_owned();
+    prepare.sensitive_categories = vec!["network".to_owned()];
+    let prepared = service.prepare_write(
+        prepare,
+        invocation(&fixture, AccessClass::WriteAuthorization),
+    )?;
+    assert_eq!(prepared.response_value["decision"], "allowed");
+    let write_authorization_id =
+        response_record_id(&prepared.response_value, "write_authorization_ref");
+    let after_prepare = prepared.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+
+    let mut run = product_write_run(
+        &fixture,
+        "req_sensitive_public_run",
+        "idem_sensitive_public_run",
+        after_prepare,
+        &task_id,
+        &change_unit_id,
+        &write_authorization_id,
+    );
+    run.observed_changes.sensitive_categories = vec!["network".to_owned()];
+    run.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    run.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "Sensitive product write is ready for close.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: vec!["network".to_owned()],
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let recorded = service.record_run(run, invocation(&fixture, AccessClass::RunRecording))?;
+    let requirement =
+        &recorded.response_value["current_close_basis"]["sensitive_action_requirements"][0];
+    assert_eq!(requirement["action_kind"], "local_sensitive_step");
+    assert_eq!(
+        requirement["normalized_paths"],
+        json!([DEFAULT_PRODUCT_PATH])
+    );
+    assert_eq!(requirement["sensitive_categories"], json!(["network"]));
+    assert_eq!(requirement["baseline_ref"], "baseline_fixture");
+    assert_eq!(requirement["change_unit_id"], change_unit_id);
+    assert_eq!(
+        requirement["source_write_authorization_ref"]["record_id"],
+        write_authorization_id
+    );
+    let after_run = recorded.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state_version should be present");
+
+    let status = service.status(
+        fixture.status_request("req_sensitive_public_status_after_run", Some(&task_id)),
+        invocation(&fixture, AccessClass::ReadStatus),
+    )?;
+    assert_eq!(
+        status.response_value["current_close_basis"]["sensitive_action_requirements"][0],
+        *requirement
+    );
+
+    let after_final = record_final_acceptance(
+        &fixture,
+        &service,
+        &task_id,
+        &change_unit_id,
+        after_run,
+        "sensitive_public_lifecycle",
+    )?;
+    let closed = service.close_task(
+        fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_sensitive_public_close",
+            idempotency_key: Some("idem_sensitive_public_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(&fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(closed.response_value["close_state"], "closed");
+    Ok(())
+}
+
+#[test]
+fn cancellation_and_pending_relevance_are_operation_specific() -> Result<(), Box<dyn Error>> {
+    let missing_fixture = CoreFixture::new("cancel_missing_authority")?;
+    let missing_service = core(&missing_fixture);
+    let (task_id, _) =
+        create_task_with_change_unit(&missing_fixture, &missing_service, "cancel_missing")?;
+    let missing = missing_service.close_task(
+        missing_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_cancel_missing",
+            idempotency_key: Some("idem_cancel_missing"),
+            dry_run: false,
+            expected_state_version: Some(2),
+            task_id: &task_id,
+            intent: CloseIntent::Cancel,
+            close_reason: Some(CloseReason::Cancelled),
+            superseding_task_id: None,
+        }),
+        invocation(&missing_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(missing.response_value["close_state"], "blocked");
+    assert_close_blocker(&missing.response_value, "missing_cancellation_authority");
+
+    for outcome in ["rejected", "deferred", "blocked"] {
+        let fixture = CoreFixture::new(&format!("cancel_negative_{outcome}"))?;
+        let service = core(&fixture);
+        let (task_id, change_unit_id) = create_task_with_change_unit(
+            &fixture,
+            &service,
+            &format!("cancel_negative_{outcome}"),
+        )?;
+        let after_authority = record_cancellation_authority(
+            &fixture,
+            &service,
+            &task_id,
+            &change_unit_id,
+            2,
+            outcome,
+        )?;
+        let judgment_id = latest_judgment_id(&fixture)?;
+        fixture.set_user_judgment_resolution_outcome(&judgment_id, Some(outcome))?;
+        let response = service.close_task(
+            fixture.close_task_request(CloseTaskFixture {
+                request_id: &format!("req_cancel_negative_{outcome}"),
+                idempotency_key: Some(&format!("idem_cancel_negative_{outcome}")),
+                dry_run: false,
+                expected_state_version: Some(after_authority),
+                task_id: &task_id,
+                intent: CloseIntent::Cancel,
+                close_reason: Some(CloseReason::Cancelled),
+                superseding_task_id: None,
+            }),
+            invocation(&fixture, AccessClass::CoreMutation),
+        )?;
+        assert_eq!(response.response_value["close_state"], "blocked");
+    }
+
+    let stale_fixture = CoreFixture::new("cancel_scope_stale")?;
+    let stale_service = core(&stale_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&stale_fixture, &stale_service, "cancel_stale")?;
+    let after_authority = record_cancellation_authority(
+        &stale_fixture,
+        &stale_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        "stale",
+    )?;
+    let scope = stale_service.update_scope(
+        stale_fixture.update_scope_request(UpdateScopeFixture {
+            request_id: "req_cancel_scope_stale",
+            idempotency_key: "idem_cancel_scope_stale",
+            dry_run: false,
+            expected_state_version: Some(after_authority),
+            task_id: &task_id,
+            operation: ChangeUnitOperation::ReplaceCurrent,
+            scope_summary: "Replacement scope makes cancellation authority stale.",
+        }),
+        invocation(&stale_fixture, AccessClass::CoreMutation),
+    )?;
+    let after_scope = scope.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version should be present");
+    let stale = stale_service.close_task(
+        stale_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_cancel_stale_close",
+            idempotency_key: Some("idem_cancel_stale_close"),
+            dry_run: false,
+            expected_state_version: Some(after_scope),
+            task_id: &task_id,
+            intent: CloseIntent::Cancel,
+            close_reason: Some(CloseReason::Cancelled),
+            superseding_task_id: None,
+        }),
+        invocation(&stale_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(stale.response_value["close_state"], "blocked");
+    assert_close_blocker(&stale.response_value, "cancellation_judgment_stale");
+
+    let final_pending_fixture = CoreFixture::new("cancel_ignores_pending_final")?;
+    let final_pending_service = core(&final_pending_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &final_pending_fixture,
+        &final_pending_service,
+        "cancel_ignores_final",
+    )?;
+    let after_basis = record_close_evidence(
+        &final_pending_fixture,
+        &final_pending_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    final_pending_service.request_user_judgment(
+        final_pending_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_cancel_pending_final",
+            idempotency_key: "idem_cancel_pending_final",
+            dry_run: false,
+            expected_state_version: Some(after_basis),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::FinalAcceptance,
+        }),
+        invocation(&final_pending_fixture, AccessClass::CoreMutation),
+    )?;
+    let after_cancel_authority = record_cancellation_authority(
+        &final_pending_fixture,
+        &final_pending_service,
+        &task_id,
+        &change_unit_id,
+        after_basis + 1,
+        "pending_final",
+    )?;
+    let cancelled = final_pending_service.close_task(
+        final_pending_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_cancel_pending_final_close",
+            idempotency_key: Some("idem_cancel_pending_final_close"),
+            dry_run: false,
+            expected_state_version: Some(after_cancel_authority),
+            task_id: &task_id,
+            intent: CloseIntent::Cancel,
+            close_reason: Some(CloseReason::Cancelled),
+            superseding_task_id: None,
+        }),
+        invocation(&final_pending_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(cancelled.response_value["close_state"], "cancelled");
+
+    for kind in [JudgmentKind::FinalAcceptance, JudgmentKind::Cancellation] {
+        let fixture = CoreFixture::new(&format!("pending_prepare_{kind:?}"))?;
+        let service = core(&fixture);
+        let (task_id, change_unit_id) =
+            create_task_with_change_unit(&fixture, &service, &format!("pending_prepare_{kind:?}"))?;
+        let mut expected_version = 2;
+        if kind == JudgmentKind::FinalAcceptance {
+            expected_version =
+                record_close_evidence(&fixture, &service, &task_id, &change_unit_id, 2, true)?;
+        }
+        service.request_user_judgment(
+            fixture.user_judgment_request(UserJudgmentFixture {
+                request_id: &format!("req_pending_prepare_{kind:?}"),
+                idempotency_key: &format!("idem_pending_prepare_{kind:?}"),
+                dry_run: false,
+                expected_state_version: Some(expected_version),
+                task_id: &task_id,
+                change_unit_id: Some(&change_unit_id),
+                judgment_kind: kind,
+            }),
+            invocation(&fixture, AccessClass::CoreMutation),
+        )?;
+        let prepared = service.prepare_write(
+            fixture.prepare_write_request(
+                &format!("req_pending_prepare_write_{kind:?}"),
+                &format!("idem_pending_prepare_write_{kind:?}"),
+                Some(expected_version + 1),
+                Some(&task_id),
+                Some(&change_unit_id),
+            ),
+            invocation(&fixture, AccessClass::WriteAuthorization),
+        )?;
+        assert_eq!(prepared.response_value["decision"], "allowed");
+    }
+
+    let sensitive_pending_fixture = CoreFixture::new("pending_sensitive_prepare")?;
+    let sensitive_pending_service = core(&sensitive_pending_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &sensitive_pending_fixture,
+        &sensitive_pending_service,
+        "pending_sensitive",
+    )?;
+    sensitive_pending_service.request_user_judgment(
+        sensitive_pending_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_pending_sensitive_prepare",
+            idempotency_key: "idem_pending_sensitive_prepare",
+            dry_run: false,
+            expected_state_version: Some(2),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::SensitiveApproval,
+        }),
+        invocation(&sensitive_pending_fixture, AccessClass::CoreMutation),
+    )?;
+    let mut sensitive_prepare = sensitive_pending_fixture.prepare_write_request(
+        "req_pending_sensitive_prepare_write",
+        "idem_pending_sensitive_prepare_write",
+        Some(3),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    sensitive_prepare.intended_operation = "local_sensitive_step".to_owned();
+    sensitive_prepare.sensitive_categories = vec!["network".to_owned()];
+    let sensitive_blocked = sensitive_pending_service.prepare_write(
+        sensitive_prepare,
+        invocation(&sensitive_pending_fixture, AccessClass::WriteAuthorization),
+    )?;
+    assert_ne!(sensitive_blocked.response_value["decision"], "allowed");
+    assert!(sensitive_blocked.response_value["write_authorization"].is_null());
+
+    let close_pending_fixture = CoreFixture::new("pending_close_complete")?;
+    let close_pending_service = core(&close_pending_fixture);
+    let (task_id, change_unit_id) = create_task_with_change_unit(
+        &close_pending_fixture,
+        &close_pending_service,
+        "pending_close",
+    )?;
+    let after_basis = record_close_evidence(
+        &close_pending_fixture,
+        &close_pending_service,
+        &task_id,
+        &change_unit_id,
+        2,
+        true,
+    )?;
+    close_pending_service.request_user_judgment(
+        close_pending_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_pending_close_final",
+            idempotency_key: "idem_pending_close_final",
+            dry_run: false,
+            expected_state_version: Some(after_basis),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::FinalAcceptance,
+        }),
+        invocation(&close_pending_fixture, AccessClass::CoreMutation),
+    )?;
+    let close = close_pending_service.close_task(
+        close_pending_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_pending_close_complete",
+            idempotency_key: Some("idem_pending_close_complete"),
+            dry_run: false,
+            expected_state_version: Some(after_basis + 1),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(&close_pending_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(close.response_value["close_state"], "blocked");
+    assert_close_blocker(&close.response_value, "pending_user_judgment");
+
+    let info_fixture = CoreFixture::new("pending_info_close")?;
+    let info_service = core(&info_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&info_fixture, &info_service, "pending_info")?;
+    let mut info_request = info_fixture.user_judgment_request(UserJudgmentFixture {
+        request_id: "req_pending_info",
+        idempotency_key: "idem_pending_info",
+        dry_run: false,
+        expected_state_version: Some(2),
+        task_id: &task_id,
+        change_unit_id: Some(&change_unit_id),
+        judgment_kind: JudgmentKind::TechnicalDecision,
+    });
+    info_request.required_for = vec![harness_types::JudgmentRequiredFor::Informational];
+    info_service.request_user_judgment(
+        info_request,
+        invocation(&info_fixture, AccessClass::CoreMutation),
+    )?;
+    let after_basis = record_close_evidence(
+        &info_fixture,
+        &info_service,
+        &task_id,
+        &change_unit_id,
+        3,
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &info_fixture,
+        &info_service,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "pending_info",
+    )?;
+    let closed = info_service.close_task(
+        info_fixture.close_task_request(CloseTaskFixture {
+            request_id: "req_pending_info_close",
+            idempotency_key: Some("idem_pending_info_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(&info_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(closed.response_value["close_state"], "closed");
+    Ok(())
+}
+
+#[test]
+fn canonical_close_refs_and_artifact_integrity_remain_truthful() -> Result<(), Box<dyn Error>> {
+    for (index, (record_kind, record_id)) in [
+        (StateRecordKind::WriteAuthorization, "wa_fabricated"),
+        (StateRecordKind::UserJudgment, "uj_fabricated"),
+        (StateRecordKind::Blocker, "blocker_fabricated"),
+        (StateRecordKind::TaskEvent, "evt_fabricated"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let fixture = CoreFixture::new(&format!("canonical_unsupported_{index}"))?;
+        let service = core(&fixture);
+        let (task_id, change_unit_id) = create_task_with_change_unit(
+            &fixture,
+            &service,
+            &format!("canonical_unsupported_{index}"),
+        )?;
+        let mut request = fixture.record_run_request(
+            &format!("req_canonical_unsupported_{index}"),
+            &format!("idem_canonical_unsupported_{index}"),
+            false,
+            Some(2),
+            &task_id,
+            &change_unit_id,
+        );
+        request.close_assessment = Some(CloseAssessmentInput {
+            result_summary: "Unsupported refs must not enter close authority.".to_owned(),
+            result_refs: vec![state_record_ref(
+                &fixture,
+                &task_id,
+                record_kind,
+                record_id,
+                Some(999),
+            )],
+            residual_risks: Vec::new(),
+            sensitive_categories: Vec::new(),
+            recovery_constraints: Vec::new(),
+        })
+        .into();
+        let before = fixture.counts()?;
+        let response =
+            service.record_run(request, invocation(&fixture, AccessClass::RunRecording))?;
+        assert_rejected_code(&response.response_value, "VALIDATION_FAILED");
+        assert_eq!(fixture.counts()?, before);
+    }
+
+    let missing_fixture = CoreFixture::new("canonical_missing_allowed")?;
+    let missing_service = core(&missing_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&missing_fixture, &missing_service, "missing_allowed")?;
+    let mut missing = missing_fixture.record_run_request(
+        "req_canonical_missing_allowed",
+        "idem_canonical_missing_allowed",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    missing.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "Missing allowed refs still need stored records.".to_owned(),
+        result_refs: vec![state_record_ref(
+            &missing_fixture,
+            &task_id,
+            StateRecordKind::Run,
+            "run_missing",
+            Some(2),
+        )],
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let before = missing_fixture.counts()?;
+    let response = missing_service.record_run(
+        missing,
+        invocation(&missing_fixture, AccessClass::RunRecording),
+    )?;
+    assert_rejected_code(&response.response_value, "VALIDATION_FAILED");
+    assert_eq!(missing_fixture.counts()?, before);
+
+    let cross_fixture = CoreFixture::new("canonical_cross_refs")?;
+    let cross_service = core(&cross_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&cross_fixture, &cross_service, "cross_refs")?;
+    for (index, record_ref) in [
+        state_record_ref_with_project(
+            &cross_fixture,
+            &task_id,
+            "project_other",
+            StateRecordKind::Artifact,
+            "artifact_cross_project",
+            Some(2),
+        ),
+        state_record_ref_with_project(
+            &cross_fixture,
+            "task_other",
+            cross_fixture.project_id(),
+            StateRecordKind::Run,
+            "run_cross_task",
+            Some(2),
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let mut request = cross_fixture.record_run_request(
+            &format!("req_canonical_cross_{index}"),
+            &format!("idem_canonical_cross_{index}"),
+            false,
+            Some(2),
+            &task_id,
+            &change_unit_id,
+        );
+        request.close_assessment = Some(CloseAssessmentInput {
+            result_summary: "Cross-owner refs must not enter close authority.".to_owned(),
+            result_refs: vec![record_ref],
+            residual_risks: Vec::new(),
+            sensitive_categories: Vec::new(),
+            recovery_constraints: Vec::new(),
+        })
+        .into();
+        let before = cross_fixture.counts()?;
+        let response = cross_service.record_run(
+            request,
+            invocation(&cross_fixture, AccessClass::RunRecording),
+        )?;
+        assert_rejected_code(&response.response_value, "VALIDATION_FAILED");
+        assert_eq!(cross_fixture.counts()?, before);
+    }
+
+    let canonical_fixture = CoreFixture::new("canonical_dedup")?;
+    let canonical_service = core(&canonical_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&canonical_fixture, &canonical_service, "canonical_dedup")?;
+    let mut request = canonical_fixture.record_run_request(
+        "req_canonical_dedup",
+        "idem_canonical_dedup",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.run_id = Some(RunId::new("run_canonical_dedup")).into();
+    request.evidence_updates = vec![supported_evidence_update("Canonical close basis claim.")];
+    let future_run_ref = state_record_ref(
+        &canonical_fixture,
+        &task_id,
+        StateRecordKind::Run,
+        "run_canonical_dedup",
+        Some(999),
+    );
+    let past_run_ref = state_record_ref(
+        &canonical_fixture,
+        &task_id,
+        StateRecordKind::Run,
+        "run_canonical_dedup",
+        Some(1),
+    );
+    let mut risk = residual_risk_input("Caller-versioned risk source.");
+    risk.acceptance_required = false;
+    risk.source_refs = vec![future_run_ref.clone(), past_run_ref.clone()];
+    request.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "Canonical refs are stored.".to_owned(),
+        result_refs: vec![future_run_ref, past_run_ref],
+        residual_risks: vec![risk],
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let response = canonical_service.record_run(
+        request,
+        invocation(&canonical_fixture, AccessClass::RunRecording),
+    )?;
+    let basis = &response.response_value["current_close_basis"];
+    let result_refs = basis["result_refs"]
+        .as_array()
+        .expect("result refs should be present");
+    assert_eq!(
+        result_refs
+            .iter()
+            .filter(|record_ref| record_ref["record_kind"] == "run"
+                && record_ref["record_id"] == "run_canonical_dedup")
+            .count(),
+        1
+    );
+    assert!(result_refs.iter().any(|record_ref| {
+        record_ref["record_kind"] == "run"
+            && record_ref["record_id"] == "run_canonical_dedup"
+            && record_ref["state_version"] == 3
+    }));
+    assert!(result_refs.iter().any(|record_ref| {
+        record_ref["record_kind"] == "change_unit"
+            && record_ref["record_id"] == change_unit_id
+            && record_ref["state_version"] == 3
+    }));
+    assert!(result_refs
+        .iter()
+        .any(|record_ref| record_ref["record_kind"] == "evidence_summary"
+            && record_ref["state_version"] == 3));
+    assert_eq!(
+        basis["residual_risks"][0]["source_refs"][0]["state_version"],
+        3
+    );
+
+    let final_judgment = canonical_service.request_user_judgment(
+        canonical_fixture.user_judgment_request(UserJudgmentFixture {
+            request_id: "req_canonical_final_basis",
+            idempotency_key: "idem_canonical_final_basis",
+            dry_run: false,
+            expected_state_version: Some(3),
+            task_id: &task_id,
+            change_unit_id: Some(&change_unit_id),
+            judgment_kind: JudgmentKind::FinalAcceptance,
+        }),
+        invocation(&canonical_fixture, AccessClass::CoreMutation),
+    )?;
+    assert_eq!(
+        final_judgment.response_value["user_judgment"]["basis"]["result_refs"],
+        basis["result_refs"]
+    );
+
+    const HELLO_SHA256: &str = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+    const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+    let artifact_fixture = CoreFixture::new("artifact_integrity_real")?;
+    let artifact_service = core(&artifact_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&artifact_fixture, &artifact_service, "artifact_integrity")?;
+    let mut stage = artifact_fixture.stage_artifact_request(
+        "req_artifact_integrity_stage",
+        Some("idem_artifact_integrity_stage"),
+        false,
+        Some(2),
+        &task_id,
+    );
+    stage.safe_bytes_or_notice = "hello".to_owned();
+    stage.content_type = "text/plain".to_owned();
+    let staged = artifact_service.stage_artifact(
+        stage,
+        invocation(&artifact_fixture, AccessClass::ArtifactRegistration),
+    )?;
+    let handle: StagedArtifactHandle =
+        serde_json::from_value(staged.response_value["staged_artifact_handle"].clone())?;
+    let mut run = artifact_fixture.record_run_request(
+        "req_artifact_integrity_run",
+        "idem_artifact_integrity_run",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    run.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_integrity",
+        handle,
+        Some("validation_report"),
+        Some("Artifact integrity is recorded."),
+    )];
+    let recorded = artifact_service.record_run(
+        run,
+        invocation(&artifact_fixture, AccessClass::RunRecording),
+    )?;
+    let artifact = &recorded.response_value["registered_artifacts"][0];
+    assert_eq!(artifact["content_type"], "text/plain");
+    assert_eq!(artifact["sha256"], HELLO_SHA256);
+    assert_eq!(artifact["size_bytes"], 5);
+    assert_eq!(artifact["integrity_status"], "verified");
+
+    let zero_fixture = CoreFixture::new("artifact_integrity_zero")?;
+    let zero_service = core(&zero_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&zero_fixture, &zero_service, "artifact_zero")?;
+    let mut zero_stage = zero_fixture.stage_artifact_request(
+        "req_artifact_zero_stage",
+        Some("idem_artifact_zero_stage"),
+        false,
+        Some(2),
+        &task_id,
+    );
+    zero_stage.safe_bytes_or_notice = String::new();
+    zero_stage.expected_sha256 = Some(EMPTY_SHA256.to_owned()).into();
+    zero_stage.expected_size_bytes = Some(0).into();
+    let staged = zero_service.stage_artifact(
+        zero_stage,
+        invocation(&zero_fixture, AccessClass::ArtifactRegistration),
+    )?;
+    let handle: StagedArtifactHandle =
+        serde_json::from_value(staged.response_value["staged_artifact_handle"].clone())?;
+    let mut run = zero_fixture.record_run_request(
+        "req_artifact_zero_run",
+        "idem_artifact_zero_run",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    run.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_zero",
+        handle,
+        Some("empty_report"),
+        Some("Zero-byte artifact was registered."),
+    )];
+    let zero =
+        zero_service.record_run(run, invocation(&zero_fixture, AccessClass::RunRecording))?;
+    assert_eq!(
+        zero.response_value["registered_artifacts"][0]["sha256"],
+        EMPTY_SHA256
+    );
+    assert_eq!(
+        zero.response_value["registered_artifacts"][0]["size_bytes"],
+        0
+    );
+
+    let legacy_fixture = CoreFixture::new("artifact_integrity_legacy")?;
+    let legacy_service = core(&legacy_fixture);
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&legacy_fixture, &legacy_service, "artifact_legacy")?;
+    let staged = stage_artifact_for_record_run(&legacy_fixture, &legacy_service, &task_id)?;
+    let mut run = legacy_fixture.record_run_request(
+        "req_artifact_legacy_run",
+        "idem_artifact_legacy_run",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    run.artifact_inputs = vec![artifact_input_for_handle(
+        "artifact_input_legacy",
+        staged,
+        Some("validation_report"),
+        Some("Legacy integrity evidence."),
+    )];
+    run.evidence_updates = vec![supported_evidence_update("Legacy integrity evidence.")];
+    run.close_assessment = Some(CloseAssessmentInput {
+        result_summary: "Legacy integrity evidence.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+    let response =
+        legacy_service.record_run(run, invocation(&legacy_fixture, AccessClass::RunRecording))?;
+    let artifact_id = response.response_value["registered_artifacts"][0]["artifact_id"]
+        .as_str()
+        .expect("artifact id should be present")
+        .to_owned();
+    legacy_fixture.set_artifact_integrity(&artifact_id, "legacy_unknown", None, None, None)?;
+    let status = legacy_service.status(
+        legacy_fixture.status_request("req_artifact_legacy_status", Some(&task_id)),
+        invocation(&legacy_fixture, AccessClass::ReadStatus),
+    )?;
+    let artifact_ref = &status.response_value["evidence_summary"]["coverage_items"][0]
+        ["supporting_artifact_refs"][0];
+    assert_eq!(artifact_ref["integrity_status"], "legacy_unknown");
+    assert!(artifact_ref["content_type"].is_null());
+    assert!(artifact_ref["sha256"].is_null());
+    assert!(artifact_ref["size_bytes"].is_null());
+    assert_close_blocker(&status.response_value, "artifact_unavailable");
+    Ok(())
+}
+
+#[test]
 fn persisted_state_corruption_public_entries_fail_closed_without_effects(
 ) -> Result<(), Box<dyn Error>> {
     let request_fixture = CoreFixture::new("corrupt_public_request")?;
@@ -2884,6 +3969,7 @@ where
         Some(&task_id),
         Some(&change_unit_id),
     );
+    request.intended_operation = "local_sensitive_step".to_owned();
     request.sensitive_categories = vec!["network".to_owned()];
     mutate(&mut request);
     let response = service.prepare_write(
@@ -2932,6 +4018,7 @@ fn assert_sensitive_approval_change_unit_mismatch() -> Result<(), Box<dyn Error>
         Some(&task_id),
         Some(&replacement_change_unit_id),
     );
+    request.intended_operation = "local_sensitive_step".to_owned();
     request.sensitive_categories = vec!["network".to_owned()];
     let response = service.prepare_write(
         request,
@@ -3047,6 +4134,40 @@ fn artifact_state_ref(
         project_id: harness_types::ProjectId::new(fixture.project_id()),
         task_id: Some(harness_types::TaskId::new(task_id)).into(),
         state_version: Some(state_version).into(),
+    }
+}
+
+fn state_record_ref(
+    fixture: &CoreFixture,
+    task_id: &str,
+    record_kind: StateRecordKind,
+    record_id: &str,
+    state_version: Option<u64>,
+) -> StateRecordRef {
+    state_record_ref_with_project(
+        fixture,
+        task_id,
+        fixture.project_id(),
+        record_kind,
+        record_id,
+        state_version,
+    )
+}
+
+fn state_record_ref_with_project(
+    _fixture: &CoreFixture,
+    task_id: &str,
+    project_id: &str,
+    record_kind: StateRecordKind,
+    record_id: &str,
+    state_version: Option<u64>,
+) -> StateRecordRef {
+    StateRecordRef {
+        record_kind,
+        record_id: harness_types::RecordId::new(record_id),
+        project_id: harness_types::ProjectId::new(project_id),
+        task_id: Some(harness_types::TaskId::new(task_id)).into(),
+        state_version: state_version.into(),
     }
 }
 
