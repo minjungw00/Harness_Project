@@ -322,7 +322,8 @@ fn plan_request_user_judgment(
         )
     });
     let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
-    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let guarantee_display =
+        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
     let write_authority_summary = projected_write_authority_summary(
         store,
         &request.task_id,
@@ -1207,7 +1208,8 @@ fn plan_record_user_judgment(
         )
     });
     let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
-    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let guarantee_display =
+        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
     let write_authority_summary = projected_write_authority_summary(
         store,
         &task_id,

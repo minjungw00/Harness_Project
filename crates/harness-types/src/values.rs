@@ -507,6 +507,25 @@ pub enum GuaranteeLevel {
     Detective,
 }
 
+/// Controlled source value for a project enforcement profile.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ProjectEnforcementProfileSource {
+    BaselineScope,
+}
+
+/// Controlled active-state value for a project enforcement profile.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ProjectEnforcementProfileStatus {
+    Active,
+}
+
+/// Controlled enabled enforcement mechanisms supported by the baseline build.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum EnabledEnforcementMechanism {}
+
 /// Artifact input source values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

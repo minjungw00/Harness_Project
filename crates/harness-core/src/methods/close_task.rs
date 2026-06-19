@@ -52,10 +52,21 @@ impl CoreService {
         let plan_now = utc_timestamp(self.now());
 
         if request.intent == CloseIntent::Check {
+            let guarantee_profile = match prepared.store.project_enforcement_profile() {
+                Ok(record) => record.profile,
+                Err(error) => {
+                    return plan_error_response(
+                        &request.envelope,
+                        &prepared.context.project_state,
+                        PlanError::Core(CorePipelineError::from(error)),
+                    )
+                }
+            };
             let plan = match plan_close_task(
                 &prepared.store,
                 &prepared.context.project_state,
                 Some(&prepared.context.verified_surface),
+                Some(&guarantee_profile),
                 request.clone(),
                 &plan_now,
             ) {
@@ -85,10 +96,21 @@ impl CoreService {
             );
         }
 
+        let guarantee_profile = match prepared.store.project_enforcement_profile() {
+            Ok(record) => record.profile,
+            Err(error) => {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    PlanError::Core(CorePipelineError::from(error)),
+                )
+            }
+        };
         let plan = match plan_close_task(
             &prepared.store,
             &prepared.context.project_state,
             Some(&prepared.context.verified_surface),
+            Some(&guarantee_profile),
             request.clone(),
             &plan_now,
         ) {
@@ -263,6 +285,7 @@ pub(super) fn plan_close_task(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     verified_surface: Option<&VerifiedSurfaceContext>,
+    guarantee_profile: Option<&ProjectEnforcementProfile>,
     request: CloseTaskRequest,
     now: &UtcTimestamp,
 ) -> Result<CloseTaskPlan, PlanError> {
@@ -271,6 +294,7 @@ pub(super) fn plan_close_task(
         store,
         project_state,
         verified_surface,
+        guarantee_profile,
         request,
         now,
         context,
@@ -281,6 +305,7 @@ pub(super) fn plan_close_task_with_context(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     verified_surface: Option<&VerifiedSurfaceContext>,
+    guarantee_profile: Option<&ProjectEnforcementProfile>,
     request: CloseTaskRequest,
     now: &UtcTimestamp,
     context: CloseTaskContext,
@@ -378,6 +403,15 @@ pub(super) fn plan_close_task_with_context(
         }))?;
     }
 
+    let guarantee_display = match (verified_surface, guarantee_profile) {
+        (Some(surface), Some(profile)) => Some(guarantee_display_from_profile(
+            profile,
+            surface,
+            response_state_version,
+        )),
+        _ => None,
+    };
+
     let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: response_state_version,
@@ -390,14 +424,12 @@ pub(super) fn plan_close_task_with_context(
             &request.task_id,
             response_state_version,
             *now.as_datetime(),
-            verified_surface
-                .map(|surface| guarantee_display_for_surface(surface, response_state_version)),
+            guarantee_display.clone(),
         )?,
         evidence_summary: context.evidence_summary.clone(),
         close_state: Some(close_state),
         close_blockers: blockers.clone(),
-        guarantee_display: verified_surface
-            .map(|surface| guarantee_display_for_surface(surface, response_state_version)),
+        guarantee_display,
     })?;
 
     let result_state = state.clone();

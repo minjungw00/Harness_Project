@@ -19,8 +19,8 @@ use harness_types::{
     prefixed_durable_id, ActorKind, ChangeUnitUpdate, DurableIdError, DurableIdGenerator,
     DurableIdKind, IdempotencyKey, InitialScope, RequestId, ScopeUpdate,
     SequenceDurableIdGenerator, SurfaceId, SurfaceInteractionRole,
-    ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
-    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON,
+    VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 use serde_json::{json, Map, Value};
 
@@ -182,6 +182,29 @@ impl MethodHarness {
                 .join(PROJECT_ID)
                 .join("state.sqlite"),
         )?)
+    }
+
+    fn project_enforcement_profile_json(&self) -> Result<String, Box<dyn Error>> {
+        Ok(self.conn()?.query_row(
+            "SELECT enforcement_profile_json
+               FROM project_state
+              WHERE project_id = ?1",
+            [PROJECT_ID],
+            |row| row.get(0),
+        )?)
+    }
+
+    fn set_project_enforcement_profile_json(
+        &self,
+        profile_json: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        self.conn()?.execute(
+            "UPDATE project_state
+                SET enforcement_profile_json = ?2
+              WHERE project_id = ?1",
+            rusqlite::params![PROJECT_ID, profile_json],
+        )?;
+        Ok(())
     }
 
     fn use_generator_and_clock(
@@ -877,6 +900,174 @@ fn status_close_false_does_not_read_corrupt_close_basis() -> Result<(), Box<dyn 
 }
 
 #[test]
+fn fresh_project_registration_creates_baseline_enforcement_profile() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let profile_json = harness.project_enforcement_profile_json()?;
+    assert_eq!(profile_json, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON);
+
+    let store = CoreProjectStore::open(&harness.runtime_home_path, &ProjectId::new(PROJECT_ID))?;
+    let record = store.project_enforcement_profile()?;
+    assert_eq!(record.project_id, PROJECT_ID);
+    assert_eq!(record.profile.profile_id, "baseline_cooperative");
+    assert_eq!(record.profile.enabled_mechanisms.len(), 0);
+    Ok(())
+}
+
+#[test]
+fn status_guarantee_include_false_does_not_read_corrupt_profile() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_profile_skip")?;
+    record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "status_profile_skip",
+        true,
+    )?;
+    harness.set_project_enforcement_profile_json(corrupt_owner_json())?;
+    let before = harness.counts()?;
+
+    let excluded = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_profile_skip_excluded",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: true,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: true,
+                guarantees: false,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(excluded.response_value["base"]["response_kind"], "result");
+    assert_field_absent(&excluded.response_value, "guarantee_display");
+    assert_field_absent(&excluded.response_value["active_task"], "guarantee_display");
+    assert_eq!(harness.counts()?, before);
+
+    let selected = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_profile_skip_selected",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: false,
+                guarantees: true,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &selected,
+        "project_state",
+        PROJECT_ID,
+        "enforcement_profile_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_guarantee_include_true_rejects_unsupported_profile_state() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    harness.set_project_enforcement_profile_json(
+        &json!({
+            "profile_id": "baseline_cooperative",
+            "guarantee_level": "detective",
+            "enabled_mechanisms": [],
+            "source": "baseline_scope",
+            "status": "active"
+        })
+        .to_string(),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_profile_detective", None, false, None, None),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: false,
+                guarantees: true,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_value_rejection(
+        &response,
+        "project_state",
+        PROJECT_ID,
+        "enforcement_profile_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_guarantee_include_true_rejects_missing_profile_fields() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    harness.set_project_enforcement_profile_json(
+        &json!({
+            "profile_id": "baseline_cooperative",
+            "enabled_mechanisms": [],
+            "source": "baseline_scope",
+            "status": "active"
+        })
+        .to_string(),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_profile_missing", None, false, None, None),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: false,
+                guarantees: true,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_owner_state_rejection(
+        &response,
+        "project_state",
+        PROJECT_ID,
+        "enforcement_profile_json",
+        &harness.runtime_home_path,
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
 fn guarantee_display_uses_verified_surface_without_profile_elevation() -> Result<(), Box<dyn Error>>
 {
     let harness = MethodHarness::new()?;
@@ -892,6 +1083,7 @@ fn guarantee_display_uses_verified_surface_without_profile_elevation() -> Result
         })
         .to_string(),
     )?;
+    let before = harness.counts()?;
 
     let status = harness.service.status(
         StatusRequest {
@@ -921,6 +1113,8 @@ fn guarantee_display_uses_verified_surface_without_profile_elevation() -> Result
         .is_some_and(|basis| {
             basis.contains(SURFACE_ID)
                 && basis.contains(SURFACE_INSTANCE_ID)
+                && basis.contains("baseline_cooperative")
+                && basis.contains("enabled mechanisms: none")
                 && basis.contains("no stronger enforcement")
         }));
     assert_eq!(
@@ -929,8 +1123,9 @@ fn guarantee_display_uses_verified_surface_without_profile_elevation() -> Result
     );
     assert_eq!(
         status.response_value["guarantee_display"]["capability_refs"][0]["record_id"],
-        SURFACE_INSTANCE_ID
+        format!("{SURFACE_ID}/{SURFACE_INSTANCE_ID}")
     );
+    assert_eq!(harness.counts()?, before);
     Ok(())
 }
 

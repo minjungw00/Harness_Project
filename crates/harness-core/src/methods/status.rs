@@ -97,9 +97,19 @@ fn status_result_fields(
     let mut risk_acceptance_coverage = None;
     let mut close_blockers = None;
     let mut next_actions = Vec::new();
-    let guarantee_projection = include
-        .guarantees
-        .then(|| guarantee_display_for_surface(verified_surface, state_version));
+    let guarantee_profile = if include.guarantees {
+        Some(
+            store
+                .project_enforcement_profile()
+                .map_err(CorePipelineError::from)?
+                .profile,
+        )
+    } else {
+        None
+    };
+    let guarantee_projection = guarantee_profile
+        .as_ref()
+        .map(|profile| guarantee_display_from_profile(profile, verified_surface, state_version));
 
     if let Some(task) = task {
         let task_id = TaskId::new(task.task_id.clone());
@@ -137,6 +147,7 @@ fn status_result_fields(
                 store,
                 project_state,
                 Some(verified_surface),
+                guarantee_profile.as_ref(),
                 CloseTaskRequest {
                     envelope: ToolEnvelope {
                         task_id: Some(task_id.clone()).into(),

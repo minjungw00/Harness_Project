@@ -9,8 +9,9 @@ use harness_types::{
     ObservedChanges, PersistedArtifactProducer, PersistedArtifactProvenance,
     PersistedArtifactProvenanceMetadata, PersistedEvidenceMetadata, PersistedJudgmentBasis,
     PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
+    ProjectEnforcementProfile, ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus,
     ProjectId, RequestHash, RequiredNullable, ResidualRisk, RunId, StagedArtifactHandleId,
-    StateRecordRef, SurfaceId, TaskId, UtcTimestamp,
+    StateRecordRef, SurfaceId, TaskId, UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
 };
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
@@ -41,6 +42,14 @@ pub struct ProjectStateHeader {
     pub active_task_id: Option<String>,
     pub default_surface_id: Option<String>,
     pub default_surface_instance_id: Option<String>,
+}
+
+/// Strict-decoded project-owned enforcement profile row.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectEnforcementProfileRecord {
+    pub project_id: String,
+    pub enforcement_profile_json: String,
+    pub profile: ProjectEnforcementProfile,
 }
 
 /// Stored idempotency replay row.
@@ -679,6 +688,11 @@ impl CoreProjectStore {
     /// Reads the current project-state header.
     pub fn project_state(&self) -> StoreResult<ProjectStateHeader> {
         read_project_state(&self.conn, &self.project.project_id)
+    }
+
+    /// Reads and strictly validates the active project enforcement profile.
+    pub fn project_enforcement_profile(&self) -> StoreResult<ProjectEnforcementProfileRecord> {
+        project_enforcement_profile(&self.conn, &self.project.project_id)
     }
 
     /// Reads one surface instance by exact project/surface/instance identity.
@@ -2626,6 +2640,71 @@ fn read_project_state(conn: &Connection, project_id: &str) -> StoreResult<Projec
         entity: "project_state",
         id: project_id.to_owned(),
     })
+}
+
+fn project_enforcement_profile(
+    conn: &Connection,
+    project_id: &str,
+) -> StoreResult<ProjectEnforcementProfileRecord> {
+    let (row_project_id, enforcement_profile_json): (String, String) = conn
+        .query_row(
+            "SELECT project_id, enforcement_profile_json
+               FROM project_state
+              WHERE project_id = ?1",
+            params![project_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()?
+        .ok_or_else(|| StoreError::NotFound {
+            entity: "project_state",
+            id: project_id.to_owned(),
+        })?;
+    let profile = serde_json::from_str::<ProjectEnforcementProfile>(&enforcement_profile_json)
+        .map_err(|_| {
+            StoreError::corrupt_owner_state_json(
+                "project_state",
+                row_project_id.clone(),
+                "enforcement_profile_json",
+            )
+        })?;
+    validate_project_enforcement_profile(&profile, &row_project_id)?;
+    Ok(ProjectEnforcementProfileRecord {
+        project_id: row_project_id,
+        enforcement_profile_json,
+        profile,
+    })
+}
+
+fn validate_project_enforcement_profile(
+    profile: &ProjectEnforcementProfile,
+    project_id: &str,
+) -> StoreResult<()> {
+    let unsupported = || {
+        StoreError::corrupt_owner_state_value(
+            "project_state",
+            project_id.to_owned(),
+            "enforcement_profile_json",
+        )
+    };
+    if profile.profile_id.trim().is_empty() {
+        return Err(unsupported());
+    }
+    if profile.profile_id != BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID {
+        return Err(unsupported());
+    }
+    if profile.guarantee_level != harness_types::GuaranteeLevel::Cooperative {
+        return Err(unsupported());
+    }
+    if !profile.enabled_mechanisms.is_empty() {
+        return Err(unsupported());
+    }
+    if profile.source != ProjectEnforcementProfileSource::BaselineScope {
+        return Err(unsupported());
+    }
+    if profile.status != ProjectEnforcementProfileStatus::Active {
+        return Err(unsupported());
+    }
+    Ok(())
 }
 
 fn task_record(

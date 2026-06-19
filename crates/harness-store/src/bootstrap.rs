@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use harness_types::SurfaceInteractionRole;
+use harness_types::{SurfaceInteractionRole, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
@@ -180,7 +180,8 @@ pub fn register_project(
                 schema_version,
                 created_at,
                 updated_at,
-                metadata_json
+                metadata_json,
+                enforcement_profile_json
             )
             VALUES (
                 ?1,
@@ -188,7 +189,8 @@ pub fn register_project(
                 ?3,
                 strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
                 strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
-                ?4
+                ?4,
+                ?5
             )
             ON CONFLICT(project_id) DO UPDATE SET
                 storage_profile = excluded.storage_profile,
@@ -199,7 +201,8 @@ pub fn register_project(
                 registration.project_id,
                 STORAGE_PROFILE,
                 PROJECT_STATE_SCHEMA_VERSION,
-                registration.metadata_json
+                registration.metadata_json,
+                BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON
             ],
         )?;
         Ok(())

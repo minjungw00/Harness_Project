@@ -261,6 +261,31 @@ pub mod core_fixtures {
             Ok(())
         }
 
+        /// Replaces the project-owned enforcement profile JSON for focused corruption tests.
+        pub fn set_project_enforcement_profile_json(
+            &self,
+            profile_json: &str,
+        ) -> Result<(), StoreError> {
+            self.conn()?.execute(
+                "UPDATE project_state
+                    SET enforcement_profile_json = ?2
+                  WHERE project_id = ?1",
+                rusqlite::params![self.project_id, profile_json],
+            )?;
+            Ok(())
+        }
+
+        /// Reads the project-owned enforcement profile JSON.
+        pub fn project_enforcement_profile_json(&self) -> Result<String, StoreError> {
+            Ok(self.conn()?.query_row(
+                "SELECT enforcement_profile_json
+                   FROM project_state
+                  WHERE project_id = ?1",
+                rusqlite::params![self.project_id],
+                |row| row.get(0),
+            )?)
+        }
+
         /// Builds a common public request envelope.
         pub fn envelope(
             &self,

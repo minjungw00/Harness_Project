@@ -396,7 +396,8 @@ fn plan_record_run(
         &request,
         planned_state_version,
     )?;
-    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let guarantee_display =
+        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
     let write_authority_summary = if let Some((record, _scope)) = &authorization_scope {
         let mut consumed_record = record.clone();
         consumed_record.status = storage_value(WriteAuthorizationStatus::Consumed)?;

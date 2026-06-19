@@ -329,9 +329,10 @@ fn plan_prepare_write(
     }
 
     let guarantee_display = Some(guarantee_display_for_surface(
+        store,
         verified_surface,
         planned_state_version,
-    ));
+    )?);
     let branch_change_unit_id =
         change_unit.map(|record| ChangeUnitId::new(record.change_unit_id.clone()));
     let scope_change_unit_id = branch_change_unit_id.clone().unwrap_or_else(|| {

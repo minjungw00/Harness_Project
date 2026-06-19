@@ -11,11 +11,12 @@ use crate::ids::{
 };
 use crate::values::{
     ActorKind, ArtifactAvailability, ArtifactInputSourceKind, ArtifactIntegrityStatus,
-    CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind, ErrorCode,
-    EvidenceCoverageState, EvidenceStatus, GuaranteeLevel, JudgmentBasisCompatibilityStatus,
-    JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName,
-    NextActionKind, PlannedBlockerSourceKind, RedactionState, ResponseKind, RunKind,
-    StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentOptionAction,
+    CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind,
+    EnabledEnforcementMechanism, ErrorCode, EvidenceCoverageState, EvidenceStatus, GuaranteeLevel,
+    JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation, JudgmentRequiredFor,
+    JudgmentResolutionOutcome, MethodName, NextActionKind, PlannedBlockerSourceKind,
+    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, RedactionState, ResponseKind,
+    RunKind, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentOptionAction,
     UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus, WriteAuthorizationStatus,
     WriteDecisionCategory,
 };
@@ -278,6 +279,40 @@ pub struct StateRecordRef {
     pub project_id: ProjectId,
     pub task_id: RequiredNullable<TaskId>,
     pub state_version: RequiredNullable<u64>,
+}
+
+/// Baseline cooperative project enforcement profile identifier.
+pub const BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID: &str = "baseline_cooperative";
+
+/// Canonical baseline cooperative enforcement profile JSON stored for projects.
+pub const BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON: &str = r#"{"profile_id":"baseline_cooperative","guarantee_level":"cooperative","enabled_mechanisms":[],"source":"baseline_scope","status":"active"}"#;
+
+/// Persisted project-owned enforcement profile used to project guarantee display.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectEnforcementProfile {
+    pub profile_id: String,
+    pub guarantee_level: GuaranteeLevel,
+    pub enabled_mechanisms: Vec<EnabledEnforcementMechanism>,
+    pub source: ProjectEnforcementProfileSource,
+    pub status: ProjectEnforcementProfileStatus,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub notes: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub refs: Vec<StateRecordRef>,
+}
+
+/// Returns the baseline cooperative project enforcement profile.
+pub fn baseline_project_enforcement_profile() -> ProjectEnforcementProfile {
+    ProjectEnforcementProfile {
+        profile_id: BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID.to_owned(),
+        guarantee_level: GuaranteeLevel::Cooperative,
+        enabled_mechanisms: Vec::new(),
+        source: ProjectEnforcementProfileSource::BaselineScope,
+        status: ProjectEnforcementProfileStatus::Active,
+        notes: Vec::new(),
+        refs: Vec::new(),
+    }
 }
 
 /// Compact current-position state returned by public methods.

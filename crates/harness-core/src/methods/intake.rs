@@ -249,7 +249,8 @@ fn plan_intake(
         ),
         service.now(),
     )?;
-    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let guarantee_display =
+        guarantee_display_for_surface(store, verified_surface, planned_state_version)?;
     let write_authority_summary = if create_new {
         None
     } else {

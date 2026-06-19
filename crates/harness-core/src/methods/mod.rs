@@ -24,23 +24,23 @@ use harness_types::{
     CloseReadinessBlocker, CloseReadinessBlockerCategory, CloseReason, CloseState,
     CloseTaskRequest, CloseTaskResult, CompletionPolicy, CurrentCloseBasis, DryRunSummary,
     DurableIdKind, EffectKind, ErrorCode, EvidenceCoverageItem, EvidenceCoverageState,
-    EvidenceStatus, EvidenceSummary, GuaranteeDisplay, GuaranteeLevel, JsonObject, JudgmentBasis,
+    EvidenceStatus, EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentBasis,
     JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentRequiredFor, JudgmentResolutionOutcome,
     MethodAccessClass, MethodName, NextActionKind, NextActionSummary, ObservedChanges,
     PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentOptions,
     PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, PlannedEffect,
-    PrepareWriteRequest, PrepareWriteResult, ProjectId, RecordId, RecordRunRequest,
-    RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
-    RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId,
-    RunId, RunSummary, SensitiveActionRequirement, StageArtifactRequest, StageArtifactResult,
-    StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind, StateRecordRef,
-    StatusCloseState, StatusInclude, StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId,
-    SurfaceInteractionRole, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
-    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
-    UserJudgmentOption, UserJudgmentOptionAction, UserJudgmentOptionId, UserJudgmentOptionInput,
-    UserJudgmentResolution, UserJudgmentStatus, UtcTimestamp, WriteAuthoritySummary,
-    WriteAuthorizationId, WriteAuthorizationStatus, WriteAuthorizationSummary,
-    WriteDecisionCategory, WriteDecisionReason,
+    PrepareWriteRequest, PrepareWriteResult, ProjectEnforcementProfile, ProjectId, RecordId,
+    RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest,
+    RedactionState, RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy,
+    RiskAcceptanceCoverage, RiskId, RunId, RunSummary, SensitiveActionRequirement,
+    StageArtifactRequest, StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId,
+    StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef,
+    SurfaceId, SurfaceInstanceId, SurfaceInteractionRole, TaskId, TaskLifecyclePhase,
+    TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
+    UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentOptionAction,
+    UserJudgmentOptionId, UserJudgmentOptionInput, UserJudgmentResolution, UserJudgmentStatus,
+    UtcTimestamp, WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
+    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
 };
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -1678,25 +1678,55 @@ fn effective_write_authorization_status(
 }
 
 fn guarantee_display_for_surface(
+    store: &CoreProjectStore,
+    verified_surface: &VerifiedSurfaceContext,
+    state_version: u64,
+) -> Result<GuaranteeDisplay, PlanError> {
+    let profile = store
+        .project_enforcement_profile()
+        .map_err(CorePipelineError::from)?
+        .profile;
+    Ok(guarantee_display_from_profile(
+        &profile,
+        verified_surface,
+        state_version,
+    ))
+}
+
+fn guarantee_display_from_profile(
+    profile: &ProjectEnforcementProfile,
     verified_surface: &VerifiedSurfaceContext,
     state_version: u64,
 ) -> GuaranteeDisplay {
     GuaranteeDisplay {
-        level: GuaranteeLevel::Cooperative,
+        level: profile.guarantee_level,
         basis: format!(
-            "Registered surface `{}` instance `{}` is verified by `{}`; no stronger enforcement is active.",
+            "Project enforcement profile `{}` is active for registered surface `{}` instance `{}` role `{}` verified by `{}`; enabled mechanisms: none; no stronger enforcement is active.",
+            profile.profile_id,
             verified_surface.surface_id.as_str(),
             verified_surface.surface_instance_id.as_str(),
+            verified_surface.interaction_role.as_str(),
             verified_surface.verification_basis
         ),
-        capability_refs: vec![state_ref(
-            StateRecordKind::LocalSurfaceRegistration,
-            verified_surface.surface_instance_id.as_str(),
-            &verified_surface.project_id,
-            None,
-            Some(state_version),
-        )],
+        capability_refs: vec![surface_registration_ref(verified_surface, state_version)],
     }
+}
+
+fn surface_registration_ref(
+    verified_surface: &VerifiedSurfaceContext,
+    state_version: u64,
+) -> StateRecordRef {
+    state_ref(
+        StateRecordKind::LocalSurfaceRegistration,
+        &format!(
+            "{}/{}",
+            verified_surface.surface_id.as_str(),
+            verified_surface.surface_instance_id.as_str()
+        ),
+        &verified_surface.project_id,
+        None,
+        Some(state_version),
+    )
 }
 
 fn selected_write_authorization_for_projection(
@@ -1871,6 +1901,7 @@ fn projected_close_check(
         store,
         project_state,
         Some(verified_surface),
+        None,
         CloseTaskRequest {
             envelope: ToolEnvelope {
                 task_id: Some(task_id.clone()).into(),

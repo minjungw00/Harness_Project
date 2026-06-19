@@ -21,7 +21,7 @@ pub const BASELINE_SCHEMA_VERSION: i64 = 1;
 pub const REGISTRY_SCHEMA_VERSION: i64 = 1;
 
 /// Latest schema version for project `state.sqlite`.
-pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 8;
+pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 9;
 
 const PROJECT_STATE_REPLAY_CONTEXT_SCHEMA_VERSION: i64 = 2;
 const PROJECT_STATE_REPLAY_SURFACE_FK_SCHEMA_VERSION: i64 = 3;
@@ -30,6 +30,7 @@ const PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_SCHEMA_VERSION: i64 = 5;
 const PROJECT_STATE_ARTIFACT_INTEGRITY_SCHEMA_VERSION: i64 = 6;
 const PROJECT_STATE_SURFACE_ROLE_ACTOR_PROVENANCE_SCHEMA_VERSION: i64 = 7;
 const PROJECT_STATE_RUN_SCOPE_REVISION_SCHEMA_VERSION: i64 = 8;
+const PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION: i64 = 9;
 
 /// `schema_migrations.database_kind` for `registry.sqlite`.
 pub const REGISTRY_DATABASE_KIND: &str = "registry";
@@ -92,6 +93,12 @@ const PROJECT_STATE_MIGRATIONS: &[Migration] = &[
         version: PROJECT_STATE_RUN_SCOPE_REVISION_SCHEMA_VERSION,
         name: "project_state_run_scope_revision_v8",
         kind: MigrationKind::Sql(PROJECT_STATE_RUN_SCOPE_REVISION_V8_SQL),
+    },
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION,
+        name: "project_state_enforcement_profile_v9",
+        kind: MigrationKind::Sql(PROJECT_STATE_ENFORCEMENT_PROFILE_V9_SQL),
     },
 ];
 
@@ -1352,11 +1359,22 @@ UPDATE project_state
  WHERE schema_version < 8;
 "#;
 
+const PROJECT_STATE_ENFORCEMENT_PROFILE_V9_SQL: &str = r#"
+ALTER TABLE project_state
+  ADD COLUMN enforcement_profile_json TEXT NOT NULL DEFAULT '{"profile_id":"baseline_cooperative","guarantee_level":"cooperative","enabled_mechanisms":[],"source":"baseline_scope","status":"active"}';
+
+UPDATE project_state
+   SET schema_version = 9,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version < 9;
+"#;
+
 #[cfg(test)]
 mod tests {
     use std::{error::Error, fs, path::Path};
 
     use harness_test_support::TempRuntimeHome;
+    use harness_types::BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON;
     use rusqlite::{params, Connection, Error as SqliteError, ErrorCode};
     use sha2::{Digest, Sha256};
 
@@ -2294,6 +2312,43 @@ mod tests {
             "{\"changed_paths\":[],\"product_file_write_observed\":false,\"sensitive_categories\":[],\"baseline_ref\":\"baseline_legacy\"}"
         );
         assert_eq!(row.3, "[]");
+        assert_integrity_check_clean(&conn)?;
+        assert_foreign_key_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn enforcement_profile_migration_adds_baseline_profile() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-v8-profile")?;
+        let path = project_state_db_path(runtime_home.path(), "project_v8_profile");
+        fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+        let mut conn = Connection::open(&path)?;
+        enable_foreign_keys(&conn)?;
+        create_project_state_v5(&conn, "project_v8_profile")?;
+
+        apply_project_state_migrations(&mut conn)?;
+        validate_project_state_schema(&conn)?;
+
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            project_schema_version(&conn, "project_v8_profile")?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        let profile_json: String = conn.query_row(
+            "SELECT enforcement_profile_json
+               FROM project_state
+              WHERE project_id = 'project_v8_profile'",
+            [],
+            |row| row.get(0),
+        )?;
+        assert_eq!(profile_json, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON);
         assert_integrity_check_clean(&conn)?;
         assert_foreign_key_check_clean(&conn)?;
         Ok(())

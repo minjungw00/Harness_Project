@@ -204,6 +204,18 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
     require_column_spec(
         conn,
         PROJECT_STATE_DATABASE_KIND,
+        "project_state",
+        ColumnSpec {
+            name: "enforcement_profile_json",
+            type_name: "TEXT",
+            not_null: true,
+            default_value: Some("'{\"profile_id\":\"baseline_cooperative\",\"guarantee_level\":\"cooperative\",\"enabled_mechanisms\":[],\"source\":\"baseline_scope\",\"status\":\"active\"}'"),
+            primary_key_position: 0,
+        },
+    )?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
         "surfaces",
         ColumnSpec {
             name: "interaction_role",
@@ -1022,7 +1034,7 @@ mod tests {
             &conn,
             PROJECT_STATE_DATABASE_KIND,
             PROJECT_STATE_SCHEMA_VERSION,
-            "project_state_run_scope_revision_v8"
+            "project_state_enforcement_profile_v9"
         )?);
         drop(conn);
 
