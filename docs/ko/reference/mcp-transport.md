@@ -1,0 +1,185 @@
+# MCP 전송 참조
+
+이 문서는 로컬 `harness-mcp` 프로세스 계약을 담당합니다. 여기에는 프로세스 시작, stdio 전송 프레이밍, 시작 바인딩, 설정 사전 점검, MCP 응답 래핑, 종료와 재연결 동작이 포함됩니다.
+
+이 문서는 공개 하네스 API 메서드 동작, 공개 요청/응답 스키마, 접근 등급 의미, 접점 등록 의미, 저장소 기록 배치, 보안 보장, Core 권한 의미를 정의하지 않습니다.
+
+## 담당하는 것 / 담당하지 않는 것
+
+이 문서가 담당합니다.
+
+- `harness-mcp` 명령줄 동작과 종료 코드
+- 필수 및 선택 프로세스 환경 변수
+- stdio JSON-RPC 프레이밍과 지원되는 MCP 요청 메서드
+- MCP 시작 검증, 고정 프로세스 바인딩, 인스턴스 선택
+- `harness-mcp --check` 진단 출력
+- MCP `tools/call` 응답 래핑
+- 프로세스 종료와 재연결 동작
+
+이 문서는 담당하지 않습니다.
+
+- 공개 하네스 메서드 목록이나 메서드 담당 표: [API 메서드](api/methods.md)
+- 공개 하네스 요청/응답 스키마: [API 코어 스키마](api/schema-core.md)
+- 접근 등급 값 의미: [API 값 집합](api/schema-value-sets.md#access-class-values)
+- 접점 등록 의미, 접근 파생, 고정 접점 맥락 의미, 행위자 출처: [에이전트 통합](agent-integration.md)
+- Runtime Home 경로 해석: [관리 CLI](admin-cli.md#runtime-home-selection)
+- 저장소 배치, 마이그레이션, 저장 효과: [저장소](storage.md)가 안내하는 저장소 담당 문서
+
+## 프로세스 모델
+
+`harness-mcp`는 로컬 MCP stdio 프로세스입니다. 명령줄 인자가 없으면 MCP 호스트가 이를 자식 프로세스로 시작하고 stdin/stdout으로 통신합니다. TCP 리스너나 HTTP 리스너가 아닙니다.
+
+명령줄 동작:
+
+- 명령줄 인자가 없으면 stdio MCP 루프를 시작합니다.
+- `harness-mcp --help`는 종료 코드 `0`으로 끝나며 하네스 환경 변수를 요구하지 않습니다.
+- `harness-mcp --version`은 `harness-mcp <package-version>`을 출력하고 종료 코드 `0`으로 끝나며 하네스 환경 변수를 요구하지 않습니다.
+- `harness-mcp --check`는 stdin 루프에 들어가지 않고 설정을 검증합니다.
+- 알 수 없는 옵션이나 추가 위치 인자는 사용법 오류입니다.
+
+종료 코드와 스트림 동작:
+
+- 성공한 help, version, 사전 점검, 정상 EOF 종료는 종료 코드 `0`으로 끝납니다.
+- 사용법 오류는 진단을 stderr에 쓰고 종료 코드 `2`로 끝납니다.
+- 시작 또는 사전 점검 중 환경/저장소 실패는 진단을 stderr에 쓰고 종료 코드 `1`로 끝납니다.
+
+<a id="process-environment"></a>
+## 프로세스 환경
+
+필수:
+
+- `HARNESS_PROJECT_ID`
+- `HARNESS_SURFACE_ID`
+
+선택:
+
+- `HARNESS_HOME`
+- `HARNESS_SURFACE_INSTANCE_ID`
+
+`harness-mcp --help`와 `harness-mcp --version`은 이 변수를 읽지 않습니다. stdio 루프와 `harness-mcp --check`는 설정된 Runtime Home과 바인딩 변수를 사용합니다.
+
+Runtime Home 경로 해석은 관리 CLI와 공유되며 [관리 CLI](admin-cli.md#runtime-home-selection)가 담당합니다. 두 실행 파일은 같은 `HARNESS_HOME`과 기본 사용자 홈 규칙을 사용합니다.
+
+## 시작 검증
+
+`harness-mcp`는 stdio 루프에 들어가기 전에 고정 프로세스 바인딩과 그 바인딩이 의존하는 로컬 등록 기록을 검증합니다.
+
+시작 검증에는 아래 조건이 필요합니다.
+
+- Runtime Home registry가 존재하고 유효합니다.
+- 설정된 프로젝트가 등록되어 있습니다.
+- 프로젝트 상태가 `active`입니다.
+- 프로젝트 상태 데이터베이스가 유효합니다.
+- 설정된 접점이 등록되어 있습니다.
+- 설정된 접점 인스턴스가 존재하거나 명확하게 선택될 수 있습니다.
+- 등록된 `interaction_role`을 인식할 수 있습니다.
+- `capability_profile`과 메타데이터가 JSON 객체입니다.
+- 로컬 접근 메타데이터가 유효하며 적어도 하나의 접근 등급을 부여합니다.
+
+`HARNESS_SURFACE_INSTANCE_ID`가 없을 때의 인스턴스 선택:
+
+1. 등록된 프로젝트 기본값이 설정된 `surface_id`에 속할 때만 그 기본값을 사용합니다.
+2. 그렇지 않으면 사용 가능한 후보가 정확히 하나일 때만 그 후보를 사용합니다.
+3. 후보가 없거나 여러 개이면 실패합니다.
+
+## 고정 프로세스 바인딩
+
+`harness-mcp` 프로세스 하나는 아래 값에 묶입니다.
+
+- 하나의 `project_id`
+- 하나의 `surface_id`
+- 하나의 `surface_instance_id`
+
+이 값은 프로세스 수명 동안 고정됩니다. 프로젝트, 접점, 접점 인스턴스를 바꾸려면 다른 프로세스가 필요합니다.
+
+각 공개 하네스 요청의 공개 `ToolEnvelope.project_id`와 `ToolEnvelope.surface_id` 값은 고정 바인딩과 일치해야 합니다. 이 값은 프로토콜 일관성을 위한 요청 되비춤 값이며 호출자가 선택하는 권한이 아닙니다. 고정 접점 맥락 의미, 접근 파생, 행위자 출처 경계는 [에이전트 통합](agent-integration.md#current-surface-context)이 담당합니다.
+
+## 설정 사전 점검
+
+`harness-mcp --check`는 stdin 루프에 들어가지 않고 설정을 검증합니다.
+
+성공 시 안정 출력은 줄 단위이며 아래 순서를 사용합니다.
+
+```text
+configuration: valid
+transport: stdio
+runtime_home: <absolute path>
+project_id: <value>
+surface_id: <value>
+surface_instance_id: <value>
+interaction_role: agent|user_interaction
+access_classes: <comma-separated registered grants>
+baseline_workflow_access: full|partial|not_applicable
+missing_access_classes: <comma-separated values or empty>
+```
+
+`agent` 접점의 경우:
+
+- `full`은 `baseline-workflow` 접근 등급 다섯 개가 모두 있음을 뜻합니다.
+- `partial`은 하나 이상이 없음을 뜻합니다.
+- `missing_access_classes`는 `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, `run_recording`의 표준 프로필 순서를 사용합니다.
+
+`user_interaction` 접점의 경우:
+
+- `baseline_workflow_access`는 `not_applicable`입니다.
+- `missing_access_classes`는 비워 둡니다.
+
+이 출력은 진단용 등록 정보입니다. 그 자체로 권한을 부여하지 않습니다.
+
+`--check` 동작:
+
+- stdin을 읽지 않습니다.
+- `Task`를 만들지 않습니다.
+- `state_version`을 증가시키지 않습니다.
+- 프로젝트나 접점을 등록하지 않습니다.
+- 애플리케이션 기록을 만들지 않습니다.
+- 일반적인 데이터베이스 열기 과정의 일부로 이미 정의된 저장소 스키마 검증이나 마이그레이션을 수행할 수 있습니다.
+
+## MCP 와이어 동작
+
+프레이밍:
+
+- 각 입력 줄은 JSON 값 하나를 담습니다.
+- 각 출력 줄은 JSON 응답 하나를 담습니다.
+- stdin EOF는 stdout을 플러시한 뒤 프로세스를 끝냅니다.
+- `initialize` 전에 준비 완료 메시지를 내보내지 않습니다.
+
+지원되는 MCP 요청 메서드:
+
+- `initialize`
+- `ping`
+- `tools/list`
+- `tools/call`
+
+notification은 응답을 받지 않습니다. 지원하지 않는 요청은 JSON-RPC `-32601`을 반환합니다. 잘못된 JSON은 JSON-RPC `-32700`을 반환합니다.
+
+전송은 [API 메서드](api/methods.md)가 담당하는 공개 하네스 메서드 집합만 정확히 노출합니다. 이 문서는 두 번째 독립 메서드 목록을 만들지 않습니다.
+
+## `tools/call` 응답 래핑
+
+`tools/call`은 MCP 결과 안에 하네스 응답 JSON을 래핑합니다.
+
+- 하네스 응답 JSON은 `result.content[0].text`의 문자열로 직렬화됩니다.
+- 클라이언트는 하네스 응답을 검사하려면 그 문자열을 JSON으로 파싱해야 합니다.
+- 성공한 MCP 전송은 하네스 도메인 수준 거절 응답을 포함해 `isError: false`를 반환합니다.
+- 하네스 도메인 성공 또는 거절은 파싱한 하네스 응답, 특히 `base.response_kind`와 `errors`에서 판단합니다.
+- JSON-RPC `error`는 프로토콜, 잘못된 파라미터, 어댑터/내부 실패에만 사용합니다.
+
+하네스 응답 분기 형태와 오류 의미는 각 담당 문서에 둡니다.
+
+- 공통 응답 분기: [API 코어 스키마](api/schema-core.md#common-response)
+- 응답 분기 처리 경로: [API 오류 처리 경로](api/error-routing.md)
+- 공개 오류 코드: [API 오류 코드](api/error-codes.md)
+- 기계 판독용 오류 세부사항: [API 오류 세부사항](api/error-details.md)
+
+## 종료와 재연결
+
+stdin을 닫거나 자식 프로세스를 종료하면 MCP 세션이 끝납니다.
+
+종료와 재연결 규칙:
+
+- SQLite 상태는 Runtime Home에 남습니다.
+- 같은 바인딩으로 다시 시작하면 같은 저장된 프로젝트 상태에 다시 연결합니다.
+- 바인딩 값을 바꾸려면 새 프로세스가 필요합니다.
+
+런타임 데이터 위치 경계는 [런타임 경계](runtime-boundaries.md)가 담당하고, 저장소 기록 세부사항은 [저장소](storage.md)가 안내하는 저장소 담당 문서가 담당합니다.

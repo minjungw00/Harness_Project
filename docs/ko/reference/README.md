@@ -7,6 +7,7 @@
 ## 먼저 볼 곳
 
 - 제품/시스템 경계: [범위](scope.md), [Core 모델](core-model.md), [런타임 경계](runtime-boundaries.md), [보안](security.md).
+- 로컬 실행 파일: `harness` 설정 명령과 Runtime Home 선택은 [관리 CLI](admin-cli.md), `harness-mcp` stdio 시작, 사전 점검, 응답 래핑, 종료는 [MCP 전송](mcp-transport.md)에 있습니다.
 - API 메서드 동작: [API 메서드](api/methods.md)에서 연결된 메서드 담당 문서.
 - API 스키마 묶음: [API 코어 스키마](api/schema-core.md), [상태 스키마](api/schema-state.md), [아티팩트 스키마](api/schema-artifacts.md), [판단 스키마](api/schema-judgment.md), [값 집합](api/schema-value-sets.md).
 - API 오류 묶음: [API 오류](api/errors.md). 오류 코드, 우선순위, 응답 처리 경로, 차단 사유 처리 경로, 기계 판독 세부사항으로 안내합니다.
@@ -19,6 +20,7 @@
 - 사용자 소유 판단의 의미는 [Core 모델](core-model.md)에, 요청과 기록 메서드 동작은 [사용자 소유 판단 요청 메서드](api/method-request-user-judgment.md)와 [사용자 소유 판단 기록 메서드](api/method-record-user-judgment.md)에, 판단 형태의 API 데이터는 [판단 스키마](api/schema-judgment.md)에 있습니다.
 - 닫기 준비 상태 권한 개념은 [Core 모델](core-model.md)에, `harness.close_task` 동작은 [Task 닫기 메서드](api/method-close-task.md)에, `CloseReadinessBlocker` 형태는 [상태 스키마](api/schema-state.md)에, 차단 사유와 API 응답 사이의 경계 질문은 [API 차단 사유 처리 경로](api/blocker-routing.md)에 있습니다.
 - 공개 오류 코드 의미는 [API 오류 코드](api/error-codes.md)에, 오류 우선순위는 [API 오류 우선순위](api/error-precedence.md)에, 응답 분기 처리 경로는 [API 오류 처리 경로](api/error-routing.md)에, 기계 판독용 오류 세부사항은 [API 오류 세부사항](api/error-details.md)에 있습니다.
+- 관리용 `harness` 명령은 로컬 부트스트랩 명령이며 공개 하네스 API 메서드가 아닙니다. `harness-mcp`는 별도의 두 번째 메서드 목록을 담당하지 않고 MCP stdio를 통해 공개 메서드 집합을 노출합니다.
 - 용어 조회는 선별된 독자용 용어를 다루는 [용어집](glossary.md)에서 시작하고, 구조화 용어와 식별자 통제는 [`docs/terminology-map.yaml`](../../terminology-map.yaml)을 사용합니다.
 
 ## 유지보수 경로

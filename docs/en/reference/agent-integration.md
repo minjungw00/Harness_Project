@@ -19,6 +19,7 @@ This document does not own:
 
 - surface-specific workflows; see [Surface Recipes](../use/surface-recipes.md)
 - API request envelopes, response branches, schema shapes, method access requirements, or access-class value names; see [API Schema Core](api/schema-core.md), [API Methods](api/methods.md), method owners, and [API Value Sets](api/schema-value-sets.md)
+- `harness-mcp` executable startup, process environment, stdio framing, configuration preflight, response wrapping, or shutdown; see [MCP Transport](mcp-transport.md)
 - storage layout, artifact lifecycle, or staged-handle validation; see storage and artifact owners through [Reference Index](README.md)
 - security guarantee meanings or access-boundary wording; see [Security](security.md)
 - authority versus projected display rules; see [Projection and template display boundaries](projection-and-templates.md)
@@ -161,6 +162,7 @@ Agent must not:
 Owner links:
 - Exact request envelopes and response shapes belong to [API Schema Core](api/schema-core.md), [API Methods](api/methods.md), and method owners.
 - Access-class values belong to [API Value Sets](api/schema-value-sets.md).
+- `harness-mcp` startup, environment variables, stdio framing, preflight diagnostics, response wrapping, and shutdown belong to [MCP Transport](mcp-transport.md).
 
 ## Capability declaration
 
