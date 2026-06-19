@@ -55,6 +55,7 @@ impl CoreService {
             let plan = match plan_close_task(
                 &prepared.store,
                 &prepared.context.project_state,
+                Some(&prepared.context.verified_surface),
                 request.clone(),
                 &plan_now,
             ) {
@@ -87,6 +88,7 @@ impl CoreService {
         let plan = match plan_close_task(
             &prepared.store,
             &prepared.context.project_state,
+            Some(&prepared.context.verified_surface),
             request.clone(),
             &plan_now,
         ) {
@@ -260,10 +262,29 @@ fn close_task_dry_run_summary(intent: CloseIntent) -> DryRunSummary {
 pub(super) fn plan_close_task(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
+    verified_surface: Option<&VerifiedSurfaceContext>,
     request: CloseTaskRequest,
     now: &UtcTimestamp,
 ) -> Result<CloseTaskPlan, PlanError> {
     let context = load_close_task_context(store, project_state, &request)?;
+    plan_close_task_with_context(
+        store,
+        project_state,
+        verified_surface,
+        request,
+        now,
+        context,
+    )
+}
+
+pub(super) fn plan_close_task_with_context(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    verified_surface: Option<&VerifiedSurfaceContext>,
+    request: CloseTaskRequest,
+    now: &UtcTimestamp,
+    context: CloseTaskContext,
+) -> Result<CloseTaskPlan, PlanError> {
     let risk_acceptance_coverage =
         risk_acceptance_coverage(store, project_state, &request, &context)?;
     let mut blockers = terminal_close_blockers(store, project_state, &request, &context, now)?;
@@ -357,20 +378,27 @@ pub(super) fn plan_close_task(
         }))?;
     }
 
-    let mut state = build_state_summary(SummaryBuild {
+    let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: response_state_version,
         task: &synthetic_task,
         current_change_unit: context.current_change_unit.as_ref(),
         pending_user_judgment_refs: context.pending_user_judgment_refs.clone(),
         blocker_refs: context.blocker_refs.clone(),
-        active_write_authorization: None,
-        effective_authorization_now: None,
-        options: SummaryOptions::mutation(),
+        write_authority_summary: projected_write_authority_summary(
+            store,
+            &request.task_id,
+            response_state_version,
+            *now.as_datetime(),
+            verified_surface
+                .map(|surface| guarantee_display_for_surface(surface, response_state_version)),
+        )?,
+        evidence_summary: context.evidence_summary.clone(),
+        close_state: Some(close_state),
+        close_blockers: blockers.clone(),
+        guarantee_display: verified_surface
+            .map(|surface| guarantee_display_for_surface(surface, response_state_version)),
     })?;
-    state.evidence_summary = context.evidence_summary.clone();
-    state.close_state = Some(close_state);
-    state.close_blockers = blockers.clone();
 
     let result_state = state.clone();
     let result_current_close_basis = context.current_close_basis.clone();
@@ -583,6 +611,8 @@ fn load_close_task_context(
         blocker_refs,
         evidence_summary,
         artifact_refs,
+        pending_judgment_authorities: None,
+        resolved_judgment_authorities: None,
     })
 }
 
@@ -713,12 +743,8 @@ fn pending_judgment_refs_for_close_operation(
     operation: JudgmentOperation,
     now: &UtcTimestamp,
 ) -> Result<Vec<StateRecordRef>, PlanError> {
-    let authorities = pending_judgment_authorities_for_plan(
-        store,
-        project_state,
-        &request.envelope,
-        &request.task_id,
-    )?;
+    let authorities =
+        pending_judgment_authorities_for_context(store, project_state, request, context)?;
     let current_change_unit_id = context
         .current_change_unit
         .as_ref()
@@ -761,6 +787,41 @@ fn pending_judgment_refs_for_close_operation(
         }
     }
     Ok(refs)
+}
+
+fn pending_judgment_authorities_for_context(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &CloseTaskRequest,
+    context: &CloseTaskContext,
+) -> Result<Vec<JudgmentAuthority>, PlanError> {
+    if let Some(authorities) = &context.pending_judgment_authorities {
+        return Ok(authorities.clone());
+    }
+    pending_judgment_authorities_for_plan(store, project_state, &request.envelope, &request.task_id)
+}
+
+fn resolved_judgment_authorities_for_context(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &CloseTaskRequest,
+    context: &CloseTaskContext,
+    judgment_kind: JudgmentKind,
+) -> Result<Vec<JudgmentAuthority>, PlanError> {
+    if let Some(authorities) = &context.resolved_judgment_authorities {
+        return Ok(authorities
+            .iter()
+            .filter(|authority| authority.judgment_kind == judgment_kind)
+            .cloned()
+            .collect());
+    }
+    resolved_judgment_authorities_for_plan(
+        store,
+        project_state,
+        &request.envelope,
+        &request.task_id,
+        judgment_kind,
+    )
 }
 
 fn pending_sensitive_judgment_blocks_close(
@@ -845,11 +906,11 @@ fn cancellation_authority_blocker(
         change_unit_id: current_change_unit_id.as_ref(),
         scope_revision: context.task.scope_revision,
     };
-    let authorities = resolved_judgment_authorities_for_plan(
+    let authorities = resolved_judgment_authorities_for_context(
         store,
         project_state,
-        &request.envelope,
-        &request.task_id,
+        request,
+        context,
         JudgmentKind::Cancellation,
     )?;
     if authorities.iter().any(|authority| {
@@ -1761,11 +1822,11 @@ fn has_current_final_acceptance(
         return Ok(false);
     };
     let requirement = final_acceptance_requirement(close_basis);
-    let authorities = resolved_judgment_authorities_for_plan(
+    let authorities = resolved_judgment_authorities_for_context(
         store,
         project_state,
-        &request.envelope,
-        &request.task_id,
+        request,
+        context,
         JudgmentKind::FinalAcceptance,
     )?;
     Ok(authorities
@@ -1786,11 +1847,11 @@ fn has_current_sensitive_approval_for_close(
     if close_basis.sensitive_action_requirements.is_empty() {
         return Ok(true);
     }
-    let authorities = resolved_judgment_authorities_for_plan(
+    let authorities = resolved_judgment_authorities_for_context(
         store,
         project_state,
-        &request.envelope,
-        &request.task_id,
+        request,
+        context,
         JudgmentKind::SensitiveApproval,
     )?;
     Ok(close_basis
@@ -1827,11 +1888,11 @@ fn risk_acceptance_coverage(
     let Some(basis) = context.current_close_basis.as_ref() else {
         return Ok(Vec::new());
     };
-    let authorities = resolved_judgment_authorities_for_plan(
+    let authorities = resolved_judgment_authorities_for_context(
         store,
         project_state,
-        &request.envelope,
-        &request.task_id,
+        request,
+        context,
         JudgmentKind::ResidualRiskAcceptance,
     )?;
     Ok(current_residual_risk_acceptance_coverage(

@@ -632,7 +632,48 @@ fn status_close_include_matches_close_task_check_blockers() -> Result<(), Box<dy
 }
 
 #[test]
-fn status_include_false_omits_selected_sections_without_effect() -> Result<(), Box<dyn Error>> {
+fn status_ready_close_uses_empty_blockers_only_after_computation() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_ready_empty")?;
+    let after_run = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "status_ready_empty",
+        true,
+    )?;
+    record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_run,
+        "status_ready_empty",
+    )?;
+    let before = harness.counts()?;
+
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_ready_empty", None, false, None, Some(&task_id)),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(status.response_value["close_state"], "ready");
+    assert_eq!(status.response_value["close_blockers"], json!([]));
+    assert_eq!(status.response_value["active_task"]["close_state"], "ready");
+    assert_eq!(
+        status.response_value["active_task"]["close_blockers"],
+        json!([])
+    );
+    assert!(status.response_value["current_close_basis"].is_object());
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn status_include_false_omits_optional_sections_without_effect() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_flags")?;
     record_close_evidence(&harness, &task_id, &change_unit_id, 2, "status_flags", true)?;
@@ -656,10 +697,10 @@ fn status_include_false_omits_selected_sections_without_effect() -> Result<(), B
     assert!(none.response_value["active_task"].is_null());
     assert!(none.response_value["write_authority_summary"].is_null());
     assert!(none.response_value["evidence_summary"].is_null());
-    assert_eq!(none.response_value["close_state"], "none");
+    assert_eq!(none.response_value["close_state"], "blocked");
     assert!(none.response_value["current_close_basis"].is_null());
     assert_eq!(none.response_value["risk_acceptance_coverage"], json!([]));
-    assert_eq!(none.response_value["close_blockers"], json!([]));
+    assert_close_blocker(&none.response_value, "missing_final_acceptance");
     assert!(none.response_value["guarantee_display"].is_null());
 
     let evidence_only = harness.service.status(
@@ -731,6 +772,64 @@ fn status_include_false_omits_selected_sections_without_effect() -> Result<(), B
         "cooperative"
     );
     assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn guarantee_display_uses_verified_surface_without_profile_elevation() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    set_surface_capability(
+        &harness,
+        &json!({
+            "access_class": "read_status",
+            "supported_access_classes": ["read_status"],
+            "guarantee_level": "detective",
+            "capabilities": {
+                "detective": true
+            }
+        })
+        .to_string(),
+    )?;
+
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_status_guarantee_surface", None, false, None, None),
+            include: StatusInclude {
+                task: false,
+                pending_user_judgments: false,
+                write_authority: false,
+                evidence: false,
+                close: false,
+                guarantees: true,
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_eq!(
+        status.response_value["guarantee_display"]["level"],
+        "cooperative"
+    );
+    assert_ne!(
+        status.response_value["guarantee_display"]["level"],
+        "detective"
+    );
+    assert!(status.response_value["guarantee_display"]["basis"]
+        .as_str()
+        .is_some_and(|basis| {
+            basis.contains(SURFACE_ID)
+                && basis.contains(SURFACE_INSTANCE_ID)
+                && basis.contains("no stronger enforcement")
+        }));
+    assert_eq!(
+        status.response_value["guarantee_display"]["capability_refs"][0]["record_kind"],
+        "local_surface_registration"
+    );
+    assert_eq!(
+        status.response_value["guarantee_display"]["capability_refs"][0]["record_id"],
+        SURFACE_INSTANCE_ID
+    );
     Ok(())
 }
 
@@ -1273,6 +1372,11 @@ fn material_scope_change_increments_revision_and_invalidates_basis() -> Result<(
     assert_eq!(after.scope_revision, before.scope_revision + 1);
     assert_eq!(after.close_basis_revision, before.close_basis_revision + 1);
     assert!(after.current_close_basis.is_none());
+    assert_eq!(response.response_value["state"]["close_state"], "blocked");
+    assert_close_blocker(
+        &response.response_value["state"],
+        "missing_current_close_basis",
+    );
     assert_eq!(event_payload["scope_changed"], true);
     assert_eq!(event_payload["scope_revision"], after.scope_revision);
     assert_eq!(
@@ -1520,6 +1624,24 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
     assert_eq!(
         response.response_value["write_authorization"]["expires_at"],
         expires_at
+    );
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_prepare_allowed_status",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert_eq!(status.response_value["base"]["state_version"], 5);
+    assert_eq!(
+        response.response_value["state"],
+        status.response_value["active_task"]
     );
     assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 1);
     Ok(())
@@ -2819,6 +2941,52 @@ fn record_run_non_null_close_assessment_creates_current_basis() -> Result<(), Bo
             .filter_map(|record_ref| record_ref["record_kind"].as_str())
             .any(|kind| kind == "run")
     );
+    Ok(())
+}
+
+#[test]
+fn record_run_state_includes_current_evidence_and_close_state() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_state_projection")?;
+    let mut request = record_run_request(
+        "req_run_state_projection",
+        "idem_run_state_projection",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.evidence_updates = vec![supported_evidence_update("Close claim supported.")];
+    request.close_assessment = Some(harness_types::CloseAssessmentInput {
+        result_summary: "Close claim supported.".to_owned(),
+        result_refs: Vec::new(),
+        residual_risks: Vec::new(),
+        sensitive_categories: Vec::new(),
+        recovery_constraints: Vec::new(),
+    })
+    .into();
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_eq!(
+        response.response_value["evidence_summary"]["status"],
+        "sufficient"
+    );
+    assert_eq!(
+        response.response_value["state"]["evidence_summary"],
+        response.response_value["evidence_summary"]
+    );
+    assert_eq!(response.response_value["state"]["close_state"], "blocked");
+    assert_close_blocker(
+        &response.response_value["state"],
+        "missing_final_acceptance",
+    );
+    assert!(response.response_value["state"]["close_blockers"]
+        .as_array()
+        .is_some_and(|blockers| !blockers.is_empty()));
     Ok(())
 }
 
@@ -4713,9 +4881,9 @@ fn record_user_judgment_persists_rejected_option_outcome() -> Result<(), Box<dyn
         .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
-    assert_eq!(
+    assert_ne!(
         response.response_value["user_judgment"]["resolution"]["resolution_outcome"],
-        "rejected"
+        "accepted"
     );
     assert_eq!(
         user_judgment_resolution_outcome(&harness, &pending_judgment_id)?,
@@ -4724,6 +4892,11 @@ fn record_user_judgment_persists_rejected_option_outcome() -> Result<(), Box<dyn
     assert_eq!(
         resolution_json(&harness, &pending_judgment_id)?["resolution_outcome"],
         "rejected"
+    );
+    assert_eq!(response.response_value["state"]["close_state"], "blocked");
+    assert_close_blocker(
+        &response.response_value["state"],
+        "missing_current_close_basis",
     );
     let (event_kind, event_payload, _) = latest_task_event(&harness)?;
     assert_eq!(event_kind, "user_judgment_recorded");

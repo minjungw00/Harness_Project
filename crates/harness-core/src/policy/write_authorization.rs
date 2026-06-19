@@ -3,10 +3,10 @@ use std::{collections::BTreeSet, path::Path};
 use chrono::{DateTime, Duration, Utc};
 use harness_store::{core_pipeline::WriteAuthorizationRecord, StoreError};
 use harness_types::{
-    BaselineRef, ChangeUnitId, DryRunSummary, GuaranteeDisplay, GuaranteeLevel, JudgmentKind,
-    JudgmentRequiredFor, PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect,
-    PrepareWriteDecision, SensitiveActionScope, StateRecordRef, TaskId, UtcTimestamp,
-    WriteDecisionCategory, WriteDecisionReason,
+    BaselineRef, ChangeUnitId, DryRunSummary, GuaranteeDisplay, JudgmentKind, JudgmentRequiredFor,
+    PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect, PrepareWriteDecision,
+    SensitiveActionScope, StateRecordRef, TaskId, UtcTimestamp, WriteDecisionCategory,
+    WriteDecisionReason,
 };
 use serde_json::Value;
 
@@ -168,15 +168,6 @@ fn write_decision_category_value(category: WriteDecisionCategory) -> &'static st
         WriteDecisionCategory::WriteCompatibility => "write_compatibility",
         WriteDecisionCategory::Baseline => "baseline",
         WriteDecisionCategory::SurfaceCapability => "surface_capability",
-    }
-}
-
-pub(crate) fn write_authorization_guarantee() -> GuaranteeDisplay {
-    GuaranteeDisplay {
-        level: GuaranteeLevel::Cooperative,
-        basis: "Write Authorization is a Harness compatibility record, not OS permission."
-            .to_owned(),
-        capability_refs: Vec::new(),
     }
 }
 

@@ -45,13 +45,7 @@ impl CoreService {
             &prepared.context.verified_surface,
         ) {
             Ok(plan) => plan,
-            Err(error) => {
-                return core_error_response(
-                    &request.envelope,
-                    Some(project_state.state_version),
-                    error,
-                )
-            }
+            Err(error) => return plan_error_response(&request.envelope, project_state, error),
         };
 
         if request.envelope.dry_run {
@@ -88,10 +82,12 @@ fn plan_intake(
     project_state: &ProjectStateHeader,
     request: harness_types::IntakeRequest,
     verified_surface: &VerifiedSurfaceContext,
-) -> CoreResult<MethodPlan> {
+) -> Result<MethodPlan, PlanError> {
     let planned_state_version = project_state.state_version + 1;
     let mode = resolve_requested_mode(request.requested_mode);
-    let active_task = store.active_task_record()?;
+    let active_task = store
+        .active_task_record()
+        .map_err(CorePipelineError::from)?;
 
     let create_new = match request.resume_policy {
         ResumePolicy::ResumeActive => active_task.is_none(),
@@ -184,6 +180,13 @@ fn plan_intake(
         active_task.expect("active_task exists when create_new is false")
     };
 
+    let current_change_unit = if create_new {
+        None
+    } else {
+        store
+            .current_change_unit(&task_id)
+            .map_err(CorePipelineError::from)?
+    };
     let task_ref = state_ref(
         StateRecordKind::Task,
         &task_record.task_id,
@@ -191,24 +194,90 @@ fn plan_intake(
         Some(&task_id),
         Some(planned_state_version),
     );
-    let pending_refs = Vec::new();
-    let blocker_refs = Vec::new();
-    let next_actions = next_actions_for_state(&task_ref, None);
+    let change_unit_ref = current_change_unit.as_ref().map(|record| {
+        state_ref(
+            StateRecordKind::ChangeUnit,
+            &record.change_unit_id,
+            &request.envelope.project_id,
+            Some(&task_id),
+            Some(record.basis_state_version.unwrap_or(planned_state_version)),
+        )
+    });
+    let pending_refs = if create_new {
+        Vec::new()
+    } else {
+        projected_pending_user_judgment_refs(store, &task_id, planned_state_version)?
+    };
+    let blocker_refs = if create_new {
+        Vec::new()
+    } else {
+        projected_blocker_refs(store, &task_id, planned_state_version)?
+    };
+    let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
+    let evidence_summary = if create_new {
+        None
+    } else {
+        projected_evidence_summary(
+            store,
+            &request.envelope.project_id,
+            planned_state_version,
+            &task_record,
+        )?
+    };
+    let projected_project_state = project_state_projection(
+        project_state,
+        planned_state_version,
+        Some(task_record.task_id.clone()),
+    );
+    let close_plan = projected_close_check(
+        store,
+        &projected_project_state,
+        verified_surface,
+        &request.envelope,
+        &task_id,
+        close_context_from_projection(
+            task_record.clone(),
+            current_change_unit.clone(),
+            if create_new {
+                None
+            } else {
+                projected_close_basis(store, &task_id)?
+            },
+            pending_refs.clone(),
+            blocker_refs.clone(),
+            evidence_summary.clone(),
+        ),
+        service.now(),
+    )?;
+    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let write_authority_summary = if create_new {
+        None
+    } else {
+        projected_write_authority_summary(
+            store,
+            &task_id,
+            planned_state_version,
+            service.now(),
+            Some(guarantee_display.clone()),
+        )?
+    };
     let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: planned_state_version,
         task: &task_record,
-        current_change_unit: None,
+        current_change_unit: current_change_unit.as_ref(),
         pending_user_judgment_refs: pending_refs,
         blocker_refs,
-        active_write_authorization: None,
-        effective_authorization_now: None,
-        options: SummaryOptions::mutation(),
+        write_authority_summary,
+        evidence_summary,
+        close_state: Some(close_plan.close_state),
+        close_blockers: close_plan.blockers,
+        guarantee_display: Some(guarantee_display),
     })?;
     let result = harness_types::IntakeResult {
         base: placeholder_base(),
         task_ref: task_ref.clone(),
-        change_unit_ref: None,
+        change_unit_ref,
         state,
         next_actions: next_actions.clone(),
     };

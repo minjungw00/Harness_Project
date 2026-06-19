@@ -328,7 +328,10 @@ fn plan_prepare_write(
         ));
     }
 
-    let guarantee_display = Some(write_authorization_guarantee());
+    let guarantee_display = Some(guarantee_display_for_surface(
+        verified_surface,
+        planned_state_version,
+    ));
     let branch_change_unit_id =
         change_unit.map(|record| ChangeUnitId::new(record.change_unit_id.clone()));
     let scope_change_unit_id = branch_change_unit_id.clone().unwrap_or_else(|| {
@@ -406,6 +409,36 @@ fn plan_prepare_write(
         .into_iter()
         .map(state_ref_from_stored)
         .collect::<Vec<_>>();
+    let evidence_summary = projected_evidence_summary(
+        store,
+        &request.envelope.project_id,
+        planned_state_version,
+        &task,
+    )?;
+    let projected_project_state = project_state_projection(
+        project_state,
+        planned_state_version,
+        project_state
+            .active_task_id
+            .clone()
+            .or_else(|| Some(task_id.as_str().to_owned())),
+    );
+    let close_plan = projected_close_check(
+        store,
+        &projected_project_state,
+        verified_surface,
+        &request.envelope,
+        &task_id,
+        close_context_from_projection(
+            task.clone(),
+            change_unit.cloned(),
+            projected_close_basis(store, &task_id)?,
+            pending_user_judgment_refs.clone(),
+            blocker_refs.clone(),
+            evidence_summary.clone(),
+        ),
+        *plan_now.as_datetime(),
+    )?;
     let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: planned_state_version,
@@ -413,9 +446,21 @@ fn plan_prepare_write(
         current_change_unit: change_unit,
         pending_user_judgment_refs,
         blocker_refs,
-        active_write_authorization: synthetic_write_authorization.as_ref(),
-        effective_authorization_now: None,
-        options: SummaryOptions::prepare_write(),
+        write_authority_summary: synthetic_write_authorization
+            .as_ref()
+            .map(|record| {
+                write_authority_summary_for_record(
+                    record,
+                    planned_state_version,
+                    None,
+                    guarantee_display.clone(),
+                )
+            })
+            .transpose()?,
+        evidence_summary,
+        close_state: Some(close_plan.close_state),
+        close_blockers: close_plan.blockers,
+        guarantee_display: guarantee_display.clone(),
     })?;
     let result = PrepareWriteResult {
         base: placeholder_base(),

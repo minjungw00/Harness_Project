@@ -39,6 +39,7 @@ impl CoreService {
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
+            &prepared.context.verified_surface,
         ) {
             Ok(plan) => plan,
             Err(error) => {
@@ -83,6 +84,7 @@ fn plan_update_scope(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: UpdateScopeRequest,
+    verified_surface: &VerifiedSurfaceContext,
 ) -> Result<MethodPlan, PlanError> {
     let planned_state_version = project_state.state_version + 1;
     let task = store
@@ -334,6 +336,48 @@ fn plan_update_scope(
         Some(planned_state_version),
     );
     let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
+    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let write_authority_summary = projected_write_authority_summary(
+        store,
+        &request.task_id,
+        planned_state_version,
+        service.now(),
+        Some(guarantee_display.clone()),
+    )?;
+    let evidence_summary = projected_evidence_summary(
+        store,
+        &request.envelope.project_id,
+        planned_state_version,
+        &synthetic_task,
+    )?;
+    let projected_project_state = project_state_projection(
+        project_state,
+        planned_state_version,
+        project_state
+            .active_task_id
+            .clone()
+            .or_else(|| Some(request.task_id.as_str().to_owned())),
+    );
+    let close_plan = projected_close_check(
+        store,
+        &projected_project_state,
+        verified_surface,
+        &request.envelope,
+        &request.task_id,
+        close_context_from_projection(
+            synthetic_task.clone(),
+            synthetic_change_unit.clone(),
+            if scope_changed {
+                None
+            } else {
+                projected_close_basis(store, &request.task_id)?
+            },
+            pending_refs.clone(),
+            blocker_refs.clone(),
+            evidence_summary.clone(),
+        ),
+        service.now(),
+    )?;
     let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: planned_state_version,
@@ -341,9 +385,11 @@ fn plan_update_scope(
         current_change_unit: synthetic_change_unit.as_ref(),
         pending_user_judgment_refs: pending_refs,
         blocker_refs: blocker_refs.clone(),
-        active_write_authorization: None,
-        effective_authorization_now: None,
-        options: SummaryOptions::mutation(),
+        write_authority_summary,
+        evidence_summary,
+        close_state: Some(close_plan.close_state),
+        close_blockers: close_plan.blockers,
+        guarantee_display: Some(guarantee_display),
     })?;
     let result = harness_types::UpdateScopeResult {
         base: placeholder_base(),

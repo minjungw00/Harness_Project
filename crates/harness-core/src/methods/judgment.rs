@@ -111,6 +111,7 @@ impl CoreService {
             &prepared.store,
             &prepared.context.project_state,
             request.clone(),
+            &prepared.context.verified_surface,
         ) {
             Ok(plan) => plan,
             Err(error) => {
@@ -314,6 +315,54 @@ fn plan_request_user_judgment(
         )
     });
     let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
+    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let write_authority_summary = projected_write_authority_summary(
+        store,
+        &request.task_id,
+        planned_state_version,
+        *requested_at.as_datetime(),
+        Some(guarantee_display.clone()),
+    )?;
+    let evidence_summary = projected_evidence_summary(
+        store,
+        &request.envelope.project_id,
+        planned_state_version,
+        &task,
+    )?;
+    let mut pending_authorities = pending_judgment_authorities_for_plan(
+        store,
+        project_state,
+        &request.envelope,
+        &request.task_id,
+    )?;
+    pending_authorities.push(user_judgment_authority_from_state(&user_judgment));
+    let projected_project_state = project_state_projection(
+        project_state,
+        planned_state_version,
+        project_state
+            .active_task_id
+            .clone()
+            .or_else(|| Some(request.task_id.as_str().to_owned())),
+    );
+    let close_plan = projected_close_check(
+        store,
+        &projected_project_state,
+        verified_surface,
+        &request.envelope,
+        &request.task_id,
+        close_context_with_pending_authorities(
+            close_context_from_projection(
+                task.clone(),
+                current_change_unit.clone(),
+                projected_close_basis(store, &request.task_id)?,
+                pending_refs.clone(),
+                blocker_refs.clone(),
+                evidence_summary.clone(),
+            ),
+            pending_authorities,
+        ),
+        *requested_at.as_datetime(),
+    )?;
     let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: planned_state_version,
@@ -321,9 +370,11 @@ fn plan_request_user_judgment(
         current_change_unit: current_change_unit.as_ref(),
         pending_user_judgment_refs: pending_refs,
         blocker_refs: blocker_refs.clone(),
-        active_write_authorization: None,
-        effective_authorization_now: None,
-        options: SummaryOptions::mutation(),
+        write_authority_summary,
+        evidence_summary,
+        close_state: Some(close_plan.close_state),
+        close_blockers: close_plan.blockers,
+        guarantee_display: Some(guarantee_display),
     })?;
     let result = harness_types::RequestUserJudgmentResult {
         base: placeholder_base(),
@@ -900,6 +951,7 @@ fn plan_record_user_judgment(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: RecordUserJudgmentRequest,
+    verified_surface: &VerifiedSurfaceContext,
 ) -> Result<MethodPlan, PlanError> {
     let planned_state_version = project_state.state_version + 1;
     let now = utc_timestamp(service.now());
@@ -1096,6 +1148,62 @@ fn plan_record_user_judgment(
         )
     });
     let next_actions = next_actions_for_state(&task_ref, change_unit_ref.as_ref());
+    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let write_authority_summary = projected_write_authority_summary(
+        store,
+        &task_id,
+        planned_state_version,
+        *now.as_datetime(),
+        Some(guarantee_display.clone()),
+    )?;
+    let evidence_summary = projected_evidence_summary(
+        store,
+        &request.envelope.project_id,
+        planned_state_version,
+        &task,
+    )?;
+    let pending_authorities =
+        pending_judgment_authorities_for_plan(store, project_state, &request.envelope, &task_id)?
+            .into_iter()
+            .filter(|authority| authority.judgment_id != request.user_judgment_id.as_str())
+            .collect::<Vec<_>>();
+    let mut resolved_authorities = resolved_judgment_authorities_for_all_kinds(
+        store,
+        project_state,
+        &request.envelope,
+        &task_id,
+    )?;
+    resolved_authorities.push(user_judgment_authority_from_state(&user_judgment));
+    let projected_project_state = project_state_projection(
+        project_state,
+        planned_state_version,
+        project_state
+            .active_task_id
+            .clone()
+            .or_else(|| Some(task_id.as_str().to_owned())),
+    );
+    let close_plan = projected_close_check(
+        store,
+        &projected_project_state,
+        verified_surface,
+        &request.envelope,
+        &task_id,
+        close_context_with_resolved_authorities(
+            close_context_with_pending_authorities(
+                close_context_from_projection(
+                    task.clone(),
+                    current_change_unit.clone(),
+                    projected_close_basis(store, &task_id)?,
+                    pending_refs.clone(),
+                    blocker_refs.clone(),
+                    evidence_summary.clone(),
+                ),
+                pending_authorities,
+            ),
+            resolved_authorities,
+        ),
+        *now.as_datetime(),
+    )?;
     let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: planned_state_version,
@@ -1103,9 +1211,11 @@ fn plan_record_user_judgment(
         current_change_unit: current_change_unit.as_ref(),
         pending_user_judgment_refs: pending_refs,
         blocker_refs,
-        active_write_authorization: None,
-        effective_authorization_now: None,
-        options: SummaryOptions::mutation(),
+        write_authority_summary,
+        evidence_summary,
+        close_state: Some(close_plan.close_state),
+        close_blockers: close_plan.blockers,
+        guarantee_display: Some(guarantee_display),
     })?;
     let result = harness_types::RecordUserJudgmentResult {
         base: placeholder_base(),

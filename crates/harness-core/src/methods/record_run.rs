@@ -396,6 +396,49 @@ fn plan_record_run(
         &request,
         planned_state_version,
     )?;
+    let guarantee_display = guarantee_display_for_surface(verified_surface, planned_state_version);
+    let write_authority_summary = if let Some((record, _scope)) = &authorization_scope {
+        let mut consumed_record = record.clone();
+        consumed_record.status = storage_value(WriteAuthorizationStatus::Consumed)?;
+        Some(write_authority_summary_for_record(
+            &consumed_record,
+            planned_state_version,
+            Some(*plan_now.as_datetime()),
+            Some(guarantee_display.clone()),
+        )?)
+    } else {
+        projected_write_authority_summary(
+            store,
+            &request.task_id,
+            planned_state_version,
+            *plan_now.as_datetime(),
+            Some(guarantee_display.clone()),
+        )?
+    };
+    let projected_project_state = project_state_projection(
+        project_state,
+        planned_state_version,
+        project_state
+            .active_task_id
+            .clone()
+            .or_else(|| Some(request.task_id.as_str().to_owned())),
+    );
+    let close_plan = projected_close_check(
+        store,
+        &projected_project_state,
+        verified_surface,
+        &request.envelope,
+        &request.task_id,
+        close_context_from_projection(
+            task.clone(),
+            Some(change_unit.clone()),
+            current_close_basis.clone(),
+            pending_user_judgment_refs.clone(),
+            blocker_refs.clone(),
+            evidence_summary.clone(),
+        ),
+        *plan_now.as_datetime(),
+    )?;
     let state = build_state_summary(SummaryBuild {
         project_id: &request.envelope.project_id,
         state_version: planned_state_version,
@@ -403,9 +446,11 @@ fn plan_record_run(
         current_change_unit: Some(&change_unit),
         pending_user_judgment_refs,
         blocker_refs: blocker_refs.clone(),
-        active_write_authorization: None,
-        effective_authorization_now: None,
-        options: SummaryOptions::mutation(),
+        write_authority_summary,
+        evidence_summary: evidence_summary.clone(),
+        close_state: Some(close_plan.close_state),
+        close_blockers: close_plan.blockers,
+        guarantee_display: Some(guarantee_display),
     })?;
 
     let run_summary = RunSummary {

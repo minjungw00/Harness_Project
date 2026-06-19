@@ -70,8 +70,8 @@ use crate::policy::{
         current_sensitive_approval, normalize_sensitive_action_scope, normalized_string_set,
         prepare_write_decision, prepare_write_dry_run_summary,
         sensitive_action_scope_matches_requirement, surface_supports_prepare_write,
-        write_authorization_expires_at, write_authorization_guarantee,
-        write_authorization_is_expired, write_decision_reason, SensitiveApprovalRequirement,
+        write_authorization_expires_at, write_authorization_is_expired, write_decision_reason,
+        SensitiveApprovalRequirement,
     },
 };
 
@@ -126,6 +126,8 @@ struct CloseTaskContext {
     blocker_refs: Vec<StateRecordRef>,
     evidence_summary: Option<EvidenceSummary>,
     artifact_refs: Vec<ArtifactRef>,
+    pending_judgment_authorities: Option<Vec<JudgmentAuthority>>,
+    resolved_judgment_authorities: Option<Vec<JudgmentAuthority>>,
 }
 
 struct ValidatedStageArtifactInput {
@@ -481,6 +483,28 @@ fn user_judgment_authority_from_record(
     })
 }
 
+fn user_judgment_authority_from_state(judgment: &UserJudgment) -> JudgmentAuthority {
+    JudgmentAuthority {
+        judgment_id: judgment.judgment_id.as_str().to_owned(),
+        task_id: judgment.task_id.clone(),
+        judgment_kind: judgment.judgment_kind,
+        status: judgment.status,
+        required_for: judgment.required_for.clone(),
+        affected_refs: judgment.affected_refs.clone(),
+        resolution_outcome: judgment
+            .resolution
+            .as_ref()
+            .and_then(|resolution| resolution.resolution_outcome),
+        basis_status: judgment
+            .basis
+            .as_ref()
+            .map(|basis| basis.compatibility_status)
+            .unwrap_or(JudgmentBasisCompatibilityStatus::Current),
+        basis: judgment.basis.clone(),
+        resolution: judgment.resolution.clone(),
+    }
+}
+
 fn stored_answer_branch_matches_kind(
     judgment_kind: JudgmentKind,
     answer: &RecordUserJudgmentPayload,
@@ -538,6 +562,33 @@ fn pending_judgment_authorities_for_plan(
         .map(user_judgment_authority_from_record)
         .collect::<CoreResult<Vec<_>>>()
         .map_err(PlanError::Core)
+}
+
+fn resolved_judgment_authorities_for_all_kinds(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    envelope: &ToolEnvelope,
+    task_id: &TaskId,
+) -> Result<Vec<JudgmentAuthority>, PlanError> {
+    let mut authorities = Vec::new();
+    for judgment_kind in [
+        JudgmentKind::ProductDecision,
+        JudgmentKind::TechnicalDecision,
+        JudgmentKind::ScopeDecision,
+        JudgmentKind::SensitiveApproval,
+        JudgmentKind::FinalAcceptance,
+        JudgmentKind::ResidualRiskAcceptance,
+        JudgmentKind::Cancellation,
+    ] {
+        authorities.extend(resolved_judgment_authorities_for_plan(
+            store,
+            project_state,
+            envelope,
+            task_id,
+            judgment_kind,
+        )?);
+    }
+    Ok(authorities)
 }
 
 fn storage_value<T>(value: T) -> CoreResult<String>
@@ -1245,39 +1296,6 @@ fn normalize_scope_string_list(values: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-#[derive(Debug, Clone, Copy)]
-struct SummaryOptions {
-    pending_user_judgments: bool,
-    blockers: bool,
-    write_authority: bool,
-}
-
-impl SummaryOptions {
-    fn mutation() -> Self {
-        Self {
-            pending_user_judgments: true,
-            blockers: true,
-            write_authority: false,
-        }
-    }
-
-    fn prepare_write() -> Self {
-        Self {
-            pending_user_judgments: true,
-            blockers: true,
-            write_authority: true,
-        }
-    }
-
-    fn status(include: &StatusInclude) -> Self {
-        Self {
-            pending_user_judgments: include.pending_user_judgments,
-            blockers: true,
-            write_authority: include.write_authority,
-        }
-    }
-}
-
 struct SummaryBuild<'a> {
     project_id: &'a ProjectId,
     state_version: u64,
@@ -1285,9 +1303,11 @@ struct SummaryBuild<'a> {
     current_change_unit: Option<&'a ChangeUnitRecord>,
     pending_user_judgment_refs: Vec<StateRecordRef>,
     blocker_refs: Vec<StateRecordRef>,
-    active_write_authorization: Option<&'a WriteAuthorizationRecord>,
-    effective_authorization_now: Option<DateTime<Utc>>,
-    options: SummaryOptions,
+    write_authority_summary: Option<WriteAuthoritySummary>,
+    evidence_summary: Option<EvidenceSummary>,
+    close_state: Option<CloseState>,
+    close_blockers: Vec<CloseReadinessBlocker>,
+    guarantee_display: Option<GuaranteeDisplay>,
 }
 
 fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::StateSummary> {
@@ -1298,9 +1318,11 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
         current_change_unit,
         pending_user_judgment_refs,
         blocker_refs,
-        active_write_authorization,
-        effective_authorization_now,
-        options,
+        write_authority_summary,
+        evidence_summary,
+        close_state,
+        close_blockers,
+        guarantee_display,
     } = input;
     let task_id = TaskId::new(task.task_id.clone());
     let task_ref = state_ref(
@@ -1332,20 +1354,6 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
         })
         .transpose()?
         .flatten();
-    let write_authority_summary = if options.write_authority {
-        active_write_authorization
-            .map(|record| {
-                write_authority_summary_for_record(
-                    record,
-                    state_version,
-                    effective_authorization_now,
-                )
-            })
-            .transpose()?
-    } else {
-        None
-    };
-
     Ok(harness_types::StateSummary {
         project_id: project_id.clone(),
         state_version,
@@ -1371,21 +1379,13 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<harness_types::Sta
         active_change_unit_ref,
         baseline_ref: scope.baseline_ref.map(BaselineRef::new),
         shaping_readiness: None,
-        pending_user_judgment_refs: if options.pending_user_judgments {
-            pending_user_judgment_refs
-        } else {
-            Vec::new()
-        },
-        blocker_refs: if options.blockers {
-            blocker_refs
-        } else {
-            Vec::new()
-        },
+        pending_user_judgment_refs,
+        blocker_refs,
         write_authority_summary,
-        evidence_summary: None,
-        close_state: None,
-        close_blockers: Vec::new(),
-        guarantee_display: None,
+        evidence_summary,
+        close_state,
+        close_blockers,
+        guarantee_display,
     })
 }
 
@@ -1393,6 +1393,7 @@ fn write_authority_summary_for_record(
     record: &WriteAuthorizationRecord,
     state_version: u64,
     now: Option<DateTime<Utc>>,
+    guarantee_display: Option<GuaranteeDisplay>,
 ) -> CoreResult<WriteAuthoritySummary> {
     let attempt_scope = decode_required_json::<PersistedAuthorizedAttemptScope>(
         "write_authorizations",
@@ -1405,7 +1406,7 @@ fn write_authority_summary_for_record(
         write_authorization_ref: Some(write_authorization_ref(record, state_version)),
         basis_state_version: Some(record.basis_state_version),
         intended_paths: attempt_scope.intended_paths,
-        guarantee_display: None,
+        guarantee_display,
     })
 }
 
@@ -1433,12 +1434,214 @@ fn effective_write_authorization_status(
     }
 }
 
-fn status_guarantee_display() -> GuaranteeDisplay {
+fn guarantee_display_for_surface(
+    verified_surface: &VerifiedSurfaceContext,
+    state_version: u64,
+) -> GuaranteeDisplay {
     GuaranteeDisplay {
         level: GuaranteeLevel::Cooperative,
-        basis: "No stronger local guarantee is currently applied.".to_owned(),
-        capability_refs: Vec::new(),
+        basis: format!(
+            "Registered surface `{}` instance `{}` is verified by `{}`; no stronger enforcement is active.",
+            verified_surface.surface_id.as_str(),
+            verified_surface.surface_instance_id.as_str(),
+            verified_surface.verification_basis
+        ),
+        capability_refs: vec![state_ref(
+            StateRecordKind::LocalSurfaceRegistration,
+            verified_surface.surface_instance_id.as_str(),
+            &verified_surface.project_id,
+            None,
+            Some(state_version),
+        )],
     }
+}
+
+fn selected_write_authorization_for_projection(
+    store: &CoreProjectStore,
+    task_id: &TaskId,
+    state_version: u64,
+    now: DateTime<Utc>,
+) -> Result<Option<WriteAuthorizationRecord>, PlanError> {
+    let records = store
+        .write_authorizations_for_task(task_id)
+        .map_err(CorePipelineError::from)?;
+    let mut selected = None;
+    let mut selected_priority = u8::MAX;
+    for record in records {
+        let status = effective_write_authorization_status(&record, state_version, Some(now))?;
+        let priority = match status {
+            WriteAuthorizationStatus::Active => 0,
+            WriteAuthorizationStatus::Expired => 1,
+            WriteAuthorizationStatus::Stale => 2,
+            WriteAuthorizationStatus::Consumed => 3,
+            WriteAuthorizationStatus::Revoked => 4,
+        };
+        if priority < selected_priority {
+            selected_priority = priority;
+            selected = Some(record);
+        }
+    }
+    Ok(selected)
+}
+
+fn projected_write_authority_summary(
+    store: &CoreProjectStore,
+    task_id: &TaskId,
+    state_version: u64,
+    now: DateTime<Utc>,
+    guarantee_display: Option<GuaranteeDisplay>,
+) -> Result<Option<WriteAuthoritySummary>, PlanError> {
+    Ok(
+        selected_write_authorization_for_projection(store, task_id, state_version, now)?
+            .as_ref()
+            .map(|record| {
+                write_authority_summary_for_record(
+                    record,
+                    state_version,
+                    Some(now),
+                    guarantee_display,
+                )
+            })
+            .transpose()?,
+    )
+}
+
+fn projected_evidence_summary(
+    store: &CoreProjectStore,
+    project_id: &ProjectId,
+    state_version: u64,
+    task: &TaskRecord,
+) -> Result<Option<EvidenceSummary>, PlanError> {
+    let task_id = TaskId::new(task.task_id.clone());
+    let record = store
+        .latest_evidence_summary(&task_id)
+        .map_err(CorePipelineError::from)?;
+    Ok(close_task::close_evidence_summary(
+        store,
+        record.as_ref(),
+        task,
+        project_id,
+        &task_id,
+        state_version,
+    )?)
+}
+
+fn projected_pending_user_judgment_refs(
+    store: &CoreProjectStore,
+    task_id: &TaskId,
+    state_version: u64,
+) -> Result<Vec<StateRecordRef>, PlanError> {
+    Ok(stored_refs_to_state_refs(
+        store
+            .pending_user_judgment_refs(task_id, state_version)
+            .map_err(CorePipelineError::from)?,
+    ))
+}
+
+fn projected_blocker_refs(
+    store: &CoreProjectStore,
+    task_id: &TaskId,
+    state_version: u64,
+) -> Result<Vec<StateRecordRef>, PlanError> {
+    Ok(stored_refs_to_state_refs(
+        store
+            .active_blocker_refs(task_id, state_version)
+            .map_err(CorePipelineError::from)?,
+    ))
+}
+
+fn projected_close_basis(
+    store: &CoreProjectStore,
+    task_id: &TaskId,
+) -> Result<Option<CurrentCloseBasis>, PlanError> {
+    Ok(store
+        .task_revision_record(task_id)
+        .map_err(CorePipelineError::from)?
+        .and_then(|record| record.current_close_basis))
+}
+
+fn project_state_projection(
+    project_state: &ProjectStateHeader,
+    state_version: u64,
+    active_task_id: Option<String>,
+) -> ProjectStateHeader {
+    ProjectStateHeader {
+        project_id: project_state.project_id.clone(),
+        state_version,
+        active_task_id,
+        default_surface_id: project_state.default_surface_id.clone(),
+        default_surface_instance_id: project_state.default_surface_instance_id.clone(),
+    }
+}
+
+fn close_context_from_projection(
+    task: TaskRecord,
+    current_change_unit: Option<ChangeUnitRecord>,
+    current_close_basis: Option<CurrentCloseBasis>,
+    pending_user_judgment_refs: Vec<StateRecordRef>,
+    blocker_refs: Vec<StateRecordRef>,
+    evidence_summary: Option<EvidenceSummary>,
+) -> CloseTaskContext {
+    let artifact_refs = evidence_summary
+        .as_ref()
+        .map(|summary| summary.artifact_refs.clone())
+        .unwrap_or_default();
+    CloseTaskContext {
+        task,
+        current_change_unit,
+        current_close_basis,
+        pending_user_judgment_refs,
+        blocker_refs,
+        evidence_summary,
+        artifact_refs,
+        pending_judgment_authorities: None,
+        resolved_judgment_authorities: None,
+    }
+}
+
+fn close_context_with_pending_authorities(
+    mut context: CloseTaskContext,
+    authorities: Vec<JudgmentAuthority>,
+) -> CloseTaskContext {
+    context.pending_judgment_authorities = Some(authorities);
+    context
+}
+
+fn close_context_with_resolved_authorities(
+    mut context: CloseTaskContext,
+    authorities: Vec<JudgmentAuthority>,
+) -> CloseTaskContext {
+    context.resolved_judgment_authorities = Some(authorities);
+    context
+}
+
+fn projected_close_check(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    verified_surface: &VerifiedSurfaceContext,
+    envelope: &ToolEnvelope,
+    task_id: &TaskId,
+    context: CloseTaskContext,
+    now: DateTime<Utc>,
+) -> Result<CloseTaskPlan, PlanError> {
+    close_task::plan_close_task_with_context(
+        store,
+        project_state,
+        Some(verified_surface),
+        CloseTaskRequest {
+            envelope: ToolEnvelope {
+                task_id: Some(task_id.clone()).into(),
+                ..envelope.clone()
+            },
+            task_id: task_id.clone(),
+            intent: CloseIntent::Check,
+            close_reason: RequiredNullable::null(),
+            superseding_task_id: RequiredNullable::null(),
+            user_note: RequiredNullable::null(),
+        },
+        &utc_timestamp(now),
+        context,
+    )
 }
 
 fn change_unit_insert(

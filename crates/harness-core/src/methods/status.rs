@@ -41,6 +41,7 @@ impl CoreService {
             &prepared.store,
             &request.envelope,
             &prepared.context.project_state,
+            &prepared.context.verified_surface,
             task.as_ref(),
             &request.include,
             self.now(),
@@ -79,6 +80,7 @@ fn status_result_fields(
     store: &CoreProjectStore,
     envelope: &ToolEnvelope,
     project_state: &ProjectStateHeader,
+    verified_surface: &VerifiedSurfaceContext,
     task: Option<&TaskRecord>,
     include: &StatusInclude,
     now: DateTime<Utc>,
@@ -95,89 +97,73 @@ fn status_result_fields(
     let mut risk_acceptance_coverage = Vec::new();
     let mut close_blockers = Vec::new();
     let mut next_actions = Vec::new();
-    let guarantee_display = include.guarantees.then(status_guarantee_display);
+    let guarantee_projection = guarantee_display_for_surface(verified_surface, state_version);
+    let guarantee_display = include.guarantees.then(|| guarantee_projection.clone());
 
     if let Some(task) = task {
         let task_id = TaskId::new(task.task_id.clone());
         let current_change_unit = store
             .current_change_unit(&task_id)
             .map_err(CorePipelineError::from)?;
+        let all_pending_user_judgments =
+            projected_pending_user_judgment_refs(store, &task_id, state_version)?;
         if include.pending_user_judgments {
-            pending_user_judgments = stored_refs_to_state_refs(
-                store
-                    .pending_user_judgment_refs(&task_id, state_version)
-                    .map_err(CorePipelineError::from)?,
-            );
+            pending_user_judgments = all_pending_user_judgments.clone();
         }
-        blocker_refs = stored_refs_to_state_refs(
-            store
-                .active_blocker_refs(&task_id, state_version)
-                .map_err(CorePipelineError::from)?,
-        );
-        let selected_write_authorization = if include.write_authority {
-            selected_status_write_authorization(store, &task_id, state_version, now)?
-        } else {
-            None
-        };
-        if let Some(record) = selected_write_authorization.as_ref() {
-            write_authority_summary = Some(write_authority_summary_for_record(
-                record,
-                state_version,
-                Some(now),
-            )?);
+        blocker_refs = projected_blocker_refs(store, &task_id, state_version)?;
+        let projected_write_authority = projected_write_authority_summary(
+            store,
+            &task_id,
+            state_version,
+            now,
+            Some(guarantee_projection.clone()),
+        )?;
+        if include.write_authority {
+            write_authority_summary = projected_write_authority.clone();
         }
+        let projected_evidence =
+            projected_evidence_summary(store, project_id, state_version, task)?;
         if include.evidence {
-            evidence_summary = status_evidence_summary(store, project_id, state_version, task)?;
+            evidence_summary = projected_evidence.clone();
         }
-        let close_plan = if include.close {
-            Some(close_task::plan_close_task(
-                store,
-                project_state,
-                CloseTaskRequest {
-                    envelope: ToolEnvelope {
-                        task_id: Some(task_id.clone()).into(),
-                        ..envelope.clone()
-                    },
-                    task_id: task_id.clone(),
-                    intent: CloseIntent::Check,
-                    close_reason: RequiredNullable::null(),
-                    superseding_task_id: RequiredNullable::null(),
-                    user_note: RequiredNullable::null(),
+        let close_plan = close_task::plan_close_task(
+            store,
+            project_state,
+            Some(verified_surface),
+            CloseTaskRequest {
+                envelope: ToolEnvelope {
+                    task_id: Some(task_id.clone()).into(),
+                    ..envelope.clone()
                 },
-                &utc_timestamp(now),
-            )?)
-        } else {
-            None
-        };
-        if let Some(plan) = close_plan.as_ref() {
-            close_state = status_close_state(plan.close_state);
-            current_close_basis = plan.current_close_basis.clone();
-            risk_acceptance_coverage = plan.risk_acceptance_coverage.clone();
-            close_blockers = plan.blockers.clone();
-            next_actions.extend(close_next_actions(&plan.blockers));
+                task_id: task_id.clone(),
+                intent: CloseIntent::Check,
+                close_reason: RequiredNullable::null(),
+                superseding_task_id: RequiredNullable::null(),
+                user_note: RequiredNullable::null(),
+            },
+            &utc_timestamp(now),
+        )?;
+        close_state = status_close_state(close_plan.close_state);
+        if include.close {
+            current_close_basis = close_plan.current_close_basis.clone();
+            risk_acceptance_coverage = close_plan.risk_acceptance_coverage.clone();
         }
+        close_blockers = close_plan.blockers.clone();
+        next_actions.extend(close_next_actions(&close_plan.blockers));
         if include.task {
-            let mut state = build_state_summary(SummaryBuild {
+            let state = build_state_summary(SummaryBuild {
                 project_id,
                 state_version,
                 task,
                 current_change_unit: current_change_unit.as_ref(),
-                pending_user_judgment_refs: pending_user_judgments.clone(),
+                pending_user_judgment_refs: all_pending_user_judgments,
                 blocker_refs: blocker_refs.clone(),
-                active_write_authorization: selected_write_authorization.as_ref(),
-                effective_authorization_now: Some(now),
-                options: SummaryOptions::status(include),
+                write_authority_summary: projected_write_authority,
+                evidence_summary: projected_evidence,
+                close_state: Some(close_plan.close_state),
+                close_blockers: close_blockers.clone(),
+                guarantee_display: Some(guarantee_projection.clone()),
             })?;
-            if include.evidence {
-                state.evidence_summary = evidence_summary.clone();
-            }
-            if include.close {
-                state.close_state = close_plan.as_ref().map(|plan| plan.close_state);
-                state.close_blockers = close_blockers.clone();
-            }
-            if include.guarantees {
-                state.guarantee_display = guarantee_display.clone();
-            }
             if let Some(task_ref) = &state.task_ref {
                 next_actions.extend(next_actions_for_state(
                     task_ref,
@@ -209,54 +195,6 @@ fn status_result_fields(
         guarantee_display,
     };
     Ok(strip_base(serde_json::to_value(result)?)?)
-}
-
-fn selected_status_write_authorization(
-    store: &CoreProjectStore,
-    task_id: &TaskId,
-    state_version: u64,
-    now: DateTime<Utc>,
-) -> Result<Option<WriteAuthorizationRecord>, PlanError> {
-    let records = store
-        .write_authorizations_for_task(task_id)
-        .map_err(CorePipelineError::from)?;
-    let mut selected = None;
-    let mut selected_priority = u8::MAX;
-    for record in records {
-        let status = effective_write_authorization_status(&record, state_version, Some(now))?;
-        let priority = match status {
-            WriteAuthorizationStatus::Active => 0,
-            WriteAuthorizationStatus::Expired => 1,
-            WriteAuthorizationStatus::Stale => 2,
-            WriteAuthorizationStatus::Consumed => 3,
-            WriteAuthorizationStatus::Revoked => 4,
-        };
-        if priority < selected_priority {
-            selected_priority = priority;
-            selected = Some(record);
-        }
-    }
-    Ok(selected)
-}
-
-fn status_evidence_summary(
-    store: &CoreProjectStore,
-    project_id: &ProjectId,
-    state_version: u64,
-    task: &TaskRecord,
-) -> Result<Option<EvidenceSummary>, PlanError> {
-    let task_id = TaskId::new(task.task_id.clone());
-    let record = store
-        .latest_evidence_summary(&task_id)
-        .map_err(CorePipelineError::from)?;
-    Ok(close_task::close_evidence_summary(
-        store,
-        record.as_ref(),
-        task,
-        project_id,
-        &task_id,
-        state_version,
-    )?)
 }
 
 fn status_close_state(close_state: CloseState) -> StatusCloseState {
