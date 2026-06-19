@@ -8,21 +8,19 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use harness_cli::registration::{
+    access_class_from_local_access, capability_profile_json, local_access_json, parse_access_class,
+    push_access_class, push_access_classes, validate_role_access_classes,
+    RegistrationMetadataError, ADMIN_METADATA_JSON, BASELINE_WORKFLOW_PROFILE,
+    DEFAULT_ACCESS_CLASS, DEFAULT_SURFACE_KIND,
+};
 use harness_store::bootstrap::{
     initialize_runtime_home, list_projects, list_surfaces, register_project, register_surface,
     ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
 };
 use harness_store::runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError};
-use harness_types::{
-    AccessClass, SurfaceInteractionRole, BASELINE_WORKFLOW_ACCESS_CLASSES,
-    VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
-};
-use serde_json::{json, Map, Value};
-
-const DEFAULT_SURFACE_KIND: &str = "cli";
-const DEFAULT_ACCESS_CLASS: AccessClass = AccessClass::ReadStatus;
-const BASELINE_WORKFLOW_PROFILE: &str = "baseline-workflow";
-const ADMIN_METADATA_JSON: &str = r#"{"created_by":"harness_cli_admin"}"#;
+use harness_types::{AccessClass, SurfaceInteractionRole, BASELINE_WORKFLOW_ACCESS_CLASSES};
+use serde_json::Value;
 
 type CliOptions = BTreeMap<String, Vec<String>>;
 
@@ -200,8 +198,10 @@ where
             let interaction_role = surface_interaction_role(&options)?;
             let access_classes = surface_access_classes(&options)?;
             validate_role_access_classes(interaction_role, &access_classes)?;
-            let capability_profile_json =
-                capability_profile_json(&access_classes, options.value_ref("capability-profile"))?;
+            let capability_profile_json = capability_profile_json(
+                &access_classes,
+                options.value_ref("capability-profile").map(String::as_str),
+            )?;
             let local_access_json = local_access_json(&access_classes)?;
 
             let record = register_surface(
@@ -375,58 +375,6 @@ fn absolute_path(current_dir: &Path, path: PathBuf) -> PathBuf {
     }
 }
 
-fn capability_profile_json(
-    access_classes: &[AccessClass],
-    provided: Option<&String>,
-) -> Result<String, CliError> {
-    let mut value = match provided {
-        Some(text) => serde_json::from_str::<Value>(text).map_err(|error| {
-            CliError::usage(format!("invalid --capability-profile JSON: {error}"))
-        })?,
-        None => Value::Object(Map::new()),
-    };
-
-    let Some(object) = value.as_object_mut() else {
-        return Err(CliError::usage(
-            "--capability-profile must be a JSON object",
-        ));
-    };
-    let primary = primary_access_class(access_classes)?;
-    object.insert("access_class".to_owned(), json!(primary.as_str()));
-    object
-        .entry("supported_access_classes".to_owned())
-        .or_insert_with(|| json!(access_class_strings(access_classes)));
-
-    serde_json::to_string(&value)
-        .map_err(|error| CliError::runtime(format!("failed to encode capability profile: {error}")))
-}
-
-fn local_access_json(access_classes: &[AccessClass]) -> Result<String, CliError> {
-    let primary = primary_access_class(access_classes)?;
-    serde_json::to_string(&json!({
-        "access_class": primary.as_str(),
-        "authorized_access_classes": access_class_strings(access_classes),
-        "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
-    }))
-    .map_err(|error| CliError::runtime(format!("failed to encode local access metadata: {error}")))
-}
-
-fn access_class_from_local_access(text: &str) -> Option<String> {
-    let value = serde_json::from_str::<Value>(text).ok()?;
-    let access_classes = value
-        .get("authorized_access_classes")
-        .and_then(Value::as_array)
-        .map(|values| values.iter().filter_map(Value::as_str).collect::<Vec<_>>())
-        .unwrap_or_default();
-    if !access_classes.is_empty() {
-        return Some(access_classes.join(","));
-    }
-    value
-        .get("access_class")
-        .and_then(Value::as_str)
-        .map(str::to_owned)
-}
-
 fn surface_access_classes(options: &CliOptions) -> Result<Vec<AccessClass>, CliError> {
     let mut access_classes = Vec::new();
     if let Some(values) = options.get("access-class") {
@@ -461,59 +409,6 @@ fn surface_interaction_role(options: &CliOptions) -> Result<SurfaceInteractionRo
             .map_err(|_| CliError::usage(format!("unknown interaction role: {value}"))),
         None => Ok(SurfaceInteractionRole::Agent),
     }
-}
-
-fn validate_role_access_classes(
-    role: SurfaceInteractionRole,
-    access_classes: &[AccessClass],
-) -> Result<(), CliError> {
-    if role != SurfaceInteractionRole::UserInteraction {
-        return Ok(());
-    }
-    if !access_classes.contains(&AccessClass::CoreMutation) {
-        return Err(CliError::usage(
-            "user_interaction surfaces require core_mutation access",
-        ));
-    }
-    if access_classes.iter().any(|access_class| {
-        !matches!(
-            access_class,
-            AccessClass::ReadStatus | AccessClass::CoreMutation
-        )
-    }) {
-        return Err(CliError::usage(
-            "user_interaction surfaces may grant only read_status and core_mutation access",
-        ));
-    }
-    Ok(())
-}
-
-fn parse_access_class(value: &str) -> Result<AccessClass, CliError> {
-    serde_json::from_value(Value::String(value.to_owned()))
-        .map_err(|_| CliError::usage(format!("unknown access class: {value}")))
-}
-
-fn push_access_classes<const N: usize>(target: &mut Vec<AccessClass>, values: [AccessClass; N]) {
-    for value in values {
-        push_access_class(target, value);
-    }
-}
-
-fn push_access_class(target: &mut Vec<AccessClass>, value: AccessClass) {
-    if !target.contains(&value) {
-        target.push(value);
-    }
-}
-
-fn primary_access_class(access_classes: &[AccessClass]) -> Result<AccessClass, CliError> {
-    access_classes
-        .first()
-        .copied()
-        .ok_or_else(|| CliError::usage("surface registration requires at least one access class"))
-}
-
-fn access_class_strings(access_classes: &[AccessClass]) -> Vec<&'static str> {
-    access_classes.iter().map(|value| value.as_str()).collect()
 }
 
 fn generated_id(prefix: &str) -> String {
@@ -582,6 +477,15 @@ impl From<harness_store::StoreError> for CliError {
     }
 }
 
+impl From<RegistrationMetadataError> for CliError {
+    fn from(error: RegistrationMetadataError) -> Self {
+        match error {
+            RegistrationMetadataError::Usage(message) => Self::Usage(message),
+            RegistrationMetadataError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
 impl From<RuntimeHomeResolutionError> for CliError {
     fn from(error: RuntimeHomeResolutionError) -> Self {
         Self::Runtime(error.to_string())
@@ -598,6 +502,7 @@ mod tests {
     use harness_store::sqlite::{project_state_db_path, registry_db_path};
     use harness_test_support::TempRuntimeHome;
     use rusqlite::Connection;
+    use serde_json::{json, Value};
 
     use super::*;
 
