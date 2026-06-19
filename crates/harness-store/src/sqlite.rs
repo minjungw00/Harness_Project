@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use rusqlite::{Connection, Transaction, TransactionBehavior};
+use rusqlite::{config::DbConfig, Connection, OpenFlags, Transaction, TransactionBehavior};
 
 use crate::{
     migrations::{
@@ -75,6 +75,18 @@ pub fn open_project_state_database(path: impl AsRef<Path>) -> StoreResult<Connec
     let mut conn = open_sqlite_database(path)?;
     apply_project_state_migrations(&mut conn)?;
     validate_project_state_schema(&conn)?;
+    Ok(conn)
+}
+
+/// Opens an existing SQLite database for inspection without creating or migrating it.
+pub fn open_read_only_database(path: impl AsRef<Path>) -> StoreResult<Connection> {
+    let conn = Connection::open_with_flags(
+        path.as_ref(),
+        OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    )?;
+    conn.set_db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY, true)?;
+    conn.set_db_config(DbConfig::SQLITE_DBCONFIG_DEFENSIVE, true)?;
+    conn.pragma_update(None, "query_only", "ON")?;
     Ok(conn)
 }
 

@@ -1370,6 +1370,122 @@ UPDATE project_state
 "#;
 
 #[cfg(test)]
+pub(crate) mod test_support {
+    use rusqlite::{params, Connection};
+
+    use super::*;
+
+    pub(crate) fn create_project_state_fixture_version(
+        conn: &mut Connection,
+        project_id: &str,
+        version: i64,
+    ) -> StoreResult<()> {
+        if !(BASELINE_SCHEMA_VERSION..=PROJECT_STATE_SCHEMA_VERSION).contains(&version) {
+            return Err(StoreError::schema_invariant(
+                PROJECT_STATE_DATABASE_KIND,
+                format!("unsupported fixture schema version {version}"),
+            ));
+        }
+
+        conn.execute_batch(PROJECT_STATE_BASELINE_SQL)?;
+        insert_fixture_migration_row(conn, BASELINE_SCHEMA_VERSION, "project_state_baseline_v1")?;
+        conn.execute(
+            "INSERT INTO project_state (
+                project_id,
+                storage_profile,
+                schema_version,
+                created_at,
+                updated_at
+            )
+            VALUES (?1, ?2, 1, 't0', 't0')",
+            params![project_id, STORAGE_PROFILE],
+        )?;
+
+        if version >= PROJECT_STATE_REPLAY_CONTEXT_SCHEMA_VERSION {
+            conn.execute_batch(PROJECT_STATE_REPLAY_CONTEXT_V2_SQL)?;
+            insert_fixture_migration_row(
+                conn,
+                PROJECT_STATE_REPLAY_CONTEXT_SCHEMA_VERSION,
+                "project_state_replay_context_v2",
+            )?;
+        }
+        if version >= PROJECT_STATE_REPLAY_SURFACE_FK_SCHEMA_VERSION {
+            conn.execute_batch(PROJECT_STATE_REPLAY_SURFACE_FK_V3_CREATE_COPY_SQL)?;
+            conn.execute_batch(PROJECT_STATE_REPLAY_SURFACE_FK_V3_SWAP_SQL)?;
+            insert_fixture_migration_row(
+                conn,
+                PROJECT_STATE_REPLAY_SURFACE_FK_SCHEMA_VERSION,
+                "project_state_replay_surface_fk_v3",
+            )?;
+        }
+        if version >= PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_SCHEMA_VERSION {
+            conn.execute_batch(PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_V4_SQL)?;
+            insert_fixture_migration_row(
+                conn,
+                PROJECT_STATE_CLOSE_BASIS_JUDGMENT_BASIS_SCHEMA_VERSION,
+                "project_state_close_basis_judgment_basis_v4",
+            )?;
+        }
+        if version >= PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_SCHEMA_VERSION {
+            conn.execute_batch(PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_V5_SQL)?;
+            insert_fixture_migration_row(
+                conn,
+                PROJECT_STATE_JUDGMENT_RESOLUTION_OUTCOME_SCHEMA_VERSION,
+                "project_state_judgment_resolution_outcome_v5",
+            )?;
+        }
+        if version >= PROJECT_STATE_ARTIFACT_INTEGRITY_SCHEMA_VERSION {
+            apply_project_state_artifact_integrity_v6(conn, &PROJECT_STATE_MIGRATIONS[5])?;
+        }
+        if version >= PROJECT_STATE_SURFACE_ROLE_ACTOR_PROVENANCE_SCHEMA_VERSION {
+            conn.execute_batch(PROJECT_STATE_SURFACE_ROLE_ACTOR_PROVENANCE_V7_SQL)?;
+            insert_fixture_migration_row(
+                conn,
+                PROJECT_STATE_SURFACE_ROLE_ACTOR_PROVENANCE_SCHEMA_VERSION,
+                "project_state_surface_role_actor_provenance_v7",
+            )?;
+        }
+        if version >= PROJECT_STATE_RUN_SCOPE_REVISION_SCHEMA_VERSION {
+            conn.execute_batch(PROJECT_STATE_RUN_SCOPE_REVISION_V8_SQL)?;
+            insert_fixture_migration_row(
+                conn,
+                PROJECT_STATE_RUN_SCOPE_REVISION_SCHEMA_VERSION,
+                "project_state_run_scope_revision_v8",
+            )?;
+        }
+        if version >= PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION {
+            conn.execute_batch(PROJECT_STATE_ENFORCEMENT_PROFILE_V9_SQL)?;
+            insert_fixture_migration_row(
+                conn,
+                PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION,
+                "project_state_enforcement_profile_v9",
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn insert_fixture_migration_row(
+        conn: &Connection,
+        version: i64,
+        name: &str,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO schema_migrations (
+                database_kind,
+                version,
+                name,
+                storage_profile,
+                applied_at
+            )
+            VALUES (?1, ?2, ?3, ?4, 't0')",
+            params![PROJECT_STATE_DATABASE_KIND, version, name, STORAGE_PROFILE],
+        )?;
+        Ok(())
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use std::{error::Error, fs, path::Path};
 
