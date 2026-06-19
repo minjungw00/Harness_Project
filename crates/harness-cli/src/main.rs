@@ -12,6 +12,7 @@ use harness_store::bootstrap::{
     initialize_runtime_home, list_projects, list_surfaces, register_project, register_surface,
     ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
 };
+use harness_store::runtime_home::{resolve_runtime_home, RuntimeHomeResolutionError};
 use harness_types::{
     AccessClass, SurfaceInteractionRole, BASELINE_WORKFLOW_ACCESS_CLASSES,
     VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
@@ -341,41 +342,6 @@ fn reject_options(options: &CliOptions) -> Result<(), CliError> {
     }
 }
 
-fn resolve_runtime_home<F>(env_var: F, current_dir: &Path) -> Result<PathBuf, CliError>
-where
-    F: Fn(&str) -> Option<std::ffi::OsString>,
-{
-    if let Some(value) = env_var("HARNESS_HOME") {
-        if value.is_empty() {
-            return Err(CliError::runtime("HARNESS_HOME must not be empty"));
-        }
-        return Ok(absolute_path(current_dir, PathBuf::from(value)));
-    }
-
-    let Some(home) = default_user_home(env_var) else {
-        return Err(CliError::runtime(
-            "could not determine a default home directory; set HARNESS_HOME",
-        ));
-    };
-    Ok(home.join(".harness"))
-}
-
-fn default_user_home<F>(env_var: F) -> Option<PathBuf>
-where
-    F: Fn(&str) -> Option<std::ffi::OsString>,
-{
-    env_var("HOME")
-        .map(PathBuf::from)
-        .or_else(|| env_var("USERPROFILE").map(PathBuf::from))
-        .or_else(|| {
-            let drive = env_var("HOMEDRIVE")?;
-            let path = env_var("HOMEPATH")?;
-            let mut home = PathBuf::from(drive);
-            home.push(path);
-            Some(home)
-        })
-}
-
 fn canonical_existing_dir(
     current_dir: &Path,
     value: String,
@@ -602,6 +568,12 @@ impl From<harness_store::StoreError> for CliError {
     }
 }
 
+impl From<RuntimeHomeResolutionError> for CliError {
+    fn from(error: RuntimeHomeResolutionError) -> Self {
+        Self::Runtime(error.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::{
@@ -647,6 +619,62 @@ mod tests {
             runtime_home,
             PathBuf::from("/tmp/harness-cli-home/.harness")
         );
+    }
+
+    #[test]
+    fn init_resolves_runtime_home_with_shared_resolver() {
+        let current_dir = TempRuntimeHome::new("cli-cwd").expect("temp current dir");
+        let runtime_home = resolve_runtime_home(
+            |name| {
+                if name == "HARNESS_HOME" {
+                    Some(OsString::from("shared-runtime"))
+                } else {
+                    None
+                }
+            },
+            current_dir.path(),
+        )
+        .expect("shared resolver should resolve relative Runtime Home");
+
+        let output = run_cli(
+            [
+                "harness",
+                "init",
+                "--runtime-home-id",
+                "runtime_home_shared",
+            ],
+            |name| {
+                if name == "HARNESS_HOME" {
+                    Some(OsString::from("shared-runtime"))
+                } else {
+                    None
+                }
+            },
+            current_dir.path(),
+        )
+        .expect("init should use shared Runtime Home resolution");
+
+        assert!(output.contains(&format!("runtime_home: {}\n", display_path(&runtime_home))));
+        assert!(registry_db_path(runtime_home).exists());
+    }
+
+    #[test]
+    fn runtime_home_resolution_errors_are_runtime_errors() {
+        let error = run_cli(
+            ["harness", "init"],
+            |name| {
+                if name == "HARNESS_HOME" {
+                    Some(OsString::new())
+                } else {
+                    None
+                }
+            },
+            Path::new(env!("CARGO_MANIFEST_DIR")),
+        )
+        .expect_err("empty HARNESS_HOME should fail");
+
+        assert!(matches!(error, CliError::Runtime(_)));
+        assert!(error.to_string().contains("HARNESS_HOME must not be empty"));
     }
 
     #[test]

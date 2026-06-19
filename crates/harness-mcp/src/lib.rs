@@ -21,6 +21,9 @@ use harness_core::{
 use harness_store::{
     bootstrap::{list_surfaces, project_record, SurfaceRecord, ACTIVE_PROJECT_STATUS},
     core_pipeline::CoreProjectStore,
+    runtime_home::{
+        resolve_runtime_home as resolve_shared_runtime_home, RuntimeHomeResolutionError,
+    },
     StoreError,
 };
 use harness_types::{
@@ -486,13 +489,20 @@ pub fn resolve_runtime_home_from_env<F>(env_var: F) -> Result<PathBuf, McpAdapte
 where
     F: Fn(&str) -> Option<OsString>,
 {
-    if let Some(path) = env_string(&env_var, "HARNESS_HOME")? {
-        return Ok(PathBuf::from(path));
-    }
+    let current_dir = std::env::current_dir().map_err(current_dir_environment_error)?;
+    resolve_runtime_home(env_var, &current_dir)
+}
 
-    let home = env_string(&env_var, "HOME")?
-        .ok_or_else(|| McpAdapterError::Environment("HOME is not set".to_owned()))?;
-    Ok(PathBuf::from(home).join(".harness"))
+/// Resolves the Runtime Home from injected process inputs.
+pub fn resolve_runtime_home<F>(env_var: F, current_dir: &Path) -> Result<PathBuf, McpAdapterError>
+where
+    F: Fn(&str) -> Option<OsString>,
+{
+    resolve_shared_runtime_home(env_var, current_dir).map_err(McpAdapterError::from)
+}
+
+fn current_dir_environment_error(error: io::Error) -> McpAdapterError {
+    McpAdapterError::Environment(format!("failed to read current directory: {error}"))
 }
 
 fn valid_startup_surface(surface: SurfaceRecord) -> Result<SurfaceRecord, McpAdapterError> {
@@ -855,13 +865,19 @@ impl Error for McpAdapterError {
     }
 }
 
+impl From<RuntimeHomeResolutionError> for McpAdapterError {
+    fn from(error: RuntimeHomeResolutionError) -> Self {
+        Self::Environment(error.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::{
         collections::BTreeSet,
         fs,
         io::{BufReader, Cursor},
-        path::{Path, PathBuf},
+        path::PathBuf,
     };
 
     use harness_core::{AdapterSessionBinding, CoreBoundary, CoreService, InvocationContext};
@@ -871,6 +887,7 @@ mod tests {
             SurfaceRegistration, ACTIVE_PROJECT_STATUS,
         },
         core_pipeline::{CoreProjectStore, StorageEffectCounts},
+        runtime_home::resolve_runtime_home as resolve_store_runtime_home,
     };
     use harness_test_support::TempRuntimeHome;
     use harness_types::{
@@ -1651,24 +1668,80 @@ mod tests {
     }
 
     #[test]
-    fn runtime_home_env_resolution_uses_harness_home_then_home() -> Result<(), Box<dyn Error>> {
-        let explicit = resolve_runtime_home_from_env(|name| {
-            if name == "HARNESS_HOME" {
-                Some(OsString::from("/tmp/harness-explicit"))
-            } else {
-                None
+    fn runtime_home_env_resolution_matches_shared_resolver() -> Result<(), Box<dyn Error>> {
+        let current_dir = TempRuntimeHome::new("mcp-current-dir")?;
+        fn env_var(name: &str) -> Option<OsString> {
+            match name {
+                "HARNESS_HOME" => Some(OsString::from("runtime-home")),
+                _ => None,
             }
-        })?;
-        assert_eq!(explicit, Path::new("/tmp/harness-explicit"));
+        }
 
-        let default = resolve_runtime_home_from_env(|name| {
-            if name == "HOME" {
-                Some(OsString::from("/tmp/harness-home"))
+        let adapter = resolve_runtime_home(env_var, current_dir.path())?;
+        let shared = resolve_store_runtime_home(env_var, current_dir.path())?;
+
+        assert_eq!(adapter, shared);
+        assert_eq!(adapter, current_dir.path().join("runtime-home"));
+        Ok(())
+    }
+
+    #[test]
+    fn runtime_home_env_resolution_uses_shared_fallback_order() -> Result<(), Box<dyn Error>> {
+        let current_dir = TempRuntimeHome::new("mcp-fallback-current-dir")?;
+
+        let resolved = resolve_runtime_home(
+            |name| match name {
+                "HOME" => Some(OsString::new()),
+                "USERPROFILE" => Some(OsString::from("userprofile-home")),
+                "HOMEDRIVE" => Some(OsString::from("unused-drive")),
+                "HOMEPATH" => Some(OsString::from("unused-path")),
+                _ => None,
+            },
+            current_dir.path(),
+        )?;
+
+        assert_eq!(
+            resolved,
+            current_dir.path().join("userprofile-home").join(".harness")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn runtime_home_env_resolution_errors_are_environment_errors() {
+        let current_dir = TempRuntimeHome::new("mcp-empty-current-dir").expect("temp current dir");
+
+        let error = resolve_runtime_home(
+            |name| {
+                if name == "HARNESS_HOME" {
+                    Some(OsString::new())
+                } else {
+                    None
+                }
+            },
+            current_dir.path(),
+        )
+        .expect_err("empty HARNESS_HOME should fail");
+
+        assert!(matches!(error, McpAdapterError::Environment(_)));
+        assert!(error.to_string().contains("HARNESS_HOME must not be empty"));
+    }
+
+    #[test]
+    fn compatible_runtime_home_from_env_helper_still_accepts_absolute_override(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("mcp-helper")?;
+        let explicit = runtime_home.path().join("explicit");
+
+        let resolved = resolve_runtime_home_from_env(|name| {
+            if name == "HARNESS_HOME" {
+                Some(explicit.clone().into_os_string())
             } else {
                 None
             }
         })?;
-        assert_eq!(default, Path::new("/tmp/harness-home/.harness"));
+
+        assert_eq!(resolved, explicit);
         Ok(())
     }
 }

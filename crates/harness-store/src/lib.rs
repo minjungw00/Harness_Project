@@ -12,6 +12,7 @@ pub mod bootstrap;
 pub mod core_pipeline;
 pub mod error;
 pub mod migrations;
+pub mod runtime_home;
 pub mod sqlite;
 
 pub use error::{StoreError, StoreFailureRoute, StoreResult};
