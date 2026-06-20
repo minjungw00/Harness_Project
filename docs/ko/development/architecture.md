@@ -2,7 +2,7 @@
 
 이 가이드는 로컬 Rust 워크스페이스의 가이드 수준 구현 구조와 실행 흐름 설명을 담당합니다. 구현자가 코드를 찾고, 책임 경계를 이해하고, 코드 질문을 계약 담당 문서로 보낼 수 있게 돕습니다.
 
-이 문서는 공개 API 동작, 요청 또는 응답 필드, 스키마 의미, 저장 효과, DDL이나 테이블 컬럼, 보안 보장, 런타임 집행, Core 권한 의미, 제품 계약을 정의하거나 덮어쓰지 않습니다. 소스 코드 학습 경로는 [개발자 문서](README.md) 진입점을 사용하고, 크레이트별 첫 파일과 심볼은 [코드베이스 둘러보기](codebase-tour.md)를, 대표 메서드 흐름은 [요청 생명주기](request-lifecycle.md)를, 변경 작업 흐름은 [구현 가이드](change-guide.md)를 사용합니다. 정확한 동작은 집중 참조 담당 문서를 사용합니다.
+이 문서는 공개 API 동작, 요청 또는 응답 필드, 스키마 의미, 저장 효과, DDL이나 테이블 컬럼, 보안 보장, 런타임 집행, Core 권한 의미, 제품 계약을 정의하거나 덮어쓰지 않습니다. 소스 코드 학습 경로는 [개발자 문서](README.md) 진입점을 사용하고, 크레이트별 첫 파일과 심볼은 [코드베이스 둘러보기](codebase-tour.md)를, 대표 메서드 흐름은 [요청 생명주기](request-lifecycle.md)를, 반복 구현 구조는 [구현 설계 패턴](design-patterns.md)을, Store 커밋과 아티팩트 경계는 [저장소와 트랜잭션](storage-and-transactions.md)을, 테스트 계층 선택은 [테스트 전략](testing-strategy.md)을, 집중 결정 기록은 [아키텍처 결정](decisions/README.md)을, 변경 작업 흐름은 [구현 가이드](change-guide.md)를 사용합니다. 정확한 동작은 집중 참조 담당 문서를 사용합니다.
 
 하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 시스템입니다. Core는 하네스 상태를 위한 로컬 기준 기록입니다.
 
@@ -205,17 +205,7 @@ sequenceDiagram
 | Core 변이 커밋 | `crates/harness-core/src/pipeline.rs`와 `CoreProjectStore::commit_mutation`을 통한 `OwnerPipelineBranch::CommitMutation` | 하나의 Store 트랜잭션 안에서 메서드가 제공한 `CoreStorageMutation` 값을 적용하고, 이벤트를 추가하고, idempotency가 있는 경우 재실행 응답을 저장하며, 적용되는 경우 프로젝트 상태를 전진시킵니다. |
 | 일시적 아티팩트 스테이징 | `crates/harness-core/src/methods/stage_artifact.rs`와 `crates/harness-store/src/artifacts.rs`의 `CoreProjectStore::create_artifact_staging` | 일시적 스테이징 핸들 행과 안전한 스테이징 바이트를 만듭니다. 일반 Core 변이 커밋 경로를 따르지 않고, `project_state.state_version`을 증가시키지 않으며, `task_events`를 추가하지 않고, 재실행 기록 행을 만들지 않습니다. |
 
-`CoreProjectStore::commit_mutation`은 일반 커밋된 Core 변이의 Store 트랜잭션 경계입니다.
-
-1. 즉시 쓰기 트랜잭션을 시작합니다.
-2. 트랜잭션 안에서 idempotency 재실행 맥락과 예상 상태 맥락을 다시 확인합니다.
-3. 커밋된 Core 변이가 적용될 때 `project_state.state_version`을 전진시킵니다.
-4. `CoreStorageMutation`을 통해 메서드가 제공한 저장소 변이를 적용합니다.
-5. 메서드가 제공한 이벤트를 하나 이상 추가합니다.
-6. idempotency가 있는 커밋 호출에 대해 정확한 재실행 응답을 만들고 저장합니다.
-7. 모든 작업을 원자적으로 커밋하거나 오류 시 전체 시도를 롤백합니다.
-
-테이블 레이아웃, DDL, 저장소 기록 세부사항, 메서드별 지속 효과, 아티팩트 생명주기 규칙은 저장소 참조 담당 문서가 담당합니다.
+`CoreProjectStore::commit_mutation`은 일반 커밋된 Core 변이의 Store 트랜잭션 경계입니다. 자세한 커밋 순서, 재실행 처리, 상태 버전 관계, 아티팩트 스테이징 구분, 실패 경계는 [저장소와 트랜잭션](storage-and-transactions.md)에서 설명합니다. 테이블 레이아웃, DDL, 저장소 기록 세부사항, 메서드별 지속 효과, 아티팩트 생명주기 규칙은 저장소 참조 담당 문서가 담당합니다.
 
 ## 관리 CLI 설정 흐름
 
@@ -235,20 +225,26 @@ sequenceDiagram
 
 `crates/harness-cli/src/wizard.rs`는 같은 계획과 적용 경로 위에 놓인 대화형 프런트엔드입니다. 위저드는 입력, 충돌 승인, 설정 덮어쓰기 결정, 최종 승인을 모은 뒤 비대화형 설정 실행기를 호출합니다. 독립된 설정 엔진이 아닙니다.
 
-## 구현 불변식과 이유
+## 결정 경로
 
-| 경계 | 코드와 담당 경로에서 보이는 이유 |
+아키텍처 개요는 워크스페이스와 실행 지도를 유지합니다. 집중 결정의 결과와
+비목표는 결정 기록에 있습니다.
+
+| 경계 | 집중 결정 |
 |---|---|
-| Core가 어댑터와 독립적임 | `harness-core`는 Store와 공유 타입에 의존하고 `harness-cli`나 `harness-mcp`에는 의존하지 않습니다. 따라서 공개 메서드 동작은 어댑터가 의미를 소유하지 않은 채 여러 어댑터를 통해 호출될 수 있습니다. |
-| 관리 CLI가 공개 Core 메서드와 분리됨 | `harness-cli`는 로컬 설정을 위해 Store 부트스트랩, 등록, 검사, 호스트 설정 모듈을 사용합니다. [관리 CLI](../reference/admin-cli.md) 담당 문서는 이 명령들이 공개 메서드 목록 밖에 있음을 유지합니다. |
-| MCP의 직접 Store 사용이 제한됨 | `harness-mcp`는 시작과 고정 세션 바인딩 검증에 Store를 사용한 뒤 공개 메서드 실행에는 Core를 호출합니다. [MCP 전송](../reference/mcp-transport.md)은 시작과 프로토콜 전송 동작을 맡고, API 담당 문서는 메서드 동작을 맡습니다. |
-| 공통 사전 점검과 메서드 계획이 분리됨 | `crates/harness-core/src/pipeline.rs`는 요청 래퍼, 요청 해시, 프로젝트, 바인딩, 재실행, Task, 최신성, 접근 점검을 중앙화합니다. 메서드 모듈은 메서드별 계획과 응답 필드를 유지합니다. |
-| Core 정책과 Store 트랜잭션 원자성이 분리됨 | `crates/harness-core/src/policy/`와 `crates/harness-core/src/methods/`가 호환성과 예정 효과를 결정합니다. Store는 메서드 정책을 소유하지 않고 변이를 원자적으로 적용합니다. |
-| Product Repository 쓰기는 공개 Harness API 밖에 있음 | Core는 호환성과 관찰 사실을 기록할 수 있지만, 파일 쓰기는 공개 API 경로 밖에서 연결된 접점이나 로컬 도구가 수행합니다. 위치 구분은 [런타임 경계](../reference/runtime-boundaries.md)가 담당합니다. |
-| 아티팩트 스테이징이 Core 변이와 분리됨 | `stage_artifact`는 아티팩트 저장소를 통해 일시적 스테이징을 만들고, 영구 아티팩트 승격은 `record_run` 같은 메서드 계획 Core 변이를 통해 일어납니다. |
-| 테스트가 제품 계약 담당 문서가 아님 | 단위, 통합, 바이너리, 적합성 테스트는 담당 문서가 정의한 사실을 검증합니다. API, 저장소, 보안, Core 권한 계약은 참조 담당 문서에 남습니다. |
+| Core가 MCP와 CLI 어댑터에서 독립적임 | [Core와 어댑터 의존 경계](decisions/core-adapter-boundary.md) |
+| 정상 커밋된 Store 변이 전 메서드 계획 | [원자적 변이 커밋 전 계획](decisions/plan-and-atomic-commit.md) |
+| 런타임 데이터와 제품 파일 분리 | [Runtime Home과 Product Repository 분리](decisions/runtime-home-and-product-repository.md) |
+
+다른 오래 유지될 경계는 위 흐름에 남아 있습니다. 관리 CLI 설정은 공개 Core
+메서드 동작이 아니라 로컬 부트스트랩이고, MCP Store 사용은 시작과 세션
+검증으로 제한되며, 아티팩트 스테이징은 정상 Core 변이 커밋과 분리되고,
+테스트는 제품 계약을 소유하지 않고 담당 문서가 정의한 사실을 검증합니다.
 
 ## 테스트 구조
+
+이 절은 테스트 위치를 지도처럼 보여 줍니다. 구체적인 변경에 맞는 테스트
+계층을 고를 때는 [테스트 전략](testing-strategy.md)을 사용합니다.
 
 | 테스트 영역 | 검증 역할 |
 |---|---|

@@ -24,27 +24,35 @@ work. Core is the local authority record for Harness state.
    Core and Store behavior to the MCP response wrapper.
 3. Architecture and boundaries: use
    [Implementation Architecture](architecture.md) for the durable workspace
-   shape, dependency direction, execution-flow maps, effect paths, commit
-   boundaries, administrative CLI setup flow, and test topology.
-4. Storage and transaction concepts: read the architecture sections on
-   [Core pipeline and Store boundary](architecture.md#core-pipeline-and-store-boundary)
-   and [Effect and commit boundaries](architecture.md#effect-and-commit-boundaries),
-   then route exact storage questions to [Storage](../reference/storage.md),
+   shape, dependency direction, execution-flow maps, administrative CLI setup
+   flow, and code-to-owner routing.
+4. Implementation patterns: read
+   [Implementation Design Patterns](design-patterns.md) for recurring
+   structures such as `CoreService`, `MethodPolicy`, method planning,
+   `CoreStorageMutation`, injected time, opaque IDs, controlled enums,
+   canonical request hashing, and shared test fixtures.
+5. Storage and transaction concepts: read
+   [Storage and Transactions](storage-and-transactions.md) for Runtime Home,
+   registry and project databases, `CoreProjectStore`, method planning,
+   mutation values, atomic commit, replay, artifact staging, and failure
+   boundaries. Route exact storage questions to [Storage](../reference/storage.md),
    [Storage Effects](../reference/storage-effects.md),
    [Storage Records](../reference/storage-records.md),
-   [Storage DDL](../reference/storage-ddl.md), and
+   [Storage DDL](../reference/storage-ddl.md),
+   [Artifact Storage](../reference/storage-artifacts.md), and
    [Storage Versioning](../reference/storage-versioning.md).
-5. Test topology: use the tour's per-member test pointers and the architecture
-   [Test topology](architecture.md#test-topology). The main paths are
-   `crates/harness-core/src/methods/tests.rs`,
-   `crates/harness-mcp/tests/binary_transport.rs`,
-   `crates/harness-cli/tests/binary_admin.rs`,
-   `tests/integration/mcp_surface.rs`, and
-   `tests/conformance/baseline.rs`.
-6. Change workflow: use the [Implementation Guide](change-guide.md) when you
+6. Test strategy: use [Testing Strategy](testing-strategy.md) to choose among
+   module unit tests, Core method tests, binary tests, MCP integration tests,
+   conformance implementation tests, and `harness-test-support`.
+7. Durable decisions: use [Architecture Decisions](decisions/README.md) for
+   focused explanations of the Core/adapter boundary, planning before atomic
+   mutation commit, and the separation of `Harness Runtime Home` from
+   `Product Repository`.
+8. Change workflow: use the [Implementation Guide](change-guide.md) when you
    are ready to classify a change, locate the owner document, inspect the
-   implementation boundary, and choose validation.
-7. Exact Reference contracts: use the
+   implementation boundary, choose validation, and update affected developer
+   explanation.
+9. Exact Reference contracts: use the
    [Reference Index](../reference/README.md) and
    [API Methods](../reference/api/methods.md). Learning documents can explain
    how the current code is arranged, but Reference documents own exact method
@@ -57,8 +65,10 @@ work. Core is the local authority record for Harness state.
 |---|---|---|
 | Which crate should I open first? | [Codebase Tour](codebase-tour.md) | [Implementation Architecture](architecture.md) owns guide-level implementation structure. |
 | How does a method call move through MCP, Core, Store, and back? | [Request Lifecycle](request-lifecycle.md) | Method behavior is owned by [API Methods](../reference/api/methods.md) and the linked method owner. |
-| Why does Core not depend on CLI or MCP? | [Implementation Architecture](architecture.md) | Dependency-boundary guidance stays in architecture; public behavior still routes to Reference owners. |
-| What storage mutation is committed? | [Request Lifecycle](request-lifecycle.md) and [Implementation Architecture](architecture.md) | Exact storage effects route to [Storage Effects](../reference/storage-effects.md) and adjacent storage owners. |
+| Why does Core not depend on CLI or MCP? | [Implementation Architecture](architecture.md) and [Core and adapter dependency boundary](decisions/core-adapter-boundary.md) | Dependency-boundary guidance stays in developer-learning docs; public behavior still routes to Reference owners. |
+| Why are planners separate from Store commit? | [Implementation Design Patterns](design-patterns.md) and [Planning before atomic mutation commit](decisions/plan-and-atomic-commit.md) | Exact method behavior and storage effects route to method and storage owners. |
+| What storage mutation is committed? | [Request Lifecycle](request-lifecycle.md) and [Storage and Transactions](storage-and-transactions.md) | Exact storage effects route to [Storage Effects](../reference/storage-effects.md) and adjacent storage owners. |
+| Which test layer should I use? | [Testing Strategy](testing-strategy.md) | Tests verify owner-defined facts but do not own product contracts. |
 | What should I edit for a change? | [Implementation Guide](change-guide.md) | The focused Reference owner selected from [Reference Index](../reference/README.md) or `docs/doc-index.yaml`. |
 
 ## Source-reading shortcuts

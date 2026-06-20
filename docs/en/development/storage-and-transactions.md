@@ -1,0 +1,171 @@
+# Storage and transactions
+
+This guide explains how the current implementation separates Runtime Home
+storage, project Store access, method planning, storage mutation values,
+atomic commits, replay records, and artifacts. It is not a storage contract.
+Exact storage effects, record meanings, DDL, artifact lifecycle rules, and
+versioning behavior belong to the storage Reference owners.
+
+Start with [Storage](../reference/storage.md) for the storage owner family,
+[Storage Effects](../reference/storage-effects.md) for method branch effects,
+[Storage Records](../reference/storage-records.md), [Storage DDL](../reference/storage-ddl.md),
+[Artifact Storage](../reference/storage-artifacts.md), and
+[Storage Versioning](../reference/storage-versioning.md) when exact behavior is
+needed.
+
+## Storage Shape
+
+`Harness Runtime Home` is the local runtime data location for Harness-owned
+records and artifact data. `Product Repository` is the user's product-file
+workspace. The implementation keeps these locations separate:
+
+- Runtime Home path handling lives in
+  [`crates/harness-store/src/runtime_home.rs`](../../../crates/harness-store/src/runtime_home.rs).
+- Registry and project bootstrap live in
+  [`crates/harness-store/src/bootstrap.rs`](../../../crates/harness-store/src/bootstrap.rs).
+- SQLite open, validation, and transaction helpers live in
+  [`crates/harness-store/src/sqlite.rs`](../../../crates/harness-store/src/sqlite.rs).
+- Baseline migration application lives in
+  [`crates/harness-store/src/migrations.rs`](../../../crates/harness-store/src/migrations.rs).
+- Project-local Core Store access lives in
+  [`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs)
+  as `CoreProjectStore`.
+- Artifact staging and persistent artifact body verification live in
+  [`crates/harness-store/src/artifacts.rs`](../../../crates/harness-store/src/artifacts.rs).
+
+The registry database tracks Runtime Home-level registration. Project
+databases hold project-local state. This page avoids reproducing table layouts
+or column definitions; use the storage Reference owners for those details.
+
+## Bootstrap And Migration Boundary
+
+Administrative setup uses Store bootstrap and inspection paths before public
+method execution is available:
+
+1. `harness-cli` plans setup through
+   [`crates/harness-cli/src/setup.rs`](../../../crates/harness-cli/src/setup.rs).
+2. Store bootstrap initializes Runtime Home metadata and registers projects and
+   surfaces through `initialize_runtime_home`, `register_project`, and
+   `register_surface`.
+3. Existing state is opened and validated through SQLite helpers and migrations
+   where the setup path allows it.
+4. Public method calls later open a project through `CoreProjectStore::open`
+   rather than going through CLI setup code.
+
+This keeps local administrative preparation separate from Core method
+semantics. Exact CLI behavior is owned by [Administrative CLI](../reference/admin-cli.md).
+
+## Read And Planning Flow
+
+Normal public method execution has two implementation phases before persistence:
+
+1. The shared Core preflight in
+   [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
+   validates the envelope, adapter binding, committed-effect envelope
+   requirements, request hash, project state, verified surface context, replay
+   eligibility, Task requirement, freshness, and access class.
+2. The method module in [`crates/harness-core/src/methods/`](../../../crates/harness-core/src/methods/)
+   performs method-specific planning and returns an `OwnerPipelineBranch`.
+
+Read-only methods and dry runs can return without a Core mutation commit.
+Committed branches provide result fields, event data, and a list of
+`CoreStorageMutation` values.
+
+## Mutation Values
+
+`CoreStorageMutation` functions as a command-like value between method planning
+and Store persistence. Method planners create values such as `InsertTask`,
+`InsertWriteAuthorization`, `InsertRun`, `PromoteStagedArtifact`,
+`LinkArtifact`, and judgment updates. Store applies those values through
+`ProjectMutation` inside the active commit transaction.
+
+This structure gives the implementation a clear split:
+
+- Core method planners decide what method-specific effect is intended.
+- Store decides how that intended effect is applied to project-local storage.
+- Reference owners decide the exact product meaning of the effect.
+
+## Commit Input And Atomic Commit
+
+For normal committed Core mutations, Core builds `CommitMutationInput` with the
+project ID, method name, optional idempotency key, canonical request hash,
+verified replay context, optional expected state version, and pending events.
+
+`CoreProjectStore::commit_mutation` is the atomic Store boundary. It:
+
+1. validates commit input and pending events;
+2. begins an immediate SQLite transaction;
+3. reads current project state inside the transaction;
+4. handles eligible replay, replay-context mismatch, idempotency conflict, and
+   stale expected-state outcomes before applying a new mutation;
+5. advances `project_state.state_version` for a new committed mutation;
+6. applies method-provided `CoreStorageMutation` values through
+   `ProjectMutation`;
+7. appends task events;
+8. builds and validates response JSON;
+9. stores an idempotency replay row when the committed call is idempotent;
+10. commits the transaction, or rolls back the whole attempt on error.
+
+The implementation tests that protect this boundary include
+`transaction_replay_returns_stored_response_before_stale_expected_state`,
+`transaction_replay_hash_conflict_rejects_without_effect`, and
+`transaction_replay_context_mismatch_precedes_request_hash_conflict` in
+[`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs),
+plus Core pipeline tests in
+[`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs).
+
+## State Version And Replay
+
+The normal commit path advances project state once for a newly committed Core
+mutation. Replay returns the stored original response for an eligible
+idempotent call instead of applying another mutation.
+
+The request hash used for replay comes from `canonical_request_hash` in
+[`crates/harness-types/src/canonical.rs`](../../../crates/harness-types/src/canonical.rs)
+after typed request decoding. This supports stable comparison across JSON
+property ordering and formatting while preserving semantic differences.
+
+Exact state-version and replay behavior routes to
+[Storage Versioning](../reference/storage-versioning.md), [API Errors](../reference/api/errors.md),
+and the relevant method owner.
+
+## Artifact Boundary
+
+Artifact staging is intentionally separate from the normal Core mutation
+commit path:
+
+- `CoreService::stage_artifact` uses method preflight and then calls
+  `CoreProjectStore::create_artifact_staging`.
+- `create_artifact_staging` creates a transient staged-handle row and safe
+  staged bytes.
+- It does not use `CoreProjectStore::commit_mutation`, increment
+  `project_state.state_version`, append task events, create replay rows, or
+  insert persistent artifact rows.
+
+Persistent artifact promotion happens through method-planned Core mutations,
+such as `record_run`, when the applicable owner-defined behavior allows it.
+
+Relevant tests include
+`stage_artifact_creates_transient_handle_without_core_commit`,
+`stage_artifact_dry_run_creates_no_handle_or_storage`, and
+`record_run_promotes_staged_artifact_and_updates_evidence` in
+[`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs),
+and `artifact_lifecycle_promotes_valid_handles_and_rolls_back_invalid_ones`
+in [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs).
+
+## Failure Boundaries
+
+The implementation separates failure boundaries by effect path:
+
+- Preflight and validation rejections return without a Core commit.
+- Read-only, no-effect, and dry-run branches do not call
+  `CoreProjectStore::commit_mutation`.
+- Store commit outcomes distinguish committed, replayed, replay-context
+  mismatch, idempotency conflict, and stale expected-state cases.
+- Errors during the Store transaction roll back the commit attempt.
+- Artifact staging has its own transaction and file cleanup boundary.
+- Direct Product Repository file writes are outside the public Harness API path.
+
+These are implementation boundaries, not acceptance, security, or close-readiness
+claims. Route exact method effects to the method owner and
+[Storage Effects](../reference/storage-effects.md).

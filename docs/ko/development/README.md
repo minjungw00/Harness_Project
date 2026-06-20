@@ -22,26 +22,31 @@ Core는 하네스 상태를 위한 로컬 기준 기록입니다.
    `tools/call`에서 Core와 Store 동작을 거쳐 MCP 응답 래퍼로 돌아오는
    경로를 따라갑니다.
 3. 아키텍처와 경계: [구현 아키텍처](architecture.md)에서 오래 유지되는
-   워크스페이스 형태, 의존 방향, 실행 흐름 지도, 효과 경로, 커밋 경계,
-   관리 CLI 설정 흐름, 테스트 구조를 봅니다.
-4. 저장소와 트랜잭션 개념: 아키텍처의
-   [Core 파이프라인과 Store 경계](architecture.md#core-파이프라인과-store-경계)
-   및 [효과와 커밋 경계](architecture.md#효과와-커밋-경계)를 읽은 뒤,
-   정확한 저장소 질문은 [저장소](../reference/storage.md),
+   워크스페이스 형태, 의존 방향, 실행 흐름 지도, 관리 CLI 설정 흐름,
+   코드에서 담당 문서로 가는 경로를 봅니다.
+4. 구현 패턴: [구현 설계 패턴](design-patterns.md)에서 `CoreService`,
+   `MethodPolicy`, 메서드 계획, `CoreStorageMutation`, 주입된 시간, 불투명
+   ID, 제어 enum, 정규 요청 해시, 공유 테스트 픽스처 같은 반복 구조를
+   봅니다.
+5. 저장소와 트랜잭션 개념: [저장소와 트랜잭션](storage-and-transactions.md)에서
+   Runtime Home, registry와 프로젝트 데이터베이스, `CoreProjectStore`,
+   메서드 계획, 변이 값, 원자적 커밋, 재실행, 아티팩트 스테이징, 실패
+   경계를 읽습니다. 정확한 저장소 질문은 [저장소](../reference/storage.md),
    [저장 효과](../reference/storage-effects.md),
    [저장소 기록](../reference/storage-records.md),
    [저장소 DDL](../reference/storage-ddl.md),
+   [아티팩트 저장소](../reference/storage-artifacts.md),
    [저장소 버전 관리](../reference/storage-versioning.md)로 보냅니다.
-5. 테스트 구조: 둘러보기 문서의 멤버별 테스트 안내와 아키텍처의
-   [테스트 구조](architecture.md#테스트-구조)를 사용합니다. 주요 경로는
-   `crates/harness-core/src/methods/tests.rs`,
-   `crates/harness-mcp/tests/binary_transport.rs`,
-   `crates/harness-cli/tests/binary_admin.rs`,
-   `tests/integration/mcp_surface.rs`,
-   `tests/conformance/baseline.rs`입니다.
-6. 변경 작업 흐름: 변경을 분류하고, 담당 문서를 찾고, 구현 경계를 확인하고,
-   검증을 고를 준비가 되면 [구현 가이드](change-guide.md)를 사용합니다.
-7. 정확한 참조 계약: [참조 색인](../reference/README.md)과
+6. 테스트 전략: [테스트 전략](testing-strategy.md)에서 모듈 단위 테스트,
+   Core 메서드 테스트, 바이너리 테스트, MCP 통합 테스트, 적합성 구현 테스트,
+   `harness-test-support` 중 무엇을 사용할지 고릅니다.
+7. 오래 유지될 결정: [아키텍처 결정](decisions/README.md)에서 Core/어댑터
+   경계, 원자적 변이 커밋 전 계획, `Harness Runtime Home`과
+   `Product Repository` 분리를 집중 설명으로 확인합니다.
+8. 변경 작업 흐름: 변경을 분류하고, 담당 문서를 찾고, 구현 경계를 확인하고,
+   검증을 고르고, 영향을 받은 개발자 설명을 갱신할 준비가 되면
+   [구현 가이드](change-guide.md)를 사용합니다.
+9. 정확한 참조 계약: [참조 색인](../reference/README.md)과
    [API 메서드](../reference/api/methods.md)를 사용합니다. 학습 문서는
    현재 코드 배치를 설명할 수 있지만, 정확한 메서드 동작, 스키마, 저장
    효과, 보안 표현, 런타임 경계, 오류 의미, Core 권한 의미는 참조 문서가
@@ -53,8 +58,10 @@ Core는 하네스 상태를 위한 로컬 기준 기록입니다.
 |---|---|---|
 | 어떤 크레이트를 먼저 열어야 하나? | [코드베이스 둘러보기](codebase-tour.md) | [구현 아키텍처](architecture.md)가 가이드 수준 구현 구조를 담당합니다. |
 | 메서드 호출이 MCP, Core, Store를 지나 응답까지 어떻게 흐르나? | [요청 생명주기](request-lifecycle.md) | 메서드 동작은 [API 메서드](../reference/api/methods.md)와 연결된 메서드 담당 문서가 담당합니다. |
-| 왜 Core는 CLI나 MCP에 의존하지 않나? | [구현 아키텍처](architecture.md) | 의존 경계 안내는 아키텍처에 남고, 공개 동작은 참조 담당 문서로 돌아갑니다. |
-| 어떤 저장소 변이가 커밋되나? | [요청 생명주기](request-lifecycle.md)와 [구현 아키텍처](architecture.md) | 정확한 저장 효과는 [저장 효과](../reference/storage-effects.md)와 인접 저장소 담당 문서로 보냅니다. |
+| 왜 Core는 CLI나 MCP에 의존하지 않나? | [구현 아키텍처](architecture.md)와 [Core와 어댑터 의존 경계](decisions/core-adapter-boundary.md) | 의존 경계 안내는 개발자 학습 문서에 남고, 공개 동작은 참조 담당 문서로 돌아갑니다. |
+| 왜 계획 함수와 Store 커밋이 분리되나? | [구현 설계 패턴](design-patterns.md)과 [원자적 변이 커밋 전 계획](decisions/plan-and-atomic-commit.md) | 정확한 메서드 동작과 저장 효과는 메서드와 저장소 담당 문서로 보냅니다. |
+| 어떤 저장소 변이가 커밋되나? | [요청 생명주기](request-lifecycle.md)와 [저장소와 트랜잭션](storage-and-transactions.md) | 정확한 저장 효과는 [저장 효과](../reference/storage-effects.md)와 인접 저장소 담당 문서로 보냅니다. |
+| 어떤 테스트 계층을 써야 하나? | [테스트 전략](testing-strategy.md) | 테스트는 담당 문서가 정의한 사실을 검증하지만 제품 계약을 담당하지 않습니다. |
 | 변경할 때 무엇을 고쳐야 하나? | [구현 가이드](change-guide.md) | [참조 색인](../reference/README.md) 또는 `docs/doc-index.yaml`에서 고른 집중 참조 담당 문서입니다. |
 
 ## 소스 읽기 지름길

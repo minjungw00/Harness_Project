@@ -2,7 +2,7 @@
 
 This guide owns guide-level implementation structure and execution-flow explanation for the local Rust workspace. It helps implementers locate code, understand responsibility boundaries, and route code questions to the contract owners.
 
-It does not define or override public API behavior, request or response fields, schema meaning, storage effects, DDL or table columns, security guarantees, runtime enforcement, Core authority semantics, or product contracts. Use the [Developer Documentation](README.md) entry point for the source-code learning path, the [Codebase Tour](codebase-tour.md) for crate-by-crate first files and symbols, the [Request Lifecycle](request-lifecycle.md) for representative method traces, the [Implementation Guide](change-guide.md) for change workflow, and the focused Reference owners for exact behavior.
+It does not define or override public API behavior, request or response fields, schema meaning, storage effects, DDL or table columns, security guarantees, runtime enforcement, Core authority semantics, or product contracts. Use the [Developer Documentation](README.md) entry point for the source-code learning path, the [Codebase Tour](codebase-tour.md) for crate-by-crate first files and symbols, the [Request Lifecycle](request-lifecycle.md) for representative method traces, [Implementation Design Patterns](design-patterns.md) for recurring implementation structures, [Storage and Transactions](storage-and-transactions.md) for Store commit and artifact boundaries, [Testing Strategy](testing-strategy.md) for test-layer choice, [Architecture Decisions](decisions/README.md) for focused decision records, the [Implementation Guide](change-guide.md) for change workflow, and the focused Reference owners for exact behavior.
 
 Harness is the local work-authority product/system for AI-assisted product work. Core is the local authority record for Harness state.
 
@@ -205,17 +205,7 @@ This flow is an implementation map. Exact public method contracts, error precede
 | Core mutation commit | `OwnerPipelineBranch::CommitMutation` through `crates/harness-core/src/pipeline.rs` and `CoreProjectStore::commit_mutation` | Applies method-provided `CoreStorageMutation` values inside one Store transaction, appends events, stores replay response when idempotent, and advances project state where applicable. |
 | Transient artifact staging | `crates/harness-core/src/methods/stage_artifact.rs` with `CoreProjectStore::create_artifact_staging` in `crates/harness-store/src/artifacts.rs` | Creates a transient staged-handle row and safe staged bytes. It does not follow the normal Core mutation commit path, does not increment `project_state.state_version`, does not append `task_events`, and does not create a replay row. |
 
-`CoreProjectStore::commit_mutation` is the Store transaction boundary for normal committed Core mutations:
-
-1. Begin an immediate write transaction.
-2. Recheck idempotency replay context and expected state context inside the transaction.
-3. Advance `project_state.state_version` where the committed Core mutation applies.
-4. Apply the method-provided storage mutations through `CoreStorageMutation`.
-5. Append the method-provided event or events.
-6. Build and store the exact replay response for idempotent committed calls.
-7. Commit atomically, or roll back the whole attempt on error.
-
-Table layout, DDL, storage record detail, method-specific persistence effects, and artifact lifecycle rules belong to the storage Reference owners.
+`CoreProjectStore::commit_mutation` is the Store transaction boundary for normal committed Core mutations. The detailed commit sequence, replay handling, state-version relationship, artifact staging distinction, and failure boundaries are explained in [Storage and Transactions](storage-and-transactions.md). Table layout, DDL, storage record detail, method-specific persistence effects, and artifact lifecycle rules belong to the storage Reference owners.
 
 ## Administrative CLI setup flow
 
@@ -235,20 +225,27 @@ Table layout, DDL, storage record detail, method-specific persistence effects, a
 
 `crates/harness-cli/src/wizard.rs` is an interactive frontend over the same planning and application path. The wizard collects inputs, conflict approvals, config overwrite decisions, and final approval, then calls the non-interactive setup executor; it is not an independent setup engine.
 
-## Implementation invariants and rationale
+## Decision Routes
 
-| Boundary | Reason visible in code and owner routes |
+The architecture overview keeps the workspace and execution map. Focused
+decision consequences and non-goals live in the decision records:
+
+| Boundary | Focused decision |
 |---|---|
-| Core independence from adapters | `harness-core` depends on Store and shared types, not `harness-cli` or `harness-mcp`, so public method behavior can be invoked through more than one adapter without adapter-owned semantics. |
-| Administrative CLI separation from public Core methods | `harness-cli` uses Store bootstrap, registration, inspection, and host-config modules for local setup. The [Administrative CLI](../reference/admin-cli.md) owner keeps these commands outside the public method list. |
-| Restricted direct Store use by MCP | `harness-mcp` uses Store for startup and fixed session binding validation, then calls Core for public method execution. [MCP Transport](../reference/mcp-transport.md) owns startup and wire behavior; API owners own method behavior. |
-| Common preflight separate from method planning | `crates/harness-core/src/pipeline.rs` centralizes envelope, request hash, project, binding, replay, Task, freshness, and access checks; method modules keep method-specific planning and response fields. |
-| Core policy separate from Store transaction atomicity | `crates/harness-core/src/policy/` and `crates/harness-core/src/methods/` decide compatibility and planned effects; Store applies mutations atomically without owning method policy. |
-| Product Repository writes outside public Harness API | Core can record compatibility and observations, but file writes are performed by connected surfaces or local tools outside the public API path. [Runtime Boundaries](../reference/runtime-boundaries.md) owns the location distinction. |
-| Artifact staging separate from Core mutation | `stage_artifact` creates transient staging through artifact storage, while persistent artifact promotion occurs through method-planned Core mutation such as `record_run`. |
-| Tests are not product-contract owners | Unit, integration, binary, and conformance tests verify owner-defined facts, but API, storage, security, and Core authority contracts stay in Reference owners. |
+| Core independence from MCP and CLI adapters | [Core and adapter dependency boundary](decisions/core-adapter-boundary.md) |
+| Method planning before normal committed Store mutation | [Planning before atomic mutation commit](decisions/plan-and-atomic-commit.md) |
+| Runtime data separated from product files | [Runtime Home and Product Repository separation](decisions/runtime-home-and-product-repository.md) |
+
+Other durable boundaries remain visible in the flow above: administrative CLI
+setup is local bootstrap rather than public Core method behavior, MCP Store use
+is limited to startup and session validation, artifact staging is separate from
+normal Core mutation commit, and tests verify owner-defined facts rather than
+owning product contracts.
 
 ## Test topology
+
+This section maps test locations. Use [Testing Strategy](testing-strategy.md)
+to choose a test layer for a concrete change.
 
 | Test area | Verification role |
 |---|---|
