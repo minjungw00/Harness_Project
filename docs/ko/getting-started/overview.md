@@ -40,6 +40,7 @@
 | `Harness Server` | 이 저장소가 유지하는 서버 구현 집합이며, 하네스 전체와 같은 말은 아닙니다. | [런타임 경계](../reference/runtime-boundaries.md) |
 | `Harness Runtime Home` | 저장소/런타임 담당 문서가 정의하는 하네스 운영 데이터의 로컬 런타임 데이터 공간입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
 | `Product Repository` | 사용자의 프로젝트 작업 공간과 제품 파일입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
+| 외부 MCP 호스트 설정 | 하네스가 생성한 환경 값으로 `harness-mcp`를 시작할 수 있는 호스트 소유 설정입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
 
 `Harness Server` 소스 저장소는 구현 크레이트, `harness` 관리 CLI, `harness-mcp` 로컬 MCP 어댑터, 테스트, 문서, 검증 도구, 저장소 설정을 담은 체크아웃입니다. `Harness Server` 설치는 배포된 실행 파일과 필요한 런타임 리소스의 부분집합이며, 모든 소스 저장소 파일이 설치된다는 뜻은 아닙니다.
 

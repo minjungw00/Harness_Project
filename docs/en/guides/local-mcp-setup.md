@@ -1,24 +1,60 @@
 # Local MCP setup
 
-Use this guide when you need the complete operational how-to for local MCP setup after the shortest first-run path.
+Use this guide when you need the complete operational how-to for local MCP setup
+after the shortest first-run path.
 
-Start with [Installation](../getting-started/installation.md) to build or locate the executables, then [Quickstart](../getting-started/quickstart.md) for the minimum successful setup. This guide owns the operational details: explicit path selection, user-interaction binding, generated host-neutral configuration, dry-run behavior, JSON output, the interactive wizard, connection verification, recovery, and troubleshooting.
+Start with [Installation](../getting-started/installation.md) to build or
+locate the executables, then [Quickstart](../getting-started/quickstart.md) for
+the minimum successful setup. This guide owns the operational details: explicit
+path selection, user-interaction binding, generated host-neutral configuration,
+dry-run behavior, JSON output, the interactive wizard, connection verification,
+recovery, and troubleshooting.
+
+Initial setup has three stages:
+
+1. Prepare Harness Server by building or locating `harness` and `harness-mcp`.
+2. From the `Product Repository`, bind that repository with explicit
+   `--repo-root .` or another explicit `--repo-root PATH`.
+3. Apply the generated host-neutral MCP configuration through the external MCP
+   host's own configuration mechanism.
 
 `harness` performs local setup. `harness-mcp` is the child process that an MCP host launches after setup. The local MCP process communicates over stdio, not a network port, URL, socket, or listener.
 
 Exact `harness` command behavior belongs to [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration). Exact `harness-mcp` process behavior, stdio framing, response wrapping, preflight, shutdown, and reconnection belong to [MCP Transport](../reference/mcp-transport.md). Runtime location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md). Surface role and actor-provenance boundaries belong to [Agent Integration](../reference/agent-integration.md).
 
+## Locations And Ownership
+
+| Location | Owner | Typical contents | Setup writes there automatically? |
+|---|---|---|---|
+| Harness Server source or installation | Harness Server maintainer or installer | `harness`, `harness-mcp`, source files or installed executable resources. | Source builds write Cargo output under `target/`; local MCP setup only reads or invokes the executables. |
+| `Harness Runtime Home` | Local Harness operator | Harness registry, project state, surface registrations, and runtime data. | Yes. Setup creates or reuses local records there. |
+| `Product Repository` | Product project owner | Product source, tests, docs, and project configuration. | No. Setup records its path in Runtime Home; selecting it does not place Harness databases or runtime artifacts there. |
+| MCP host configuration location | External MCP host operator | Host-specific settings that launch `harness-mcp` with the generated environment. | No. Harness prints or writes a host-neutral fragment; the host's own settings remain host-owned. |
+
+`--config-dir` is an explicit output directory for generated host-neutral
+fragments. It is not the external host configuration location itself unless the
+host operator deliberately copies or adapts the fragment there.
+
 ## Inputs And Path Selection
 
-The setup command can use defaults for some inputs, but `Product Repository` selection is explicit. Operators often use explicit paths so the selected locations are visible:
+The setup command can use defaults for some inputs, but `Product Repository`
+selection is explicit. The Product Repository-local form uses `--repo-root .`
+from the project workspace:
+
+Working directory: `Product Repository` root.
 
 ```sh
 /absolute/path/to/harness setup local-mcp \
+  --repo-root . \
   --runtime-home /absolute/path/to/harness-runtime-home \
-  --repo-root /absolute/path/to/product-repository \
   --project-id demo \
   --mcp-command /absolute/path/to/harness-mcp
 ```
+
+Operators can also pass `--repo-root /absolute/path/to/product-repository` from
+another working directory. Non-interactive setup never silently chooses the
+process current directory; current-directory selection is explicit only when
+the command includes `--repo-root .`.
 
 Important selection rules at guide level:
 
@@ -28,9 +64,20 @@ Important selection rules at guide level:
 - `--mcp-command` selects the `harness-mcp` executable. Without it, setup discovers a sibling `harness-mcp` next to the running `harness`, then searches `PATH`.
 - The agent MCP surface uses `surface_id=agent_mcp` and `surface_instance_id=agent_mcp_local`.
 
+Setup registers the selected `Product Repository` path in Runtime Home. It does
+not edit product files merely because the repository was selected, and it does
+not place Harness databases or runtime artifacts inside the `Product
+Repository`. It may write generated host-neutral configuration fragments only
+when `--config-dir` explicitly selects an output directory.
+
 Before storage mutation, setup rejects invalid project IDs, inaccessible repository paths, executable-discovery failures, and structurally impossible configuration output paths. A real non-dry-run setup may initialize or migrate a recognized existing `Harness Runtime Home` after setup begins. Setup is designed to be rerunnable after partial failure, but it does not promise a cross-database, cross-file, or cross-system rollback.
 
 Route exact defaults, validation order, conflict behavior, exit codes, and stream behavior to [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration).
+
+If you intentionally use the Harness Server source repository itself as a
+`Product Repository` for dogfooding, select it explicitly with `--repo-root .`
+from that checkout or with its path. Do not treat accidental process current
+directory as repository selection.
 
 ## Setup Result And Host-Neutral Configuration
 
@@ -78,9 +125,11 @@ Place that fragment in the configuration location and wrapper shape used by the 
 
 Only add the user-interaction binding when a real user-facing UI or connector will submit user actions:
 
+Working directory: `Product Repository` root.
+
 ```sh
 /absolute/path/to/harness setup local-mcp \
-  --repo-root /absolute/path/to/product-repository \
+  --repo-root . \
   --with-user-interaction
 ```
 
@@ -110,9 +159,11 @@ The user-interaction configuration is for the appropriate UI or connector, not f
 
 To write host-neutral fragments to a directory:
 
+Working directory: `Product Repository` root.
+
 ```sh
 /absolute/path/to/harness setup local-mcp \
-  --repo-root /absolute/path/to/product-repository \
+  --repo-root . \
   --config-dir /absolute/path/to/generated-mcp-config
 ```
 
@@ -133,10 +184,12 @@ Setup validates whether the configuration directory and all requested target fil
 
 Preview the same setup path without registration, preflight, Runtime Home creation, database writes, migration, or configuration-file writes:
 
+Working directory: `Product Repository` root.
+
 ```sh
 /absolute/path/to/harness setup local-mcp \
+  --repo-root . \
   --runtime-home /absolute/path/to/harness-runtime-home \
-  --repo-root /absolute/path/to/product-repository \
   --project-id demo \
   --mcp-command /absolute/path/to/harness-mcp \
   --dry-run
@@ -152,9 +205,11 @@ Detailed dry-run behavior stays in [Administrative CLI](../reference/admin-cli.m
 
 For automation, request JSON output:
 
+Working directory: `Product Repository` root.
+
 ```sh
 /absolute/path/to/harness setup local-mcp \
-  --repo-root /absolute/path/to/product-repository \
+  --repo-root . \
   --output json
 ```
 
@@ -166,11 +221,21 @@ The exact JSON success fields are owned by [Administrative CLI](../reference/adm
 
 Use the wizard when you want setup to prompt for the same inputs:
 
+Working directory: `Product Repository` root when you want to seed the wizard
+with the current repository.
+
 ```sh
-/absolute/path/to/harness setup local-mcp --interactive
+/absolute/path/to/harness setup local-mcp --interactive --repo-root .
 ```
 
-The wizard is optional and requires a terminal. It displays the agent binding and access classes, defaults the user-interaction connector to no, requires explicit confirmation for destructive replacement and configuration overwrite, and creates no persistent setup writes when final confirmation is cancelled. It uses the same setup engine as the non-interactive command. The exact prompt behavior stays in [Administrative CLI](../reference/admin-cli.md#interactive-setup-frontend).
+The wizard is optional and requires a terminal. You may omit `--repo-root` when
+you want the wizard to prompt for `Product Repository` instead of seeding the
+current directory. It displays the agent binding and access classes, defaults
+the user-interaction connector to no, requires explicit confirmation for
+destructive replacement and configuration overwrite, and creates no persistent
+setup writes when final confirmation is cancelled. It uses the same setup
+engine as the non-interactive command. The exact prompt behavior stays in
+[Administrative CLI](../reference/admin-cli.md#interactive-setup-frontend).
 
 Before final confirmation, the wizard uses read-only planning. You can cancel, decline a conflicting-surface replacement, decline configuration overwrite, or decline the final plan without Runtime Home initialization, storage migration, preflight, registration, or configuration-file creation. After final confirmation, real setup may migrate a recognized existing Runtime Home.
 
@@ -214,12 +279,16 @@ Use the lower-level commands when you need custom IDs, need to diagnose conflict
 
 Initialize the Runtime Home:
 
+Working directory: any shell directory.
+
 ```sh
 HARNESS_HOME=/absolute/path/to/harness-runtime-home \
 /absolute/path/to/harness init
 ```
 
 Register a product repository:
+
+Working directory: any shell directory.
 
 ```sh
 HARNESS_HOME=/absolute/path/to/harness-runtime-home \
@@ -229,6 +298,8 @@ HARNESS_HOME=/absolute/path/to/harness-runtime-home \
 ```
 
 Register the agent MCP surface:
+
+Working directory: any shell directory.
 
 ```sh
 HARNESS_HOME=/absolute/path/to/harness-runtime-home \
@@ -242,6 +313,8 @@ HARNESS_HOME=/absolute/path/to/harness-runtime-home \
 ```
 
 Optionally register a separate user-interaction surface:
+
+Working directory: any shell directory.
 
 ```sh
 HARNESS_HOME=/absolute/path/to/harness-runtime-home \
@@ -257,12 +330,16 @@ HARNESS_HOME=/absolute/path/to/harness-runtime-home \
 
 Inspect registration:
 
+Working directory: any shell directory.
+
 ```sh
 HARNESS_HOME=/absolute/path/to/harness-runtime-home \
 /absolute/path/to/harness surface list --project-id demo
 ```
 
 Run a direct MCP preflight:
+
+Working directory: any shell directory.
 
 ```sh
 HARNESS_HOME=/absolute/path/to/harness-runtime-home \

@@ -40,6 +40,7 @@ These names are related, but they are not interchangeable.
 | `Harness Server` | The server implementation set maintained by this repository, not a synonym for Harness as a whole. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 | `Harness Runtime Home` | The local runtime data space for Harness operational data as storage/runtime owners define it. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 | `Product Repository` | The user's project workspace and product files. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| External MCP host configuration | Host-owned settings that may launch `harness-mcp` with Harness-generated environment values. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 
 The Harness Server source repository is the checkout that contains implementation crates, the `harness` administrative CLI, the `harness-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration. A Harness Server installation is the deployed subset of executables and required runtime resources; it does not imply that every source-repository file is installed.
 

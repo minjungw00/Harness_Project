@@ -6,7 +6,7 @@ This is the English entry point for the Harness documentation set. Start with th
 
 - Understand the product: [Getting Started Overview](getting-started/overview.md)
 - Build the executables: [Installation](getting-started/installation.md)
-- Run the shortest local MCP setup: [Quickstart](getting-started/quickstart.md)
+- Bind a Product Repository for local MCP: [Quickstart](getting-started/quickstart.md)
 - Operate or troubleshoot local MCP setup: [Local MCP Setup](guides/local-mcp-setup.md)
 
 ## Reader Paths

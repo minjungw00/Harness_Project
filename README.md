@@ -21,14 +21,38 @@ The baseline local MCP process is stdio-based. It is launched as a local child p
 For the source build and local setup path, you need:
 
 - a Rust toolchain with Cargo that can build this workspace
-- a local checkout of this repository
+- a local checkout of this repository, or another Harness Server installation
+  that provides `harness` and `harness-mcp`
 - a local `Product Repository` directory to bind
-- an absolute path for any `Product Repository` or `Harness Runtime Home` you pass to setup
+- a `Harness Runtime Home` that is separate from the `Product Repository`
 - an MCP host that can launch a local stdio MCP process when you are ready to connect Harness to a host
+
+## Initial Setup Shape
+
+Initial setup has three separate stages:
+
+1. Prepare Harness Server by building or locating the `harness` and
+   `harness-mcp` executables.
+2. From the `Product Repository`, bind that repository to a separate
+   `Harness Runtime Home` with an explicit `--repo-root .`.
+3. Apply the generated host-neutral MCP configuration fragment to the external
+   MCP host's own configuration mechanism.
+
+The four locations stay distinct:
+
+| Location | Owner | Typical contents | Setup writes there automatically? |
+|---|---|---|---|
+| Harness Server source or installation | Harness Server maintainer or installer | `harness`, `harness-mcp`, source files or installed executable resources. | Only a source build writes Cargo build output under this repository's `target/`. |
+| `Harness Runtime Home` | Local Harness operator | Harness registry, project state, and runtime data. | Yes. Setup creates or reuses records there. |
+| `Product Repository` | Product project owner | The user's product files and project workspace. | No. Setup registers its path in Runtime Home; selecting it does not edit its contents or place Harness databases inside it. |
+| External MCP host configuration | External MCP host operator | Host-owned settings that start `harness-mcp` with the generated environment. | No. Harness prints or writes a host-neutral fragment; the host owns its actual settings file and wrapper shape. |
+
+`--config-dir` is an explicitly selected output directory for generated
+host-neutral fragments, not the external host configuration location itself.
 
 ## Build The Executables
 
-From this repository root:
+Working directory: Harness Server source repository root.
 
 ```sh
 cargo build -p harness-cli -p harness-mcp
@@ -43,14 +67,18 @@ For release executable paths and build verification, see [Installation](docs/en/
 
 ## Shortest Local MCP Setup
 
-From this repository root, choose an existing product repository and a disposable or durable runtime home:
+After building, go to the `Product Repository` you want Harness to bind. Invoke
+`harness` by explicit path or by an installed command, and pass `--repo-root .`
+so the current directory selection is deliberate.
+
+Working directory: `Product Repository` root.
 
 ```sh
-target/debug/harness setup local-mcp \
-  --repo-root /absolute/path/to/product-repository \
+/absolute/path/to/harness setup local-mcp \
+  --repo-root . \
   --runtime-home /absolute/path/to/harness-runtime-home \
   --project-id demo \
-  --mcp-command "$(pwd)/target/debug/harness-mcp"
+  --mcp-command /absolute/path/to/harness-mcp
 ```
 
 A successful first setup includes human-readable lines like:
@@ -62,6 +90,11 @@ agent_config_json:
 ```
 
 The printed `agent_config_json` is a host-neutral MCP configuration fragment. Copy it into the wrapper shape and configuration location used by the MCP host you operate. Do not configure a URL, port, HTTP endpoint, or socket path for the baseline local MCP process.
+
+If you intentionally use this Harness Server source repository as a
+`Product Repository` for dogfooding, still select it explicitly with
+`--repo-root .` from that checkout or with its path. That is not the normal
+installation flow.
 
 For the complete first-run path, use [Quickstart](docs/en/getting-started/quickstart.md). For all setup options, dry-run preview, JSON output, configuration files, interactive setup, connection checks, and troubleshooting, use [Local MCP Setup](docs/en/guides/local-mcp-setup.md).
 

@@ -6,7 +6,7 @@
 
 - 제품 이해하기: [시작하기 개요](getting-started/overview.md)
 - 실행 파일 빌드하기: [설치](getting-started/installation.md)
-- 가장 짧은 로컬 MCP 설정 실행하기: [빠른 시작](getting-started/quickstart.md)
+- 로컬 MCP를 위한 `Product Repository` 바인딩: [빠른 시작](getting-started/quickstart.md)
 - 로컬 MCP 설정 운영과 문제 해결: [로컬 MCP 설정](guides/local-mcp-setup.md)
 
 ## 독자별 경로
