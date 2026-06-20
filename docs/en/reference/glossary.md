@@ -15,7 +15,7 @@ Preferred expressions, avoid expressions, identifier-preservation controls, and 
 
 For owner lookup by topic, use the [Reference Index](README.md). For exact machine-readable routing by `doc_id`, use [`docs/doc-index.yaml`](../../doc-index.yaml).
 
-Contract detail stays in the focused owner documents. Translation and style rules stay in the [Translation Guide](../maintain/translation-guide.md).
+Contract detail stays in the focused owner documents. Translation and style rules stay in the [Translation Policy](../maintain/translation-policy.md).
 
 ## Terms
 
@@ -29,8 +29,8 @@ Contract detail stays in the focused owner documents. Translation and style rule
 | runtime | 런타임 | The operational Harness execution and data context. | [Runtime Boundaries](runtime-boundaries.md) |
 | baseline scope | 기준 범위 | The stable support boundary documented for Harness. | [Scope](scope.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | A deferred capability outside the baseline support boundary. | [Scope](scope.md) |
-| owner document | 담당 문서 | The canonical document that defines a term, product concept, or contract. | [Authoring Guide](../maintain/authoring-guide.md) |
-| applicable owner path | 적용되는 담당 경로 | The documentation route to the focused owner for a question or concept. | [Authoring Guide](../maintain/authoring-guide.md) |
+| owner document | 담당 문서 | The canonical document that defines a term, product concept, or contract. | [Documentation Policy](../maintain/documentation-policy.md) |
+| applicable owner path | 적용되는 담당 경로 | The documentation route to the focused owner for a question or concept. | [Documentation Policy](../maintain/documentation-policy.md) |
 | `Task` | `Task` | The Harness entity that gathers scope, authority context, judgments, evidence, and close-readiness state. | [Core Model](core-model.md) |
 | scope | 범위 | The work or authority boundary attached to a `Task` or Change Unit context. | [Core Model](core-model.md) |
 | current scope | 현재 적용 범위 | The scope currently applied inside a `Task` or Change Unit context. | [Core Model](core-model.md) |

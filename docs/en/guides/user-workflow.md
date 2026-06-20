@@ -174,4 +174,4 @@ Do not treat this guide as the API contract. Do not copy detailed contract rules
 | Working user | [Judgment Examples](judgment-examples.md) -> [Scope](../reference/scope.md) |
 | Agent author or operator | [Agent Guide](agent-workflow.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
 | Implementer | [Reference Index](../reference/README.md) -> baseline scope -> API methods -> schema owners -> storage effects |
-| Documentation maintainer | [Authoring Guide](../maintain/authoring-guide.md) -> [Translation Guide](../maintain/translation-guide.md) -> [Checks](../maintain/checks.md) |
+| Documentation maintainer | [Documentation Policy](../maintain/documentation-policy.md) -> [Translation Policy](../maintain/translation-policy.md) -> [Validation](../maintain/validation.md) |

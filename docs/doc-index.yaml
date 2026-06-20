@@ -1,1972 +1,1433 @@
-version: 1
+version: 2
 metadata:
-  purpose: "Machine-readable owner-routing metadata for the maintained Harness documentation set."
-  default_language: "en"
+  purpose: Machine-readable documentation metadata for maintained Harness paths, reader purpose, focused owner routing, and bilingual maintenance.
+  default_language: en
   documentation_metadata: true
   runtime_config: false
   human_reference_index:
-    en: "docs/en/reference/README.md"
-    ko: "docs/ko/reference/README.md"
+    en: docs/en/reference/README.md
+    ko: docs/ko/reference/README.md
   human_term_guide:
-    en: "docs/en/reference/glossary.md"
-    ko: "docs/ko/reference/glossary.md"
-  terminology_metadata: "docs/terminology-map.yaml"
-
+    en: docs/en/reference/glossary.md
+    ko: docs/ko/reference/glossary.md
+  terminology_metadata: docs/terminology-map.yaml
 language_retrieval:
-  normal_lookup: "Use one language version for ordinary lookup, choosing the user's language when clear and `default_language` otherwise."
-  paired_review_rule: "Translation review, bilingual parity review, and documentation quality review must read both `path_en` and `path_ko` for each affected `doc_id`."
+  normal_lookup: Use one language version for ordinary lookup, choosing the user's language when clear and `default_language` otherwise.
+  paired_review_rule: Translation review, bilingual parity review, and documentation quality review must read both `path_en` and `path_ko` for each affected `doc_id`.
   read_both_language_versions_for:
-    - "translation review"
-    - "bilingual parity review"
-    - "documentation quality review"
-
+  - translation review
+  - bilingual parity review
+  - documentation quality review
 entry_schema:
-  required:
-    - "doc_id"
-    - "path_en"
-    - "path_ko"
-    - "role"
-    - "owner_for"
-    - "normative_level"
-    - "audience"
+  shared_required:
+  - doc_id
+  - path
+  - kind
+  - summary
+  - normative_level
+  paired_required:
+  - doc_id
+  - path_en
+  - path_ko
+  - kind
+  - summary
+  - normative_level
+  - translation_policy
   optional:
-    - "not_owner_for"
-    - "depends_on"
-  roles:
-    - "entry"
-    - "use"
-    - "reference"
-    - "maintain"
-    - "build"
+  - primary_audience
+  - journeys
+  - canonical_for
+  - depends_on
+  kinds:
+  - landing
+  - tutorial
+  - how_to
+  - explanation
+  - reference
+  - maintenance
+  reader_journeys:
+  - evaluate
+  - install
+  - operate
+  - learn
+  - implement
+  - maintain
   normative_levels:
-    - "contract"
-    - "guide"
-    - "example"
-    - "maintenance"
-
+  - contract
+  - guide
+  - example
+  - maintenance
+  translation_policies:
+  - semantic_parity
 shared_documents:
-  - doc_id: "agents.root"
-    path: "AGENTS.md"
-    role: "maintain"
-    owner_for:
-      - "repository-wide agent and maintainer working rules"
-      - "scoped AGENTS.md instruction hierarchy"
-      - "repository priority order for onboarding, developer learning, reference contracts, and maintenance metadata"
-      - "global contract-first workflow guidance"
-      - "global Harness/Core terminology distinction"
-      - "global bilingual semantic-parity requirement"
-      - "repository output and scratch artifact placement guidance"
-      - "repository validation and reporting expectations"
-    not_owner_for:
-      - "documentation-specific authoring rules"
-      - "Rust crate implementation placement rules"
-      - "product contracts"
-      - "reference contracts"
-      - "API behavior"
-      - "public API method list"
-      - "storage effects"
-      - "security guarantees"
-      - "Core authority semantics"
-      - "runtime behavior"
-      - "implementation logs"
-    normative_level: "maintenance"
-    audience:
-      - "agents"
-      - "maintainers"
-
-  - doc_id: "agents.docs"
-    path: "docs/AGENTS.md"
-    role: "maintain"
-    owner_for:
-      - "documentation-specific agent and maintainer working rules"
-      - "reader-oriented documentation type rules"
-      - "landing, tutorial, how-to, explanation, reference, maintenance, index, and route-only document distinctions"
-      - "non-Reference explanation and Reference contract boundary guidance"
-      - "documentation-specific bilingual semantic-parity guidance"
-      - "maintained documentation artifact placement guidance"
-      - "documentation validation expectations for scoped documentation edits"
-    not_owner_for:
-      - "product contracts"
-      - "reference contracts"
-      - "API behavior"
-      - "public API method list"
-      - "storage effects"
-      - "security guarantees"
-      - "Core authority semantics"
-      - "runtime behavior"
-      - "Rust implementation placement rules"
-      - "implementation logs"
-    normative_level: "maintenance"
-    audience:
-      - "agents"
-      - "maintainers"
-      - "translators"
-
-  - doc_id: "agents.crates"
-    path: "crates/AGENTS.md"
-    role: "maintain"
-    owner_for:
-      - "Rust implementation agent and maintainer working rules"
-      - "crate implementation placement guidance"
-      - "Core-to-adapter dependency-direction guidance"
-      - "implementation test and fixture placement guidance"
-      - "contract-first implementation routing guidance"
-      - "Rust implementation validation expectations"
-    not_owner_for:
-      - "product contracts"
-      - "reference contracts"
-      - "API behavior"
-      - "public API method list"
-      - "storage effects"
-      - "security guarantees"
-      - "Core authority semantics"
-      - "runtime behavior"
-      - "documentation-specific authoring rules"
-      - "implementation logs"
-    normative_level: "maintenance"
-    audience:
-      - "agents"
-      - "implementers"
-      - "maintainers"
-
-  - doc_id: "readme.root"
-    path: "README.md"
-    role: "entry"
-    owner_for:
-      - "repository product landing page"
-      - "top-level Harness product description and problem statement"
-      - "currently implemented repository component summary"
-      - "top-level source build and local MCP first-run route"
-      - "repository entry navigation"
-      - "top-level documentation routes"
-      - "reader documentation versus Reference contract distinction"
-    not_owner_for:
-      - "reference contracts"
-      - "implementation contracts"
-      - "CLI command contracts"
-      - "MCP transport contracts"
-      - "public API behavior"
-    normative_level: "guide"
-    audience:
-      - "all readers"
-
-  - doc_id: "docs.root"
-    path: "docs/README.md"
-    role: "entry"
-    owner_for:
-      - "bilingual documentation language selection"
-      - "first-hop documentation routes"
-    not_owner_for:
-      - "reference contracts"
-      - "technical owner detail"
-    normative_level: "guide"
-    audience:
-      - "all readers"
-
-  - doc_id: "docs.doc-index"
-    path: "docs/doc-index.yaml"
-    role: "maintain"
-    owner_for:
-      - "machine-readable documentation owner routing"
-      - "paired document path metadata"
-      - "language retrieval rule"
-    not_owner_for:
-      - "reader-facing glossary prose"
-      - "terminology metadata"
-      - "product contracts"
-      - "API contracts"
-      - "storage contracts"
-      - "security guarantees"
-    normative_level: "maintenance"
-    audience:
-      - "agents"
-      - "maintainers"
-
-  - doc_id: "terminology.map"
-    path: "docs/terminology-map.yaml"
-    role: "maintain"
-    owner_for:
-      - "machine-readable terminology metadata"
-      - "complete structured term inventory"
-      - "bilingual terminology controls"
-      - "identifier preservation rules"
-      - "English and Korean discouraged-expression metadata"
-      - "Harness, Core, Harness Server, Harness Runtime Home, and Product Repository terminology routing"
-      - "Write Authorization, write approval, sensitive-action approval, final-acceptance, residual-risk acceptance, and verification-criteria terminology distinctions"
-      - "Korean mixed-language expressions to avoid"
-    not_owner_for:
-      - "reader-facing glossary prose"
-      - "curated glossary subset selection"
-      - "reference owner routing"
-      - "product contracts"
-      - "API contracts"
-      - "storage contracts"
-      - "security guarantees"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "translators"
-
+- doc_id: agents.root
+  path: AGENTS.md
+  kind: maintenance
+  summary: Repository-wide working rules for agents and maintainers.
+  normative_level: maintenance
+  primary_audience:
+  - agents
+  - maintainers
+  journeys:
+  - maintain
+  canonical_for:
+  - repository-wide agent and maintainer working rules
+  - scoped AGENTS.md instruction hierarchy
+  - repository priority order for onboarding, developer learning, reference contracts, and maintenance metadata
+  - global contract-first workflow guidance
+  - global Harness/Core terminology distinction
+  - global bilingual semantic-parity requirement
+  - repository output and scratch artifact placement guidance
+  - repository validation and reporting expectations
+- doc_id: agents.docs
+  path: docs/AGENTS.md
+  kind: maintenance
+  summary: Documentation-specific working rules for maintained docs and metadata.
+  normative_level: maintenance
+  primary_audience:
+  - agents
+  - maintainers
+  - translators
+  journeys:
+  - maintain
+  canonical_for:
+  - documentation-specific agent and maintainer working rules
+  - reader-oriented documentation type rules
+  - landing, tutorial, how-to, explanation, reference, maintenance, index, and route-only document distinctions
+  - non-Reference explanation and Reference contract boundary guidance
+  - documentation-specific bilingual semantic-parity guidance
+  - maintained documentation artifact placement guidance
+  - documentation validation expectations for scoped documentation edits
+- doc_id: agents.crates
+  path: crates/AGENTS.md
+  kind: maintenance
+  summary: Rust workspace working rules for implementation edits and validation.
+  normative_level: maintenance
+  primary_audience:
+  - agents
+  - implementers
+  - maintainers
+  journeys:
+  - maintain
+  canonical_for:
+  - Rust implementation agent and maintainer working rules
+  - crate implementation placement guidance
+  - Core-to-adapter dependency-direction guidance
+  - implementation test and fixture placement guidance
+  - contract-first implementation routing guidance
+  - Rust implementation validation expectations
+- doc_id: readme.root
+  path: README.md
+  kind: landing
+  summary: Top-level Harness repository landing page and first navigation route.
+  normative_level: guide
+  primary_audience:
+  - all readers
+  journeys:
+  - evaluate
+  - learn
+- doc_id: docs.root
+  path: docs/README.md
+  kind: landing
+  summary: Bilingual documentation directory landing page and language selector.
+  normative_level: guide
+  primary_audience:
+  - all readers
+  journeys:
+  - evaluate
+  - learn
+- doc_id: docs.doc-index
+  path: docs/doc-index.yaml
+  kind: maintenance
+  summary: Version 2 machine-readable metadata for document paths, kinds, owners, dependencies, and translation policy.
+  normative_level: maintenance
+  primary_audience:
+  - agents
+  - maintainers
+  journeys:
+  - maintain
+  canonical_for:
+  - Version 2 machine-readable documentation metadata model.
+  - Maintained document path inventory and paired-language routing.
+  - Document kind, normative level, reader journey, translation policy, dependency, and focused owner metadata.
+- doc_id: terminology.map
+  path: docs/terminology-map.yaml
+  kind: maintenance
+  summary: Structured terminology metadata and identifier-preservation controls.
+  normative_level: maintenance
+  primary_audience:
+  - maintainers
+  - translators
+  journeys:
+  - maintain
+  canonical_for:
+  - machine-readable terminology metadata
+  - complete structured term inventory
+  - bilingual terminology controls
+  - identifier preservation rules
+  - English and Korean discouraged-expression metadata
+  - Harness, Core, Harness Server, Harness Runtime Home, and Product Repository terminology routing
+  - Write Authorization, write approval, sensitive-action approval, final-acceptance, residual-risk acceptance, and verification-criteria terminology distinctions
+  - Korean mixed-language expressions to avoid
 documents:
-  - doc_id: "docs.index"
-    path_en: "docs/en/README.md"
-    path_ko: "docs/ko/README.md"
-    role: "entry"
-    owner_for:
-      - "language-specific documentation entry"
-      - "reading path selection"
-      - "human-readable owner-routing entry points"
-    not_owner_for:
-      - "reference contracts"
-      - "technical owner detail"
-      - "machine-readable owner routing"
-    normative_level: "guide"
-    audience:
-      - "all readers"
-
-  - doc_id: "start"
-    path_en: "docs/en/getting-started/overview.md"
-    path_ko: "docs/ko/getting-started/overview.md"
-    role: "entry"
-    owner_for:
-      - "product orientation"
-      - "Harness product/system thesis"
-      - "first-read concept introduction"
-      - "first-read Harness and Core distinction"
-      - "first-read relationship among Harness, Core, Harness Server, Harness Runtime Home, and Product Repository"
-      - "first-read authority concept summary"
-      - "new-reader journey routing"
-    not_owner_for:
-      - "Core local authority record model"
-      - "exact API contracts"
-      - "storage records"
-      - "security guarantee detail"
-    normative_level: "guide"
-    audience:
-      - "new users"
-      - "agents"
-      - "implementers"
-
-  - doc_id: "start.installation"
-    path_en: "docs/en/getting-started/installation.md"
-    path_ko: "docs/ko/getting-started/installation.md"
-    role: "entry"
-    owner_for:
-      - "source prerequisites for building the current repository executables"
-      - "repository build procedure for `harness` and `harness-mcp`"
-      - "debug and release executable locations"
-      - "setup-relevant executable discovery guidance"
-      - "installation verification commands"
-    not_owner_for:
-      - "package-manager distribution"
-      - "operating-system support claims"
-      - "CLI command contracts"
-      - "MCP wire contracts"
-      - "public API behavior"
-      - "storage semantics"
-      - "security guarantees"
-    depends_on:
-      - "reference.admin-cli"
-      - "reference.mcp-transport"
-    normative_level: "guide"
-    audience:
-      - "new users"
-      - "operators"
-      - "implementers"
-
-  - doc_id: "use.local-mcp-quickstart"
-    path_en: "docs/en/getting-started/quickstart.md"
-    path_ko: "docs/ko/getting-started/quickstart.md"
-    role: "use"
-    owner_for:
-      - "shortest supported local MCP first-run success path"
-      - "minimum local MCP setup command sequence"
-      - "host-neutral local MCP configuration handoff at quickstart level"
-      - "quickstart-level successful setup recognition"
-      - "quickstart routing to detailed local MCP operations"
-    not_owner_for:
-      - "full installation procedure"
-      - "optional local MCP interactive wizard usage"
-      - "optional user-interaction connector setup guidance"
-      - "local MCP conflict handling"
-      - "configuration overwrite behavior"
-      - "extended local MCP troubleshooting"
-      - "CLI command contracts"
-      - "MCP wire contracts"
-      - "public API behavior"
-      - "public API method list"
-      - "request or response schemas"
-      - "storage semantics"
-      - "security guarantees"
-      - "Core authority semantics"
-    depends_on:
-      - "start.installation"
-      - "use.local-mcp-setup"
-      - "reference.admin-cli"
-      - "reference.mcp-transport"
-    normative_level: "guide"
-    audience:
-      - "new users"
-      - "operators"
-      - "agent integrators"
-
-  - doc_id: "use.user-guide"
-    path_en: "docs/en/guides/user-workflow.md"
-    path_ko: "docs/ko/guides/user-workflow.md"
-    role: "use"
-    owner_for:
-      - "user workflow guidance"
-      - "plain-language task flow"
-      - "user-facing close-readiness explanation"
-    not_owner_for:
-      - "API schemas"
-      - "storage records"
-      - "security guarantees"
-    normative_level: "guide"
-    audience:
-      - "users"
-      - "agents"
-
-  - doc_id: "use.agent-guide"
-    path_en: "docs/en/guides/agent-workflow.md"
-    path_ko: "docs/ko/guides/agent-workflow.md"
-    role: "use"
-    owner_for:
-      - "agent workflow guidance"
-      - "context discipline"
-      - "agent handling of user-owned judgment"
-    not_owner_for:
-      - "connector contracts"
-      - "API schemas"
-      - "security guarantee definitions"
-    normative_level: "guide"
-    audience:
-      - "agents"
-      - "agent operators"
-
-  - doc_id: "use.judgment-examples"
-    path_en: "docs/en/guides/judgment-examples.md"
-    path_ko: "docs/ko/guides/judgment-examples.md"
-    role: "use"
-    owner_for:
-      - "user-owned judgment examples"
-      - "judgment boundary examples"
-      - "non-substitution examples"
-    not_owner_for:
-      - "judgment schemas"
-      - "judgment value sets"
-      - "Core local authority record rules"
-    normative_level: "example"
-    audience:
-      - "users"
-      - "agents"
-      - "maintainers"
-
-  - doc_id: "use.surface-recipes"
-    path_en: "docs/en/guides/surface-recipes.md"
-    path_ko: "docs/ko/guides/surface-recipes.md"
-    role: "use"
-    owner_for:
-      - "surface-specific usage recipes"
-      - "user-visible surface workflows"
-      - "surface failure reporting patterns"
-    not_owner_for:
-      - "connector contracts"
-      - "API schemas"
-      - "storage effects"
-      - "security guarantee definitions"
-    normative_level: "guide"
-    audience:
-      - "users"
-      - "agents"
-      - "connector authors"
-
-  - doc_id: "use.local-mcp-setup"
-    path_en: "docs/en/guides/local-mcp-setup.md"
-    path_ko: "docs/ko/guides/local-mcp-setup.md"
-    role: "use"
-    owner_for:
-      - "complete operational local MCP setup guide for operators"
-      - "explicit local MCP setup path and project selection guidance"
-      - "generated host-neutral local MCP configuration file guidance"
-      - "local MCP dry-run preview guidance"
-      - "local MCP JSON automation guidance"
-      - "optional local MCP interactive wizard usage"
-      - "optional user-interaction connector setup guidance"
-      - "guide-level local MCP connection verification and reconnection"
-      - "manual fallback and troubleshooting order for local MCP setup"
-    not_owner_for:
-      - "CLI command contracts"
-      - "MCP wire contracts"
-      - "public API behavior"
-      - "public API method list"
-      - "request or response schemas"
-      - "storage semantics"
-      - "security guarantees"
-      - "access-class value meanings"
-      - "Core authority semantics"
-    depends_on:
-      - "reference.admin-cli"
-      - "reference.mcp-transport"
-      - "reference.runtime-boundaries"
-      - "reference.agent-integration"
-      - "reference.api.methods"
-    normative_level: "guide"
-    audience:
-      - "operators"
-      - "agent integrators"
-      - "implementers"
-
-  - doc_id: "development.index"
-    path_en: "docs/en/development/README.md"
-    path_ko: "docs/ko/development/README.md"
-    role: "build"
-    owner_for:
-      - "developer-learning entry point"
-      - "source-code learning reading order"
-      - "guide-level routing among workspace responsibilities, request lifecycle, architecture, implementation patterns, storage and transaction concepts, test strategy, architecture decisions, change workflow, and Reference contracts"
-      - "learning-document versus Reference-owner distinction for implementers"
-    not_owner_for:
-      - "baseline scope contracts"
-      - "API behavior"
-      - "schema contracts"
-      - "storage contracts"
-      - "storage effects"
-      - "security claims"
-      - "runtime behavior"
-      - "Core authority semantics"
-      - "implementation logs"
-      - "PR notes"
-      - "transient migration records"
-    depends_on:
-      - "development.codebase-tour"
-      - "development.request-lifecycle"
-      - "development.design-patterns"
-      - "development.storage-and-transactions"
-      - "development.testing-strategy"
-      - "development.decisions.index"
-      - "build.architecture"
-      - "build.implementation-guide"
-      - "reference.index"
-      - "reference.api.methods"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.codebase-tour"
-    path_en: "docs/en/development/codebase-tour.md"
-    path_ko: "docs/ko/development/codebase-tour.md"
-    role: "build"
-    owner_for:
-      - "developer-learning codebase tour"
-      - "guide-level current Cargo workspace member inventory"
-      - "guide-level source-reading order by workspace member"
-      - "guide-level source file, symbol, dependency, and test pointers for implementers"
-      - "implementation responsibility exclusions by workspace member"
-    not_owner_for:
-      - "baseline scope contracts"
-      - "API behavior"
-      - "schema contracts"
-      - "storage contracts"
-      - "storage effects"
-      - "security claims"
-      - "runtime behavior"
-      - "Core authority semantics"
-      - "exhaustive source-file inventory"
-      - "test-derived product contracts"
-      - "implementation logs"
-      - "PR notes"
-      - "transient migration records"
-    depends_on:
-      - "build.architecture"
-      - "reference.index"
-      - "reference.api.methods"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.request-lifecycle"
-    path_en: "docs/en/development/request-lifecycle.md"
-    path_ko: "docs/ko/development/request-lifecycle.md"
-    role: "build"
-    owner_for:
-      - "developer-learning representative request lifecycle traces"
-      - "guide-level MCP to Core to Store implementation flow for `harness.status`, `harness.intake`, and `harness.prepare_write`"
-      - "guide-level branch distinction among read-only, rejected/no-effect, dry-run, and committed mutation paths"
-      - "guide-level source symbol and test pointers for representative public method paths"
-    not_owner_for:
-      - "public API method contracts"
-      - "request or response schemas"
-      - "storage effect contracts"
-      - "storage DDL"
-      - "security claims"
-      - "runtime behavior"
-      - "Core authority semantics"
-      - "public error semantics"
-      - "test-derived product contracts"
-      - "implementation logs"
-      - "PR notes"
-      - "transient migration records"
-    depends_on:
-      - "build.architecture"
-      - "reference.api.methods"
-      - "reference.api.method-status"
-      - "reference.api.method-intake"
-      - "reference.api.method-prepare-write"
-      - "reference.storage-effects"
-      - "reference.mcp-transport"
-      - "reference.runtime-boundaries"
-      - "reference.core-model"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.design-patterns"
-    path_en: "docs/en/development/design-patterns.md"
-    path_ko: "docs/ko/development/design-patterns.md"
-    role: "build"
-    owner_for:
-      - "developer-learning implementation pattern explanation"
-      - "guide-level problem, source-location, benefit, trade-off, and test explanation for current Rust implementation structures"
-      - "guide-level source symbol and test routing for `CoreService`, `MethodPolicy`, method planning, `CoreStorageMutation`, atomic commit boundaries, injectable `Clock`, opaque identifiers, controlled enums, canonical request hashing, and `harness-test-support` fixture composition"
-      - "pattern wording boundaries when current code resembles or functions as a known structure without claiming undocumented formal design intent"
-    not_owner_for:
-      - "formal design-pattern intent claims beyond repository evidence"
-      - "baseline scope contracts"
-      - "API behavior"
-      - "schema contracts"
-      - "storage contracts"
-      - "storage effects"
-      - "security claims"
-      - "runtime behavior"
-      - "Core authority semantics"
-      - "test-derived product contracts"
-      - "implementation logs"
-      - "PR notes"
-      - "transient migration records"
-    depends_on:
-      - "development.index"
-      - "development.codebase-tour"
-      - "development.request-lifecycle"
-      - "development.testing-strategy"
-      - "build.architecture"
-      - "reference.index"
-      - "reference.api.methods"
-      - "reference.storage-effects"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.storage-and-transactions"
-    path_en: "docs/en/development/storage-and-transactions.md"
-    path_ko: "docs/ko/development/storage-and-transactions.md"
-    role: "build"
-    owner_for:
-      - "developer-learning storage and transaction implementation explanation"
-      - "guide-level relationship among `Harness Runtime Home`, registry and project databases, project bootstrap, migration, `CoreProjectStore`, read operations, method planning, storage mutation values, commit input, atomic commit behavior, state-version changes, replay records, artifact staging, persistent artifact handling, and failure boundaries"
-      - "source and test routing for Store commit and artifact boundaries"
-    not_owner_for:
-      - "storage contracts"
-      - "storage effect contracts"
-      - "storage record definitions"
-      - "DDL or table column definitions"
-      - "artifact lifecycle contracts"
-      - "method-specific persistence contracts"
-      - "baseline scope contracts"
-      - "API behavior"
-      - "schema contracts"
-      - "security claims"
-      - "runtime behavior"
-      - "Core authority semantics"
-      - "test-derived product contracts"
-      - "implementation logs"
-      - "PR notes"
-      - "transient migration records"
-    depends_on:
-      - "development.index"
-      - "development.request-lifecycle"
-      - "development.design-patterns"
-      - "build.architecture"
-      - "reference.storage"
-      - "reference.storage-effects"
-      - "reference.storage-records"
-      - "reference.storage-ddl"
-      - "reference.storage-artifacts"
-      - "reference.storage-versioning"
-      - "reference.runtime-boundaries"
-      - "reference.admin-cli"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.testing-strategy"
-    path_en: "docs/en/development/testing-strategy.md"
-    path_ko: "docs/ko/development/testing-strategy.md"
-    role: "build"
-    owner_for:
-      - "developer-learning Rust implementation test strategy"
-      - "guide-level explanation of module unit tests, Core method tests, binary tests, `harness-test-support`, conformance implementation tests, and MCP integration tests"
-      - "guide-level test-layer selection by common implementation change category"
-      - "boundary wording that repository test success is not product acceptance, security proof, QA completion, close readiness, runtime conformance, or residual-risk acceptance"
-    not_owner_for:
-      - "test-derived product contracts"
-      - "conformance contract authority"
-      - "runtime conformance results"
-      - "QA results"
-      - "product acceptance"
-      - "security guarantees"
-      - "close-readiness state"
-      - "residual-risk acceptance"
-      - "baseline scope contracts"
-      - "API behavior"
-      - "schema contracts"
-      - "storage contracts"
-      - "Core authority semantics"
-      - "implementation logs"
-      - "PR notes"
-      - "transient migration records"
-    depends_on:
-      - "development.index"
-      - "development.codebase-tour"
-      - "development.design-patterns"
-      - "build.architecture"
-      - "reference.index"
-      - "reference.conformance"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.decisions.index"
-    path_en: "docs/en/development/decisions/README.md"
-    path_ko: "docs/ko/development/decisions/README.md"
-    role: "build"
-    owner_for:
-      - "developer-learning architecture decision index"
-      - "route among the maintained focused architecture decision records"
-      - "boundary that architecture decision records explain stable intended implementation structure without defining product contracts"
-    not_owner_for:
-      - "broad architecture decision archive"
-      - "implementation history"
-      - "baseline scope contracts"
-      - "API behavior"
-      - "schema contracts"
-      - "storage contracts"
-      - "storage effects"
-      - "security claims"
-      - "runtime behavior"
-      - "Core authority semantics"
-      - "test-derived product contracts"
-      - "implementation logs"
-      - "PR notes"
-      - "transient migration records"
-    depends_on:
-      - "development.decision.core-adapter-boundary"
-      - "development.decision.plan-and-atomic-commit"
-      - "development.decision.runtime-home-and-product-repository"
-      - "build.architecture"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.decision.core-adapter-boundary"
-    path_en: "docs/en/development/decisions/core-adapter-boundary.md"
-    path_ko: "docs/ko/development/decisions/core-adapter-boundary.md"
-    role: "build"
-    owner_for:
-      - "stable guide-level architecture decision for Core and adapter dependency boundary"
-      - "implementation consequence and non-goal explanation for `harness-core` independence from `harness-mcp` and `harness-cli`"
-      - "source and test routing for adapter/Core separation"
-    not_owner_for:
-      - "public API method list contracts"
-      - "public API method behavior"
-      - "MCP transport contracts"
-      - "administrative CLI contracts"
-      - "security claims"
-      - "Core authority semantics"
-      - "implementation history"
-      - "test-derived product contracts"
-    depends_on:
-      - "development.design-patterns"
-      - "build.architecture"
-      - "reference.api.methods"
-      - "reference.mcp-transport"
-      - "reference.admin-cli"
-      - "reference.agent-integration"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.decision.plan-and-atomic-commit"
-    path_en: "docs/en/development/decisions/plan-and-atomic-commit.md"
-    path_ko: "docs/ko/development/decisions/plan-and-atomic-commit.md"
-    role: "build"
-    owner_for:
-      - "stable guide-level architecture decision for planning before atomic mutation commit"
-      - "implementation consequence and non-goal explanation for method planning, `OwnerPipelineBranch`, `CoreStorageMutation`, `CommitMutationInput`, and `CoreProjectStore::commit_mutation`"
-      - "source and test routing for normal committed Core mutation and transient artifact staging boundaries"
-    not_owner_for:
-      - "storage effect contracts"
-      - "storage record definitions"
-      - "DDL or table column definitions"
-      - "artifact lifecycle contracts"
-      - "public API method behavior"
-      - "schema contracts"
-      - "security claims"
-      - "Core authority semantics"
-      - "implementation history"
-      - "test-derived product contracts"
-    depends_on:
-      - "development.storage-and-transactions"
-      - "development.design-patterns"
-      - "build.architecture"
-      - "reference.api.methods"
-      - "reference.storage-effects"
-      - "reference.storage-versioning"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "development.decision.runtime-home-and-product-repository"
-    path_en: "docs/en/development/decisions/runtime-home-and-product-repository.md"
-    path_ko: "docs/ko/development/decisions/runtime-home-and-product-repository.md"
-    role: "build"
-    owner_for:
-      - "stable guide-level architecture decision for `Harness Runtime Home` and `Product Repository` separation"
-      - "implementation consequence and non-goal explanation for runtime state, project registration, artifact data, product-file paths, and public API file-write boundary"
-      - "source and test routing for Runtime Home setup and Product Repository boundary"
-    not_owner_for:
-      - "runtime boundary contracts"
-      - "storage contracts"
-      - "artifact lifecycle contracts"
-      - "security claims"
-      - "public API method behavior"
-      - "schema contracts"
-      - "Core authority semantics"
-      - "implementation history"
-      - "test-derived product contracts"
-    depends_on:
-      - "development.storage-and-transactions"
-      - "build.architecture"
-      - "reference.runtime-boundaries"
-      - "reference.storage"
-      - "reference.storage-artifacts"
-      - "reference.admin-cli"
-      - "reference.security"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "build.implementation-guide"
-    path_en: "docs/en/development/change-guide.md"
-    path_ko: "docs/ko/development/change-guide.md"
-    role: "build"
-    owner_for:
-      - "baseline implementation reading path"
-      - "implementation-change classification"
-      - "practical narrow implementation-change sequence"
-      - "representative change-type routing table for shared types, Store behavior, Core method behavior, MCP adapter behavior, administrative setup behavior, test fixture behavior, and developer documentation"
-      - "contract-first implementation reading workflow"
-      - "implementation-question routing"
-      - "code/document mismatch handling"
-    not_owner_for:
-      - "baseline scope contracts"
-      - "scope boundary changes"
-      - "API behavior"
-      - "schema contracts"
-      - "storage contracts"
-      - "security claims"
-      - "error behavior"
-      - "Core authority semantics"
-      - "product contract changes"
-      - "implementation logs"
-      - "PR notes"
-      - "transient migration records"
-    depends_on:
-      - "development.index"
-      - "development.codebase-tour"
-      - "development.request-lifecycle"
-      - "development.design-patterns"
-      - "development.storage-and-transactions"
-      - "development.testing-strategy"
-      - "development.decisions.index"
-      - "build.architecture"
-      - "reference.index"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "build.architecture"
-    path_en: "docs/en/development/architecture.md"
-    path_ko: "docs/ko/development/architecture.md"
-    role: "build"
-    owner_for:
-      - "guide-level implementation architecture"
-      - "Rust workspace and durable source-module map"
-      - "internal crate dependency direction"
-      - "guide-level execution-flow map"
-      - "architecture decision routing"
-      - "implementation-boundary routes and reminders"
-      - "implementation test topology"
-      - "code-to-contract-owner routing support"
-    not_owner_for:
-      - "baseline scope contracts"
-      - "API behavior"
-      - "public API method list"
-      - "request or response fields"
-      - "schema contracts"
-      - "storage contracts"
-      - "storage effects"
-      - "storage record layout"
-      - "DDL or table columns"
-      - "security claims"
-      - "Core authority semantics"
-      - "product contract changes"
-      - "function-level code reference"
-      - "exhaustive source-file inventory"
-      - "test-derived product contracts"
-      - "PR notes"
-      - "transient migration records"
-      - "implementation logs, history, or change logs"
-    depends_on:
-      - "development.index"
-      - "development.codebase-tour"
-      - "development.request-lifecycle"
-      - "development.design-patterns"
-      - "development.storage-and-transactions"
-      - "development.testing-strategy"
-      - "development.decisions.index"
-      - "reference.runtime-boundaries"
-      - "reference.admin-cli"
-      - "reference.mcp-transport"
-      - "reference.agent-integration"
-      - "reference.core-model"
-      - "reference.api.methods"
-      - "reference.storage"
-      - "reference.storage-effects"
-      - "reference.storage-versioning"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "reviewers"
-
-  - doc_id: "reference.index"
-    path_en: "docs/en/reference/README.md"
-    path_ko: "docs/ko/reference/README.md"
-    role: "reference"
-    owner_for:
-      - "human-readable reference index"
-      - "reader-facing reference navigation"
-      - "human-readable route to common reference owners"
-      - "reference family navigation"
-    not_owner_for:
-      - "machine-readable owner routing"
-      - "exact owner-route metadata"
-      - "glossary term meanings"
-      - "terminology metadata"
-      - "detailed contracts"
-      - "schemas"
-      - "storage effects"
-      - "security guarantees"
-    normative_level: "guide"
-    audience:
-      - "agents"
-      - "implementers"
-      - "maintainers"
-
-  - doc_id: "reference.scope"
-    path_en: "docs/en/reference/scope.md"
-    path_ko: "docs/ko/reference/scope.md"
-    role: "reference"
-    owner_for:
-      - "baseline scope contract"
-      - "supported baseline boundary"
-      - "out-of-scope boundary"
-      - "profile-gated boundary"
-      - "reserved behavior boundary"
-      - "scope-level guarantee boundary"
-    not_owner_for:
-      - "method behavior"
-      - "schema definitions"
-      - "storage contracts"
-      - "security guarantee semantics"
-    normative_level: "contract"
-    audience:
-      - "agents"
-      - "implementers"
-      - "maintainers"
-
-  - doc_id: "reference.core-model"
-    path_en: "docs/en/reference/core-model.md"
-    path_ko: "docs/ko/reference/core-model.md"
-    role: "reference"
-    owner_for:
-      - "Core local authority record model for Harness state"
-      - "current scope and current Change Unit authority context"
-      - "lifecycle meaning"
-      - "close-readiness authority concepts"
-      - "user-owned judgment boundaries"
-      - "Write Authorization, approval, final-acceptance, and residual-risk non-substitution boundaries"
-      - "verification criteria and evidence/acceptance authority boundaries"
-    not_owner_for:
-      - "Harness product/system thesis"
-      - "Harness Server, Product Repository, or Harness Runtime Home location boundaries"
-      - "wire schemas"
-      - "storage layout"
-      - "public error precedence"
-      - "`harness.close_task` method-specific behavior"
-      - "`CloseReadinessBlocker` schema shape"
-      - "close-readiness blocker terminology routing"
-    normative_level: "contract"
-    audience:
-      - "agents"
-      - "implementers"
-      - "maintainers"
-
-  - doc_id: "reference.runtime-boundaries"
-    path_en: "docs/en/reference/runtime-boundaries.md"
-    path_ko: "docs/ko/reference/runtime-boundaries.md"
-    role: "reference"
-    owner_for:
-      - "Product Repository boundary"
-      - "Harness Runtime Home boundary"
-      - "Harness Server and runtime process boundary"
-      - "runtime, server, and repository separation"
-    not_owner_for:
-      - "Harness product/system thesis"
-      - "Core local authority record model"
-      - "API behavior"
-      - "storage record layout"
-      - "security guarantees"
-    normative_level: "contract"
-    audience:
-      - "agents"
-      - "implementers"
-      - "maintainers"
-
-  - doc_id: "reference.admin-cli"
-    path_en: "docs/en/reference/admin-cli.md"
-    path_ko: "docs/ko/reference/admin-cli.md"
-    role: "reference"
-    owner_for:
-      - "local `harness` administrative and bootstrap CLI command contract"
-      - "`harness` command-line arguments, defaults, stdout and stderr routing, and exit codes"
-      - "Runtime Home path selection rules for `harness` administrative commands"
-      - "administrative project registration command behavior"
-      - "administrative surface registration command behavior"
-      - "local MCP setup orchestration"
-      - "local MCP interactive setup orchestration"
-      - "local MCP setup option defaults"
-      - "local MCP setup project and surface conflict behavior"
-      - "local MCP setup dry-run behavior"
-      - "local MCP setup preview and cancellation guarantees"
-      - "local MCP setup storage preparation and migration sequencing"
-      - "local MCP setup post-preparation revalidation"
-      - "local MCP setup project-ID validation"
-      - "local MCP setup generated-configuration path validation"
-      - "local MCP setup partial-failure reporting"
-      - "local MCP setup output formats"
-      - "local MCP setup host-neutral configuration generation"
-      - "`baseline-workflow` local registration profile expansion"
-      - "administrative command boundary from public Harness API methods"
-    not_owner_for:
-      - "external MCP host installation schemas"
-      - "public Harness API method behavior"
-      - "public API request or response schemas"
-      - "access-class value meanings"
-      - "surface registration meaning and verified surface context boundaries"
-      - "storage record layout or storage effects"
-      - "SQLite DDL or general storage migration definitions"
-      - "security guarantee meanings"
-      - "Core authority semantics"
-      - "MCP wire behavior"
-      - "MCP stdio transport framing, response wrapping, startup validation, or shutdown"
-    depends_on:
-      - "reference.runtime-boundaries"
-      - "reference.agent-integration"
-      - "reference.mcp-transport"
-      - "reference.api.methods"
-      - "reference.api.schema-value-sets"
-    normative_level: "contract"
-    audience:
-      - "implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.mcp-transport"
-    path_en: "docs/en/reference/mcp-transport.md"
-    path_ko: "docs/ko/reference/mcp-transport.md"
-    role: "reference"
-    owner_for:
-      - "local `harness-mcp` process command contract"
-      - "MCP stdio process startup and exit behavior"
-      - "MCP process environment variables"
-      - "MCP startup validation and fixed process binding"
-      - "MCP Runtime Home environment resolution"
-      - "line-delimited JSON-RPC over stdio"
-      - "MCP supported request method set"
-      - "`tools/call` Harness response wrapping"
-      - "MCP process shutdown and reconnection behavior"
-    not_owner_for:
-      - "public Harness API method behavior"
-      - "public Harness request or response schema meanings"
-      - "public Harness method owner list"
-      - "access-class value meanings"
-      - "surface registration meaning, access derivation meaning, or actor provenance"
-      - "Runtime Home path selection rules"
-      - "storage record layout, migrations, or method storage effects"
-      - "security guarantee meanings"
-      - "Core authority semantics"
-    depends_on:
-      - "reference.admin-cli"
-      - "reference.agent-integration"
-      - "reference.api.methods"
-      - "reference.api.schema-core"
-      - "reference.api.schema-value-sets"
-      - "reference.storage"
-    normative_level: "contract"
-    audience:
-      - "agent integrators"
-      - "implementers"
-      - "maintainers"
-
-  - doc_id: "reference.security"
-    path_en: "docs/en/reference/security.md"
-    path_ko: "docs/ko/reference/security.md"
-    role: "reference"
-    owner_for:
-      - "security guarantee wording"
-      - "access-boundary non-claims"
-      - "guarantee semantics"
-    not_owner_for:
-      - "access-class value names"
-      - "method behavior"
-      - "connector recipes"
-    normative_level: "contract"
-    audience:
-      - "agents"
-      - "implementers"
-      - "security reviewers"
-      - "maintainers"
-
-  - doc_id: "reference.glossary"
-    path_en: "docs/en/reference/glossary.md"
-    path_ko: "docs/ko/reference/glossary.md"
-    role: "reference"
-    owner_for:
-      - "compact human-readable term guidance for selected core reader-facing terms"
-      - "curated reader-facing glossary subset"
-      - "term-level primary owner links for selected glossary terms"
-    not_owner_for:
-      - "complete structured term inventory"
-      - "all product terms or terminology-map entries"
-      - "all API, schema, storage, or value-set values"
-      - "full reference owner index"
-      - "machine-readable owner routing"
-      - "terminology metadata"
-      - "API contracts"
-      - "storage contracts"
-      - "security mechanisms"
-    depends_on:
-      - "terminology.map"
-    normative_level: "guide"
-    audience:
-      - "readers"
-      - "maintainers"
-      - "translators"
-
-  - doc_id: "reference.api.methods"
-    path_en: "docs/en/reference/api/methods.md"
-    path_ko: "docs/ko/reference/api/methods.md"
-    role: "reference"
-    owner_for:
-      - "supported public API method list"
-      - "human-readable API method owner routing"
-    not_owner_for:
-      - "machine-readable owner routing"
-      - "method-specific behavior"
-      - "shared schema bodies"
-      - "storage effect detail"
-      - "representative API example scenario"
-      - "public error semantics"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-intake"
-    path_en: "docs/en/reference/api/method-intake.md"
-    path_ko: "docs/ko/reference/api/method-intake.md"
-    role: "reference"
-    owner_for:
-      - "`harness.intake` behavior"
-      - "`IntakeResult` branch behavior"
-      - "intake examples"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-update-scope"
-    path_en: "docs/en/reference/api/method-update-scope.md"
-    path_ko: "docs/ko/reference/api/method-update-scope.md"
-    role: "reference"
-    owner_for:
-      - "`harness.update_scope` behavior"
-      - "`UpdateScopeResult` branch behavior"
-      - "update-scope examples"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-status"
-    path_en: "docs/en/reference/api/method-status.md"
-    path_ko: "docs/ko/reference/api/method-status.md"
-    role: "reference"
-    owner_for:
-      - "`harness.status` behavior"
-      - "`StatusResult` branch behavior"
-      - "status read-only behavior"
-      - "status examples"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-prepare-write"
-    path_en: "docs/en/reference/api/method-prepare-write.md"
-    path_ko: "docs/ko/reference/api/method-prepare-write.md"
-    role: "reference"
-    owner_for:
-      - "`harness.prepare_write` behavior"
-      - "`PrepareWriteResult` branch behavior"
-      - "Write Authorization creation behavior"
-      - "method-specific sensitive-action approval handling"
-    not_owner_for:
-      - "Core meaning of Write Authorization"
-      - "ordinary write approval meaning"
-      - "final acceptance or residual-risk acceptance meaning"
-      - "user-owned judgment product meaning"
-      - "security guarantee semantics"
-      - "shared schema bodies"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-stage-artifact"
-    path_en: "docs/en/reference/api/method-stage-artifact.md"
-    path_ko: "docs/ko/reference/api/method-stage-artifact.md"
-    role: "reference"
-    owner_for:
-      - "`harness.stage_artifact` behavior"
-      - "`StageArtifactResult` branch behavior"
-      - "staged handle result behavior"
-    not_owner_for:
-      - "artifact storage lifecycle"
-      - "shared schema bodies"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-record-run"
-    path_en: "docs/en/reference/api/method-record-run.md"
-    path_ko: "docs/ko/reference/api/method-record-run.md"
-    role: "reference"
-    owner_for:
-      - "`harness.record_run` behavior"
-      - "`RecordRunResult` branch behavior"
-      - "run and evidence method behavior"
-      - "artifact promotion method behavior"
-    not_owner_for:
-      - "artifact storage lifecycle"
-      - "Core evidence meaning"
-      - "shared schema bodies"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-request-user-judgment"
-    path_en: "docs/en/reference/api/method-request-user-judgment.md"
-    path_ko: "docs/ko/reference/api/method-request-user-judgment.md"
-    role: "reference"
-    owner_for:
-      - "`harness.request_user_judgment` behavior"
-      - "`RequestUserJudgmentResult` branch behavior"
-      - "pending user-owned judgment request behavior"
-    not_owner_for:
-      - "Core user-owned judgment, final-acceptance, residual-risk, or approval meaning"
-      - "shared schema bodies"
-      - "storage record layouts"
-      - "public error code meaning or precedence"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-record-user-judgment"
-    path_en: "docs/en/reference/api/method-record-user-judgment.md"
-    path_ko: "docs/ko/reference/api/method-record-user-judgment.md"
-    role: "reference"
-    owner_for:
-      - "`harness.record_user_judgment` behavior"
-      - "`RecordUserJudgmentResult` branch behavior"
-      - "user-owned judgment answer recording behavior"
-    not_owner_for:
-      - "Core user-owned judgment, final-acceptance, residual-risk, or approval meaning"
-      - "shared schema bodies"
-      - "storage record layouts"
-      - "public error code meaning or precedence"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.method-close-task"
-    path_en: "docs/en/reference/api/method-close-task.md"
-    path_ko: "docs/ko/reference/api/method-close-task.md"
-    role: "reference"
-    owner_for:
-      - "close task API method term"
-      - "`harness.close_task` public method identifier"
-      - "`harness.close_task` method-specific behavior"
-      - "`CloseTaskResult` method result branch behavior"
-      - "method-specific close-readiness evaluation order"
-      - "method-specific blocker-producing branches"
-      - "method-specific `CloseReadinessBlocker.code` production behavior"
-      - "close-task examples"
-    not_owner_for:
-      - "Core close-readiness authority concepts"
-      - "shared schema bodies"
-      - "`CloseReadinessBlocker` shape"
-      - "`CloseReadinessBlocker.category` values"
-      - "blocker/API response routing boundary"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.schema-core"
-    path_en: "docs/en/reference/api/schema-core.md"
-    path_ko: "docs/ko/reference/api/schema-core.md"
-    role: "reference"
-    owner_for:
-      - "common API request envelopes"
-      - "common API response branches"
-      - "dry-run response shapes"
-      - "shared API error envelope shapes"
-    not_owner_for:
-      - "method-specific behavior"
-      - "dry-run response branch routing"
-      - "nested state shapes"
-      - "nested artifact shapes"
-      - "nested judgment shapes"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.schema-state"
-    path_en: "docs/en/reference/api/schema-state.md"
-    path_ko: "docs/ko/reference/api/schema-state.md"
-    role: "reference"
-    owner_for:
-      - "state schemas"
-      - "close-readiness state shapes"
-      - "`CloseReadinessBlocker` shape"
-      - "`CloseReadinessBlocker` fields and nesting"
-    not_owner_for:
-      - "method behavior"
-      - "method-specific blocker-producing branches"
-      - "storage rows"
-      - "public error semantics"
-      - "`CloseReadinessBlocker.category` values"
-      - "blocker/API response routing boundary"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.schema-artifacts"
-    path_en: "docs/en/reference/api/schema-artifacts.md"
-    path_ko: "docs/ko/reference/api/schema-artifacts.md"
-    role: "reference"
-    owner_for:
-      - "artifact reference schemas"
-      - "`ArtifactInput` shape"
-      - "`StagedArtifactHandle` shape"
-    not_owner_for:
-      - "artifact storage lifecycle"
-      - "method behavior"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.schema-judgment"
-    path_en: "docs/en/reference/api/schema-judgment.md"
-    path_ko: "docs/ko/reference/api/schema-judgment.md"
-    role: "reference"
-    owner_for:
-      - "user judgment schemas"
-      - "sensitive-action approval schemas"
-      - "accepted-risk input shapes"
-      - "judgment-shaped API data for approvals and acceptance"
-    not_owner_for:
-      - "Core user-owned judgment, approval, final-acceptance, or residual-risk meaning"
-      - "method behavior"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.schema-value-sets"
-    path_en: "docs/en/reference/api/schema-value-sets.md"
-    path_ko: "docs/ko/reference/api/schema-value-sets.md"
-    role: "reference"
-    owner_for:
-      - "public API value sets"
-      - "blocker category values"
-      - "method-name values"
-      - "access-class values"
-      - "`CloseReadinessBlocker.category` values"
-      - "enum-like API vocabulary"
-    not_owner_for:
-      - "value semantics outside schema vocabulary"
-      - "security guarantee meanings"
-      - "method behavior"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.errors"
-    path_en: "docs/en/reference/api/errors.md"
-    path_ko: "docs/ko/reference/api/errors.md"
-    role: "reference"
-    owner_for:
-      - "API error reference family index"
-      - "first-hop routing to focused API error owners"
-      - "human-readable API error navigation"
-      - "first-hop API error reference navigation"
-    depends_on:
-      - "reference.api.error-codes"
-      - "reference.api.error-precedence"
-      - "reference.api.error-routing"
-      - "reference.api.blocker-routing"
-      - "reference.api.error-details"
-      - "reference.api.schema-state"
-      - "reference.api.schema-value-sets"
-      - "reference.api.method-close-task"
-    not_owner_for:
-      - "machine-readable owner routing"
-      - "public error code meanings"
-      - "error precedence"
-      - "API response branch routing"
-      - "blocker/API response routing boundary"
-      - "public-code-to-blocker boundary"
-      - "`ToolError.details` fields and error detail helper values"
-      - "`CloseReadinessBlocker` shape"
-      - "`CloseReadinessBlocker.category` values"
-      - "`harness.close_task` method-specific behavior"
-      - "method result behavior"
-      - "storage effects"
-      - "user-facing display labels"
-      - "rendered error message phrasing"
-    normative_level: "guide"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.error-codes"
-    path_en: "docs/en/reference/api/error-codes.md"
-    path_ko: "docs/ko/reference/api/error-codes.md"
-    role: "reference"
-    owner_for:
-      - "public `ErrorCode` identifiers and meanings"
-    not_owner_for:
-      - "primary error precedence"
-      - "response branch routing"
-      - "blocker/API response routing boundary"
-      - "public-code-to-blocker boundary"
-      - "`CloseReadinessBlocker.category` values"
-      - "`CloseReadinessBlocker.code` production behavior"
-      - "machine-readable error details"
-      - "user-facing display labels"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.error-precedence"
-    path_en: "docs/en/reference/api/error-precedence.md"
-    path_ko: "docs/ko/reference/api/error-precedence.md"
-    role: "reference"
-    owner_for:
-      - "public error selection precedence"
-      - "primary `ErrorCode` selection"
-      - "`STATE_VERSION_CONFLICT` conflict selection"
-      - "stale-state conflict behavior"
-      - "idempotency request-hash conflict behavior"
-    not_owner_for:
-      - "public error code meanings"
-      - "API response branch routing"
-      - "blocker/API response routing boundary"
-      - "public-code-to-blocker boundary"
-      - "machine-readable error detail fields"
-      - "storage replay rows"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.error-routing"
-    path_en: "docs/en/reference/api/error-routing.md"
-    path_ko: "docs/ko/reference/api/error-routing.md"
-    role: "reference"
-    owner_for:
-      - "API response branch routing"
-      - "rejected response branch routing"
-      - "blocked result response branch routing"
-      - "`dry_run` preview response branch routing"
-    not_owner_for:
-      - "public error code meanings"
-      - "primary error precedence"
-      - "machine-readable error details"
-      - "Core close-readiness authority concepts"
-      - "blocker/API response routing boundary"
-      - "close-readiness blocker/API response boundary"
-      - "`CloseReadinessBlocker` shape"
-      - "`CloseReadinessBlocker.category` values"
-      - "`harness.close_task` method-specific behavior"
-      - "public-code-to-blocker boundary"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.blocker-routing"
-    path_en: "docs/en/reference/api/blocker-routing.md"
-    path_ko: "docs/ko/reference/api/blocker-routing.md"
-    role: "reference"
-    owner_for:
-      - "close-readiness blocker terminology"
-      - "blocker routing"
-      - "close-readiness blocker/API response boundary"
-      - "error/blocker boundary for close-readiness blocker data"
-      - "public-code-to-blocker boundary"
-    not_owner_for:
-      - "Core close-readiness authority concepts"
-      - "`harness.close_task` method-specific behavior"
-      - "method-specific blocker-producing branches"
-      - "method result branch behavior"
-      - "`CloseReadinessBlocker` schema shape"
-      - "`CloseReadinessBlocker.category` values"
-      - "`CloseReadinessBlocker.code` method-specific production behavior"
-      - "API response branch routing"
-      - "blocked result response branch routing"
-      - "`dry_run` preview response branch routing"
-      - "display wording"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.api.error-details"
-    path_en: "docs/en/reference/api/error-details.md"
-    path_ko: "docs/ko/reference/api/error-details.md"
-    role: "reference"
-    owner_for:
-      - "`ToolError.details` fields and semantics"
-      - "error detail helper values"
-      - "state conflict detail fields"
-      - "machine-readable error detail constraints"
-    not_owner_for:
-      - "ToolError object shape"
-      - "public error code meanings"
-      - "primary error precedence"
-      - "response branch routing"
-      - "blocker/API response routing boundary"
-      - "user-facing display labels"
-    normative_level: "contract"
-    audience:
-      - "API implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.storage"
-    path_en: "docs/en/reference/storage.md"
-    path_ko: "docs/ko/reference/storage.md"
-    role: "reference"
-    owner_for:
-      - "storage family routing"
-      - "storage owner reading order"
-      - "human-readable storage owner navigation"
-    not_owner_for:
-      - "machine-readable owner routing"
-      - "record layout detail"
-      - "baseline SQLite DDL"
-      - "method storage effects"
-      - "artifact lifecycle detail"
-      - "versioning detail"
-      - "storage authority semantics"
-    normative_level: "guide"
-    audience:
-      - "implementers"
-      - "maintainers"
-
-  - doc_id: "reference.storage-records"
-    path_en: "docs/en/reference/storage-records.md"
-    path_ko: "docs/ko/reference/storage-records.md"
-    role: "reference"
-    owner_for:
-      - "baseline persisted record families"
-      - "storage location and record-family overview"
-      - "table overview"
-      - "storage-owned record values"
-      - "storage-owned JSON placement"
-    not_owner_for:
-      - "baseline SQLite DDL, indexes, foreign keys, and constraints"
-      - "method behavior"
-      - "API schemas"
-      - "security guarantees"
-    normative_level: "contract"
-    audience:
-      - "storage implementers"
-      - "maintainers"
-
-  - doc_id: "reference.storage-ddl"
-    path_en: "docs/en/reference/storage-ddl.md"
-    path_ko: "docs/ko/reference/storage-ddl.md"
-    role: "reference"
-    owner_for:
-      - "baseline SQLite DDL"
-      - "`registry.sqlite` schema shape"
-      - "project `state.sqlite` schema shape"
-      - "baseline SQLite indexes, foreign keys, migration tables, and constraints"
-      - "storage constraints for state clock columns, replay rows, current Change Unit uniqueness, Write Authorization basis versions, and staged artifact provenance"
-    not_owner_for:
-      - "method behavior"
-      - "method storage effects"
-      - "API request or response schemas"
-      - "artifact lifecycle semantics"
-      - "state-version, idempotency, event, lock, and migration semantics"
-      - "runtime deployment"
-      - "security guarantees"
-    normative_level: "contract"
-    audience:
-      - "storage implementers"
-      - "API implementers"
-      - "maintainers"
-
-  - doc_id: "reference.storage-effects"
-    path_en: "docs/en/reference/storage-effects.md"
-    path_ko: "docs/ko/reference/storage-effects.md"
-    role: "reference"
-    owner_for:
-      - "method-to-storage effects"
-      - "read-only and dry-run storage effects"
-      - "rejected and blocked branch storage effects"
-    not_owner_for:
-      - "API request shapes"
-      - "storage table layout"
-      - "baseline SQLite DDL, indexes, foreign keys, and constraints"
-      - "artifact body lifecycle"
-    normative_level: "contract"
-    audience:
-      - "storage implementers"
-      - "API implementers"
-      - "maintainers"
-
-  - doc_id: "reference.storage-artifacts"
-    path_en: "docs/en/reference/storage-artifacts.md"
-    path_ko: "docs/ko/reference/storage-artifacts.md"
-    role: "reference"
-    owner_for:
-      - "artifact storage lifecycle"
-      - "staging validation"
-      - "artifact promotion"
-      - "artifact body-read boundaries"
-    not_owner_for:
-      - "artifact API schema shapes"
-      - "method branch behavior"
-      - "baseline SQLite DDL, indexes, foreign keys, and constraints"
-    normative_level: "contract"
-    audience:
-      - "storage implementers"
-      - "API implementers"
-      - "maintainers"
-
-  - doc_id: "reference.storage-versioning"
-    path_en: "docs/en/reference/storage-versioning.md"
-    path_ko: "docs/ko/reference/storage-versioning.md"
-    role: "reference"
-    owner_for:
-      - "state versioning"
-      - "idempotency and replay rows"
-      - "storage locking"
-      - "migration boundaries"
-    not_owner_for:
-      - "method behavior"
-      - "API schema fields"
-      - "baseline SQLite DDL, indexes, foreign keys, and migration table shape"
-      - "runtime deployment"
-    normative_level: "contract"
-    audience:
-      - "storage implementers"
-      - "maintainers"
-
-  - doc_id: "reference.agent-integration"
-    path_en: "docs/en/reference/agent-integration.md"
-    path_ko: "docs/ko/reference/agent-integration.md"
-    role: "reference"
-    owner_for:
-      - "surface registration"
-      - "current surface context"
-      - "currently applied surface context boundaries"
-      - "`VerifiedSurfaceContext` integration boundaries"
-      - "`capability_profile` declaration boundaries"
-      - "agent context transfer boundaries"
-    not_owner_for:
-      - "Core local authority record model"
-      - "surface-specific recipes"
-      - "API method behavior"
-      - "API schema shapes"
-      - "security guarantee meanings"
-      - "projection authority"
-      - "rendered template wording"
-    normative_level: "contract"
-    audience:
-      - "agent integrators"
-      - "agents"
-      - "maintainers"
-
-  - doc_id: "reference.projection-and-templates"
-    path_en: "docs/en/reference/projection-and-templates.md"
-    path_ko: "docs/ko/reference/projection-and-templates.md"
-    role: "reference"
-    owner_for:
-      - "Projection authority boundaries"
-      - "Core authoritative records vs projected/status/template views"
-      - "derived display boundaries"
-      - "display labels are not canonical schema values"
-    not_owner_for:
-      - "exact template bodies"
-      - "API method behavior"
-      - "storage contracts"
-      - "surface registration"
-      - "capability declarations"
-    normative_level: "contract"
-    audience:
-      - "implementers"
-      - "agent integrators"
-      - "maintainers"
-
-  - doc_id: "reference.template-bodies"
-    path_en: "docs/en/reference/template-bodies.md"
-    path_ko: "docs/ko/reference/template-bodies.md"
-    role: "reference"
-    owner_for:
-      - "rendered template body guidance"
-      - "user-facing label wording"
-      - "display phrasing"
-      - "public-error display labels"
-      - "display wording versus Core authority record boundary"
-      - "display wording versus API error semantics boundary"
-    not_owner_for:
-      - "projection authority"
-      - "API schemas"
-      - "public ErrorCode identifiers or semantics"
-      - "error precedence"
-      - "response branch routing"
-      - "close-readiness blocker semantics or routing"
-      - "machine-readable error details"
-      - "storage record authority or layout"
-      - "storage contracts"
-      - "rendered bodies outside current template-body scope"
-    normative_level: "contract"
-    audience:
-      - "implementers"
-      - "maintainers"
-      - "translators"
-
-  - doc_id: "reference.conformance"
-    path_en: "docs/en/reference/conformance.md"
-    path_ko: "docs/ko/reference/conformance.md"
-    role: "reference"
-    owner_for:
-      - "conformance terminology"
-      - "documentation-level conformance criteria"
-      - "assertion authority boundaries"
-    not_owner_for:
-      - "API branches"
-      - "storage effects"
-      - "security guarantees"
-      - "close-readiness behavior"
-    normative_level: "contract"
-    audience:
-      - "implementers"
-      - "reviewers"
-      - "maintainers"
-
-  - doc_id: "reference.design-quality"
-    path_en: "docs/en/reference/design-quality.md"
-    path_ko: "docs/ko/reference/design-quality.md"
-    role: "reference"
-    owner_for:
-      - "design-quality finding semantics"
-      - "design-quality owner-boundary rules"
-      - "quality observation routing"
-      - "advisory severity boundary"
-    not_owner_for:
-      - "close effect authority"
-      - "independent close blockers"
-      - "Core close-readiness authority concepts"
-      - "method-specific blocker production"
-      - "design-policy validator catalogs"
-      - "acceptance decisions"
-    normative_level: "contract"
-    audience:
-      - "agents"
-      - "reviewers"
-      - "maintainers"
-
-  - doc_id: "maintain.authoring-guide"
-    path_en: "docs/en/maintain/authoring-guide.md"
-    path_ko: "docs/ko/maintain/authoring-guide.md"
-    role: "maintain"
-    owner_for:
-      - "documentation architecture rules"
-      - "canonical owner rule"
-      - "implementation-architecture maintenance rules"
-      - "durable implementation-documentation granularity rules"
-      - "durable example rules"
-      - "reader-oriented documentation type rules"
-      - "index and route-only document rules"
-      - "reference semantic skeleton rules"
-    not_owner_for:
-      - "product contracts"
-      - "API contracts"
-      - "storage contracts"
-      - "security guarantees"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "agents"
-
-  - doc_id: "maintain.translation-guide"
-    path_en: "docs/en/maintain/translation-guide.md"
-    path_ko: "docs/ko/maintain/translation-guide.md"
-    role: "maintain"
-    owner_for:
-      - "bilingual semantic parity rules"
-      - "bilingual terminology guidance"
-      - "Korean style guidance"
-      - "Korean technical writing rules"
-      - "identifier preservation guidance"
-      - "hidden anchor policy"
-    not_owner_for:
-      - "product contracts"
-      - "API contracts"
-      - "storage contracts"
-    depends_on:
-      - "terminology.map"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "translators"
-      - "agents"
-
-  - doc_id: "maintain.checks"
-    path_en: "docs/en/maintain/checks.md"
-    path_ko: "docs/ko/maintain/checks.md"
-    role: "maintain"
-    owner_for:
-      - "documentation checks index"
-      - "documentation-maintenance result label routing"
-      - "focused check page routing"
-    not_owner_for:
-      - "runtime conformance"
-      - "product acceptance"
-      - "API contracts"
-      - "storage contracts"
-    depends_on:
-      - "maintain.authoring-guide"
-      - "maintain.translation-guide"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "agents"
-
-  - doc_id: "maintain.checks.structure"
-    path_en: "docs/en/maintain/checks/structure.md"
-    path_ko: "docs/ko/maintain/checks/structure.md"
-    role: "maintain"
-    owner_for:
-      - "documentation structure checks"
-      - "canonical owner boundary checks"
-      - "owner granularity checks"
-      - "route-page shape checks"
-      - "reference semantic skeleton checks"
-      - "implementation-architecture alignment checks"
-      - "owner-map placement checks"
-      - "duplicate owner-map checks"
-      - "baseline and out-of-scope wording checks"
-      - "excluded-scope double-negative checks"
-      - "transient maintenance leftover checks"
-      - "documentation final report format"
-    not_owner_for:
-      - "runtime conformance"
-      - "product acceptance"
-      - "API contracts"
-      - "storage contracts"
-      - "security guarantees"
-    depends_on:
-      - "maintain.authoring-guide"
-      - "reference.index"
-      - "build.architecture"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "agents"
-
-  - doc_id: "maintain.checks.language-parity"
-    path_en: "docs/en/maintain/checks/language-parity.md"
-    path_ko: "docs/ko/maintain/checks/language-parity.md"
-    role: "maintain"
-    owner_for:
-      - "English and Korean semantic parity checks"
-      - "reference semantic skeleton parity checks"
-      - "paired heading parity checks"
-      - "identifier preservation checks"
-      - "Korean structure preservation checks"
-      - "Korean readability checks"
-    not_owner_for:
-      - "product contracts"
-      - "runtime conformance"
-      - "translation-only archive status"
-    depends_on:
-      - "maintain.translation-guide"
-      - "terminology.map"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "translators"
-      - "agents"
-
-  - doc_id: "maintain.checks.terminology"
-    path_en: "docs/en/maintain/checks/terminology.md"
-    path_ko: "docs/ko/maintain/checks/terminology.md"
-    role: "maintain"
-    owner_for:
-      - "terminology-map check procedures"
-      - "mixed-language Korean check procedures"
-      - "`active` versus supported or applicable wording checks"
-      - "`complete` ambiguity checks"
-      - "retired or unsupported concept-name checks"
-      - "close-readiness terminology checks"
-      - "surface and access wording checks"
-    not_owner_for:
-      - "product terminology definitions"
-      - "security guarantees"
-      - "API contracts"
-      - "runtime localization configuration"
-    depends_on:
-      - "terminology.map"
-      - "maintain.translation-guide"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "translators"
-      - "agents"
-
-  - doc_id: "maintain.checks.api-examples"
-    path_en: "docs/en/maintain/checks/api-examples.md"
-    path_ko: "docs/ko/maintain/checks/api-examples.md"
-    role: "maintain"
-    owner_for:
-      - "API example durability checks"
-      - "API example internal consistency checks"
-      - "API example field-name, required-field, and nullability consistency checks"
-      - "API example value-set and response-shape consistency checks"
-      - "API example owner-routing checks"
-      - "cross-method scenario spine detection for API method examples"
-    not_owner_for:
-      - "API method contracts"
-      - "API schema contracts"
-      - "runtime conformance"
-      - "product acceptance"
-    depends_on:
-      - "maintain.authoring-guide"
-      - "maintain.translation-guide"
-      - "reference.index"
-      - "reference.conformance"
-      - "reference.api.methods"
-      - "reference.api.schema-core"
-      - "reference.api.schema-state"
-      - "reference.api.schema-artifacts"
-      - "reference.api.schema-judgment"
-      - "reference.api.schema-value-sets"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "agents"
-
-  - doc_id: "maintain.checks.links-and-indexes"
-    path_en: "docs/en/maintain/checks/links-and-indexes.md"
-    path_ko: "docs/ko/maintain/checks/links-and-indexes.md"
-    role: "maintain"
-    owner_for:
-      - "link and anchor check procedures"
-      - "README and route index check procedures"
-      - "doc-index route metadata checks"
-      - "doc-index structure reference checks"
-      - "API error owner-routing checks"
-      - "method-router placement checks"
-      - "LLM retrieval route checks"
-    not_owner_for:
-      - "product contracts"
-      - "API contracts"
-      - "storage contracts"
-      - "security guarantees"
-    depends_on:
-      - "maintain.authoring-guide"
-      - "maintain.translation-guide"
-      - "docs.doc-index"
-    normative_level: "maintenance"
-    audience:
-      - "maintainers"
-      - "agents"
+- doc_id: docs.index
+  path_en: docs/en/README.md
+  path_ko: docs/ko/README.md
+  kind: landing
+  summary: Language-specific documentation entry point and reader-path router.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - all readers
+  journeys:
+  - evaluate
+  - learn
+- doc_id: start
+  path_en: docs/en/getting-started/overview.md
+  path_ko: docs/ko/getting-started/overview.md
+  kind: landing
+  summary: First-read product orientation for Harness, Core, and the local authority model.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - new users
+  - agents
+  - implementers
+  journeys:
+  - evaluate
+  - learn
+- doc_id: start.installation
+  path_en: docs/en/getting-started/installation.md
+  path_ko: docs/ko/getting-started/installation.md
+  kind: tutorial
+  summary: Source build, executable discovery, and installation verification tutorial.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - new users
+  - operators
+  - implementers
+  journeys:
+  - install
+  depends_on:
+  - reference.admin-cli
+  - reference.mcp-transport
+- doc_id: use.local-mcp-quickstart
+  path_en: docs/en/getting-started/quickstart.md
+  path_ko: docs/ko/getting-started/quickstart.md
+  kind: tutorial
+  summary: Shortest local MCP setup tutorial for a first successful run.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - new users
+  - operators
+  - agent integrators
+  journeys:
+  - install
+  - operate
+  depends_on:
+  - start.installation
+  - use.local-mcp-setup
+  - reference.admin-cli
+  - reference.mcp-transport
+- doc_id: use.user-guide
+  path_en: docs/en/guides/user-workflow.md
+  path_ko: docs/ko/guides/user-workflow.md
+  kind: how_to
+  summary: How-to guidance for user workflow and authority-aware work with Harness.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - users
+  - agents
+  journeys:
+  - operate
+- doc_id: use.agent-guide
+  path_en: docs/en/guides/agent-workflow.md
+  path_ko: docs/ko/guides/agent-workflow.md
+  kind: how_to
+  summary: How-to guidance for agents operating against Harness authority boundaries.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - agent operators
+  journeys:
+  - operate
+- doc_id: use.judgment-examples
+  path_en: docs/en/guides/judgment-examples.md
+  path_ko: docs/ko/guides/judgment-examples.md
+  kind: how_to
+  summary: Example-oriented guidance for user judgments and related workflow decisions.
+  normative_level: example
+  translation_policy: semantic_parity
+  primary_audience:
+  - users
+  - agents
+  - maintainers
+  journeys:
+  - operate
+- doc_id: use.surface-recipes
+  path_en: docs/en/guides/surface-recipes.md
+  path_ko: docs/ko/guides/surface-recipes.md
+  kind: how_to
+  summary: How-to recipes for using Harness surfaces and connector contexts.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - users
+  - agents
+  - connector authors
+  journeys:
+  - operate
+- doc_id: use.local-mcp-setup
+  path_en: docs/en/guides/local-mcp-setup.md
+  path_ko: docs/ko/guides/local-mcp-setup.md
+  kind: how_to
+  summary: Detailed how-to guidance for local MCP setup, operation, and troubleshooting.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - operators
+  - agent integrators
+  - implementers
+  journeys:
+  - operate
+  depends_on:
+  - reference.admin-cli
+  - reference.mcp-transport
+  - reference.runtime-boundaries
+  - reference.agent-integration
+  - reference.api.methods
+- doc_id: development.index
+  path_en: docs/en/development/README.md
+  path_ko: docs/ko/development/README.md
+  kind: landing
+  summary: Developer documentation landing page and implementation-learning route.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.codebase-tour
+  - development.request-lifecycle
+  - development.design-patterns
+  - development.storage-and-transactions
+  - development.testing-strategy
+  - development.decisions.index
+  - build.architecture
+  - build.implementation-guide
+  - reference.index
+  - reference.api.methods
+- doc_id: development.codebase-tour
+  path_en: docs/en/development/codebase-tour.md
+  path_ko: docs/ko/development/codebase-tour.md
+  kind: explanation
+  summary: Explanation of the repository and crate layout for source-code learners.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - build.architecture
+  - reference.index
+  - reference.api.methods
+- doc_id: development.request-lifecycle
+  path_en: docs/en/development/request-lifecycle.md
+  path_ko: docs/ko/development/request-lifecycle.md
+  kind: explanation
+  summary: Explanation of request flow from adapters through Core-facing behavior.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - build.architecture
+  - reference.api.methods
+  - reference.api.method-status
+  - reference.api.method-intake
+  - reference.api.method-prepare-write
+  - reference.storage-effects
+  - reference.mcp-transport
+  - reference.runtime-boundaries
+  - reference.core-model
+- doc_id: development.design-patterns
+  path_en: docs/en/development/design-patterns.md
+  path_ko: docs/ko/development/design-patterns.md
+  kind: explanation
+  summary: Explanation of durable implementation patterns and responsibility boundaries.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.index
+  - development.codebase-tour
+  - development.request-lifecycle
+  - development.testing-strategy
+  - build.architecture
+  - reference.index
+  - reference.api.methods
+  - reference.storage-effects
+- doc_id: development.storage-and-transactions
+  path_en: docs/en/development/storage-and-transactions.md
+  path_ko: docs/ko/development/storage-and-transactions.md
+  kind: explanation
+  summary: Explanation of storage and transaction architecture for implementers.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.index
+  - development.request-lifecycle
+  - development.design-patterns
+  - build.architecture
+  - reference.storage
+  - reference.storage-effects
+  - reference.storage-records
+  - reference.storage-ddl
+  - reference.storage-artifacts
+  - reference.storage-versioning
+  - reference.runtime-boundaries
+  - reference.admin-cli
+- doc_id: development.testing-strategy
+  path_en: docs/en/development/testing-strategy.md
+  path_ko: docs/ko/development/testing-strategy.md
+  kind: explanation
+  summary: Explanation of test organization and validation responsibilities.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.index
+  - development.codebase-tour
+  - development.design-patterns
+  - build.architecture
+  - reference.index
+  - reference.conformance
+- doc_id: development.decisions.index
+  path_en: docs/en/development/decisions/README.md
+  path_ko: docs/ko/development/decisions/README.md
+  kind: landing
+  summary: Architecture-decision record index for implementation rationale.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.decision.core-adapter-boundary
+  - development.decision.plan-and-atomic-commit
+  - development.decision.runtime-home-and-product-repository
+  - build.architecture
+- doc_id: development.decision.core-adapter-boundary
+  path_en: docs/en/development/decisions/core-adapter-boundary.md
+  path_ko: docs/ko/development/decisions/core-adapter-boundary.md
+  kind: explanation
+  summary: Architecture decision explaining the Core and adapter boundary.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.design-patterns
+  - build.architecture
+  - reference.api.methods
+  - reference.mcp-transport
+  - reference.admin-cli
+  - reference.agent-integration
+- doc_id: development.decision.plan-and-atomic-commit
+  path_en: docs/en/development/decisions/plan-and-atomic-commit.md
+  path_ko: docs/ko/development/decisions/plan-and-atomic-commit.md
+  kind: explanation
+  summary: Architecture decision explaining plan and atomic commit boundaries.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.storage-and-transactions
+  - development.design-patterns
+  - build.architecture
+  - reference.api.methods
+  - reference.storage-effects
+  - reference.storage-versioning
+- doc_id: development.decision.runtime-home-and-product-repository
+  path_en: docs/en/development/decisions/runtime-home-and-product-repository.md
+  path_ko: docs/ko/development/decisions/runtime-home-and-product-repository.md
+  kind: explanation
+  summary: Architecture decision explaining Runtime Home and Product Repository separation.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.storage-and-transactions
+  - build.architecture
+  - reference.runtime-boundaries
+  - reference.storage
+  - reference.storage-artifacts
+  - reference.admin-cli
+  - reference.security
+- doc_id: build.implementation-guide
+  path_en: docs/en/development/change-guide.md
+  path_ko: docs/ko/development/change-guide.md
+  kind: how_to
+  summary: How-to guidance for making implementation changes in the Rust workspace.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.index
+  - development.codebase-tour
+  - development.request-lifecycle
+  - development.design-patterns
+  - development.storage-and-transactions
+  - development.testing-strategy
+  - development.decisions.index
+  - build.architecture
+  - reference.index
+- doc_id: build.architecture
+  path_en: docs/en/development/architecture.md
+  path_ko: docs/ko/development/architecture.md
+  kind: explanation
+  summary: Durable explanation of workspace architecture, crate roles, and execution flow.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  journeys:
+  - learn
+  - implement
+  depends_on:
+  - development.index
+  - development.codebase-tour
+  - development.request-lifecycle
+  - development.design-patterns
+  - development.storage-and-transactions
+  - development.testing-strategy
+  - development.decisions.index
+  - reference.runtime-boundaries
+  - reference.admin-cli
+  - reference.mcp-transport
+  - reference.agent-integration
+  - reference.core-model
+  - reference.api.methods
+  - reference.storage
+  - reference.storage-effects
+  - reference.storage-versioning
+- doc_id: reference.index
+  path_en: docs/en/reference/README.md
+  path_ko: docs/ko/reference/README.md
+  kind: reference
+  summary: Human-readable Reference index for finding focused owner documents.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - implementers
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - human-readable reference index
+  - reader-facing reference navigation
+  - human-readable route to common reference owners
+  - reference family navigation
+- doc_id: reference.scope
+  path_en: docs/en/reference/scope.md
+  path_ko: docs/ko/reference/scope.md
+  kind: reference
+  summary: Reference contract for baseline, supported, profile-gated, reserved, and out-of-scope boundaries.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - implementers
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - baseline scope contract
+  - supported baseline boundary
+  - out-of-scope boundary
+  - profile-gated boundary
+  - reserved behavior boundary
+  - scope-level guarantee boundary
+- doc_id: reference.core-model
+  path_en: docs/en/reference/core-model.md
+  path_ko: docs/ko/reference/core-model.md
+  kind: reference
+  summary: Reference contract for Core authority records and state concepts.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - implementers
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - Core local authority record model for Harness state
+  - current scope and current Change Unit authority context
+  - lifecycle meaning
+  - close-readiness authority concepts
+  - user-owned judgment boundaries
+  - Write Authorization, approval, final-acceptance, and residual-risk non-substitution boundaries
+  - verification criteria and evidence/acceptance authority boundaries
+- doc_id: reference.runtime-boundaries
+  path_en: docs/en/reference/runtime-boundaries.md
+  path_ko: docs/ko/reference/runtime-boundaries.md
+  kind: reference
+  summary: Reference contract for runtime, repository, and local storage boundaries.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - implementers
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - Product Repository boundary
+  - Harness Runtime Home boundary
+  - Harness Server and runtime process boundary
+  - runtime, server, and repository separation
+- doc_id: reference.admin-cli
+  path_en: docs/en/reference/admin-cli.md
+  path_ko: docs/ko/reference/admin-cli.md
+  kind: reference
+  summary: Reference contract for administrative CLI behavior and local bootstrap commands.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - local `harness` administrative and bootstrap CLI command contract
+  - '`harness` command-line arguments, defaults, stdout and stderr routing, and exit codes'
+  - Runtime Home path selection rules for `harness` administrative commands
+  - administrative project registration command behavior
+  - administrative surface registration command behavior
+  - local MCP setup orchestration
+  - local MCP interactive setup orchestration
+  - local MCP setup option defaults
+  - local MCP setup project and surface conflict behavior
+  - local MCP setup dry-run behavior
+  - local MCP setup preview and cancellation guarantees
+  - local MCP setup storage preparation and migration sequencing
+  - local MCP setup post-preparation revalidation
+  - local MCP setup project-ID validation
+  - local MCP setup generated-configuration path validation
+  - local MCP setup partial-failure reporting
+  - local MCP setup output formats
+  - local MCP setup host-neutral configuration generation
+  - '`baseline-workflow` local registration profile expansion'
+  - administrative command boundary from public Harness API methods
+  depends_on:
+  - reference.runtime-boundaries
+  - reference.agent-integration
+  - reference.mcp-transport
+  - reference.api.methods
+  - reference.api.schema-value-sets
+- doc_id: reference.mcp-transport
+  path_en: docs/en/reference/mcp-transport.md
+  path_ko: docs/ko/reference/mcp-transport.md
+  kind: reference
+  summary: Reference contract for MCP transport startup, framing, and response wrapping.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - agent integrators
+  - implementers
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - local `harness-mcp` process command contract
+  - MCP stdio process startup and exit behavior
+  - MCP process environment variables
+  - MCP startup validation and fixed process binding
+  - MCP Runtime Home environment resolution
+  - line-delimited JSON-RPC over stdio
+  - MCP supported request method set
+  - '`tools/call` Harness response wrapping'
+  - MCP process shutdown and reconnection behavior
+  depends_on:
+  - reference.admin-cli
+  - reference.agent-integration
+  - reference.api.methods
+  - reference.api.schema-core
+  - reference.api.schema-value-sets
+  - reference.storage
+- doc_id: reference.security
+  path_en: docs/en/reference/security.md
+  path_ko: docs/ko/reference/security.md
+  kind: reference
+  summary: Reference contract for security wording, guarantees, and non-guarantees.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - implementers
+  - security reviewers
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - security guarantee wording
+  - access-boundary non-claims
+  - guarantee semantics
+- doc_id: reference.glossary
+  path_en: docs/en/reference/glossary.md
+  path_ko: docs/ko/reference/glossary.md
+  kind: reference
+  summary: Curated reader-facing glossary for selected Harness terms and owner routes.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - readers
+  - maintainers
+  - translators
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - compact human-readable term guidance for selected core reader-facing terms
+  - curated reader-facing glossary subset
+  - term-level primary owner links for selected glossary terms
+  depends_on:
+  - terminology.map
+- doc_id: reference.api.methods
+  path_en: docs/en/reference/api/methods.md
+  path_ko: docs/ko/reference/api/methods.md
+  kind: reference
+  summary: Reference contract for the supported public Harness API method list.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - supported public API method list
+  - human-readable API method owner routing
+- doc_id: reference.api.method-intake
+  path_en: docs/en/reference/api/method-intake.md
+  path_ko: docs/ko/reference/api/method-intake.md
+  kind: reference
+  summary: Reference contract for `harness.intake` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`harness.intake` behavior'
+  - '`IntakeResult` branch behavior'
+  - intake examples
+- doc_id: reference.api.method-update-scope
+  path_en: docs/en/reference/api/method-update-scope.md
+  path_ko: docs/ko/reference/api/method-update-scope.md
+  kind: reference
+  summary: Reference contract for `harness.update_scope` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`harness.update_scope` behavior'
+  - '`UpdateScopeResult` branch behavior'
+  - update-scope examples
+- doc_id: reference.api.method-status
+  path_en: docs/en/reference/api/method-status.md
+  path_ko: docs/ko/reference/api/method-status.md
+  kind: reference
+  summary: Reference contract for `harness.status` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`harness.status` behavior'
+  - '`StatusResult` branch behavior'
+  - status read-only behavior
+  - status examples
+- doc_id: reference.api.method-prepare-write
+  path_en: docs/en/reference/api/method-prepare-write.md
+  path_ko: docs/ko/reference/api/method-prepare-write.md
+  kind: reference
+  summary: Reference contract for `harness.prepare_write` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`harness.prepare_write` behavior'
+  - '`PrepareWriteResult` branch behavior'
+  - Write Authorization creation behavior
+  - method-specific sensitive-action approval handling
+- doc_id: reference.api.method-stage-artifact
+  path_en: docs/en/reference/api/method-stage-artifact.md
+  path_ko: docs/ko/reference/api/method-stage-artifact.md
+  kind: reference
+  summary: Reference contract for `harness.stage_artifact` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`harness.stage_artifact` behavior'
+  - '`StageArtifactResult` branch behavior'
+  - staged handle result behavior
+- doc_id: reference.api.method-record-run
+  path_en: docs/en/reference/api/method-record-run.md
+  path_ko: docs/ko/reference/api/method-record-run.md
+  kind: reference
+  summary: Reference contract for `harness.record_run` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`harness.record_run` behavior'
+  - '`RecordRunResult` branch behavior'
+  - run and evidence method behavior
+  - artifact promotion method behavior
+- doc_id: reference.api.method-request-user-judgment
+  path_en: docs/en/reference/api/method-request-user-judgment.md
+  path_ko: docs/ko/reference/api/method-request-user-judgment.md
+  kind: reference
+  summary: Reference contract for `harness.request_user_judgment` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`harness.request_user_judgment` behavior'
+  - '`RequestUserJudgmentResult` branch behavior'
+  - pending user-owned judgment request behavior
+- doc_id: reference.api.method-record-user-judgment
+  path_en: docs/en/reference/api/method-record-user-judgment.md
+  path_ko: docs/ko/reference/api/method-record-user-judgment.md
+  kind: reference
+  summary: Reference contract for `harness.record_user_judgment` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`harness.record_user_judgment` behavior'
+  - '`RecordUserJudgmentResult` branch behavior'
+  - user-owned judgment answer recording behavior
+- doc_id: reference.api.method-close-task
+  path_en: docs/en/reference/api/method-close-task.md
+  path_ko: docs/ko/reference/api/method-close-task.md
+  kind: reference
+  summary: Reference contract for `harness.close_task` behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - close task API method term
+  - '`harness.close_task` public method identifier'
+  - '`harness.close_task` method-specific behavior'
+  - '`CloseTaskResult` method result branch behavior'
+  - method-specific close-readiness evaluation order
+  - method-specific blocker-producing branches
+  - method-specific `CloseReadinessBlocker.code` production behavior
+  - close-task examples
+- doc_id: reference.api.schema-core
+  path_en: docs/en/reference/api/schema-core.md
+  path_ko: docs/ko/reference/api/schema-core.md
+  kind: reference
+  summary: Reference contract for core API schema families.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - common API request envelopes
+  - common API response branches
+  - dry-run response shapes
+  - shared API error envelope shapes
+- doc_id: reference.api.schema-state
+  path_en: docs/en/reference/api/schema-state.md
+  path_ko: docs/ko/reference/api/schema-state.md
+  kind: reference
+  summary: Reference contract for state API schema families.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - state schemas
+  - close-readiness state shapes
+  - '`CloseReadinessBlocker` shape'
+  - '`CloseReadinessBlocker` fields and nesting'
+- doc_id: reference.api.schema-artifacts
+  path_en: docs/en/reference/api/schema-artifacts.md
+  path_ko: docs/ko/reference/api/schema-artifacts.md
+  kind: reference
+  summary: Reference contract for artifact API schema families.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - artifact reference schemas
+  - '`ArtifactInput` shape'
+  - '`StagedArtifactHandle` shape'
+- doc_id: reference.api.schema-judgment
+  path_en: docs/en/reference/api/schema-judgment.md
+  path_ko: docs/ko/reference/api/schema-judgment.md
+  kind: reference
+  summary: Reference contract for judgment API schema families.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - user judgment schemas
+  - sensitive-action approval schemas
+  - accepted-risk input shapes
+  - judgment-shaped API data for approvals and acceptance
+- doc_id: reference.api.schema-value-sets
+  path_en: docs/en/reference/api/schema-value-sets.md
+  path_ko: docs/ko/reference/api/schema-value-sets.md
+  kind: reference
+  summary: Reference contract for API value sets and value meanings.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - public API value sets
+  - blocker category values
+  - method-name values
+  - access-class values
+  - '`CloseReadinessBlocker.category` values'
+  - enum-like API vocabulary
+- doc_id: reference.api.errors
+  path_en: docs/en/reference/api/errors.md
+  path_ko: docs/ko/reference/api/errors.md
+  kind: reference
+  summary: Reference route for API error families and focused error owners.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - API error reference family index
+  - first-hop routing to focused API error owners
+  - human-readable API error navigation
+  - first-hop API error reference navigation
+  depends_on:
+  - reference.api.error-codes
+  - reference.api.error-precedence
+  - reference.api.error-routing
+  - reference.api.blocker-routing
+  - reference.api.error-details
+  - reference.api.schema-state
+  - reference.api.schema-value-sets
+  - reference.api.method-close-task
+- doc_id: reference.api.error-codes
+  path_en: docs/en/reference/api/error-codes.md
+  path_ko: docs/ko/reference/api/error-codes.md
+  kind: reference
+  summary: Reference contract for public API error-code meanings.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - public `ErrorCode` identifiers and meanings
+- doc_id: reference.api.error-precedence
+  path_en: docs/en/reference/api/error-precedence.md
+  path_ko: docs/ko/reference/api/error-precedence.md
+  kind: reference
+  summary: Reference contract for API error precedence.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - public error selection precedence
+  - primary `ErrorCode` selection
+  - '`STATE_VERSION_CONFLICT` conflict selection'
+  - stale-state conflict behavior
+  - idempotency request-hash conflict behavior
+- doc_id: reference.api.error-routing
+  path_en: docs/en/reference/api/error-routing.md
+  path_ko: docs/ko/reference/api/error-routing.md
+  kind: reference
+  summary: Reference contract for API error response routing.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - API response branch routing
+  - rejected response branch routing
+  - blocked result response branch routing
+  - '`dry_run` preview response branch routing'
+- doc_id: reference.api.blocker-routing
+  path_en: docs/en/reference/api/blocker-routing.md
+  path_ko: docs/ko/reference/api/blocker-routing.md
+  kind: reference
+  summary: Reference contract for blocker routing in API responses.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - close-readiness blocker terminology
+  - blocker routing
+  - close-readiness blocker/API response boundary
+  - error/blocker boundary for close-readiness blocker data
+  - public-code-to-blocker boundary
+- doc_id: reference.api.error-details
+  path_en: docs/en/reference/api/error-details.md
+  path_ko: docs/ko/reference/api/error-details.md
+  kind: reference
+  summary: Reference contract for machine-readable API error details.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - API implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - '`ToolError.details` fields and semantics'
+  - error detail helper values
+  - state conflict detail fields
+  - machine-readable error detail constraints
+- doc_id: reference.storage
+  path_en: docs/en/reference/storage.md
+  path_ko: docs/ko/reference/storage.md
+  kind: reference
+  summary: Reference route for storage contracts and storage owner documents.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - storage family routing
+  - storage owner reading order
+  - human-readable storage owner navigation
+- doc_id: reference.storage-records
+  path_en: docs/en/reference/storage-records.md
+  path_ko: docs/ko/reference/storage-records.md
+  kind: reference
+  summary: Reference contract for storage record families.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - storage implementers
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - baseline persisted record families
+  - storage location and record-family overview
+  - table overview
+  - storage-owned record values
+  - storage-owned JSON placement
+- doc_id: reference.storage-ddl
+  path_en: docs/en/reference/storage-ddl.md
+  path_ko: docs/ko/reference/storage-ddl.md
+  kind: reference
+  summary: Reference contract for storage DDL.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - storage implementers
+  - API implementers
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - baseline SQLite DDL
+  - '`registry.sqlite` schema shape'
+  - project `state.sqlite` schema shape
+  - baseline SQLite indexes, foreign keys, migration tables, and constraints
+  - storage constraints for state clock columns, replay rows, current Change Unit uniqueness, Write Authorization basis versions, and staged artifact provenance
+- doc_id: reference.storage-effects
+  path_en: docs/en/reference/storage-effects.md
+  path_ko: docs/ko/reference/storage-effects.md
+  kind: reference
+  summary: Reference contract for storage effects.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - storage implementers
+  - API implementers
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - method-to-storage effects
+  - read-only and dry-run storage effects
+  - rejected and blocked branch storage effects
+- doc_id: reference.storage-artifacts
+  path_en: docs/en/reference/storage-artifacts.md
+  path_ko: docs/ko/reference/storage-artifacts.md
+  kind: reference
+  summary: Reference contract for artifact storage behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - storage implementers
+  - API implementers
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - artifact storage lifecycle
+  - staging validation
+  - artifact promotion
+  - artifact body-read boundaries
+- doc_id: reference.storage-versioning
+  path_en: docs/en/reference/storage-versioning.md
+  path_ko: docs/ko/reference/storage-versioning.md
+  kind: reference
+  summary: Reference contract for storage versioning.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - storage implementers
+  - maintainers
+  journeys:
+  - implement
+  - operate
+  canonical_for:
+  - state versioning
+  - idempotency and replay rows
+  - storage locking
+  - migration boundaries
+- doc_id: reference.agent-integration
+  path_en: docs/en/reference/agent-integration.md
+  path_ko: docs/ko/reference/agent-integration.md
+  kind: reference
+  summary: Reference contract for agent integration and context boundaries.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - agent integrators
+  - agents
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - surface registration
+  - current surface context
+  - currently applied surface context boundaries
+  - '`VerifiedSurfaceContext` integration boundaries'
+  - '`capability_profile` declaration boundaries'
+  - agent context transfer boundaries
+- doc_id: reference.projection-and-templates
+  path_en: docs/en/reference/projection-and-templates.md
+  path_ko: docs/ko/reference/projection-and-templates.md
+  kind: reference
+  summary: Reference contract for Projection authority and template behavior.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - agent integrators
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - Projection authority boundaries
+  - Core authoritative records vs projected/status/template views
+  - derived display boundaries
+  - display labels are not canonical schema values
+- doc_id: reference.template-bodies
+  path_en: docs/en/reference/template-bodies.md
+  path_ko: docs/ko/reference/template-bodies.md
+  kind: reference
+  summary: Reference contract for exact template body ownership.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - maintainers
+  - translators
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - rendered template body guidance
+  - user-facing label wording
+  - display phrasing
+  - public-error display labels
+  - display wording versus Core authority record boundary
+  - display wording versus API error semantics boundary
+- doc_id: reference.conformance
+  path_en: docs/en/reference/conformance.md
+  path_ko: docs/ko/reference/conformance.md
+  kind: reference
+  summary: Reference contract for conformance scenario scope and meaning.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - implementers
+  - reviewers
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - conformance terminology
+  - documentation-level conformance criteria
+  - assertion authority boundaries
+- doc_id: reference.design-quality
+  path_en: docs/en/reference/design-quality.md
+  path_ko: docs/ko/reference/design-quality.md
+  kind: reference
+  summary: Reference contract for design-quality boundaries and review concepts.
+  normative_level: contract
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - reviewers
+  - maintainers
+  journeys:
+  - operate
+  - implement
+  canonical_for:
+  - design-quality finding semantics
+  - design-quality owner-boundary rules
+  - quality observation routing
+  - advisory severity boundary
+- doc_id: maintain.documentation-policy
+  path_en: docs/en/maintain/documentation-policy.md
+  path_ko: docs/ko/maintain/documentation-policy.md
+  kind: maintenance
+  summary: Maintenance policy for document kinds, owner boundaries, examples, durable content, and scoped working rules.
+  normative_level: maintenance
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - maintainers
+  - translators
+  journeys:
+  - maintain
+  canonical_for:
+  - Documentation governance policy for document kinds and owner boundaries.
+  - Durable authoring rules for examples, source-code links, generated output, and scoped AGENTS.md interaction.
+  depends_on:
+  - docs.doc-index
+  - terminology.map
+  - reference.index
+  - build.architecture
+- doc_id: maintain.translation-policy
+  path_en: docs/en/maintain/translation-policy.md
+  path_ko: docs/ko/maintain/translation-policy.md
+  kind: maintenance
+  summary: Maintenance policy for English/Korean semantic parity, Korean prose, identifiers, terminology, and paired updates.
+  normative_level: maintenance
+  translation_policy: semantic_parity
+  primary_audience:
+  - maintainers
+  - translators
+  - agents
+  journeys:
+  - maintain
+  canonical_for:
+  - Bilingual semantic-parity policy for maintained English and Korean documentation.
+  - Natural Korean technical prose, exact identifier preservation, terminology-map usage, and paired update completion expectations.
+  depends_on:
+  - terminology.map
+- doc_id: maintain.validation
+  path_en: docs/en/maintain/validation.md
+  path_ko: docs/ko/maintain/validation.md
+  kind: maintenance
+  summary: Maintenance policy for structural checks, human semantic review, Rust validation, and result reporting.
+  normative_level: maintenance
+  translation_policy: semantic_parity
+  primary_audience:
+  - agents
+  - maintainers
+  - implementers
+  - translators
+  journeys:
+  - maintain
+  canonical_for:
+  - Documentation metadata, path, link, terminology, bilingual, contract-boundary, API example, and reporting validation policy.
+  - Rust validation routing for documentation work that also changes implementation files.
+  depends_on:
+  - maintain.documentation-policy
+  - maintain.translation-policy
+  - docs.doc-index
+  - terminology.map

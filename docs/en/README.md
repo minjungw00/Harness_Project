@@ -16,6 +16,6 @@ This is the English entry point for the Harness documentation set. Start with th
 - Agents: [Agent Guide](guides/agent-workflow.md), with repository working rules in [AGENTS.md](../../AGENTS.md)
 - Source-code learners: [Developer Documentation](development/README.md), then [Codebase Tour](development/codebase-tour.md), [Request Lifecycle](development/request-lifecycle.md), and [Architecture](development/architecture.md)
 - Reference readers: [Reference Index](reference/README.md)
-- Documentation maintainers: [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain/translation-guide.md), [Checks Index](maintain/checks.md), [doc-index.yaml](../doc-index.yaml), and [Terminology Map](../terminology-map.yaml)
+- Documentation maintainers: [Documentation Policy](maintain/documentation-policy.md), [Translation Policy](maintain/translation-policy.md), [Validation](maintain/validation.md), [doc-index.yaml](../doc-index.yaml), and [Terminology Map](../terminology-map.yaml)
 
 Reader pages explain, orient, and sequence work. Exact product contracts live in Reference documents. For human-readable reference navigation, use the [Reference Index](reference/README.md). For exact machine-readable owner routing during maintenance, use [doc-index.yaml](../doc-index.yaml).

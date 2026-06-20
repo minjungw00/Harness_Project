@@ -1,0 +1,116 @@
+# Documentation policy
+
+Use this policy when changing maintained Harness documentation. It defines the
+documentation governance model for authors, reviewers, translators, and agents.
+
+This is a maintenance policy. It does not define product behavior, API
+behavior, storage effects, security guarantees, runtime behavior, schemas, Core
+authority semantics, conformance results, QA results, acceptance decisions,
+close-readiness state, or residual-risk decisions.
+
+## Metadata And Document Kinds
+
+Use [`docs/doc-index.yaml`](../../doc-index.yaml) as the machine-readable route
+for maintained documentation. Version 2 metadata records `doc_id`, maintained
+paths, document `kind`, summary, normative level, translation policy, primary
+audience, reader journeys, focused `canonical_for` ownership where needed, and
+`depends_on` relationships.
+
+Use these document kinds by reader purpose:
+
+- `landing`: introduces a product, repository, or documentation area.
+- `tutorial`: leads a reader through an executable sequence.
+- `how_to`: explains how to complete a concrete task.
+- `explanation`: teaches concepts, architecture, rationale, or code structure.
+- `reference`: owns exact product contracts or routes readers within Reference.
+- `maintenance`: guides documentation authors, translators, reviewers, and
+  agents.
+
+Most landing, tutorial, how-to, and explanation documents should not carry
+`canonical_for`. Use `canonical_for` only when the document is a stable owner of
+a defined subject, especially focused Reference contracts and maintenance
+policies.
+
+Use [`docs/terminology-map.yaml`](../../terminology-map.yaml) as the structured
+terminology and identifier-preservation source of truth. The terminology map
+does not define API, storage, schema, security, projection, or runtime behavior.
+
+## Ownership Boundaries
+
+Exact product contracts stay in the focused Reference owners selected from
+`doc-index.yaml` or the [Reference Index](../reference/README.md). This
+includes baseline scope, API behavior, schema meaning, error meaning, storage
+effects, security wording, access boundaries, close-readiness meaning, product
+terminology, out-of-scope promotion rules, and value-set meaning.
+
+Reader-facing documents may summarize, explain, teach, or sequence contract
+material, but they must link to the focused Reference owner when exact behavior
+matters. Do not turn a guide, tutorial, how-to, explanation, README, route page,
+Maintain page, `AGENTS.md`, example, implementation comment, test, fixture, CLI
+help, or generated output into a second contract body.
+
+Treat duplication by information ownership, not by wording similarity. Repeating
+short orientation prose can be useful. Repeating API behavior, schema fields,
+storage effects, security guarantees, value meanings, or owner maps creates
+competing authority unless the repeated material belongs to that document.
+
+If no focused owner exists for a needed normative meaning, report the owner gap
+or update the applicable owner first. Do not fill the gap in a non-owner
+document.
+
+Keep baseline behavior separate from reserved, profile-gated, and out-of-scope
+material. A value name can appear in schemas, examples, storage notes, or route
+pages without becoming baseline behavior.
+
+## Examples And Source Links
+
+Examples should be stable, self-contained product or user scenarios. They show
+the documented shape without creating product policy.
+
+API method reference examples must be method-local. Introduce every required
+ref, `state_version` fact, artifact ref, run ref, judgment ref, blocker ref, and
+file path inside the method document or state it as a method-local precondition.
+Do not build a shared cross-method scenario spine across method reference pages.
+
+Review examples against method owners, schema owners, value-set owners, and
+storage-effect owners where relevant. Unsupported enum-like values, stale
+response shapes, mismatched required fields, and inconsistent response branches
+are documentation failures.
+
+Source-code links and developer-learning prose should describe durable crates,
+modules, entry points, execution stages, and responsibility boundaries. Avoid
+line-number-dependent explanations, private helper catalogs, and implementation
+history. When code structure changes durably, update the relevant Development
+document, especially [Architecture](../development/architecture.md), in the same
+documentation batch.
+
+## Durable Maintained Content
+
+Maintained documentation should describe the stable current model. Do not store
+task history, PR notes, migration narratives, scratch notes, generated runtime
+records, archive copies, conversion notes, unresolved review notes, work logs,
+or task-specific follow-up plans in maintained documentation.
+
+Maintained documentation, shared metadata, README files, and `AGENTS.md` files
+are not Harness runtime homes. Do not store runtime data, generated logs, SQLite
+files, product runtime homes, test runtime homes, generated projections, fixture
+output, QA results, acceptance records, close-readiness state, or residual-risk
+records in them.
+
+If a documentation tool creates temporary output during editing or validation,
+remove it before finishing unless it is ordinary ignored build output.
+
+## Scoped Working Rules
+
+Read the root [`AGENTS.md`](../../../AGENTS.md) before changing repository files.
+Under `docs/`, also read [`docs/AGENTS.md`](../../AGENTS.md). For work that
+crosses documentation and Rust implementation boundaries, also read
+[`crates/AGENTS.md`](../../../crates/AGENTS.md).
+
+`AGENTS.md` files are repository working guidance. They do not define product
+contracts, runtime behavior, API behavior, storage effects, security guarantees,
+or Core authority semantics.
+
+When adding, removing, renaming, or repurposing a maintained document, update
+`doc-index.yaml`, paired-language routes, reader navigation, terminology paths,
+and links in the same change.

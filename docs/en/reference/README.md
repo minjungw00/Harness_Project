@@ -1,6 +1,6 @@
 # Reference index
 
-Use this human-readable index to choose the next owner document for a Harness reference question. For the exact machine-readable owner route, use [`docs/doc-index.yaml`](../../doc-index.yaml); it owns `doc_id`, paired paths, roles, owner scope, dependencies, normative level, and audience metadata.
+Use this human-readable index to choose the next owner document for a Harness reference question. For the exact machine-readable owner route, use [`docs/doc-index.yaml`](../../doc-index.yaml); it owns `doc_id`, maintained paths, document kind, focused `canonical_for` scope, dependencies, normative level, primary audience, reader journeys, and translation policy metadata.
 
 This README is route-only. It does not define term meanings, terminology metadata, API behavior, error meaning, error precedence, response branch routing, blocker routing, storage effects, schema shapes, security guarantees, or Core authority semantics.
 
@@ -27,6 +27,6 @@ This README is route-only. It does not define term meanings, terminology metadat
 ## Maintenance Routes
 
 - Repository editing rules: [`AGENTS.md`](../../../AGENTS.md).
-- Authoring rules: [Authoring Guide](../maintain/authoring-guide.md).
-- Documentation checks: [Checks](../maintain/checks.md).
-- English/Korean wording and Korean style: [Translation Guide](../maintain/translation-guide.md).
+- Documentation governance: [Documentation Policy](../maintain/documentation-policy.md).
+- Documentation validation: [Validation](../maintain/validation.md).
+- English/Korean wording and Korean style: [Translation Policy](../maintain/translation-policy.md).

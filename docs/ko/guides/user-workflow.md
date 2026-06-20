@@ -174,4 +174,4 @@
 | 작업 중인 사용자 | [판단 예시](judgment-examples.md) -> [기준 범위](../reference/scope.md) |
 | 에이전트 작성자·운영자 | [에이전트 가이드](agent-workflow.md) -> [에이전트 통합 참조](../reference/agent-integration.md) |
 | 구현 담당자 | [참조 색인](../reference/README.md) -> 기준 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
-| 문서 유지보수자 | [작성 가이드](../maintain/authoring-guide.md) -> [번역 가이드](../maintain/translation-guide.md) -> [점검](../maintain/checks.md) |
+| 문서 유지보수자 | [문서 정책](../maintain/documentation-policy.md) -> [번역 정책](../maintain/translation-policy.md) -> [검증](../maintain/validation.md) |

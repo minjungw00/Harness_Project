@@ -15,7 +15,7 @@
 
 주제별 담당 문서 찾기는 [참조 색인](README.md)을 사용합니다. `doc_id` 기준의 정확한 기계 판독 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다.
 
-계약 세부사항은 각각의 집중 담당 문서에서 확인합니다. 번역과 문체 규칙은 [번역 가이드](../maintain/translation-guide.md)에 둡니다.
+계약 세부사항은 각각의 집중 담당 문서에서 확인합니다. 번역과 문체 규칙은 [번역 정책](../maintain/translation-policy.md)에 둡니다.
 
 ## 용어
 
@@ -29,8 +29,8 @@
 | runtime | 런타임 | 하네스의 운영 실행과 데이터 맥락입니다. | [런타임 경계](runtime-boundaries.md) |
 | baseline scope | 기준 범위 | 하네스가 안정적으로 지원한다고 문서화한 경계입니다. | [기준 범위](scope.md) |
 | out-of-scope capability | 지원 범위 밖 기능 | 기준 지원 경계 밖에 있는 유예된 기능입니다. | [기준 범위](scope.md) |
-| owner document | 담당 문서 | 용어, 제품 개념, 계약을 정의하는 기준 문서입니다. | [작성 가이드](../maintain/authoring-guide.md) |
-| applicable owner path | 적용되는 담당 경로 | 질문이나 개념에 맞는 집중 담당 문서로 가는 문서 경로입니다. | [작성 가이드](../maintain/authoring-guide.md) |
+| owner document | 담당 문서 | 용어, 제품 개념, 계약을 정의하는 기준 문서입니다. | [문서 정책](../maintain/documentation-policy.md) |
+| applicable owner path | 적용되는 담당 경로 | 질문이나 개념에 맞는 집중 담당 문서로 가는 문서 경로입니다. | [문서 정책](../maintain/documentation-policy.md) |
 | `Task` | `Task` | 범위, 권한 맥락, 판단, 증거, 닫기 준비 상태를 묶는 하네스 개체입니다. | [Core 모델](core-model.md) |
 | scope | 범위 | `Task` 또는 Change Unit 맥락에 붙는 작업 또는 권한 경계입니다. | [Core 모델](core-model.md) |
 | current scope | 현재 적용 범위 | `Task` 또는 Change Unit 맥락 안에서 현재 적용되는 범위입니다. | [Core 모델](core-model.md) |

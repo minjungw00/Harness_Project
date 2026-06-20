@@ -212,7 +212,7 @@ VerifiedActorContext:
 담당 문서 링크:
 - [템플릿 본문](template-bodies.md)은 에이전트 맥락 패킷 문구를 담당합니다.
 - [참조 색인](README.md)은 정확한 담당 문서 섹션 경로를 안내합니다.
-- [번역 가이드](../maintain/translation-guide.md)는 한영 의미 일치 검토 지침을 담당합니다.
+- [번역 정책](../maintain/translation-policy.md)은 한영 의미 일치 검토 지침을 담당합니다.
 
 ## 대체 경계
 

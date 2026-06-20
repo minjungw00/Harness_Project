@@ -90,6 +90,6 @@ decisions.
 - Use narrower Cargo commands only when the repository structure or task scope
   clearly calls for them, and report the reason.
 - When implementation work also changes maintained documentation, run the
-  applicable documentation checks from `docs/*/maintain/checks.md`.
+  applicable documentation validation from `docs/*/maintain/validation.md`.
 - If no Rust source, Cargo manifest, test, fixture, or build configuration is
   changed, Rust validation is not required.

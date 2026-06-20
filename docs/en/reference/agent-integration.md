@@ -211,7 +211,7 @@ Agent must not:
 Owner links:
 - [Template Bodies](template-bodies.md) owns agent context packet wording.
 - [Reference Index](README.md) routes exact owner sections.
-- [Translation Guide](../maintain/translation-guide.md) owns bilingual semantic-parity review guidance.
+- [Translation Policy](../maintain/translation-policy.md) owns bilingual semantic-parity review guidance.
 
 ## Fallback boundary
 

@@ -38,9 +38,9 @@ related_documents:
   glossary:
     en: "docs/en/reference/glossary.md"
     ko: "docs/ko/reference/glossary.md"
-  translation_guide:
-    en: "docs/en/maintain/translation-guide.md"
-    ko: "docs/ko/maintain/translation-guide.md"
+  translation_policy:
+    en: "docs/en/maintain/translation-policy.md"
+    ko: "docs/ko/maintain/translation-policy.md"
 related_metadata:
   doc_index: "docs/doc-index.yaml"
 term_entry_schema:
@@ -372,8 +372,8 @@ terms:
     ko_reference: "문서"
     ko_user: "문서"
     primary_owner:
-      en: "docs/en/maintain/authoring-guide.md"
-      ko: "docs/ko/maintain/authoring-guide.md"
+      en: "docs/en/maintain/documentation-policy.md"
+      ko: "docs/ko/maintain/documentation-policy.md"
     related_references:
       - en: "docs/en/reference/runtime-boundaries.md"
         ko: "docs/ko/reference/runtime-boundaries.md"
@@ -387,13 +387,11 @@ terms:
     ko_reference: "의미 골격"
     ko_user: "의미 골격"
     primary_owner:
-      en: "docs/en/maintain/authoring-guide.md"
-      ko: "docs/ko/maintain/authoring-guide.md"
+      en: "docs/en/maintain/documentation-policy.md"
+      ko: "docs/ko/maintain/documentation-policy.md"
     related_references:
-      - en: "docs/en/maintain/checks/structure.md"
-        ko: "docs/ko/maintain/checks/structure.md"
-      - en: "docs/en/maintain/checks/language-parity.md"
-        ko: "docs/ko/maintain/checks/language-parity.md"
+      - en: "docs/en/maintain/validation.md"
+        ko: "docs/ko/maintain/validation.md"
     notes:
       - "A semantic skeleton is an authoring control for important Reference sections, not a product contract or runtime behavior."
   baseline_scope:
@@ -542,8 +540,8 @@ terms:
     ko_reference: "담당 문서"
     ko_user: "담당 문서"
     primary_owner:
-      en: "docs/en/maintain/authoring-guide.md"
-      ko: "docs/ko/maintain/authoring-guide.md"
+      en: "docs/en/maintain/documentation-policy.md"
+      ko: "docs/ko/maintain/documentation-policy.md"
     related_references:
       - en: "docs/en/reference/README.md"
         ko: "docs/ko/reference/README.md"
@@ -556,8 +554,8 @@ terms:
     ko_reference: "담당 계약"
     ko_user: "담당 계약"
     primary_owner:
-      en: "docs/en/maintain/authoring-guide.md"
-      ko: "docs/ko/maintain/authoring-guide.md"
+      en: "docs/en/maintain/documentation-policy.md"
+      ko: "docs/ko/maintain/documentation-policy.md"
     related_references: []
     notes:
       - "Use when a product behavior or close effect depends on the contract defined by the relevant owner document."
@@ -569,8 +567,8 @@ terms:
     ko_reference: "적용되는 담당 경로"
     ko_user: "적용되는 담당 경로"
     primary_owner:
-      en: "docs/en/maintain/authoring-guide.md"
-      ko: "docs/ko/maintain/authoring-guide.md"
+      en: "docs/en/maintain/documentation-policy.md"
+      ko: "docs/ko/maintain/documentation-policy.md"
     related_references:
       - en: "docs/en/reference/README.md"
         ko: "docs/ko/reference/README.md"
@@ -591,8 +589,8 @@ terms:
       en: "docs/en/reference/README.md"
       ko: "docs/ko/reference/README.md"
     related_references:
-      - en: "docs/en/maintain/authoring-guide.md"
-        ko: "docs/ko/maintain/authoring-guide.md"
+      - en: "docs/en/maintain/documentation-policy.md"
+        ko: "docs/ko/maintain/documentation-policy.md"
     notes:
       - "Use when prose needs to point product behavior to the reference document that defines the relevant contract."
       - "This is documentation routing shorthand; it is not a runtime record, state value, or storage condition."
@@ -605,8 +603,8 @@ terms:
       - "existing canonical owner"
       - "existing owner document"
     primary_owner:
-      en: "docs/en/maintain/authoring-guide.md"
-      ko: "docs/ko/maintain/authoring-guide.md"
+      en: "docs/en/maintain/documentation-policy.md"
+      ko: "docs/ko/maintain/documentation-policy.md"
     related_references:
       - en: "docs/en/reference/README.md"
         ko: "docs/ko/reference/README.md"
@@ -624,8 +622,8 @@ terms:
       en: "docs/en/reference/scope.md"
       ko: "docs/ko/reference/scope.md"
     related_references:
-      - en: "docs/en/maintain/authoring-guide.md"
-        ko: "docs/ko/maintain/authoring-guide.md"
+      - en: "docs/en/maintain/documentation-policy.md"
+        ko: "docs/ko/maintain/documentation-policy.md"
     notes:
       - "This means the owner does not exist as a baseline contract owner before promotion."
       - "Do not name a missing owner as if it is an existing canonical owner."
@@ -636,8 +634,8 @@ terms:
     ko_reference: "담당 문서 자리표시자"
     ko_user: "담당 문서 자리표시자"
     primary_owner:
-      en: "docs/en/maintain/authoring-guide.md"
-      ko: "docs/ko/maintain/authoring-guide.md"
+      en: "docs/en/maintain/documentation-policy.md"
+      ko: "docs/ko/maintain/documentation-policy.md"
     related_references:
       - en: "docs/en/reference/scope.md"
         ko: "docs/ko/reference/scope.md"
@@ -971,8 +969,8 @@ terms:
       en: "docs/terminology-map.yaml"
       ko: "docs/terminology-map.yaml"
     related_references:
-      - en: "docs/en/maintain/translation-guide.md"
-        ko: "docs/ko/maintain/translation-guide.md"
+      - en: "docs/en/maintain/translation-policy.md"
+        ko: "docs/ko/maintain/translation-policy.md"
     notes:
       - "Do not preserve the English word `complete` when it means full or entire rather than an enum value."
       - "Use 전체, 전체 평가, or 전체 평가 순서 for ordinary prose meaning."

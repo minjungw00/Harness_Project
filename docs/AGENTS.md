@@ -21,17 +21,19 @@ residual-risk decisions.
 ## First Reads
 
 - Use `docs/doc-index.yaml` as the machine-readable owner route for maintained
-  documentation. It owns `doc_id`, paired paths, document role, owner scope,
-  non-owner scope, dependencies, normative level, and audience metadata.
+  documentation. It owns `doc_id`, maintained paths, document kind, focused
+  `canonical_for` scope, dependencies, normative level, primary audience,
+  reader journeys, and translation policy metadata.
 - Use `docs/terminology-map.yaml` as the terminology and
   identifier-preservation source of truth.
 - For English-facing documentation edits, read
-  `docs/en/maintain/authoring-guide.md`.
+  `docs/en/maintain/documentation-policy.md`.
 - For Korean-facing documentation edits, read
-  `docs/ko/maintain/authoring-guide.md`.
+  `docs/ko/maintain/documentation-policy.md`.
 - For bilingual edits, translation review, parity review, or
-  terminology-affecting edits, read both authoring guides, the translation
-  guides, `docs/terminology-map.yaml`, and the relevant glossary entries.
+  terminology-affecting edits, read both documentation policies, both
+  translation policies, `docs/terminology-map.yaml`, and the relevant glossary
+  entries.
 - For ordinary readers, prefer reader-facing entry points such as README,
   Getting Started, Guides, Development, and Reference pages. Do not require
   ordinary readers to start from `docs/doc-index.yaml`.
@@ -55,9 +57,10 @@ broad filename family.
 - Reference documents own exact product contracts for their focused scope.
 - Maintenance documents guide authors, translators, reviewers, and agents.
   They may own documentation process, metadata use, and check procedures.
-- Index and route-only documents help readers choose a next document. Limit
-  navigation-only behavior to pages whose purpose and owner metadata are
-  actually index or route-only.
+- Index and route-only documents help readers choose a next document. Route-only
+  behavior is a reader purpose, not a separate version 2 `kind`; limit
+  navigation-only behavior to pages whose purpose and metadata are actually
+  route-only.
 
 README, Getting Started, Guides, Development, and Maintain pages are not
 automatically navigation-only. If their owner metadata gives them landing,
@@ -80,7 +83,8 @@ substantial durable reader-facing content within that scope.
   selected from `docs/doc-index.yaml`. If no focused owner exists, report the
   owner gap or route to the closest applicable owner instead of filling the gap
   in a non-owner document.
-- Contract owner pages may contain the detail that belongs to their `owner_for`
+- Contract owner pages may contain the detail that belongs to their
+  `canonical_for`
   scope. They should still avoid duplicating adjacent owners' API behavior,
   schema fields, storage effects, security guarantees, or other focused
   contracts.
@@ -130,9 +134,9 @@ substantial durable reader-facing content within that scope.
 
 ## Validation
 
-- After documentation edits, start from `docs/*/maintain/checks.md`, then use
-  focused check guidance such as structure, links and indexes, language parity,
-  terminology, and API examples checks as applicable.
+- After documentation edits, use `docs/*/maintain/validation.md`, then perform
+  the structural, link, language-parity, terminology, and API-example checks
+  that match the changed files.
 - For route and metadata edits, confirm changed paths exist, `doc_id` values
   remain unique, link targets are valid, and owner routing remains consistent.
 - Before finishing, confirm no scratch files, archive copies, generated

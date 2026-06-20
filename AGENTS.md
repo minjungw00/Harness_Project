@@ -49,10 +49,10 @@ implementation workflow all matter:
 
 - Use `docs/terminology-map.yaml` as the terminology and
   identifier-preservation source of truth.
-- For documentation edits, read `docs/AGENTS.md` and the applicable authoring
+- For documentation edits, read `docs/AGENTS.md` and the applicable policy
   guidance under `docs/*/maintain/`.
 - For bilingual edits, translation review, parity review, or
-  terminology-affecting edits, read both language guides,
+  terminology-affecting edits, read both language policy documents,
   `docs/terminology-map.yaml`, and the relevant glossary entries.
 - For Rust implementation work, read `crates/AGENTS.md`, then start with
   `docs/en/development/change-guide.md` or

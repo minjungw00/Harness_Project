@@ -1,6 +1,6 @@
 # 참조 색인
 
-이 색인은 하네스 참조 질문에서 다음 담당 문서를 고를 때 쓰는 읽기용 색인입니다. 기계가 읽는 정확한 담당 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다. 이 파일이 `doc_id`, 대응 경로, 역할, 담당 범위, 의존 관계, 규범 수준, 독자 메타데이터를 담당합니다.
+이 색인은 하네스 참조 질문에서 다음 담당 문서를 고를 때 쓰는 읽기용 색인입니다. 기계가 읽는 정확한 담당 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을 사용합니다. 이 파일이 `doc_id`, 유지 경로, 문서 종류, 집중 `canonical_for` 범위, 의존 관계, 규범 수준, 주요 독자, 독자 여정, 번역 정책 메타데이터를 담당합니다.
 
 이 README는 경로 안내 전용입니다. 용어 뜻, 용어 메타데이터, API 동작, 오류 의미, 오류 우선순위, 응답 분기 처리 경로, 차단 사유 처리 경로, 저장 효과, 스키마 형태, 보안 보장, Core 권한 의미를 정의하지 않습니다.
 
@@ -27,6 +27,6 @@
 ## 유지보수 경로
 
 - 저장소 편집 규칙: [`AGENTS.md`](../../../AGENTS.md).
-- 문서 작성 규칙: [작성 가이드](../maintain/authoring-guide.md).
-- 문서 점검: [점검](../maintain/checks.md).
-- 영어/한국어 표현과 한국어 문체: [번역 가이드](../maintain/translation-guide.md).
+- 문서 거버넌스: [문서 정책](../maintain/documentation-policy.md).
+- 문서 검증: [검증](../maintain/validation.md).
+- 영어/한국어 표현과 한국어 문체: [번역 정책](../maintain/translation-policy.md).

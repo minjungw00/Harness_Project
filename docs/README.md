@@ -22,6 +22,6 @@ Shared metadata:
 
 Those metadata files support maintainers, translators, and agents. Ordinary readers should start from the language entry pages, Getting Started, Guides, Development, or Reference pages.
 
-Maintainers and implementation agents should read [../AGENTS.md](../AGENTS.md), then the relevant authoring, translation, and check guidance under `docs/*/maintain/`.
+Maintainers and implementation agents should read [../AGENTS.md](../AGENTS.md), then the relevant documentation, translation, and validation policies under `docs/*/maintain/`.
 
 This README is an entry route. It does not define API behavior, storage effects, security guarantees, schemas, Core authority semantics, or detailed owner maps.

@@ -241,7 +241,7 @@ Use compact user-facing shapes first: status, focused judgment request, what was
 
 For ordinary Harness session context, load the language needed for the current user or task. Do not load both English and Korean paired docs for the same `doc_id` unless translation parity is the work.
 
-Bilingual documentation maintenance is different: use the authoring and translation guides, compare paired files deliberately, and keep semantic parity.
+Bilingual documentation maintenance is different: use the documentation and translation policies, compare paired files deliberately, and keep semantic parity.
 
 When the task is Korean-facing, preserve exact identifiers such as API names, schema fields, enum values, file paths, error codes, table names, and validator IDs. Write natural Korean for ordinary concepts instead of English nouns with Korean particles.
 
