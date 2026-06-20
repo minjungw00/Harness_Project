@@ -14,7 +14,7 @@ This is the English entry point for the Harness documentation set. Start with th
 - Product users: [Getting Started Overview](getting-started/overview.md), then [User Guide](guides/user-workflow.md), [Judgment Examples](guides/judgment-examples.md), and [Surface Recipes](guides/surface-recipes.md)
 - Local MCP operators: [Installation](getting-started/installation.md), [Quickstart](getting-started/quickstart.md), then [Local MCP Setup](guides/local-mcp-setup.md)
 - Agents: [Agent Guide](guides/agent-workflow.md), with repository working rules in [AGENTS.md](../../AGENTS.md)
-- Source-code learners: [Implementation Guide](development/change-guide.md), then [Architecture](development/architecture.md)
+- Source-code learners: [Developer Documentation](development/README.md), then [Codebase Tour](development/codebase-tour.md), [Request Lifecycle](development/request-lifecycle.md), and [Architecture](development/architecture.md)
 - Reference readers: [Reference Index](reference/README.md)
 - Documentation maintainers: [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain/translation-guide.md), [Checks Index](maintain/checks.md), [doc-index.yaml](../doc-index.yaml), and [Terminology Map](../terminology-map.yaml)
 

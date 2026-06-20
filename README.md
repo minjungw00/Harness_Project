@@ -75,7 +75,7 @@ Reader paths:
 
 - Product users: [Getting Started Overview](docs/en/getting-started/overview.md), then [User Guide](docs/en/guides/user-workflow.md)
 - Local MCP operators: [Installation](docs/en/getting-started/installation.md), [Quickstart](docs/en/getting-started/quickstart.md), then [Local MCP Setup](docs/en/guides/local-mcp-setup.md)
-- Source-code learners: [Implementation Guide](docs/en/development/change-guide.md), then [Architecture](docs/en/development/architecture.md)
+- Source-code learners: [Developer Documentation](docs/en/development/README.md), then [Codebase Tour](docs/en/development/codebase-tour.md), [Request Lifecycle](docs/en/development/request-lifecycle.md), and [Architecture](docs/en/development/architecture.md)
 - Reference readers: [Reference Index](docs/en/reference/README.md)
 
 Reader documentation explains and sequences the product. Exact contracts live in Reference documents, including [Administrative CLI](docs/en/reference/admin-cli.md), [MCP Transport](docs/en/reference/mcp-transport.md), [Runtime Boundaries](docs/en/reference/runtime-boundaries.md), and [API Methods](docs/en/reference/api/methods.md). `docs/doc-index.yaml` is maintenance metadata for exact owner routing, not an ordinary reader's first step.

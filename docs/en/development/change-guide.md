@@ -2,7 +2,7 @@
 
 This guide helps implementers classify an implementation change, locate the applicable contract owner, find the implementation boundary, and select validation. Product meaning remains in the canonical Reference owners.
 
-This is a guide-level reading path. It does not define or override baseline scope, API behavior, schemas, storage effects, security guarantees, runtime boundaries, error behavior, close-readiness rules, connector behavior, conformance authority, or Core authority semantics. Use [`docs/doc-index.yaml`](../../doc-index.yaml) for the exact machine-readable owner route and the [Reference Index](../reference/README.md) for reader-facing owner navigation.
+This is a guide-level reading path for making changes. If you are learning the source code before choosing an implementation change, start with [Developer Documentation](README.md), then use the [Codebase Tour](codebase-tour.md) and [Request Lifecycle](request-lifecycle.md). This guide does not define or override baseline scope, API behavior, schemas, storage effects, security guarantees, runtime boundaries, error behavior, close-readiness rules, connector behavior, conformance authority, or Core authority semantics. Use [`docs/doc-index.yaml`](../../doc-index.yaml) for the exact machine-readable owner route and the [Reference Index](../reference/README.md) for reader-facing owner navigation.
 
 Harness is the local work-authority product/system for AI-assisted product work. Core is the local authority record for Harness state.
 
@@ -27,7 +27,7 @@ Use this order unless the change has a narrower owner route already selected:
 1. Check supported scope in [Scope](../reference/scope.md).
 2. Use [`docs/doc-index.yaml`](../../doc-index.yaml) to locate the canonical owner for each contract question.
 3. Read the focused Reference owner for exact meaning.
-4. Use [Implementation Architecture](architecture.md) to locate the implementation boundary and execution flow.
+4. Use [Implementation Architecture](architecture.md) to locate the implementation boundary and execution flow. Use [Codebase Tour](codebase-tour.md) and [Request Lifecycle](request-lifecycle.md) when you need a source-reading path before making the change.
 5. Inspect the relevant source and tests.
 6. Compare code, tests, and documentation against the owner-defined contract.
 7. Run validation appropriate to the changed layer.
