@@ -28,8 +28,8 @@ Repository organization:
 
 Implementation and local runtime routes:
 
-- One-command local MCP quickstart: [English](docs/en/use/local-mcp-quickstart.md) / [한국어](docs/ko/use/local-mcp-quickstart.md)
-- Build architecture: [`docs/en/build/architecture.md`](docs/en/build/architecture.md)
+- One-command local MCP setup: [English](docs/en/guides/local-mcp-setup.md) / [한국어](docs/ko/guides/local-mcp-setup.md)
+- Development architecture: [`docs/en/development/architecture.md`](docs/en/development/architecture.md)
 - Administrative CLI: [`docs/en/reference/admin-cli.md`](docs/en/reference/admin-cli.md)
 - MCP transport: [`docs/en/reference/mcp-transport.md`](docs/en/reference/mcp-transport.md)
 

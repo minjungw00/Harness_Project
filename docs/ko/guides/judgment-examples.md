@@ -1,6 +1,6 @@
 # 판단 예시
 
-[사용자 가이드](user-guide.md)를 읽은 뒤, 에이전트가 혼자 결정하면 안 되는 선택 때문에 작업이 막혔을 때 이 예시를 사용합니다.
+[사용자 가이드](user-workflow.md)를 읽은 뒤, 에이전트가 혼자 결정하면 안 되는 선택 때문에 작업이 막혔을 때 이 예시를 사용합니다.
 
 아래 예시는 설명을 위한 것입니다. 독자가 경계의 모양을 알아보도록 돕지만, 빠짐없는 정책, 스키마 참조, 닫기 준비 상태 계약, 비슷한 모든 상황의 고정 경로가 아닙니다. 여기의 어떤 상황도 반드시 공유해야 하는 표준 예시 작업이 아닙니다. 정확한 담당 경계는 [Core 모델](../reference/core-model.md), [기준 범위](../reference/scope.md), [참조 색인](../reference/README.md)이 연결하는 관련 담당 문서를 봅니다.
 
@@ -60,7 +60,7 @@
 담당 문서:
 
 - [Core 모델](../reference/core-model.md)
-- [에이전트 가이드](agent-guide.md)
+- [에이전트 가이드](agent-workflow.md)
 
 ## 범위 변경
 
@@ -114,7 +114,7 @@
 담당 문서:
 
 - [Core 모델](../reference/core-model.md)
-- [에이전트 가이드](agent-guide.md)
+- [에이전트 가이드](agent-workflow.md)
 
 ## 민감 동작
 
@@ -272,9 +272,9 @@
 
 담당 문서:
 
-- [에이전트 가이드](agent-guide.md)
+- [에이전트 가이드](agent-workflow.md)
 - [Core 모델](../reference/core-model.md)
 
 ## 다음 읽기 경로
 
-운영 방식은 [에이전트 가이드](agent-guide.md)를 봅니다. 예시가 기준 범위, 프로필 조건부, 지원 범위 밖 기능 질문을 만들면 [기준 범위](../reference/scope.md)를 봅니다. 정확한 담당 경로는 [참조 색인](../reference/README.md)을 사용합니다.
+운영 방식은 [에이전트 가이드](agent-workflow.md)를 봅니다. 예시가 기준 범위, 프로필 조건부, 지원 범위 밖 기능 질문을 만들면 [기준 범위](../reference/scope.md)를 봅니다. 정확한 담당 경로는 [참조 색인](../reference/README.md)을 사용합니다.

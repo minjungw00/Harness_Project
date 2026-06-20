@@ -10,9 +10,9 @@ decisions.
 
 ## First Reads
 
-- Start with `docs/en/build/implementation-guide.md` or
-  `docs/ko/build/implementation-guide.md` according to the working language.
-- Use `docs/en/build/architecture.md` or `docs/ko/build/architecture.md` for
+- Start with `docs/en/development/change-guide.md` or
+  `docs/ko/development/change-guide.md` according to the working language.
+- Use `docs/en/development/architecture.md` or `docs/ko/development/architecture.md` for
   durable workspace shape, crate roles, execution-flow maps, and
   implementation-boundary guidance.
 - Use `docs/doc-index.yaml` only when exact machine-readable owner routing is

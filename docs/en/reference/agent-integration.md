@@ -17,7 +17,7 @@ This document owns:
 
 This document does not own:
 
-- surface-specific workflows; see [Surface Recipes](../use/surface-recipes.md)
+- surface-specific workflows; see [Surface Recipes](../guides/surface-recipes.md)
 - API request envelopes, response branches, schema shapes, method access requirements, or access-class value names; see [API Schema Core](api/schema-core.md), [API Methods](api/methods.md), method owners, and [API Value Sets](api/schema-value-sets.md)
 - `harness-mcp` executable startup, process environment, stdio framing, startup validation, response wrapping, or shutdown; see [MCP Transport](mcp-transport.md)
 - storage layout, artifact lifecycle, or staged-handle validation; see storage and artifact owners through [Reference Index](README.md)
@@ -226,7 +226,7 @@ Agent may:
 Agent must:
 - expose the limitation in support or display text
 - route machine-readable failure meanings to [API error codes](api/error-codes.md) and [API error details](api/error-details.md)
-- route user-facing wording to [Template Bodies](template-bodies.md) or [Surface Recipes](../use/surface-recipes.md)
+- route user-facing wording to [Template Bodies](template-bodies.md) or [Surface Recipes](../guides/surface-recipes.md)
 
 Agent must not:
 - fabricate authority

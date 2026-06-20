@@ -155,7 +155,7 @@ The agent should not use residual-risk acceptance to cover missing required evid
 
 ## Use reference owners for contract detail
 
-Use the use docs for workflow. Use owner reference docs for exact contracts:
+Use guide pages for workflow. Use owner reference docs for exact contracts:
 
 | Need | Owner Route |
 |---|---|
@@ -172,6 +172,6 @@ Do not treat this guide as the API contract. Do not copy detailed contract rules
 | Reader | Path |
 |---|---|
 | Working user | [Judgment Examples](judgment-examples.md) -> [Scope](../reference/scope.md) |
-| Agent author or operator | [Agent Guide](agent-guide.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
+| Agent author or operator | [Agent Guide](agent-workflow.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
 | Implementer | [Reference Index](../reference/README.md) -> baseline scope -> API methods -> schema owners -> storage effects |
 | Documentation maintainer | [Authoring Guide](../maintain/authoring-guide.md) -> [Translation Guide](../maintain/translation-guide.md) -> [Checks](../maintain/checks.md) |

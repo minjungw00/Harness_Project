@@ -7,7 +7,7 @@ Choose a language first:
 - English: [`en/README.md`](en/README.md)
 - 한국어: [`ko/README.md`](ko/README.md)
 
-Operator quickstart for one-command local MCP setup: [English](en/use/local-mcp-quickstart.md) / [한국어](ko/use/local-mcp-quickstart.md).
+One-command local MCP setup for operators: [English](en/guides/local-mcp-setup.md) / [한국어](ko/guides/local-mcp-setup.md).
 
 Shared metadata:
 

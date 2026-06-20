@@ -1,4 +1,4 @@
-# Local MCP quickstart
+# Local MCP setup
 
 Use this guide when you want the ordinary local MCP setup path for one `Product Repository`.
 

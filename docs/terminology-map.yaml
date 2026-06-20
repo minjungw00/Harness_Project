@@ -377,8 +377,8 @@ terms:
     related_references:
       - en: "docs/en/reference/runtime-boundaries.md"
         ko: "docs/ko/reference/runtime-boundaries.md"
-      - en: "docs/en/build/implementation-guide.md"
-        ko: "docs/ko/build/implementation-guide.md"
+      - en: "docs/en/development/change-guide.md"
+        ko: "docs/ko/development/change-guide.md"
     notes:
       - "Documentation work does not implement runtime behavior or create generated runtime records."
   semantic_skeleton:
@@ -1126,8 +1126,8 @@ terms:
         ko: "docs/ko/reference/scope.md"
       - en: "docs/en/reference/api/method-update-scope.md"
         ko: "docs/ko/reference/api/method-update-scope.md"
-      - en: "docs/en/use/agent-guide.md"
-        ko: "docs/ko/use/agent-guide.md"
+      - en: "docs/en/guides/agent-workflow.md"
+        ko: "docs/ko/guides/agent-workflow.md"
     notes:
       - "Use when the meaning is user-visible criteria for checking work."
       - "Do not use the discouraged expectation wording for this concept."

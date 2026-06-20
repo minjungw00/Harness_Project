@@ -1,4 +1,4 @@
-# 시작하기
+# 시작하기 개요
 
 이 문서는 하네스를 처음 읽는 독자를 위한 제품 개요입니다. 기본 개념을 평이하게 소개하고, 정확한 계약 질문은 참조 담당 문서로 안내합니다.
 
@@ -25,13 +25,13 @@
 
 | 개념 | 처음 읽는 독자를 위한 의미 | 정확한 담당 문서 |
 |---|---|---|
-| 하네스 | AI 지원 제품 작업에서 로컬 작업 권한을 다루는 제품이자 시스템입니다. | [기준 범위](reference/scope.md) |
-| `Core` | 하네스 상태를 위한 로컬 기준 기록입니다. | [Core 모델](reference/core-model.md) |
-| `Harness Server` | 하네스 전체를 뜻하는 말이 아니라, 하네스의 서버/런타임 구성 요소입니다. | [런타임 경계](reference/runtime-boundaries.md) |
-| `Harness Runtime Home` | 저장소와 런타임 담당 문서가 정의하는 하네스 운영 데이터의 로컬 런타임 데이터 공간입니다. | [런타임 경계](reference/runtime-boundaries.md) |
-| `Product Repository` | 사용자의 프로젝트 작업 공간과 제품 파일입니다. | [런타임 경계](reference/runtime-boundaries.md) |
-| `Projection` | 담당 기록을 읽기 전용으로 보여 주는 상태 보기입니다. | [상태 보기 권한 참조](reference/projection-and-templates.md) |
-| `Write Authorization` | 현재 하네스 상태에서 호환되는 제품 파일 쓰기 시도 하나를 위한 정확한 제품 라벨입니다. | [Core 모델](reference/core-model.md) |
+| 하네스 | AI 지원 제품 작업에서 로컬 작업 권한을 다루는 제품이자 시스템입니다. | [기준 범위](../reference/scope.md) |
+| `Core` | 하네스 상태를 위한 로컬 기준 기록입니다. | [Core 모델](../reference/core-model.md) |
+| `Harness Server` | 하네스 전체를 뜻하는 말이 아니라, 하네스의 서버/런타임 구성 요소입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
+| `Harness Runtime Home` | 저장소와 런타임 담당 문서가 정의하는 하네스 운영 데이터의 로컬 런타임 데이터 공간입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
+| `Product Repository` | 사용자의 프로젝트 작업 공간과 제품 파일입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
+| `Projection` | 담당 기록을 읽기 전용으로 보여 주는 상태 보기입니다. | [상태 보기 권한 참조](../reference/projection-and-templates.md) |
+| `Write Authorization` | 현재 하네스 상태에서 호환되는 제품 파일 쓰기 시도 하나를 위한 정확한 제품 라벨입니다. | [Core 모델](../reference/core-model.md) |
 
 이 개념들을 서로의 줄임말처럼 사용하지 않습니다. 읽기 좋은 `Projection`, `Product Repository` 안의 파일, `Harness Runtime Home`으로 선택된 디렉터리는 `Core`가 아닙니다. `Harness Server`는 구성 요소를 가리키는 이름이지 하네스 제품과 시스템 전체의 다른 이름이 아닙니다.
 
@@ -88,26 +88,26 @@ AI 지원 작업은 그 작업을 설명하는 기록보다 빠르게 움직일 
 - 잔여 위험 수락은 이름 붙은 보이는 잔여 위험에 대한 사용자 소유 판단입니다.
 - 닫기 준비 상태는 현재 상태에서 작업을 정직하게 닫을 수 있는지를 다루는 참조 개념입니다. 사용자용 설명에서 "닫을 수 있는지"처럼 부드럽게 말할 수는 있지만, 그 의미는 닫기 준비 상태로 다시 연결되어야 합니다.
 
-정확한 권한 규칙과 대체 금지 경계는 [Core 모델](reference/core-model.md)을 봅니다.
+정확한 권한 규칙과 대체 금지 경계는 [Core 모델](../reference/core-model.md)을 봅니다.
 
 ## 하네스가 아닌 것
 
 하네스는 프롬프트 묶음, 대화 스크립트, API 래퍼, 워크플로 엔진, 보고서 생성기, 대시보드, 호스팅 에이전트 플랫폼, `Product Repository`, `Harness Runtime Home`이 아닙니다.
 
-또한 하네스는 잘 쓴 대화 답변, 생성된 요약, 읽기 쉬운 상태 카드, `Projection`을 기준 기록으로 바꾸지 않습니다. 정확한 상태 보기 경계는 [상태 보기 권한 참조](reference/projection-and-templates.md)가, 런타임과 위치 경계는 [런타임 경계](reference/runtime-boundaries.md)가, 보안 표현은 [보안](reference/security.md)이 담당합니다.
+또한 하네스는 잘 쓴 대화 답변, 생성된 요약, 읽기 쉬운 상태 카드, `Projection`을 기준 기록으로 바꾸지 않습니다. 정확한 상태 보기 경계는 [상태 보기 권한 참조](../reference/projection-and-templates.md)가, 런타임과 위치 경계는 [런타임 경계](../reference/runtime-boundaries.md)가, 보안 표현은 [보안](../reference/security.md)이 담당합니다.
 
 ## 기준 범위
 
-기준 범위는 의도적으로 좁습니다. 기준 범위, 프로필 조건부, 지원 범위 밖 기능 경계는 [기준 범위](reference/scope.md)를 봅니다.
+기준 범위는 의도적으로 좁습니다. 기준 범위, 프로필 조건부, 지원 범위 밖 기능 경계는 [기준 범위](../reference/scope.md)를 봅니다.
 
 ## 다음 읽기 경로
 
 | 독자 | 경로 |
 |---|---|
-| 처음 읽는 사용자 | [사용자 가이드](use/user-guide.md) |
-| 작업 중인 사용자 | [사용자 가이드](use/user-guide.md) -> [판단 예시](use/judgment-examples.md) -> [기준 범위](reference/scope.md) |
-| 로컬 MCP 운영자·에이전트 작성자 | [로컬 MCP 빠른 시작](use/local-mcp-quickstart.md) -> [에이전트 가이드](use/agent-guide.md) -> [에이전트 통합 참조](reference/agent-integration.md) |
-| 구현 담당자 | [참조 색인](reference/README.md) -> 기준 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
-| 문서 유지보수자 | [작성 가이드](maintain/authoring-guide.md) -> [번역 가이드](maintain/translation-guide.md) -> [점검](maintain/checks.md) |
+| 처음 읽는 사용자 | [사용자 가이드](../guides/user-workflow.md) |
+| 작업 중인 사용자 | [사용자 가이드](../guides/user-workflow.md) -> [판단 예시](../guides/judgment-examples.md) -> [기준 범위](../reference/scope.md) |
+| 로컬 MCP 운영자·에이전트 작성자 | [로컬 MCP 설정](../guides/local-mcp-setup.md) -> [에이전트 가이드](../guides/agent-workflow.md) -> [에이전트 통합 참조](../reference/agent-integration.md) |
+| 구현 담당자 | [참조 색인](../reference/README.md) -> 기준 범위 -> API 메서드 -> 스키마 담당 문서 -> 저장 효과 |
+| 문서 유지보수자 | [작성 가이드](../maintain/authoring-guide.md) -> [번역 가이드](../maintain/translation-guide.md) -> [점검](../maintain/checks.md) |
 
-정확한 담당 문서가 필요할 때는 [참조 색인](reference/README.md)을 사용합니다. 처음 읽는 사용자가 제품을 이해하려고 API 스키마부터 읽을 필요는 없습니다.
+정확한 담당 문서가 필요할 때는 [참조 색인](../reference/README.md)을 사용합니다. 처음 읽는 사용자가 제품을 이해하려고 API 스키마부터 읽을 필요는 없습니다.

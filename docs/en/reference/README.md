@@ -7,13 +7,13 @@ This README is route-only. It does not define term meanings, terminology metadat
 ## Start Here
 
 - Product/system boundaries: [Scope](scope.md), [Core Model](core-model.md), [Runtime Boundaries](runtime-boundaries.md), and [Security](security.md).
-- Operational local MCP setup: [Local MCP Quickstart](../use/local-mcp-quickstart.md) for the one-command operator path.
+- Operational local MCP setup: [Local MCP Setup](../guides/local-mcp-setup.md) for the one-command operator path.
 - Local executable contracts: [Administrative CLI](admin-cli.md) for `harness` setup commands and Runtime Home selection, and [MCP Transport](mcp-transport.md) for `harness-mcp` stdio startup, preflight, response wrapping, and shutdown.
 - API method behavior: [API Methods](api/methods.md), then the linked method owner.
 - API schema families: [Schema Core](api/schema-core.md), [State Schemas](api/schema-state.md), [Artifact Schemas](api/schema-artifacts.md), [Judgment Schemas](api/schema-judgment.md), and [Value Sets](api/schema-value-sets.md).
 - API error families: [API Errors](api/errors.md), which routes to error codes, precedence, response routing, blocker routing, and machine-readable details.
 - Storage families: [Storage](storage.md), which routes to records, DDL, effects, artifacts, and versioning.
-- Surface, projection, and display routes: [Agent Integration](agent-integration.md), [Surface Recipes](../use/surface-recipes.md), [Projection and Templates](projection-and-templates.md), and [Template Bodies](template-bodies.md).
+- Surface, projection, and display routes: [Agent Integration](agent-integration.md), [Surface Recipes](../guides/surface-recipes.md), [Projection and Templates](projection-and-templates.md), and [Template Bodies](template-bodies.md).
 - Quality and verification routes: [Conformance](conformance.md), [Design Quality](design-quality.md), and the relevant method or Core owner for the question.
 
 ## Common Crossings

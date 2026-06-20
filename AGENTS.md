@@ -55,8 +55,8 @@ implementation workflow all matter:
   terminology-affecting edits, read both language guides,
   `docs/terminology-map.yaml`, and the relevant glossary entries.
 - For Rust implementation work, read `crates/AGENTS.md`, then start with
-  `docs/en/build/implementation-guide.md` or
-  `docs/ko/build/implementation-guide.md` according to the working language.
+  `docs/en/development/change-guide.md` or
+  `docs/ko/development/change-guide.md` according to the working language.
 - For public API work, use `docs/en/reference/api/methods.md` and
   `docs/ko/reference/api/methods.md` for the supported public method list and
   method-owner routing.

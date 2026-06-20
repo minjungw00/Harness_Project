@@ -217,8 +217,8 @@ documents:
       - "all readers"
 
   - doc_id: "start"
-    path_en: "docs/en/start.md"
-    path_ko: "docs/ko/start.md"
+    path_en: "docs/en/getting-started/overview.md"
+    path_ko: "docs/ko/getting-started/overview.md"
     role: "entry"
     owner_for:
       - "product orientation"
@@ -236,8 +236,8 @@ documents:
       - "implementers"
 
   - doc_id: "use.user-guide"
-    path_en: "docs/en/use/user-guide.md"
-    path_ko: "docs/ko/use/user-guide.md"
+    path_en: "docs/en/guides/user-workflow.md"
+    path_ko: "docs/ko/guides/user-workflow.md"
     role: "use"
     owner_for:
       - "user workflow guidance"
@@ -253,8 +253,8 @@ documents:
       - "agents"
 
   - doc_id: "use.agent-guide"
-    path_en: "docs/en/use/agent-guide.md"
-    path_ko: "docs/ko/use/agent-guide.md"
+    path_en: "docs/en/guides/agent-workflow.md"
+    path_ko: "docs/ko/guides/agent-workflow.md"
     role: "use"
     owner_for:
       - "agent workflow guidance"
@@ -270,8 +270,8 @@ documents:
       - "agent operators"
 
   - doc_id: "use.judgment-examples"
-    path_en: "docs/en/use/judgment-examples.md"
-    path_ko: "docs/ko/use/judgment-examples.md"
+    path_en: "docs/en/guides/judgment-examples.md"
+    path_ko: "docs/ko/guides/judgment-examples.md"
     role: "use"
     owner_for:
       - "user-owned judgment examples"
@@ -288,8 +288,8 @@ documents:
       - "maintainers"
 
   - doc_id: "use.surface-recipes"
-    path_en: "docs/en/use/surface-recipes.md"
-    path_ko: "docs/ko/use/surface-recipes.md"
+    path_en: "docs/en/guides/surface-recipes.md"
+    path_ko: "docs/ko/guides/surface-recipes.md"
     role: "use"
     owner_for:
       - "surface-specific usage recipes"
@@ -307,8 +307,8 @@ documents:
       - "connector authors"
 
   - doc_id: "use.local-mcp-quickstart"
-    path_en: "docs/en/use/local-mcp-quickstart.md"
-    path_ko: "docs/ko/use/local-mcp-quickstart.md"
+    path_en: "docs/en/guides/local-mcp-setup.md"
+    path_ko: "docs/ko/guides/local-mcp-setup.md"
     role: "use"
     owner_for:
       - "one-command executable local MCP setup for operators"
@@ -340,8 +340,8 @@ documents:
       - "implementers"
 
   - doc_id: "build.implementation-guide"
-    path_en: "docs/en/build/implementation-guide.md"
-    path_ko: "docs/ko/build/implementation-guide.md"
+    path_en: "docs/en/development/change-guide.md"
+    path_ko: "docs/ko/development/change-guide.md"
     role: "build"
     owner_for:
       - "baseline implementation reading path"
@@ -371,8 +371,8 @@ documents:
       - "reviewers"
 
   - doc_id: "build.architecture"
-    path_en: "docs/en/build/architecture.md"
-    path_ko: "docs/ko/build/architecture.md"
+    path_en: "docs/en/development/architecture.md"
+    path_ko: "docs/ko/development/architecture.md"
     role: "build"
     owner_for:
       - "guide-level implementation architecture"

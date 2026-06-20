@@ -17,7 +17,7 @@ API 스키마, 메서드 동작, 저장 효과, 보안 보장 의미, 상태 보
 
 이 문서는 담당하지 않습니다.
 
-- 접점별 사용 흐름: [접점별 사용 레시피](../use/surface-recipes.md)
+- 접점별 사용 흐름: [접점별 사용 레시피](../guides/surface-recipes.md)
 - API 요청 래퍼, 응답 분기, 스키마 형태, 메서드 접근 요구사항, 접근 등급 값 이름: [API 코어 스키마](api/schema-core.md), [API 메서드](api/methods.md), 메서드 담당 문서, [API 값 집합](api/schema-value-sets.md)
 - `harness-mcp` 실행 파일 시작, 프로세스 환경, stdio 프레이밍, 시작 검증, 응답 래핑, 종료: [MCP 전송](mcp-transport.md)
 - 저장소 배치, 아티팩트 생명주기, 스테이징 핸들 검증: [참조 색인](README.md)에서 고르는 저장소와 아티팩트 담당 문서
@@ -227,7 +227,7 @@ VerifiedActorContext:
 에이전트가 해야 하는 것:
 - 제한을 지원 문구나 표시 문구에 드러내야 합니다.
 - 기계 판독용 실패 의미는 [API 오류 코드](api/error-codes.md)와 [API 오류 세부사항](api/error-details.md)으로 보내야 합니다.
-- 사용자에게 보이는 문구는 [템플릿 본문](template-bodies.md) 또는 [접점별 사용 레시피](../use/surface-recipes.md)로 보내야 합니다.
+- 사용자에게 보이는 문구는 [템플릿 본문](template-bodies.md) 또는 [접점별 사용 레시피](../guides/surface-recipes.md)로 보내야 합니다.
 
 에이전트가 하면 안 되는 것:
 - 권한을 지어내면 안 됩니다.

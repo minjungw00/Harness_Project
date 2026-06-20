@@ -40,7 +40,7 @@ When implementation and documentation appear to disagree, classify the disagreem
 
 - If a guide-level source-structure description differs from current stable code, correct [Implementation Architecture](architecture.md) to match the implementation structure.
 - If code differs from API, schema, storage, security, error, scope, or Core authority owners, do not treat code as the new contract.
-- Resolve product-meaning differences through the applicable owner and implementation, not in a route page, README, Use page, or this guide.
+- Resolve product-meaning differences through the applicable owner and implementation, not in a route page, README, guide page, or this guide.
 - If tests, fixtures, examples, or conformance scenario prose are the only place a behavior is expressed, treat that as a contract-owner gap.
 - If no owner can be identified, report the owner gap rather than placing the contract in this guide.
 
@@ -52,7 +52,7 @@ These inputs are useful while implementing, but they do not define product contr
 
 | Input | Legitimate use | Owner boundary |
 |---|---|---|
-| Use pages, including [User Guide](../use/user-guide.md), [Agent Guide](../use/agent-guide.md), [Judgment Examples](../use/judgment-examples.md), and [Surface Recipes](../use/surface-recipes.md) | Understand workflow intent, reader decisions, connector context, and surface expectations. | API payloads, storage effects, access boundaries, security guarantees, close-readiness rules, and error behavior route back to Reference owners. |
+| Guide pages, including [User Guide](../guides/user-workflow.md), [Agent Guide](../guides/agent-workflow.md), [Judgment Examples](../guides/judgment-examples.md), and [Surface Recipes](../guides/surface-recipes.md) | Understand workflow intent, reader decisions, connector context, and surface expectations. | API payloads, storage effects, access boundaries, security guarantees, close-readiness rules, and error behavior route back to Reference owners. |
 | Examples | Understand a representative branch, compact shape, or scenario. | Examples are not full schemas, value-set definitions, storage-effect definitions, or implementation shortcuts. |
 | Conformance scenarios | Identify coverage prompts and assertion routing. | Scenario prose and scenario IDs do not own the asserted product fact; the fact routes to Scope or the focused Reference owner. |
 | Tests, fixtures, and test-support helpers | Verify owner-defined behavior, set up disposable Runtime Home state, and exercise cross-layer paths. | A test assertion, fixture shape, or helper API must not be the only source for a product contract. |

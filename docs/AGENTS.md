@@ -33,8 +33,8 @@ residual-risk decisions.
   terminology-affecting edits, read both authoring guides, the translation
   guides, `docs/terminology-map.yaml`, and the relevant glossary entries.
 - For ordinary readers, prefer reader-facing entry points such as README,
-  Start, Use, Build, and Reference pages. Do not require ordinary readers to
-  start from `docs/doc-index.yaml`.
+  Getting Started, Guides, Development, and Reference pages. Do not require
+  ordinary readers to start from `docs/doc-index.yaml`.
 
 ## Documentation Types
 
@@ -59,10 +59,10 @@ broad filename family.
   navigation-only behavior to pages whose purpose and owner metadata are
   actually index or route-only.
 
-README, Start, Use, Build, and Maintain pages are not automatically
-navigation-only. If their owner metadata gives them landing, tutorial, how-to,
-explanation, or maintenance responsibility, they may carry substantial durable
-reader-facing content within that scope.
+README, Getting Started, Guides, Development, and Maintain pages are not
+automatically navigation-only. If their owner metadata gives them landing,
+tutorial, how-to, explanation, or maintenance responsibility, they may carry
+substantial durable reader-facing content within that scope.
 
 ## Owner And Contract Boundaries
 

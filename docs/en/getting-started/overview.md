@@ -1,4 +1,4 @@
-# Start
+# Getting started overview
 
 This is the first-read overview for Harness. It introduces the concept model in ordinary language and routes exact contract questions to the reference owners.
 
@@ -25,13 +25,13 @@ These concepts are related, but they are not interchangeable:
 
 | Concept | First-read meaning | Exact owner |
 |---|---|---|
-| Harness | The local work-authority product/system for AI-assisted product work. | [Scope](reference/scope.md) |
-| Core | The local authority record for Harness state. | [Core Model](reference/core-model.md) |
-| `Harness Server` | A serving/runtime component of Harness, not a synonym for Harness as a whole. | [Runtime Boundaries](reference/runtime-boundaries.md) |
-| `Harness Runtime Home` | The local runtime data space for Harness operational data as storage/runtime owners define it. | [Runtime Boundaries](reference/runtime-boundaries.md) |
-| `Product Repository` | The user's project workspace and product files. | [Runtime Boundaries](reference/runtime-boundaries.md) |
-| `Projection` | A read-only state view or display of owner records. | [Projection Authority Reference](reference/projection-and-templates.md) |
-| `Write Authorization` | The exact Harness product label for one compatible product-file write attempt under current Harness state. | [Core Model](reference/core-model.md) |
+| Harness | The local work-authority product/system for AI-assisted product work. | [Scope](../reference/scope.md) |
+| Core | The local authority record for Harness state. | [Core Model](../reference/core-model.md) |
+| `Harness Server` | A serving/runtime component of Harness, not a synonym for Harness as a whole. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| `Harness Runtime Home` | The local runtime data space for Harness operational data as storage/runtime owners define it. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| `Product Repository` | The user's project workspace and product files. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| `Projection` | A read-only state view or display of owner records. | [Projection Authority Reference](../reference/projection-and-templates.md) |
+| `Write Authorization` | The exact Harness product label for one compatible product-file write attempt under current Harness state. | [Core Model](../reference/core-model.md) |
 
 Do not use one of these terms as a shortcut for another. A readable `Projection`, a file in the `Product Repository`, or a directory selected as `Harness Runtime Home` is not Core. `Harness Server` names a component; it does not rename the whole product/system.
 
@@ -88,26 +88,26 @@ Harness documentation uses these concepts separately:
 - Residual-risk acceptance is a user-owned judgment about a named visible residual risk.
 - Close readiness is the reference concept for whether a task can honestly close from its current state. In user-facing language, "ready to close" is a friendly alias only when it points back to close readiness.
 
-For exact authority rules and non-substitution boundaries, use [Core Model](reference/core-model.md).
+For exact authority rules and non-substitution boundaries, use [Core Model](../reference/core-model.md).
 
 ## What Harness is not
 
 Harness is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Harness Runtime Home`.
 
-Harness also does not turn a polished chat answer, generated summary, readable status card, or `Projection` into the authority record. Exact display boundaries belong to [Projection Authority Reference](reference/projection-and-templates.md), runtime and location boundaries belong to [Runtime Boundaries](reference/runtime-boundaries.md), and security wording belongs to [Security](reference/security.md).
+Harness also does not turn a polished chat answer, generated summary, readable status card, or `Projection` into the authority record. Exact display boundaries belong to [Projection Authority Reference](../reference/projection-and-templates.md), runtime and location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md), and security wording belongs to [Security](../reference/security.md).
 
 ## Baseline scope
 
-The baseline scope is intentionally narrow. Use [Scope](reference/scope.md) for baseline, profile-gated, and out-of-scope boundaries.
+The baseline scope is intentionally narrow. Use [Scope](../reference/scope.md) for baseline, profile-gated, and out-of-scope boundaries.
 
 ## Where to go next
 
 | Reader | Path |
 |---|---|
-| New user | [User Guide](use/user-guide.md) |
-| Working user | [User Guide](use/user-guide.md) -> [Judgment Examples](use/judgment-examples.md) -> [Scope](reference/scope.md) |
-| Local MCP operator or agent author | [Local MCP Quickstart](use/local-mcp-quickstart.md) -> [Agent Guide](use/agent-guide.md) -> [Agent Integration Reference](reference/agent-integration.md) |
-| Implementer | [Reference Index](reference/README.md) -> baseline scope -> API methods -> schema owners -> storage effects |
-| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) -> [Translation Guide](maintain/translation-guide.md) -> [Checks](maintain/checks.md) |
+| New user | [User Guide](../guides/user-workflow.md) |
+| Working user | [User Guide](../guides/user-workflow.md) -> [Judgment Examples](../guides/judgment-examples.md) -> [Scope](../reference/scope.md) |
+| Local MCP operator or agent author | [Local MCP Setup](../guides/local-mcp-setup.md) -> [Agent Guide](../guides/agent-workflow.md) -> [Agent Integration Reference](../reference/agent-integration.md) |
+| Implementer | [Reference Index](../reference/README.md) -> baseline scope -> API methods -> schema owners -> storage effects |
+| Documentation maintainer | [Authoring Guide](../maintain/authoring-guide.md) -> [Translation Guide](../maintain/translation-guide.md) -> [Checks](../maintain/checks.md) |
 
-Use the [Reference Index](reference/README.md) when you need exact owner documents. New users should not need API schemas to understand the product.
+Use the [Reference Index](../reference/README.md) when you need exact owner documents. New users should not need API schemas to understand the product.

@@ -2,7 +2,7 @@
 
 This guide owns guide-level implementation structure and execution-flow explanation for the local Rust workspace. It helps implementers locate code, understand responsibility boundaries, and route code questions to the contract owners.
 
-It does not define or override public API behavior, request or response fields, schema meaning, storage effects, DDL or table columns, security guarantees, runtime enforcement, Core authority semantics, or product contracts. Use the [Implementation Guide](implementation-guide.md) for the broader reading path and the focused Reference owners for exact behavior.
+It does not define or override public API behavior, request or response fields, schema meaning, storage effects, DDL or table columns, security guarantees, runtime enforcement, Core authority semantics, or product contracts. Use the [Implementation Guide](change-guide.md) for the broader reading path and the focused Reference owners for exact behavior.
 
 Harness is the local work-authority product/system for AI-assisted product work. Core is the local authority record for Harness state.
 

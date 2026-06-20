@@ -9,7 +9,7 @@ A good Harness-connected agent turns ordinary user requests into careful work, k
 
 In this guide, Harness names the local work-authority product/system. Core names the local authority record for Harness state. Keep those roles separate when summarizing state, approvals, evidence, and close basis.
 
-This guide is use documentation. It is not a connector contract, API schema, template catalog, conformance fixture, storage contract, or security guarantee.
+This guide is workflow guidance. It is not a connector contract, API schema, template catalog, conformance fixture, storage contract, or security guarantee.
 
 Owner links:
 

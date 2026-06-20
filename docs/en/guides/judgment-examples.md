@@ -1,6 +1,6 @@
 # Judgment Examples
 
-Use these examples after the [User Guide](user-guide.md) when a task is blocked by a choice the agent should not make alone.
+Use these examples after the [User Guide](user-workflow.md) when a task is blocked by a choice the agent should not make alone.
 
 The examples are illustrative. They help readers recognize boundary shapes; they are not an exhaustive policy, a schema reference, a close-readiness contract, or proof that every similar case uses the same route. No scenario here is a required shared sample task. For exact owner boundaries, use [Core Model](../reference/core-model.md), [Scope](../reference/scope.md), and the relevant owners from the [Reference Index](../reference/README.md).
 
@@ -60,7 +60,7 @@ Agent must not imply:
 Owner links:
 
 - [Core Model](../reference/core-model.md)
-- [Agent Guide](agent-guide.md)
+- [Agent Guide](agent-workflow.md)
 
 ## Scope change
 
@@ -114,7 +114,7 @@ Agent must not imply:
 Owner links:
 
 - [Core Model](../reference/core-model.md)
-- [Agent Guide](agent-guide.md)
+- [Agent Guide](agent-workflow.md)
 
 ## Sensitive action
 
@@ -272,9 +272,9 @@ Agent must not imply:
 
 Owner links:
 
-- [Agent Guide](agent-guide.md)
+- [Agent Guide](agent-workflow.md)
 - [Core Model](../reference/core-model.md)
 
 ## Where to go next
 
-Use [Agent Guide](agent-guide.md) for operating patterns and [Scope](../reference/scope.md) when an example raises a baseline, profile-gated, or out-of-scope question. Use [Reference Index](../reference/README.md) for exact owner routing.
+Use [Agent Guide](agent-workflow.md) for operating patterns and [Scope](../reference/scope.md) when an example raises a baseline, profile-gated, or out-of-scope question. Use [Reference Index](../reference/README.md) for exact owner routing.

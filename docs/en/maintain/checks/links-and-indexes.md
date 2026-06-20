@@ -89,7 +89,7 @@ Failure:
 
 Fix:
 - Retarget the route to the exact owner selected from the Reference Index.
-- If no applicable owner exists, state the owner gap and route to the closest real owner, [Scope Reference](../../reference/scope.md), or [Implementation Guide](../../build/implementation-guide.md) as appropriate.
+- If no applicable owner exists, state the owner gap and route to the closest real owner, [Scope Reference](../../reference/scope.md), or [Implementation Guide](../../development/change-guide.md) as appropriate.
 - Create or designate a real owner only in the same paired documentation batch that defines the owner boundary.
 
 ## CHK-LINK-004: check-page routing

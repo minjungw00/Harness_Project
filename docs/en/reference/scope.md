@@ -16,7 +16,7 @@ This document owns:
 
 This document does not own:
 
-- baseline implementation reading paths; see the [Implementation Guide](../build/implementation-guide.md)
+- baseline implementation reading paths; see the [Implementation Guide](../development/change-guide.md)
 - API method behavior
 - schema fields
 - storage records or effects
@@ -27,7 +27,7 @@ This document does not own:
 - connector behavior
 - detailed specifications for out-of-scope capabilities
 
-Use this page when deciding whether a capability is part of the supported baseline scope. Route, build, README, and reference documents should link here for the scope boundary instead of repeating the detailed list.
+Use this page when deciding whether a capability is part of the supported baseline scope. Route, development, README, and reference documents should link here for the scope boundary instead of repeating the detailed list.
 
 <a id="supported-baseline-scope"></a>
 ## Supported baseline scope
@@ -58,7 +58,7 @@ Supported does not mean:
 | Scope updates | `Task` and Change Unit scope can be updated through the supported scope-update path. | [Update-scope method](api/method-update-scope.md), [Core Model](core-model.md) |
 | Status and close-readiness review | Status, evidence sufficiency, known blockers, and close-readiness state can be read through supported read paths. | [Status method](api/method-status.md), [Close-task method](api/method-close-task.md), [API State Schemas](api/schema-state.md), [Core Model](core-model.md) |
 | Prepare-write authorization | `harness.prepare_write` can create an owner-scoped, single-use `Write Authorization` for one compatible product-file write attempt. | [Prepare-write method](api/method-prepare-write.md), [Storage Effects](storage-effects.md), [Security](security.md) |
-| Local surface registration | Registered local surfaces can identify the selected surface and supported capabilities for scope checks. | [Agent Integration](agent-integration.md), [Surface Recipes](../use/surface-recipes.md), [Security](security.md) |
+| Local surface registration | Registered local surfaces can identify the selected surface and supported capabilities for scope checks. | [Agent Integration](agent-integration.md), [Surface Recipes](../guides/surface-recipes.md), [Security](security.md) |
 | Artifact staging and compatible artifact linking | New artifact bytes can enter the baseline through the supported staging path; compatible persisted artifact references can be linked when artifact owners allow it. | See [Artifact staging owners](#artifact-staging-owners). |
 | Run and evidence recording | Runs and compact evidence summaries can be recorded for baseline work. | [Record-run method](api/method-record-run.md), [Storage Effects](storage-effects.md), [Core Model](core-model.md) |
 | Focused user-owned judgment capture | User-owned judgments can be requested and recorded through supported judgment paths without substituting for Core-owned state, evidence, or close-readiness rules. | See [User-owned judgment owners](#user-judgment-owners). |

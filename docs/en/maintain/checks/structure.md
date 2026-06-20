@@ -39,7 +39,7 @@ Failure:
 
 Fix:
 - Reword the output as a documentation maintenance result.
-- Route implementation questions to [Implementation Guide](../../build/implementation-guide.md).
+- Route implementation questions to [Implementation Guide](../../development/change-guide.md).
 
 ## CHK-STRUCT-003: no generated runtime outputs
 
@@ -167,7 +167,7 @@ Fix:
 ## CHK-STRUCT-007: implementation-architecture alignment
 
 Check sources:
-- The paired [Implementation architecture](../../build/architecture.md) page
+- The paired [Implementation architecture](../../development/architecture.md) page
 - Root `Cargo.toml`
 - Relevant `crates/*/Cargo.toml` and `tests/*/Cargo.toml` files
 - Major `lib.rs` and `main.rs` entry points
@@ -213,7 +213,7 @@ Evidence to inspect:
   maintenance scope and link to the owner when exact behavior matters.
 
 Failure:
-- `README`, Start, Use, Build, Maintain, example, or non-owner Reference text creates a second normative definition.
+- `README`, Getting Started, Guides, Development, Maintain, example, or non-owner Reference text creates a second normative definition.
 - A non-owner presents field lists, response branches, storage details,
   guarantee levels, blocker details, access-class rules, or template bodies as
   contract detail instead of reader-facing explanation with an owner link.
@@ -233,7 +233,7 @@ Evidence to inspect:
 - Classify pages from `doc-index.yaml` metadata such as `role`, `owner_for`, and `normative_level` before applying route-page checks.
 - Treat `reference.scope` (`docs/en/reference/scope.md` and `docs/ko/reference/scope.md`) as a contract owner for baseline scope, the supported boundary, the out-of-scope boundary, the profile-gated boundary, and the reserved behavior boundary.
 - Inspect documents classified by metadata as route-only or index pages,
-  including any `README`, Start, Use, Build, Maintain, or reference-index page
+  including any `README`, Getting Started, Guides, Development, Maintain, or reference-index page
   with that actual role, for contract tables, long field explanations,
   status-value lists, security guarantee details, storage-effect details, and
   API branch summaries.
@@ -397,7 +397,7 @@ Documentation boundary: scope checks inspect wording in documentation. They do n
 
 Check sources:
 - [Scope](../../reference/scope.md)
-- [Implementation Guide](../../build/implementation-guide.md)
+- [Implementation Guide](../../development/change-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
 Evidence to inspect:
@@ -418,13 +418,13 @@ Fix:
 ## CHK-SCOPE-002: implementation wording
 
 Check sources:
-- [Implementation Guide](../../build/implementation-guide.md)
+- [Implementation Guide](../../development/change-guide.md)
 - [Authoring Guide](../authoring-guide.md)
 
 Evidence to inspect:
 - Confirm documentation edits do not imply the server, runtime, conformance runner, generated projections, or runtime behavior exists because of documentation alone.
 - Confirm implementation authority is not claimed outside the Implementation Guide owner.
-- Confirm implementation guidance, build pages, and metadata use durable implementation wording rather than build-moment labels, transfer labels, batch-specific labels, or interim-stage labels.
+- Confirm implementation guidance, development pages, and metadata use durable implementation wording rather than build-moment labels, transfer labels, batch-specific labels, or interim-stage labels.
 
 Failure:
 - Maintained docs describe documentation reference material as accepted runtime behavior or implementation authority without the Implementation Guide owner.
@@ -499,9 +499,9 @@ Fix:
 ## CHK-READ-001: user-facing readability
 
 Check sources:
-- [User Guide](../../use/user-guide.md)
-- [Agent Guide](../../use/agent-guide.md)
-- [Judgment Examples](../../use/judgment-examples.md)
+- [User Guide](../../guides/user-workflow.md)
+- [Agent Guide](../../guides/agent-workflow.md)
+- [Judgment Examples](../../guides/judgment-examples.md)
 - [Authoring Guide](../authoring-guide.md)
 
 Evidence to inspect:

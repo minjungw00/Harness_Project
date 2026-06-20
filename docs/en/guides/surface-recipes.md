@@ -101,7 +101,7 @@ A local MCP surface is the practical route for supported Harness methods.
 
 Use it for status, scope updates, write checks, run/evidence recording, user-judgment capture, artifact staging, and close checks.
 
-For executable local setup, start with [Local MCP Quickstart](local-mcp-quickstart.md); its common path is `harness setup local-mcp`.
+For executable local setup, start with [Local MCP Setup](local-mcp-setup.md); its common path is `harness setup local-mcp`.
 
 This recipe does not define the supported method list, surface registration, context exchange, storage effects, or security guarantees. Use the Reference owners for those details.
 
@@ -170,7 +170,7 @@ Use these owner routes for exact contracts:
 
 ## Where to go next
 
-Use [Agent Guide](agent-guide.md) for general agent behavior.
+Use [Agent Guide](agent-workflow.md) for general agent behavior.
 
 Use [Agent Integration Reference](../reference/agent-integration.md) for exact connector ownership.
 
