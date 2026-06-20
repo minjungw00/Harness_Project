@@ -1,58 +1,16 @@
 # Local MCP setup
 
-Use this guide when you want the ordinary local MCP setup path for one `Product Repository`.
+Use this guide when you need the complete operational how-to for local MCP setup after the shortest first-run path.
 
-`harness` performs local setup. `harness-mcp` is the child process that an MCP host launches after setup. The local MCP process communicates over stdio, not a network port, URL, socket, or listener. The setup command generates host-neutral configuration that you copy into the appropriate host-specific configuration; it does not install, discover, or edit an unknown external host.
+Start with [Installation](../getting-started/installation.md) to build or locate the executables, then [Quickstart](../getting-started/quickstart.md) for the minimum successful setup. This guide owns the operational details: explicit path selection, user-interaction binding, generated host-neutral configuration, dry-run behavior, JSON output, the interactive wizard, connection verification, recovery, and troubleshooting.
 
-This page owns the task-oriented onboarding order only. Exact `harness` command behavior belongs to [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration). Exact `harness-mcp` process behavior, stdio framing, response wrapping, preflight, shutdown, and reconnection belong to [MCP Transport](../reference/mcp-transport.md). Runtime location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md). Surface role and actor-provenance boundaries belong to [Agent Integration](../reference/agent-integration.md).
+`harness` performs local setup. `harness-mcp` is the child process that an MCP host launches after setup. The local MCP process communicates over stdio, not a network port, URL, socket, or listener.
 
-## 1. Build the executables
+Exact `harness` command behavior belongs to [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration). Exact `harness-mcp` process behavior, stdio framing, response wrapping, preflight, shutdown, and reconnection belong to [MCP Transport](../reference/mcp-transport.md). Runtime location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md). Surface role and actor-provenance boundaries belong to [Agent Integration](../reference/agent-integration.md).
 
-From the Harness repository root:
+## Inputs And Path Selection
 
-```sh
-cargo build --release -p harness-cli -p harness-mcp
-```
-
-Expected release executables:
-
-- `target/release/harness`
-- `target/release/harness-mcp`
-
-Option-free setup can discover `harness-mcp` when either:
-
-- `harness-mcp` is beside `harness`, as in the release build output
-- `harness-mcp` is on `PATH`
-
-Use `--mcp-command` only when you need to point setup at a specific MCP executable.
-
-## 2. Run the common setup path
-
-From the product repository you want to bind:
-
-```sh
-cd /absolute/path/to/product-repository
-/absolute/path/to/harness setup local-mcp
-```
-
-The option-free path uses these guide-level defaults:
-
-- the current directory is the `Product Repository`
-- the Runtime Home uses the normal shared selection rules
-- an existing active project with the exact repository path is reused
-- otherwise the project ID is derived from the final directory name
-- the agent MCP surface uses the baseline workflow profile
-- user interaction is not created
-- preflight runs automatically after registration
-- host-neutral agent configuration is printed
-
-Before storage mutation, setup rejects invalid project IDs and structurally impossible configuration output paths. A real non-dry-run setup may initialize or migrate a recognized existing Runtime Home after setup begins. Runtime failures, permission changes, storage exhaustion, operating-system errors, and MCP preflight failures can still occur after storage preparation or registration; setup reports completed actions where relevant and remains rerunnable.
-
-For exact defaults, conflict behavior, exit codes, and stream behavior, use [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration).
-
-## 3. Use explicit paths when needed
-
-Operators who need fixed locations can provide them directly:
+The setup command can run with defaults, but operators often use explicit paths so the selected locations are visible:
 
 ```sh
 /absolute/path/to/harness setup local-mcp \
@@ -62,9 +20,19 @@ Operators who need fixed locations can provide them directly:
   --mcp-command /absolute/path/to/harness-mcp
 ```
 
-Route detailed option behavior to [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration).
+Important selection rules at guide level:
 
-## 4. Read the setup result
+- `--repo-root` identifies the `Product Repository`; without it, setup uses the process current directory.
+- `--runtime-home` selects the `Harness Runtime Home`; without it, setup uses `HARNESS_HOME` or the shared user-home fallback.
+- `--project-id` selects the local project record. Without it, setup tries to reuse one exact repository match, otherwise derives an ID from the final repository directory name.
+- `--mcp-command` selects the `harness-mcp` executable. Without it, setup discovers a sibling `harness-mcp` next to the running `harness`, then searches `PATH`.
+- The agent MCP surface uses `surface_id=agent_mcp` and `surface_instance_id=agent_mcp_local`.
+
+Before storage mutation, setup rejects invalid project IDs, inaccessible repository paths, executable-discovery failures, and structurally impossible configuration output paths. A real non-dry-run setup may initialize or migrate a recognized existing `Harness Runtime Home` after setup begins. Setup is designed to be rerunnable after partial failure, but it does not promise a cross-database, cross-file, or cross-system rollback.
+
+Route exact defaults, validation order, conflict behavior, exit codes, and stream behavior to [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration).
+
+## Setup Result And Host-Neutral Configuration
 
 A successful text result includes important lines like these. Treat them as human-readable command output, not as a public API schema:
 
@@ -72,10 +40,12 @@ A successful text result includes important lines like these. Treat them as huma
 setup: complete
 runtime_home: ...
 project_id: ...
+repo_root: ...
 agent_surface_id: agent_mcp
 agent_surface_instance_id: agent_mcp_local
 mcp_command: ...
 preflight: passed
+agent_preflight: passed
 ```
 
 The actions section identifies what setup did:
@@ -84,7 +54,7 @@ The actions section identifies what setup did:
 - `reused` means an existing compatible record was kept.
 - `updated` means setup replaced a target surface only through the explicit conflict-handling path owned by the Administrative CLI.
 
-The printed `agent_config_json` is the host-neutral fragment for the ordinary agent process:
+Without `--config-dir`, the printed `agent_config_json` is the host-neutral fragment for the ordinary agent process:
 
 ```json
 {
@@ -102,14 +72,16 @@ The printed `agent_config_json` is the host-neutral fragment for the ordinary ag
 }
 ```
 
-Place that fragment in the configuration location and wrapper shape used by the MCP host you operate. Do not configure a URL, TCP port, HTTP endpoint, or socket path for the baseline local MCP process.
+Place that fragment in the configuration location and wrapper shape used by the MCP host you operate. The setup command does not install, discover, or edit an unknown external host. Do not configure a URL, TCP port, HTTP endpoint, or socket path for the baseline local MCP process.
 
-## 5. Optional user-interaction connector setup
+## Optional User-Interaction Binding
 
 Only add the user-interaction binding when a real user-facing UI or connector will submit user actions:
 
 ```sh
-harness setup local-mcp --with-user-interaction
+/absolute/path/to/harness setup local-mcp \
+  --repo-root /absolute/path/to/product-repository \
+  --with-user-interaction
 ```
 
 This creates and preflights a separate `user_interaction` surface, then prints a separate `harness-user-interaction` configuration. It does not merge that binding into the ordinary agent configuration.
@@ -134,12 +106,14 @@ The user-interaction configuration is for the appropriate UI or connector, not f
 
 `actor_kind=user` alone is insufficient. Authority-bearing user actions require the appropriate user-facing UI or connector to use the separate `user_interaction` binding. Exact actor-provenance rules are in [Agent Integration](../reference/agent-integration.md#current-surface-context).
 
-## 6. Write configuration files
+## Generated Configuration Files
 
 To write host-neutral fragments to a directory:
 
 ```sh
-harness setup local-mcp --config-dir /absolute/path/to/generated-mcp-config
+/absolute/path/to/harness setup local-mcp \
+  --repo-root /absolute/path/to/product-repository \
+  --config-dir /absolute/path/to/generated-mcp-config
 ```
 
 Expected files:
@@ -155,39 +129,52 @@ Existing files are not overwritten by default. Use `--overwrite-config` only whe
 
 Setup validates whether the configuration directory and all requested target files are structurally usable before storage mutation. Dry-run performs the same structural checks without creating the directory or files. Detailed path rules are in [Administrative CLI](../reference/admin-cli.md#host-neutral-configuration).
 
-## 7. Preview or automate setup
+## Dry-Run Preview
 
-Preview setup:
+Preview the same setup path without registration, preflight, Runtime Home creation, database writes, migration, or configuration-file writes:
 
 ```sh
-harness setup local-mcp --dry-run
+/absolute/path/to/harness setup local-mcp \
+  --runtime-home /absolute/path/to/harness-runtime-home \
+  --repo-root /absolute/path/to/product-repository \
+  --project-id demo \
+  --mcp-command /absolute/path/to/harness-mcp \
+  --dry-run
 ```
 
-Dry run performs path resolution, planning, executable discovery, configuration rendering, and conflict analysis. It performs no registration, preflight, Runtime Home creation, database writes, migration, or configuration-file writes.
+Dry run performs path resolution, planning, executable discovery, configuration rendering, and conflict analysis. Its output reports `setup: dry_run` and `preflight: planned`, not `preflight: passed`.
 
 Dry-run inspection is read-only and safe for preview. If the repository directory name cannot become a valid project ID, rerun with an explicit valid `--project-id`.
+
+Detailed dry-run behavior stays in [Administrative CLI](../reference/admin-cli.md#dry-run).
+
+## JSON Output For Automation
 
 For automation, request JSON output:
 
 ```sh
-harness setup local-mcp --output json
+/absolute/path/to/harness setup local-mcp \
+  --repo-root /absolute/path/to/product-repository \
+  --output json
 ```
 
 JSON mode emits one machine-readable success object on stdout. Automation should use JSON instead of parsing human-readable text. Errors continue to use stderr and process status. JSON output is administrative CLI output, not a public Harness API response schema.
 
-## 8. Optional interactive wizard
+The exact JSON success fields are owned by [Administrative CLI](../reference/admin-cli.md#setup-output).
+
+## Optional Interactive Wizard
 
 Use the wizard when you want setup to prompt for the same inputs:
 
 ```sh
-harness setup local-mcp --interactive
+/absolute/path/to/harness setup local-mcp --interactive
 ```
 
-The wizard is optional and requires a terminal. It displays the agent binding and access classes, defaults the user-interaction connector to no, requires explicit confirmation for destructive replacement and configuration overwrite, and creates no persistent setup writes when final confirmation is cancelled. It uses the same setup engine as the non-interactive command. The exact prompt behavior stays in [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration).
+The wizard is optional and requires a terminal. It displays the agent binding and access classes, defaults the user-interaction connector to no, requires explicit confirmation for destructive replacement and configuration overwrite, and creates no persistent setup writes when final confirmation is cancelled. It uses the same setup engine as the non-interactive command. The exact prompt behavior stays in [Administrative CLI](../reference/admin-cli.md#interactive-setup-frontend).
 
 Before final confirmation, the wizard uses read-only planning. You can cancel, decline a conflicting-surface replacement, decline configuration overwrite, or decline the final plan without Runtime Home initialization, storage migration, preflight, registration, or configuration-file creation. After final confirmation, real setup may migrate a recognized existing Runtime Home.
 
-## 9. Verify connection and tool discovery
+## Connection And Tool Discovery Verification
 
 After the host launches the agent process, verify this MCP sequence:
 
@@ -215,13 +202,13 @@ A raw stdio smoke test uses one JSON value per line:
 {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"demo","task_id":null,"actor_kind":"agent","surface_id":"agent_mcp","request_id":"req_quickstart_status","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":false,"evidence":false,"close":true,"guarantees":true}}}}
 ```
 
-## 10. Stop and reconnect
+## Stop And Reconnect
 
 An MCP host stops a local session by closing stdin or terminating the child process. Stdin EOF ends the stdio session after stdout is flushed.
 
 SQLite state remains in the Runtime Home. Starting a new `harness-mcp` child process with the same `HARNESS_HOME`, `HARNESS_PROJECT_ID`, `HARNESS_SURFACE_ID`, and `HARNESS_SURFACE_INSTANCE_ID` reconnects to the same stored project state. Changing project, surface, or surface instance requires another process.
 
-## Advanced manual setup and recovery
+## Advanced Manual Setup And Recovery
 
 Use the lower-level commands when you need custom IDs, need to diagnose conflicts, repair a partial setup, inspect registration, or support automation that cannot use `harness setup local-mcp`.
 
@@ -291,7 +278,7 @@ For the agent binding, expect `configuration: valid`, `transport: stdio`, `inter
 
 | Symptom | Likely cause | Next action |
 |---|---|---|
-| `harness-mcp` is not found. | It is not beside `harness` and is not on `PATH`. | Build both release executables, add `harness-mcp` to `PATH`, or pass `--mcp-command /absolute/path/to/harness-mcp`. |
+| `harness-mcp` is not found. | It is not beside `harness` and is not on `PATH`. | Build both executables, add `harness-mcp` to `PATH`, or pass `--mcp-command /absolute/path/to/harness-mcp`. |
 | The repository directory has no usable derived ID. | Setup cannot derive a valid path-component project ID from the final directory name. | Re-run with an explicit valid `--project-id`. |
 | Multiple projects match the same repository. | More than one registered project points to the canonical repository path. | Re-run with the intended `--project-id`, or inspect registration with Administrative CLI commands. |
 | The project ID points to another repository. | The selected `--project-id` is already registered for a different `repo_root`. | Choose the correct project ID or repository; setup does not rebind project IDs. |

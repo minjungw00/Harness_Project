@@ -1,19 +1,27 @@
 # Harness Documentation Directory
 
-This directory contains the maintained English and Korean Harness documentation plus the metadata used for owner routing and terminology control.
+This directory contains the maintained English and Korean Harness documentation plus the metadata used by maintainers for owner routing and terminology control.
 
 Choose a language first:
 
-- English: [`en/README.md`](en/README.md)
-- 한국어: [`ko/README.md`](ko/README.md)
+- English: [en/README.md](en/README.md)
+- Korean: [ko/README.md](ko/README.md)
 
-One-command local MCP setup for operators: [English](en/guides/local-mcp-setup.md) / [한국어](ko/guides/local-mcp-setup.md).
+Fast reader routes:
+
+- Product orientation: [English](en/getting-started/overview.md) / [Korean](ko/getting-started/overview.md)
+- Installation: [English](en/getting-started/installation.md) / [Korean](ko/getting-started/installation.md)
+- Local MCP quickstart: [English](en/getting-started/quickstart.md) / [Korean](ko/getting-started/quickstart.md)
+- Detailed local MCP setup: [English](en/guides/local-mcp-setup.md) / [Korean](ko/guides/local-mcp-setup.md)
+- Reference navigation: [English](en/reference/README.md) / [Korean](ko/reference/README.md)
 
 Shared metadata:
 
-- [`doc-index.yaml`](doc-index.yaml) is the canonical machine-readable route for documentation owners and paired paths.
-- [`terminology-map.yaml`](terminology-map.yaml) is the terminology and identifier-preservation source of truth.
+- [doc-index.yaml](doc-index.yaml) is the canonical machine-readable route for documentation owners and paired paths.
+- [terminology-map.yaml](terminology-map.yaml) is the terminology and identifier-preservation source of truth.
 
-Maintainers and implementation agents should read [`../AGENTS.md`](../AGENTS.md), then the relevant authoring, translation, and check guidance under `docs/*/maintain/`.
+Those metadata files support maintainers, translators, and agents. Ordinary readers should start from the language entry pages, Getting Started, Guides, Development, or Reference pages.
 
-This README is an entry route. It does not define API behavior, storage effects, security guarantees, schemas, or detailed owner maps. Use human-readable indexes for navigation and `doc-index.yaml` for exact owner routing.
+Maintainers and implementation agents should read [../AGENTS.md](../AGENTS.md), then the relevant authoring, translation, and check guidance under `docs/*/maintain/`.
+
+This README is an entry route. It does not define API behavior, storage effects, security guarantees, schemas, Core authority semantics, or detailed owner maps.

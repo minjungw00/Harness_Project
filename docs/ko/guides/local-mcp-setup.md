@@ -1,58 +1,16 @@
 # 로컬 MCP 설정
 
-하나의 `Product Repository`에 대해 일반적인 로컬 MCP 설정 경로가 필요할 때 이 가이드를 사용합니다.
+가장 짧은 첫 실행 경로를 지나 로컬 MCP 설정을 운영해야 할 때 이 가이드를 사용합니다.
 
-`harness`가 로컬 설정을 수행합니다. `harness-mcp`는 설정 뒤 MCP 호스트가 자식 프로세스로 시작하는 실행 파일입니다. 로컬 MCP 프로세스는 네트워크 포트, URL, 소켓, 리스너가 아니라 stdio로 통신합니다. 설정 명령은 알맞은 호스트별 설정에 복사할 수 있는 호스트 중립 설정을 생성합니다. 알 수 없는 외부 호스트를 설치하거나 찾아내거나 편집하지 않습니다.
+실행 파일을 빌드하거나 찾는 방법은 [설치](../getting-started/installation.md)에서 시작하고, 최소 성공 경로는 [빠른 시작](../getting-started/quickstart.md)을 봅니다. 이 가이드는 명시 경로 선택, 사용자 상호작용 바인딩, 생성되는 호스트 중립 설정, dry-run 동작, JSON 출력, 대화형 마법사, 연결 확인, 복구, 문제 해결을 담당합니다.
 
-이 문서는 작업 중심 온보딩 순서만 담당합니다. 정확한 `harness` 명령 동작은 [관리 CLI](../reference/admin-cli.md#local-mcp-setup-orchestration)가 담당합니다. 정확한 `harness-mcp` 프로세스 동작, stdio 프레이밍, 응답 래핑, 사전 점검, 종료, 재연결은 [MCP 전송](../reference/mcp-transport.md)이 담당합니다. 런타임 위치 경계는 [런타임 경계](../reference/runtime-boundaries.md)가 담당합니다. 접점 역할과 행위자 출처 경계는 [에이전트 통합](../reference/agent-integration.md)이 담당합니다.
+`harness`가 로컬 설정을 수행합니다. `harness-mcp`는 설정 뒤 MCP 호스트가 시작하는 자식 프로세스입니다. 로컬 MCP 프로세스는 네트워크 포트, URL, 소켓, 리스너가 아니라 stdio로 통신합니다.
 
-## 1. 실행 파일 빌드
+정확한 `harness` 명령 동작은 [관리 CLI](../reference/admin-cli.md#local-mcp-setup-orchestration)가 담당합니다. 정확한 `harness-mcp` 프로세스 동작, stdio 프레이밍, 응답 래핑, 사전 점검, 종료, 재연결은 [MCP 전송](../reference/mcp-transport.md)이 담당합니다. 런타임 위치 경계는 [런타임 경계](../reference/runtime-boundaries.md)가 담당합니다. 접점 역할과 행위자 출처 경계는 [에이전트 통합](../reference/agent-integration.md)이 담당합니다.
 
-하네스 저장소 루트에서 실행합니다.
+## 입력과 경로 선택
 
-```sh
-cargo build --release -p harness-cli -p harness-mcp
-```
-
-예상되는 release 실행 파일:
-
-- `target/release/harness`
-- `target/release/harness-mcp`
-
-옵션 없는 설정은 아래 조건에서 `harness-mcp`를 찾을 수 있습니다.
-
-- release 빌드 출력처럼 `harness-mcp`가 `harness` 옆에 있음
-- `harness-mcp`가 `PATH`에 있음
-
-특정 MCP 실행 파일을 지정해야 할 때만 `--mcp-command`를 사용합니다.
-
-## 2. 일반 설정 경로 실행
-
-바인딩하려는 제품 저장소에서 실행합니다.
-
-```sh
-cd /absolute/path/to/product-repository
-/absolute/path/to/harness setup local-mcp
-```
-
-옵션 없는 경로는 가이드 수준에서 아래 기본값을 사용합니다.
-
-- 현재 디렉터리를 `Product Repository`로 사용합니다.
-- Runtime Home은 일반 공유 선택 규칙을 사용합니다.
-- 정확히 같은 저장소 경로를 가진 기존 `active` 프로젝트가 있으면 재사용합니다.
-- 그렇지 않으면 최종 디렉터리 이름에서 프로젝트 ID를 파생합니다.
-- 에이전트 MCP 접점은 기준 워크플로 프로필을 사용합니다.
-- 사용자 상호작용은 만들지 않습니다.
-- 등록 뒤 사전 점검을 자동으로 실행합니다.
-- 호스트 중립 에이전트 설정을 출력합니다.
-
-저장소 변경 전에 설정은 무효 프로젝트 ID와 구조적으로 불가능한 설정 출력 경로를 거절합니다. 실제 설정, 즉 dry-run이 아닌 실행은 설정이 시작된 뒤 인식된 기존 Runtime Home을 초기화하거나 마이그레이션할 수 있습니다. 저장소 준비나 등록 뒤에도 런타임 실패, 권한 변경, 저장 공간 고갈, 운영체제 오류, MCP 사전 점검 실패가 발생할 수 있습니다. 설정은 관련될 때 완료된 작업을 보고하고 다시 실행할 수 있어야 합니다.
-
-정확한 기본값, 충돌 처리, 종료 코드, 스트림 동작은 [관리 CLI](../reference/admin-cli.md#local-mcp-setup-orchestration)를 봅니다.
-
-## 3. 필요할 때 명시 경로 사용
-
-고정 위치가 필요한 운영자는 직접 값을 지정할 수 있습니다.
+설정 명령은 기본값으로 실행할 수 있지만, 운영자는 선택된 위치가 보이도록 명시 경로를 자주 사용합니다.
 
 ```sh
 /absolute/path/to/harness setup local-mcp \
@@ -62,9 +20,19 @@ cd /absolute/path/to/product-repository
   --mcp-command /absolute/path/to/harness-mcp
 ```
 
-자세한 옵션 동작은 [관리 CLI](../reference/admin-cli.md#local-mcp-setup-orchestration)로 보냅니다.
+가이드 수준의 중요한 선택 규칙은 아래와 같습니다.
 
-## 4. 설정 결과 읽기
+- `--repo-root`는 `Product Repository`를 식별합니다. 없으면 설정은 프로세스의 현재 디렉터리를 사용합니다.
+- `--runtime-home`은 `Harness Runtime Home`을 선택합니다. 없으면 설정은 `HARNESS_HOME` 또는 공유 사용자 홈 대체 경로를 사용합니다.
+- `--project-id`는 로컬 프로젝트 기록을 선택합니다. 없으면 설정은 정확히 일치하는 저장소 하나를 재사용하려고 하고, 그렇지 않으면 최종 저장소 디렉터리 이름에서 ID를 파생합니다.
+- `--mcp-command`는 `harness-mcp` 실행 파일을 선택합니다. 없으면 설정은 실행 중인 `harness` 옆의 형제 `harness-mcp`를 찾은 뒤 `PATH`를 검색합니다.
+- 에이전트 MCP 접점은 `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`을 사용합니다.
+
+저장소 변경 전에 설정은 무효 프로젝트 ID, 접근할 수 없는 저장소 경로, 실행 파일 탐색 실패, 구조적으로 불가능한 설정 출력 경로를 거절합니다. dry-run이 아닌 실제 설정은 설정이 시작된 뒤 인식된 기존 `Harness Runtime Home`을 초기화하거나 마이그레이션할 수 있습니다. 설정은 부분 실패 뒤 다시 실행할 수 있도록 설계되어 있지만, 데이터베이스, 파일, 시스템을 아우르는 되돌림을 약속하지 않습니다.
+
+정확한 기본값, 검증 순서, 충돌 처리, 종료 코드, 스트림 동작은 [관리 CLI](../reference/admin-cli.md#local-mcp-setup-orchestration)로 보냅니다.
+
+## 설정 결과와 호스트 중립 설정
 
 성공한 text 결과에는 아래와 같은 중요한 줄이 포함됩니다. 이는 사람이 읽는 명령 출력이지 공개 API 스키마가 아닙니다.
 
@@ -72,10 +40,12 @@ cd /absolute/path/to/product-repository
 setup: complete
 runtime_home: ...
 project_id: ...
+repo_root: ...
 agent_surface_id: agent_mcp
 agent_surface_instance_id: agent_mcp_local
 mcp_command: ...
 preflight: passed
+agent_preflight: passed
 ```
 
 actions 절은 설정이 수행한 일을 식별합니다.
@@ -84,7 +54,7 @@ actions 절은 설정이 수행한 일을 식별합니다.
 - `reused`는 호환되는 기존 기록을 유지했다는 뜻입니다.
 - `updated`는 관리 CLI가 담당하는 명시적 충돌 처리 경로를 통해서만 대상 접점을 교체했다는 뜻입니다.
 
-출력된 `agent_config_json`은 일반 에이전트 프로세스를 위한 호스트 중립 조각입니다.
+`--config-dir`가 없으면 출력된 `agent_config_json`은 일반 에이전트 프로세스를 위한 호스트 중립 조각입니다.
 
 ```json
 {
@@ -102,14 +72,16 @@ actions 절은 설정이 수행한 일을 식별합니다.
 }
 ```
 
-이 조각을 운영하는 MCP 호스트가 사용하는 설정 위치와 래퍼 형태에 맞게 넣습니다. 기준 로컬 MCP 프로세스에는 URL, TCP 포트, HTTP 엔드포인트, 소켓 경로를 설정하지 않습니다.
+이 조각을 운영하는 MCP 호스트가 사용하는 설정 위치와 래퍼 형태에 맞게 넣습니다. 설정 명령은 알 수 없는 외부 호스트를 설치하거나 찾아내거나 편집하지 않습니다. 기준 로컬 MCP 프로세스에는 URL, TCP 포트, HTTP 엔드포인트, 소켓 경로를 설정하지 않습니다.
 
-## 5. 선택적 사용자 상호작용 커넥터 설정
+## 선택적 사용자 상호작용 바인딩
 
 실제 사용자 대상 UI나 커넥터가 사용자 행동을 제출할 때만 사용자 상호작용 바인딩을 추가합니다.
 
 ```sh
-harness setup local-mcp --with-user-interaction
+/absolute/path/to/harness setup local-mcp \
+  --repo-root /absolute/path/to/product-repository \
+  --with-user-interaction
 ```
 
 이 명령은 별도의 `user_interaction` 접점을 만들고 사전 점검한 뒤, 별도의 `harness-user-interaction` 설정을 출력합니다. 이 바인딩을 일반 에이전트 설정에 합치지 않습니다.
@@ -134,12 +106,14 @@ harness setup local-mcp --with-user-interaction
 
 `actor_kind=user`만으로는 충분하지 않습니다. 권한을 지니는 사용자 행동에는 적절한 사용자 대상 UI나 커넥터가 별도 `user_interaction` 바인딩을 사용해야 합니다. 정확한 행위자 출처 규칙은 [에이전트 통합](../reference/agent-integration.md#current-surface-context)에 있습니다.
 
-## 6. 설정 파일 쓰기
+## 생성된 설정 파일
 
 호스트 중립 조각을 디렉터리에 쓰려면 아래처럼 실행합니다.
 
 ```sh
-harness setup local-mcp --config-dir /absolute/path/to/generated-mcp-config
+/absolute/path/to/harness setup local-mcp \
+  --repo-root /absolute/path/to/product-repository \
+  --config-dir /absolute/path/to/generated-mcp-config
 ```
 
 예상 파일:
@@ -155,39 +129,52 @@ harness-user-interaction.mcp.json
 
 설정은 저장소 변경 전에 설정 디렉터리와 요청된 모든 대상 파일이 구조적으로 사용 가능한지 검증합니다. Dry-run은 같은 구조 검사를 수행하지만 디렉터리나 파일을 만들지 않습니다. 자세한 경로 규칙은 [관리 CLI](../reference/admin-cli.md#host-neutral-configuration)에 있습니다.
 
-## 7. 설정 미리보기 또는 자동화
+## Dry-run 미리보기
 
-설정을 미리 보려면 아래처럼 실행합니다.
+등록, 사전 점검, Runtime Home 생성, 데이터베이스 쓰기, 마이그레이션, 설정 파일 쓰기 없이 같은 설정 경로를 미리 봅니다.
 
 ```sh
-harness setup local-mcp --dry-run
+/absolute/path/to/harness setup local-mcp \
+  --runtime-home /absolute/path/to/harness-runtime-home \
+  --repo-root /absolute/path/to/product-repository \
+  --project-id demo \
+  --mcp-command /absolute/path/to/harness-mcp \
+  --dry-run
 ```
 
-`dry-run`은 경로 해석, 계획, 실행 파일 탐색, 설정 렌더링, 충돌 분석을 수행합니다. 등록, 사전 점검, Runtime Home 생성, 데이터베이스 쓰기, 마이그레이션, 설정 파일 쓰기는 수행하지 않습니다.
+Dry-run은 경로 해석, 계획, 실행 파일 탐색, 설정 렌더링, 충돌 분석을 수행합니다. 출력은 `setup: dry_run`과 `preflight: planned`를 보고하며, `preflight: passed`를 보고하지 않습니다.
 
-`dry-run` 검사는 읽기 전용이며 미리보기로 안전합니다. 저장소 디렉터리 이름이 유효한 프로젝트 ID가 될 수 없으면 명시적으로 유효한 `--project-id`를 지정해 다시 실행합니다.
+Dry-run 검사는 읽기 전용이며 미리보기로 안전합니다. 저장소 디렉터리 이름이 유효한 프로젝트 ID가 될 수 없으면 명시적으로 유효한 `--project-id`를 지정해 다시 실행합니다.
+
+자세한 dry-run 동작은 [관리 CLI](../reference/admin-cli.md#dry-run)에 있습니다.
+
+## 자동화를 위한 JSON 출력
 
 자동화에서는 JSON 출력을 요청합니다.
 
 ```sh
-harness setup local-mcp --output json
+/absolute/path/to/harness setup local-mcp \
+  --repo-root /absolute/path/to/product-repository \
+  --output json
 ```
 
 JSON 모드는 stdout에 기계가 읽을 수 있는 성공 객체 하나를 출력합니다. 자동화는 사람이 읽는 텍스트를 파싱하지 말고 JSON을 사용해야 합니다. 오류는 계속 stderr와 프로세스 상태를 사용합니다. JSON 출력은 관리 CLI 출력이지 공개 하네스 API 응답 스키마가 아닙니다.
 
-## 8. 선택적 대화형 마법사
+정확한 JSON 성공 필드는 [관리 CLI](../reference/admin-cli.md#local-mcp-setup-orchestration)가 담당합니다.
+
+## 선택적 대화형 마법사
 
 같은 입력을 프롬프트로 확인하려면 마법사를 사용합니다.
 
 ```sh
-harness setup local-mcp --interactive
+/absolute/path/to/harness setup local-mcp --interactive
 ```
 
 마법사는 선택 사항이며 터미널이 필요합니다. 에이전트 바인딩과 접근 등급을 보여 주고, 사용자 상호작용 커넥터 기본값은 no로 둡니다. 파괴적 교체와 설정 덮어쓰기는 명시적 확인을 요구하고, 최종 확인에서 취소하면 영속 설정 쓰기를 만들지 않습니다. 비대화식 명령과 같은 설정 엔진을 사용합니다. 정확한 프롬프트 동작은 [관리 CLI](../reference/admin-cli.md#local-mcp-setup-orchestration)에 있습니다.
 
 최종 확인 전까지 마법사는 읽기 전용 계획을 사용합니다. 취소하거나, 충돌 접점 교체를 거절하거나, 설정 덮어쓰기를 거절하거나, 최종 계획을 거절해도 Runtime Home 초기화, 저장소 마이그레이션, 사전 점검, 등록, 설정 파일 생성은 일어나지 않습니다. 최종 확인 뒤에는 실제 설정이 인식된 기존 Runtime Home을 마이그레이션할 수 있습니다.
 
-## 9. 연결과 도구 탐색 확인
+## 연결과 도구 탐색 확인
 
 호스트가 에이전트 프로세스를 시작한 뒤 아래 MCP 순서를 확인합니다.
 
@@ -215,7 +202,7 @@ harness setup local-mcp --interactive
 {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"demo","task_id":null,"actor_kind":"agent","surface_id":"agent_mcp","request_id":"req_quickstart_status","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":false,"evidence":false,"close":true,"guarantees":true}}}}
 ```
 
-## 10. 중지와 재연결
+## 중지와 재연결
 
 MCP 호스트는 stdin을 닫거나 자식 프로세스를 종료해서 로컬 세션을 끝냅니다. stdin EOF는 stdout을 플러시한 뒤 stdio 세션을 끝냅니다.
 
@@ -291,7 +278,7 @@ HARNESS_SURFACE_INSTANCE_ID=agent_mcp_local \
 
 | 증상 | 가능한 원인 | 다음 행동 |
 |---|---|---|
-| `harness-mcp`를 찾을 수 없습니다. | `harness` 옆에 없고 `PATH`에도 없습니다. | 두 release 실행 파일을 빌드하거나, `harness-mcp`를 `PATH`에 추가하거나, `--mcp-command /absolute/path/to/harness-mcp`를 전달합니다. |
+| `harness-mcp`를 찾을 수 없습니다. | `harness` 옆에 없고 `PATH`에도 없습니다. | 두 실행 파일을 빌드하거나, `harness-mcp`를 `PATH`에 추가하거나, `--mcp-command /absolute/path/to/harness-mcp`를 전달합니다. |
 | 저장소 디렉터리에서 쓸 수 있는 ID를 파생할 수 없습니다. | 설정이 최종 디렉터리 이름에서 유효한 경로 구성 요소 프로젝트 ID를 파생할 수 없습니다. | 명시적으로 유효한 `--project-id`를 지정해 다시 실행합니다. |
 | 같은 저장소에 여러 프로젝트가 일치합니다. | 등록된 프로젝트 둘 이상이 정규화된 저장소 경로를 가리킵니다. | 의도한 `--project-id`로 다시 실행하거나 관리 CLI 명령으로 등록 상태를 확인합니다. |
 | 프로젝트 ID가 다른 저장소를 가리킵니다. | 선택한 `--project-id`가 이미 다른 `repo_root`에 등록되어 있습니다. | 올바른 프로젝트 ID나 저장소를 선택합니다. 설정은 프로젝트 ID를 재바인딩하지 않습니다. |
