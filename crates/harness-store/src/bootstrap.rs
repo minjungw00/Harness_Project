@@ -6,6 +6,7 @@ use serde_json::Value;
 
 use crate::{
     migrations::{PROJECT_STATE_SCHEMA_VERSION, REGISTRY_SCHEMA_VERSION, STORAGE_PROFILE},
+    runtime_home::{validate_project_home_boundary, validate_runtime_home_product_repository},
     sqlite::{
         open_project_state_database, open_registry_database, project_home_path, registry_db_path,
         with_immediate_transaction, PROJECT_STATE_DB_FILE,
@@ -150,7 +151,11 @@ pub fn register_project(
     validate_project_status(&registration.status)?;
     validate_json_object("projects.metadata_json", &registration.metadata_json)?;
 
-    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let path_validation =
+        validate_runtime_home_product_repository(runtime_home.as_ref(), &registration.repo_root)
+            .map_err(path_boundary_input)?;
+    let runtime_home = path_validation.runtime_home;
+    let repo_root = path_validation.repo_root;
     let registry_path = registry_db_path(&runtime_home);
     let mut registry = open_registry_database(&registry_path)?;
     let runtime_home_row =
@@ -163,8 +168,10 @@ pub fn register_project(
     let project_home = registration
         .project_home
         .unwrap_or_else(|| project_home_path(&runtime_home, &registration.project_id));
+    let project_home = validate_project_home_boundary(&runtime_home, &repo_root, &project_home)
+        .map_err(path_boundary_input)?;
     let state_db_path = project_home.join(PROJECT_STATE_DB_FILE);
-    let repo_root_text = path_to_text("repo_root", &registration.repo_root)?;
+    let repo_root_text = path_to_text("repo_root", &repo_root)?;
     let project_home_text = path_to_text("project_home", &project_home)?;
     let state_db_path_text = path_to_text("state_db_path", &state_db_path)?;
 
@@ -256,6 +263,12 @@ pub fn register_project(
             id: registration.project_id,
         }
     })
+}
+
+fn path_boundary_input(error: crate::runtime_home::RuntimePathBoundaryError) -> StoreError {
+    StoreError::InvalidInput {
+        detail: error.to_string(),
+    }
 }
 
 /// Lists registered projects in deterministic order.
@@ -663,8 +676,7 @@ mod tests {
     fn project_registration_uses_project_id_validator_even_with_custom_home(
     ) -> Result<(), Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("store-project-id-validation")?;
-        let repo_root = runtime_home.path().join("repo");
-        fs::create_dir_all(&repo_root)?;
+        let repo_root = runtime_home.create_product_repo("repo")?;
         initialize_runtime_home(runtime_home.path(), "runtime_home_validation", "{}")?;
 
         let error = register_project(
@@ -681,6 +693,170 @@ mod tests {
 
         assert!(matches!(error, StoreError::InvalidInput { .. }));
         assert!(!runtime_home.path().join("custom-project-home").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn project_registration_rejects_same_runtime_home_and_repository() -> Result<(), Box<dyn Error>>
+    {
+        let runtime_home = TempRuntimeHome::new("store-same-runtime-repo")?;
+        initialize_runtime_home(runtime_home.path(), "runtime_home_same_repo", "{}")?;
+
+        let error = register_project(
+            runtime_home.path(),
+            ProjectRegistration {
+                project_id: "project_same".to_owned(),
+                repo_root: runtime_home.path().to_path_buf(),
+                project_home: None,
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )
+        .expect_err("same Runtime Home and Product Repository should be rejected");
+
+        assert!(error.to_string().contains("same path"));
+        assert!(!runtime_home.project_state_db_path("project_same").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn project_registration_rejects_repository_inside_runtime_home() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("store-repo-inside-runtime")?;
+        let repo_root = runtime_home.path().join("repo");
+        fs::create_dir_all(&repo_root)?;
+        initialize_runtime_home(runtime_home.path(), "runtime_home_contains_repo", "{}")?;
+
+        let error = register_project(
+            runtime_home.path(),
+            ProjectRegistration {
+                project_id: "project_repo_inside".to_owned(),
+                repo_root,
+                project_home: None,
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )
+        .expect_err("repository under Runtime Home should be rejected");
+
+        assert!(error
+            .to_string()
+            .contains("Product Repository must not be inside Harness Runtime Home"));
+        assert!(!runtime_home
+            .project_state_db_path("project_repo_inside")
+            .exists());
+        Ok(())
+    }
+
+    #[test]
+    fn project_registration_rejects_runtime_home_inside_repository() -> Result<(), Box<dyn Error>> {
+        let root = TempRuntimeHome::new("store-runtime-inside-repo")?;
+        let repo_root = root.create_product_repo("repo")?;
+        let runtime_home = repo_root.join(".harness");
+        initialize_runtime_home(&runtime_home, "runtime_home_inside_repo", "{}")?;
+
+        let error = register_project(
+            &runtime_home,
+            ProjectRegistration {
+                project_id: "project_runtime_inside".to_owned(),
+                repo_root,
+                project_home: None,
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )
+        .expect_err("Runtime Home under repository should be rejected");
+
+        assert!(error
+            .to_string()
+            .contains("Harness Runtime Home must not be inside Product Repository"));
+        assert!(!project_home_path(&runtime_home, "project_runtime_inside").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn project_registration_accepts_separate_sibling_paths() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("store-sibling-paths")?;
+        let repo_root = runtime_home.create_product_repo("repo")?;
+        initialize_runtime_home(runtime_home.path(), "runtime_home_sibling", "{}")?;
+
+        let record = register_project(
+            runtime_home.path(),
+            ProjectRegistration {
+                project_id: "project_sibling".to_owned(),
+                repo_root: repo_root.clone(),
+                project_home: None,
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+
+        assert_eq!(record.repo_root, fs::canonicalize(repo_root)?);
+        assert!(record.project_home.starts_with(runtime_home.path()));
+        assert!(record.state_db_path.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn project_registration_rejects_custom_home_outside_runtime_home() -> Result<(), Box<dyn Error>>
+    {
+        let runtime_home = TempRuntimeHome::new("store-project-home-outside")?;
+        let repo_root = runtime_home.create_product_repo("repo")?;
+        let project_home = runtime_home
+            .path()
+            .parent()
+            .expect("runtime home has parent")
+            .join("outside-project-home");
+        initialize_runtime_home(
+            runtime_home.path(),
+            "runtime_home_project_home_outside",
+            "{}",
+        )?;
+
+        let error = register_project(
+            runtime_home.path(),
+            ProjectRegistration {
+                project_id: "project_home_outside".to_owned(),
+                repo_root,
+                project_home: Some(project_home.clone()),
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )
+        .expect_err("project_home outside Runtime Home should be rejected");
+
+        assert!(error.to_string().contains("project_home must be inside"));
+        assert!(!project_home.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn project_registration_rejects_custom_home_overlapping_repository(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("store-project-home-repo-overlap")?;
+        let repo_root = runtime_home.create_product_repo("repo")?;
+        let project_home = repo_root.join(".harness-project");
+        initialize_runtime_home(
+            runtime_home.path(),
+            "runtime_home_project_home_overlap",
+            "{}",
+        )?;
+
+        let error = register_project(
+            runtime_home.path(),
+            ProjectRegistration {
+                project_id: "project_home_overlap".to_owned(),
+                repo_root,
+                project_home: Some(project_home.clone()),
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )
+        .expect_err("project_home overlapping Product Repository should be rejected");
+
+        assert!(error
+            .to_string()
+            .contains("project_home must not overlap Product Repository"));
+        assert!(!project_home.exists());
         Ok(())
     }
 }

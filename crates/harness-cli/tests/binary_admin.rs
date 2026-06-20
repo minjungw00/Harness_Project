@@ -42,8 +42,7 @@ const USER_INSTANCE_ID: &str = "surface_instance_binary_user";
 fn harness_binary_runs_administrative_initialization_and_registration() -> Result<(), Box<dyn Error>>
 {
     let runtime_home = TempRuntimeHome::new("cli-bin-admin")?;
-    let repo_root = runtime_home.path().join("product-repo");
-    fs::create_dir_all(&repo_root)?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
     let repo_root_text = path_text(&repo_root);
 
     let help = run_without_home(["--help"])?;
@@ -211,8 +210,7 @@ fn harness_binary_setup_help_and_usage_errors() -> Result<(), Box<dyn Error>> {
 #[test]
 fn harness_binary_project_register_rejects_invalid_project_id() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-invalid-project-id")?;
-    let repo_root = runtime_home.path().join("product-repo");
-    fs::create_dir_all(&repo_root)?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
     let init = run_with_home(
         runtime_home.path(),
         ["init", "--runtime-home-id", "runtime_home_invalid_project"],
@@ -251,9 +249,8 @@ fn harness_binary_interactive_rejects_non_terminal_input() -> Result<(), Box<dyn
 #[test]
 fn harness_binary_json_dry_run_is_parseable_and_does_not_register() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-setup-dry-run")?;
-    let repo_root = runtime_home.path().join("product-repo");
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
     let mcp_command = runtime_home.path().join("harness-mcp");
-    fs::create_dir_all(&repo_root)?;
     fs::write(&mcp_command, "not executed during dry run")?;
 
     let output = run_without_home([
@@ -282,10 +279,9 @@ fn harness_binary_json_dry_run_is_parseable_and_does_not_register() -> Result<()
 fn harness_binary_setup_config_file_ancestor_fails_before_runtime_home_creation(
 ) -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-setup-config-ancestor")?;
-    let repo_root = runtime_home.path().join("product-repo");
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
     let mcp_command = runtime_home.path().join("harness-mcp");
     let output_root = runtime_home.path().join("output-root");
-    fs::create_dir_all(&repo_root)?;
     fs::write(&mcp_command, "not executed")?;
     fs::write(&output_root, "not a directory")?;
 
@@ -313,9 +309,8 @@ fn harness_binary_setup_config_file_ancestor_fails_before_runtime_home_creation(
 #[test]
 fn harness_binary_historical_setup_dry_run_and_real_execution() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-setup-historical")?;
-    let repo_root = runtime_home.path().join("product-repo");
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
     let marker = runtime_home.path().join("preflight-marker.txt");
-    fs::create_dir_all(&repo_root)?;
     initialize_historical_setup(runtime_home.path(), &repo_root, "product-repo")?;
     let state_path = project_state_db_path(runtime_home.path(), "product-repo");
     let before_migrations = migration_count(&state_path)?;
@@ -374,10 +369,9 @@ fn harness_binary_historical_setup_dry_run_and_real_execution() -> Result<(), Bo
 #[test]
 fn harness_binary_local_mcp_setup_flow() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-setup-real")?;
-    let repo_root = runtime_home.path().join("product-repo");
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
     let config_dir = runtime_home.path().join("configs");
     let marker = runtime_home.path().join("preflight-marker.txt");
-    fs::create_dir_all(&repo_root)?;
     let mcp_command = write_test_mcp(runtime_home.path(), &marker)?;
 
     let first = run_without_home([
@@ -506,9 +500,8 @@ fn harness_binary_local_mcp_setup_flow() -> Result<(), Box<dyn Error>> {
 #[test]
 fn harness_binary_preflight_failure_writes_no_configuration() -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-setup-preflight-fail")?;
-    let repo_root = runtime_home.path().join("product-repo");
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
     let config_dir = runtime_home.path().join("configs");
-    fs::create_dir_all(&repo_root)?;
     let mcp_command = write_failing_mcp(runtime_home.path())?;
 
     let failed = run_without_home([

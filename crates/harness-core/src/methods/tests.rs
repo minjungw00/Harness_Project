@@ -117,8 +117,7 @@ struct MethodHarness {
 impl MethodHarness {
     fn new() -> Result<Self, Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("core-methods")?;
-        let repo_root = runtime_home.path().join("repo");
-        fs::create_dir_all(&repo_root)?;
+        let repo_root = runtime_home.create_product_repo("repo")?;
         initialize_runtime_home(runtime_home.path(), "runtime_home_methods", "{}")?;
         register_project(
             runtime_home.path(),

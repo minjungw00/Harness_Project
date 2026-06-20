@@ -4288,7 +4288,7 @@ mod tests {
                 runtime_home.path(),
                 ProjectRegistration {
                     project_id: PROJECT_ID.to_owned(),
-                    repo_root: runtime_home.path().join("repo"),
+                    repo_root: runtime_home.create_product_repo("repo")?,
                     project_home: None,
                     status: ACTIVE_PROJECT_STATUS.to_owned(),
                     metadata_json: "{}".to_owned(),

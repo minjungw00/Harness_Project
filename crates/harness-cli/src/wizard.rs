@@ -1231,7 +1231,12 @@ mod tests {
         fn new(prefix: &str) -> Result<Self, Box<dyn Error>> {
             let temp = TempRuntimeHome::new(prefix)?;
             let runtime_home = temp.path().join("runtime-home");
-            let repo_root = temp.path().join("repo");
+            let repo_root = temp
+                .path()
+                .parent()
+                .expect("runtime home has parent")
+                .join("product-repositories")
+                .join("repo");
             fs::create_dir_all(&repo_root)?;
             let mcp_command = temp.path().join("harness-mcp");
             fs::write(&mcp_command, "test")?;
@@ -1274,7 +1279,12 @@ mod tests {
         fn new(prefix: &str, access_classes: &[AccessClass]) -> Result<Self, Box<dyn Error>> {
             let temp = TempRuntimeHome::new(prefix)?;
             let runtime_home = temp.path().join("runtime-home");
-            let repo_root = temp.path().join("repo");
+            let repo_root = temp
+                .path()
+                .parent()
+                .expect("runtime home has parent")
+                .join("product-repositories")
+                .join("repo");
             fs::create_dir_all(&repo_root)?;
             let mcp_command = temp.path().join("harness-mcp");
             fs::write(&mcp_command, "test")?;

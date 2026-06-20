@@ -1312,8 +1312,7 @@ mod tests {
 
     fn current_fixture(prefix: &str) -> Result<InspectionFixture, Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new(prefix)?;
-        let repo_root = runtime_home.path().join("repo");
-        fs::create_dir_all(&repo_root)?;
+        let repo_root = runtime_home.create_product_repo("repo")?;
         initialize_runtime_home(runtime_home.path(), RUNTIME_HOME_ID, "{}")?;
         let project = register_project(
             runtime_home.path(),

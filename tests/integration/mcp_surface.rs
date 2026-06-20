@@ -2315,10 +2315,7 @@ fn register_extra_project_surface_with_role(
     surface_instance_id: &str,
     interaction_role: SurfaceInteractionRole,
 ) -> Result<(), Box<dyn Error>> {
-    let repo_root = fixture
-        .runtime_home_path()
-        .join(format!("repo-{project_id}"));
-    fs::create_dir_all(&repo_root)?;
+    let repo_root = fixture.create_product_repo(format!("repo-{project_id}"))?;
     register_project(
         fixture.runtime_home_path(),
         ProjectRegistration {

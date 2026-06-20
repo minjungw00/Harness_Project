@@ -294,6 +294,7 @@ fn execute_local_mcp_setup_with_revalidation_hook(
             &plan.conflicts,
         )));
     }
+    let planned_runtime_home = plan.runtime_home.clone();
 
     validate_config_destinations(
         config_dir.as_deref(),
@@ -307,7 +308,7 @@ fn execute_local_mcp_setup_with_revalidation_hook(
         .ok_or_else(|| LocalMcpCommandError::runtime("setup plan has no selected project_id"))?;
     let configs = render_configs(
         parsed.include_user_interaction,
-        &runtime_home,
+        &planned_runtime_home,
         project_id,
         &mcp_command,
         config_dir.as_deref(),
@@ -316,7 +317,7 @@ fn execute_local_mcp_setup_with_revalidation_hook(
     if parsed.dry_run {
         return render_success_output(SuccessOutput {
             status: SetupStatus::DryRun,
-            runtime_home: &runtime_home,
+            runtime_home: &planned_runtime_home,
             repo_root: &plan.repo_root,
             project_id,
             mcp_command: &mcp_command,
@@ -345,7 +346,7 @@ fn execute_local_mcp_setup_with_revalidation_hook(
     for binding in setup_bindings_from_plan(&refreshed_plan) {
         match run_preflight(
             &mcp_command,
-            &runtime_home,
+            &result.runtime_home,
             &result.project_id,
             binding,
             process,
@@ -1720,6 +1721,46 @@ mod tests {
     }
 
     #[test]
+    fn path_boundary_failure_happens_before_persistent_setup_outputs() -> Result<(), Box<dyn Error>>
+    {
+        let fixture = CommandFixture::new("setup-path-boundary-before-output")?;
+        let repo_root = fixture
+            .temp
+            .create_product_repo("repo-containing-runtime")?;
+        let runtime_home = repo_root.join(".harness");
+        let config_dir = fixture.temp.path().join("configs");
+        let before = InvalidSetupSnapshot::read(&runtime_home, &config_dir)?;
+        let mut process = FakeProcess::new(&repo_root);
+
+        let error = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                runtime_home.to_str().expect("utf8 path"),
+                "--repo-root",
+                repo_root.to_str().expect("utf8 path"),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+                "--config-dir",
+                config_dir.to_str().expect("utf8 path"),
+            ]),
+            &repo_root,
+            &mut process,
+        )
+        .expect_err("runtime home inside repository should fail setup planning");
+        let after = InvalidSetupSnapshot::read(&runtime_home, &config_dir)?;
+
+        assert!(matches!(error, LocalMcpCommandError::Usage(_)));
+        assert!(error
+            .to_string()
+            .contains("Harness Runtime Home must not be inside Product Repository"));
+        assert_eq!(after, before);
+        assert!(!runtime_home.exists());
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
     fn dry_run_against_historical_state_preserves_persistent_state() -> Result<(), Box<dyn Error>> {
         let fixture = HistoricalCommandFixture::new(
             "setup-dry-run-historical",
@@ -2614,7 +2655,12 @@ mod tests {
         fn new(prefix: &str) -> Result<Self, Box<dyn Error>> {
             let temp = TempRuntimeHome::new(prefix)?;
             let runtime_home = temp.path().join("runtime-home");
-            let repo_root = temp.path().join("repo");
+            let repo_root = temp
+                .path()
+                .parent()
+                .expect("runtime home has parent")
+                .join("product-repositories")
+                .join("repo");
             let bin = temp.path().join("bin");
             fs::create_dir_all(&repo_root)?;
             fs::create_dir_all(&bin)?;
@@ -2676,7 +2722,12 @@ mod tests {
         ) -> Result<Self, Box<dyn Error>> {
             let temp = TempRuntimeHome::new(prefix)?;
             let runtime_home = temp.path().join("runtime-home");
-            let repo_root = temp.path().join("repo");
+            let repo_root = temp
+                .path()
+                .parent()
+                .expect("runtime home has parent")
+                .join("product-repositories")
+                .join("repo");
             let bin = temp.path().join("bin");
             fs::create_dir_all(&repo_root)?;
             fs::create_dir_all(&bin)?;

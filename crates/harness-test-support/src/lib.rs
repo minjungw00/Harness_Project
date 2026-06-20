@@ -5,7 +5,10 @@
 //! Helpers in this crate should use disposable locations, such as `/tmp`, for
 //! future runtime homes and fixture output.
 
-use std::path::{Path, PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use harness_store::{
     bootstrap::{
@@ -43,6 +46,7 @@ pub fn disposable_runtime_home(name: &str) -> PathBuf {
 #[derive(Debug)]
 pub struct TempRuntimeHome {
     dir: TempDir,
+    runtime_home_path: PathBuf,
 }
 
 impl TempRuntimeHome {
@@ -51,12 +55,32 @@ impl TempRuntimeHome {
         let dir = Builder::new()
             .prefix(&format!("harness-runtime-{prefix}-"))
             .tempdir()?;
-        Ok(Self { dir })
+        let runtime_home_path = dir.path().join("runtime-home");
+        fs::create_dir_all(&runtime_home_path)?;
+        Ok(Self {
+            dir,
+            runtime_home_path,
+        })
     }
 
     /// Returns the Runtime Home directory path.
     pub fn path(&self) -> &Path {
-        self.dir.path()
+        &self.runtime_home_path
+    }
+
+    /// Returns a sibling Product Repository path inside this disposable fixture root.
+    pub fn product_repo_path(&self, name: impl AsRef<Path>) -> PathBuf {
+        self.dir
+            .path()
+            .join("product-repositories")
+            .join(name.as_ref())
+    }
+
+    /// Creates and returns a sibling Product Repository directory.
+    pub fn create_product_repo(&self, name: impl AsRef<Path>) -> std::io::Result<PathBuf> {
+        let path = self.product_repo_path(name);
+        fs::create_dir_all(&path)?;
+        Ok(path)
     }
 
     /// Returns the `registry.sqlite` path under this Runtime Home.
@@ -119,6 +143,7 @@ pub mod core_fixtures {
     pub struct CoreFixture {
         _runtime_home: TempRuntimeHome,
         runtime_home_path: PathBuf,
+        product_repo_path: PathBuf,
         project_id: String,
         surface_id: String,
         surface_instance_id: String,
@@ -129,8 +154,7 @@ pub mod core_fixtures {
         pub fn new(prefix: &str) -> Result<Self, Box<dyn Error>> {
             let component = identifier_component(prefix);
             let runtime_home = TempRuntimeHome::new(&component)?;
-            let repo_root = runtime_home.path().join("repo");
-            fs::create_dir_all(&repo_root)?;
+            let repo_root = runtime_home.create_product_repo("repo")?;
 
             let project_id = DEFAULT_PROJECT_ID.to_owned();
             let surface_id = DEFAULT_SURFACE_ID.to_owned();
@@ -145,7 +169,7 @@ pub mod core_fixtures {
                 runtime_home.path(),
                 ProjectRegistration {
                     project_id: project_id.clone(),
-                    repo_root,
+                    repo_root: repo_root.clone(),
                     project_home: None,
                     status: ACTIVE_PROJECT_STATUS.to_owned(),
                     metadata_json: "{}".to_owned(),
@@ -182,6 +206,7 @@ pub mod core_fixtures {
             Ok(Self {
                 _runtime_home: runtime_home,
                 runtime_home_path,
+                product_repo_path: repo_root,
                 project_id,
                 surface_id,
                 surface_instance_id,
@@ -195,7 +220,18 @@ pub mod core_fixtures {
 
         /// Returns the disposable Product Repository path for this fixture project.
         pub fn product_repo_path(&self) -> PathBuf {
-            self.runtime_home_path.join("repo")
+            self.product_repo_path.clone()
+        }
+
+        /// Creates a disposable sibling Product Repository path for an extra fixture project.
+        pub fn create_product_repo(&self, name: impl AsRef<Path>) -> std::io::Result<PathBuf> {
+            let path = self
+                .product_repo_path
+                .parent()
+                .expect("fixture product repo has a parent")
+                .join(name.as_ref());
+            fs::create_dir_all(&path)?;
+            Ok(path)
         }
 
         /// Returns the registered project id.

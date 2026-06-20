@@ -15,6 +15,7 @@ use harness_store::{
         ProjectInspectionRecord, ProjectStateInspectionSnapshot, RegistryInspectionSnapshot,
         SurfaceInspectionRecord,
     },
+    runtime_home::validate_runtime_home_product_repository,
     sqlite::{open_project_state_database, open_registry_database, registry_db_path},
     StoreError,
 };
@@ -414,24 +415,17 @@ pub fn plan_local_mcp_setup(
         });
     }
 
-    let repo_root = fs::canonicalize(&options.repo_root).map_err(|error| {
-        SetupPlanError::RepositoryUnavailable {
-            repo_root: options.repo_root.clone(),
-            detail: error.to_string(),
-        }
-    })?;
-    if !repo_root.is_dir() {
-        return Err(SetupPlanError::RepositoryUnavailable {
-            repo_root,
-            detail: "not a directory".to_owned(),
-        });
-    }
+    let path_validation =
+        validate_runtime_home_product_repository(&options.runtime_home, &options.repo_root)
+            .map_err(setup_path_boundary_error)?;
+    let runtime_home = path_validation.runtime_home;
+    let repo_root = path_validation.repo_root;
 
     if let Some(project_id) = options.project_id.as_deref() {
         validate_project_id(project_id).map_err(project_id_options_error)?;
     }
 
-    let inspection = inspect_runtime_home(&options.runtime_home);
+    let inspection = inspect_runtime_home(&runtime_home);
     let registry_snapshot = match &inspection.registry {
         DatabaseInspection::Missing { .. } => None,
         DatabaseInspection::Present(snapshot) => Some(snapshot),
@@ -448,7 +442,7 @@ pub fn plan_local_mcp_setup(
         } else {
             SetupActionKind::Create
         },
-        options.runtime_home.clone(),
+        runtime_home.clone(),
     );
 
     let projects = registry_snapshot
@@ -492,7 +486,7 @@ pub fn plan_local_mcp_setup(
     }
 
     Ok(LocalMcpSetupPlan {
-        runtime_home: options.runtime_home,
+        runtime_home,
         selected_project_id: project_plan.selected_project_id,
         repo_root,
         runtime_home_action,
@@ -1147,6 +1141,24 @@ fn project_id_options_error(error: StoreError) -> SetupPlanError {
     }
 }
 
+fn setup_path_boundary_error(
+    error: harness_store::runtime_home::RuntimePathBoundaryError,
+) -> SetupPlanError {
+    match error {
+        harness_store::runtime_home::RuntimePathBoundaryError::InvalidPath {
+            role: "repo_root",
+            path,
+            detail,
+        } => SetupPlanError::RepositoryUnavailable {
+            repo_root: path,
+            detail,
+        },
+        other => SetupPlanError::InvalidOptions {
+            detail: other.to_string(),
+        },
+    }
+}
+
 fn project_repo_matches(project: &ProjectRecord, selected_repo_root: &Path) -> bool {
     if project.repo_root == selected_repo_root {
         return true;
@@ -1435,6 +1447,73 @@ mod tests {
     }
 
     #[test]
+    fn setup_planning_rejects_same_runtime_home_and_repository() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("setup-boundary-same")?;
+
+        let error = plan_local_mcp_setup(LocalMcpSetupOptions::new(
+            runtime_home.path(),
+            runtime_home.path(),
+        ))
+        .expect_err("same Runtime Home and Product Repository should fail planning");
+
+        assert!(error.to_string().contains("same path"));
+        assert!(!registry_db_path(runtime_home.path()).exists());
+        Ok(())
+    }
+
+    #[test]
+    fn setup_planning_rejects_repository_inside_runtime_home() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("setup-boundary-repo-inside")?;
+        let repo_root = runtime_home.path().join("repo");
+        fs::create_dir_all(&repo_root)?;
+
+        let error =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))
+                .expect_err("Product Repository under Runtime Home should fail planning");
+
+        assert!(error
+            .to_string()
+            .contains("Product Repository must not be inside Harness Runtime Home"));
+        assert!(!registry_db_path(runtime_home.path()).exists());
+        Ok(())
+    }
+
+    #[test]
+    fn setup_planning_rejects_runtime_home_inside_repository_without_creation(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = TempRuntimeHome::new("setup-boundary-runtime-inside")?;
+        let repo_root = fixture.create_product_repo("repo")?;
+        let runtime_home = repo_root.join(".harness");
+
+        let error = plan_local_mcp_setup(LocalMcpSetupOptions::new(&runtime_home, &repo_root))
+            .expect_err("Runtime Home under Product Repository should fail planning");
+
+        assert!(error
+            .to_string()
+            .contains("Harness Runtime Home must not be inside Product Repository"));
+        assert!(!runtime_home.exists());
+        assert!(!registry_db_path(&runtime_home).exists());
+        Ok(())
+    }
+
+    #[test]
+    fn setup_planning_accepts_component_distinct_text_prefix_paths() -> Result<(), Box<dyn Error>> {
+        let fixture = TempRuntimeHome::new("setup-boundary-text-prefix")?;
+        let parent = fixture.path().parent().expect("runtime home has parent");
+        let runtime_home = parent.join("repo");
+        let repo_root = parent.join("repository");
+        fs::create_dir_all(&repo_root)?;
+
+        let plan = plan_local_mcp_setup(LocalMcpSetupOptions::new(&runtime_home, &repo_root))?;
+
+        assert_eq!(plan.runtime_home_action.kind, SetupActionKind::Create);
+        assert_eq!(plan.project_action.kind, SetupActionKind::Create);
+        assert_eq!(plan.selected_project_id.as_deref(), Some("repository"));
+        assert!(!registry_db_path(&runtime_home).exists());
+        Ok(())
+    }
+
+    #[test]
     fn existing_runtime_home_is_reused() -> Result<(), Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("setup-existing-runtime")?;
         initialize(runtime_home.path())?;
@@ -1617,6 +1696,9 @@ mod tests {
         let runtime_home = TempRuntimeHome::new("setup-non-utf8-project")?;
         let repo_root = runtime_home
             .path()
+            .parent()
+            .expect("runtime home has parent")
+            .join("product-repositories")
             .join(PathBuf::from(OsString::from_vec(vec![
                 b'r', b'e', b'p', b'o', 0xFF,
             ])));
@@ -2224,7 +2306,11 @@ mod tests {
     }
 
     fn repo_dir(runtime_home: &Path, name: &str) -> Result<PathBuf, Box<dyn Error>> {
-        let repo_root = runtime_home.join(name);
+        let repo_root = runtime_home
+            .parent()
+            .expect("runtime home has parent")
+            .join("product-repositories")
+            .join(name);
         fs::create_dir_all(&repo_root)?;
         Ok(fs::canonicalize(repo_root)?)
     }
