@@ -198,12 +198,37 @@ fn harness_binary_setup_help_and_usage_errors() -> Result<(), Box<dyn Error>> {
     assert_success(&local_help);
     assert!(stdout(&local_help).contains("--interactive"));
     assert!(stdout(&local_help).contains("--runtime-home PATH"));
+    assert!(stdout(&local_help).contains("--repo-root PATH is required"));
+    assert!(stdout(&local_help).contains("--repo-root ."));
+    assert!(stdout(&local_help).contains("must be absolute"));
     assert!(stdout(&local_help).contains("--dry-run"));
 
     let invalid = run_without_home(["setup", "local-mcp", "--not-real"])?;
     assert_eq!(invalid.status.code(), Some(2));
     assert!(stderr(&invalid).contains("unknown option"));
 
+    Ok(())
+}
+
+#[test]
+fn harness_binary_setup_local_mcp_requires_repo_root_before_work() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-setup-requires-repo")?;
+    let selected_runtime_home = runtime_home.path().join("runtime-home");
+
+    let output = run_without_home([
+        "setup",
+        "local-mcp",
+        "--runtime-home",
+        path_text(&selected_runtime_home).as_str(),
+        "--dry-run",
+    ])?;
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(stdout(&output).is_empty());
+    assert!(stderr(&output).contains("--repo-root is required"));
+    assert!(!stderr(&output).contains("harness-mcp"));
+    assert!(!selected_runtime_home.exists());
+    assert!(!registry_db_path(&selected_runtime_home).exists());
     Ok(())
 }
 

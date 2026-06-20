@@ -10,7 +10,7 @@ Exact `harness` command behavior belongs to [Administrative CLI](../reference/ad
 
 ## Inputs And Path Selection
 
-The setup command can run with defaults, but operators often use explicit paths so the selected locations are visible:
+The setup command can use defaults for some inputs, but `Product Repository` selection is explicit. Operators often use explicit paths so the selected locations are visible:
 
 ```sh
 /absolute/path/to/harness setup local-mcp \
@@ -22,8 +22,8 @@ The setup command can run with defaults, but operators often use explicit paths 
 
 Important selection rules at guide level:
 
-- `--repo-root` identifies the `Product Repository`; without it, setup uses the process current directory.
-- `--runtime-home` selects the `Harness Runtime Home`; without it, setup uses `HARNESS_HOME` or the shared user-home fallback.
+- `--repo-root` identifies the `Product Repository`. Non-interactive setup requires it; use `--repo-root .` to select the current `Product Repository` explicitly. Interactive setup prompts when it is absent.
+- `--runtime-home` selects the `Harness Runtime Home`; an explicit setup value must be absolute. Without it, setup uses `HARNESS_HOME` or the shared user-home fallback.
 - `--project-id` selects the local project record. Without it, setup tries to reuse one exact repository match, otherwise derives an ID from the final repository directory name.
 - `--mcp-command` selects the `harness-mcp` executable. Without it, setup discovers a sibling `harness-mcp` next to the running `harness`, then searches `PATH`.
 - The agent MCP surface uses `surface_id=agent_mcp` and `surface_instance_id=agent_mcp_local`.

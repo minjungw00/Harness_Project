@@ -96,12 +96,18 @@ Boolean options are presence flags. Forms such as `--dry-run=true` are usage err
 
 Defaults:
 
-- `--repo-root` defaults to the process current working directory.
 - `--output` defaults to `text`.
 - `--interactive` is disabled unless present.
 - User-interaction setup is disabled unless `--with-user-interaction` is present.
 - The agent MCP surface target is `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`, `surface_kind=mcp`, `interaction_role=agent`, with the `baseline-workflow` access set.
 - The optional user-interaction MCP surface target is `surface_id=user_ui`, `surface_instance_id=user_ui_local`, `surface_kind=mcp`, `interaction_role=user_interaction`, with `read_status` and `core_mutation`.
+
+Selection rules:
+
+- Non-interactive setup requires `--repo-root`. Use `--repo-root .` as the explicit form for selecting the current `Product Repository`.
+- Interactive setup prompts for `Product Repository` when `--repo-root` is absent.
+- An explicit `--runtime-home` value for setup must be an absolute path. Omitting `--runtime-home` still uses `HARNESS_HOME` or the shared user-home fallback described in [Runtime Home setup selection](#runtime-home-setup-selection).
+- The selected `Harness Runtime Home` and `Product Repository` must satisfy the path-separation contract owned by [Runtime Boundaries](runtime-boundaries.md).
 
 ### Interactive setup frontend
 
@@ -139,8 +145,8 @@ Wizard prompt order:
 
 Prompt behavior:
 
-- The Runtime Home prompt shows the path selected by setup precedence as the default. Empty input accepts the default, entered values follow the existing Runtime Home rules, and prompting does not create the path.
-- The repository prompt defaults to `--repo-root` or the process current working directory. Empty input accepts the default. Entered paths are validated and canonicalized with a retryable prompt when inaccessible or not a directory, without mutating state.
+- The Runtime Home prompt shows the path selected by setup precedence as the default. Empty input accepts the default. Entered setup override values must be absolute paths, and prompting does not create the path.
+- The repository prompt shows an explicit `--repo-root` value as the default. Empty input accepts that default only when `--repo-root` was supplied. When `--repo-root` is absent, the prompt requires input and does not silently preselect the process current working directory. Entering `.` is the explicit current `Product Repository` form. Entered paths are validated and canonicalized with a retryable prompt when inaccessible or not a directory, without mutating state.
 - After repository selection, the project prompt uses the setup planner to suggest one exact matching project ID when available, otherwise the final directory name when valid. It requires explicit input when no valid suggestion exists, surfaces ambiguity instead of choosing among several matches, and shows project-ID-to-repository conflicts clearly. Project rebinding remains unsupported.
 - The agent binding review shows `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`, `interaction_role=agent`, and the access classes `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, and `run_recording`. This list is registration input, not user identity, trust, or Core authority.
 - The user-interaction connector prompt defaults to no. When selected, it shows a separate `surface_id=user_ui`, `surface_instance_id=user_ui_local`, `interaction_role=user_interaction` binding with `read_status` and `core_mutation`. The prompt explains that this is a separate connector binding, not an extension of the agent role; it is needed only when a real user-facing UI or connector submits the user action; `actor_kind=user` alone does not establish user authority; and its configuration remains separate from the agent configuration.
@@ -160,20 +166,19 @@ With `--interactive --dry-run`, the wizard gathers and confirms the same inputs,
 
 For `harness setup local-mcp`, Runtime Home selection order is:
 
-1. `--runtime-home`
+1. absolute `--runtime-home`
 2. `HARNESS_HOME`
 3. the shared user-home fallback defined in [Runtime Home selection](#runtime-home-selection)
 
-The selected path follows the shared Runtime Home resolution rules:
+An explicit `--runtime-home` value is invalid when it is empty or relative. When `--runtime-home` is absent, `HARNESS_HOME` and the shared user-home fallback follow the shared Runtime Home resolution rules.
 
-- an empty explicit value is invalid
-- a relative path is resolved against the process current working directory
-- the final path is absolute
-- the path need not exist before setup
+The final selected path is absolute and need not exist before setup.
 
 The setup command initializes the Runtime Home when it is not already initialized. It preserves an existing valid Runtime Home registration.
 
 ### Project selection
+
+Non-interactive setup requires `--repo-root`; the command does not infer the process current working directory. Interactive setup prompts for `Product Repository` when `--repo-root` is absent. `--repo-root .` is valid and explicitly selects the current `Product Repository`.
 
 The selected `repo_root` must be an existing accessible directory and must be canonicalized before comparison.
 
@@ -273,7 +278,7 @@ An exact repeated setup:
 - does not increment project `state_version`
 - generates deterministic host configuration
 
-Before registration changes, the command detects currently observable deterministic input errors, registration conflicts, executable-discovery failures, configuration-rendering failures, and output-path structure conflicts. Project-ID validation and generated-configuration path structure validation occur before storage initialization or migration.
+Before registration changes, the command detects currently observable deterministic input errors, registration conflicts, executable-discovery failures, configuration-rendering failures, and output-path structure conflicts. Missing non-interactive `--repo-root` and invalid explicit `--runtime-home` values fail before executable discovery. Project-ID validation and generated-configuration path structure validation occur before storage initialization or migration.
 
 This pre-mutation validation is not a race-free or failure-free guarantee. External filesystem changes, permission changes, storage exhaustion, operating-system errors, MCP preflight failures, and other runtime failures may still occur after storage preparation or registration begins. File checks cannot eliminate time-of-check/time-of-use races. A later failure reports completed actions where relevant, generated destination files continue to use same-directory temporary-file replacement behavior, and no cross-system transaction is promised.
 

@@ -10,7 +10,7 @@
 
 ## 입력과 경로 선택
 
-설정 명령은 기본값으로 실행할 수 있지만, 운영자는 선택된 위치가 보이도록 명시 경로를 자주 사용합니다.
+설정 명령은 일부 입력에 기본값을 사용할 수 있지만 `Product Repository` 선택은 명시적입니다. 운영자는 선택된 위치가 보이도록 명시 경로를 자주 사용합니다.
 
 ```sh
 /absolute/path/to/harness setup local-mcp \
@@ -22,8 +22,8 @@
 
 가이드 수준의 중요한 선택 규칙은 아래와 같습니다.
 
-- `--repo-root`는 `Product Repository`를 식별합니다. 없으면 설정은 프로세스의 현재 디렉터리를 사용합니다.
-- `--runtime-home`은 `Harness Runtime Home`을 선택합니다. 없으면 설정은 `HARNESS_HOME` 또는 공유 사용자 홈 대체 경로를 사용합니다.
+- `--repo-root`는 `Product Repository`를 식별합니다. 비대화식 설정에는 필수이며, 현재 `Product Repository`를 명시적으로 선택하려면 `--repo-root .`을 사용합니다. 대화형 설정에서는 이 값이 없으면 프롬프트를 표시합니다.
+- `--runtime-home`은 `Harness Runtime Home`을 선택합니다. 명시한 설정 값은 절대 경로여야 합니다. 없으면 설정은 `HARNESS_HOME` 또는 공유 사용자 홈 대체 경로를 사용합니다.
 - `--project-id`는 로컬 프로젝트 기록을 선택합니다. 없으면 설정은 정확히 일치하는 저장소 하나를 재사용하려고 하고, 그렇지 않으면 최종 저장소 디렉터리 이름에서 ID를 파생합니다.
 - `--mcp-command`는 `harness-mcp` 실행 파일을 선택합니다. 없으면 설정은 실행 중인 `harness` 옆의 형제 `harness-mcp`를 찾은 뒤 `PATH`를 검색합니다.
 - 에이전트 MCP 접점은 `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`을 사용합니다.

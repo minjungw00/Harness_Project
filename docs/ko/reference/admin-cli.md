@@ -98,12 +98,18 @@ harness surface list --project-id ID
 
 기본값:
 
-- `--repo-root`의 기본값은 프로세스 현재 작업 디렉터리입니다.
 - `--output`의 기본값은 `text`입니다.
 - `--interactive`는 있을 때만 켜집니다.
 - `--with-user-interaction`이 있을 때만 사용자 상호작용 설정을 수행합니다.
 - 에이전트 MCP 접점 대상은 `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`, `surface_kind=mcp`, `interaction_role=agent`이고 `baseline-workflow` 접근 집합을 사용합니다.
 - 선택적 사용자 상호작용 MCP 접점 대상은 `surface_id=user_ui`, `surface_instance_id=user_ui_local`, `surface_kind=mcp`, `interaction_role=user_interaction`이고 `read_status`와 `core_mutation`을 사용합니다.
+
+선택 규칙:
+
+- 비대화식 설정에는 `--repo-root`가 필수입니다. 현재 `Product Repository`를 선택하려면 명시 형식인 `--repo-root .`을 사용합니다.
+- 대화형 설정에서 `--repo-root`가 없으면 `Product Repository`를 입력하라는 프롬프트를 표시합니다.
+- 설정에서 명시한 `--runtime-home` 값은 절대 경로여야 합니다. `--runtime-home`을 생략하면 [Runtime Home 설정 선택](#runtime-home-setup-selection)에서 설명하는 `HARNESS_HOME` 또는 공유 사용자 홈 대체 경로를 계속 사용합니다.
+- 선택된 `Harness Runtime Home`과 `Product Repository`는 [런타임 경계](runtime-boundaries.md)가 담당하는 경로 분리 계약을 만족해야 합니다.
 
 ### 대화형 설정 프런트엔드
 
@@ -141,8 +147,8 @@ harness surface list --project-id ID
 
 프롬프트 동작:
 
-- Runtime Home 프롬프트는 설정 우선순위가 선택한 경로를 기본값으로 보여 줍니다. 빈 입력은 기본값을 받아들이고, 입력한 값은 기존 Runtime Home 규칙을 따르며, 프롬프트 중에는 경로를 만들지 않습니다.
-- 저장소 프롬프트는 `--repo-root` 또는 프로세스 현재 작업 디렉터리를 기본값으로 씁니다. 빈 입력은 기본값을 받아들입니다. 입력한 경로는 검증하고 정규화하며, 접근할 수 없거나 디렉터리가 아니면 상태를 바꾸지 않고 다시 입력하게 합니다.
+- Runtime Home 프롬프트는 설정 우선순위가 선택한 경로를 기본값으로 보여 줍니다. 빈 입력은 기본값을 받아들입니다. 입력한 설정 재정의 값은 절대 경로여야 하며, 프롬프트 중에는 경로를 만들지 않습니다.
+- 저장소 프롬프트는 명시한 `--repo-root` 값을 기본값으로 보여 줍니다. 빈 입력은 `--repo-root`가 제공된 경우에만 그 기본값을 받아들입니다. `--repo-root`가 없으면 프롬프트는 입력을 요구하고 프로세스 현재 작업 디렉터리를 조용히 미리 선택하지 않습니다. `.` 입력은 현재 `Product Repository`를 명시적으로 선택하는 형식입니다. 입력한 경로는 검증하고 정규화하며, 접근할 수 없거나 디렉터리가 아니면 상태를 바꾸지 않고 다시 입력하게 합니다.
 - 저장소 선택 뒤 프로젝트 프롬프트는 설정 플래너를 사용해 정확히 하나의 일치 프로젝트 ID가 있으면 그것을 제안하고, 없으면 유효할 때 최종 디렉터리 이름을 제안합니다. 유효한 제안이 없으면 명시 입력을 요구하고, 여러 일치 항목 중 하나를 고르지 않고 모호함을 드러내며, 프로젝트 ID와 저장소의 충돌을 분명히 보여 줍니다. 프로젝트 재바인딩은 계속 지원하지 않습니다.
 - 에이전트 바인딩 검토는 `surface_id=agent_mcp`, `surface_instance_id=agent_mcp_local`, `interaction_role=agent`와 접근 등급 `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, `run_recording`을 보여 줍니다. 이 목록은 등록 입력이지 사용자 신원, 신뢰, Core 권한이 아닙니다.
 - 사용자 상호작용 커넥터 프롬프트의 기본값은 no입니다. 선택하면 `surface_id=user_ui`, `surface_instance_id=user_ui_local`, `interaction_role=user_interaction`과 `read_status`, `core_mutation`을 가진 별도 바인딩을 보여 줍니다. 프롬프트는 이것이 별도 커넥터 바인딩이며 에이전트 역할의 확장이 아니고, 실제 사용자 대상 UI나 커넥터가 사용자 동작을 제출할 때만 필요하며, `actor_kind=user`만으로는 사용자 권한이 성립하지 않고, 그 설정은 에이전트 설정과 분리되어 남는다고 설명합니다.
@@ -158,24 +164,24 @@ harness surface list --project-id ID
 
 `--interactive --dry-run`에서는 마법사가 같은 입력을 수집하고 확인하며 계획을 보여 주고, 영속 설정 변경이나 마이그레이션을 수행하지 않으며, 사전 점검을 실행하지 않고, 최종 확인 뒤 정상 dry-run 출력을 냅니다.
 
+<a id="runtime-home-setup-selection"></a>
 ### Runtime Home 설정 선택
 
 `harness setup local-mcp`의 Runtime Home 선택 순서는 아래와 같습니다.
 
-1. `--runtime-home`
+1. 절대 경로 `--runtime-home`
 2. `HARNESS_HOME`
 3. [Runtime Home 선택](#runtime-home-selection)에서 정의한 공유 사용자 홈 대체 경로
 
-선택된 경로는 공유 Runtime Home 해석 규칙을 따릅니다.
+명시한 `--runtime-home` 값이 비어 있거나 상대 경로이면 무효입니다. `--runtime-home`이 없으면 `HARNESS_HOME`과 공유 사용자 홈 대체 경로는 공유 Runtime Home 해석 규칙을 따릅니다.
 
-- 명시 값이 비어 있으면 무효입니다.
-- 상대 경로는 프로세스 현재 작업 디렉터리를 기준으로 해석합니다.
-- 최종 경로는 절대 경로입니다.
-- 설정 전에 경로가 존재할 필요는 없습니다.
+최종 선택 경로는 절대 경로이며 설정 전에 존재할 필요는 없습니다.
 
 설정 명령은 Runtime Home이 아직 초기화되지 않았다면 초기화합니다. 이미 유효한 Runtime Home 등록은 보존합니다.
 
 ### 프로젝트 선택
+
+비대화식 설정에는 `--repo-root`가 필수이며, 명령은 프로세스 현재 작업 디렉터리를 추론하지 않습니다. 대화형 설정에서 `--repo-root`가 없으면 `Product Repository`를 입력하라는 프롬프트를 표시합니다. `--repo-root .`은 유효하며 현재 `Product Repository`를 명시적으로 선택합니다.
 
 선택된 `repo_root`는 이미 존재하고 접근 가능한 디렉터리여야 하며, 비교 전에 정규화해야 합니다.
 
@@ -275,7 +281,7 @@ read-only planning
 - 프로젝트 `state_version`을 증가시키지 않습니다.
 - 결정적인 호스트 설정을 생성합니다.
 
-등록 변경 전 명령은 현재 관찰 가능한 결정적 입력 오류, 등록 충돌, 실행 파일 탐색 실패, 설정 렌더링 실패, 출력 경로 구조 충돌을 감지합니다. 프로젝트 ID 검증과 생성 설정 경로 구조 검증은 저장소 초기화나 마이그레이션 전에 일어납니다.
+등록 변경 전 명령은 현재 관찰 가능한 결정적 입력 오류, 등록 충돌, 실행 파일 탐색 실패, 설정 렌더링 실패, 출력 경로 구조 충돌을 감지합니다. 비대화식 `--repo-root` 누락과 무효인 명시 `--runtime-home` 값은 실행 파일 탐색 전에 실패합니다. 프로젝트 ID 검증과 생성 설정 경로 구조 검증은 저장소 초기화나 마이그레이션 전에 일어납니다.
 
 이 변경 전 검증은 경쟁 상태가 없거나 실패가 없다는 보장이 아닙니다. 외부 파일시스템 변경, 권한 변경, 저장 공간 고갈, 운영체제 오류, MCP 사전 점검 실패, 그 밖의 런타임 실패는 저장소 준비나 등록이 시작된 뒤에도 발생할 수 있습니다. 파일 검사는 time-of-check/time-of-use 경쟁 상태를 제거할 수 없습니다. 나중 실패는 관련될 때 완료된 작업을 보고하고, 생성 대상 파일은 계속 같은 디렉터리의 임시 파일 교체 방식을 사용하며, 시스템 간 트랜잭션은 약속하지 않습니다.
 

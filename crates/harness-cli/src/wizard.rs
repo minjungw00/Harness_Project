@@ -205,13 +205,26 @@ fn prompt_repo_root(
     let default = parsed
         .repo_root
         .clone()
-        .map(|path| absolute_path(current_dir, path))
-        .unwrap_or_else(|| current_dir.to_path_buf());
+        .map(|path| absolute_path(current_dir, path));
     loop {
-        let input = prompt_value(io, &format!("Product Repository [{}]: ", default.display()))?;
+        let prompt = match &default {
+            Some(path) => format!("Product Repository [{}]: ", path.display()),
+            None => "Product Repository: ".to_owned(),
+        };
+        let input = prompt_value(io, &prompt)?;
         let candidate = match input {
             PromptValue::Cancel => return Err(WizardError::Cancelled),
-            PromptValue::Empty => default.clone(),
+            PromptValue::Empty => {
+                if let Some(default) = &default {
+                    default.clone()
+                } else {
+                    write(
+                        io,
+                        "Product Repository path is required; enter . to select the current Product Repository.\n",
+                    )?;
+                    continue;
+                }
+            }
             PromptValue::Text(value) => absolute_path(current_dir, PathBuf::from(value)),
         };
         match std::fs::canonicalize(&candidate) {
@@ -795,12 +808,37 @@ mod tests {
 
         assert_eq!(output, "setup: cancelled\n");
         assert!(io.prompts().contains("Runtime Home"));
-        assert!(io.prompts().contains("Product Repository"));
+        assert!(io.prompts().contains(&format!(
+            "Product Repository [{}]",
+            fixture.repo_root().display()
+        )));
         assert!(io.prompts().contains("Project ID [repo]"));
         assert!(io
             .prompts()
             .contains("Configuration output directory [stdout-only]"));
         assert!(!registry_db_path(fixture.runtime_home()).exists());
+        Ok(())
+    }
+
+    #[test]
+    fn missing_interactive_repo_root_requires_input_and_accepts_dot() -> Result<(), Box<dyn Error>>
+    {
+        let fixture = WizardFixture::new("wizard-repo-explicit-dot")?;
+        let mut parsed = fixture.parsed();
+        parsed.repo_root = None;
+        let mut process = FakeProcess::new(fixture.repo_root());
+        let mut io = TestWizardIo::new("\n\n.\n\n\n\ny\n", true);
+
+        let output = run_local_mcp_wizard(parsed, fixture.repo_root(), &mut process, &mut io)?;
+
+        assert!(output.contains("setup: complete\n"));
+        assert!(output.contains(&format!(
+            "repo_root: {}\n",
+            fs::canonicalize(fixture.repo_root())?.display()
+        )));
+        assert!(io.prompts().contains("Product Repository: "));
+        assert!(!io.prompts().contains("Product Repository ["));
+        assert!(io.prompts().contains("Product Repository path is required"));
         Ok(())
     }
 

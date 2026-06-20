@@ -189,7 +189,7 @@ pub fn setup_usage() -> String {
 }
 
 pub fn local_mcp_usage() -> String {
-    "harness setup local-mcp [--interactive] [--runtime-home PATH] [--repo-root PATH] [--project-id ID] [--with-user-interaction] [--mcp-command PATH] [--config-dir PATH] [--output text|json] [--dry-run] [--replace-conflicting-surfaces] [--overwrite-config]\n"
+    "Usage:\n  harness setup local-mcp --repo-root PATH [--runtime-home PATH] [--project-id ID] [--with-user-interaction] [--mcp-command PATH] [--config-dir PATH] [--output text|json] [--dry-run] [--replace-conflicting-surfaces] [--overwrite-config]\n  harness setup local-mcp --interactive [--repo-root PATH] [--runtime-home PATH] [--project-id ID] [--with-user-interaction] [--mcp-command PATH] [--config-dir PATH] [--dry-run] [--replace-conflicting-surfaces] [--overwrite-config]\n\nNotes:\n  --repo-root PATH is required unless --interactive is used; pass --repo-root . to select the current Product Repository.\n  Interactive setup prompts for Product Repository when --repo-root is absent.\n  Explicit --runtime-home PATH for local MCP setup must be absolute.\n"
         .to_owned()
 }
 
@@ -274,12 +274,8 @@ fn execute_local_mcp_setup_with_revalidation_hook(
     process: &mut impl LocalMcpProcess,
     after_preparation: impl FnOnce(&SetupPreparationResult) -> Result<(), LocalMcpCommandError>,
 ) -> Result<String, LocalMcpCommandError> {
+    let repo_root = resolve_setup_repo_root(&parsed, current_dir)?;
     let runtime_home = resolve_setup_runtime_home(&parsed, current_dir, process)?;
-    let repo_root = parsed
-        .repo_root
-        .clone()
-        .unwrap_or_else(|| current_dir.to_path_buf());
-    let repo_root = absolute_path(current_dir, repo_root);
     let config_dir = parsed
         .config_dir
         .as_ref()
@@ -462,6 +458,21 @@ pub(crate) fn parse_local_mcp_options(
     Ok(parsed)
 }
 
+fn resolve_setup_repo_root(
+    parsed: &ParsedLocalMcpOptions,
+    current_dir: &Path,
+) -> Result<PathBuf, LocalMcpCommandError> {
+    parsed
+        .repo_root
+        .as_ref()
+        .map(|path| absolute_path(current_dir, path.clone()))
+        .ok_or_else(|| {
+            LocalMcpCommandError::usage(
+                "--repo-root is required for non-interactive local MCP setup; pass --repo-root . to select the current Product Repository or use --interactive to be prompted",
+            )
+        })
+}
+
 fn is_allowed_option(name: &str) -> bool {
     matches!(
         name,
@@ -562,6 +573,13 @@ pub(crate) fn resolve_setup_runtime_home(
     current_dir: &Path,
     process: &impl LocalMcpProcess,
 ) -> Result<PathBuf, LocalMcpCommandError> {
+    if let Some(path) = &parsed.runtime_home {
+        if !path.is_absolute() {
+            return Err(LocalMcpCommandError::usage(
+                "--runtime-home must be an absolute path for local MCP setup",
+            ));
+        }
+    }
     let resolved = resolve_runtime_home(
         |name| {
             if name == HARNESS_HOME {
@@ -1481,6 +1499,7 @@ fn format_conflicts(conflicts: &[SetupConflict]) -> String {
 #[cfg(test)]
 mod tests {
     use std::{
+        cell::Cell,
         collections::BTreeMap,
         error::Error,
         fs,
@@ -1578,16 +1597,50 @@ mod tests {
     }
 
     #[test]
-    fn repository_defaults_to_current_directory() -> Result<(), Box<dyn Error>> {
-        let fixture = CommandFixture::new("setup-repo-default")?;
+    fn non_interactive_requires_repo_root_before_discovery_or_writes() -> Result<(), Box<dyn Error>>
+    {
+        let fixture = CommandFixture::new("setup-repo-required")?;
+        let config_dir = fixture.temp.path().join("configs");
         let mut process = FakeProcess::new(fixture.repo_root());
-        process.env.insert(
-            HARNESS_HOME.to_owned(),
-            fixture.runtime_home().as_os_str().to_os_string(),
-        );
+        let before = InvalidSetupSnapshot::read(fixture.runtime_home(), &config_dir)?;
+
+        let error = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                fixture.runtime_home_text(),
+                "--config-dir",
+                config_dir.to_str().expect("utf8 path"),
+                "--dry-run",
+            ]),
+            fixture.repo_root(),
+            &mut process,
+        )
+        .expect_err("missing --repo-root should fail");
+        let after = InvalidSetupSnapshot::read(fixture.runtime_home(), &config_dir)?;
+
+        assert!(matches!(error, LocalMcpCommandError::Usage(_)));
+        assert!(error.to_string().contains("--repo-root is required"));
+        assert_eq!(process.current_exe_calls.get(), 0);
+        assert!(process.calls.is_empty());
+        assert_eq!(after, before);
+        assert!(!registry_db_path(fixture.runtime_home()).exists());
+        assert!(!config_dir.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn explicit_repo_root_dot_selects_current_product_repository() -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-repo-dot")?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+
         let output = run_setup_command(
             &args([
                 "local-mcp",
+                "--runtime-home",
+                fixture.runtime_home_text(),
+                "--repo-root",
+                ".",
                 "--mcp-command",
                 fixture.mcp_command_text(),
                 "--dry-run",
@@ -1603,6 +1656,81 @@ mod tests {
             value["project"]["repo_root"],
             fs::canonicalize(fixture.repo_root())?.display().to_string()
         );
+        assert_eq!(process.current_exe_calls.get(), 0);
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn relative_explicit_runtime_home_is_rejected_before_discovery_or_writes(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-relative-runtime")?;
+        let relative_runtime_home = fixture.repo_root().join("relative-runtime-home");
+        let config_dir = fixture.temp.path().join("configs");
+        let before = InvalidSetupSnapshot::read(&relative_runtime_home, &config_dir)?;
+        let mut process = FakeProcess::new(fixture.repo_root());
+
+        let error = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                "relative-runtime-home",
+                "--repo-root",
+                fixture.repo_root_text(),
+                "--config-dir",
+                config_dir.to_str().expect("utf8 path"),
+            ]),
+            fixture.repo_root(),
+            &mut process,
+        )
+        .expect_err("relative --runtime-home should fail");
+        let after = InvalidSetupSnapshot::read(&relative_runtime_home, &config_dir)?;
+
+        assert!(matches!(error, LocalMcpCommandError::Usage(_)));
+        assert!(error
+            .to_string()
+            .contains("--runtime-home must be an absolute path"));
+        assert_eq!(process.current_exe_calls.get(), 0);
+        assert!(process.calls.is_empty());
+        assert_eq!(after, before);
+        assert!(!relative_runtime_home.exists());
+        assert!(!config_dir.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn absent_runtime_home_uses_user_home_default() -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-runtime-default")?;
+        let home = fixture.temp.path().join("home");
+        fs::create_dir_all(&home)?;
+        let expected_runtime_home = home.join(".harness");
+        let mut process = FakeProcess::new(fixture.repo_root());
+        process
+            .env
+            .insert("HOME".to_owned(), home.as_os_str().to_os_string());
+
+        let output = run_setup_command(
+            &args([
+                "local-mcp",
+                "--repo-root",
+                fixture.repo_root_text(),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+                "--dry-run",
+                "--output",
+                "json",
+            ]),
+            fixture.repo_root(),
+            &mut process,
+        )?;
+        let value: Value = serde_json::from_str(&output)?;
+
+        assert_eq!(
+            value["runtime_home"],
+            expected_runtime_home.display().to_string()
+        );
+        assert!(!registry_db_path(&expected_runtime_home).exists());
+        assert!(process.calls.is_empty());
         Ok(())
     }
 
@@ -2955,6 +3083,7 @@ mod tests {
     struct FakeProcess {
         env: BTreeMap<String, OsString>,
         current_exe: PathBuf,
+        current_exe_calls: Cell<usize>,
         outputs: Vec<PreflightProcessOutput>,
         calls: Vec<RecordedCall>,
     }
@@ -2964,6 +3093,7 @@ mod tests {
             Self {
                 env: BTreeMap::new(),
                 current_exe: current_dir.join("harness"),
+                current_exe_calls: Cell::new(0),
                 outputs: Vec::new(),
                 calls: Vec::new(),
             }
@@ -2976,6 +3106,7 @@ mod tests {
         }
 
         fn current_exe(&self) -> Result<PathBuf, String> {
+            self.current_exe_calls.set(self.current_exe_calls.get() + 1);
             Ok(self.current_exe.clone())
         }
 
