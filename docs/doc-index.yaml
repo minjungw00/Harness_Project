@@ -287,8 +287,10 @@ documents:
     role: "build"
     owner_for:
       - "baseline implementation reading path"
-      - "owner-document interpretation for implementation questions"
-      - "guide-level supported implementation shape"
+      - "implementation-change classification"
+      - "contract-first implementation reading workflow"
+      - "implementation-question routing"
+      - "code/document mismatch handling"
     not_owner_for:
       - "baseline scope contracts"
       - "scope boundary changes"
@@ -302,6 +304,9 @@ documents:
       - "implementation logs"
       - "PR notes"
       - "transient migration records"
+    depends_on:
+      - "build.architecture"
+      - "reference.index"
     normative_level: "guide"
     audience:
       - "implementers"
@@ -313,8 +318,12 @@ documents:
     role: "build"
     owner_for:
       - "guide-level implementation architecture"
-      - "guide-level layer separation"
-      - "implementation reading support"
+      - "Rust workspace and durable source-module map"
+      - "internal crate dependency direction"
+      - "guide-level execution-flow map"
+      - "implementation-boundary invariants and rationale"
+      - "implementation test topology"
+      - "code-to-contract-owner routing support"
     not_owner_for:
       - "baseline scope contracts"
       - "API behavior"
@@ -328,9 +337,22 @@ documents:
       - "security claims"
       - "Core authority semantics"
       - "product contract changes"
-      - "implementation logs"
+      - "function-level code reference"
+      - "exhaustive source-file inventory"
+      - "test-derived product contracts"
       - "PR notes"
       - "transient migration records"
+      - "implementation logs, history, or change logs"
+    depends_on:
+      - "reference.runtime-boundaries"
+      - "reference.admin-cli"
+      - "reference.mcp-transport"
+      - "reference.agent-integration"
+      - "reference.core-model"
+      - "reference.api.methods"
+      - "reference.storage"
+      - "reference.storage-effects"
+      - "reference.storage-versioning"
     normative_level: "guide"
     audience:
       - "implementers"
@@ -1247,6 +1269,8 @@ documents:
     owner_for:
       - "documentation architecture rules"
       - "canonical owner rule"
+      - "implementation-architecture maintenance rules"
+      - "durable implementation-documentation granularity rules"
       - "durable example rules"
       - "route document rules"
       - "reference semantic skeleton rules"
@@ -1314,6 +1338,7 @@ documents:
       - "owner granularity checks"
       - "route-page shape checks"
       - "reference semantic skeleton checks"
+      - "implementation-architecture alignment checks"
       - "owner-map placement checks"
       - "duplicate owner-map checks"
       - "baseline and out-of-scope wording checks"
@@ -1329,6 +1354,7 @@ documents:
     depends_on:
       - "maintain.authoring-guide"
       - "reference.index"
+      - "build.architecture"
     normative_level: "maintenance"
     audience:
       - "maintainers"
