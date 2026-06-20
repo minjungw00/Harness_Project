@@ -1889,6 +1889,48 @@ mod tests {
     }
 
     #[test]
+    fn dry_run_path_boundary_failure_leaves_no_runtime_or_config_outputs(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = CommandFixture::new("setup-dry-run-path-boundary")?;
+        let repo_root = fixture
+            .temp
+            .create_product_repo("repo-containing-runtime")?;
+        let runtime_home = repo_root.join(".harness");
+        let config_dir = fixture.temp.path().join("configs");
+        let before = InvalidSetupSnapshot::read(&runtime_home, &config_dir)?;
+        let mut process = FakeProcess::new(&repo_root);
+
+        let error = run_setup_command(
+            &args([
+                "local-mcp",
+                "--runtime-home",
+                runtime_home.to_str().expect("utf8 path"),
+                "--repo-root",
+                repo_root.to_str().expect("utf8 path"),
+                "--mcp-command",
+                fixture.mcp_command_text(),
+                "--config-dir",
+                config_dir.to_str().expect("utf8 path"),
+                "--dry-run",
+            ]),
+            &repo_root,
+            &mut process,
+        )
+        .expect_err("dry-run should reject Runtime Home under Product Repository");
+        let after = InvalidSetupSnapshot::read(&runtime_home, &config_dir)?;
+
+        assert!(matches!(error, LocalMcpCommandError::Usage(_)));
+        assert!(error
+            .to_string()
+            .contains("Harness Runtime Home must not be inside Product Repository"));
+        assert_eq!(after, before);
+        assert!(!runtime_home.exists());
+        assert!(!config_dir.exists());
+        assert!(process.calls.is_empty());
+        Ok(())
+    }
+
+    #[test]
     fn dry_run_against_historical_state_preserves_persistent_state() -> Result<(), Box<dyn Error>> {
         let fixture = HistoricalCommandFixture::new(
             "setup-dry-run-historical",

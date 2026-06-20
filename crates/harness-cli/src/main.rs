@@ -551,6 +551,7 @@ impl From<LocalMcpCommandError> for CliError {
 mod tests {
     use std::{
         ffi::OsString,
+        fs,
         path::{Path, PathBuf},
     };
 
@@ -729,6 +730,46 @@ mod tests {
             )
             .expect("project state row should exist");
         assert_eq!(state_version, 0);
+    }
+
+    #[test]
+    fn project_register_rejects_repository_under_runtime_home_without_project_state() {
+        let runtime_home = TempRuntimeHome::new("cli-project-boundary").expect("temp runtime home");
+        run_with_home(
+            runtime_home.path(),
+            [
+                "harness",
+                "init",
+                "--runtime-home-id",
+                "runtime_home_project_boundary",
+            ],
+        )
+        .expect("init should succeed");
+        let repo_root = runtime_home.path().join("product-repo");
+        fs::create_dir_all(&repo_root).expect("repo fixture should be created");
+
+        let error = run_with_home(
+            runtime_home.path(),
+            [
+                "harness",
+                "project",
+                "register",
+                "--project-id",
+                "project_boundary",
+                "--repo-root",
+                repo_root.to_str().expect("utf8 path"),
+            ],
+        )
+        .expect_err("project register should reject Product Repository inside Runtime Home");
+
+        assert!(matches!(error, CliError::Runtime(_)));
+        assert!(error
+            .to_string()
+            .contains("Product Repository must not be inside Harness Runtime Home"));
+        assert!(list_projects(runtime_home.path())
+            .expect("registry inspection should still work")
+            .is_empty());
+        assert!(!project_state_db_path(runtime_home.path(), "project_boundary").exists());
     }
 
     #[test]
