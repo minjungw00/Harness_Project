@@ -6,6 +6,8 @@ It does not define or override public API behavior, request or response fields, 
 
 Harness is the local work-authority product/system for AI-assisted product work. Core is the local authority record for Harness state.
 
+Code and test paths that are meant to be opened directly are written relative to the repository root.
+
 ## Operational paths
 
 ```mermaid
@@ -122,27 +124,27 @@ The durable dependency boundaries are:
 
 ## Source module map
 
-| Area | Major modules | Durable responsibility |
+| Area | Major module paths | Durable responsibility |
 |---|---|---|
-| `crates/harness-types` | `methods.rs`, `schema.rs`, `values.rs`, `ids.rs`, `canonical.rs` | `methods.rs` carries typed public request/result models and method-to-access mapping. `schema.rs` carries shared schema-shaped Rust data, response branches, Core state shapes, artifact and judgment structures, and persisted helper shapes. `values.rs` carries controlled Rust enums and constants for documented value names. `ids.rs` carries opaque identifier wrappers and durable ID generation helpers. `canonical.rs` carries deterministic canonical JSON serialization and request hashing. |
-| `crates/harness-store` | `runtime_home.rs`, `bootstrap.rs`, `sqlite.rs`, `migrations.rs`, `core_pipeline.rs`, `artifacts.rs`, `inspection.rs`, `error.rs` | `runtime_home.rs` resolves Runtime Home paths. `bootstrap.rs` initializes Runtime Home metadata and registers projects and surfaces. `sqlite.rs` opens and validates registry/project SQLite databases. `migrations.rs` applies baseline migrations. `core_pipeline.rs` exposes `CoreProjectStore`, read helpers, replay rows, storage mutation types, and the atomic Core mutation commit boundary. `artifacts.rs` handles transient staging and persistent artifact body verification. `inspection.rs` supports read-only setup inspection. `error.rs` classifies storage failures for higher layers. |
-| `crates/harness-core` | `pipeline.rs`, `methods/`, `policy/` | `pipeline.rs` owns common request preflight, validated request context preparation, effect-path selection, response construction, replay handling, and Core commit orchestration. `methods/` owns method-specific validation, planning, storage mutation lists, event payloads, dry-run summaries, and result fields. `policy/` owns reusable Core policy helpers for access, replay context, product paths, write authorization, close readiness, evidence, and judgment relevance. |
-| `crates/harness-cli` | `main.rs`, `local_mcp_command.rs`, `setup.rs`, `wizard.rs`, `host_config.rs`, `registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `local_mcp_command.rs` parses and orchestrates `harness setup local-mcp`, preflight checks, config destination checks, output rendering, and config-file writing. `setup.rs` plans, prepares, revalidates, and applies Runtime Home/project/surface setup. `wizard.rs` is the interactive frontend for the same setup path. `host_config.rs` renders host-neutral MCP configuration JSON. `registration.rs` builds deterministic capability-profile and local-access metadata. |
-| `crates/harness-mcp` | `main.rs`, `lib.rs` | `main.rs` handles command modes such as stdio, `--check`, help, and version. `lib.rs` owns MCP tool metadata, startup inspection, session context, typed `tools/call` decoding, invocation-context derivation, JSON-RPC stdio framing, and response wrapping. |
-| `crates/harness-test-support` | `lib.rs` | Provides disposable Runtime Home helpers, fixture setup for Core and Store tests, shared request builders, and fixture-only helpers used by conformance and integration tests. |
+| `crates/harness-types` | `crates/harness-types/src/methods.rs`, `crates/harness-types/src/schema.rs`, `crates/harness-types/src/values.rs`, `crates/harness-types/src/ids.rs`, `crates/harness-types/src/canonical.rs` | `methods.rs` carries typed public request/result models and method-to-access mapping. `schema.rs` carries shared schema-shaped Rust data, response branches, Core state shapes, artifact and judgment structures, and persisted helper shapes. `values.rs` carries controlled Rust enums and constants for documented value names. `ids.rs` carries opaque identifier wrappers and durable ID generation helpers. `canonical.rs` carries deterministic canonical JSON serialization and request hashing. |
+| `crates/harness-store` | `crates/harness-store/src/runtime_home.rs`, `crates/harness-store/src/bootstrap.rs`, `crates/harness-store/src/sqlite.rs`, `crates/harness-store/src/migrations.rs`, `crates/harness-store/src/core_pipeline.rs`, `crates/harness-store/src/artifacts.rs`, `crates/harness-store/src/inspection.rs`, `crates/harness-store/src/error.rs` | `runtime_home.rs` resolves Runtime Home paths. `bootstrap.rs` initializes Runtime Home metadata and registers projects and surfaces. `sqlite.rs` opens and validates registry/project SQLite databases. `migrations.rs` applies baseline migrations. `core_pipeline.rs` exposes `CoreProjectStore`, read helpers, replay rows, storage mutation types, and the atomic Core mutation commit boundary. `artifacts.rs` handles transient staging and persistent artifact body verification. `inspection.rs` supports read-only setup inspection. `error.rs` classifies storage failures for higher layers. |
+| `crates/harness-core` | `crates/harness-core/src/pipeline.rs`, `crates/harness-core/src/methods/`, `crates/harness-core/src/policy/` | `pipeline.rs` owns common request preflight, validated request context preparation, effect-path selection, response construction, replay handling, and Core commit orchestration. `methods/` owns method-specific validation, planning, storage mutation lists, event payloads, dry-run summaries, and result fields. `policy/` owns reusable Core policy helpers for access, replay context, product paths, write authorization, close readiness, evidence, and judgment relevance. |
+| `crates/harness-cli` | `crates/harness-cli/src/main.rs`, `crates/harness-cli/src/local_mcp_command.rs`, `crates/harness-cli/src/setup.rs`, `crates/harness-cli/src/wizard.rs`, `crates/harness-cli/src/host_config.rs`, `crates/harness-cli/src/registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `local_mcp_command.rs` parses and orchestrates `harness setup local-mcp`, preflight checks, config destination checks, output rendering, and config-file writing. `setup.rs` plans, prepares, revalidates, and applies Runtime Home/project/surface setup. `wizard.rs` is the interactive frontend for the same setup path. `host_config.rs` renders host-neutral MCP configuration JSON. `registration.rs` builds deterministic capability-profile and local-access metadata. |
+| `crates/harness-mcp` | `crates/harness-mcp/src/main.rs`, `crates/harness-mcp/src/lib.rs` | `main.rs` handles command modes such as stdio, `--check`, help, and version. `lib.rs` owns MCP tool metadata, startup inspection, session context, typed `tools/call` decoding, invocation-context derivation, JSON-RPC stdio framing, and response wrapping. |
+| `crates/harness-test-support` | `crates/harness-test-support/src/lib.rs` | Provides disposable Runtime Home helpers, fixture setup for Core and Store tests, shared request builders, and fixture-only helpers used by conformance and integration tests. |
 
 These module descriptions are implementation placement guidance. Exact API fields, method behavior, storage records, storage effects, security wording, and Core authority semantics stay with the Reference owners.
 
 ## Core pipeline and Store boundary
 
-`harness-core/src/pipeline.rs`, `harness-core/src/methods/`, `harness-core/src/policy/`, and `harness-store/src/core_pipeline.rs` have separate jobs:
+`crates/harness-core/src/pipeline.rs`, `crates/harness-core/src/methods/`, `crates/harness-core/src/policy/`, and `crates/harness-store/src/core_pipeline.rs` have separate jobs:
 
 | Component | Job in the implementation |
 |---|---|
-| `pipeline.rs` | Runs common preflight, prepares `VerifiedRequestContext`, routes prepared requests to read, no-effect, dry-run, or committed Core paths, and builds common response bases. |
-| `methods/` | Decodes already typed requests into method-specific plans: validation outcomes, dry-run summaries, event payloads, result fields, and `CoreStorageMutation` lists. |
-| `policy/` | Supplies reusable checks used by method planners and preflight: registered-surface access, replay context, Product Repository path normalization, write-authorization compatibility, evidence status, judgment relevance, and close-readiness calculations. |
-| `harness-store/src/core_pipeline.rs` | Owns project-local Store access, read helpers, replay rows, storage mutation application, and the atomic `CoreProjectStore::commit_mutation` transaction. |
+| `crates/harness-core/src/pipeline.rs` | Runs common preflight, prepares `VerifiedRequestContext`, routes prepared requests to read, no-effect, dry-run, or committed Core paths, and builds common response bases. |
+| `crates/harness-core/src/methods/` | Decodes already typed requests into method-specific plans: validation outcomes, dry-run summaries, event payloads, result fields, and `CoreStorageMutation` lists. |
+| `crates/harness-core/src/policy/` | Supplies reusable checks used by method planners and preflight: registered-surface access, replay context, Product Repository path normalization, write-authorization compatibility, evidence status, judgment relevance, and close-readiness calculations. |
+| `crates/harness-store/src/core_pipeline.rs` | Owns project-local Store access, read helpers, replay rows, storage mutation application, and the atomic `CoreProjectStore::commit_mutation` transaction. |
 
 Method modules decide what should happen for one public method. The shared Core pipeline decides the common ordering and effect path. Store commits apply the selected storage mutations atomically; Store does not decide method policy.
 
@@ -161,7 +163,7 @@ sequenceDiagram
   Host->>MCP: tools/call(name, arguments)
   MCP->>MCP: decode typed request and derive invocation context
   MCP->>Core: CoreService method(request, invocation)
-  Core->>Core: common preflight in pipeline.rs
+  Core->>Core: common preflight in crates/harness-core/src/pipeline.rs
   Core->>Store: open project, read state, validate surface, replay, task, freshness
   Core->>Method: method-specific planning and policy checks
   Method-->>Core: branch, result fields, events, storage mutations, or direct response
@@ -197,11 +199,11 @@ This flow is an implementation map. Exact public method contracts, error precede
 
 | Effect path | Implementation location | Storage consequence at guide level |
 |---|---|---|
-| Read-only result | `OwnerPipelineBranch::ReadOnly` through `pipeline.rs` | Builds a result from current Store reads; no Core mutation commit. |
-| Result with no persistence | `OwnerPipelineBranch::NoEffectResult` through `pipeline.rs` | Returns a method result without a Core state mutation, such as a blocked close result. |
-| Dry-run result | `OwnerPipelineBranch::DryRunPreview` through `pipeline.rs` | Returns preview data with no persistent storage effect. |
-| Core mutation commit | `OwnerPipelineBranch::CommitMutation` through `pipeline.rs` and `CoreProjectStore::commit_mutation` | Applies method-provided `CoreStorageMutation` values inside one Store transaction, appends events, stores replay response when idempotent, and advances project state where applicable. |
-| Transient artifact staging | `harness-core/src/methods/stage_artifact.rs` with `CoreProjectStore::create_artifact_staging` in `artifacts.rs` | Creates a transient staged-handle row and safe staged bytes. It does not follow the normal Core mutation commit path, does not increment `project_state.state_version`, does not append `task_events`, and does not create a replay row. |
+| Read-only result | `OwnerPipelineBranch::ReadOnly` through `crates/harness-core/src/pipeline.rs` | Builds a result from current Store reads; no Core mutation commit. |
+| Result with no persistence | `OwnerPipelineBranch::NoEffectResult` through `crates/harness-core/src/pipeline.rs` | Returns a method result without a Core state mutation, such as a blocked close result. |
+| Dry-run result | `OwnerPipelineBranch::DryRunPreview` through `crates/harness-core/src/pipeline.rs` | Returns preview data with no persistent storage effect. |
+| Core mutation commit | `OwnerPipelineBranch::CommitMutation` through `crates/harness-core/src/pipeline.rs` and `CoreProjectStore::commit_mutation` | Applies method-provided `CoreStorageMutation` values inside one Store transaction, appends events, stores replay response when idempotent, and advances project state where applicable. |
+| Transient artifact staging | `crates/harness-core/src/methods/stage_artifact.rs` with `CoreProjectStore::create_artifact_staging` in `crates/harness-store/src/artifacts.rs` | Creates a transient staged-handle row and safe staged bytes. It does not follow the normal Core mutation commit path, does not increment `project_state.state_version`, does not append `task_events`, and does not create a replay row. |
 
 `CoreProjectStore::commit_mutation` is the Store transaction boundary for normal committed Core mutations:
 
@@ -219,19 +221,19 @@ Table layout, DDL, storage record detail, method-specific persistence effects, a
 
 `harness setup local-mcp` is implemented as local administrative orchestration, not as a public Core method:
 
-1. `harness-cli/src/main.rs` dispatches `harness setup local-mcp` to `local_mcp_command.rs`.
-2. `local_mcp_command.rs` parses options, resolves Runtime Home, resolves Product Repository root, resolves optional config directory, and discovers the `harness-mcp` executable.
-3. `setup.rs` builds a read-only `LocalMcpSetupPlan` by inspecting Runtime Home, registry, project records, project state, and surfaces. It also reports project or surface conflicts.
+1. `crates/harness-cli/src/main.rs` dispatches `harness setup local-mcp` to `crates/harness-cli/src/local_mcp_command.rs`.
+2. `crates/harness-cli/src/local_mcp_command.rs` parses options, resolves Runtime Home, resolves Product Repository root, resolves optional config directory, and discovers the `harness-mcp` executable.
+3. `crates/harness-cli/src/setup.rs` builds a read-only `LocalMcpSetupPlan` by inspecting Runtime Home, registry, project records, project state, and surfaces. It also reports project or surface conflicts.
 4. Config destination checks inspect the target directory and files before setup writes.
 5. Dry-run returns rendered text or JSON output from the plan, planned preflight entries, and generated host config content without storage preparation, registration, preflight execution, or config-file writes.
 6. Non-dry-run setup prepares storage: create or validate Runtime Home, and validate or migrate selected existing project state when reusing a project.
 7. The command regenerates the plan after preparation and compares it with the earlier plan to catch conflicts introduced during preparation.
 8. `apply_local_mcp_setup_plan` creates or reuses Runtime Home, registers or reuses the project, and creates or updates the fixed agent and optional user-interaction surface registrations.
 9. For each configured binding, the CLI runs `harness-mcp --check` with generated environment variables and validates the deterministic preflight report.
-10. `host_config.rs` renders host-neutral MCP configuration JSON, and `local_mcp_command.rs` writes config files only after destination validation and successful preflight.
+10. `crates/harness-cli/src/host_config.rs` renders host-neutral MCP configuration JSON, and `crates/harness-cli/src/local_mcp_command.rs` writes config files only after destination validation and successful preflight.
 11. The command renders final text or JSON output with setup status, actions, preflight status, and generated configuration information.
 
-`wizard.rs` is an interactive frontend over the same planning and application path. The wizard collects inputs, conflict approvals, config overwrite decisions, and final approval, then calls the non-interactive setup executor; it is not an independent setup engine.
+`crates/harness-cli/src/wizard.rs` is an interactive frontend over the same planning and application path. The wizard collects inputs, conflict approvals, config overwrite decisions, and final approval, then calls the non-interactive setup executor; it is not an independent setup engine.
 
 ## Implementation invariants and rationale
 
@@ -240,8 +242,8 @@ Table layout, DDL, storage record detail, method-specific persistence effects, a
 | Core independence from adapters | `harness-core` depends on Store and shared types, not `harness-cli` or `harness-mcp`, so public method behavior can be invoked through more than one adapter without adapter-owned semantics. |
 | Administrative CLI separation from public Core methods | `harness-cli` uses Store bootstrap, registration, inspection, and host-config modules for local setup. The [Administrative CLI](../reference/admin-cli.md) owner keeps these commands outside the public method list. |
 | Restricted direct Store use by MCP | `harness-mcp` uses Store for startup and fixed session binding validation, then calls Core for public method execution. [MCP Transport](../reference/mcp-transport.md) owns startup and wire behavior; API owners own method behavior. |
-| Common preflight separate from method planning | `pipeline.rs` centralizes envelope, request hash, project, binding, replay, Task, freshness, and access checks; method modules keep method-specific planning and response fields. |
-| Core policy separate from Store transaction atomicity | `policy/` and `methods/` decide compatibility and planned effects; Store applies mutations atomically without owning method policy. |
+| Common preflight separate from method planning | `crates/harness-core/src/pipeline.rs` centralizes envelope, request hash, project, binding, replay, Task, freshness, and access checks; method modules keep method-specific planning and response fields. |
+| Core policy separate from Store transaction atomicity | `crates/harness-core/src/policy/` and `crates/harness-core/src/methods/` decide compatibility and planned effects; Store applies mutations atomically without owning method policy. |
 | Product Repository writes outside public Harness API | Core can record compatibility and observations, but file writes are performed by connected surfaces or local tools outside the public API path. [Runtime Boundaries](../reference/runtime-boundaries.md) owns the location distinction. |
 | Artifact staging separate from Core mutation | `stage_artifact` creates transient staging through artifact storage, while persistent artifact promotion occurs through method-planned Core mutation such as `record_run`. |
 | Tests are not product-contract owners | Unit, integration, binary, and conformance tests verify owner-defined facts, but API, storage, security, and Core authority contracts stay in Reference owners. |
@@ -264,11 +266,11 @@ Tests verify behavior that owner documents define. A test fixture, assertion, or
 
 | Implementation area | First relevant contract owner |
 |---|---|
-| Public method implementation in `harness-core/src/methods/` | [API Methods](../reference/api/methods.md), then the linked method owner. |
+| Public method implementation in `crates/harness-core/src/methods/` | [API Methods](../reference/api/methods.md), then the linked method owner. |
 | Common Core pipeline, response branches, envelope handling, request hashing, and public error routing | [API Schema Core](../reference/api/schema-core.md), [API Error Family Index](../reference/api/errors.md), and [Storage Effects](../reference/storage-effects.md) where persistence is involved. |
 | Core policies for user-owned judgment, write authorization, evidence, close readiness, and authority boundaries | [Core Model](../reference/core-model.md), method owners, [Agent Integration](../reference/agent-integration.md), and [API Value Sets](../reference/api/schema-value-sets.md) as applicable. |
 | Product Repository path normalization and product/runtime location separation | [Runtime Boundaries](../reference/runtime-boundaries.md). |
-| Shared Rust types and schema-shaped data in `harness-types` | [API Schema Core](../reference/api/schema-core.md), [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), and [API Value Sets](../reference/api/schema-value-sets.md). |
+| Shared Rust types and schema-shaped data in `crates/harness-types/src/` | [API Schema Core](../reference/api/schema-core.md), [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), and [API Value Sets](../reference/api/schema-value-sets.md). |
 | Atomic Store commit, replay rows, locking/versioning, storage records, and DDL | [Storage](../reference/storage.md), [Storage Effects](../reference/storage-effects.md), [Storage Records](../reference/storage-records.md), [Storage DDL](../reference/storage-ddl.md), and [Storage Versioning](../reference/storage-versioning.md). |
 | Artifact staging and persistent artifact body verification | [Artifact Storage](../reference/storage-artifacts.md) and the method owner that references the artifact. |
 | MCP startup, process binding, stdio framing, and `tools/call` wrapping | [MCP Transport](../reference/mcp-transport.md), with [Agent Integration](../reference/agent-integration.md) for verified surface context. |

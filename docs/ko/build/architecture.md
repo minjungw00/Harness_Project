@@ -6,6 +6,8 @@
 
 하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 시스템입니다. Core는 하네스 상태를 위한 로컬 기준 기록입니다.
 
+이 가이드에서 직접 열 수 있는 코드와 테스트 경로는 저장소 루트 기준으로 씁니다.
+
 ## 운영 경로
 
 ```mermaid
@@ -122,27 +124,27 @@ flowchart TD
 
 ## 소스 모듈 지도
 
-| 영역 | 주요 모듈 | 오래 유지될 책임 |
+| 영역 | 주요 모듈 경로 | 오래 유지될 책임 |
 |---|---|---|
-| `crates/harness-types` | `methods.rs`, `schema.rs`, `values.rs`, `ids.rs`, `canonical.rs` | `methods.rs`는 타입 지정 공개 요청과 결과 모델, 메서드와 접근 등급 매핑을 담습니다. `schema.rs`는 공유 스키마 형태 Rust 데이터, 응답 분기, Core 상태 형태, 아티팩트와 판단 구조, 지속 보조 형태를 담습니다. `values.rs`는 문서화된 값 이름에 대응하는 제어 Rust enum과 상수를 담습니다. `ids.rs`는 불투명 식별자 래퍼와 오래 유지되는 ID 생성 도우미를 담습니다. `canonical.rs`는 결정적 정규 JSON 직렬화와 요청 해시를 담습니다. |
-| `crates/harness-store` | `runtime_home.rs`, `bootstrap.rs`, `sqlite.rs`, `migrations.rs`, `core_pipeline.rs`, `artifacts.rs`, `inspection.rs`, `error.rs` | `runtime_home.rs`는 Runtime Home 경로를 해석합니다. `bootstrap.rs`는 Runtime Home 메타데이터를 초기화하고 프로젝트와 접점을 등록합니다. `sqlite.rs`는 registry/project SQLite 데이터베이스를 열고 검증합니다. `migrations.rs`는 기준 마이그레이션을 적용합니다. `core_pipeline.rs`는 `CoreProjectStore`, 읽기 도우미, 재실행 기록 행, 저장소 변이 타입, 원자적 Core 변이 커밋 경계를 제공합니다. `artifacts.rs`는 일시적 스테이징과 영구 아티팩트 본문 검증을 처리합니다. `inspection.rs`는 읽기 전용 설정 검사를 지원합니다. `error.rs`는 상위 계층에서 사용할 저장소 실패 분류를 제공합니다. |
-| `crates/harness-core` | `pipeline.rs`, `methods/`, `policy/` | `pipeline.rs`는 공통 요청 사전 점검, 검증된 요청 맥락 준비, 효과 경로 선택, 응답 구성, 재실행 처리, Core 커밋 조율을 담당합니다. `methods/`는 메서드별 검증, 계획, 저장소 변이 목록, 이벤트 페이로드, dry-run 요약, 결과 필드를 담당합니다. `policy/`는 등록된 접점 접근, 재실행 맥락, Product Repository 경로 정규화, 쓰기 권한 부여 호환성, 증거 상태, 판단 관련성, 닫기 준비 상태 계산에 쓰는 재사용 Core 정책 도우미를 담당합니다. |
-| `crates/harness-cli` | `main.rs`, `local_mcp_command.rs`, `setup.rs`, `wizard.rs`, `host_config.rs`, `registration.rs` | `main.rs`는 관리 명령과 바이너리 종료 동작을 디스패치합니다. `local_mcp_command.rs`는 `harness setup local-mcp` 파싱과 오케스트레이션, 사전 점검, 설정 대상 검사, 출력 렌더링, 설정 파일 쓰기를 맡습니다. `setup.rs`는 Runtime Home, 프로젝트, 접점 설정을 계획, 준비, 재검증, 적용합니다. `wizard.rs`는 같은 설정 경로 위의 대화형 프런트엔드입니다. `host_config.rs`는 호스트 중립 MCP 설정 JSON을 렌더링합니다. `registration.rs`는 결정적 역량 프로필과 로컬 접근 메타데이터를 만듭니다. |
-| `crates/harness-mcp` | `main.rs`, `lib.rs` | `main.rs`는 stdio, `--check`, help, version 같은 명령 모드를 처리합니다. `lib.rs`는 MCP 도구 메타데이터, 시작 검사, 세션 맥락, 타입 지정 `tools/call` 디코딩, 호출 맥락 파생, JSON-RPC stdio 프레이밍, 응답 래핑을 담당합니다. |
-| `crates/harness-test-support` | `lib.rs` | 테스트 패키지와 크레이트 테스트가 쓰는 폐기 가능한 Runtime Home 도우미, Core와 Store용 픽스처 설정, 공유 요청 빌더, 픽스처 전용 도우미를 제공합니다. |
+| `crates/harness-types` | `crates/harness-types/src/methods.rs`, `crates/harness-types/src/schema.rs`, `crates/harness-types/src/values.rs`, `crates/harness-types/src/ids.rs`, `crates/harness-types/src/canonical.rs` | `methods.rs`는 타입 지정 공개 요청과 결과 모델, 메서드와 접근 등급 매핑을 담습니다. `schema.rs`는 공유 스키마 형태 Rust 데이터, 응답 분기, Core 상태 형태, 아티팩트와 판단 구조, 지속 보조 형태를 담습니다. `values.rs`는 문서화된 값 이름에 대응하는 제어 Rust enum과 상수를 담습니다. `ids.rs`는 불투명 식별자 래퍼와 오래 유지되는 ID 생성 도우미를 담습니다. `canonical.rs`는 결정적 정규 JSON 직렬화와 요청 해시를 담습니다. |
+| `crates/harness-store` | `crates/harness-store/src/runtime_home.rs`, `crates/harness-store/src/bootstrap.rs`, `crates/harness-store/src/sqlite.rs`, `crates/harness-store/src/migrations.rs`, `crates/harness-store/src/core_pipeline.rs`, `crates/harness-store/src/artifacts.rs`, `crates/harness-store/src/inspection.rs`, `crates/harness-store/src/error.rs` | `runtime_home.rs`는 Runtime Home 경로를 해석합니다. `bootstrap.rs`는 Runtime Home 메타데이터를 초기화하고 프로젝트와 접점을 등록합니다. `sqlite.rs`는 registry/project SQLite 데이터베이스를 열고 검증합니다. `migrations.rs`는 기준 마이그레이션을 적용합니다. `core_pipeline.rs`는 `CoreProjectStore`, 읽기 도우미, 재실행 기록 행, 저장소 변이 타입, 원자적 Core 변이 커밋 경계를 제공합니다. `artifacts.rs`는 일시적 스테이징과 영구 아티팩트 본문 검증을 처리합니다. `inspection.rs`는 읽기 전용 설정 검사를 지원합니다. `error.rs`는 상위 계층에서 사용할 저장소 실패 분류를 제공합니다. |
+| `crates/harness-core` | `crates/harness-core/src/pipeline.rs`, `crates/harness-core/src/methods/`, `crates/harness-core/src/policy/` | `pipeline.rs`는 공통 요청 사전 점검, 검증된 요청 맥락 준비, 효과 경로 선택, 응답 구성, 재실행 처리, Core 커밋 조율을 담당합니다. `methods/`는 메서드별 검증, 계획, 저장소 변이 목록, 이벤트 페이로드, dry-run 요약, 결과 필드를 담당합니다. `policy/`는 등록된 접점 접근, 재실행 맥락, Product Repository 경로 정규화, 쓰기 권한 부여 호환성, 증거 상태, 판단 관련성, 닫기 준비 상태 계산에 쓰는 재사용 Core 정책 도우미를 담당합니다. |
+| `crates/harness-cli` | `crates/harness-cli/src/main.rs`, `crates/harness-cli/src/local_mcp_command.rs`, `crates/harness-cli/src/setup.rs`, `crates/harness-cli/src/wizard.rs`, `crates/harness-cli/src/host_config.rs`, `crates/harness-cli/src/registration.rs` | `main.rs`는 관리 명령과 바이너리 종료 동작을 디스패치합니다. `local_mcp_command.rs`는 `harness setup local-mcp` 파싱과 오케스트레이션, 사전 점검, 설정 대상 검사, 출력 렌더링, 설정 파일 쓰기를 맡습니다. `setup.rs`는 Runtime Home, 프로젝트, 접점 설정을 계획, 준비, 재검증, 적용합니다. `wizard.rs`는 같은 설정 경로 위의 대화형 프런트엔드입니다. `host_config.rs`는 호스트 중립 MCP 설정 JSON을 렌더링합니다. `registration.rs`는 결정적 역량 프로필과 로컬 접근 메타데이터를 만듭니다. |
+| `crates/harness-mcp` | `crates/harness-mcp/src/main.rs`, `crates/harness-mcp/src/lib.rs` | `main.rs`는 stdio, `--check`, help, version 같은 명령 모드를 처리합니다. `lib.rs`는 MCP 도구 메타데이터, 시작 검사, 세션 맥락, 타입 지정 `tools/call` 디코딩, 호출 맥락 파생, JSON-RPC stdio 프레이밍, 응답 래핑을 담당합니다. |
+| `crates/harness-test-support` | `crates/harness-test-support/src/lib.rs` | 테스트 패키지와 크레이트 테스트가 쓰는 폐기 가능한 Runtime Home 도우미, Core와 Store용 픽스처 설정, 공유 요청 빌더, 픽스처 전용 도우미를 제공합니다. |
 
 이 모듈 설명은 구현 배치 지침입니다. 정확한 API 필드, 메서드 동작, 저장소 기록, 저장 효과, 보안 표현, Core 권한 의미는 참조 담당 문서에 둡니다.
 
 ## Core 파이프라인과 Store 경계
 
-`harness-core/src/pipeline.rs`, `harness-core/src/methods/`, `harness-core/src/policy/`, `harness-store/src/core_pipeline.rs`는 서로 다른 일을 합니다.
+`crates/harness-core/src/pipeline.rs`, `crates/harness-core/src/methods/`, `crates/harness-core/src/policy/`, `crates/harness-store/src/core_pipeline.rs`는 서로 다른 일을 합니다.
 
 | 컴포넌트 | 구현에서의 역할 |
 |---|---|
-| `pipeline.rs` | 공통 사전 점검을 실행하고, `VerifiedRequestContext`를 준비하며, 준비된 요청을 읽기, 효과 없음, dry-run, 커밋된 Core 경로로 보내고, 공통 응답 기반을 만듭니다. |
-| `methods/` | 하나의 메서드에 대한 계획을 만듭니다. 검증 결과, dry-run 요약, 이벤트 페이로드, 결과 필드, `CoreStorageMutation` 목록을 정합니다. |
-| `policy/` | 메서드 계획과 사전 점검이 사용하는 재사용 점검을 제공합니다. 등록된 접점 접근, 재실행 맥락, Product Repository 경로 정규화, 쓰기 권한 부여 호환성, 증거 상태, 판단 관련성, 닫기 준비 상태 계산이 여기에 속합니다. |
-| `harness-store/src/core_pipeline.rs` | 프로젝트 로컬 Store 접근, 읽기 도우미, 재실행 기록 행, 저장소 변이 적용, 원자적 `CoreProjectStore::commit_mutation` 트랜잭션을 담당합니다. |
+| `crates/harness-core/src/pipeline.rs` | 공통 사전 점검을 실행하고, `VerifiedRequestContext`를 준비하며, 준비된 요청을 읽기, 효과 없음, dry-run, 커밋된 Core 경로로 보내고, 공통 응답 기반을 만듭니다. |
+| `crates/harness-core/src/methods/` | 하나의 메서드에 대한 계획을 만듭니다. 검증 결과, dry-run 요약, 이벤트 페이로드, 결과 필드, `CoreStorageMutation` 목록을 정합니다. |
+| `crates/harness-core/src/policy/` | 메서드 계획과 사전 점검이 사용하는 재사용 점검을 제공합니다. 등록된 접점 접근, 재실행 맥락, Product Repository 경로 정규화, 쓰기 권한 부여 호환성, 증거 상태, 판단 관련성, 닫기 준비 상태 계산이 여기에 속합니다. |
+| `crates/harness-store/src/core_pipeline.rs` | 프로젝트 로컬 Store 접근, 읽기 도우미, 재실행 기록 행, 저장소 변이 적용, 원자적 `CoreProjectStore::commit_mutation` 트랜잭션을 담당합니다. |
 
 메서드 모듈은 하나의 공개 메서드에 대해 무엇이 일어나야 하는지 결정합니다. 공유 Core 파이프라인은 공통 순서와 효과 경로를 결정합니다. Store 커밋은 선택된 저장소 변이를 원자적으로 적용하며, Store가 메서드 정책을 결정하지 않습니다.
 
@@ -161,7 +163,7 @@ sequenceDiagram
   Host->>MCP: tools/call(name, arguments)
   MCP->>MCP: 타입 지정 요청 디코딩과 호출 맥락 파생
   MCP->>Core: CoreService method(request, invocation)
-  Core->>Core: pipeline.rs 공통 사전 점검
+  Core->>Core: crates/harness-core/src/pipeline.rs 공통 사전 점검
   Core->>Store: 프로젝트 열기, 상태 읽기, 접점, 재실행, Task, 최신성 검증
   Core->>Method: 메서드별 계획과 정책 점검
   Method-->>Core: 분기, 결과 필드, 이벤트, 저장소 변이 또는 직접 응답
@@ -197,11 +199,11 @@ sequenceDiagram
 
 | 효과 경로 | 구현 위치 | 가이드 수준 저장 결과 |
 |---|---|---|
-| 읽기 전용 결과 | `pipeline.rs`를 통한 `OwnerPipelineBranch::ReadOnly` | 현재 Store 읽기에서 결과를 만듭니다. Core 변이 커밋은 없습니다. |
-| 지속 효과 없는 결과 | `pipeline.rs`를 통한 `OwnerPipelineBranch::NoEffectResult` | 차단된 닫기 결과처럼 Core 상태 변이 없이 메서드 결과를 반환합니다. |
-| Dry-run 결과 | `pipeline.rs`를 통한 `OwnerPipelineBranch::DryRunPreview` | 지속 저장 효과 없이 미리보기 데이터를 반환합니다. |
-| Core 변이 커밋 | `pipeline.rs`와 `CoreProjectStore::commit_mutation`을 통한 `OwnerPipelineBranch::CommitMutation` | 하나의 Store 트랜잭션 안에서 메서드가 제공한 `CoreStorageMutation` 값을 적용하고, 이벤트를 추가하고, idempotency가 있는 경우 재실행 응답을 저장하며, 적용되는 경우 프로젝트 상태를 전진시킵니다. |
-| 일시적 아티팩트 스테이징 | `harness-core/src/methods/stage_artifact.rs`와 `artifacts.rs`의 `CoreProjectStore::create_artifact_staging` | 일시적 스테이징 핸들 행과 안전한 스테이징 바이트를 만듭니다. 일반 Core 변이 커밋 경로를 따르지 않고, `project_state.state_version`을 증가시키지 않으며, `task_events`를 추가하지 않고, 재실행 기록 행을 만들지 않습니다. |
+| 읽기 전용 결과 | `crates/harness-core/src/pipeline.rs`를 통한 `OwnerPipelineBranch::ReadOnly` | 현재 Store 읽기에서 결과를 만듭니다. Core 변이 커밋은 없습니다. |
+| 지속 효과 없는 결과 | `crates/harness-core/src/pipeline.rs`를 통한 `OwnerPipelineBranch::NoEffectResult` | 차단된 닫기 결과처럼 Core 상태 변이 없이 메서드 결과를 반환합니다. |
+| Dry-run 결과 | `crates/harness-core/src/pipeline.rs`를 통한 `OwnerPipelineBranch::DryRunPreview` | 지속 저장 효과 없이 미리보기 데이터를 반환합니다. |
+| Core 변이 커밋 | `crates/harness-core/src/pipeline.rs`와 `CoreProjectStore::commit_mutation`을 통한 `OwnerPipelineBranch::CommitMutation` | 하나의 Store 트랜잭션 안에서 메서드가 제공한 `CoreStorageMutation` 값을 적용하고, 이벤트를 추가하고, idempotency가 있는 경우 재실행 응답을 저장하며, 적용되는 경우 프로젝트 상태를 전진시킵니다. |
+| 일시적 아티팩트 스테이징 | `crates/harness-core/src/methods/stage_artifact.rs`와 `crates/harness-store/src/artifacts.rs`의 `CoreProjectStore::create_artifact_staging` | 일시적 스테이징 핸들 행과 안전한 스테이징 바이트를 만듭니다. 일반 Core 변이 커밋 경로를 따르지 않고, `project_state.state_version`을 증가시키지 않으며, `task_events`를 추가하지 않고, 재실행 기록 행을 만들지 않습니다. |
 
 `CoreProjectStore::commit_mutation`은 일반 커밋된 Core 변이의 Store 트랜잭션 경계입니다.
 
@@ -219,19 +221,19 @@ sequenceDiagram
 
 `harness setup local-mcp`는 로컬 관리 오케스트레이션으로 구현되며 공개 Core 메서드가 아닙니다.
 
-1. `harness-cli/src/main.rs`는 `harness setup local-mcp`를 `local_mcp_command.rs`로 디스패치합니다.
-2. `local_mcp_command.rs`는 옵션을 파싱하고, Runtime Home을 해석하고, Product Repository 루트를 해석하고, 선택적 설정 디렉터리를 해석하며, `harness-mcp` 실행 파일을 찾습니다.
-3. `setup.rs`는 Runtime Home, registry, 프로젝트 기록, 프로젝트 상태, 접점을 검사해서 읽기 전용 `LocalMcpSetupPlan`을 만듭니다. 프로젝트 또는 접점 충돌도 이 단계에서 보고합니다.
+1. `crates/harness-cli/src/main.rs`는 `harness setup local-mcp`를 `crates/harness-cli/src/local_mcp_command.rs`로 디스패치합니다.
+2. `crates/harness-cli/src/local_mcp_command.rs`는 옵션을 파싱하고, Runtime Home을 해석하고, Product Repository 루트를 해석하고, 선택적 설정 디렉터리를 해석하며, `harness-mcp` 실행 파일을 찾습니다.
+3. `crates/harness-cli/src/setup.rs`는 Runtime Home, registry, 프로젝트 기록, 프로젝트 상태, 접점을 검사해서 읽기 전용 `LocalMcpSetupPlan`을 만듭니다. 프로젝트 또는 접점 충돌도 이 단계에서 보고합니다.
 4. 설정 대상 검사는 설정 쓰기 전에 대상 디렉터리와 파일을 검사합니다.
 5. Dry-run은 계획, 예정된 사전 점검 항목, 생성될 호스트 설정 내용을 텍스트 또는 JSON으로 렌더링해서 반환합니다. 저장소 준비, 등록, 사전 점검 실행, 설정 파일 쓰기는 하지 않습니다.
 6. dry-run이 아닌 설정은 저장소를 준비합니다. Runtime Home을 만들거나 검증하고, 기존 프로젝트를 재사용할 때 선택된 프로젝트 상태를 검증하거나 마이그레이션합니다.
 7. 준비 뒤 명령은 계획을 다시 생성하고, 준비 전에 만든 계획과 비교해 준비 중 생긴 충돌을 잡습니다.
 8. `apply_local_mcp_setup_plan`은 Runtime Home을 만들거나 재사용하고, 프로젝트를 등록하거나 재사용하고, 고정 `agent` 접점과 선택적 `user_interaction` 접점 등록을 만들거나 갱신합니다.
 9. 구성된 각 바인딩에 대해 CLI는 생성된 환경 변수로 `harness-mcp --check`를 실행하고 결정적 사전 점검 보고서를 검증합니다.
-10. `host_config.rs`는 호스트 중립 MCP 설정 JSON을 렌더링하고, `local_mcp_command.rs`는 대상 검증과 성공한 사전 점검 뒤에만 설정 파일을 씁니다.
+10. `crates/harness-cli/src/host_config.rs`는 호스트 중립 MCP 설정 JSON을 렌더링하고, `crates/harness-cli/src/local_mcp_command.rs`는 대상 검증과 성공한 사전 점검 뒤에만 설정 파일을 씁니다.
 11. 명령은 설정 상태, 수행 작업, 사전 점검 상태, 생성된 설정 정보를 담아 최종 텍스트 또는 JSON 출력을 렌더링합니다.
 
-`wizard.rs`는 같은 계획과 적용 경로 위에 놓인 대화형 프런트엔드입니다. 위저드는 입력, 충돌 승인, 설정 덮어쓰기 결정, 최종 승인을 모은 뒤 비대화형 설정 실행기를 호출합니다. 독립된 설정 엔진이 아닙니다.
+`crates/harness-cli/src/wizard.rs`는 같은 계획과 적용 경로 위에 놓인 대화형 프런트엔드입니다. 위저드는 입력, 충돌 승인, 설정 덮어쓰기 결정, 최종 승인을 모은 뒤 비대화형 설정 실행기를 호출합니다. 독립된 설정 엔진이 아닙니다.
 
 ## 구현 불변식과 이유
 
@@ -240,8 +242,8 @@ sequenceDiagram
 | Core가 어댑터와 독립적임 | `harness-core`는 Store와 공유 타입에 의존하고 `harness-cli`나 `harness-mcp`에는 의존하지 않습니다. 따라서 공개 메서드 동작은 어댑터가 의미를 소유하지 않은 채 여러 어댑터를 통해 호출될 수 있습니다. |
 | 관리 CLI가 공개 Core 메서드와 분리됨 | `harness-cli`는 로컬 설정을 위해 Store 부트스트랩, 등록, 검사, 호스트 설정 모듈을 사용합니다. [관리 CLI](../reference/admin-cli.md) 담당 문서는 이 명령들이 공개 메서드 목록 밖에 있음을 유지합니다. |
 | MCP의 직접 Store 사용이 제한됨 | `harness-mcp`는 시작과 고정 세션 바인딩 검증에 Store를 사용한 뒤 공개 메서드 실행에는 Core를 호출합니다. [MCP 전송](../reference/mcp-transport.md)은 시작과 프로토콜 전송 동작을 맡고, API 담당 문서는 메서드 동작을 맡습니다. |
-| 공통 사전 점검과 메서드 계획이 분리됨 | `pipeline.rs`는 요청 래퍼, 요청 해시, 프로젝트, 바인딩, 재실행, Task, 최신성, 접근 점검을 중앙화합니다. 메서드 모듈은 메서드별 계획과 응답 필드를 유지합니다. |
-| Core 정책과 Store 트랜잭션 원자성이 분리됨 | `policy/`와 `methods/`가 호환성과 예정 효과를 결정합니다. Store는 메서드 정책을 소유하지 않고 변이를 원자적으로 적용합니다. |
+| 공통 사전 점검과 메서드 계획이 분리됨 | `crates/harness-core/src/pipeline.rs`는 요청 래퍼, 요청 해시, 프로젝트, 바인딩, 재실행, Task, 최신성, 접근 점검을 중앙화합니다. 메서드 모듈은 메서드별 계획과 응답 필드를 유지합니다. |
+| Core 정책과 Store 트랜잭션 원자성이 분리됨 | `crates/harness-core/src/policy/`와 `crates/harness-core/src/methods/`가 호환성과 예정 효과를 결정합니다. Store는 메서드 정책을 소유하지 않고 변이를 원자적으로 적용합니다. |
 | Product Repository 쓰기는 공개 Harness API 밖에 있음 | Core는 호환성과 관찰 사실을 기록할 수 있지만, 파일 쓰기는 공개 API 경로 밖에서 연결된 접점이나 로컬 도구가 수행합니다. 위치 구분은 [런타임 경계](../reference/runtime-boundaries.md)가 담당합니다. |
 | 아티팩트 스테이징이 Core 변이와 분리됨 | `stage_artifact`는 아티팩트 저장소를 통해 일시적 스테이징을 만들고, 영구 아티팩트 승격은 `record_run` 같은 메서드 계획 Core 변이를 통해 일어납니다. |
 | 테스트가 제품 계약 담당 문서가 아님 | 단위, 통합, 바이너리, 적합성 테스트는 담당 문서가 정의한 사실을 검증합니다. API, 저장소, 보안, Core 권한 계약은 참조 담당 문서에 남습니다. |
@@ -264,11 +266,11 @@ sequenceDiagram
 
 | 구현 영역 | 첫 계약 담당 경로 |
 |---|---|
-| `harness-core/src/methods/`의 공개 메서드 구현 | [API 메서드](../reference/api/methods.md), 그다음 연결된 메서드 담당 문서. |
+| `crates/harness-core/src/methods/`의 공개 메서드 구현 | [API 메서드](../reference/api/methods.md), 그다음 연결된 메서드 담당 문서. |
 | 공통 Core 파이프라인, 응답 분기, 요청 래퍼 처리, 요청 해시, 공개 오류 처리 경로 | [API 코어 스키마](../reference/api/schema-core.md), [API 오류 문서 묶음 색인](../reference/api/errors.md), 지속 효과가 있을 때는 [저장 효과](../reference/storage-effects.md). |
 | 사용자 소유 판단, 쓰기 권한 부여, 증거, 닫기 준비 상태, 권한 경계를 다루는 Core 정책 | [Core 모델](../reference/core-model.md), 메서드 담당 문서, [에이전트 통합](../reference/agent-integration.md), 적용되는 경우 [API 값 집합](../reference/api/schema-value-sets.md). |
 | Product Repository 경로 정규화와 제품/런타임 위치 분리 | [런타임 경계](../reference/runtime-boundaries.md). |
-| `harness-types`의 공유 Rust 타입과 스키마 형태 데이터 | [API 코어 스키마](../reference/api/schema-core.md), [API 상태 스키마](../reference/api/schema-state.md), [API 아티팩트 스키마](../reference/api/schema-artifacts.md), [API 판단 스키마](../reference/api/schema-judgment.md), [API 값 집합](../reference/api/schema-value-sets.md). |
+| `crates/harness-types/src/`의 공유 Rust 타입과 스키마 형태 데이터 | [API 코어 스키마](../reference/api/schema-core.md), [API 상태 스키마](../reference/api/schema-state.md), [API 아티팩트 스키마](../reference/api/schema-artifacts.md), [API 판단 스키마](../reference/api/schema-judgment.md), [API 값 집합](../reference/api/schema-value-sets.md). |
 | 원자적 Store 커밋, 재실행 기록 행, 잠금/버전 관리, 저장소 기록, DDL | [저장소](../reference/storage.md), [저장 효과](../reference/storage-effects.md), [저장소 기록](../reference/storage-records.md), [저장소 DDL](../reference/storage-ddl.md), [저장소 버전 관리](../reference/storage-versioning.md). |
 | 아티팩트 스테이징과 영구 아티팩트 본문 검증 | [아티팩트 저장소](../reference/storage-artifacts.md), 그리고 해당 아티팩트를 참조하는 메서드 담당 문서. |
 | MCP 시작, 프로세스 바인딩, stdio 프레이밍, `tools/call` 래핑 | [MCP 전송](../reference/mcp-transport.md), 검증된 접점 맥락은 [에이전트 통합](../reference/agent-integration.md). |
