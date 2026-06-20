@@ -1,120 +1,277 @@
 # Implementation architecture
 
-This guide gives implementers a durable repository-architecture reading path for the local Rust implementation. It describes layer separation, crate placement, and owner-routing support only.
+This guide owns guide-level implementation structure and execution-flow explanation for the local Rust workspace. It helps implementers locate code, understand responsibility boundaries, and route code questions to the contract owners.
 
-It does not define or override public API behavior, request or response fields, schema meaning, storage effects, DDL or table columns, security guarantees, runtime enforcement, Core authority semantics, or product contracts. For those questions, follow the [Implementation Guide](implementation-guide.md) and the applicable Reference owner.
+It does not define or override public API behavior, request or response fields, schema meaning, storage effects, DDL or table columns, security guarantees, runtime enforcement, Core authority semantics, or product contracts. Use the [Implementation Guide](implementation-guide.md) for the broader reading path and the focused Reference owners for exact behavior.
 
 Harness is the local work-authority product/system for AI-assisted product work. Core is the local authority record for Harness state.
 
-## Owner Boundary
-
-| This guide may describe | This guide routes away |
-|---|---|
-| Guide-level implementation architecture. | API method behavior and supported public methods. |
-| Guide-level layer separation among adapters, Core, stores, runtime data, and product files. | Request fields, response fields, shared schemas, and value meanings. |
-| A conservative Rust workspace shape for implementers. | Storage record layout, storage effects, artifact lifecycle detail, and DDL. |
-| Reading support for locating the focused owner. | Security guarantee wording, access-boundary claims, Core authority semantics, and product contracts. |
-
-## Layer Model
+## Operational paths
 
 ```mermaid
 flowchart LR
-  host[Agent or MCP Host]
-  mcp[harness-mcp MCP stdio adapter]
-  operator[Operator or Administrator]
-  cli[harness administrative CLI]
-  core[Harness Core]
-  sqlite[(Project state SQLite)]
-  bootstrap[(Runtime Home bootstrap storage)]
-  artifacts[(Artifact Store)]
-  runtime[Harness Runtime Home]
-  product[Product Repository]
+  host[MCP host or agent surface]
+  mcp["harness-mcp stdio adapter"]
+  core["harness-core"]
+  store["harness-store project Store"]
+  artifacts[Artifact staging and artifact facilities]
+  operator[Operator]
+  cli["harness administrative CLI"]
+  bootstrap[Bootstrap, registration, and inspection facilities]
+  runtime["Harness Runtime Home"]
+  config[Host configuration files]
+  product["Product Repository"]
 
   host --> mcp
   mcp --> core
+  mcp -. startup and session validation .-> store
+  core --> store
+  core --> artifacts
+  store --> runtime
+  artifacts --> runtime
+
   operator --> cli
   cli --> bootstrap
-  core --> sqlite
-  core --> artifacts
+  cli --> config
   bootstrap --> runtime
-  sqlite --> runtime
-  artifacts --> runtime
-  product -. read or observed product context .-> core
+
+  product -. owner-defined inputs and observed paths .-> core
   host -. product-file tools outside public API .-> product
 ```
 
-Read the solid paths as two distinct current implementation paths. An agent or MCP host starts `harness-mcp`, reaches Harness Core through the MCP stdio adapter, and Core uses project-state and artifact storage under `Harness Runtime Home`. An operator or administrator uses the `harness` administrative CLI for Runtime Home, project, and surface bootstrap storage; that path is not a public Harness workflow-method adapter and does not imply that the CLI invokes public Core method services. Read the dotted paths as boundary reminders: `Product Repository` is a separate product-file boundary that Core may read or observe through owner-defined inputs, while actual product-file tools run outside the public Harness API.
+The repository implementation has two distinct operational paths:
 
-The diagram is an implementation guide. It is not a storage layout, a security boundary, a method contract, or proof that any runtime exists.
+- MCP host -> `harness-mcp` -> `harness-core` -> Store and artifact facilities under `Harness Runtime Home`.
+- Operator -> `harness` administrative CLI -> bootstrap and registration facilities -> `Harness Runtime Home` and host configuration files.
 
-## Layer Responsibilities
+`harness-mcp` also uses `harness-store` directly during startup and session-binding validation. That Store use checks Runtime Home, project, surface, surface instance, role, and local-access registration before stdio begins. It is not an alternate implementation path for public Harness method semantics, which route through `harness-core`.
 
-| Layer | Guide-level responsibility | Does not own |
+`Product Repository` remains a separate product-file boundary. The public Harness API records owner-defined compatibility, observations, and artifact links; product-file writes themselves happen through a connected surface or local tooling outside the public API path.
+
+## Workspace shape
+
+The Cargo workspace contains these members:
+
+| Workspace member | Cargo package | Targets | Guide-level role |
+|---|---|---|---|
+| `crates/harness-types` | `harness-types` | Library | Shared Rust request, response, schema-shaped, value-set, identifier, and canonical-hash types. |
+| `crates/harness-store` | `harness-store` | Library | SQLite, Runtime Home, bootstrap, project Store, artifact storage, migration, inspection, and storage-error implementation. |
+| `crates/harness-core` | `harness-core` | Library | Core service, shared request pipeline, method planning, policy checks, and Store coordination. |
+| `crates/harness-cli` | `harness-cli` | Library and `harness` binary | Local administrative CLI for Runtime Home setup, project registration, surface registration, local MCP setup, and host config generation. |
+| `crates/harness-mcp` | `harness-mcp` | Library and `harness-mcp` binary | MCP stdio adapter, startup validation, tool listing, `tools/call` dispatch, and Core invocation. |
+| `crates/harness-test-support` | `harness-test-support` | Library | Disposable Runtime Home, Store, Core, and fixture helpers shared by implementation tests. |
+| `tests/conformance` | `harness-conformance-tests` | `baseline` test target | Baseline cross-method scenarios that exercise owner-defined behavior through Core-facing APIs. |
+| `tests/integration` | `harness-integration-tests` | `mcp_surface` test target | Cross-layer MCP, Core, Store, surface-binding, and access-path verification. |
+
+Internal dependency direction from the Cargo manifests:
+
+| Member | Normal internal dependencies | Test-only internal dependencies |
 |---|---|---|
-| Agent or MCP Host | Starts or communicates with a supported MCP adapter and may use product-file tools outside the public API path. | Core authority, storage authority, security guarantees, or product-file authority. |
-| MCP Adapter | Translates MCP stdio transport into Core-facing calls and returns owner-shaped results. | Core meaning, method behavior, schema meaning, or storage effects. |
-| Administrative CLI | Initializes and registers local Runtime Home, project, and surface bootstrap records. | Public Harness workflow methods, Core meaning, method behavior, schema meaning, or storage effects. |
-| Harness Core | Evaluates owner-defined authority decisions and coordinates storage-facing interfaces. | Adapter transport, DDL, artifact byte lifecycle, or security guarantee wording. |
-| SQLite Store | Implements the record store behind Core according to storage owners. | API behavior, Core semantics, or table detail in this guide. |
-| Artifact Store | Implements staged and persistent artifact storage support according to artifact owners. | Artifact lifecycle contracts or schema fields in this guide. |
-| `Harness Runtime Home` | Holds Harness runtime data as runtime and storage owners define. | `Product Repository`, server installation storage by default, or a security boundary by itself. |
-| `Product Repository` | Holds the user's product files that may be read, observed, or changed outside the public API path. | Harness runtime state, Core records, artifact authority, or `Harness Runtime Home`. |
+| `harness-types` | None | None |
+| `harness-store` | `harness-types` | `harness-test-support` |
+| `harness-core` | `harness-store`, `harness-types` | `harness-test-support` |
+| `harness-cli` | `harness-store`, `harness-types` | `harness-store` with `test-support`, `harness-test-support` |
+| `harness-mcp` | `harness-core`, `harness-store`, `harness-types` | `harness-test-support` |
+| `harness-test-support` | `harness-store`, `harness-types` | None |
+| `tests/conformance` | None; the package contains only test targets | `harness-core`, `harness-test-support`, `harness-types` |
+| `tests/integration` | None; the package contains only test targets | `harness-core`, `harness-mcp`, `harness-store`, `harness-test-support`, `harness-types` |
 
-Core owns authority decisions defined by the Reference owners. The MCP adapter translates public-method transport only. The administrative CLI performs local bootstrap and registration work only. Core-facing code must stay independent of CLI and MCP adapter layers; the MCP adapter may depend on Core-facing interfaces.
+```mermaid
+flowchart TD
+  types["harness-types"]
+  store["harness-store"]
+  core["harness-core"]
+  cli["harness-cli"]
+  mcp["harness-mcp"]
+  support["harness-test-support"]
+  conformance["tests/conformance"]
+  integration["tests/integration"]
 
-At guide level, MCP adapter startup selects one project, one surface, and one surface instance for a session, then derives requested access per public method call from the method and typed params. Exact session binding, access derivation, and grant rules stay with [Agent Integration](../reference/agent-integration.md) and the method owners.
+  store --> types
+  core --> store
+  core --> types
+  cli --> store
+  cli --> types
+  mcp --> core
+  mcp --> store
+  mcp --> types
+  support --> store
+  support --> types
 
-## Rust Workspace Shape
+  store -. dev .-> support
+  core -. dev .-> support
+  cli -. dev .-> support
+  mcp -. dev .-> support
+  conformance -. test .-> core
+  conformance -. test .-> support
+  conformance -. test .-> types
+  integration -. test .-> mcp
+  integration -. test .-> core
+  integration -. test .-> store
+  integration -. test .-> support
+  integration -. test .-> types
+```
 
-For Rust implementation work, keep the baseline workspace narrow and layered:
+The durable dependency boundaries are:
 
-| Crate | Guide-level contents |
+- Core does not depend on CLI or MCP adapter crates.
+- MCP may depend on Core, Store, and shared types for distinct responsibilities: transport and dispatch, startup/session validation, and typed request handling.
+- The administrative CLI uses Store and shared types for local setup and registration rather than invoking public Core methods.
+- Store depends on shared types.
+- Test-support and test packages compose implementation crates only for disposable fixtures and cross-layer verification.
+
+## Source module map
+
+| Area | Major modules | Durable responsibility |
+|---|---|---|
+| `crates/harness-types` | `methods.rs`, `schema.rs`, `values.rs`, `ids.rs`, `canonical.rs` | `methods.rs` carries typed public request/result models and method-to-access mapping. `schema.rs` carries shared schema-shaped Rust data, response branches, Core state shapes, artifact and judgment structures, and persisted helper shapes. `values.rs` carries controlled Rust enums and constants for documented value names. `ids.rs` carries opaque identifier wrappers and durable ID generation helpers. `canonical.rs` carries deterministic canonical JSON serialization and request hashing. |
+| `crates/harness-store` | `runtime_home.rs`, `bootstrap.rs`, `sqlite.rs`, `migrations.rs`, `core_pipeline.rs`, `artifacts.rs`, `inspection.rs`, `error.rs` | `runtime_home.rs` resolves Runtime Home paths. `bootstrap.rs` initializes Runtime Home metadata and registers projects and surfaces. `sqlite.rs` opens and validates registry/project SQLite databases. `migrations.rs` applies baseline migrations. `core_pipeline.rs` exposes `CoreProjectStore`, read helpers, replay rows, storage mutation types, and the atomic Core mutation commit boundary. `artifacts.rs` handles transient staging and persistent artifact body verification. `inspection.rs` supports read-only setup inspection. `error.rs` classifies storage failures for higher layers. |
+| `crates/harness-core` | `pipeline.rs`, `methods/`, `policy/` | `pipeline.rs` owns common request preflight, validated request context preparation, effect-path selection, response construction, replay handling, and Core commit orchestration. `methods/` owns method-specific validation, planning, storage mutation lists, event payloads, dry-run summaries, and result fields. `policy/` owns reusable Core policy helpers for access, replay context, product paths, write authorization, close readiness, evidence, and judgment relevance. |
+| `crates/harness-cli` | `main.rs`, `local_mcp_command.rs`, `setup.rs`, `wizard.rs`, `host_config.rs`, `registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `local_mcp_command.rs` parses and orchestrates `harness setup local-mcp`, preflight checks, config destination checks, output rendering, and config-file writing. `setup.rs` plans, prepares, revalidates, and applies Runtime Home/project/surface setup. `wizard.rs` is the interactive frontend for the same setup path. `host_config.rs` renders host-neutral MCP configuration JSON. `registration.rs` builds deterministic capability-profile and local-access metadata. |
+| `crates/harness-mcp` | `main.rs`, `lib.rs` | `main.rs` handles command modes such as stdio, `--check`, help, and version. `lib.rs` owns MCP tool metadata, startup inspection, session context, typed `tools/call` decoding, invocation-context derivation, JSON-RPC stdio framing, and response wrapping. |
+| `crates/harness-test-support` | `lib.rs` | Provides disposable Runtime Home helpers, fixture setup for Core and Store tests, shared request builders, and fixture-only helpers used by conformance and integration tests. |
+
+These module descriptions are implementation placement guidance. Exact API fields, method behavior, storage records, storage effects, security wording, and Core authority semantics stay with the Reference owners.
+
+## Core pipeline and Store boundary
+
+`harness-core/src/pipeline.rs`, `harness-core/src/methods/`, `harness-core/src/policy/`, and `harness-store/src/core_pipeline.rs` have separate jobs:
+
+| Component | Job in the implementation |
 |---|---|
-| `crates/harness-types` | Shared Rust types, identifiers, result enums, and serialization helpers that mirror owner-defined schemas without becoming the schema owner. |
-| `crates/harness-store` | SQLite-backed record-store interfaces, artifact-store plumbing, migrations, and storage test helpers routed to storage owners. |
-| `crates/harness-core` | Core-facing services that apply owner-defined transitions, authority checks, idempotency calls, and store coordination. |
-| `crates/harness-cli` | Local administrative/bootstrap commands for Runtime Home initialization, project registration, and surface registration. |
-| `crates/harness-mcp` | MCP stdio adapter that maps public Harness tools to Core-facing services and returns owner-shaped responses. |
-| `crates/harness-test-support` | Test fixtures, disposable runtime-home helpers, and shared assertions for implementation tests. |
+| `pipeline.rs` | Runs common preflight, prepares `VerifiedRequestContext`, routes prepared requests to read, no-effect, dry-run, or committed Core paths, and builds common response bases. |
+| `methods/` | Decodes already typed requests into method-specific plans: validation outcomes, dry-run summaries, event payloads, result fields, and `CoreStorageMutation` lists. |
+| `policy/` | Supplies reusable checks used by method planners and preflight: registered-surface access, replay context, Product Repository path normalization, write-authorization compatibility, evidence status, judgment relevance, and close-readiness calculations. |
+| `harness-store/src/core_pipeline.rs` | Owns project-local Store access, read helpers, replay rows, storage mutation application, and the atomic `CoreProjectStore::commit_mutation` transaction. |
 
-Crate names and module boundaries are implementation placement guidance. Public method names, schemas, storage effects, and value meanings still come from the Reference owners.
+Method modules decide what should happen for one public method. The shared Core pipeline decides the common ordering and effect path. Store commits apply the selected storage mutations atomically; Store does not decide method policy.
 
-## Runtime Home And Product Repository
+## MCP and Core execution flow
 
-`Harness Runtime Home` and `Product Repository` are separate boundaries. The runtime home is where Harness-owned records, metadata, and artifact data belong when the storage and runtime owners define them. The product repository is the user's product-file workspace.
+```mermaid
+sequenceDiagram
+  participant Host as MCP host
+  participant MCP as harness-mcp
+  participant Store as harness-store
+  participant Core as harness-core
+  participant Method as harness-core methods
 
-The two locations may be near each other on a local filesystem, but location does not collapse their meanings. A product file is not a Core record merely because Core observed it. A runtime record is not a product file merely because it refers to a product path. Direct local changes outside documented Harness contracts do not create valid Core records, evidence, acceptance, residual-risk acceptance, `Write Authorization`, or artifact authority.
+  Host->>MCP: start process with binding environment
+  MCP->>Store: validate Runtime Home, project, surface, instance, role, local access
+  Host->>MCP: tools/call(name, arguments)
+  MCP->>MCP: decode typed request and derive invocation context
+  MCP->>Core: CoreService method(request, invocation)
+  Core->>Core: common preflight in pipeline.rs
+  Core->>Store: open project, read state, validate surface, replay, task, freshness
+  Core->>Method: method-specific planning and policy checks
+  Method-->>Core: branch, result fields, events, storage mutations, or direct response
+  alt read, no-effect, or dry-run
+    Core-->>MCP: PipelineResponse without Core commit
+  else Core mutation
+    Core->>Store: commit_mutation(input, storage mutations, response builder)
+    Store-->>Core: committed, replayed, stale, or conflict outcome
+  else stage_artifact
+    Core->>Store: create_artifact_staging(...)
+    Store-->>Core: staged handle facts
+  end
+  Core-->>MCP: PipelineResponse
+  MCP-->>Host: MCP result with Harness JSON in content text
+```
 
-The public Harness API does not directly edit product files. A connected surface or local tool may perform product-file writes outside the public API path; Harness records write compatibility and observed results through owner-defined API flows.
+Implementation flow:
 
-## Write Preparation And Run Recording
+1. `harness-mcp` resolves Runtime Home and fixed binding inputs from process environment or configured registration data.
+2. `McpStartupInspection` validates Runtime Home metadata, project registration and status, project state availability, surface registration, usable surface instance selection, role, capability-profile JSON, metadata JSON, and local-access grants through Store-facing facilities.
+3. The stdio loop accepts line-delimited JSON-RPC and dispatches `initialize`, `ping`, `tools/list`, and `tools/call`.
+4. `tools/call` reads the tool name, decodes `arguments` into the matching typed request from `harness-types`, and derives an `InvocationContext` from the fixed MCP session plus the typed request's method-derived access class.
+5. `McpAdapter::call_tool` dispatches to the matching `CoreService` method.
+6. Each `CoreService` method selects a `MethodPolicy` and calls common preflight before method-specific planning.
+7. Common preflight validates request-envelope shape, rejects adapter binding mismatches, validates committed-effect envelope requirements, computes the canonical request hash, opens the project Store, reads `project_state`, derives the verified surface context, handles idempotency replay for committed branches, resolves the Task according to the method policy, checks `state_version` freshness where applicable, checks registered access for the method-derived access class, and prepares a validated request context.
+8. The method module performs method-specific validation, policy evaluation, and plan or result construction.
+9. The selected branch returns a read-only result, no-persistence result, dry-run preview, Core mutation commit, or transient artifact staging result.
+10. Core returns a `PipelineResponse`; MCP wraps the exact Harness response JSON as MCP `tools/call` content text.
 
-At guide level, read the write path this way:
+This flow is an implementation map. Exact public method contracts, error precedence, response schemas, and storage effects remain with the focused Reference owners.
 
-1. `harness.prepare_write` asks Core to evaluate whether one intended product-file write attempt is compatible with current owner-defined state. When the method owner allows it, Core creates a `Write Authorization` authority record.
-2. Any actual product-file edit happens outside the public Harness API, through the connected surface or local tooling. This guide does not define the file-write mechanism and does not make a security guarantee.
-3. `harness.record_run` records observed work after the fact and may update the current close basis or record owner-supported evidence, blockers, artifact links, or artifact promotion. A Run record does not retrofit missing authority or prove a write occurred beyond owner-defined recorded facts. Terminal close behavior stays with `harness.close_task`.
+## Effect and commit boundaries
 
-Use the method owners for exact behavior. Use storage owners for persistence effects. Use Core Model for authority meaning.
+| Effect path | Implementation location | Storage consequence at guide level |
+|---|---|---|
+| Read-only result | `OwnerPipelineBranch::ReadOnly` through `pipeline.rs` | Builds a result from current Store reads; no Core mutation commit. |
+| Result with no persistence | `OwnerPipelineBranch::NoEffectResult` through `pipeline.rs` | Returns a method result without a Core state mutation, such as a blocked close result. |
+| Dry-run result | `OwnerPipelineBranch::DryRunPreview` through `pipeline.rs` | Returns preview data with no persistent storage effect. |
+| Core mutation commit | `OwnerPipelineBranch::CommitMutation` through `pipeline.rs` and `CoreProjectStore::commit_mutation` | Applies method-provided `CoreStorageMutation` values inside one Store transaction, appends events, stores replay response when idempotent, and advances project state where applicable. |
+| Transient artifact staging | `harness-core/src/methods/stage_artifact.rs` with `CoreProjectStore::create_artifact_staging` in `artifacts.rs` | Creates a transient staged-handle row and safe staged bytes. It does not follow the normal Core mutation commit path, does not increment `project_state.state_version`, does not append `task_events`, and does not create a replay row. |
 
-## Owner Routes
+`CoreProjectStore::commit_mutation` is the Store transaction boundary for normal committed Core mutations:
 
-| Implementation question | Owner route |
+1. Begin an immediate write transaction.
+2. Recheck idempotency replay context and expected state context inside the transaction.
+3. Advance `project_state.state_version` where the committed Core mutation applies.
+4. Apply the method-provided storage mutations through `CoreStorageMutation`.
+5. Append the method-provided event or events.
+6. Build and store the exact replay response for idempotent committed calls.
+7. Commit atomically, or roll back the whole attempt on error.
+
+Table layout, DDL, storage record detail, method-specific persistence effects, and artifact lifecycle rules belong to the storage Reference owners.
+
+## Administrative CLI setup flow
+
+`harness setup local-mcp` is implemented as local administrative orchestration, not as a public Core method:
+
+1. `harness-cli/src/main.rs` dispatches `harness setup local-mcp` to `local_mcp_command.rs`.
+2. `local_mcp_command.rs` parses options, resolves Runtime Home, resolves Product Repository root, resolves optional config directory, and discovers the `harness-mcp` executable.
+3. `setup.rs` builds a read-only `LocalMcpSetupPlan` by inspecting Runtime Home, registry, project records, project state, and surfaces. It also reports project or surface conflicts.
+4. Config destination checks inspect the target directory and files before setup writes.
+5. Dry-run returns rendered text or JSON output from the plan, planned preflight entries, and generated host config content without storage preparation, registration, preflight execution, or config-file writes.
+6. Non-dry-run setup prepares storage: create or validate Runtime Home, and validate or migrate selected existing project state when reusing a project.
+7. The command regenerates the plan after preparation and compares it with the earlier plan to catch conflicts introduced during preparation.
+8. `apply_local_mcp_setup_plan` creates or reuses Runtime Home, registers or reuses the project, and creates or updates the fixed agent and optional user-interaction surface registrations.
+9. For each configured binding, the CLI runs `harness-mcp --check` with generated environment variables and validates the deterministic preflight report.
+10. `host_config.rs` renders host-neutral MCP configuration JSON, and `local_mcp_command.rs` writes config files only after destination validation and successful preflight.
+11. The command renders final text or JSON output with setup status, actions, preflight status, and generated configuration information.
+
+`wizard.rs` is an interactive frontend over the same planning and application path. The wizard collects inputs, conflict approvals, config overwrite decisions, and final approval, then calls the non-interactive setup executor; it is not an independent setup engine.
+
+## Implementation invariants and rationale
+
+| Boundary | Reason visible in code and owner routes |
 |---|---|
-| Core authority concepts, `Write Authorization`, user-owned judgment, evidence, acceptance, and residual-risk boundaries | [Core Model](../reference/core-model.md) |
-| `Product Repository`, `Harness Runtime Home`, `Harness Server`, and runtime location separation | [Runtime Boundaries](../reference/runtime-boundaries.md) |
-| `harness` administrative/bootstrap CLI behavior | [Administrative CLI](../reference/admin-cli.md) |
-| `harness-mcp` MCP stdio process behavior | [MCP Transport](../reference/mcp-transport.md) |
-| Supported public methods and method-specific behavior | [API Methods](../reference/api/methods.md), then the method owner |
-| `harness.prepare_write` behavior | [`harness.prepare_write`](../reference/api/method-prepare-write.md) |
-| `harness.record_run` behavior | [`harness.record_run`](../reference/api/method-record-run.md) |
-| `harness.close_task` behavior | [`harness.close_task`](../reference/api/method-close-task.md) |
-| Storage owner reading order | [Storage](../reference/storage.md) |
-| Storage effects | [Storage Effects](../reference/storage-effects.md) |
-| Record layout | [Storage Records](../reference/storage-records.md) |
-| Artifact storage lifecycle | [Artifact Storage](../reference/storage-artifacts.md) |
-| Versioning, replay, locking, and migrations | [Storage Versioning](../reference/storage-versioning.md) |
-| Surface and connector boundaries | [Agent Integration](../reference/agent-integration.md) |
-| Security guarantees and non-claims | [Security](../reference/security.md) |
+| Core independence from adapters | `harness-core` depends on Store and shared types, not `harness-cli` or `harness-mcp`, so public method behavior can be invoked through more than one adapter without adapter-owned semantics. |
+| Administrative CLI separation from public Core methods | `harness-cli` uses Store bootstrap, registration, inspection, and host-config modules for local setup. The [Administrative CLI](../reference/admin-cli.md) owner keeps these commands outside the public method list. |
+| Restricted direct Store use by MCP | `harness-mcp` uses Store for startup and fixed session binding validation, then calls Core for public method execution. [MCP Transport](../reference/mcp-transport.md) owns startup and wire behavior; API owners own method behavior. |
+| Common preflight separate from method planning | `pipeline.rs` centralizes envelope, request hash, project, binding, replay, Task, freshness, and access checks; method modules keep method-specific planning and response fields. |
+| Core policy separate from Store transaction atomicity | `policy/` and `methods/` decide compatibility and planned effects; Store applies mutations atomically without owning method policy. |
+| Product Repository writes outside public Harness API | Core can record compatibility and observations, but file writes are performed by connected surfaces or local tools outside the public API path. [Runtime Boundaries](../reference/runtime-boundaries.md) owns the location distinction. |
+| Artifact staging separate from Core mutation | `stage_artifact` creates transient staging through artifact storage, while persistent artifact promotion occurs through method-planned Core mutation such as `record_run`. |
+| Tests are not product-contract owners | Unit, integration, binary, and conformance tests verify owner-defined facts, but API, storage, security, and Core authority contracts stay in Reference owners. |
 
-Use this page to place code and keep boundaries visible. Use the focused owners to decide behavior.
+## Test topology
+
+| Test area | Verification role |
+|---|---|
+| Colocated unit tests in implementation modules | Check local helpers, parsing, serialization, migration, Store, policy, and edge behavior close to the code under test. |
+| `crates/harness-core/src/methods/tests.rs` | Exercises Core method planning, shared preflight behavior, effect branches, replay behavior, staging distinction, artifact promotion, close-readiness calculations, and method-owned storage mutation outcomes through `CoreService`. |
+| `crates/harness-cli/tests/binary_admin.rs` | Runs the `harness` binary for administrative initialization, registration, setup help and usage errors, dry-run behavior, local MCP setup, preflight failure handling, and config-file safety. |
+| `crates/harness-mcp/tests/binary_transport.rs` | Runs the `harness-mcp` binary for help/version, `--check`, stdio framing, line-delimited JSON-RPC, reconnection behavior, and MCP response wrapping. |
+| `tests/integration/mcp_surface.rs` | Verifies MCP surface binding, tool schemas, public method exposure, per-method access derivation, Core/MCP parity, session rejection cases, replay context binding, and cross-layer storage effects. |
+| `tests/conformance/baseline.rs` | Exercises baseline public behavior scenarios through Core-facing APIs using shared fixtures, including replay, no-effect branches, write authorization, artifact lifecycle, judgment boundaries, close readiness, error routing, and corruption handling. |
+| `crates/harness-test-support` | Supplies disposable Runtime Home fixtures, project and surface registration helpers, request builders, Store helpers, and shared assertions for the test packages and crate tests. |
+
+Tests verify behavior that owner documents define. A test fixture, assertion, or scenario name must not become the only source for a product contract.
+
+## Code-to-owner routing
+
+| Implementation area | First relevant contract owner |
+|---|---|
+| Public method implementation in `harness-core/src/methods/` | [API Methods](../reference/api/methods.md), then the linked method owner. |
+| Common Core pipeline, response branches, envelope handling, request hashing, and public error routing | [API Schema Core](../reference/api/schema-core.md), [API Error Family Index](../reference/api/errors.md), and [Storage Effects](../reference/storage-effects.md) where persistence is involved. |
+| Core policies for user-owned judgment, write authorization, evidence, close readiness, and authority boundaries | [Core Model](../reference/core-model.md), method owners, [Agent Integration](../reference/agent-integration.md), and [API Value Sets](../reference/api/schema-value-sets.md) as applicable. |
+| Product Repository path normalization and product/runtime location separation | [Runtime Boundaries](../reference/runtime-boundaries.md). |
+| Shared Rust types and schema-shaped data in `harness-types` | [API Schema Core](../reference/api/schema-core.md), [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), and [API Value Sets](../reference/api/schema-value-sets.md). |
+| Atomic Store commit, replay rows, locking/versioning, storage records, and DDL | [Storage](../reference/storage.md), [Storage Effects](../reference/storage-effects.md), [Storage Records](../reference/storage-records.md), [Storage DDL](../reference/storage-ddl.md), and [Storage Versioning](../reference/storage-versioning.md). |
+| Artifact staging and persistent artifact body verification | [Artifact Storage](../reference/storage-artifacts.md) and the method owner that references the artifact. |
+| MCP startup, process binding, stdio framing, and `tools/call` wrapping | [MCP Transport](../reference/mcp-transport.md), with [Agent Integration](../reference/agent-integration.md) for verified surface context. |
+| Administrative CLI setup and local registration | [Administrative CLI](../reference/admin-cli.md), with [Runtime Boundaries](../reference/runtime-boundaries.md) and [MCP Transport](../reference/mcp-transport.md) for adjacent location and process behavior. |
+
+Use this page to orient code reading and preserve implementation boundaries. Use the focused owners to decide behavior.
