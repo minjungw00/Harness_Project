@@ -18,6 +18,10 @@ use harness_cli::{
     },
 };
 use harness_store::{
+    agent_integrations::{
+        agent_integration_record, list_host_installations_for_integration,
+        VERIFIED_STATUS_ACTION_REQUIRED, VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_PARTIAL_FAILURE,
+    },
     bootstrap::{
         initialize_runtime_home, list_projects, list_surfaces, register_project, ProjectRecord,
         ProjectRegistration, ACTIVE_PROJECT_STATUS,
@@ -977,6 +981,364 @@ fn harness_binary_setup_rejects_invalid_existing_project_before_preflight_and_co
     Ok(())
 }
 
+#[test]
+fn harness_binary_agent_help_covers_nested_commands() -> Result<(), Box<dyn Error>> {
+    assert_agent_help(["agent", "--help"])?;
+    assert_agent_help(["agent", "install", "--help"])?;
+    assert_agent_help(["agent", "project", "--help"])?;
+    assert_agent_help(["agent", "project", "add", "--help"])?;
+    assert_agent_help(["agent", "project", "remove", "--help"])?;
+    assert_agent_help(["agent", "status", "--help"])?;
+    assert_agent_help(["agent", "verify", "--help"])?;
+    assert_agent_help(["agent", "uninstall", "--help"])?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-codex")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_codex_user",
+            "--server-name",
+            "harness-test",
+            "--project-id",
+            "project_agent_codex",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&install);
+    assert!(stdout(&install).contains("status: complete"));
+    assert!(stdout(&install).contains("verification: complete"));
+
+    let config = fs::read_to_string(codex_home.join("config.toml"))?;
+    assert!(config.contains("[mcp_servers.harness-test]"));
+    assert!(config.contains("args = [\"--integration\", \"agent_codex_user\"]"));
+    assert!(!config.contains("HARNESS_PROJECT_ID"));
+
+    let integration = agent_integration_record(runtime_home.path(), "agent_codex_user")?
+        .expect("integration should be stored");
+    assert!(integration.enabled);
+    let installations =
+        list_host_installations_for_integration(runtime_home.path(), "agent_codex_user")?;
+    assert_eq!(installations.len(), 1);
+    assert_eq!(
+        installations[0].last_verified_status,
+        VERIFIED_STATUS_COMPLETE
+    );
+
+    let status = run_with_home_and_env(
+        runtime_home.path(),
+        ["agent", "status", "--integration-id", "agent_codex_user"],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&status);
+    assert!(stdout(&status).contains("host_state"));
+
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        ["agent", "verify", "--integration-id", "agent_codex_user"],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&verify);
+    assert!(stdout(&verify).contains("status: complete"));
+
+    let uninstall = run_with_home_and_env(
+        runtime_home.path(),
+        ["agent", "uninstall", "--integration-id", "agent_codex_user"],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&uninstall);
+    assert!(stdout(&uninstall).contains("status: complete"));
+    let config_after = fs::read_to_string(codex_home.join("config.toml"))?;
+    assert!(!config_after.contains("[mcp_servers.harness-test]"));
+    assert!(
+        list_host_installations_for_integration(runtime_home.path(), "agent_codex_user")?
+            .is_empty()
+    );
+    assert!(
+        !agent_integration_record(runtime_home.path(), "agent_codex_user")?
+            .expect("integration remains as disabled inventory")
+            .enabled
+    );
+
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_dry_run_writes_nothing_and_rejects_invalid_scope(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-dry-run")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = runtime_home.path().join("harness-mcp-dry");
+    fs::write(&mcp_command, "not executed")?;
+
+    let dry_run = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_dry_run",
+            "--project-id",
+            "project_agent_dry",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--dry-run",
+            "--output",
+            "json",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&dry_run);
+    let value: Value = serde_json::from_str(&stdout(&dry_run))?;
+    assert_eq!(value["status"], "dry_run");
+    assert_eq!(
+        value["runtime"]["runtime_home"],
+        path_text(runtime_home.path())
+    );
+    assert_eq!(
+        value["project"]["allowed_project_ids"],
+        json!(["project_agent_dry"])
+    );
+    assert!(value["integration"]["integration_id"].is_string());
+    assert_eq!(value["host"]["host_kind"], "codex");
+    assert_eq!(value["verification"]["status"], "not_verified");
+    assert!(value["action_required"].as_array().is_some());
+    assert!(value["effects"].as_array().is_some());
+    assert!(!registry_db_path(runtime_home.path()).exists());
+    assert!(!codex_home.join("config.toml").exists());
+
+    let invalid = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "local",
+            "--project-id",
+            "project_invalid",
+        ],
+    )?;
+    assert_eq!(invalid.status.code(), Some(2));
+    assert!(stderr(&invalid).contains("host and scope"));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-project-add")?;
+    let repo_a = runtime_home.create_product_repo("repo-a")?;
+    let repo_b = runtime_home.create_product_repo("repo-b")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_multi_project",
+            "--server-name",
+            "harness-multi",
+            "--project-id",
+            "project_a",
+            "--repo-root",
+            path_text(&repo_a).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&install);
+
+    let add = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "project",
+            "add",
+            "--integration-id",
+            "agent_multi_project",
+            "--project-id",
+            "project_b",
+            "--repo-root",
+            path_text(&repo_b).as_str(),
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&add);
+    assert_eq!(
+        list_host_installations_for_integration(runtime_home.path(), "agent_multi_project")?.len(),
+        1
+    );
+
+    let remove_default = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "project",
+            "remove",
+            "--integration-id",
+            "agent_multi_project",
+            "--project-id",
+            "project_a",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_eq!(remove_default.status.code(), Some(1));
+    assert!(stderr(&remove_default).contains("default project"));
+
+    let remove_b = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "project",
+            "remove",
+            "--integration-id",
+            "agent_multi_project",
+            "--project-id",
+            "project_b",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&remove_b);
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_claude_project_install_reports_action_required(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-claude-project")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let bin_dir = runtime_home.path().join("bin");
+    fs::create_dir_all(&bin_dir)?;
+    let mcp = write_agent_mcp(&bin_dir, AgentMcpFixture::Complete)?;
+    fs::rename(&mcp, bin_dir.join("harness-mcp"))?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "claude-code",
+            "--scope",
+            "project",
+            "--integration-id",
+            "agent_claude_project",
+            "--server-name",
+            "harness-claude",
+            "--project-id",
+            "project_claude",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--allow-repository-write",
+        ],
+        &[("PATH", path_text(&bin_dir))],
+    )?;
+    assert_success(&install);
+    assert!(stdout(&install).contains("status: action_required"));
+    let project_config: Value =
+        serde_json::from_str(&fs::read_to_string(repo_root.join(".mcp.json"))?)?;
+    assert_eq!(
+        project_config["mcpServers"]["harness-claude"]["command"],
+        "harness-mcp"
+    );
+    let installations =
+        list_host_installations_for_integration(runtime_home.path(), "agent_claude_project")?;
+    assert_eq!(
+        installations[0].last_verified_status,
+        VERIFIED_STATUS_ACTION_REQUIRED
+    );
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_mcp_tool_discovery_failures_are_partial_failure(
+) -> Result<(), Box<dyn Error>> {
+    for (fixture, expected) in [
+        (
+            AgentMcpFixture::MissingInstructions,
+            "missing server instructions",
+        ),
+        (AgentMcpFixture::MissingUtilityTool, "harness.list_projects"),
+    ] {
+        let runtime_home = TempRuntimeHome::new("cli-bin-agent-mcp-fail")?;
+        let repo_root = runtime_home.create_product_repo("product-repo")?;
+        let codex_home = runtime_home.path().join("codex-home");
+        let mcp_command = write_agent_mcp(runtime_home.path(), fixture)?;
+        let output = run_with_home_and_env(
+            runtime_home.path(),
+            [
+                "agent",
+                "install",
+                "--host",
+                "codex",
+                "--scope",
+                "user",
+                "--integration-id",
+                "agent_mcp_failure",
+                "--server-name",
+                "harness-failure",
+                "--project-id",
+                "project_failure",
+                "--repo-root",
+                path_text(&repo_root).as_str(),
+                "--mcp-command",
+                path_text(&mcp_command).as_str(),
+            ],
+            &[("CODEX_HOME", path_text(&codex_home))],
+        )?;
+        assert_eq!(output.status.code(), Some(1));
+        assert!(stdout(&output).contains("status: partial_failure"));
+        assert!(stdout(&output).contains(expected));
+        let installations =
+            list_host_installations_for_integration(runtime_home.path(), "agent_mcp_failure")?;
+        assert_eq!(
+            installations[0].last_verified_status,
+            VERIFIED_STATUS_PARTIAL_FAILURE
+        );
+    }
+    Ok(())
+}
+
 fn initialize_historical_setup(
     runtime_home: &Path,
     repo_root: &Path,
@@ -1052,6 +1414,31 @@ fn run_with_home<const N: usize>(
     command.env("HARNESS_HOME", runtime_home);
     command.args(args);
     Ok(command.output()?)
+}
+
+fn run_with_home_and_env<const N: usize>(
+    runtime_home: &Path,
+    args: [&str; N],
+    envs: &[(&str, String)],
+) -> Result<Output, Box<dyn Error>> {
+    let mut command = base_command();
+    command.env("HARNESS_HOME", runtime_home);
+    for (name, value) in envs {
+        command.env(name, value);
+    }
+    command.args(args);
+    Ok(command.output()?)
+}
+
+fn assert_agent_help<const N: usize>(args: [&str; N]) -> Result<(), Box<dyn Error>> {
+    let output = run_without_home(args)?;
+    assert_success(&output);
+    assert!(stdout(&output).contains("harness agent install"));
+    assert!(stdout(&output).contains("--default-project-id ID"));
+    assert!(stdout(&output).contains("--surface-id ID"));
+    assert!(stdout(&output).contains("--export-path PATH"));
+    assert!(stdout(&output).contains("--remove-managed"));
+    Ok(())
 }
 
 fn base_command() -> Command {
@@ -1414,6 +1801,108 @@ fn write_failing_mcp(dir: &Path) -> Result<std::path::PathBuf, Box<dyn Error>> {
     )?;
     make_executable(&path)?;
     Ok(path)
+}
+
+#[cfg(unix)]
+#[derive(Clone, Copy)]
+enum AgentMcpFixture {
+    Complete,
+    MissingInstructions,
+    MissingUtilityTool,
+}
+
+#[cfg(unix)]
+fn write_agent_mcp(
+    dir: &Path,
+    fixture: AgentMcpFixture,
+) -> Result<std::path::PathBuf, Box<dyn Error>> {
+    fs::create_dir_all(dir)?;
+    let name = match fixture {
+        AgentMcpFixture::Complete => "agent-mcp-complete",
+        AgentMcpFixture::MissingInstructions => "agent-mcp-missing-instructions",
+        AgentMcpFixture::MissingUtilityTool => "agent-mcp-missing-utility",
+    };
+    let path = dir.join(name);
+    let initialize = match fixture {
+        AgentMcpFixture::MissingInstructions => {
+            r#"printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"harness-mcp","version":"test"}}}'"#
+        }
+        _ => {
+            r#"printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"harness-mcp","version":"test"},"instructions":"Use Harness."}}'"#
+        }
+    };
+    let tools = match fixture {
+        AgentMcpFixture::MissingUtilityTool => public_tool_json(false),
+        _ => public_tool_json(true),
+    };
+    fs::write(
+        &path,
+        format!(
+            "#!/bin/sh\n\
+             if [ \"$1\" = \"--check\" ]; then\n\
+             shift\n\
+             if [ \"$1\" != \"--integration\" ]; then printf 'missing integration\\n' >&2; exit 2; fi\n\
+             integration=\"$2\"\n\
+             printf 'configuration: valid\\n'\n\
+             printf 'transport: stdio\\n'\n\
+             printf 'runtime_home: %s\\n' \"$HARNESS_HOME\"\n\
+             printf 'integration_id: %s\\n' \"$integration\"\n\
+             printf 'interaction_role: agent\\n'\n\
+             printf 'surface_id: surface_test\\n'\n\
+             printf 'surface_instance_id: surface_instance_test\\n'\n\
+             printf 'enabled: true\\n'\n\
+             printf 'allowed_projects: 1\\n'\n\
+             printf 'available_projects: 1\\n'\n\
+             printf 'default_project_id: project_test\\n'\n\
+             printf 'verification_scope: startup_check_only\\n'\n\
+             exit 0\n\
+             fi\n\
+             if [ \"$1\" = \"--integration\" ]; then\n\
+             while IFS= read -r line; do\n\
+             case \"$line\" in\n\
+             *'\"method\":\"notifications/initialized\"'*) ;;\n\
+             *'\"method\":\"initialize\"'*) {initialize} ;;\n\
+             *'\"method\":\"tools/list\"'*) printf '%s\\n' '{tools}'; exit 0 ;;\n\
+             esac\n\
+             done\n\
+             exit 0\n\
+             fi\n\
+             printf 'unexpected invocation\\n' >&2\n\
+             exit 2\n"
+        ),
+    )?;
+    make_executable(&path)?;
+    Ok(path)
+}
+
+#[cfg(unix)]
+fn public_tool_json(include_utility: bool) -> String {
+    let mut names = vec![
+        "harness.intake",
+        "harness.update_scope",
+        "harness.status",
+        "harness.prepare_write",
+        "harness.stage_artifact",
+        "harness.record_run",
+        "harness.request_user_judgment",
+        "harness.record_user_judgment",
+        "harness.close_task",
+    ];
+    if include_utility {
+        names.push("harness.list_projects");
+    }
+    let tools = names
+        .into_iter()
+        .map(|name| json!({ "name": name }))
+        .collect::<Vec<_>>();
+    json!({
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+            "tools": tools
+        }
+    })
+    .to_string()
 }
 
 #[cfg(unix)]

@@ -5,6 +5,7 @@
 //! The binary owns process entry/exit. Library modules are kept reusable so
 //! setup planning and orchestration can be tested without invoking the binary.
 
+pub mod agent_command;
 pub mod host_config;
 pub mod host_integration;
 pub mod local_mcp_command;

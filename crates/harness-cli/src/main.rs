@@ -10,6 +10,7 @@ use std::{
 };
 
 use harness_cli::{
+    agent_command::{agent_usage, run_agent_command, AgentCommandError, ProductionAgentProcess},
     local_mcp_command::{
         run_setup_command_with_wizard, setup_usage, LocalMcpCommandError, ProductionLocalMcpProcess,
     },
@@ -63,6 +64,10 @@ fn main() {
             eprintln!("error: {message}");
             process::exit(1);
         }
+        Err(CliError::FailureOutput(output)) => {
+            print!("{output}");
+            process::exit(1);
+        }
     }
 }
 
@@ -114,6 +119,10 @@ where
         "init" => command_init(&args[2..], env_var, current_dir),
         "setup" => run_setup_command_with_wizard(&args[2..], current_dir, setup_process, wizard_io)
             .map_err(CliError::from),
+        "agent" => {
+            let mut agent_process = ProductionAgentProcess;
+            run_agent_command(&args[2..], current_dir, &mut agent_process).map_err(CliError::from)
+        }
         "project" => command_project(&args[2..], env_var, current_dir),
         "surface" => command_surface(&args[2..], env_var, current_dir),
         other => Err(CliError::usage(format!(
@@ -470,8 +479,9 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  harness --help\n  harness --version\n  harness init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  HARNESS_HOME  Override Runtime Home path (default: $HOME/.harness)\n\nThese are local administrative setup commands, not public Harness API methods.\n",
+        "Usage:\n  harness --help\n  harness --version\n  harness init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  HARNESS_HOME  Override Runtime Home path (default: $HOME/.harness)\n\nThese are local administrative setup commands, not public Harness API methods.\n",
         setup_usage().trim_end(),
+        agent_usage().trim_end(),
         project_usage().trim_end(),
         surface_usage().trim_end()
     )
@@ -495,6 +505,7 @@ fn surface_usage() -> String {
 enum CliError {
     Usage(String),
     Runtime(String),
+    FailureOutput(String),
 }
 
 impl CliError {
@@ -510,7 +521,9 @@ impl CliError {
 impl fmt::Display for CliError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Usage(message) | Self::Runtime(message) => formatter.write_str(message),
+            Self::Usage(message) | Self::Runtime(message) | Self::FailureOutput(message) => {
+                formatter.write_str(message)
+            }
         }
     }
 }
@@ -543,6 +556,16 @@ impl From<LocalMcpCommandError> for CliError {
         match error {
             LocalMcpCommandError::Usage(message) => Self::Usage(message),
             LocalMcpCommandError::Runtime(message) => Self::Runtime(message),
+        }
+    }
+}
+
+impl From<AgentCommandError> for CliError {
+    fn from(error: AgentCommandError) -> Self {
+        match error {
+            AgentCommandError::Usage(message) => Self::Usage(message),
+            AgentCommandError::Runtime(message) => Self::Runtime(message),
+            AgentCommandError::FailureOutput(output) => Self::FailureOutput(output),
         }
     }
 }
