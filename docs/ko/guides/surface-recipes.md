@@ -101,7 +101,7 @@ IDE/편집기 통합은 에이전트가 절차를 지키도록 도울 수 있습
 
 상태 조회, 범위 업데이트, 쓰기 확인, 실행/증거 기록, 사용자 판단 기록, 아티팩트 스테이징, 닫기 확인에 사용합니다.
 
-실행 가능한 로컬 설정은 [로컬 MCP 설정](local-mcp-setup.md)에서 시작합니다. 일반 경로는 `harness setup local-mcp`입니다.
+실행 가능한 호스트 설정은 [빠른 시작](../getting-started/quickstart.md)에서 시작한 뒤 [에이전트 호스트 설정](agent-host-setup.md)을 봅니다. 현재 Codex와 Claude Code 설정은 `harness agent install`을 사용합니다. 오래된 `harness setup local-mcp` 명령은 [레거시 로컬 MCP 설정](local-mcp-setup.md)의 호환 경로로 남아 있습니다.
 
 이 레시피는 지원되는 메서드 목록, 접점 등록, 맥락 교환, 저장 효과, 보안 보장을 정의하지 않습니다. 그런 세부사항은 참조 담당 문서를 사용합니다.
 

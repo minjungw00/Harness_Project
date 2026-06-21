@@ -284,16 +284,18 @@ Core 변이 원자 커밋이 여기에 속합니다.
 존재 이유:
 
 `harness-cli`는 로컬 `harness` 관리 실행 파일과 재사용 가능한 설정 모듈을
-구현합니다. Runtime Home 초기화, 프로젝트와 접점 등록, 로컬 MCP 설정
-계획, 사전 점검 실행, 호스트 설정 렌더링, 선택적 대화형 설정을 처리합니다.
+구현합니다. Runtime Home 초기화, 프로젝트와 접점 등록, Agent Integration
+Profile 설치, 호스트별 MCP 설정, 선택적 저장소 guidance, 사전 점검 실행,
+호환 로컬 MCP 설정을 처리합니다.
 
 구현에서 담당하는 것:
 
 - `harness` 바이너리의 프로세스 진입과 관리 명령 디스패치.
-- `harness setup local-mcp` 옵션 파싱, 계획, 저장소 준비, 계획 재검증,
-  사전 점검 호출, 설정 대상 검증, 출력.
-- 같은 설정 경로 위의 대화형 설정 프롬프트.
-- 호스트 중립 MCP 설정 JSON 렌더링.
+- `harness agent` 옵션 파싱, 저장소 준비, 호스트 계획 구성, 사전 점검
+  호출, status/verify/project membership/uninstall/guidance 명령, 출력.
+- Codex, Claude Code, generic export 호스트 통합 계획.
+- 선택적 Product Repository guidance 렌더링과 관리 블록 갱신.
+- 호환 `harness setup local-mcp` 설정 계획과 대화형 프롬프트.
 - 등록된 접점을 위한 역량 프로필과 로컬 접근 메타데이터 생성.
 
 담당하지 않는 것:
@@ -312,16 +314,22 @@ Core 변이 원자 커밋이 여기에 속합니다.
 - [`crates/harness-cli/src/main.rs`](../../../crates/harness-cli/src/main.rs):
   프로세스 디스패치, `run_cli_with_setup_process_and_wizard`,
   `command_init`, `command_project`, `command_surface`.
+- [`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs):
+  `harness agent` install, project membership, status, verification,
+  uninstall, guidance 명령 오케스트레이션.
+- [`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/):
+  Codex, Claude Code, generic 호스트 통합 어댑터.
+- [`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs):
+  관리되는 Product Repository guidance 검색, apply, status, removal.
+- [`crates/harness-cli/src/guidance_template.rs`](../../../crates/harness-cli/src/guidance_template.rs):
+  Codex와 Claude Code guidance 본문.
 - [`crates/harness-cli/src/local_mcp_command.rs`](../../../crates/harness-cli/src/local_mcp_command.rs):
-  `run_setup_command_with_wizard`, `LocalMcpProcess`,
-  `PreflightEnvironment`, 사전 점검 검증, 설정 파일 안전성, 설정 출력
-  렌더링.
+  호환 `harness setup local-mcp` 명령, `LocalMcpProcess`,
+  `PreflightEnvironment`, 사전 점검 검증, 설정 파일 안전성, 설정 출력 렌더링.
 - [`crates/harness-cli/src/setup.rs`](../../../crates/harness-cli/src/setup.rs):
-  `LocalMcpSetupOptions`, `LocalMcpSetupPlan`, `SetupAction`,
-  `SetupSurfaceBinding`, `plan_local_mcp_setup`,
-  `prepare_local_mcp_setup_storage`, `apply_local_mcp_setup_plan`.
+  호환 로컬 MCP 설정 계획, 저장소 준비, 로컬 등록 도우미.
 - [`crates/harness-cli/src/wizard.rs`](../../../crates/harness-cli/src/wizard.rs):
-  `WizardIo`, `TerminalWizardIo`, 대화형 설정 흐름.
+  `WizardIo`, `TerminalWizardIo`, 호환 대화형 설정 흐름.
 - [`crates/harness-cli/src/host_config.rs`](../../../crates/harness-cli/src/host_config.rs):
   `render_config`, `render_configs`, `GeneratedConfig`.
 - [`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs):
@@ -330,6 +338,16 @@ Core 변이 원자 커밋이 여기에 속합니다.
 중요한 현재 심볼:
 
 - `run_cli_with_setup_process_and_wizard`, `CliError`
+- `run_agent_command`, `agent_usage`, `AgentCommandError`,
+  `AgentProcessOutput`
+- `command_install`, `command_status`, `command_verify`,
+  `command_uninstall`
+- `command_project_add`, `command_project_remove`
+- `command_guidance_apply`, `command_guidance_status`,
+  `command_guidance_remove`
+- `HostKind`, `HostScope`, `HostPlan`, `HostAdapter`, `Verification`
+- `GuidanceTarget`, `GuidancePlan`, `guidance_status`,
+  `plan_guidance_apply`, `apply_guidance_plan`, `plan_guidance_remove`
 - `run_setup_command_with_wizard`, `LocalMcpProcess`,
   `ProductionLocalMcpProcess`, `PreflightProcessOutput`
 - `LocalMcpSetupOptions`, `LocalMcpSetupPlan`, `LocalMcpSetupResult`
@@ -342,15 +360,16 @@ Core 변이 원자 커밋이 여기에 속합니다.
 가장 관련 있는 테스트:
 
 - [`crates/harness-cli/tests/binary_admin.rs`](../../../crates/harness-cli/tests/binary_admin.rs)는
-  `harness` 바이너리의 관리 설정, dry-run 동작, 로컬 MCP 설정, 사전 점검
-  처리, 설정 파일 안전성을 실행합니다.
+  `harness` 바이너리의 관리 설정, dry-run 동작, `harness agent` 호스트
+  설정, 저장소 guidance, 로컬 MCP 호환 설정, 사전 점검 처리, 설정 파일
+  안전성을 실행합니다.
 - CLI 모듈 안의 단위 테스트는 파싱, 계획, 렌더링, 위저드 동작을 다룹니다.
 
 다음에 읽을 컴포넌트:
 
-- 부트스트랩과 검사 저장소 호출은 `harness-store`에서 봅니다.
-  설정 명령이 검증하는 `harness-mcp --check` 사전 점검 경로는
-  `harness-mcp`에서 봅니다.
+- 부트스트랩, 검사, registry 저장소 호출은 `harness-store`에서 봅니다.
+  에이전트 설정이 검증하는 `harness-mcp --check --integration` 사전 점검
+  경로는 `harness-mcp`에서 봅니다.
 
 ## `crates/harness-mcp`
 

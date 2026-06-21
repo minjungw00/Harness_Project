@@ -12,44 +12,39 @@ This repository currently contains:
 - a Cargo Rust workspace
 - the `harness` administrative/bootstrap executable from package `harness-cli`
 - the `harness-mcp` local MCP stdio executable from package `harness-mcp`
+- direct host integration support for Codex, Claude Code, and generic export
 - implementation, integration, and conformance test paths
 
-The baseline local MCP process is stdio-based. It is launched as a local child process by an MCP host; it is not a TCP, HTTP, socket, or other network listener.
+The baseline local MCP process is stdio-based. An MCP host starts `harness-mcp` as a local child process with `--integration <integration_id>`; it is not a TCP, HTTP, socket, or other network listener.
 
 ## Prerequisites
 
 For the source build and local setup path, you need:
 
-- Rust 1.85 or newer with Cargo; Rust 1.85 is the minimum compiler
-  version verified for the current workspace
-- a local checkout of this repository, or another Harness Server installation
-  that provides `harness` and `harness-mcp`
-- a local `Product Repository` directory to bind
+- Rust 1.85 or newer with Cargo; Rust 1.85 is the minimum compiler version verified for the current workspace
+- a local checkout of this repository, or another Harness Server installation that provides `harness` and `harness-mcp`
+- a local `Product Repository` directory to allow for the integration
 - a `Harness Runtime Home` that is separate from the `Product Repository`
-- an MCP host that can launch a local stdio MCP process when you are ready to connect Harness to a host
+- Codex, Claude Code, or another MCP host when you are ready to connect the MCP server
 
-## Initial Setup Shape
+## Setup Shape
 
-Initial setup has three separate stages:
+Agent integration setup has three separate stages:
 
-1. Prepare Harness Server by building or locating the `harness` and
-   `harness-mcp` executables.
-2. From the `Product Repository`, bind that repository to a separate
-   `Harness Runtime Home` with an explicit `--repo-root .`.
-3. Apply the generated host-neutral MCP configuration fragment to the external
-   MCP host's own configuration mechanism.
+1. Prepare Harness Server by building or locating `harness` and `harness-mcp`.
+2. Run `harness agent install` for a real host: Codex, Claude Code, or generic export.
+3. Complete any host-owned trust, approval, reload, or startup action reported as `action_required`.
 
-The four locations stay distinct:
+The locations stay distinct:
 
-| Location | Owner | Typical contents | Setup writes there automatically? |
+| Location | Owner | Typical contents | Setup may write there? |
 |---|---|---|---|
-| Harness Server source or installation | Harness Server maintainer or installer | `harness`, `harness-mcp`, source files or installed executable resources. | Only a source build writes Cargo build output under this repository's `target/`. |
-| `Harness Runtime Home` | Local Harness operator | Harness registry, project state, and runtime data. | Yes. Setup creates or reuses records there. |
-| `Product Repository` | Product project owner | The user's product files and project workspace. | No. Setup registers its path in Runtime Home; selecting it does not edit its contents or place Harness databases inside it. |
-| External MCP host configuration | External MCP host operator | Host-owned settings that start `harness-mcp` with the generated environment. | No. Harness prints or writes a host-neutral fragment; the host owns its actual settings file and wrapper shape. |
+| Harness Server source or installation | Harness Server maintainer or installer | `harness`, `harness-mcp`, source files or installed executable resources. | A source build writes Cargo output under `target/`. |
+| `Harness Runtime Home` | Local Harness operator | Harness registry, integration state, project state, and runtime data. | Yes. Agent setup creates or reuses records there. |
+| `Product Repository` | Product project owner | Product files and explicitly selected project-scoped integration files. | Only when project-scoped host config or repository guidance is selected and authorized. |
+| Codex or Claude Code configuration | Host operator | Host-owned settings that start `harness-mcp --integration <integration_id>`. | Yes for direct supported host setup, in the host's own location. |
 
-`--config-dir` is an explicitly selected output directory for generated
-host-neutral fragments, not the external host configuration location itself.
+Harness runtime databases, generated runtime records, logs, projections, QA results, acceptance records, close-readiness state, and residual-risk records are never stored in the `Product Repository`.
 
 ## Build The Executables
 
@@ -66,38 +61,60 @@ That builds:
 
 For release executable paths and build verification, see [Installation](docs/en/getting-started/installation.md).
 
-## Shortest Local MCP Setup
+## First Host Setup
 
-After building, go to the `Product Repository` you want Harness to bind. Invoke
-`harness` by explicit path or by an installed command, and pass `--repo-root .`
-so the current directory selection is deliberate.
+Use [Quickstart](docs/en/getting-started/quickstart.md) for the shortest supported host path. It shows both Codex and Claude Code.
 
-Working directory: `Product Repository` root.
+Codex user-scope example for Product Repository A:
 
 ```sh
-/absolute/path/to/harness setup local-mcp \
-  --repo-root . \
-  --runtime-home /absolute/path/to/harness-runtime-home \
-  --project-id demo \
-  --mcp-command /absolute/path/to/harness-mcp
+/opt/harness/bin/harness agent install \
+  --host codex \
+  --scope user \
+  --server-name harness-main \
+  --integration-id int-codex-team \
+  --project-id acme-api \
+  --repo-root /work/acme-api \
+  --default-project-id acme-api \
+  --runtime-home /Users/alex/.harness \
+  --mcp-command /opt/harness/bin/harness-mcp
 ```
 
-A successful first setup includes human-readable lines like:
+Expected success includes:
 
 ```text
-setup: complete
-preflight: passed
-agent_config_json:
+status: complete
+integration_id: int-codex-team
+host_kind: codex
+host_scope: user
+server_name: harness-main
+verification: complete
 ```
 
-The printed `agent_config_json` is a host-neutral MCP configuration fragment. Copy it into the wrapper shape and configuration location used by the MCP host you operate. Do not configure a URL, port, HTTP endpoint, or socket path for the baseline local MCP process.
+Claude Code project-scope example for Product Repository A:
 
-If you intentionally use this Harness Server source repository as a
-`Product Repository` for dogfooding, still select it explicitly with
-`--repo-root .` from that checkout or with its path. That is not the normal
-installation flow.
+```sh
+HARNESS_HOME=/Users/alex/.harness \
+PATH="/opt/harness/bin:$PATH" \
+/opt/harness/bin/harness agent install \
+  --host claude-code \
+  --scope project \
+  --server-name harness-main \
+  --integration-id int-claude-acme \
+  --project-id acme-api \
+  --repo-root /work/acme-api \
+  --mcp-command harness-mcp \
+  --allow-repository-write
+```
 
-For the complete first-run path, use [Quickstart](docs/en/getting-started/quickstart.md). For all setup options, dry-run preview, JSON output, configuration files, interactive setup, connection checks, and troubleshooting, use [Local MCP Setup](docs/en/guides/local-mcp-setup.md).
+Expected setup may report:
+
+```text
+status: action_required
+verification_detail: Claude Code requires user approval before project-scoped .mcp.json servers load
+```
+
+`action_required` is a successful administrative result. Complete the named host action in Codex or Claude Code, then run `harness agent verify`.
 
 ## Documentation Routes
 
@@ -108,8 +125,10 @@ For the complete first-run path, use [Quickstart](docs/en/getting-started/quicks
 Reader paths:
 
 - Product users: [Getting Started Overview](docs/en/getting-started/overview.md), then [User Guide](docs/en/guides/user-workflow.md)
-- Local MCP operators: [Installation](docs/en/getting-started/installation.md), [Quickstart](docs/en/getting-started/quickstart.md), then [Local MCP Setup](docs/en/guides/local-mcp-setup.md)
+- First setup: [Installation](docs/en/getting-started/installation.md), [Quickstart](docs/en/getting-started/quickstart.md), then [Agent Host Setup](docs/en/guides/agent-host-setup.md)
+- Multiple repositories: [Multi-Repository Agent Setup](docs/en/guides/multi-repository-agent-setup.md)
+- Agents: [Agent Guide](docs/en/guides/agent-workflow.md)
 - Source-code learners: [Developer Documentation](docs/en/development/README.md), then [Codebase Tour](docs/en/development/codebase-tour.md), [Request Lifecycle](docs/en/development/request-lifecycle.md), and [Architecture](docs/en/development/architecture.md)
 - Reference readers: [Reference Index](docs/en/reference/README.md)
 
-Reader documentation explains and sequences the product. Exact contracts live in Reference documents, including [Administrative CLI](docs/en/reference/admin-cli.md), [MCP Transport](docs/en/reference/mcp-transport.md), [Runtime Boundaries](docs/en/reference/runtime-boundaries.md), and [API Methods](docs/en/reference/api/methods.md). `docs/doc-index.yaml` is maintenance metadata for exact owner routing, not an ordinary reader's first step.
+Reader documentation explains and sequences the product. Exact contracts live in Reference documents, including [Administrative CLI](docs/en/reference/admin-cli.md), [Agent Integration](docs/en/reference/agent-integration.md), [MCP Transport](docs/en/reference/mcp-transport.md), [Runtime Boundaries](docs/en/reference/runtime-boundaries.md), and [API Methods](docs/en/reference/api/methods.md). `docs/doc-index.yaml` is maintenance metadata for exact owner routing, not an ordinary reader's first step.

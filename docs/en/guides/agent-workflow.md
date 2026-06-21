@@ -14,6 +14,7 @@ This guide is workflow guidance. It is not a connector contract, API schema, tem
 Owner links:
 
 - Exact connector behavior: [Agent Integration Reference](../reference/agent-integration.md)
+- Host setup and multi-repository operation: [Agent Host Setup](agent-host-setup.md) and [Multi-Repository Agent Setup](multi-repository-agent-setup.md)
 - Surface-specific presentation: [Surface Recipes](surface-recipes.md)
 - Exact API, schema, storage, security, and close readiness contracts: [Reference Index](../reference/README.md)
 
@@ -57,6 +58,34 @@ Choose procedure weight from the work shape:
 - Tracked work: clarify scope, preserve judgment, check writes, record evidence, and report close readiness.
 
 Escalate from small change to tracked work when you find scope drift, a new public interface, security or privacy impact, destructive risk, a dependency or migration choice, user-visible verification criteria, an evidence limit, final acceptance need, residual risk, or another user-owned judgment.
+
+<a id="project-selection"></a>
+## Select the Harness project deliberately
+
+In the current MCP path, the `harness-mcp` process is bound to one Agent Integration Profile, not to one fixed `Product Repository`. A user-scope integration may allow multiple projects, while project and local scopes remain single-repository scopes.
+
+For public Harness tool calls:
+
+- Use `ToolEnvelope.project_id` when the target project is known.
+- If the target is unclear, call `harness.list_projects` and choose one listed `project_id`.
+- If a valid default project exists, omitted `project_id` may route to that default, but explicit selection is clearer for multi-repository work.
+- Never guess a project from folder names, current working directory, MCP roots, host labels, or memory.
+
+`harness.list_projects` is a read-only MCP adapter utility. It lists only projects explicitly allowed for the bound integration and is not a public Core API method.
+
+When multiple projects are available and no explicit project or valid default is supplied, the adapter rejects the call before Core execution and tells the agent to call `harness.list_projects`. Treat that as an agent-resolvable routing issue: list projects, select the intended project, and retry with `envelope.project_id`.
+
+<a id="instructions-and-guidance"></a>
+## Treat instructions and guidance as advisory
+
+Harness provides two guidance layers for agents:
+
+- MCP server instructions returned during MCP initialization.
+- Optional `Product Repository` guidance, such as a managed `AGENTS.md` block for Codex or `.claude/rules/harness.md` for Claude Code.
+
+These instructions can help tool selection, project routing, and workflow consistency. They are not access control, security enforcement, user-owned judgment, `Write Authorization`, evidence, acceptance, close readiness, or proof that a model will choose Harness tools.
+
+Core authority and external filesystem permission remain distinct. A Harness record or `Write Authorization` does not independently grant the host permission to edit product files, and host filesystem permission does not create Harness authority.
 
 <a id="keep-context-small"></a>
 ## Keep context small
@@ -255,4 +284,6 @@ Agent authors and operators should use this path:
 Then use:
 
 - [Surface Recipes](surface-recipes.md) for CLI, IDE/editor, chat, and local MCP presentation choices
+- [Agent Host Setup](agent-host-setup.md) for installing, verifying, guiding, and removing Codex or Claude Code integrations
+- [Multi-Repository Agent Setup](multi-repository-agent-setup.md) for user-scope integrations that allow more than one `Product Repository`
 - [Reference Index](../reference/README.md) only when the next action needs an exact owner contract

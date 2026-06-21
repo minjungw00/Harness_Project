@@ -1,24 +1,20 @@
 # Installation
 
-This page owns Stage 1 of initial setup: preparing the Harness Server
-executables. It covers source prerequisites, build commands, executable paths,
-and build verification for the current repository executables. It does not
-define package-manager distribution, operating-system support, public API
-behavior, storage effects, Product Repository registration, external host
-configuration, or MCP wire behavior.
+This page owns the first setup stage: preparing the Harness Server executables. It covers source prerequisites, build commands, executable paths, and build verification for the current repository executables. It does not define package-manager distribution, operating-system support, public API behavior, storage effects, Product Repository registration, host trust, or MCP wire behavior.
 
 ## Prerequisites
 
 For the source build path, you need:
 
 - a local checkout of this repository
-- Rust 1.85 or newer with Cargo; Rust 1.85 is the minimum compiler
-  version verified for the current workspace
+- Rust 1.85 or newer with Cargo; Rust 1.85 is the minimum compiler version verified for the current workspace
 - a shell that can run Cargo and local executables
-- a local `Product Repository` directory for the next setup stage
-- a separate `Harness Runtime Home` for the next setup stage
 
-An MCP host is only needed when you are ready to connect the generated host-neutral configuration to a real host. The build and setup preflight can run without naming a specific external host.
+For the next setup stage, you also need:
+
+- a local `Product Repository` directory
+- a separate `Harness Runtime Home`
+- Codex, Claude Code, or another MCP host when you are ready to connect an agent host
 
 ## Build From The Repository Root
 
@@ -50,39 +46,29 @@ The Cargo package names are `harness-cli` and `harness-mcp`. The executable name
 
 ## Verify The Build
 
-Working directory: Harness Server source repository root after the quick local
-build.
+Working directory: Harness Server source repository root after the quick local build.
 
 ```sh
 target/debug/harness --version
-target/debug/harness setup local-mcp --help
+target/debug/harness agent --help
 target/debug/harness-mcp --version
 target/debug/harness-mcp --help
 ```
 
-The version commands print `harness <version>` and `harness-mcp <version>`. The help commands should print local administrative setup usage and MCP environment usage.
+The version commands print `harness <version>` and `harness-mcp <version>`. The help commands should print the `harness agent` command family and the integration-bound `harness-mcp --integration <integration_id>` process usage.
 
 ## Executable Discovery During Setup
 
-`harness setup local-mcp` performs setup in the next stage. `harness-mcp` is
-the child process that an MCP host launches after setup.
+`harness agent install` installs or exports host configuration that starts `harness-mcp --integration <integration_id>`.
 
-Setup can discover `harness-mcp` when either:
+For user-scope Codex or user/local-scope Claude Code setup, pass an existing absolute executable path with `--mcp-command /absolute/path/to/harness-mcp`, or put `harness-mcp` beside `harness` or on `PATH` so the CLI can discover it.
 
-- `harness-mcp` is beside the running `harness` executable, as in `target/debug/` or `target/release/`
-- `harness-mcp` is on `PATH`
+For project-scoped Codex or Claude Code setup, the generated project file must remain shareable. Use `--mcp-command harness-mcp` or omit `--mcp-command`, and make sure the host environment can find `harness-mcp` on `PATH`.
 
-When you want setup to use one exact executable, pass `--mcp-command /absolute/path/to/harness-mcp`. The generated host-neutral configuration records the selected command path.
-
-Installation location is not runtime state. The Harness Server source
-repository or installation contains the executables; the `Harness Runtime Home`
-contains Harness runtime records; the `Product Repository` contains product
-files; and the external MCP host owns its actual configuration file.
+Installation location is not runtime state. Harness Server source or installation files contain executables, `Harness Runtime Home` contains Harness runtime records, `Product Repository` contains product files and selected project-scoped integration files, and the agent host owns its actual configuration and trust state.
 
 ## Next Step
 
-Continue to [Quickstart](quickstart.md). It starts from the `Product
-Repository` root and uses `--repo-root .` for the shortest local MCP setup
-path.
+Continue to [Quickstart](quickstart.md). It starts from a real supported host path for Codex or Claude Code.
 
 Exact command behavior belongs to [Administrative CLI](../reference/admin-cli.md). Exact `harness-mcp` startup, environment, stdio transport, preflight, and shutdown behavior belongs to [MCP Transport](../reference/mcp-transport.md).

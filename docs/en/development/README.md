@@ -83,9 +83,14 @@ For public method work, the shortest useful source path is:
 6. [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
 7. [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)
 
-For local setup and operator behavior, start instead with
+For agent host setup and operator behavior, start instead with
 [`crates/harness-cli/src/main.rs`](../../../crates/harness-cli/src/main.rs),
 then
+[`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs),
+[`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/),
+and
+[`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs).
+For legacy fixed-project setup compatibility, continue with
 [`crates/harness-cli/src/local_mcp_command.rs`](../../../crates/harness-cli/src/local_mcp_command.rs)
 and [`crates/harness-cli/src/setup.rs`](../../../crates/harness-cli/src/setup.rs).
 

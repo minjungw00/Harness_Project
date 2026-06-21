@@ -6,20 +6,11 @@ This is the first-read overview for Harness. It explains the product thesis in o
 
 Harness is the local work-authority product/system for AI-assisted product work. Its thesis is simple: AI-assisted work should keep the user's authority basis visible while the work moves.
 
-In ordinary product work, an agent can move quickly from a request to code, tests, and a polished answer. Harness helps keep the important boundaries from disappearing along the way:
-
-- what is in scope
-- what the user has actually decided
-- what evidence supports a claim
-- what verification criteria were checked
-- what final acceptance or residual-risk acceptance still belongs to the user
-- whether the work is ready to close
-
 Harness itself is not the local authority record. Core is the local authority record for Harness state. Harness is the broader product/system around that record, including its local runtime components, surfaces, documentation, and workflows.
 
 ## The Ordinary Problem
 
-A user might ask an agent to change a product behavior, investigate a failure, or prepare a release note. The agent may inspect files, propose a plan, write code, run tests, and summarize the outcome. That speed is useful, but it can also hide substitutions:
+A user might ask an agent to change product behavior, investigate a failure, or prepare a release note. The agent may inspect files, propose a plan, write code, run tests, and summarize the outcome. That speed is useful, but it can also hide substitutions:
 
 - A small request becomes a broader product change.
 - A product decision gets buried inside implementation.
@@ -38,13 +29,31 @@ These names are related, but they are not interchangeable.
 | Harness | The local work-authority product/system for AI-assisted product work. | [Scope](../reference/scope.md) |
 | Core | The local authority record for Harness state. | [Core Model](../reference/core-model.md) |
 | `Harness Server` | The server implementation set maintained by this repository, not a synonym for Harness as a whole. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| `harness` | The local administrative CLI that builds setup, project, surface, integration, host, and guidance records. | [Administrative CLI](../reference/admin-cli.md) |
+| `harness-mcp` | The stdio MCP adapter process that an MCP host starts as a child process. | [MCP Transport](../reference/mcp-transport.md) |
 | `Harness Runtime Home` | The local runtime data space for Harness operational data as storage/runtime owners define it. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
-| `Product Repository` | The user's project workspace and product files. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
-| External MCP host configuration | Host-owned settings that may launch `harness-mcp` with Harness-generated environment values. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| `Product Repository` | The user's project workspace and product files. It may contain explicitly selected integration files. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| Agent host configuration | Codex, Claude Code, or exported MCP configuration that starts `harness-mcp --integration <integration_id>`. | [Administrative CLI](../reference/admin-cli.md) |
 
-The Harness Server source repository is the checkout that contains implementation crates, the `harness` administrative CLI, the `harness-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration. A Harness Server installation is the deployed subset of executables and required runtime resources; it does not imply that every source-repository file is installed.
+The current baseline agent integration is integration-bound, not fixed-project. One `harness-mcp` process binds to one Agent Integration Profile. Each public tool call then selects and validates one explicitly allowed project.
 
-In the current local Rust implementation, `harness` and `harness-mcp` are distinct executable roles within Harness Server. `harness` performs local administrative setup. `harness-mcp` is the stdio MCP adapter process that an MCP host starts as a local child process and communicates with through stdin/stdout. The baseline process is not a network listener.
+## What Setup Does
+
+Agent setup can:
+
+- create or reuse Runtime Home records
+- register or reuse a `Product Repository`
+- create an Agent Integration Profile and explicit project allowlist
+- install Codex or Claude Code host configuration, or export generic configuration
+- run setup verification and report `complete`, `action_required`, `partial_failure`, or `failed`
+- optionally write repository guidance when explicitly selected and authorized
+
+Agent setup must not:
+
+- grant access to every project in the Runtime Home
+- store Harness runtime databases or runtime records in a `Product Repository`
+- bypass Codex project trust, Claude Code project MCP approval, OAuth, reloads, restarts, or other host-owned actions
+- promise that a model will choose Harness tools automatically
 
 ## First-Read Authority Concepts
 
@@ -63,15 +72,16 @@ For exact authority rules and non-substitution boundaries, use [Core Model](../r
 
 Harness is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Harness Runtime Home`.
 
-Harness also does not turn a polished chat answer, generated summary, readable status card, copied identifier, or `Projection` into the authority record. Exact display boundaries belong to [Projection and Templates](../reference/projection-and-templates.md), runtime and location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md), and security wording belongs to [Security](../reference/security.md).
+Harness also does not turn a polished chat answer, generated summary, readable status card, copied identifier, optional repository guidance, or `Projection` into the authority record. Exact display boundaries belong to [Projection and Templates](../reference/projection-and-templates.md), runtime and location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md), and security wording belongs to [Security](../reference/security.md).
 
 ## Next Reader Journeys
 
 | Reader | Next path |
 |---|---|
 | New product reader | [User Guide](../guides/user-workflow.md) |
-| First local setup | [Installation](installation.md) -> [Quickstart](quickstart.md) |
-| Local MCP operator | [Quickstart](quickstart.md) -> [Local MCP Setup](../guides/local-mcp-setup.md) |
+| First setup | [Installation](installation.md) -> [Quickstart](quickstart.md) |
+| Agent host operator | [Quickstart](quickstart.md) -> [Agent Host Setup](../guides/agent-host-setup.md) |
+| Multi-repository operator | [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md) |
 | Agent author | [Agent Guide](../guides/agent-workflow.md) -> [Agent Integration](../reference/agent-integration.md) |
 | Source-code learner | [Implementation Guide](../development/change-guide.md) -> [Architecture](../development/architecture.md) |
 | Reference reader | [Reference Index](../reference/README.md) |

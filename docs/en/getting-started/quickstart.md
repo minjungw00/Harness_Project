@@ -1,16 +1,23 @@
 # Quickstart
 
-This page owns the shortest supported local MCP success path. It assumes you
-can build or locate the Harness Server executables and that you have a
-`Product Repository` you want to bind.
+This page owns the shortest supported first setup path for a real local agent host. It assumes you can build or locate the Harness Server executables and that you have a `Product Repository` you want to allow.
 
-For build details, release executable locations, and executable discovery rules,
-see [Installation](installation.md). For every setup option and troubleshooting
-path, see [Local MCP Setup](../guides/local-mcp-setup.md).
+For build details and executable discovery rules, see [Installation](installation.md). For complete host setup options, dry-run previews, repository guidance, removal, and troubleshooting, see [Agent Host Setup](../guides/agent-host-setup.md).
+
+The examples use:
+
+| Example value | Meaning |
+|---|---|
+| `/opt/harness/bin/harness` | installed `harness` executable |
+| `/opt/harness/bin/harness-mcp` | installed `harness-mcp` executable |
+| `/Users/alex/.harness` | `Harness Runtime Home` |
+| `/work/acme-api` | Product Repository A |
+| `acme-api` | project ID for Product Repository A |
+| `harness-main` | host MCP server name |
 
 ## Stage 1: Prepare Harness Server
 
-Working directory: Harness Server source repository root.
+Working directory: Harness Server source repository root, if building from this repository.
 
 ```sh
 cargo build -p harness-cli -p harness-mcp
@@ -21,107 +28,183 @@ This provides:
 - `target/debug/harness`
 - `target/debug/harness-mcp`
 
-Use those files by absolute path in the next stage, or use installed
-executables that provide the same `harness` and `harness-mcp` commands.
+Use those files by absolute path, or use installed executables that provide the same `harness` and `harness-mcp` commands.
 
-## Stage 2: Bind A Product Repository
+## Path A: Codex User-Scope Setup
 
-Start from the project workspace you want Harness to register. The current
-directory is selected only because the command passes `--repo-root .`.
+Use this when one personal Codex MCP entry should serve one or more explicitly allowed `Product Repository` registrations.
 
-Working directory: `Product Repository` root.
+Prerequisites:
+
+- Codex can read its user `config.toml`.
+- `harness-mcp` is available by absolute path.
+- Product Repository A is at `/work/acme-api`.
+- `/Users/alex/.harness` is separate from `/work/acme-api`.
+
+Command:
 
 ```sh
-/absolute/path/to/harness setup local-mcp \
-  --repo-root . \
-  --runtime-home /absolute/path/to/harness-runtime-home \
-  --project-id demo \
-  --mcp-command /absolute/path/to/harness-mcp
+/opt/harness/bin/harness agent install \
+  --host codex \
+  --scope user \
+  --server-name harness-main \
+  --integration-id int-codex-team \
+  --project-id acme-api \
+  --repo-root /work/acme-api \
+  --default-project-id acme-api \
+  --runtime-home /Users/alex/.harness \
+  --mcp-command /opt/harness/bin/harness-mcp
 ```
 
-Use a `Harness Runtime Home` outside the `Product Repository`. If
-`--runtime-home` is omitted, setup uses the documented `HARNESS_HOME` or
-user-home fallback, but the selected Runtime Home still must stay separate from
-the `Product Repository`.
+Locations that may change:
 
-Setup registers the `Product Repository` path in Runtime Home, creates or
-reuses the local MCP agent surface, runs MCP preflight, and prints host-neutral
-MCP configuration. It does not install, discover, or edit an external MCP host.
+| Location | What may change |
+|---|---|
+| `/Users/alex/.harness` | Runtime Home registry, integration, project, surface, Host Installation, and project state records. |
+| Codex user config, normally `~/.codex/config.toml` or `CODEX_HOME/config.toml` | A `[mcp_servers.harness-main]` table. |
+| `/work/acme-api` | No file change unless repository guidance is selected separately. |
 
-Setup does not place Harness databases or runtime artifacts inside the
-`Product Repository`, and selecting the repository does not by itself edit
-product files. If you pass `--config-dir`, setup may write generated
-host-neutral configuration fragments to that explicit directory.
+Expected result:
 
-## Stage 3: Configure The External MCP Host
+```text
+status: complete
+integration_id: int-codex-team
+host_kind: codex
+host_scope: user
+server_name: harness-main
+verification: complete
+verification_detail: MCP initialize and tools/list succeeded
+```
 
-The text output includes `agent_config_json` with a host-neutral fragment like:
+The generated Codex entry has this shape:
+
+```toml
+[mcp_servers.harness-main]
+command = "/opt/harness/bin/harness-mcp"
+args = ["--integration", "int-codex-team"]
+
+[mcp_servers.harness-main.env]
+HARNESS_HOME = "/Users/alex/.harness"
+```
+
+Verify later:
+
+```sh
+/opt/harness/bin/harness agent status \
+  --integration-id int-codex-team \
+  --runtime-home /Users/alex/.harness
+
+/opt/harness/bin/harness agent verify \
+  --integration-id int-codex-team \
+  --runtime-home /Users/alex/.harness
+```
+
+Recognize success:
+
+- `status: complete` on install or verify means durable integration state exists, host configuration was installed, MCP initialization succeeded, and tool discovery succeeded.
+- `harness agent status` is inventory/status reporting. Its verification section may say it does not prove host loading.
+
+## Path B: Claude Code Project-Scope Setup
+
+Use this when Product Repository A should carry a team-shared Claude Code `.mcp.json` entry.
+
+Prerequisites:
+
+- `harness-mcp` is available on the `PATH` that Claude Code will use.
+- Product Repository A is at `/work/acme-api`.
+- `/Users/alex/.harness` is separate from `/work/acme-api`.
+- You are willing to write `.mcp.json` in Product Repository A.
+
+Command:
+
+```sh
+HARNESS_HOME=/Users/alex/.harness \
+PATH="/opt/harness/bin:$PATH" \
+/opt/harness/bin/harness agent install \
+  --host claude-code \
+  --scope project \
+  --server-name harness-main \
+  --integration-id int-claude-acme \
+  --project-id acme-api \
+  --repo-root /work/acme-api \
+  --mcp-command harness-mcp \
+  --allow-repository-write
+```
+
+Locations that may change:
+
+| Location | What may change |
+|---|---|
+| `/Users/alex/.harness` | Runtime Home registry, integration, project, surface, Host Installation, and project state records. |
+| `/work/acme-api/.mcp.json` | A Claude Code project-scoped MCP server entry. |
+| Claude Code user approval state | Only after the user approves the project MCP server in Claude Code. |
+
+Expected result:
+
+```text
+status: action_required
+verification: action_required
+verification_detail: Claude Code requires user approval before project-scoped .mcp.json servers load
+```
+
+The generated `.mcp.json` entry has this shape:
 
 ```json
 {
   "mcpServers": {
-    "harness-agent": {
-      "command": "/absolute/path/to/harness-mcp",
-      "env": {
-        "HARNESS_HOME": "/absolute/path/to/harness-runtime-home",
-        "HARNESS_PROJECT_ID": "demo",
-        "HARNESS_SURFACE_ID": "agent_mcp",
-        "HARNESS_SURFACE_INSTANCE_ID": "agent_mcp_local"
-      }
+    "harness-main": {
+      "command": "harness-mcp",
+      "args": ["--integration", "int-claude-acme"]
     }
   }
 }
 ```
 
-Apply that fragment according to the MCP host's supported configuration
-mechanism. The external host owns the actual settings file, directory, and
-wrapper shape. The baseline local MCP process uses stdio, so do not configure a
-URL, TCP port, HTTP endpoint, or socket path.
+`action_required` is not a setup failure. Start Claude Code in `/work/acme-api`, review and approve the project-scoped MCP server, then run:
 
-## Locations And Ownership
-
-| Location | Owner | Typical contents | Setup writes there automatically? |
-|---|---|---|---|
-| Harness Server source or installation | Harness Server maintainer or installer | `harness`, `harness-mcp`, source files or installed executable resources. | Source builds write Cargo output under `target/`; local MCP setup only reads or invokes the executables. |
-| `Harness Runtime Home` | Local Harness operator | Harness registry, project state, surface registrations, and runtime data. | Yes. Setup creates or reuses local records there. |
-| `Product Repository` | Product project owner | Product source, tests, docs, and project configuration. | No. Setup records its path in Runtime Home; it does not put Harness databases or runtime artifacts there merely because it is selected. |
-| MCP host configuration location | External MCP host operator | Host-specific settings that launch `harness-mcp` with the generated environment. | No. Harness prints or writes a host-neutral fragment; the host's own settings remain host-owned. |
-
-`--config-dir` is an explicit output location for generated host-neutral
-fragments such as `harness-agent.mcp.json`. It is not the external host's
-configuration location unless the host operator deliberately copies or adapts
-the fragment there.
-
-## Recognize Success
-
-A successful setup includes lines like:
-
-```text
-setup: complete
-project_id: demo
-repo_root: /absolute/path/to/product-repository
-agent_surface_id: agent_mcp
-agent_surface_instance_id: agent_mcp_local
-preflight: passed
-agent_preflight: passed
+```sh
+HARNESS_HOME=/Users/alex/.harness \
+/opt/harness/bin/harness agent verify \
+  --integration-id int-claude-acme
 ```
 
-Treat this as human-readable command output, not as a public API schema.
-`preflight: passed` means the local MCP process binding validated. Later MCP
-transport success is still separate from Harness domain acceptance; clients
-must inspect the parsed Harness response for domain result or rejection.
+## Dry-Run First
 
-## Intentional Self-Hosting
+Use `--dry-run --output json` before writing project-scoped configuration or repository guidance:
 
-You may intentionally select the Harness Server source repository itself as a
-`Product Repository` for dogfooding. Do that only by explicit selection, either
-from that checkout with `--repo-root .` or from another directory with its
-path. This is not the normal installation flow.
+```sh
+/opt/harness/bin/harness agent install \
+  --host codex \
+  --scope user \
+  --server-name harness-main \
+  --integration-id int-codex-team \
+  --project-id acme-api \
+  --repo-root /work/acme-api \
+  --runtime-home /Users/alex/.harness \
+  --mcp-command /opt/harness/bin/harness-mcp \
+  --dry-run \
+  --output json
+```
+
+Dry-run output reports `status: dry_run`, planned actions, host target paths, guidance target paths when selected, and no persistent writes.
+
+## Setup State Meanings
+
+| State | What to do next |
+|---|---|
+| `complete` | The administrative setup and MCP verification path succeeded. Use the host and confirm the server appears in its MCP UI or tool list. |
+| `action_required` | Complete the host-owned action named in the output, such as Codex project trust or Claude Code project MCP approval, then run `harness agent verify`. |
+| `partial_failure` | Some durable action may have succeeded before a later step failed. Fix the reported issue and rerun the same command. |
+| `failed` | The requested setup did not establish usable durable integration state or host configuration. Fix the reported error before retrying. |
+
+A successful `harness-mcp --check --integration <integration_id>` is only startup validation for the MCP process. It is not by itself complete host integration. Host configuration presence is not the same as host loading or tool discovery. Tool discovery also does not guarantee that every future model decision will choose Harness tools.
 
 ## Continue
 
-- Full setup operations, dry-run preview, JSON output, configuration files, interactive setup, recovery, and troubleshooting: [Local MCP Setup](../guides/local-mcp-setup.md)
+- Full host setup, dry-run preview, repository guidance, generic export, status, verification, and safe removal: [Agent Host Setup](../guides/agent-host-setup.md)
+- One user-scope integration serving multiple repositories: [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md)
 - Agent workflow: [Agent Guide](../guides/agent-workflow.md)
-- Exact `harness` setup behavior: [Administrative CLI](../reference/admin-cli.md#local-mcp-setup-orchestration)
+- Exact `harness` agent command behavior: [Administrative CLI](../reference/admin-cli.md#harness-agent-install)
+- Exact project selection and guidance boundaries: [Agent Integration](../reference/agent-integration.md)
 - Exact `harness-mcp` process behavior: [MCP Transport](../reference/mcp-transport.md)
 - Exact runtime location boundaries: [Runtime Boundaries](../reference/runtime-boundaries.md)

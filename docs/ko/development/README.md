@@ -76,9 +76,13 @@ Core는 하네스 상태를 위한 로컬 기준 기록입니다.
 6. [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
 7. [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)
 
-로컬 설정과 운영자 동작을 읽을 때는
+에이전트 호스트 설정과 운영자 동작을 읽을 때는
 [`crates/harness-cli/src/main.rs`](../../../crates/harness-cli/src/main.rs)에서
 시작한 뒤
+[`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs),
+[`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/),
+[`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs)를
+읽습니다. 레거시 고정 프로젝트 설정 호환성을 볼 때는 이어서
 [`crates/harness-cli/src/local_mcp_command.rs`](../../../crates/harness-cli/src/local_mcp_command.rs)와
 [`crates/harness-cli/src/setup.rs`](../../../crates/harness-cli/src/setup.rs)를
 읽습니다.

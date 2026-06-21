@@ -6,15 +6,6 @@
 
 하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 시스템입니다. 핵심 생각은 단순합니다. AI 지원 작업이 빠르게 진행되더라도 사용자의 권한 근거는 계속 보여야 합니다.
 
-일반적인 제품 작업에서 에이전트는 요청에서 코드, 테스트, 정리된 답변으로 빠르게 이동할 수 있습니다. 하네스는 그 과정에서 중요한 경계가 사라지지 않도록 돕습니다.
-
-- 무엇이 범위에 들어가는가
-- 사용자가 실제로 무엇을 결정했는가
-- 어떤 증거가 주장을 뒷받침하는가
-- 어떤 검증 기준을 확인했는가
-- 어떤 최종 수락이나 잔여 위험 수락이 여전히 사용자에게 남아 있는가
-- 지금 작업을 닫을 준비가 되었는가
-
 하네스 자체는 로컬 기준 기록이 아닙니다. Core가 하네스 상태를 위한 로컬 기준 기록입니다. 하네스는 그 기록을 둘러싼 더 넓은 제품과 시스템이며, 로컬 런타임 구성 요소, 접점, 문서, 작업 흐름을 포함합니다.
 
 ## 평소에 생기는 문제
@@ -38,13 +29,31 @@
 | 하네스 | AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 시스템입니다. | [기준 범위](../reference/scope.md) |
 | Core | 하네스 상태를 위한 로컬 기준 기록입니다. | [Core 모델](../reference/core-model.md) |
 | `Harness Server` | 이 저장소가 유지하는 서버 구현 집합이며, 하네스 전체와 같은 말은 아닙니다. | [런타임 경계](../reference/runtime-boundaries.md) |
+| `harness` | 설정, 프로젝트, 접점, 통합, 호스트, guidance 기록을 만드는 로컬 관리 CLI입니다. | [관리 CLI](../reference/admin-cli.md) |
+| `harness-mcp` | MCP 호스트가 자식 프로세스로 시작하는 stdio MCP 어댑터 프로세스입니다. | [MCP 전송](../reference/mcp-transport.md) |
 | `Harness Runtime Home` | 저장소/런타임 담당 문서가 정의하는 하네스 운영 데이터의 로컬 런타임 데이터 공간입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
-| `Product Repository` | 사용자의 프로젝트 작업 공간과 제품 파일입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
-| 외부 MCP 호스트 설정 | 하네스가 생성한 환경 값으로 `harness-mcp`를 시작할 수 있는 호스트 소유 설정입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
+| `Product Repository` | 사용자의 프로젝트 작업 공간과 제품 파일입니다. 명시적으로 선택한 통합 파일을 담을 수 있습니다. | [런타임 경계](../reference/runtime-boundaries.md) |
+| 에이전트 호스트 설정 | `harness-mcp --integration <integration_id>`를 시작하는 Codex, Claude Code, 또는 내보낸 MCP 설정입니다. | [관리 CLI](../reference/admin-cli.md) |
 
-`Harness Server` 소스 저장소는 구현 크레이트, `harness` 관리 CLI, `harness-mcp` 로컬 MCP 어댑터, 테스트, 문서, 검증 도구, 저장소 설정을 담은 체크아웃입니다. `Harness Server` 설치는 배포된 실행 파일과 필요한 런타임 리소스의 부분집합이며, 모든 소스 저장소 파일이 설치된다는 뜻은 아닙니다.
+현재 기준 에이전트 통합은 고정 프로젝트 방식이 아니라 통합 바인딩 방식입니다. 하나의 `harness-mcp` 프로세스는 하나의 Agent Integration Profile에 묶입니다. 각 공개 도구 호출은 그때마다 명시적으로 허용된 프로젝트 하나를 선택하고 검증합니다.
 
-현재 로컬 Rust 구현에서 `harness`와 `harness-mcp`는 `Harness Server` 안의 서로 다른 실행 파일 역할입니다. `harness`는 로컬 관리 설정을 수행합니다. `harness-mcp`는 MCP 호스트가 로컬 자식 프로세스로 시작하고 stdin/stdout으로 통신하는 stdio MCP 어댑터 프로세스입니다. 기준 프로세스는 네트워크 리스너가 아닙니다.
+## 설정이 하는 일
+
+에이전트 설정은 아래 일을 할 수 있습니다.
+
+- Runtime Home 기록을 만들거나 재사용합니다.
+- `Product Repository`를 등록하거나 재사용합니다.
+- Agent Integration Profile과 명시적 프로젝트 허용 목록을 만듭니다.
+- Codex 또는 Claude Code 호스트 설정을 설치하거나 generic 설정을 내보냅니다.
+- 설정 검증을 실행하고 `complete`, `action_required`, `partial_failure`, `failed`를 보고합니다.
+- 명시적으로 선택하고 승인한 경우 저장소 guidance를 쓸 수 있습니다.
+
+에이전트 설정은 아래 일을 하면 안 됩니다.
+
+- Runtime Home의 모든 프로젝트에 접근을 부여하면 안 됩니다.
+- 하네스 런타임 데이터베이스나 런타임 기록을 `Product Repository`에 저장하면 안 됩니다.
+- Codex 프로젝트 신뢰, Claude Code 프로젝트 MCP 승인, OAuth, reload, restart, 또는 그 밖의 호스트 소유 동작을 우회한다고 주장하면 안 됩니다.
+- 모델이 하네스 도구를 자동으로 선택한다고 약속하면 안 됩니다.
 
 ## 처음 알아둘 권한 개념
 
@@ -63,15 +72,16 @@
 
 하네스는 프롬프트 묶음, 대화 스크립트, API 래퍼, 워크플로 엔진, 보고서 생성기, 대시보드, 호스팅 에이전트 플랫폼, `Product Repository`, `Harness Runtime Home`이 아닙니다.
 
-또한 하네스는 잘 쓴 대화 답변, 생성된 요약, 읽기 쉬운 상태 카드, 복사한 식별자, `Projection`을 기준 기록으로 바꾸지 않습니다. 정확한 표시 경계는 [상태 보기와 템플릿](../reference/projection-and-templates.md)이, 런타임과 위치 경계는 [런타임 경계](../reference/runtime-boundaries.md)가, 보안 표현은 [보안](../reference/security.md)이 담당합니다.
+또한 하네스는 잘 쓴 대화 답변, 생성된 요약, 읽기 쉬운 상태 카드, 복사한 식별자, 선택적 저장소 guidance, `Projection`을 기준 기록으로 바꾸지 않습니다. 정확한 표시 경계는 [상태 보기와 템플릿](../reference/projection-and-templates.md)이, 런타임과 위치 경계는 [런타임 경계](../reference/runtime-boundaries.md)가, 보안 표현은 [보안](../reference/security.md)이 담당합니다.
 
 ## 다음 읽기 경로
 
 | 독자 | 다음 경로 |
 |---|---|
 | 처음 읽는 제품 독자 | [사용자 가이드](../guides/user-workflow.md) |
-| 첫 로컬 설정 | [설치](installation.md) -> [빠른 시작](quickstart.md) |
-| 로컬 MCP 운영자 | [빠른 시작](quickstart.md) -> [로컬 MCP 설정](../guides/local-mcp-setup.md) |
+| 첫 설정 | [설치](installation.md) -> [빠른 시작](quickstart.md) |
+| 에이전트 호스트 운영자 | [빠른 시작](quickstart.md) -> [에이전트 호스트 설정](../guides/agent-host-setup.md) |
+| 여러 저장소 운영자 | [다중 저장소 에이전트 설정](../guides/multi-repository-agent-setup.md) |
 | 에이전트 작성자 | [에이전트 가이드](../guides/agent-workflow.md) -> [에이전트 통합](../reference/agent-integration.md) |
 | 소스 코드 학습자 | [구현 가이드](../development/change-guide.md) -> [아키텍처](../development/architecture.md) |
 | 참조 독자 | [참조 색인](../reference/README.md) |

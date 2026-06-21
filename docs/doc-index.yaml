@@ -216,7 +216,7 @@ documents:
   path_en: docs/en/getting-started/quickstart.md
   path_ko: docs/ko/getting-started/quickstart.md
   kind: tutorial
-  summary: Shortest local MCP setup tutorial for a first successful run.
+  summary: Shortest real agent host setup tutorial for a first successful run.
   normative_level: guide
   translation_policy: semantic_parity
   primary_audience:
@@ -228,7 +228,7 @@ documents:
   - operate
   depends_on:
   - start.installation
-  - use.local-mcp-setup
+  - use.agent-host-setup
   - reference.admin-cli
   - reference.mcp-transport
 - doc_id: use.user-guide
@@ -281,11 +281,50 @@ documents:
   - connector authors
   journeys:
   - operate
+- doc_id: use.agent-host-setup
+  path_en: docs/en/guides/agent-host-setup.md
+  path_ko: docs/ko/guides/agent-host-setup.md
+  kind: how_to
+  summary: How-to guidance for installing, verifying, guiding, and removing Codex, Claude Code, and generic agent host integrations.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - operators
+  - agent integrators
+  - agents
+  journeys:
+  - install
+  - operate
+  depends_on:
+  - reference.admin-cli
+  - reference.mcp-transport
+  - reference.runtime-boundaries
+  - reference.agent-integration
+  - reference.api.methods
+- doc_id: use.multi-repository-agent-setup
+  path_en: docs/en/guides/multi-repository-agent-setup.md
+  path_ko: docs/ko/guides/multi-repository-agent-setup.md
+  kind: how_to
+  summary: How-to guidance for one user-scope agent integration serving multiple explicitly allowed Product Repositories.
+  normative_level: guide
+  translation_policy: semantic_parity
+  primary_audience:
+  - operators
+  - agent integrators
+  - agents
+  journeys:
+  - operate
+  depends_on:
+  - use.agent-host-setup
+  - reference.admin-cli
+  - reference.mcp-transport
+  - reference.runtime-boundaries
+  - reference.agent-integration
 - doc_id: use.local-mcp-setup
   path_en: docs/en/guides/local-mcp-setup.md
   path_ko: docs/ko/guides/local-mcp-setup.md
   kind: how_to
-  summary: Detailed how-to guidance for local MCP setup, operation, and troubleshooting.
+  summary: Compatibility guidance for legacy fixed-project local MCP setup.
   normative_level: guide
   translation_policy: semantic_parity
   primary_audience:
