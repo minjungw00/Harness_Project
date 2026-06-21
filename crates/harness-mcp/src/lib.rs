@@ -39,7 +39,7 @@ use harness_types::{
 use serde::Serialize;
 use serde_json::{json, Map, Value};
 
-const DEFAULT_PROTOCOL_VERSION: &str = "2024-11-05";
+const SUPPORTED_PROTOCOL_VERSION: &str = "2025-11-25";
 const SERVER_NAME: &str = "harness-mcp";
 const DEFAULT_INVOCATION_BINDING_BASIS: &str = VERIFICATION_BASIS_MCP_STDIO_SURFACE_BINDING;
 
@@ -558,6 +558,8 @@ where
     R: BufRead,
     W: Write,
 {
+    let mut state = ConnectionState::AwaitingInitialize;
+
     for line in reader.lines() {
         let line = line.map_err(McpAdapterError::Io)?;
         if line.trim().is_empty() {
@@ -575,10 +577,8 @@ where
             }
         };
 
-        if let Some(responses) = handle_json_rpc_message(&adapter, message) {
-            for response in responses {
-                write_json_line(&mut writer, response)?;
-            }
+        if let Some(response) = handle_json_rpc_message(&adapter, &mut state, message) {
+            write_json_line(&mut writer, response)?;
         }
     }
 
@@ -798,76 +798,219 @@ fn controlled_invocation_binding_basis(value: &str) -> &'static str {
     }
 }
 
-fn handle_json_rpc_message(adapter: &McpAdapter, message: Value) -> Option<Vec<Value>> {
-    if let Value::Array(messages) = message {
-        let responses = messages
-            .into_iter()
-            .filter_map(|message| handle_json_rpc_request(adapter, message))
-            .collect::<Vec<_>>();
-        if responses.is_empty() {
-            None
-        } else {
-            Some(responses)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ConnectionState {
+    AwaitingInitialize,
+    AwaitingInitialized,
+    Ready,
+}
+
+#[derive(Debug, PartialEq)]
+enum ClientMessage {
+    Request(JsonRpcRequest),
+    Notification(JsonRpcNotification),
+}
+
+#[derive(Debug, PartialEq)]
+struct JsonRpcRequest {
+    id: Value,
+    method: String,
+    params: Option<Value>,
+}
+
+#[derive(Debug, PartialEq)]
+struct JsonRpcNotification {
+    method: String,
+    params: Option<Value>,
+}
+
+#[derive(Debug, PartialEq)]
+struct JsonRpcFailure {
+    id: Value,
+    code: i64,
+    message: &'static str,
+    data: Option<String>,
+}
+
+fn handle_json_rpc_message(
+    adapter: &McpAdapter,
+    state: &mut ConnectionState,
+    message: Value,
+) -> Option<Value> {
+    match parse_client_message(message) {
+        Ok(ClientMessage::Request(request)) => {
+            Some(handle_json_rpc_request(adapter, state, request))
         }
-    } else {
-        handle_json_rpc_request(adapter, message).map(|response| vec![response])
+        Ok(ClientMessage::Notification(notification)) => {
+            handle_json_rpc_notification(state, notification);
+            None
+        }
+        Err(error) => Some(json_rpc_error(
+            error.id,
+            error.code,
+            error.message,
+            error.data,
+        )),
     }
 }
 
-fn handle_json_rpc_request(adapter: &McpAdapter, message: Value) -> Option<Value> {
-    let id = message.get("id").cloned();
-    let is_notification = id.is_none();
-    let response_id = id.unwrap_or(Value::Null);
-
-    let Some(method) = message.get("method").and_then(Value::as_str) else {
-        if is_notification {
-            return None;
+fn parse_client_message(message: Value) -> Result<ClientMessage, JsonRpcFailure> {
+    let object = match message {
+        Value::Object(object) => object,
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) | Value::Array(_) => {
+            return Err(invalid_request(
+                Value::Null,
+                "message must be a JSON object",
+            ));
         }
-        return Some(json_rpc_error(
-            response_id,
-            -32600,
-            "Invalid Request",
-            Some("method must be a string".to_owned()),
-        ));
     };
-    let params = message.get("params").cloned().unwrap_or(Value::Null);
 
-    if is_notification {
-        return None;
+    let id = match object.get("id") {
+        Some(value) => Some(valid_request_id(value)?),
+        None => None,
+    };
+    let response_id = id.clone().unwrap_or(Value::Null);
+
+    match object.get("jsonrpc") {
+        Some(Value::String(version)) if version == "2.0" => (),
+        _ => {
+            return Err(invalid_request(
+                response_id,
+                "jsonrpc must be exactly \"2.0\"",
+            ));
+        }
     }
 
-    let result = match method {
-        "initialize" => initialize_result(params),
-        "ping" => json!({}),
-        "tools/list" => json!({ "tools": adapter.tools() }),
-        "tools/call" => match call_tool_result(adapter, params) {
+    let Some(Value::String(method)) = object.get("method") else {
+        return Err(invalid_request(response_id, "method must be a string"));
+    };
+    let params = object.get("params").cloned();
+
+    if let Some(id) = id {
+        Ok(ClientMessage::Request(JsonRpcRequest {
+            id,
+            method: method.clone(),
+            params,
+        }))
+    } else {
+        if params.as_ref().is_some_and(|params| !params.is_object()) {
+            return Err(invalid_request(
+                Value::Null,
+                "notification params must be an object",
+            ));
+        }
+        Ok(ClientMessage::Notification(JsonRpcNotification {
+            method: method.clone(),
+            params,
+        }))
+    }
+}
+
+fn valid_request_id(value: &Value) -> Result<Value, JsonRpcFailure> {
+    match value {
+        Value::String(_) => Ok(value.clone()),
+        Value::Number(number) if number.is_i64() || number.is_u64() => Ok(value.clone()),
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::Array(_) | Value::Object(_) => {
+            Err(invalid_request(
+                Value::Null,
+                "id must be a string or integer",
+            ))
+        }
+    }
+}
+
+fn handle_json_rpc_notification(state: &mut ConnectionState, notification: JsonRpcNotification) {
+    let _ = notification.params;
+    if notification.method == "notifications/initialized"
+        && *state == ConnectionState::AwaitingInitialized
+    {
+        *state = ConnectionState::Ready;
+    }
+}
+
+fn handle_json_rpc_request(
+    adapter: &McpAdapter,
+    state: &mut ConnectionState,
+    request: JsonRpcRequest,
+) -> Value {
+    if let Some(error) = lifecycle_error(*state, &request) {
+        return error;
+    }
+
+    let response_id = request.id.clone();
+    let result = match request.method.as_str() {
+        "initialize" => {
+            if let Err(error) = validate_initialize_params(&response_id, request.params) {
+                return error;
+            }
+            *state = ConnectionState::AwaitingInitialized;
+            initialize_result()
+        }
+        "ping" => {
+            if let Err(error) =
+                validate_optional_object_params(&response_id, request.params, "ping")
+            {
+                return error;
+            }
+            json!({})
+        }
+        "tools/list" => {
+            if let Err(error) =
+                validate_optional_object_params(&response_id, request.params, "tools/list")
+            {
+                return error;
+            }
+            json!({ "tools": adapter.tools() })
+        }
+        "tools/call" => match call_tool_result(adapter, &response_id, request.params) {
             Ok(result) => result,
-            Err(error) => return Some(json_rpc_error_for_adapter(response_id, error)),
+            Err(error) => return error,
         },
         _ => {
-            return Some(json_rpc_error(
+            return json_rpc_error(
                 response_id,
                 -32601,
                 "Method not found",
-                Some(method.to_owned()),
-            ))
+                Some(request.method),
+            )
         }
     };
 
-    Some(json!({
+    json!({
         "jsonrpc": "2.0",
         "id": response_id,
         "result": result
-    }))
+    })
 }
 
-fn initialize_result(params: Value) -> Value {
-    let protocol_version = params
-        .get("protocolVersion")
-        .and_then(Value::as_str)
-        .unwrap_or(DEFAULT_PROTOCOL_VERSION);
+fn lifecycle_error(state: ConnectionState, request: &JsonRpcRequest) -> Option<Value> {
+    match state {
+        ConnectionState::AwaitingInitialize if request.method != "initialize" => Some(
+            invalid_request_response(&request.id, "initialize must be the first request"),
+        ),
+        ConnectionState::AwaitingInitialize => None,
+        ConnectionState::AwaitingInitialized => match request.method.as_str() {
+            "initialize" => Some(invalid_request_response(
+                &request.id,
+                "initialize has already completed",
+            )),
+            "tools/list" | "tools/call" => Some(invalid_request_response(
+                &request.id,
+                "connection is not ready",
+            )),
+            _ => None,
+        },
+        ConnectionState::Ready if request.method == "initialize" => Some(invalid_request_response(
+            &request.id,
+            "initialize has already completed",
+        )),
+        ConnectionState::Ready => None,
+    }
+}
+
+fn initialize_result() -> Value {
     json!({
-        "protocolVersion": protocol_version,
+        "protocolVersion": SUPPORTED_PROTOCOL_VERSION,
         "capabilities": {
             "tools": {}
         },
@@ -878,15 +1021,116 @@ fn initialize_result(params: Value) -> Value {
     })
 }
 
-fn call_tool_result(adapter: &McpAdapter, params: Value) -> Result<Value, McpAdapterError> {
-    let tool_name = params.get("name").and_then(Value::as_str).ok_or_else(|| {
-        McpAdapterError::Protocol("tools/call params.name is required".to_owned())
-    })?;
-    let arguments = params
-        .get("arguments")
-        .cloned()
-        .unwrap_or_else(|| json!({}));
-    let response = adapter.call_tool(tool_name, arguments)?;
+fn validate_initialize_params(id: &Value, params: Option<Value>) -> Result<(), Value> {
+    let object = required_object_params(id, params, "initialize")?;
+    if !matches!(object.get("protocolVersion"), Some(Value::String(_))) {
+        return Err(invalid_params_response(
+            id,
+            "initialize params.protocolVersion must be a string",
+        ));
+    }
+    if !matches!(object.get("capabilities"), Some(Value::Object(_))) {
+        return Err(invalid_params_response(
+            id,
+            "initialize params.capabilities must be an object",
+        ));
+    }
+    let Some(Value::Object(client_info)) = object.get("clientInfo") else {
+        return Err(invalid_params_response(
+            id,
+            "initialize params.clientInfo must be an object",
+        ));
+    };
+    if !matches!(client_info.get("name"), Some(Value::String(_))) {
+        return Err(invalid_params_response(
+            id,
+            "initialize params.clientInfo.name must be a string",
+        ));
+    }
+    if !matches!(client_info.get("version"), Some(Value::String(_))) {
+        return Err(invalid_params_response(
+            id,
+            "initialize params.clientInfo.version must be a string",
+        ));
+    }
+
+    Ok(())
+}
+
+fn validate_optional_object_params(
+    id: &Value,
+    params: Option<Value>,
+    method: &str,
+) -> Result<(), Value> {
+    match params {
+        None | Some(Value::Object(_)) => Ok(()),
+        Some(_) => Err(invalid_params_response(
+            id,
+            format!("{method} params must be an object"),
+        )),
+    }
+}
+
+fn required_object_params(
+    id: &Value,
+    params: Option<Value>,
+    method: &str,
+) -> Result<Map<String, Value>, Value> {
+    match params {
+        Some(Value::Object(object)) => Ok(object),
+        None | Some(_) => Err(invalid_params_response(
+            id,
+            format!("{method} params must be an object"),
+        )),
+    }
+}
+
+fn call_tool_result(
+    adapter: &McpAdapter,
+    id: &Value,
+    params: Option<Value>,
+) -> Result<Value, Value> {
+    let object = required_object_params(id, params, "tools/call")?;
+    if object.contains_key("task") {
+        return Err(invalid_params_response(
+            id,
+            "tools/call task augmentation is not supported",
+        ));
+    }
+
+    let tool_name = object
+        .get("name")
+        .and_then(Value::as_str)
+        .ok_or_else(|| invalid_params_response(id, "tools/call params.name must be a string"))?;
+    if !PUBLIC_METHOD_TOOL_NAMES.contains(&tool_name) {
+        return Err(json_rpc_error(
+            id.clone(),
+            -32602,
+            "Invalid params",
+            Some(format!("unknown MCP tool: {tool_name}")),
+        ));
+    }
+
+    let arguments = match object.get("arguments") {
+        None => json!({}),
+        Some(Value::Object(_)) => object
+            .get("arguments")
+            .cloned()
+            .expect("arguments object should be present"),
+        Some(_) => {
+            return Err(invalid_params_response(
+                id,
+                "tools/call params.arguments must be an object",
+            ))
+        }
+    };
+    let response = match adapter.call_tool(tool_name, arguments) {
+        Ok(response) => response,
+        Err(error @ McpAdapterError::InvalidParams { .. }) => {
+            return Ok(tool_execution_error_result(&error));
+        }
+        Err(error) => return Err(json_rpc_error_for_adapter(id.clone(), error)),
+    };
 
     Ok(json!({
         "content": [
@@ -897,6 +1141,25 @@ fn call_tool_result(adapter: &McpAdapter, params: Value) -> Result<Value, McpAda
         ],
         "isError": false
     }))
+}
+
+fn tool_execution_error_result(error: &McpAdapterError) -> Value {
+    let text = match error {
+        McpAdapterError::InvalidParams { tool_name, source } => {
+            format!("Invalid arguments for {tool_name}: {source}. Check the tool input schema and retry.")
+        }
+        _ => "Tool execution failed before reaching Harness Core.".to_owned(),
+    };
+
+    json!({
+        "content": [
+            {
+                "type": "text",
+                "text": text
+            }
+        ],
+        "isError": true
+    })
 }
 
 fn json_rpc_error_for_adapter(id: Value, error: McpAdapterError) -> Value {
@@ -913,6 +1176,23 @@ fn json_rpc_error_for_adapter(id: Value, error: McpAdapterError) -> Value {
         | McpAdapterError::Store(_) => (-32603, "Internal error"),
     };
     json_rpc_error(id, code, message, Some(error.to_string()))
+}
+
+fn invalid_request(id: Value, data: impl Into<String>) -> JsonRpcFailure {
+    JsonRpcFailure {
+        id,
+        code: -32600,
+        message: "Invalid Request",
+        data: Some(data.into()),
+    }
+}
+
+fn invalid_request_response(id: &Value, data: impl Into<String>) -> Value {
+    json_rpc_error(id.clone(), -32600, "Invalid Request", Some(data.into()))
+}
+
+fn invalid_params_response(id: &Value, data: impl Into<String>) -> Value {
+    json_rpc_error(id.clone(), -32602, "Invalid params", Some(data.into()))
 }
 
 fn json_rpc_error(id: Value, code: i64, message: &str, data: Option<String>) -> Value {
@@ -1263,7 +1543,9 @@ mod tests {
         let harness = TestHarness::new(json!({}))?;
         let adapter = harness.adapter();
         let input = Cursor::new(
-            br#"{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
+            br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-unit-test","version":"0.0.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
 "#
             .to_vec(),
         );
@@ -1271,7 +1553,13 @@ mod tests {
 
         run_stdio(adapter, BufReader::new(input), &mut output)?;
 
-        let response: Value = serde_json::from_slice(&output)?;
+        let responses = stdio_responses(&output)?;
+        assert_eq!(responses.len(), 2);
+        assert_eq!(
+            responses[0]["result"]["protocolVersion"],
+            SUPPORTED_PROTOCOL_VERSION
+        );
+        let response = &responses[1];
         let names = response["result"]["tools"]
             .as_array()
             .expect("tools should be an array")
@@ -1279,6 +1567,131 @@ mod tests {
             .map(|tool| tool["name"].as_str().expect("tool name"))
             .collect::<Vec<_>>();
         assert_eq!(names, PUBLIC_METHOD_TOOL_NAMES);
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_lifecycle_negotiates_version_and_gates_tools() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let adapter = harness.adapter();
+        let input = Cursor::new(
+            br#"{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{"unknownClientCapability":{}},"clientInfo":{"name":"harness-unit-test","version":"0.0.0","title":"Harness Unit Test"}}}
+{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":4,"method":"tools/list","params":{}}
+{"jsonrpc":"2.0","id":5,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-unit-test","version":"0.0.0"}}}
+"#
+            .to_vec(),
+        );
+        let mut output = Vec::new();
+
+        run_stdio(adapter, BufReader::new(input), &mut output)?;
+
+        let responses = stdio_responses(&output)?;
+        assert_eq!(responses.len(), 5);
+        assert_eq!(responses[0]["id"], 1);
+        assert_eq!(responses[0]["error"]["code"], -32600);
+        assert_eq!(responses[1]["id"], 2);
+        assert_eq!(
+            responses[1]["result"]["protocolVersion"],
+            SUPPORTED_PROTOCOL_VERSION
+        );
+        assert_eq!(responses[2]["id"], 3);
+        assert_eq!(responses[2]["error"]["code"], -32600);
+        assert_eq!(responses[3]["id"], 4);
+        assert_eq!(
+            responses[3]["result"]["tools"]
+                .as_array()
+                .expect("tools should be an array")
+                .len(),
+            9
+        );
+        assert_eq!(responses[4]["id"], 5);
+        assert_eq!(responses[4]["error"]["code"], -32600);
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_invalid_initialize_does_not_advance_lifecycle() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let adapter = harness.adapter();
+        let input = Cursor::new(
+            br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","clientInfo":{"name":"harness-unit-test","version":"0.0.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+{"jsonrpc":"2.0","id":3,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-unit-test","version":"0.0.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":4,"method":"tools/list","params":{}}
+"#
+            .to_vec(),
+        );
+        let mut output = Vec::new();
+
+        run_stdio(adapter, BufReader::new(input), &mut output)?;
+
+        let responses = stdio_responses(&output)?;
+        assert_eq!(responses.len(), 4);
+        assert_eq!(responses[0]["id"], 1);
+        assert_eq!(responses[0]["error"]["code"], -32602);
+        assert_eq!(responses[1]["id"], 2);
+        assert_eq!(responses[1]["error"]["code"], -32600);
+        assert_eq!(responses[2]["id"], 3);
+        assert_eq!(
+            responses[2]["result"]["protocolVersion"],
+            SUPPORTED_PROTOCOL_VERSION
+        );
+        assert_eq!(responses[3]["id"], 4);
+        assert_eq!(
+            responses[3]["result"]["tools"]
+                .as_array()
+                .expect("tools should be an array")
+                .len(),
+            9
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_arrays_return_one_invalid_request_response() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let adapter = harness.adapter();
+        let input = Cursor::new(
+            br#"[{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}},{"jsonrpc":"2.0","id":2,"method":"ping","params":{}}]
+"#
+            .to_vec(),
+        );
+        let mut output = Vec::new();
+
+        run_stdio(adapter, BufReader::new(input), &mut output)?;
+
+        let responses = stdio_responses(&output)?;
+        assert_eq!(responses.len(), 1);
+        assert_eq!(responses[0]["id"], Value::Null);
+        assert_eq!(responses[0]["error"]["code"], -32600);
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_invalid_json_rpc_shape_uses_valid_id_when_available() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let adapter = harness.adapter();
+        let input = Cursor::new(
+            br#"{"jsonrpc":"2.0","id":"request-a","params":{}}
+{"jsonrpc":"2.0","id":1.5,"method":"initialize","params":{}}
+"#
+            .to_vec(),
+        );
+        let mut output = Vec::new();
+
+        run_stdio(adapter, BufReader::new(input), &mut output)?;
+
+        let responses = stdio_responses(&output)?;
+        assert_eq!(responses.len(), 2);
+        assert_eq!(responses[0]["id"], "request-a");
+        assert_eq!(responses[0]["error"]["code"], -32600);
+        assert_eq!(responses[1]["id"], Value::Null);
+        assert_eq!(responses[1]["error"]["code"], -32600);
         Ok(())
     }
 
@@ -1876,6 +2289,18 @@ mod tests {
             ),
             requested_access_class: access_class,
         }
+    }
+
+    fn stdio_responses(output: &[u8]) -> Result<Vec<Value>, Box<dyn Error>> {
+        let text = std::str::from_utf8(output)?;
+        let mut responses = Vec::new();
+        for line in text.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            responses.push(serde_json::from_str(line)?);
+        }
+        Ok(responses)
     }
 
     #[test]

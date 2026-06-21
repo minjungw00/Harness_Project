@@ -179,6 +179,10 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
         responses[&1]["result"]["serverInfo"]["name"],
         json!("harness-mcp")
     );
+    assert_eq!(
+        responses[&1]["result"]["protocolVersion"],
+        json!("2025-11-25")
+    );
 
     let tool_names = responses[&3]["result"]["tools"]
         .as_array()
@@ -210,13 +214,16 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
         "LOCAL_ACCESS_MISMATCH"
     );
 
-    assert!(responses[&7].get("error").is_some());
-    assert_eq!(responses[&7]["error"]["code"], -32602);
-    assert_eq!(responses[&7]["error"]["message"], "Invalid params");
-    assert!(responses[&7].get("result").is_none());
+    assert!(responses[&7].get("error").is_none());
+    assert_eq!(responses[&7]["result"]["isError"], json!(true));
+    let tool_error = responses[&7]["result"]["content"][0]["text"]
+        .as_str()
+        .expect("invalid known-tool arguments should return text content");
+    assert!(tool_error.contains("Invalid arguments for harness.status"));
 
     let reconnect_messages = json_lines(&[
         initialize_request(10),
+        initialized_notification(),
         tools_call(
             11,
             "harness.status",
@@ -234,6 +241,10 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
     assert_eq!(
         reconnect_responses[&10]["result"]["serverInfo"]["name"],
         "harness-mcp"
+    );
+    assert_eq!(
+        reconnect_responses[&10]["result"]["protocolVersion"],
+        "2025-11-25"
     );
     let reconnect_status = harness_response(&reconnect_responses[&11])?;
     assert_eq!(reconnect_status["base"]["response_kind"], "result");

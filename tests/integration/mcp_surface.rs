@@ -48,7 +48,9 @@ fn stdio_tools_list_exposes_exactly_the_public_method_set() -> Result<(), Box<dy
     let fixture = CoreFixture::new("mcp_tools")?;
     let adapter = adapter(&fixture);
     let input = Cursor::new(
-        br#"{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
+        br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-integration-test","version":"0.0.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
 "#
         .to_vec(),
     );
@@ -56,7 +58,9 @@ fn stdio_tools_list_exposes_exactly_the_public_method_set() -> Result<(), Box<dy
 
     run_stdio(adapter, BufReader::new(input), &mut output)?;
 
-    let response: Value = serde_json::from_slice(&output)?;
+    let responses = stdio_responses(&output)?;
+    assert_eq!(responses.len(), 2);
+    let response = &responses[1];
     let names = response["result"]["tools"]
         .as_array()
         .expect("tools should be an array")
@@ -1844,13 +1848,15 @@ fn invalid_mcp_authority_fields_are_rejected_before_core() -> Result<(), Box<dyn
 }
 
 #[test]
-fn stdio_invalid_params_returns_protocol_error_without_storage_effect() -> Result<(), Box<dyn Error>>
-{
+fn stdio_invalid_known_tool_arguments_return_tool_error_without_storage_effect(
+) -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_stdio_invalid")?;
     let adapter = adapter(&fixture);
     let before = fixture.counts()?;
     let input = Cursor::new(
-        br#"{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"project_fixture","task_id":null,"actor_kind":"agent","surface_id":"surface_fixture","request_id":"req_stdio_invalid","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":true,"evidence":true,"close":true,"guarantees":true},"access_class":"core_mutation"}}}
+        br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-integration-test","version":"0.0.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"project_fixture","task_id":null,"actor_kind":"agent","surface_id":"surface_fixture","request_id":"req_stdio_invalid","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":true,"evidence":true,"close":true,"guarantees":true},"access_class":"core_mutation"}}}
 "#
         .to_vec(),
     );
@@ -1858,9 +1864,15 @@ fn stdio_invalid_params_returns_protocol_error_without_storage_effect() -> Resul
 
     run_stdio(adapter, BufReader::new(input), &mut output)?;
 
-    let response: Value = serde_json::from_slice(&output)?;
-    assert_eq!(response["error"]["code"], -32602);
-    assert_eq!(response["error"]["message"], "Invalid params");
+    let responses = stdio_responses(&output)?;
+    assert_eq!(responses.len(), 2);
+    let response = &responses[1];
+    assert!(response.get("error").is_none());
+    assert_eq!(response["result"]["isError"], true);
+    let text = response["result"]["content"][0]["text"]
+        .as_str()
+        .expect("tool error should include text");
+    assert!(text.contains("Invalid arguments for harness.status"));
     assert_eq!(fixture.counts()?, before);
     Ok(())
 }
@@ -2338,6 +2350,18 @@ fn adapter_for_surface(
         )
         .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING),
     )
+}
+
+fn stdio_responses(output: &[u8]) -> Result<Vec<Value>, Box<dyn Error>> {
+    let text = std::str::from_utf8(output)?;
+    let mut responses = Vec::new();
+    for line in text.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        responses.push(serde_json::from_str(line)?);
+    }
+    Ok(responses)
 }
 
 fn register_extra_project_surface(
