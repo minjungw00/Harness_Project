@@ -42,7 +42,7 @@ harness project register --project-id ID --repo-root PATH [--status active]
 harness project list
 harness surface register --project-id ID --surface-id ID [--surface-instance-id ID] [--kind KIND] [--name NAME] [--interaction-role agent|user_interaction] [--access-class ACCESS_CLASS ...] [--profile baseline-workflow] [--capability-profile JSON]
 harness surface list --project-id ID
-harness agent install --host codex|claude_code|generic --scope user|project|local|export --server-name NAME --project-id ID [--integration-id ID] [--default-project-id ID] [--repo-root PATH] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]
+harness agent install --host codex|claude_code|generic --scope user|project|local|export --server-name NAME --project-id ID [--integration-id ID] [--default-project-id ID] [--repo-root PATH] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--guidance none|codex|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]
 harness agent project add --integration-id ID --project-id ID [--default] [--output text|json] [--dry-run]
 harness agent project remove --integration-id ID --project-id ID [--output text|json] [--dry-run]
 harness agent status --integration-id ID [--output text|json]
@@ -151,6 +151,7 @@ Optional behavior:
 - `--surface-id` and `--surface-instance-id` select the integration surface binding. When omitted, the CLI generates stable opaque ids and reports them.
 - `--mcp-command` selects the `harness-mcp` executable path to install. The installed path must be absolute.
 - `--runtime-home` selects the Runtime Home path to write into host configuration as `HARNESS_HOME`.
+- `--guidance none|codex|claude_code|both` previews and applies optional `Product Repository` guidance for the selected project. Omitted or `none` writes no guidance, and noninteractive guidance writes still require `--allow-repository-write`.
 
 Installation rules:
 

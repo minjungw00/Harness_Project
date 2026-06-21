@@ -19,10 +19,10 @@ use harness_store::{
         set_agent_integration_default_project, set_agent_integration_enabled,
         update_host_installation_verification, AgentIntegrationRecord,
         AgentIntegrationRegistration, HostInstallationRecord, HostInstallationRegistration,
-        IntegrationProjectRegistration, AGENT_INTERACTION_ROLE, HOST_KIND_CLAUDE_CODE,
-        HOST_KIND_CODEX, HOST_KIND_GENERIC, HOST_SCOPE_LOCAL, HOST_SCOPE_PROJECT,
-        VERIFIED_STATUS_ACTION_REQUIRED, VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED,
-        VERIFIED_STATUS_NOT_VERIFIED, VERIFIED_STATUS_PARTIAL_FAILURE,
+        IntegrationProjectRecord, IntegrationProjectRegistration, AGENT_INTERACTION_ROLE,
+        HOST_KIND_CLAUDE_CODE, HOST_KIND_CODEX, HOST_KIND_GENERIC, HOST_SCOPE_LOCAL,
+        HOST_SCOPE_PROJECT, VERIFIED_STATUS_ACTION_REQUIRED, VERIFIED_STATUS_COMPLETE,
+        VERIFIED_STATUS_FAILED, VERIFIED_STATUS_NOT_VERIFIED, VERIFIED_STATUS_PARTIAL_FAILURE,
     },
     bootstrap::{
         initialize_runtime_home, list_projects, list_surfaces, project_record_for_execution,
@@ -46,6 +46,11 @@ use crate::{
         PlannedChange,
     },
     registration::{capability_profile_json, local_access_json, RegistrationMetadataError},
+    repository_guidance::{
+        apply_guidance_plan, apply_guidance_remove, compensate_new_guidance, guidance_status,
+        plan_guidance_apply, plan_guidance_remove, GuidanceEffect, GuidancePlan, GuidanceStateKind,
+        GuidanceStatus, GuidanceTarget,
+    },
 };
 
 const HARNESS_HOME: &str = "HARNESS_HOME";
@@ -217,6 +222,30 @@ enum OutputFormat {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GuidanceSelection {
+    None,
+    Codex,
+    ClaudeCode,
+    Both,
+}
+
+impl GuidanceSelection {
+    fn targets(self) -> &'static [GuidanceTarget] {
+        const NONE: &[GuidanceTarget] = &[];
+        const CODEX: &[GuidanceTarget] = &[GuidanceTarget::Codex];
+        const CLAUDE_CODE: &[GuidanceTarget] = &[GuidanceTarget::ClaudeCode];
+        const BOTH: &[GuidanceTarget] = &[GuidanceTarget::Codex, GuidanceTarget::ClaudeCode];
+
+        match self {
+            Self::None => NONE,
+            Self::Codex => CODEX,
+            Self::ClaudeCode => CLAUDE_CODE,
+            Self::Both => BOTH,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum AgentResultStatus {
     Complete,
     ActionRequired,
@@ -244,6 +273,7 @@ enum ActionState {
     Updated,
     Removed,
     Skipped,
+    Conflict,
     Planned,
 }
 
@@ -255,6 +285,7 @@ impl ActionState {
             Self::Updated => "updated",
             Self::Removed => "removed",
             Self::Skipped => "skipped",
+            Self::Conflict => "conflict",
             Self::Planned => "planned",
         }
     }
@@ -313,6 +344,7 @@ struct ParsedAgentOptions {
     export_path: Option<PathBuf>,
     export_dir: Option<PathBuf>,
     output: OutputFormat,
+    guidance: GuidanceSelection,
     dry_run: bool,
     yes: bool,
     allow_repository_write: bool,
@@ -339,6 +371,7 @@ impl Default for ParsedAgentOptions {
             export_path: None,
             export_dir: None,
             output: OutputFormat::Text,
+            guidance: GuidanceSelection::None,
             dry_run: false,
             yes: false,
             allow_repository_write: false,
@@ -350,12 +383,15 @@ impl Default for ParsedAgentOptions {
 }
 
 pub fn agent_usage() -> String {
-    "harness agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export --project-id ID [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--output text|json] [--dry-run] [--yes] [--allow-repository-write] [--replace-managed]\n\
+    "harness agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export --project-id ID [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--yes] [--allow-repository-write] [--replace-managed]\n\
      harness agent project add --integration-id ID --project-id ID [--repo-root PATH] [--default] [--runtime-home PATH] [--output text|json] [--dry-run]\n\
      harness agent project remove --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
      harness agent status --integration-id ID [--runtime-home PATH] [--output text|json]\n\
      harness agent verify --integration-id ID [--installation-id ID] [--runtime-home PATH] [--output text|json]\n\
-     harness agent uninstall --integration-id ID [--installation-id ID] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--remove-managed]\n"
+     harness agent uninstall --integration-id ID [--installation-id ID] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--remove-managed]\n\
+     harness agent guidance apply --integration-id ID --project-id ID --host codex|claude-code|claude_code [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n\
+     harness agent guidance status --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json]\n\
+     harness agent guidance remove --integration-id ID --project-id ID [--host codex|claude-code|claude_code] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--remove-managed]\n"
         .to_owned()
 }
 
@@ -385,9 +421,7 @@ pub fn run_agent_command(
         "status" => command_status(&args[1..], current_dir, process),
         "verify" => command_verify(&args[1..], current_dir, process),
         "uninstall" => command_uninstall(&args[1..], current_dir, process),
-        "guidance" => Err(AgentCommandError::usage(
-            "harness agent guidance is outside this implementation unit",
-        )),
+        "guidance" => command_guidance(&args[1..], current_dir, process),
         other => Err(AgentCommandError::usage(format!(
             "unknown agent command: {other}\n\n{}",
             agent_usage()
@@ -415,6 +449,9 @@ fn command_install(
     let host_scope = required_host_scope(&parsed)?;
     validate_host_scope(host_kind, host_scope)?;
     validate_repository_write_authorization(&parsed, host_scope)?;
+    if !parsed.guidance.targets().is_empty() {
+        validate_guidance_write_authorization(&parsed)?;
+    }
 
     let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
     let repo_root = resolve_optional_repo_root(parsed.repo_root.as_deref(), current_dir)?;
@@ -554,6 +591,30 @@ fn command_install(
         planned_change_action(host_plan.change),
         host_target_text(&host_plan.target),
     ));
+    let guidance_plans = if parsed.guidance.targets().is_empty() {
+        Vec::new()
+    } else {
+        let repo_root = project_plan.repo_root.as_deref().ok_or_else(|| {
+            AgentCommandError::runtime("repository guidance requires a Product Repository root")
+        })?;
+        plan_guidance_for_targets(
+            repo_root,
+            &integration_id,
+            &project_plan.project_id,
+            parsed.guidance.targets(),
+        )?
+    };
+    for plan in &guidance_plans {
+        actions.push(AgentAction::new(
+            "guidance",
+            planned_change_action(plan.change),
+            format!("{} {}", plan.target.as_str(), path_text(&plan.path)),
+        ));
+    }
+    let guidance = guidance_plans
+        .iter()
+        .map(|plan| plan.status.clone())
+        .collect::<Vec<_>>();
 
     if parsed.dry_run {
         let output = AgentOutput {
@@ -563,6 +624,7 @@ fn command_install(
             host_plan: Some(host_plan),
             allowed_projects: vec![project_plan.project_id],
             installations: expected_installation.into_iter().collect(),
+            guidance,
             verification: McpVerification::skipped(
                 "dry run does not run preflight or MCP verification",
             ),
@@ -681,6 +743,40 @@ fn command_install(
         host_target_text(&host_effect.target),
     ));
 
+    let mut guidance_effects = Vec::new();
+    for plan in &guidance_plans {
+        match apply_guidance_plan(plan) {
+            Ok(effect) => {
+                actions.push(AgentAction::new(
+                    "guidance_apply",
+                    planned_change_action(effect.change),
+                    format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
+                ));
+                guidance_effects.push(effect);
+            }
+            Err(error) => {
+                compensate_install_membership(
+                    &runtime_home,
+                    &integration_id,
+                    &project.project_id,
+                    membership_before,
+                );
+                let output = partial_install_output(
+                    &parsed,
+                    runtime_home,
+                    integration_id,
+                    host_plan,
+                    vec![project.project_id],
+                    actions,
+                    format!("repository guidance apply failed: {error}"),
+                );
+                return Err(AgentCommandError::failure_output(render_agent_output(
+                    &output,
+                )?));
+            }
+        }
+    }
+
     let host_status = verify_host_plan(host_kind, &host_plan, process)?;
     let mcp_verification = if host_plan.host_kind == HostKind::Generic {
         McpVerification {
@@ -718,6 +814,13 @@ fn command_install(
         }
     };
     let status = setup_status_from_verification(&mcp_verification);
+    let mut warnings = Vec::new();
+    if matches!(
+        status,
+        AgentResultStatus::PartialFailure | AgentResultStatus::Failed
+    ) {
+        compensate_guidance_effects(&guidance_effects, &mut warnings);
+    }
     let last_verified_status = store_status_from_setup_status(status);
     let installation = register_host_installation(
         &runtime_home,
@@ -738,6 +841,12 @@ fn command_install(
         },
     )?;
     mark_planned_actions_created(&mut actions);
+    let guidance = guidance_statuses_for_project(
+        project_plan.repo_root.as_deref(),
+        &integration_id,
+        &project.project_id,
+        guidance_targets_for_status(parsed.guidance.targets()),
+    )?;
 
     let output = AgentOutput {
         status,
@@ -746,9 +855,10 @@ fn command_install(
         host_plan: Some(host_plan),
         allowed_projects: vec![project.project_id],
         installations: vec![installation],
+        guidance,
         verification: mcp_verification,
         actions,
-        warnings: Vec::new(),
+        warnings,
         action_required: host_required_actions(&host_status),
         output: parsed.output,
     };
@@ -837,6 +947,7 @@ fn command_project_add(
             host_plan: None,
             allowed_projects: vec![project_id.to_owned()],
             installations,
+            guidance: Vec::new(),
             verification: McpVerification::skipped("dry run does not run project preflight"),
             actions,
             warnings: Vec::new(),
@@ -912,6 +1023,7 @@ fn command_project_add(
         host_plan: None,
         allowed_projects,
         installations,
+        guidance: Vec::new(),
         verification,
         actions,
         warnings: Vec::new(),
@@ -961,6 +1073,7 @@ fn command_project_remove(
             host_plan: None,
             allowed_projects: Vec::new(),
             installations: Vec::new(),
+            guidance: Vec::new(),
             verification: McpVerification::skipped("dry run does not change project membership"),
             actions,
             warnings: Vec::new(),
@@ -989,6 +1102,7 @@ fn command_project_remove(
             .map(|record| record.project_id)
             .collect::<Vec<_>>(),
         installations,
+        guidance: Vec::new(),
         verification: McpVerification::skipped(
             "project membership removed; host configuration was not rewritten",
         ),
@@ -1031,16 +1145,19 @@ fn command_status(
             )),
         }
     }
+    let guidance = guidance_statuses_for_projects(integration_id, &projects)?;
+    let allowed_projects = projects
+        .iter()
+        .map(|project| project.project_id.clone())
+        .collect();
     let output = AgentOutput {
         status: AgentResultStatus::Complete,
         runtime_home,
         integration_id: integration_id.to_owned(),
         host_plan: None,
-        allowed_projects: projects
-            .into_iter()
-            .map(|project| project.project_id)
-            .collect(),
+        allowed_projects,
         installations,
+        guidance,
         verification: McpVerification::skipped("status does not prove host loading"),
         actions: Vec::new(),
         warnings,
@@ -1108,6 +1225,7 @@ fn command_verify(
         host_plan: None,
         allowed_projects,
         installations: updated,
+        guidance: Vec::new(),
         verification,
         actions: vec![AgentAction::new(
             "verification",
@@ -1147,7 +1265,14 @@ fn command_uninstall(
         let scope = parse_host_scope(&installation.host_scope)?;
         validate_repository_write_authorization(&parsed, scope)?;
     }
-    let actions = installations
+    if parsed.remove_managed {
+        validate_guidance_remove_authorization(&parsed)?;
+    }
+    let projects = list_integration_projects(&runtime_home, integration_id)?;
+    let mut guidance = guidance_statuses_for_projects(integration_id, &projects)?;
+    let mut guidance_remove_plans = Vec::new();
+    let mut warnings = Vec::new();
+    let mut actions = installations
         .iter()
         .map(|installation| {
             AgentAction::new(
@@ -1161,17 +1286,56 @@ fn command_uninstall(
             )
         })
         .collect::<Vec<_>>();
+    if parsed.remove_managed {
+        for project in &projects {
+            for target in [GuidanceTarget::Codex, GuidanceTarget::ClaudeCode] {
+                match plan_guidance_remove(
+                    &project.project.repo_root,
+                    integration_id,
+                    &project.project_id,
+                    target,
+                ) {
+                    Ok(plan) => {
+                        actions.push(AgentAction::new(
+                            "guidance",
+                            planned_change_action(plan.change),
+                            format!("{} {}", target.as_str(), path_text(&plan.path)),
+                        ));
+                        guidance_remove_plans.push(plan);
+                    }
+                    Err(HostConfigError::Conflict(conflict)) => {
+                        actions.push(AgentAction::new(
+                            "guidance",
+                            ActionState::Conflict,
+                            format!("{}: {}", target.as_str(), conflict.message),
+                        ));
+                        warnings.push(format!(
+                            "residual guidance preserved for project {} {}: {}",
+                            project.project_id,
+                            target.as_str(),
+                            conflict.message
+                        ));
+                    }
+                    Err(error) => return Err(AgentCommandError::from(error)),
+                }
+            }
+        }
+    }
     if parsed.dry_run {
         let output = AgentOutput {
             status: AgentResultStatus::DryRun,
             runtime_home,
             integration_id: integration_id.to_owned(),
             host_plan: None,
-            allowed_projects: Vec::new(),
+            allowed_projects: projects
+                .iter()
+                .map(|project| project.project_id.clone())
+                .collect(),
             installations,
+            guidance,
             verification: McpVerification::skipped("dry run does not remove host configuration"),
             actions,
-            warnings: Vec::new(),
+            warnings,
             action_required: Vec::new(),
             output: parsed.output,
         };
@@ -1181,24 +1345,386 @@ fn command_uninstall(
         remove_host_configuration(&runtime_home, installation, current_dir, process)?;
         remove_host_installation(&runtime_home, &installation.installation_id)?;
     }
+    for plan in &guidance_remove_plans {
+        if let Err(error) = apply_guidance_remove(plan) {
+            warnings.push(format!(
+                "residual guidance preserved for project {} {}: {}",
+                plan.project_id,
+                plan.target.as_str(),
+                error
+            ));
+        }
+    }
+    guidance = guidance_statuses_for_projects(integration_id, &projects)?;
     let remaining = list_host_installations_for_integration(&runtime_home, integration_id)?;
     if remaining.is_empty() {
         set_agent_integration_enabled(&runtime_home, integration_id, false)?;
     }
     let output = AgentOutput {
+        status: if warnings
+            .iter()
+            .any(|warning| warning.contains("residual guidance"))
+        {
+            AgentResultStatus::PartialFailure
+        } else {
+            AgentResultStatus::Complete
+        },
+        runtime_home,
+        integration_id: integration_id.to_owned(),
+        host_plan: None,
+        allowed_projects: projects
+            .iter()
+            .map(|project| project.project_id.clone())
+            .collect(),
+        installations: remaining,
+        guidance,
+        verification: McpVerification::skipped("managed host configuration removed"),
+        actions,
+        warnings,
+        action_required: Vec::new(),
+        output: parsed.output,
+    };
+    match output.status {
+        AgentResultStatus::PartialFailure | AgentResultStatus::Failed => Err(
+            AgentCommandError::failure_output(render_agent_output(&output)?),
+        ),
+        _ => render_agent_output(&output),
+    }
+}
+
+fn command_guidance(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    let Some(subcommand) = args.first().map(String::as_str) else {
+        return Err(AgentCommandError::usage(agent_usage()));
+    };
+    match subcommand {
+        "apply" => command_guidance_apply(&args[1..], current_dir, process),
+        "status" => command_guidance_status(&args[1..], current_dir, process),
+        "remove" => command_guidance_remove(&args[1..], current_dir, process),
+        "-h" | "--help" | "help" => Ok(agent_usage()),
+        other => Err(AgentCommandError::usage(format!(
+            "unknown agent guidance command: {other}\n\n{}",
+            agent_usage()
+        ))),
+    }
+}
+
+fn command_guidance_apply(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(agent_usage());
+    }
+    let parsed = parse_agent_options(args, guidance_apply_allowed_options())?;
+    validate_guidance_write_authorization(&parsed)?;
+    let host_kind = required_host_kind(&parsed)?;
+    let target = guidance_target_from_host_kind(host_kind)?;
+    let integration_id = required_text(parsed.integration_id.as_deref(), "--integration-id")?;
+    let project_id = required_text(parsed.project_id.as_deref(), "--project-id")?;
+    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
+    let project = required_guidance_project(&runtime_home, integration_id, project_id)?;
+    let plan = plan_guidance_apply(&project.repo_root, integration_id, project_id, target)?;
+    let actions = vec![AgentAction::new(
+        "guidance",
+        planned_change_action(plan.change),
+        format!("{} {}", target.as_str(), path_text(&plan.path)),
+    )];
+    if parsed.dry_run {
+        let output = AgentOutput {
+            status: AgentResultStatus::DryRun,
+            runtime_home,
+            integration_id: integration_id.to_owned(),
+            host_plan: None,
+            allowed_projects: vec![project_id.to_owned()],
+            installations: Vec::new(),
+            guidance: vec![plan.status],
+            verification: McpVerification::skipped("dry run does not apply repository guidance"),
+            actions,
+            warnings: Vec::new(),
+            action_required: Vec::new(),
+            output: parsed.output,
+        };
+        return render_agent_output(&output);
+    }
+    let effect = apply_guidance_plan(&plan)?;
+    let guidance = guidance_statuses_for_project(
+        Some(&project.repo_root),
+        integration_id,
+        project_id,
+        &[target],
+    )?;
+    let output = AgentOutput {
         status: AgentResultStatus::Complete,
         runtime_home,
         integration_id: integration_id.to_owned(),
         host_plan: None,
-        allowed_projects: Vec::new(),
-        installations: remaining,
-        verification: McpVerification::skipped("managed host configuration removed"),
-        actions,
+        allowed_projects: vec![project_id.to_owned()],
+        installations: Vec::new(),
+        guidance,
+        verification: McpVerification::skipped("repository guidance applied"),
+        actions: vec![AgentAction::new(
+            "guidance_apply",
+            planned_change_action(effect.change),
+            format!("{} {}", target.as_str(), path_text(&effect.path)),
+        )],
         warnings: Vec::new(),
         action_required: Vec::new(),
         output: parsed.output,
     };
     render_agent_output(&output)
+}
+
+fn command_guidance_status(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(agent_usage());
+    }
+    let parsed = parse_agent_options(args, guidance_status_allowed_options())?;
+    let integration_id = required_text(parsed.integration_id.as_deref(), "--integration-id")?;
+    let project_id = required_text(parsed.project_id.as_deref(), "--project-id")?;
+    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
+    let project = required_guidance_project(&runtime_home, integration_id, project_id)?;
+    let guidance = guidance_statuses_for_project(
+        Some(&project.repo_root),
+        integration_id,
+        project_id,
+        &[GuidanceTarget::Codex, GuidanceTarget::ClaudeCode],
+    )?;
+    let output = AgentOutput {
+        status: if guidance.iter().any(|status| {
+            matches!(
+                status.state,
+                GuidanceStateKind::Changed | GuidanceStateKind::Conflicted
+            )
+        }) {
+            AgentResultStatus::Failed
+        } else {
+            AgentResultStatus::Complete
+        },
+        runtime_home,
+        integration_id: integration_id.to_owned(),
+        host_plan: None,
+        allowed_projects: vec![project_id.to_owned()],
+        installations: Vec::new(),
+        guidance,
+        verification: McpVerification::skipped("guidance status does not prove model behavior"),
+        actions: Vec::new(),
+        warnings: Vec::new(),
+        action_required: Vec::new(),
+        output: parsed.output,
+    };
+    match output.status {
+        AgentResultStatus::Failed => Err(AgentCommandError::failure_output(render_agent_output(
+            &output,
+        )?)),
+        _ => render_agent_output(&output),
+    }
+}
+
+fn command_guidance_remove(
+    args: &[String],
+    current_dir: &Path,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    if is_help_request(args) {
+        return Ok(agent_usage());
+    }
+    let parsed = parse_agent_options(args, guidance_remove_allowed_options())?;
+    validate_guidance_remove_authorization(&parsed)?;
+    let integration_id = required_text(parsed.integration_id.as_deref(), "--integration-id")?;
+    let project_id = required_text(parsed.project_id.as_deref(), "--project-id")?;
+    let runtime_home = resolve_agent_runtime_home(&parsed, current_dir, process)?;
+    let project = required_guidance_project(&runtime_home, integration_id, project_id)?;
+    let targets = if let Some(host_kind) = parsed.host_kind {
+        vec![guidance_target_from_host_kind(host_kind)?]
+    } else {
+        vec![GuidanceTarget::Codex, GuidanceTarget::ClaudeCode]
+    };
+    let plans =
+        plan_guidance_remove_for_targets(&project.repo_root, integration_id, project_id, &targets)?;
+    let actions = plans
+        .iter()
+        .map(|plan| {
+            AgentAction::new(
+                "guidance",
+                planned_change_action(plan.change),
+                format!("{} {}", plan.target.as_str(), path_text(&plan.path)),
+            )
+        })
+        .collect::<Vec<_>>();
+    if parsed.dry_run {
+        let output = AgentOutput {
+            status: AgentResultStatus::DryRun,
+            runtime_home,
+            integration_id: integration_id.to_owned(),
+            host_plan: None,
+            allowed_projects: vec![project_id.to_owned()],
+            installations: Vec::new(),
+            guidance: plans.iter().map(|plan| plan.status.clone()).collect(),
+            verification: McpVerification::skipped("dry run does not remove repository guidance"),
+            actions,
+            warnings: Vec::new(),
+            action_required: Vec::new(),
+            output: parsed.output,
+        };
+        return render_agent_output(&output);
+    }
+    let mut effects = Vec::new();
+    for plan in &plans {
+        effects.push(apply_guidance_remove(plan)?);
+    }
+    let guidance = guidance_statuses_for_project(
+        Some(&project.repo_root),
+        integration_id,
+        project_id,
+        &targets,
+    )?;
+    let output = AgentOutput {
+        status: AgentResultStatus::Complete,
+        runtime_home,
+        integration_id: integration_id.to_owned(),
+        host_plan: None,
+        allowed_projects: vec![project_id.to_owned()],
+        installations: Vec::new(),
+        guidance,
+        verification: McpVerification::skipped("repository guidance removed"),
+        actions: effects
+            .iter()
+            .map(|effect| {
+                AgentAction::new(
+                    "guidance_remove",
+                    planned_change_action(effect.change),
+                    format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
+                )
+            })
+            .collect(),
+        warnings: Vec::new(),
+        action_required: Vec::new(),
+        output: parsed.output,
+    };
+    render_agent_output(&output)
+}
+
+fn required_guidance_project(
+    runtime_home: &Path,
+    integration_id: &str,
+    project_id: &str,
+) -> Result<ProjectRecord, AgentCommandError> {
+    let _integration = required_integration(runtime_home, integration_id)?;
+    validate_project_id(project_id)?;
+    if !is_project_member(runtime_home, integration_id, project_id)? {
+        return Err(AgentCommandError::runtime(
+            "project is not allowed for this Agent Integration Profile",
+        ));
+    }
+    project_record_for_execution(runtime_home, project_id)?.ok_or_else(|| {
+        AgentCommandError::runtime(format!("project is not executable: {project_id}"))
+    })
+}
+
+fn plan_guidance_for_targets(
+    repo_root: &Path,
+    integration_id: &str,
+    project_id: &str,
+    targets: &[GuidanceTarget],
+) -> Result<Vec<GuidancePlan>, AgentCommandError> {
+    targets
+        .iter()
+        .map(|target| {
+            plan_guidance_apply(repo_root, integration_id, project_id, *target)
+                .map_err(AgentCommandError::from)
+        })
+        .collect()
+}
+
+fn plan_guidance_remove_for_targets(
+    repo_root: &Path,
+    integration_id: &str,
+    project_id: &str,
+    targets: &[GuidanceTarget],
+) -> Result<Vec<GuidancePlan>, AgentCommandError> {
+    targets
+        .iter()
+        .map(|target| {
+            plan_guidance_remove(repo_root, integration_id, project_id, *target)
+                .map_err(AgentCommandError::from)
+        })
+        .collect()
+}
+
+fn guidance_statuses_for_project(
+    repo_root: Option<&Path>,
+    integration_id: &str,
+    project_id: &str,
+    targets: &[GuidanceTarget],
+) -> Result<Vec<GuidanceStatus>, AgentCommandError> {
+    let Some(repo_root) = repo_root else {
+        return Ok(Vec::new());
+    };
+    targets
+        .iter()
+        .map(|target| {
+            guidance_status(repo_root, integration_id, project_id, *target)
+                .map_err(AgentCommandError::from)
+        })
+        .collect()
+}
+
+fn guidance_statuses_for_projects(
+    integration_id: &str,
+    projects: &[IntegrationProjectRecord],
+) -> Result<Vec<GuidanceStatus>, AgentCommandError> {
+    let mut statuses = Vec::new();
+    for project in projects {
+        statuses.extend(guidance_statuses_for_project(
+            Some(&project.project.repo_root),
+            integration_id,
+            &project.project_id,
+            &[GuidanceTarget::Codex, GuidanceTarget::ClaudeCode],
+        )?);
+    }
+    Ok(statuses)
+}
+
+fn guidance_targets_for_status(targets: &[GuidanceTarget]) -> &[GuidanceTarget] {
+    targets
+}
+
+fn compensate_guidance_effects(effects: &[GuidanceEffect], warnings: &mut Vec<String>) {
+    for effect in effects {
+        match compensate_new_guidance(effect) {
+            Ok(compensation) => {
+                if let Some(residual) = compensation.residual {
+                    warnings.push(format!(
+                        "residual guidance preserved for project {} {}: {}",
+                        effect.project_id,
+                        effect.target.as_str(),
+                        residual
+                    ));
+                } else {
+                    warnings.push(format!(
+                        "compensated newly-created guidance for project {} {}",
+                        effect.project_id,
+                        effect.target.as_str()
+                    ));
+                }
+            }
+            Err(error) => warnings.push(format!(
+                "residual guidance preserved for project {} {}: {}",
+                effect.project_id,
+                effect.target.as_str(),
+                error
+            )),
+        }
+    }
 }
 
 fn parse_agent_options(
@@ -1280,6 +1806,7 @@ fn install_allowed_options() -> &'static [&'static str] {
         "mcp-command",
         "export-path",
         "export-dir",
+        "guidance",
         "output",
         "dry-run",
         "yes",
@@ -1328,6 +1855,36 @@ fn uninstall_allowed_options() -> &'static [&'static str] {
         "runtime-home",
         "integration-id",
         "installation-id",
+        "output",
+        "dry-run",
+        "allow-repository-write",
+        "remove-managed",
+    ]
+}
+
+fn guidance_apply_allowed_options() -> &'static [&'static str] {
+    &[
+        "runtime-home",
+        "integration-id",
+        "project-id",
+        "host",
+        "output",
+        "dry-run",
+        "allow-repository-write",
+        "replace-managed",
+    ]
+}
+
+fn guidance_status_allowed_options() -> &'static [&'static str] {
+    &["runtime-home", "integration-id", "project-id", "output"]
+}
+
+fn guidance_remove_allowed_options() -> &'static [&'static str] {
+    &[
+        "runtime-home",
+        "integration-id",
+        "project-id",
+        "host",
         "output",
         "dry-run",
         "allow-repository-write",
@@ -1384,6 +1941,7 @@ fn set_agent_value(
         "mcp-command" => parsed.mcp_command = Some(PathBuf::from(value)),
         "export-path" => parsed.export_path = Some(PathBuf::from(value)),
         "export-dir" => parsed.export_dir = Some(PathBuf::from(value)),
+        "guidance" => parsed.guidance = parse_guidance_selection(&value)?,
         "output" => {
             parsed.output = match value.as_str() {
                 "text" => OutputFormat::Text,
@@ -1408,6 +1966,30 @@ fn parse_host_kind(value: &str) -> Result<HostKind, AgentCommandError> {
         other => Err(AgentCommandError::usage(format!(
             "unsupported host: {other}"
         ))),
+    }
+}
+
+fn parse_guidance_selection(value: &str) -> Result<GuidanceSelection, AgentCommandError> {
+    match value {
+        "none" => Ok(GuidanceSelection::None),
+        "codex" => Ok(GuidanceSelection::Codex),
+        "claude-code" | "claude_code" => Ok(GuidanceSelection::ClaudeCode),
+        "both" => Ok(GuidanceSelection::Both),
+        other => Err(AgentCommandError::usage(format!(
+            "unsupported guidance target: {other}"
+        ))),
+    }
+}
+
+fn guidance_target_from_host_kind(
+    host_kind: HostKind,
+) -> Result<GuidanceTarget, AgentCommandError> {
+    match host_kind {
+        HostKind::Codex => Ok(GuidanceTarget::Codex),
+        HostKind::ClaudeCode => Ok(GuidanceTarget::ClaudeCode),
+        HostKind::Generic => Err(AgentCommandError::usage(
+            "repository guidance supports only codex and claude_code hosts",
+        )),
     }
 }
 
@@ -1468,6 +2050,33 @@ fn validate_repository_write_authorization(
     if scope == HostScope::Project && !parsed.dry_run && !parsed.allow_repository_write {
         return Err(AgentCommandError::usage(
             "--allow-repository-write is required for project-scoped host configuration writes",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_guidance_write_authorization(
+    parsed: &ParsedAgentOptions,
+) -> Result<(), AgentCommandError> {
+    if !parsed.dry_run && !parsed.allow_repository_write {
+        return Err(AgentCommandError::usage(
+            "--allow-repository-write is required for repository guidance writes",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_guidance_remove_authorization(
+    parsed: &ParsedAgentOptions,
+) -> Result<(), AgentCommandError> {
+    if !parsed.remove_managed {
+        return Err(AgentCommandError::usage(
+            "--remove-managed is required for repository guidance removal",
+        ));
+    }
+    if !parsed.dry_run && !parsed.allow_repository_write {
+        return Err(AgentCommandError::usage(
+            "--allow-repository-write is required for repository guidance removal",
         ));
     }
     Ok(())
@@ -2183,6 +2792,7 @@ struct AgentOutput {
     host_plan: Option<HostPlan>,
     allowed_projects: Vec<String>,
     installations: Vec<HostInstallationRecord>,
+    guidance: Vec<GuidanceStatus>,
     verification: McpVerification,
     actions: Vec<AgentAction>,
     warnings: Vec<String>,
@@ -2231,6 +2841,27 @@ fn render_agent_text(output: &AgentOutput) -> Result<String, AgentCommandError> 
                 installation.server_name,
                 installation.last_verified_status
             ));
+        }
+    }
+    if !output.guidance.is_empty() {
+        text.push_str("guidance:\n");
+        for item in &output.guidance {
+            text.push_str(&format!(
+                "  {} {}: {} ({})\n",
+                item.project_id,
+                item.target.as_str(),
+                item.state.as_str(),
+                item.path.display()
+            ));
+            if !item.detail.is_empty() {
+                text.push_str(&format!("    detail: {}\n", item.detail));
+            }
+            if let Some(content) = &item.planned_content {
+                text.push_str("    planned_content:\n");
+                for line in content.lines() {
+                    text.push_str(&format!("      {line}\n"));
+                }
+            }
         }
     }
     text.push_str(&format!(
@@ -2305,6 +2936,22 @@ fn render_agent_json(output: &AgentOutput) -> Result<String, AgentCommandError> 
             })
         })
         .collect::<Vec<_>>();
+    let guidance_items = output
+        .guidance
+        .iter()
+        .map(|item| {
+            json!({
+                "target": item.target.as_str(),
+                "integration_id": &item.integration_id,
+                "project_id": &item.project_id,
+                "path": path_text(&item.path),
+                "state": item.state.as_str(),
+                "fingerprint": &item.fingerprint,
+                "detail": &item.detail,
+                "planned_content": &item.planned_content,
+            })
+        })
+        .collect::<Vec<_>>();
     let value = json!({
         "status": output.status.as_str(),
         "runtime": {
@@ -2319,7 +2966,8 @@ fn render_agent_json(output: &AgentOutput) -> Result<String, AgentCommandError> 
         "allowed_projects": output.allowed_projects,
         "installations": installations,
         "guidance": {
-            "status": "not_managed"
+            "status": guidance_summary_status(&output.guidance),
+            "items": guidance_items,
         },
         "host": host,
         "verification": {
@@ -2337,6 +2985,30 @@ fn render_agent_json(output: &AgentOutput) -> Result<String, AgentCommandError> 
         .map_err(|error| AgentCommandError::runtime(format!("failed to render JSON: {error}")))?;
     text.push('\n');
     Ok(text)
+}
+
+fn guidance_summary_status(guidance: &[GuidanceStatus]) -> &'static str {
+    let mut states = guidance
+        .iter()
+        .map(|status| status.state)
+        .collect::<BTreeSet<_>>();
+    if states.is_empty() {
+        return "not_managed";
+    }
+    if states.remove(&GuidanceStateKind::Conflicted) {
+        return "conflicted";
+    }
+    if states.remove(&GuidanceStateKind::Changed) {
+        return "changed";
+    }
+    if states.len() == 1 {
+        return states
+            .iter()
+            .next()
+            .map(|state| state.as_str())
+            .unwrap_or("not_managed");
+    }
+    "mixed"
 }
 
 fn setup_status_from_verification(verification: &McpVerification) -> AgentResultStatus {
@@ -2377,6 +3049,7 @@ fn partial_install_output(
         host_plan: Some(host_plan),
         allowed_projects,
         installations: Vec::new(),
+        guidance: Vec::new(),
         verification: McpVerification {
             status: VerificationStatus::Failed,
             details: message,

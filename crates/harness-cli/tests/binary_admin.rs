@@ -42,6 +42,7 @@ const AGENT_INSTANCE_ID: &str = "surface_instance_binary_agent";
 const USER_SURFACE_ID: &str = "surface_binary_user";
 const USER_INSTANCE_ID: &str = "surface_instance_binary_user";
 const LEGACY_PROJECT_STATE_SCHEMA_VERSION: i64 = 5;
+const GUIDANCE_BEGIN_MARKER: &str = "<!-- BEGIN HARNESS MANAGED GUIDANCE v1 -->";
 
 #[test]
 fn harness_binary_runs_administrative_initialization_and_registration() -> Result<(), Box<dyn Error>>
@@ -991,6 +992,10 @@ fn harness_binary_agent_help_covers_nested_commands() -> Result<(), Box<dyn Erro
     assert_agent_help(["agent", "status", "--help"])?;
     assert_agent_help(["agent", "verify", "--help"])?;
     assert_agent_help(["agent", "uninstall", "--help"])?;
+    assert_agent_help(["agent", "guidance", "--help"])?;
+    assert_agent_help(["agent", "guidance", "apply", "--help"])?;
+    assert_agent_help(["agent", "guidance", "status", "--help"])?;
+    assert_agent_help(["agent", "guidance", "remove", "--help"])?;
     Ok(())
 }
 
@@ -1128,11 +1133,18 @@ fn harness_binary_agent_dry_run_writes_nothing_and_rejects_invalid_scope(
     );
     assert!(value["integration"]["integration_id"].is_string());
     assert_eq!(value["host"]["host_kind"], "codex");
+    assert_eq!(value["guidance"]["status"], "not_managed");
+    assert!(value["guidance"]["items"]
+        .as_array()
+        .expect("guidance items array")
+        .is_empty());
     assert_eq!(value["verification"]["status"], "not_verified");
     assert!(value["action_required"].as_array().is_some());
     assert!(value["effects"].as_array().is_some());
     assert!(!registry_db_path(runtime_home.path()).exists());
     assert!(!codex_home.join("config.toml").exists());
+    assert!(!repo_root.join("AGENTS.md").exists());
+    assert!(!repo_root.join(".claude").exists());
 
     let invalid = run_with_home(
         runtime_home.path(),
@@ -1149,6 +1161,373 @@ fn harness_binary_agent_dry_run_writes_nothing_and_rejects_invalid_scope(
     )?;
     assert_eq!(invalid.status.code(), Some(2));
     assert!(stderr(&invalid).contains("host and scope"));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_guidance_apply_status_and_remove_flow() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-guidance-flow")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_guidance_flow",
+            "--server-name",
+            "harness-guidance-flow",
+            "--project-id",
+            "project_guidance_flow",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&install);
+    assert!(!repo_root.join("AGENTS.md").exists());
+    assert!(!repo_root.join(".claude").exists());
+
+    let claude_dry_run = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "guidance",
+            "apply",
+            "--integration-id",
+            "agent_guidance_flow",
+            "--project-id",
+            "project_guidance_flow",
+            "--host",
+            "claude-code",
+            "--dry-run",
+            "--output",
+            "json",
+        ],
+    )?;
+    assert_success(&claude_dry_run);
+    let claude_dry_json: Value = serde_json::from_str(&stdout(&claude_dry_run))?;
+    assert_eq!(claude_dry_json["status"], "dry_run");
+    assert_eq!(claude_dry_json["guidance"]["status"], "absent");
+    assert!(claude_dry_json["guidance"]["items"][0]["planned_content"]
+        .as_str()
+        .expect("planned content")
+        .contains(GUIDANCE_BEGIN_MARKER));
+    assert!(!repo_root.join(".claude").exists());
+
+    let missing_authorization = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "guidance",
+            "apply",
+            "--integration-id",
+            "agent_guidance_flow",
+            "--project-id",
+            "project_guidance_flow",
+            "--host",
+            "codex",
+        ],
+    )?;
+    assert_eq!(missing_authorization.status.code(), Some(2));
+    assert!(stderr(&missing_authorization).contains("--allow-repository-write"));
+
+    let apply = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "guidance",
+            "apply",
+            "--integration-id",
+            "agent_guidance_flow",
+            "--project-id",
+            "project_guidance_flow",
+            "--host",
+            "codex",
+            "--allow-repository-write",
+            "--output",
+            "json",
+        ],
+    )?;
+    assert_success(&apply);
+    let apply_json: Value = serde_json::from_str(&stdout(&apply))?;
+    assert_eq!(apply_json["guidance"]["status"], "present");
+    assert_guidance_item_state(&apply_json, "codex", "present");
+    let agents_path = repo_root.join("AGENTS.md");
+    let agents = fs::read_to_string(&agents_path)?;
+    assert!(agents.contains(GUIDANCE_BEGIN_MARKER));
+    assert!(agents.contains("harness.list_projects"));
+
+    let status = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "guidance",
+            "status",
+            "--integration-id",
+            "agent_guidance_flow",
+            "--project-id",
+            "project_guidance_flow",
+            "--output",
+            "json",
+        ],
+    )?;
+    assert_success(&status);
+    let status_json: Value = serde_json::from_str(&stdout(&status))?;
+    assert_eq!(status_json["guidance"]["status"], "mixed");
+    assert_guidance_item_state(&status_json, "codex", "present");
+    assert_guidance_item_state(&status_json, "claude_code", "absent");
+
+    let remove_dry_run = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "guidance",
+            "remove",
+            "--integration-id",
+            "agent_guidance_flow",
+            "--project-id",
+            "project_guidance_flow",
+            "--host",
+            "codex",
+            "--dry-run",
+            "--remove-managed",
+        ],
+    )?;
+    assert_success(&remove_dry_run);
+    assert!(agents_path.exists());
+
+    let remove = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "guidance",
+            "remove",
+            "--integration-id",
+            "agent_guidance_flow",
+            "--project-id",
+            "project_guidance_flow",
+            "--host",
+            "codex",
+            "--allow-repository-write",
+            "--remove-managed",
+        ],
+    )?;
+    assert_success(&remove);
+    assert!(!agents_path.exists());
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_install_guidance_both_and_uninstall_managed() -> Result<(), Box<dyn Error>>
+{
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-guidance-install")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_guidance_install",
+            "--server-name",
+            "harness-guidance-install",
+            "--project-id",
+            "project_guidance_install",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--guidance",
+            "both",
+            "--allow-repository-write",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&install);
+    assert!(stdout(&install).contains("guidance:"));
+    assert!(stdout(&install).contains("codex: present"));
+    assert!(stdout(&install).contains("claude_code: present"));
+
+    let agents_path = repo_root.join("AGENTS.md");
+    let claude_path = repo_root.join(".claude").join("rules").join("harness.md");
+    assert!(fs::read_to_string(&agents_path)?.contains(GUIDANCE_BEGIN_MARKER));
+    assert!(fs::read_to_string(&claude_path)?.contains(GUIDANCE_BEGIN_MARKER));
+
+    let status = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "status",
+            "--integration-id",
+            "agent_guidance_install",
+            "--output",
+            "json",
+        ],
+    )?;
+    assert_success(&status);
+    let status_json: Value = serde_json::from_str(&stdout(&status))?;
+    assert_eq!(status_json["guidance"]["status"], "present");
+    assert_guidance_item_state(&status_json, "codex", "present");
+    assert_guidance_item_state(&status_json, "claude_code", "present");
+
+    let uninstall = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "uninstall",
+            "--integration-id",
+            "agent_guidance_install",
+            "--allow-repository-write",
+            "--remove-managed",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&uninstall);
+    assert!(stdout(&uninstall).contains("status: complete"));
+    assert!(!agents_path.exists());
+    assert!(!repo_root.join(".claude").exists());
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_uninstall_preserves_changed_guidance() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-guidance-conflict")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_guidance_conflict",
+            "--server-name",
+            "harness-guidance-conflict",
+            "--project-id",
+            "project_guidance_conflict",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--guidance",
+            "codex",
+            "--allow-repository-write",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&install);
+
+    let agents_path = repo_root.join("AGENTS.md");
+    let original = fs::read_to_string(&agents_path)?;
+    fs::write(
+        &agents_path,
+        original.replace("do not guess `project_id`", "guess project_id"),
+    )?;
+
+    let guidance_status = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "guidance",
+            "status",
+            "--integration-id",
+            "agent_guidance_conflict",
+            "--project-id",
+            "project_guidance_conflict",
+        ],
+    )?;
+    assert_eq!(guidance_status.status.code(), Some(1));
+    assert!(stdout(&guidance_status).contains("status: failed"));
+    assert!(stdout(&guidance_status).contains("codex: changed"));
+
+    let uninstall = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "uninstall",
+            "--integration-id",
+            "agent_guidance_conflict",
+            "--allow-repository-write",
+            "--remove-managed",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_eq!(uninstall.status.code(), Some(1));
+    assert!(stdout(&uninstall).contains("status: partial_failure"));
+    assert!(stdout(&uninstall).contains("residual guidance preserved"));
+    assert!(fs::read_to_string(&agents_path)?.contains("guess project_id"));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_install_compensates_new_guidance_after_verification_failure(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-guidance-compensate")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::MissingUtilityTool)?;
+    let agents_path = repo_root.join("AGENTS.md");
+    fs::write(&agents_path, "# Existing instructions\nKeep this.\n")?;
+
+    let output = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_guidance_compensate",
+            "--server-name",
+            "harness-guidance-compensate",
+            "--project-id",
+            "project_guidance_compensate",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--guidance",
+            "codex",
+            "--allow-repository-write",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_eq!(output.status.code(), Some(1));
+    assert!(stdout(&output).contains("status: partial_failure"));
+    assert!(stdout(&output).contains("harness.list_projects"));
+    assert!(stdout(&output).contains("compensated newly-created guidance"));
+    let agents = fs::read_to_string(&agents_path)?;
+    assert!(agents.contains("# Existing instructions\nKeep this.\n"));
+    assert!(!agents.contains(GUIDANCE_BEGIN_MARKER));
     Ok(())
 }
 
@@ -1434,11 +1813,25 @@ fn assert_agent_help<const N: usize>(args: [&str; N]) -> Result<(), Box<dyn Erro
     let output = run_without_home(args)?;
     assert_success(&output);
     assert!(stdout(&output).contains("harness agent install"));
+    assert!(stdout(&output).contains("harness agent guidance apply"));
+    assert!(stdout(&output).contains("--guidance none|codex"));
     assert!(stdout(&output).contains("--default-project-id ID"));
     assert!(stdout(&output).contains("--surface-id ID"));
     assert!(stdout(&output).contains("--export-path PATH"));
     assert!(stdout(&output).contains("--remove-managed"));
     Ok(())
+}
+
+fn assert_guidance_item_state(value: &Value, target: &str, state: &str) {
+    let items = value["guidance"]["items"]
+        .as_array()
+        .expect("guidance items array");
+    assert!(
+        items
+            .iter()
+            .any(|item| item["target"] == target && item["state"] == state),
+        "expected guidance item {target}={state}, got {items:?}"
+    );
 }
 
 fn base_command() -> Command {
