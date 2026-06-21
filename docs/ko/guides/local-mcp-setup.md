@@ -239,25 +239,26 @@ JSON 모드는 stdout에 기계가 읽을 수 있는 성공 객체 하나를 출
 
 호스트가 에이전트 프로세스를 시작한 뒤 아래 MCP 순서를 확인합니다.
 
-1. `initialize`를 보냅니다.
-2. `notifications/initialized`를 보냅니다.
-3. `tools/list`를 보냅니다.
-4. `harness.status`를 호출합니다.
+1. `protocolVersion: "2025-11-25"`로 `initialize`를 보냅니다.
+2. `initialize` 응답을 기다립니다.
+3. `notifications/initialized`를 보냅니다.
+4. `tools/list`를 보냅니다.
+5. `harness.status`를 호출합니다.
 
 예상 관찰 결과:
 
-- `initialize`가 `serverInfo.name`을 `harness-mcp`로 반환합니다.
+- `initialize`가 `protocolVersion: "2025-11-25"`와 `serverInfo.name`을 `harness-mcp`로 반환합니다.
 - `tools/list`가 공개 하네스 도구 정확히 아홉 개를 노출합니다.
 - `harness.status`는 `result.content[0].text`에 직렬화된 하네스 JSON을 담은 MCP text content를 반환합니다.
 - 클라이언트는 `result.content[0].text`를 파싱하고 `base.response_kind`와 `errors`를 확인합니다.
 - `isError: false`는 MCP 전송 성공을 뜻합니다. 하네스 도메인 수락을 증명하지 않습니다.
 
-정확한 공개 메서드 목록은 [API 메서드](../reference/api/methods.md)가 담당합니다. 정확한 MCP 와이어 동작과 응답 래핑은 [MCP 전송](../reference/mcp-transport.md)이 담당합니다.
+정확한 공개 메서드 목록은 [API 메서드](../reference/api/methods.md)가 담당합니다. 정확한 MCP 프로토콜 버전 협상, 수명주기 제한, 와이어 동작, 응답 래핑은 [MCP 전송](../reference/mcp-transport.md)이 담당합니다.
 
-원시 stdio 점검은 한 줄에 JSON 값 하나를 사용합니다.
+원시 stdio 점검은 비어 있지 않은 stdin 한 줄마다 JSON-RPC 메시지 객체 하나를 사용합니다. 첫 줄을 보낸 뒤 응답을 기다리고 나서 `notifications/initialized`를 보내며, `tools/list`나 `tools/call`은 그 notification 뒤에만 보냅니다.
 
 ```text
-{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"harness-quickstart","version":"0.0.0"}}}
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-quickstart","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
 {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
 {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"demo","task_id":null,"actor_kind":"agent","surface_id":"agent_mcp","request_id":"req_quickstart_status","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":false,"evidence":false,"close":true,"guarantees":true}}}}

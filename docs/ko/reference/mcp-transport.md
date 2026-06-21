@@ -1,6 +1,6 @@
 # MCP 전송 참조
 
-이 문서는 로컬 `harness-mcp` 프로세스 계약을 담당합니다. 여기에는 프로세스 시작, 프로세스 환경, stdio 전송 프레이밍, 시작 바인딩과 검증, MCP 응답 래핑, 종료와 재연결 동작이 포함됩니다.
+이 문서는 로컬 `harness-mcp` 프로세스 계약을 담당합니다. 여기에는 프로세스 시작, 프로세스 환경, MCP 프로토콜 버전 협상, 초기화 수명주기, stdio 전송 프레이밍, JSON-RPC 메시지 검증, 시작 바인딩과 검증, MCP 응답 래핑, 종료와 재연결 동작이 포함됩니다.
 
 이 문서는 공개 하네스 API 메서드 동작, 공개 요청/응답 스키마, 접근 등급 의미, 접점 등록 의미, 저장소 기록 배치, 보안 보장, Core 권한 의미를 정의하지 않습니다.
 
@@ -10,7 +10,8 @@
 
 - `harness-mcp` 프로세스 시작과 종료 동작
 - MCP Runtime Home 경로 해석을 포함한 필수 및 선택 프로세스 환경 변수
-- stdio JSON-RPC 프레이밍과 지원되는 MCP 요청 메서드
+- MCP 프로토콜 버전 협상과 초기화 수명주기
+- stdio JSON-RPC 프레이밍, 메시지 검증, 지원되는 MCP 메서드
 - MCP 시작 검증, 고정 프로세스 바인딩, 인스턴스 선택
 - MCP `tools/call` 응답 래핑
 - 프로세스 종료와 재연결 동작
@@ -134,12 +135,66 @@ missing_access_classes: <comma-separated values or empty>
 
 ## MCP 와이어 동작
 
-프레이밍:
+`harness-mcp`는 stdio 위에서 MCP 프로토콜 버전 `2025-11-25`를 지원합니다. 더 오래된 MCP 프로토콜 버전과 동시에 호환된다고 광고하지 않습니다. 새 프로세스나 stdio 연결마다 새 MCP 수명주기가 시작되며, 각 연결은 자체 초기화 순서를 완료해야 합니다.
 
-- 각 입력 줄은 JSON 값 하나를 담습니다.
-- 각 출력 줄은 JSON 응답 하나를 담습니다.
+### 프레이밍과 JSON-RPC 검증
+
+프레이밍 규칙:
+
+- 비어 있지 않은 각 stdin 줄은 UTF-8 JSON-RPC 메시지 객체 하나를 정확히 담습니다.
+- JSON 루트는 JSON-RPC 메시지 객체 하나여야 합니다. 하네스의 클라이언트-서버 기준 범위에서 지원되는 메시지 객체는 요청과 `notifications/initialized` notification입니다. 배열, 원시 JSON 루트, `null`은 유효하지 않은 MCP stdio 메시지입니다.
+- JSON-RPC 배치는 지원하지 않습니다. 배열 입력은 배열 요소마다 응답을 내지 않고 Invalid Request 응답 하나를 받습니다.
+- 메시지는 줄바꿈으로 구분되며 메시지 안에 줄바꿈을 포함하면 안 됩니다.
+- 각 출력 줄은 JSON-RPC 응답 객체 하나를 담습니다. `harness-mcp`는 `initialize` 전에 준비 완료 메시지를 쓰지 않습니다.
 - stdin EOF는 stdout을 플러시한 뒤 프로세스를 끝냅니다.
-- `initialize` 전에 준비 완료 메시지를 내보내지 않습니다.
+
+JSON-RPC 검증 규칙:
+
+- `jsonrpc`는 정확히 `"2.0"`이어야 합니다.
+- 요청 `method`는 문자열이어야 합니다.
+- 요청 ID는 문자열 또는 정수일 수 있으며 `null`이면 안 됩니다.
+- 구조적으로 유효한 notification은 문자열 `method`를 갖고 `id`가 없으며 응답을 받지 않습니다.
+- `id`가 없는 객체가 자동으로 유효한 notification이 되는 것은 아닙니다. 그래도 notification 형태를 만족해야 합니다.
+- 지원되는 MCP 메서드의 `params`는 존재할 때 객체여야 합니다.
+
+오류 분류:
+
+| 조건 | MCP 응답 |
+|---|---|
+| JSON 파싱 실패 | JSON-RPC `-32700` Parse error |
+| 배열, 원시 루트, 누락되었거나 잘못된 `jsonrpc`, 잘못된 요청 `id`, 누락되었거나 문자열이 아닌 요청 `method`, 잘못된 non-notification 객체를 포함한 유효하지 않은 JSON-RPC 메시지 구조 | JSON-RPC `-32600` Invalid Request |
+| `initialize` 전 요청, 준비 상태 전 `tools/list`나 `tools/call`, 중복 `initialize`를 포함한 요청의 수명주기 위반 | JSON-RPC `-32600` Invalid Request |
+| 알 수 없는 요청 메서드 | JSON-RPC `-32601` Method not found |
+| 잘못된 메서드 파라미터 | JSON-RPC `-32602` Invalid params |
+| 구조적으로 유효한 `tools/call` 요청의 알 수 없는 도구 이름 | JSON-RPC `-32602` Invalid params |
+| 어댑터 또는 서버 내부 실패 | 적절한 JSON-RPC 내부 오류 응답 |
+| 구조적으로 유효한 notification | 응답 없음. `notifications/initialized`가 너무 이르거나 다른 이유로 수명주기에 맞지 않으면 연결을 준비 상태로 옮기지 않습니다. |
+
+### 프로토콜 버전과 수명주기
+
+연결에서 첫 번째로 유효한 MCP 요청은 `initialize`입니다. 유효한 `initialize` 요청은 객체 `params` 안에 아래 값을 둡니다.
+
+- 문자열 `protocolVersion`
+- 객체 `capabilities`
+- 문자열 `name`과 `version` 필드를 포함하는 객체 `clientInfo`
+
+2025-11-25 스키마가 허용하는 추가 MCP `Implementation` 메타데이터, 예를 들어 `title`, `description`, `icons`, `websiteUrl`은 받을 수 있지만 예시에 필수는 아닙니다.
+
+프로토콜 버전 협상:
+
+- 클라이언트가 `2025-11-25`를 요청하면 `harness-mcp`는 `2025-11-25`를 반환합니다.
+- 클라이언트가 문법적으로 유효한 다른 프로토콜 버전 문자열을 보내면 `harness-mcp`는 자신이 지원하는 버전인 `2025-11-25`를 반환합니다.
+- 서버 응답은 더 오래된 MCP 프로토콜 버전과 동시에 호환된다고 주장하지 않습니다.
+
+수명주기 상태:
+
+| 연결 지점 | 유효한 클라이언트 메시지 | 결과 |
+|---|---|---|
+| 성공한 `initialize` 전 | `initialize` 요청 | 성공하면 서버는 `protocolVersion: "2025-11-25"`를 반환하고 `notifications/initialized`를 기다립니다. |
+| `notifications/initialized` 대기 중 | `notifications/initialized` notification, `ping` 요청 | `notifications/initialized`가 준비 상태 전환을 완료합니다. `ping`은 `initialize`가 성공한 뒤 사용할 수 있으며, 서버가 notification을 기다리는 동안에도 사용할 수 있습니다. |
+| 준비 상태 | `ping`, `tools/list`, `tools/call` | 일반 MCP 도구 탐색과 도구 실행을 사용할 수 있습니다. |
+
+`tools/list`와 `tools/call`은 `notifications/initialized`가 준비 상태 전환을 완료한 뒤에만 사용할 수 있습니다. 중복 `initialize` 요청은 유효하지 않습니다. 너무 이르거나 잘못된 `notifications/initialized` notification은 연결을 준비 상태로 만들지 않습니다.
 
 지원되는 MCP 요청 메서드:
 
@@ -148,19 +203,30 @@ missing_access_classes: <comma-separated values or empty>
 - `tools/list`
 - `tools/call`
 
-notification은 응답을 받지 않습니다. 지원하지 않는 요청은 JSON-RPC `-32601`을 반환합니다. 잘못된 JSON은 JSON-RPC `-32700`을 반환합니다.
+지원되는 수명주기 notification은 `notifications/initialized`입니다.
 
-전송은 [API 메서드](api/methods.md)가 담당하는 공개 하네스 메서드 집합만 정확히 노출합니다. 이 문서는 두 번째 독립 메서드 목록을 만들지 않습니다.
+## 도구 탐색과 `tools/call` 응답 래핑
 
-## `tools/call` 응답 래핑
+연결이 준비 상태가 된 뒤 `tools/list`는 [API 메서드](api/methods.md)가 담당하는 공개 하네스 도구 정확히 아홉 개를 노출합니다. 이 문서는 두 번째 독립 메서드 목록을 만들지 않습니다.
 
-`tools/call`은 MCP 결과 안에 하네스 응답 JSON을 래핑합니다.
+구조적으로 유효한 `tools/call` 요청은 객체 `params` 안에 아래 값을 둡니다.
+
+- 문자열 `name`
+- 선택적 객체 `arguments`
+
+`arguments`가 없으면 빈 객체로 취급합니다. `arguments: null`과 객체가 아닌 `arguments`는 잘못된 메서드 파라미터이며 JSON-RPC `-32602`를 반환합니다. 알 수 없는 도구 이름은 프로토콜 오류이며 JSON-RPC `-32602`를 반환합니다.
+
+알려진 도구에서 객체 `arguments`가 도구 입력 스키마를 통과하지 못하면 `isError: true`와 실행 가능한 text content를 담은 `CallToolResult`를 반환합니다. 이는 JSON-RPC 프로토콜 오류가 아니라 도구 실행 오류입니다.
+
+`harness-mcp`는 MCP 태스크 보강 도구 실행을 광고하거나 구현하지 않습니다. `tools/call` 요청은 `CreateTaskResult`를 반환하지 않으며, `task` 파라미터는 지원되는 기준 기능이 아닙니다.
+
+하네스까지 도달한 알려진 도구 호출에서 `tools/call`은 MCP 결과 안에 하네스 응답 JSON을 래핑합니다.
 
 - 하네스 응답 JSON은 `result.content[0].text`의 문자열로 직렬화됩니다.
 - 클라이언트는 하네스 응답을 검사하려면 그 문자열을 JSON으로 파싱해야 합니다.
 - 성공한 MCP 전송은 하네스 도메인 수준 거절 응답을 포함해 `isError: false`를 반환합니다.
 - 하네스 도메인 성공 또는 거절은 파싱한 하네스 응답, 특히 `base.response_kind`와 `errors`에서 판단합니다.
-- JSON-RPC `error`는 프로토콜, 잘못된 파라미터, 어댑터/내부 실패에만 사용합니다.
+- JSON-RPC `error`는 프로토콜, 잘못된 파라미터, 어댑터/내부 실패에만 사용합니다. 하네스 도메인 수준 거절에는 사용하지 않습니다.
 
 하네스 응답 분기 형태와 오류 의미는 각 담당 문서에 둡니다.
 

@@ -243,25 +243,26 @@ Before final confirmation, the wizard uses read-only planning. You can cancel, d
 
 After the host launches the agent process, verify this MCP sequence:
 
-1. Send `initialize`.
-2. Send `notifications/initialized`.
-3. Send `tools/list`.
-4. Call `harness.status`.
+1. Send `initialize` with `protocolVersion: "2025-11-25"`.
+2. Wait for the `initialize` response.
+3. Send `notifications/initialized`.
+4. Send `tools/list`.
+5. Call `harness.status`.
 
 Expected observations:
 
-- `initialize` returns `serverInfo.name` as `harness-mcp`.
+- `initialize` returns `protocolVersion: "2025-11-25"` and `serverInfo.name` as `harness-mcp`.
 - `tools/list` exposes exactly nine public Harness tools.
 - `harness.status` returns MCP text content whose `result.content[0].text` contains serialized Harness JSON.
 - Clients parse `result.content[0].text` and inspect `base.response_kind` and `errors`.
 - `isError: false` means MCP transport success; it does not prove Harness domain acceptance.
 
-The exact public method list is owned by [API Methods](../reference/api/methods.md). Exact MCP wire behavior and response wrapping are owned by [MCP Transport](../reference/mcp-transport.md).
+The exact public method list is owned by [API Methods](../reference/api/methods.md). Exact MCP protocol-version negotiation, lifecycle restrictions, wire behavior, and response wrapping are owned by [MCP Transport](../reference/mcp-transport.md).
 
-A raw stdio smoke test uses one JSON value per line:
+A raw stdio smoke test uses one JSON-RPC message object per non-empty stdin line. Send the first line and wait for its response before sending `notifications/initialized`; send `tools/list` or `tools/call` only after that notification:
 
 ```text
-{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"harness-quickstart","version":"0.0.0"}}}
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-quickstart","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
 {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
 {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"demo","task_id":null,"actor_kind":"agent","surface_id":"agent_mcp","request_id":"req_quickstart_status","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":false,"evidence":false,"close":true,"guarantees":true}}}}

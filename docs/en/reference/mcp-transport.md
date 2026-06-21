@@ -1,6 +1,6 @@
 # MCP transport reference
 
-This document owns the local `harness-mcp` process contract: process startup, process environment, stdio transport framing, startup binding and validation, MCP response wrapping, and shutdown/reconnection behavior.
+This document owns the local `harness-mcp` process contract: process startup, process environment, MCP protocol-version negotiation, initialization lifecycle, stdio transport framing, JSON-RPC message validation, startup binding and validation, MCP response wrapping, and shutdown/reconnection behavior.
 
 It does not define public Harness API method behavior, public request or response schemas, access-class meanings, surface registration meaning, storage record layout, security guarantees, or Core authority semantics.
 
@@ -10,7 +10,8 @@ This document owns:
 
 - `harness-mcp` process startup and exit behavior
 - required and optional process environment variables, including MCP Runtime Home resolution
-- stdio JSON-RPC framing and supported MCP request methods
+- MCP protocol-version negotiation and initialization lifecycle
+- stdio JSON-RPC framing, message validation, and supported MCP methods
 - MCP startup validation, fixed process binding, and instance selection
 - MCP `tools/call` response wrapping
 - process shutdown and reconnection behavior
@@ -132,12 +133,66 @@ When a stored project registration fails the [Runtime Home/Product Repository se
 
 ## MCP wire behavior
 
-Framing:
+`harness-mcp` supports MCP protocol version `2025-11-25` over stdio. It does not advertise simultaneous compatibility with older MCP protocol versions. Each new process or stdio connection starts a new MCP lifecycle and must complete its own initialization sequence.
 
-- Each input line contains one JSON value.
-- Each output line contains one JSON response.
+### Framing and JSON-RPC validation
+
+Framing rules:
+
+- Each non-empty stdin line contains exactly one UTF-8 JSON-RPC message object.
+- The JSON root must be one JSON-RPC message object. For the Harness client-to-server baseline, the supported message objects are requests and the `notifications/initialized` notification. Arrays, primitive JSON roots, and `null` are invalid MCP stdio messages.
+- JSON-RPC batches are not supported. An array input receives one Invalid Request response, not one response per array element.
+- Messages are delimited by newlines and must not contain embedded newlines.
+- Each output line contains one JSON-RPC response object. `harness-mcp` writes no readiness message before `initialize`.
 - Stdin EOF ends the process after stdout is flushed.
-- No readiness message is emitted before `initialize`.
+
+JSON-RPC validation rules:
+
+- `jsonrpc` must be exactly `"2.0"`.
+- A request `method` must be a string.
+- Request IDs may be strings or integers and must not be `null`.
+- A structurally valid notification has a string `method`, no `id`, and receives no response.
+- An object without an `id` is not automatically a valid notification; it must still satisfy the notification shape.
+- Method `params`, when present for supported MCP methods, must be an object.
+
+Error classification:
+
+| Condition | MCP response |
+|---|---|
+| JSON parse failure | JSON-RPC `-32700` Parse error |
+| Invalid JSON-RPC message structure, including arrays, primitive roots, missing or invalid `jsonrpc`, invalid request `id`, missing or non-string request `method`, or malformed non-notification objects | JSON-RPC `-32600` Invalid Request |
+| Lifecycle violation on a request, including a request before `initialize`, `tools/list` or `tools/call` before the ready state, or duplicate `initialize` | JSON-RPC `-32600` Invalid Request |
+| Unknown request method | JSON-RPC `-32601` Method not found |
+| Malformed method parameters | JSON-RPC `-32602` Invalid params |
+| Unknown tool name in a structurally valid `tools/call` request | JSON-RPC `-32602` Invalid params |
+| Adapter or server internal failure | an appropriate JSON-RPC internal-error response |
+| Structurally valid notification | no response; if `notifications/initialized` is early or otherwise lifecycle-invalid, it does not move the connection to ready |
+
+### Protocol version and lifecycle
+
+The first valid MCP request in a connection is `initialize`. A valid `initialize` request has object `params` with:
+
+- `protocolVersion` as a string
+- `capabilities` as an object
+- `clientInfo` as an object containing string `name` and `version` fields
+
+Additional MCP `Implementation` metadata allowed by the 2025-11-25 schema, such as `title`, `description`, `icons`, or `websiteUrl`, may be accepted but is not required in examples.
+
+Protocol-version negotiation:
+
+- If the client requests `2025-11-25`, `harness-mcp` returns `2025-11-25`.
+- If the client sends another syntactically valid protocol-version string, `harness-mcp` returns the version it supports: `2025-11-25`.
+- The server response does not claim simultaneous compatibility with older MCP protocol versions.
+
+Lifecycle states:
+
+| Connection point | Valid client messages | Result |
+|---|---|---|
+| Before successful `initialize` | `initialize` request | On success, the server returns `protocolVersion: "2025-11-25"` and waits for `notifications/initialized`. |
+| Waiting for `notifications/initialized` | `notifications/initialized` notification; `ping` request | `notifications/initialized` completes the transition to ready. `ping` may be used after `initialize` has succeeded, including while the server waits for the notification. |
+| Ready | `ping`, `tools/list`, `tools/call` | Normal MCP tool discovery and tool execution are available. |
+
+`tools/list` and `tools/call` are available only after `notifications/initialized` has completed the ready transition. A duplicate `initialize` request is invalid. An early or malformed `notifications/initialized` notification does not make the connection ready.
 
 Supported MCP request methods:
 
@@ -146,19 +201,30 @@ Supported MCP request methods:
 - `tools/list`
 - `tools/call`
 
-Notifications receive no response. Unsupported requests return JSON-RPC `-32601`. Malformed JSON returns JSON-RPC `-32700`.
+The supported lifecycle notification is `notifications/initialized`.
 
-The transport exposes exactly the public Harness method set owned by [API Methods](api/methods.md). This document does not create a second independently owned method list.
+## Tool discovery and `tools/call` response wrapping
 
-## `tools/call` response wrapping
+After the connection is ready, `tools/list` exposes exactly the nine public Harness tools owned by [API Methods](api/methods.md). This document does not create a second independently owned method list.
 
-`tools/call` wraps the Harness response JSON inside the MCP result:
+A structurally valid `tools/call` request has object `params` with:
+
+- `name` as a string
+- optional `arguments` as an object
+
+Missing `arguments` are treated as an empty object. `arguments: null` and non-object `arguments` are malformed method parameters and return JSON-RPC `-32602`. Unknown tool names are protocol errors and return JSON-RPC `-32602`.
+
+For a known tool, object `arguments` that fail the tool input schema return a `CallToolResult` with `isError: true` and actionable text content. They are tool execution errors, not JSON-RPC protocol errors.
+
+`harness-mcp` does not advertise or implement MCP task-augmented tool execution. A `tools/call` request does not return `CreateTaskResult`, and a `task` parameter is not a supported baseline feature.
+
+For known tool calls that reach Harness, `tools/call` wraps the Harness response JSON inside the MCP result:
 
 - Harness response JSON is serialized as the string in `result.content[0].text`.
 - Clients must parse that string as JSON to inspect the Harness response.
 - Successful MCP transport returns `isError: false`, including Harness domain-level rejected responses.
 - Harness domain success or rejection is determined from the parsed Harness response, especially `base.response_kind` and `errors`.
-- JSON-RPC `error` is reserved for protocol, invalid-parameter, or adapter/internal failures.
+- JSON-RPC `error` is reserved for protocol, invalid-parameter, or adapter/internal failures; it is not used for Harness domain-level rejection.
 
 Harness response branch shapes and error meanings stay with their owners:
 
