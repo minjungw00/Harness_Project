@@ -19,7 +19,7 @@ use harness_cli::{
 };
 use harness_store::{
     bootstrap::{
-        initialize_runtime_home, list_projects, list_surfaces, register_project,
+        initialize_runtime_home, list_projects, list_surfaces, register_project, ProjectRecord,
         ProjectRegistration, ACTIVE_PROJECT_STATUS,
     },
     migrations::{
@@ -37,6 +37,7 @@ const AGENT_SURFACE_ID: &str = "surface_binary_agent";
 const AGENT_INSTANCE_ID: &str = "surface_instance_binary_agent";
 const USER_SURFACE_ID: &str = "surface_binary_user";
 const USER_INSTANCE_ID: &str = "surface_instance_binary_user";
+const LEGACY_PROJECT_STATE_SCHEMA_VERSION: i64 = 5;
 
 #[test]
 fn harness_binary_runs_administrative_initialization_and_registration() -> Result<(), Box<dyn Error>>
@@ -258,6 +259,205 @@ fn harness_binary_project_register_rejects_invalid_project_id() -> Result<(), Bo
     assert!(stderr(&output).contains("project_id must be a single path component"));
     assert!(list_projects(runtime_home.path())?.is_empty());
     assert!(!runtime_home.path().join("projects").exists());
+    Ok(())
+}
+
+#[test]
+fn harness_binary_surface_commands_reject_invalid_legacy_project_paths(
+) -> Result<(), Box<dyn Error>> {
+    for relationship in InvalidProjectRelationship::ALL {
+        let project_id = relationship.project_id("current");
+        let runtime_home = initialized_project(
+            &relationship.prefix("current"),
+            &project_id,
+            "runtime_home_cli_surface_current",
+        )?;
+        let initial_surface = run_with_home(
+            runtime_home.path(),
+            [
+                "surface",
+                "register",
+                "--project-id",
+                project_id.as_str(),
+                "--surface-id",
+                "surface_existing",
+                "--surface-instance-id",
+                "surface_instance_existing",
+                "--kind",
+                "mcp",
+                "--profile",
+                "baseline-workflow",
+            ],
+        )?;
+        assert_success(&initial_surface);
+
+        relationship.replace_repo_root(&runtime_home, &project_id)?;
+        let registry_before = single_project_record(runtime_home.path(), &project_id)?;
+        let state_path = project_state_db_path(runtime_home.path(), &project_id);
+        let migrations_before = migration_count(&state_path)?;
+        let surfaces_before = surface_rows(&state_path)?;
+
+        let register = run_with_home(
+            runtime_home.path(),
+            [
+                "surface",
+                "register",
+                "--project-id",
+                project_id.as_str(),
+                "--surface-id",
+                "surface_new",
+                "--surface-instance-id",
+                "surface_instance_new",
+            ],
+        )?;
+        assert_invalid_project_path_error(&register, relationship.expected_error());
+        assert_eq!(migration_count(&state_path)?, migrations_before);
+        assert_eq!(surface_rows(&state_path)?, surfaces_before);
+        assert_registry_unchanged_and_cli_visible(
+            runtime_home.path(),
+            &project_id,
+            &registry_before,
+        )?;
+
+        let list = run_with_home(
+            runtime_home.path(),
+            ["surface", "list", "--project-id", project_id.as_str()],
+        )?;
+        assert_invalid_project_path_error(&list, relationship.expected_error());
+        assert_eq!(migration_count(&state_path)?, migrations_before);
+        assert_eq!(surface_rows(&state_path)?, surfaces_before);
+        assert_registry_unchanged_and_cli_visible(
+            runtime_home.path(),
+            &project_id,
+            &registry_before,
+        )?;
+
+        let missing_project_id = relationship.project_id("missing_db");
+        let missing_runtime_home = initialized_project(
+            &relationship.prefix("missing-db"),
+            &missing_project_id,
+            "runtime_home_cli_surface_missing",
+        )?;
+        relationship.replace_repo_root(&missing_runtime_home, &missing_project_id)?;
+        let missing_registry_before =
+            single_project_record(missing_runtime_home.path(), &missing_project_id)?;
+        let missing_state_path =
+            project_state_db_path(missing_runtime_home.path(), &missing_project_id);
+        fs::remove_file(&missing_state_path)?;
+        assert!(!missing_state_path.exists());
+
+        let missing_list = run_with_home(
+            missing_runtime_home.path(),
+            [
+                "surface",
+                "list",
+                "--project-id",
+                missing_project_id.as_str(),
+            ],
+        )?;
+        assert_invalid_project_path_error(&missing_list, relationship.expected_error());
+        assert!(!missing_state_path.exists());
+        assert_registry_unchanged_and_cli_visible(
+            missing_runtime_home.path(),
+            &missing_project_id,
+            &missing_registry_before,
+        )?;
+
+        let missing_register = run_with_home(
+            missing_runtime_home.path(),
+            [
+                "surface",
+                "register",
+                "--project-id",
+                missing_project_id.as_str(),
+                "--surface-id",
+                "surface_missing",
+                "--surface-instance-id",
+                "surface_instance_missing",
+            ],
+        )?;
+        assert_invalid_project_path_error(&missing_register, relationship.expected_error());
+        assert!(!missing_state_path.exists());
+        assert_registry_unchanged_and_cli_visible(
+            missing_runtime_home.path(),
+            &missing_project_id,
+            &missing_registry_before,
+        )?;
+
+        let historical_project_id = relationship.project_id("historical");
+        let historical_runtime_home = initialized_project(
+            &relationship.prefix("historical"),
+            &historical_project_id,
+            "runtime_home_cli_surface_historical",
+        )?;
+        relationship.replace_repo_root(&historical_runtime_home, &historical_project_id)?;
+        let historical_registry_before =
+            single_project_record(historical_runtime_home.path(), &historical_project_id)?;
+        let historical_state_path =
+            project_state_db_path(historical_runtime_home.path(), &historical_project_id);
+        fs::remove_file(&historical_state_path)?;
+        let mut historical = Connection::open(&historical_state_path)?;
+        create_project_state_fixture_version(
+            &mut historical,
+            &historical_project_id,
+            LEGACY_PROJECT_STATE_SCHEMA_VERSION,
+        )?;
+        drop(historical);
+        let historical_migrations_before = migration_count(&historical_state_path)?;
+        let historical_surface_count_before = surface_count(&historical_state_path)?;
+        assert!(!column_exists(
+            &historical_state_path,
+            "project_state",
+            "enforcement_profile_json"
+        )?);
+        assert!(!column_exists(
+            &historical_state_path,
+            "surfaces",
+            "interaction_role"
+        )?);
+
+        let historical_list = run_with_home(
+            historical_runtime_home.path(),
+            [
+                "surface",
+                "list",
+                "--project-id",
+                historical_project_id.as_str(),
+            ],
+        )?;
+        assert_invalid_project_path_error(&historical_list, relationship.expected_error());
+        assert_historical_project_state_unchanged(
+            &historical_state_path,
+            historical_migrations_before,
+            historical_surface_count_before,
+        )?;
+
+        let historical_register = run_with_home(
+            historical_runtime_home.path(),
+            [
+                "surface",
+                "register",
+                "--project-id",
+                historical_project_id.as_str(),
+                "--surface-id",
+                "surface_historical",
+                "--surface-instance-id",
+                "surface_instance_historical",
+            ],
+        )?;
+        assert_invalid_project_path_error(&historical_register, relationship.expected_error());
+        assert_historical_project_state_unchanged(
+            &historical_state_path,
+            historical_migrations_before,
+            historical_surface_count_before,
+        )?;
+        assert_registry_unchanged_and_cli_visible(
+            historical_runtime_home.path(),
+            &historical_project_id,
+            &historical_registry_before,
+        )?;
+    }
+
     Ok(())
 }
 
@@ -718,6 +918,146 @@ fn state_version(runtime_home: &Path, project_id: &str) -> Result<i64, Box<dyn E
     )?)
 }
 
+fn initialized_project(
+    prefix: &str,
+    project_id: &str,
+    runtime_home_id: &str,
+) -> Result<TempRuntimeHome, Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new(prefix)?;
+    let repo_root = runtime_home.create_product_repo(format!("repo-{project_id}"))?;
+    initialize_runtime_home(runtime_home.path(), runtime_home_id, "{}")?;
+    register_project(
+        runtime_home.path(),
+        ProjectRegistration {
+            project_id: project_id.to_owned(),
+            repo_root,
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(runtime_home)
+}
+
+fn single_project_record(
+    runtime_home: &Path,
+    project_id: &str,
+) -> Result<ProjectRecord, Box<dyn Error>> {
+    let project = list_projects(runtime_home)?
+        .into_iter()
+        .find(|project| project.project_id == project_id)
+        .expect("project should remain registry-visible");
+    Ok(project)
+}
+
+fn assert_registry_unchanged_and_cli_visible(
+    runtime_home: &Path,
+    project_id: &str,
+    expected: &ProjectRecord,
+) -> Result<(), Box<dyn Error>> {
+    assert_eq!(&single_project_record(runtime_home, project_id)?, expected);
+
+    let projects = run_with_home(runtime_home, ["project", "list"])?;
+    assert_success(&projects);
+    assert!(stdout(&projects).contains(project_id));
+    assert!(stdout(&projects).contains(&path_text(&expected.repo_root)));
+    Ok(())
+}
+
+fn assert_invalid_project_path_error(output: &Output, relationship: &str) {
+    assert_eq!(output.status.code(), Some(1));
+    let stderr = stderr(output);
+    assert!(stdout(output).is_empty());
+    assert!(stderr.contains("registered Product Repository conflicts with Runtime Home"));
+    assert!(stderr.contains(&format!("relationship {relationship}")));
+    assert!(stderr.contains("Harness Runtime Home"));
+    assert!(stderr.contains("Product Repository"));
+}
+
+fn surface_rows(state_path: &Path) -> Result<Vec<Vec<String>>, Box<dyn Error>> {
+    let conn = open_read_only_database(state_path)?;
+    let mut stmt = conn.prepare(
+        "SELECT
+            project_id,
+            surface_id,
+            surface_instance_id,
+            surface_kind,
+            interaction_role,
+            COALESCE(display_name, ''),
+            capability_profile_json,
+            local_access_json,
+            metadata_json
+         FROM surfaces
+         ORDER BY surface_id, surface_instance_id",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok(vec![
+            row.get(0)?,
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+            row.get(5)?,
+            row.get(6)?,
+            row.get(7)?,
+            row.get(8)?,
+        ])
+    })?;
+    let mut values = Vec::new();
+    for row in rows {
+        values.push(row?);
+    }
+    Ok(values)
+}
+
+fn surface_count(state_path: &Path) -> Result<i64, Box<dyn Error>> {
+    let conn = open_read_only_database(state_path)?;
+    Ok(conn.query_row("SELECT COUNT(*) FROM surfaces", [], |row| row.get(0))?)
+}
+
+fn column_exists(state_path: &Path, table: &str, column: &str) -> Result<bool, Box<dyn Error>> {
+    let conn = open_read_only_database(state_path)?;
+    let escaped_table = table.replace('"', "\"\"");
+    let mut stmt = conn.prepare(&format!("PRAGMA table_info(\"{escaped_table}\")"))?;
+    let mut rows = stmt.query([])?;
+    while let Some(row) = rows.next()? {
+        let name: String = row.get(1)?;
+        if name == column {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn assert_historical_project_state_unchanged(
+    state_path: &Path,
+    expected_migration_count: i64,
+    expected_surface_count: i64,
+) -> Result<(), Box<dyn Error>> {
+    assert_eq!(migration_count(state_path)?, expected_migration_count);
+    assert_eq!(surface_count(state_path)?, expected_surface_count);
+    assert!(!column_exists(
+        state_path,
+        "project_state",
+        "enforcement_profile_json"
+    )?);
+    assert!(!column_exists(state_path, "surfaces", "interaction_role")?);
+    Ok(())
+}
+
+fn replace_project_repo_root(
+    runtime_home: &Path,
+    project_id: &str,
+    repo_root: &Path,
+) -> Result<(), Box<dyn Error>> {
+    let conn = Connection::open(registry_db_path(runtime_home))?;
+    conn.execute(
+        "UPDATE projects SET repo_root = ?2 WHERE project_id = ?1",
+        params![project_id, repo_root.to_string_lossy().as_ref()],
+    )?;
+    Ok(())
+}
+
 fn replace_project_home(
     runtime_home: &Path,
     project_id: &str,
@@ -737,6 +1077,66 @@ fn replace_project_home(
         ],
     )?;
     Ok(())
+}
+
+#[derive(Clone, Copy)]
+enum InvalidProjectRelationship {
+    SamePath,
+    RepositoryInsideRuntimeHome,
+    RuntimeHomeInsideRepository,
+}
+
+impl InvalidProjectRelationship {
+    const ALL: [Self; 3] = [
+        Self::SamePath,
+        Self::RepositoryInsideRuntimeHome,
+        Self::RuntimeHomeInsideRepository,
+    ];
+
+    fn name(self) -> &'static str {
+        match self {
+            Self::SamePath => "same",
+            Self::RepositoryInsideRuntimeHome => "repo_inside_runtime",
+            Self::RuntimeHomeInsideRepository => "runtime_inside_repo",
+        }
+    }
+
+    fn expected_error(self) -> &'static str {
+        match self {
+            Self::SamePath => "same_path",
+            Self::RepositoryInsideRuntimeHome => "runtime_home_contains_product_repository",
+            Self::RuntimeHomeInsideRepository => "product_repository_contains_runtime_home",
+        }
+    }
+
+    fn prefix(self, suffix: &str) -> String {
+        format!("cli-bin-surface-{suffix}-{}", self.name())
+    }
+
+    fn project_id(self, suffix: &str) -> String {
+        format!("project_cli_surface_{suffix}_{}", self.name())
+    }
+
+    fn replace_repo_root(
+        self,
+        runtime_home: &TempRuntimeHome,
+        project_id: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        let repo_root = match self {
+            Self::SamePath => runtime_home.path().to_path_buf(),
+            Self::RepositoryInsideRuntimeHome => {
+                let repo_root = runtime_home.path().join("legacy-product-repo");
+                fs::create_dir_all(&repo_root)?;
+                repo_root
+            }
+            Self::RuntimeHomeInsideRepository => runtime_home
+                .path()
+                .parent()
+                .expect("runtime home should have a parent")
+                .to_path_buf(),
+        };
+        replace_project_repo_root(runtime_home.path(), project_id, &repo_root)
+    }
 }
 
 fn temporary_files(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
