@@ -12,7 +12,8 @@ configuration, or MCP wire behavior.
 For the source build path, you need:
 
 - a local checkout of this repository
-- a Rust toolchain with Cargo that can build the workspace
+- Rust 1.85 or newer with Cargo; Rust 1.85 is the minimum compiler
+  version verified for the current workspace
 - a shell that can run Cargo and local executables
 - a local `Product Repository` directory for the next setup stage
 - a separate `Harness Runtime Home` for the next setup stage

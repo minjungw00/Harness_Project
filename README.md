@@ -20,7 +20,8 @@ The baseline local MCP process is stdio-based. It is launched as a local child p
 
 For the source build and local setup path, you need:
 
-- a Rust toolchain with Cargo that can build this workspace
+- Rust 1.85 or newer with Cargo; Rust 1.85 is the minimum compiler
+  version verified for the current workspace
 - a local checkout of this repository, or another Harness Server installation
   that provides `harness` and `harness-mcp`
 - a local `Product Repository` directory to bind
