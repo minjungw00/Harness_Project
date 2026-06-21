@@ -1559,47 +1559,125 @@ mod tests {
             responses[0]["result"]["protocolVersion"],
             SUPPORTED_PROTOCOL_VERSION
         );
+        let capabilities = responses[0]["result"]["capabilities"]
+            .as_object()
+            .expect("initialize result capabilities should be an object");
+        assert!(capabilities.contains_key("tools"));
+        assert!(!capabilities.contains_key("tasks"));
+        assert!(!capabilities.contains_key("prompts"));
+        assert!(!capabilities.contains_key("resources"));
         let response = &responses[1];
         let names = response["result"]["tools"]
             .as_array()
             .expect("tools should be an array")
             .iter()
-            .map(|tool| tool["name"].as_str().expect("tool name"))
+            .map(|tool| {
+                assert!(tool.get("execution").is_none());
+                tool["name"].as_str().expect("tool name")
+            })
             .collect::<Vec<_>>();
         assert_eq!(names, PUBLIC_METHOD_TOOL_NAMES);
         Ok(())
     }
 
     #[test]
-    fn stdio_lifecycle_negotiates_version_and_gates_tools() -> Result<(), Box<dyn Error>> {
+    fn stdio_lifecycle_negotiates_version_and_requires_initialized_notification(
+    ) -> Result<(), Box<dyn Error>> {
         let harness = TestHarness::new(json!({}))?;
         let adapter = harness.adapter();
-        let input = Cursor::new(
-            br#"{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
-{"jsonrpc":"2.0","id":2,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{"unknownClientCapability":{}},"clientInfo":{"name":"harness-unit-test","version":"0.0.0","title":"Harness Unit Test"}}}
-{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}
-{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
-{"jsonrpc":"2.0","id":4,"method":"tools/list","params":{}}
-{"jsonrpc":"2.0","id":5,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-unit-test","version":"0.0.0"}}}
-"#
-            .to_vec(),
-        );
-        let mut output = Vec::new();
+        let status_arguments = serde_json::to_value(status_request("req_stdio_lifecycle"))?;
+        let responses = run_stdio_messages(
+            adapter,
+            &[
+                request_message(json!(1), "tools/list", Some(json!({}))),
+                initialize_request_message(json!(2), "2030-01-01"),
+                request_message(json!(3), "tools/list", Some(json!({}))),
+                request_message(json!("ping-waiting"), "ping", None),
+                initialized_notification_with_params(json!([])),
+                request_message(
+                    json!(4),
+                    "tools/call",
+                    Some(json!({
+                        "name": "harness.status",
+                        "arguments": status_arguments.clone()
+                    })),
+                ),
+                initialized_notification(),
+                request_message(json!(5), "tools/list", None),
+                request_message(
+                    json!(6),
+                    "tools/call",
+                    Some(json!({
+                        "name": "harness.status",
+                        "arguments": status_arguments
+                    })),
+                ),
+                initialize_request_message(json!(7), SUPPORTED_PROTOCOL_VERSION),
+                request_message(json!(8), "tools/list", Some(json!({}))),
+            ],
+        )?;
 
-        run_stdio(adapter, BufReader::new(input), &mut output)?;
-
-        let responses = stdio_responses(&output)?;
-        assert_eq!(responses.len(), 5);
-        assert_eq!(responses[0]["id"], 1);
-        assert_eq!(responses[0]["error"]["code"], -32600);
+        assert_eq!(responses.len(), 10);
+        assert_error_response(&responses[0], json!(1), -32600);
         assert_eq!(responses[1]["id"], 2);
         assert_eq!(
             responses[1]["result"]["protocolVersion"],
             SUPPORTED_PROTOCOL_VERSION
         );
-        assert_eq!(responses[2]["id"], 3);
-        assert_eq!(responses[2]["error"]["code"], -32600);
-        assert_eq!(responses[3]["id"], 4);
+        assert_error_response(&responses[2], json!(3), -32600);
+        assert_eq!(responses[3]["id"], "ping-waiting");
+        assert_eq!(responses[3]["result"], json!({}));
+        assert_error_response(&responses[4], Value::Null, -32600);
+        assert_error_response(&responses[5], json!(4), -32600);
+        assert_eq!(responses[6]["id"], 5);
+        assert_eq!(
+            responses[6]["result"]["tools"]
+                .as_array()
+                .expect("tools should be an array")
+                .len(),
+            9
+        );
+        assert_eq!(responses[7]["id"], 6);
+        assert_eq!(responses[7]["result"]["isError"], false);
+        let tool_text = responses[7]["result"]["content"][0]["text"]
+            .as_str()
+            .expect("tools/call response should contain text content");
+        let tool_response: Value = serde_json::from_str(tool_text)?;
+        assert_eq!(tool_response["base"]["response_kind"], "result");
+        assert_error_response(&responses[8], json!(7), -32600);
+        assert_eq!(
+            responses[9]["result"]["tools"]
+                .as_array()
+                .expect("tools should be an array")
+                .len(),
+            9
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_early_initialized_notification_does_not_make_connection_ready(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let responses = run_stdio_messages(
+            harness.adapter(),
+            &[
+                initialized_notification(),
+                request_message(json!(1), "tools/list", Some(json!({}))),
+                initialize_request_message(json!(2), SUPPORTED_PROTOCOL_VERSION),
+                request_message(json!(3), "tools/list", Some(json!({}))),
+                initialized_notification(),
+                request_message(json!(4), "tools/list", Some(json!({}))),
+            ],
+        )?;
+
+        assert_eq!(responses.len(), 4);
+        assert_error_response(&responses[0], json!(1), -32600);
+        assert_eq!(
+            responses[1]["result"]["protocolVersion"],
+            SUPPORTED_PROTOCOL_VERSION
+        );
+        assert_error_response(&responses[2], json!(3), -32600);
         assert_eq!(
             responses[3]["result"]["tools"]
                 .as_array()
@@ -1607,8 +1685,6 @@ mod tests {
                 .len(),
             9
         );
-        assert_eq!(responses[4]["id"], 5);
-        assert_eq!(responses[4]["error"]["code"], -32600);
         Ok(())
     }
 
@@ -1692,6 +1768,220 @@ mod tests {
         assert_eq!(responses[0]["error"]["code"], -32600);
         assert_eq!(responses[1]["id"], Value::Null);
         assert_eq!(responses[1]["error"]["code"], -32600);
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_rejects_malformed_json_rpc_envelopes_with_single_protocol_errors(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let cases = [
+            ("invalid_json", "{not json}\n", Value::Null, -32700),
+            ("top_level_array", "[{}]\n", Value::Null, -32600),
+            ("empty_array", "[]\n", Value::Null, -32600),
+            ("null_root", "null\n", Value::Null, -32600),
+            ("bool_root", "true\n", Value::Null, -32600),
+            ("number_root", "17\n", Value::Null, -32600),
+            ("string_root", "\"message\"\n", Value::Null, -32600),
+            (
+                "missing_jsonrpc",
+                "{\"id\":\"missing-jsonrpc\",\"method\":\"initialize\",\"params\":{}}\n",
+                json!("missing-jsonrpc"),
+                -32600,
+            ),
+            (
+                "wrong_jsonrpc",
+                "{\"jsonrpc\":\"2.1\",\"id\":\"wrong-jsonrpc\",\"method\":\"initialize\",\"params\":{}}\n",
+                json!("wrong-jsonrpc"),
+                -32600,
+            ),
+            (
+                "missing_method",
+                "{\"jsonrpc\":\"2.0\",\"id\":\"missing-method\",\"params\":{}}\n",
+                json!("missing-method"),
+                -32600,
+            ),
+            (
+                "non_string_method",
+                "{\"jsonrpc\":\"2.0\",\"id\":\"bad-method\",\"method\":7,\"params\":{}}\n",
+                json!("bad-method"),
+                -32600,
+            ),
+            (
+                "malformed_no_id_object",
+                "{\"jsonrpc\":\"2.0\",\"params\":{}}\n",
+                Value::Null,
+                -32600,
+            ),
+            (
+                "null_id",
+                "{\"jsonrpc\":\"2.0\",\"id\":null,\"method\":\"initialize\",\"params\":{}}\n",
+                Value::Null,
+                -32600,
+            ),
+            (
+                "float_id",
+                "{\"jsonrpc\":\"2.0\",\"id\":1.5,\"method\":\"initialize\",\"params\":{}}\n",
+                Value::Null,
+                -32600,
+            ),
+            (
+                "boolean_id",
+                "{\"jsonrpc\":\"2.0\",\"id\":true,\"method\":\"initialize\",\"params\":{}}\n",
+                Value::Null,
+                -32600,
+            ),
+            (
+                "object_id",
+                "{\"jsonrpc\":\"2.0\",\"id\":{},\"method\":\"initialize\",\"params\":{}}\n",
+                Value::Null,
+                -32600,
+            ),
+            (
+                "array_id",
+                "{\"jsonrpc\":\"2.0\",\"id\":[],\"method\":\"initialize\",\"params\":{}}\n",
+                Value::Null,
+                -32600,
+            ),
+        ];
+
+        for (name, input, expected_id, expected_code) in cases {
+            let responses = run_stdio_text(harness.adapter(), input)?;
+            assert_eq!(responses.len(), 1, "{name} should produce one response");
+            assert_error_response(&responses[0], expected_id, expected_code);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_accepts_and_echoes_string_and_integer_request_ids() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let responses = run_stdio_messages(
+            harness.adapter(),
+            &[
+                initialize_request_message(json!("init-string-id"), SUPPORTED_PROTOCOL_VERSION),
+                initialized_notification(),
+                request_message(json!(42), "ping", None),
+                request_message(json!("tools-string-id"), "tools/list", Some(json!({}))),
+            ],
+        )?;
+
+        assert_eq!(responses.len(), 3);
+        assert_eq!(responses[0]["id"], "init-string-id");
+        assert_eq!(
+            responses[0]["result"]["protocolVersion"],
+            SUPPORTED_PROTOCOL_VERSION
+        );
+        assert_eq!(responses[1]["id"], 42);
+        assert_eq!(responses[1]["result"], json!({}));
+        assert_eq!(responses[2]["id"], "tools-string-id");
+        assert!(responses[2]["result"]["tools"].is_array());
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_notifications_do_not_respond_or_execute_request_only_methods(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let before = harness.counts()?;
+        let intake_arguments =
+            serde_json::to_value(intake_request("req_notification_tool_call", false, None))?;
+        let responses = run_stdio_messages(
+            harness.adapter(),
+            &[
+                notification_message("notifications/unknown", Some(json!({ "ignored": true }))),
+                initialize_request_message(json!(1), SUPPORTED_PROTOCOL_VERSION),
+                initialized_notification(),
+                notification_message(
+                    "tools/call",
+                    Some(json!({
+                        "name": "harness.intake",
+                        "arguments": intake_arguments
+                    })),
+                ),
+                request_message(json!(2), "tools/list", Some(json!({}))),
+            ],
+        )?;
+
+        assert_eq!(responses.len(), 2);
+        assert_eq!(
+            responses[0]["result"]["protocolVersion"],
+            SUPPORTED_PROTOCOL_VERSION
+        );
+        assert!(responses[1]["result"]["tools"].is_array());
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
+    fn stdio_validates_method_params_before_tool_execution() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::new(json!({}))?;
+        let before = harness.counts()?;
+        let responses = run_stdio_messages(
+            harness.adapter(),
+            &[
+                initialize_request_message(json!(1), SUPPORTED_PROTOCOL_VERSION),
+                initialized_notification(),
+                request_message(json!(2), "ping", None),
+                request_message(json!(3), "ping", Some(json!({}))),
+                request_message(json!(4), "tools/list", None),
+                request_message(json!(5), "tools/list", Some(json!({}))),
+                request_message(json!(6), "tools/call", Some(Value::Null)),
+                request_message(json!(7), "tools/call", Some(json!({}))),
+                request_message(json!(8), "tools/call", Some(json!({ "name": 7 }))),
+                request_message(
+                    json!(9),
+                    "tools/call",
+                    Some(json!({ "name": "harness.not_real" })),
+                ),
+                request_message(
+                    json!(10),
+                    "tools/call",
+                    Some(json!({ "name": "harness.status", "arguments": null })),
+                ),
+                request_message(
+                    json!(11),
+                    "tools/call",
+                    Some(json!({ "name": "harness.status", "arguments": [] })),
+                ),
+                request_message(
+                    json!(12),
+                    "tools/call",
+                    Some(json!({
+                        "name": "harness.status",
+                        "task": {},
+                        "arguments": {}
+                    })),
+                ),
+                request_message(
+                    json!(13),
+                    "tools/call",
+                    Some(json!({ "name": "harness.status" })),
+                ),
+                request_message(json!(14), "not/a-method", Some(json!({}))),
+            ],
+        )?;
+
+        assert_eq!(responses.len(), 14);
+        assert_eq!(
+            responses[0]["result"]["protocolVersion"],
+            SUPPORTED_PROTOCOL_VERSION
+        );
+        for response in responses.iter().take(5).skip(1) {
+            assert!(response.get("error").is_none());
+        }
+        for (response_index, id) in [(5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12)] {
+            assert_error_response(&responses[response_index], json!(id), -32602);
+        }
+        assert!(responses[12].get("error").is_none());
+        assert_eq!(responses[12]["id"], 13);
+        assert_eq!(responses[12]["result"]["isError"], true);
+        let text = responses[12]["result"]["content"][0]["text"]
+            .as_str()
+            .expect("typed validation failure should include text content");
+        assert!(text.contains("Invalid arguments for harness.status"));
+        assert_error_response(&responses[13], json!(14), -32601);
+        assert_eq!(harness.counts()?, before);
         Ok(())
     }
 
@@ -2289,6 +2579,79 @@ mod tests {
             ),
             requested_access_class: access_class,
         }
+    }
+
+    fn initialize_request_message(id: Value, protocol_version: &str) -> Value {
+        request_message(
+            id,
+            "initialize",
+            Some(json!({
+                "protocolVersion": protocol_version,
+                "capabilities": {},
+                "clientInfo": {
+                    "name": "harness-unit-test",
+                    "version": "0.0.0"
+                }
+            })),
+        )
+    }
+
+    fn request_message(id: Value, method: &str, params: Option<Value>) -> Value {
+        let mut message = json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "method": method
+        });
+        if let Some(params) = params {
+            message["params"] = params;
+        }
+        message
+    }
+
+    fn notification_message(method: &str, params: Option<Value>) -> Value {
+        let mut message = json!({
+            "jsonrpc": "2.0",
+            "method": method
+        });
+        if let Some(params) = params {
+            message["params"] = params;
+        }
+        message
+    }
+
+    fn initialized_notification() -> Value {
+        initialized_notification_with_params(json!({}))
+    }
+
+    fn initialized_notification_with_params(params: Value) -> Value {
+        notification_message("notifications/initialized", Some(params))
+    }
+
+    fn run_stdio_messages(
+        adapter: McpAdapter,
+        messages: &[Value],
+    ) -> Result<Vec<Value>, Box<dyn Error>> {
+        let mut input = Vec::new();
+        for message in messages {
+            serde_json::to_writer(&mut input, message)?;
+            input.push(b'\n');
+        }
+        run_stdio_bytes(adapter, input)
+    }
+
+    fn run_stdio_text(adapter: McpAdapter, input: &str) -> Result<Vec<Value>, Box<dyn Error>> {
+        run_stdio_bytes(adapter, input.as_bytes().to_vec())
+    }
+
+    fn run_stdio_bytes(adapter: McpAdapter, input: Vec<u8>) -> Result<Vec<Value>, Box<dyn Error>> {
+        let mut output = Vec::new();
+        run_stdio(adapter, BufReader::new(Cursor::new(input)), &mut output)?;
+        stdio_responses(&output)
+    }
+
+    fn assert_error_response(response: &Value, expected_id: Value, expected_code: i64) {
+        assert_eq!(response["id"], expected_id);
+        assert_eq!(response["error"]["code"], expected_code);
     }
 
     fn stdio_responses(output: &[u8]) -> Result<Vec<Value>, Box<dyn Error>> {

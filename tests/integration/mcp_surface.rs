@@ -72,6 +72,91 @@ fn stdio_tools_list_exposes_exactly_the_public_method_set() -> Result<(), Box<dy
 }
 
 #[test]
+fn stdio_rejected_lifecycle_and_notification_tool_calls_have_no_storage_effect(
+) -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("mcp_stdio_protocol_no_effect")?;
+    let adapter = adapter(&fixture);
+    let before = fixture.counts()?;
+    let mutating_arguments = serde_json::to_value(fixture.intake_request(
+        "req_stdio_no_effect",
+        "idem_stdio_no_effect",
+        false,
+        Some(0),
+    ))?;
+    let input = stdio_input(&[
+        json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": {
+                "name": "harness.intake",
+                "arguments": mutating_arguments.clone()
+            }
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2025-11-25",
+                "capabilities": {},
+                "clientInfo": {
+                    "name": "harness-integration-test",
+                    "version": "0.0.0"
+                }
+            }
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
+            "params": {
+                "name": "harness.intake",
+                "arguments": mutating_arguments.clone()
+            }
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "method": "tools/call",
+            "params": {
+                "name": "harness.intake",
+                "arguments": mutating_arguments
+            }
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "method": "notifications/unknown",
+            "params": {}
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "method": "notifications/initialized",
+            "params": {}
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "id": 4,
+            "method": "tools/list",
+            "params": {}
+        }),
+    ])?;
+    let mut output = Vec::new();
+
+    run_stdio(adapter, BufReader::new(input), &mut output)?;
+
+    let responses = stdio_responses(&output)?;
+    assert_eq!(responses.len(), 4);
+    assert_eq!(responses[0]["id"], 1);
+    assert_eq!(responses[0]["error"]["code"], -32600);
+    assert_eq!(responses[1]["result"]["protocolVersion"], "2025-11-25");
+    assert_eq!(responses[2]["id"], 3);
+    assert_eq!(responses[2]["error"]["code"], -32600);
+    assert!(responses[3]["result"]["tools"].is_array());
+    assert_eq!(fixture.counts()?, before);
+    Ok(())
+}
+
+#[test]
 fn mcp_tool_schemas_are_closed_top_level_objects() {
     for tool in public_method_tools() {
         assert_eq!(
@@ -1873,6 +1958,9 @@ fn stdio_invalid_known_tool_arguments_return_tool_error_without_storage_effect(
         .as_str()
         .expect("tool error should include text");
     assert!(text.contains("Invalid arguments for harness.status"));
+    assert!(!text.contains("McpAdapterError"));
+    assert!(!text.contains("state.sqlite"));
+    assert!(!text.contains(fixture.runtime_home_path().to_string_lossy().as_ref()));
     assert_eq!(fixture.counts()?, before);
     Ok(())
 }
@@ -2362,6 +2450,15 @@ fn stdio_responses(output: &[u8]) -> Result<Vec<Value>, Box<dyn Error>> {
         responses.push(serde_json::from_str(line)?);
     }
     Ok(responses)
+}
+
+fn stdio_input(messages: &[Value]) -> Result<Cursor<Vec<u8>>, serde_json::Error> {
+    let mut input = Vec::new();
+    for message in messages {
+        serde_json::to_writer(&mut input, message)?;
+        input.push(b'\n');
+    }
+    Ok(Cursor::new(input))
 }
 
 fn register_extra_project_surface(

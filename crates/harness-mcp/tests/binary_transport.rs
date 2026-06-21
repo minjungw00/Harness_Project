@@ -221,11 +221,22 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
         .expect("invalid known-tool arguments should return text content");
     assert!(tool_error.contains("Invalid arguments for harness.status"));
 
+    let reconnect_before_handshake = run_child(
+        fixture.bound_command(AGENT_SURFACE_ID, AGENT_INSTANCE_ID, []),
+        ChildStdin::WriteAndClose(json_lines(&[request(10, "tools/list", json!({}))])?),
+    )?;
+    assert_success_captured(&reconnect_before_handshake);
+    let reconnect_before_handshake_responses = responses_by_id(&reconnect_before_handshake.stdout)?;
+    assert_eq!(
+        reconnect_before_handshake_responses[&10]["error"]["code"],
+        -32600
+    );
+
     let reconnect_messages = json_lines(&[
-        initialize_request(10),
+        initialize_request(11),
         initialized_notification(),
         tools_call(
-            11,
+            12,
             "harness.status",
             status_arguments(PROJECT_ID, AGENT_SURFACE_ID, "req_binary_reconnect_status"),
         ),
@@ -239,14 +250,14 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
 
     let reconnect_responses = responses_by_id(&reconnect.stdout)?;
     assert_eq!(
-        reconnect_responses[&10]["result"]["serverInfo"]["name"],
+        reconnect_responses[&11]["result"]["serverInfo"]["name"],
         "harness-mcp"
     );
     assert_eq!(
-        reconnect_responses[&10]["result"]["protocolVersion"],
+        reconnect_responses[&11]["result"]["protocolVersion"],
         "2025-11-25"
     );
-    let reconnect_status = harness_response(&reconnect_responses[&11])?;
+    let reconnect_status = harness_response(&reconnect_responses[&12])?;
     assert_eq!(reconnect_status["base"]["response_kind"], "result");
     assert_eq!(reconnect_status["base"]["state_version"], 1);
     assert_eq!(
@@ -400,7 +411,7 @@ fn initialize_request(id: u64) -> Value {
         id,
         "initialize",
         json!({
-            "protocolVersion": "2024-11-05",
+            "protocolVersion": "2025-11-25",
             "capabilities": {},
             "clientInfo": {
                 "name": "harness-binary-test",
