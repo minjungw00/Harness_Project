@@ -277,6 +277,13 @@ pub fn validate_project_home_boundary(
     Ok(project_home)
 }
 
+pub(crate) fn normalize_lexical_path(
+    role: &'static str,
+    path: &Path,
+) -> Result<PathBuf, RuntimePathBoundaryError> {
+    make_absolute_without_parent_traversal(role, path)
+}
+
 fn default_user_home<F>(env_var: F) -> Option<PathBuf>
 where
     F: Fn(&str) -> Option<OsString>,

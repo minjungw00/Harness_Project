@@ -84,6 +84,7 @@ CREATE INDEX idx_projects_status ON projects (status);
 
 - `runtime_home`은 단일 행 테이블입니다. 저장된 `runtime_home_id`는 런타임 홈 기록을 식별하며 보안 보장이 아닙니다.
 - `projects.project_home`은 고유합니다. `repo_root`는 조회를 위해 인덱스를 두지만 프로젝트 식별을 대신하지 않습니다.
+- `projects.state_db_path`는 저장 열로 유지됩니다. SQL 열 정의는 이 값이 `project_home/state.sqlite`와 같은지를 강제하지 않습니다. 그 관계는 프로젝트 상태 검사, 마이그레이션, 쓰기 가능 열기, 접점 관리, Core 실행, setup 재사용, MCP 프로젝트 시작 전에 Store의 애플리케이션 수준 실행 검증이 강제합니다. 일치하지 않는 레지스트리 행은 진단을 위해 계속 읽을 수 있지만 실행에는 적격하지 않습니다.
 - `projects.status`는 저장소 소유 값이며 기준 범위에서 유효한 값은 `active`뿐입니다.
 - `schema_migrations`는 적용된 레지스트리 스키마 버전을 기록합니다. 마이그레이션 실행 의미는 [저장소 버전 관리](storage-versioning.md)가 담당합니다.
 

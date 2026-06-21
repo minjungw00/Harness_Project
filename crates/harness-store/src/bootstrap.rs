@@ -7,8 +7,8 @@ use serde_json::Value;
 use crate::{
     migrations::{PROJECT_STATE_SCHEMA_VERSION, REGISTRY_SCHEMA_VERSION, STORAGE_PROFILE},
     runtime_home::{
-        validate_project_home_boundary, validate_runtime_home_product_repository,
-        RuntimePathBoundaryError,
+        normalize_lexical_path, validate_project_home_boundary,
+        validate_runtime_home_product_repository, RuntimePathBoundaryError,
     },
     sqlite::{
         open_project_state_database, open_registry_database, project_home_path, registry_db_path,
@@ -323,27 +323,43 @@ pub fn project_record_for_execution(
     project_id: &str,
 ) -> StoreResult<Option<ProjectRecord>> {
     let runtime_home = runtime_home.as_ref();
-    let project = project_record(runtime_home, project_id)?;
-    if let Some(project) = project.as_ref() {
-        validate_project_record_for_execution(runtime_home, project)?;
-    }
-    Ok(project)
+    let Some(project) = project_record(runtime_home, project_id)? else {
+        return Ok(None);
+    };
+    validate_project_record_for_execution(runtime_home, &project).map(Some)
 }
 
 /// Validates a stored project registration before execution use.
 pub fn validate_project_record_for_execution(
     runtime_home: impl AsRef<Path>,
     project: &ProjectRecord,
-) -> StoreResult<()> {
-    validate_runtime_home_product_repository(runtime_home.as_ref(), &project.repo_root)
-        .map_err(|error| registered_project_path_error(project, "repo_root", error))?;
-    validate_project_home_boundary(
-        runtime_home.as_ref(),
-        &project.repo_root,
+) -> StoreResult<ProjectRecord> {
+    let path_validation =
+        validate_runtime_home_product_repository(runtime_home.as_ref(), &project.repo_root)
+            .map_err(|error| registered_project_path_error(project, "repo_root", error))?;
+    let project_home = validate_project_home_boundary(
+        &path_validation.runtime_home,
+        &path_validation.repo_root,
         &project.project_home,
     )
     .map_err(|error| registered_project_path_error(project, "project_home", error))?;
-    Ok(())
+    let expected_state_db_path = project_home.join(PROJECT_STATE_DB_FILE);
+    let stored_state_db_path = normalize_lexical_path("state_db_path", &project.state_db_path)
+        .map_err(|error| registered_project_path_error(project, "state_db_path", error))?;
+    if stored_state_db_path != expected_state_db_path {
+        return Err(state_db_path_mismatch_error(
+            project,
+            &stored_state_db_path,
+            &expected_state_db_path,
+        ));
+    }
+
+    Ok(ProjectRecord {
+        repo_root: path_validation.repo_root,
+        project_home,
+        state_db_path: expected_state_db_path,
+        ..project.clone()
+    })
 }
 
 fn registered_project_path_error(
@@ -360,6 +376,23 @@ fn registered_project_path_error(
         field,
         relationship,
         detail: error.to_string(),
+    }
+}
+
+fn state_db_path_mismatch_error(
+    project: &ProjectRecord,
+    stored: &Path,
+    expected: &Path,
+) -> StoreError {
+    StoreError::InvalidProjectRegistration {
+        project_id: project.project_id.clone(),
+        field: "state_db_path",
+        relationship: "state_db_path_mismatch",
+        detail: format!(
+            "state_db_path must match project_home/{PROJECT_STATE_DB_FILE}: stored {}, expected {}",
+            stored.display(),
+            expected.display()
+        ),
     }
 }
 
@@ -859,6 +892,38 @@ mod tests {
     }
 
     #[test]
+    fn project_registration_accepts_valid_custom_project_home() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("store-custom-project-home")?;
+        let repo_root = runtime_home.create_product_repo("repo")?;
+        let project_home = runtime_home.path().join("custom-projects/project_custom");
+        initialize_runtime_home(runtime_home.path(), "runtime_home_custom_project", "{}")?;
+
+        let record = register_project(
+            runtime_home.path(),
+            ProjectRegistration {
+                project_id: "project_custom".to_owned(),
+                repo_root,
+                project_home: Some(project_home.clone()),
+                status: ACTIVE_PROJECT_STATUS.to_owned(),
+                metadata_json: "{}".to_owned(),
+            },
+        )?;
+        let project = project_record_for_execution(runtime_home.path(), "project_custom")?
+            .expect("project should be registered");
+        let store = CoreProjectStore::open(runtime_home.path(), &ProjectId::new("project_custom"))?;
+
+        assert_eq!(record.project_home, project_home);
+        assert_eq!(project.project_home, project_home);
+        assert_eq!(
+            project.state_db_path,
+            project_home.join(PROJECT_STATE_DB_FILE)
+        );
+        assert_eq!(store.project_record().state_db_path, project.state_db_path);
+        assert!(project.state_db_path.exists());
+        Ok(())
+    }
+
+    #[test]
     fn project_registration_rejects_custom_home_outside_runtime_home() -> Result<(), Box<dyn Error>>
     {
         let runtime_home = TempRuntimeHome::new("store-project-home-outside")?;
@@ -931,7 +996,85 @@ mod tests {
         let store = CoreProjectStore::open(runtime_home.path(), &ProjectId::new("project_valid"))?;
 
         assert_eq!(project.repo_root, fs::canonicalize(repo_root)?);
+        assert_eq!(
+            project.state_db_path,
+            project.project_home.join(PROJECT_STATE_DB_FILE)
+        );
         assert_eq!(store.project_record().project_id, "project_valid");
+        assert_eq!(store.project_record().state_db_path, project.state_db_path);
+        Ok(())
+    }
+
+    #[test]
+    fn checked_project_record_rejects_state_db_path_mismatch_before_alternate_creation(
+    ) -> Result<(), Box<dyn Error>> {
+        let project_id = "project_state_db_mismatch_missing";
+        let (runtime_home, _) = registered_project("store-state-db-missing-alt", project_id)?;
+        let original =
+            project_record(runtime_home.path(), project_id)?.expect("project should be registered");
+        let expected_state_path = original.project_home.join(PROJECT_STATE_DB_FILE);
+        let alternate_state_path = runtime_home.path().join("alternate/missing-state.sqlite");
+
+        replace_project_state_db_path(runtime_home.path(), project_id, &alternate_state_path)?;
+        assert!(!alternate_state_path.exists());
+
+        let error = project_record_for_execution(runtime_home.path(), project_id)
+            .expect_err("mismatched state_db_path should be rejected for execution");
+        assert_state_db_path_mismatch(error, &alternate_state_path, &expected_state_path);
+        let open_error = CoreProjectStore::open(runtime_home.path(), &ProjectId::new(project_id))
+            .expect_err("Core store open should reject mismatched state_db_path");
+        assert_state_db_path_mismatch(open_error, &alternate_state_path, &expected_state_path);
+        assert!(!alternate_state_path.exists());
+
+        let damaged = project_record(runtime_home.path(), project_id)?
+            .expect("damaged record remains readable");
+        assert_eq!(damaged.state_db_path, alternate_state_path);
+        assert_registry_record_unchanged_and_visible(runtime_home.path(), project_id, &damaged)?;
+        Ok(())
+    }
+
+    #[test]
+    fn checked_project_record_rejects_existing_alternate_without_migration_or_surface_mutation(
+    ) -> Result<(), Box<dyn Error>> {
+        let project_id = "project_state_db_mismatch_existing";
+        let (runtime_home, _) = registered_project("store-state-db-existing-alt", project_id)?;
+        let original =
+            project_record(runtime_home.path(), project_id)?.expect("project should be registered");
+        let expected_state_path = original.project_home.join(PROJECT_STATE_DB_FILE);
+        let alternate_state_path = runtime_home.path().join("alternate/existing-state.sqlite");
+        fs::create_dir_all(
+            alternate_state_path
+                .parent()
+                .expect("alternate state path has parent"),
+        )?;
+        let mut conn = Connection::open(&alternate_state_path)?;
+        create_project_state_fixture_version(&mut conn, project_id, 5)?;
+        drop(conn);
+        let migrations_before = migration_count(&alternate_state_path)?;
+        let surface_count_before = surface_count(&alternate_state_path)?;
+
+        replace_project_state_db_path(runtime_home.path(), project_id, &alternate_state_path)?;
+
+        let open_error = CoreProjectStore::open(runtime_home.path(), &ProjectId::new(project_id))
+            .expect_err("Core store open should reject mismatched state_db_path");
+        assert_state_db_path_mismatch(open_error, &alternate_state_path, &expected_state_path);
+        let register_error =
+            register_surface(runtime_home.path(), surface_registration(project_id))
+                .expect_err("surface registration should reject mismatched state_db_path");
+        assert_state_db_path_mismatch(register_error, &alternate_state_path, &expected_state_path);
+        let list_error = list_surfaces(runtime_home.path(), project_id)
+            .expect_err("surface listing should reject mismatched state_db_path");
+        assert_state_db_path_mismatch(list_error, &alternate_state_path, &expected_state_path);
+
+        assert_historical_project_state_unchanged(
+            &alternate_state_path,
+            migrations_before,
+            surface_count_before,
+        )?;
+        let damaged = project_record(runtime_home.path(), project_id)?
+            .expect("damaged record remains readable");
+        assert_eq!(damaged.state_db_path, alternate_state_path);
+        assert_registry_record_unchanged_and_visible(runtime_home.path(), project_id, &damaged)?;
         Ok(())
     }
 
@@ -1213,6 +1356,19 @@ mod tests {
         Ok(())
     }
 
+    fn replace_project_state_db_path(
+        runtime_home: &Path,
+        project_id: &str,
+        state_db_path: &Path,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = open_registry_database(registry_db_path(runtime_home))?;
+        conn.execute(
+            "UPDATE projects SET state_db_path = ?2 WHERE project_id = ?1",
+            rusqlite::params![project_id, state_db_path.to_string_lossy().as_ref()],
+        )?;
+        Ok(())
+    }
+
     #[derive(Clone, Copy)]
     enum InvalidProjectRelationship {
         SamePath,
@@ -1406,6 +1562,23 @@ mod tests {
                 assert_eq!(actual, relationship);
                 assert!(detail.contains("Harness Runtime Home"));
                 assert!(detail.contains("Product Repository"));
+            }
+            other => panic!("unexpected error: {other}"),
+        }
+    }
+
+    fn assert_state_db_path_mismatch(error: StoreError, stored: &Path, expected: &Path) {
+        match error {
+            StoreError::InvalidProjectRegistration {
+                field,
+                relationship,
+                detail,
+                ..
+            } => {
+                assert_eq!(field, "state_db_path");
+                assert_eq!(relationship, "state_db_path_mismatch");
+                assert!(detail.contains(&stored.display().to_string()));
+                assert!(detail.contains(&expected.display().to_string()));
             }
             other => panic!("unexpected error: {other}"),
         }

@@ -84,6 +84,7 @@ Registry constraints:
 
 - `runtime_home` is a singleton table. The stored `runtime_home_id` identifies the Runtime Home record; it is not a security guarantee.
 - `projects.project_home` is unique. `repo_root` is indexed for lookup but does not replace project identity.
+- `projects.state_db_path` is retained as a stored column. The SQL column definition does not enforce its equality with `project_home/state.sqlite`; Store application-level execution validation enforces that relationship before project-state inspection, migration, writable open, surface management, Core execution, setup reuse, or MCP project startup. A mismatching registry row remains readable for diagnosis but is execution-ineligible.
 - `projects.status` is storage-owned and baseline-valid only as `active`.
 - `schema_migrations` records applied registry schema versions. Migration execution semantics stay with [Storage Versioning](storage-versioning.md).
 

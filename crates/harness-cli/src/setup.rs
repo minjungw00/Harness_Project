@@ -6,7 +6,7 @@ use std::{
 
 use harness_store::{
     bootstrap::{
-        initialize_runtime_home, project_record, register_project, register_surface,
+        initialize_runtime_home, project_record_for_execution, register_project, register_surface,
         validate_project_id, validate_project_record_for_execution, ProjectRecord,
         ProjectRegistration, SurfaceRecord, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
     },
@@ -667,7 +667,7 @@ fn prepare_selected_existing_project_state(
         });
     };
 
-    let project = project_record(&plan.runtime_home, project_id)
+    let project = project_record_for_execution(&plan.runtime_home, project_id)
         .map_err(|source| operation_failed(Box::new(source), completed_actions.as_slice()))?
         .ok_or_else(|| {
             operation_failed(
@@ -678,8 +678,6 @@ fn prepare_selected_existing_project_state(
                 completed_actions.as_slice(),
             )
         })?;
-    validate_project_record_for_execution(&plan.runtime_home, &project)
-        .map_err(|source| operation_failed(Box::new(source), completed_actions.as_slice()))?;
     if !project.state_db_path.exists() {
         return Err(operation_failed(
             Box::new(StoreError::NotFound {
@@ -1679,6 +1677,40 @@ mod tests {
     }
 
     #[test]
+    fn invalid_existing_state_db_path_registration_is_not_reused() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("setup-reuse-state-db-mismatch")?;
+        initialize(runtime_home.path())?;
+        let repo_root = repo_dir(runtime_home.path(), "product-state-db-mismatch")?;
+        register_test_project(runtime_home.path(), "project_state_mismatch", &repo_root)?;
+        let alternate_state_path = runtime_home.path().join("alternate/corrupt-state.sqlite");
+        fs::create_dir_all(
+            alternate_state_path
+                .parent()
+                .expect("alternate state path has parent"),
+        )?;
+        fs::write(&alternate_state_path, b"not a sqlite database")?;
+        replace_project_state_db_path(
+            runtime_home.path(),
+            "project_state_mismatch",
+            &alternate_state_path,
+        )?;
+
+        let plan =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))?;
+
+        assert_eq!(plan.project_action.kind, SetupActionKind::Conflict);
+        assert_eq!(
+            conflict_kinds(&plan),
+            vec![SetupConflictKind::ProjectPathBoundaryInvalid]
+        );
+        assert!(plan.conflicts[0].message.contains("state_db_path"));
+        assert!(plan.conflicts[0].message.contains("state_db_path_mismatch"));
+        assert!(plan.surface_actions.is_empty());
+        assert_eq!(fs::read(&alternate_state_path)?, b"not a sqlite database");
+        Ok(())
+    }
+
+    #[test]
     fn setup_preparation_rechecks_reused_project_registration_before_mutation(
     ) -> Result<(), Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("setup-prepare-invalid-project")?;
@@ -1705,6 +1737,52 @@ mod tests {
             project_metadata(runtime_home.path(), "project_prepare")?,
             "{}"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn setup_preparation_rechecks_state_db_path_before_project_state_access(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("setup-prepare-state-db-mismatch")?;
+        initialize(runtime_home.path())?;
+        let repo_root = repo_dir(runtime_home.path(), "product-prepare-state-db")?;
+        register_test_project(runtime_home.path(), "project_prepare_state_db", &repo_root)?;
+        let plan =
+            plan_local_mcp_setup(LocalMcpSetupOptions::new(runtime_home.path(), &repo_root))?;
+        assert_eq!(plan.project_action.kind, SetupActionKind::Reuse);
+
+        let alternate_state_path = runtime_home
+            .path()
+            .join("alternate/historical-state.sqlite");
+        fs::create_dir_all(
+            alternate_state_path
+                .parent()
+                .expect("alternate state path has parent"),
+        )?;
+        let mut conn = Connection::open(&alternate_state_path)?;
+        create_project_state_fixture_version(&mut conn, "project_prepare_state_db", 5)?;
+        drop(conn);
+        let migrations_before = migration_count(&alternate_state_path)?;
+        let surface_count_before = surface_count(&alternate_state_path)?;
+        replace_project_state_db_path(
+            runtime_home.path(),
+            "project_prepare_state_db",
+            &alternate_state_path,
+        )?;
+
+        let error = prepare_local_mcp_setup_storage(&plan)
+            .expect_err("preparation should reject changed state_db_path");
+
+        assert!(error.to_string().contains("state_db_path_mismatch"));
+        assert_eq!(
+            error.completed_actions(),
+            std::slice::from_ref(&plan.runtime_home_action)
+        );
+        assert_historical_project_state_unchanged(
+            &alternate_state_path,
+            migrations_before,
+            surface_count_before,
+        )?;
         Ok(())
     }
 
@@ -2627,6 +2705,19 @@ mod tests {
         Ok(())
     }
 
+    fn replace_project_state_db_path(
+        runtime_home: &Path,
+        project_id: &str,
+        state_db_path: &Path,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = Connection::open(registry_db_path(runtime_home))?;
+        conn.execute(
+            "UPDATE projects SET state_db_path = ?2 WHERE project_id = ?1",
+            params![project_id, state_db_path.to_string_lossy().as_ref()],
+        )?;
+        Ok(())
+    }
+
     fn project_status(runtime_home: &Path, project_id: &str) -> Result<String, Box<dyn Error>> {
         Ok(Connection::open(registry_db_path(runtime_home))?.query_row(
             "SELECT status FROM projects WHERE project_id = ?1",
@@ -2750,6 +2841,41 @@ mod tests {
             params![PROJECT_STATE_DATABASE_KIND],
             |row| row.get(0),
         )?)
+    }
+
+    fn surface_count(path: &Path) -> Result<i64, Box<dyn Error>> {
+        let conn = open_read_only_database(path)?;
+        Ok(conn.query_row("SELECT COUNT(*) FROM surfaces", [], |row| row.get(0))?)
+    }
+
+    fn column_exists(path: &Path, table: &str, column: &str) -> Result<bool, Box<dyn Error>> {
+        let conn = open_read_only_database(path)?;
+        let escaped_table = table.replace('"', "\"\"");
+        let mut stmt = conn.prepare(&format!("PRAGMA table_info(\"{escaped_table}\")"))?;
+        let mut rows = stmt.query([])?;
+        while let Some(row) = rows.next()? {
+            let name: String = row.get(1)?;
+            if name == column {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    fn assert_historical_project_state_unchanged(
+        path: &Path,
+        expected_migration_count: i64,
+        expected_surface_count: i64,
+    ) -> Result<(), Box<dyn Error>> {
+        assert_eq!(migration_count(path)?, expected_migration_count);
+        assert_eq!(surface_count(path)?, expected_surface_count);
+        assert!(!column_exists(
+            path,
+            "project_state",
+            "enforcement_profile_json"
+        )?);
+        assert!(!column_exists(path, "surfaces", "interaction_role")?);
+        Ok(())
     }
 
     fn registry_migration_count(path: &Path) -> Result<i64, Box<dyn Error>> {

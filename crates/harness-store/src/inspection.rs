@@ -7,6 +7,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
 use crate::{
+    bootstrap::{validate_project_record_for_execution, ProjectRecord},
     migrations::{
         expected_project_state_migrations, expected_registry_migrations,
         PROJECT_STATE_DATABASE_KIND, PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND,
@@ -184,7 +185,7 @@ struct ProjectRegistryRow {
 pub fn inspect_runtime_home(runtime_home: impl AsRef<Path>) -> RuntimeHomeInspection {
     let runtime_home = runtime_home.as_ref().to_path_buf();
     let registry_db_path = registry_db_path(&runtime_home);
-    let registry = inspect_registry_database_at(&registry_db_path);
+    let registry = inspect_registry_database_at(&registry_db_path, &runtime_home);
 
     RuntimeHomeInspection {
         runtime_home,
@@ -196,7 +197,7 @@ pub fn inspect_runtime_home(runtime_home: impl AsRef<Path>) -> RuntimeHomeInspec
 /// Inspects `registry.sqlite` under a Runtime Home.
 pub fn inspect_registry_database(runtime_home: impl AsRef<Path>) -> RegistryDatabaseInspection {
     let runtime_home = runtime_home.as_ref();
-    inspect_registry_database_at(&registry_db_path(runtime_home))
+    inspect_registry_database_at(&registry_db_path(runtime_home), runtime_home)
 }
 
 /// Inspects one project-state database for a registered project id.
@@ -207,7 +208,7 @@ pub fn inspect_project_state_database(
     inspect_project_state_database_at(path.as_ref(), project_id)
 }
 
-fn inspect_registry_database_at(path: &Path) -> RegistryDatabaseInspection {
+fn inspect_registry_database_at(path: &Path, runtime_home: &Path) -> RegistryDatabaseInspection {
     if let Some(missing) = missing_database(path) {
         return missing;
     }
@@ -244,9 +245,7 @@ fn inspect_registry_database_at(path: &Path) -> RegistryDatabaseInspection {
     let projects = project_rows
         .into_iter()
         .map(|row| {
-            let project_state =
-                inspect_project_state_database_at(&row.state_db_path, &row.project_id);
-            ProjectInspectionRecord {
+            let project = ProjectRecord {
                 project_id: row.project_id,
                 runtime_home_id: row.runtime_home_id,
                 repo_root: row.repo_root,
@@ -254,6 +253,16 @@ fn inspect_registry_database_at(path: &Path) -> RegistryDatabaseInspection {
                 state_db_path: row.state_db_path,
                 status: row.status,
                 metadata_json: row.metadata_json,
+            };
+            let project_state = inspect_registered_project_state(runtime_home, &project);
+            ProjectInspectionRecord {
+                project_id: project.project_id,
+                runtime_home_id: project.runtime_home_id,
+                repo_root: project.repo_root,
+                project_home: project.project_home,
+                state_db_path: project.state_db_path,
+                status: project.status,
+                metadata_json: project.metadata_json,
                 project_state,
             }
         })
@@ -265,6 +274,18 @@ fn inspect_registry_database_at(path: &Path) -> RegistryDatabaseInspection {
         runtime_home: runtime_home_record,
         projects,
     })
+}
+
+fn inspect_registered_project_state(
+    runtime_home: &Path,
+    project: &ProjectRecord,
+) -> ProjectStateDatabaseInspection {
+    match validate_project_record_for_execution(runtime_home, project) {
+        Ok(project) => {
+            inspect_project_state_database_at(&project.state_db_path, &project.project_id)
+        }
+        Err(error) => malformed(&project.state_db_path, error.to_string()),
+    }
 }
 
 fn inspect_project_state_database_at(
@@ -997,7 +1018,7 @@ mod tests {
             ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
         },
         migrations::test_support::create_project_state_fixture_version,
-        sqlite::{open_read_only_database, project_state_db_path},
+        sqlite::{open_read_only_database, project_state_db_path, registry_db_path},
         StoreResult,
     };
 
@@ -1097,6 +1118,41 @@ mod tests {
             snapshot.projects[0].project_state,
             DatabaseInspection::Missing { .. }
         ));
+        Ok(())
+    }
+
+    #[test]
+    fn registry_reports_state_db_path_mismatch_without_inspecting_alternate(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = current_fixture("inspect-state-db-mismatch")?;
+        let alternate_state_path = fixture
+            .runtime_home
+            .path()
+            .join("alternate/corrupt-state.sqlite");
+        fs::create_dir_all(
+            alternate_state_path
+                .parent()
+                .expect("alternate state path has parent"),
+        )?;
+        fs::write(&alternate_state_path, b"not a sqlite database")?;
+        replace_project_state_db_path(
+            fixture.runtime_home.path(),
+            PROJECT_ID,
+            &alternate_state_path,
+        )?;
+
+        let inspection = inspect_runtime_home(fixture.runtime_home.path());
+        let snapshot = present_registry(&inspection.registry);
+
+        match &snapshot.projects[0].project_state {
+            DatabaseInspection::Malformed { path, detail } => {
+                assert_eq!(path, &alternate_state_path);
+                assert!(detail.contains("state_db_path_mismatch"));
+                assert!(detail.contains("state_db_path"));
+            }
+            other => panic!("expected malformed project-state diagnostic, got {other:?}"),
+        }
+        assert_eq!(fs::read(&alternate_state_path)?, b"not a sqlite database");
         Ok(())
     }
 
@@ -1339,6 +1395,19 @@ mod tests {
         insert_historical_surface(&conn)?;
         drop(conn);
         Ok(fixture)
+    }
+
+    fn replace_project_state_db_path(
+        runtime_home: &Path,
+        project_id: &str,
+        state_db_path: &Path,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = Connection::open(registry_db_path(runtime_home))?;
+        conn.execute(
+            "UPDATE projects SET state_db_path = ?2 WHERE project_id = ?1",
+            params![project_id, state_db_path.to_string_lossy().as_ref()],
+        )?;
+        Ok(())
     }
 
     fn surface_registration() -> SurfaceRegistration {

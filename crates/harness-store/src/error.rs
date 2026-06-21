@@ -372,10 +372,12 @@ impl fmt::Display for StoreError {
                 relationship,
                 detail,
             } => {
-                let subject = if *field == "repo_root" {
-                    "registered Product Repository conflicts with Runtime Home"
-                } else {
-                    "registered project paths conflict with Runtime Home or Product Repository"
+                let subject = match *field {
+                    "repo_root" => "registered Product Repository conflicts with Runtime Home",
+                    "state_db_path" => {
+                        "registered project state database path conflicts with project_home"
+                    }
+                    _ => "registered project paths conflict with Runtime Home or Product Repository",
                 };
                 write!(
                     formatter,
