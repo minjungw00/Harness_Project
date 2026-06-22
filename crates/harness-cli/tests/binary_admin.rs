@@ -1134,6 +1134,8 @@ fn harness_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(), 
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
     let install = run_with_home_and_env(
         runtime_home.path(),
@@ -1155,7 +1157,7 @@ fn harness_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(), 
             "--mcp-command",
             path_text(&mcp_command).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&install);
     assert!(stdout(&install).contains("status: complete"));
@@ -1180,7 +1182,7 @@ fn harness_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(), 
     let status = run_with_home_and_env(
         runtime_home.path(),
         ["agent", "status", "--integration-id", "agent_codex_user"],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&status);
     assert!(stdout(&status).contains("host_state"));
@@ -1188,7 +1190,7 @@ fn harness_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(), 
     let verify = run_with_home_and_env(
         runtime_home.path(),
         ["agent", "verify", "--integration-id", "agent_codex_user"],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&verify);
     assert!(stdout(&verify).contains("status: complete"));
@@ -1196,7 +1198,7 @@ fn harness_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(), 
     let uninstall = run_with_home_and_env(
         runtime_home.path(),
         ["agent", "uninstall", "--integration-id", "agent_codex_user"],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&uninstall);
     assert!(stdout(&uninstall).contains("status: complete"));
@@ -1212,6 +1214,205 @@ fn harness_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(), 
             .enabled
     );
 
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_codex_user_install_requires_codex_executable() -> Result<(), Box<dyn Error>>
+{
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-codex-missing")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_log = runtime_home.path().join("mcp.log");
+    let mcp_command = write_recording_agent_mcp(
+        runtime_home.path(),
+        "agent-mcp-codex-missing",
+        AgentMcpFixture::Complete,
+        &mcp_log,
+    )?;
+    fs::write(&mcp_log, "")?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_codex_missing",
+            "--server-name",
+            "harness-codex-missing",
+            "--project-id",
+            "project_codex_missing",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--output",
+            "json",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+
+    assert_success(&install);
+    let value: Value = serde_json::from_str(&stdout(&install))?;
+    assert_eq!(value["status"], "action_required");
+    assert_eq!(value["verification"]["status"], "action_required");
+    assert_eq!(value["verification"]["host_executable"], "unavailable");
+    assert_eq!(value["verification"]["mcp_handshake_diagnostic"], false);
+    assert!(value["verification"]["details"]
+        .as_str()
+        .unwrap_or_default()
+        .contains("not found on PATH"));
+    let mcp_log_text = fs::read_to_string(&mcp_log)?;
+    assert!(mcp_log_text.contains("--check --integration agent_codex_missing"));
+    assert!(!mcp_log_text
+        .lines()
+        .any(|line| line.contains("--integration agent_codex_missing")
+            && !line.contains("--check --integration")));
+    assert_eq!(
+        list_host_installations_for_integration(runtime_home.path(), "agent_codex_missing")?[0]
+            .last_verified_status,
+        VERIFIED_STATUS_ACTION_REQUIRED
+    );
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_codex_user_verify_requires_codex_executable() -> Result<(), Box<dyn Error>>
+{
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-codex-verify-missing")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_log = runtime_home.path().join("mcp.log");
+    let mcp_command = write_recording_agent_mcp(
+        runtime_home.path(),
+        "agent-mcp-codex-verify-missing",
+        AgentMcpFixture::Complete,
+        &mcp_log,
+    )?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let ready_env = codex_env(&codex_home, &[runtime_home.path()]);
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_codex_verify_missing",
+            "--server-name",
+            "harness-codex-verify-missing",
+            "--project-id",
+            "project_codex_verify_missing",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+        ],
+        &ready_env,
+    )?;
+    assert_success(&install);
+    fs::write(&mcp_log, "")?;
+
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_codex_verify_missing",
+            "--output",
+            "json",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+
+    assert_success(&verify);
+    let value: Value = serde_json::from_str(&stdout(&verify))?;
+    assert_eq!(value["status"], "action_required");
+    assert_eq!(value["verification"]["host_executable"], "unavailable");
+    let results = value["installation_verifications"]
+        .as_array()
+        .expect("installation verifications");
+    assert_eq!(results[0]["mcp_handshake_result"]["status"], "skipped");
+    assert_eq!(results[0]["final_status"], "action_required");
+    assert_eq!(fs::read_to_string(&mcp_log)?, "");
+    assert_eq!(
+        list_host_installations_for_integration(runtime_home.path(), "agent_codex_verify_missing")?
+            [0]
+        .last_verified_status,
+        VERIFIED_STATUS_ACTION_REQUIRED
+    );
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_codex_user_failing_executable_is_action_required(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-codex-version-fails")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_log = runtime_home.path().join("mcp.log");
+    let mcp_command = write_recording_agent_mcp(
+        runtime_home.path(),
+        "agent-mcp-codex-version-fails",
+        AgentMcpFixture::Complete,
+        &mcp_log,
+    )?;
+    write_fake_codex(runtime_home.path(), CodexFixture::VersionFails)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
+    fs::write(&mcp_log, "")?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_codex_version_fails",
+            "--server-name",
+            "harness-codex-version-fails",
+            "--project-id",
+            "project_codex_version_fails",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--output",
+            "json",
+        ],
+        &codex_env,
+    )?;
+
+    assert_success(&install);
+    let value: Value = serde_json::from_str(&stdout(&install))?;
+    assert_eq!(value["status"], "action_required");
+    assert_eq!(value["verification"]["host_executable"], "unavailable");
+    assert_eq!(value["verification"]["mcp_handshake_diagnostic"], false);
+    assert!(value["verification"]["host_diagnostic"]
+        .as_str()
+        .unwrap_or_default()
+        .contains("status 17"));
+    let mcp_log_text = fs::read_to_string(&mcp_log)?;
+    assert!(mcp_log_text.contains("--check --integration agent_codex_version_fails"));
+    assert!(!mcp_log_text.lines().any(|line| line
+        .contains("--integration agent_codex_version_fails")
+        && !line.contains("--check --integration")));
     Ok(())
 }
 
@@ -1459,6 +1660,8 @@ fn harness_binary_agent_dry_run_current_registry_is_byte_identical() -> Result<(
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
     let install = run_with_home_and_env(
         runtime_home.path(),
@@ -1480,7 +1683,7 @@ fn harness_binary_agent_dry_run_current_registry_is_byte_identical() -> Result<(
             "--mcp-command",
             path_text(&mcp_command).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&install);
 
@@ -1513,7 +1716,7 @@ fn harness_binary_agent_dry_run_current_registry_is_byte_identical() -> Result<(
             "--output",
             "json",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
 
     assert_success(&dry_run);
@@ -1591,6 +1794,8 @@ fn harness_binary_agent_guidance_apply_status_and_remove_flow() -> Result<(), Bo
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
     let install = run_with_home_and_env(
         runtime_home.path(),
@@ -1612,7 +1817,7 @@ fn harness_binary_agent_guidance_apply_status_and_remove_flow() -> Result<(), Bo
             "--mcp-command",
             path_text(&mcp_command).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&install);
     assert!(!repo_root.join("AGENTS.md").exists());
@@ -1756,6 +1961,8 @@ fn harness_binary_agent_install_guidance_both_and_uninstall_managed() -> Result<
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
     let install = run_with_home_and_env(
         runtime_home.path(),
@@ -1780,7 +1987,7 @@ fn harness_binary_agent_install_guidance_both_and_uninstall_managed() -> Result<
             "both",
             "--allow-repository-write",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&install);
     assert!(stdout(&install).contains("guidance:"));
@@ -1819,7 +2026,7 @@ fn harness_binary_agent_install_guidance_both_and_uninstall_managed() -> Result<
             "--allow-repository-write",
             "--remove-managed",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&uninstall);
     assert!(stdout(&uninstall).contains("status: complete"));
@@ -1835,6 +2042,8 @@ fn harness_binary_agent_uninstall_preserves_changed_guidance() -> Result<(), Box
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
     let install = run_with_home_and_env(
         runtime_home.path(),
@@ -1859,7 +2068,7 @@ fn harness_binary_agent_uninstall_preserves_changed_guidance() -> Result<(), Box
             "codex",
             "--allow-repository-write",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&install);
 
@@ -1896,7 +2105,7 @@ fn harness_binary_agent_uninstall_preserves_changed_guidance() -> Result<(), Box
             "--allow-repository-write",
             "--remove-managed",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_eq!(uninstall.status.code(), Some(1));
     assert!(stdout(&uninstall).contains("status: partial_failure"));
@@ -1913,6 +2122,8 @@ fn harness_binary_agent_install_compensates_new_guidance_after_verification_fail
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::MissingUtilityTool)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
     let agents_path = repo_root.join("AGENTS.md");
     fs::write(&agents_path, "# Existing instructions\nKeep this.\n")?;
 
@@ -1939,7 +2150,7 @@ fn harness_binary_agent_install_compensates_new_guidance_after_verification_fail
             "codex",
             "--allow-repository-write",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_eq!(output.status.code(), Some(1));
     assert!(stdout(&output).contains("status: partial_failure"));
@@ -1983,6 +2194,9 @@ fn harness_binary_agent_install_faults_roll_back_reversible_effects() -> Result<
         )?;
         let codex_home = runtime_home.path().join("codex-home");
         let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+        write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+        let mut env = codex_env(&codex_home, &[runtime_home.path()]);
+        env.push(("HARNESS_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()));
 
         let output = run_with_home_and_env_slice(
             runtime_home.path(),
@@ -2010,10 +2224,7 @@ fn harness_binary_agent_install_faults_roll_back_reversible_effects() -> Result<
                 "--output",
                 "json",
             ],
-            &[
-                ("CODEX_HOME", path_text(&codex_home)),
-                ("HARNESS_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()),
-            ],
+            &env,
         )?;
 
         assert_eq!(output.status.code(), Some(1), "step {step}");
@@ -2062,6 +2273,9 @@ fn harness_binary_agent_install_guidance_apply_faults_are_compensated() -> Resul
         )?;
         let codex_home = runtime_home.path().join("codex-home");
         let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+        write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+        let mut env = codex_env(&codex_home, &[runtime_home.path()]);
+        env.push(("HARNESS_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()));
 
         let output = run_with_home_and_env_slice(
             runtime_home.path(),
@@ -2092,10 +2306,7 @@ fn harness_binary_agent_install_guidance_apply_faults_are_compensated() -> Resul
                 "--output",
                 "json",
             ],
-            &[
-                ("CODEX_HOME", path_text(&codex_home)),
-                ("HARNESS_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()),
-            ],
+            &env,
         )?;
 
         assert_eq!(output.status.code(), Some(1), "step {step}");
@@ -2138,6 +2349,16 @@ fn harness_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<d
     )?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let mut host_env = codex_env(&codex_home, &[runtime_home.path()]);
+    host_env.push((
+        "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP",
+        "inventory_record".to_owned(),
+    ));
+    host_env.push((
+        "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
+        "host".to_owned(),
+    ));
     let host_residual = run_with_home_and_env(
         runtime_home.path(),
         [
@@ -2164,17 +2385,7 @@ fn harness_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<d
             "--output",
             "json",
         ],
-        &[
-            ("CODEX_HOME", path_text(&codex_home)),
-            (
-                "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP",
-                "inventory_record".to_owned(),
-            ),
-            (
-                "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
-                "host".to_owned(),
-            ),
-        ],
+        &host_env,
     )?;
     assert_eq!(host_residual.status.code(), Some(1));
     let value: Value = serde_json::from_str(&stdout(&host_residual))?;
@@ -2199,6 +2410,16 @@ fn harness_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<d
     )?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let mut guidance_env = codex_env(&codex_home, &[runtime_home.path()]);
+    guidance_env.push((
+        "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP",
+        "final_verification_status_update".to_owned(),
+    ));
+    guidance_env.push((
+        "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
+        "guidance".to_owned(),
+    ));
     let guidance_residual = run_with_home_and_env(
         runtime_home.path(),
         [
@@ -2228,17 +2449,7 @@ fn harness_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<d
             "--output",
             "json",
         ],
-        &[
-            ("CODEX_HOME", path_text(&codex_home)),
-            (
-                "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP",
-                "final_verification_status_update".to_owned(),
-            ),
-            (
-                "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
-                "guidance".to_owned(),
-            ),
-        ],
+        &guidance_env,
     )?;
     assert_eq!(guidance_residual.status.code(), Some(1));
     let value: Value = serde_json::from_str(&stdout(&guidance_residual))?;
@@ -2264,6 +2475,8 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
     let repo_c = runtime_home.create_product_repo("repo-c")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
     let install = run_with_home_and_env(
         runtime_home.path(),
@@ -2285,7 +2498,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--mcp-command",
             path_text(&mcp_command).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&install);
     assert_eq!(
@@ -2309,7 +2522,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--repo-root",
             path_text(&repo_b).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&add);
     assert_eq!(
@@ -2465,7 +2678,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--project-id",
             "project_b",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_eq!(remove_current_default.status.code(), Some(1));
     assert!(stderr(&remove_current_default).contains("default project"));
@@ -2483,7 +2696,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--project-id",
             "project_a",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&remove_a_after_change);
 
@@ -2498,7 +2711,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--project-id",
             "project_a",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&add_a_again);
 
@@ -2585,7 +2798,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--project-id",
             "project_a",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&remove_a_after_clear);
 
@@ -2600,7 +2813,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--project-id",
             "project_b",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&remove_b);
     assert!(stdout(&remove_b).contains("allowed_project_count: 0"));
@@ -2651,7 +2864,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--output",
             "json",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_eq!(verify_empty.status.code(), Some(1));
     let verify_empty_json: Value = serde_json::from_str(&stdout(&verify_empty))?;
@@ -2678,7 +2891,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--project-id",
             "project_b",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&add_b_again);
     assert_eq!(
@@ -2689,7 +2902,7 @@ fn harness_binary_agent_user_scope_project_membership_is_single_host_entry(
     let verify_restored = run_with_home_and_env(
         runtime_home.path(),
         ["agent", "verify", "--integration-id", "agent_multi_project"],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&verify_restored);
     assert!(stdout(&verify_restored).contains("status: complete"));
@@ -2705,6 +2918,8 @@ fn harness_binary_agent_project_and_uninstall_dry_runs_are_read_only() -> Result
     let repo_b = runtime_home.create_product_repo("repo-b")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
     let install = run_with_home_and_env(
         runtime_home.path(),
@@ -2726,7 +2941,7 @@ fn harness_binary_agent_project_and_uninstall_dry_runs_are_read_only() -> Result
             "--mcp-command",
             path_text(&mcp_command).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&install);
 
@@ -2751,7 +2966,7 @@ fn harness_binary_agent_project_and_uninstall_dry_runs_are_read_only() -> Result
             "--output",
             "json",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&add_dry_run);
     let add_json: Value = serde_json::from_str(&stdout(&add_dry_run))?;
@@ -2777,7 +2992,7 @@ fn harness_binary_agent_project_and_uninstall_dry_runs_are_read_only() -> Result
             "--repo-root",
             path_text(&repo_b).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&add);
     let hash_before_remove = file_hash(&registry_path)?;
@@ -2823,7 +3038,7 @@ fn harness_binary_agent_project_and_uninstall_dry_runs_are_read_only() -> Result
             "--output",
             "json",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&uninstall_dry_run);
     let uninstall_json: Value = serde_json::from_str(&stdout(&uninstall_dry_run))?;
@@ -3033,6 +3248,8 @@ fn harness_binary_agent_verify_reports_persistence_update_failure() -> Result<()
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let codex_home = runtime_home.path().join("codex-home");
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
     let install = run_with_home_and_env(
         runtime_home.path(),
         [
@@ -3053,7 +3270,7 @@ fn harness_binary_agent_verify_reports_persistence_update_failure() -> Result<()
             "--mcp-command",
             path_text(&mcp_command).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&install);
 
@@ -3070,7 +3287,7 @@ fn harness_binary_agent_verify_reports_persistence_update_failure() -> Result<()
             "--integration-id",
             "agent_verify_persist",
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     fs::set_permissions(&registry, original_permissions)?;
 
@@ -3097,6 +3314,8 @@ fn harness_binary_agent_mcp_tool_discovery_failures_are_partial_failure(
         let repo_root = runtime_home.create_product_repo("product-repo")?;
         let codex_home = runtime_home.path().join("codex-home");
         let mcp_command = write_agent_mcp(runtime_home.path(), fixture)?;
+        write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+        let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
         let output = run_with_home_and_env(
             runtime_home.path(),
             [
@@ -3117,7 +3336,7 @@ fn harness_binary_agent_mcp_tool_discovery_failures_are_partial_failure(
                 "--mcp-command",
                 path_text(&mcp_command).as_str(),
             ],
-            &[("CODEX_HOME", path_text(&codex_home))],
+            &codex_env,
         )?;
         assert_eq!(output.status.code(), Some(1));
         assert!(stdout(&output).contains("status: partial_failure"));
@@ -3151,6 +3370,8 @@ fn harness_binary_agent_verify_selected_installation_uses_only_selected_command(
         AgentMcpFixture::Complete,
         &second_log,
     )?;
+    write_fake_codex(&bin_dir, CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[&bin_dir]);
 
     for (server_name, command) in [
         ("harness-first", &first_mcp),
@@ -3176,7 +3397,7 @@ fn harness_binary_agent_verify_selected_installation_uses_only_selected_command(
                 "--mcp-command",
                 path_text(command).as_str(),
             ],
-            &[("CODEX_HOME", path_text(&codex_home))],
+            &codex_env,
         )?;
         assert_success(&install);
     }
@@ -3213,7 +3434,7 @@ fn harness_binary_agent_verify_selected_installation_uses_only_selected_command(
             "--installation-id",
             selected.installation_id.as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&verify);
     assert!(stdout(&verify).contains("installation_verifications:"));
@@ -3268,6 +3489,8 @@ fn harness_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
         AgentMcpFixture::Complete,
         &project_log,
     )?;
+    write_fake_codex(&bin_dir, CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[&bin_dir]);
 
     let user_install = run_with_home_and_env(
         runtime_home.path(),
@@ -3289,7 +3512,7 @@ fn harness_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
             "--mcp-command",
             path_text(&user_mcp).as_str(),
         ],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_success(&user_install);
     let project_install = run_with_home_and_env(
@@ -3311,12 +3534,10 @@ fn harness_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
             path_text(&repo_root).as_str(),
             "--allow-repository-write",
         ],
-        &[
-            ("CODEX_HOME", path_text(&codex_home)),
-            ("PATH", path_text(&bin_dir)),
-        ],
+        &codex_env,
     )?;
     assert_success(&project_install);
+    assert!(stdout(&project_install).contains("status: action_required"));
     fs::write(&user_log, "")?;
     fs::write(&project_log, "")?;
 
@@ -3330,10 +3551,7 @@ fn harness_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
             "--output",
             "json",
         ],
-        &[
-            ("CODEX_HOME", path_text(&codex_home)),
-            ("PATH", path_text(&bin_dir)),
-        ],
+        &codex_env,
     )?;
     assert_success(&verify);
     let value: Value = serde_json::from_str(&stdout(&verify))?;
@@ -3394,6 +3612,8 @@ fn harness_binary_agent_verify_failed_installation_is_not_hidden() -> Result<(),
         AgentMcpFixture::Complete,
         &runtime_home.path().join("changed.log"),
     )?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
     for (server_name, command) in [("harness-ok", &first_mcp), ("harness-changed", &second_mcp)] {
         let install = run_with_home_and_env(
@@ -3416,7 +3636,7 @@ fn harness_binary_agent_verify_failed_installation_is_not_hidden() -> Result<(),
                 "--mcp-command",
                 path_text(command).as_str(),
             ],
-            &[("CODEX_HOME", path_text(&codex_home))],
+            &codex_env,
         )?;
         assert_success(&install);
     }
@@ -3428,7 +3648,7 @@ fn harness_binary_agent_verify_failed_installation_is_not_hidden() -> Result<(),
     let verify = run_with_home_and_env(
         runtime_home.path(),
         ["agent", "verify", "--integration-id", "agent_verify_failed"],
-        &[("CODEX_HOME", path_text(&codex_home))],
+        &codex_env,
     )?;
     assert_eq!(verify.status.code(), Some(1));
     assert!(stdout(&verify).contains("status: failed"));
@@ -4132,6 +4352,49 @@ enum AgentMcpFixture {
     Complete,
     MissingInstructions,
     MissingUtilityTool,
+}
+
+#[derive(Clone, Copy)]
+enum CodexFixture {
+    Ready,
+    VersionFails,
+}
+
+#[cfg(unix)]
+fn codex_env(codex_home: &Path, path_dirs: &[&Path]) -> Vec<(&'static str, String)> {
+    vec![
+        ("CODEX_HOME", path_text(codex_home)),
+        (
+            "PATH",
+            std::env::join_paths(path_dirs)
+                .expect("test PATH should be valid")
+                .to_string_lossy()
+                .into_owned(),
+        ),
+    ]
+}
+
+#[cfg(unix)]
+fn write_fake_codex(dir: &Path, fixture: CodexFixture) -> Result<PathBuf, Box<dyn Error>> {
+    fs::create_dir_all(dir)?;
+    let path = dir.join("codex");
+    let version_exit = match fixture {
+        CodexFixture::Ready => "printf 'codex 1.2.3-test\\n'\nexit 0",
+        CodexFixture::VersionFails => "printf 'codex unavailable\\n' >&2\nexit 17",
+    };
+    fs::write(
+        &path,
+        format!(
+            "#!/bin/sh\n\
+             if [ \"$1\" = \"--version\" ]; then\n\
+             {version_exit}\n\
+             fi\n\
+             printf 'unexpected codex invocation\\n' >&2\n\
+             exit 2\n"
+        ),
+    )?;
+    make_executable(&path)?;
+    Ok(path)
 }
 
 #[cfg(unix)]

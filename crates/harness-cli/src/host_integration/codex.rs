@@ -1,13 +1,14 @@
 use std::{
+    cell::RefCell,
     collections::BTreeMap,
     ffi::OsString,
     path::{Path, PathBuf},
-    process::{Command, Stdio},
 };
 
 use toml_edit::{value, Array, DocumentMut, Item, Table};
 
 use super::{
+    claude_code::{CommandInvocation, CommandRunner, ProductionCommandRunner},
     config_edit::{read_text_snapshot, write_if_fresh, FileSnapshot},
     managed_fingerprint, unmanaged_fingerprint, validated_server_name, HostAdapter,
     HostConfigError, HostConflict, HostConflictKind, HostDetection, HostEffect, HostKind, HostPlan,
@@ -15,7 +16,8 @@ use super::{
     UserActionKind,
 };
 use crate::host_integration::verification::{
-    HostExecutableStatus, HostGateStatus, ManagedConfigStatus, Verification,
+    HostConfigurationStatus, HostExecutableStatus, HostGateStatus, ManagedConfigStatus,
+    Verification,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -26,13 +28,23 @@ pub struct CodexEnvironment {
 }
 
 #[derive(Debug, Clone)]
-pub struct CodexAdapter {
+pub struct CodexAdapter<R = ProductionCommandRunner> {
     env: CodexEnvironment,
+    runner: RefCell<R>,
 }
 
-impl CodexAdapter {
+impl CodexAdapter<ProductionCommandRunner> {
     pub fn new(env: CodexEnvironment) -> Self {
-        Self { env }
+        Self::with_runner(env, ProductionCommandRunner)
+    }
+}
+
+impl<R: CommandRunner> CodexAdapter<R> {
+    pub fn with_runner(env: CodexEnvironment, runner: R) -> Self {
+        Self {
+            env,
+            runner: RefCell::new(runner),
+        }
     }
 
     pub fn plan(&self, request: CodexPlanRequest<'_>) -> Result<HostPlan, HostConfigError> {
@@ -158,75 +170,58 @@ impl CodexAdapter {
         })?;
         Ok(home.join(".codex"))
     }
+
+    fn executable_availability(&self, config_target: &Path) -> CodexExecutableAvailability {
+        let Some(executable) = find_executable_in_path("codex", self.env.path.as_ref()) else {
+            return CodexExecutableAvailability::unavailable(
+                format!(
+                    "Codex executable `codex` was not found on PATH; install Codex or make it available before using this Host Installation; configuration target: {}",
+                    config_target.display()
+                ),
+                "Codex executable `codex` was not found on PATH",
+            );
+        };
+        let invocation = CommandInvocation {
+            program: executable.display().to_string(),
+            args: vec!["--version".to_owned()],
+            cwd: None,
+        };
+        match self.runner.borrow_mut().run(&invocation) {
+            Ok(output) if output.success => CodexExecutableAvailability::available(format!(
+                "Codex executable availability check succeeded with `codex --version`; executable: {}; configuration target: {}",
+                executable.display(),
+                config_target.display()
+            )),
+            Ok(output) => CodexExecutableAvailability::unavailable(
+                format!(
+                    "Codex executable failed its availability check `codex --version` with status {}; install or repair Codex before using this Host Installation; configuration target: {}",
+                    status_text(output.status_code),
+                    config_target.display()
+                ),
+                format!(
+                    "Codex executable availability check failed with status {}",
+                    status_text(output.status_code)
+                ),
+            ),
+            Err(error) => CodexExecutableAvailability::unavailable(
+                format!(
+                    "Codex executable could not be launched for availability check `codex --version`: {error}; install Codex or make it executable before using this Host Installation; configuration target: {}",
+                    config_target.display()
+                ),
+                format!("Codex executable availability check could not launch: {error}"),
+            ),
+        }
+    }
 }
 
-impl HostAdapter for CodexAdapter {
+impl<R: CommandRunner> HostAdapter for CodexAdapter<R> {
     fn detect(&self) -> Result<HostDetection, HostConfigError> {
         let path = self.codex_home()?.join("config.toml");
-        let Some(executable) = find_executable_in_path("codex", self.env.path.as_ref()) else {
-            return Ok(HostDetection {
-                host_kind: HostKind::Codex,
-                available: false,
-                details: format!(
-                    "Codex executable was not found on PATH; configuration target: {}",
-                    path.display()
-                ),
-            });
-        };
-        let output = Command::new(&executable)
-            .arg("--version")
-            .stdin(Stdio::null())
-            .output();
-        let details = match output {
-            Ok(output) if output.status.success() => {
-                let version = String::from_utf8_lossy(&output.stdout);
-                let version = version.trim();
-                if version.starts_with("codex ") || version.chars().any(|ch| ch.is_ascii_digit()) {
-                    format!(
-                        "Codex executable: {}; configuration target: {}",
-                        executable.display(),
-                        path.display()
-                    )
-                } else {
-                    format!(
-                        "Codex executable ran but version output is unsupported for interpretation: {}; configuration target: {}",
-                        executable.display(),
-                        path.display()
-                    )
-                }
-            }
-            Ok(output) => {
-                return Ok(HostDetection {
-                    host_kind: HostKind::Codex,
-                    available: false,
-                    details: format!(
-                        "Codex executable could not be executed successfully: {} exited {}; configuration target: {}",
-                        executable.display(),
-                        output
-                            .status
-                            .code()
-                            .map(|code| code.to_string())
-                            .unwrap_or_else(|| "without status".to_owned()),
-                        path.display()
-                    ),
-                });
-            }
-            Err(error) => {
-                return Ok(HostDetection {
-                    host_kind: HostKind::Codex,
-                    available: false,
-                    details: format!(
-                        "Codex executable could not be executed: {}: {error}; configuration target: {}",
-                        executable.display(),
-                        path.display()
-                    ),
-                });
-            }
-        };
+        let availability = self.executable_availability(&path);
         Ok(HostDetection {
             host_kind: HostKind::Codex,
-            available: true,
-            details,
+            available: availability.is_available(),
+            details: availability.details,
         })
     }
 
@@ -262,29 +257,45 @@ impl HostAdapter for CodexAdapter {
         if let Some(conflict) = plan.conflicts.first() {
             return Ok(Verification::changed(conflict.message.clone()));
         }
+        let config_target = match &plan.target {
+            HostTarget::File(target) => target.as_path(),
+            _ => Path::new("unknown Codex configuration target"),
+        };
+        let executable = self.executable_availability(config_target);
         let managed = verify_codex_entry(plan)?;
         if managed != ManagedConfigStatus::Match {
-            return Ok(verification_from_managed_status(
+            let mut verification = verification_from_managed_status(
                 managed,
                 format!(
                     "Codex managed MCP server entry is {} for {}",
                     managed.as_str(),
                     plan.server_name
                 ),
+            )
+            .with_host_executable(executable.status);
+            if let Some(diagnostic) = executable.diagnostic {
+                verification = verification.with_diagnostic(diagnostic);
+            }
+            return Ok(verification);
+        }
+        if !executable.is_available() {
+            return Ok(verification_from_executable_unavailable(
+                executable,
+                plan.host_scope == HostScope::Project,
             ));
         }
         if plan.host_scope == HostScope::Project {
             return Ok(Verification::action_required(
                 "Codex project trust was not confirmed by this structural configuration check",
             )
-            .with_host_executable(HostExecutableStatus::NotChecked)
+            .with_host_executable(HostExecutableStatus::Available)
             .with_host_gate(HostGateStatus::ActionRequired)
             .with_mcp_handshake_allowed(true));
         }
         Ok(Verification::configured_ready(
-            "Codex managed configuration is present and no separate project trust gate applies",
+            "Codex managed configuration is present, Codex executable is available, and no separate project trust gate applies",
         )
-        .with_host_executable(HostExecutableStatus::NotRequired)
+        .with_host_executable(HostExecutableStatus::Available)
         .with_mcp_handshake_allowed(true))
     }
 
@@ -466,6 +477,62 @@ fn codex_entry_fingerprint(scope: HostScope, server_name: &str, item: &Item) -> 
     ))
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct CodexExecutableAvailability {
+    status: HostExecutableStatus,
+    details: String,
+    diagnostic: Option<String>,
+}
+
+impl CodexExecutableAvailability {
+    fn available(details: String) -> Self {
+        Self {
+            status: HostExecutableStatus::Available,
+            details,
+            diagnostic: None,
+        }
+    }
+
+    fn unavailable(details: String, diagnostic: impl Into<String>) -> Self {
+        Self {
+            status: HostExecutableStatus::Unavailable,
+            details,
+            diagnostic: Some(diagnostic.into()),
+        }
+    }
+
+    fn is_available(&self) -> bool {
+        self.status == HostExecutableStatus::Available
+    }
+}
+
+fn status_text(status_code: Option<i32>) -> String {
+    status_code
+        .map(|code| code.to_string())
+        .unwrap_or_else(|| "without exit status".to_owned())
+}
+
+fn verification_from_executable_unavailable(
+    executable: CodexExecutableAvailability,
+    project_trust_unconfirmed: bool,
+) -> Verification {
+    let mut details = executable.details;
+    if project_trust_unconfirmed {
+        details.push_str(
+            "; Codex project trust was not confirmed by this structural configuration check",
+        );
+    }
+    let mut verification = Verification::action_required(details)
+        .with_host_executable(HostExecutableStatus::Unavailable)
+        .with_host_gate(HostGateStatus::ActionRequired)
+        .with_host_configuration(HostConfigurationStatus::Discovered)
+        .with_mcp_handshake_allowed(false);
+    if let Some(diagnostic) = executable.diagnostic {
+        verification = verification.with_diagnostic(diagnostic);
+    }
+    verification
+}
+
 fn verify_codex_entry(plan: &HostPlan) -> Result<ManagedConfigStatus, HostConfigError> {
     let HostTarget::File(target) = &plan.target else {
         return Ok(ManagedConfigStatus::Unknown);
@@ -574,9 +641,12 @@ fn conflicted_plan(
 #[cfg(test)]
 mod tests {
     use std::{
+        collections::VecDeque,
         fs,
         time::{SystemTime, UNIX_EPOCH},
     };
+
+    use crate::host_integration::claude_code::{CommandInvocation, CommandOutput};
 
     use super::*;
 
@@ -855,15 +925,191 @@ mod tests {
     }
 
     #[test]
-    fn verify_distinguishes_missing_changed_and_project_trust(
+    fn detect_reports_available_executable() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-detect-available")?;
+        let codex_home = dir.join("codex");
+        let bin = dir.join("bin");
+        write_fake_codex_file(&bin)?;
+        let adapter = CodexAdapter::with_runner(
+            CodexEnvironment {
+                home: None,
+                codex_home: Some(codex_home),
+                path: Some(bin.into_os_string()),
+            },
+            FakeRunner::new(vec![Ok(ok_output())]),
+        );
+
+        let detection = adapter.detect()?;
+
+        assert!(detection.available);
+        assert!(detection.details.contains("codex --version"));
+        Ok(())
+    }
+
+    #[test]
+    fn verify_requires_available_executable_for_user_scope(
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let dir = temp_dir("codex-verify")?;
+        let dir = temp_dir("codex-verify-no-executable")?;
         let codex_home = dir.join("codex");
         let mut adapter = CodexAdapter::new(CodexEnvironment {
             home: None,
             codex_home: Some(codex_home),
-            path: None,
+            path: Some(dir.join("empty").into_os_string()),
         });
+        let plan = adapter.plan(request(
+            HostScope::User,
+            None,
+            Path::new("/bin/harness-mcp"),
+        ))?;
+        adapter.apply(&plan)?;
+
+        let verification = adapter.verify(&plan)?;
+
+        assert_eq!(verification.status.as_str(), "action_required");
+        assert_eq!(
+            verification.host_executable,
+            HostExecutableStatus::Unavailable
+        );
+        assert!(!verification.mcp_handshake_allowed);
+        assert!(verification.details.contains("install Codex"));
+        Ok(())
+    }
+
+    #[test]
+    fn verify_reports_failed_executable_diagnostic() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-verify-version-fails")?;
+        let codex_home = dir.join("codex");
+        let bin = dir.join("bin");
+        write_fake_codex_file(&bin)?;
+        let mut adapter = CodexAdapter::with_runner(
+            CodexEnvironment {
+                home: None,
+                codex_home: Some(codex_home),
+                path: Some(bin.into_os_string()),
+            },
+            FakeRunner::new(vec![Ok(failed_output(42))]),
+        );
+        let plan = adapter.plan(request(
+            HostScope::User,
+            None,
+            Path::new("/bin/harness-mcp"),
+        ))?;
+        adapter.apply(&plan)?;
+
+        let verification = adapter.verify(&plan)?;
+
+        assert_eq!(verification.status.as_str(), "action_required");
+        assert_eq!(
+            verification.host_executable,
+            HostExecutableStatus::Unavailable
+        );
+        assert!(verification.details.contains("status 42"));
+        assert!(verification
+            .diagnostic
+            .as_deref()
+            .unwrap_or_default()
+            .contains("status 42"));
+        Ok(())
+    }
+
+    #[test]
+    fn verify_reports_launch_failure() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-verify-launch-fails")?;
+        let codex_home = dir.join("codex");
+        let bin = dir.join("bin");
+        write_fake_codex_file(&bin)?;
+        let mut adapter = CodexAdapter::with_runner(
+            CodexEnvironment {
+                home: None,
+                codex_home: Some(codex_home),
+                path: Some(bin.into_os_string()),
+            },
+            FakeRunner::new(vec![Err("permission denied".to_owned())]),
+        );
+        let plan = adapter.plan(request(
+            HostScope::User,
+            None,
+            Path::new("/bin/harness-mcp"),
+        ))?;
+        adapter.apply(&plan)?;
+
+        let verification = adapter.verify(&plan)?;
+
+        assert_eq!(verification.status.as_str(), "action_required");
+        assert_eq!(
+            verification.host_executable,
+            HostExecutableStatus::Unavailable
+        );
+        assert!(verification.details.contains("could not be launched"));
+        Ok(())
+    }
+
+    #[test]
+    fn detect_and_verify_use_consistent_executable_status() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let dir = temp_dir("codex-detect-verify-consistent")?;
+        let codex_home = dir.join("codex");
+        let mut adapter = CodexAdapter::new(CodexEnvironment {
+            home: None,
+            codex_home: Some(codex_home),
+            path: Some(dir.join("empty").into_os_string()),
+        });
+        let plan = adapter.plan(request(
+            HostScope::User,
+            None,
+            Path::new("/bin/harness-mcp"),
+        ))?;
+        adapter.apply(&plan)?;
+
+        let detection = adapter.detect()?;
+        let verification = adapter.verify(&plan)?;
+
+        assert!(!detection.available);
+        assert_eq!(
+            verification.host_executable,
+            HostExecutableStatus::Unavailable
+        );
+        assert_eq!(verification.status.as_str(), "action_required");
+        Ok(())
+    }
+
+    #[test]
+    fn missing_executable_diagnostic_does_not_expose_path_value(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-diagnostic-path")?;
+        let adapter = CodexAdapter::new(CodexEnvironment {
+            home: None,
+            codex_home: Some(dir.join("codex")),
+            path: Some(OsString::from("/tmp/SECRET_PATH_TOKEN")),
+        });
+
+        let detection = adapter.detect()?;
+
+        assert!(!detection.available);
+        assert!(!detection.details.contains("SECRET_PATH_TOKEN"));
+        Ok(())
+    }
+
+    #[test]
+    fn verify_distinguishes_missing_changed_and_project_trust(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-verify")?;
+        let codex_home = dir.join("codex");
+        let bin = dir.join("bin");
+        write_fake_codex_file(&bin)?;
+        let mut adapter = CodexAdapter::with_runner(
+            CodexEnvironment {
+                home: None,
+                codex_home: Some(codex_home),
+                path: Some(bin.into_os_string()),
+            },
+            FakeRunner::new(vec![
+                Ok(ok_output()),
+                Ok(ok_output()),
+                Ok(ok_output()),
+                Ok(ok_output()),
+            ]),
+        );
         let plan = adapter.plan(request(
             HostScope::User,
             None,
@@ -897,6 +1143,10 @@ mod tests {
         adapter.apply(&project)?;
         let verification = adapter.verify(&project)?;
         assert_eq!(verification.status.as_str(), "action_required");
+        assert_eq!(
+            verification.host_executable,
+            HostExecutableStatus::Available
+        );
         assert!(verification.mcp_handshake_allowed);
         Ok(())
     }
@@ -922,5 +1172,53 @@ mod tests {
         let path = std::env::temp_dir().join(format!("{prefix}-{}-{stamp}", std::process::id()));
         fs::create_dir_all(&path)?;
         Ok(path)
+    }
+
+    fn write_fake_codex_file(dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        fs::create_dir_all(dir)?;
+        fs::write(dir.join("codex"), "fake codex")?;
+        Ok(())
+    }
+
+    fn ok_output() -> CommandOutput {
+        CommandOutput {
+            success: true,
+            status_code: Some(0),
+            stdout: "codex 1.2.3\n".to_owned(),
+            stderr: String::new(),
+        }
+    }
+
+    fn failed_output(status_code: i32) -> CommandOutput {
+        CommandOutput {
+            success: false,
+            status_code: Some(status_code),
+            stdout: String::new(),
+            stderr: "version failed".to_owned(),
+        }
+    }
+
+    #[derive(Debug)]
+    struct FakeRunner {
+        outputs: VecDeque<Result<CommandOutput, String>>,
+        calls: Vec<CommandInvocation>,
+    }
+
+    impl FakeRunner {
+        fn new(outputs: Vec<Result<CommandOutput, String>>) -> Self {
+            Self {
+                outputs: outputs.into(),
+                calls: Vec::new(),
+            }
+        }
+    }
+
+    impl CommandRunner for FakeRunner {
+        fn run(&mut self, invocation: &CommandInvocation) -> Result<CommandOutput, String> {
+            self.calls.push(invocation.clone());
+            self.outputs
+                .pop_front()
+                .unwrap_or_else(|| Err("missing fake command output".to_owned()))
+        }
     }
 }

@@ -4012,17 +4012,21 @@ struct HostPlanInputs<'a> {
     current_dir: &'a Path,
 }
 
+fn codex_environment(process: &impl AgentProcess) -> CodexEnvironment {
+    CodexEnvironment {
+        home: process.env_var("HOME").map(PathBuf::from),
+        codex_home: process.env_var("CODEX_HOME").map(PathBuf::from),
+        path: process.env_var(PATH_ENV),
+    }
+}
+
 fn build_host_plan(
     inputs: HostPlanInputs<'_>,
     process: &mut impl AgentProcess,
 ) -> Result<HostPlan, AgentCommandError> {
     match inputs.host_kind {
         HostKind::Codex => {
-            let adapter = CodexAdapter::new(CodexEnvironment {
-                home: process.env_var("HOME").map(PathBuf::from),
-                codex_home: process.env_var("CODEX_HOME").map(PathBuf::from),
-                path: process.env_var(PATH_ENV),
-            });
+            let adapter = CodexAdapter::new(codex_environment(process));
             Ok(
                 adapter.plan(crate::host_integration::codex::CodexPlanRequest {
                     scope: inputs.host_scope,
@@ -4102,11 +4106,11 @@ fn apply_host_plan(
 fn verify_host_plan(
     host_kind: HostKind,
     plan: &HostPlan,
-    _process: &mut impl AgentProcess,
+    process: &mut impl AgentProcess,
 ) -> Result<crate::host_integration::verification::Verification, HostConfigError> {
     match host_kind {
         HostKind::Codex => {
-            let mut adapter = CodexAdapter::new(CodexEnvironment::default());
+            let mut adapter = CodexAdapter::new(codex_environment(process));
             adapter.verify(plan)
         }
         HostKind::ClaudeCode => {
@@ -5821,11 +5825,7 @@ fn remove_host_effect(
     };
     match host_kind {
         HostKind::Codex => {
-            let mut adapter = CodexAdapter::new(CodexEnvironment {
-                home: process.env_var("HOME").map(PathBuf::from),
-                codex_home: process.env_var("CODEX_HOME").map(PathBuf::from),
-                path: process.env_var(PATH_ENV),
-            });
+            let mut adapter = CodexAdapter::new(codex_environment(process));
             adapter.remove(request)
         }
         HostKind::ClaudeCode => {
@@ -5939,11 +5939,7 @@ fn remove_host_configuration(
     };
     match host_kind {
         HostKind::Codex => {
-            let mut adapter = CodexAdapter::new(CodexEnvironment {
-                home: process.env_var("HOME").map(PathBuf::from),
-                codex_home: process.env_var("CODEX_HOME").map(PathBuf::from),
-                path: process.env_var(PATH_ENV),
-            });
+            let mut adapter = CodexAdapter::new(codex_environment(process));
             adapter.remove(request)?;
         }
         HostKind::ClaudeCode => {
