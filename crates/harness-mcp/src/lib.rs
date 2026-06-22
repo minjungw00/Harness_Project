@@ -1700,12 +1700,6 @@ fn parse_client_message(message: Value) -> Result<ClientMessage, JsonRpcFailure>
             params,
         }))
     } else {
-        if params.as_ref().is_some_and(|params| !params.is_object()) {
-            return Err(invalid_request(
-                Value::Null,
-                "notification params must be an object",
-            ));
-        }
         Ok(ClientMessage::Notification(JsonRpcNotification {
             method: method.clone(),
             params,
@@ -1727,12 +1721,16 @@ fn valid_request_id(value: &Value) -> Result<Value, JsonRpcFailure> {
 }
 
 fn handle_json_rpc_notification(state: &mut ConnectionState, notification: JsonRpcNotification) {
-    let _ = notification.params;
     if notification.method == "notifications/initialized"
         && *state == ConnectionState::AwaitingInitialized
+        && notification_params_are_object_or_absent(notification.params.as_ref())
     {
         *state = ConnectionState::Ready;
     }
+}
+
+fn notification_params_are_object_or_absent(params: Option<&Value>) -> bool {
+    matches!(params, None | Some(Value::Object(_)))
 }
 
 fn handle_json_rpc_request(
@@ -2989,7 +2987,25 @@ mod tests {
             ],
         )?;
 
-        assert_eq!(responses.len(), 10);
+        assert_eq!(responses.len(), 9);
+        let response_ids = responses
+            .iter()
+            .map(|response| response["id"].clone())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            response_ids,
+            vec![
+                json!(1),
+                json!(2),
+                json!(3),
+                json!("ping-waiting"),
+                json!(4),
+                json!(5),
+                json!(6),
+                json!(7),
+                json!(8)
+            ]
+        );
         assert_error_response(&responses[0], json!(1), -32600);
         assert_eq!(responses[1]["id"], 2);
         assert_eq!(
@@ -2999,26 +3015,25 @@ mod tests {
         assert_error_response(&responses[2], json!(3), -32600);
         assert_eq!(responses[3]["id"], "ping-waiting");
         assert_eq!(responses[3]["result"], json!({}));
-        assert_error_response(&responses[4], Value::Null, -32600);
-        assert_error_response(&responses[5], json!(4), -32600);
-        assert_eq!(responses[6]["id"], 5);
+        assert_error_response(&responses[4], json!(4), -32600);
+        assert_eq!(responses[5]["id"], 5);
         assert_eq!(
-            responses[6]["result"]["tools"]
+            responses[5]["result"]["tools"]
                 .as_array()
                 .expect("tools should be an array")
                 .len(),
             10
         );
-        assert_eq!(responses[7]["id"], 6);
-        assert_eq!(responses[7]["result"]["isError"], false);
-        let tool_text = responses[7]["result"]["content"][0]["text"]
+        assert_eq!(responses[6]["id"], 6);
+        assert_eq!(responses[6]["result"]["isError"], false);
+        let tool_text = responses[6]["result"]["content"][0]["text"]
             .as_str()
             .expect("tools/call response should contain text content");
         let tool_response: Value = serde_json::from_str(tool_text)?;
         assert_eq!(tool_response["base"]["response_kind"], "result");
-        assert_error_response(&responses[8], json!(7), -32600);
+        assert_error_response(&responses[7], json!(7), -32600);
         assert_eq!(
-            responses[9]["result"]["tools"]
+            responses[8]["result"]["tools"]
                 .as_array()
                 .expect("tools should be an array")
                 .len(),
@@ -3264,6 +3279,21 @@ mod tests {
                 notification_message("notifications/unknown", Some(json!({ "ignored": true }))),
                 initialize_request_message(json!(1), SUPPORTED_PROTOCOL_VERSION),
                 initialized_notification(),
+                notification_message("tools/list", Some(json!({}))),
+                notification_message("ping", Some(json!([]))),
+                notification_message(
+                    "initialize",
+                    Some(json!({
+                        "protocolVersion": SUPPORTED_PROTOCOL_VERSION,
+                        "capabilities": {},
+                        "clientInfo": {
+                            "name": "harness-unit-test",
+                            "version": "0.0.0"
+                        }
+                    })),
+                ),
+                notification_message("tools/call", Some(Value::Null)),
+                notification_message("tools/call", Some(json!([]))),
                 notification_message(
                     "tools/call",
                     Some(json!({
@@ -3330,11 +3360,12 @@ mod tests {
                     "tools/call",
                     Some(json!({ "name": "harness.status" })),
                 ),
+                request_message(json!(15), "tools/call", Some(json!([]))),
                 request_message(json!(14), "not/a-method", Some(json!({}))),
             ],
         )?;
 
-        assert_eq!(responses.len(), 14);
+        assert_eq!(responses.len(), 15);
         assert_eq!(
             responses[0]["result"]["protocolVersion"],
             SUPPORTED_PROTOCOL_VERSION
@@ -3352,7 +3383,8 @@ mod tests {
             .as_str()
             .expect("typed validation failure should include text content");
         assert!(text.contains("Invalid arguments for harness.status"));
-        assert_error_response(&responses[13], json!(14), -32601);
+        assert_error_response(&responses[13], json!(15), -32602);
+        assert_error_response(&responses[14], json!(14), -32601);
         assert_eq!(harness.counts()?, before);
         Ok(())
     }

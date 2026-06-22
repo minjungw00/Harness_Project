@@ -127,6 +127,21 @@ fn stdio_rejected_lifecycle_and_notification_tool_calls_have_no_storage_effect(
         json!({
             "jsonrpc": "2.0",
             "method": "tools/call",
+            "params": []
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "method": "tools/call",
+            "params": null
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "method": "tools/list",
+            "params": {}
+        }),
+        json!({
+            "jsonrpc": "2.0",
+            "method": "tools/call",
             "params": {
                 "name": "harness.intake",
                 "arguments": mutating_arguments

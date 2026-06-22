@@ -163,9 +163,11 @@ JSON-RPC 검증 규칙:
 - `jsonrpc`는 정확히 `"2.0"`이어야 합니다.
 - 요청 `method`는 문자열이어야 합니다.
 - 요청 ID는 문자열 또는 정수일 수 있으며 `null`이면 안 됩니다.
-- 구조적으로 유효한 notification은 문자열 `method`를 갖고 `id`가 없으며 응답을 받지 않습니다.
+- 분류 가능한 notification은 문자열 `method`를 갖고 `id`가 없으며 MCP 메서드 파라미터가 잘못되었더라도 응답을 받지 않습니다.
 - `id`가 없는 객체가 자동으로 유효한 notification이 되는 것은 아닙니다. 그래도 notification 형태를 만족해야 합니다.
-- 지원되는 MCP 메서드의 `params`는 존재할 때 객체여야 합니다.
+- 지원되는 MCP 요청의 메서드 `params`는 존재할 때 객체여야 합니다. 수명주기 notification에서는 `params`가 없거나 객체인 경우에만 수명주기에 영향을 줄 수 있습니다.
+
+notification 분류는 MCP 메서드 파라미터 검증보다 먼저 JSON-RPC envelope를 기준으로 이루어집니다. 메시지가 notification으로 분류될 수 있으면 잘못된 `params`가 있어도 JSON-RPC 응답을 만들지 않습니다. 그러나 그런 `params`는 수명주기 목적에서는 유효하지 않습니다. 잘못된 `notifications/initialized`는 연결을 준비 상태로 옮기지 않고, notification으로 받은 요청 전용 메서드는 무시되며 실행하면 안 됩니다.
 
 오류 분류:
 
@@ -175,10 +177,10 @@ JSON-RPC 검증 규칙:
 | 배열, 원시 루트, 누락되었거나 잘못된 `jsonrpc`, 잘못된 요청 `id`, 누락되었거나 문자열이 아닌 요청 `method`, 잘못된 non-notification 객체를 포함한 유효하지 않은 JSON-RPC 메시지 구조 | JSON-RPC `-32600` Invalid Request |
 | `initialize` 전 요청, 준비 상태 전 `tools/list`나 `tools/call`, 중복 `initialize`를 포함한 요청의 수명주기 위반 | JSON-RPC `-32600` Invalid Request |
 | 알 수 없는 요청 메서드 | JSON-RPC `-32601` Method not found |
-| 잘못된 메서드 파라미터 | JSON-RPC `-32602` Invalid params |
+| 요청의 잘못된 메서드 파라미터 | JSON-RPC `-32602` Invalid params |
 | 구조적으로 유효한 `tools/call` 요청의 알 수 없는 도구 이름 | JSON-RPC `-32602` Invalid params |
 | 어댑터 또는 서버 내부 실패 | 적절한 JSON-RPC 내부 오류 응답 |
-| 구조적으로 유효한 notification | 응답 없음. `notifications/initialized`가 너무 이르거나 다른 이유로 수명주기에 맞지 않으면 연결을 준비 상태로 옮기지 않습니다. |
+| 분류 가능한 notification. 잘못된 메서드 파라미터가 있는 경우도 포함 | 응답 없음. 잘못된 파라미터는 수명주기 전환이나 요청 전용 동작을 일으키지 않습니다. |
 
 ### 프로토콜 버전과 수명주기
 

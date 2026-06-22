@@ -334,6 +334,72 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
     Ok(())
 }
 
+#[test]
+fn harness_mcp_binary_suppresses_malformed_notification_output_and_effects(
+) -> Result<(), Box<dyn Error>> {
+    let fixture = McpFixture::new("mcp-bin-notification-suppression")?;
+    let before = fixture.counts()?;
+    let messages = json_lines(&[
+        initialize_request(1),
+        initialized_notification_with_params(json!([])),
+        request(2, "tools/list", json!({})),
+        notification("notifications/unknown", json!({ "ignored": true })),
+        notification("tools/call", json!([])),
+        notification(
+            "tools/call",
+            json!({
+                "name": "harness.intake",
+                "arguments": intake_arguments(
+                    PROJECT_ID,
+                    AGENT_SURFACE_ID,
+                    "req_binary_notification_intake",
+                    "idem_binary_notification_intake",
+                )
+            }),
+        ),
+        initialized_notification(),
+        request(3, "tools/list", json!({})),
+        tools_call(
+            4,
+            "harness.status",
+            status_arguments(
+                PROJECT_ID,
+                AGENT_SURFACE_ID,
+                "req_binary_notification_status",
+            ),
+        ),
+    ])?;
+
+    let output = run_child(
+        fixture.integration_command(["--integration", INTEGRATION_ID]),
+        ChildStdin::WriteAndClose(messages),
+    )?;
+
+    assert_success_captured(&output);
+    assert_eq!(captured_stderr(&output), "");
+    let stdout = captured_stdout(&output);
+    let stdout_lines = stdout.lines().collect::<Vec<_>>();
+    assert_eq!(
+        stdout_lines.len(),
+        4,
+        "notifications must not emit blank or placeholder output lines"
+    );
+    assert!(stdout_lines.iter().all(|line| !line.trim().is_empty()));
+    let responses = responses_by_id(&output.stdout)?;
+    assert_eq!(responses.len(), 4);
+    assert_eq!(
+        responses[&1]["result"]["protocolVersion"],
+        json!("2025-11-25")
+    );
+    assert_eq!(responses[&2]["error"]["code"], -32600);
+    assert!(responses[&3]["result"]["tools"].is_array());
+    let status = harness_response(&responses[&4])?;
+    assert_eq!(status["base"]["response_kind"], "result");
+    assert_eq!(status["base"]["state_version"], 0);
+    assert_eq!(fixture.counts()?, before);
+    Ok(())
+}
+
 struct McpFixture {
     runtime_home: TempRuntimeHome,
     runtime_home_path: PathBuf,
@@ -618,10 +684,18 @@ fn initialize_request(id: u64) -> Value {
 }
 
 fn initialized_notification() -> Value {
+    initialized_notification_with_params(json!({}))
+}
+
+fn initialized_notification_with_params(params: Value) -> Value {
+    notification("notifications/initialized", params)
+}
+
+fn notification(method: &str, params: Value) -> Value {
     json!({
         "jsonrpc": "2.0",
-        "method": "notifications/initialized",
-        "params": {}
+        "method": method,
+        "params": params
     })
 }
 

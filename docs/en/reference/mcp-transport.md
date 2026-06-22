@@ -161,9 +161,11 @@ JSON-RPC validation rules:
 - `jsonrpc` must be exactly `"2.0"`.
 - A request `method` must be a string.
 - Request IDs may be strings or integers and must not be `null`.
-- A structurally valid notification has a string `method`, no `id`, and receives no response.
+- A classifiable notification has a string `method`, no `id`, and receives no response even when its MCP method parameters are malformed.
 - An object without an `id` is not automatically a valid notification; it must still satisfy the notification shape.
-- Method `params`, when present for supported MCP methods, must be an object.
+- For supported MCP requests, method `params`, when present, must be an object. For lifecycle notifications, absent or object `params` are the only shapes that can affect lifecycle.
+
+Notification classification is based on the JSON-RPC envelope before MCP method-parameter validation. Once a message is classifiable as a notification, malformed `params` do not produce any JSON-RPC response. Those `params` are still invalid for lifecycle purposes: a malformed `notifications/initialized` does not move the connection to ready, and request-only methods received as notifications are ignored and must not execute.
 
 Error classification:
 
@@ -173,10 +175,10 @@ Error classification:
 | Invalid JSON-RPC message structure, including arrays, primitive roots, missing or invalid `jsonrpc`, invalid request `id`, missing or non-string request `method`, or malformed non-notification objects | JSON-RPC `-32600` Invalid Request |
 | Lifecycle violation on a request, including a request before `initialize`, `tools/list` or `tools/call` before the ready state, or duplicate `initialize` | JSON-RPC `-32600` Invalid Request |
 | Unknown request method | JSON-RPC `-32601` Method not found |
-| Malformed method parameters | JSON-RPC `-32602` Invalid params |
+| Malformed method parameters on a request | JSON-RPC `-32602` Invalid params |
 | Unknown tool name in a structurally valid `tools/call` request | JSON-RPC `-32602` Invalid params |
 | Adapter or server internal failure | an appropriate JSON-RPC internal-error response |
-| Structurally valid notification | no response; if `notifications/initialized` is early or otherwise lifecycle-invalid, it does not move the connection to ready |
+| Classifiable notification, including one with malformed method parameters | no response; invalid parameters do not trigger lifecycle transitions or request-only behavior |
 
 ### Protocol version and lifecycle
 
