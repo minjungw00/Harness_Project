@@ -210,7 +210,7 @@ Used in:
 - Owner-defined result paths
 
 Condition:
-- A relevant user-owned judgment is pending, deferred without coverage, rejected, blocked, stale, superseded, or incompatible.
+- A relevant user-owned judgment is pending, deferred without coverage, rejected, stale, superseded, incompatible, or otherwise cannot satisfy the owner-defined decision requirement.
 
 <a id="errorcode-autonomy-boundary-exceeded"></a>
 ### `AUTONOMY_BOUNDARY_EXCEEDED`
