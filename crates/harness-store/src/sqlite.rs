@@ -3,7 +3,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use rusqlite::{config::DbConfig, Connection, OpenFlags, Transaction, TransactionBehavior};
+use rusqlite::{
+    config::DbConfig, Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior,
+};
 
 use crate::{
     migrations::{
@@ -696,6 +698,24 @@ fn validate_migration_history(
 }
 
 fn validate_project_state_versions(conn: &Connection) -> StoreResult<()> {
+    if let Some(actual_storage_profile) = conn
+        .query_row(
+            "SELECT storage_profile
+               FROM project_state
+              WHERE storage_profile != ?1
+              LIMIT 1",
+            [STORAGE_PROFILE],
+            |row| row.get::<_, String>(0),
+        )
+        .optional()?
+    {
+        return Err(StoreError::unsupported_storage_profile(
+            PROJECT_STATE_DATABASE_KIND,
+            actual_storage_profile,
+            STORAGE_PROFILE,
+        ));
+    }
+
     let stale_count: i64 = conn.query_row(
         "SELECT COUNT(*)
            FROM project_state
@@ -714,6 +734,24 @@ fn validate_project_state_versions(conn: &Connection) -> StoreResult<()> {
 }
 
 fn validate_registry_versions(conn: &Connection) -> StoreResult<()> {
+    if let Some(actual_storage_profile) = conn
+        .query_row(
+            "SELECT storage_profile
+               FROM runtime_home
+              WHERE storage_profile != ?1
+              LIMIT 1",
+            [STORAGE_PROFILE],
+            |row| row.get::<_, String>(0),
+        )
+        .optional()?
+    {
+        return Err(StoreError::unsupported_storage_profile(
+            REGISTRY_DATABASE_KIND,
+            actual_storage_profile,
+            STORAGE_PROFILE,
+        ));
+    }
+
     let stale_count: i64 = conn.query_row(
         "SELECT COUNT(*)
            FROM runtime_home
@@ -1226,8 +1264,7 @@ mod tests {
 
     use super::*;
     use crate::migrations::{
-        BASELINE_SCHEMA_VERSION, PROJECT_STATE_SCHEMA_VERSION, REGISTRY_SCHEMA_VERSION,
-        STORAGE_PROFILE,
+        PROJECT_STATE_SCHEMA_VERSION, REGISTRY_SCHEMA_VERSION, STORAGE_PROFILE,
     };
 
     #[test]
@@ -1271,14 +1308,8 @@ mod tests {
         assert!(migration_exists(
             &conn,
             PROJECT_STATE_DATABASE_KIND,
-            BASELINE_SCHEMA_VERSION,
-            "project_state_baseline_v1"
-        )?);
-        assert!(migration_exists(
-            &conn,
-            PROJECT_STATE_DATABASE_KIND,
             PROJECT_STATE_SCHEMA_VERSION,
-            "project_state_judgment_authority_v10"
+            "project_state_initial_v1"
         )?);
         drop(conn);
 

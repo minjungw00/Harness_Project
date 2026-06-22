@@ -154,7 +154,7 @@ Registry constraints:
 
 Each registered project has one project-local `state.sqlite`. It stores Core state for that project and repeats `project_id` in project-scoped rows so foreign keys and indexes can enforce same-project relationships.
 
-The DDL below represents the intended latest physical project-state schema after supported project-state schema version 10. Earlier physical databases reach this shape only through the supported migrations owned by [Storage Versioning](storage-versioning.md).
+The DDL below is the initial physical project-state schema for storage profile `baseline_sqlite_v2` schema version `1`. Storage profile and migration boundary behavior are owned by [Storage Versioning](storage-versioning.md).
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -668,7 +668,7 @@ Judgment basis storage:
 - `user_judgments.basis_json` stores the API `JudgmentBasis` snapshot when one exists.
 - `user_judgments.basis_status` stores the storage-owned compatibility state for the judgment basis: `current`, `stale`, `superseded`, or `legacy_unbound`.
 - Existing judgments without a basis are represented as `basis_json IS NULL` and `basis_status='legacy_unbound'`. They remain audit records and cannot satisfy current close, write, or sensitive-approval requirements.
-- The closed `user_judgments.status` set, nullable `resolution_outcome`, nullable `resolution_machine_action`, actor provenance columns, resolved-surface provenance columns, and composite resolved-surface foreign key are part of intended project-state schema version 10.
+- The closed `user_judgments.status` set, nullable `resolution_outcome`, nullable `resolution_machine_action`, actor provenance columns, resolved-surface provenance columns, and composite resolved-surface foreign key are part of the `baseline_sqlite_v2` project-state schema version `1`.
 - `user_judgments.resolution_outcome` stores the selected option's machine-readable outcome when one exists. `status='resolved'` without a non-null `resolution_outcome` remains a historical audit record for authority-bearing requirements and cannot be interpreted as acceptance.
 - `user_judgments.resolution_machine_action` stores the selected Core-created authority action when one exists. Current authority-bearing resolutions require a non-null `resolution_machine_action` and non-null `resolution_outcome`; legacy rows may leave either null for audit-only reads.
 - `resolved_by_actor_kind`, `resolved_actor_role`, `resolved_by_surface_id`, `resolved_by_surface_instance_id`, `resolved_verification_basis`, and `resolved_assurance_level` store derived `VerifiedActorContext` provenance for resolution. Authority-bearing rows require `resolved_by_actor_kind='user'`, `resolved_actor_role='user_interaction'`, a valid resolved surface/instance reference, and non-null provenance fields. Rows without that provenance are readable historical records only.

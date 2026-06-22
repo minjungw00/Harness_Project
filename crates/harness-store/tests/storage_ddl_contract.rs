@@ -88,17 +88,17 @@ struct StorageDdlSql {
 }
 
 #[test]
-fn storage_ddl_documents_match_latest_migrated_schemas() -> Result<(), Box<dyn Error>> {
+fn storage_ddl_documents_match_initial_schemas() -> Result<(), Box<dyn Error>> {
     let english = load_storage_ddl_sql("en")?;
     let korean = load_storage_ddl_sql("ko")?;
 
     let english_registry = build_schema_from_sql(&english.registry)?;
     let korean_registry = build_schema_from_sql(&korean.registry)?;
-    let migrated_registry = migrated_registry_schema()?;
+    let initial_registry = initial_registry_schema()?;
 
     let english_registry_schema = read_database_schema(&english_registry)?;
     let korean_registry_schema = read_database_schema(&korean_registry)?;
-    let migrated_registry_schema = read_database_schema(&migrated_registry)?;
+    let initial_registry_schema = read_database_schema(&initial_registry)?;
 
     assert_schema_eq(
         "English and Korean registry.sqlite DDL",
@@ -106,18 +106,18 @@ fn storage_ddl_documents_match_latest_migrated_schemas() -> Result<(), Box<dyn E
         &korean_registry_schema,
     );
     assert_schema_eq(
-        "Storage DDL registry.sqlite and migrated registry.sqlite",
+        "Storage DDL registry.sqlite and initial registry.sqlite",
         &english_registry_schema,
-        &migrated_registry_schema,
+        &initial_registry_schema,
     );
 
     let english_project = build_schema_from_sql(&english.project_state)?;
     let korean_project = build_schema_from_sql(&korean.project_state)?;
-    let migrated_project = migrated_project_state_schema()?;
+    let initial_project = initial_project_state_schema()?;
 
     let english_project_schema = read_database_schema(&english_project)?;
     let korean_project_schema = read_database_schema(&korean_project)?;
-    let migrated_project_schema = read_database_schema(&migrated_project)?;
+    let initial_project_schema = read_database_schema(&initial_project)?;
 
     assert_schema_eq(
         "English and Korean project state.sqlite DDL",
@@ -125,14 +125,14 @@ fn storage_ddl_documents_match_latest_migrated_schemas() -> Result<(), Box<dyn E
         &korean_project_schema,
     );
     assert_schema_eq(
-        "Storage DDL project state.sqlite and migrated state.sqlite",
+        "Storage DDL project state.sqlite and initial state.sqlite",
         &english_project_schema,
-        &migrated_project_schema,
+        &initial_project_schema,
     );
 
     assert_project_contract_behavior("English project state.sqlite DDL", &english_project)?;
     assert_project_contract_behavior("Korean project state.sqlite DDL", &korean_project)?;
-    assert_project_contract_behavior("migrated project state.sqlite", &migrated_project)?;
+    assert_project_contract_behavior("initial project state.sqlite", &initial_project)?;
 
     Ok(())
 }
@@ -303,7 +303,7 @@ fn build_schema_from_sql(sql: &str) -> Result<Connection, Box<dyn Error>> {
     Ok(conn)
 }
 
-fn migrated_registry_schema() -> Result<Connection, Box<dyn Error>> {
+fn initial_registry_schema() -> Result<Connection, Box<dyn Error>> {
     let mut conn = Connection::open_in_memory()?;
     enable_foreign_keys(&conn)?;
     apply_registry_migrations(&mut conn)?;
@@ -311,7 +311,7 @@ fn migrated_registry_schema() -> Result<Connection, Box<dyn Error>> {
     Ok(conn)
 }
 
-fn migrated_project_state_schema() -> Result<Connection, Box<dyn Error>> {
+fn initial_project_state_schema() -> Result<Connection, Box<dyn Error>> {
     let mut conn = Connection::open_in_memory()?;
     enable_foreign_keys(&conn)?;
     apply_project_state_migrations(&mut conn)?;

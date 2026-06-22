@@ -49,7 +49,7 @@ Storage placement:
 
 For project execution, `project_home` is the location owner for project-local runtime state. The executable project state database path is derived from the validated project home as `project_home/state.sqlite`. The stored `state_db_path` remains in `registry.sqlite` for persistence and diagnostics, but it must match that derived path before Store execution opens, inspects, migrates, or uses project-local state. A mismatching registration remains readable through registry-level lookup and listing for diagnosis, but it is not eligible for Core execution, surface management, setup reuse, or MCP project startup.
 
-Baseline SQLite table shape, indexes, foreign keys, migration tables, and constraints belong to [Storage DDL](storage-ddl.md).
+Baseline SQLite table shape, indexes, foreign keys, migration tables, and constraints belong to [Storage DDL](storage-ddl.md). The current baseline SQLite storage profile for these records is `baseline_sqlite_v2`; profile/version boundary behavior belongs to [Storage Versioning](storage-versioning.md).
 
 Runtime Home identity must not depend only on a filesystem path. A copied or moved Runtime Home may carry the same stored `runtime_home_id`, while a newly created Runtime Home gets a new id. The id can help detect suspicious copies, duplicate registrations, or path drift; it is not a security guarantee.
 

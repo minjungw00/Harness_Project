@@ -15,7 +15,7 @@ use crate::{
     },
     bootstrap::{validate_project_record_for_execution, ProjectRecord},
     migrations::{
-        expected_project_state_migrations, expected_registry_migrations,
+        expected_project_state_migrations, expected_registry_migrations, OLD_STORAGE_PROFILE,
         PROJECT_STATE_DATABASE_KIND, PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND,
         REGISTRY_SCHEMA_VERSION, STORAGE_PROFILE,
     },
@@ -118,7 +118,7 @@ pub struct ProjectInspectionRecord {
     pub project_state: ProjectStateDatabaseInspection,
 }
 
-/// Agent Integration Profile row read from a schema version 2 registry.
+/// Agent Integration Profile row read from the current registry schema.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentIntegrationInspectionRecord {
     pub integration_id: String,
@@ -132,7 +132,7 @@ pub struct AgentIntegrationInspectionRecord {
     pub metadata_json: String,
 }
 
-/// Integration project membership row read from a schema version 2 registry.
+/// Integration project membership row read from the current registry schema.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IntegrationProjectInspectionRecord {
     pub integration_id: String,
@@ -141,7 +141,7 @@ pub struct IntegrationProjectInspectionRecord {
     pub is_default: bool,
 }
 
-/// Host Installation inventory row read from a schema version 2 registry.
+/// Host Installation inventory row read from the current registry schema.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HostInstallationInspectionRecord {
     pub installation_id: String,
@@ -157,7 +157,7 @@ pub struct HostInstallationInspectionRecord {
     pub metadata_json: String,
 }
 
-/// Current or supported historical project-state data.
+/// Current project-state data.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProjectStateInspectionSnapshot {
     pub path: PathBuf,
@@ -193,11 +193,10 @@ pub struct SurfaceInspectionRecord {
     pub metadata_json: String,
 }
 
-/// Whether `surfaces.interaction_role` was stored or inferred from migration history.
+/// Whether `surfaces.interaction_role` was read from the current schema.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SurfaceInteractionRoleSource {
     Stored,
-    HistoricalDefault,
 }
 
 #[derive(Debug)]
@@ -515,6 +514,19 @@ fn inspect_migration_history(
             "schema_migrations contains rows outside {database_kind}"
         )));
     }
+    if let Some(row) = actual
+        .iter()
+        .find(|row| row.storage_profile != STORAGE_PROFILE)
+    {
+        return Err(InspectionIssue::Unsupported {
+            detected_version: row.version,
+            detail: unsupported_storage_profile_detail(
+                database_kind,
+                &row.storage_profile,
+                STORAGE_PROFILE,
+            ),
+        });
+    }
 
     let mut seen_versions = BTreeSet::new();
     for row in &actual {
@@ -549,10 +561,7 @@ fn inspect_migration_history(
 
     for (index, row) in actual.iter().enumerate() {
         let expected_row = expected[index];
-        if row.version != expected_row.version
-            || row.name != expected_row.name
-            || row.storage_profile != STORAGE_PROFILE
-        {
+        if row.version != expected_row.version || row.name != expected_row.name {
             return Err(InspectionIssue::Malformed(format!(
                 "schema_migrations row {index} is version={} name={} profile={}, expected version={} name={} profile={}",
                 row.version,
@@ -583,9 +592,19 @@ fn inspect_migration_history(
 
 fn validate_registry_required_schema(
     conn: &Connection,
-    detected_version: i64,
+    _detected_version: i64,
 ) -> Result<(), InspectionIssue> {
-    require_tables(conn, REGISTRY_DATABASE_KIND, &["runtime_home", "projects"])?;
+    require_tables(
+        conn,
+        REGISTRY_DATABASE_KIND,
+        &[
+            "runtime_home",
+            "projects",
+            "agent_integrations",
+            "integration_projects",
+            "host_installations",
+        ],
+    )?;
     require_columns(
         conn,
         REGISTRY_DATABASE_KIND,
@@ -614,63 +633,52 @@ fn validate_registry_required_schema(
             "metadata_json",
         ],
     )?;
-    if detected_version >= 2 {
-        require_tables(
-            conn,
-            REGISTRY_DATABASE_KIND,
-            &[
-                "agent_integrations",
-                "integration_projects",
-                "host_installations",
-            ],
-        )?;
-        require_columns(
-            conn,
-            REGISTRY_DATABASE_KIND,
-            "agent_integrations",
-            &[
-                "integration_id",
-                "interaction_role",
-                "surface_id",
-                "surface_instance_id",
-                "default_project_id",
-                "enabled",
-                "created_at",
-                "updated_at",
-                "metadata_json",
-            ],
-        )?;
-        require_columns(
-            conn,
-            REGISTRY_DATABASE_KIND,
-            "integration_projects",
-            &["integration_id", "project_id", "created_at"],
-        )?;
-        require_columns(
-            conn,
-            REGISTRY_DATABASE_KIND,
-            "host_installations",
-            &[
-                "installation_id",
-                "integration_id",
-                "host_kind",
-                "host_scope",
-                "server_name",
-                "config_target",
-                "managed_fingerprint",
-                "last_verified_status",
-                "created_at",
-                "updated_at",
-                "metadata_json",
-            ],
-        )?;
-    }
+    require_columns(
+        conn,
+        REGISTRY_DATABASE_KIND,
+        "agent_integrations",
+        &[
+            "integration_id",
+            "interaction_role",
+            "surface_id",
+            "surface_instance_id",
+            "default_project_id",
+            "enabled",
+            "created_at",
+            "updated_at",
+            "metadata_json",
+        ],
+    )?;
+    require_columns(
+        conn,
+        REGISTRY_DATABASE_KIND,
+        "integration_projects",
+        &["integration_id", "project_id", "created_at"],
+    )?;
+    require_columns(
+        conn,
+        REGISTRY_DATABASE_KIND,
+        "host_installations",
+        &[
+            "installation_id",
+            "integration_id",
+            "host_kind",
+            "host_scope",
+            "server_name",
+            "config_target",
+            "managed_fingerprint",
+            "last_verified_status",
+            "created_at",
+            "updated_at",
+            "metadata_json",
+        ],
+    )?;
     Ok(())
 }
 
 fn validate_project_state_required_schema(
     conn: &Connection,
-    detected_version: i64,
+    _detected_version: i64,
 ) -> Result<(), InspectionIssue> {
     require_tables(
         conn,
@@ -700,24 +708,13 @@ fn validate_project_state_required_schema(
             "surface_id",
             "surface_instance_id",
             "surface_kind",
+            "interaction_role",
             "display_name",
             "capability_profile_json",
             "local_access_json",
             "metadata_json",
         ],
     )?;
-
-    let has_role = column_exists(conn, "surfaces", "interaction_role")?;
-    if detected_version >= 7 && !has_role {
-        return Err(InspectionIssue::Malformed(
-            "missing column surfaces.interaction_role".to_owned(),
-        ));
-    }
-    if detected_version < 7 && has_role {
-        return Err(InspectionIssue::Malformed(
-            "surfaces.interaction_role exists before migration version 7".to_owned(),
-        ));
-    }
 
     Ok(())
 }
@@ -927,12 +924,8 @@ fn read_project_rows(
 
 fn read_agent_integration_rows(
     conn: &Connection,
-    detected_version: i64,
+    _detected_version: i64,
 ) -> Result<Vec<AgentIntegrationInspectionRecord>, InspectionIssue> {
-    if detected_version < 2 {
-        return Ok(Vec::new());
-    }
-
     let mut stmt = conn
         .prepare(
             "SELECT
@@ -976,14 +969,10 @@ fn read_agent_integration_rows(
 
 fn read_integration_project_rows(
     conn: &Connection,
-    detected_version: i64,
+    _detected_version: i64,
     integrations: &[AgentIntegrationInspectionRecord],
     projects: &[ProjectInspectionRecord],
 ) -> Result<Vec<IntegrationProjectInspectionRecord>, InspectionIssue> {
-    if detected_version < 2 {
-        return Ok(Vec::new());
-    }
-
     let integration_ids = integrations
         .iter()
         .map(|record| record.integration_id.as_str())
@@ -1035,13 +1024,9 @@ fn read_integration_project_rows(
 
 fn read_host_installation_rows(
     conn: &Connection,
-    detected_version: i64,
+    _detected_version: i64,
     integrations: &[AgentIntegrationInspectionRecord],
 ) -> Result<Vec<HostInstallationInspectionRecord>, InspectionIssue> {
-    if detected_version < 2 {
-        return Ok(Vec::new());
-    }
-
     let integration_ids = integrations
         .iter()
         .map(|record| record.integration_id.as_str())
@@ -1302,40 +1287,25 @@ fn validate_verification_status(status: &str) -> Result<(), InspectionIssue> {
 fn read_surface_rows(
     conn: &Connection,
     project_id: &str,
-    detected_version: i64,
+    _detected_version: i64,
 ) -> Result<Vec<SurfaceInspectionRecord>, InspectionIssue> {
-    let has_stored_role = detected_version >= 7;
-    let sql = if has_stored_role {
-        "SELECT
-            project_id,
-            surface_id,
-            surface_instance_id,
-            surface_kind,
-            interaction_role,
-            display_name,
-            capability_profile_json,
-            local_access_json,
-            metadata_json
-         FROM surfaces
-         WHERE project_id = ?1
-         ORDER BY surface_id, surface_instance_id"
-    } else {
-        "SELECT
-            project_id,
-            surface_id,
-            surface_instance_id,
-            surface_kind,
-            'agent' AS interaction_role,
-            display_name,
-            capability_profile_json,
-            local_access_json,
-            metadata_json
-         FROM surfaces
-         WHERE project_id = ?1
-         ORDER BY surface_id, surface_instance_id"
-    };
-
-    let mut stmt = conn.prepare(sql).map_err(sqlite_unreadable)?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT
+                project_id,
+                surface_id,
+                surface_instance_id,
+                surface_kind,
+                interaction_role,
+                display_name,
+                capability_profile_json,
+                local_access_json,
+                metadata_json
+             FROM surfaces
+             WHERE project_id = ?1
+             ORDER BY surface_id, surface_instance_id",
+        )
+        .map_err(sqlite_unreadable)?;
     let rows = stmt
         .query_map([project_id], |row| {
             Ok(SurfaceInspectionRecord {
@@ -1344,11 +1314,7 @@ fn read_surface_rows(
                 surface_instance_id: row.get(2)?,
                 surface_kind: row.get(3)?,
                 interaction_role: row.get(4)?,
-                interaction_role_source: if has_stored_role {
-                    SurfaceInteractionRoleSource::Stored
-                } else {
-                    SurfaceInteractionRoleSource::HistoricalDefault
-                },
+                interaction_role_source: SurfaceInteractionRoleSource::Stored,
                 display_name: row.get(5)?,
                 capability_profile_json: row.get(6)?,
                 local_access_json: row.get(7)?,
@@ -1385,8 +1351,28 @@ fn validate_storage_profile(
     } else {
         Err(InspectionIssue::Unsupported {
             detected_version,
-            detail: format!("{database_kind} storage_profile {storage_profile} is not supported"),
+            detail: unsupported_storage_profile_detail(
+                database_kind,
+                storage_profile,
+                STORAGE_PROFILE,
+            ),
         })
+    }
+}
+
+fn unsupported_storage_profile_detail(
+    database_kind: &'static str,
+    storage_profile: &str,
+    expected_storage_profile: &str,
+) -> String {
+    if storage_profile == OLD_STORAGE_PROFILE {
+        format!(
+            "{database_kind} storage_profile {storage_profile} is not supported; explicitly reinitialize the Runtime Home to use {expected_storage_profile}"
+        )
+    } else {
+        format!(
+            "{database_kind} storage_profile {storage_profile} is not supported; expected {expected_storage_profile}"
+        )
     }
 }
 
@@ -1446,10 +1432,6 @@ mod tests {
         bootstrap::{
             initialize_runtime_home, register_project, register_surface, ProjectRecord,
             ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
-        },
-        migrations::test_support::{
-            create_project_state_fixture_version, create_registry_fixture_version,
-            RegistryFixtureProject,
         },
         sqlite::{open_read_only_database, project_state_db_path, registry_db_path},
         StoreResult,
@@ -1519,29 +1501,30 @@ mod tests {
     }
 
     #[test]
-    fn supported_historical_registry_schema_is_read_without_migration() -> Result<(), Box<dyn Error>>
-    {
-        let fixture = historical_registry_fixture("inspect-historical-registry", 1)?;
+    fn old_profile_registry_is_unsupported_without_migration() -> Result<(), Box<dyn Error>> {
+        let fixture = current_fixture("inspect-old-profile-registry")?;
         let registry_path = fixture.runtime_home.registry_db_path();
+        mark_registry_old_profile(&registry_path)?;
         let registry_hash_before = file_hash(&registry_path)?;
         let migrations_before = migration_count(&registry_path, REGISTRY_DATABASE_KIND)?;
         let sidecars_before = existing_sidecars(std::slice::from_ref(&registry_path));
 
         let inspection = inspect_runtime_home(fixture.runtime_home.path());
-        let snapshot = present_registry(&inspection.registry);
 
-        assert_eq!(
-            snapshot.schema,
-            InspectionSchemaState::MigrationRequired {
-                detected_version: 1,
-                latest_supported_version: REGISTRY_SCHEMA_VERSION,
+        match inspection.registry {
+            DatabaseInspection::Unsupported {
+                detected_version,
+                latest_supported_version,
+                detail,
+                ..
+            } => {
+                assert_eq!(detected_version, 1);
+                assert_eq!(latest_supported_version, REGISTRY_SCHEMA_VERSION);
+                assert!(detail.contains(OLD_STORAGE_PROFILE));
+                assert!(detail.contains("explicitly reinitialize"));
             }
-        );
-        assert_eq!(snapshot.projects.len(), 1);
-        assert!(snapshot.agent_integrations.is_empty());
-        assert!(snapshot.integration_projects.is_empty());
-        assert!(snapshot.host_installations.is_empty());
-        assert!(!table_exists(&registry_path, "agent_integrations")?);
+            other => panic!("expected unsupported old-profile registry, got {other:?}"),
+        }
         assert_eq!(file_hash(&registry_path)?, registry_hash_before);
         assert_eq!(
             migration_count(&registry_path, REGISTRY_DATABASE_KIND)?,
@@ -1679,38 +1662,39 @@ mod tests {
     }
 
     #[test]
-    fn supported_historical_project_state_schemas_are_read_without_migration(
-    ) -> Result<(), Box<dyn Error>> {
-        for version in 1..PROJECT_STATE_SCHEMA_VERSION {
-            let fixture = historical_fixture(&format!("inspect-historical-v{version}"), version)?;
-            let before_migrations =
-                migration_count(&fixture.project.state_db_path, PROJECT_STATE_DATABASE_KIND)?;
+    fn old_profile_project_state_is_unsupported_without_migration() -> Result<(), Box<dyn Error>> {
+        let fixture = current_fixture("inspect-old-profile-state")?;
+        mark_project_state_old_profile(&fixture.project.state_db_path)?;
+        let before_hash = file_hash(&fixture.project.state_db_path)?;
+        let before_migrations =
+            migration_count(&fixture.project.state_db_path, PROJECT_STATE_DATABASE_KIND)?;
+        let before_surfaces = surface_count(&fixture.project.state_db_path)?;
 
-            let state = inspect_project_state_database(&fixture.project.state_db_path, PROJECT_ID);
+        let state = inspect_project_state_database(&fixture.project.state_db_path, PROJECT_ID);
 
-            let snapshot = present_project_state(&state);
-            assert_eq!(
-                snapshot.schema,
-                InspectionSchemaState::MigrationRequired {
-                    detected_version: version,
-                    latest_supported_version: PROJECT_STATE_SCHEMA_VERSION,
-                }
-            );
-            assert_eq!(snapshot.surfaces.len(), 1);
-            assert_eq!(snapshot.surfaces[0].interaction_role, "agent");
-            assert_eq!(
-                snapshot.surfaces[0].interaction_role_source,
-                if version < 7 {
-                    SurfaceInteractionRoleSource::HistoricalDefault
-                } else {
-                    SurfaceInteractionRoleSource::Stored
-                }
-            );
-            assert_eq!(
-                migration_count(&fixture.project.state_db_path, PROJECT_STATE_DATABASE_KIND)?,
-                before_migrations
-            );
+        match state {
+            DatabaseInspection::Unsupported {
+                detected_version,
+                latest_supported_version,
+                detail,
+                ..
+            } => {
+                assert_eq!(detected_version, 1);
+                assert_eq!(latest_supported_version, PROJECT_STATE_SCHEMA_VERSION);
+                assert!(detail.contains(OLD_STORAGE_PROFILE));
+                assert!(detail.contains("explicitly reinitialize"));
+            }
+            other => panic!("expected unsupported old-profile project state, got {other:?}"),
         }
+        assert_eq!(file_hash(&fixture.project.state_db_path)?, before_hash);
+        assert_eq!(
+            migration_count(&fixture.project.state_db_path, PROJECT_STATE_DATABASE_KIND)?,
+            before_migrations
+        );
+        assert_eq!(
+            surface_count(&fixture.project.state_db_path)?,
+            before_surfaces
+        );
         Ok(())
     }
 
@@ -1744,9 +1728,11 @@ mod tests {
 
     #[test]
     fn inconsistent_migration_records_are_malformed() -> Result<(), Box<dyn Error>> {
-        let fixture = historical_fixture("inspect-inconsistent-migrations", 3)?;
-        Connection::open(&fixture.project.state_db_path)?
-            .execute("DELETE FROM schema_migrations WHERE version = 2", [])?;
+        let fixture = current_fixture("inspect-inconsistent-migrations")?;
+        Connection::open(&fixture.project.state_db_path)?.execute(
+            "UPDATE schema_migrations SET name = 'project_state_other_v1'",
+            [],
+        )?;
 
         let state = inspect_project_state_database(&fixture.project.state_db_path, PROJECT_ID);
 
@@ -1826,7 +1812,9 @@ mod tests {
     #[test]
     fn inspection_does_not_mutate_database_bytes_migrations_or_sidecars(
     ) -> Result<(), Box<dyn Error>> {
-        let fixture = historical_fixture("inspect-no-mutation", 6)?;
+        let fixture = current_fixture("inspect-no-mutation")?;
+        mark_registry_old_profile(&fixture.runtime_home.registry_db_path())?;
+        mark_project_state_old_profile(&fixture.project.state_db_path)?;
         let registry_hash_before = file_hash(&fixture.runtime_home.registry_db_path())?;
         let state_hash_before = file_hash(&fixture.project.state_db_path)?;
         let migration_count_before =
@@ -1838,6 +1826,10 @@ mod tests {
 
         let _inspection = inspect_runtime_home(fixture.runtime_home.path());
 
+        assert!(matches!(
+            inspect_runtime_home(fixture.runtime_home.path()).registry,
+            DatabaseInspection::Unsupported { .. }
+        ));
         assert_eq!(
             file_hash(&fixture.runtime_home.registry_db_path())?,
             registry_hash_before
@@ -1909,62 +1901,6 @@ mod tests {
         })
     }
 
-    fn historical_fixture(prefix: &str, version: i64) -> Result<InspectionFixture, Box<dyn Error>> {
-        let fixture = current_fixture(prefix)?;
-        fs::remove_file(&fixture.project.state_db_path)?;
-        let mut conn = Connection::open(&fixture.project.state_db_path)?;
-        create_project_state_fixture_version(&mut conn, PROJECT_ID, version)?;
-        insert_historical_surface(&conn)?;
-        drop(conn);
-        Ok(fixture)
-    }
-
-    fn historical_registry_fixture(
-        prefix: &str,
-        version: i64,
-    ) -> Result<InspectionFixture, Box<dyn Error>> {
-        let runtime_home = TempRuntimeHome::new(prefix)?;
-        let repo_root = runtime_home.create_product_repo("repo")?;
-        let project_home = runtime_home.path().join("projects").join(PROJECT_ID);
-        fs::create_dir_all(&project_home)?;
-        let state_db_path = project_home.join("state.sqlite");
-        let mut state = Connection::open(&state_db_path)?;
-        create_project_state_fixture_version(&mut state, PROJECT_ID, PROJECT_STATE_SCHEMA_VERSION)?;
-        drop(state);
-
-        let repo_root_text = path_text(&repo_root);
-        let project_home_text = path_text(&project_home);
-        let state_db_path_text = path_text(&state_db_path);
-        let mut registry = Connection::open(runtime_home.registry_db_path())?;
-        create_registry_fixture_version(
-            &mut registry,
-            RUNTIME_HOME_ID,
-            version,
-            &[RegistryFixtureProject {
-                project_id: PROJECT_ID,
-                repo_root: &repo_root_text,
-                project_home: &project_home_text,
-                state_db_path: &state_db_path_text,
-                status: ACTIVE_PROJECT_STATUS,
-                metadata_json: "{}",
-            }],
-        )?;
-        drop(registry);
-
-        Ok(InspectionFixture {
-            runtime_home,
-            project: ProjectRecord {
-                project_id: PROJECT_ID.to_owned(),
-                runtime_home_id: RUNTIME_HOME_ID.to_owned(),
-                repo_root,
-                project_home,
-                state_db_path,
-                status: ACTIVE_PROJECT_STATUS.to_owned(),
-                metadata_json: "{}".to_owned(),
-            },
-        })
-    }
-
     fn replace_project_state_db_path(
         runtime_home: &Path,
         project_id: &str,
@@ -1995,31 +1931,28 @@ mod tests {
         }
     }
 
-    fn insert_historical_surface(conn: &Connection) -> rusqlite::Result<()> {
+    fn mark_registry_old_profile(path: &Path) -> rusqlite::Result<()> {
+        let conn = Connection::open(path)?;
         conn.execute(
-            "INSERT INTO surfaces (
-                project_id,
-                surface_id,
-                surface_instance_id,
-                surface_kind,
-                display_name,
-                capability_profile_json,
-                local_access_json,
-                registered_at,
-                metadata_json
-            )
-            VALUES (
-                ?1,
-                ?2,
-                ?3,
-                'mcp',
-                'Agent MCP',
-                '{}',
-                '{\"access_class\":\"core_mutation\",\"authorized_access_classes\":[\"read_status\",\"core_mutation\"],\"verification_basis\":\"local_admin_registration\"}',
-                't0',
-                '{}'
-            )",
-            params![PROJECT_ID, SURFACE_ID, SURFACE_INSTANCE_ID],
+            "UPDATE schema_migrations SET storage_profile = ?1",
+            [OLD_STORAGE_PROFILE],
+        )?;
+        conn.execute(
+            "UPDATE runtime_home SET storage_profile = ?1",
+            [OLD_STORAGE_PROFILE],
+        )?;
+        Ok(())
+    }
+
+    fn mark_project_state_old_profile(path: &Path) -> rusqlite::Result<()> {
+        let conn = Connection::open(path)?;
+        conn.execute(
+            "UPDATE schema_migrations SET storage_profile = ?1",
+            [OLD_STORAGE_PROFILE],
+        )?;
+        conn.execute(
+            "UPDATE project_state SET storage_profile = ?1",
+            [OLD_STORAGE_PROFILE],
         )?;
         Ok(())
     }
@@ -2051,26 +1984,13 @@ mod tests {
         )?)
     }
 
+    fn surface_count(path: &Path) -> StoreResult<i64> {
+        let conn = open_read_only_database(path)?;
+        Ok(conn.query_row("SELECT COUNT(*) FROM surfaces", [], |row| row.get(0))?)
+    }
+
     fn file_hash(path: &Path) -> Result<Vec<u8>, Box<dyn Error>> {
         Ok(Sha256::digest(fs::read(path)?).to_vec())
-    }
-
-    fn path_text(path: &Path) -> String {
-        path.display().to_string()
-    }
-
-    fn table_exists(path: &Path, table: &str) -> Result<bool, Box<dyn Error>> {
-        let conn = open_read_only_database(path)?;
-        Ok(conn.query_row(
-            "SELECT EXISTS (
-                SELECT 1
-                  FROM sqlite_master
-                 WHERE type = 'table'
-                   AND name = ?1
-            )",
-            [table],
-            |row| row.get::<_, i64>(0),
-        )? == 1)
     }
 
     fn existing_sidecars(paths: &[PathBuf]) -> Vec<PathBuf> {

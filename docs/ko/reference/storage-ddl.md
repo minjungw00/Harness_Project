@@ -154,7 +154,7 @@ CREATE UNIQUE INDEX idx_host_installations_target
 
 등록된 프로젝트마다 프로젝트별 `state.sqlite`가 하나 있습니다. 이 데이터베이스는 그 프로젝트의 Core 상태를 저장하며, 외래 키와 인덱스가 같은 프로젝트 관계를 강제할 수 있도록 프로젝트 범위 행에 `project_id`를 반복해 저장합니다.
 
-아래 DDL은 지원되는 프로젝트 상태 스키마 버전 10까지 적용된 뒤의 의도된 최신 물리 프로젝트 상태 스키마를 나타냅니다. 더 오래된 물리 데이터베이스가 이 형태에 도달하는 지원 마이그레이션은 [저장소 버전 관리](storage-versioning.md)가 담당합니다.
+아래 DDL은 저장소 프로필 `baseline_sqlite_v2` 스키마 버전 `1`의 초기 물리 프로젝트 상태 스키마입니다. 저장소 프로필과 마이그레이션 경계 동작은 [저장소 버전 관리](storage-versioning.md)가 담당합니다.
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -668,7 +668,7 @@ Task 리비전과 닫기 근거:
 - `user_judgments.basis_json`은 있을 때 API `JudgmentBasis` 스냅샷을 저장합니다.
 - `user_judgments.basis_status`는 판단 근거의 저장소 소유 호환 상태인 `current`, `stale`, `superseded`, `legacy_unbound`를 저장합니다.
 - 근거가 없는 기존 판단은 `basis_json IS NULL`과 `basis_status='legacy_unbound'`로 표현합니다. 이 판단은 감사 기록으로 남으며 현재 닫기, 쓰기, 민감 승인 요구사항을 만족할 수 없습니다.
-- 닫힌 `user_judgments.status` 집합, nullable `resolution_outcome`, nullable `resolution_machine_action`, 행위자 출처 열, 해결 접점 출처 열, 복합 해결 접점 외래 키는 의도된 프로젝트 상태 스키마 버전 10의 일부입니다.
+- 닫힌 `user_judgments.status` 집합, nullable `resolution_outcome`, nullable `resolution_machine_action`, 행위자 출처 열, 해결 접점 출처 열, 복합 해결 접점 외래 키는 `baseline_sqlite_v2` 프로젝트 상태 스키마 버전 `1`의 일부입니다.
 - `user_judgments.resolution_outcome`은 있을 때 선택된 선택지의 기계 판독 가능 결과를 저장합니다. `resolution_outcome`이 null인 `status='resolved'`는 권한을 지니는 요구사항에서는 이력 감사 기록이며 수락으로 해석할 수 없습니다.
 - `user_judgments.resolution_machine_action`은 있을 때 선택된 Core 생성 권한 동작을 저장합니다. 현재 권한을 지니는 해결은 null이 아닌 `resolution_machine_action`과 null이 아닌 `resolution_outcome`을 요구합니다. 레거시 행은 감사 전용 읽기를 위해 둘 중 하나를 null로 둘 수 있습니다.
 - `resolved_by_actor_kind`, `resolved_actor_role`, `resolved_by_surface_id`, `resolved_by_surface_instance_id`, `resolved_verification_basis`, `resolved_assurance_level`은 해결 시점에 파생된 `VerifiedActorContext` 출처를 저장합니다. 권한을 지니는 행은 `resolved_by_actor_kind='user'`, `resolved_actor_role='user_interaction'`, 유효한 해결 접점/인스턴스 참조, null이 아닌 출처 필드가 필요합니다. 그 출처가 없는 행은 읽을 수 있는 이력 기록일 뿐입니다.

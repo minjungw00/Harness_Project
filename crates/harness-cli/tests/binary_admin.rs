@@ -23,14 +23,13 @@ use harness_store::{
         ProjectRecord, ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
     },
     migrations::{
-        test_support::{
-            create_project_state_fixture_version, create_registry_fixture_version,
-            RegistryFixtureProject,
-        },
-        PROJECT_STATE_DATABASE_KIND, PROJECT_STATE_SCHEMA_VERSION, REGISTRY_DATABASE_KIND,
-        REGISTRY_SCHEMA_VERSION, STORAGE_PROFILE,
+        PROJECT_STATE_DATABASE_KIND, REGISTRY_DATABASE_KIND, REGISTRY_SCHEMA_VERSION,
+        STORAGE_PROFILE,
     },
-    sqlite::{open_read_only_database, project_state_db_path, registry_db_path},
+    sqlite::{
+        open_project_state_database, open_read_only_database, project_state_db_path,
+        registry_db_path,
+    },
 };
 use harness_test_support::TempRuntimeHome;
 use harness_types::SurfaceInteractionRole;
@@ -42,7 +41,6 @@ const AGENT_SURFACE_ID: &str = "surface_binary_agent";
 const AGENT_INSTANCE_ID: &str = "surface_instance_binary_agent";
 const USER_SURFACE_ID: &str = "surface_binary_user";
 const USER_INSTANCE_ID: &str = "surface_instance_binary_user";
-const LEGACY_PROJECT_STATE_SCHEMA_VERSION: i64 = 5;
 const GUIDANCE_BEGIN_MARKER: &str = "<!-- BEGIN HARNESS MANAGED GUIDANCE v1 -->";
 
 #[test]
@@ -360,77 +358,62 @@ fn harness_binary_surface_commands_reject_invalid_legacy_project_paths(
             &missing_registry_before,
         )?;
 
-        let historical_project_id = relationship.project_id("historical");
-        let historical_runtime_home = initialized_project(
-            &relationship.prefix("historical"),
-            &historical_project_id,
-            "runtime_home_cli_surface_historical",
+        let existing_project_id = relationship.project_id("existing");
+        let existing_runtime_home = initialized_project(
+            &relationship.prefix("existing"),
+            &existing_project_id,
+            "runtime_home_cli_surface_existing",
         )?;
-        relationship.replace_repo_root(&historical_runtime_home, &historical_project_id)?;
-        let historical_registry_before =
-            single_project_record(historical_runtime_home.path(), &historical_project_id)?;
-        let historical_state_path =
-            project_state_db_path(historical_runtime_home.path(), &historical_project_id);
-        fs::remove_file(&historical_state_path)?;
-        let mut historical = Connection::open(&historical_state_path)?;
-        create_project_state_fixture_version(
-            &mut historical,
-            &historical_project_id,
-            LEGACY_PROJECT_STATE_SCHEMA_VERSION,
-        )?;
-        drop(historical);
-        let historical_migrations_before = migration_count(&historical_state_path)?;
-        let historical_surface_count_before = surface_count(&historical_state_path)?;
-        assert!(!column_exists(
-            &historical_state_path,
-            "project_state",
-            "enforcement_profile_json"
-        )?);
-        assert!(!column_exists(
-            &historical_state_path,
-            "surfaces",
-            "interaction_role"
-        )?);
+        relationship.replace_repo_root(&existing_runtime_home, &existing_project_id)?;
+        let existing_registry_before =
+            single_project_record(existing_runtime_home.path(), &existing_project_id)?;
+        let existing_state_path =
+            project_state_db_path(existing_runtime_home.path(), &existing_project_id);
+        fs::remove_file(&existing_state_path)?;
+        let existing = open_project_state_database(&existing_state_path)?;
+        drop(existing);
+        let existing_migrations_before = migration_count(&existing_state_path)?;
+        let existing_surface_count_before = surface_count(&existing_state_path)?;
 
-        let historical_list = run_with_home(
-            historical_runtime_home.path(),
+        let existing_list = run_with_home(
+            existing_runtime_home.path(),
             [
                 "surface",
                 "list",
                 "--project-id",
-                historical_project_id.as_str(),
+                existing_project_id.as_str(),
             ],
         )?;
-        assert_invalid_project_path_error(&historical_list, relationship.expected_error());
-        assert_historical_project_state_unchanged(
-            &historical_state_path,
-            historical_migrations_before,
-            historical_surface_count_before,
+        assert_invalid_project_path_error(&existing_list, relationship.expected_error());
+        assert_project_state_unchanged(
+            &existing_state_path,
+            existing_migrations_before,
+            existing_surface_count_before,
         )?;
 
-        let historical_register = run_with_home(
-            historical_runtime_home.path(),
+        let existing_register = run_with_home(
+            existing_runtime_home.path(),
             [
                 "surface",
                 "register",
                 "--project-id",
-                historical_project_id.as_str(),
+                existing_project_id.as_str(),
                 "--surface-id",
-                "surface_historical",
+                "surface_existing",
                 "--surface-instance-id",
-                "surface_instance_historical",
+                "surface_instance_existing",
             ],
         )?;
-        assert_invalid_project_path_error(&historical_register, relationship.expected_error());
-        assert_historical_project_state_unchanged(
-            &historical_state_path,
-            historical_migrations_before,
-            historical_surface_count_before,
+        assert_invalid_project_path_error(&existing_register, relationship.expected_error());
+        assert_project_state_unchanged(
+            &existing_state_path,
+            existing_migrations_before,
+            existing_surface_count_before,
         )?;
         assert_registry_unchanged_and_cli_visible(
-            historical_runtime_home.path(),
-            &historical_project_id,
-            &historical_registry_before,
+            existing_runtime_home.path(),
+            &existing_project_id,
+            &existing_registry_before,
         )?;
     }
 
@@ -1215,18 +1198,18 @@ fn harness_binary_agent_generic_export_dry_run_creates_no_export_files(
 
 #[cfg(unix)]
 #[test]
-fn harness_binary_agent_dry_run_historical_registry_is_read_only_and_reports_migration(
+fn harness_binary_agent_dry_run_old_profile_registry_is_read_only_and_rejected(
 ) -> Result<(), Box<dyn Error>> {
-    let runtime_home = TempRuntimeHome::new("cli-bin-agent-registry-v1-dry")?;
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-registry-old-profile-dry")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     create_registry_fixture_with_project(
         runtime_home.path(),
         &repo_root,
-        "project_registry_v1_dry",
-        1,
+        "project_registry_old_profile_dry",
     )?;
+    mark_registry_old_profile(runtime_home.path())?;
     let codex_home = runtime_home.path().join("codex-home");
-    let mcp_command = runtime_home.path().join("harness-mcp-v1-dry");
+    let mcp_command = runtime_home.path().join("harness-mcp-old-profile-dry");
     fs::write(&mcp_command, "not executed")?;
     let registry_path = registry_db_path(runtime_home.path());
     let hash_before = file_hash(&registry_path)?;
@@ -1243,9 +1226,9 @@ fn harness_binary_agent_dry_run_historical_registry_is_read_only_and_reports_mig
             "--scope",
             "user",
             "--integration-id",
-            "agent_registry_v1_dry",
+            "agent_registry_old_profile_dry",
             "--project-id",
-            "project_registry_v1_dry",
+            "project_registry_old_profile_dry",
             "--repo-root",
             path_text(&repo_root).as_str(),
             "--mcp-command",
@@ -1257,26 +1240,22 @@ fn harness_binary_agent_dry_run_historical_registry_is_read_only_and_reports_mig
         &[("CODEX_HOME", path_text(&codex_home))],
     )?;
 
-    assert_success(&dry_run);
-    let value: Value = serde_json::from_str(&stdout(&dry_run))?;
-    assert_eq!(value["runtime"]["registry_schema_version"], 1);
-    assert_eq!(
-        value["runtime"]["registry_latest_supported_schema_version"],
-        REGISTRY_SCHEMA_VERSION
-    );
-    assert_eq!(value["runtime"]["registry_migration_planned"], true);
-    assert!(value["actions"]
-        .as_array()
-        .expect("actions array")
-        .iter()
-        .any(|action| action["target"] == "registry_migration" && action["action"] == "planned"));
+    assert_eq!(dry_run.status.code(), Some(1));
+    assert!(stdout(&dry_run).is_empty());
+    let error = stderr(&dry_run);
+    assert!(error.contains("baseline_sqlite"));
+    assert!(error.contains("baseline_sqlite_v2"));
+    assert!(error.contains("explicitly reinitialize the Runtime Home"));
     assert_eq!(file_hash(&registry_path)?, hash_before);
     assert_eq!(
         migration_count_for(&registry_path, REGISTRY_DATABASE_KIND)?,
         migrations_before
     );
-    assert_eq!(registry_schema_version(&registry_path)?, 1);
-    assert!(!table_exists(&registry_path, "agent_integrations")?);
+    assert_eq!(
+        registry_storage_profile(&registry_path, "runtime_home")?,
+        "baseline_sqlite"
+    );
+    assert!(table_exists(&registry_path, "agent_integrations")?);
     assert_eq!(existing_sidecars(&[registry_path]), sidecars_before);
     assert!(!codex_home.join("config.toml").exists());
     Ok(())
@@ -1379,7 +1358,6 @@ fn harness_binary_agent_dry_run_unsupported_future_registry_is_read_only(
         runtime_home.path(),
         &repo_root,
         "project_registry_future_dry",
-        REGISTRY_SCHEMA_VERSION,
     )?;
     insert_future_registry_migration(runtime_home.path())?;
     let registry_path = registry_db_path(runtime_home.path());
@@ -3312,44 +3290,34 @@ fn create_registry_fixture_with_project(
     runtime_home: &Path,
     repo_root: &Path,
     project_id: &str,
-    registry_version: i64,
 ) -> Result<ProjectRecord, Box<dyn Error>> {
-    let repo_root = fs::canonicalize(repo_root)?;
-    let project_home = runtime_home.join("projects").join(project_id);
-    fs::create_dir_all(&project_home)?;
-    let state_db_path = project_home.join("state.sqlite");
-    let mut state = Connection::open(&state_db_path)?;
-    create_project_state_fixture_version(&mut state, project_id, PROJECT_STATE_SCHEMA_VERSION)?;
-    drop(state);
+    initialize_runtime_home(runtime_home, "runtime_home_binary_agent_fixture", "{}")?;
+    Ok(register_project(
+        runtime_home,
+        ProjectRegistration {
+            project_id: project_id.to_owned(),
+            repo_root: repo_root.to_path_buf(),
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?)
+}
 
-    let repo_root_text = path_text(&repo_root);
-    let project_home_text = path_text(&project_home);
-    let state_db_path_text = path_text(&state_db_path);
-    let mut registry = Connection::open(registry_db_path(runtime_home))?;
-    create_registry_fixture_version(
-        &mut registry,
-        "runtime_home_binary_agent_fixture",
-        registry_version,
-        &[RegistryFixtureProject {
-            project_id,
-            repo_root: &repo_root_text,
-            project_home: &project_home_text,
-            state_db_path: &state_db_path_text,
-            status: ACTIVE_PROJECT_STATUS,
-            metadata_json: "{}",
-        }],
+fn mark_registry_old_profile(runtime_home: &Path) -> Result<(), Box<dyn Error>> {
+    let conn = Connection::open(registry_db_path(runtime_home))?;
+    conn.execute(
+        "UPDATE schema_migrations
+            SET storage_profile = 'baseline_sqlite'
+          WHERE database_kind = ?1",
+        [REGISTRY_DATABASE_KIND],
     )?;
-    drop(registry);
-
-    Ok(ProjectRecord {
-        project_id: project_id.to_owned(),
-        runtime_home_id: "runtime_home_binary_agent_fixture".to_owned(),
-        repo_root,
-        project_home,
-        state_db_path,
-        status: ACTIVE_PROJECT_STATUS.to_owned(),
-        metadata_json: "{}".to_owned(),
-    })
+    conn.execute(
+        "UPDATE runtime_home
+            SET storage_profile = 'baseline_sqlite'",
+        [],
+    )?;
+    Ok(())
 }
 
 fn insert_future_registry_migration(runtime_home: &Path) -> Result<(), Box<dyn Error>> {
@@ -3387,10 +3355,11 @@ fn migration_count_for(path: &Path, database_kind: &str) -> Result<i64, Box<dyn 
     )?)
 }
 
-fn registry_schema_version(path: &Path) -> Result<i64, Box<dyn Error>> {
+fn registry_storage_profile(path: &Path, table: &str) -> Result<String, Box<dyn Error>> {
     let conn = open_read_only_database(path)?;
+    let escaped_table = table.replace('"', "\"\"");
     Ok(conn.query_row(
-        "SELECT schema_version FROM runtime_home WHERE singleton_id = 1",
+        &format!("SELECT storage_profile FROM \"{escaped_table}\" WHERE singleton_id = 1"),
         [],
         |row| row.get(0),
     )?)
@@ -3708,33 +3677,13 @@ fn surface_count(state_path: &Path) -> Result<i64, Box<dyn Error>> {
     Ok(conn.query_row("SELECT COUNT(*) FROM surfaces", [], |row| row.get(0))?)
 }
 
-fn column_exists(state_path: &Path, table: &str, column: &str) -> Result<bool, Box<dyn Error>> {
-    let conn = open_read_only_database(state_path)?;
-    let escaped_table = table.replace('"', "\"\"");
-    let mut stmt = conn.prepare(&format!("PRAGMA table_info(\"{escaped_table}\")"))?;
-    let mut rows = stmt.query([])?;
-    while let Some(row) = rows.next()? {
-        let name: String = row.get(1)?;
-        if name == column {
-            return Ok(true);
-        }
-    }
-    Ok(false)
-}
-
-fn assert_historical_project_state_unchanged(
+fn assert_project_state_unchanged(
     state_path: &Path,
     expected_migration_count: i64,
     expected_surface_count: i64,
 ) -> Result<(), Box<dyn Error>> {
     assert_eq!(migration_count(state_path)?, expected_migration_count);
     assert_eq!(surface_count(state_path)?, expected_surface_count);
-    assert!(!column_exists(
-        state_path,
-        "project_state",
-        "enforcement_profile_json"
-    )?);
-    assert!(!column_exists(state_path, "surfaces", "interaction_role")?);
     Ok(())
 }
 

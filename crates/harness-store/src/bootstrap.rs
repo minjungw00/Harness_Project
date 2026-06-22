@@ -738,14 +738,11 @@ mod tests {
 
     use crate::{
         core_pipeline::CoreProjectStore,
-        migrations::{
-            test_support::create_project_state_fixture_version, PROJECT_STATE_DATABASE_KIND,
-        },
-        sqlite::open_read_only_database,
+        migrations::PROJECT_STATE_DATABASE_KIND,
+        sqlite::{open_project_state_database, open_read_only_database},
     };
     use harness_test_support::TempRuntimeHome;
     use harness_types::{ProjectId, SurfaceInteractionRole};
-    use rusqlite::Connection;
 
     use super::*;
 
@@ -1047,8 +1044,7 @@ mod tests {
                 .parent()
                 .expect("alternate state path has parent"),
         )?;
-        let mut conn = Connection::open(&alternate_state_path)?;
-        create_project_state_fixture_version(&mut conn, project_id, 5)?;
+        let conn = open_project_state_database(&alternate_state_path)?;
         drop(conn);
         let migrations_before = migration_count(&alternate_state_path)?;
         let surface_count_before = surface_count(&alternate_state_path)?;
@@ -1066,7 +1062,7 @@ mod tests {
             .expect_err("surface listing should reject mismatched state_db_path");
         assert_state_db_path_mismatch(list_error, &alternate_state_path, &expected_state_path);
 
-        assert_historical_project_state_unchanged(
+        assert_project_state_unchanged(
             &alternate_state_path,
             migrations_before,
             surface_count_before,
@@ -1264,12 +1260,12 @@ mod tests {
     }
 
     #[test]
-    fn surface_management_rejects_invalid_legacy_records_without_migrating_historical_state(
+    fn surface_management_rejects_invalid_records_without_touching_project_state(
     ) -> Result<(), Box<dyn Error>> {
         for relationship in InvalidProjectRelationship::ALL {
-            let project_id = relationship.project_id("surface_historical");
+            let project_id = relationship.project_id("surface_existing");
             let (runtime_home, _) =
-                registered_project(&relationship.prefix("surface-historical"), &project_id)?;
+                registered_project(&relationship.prefix("surface-existing"), &project_id)?;
             relationship.replace_repo_root(&runtime_home, &project_id)?;
 
             let project = project_record(runtime_home.path(), &project_id)?
@@ -1277,38 +1273,22 @@ mod tests {
             let state_path = project.state_db_path.clone();
             let registry_before = project.clone();
             fs::remove_file(&state_path)?;
-            let mut conn = Connection::open(&state_path)?;
-            create_project_state_fixture_version(&mut conn, &project_id, 5)?;
+            let conn = open_project_state_database(&state_path)?;
             drop(conn);
 
             let migrations_before = migration_count(&state_path)?;
             let surface_count_before = surface_count(&state_path)?;
-            assert_eq!(migrations_before, 5);
-            assert!(!column_exists(
-                &state_path,
-                "project_state",
-                "enforcement_profile_json"
-            )?);
-            assert!(!column_exists(&state_path, "surfaces", "interaction_role")?);
 
             let list_error = list_surfaces(runtime_home.path(), &project_id)
                 .expect_err("invalid legacy registration should reject before state DB migration");
             assert_invalid_project_registration(list_error, relationship.expected_error());
-            assert_historical_project_state_unchanged(
-                &state_path,
-                migrations_before,
-                surface_count_before,
-            )?;
+            assert_project_state_unchanged(&state_path, migrations_before, surface_count_before)?;
 
             let register_error =
                 register_surface(runtime_home.path(), surface_registration(&project_id))
                     .expect_err("invalid legacy registration should reject before surface insert");
             assert_invalid_project_registration(register_error, relationship.expected_error());
-            assert_historical_project_state_unchanged(
-                &state_path,
-                migrations_before,
-                surface_count_before,
-            )?;
+            assert_project_state_unchanged(&state_path, migrations_before, surface_count_before)?;
 
             assert_registry_record_unchanged_and_visible(
                 runtime_home.path(),
@@ -1505,34 +1485,13 @@ mod tests {
         Ok(conn.query_row("SELECT COUNT(*) FROM surfaces", [], |row| row.get(0))?)
     }
 
-    fn column_exists(state_path: &Path, table: &str, column: &str) -> StoreResult<bool> {
-        let conn = open_read_only_database(state_path)?;
-        let escaped_table = table.replace('"', "\"\"");
-        let sql = format!("PRAGMA table_info(\"{escaped_table}\")");
-        let mut stmt = conn.prepare(&sql)?;
-        let mut rows = stmt.query([])?;
-        while let Some(row) = rows.next()? {
-            let name: String = row.get(1)?;
-            if name == column {
-                return Ok(true);
-            }
-        }
-        Ok(false)
-    }
-
-    fn assert_historical_project_state_unchanged(
+    fn assert_project_state_unchanged(
         state_path: &Path,
         expected_migration_count: i64,
         expected_surface_count: i64,
     ) -> StoreResult<()> {
         assert_eq!(migration_count(state_path)?, expected_migration_count);
         assert_eq!(surface_count(state_path)?, expected_surface_count);
-        assert!(!column_exists(
-            state_path,
-            "project_state",
-            "enforcement_profile_json"
-        )?);
-        assert!(!column_exists(state_path, "surfaces", "interaction_role")?);
         Ok(())
     }
 

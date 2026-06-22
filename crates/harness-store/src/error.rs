@@ -62,6 +62,12 @@ pub enum StoreError {
         expected_storage_profile: &'static str,
         actual_storage_profile: String,
     },
+    /// A database uses a storage profile that this build does not support.
+    UnsupportedStorageProfile {
+        database_kind: &'static str,
+        actual_storage_profile: String,
+        expected_storage_profile: &'static str,
+    },
     /// A migrated database does not satisfy a required schema invariant.
     SchemaInvariant {
         database_kind: &'static str,
@@ -74,6 +80,18 @@ impl StoreError {
         Self::SchemaInvariant {
             database_kind,
             detail: detail.into(),
+        }
+    }
+
+    pub(crate) fn unsupported_storage_profile(
+        database_kind: &'static str,
+        actual_storage_profile: impl Into<String>,
+        expected_storage_profile: &'static str,
+    ) -> Self {
+        Self::UnsupportedStorageProfile {
+            database_kind,
+            actual_storage_profile: actual_storage_profile.into(),
+            expected_storage_profile,
         }
     }
 
@@ -277,6 +295,15 @@ impl StoreError {
                 field: None,
                 owner_state_error: None,
             },
+            Self::UnsupportedStorageProfile { database_kind, .. } => StoreFailureClassification {
+                route: StoreFailureRoute::OperationalUnavailable,
+                category: "unsupported_storage_profile",
+                retryable: false,
+                database_kind: Some(database_kind),
+                entity: None,
+                field: Some("storage_profile"),
+                owner_state_error: None,
+            },
             Self::SchemaInvariant { database_kind, .. } => StoreFailureClassification {
                 route: StoreFailureRoute::OperationalUnavailable,
                 category: "schema_invariant",
@@ -446,6 +473,14 @@ impl fmt::Display for StoreError {
                 formatter,
                 "migration conflict for {database_kind} version {version}: expected {expected_name}/{expected_storage_profile}, found {actual_name}/{actual_storage_profile}"
             ),
+            Self::UnsupportedStorageProfile {
+                database_kind,
+                actual_storage_profile,
+                expected_storage_profile,
+            } => write!(
+                formatter,
+                "unsupported storage profile for {database_kind}: found {actual_storage_profile}, expected {expected_storage_profile}; explicitly reinitialize the Runtime Home"
+            ),
             Self::SchemaInvariant {
                 database_kind,
                 detail,
@@ -471,6 +506,7 @@ impl Error for StoreError {
             | Self::CorruptOwnerStateValue { .. }
             | Self::CorruptStoredValue { .. }
             | Self::MigrationConflict { .. }
+            | Self::UnsupportedStorageProfile { .. }
             | Self::SchemaInvariant { .. } => None,
         }
     }

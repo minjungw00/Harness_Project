@@ -11,7 +11,7 @@ This document owns:
 - idempotency and request-hash replay semantics
 - event meaning for `task_events`
 - lock policy
-- supported project-state migration semantics and baseline/out-of-scope migration boundaries
+- supported storage profile/schema migration semantics and baseline/out-of-scope migration boundaries
 - failure and retry interpretation for state versions and idempotency keys
 
 This document does not own:
@@ -463,55 +463,19 @@ Owner links:
 - Baseline SQLite DDL, constraints, indexes, foreign keys, and migration table shape belong to [Storage DDL](storage-ddl.md).
 - Runtime Home separation belongs to [Runtime Boundaries](runtime-boundaries.md).
 
-The baseline migration boundary is:
+The current baseline storage profile is `baseline_sqlite_v2`.
 
-- Store schema/profile version in Runtime Home metadata and `project_state`, or an equivalent storage owner-defined mechanism.
-- Validate owner-shaped JSON before commit and before tightening constraints.
-- Treat unknown owner-bound status or enum values as invalid until an owner defines them.
-- Tighten nullable fields, foreign keys, enum checks, and JSON validation only after existing rows have been validated or routed to an owner-defined repair state.
-- Preserve `task_events.event_seq` ordering when `task_events` is retained.
-- Preserve artifact hashes and owner links, or mark affected refs invalid for recovery.
-- Preserve committed `tool_invocations` replay rows so idempotency keys do not fork after migration.
-- Preserve replay rows that lack verified replay context as `legacy_unverified`, or an equivalent non-replay-eligible state, until an owner-defined repair attaches complete verified context.
-- When adding or validating the replay surface constraint, inspect the actual SQLite foreign-key definition, including the physical composite key and restrictive deletion behavior, not only column presence.
-- Migration from an older replay schema must preserve historical rows and fail rather than silently downgrade an invalid verified replay row.
-- Project `state.sqlite` schema migration does not create a public `project_state.state_version` increment, Core event, replay record, or public method effect unless a focused owner explicitly defines that effect.
-- A project-state migration may advance `project_state.schema_version` and the `schema_migrations` ledger only after that version's DDL changes, data preservation or classification, validation before tightening, and required post-checks succeed in the same migration attempt.
-- If a project-state migration fails before the metadata and ledger advance, retry must be safe after rollback. If a committed partial schema or unknown migration row is detected, startup must fail with a structured storage/runtime unavailable diagnostic rather than guessing record meaning.
+In that profile:
 
-### Project-state schema versions 2 through 10
+- `registry.sqlite` starts at schema version `1` with one registry `schema_migrations` row: `database_kind='registry'`, `version=1`, `name='registry_initial_v1'`, and `storage_profile='baseline_sqlite_v2'`.
+- Project `state.sqlite` starts at schema version `1` with one project-state `schema_migrations` row: `database_kind='project_state'`, `version=1`, `name='project_state_initial_v1'`, and `storage_profile='baseline_sqlite_v2'`.
+- A new database is created by applying the full initial DDL for that database in one transactional migration, then recording the metadata and migration ledger row for the same profile.
+- Reopening an already-current database is idempotent only when the stored schema version, migration version, migration name, database kind, and storage profile match the compiled baseline.
+- Unknown newer versions, unknown migration rows, missing migration rows, partial or corrupt ledgers, migration name mismatch, and storage-profile mismatch are not repaired, inferred, or silently converted. Startup and inspection must fail with a structured storage/runtime unavailable diagnostic rather than guessing record meaning.
+- The exact old storage profile `baseline_sqlite` is unsupported. Store must not convert, delete, rewrite, or migrate a Runtime Home that carries that profile. The operator must explicitly reinitialize the Runtime Home before using the new profile.
+- Future profile or schema changes are supported only when [Scope](scope.md), [Storage Records](storage-records.md), [Storage DDL](storage-ddl.md), and this document define the version, storage profile, validation, preservation, repair, retry, and metadata-advance behavior.
 
-These are the supported durable project-state migration semantics. [Storage DDL](storage-ddl.md) owns the physical latest DDL; this section owns the version transition, preservation, failure, rollback, retry, and metadata-advance meaning.
-
-| Version | Durable migration semantics |
-|---|---|
-| 2 | Replay-context status is added to `tool_invocations` together with replay surface identity fields. Existing committed replay rows are preserved as `replay_context_status='legacy_unverified'`; they remain non-replay-eligible until an owner-defined repair attaches complete verified context. New `verified` rows must carry `surface_id`, `surface_instance_id`, and `access_class`; insert/update validation rejects missing verified context. The migration may advance `project_state.schema_version` and `schema_migrations` only after those columns, the closed replay-context status set, and verified-context checks exist. Failure rolls back the attempted DDL and metadata; retry is safe only from the pre-version-2 shape or another fully recognized version. |
-| 3 | The replay-surface composite foreign key and table-level verified-context constraint are added by rebuilding `tool_invocations`. Before tightening, existing foreign keys are checked and every existing `verified` row must already reference an existing `surfaces(project_id, surface_id, surface_instance_id)` row with complete context. Historical `legacy_unverified` rows are preserved but remain non-replay-eligible. Invalid verified replay rows fail migration rather than being downgraded or silently repaired. Metadata and ledger advance only after the rebuilt table, restrictive replay-surface foreign key, triggers, and post-migration foreign-key check succeed. Failure must roll back the rebuild and restore connection foreign-key mode; retry is safe when no partial rebuild committed. |
-| 4 | Task close-basis coordinates and judgment basis storage are added. Existing Tasks receive `tasks.scope_revision=0` and `tasks.close_basis_revision=0`; `tasks.close_basis_json` remains nullable so absence means no current `CurrentCloseBasis`. Existing judgments receive `basis_status='legacy_unbound'` with no invented basis, remain audit records, and cannot satisfy current close, write, or sensitive-approval authority. Metadata and ledger advance only after all columns and basis-status constraints exist. Failure rolls back the additive change; retry is safe from the unchanged version-3 shape. |
-| 5 | Judgment resolution outcome storage is added, and legacy judgment statuses `rejected`, `deferred`, and `blocked` are normalized into `resolution_outcome` while the row status becomes `resolved`. Existing rows without a machine-readable outcome remain readable audit records and do not become acceptance. The nullable `resolution_outcome` constraint permits only `accepted`, `rejected`, `deferred`, or `blocked` when present. Metadata and ledger advance only after normalization and the constraint succeed. Failure rolls back normalization and the schema change; retry is safe from the unchanged version-4 shape. |
-| 6 | Artifact integrity classification is added by rebuilding `artifacts`. Existing artifact ids, task relations, producer relations, staging source relations, hashes, sizes, content types, retention JSON, producer JSON, timestamps, metadata, and owner links are preserved. Rows with complete verified bytes and facts may become `integrity_status='verified'`; incomplete or unavailable facts are preserved as `legacy_unknown`; known mismatches become `corrupt` and the availability status is preserved or moved to an integrity-failure state as owned by Artifact Storage. `legacy_unknown` and `corrupt` are permitted legacy/recovery states and cannot satisfy evidence or close authority. Metadata and ledger advance only after classification, rebuild, indexes, and foreign-key checks succeed. Failure rolls back the rebuild; retry is safe when no partial artifact table swap committed. |
-| 7 | Surface interaction role and resolved actor provenance storage are added. Existing surfaces receive `interaction_role='agent'`; existing judgments retain null resolved-actor and resolved-surface provenance unless the row already has owner-defined facts. Null provenance is permitted for legacy audit-only rows and must not be interpreted as user acceptance or verified user interaction. Actor kind and actor role are constrained to their closed sets when present. Metadata and ledger advance only after additive columns and constraints exist. Failure rolls back the additive change; retry is safe from the unchanged prior shape. |
-| 8 | Run scope revision storage is added. Existing `runs` rows preserve their meaning with `scope_revision IS NULL`; null means the legacy run did not record an observed current-scope revision. New rows may store a nonnegative observed scope revision when available. Metadata and ledger advance only after the nullable nonnegative constraint exists. Failure rolls back the additive change; retry is safe from the unchanged version-7 shape. |
-| 9 | The project enforcement profile is added to `project_state` with the baseline cooperative profile default `{"profile_id":"baseline_cooperative","guarantee_level":"cooperative","enabled_mechanisms":[],"source":"baseline_scope","status":"active"}`. Existing projects are preserved and receive that baseline profile unless an owner-defined migration path supplies another valid profile. This migration records cooperative baseline posture only; it does not create stronger security guarantees. Metadata and ledger advance only after the non-null column and default are present. Failure rolls back the additive change; retry is safe from the unchanged version-8 shape. |
-| 10 | Judgment machine-action storage, the closed `user_judgments.status` constraint, and resolved-surface provenance foreign key are added as the intended judgment-authority tightening. Before tightening, legacy status values must already be normalized or rejected; the only valid current status values are `pending`, `resolved`, `stale`, `superseded`, and `expired`. `resolution_machine_action` is nullable and, when present, is constrained to `accept`, `reject`, or `defer`. Existing rows may retain null machine action, null outcome, or missing resolved provenance for audit-only reads; those absences must not be interpreted as acceptance. Present resolved surface identifiers must reference `surfaces(project_id, surface_id, surface_instance_id)` through the composite foreign key; invalid present references fail migration rather than being erased. Metadata and ledger advance only after the closed status constraint, machine-action constraint, resolved-surface foreign key, and post-migration checks succeed. Failure rolls back the tightening; retry is safe only from a recognized pre-version-10 shape or after owner-defined repair. |
-
-### Registry schema version 2
-
-Registry schema version 2 is the supported additive migration from the registry layout that stored only Runtime Home identity and project registrations to the registry layout that also stores Agent Integration Profile, integration project membership, and Host Installation inventory records.
-
-Migration behavior:
-
-- The migration validates the existing `runtime_home` singleton and all `projects` rows before adding the new registry tables and indexes defined by [Storage DDL](storage-ddl.md).
-- Existing project registrations, `repo_root`, `project_home`, `state_db_path`, status, timestamps, and metadata are preserved unchanged.
-- The new `agent_integrations`, `integration_projects`, and `host_installations` tables start empty. Migration does not create an Agent Integration Profile, does not grant any project membership, and does not create Host Installation inventory from existing files or environment variables.
-- Legacy fixed-project MCP environment setup, exported host-neutral configuration, or host files are not imported as trusted integration records by migration. Administrative setup or verification commands must create or reconcile those records through [Administrative CLI](admin-cli.md).
-- No project `state.sqlite` migration is required for this registry migration, and no public `project_state.state_version` increment, Core event, or replay row is created.
-- The registry `runtime_home.schema_version` and `schema_migrations` registry row are updated only after all new tables, indexes, and constraints are created successfully.
-
-Failure and retry behavior:
-
-- A failed registry version 2 migration must roll back partial DDL and metadata changes or leave a detectable failed migration state that cannot be used for adapter startup.
-- Retrying the migration must be safe when the previous attempt made no committed schema change. If a committed partial or unknown registry schema is detected, startup must fail with a structured storage/runtime unavailable diagnostic rather than guessing record meaning.
+Project `state.sqlite` schema migration does not create a public `project_state.state_version` increment, Core event, replay record, or public method effect unless a focused owner explicitly defines that effect.
 
 This document excludes complete SQL migration bodies and unsupported or profile-specific migration details outside the supported baseline.
 
