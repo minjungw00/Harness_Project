@@ -21,7 +21,8 @@ use harness_cli::{
 use harness_store::{
     agent_integrations::{
         agent_integration_record, list_host_installations_for_integration,
-        VERIFIED_STATUS_ACTION_REQUIRED, VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_PARTIAL_FAILURE,
+        update_host_installation_verification, VERIFIED_STATUS_ACTION_REQUIRED,
+        VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED, VERIFIED_STATUS_PARTIAL_FAILURE,
     },
     bootstrap::{
         initialize_runtime_home, list_projects, list_surfaces, register_project, ProjectRecord,
@@ -2115,6 +2116,190 @@ fn harness_binary_agent_claude_project_install_reports_action_required(
         installations[0].last_verified_status,
         VERIFIED_STATUS_ACTION_REQUIRED
     );
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_claude_project",
+        ],
+        &[("PATH", path_text(&bin_dir))],
+    )?;
+    assert_success(&verify);
+    assert!(stdout(&verify).contains("status: action_required"));
+    assert!(stdout(&verify).contains("mcp_handshake_result: complete"));
+    assert!(stdout(&verify).contains("final_status: action_required"));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_claude_project_connected_verify_completes() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-claude-connected")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let bin_dir = runtime_home.path().join("bin");
+    fs::create_dir_all(&bin_dir)?;
+    let mcp = write_agent_mcp(&bin_dir, AgentMcpFixture::Complete)?;
+    fs::rename(&mcp, bin_dir.join("harness-mcp"))?;
+    write_fake_claude_mcp_get(
+        &bin_dir,
+        "Status: ✓ Connected\nScope: project\nCommand: harness-mcp\nArgs: [\"--integration\",\"agent_claude_connected\"]",
+    )?;
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "claude-code",
+            "--scope",
+            "project",
+            "--integration-id",
+            "agent_claude_connected",
+            "--server-name",
+            "harness-claude-connected",
+            "--project-id",
+            "project_claude_connected",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--allow-repository-write",
+        ],
+        &[("PATH", path_text(&bin_dir))],
+    )?;
+    assert_success(&install);
+    assert!(stdout(&install).contains("status: complete"));
+
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_claude_connected",
+        ],
+        &[("PATH", path_text(&bin_dir))],
+    )?;
+    assert_success(&verify);
+    assert!(stdout(&verify).contains("status: complete"));
+    assert!(stdout(&verify).contains("host_state: configured_ready"));
+    assert!(stdout(&verify).contains("tool_discovery_result: complete"));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_generic_export_verify_remains_action_required() -> Result<(), Box<dyn Error>>
+{
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-generic-verify")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    let export_path = runtime_home.path().join("harness-generic.mcp.json");
+    let install = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "generic",
+            "--scope",
+            "export",
+            "--integration-id",
+            "agent_generic_verify",
+            "--server-name",
+            "harness-generic",
+            "--project-id",
+            "project_generic_verify",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--export-path",
+            path_text(&export_path).as_str(),
+        ],
+    )?;
+    assert_success(&install);
+    assert!(stdout(&install).contains("status: action_required"));
+
+    let verify = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_generic_verify",
+        ],
+    )?;
+    assert_success(&verify);
+    assert!(stdout(&verify).contains("status: action_required"));
+    assert!(stdout(&verify).contains("host_kind: generic"));
+    assert!(stdout(&verify).contains("mcp_handshake_result: complete"));
+    assert!(stdout(&verify).contains("final_status: action_required"));
+    let installations =
+        list_host_installations_for_integration(runtime_home.path(), "agent_generic_verify")?;
+    assert_eq!(
+        installations[0].last_verified_status,
+        VERIFIED_STATUS_ACTION_REQUIRED
+    );
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_verify_reports_persistence_update_failure() -> Result<(), Box<dyn Error>> {
+    use std::os::unix::fs::PermissionsExt;
+
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-verify-persist")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_verify_persist",
+            "--server-name",
+            "harness-persist",
+            "--project-id",
+            "project_verify_persist",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&install);
+
+    let registry = registry_db_path(runtime_home.path());
+    let original_permissions = fs::metadata(&registry)?.permissions();
+    let mut readonly = original_permissions.clone();
+    readonly.set_mode(0o444);
+    fs::set_permissions(&registry, readonly)?;
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_verify_persist",
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    fs::set_permissions(&registry, original_permissions)?;
+
+    assert_eq!(verify.status.code(), Some(1));
+    assert!(stdout(&verify).contains("status: partial_failure"));
+    assert!(stdout(&verify).contains("persistence_result: failed"));
+    assert!(stdout(&verify).contains("failed to update Host Installation"));
+    assert!(stdout(&verify).contains("final_status: partial_failure"));
     Ok(())
 }
 
@@ -2165,6 +2350,328 @@ fn harness_binary_agent_mcp_tool_discovery_failures_are_partial_failure(
             VERIFIED_STATUS_PARTIAL_FAILURE
         );
     }
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_verify_selected_installation_uses_only_selected_command(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-verify-selected")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let bin_dir = runtime_home.path().join("bin");
+    let first_log = runtime_home.path().join("first.log");
+    let second_log = runtime_home.path().join("second.log");
+    let first_mcp = write_recording_agent_mcp(
+        &bin_dir,
+        "agent-mcp-first",
+        AgentMcpFixture::Complete,
+        &first_log,
+    )?;
+    let second_mcp = write_recording_agent_mcp(
+        &bin_dir,
+        "agent-mcp-second",
+        AgentMcpFixture::Complete,
+        &second_log,
+    )?;
+
+    for (server_name, command) in [
+        ("harness-first", &first_mcp),
+        ("harness-second", &second_mcp),
+    ] {
+        let install = run_with_home_and_env(
+            runtime_home.path(),
+            [
+                "agent",
+                "install",
+                "--host",
+                "codex",
+                "--scope",
+                "user",
+                "--integration-id",
+                "agent_verify_selected",
+                "--server-name",
+                server_name,
+                "--project-id",
+                "project_verify_selected",
+                "--repo-root",
+                path_text(&repo_root).as_str(),
+                "--mcp-command",
+                path_text(command).as_str(),
+            ],
+            &[("CODEX_HOME", path_text(&codex_home))],
+        )?;
+        assert_success(&install);
+    }
+
+    let installations =
+        list_host_installations_for_integration(runtime_home.path(), "agent_verify_selected")?;
+    assert_eq!(installations.len(), 2);
+    let selected = installations
+        .iter()
+        .find(|installation| installation.server_name == "harness-first")
+        .expect("first installation")
+        .clone();
+    let unselected = installations
+        .iter()
+        .find(|installation| installation.server_name == "harness-second")
+        .expect("second installation")
+        .clone();
+    update_host_installation_verification(
+        runtime_home.path(),
+        &unselected.installation_id,
+        VERIFIED_STATUS_ACTION_REQUIRED,
+        &unselected.managed_fingerprint,
+    )?;
+    fs::write(&first_log, "")?;
+    fs::write(&second_log, "")?;
+
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_verify_selected",
+            "--installation-id",
+            selected.installation_id.as_str(),
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&verify);
+    assert!(stdout(&verify).contains("installation_verifications:"));
+    assert!(stdout(&verify).contains(&selected.installation_id));
+    assert!(!stdout(&verify).contains(&unselected.installation_id));
+    let first_log_text = fs::read_to_string(&first_log)?;
+    assert!(first_log_text.contains("--check --integration"));
+    assert!(first_log_text.contains("--integration agent_verify_selected"));
+    assert!(first_log_text.contains("exit"));
+    assert_eq!(fs::read_to_string(&second_log)?, "");
+
+    let after =
+        list_host_installations_for_integration(runtime_home.path(), "agent_verify_selected")?;
+    assert_eq!(
+        after
+            .iter()
+            .find(|installation| installation.installation_id == selected.installation_id)
+            .expect("selected after")
+            .last_verified_status,
+        VERIFIED_STATUS_COMPLETE
+    );
+    assert_eq!(
+        after
+            .iter()
+            .find(|installation| installation.installation_id == unselected.installation_id)
+            .expect("unselected after")
+            .last_verified_status,
+        VERIFIED_STATUS_ACTION_REQUIRED
+    );
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-verify-all")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let bin_dir = runtime_home.path().join("bin");
+    let user_log = runtime_home.path().join("user.log");
+    let project_log = runtime_home.path().join("project.log");
+    let user_mcp = write_recording_agent_mcp(
+        &bin_dir,
+        "agent-mcp-user",
+        AgentMcpFixture::Complete,
+        &user_log,
+    )?;
+    let _project_mcp = write_recording_agent_mcp(
+        &bin_dir,
+        "harness-mcp",
+        AgentMcpFixture::Complete,
+        &project_log,
+    )?;
+
+    let user_install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_verify_all",
+            "--server-name",
+            "harness-user",
+            "--project-id",
+            "project_verify_all",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&user_mcp).as_str(),
+        ],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_success(&user_install);
+    let project_install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "project",
+            "--integration-id",
+            "agent_verify_all",
+            "--server-name",
+            "harness-project",
+            "--project-id",
+            "project_verify_all",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--allow-repository-write",
+        ],
+        &[
+            ("CODEX_HOME", path_text(&codex_home)),
+            ("PATH", path_text(&bin_dir)),
+        ],
+    )?;
+    assert_success(&project_install);
+    fs::write(&user_log, "")?;
+    fs::write(&project_log, "")?;
+
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_verify_all",
+            "--output",
+            "json",
+        ],
+        &[
+            ("CODEX_HOME", path_text(&codex_home)),
+            ("PATH", path_text(&bin_dir)),
+        ],
+    )?;
+    assert_success(&verify);
+    let value: Value = serde_json::from_str(&stdout(&verify))?;
+    assert_eq!(value["status"], "action_required");
+    let results = value["installation_verifications"]
+        .as_array()
+        .expect("installation verification results");
+    assert_eq!(results.len(), 2);
+    assert!(results.iter().any(|result| {
+        result["server_name"] == "harness-user" && result["final_status"] == "complete"
+    }));
+    assert!(results.iter().any(|result| {
+        result["server_name"] == "harness-project"
+            && result["final_status"] == "action_required"
+            && result["mcp_handshake_result"]["status"] == "complete"
+            && result["required_user_action"][0]
+                .as_str()
+                .unwrap_or_default()
+                .contains("Codex project trust")
+    }));
+    let user_log_text = fs::read_to_string(&user_log)?;
+    let project_log_text = fs::read_to_string(&project_log)?;
+    assert!(user_log_text.contains("--integration agent_verify_all"));
+    assert!(user_log_text.contains("exit"));
+    assert!(project_log_text.contains("--integration agent_verify_all"));
+    assert!(project_log_text.contains("exit"));
+
+    let after = list_host_installations_for_integration(runtime_home.path(), "agent_verify_all")?;
+    assert_eq!(
+        after
+            .iter()
+            .find(|installation| installation.server_name == "harness-user")
+            .expect("user installation")
+            .last_verified_status,
+        VERIFIED_STATUS_COMPLETE
+    );
+    assert_eq!(
+        after
+            .iter()
+            .find(|installation| installation.server_name == "harness-project")
+            .expect("project installation")
+            .last_verified_status,
+        VERIFIED_STATUS_ACTION_REQUIRED
+    );
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_verify_failed_installation_is_not_hidden() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-verify-failed")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let first_mcp = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    let second_mcp = write_recording_agent_mcp(
+        runtime_home.path(),
+        "agent-mcp-changed",
+        AgentMcpFixture::Complete,
+        &runtime_home.path().join("changed.log"),
+    )?;
+
+    for (server_name, command) in [("harness-ok", &first_mcp), ("harness-changed", &second_mcp)] {
+        let install = run_with_home_and_env(
+            runtime_home.path(),
+            [
+                "agent",
+                "install",
+                "--host",
+                "codex",
+                "--scope",
+                "user",
+                "--integration-id",
+                "agent_verify_failed",
+                "--server-name",
+                server_name,
+                "--project-id",
+                "project_verify_failed",
+                "--repo-root",
+                path_text(&repo_root).as_str(),
+                "--mcp-command",
+                path_text(command).as_str(),
+            ],
+            &[("CODEX_HOME", path_text(&codex_home))],
+        )?;
+        assert_success(&install);
+    }
+    let config_path = codex_home.join("config.toml");
+    let changed_config = fs::read_to_string(&config_path)?
+        .replace(&path_text(&second_mcp), "/bin/not-the-installed-command");
+    fs::write(&config_path, changed_config)?;
+
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        ["agent", "verify", "--integration-id", "agent_verify_failed"],
+        &[("CODEX_HOME", path_text(&codex_home))],
+    )?;
+    assert_eq!(verify.status.code(), Some(1));
+    assert!(stdout(&verify).contains("status: failed"));
+    assert!(stdout(&verify).contains("harness-ok"));
+    assert!(stdout(&verify).contains("final_status: complete"));
+    assert!(stdout(&verify).contains("harness-changed"));
+    assert!(stdout(&verify).contains("fingerprint_state: changed"));
+    assert!(stdout(&verify).contains("final_status: failed"));
+
+    let after =
+        list_host_installations_for_integration(runtime_home.path(), "agent_verify_failed")?;
+    assert_eq!(
+        after
+            .iter()
+            .find(|installation| installation.server_name == "harness-changed")
+            .expect("changed installation")
+            .last_verified_status,
+        VERIFIED_STATUS_FAILED
+    );
     Ok(())
 }
 
@@ -2786,12 +3293,32 @@ fn write_agent_mcp(
     dir: &Path,
     fixture: AgentMcpFixture,
 ) -> Result<std::path::PathBuf, Box<dyn Error>> {
+    write_agent_mcp_script(dir, None, fixture, None)
+}
+
+#[cfg(unix)]
+fn write_recording_agent_mcp(
+    dir: &Path,
+    name: &str,
+    fixture: AgentMcpFixture,
+    log_path: &Path,
+) -> Result<std::path::PathBuf, Box<dyn Error>> {
+    write_agent_mcp_script(dir, Some(name), fixture, Some(log_path))
+}
+
+#[cfg(unix)]
+fn write_agent_mcp_script(
+    dir: &Path,
+    explicit_name: Option<&str>,
+    fixture: AgentMcpFixture,
+    log_path: Option<&Path>,
+) -> Result<std::path::PathBuf, Box<dyn Error>> {
     fs::create_dir_all(dir)?;
-    let name = match fixture {
+    let name = explicit_name.unwrap_or(match fixture {
         AgentMcpFixture::Complete => "agent-mcp-complete",
         AgentMcpFixture::MissingInstructions => "agent-mcp-missing-instructions",
         AgentMcpFixture::MissingUtilityTool => "agent-mcp-missing-utility",
-    };
+    });
     let path = dir.join(name);
     let initialize = match fixture {
         AgentMcpFixture::MissingInstructions => {
@@ -2805,10 +3332,17 @@ fn write_agent_mcp(
         AgentMcpFixture::MissingUtilityTool => public_tool_json(false),
         _ => public_tool_json(true),
     };
+    let record_start = log_path
+        .map(|path| format!("printf '%s\\n' \"$0 $*\" >> '{}'\n", path_text(path)))
+        .unwrap_or_default();
+    let record_exit = log_path
+        .map(|path| format!("printf '%s\\n' 'exit' >> '{}'\n", path_text(path)))
+        .unwrap_or_default();
     fs::write(
         &path,
         format!(
             "#!/bin/sh\n\
+             {record_start}\
              if [ \"$1\" = \"--check\" ]; then\n\
              shift\n\
              if [ \"$1\" != \"--integration\" ]; then printf 'missing integration\\n' >&2; exit 2; fi\n\
@@ -2825,6 +3359,7 @@ fn write_agent_mcp(
              printf 'available_projects: 1\\n'\n\
              printf 'default_project_id: project_test\\n'\n\
              printf 'verification_scope: startup_check_only\\n'\n\
+             {record_exit}\
              exit 0\n\
              fi\n\
              if [ \"$1\" = \"--integration\" ]; then\n\
@@ -2832,12 +3367,14 @@ fn write_agent_mcp(
              case \"$line\" in\n\
              *'\"method\":\"notifications/initialized\"'*) ;;\n\
              *'\"method\":\"initialize\"'*) {initialize} ;;\n\
-             *'\"method\":\"tools/list\"'*) printf '%s\\n' '{tools}'; exit 0 ;;\n\
+             *'\"method\":\"tools/list\"'*) printf '%s\\n' '{tools}'; {record_exit}exit 0 ;;\n\
              esac\n\
              done\n\
+             {record_exit}\
              exit 0\n\
              fi\n\
              printf 'unexpected invocation\\n' >&2\n\
+             {record_exit}\
              exit 2\n"
         ),
     )?;
