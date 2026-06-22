@@ -146,22 +146,17 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
         tools_call(
             4,
             "harness.status",
-            status_arguments(PROJECT_ID, AGENT_SURFACE_ID, "req_binary_status"),
+            status_arguments(PROJECT_ID, "req_binary_status"),
         ),
         tools_call(
             5,
             "harness.intake",
-            intake_arguments(
-                PROJECT_ID,
-                AGENT_SURFACE_ID,
-                "req_binary_intake",
-                "idem_binary_intake",
-            ),
+            intake_arguments(PROJECT_ID, "req_binary_intake", "idem_binary_intake"),
         ),
         tools_call(
             6,
             "harness.status",
-            status_arguments(PROJECT_ID, "surface_binary_mismatch", "req_binary_rejected"),
+            status_arguments_with_surface_id(PROJECT_ID, AGENT_SURFACE_ID, "req_binary_rejected"),
         ),
         tools_call(7, "harness.status", json!({ "unexpected": true })),
     ])?;
@@ -228,10 +223,10 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
         .to_owned();
 
     assert_eq!(responses[&6]["result"]["isError"], json!(true));
-    let surface_mismatch = responses[&6]["result"]["content"][0]["text"]
+    let surface_rejection = responses[&6]["result"]["content"][0]["text"]
         .as_str()
-        .expect("surface mismatch should be text");
-    assert!(surface_mismatch.contains("envelope.surface_id"));
+        .expect("surface rejection should be text");
+    assert!(surface_rejection.contains("envelope.surface_id"));
 
     assert!(responses[&7].get("error").is_none());
     assert_eq!(responses[&7]["result"]["isError"], json!(true));
@@ -257,7 +252,7 @@ fn harness_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<(
         tools_call(
             12,
             "harness.status",
-            status_arguments(PROJECT_ID, AGENT_SURFACE_ID, "req_binary_reconnect_status"),
+            status_arguments(PROJECT_ID, "req_binary_reconnect_status"),
         ),
     ])?;
     let reconnect = run_child(
@@ -304,7 +299,6 @@ fn harness_mcp_binary_suppresses_malformed_notification_output_and_effects(
                 "name": "harness.intake",
                 "arguments": intake_arguments(
                     PROJECT_ID,
-                    AGENT_SURFACE_ID,
                     "req_binary_notification_intake",
                     "idem_binary_notification_intake",
                 )
@@ -315,11 +309,7 @@ fn harness_mcp_binary_suppresses_malformed_notification_output_and_effects(
         tools_call(
             4,
             "harness.status",
-            status_arguments(
-                PROJECT_ID,
-                AGENT_SURFACE_ID,
-                "req_binary_notification_status",
-            ),
+            status_arguments(PROJECT_ID, "req_binary_notification_status"),
         ),
     ])?;
 
@@ -549,11 +539,10 @@ fn tools_call(id: u64, name: &str, arguments: Value) -> Value {
     )
 }
 
-fn status_arguments(project_id: &str, surface_id: &str, request_id: &str) -> Value {
+fn status_arguments(project_id: &str, request_id: &str) -> Value {
     json!({
         "envelope": envelope(
             project_id,
-            surface_id,
             request_id,
             Value::Null,
             Value::Null
@@ -569,14 +558,9 @@ fn status_arguments(project_id: &str, surface_id: &str, request_id: &str) -> Val
     })
 }
 
-fn intake_arguments(
-    project_id: &str,
-    surface_id: &str,
-    request_id: &str,
-    idempotency_key: &str,
-) -> Value {
+fn intake_arguments(project_id: &str, request_id: &str, idempotency_key: &str) -> Value {
     json!({
-        "envelope": envelope(project_id, surface_id, request_id, json!(idempotency_key), json!(0)),
+        "envelope": envelope(project_id, request_id, json!(idempotency_key), json!(0)),
         "plain_language_request": "Exercise the compiled MCP stdio binary.",
         "requested_mode": "work",
         "resume_policy": "create_new",
@@ -589,9 +573,14 @@ fn intake_arguments(
     })
 }
 
+fn status_arguments_with_surface_id(project_id: &str, surface_id: &str, request_id: &str) -> Value {
+    let mut arguments = status_arguments(project_id, request_id);
+    arguments["envelope"]["surface_id"] = json!(surface_id);
+    arguments
+}
+
 fn envelope(
     project_id: &str,
-    surface_id: &str,
     request_id: &str,
     idempotency_key: Value,
     expected_state_version: Value,
@@ -600,7 +589,6 @@ fn envelope(
         "project_id": project_id,
         "task_id": null,
         "actor_kind": "agent",
-        "surface_id": surface_id,
         "request_id": request_id,
         "idempotency_key": idempotency_key,
         "expected_state_version": expected_state_version,

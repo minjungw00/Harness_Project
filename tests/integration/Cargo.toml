@@ -12,6 +12,7 @@ harness-store = { path = "../../crates/harness-store" }
 harness-test-support = { path = "../../crates/harness-test-support" }
 harness-types = { path = "../../crates/harness-types" }
 rusqlite = { version = "0.32", features = ["bundled"] }
+serde = "1"
 serde_json = "1"
 
 [[test]]

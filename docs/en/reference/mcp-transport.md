@@ -227,6 +227,8 @@ A structurally valid `tools/call` request has object `params` with:
 
 Missing `arguments` are treated as an empty object. `arguments: null` and non-object `arguments` are malformed method parameters and return JSON-RPC `-32602`. Unknown tool names are protocol errors and return JSON-RPC `-32602`.
 
+For public Harness tools, `tools/list` exposes MCP-visible input schemas derived from the shared Harness request schemas with the MCP integration binding applied. `envelope.project_id` remains an optional caller selector. `envelope.surface_id` is not exposed in the MCP-visible schema and is not accepted in raw `tools/call` arguments. If raw public-tool arguments include `envelope.surface_id`, the adapter rejects the call before Core execution. After MCP-visible input validation, the adapter injects the selected Agent Integration Profile's `surface_id` into the internal typed request.
+
 For a known public Harness tool, object `arguments` that fail the tool input schema return a `CallToolResult` with `isError: true` and actionable text content. They are tool execution errors, not JSON-RPC protocol errors.
 
 For `harness.list_projects`, the adapter returns a read-only project list for the bound integration only. It must not enter Core, create storage effects, mutate project membership, or expose projects outside the integration allowlist.

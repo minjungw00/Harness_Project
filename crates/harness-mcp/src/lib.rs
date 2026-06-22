@@ -550,16 +550,8 @@ impl McpAdapter {
                 tool_name: tool_name.to_owned(),
                 message: "public Harness tool arguments require an envelope object".to_owned(),
             })?;
+        reject_caller_owned_surface_identity(envelope, tool_name)?;
         let requested_project_id = optional_string_field(envelope, "project_id", tool_name)?;
-        if let Some(surface_id) = optional_string_field(envelope, "surface_id", tool_name)? {
-            if surface_id != context.surface_id.as_str() {
-                return Err(McpAdapterError::ToolExecution {
-                    tool_name: tool_name.to_owned(),
-                    message: "envelope.surface_id does not match the integration-bound surface"
-                        .to_owned(),
-                });
-            }
-        }
 
         let selected = self.select_project(
             context,
@@ -1755,11 +1747,11 @@ fn optional_string_field(
 
 fn mcp_visible_request_schema(method_name: &str) -> Option<Value> {
     let mut schema = public_request_schema(method_name)?;
-    mark_adapter_managed_envelope_fields(&mut schema);
+    apply_mcp_visible_envelope_contract(&mut schema);
     Some(schema)
 }
 
-fn mark_adapter_managed_envelope_fields(schema: &mut Value) {
+fn apply_mcp_visible_envelope_contract(schema: &mut Value) {
     match schema {
         Value::Object(object) => {
             if is_tool_envelope_schema(object) {
@@ -1768,14 +1760,17 @@ fn mark_adapter_managed_envelope_fields(schema: &mut Value) {
                         !matches!(value.as_str(), Some("project_id") | Some("surface_id"))
                     });
                 }
+                if let Some(Value::Object(properties)) = object.get_mut("properties") {
+                    properties.remove("surface_id");
+                }
             }
             for value in object.values_mut() {
-                mark_adapter_managed_envelope_fields(value);
+                apply_mcp_visible_envelope_contract(value);
             }
         }
         Value::Array(values) => {
             for value in values {
-                mark_adapter_managed_envelope_fields(value);
+                apply_mcp_visible_envelope_contract(value);
             }
         }
         Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
@@ -1788,13 +1783,29 @@ fn is_tool_envelope_schema(object: &Map<String, Value>) -> bool {
     };
     [
         "project_id",
-        "surface_id",
+        "task_id",
         "request_id",
         "actor_kind",
+        "idempotency_key",
+        "expected_state_version",
         "dry_run",
+        "locale",
     ]
     .iter()
     .all(|field| properties.contains_key(*field))
+}
+
+fn reject_caller_owned_surface_identity(
+    envelope: &Map<String, Value>,
+    tool_name: &str,
+) -> Result<(), McpAdapterError> {
+    if envelope.contains_key("surface_id") {
+        return Err(McpAdapterError::ToolExecution {
+            tool_name: tool_name.to_owned(),
+            message: "envelope.surface_id is supplied by the selected MCP integration and must not be included in MCP tool arguments".to_owned(),
+        });
+    }
+    Ok(())
 }
 
 fn validate_identifier_text(field: &'static str, value: &str) -> Result<(), McpAdapterError> {
@@ -2201,7 +2212,7 @@ mod tests {
     }
 
     #[test]
-    fn mcp_visible_schemas_make_project_and_surface_adapter_managed() {
+    fn mcp_visible_schemas_keep_project_selector_and_hide_surface_identity() {
         for tool in public_method_tools() {
             let required = envelope_required_fields(&tool.input_schema)
                 .expect("tool schema should contain ToolEnvelope schema");
@@ -2221,8 +2232,8 @@ mod tests {
                 tool.name
             );
             assert!(
-                schema_has_property(&tool.input_schema, "surface_id"),
-                "{} should still expose envelope.surface_id for compatibility",
+                !schema_has_property(&tool.input_schema, "surface_id"),
+                "{} should not expose envelope.surface_id to MCP callers",
                 tool.name
             );
         }
@@ -2237,7 +2248,7 @@ mod tests {
             SurfaceInteractionRole::Agent,
         )?;
         let adapter = harness.integration_adapter();
-        let mut params = serde_json::to_value(status_request("req_integration_single"))?;
+        let mut params = mcp_arguments(status_request("req_integration_single"))?;
         let envelope = params["envelope"]
             .as_object_mut()
             .expect("envelope should be an object");
@@ -2258,6 +2269,37 @@ mod tests {
     }
 
     #[test]
+    fn integration_adapter_rejects_caller_surface_id_before_core() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::with_role_and_local_access(
+            json!({}),
+            local_access(&BASELINE_WORKFLOW_ACCESS_CLASSES),
+            SurfaceInteractionRole::Agent,
+        )?;
+        let adapter = harness.integration_adapter();
+
+        for (case, supplied_surface_id) in [
+            ("matching", SURFACE_ID),
+            ("mismatching", "surface_mcp_caller_supplied"),
+        ] {
+            let request_id = format!("req_surface_forbidden_{case}");
+            let idempotency_key = format!("idem_surface_forbidden_{case}");
+            let mut params =
+                mcp_arguments(intake_request(&request_id, false, Some(&idempotency_key)))?;
+            params["envelope"]["surface_id"] = json!(supplied_surface_id);
+            let before = harness.counts()?;
+
+            let error = adapter
+                .call_tool("harness.intake", params)
+                .expect_err("caller-supplied MCP surface_id should be rejected");
+
+            assert!(matches!(error, McpAdapterError::ToolExecution { .. }));
+            assert!(error.to_string().contains("envelope.surface_id"));
+            assert_eq!(harness.counts()?, before);
+        }
+        Ok(())
+    }
+
+    #[test]
     fn integration_adapter_routes_explicit_project_and_isolates_state() -> Result<(), Box<dyn Error>>
     {
         let harness = TestHarness::with_role_and_local_access(
@@ -2274,7 +2316,7 @@ mod tests {
         let adapter = McpAdapter::new(&harness.runtime_home_path, context);
         let before_bound = harness.counts()?;
         let before_other = harness.counts_for_project(other_project_id)?;
-        let mut params = serde_json::to_value(intake_request(
+        let mut params = mcp_arguments(intake_request(
             "req_integration_route_b",
             false,
             Some("idem_integration_route_b"),
@@ -2315,7 +2357,7 @@ mod tests {
         let context = McpIntegrationContext::resolve(&harness.runtime_home_path, INTEGRATION_ID)?
             .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING);
         let adapter = McpAdapter::new(&harness.runtime_home_path, context);
-        let mut params = serde_json::to_value(status_request("req_integration_default"))?;
+        let mut params = mcp_arguments(status_request("req_integration_default"))?;
         params["envelope"]
             .as_object_mut()
             .expect("envelope object")
@@ -2353,7 +2395,7 @@ mod tests {
         let context = McpIntegrationContext::resolve(&harness.runtime_home_path, INTEGRATION_ID)?
             .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING);
         let adapter = McpAdapter::new(&harness.runtime_home_path, context);
-        let mut params = serde_json::to_value(status_request("req_integration_ambiguous"))?;
+        let mut params = mcp_arguments(status_request("req_integration_ambiguous"))?;
         params["envelope"]
             .as_object_mut()
             .expect("envelope object")
@@ -2390,7 +2432,7 @@ mod tests {
         let adapter = McpAdapter::new(&harness.runtime_home_path, context);
         let response = adapter.call_tool(
             "harness.status",
-            serde_json::to_value(status_request("req_integration_before_revoke"))?,
+            mcp_arguments(status_request("req_integration_before_revoke"))?,
         )?;
         assert_eq!(response.response_value["base"]["response_kind"], "result");
 
@@ -2399,7 +2441,7 @@ mod tests {
         let error = adapter
             .call_tool(
                 "harness.status",
-                serde_json::to_value(status_request("req_integration_after_revoke"))?,
+                mcp_arguments(status_request("req_integration_after_revoke"))?,
             )
             .expect_err("revoked project should be rejected by running process");
 
@@ -2454,7 +2496,7 @@ mod tests {
             .expect("reason")
             .contains("surface instance"));
 
-        let mut params = serde_json::to_value(status_request("req_inactive_rejected"))?;
+        let mut params = mcp_arguments(status_request("req_inactive_rejected"))?;
         params["envelope"]["project_id"] = json!(inactive_project_id);
         let error = adapter
             .call_tool("harness.status", params)
@@ -2537,7 +2579,7 @@ mod tests {
     ) -> Result<(), Box<dyn Error>> {
         let harness = TestHarness::new(json!({}))?;
         let adapter = harness.adapter();
-        let status_arguments = serde_json::to_value(status_request("req_stdio_lifecycle"))?;
+        let status_arguments = mcp_arguments(status_request("req_stdio_lifecycle"))?;
         let responses = run_stdio_messages(
             adapter,
             &[
@@ -2854,7 +2896,7 @@ mod tests {
         let harness = TestHarness::new(json!({}))?;
         let before = harness.counts()?;
         let intake_arguments =
-            serde_json::to_value(intake_request("req_notification_tool_call", false, None))?;
+            mcp_arguments(intake_request("req_notification_tool_call", false, None))?;
         let responses = run_stdio_messages(
             harness.adapter(),
             &[
@@ -2981,7 +3023,7 @@ mod tests {
         let adapter = harness.adapter();
         let request = status_request("req_status_adapter");
 
-        let response = adapter.call_tool("harness.status", serde_json::to_value(request)?)?;
+        let response = adapter.call_tool("harness.status", mcp_arguments(request)?)?;
 
         assert_eq!(response.response_value["base"]["response_kind"], "result");
         assert_eq!(response.response_value["base"]["effect_kind"], "read_only");
@@ -3017,7 +3059,7 @@ mod tests {
         let error = adapter
             .call_tool(
                 "harness.status",
-                serde_json::to_value(status_request("req_status_missing_db_adapter"))?,
+                mcp_arguments(status_request("req_status_missing_db_adapter"))?,
             )
             .expect_err("missing project state should fail during integration routing");
 
@@ -3045,7 +3087,7 @@ mod tests {
         let direct = harness
             .core()
             .status(request.clone(), invocation(AccessClass::ReadStatus))?;
-        let adapted = adapter.call_tool("harness.status", serde_json::to_value(request)?)?;
+        let adapted = adapter.call_tool("harness.status", mcp_arguments(request)?)?;
 
         assert_eq!(adapted.response_value, direct.response_value);
         assert_eq!(adapted.response_json, direct.response_json);
@@ -3074,7 +3116,7 @@ mod tests {
         let direct = harness
             .core()
             .intake(request.clone(), invocation(AccessClass::CoreMutation))?;
-        let adapted = adapter.call_tool("harness.intake", serde_json::to_value(request)?)?;
+        let adapted = adapter.call_tool("harness.intake", mcp_arguments(request)?)?;
 
         assert_eq!(
             normalize_dry_run_required_ref_ids(adapted.response_value),
@@ -3092,7 +3134,7 @@ mod tests {
         let adapter = harness.adapter();
         let response = adapter.call_tool(
             "harness.status",
-            serde_json::to_value(status_request("req_status_derived_read"))?,
+            mcp_arguments(status_request("req_status_derived_read"))?,
         )?;
 
         assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -3117,7 +3159,7 @@ mod tests {
         let error = adapter
             .call_tool(
                 "harness.intake",
-                serde_json::to_value(intake_request("req_env_elevate", true, None))?,
+                mcp_arguments(intake_request("req_env_elevate", true, None))?,
             )
             .expect_err("unauthorized access class should fail before Core");
 
@@ -3137,7 +3179,7 @@ mod tests {
 
         let response = adapter.call_tool(
             "harness.stage_artifact",
-            serde_json::to_value(stage_artifact_request(
+            mcp_arguments(stage_artifact_request(
                 "req_stage_missing_capability",
                 &task_id,
             ))?,
@@ -3160,8 +3202,7 @@ mod tests {
         }))?;
         let task_id = create_task(&harness, "req_stage_task_forged", "idem_stage_task_forged")?;
         let adapter = harness.adapter();
-        let mut params =
-            serde_json::to_value(stage_artifact_request("req_stage_forged", &task_id))?;
+        let mut params = mcp_arguments(stage_artifact_request("req_stage_forged", &task_id))?;
         params["surface_instance_id"] = json!("forged_surface_instance");
         let before = harness.counts()?;
 
@@ -3187,7 +3228,7 @@ mod tests {
             "idem_stage_missing_required_task",
         )?;
         let adapter = harness.adapter();
-        let mut params = serde_json::to_value(stage_artifact_request(
+        let mut params = mcp_arguments(stage_artifact_request(
             "req_stage_missing_required_nullable",
             &task_id,
         ))?;
@@ -3214,7 +3255,7 @@ mod tests {
             "supported_access_classes": ["core_mutation"]
         }))?;
         let adapter = harness.adapter();
-        let first = serde_json::to_value(intake_request(
+        let first = mcp_arguments(intake_request(
             "req_intake_order_replay",
             false,
             Some("idem_intake_order_replay"),
@@ -3236,7 +3277,6 @@ mod tests {
                     "expected_state_version": 0,
                     "idempotency_key": "idem_intake_order_replay",
                     "request_id": "req_intake_order_replay",
-                    "surface_id": "surface_mcp",
                     "actor_kind": "agent",
                     "task_id": null,
                     "project_id": "project_mcp"
@@ -3572,6 +3612,18 @@ mod tests {
                 VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
             ),
             requested_access_class: access_class,
+        }
+    }
+
+    fn mcp_arguments<T: serde::Serialize>(request: T) -> Result<Value, serde_json::Error> {
+        let mut params = serde_json::to_value(request)?;
+        remove_mcp_surface_id(&mut params);
+        Ok(params)
+    }
+
+    fn remove_mcp_surface_id(params: &mut Value) {
+        if let Some(envelope) = params.get_mut("envelope").and_then(Value::as_object_mut) {
+            envelope.remove("surface_id");
         }
     }
 

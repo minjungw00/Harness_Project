@@ -92,7 +92,7 @@ fn stdio_rejected_lifecycle_and_notification_tool_calls_have_no_storage_effect(
     let fixture = CoreFixture::new("mcp_stdio_protocol_no_effect")?;
     let adapter = adapter(&fixture);
     let before = fixture.counts()?;
-    let mutating_arguments = serde_json::to_value(fixture.intake_request(
+    let mutating_arguments = mcp_arguments(fixture.intake_request(
         "req_stdio_no_effect",
         "idem_stdio_no_effect",
         false,
@@ -200,17 +200,35 @@ fn mcp_tool_schemas_are_closed_top_level_objects() {
             tool.name
         );
         for forbidden in [
+            "surface_id",
             "verified_surface_context",
             "access_class",
             "capability_profile",
             "verification_basis",
         ] {
             assert!(
-                tool.input_schema["properties"].get(forbidden).is_none(),
+                !schema_has_property(&tool.input_schema, forbidden),
                 "{} schema should not expose request-level authority field {forbidden}",
                 tool.name
             );
         }
+        let envelope_required = envelope_required_fields(&tool.input_schema)
+            .expect("tool schema should contain ToolEnvelope schema");
+        assert!(
+            schema_has_property(&tool.input_schema, "project_id"),
+            "{} schema should expose envelope.project_id",
+            tool.name
+        );
+        assert!(
+            !envelope_required.contains(&"project_id".to_owned()),
+            "{} schema should not require envelope.project_id",
+            tool.name
+        );
+        assert!(
+            !envelope_required.contains(&"surface_id".to_owned()),
+            "{} schema should not require envelope.surface_id",
+            tool.name
+        );
     }
 }
 
@@ -228,7 +246,7 @@ fn adapter_uses_session_surface_context_for_artifact_provenance() -> Result<(), 
         .to_owned();
 
     let adapter = adapter(&fixture);
-    let params = serde_json::to_value(fixture.stage_artifact_request(
+    let params = mcp_arguments(fixture.stage_artifact_request(
         "req_mcp_stage",
         None,
         false,
@@ -269,7 +287,7 @@ fn bound_session_rejects_different_request_project_without_effect() -> Result<()
     let before_other = counts_for_project(&fixture, other_project_id)?;
 
     let error = adapter
-        .call_tool("harness.status", serde_json::to_value(request)?)
+        .call_tool("harness.status", mcp_arguments(request)?)
         .expect_err("ungranted project should fail before Core");
 
     assert_tool_execution_error(&error, "not allowed");
@@ -282,7 +300,7 @@ fn bound_session_rejects_different_request_project_without_effect() -> Result<()
 }
 
 #[test]
-fn bound_session_rejects_different_request_surface_without_effect() -> Result<(), Box<dyn Error>> {
+fn bound_session_rejects_caller_supplied_surface_id_without_effect() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_surface_binding")?;
     register_surface(
         fixture.runtime_home_path(),
@@ -299,16 +317,23 @@ fn bound_session_rejects_different_request_surface_without_effect() -> Result<()
         },
     )?;
     let adapter = adapter(&fixture);
-    let mut request = fixture.status_request("req_surface_mismatch", None);
-    request.envelope.surface_id = SurfaceId::new("surface_other_binding");
-    let before = fixture.counts()?;
 
-    let error = adapter
-        .call_tool("harness.status", serde_json::to_value(request)?)
-        .expect_err("surface mismatch should fail before Core");
+    for (case, supplied_surface_id) in [
+        ("matching", fixture.surface_id()),
+        ("mismatching", "surface_other_binding"),
+    ] {
+        let request = fixture.status_request(&format!("req_surface_forbidden_{case}"), None);
+        let mut params = mcp_arguments(request)?;
+        params["envelope"]["surface_id"] = json!(supplied_surface_id);
+        let before = fixture.counts()?;
 
-    assert_tool_execution_error(&error, "surface_id");
-    assert_eq!(fixture.counts()?, before);
+        let error = adapter
+            .call_tool("harness.status", params)
+            .expect_err("caller-supplied surface_id should fail before Core");
+
+        assert_tool_execution_error(&error, "surface_id");
+        assert_eq!(fixture.counts()?, before);
+    }
     Ok(())
 }
 
@@ -330,7 +355,7 @@ fn same_surface_instance_id_in_another_project_does_not_permit_access() -> Resul
     let before_other = counts_for_project(&fixture, other_project_id)?;
 
     let error = adapter
-        .call_tool("harness.status", serde_json::to_value(request)?)
+        .call_tool("harness.status", mcp_arguments(request)?)
         .expect_err("ungranted project should fail before Core");
 
     assert_tool_execution_error(&error, "not allowed");
@@ -359,7 +384,7 @@ fn same_surface_id_in_another_project_does_not_permit_access() -> Result<(), Box
     let before_other = counts_for_project(&fixture, other_project_id)?;
 
     let error = adapter
-        .call_tool("harness.status", serde_json::to_value(request)?)
+        .call_tool("harness.status", mcp_arguments(request)?)
         .expect_err("ungranted project should fail before Core");
 
     assert_tool_execution_error(&error, "not allowed");
@@ -404,11 +429,10 @@ fn deleted_bound_surface_fails_later_calls_closed_without_effect() -> Result<(),
         rusqlite::params![fixture.project_id(), surface_id, surface_instance_id],
     )?;
     let before = fixture.counts()?;
-    let mut request = fixture.status_request("req_deleted_bound_surface", None);
-    request.envelope.surface_id = SurfaceId::new(surface_id);
+    let request = fixture.status_request("req_deleted_bound_surface", None);
 
     let error = adapter
-        .call_tool("harness.status", serde_json::to_value(request)?)
+        .call_tool("harness.status", mcp_arguments(request)?)
         .expect_err("deleted integration surface should fail before Core");
 
     assert!(matches!(
@@ -439,9 +463,7 @@ fn invalid_integration_project_registration_blocks_core_execution_but_remains_li
     let error = adapter
         .call_tool(
             "harness.status",
-            serde_json::to_value(
-                fixture.status_request("req_invalid_integration_registration", None),
-            )?,
+            mcp_arguments(fixture.status_request("req_invalid_integration_registration", None))?,
         )
         .expect_err("invalid integration project should fail before Core");
     assert_tool_execution_error(&error, "invalid project registration");
@@ -454,9 +476,9 @@ fn exact_idempotency_replay_succeeds_inside_bound_session() -> Result<(), Box<dy
     let adapter = adapter(&fixture);
     let request = fixture.intake_request("req_bound_replay", "idem_bound_replay", false, Some(0));
 
-    let first = adapter.call_tool("harness.intake", serde_json::to_value(request.clone())?)?;
+    let first = adapter.call_tool("harness.intake", mcp_arguments(request.clone())?)?;
     let after_first = fixture.counts()?;
-    let second = adapter.call_tool("harness.intake", serde_json::to_value(request)?)?;
+    let second = adapter.call_tool("harness.intake", mcp_arguments(request)?)?;
 
     assert!(second.replayed);
     assert_eq!(second.response_json, first.response_json);
@@ -472,7 +494,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
 
     let status = adapter.call_tool(
         "harness.status",
-        serde_json::to_value(fixture.status_request("req_mcp_full_status", None))?,
+        mcp_arguments(fixture.status_request("req_mcp_full_status", None))?,
     )?;
     assert_eq!(status.response_value["base"]["response_kind"], "result");
     assert_eq!(
@@ -486,7 +508,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
 
     let intake = adapter.call_tool(
         "harness.intake",
-        serde_json::to_value(fixture.intake_request(
+        mcp_arguments(fixture.intake_request(
             "req_mcp_full_intake",
             "idem_mcp_full_intake",
             false,
@@ -509,7 +531,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
 
     let scope = adapter.call_tool(
         "harness.update_scope",
-        serde_json::to_value(fixture.update_scope_request(UpdateScopeFixture {
+        mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_mcp_full_scope",
             idempotency_key: "idem_mcp_full_scope",
             dry_run: false,
@@ -527,7 +549,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
 
     let prepare = adapter.call_tool(
         "harness.prepare_write",
-        serde_json::to_value(fixture.prepare_write_request(
+        mcp_arguments(fixture.prepare_write_request(
             "req_mcp_full_prepare",
             "idem_mcp_full_prepare",
             Some(2),
@@ -560,7 +582,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
 
     let stage = adapter.call_tool(
         "harness.stage_artifact",
-        serde_json::to_value(fixture.stage_artifact_request(
+        mcp_arguments(fixture.stage_artifact_request(
             "req_mcp_full_stage",
             None,
             false,
@@ -612,7 +634,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         recovery_constraints: Vec::new(),
     })
     .into();
-    let run = adapter.call_tool("harness.record_run", serde_json::to_value(run_request)?)?;
+    let run = adapter.call_tool("harness.record_run", mcp_arguments(run_request)?)?;
     assert_eq!(run.response_value["base"]["response_kind"], "result");
     let risk_id = run.response_value["current_close_basis"]["residual_risks"][0]["risk_id"]
         .as_str()
@@ -633,9 +655,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
     let before_status = fixture.counts()?;
     let status = adapter.call_tool(
         "harness.status",
-        serde_json::to_value(
-            fixture.status_request("req_mcp_full_status_after_run", Some(&task_id)),
-        )?,
+        mcp_arguments(fixture.status_request("req_mcp_full_status_after_run", Some(&task_id)))?,
     )?;
     assert_eq!(status.response_value["base"]["effect_kind"], "read_only");
     assert_eq!(
@@ -662,7 +682,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
 
     let close_check = adapter.call_tool(
         "harness.close_task",
-        serde_json::to_value(fixture.close_task_request(CloseTaskFixture {
+        mcp_arguments(fixture.close_task_request(CloseTaskFixture {
             request_id: "req_mcp_full_close_check",
             idempotency_key: None,
             dry_run: false,
@@ -693,7 +713,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
 
     let risk_judgment = adapter.call_tool(
         "harness.request_user_judgment",
-        serde_json::to_value(fixture.user_judgment_request(UserJudgmentFixture {
+        mcp_arguments(fixture.user_judgment_request(UserJudgmentFixture {
             request_id: "req_mcp_full_risk",
             idempotency_key: "idem_mcp_full_risk",
             dry_run: false,
@@ -731,7 +751,7 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
 
     let intake = adapter.call_tool(
         "harness.intake",
-        serde_json::to_value(fixture.intake_request(
+        mcp_arguments(fixture.intake_request(
             "req_mcp_role_task",
             "idem_mcp_role_task",
             false,
@@ -744,7 +764,7 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
         .to_owned();
     let scope = adapter.call_tool(
         "harness.update_scope",
-        serde_json::to_value(fixture.update_scope_request(UpdateScopeFixture {
+        mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_mcp_role_scope",
             idempotency_key: "idem_mcp_role_scope",
             dry_run: false,
@@ -775,11 +795,11 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
         recovery_constraints: Vec::new(),
     })
     .into();
-    let run = adapter.call_tool("harness.record_run", serde_json::to_value(run_request)?)?;
+    let run = adapter.call_tool("harness.record_run", mcp_arguments(run_request)?)?;
     assert_eq!(run.response_value["base"]["response_kind"], "result");
     let final_judgment = adapter.call_tool(
         "harness.request_user_judgment",
-        serde_json::to_value(fixture.user_judgment_request(UserJudgmentFixture {
+        mcp_arguments(fixture.user_judgment_request(UserJudgmentFixture {
             request_id: "req_mcp_role_final",
             idempotency_key: "idem_mcp_role_final",
             dry_run: false,
@@ -814,7 +834,7 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
 
     let record = adapter.call_tool(
         "harness.record_user_judgment",
-        serde_json::to_value(fixture.record_judgment_request(RecordJudgmentFixture {
+        mcp_arguments(fixture.record_judgment_request(RecordJudgmentFixture {
             request_id: "req_mcp_role_final_record",
             idempotency_key: "idem_mcp_role_final_record",
             expected_state_version: Some(4),
@@ -851,7 +871,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
 
     let intake = adapter.call_tool(
         "harness.intake",
-        serde_json::to_value(fixture.intake_request(
+        mcp_arguments(fixture.intake_request(
             "req_missing_run_intake",
             "idem_missing_run_intake",
             false,
@@ -866,7 +886,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
 
     let scope = adapter.call_tool(
         "harness.update_scope",
-        serde_json::to_value(fixture.update_scope_request(UpdateScopeFixture {
+        mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_missing_run_scope",
             idempotency_key: "idem_missing_run_scope",
             dry_run: false,
@@ -883,7 +903,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
 
     let prepare = adapter.call_tool(
         "harness.prepare_write",
-        serde_json::to_value(fixture.prepare_write_request(
+        mcp_arguments(fixture.prepare_write_request(
             "req_missing_run_prepare",
             "idem_missing_run_prepare",
             Some(2),
@@ -895,7 +915,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
 
     let stage = adapter.call_tool(
         "harness.stage_artifact",
-        serde_json::to_value(fixture.stage_artifact_request(
+        mcp_arguments(fixture.stage_artifact_request(
             "req_missing_run_stage",
             None,
             false,
@@ -909,7 +929,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
     let error = adapter
         .call_tool(
             "harness.record_run",
-            serde_json::to_value(fixture.record_run_request(
+            mcp_arguments(fixture.record_run_request(
                 "req_missing_run_record",
                 "idem_missing_run_record",
                 false,
@@ -940,7 +960,7 @@ fn missing_write_authorization_grant_blocks_prepare_write() -> Result<(), Box<dy
 
     let intake = adapter.call_tool(
         "harness.intake",
-        serde_json::to_value(fixture.intake_request(
+        mcp_arguments(fixture.intake_request(
             "req_missing_write_intake",
             "idem_missing_write_intake",
             false,
@@ -955,7 +975,7 @@ fn missing_write_authorization_grant_blocks_prepare_write() -> Result<(), Box<dy
 
     let scope = adapter.call_tool(
         "harness.update_scope",
-        serde_json::to_value(fixture.update_scope_request(UpdateScopeFixture {
+        mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_missing_write_scope",
             idempotency_key: "idem_missing_write_scope",
             dry_run: false,
@@ -974,7 +994,7 @@ fn missing_write_authorization_grant_blocks_prepare_write() -> Result<(), Box<dy
     let error = adapter
         .call_tool(
             "harness.prepare_write",
-            serde_json::to_value(fixture.prepare_write_request(
+            mcp_arguments(fixture.prepare_write_request(
                 "req_missing_write_prepare",
                 "idem_missing_write_prepare",
                 Some(2),
@@ -1025,16 +1045,14 @@ fn removed_read_status_grant_blocks_read_methods_only() -> Result<(), Box<dyn Er
     let status = adapter
         .call_tool(
             "harness.status",
-            serde_json::to_value(
-                fixture.status_request("req_missing_read_status", Some(&task_id)),
-            )?,
+            mcp_arguments(fixture.status_request("req_missing_read_status", Some(&task_id)))?,
         )
         .expect_err("missing read_status grant should fail before Core");
     assert_tool_execution_error(&status, "read_status");
     let close_check = adapter
         .call_tool(
             "harness.close_task",
-            serde_json::to_value(fixture.close_task_request(CloseTaskFixture {
+            mcp_arguments(fixture.close_task_request(CloseTaskFixture {
                 request_id: "req_missing_read_close_check",
                 idempotency_key: None,
                 dry_run: false,
@@ -1051,7 +1069,7 @@ fn removed_read_status_grant_blocks_read_methods_only() -> Result<(), Box<dyn Er
 
     let mutation = adapter.call_tool(
         "harness.intake",
-        serde_json::to_value(fixture.intake_request(
+        mcp_arguments(fixture.intake_request(
             "req_missing_read_mutation",
             "idem_missing_read_mutation",
             false,
@@ -1109,7 +1127,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
     for (tool_name, params) in [
         (
             "harness.intake",
-            serde_json::to_value(fixture.intake_request(
+            mcp_arguments(fixture.intake_request(
                 "req_missing_core_intake",
                 "idem_missing_core_intake",
                 false,
@@ -1118,7 +1136,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
         ),
         (
             "harness.update_scope",
-            serde_json::to_value(fixture.update_scope_request(UpdateScopeFixture {
+            mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
                 request_id: "req_missing_core_update",
                 idempotency_key: "idem_missing_core_update",
                 dry_run: false,
@@ -1130,7 +1148,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
         ),
         (
             "harness.request_user_judgment",
-            serde_json::to_value(fixture.user_judgment_request(UserJudgmentFixture {
+            mcp_arguments(fixture.user_judgment_request(UserJudgmentFixture {
                 request_id: "req_missing_core_judgment",
                 idempotency_key: "idem_missing_core_judgment",
                 dry_run: false,
@@ -1142,7 +1160,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
         ),
         (
             "harness.close_task",
-            serde_json::to_value(fixture.close_task_request(CloseTaskFixture {
+            mcp_arguments(fixture.close_task_request(CloseTaskFixture {
                 request_id: "req_missing_core_close",
                 idempotency_key: Some("idem_missing_core_close"),
                 dry_run: false,
@@ -1169,7 +1187,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
     let before_prepare = fixture.counts()?;
     let prepare = adapter.call_tool(
         "harness.prepare_write",
-        serde_json::to_value(fixture.prepare_write_request(
+        mcp_arguments(fixture.prepare_write_request(
             "req_missing_core_prepare",
             "idem_missing_core_prepare",
             Some(before_prepare.state_version),
@@ -1229,7 +1247,7 @@ fn removed_artifact_registration_grant_blocks_stage_only() -> Result<(), Box<dyn
     let stage = adapter
         .call_tool(
             "harness.stage_artifact",
-            serde_json::to_value(fixture.stage_artifact_request(
+            mcp_arguments(fixture.stage_artifact_request(
                 "req_missing_artifact_stage",
                 None,
                 false,
@@ -1243,7 +1261,7 @@ fn removed_artifact_registration_grant_blocks_stage_only() -> Result<(), Box<dyn
 
     let run = adapter.call_tool(
         "harness.record_run",
-        serde_json::to_value(fixture.record_run_request(
+        mcp_arguments(fixture.record_run_request(
             "req_missing_artifact_run",
             "idem_missing_artifact_run",
             false,
@@ -1288,7 +1306,7 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
     let adapter = adapter(&fixture);
     let check = adapter.call_tool(
         "harness.close_task",
-        serde_json::to_value(fixture.close_task_request(CloseTaskFixture {
+        mcp_arguments(fixture.close_task_request(CloseTaskFixture {
             request_id: "req_close_intent_check",
             idempotency_key: None,
             dry_run: false,
@@ -1312,7 +1330,7 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
     let mutating_without_core = adapter
         .call_tool(
             "harness.close_task",
-            serde_json::to_value(fixture.close_task_request(CloseTaskFixture {
+            mcp_arguments(fixture.close_task_request(CloseTaskFixture {
                 request_id: "req_close_intent_complete_no_core",
                 idempotency_key: None,
                 dry_run: true,
@@ -1332,7 +1350,7 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
     }))?;
     let mutating_with_core = adapter.call_tool(
         "harness.close_task",
-        serde_json::to_value(fixture.close_task_request(CloseTaskFixture {
+        mcp_arguments(fixture.close_task_request(CloseTaskFixture {
             request_id: "req_close_intent_complete_core",
             idempotency_key: None,
             dry_run: true,
@@ -1370,7 +1388,7 @@ fn integration_access_class_derives_from_method_not_caller_fields() -> Result<()
 
     let response = adapter.call_tool(
         "harness.status",
-        serde_json::to_value(fixture.status_request("req_env_no_elevate", None))?,
+        mcp_arguments(fixture.status_request("req_env_no_elevate", None))?,
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -1395,7 +1413,7 @@ fn integration_binding_basis_is_used_for_newly_stored_trusted_basis() -> Result<
 
     let intake = adapter.call_tool(
         "harness.intake",
-        serde_json::to_value(fixture.intake_request(
+        mcp_arguments(fixture.intake_request(
             "req_env_basis_intake",
             "idem_env_basis_intake",
             false,
@@ -1408,7 +1426,7 @@ fn integration_binding_basis_is_used_for_newly_stored_trusted_basis() -> Result<
         .to_owned();
     adapter.call_tool(
         "harness.update_scope",
-        serde_json::to_value(fixture.update_scope_request(UpdateScopeFixture {
+        mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_env_basis_scope",
             idempotency_key: "idem_env_basis_scope",
             dry_run: false,
@@ -1424,7 +1442,7 @@ fn integration_binding_basis_is_used_for_newly_stored_trusted_basis() -> Result<
 
     let prepare = adapter.call_tool(
         "harness.prepare_write",
-        serde_json::to_value(fixture.prepare_write_request(
+        mcp_arguments(fixture.prepare_write_request(
             "req_env_basis_prepare",
             "idem_env_basis_prepare",
             Some(2),
@@ -1495,7 +1513,7 @@ fn invalid_mcp_authority_fields_are_rejected_before_core() -> Result<(), Box<dyn
         ),
         ("verification_basis", json!("caller_basis")),
     ] {
-        let mut params = serde_json::to_value(fixture.stage_artifact_request(
+        let mut params = mcp_arguments(fixture.stage_artifact_request(
             &format!("req_invalid_{}", field_path.replace('.', "_")),
             None,
             false,
@@ -1536,7 +1554,7 @@ fn stdio_invalid_known_tool_arguments_return_tool_error_without_storage_effect(
     let input = Cursor::new(
         br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-integration-test","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
-{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"project_fixture","task_id":null,"actor_kind":"agent","surface_id":"surface_fixture","request_id":"req_stdio_invalid","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":true,"evidence":true,"close":true,"guarantees":true},"access_class":"core_mutation"}}}
+{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"project_fixture","task_id":null,"actor_kind":"agent","request_id":"req_stdio_invalid","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":true,"evidence":true,"close":true,"guarantees":true},"access_class":"core_mutation"}}}
 "#
         .to_vec(),
     );
@@ -1566,7 +1584,7 @@ fn mcp_session_derives_access_per_method_call() -> Result<(), Box<dyn Error>> {
     let adapter = adapter(&fixture);
     let response = adapter.call_tool(
         "harness.status",
-        serde_json::to_value(fixture.status_request("req_status_derived", None))?,
+        mcp_arguments(fixture.status_request("req_status_derived", None))?,
     )?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -1614,10 +1632,8 @@ fn mcp_replay_rejects_different_session_access_class_without_stored_response(
         Some(&change_unit_id),
     );
 
-    let first = adapter(&fixture).call_tool(
-        "harness.prepare_write",
-        serde_json::to_value(request.clone())?,
-    )?;
+    let first =
+        adapter(&fixture).call_tool("harness.prepare_write", mcp_arguments(request.clone())?)?;
     let after_first = fixture.counts()?;
     let write_authorization_id = first.response_value["write_authorization_ref"]["record_id"]
         .as_str()
@@ -1735,7 +1751,7 @@ fn mcp_and_direct_status_omit_same_excluded_projection_fields() -> Result<(), Bo
         request.clone(),
         invocation(&fixture, AccessClass::ReadStatus),
     )?;
-    let mcp = adapter(&fixture).call_tool("harness.status", serde_json::to_value(request)?)?;
+    let mcp = adapter(&fixture).call_tool("harness.status", mcp_arguments(request)?)?;
 
     assert_eq!(direct.response_value, mcp.response_value);
     for field in [
@@ -2203,6 +2219,14 @@ fn invocation(fixture: &CoreFixture, access_class: AccessClass) -> InvocationCon
     }
 }
 
+fn mcp_arguments<T: serde::Serialize>(request: T) -> Result<Value, serde_json::Error> {
+    let mut params = serde_json::to_value(request)?;
+    if let Some(envelope) = params.get_mut("envelope").and_then(Value::as_object_mut) {
+        envelope.remove("surface_id");
+    }
+    Ok(params)
+}
+
 fn assert_rejected_code(response: &Value, code: &str) {
     assert_eq!(response["base"]["response_kind"], "rejected");
     assert_eq!(response["errors"][0]["code"], code);
@@ -2222,6 +2246,66 @@ fn assert_tool_execution_error(error: &harness_mcp::McpAdapterError, needle: &st
         "expected `{}` to contain `{needle}`",
         error
     );
+}
+
+fn schema_has_property(schema: &Value, property_name: &str) -> bool {
+    match schema {
+        Value::Object(object) => {
+            object
+                .get("properties")
+                .and_then(Value::as_object)
+                .is_some_and(|properties| properties.contains_key(property_name))
+                || object
+                    .values()
+                    .any(|child| schema_has_property(child, property_name))
+        }
+        Value::Array(items) => items
+            .iter()
+            .any(|child| schema_has_property(child, property_name)),
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => false,
+    }
+}
+
+fn envelope_required_fields(schema: &Value) -> Option<Vec<String>> {
+    match schema {
+        Value::Object(object) => {
+            if is_tool_envelope_schema(object) {
+                return object
+                    .get("required")
+                    .and_then(Value::as_array)
+                    .map(|required| {
+                        required
+                            .iter()
+                            .filter_map(Value::as_str)
+                            .map(str::to_owned)
+                            .collect::<Vec<_>>()
+                    });
+            }
+            object.values().find_map(envelope_required_fields)
+        }
+        Value::Array(items) => items.iter().find_map(envelope_required_fields),
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => None,
+    }
+}
+
+fn is_tool_envelope_schema(object: &serde_json::Map<String, Value>) -> bool {
+    object
+        .get("properties")
+        .and_then(Value::as_object)
+        .is_some_and(|properties| {
+            [
+                "project_id",
+                "task_id",
+                "request_id",
+                "actor_kind",
+                "idempotency_key",
+                "expected_state_version",
+                "dry_run",
+                "locale",
+            ]
+            .iter()
+            .all(|field| properties.contains_key(*field))
+        })
 }
 
 fn assert_replay_surface_foreign_key(conn: &rusqlite::Connection) -> rusqlite::Result<()> {

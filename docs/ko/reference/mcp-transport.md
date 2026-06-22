@@ -229,6 +229,8 @@ notification 분류는 MCP 메서드 파라미터 검증보다 먼저 JSON-RPC e
 
 `arguments`가 없으면 빈 객체로 취급합니다. `arguments: null`과 객체가 아닌 `arguments`는 잘못된 메서드 파라미터이며 JSON-RPC `-32602`를 반환합니다. 알 수 없는 도구 이름은 프로토콜 오류이며 JSON-RPC `-32602`를 반환합니다.
 
+공개 하네스 도구에서 `tools/list`는 공유 하네스 요청 스키마에 MCP 통합 바인딩을 적용해 만든 MCP에 보이는 입력 스키마를 노출합니다. `envelope.project_id`는 호출자가 선택할 수 있는 선택적 선택자로 남습니다. `envelope.surface_id`는 MCP에 보이는 스키마에 노출되지 않으며 원시 `tools/call` `arguments`에서도 허용되지 않습니다. 원시 공개 도구 `arguments`에 `envelope.surface_id`가 들어 있으면 어댑터는 Core 실행 전에 호출을 거절합니다. MCP에 보이는 입력 검증이 끝난 뒤 어댑터는 선택된 Agent Integration Profile의 `surface_id`를 내부 타입 요청에 주입합니다.
+
 알려진 공개 하네스 도구에서 객체 `arguments`가 도구 입력 스키마를 통과하지 못하면 `isError: true`와 실행 가능한 text content를 담은 `CallToolResult`를 반환합니다. 이는 JSON-RPC 프로토콜 오류가 아니라 도구 실행 오류입니다.
 
 `harness.list_projects`에 대해 어댑터는 묶인 통합만을 위한 읽기 전용 프로젝트 목록을 반환합니다. 이 도구는 Core에 들어가거나, 저장 효과를 만들거나, 프로젝트 멤버십을 바꾸거나, 통합 허용 목록 밖의 프로젝트를 노출하면 안 됩니다.

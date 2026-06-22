@@ -186,7 +186,7 @@ Before a public tool call enters Core, the MCP adapter must verify:
 - the integration's `surface_id` and `surface_instance_id` are registered for that project
 - the requested access class is authorized for that surface instance
 
-The MCP session does not bind one fixed access class for the whole process. The MCP adapter derives the requested invocation access from the public method name and typed params for the current call. Public request params never contain an invocation access class, invocation `surface_instance_id`, capability profile, verification basis, or `VerifiedSurfaceContext`. Core independently verifies both the selected integration/project binding and that the method-derived requested access is included in the registered grant in `surfaces.local_access_json` before it derives `VerifiedSurfaceContext`.
+The MCP session does not bind one fixed access class for the whole process. The MCP adapter derives the requested invocation access from the public method name and typed params for the current call. MCP-visible public request params never contain `envelope.surface_id`, an invocation access class, invocation `surface_instance_id`, capability profile, verification basis, or `VerifiedSurfaceContext`. Core independently verifies both the selected integration/project binding and that the method-derived requested access is included in the registered grant in `surfaces.local_access_json` before it derives `VerifiedSurfaceContext`.
 
 Method-derived requested access:
 
@@ -238,7 +238,8 @@ Condition:
 - A public API request has exactly one request-level `VerifiedSurfaceContext.access_class`.
 - A public API request has at most one authority-relevant `VerifiedActorContext`, and only authority-resolution method owners consume it.
 - Public `ToolEnvelope.project_id`, when present, is a deterministic project selector constrained by the integration project membership. It is not caller authority and cannot grant access to an unlisted, inactive, or invalid project.
-- Public `ToolEnvelope.surface_id` remains an API envelope field where schema owners define it. The MCP adapter derives invocation surface identity from the selected integration and must not let caller text override the integration's `surface_id` or `surface_instance_id`.
+- `ToolEnvelope.surface_id` remains part of the shared Harness request envelope where schema owners define it for the common request model.
+- The MCP-visible tool input schema does not expose `envelope.surface_id`. MCP callers must not submit surface identity; if raw arguments include `envelope.surface_id`, the adapter rejects the call before Core execution. After MCP-visible input validation, the adapter injects the selected integration's `surface_id` into the internal typed request and must not let caller text override the integration's `surface_id` or `surface_instance_id`.
 - `surface_instance_id` remains adapter-derived invocation context. `ToolEnvelope` does not gain `surface_instance_id`; the shared request envelope stays with [API Schema Core](api/schema-core.md#tool-envelope).
 - Nested payloads such as `ArtifactInput` or `StagedArtifactHandle` do not add a second request-level access class.
 - Staged artifact provenance fields such as `created_by_surface_id` and `created_by_surface_instance_id` come from the derived `VerifiedSurfaceContext` at staging time, not caller text or nested artifact input.
