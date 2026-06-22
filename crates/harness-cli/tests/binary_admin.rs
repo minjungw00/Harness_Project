@@ -1219,6 +1219,187 @@ fn harness_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(), 
 
 #[cfg(unix)]
 #[test]
+fn harness_binary_agent_codex_existing_user_target_survives_environment_changes_and_uninstall(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-codex-stored-target")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let stored_codex_home = runtime_home.path().join("codex-home-a");
+    let ambient_codex_home = runtime_home.path().join("codex-home-b");
+    let later_home = runtime_home.path().join("later-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let install_env = codex_env(&stored_codex_home, &[runtime_home.path()]);
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_codex_stored_target",
+            "--server-name",
+            "harness-stored-target",
+            "--project-id",
+            "project_codex_stored_target",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+        ],
+        &install_env,
+    )?;
+    assert_success(&install);
+    let stored_config = stored_codex_home.join("config.toml");
+    let stored_config_text = path_text(&stored_config);
+    let installations =
+        list_host_installations_for_integration(runtime_home.path(), "agent_codex_stored_target")?;
+    assert_eq!(installations[0].config_target, stored_config_text);
+
+    fs::create_dir_all(&ambient_codex_home)?;
+    let ambient_config = ambient_codex_home.join("config.toml");
+    let ambient_text =
+        "[mcp_servers.harness-stored-target]\ncommand = \"ambient-codex-home\"\n".to_owned();
+    fs::write(&ambient_config, &ambient_text)?;
+    let ambient_env = codex_env(&ambient_codex_home, &[runtime_home.path()]);
+    let status = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "status",
+            "--integration-id",
+            "agent_codex_stored_target",
+        ],
+        &ambient_env,
+    )?;
+    assert_success(&status);
+    assert!(stdout(&status).contains("configured_ready"));
+
+    fs::create_dir_all(later_home.join(".codex"))?;
+    fs::write(
+        later_home.join(".codex").join("config.toml"),
+        "[mcp_servers.harness-stored-target]\ncommand = \"ambient-home\"\n",
+    )?;
+    let no_codex_home_env = vec![
+        ("HOME", path_text(&later_home)),
+        ("PATH", path_env(&[runtime_home.path()])),
+    ];
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_codex_stored_target",
+            "--output",
+            "json",
+        ],
+        &no_codex_home_env,
+    )?;
+    assert_success(&verify);
+    let value: Value = serde_json::from_str(&stdout(&verify))?;
+    assert_eq!(value["status"], "complete");
+    assert_eq!(
+        value["installation_verifications"][0]["config_target"],
+        stored_config_text
+    );
+    assert_eq!(fs::read_to_string(&ambient_config)?, ambient_text);
+
+    let uninstall = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "uninstall",
+            "--integration-id",
+            "agent_codex_stored_target",
+        ],
+        &ambient_env,
+    )?;
+    assert_success(&uninstall);
+    assert_no_codex_server(&stored_config, "harness-stored-target")?;
+    assert_eq!(fs::read_to_string(&ambient_config)?, ambient_text);
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_codex_verify_reports_stored_missing_without_ambient_fallback(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-codex-stored-missing")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    let stored_codex_home = runtime_home.path().join("codex-home-a");
+    let ambient_codex_home = runtime_home.path().join("codex-home-b");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let install_env = codex_env(&stored_codex_home, &[runtime_home.path()]);
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_codex_stored_missing",
+            "--server-name",
+            "harness-stored-missing",
+            "--project-id",
+            "project_codex_stored_missing",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+        ],
+        &install_env,
+    )?;
+    assert_success(&install);
+
+    let stored_config = stored_codex_home.join("config.toml");
+    let valid_config = fs::read_to_string(&stored_config)?;
+    fs::create_dir_all(&ambient_codex_home)?;
+    fs::write(ambient_codex_home.join("config.toml"), &valid_config)?;
+    fs::remove_file(&stored_config)?;
+    let ambient_env = codex_env(&ambient_codex_home, &[runtime_home.path()]);
+
+    let verify = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "verify",
+            "--integration-id",
+            "agent_codex_stored_missing",
+            "--output",
+            "json",
+        ],
+        &ambient_env,
+    )?;
+    assert_eq!(verify.status.code(), Some(1));
+    let value: Value = serde_json::from_str(&stdout(&verify))?;
+    assert_eq!(value["status"], "failed");
+    assert_eq!(value["verification"]["managed_config"], "missing");
+    assert_eq!(
+        value["installation_verifications"][0]["host_state"],
+        "missing"
+    );
+    assert_eq!(
+        value["installation_verifications"][0]["config_target"],
+        path_text(&stored_config)
+    );
+    assert_eq!(
+        fs::read_to_string(ambient_codex_home.join("config.toml"))?,
+        valid_config
+    );
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
 fn harness_binary_agent_codex_user_install_requires_codex_executable() -> Result<(), Box<dyn Error>>
 {
     let runtime_home = TempRuntimeHome::new("cli-bin-agent-codex-missing")?;
@@ -3354,7 +3535,9 @@ fn harness_binary_agent_verify_selected_installation_uses_only_selected_command(
 ) -> Result<(), Box<dyn Error>> {
     let runtime_home = TempRuntimeHome::new("cli-bin-agent-verify-selected")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
-    let codex_home = runtime_home.path().join("codex-home");
+    let first_codex_home = runtime_home.path().join("codex-home-first");
+    let second_codex_home = runtime_home.path().join("codex-home-second");
+    let ambient_codex_home = runtime_home.path().join("codex-home-ambient");
     let bin_dir = runtime_home.path().join("bin");
     let first_log = runtime_home.path().join("first.log");
     let second_log = runtime_home.path().join("second.log");
@@ -3371,12 +3554,12 @@ fn harness_binary_agent_verify_selected_installation_uses_only_selected_command(
         &second_log,
     )?;
     write_fake_codex(&bin_dir, CodexFixture::Ready)?;
-    let codex_env = codex_env(&codex_home, &[&bin_dir]);
 
-    for (server_name, command) in [
-        ("harness-first", &first_mcp),
-        ("harness-second", &second_mcp),
+    for (server_name, command, codex_home) in [
+        ("harness-first", &first_mcp, &first_codex_home),
+        ("harness-second", &second_mcp, &second_codex_home),
     ] {
+        let codex_env = codex_env(codex_home, &[&bin_dir]);
         let install = run_with_home_and_env(
             runtime_home.path(),
             [
@@ -3423,6 +3606,12 @@ fn harness_binary_agent_verify_selected_installation_uses_only_selected_command(
     )?;
     fs::write(&first_log, "")?;
     fs::write(&second_log, "")?;
+    fs::create_dir_all(&ambient_codex_home)?;
+    fs::write(
+        ambient_codex_home.join("config.toml"),
+        "[mcp_servers.harness-first]\ncommand = \"ambient\"\n",
+    )?;
+    let ambient_env = codex_env(&ambient_codex_home, &[&bin_dir]);
 
     let verify = run_with_home_and_env(
         runtime_home.path(),
@@ -3434,7 +3623,7 @@ fn harness_binary_agent_verify_selected_installation_uses_only_selected_command(
             "--installation-id",
             selected.installation_id.as_str(),
         ],
-        &codex_env,
+        &ambient_env,
     )?;
     assert_success(&verify);
     assert!(stdout(&verify).contains("installation_verifications:"));
@@ -4364,14 +4553,16 @@ enum CodexFixture {
 fn codex_env(codex_home: &Path, path_dirs: &[&Path]) -> Vec<(&'static str, String)> {
     vec![
         ("CODEX_HOME", path_text(codex_home)),
-        (
-            "PATH",
-            std::env::join_paths(path_dirs)
-                .expect("test PATH should be valid")
-                .to_string_lossy()
-                .into_owned(),
-        ),
+        ("PATH", path_env(path_dirs)),
     ]
+}
+
+#[cfg(unix)]
+fn path_env(path_dirs: &[&Path]) -> String {
+    std::env::join_paths(path_dirs)
+        .expect("test PATH should be valid")
+        .to_string_lossy()
+        .into_owned()
 }
 
 #[cfg(unix)]

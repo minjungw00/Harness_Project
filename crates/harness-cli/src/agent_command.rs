@@ -48,7 +48,7 @@ use crate::{
     },
     host_integration::{
         claude_code::{ClaudeCodeAdapter, ProductionCommandRunner},
-        codex::{CodexAdapter, CodexEnvironment},
+        codex::{CodexAdapter, CodexEnvironment, CodexExistingPlanRequest},
         generic::GenericAdapter,
         verification::{
             HostConfigurationStatus, HostExecutableStatus, HostGateStatus, HostVerificationState,
@@ -6113,21 +6113,36 @@ fn installation_host_context(
     if host_kind == HostKind::Generic {
         parsed.export_path = Some(PathBuf::from(&installation.config_target));
     }
-    let plan = build_host_plan(
-        HostPlanInputs {
-            host_kind,
-            host_scope,
+    let existing_runtime_home =
+        runtime_home_for_existing_host_config(host_scope, runtime_home, &metadata);
+    let plan = if host_kind == HostKind::Codex {
+        let adapter = CodexAdapter::new(CodexEnvironment::default());
+        adapter.plan_existing(CodexExistingPlanRequest {
+            scope: host_scope,
             integration_id: &installation.integration_id,
-            server_name: Some(&installation.server_name),
-            repo_root: repo_root.as_deref(),
+            server_name: &installation.server_name,
+            config_target: Path::new(&installation.config_target),
             mcp_command: &mcp_command,
-            runtime_home: runtime_home_for_host_config(host_scope, runtime_home),
-            expected_fingerprint: Some(&installation.managed_fingerprint),
-            parsed: &parsed,
-            current_dir,
-        },
-        process,
-    )?;
+            runtime_home: existing_runtime_home.as_deref(),
+            managed_fingerprint: &installation.managed_fingerprint,
+        })?
+    } else {
+        build_host_plan(
+            HostPlanInputs {
+                host_kind,
+                host_scope,
+                integration_id: &installation.integration_id,
+                server_name: Some(&installation.server_name),
+                repo_root: repo_root.as_deref(),
+                mcp_command: &mcp_command,
+                runtime_home: runtime_home_for_host_config(host_scope, runtime_home),
+                expected_fingerprint: Some(&installation.managed_fingerprint),
+                parsed: &parsed,
+                current_dir,
+            },
+            process,
+        )?
+    };
     Ok(InstallationHostContext {
         host_kind,
         plan,
@@ -6309,6 +6324,23 @@ fn runtime_home_for_host_config(scope: HostScope, runtime_home: &Path) -> Option
         None
     } else {
         Some(runtime_home)
+    }
+}
+
+fn runtime_home_for_existing_host_config(
+    scope: HostScope,
+    runtime_home: &Path,
+    metadata: &BTreeMap<String, String>,
+) -> Option<PathBuf> {
+    if scope == HostScope::Project {
+        None
+    } else {
+        Some(
+            metadata
+                .get("runtime_home")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| runtime_home.to_path_buf()),
+        )
     }
 }
 

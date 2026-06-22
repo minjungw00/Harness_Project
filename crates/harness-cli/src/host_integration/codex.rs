@@ -114,12 +114,7 @@ impl<R: CommandRunner> CodexAdapter<R> {
             }
         };
         let mut user_actions = Vec::new();
-        if request.scope == HostScope::Project {
-            user_actions.push(UserAction::new(
-                UserActionKind::HostTrustRequired,
-                "Codex project configuration is loaded only after the project is trusted",
-            ));
-        }
+        add_project_trust_action(request.scope, &mut user_actions);
 
         Ok(HostPlan {
             host_kind: HostKind::Codex,
@@ -132,6 +127,47 @@ impl<R: CommandRunner> CodexAdapter<R> {
             conflicts,
             user_actions,
             file_snapshot: Some(snapshot),
+        })
+    }
+
+    pub fn plan_existing(
+        &self,
+        request: CodexExistingPlanRequest<'_>,
+    ) -> Result<HostPlan, HostConfigError> {
+        if !matches!(request.scope, HostScope::User | HostScope::Project) {
+            return Err(HostConfigError::Conflict(HostConflict::new(
+                HostConflictKind::InvalidScope,
+                "Codex supports only user and project host scopes",
+            )));
+        }
+        validate_mcp_command(request.scope, request.mcp_command)?;
+        if request.scope == HostScope::Project && request.runtime_home.is_some() {
+            return Err(HostConfigError::Conflict(HostConflict::new(
+                HostConflictKind::InvalidCommand,
+                "Codex project-scoped configuration must not embed a personal HARNESS_HOME",
+            )));
+        }
+
+        let server_name = validated_server_name(request.integration_id, Some(request.server_name))?;
+        let entry = ManagedServerEntry::new(
+            request.integration_id,
+            request.mcp_command,
+            request.runtime_home,
+        );
+        let mut user_actions = Vec::new();
+        add_project_trust_action(request.scope, &mut user_actions);
+
+        Ok(HostPlan {
+            host_kind: HostKind::Codex,
+            host_scope: request.scope,
+            server_name,
+            target: HostTarget::File(request.config_target.to_path_buf()),
+            entry,
+            change: PlannedChange::Noop,
+            fingerprint: request.managed_fingerprint.to_owned(),
+            conflicts: Vec::new(),
+            user_actions,
+            file_snapshot: None,
         })
     }
 
@@ -345,6 +381,26 @@ pub struct CodexPlanRequest<'a> {
     pub mcp_command: &'a Path,
     pub runtime_home: Option<&'a Path>,
     pub expected_fingerprint: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct CodexExistingPlanRequest<'a> {
+    pub scope: HostScope,
+    pub integration_id: &'a str,
+    pub server_name: &'a str,
+    pub config_target: &'a Path,
+    pub mcp_command: &'a Path,
+    pub runtime_home: Option<&'a Path>,
+    pub managed_fingerprint: &'a str,
+}
+
+fn add_project_trust_action(scope: HostScope, user_actions: &mut Vec<UserAction>) {
+    if scope == HostScope::Project {
+        user_actions.push(UserAction::new(
+            UserActionKind::HostTrustRequired,
+            "Codex project configuration is loaded only after the project is trusted",
+        ));
+    }
 }
 
 fn validate_mcp_command(scope: HostScope, command: &Path) -> Result<(), HostConfigError> {
@@ -715,6 +771,66 @@ mod tests {
             HostTarget::File(repo.join(".codex").join("config.toml"))
         );
         assert_eq!(plan.user_actions[0].kind, UserActionKind::HostTrustRequired);
+        Ok(())
+    }
+
+    #[test]
+    fn existing_plan_uses_stored_target_without_ambient_discovery(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-existing-target")?;
+        let stored_target = dir.join("stored").join("config.toml");
+        let ambient_codex_home = dir.join("ambient");
+        fs::create_dir_all(&ambient_codex_home)?;
+        fs::write(
+            ambient_codex_home.join("config.toml"),
+            "[mcp_servers.harness-existing]\ncommand = \"ambient\"\n",
+        )?;
+        let adapter = CodexAdapter::new(CodexEnvironment {
+            home: Some(dir.join("home")),
+            codex_home: Some(ambient_codex_home),
+            path: None,
+        });
+
+        let plan = adapter.plan_existing(existing_request(
+            HostScope::User,
+            &stored_target,
+            Path::new("/bin/harness-mcp"),
+            Some(Path::new("/runtime")),
+        ))?;
+
+        assert_eq!(plan.target, HostTarget::File(stored_target));
+        assert_eq!(plan.change, PlannedChange::Noop);
+        assert_eq!(plan.fingerprint, "stored-fingerprint");
+        Ok(())
+    }
+
+    #[test]
+    fn existing_plan_verification_reports_stored_missing_without_ambient_fallback(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let dir = temp_dir("codex-existing-missing")?;
+        let stored_target = dir.join("stored").join("config.toml");
+        let ambient_codex_home = dir.join("ambient");
+        fs::create_dir_all(&ambient_codex_home)?;
+        fs::write(
+            ambient_codex_home.join("config.toml"),
+            "[mcp_servers.harness-existing]\ncommand = \"ambient\"\n",
+        )?;
+        let mut adapter = CodexAdapter::new(CodexEnvironment {
+            home: None,
+            codex_home: Some(ambient_codex_home),
+            path: Some(dir.join("empty-path").into_os_string()),
+        });
+        let plan = adapter.plan_existing(existing_request(
+            HostScope::User,
+            &stored_target,
+            Path::new("/bin/harness-mcp"),
+            Some(Path::new("/runtime")),
+        ))?;
+
+        let verification = adapter.verify(&plan)?;
+
+        assert_eq!(verification.status.as_str(), "missing");
+        assert_eq!(verification.managed_config, ManagedConfigStatus::Missing);
         Ok(())
     }
 
@@ -1164,6 +1280,23 @@ mod tests {
             mcp_command,
             runtime_home: Some(Path::new("/runtime")),
             expected_fingerprint: None,
+        }
+    }
+
+    fn existing_request<'a>(
+        scope: HostScope,
+        config_target: &'a Path,
+        mcp_command: &'a Path,
+        runtime_home: Option<&'a Path>,
+    ) -> CodexExistingPlanRequest<'a> {
+        CodexExistingPlanRequest {
+            scope,
+            integration_id: "int_alpha",
+            server_name: "harness-existing",
+            config_target,
+            mcp_command,
+            runtime_home,
+            managed_fingerprint: "stored-fingerprint",
         }
     }
 
