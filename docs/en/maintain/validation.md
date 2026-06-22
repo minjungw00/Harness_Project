@@ -99,6 +99,26 @@ workspace or changed crate:
 Use narrower Cargo commands only when the repository structure or task scope
 clearly calls for them, and report the reason.
 
+## Storage DDL Contract Check
+
+When editing Storage DDL, `harness-store` migrations, or schema validation code,
+run the focused owner-to-implementation consistency check:
+
+```sh
+cargo test -p harness-store --test storage_ddl_contract
+```
+
+This check compares the authoritative English and Korean Storage DDL SQL with
+the latest schemas produced by executable migrations in in-memory SQLite
+databases. It checks schema semantics such as tables, columns, defaults,
+constraints, foreign keys, indexes, partial indexes, and maintained triggers
+without comparing Markdown prose or SQL formatting.
+
+This is a repository maintenance and implementation consistency check. It is
+distinct from general documentation structure validation, public runtime
+conformance, product acceptance, QA completion, close readiness, security
+proof, and residual-risk acceptance.
+
 ## Reporting
 
 Report validation results in the conversation, not in repository files. Include
