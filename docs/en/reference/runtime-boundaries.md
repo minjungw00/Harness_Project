@@ -172,7 +172,7 @@ Permitted relationship:
 
 This separation contract is an eligibility rule. New project registration, setup reuse, project-state administrative access, Core execution entry, and MCP project-session startup must require the selected `Harness Runtime Home` and registered `Product Repository` to satisfy it.
 
-Registry-level inspection may still show a stored legacy project record that violates this contract so the record can be diagnosed. Registry visibility does not make the record eligible to open the project-state database, perform surface administration, enter Core execution, or start an MCP project session. The system does not automatically move paths, repair the registry row, or delete that record solely because it remains visible.
+The inspection layer may still show a raw stored project row that violates this contract so the record can be diagnosed. Operational project lookup, project listing, setup reuse, project-state administrative access, surface administration, Agent Integration Profile project access, Core execution entry, and MCP project availability must reject that row rather than returning it as a normal project record or project entry. The system does not automatically move paths, repair the registry row, or delete that record solely because inspection can report it.
 
 ## Local access boundaries
 

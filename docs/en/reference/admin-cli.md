@@ -193,8 +193,8 @@ Verification:
 Rules:
 
 - `--integration-id` and `--project-id` are required.
-- The project must already be registered in the selected Runtime Home.
-- Adding a project does not make inactive, invalid, or execution-ineligible projects available at execution time.
+- The project must already be registered in the selected Runtime Home with a valid current project registration.
+- Adding a project does not make inactive or otherwise execution-ineligible projects available at execution time.
 - `--default` sets the integration default to the added project.
 - Adding a second project to a `project` or `local` scoped integration is a conflict.
 - The command does not rewrite host configuration; access revocation and addition are registry changes.
@@ -405,9 +405,9 @@ Rules:
 - `--repo-root` identifies the local repository root for the project registration.
 - The selected Runtime Home and `--repo-root` must satisfy the [Runtime Home/Product Repository separation contract](runtime-boundaries.md#runtime-home-product-repository-separation) before registration is recorded.
 
-`harness project list` lists registered projects for the selected Runtime Home.
+`harness project list` lists current valid registered projects for the selected Runtime Home.
 
-`harness project list` is registry-level inspection. It may show a legacy project record that violates the Runtime Home/Product Repository separation contract for diagnosis. Listing visibility does not make that record eligible for project-state database access, surface administration, Core execution, setup reuse, or MCP startup.
+If any selected project registry row is malformed or violates the current registration invariants, `harness project list` fails through the standard CLI error channel instead of omitting the row or returning it as a normal project. Raw malformed registry content remains diagnosable through the inspection layer.
 
 Runtime location boundaries, including the distinction between `Product Repository` and `Harness Runtime Home`, are owned by [Runtime Boundaries](runtime-boundaries.md#runtime-home-product-repository-separation).
 

@@ -1,10 +1,10 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
 use crate::{
-    bootstrap::{validate_project_id, ProjectRecord},
+    bootstrap::{validate_current_project_registration, validate_project_id, ProjectRecord},
     sqlite::{begin_immediate_transaction, open_registry_database, registry_db_path},
     StoreError, StoreResult,
 };
@@ -315,12 +315,13 @@ pub fn add_integration_project(
     registration: IntegrationProjectRegistration,
 ) -> StoreResult<IntegrationProjectRecord> {
     validate_integration_project_registration(&registration)?;
-    let registry_path = registry_db_path(runtime_home);
+    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let registry_path = registry_db_path(&runtime_home);
     let mut conn = open_registry_database(&registry_path)?;
     let tx = begin_immediate_transaction(&mut conn)?;
     require_runtime_home(&tx, &registry_path)?;
     require_agent_integration(&tx, &registration.integration_id)?;
-    require_registered_project(&tx, &registration.project_id)?;
+    require_current_project_registration(&tx, &runtime_home, &registration.project_id)?;
     tx.execute(
         "INSERT OR IGNORE INTO integration_projects (
             integration_id,
@@ -338,6 +339,7 @@ pub fn add_integration_project(
 
     integration_project_record_from_conn(
         &conn,
+        &runtime_home,
         &registration.integration_id,
         &registration.project_id,
     )?
@@ -385,7 +387,8 @@ pub fn list_integration_projects(
     integration_id: &str,
 ) -> StoreResult<Vec<IntegrationProjectRecord>> {
     validate_identifier("integration_id", integration_id)?;
-    let registry_path = registry_db_path(runtime_home);
+    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let registry_path = registry_db_path(&runtime_home);
     if !registry_path.exists() {
         return Err(StoreError::NotFound {
             entity: "agent_integration",
@@ -418,7 +421,8 @@ pub fn list_integration_projects(
     let mut rows = stmt.query([integration_id])?;
     let mut projects = Vec::new();
     while let Some(row) = rows.next()? {
-        projects.push(integration_project_record_from_row(row)?);
+        let project = integration_project_record_from_row(row)?;
+        projects.push(validate_integration_project_record(&runtime_home, project)?);
     }
     Ok(projects)
 }
@@ -431,14 +435,16 @@ pub fn agent_integration_project_access(
 ) -> StoreResult<Option<AgentIntegrationProjectAccess>> {
     validate_identifier("integration_id", integration_id)?;
     validate_project_id(project_id)?;
-    let registry_path = registry_db_path(runtime_home);
+    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let registry_path = registry_db_path(&runtime_home);
     if !registry_path.exists() {
         return Ok(None);
     }
 
     let conn = open_registry_database(registry_path)?;
-    conn.query_row(
-        "SELECT
+    let access = conn
+        .query_row(
+            "SELECT
             ai.enabled,
             CASE WHEN ip.project_id IS NULL THEN 0 ELSE 1 END AS project_allowed,
             CASE WHEN ai.default_project_id = ?2 THEN 1 ELSE 0 END AS is_default,
@@ -456,34 +462,45 @@ pub fn agent_integration_project_access(
          LEFT JOIN projects AS p
            ON p.project_id = ?2
         WHERE ai.integration_id = ?1",
-        params![integration_id, project_id],
-        |row| {
-            let project_id_value = row.get::<_, Option<String>>(3)?;
-            let project = if let Some(project_id_value) = project_id_value {
-                Some(ProjectRecord {
-                    project_id: project_id_value,
-                    runtime_home_id: row.get(4)?,
-                    repo_root: row.get::<_, String>(5)?.into(),
-                    project_home: row.get::<_, String>(6)?.into(),
-                    state_db_path: row.get::<_, String>(7)?.into(),
-                    status: row.get(8)?,
-                    metadata_json: row.get(9)?,
+            params![integration_id, project_id],
+            |row| {
+                let project_id_value = row.get::<_, Option<String>>(3)?;
+                let project = if let Some(project_id_value) = project_id_value {
+                    Some(ProjectRecord {
+                        project_id: project_id_value,
+                        runtime_home_id: row.get(4)?,
+                        repo_root: row.get::<_, String>(5)?.into(),
+                        project_home: row.get::<_, String>(6)?.into(),
+                        state_db_path: row.get::<_, String>(7)?.into(),
+                        status: row.get(8)?,
+                        metadata_json: row.get(9)?,
+                    })
+                } else {
+                    None
+                };
+                Ok(AgentIntegrationProjectAccess {
+                    integration_id: integration_id.to_owned(),
+                    project_id: project_id.to_owned(),
+                    integration_enabled: row.get::<_, i64>(0)? == 1,
+                    project_allowed: row.get::<_, i64>(1)? == 1,
+                    is_default: row.get::<_, i64>(2)? == 1,
+                    project,
                 })
-            } else {
-                None
-            };
-            Ok(AgentIntegrationProjectAccess {
-                integration_id: integration_id.to_owned(),
-                project_id: project_id.to_owned(),
-                integration_enabled: row.get::<_, i64>(0)? == 1,
-                project_allowed: row.get::<_, i64>(1)? == 1,
-                is_default: row.get::<_, i64>(2)? == 1,
-                project,
-            })
-        },
-    )
-    .optional()
-    .map_err(StoreError::from)
+            },
+        )
+        .optional()
+        .map_err(StoreError::from)?;
+    access
+        .map(|mut access| {
+            if let Some(project) = access.project.take() {
+                access.project = Some(validate_current_project_registration(
+                    &runtime_home,
+                    &project,
+                )?);
+            }
+            Ok(access)
+        })
+        .transpose()
 }
 
 /// Returns whether the integration is currently enabled and the project is allowlisted.
@@ -506,11 +523,13 @@ pub fn set_agent_integration_default_project(
 ) -> StoreResult<AgentIntegrationRecord> {
     validate_identifier("integration_id", integration_id)?;
     validate_project_id(project_id)?;
-    let registry_path = registry_db_path(runtime_home);
+    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let registry_path = registry_db_path(&runtime_home);
     let mut conn = open_registry_database(&registry_path)?;
     let tx = begin_immediate_transaction(&mut conn)?;
     require_runtime_home(&tx, &registry_path)?;
     require_agent_integration(&tx, integration_id)?;
+    require_current_project_registration(&tx, &runtime_home, project_id)?;
     if !integration_project_exists(&tx, integration_id, project_id)? {
         return Err(StoreError::InvalidInput {
             detail: "default project must be an allowed integration project".to_owned(),
@@ -908,20 +927,15 @@ fn require_agent_integration(
     })
 }
 
-fn require_registered_project(conn: &Connection, project_id: &str) -> StoreResult<()> {
-    let exists = conn.query_row(
-        "SELECT COUNT(*) FROM projects WHERE project_id = ?1",
-        [project_id],
-        |row| Ok(row.get::<_, i64>(0)? == 1),
-    )?;
-    if exists {
-        Ok(())
-    } else {
-        Err(StoreError::NotFound {
-            entity: "project",
-            id: project_id.to_owned(),
-        })
-    }
+fn require_current_project_registration(
+    conn: &Connection,
+    runtime_home: &Path,
+    project_id: &str,
+) -> StoreResult<ProjectRecord> {
+    project_record_from_conn(conn, runtime_home, project_id)?.ok_or_else(|| StoreError::NotFound {
+        entity: "project",
+        id: project_id.to_owned(),
+    })
 }
 
 fn integration_project_exists(
@@ -982,11 +996,13 @@ fn agent_integration_record_from_row(
 
 fn integration_project_record_from_conn(
     conn: &Connection,
+    runtime_home: &Path,
     integration_id: &str,
     project_id: &str,
 ) -> StoreResult<Option<IntegrationProjectRecord>> {
-    conn.query_row(
-        "SELECT
+    let record = conn
+        .query_row(
+            "SELECT
             ip.integration_id,
             ip.project_id,
             ip.created_at,
@@ -1004,11 +1020,59 @@ fn integration_project_record_from_conn(
            ON p.project_id = ip.project_id
         WHERE ip.integration_id = ?1
           AND ip.project_id = ?2",
-        params![integration_id, project_id],
-        integration_project_record_from_row,
-    )
-    .optional()
-    .map_err(StoreError::from)
+            params![integration_id, project_id],
+            integration_project_record_from_row,
+        )
+        .optional()
+        .map_err(StoreError::from)?;
+    record
+        .map(|record| validate_integration_project_record(runtime_home, record))
+        .transpose()
+}
+
+fn project_record_from_conn(
+    conn: &Connection,
+    runtime_home: &Path,
+    project_id: &str,
+) -> StoreResult<Option<ProjectRecord>> {
+    let project = conn
+        .query_row(
+            "SELECT
+                project_id,
+                runtime_home_id,
+                repo_root,
+                project_home,
+                state_db_path,
+                status,
+                metadata_json
+             FROM projects
+             WHERE project_id = ?1",
+            [project_id],
+            |row| {
+                Ok(ProjectRecord {
+                    project_id: row.get(0)?,
+                    runtime_home_id: row.get(1)?,
+                    repo_root: PathBuf::from(row.get::<_, String>(2)?),
+                    project_home: PathBuf::from(row.get::<_, String>(3)?),
+                    state_db_path: PathBuf::from(row.get::<_, String>(4)?),
+                    status: row.get(5)?,
+                    metadata_json: row.get(6)?,
+                })
+            },
+        )
+        .optional()
+        .map_err(StoreError::from)?;
+    project
+        .map(|project| validate_current_project_registration(runtime_home, &project))
+        .transpose()
+}
+
+fn validate_integration_project_record(
+    runtime_home: &Path,
+    mut record: IntegrationProjectRecord,
+) -> StoreResult<IntegrationProjectRecord> {
+    record.project = validate_current_project_registration(runtime_home, &record.project)?;
+    Ok(record)
 }
 
 fn integration_project_record_from_row(
@@ -1406,6 +1470,78 @@ mod tests {
     }
 
     #[test]
+    fn integration_project_access_rejects_invalid_project_registration(
+    ) -> Result<(), Box<dyn Error>> {
+        let fixture = IntegrationFixture::new("agent-invalid-project")?;
+        register_agent_integration(fixture.runtime_home.path(), integration("agent_invalid"))?;
+        add_integration_project(
+            fixture.runtime_home.path(),
+            IntegrationProjectRegistration {
+                integration_id: "agent_invalid".to_owned(),
+                project_id: "project_a".to_owned(),
+            },
+        )?;
+        replace_project_repo_root(
+            fixture.runtime_home.path(),
+            "project_a",
+            fixture.runtime_home.path(),
+        )?;
+
+        let list_error = list_integration_projects(fixture.runtime_home.path(), "agent_invalid")
+            .expect_err("invalid joined project should reject integration listing");
+        assert_invalid_project_registration(list_error, "same_path");
+        let access_error = agent_integration_project_access(
+            fixture.runtime_home.path(),
+            "agent_invalid",
+            "project_a",
+        )
+        .expect_err("invalid joined project should reject access lookup");
+        assert_invalid_project_registration(access_error, "same_path");
+        let allowed_error = is_agent_integration_project_allowed(
+            fixture.runtime_home.path(),
+            "agent_invalid",
+            "project_a",
+        )
+        .expect_err("invalid joined project should reject allow check");
+        assert_invalid_project_registration(allowed_error, "same_path");
+        Ok(())
+    }
+
+    #[test]
+    fn adding_invalid_integration_project_leaves_membership_unchanged() -> Result<(), Box<dyn Error>>
+    {
+        let fixture = IntegrationFixture::new("agent-invalid-add")?;
+        register_agent_integration(fixture.runtime_home.path(), integration("agent_add"))?;
+        let alternate_state_path = fixture
+            .runtime_home
+            .path()
+            .join("alternate/project-b-state.sqlite");
+        replace_project_state_db_path(
+            fixture.runtime_home.path(),
+            "project_b",
+            &alternate_state_path,
+        )?;
+
+        let error = add_integration_project(
+            fixture.runtime_home.path(),
+            IntegrationProjectRegistration {
+                integration_id: "agent_add".to_owned(),
+                project_id: "project_b".to_owned(),
+            },
+        )
+        .expect_err("invalid project registration should not be added to integration");
+
+        assert_invalid_project_registration(error, "state_db_path_mismatch");
+        assert!(!integration_project_exists_raw(
+            fixture.runtime_home.path(),
+            "agent_add",
+            "project_b",
+        )?);
+        assert!(!alternate_state_path.exists());
+        Ok(())
+    }
+
+    #[test]
     fn host_installation_registration_update_and_uniqueness() -> Result<(), Box<dyn Error>> {
         let fixture = IntegrationFixture::new("host-installation")?;
         register_agent_integration(fixture.runtime_home.path(), integration("agent_host"))?;
@@ -1602,6 +1738,62 @@ mod tests {
             params![project_id, status],
         )?;
         Ok(())
+    }
+
+    fn replace_project_repo_root(
+        runtime_home: &Path,
+        project_id: &str,
+        repo_root: &Path,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = Connection::open(registry_db_path(runtime_home))?;
+        conn.execute(
+            "UPDATE projects SET repo_root = ?2 WHERE project_id = ?1",
+            params![project_id, repo_root.to_string_lossy().as_ref()],
+        )?;
+        Ok(())
+    }
+
+    fn replace_project_state_db_path(
+        runtime_home: &Path,
+        project_id: &str,
+        state_db_path: &Path,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = Connection::open(registry_db_path(runtime_home))?;
+        conn.execute(
+            "UPDATE projects SET state_db_path = ?2 WHERE project_id = ?1",
+            params![project_id, state_db_path.to_string_lossy().as_ref()],
+        )?;
+        Ok(())
+    }
+
+    fn integration_project_exists_raw(
+        runtime_home: &Path,
+        integration_id: &str,
+        project_id: &str,
+    ) -> Result<bool, Box<dyn Error>> {
+        let conn = Connection::open(registry_db_path(runtime_home))?;
+        Ok(conn.query_row(
+            "SELECT COUNT(*)
+               FROM integration_projects
+              WHERE integration_id = ?1
+                AND project_id = ?2",
+            params![integration_id, project_id],
+            |row| Ok(row.get::<_, i64>(0)? == 1),
+        )?)
+    }
+
+    fn assert_invalid_project_registration(error: StoreError, relationship: &str) {
+        match error {
+            StoreError::InvalidProjectRegistration {
+                relationship: actual,
+                detail,
+                ..
+            } => {
+                assert_eq!(actual, relationship);
+                assert!(!detail.is_empty());
+            }
+            other => panic!("unexpected error: {other}"),
+        }
     }
 
     fn assert_constraint_error(error: rusqlite::Error) {

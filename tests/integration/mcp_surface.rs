@@ -445,20 +445,50 @@ fn deleted_bound_surface_fails_later_calls_closed_without_effect() -> Result<(),
 }
 
 #[test]
-fn invalid_integration_project_registration_blocks_core_execution_but_remains_listed(
+fn invalid_integration_project_registration_blocks_core_execution_and_listing(
 ) -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_invalid_integration_registration")?;
-    let adapter = adapter(&fixture);
+    let integration_id = next_integration_id();
+    set_surface_role(
+        fixture.runtime_home_path(),
+        fixture.project_id(),
+        fixture.surface_id(),
+        fixture.surface_instance_id(),
+        SurfaceInteractionRole::Agent,
+    )?;
+    register_agent_integration(
+        fixture.runtime_home_path(),
+        AgentIntegrationRegistration {
+            integration_id: integration_id.clone(),
+            interaction_role: "agent".to_owned(),
+            surface_id: fixture.surface_id().to_owned(),
+            surface_instance_id: fixture.surface_instance_id().to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    add_integration_project(
+        fixture.runtime_home_path(),
+        IntegrationProjectRegistration {
+            integration_id: integration_id.clone(),
+            project_id: fixture.project_id().to_owned(),
+        },
+    )?;
+    let context = McpIntegrationContext::resolve(fixture.runtime_home_path(), &integration_id)?
+        .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING);
+    let adapter = McpAdapter::new(fixture.runtime_home_path(), context);
     replace_project_repo_root(
         fixture.runtime_home_path(),
         fixture.project_id(),
         fixture.runtime_home_path(),
     )?;
 
-    let projects = list_projects(fixture.runtime_home_path())?;
-    assert_eq!(projects.len(), 1);
-    assert_eq!(projects[0].project_id, fixture.project_id());
-    assert_eq!(projects[0].repo_root, fixture.runtime_home_path());
+    let list_error = list_projects(fixture.runtime_home_path())
+        .expect_err("invalid registration should reject operational project listing");
+    assert!(list_error.to_string().contains("same_path"));
+    let startup_error =
+        McpIntegrationContext::resolve(fixture.runtime_home_path(), &integration_id)
+            .expect_err("invalid registration should reject integration startup");
+    assert!(startup_error.to_string().contains("same_path"));
 
     let error = adapter
         .call_tool(
@@ -466,7 +496,7 @@ fn invalid_integration_project_registration_blocks_core_execution_but_remains_li
             mcp_arguments(fixture.status_request("req_invalid_integration_registration", None))?,
         )
         .expect_err("invalid integration project should fail before Core");
-    assert_tool_execution_error(&error, "invalid project registration");
+    assert!(error.to_string().contains("same_path"));
     Ok(())
 }
 

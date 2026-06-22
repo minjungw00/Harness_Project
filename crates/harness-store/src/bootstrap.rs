@@ -260,7 +260,7 @@ pub fn register_project(
         Ok(())
     })?;
 
-    project_record_from_conn(&registry, &registration.project_id)?.ok_or_else(|| {
+    project_record_from_conn(&registry, &runtime_home, &registration.project_id)?.ok_or_else(|| {
         StoreError::NotFound {
             entity: "project",
             id: registration.project_id,
@@ -276,7 +276,8 @@ fn path_boundary_input(error: crate::runtime_home::RuntimePathBoundaryError) -> 
 
 /// Lists registered projects in deterministic order.
 pub fn list_projects(runtime_home: impl AsRef<Path>) -> StoreResult<Vec<ProjectRecord>> {
-    let registry_path = registry_db_path(runtime_home);
+    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let registry_path = registry_db_path(&runtime_home);
     if !registry_path.exists() {
         return Ok(Vec::new());
     }
@@ -297,7 +298,11 @@ pub fn list_projects(runtime_home: impl AsRef<Path>) -> StoreResult<Vec<ProjectR
     let rows = stmt.query_map([], project_record_from_row)?;
     let mut projects = Vec::new();
     for row in rows {
-        projects.push(row?);
+        let project = row?;
+        projects.push(validate_current_project_registration(
+            &runtime_home,
+            &project,
+        )?);
     }
     Ok(projects)
 }
@@ -308,13 +313,14 @@ pub fn project_record(
     project_id: &str,
 ) -> StoreResult<Option<ProjectRecord>> {
     validate_project_id(project_id)?;
-    let registry_path = registry_db_path(runtime_home);
+    let runtime_home = runtime_home.as_ref().to_path_buf();
+    let registry_path = registry_db_path(&runtime_home);
     if !registry_path.exists() {
         return Ok(None);
     }
 
     let conn = open_registry_database(registry_path)?;
-    project_record_from_conn(&conn, project_id)
+    project_record_from_conn(&conn, &runtime_home, project_id)
 }
 
 /// Reads one registered project and validates it before execution use.
@@ -322,15 +328,11 @@ pub fn project_record_for_execution(
     runtime_home: impl AsRef<Path>,
     project_id: &str,
 ) -> StoreResult<Option<ProjectRecord>> {
-    let runtime_home = runtime_home.as_ref();
-    let Some(project) = project_record(runtime_home, project_id)? else {
-        return Ok(None);
-    };
-    validate_project_record_for_execution(runtime_home, &project).map(Some)
+    project_record(runtime_home, project_id)
 }
 
-/// Validates a stored project registration before execution use.
-pub fn validate_project_record_for_execution(
+/// Validates a stored project registration for current operational use.
+pub fn validate_current_project_registration(
     runtime_home: impl AsRef<Path>,
     project: &ProjectRecord,
 ) -> StoreResult<ProjectRecord> {
@@ -360,6 +362,14 @@ pub fn validate_project_record_for_execution(
         state_db_path: expected_state_db_path,
         ..project.clone()
     })
+}
+
+/// Validates a stored project registration before execution use.
+pub fn validate_project_record_for_execution(
+    runtime_home: impl AsRef<Path>,
+    project: &ProjectRecord,
+) -> StoreResult<ProjectRecord> {
+    validate_current_project_registration(runtime_home, project)
 }
 
 fn registered_project_path_error(
@@ -574,10 +584,12 @@ fn runtime_home_record_from_conn(
 
 fn project_record_from_conn(
     conn: &Connection,
+    runtime_home: &Path,
     project_id: &str,
 ) -> StoreResult<Option<ProjectRecord>> {
-    conn.query_row(
-        "SELECT
+    let project = conn
+        .query_row(
+            "SELECT
             project_id,
             runtime_home_id,
             repo_root,
@@ -587,11 +599,14 @@ fn project_record_from_conn(
             metadata_json
          FROM projects
          WHERE project_id = ?1",
-        params![project_id],
-        project_record_from_row,
-    )
-    .optional()
-    .map_err(StoreError::from)
+            params![project_id],
+            project_record_from_row,
+        )
+        .optional()
+        .map_err(StoreError::from)?;
+    project
+        .map(|project| validate_current_project_registration(runtime_home, &project))
+        .transpose()
 }
 
 fn surface_record_from_conn(
@@ -738,6 +753,7 @@ mod tests {
 
     use crate::{
         core_pipeline::CoreProjectStore,
+        inspection::{inspect_registry_database, DatabaseInspection},
         migrations::PROJECT_STATE_DATABASE_KIND,
         sqlite::{open_project_state_database, open_read_only_database},
     };
@@ -1015,6 +1031,12 @@ mod tests {
         replace_project_state_db_path(runtime_home.path(), project_id, &alternate_state_path)?;
         assert!(!alternate_state_path.exists());
 
+        let lookup_error = project_record(runtime_home.path(), project_id)
+            .expect_err("mismatched state_db_path should be rejected by project lookup");
+        assert_state_db_path_mismatch(lookup_error, &alternate_state_path, &expected_state_path);
+        let list_error = list_projects(runtime_home.path())
+            .expect_err("mismatched state_db_path should be rejected by project listing");
+        assert_state_db_path_mismatch(list_error, &alternate_state_path, &expected_state_path);
         let error = project_record_for_execution(runtime_home.path(), project_id)
             .expect_err("mismatched state_db_path should be rejected for execution");
         assert_state_db_path_mismatch(error, &alternate_state_path, &expected_state_path);
@@ -1023,8 +1045,7 @@ mod tests {
         assert_state_db_path_mismatch(open_error, &alternate_state_path, &expected_state_path);
         assert!(!alternate_state_path.exists());
 
-        let damaged = project_record(runtime_home.path(), project_id)?
-            .expect("damaged record remains readable");
+        let damaged = raw_project_record(runtime_home.path(), project_id)?;
         assert_eq!(damaged.state_db_path, alternate_state_path);
         assert_registry_record_unchanged_and_visible(runtime_home.path(), project_id, &damaged)?;
         Ok(())
@@ -1067,15 +1088,20 @@ mod tests {
             migrations_before,
             surface_count_before,
         )?;
-        let damaged = project_record(runtime_home.path(), project_id)?
-            .expect("damaged record remains readable");
+        let lookup_error = project_record(runtime_home.path(), project_id)
+            .expect_err("mismatched state_db_path should be rejected by project lookup");
+        assert_state_db_path_mismatch(lookup_error, &alternate_state_path, &expected_state_path);
+        let list_error = list_projects(runtime_home.path())
+            .expect_err("mismatched state_db_path should be rejected by project listing");
+        assert_state_db_path_mismatch(list_error, &alternate_state_path, &expected_state_path);
+        let damaged = raw_project_record(runtime_home.path(), project_id)?;
         assert_eq!(damaged.state_db_path, alternate_state_path);
         assert_registry_record_unchanged_and_visible(runtime_home.path(), project_id, &damaged)?;
         Ok(())
     }
 
     #[test]
-    fn checked_project_record_rejects_legacy_same_path_registration_but_keeps_listing(
+    fn checked_project_record_rejects_same_path_registration_for_operational_reads(
     ) -> Result<(), Box<dyn Error>> {
         let (runtime_home, _) = registered_project("store-checked-same", "project_same_legacy")?;
         replace_project_repo_root(
@@ -1092,11 +1118,19 @@ mod tests {
                 .expect_err("Core store open should reject same-path legacy registration");
         assert_invalid_project_registration(open_error, "same_path");
 
-        let projects = list_projects(runtime_home.path())?;
-        assert_eq!(projects.len(), 1);
-        assert_eq!(projects[0].project_id, "project_same_legacy");
-        assert_eq!(projects[0].repo_root, runtime_home.path());
-        assert!(project_record(runtime_home.path(), "project_same_legacy")?.is_some());
+        let lookup_error = project_record(runtime_home.path(), "project_same_legacy")
+            .expect_err("project lookup should reject same-path registration");
+        assert_invalid_project_registration(lookup_error, "same_path");
+        let list_error = list_projects(runtime_home.path())
+            .expect_err("project listing should reject same-path registration");
+        assert_invalid_project_registration(list_error, "same_path");
+        let damaged = raw_project_record(runtime_home.path(), "project_same_legacy")?;
+        assert_eq!(damaged.repo_root, runtime_home.path());
+        assert_registry_record_unchanged_and_visible(
+            runtime_home.path(),
+            "project_same_legacy",
+            &damaged,
+        )?;
         Ok(())
     }
 
@@ -1120,12 +1154,22 @@ mod tests {
         .expect_err("repository under Runtime Home should be rejected for execution");
 
         assert_invalid_project_registration(error, "runtime_home_contains_product_repository");
-        assert_eq!(
-            project_record(runtime_home.path(), "project_repo_inside_legacy")?
-                .expect("record remains readable")
-                .repo_root,
-            repo_root
+        let lookup_error = project_record(runtime_home.path(), "project_repo_inside_legacy")
+            .expect_err("project lookup should reject repository under Runtime Home");
+        assert_invalid_project_registration(
+            lookup_error,
+            "runtime_home_contains_product_repository",
         );
+        let list_error = list_projects(runtime_home.path())
+            .expect_err("project listing should reject repository under Runtime Home");
+        assert_invalid_project_registration(list_error, "runtime_home_contains_product_repository");
+        let damaged = raw_project_record(runtime_home.path(), "project_repo_inside_legacy")?;
+        assert_eq!(damaged.repo_root, repo_root);
+        assert_registry_record_unchanged_and_visible(
+            runtime_home.path(),
+            "project_repo_inside_legacy",
+            &damaged,
+        )?;
         Ok(())
     }
 
@@ -1154,7 +1198,56 @@ mod tests {
         .expect_err("Runtime Home under repository should be rejected for execution");
 
         assert_invalid_project_registration(error, "product_repository_contains_runtime_home");
-        assert!(project_record(runtime_home.path(), "project_runtime_inside_legacy")?.is_some());
+        let lookup_error = project_record(runtime_home.path(), "project_runtime_inside_legacy")
+            .expect_err("project lookup should reject Runtime Home under repository");
+        assert_invalid_project_registration(
+            lookup_error,
+            "product_repository_contains_runtime_home",
+        );
+        let list_error = list_projects(runtime_home.path())
+            .expect_err("project listing should reject Runtime Home under repository");
+        assert_invalid_project_registration(list_error, "product_repository_contains_runtime_home");
+        let damaged = raw_project_record(runtime_home.path(), "project_runtime_inside_legacy")?;
+        assert_registry_record_unchanged_and_visible(
+            runtime_home.path(),
+            "project_runtime_inside_legacy",
+            &damaged,
+        )?;
+        Ok(())
+    }
+
+    #[test]
+    fn checked_project_record_rejects_project_home_outside_runtime_home(
+    ) -> Result<(), Box<dyn Error>> {
+        let project_id = "project_home_outside_damaged";
+        let (runtime_home, _) = registered_project("store-checked-project-home", project_id)?;
+        let original =
+            project_record(runtime_home.path(), project_id)?.expect("project should be registered");
+        let outside_project_home = runtime_home
+            .path()
+            .parent()
+            .expect("runtime home has parent")
+            .join("outside-project-home-damaged");
+
+        replace_project_home(runtime_home.path(), project_id, &outside_project_home)?;
+
+        let lookup_error = project_record(runtime_home.path(), project_id)
+            .expect_err("project lookup should reject project_home outside Runtime Home");
+        assert_invalid_project_registration(lookup_error, "project_home_outside_runtime_home");
+        let list_error = list_projects(runtime_home.path())
+            .expect_err("project listing should reject project_home outside Runtime Home");
+        assert_invalid_project_registration(list_error, "project_home_outside_runtime_home");
+        let open_error = CoreProjectStore::open(runtime_home.path(), &ProjectId::new(project_id))
+            .expect_err("Core store open should reject project_home outside Runtime Home");
+        assert_invalid_project_registration(open_error, "project_home_outside_runtime_home");
+        let surface_error = register_surface(runtime_home.path(), surface_registration(project_id))
+            .expect_err("surface registration should reject invalid project_home");
+        assert_invalid_project_registration(surface_error, "project_home_outside_runtime_home");
+
+        let damaged = raw_project_record(runtime_home.path(), project_id)?;
+        assert_eq!(damaged.project_home, outside_project_home);
+        assert_eq!(damaged.state_db_path, original.state_db_path);
+        assert_registry_record_unchanged_and_visible(runtime_home.path(), project_id, &damaged)?;
         Ok(())
     }
 
@@ -1184,8 +1277,7 @@ mod tests {
             register_surface(runtime_home.path(), surface_registration(&project_id))?;
             relationship.replace_repo_root(&runtime_home, &project_id)?;
 
-            let project = project_record(runtime_home.path(), &project_id)?
-                .expect("invalid legacy project record remains readable");
+            let project = raw_project_record(runtime_home.path(), &project_id)?;
             let state_path = project.state_db_path.clone();
             let registry_before = project.clone();
             let migrations_before = migration_count(&state_path)?;
@@ -1230,8 +1322,7 @@ mod tests {
                 registered_project(&relationship.prefix("surface-missing-db"), &project_id)?;
             relationship.replace_repo_root(&runtime_home, &project_id)?;
 
-            let project = project_record(runtime_home.path(), &project_id)?
-                .expect("invalid legacy project record remains readable");
+            let project = raw_project_record(runtime_home.path(), &project_id)?;
             let state_path = project.state_db_path.clone();
             let registry_before = project.clone();
             fs::remove_file(&state_path)?;
@@ -1268,8 +1359,7 @@ mod tests {
                 registered_project(&relationship.prefix("surface-existing"), &project_id)?;
             relationship.replace_repo_root(&runtime_home, &project_id)?;
 
-            let project = project_record(runtime_home.path(), &project_id)?
-                .expect("invalid legacy project record remains readable");
+            let project = raw_project_record(runtime_home.path(), &project_id)?;
             let state_path = project.state_db_path.clone();
             let registry_before = project.clone();
             fs::remove_file(&state_path)?;
@@ -1345,6 +1435,19 @@ mod tests {
         conn.execute(
             "UPDATE projects SET state_db_path = ?2 WHERE project_id = ?1",
             rusqlite::params![project_id, state_db_path.to_string_lossy().as_ref()],
+        )?;
+        Ok(())
+    }
+
+    fn replace_project_home(
+        runtime_home: &Path,
+        project_id: &str,
+        project_home: &Path,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = open_registry_database(registry_db_path(runtime_home))?;
+        conn.execute(
+            "UPDATE projects SET project_home = ?2 WHERE project_id = ?1",
+            rusqlite::params![project_id, project_home.to_string_lossy().as_ref()],
         )?;
         Ok(())
     }
@@ -1500,15 +1603,41 @@ mod tests {
         project_id: &str,
         expected: &ProjectRecord,
     ) -> StoreResult<()> {
-        let project = project_record(runtime_home, project_id)?.expect("project remains readable");
+        let project = raw_project_record(runtime_home, project_id)?;
         assert_eq!(&project, expected);
 
-        let projects = list_projects(runtime_home)?;
+        let inspection = inspect_registry_database(runtime_home);
+        let DatabaseInspection::Present(snapshot) = inspection else {
+            panic!("expected present registry inspection, got {inspection:?}");
+        };
         assert!(
-            projects.iter().any(|project| project == expected),
-            "invalid registry record should remain visible through project listing"
+            snapshot.projects.iter().any(|project| {
+                project.project_id == expected.project_id
+                    && project.repo_root == expected.repo_root
+                    && project.project_home == expected.project_home
+                    && project.state_db_path == expected.state_db_path
+            }),
+            "invalid registry record should remain inspectable"
         );
         Ok(())
+    }
+
+    fn raw_project_record(runtime_home: &Path, project_id: &str) -> StoreResult<ProjectRecord> {
+        let conn = open_read_only_database(registry_db_path(runtime_home))?;
+        Ok(conn.query_row(
+            "SELECT
+                project_id,
+                runtime_home_id,
+                repo_root,
+                project_home,
+                state_db_path,
+                status,
+                metadata_json
+             FROM projects
+             WHERE project_id = ?1",
+            rusqlite::params![project_id],
+            project_record_from_row,
+        )?)
     }
 
     fn assert_invalid_project_registration(error: StoreError, relationship: &str) {
@@ -1519,8 +1648,7 @@ mod tests {
                 ..
             } => {
                 assert_eq!(actual, relationship);
-                assert!(detail.contains("Harness Runtime Home"));
-                assert!(detail.contains("Product Repository"));
+                assert!(!detail.is_empty());
             }
             other => panic!("unexpected error: {other}"),
         }

@@ -195,8 +195,8 @@ harness agent guidance remove --integration-id ID --project-id ID [--host codex|
 규칙:
 
 - `--integration-id`와 `--project-id`는 필수입니다.
-- 프로젝트는 선택된 Runtime Home에 이미 등록되어 있어야 합니다.
-- 프로젝트를 추가해도 inactive, 무효, 실행 부적격 프로젝트가 실행 시점에 사용 가능해지는 것은 아닙니다.
+- 프로젝트는 선택된 Runtime Home에 유효한 현재 프로젝트 등록으로 이미 등록되어 있어야 합니다.
+- 프로젝트를 추가해도 inactive이거나 그 밖의 이유로 실행 부적격인 프로젝트가 실행 시점에 사용 가능해지는 것은 아닙니다.
 - `--default`는 통합 기본값을 추가된 프로젝트로 설정합니다.
 - `project` 또는 `local` 범위 통합에 두 번째 프로젝트를 추가하는 것은 충돌입니다.
 - 이 명령은 호스트 설정을 다시 쓰지 않습니다. 접근 철회와 추가는 레지스트리 변경입니다.
@@ -405,9 +405,9 @@ JSON 출력은 관리 CLI 출력이지 공개 하네스 API 응답 스키마가 
 - `--repo-root`는 프로젝트 등록에 쓰는 로컬 저장소 루트를 식별합니다.
 - 선택된 Runtime Home과 `--repo-root`는 등록이 기록되기 전에 [Runtime Home/Product Repository 분리 계약](runtime-boundaries.md#runtime-home-product-repository-separation)을 만족해야 합니다.
 
-`harness project list`는 선택된 Runtime Home의 등록된 프로젝트를 나열합니다.
+`harness project list`는 선택된 Runtime Home의 현재 유효한 등록 프로젝트를 나열합니다.
 
-`harness project list`는 레지스트리 수준 검사입니다. Runtime Home/Product Repository 분리 계약을 위반하는 이력 프로젝트 기록을 진단 목적으로 보여 줄 수 있습니다. 목록에 보인다는 사실만으로 그 기록이 프로젝트 상태 데이터베이스 접근, 접점 관리, Core 실행, 설정 재사용, MCP 시작에 적격해지지는 않습니다.
+선택된 프로젝트 registry 행 중 하나라도 잘못된 형태이거나 현재 등록 불변 조건을 위반하면, `harness project list`는 그 행을 생략하거나 정상 프로젝트로 반환하지 않고 표준 CLI 오류 경로로 실패합니다. 잘못된 형태의 원시 registry 내용은 검사 계층에서 계속 진단할 수 있습니다.
 
 `Product Repository`와 `Harness Runtime Home`의 구분을 포함한 런타임 위치 경계는 [런타임 경계](runtime-boundaries.md#runtime-home-product-repository-separation)가 담당합니다.
 

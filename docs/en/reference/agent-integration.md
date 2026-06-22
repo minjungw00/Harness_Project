@@ -68,7 +68,8 @@ Rules:
 - A default project must also be an allowed project.
 - Removing a project that is still the integration default must fail until the default is cleared or changed.
 - Project membership does not bypass project status, path separation, storage executability, surface registration, or local access grants.
-- Inactive, invalid, or execution-ineligible projects remain unavailable at execution time even if a stale membership row exists.
+- Invalid current project registrations must be rejected by integration project listing and access resolution instead of returned as allowed project records.
+- Inactive or otherwise execution-ineligible valid projects remain unavailable at execution time even if a stale membership row exists.
 - Revoking membership or disabling the integration must take effect without requiring host configuration to be rewritten.
 - An integration with no allowed projects may remain stored, but it is not executable until a project is added again.
 
@@ -176,7 +177,7 @@ Project selection for public MCP method calls is deterministic:
 
 The adapter must not guess a project from folder names, process current working directory, host roots, host labels, or the first row returned by storage. MCP roots may be used only as optional future or host-provided hints. Roots do not change the deterministic selection order above.
 
-`harness.list_projects` is a read-only MCP adapter utility tool. It lists only projects explicitly allowed for the integration, shows project availability and default status, and provides enough project identity information for an agent to choose a valid `project_id`. It is outside the nine public Harness Core API methods and must not be added to the public method list.
+`harness.list_projects` is a read-only MCP adapter utility tool. It lists only projects explicitly allowed for the integration whose current registration can be validated, shows project availability and default status, and provides enough project identity information for an agent to choose a valid `project_id`. If an allowed project has an invalid current registration, the adapter fails the utility call instead of returning that project as a normal available or unavailable entry. It is outside the nine public Harness Core API methods and must not be added to the public method list.
 
 Before a public tool call enters Core, the MCP adapter must verify:
 

@@ -1891,7 +1891,7 @@ mod tests {
         collections::BTreeSet,
         fs,
         io::{BufReader, Cursor},
-        path::PathBuf,
+        path::{Path, PathBuf},
     };
 
     use harness_core::{AdapterSessionBinding, CoreBoundary, CoreService, InvocationContext};
@@ -2120,6 +2120,20 @@ mod tests {
     fn next_integration_id() -> String {
         let suffix = NEXT_INTEGRATION_SUFFIX.fetch_add(1, Ordering::Relaxed);
         format!("{INTEGRATION_ID}_{suffix}")
+    }
+
+    fn replace_project_state_db_path(
+        runtime_home: &Path,
+        project_id: &str,
+        state_db_path: &Path,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = open_registry_database(registry_db_path(runtime_home))?;
+        let state_db_path = state_db_path.to_string_lossy().into_owned();
+        conn.execute(
+            "UPDATE projects SET state_db_path = ?2 WHERE project_id = ?1",
+            [project_id, state_db_path.as_str()],
+        )?;
+        Ok(())
     }
 
     #[test]
@@ -2502,6 +2516,44 @@ mod tests {
             .call_tool("harness.status", params)
             .expect_err("inactive project should be rejected before Core");
         assert!(error.to_string().contains("unavailable"));
+        Ok(())
+    }
+
+    #[test]
+    fn list_projects_rejects_invalid_allowed_registration_without_project_entry(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::with_role_and_local_access(
+            json!({}),
+            local_access(&BASELINE_WORKFLOW_ACCESS_CLASSES),
+            SurfaceInteractionRole::Agent,
+        )?;
+        harness.register_integration(INTEGRATION_ID, SURFACE_ID, SURFACE_INSTANCE_ID)?;
+        let valid_context =
+            McpIntegrationContext::resolve(&harness.runtime_home_path, INTEGRATION_ID)?
+                .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING);
+        let alternate_state_path = harness
+            .runtime_home_path
+            .join("alternate")
+            .join("mcp-mismatched-state.sqlite");
+        replace_project_state_db_path(
+            &harness.runtime_home_path,
+            PROJECT_ID,
+            &alternate_state_path,
+        )?;
+        assert!(!alternate_state_path.exists());
+
+        let startup_error =
+            McpIntegrationContext::resolve(&harness.runtime_home_path, INTEGRATION_ID)
+                .expect_err("startup should reject invalid allowed project registration");
+        assert!(startup_error.to_string().contains("state_db_path_mismatch"));
+
+        let adapter = McpAdapter::new(&harness.runtime_home_path, valid_context);
+        let list_error = adapter
+            .call_adapter_tool(LIST_PROJECTS_TOOL_NAME, json!({}))
+            .expect_err("list_projects should fail instead of exposing invalid project");
+
+        assert!(list_error.to_string().contains("state_db_path_mismatch"));
+        assert!(!alternate_state_path.exists());
         Ok(())
     }
 

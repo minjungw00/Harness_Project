@@ -287,10 +287,11 @@ fn harness_binary_surface_commands_reject_invalid_legacy_project_paths(
         assert_invalid_project_path_error(&register, relationship.expected_error());
         assert_eq!(migration_count(&state_path)?, migrations_before);
         assert_eq!(surface_rows(&state_path)?, surfaces_before);
-        assert_registry_unchanged_and_cli_visible(
+        assert_registry_unchanged_and_project_list_rejects(
             runtime_home.path(),
             &project_id,
             &registry_before,
+            relationship.expected_error(),
         )?;
 
         let list = run_with_home(
@@ -300,10 +301,11 @@ fn harness_binary_surface_commands_reject_invalid_legacy_project_paths(
         assert_invalid_project_path_error(&list, relationship.expected_error());
         assert_eq!(migration_count(&state_path)?, migrations_before);
         assert_eq!(surface_rows(&state_path)?, surfaces_before);
-        assert_registry_unchanged_and_cli_visible(
+        assert_registry_unchanged_and_project_list_rejects(
             runtime_home.path(),
             &project_id,
             &registry_before,
+            relationship.expected_error(),
         )?;
 
         let missing_project_id = relationship.project_id("missing_db");
@@ -331,10 +333,11 @@ fn harness_binary_surface_commands_reject_invalid_legacy_project_paths(
         )?;
         assert_invalid_project_path_error(&missing_list, relationship.expected_error());
         assert!(!missing_state_path.exists());
-        assert_registry_unchanged_and_cli_visible(
+        assert_registry_unchanged_and_project_list_rejects(
             missing_runtime_home.path(),
             &missing_project_id,
             &missing_registry_before,
+            relationship.expected_error(),
         )?;
 
         let missing_register = run_with_home(
@@ -352,10 +355,11 @@ fn harness_binary_surface_commands_reject_invalid_legacy_project_paths(
         )?;
         assert_invalid_project_path_error(&missing_register, relationship.expected_error());
         assert!(!missing_state_path.exists());
-        assert_registry_unchanged_and_cli_visible(
+        assert_registry_unchanged_and_project_list_rejects(
             missing_runtime_home.path(),
             &missing_project_id,
             &missing_registry_before,
+            relationship.expected_error(),
         )?;
 
         let existing_project_id = relationship.project_id("existing");
@@ -410,13 +414,44 @@ fn harness_binary_surface_commands_reject_invalid_legacy_project_paths(
             existing_migrations_before,
             existing_surface_count_before,
         )?;
-        assert_registry_unchanged_and_cli_visible(
+        assert_registry_unchanged_and_project_list_rejects(
             existing_runtime_home.path(),
             &existing_project_id,
             &existing_registry_before,
+            relationship.expected_error(),
         )?;
     }
 
+    Ok(())
+}
+
+#[test]
+fn harness_binary_project_list_rejects_state_db_path_mismatch_without_creating_alternate(
+) -> Result<(), Box<dyn Error>> {
+    let project_id = "project_cli_state_db_mismatch";
+    let runtime_home = initialized_project(
+        "cli-project-list-state-db-mismatch",
+        project_id,
+        "runtime_home_cli_project_list_state_db",
+    )?;
+    let registry_before = single_project_record(runtime_home.path(), project_id)?;
+    let alternate_state_path = runtime_home
+        .path()
+        .join("alternate")
+        .join("mismatched-state.sqlite");
+    replace_project_state_db_path(runtime_home.path(), project_id, &alternate_state_path)?;
+    assert!(!alternate_state_path.exists());
+
+    let output = run_with_home(runtime_home.path(), ["project", "list"])?;
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(stdout(&output).is_empty());
+    assert!(stderr(&output).contains("state_db_path_mismatch"));
+    assert!(!alternate_state_path.exists());
+    let registry_after = single_project_record(runtime_home.path(), project_id)?;
+    assert_eq!(registry_after.state_db_path, alternate_state_path);
+    assert_eq!(registry_after.repo_root, registry_before.repo_root);
+    assert_eq!(registry_after.project_home, registry_before.project_home);
     Ok(())
 }
 
@@ -3548,6 +3583,19 @@ fn initialized_project(
     Ok(runtime_home)
 }
 
+fn replace_project_state_db_path(
+    runtime_home: &Path,
+    project_id: &str,
+    state_db_path: &Path,
+) -> Result<(), Box<dyn Error>> {
+    let conn = Connection::open(registry_db_path(runtime_home))?;
+    conn.execute(
+        "UPDATE projects SET state_db_path = ?2 WHERE project_id = ?1",
+        params![project_id, state_db_path.to_string_lossy().as_ref()],
+    )?;
+    Ok(())
+}
+
 fn initialize_agent_install_fixture(
     runtime_home: &Path,
     repo_root: &Path,
@@ -3588,24 +3636,43 @@ fn single_project_record(
     runtime_home: &Path,
     project_id: &str,
 ) -> Result<ProjectRecord, Box<dyn Error>> {
-    let project = list_projects(runtime_home)?
-        .into_iter()
-        .find(|project| project.project_id == project_id)
-        .expect("project should remain registry-visible");
-    Ok(project)
+    let conn = open_read_only_database(registry_db_path(runtime_home))?;
+    Ok(conn.query_row(
+        "SELECT
+            project_id,
+            runtime_home_id,
+            repo_root,
+            project_home,
+            state_db_path,
+            status,
+            metadata_json
+         FROM projects
+         WHERE project_id = ?1",
+        [project_id],
+        |row| {
+            Ok(ProjectRecord {
+                project_id: row.get(0)?,
+                runtime_home_id: row.get(1)?,
+                repo_root: PathBuf::from(row.get::<_, String>(2)?),
+                project_home: PathBuf::from(row.get::<_, String>(3)?),
+                state_db_path: PathBuf::from(row.get::<_, String>(4)?),
+                status: row.get(5)?,
+                metadata_json: row.get(6)?,
+            })
+        },
+    )?)
 }
 
-fn assert_registry_unchanged_and_cli_visible(
+fn assert_registry_unchanged_and_project_list_rejects(
     runtime_home: &Path,
     project_id: &str,
     expected: &ProjectRecord,
+    relationship: &str,
 ) -> Result<(), Box<dyn Error>> {
     assert_eq!(&single_project_record(runtime_home, project_id)?, expected);
 
     let projects = run_with_home(runtime_home, ["project", "list"])?;
-    assert_success(&projects);
-    assert!(stdout(&projects).contains(project_id));
-    assert!(stdout(&projects).contains(&path_text(&expected.repo_root)));
+    assert_invalid_project_path_error(&projects, relationship);
     Ok(())
 }
 

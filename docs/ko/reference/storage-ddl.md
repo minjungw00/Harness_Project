@@ -141,7 +141,7 @@ CREATE UNIQUE INDEX idx_host_installations_target
 
 - `runtime_home`은 단일 행 테이블입니다. 저장된 `runtime_home_id`는 런타임 홈 기록을 식별하며 보안 보장이 아닙니다.
 - `projects.project_home`은 고유합니다. `repo_root`는 조회를 위해 인덱스를 두지만 프로젝트 식별을 대신하지 않습니다.
-- `projects.state_db_path`는 저장 열로 유지됩니다. SQL 열 정의는 이 값이 `project_home/state.sqlite`와 같은지를 강제하지 않습니다. 그 관계는 프로젝트 상태 검사, 마이그레이션, 쓰기 가능 열기, 접점 관리, Core 실행, setup 재사용, MCP 프로젝트 시작 전에 Store의 애플리케이션 수준 실행 검증이 강제합니다. 일치하지 않는 레지스트리 행은 진단을 위해 계속 읽을 수 있지만 실행에는 적격하지 않습니다.
+- `projects.state_db_path`는 저장 열로 유지됩니다. SQL 열 정의는 이 값이 `project_home/state.sqlite`와 같은지를 강제하지 않습니다. 그 관계는 운영 `ProjectRecord` 조회나 목록 조회, 프로젝트 상태 마이그레이션 또는 쓰기 가능 열기, 접점 관리, Agent Integration Profile 프로젝트 접근, Core 실행, setup 재사용, MCP 프로젝트 가용성 전에 Store의 애플리케이션 수준 현재 등록 검증이 강제합니다. 일치하지 않는 registry 행은 진단을 위한 원시 registry 내용으로 검사할 수 있지만, 운영 경로는 그 행을 생략하거나 정상 프로젝트로 반환하지 말고 거절해야 합니다.
 - `projects.status`는 저장소 소유 값이며 기준 범위에서 유효한 값은 `active`뿐입니다.
 - `agent_integrations`는 통합에 묶인 MCP 프로세스 식별 정보와 묶인 접점 식별자를 저장합니다. 레지스트리 데이터베이스는 이 접점 식별자를 프로젝트별 `state.sqlite`에 외래 키로 연결할 수 없습니다. 따라서 어댑터 호출이 Core에 들어가기 전에 프로젝트별 실행 검증이 호환되는 접점 등록을 확인해야 합니다.
 - `agent_integrations.default_project_id`는 값이 있으면 같은 `integration_id`의 `integration_projects` 행으로 물리적으로 제한됩니다. 외래 키는 지연 가능하므로 생성 과정에서 프로필과 멤버십을 한 트랜잭션으로 삽입할 수 있습니다.

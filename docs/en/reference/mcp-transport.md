@@ -231,7 +231,7 @@ For public Harness tools, `tools/list` exposes MCP-visible input schemas derived
 
 For a known public Harness tool, object `arguments` that fail the tool input schema return a `CallToolResult` with `isError: true` and actionable text content. They are tool execution errors, not JSON-RPC protocol errors.
 
-For `harness.list_projects`, the adapter returns a read-only project list for the bound integration only. It must not enter Core, create storage effects, mutate project membership, or expose projects outside the integration allowlist.
+For `harness.list_projects`, the adapter returns a read-only project list for the bound integration only. It must not enter Core, create storage effects, mutate project membership, or expose projects outside the integration allowlist. If an allowlisted project has an invalid current registration, the adapter fails the utility call instead of returning that project as a normal available or unavailable entry.
 
 For a public Harness tool call, the adapter first performs deterministic project selection and per-project validation owned by [Agent Integration](agent-integration.md#current-surface-context). Ambiguous project selection is rejected before Core execution and the actionable text must instruct the agent to call `harness.list_projects`.
 

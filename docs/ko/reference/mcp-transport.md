@@ -233,7 +233,7 @@ notification 분류는 MCP 메서드 파라미터 검증보다 먼저 JSON-RPC e
 
 알려진 공개 하네스 도구에서 객체 `arguments`가 도구 입력 스키마를 통과하지 못하면 `isError: true`와 실행 가능한 text content를 담은 `CallToolResult`를 반환합니다. 이는 JSON-RPC 프로토콜 오류가 아니라 도구 실행 오류입니다.
 
-`harness.list_projects`에 대해 어댑터는 묶인 통합만을 위한 읽기 전용 프로젝트 목록을 반환합니다. 이 도구는 Core에 들어가거나, 저장 효과를 만들거나, 프로젝트 멤버십을 바꾸거나, 통합 허용 목록 밖의 프로젝트를 노출하면 안 됩니다.
+`harness.list_projects`에 대해 어댑터는 묶인 통합만을 위한 읽기 전용 프로젝트 목록을 반환합니다. 이 도구는 Core에 들어가거나, 저장 효과를 만들거나, 프로젝트 멤버십을 바꾸거나, 통합 허용 목록 밖의 프로젝트를 노출하면 안 됩니다. 허용 목록에 있는 프로젝트의 현재 등록이 유효하지 않으면, 어댑터는 그 프로젝트를 정상 available 또는 unavailable 항목으로 반환하지 않고 유틸리티 호출을 실패시킵니다.
 
 공개 하네스 도구 호출에 대해 어댑터는 먼저 [에이전트 통합](agent-integration.md#current-surface-context)이 담당하는 결정적 프로젝트 선택과 프로젝트별 검증을 수행합니다. 모호한 프로젝트 선택은 Core 실행 전에 거절하고, 실행 가능한 텍스트는 에이전트에게 `harness.list_projects`를 호출하라고 안내해야 합니다.
 
