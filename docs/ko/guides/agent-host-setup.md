@@ -49,26 +49,7 @@ Codex project 범위는 Codex 프로젝트 신뢰를 확인할 수 없는 동안
 
 Dry-run은 계획된 Runtime Home 동작, 호스트 대상 경로, guidance 대상 경로를 보고합니다. 아무것도 만들거나 수정하지 않습니다. Runtime Home 디렉터리, SQLite 데이터베이스나 행, WAL 또는 SHM 파일, registry 마이그레이션, 호스트 설정, `Product Repository` guidance, generic export 파일, MCP 호스트 상태, `harness-mcp --check`, MCP 초기화, 도구 발견을 만들거나 실행하지 않습니다.
 
-선택된 Runtime Home에 스키마 버전 1 registry가 있으면 dry-run은 보류 중인 마이그레이션을 적용하지 않고 보고합니다.
-
-```json
-{
-  "status": "dry_run",
-  "runtime": {
-    "registry_schema_version": 1,
-    "registry_latest_supported_schema_version": 2,
-    "registry_migration_planned": true
-  },
-  "actions": [
-    {
-      "target": "registry_migration",
-      "action": "planned"
-    }
-  ]
-}
-```
-
-이 미리보기 뒤에도 registry는 스키마 버전 1로 남고, 새 Agent Integration 테이블, 프로젝트 상태 데이터베이스, 마이그레이션 메타데이터는 쓰이지 않습니다.
+현재 저장소 프로필에서 registry 스키마 버전 `1`은 이미 최신 지원 registry 스키마 버전입니다. 기존의 현재 registry에 대해 dry-run을 실행하면 `registry_schema_version: 1`, `registry_latest_supported_schema_version: 1`, `registry_migration_planned: false`를 보고하고 마이그레이션 메타데이터를 쓰지 않습니다.
 
 아래 예시들은 호스트 snippet이 안정적인 사람이 읽기 쉬운 키를 갖도록 `--server-name harness-main`을 고정합니다. 이 옵션은 필수가 아닙니다. 생략하면 CLI가 `integration_id`에서 안정적인 서버 이름을 파생하고 결과에 보고합니다.
 

@@ -49,26 +49,7 @@ Use dry-run when a command might write host configuration or `Product Repository
 
 Dry-run reports planned Runtime Home actions, host target paths, and guidance target paths. It creates or modifies nothing: no Runtime Home directories, SQLite databases or rows, WAL or SHM files, registry migrations, host configuration, `Product Repository` guidance, generic export files, MCP host state, `harness-mcp --check`, MCP initialization, or tool discovery.
 
-When the selected Runtime Home has a schema version 1 registry, dry-run reports the pending migration without applying it:
-
-```json
-{
-  "status": "dry_run",
-  "runtime": {
-    "registry_schema_version": 1,
-    "registry_latest_supported_schema_version": 2,
-    "registry_migration_planned": true
-  },
-  "actions": [
-    {
-      "target": "registry_migration",
-      "action": "planned"
-    }
-  ]
-}
-```
-
-After that preview, the registry remains at schema version 1 and no new Agent Integration tables, project-state databases, or migration metadata are written.
+With the current storage profile, registry schema version `1` is already the latest supported registry schema version. A dry-run against an existing current registry reports `registry_schema_version: 1`, `registry_latest_supported_schema_version: 1`, and `registry_migration_planned: false`, and writes no migration metadata.
 
 The examples below pin `--server-name harness-main` so the host snippets have a stable, human-readable key. The option is not required; if it is omitted, the CLI derives a stable server name from `integration_id` and reports it in the result.
 

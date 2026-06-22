@@ -57,7 +57,10 @@ use crate::{
         HostAdapter, HostConfigError, HostKind, HostPlan, HostRemoveRequest, HostScope, HostTarget,
         PlannedChange,
     },
-    registration::{capability_profile_json, local_access_json, RegistrationMetadataError},
+    registration::{
+        access_classes_match, capability_profile_json, local_access_json,
+        normalized_access_classes_from_local_access, RegistrationMetadataError,
+    },
     repository_guidance::{
         apply_guidance_plan, apply_guidance_remove, compensate_guidance_effect, guidance_status,
         plan_guidance_apply, plan_guidance_remove, GuidanceEffect, GuidancePlan, GuidanceStateKind,
@@ -4162,22 +4165,9 @@ fn ensure_agent_surface(
 }
 
 fn surface_access_matches(text: &str, expected: &[AccessClass]) -> bool {
-    let Ok(value) = serde_json::from_str::<Value>(text) else {
-        return false;
-    };
-    let Some(items) = value
-        .get("authorized_access_classes")
-        .and_then(Value::as_array)
-    else {
-        return false;
-    };
-    let actual = items
-        .iter()
-        .filter_map(Value::as_str)
-        .collect::<BTreeSet<_>>();
-    expected
-        .iter()
-        .all(|access| actual.contains(access.as_str()))
+    normalized_access_classes_from_local_access(text)
+        .map(|actual| access_classes_match(&actual, expected))
+        .unwrap_or(false)
 }
 
 fn mark_planned_actions_created(actions: &mut [AgentAction]) {
@@ -6453,5 +6443,28 @@ impl AgentProcess for EnvOnlyProcess {
         _integration_id: &str,
     ) -> Result<McpVerification, String> {
         Err("MCP verification is not available in this command path".to_owned())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use harness_types::VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION;
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn surface_access_match_rejects_obsolete_local_access_key() {
+        let expected = [AccessClass::ReadStatus, AccessClass::CoreMutation];
+        let current = local_access_json(&expected).expect("current local access should encode");
+        assert!(surface_access_matches(&current, &expected));
+
+        let obsolete = json!({
+            "access_class": "read_status",
+            "authorized_access_classes": ["read_status", "core_mutation"],
+            "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+        })
+        .to_string();
+        assert!(!surface_access_matches(&obsolete, &expected));
     }
 }

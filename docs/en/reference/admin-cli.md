@@ -325,7 +325,7 @@ Dry-run does not:
 - invoke `harness-mcp --check`
 - perform MCP initialization or tool discovery
 
-When a selected Runtime Home has a schema version 1 registry, dry-run may inspect it without migration and may report that migration would occur during apply. It must not migrate the registry, create new registry tables, create project-state databases, or write migration metadata.
+When a selected Runtime Home has a current registry under the current storage profile, dry-run may inspect it without migration and reports no registry migration planned. It must not migrate the registry, create new registry tables, create project-state databases, or write migration metadata. Unsupported registry versions or storage profiles fail without being converted or repaired.
 
 Text output must be human-readable and identify each resource action using `created`, `reused`, `updated`, `removed`, `skipped`, `conflict`, or `planned`.
 

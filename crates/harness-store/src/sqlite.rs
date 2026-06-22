@@ -508,12 +508,7 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         "tool_invocations",
         "verification_basis",
     )?;
-    reject_column(
-        conn,
-        PROJECT_STATE_DATABASE_KIND,
-        "tool_invocations",
-        "replay_context_status",
-    )?;
+    validate_tool_invocations_columns(conn)?;
     validate_tool_invocations_primary_key(conn)?;
     validate_tool_invocations_replay_surface_foreign_key(conn)?;
     require_column_spec(
@@ -843,6 +838,22 @@ fn column_info(
     Ok(None)
 }
 
+fn table_column_names(conn: &Connection, table: &str) -> rusqlite::Result<Vec<String>> {
+    let escaped_table = table.replace('"', "\"\"");
+    let sql = format!("PRAGMA table_info(\"{escaped_table}\")");
+    let mut stmt = conn.prepare(&sql)?;
+    let rows = stmt.query_map([], |row| {
+        Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+    })?;
+
+    let mut columns = Vec::new();
+    for row in rows {
+        columns.push(row?);
+    }
+    columns.sort_by_key(|(position, _)| *position);
+    Ok(columns.into_iter().map(|(_, name)| name).collect())
+}
+
 fn validate_user_judgments_basis_status_constraint(conn: &Connection) -> StoreResult<()> {
     let table_sql: String = conn.query_row(
         "SELECT sql
@@ -1061,6 +1072,39 @@ fn validate_tool_invocations_primary_key(conn: &Connection) -> StoreResult<()> {
             format!(
                 "tool_invocations primary key is {:?}, expected {:?}",
                 primary_key_columns, expected
+            ),
+        ))
+    }
+}
+
+fn validate_tool_invocations_columns(conn: &Connection) -> StoreResult<()> {
+    let actual = table_column_names(conn, "tool_invocations")?;
+    let expected = [
+        "project_id",
+        "tool_name",
+        "idempotency_key",
+        "request_hash",
+        "basis_state_version",
+        "committed_state_version",
+        "status",
+        "surface_id",
+        "surface_instance_id",
+        "access_class",
+        "verification_basis",
+        "response_json",
+        "created_at",
+    ]
+    .iter()
+    .map(|name| (*name).to_owned())
+    .collect::<Vec<_>>();
+    if actual == expected {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            format!(
+                "tool_invocations columns are {:?}, expected {:?}",
+                actual, expected
             ),
         ))
     }
@@ -1342,11 +1386,7 @@ mod tests {
         assert_eq!(migration_count(&conn)?, PROJECT_STATE_SCHEMA_VERSION);
         assert!(foreign_keys_enabled(&conn)?);
         assert!(sqlite_object_exists(&conn, "table", "tool_invocations")?);
-        assert!(!column_exists(
-            &conn,
-            "tool_invocations",
-            "replay_context_status"
-        )?);
+        validate_tool_invocations_columns(&conn)?;
         validate_tool_invocations_replay_surface_foreign_key(&conn)?;
         Ok(())
     }
