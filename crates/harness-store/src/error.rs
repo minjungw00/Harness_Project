@@ -415,6 +415,7 @@ impl fmt::Display for StoreError {
                 detail,
             } => {
                 let subject = match *field {
+                    "project_id" => "registered project id is invalid",
                     "repo_root" => "registered Product Repository conflicts with Runtime Home",
                     "state_db_path" => {
                         "registered project state database path conflicts with project_home"

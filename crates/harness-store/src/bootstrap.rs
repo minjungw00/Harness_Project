@@ -336,6 +336,14 @@ pub fn validate_current_project_registration(
     runtime_home: impl AsRef<Path>,
     project: &ProjectRecord,
 ) -> StoreResult<ProjectRecord> {
+    validate_project_id(&project.project_id).map_err(|error| {
+        StoreError::InvalidProjectRegistration {
+            project_id: project.project_id.clone(),
+            field: "project_id",
+            relationship: "invalid_project_id",
+            detail: error.to_string(),
+        }
+    })?;
     let path_validation =
         validate_runtime_home_product_repository(runtime_home.as_ref(), &project.repo_root)
             .map_err(|error| registered_project_path_error(project, "repo_root", error))?;
@@ -1019,6 +1027,31 @@ mod tests {
     }
 
     #[test]
+    fn checked_project_list_rejects_unsafe_stored_project_id() -> Result<(), Box<dyn Error>> {
+        let original_project_id = "project_unsafe_id_original";
+        let damaged_project_id = "project/unsafe";
+        let (runtime_home, _) = registered_project("store-checked-unsafe-id", original_project_id)?;
+        let original = project_record(runtime_home.path(), original_project_id)?
+            .expect("project should be registered");
+
+        replace_project_id(runtime_home.path(), original_project_id, damaged_project_id)?;
+
+        let list_error = list_projects(runtime_home.path())
+            .expect_err("project listing should reject unsafe stored project_id");
+        assert_invalid_project_registration(list_error, "invalid_project_id");
+        let damaged = raw_project_record(runtime_home.path(), damaged_project_id)?;
+        assert_eq!(damaged.project_id, damaged_project_id);
+        assert_eq!(damaged.project_home, original.project_home);
+        assert_eq!(damaged.state_db_path, original.state_db_path);
+        assert_registry_record_unchanged_and_visible(
+            runtime_home.path(),
+            damaged_project_id,
+            &damaged,
+        )?;
+        Ok(())
+    }
+
+    #[test]
     fn checked_project_record_rejects_state_db_path_mismatch_before_alternate_creation(
     ) -> Result<(), Box<dyn Error>> {
         let project_id = "project_state_db_mismatch_missing";
@@ -1422,6 +1455,19 @@ mod tests {
         conn.execute(
             "UPDATE projects SET repo_root = ?2 WHERE project_id = ?1",
             rusqlite::params![project_id, repo_root.to_string_lossy().as_ref()],
+        )?;
+        Ok(())
+    }
+
+    fn replace_project_id(
+        runtime_home: &Path,
+        old_project_id: &str,
+        new_project_id: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        let conn = open_registry_database(registry_db_path(runtime_home))?;
+        conn.execute(
+            "UPDATE projects SET project_id = ?2 WHERE project_id = ?1",
+            rusqlite::params![old_project_id, new_project_id],
         )?;
         Ok(())
     }
