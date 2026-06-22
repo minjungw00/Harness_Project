@@ -331,7 +331,8 @@ Dry-run이 하지 않는 것:
 Text 출력은 사람이 읽을 수 있어야 하며 각 리소스 작업을 `created`, `reused`, `updated`, `removed`, `skipped`, `conflict`, `planned` 중 하나로 식별해야 합니다.
 
 <a id="setup-output"></a>
-JSON 성공 출력은 아래 최상위 키를 갖습니다.
+`harness agent` 명령이 에이전트 결과 객체를 반환하는 경우 JSON 출력은 아래
+최상위 키를 갖습니다.
 
 ```text
 status
@@ -340,14 +341,23 @@ project
 integration
 allowed_projects
 installations
+installation_verifications
 guidance
 host
 verification
 actions
 effects
+residual_effects
 action_required
 warnings
 ```
+
+최상위 `effects` 배열은 구현된 결과 모델에 따라 관련 계획, 적용, 재사용, 보상,
+롤백 결과를 기록합니다. 최상위 `residual_effects` 배열은 항상 출력됩니다.
+알려진 잔류 효과가 없으면 빈 배열입니다. 항목이 있으면 실패했거나 일부 보상된
+작업 뒤에 남은 것으로 알려진 영속 또는 외부 효과를 기록하며, 운영자가 인지하거나
+조치해야 할 대상을 나타냅니다. 잔류 효과 항목은 `component`, `target`,
+`current_state`, `reason`, `recommended_action`을 포함합니다.
 
 필수 JSON 값:
 
@@ -362,8 +372,10 @@ JSON 출력은 관리 CLI 출력이지 공개 하네스 API 응답 스키마가 
 
 - 사람용 text 출력은 적용된 효과, 롤백된 효과, 잔류 효과를 각각 식별해야 합니다.
 - JSON 출력은 같은 사실을 기계 판독 가능한 항목으로 노출해야 합니다.
+- JSON 잔류 효과 항목은 최상위 `residual_effects` 배열에 나타납니다. `effects`, `warnings`, `verification`, `action_required` 아래에 중첩되지 않으며, `effects`와 `residual_effects`는 서로 바꿔 쓸 수 없습니다.
 - 각 효과 항목에는 대상 위치 또는 기록 식별자, 효과 분류, 대상 재실행 또는 검사에 충분한 세부사항이 있어야 합니다.
 - 각 잔류 효과에는 롤백을 수행하지 않은 이유 또는 롤백 실패 이유와 권장 운영자 동작이 있어야 합니다.
+- 미완료 보상 때문에 `partial_failure`가 발생하면 채워진 `residual_effects` 항목이 남은 효과를 식별합니다. `complete`가 아닌 결과라는 사실만으로 잔류 효과가 있다는 뜻은 아니며, 알려진 잔류 효과가 없으면 `residual_effects`는 빈 배열입니다.
 - `registry changes may remain` 같은 일반 문장은 정확한 잔류 효과 항목과 함께 제공되지 않는 한 충분하지 않습니다.
 
 <a id="noninteractive-approval-behavior"></a>

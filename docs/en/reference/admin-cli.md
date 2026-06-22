@@ -329,7 +329,8 @@ When a selected Runtime Home has a schema version 1 registry, dry-run may inspec
 Text output must be human-readable and identify each resource action using `created`, `reused`, `updated`, `removed`, `skipped`, `conflict`, or `planned`.
 
 <a id="setup-output"></a>
-JSON success output has these top-level keys:
+When a `harness agent` command returns the agent result object, JSON output has
+these top-level keys:
 
 ```text
 status
@@ -338,14 +339,25 @@ project
 integration
 allowed_projects
 installations
+installation_verifications
 guidance
 host
 verification
 actions
 effects
+residual_effects
 action_required
 warnings
 ```
+
+The top-level `effects` array records relevant planned, applied, reused,
+compensated, or rollback outcomes according to the implemented result model.
+The top-level `residual_effects` array is always emitted. It is empty when no
+residual effects are known. When populated, each entry records a known
+persistent or external effect that remains after a failed or partially
+compensated operation and requires operator awareness or action. Residual
+effect entries include `component`, `target`, `current_state`, `reason`, and
+`recommended_action`.
 
 Required JSON values:
 
@@ -360,8 +372,10 @@ Partial-failure output:
 
 - Human-readable text output must identify each applied effect, rolled-back effect, and residual effect.
 - JSON output must expose the same facts in machine-readable entries.
+- JSON residual-effect entries appear in the top-level `residual_effects` array. They are not nested under `effects`, `warnings`, `verification`, or `action_required`, and `effects` and `residual_effects` are not interchangeable.
 - Each effect entry must include the target location or record identity, the effect classification, and enough detail to rerun or inspect the target.
 - Each residual effect must include why rollback was not performed or why rollback failed, plus the recommended operator action.
+- When `partial_failure` is caused by incomplete compensation, populated `residual_effects` entries identify the remaining effects. A non-`complete` result does not by itself imply that residual effects exist; when none are known, `residual_effects` is an empty array.
 - A generic statement such as `registry changes may remain` is insufficient unless paired with exact residual-effect entries.
 
 <a id="noninteractive-approval-behavior"></a>
