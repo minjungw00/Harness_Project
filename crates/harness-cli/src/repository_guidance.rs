@@ -120,6 +120,8 @@ pub struct GuidanceEffect {
     pub fingerprint: Option<String>,
     pub residual: Option<String>,
     pub new_guidance: bool,
+    pub(crate) prior_snapshot: FileSnapshot,
+    pub(crate) applied_snapshot: Option<FileSnapshot>,
 }
 
 #[derive(Debug, Clone)]
@@ -262,13 +264,14 @@ pub fn plan_guidance_apply(
 
 pub fn apply_guidance_plan(plan: &GuidancePlan) -> Result<GuidanceEffect, HostConfigError> {
     if matches!(plan.change, PlannedChange::Noop) {
-        return Ok(effect_from_plan(plan, None));
+        return Ok(effect_from_plan(plan, None, Some(plan.snapshot.clone())));
     }
     let content = plan.next_content.as_ref().ok_or_else(|| {
         HostConfigError::StalePlan("guidance apply plan is missing content".to_owned())
     })?;
     write_if_fresh(&plan.path, content, &plan.snapshot)?;
-    Ok(effect_from_plan(plan, None))
+    let applied_snapshot = read_snapshot(&plan.path)?;
+    Ok(effect_from_plan(plan, None, Some(applied_snapshot)))
 }
 
 pub fn plan_guidance_remove(
@@ -345,14 +348,15 @@ pub fn plan_guidance_remove(
 
 pub fn apply_guidance_remove(plan: &GuidancePlan) -> Result<GuidanceEffect, HostConfigError> {
     if matches!(plan.change, PlannedChange::Noop) {
-        return Ok(effect_from_plan(plan, None));
+        return Ok(effect_from_plan(plan, None, Some(plan.snapshot.clone())));
     }
     match &plan.next_content {
         Some(content) => write_if_fresh(&plan.path, content, &plan.snapshot)?,
         None => remove_file_if_fresh(&plan.path, &plan.snapshot)?,
     }
     cleanup_empty_created_dirs(&plan.path, &plan.cleanup_dirs)?;
-    Ok(effect_from_plan(plan, None))
+    let applied_snapshot = read_snapshot(&plan.path)?;
+    Ok(effect_from_plan(plan, None, Some(applied_snapshot)))
 }
 
 pub fn compensate_new_guidance(effect: &GuidanceEffect) -> Result<GuidanceEffect, HostConfigError> {
@@ -381,6 +385,34 @@ pub fn compensate_new_guidance(effect: &GuidanceEffect) -> Result<GuidanceEffect
         effect.target,
     )?;
     apply_guidance_remove(&remove)
+}
+
+pub fn compensate_guidance_effect(
+    effect: &GuidanceEffect,
+) -> Result<GuidanceEffect, HostConfigError> {
+    if matches!(effect.change, PlannedChange::Noop) {
+        return Ok(effect.clone());
+    }
+    if effect.new_guidance {
+        return compensate_new_guidance(effect);
+    }
+    let Some(applied_snapshot) = &effect.applied_snapshot else {
+        return Ok(GuidanceEffect {
+            residual: Some(
+                "guidance could not be restored because its applied snapshot was unavailable"
+                    .to_owned(),
+            ),
+            ..effect.clone()
+        });
+    };
+    match &effect.prior_snapshot {
+        FileSnapshot::Missing => remove_file_if_fresh(&effect.path, applied_snapshot)?,
+        FileSnapshot::Present { bytes } => write_if_fresh(&effect.path, bytes, applied_snapshot)?,
+    }
+    Ok(GuidanceEffect {
+        residual: None,
+        ..effect.clone()
+    })
 }
 
 fn analyze_snapshot(
@@ -847,7 +879,11 @@ fn ensure_final_newline(text: &str) -> String {
     }
 }
 
-fn effect_from_plan(plan: &GuidancePlan, residual: Option<String>) -> GuidanceEffect {
+fn effect_from_plan(
+    plan: &GuidancePlan,
+    residual: Option<String>,
+    applied_snapshot: Option<FileSnapshot>,
+) -> GuidanceEffect {
     GuidanceEffect {
         target: plan.target,
         integration_id: plan.integration_id.clone(),
@@ -857,6 +893,8 @@ fn effect_from_plan(plan: &GuidancePlan, residual: Option<String>) -> GuidanceEf
         fingerprint: plan.status.fingerprint.clone(),
         residual,
         new_guidance: plan.new_guidance,
+        prior_snapshot: plan.snapshot.clone(),
+        applied_snapshot,
     }
 }
 

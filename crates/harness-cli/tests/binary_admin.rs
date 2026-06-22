@@ -22,11 +22,11 @@ use harness_store::{
     agent_integrations::{
         agent_integration_record, list_host_installations_for_integration,
         update_host_installation_verification, VERIFIED_STATUS_ACTION_REQUIRED,
-        VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED, VERIFIED_STATUS_PARTIAL_FAILURE,
+        VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED,
     },
     bootstrap::{
-        initialize_runtime_home, list_projects, list_surfaces, register_project, ProjectRecord,
-        ProjectRegistration, ACTIVE_PROJECT_STATUS,
+        initialize_runtime_home, list_projects, list_surfaces, register_project, register_surface,
+        ProjectRecord, ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
     },
     migrations::{
         test_support::{
@@ -39,6 +39,7 @@ use harness_store::{
     sqlite::{open_read_only_database, project_state_db_path, registry_db_path},
 };
 use harness_test_support::TempRuntimeHome;
+use harness_types::SurfaceInteractionRole;
 use rusqlite::{params, Connection};
 use serde_json::{json, Value};
 
@@ -1822,10 +1823,313 @@ fn harness_binary_agent_install_compensates_new_guidance_after_verification_fail
     assert_eq!(output.status.code(), Some(1));
     assert!(stdout(&output).contains("status: partial_failure"));
     assert!(stdout(&output).contains("harness.list_projects"));
-    assert!(stdout(&output).contains("compensated newly-created guidance"));
+    assert!(stdout(&output).contains("effects:"));
+    assert!(stdout(&output).contains("residual_effects:"));
+    assert!(stdout(&output).contains("rollback_state: rolled_back"));
     let agents = fs::read_to_string(&agents_path)?;
     assert!(agents.contains("# Existing instructions\nKeep this.\n"));
     assert!(!agents.contains(GUIDANCE_BEGIN_MARKER));
+    assert_no_codex_server(
+        &codex_home.join("config.toml"),
+        "harness-guidance-compensate",
+    )?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_install_faults_roll_back_reversible_effects() -> Result<(), Box<dyn Error>>
+{
+    for step in [
+        "preflight",
+        "host_apply",
+        "inventory_record",
+        "final_verification_status_update",
+    ] {
+        let runtime_home = TempRuntimeHome::new(&format!("cli-bin-agent-fault-{step}"))?;
+        let repo_root = runtime_home.create_product_repo("product-repo")?;
+        let project_id = format!("project_fault_{step}");
+        let integration_id = format!("agent_fault_{step}");
+        let surface_id = format!("surface_fault_{step}");
+        let surface_instance_id = format!("surface_instance_fault_{step}");
+        let server_name = format!("harness-fault-{}", step.replace('_', "-"));
+        initialize_agent_install_fixture(
+            runtime_home.path(),
+            &repo_root,
+            &project_id,
+            &surface_id,
+            &surface_instance_id,
+        )?;
+        let codex_home = runtime_home.path().join("codex-home");
+        let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+
+        let output = run_with_home_and_env_slice(
+            runtime_home.path(),
+            &[
+                "agent",
+                "install",
+                "--host",
+                "codex",
+                "--scope",
+                "user",
+                "--integration-id",
+                &integration_id,
+                "--server-name",
+                &server_name,
+                "--project-id",
+                &project_id,
+                "--repo-root",
+                path_text(&repo_root).as_str(),
+                "--surface-id",
+                &surface_id,
+                "--surface-instance-id",
+                &surface_instance_id,
+                "--mcp-command",
+                path_text(&mcp_command).as_str(),
+                "--output",
+                "json",
+            ],
+            &[
+                ("CODEX_HOME", path_text(&codex_home)),
+                ("HARNESS_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()),
+            ],
+        )?;
+
+        assert_eq!(output.status.code(), Some(1), "step {step}");
+        let value: Value = serde_json::from_str(&stdout(&output))?;
+        assert_eq!(value["status"], "failed", "step {step}");
+        assert!(value["residual_effects"]
+            .as_array()
+            .expect("residual effects array")
+            .is_empty());
+        assert_effect_rollback(&value, "integration", "rolled_back");
+        assert_effect_rollback(&value, "project_allowlist", "rolled_back");
+        assert_effect_rollback(&value, "default_project", "rolled_back");
+        if matches!(
+            step,
+            "inventory_record" | "final_verification_status_update"
+        ) {
+            assert_effect_rollback(&value, "host_config", "rolled_back");
+        }
+        if step == "final_verification_status_update" {
+            assert_effect_rollback(&value, "host_inventory", "rolled_back");
+        }
+        assert!(agent_integration_record(runtime_home.path(), &integration_id)?.is_none());
+        assert_no_codex_server(&codex_home.join("config.toml"), &server_name)?;
+    }
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_install_guidance_apply_faults_are_compensated() -> Result<(), Box<dyn Error>>
+{
+    for step in ["guidance_apply_1", "guidance_apply_2"] {
+        let runtime_home = TempRuntimeHome::new(&format!("cli-bin-agent-guidance-{step}"))?;
+        let repo_root = runtime_home.create_product_repo("product-repo")?;
+        let project_id = format!("project_{step}");
+        let integration_id = format!("agent_{step}");
+        let surface_id = format!("surface_{step}");
+        let surface_instance_id = format!("surface_instance_{step}");
+        let server_name = format!("harness-{}", step.replace('_', "-"));
+        initialize_agent_install_fixture(
+            runtime_home.path(),
+            &repo_root,
+            &project_id,
+            &surface_id,
+            &surface_instance_id,
+        )?;
+        let codex_home = runtime_home.path().join("codex-home");
+        let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+
+        let output = run_with_home_and_env_slice(
+            runtime_home.path(),
+            &[
+                "agent",
+                "install",
+                "--host",
+                "codex",
+                "--scope",
+                "user",
+                "--integration-id",
+                &integration_id,
+                "--server-name",
+                &server_name,
+                "--project-id",
+                &project_id,
+                "--repo-root",
+                path_text(&repo_root).as_str(),
+                "--surface-id",
+                &surface_id,
+                "--surface-instance-id",
+                &surface_instance_id,
+                "--mcp-command",
+                path_text(&mcp_command).as_str(),
+                "--guidance",
+                "both",
+                "--allow-repository-write",
+                "--output",
+                "json",
+            ],
+            &[
+                ("CODEX_HOME", path_text(&codex_home)),
+                ("HARNESS_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()),
+            ],
+        )?;
+
+        assert_eq!(output.status.code(), Some(1), "step {step}");
+        let value: Value = serde_json::from_str(&stdout(&output))?;
+        assert_eq!(value["status"], "failed", "step {step}");
+        assert!(value["residual_effects"]
+            .as_array()
+            .expect("residual effects array")
+            .is_empty());
+        if step == "guidance_apply_2" {
+            assert_effect_rollback(&value, "guidance", "rolled_back");
+        }
+        assert!(agent_integration_record(runtime_home.path(), &integration_id)?.is_none());
+        assert_no_codex_server(&codex_home.join("config.toml"), &server_name)?;
+        if repo_root.join("AGENTS.md").exists() {
+            assert!(
+                !fs::read_to_string(repo_root.join("AGENTS.md"))?.contains(GUIDANCE_BEGIN_MARKER)
+            );
+        }
+        assert!(!repo_root
+            .join(".claude")
+            .join("rules")
+            .join("harness.md")
+            .exists());
+    }
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn harness_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-host-rollback-residual")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    initialize_agent_install_fixture(
+        runtime_home.path(),
+        &repo_root,
+        "project_host_rollback",
+        "surface_host_rollback",
+        "surface_instance_host_rollback",
+    )?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    let host_residual = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_host_rollback",
+            "--server-name",
+            "harness-host-rollback",
+            "--project-id",
+            "project_host_rollback",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--surface-id",
+            "surface_host_rollback",
+            "--surface-instance-id",
+            "surface_instance_host_rollback",
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--output",
+            "json",
+        ],
+        &[
+            ("CODEX_HOME", path_text(&codex_home)),
+            (
+                "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP",
+                "inventory_record".to_owned(),
+            ),
+            (
+                "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
+                "host".to_owned(),
+            ),
+        ],
+    )?;
+    assert_eq!(host_residual.status.code(), Some(1));
+    let value: Value = serde_json::from_str(&stdout(&host_residual))?;
+    assert_eq!(value["status"], "partial_failure");
+    assert_effect_rollback(&value, "host_config", "failed");
+    assert!(value["residual_effects"]
+        .as_array()
+        .expect("residual effects array")
+        .iter()
+        .any(|residual| residual["component"] == "host_config"));
+    assert!(fs::read_to_string(codex_home.join("config.toml"))?
+        .contains("[mcp_servers.harness-host-rollback]"));
+
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-guidance-rollback-residual")?;
+    let repo_root = runtime_home.create_product_repo("product-repo")?;
+    initialize_agent_install_fixture(
+        runtime_home.path(),
+        &repo_root,
+        "project_guidance_rollback",
+        "surface_guidance_rollback",
+        "surface_instance_guidance_rollback",
+    )?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    let guidance_residual = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            "agent_guidance_rollback",
+            "--server-name",
+            "harness-guidance-rollback",
+            "--project-id",
+            "project_guidance_rollback",
+            "--repo-root",
+            path_text(&repo_root).as_str(),
+            "--surface-id",
+            "surface_guidance_rollback",
+            "--surface-instance-id",
+            "surface_instance_guidance_rollback",
+            "--mcp-command",
+            path_text(&mcp_command).as_str(),
+            "--guidance",
+            "codex",
+            "--allow-repository-write",
+            "--output",
+            "json",
+        ],
+        &[
+            ("CODEX_HOME", path_text(&codex_home)),
+            (
+                "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP",
+                "final_verification_status_update".to_owned(),
+            ),
+            (
+                "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
+                "guidance".to_owned(),
+            ),
+        ],
+    )?;
+    assert_eq!(guidance_residual.status.code(), Some(1));
+    let value: Value = serde_json::from_str(&stdout(&guidance_residual))?;
+    assert_eq!(value["status"], "partial_failure");
+    assert_effect_rollback(&value, "guidance", "failed");
+    assert!(value["residual_effects"]
+        .as_array()
+        .expect("residual effects array")
+        .iter()
+        .any(|residual| residual["component"] == "guidance"));
+    assert!(fs::read_to_string(repo_root.join("AGENTS.md"))?.contains(GUIDANCE_BEGIN_MARKER));
+    assert_no_codex_server(&codex_home.join("config.toml"), "harness-guidance-rollback")?;
     Ok(())
 }
 
@@ -2343,12 +2647,9 @@ fn harness_binary_agent_mcp_tool_discovery_failures_are_partial_failure(
         assert_eq!(output.status.code(), Some(1));
         assert!(stdout(&output).contains("status: partial_failure"));
         assert!(stdout(&output).contains(expected));
-        let installations =
-            list_host_installations_for_integration(runtime_home.path(), "agent_mcp_failure")?;
-        assert_eq!(
-            installations[0].last_verified_status,
-            VERIFIED_STATUS_PARTIAL_FAILURE
-        );
+        assert!(stdout(&output).contains("residual_effects:"));
+        assert!(agent_integration_record(runtime_home.path(), "agent_mcp_failure")?.is_none());
+        assert_no_codex_server(&codex_home.join("config.toml"), "harness-failure")?;
     }
     Ok(())
 }
@@ -2893,6 +3194,20 @@ fn run_with_home_and_env<const N: usize>(
     Ok(command.output()?)
 }
 
+fn run_with_home_and_env_slice(
+    runtime_home: &Path,
+    args: &[&str],
+    envs: &[(&str, String)],
+) -> Result<Output, Box<dyn Error>> {
+    let mut command = base_command();
+    command.env("HARNESS_HOME", runtime_home);
+    for (name, value) in envs {
+        command.env(name, value);
+    }
+    command.args(args);
+    Ok(command.output()?)
+}
+
 fn assert_agent_help<const N: usize>(args: [&str; N]) -> Result<(), Box<dyn Error>> {
     let output = run_without_home(args)?;
     assert_success(&output);
@@ -2982,6 +3297,42 @@ fn initialized_project(
     Ok(runtime_home)
 }
 
+fn initialize_agent_install_fixture(
+    runtime_home: &Path,
+    repo_root: &Path,
+    project_id: &str,
+    surface_id: &str,
+    surface_instance_id: &str,
+) -> Result<(), Box<dyn Error>> {
+    initialize_runtime_home(runtime_home, "runtime_home_agent_install_fixture", "{}")?;
+    register_project(
+        runtime_home,
+        ProjectRegistration {
+            project_id: project_id.to_owned(),
+            repo_root: repo_root.to_path_buf(),
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    let access = baseline_workflow_access_classes();
+    register_surface(
+        runtime_home,
+        SurfaceRegistration {
+            project_id: project_id.to_owned(),
+            surface_id: surface_id.to_owned(),
+            surface_instance_id: surface_instance_id.to_owned(),
+            surface_kind: "mcp".to_owned(),
+            interaction_role: SurfaceInteractionRole::Agent,
+            display_name: Some("Harness Agent MCP".to_owned()),
+            capability_profile_json: capability_profile_json(&access, None)?,
+            local_access_json: local_access_json(&access)?,
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    Ok(())
+}
+
 fn single_project_record(
     runtime_home: &Path,
     project_id: &str,
@@ -3036,6 +3387,23 @@ fn assert_state_db_path_mismatch_stderr(stderr: &str) {
     assert!(stderr.contains("registered project state database path conflicts with project_home"));
     assert!(stderr.contains("field state_db_path"));
     assert!(stderr.contains("relationship state_db_path_mismatch"));
+}
+
+fn assert_effect_rollback(value: &Value, component: &str, rollback_state: &str) {
+    let effects = value["effects"].as_array().expect("effects array");
+    assert!(
+        effects.iter().any(|effect| {
+            effect["component"] == component && effect["rollback_state"] == rollback_state
+        }),
+        "expected {component} rollback_state={rollback_state}, got {effects:?}"
+    );
+}
+
+fn assert_no_codex_server(config_path: &Path, server_name: &str) -> Result<(), Box<dyn Error>> {
+    if config_path.exists() {
+        assert!(!fs::read_to_string(config_path)?.contains(&format!("[mcp_servers.{server_name}]")));
+    }
+    Ok(())
 }
 
 fn surface_rows(state_path: &Path) -> Result<Vec<Vec<String>>, Box<dyn Error>> {

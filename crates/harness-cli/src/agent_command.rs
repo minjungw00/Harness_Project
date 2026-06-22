@@ -15,7 +15,7 @@ use harness_store::{
         add_integration_project, agent_integration_record, clear_agent_integration_default_project,
         host_installation_record, list_host_installations_for_integration,
         list_integration_projects, register_agent_integration, register_host_installation,
-        remove_host_installation, remove_integration_project,
+        remove_agent_integration_if_unused, remove_host_installation, remove_integration_project,
         set_agent_integration_default_project, set_agent_integration_enabled,
         update_host_installation_verification, AgentIntegrationRecord,
         AgentIntegrationRegistration, HostInstallationRecord, HostInstallationRegistration,
@@ -25,9 +25,9 @@ use harness_store::{
         VERIFIED_STATUS_FAILED, VERIFIED_STATUS_NOT_VERIFIED, VERIFIED_STATUS_PARTIAL_FAILURE,
     },
     bootstrap::{
-        initialize_runtime_home, list_projects, list_surfaces, project_record_for_execution,
-        register_project, register_surface, runtime_home_record, validate_project_id,
-        ProjectRecord, ProjectRegistration, SurfaceRegistration, ACTIVE_PROJECT_STATUS,
+        initialize_runtime_home, list_surfaces, project_record_for_execution, register_project,
+        register_surface, validate_project_id, ProjectRecord, ProjectRegistration,
+        SurfaceRegistration, ACTIVE_PROJECT_STATUS,
     },
     inspection::{
         inspect_runtime_home, AgentIntegrationInspectionRecord, DatabaseInspection,
@@ -43,6 +43,9 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
 use crate::{
+    host_integration::config_edit::{
+        read_snapshot, remove_file_if_fresh, write_if_fresh, FileSnapshot,
+    },
     host_integration::{
         claude_code::{ClaudeCodeAdapter, ProductionCommandRunner},
         codex::{CodexAdapter, CodexEnvironment},
@@ -56,7 +59,7 @@ use crate::{
     },
     registration::{capability_profile_json, local_access_json, RegistrationMetadataError},
     repository_guidance::{
-        apply_guidance_plan, apply_guidance_remove, compensate_new_guidance, guidance_status,
+        apply_guidance_plan, apply_guidance_remove, compensate_guidance_effect, guidance_status,
         plan_guidance_apply, plan_guidance_remove, GuidanceEffect, GuidancePlan, GuidanceStateKind,
         GuidanceStatus, GuidanceTarget,
     },
@@ -70,6 +73,8 @@ const AGENT_RUNTIME_HOME_ID: &str = "runtime_home_agent";
 const AGENT_SURFACE_KIND: &str = "mcp";
 const DEFAULT_MCP_COMMAND: &str = "harness-mcp";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
+const INSTALL_FAULT_ENV: &str = "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP";
+const INSTALL_ROLLBACK_FAULT_ENV: &str = "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL";
 
 const PUBLIC_METHOD_TOOL_NAMES: [&str; 9] = [
     "harness.intake",
@@ -334,6 +339,164 @@ impl AgentAction {
             detail: detail.into(),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct InstallEffectReport {
+    component: String,
+    target: String,
+    prior_state: String,
+    applied_state: String,
+    rollback_state: String,
+}
+
+impl InstallEffectReport {
+    fn new(
+        component: impl Into<String>,
+        target: impl Into<String>,
+        prior_state: impl Into<String>,
+        applied_state: impl Into<String>,
+    ) -> Self {
+        Self {
+            component: component.into(),
+            target: target.into(),
+            prior_state: prior_state.into(),
+            applied_state: applied_state.into(),
+            rollback_state: "not_attempted".to_owned(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ResidualEffectReport {
+    component: String,
+    target: String,
+    current_state: String,
+    reason: String,
+    recommended_action: String,
+}
+
+impl ResidualEffectReport {
+    fn new(
+        component: impl Into<String>,
+        target: impl Into<String>,
+        current_state: impl Into<String>,
+        reason: impl Into<String>,
+        recommended_action: impl Into<String>,
+    ) -> Self {
+        Self {
+            component: component.into(),
+            target: target.into(),
+            current_state: current_state.into(),
+            reason: reason.into(),
+            recommended_action: recommended_action.into(),
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+struct InstallJournal {
+    effects: Vec<InstallEffectReport>,
+    entries: Vec<InstallJournalEntry>,
+    residuals: Vec<ResidualEffectReport>,
+}
+
+impl InstallJournal {
+    fn record(
+        &mut self,
+        component: impl Into<String>,
+        target: impl Into<String>,
+        prior_state: impl Into<String>,
+        applied_state: impl Into<String>,
+    ) -> usize {
+        let index = self.effects.len();
+        self.effects.push(InstallEffectReport::new(
+            component,
+            target,
+            prior_state,
+            applied_state,
+        ));
+        index
+    }
+
+    fn set_rollback(&mut self, index: usize, state: impl Into<String>) {
+        if let Some(effect) = self.effects.get_mut(index) {
+            effect.rollback_state = state.into();
+        }
+    }
+
+    fn residual(
+        &mut self,
+        component: impl Into<String>,
+        target: impl Into<String>,
+        current_state: impl Into<String>,
+        reason: impl Into<String>,
+        recommended_action: impl Into<String>,
+    ) {
+        self.residuals.push(ResidualEffectReport::new(
+            component,
+            target,
+            current_state,
+            reason,
+            recommended_action,
+        ));
+    }
+}
+
+#[derive(Debug, Clone)]
+enum InstallJournalEntry {
+    RuntimeHome {
+        effect_index: usize,
+        created: bool,
+        migrated: bool,
+    },
+    Project {
+        effect_index: usize,
+        created: bool,
+    },
+    Surface {
+        effect_index: usize,
+        created: bool,
+        project_id: String,
+        surface_id: String,
+        surface_instance_id: String,
+    },
+    Integration {
+        effect_index: usize,
+        created: bool,
+        integration_id: String,
+    },
+    DefaultProject {
+        effect_index: usize,
+        integration_id: String,
+        prior_default_project_id: Option<String>,
+        applied_default_project_id: Option<String>,
+        changed: bool,
+    },
+    Membership {
+        effect_index: usize,
+        created: bool,
+        integration_id: String,
+        project_id: String,
+    },
+    HostConfig {
+        effect_index: usize,
+        host_kind: HostKind,
+        plan: HostPlan,
+        effect: crate::host_integration::HostEffect,
+        prior_snapshot: Option<FileSnapshot>,
+        applied_snapshot: Option<FileSnapshot>,
+        prior_installation: Option<HostInstallationRecord>,
+    },
+    HostInventory {
+        effect_index: usize,
+        prior: Option<HostInstallationRecord>,
+        applied: HostInstallationRecord,
+    },
+    Guidance {
+        effect_index: usize,
+        effect: GuidanceEffect,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -604,12 +767,19 @@ fn command_install(
             process,
         );
     }
-    let project_plan =
-        resolve_install_project(&runtime_home, parsed.project_id.as_deref(), repo_root)?;
+    let registry = inspect_agent_registry_for_planning(&runtime_home)?;
+    let project_plan = resolve_install_project_from_registry(
+        &registry,
+        &runtime_home,
+        parsed.project_id.as_deref(),
+        repo_root,
+    )?;
     let integration_id = parsed.integration_id.clone().unwrap_or_else(|| {
         deterministic_integration_id(host_kind, host_scope, &project_plan.project_id)
     });
-    let existing_integration = agent_integration_record(&runtime_home, &integration_id)?;
+    let existing_integration = registry
+        .integration(&integration_id)
+        .map(agent_integration_record_from_inspection);
     let surface_id = parsed
         .surface_id
         .clone()
@@ -637,29 +807,21 @@ fn command_install(
                 .and_then(|record| record.default_project_id.clone())
         })
         .unwrap_or_else(|| project_plan.project_id.clone());
-    let surface_exists = project_plan
-        .existing_project
-        .as_ref()
-        .map(|project| {
-            surface_exists_for_project(
-                &runtime_home,
-                &project.project_id,
-                &surface_id,
-                &surface_instance_id,
-            )
-        })
-        .transpose()?
-        .unwrap_or(false);
-    let membership_exists =
-        is_project_member(&runtime_home, &integration_id, &project_plan.project_id)?;
-    let mcp_command = resolve_mcp_command(&parsed, host_scope, current_dir, process)?;
-    let expected_installation = find_installation_for_target_hint(
-        &runtime_home,
-        &integration_id,
-        host_kind,
-        host_scope,
-        parsed.server_name.as_deref(),
+    let surface_exists = registry.project_surface_exists(
+        &project_plan.project_id,
+        &surface_id,
+        &surface_instance_id,
     )?;
+    let membership_exists = registry.is_project_member(&integration_id, &project_plan.project_id);
+    let mcp_command = resolve_mcp_command(&parsed, host_scope, current_dir, process)?;
+    let expected_installation = registry
+        .find_installation_for_target_hint(
+            &integration_id,
+            host_kind,
+            host_scope,
+            parsed.server_name.as_deref(),
+        )
+        .map(host_installation_record_from_inspection);
     let host_plan = build_host_plan(
         HostPlanInputs {
             host_kind,
@@ -682,25 +844,33 @@ fn command_install(
             host_plan.conflicts[0].message.clone(),
         ));
     }
-    validate_project_scope_membership(
-        &runtime_home,
+    validate_project_scope_membership_from_registry(
+        &registry,
         &integration_id,
         host_scope,
         &project_plan.project_id,
     )?;
+    if default_project_id != project_plan.project_id
+        && !registry.is_project_member(&integration_id, &default_project_id)
+    {
+        return Err(AgentCommandError::runtime(
+            "--default-project-id must name an allowed integration project",
+        ));
+    }
 
     let installation_id = expected_installation
         .as_ref()
         .map(|record| record.installation_id.clone())
         .unwrap_or_else(|| deterministic_installation_id(&integration_id, &host_plan));
     let mut actions = Vec::new();
+    let runtime_action = match registry.schema {
+        None => ActionState::Planned,
+        Some(schema) if schema.migration_planned => ActionState::Updated,
+        Some(_) => ActionState::Reused,
+    };
     actions.push(AgentAction::new(
         "runtime_home",
-        if runtime_home_record(&runtime_home)?.is_some() {
-            ActionState::Reused
-        } else {
-            ActionState::Planned
-        },
+        runtime_action,
         path_text(&runtime_home),
     ));
     actions.push(AgentAction::new(
@@ -760,14 +930,35 @@ fn command_install(
             format!("{} {}", plan.target.as_str(), path_text(&plan.path)),
         ));
     }
-    initialize_runtime_home(&runtime_home, AGENT_RUNTIME_HOME_ID, AGENT_METADATA_JSON)?;
-    let project = if let Some(existing) = project_plan.existing_project {
+    let mut journal = InstallJournal::default();
+    if let Err(error) =
+        initialize_runtime_home(&runtime_home, AGENT_RUNTIME_HOME_ID, AGENT_METADATA_JSON)
+    {
+        return Err(AgentCommandError::runtime(error.to_string()));
+    }
+    let runtime_effect_index = journal.record(
+        "runtime_home",
+        path_text(&runtime_home),
+        runtime_prior_state(registry.schema),
+        runtime_applied_state(registry.schema),
+    );
+    journal.entries.push(InstallJournalEntry::RuntimeHome {
+        effect_index: runtime_effect_index,
+        created: registry.schema.is_none(),
+        migrated: registry
+            .schema
+            .map(|schema| schema.migration_planned)
+            .unwrap_or(false),
+    });
+
+    let project_created = project_plan.existing_project.is_none();
+    let project = if let Some(existing) = project_plan.existing_project.clone() {
         existing
     } else {
         let repo_root = project_plan.repo_root.clone().ok_or_else(|| {
             AgentCommandError::runtime("project registration requires --repo-root")
         })?;
-        register_project(
+        match register_project(
             &runtime_home,
             ProjectRegistration {
                 project_id: project_plan.project_id.clone(),
@@ -776,15 +967,75 @@ fn command_install(
                 status: ACTIVE_PROJECT_STATUS.to_owned(),
                 metadata_json: AGENT_METADATA_JSON.to_owned(),
             },
-        )?
+        ) {
+            Ok(project) => project,
+            Err(error) => {
+                return install_failure_output(
+                    &parsed,
+                    &runtime_home,
+                    &integration_id,
+                    &host_plan,
+                    vec![project_plan.project_id.clone()],
+                    actions,
+                    McpVerification::failed(format!("project registration failed: {error}")),
+                    journal,
+                    process,
+                );
+            }
+        }
     };
-    ensure_agent_surface(
+    let project_effect_index = journal.record(
+        "project",
+        project.project_id.clone(),
+        if project_created {
+            "missing"
+        } else {
+            "registered"
+        },
+        if project_created { "created" } else { "reused" },
+    );
+    journal.entries.push(InstallJournalEntry::Project {
+        effect_index: project_effect_index,
+        created: project_created,
+    });
+
+    if let Err(error) = ensure_agent_surface(
         &runtime_home,
         &project.project_id,
         &surface_id,
         &surface_instance_id,
-    )?;
-    let integration = register_agent_integration(
+    ) {
+        return install_failure_output(
+            &parsed,
+            &runtime_home,
+            &integration_id,
+            &host_plan,
+            vec![project.project_id.clone()],
+            actions,
+            McpVerification::failed(format!("surface registration failed: {error}")),
+            journal,
+            process,
+        );
+    }
+    let surface_effect_index = journal.record(
+        "surface",
+        format!("{surface_id}/{surface_instance_id}"),
+        if surface_exists {
+            "registered"
+        } else {
+            "missing"
+        },
+        if surface_exists { "reused" } else { "created" },
+    );
+    journal.entries.push(InstallJournalEntry::Surface {
+        effect_index: surface_effect_index,
+        created: !surface_exists,
+        project_id: project.project_id.clone(),
+        surface_id: surface_id.clone(),
+        surface_instance_id: surface_instance_id.clone(),
+    });
+
+    let integration = match register_agent_integration(
         &runtime_home,
         AgentIntegrationRegistration {
             integration_id: integration_id.clone(),
@@ -793,73 +1044,185 @@ fn command_install(
             surface_instance_id: surface_instance_id.clone(),
             metadata_json: AGENT_METADATA_JSON.to_owned(),
         },
-    )?;
-    let membership_before = is_project_member(&runtime_home, &integration_id, &project.project_id)?;
-    add_integration_project(
+    ) {
+        Ok(integration) => integration,
+        Err(error) => {
+            return install_failure_output(
+                &parsed,
+                &runtime_home,
+                &integration_id,
+                &host_plan,
+                vec![project.project_id.clone()],
+                actions,
+                McpVerification::failed(format!("integration registration failed: {error}")),
+                journal,
+                process,
+            );
+        }
+    };
+    let integration_effect_index = journal.record(
+        "integration",
+        integration.integration_id.clone(),
+        if existing_integration.is_some() {
+            "registered"
+        } else {
+            "missing"
+        },
+        if existing_integration.is_some() {
+            "reused"
+        } else {
+            "created"
+        },
+    );
+    journal.entries.push(InstallJournalEntry::Integration {
+        effect_index: integration_effect_index,
+        created: existing_integration.is_none(),
+        integration_id: integration_id.clone(),
+    });
+
+    if let Err(error) = add_integration_project(
         &runtime_home,
         IntegrationProjectRegistration {
             integration_id: integration_id.clone(),
             project_id: project.project_id.clone(),
         },
-    )?;
-    if default_project_id != project.project_id
-        && !is_project_member(&runtime_home, &integration_id, &default_project_id)?
-    {
-        return Err(AgentCommandError::runtime(
-            "--default-project-id must name an allowed integration project",
-        ));
+    ) {
+        return install_failure_output(
+            &parsed,
+            &runtime_home,
+            &integration_id,
+            &host_plan,
+            vec![project.project_id.clone()],
+            actions,
+            McpVerification::failed(format!("project allowlist update failed: {error}")),
+            journal,
+            process,
+        );
     }
-    set_agent_integration_default_project(&runtime_home, &integration_id, &default_project_id)?;
+    let membership_effect_index = journal.record(
+        "project_allowlist",
+        format!("{}/{}", integration_id, project.project_id),
+        if membership_exists {
+            "registered"
+        } else {
+            "missing"
+        },
+        if membership_exists {
+            "reused"
+        } else {
+            "created"
+        },
+    );
+    journal.entries.push(InstallJournalEntry::Membership {
+        effect_index: membership_effect_index,
+        created: !membership_exists,
+        integration_id: integration_id.clone(),
+        project_id: project.project_id.clone(),
+    });
+
+    let prior_default_project_id = existing_integration
+        .as_ref()
+        .and_then(|record| record.default_project_id.clone());
+    if let Err(error) =
+        set_agent_integration_default_project(&runtime_home, &integration_id, &default_project_id)
+    {
+        return install_failure_output(
+            &parsed,
+            &runtime_home,
+            &integration_id,
+            &host_plan,
+            vec![project.project_id.clone()],
+            actions,
+            McpVerification::failed(format!("default project update failed: {error}")),
+            journal,
+            process,
+        );
+    }
+    let default_effect_index = journal.record(
+        "default_project",
+        integration_id.clone(),
+        prior_default_project_id
+            .as_deref()
+            .unwrap_or("none")
+            .to_owned(),
+        default_project_id.clone(),
+    );
+    journal.entries.push(InstallJournalEntry::DefaultProject {
+        effect_index: default_effect_index,
+        integration_id: integration_id.clone(),
+        prior_default_project_id,
+        applied_default_project_id: Some(default_project_id.clone()),
+        changed: existing_integration
+            .as_ref()
+            .and_then(|record| record.default_project_id.as_deref())
+            != Some(default_project_id.as_str()),
+    });
 
     let mcp_launch = mcp_launch_from_host_plan(&host_plan, project_plan.repo_root.as_deref());
-    match run_integration_preflight(process, &mcp_launch, &runtime_home, &integration_id, None) {
+    match maybe_install_fault(process, "preflight").and_then(|_| {
+        run_integration_preflight(process, &mcp_launch, &runtime_home, &integration_id, None)
+    }) {
         Ok(()) => (),
         Err(message) => {
-            compensate_install_membership(
+            return install_failure_output(
+                &parsed,
                 &runtime_home,
                 &integration_id,
-                &project.project_id,
-                membership_before,
-            );
-            let output = partial_install_output(
-                &parsed,
-                runtime_home,
-                integration_id,
-                host_plan,
+                &host_plan,
                 vec![project.project_id],
                 actions,
-                format!("MCP preflight failed before host configuration: {message}"),
+                McpVerification::failed(format!(
+                    "MCP preflight failed before host configuration: {message}"
+                )),
+                journal,
+                process,
             );
-            return Err(AgentCommandError::failure_output(render_agent_output(
-                &output,
-            )?));
         }
     };
 
-    let host_effect = {
-        let result = apply_host_plan(host_kind, &host_plan, process);
-        match result {
-            Ok(effect) => effect,
-            Err(error) => {
-                compensate_install_membership(
-                    &runtime_home,
-                    &integration_id,
-                    &project.project_id,
-                    membership_before,
-                );
-                let output = partial_install_output(
-                    &parsed,
-                    runtime_home,
-                    integration_id,
-                    host_plan,
-                    vec![project.project_id],
-                    actions,
-                    format!("host configuration apply failed: {error}"),
-                );
-                return Err(AgentCommandError::failure_output(render_agent_output(
-                    &output,
-                )?));
-            }
+    let host_prior_snapshot = match read_host_target_snapshot(&host_plan.target) {
+        Ok(snapshot) => snapshot,
+        Err(error) => {
+            return install_failure_output(
+                &parsed,
+                &runtime_home,
+                &integration_id,
+                &host_plan,
+                vec![project.project_id.clone()],
+                actions,
+                McpVerification::failed(format!("host configuration snapshot failed: {error}")),
+                journal,
+                process,
+            );
+        }
+    };
+    if let Err(message) = maybe_install_fault(process, "host_apply") {
+        return install_failure_output(
+            &parsed,
+            &runtime_home,
+            &integration_id,
+            &host_plan,
+            vec![project.project_id.clone()],
+            actions,
+            McpVerification::failed(format!("host configuration apply failed: {message}")),
+            journal,
+            process,
+        );
+    }
+    let host_effect = match apply_host_plan(host_kind, &host_plan, process) {
+        Ok(effect) => effect,
+        Err(error) => {
+            return install_failure_output(
+                &parsed,
+                &runtime_home,
+                &integration_id,
+                &host_plan,
+                vec![project.project_id.clone()],
+                actions,
+                McpVerification::failed(format!("host configuration apply failed: {error}")),
+                journal,
+                process,
+            );
         }
     };
     actions.push(AgentAction::new(
@@ -867,60 +1230,69 @@ fn command_install(
         planned_change_action(host_effect.change),
         host_target_text(&host_effect.target),
     ));
-
-    let mut guidance_effects = Vec::new();
-    for plan in &guidance_plans {
-        match apply_guidance_plan(plan) {
-            Ok(effect) => {
-                actions.push(AgentAction::new(
-                    "guidance_apply",
-                    planned_change_action(effect.change),
-                    format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
-                ));
-                guidance_effects.push(effect);
-            }
-            Err(error) => {
-                compensate_install_membership(
-                    &runtime_home,
-                    &integration_id,
-                    &project.project_id,
-                    membership_before,
-                );
-                let output = partial_install_output(
-                    &parsed,
-                    runtime_home,
-                    integration_id,
-                    host_plan,
-                    vec![project.project_id],
-                    actions,
-                    format!("repository guidance apply failed: {error}"),
-                );
-                return Err(AgentCommandError::failure_output(render_agent_output(
-                    &output,
-                )?));
-            }
+    let host_applied_snapshot = match read_host_target_snapshot(&host_plan.target) {
+        Ok(snapshot) => snapshot,
+        Err(error) => {
+            let effect_index = journal.record(
+                "host_config",
+                host_target_text(&host_effect.target),
+                host_snapshot_state(host_prior_snapshot.as_ref()),
+                planned_change_text(host_effect.change),
+            );
+            journal.entries.push(InstallJournalEntry::HostConfig {
+                effect_index,
+                host_kind,
+                plan: host_plan.clone(),
+                effect: host_effect.clone(),
+                prior_snapshot: host_prior_snapshot,
+                applied_snapshot: None,
+                prior_installation: expected_installation.clone(),
+            });
+            return install_failure_output(
+                &parsed,
+                &runtime_home,
+                &integration_id,
+                &host_plan,
+                vec![project.project_id.clone()],
+                actions,
+                McpVerification::failed(format!(
+                    "host configuration snapshot failed after apply: {error}"
+                )),
+                journal,
+                process,
+            );
         }
-    }
-
-    let host_status = verify_host_plan(host_kind, &host_plan, process)?;
-    let mcp_verification = if should_run_diagnostic_mcp_handshake(&host_status) {
-        match process.verify_mcp_stdio(&mcp_launch, &runtime_home, &integration_id) {
-            Ok(verification) => merge_mcp_verification_with_host(verification, &host_status),
-            Err(message) => mcp_failure_from_host(&host_status, message),
-        }
-    } else {
-        mcp_verification_from_host(host_status.clone())
     };
-    let status = setup_status_from_verification(&mcp_verification);
-    let mut warnings = Vec::new();
-    if matches!(
-        status,
-        AgentResultStatus::PartialFailure | AgentResultStatus::Failed
-    ) {
-        compensate_guidance_effects(&guidance_effects, &mut warnings);
+    let host_effect_index = journal.record(
+        "host_config",
+        host_target_text(&host_effect.target),
+        host_snapshot_state(host_prior_snapshot.as_ref()),
+        planned_change_text(host_effect.change),
+    );
+    journal.entries.push(InstallJournalEntry::HostConfig {
+        effect_index: host_effect_index,
+        host_kind,
+        plan: host_plan.clone(),
+        effect: host_effect.clone(),
+        prior_snapshot: host_prior_snapshot,
+        applied_snapshot: host_applied_snapshot,
+        prior_installation: expected_installation.clone(),
+    });
+
+    if let Err(message) = maybe_install_fault(process, "inventory_record") {
+        return install_failure_output(
+            &parsed,
+            &runtime_home,
+            &integration_id,
+            &host_plan,
+            vec![project.project_id.clone()],
+            actions,
+            McpVerification::failed(format!("Host Installation inventory failed: {message}")),
+            journal,
+            process,
+        );
     }
-    let last_verified_status = store_status_from_setup_status(status);
-    let installation = register_host_installation(
+    let installation = match register_host_installation(
         &runtime_home,
         HostInstallationRegistration {
             installation_id: installation_id.clone(),
@@ -930,14 +1302,164 @@ fn command_install(
             server_name: host_plan.server_name.clone(),
             config_target: host_target_text(&host_plan.target),
             managed_fingerprint: host_plan.fingerprint.clone(),
-            last_verified_status: last_verified_status.to_owned(),
+            last_verified_status: VERIFIED_STATUS_NOT_VERIFIED.to_owned(),
             metadata_json: installation_metadata_json(
                 &runtime_home,
                 &mcp_command,
                 project_plan.repo_root.as_deref(),
             )?,
         },
-    )?;
+    ) {
+        Ok(installation) => installation,
+        Err(error) => {
+            return install_failure_output(
+                &parsed,
+                &runtime_home,
+                &integration_id,
+                &host_plan,
+                vec![project.project_id.clone()],
+                actions,
+                McpVerification::failed(format!("Host Installation inventory failed: {error}")),
+                journal,
+                process,
+            );
+        }
+    };
+    let inventory_effect_index = journal.record(
+        "host_inventory",
+        installation.installation_id.clone(),
+        if expected_installation.is_some() {
+            "registered"
+        } else {
+            "missing"
+        },
+        VERIFIED_STATUS_NOT_VERIFIED,
+    );
+    journal.entries.push(InstallJournalEntry::HostInventory {
+        effect_index: inventory_effect_index,
+        prior: expected_installation.clone(),
+        applied: installation.clone(),
+    });
+
+    for (index, plan) in guidance_plans.iter().enumerate() {
+        let step = format!("guidance_apply_{}", index + 1);
+        let guidance_result = maybe_install_fault(process, &step)
+            .map_err(HostConfigError::StalePlan)
+            .and_then(|_| apply_guidance_plan(plan));
+        match guidance_result {
+            Ok(effect) => {
+                actions.push(AgentAction::new(
+                    "guidance_apply",
+                    planned_change_action(effect.change),
+                    format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
+                ));
+                let effect_index = journal.record(
+                    "guidance",
+                    format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
+                    guidance_state_text(plan.status.state),
+                    planned_change_text(effect.change),
+                );
+                journal.entries.push(InstallJournalEntry::Guidance {
+                    effect_index,
+                    effect,
+                });
+            }
+            Err(error) => {
+                return install_failure_output(
+                    &parsed,
+                    &runtime_home,
+                    &integration_id,
+                    &host_plan,
+                    vec![project.project_id.clone()],
+                    actions,
+                    McpVerification::failed(format!("repository guidance apply failed: {error}")),
+                    journal,
+                    process,
+                );
+            }
+        }
+    }
+
+    let host_status = match verify_host_plan(host_kind, &host_plan, process) {
+        Ok(status) => status,
+        Err(error) => {
+            return install_failure_output(
+                &parsed,
+                &runtime_home,
+                &integration_id,
+                &host_plan,
+                vec![project.project_id.clone()],
+                actions,
+                McpVerification::failed(format!("host readiness verification failed: {error}")),
+                journal,
+                process,
+            );
+        }
+    };
+    let mcp_verification = if should_run_diagnostic_mcp_handshake(&host_status) {
+        match process.verify_mcp_stdio(&mcp_launch, &runtime_home, &integration_id) {
+            Ok(verification) => merge_mcp_verification_with_host(verification, &host_status),
+            Err(message) => mcp_failure_from_host(&host_status, message),
+        }
+    } else {
+        mcp_verification_from_host(host_status.clone())
+    };
+    let status = setup_status_from_verification(&mcp_verification);
+    if matches!(
+        status,
+        AgentResultStatus::PartialFailure | AgentResultStatus::Failed
+    ) {
+        return install_failure_output(
+            &parsed,
+            &runtime_home,
+            &integration_id,
+            &host_plan,
+            vec![project.project_id.clone()],
+            actions,
+            mcp_verification,
+            journal,
+            process,
+        );
+    }
+    let last_verified_status = store_status_from_setup_status(status);
+    if let Err(message) = maybe_install_fault(process, "final_verification_status_update") {
+        return install_failure_output(
+            &parsed,
+            &runtime_home,
+            &integration_id,
+            &host_plan,
+            vec![project.project_id.clone()],
+            actions,
+            McpVerification::failed(format!(
+                "Host Installation verification status update failed: {message}"
+            )),
+            journal,
+            process,
+        );
+    }
+    let installation = match update_host_installation_verification(
+        &runtime_home,
+        &installation.installation_id,
+        last_verified_status,
+        &host_plan.fingerprint,
+    ) {
+        Ok(installation) => installation,
+        Err(error) => {
+            return install_failure_output(
+                &parsed,
+                &runtime_home,
+                &integration_id,
+                &host_plan,
+                vec![project.project_id.clone()],
+                actions,
+                McpVerification::failed(format!(
+                    "Host Installation verification status update failed: {error}"
+                )),
+                journal,
+                process,
+            );
+        }
+    };
     mark_planned_actions_created(&mut actions);
     let guidance = guidance_statuses_for_project(
         project_plan.repo_root.as_deref(),
@@ -949,7 +1471,7 @@ fn command_install(
     let output = AgentOutput {
         status,
         runtime_home,
-        registry_schema: None,
+        registry_schema: registry.schema,
         integration_id,
         host_plan: Some(host_plan),
         allowed_projects: vec![project.project_id],
@@ -958,7 +1480,9 @@ fn command_install(
         verification: mcp_verification,
         installation_verifications: Vec::new(),
         actions,
-        warnings,
+        effects: journal.effects,
+        residual_effects: journal.residuals,
+        warnings: Vec::new(),
         action_required: host_required_actions(&host_status),
         output: parsed.output,
     };
@@ -1158,6 +1682,8 @@ fn command_install_dry_run(
         ),
         installation_verifications: Vec::new(),
         actions,
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings: Vec::new(),
         action_required: Vec::new(),
         output: parsed.output,
@@ -1246,6 +1772,8 @@ fn command_project_add(
             verification: McpVerification::skipped("dry run does not run project preflight"),
             installation_verifications: Vec::new(),
             actions,
+            effects: Vec::new(),
+            residual_effects: Vec::new(),
             warnings: Vec::new(),
             action_required: Vec::new(),
             output: parsed.output,
@@ -1351,6 +1879,8 @@ fn command_project_add(
         verification,
         installation_verifications: Vec::new(),
         actions,
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings: Vec::new(),
         action_required: Vec::new(),
         output: parsed.output,
@@ -1404,6 +1934,8 @@ fn command_project_remove(
             verification: McpVerification::skipped("dry run does not change project membership"),
             installation_verifications: Vec::new(),
             actions,
+            effects: Vec::new(),
+            residual_effects: Vec::new(),
             warnings: Vec::new(),
             action_required: Vec::new(),
             output: parsed.output,
@@ -1453,6 +1985,8 @@ fn command_project_remove(
         ),
         installation_verifications: Vec::new(),
         actions,
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings,
         action_required: Vec::new(),
         output: parsed.output,
@@ -1504,6 +2038,8 @@ fn command_status(
         verification: McpVerification::skipped("status does not prove host loading"),
         installation_verifications: Vec::new(),
         actions: Vec::new(),
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings,
         action_required: Vec::new(),
         output: parsed.output,
@@ -1543,6 +2079,8 @@ fn command_verify(
             ),
             installation_verifications: Vec::new(),
             actions: Vec::new(),
+            effects: Vec::new(),
+            residual_effects: Vec::new(),
             warnings: Vec::new(),
             action_required: vec![
                 "run harness agent install for the target host before verification".to_owned(),
@@ -1635,6 +2173,8 @@ fn command_verify(
         verification,
         installation_verifications: results,
         actions,
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings,
         action_required,
         output: parsed.output,
@@ -1735,6 +2275,8 @@ fn command_uninstall(
             verification: McpVerification::skipped("dry run does not remove host configuration"),
             installation_verifications: Vec::new(),
             actions,
+            effects: Vec::new(),
+            residual_effects: Vec::new(),
             warnings,
             action_required: Vec::new(),
             output: parsed.output,
@@ -1843,6 +2385,8 @@ fn command_uninstall(
         verification: McpVerification::skipped("managed host configuration removed"),
         installation_verifications: Vec::new(),
         actions,
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings,
         action_required: Vec::new(),
         output: parsed.output,
@@ -1912,6 +2456,8 @@ fn command_guidance_apply(
             verification: McpVerification::skipped("dry run does not apply repository guidance"),
             installation_verifications: Vec::new(),
             actions,
+            effects: Vec::new(),
+            residual_effects: Vec::new(),
             warnings: Vec::new(),
             action_required: Vec::new(),
             output: parsed.output,
@@ -1943,6 +2489,8 @@ fn command_guidance_apply(
             planned_change_action(effect.change),
             format!("{} {}", target.as_str(), path_text(&effect.path)),
         )],
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings: Vec::new(),
         action_required: Vec::new(),
         output: parsed.output,
@@ -1999,6 +2547,8 @@ fn command_guidance_status(
             verification: McpVerification::skipped("dry run does not remove repository guidance"),
             installation_verifications: Vec::new(),
             actions,
+            effects: Vec::new(),
+            residual_effects: Vec::new(),
             warnings: Vec::new(),
             action_required: Vec::new(),
             output: parsed.output,
@@ -2033,6 +2583,8 @@ fn command_guidance_status(
         verification: McpVerification::skipped("guidance status does not prove model behavior"),
         installation_verifications: Vec::new(),
         actions: Vec::new(),
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings: Vec::new(),
         action_required: Vec::new(),
         output: parsed.output,
@@ -2095,6 +2647,8 @@ fn command_guidance_remove(
             verification: McpVerification::skipped("dry run does not remove repository guidance"),
             installation_verifications: Vec::new(),
             actions,
+            effects: Vec::new(),
+            residual_effects: Vec::new(),
             warnings: Vec::new(),
             action_required: Vec::new(),
             output: parsed.output,
@@ -2140,6 +2694,8 @@ fn command_guidance_remove(
                 )
             })
             .collect(),
+        effects: Vec::new(),
+        residual_effects: Vec::new(),
         warnings: Vec::new(),
         action_required: Vec::new(),
         output: parsed.output,
@@ -2230,35 +2786,6 @@ fn guidance_statuses_for_projects(
 
 fn guidance_targets_for_status(targets: &[GuidanceTarget]) -> &[GuidanceTarget] {
     targets
-}
-
-fn compensate_guidance_effects(effects: &[GuidanceEffect], warnings: &mut Vec<String>) {
-    for effect in effects {
-        match compensate_new_guidance(effect) {
-            Ok(compensation) => {
-                if let Some(residual) = compensation.residual {
-                    warnings.push(format!(
-                        "residual guidance preserved for project {} {}: {}",
-                        effect.project_id,
-                        effect.target.as_str(),
-                        residual
-                    ));
-                } else {
-                    warnings.push(format!(
-                        "compensated newly-created guidance for project {} {}",
-                        effect.project_id,
-                        effect.target.as_str()
-                    ));
-                }
-            }
-            Err(error) => warnings.push(format!(
-                "residual guidance preserved for project {} {}: {}",
-                effect.project_id,
-                effect.target.as_str(),
-                error
-            )),
-        }
-    }
 }
 
 fn parse_agent_options(
@@ -2679,80 +3206,6 @@ struct InstallProjectPlan {
     repo_root: Option<PathBuf>,
     existing_project: Option<ProjectRecord>,
     action: ActionState,
-}
-
-fn resolve_install_project(
-    runtime_home: &Path,
-    project_id: Option<&str>,
-    repo_root: Option<PathBuf>,
-) -> Result<InstallProjectPlan, AgentCommandError> {
-    let projects = list_projects(runtime_home)?;
-    let selected = match project_id {
-        Some(project_id) => {
-            validate_project_id(project_id)?;
-            let existing = project_record_for_execution(runtime_home, project_id)?;
-            if let (Some(existing), Some(repo_root)) = (&existing, &repo_root) {
-                if !project_repo_matches(existing, repo_root) {
-                    return Err(AgentCommandError::runtime(
-                        "project is registered to another repo_root",
-                    ));
-                }
-            }
-            let repo_root =
-                repo_root.or_else(|| existing.as_ref().map(|project| project.repo_root.clone()));
-            if existing.is_none() && repo_root.is_none() {
-                return Err(AgentCommandError::usage(
-                    "--repo-root is required when --project-id is not already registered",
-                ));
-            }
-            (project_id.to_owned(), repo_root, existing)
-        }
-        None => {
-            let repo_root = repo_root.ok_or_else(|| {
-                AgentCommandError::usage(
-                    "--project-id or --repo-root is required; omitted --project-id resolves only an existing unique registration",
-                )
-            })?;
-            let matches = projects
-                .iter()
-                .filter(|project| project_repo_matches(project, &repo_root))
-                .cloned()
-                .collect::<Vec<_>>();
-            match matches.as_slice() {
-                [project] => (
-                    project.project_id.clone(),
-                    Some(project.repo_root.clone()),
-                    Some(
-                        project_record_for_execution(runtime_home, &project.project_id)?
-                            .ok_or_else(|| {
-                                AgentCommandError::runtime("matched project is not executable")
-                            })?,
-                    ),
-                ),
-                [] => {
-                    return Err(AgentCommandError::usage(
-                        "--project-id is required when --repo-root has no existing unique registration",
-                    ));
-                }
-                _ => {
-                    return Err(AgentCommandError::runtime(
-                        "multiple projects are registered for repo_root; pass --project-id",
-                    ));
-                }
-            }
-        }
-    };
-    let (project_id, repo_root, existing_project) = selected;
-    Ok(InstallProjectPlan {
-        action: if existing_project.is_some() {
-            ActionState::Reused
-        } else {
-            ActionState::Planned
-        },
-        project_id,
-        repo_root,
-        existing_project,
-    })
 }
 
 impl AgentRegistryPlan {
@@ -3423,19 +3876,6 @@ fn ensure_agent_surface(
     Ok(())
 }
 
-fn surface_exists_for_project(
-    runtime_home: &Path,
-    project_id: &str,
-    surface_id: &str,
-    surface_instance_id: &str,
-) -> Result<bool, AgentCommandError> {
-    Ok(list_surfaces(runtime_home, project_id)?
-        .iter()
-        .any(|surface| {
-            surface.surface_id == surface_id && surface.surface_instance_id == surface_instance_id
-        }))
-}
-
 fn surface_access_matches(text: &str, expected: &[AccessClass]) -> bool {
     let Ok(value) = serde_json::from_str::<Value>(text) else {
         return false;
@@ -3461,27 +3901,6 @@ fn mark_planned_actions_created(actions: &mut [AgentAction]) {
             action.state = ActionState::Created;
         }
     }
-}
-
-fn validate_project_scope_membership(
-    runtime_home: &Path,
-    integration_id: &str,
-    scope: HostScope,
-    project_id: &str,
-) -> Result<(), AgentCommandError> {
-    if !matches!(scope, HostScope::Project | HostScope::Local) {
-        return Ok(());
-    }
-    let projects = list_integration_projects(runtime_home, integration_id).unwrap_or_default();
-    if projects
-        .iter()
-        .any(|project| project.project_id != project_id)
-    {
-        return Err(AgentCommandError::runtime(
-            "project and local scoped integrations may allow only their associated Product Repository",
-        ));
-    }
-    Ok(())
 }
 
 fn validate_add_membership_scope(
@@ -3812,6 +4231,8 @@ struct AgentOutput {
     verification: McpVerification,
     installation_verifications: Vec<InstallationVerificationResult>,
     actions: Vec<AgentAction>,
+    effects: Vec<InstallEffectReport>,
+    residual_effects: Vec<ResidualEffectReport>,
     warnings: Vec<String>,
     action_required: Vec<String>,
     output: OutputFormat,
@@ -4012,6 +4433,27 @@ fn render_agent_text(output: &AgentOutput) -> Result<String, AgentCommandError> 
             ));
         }
     }
+    if !output.effects.is_empty() {
+        text.push_str("effects:\n");
+        for effect in &output.effects {
+            text.push_str(&format!("  {}: {}\n", effect.component, effect.target));
+            text.push_str(&format!("    prior_state: {}\n", effect.prior_state));
+            text.push_str(&format!("    applied_state: {}\n", effect.applied_state));
+            text.push_str(&format!("    rollback_state: {}\n", effect.rollback_state));
+        }
+    }
+    if !output.residual_effects.is_empty() {
+        text.push_str("residual_effects:\n");
+        for residual in &output.residual_effects {
+            text.push_str(&format!("  {}: {}\n", residual.component, residual.target));
+            text.push_str(&format!("    current_state: {}\n", residual.current_state));
+            text.push_str(&format!("    reason: {}\n", residual.reason));
+            text.push_str(&format!(
+                "    recommended_action: {}\n",
+                residual.recommended_action
+            ));
+        }
+    }
     if !output.warnings.is_empty() {
         text.push_str("warnings:\n");
         for warning in &output.warnings {
@@ -4096,6 +4538,32 @@ fn render_agent_json(output: &AgentOutput) -> Result<String, AgentCommandError> 
             })
         })
         .collect::<Vec<_>>();
+    let effects = output
+        .effects
+        .iter()
+        .map(|effect| {
+            json!({
+                "component": effect.component,
+                "target": effect.target,
+                "prior_state": effect.prior_state,
+                "applied_state": effect.applied_state,
+                "rollback_state": effect.rollback_state,
+            })
+        })
+        .collect::<Vec<_>>();
+    let residual_effects = output
+        .residual_effects
+        .iter()
+        .map(|residual| {
+            json!({
+                "component": residual.component,
+                "target": residual.target,
+                "current_state": residual.current_state,
+                "reason": residual.reason,
+                "recommended_action": residual.recommended_action,
+            })
+        })
+        .collect::<Vec<_>>();
     let guidance_items = output
         .guidance
         .iter()
@@ -4148,7 +4616,8 @@ fn render_agent_json(output: &AgentOutput) -> Result<String, AgentCommandError> 
             "tools": output.verification.tools,
         },
         "actions": actions,
-        "effects": actions,
+        "effects": effects,
+        "residual_effects": residual_effects,
         "action_required": output.action_required,
         "warnings": output.warnings,
     });
@@ -4338,45 +4807,677 @@ fn store_status_from_setup_status(status: AgentResultStatus) -> &'static str {
     }
 }
 
-fn partial_install_output(
+#[allow(clippy::too_many_arguments)]
+fn install_failure_output(
     parsed: &ParsedAgentOptions,
-    runtime_home: PathBuf,
-    integration_id: String,
-    host_plan: HostPlan,
+    runtime_home: &Path,
+    integration_id: &str,
+    host_plan: &HostPlan,
     allowed_projects: Vec<String>,
     actions: Vec<AgentAction>,
-    message: String,
-) -> AgentOutput {
-    AgentOutput {
-        status: AgentResultStatus::PartialFailure,
-        runtime_home,
+    verification: McpVerification,
+    mut journal: InstallJournal,
+    process: &mut impl AgentProcess,
+) -> Result<String, AgentCommandError> {
+    let status = compensate_install_failure(runtime_home, &mut journal, process);
+    let installations = current_journal_installations(runtime_home, &journal);
+    let warnings = journal
+        .residuals
+        .iter()
+        .map(|residual| {
+            format!(
+                "residual effect remains: {} {} ({})",
+                residual.component, residual.target, residual.reason
+            )
+        })
+        .collect::<Vec<_>>();
+    let output = AgentOutput {
+        status,
+        runtime_home: runtime_home.to_path_buf(),
         registry_schema: None,
-        integration_id,
-        host_plan: Some(host_plan),
+        integration_id: integration_id.to_owned(),
+        host_plan: Some(host_plan.clone()),
         allowed_projects,
-        installations: Vec::new(),
+        installations,
         guidance: Vec::new(),
-        verification: McpVerification::failed(message),
+        verification,
         installation_verifications: Vec::new(),
         actions,
-        warnings: vec![
-            "durable registry changes may remain; rerun install after fixing the error".to_owned(),
-        ],
+        effects: journal.effects,
+        residual_effects: journal.residuals,
+        warnings,
         action_required: Vec::new(),
         output: parsed.output,
+    };
+    Err(AgentCommandError::failure_output(render_agent_output(
+        &output,
+    )?))
+}
+
+fn compensate_install_failure(
+    runtime_home: &Path,
+    journal: &mut InstallJournal,
+    process: &mut impl AgentProcess,
+) -> AgentResultStatus {
+    let entries = journal.entries.clone();
+    for entry in entries.iter().rev() {
+        if let InstallJournalEntry::Guidance {
+            effect_index,
+            effect,
+        } = entry
+        {
+            compensate_guidance_entry(*effect_index, effect, journal, process);
+        }
+    }
+
+    let mut host_residual = false;
+    for entry in entries.iter().rev() {
+        if let InstallJournalEntry::HostConfig {
+            effect_index,
+            host_kind,
+            plan,
+            effect,
+            prior_snapshot,
+            applied_snapshot,
+            prior_installation,
+        } = entry
+        {
+            host_residual |= compensate_host_config_entry(
+                *effect_index,
+                *host_kind,
+                plan,
+                effect,
+                prior_snapshot.as_ref(),
+                applied_snapshot.as_ref(),
+                prior_installation.as_ref(),
+                journal,
+                process,
+            );
+        }
+    }
+
+    for entry in entries.iter().rev() {
+        if let InstallJournalEntry::HostInventory {
+            effect_index,
+            prior,
+            applied,
+        } = entry
+        {
+            compensate_host_inventory_entry(
+                runtime_home,
+                *effect_index,
+                prior.as_ref(),
+                applied,
+                host_residual,
+                journal,
+            );
+        }
+    }
+
+    for entry in entries.iter().rev() {
+        if let InstallJournalEntry::DefaultProject {
+            effect_index,
+            integration_id,
+            prior_default_project_id,
+            applied_default_project_id,
+            changed,
+        } = entry
+        {
+            compensate_default_project_entry(
+                runtime_home,
+                *effect_index,
+                integration_id,
+                prior_default_project_id.as_deref(),
+                applied_default_project_id.as_deref(),
+                *changed,
+                journal,
+            );
+        }
+    }
+
+    for entry in entries.iter().rev() {
+        if let InstallJournalEntry::Membership {
+            effect_index,
+            created,
+            integration_id,
+            project_id,
+        } = entry
+        {
+            compensate_membership_entry(
+                runtime_home,
+                *effect_index,
+                *created,
+                integration_id,
+                project_id,
+                journal,
+            );
+        }
+    }
+
+    for entry in entries.iter().rev() {
+        if let InstallJournalEntry::Integration {
+            effect_index,
+            created,
+            integration_id,
+        } = entry
+        {
+            compensate_integration_entry(
+                runtime_home,
+                *effect_index,
+                *created,
+                integration_id,
+                journal,
+            );
+        }
+    }
+
+    for entry in entries.iter().rev() {
+        match entry {
+            InstallJournalEntry::Surface {
+                effect_index,
+                created,
+                project_id,
+                surface_id,
+                surface_instance_id,
+            } => compensate_surface_entry(
+                *effect_index,
+                *created,
+                project_id,
+                surface_id,
+                surface_instance_id,
+                journal,
+            ),
+            InstallJournalEntry::Project {
+                effect_index,
+                created,
+            } => compensate_project_entry(*effect_index, *created, journal),
+            InstallJournalEntry::RuntimeHome {
+                effect_index,
+                created,
+                migrated,
+            } => compensate_runtime_home_entry(*effect_index, *created, *migrated, journal),
+            _ => {}
+        }
+    }
+
+    if journal.residuals.is_empty() {
+        AgentResultStatus::Failed
+    } else {
+        AgentResultStatus::PartialFailure
     }
 }
 
-fn compensate_install_membership(
+fn compensate_guidance_entry(
+    effect_index: usize,
+    effect: &GuidanceEffect,
+    journal: &mut InstallJournal,
+    process: &impl AgentProcess,
+) {
+    if matches!(effect.change, PlannedChange::Noop) {
+        journal.set_rollback(effect_index, "not_applicable");
+        return;
+    }
+    if rollback_fault(process, "guidance") {
+        journal.set_rollback(effect_index, "failed");
+        journal.residual(
+            "guidance",
+            format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
+            "applied",
+            "injected guidance rollback failure",
+            "inspect the managed guidance block and rerun `harness agent guidance remove` when safe",
+        );
+        return;
+    }
+    match compensate_guidance_effect(effect) {
+        Ok(compensation) => {
+            if let Some(residual) = compensation.residual {
+                journal.set_rollback(effect_index, "retained");
+                journal.residual(
+                    "guidance",
+                    format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
+                    "retained",
+                    residual,
+                    "inspect the managed guidance block and remove or restore it only if the Harness markers still match",
+                );
+            } else {
+                journal.set_rollback(effect_index, "rolled_back");
+            }
+        }
+        Err(error) => {
+            journal.set_rollback(effect_index, "failed");
+            journal.residual(
+                "guidance",
+                format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
+                "retained_or_uncertain",
+                format!("safe guidance rollback failed: {error}"),
+                "inspect the file and remove or restore only the Harness-managed block if ownership is intact",
+            );
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn compensate_host_config_entry(
+    effect_index: usize,
+    host_kind: HostKind,
+    _plan: &HostPlan,
+    effect: &crate::host_integration::HostEffect,
+    prior_snapshot: Option<&FileSnapshot>,
+    applied_snapshot: Option<&FileSnapshot>,
+    prior_installation: Option<&HostInstallationRecord>,
+    journal: &mut InstallJournal,
+    process: &mut impl AgentProcess,
+) -> bool {
+    if matches!(effect.change, PlannedChange::Noop) {
+        journal.set_rollback(effect_index, "not_applicable");
+        return false;
+    }
+    if rollback_fault(process, "host") {
+        journal.set_rollback(effect_index, "failed");
+        journal.residual(
+            "host_config",
+            host_target_text(&effect.target),
+            "applied",
+            "injected host rollback failure",
+            "inspect the host configuration and remove or restore the Harness-managed entry when safe",
+        );
+        return true;
+    }
+    if let (Some(prior), Some(applied)) = (prior_snapshot, applied_snapshot) {
+        match restore_host_target_snapshot(&effect.target, prior, applied) {
+            Ok(()) => {
+                journal.set_rollback(effect_index, "rolled_back");
+                return false;
+            }
+            Err(error) => {
+                journal.set_rollback(effect_index, "failed");
+                journal.residual(
+                    "host_config",
+                    host_target_text(&effect.target),
+                    "applied_or_modified",
+                    format!("safe host snapshot restore failed: {error}"),
+                    "inspect the host configuration and restore only if the current managed fingerprint still matches",
+                );
+                return true;
+            }
+        }
+    }
+    if prior_installation.is_none() {
+        match remove_host_effect(host_kind, effect, process) {
+            Ok(_) => {
+                journal.set_rollback(effect_index, "rolled_back");
+                false
+            }
+            Err(error) => {
+                journal.set_rollback(effect_index, "failed");
+                journal.residual(
+                    "host_config",
+                    host_target_text(&effect.target),
+                    "applied_or_uncertain",
+                    format!("safe host removal failed: {error}"),
+                    "inspect the host configuration and remove only the Harness-managed entry if its fingerprint still matches",
+                );
+                true
+            }
+        }
+    } else {
+        journal.set_rollback(effect_index, "retained");
+        journal.residual(
+            "host_config",
+            host_target_text(&effect.target),
+            "updated",
+            "prior host entry cannot be restored for this host target without a safe file snapshot",
+            "inspect the host configuration and restore the prior managed entry manually if needed",
+        );
+        true
+    }
+}
+
+fn compensate_host_inventory_entry(
     runtime_home: &Path,
+    effect_index: usize,
+    prior: Option<&HostInstallationRecord>,
+    applied: &HostInstallationRecord,
+    host_residual: bool,
+    journal: &mut InstallJournal,
+) {
+    if host_residual {
+        journal.set_rollback(effect_index, "retained_due_to_host_residual");
+        journal.residual(
+            "host_inventory",
+            applied.installation_id.clone(),
+            "retained",
+            "Host Installation inventory was retained because host configuration rollback did not complete",
+            "resolve the host configuration residual, then rerun `harness agent uninstall` if the inventory should be removed",
+        );
+        return;
+    }
+    let result = if let Some(prior) = prior {
+        register_host_installation(
+            runtime_home,
+            HostInstallationRegistration {
+                installation_id: prior.installation_id.clone(),
+                integration_id: prior.integration_id.clone(),
+                host_kind: prior.host_kind.clone(),
+                host_scope: prior.host_scope.clone(),
+                server_name: prior.server_name.clone(),
+                config_target: prior.config_target.clone(),
+                managed_fingerprint: prior.managed_fingerprint.clone(),
+                last_verified_status: prior.last_verified_status.clone(),
+                metadata_json: prior.metadata_json.clone(),
+            },
+        )
+        .map(|_| true)
+    } else {
+        remove_host_installation(runtime_home, &applied.installation_id)
+    };
+    match result {
+        Ok(_) => journal.set_rollback(effect_index, "rolled_back"),
+        Err(error) => {
+            journal.set_rollback(effect_index, "failed");
+            journal.residual(
+                "host_inventory",
+                applied.installation_id.clone(),
+                "applied_or_uncertain",
+                format!("Host Installation inventory rollback failed: {error}"),
+                "inspect Host Installation inventory before retrying install or uninstall",
+            );
+        }
+    }
+}
+
+fn compensate_default_project_entry(
+    runtime_home: &Path,
+    effect_index: usize,
+    integration_id: &str,
+    prior_default_project_id: Option<&str>,
+    applied_default_project_id: Option<&str>,
+    changed: bool,
+    journal: &mut InstallJournal,
+) {
+    let applied = applied_default_project_id.unwrap_or("none");
+    if !changed {
+        journal.set_rollback(effect_index, "not_applicable");
+        return;
+    }
+    let result = if let Some(prior) = prior_default_project_id {
+        set_agent_integration_default_project(runtime_home, integration_id, prior).map(|_| ())
+    } else {
+        clear_agent_integration_default_project(runtime_home, integration_id).map(|_| ())
+    };
+    match result {
+        Ok(()) => journal.set_rollback(effect_index, "rolled_back"),
+        Err(error) => {
+            journal.set_rollback(effect_index, "failed");
+            journal.residual(
+                "default_project",
+                integration_id.to_owned(),
+                format!("default_project={applied}"),
+                format!("default project rollback failed: {error}"),
+                "inspect the Agent Integration Profile default project before retrying install",
+            );
+        }
+    }
+}
+
+fn compensate_membership_entry(
+    runtime_home: &Path,
+    effect_index: usize,
+    created: bool,
     integration_id: &str,
     project_id: &str,
-    membership_before: bool,
+    journal: &mut InstallJournal,
 ) {
-    if !membership_before {
-        let _ = clear_agent_integration_default_project(runtime_home, integration_id);
-        let _ = remove_integration_project(runtime_home, integration_id, project_id);
+    if !created {
+        journal.set_rollback(effect_index, "not_applicable");
+        return;
     }
+    match remove_integration_project(runtime_home, integration_id, project_id) {
+        Ok(_) => journal.set_rollback(effect_index, "rolled_back"),
+        Err(error) => {
+            journal.set_rollback(effect_index, "failed");
+            journal.residual(
+                "project_allowlist",
+                format!("{integration_id}/{project_id}"),
+                "present",
+                format!("project allowlist rollback failed: {error}"),
+                "clear any blocking default project, then remove the allowlist row if it was created by this failed install",
+            );
+        }
+    }
+}
+
+fn compensate_integration_entry(
+    runtime_home: &Path,
+    effect_index: usize,
+    created: bool,
+    integration_id: &str,
+    journal: &mut InstallJournal,
+) {
+    if !created {
+        journal.set_rollback(effect_index, "not_applicable");
+        return;
+    }
+    match remove_agent_integration_if_unused(runtime_home, integration_id) {
+        Ok(true) => journal.set_rollback(effect_index, "rolled_back"),
+        Ok(false) => {
+            journal.set_rollback(effect_index, "retained");
+            journal.residual(
+                "integration",
+                integration_id.to_owned(),
+                "present",
+                "Agent Integration Profile still has dependent membership or Host Installation rows",
+                "remove dependent rows only after confirming they were created by the failed install",
+            );
+        }
+        Err(error) => {
+            journal.set_rollback(effect_index, "failed");
+            journal.residual(
+                "integration",
+                integration_id.to_owned(),
+                "present_or_uncertain",
+                format!("Agent Integration Profile rollback failed: {error}"),
+                "inspect registry dependencies before retrying install",
+            );
+        }
+    }
+}
+
+fn compensate_surface_entry(
+    effect_index: usize,
+    created: bool,
+    project_id: &str,
+    surface_id: &str,
+    surface_instance_id: &str,
+    journal: &mut InstallJournal,
+) {
+    if !created {
+        journal.set_rollback(effect_index, "not_applicable");
+        return;
+    }
+    journal.set_rollback(effect_index, "retained");
+    journal.residual(
+        "surface",
+        format!("{project_id}/{surface_id}/{surface_instance_id}"),
+        "present",
+        "new surface registration remains because this compensation path does not have an owner-defined safe surface removal operation",
+        "leave the surface registration in place or remove it only through an owner-defined registry cleanup path",
+    );
+}
+
+fn compensate_project_entry(effect_index: usize, created: bool, journal: &mut InstallJournal) {
+    if !created {
+        journal.set_rollback(effect_index, "not_applicable");
+        return;
+    }
+    journal.set_rollback(effect_index, "retained");
+    journal.residual(
+        "project",
+        "registered project",
+        "present",
+        "project registration and project state are preserved by install compensation",
+        "leave the project registered unless a separate owner-defined project removal workflow applies",
+    );
+}
+
+fn compensate_runtime_home_entry(
+    effect_index: usize,
+    created: bool,
+    migrated: bool,
+    journal: &mut InstallJournal,
+) {
+    if created {
+        journal.set_rollback(effect_index, "retained");
+        journal.residual(
+            "runtime_home",
+            "registry",
+            "present",
+            "Runtime Home creation is durable and is not rolled back by agent install compensation",
+            "reuse the Runtime Home on retry or remove it only if it is disposable test state",
+        );
+    } else if migrated {
+        journal.set_rollback(effect_index, "retained");
+        journal.residual(
+            "runtime_home",
+            "registry",
+            "migrated",
+            "registry schema migrations are durable and are not rolled back",
+            "continue using the migrated Runtime Home or restore from a pre-migration backup if required",
+        );
+    } else {
+        journal.set_rollback(effect_index, "not_applicable");
+    }
+}
+
+fn current_journal_installations(
+    runtime_home: &Path,
+    journal: &InstallJournal,
+) -> Vec<HostInstallationRecord> {
+    let mut records = Vec::new();
+    for entry in &journal.entries {
+        if let InstallJournalEntry::HostInventory { applied, .. } = entry {
+            if let Ok(Some(record)) =
+                host_installation_record(runtime_home, &applied.installation_id)
+            {
+                records.push(record);
+            }
+        }
+    }
+    records
+}
+
+fn remove_host_effect(
+    host_kind: HostKind,
+    effect: &crate::host_integration::HostEffect,
+    process: &mut impl AgentProcess,
+) -> Result<crate::host_integration::HostEffect, HostConfigError> {
+    let request = HostRemoveRequest {
+        host_kind,
+        host_scope: effect.host_scope,
+        server_name: effect.server_name.clone(),
+        target: effect.target.clone(),
+        expected_fingerprint: effect.fingerprint.clone(),
+    };
+    match host_kind {
+        HostKind::Codex => {
+            let mut adapter = CodexAdapter::new(CodexEnvironment {
+                home: process.env_var("HOME").map(PathBuf::from),
+                codex_home: process.env_var("CODEX_HOME").map(PathBuf::from),
+                path: process.env_var(PATH_ENV),
+            });
+            adapter.remove(request)
+        }
+        HostKind::ClaudeCode => {
+            let mut adapter = ClaudeCodeAdapter::new(ProductionCommandRunner);
+            adapter.remove(request)
+        }
+        HostKind::Generic => {
+            let mut adapter = GenericAdapter;
+            adapter.remove(request)
+        }
+    }
+}
+
+fn read_host_target_snapshot(target: &HostTarget) -> Result<Option<FileSnapshot>, HostConfigError> {
+    match target {
+        HostTarget::File(path) | HostTarget::Export(path) => read_snapshot(path).map(Some),
+        HostTarget::ExternalCli { .. } => Ok(None),
+    }
+}
+
+fn restore_host_target_snapshot(
+    target: &HostTarget,
+    prior: &FileSnapshot,
+    applied: &FileSnapshot,
+) -> Result<(), HostConfigError> {
+    let path = match target {
+        HostTarget::File(path) | HostTarget::Export(path) => path,
+        HostTarget::ExternalCli { .. } => {
+            return Err(HostConfigError::StalePlan(
+                "external CLI target has no file snapshot".to_owned(),
+            ));
+        }
+    };
+    match (prior, applied) {
+        (FileSnapshot::Missing, FileSnapshot::Missing) => Ok(()),
+        (FileSnapshot::Missing, _) => remove_file_if_fresh(path, applied),
+        (FileSnapshot::Present { bytes }, _) => write_if_fresh(path, bytes, applied),
+    }
+}
+
+fn host_snapshot_state(snapshot: Option<&FileSnapshot>) -> String {
+    match snapshot {
+        Some(FileSnapshot::Missing) => "missing".to_owned(),
+        Some(FileSnapshot::Present { .. }) => "present".to_owned(),
+        None => "not_snapshotable".to_owned(),
+    }
+}
+
+fn runtime_prior_state(schema: Option<RegistrySchemaPlan>) -> String {
+    match schema {
+        None => "missing".to_owned(),
+        Some(schema) => format!("schema_version {}", schema.current_version),
+    }
+}
+
+fn runtime_applied_state(schema: Option<RegistrySchemaPlan>) -> String {
+    match schema {
+        None => "created".to_owned(),
+        Some(schema) if schema.migration_planned => {
+            format!(
+                "migrated_to_schema_version {}",
+                schema.latest_supported_version
+            )
+        }
+        Some(schema) => format!("reused_schema_version {}", schema.current_version),
+    }
+}
+
+fn guidance_state_text(state: GuidanceStateKind) -> String {
+    state.as_str().to_owned()
+}
+
+fn maybe_install_fault(process: &impl AgentProcess, step: &str) -> Result<(), String> {
+    if env_list_contains(process.env_var(INSTALL_FAULT_ENV), step) {
+        Err(format!("injected install failure at {step}"))
+    } else {
+        Ok(())
+    }
+}
+
+fn rollback_fault(process: &impl AgentProcess, component: &str) -> bool {
+    env_list_contains(process.env_var(INSTALL_ROLLBACK_FAULT_ENV), component)
+}
+
+fn env_list_contains(value: Option<OsString>, needle: &str) -> bool {
+    value
+        .map(|value| {
+            value
+                .to_string_lossy()
+                .split(',')
+                .any(|item| item.trim() == needle)
+        })
+        .unwrap_or(false)
 }
 
 fn remove_host_configuration(
@@ -4644,24 +5745,6 @@ fn required_integration(
             "Agent Integration Profile not found: {integration_id}"
         ))
     })
-}
-
-fn find_installation_for_target_hint(
-    runtime_home: &Path,
-    integration_id: &str,
-    host_kind: HostKind,
-    host_scope: HostScope,
-    server_name: Option<&str>,
-) -> Result<Option<HostInstallationRecord>, AgentCommandError> {
-    let records =
-        list_host_installations_for_integration(runtime_home, integration_id).unwrap_or_default();
-    Ok(records.into_iter().find(|record| {
-        record.host_kind == host_kind.as_str()
-            && record.host_scope == host_scope.as_str()
-            && server_name
-                .map(|name| record.server_name == name)
-                .unwrap_or(true)
-    }))
 }
 
 fn is_project_member(

@@ -263,6 +263,52 @@ pub fn set_agent_integration_enabled(
     })
 }
 
+/// Removes an Agent Integration Profile only when no dependent registry rows remain.
+pub fn remove_agent_integration_if_unused(
+    runtime_home: impl AsRef<Path>,
+    integration_id: &str,
+) -> StoreResult<bool> {
+    validate_identifier("integration_id", integration_id)?;
+    let registry_path = registry_db_path(runtime_home);
+    let mut conn = open_registry_database(&registry_path)?;
+    let tx = begin_immediate_transaction(&mut conn)?;
+    require_runtime_home(&tx, &registry_path)?;
+    require_agent_integration(&tx, integration_id)?;
+
+    let membership_count: i64 = tx.query_row(
+        "SELECT COUNT(*)
+           FROM integration_projects
+          WHERE integration_id = ?1",
+        [integration_id],
+        |row| row.get(0),
+    )?;
+    let installation_count: i64 = tx.query_row(
+        "SELECT COUNT(*)
+           FROM host_installations
+          WHERE integration_id = ?1",
+        [integration_id],
+        |row| row.get(0),
+    )?;
+    if membership_count != 0 || installation_count != 0 {
+        tx.commit()?;
+        return Ok(false);
+    }
+
+    tx.execute(
+        "UPDATE agent_integrations
+            SET default_project_id = NULL,
+                updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+          WHERE integration_id = ?1",
+        [integration_id],
+    )?;
+    let changed = tx.execute(
+        "DELETE FROM agent_integrations WHERE integration_id = ?1",
+        [integration_id],
+    )?;
+    tx.commit()?;
+    Ok(changed > 0)
+}
+
 /// Adds a registered project to an integration allowlist.
 pub fn add_integration_project(
     runtime_home: impl AsRef<Path>,
