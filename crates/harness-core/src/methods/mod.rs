@@ -627,6 +627,18 @@ fn user_judgment_authority_from_record(
             )
         })
         .transpose()?;
+    let resolution_machine_action = record
+        .resolution_machine_action
+        .as_deref()
+        .map(|action| {
+            parse_owner_storage_value(
+                "user_judgments",
+                record.judgment_id.clone(),
+                "resolution_machine_action",
+                action,
+            )
+        })
+        .transpose()?;
     let resolution = decode_optional_persisted_resolution(
         "user_judgments",
         record.judgment_id.clone(),
@@ -634,6 +646,32 @@ fn user_judgment_authority_from_record(
         record.resolution_json.as_deref(),
         resolution_outcome,
     )?;
+    let authority_machine_action = if let Some(resolution) = resolution.as_ref() {
+        let json_machine_action = resolution.machine_action.as_ref().copied();
+        if resolution_machine_action != json_machine_action {
+            return Err(CorePipelineError::Store(
+                StoreError::corrupt_owner_state_value(
+                    "user_judgments",
+                    record.judgment_id.clone(),
+                    "resolution_machine_action",
+                ),
+            ));
+        }
+        resolution_machine_action
+    } else {
+        None
+    };
+    if let (Some(machine_action), Some(outcome)) = (authority_machine_action, resolution_outcome) {
+        if machine_action.resolution_outcome() != outcome {
+            return Err(CorePipelineError::Store(
+                StoreError::corrupt_owner_state_value(
+                    "user_judgments",
+                    record.judgment_id.clone(),
+                    "resolution_machine_action",
+                ),
+            ));
+        }
+    }
     let resolved_by_actor_kind: Option<ActorKind> = record
         .resolved_by_actor_kind
         .as_deref()
@@ -695,9 +733,7 @@ fn user_judgment_authority_from_record(
         status,
         required_for: request.required_for,
         affected_refs,
-        machine_action: resolution
-            .as_ref()
-            .and_then(|resolution| resolution.machine_action.as_ref().copied()),
+        machine_action: authority_machine_action,
         resolution_outcome,
         resolved_actor_role,
         resolved_by_surface_id,

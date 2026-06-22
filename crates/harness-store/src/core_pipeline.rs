@@ -11,7 +11,8 @@ use harness_types::{
     PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
     ProjectEnforcementProfile, ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus,
     ProjectId, RequestHash, RequiredNullable, ResidualRisk, RunId, StagedArtifactHandleId,
-    StateRecordRef, SurfaceId, TaskId, UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
+    StateRecordRef, SurfaceId, TaskId, UserJudgmentOptionAction, UtcTimestamp,
+    BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
 };
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
@@ -222,6 +223,7 @@ pub struct UserJudgmentResolutionUpdate {
     pub judgment_id: String,
     pub status: String,
     pub resolution_outcome: JudgmentResolutionOutcome,
+    pub resolution_machine_action: UserJudgmentOptionAction,
     pub resolution_json: String,
     pub sensitive_action_scope_json: Option<String>,
     pub resolved_by_actor_kind: String,
@@ -618,6 +620,7 @@ pub struct UserJudgmentRecord {
     pub basis_json: Option<String>,
     pub basis_status: String,
     pub resolution_outcome: Option<String>,
+    pub resolution_machine_action: Option<String>,
     pub resolution_json: Option<String>,
     pub resolved_by_actor_kind: Option<String>,
     pub resolved_actor_role: Option<String>,
@@ -2337,6 +2340,14 @@ impl ProjectMutation<'_> {
         validate_identifier("judgment_id", &input.judgment_id)?;
         validate_identifier("status", &input.status)?;
         let resolution_outcome = judgment_resolution_outcome_as_str(input.resolution_outcome);
+        let resolution_machine_action =
+            judgment_machine_action_as_str(input.resolution_machine_action);
+        if input.resolution_machine_action.resolution_outcome() != input.resolution_outcome {
+            return Err(StoreError::InvalidInput {
+                detail: "user_judgments.resolution_machine_action must match resolution_outcome"
+                    .to_owned(),
+            });
+        }
         validate_user_judgment_resolution_json(
             "user_judgments.resolution_json",
             &input.resolution_json,
@@ -2363,15 +2374,16 @@ impl ProjectMutation<'_> {
             "UPDATE user_judgments
                 SET status = ?3,
                     resolution_outcome = ?4,
-                    resolution_json = ?5,
-                    sensitive_action_scope_json = COALESCE(?6, sensitive_action_scope_json),
-                    resolved_by_actor_kind = ?7,
-                    resolved_actor_role = ?8,
-                    resolved_by_surface_id = ?9,
-                    resolved_by_surface_instance_id = ?10,
-                    resolved_verification_basis = ?11,
-                    resolved_assurance_level = ?12,
-                    resolved_at = ?13
+                    resolution_machine_action = ?5,
+                    resolution_json = ?6,
+                    sensitive_action_scope_json = COALESCE(?7, sensitive_action_scope_json),
+                    resolved_by_actor_kind = ?8,
+                    resolved_actor_role = ?9,
+                    resolved_by_surface_id = ?10,
+                    resolved_by_surface_instance_id = ?11,
+                    resolved_verification_basis = ?12,
+                    resolved_assurance_level = ?13,
+                    resolved_at = ?14
               WHERE project_id = ?1
                 AND judgment_id = ?2
                 AND status = 'pending'",
@@ -2380,6 +2392,7 @@ impl ProjectMutation<'_> {
                 input.judgment_id,
                 input.status,
                 resolution_outcome,
+                resolution_machine_action,
                 input.resolution_json,
                 input.sensitive_action_scope_json,
                 input.resolved_by_actor_kind,
@@ -3389,6 +3402,7 @@ fn user_judgment_record(
             basis_json,
             basis_status,
             resolution_outcome,
+            resolution_machine_action,
             resolution_json,
             resolved_by_actor_kind,
             resolved_actor_role,
@@ -3434,6 +3448,7 @@ fn resolved_user_judgment_records(
             basis_json,
             basis_status,
             resolution_outcome,
+            resolution_machine_action,
             resolution_json,
             resolved_by_actor_kind,
             resolved_actor_role,
@@ -3486,6 +3501,7 @@ fn pending_user_judgment_records(
             basis_json,
             basis_status,
             resolution_outcome,
+            resolution_machine_action,
             resolution_json,
             resolved_by_actor_kind,
             resolved_actor_role,
@@ -3529,18 +3545,19 @@ fn user_judgment_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Us
         basis_json: row.get(12)?,
         basis_status: row.get(13)?,
         resolution_outcome: row.get(14)?,
-        resolution_json: row.get(15)?,
-        resolved_by_actor_kind: row.get(16)?,
-        resolved_actor_role: row.get(17)?,
-        resolved_by_surface_id: row.get(18)?,
-        resolved_by_surface_instance_id: row.get(19)?,
-        resolved_verification_basis: row.get(20)?,
-        resolved_assurance_level: row.get(21)?,
-        requested_by_surface_id: row.get(22)?,
-        requested_by_surface_instance_id: row.get(23)?,
-        requested_at: row.get(24)?,
-        resolved_at: row.get(25)?,
-        metadata_json: row.get(26)?,
+        resolution_machine_action: row.get(15)?,
+        resolution_json: row.get(16)?,
+        resolved_by_actor_kind: row.get(17)?,
+        resolved_actor_role: row.get(18)?,
+        resolved_by_surface_id: row.get(19)?,
+        resolved_by_surface_instance_id: row.get(20)?,
+        resolved_verification_basis: row.get(21)?,
+        resolved_assurance_level: row.get(22)?,
+        requested_by_surface_id: row.get(23)?,
+        requested_by_surface_instance_id: row.get(24)?,
+        requested_at: row.get(25)?,
+        resolved_at: row.get(26)?,
+        metadata_json: row.get(27)?,
     })
 }
 
@@ -4217,6 +4234,14 @@ fn judgment_resolution_outcome_as_str(outcome: JudgmentResolutionOutcome) -> &'s
         JudgmentResolutionOutcome::Rejected => "rejected",
         JudgmentResolutionOutcome::Deferred => "deferred",
         JudgmentResolutionOutcome::Blocked => "blocked",
+    }
+}
+
+fn judgment_machine_action_as_str(action: UserJudgmentOptionAction) -> &'static str {
+    match action {
+        UserJudgmentOptionAction::Accept => "accept",
+        UserJudgmentOptionAction::Reject => "reject",
+        UserJudgmentOptionAction::Defer => "defer",
     }
 }
 

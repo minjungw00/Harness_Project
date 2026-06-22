@@ -403,6 +403,19 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         PROJECT_STATE_DATABASE_KIND,
         "user_judgments",
         ColumnSpec {
+            name: "status",
+            type_name: "TEXT",
+            not_null: true,
+            default_value: None,
+            primary_key_position: 0,
+        },
+    )?;
+    validate_user_judgments_status_constraint(conn)?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "user_judgments",
+        ColumnSpec {
             name: "resolution_outcome",
             type_name: "TEXT",
             not_null: false,
@@ -411,6 +424,19 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         },
     )?;
     validate_user_judgments_resolution_outcome_constraint(conn)?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "user_judgments",
+        ColumnSpec {
+            name: "resolution_machine_action",
+            type_name: "TEXT",
+            not_null: false,
+            default_value: None,
+            primary_key_position: 0,
+        },
+    )?;
+    validate_user_judgments_resolution_machine_action_constraint(conn)?;
     require_column_spec(
         conn,
         PROJECT_STATE_DATABASE_KIND,
@@ -445,6 +471,7 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
     ] {
         require_column(conn, PROJECT_STATE_DATABASE_KIND, "user_judgments", column)?;
     }
+    validate_user_judgments_resolved_surface_foreign_key(conn)?;
     reject_column(conn, PROJECT_STATE_DATABASE_KIND, "tasks", "state_version")?;
     require_column(
         conn,
@@ -812,6 +839,21 @@ fn validate_user_judgments_basis_status_constraint(conn: &Connection) -> StoreRe
     }
 }
 
+fn validate_user_judgments_status_constraint(conn: &Connection) -> StoreResult<()> {
+    let table_sql = normalized_table_sql(conn, "user_judgments")?;
+    let has_constraint = table_sql
+        .contains("status in ('pending', 'resolved', 'stale', 'superseded', 'expired')")
+        || table_sql.contains("status in('pending', 'resolved', 'stale', 'superseded', 'expired')");
+    if has_constraint {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "user_judgments.status constraint is missing or malformed",
+        ))
+    }
+}
+
 fn validate_user_judgments_resolution_outcome_constraint(conn: &Connection) -> StoreResult<()> {
     let table_sql: String = conn.query_row(
         "SELECT sql
@@ -837,6 +879,25 @@ fn validate_user_judgments_resolution_outcome_constraint(conn: &Connection) -> S
         Err(StoreError::schema_invariant(
             PROJECT_STATE_DATABASE_KIND,
             "user_judgments.resolution_outcome constraint is missing or malformed",
+        ))
+    }
+}
+
+fn validate_user_judgments_resolution_machine_action_constraint(
+    conn: &Connection,
+) -> StoreResult<()> {
+    let table_sql = normalized_table_sql(conn, "user_judgments")?;
+    let has_constraint = table_sql.contains(
+        "resolution_machine_action is null or resolution_machine_action in ('accept', 'reject', 'defer')",
+    ) || table_sql.contains(
+        "resolution_machine_action is null or resolution_machine_action in('accept', 'reject', 'defer')",
+    );
+    if has_constraint {
+        Ok(())
+    } else {
+        Err(StoreError::schema_invariant(
+            PROJECT_STATE_DATABASE_KIND,
+            "user_judgments.resolution_machine_action constraint is missing or malformed",
         ))
     }
 }
@@ -1008,6 +1069,60 @@ fn validate_tool_invocations_replay_surface_foreign_key(conn: &Connection) -> St
     ))
 }
 
+fn validate_user_judgments_resolved_surface_foreign_key(conn: &Connection) -> StoreResult<()> {
+    let mut stmt = conn.prepare("PRAGMA foreign_key_list(user_judgments)")?;
+    let rows = stmt.query_map([], |row| {
+        Ok(ForeignKeyListRow {
+            id: row.get(0)?,
+            seq: row.get(1)?,
+            parent_table: row.get(2)?,
+            from_column: row.get(3)?,
+            to_column: row.get(4)?,
+            on_delete: row.get(6)?,
+        })
+    })?;
+
+    let mut rows_by_id = Vec::<ForeignKeyListRow>::new();
+    for row in rows {
+        rows_by_id.push(row?);
+    }
+
+    let expected_columns = [
+        ("project_id", "project_id"),
+        ("resolved_by_surface_id", "surface_id"),
+        ("resolved_by_surface_instance_id", "surface_instance_id"),
+    ];
+
+    for id in rows_by_id.iter().map(|row| row.id) {
+        let mut candidate = rows_by_id
+            .iter()
+            .filter(|row| row.id == id)
+            .cloned()
+            .collect::<Vec<_>>();
+        candidate.sort_by_key(|row| row.seq);
+
+        if candidate.len() != expected_columns.len() {
+            continue;
+        }
+        if !candidate.iter().all(|row| row.parent_table == "surfaces") {
+            continue;
+        }
+
+        let actual_columns = candidate
+            .iter()
+            .map(|row| (row.from_column.as_str(), row.to_column.as_str()))
+            .collect::<Vec<_>>();
+        if actual_columns == expected_columns {
+            return Ok(());
+        }
+    }
+
+    Err(StoreError::schema_invariant(
+        PROJECT_STATE_DATABASE_KIND,
+        "user_judgments resolved surface foreign key is missing or malformed",
+    ))
+}
+
 fn validate_artifacts_integrity_status_constraint(conn: &Connection) -> StoreResult<()> {
     let table_sql: String = conn.query_row(
         "SELECT sql
@@ -1163,7 +1278,7 @@ mod tests {
             &conn,
             PROJECT_STATE_DATABASE_KIND,
             PROJECT_STATE_SCHEMA_VERSION,
-            "project_state_enforcement_profile_v9"
+            "project_state_judgment_authority_v10"
         )?);
         drop(conn);
 

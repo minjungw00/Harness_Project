@@ -1,5 +1,8 @@
 use std::path::{Path, PathBuf};
 
+use harness_types::{
+    JudgmentResolutionOutcome, PersistedUserJudgmentResolution, UserJudgmentOptionAction,
+};
 use rusqlite::{params, Connection, OptionalExtension, Transaction, TransactionBehavior};
 
 use crate::{
@@ -21,7 +24,7 @@ pub const BASELINE_SCHEMA_VERSION: i64 = 1;
 pub const REGISTRY_SCHEMA_VERSION: i64 = 2;
 
 /// Latest schema version for project `state.sqlite`.
-pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 9;
+pub const PROJECT_STATE_SCHEMA_VERSION: i64 = 10;
 
 const PROJECT_STATE_REPLAY_CONTEXT_SCHEMA_VERSION: i64 = 2;
 const REGISTRY_AGENT_INTEGRATIONS_SCHEMA_VERSION: i64 = 2;
@@ -32,6 +35,7 @@ const PROJECT_STATE_ARTIFACT_INTEGRITY_SCHEMA_VERSION: i64 = 6;
 const PROJECT_STATE_SURFACE_ROLE_ACTOR_PROVENANCE_SCHEMA_VERSION: i64 = 7;
 const PROJECT_STATE_RUN_SCOPE_REVISION_SCHEMA_VERSION: i64 = 8;
 const PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION: i64 = 9;
+const PROJECT_STATE_JUDGMENT_AUTHORITY_SCHEMA_VERSION: i64 = 10;
 
 /// `schema_migrations.database_kind` for `registry.sqlite`.
 pub const REGISTRY_DATABASE_KIND: &str = "registry";
@@ -108,6 +112,12 @@ const PROJECT_STATE_MIGRATIONS: &[Migration] = &[
         version: PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION,
         name: "project_state_enforcement_profile_v9",
         kind: MigrationKind::Sql(PROJECT_STATE_ENFORCEMENT_PROFILE_V9_SQL),
+    },
+    Migration {
+        database_kind: PROJECT_STATE_DATABASE_KIND,
+        version: PROJECT_STATE_JUDGMENT_AUTHORITY_SCHEMA_VERSION,
+        name: "project_state_judgment_authority_v10",
+        kind: MigrationKind::Custom(apply_project_state_judgment_authority_v10),
     },
 ];
 
@@ -457,6 +467,30 @@ fn apply_project_state_artifact_integrity_v6(
     }
 }
 
+fn apply_project_state_judgment_authority_v10(
+    conn: &mut Connection,
+    migration: &Migration,
+) -> StoreResult<()> {
+    validate_no_foreign_key_violations(conn, PROJECT_STATE_DATABASE_KIND, None)?;
+
+    let original_foreign_key_mode = foreign_keys_enabled(conn)?;
+    if original_foreign_key_mode {
+        set_foreign_keys(conn, false)?;
+    }
+
+    let migration_result = rebuild_user_judgments_with_authority_v10(conn, migration);
+    let restore_result = restore_foreign_key_mode(conn, original_foreign_key_mode);
+
+    match (migration_result, restore_result) {
+        (Err(error), _) => Err(error),
+        (Ok(()), Err(error)) => Err(StoreError::from(error)),
+        (Ok(()), Ok(())) => {
+            validate_no_foreign_key_violations(conn, PROJECT_STATE_DATABASE_KIND, None)?;
+            Ok(())
+        }
+    }
+}
+
 fn rebuild_artifacts_with_integrity_status_v6(
     conn: &mut Connection,
     migration: &Migration,
@@ -467,6 +501,24 @@ fn rebuild_artifacts_with_integrity_status_v6(
     copy_artifacts_with_integrity_status_v6(&tx, project_home.as_deref())?;
     validate_no_foreign_key_violations(&tx, PROJECT_STATE_DATABASE_KIND, Some("artifacts_v6"))?;
     tx.execute_batch(PROJECT_STATE_ARTIFACT_INTEGRITY_V6_SWAP_SQL)?;
+    insert_schema_migration(&tx, migration)?;
+    tx.commit()?;
+    Ok(())
+}
+
+fn rebuild_user_judgments_with_authority_v10(
+    conn: &mut Connection,
+    migration: &Migration,
+) -> StoreResult<()> {
+    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
+    tx.execute_batch(PROJECT_STATE_JUDGMENT_AUTHORITY_V10_CREATE_SQL)?;
+    copy_user_judgments_with_authority_v10(&tx)?;
+    validate_no_foreign_key_violations(
+        &tx,
+        PROJECT_STATE_DATABASE_KIND,
+        Some("user_judgments_v10"),
+    )?;
+    tx.execute_batch(PROJECT_STATE_JUDGMENT_AUTHORITY_V10_SWAP_SQL)?;
     insert_schema_migration(&tx, migration)?;
     tx.commit()?;
     Ok(())
@@ -499,6 +551,308 @@ struct ArtifactIntegrityMigrationRow {
 struct ArtifactIntegrityMigrationClassification {
     integrity_status: &'static str,
     status: String,
+}
+
+#[derive(Debug)]
+struct UserJudgmentAuthorityMigrationRow {
+    project_id: String,
+    judgment_id: String,
+    task_id: String,
+    change_unit_id: Option<String>,
+    judgment_kind: String,
+    status: String,
+    request_json: String,
+    context_json: String,
+    options_json: String,
+    affected_refs_json: String,
+    artifact_refs_json: String,
+    sensitive_action_scope_json: String,
+    basis_json: Option<String>,
+    basis_status: String,
+    resolution_outcome: Option<String>,
+    resolution_json: Option<String>,
+    requested_by_surface_id: String,
+    requested_by_surface_instance_id: String,
+    resolved_by_actor_kind: Option<String>,
+    resolved_actor_role: Option<String>,
+    resolved_by_surface_id: Option<String>,
+    resolved_by_surface_instance_id: Option<String>,
+    resolved_verification_basis: Option<String>,
+    resolved_assurance_level: Option<String>,
+    requested_at: String,
+    resolved_at: Option<String>,
+    metadata_json: String,
+}
+
+fn copy_user_judgments_with_authority_v10(tx: &Transaction<'_>) -> StoreResult<()> {
+    let rows = user_judgment_authority_migration_rows(tx)?;
+    let mut insert = tx.prepare(
+        "INSERT INTO user_judgments_v10 (
+            project_id,
+            judgment_id,
+            task_id,
+            change_unit_id,
+            judgment_kind,
+            status,
+            request_json,
+            context_json,
+            options_json,
+            affected_refs_json,
+            artifact_refs_json,
+            sensitive_action_scope_json,
+            basis_json,
+            basis_status,
+            resolution_outcome,
+            resolution_machine_action,
+            resolution_json,
+            requested_by_surface_id,
+            requested_by_surface_instance_id,
+            resolved_by_actor_kind,
+            resolved_actor_role,
+            resolved_by_surface_id,
+            resolved_by_surface_instance_id,
+            resolved_verification_basis,
+            resolved_assurance_level,
+            requested_at,
+            resolved_at,
+            metadata_json
+        )
+        VALUES (
+            ?1,
+            ?2,
+            ?3,
+            ?4,
+            ?5,
+            ?6,
+            ?7,
+            ?8,
+            ?9,
+            ?10,
+            ?11,
+            ?12,
+            ?13,
+            ?14,
+            ?15,
+            ?16,
+            ?17,
+            ?18,
+            ?19,
+            ?20,
+            ?21,
+            ?22,
+            ?23,
+            ?24,
+            ?25,
+            ?26,
+            ?27,
+            ?28
+        )",
+    )?;
+
+    for row in rows {
+        validate_user_judgment_status_for_v10(&row)?;
+        let resolution_machine_action = resolution_machine_action_for_v10(&row)?;
+        insert.execute(params![
+            row.project_id,
+            row.judgment_id,
+            row.task_id,
+            row.change_unit_id,
+            row.judgment_kind,
+            row.status,
+            row.request_json,
+            row.context_json,
+            row.options_json,
+            row.affected_refs_json,
+            row.artifact_refs_json,
+            row.sensitive_action_scope_json,
+            row.basis_json,
+            row.basis_status,
+            row.resolution_outcome,
+            resolution_machine_action,
+            row.resolution_json,
+            row.requested_by_surface_id,
+            row.requested_by_surface_instance_id,
+            row.resolved_by_actor_kind,
+            row.resolved_actor_role,
+            row.resolved_by_surface_id,
+            row.resolved_by_surface_instance_id,
+            row.resolved_verification_basis,
+            row.resolved_assurance_level,
+            row.requested_at,
+            row.resolved_at,
+            row.metadata_json
+        ])?;
+    }
+
+    Ok(())
+}
+
+fn user_judgment_authority_migration_rows(
+    tx: &Transaction<'_>,
+) -> StoreResult<Vec<UserJudgmentAuthorityMigrationRow>> {
+    let mut stmt = tx.prepare(
+        "SELECT
+            project_id,
+            judgment_id,
+            task_id,
+            change_unit_id,
+            judgment_kind,
+            status,
+            request_json,
+            context_json,
+            options_json,
+            affected_refs_json,
+            artifact_refs_json,
+            sensitive_action_scope_json,
+            basis_json,
+            basis_status,
+            resolution_outcome,
+            resolution_json,
+            requested_by_surface_id,
+            requested_by_surface_instance_id,
+            resolved_by_actor_kind,
+            resolved_actor_role,
+            resolved_by_surface_id,
+            resolved_by_surface_instance_id,
+            resolved_verification_basis,
+            resolved_assurance_level,
+            requested_at,
+            resolved_at,
+            metadata_json
+         FROM user_judgments
+         ORDER BY project_id, judgment_id",
+    )?;
+    let mut rows = stmt.query([])?;
+    let mut judgments = Vec::new();
+    while let Some(row) = rows.next()? {
+        judgments.push(UserJudgmentAuthorityMigrationRow {
+            project_id: row.get(0)?,
+            judgment_id: row.get(1)?,
+            task_id: row.get(2)?,
+            change_unit_id: row.get(3)?,
+            judgment_kind: row.get(4)?,
+            status: row.get(5)?,
+            request_json: row.get(6)?,
+            context_json: row.get(7)?,
+            options_json: row.get(8)?,
+            affected_refs_json: row.get(9)?,
+            artifact_refs_json: row.get(10)?,
+            sensitive_action_scope_json: row.get(11)?,
+            basis_json: row.get(12)?,
+            basis_status: row.get(13)?,
+            resolution_outcome: row.get(14)?,
+            resolution_json: row.get(15)?,
+            requested_by_surface_id: row.get(16)?,
+            requested_by_surface_instance_id: row.get(17)?,
+            resolved_by_actor_kind: row.get(18)?,
+            resolved_actor_role: row.get(19)?,
+            resolved_by_surface_id: row.get(20)?,
+            resolved_by_surface_instance_id: row.get(21)?,
+            resolved_verification_basis: row.get(22)?,
+            resolved_assurance_level: row.get(23)?,
+            requested_at: row.get(24)?,
+            resolved_at: row.get(25)?,
+            metadata_json: row.get(26)?,
+        });
+    }
+    Ok(judgments)
+}
+
+fn validate_user_judgment_status_for_v10(
+    row: &UserJudgmentAuthorityMigrationRow,
+) -> StoreResult<()> {
+    match row.status.as_str() {
+        "pending" | "resolved" | "stale" | "superseded" | "expired" => Ok(()),
+        _ => Err(StoreError::corrupt_owner_state_value(
+            "user_judgments",
+            row.judgment_id.clone(),
+            "status",
+        )),
+    }
+}
+
+fn resolution_machine_action_for_v10(
+    row: &UserJudgmentAuthorityMigrationRow,
+) -> StoreResult<Option<&'static str>> {
+    let stored_outcome = row
+        .resolution_outcome
+        .as_deref()
+        .map(|value| parse_judgment_resolution_outcome_for_v10(row, value))
+        .transpose()?;
+    let Some(resolution_json) = row.resolution_json.as_deref() else {
+        return Ok(None);
+    };
+    let resolution = serde_json::from_str::<PersistedUserJudgmentResolution>(resolution_json)
+        .map_err(|_| {
+            StoreError::corrupt_owner_state_json(
+                "user_judgments",
+                row.judgment_id.clone(),
+                "resolution_json",
+            )
+        })?;
+
+    if let (Some(json_outcome), Some(stored_outcome)) =
+        (resolution.resolution_outcome, stored_outcome)
+    {
+        if json_outcome != stored_outcome {
+            return Err(StoreError::corrupt_owner_state_value(
+                "user_judgments",
+                row.judgment_id.clone(),
+                "resolution_outcome",
+            ));
+        }
+    }
+    if let (Some(machine_action), Some(json_outcome)) =
+        (resolution.machine_action, resolution.resolution_outcome)
+    {
+        if machine_action.resolution_outcome() != json_outcome {
+            return Err(StoreError::corrupt_owner_state_value(
+                "user_judgments",
+                row.judgment_id.clone(),
+                "resolution_json",
+            ));
+        }
+    }
+    if let (Some(machine_action), Some(stored_outcome)) =
+        (resolution.machine_action, stored_outcome)
+    {
+        if machine_action.resolution_outcome() != stored_outcome {
+            return Err(StoreError::corrupt_owner_state_value(
+                "user_judgments",
+                row.judgment_id.clone(),
+                "resolution_json",
+            ));
+        }
+    }
+
+    Ok(resolution
+        .machine_action
+        .map(judgment_machine_action_as_str_for_v10))
+}
+
+fn parse_judgment_resolution_outcome_for_v10(
+    row: &UserJudgmentAuthorityMigrationRow,
+    value: &str,
+) -> StoreResult<JudgmentResolutionOutcome> {
+    match value {
+        "accepted" => Ok(JudgmentResolutionOutcome::Accepted),
+        "rejected" => Ok(JudgmentResolutionOutcome::Rejected),
+        "deferred" => Ok(JudgmentResolutionOutcome::Deferred),
+        "blocked" => Ok(JudgmentResolutionOutcome::Blocked),
+        _ => Err(StoreError::corrupt_owner_state_value(
+            "user_judgments",
+            row.judgment_id.clone(),
+            "resolution_outcome",
+        )),
+    }
+}
+
+fn judgment_machine_action_as_str_for_v10(action: UserJudgmentOptionAction) -> &'static str {
+    match action {
+        UserJudgmentOptionAction::Accept => "accept",
+        UserJudgmentOptionAction::Reject => "reject",
+        UserJudgmentOptionAction::Defer => "defer",
+    }
 }
 
 fn project_home_from_connection(conn: &Connection) -> StoreResult<Option<PathBuf>> {
@@ -1599,6 +1953,64 @@ UPDATE project_state
  WHERE schema_version < 9;
 "#;
 
+const PROJECT_STATE_JUDGMENT_AUTHORITY_V10_CREATE_SQL: &str = r#"
+CREATE TABLE user_judgments_v10 (
+  project_id TEXT NOT NULL,
+  judgment_id TEXT NOT NULL,
+  task_id TEXT NOT NULL,
+  change_unit_id TEXT,
+  judgment_kind TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'resolved', 'stale', 'superseded', 'expired')),
+  request_json TEXT NOT NULL DEFAULT '{}',
+  context_json TEXT NOT NULL DEFAULT '{}',
+  options_json TEXT NOT NULL DEFAULT '[]',
+  affected_refs_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  sensitive_action_scope_json TEXT NOT NULL DEFAULT '{}',
+  basis_json TEXT,
+  basis_status TEXT NOT NULL DEFAULT 'legacy_unbound'
+    CHECK (basis_status IN ('current', 'stale', 'superseded', 'legacy_unbound')),
+  resolution_outcome TEXT
+    CHECK (resolution_outcome IS NULL OR resolution_outcome IN ('accepted', 'rejected', 'deferred', 'blocked')),
+  resolution_machine_action TEXT
+    CHECK (resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')),
+  resolution_json TEXT,
+  requested_by_surface_id TEXT NOT NULL,
+  requested_by_surface_instance_id TEXT NOT NULL,
+  resolved_by_actor_kind TEXT CHECK (resolved_by_actor_kind IS NULL OR resolved_by_actor_kind IN ('agent', 'user')),
+  resolved_actor_role TEXT CHECK (resolved_actor_role IS NULL OR resolved_actor_role IN ('agent', 'user_interaction')),
+  resolved_by_surface_id TEXT,
+  resolved_by_surface_instance_id TEXT,
+  resolved_verification_basis TEXT,
+  resolved_assurance_level TEXT,
+  requested_at TEXT NOT NULL,
+  resolved_at TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, judgment_id),
+  FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
+  FOREIGN KEY (project_id, task_id, change_unit_id)
+    REFERENCES change_units (project_id, task_id, change_unit_id),
+  FOREIGN KEY (project_id, requested_by_surface_id, requested_by_surface_instance_id)
+    REFERENCES surfaces (project_id, surface_id, surface_instance_id),
+  FOREIGN KEY (project_id, resolved_by_surface_id, resolved_by_surface_instance_id)
+    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
+);
+"#;
+
+const PROJECT_STATE_JUDGMENT_AUTHORITY_V10_SWAP_SQL: &str = r#"
+DROP TABLE user_judgments;
+
+ALTER TABLE user_judgments_v10 RENAME TO user_judgments;
+
+CREATE INDEX idx_user_judgments_task_status
+  ON user_judgments (project_id, task_id, status);
+
+UPDATE project_state
+   SET schema_version = 10,
+       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE schema_version < 10;
+"#;
+
 #[cfg(any(test, feature = "test-support"))]
 pub mod test_support {
     use rusqlite::{params, Connection};
@@ -1770,6 +2182,9 @@ pub mod test_support {
                 "project_state_enforcement_profile_v9",
             )?;
         }
+        if version >= PROJECT_STATE_JUDGMENT_AUTHORITY_SCHEMA_VERSION {
+            apply_project_state_judgment_authority_v10(conn, &PROJECT_STATE_MIGRATIONS[9])?;
+        }
 
         Ok(())
     }
@@ -1825,11 +2240,18 @@ mod tests {
     use super::*;
     use crate::sqlite::{
         enable_foreign_keys, foreign_keys_enabled, open_project_state_database,
-        open_registry_database, project_state_db_path, registry_db_path,
+        open_registry_database, project_state_db_path, registry_db_path, set_foreign_keys,
         validate_project_state_schema, validate_registry_schema,
     };
 
     type ArtifactIntegrityRow = (String, Option<String>, Option<i64>, Option<String>, String);
+    type JudgmentAuthorityRow = (
+        String,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+    );
 
     struct V5ArtifactFixture<'a> {
         artifact_id: &'a str,
@@ -1839,6 +2261,34 @@ mod tests {
         sha256: Option<&'a str>,
         size_bytes: Option<i64>,
         content_type: Option<&'a str>,
+    }
+
+    struct V9UserJudgmentFixture<'a> {
+        judgment_id: &'a str,
+        task_id: &'a str,
+        status: &'a str,
+        resolution_outcome: Option<&'a str>,
+        resolution_json: Option<&'a str>,
+        resolved_surface: Option<(&'a str, &'a str)>,
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    enum V10FailureCase {
+        ContradictoryActionOutcome,
+        MalformedResolutionJson,
+        UnsupportedStatus,
+        DanglingResolvedSurface,
+    }
+
+    impl V10FailureCase {
+        fn slug(self) -> &'static str {
+            match self {
+                Self::ContradictoryActionOutcome => "contradictory_action_outcome",
+                Self::MalformedResolutionJson => "malformed_resolution_json",
+                Self::UnsupportedStatus => "unsupported_status",
+                Self::DanglingResolvedSurface => "dangling_resolved_surface",
+            }
+        }
     }
 
     #[test]
@@ -2305,7 +2755,7 @@ mod tests {
             "project_v3_close",
             "judgment_legacy",
             "task_closed",
-            Some("{\"selected_option_id\":\"accept\"}"),
+            Some(legacy_resolution_without_action_json()),
         )?;
 
         apply_project_state_migrations(&mut conn)?;
@@ -2381,7 +2831,7 @@ mod tests {
             (
                 None,
                 "legacy_unbound".to_owned(),
-                Some("{\"selected_option_id\":\"accept\"}".to_owned()),
+                Some(legacy_resolution_without_action_json().to_owned()),
             )
         );
         Ok(())
@@ -2916,6 +3366,307 @@ mod tests {
     }
 
     #[test]
+    fn fresh_project_state_database_has_judgment_authority_v10_schema() -> Result<(), Box<dyn Error>>
+    {
+        let runtime_home = TempRuntimeHome::new("migration-fresh-judgment-authority")?;
+        let path = project_state_db_path(runtime_home.path(), "project_fresh_judgment_authority");
+        let conn = open_project_state_database(&path)?;
+
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            latest_migration_name(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            "project_state_judgment_authority_v10"
+        );
+        assert_eq!(
+            migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert!(column_exists(
+            &conn,
+            "user_judgments",
+            "resolution_machine_action"
+        )?);
+        let user_judgments_sql = table_sql(&conn, "user_judgments")?;
+        assert!(user_judgments_sql.contains(
+            "status TEXT NOT NULL CHECK (status IN ('pending', 'resolved', 'stale', 'superseded', 'expired'))"
+        ));
+        assert!(user_judgments_sql.contains(
+            "resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')"
+        ));
+        assert_user_judgments_resolved_surface_foreign_key(&conn)?;
+        assert_integrity_check_clean(&conn)?;
+        assert_foreign_key_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn version_nine_project_state_judgment_authority_upgrade() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-v9-judgment-authority")?;
+        let path = project_state_db_path(runtime_home.path(), "project_v9_judgment_authority");
+        fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+        let mut conn = Connection::open(&path)?;
+        enable_foreign_keys(&conn)?;
+        create_project_state_v9(&mut conn, "project_v9_judgment_authority")?;
+        insert_surface(&conn, "project_v9_judgment_authority")?;
+        insert_task_current(
+            &conn,
+            "project_v9_judgment_authority",
+            "task_judgment_authority",
+        )?;
+        insert_user_judgment_v9(
+            &conn,
+            "project_v9_judgment_authority",
+            V9UserJudgmentFixture {
+                judgment_id: "judgment_current_accept",
+                task_id: "task_judgment_authority",
+                status: "resolved",
+                resolution_outcome: Some("accepted"),
+                resolution_json: Some(current_resolution_json("accept", "accepted")),
+                resolved_surface: Some(("surface_main", "surface_instance_1")),
+            },
+        )?;
+        insert_user_judgment_v9(
+            &conn,
+            "project_v9_judgment_authority",
+            V9UserJudgmentFixture {
+                judgment_id: "judgment_legacy_no_action",
+                task_id: "task_judgment_authority",
+                status: "resolved",
+                resolution_outcome: None,
+                resolution_json: Some(legacy_resolution_without_action_json()),
+                resolved_surface: None,
+            },
+        )?;
+        insert_user_judgment_v9(
+            &conn,
+            "project_v9_judgment_authority",
+            V9UserJudgmentFixture {
+                judgment_id: "judgment_legacy_blocked",
+                task_id: "task_judgment_authority",
+                status: "resolved",
+                resolution_outcome: Some("blocked"),
+                resolution_json: Some(blocked_resolution_without_action_json()),
+                resolved_surface: None,
+            },
+        )?;
+
+        apply_project_state_migrations(&mut conn)?;
+        validate_project_state_schema(&conn)?;
+
+        assert!(foreign_keys_enabled(&conn)?);
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            latest_migration_name(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            "project_state_judgment_authority_v10"
+        );
+        assert_eq!(
+            migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            project_schema_version(&conn, "project_v9_judgment_authority")?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            judgment_authority_row(&conn, "judgment_current_accept")?,
+            (
+                "resolved".to_owned(),
+                Some("accepted".to_owned()),
+                Some("accept".to_owned()),
+                Some("surface_main".to_owned()),
+                Some("surface_instance_1".to_owned()),
+            )
+        );
+        assert_eq!(
+            judgment_authority_row(&conn, "judgment_legacy_no_action")?,
+            ("resolved".to_owned(), None, None, None, None)
+        );
+        assert_eq!(
+            judgment_authority_row(&conn, "judgment_legacy_blocked")?,
+            (
+                "resolved".to_owned(),
+                Some("blocked".to_owned()),
+                None,
+                None,
+                None,
+            )
+        );
+        assert_integrity_check_clean(&conn)?;
+        assert_user_judgments_resolved_surface_foreign_key(&conn)?;
+        assert_foreign_key_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn older_supported_project_state_fixtures_migrate_through_judgment_authority_v10(
+    ) -> Result<(), Box<dyn Error>> {
+        for version in BASELINE_SCHEMA_VERSION..PROJECT_STATE_SCHEMA_VERSION {
+            let runtime_home = TempRuntimeHome::new(&format!("migration-v{version}-to-v10"))?;
+            let path = project_state_db_path(runtime_home.path(), format!("project_v{version}"));
+            fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+            let mut conn = Connection::open(&path)?;
+            enable_foreign_keys(&conn)?;
+            test_support::create_project_state_fixture_version(
+                &mut conn,
+                &format!("project_v{version}"),
+                version,
+            )?;
+
+            apply_project_state_migrations(&mut conn)?;
+            validate_project_state_schema(&conn)?;
+
+            assert!(foreign_keys_enabled(&conn)?);
+            assert_eq!(
+                latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+                PROJECT_STATE_SCHEMA_VERSION
+            );
+            assert_eq!(
+                migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?,
+                PROJECT_STATE_SCHEMA_VERSION
+            );
+            assert_integrity_check_clean(&conn)?;
+            assert_foreign_key_check_clean(&conn)?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn judgment_authority_migration_rejects_corrupt_rows_atomically() -> Result<(), Box<dyn Error>>
+    {
+        for case in [
+            V10FailureCase::ContradictoryActionOutcome,
+            V10FailureCase::MalformedResolutionJson,
+            V10FailureCase::UnsupportedStatus,
+            V10FailureCase::DanglingResolvedSurface,
+        ] {
+            let project_id = format!("project_v10_failure_{}", case.slug());
+            let runtime_home = TempRuntimeHome::new(&format!("migration-v10-{}", case.slug()))?;
+            let path = project_state_db_path(runtime_home.path(), &project_id);
+            fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+            let mut conn = Connection::open(&path)?;
+            enable_foreign_keys(&conn)?;
+            create_project_state_v9(&mut conn, &project_id)?;
+            insert_surface(&conn, &project_id)?;
+            insert_task_current(&conn, &project_id, "task_v10_failure")?;
+            insert_v10_failure_case(&conn, &project_id, case)?;
+
+            let error = apply_project_state_migrations(&mut conn)
+                .expect_err("invalid v9 judgment row must fail v10 migration");
+            assert!(matches!(
+                error,
+                StoreError::CorruptOwnerStateJson { .. }
+                    | StoreError::CorruptOwnerStateValue { .. }
+                    | StoreError::SchemaInvariant { .. }
+                    | StoreError::Sqlite(_)
+            ));
+            assert_v10_failure_left_v9_intact(&conn, &project_id)?;
+            assert_eq!(table_count(&conn, "user_judgments")?, 1);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn failed_judgment_authority_migration_can_retry_after_repair() -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-v10-retry")?;
+        let project_id = "project_v10_retry";
+        let path = project_state_db_path(runtime_home.path(), project_id);
+        fs::create_dir_all(path.parent().expect("state db path has parent"))?;
+        let mut conn = Connection::open(&path)?;
+        enable_foreign_keys(&conn)?;
+        create_project_state_v9(&mut conn, project_id)?;
+        insert_surface(&conn, project_id)?;
+        insert_task_current(&conn, project_id, "task_v10_retry")?;
+        insert_user_judgment_v9(
+            &conn,
+            project_id,
+            V9UserJudgmentFixture {
+                judgment_id: "judgment_retry",
+                task_id: "task_v10_retry",
+                status: "approved",
+                resolution_outcome: None,
+                resolution_json: None,
+                resolved_surface: None,
+            },
+        )?;
+
+        apply_project_state_migrations(&mut conn)
+            .expect_err("unsupported status should fail the first v10 attempt");
+        assert_v10_failure_left_v9_intact(&conn, project_id)?;
+        conn.execute(
+            "UPDATE user_judgments
+                SET status = 'pending'
+              WHERE judgment_id = 'judgment_retry'",
+            [],
+        )?;
+
+        apply_project_state_migrations(&mut conn)?;
+        validate_project_state_schema(&conn)?;
+
+        assert!(foreign_keys_enabled(&conn)?);
+        assert_eq!(
+            latest_migration_version(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            migration_count(&conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            judgment_authority_row(&conn, "judgment_retry")?,
+            ("pending".to_owned(), None, None, None, None)
+        );
+        assert_foreign_key_check_clean(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn judgment_authority_migration_restores_original_foreign_key_mode(
+    ) -> Result<(), Box<dyn Error>> {
+        let runtime_home = TempRuntimeHome::new("migration-v10-fk-mode")?;
+
+        let success_project_id = "project_v10_fk_mode_success";
+        let success_path = project_state_db_path(runtime_home.path(), success_project_id);
+        fs::create_dir_all(success_path.parent().expect("state db path has parent"))?;
+        let mut success_conn = Connection::open(&success_path)?;
+        enable_foreign_keys(&success_conn)?;
+        create_project_state_v9(&mut success_conn, success_project_id)?;
+        insert_surface(&success_conn, success_project_id)?;
+        insert_task_current(&success_conn, success_project_id, "task_fk_mode_success")?;
+        set_foreign_keys(&success_conn, false)?;
+        apply_project_state_migrations(&mut success_conn)?;
+        assert!(!foreign_keys_enabled(&success_conn)?);
+        enable_foreign_keys(&success_conn)?;
+        validate_project_state_schema(&success_conn)?;
+
+        let failure_project_id = "project_v10_fk_mode_failure";
+        let failure_path = project_state_db_path(runtime_home.path(), failure_project_id);
+        fs::create_dir_all(failure_path.parent().expect("state db path has parent"))?;
+        let mut failure_conn = Connection::open(&failure_path)?;
+        enable_foreign_keys(&failure_conn)?;
+        create_project_state_v9(&mut failure_conn, failure_project_id)?;
+        insert_surface(&failure_conn, failure_project_id)?;
+        insert_task_current(&failure_conn, failure_project_id, "task_v10_failure")?;
+        insert_v10_failure_case(
+            &failure_conn,
+            failure_project_id,
+            V10FailureCase::UnsupportedStatus,
+        )?;
+        set_foreign_keys(&failure_conn, false)?;
+        apply_project_state_migrations(&mut failure_conn)
+            .expect_err("unsupported status should fail with FK mode restored");
+        assert!(!foreign_keys_enabled(&failure_conn)?);
+        enable_foreign_keys(&failure_conn)?;
+        assert_v10_failure_left_v9_intact(&failure_conn, failure_project_id)?;
+        Ok(())
+    }
+
+    #[test]
     fn invalid_verified_artifact_integrity_is_rejected() -> Result<(), Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("migration-invalid-artifact-integrity")?;
         let conn = open_project_state_database(
@@ -3194,6 +3945,14 @@ mod tests {
         Ok(())
     }
 
+    fn create_project_state_v9(conn: &mut Connection, project_id: &str) -> StoreResult<()> {
+        test_support::create_project_state_fixture_version(
+            conn,
+            project_id,
+            PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION,
+        )
+    }
+
     fn create_project_state_v3(conn: &Connection, project_id: &str) -> rusqlite::Result<()> {
         create_project_state_v2(conn, project_id)?;
         conn.execute_batch(PROJECT_STATE_REPLAY_SURFACE_FK_V3_CREATE_COPY_SQL)?;
@@ -3410,6 +4169,85 @@ mod tests {
                 CASE WHEN ?4 = 'pending' THEN NULL ELSE 't1' END
             )",
             params![project_id, judgment_id, task_id, status],
+        )?;
+        Ok(())
+    }
+
+    fn insert_user_judgment_v9(
+        conn: &Connection,
+        project_id: &str,
+        fixture: V9UserJudgmentFixture<'_>,
+    ) -> rusqlite::Result<()> {
+        let (resolved_by_surface_id, resolved_by_surface_instance_id) =
+            match fixture.resolved_surface {
+                Some((surface_id, surface_instance_id)) => {
+                    (Some(surface_id), Some(surface_instance_id))
+                }
+                None => (None, None),
+            };
+        conn.execute(
+            "INSERT INTO user_judgments (
+                project_id,
+                judgment_id,
+                task_id,
+                judgment_kind,
+                status,
+                request_json,
+                context_json,
+                options_json,
+                affected_refs_json,
+                artifact_refs_json,
+                sensitive_action_scope_json,
+                resolution_outcome,
+                resolution_json,
+                requested_by_surface_id,
+                requested_by_surface_instance_id,
+                resolved_by_actor_kind,
+                resolved_actor_role,
+                resolved_by_surface_id,
+                resolved_by_surface_instance_id,
+                resolved_verification_basis,
+                resolved_assurance_level,
+                requested_at,
+                resolved_at,
+                metadata_json
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                'final_acceptance',
+                ?4,
+                '{\"presentation\":\"short\",\"question\":\"Accept?\",\"required_for\":[\"close_complete\"],\"expires_at\":null}',
+                '{}',
+                '[]',
+                '[]',
+                '[]',
+                '{}',
+                ?5,
+                ?6,
+                'surface_main',
+                'surface_instance_1',
+                CASE WHEN ?4 = 'resolved' THEN 'user' ELSE NULL END,
+                CASE WHEN ?4 = 'resolved' THEN 'user_interaction' ELSE NULL END,
+                ?7,
+                ?8,
+                CASE WHEN ?7 IS NOT NULL THEN 'migration_test_registration' ELSE NULL END,
+                CASE WHEN ?7 IS NOT NULL THEN 'verified' ELSE NULL END,
+                't0',
+                CASE WHEN ?4 = 'resolved' THEN 't1' ELSE NULL END,
+                '{}'
+            )",
+            params![
+                project_id,
+                fixture.judgment_id,
+                fixture.task_id,
+                fixture.status,
+                fixture.resolution_outcome,
+                fixture.resolution_json,
+                resolved_by_surface_id,
+                resolved_by_surface_instance_id
+            ],
         )?;
         Ok(())
     }
@@ -3647,6 +4485,121 @@ mod tests {
         conn.query_row("SELECT COUNT(*) FROM artifact_links", [], |row| row.get(0))
     }
 
+    fn current_resolution_json(action: &str, outcome: &str) -> &'static str {
+        match (action, outcome) {
+            ("accept", "accepted") => {
+                r#"{"selected_option_id":"accept","machine_action":"accept","resolution_outcome":"accepted","answer":{"product_decision":null,"technical_decision":null,"scope_decision":null,"sensitive_action_scope":null,"final_acceptance":{"accepted":true},"residual_risk_acceptance":null,"cancellation":null},"note":null,"accepted_risks":[],"resolved_by_actor_kind":"user"}"#
+            }
+            ("accept", "rejected") => {
+                r#"{"selected_option_id":"accept","machine_action":"accept","resolution_outcome":"rejected","answer":{"product_decision":null,"technical_decision":null,"scope_decision":null,"sensitive_action_scope":null,"final_acceptance":{"accepted":false},"residual_risk_acceptance":null,"cancellation":null},"note":null,"accepted_risks":[],"resolved_by_actor_kind":"user"}"#
+            }
+            _ => panic!("unsupported current resolution fixture {action}/{outcome}"),
+        }
+    }
+
+    fn legacy_resolution_without_action_json() -> &'static str {
+        r#"{"selected_option_id":"accept","machine_action":null,"resolution_outcome":null,"answer":{"product_decision":null,"technical_decision":null,"scope_decision":null,"sensitive_action_scope":null,"final_acceptance":{"legacy":true},"residual_risk_acceptance":null,"cancellation":null},"note":null,"accepted_risks":[],"resolved_by_actor_kind":"user"}"#
+    }
+
+    fn blocked_resolution_without_action_json() -> &'static str {
+        r#"{"selected_option_id":"defer","machine_action":null,"resolution_outcome":"blocked","answer":{"product_decision":null,"technical_decision":null,"scope_decision":null,"sensitive_action_scope":null,"final_acceptance":{"blocked":true},"residual_risk_acceptance":null,"cancellation":null},"note":null,"accepted_risks":[],"resolved_by_actor_kind":"user"}"#
+    }
+
+    fn insert_v10_failure_case(
+        conn: &Connection,
+        project_id: &str,
+        case: V10FailureCase,
+    ) -> rusqlite::Result<()> {
+        let fixture = match case {
+            V10FailureCase::ContradictoryActionOutcome => V9UserJudgmentFixture {
+                judgment_id: "judgment_contradictory",
+                task_id: "task_v10_failure",
+                status: "resolved",
+                resolution_outcome: Some("rejected"),
+                resolution_json: Some(current_resolution_json("accept", "accepted")),
+                resolved_surface: Some(("surface_main", "surface_instance_1")),
+            },
+            V10FailureCase::MalformedResolutionJson => V9UserJudgmentFixture {
+                judgment_id: "judgment_malformed_json",
+                task_id: "task_v10_failure",
+                status: "resolved",
+                resolution_outcome: Some("accepted"),
+                resolution_json: Some("{not-valid-json"),
+                resolved_surface: Some(("surface_main", "surface_instance_1")),
+            },
+            V10FailureCase::UnsupportedStatus => V9UserJudgmentFixture {
+                judgment_id: "judgment_unsupported_status",
+                task_id: "task_v10_failure",
+                status: "approved",
+                resolution_outcome: None,
+                resolution_json: None,
+                resolved_surface: None,
+            },
+            V10FailureCase::DanglingResolvedSurface => V9UserJudgmentFixture {
+                judgment_id: "judgment_dangling_surface",
+                task_id: "task_v10_failure",
+                status: "resolved",
+                resolution_outcome: Some("accepted"),
+                resolution_json: Some(current_resolution_json("accept", "accepted")),
+                resolved_surface: Some(("missing_surface", "missing_instance")),
+            },
+        };
+        insert_user_judgment_v9(conn, project_id, fixture)
+    }
+
+    fn judgment_authority_row(
+        conn: &Connection,
+        judgment_id: &str,
+    ) -> rusqlite::Result<JudgmentAuthorityRow> {
+        conn.query_row(
+            "SELECT
+                status,
+                resolution_outcome,
+                resolution_machine_action,
+                resolved_by_surface_id,
+                resolved_by_surface_instance_id
+               FROM user_judgments
+              WHERE judgment_id = ?1",
+            [judgment_id],
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                ))
+            },
+        )
+    }
+
+    fn assert_v10_failure_left_v9_intact(
+        conn: &Connection,
+        project_id: &str,
+    ) -> rusqlite::Result<()> {
+        assert!(foreign_keys_enabled(conn)?);
+        assert_eq!(
+            latest_migration_version(conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            migration_count(conn, PROJECT_STATE_DATABASE_KIND)?,
+            PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            project_schema_version(conn, project_id)?,
+            PROJECT_STATE_ENFORCEMENT_PROFILE_SCHEMA_VERSION
+        );
+        assert!(!column_exists(
+            conn,
+            "user_judgments",
+            "resolution_machine_action"
+        )?);
+        assert!(!sqlite_object_exists(conn, "table", "user_judgments_v10")?);
+        assert_integrity_check_clean(conn)?;
+        Ok(())
+    }
+
     fn assert_judgment_status_and_outcome(
         conn: &Connection,
         judgment_id: &str,
@@ -3733,6 +4686,63 @@ mod tests {
     fn assert_tool_invocations_surface_foreign_key(conn: &Connection) -> rusqlite::Result<()> {
         assert!(tool_invocations_has_surface_foreign_key(conn)?);
         Ok(())
+    }
+
+    fn assert_user_judgments_resolved_surface_foreign_key(
+        conn: &Connection,
+    ) -> rusqlite::Result<()> {
+        assert!(user_judgments_has_resolved_surface_foreign_key(conn)?);
+        Ok(())
+    }
+
+    fn user_judgments_has_resolved_surface_foreign_key(
+        conn: &Connection,
+    ) -> rusqlite::Result<bool> {
+        let mut stmt = conn.prepare("PRAGMA foreign_key_list(user_judgments)")?;
+        let mapped_rows = stmt.query_map([], |row| {
+            Ok((
+                row.get::<_, i64>(0)?,
+                row.get::<_, i64>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+            ))
+        })?;
+        let mut rows = Vec::new();
+        for row in mapped_rows {
+            rows.push(row?);
+        }
+
+        let expected = [
+            ("project_id", "project_id"),
+            ("resolved_by_surface_id", "surface_id"),
+            ("resolved_by_surface_instance_id", "surface_instance_id"),
+        ];
+        for id in rows.iter().map(|(id, _, _, _, _)| *id) {
+            let mut candidate = rows
+                .iter()
+                .filter(|(candidate_id, _, _, _, _)| *candidate_id == id)
+                .cloned()
+                .collect::<Vec<_>>();
+            candidate.sort_by_key(|(_, seq, _, _, _)| *seq);
+            if candidate.len() != expected.len() {
+                continue;
+            }
+            if !candidate
+                .iter()
+                .all(|(_, _, table, _, _)| table == "surfaces")
+            {
+                continue;
+            }
+            let actual = candidate
+                .iter()
+                .map(|(_, _, _, from, to)| (from.as_str(), to.as_str()))
+                .collect::<Vec<_>>();
+            if actual == expected {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     fn tool_invocations_has_surface_foreign_key(conn: &Connection) -> rusqlite::Result<bool> {
@@ -3826,6 +4836,18 @@ mod tests {
             "SELECT COALESCE(MAX(version), 0)
                FROM schema_migrations
               WHERE database_kind = ?1",
+            [database_kind],
+            |row| row.get(0),
+        )
+    }
+
+    fn latest_migration_name(conn: &Connection, database_kind: &str) -> rusqlite::Result<String> {
+        conn.query_row(
+            "SELECT name
+               FROM schema_migrations
+              WHERE database_kind = ?1
+              ORDER BY version DESC
+              LIMIT 1",
             [database_kind],
             |row| row.get(0),
         )

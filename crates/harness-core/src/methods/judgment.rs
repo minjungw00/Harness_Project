@@ -1300,6 +1300,7 @@ fn plan_record_user_judgment(
             judgment_id: request.user_judgment_id.as_str().to_owned(),
             status: storage_value(UserJudgmentStatus::Resolved)?,
             resolution_outcome,
+            resolution_machine_action: machine_action,
             resolution_json: serde_json::to_string(&resolution)?,
             sensitive_action_scope_json,
             resolved_by_actor_kind: storage_value(request.envelope.actor_kind)?,
