@@ -250,7 +250,6 @@ CREATE TABLE change_units (
   scope_summary_json TEXT NOT NULL DEFAULT '{}',
   bounded_paths_json TEXT NOT NULL DEFAULT '[]',
   write_basis_json TEXT NOT NULL DEFAULT '{}',
-  close_basis_json TEXT NOT NULL DEFAULT '{}',
   lifecycle_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -488,7 +487,7 @@ CREATE TABLE artifacts (
   size_bytes INTEGER CHECK (size_bytes IS NULL OR size_bytes >= 0),
   content_type TEXT,
   integrity_status TEXT NOT NULL DEFAULT 'verified'
-    CHECK (integrity_status IN ('verified', 'legacy_unknown', 'corrupt')),
+    CHECK (integrity_status IN ('verified', 'corrupt')),
   redaction_state TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('available', 'missing', 'integrity_failed', 'unavailable')),
   retention_json TEXT NOT NULL DEFAULT '{}',
@@ -686,8 +685,7 @@ Task 리비전과 닫기 근거:
 - 실질적 범위 변경은 `tasks.close_basis_json`을 무효화하고, `tasks.close_basis_revision`을 증가시키며, 담당 문서에 따라 판단 근거 행을 오래됨 또는 대체됨으로 만들 수 있습니다.
 - 사용자 판단 기록은 어느 Task 리비전도 증가시키지 않습니다.
 - `tasks.close_basis_json`은 nullable 현재 `CurrentCloseBasis` 저장소입니다. SQL `NULL`은 사용할 수 있는 현재 닫기 근거가 없다는 뜻입니다.
-- `change_units.close_basis_json`은 물리 호환성 저장소로 유지됩니다. 현재 닫기 근거 권한이 아니며, 현재 `CurrentCloseBasis` 권한은 `tasks.close_basis_json`에 있습니다.
-- `tasks.close_summary_json`은 성공한 종료 닫기 결과를 위해 보존됩니다. 기존 열린 Task는 종료 또는 레거시 요약 JSON을 현재 닫기 근거로 자동 변환하지 않습니다.
+- `tasks.close_summary_json`은 성공한 종료 닫기 결과를 위해 보존됩니다. 기존 열린 Task는 종료 닫기 요약 JSON을 현재 닫기 근거로 자동 변환하지 않습니다.
 
 판단 근거 저장:
 
@@ -736,9 +734,8 @@ Task 리비전과 닫기 근거:
 지속 아티팩트 무결성:
 
 - `artifacts.integrity_status='verified'`는 비어 있지 않은 `content_type`, 소문자 16진수 64자 `sha256`, 음수가 아닌 `size_bytes`를 요구합니다.
-- `integrity_status='legacy_unknown'`은 사실이 불완전한 레거시 행을 보존합니다. 타입을 아는 Core 코드는 그런 행이 verified처럼 보이도록 빈 해시, 0바이트 크기, 콘텐츠 타입을 만들어 내면 안 됩니다.
-- `integrity_status='corrupt'`는 알려진 무결성 실패를 기록합니다. `legacy_unknown` 또는 `corrupt` 아티팩트는 증거 또는 닫기 권한 요구사항을 만족할 수 없습니다.
-- DDL 제약은 메타데이터 형태만 검증합니다. 권한 사용 전 현재 바이트 검증은 아티팩트 저장소가 담당합니다. 마이그레이션은 메타데이터 열 형태가 올바르다는 이유만으로 레거시 행을 `verified`로 표시하면 안 됩니다.
+- `integrity_status='corrupt'`는 알려진 무결성 실패나 유효하지 않은 `verified` 사실 관계를 기록합니다. `corrupt` 아티팩트는 증거 또는 닫기 권한 요구사항을 만족할 수 없습니다.
+- DDL 제약은 메타데이터 형태만 검증합니다. 권한 사용 전 현재 바이트 검증은 아티팩트 저장소가 담당합니다. 본문 바이트가 없거나, 읽을 수 없거나, 사용할 수 없거나, 사용에 부적합한 상태는 계속 가용성 조건이며 다른 지속 무결성 값을 추가하지 않습니다.
 
 마이그레이션 기록:
 

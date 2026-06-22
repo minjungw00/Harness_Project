@@ -339,6 +339,12 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             primary_key_position: 0,
         },
     )?;
+    reject_column(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "change_units",
+        "close_basis_json",
+    )?;
     require_column_spec(
         conn,
         PROJECT_STATE_DATABASE_KIND,
@@ -1195,9 +1201,8 @@ fn validate_artifacts_integrity_status_constraint(conn: &Connection) -> StoreRes
         .collect::<Vec<_>>()
         .join(" ")
         .to_lowercase();
-    let has_status_values = normalized
-        .contains("integrity_status in ('verified', 'legacy_unknown', 'corrupt')")
-        || normalized.contains("integrity_status in('verified', 'legacy_unknown', 'corrupt')");
+    let has_status_values = normalized.contains("integrity_status in ('verified', 'corrupt')")
+        || normalized.contains("integrity_status in('verified', 'corrupt')");
     let has_verified_requirement = normalized.contains("integrity_status <> 'verified'")
         && normalized.contains("length(sha256) = 64")
         && normalized.contains("sha256 not glob '*[^0-9a-f]*'")

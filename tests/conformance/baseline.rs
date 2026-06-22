@@ -3006,28 +3006,28 @@ fn canonical_close_refs_and_artifact_integrity_remain_truthful() -> Result<(), B
         0
     );
 
-    let legacy_fixture = CoreFixture::new("artifact_integrity_legacy")?;
-    let legacy_service = core(&legacy_fixture);
+    let corrupt_fixture = CoreFixture::new("artifact_integrity_corrupt")?;
+    let corrupt_service = core(&corrupt_fixture);
     let (task_id, change_unit_id) =
-        create_task_with_change_unit(&legacy_fixture, &legacy_service, "artifact_legacy")?;
-    let staged = stage_artifact_for_record_run(&legacy_fixture, &legacy_service, &task_id)?;
-    let mut run = legacy_fixture.record_run_request(
-        "req_artifact_legacy_run",
-        "idem_artifact_legacy_run",
+        create_task_with_change_unit(&corrupt_fixture, &corrupt_service, "artifact_corrupt")?;
+    let staged = stage_artifact_for_record_run(&corrupt_fixture, &corrupt_service, &task_id)?;
+    let mut run = corrupt_fixture.record_run_request(
+        "req_artifact_corrupt_run",
+        "idem_artifact_corrupt_run",
         false,
         Some(2),
         &task_id,
         &change_unit_id,
     );
     run.artifact_inputs = vec![artifact_input_for_handle(
-        "artifact_input_legacy",
+        "artifact_input_corrupt",
         staged,
         Some("validation_report"),
-        Some("Legacy integrity evidence."),
+        Some("Corrupt integrity evidence."),
     )];
-    run.evidence_updates = vec![supported_evidence_update("Legacy integrity evidence.")];
+    run.evidence_updates = vec![supported_evidence_update("Corrupt integrity evidence.")];
     run.close_assessment = Some(CloseAssessmentInput {
-        result_summary: "Legacy integrity evidence.".to_owned(),
+        result_summary: "Corrupt integrity evidence.".to_owned(),
         result_refs: Vec::new(),
         residual_risks: Vec::new(),
         sensitive_categories: Vec::new(),
@@ -3035,19 +3035,20 @@ fn canonical_close_refs_and_artifact_integrity_remain_truthful() -> Result<(), B
     })
     .into();
     let response =
-        legacy_service.record_run(run, invocation(&legacy_fixture, AccessClass::RunRecording))?;
+        corrupt_service.record_run(run, invocation(&corrupt_fixture, AccessClass::RunRecording))?;
     let artifact_id = response.response_value["registered_artifacts"][0]["artifact_id"]
         .as_str()
         .expect("artifact id should be present")
         .to_owned();
-    legacy_fixture.set_artifact_integrity(&artifact_id, "legacy_unknown", None, None, None)?;
-    let status = legacy_service.status(
-        legacy_fixture.status_request("req_artifact_legacy_status", Some(&task_id)),
-        invocation(&legacy_fixture, AccessClass::ReadStatus),
+    corrupt_fixture.set_artifact_integrity(&artifact_id, "corrupt", None, None, None)?;
+    let status = corrupt_service.status(
+        corrupt_fixture.status_request("req_artifact_corrupt_status", Some(&task_id)),
+        invocation(&corrupt_fixture, AccessClass::ReadStatus),
     )?;
     let artifact_ref = &status.response_value["evidence_summary"]["coverage_items"][0]
         ["supporting_artifact_refs"][0];
-    assert_eq!(artifact_ref["integrity_status"], "legacy_unknown");
+    assert_eq!(artifact_ref["availability"], "integrity_failed");
+    assert_eq!(artifact_ref["integrity_status"], "corrupt");
     assert!(artifact_ref["content_type"].is_null());
     assert!(artifact_ref["sha256"].is_null());
     assert!(artifact_ref["size_bytes"].is_null());

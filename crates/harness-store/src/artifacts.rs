@@ -31,8 +31,6 @@ pub enum PersistentArtifactVerificationStatus {
     IntegrityFailed,
     /// The artifact body could not be accessed as a usable regular file.
     Unavailable,
-    /// Legacy rows or incomplete facts cannot establish current integrity.
-    LegacyUnknown,
     /// The stored path or resolved body escapes the artifact-store boundary.
     BoundaryViolation,
 }
@@ -156,11 +154,6 @@ pub fn verify_persistent_artifact_body(
 ) -> StoreResult<PersistentArtifactVerification> {
     match spec.integrity_status {
         "verified" => {}
-        "legacy_unknown" => {
-            return Ok(verification(
-                PersistentArtifactVerificationStatus::LegacyUnknown,
-            ))
-        }
         "corrupt" => {
             return Ok(verification(
                 PersistentArtifactVerificationStatus::IntegrityFailed,
@@ -204,7 +197,7 @@ pub fn verify_persistent_artifact_body(
         || spec.size_bytes.is_none()
     {
         return Ok(verification(
-            PersistentArtifactVerificationStatus::LegacyUnknown,
+            PersistentArtifactVerificationStatus::IntegrityFailed,
         ));
     }
 

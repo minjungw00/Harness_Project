@@ -4275,22 +4275,23 @@ fn record_run_rejects_cross_project_artifact_and_cross_task_run_refs_without_eff
 }
 
 #[test]
-fn record_run_rejects_unverified_artifact_close_basis_ref_without_effect(
-) -> Result<(), Box<dyn Error>> {
+fn record_run_rejects_corrupt_artifact_close_basis_ref_without_effect() -> Result<(), Box<dyn Error>>
+{
     let harness = MethodHarness::new()?;
-    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "unverified_artifact")?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "corrupt_basis_artifact")?;
     let (state_version, artifact_ref) = promote_artifact_for_record_run(
         &harness,
         &task_id,
         &change_unit_id,
         2,
-        "unverified_artifact",
+        "corrupt_basis_artifact",
     )?;
     let artifact_id = artifact_ref.artifact_id.as_str().to_owned();
     set_artifact_integrity(
         &harness,
         &artifact_id,
-        "legacy_unknown",
+        "corrupt",
         artifact_ref.content_type.as_deref(),
         artifact_ref.sha256.as_deref(),
         artifact_ref.size_bytes.as_ref().copied(),
@@ -5219,29 +5220,30 @@ fn record_run_promotes_zero_byte_artifact_with_real_empty_sha256() -> Result<(),
 }
 
 #[test]
-fn legacy_unknown_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Error>> {
+fn corrupt_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
-    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "legacy_artifact")?;
-    let handle = stage_artifact_for_record_run(&harness, &task_id, "legacy_artifact", 2)?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "corrupt_evidence_artifact")?;
+    let handle = stage_artifact_for_record_run(&harness, &task_id, "corrupt_evidence_artifact", 2)?;
 
     let mut request = record_run_request(
-        "req_run_legacy_artifact",
-        "idem_run_legacy_artifact",
+        "req_run_corrupt_evidence_artifact",
+        "idem_run_corrupt_evidence_artifact",
         false,
         Some(2),
         &task_id,
         &change_unit_id,
     );
     request.artifact_inputs = vec![artifact_input_for_handle(
-        "artifact_input_legacy",
+        "artifact_input_corrupt",
         handle,
         Some("validation_report"),
-        Some("Legacy integrity evidence."),
+        Some("Corrupt integrity evidence."),
     )];
-    request.evidence_updates = vec![supported_evidence_update("Legacy integrity evidence.")];
+    request.evidence_updates = vec![supported_evidence_update("Corrupt integrity evidence.")];
     request.close_assessment = Some(close_assessment_with_risks(
-        "Legacy integrity evidence.",
+        "Corrupt integrity evidence.",
         Vec::new(),
     ))
     .into();
@@ -5253,12 +5255,12 @@ fn legacy_unknown_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Err
         .expect("artifact id should be present")
         .to_owned();
 
-    set_artifact_integrity(&harness, &artifact_id, "legacy_unknown", None, None, None)?;
+    set_artifact_integrity(&harness, &artifact_id, "corrupt", None, None, None)?;
 
     let status = harness.service.status(
         StatusRequest {
             envelope: envelope(
-                "req_status_legacy_artifact",
+                "req_status_corrupt_evidence_artifact",
                 None,
                 false,
                 None,
@@ -5282,7 +5284,8 @@ fn legacy_unknown_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Err
         status.response_value["evidence_summary"]["status"],
         "blocked"
     );
-    assert_eq!(artifact_ref["integrity_status"], "legacy_unknown");
+    assert_eq!(artifact_ref["availability"], "integrity_failed");
+    assert_eq!(artifact_ref["integrity_status"], "corrupt");
     assert!(artifact_ref["content_type"].is_null());
     assert!(artifact_ref["sha256"].is_null());
     assert!(artifact_ref["size_bytes"].is_null());
@@ -5290,7 +5293,7 @@ fn legacy_unknown_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Err
 
     let check = harness.service.close_task(
         close_task_request(CloseTaskFixture {
-            request_id: "req_close_legacy_artifact",
+            request_id: "req_close_corrupt_evidence_artifact",
             idempotency_key: None,
             dry_run: false,
             expected_state_version: None,
@@ -8078,25 +8081,25 @@ fn close_assessment_cannot_invent_or_erase_sensitive_requirements() -> Result<()
 }
 
 #[test]
-fn legacy_category_only_close_basis_cannot_complete_close() -> Result<(), Box<dyn Error>> {
+fn category_only_close_basis_is_corrupt_owner_state() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
-    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "legacy_sensitive")?;
-    let after_basis = record_close_evidence(
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "category_only_basis")?;
+    record_close_evidence(
         &harness,
         &task_id,
         &change_unit_id,
         2,
-        "legacy_sensitive",
+        "category_only_basis",
         true,
     )?;
     let revision = task_revision(&harness, &task_id)?;
-    let mut legacy_basis = serde_json::to_value(
+    let mut category_only_basis = serde_json::to_value(
         revision
             .current_close_basis
             .expect("close basis should exist"),
     )?;
-    legacy_basis["sensitive_categories"] = json!(["network"]);
-    legacy_basis
+    category_only_basis["sensitive_categories"] = json!(["network"]);
+    category_only_basis
         .as_object_mut()
         .expect("close basis should be an object")
         .remove("sensitive_action_requirements");
@@ -8104,19 +8107,13 @@ fn legacy_category_only_close_basis_cannot_complete_close() -> Result<(), Box<dy
         &harness,
         &task_id,
         "close_basis_json",
-        Some(&legacy_basis.to_string()),
+        Some(&category_only_basis.to_string()),
     )?;
-    let after_final = record_final_acceptance(
-        &harness,
-        &task_id,
-        &change_unit_id,
-        after_basis,
-        "legacy_sensitive",
-    )?;
+    let before = harness.counts()?;
 
     let check = harness.service.close_task(
         close_task_request(CloseTaskFixture {
-            request_id: "req_legacy_sensitive_check",
+            request_id: "req_category_only_basis_check",
             idempotency_key: None,
             dry_run: false,
             expected_state_version: None,
@@ -8127,27 +8124,14 @@ fn legacy_category_only_close_basis_cannot_complete_close() -> Result<(), Box<dy
         }),
         invocation(AccessClass::ReadStatus),
     )?;
-    assert_eq!(
-        check.response_value["current_close_basis"]["sensitive_action_requirements"],
-        json!([])
+    assert_owner_state_rejection(
+        &check,
+        "tasks",
+        &task_id,
+        "close_basis_json",
+        &harness.runtime_home_path,
     );
-    assert_close_blocker(&check.response_value, "stale_current_close_basis");
-
-    let close = harness.service.close_task(
-        close_task_request(CloseTaskFixture {
-            request_id: "req_legacy_sensitive_close",
-            idempotency_key: Some("idem_legacy_sensitive_close"),
-            dry_run: false,
-            expected_state_version: Some(after_final),
-            task_id: &task_id,
-            intent: CloseIntent::Complete,
-            close_reason: Some(CloseReason::CompletedSelfChecked),
-            superseding_task_id: None,
-        }),
-        invocation(AccessClass::CoreMutation),
-    )?;
-    assert_eq!(close.response_value["close_state"], "blocked");
-    assert_close_blocker(&close.response_value, "stale_current_close_basis");
+    assert_eq!(harness.counts()?, before);
     Ok(())
 }
 
@@ -12634,12 +12618,6 @@ fn set_change_unit_owner_json(
         "write_basis_json" => {
             "UPDATE change_units
                 SET write_basis_json = ?3
-              WHERE project_id = ?1
-                AND change_unit_id = ?2"
-        }
-        "close_basis_json" => {
-            "UPDATE change_units
-                SET close_basis_json = ?3
               WHERE project_id = ?1
                 AND change_unit_id = ?2"
         }

@@ -1460,10 +1460,10 @@ fn unavailable_artifact_ref_from_raw(
         project_id: artifact_ref.project_id.clone(),
         task_id: artifact_ref.task_id.clone(),
         display_name: artifact_ref.display_name.clone(),
-        content_type: RequiredNullable::null(),
-        sha256: RequiredNullable::null(),
-        size_bytes: RequiredNullable::null(),
-        integrity_status: ArtifactIntegrityStatus::LegacyUnknown,
+        content_type: artifact_ref.content_type.clone(),
+        sha256: artifact_ref.sha256.clone(),
+        size_bytes: artifact_ref.size_bytes.clone(),
+        integrity_status: artifact_ref.integrity_status,
         redaction_state: artifact_ref.redaction_state,
         availability,
         created_by_run_ref: artifact_ref.created_by_run_ref.clone(),
@@ -1530,21 +1530,6 @@ fn current_close_basis_blocker(
         current_baseline.as_deref(),
     )? {
         Ok(Some(blocker))
-    } else if legacy_category_only_sensitive_basis(basis) {
-        Ok(Some(close_blocker(
-            CloseReadinessBlockerCategory::Scope,
-            "stale_current_close_basis",
-            "The current close basis contains legacy category-only sensitive data and must be re-recorded before completion.",
-            vec![basis.source_run_ref.clone()],
-            vec![NextActionSummary {
-                action_kind: NextActionKind::RecordRun,
-                owner_method: Some(MethodName::RecordRun),
-                label: "Record a fresh close basis with full sensitive-action requirements."
-                    .to_owned(),
-                blocking_question: None,
-                required_refs: vec![task_ref],
-            }],
-        )))
     } else {
         Ok(None)
     }
@@ -1647,10 +1632,6 @@ fn stored_run_is_not_current_close_basis_compatible(
         || record.scope_revision != current_scope_revision
         || record.baseline_ref.as_deref() != current_baseline
         || record.status != "recorded"
-}
-
-fn legacy_category_only_sensitive_basis(basis: &CurrentCloseBasis) -> bool {
-    !basis.sensitive_categories.is_empty() && basis.sensitive_action_requirements.is_empty()
 }
 
 fn task_completion_policy(task: &TaskRecord) -> CoreResult<CompletionPolicy> {

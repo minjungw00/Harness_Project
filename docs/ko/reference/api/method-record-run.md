@@ -86,7 +86,7 @@ ResidualRiskInput:
 - 호출자가 제공한 `close_assessment.result_refs`와 `ResidualRiskInput.source_refs`는 담당 문서가 다른 종류를 명시적으로 추가하지 않는 한 `record_kind=run`, `artifact`, `evidence_summary`, `change_unit`으로 제한됩니다.
 - 담당 문서가 명시적으로 추가하지 않는 한 이 메서드는 호출자가 제공한 `project_state`, `write_authorization`, `user_judgment`, `blocker`, `task_event`, `local_surface_registration`, `task` 참조를 닫기 근거에서 거절하거나 제외합니다.
 - 받아들인 모든 참조는 존재해야 하고 같은 프로젝트와 `Task`에 속해야 합니다. 아티팩트 참조는 `Task`에 연결되어 있고 `integrity_status=verified`로 현재 바이트 검증을 통과해야 합니다. 증거 참조는 현재 `Task` 증거 요약을 식별해야 합니다. 현재 닫기 근거 결과 참조로 쓰이는 실행 기록 참조는 현재 `Task`, 현재 적용 Change Unit, 현재 범위 리비전, 호환되는 기준선, 기록된 상태와 호환되는 기록된 현재 실행 기록을 식별해야 합니다.
-- 이력 실행 기록 참조는 이 새 현재 실행 기록이 이력의 verified 아티팩트나 증거를 명시적으로 재사용하고 그 재사용을 커밋된 증거나 닫기 평가에 기록하지 않는 한 닫기 근거 용도에서는 감사 기록입니다.
+- 이력 실행 기록 참조는 이 새 현재 실행 기록이 이력의 `verified` 아티팩트나 증거를 명시적으로 재사용하고 그 재사용을 커밋된 증거나 닫기 평가에 기록하지 않는 한 닫기 근거 용도에서는 감사 기록입니다.
 - Core는 `CurrentCloseBasis`에 기준 참조를 저장하며 호출자가 보낸 `state_version` 메타데이터를 권한으로 보존하지 않습니다.
 - Core는 기준 닫기 근거를 만들면서 현재 실행 기록, 현재 Change Unit, 현재 EvidenceSummary 참조를 추가할 수 있습니다.
 

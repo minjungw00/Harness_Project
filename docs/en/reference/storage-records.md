@@ -77,7 +77,7 @@ Baseline storage persists only the record families defined by this baseline stor
 | `state.sqlite` | `project_state` | Project state header | Storage profile, `state_version`, current `Task` pointer, default surface pointer, and project enforcement profile. |
 | `state.sqlite` | `surfaces` | Surface facts | Registered local surface facts needed for API envelope compatibility, actor-provenance role, capability display, and local-access posture. |
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, and current Change Unit pointer. |
-| `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, compatibility close-basis storage, Change Unit lifecycle, and owning `Task` relation. |
+| `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, Change Unit lifecycle, and owning `Task` relation. |
 | `state.sqlite` | `user_judgments` | User-owned judgment state | Pending, resolved, stale, superseded, and expired user-owned judgments, including required basis snapshot, basis status, selected option, machine action, resolution outcome, resolution actor, verified actor provenance for resolved rows, and sensitive-action approval scope when relevant. |
 | `state.sqlite` | `write_authorizations` | Cooperative write authority | Single-use `Write Authorization`, basis version, attempt scope, expiration, and consumption state. |
 | `state.sqlite` | `runs` | Execution or observation record | Committed execution or observation record, compatible authorization consumption, and compact evidence updates. |
@@ -131,13 +131,13 @@ Ordinary baseline Core operations preserve authority rows through lifecycle or s
 
 This preservation applies to `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers`, `task_events`, and `tool_invocations`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
 
-### Current close basis and legacy state
+### Current close basis
 
 The current close basis is Task-owned current state stored with the `tasks` family. It is distinct from the terminal close summary stored for a successful terminal close result.
 
-The authoritative current `CurrentCloseBasis` record is `tasks.close_basis_json`, interpreted with the Task-owned close-basis coordinates. `change_units.close_basis_json` is retained physical compatibility storage and must not be interpreted as the current close-basis authority.
+The authoritative current `CurrentCloseBasis` record is `tasks.close_basis_json`, interpreted with the Task-owned close-basis coordinates.
 
-Existing open Tasks do not automatically convert terminal close summary JSON or legacy summary JSON into a current close basis. Absence of a current close basis is represented as absence in `tasks.close_basis_json`, not as an empty generated basis. Presence, absence, or content in `change_units.close_basis_json` does not satisfy current `CurrentCloseBasis` authority.
+Existing open Tasks do not automatically convert terminal close summary JSON into a current close basis. Absence of a current close basis is represented as absence in `tasks.close_basis_json`, not as an empty generated basis. Change Unit records do not store or satisfy current `CurrentCloseBasis` authority.
 
 Stored judgments require a `JudgmentBasis`. Resolved stored judgments require a complete machine-readable resolution, actor provenance, and verified resolved surface provenance. Rows missing those facts are invalid owner state, not audit-compatible authority records.
 
@@ -162,7 +162,7 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | `user_judgments.resolution_outcome` | `accepted`, `rejected`, `deferred` in complete resolution groups |
 | `artifact_staging.status` | `staged`, `consumed`, `expired`, `discarded` |
 | `artifacts.status` | `available`, `missing`, `integrity_failed`, `unavailable` |
-| `artifacts.integrity_status` | `verified`, `legacy_unknown`, `corrupt` |
+| `artifacts.integrity_status` | `verified`, `corrupt` |
 | `artifact_links.owner_record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
 | `blockers.status` | `active`, `resolved`, `superseded` |
 | `tool_invocations.status` | `committed` |
@@ -186,7 +186,7 @@ Rules:
 | Host Installation | Installation metadata that is not used as authority, host trust proof, or replacement for the external host configuration. |
 | `surfaces` | Surface capability profile data. |
 | `tasks` | Shaping summary, bounded lists, autonomy boundary, current close basis, terminal close summary, lifecycle summary, and `CompletionPolicy`. |
-| `change_units` | Scope summaries, bounded lists, write basis summaries, compatibility close-basis storage, and lifecycle support data. |
+| `change_units` | Scope summaries, bounded lists, write basis summaries, and lifecycle support data. |
 | `user_judgments` | Judgment request, context, option, affected-ref, artifact-ref, basis snapshot, sensitive-action scope, selected option, machine action, resolution outcome, actor provenance, and resolution data. |
 | `write_authorizations` | `Write Authorization` attempt scope. |
 | `runs` | Observation and evidence-update data. |

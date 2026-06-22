@@ -250,7 +250,6 @@ CREATE TABLE change_units (
   scope_summary_json TEXT NOT NULL DEFAULT '{}',
   bounded_paths_json TEXT NOT NULL DEFAULT '[]',
   write_basis_json TEXT NOT NULL DEFAULT '{}',
-  close_basis_json TEXT NOT NULL DEFAULT '{}',
   lifecycle_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -488,7 +487,7 @@ CREATE TABLE artifacts (
   size_bytes INTEGER CHECK (size_bytes IS NULL OR size_bytes >= 0),
   content_type TEXT,
   integrity_status TEXT NOT NULL DEFAULT 'verified'
-    CHECK (integrity_status IN ('verified', 'legacy_unknown', 'corrupt')),
+    CHECK (integrity_status IN ('verified', 'corrupt')),
   redaction_state TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('available', 'missing', 'integrity_failed', 'unavailable')),
   retention_json TEXT NOT NULL DEFAULT '{}',
@@ -686,8 +685,7 @@ Task revisions and close basis:
 - A material scope change invalidates `tasks.close_basis_json`, increments `tasks.close_basis_revision`, and may make judgment basis rows stale or superseded under their owners.
 - Recording a user judgment does not increment either task revision.
 - `tasks.close_basis_json` is nullable current `CurrentCloseBasis` storage. SQL `NULL` means no current close basis is available.
-- `change_units.close_basis_json` is retained physical compatibility storage. It is not the current close-basis authority; current `CurrentCloseBasis` authority belongs to `tasks.close_basis_json`.
-- `tasks.close_summary_json` is preserved for successful terminal close results. Existing open Tasks do not automatically convert terminal or legacy summary JSON into a current close basis.
+- `tasks.close_summary_json` is preserved for successful terminal close results. Existing open Tasks do not automatically convert terminal close summary JSON into a current close basis.
 
 Judgment basis storage:
 
@@ -736,9 +734,8 @@ Staged artifact provenance:
 Persistent artifact integrity:
 
 - `artifacts.integrity_status='verified'` requires a non-empty `content_type`, a lowercase hexadecimal 64-character `sha256`, and nonnegative `size_bytes`.
-- `integrity_status='legacy_unknown'` preserves legacy rows with incomplete facts; typed Core code must not invent an empty hash, zero-byte size, or content type to make such rows look verified.
-- `integrity_status='corrupt'` records a known integrity failure. `legacy_unknown` or `corrupt` artifacts cannot satisfy evidence or close authority requirements.
-- The DDL check validates metadata shape only. Artifact Storage owns current-byte validation before authority use; migrations must not mark legacy rows `verified` merely because metadata columns are well formed.
+- `integrity_status='corrupt'` records a known integrity failure or invalid verified-fact relationship. `corrupt` artifacts cannot satisfy evidence or close authority requirements.
+- The DDL check validates metadata shape only. Artifact Storage owns current-byte validation before authority use. Missing, unreadable, unavailable, or unusable backing bytes remain availability conditions and do not add another persisted integrity value.
 
 Migration records:
 

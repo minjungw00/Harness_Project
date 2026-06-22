@@ -394,8 +394,7 @@ fn artifact_availability_for_verification_status(
         PersistentArtifactVerificationStatus::IntegrityFailed => {
             Ok(ArtifactAvailability::IntegrityFailed)
         }
-        PersistentArtifactVerificationStatus::Unavailable
-        | PersistentArtifactVerificationStatus::LegacyUnknown => match record.status.as_str() {
+        PersistentArtifactVerificationStatus::Unavailable => match record.status.as_str() {
             "missing" => Ok(ArtifactAvailability::Missing),
             "integrity_failed" => Ok(ArtifactAvailability::IntegrityFailed),
             "available" | "unavailable" => Ok(ArtifactAvailability::Unavailable),
@@ -425,9 +424,6 @@ fn effective_artifact_integrity_status(
         | PersistentArtifactVerificationStatus::BoundaryViolation => {
             Ok(ArtifactIntegrityStatus::Corrupt)
         }
-        PersistentArtifactVerificationStatus::LegacyUnknown => {
-            Ok(ArtifactIntegrityStatus::LegacyUnknown)
-        }
         PersistentArtifactVerificationStatus::Missing
         | PersistentArtifactVerificationStatus::Unavailable => parse_owner_storage_value(
             "artifacts",
@@ -444,7 +440,7 @@ fn sanitized_artifact_content_type(
 ) -> Option<String> {
     match integrity_status {
         ArtifactIntegrityStatus::Verified => record.content_type.clone(),
-        ArtifactIntegrityStatus::LegacyUnknown | ArtifactIntegrityStatus::Corrupt => record
+        ArtifactIntegrityStatus::Corrupt => record
             .content_type
             .as_ref()
             .filter(|value| !value.trim().is_empty())
@@ -458,7 +454,7 @@ fn sanitized_artifact_sha256(
 ) -> Option<String> {
     match integrity_status {
         ArtifactIntegrityStatus::Verified => record.sha256.clone(),
-        ArtifactIntegrityStatus::LegacyUnknown | ArtifactIntegrityStatus::Corrupt => record
+        ArtifactIntegrityStatus::Corrupt => record
             .sha256
             .as_ref()
             .filter(|value| artifact_sha256_is_lowercase_hex(value))
@@ -2006,7 +2002,6 @@ fn change_unit_insert(
         write_basis_json: serde_json::to_string(&json!({
             "baseline_ref": request.baseline_ref
         }))?,
-        close_basis_json: "{}".to_owned(),
         lifecycle_json: "{}".to_owned(),
     })
 }
@@ -2027,7 +2022,6 @@ fn synthetic_change_unit_record(
         scope_summary_json: insert.scope_summary_json.clone(),
         bounded_paths_json: insert.bounded_paths_json.clone(),
         write_basis_json: insert.write_basis_json.clone(),
-        close_basis_json: insert.close_basis_json.clone(),
         lifecycle_json: insert.lifecycle_json.clone(),
     }
 }

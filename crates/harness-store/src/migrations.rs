@@ -456,7 +456,6 @@ CREATE TABLE change_units (
   scope_summary_json TEXT NOT NULL DEFAULT '{}',
   bounded_paths_json TEXT NOT NULL DEFAULT '[]',
   write_basis_json TEXT NOT NULL DEFAULT '{}',
-  close_basis_json TEXT NOT NULL DEFAULT '{}',
   lifecycle_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -694,7 +693,7 @@ CREATE TABLE artifacts (
   size_bytes INTEGER CHECK (size_bytes IS NULL OR size_bytes >= 0),
   content_type TEXT,
   integrity_status TEXT NOT NULL DEFAULT 'verified'
-    CHECK (integrity_status IN ('verified', 'legacy_unknown', 'corrupt')),
+    CHECK (integrity_status IN ('verified', 'corrupt')),
   redaction_state TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('available', 'missing', 'integrity_failed', 'unavailable')),
   retention_json TEXT NOT NULL DEFAULT '{}',

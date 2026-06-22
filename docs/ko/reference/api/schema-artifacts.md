@@ -60,7 +60,7 @@ ArtifactRef:
 
 `integrity_status`는 필수입니다. `content_type`, `sha256`, `size_bytes`가 null이면 그 사실을 모른다는 뜻이며, 비어 있음, 0, 기본값이 아닙니다. 빠진 사실을 빈 해시, 0바이트 크기, 만들어 낸 콘텐츠 타입으로 표현하면 안 됩니다. 실제 0바이트 아티팩트는 `size_bytes: 0`과 빈 바이트의 SHA-256인 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`를 가집니다.
 
-`integrity_status=verified`에서는 `content_type`이 비어 있지 않고, `sha256`이 유효한 소문자 16진수 SHA-256 문자열이며, `size_bytes`가 음수가 아니어야 합니다. 권한을 지니는 증거와 닫기 사용은 [아티팩트 저장소](../storage-artifacts.md)의 현재 바이트 검증도 요구합니다. 사실이 불완전한 레거시 아티팩트는 `integrity_status=legacy_unknown`을 사용하고, 알려진 불일치는 `integrity_status=corrupt`를 사용합니다.
+`integrity_status=verified`에서는 `content_type`이 비어 있지 않고, `sha256`이 유효한 소문자 16진수 SHA-256 문자열이며, `size_bytes`가 음수가 아니어야 합니다. 권한을 지니는 증거와 닫기 사용은 [아티팩트 저장소](../storage-artifacts.md)의 현재 바이트 검증도 요구합니다. `integrity_status=corrupt`는 알려진 불일치나 유효하지 않은 `verified` 사실 관계를 기록합니다. 본문 바이트가 없거나, 읽을 수 없거나, 사용할 수 없거나, 사용에 부적합한 상태는 세 번째 무결성 값이 아니라 `availability`로 표현합니다.
 
 ## `StagedArtifactHandle`
 

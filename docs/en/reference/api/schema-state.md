@@ -376,7 +376,6 @@ Close-basis reference rules:
 - Artifact refs used for close evidence must be linked to the Task and have `integrity_status=verified` plus current-byte verification at use time under [Artifact Storage](../storage-artifacts.md).
 - Evidence refs must identify the current Task evidence summary. Run refs used as current close-basis result refs must identify a recorded current Run compatible with the current Task, current Change Unit, current scope revision, compatible baseline, and recorded status. Historical Runs are audit records unless a current Run explicitly reuses their verified artifacts or evidence and records that reuse.
 - Core may add the current Run, current Change Unit, and current EvidenceSummary refs when constructing the canonical close basis.
-- Legacy close bases with non-empty category-only sensitive data but no reconstructable action scope cannot satisfy complete close.
 
 Guarantee display rules:
 - `GuaranteeDisplay` is derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope.

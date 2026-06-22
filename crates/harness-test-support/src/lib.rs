@@ -1303,7 +1303,6 @@ pub mod core_fixtures {
         ScopeSummary,
         BoundedPaths,
         WriteBasis,
-        CloseBasis,
         Lifecycle,
     }
 
@@ -1313,7 +1312,6 @@ pub mod core_fixtures {
                 Self::ScopeSummary => "scope_summary_json",
                 Self::BoundedPaths => "bounded_paths_json",
                 Self::WriteBasis => "write_basis_json",
-                Self::CloseBasis => "close_basis_json",
                 Self::Lifecycle => "lifecycle_json",
             }
         }

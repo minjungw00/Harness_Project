@@ -427,11 +427,10 @@ unusable
 
 ```text
 verified
-legacy_unknown
 corrupt
 ```
 
-`verified` means persisted artifact facts are complete enough for integrity-aware use and current-byte verification may be performed before authority use. `legacy_unknown` means preserved artifact metadata lacks the complete facts required for verification. `corrupt` means stored bytes or metadata are known not to match persisted integrity facts. Artifact evidence and close use require the current-byte checks owned by [Artifact Storage](../storage-artifacts.md).
+`verified` means persisted artifact facts are complete enough for integrity-aware use and current-byte verification may be performed before authority use. `corrupt` means stored bytes or metadata are known not to match persisted integrity facts, or the stored verified-fact relationship is invalid. Artifact evidence and close use require the current-byte checks owned by [Artifact Storage](../storage-artifacts.md). Missing, unreadable, unavailable, or unusable backing bytes are represented by artifact availability values, not by artifact integrity values.
 
 Artifact storage lifecycle and body-read eligibility are owned by [Artifact Storage](../storage-artifacts.md).
 

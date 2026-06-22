@@ -4,15 +4,14 @@ use std::{
 };
 
 use harness_types::{
-    BaselineRef, ChangeUnitId, CurrentCloseBasis, EvidenceCoverageItem, IdempotencyKey,
-    JudgmentBasis, JudgmentBasisCompatibilityStatus, JudgmentResolutionOutcome, MethodName,
-    ObservedChanges, PersistedArtifactProducer, PersistedArtifactProvenance,
-    PersistedArtifactProvenanceMetadata, PersistedEvidenceMetadata, PersistedJudgmentBasis,
-    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
-    ProjectEnforcementProfile, ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus,
-    ProjectId, RequestHash, RequiredNullable, ResidualRisk, RunId, StagedArtifactHandleId,
-    StateRecordRef, SurfaceId, TaskId, UserJudgmentOptionAction, UtcTimestamp,
-    BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
+    CurrentCloseBasis, EvidenceCoverageItem, IdempotencyKey, JudgmentBasis,
+    JudgmentBasisCompatibilityStatus, JudgmentResolutionOutcome, MethodName, ObservedChanges,
+    PersistedArtifactProducer, PersistedArtifactProvenance, PersistedArtifactProvenanceMetadata,
+    PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentOptions,
+    PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, ProjectEnforcementProfile,
+    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, ProjectId, RequestHash,
+    RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId, UserJudgmentOptionAction,
+    UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
 };
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
@@ -190,7 +189,6 @@ pub struct ChangeUnitInsert {
     pub scope_summary_json: String,
     pub bounded_paths_json: String,
     pub write_basis_json: String,
-    pub close_basis_json: String,
     pub lifecycle_json: String,
 }
 
@@ -474,45 +472,6 @@ pub struct TaskRevisionRecord {
     pub current_close_basis: Option<CurrentCloseBasis>,
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-struct LegacyCategoryOnlyCloseBasis {
-    close_basis_revision: u64,
-    scope_revision: u64,
-    task_id: TaskId,
-    change_unit_id: ChangeUnitId,
-    baseline_ref: RequiredNullable<BaselineRef>,
-    result_summary: String,
-    result_refs: Vec<StateRecordRef>,
-    evidence_summary_ref: RequiredNullable<StateRecordRef>,
-    residual_risks: Vec<ResidualRisk>,
-    sensitive_categories: Vec<String>,
-    recovery_constraints: Vec<String>,
-    source_run_ref: StateRecordRef,
-    updated_at: UtcTimestamp,
-}
-
-impl From<LegacyCategoryOnlyCloseBasis> for CurrentCloseBasis {
-    fn from(value: LegacyCategoryOnlyCloseBasis) -> Self {
-        Self {
-            close_basis_revision: value.close_basis_revision,
-            scope_revision: value.scope_revision,
-            task_id: value.task_id,
-            change_unit_id: value.change_unit_id,
-            baseline_ref: value.baseline_ref,
-            result_summary: value.result_summary,
-            result_refs: value.result_refs,
-            evidence_summary_ref: value.evidence_summary_ref,
-            residual_risks: value.residual_risks,
-            sensitive_categories: value.sensitive_categories,
-            sensitive_action_requirements: Vec::new(),
-            recovery_constraints: value.recovery_constraints,
-            source_run_ref: value.source_run_ref,
-            updated_at: value.updated_at,
-        }
-    }
-}
-
 /// Current Change Unit row data needed by Core method implementations.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChangeUnitRecord {
@@ -525,7 +484,6 @@ pub struct ChangeUnitRecord {
     pub scope_summary_json: String,
     pub bounded_paths_json: String,
     pub write_basis_json: String,
-    pub close_basis_json: String,
     pub lifecycle_json: String,
 }
 
@@ -1689,7 +1647,6 @@ impl ProjectMutation<'_> {
         validate_json_text("change_units.scope_summary_json", &input.scope_summary_json)?;
         validate_json_text("change_units.bounded_paths_json", &input.bounded_paths_json)?;
         validate_json_text("change_units.write_basis_json", &input.write_basis_json)?;
-        validate_json_text("change_units.close_basis_json", &input.close_basis_json)?;
         validate_json_text("change_units.lifecycle_json", &input.lifecycle_json)?;
         let basis_state_version = u64_to_i64("basis_state_version", committed_state_version)?;
 
@@ -1704,7 +1661,6 @@ impl ProjectMutation<'_> {
                 scope_summary_json,
                 bounded_paths_json,
                 write_basis_json,
-                close_basis_json,
                 lifecycle_json,
                 created_at,
                 updated_at
@@ -1720,7 +1676,6 @@ impl ProjectMutation<'_> {
                 ?6,
                 ?7,
                 ?8,
-                ?9,
                 strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
                 strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
             )",
@@ -1732,7 +1687,6 @@ impl ProjectMutation<'_> {
                 input.scope_summary_json,
                 input.bounded_paths_json,
                 input.write_basis_json,
-                input.close_basis_json,
                 input.lifecycle_json
             ],
         )?;
@@ -2837,7 +2791,6 @@ fn current_change_unit(
             scope_summary_json,
             bounded_paths_json,
             write_basis_json,
-            close_basis_json,
             lifecycle_json
          FROM change_units
          WHERE project_id = ?1
@@ -2868,7 +2821,6 @@ fn change_unit_record(
             scope_summary_json,
             bounded_paths_json,
             write_basis_json,
-            close_basis_json,
             lifecycle_json
          FROM change_units
          WHERE project_id = ?1
@@ -2900,8 +2852,7 @@ fn change_unit_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Chan
         scope_summary_json: row.get(6)?,
         bounded_paths_json: row.get(7)?,
         write_basis_json: row.get(8)?,
-        close_basis_json: row.get(9)?,
-        lifecycle_json: row.get(10)?,
+        lifecycle_json: row.get(9)?,
     })
 }
 
@@ -4169,14 +4120,8 @@ fn decode_current_close_basis_column(
 }
 
 fn decode_current_close_basis_text(record_ref: &str, text: &str) -> StoreResult<CurrentCloseBasis> {
-    match serde_json::from_str::<CurrentCloseBasis>(text) {
-        Ok(current) => Ok(current),
-        Err(_) => serde_json::from_str::<LegacyCategoryOnlyCloseBasis>(text)
-            .map(CurrentCloseBasis::from)
-            .map_err(|_| {
-                StoreError::corrupt_owner_state_json("tasks", record_ref, "close_basis_json")
-            }),
-    }
+    serde_json::from_str::<CurrentCloseBasis>(text)
+        .map_err(|_| StoreError::corrupt_owner_state_json("tasks", record_ref, "close_basis_json"))
 }
 
 fn decode_judgment_basis_column(record_ref: &str, text: &str) -> StoreResult<JudgmentBasis> {

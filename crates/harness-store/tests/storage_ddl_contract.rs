@@ -827,6 +827,8 @@ fn assert_project_contract_behavior(label: &str, conn: &Connection) -> Result<()
     assert_resolved_user_judgments_require_complete_resolution(label, conn);
     assert_tool_invocation_requires_identity(label, conn);
     assert_one_active_current_change_unit(label, conn);
+    assert_artifacts_integrity_status_is_closed(label, conn);
+    assert_verified_artifacts_require_integrity_facts(label, conn);
     Ok(())
 }
 
@@ -1129,6 +1131,68 @@ fn assert_one_active_current_change_unit(label: &str, conn: &Connection) {
                 updated_at
             )
             VALUES ('project_a', 'cu_current_2', 'task_a', 'active', 1, 't2', 't2')",
+            [],
+        )
+        .unwrap_err();
+    assert_constraint_error(label, error);
+}
+
+fn assert_artifacts_integrity_status_is_closed(label: &str, conn: &Connection) {
+    let error = conn
+        .execute(
+            "INSERT INTO artifacts (
+                project_id,
+                artifact_id,
+                task_id,
+                uri,
+                integrity_status,
+                redaction_state,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                'project_a',
+                'artifact_bad_integrity_status',
+                'task_a',
+                'harness-artifact://project_a/artifact_bad_integrity_status',
+                'legacy_unknown',
+                'none',
+                'unavailable',
+                't1',
+                't1'
+            )",
+            [],
+        )
+        .unwrap_err();
+    assert_constraint_error(label, error);
+}
+
+fn assert_verified_artifacts_require_integrity_facts(label: &str, conn: &Connection) {
+    let error = conn
+        .execute(
+            "INSERT INTO artifacts (
+                project_id,
+                artifact_id,
+                task_id,
+                uri,
+                integrity_status,
+                redaction_state,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                'project_a',
+                'artifact_verified_missing_facts',
+                'task_a',
+                'harness-artifact://project_a/artifact_verified_missing_facts',
+                'verified',
+                'none',
+                'available',
+                't1',
+                't1'
+            )",
             [],
         )
         .unwrap_err();

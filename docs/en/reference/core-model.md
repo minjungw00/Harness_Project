@@ -147,7 +147,7 @@ It considers the current `Task`, current scope, current Change Unit, required ju
 
 ### Current close basis
 
-`CurrentCloseBasis` is the current result and risk state used for close-readiness decisions. It contains the current `Task`, current Change Unit, `scope_revision`, `close_basis_revision`, baseline, result summary, result references, evidence-summary reference, residual risks, sensitive categories, recovery constraints, source Run reference, and update time.
+`CurrentCloseBasis` is the current result and risk state used for close-readiness decisions. It contains the current `Task`, current Change Unit, `scope_revision`, `close_basis_revision`, baseline, result summary, result references, evidence-summary reference, residual risks, sensitive categories, sensitive action requirements, recovery constraints, source Run reference, and update time.
 
 `CurrentCloseBasis` is pre-close authority input. A successful terminal close may produce a terminal close summary, but that terminal summary is not the current pre-close basis and must not be used to recreate one for an open `Task`.
 
@@ -372,7 +372,6 @@ Close-basis authority:
 - Artifact refs used for close evidence must be linked to the `Task` and have current-byte verified integrity at use time. Evidence refs must identify the current `Task` evidence summary. Run refs must identify a recorded current Run compatible with the current `Task`, current Change Unit, current scope revision, and compatible baseline. Historical Runs are audit records unless a current Run explicitly reuses their verified artifacts or evidence and records that reuse.
 - Core stores canonical refs and never treats caller-supplied state-version metadata as authority. Core may add the current Run, current Change Unit, and current EvidenceSummary refs.
 - Sensitive action requirements in the current close basis are derived by Core from committed Runs and consumed `Write Authorization` records. Category-only caller input cannot establish or erase a requirement.
-- Legacy close bases with non-empty category-only sensitive data but no reconstructable action scope cannot satisfy complete close.
 
 The current close basis changes through owner-defined transitions:
 

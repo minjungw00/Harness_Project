@@ -60,7 +60,7 @@ ArtifactRef:
 
 `integrity_status` is required. Null `content_type`, `sha256`, or `size_bytes` means the fact is unknown, not empty, not zero, and not defaulted. Missing facts must not be represented as an empty hash, zero-byte size, or invented content type. A real zero-byte artifact has `size_bytes: 0` and the SHA-256 of empty bytes, `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
 
-For `integrity_status=verified`, `content_type` is non-empty, `sha256` is a valid lowercase hexadecimal SHA-256 string, and `size_bytes` is nonnegative. Authority-bearing evidence and close use also require current-byte verification by [Artifact Storage](../storage-artifacts.md). Legacy artifacts with incomplete facts use `integrity_status=legacy_unknown`; known mismatches use `integrity_status=corrupt`.
+For `integrity_status=verified`, `content_type` is non-empty, `sha256` is a valid lowercase hexadecimal SHA-256 string, and `size_bytes` is nonnegative. Authority-bearing evidence and close use also require current-byte verification by [Artifact Storage](../storage-artifacts.md). `integrity_status=corrupt` records a known mismatch or invalid verified-fact relationship. Missing, unreadable, unavailable, or unusable backing bytes are represented through `availability`, not a third integrity value.
 
 ## `StagedArtifactHandle`
 

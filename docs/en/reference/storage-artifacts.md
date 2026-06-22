@@ -353,8 +353,7 @@ Storage meaning:
 | Value | Meaning |
 |---|---|
 | `verified` | Persistent artifact facts are complete, and current bytes can be integrity-checked before authority use. |
-| `legacy_unknown` | A preserved artifact lacks complete integrity facts. |
-| `corrupt` | The stored bytes or metadata are known not to match persisted integrity facts. |
+| `corrupt` | The stored bytes or metadata are known not to match persisted integrity facts, or the stored verified-fact relationship is invalid. |
 
 Persistent artifact facts:
 
@@ -369,8 +368,8 @@ Rules:
 - `verified` requires a non-empty `content_type`, a valid lowercase hexadecimal SHA-256 string, and nonnegative `size_bytes`.
 - Authority-bearing artifact use also requires current-byte verification at use time: the body or safe notice exists inside the artifact-store boundary, no symlink or path escape is followed, the stored target is a regular file or owner-approved safe representation, `artifacts.status=available`, current byte size equals stored `size_bytes`, current SHA-256 equals stored `sha256`, and the stored content-type and integrity facts remain valid.
 - Missing facts must not be represented as an empty hash, zero-byte size, or invented content type.
-- Legacy artifacts with incomplete facts remain `legacy_unknown`; migration must not mark a legacy artifact `verified` merely because metadata columns have the right shape.
-- `legacy_unknown`, `corrupt`, deleted, missing, unavailable, or modified artifacts cannot satisfy evidence or close authority requirements.
+- Missing, unreadable, unavailable, or unusable backing bytes are represented through availability handling, not by changing `integrity_status`.
+- `corrupt`, deleted, missing, unavailable, or modified artifacts cannot satisfy evidence or close authority requirements.
 - Read-only status and close paths may compute an effective missing or integrity-failed result for the response without mutating stored artifact lifecycle state.
 - Status displays may show that artifact facts are unavailable or corrupt without inventing facts.
 
@@ -385,7 +384,7 @@ Not allowed:
 - Do not treat `blocked` as an artifact availability status.
 - Do not use `sha256`, `size_bytes`, or `content_type` as security guarantee claims.
 - Do not treat `uri` as a caller-supplied arbitrary filesystem path.
-- Do not treat `legacy_unknown` or `corrupt` as evidence-eligible integrity states.
+- Do not treat `corrupt` as an evidence-eligible integrity state.
 - Raw secrets, tokens, and full sensitive logs must not be stored as evidence bytes.
 
 Owner links:

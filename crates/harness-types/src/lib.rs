@@ -878,7 +878,7 @@ mod tests {
     }
 
     #[test]
-    fn artifact_ref_requires_integrity_status_and_allows_null_legacy_facts() {
+    fn artifact_ref_requires_integrity_status_and_rejects_legacy_unknown() {
         let schema = serde_json::to_value(schemars::schema_for!(ArtifactRef))
             .expect("artifact schema should serialize");
         assert_required(
@@ -906,13 +906,17 @@ mod tests {
             "ArtifactRef should be closed"
         );
 
+        let corrupt = artifact_ref_json("corrupt", Value::Null, Value::Null, Value::Null);
+        assert!(serde_json::from_value::<ArtifactRef>(corrupt.clone()).is_ok());
+        assert!(validate_json_schema(&schema, &corrupt).is_ok());
+
         let legacy_unknown =
             artifact_ref_json("legacy_unknown", Value::Null, Value::Null, Value::Null);
-        assert!(serde_json::from_value::<ArtifactRef>(legacy_unknown.clone()).is_ok());
-        assert!(validate_json_schema(&schema, &legacy_unknown).is_ok());
+        assert!(serde_json::from_value::<ArtifactRef>(legacy_unknown.clone()).is_err());
+        assert!(validate_json_schema(&schema, &legacy_unknown).is_err());
 
         let mut missing_integrity =
-            artifact_ref_json("legacy_unknown", Value::Null, Value::Null, Value::Null);
+            artifact_ref_json("corrupt", Value::Null, Value::Null, Value::Null);
         remove_path(&mut missing_integrity, &["integrity_status"]);
         assert!(serde_json::from_value::<ArtifactRef>(missing_integrity.clone()).is_err());
         assert!(validate_json_schema(&schema, &missing_integrity).is_err());
