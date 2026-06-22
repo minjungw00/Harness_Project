@@ -82,9 +82,8 @@ Core는 하네스 상태를 위한 로컬 기준 기록입니다.
 [`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs),
 [`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/),
 [`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs)를
-읽습니다. 레거시 고정 프로젝트 설정 호환성을 볼 때는 이어서
-[`crates/harness-cli/src/local_mcp_command.rs`](../../../crates/harness-cli/src/local_mcp_command.rs)와
-[`crates/harness-cli/src/setup.rs`](../../../crates/harness-cli/src/setup.rs)를
+읽습니다. 등록된 접점의 역량과 로컬 접근 메타데이터는 이어서
+[`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs)를
 읽습니다.
 
 ## 경계 기억하기

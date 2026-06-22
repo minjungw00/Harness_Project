@@ -12,7 +12,7 @@ Fast reader routes:
 - Product orientation: [English](en/getting-started/overview.md) / [Korean](ko/getting-started/overview.md)
 - Installation: [English](en/getting-started/installation.md) / [Korean](ko/getting-started/installation.md)
 - Local MCP quickstart: [English](en/getting-started/quickstart.md) / [Korean](ko/getting-started/quickstart.md)
-- Detailed local MCP setup: [English](en/guides/local-mcp-setup.md) / [Korean](ko/guides/local-mcp-setup.md)
+- Surface recipes: [English](en/guides/surface-recipes.md) / [Korean](ko/guides/surface-recipes.md)
 - Reference navigation: [English](en/reference/README.md) / [Korean](ko/reference/README.md)
 
 Shared metadata:

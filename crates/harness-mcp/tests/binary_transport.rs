@@ -477,7 +477,6 @@ fn surface_registration_for_project(
         })
         .to_string(),
         local_access_json: json!({
-            "access_class": access_classes.first().copied().unwrap_or("read_status"),
             "authorized_access_classes": access_classes,
             "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
         })

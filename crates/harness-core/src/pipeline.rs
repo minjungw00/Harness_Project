@@ -1568,7 +1568,6 @@ mod tests {
                     display_name: Some("Pipeline Test Surface".to_owned()),
                     capability_profile_json: "{}".to_owned(),
                     local_access_json: json!({
-                        "access_class": "core_mutation",
                         "authorized_access_classes": ["read_status", "core_mutation"],
                         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
                     })

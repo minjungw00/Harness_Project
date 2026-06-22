@@ -119,27 +119,18 @@ pub(crate) fn parse_registered_local_access_grant(
     let object = value
         .as_object()
         .ok_or(RegisteredLocalAccessGrantError::InvalidShape)?;
-    let authorized_access_classes = if let Some(value) = object.get("authorized_access_classes") {
-        parse_authorized_access_classes(value)?
-    } else {
-        vec![parse_access_class_field(
-            object
-                .get("access_class")
-                .ok_or(RegisteredLocalAccessGrantError::InvalidShape)?,
-        )?]
-    };
-
-    if let Some(value) = object.get("access_class") {
-        let fallback_access_class = parse_access_class_field(value)?;
-        if !authorized_access_classes.contains(&fallback_access_class) {
-            return Err(RegisteredLocalAccessGrantError::InvalidShape);
-        }
+    if object.contains_key("access_class") {
+        return Err(RegisteredLocalAccessGrantError::InvalidShape);
     }
+    let authorized_access_classes = parse_authorized_access_classes(
+        object
+            .get("authorized_access_classes")
+            .ok_or(RegisteredLocalAccessGrantError::InvalidShape)?,
+    )?;
 
     let verification_basis = match object.get("verification_basis") {
         Some(Value::String(value)) if !value.trim().is_empty() => value.clone(),
-        Some(_) => return Err(RegisteredLocalAccessGrantError::InvalidShape),
-        None => VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION.to_owned(),
+        Some(_) | None => return Err(RegisteredLocalAccessGrantError::InvalidShape),
     };
 
     Ok(RegisteredLocalAccessGrant {
@@ -161,6 +152,9 @@ fn parse_authorized_access_classes(
         if !access_classes.contains(&access_class) {
             access_classes.push(access_class);
         }
+    }
+    if access_classes.is_empty() {
+        return Err(RegisteredLocalAccessGrantError::InvalidShape);
     }
     Ok(access_classes)
 }
@@ -257,4 +251,72 @@ fn access_class_mismatch_error(
         false,
         Some(details),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn registered_local_access_grant_accepts_current_array_shape() {
+        let grant = parse_registered_local_access_grant(
+            &json!({
+                "authorized_access_classes": [
+                    "read_status",
+                    "core_mutation",
+                    "read_status"
+                ],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            grant.authorized_access_classes,
+            vec![AccessClass::ReadStatus, AccessClass::CoreMutation]
+        );
+        assert_eq!(
+            grant.verification_basis,
+            VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+        );
+    }
+
+    #[test]
+    fn registered_local_access_grant_rejects_obsolete_or_incomplete_shapes() {
+        for grant in [
+            json!({"access_class": "read_status"}),
+            json!({
+                "access_class": "read_status",
+                "authorized_access_classes": ["read_status"],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({"verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION}),
+            json!({
+                "authorized_access_classes": "read_status",
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({
+                "authorized_access_classes": [],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({
+                "authorized_access_classes": ["unknown"],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({"authorized_access_classes": ["read_status"]}),
+            json!({
+                "authorized_access_classes": ["read_status"],
+                "verification_basis": ""
+            }),
+        ] {
+            assert_eq!(
+                parse_registered_local_access_grant(&grant.to_string()),
+                Err(RegisteredLocalAccessGrantError::InvalidShape),
+                "grant should be rejected: {grant}"
+            );
+        }
+    }
 }

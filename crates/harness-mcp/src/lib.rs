@@ -1161,44 +1161,43 @@ fn startup_authorized_access_classes(text: &str) -> Result<Vec<AccessClass>, Mcp
     let object = value.as_object().ok_or_else(|| {
         McpAdapterError::Environment("registered surface local access is not an object".to_owned())
     })?;
+    if object.contains_key("access_class") {
+        return Err(McpAdapterError::Environment(
+            "registered surface local access uses obsolete access_class".to_owned(),
+        ));
+    }
     let mut access_classes = Vec::new();
-    if let Some(value) = object.get("authorized_access_classes") {
-        let values = value.as_array().ok_or_else(|| {
+    let values = object
+        .get("authorized_access_classes")
+        .ok_or_else(|| {
+            McpAdapterError::Environment(
+                "registered surface local access grant is missing".to_owned(),
+            )
+        })?
+        .as_array()
+        .ok_or_else(|| {
             McpAdapterError::Environment(
                 "registered surface authorized access classes are not an array".to_owned(),
             )
         })?;
-        for value in values {
-            let access_class = startup_access_class(value)?;
-            if !access_classes.contains(&access_class) {
-                access_classes.push(access_class);
-            }
+    for value in values {
+        let access_class = startup_access_class(value)?;
+        if !access_classes.contains(&access_class) {
+            access_classes.push(access_class);
         }
-    } else if let Some(value) = object.get("access_class") {
-        access_classes.push(startup_access_class(value)?);
-    } else {
+    }
+    if access_classes.is_empty() {
         return Err(McpAdapterError::Environment(
-            "registered surface local access grant is missing".to_owned(),
+            "registered surface local access grant is empty".to_owned(),
         ));
     }
 
-    if let Some(value) = object.get("access_class") {
-        let fallback_access_class = startup_access_class(value)?;
-        if !access_classes.contains(&fallback_access_class) {
+    match object.get("verification_basis") {
+        Some(Value::String(text)) if !text.trim().is_empty() => (),
+        _ => {
             return Err(McpAdapterError::Environment(
-                "registered surface local access fallback grant is inconsistent".to_owned(),
+                "registered surface verification basis is invalid".to_owned(),
             ));
-        }
-    }
-
-    if let Some(value) = object.get("verification_basis") {
-        match value {
-            Value::String(text) if !text.trim().is_empty() => (),
-            _ => {
-                return Err(McpAdapterError::Environment(
-                    "registered surface verification basis is invalid".to_owned(),
-                ));
-            }
         }
     }
 
@@ -1919,7 +1918,6 @@ mod tests {
             Self::with_local_access(
                 capability_profile,
                 json!({
-                    "access_class": "core_mutation",
                     "authorized_access_classes": [
                         "read_status",
                         "core_mutation",
@@ -3104,7 +3102,6 @@ mod tests {
                 "supported_access_classes": ["core_mutation"]
             }),
             json!({
-                "access_class": "read_status",
                 "authorized_access_classes": ["read_status"],
                 "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
             }),
@@ -3740,11 +3737,44 @@ mod tests {
             .iter()
             .map(|access_class| access_class.as_str())
             .collect::<Vec<_>>();
-        let primary = names.first().copied().unwrap_or("read_status");
         json!({
-            "access_class": primary,
             "authorized_access_classes": names,
             "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
         })
+    }
+
+    #[test]
+    fn startup_local_access_rejects_obsolete_or_incomplete_shapes() {
+        for grant in [
+            json!({"access_class": "read_status"}),
+            json!({
+                "access_class": "read_status",
+                "authorized_access_classes": ["read_status"],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({"verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION}),
+            json!({
+                "authorized_access_classes": "read_status",
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({
+                "authorized_access_classes": [],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({
+                "authorized_access_classes": ["unknown"],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({"authorized_access_classes": ["read_status"]}),
+            json!({
+                "authorized_access_classes": ["read_status"],
+                "verification_basis": ""
+            }),
+        ] {
+            assert!(
+                startup_authorized_access_classes(&grant.to_string()).is_err(),
+                "grant should be rejected: {grant}"
+            );
+        }
     }
 }

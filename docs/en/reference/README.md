@@ -8,7 +8,7 @@ This README is route-only. It does not define term meanings, terminology metadat
 
 - Product/system boundaries: [Scope](scope.md), [Core Model](core-model.md), [Runtime Boundaries](runtime-boundaries.md), and [Security](security.md).
 - First-run agent host setup: [Quickstart](../getting-started/quickstart.md) for the shortest success path, then [Agent Host Setup](../guides/agent-host-setup.md) for the complete operator guide and [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md) for one user-scope integration serving multiple repositories.
-- Local executable contracts: [Administrative CLI](admin-cli.md) for `harness` setup commands and Runtime Home selection, and [MCP Transport](mcp-transport.md) for `harness-mcp` stdio startup, preflight, response wrapping, and shutdown.
+- Local executable contracts: [Administrative CLI](admin-cli.md) for `harness` administrative commands and Runtime Home selection, and [MCP Transport](mcp-transport.md) for `harness-mcp` stdio startup, preflight, response wrapping, and shutdown.
 - API method behavior: [API Methods](api/methods.md), then the linked method owner.
 - API schema families: [Schema Core](api/schema-core.md), [State Schemas](api/schema-state.md), [Artifact Schemas](api/schema-artifacts.md), [Judgment Schemas](api/schema-judgment.md), and [Value Sets](api/schema-value-sets.md).
 - API error families: [API Errors](api/errors.md), which routes to error codes, precedence, response routing, blocker routing, and machine-readable details.

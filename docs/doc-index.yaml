@@ -320,25 +320,6 @@ documents:
   - reference.mcp-transport
   - reference.runtime-boundaries
   - reference.agent-integration
-- doc_id: use.local-mcp-setup
-  path_en: docs/en/guides/local-mcp-setup.md
-  path_ko: docs/ko/guides/local-mcp-setup.md
-  kind: how_to
-  summary: Compatibility guidance for legacy fixed-project local MCP setup.
-  normative_level: guide
-  translation_policy: semantic_parity
-  primary_audience:
-  - operators
-  - agent integrators
-  - implementers
-  journeys:
-  - operate
-  depends_on:
-  - reference.admin-cli
-  - reference.mcp-transport
-  - reference.runtime-boundaries
-  - reference.agent-integration
-  - reference.api.methods
 - doc_id: development.index
   path_en: docs/en/development/README.md
   path_ko: docs/ko/development/README.md
@@ -736,7 +717,7 @@ documents:
   - Host Installation setup result states and verification reporting
   - administrative dry-run, machine output, and noninteractive approval behavior
   - repository guidance apply, status, and remove commands
-  - compatibility behavior for legacy local MCP setup orchestration
+  - unsupported `harness setup` command-family rejection behavior
   - '`baseline-workflow` local registration profile expansion'
   - administrative command boundary from public Harness API methods
   depends_on:

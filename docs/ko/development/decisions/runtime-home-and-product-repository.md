@@ -58,16 +58,18 @@ Home이나 Product Repository는 아닙니다.
   `CoreProjectStore` 프로젝트 로컬 접근.
 - [`crates/harness-store/src/artifacts.rs`](../../../../crates/harness-store/src/artifacts.rs):
   Runtime Home 아티팩트 스테이징과 영구 본문 검증.
-- [`crates/harness-cli/src/setup.rs`](../../../../crates/harness-cli/src/setup.rs):
-  로컬 MCP 설정 계획과 Runtime Home 준비.
+- [`crates/harness-cli/src/agent_command.rs`](../../../../crates/harness-cli/src/agent_command.rs):
+  에이전트 설정 오케스트레이션과 Runtime Home 준비.
+- [`crates/harness-cli/src/registration.rs`](../../../../crates/harness-cli/src/registration.rs):
+  등록된 접점의 역량과 로컬 접근 메타데이터 생성.
 - [`crates/harness-core/src/policy/path.rs`](../../../../crates/harness-core/src/policy/path.rs):
   Core 정책에서 쓰는 Product Repository 경로 정규화 도우미.
 
 ## 관련 테스트와 참조 담당 문서
 
 - [`crates/harness-cli/tests/binary_admin.rs`](../../../../crates/harness-cli/tests/binary_admin.rs)의
-  `harness_binary_local_mcp_setup_flow`,
-  `harness_binary_json_dry_run_is_parseable_and_does_not_register`.
+  `harness_binary_runs_administrative_initialization_and_registration`,
+  `harness_binary_agent_dry_run_writes_nothing_and_rejects_invalid_scope`.
 - [`crates/harness-test-support/src/lib.rs`](../../../../crates/harness-test-support/src/lib.rs)의
   `disposable_runtime_home_stays_under_system_temp`.
 - 계층 간 로컬 접근 동작은

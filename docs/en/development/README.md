@@ -90,9 +90,8 @@ then
 [`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/),
 and
 [`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs).
-For legacy fixed-project setup compatibility, continue with
-[`crates/harness-cli/src/local_mcp_command.rs`](../../../crates/harness-cli/src/local_mcp_command.rs)
-and [`crates/harness-cli/src/setup.rs`](../../../crates/harness-cli/src/setup.rs).
+For registered surface capability and local-access metadata, continue with
+[`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs).
 
 ## Boundary reminders
 

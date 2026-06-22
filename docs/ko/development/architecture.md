@@ -61,7 +61,7 @@ Cargo 워크스페이스는 아래 멤버로 구성됩니다.
 | `crates/harness-types` | `harness-types` | 라이브러리 | 공유 Rust 요청, 응답, 스키마 형태, 값 집합, 식별자, 정규 해시 타입. |
 | `crates/harness-store` | `harness-store` | 라이브러리 | SQLite, Runtime Home, 부트스트랩, 프로젝트 Store, 아티팩트 저장소, 마이그레이션, 검사, 저장소 오류 구현. |
 | `crates/harness-core` | `harness-core` | 라이브러리 | Core 서비스, 공유 요청 파이프라인, 메서드 계획, 정책 점검, Store 조율. |
-| `crates/harness-cli` | `harness-cli` | 라이브러리와 `harness` 바이너리 | Runtime Home 설정, 프로젝트와 접점 등록, Agent Integration Profile 설치, 호스트 어댑터, 저장소 guidance, 호환 로컬 MCP 설정을 위한 로컬 관리 CLI. |
+| `crates/harness-cli` | `harness-cli` | 라이브러리와 `harness` 바이너리 | Runtime Home 설정, 프로젝트와 접점 등록, Agent Integration Profile 설치, 호스트 어댑터, 저장소 guidance를 위한 로컬 관리 CLI. |
 | `crates/harness-mcp` | `harness-mcp` | 라이브러리와 `harness-mcp` 바이너리 | MCP stdio 어댑터, 시작 검증, 도구 목록, `tools/call` 디스패치, Core 호출. |
 | `crates/harness-test-support` | `harness-test-support` | 라이브러리 | 구현 테스트가 공유하는 폐기 가능한 Runtime Home, Store, Core, 픽스처 도우미. |
 | `tests/conformance` | `harness-conformance-tests` | `baseline` 테스트 대상 | Core 쪽 API를 통해 담당 문서가 정의한 동작을 실행하는 기준 범위 교차 메서드 시나리오. |
@@ -135,7 +135,7 @@ flowchart TD
 | `crates/harness-types` | `crates/harness-types/src/methods.rs`, `crates/harness-types/src/schema.rs`, `crates/harness-types/src/values.rs`, `crates/harness-types/src/ids.rs`, `crates/harness-types/src/canonical.rs` | `methods.rs`는 타입 지정 공개 요청과 결과 모델, 메서드와 접근 등급 매핑을 담습니다. `schema.rs`는 공유 스키마 형태 Rust 데이터, 응답 분기, Core 상태 형태, 아티팩트와 판단 구조, 지속 보조 형태를 담습니다. `values.rs`는 문서화된 값 이름에 대응하는 제어 Rust enum과 상수를 담습니다. `ids.rs`는 불투명 식별자 래퍼와 오래 유지되는 ID 생성 도우미를 담습니다. `canonical.rs`는 결정적 정규 JSON 직렬화와 요청 해시를 담습니다. |
 | `crates/harness-store` | `crates/harness-store/src/runtime_home.rs`, `crates/harness-store/src/bootstrap.rs`, `crates/harness-store/src/sqlite.rs`, `crates/harness-store/src/migrations.rs`, `crates/harness-store/src/core_pipeline.rs`, `crates/harness-store/src/artifacts.rs`, `crates/harness-store/src/inspection.rs`, `crates/harness-store/src/error.rs` | `runtime_home.rs`는 Runtime Home 경로를 해석합니다. `bootstrap.rs`는 Runtime Home 메타데이터를 초기화하고 프로젝트와 접점을 등록합니다. `sqlite.rs`는 registry/project SQLite 데이터베이스를 열고 검증합니다. `migrations.rs`는 기준 마이그레이션을 적용합니다. `core_pipeline.rs`는 `CoreProjectStore`, 읽기 도우미, 재실행 기록 행, 저장소 변이 타입, 원자적 Core 변이 커밋 경계를 제공합니다. `artifacts.rs`는 일시적 스테이징과 영구 아티팩트 본문 검증을 처리합니다. `inspection.rs`는 읽기 전용 설정 검사를 지원합니다. `error.rs`는 상위 계층에서 사용할 저장소 실패 분류를 제공합니다. |
 | `crates/harness-core` | `crates/harness-core/src/pipeline.rs`, `crates/harness-core/src/methods/`, `crates/harness-core/src/policy/` | `pipeline.rs`는 공통 요청 사전 점검, 검증된 요청 맥락 준비, 효과 경로 선택, 응답 구성, 재실행 처리, Core 커밋 조율을 담당합니다. `methods/`는 메서드별 검증, 계획, 저장소 변이 목록, 이벤트 페이로드, dry-run 요약, 결과 필드를 담당합니다. `policy/`는 등록된 접점 접근, 재실행 맥락, Product Repository 경로 정규화, 쓰기 권한 부여 호환성, 증거 상태, 판단 관련성, 닫기 준비 상태 계산에 쓰는 재사용 Core 정책 도우미를 담당합니다. |
-| `crates/harness-cli` | `crates/harness-cli/src/main.rs`, `crates/harness-cli/src/agent_command.rs`, `crates/harness-cli/src/host_integration/`, `crates/harness-cli/src/repository_guidance.rs`, `crates/harness-cli/src/guidance_template.rs`, `crates/harness-cli/src/local_mcp_command.rs`, `crates/harness-cli/src/setup.rs`, `crates/harness-cli/src/wizard.rs`, `crates/harness-cli/src/host_config.rs`, `crates/harness-cli/src/registration.rs` | `main.rs`는 관리 명령과 바이너리 종료 동작을 디스패치합니다. `agent_command.rs`는 `harness agent` install, project membership, status, verification, uninstall, guidance 명령을 파싱하고 오케스트레이션합니다. `host_integration/`은 Codex, Claude Code, generic 호스트 계획과 관리되는 호스트 설정을 맡습니다. `repository_guidance.rs`와 `guidance_template.rs`는 선택적 Product Repository guidance를 관리합니다. `local_mcp_command.rs`, `setup.rs`, `wizard.rs`, `host_config.rs`, `registration.rs`는 호환 로컬 MCP 설정 경로와 공유 로컬 등록 도우미로 남습니다. |
+| `crates/harness-cli` | `crates/harness-cli/src/main.rs`, `crates/harness-cli/src/agent_command.rs`, `crates/harness-cli/src/host_integration/`, `crates/harness-cli/src/repository_guidance.rs`, `crates/harness-cli/src/guidance_template.rs`, `crates/harness-cli/src/registration.rs` | `main.rs`는 관리 명령과 바이너리 종료 동작을 디스패치합니다. `agent_command.rs`는 `harness agent` install, project membership, status, verification, uninstall, guidance 명령을 파싱하고 오케스트레이션합니다. `host_integration/`은 Codex, Claude Code, generic 호스트 계획과 관리되는 호스트 설정을 맡습니다. `repository_guidance.rs`와 `guidance_template.rs`는 선택적 Product Repository guidance를 관리합니다. `registration.rs`는 등록된 접점을 위한 역량 프로필과 로컬 접근 메타데이터를 만듭니다. |
 | `crates/harness-mcp` | `crates/harness-mcp/src/main.rs`, `crates/harness-mcp/src/lib.rs` | `main.rs`는 stdio, `--check`, help, version 같은 명령 모드를 처리합니다. `lib.rs`는 MCP 도구 메타데이터, 통합 시작 검사, 요청 시점 프로젝트 라우팅, 어댑터 소유 `harness.list_projects` 유틸리티, 타입 지정 공개 `tools/call` 디코딩, 호출 맥락 파생, 초기화 instructions, JSON-RPC stdio 프레이밍, 응답 래핑을 담당합니다. |
 | `crates/harness-test-support` | `crates/harness-test-support/src/lib.rs` | 테스트 패키지와 크레이트 테스트가 쓰는 폐기 가능한 Runtime Home 도우미, Core와 Store용 픽스처 설정, 공유 요청 빌더, 픽스처 전용 도우미를 제공합니다. |
 
@@ -188,7 +188,7 @@ sequenceDiagram
 
 구현 흐름은 아래와 같습니다.
 
-1. `harness-mcp`는 `--integration <integration_id>`와 선택적 `HARNESS_HOME`에서 Runtime Home과 통합에 묶인 프로세스 맥락 하나를 해석합니다. 레거시 고정 프로젝트 환경 바인딩은 호환 경로로만 남습니다.
+1. `harness-mcp`는 `--integration <integration_id>`와 선택적 `HARNESS_HOME`에서 Runtime Home과 통합에 묶인 프로세스 맥락 하나를 해석합니다.
 2. `McpIntegrationStartupInspection`은 Runtime Home 메타데이터, Agent Integration Profile 상태, 접점과 접점 인스턴스 바인딩, 역할, 프로젝트 멤버십 읽기 가능성, stdio 시작 전에 필요한 registry JSON을 검증합니다. 모든 호출에 쓸 프로젝트 하나를 시작 시점에 선택하지 않습니다.
 3. stdio 루프는 줄 단위 JSON-RPC를 받아 `initialize`, `ping`, `tools/list`, `tools/call`을 디스패치합니다.
 4. `tools/list`는 공개 Harness 메서드 도구 아홉 개와 어댑터 소유 `harness.list_projects` 유틸리티를 노출합니다. 공개 `tools/call`에 대해 어댑터는 원시 `envelope`를 읽고, 허용된 프로젝트를 결정적으로 선택하고, 그 프로젝트에서 통합 접점을 검증하고, 어댑터가 관리하는 프로젝트와 접점 사실을 주입한 뒤, `arguments`를 `harness-types`의 해당 타입 지정 요청으로 디코딩합니다.
@@ -228,8 +228,6 @@ sequenceDiagram
 8. 검증은 설정된 MCP 서버를 초기화하고 도구 발견을 요청할 수 있습니다. 호스트가 프로젝트 신뢰, 프로젝트 MCP 승인, 재로드, 재시작, OAuth, 또는 비슷한 사용자 제어 행동을 소유하면 결과는 여전히 `action_required`일 수 있습니다.
 9. `harness agent status`, `verify`, `project add`, `project remove`, `uninstall`, `guidance` 명령은 명령이 설명하는 registry, 관리되는 호스트 항목, 관리되는 guidance만 읽거나 갱신합니다.
 
-`harness setup local-mcp`는 레거시 고정 프로젝트 MCP 설정을 위한 호환 경로로 `crates/harness-cli/src/local_mcp_command.rs`, `setup.rs`, `wizard.rs`, `host_config.rs`, `registration.rs`에 계속 구현되어 있습니다.
-
 ## 결정 경로
 
 아키텍처 개요는 워크스페이스와 실행 지도를 유지합니다. 집중 결정의 결과와
@@ -255,7 +253,7 @@ sequenceDiagram
 |---|---|
 | 구현 모듈에 함께 있는 단위 테스트 | 로컬 도우미, 파싱, 직렬화, 마이그레이션, Store, 정책, 경계 동작을 테스트 대상 코드 가까이에서 확인합니다. |
 | `crates/harness-core/src/methods/tests.rs` | `CoreService`를 통해 Core 메서드 계획, 공유 사전 점검 동작, 효과 분기, 재실행 동작, 스테이징 구분, 아티팩트 승격, 닫기 준비 상태 계산, 메서드 소유 저장소 변이 결과를 실행합니다. |
-| `crates/harness-cli/tests/binary_admin.rs` | `harness` 바이너리로 관리 초기화, 등록, `harness agent` install/status/verify/uninstall/guidance 동작, dry-run 동작, 로컬 MCP 호환 설정, 사전 점검 실패 처리, 호스트 설정 쓰기, 저장소 guidance 안전성, 명령줄 오류 경로를 실행합니다. |
+| `crates/harness-cli/tests/binary_admin.rs` | `harness` 바이너리로 관리 초기화, 등록, `harness agent` install/status/verify/uninstall/guidance 동작, dry-run 동작, 호스트 통합 사전 점검 처리, 호스트 설정 쓰기, 저장소 guidance 안전성, 명령줄 오류 경로를 실행합니다. |
 | `crates/harness-mcp/tests/binary_transport.rs` | `harness-mcp` 바이너리로 help/version, `--check`, stdio 프레이밍, 줄 단위 JSON-RPC, 재연결 동작, MCP 응답 래핑을 실행합니다. |
 | `tests/integration/mcp_surface.rs` | MCP 접점 바인딩, 도구 스키마, 공개 메서드 노출, 메서드별 접근 파생, Core/MCP 일치, 세션 거부 사례, 재실행 맥락 바인딩, 계층 간 저장 효과를 검증합니다. |
 | `tests/conformance/baseline.rs` | 공유 픽스처를 사용해 Core 쪽 API로 기준 범위 공개 동작 시나리오를 실행합니다. 재실행, 효과 없는 분기, 쓰기 권한 부여, 아티팩트 생명주기, 판단 경계, 닫기 준비 상태, 오류 처리 경로, 손상 처리 등이 포함됩니다. |
@@ -275,6 +273,6 @@ sequenceDiagram
 | 원자적 Store 커밋, 재실행 기록 행, 잠금/버전 관리, 저장소 기록, DDL | [저장소](../reference/storage.md), [저장 효과](../reference/storage-effects.md), [저장소 기록](../reference/storage-records.md), [저장소 DDL](../reference/storage-ddl.md), [저장소 버전 관리](../reference/storage-versioning.md). |
 | 아티팩트 스테이징과 영구 아티팩트 본문 검증 | [아티팩트 저장소](../reference/storage-artifacts.md), 그리고 해당 아티팩트를 참조하는 메서드 담당 문서. |
 | MCP 시작, 프로세스 바인딩, stdio 프레이밍, `tools/call` 래핑 | [MCP 전송](../reference/mcp-transport.md), 검증된 접점 맥락은 [에이전트 통합](../reference/agent-integration.md). |
-| 관리 에이전트 설정, 로컬 등록, 호환 로컬 MCP 설정 | [관리 CLI](../reference/admin-cli.md), 인접한 호스트, 위치, 프로세스 동작은 [에이전트 통합](../reference/agent-integration.md), [런타임 경계](../reference/runtime-boundaries.md), [MCP 전송](../reference/mcp-transport.md). |
+| 관리 에이전트 설정과 로컬 등록 | [관리 CLI](../reference/admin-cli.md), 인접한 호스트, 위치, 프로세스 동작은 [에이전트 통합](../reference/agent-integration.md), [런타임 경계](../reference/runtime-boundaries.md), [MCP 전송](../reference/mcp-transport.md). |
 
 이 페이지는 코드 읽기 방향을 잡고 구현 경계를 보존할 때 사용합니다. 동작을 결정할 때는 집중 담당 문서를 사용합니다.

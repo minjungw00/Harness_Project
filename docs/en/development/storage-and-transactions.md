@@ -42,8 +42,10 @@ or column definitions; use the storage Reference owners for those details.
 Administrative setup uses Store bootstrap and inspection paths before public
 method execution is available:
 
-1. `harness-cli` plans setup through
-   [`crates/harness-cli/src/setup.rs`](../../../crates/harness-cli/src/setup.rs).
+1. `harness-cli` plans administrative setup through
+   [`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs)
+   and registration metadata helpers in
+   [`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs).
 2. Store bootstrap initializes Runtime Home metadata and registers projects and
    surfaces through `initialize_runtime_home`, `register_project`, and
    `register_surface`.

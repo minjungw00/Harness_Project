@@ -76,9 +76,8 @@ pub fn capability_profile_json(
 pub fn local_access_json(
     access_classes: &[AccessClass],
 ) -> Result<String, RegistrationMetadataError> {
-    let primary = primary_access_class(access_classes)?;
+    primary_access_class(access_classes)?;
     serde_json::to_string(&json!({
-        "access_class": primary.as_str(),
         "authorized_access_classes": access_class_strings(access_classes),
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))
@@ -90,9 +89,6 @@ pub fn local_access_json(
 }
 
 /// Parses registered local-access metadata into a de-duplicated access set.
-///
-/// The preferred field is `authorized_access_classes`; the single-value
-/// `access_class` field is retained as a backward-compatible fallback.
 pub fn normalized_access_classes_from_local_access(
     text: &str,
 ) -> Result<Vec<AccessClass>, RegistrationMetadataError> {
@@ -104,31 +100,49 @@ pub fn normalized_access_classes_from_local_access(
             "local access metadata must be a JSON object",
         ));
     };
-
-    let mut access_classes = Vec::new();
-    if let Some(values) = object.get("authorized_access_classes") {
-        let Some(values) = values.as_array() else {
-            return Err(RegistrationMetadataError::usage(
-                "authorized_access_classes must be an array",
-            ));
-        };
-        for value in values {
-            let Some(raw) = value.as_str() else {
-                return Err(RegistrationMetadataError::usage(
-                    "authorized_access_classes entries must be strings",
-                ));
-            };
-            push_access_class(&mut access_classes, parse_access_class(raw)?);
-        }
+    if object.contains_key("access_class") {
+        return Err(RegistrationMetadataError::usage(
+            "local access metadata must not include access_class",
+        ));
     }
 
-    if access_classes.is_empty() {
-        let Some(raw) = object.get("access_class").and_then(Value::as_str) else {
+    let values = object
+        .get("authorized_access_classes")
+        .ok_or_else(|| {
+            RegistrationMetadataError::usage(
+                "local access metadata must include authorized_access_classes",
+            )
+        })?
+        .as_array()
+        .ok_or_else(|| {
+            RegistrationMetadataError::usage("authorized_access_classes must be an array")
+        })?;
+    let mut access_classes = Vec::new();
+    for value in values {
+        let Some(raw) = value.as_str() else {
             return Err(RegistrationMetadataError::usage(
-                "local access metadata must include an access class",
+                "authorized_access_classes entries must be strings",
             ));
         };
         push_access_class(&mut access_classes, parse_access_class(raw)?);
+    }
+    if access_classes.is_empty() {
+        return Err(RegistrationMetadataError::usage(
+            "authorized_access_classes must not be empty",
+        ));
+    }
+    match object.get("verification_basis") {
+        Some(Value::String(value)) if !value.trim().is_empty() => (),
+        Some(_) => {
+            return Err(RegistrationMetadataError::usage(
+                "verification_basis must be a non-empty string",
+            ))
+        }
+        None => {
+            return Err(RegistrationMetadataError::usage(
+                "local access metadata must include verification_basis",
+            ))
+        }
     }
 
     Ok(access_classes)
@@ -136,19 +150,15 @@ pub fn normalized_access_classes_from_local_access(
 
 /// Returns the display value used by the existing low-level list/register output.
 pub fn access_class_from_local_access(text: &str) -> Option<String> {
-    let value = serde_json::from_str::<Value>(text).ok()?;
-    let access_classes = value
-        .get("authorized_access_classes")
-        .and_then(Value::as_array)
-        .map(|values| values.iter().filter_map(Value::as_str).collect::<Vec<_>>())
-        .unwrap_or_default();
-    if !access_classes.is_empty() {
-        return Some(access_classes.join(","));
-    }
-    value
-        .get("access_class")
-        .and_then(Value::as_str)
-        .map(str::to_owned)
+    normalized_access_classes_from_local_access(text)
+        .ok()
+        .map(|access_classes| {
+            access_classes
+                .iter()
+                .map(|access_class| access_class.as_str())
+                .collect::<Vec<_>>()
+                .join(",")
+        })
 }
 
 /// Validates role-specific local-access constraints.
@@ -231,5 +241,65 @@ pub fn parse_json_object(field: &str, text: &str) -> Result<Value, RegistrationM
         Err(RegistrationMetadataError::usage(format!(
             "{field} must be a JSON object"
         )))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn local_access_json_uses_array_grant_only() {
+        let text =
+            local_access_json(&[AccessClass::ReadStatus, AccessClass::CoreMutation]).unwrap();
+        let value = serde_json::from_str::<Value>(&text).unwrap();
+
+        assert!(value.get("access_class").is_none());
+        assert_eq!(
+            value["authorized_access_classes"],
+            json!(["read_status", "core_mutation"])
+        );
+        assert_eq!(
+            value["verification_basis"],
+            VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+        );
+    }
+
+    #[test]
+    fn local_access_parser_rejects_obsolete_and_incomplete_grants() {
+        for grant in [
+            json!({"access_class": "read_status"}),
+            json!({
+                "access_class": "read_status",
+                "authorized_access_classes": ["read_status"],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({"verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION}),
+            json!({
+                "authorized_access_classes": "read_status",
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({
+                "authorized_access_classes": [],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({
+                "authorized_access_classes": ["unknown"],
+                "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
+            }),
+            json!({"authorized_access_classes": ["read_status"]}),
+            json!({
+                "authorized_access_classes": ["read_status"],
+                "verification_basis": ""
+            }),
+        ] {
+            assert!(
+                normalized_access_classes_from_local_access(&grant.to_string()).is_err(),
+                "grant should be rejected: {grant}"
+            );
+            assert!(access_class_from_local_access(&grant.to_string()).is_none());
+        }
     }
 }

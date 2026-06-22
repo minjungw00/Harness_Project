@@ -186,7 +186,6 @@ pub mod core_fixtures {
                     display_name: Some("Shared Test Surface".to_owned()),
                     capability_profile_json: default_capability_profile().to_string(),
                     local_access_json: json!({
-                        "access_class": "core_mutation",
                         "authorized_access_classes": [
                             "read_status",
                             "core_mutation",

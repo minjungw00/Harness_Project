@@ -291,10 +291,9 @@ Recommended next component:
 Why it exists:
 
 `harness-cli` implements the local `harness` administrative executable and
-reusable setup modules. It handles Runtime Home initialization, project and
-surface registration, Agent Integration Profile installation, host-specific MCP
-configuration, optional repository guidance, preflight execution, and
-compatibility local MCP setup.
+reusable agent setup modules. It handles Runtime Home initialization, project
+and surface registration, Agent Integration Profile installation, host-specific
+MCP configuration, optional repository guidance, and preflight execution.
 
 Owns in the implementation:
 
@@ -304,7 +303,6 @@ Owns in the implementation:
   commands, and output.
 - Codex, Claude Code, and generic export host integration planning.
 - Optional Product Repository guidance rendering and managed-block updates.
-- Compatibility `harness setup local-mcp` setup planning and interactive prompts.
 - Capability-profile and local-access metadata generation for registered
   surfaces.
 
@@ -322,8 +320,8 @@ Recommended first file:
 Important modules:
 
 - [`crates/harness-cli/src/main.rs`](../../../crates/harness-cli/src/main.rs)
-  for process dispatch, `run_cli_with_setup_process_and_wizard`, `command_init`,
-  `command_project`, and `command_surface`.
+  for process dispatch, `run_cli`, `command_init`, `command_project`, and
+  `command_surface`.
 - [`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs)
   for `harness agent` install, project membership, status, verification,
   uninstall, and guidance command orchestration.
@@ -333,24 +331,12 @@ Important modules:
   for managed Product Repository guidance discovery, apply, status, and removal.
 - [`crates/harness-cli/src/guidance_template.rs`](../../../crates/harness-cli/src/guidance_template.rs)
   for the Codex and Claude Code guidance body.
-- [`crates/harness-cli/src/local_mcp_command.rs`](../../../crates/harness-cli/src/local_mcp_command.rs)
-  for the compatibility `harness setup local-mcp` command, `LocalMcpProcess`,
-  `PreflightEnvironment`, preflight validation, config-file safety, and setup
-  output rendering.
-- [`crates/harness-cli/src/setup.rs`](../../../crates/harness-cli/src/setup.rs)
-  for compatibility local MCP setup planning, storage preparation, and local
-  registration helpers.
-- [`crates/harness-cli/src/wizard.rs`](../../../crates/harness-cli/src/wizard.rs)
-  for `WizardIo`, `TerminalWizardIo`, and the compatibility interactive setup
-  flow.
-- [`crates/harness-cli/src/host_config.rs`](../../../crates/harness-cli/src/host_config.rs)
-  for `render_config`, `render_configs`, and `GeneratedConfig`.
 - [`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs)
   for `capability_profile_json`, `local_access_json`, and access-class helpers.
 
 Important current symbols:
 
-- `run_cli_with_setup_process_and_wizard`, `CliError`
+- `run_cli`, `CliError`
 - `run_agent_command`, `agent_usage`, `AgentCommandError`,
   `AgentProcessOutput`
 - `command_install`, `command_status`, `command_verify`,
@@ -361,23 +347,17 @@ Important current symbols:
 - `HostKind`, `HostScope`, `HostPlan`, `HostAdapter`, `Verification`
 - `GuidanceTarget`, `GuidancePlan`, `guidance_status`,
   `plan_guidance_apply`, `apply_guidance_plan`, `plan_guidance_remove`
-- `run_setup_command_with_wizard`, `LocalMcpProcess`,
-  `ProductionLocalMcpProcess`, `PreflightProcessOutput`
-- `LocalMcpSetupOptions`, `LocalMcpSetupPlan`, `LocalMcpSetupResult`
-- `SetupAction`, `SetupActionKind`, `SetupActionTarget`,
-  `SetupSurfaceBinding`, `SetupConflict`
-- `plan_local_mcp_setup`, `prepare_local_mcp_setup_storage`,
-  `apply_local_mcp_setup_plan`
-- `render_configs`, `GeneratedConfig`, `WizardIo`
+- `capability_profile_json`, `local_access_json`,
+  `normalized_access_classes_from_local_access`
 
 Most relevant tests:
 
 - [`crates/harness-cli/tests/binary_admin.rs`](../../../crates/harness-cli/tests/binary_admin.rs)
   exercises the `harness` binary for administrative setup, dry-run behavior,
-  `harness agent` host setup, repository guidance, local MCP compatibility
-  setup, preflight handling, and config-file safety.
-- Colocated unit tests in CLI modules cover parsing, planning, rendering, and
-  wizard behavior.
+  `harness agent` host setup, repository guidance, setup-command rejection,
+  preflight handling, and config-file safety.
+- Colocated unit tests in CLI modules cover parsing, planning, rendering,
+  registration metadata, and host/guidance behavior.
 
 Recommended next component:
 

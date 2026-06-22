@@ -839,7 +839,6 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
 fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_missing_run")?;
     fixture.set_surface_local_access(json!({
-        "access_class": "read_status",
         "authorized_access_classes": [
             "read_status",
             "core_mutation",
@@ -929,7 +928,6 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
 fn missing_write_authorization_grant_blocks_prepare_write() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_missing_write")?;
     fixture.set_surface_local_access(json!({
-        "access_class": "read_status",
         "authorized_access_classes": [
             "read_status",
             "core_mutation",
@@ -1284,7 +1282,6 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
         .to_owned();
 
     fixture.set_surface_local_access(json!({
-        "access_class": "read_status",
         "authorized_access_classes": ["read_status"],
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))?;
@@ -1330,7 +1327,6 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
     assert_tool_execution_error(&mutating_without_core, "core_mutation");
 
     fixture.set_surface_local_access(json!({
-        "access_class": "core_mutation",
         "authorized_access_classes": ["core_mutation"],
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))?;
@@ -1366,7 +1362,6 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
 fn integration_access_class_derives_from_method_not_caller_fields() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_env_no_elevate")?;
     fixture.set_surface_local_access(json!({
-        "access_class": "read_status",
         "authorized_access_classes": ["read_status"],
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))?;
@@ -1642,7 +1637,6 @@ fn registered_core_mutation_grant_rejects_requested_write_authorization(
 ) -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("grant_reject")?;
     fixture.set_surface_local_access(json!({
-        "access_class": "core_mutation",
         "authorized_access_classes": ["core_mutation"],
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))?;
@@ -1662,7 +1656,6 @@ fn registered_core_mutation_grant_rejects_requested_write_authorization(
 fn capability_profile_cannot_override_registered_local_grant() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("capability_no_grant")?;
     fixture.set_surface_local_access(json!({
-        "access_class": "core_mutation",
         "authorized_access_classes": ["core_mutation"],
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))?;
@@ -1687,7 +1680,6 @@ fn capability_profile_cannot_override_registered_local_grant() -> Result<(), Box
 fn matching_registered_grant_and_requested_access_succeeds() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("grant_match")?;
     fixture.set_surface_local_access(json!({
-        "access_class": "read_status",
         "authorized_access_classes": ["read_status"],
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))?;
@@ -1833,34 +1825,26 @@ fn malformed_local_access_document_fails_closed() -> Result<(), Box<dyn Error>> 
         invocation(&fixture, AccessClass::ReadStatus),
     )?;
 
-    assert_rejected_code(&response.response_value, "LOCAL_ACCESS_MISMATCH");
+    assert_rejected_code(&response.response_value, "MCP_UNAVAILABLE");
     assert!(response.verified_surface.is_none());
     Ok(())
 }
 
 #[test]
-fn legacy_single_access_class_grant_remains_readable() -> Result<(), Box<dyn Error>> {
-    let fixture = CoreFixture::new("legacy_grant")?;
+fn obsolete_single_access_class_grant_fails_closed() -> Result<(), Box<dyn Error>> {
+    let fixture = CoreFixture::new("obsolete_grant")?;
     fixture.set_surface_local_access(json!({
         "access_class": "read_status"
     }))?;
     let core = CoreService::new(fixture.runtime_home_path());
 
     let response = core.status(
-        fixture.status_request("req_legacy_grant", None),
+        fixture.status_request("req_obsolete_grant", None),
         invocation(&fixture, AccessClass::ReadStatus),
     )?;
 
-    assert_eq!(response.response_value["base"]["response_kind"], "result");
-    let verified = response
-        .verified_surface
-        .as_ref()
-        .expect("legacy grant should create verified surface context");
-    assert_eq!(verified.access_class, AccessClass::ReadStatus);
-    assert_eq!(
-        verified.verification_basis,
-        "local_admin_registration:test_fixture_binding"
-    );
+    assert_rejected_code(&response.response_value, "MCP_UNAVAILABLE");
+    assert!(response.verified_surface.is_none());
     Ok(())
 }
 
@@ -2202,7 +2186,6 @@ fn local_access_without(removed: &[&str]) -> Value {
     .filter(|access_class| !removed.contains(access_class))
     .collect::<Vec<_>>();
     json!({
-        "access_class": authorized_access_classes.first().copied().unwrap_or("read_status"),
         "authorized_access_classes": authorized_access_classes,
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     })

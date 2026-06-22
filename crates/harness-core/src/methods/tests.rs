@@ -144,7 +144,6 @@ impl MethodHarness {
                 })
                 .to_string(),
                 local_access_json: json!({
-                    "access_class": "core_mutation",
                     "authorized_access_classes": [
                         "read_status",
                         "core_mutation",

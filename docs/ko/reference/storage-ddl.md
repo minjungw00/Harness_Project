@@ -677,8 +677,9 @@ Task 리비전과 닫기 근거:
 
 - `surfaces.local_access_json`은 등록된 로컬 접근 허용의 기준 저장 위치입니다.
 - `surfaces.interaction_role`은 등록된 접점 인스턴스가 `agent` 또는 `user_interaction` 행위자 출처를 제공하는지를 기록합니다. 기준 저장소는 혼합 역할 접점 인스턴스를 지원하지 않습니다.
-- 선호되는 허용 필드는 `authorized_access_classes: string[]`입니다. 접점 인스턴스 하나에 대해 문서화된 접근 등급 여러 개를 담을 수 있습니다. `access_class: string`은 하위 호환을 위한 단일 값 대체 필드입니다.
-- `verification_basis: string`은 허용이 어떻게 성립했는지 설명하는 통제된 등록 또는 어댑터 바인딩 진단 메타데이터입니다. 호출자 권한이 아니며 허용을 추가하지 않습니다.
+- `authorized_access_classes: string[]`은 필수이고, 문서화된 접근 등급을 하나 이상 담아야 하며, 접점 인스턴스 하나에 대해 여러 등급을 담을 수 있습니다.
+- `verification_basis: string`은 필수이며 비어 있으면 안 됩니다. 허용이 어떻게 성립했는지 설명하는 통제된 등록 또는 어댑터 바인딩 진단 메타데이터입니다. 호출자 권한이 아니며 허용을 추가하지 않습니다.
+- `access_class`는 `surfaces.local_access_json`에서 유효한 키가 아닙니다. 역량 프로필, 확인된 재실행 맥락, 호출 맥락에 저장된 `access_class` 필드는 각 담당 문서가 소유하는 별도 의미로 남습니다.
 - `surfaces.capability_profile_json`은 역량 선언이며 접근 등급 허용으로 취급하면 안 됩니다.
 
 멱등 재실행 행:

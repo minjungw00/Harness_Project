@@ -101,7 +101,7 @@ A local MCP surface is the practical route for supported Harness methods.
 
 Use it for status, scope updates, write checks, run/evidence recording, user-judgment capture, artifact staging, and close checks.
 
-For executable host setup, start with [Quickstart](../getting-started/quickstart.md), then [Agent Host Setup](agent-host-setup.md). Current Codex and Claude Code setup uses `harness agent install`. The old `harness setup local-mcp` command remains a compatibility path in [Legacy Local MCP Setup](local-mcp-setup.md).
+For executable host setup, start with [Quickstart](../getting-started/quickstart.md), then [Agent Host Setup](agent-host-setup.md). Current Codex, Claude Code, and generic export setup uses `harness agent install`.
 
 This recipe does not define the supported method list, surface registration, context exchange, storage effects, or security guarantees. Use the Reference owners for those details.
 

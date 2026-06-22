@@ -67,6 +67,7 @@ Exit and stream behavior:
 
 Not supported:
 
+- `harness setup` and `harness setup local-mcp` are not supported commands.
 - The CLI has no `serve`, `server`, or `connect` command.
 - The public `harness agent` contract has no broad automatic-confirmation flag. Use the explicit approval and replacement flags this contract requires.
 - Administrative commands are not public Harness API methods and must not be added to the public method list.
@@ -452,26 +453,6 @@ Rules:
 - `--project-id` is required.
 - Listing output is diagnostic registration information.
 - Listing output does not grant authority, prove local reachability, or replace owner-returned verified surface context.
-
-<a id="local-mcp-setup-orchestration"></a>
-## Compatibility: `harness setup local-mcp`
-
-`harness setup local-mcp` is a non-baseline compatibility command for legacy fixed-project MCP configuration. New setup examples and Host Installation records must use `harness agent install`.
-
-<a id="interactive-setup-frontend"></a>
-
-Compatibility rules:
-
-- The command remains administrative orchestration, not a public Harness API method.
-- Any interactive frontend for this command is compatibility UI for the same non-baseline legacy setup path.
-- It may generate legacy fixed-project configuration only when explicitly invoked for compatibility.
-- It must identify the result as compatibility output.
-- It must not be used as the baseline model for direct Codex or Claude Code installation.
-
-<a id="host-neutral-configuration"></a>
-### Compatibility host-neutral configuration
-
-Legacy host-neutral configuration fragments such as `harness-agent.mcp.json` and server names such as `harness-agent` are compatibility material only. They are not baseline required names.
 
 ## Administrative boundary
 

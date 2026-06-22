@@ -2,8 +2,7 @@
 
 use std::{
     collections::BTreeMap,
-    env, fmt, fs, io,
-    io::IsTerminal,
+    env, fmt, fs,
     path::{Path, PathBuf},
     process,
     time::{SystemTime, UNIX_EPOCH},
@@ -11,16 +10,12 @@ use std::{
 
 use harness_cli::{
     agent_command::{agent_usage, run_agent_command, AgentCommandError, ProductionAgentProcess},
-    local_mcp_command::{
-        run_setup_command_with_wizard, setup_usage, LocalMcpCommandError, ProductionLocalMcpProcess,
-    },
     registration::{
         access_class_from_local_access, capability_profile_json, local_access_json,
         parse_access_class, push_access_class, push_access_classes, validate_role_access_classes,
         RegistrationMetadataError, ADMIN_METADATA_JSON, BASELINE_WORKFLOW_PROFILE,
         DEFAULT_ACCESS_CLASS, DEFAULT_SURFACE_KIND,
     },
-    wizard::{TerminalWizardIo, WizardIo},
 };
 use harness_store::bootstrap::{
     initialize_runtime_home, list_projects, list_surfaces, register_project, register_surface,
@@ -42,19 +37,7 @@ fn main() {
         }
     };
 
-    let mut setup_process = ProductionLocalMcpProcess;
-    let stdin = io::stdin();
-    let stderr = io::stderr();
-    let input_is_terminal = stdin.is_terminal();
-    let mut wizard_io = TerminalWizardIo::new(stdin.lock(), stderr.lock(), input_is_terminal);
-
-    match run_cli_with_setup_process_and_wizard(
-        args,
-        |name| env::var_os(name),
-        &current_dir,
-        &mut setup_process,
-        &mut wizard_io,
-    ) {
+    match run_cli(args, |name| env::var_os(name), &current_dir) {
         Ok(output) => print!("{output}"),
         Err(CliError::Usage(message)) => {
             eprintln!("{message}");
@@ -71,31 +54,7 @@ fn main() {
     }
 }
 
-#[cfg(test)]
 fn run_cli<I, S, F>(args: I, env_var: F, current_dir: &Path) -> Result<String, CliError>
-where
-    I: IntoIterator<Item = S>,
-    S: Into<String>,
-    F: Fn(&str) -> Option<std::ffi::OsString>,
-{
-    let mut setup_process = ProductionLocalMcpProcess;
-    let mut wizard_io = harness_cli::wizard::NoWizardIo;
-    run_cli_with_setup_process_and_wizard(
-        args,
-        env_var,
-        current_dir,
-        &mut setup_process,
-        &mut wizard_io,
-    )
-}
-
-fn run_cli_with_setup_process_and_wizard<I, S, F>(
-    args: I,
-    env_var: F,
-    current_dir: &Path,
-    setup_process: &mut impl harness_cli::local_mcp_command::LocalMcpProcess,
-    wizard_io: &mut dyn WizardIo,
-) -> Result<String, CliError>
 where
     I: IntoIterator<Item = S>,
     S: Into<String>,
@@ -117,8 +76,6 @@ where
             }
         }
         "init" => command_init(&args[2..], env_var, current_dir),
-        "setup" => run_setup_command_with_wizard(&args[2..], current_dir, setup_process, wizard_io)
-            .map_err(CliError::from),
         "agent" => {
             let mut agent_process = ProductionAgentProcess;
             run_agent_command(&args[2..], current_dir, &mut agent_process).map_err(CliError::from)
@@ -479,8 +436,7 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  harness --help\n  harness --version\n  harness init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  HARNESS_HOME  Override Runtime Home path (default: $HOME/.harness)\n\nThese are local administrative setup commands, not public Harness API methods.\n",
-        setup_usage().trim_end(),
+        "Usage:\n  harness --help\n  harness --version\n  harness init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  HARNESS_HOME  Override Runtime Home path (default: $HOME/.harness)\n\nThese are local administrative commands, not public Harness API methods.\n",
         agent_usage().trim_end(),
         project_usage().trim_end(),
         surface_usage().trim_end()
@@ -551,15 +507,6 @@ impl From<RuntimeHomeResolutionError> for CliError {
     }
 }
 
-impl From<LocalMcpCommandError> for CliError {
-    fn from(error: LocalMcpCommandError) -> Self {
-        match error {
-            LocalMcpCommandError::Usage(message) => Self::Usage(message),
-            LocalMcpCommandError::Runtime(message) => Self::Runtime(message),
-        }
-    }
-}
-
 impl From<AgentCommandError> for CliError {
     fn from(error: AgentCommandError) -> Self {
         match error {
@@ -619,6 +566,23 @@ mod tests {
         .expect("help should not need Runtime Home");
 
         assert!(output.contains("harness --version"));
+        assert!(!output.contains("harness setup"));
+    }
+
+    #[test]
+    fn setup_command_family_is_unknown() {
+        for args in [
+            vec!["harness", "setup"],
+            vec!["harness", "setup", "local-mcp"],
+        ] {
+            let error = run_cli(args, |_| None, Path::new(env!("CARGO_MANIFEST_DIR")))
+                .expect_err("removed setup command should be unknown");
+
+            assert_eq!(
+                error,
+                CliError::Usage(format!("unknown command: setup\n\n{}", usage()))
+            );
+        }
     }
 
     #[test]
@@ -933,7 +897,7 @@ mod tests {
         assert_eq!(capability["local_reachability"], true);
         let local_access =
             serde_json::from_str::<Value>(&local_access).expect("local access should be JSON");
-        assert_eq!(local_access["access_class"], "core_mutation");
+        assert!(local_access.get("access_class").is_none());
         assert_eq!(
             local_access["authorized_access_classes"],
             json!(["core_mutation"])
@@ -1140,7 +1104,7 @@ mod tests {
         );
         let local_access =
             serde_json::from_str::<Value>(&local_access).expect("local access should be JSON");
-        assert_eq!(local_access["access_class"], "core_mutation");
+        assert!(local_access.get("access_class").is_none());
         assert_eq!(
             local_access["authorized_access_classes"],
             json!(["core_mutation", "read_status"])
@@ -1219,7 +1183,7 @@ mod tests {
             .expect("surface metadata should exist");
         let local_access =
             serde_json::from_str::<Value>(&local_access).expect("local access should be JSON");
-        assert_eq!(local_access["access_class"], "read_status");
+        assert!(local_access.get("access_class").is_none());
         assert_eq!(local_access["authorized_access_classes"], expected);
         assert!(local_access.get("profile").is_none());
     }
@@ -1295,7 +1259,7 @@ mod tests {
                 "artifact_registration"
             ])
         );
-        assert_eq!(local_access["access_class"], "run_recording");
+        assert!(local_access.get("access_class").is_none());
     }
 
     #[test]

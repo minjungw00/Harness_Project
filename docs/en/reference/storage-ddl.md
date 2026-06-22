@@ -677,8 +677,9 @@ Surface local access grants:
 
 - `surfaces.local_access_json` is the baseline storage location for registered local access grants.
 - `surfaces.interaction_role` records whether the registered surface instance supplies `agent` or `user_interaction` actor provenance. Baseline storage does not support mixed-role surface instances.
-- The preferred grant field is `authorized_access_classes: string[]`; it may contain multiple documented access classes for one surface instance. `access_class: string` is a backward-compatible single-value fallback.
-- `verification_basis: string` is controlled registration or adapter-binding diagnostic metadata for explaining how the grant was established. It is not caller authority and does not add a grant.
+- `authorized_access_classes: string[]` is required, must contain at least one documented access class, and may contain multiple classes for one surface instance.
+- `verification_basis: string` is required and must be non-empty. It is controlled registration or adapter-binding diagnostic metadata for explaining how the grant was established. It is not caller authority and does not add a grant.
+- `access_class` is not a valid key in `surfaces.local_access_json`. Stored `access_class` fields in capability profiles, verified replay context, or invocation context remain separate meanings owned by their respective owners.
 - `surfaces.capability_profile_json` is a capability declaration and must not be treated as an access-class grant.
 
 Idempotency replay rows:

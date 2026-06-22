@@ -138,10 +138,11 @@ Condition:
 - `surface_id` is a selector for a registered local surface.
 - `surface_instance_id` distinguishes a registered instance when a method owner returns or requires it.
 - `surfaces.local_access_json` is the baseline source of registered local access grants for that surface instance.
-- The preferred grant field is `authorized_access_classes: string[]`; it may contain multiple documented access classes for the same surface instance. `access_class: string` is a backward-compatible single-value fallback.
+- `authorized_access_classes: string[]` is required. It contains one or more documented access classes for the same surface instance.
+- `access_class` is not a valid grant field in `surfaces.local_access_json`; capability profiles and invocation contexts have their own separate `access_class` fields.
 - A baseline-workflow registration profile may expand to the explicit access-class set `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, and `run_recording`.
 - A full-workflow profile must be explicitly selected and must not be the implicit default.
-- `verification_basis: string` is controlled registration or adapter-binding diagnostic metadata that explains how the grant was established. It does not grant access.
+- `verification_basis: string` is required and must be non-empty. It is controlled registration or adapter-binding diagnostic metadata that explains how the grant was established. It does not grant access.
 - `interaction_role: string` identifies whether the surface instance acts as `agent` or `user_interaction` for authority-resolution purposes. Baseline registration has no mixed-role surface instance.
 - Registration facts are usable only through owner-returned verification for the current request.
 

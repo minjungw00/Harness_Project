@@ -67,6 +67,7 @@ harness agent guidance remove --integration-id ID --project-id ID [--host codex|
 
 지원하지 않는 것:
 
+- `harness setup`과 `harness setup local-mcp`는 지원되는 명령이 아닙니다.
 - CLI에는 `serve`, `server`, `connect` 명령이 없습니다.
 - 공개 `harness agent` 계약에는 포괄적 자동 확인 플래그가 없습니다. 이 계약이 요구하는 명시적 승인 및 교체 플래그를 사용해야 합니다.
 - 관리 명령은 공개 하네스 API 메서드가 아니며 공개 메서드 목록에 추가되면 안 됩니다.
@@ -452,26 +453,6 @@ MCP 등록 지침:
 - `--project-id`는 필수입니다.
 - 목록 출력은 진단용 등록 정보입니다.
 - 목록 출력은 권한을 부여하거나, 로컬 도달 가능성을 증명하거나, 담당 결과가 반환한 확인된 접점 맥락을 대신하지 않습니다.
-
-<a id="local-mcp-setup-orchestration"></a>
-## 호환성: `harness setup local-mcp`
-
-`harness setup local-mcp`는 레거시 고정 프로젝트 MCP 설정을 위한 기준 범위 밖 호환 명령입니다. 새 설정 예시와 Host Installation 기록은 `harness agent install`을 사용해야 합니다.
-
-<a id="interactive-setup-frontend"></a>
-
-호환성 규칙:
-
-- 이 명령은 계속 관리 오케스트레이션이며 공개 하네스 API 메서드가 아닙니다.
-- 이 명령의 대화형 프런트엔드는 같은 기준 범위 밖 레거시 setup 경로를 위한 호환 UI입니다.
-- 명시적으로 호환성을 위해 호출된 경우에만 레거시 고정 프로젝트 설정을 생성할 수 있습니다.
-- 결과가 호환성 출력임을 식별해야 합니다.
-- 직접 Codex 또는 Claude Code 설치의 기준 모델로 사용하면 안 됩니다.
-
-<a id="host-neutral-configuration"></a>
-### 호환성 호스트 중립 설정
-
-`harness-agent.mcp.json` 같은 레거시 호스트 중립 설정 조각과 `harness-agent` 같은 서버 이름은 호환성 자료일 뿐입니다. 기준 범위에서 요구되는 이름이 아닙니다.
 
 ## 관리 경계
 

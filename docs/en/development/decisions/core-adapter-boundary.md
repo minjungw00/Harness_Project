@@ -48,9 +48,10 @@ only the structure visible in the repository.
 - [`crates/harness-mcp/src/lib.rs`](../../../../crates/harness-mcp/src/lib.rs):
   `PUBLIC_METHOD_TOOL_NAMES`, `McpStartupInspection`, `McpAdapter`,
   `McpAdapter::call_tool`, and `typed_invocation`.
-- [`crates/harness-cli/src/setup.rs`](../../../../crates/harness-cli/src/setup.rs):
-  `LocalMcpSetupPlan`, `prepare_local_mcp_setup_storage`, and
-  `apply_local_mcp_setup_plan`.
+- [`crates/harness-cli/src/agent_command.rs`](../../../../crates/harness-cli/src/agent_command.rs):
+  administrative host setup orchestration outside the Core/MCP adapter path.
+- [`crates/harness-cli/src/registration.rs`](../../../../crates/harness-cli/src/registration.rs):
+  registered surface capability and local-access metadata helpers.
 - Cargo manifests for `harness-core`, `harness-mcp`, and `harness-cli`.
 
 ## Related Tests And Reference Owners

@@ -60,15 +60,17 @@ separate location concepts:
   `CoreProjectStore` project-local access.
 - [`crates/harness-store/src/artifacts.rs`](../../../../crates/harness-store/src/artifacts.rs):
   Runtime Home artifact staging and persistent body verification.
-- [`crates/harness-cli/src/setup.rs`](../../../../crates/harness-cli/src/setup.rs):
-  local MCP setup planning and Runtime Home preparation.
+- [`crates/harness-cli/src/agent_command.rs`](../../../../crates/harness-cli/src/agent_command.rs):
+  agent setup orchestration and Runtime Home preparation.
+- [`crates/harness-cli/src/registration.rs`](../../../../crates/harness-cli/src/registration.rs):
+  registered surface capability and local-access metadata generation.
 - [`crates/harness-core/src/policy/path.rs`](../../../../crates/harness-core/src/policy/path.rs):
   Product Repository path normalization helpers used by Core policy.
 
 ## Related Tests And Reference Owners
 
-- `harness_binary_local_mcp_setup_flow` and
-  `harness_binary_json_dry_run_is_parseable_and_does_not_register` in
+- `harness_binary_runs_administrative_initialization_and_registration` and
+  `harness_binary_agent_dry_run_writes_nothing_and_rejects_invalid_scope` in
   [`crates/harness-cli/tests/binary_admin.rs`](../../../../crates/harness-cli/tests/binary_admin.rs).
 - `disposable_runtime_home_stays_under_system_temp` in
   [`crates/harness-test-support/src/lib.rs`](../../../../crates/harness-test-support/src/lib.rs).

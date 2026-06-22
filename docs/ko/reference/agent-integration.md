@@ -138,10 +138,11 @@ Host Installation은 하네스가 관리하는 호스트 설정과 검증 상태
 - `surface_id`는 등록된 로컬 접점의 선택자입니다.
 - `surface_instance_id`는 메서드 담당 문서가 반환하거나 요구할 때 등록된 인스턴스를 구분합니다.
 - `surfaces.local_access_json`은 그 접점 인스턴스에 등록된 로컬 접근 허용의 기준 소스입니다.
-- 선호되는 허용 필드는 `authorized_access_classes: string[]`입니다. 같은 접점 인스턴스에 대해 문서화된 접근 등급 여러 개를 담을 수 있습니다. `access_class: string`은 하위 호환을 위한 단일 값 대체 필드입니다.
+- `authorized_access_classes: string[]`는 필수입니다. 같은 접점 인스턴스에 대해 문서화된 접근 등급을 하나 이상 담습니다.
+- `access_class`는 `surfaces.local_access_json`에서 유효한 허용 필드가 아닙니다. 역량 프로필과 호출 맥락은 별도의 `access_class` 필드를 가집니다.
 - 기준 워크플로 등록 프로필은 `read_status`, `core_mutation`, `write_authorization`, `artifact_registration`, `run_recording`의 명시적 접근 등급 집합으로 확장될 수 있습니다.
 - 전체 워크플로 프로필은 명시적으로 선택되어야 하며 암묵적 기본값이 되면 안 됩니다.
-- `verification_basis: string`은 허용이 어떻게 성립했는지 설명하는 통제된 등록 또는 어댑터 바인딩 진단 메타데이터입니다. 접근을 부여하지 않습니다.
+- `verification_basis: string`은 필수이며 비어 있으면 안 됩니다. 허용이 어떻게 성립했는지 설명하는 통제된 등록 또는 어댑터 바인딩 진단 메타데이터입니다. 접근을 부여하지 않습니다.
 - `interaction_role: string`은 그 접점 인스턴스가 권한 해결에서 `agent`로 동작하는지 `user_interaction`으로 동작하는지를 식별합니다. 기준 등록에는 혼합 역할 접점 인스턴스가 없습니다.
 - 등록 사실은 현재 요청에 대해 담당 결과가 반환한 확인을 통해서만 사용할 수 있습니다.
 
