@@ -143,7 +143,7 @@ UserJudgmentContext:
 
 `UserJudgmentOptionInput`은 메서드 담당 문서가 호출자 작성 선택지를 허용할 때 쓰는 사용자 지정 선택지 요청 형태입니다. 이 형태에는 `machine_action`이나 `resolution_outcome`이 없습니다. 공개 요청이 `options` 안에 이 필드를 담으면 유효하지 않습니다.
 
-`UserJudgmentOption`은 현재 Core가 소유한 선택지 상태/출력 형태입니다. 현재 공개 선택지는 `null`이 아닌 `machine_action`과 `null`이 아닌 `resolution_outcome`을 포함합니다. `machine_action=accept`는 `resolution_outcome=accepted`로, `machine_action=reject`는 `resolution_outcome=rejected`로 매핑되고, `machine_action=defer`는 메서드나 의미 담당 문서가 연기를 허용하는 곳에서만 `resolution_outcome=deferred`로 매핑됩니다. `blocked`는 현재 동작 매핑에서 지속 선택지 결과가 아닙니다.
+`UserJudgmentOption`은 현재 Core가 소유한 선택지 상태/출력 형태입니다. 현재 공개 선택지는 `null`이 아닌 `machine_action`과 `null`이 아닌 `resolution_outcome`을 포함합니다. `machine_action=accept`는 `resolution_outcome=accepted`로, `machine_action=reject`는 `resolution_outcome=rejected`로 매핑되고, `machine_action=defer`는 메서드나 의미 담당 문서가 연기를 허용하는 곳에서만 `resolution_outcome=deferred`로 매핑됩니다. `blocked`는 `JudgmentResolutionOutcome` 값이 아닙니다.
 
 권한을 지니는 판단 종류에서 호출자는 요청 입력에 보이는 라벨과 기계 결과 사이의 매핑을 작성하지 않습니다. Core가 권한 선택지의 동작, 결과, 현지화된 라벨, 결과 설명을 만듭니다. 선택지 라벨이나 설명 문구가 기계 판독 가능한 동작이나 결과를 뒤집으면 안 됩니다. 지속 선택지 상태는 명시적인 동작과 결과 필드가 있는 현재 구조화된 선택지 객체를 사용합니다.
 
@@ -178,7 +178,7 @@ RecordUserJudgmentPayload:
 
 권한을 지니는 해결 규칙:
 - `judgment_kind=scope_decision`, `final_acceptance`, `residual_risk_acceptance`, `sensitive_approval`, `cancellation`은 현재 권한 요구사항을 만족하려면 선택된 Core 생성 권한 선택지, `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_kind=user`, 호환되는 내부 `VerifiedActorContext.role=user_interaction`, 호환되는 현재 근거가 필요합니다.
-- `resolution_outcome=rejected` 또는 `deferred`는 지속되는 사용자 결정이지만 어떤 것도 승인, 수락, 권한 부여, 면제, 닫기를 만들지 않습니다. `blocked`에는 현재 지속 선택지 동작 매핑이 없으며 권한 요구사항을 만족할 수 없습니다.
+- `resolution_outcome=rejected` 또는 `deferred`는 지속되는 사용자 결정이지만 어떤 것도 승인, 수락, 권한 부여, 면제, 닫기를 만들지 않습니다. `blocked`는 판단 해결 결과가 아니며 권한 요구사항을 만족할 수 없습니다.
 - 기계 판독 가능한 동작/결과나 필요한 확인된 행위자 출처가 없는 해결 판단은 유효하지 않은 소유자 상태이며 현재 권한 요구사항을 만족할 수 없습니다.
 
 형태 규칙:

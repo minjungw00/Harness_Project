@@ -910,9 +910,9 @@ fn validate_user_judgments_resolution_outcome_constraint(conn: &Connection) -> S
         .join(" ")
         .to_lowercase();
     let has_constraint = normalized.contains(
-        "resolution_outcome is null or resolution_outcome in ('accepted', 'rejected', 'deferred', 'blocked')",
+        "resolution_outcome is null or resolution_outcome in ('accepted', 'rejected', 'deferred')",
     ) || normalized.contains(
-        "resolution_outcome is null or resolution_outcome in('accepted', 'rejected', 'deferred', 'blocked')",
+        "resolution_outcome is null or resolution_outcome in('accepted', 'rejected', 'deferred')",
     );
     if has_constraint {
         Ok(())

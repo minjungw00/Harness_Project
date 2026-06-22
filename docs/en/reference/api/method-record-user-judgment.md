@@ -8,7 +8,7 @@ This document owns baseline method behavior for `harness.record_user_judgment`:
 
 - method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
 - recording the user's answer to one existing pending `UserJudgment`
-- method-specific boundaries for resolving, rejecting, deferring, blocking, or marking that pending user-owned judgment
+- method-specific boundaries for resolving that pending user-owned judgment and rejecting invalid answer attempts
 - record-user-judgment examples
 
 ## What this document does not own
@@ -94,7 +94,7 @@ Compatibility requirements:
 - Sensitive approval must match current `scope_revision`, Change Unit, operation, normalized paths, sensitive categories, and baseline.
 - Scope decision authority for a later scope update requires `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, current basis, `required_for` that includes scope update, verified `user_interaction` actor provenance, and compatible Task, Change Unit, `scope_revision`, and affected refs.
 - Authority-bearing judgments require `resolved_by_actor_kind=user`, compatible verified actor provenance, `machine_action=accept`, and `resolution_outcome=accepted` to satisfy the authority requirement.
-- Rejected, deferred, blocked, stale, superseded, expired, judgments with invalid basis state, or agent-recorded authority-bearing judgments remain audit or decision records but cannot authorize a current transition.
+- Rejected or deferred authority-bearing judgments remain decision records but cannot authorize a current transition. Stale, superseded, expired, invalid-basis, provenance-missing, resolution-incomplete, or agent-recorded authority-bearing judgments cannot authorize a current transition.
 - Scope or Run changes do not delete historical judgments; they make incompatible judgments ineligible for current close, write, scope-decision, or sensitive-approval requirements.
 
 ## Success result
@@ -132,7 +132,7 @@ The result updates only covered blockers and judgment-dependent summaries. It do
 
 There is no separate committed blocked response branch for this method.
 
-A committed `resolution_outcome=blocked` is a recorded judgment outcome, not `ToolRejectedResponse` and not a `PrepareWriteResult`-style blocked decision.
+`blocked` is not a committed `JudgmentResolutionOutcome`. An answer payload that explicitly claims a blocked judgment result is rejected before commit.
 
 ## Rejected result
 

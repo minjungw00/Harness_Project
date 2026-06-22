@@ -485,7 +485,6 @@ Status values describe the judgment lifecycle. `resolved` means an answer was re
 accepted
 rejected
 deferred
-blocked
 ```
 
 `JudgmentBasis.compatibility_status` uses:
@@ -505,12 +504,11 @@ Authority option action values:
 - `accept` maps to `accepted`.
 - `reject` maps to `rejected`.
 - `defer` maps to `deferred` only where the method or semantic owner permits deferral.
-- `blocked` has no current persisted selected-option action mapping.
 
 Resolution outcome meaning:
 - `accepted` is the only outcome that can satisfy an authority-bearing judgment requirement when the judgment kind, basis, verified actor provenance, selected option, and `machine_action=accept` are otherwise compatible.
 - `rejected` and `deferred` are durable user decisions but do not approve, accept, authorize, waive, or close anything.
-- `blocked` is part of the broader outcome vocabulary, but current persisted selected-option resolutions cannot use it because no `machine_action` maps to `blocked`.
+- `blocked` is used by unrelated blocked-result and blocker value sets elsewhere in the product, but it is not a `JudgmentResolutionOutcome` value and cannot be persisted as a selected-option resolution.
 - Absence of a machine-readable outcome must never be interpreted as `accepted`.
 
 Pending-judgment relevance:

@@ -821,6 +821,7 @@ fn is_word_char(ch: char) -> bool {
 fn assert_project_contract_behavior(label: &str, conn: &Connection) -> Result<(), Box<dyn Error>> {
     insert_minimal_project_graph(conn)?;
     assert_user_judgments_status_is_closed(label, conn);
+    assert_resolution_outcome_is_closed(label, conn);
     assert_resolution_machine_action_is_closed(label, conn);
     assert_resolved_surface_foreign_key_is_enforced(label, conn);
     assert_user_judgments_require_basis(label, conn);
@@ -904,6 +905,57 @@ fn assert_user_judgments_status_is_closed(label: &str, conn: &Connection) {
                 '{\"task_id\":\"task_a\",\"change_unit_id\":null,\"scope_revision\":0,\"close_basis_revision\":null,\"baseline_ref\":null,\"result_refs\":[],\"residual_risk_ids\":[],\"sensitive_action_scope\":null,\"created_at_state_version\":0,\"compatibility_status\":\"current\"}',
                 'surface_main',
                 'surface_instance_1',
+                't1'
+            )",
+            [],
+        )
+        .unwrap_err();
+    assert_constraint_error(label, error);
+}
+
+fn assert_resolution_outcome_is_closed(label: &str, conn: &Connection) {
+    let error = conn
+        .execute(
+            "INSERT INTO user_judgments (
+                project_id,
+                judgment_id,
+                task_id,
+                judgment_kind,
+                status,
+                basis_json,
+                resolution_outcome,
+                resolution_machine_action,
+                resolution_json,
+                requested_by_surface_id,
+                requested_by_surface_instance_id,
+                resolved_by_actor_kind,
+                resolved_actor_role,
+                resolved_by_surface_id,
+                resolved_by_surface_instance_id,
+                resolved_verification_basis,
+                resolved_assurance_level,
+                resolved_at,
+                requested_at
+            )
+            VALUES (
+                'project_a',
+                'judgment_bad_outcome',
+                'task_a',
+                'approval',
+                'resolved',
+                '{\"task_id\":\"task_a\",\"change_unit_id\":null,\"scope_revision\":0,\"close_basis_revision\":null,\"baseline_ref\":null,\"result_refs\":[],\"residual_risk_ids\":[],\"sensitive_action_scope\":null,\"created_at_state_version\":0,\"compatibility_status\":\"current\"}',
+                'blocked',
+                'accept',
+                '{\"selected_option_id\":\"accept\",\"machine_action\":\"accept\",\"resolution_outcome\":\"blocked\",\"answer\":{\"product_decision\":{\"judgment\":{\"decision\":\"accepted\"}},\"technical_decision\":null,\"scope_decision\":null,\"sensitive_action_scope\":null,\"final_acceptance\":null,\"residual_risk_acceptance\":null,\"cancellation\":null},\"note\":null,\"accepted_risks\":[],\"resolved_by_actor_kind\":\"user\"}',
+                'surface_main',
+                'surface_instance_1',
+                'user',
+                'user_interaction',
+                'surface_main',
+                'surface_instance_1',
+                'fixture',
+                'cooperative',
+                't1',
                 't1'
             )",
             [],

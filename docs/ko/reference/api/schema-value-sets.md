@@ -487,7 +487,6 @@ expired
 accepted
 rejected
 deferred
-blocked
 ```
 
 `JudgmentBasis.compatibility_status`는 아래 값을 사용합니다.
@@ -507,12 +506,11 @@ superseded
 - `accept`는 `accepted`로 매핑됩니다.
 - `reject`는 `rejected`로 매핑됩니다.
 - `defer`는 메서드나 의미 담당 문서가 연기를 허용하는 곳에서만 `deferred`로 매핑됩니다.
-- `blocked`에는 현재 지속 선택지 동작 매핑이 없습니다.
 
 해결 결과 의미:
 - `accepted`는 판단 종류, 근거, 확인된 행위자 출처, 선택된 선택지, `machine_action=accept`가 모두 호환될 때 권한을 지니는 판단 요구사항을 만족할 수 있는 유일한 결과입니다.
 - `rejected`와 `deferred`는 지속되는 사용자 결정이지만 어떤 것도 승인, 수락, 권한 부여, 면제, 닫기를 만들지 않습니다.
-- `blocked`는 더 넓은 결과 어휘의 일부이지만, 현재 지속 선택지 해결에는 `blocked`로 매핑되는 `machine_action`이 없으므로 사용할 수 없습니다.
+- `blocked`는 제품의 다른 차단 결과와 차단 사유 값 집합에서 쓰이지만 `JudgmentResolutionOutcome` 값이 아니며 선택지 해결 결과로 저장할 수 없습니다.
 - 기계 판독 가능한 결과가 없으면 절대 `accepted`로 해석하면 안 됩니다.
 
 대기 판단 관련성:

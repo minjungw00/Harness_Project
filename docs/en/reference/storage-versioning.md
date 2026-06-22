@@ -361,7 +361,7 @@ Meaning:
 - Newly committed replay rows store complete non-null `surface_id`, `surface_instance_id`, and `access_class` from the valid `VerifiedSurfaceContext`.
 - Verified replay rows require a valid referenced surface through the physical composite foreign key owned by [Storage DDL](storage-ddl.md).
 - `verification_basis` may be stored for diagnostics, but it is not caller authority.
-- Legacy replay rows without verified context may be preserved, but they are not replay eligible.
+- A current replay row requires complete `surface_id`, `surface_instance_id`, and `access_class` identity. Missing required replay identity is invalid stored state, not a compatibility projection.
 
 Increments when:
 

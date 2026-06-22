@@ -8,7 +8,7 @@
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
 - 기존 대기 중인 `UserJudgment` 하나에 대한 사용자의 답을 기록하는 동작
-- 그 대기 중인 사용자 소유 판단을 해결, 거절, 연기, 차단, 또는 다른 지원 상태로 표시하는 메서드별 경계
+- 그 대기 중인 사용자 소유 판단을 해결하고 유효하지 않은 답변 시도를 거절하는 메서드별 경계
 - 사용자 소유 판단 기록 예시
 
 ## 담당하지 않는 것
@@ -94,7 +94,7 @@ RecordUserJudgmentRequest:
 - 민감 승인은 현재 `scope_revision`, Change Unit, 동작, 정규화된 경로, 민감 범주, 기준선과 일치해야 합니다.
 - 나중의 범위 갱신에 쓰이는 범위 결정 권한은 `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, 현재 근거, scope update를 포함하는 `required_for`, 확인된 `user_interaction` 행위자 출처, 호환되는 Task, Change Unit, `scope_revision`, 영향받는 참조가 필요합니다.
 - 권한을 지니는 판단은 권한 요구사항을 만족하려면 `resolved_by_actor_kind=user`, 호환되는 확인된 행위자 출처, `machine_action=accept`, `resolution_outcome=accepted`가 필요합니다.
-- 거절, 연기, 차단, 오래됨, 대체됨, 만료됨, 근거 상태가 유효하지 않은 판단, 에이전트가 기록한 권한 판단은 감사 또는 결정 기록으로 남지만 현재 전이를 허가할 수 없습니다.
+- 거절되거나 연기된 권한 판단은 결정 기록으로 남지만 현재 전이를 허가할 수 없습니다. 오래됨, 대체됨, 만료됨, 유효하지 않은 근거, 출처 누락, 해결 정보 누락, 에이전트가 기록한 권한 판단은 현재 전이를 허가할 수 없습니다.
 - 범위 변경이나 실행 기록 변경은 이력 판단을 삭제하지 않습니다. 다만 호환되지 않는 판단은 현재 닫기, 쓰기, 범위 결정, 민감 승인 요구사항에 사용할 수 없게 됩니다.
 
 ## 성공 결과
@@ -132,7 +132,7 @@ RecordUserJudgmentRequest:
 
 이 메서드에는 별도의 커밋된 차단 응답 분기가 없습니다.
 
-커밋된 `resolution_outcome=blocked`는 기록된 판단 결과이지, `ToolRejectedResponse`도 아니고 `PrepareWriteResult` 방식의 차단 결정도 아닙니다.
+`blocked`는 커밋되는 `JudgmentResolutionOutcome`이 아닙니다. 답변 본문이 차단된 판단 결과를 명시적으로 주장하면 커밋 전에 거절됩니다.
 
 ## 거절 결과
 

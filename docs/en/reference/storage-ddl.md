@@ -281,7 +281,7 @@ CREATE TABLE user_judgments (
   basis_status TEXT NOT NULL DEFAULT 'current'
     CHECK (basis_status IN ('current', 'stale', 'superseded')),
   resolution_outcome TEXT
-    CHECK (resolution_outcome IS NULL OR resolution_outcome IN ('accepted', 'rejected', 'deferred', 'blocked')),
+    CHECK (resolution_outcome IS NULL OR resolution_outcome IN ('accepted', 'rejected', 'deferred')),
   resolution_machine_action TEXT
     CHECK (resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')),
   resolution_json TEXT,

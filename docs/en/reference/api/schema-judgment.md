@@ -143,7 +143,7 @@ UserJudgmentContext:
 
 `UserJudgmentOptionInput` is the caller request shape for custom options where the method owner allows caller-authored options. It does not contain `machine_action` or `resolution_outcome`; public requests that include those fields inside `options` are invalid.
 
-`UserJudgmentOption` is the current Core-owned option state/output shape. Current public options include non-null `machine_action` and non-null `resolution_outcome`. `machine_action=accept` maps to `resolution_outcome=accepted`; `machine_action=reject` maps to `resolution_outcome=rejected`; `machine_action=defer` maps to `resolution_outcome=deferred` only where the method or semantic owner permits deferral. `blocked` is not a persisted selected-option outcome under the current action mapping.
+`UserJudgmentOption` is the current Core-owned option state/output shape. Current public options include non-null `machine_action` and non-null `resolution_outcome`. `machine_action=accept` maps to `resolution_outcome=accepted`; `machine_action=reject` maps to `resolution_outcome=rejected`; `machine_action=defer` maps to `resolution_outcome=deferred` only where the method or semantic owner permits deferral. `blocked` is not a `JudgmentResolutionOutcome` value.
 
 For authority-bearing judgment kinds, callers do not author visible-label-to-machine-outcome mappings in request input. Core creates the authority option actions, outcomes, localized labels, and consequences. Option labels or explanatory text must not invert the machine-readable action or outcome. Persisted option state uses the current structured option object with explicit action and outcome fields.
 
@@ -177,7 +177,7 @@ RecordUserJudgmentPayload:
 
 Authority-bearing resolution rule:
 - `judgment_kind=scope_decision`, `final_acceptance`, `residual_risk_acceptance`, `sensitive_approval`, or `cancellation` requires a selected Core-created authority option, `machine_action=accept`, `resolution_outcome=accepted`, `resolved_by_actor_kind=user`, compatible internal `VerifiedActorContext.role=user_interaction`, and a compatible current basis before it can satisfy an authority requirement.
-- `resolution_outcome=rejected` or `deferred` remains a durable user decision but does not approve, accept, authorize, waive, or close anything. `blocked` has no current persisted selected-option action mapping and cannot satisfy an authority requirement.
+- `resolution_outcome=rejected` or `deferred` remains a durable user decision but does not approve, accept, authorize, waive, or close anything. `blocked` is not a judgment resolution outcome and cannot satisfy an authority requirement.
 - A resolved judgment without machine-readable action/outcome or required verified actor provenance is invalid owner state and cannot satisfy current authority requirements.
 
 Shape rule:

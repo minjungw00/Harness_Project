@@ -359,7 +359,7 @@
 - 새로 커밋되는 재실행 행은 유효한 `VerifiedSurfaceContext`에서 온 완전하고 null이 아닌 `surface_id`, `surface_instance_id`, `access_class`를 저장합니다.
 - 확인된 재실행 행은 [저장소 DDL](storage-ddl.md)이 담당하는 물리 복합 외래 키를 통해 유효한 참조 접점을 요구합니다.
 - `verification_basis`는 진단용으로 저장할 수 있지만 호출자 권한이 아닙니다.
-- 확인된 맥락이 없는 레거시 재실행 행은 보존할 수 있지만 재실행 적격이 아닙니다.
+- 현재 재실행 행에는 완전한 `surface_id`, `surface_instance_id`, `access_class` 식별성이 필요합니다. 필요한 재실행 식별성이 빠진 행은 호환성 상태 보기가 아니라 유효하지 않은 저장 상태입니다.
 
 증가하는 경우:
 

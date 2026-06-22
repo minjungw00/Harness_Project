@@ -4146,7 +4146,6 @@ fn judgment_resolution_outcome_as_str(outcome: JudgmentResolutionOutcome) -> &'s
         JudgmentResolutionOutcome::Accepted => "accepted",
         JudgmentResolutionOutcome::Rejected => "rejected",
         JudgmentResolutionOutcome::Deferred => "deferred",
-        JudgmentResolutionOutcome::Blocked => "blocked",
     }
 }
 
@@ -4622,6 +4621,59 @@ mod tests {
     }
 
     #[test]
+    fn insert_user_judgment_rejects_blocked_option_outcome() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_blocked_option_outcome";
+        let judgment_id = "judgment_blocked_option_outcome";
+        let before = store.effect_counts()?;
+
+        let input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::RequestUserJudgment,
+            Some(&IdempotencyKey::new("idem_store_blocked_option")),
+            &RequestHash::new("sha256:blocked-option"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("blocked_option", task_id)],
+        );
+        let error = store
+            .commit_mutation(
+                input,
+                |mutation, facts| {
+                    CoreStorageMutation::InsertTask(task_insert(task_id))
+                        .apply(mutation, facts.committed_state_version)?;
+                    let mut insert = user_judgment_insert(
+                        judgment_id,
+                        task_id,
+                        None,
+                        JudgmentBasisCompatibilityStatus::Current,
+                    );
+                    insert.options_json = json!({
+                        "schema_version": 1,
+                        "options": [{
+                            "option_id": "accept",
+                            "label": "Accept",
+                            "description": "Accept the current close basis.",
+                            "consequence": "The judgment can be resolved.",
+                            "machine_action": "accept",
+                            "resolution_outcome": "blocked",
+                            "is_default": true
+                        }]
+                    })
+                    .to_string();
+                    CoreStorageMutation::InsertUserJudgment(insert)
+                        .apply(mutation, facts.committed_state_version)
+                },
+                response_json,
+            )
+            .expect_err("blocked persisted option outcome should reject");
+        assert!(matches!(error, StoreError::InvalidInput { .. }));
+        assert_eq!(store.effect_counts()?, before);
+        Ok(())
+    }
+
+    #[test]
     fn resolve_user_judgment_requires_resolution_json_action() -> Result<(), Box<dyn Error>> {
         let harness = StoreHarness::new()?;
         let mut store = harness.store()?;
@@ -4707,6 +4759,96 @@ mod tests {
             .expect("pending judgment should remain readable");
         assert_eq!(record.status, "pending");
         assert_eq!(record.resolution_machine_action, None);
+        Ok(())
+    }
+
+    #[test]
+    fn resolve_user_judgment_rejects_blocked_resolution_json() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_blocked_resolution_json";
+        let judgment_id = "judgment_blocked_resolution_json";
+
+        let insert_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::RequestUserJudgment,
+            Some(&IdempotencyKey::new("idem_store_blocked_resolution_insert")),
+            &RequestHash::new("sha256:blocked-resolution-insert"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("blocked_resolution_insert", task_id)],
+        );
+        let inserted = store.commit_mutation(
+            insert_input,
+            |mutation, facts| {
+                for storage_mutation in [
+                    CoreStorageMutation::InsertTask(task_insert(task_id)),
+                    CoreStorageMutation::InsertUserJudgment(user_judgment_insert(
+                        judgment_id,
+                        task_id,
+                        None,
+                        JudgmentBasisCompatibilityStatus::Current,
+                    )),
+                ] {
+                    storage_mutation.apply(mutation, facts.committed_state_version)?;
+                }
+                Ok(())
+            },
+            response_json,
+        )?;
+        assert!(matches!(inserted, MutationCommitOutcome::Committed { .. }));
+        let before = store.effect_counts()?;
+
+        let resolve_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::RecordUserJudgment,
+            Some(&IdempotencyKey::new("idem_store_blocked_resolution")),
+            &RequestHash::new("sha256:blocked-resolution"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(1),
+            vec![pending_event_for_task("blocked_resolution", task_id)],
+        );
+        let mut update = user_judgment_resolution_update(
+            judgment_id,
+            UserJudgmentOptionAction::Accept,
+            JudgmentResolutionOutcome::Accepted,
+        );
+        update.resolution_json = json!({
+            "selected_option_id": "accept",
+            "machine_action": "accept",
+            "resolution_outcome": "blocked",
+            "answer": {
+                "product_decision": null,
+                "technical_decision": null,
+                "scope_decision": null,
+                "sensitive_action_scope": null,
+                "final_acceptance": { "judgment": { "decision": "accepted" } },
+                "residual_risk_acceptance": null,
+                "cancellation": null
+            },
+            "note": null,
+            "accepted_risks": [],
+            "resolved_by_actor_kind": "user"
+        })
+        .to_string();
+
+        let error = store
+            .commit_mutation(
+                resolve_input,
+                |mutation, facts| {
+                    CoreStorageMutation::ResolveUserJudgment(update)
+                        .apply(mutation, facts.committed_state_version)
+                },
+                response_json,
+            )
+            .expect_err("resolution JSON with blocked outcome should reject");
+        assert!(matches!(error, StoreError::InvalidInput { .. }));
+        assert_eq!(store.effect_counts()?, before);
+        let record = store
+            .user_judgment_record(judgment_id)?
+            .expect("pending judgment should remain readable");
+        assert_eq!(record.status, "pending");
+        assert_eq!(record.resolution_outcome, None);
         Ok(())
     }
 

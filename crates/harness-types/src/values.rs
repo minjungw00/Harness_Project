@@ -615,7 +615,6 @@ pub enum JudgmentResolutionOutcome {
     Accepted,
     Rejected,
     Deferred,
-    Blocked,
 }
 
 /// Core-owned machine action for current user judgment options.

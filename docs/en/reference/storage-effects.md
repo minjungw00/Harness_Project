@@ -574,7 +574,7 @@ Valid dry-run previews do not create:
 
 Recording a user judgment does not increment `tasks.scope_revision` or `tasks.close_basis_revision`.
 
-`status='resolved'` records that an answer was recorded; it is not acceptance by itself. Existing resolved rows without stored `resolution_outcome` or required verified actor provenance remain historical audit records and cannot satisfy current authority requirements.
+`status='resolved'` records that an answer was recorded; it is not acceptance by itself. Current resolved rows require complete basis, selected action, `resolution_outcome`, resolution payload, resolution timestamp, resolved surface identity, verification basis, assurance level, and required actor provenance. Missing required resolution authority is invalid stored state, not a readable historical audit judgment.
 
 Owner links:
 

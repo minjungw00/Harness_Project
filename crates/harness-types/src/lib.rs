@@ -786,6 +786,11 @@ mod tests {
         assert!(serde_json::from_value::<UserJudgmentOption>(missing_outcome.clone()).is_err());
         assert!(validate_json_schema(&schema, &missing_outcome).is_err());
 
+        let mut blocked_outcome = user_judgment_option_json();
+        blocked_outcome["resolution_outcome"] = json!("blocked");
+        assert!(serde_json::from_value::<UserJudgmentOption>(blocked_outcome.clone()).is_err());
+        assert!(validate_json_schema(&schema, &blocked_outcome).is_err());
+
         let mut unknown = user_judgment_option_json();
         unknown["legacy_note"] = json!("not current public shape");
         assert_unknown::<UserJudgmentOption>(unknown, "legacy_note");
@@ -830,6 +835,20 @@ mod tests {
             }]
         }));
         assert!(missing_outcome.is_err());
+
+        let blocked_outcome = serde_json::from_value::<PersistedUserJudgmentOptions>(json!({
+            "schema_version": 1,
+            "options": [{
+                "option_id": "accept",
+                "label": "Accept",
+                "description": "Accept the current close basis.",
+                "consequence": "The judgment can be resolved.",
+                "machine_action": "accept",
+                "resolution_outcome": "blocked",
+                "is_default": true
+            }]
+        }));
+        assert!(blocked_outcome.is_err());
     }
 
     #[test]
@@ -858,7 +877,7 @@ mod tests {
         assert!(serde_json::from_value::<UserJudgmentResolution>(valid.clone()).is_ok());
         assert!(validate_json_schema(&schema, &valid).is_ok());
 
-        let blocked = user_judgment_resolution_json(Value::Null, json!("blocked"));
+        let blocked = user_judgment_resolution_json(json!("accept"), json!("blocked"));
         assert!(serde_json::from_value::<UserJudgmentResolution>(blocked.clone()).is_err());
         assert!(validate_json_schema(&schema, &blocked).is_err());
 

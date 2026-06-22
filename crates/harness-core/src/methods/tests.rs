@@ -6618,6 +6618,56 @@ fn record_user_judgment_rejects_answer_outcome_contradicting_option() -> Result<
 }
 
 #[test]
+fn record_user_judgment_rejects_blocked_answer_outcome() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "blocked_outcome")?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_judgment_blocked_outcome",
+            "idem_judgment_blocked_outcome",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ScopeDecision,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let request = record_judgment_request(
+        "req_record_blocked_outcome",
+        "idem_record_blocked_outcome",
+        Some(3),
+        &task_id,
+        &pending_judgment_id,
+        JudgmentKind::ScopeDecision,
+        scope_decision_payload("blocked"),
+    );
+    let before = harness.counts()?;
+
+    let response = harness
+        .service
+        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(
+        user_judgment_status(&harness, &pending_judgment_id)?,
+        "pending"
+    );
+    assert_eq!(
+        user_judgment_resolution_outcome(&harness, &pending_judgment_id)?,
+        None
+    );
+    Ok(())
+}
+
+#[test]
 fn non_user_actor_cannot_resolve_authority_bearing_judgment() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "authority_actor")?;
