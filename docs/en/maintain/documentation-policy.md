@@ -1,6 +1,6 @@
 # Documentation policy
 
-Use this policy when changing maintained Harness documentation. It defines the
+Use this policy when changing maintained Volicord documentation. It defines the
 documentation governance model for authors, reviewers, translators, and agents.
 
 This is a maintenance policy. It does not define product behavior, API
@@ -113,7 +113,7 @@ records, archive copies, conversion notes, unresolved review notes, work logs,
 or task-specific follow-up plans in maintained documentation.
 
 Maintained documentation, shared metadata, README files, and `AGENTS.md` files
-are not Harness runtime homes. Do not store runtime data, generated logs, SQLite
+are not Volicord runtime homes. Do not store runtime data, generated logs, SQLite
 files, product runtime homes, test runtime homes, generated projections, fixture
 output, QA results, acceptance records, close-readiness state, or residual-risk
 records in them.

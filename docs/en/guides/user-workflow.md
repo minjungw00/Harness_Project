@@ -1,6 +1,6 @@
 # User Guide
 
-Harness lets you work in ordinary language while keeping decision boundaries visible. Harness is the local work-authority product/system; Core is the local authority record for Harness state. You decide the work and the risky calls. The agent should keep scope, judgment, evidence, approvals, and close basis separate instead of presenting inference as your decision.
+Volicord lets you work in ordinary language while keeping decision boundaries visible. Volicord is the local work-authority product/system; Core is the local authority record for Volicord state. You decide the work and the risky calls. The agent should keep scope, judgment, evidence, approvals, and close basis separate instead of presenting inference as your decision.
 
 This guide is the user workflow path. Exact API behavior, schemas, storage effects, security wording, and reference-level close readiness rules live in the owners linked from the [Reference Index](../reference/README.md).
 
@@ -75,7 +75,7 @@ The agent should not mix inspected facts with user-owned judgment, ask you to re
 
 A user-facing write approval is bounded permission for a named write attempt. In this guide, write approval means ordinary user approval for a write flow; it is separate from the exact product label `Write Authorization`.
 
-Write approval is not whole-plan approval, final acceptance, residual-risk acceptance, sensitive-action approval, or a guarantee that Harness can prevent every unsafe action.
+Write approval is not whole-plan approval, final acceptance, residual-risk acceptance, sensitive-action approval, or a guarantee that Volicord can prevent every unsafe action.
 
 You decide:
 

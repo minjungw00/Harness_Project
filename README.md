@@ -1,16 +1,19 @@
-# Harness
+# Volicord
 
 **[English](README.md)** | [한국어](README.ko.md)
 
-Harness is the local work-authority product/system for AI-assisted product work.
-It helps a user and an agent keep the important parts of the work visible:
+**AI moves. Judgment stays yours.**
+
+A local work-authority system for AI-assisted product work.
+
+Volicord helps a user and an agent keep the important parts of the work visible:
 scope, user-owned judgment, evidence, verification criteria, final acceptance,
 residual-risk acceptance, and close readiness.
 
 This README is the first-user route for the current repository. It explains
-what Harness is, how the local executables and host setup fit together, how to
+what Volicord is, how the local executables and host setup fit together, how to
 build and verify the executables, how to choose a supported host path, and how
-to try a first Harness-assisted interaction after setup.
+to try a first Volicord-assisted interaction after setup.
 
 Exact contracts remain in the maintained Reference documents linked throughout
 this page.
@@ -18,7 +21,7 @@ this page.
 ## Contents
 
 - [Overview](#overview)
-- [Why Harness Exists](#why-harness-exists)
+- [Why Volicord Exists](#why-volicord-exists)
 - [Concrete Scenario](#scenario)
 - [How The Pieces Fit](#how-the-pieces-fit)
 - [Terms For First Setup](#terms)
@@ -39,11 +42,11 @@ this page.
 <a id="overview"></a>
 ## Overview
 
-Harness is for local product work where an AI agent helps you inspect, plan,
+Volicord is for local product work where an AI agent helps you inspect, plan,
 write, verify, and summarize changes. Its job is not to make every agent action
 automatic. Its job is to keep the authority basis visible while the work moves.
 
-In practical terms, Harness helps an agent keep asking and answering questions
+In practical terms, Volicord helps an agent keep asking and answering questions
 like these:
 
 - What is in scope, and what is explicitly not in scope?
@@ -54,13 +57,13 @@ like these:
 - Is a remaining risk named clearly enough for the user to accept or reject?
 - What still blocks an honest close?
 
-Harness itself is not the local authority record. Core is the local authority
-record for Harness state. Harness is the broader product/system around that
+Volicord itself is not the local authority record. Core is the local authority
+record for Volicord state. Volicord is the broader product/system around that
 record, including local runtime components, host integration, documentation, and
 workflows.
 
-<a id="why-harness-exists"></a>
-## Why Harness Exists
+<a id="why-volicord-exists"></a>
+## Why Volicord Exists
 
 AI-assisted product work can move quickly enough that important distinctions get
 blurred. A passing test can start sounding like final acceptance. A plausible
@@ -68,7 +71,7 @@ implementation detail can become an unstated product decision. A broad "looks
 good" can be mistaken for approval of scope expansion, sensitive action,
 residual risk, and close.
 
-Harness exists to slow down only the part that should not be blurred. The agent
+Volicord exists to slow down only the part that should not be blurred. The agent
 can still move quickly, but scope, user judgment, evidence, verification
 criteria, acceptance, residual risk, and close readiness stay separate.
 
@@ -82,7 +85,7 @@ Add email login, but keep password reset and account creation out of scope.
 Make a plan first and do not write until I approve the first change.
 ```
 
-A Harness-assisted workflow should keep these facts distinct:
+A Volicord-assisted workflow should keep these facts distinct:
 
 | Work item | What should stay visible |
 |---|---|
@@ -108,41 +111,41 @@ AI host
         |
         | starts a local child process
         v
-harness-mcp --integration <integration_id>
+volicord-mcp --integration <integration_id>
         |
-        | uses the selected Harness Runtime Home and allowed Product Repository
+        | uses the selected Volicord Runtime Home and allowed Product Repository
         v
-Harness Runtime Home                    Product Repository
-  /Users/alex/.harness                    /work/acme-api
+Volicord Runtime Home                    Product Repository
+  /Users/alex/.volicord                    /work/acme-api
 
-harness
+volicord
   administrative CLI used for install, status, verification, and guidance
 ```
 
-`harness-mcp` is a local stdio child process started by the host. It is not a
-TCP, HTTP, socket, or other network listener. One `harness-mcp` process is bound
+`volicord-mcp` is a local stdio child process started by the host. It is not a
+TCP, HTTP, socket, or other network listener. One `volicord-mcp` process is bound
 to one Agent Integration Profile by `--integration <integration_id>`. Project
-selection happens per public Harness tool call.
+selection happens per public Volicord tool call.
 
-`harness` is the administrative CLI. It is used to build setup state, install or
+`volicord` is the administrative CLI. It is used to build setup state, install or
 export host configuration, inspect status, and refresh verification. It is not a
-long-running server and is not a public Harness API method surface.
+long-running server and is not a public Volicord API method surface.
 
 <a id="terms"></a>
 ## Terms For First Setup
 
 | Term | Beginner meaning | More detail |
 |---|---|---|
-| Harness | The local work-authority product/system for AI-assisted product work. | [Getting Started Overview](docs/en/getting-started/overview.md) |
-| Core | The local authority record for Harness state. | [Core Model](docs/en/reference/core-model.md) |
-| `Harness Server` | The server implementation set maintained by this repository. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
-| `harness` | The administrative CLI executable from package `harness-cli`. | [Administrative CLI](docs/en/reference/admin-cli.md) |
-| `harness-mcp` | The local MCP stdio executable started by an AI host. | [MCP Transport](docs/en/reference/mcp-transport.md) |
-| `Harness Runtime Home` | Local runtime storage for Harness records and operational data. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
+| Volicord | The local work-authority product/system for AI-assisted product work. | [Getting Started Overview](docs/en/getting-started/overview.md) |
+| Core | The local authority record for Volicord state. | [Core Model](docs/en/reference/core-model.md) |
+| Volicord implementation | The server implementation set maintained by this repository. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
+| `volicord` | The administrative CLI executable from package `volicord-cli`. | [Administrative CLI](docs/en/reference/admin-cli.md) |
+| `volicord-mcp` | The local MCP stdio executable started by an AI host. | [MCP Transport](docs/en/reference/mcp-transport.md) |
+| `Volicord Runtime Home` | Local runtime storage for Volicord records and operational data. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
 | `Product Repository` | Your project workspace and product-file boundary. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
-| Agent host | Codex, Claude Code, or a user-managed MCP host that can start `harness-mcp`. | [Agent Integration](docs/en/reference/agent-integration.md) |
-| Agent Integration Profile | The durable Harness integration record selected by `integration_id`. | [Agent Integration](docs/en/reference/agent-integration.md) |
-| Host Installation | Harness-managed inventory for host configuration and last verification state. | [Agent Integration](docs/en/reference/agent-integration.md) |
+| Agent host | Codex, Claude Code, or a user-managed MCP host that can start `volicord-mcp`. | [Agent Integration](docs/en/reference/agent-integration.md) |
+| Agent Integration Profile | The durable Volicord integration record selected by `integration_id`. | [Agent Integration](docs/en/reference/agent-integration.md) |
+| Host Installation | Volicord-managed inventory for host configuration and last verification state. | [Agent Integration](docs/en/reference/agent-integration.md) |
 
 <a id="support"></a>
 ## Current Capabilities And Boundaries
@@ -150,8 +153,8 @@ long-running server and is not a public Harness API method surface.
 This repository currently contains:
 
 - a Cargo Rust workspace
-- the `harness` administrative executable from `harness-cli`
-- the local stdio `harness-mcp` executable from `harness-mcp`
+- the `volicord` administrative executable from `volicord-cli`
+- the local stdio `volicord-mcp` executable from `volicord-mcp`
 - maintained English and Korean documentation under `docs/`
 - direct setup support for Codex and Claude Code
 - generic MCP configuration export for user-managed hosts
@@ -162,10 +165,10 @@ Current first-setup support is intentionally local:
 
 | Area | Current baseline |
 |---|---|
-| Executable source | Build from this source checkout, or use an already available Harness Server installation directory containing both `harness` and `harness-mcp`. |
-| Direct host setup | Codex and Claude Code have supported direct `harness agent install` paths. |
-| Generic MCP hosts | Generic export renders configuration for a user-managed host. Harness does not directly install into that host or prove that the host loaded it. |
-| MCP transport | The baseline process is local stdio: the host starts `harness-mcp` as a child process. |
+| Executable source | Build from this source checkout, or use an already available Volicord installation directory containing both `volicord` and `volicord-mcp`. |
+| Direct host setup | Codex and Claude Code have supported direct `volicord agent install` paths. |
+| Generic MCP hosts | Generic export renders configuration for a user-managed host. Volicord does not directly install into that host or prove that the host loaded it. |
+| MCP transport | The baseline process is local stdio: the host starts `volicord-mcp` as a child process. |
 | Package managers | No package-manager installation path is documented by current owner docs. |
 | Named operating systems | No named OS family is declared as generally supported by this checkout. Maintained examples use POSIX-style shell syntax. |
 | Remote hosts and containers | Not documented as supported baseline setup paths by current owner docs. |
@@ -173,7 +176,7 @@ Current first-setup support is intentionally local:
 Codex and Claude Code setup can be successful as administrative work while
 still requiring a host-owned action such as project trust, project MCP approval,
 reload, restart, OAuth, or executable availability. Generic export normally
-remains `action_required` because Harness cannot observe whether the external
+remains `action_required` because Volicord cannot observe whether the external
 host loaded the exported configuration.
 
 <a id="system-requirements"></a>
@@ -185,8 +188,8 @@ Check these before running installation commands:
 |---|---|
 | Rust toolchain for source builds | Rust 1.85 or newer with Cargo. The workspace root `Cargo.toml` declares `rust-version = "1.85"`. |
 | Shell examples | Maintained commands use POSIX-style syntax such as `export`, `$(pwd)`, quoted variables, inline environment assignment, colon-separated `PATH`, and `test -x`. |
-| Executable layout | One selected directory must contain both runnable executables: `harness` and `harness-mcp`. |
-| Runtime Home | Choose a local `Harness Runtime Home` the selected user and future host process can read and write. |
+| Executable layout | One selected directory must contain both runnable executables: `volicord` and `volicord-mcp`. |
+| Runtime Home | Choose a local `Volicord Runtime Home` the selected user and future host process can read and write. |
 | Product Repository | Choose an existing local `Product Repository` directory. It must be separate from the Runtime Home. |
 | Host availability | Use Codex or Claude Code for direct setup, or a user-managed MCP host for generic export. No fixed minimum host versions are documented. |
 
@@ -206,37 +209,37 @@ and ID with your real values.
 
 | Example value | Meaning |
 |---|---|
-| `HARNESS_BIN="/absolute/path/to/selected/bin"` | Shell convenience variable for one directory containing both executables. |
-| `"$HARNESS_BIN/harness"` | The administrative CLI invocation. |
-| `"$HARNESS_BIN/harness-mcp"` | Absolute `harness-mcp` path for user/local-scope host configuration and generic export. |
-| `/Users/alex/.harness` | Example `Harness Runtime Home`. |
+| `VOLICORD_BIN="/absolute/path/to/selected/bin"` | Shell convenience variable for one directory containing both executables. |
+| `"$VOLICORD_BIN/volicord"` | The administrative CLI invocation. |
+| `"$VOLICORD_BIN/volicord-mcp"` | Absolute `volicord-mcp` path for user/local-scope host configuration and generic export. |
+| `/Users/alex/.volicord` | Example `Volicord Runtime Home`. |
 | `/work/acme-api` | Example `Product Repository`. |
 | `acme-api` | Example `project_id`. |
 | `int-codex-team` | Example Codex `integration_id`. |
 | `int-claude-acme` | Example Claude Code `integration_id`. |
 | `int-generic-acme` | Example generic export `integration_id`. |
 
-`HARNESS_BIN` is only a shell variable used by these examples. Harness does not
+`VOLICORD_BIN` is only a shell variable used by these examples. Volicord does not
 read it as configuration. Set it again in each new shell, or use absolute paths
 directly.
 
-`HARNESS_HOME` is different. It is a real Runtime Home selection input for
-administrative commands and for later `harness-mcp` process startup when the
+`VOLICORD_HOME` is different. It is a real Runtime Home selection input for
+administrative commands and for later `volicord-mcp` process startup when the
 default home-derived Runtime Home is not the one you intend.
 
-The `Harness Runtime Home` and `Product Repository` must be separate resolved
+The `Volicord Runtime Home` and `Product Repository` must be separate resolved
 paths. Do not place one inside the other.
 
 <a id="executable-installation"></a>
 ## Build And Verify Executables
 
 Use Path A when you are building from this repository. Use Path B when you
-already have a Harness Server installation directory containing both
+already have a Volicord installation directory containing both
 executables.
 
 ### Path A: Build From Source
 
-Working directory: Harness Server source repository root.
+Working directory: Volicord source repository root.
 
 Run toolchain checks first:
 
@@ -251,15 +254,15 @@ If either command is unavailable, or if the selected Rust compiler is older than
 For a debug build:
 
 ```sh
-cargo build -p harness-cli -p harness-mcp
-export HARNESS_BIN="$(pwd)/target/debug"
+cargo build -p volicord-cli -p volicord-mcp
+export VOLICORD_BIN="$(pwd)/target/debug"
 ```
 
 For a release build:
 
 ```sh
-cargo build --release -p harness-cli -p harness-mcp
-export HARNESS_BIN="$(pwd)/target/release"
+cargo build --release -p volicord-cli -p volicord-mcp
+export VOLICORD_BIN="$(pwd)/target/release"
 ```
 
 ### Path B: Select Installed Executables
@@ -268,29 +271,29 @@ Use this path when the executables are already available outside the source
 checkout:
 
 ```sh
-export HARNESS_BIN="/absolute/path/to/installed/bin"
+export VOLICORD_BIN="/absolute/path/to/installed/bin"
 ```
 
 Replace the example path with the absolute directory that contains both
-`harness` and `harness-mcp`.
+`volicord` and `volicord-mcp`.
 
 ### Verify The Selected Directory
 
-From the same shell where `HARNESS_BIN` is set:
+From the same shell where `VOLICORD_BIN` is set:
 
 ```sh
-test -x "$HARNESS_BIN/harness"
-test -x "$HARNESS_BIN/harness-mcp"
+test -x "$VOLICORD_BIN/volicord"
+test -x "$VOLICORD_BIN/volicord-mcp"
 
-"$HARNESS_BIN/harness" --version
-"$HARNESS_BIN/harness" agent --help
-"$HARNESS_BIN/harness-mcp" --version
-"$HARNESS_BIN/harness-mcp" --help
+"$VOLICORD_BIN/volicord" --version
+"$VOLICORD_BIN/volicord" agent --help
+"$VOLICORD_BIN/volicord-mcp" --version
+"$VOLICORD_BIN/volicord-mcp" --help
 ```
 
-The version commands should print `harness <version>` and
-`harness-mcp <version>`. The help commands should show the `harness agent`
-command family and the integration-bound `harness-mcp --integration
+The version commands should print `volicord <version>` and
+`volicord-mcp <version>`. The help commands should show the `volicord agent`
+command family and the integration-bound `volicord-mcp --integration
 <integration_id>` process usage.
 
 Continue only after both executables run from the same selected directory. This
@@ -305,11 +308,11 @@ For the focused tutorial, see
 
 Choose one path for the first setup. You can add other paths later.
 
-| Path | Use when | What Harness can verify |
+| Path | Use when | What Volicord can verify |
 |---|---|---|
 | Codex `user` scope | One personal Codex MCP entry should serve this repository now and may later serve more explicitly allowed repositories. | Direct setup can install Codex user configuration and run administrative verification. |
 | Claude Code `project` scope | The Product Repository should carry a team-shared Claude Code `.mcp.json` entry. | Direct setup can write the project file when authorized, then report host-owned approval or completion state. |
-| Generic `export` scope | You use another MCP host and will manage its configuration yourself. | Harness can render configuration. It cannot prove the external host loaded it. |
+| Generic `export` scope | You use another MCP host and will manage its configuration yourself. | Volicord can render configuration. It cannot prove the external host loaded it. |
 
 The examples below intentionally show one Codex path, one Claude Code path, and
 one generic export path. More host and scope combinations are documented in
@@ -319,32 +322,32 @@ one generic export path. More host and scope combinations are documented in
 ## Codex User-Scope Setup
 
 Use this path when one personal Codex configuration should load the same
-Harness integration across Codex projects.
+Volicord integration across Codex projects.
 
 Before running it:
 
-- `HARNESS_BIN` names the verified executable directory.
+- `VOLICORD_BIN` names the verified executable directory.
 - Codex can read its user `config.toml` through `CODEX_HOME` or `HOME`.
 - The `codex` executable is available on the administrative command `PATH` for
   the compatibility check.
-- `/Users/alex/.harness` and `/work/acme-api` are separate paths.
+- `/Users/alex/.volicord` and `/work/acme-api` are separate paths.
 
 Install:
 
 ```sh
-"$HARNESS_BIN/harness" agent install \
+"$VOLICORD_BIN/volicord" agent install \
   --host codex \
   --scope user \
   --integration-id int-codex-team \
   --project-id acme-api \
   --repo-root /work/acme-api \
   --default-project-id acme-api \
-  --runtime-home /Users/alex/.harness \
-  --mcp-command "$HARNESS_BIN/harness-mcp"
+  --runtime-home /Users/alex/.volicord \
+  --mcp-command "$VOLICORD_BIN/volicord-mcp"
 ```
 
 Because `--server-name` is omitted, the CLI derives a stable host MCP server
-name from `integration_id`, such as `harness-int-codex-team`, and reports it in
+name from `integration_id`, such as `volicord-int-codex-team`, and reports it in
 the result.
 
 Expected first result includes:
@@ -354,20 +357,20 @@ status: complete
 integration_id: int-codex-team
 host_kind: codex
 host_scope: user
-server_name: harness-int-codex-team
+server_name: volicord-int-codex-team
 verification: complete
 ```
 
-The setup may write Runtime Home records under `/Users/alex/.harness` and a
+The setup may write Runtime Home records under `/Users/alex/.volicord` and a
 Codex user MCP entry. It does not write `/work/acme-api` unless optional
 repository guidance is selected separately and explicitly authorized.
 
 Independent completion check:
 
 ```sh
-"$HARNESS_BIN/harness" agent verify \
+"$VOLICORD_BIN/volicord" agent verify \
   --integration-id int-codex-team \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
 This path is complete when verification reports `status: complete`. If it
@@ -382,27 +385,27 @@ Use this path when `/work/acme-api` should carry a team-shared Claude Code
 
 Before running it:
 
-- `HARNESS_BIN` names the verified executable directory.
-- `/Users/alex/.harness` and `/work/acme-api` are separate paths.
-- `harness-mcp` will be available on the `PATH` used by the future Claude Code
+- `VOLICORD_BIN` names the verified executable directory.
+- `/Users/alex/.volicord` and `/work/acme-api` are separate paths.
+- `volicord-mcp` will be available on the `PATH` used by the future Claude Code
   process.
-- If Claude Code would not otherwise use `/Users/alex/.harness`, the future
-  Claude Code launch environment must provide `HARNESS_HOME=/Users/alex/.harness`.
+- If Claude Code would not otherwise use `/Users/alex/.volicord`, the future
+  Claude Code launch environment must provide `VOLICORD_HOME=/Users/alex/.volicord`.
 - You intentionally allow the administrative command to write
   `/work/acme-api/.mcp.json`.
 
 Optional dry-run:
 
 ```sh
-HARNESS_HOME=/Users/alex/.harness \
-PATH="$HARNESS_BIN:$PATH" \
-"$HARNESS_BIN/harness" agent install \
+VOLICORD_HOME=/Users/alex/.volicord \
+PATH="$VOLICORD_BIN:$PATH" \
+"$VOLICORD_BIN/volicord" agent install \
   --host claude-code \
   --scope project \
   --integration-id int-claude-acme \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --mcp-command harness-mcp \
+  --mcp-command volicord-mcp \
   --dry-run \
   --output json
 ```
@@ -410,15 +413,15 @@ PATH="$HARNESS_BIN:$PATH" \
 Apply setup:
 
 ```sh
-HARNESS_HOME=/Users/alex/.harness \
-PATH="$HARNESS_BIN:$PATH" \
-"$HARNESS_BIN/harness" agent install \
+VOLICORD_HOME=/Users/alex/.volicord \
+PATH="$VOLICORD_BIN:$PATH" \
+"$VOLICORD_BIN/volicord" agent install \
   --host claude-code \
   --scope project \
   --integration-id int-claude-acme \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --mcp-command harness-mcp \
+  --mcp-command volicord-mcp \
   --allow-repository-write
 ```
 
@@ -429,7 +432,7 @@ status: action_required
 integration_id: int-claude-acme
 host_kind: claude_code
 host_scope: project
-server_name: harness-int-claude-acme
+server_name: volicord-int-claude-acme
 verification: action_required
 ```
 
@@ -438,18 +441,18 @@ host-owned action remains, such as Claude Code project MCP approval, reload, or
 restart.
 
 The generated `.mcp.json` entry intentionally stores the portable command
-`harness-mcp` and does not embed a personal `HARNESS_HOME`. The inline
-`HARNESS_HOME` and `PATH` values above apply only to the administrative command.
+`volicord-mcp` and does not embed a personal `VOLICORD_HOME`. The inline
+`VOLICORD_HOME` and `PATH` values above apply only to the administrative command.
 When Claude Code later starts the server, Claude Code's own environment must be
-able to find `harness-mcp` and select the intended Runtime Home if the default
+able to find `volicord-mcp` and select the intended Runtime Home if the default
 would differ.
 
 After completing the host-owned approval or reload step, verify:
 
 ```sh
-HARNESS_HOME=/Users/alex/.harness \
-PATH="$HARNESS_BIN:$PATH" \
-"$HARNESS_BIN/harness" agent verify \
+VOLICORD_HOME=/Users/alex/.volicord \
+PATH="$VOLICORD_BIN:$PATH" \
+"$VOLICORD_BIN/volicord" agent verify \
   --integration-id int-claude-acme
 ```
 
@@ -459,20 +462,20 @@ selected Host Installation reports `final_status: complete`.
 <a id="generic-export"></a>
 ## Generic Export
 
-Use generic export only for a host that Harness does not install directly. This
+Use generic export only for a host that Volicord does not install directly. This
 path renders configuration for you to apply in the external host's own setup
 flow.
 
 ```sh
-"$HARNESS_BIN/harness" agent install \
+"$VOLICORD_BIN/volicord" agent install \
   --host generic \
   --scope export \
   --integration-id int-generic-acme \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --runtime-home /Users/alex/.harness \
-  --mcp-command "$HARNESS_BIN/harness-mcp" \
-  --export-dir /tmp/harness-mcp-export
+  --runtime-home /Users/alex/.volicord \
+  --mcp-command "$VOLICORD_BIN/volicord-mcp" \
+  --export-dir /tmp/volicord-mcp-export
 ```
 
 The export contains a host-neutral MCP server object shaped like:
@@ -480,18 +483,18 @@ The export contains a host-neutral MCP server object shaped like:
 ```json
 {
   "mcpServers": {
-    "harness-int-generic-acme": {
-      "command": "/absolute/path/to/selected/bin/harness-mcp",
+    "volicord-int-generic-acme": {
+      "command": "/absolute/path/to/selected/bin/volicord-mcp",
       "args": ["--integration", "int-generic-acme"],
       "env": {
-        "HARNESS_HOME": "/Users/alex/.harness"
+        "VOLICORD_HOME": "/Users/alex/.volicord"
       }
     }
   }
 }
 ```
 
-Apply that configuration through the external host's own instructions. Harness
+Apply that configuration through the external host's own instructions. Volicord
 does not directly install it, reload the host, or confirm that the host loaded
 it. A generic export may remain `action_required` for that reason.
 
@@ -502,23 +505,23 @@ These checks have different meanings:
 
 | Command | What it tells you | What it does not prove |
 |---|---|---|
-| `harness agent status` | Registry state, allowed projects, Host Installation inventory, last verification status, and guidance status. | It does not prove the host loaded or exposed the MCP server. |
-| `harness agent verify` | Administrative verification for selected Host Installations, including startup checks and host-specific gates where observable. | It does not make host-owned trust or approval decisions for you. |
-| `harness-mcp --check --integration <integration_id>` | Startup validation for the local `harness-mcp` process and selected integration. | It is not complete host integration and does not prove Codex, Claude Code, or a generic host loaded it. |
+| `volicord agent status` | Registry state, allowed projects, Host Installation inventory, last verification status, and guidance status. | It does not prove the host loaded or exposed the MCP server. |
+| `volicord agent verify` | Administrative verification for selected Host Installations, including startup checks and host-specific gates where observable. | It does not make host-owned trust or approval decisions for you. |
+| `volicord-mcp --check --integration <integration_id>` | Startup validation for the local `volicord-mcp` process and selected integration. | It is not complete host integration and does not prove Codex, Claude Code, or a generic host loaded it. |
 
 Useful checks:
 
 ```sh
-"$HARNESS_BIN/harness" agent status \
+"$VOLICORD_BIN/volicord" agent status \
   --integration-id int-codex-team \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 
-"$HARNESS_BIN/harness" agent verify \
+"$VOLICORD_BIN/volicord" agent verify \
   --integration-id int-codex-team \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 
-HARNESS_HOME=/Users/alex/.harness \
-"$HARNESS_BIN/harness-mcp" --check --integration int-codex-team
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord-mcp" --check --integration int-codex-team
 ```
 
 Setup result states at onboarding level:
@@ -526,13 +529,13 @@ Setup result states at onboarding level:
 | State | Meaning |
 |---|---|
 | `complete` | Administrative setup, relevant host-owned gates, MCP initialization, and tool discovery all succeeded for the selected installation. |
-| `action_required` | The command succeeded, but a named host-owned action remains. Complete that action, then run `harness agent verify`. |
+| `action_required` | The command succeeded, but a named host-owned action remains. Complete that action, then run `volicord agent verify`. |
 | `partial_failure` | Some durable administrative action may have succeeded before a later step failed. Read `effects` and `residual_effects` before retrying. |
 | `failed` | The requested setup or verification did not establish usable durable integration state or host configuration. Fix the reported error before retrying. |
 
 Successful MCP startup does not prove that a host loaded or will consistently
-use Harness. Tool discovery also does not guarantee that an AI model will choose
-Harness for every request.
+use Volicord. Tool discovery also does not guarantee that an AI model will choose
+Volicord for every request.
 
 Exact result-state behavior belongs to
 [Administrative CLI](docs/en/reference/admin-cli.md).
@@ -574,13 +577,13 @@ Keep these locations separate:
 
 | Location | Owner | What belongs there | What setup may write |
 |---|---|---|---|
-| Harness Server source or installation | Harness Server maintainer or installer | Source checkout, installed executables, build output, documentation, tests, or required executable resources. | Source builds write Cargo output under `target/`. |
-| `Harness Runtime Home` | Local Harness operator | Harness registry, integration state, project state, runtime records, and runtime data as storage owners define them. | Agent setup creates or reuses Harness records there. |
+| Volicord source repository or installation | Volicord implementation maintainer or installer | Source checkout, installed executables, build output, documentation, tests, or required executable resources. | Source builds write Cargo output under `target/`. |
+| `Volicord Runtime Home` | Local Volicord operator | Volicord registry, integration state, project state, runtime records, and runtime data as storage owners define them. | Agent setup creates or reuses Volicord records there. |
 | `Product Repository` | Product project owner | Product files and explicitly selected project-scoped integration files. | Only explicitly selected and authorized integration files or guidance, such as `.codex/config.toml`, `.mcp.json`, `AGENTS.md` guidance, or `.claude/rules/` guidance. |
-| Codex or Claude Code configuration | Host operator | Host-owned settings that start `harness-mcp --integration <integration_id>`. | Direct setup may write managed host configuration where the selected host and scope require it. |
-| Generic export target | User-managed host operator | Exported MCP configuration for another host. | The export file or directory you select, such as `/tmp/harness-mcp-export`. |
+| Codex or Claude Code configuration | Host operator | Host-owned settings that start `volicord-mcp --integration <integration_id>`. | Direct setup may write managed host configuration where the selected host and scope require it. |
+| Generic export target | User-managed host operator | Exported MCP configuration for another host. | The export file or directory you select, such as `/tmp/volicord-mcp-export`. |
 
-Harness runtime databases, runtime records, generated records, logs,
+Volicord runtime databases, runtime records, generated records, logs,
 projections, QA results, acceptance records, close-readiness state, and
 residual-risk records are not stored in the `Product Repository`.
 
@@ -600,14 +603,14 @@ For exact location rules, use
 |---|---|---|
 | `cargo` or `rustc` is unavailable, or Rust is older than 1.85. | Select Rust 1.85+ with Cargo, then rerun the toolchain checks. | [System Requirements](docs/en/reference/system-requirements.md) |
 | `target/debug` or `target/release` does not contain both executables. | Confirm which build command succeeded, select the matching output directory, and rerun every executable check. | [Installation](docs/en/getting-started/installation.md) |
-| A help or version command fails. | Select the directory that actually contains runnable `harness` and `harness-mcp`. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
+| A help or version command fails. | Select the directory that actually contains runnable `volicord` and `volicord-mcp`. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
 | Runtime Home and Product Repository overlap. | Choose separate paths with no ancestor-descendant relationship. Do not repair by editing SQLite. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
 | Project-scoped setup refuses to write `.mcp.json` or `.codex/config.toml`. | Rerun only after deciding the repository write is intended and include `--allow-repository-write`. | [Administrative CLI](docs/en/reference/admin-cli.md) |
-| Result is `action_required`. | Complete the named host-owned trust, approval, reload, restart, OAuth, or executable-availability action, then run `harness agent verify`. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
+| Result is `action_required`. | Complete the named host-owned trust, approval, reload, restart, OAuth, or executable-availability action, then run `volicord agent verify`. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
 | Result is `partial_failure`. | Read `effects` and `residual_effects`; fix only the named issue before retrying. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
 | Result is `failed`. | Fix the reported error, run a dry-run before another write when available, then retry install or verify. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
-| A project-scoped host cannot find `harness-mcp`. | Keep the project file portable and fix the future host process `PATH`. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
-| Generic export stays `action_required`. | Apply the exported configuration in the external host yourself; Harness cannot observe that host's load state. | [Agent Host Setup](docs/en/guides/agent-host-setup.md) |
+| A project-scoped host cannot find `volicord-mcp`. | Keep the project file portable and fix the future host process `PATH`. | [Agent Host Troubleshooting](docs/en/guides/agent-host-troubleshooting.md) |
+| Generic export stays `action_required`. | Apply the exported configuration in the external host yourself; Volicord cannot observe that host's load state. | [Agent Host Setup](docs/en/guides/agent-host-setup.md) |
 
 Do not delete the Runtime Home, Product Repository, artifact storage, Core
 records, unrelated host entries, or user-edited guidance as a first response to

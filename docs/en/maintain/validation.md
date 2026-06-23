@@ -4,7 +4,7 @@ Use this policy after maintained documentation edits. It separates structural
 checks, human semantic review, Rust implementation validation, and result
 reporting.
 
-This is maintenance validation. It is not Harness runtime conformance, product
+This is maintenance validation. It is not Volicord runtime conformance, product
 acceptance, QA completion, close readiness, a security proof, or residual-risk
 acceptance. The repository-local automated documentation validator is:
 
@@ -96,7 +96,7 @@ owner path integrity.
 
 For brand-presentation or broad-claim changes, check the [Brand Guidelines](brand-guidelines.md)
 for Volicord spelling, official bilingual brand copy, component presentation,
-test-harness term boundaries, visual principles, and claim restrictions. Confirm
+test-volicord term boundaries, visual principles, and claim restrictions. Confirm
 exact product behavior, API behavior, storage effects, schemas, security
 guarantees, and Core authority semantics still route to their Reference owners.
 
@@ -129,8 +129,8 @@ is not evidence that first-time human readers can complete the flow.
 
 The participant set must include at least:
 
-- two technically capable users with no prior Harness experience
-- one MCP host operator with no prior Harness experience
+- two technically capable users with no prior Volicord experience
+- one MCP host operator with no prior Volicord experience
 - one implementer who needs to navigate API or schema Reference material
 
 The tasks must cover whether participants can:
@@ -192,11 +192,11 @@ clearly calls for them, and report the reason.
 
 ## Storage DDL Contract Check
 
-When editing Storage DDL, `harness-store` migrations, or schema validation code,
+When editing Storage DDL, `volicord-store` migrations, or schema validation code,
 run the focused owner-to-implementation consistency check:
 
 ```sh
-cargo test -p harness-store --test storage_ddl_contract
+cargo test -p volicord-store --test storage_ddl_contract
 ```
 
 This check compares the authoritative English and Korean Storage DDL SQL with
@@ -218,5 +218,5 @@ remaining documentation risks.
 
 Use `PASS`, `WARN`, `FAIL`, or `SKIP` only as documentation-maintenance or
 implementation-check outcomes. Do not describe a passing validation step as
-Harness runtime conformance, product acceptance, QA completion, close readiness,
+Volicord runtime conformance, product acceptance, QA completion, close readiness,
 a security guarantee, or residual-risk acceptance.

@@ -1,6 +1,6 @@
 # Surface Recipes
 
-Use this guide when an agent needs to make Harness-connected work feel clear in a named surface: CLI, IDE/editor, chat, or local MCP.
+Use this guide when an agent needs to make Volicord-connected work feel clear in a named surface: CLI, IDE/editor, chat, or local MCP.
 
 These recipes describe user-visible flow. They cover:
 
@@ -93,15 +93,15 @@ Route to the applicable next action:
 - refresh
 - use a capable surface
 - narrow the operation
-- continue explicitly outside Harness
+- continue explicitly outside Volicord
 
 ## Local MCP surface
 
-A local MCP surface is the practical route for supported Harness methods.
+A local MCP surface is the practical route for supported Volicord methods.
 
 Use it for status, scope updates, write checks, run/evidence recording, user-judgment capture, artifact staging, and close checks.
 
-For executable host setup, start with [Quickstart](../getting-started/quickstart.md), then [Agent Host Setup](agent-host-setup.md). Current Codex, Claude Code, and generic export setup uses `harness agent install`.
+For executable host setup, start with [Quickstart](../getting-started/quickstart.md), then [Agent Host Setup](agent-host-setup.md). Current Codex, Claude Code, and generic export setup uses `volicord agent install`.
 
 This recipe does not define the supported method list, surface registration, context exchange, storage effects, or security guarantees. Use the Reference owners for those details.
 
@@ -165,7 +165,7 @@ Use these owner routes for exact contracts:
 - [API error codes](../reference/api/error-codes.md), [API error routing](../reference/api/error-routing.md): public error codes and recovery routing.
 - [Artifact Storage](../reference/storage-artifacts.md): artifact access, staging, and storage-effect detail.
 - [Security](../reference/security.md): guarantee wording and non-claims.
-- [Runtime Boundaries](../reference/runtime-boundaries.md): Harness Server source/installation files, executable processes, `Product Repository`, `Harness Runtime Home`, and external MCP host configuration separation.
+- [Runtime Boundaries](../reference/runtime-boundaries.md): Volicord source/installation files, executable processes, `Product Repository`, `Volicord Runtime Home`, and external MCP host configuration separation.
 - [Scope](../reference/scope.md): baseline, profile-gated, and out-of-scope boundaries.
 
 ## Where to go next

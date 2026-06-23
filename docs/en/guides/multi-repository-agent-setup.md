@@ -7,7 +7,7 @@ The baseline topology is:
 ```mermaid
 flowchart LR
   host[Codex user MCP entry]
-  process["harness-mcp --integration int-codex-team"]
+  process["volicord-mcp --integration int-codex-team"]
   allowlist[explicit integration project allowlist]
   a["project_id: acme-api<br/>/work/acme-api"]
   b["project_id: billing-api<br/>/work/billing-api"]
@@ -18,7 +18,7 @@ flowchart LR
   allowlist --> b
 ```
 
-There is one host MCP entry, one `harness-mcp --integration <integration_id>` process, one explicit allowlist, and multiple repositories selected per tool call. Adding a project does not grant every Runtime Home project. Removing access takes effect through registry state without requiring the host entry to be rewritten.
+There is one host MCP entry, one `volicord-mcp --integration <integration_id>` process, one explicit allowlist, and multiple repositories selected per tool call. Adding a project does not grant every Runtime Home project. Removing access takes effect through registry state without requiring the host entry to be rewritten.
 
 Project and local host scopes remain single-repository scopes. Use user scope for this topology.
 
@@ -30,63 +30,63 @@ This guide is complete when one user-scope host entry points at one `integration
 
 ## Executable Convention
 
-The command examples assume you have selected one absolute directory containing both `harness` and `harness-mcp`, then exported it in the current shell:
+The command examples assume you have selected one absolute directory containing both `volicord` and `volicord-mcp`, then exported it in the current shell:
 
 ```sh
-export HARNESS_BIN="/absolute/path/to/selected/bin"
+export VOLICORD_BIN="/absolute/path/to/selected/bin"
 ```
 
-When building from the Harness Server source repository root, a debug build can use:
+When building from the Volicord source repository root, a debug build can use:
 
 ```sh
-export HARNESS_BIN="$(pwd)/target/debug"
+export VOLICORD_BIN="$(pwd)/target/debug"
 ```
 
-Replace `/absolute/path/to/selected/bin` with your real selected directory; do not copy it literally. `HARNESS_BIN` is only a shell convenience variable for these examples. Harness does not read it as runtime or host configuration. For release builds and installed-directory choices, see [Installation](../getting-started/installation.md) and [Agent host setup](agent-host-setup.md).
+Replace `/absolute/path/to/selected/bin` with your real selected directory; do not copy it literally. `VOLICORD_BIN` is only a shell convenience variable for these examples. Volicord does not read it as runtime or host configuration. For release builds and installed-directory choices, see [Installation](../getting-started/installation.md) and [Agent host setup](agent-host-setup.md).
 
-Administrative commands use `"$HARNESS_BIN/harness"`. The user-scope Codex install passes `--mcp-command "$HARNESS_BIN/harness-mcp"` so generated configuration stores the resolved absolute executable path, not the literal `HARNESS_BIN` variable.
+Administrative commands use `"$VOLICORD_BIN/volicord"`. The user-scope Codex install passes `--mcp-command "$VOLICORD_BIN/volicord-mcp"` so generated configuration stores the resolved absolute executable path, not the literal `VOLICORD_BIN` variable.
 
 ## Install Product Repository A
 
 ```sh
-"$HARNESS_BIN/harness" agent install \
+"$VOLICORD_BIN/volicord" agent install \
   --host codex \
   --scope user \
-  --server-name harness-main \
+  --server-name volicord-main \
   --integration-id int-codex-team \
   --project-id acme-api \
   --repo-root /work/acme-api \
   --default-project-id acme-api \
-  --runtime-home /Users/alex/.harness \
-  --mcp-command "$HARNESS_BIN/harness-mcp"
+  --runtime-home /Users/alex/.volicord \
+  --mcp-command "$VOLICORD_BIN/volicord-mcp"
 ```
 
-This example pins `--server-name harness-main` so the host entry has a short predictable key. The option is not required; omitting it derives a stable name from `integration_id`.
+This example pins `--server-name volicord-main` so the host entry has a short predictable key. The option is not required; omitting it derives a stable name from `integration_id`.
 
 The host config has one server entry:
 
 ```toml
-[mcp_servers.harness-main]
-command = "/absolute/path/to/selected/bin/harness-mcp"
+[mcp_servers.volicord-main]
+command = "/absolute/path/to/selected/bin/volicord-mcp"
 args = ["--integration", "int-codex-team"]
 
-[mcp_servers.harness-main.env]
-HARNESS_HOME = "/Users/alex/.harness"
+[mcp_servers.volicord-main.env]
+VOLICORD_HOME = "/Users/alex/.volicord"
 ```
 
-The actual generated `command` value is the resolved absolute path selected through `HARNESS_BIN`; generated TOML does not contain `HARNESS_BIN`.
+The actual generated `command` value is the resolved absolute path selected through `VOLICORD_BIN`; generated TOML does not contain `VOLICORD_BIN`.
 
 ## Add Product Repository B
 
 ```sh
-"$HARNESS_BIN/harness" agent project add \
+"$VOLICORD_BIN/volicord" agent project add \
   --integration-id int-codex-team \
   --project-id billing-api \
   --repo-root /work/billing-api \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
-`harness agent project add` reuses `billing-api` if that project is already registered in the selected Runtime Home. If it is not registered, this command can register it because the required `--repo-root /work/billing-api` value is supplied, then add the integration membership. The command does not rewrite host configuration; the detailed command contract stays in [Administrative CLI](../reference/admin-cli.md).
+`volicord agent project add` reuses `billing-api` if that project is already registered in the selected Runtime Home. If it is not registered, this command can register it because the required `--repo-root /work/billing-api` value is supplied, then add the integration membership. The command does not rewrite host configuration; the detailed command contract stays in [Administrative CLI](../reference/admin-cli.md).
 
 Expected result:
 
@@ -98,12 +98,12 @@ allowed_projects:
 verification_detail: project-specific startup preflight passed
 ```
 
-Confirm the host still has one MCP server entry. The Codex config should still contain only `mcp_servers.harness-main` for this integration; it should not gain one server entry per project.
+Confirm the host still has one MCP server entry. The Codex config should still contain only `mcp_servers.volicord-main` for this integration; it should not gain one server entry per project.
 
 ```sh
-"$HARNESS_BIN/harness" agent status \
+"$VOLICORD_BIN/volicord" agent status \
   --integration-id int-codex-team \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
 Status should list both `acme-api` and `billing-api` under `allowed_projects`.
@@ -210,10 +210,10 @@ When the user's request names a repository, the agent should still use the match
 Set or change the default without rewriting host configuration:
 
 ```sh
-"$HARNESS_BIN/harness" agent project default set \
+"$VOLICORD_BIN/volicord" agent project default set \
   --integration-id int-codex-team \
   --project-id billing-api \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
 Expected result:
@@ -233,10 +233,10 @@ For recovery from an already ambiguous call, see [More than one allowed project 
 After the default has moved to `billing-api`, Product Repository A is only a formerly default project. Remove it while retaining the integration and host MCP entry:
 
 ```sh
-"$HARNESS_BIN/harness" agent project remove \
+"$VOLICORD_BIN/volicord" agent project remove \
   --integration-id int-codex-team \
   --project-id acme-api \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
 Expected result:
@@ -251,14 +251,14 @@ verification_detail: project membership removed; host configuration was not rewr
 To remove the final remaining project, clear the default first if it still names that project, then remove the membership:
 
 ```sh
-"$HARNESS_BIN/harness" agent project default clear \
+"$VOLICORD_BIN/volicord" agent project default clear \
   --integration-id int-codex-team \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 
-"$HARNESS_BIN/harness" agent project remove \
+"$VOLICORD_BIN/volicord" agent project remove \
   --integration-id int-codex-team \
   --project-id billing-api \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
 Expected result:
@@ -269,16 +269,16 @@ allowed_project_count: 0
 not executable until one is added
 ```
 
-After removal, Host Installation inventory and host configuration can remain, but that stored state is not proof of new startup eligibility. A `harness-mcp` process that was already running can refresh registry state, so `volicord.list_projects` may return an empty list for `int-codex-team`; project-routed public tools cannot proceed because no allowed project remains. A newly started `harness-mcp` process, `harness-mcp --check`, and verification paths that need new MCP startup fail until a project is added again and normal configuration checks pass.
+After removal, Host Installation inventory and host configuration can remain, but that stored state is not proof of new startup eligibility. A `volicord-mcp` process that was already running can refresh registry state, so `volicord.list_projects` may return an empty list for `int-codex-team`; project-routed public tools cannot proceed because no allowed project remains. A newly started `volicord-mcp` process, `volicord-mcp --check`, and verification paths that need new MCP startup fail until a project is added again and normal configuration checks pass.
 
 For troubleshooting this state, see [Host configuration remains while no project is currently allowed](agent-host-troubleshooting.md#host-config-remains-zero-projects).
 
 Observe the zero-project state:
 
 ```sh
-"$HARNESS_BIN/harness" agent status \
+"$VOLICORD_BIN/volicord" agent status \
   --integration-id int-codex-team \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
 Expected status includes:
@@ -291,20 +291,20 @@ not executable
 Add a project again without reinstalling the host entry. This restores eligibility for new startup, subject to normal configuration checks:
 
 ```sh
-"$HARNESS_BIN/harness" agent project add \
+"$VOLICORD_BIN/volicord" agent project add \
   --integration-id int-codex-team \
   --project-id billing-api \
   --repo-root /work/billing-api \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
 If the re-added project should be the convenience default again, set it after adding it:
 
 ```sh
-"$HARNESS_BIN/harness" agent project default set \
+"$VOLICORD_BIN/volicord" agent project default set \
   --integration-id int-codex-team \
   --project-id billing-api \
-  --runtime-home /Users/alex/.harness
+  --runtime-home /Users/alex/.volicord
 ```
 
 ## Full Uninstall
@@ -312,14 +312,14 @@ If the re-added project should be the convenience default again, set it after ad
 Remove managed host configuration and managed guidance for the integration:
 
 ```sh
-"$HARNESS_BIN/harness" agent uninstall \
+"$VOLICORD_BIN/volicord" agent uninstall \
   --integration-id int-codex-team \
-  --runtime-home /Users/alex/.harness \
+  --runtime-home /Users/alex/.volicord \
   --allow-repository-write \
   --remove-managed
 ```
 
-Uninstall removes selected Harness-managed host configuration when ownership and safety checks allow it. With `--remove-managed`, it also removes managed repository guidance only when selected and safely owned. A successful managed uninstall removes the corresponding Host Installation inventory; if no Host Installations remain for the Agent Integration Profile, the profile can be disabled, which is not deletion. Product Repositories, project registration and project state, Core task, evidence, decision, run, and artifact-related records, artifact storage, and unrelated host entries are preserved according to their owners.
+Uninstall removes selected Volicord-managed host configuration when ownership and safety checks allow it. With `--remove-managed`, it also removes managed repository guidance only when selected and safely owned. A successful managed uninstall removes the corresponding Host Installation inventory; if no Host Installations remain for the Agent Integration Profile, the profile can be disabled, which is not deletion. Product Repositories, project registration and project state, Core task, evidence, decision, run, and artifact-related records, artifact storage, and unrelated host entries are preserved according to their owners.
 
 If uninstall reports `partial_failure`, use [Removal completed only partially](agent-host-troubleshooting.md#partial-removal) before retrying cleanup.
 

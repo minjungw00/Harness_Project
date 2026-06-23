@@ -19,7 +19,7 @@ fn valid_fixture() -> TempDir {
     write(root, "AGENTS.md", "# Root Agent Rules\n");
     write(root, "docs/AGENTS.md", "# Docs Agent Rules\n");
     write(root, "crates/AGENTS.md", "# Crates Agent Rules\n");
-    write(root, "README.md", "# Harness\n");
+    write(root, "README.md", "# Volicord\n");
     write(root, "docs/README.md", "# Documentation\n");
     write(root, "docs/en/README.md", "# English Docs\n");
     write(
@@ -65,8 +65,8 @@ owner_areas:
   developer_documentation:
     description: Developer documentation.
 applicability:
-  harness_server_0_1:
-    description: Harness Server 0.1.
+  volicord_workspace_0_1:
+    description: Volicord workspace 0.1.
   doc_index_schema_v3:
     description: Documentation index schema v3.
   terminology_map_v1:
@@ -83,7 +83,7 @@ shared_documents:
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 - doc_id: agents.docs
   path: docs/AGENTS.md
   kind: maintenance
@@ -94,7 +94,7 @@ shared_documents:
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 - doc_id: agents.crates
   path: crates/AGENTS.md
   kind: maintenance
@@ -105,7 +105,7 @@ shared_documents:
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 - doc_id: readme.root
   path: README.md
   kind: landing
@@ -116,7 +116,7 @@ shared_documents:
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 - doc_id: docs.root
   path: docs/README.md
   kind: landing
@@ -127,7 +127,7 @@ shared_documents:
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 - doc_id: docs.doc-index
   path: docs/doc-index.yaml
   kind: maintenance
@@ -163,7 +163,7 @@ documents:
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
   journeys:
   - learn
 - doc_id: example
@@ -178,7 +178,7 @@ documents:
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
   journeys:
   - learn
 "#
@@ -202,7 +202,7 @@ fn root_readme_shared_entry() -> &'static str {
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 "#
 }
 
@@ -219,7 +219,7 @@ fn root_readme_paired_entry() -> &'static str {
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 "#
 }
 
@@ -290,7 +290,7 @@ fn accepts_shared_root_readme_without_korean_readme() {
 #[test]
 fn accepts_registered_root_readme_pair() {
     let fixture = valid_fixture();
-    write(fixture.path(), "README.ko.md", "# Harness Korean\n");
+    write(fixture.path(), "README.ko.md", "# Volicord Korean\n");
     write(
         fixture.path(),
         "docs/doc-index.yaml",
@@ -321,7 +321,7 @@ fn accepts_normal_mirrored_docs_pair() {
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 "#,
     );
     write(fixture.path(), "docs/doc-index.yaml", &index);
@@ -350,7 +350,7 @@ fn rejects_arbitrary_root_level_pair() {
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 "#,
     );
     write(fixture.path(), "docs/doc-index.yaml", &index);
@@ -363,7 +363,7 @@ fn rejects_arbitrary_root_level_pair() {
 #[test]
 fn rejects_reversed_root_readme_pair() {
     let fixture = valid_fixture();
-    write(fixture.path(), "README.ko.md", "# Harness Korean\n");
+    write(fixture.path(), "README.ko.md", "# Volicord Korean\n");
     let index = valid_doc_index()
         .replace(root_readme_shared_entry(), "")
         .replace("path_en: docs/en/README.md", "path_en: README.ko.md")
@@ -378,7 +378,7 @@ fn rejects_reversed_root_readme_pair() {
 #[test]
 fn reports_unindexed_korean_root_readme() {
     let fixture = valid_fixture();
-    write(fixture.path(), "README.ko.md", "# Harness Korean\n");
+    write(fixture.path(), "README.ko.md", "# Volicord Korean\n");
 
     let report = report(fixture.path());
     let errors = category_errors(&report, "coverage.unindexed_pair");
@@ -412,9 +412,9 @@ fn reports_bilingual_link_mismatch_in_registered_root_readme_pair() {
     write(
         fixture.path(),
         "README.md",
-        "# Harness\n\n[Docs](docs/en/README.md)\n",
+        "# Volicord\n\n[Docs](docs/en/README.md)\n",
     );
-    write(fixture.path(), "README.ko.md", "# Harness Korean\n");
+    write(fixture.path(), "README.ko.md", "# Volicord Korean\n");
     write(
         fixture.path(),
         "docs/doc-index.yaml",
@@ -466,8 +466,11 @@ fn reports_unknown_owner_area() {
 #[test]
 fn reports_unknown_applicability_identifier() {
     let fixture = valid_fixture();
-    let index =
-        valid_doc_index().replacen("  - harness_server_0_1\n", "  - unknown_applicability\n", 1);
+    let index = valid_doc_index().replacen(
+        "  - volicord_workspace_0_1\n",
+        "  - unknown_applicability\n",
+        1,
+    );
     write(fixture.path(), "docs/doc-index.yaml", &index);
 
     let report = report(fixture.path());
@@ -479,7 +482,7 @@ fn reports_unknown_applicability_identifier() {
 fn reports_empty_or_duplicate_applicability() {
     let fixture = valid_fixture();
     let empty = valid_doc_index().replacen(
-        "  applies_to:\n  - harness_server_0_1\n",
+        "  applies_to:\n  - volicord_workspace_0_1\n",
         "  applies_to: []\n",
         1,
     );
@@ -490,8 +493,8 @@ fn reports_empty_or_duplicate_applicability() {
     assert!(has_category(&empty_report, "metadata.invalid_applies_to"));
 
     let duplicate = valid_doc_index().replacen(
-        "  applies_to:\n  - harness_server_0_1\n",
-        "  applies_to:\n  - harness_server_0_1\n  - harness_server_0_1\n",
+        "  applies_to:\n  - volicord_workspace_0_1\n",
+        "  applies_to:\n  - volicord_workspace_0_1\n  - volicord_workspace_0_1\n",
         1,
     );
     write(fixture.path(), "docs/doc-index.yaml", &duplicate);
@@ -588,7 +591,7 @@ fn reports_duplicate_doc_id() {
   last_updated_on: '2026-06-20'
   last_verified_on: '2026-06-23'
   applies_to:
-  - harness_server_0_1
+  - volicord_workspace_0_1
 "#,
     );
     write(fixture.path(), "docs/doc-index.yaml", &index);

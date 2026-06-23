@@ -4,25 +4,25 @@ This guide owns guide-level implementation structure and execution-flow explanat
 
 It does not define or override public API behavior, request or response fields, schema meaning, storage effects, DDL or table columns, security guarantees, runtime enforcement, Core authority semantics, or product contracts. Use the [Developer Documentation](README.md) entry point for the source-code learning path, the [Codebase Tour](codebase-tour.md) for crate-by-crate first files and symbols, the [Request Lifecycle](request-lifecycle.md) for representative method traces, [Implementation Design Patterns](design-patterns.md) for recurring implementation structures, [Storage and Transactions](storage-and-transactions.md) for Store commit and artifact boundaries, [Testing Strategy](testing-strategy.md) for test-layer choice, [Architecture Decisions](decisions/README.md) for focused decision records, the [Implementation Guide](change-guide.md) for change workflow, and the focused Reference owners for exact behavior.
 
-Harness is the local work-authority product/system for AI-assisted product work. Core is the local authority record for Harness state.
+Volicord is the local work-authority product/system for AI-assisted product work. Core is the local authority record for Volicord state.
 
 Code and test paths that are meant to be opened directly are written relative to the repository root.
 
-This checkout is the Harness Server source repository: the maintained server implementation set for Harness. It contains implementation crates, the `harness` administrative CLI, the `harness-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration. A Harness Server installation is a deployed subset of executables and required runtime resources, so this source map must not be read as an installation manifest.
+This checkout is the Volicord source repository: the maintained server implementation set for Volicord. It contains implementation crates, the `volicord` administrative CLI, the `volicord-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration. A Volicord installation is a deployed subset of executables and required runtime resources, so this source map must not be read as an installation manifest.
 
 ## Operational paths
 
 ```mermaid
 flowchart LR
   host[MCP host or agent surface]
-  mcp["harness-mcp stdio adapter"]
-  core["harness-core"]
-  store["harness-store project Store"]
+  mcp["volicord-mcp stdio adapter"]
+  core["volicord-core"]
+  store["volicord-store project Store"]
   artifacts[Artifact staging and artifact facilities]
   operator[Operator]
-  cli["harness administrative CLI"]
+  cli["volicord administrative CLI"]
   bootstrap[Bootstrap, registration, and inspection facilities]
-  runtime["Harness Runtime Home"]
+  runtime["Volicord Runtime Home"]
   config[Host configuration files]
   product["Product Repository"]
 
@@ -43,14 +43,14 @@ flowchart LR
   host -. product-file tools outside public API .-> product
 ```
 
-The Harness Server implementation in this repository has two distinct operational paths:
+The Volicord implementation in this repository has two distinct operational paths:
 
-- MCP host -> `harness-mcp` -> `harness-core` -> Store and artifact facilities under `Harness Runtime Home`.
-- Operator -> `harness` administrative CLI -> bootstrap and registration facilities -> `Harness Runtime Home` and host configuration files.
+- MCP host -> `volicord-mcp` -> `volicord-core` -> Store and artifact facilities under `Volicord Runtime Home`.
+- Operator -> `volicord` administrative CLI -> bootstrap and registration facilities -> `Volicord Runtime Home` and host configuration files.
 
-`harness-mcp` also uses `harness-store` directly during startup and request routing. That Store use checks Runtime Home, Agent Integration Profile state, integration project membership, project availability, surface, surface instance, role, and local-access registration before dispatching a public method to Core. It is not an alternate implementation path for public Harness method semantics, which route through `harness-core`.
+`volicord-mcp` also uses `volicord-store` directly during startup and request routing. That Store use checks Runtime Home, Agent Integration Profile state, integration project membership, project availability, surface, surface instance, role, and local-access registration before dispatching a public method to Core. It is not an alternate implementation path for public Volicord method semantics, which route through `volicord-core`.
 
-`Product Repository` remains a separate product-file boundary. The public Harness API records owner-defined compatibility, observations, and artifact links; product-file writes themselves happen through a connected surface or local tooling outside the public API path.
+`Product Repository` remains a separate product-file boundary. The public Volicord API records owner-defined compatibility, observations, and artifact links; product-file writes themselves happen through a connected surface or local tooling outside the public API path.
 
 ## Workspace shape
 
@@ -58,38 +58,38 @@ The Cargo workspace contains these members:
 
 | Workspace member | Cargo package | Targets | Guide-level role |
 |---|---|---|---|
-| `crates/harness-types` | `harness-types` | Library | Shared Rust request, response, schema-shaped, value-set, identifier, and canonical-hash types. |
-| `crates/harness-store` | `harness-store` | Library | SQLite, Runtime Home, bootstrap, project Store, artifact storage, migration, inspection, and storage-error implementation. |
-| `crates/harness-core` | `harness-core` | Library | Core service, shared request pipeline, method planning, policy checks, and Store coordination. |
-| `crates/harness-cli` | `harness-cli` | Library and `harness` binary | Local administrative CLI for Runtime Home setup, project and surface registration, Agent Integration Profile installation, host adapters, and repository guidance. |
-| `crates/harness-mcp` | `harness-mcp` | Library and `harness-mcp` binary | MCP stdio adapter, startup validation, tool listing, `tools/call` dispatch, and Core invocation. |
-| `crates/harness-test-support` | `harness-test-support` | Library | Disposable Runtime Home, Store, Core, and fixture helpers shared by implementation tests. |
-| `tests/conformance` | `harness-conformance-tests` | `baseline` test target | Baseline cross-method scenarios that exercise owner-defined behavior through Core-facing APIs. |
-| `tests/integration` | `harness-integration-tests` | `mcp_surface` test target | Cross-layer MCP, Core, Store, surface-binding, and access-path verification. |
-| `xtask` | `xtask` | Library and `xtask` binary | Repository maintenance tooling for read-only documentation validation. It is not part of Harness runtime architecture. |
+| `crates/volicord-types` | `volicord-types` | Library | Shared Rust request, response, schema-shaped, value-set, identifier, and canonical-hash types. |
+| `crates/volicord-store` | `volicord-store` | Library | SQLite, Runtime Home, bootstrap, project Store, artifact storage, migration, inspection, and storage-error implementation. |
+| `crates/volicord-core` | `volicord-core` | Library | Core service, shared request pipeline, method planning, policy checks, and Store coordination. |
+| `crates/volicord-cli` | `volicord-cli` | Library and `volicord` binary | Local administrative CLI for Runtime Home setup, project and surface registration, Agent Integration Profile installation, host adapters, and repository guidance. |
+| `crates/volicord-mcp` | `volicord-mcp` | Library and `volicord-mcp` binary | MCP stdio adapter, startup validation, tool listing, `tools/call` dispatch, and Core invocation. |
+| `crates/volicord-test-support` | `volicord-test-support` | Library | Disposable Runtime Home, Store, Core, and fixture helpers shared by implementation tests. |
+| `tests/conformance` | `volicord-conformance-tests` | `baseline` test target | Baseline cross-method scenarios that exercise owner-defined behavior through Core-facing APIs. |
+| `tests/integration` | `volicord-integration-tests` | `mcp_surface` test target | Cross-layer MCP, Core, Store, surface-binding, and access-path verification. |
+| `xtask` | `xtask` | Library and `xtask` binary | Repository maintenance tooling for read-only documentation validation. It is not part of Volicord runtime architecture. |
 
 Internal dependency direction from the Cargo manifests:
 
 | Member | Normal internal dependencies | Test-only internal dependencies |
 |---|---|---|
-| `harness-types` | None | None |
-| `harness-store` | `harness-types` | `harness-test-support` |
-| `harness-core` | `harness-store`, `harness-types` | `harness-test-support` |
-| `harness-cli` | `harness-store`, `harness-types` | `harness-store` with `test-support`, `harness-test-support` |
-| `harness-mcp` | `harness-core`, `harness-store`, `harness-types` | `harness-test-support` |
-| `harness-test-support` | `harness-store`, `harness-types` | None |
-| `tests/conformance` | None; the package contains only test targets | `harness-core`, `harness-test-support`, `harness-types` |
-| `tests/integration` | None; the package contains only test targets | `harness-core`, `harness-mcp`, `harness-store`, `harness-test-support`, `harness-types` |
+| `volicord-types` | None | None |
+| `volicord-store` | `volicord-types` | `volicord-test-support` |
+| `volicord-core` | `volicord-store`, `volicord-types` | `volicord-test-support` |
+| `volicord-cli` | `volicord-store`, `volicord-types` | `volicord-store` with `test-support`, `volicord-test-support` |
+| `volicord-mcp` | `volicord-core`, `volicord-store`, `volicord-types` | `volicord-test-support` |
+| `volicord-test-support` | `volicord-store`, `volicord-types` | None |
+| `tests/conformance` | None; the package contains only test targets | `volicord-core`, `volicord-test-support`, `volicord-types` |
+| `tests/integration` | None; the package contains only test targets | `volicord-core`, `volicord-mcp`, `volicord-store`, `volicord-test-support`, `volicord-types` |
 | `xtask` | None | None |
 
 ```mermaid
 flowchart TD
-  types["harness-types"]
-  store["harness-store"]
-  core["harness-core"]
-  cli["harness-cli"]
-  mcp["harness-mcp"]
-  support["harness-test-support"]
+  types["volicord-types"]
+  store["volicord-store"]
+  core["volicord-core"]
+  cli["volicord-cli"]
+  mcp["volicord-mcp"]
+  support["volicord-test-support"]
   conformance["tests/conformance"]
   integration["tests/integration"]
   xtask["xtask"]
@@ -132,25 +132,25 @@ The durable dependency boundaries are:
 
 | Area | Major module paths | Durable responsibility |
 |---|---|---|
-| `crates/harness-types` | `crates/harness-types/src/methods.rs`, `crates/harness-types/src/schema.rs`, `crates/harness-types/src/values.rs`, `crates/harness-types/src/ids.rs`, `crates/harness-types/src/canonical.rs` | `methods.rs` carries typed public request/result models and method-to-access mapping. `schema.rs` carries shared schema-shaped Rust data, response branches, Core state shapes, artifact and judgment structures, and persisted helper shapes. `values.rs` carries controlled Rust enums and constants for documented value names. `ids.rs` carries opaque identifier wrappers and durable ID generation helpers. `canonical.rs` carries deterministic canonical JSON serialization and request hashing. |
-| `crates/harness-store` | `crates/harness-store/src/runtime_home.rs`, `crates/harness-store/src/bootstrap.rs`, `crates/harness-store/src/sqlite.rs`, `crates/harness-store/src/migrations.rs`, `crates/harness-store/src/core_pipeline.rs`, `crates/harness-store/src/artifacts.rs`, `crates/harness-store/src/inspection.rs`, `crates/harness-store/src/error.rs` | `runtime_home.rs` resolves Runtime Home paths. `bootstrap.rs` initializes Runtime Home metadata and registers projects and surfaces. `sqlite.rs` opens and validates registry/project SQLite databases. `migrations.rs` applies baseline migrations. `core_pipeline.rs` exposes `CoreProjectStore`, read helpers, replay rows, storage mutation types, and the atomic Core mutation commit boundary. `artifacts.rs` handles transient staging and persistent artifact body verification. `inspection.rs` supports read-only setup inspection. `error.rs` classifies storage failures for higher layers. |
-| `crates/harness-core` | `crates/harness-core/src/pipeline.rs`, `crates/harness-core/src/methods/`, `crates/harness-core/src/policy/` | `pipeline.rs` owns common request preflight, validated request context preparation, effect-path selection, response construction, replay handling, and Core commit orchestration. `methods/` owns method-specific validation, planning, storage mutation lists, event payloads, dry-run summaries, and result fields. `policy/` owns reusable Core policy helpers for access, replay context, product paths, write authorization, close readiness, evidence, and judgment relevance. |
-| `crates/harness-cli` | `crates/harness-cli/src/main.rs`, `crates/harness-cli/src/agent_command.rs`, `crates/harness-cli/src/host_integration/`, `crates/harness-cli/src/repository_guidance.rs`, `crates/harness-cli/src/guidance_template.rs`, `crates/harness-cli/src/registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `agent_command.rs` parses and orchestrates `harness agent` install, project membership, status, verification, uninstall, and guidance commands. `host_integration/` owns Codex, Claude Code, and generic host plans and managed host configuration. `repository_guidance.rs` and `guidance_template.rs` manage optional Product Repository guidance. `registration.rs` builds capability-profile and local-access metadata for registered surfaces. |
-| `crates/harness-mcp` | `crates/harness-mcp/src/main.rs`, `crates/harness-mcp/src/lib.rs` | `main.rs` handles command modes such as stdio, `--check`, help, and version. `lib.rs` owns MCP tool metadata, integration startup inspection, request-time project routing, the adapter-owned `volicord.list_projects` utility, typed public `tools/call` decoding, invocation-context derivation, initialization instructions, JSON-RPC stdio framing, and response wrapping. |
-| `crates/harness-test-support` | `crates/harness-test-support/src/lib.rs` | Provides disposable Runtime Home helpers, fixture setup for Core and Store tests, shared request builders, and fixture-only helpers used by conformance and integration tests. |
+| `crates/volicord-types` | `crates/volicord-types/src/methods.rs`, `crates/volicord-types/src/schema.rs`, `crates/volicord-types/src/values.rs`, `crates/volicord-types/src/ids.rs`, `crates/volicord-types/src/canonical.rs` | `methods.rs` carries typed public request/result models and method-to-access mapping. `schema.rs` carries shared schema-shaped Rust data, response branches, Core state shapes, artifact and judgment structures, and persisted helper shapes. `values.rs` carries controlled Rust enums and constants for documented value names. `ids.rs` carries opaque identifier wrappers and durable ID generation helpers. `canonical.rs` carries deterministic canonical JSON serialization and request hashing. |
+| `crates/volicord-store` | `crates/volicord-store/src/runtime_home.rs`, `crates/volicord-store/src/bootstrap.rs`, `crates/volicord-store/src/sqlite.rs`, `crates/volicord-store/src/migrations.rs`, `crates/volicord-store/src/core_pipeline.rs`, `crates/volicord-store/src/artifacts.rs`, `crates/volicord-store/src/inspection.rs`, `crates/volicord-store/src/error.rs` | `runtime_home.rs` resolves Runtime Home paths. `bootstrap.rs` initializes Runtime Home metadata and registers projects and surfaces. `sqlite.rs` opens and validates registry/project SQLite databases. `migrations.rs` applies baseline migrations. `core_pipeline.rs` exposes `CoreProjectStore`, read helpers, replay rows, storage mutation types, and the atomic Core mutation commit boundary. `artifacts.rs` handles transient staging and persistent artifact body verification. `inspection.rs` supports read-only setup inspection. `error.rs` classifies storage failures for higher layers. |
+| `crates/volicord-core` | `crates/volicord-core/src/pipeline.rs`, `crates/volicord-core/src/methods/`, `crates/volicord-core/src/policy/` | `pipeline.rs` owns common request preflight, validated request context preparation, effect-path selection, response construction, replay handling, and Core commit orchestration. `methods/` owns method-specific validation, planning, storage mutation lists, event payloads, dry-run summaries, and result fields. `policy/` owns reusable Core policy helpers for access, replay context, product paths, write authorization, close readiness, evidence, and judgment relevance. |
+| `crates/volicord-cli` | `crates/volicord-cli/src/main.rs`, `crates/volicord-cli/src/agent_command.rs`, `crates/volicord-cli/src/host_integration/`, `crates/volicord-cli/src/repository_guidance.rs`, `crates/volicord-cli/src/guidance_template.rs`, `crates/volicord-cli/src/registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `agent_command.rs` parses and orchestrates `volicord agent` install, project membership, status, verification, uninstall, and guidance commands. `host_integration/` owns Codex, Claude Code, and generic host plans and managed host configuration. `repository_guidance.rs` and `guidance_template.rs` manage optional Product Repository guidance. `registration.rs` builds capability-profile and local-access metadata for registered surfaces. |
+| `crates/volicord-mcp` | `crates/volicord-mcp/src/main.rs`, `crates/volicord-mcp/src/lib.rs` | `main.rs` handles command modes such as stdio, `--check`, help, and version. `lib.rs` owns MCP tool metadata, integration startup inspection, request-time project routing, the adapter-owned `volicord.list_projects` utility, typed public `tools/call` decoding, invocation-context derivation, initialization instructions, JSON-RPC stdio framing, and response wrapping. |
+| `crates/volicord-test-support` | `crates/volicord-test-support/src/lib.rs` | Provides disposable Runtime Home helpers, fixture setup for Core and Store tests, shared request builders, and fixture-only helpers used by conformance and integration tests. |
 
 These module descriptions are implementation placement guidance. Exact API fields, method behavior, storage records, storage effects, security wording, and Core authority semantics stay with the Reference owners.
 
 ## Core pipeline and Store boundary
 
-`crates/harness-core/src/pipeline.rs`, `crates/harness-core/src/methods/`, `crates/harness-core/src/policy/`, and `crates/harness-store/src/core_pipeline.rs` have separate jobs:
+`crates/volicord-core/src/pipeline.rs`, `crates/volicord-core/src/methods/`, `crates/volicord-core/src/policy/`, and `crates/volicord-store/src/core_pipeline.rs` have separate jobs:
 
 | Component | Job in the implementation |
 |---|---|
-| `crates/harness-core/src/pipeline.rs` | Runs common preflight, prepares `VerifiedRequestContext`, routes prepared requests to read, no-effect, dry-run, or committed Core paths, and builds common response bases. |
-| `crates/harness-core/src/methods/` | Decodes already typed requests into method-specific plans: validation outcomes, dry-run summaries, event payloads, result fields, and `CoreStorageMutation` lists. |
-| `crates/harness-core/src/policy/` | Supplies reusable checks used by method planners and preflight: registered-surface access, replay context, Product Repository path normalization, write-authorization compatibility, evidence status, judgment relevance, and close-readiness calculations. |
-| `crates/harness-store/src/core_pipeline.rs` | Owns project-local Store access, read helpers, replay rows, storage mutation application, and the atomic `CoreProjectStore::commit_mutation` transaction. |
+| `crates/volicord-core/src/pipeline.rs` | Runs common preflight, prepares `VerifiedRequestContext`, routes prepared requests to read, no-effect, dry-run, or committed Core paths, and builds common response bases. |
+| `crates/volicord-core/src/methods/` | Decodes already typed requests into method-specific plans: validation outcomes, dry-run summaries, event payloads, result fields, and `CoreStorageMutation` lists. |
+| `crates/volicord-core/src/policy/` | Supplies reusable checks used by method planners and preflight: registered-surface access, replay context, Product Repository path normalization, write-authorization compatibility, evidence status, judgment relevance, and close-readiness calculations. |
+| `crates/volicord-store/src/core_pipeline.rs` | Owns project-local Store access, read helpers, replay rows, storage mutation application, and the atomic `CoreProjectStore::commit_mutation` transaction. |
 
 Method modules decide what should happen for one public method. The shared Core pipeline decides the common ordering and effect path. Store commits apply the selected storage mutations atomically; Store does not decide method policy.
 
@@ -159,17 +159,17 @@ Method modules decide what should happen for one public method. The shared Core 
 ```mermaid
 sequenceDiagram
   participant Host as MCP host
-  participant MCP as harness-mcp
-  participant Store as harness-store
-  participant Core as harness-core
-  participant Method as harness-core methods
+  participant MCP as volicord-mcp
+  participant Store as volicord-store
+  participant Core as volicord-core
+  participant Method as volicord-core methods
 
   Host->>MCP: start process with integration binding
   MCP->>Store: validate Runtime Home, integration, surface, instance, role, membership
   Host->>MCP: tools/call(name, arguments)
   MCP->>MCP: select project, inject adapter facts, decode typed request
   MCP->>Core: CoreService method(request, invocation)
-  Core->>Core: common preflight in crates/harness-core/src/pipeline.rs
+  Core->>Core: common preflight in crates/volicord-core/src/pipeline.rs
   Core->>Store: open project, read state, validate surface, replay, task, freshness
   Core->>Method: method-specific planning and policy checks
   Method-->>Core: branch, result fields, events, storage mutations, or direct response
@@ -183,22 +183,22 @@ sequenceDiagram
     Store-->>Core: staged handle facts
   end
   Core-->>MCP: PipelineResponse
-  MCP-->>Host: MCP result with Harness JSON in content text
+  MCP-->>Host: MCP result with Volicord JSON in content text
 ```
 
 Implementation flow:
 
-1. `harness-mcp` resolves Runtime Home and one integration-bound process context from `--integration <integration_id>` and optional `HARNESS_HOME`.
+1. `volicord-mcp` resolves Runtime Home and one integration-bound process context from `--integration <integration_id>` and optional `VOLICORD_HOME`.
 2. `McpIntegrationStartupInspection` validates Runtime Home metadata, Agent Integration Profile state, surface and surface-instance binding, role, project membership readability, and registry JSON needed before stdio begins. It does not select one project for all calls.
 3. The stdio loop accepts line-delimited JSON-RPC and dispatches `initialize`, `ping`, `tools/list`, and `tools/call`.
-4. `tools/list` exposes the nine public Harness method tools plus the adapter-owned `volicord.list_projects` utility. For a public `tools/call`, the adapter reads the raw `envelope`, deterministically selects an allowed project, validates the integration surface for that project, injects adapter-managed project and surface facts, then decodes `arguments` into the matching typed request from `harness-types`.
+4. `tools/list` exposes the nine public Volicord method tools plus the adapter-owned `volicord.list_projects` utility. For a public `tools/call`, the adapter reads the raw `envelope`, deterministically selects an allowed project, validates the integration surface for that project, injects adapter-managed project and surface facts, then decodes `arguments` into the matching typed request from `volicord-types`.
 5. `tools/call` derives an `InvocationContext` from the selected project, integration-bound surface instance, and method-derived access class before dispatching to Core.
 6. `McpAdapter::call_tool` dispatches to the matching `CoreService` method.
 7. Each `CoreService` method selects a `MethodPolicy` and calls common preflight before method-specific planning.
 8. Common preflight validates request-envelope shape, rejects adapter binding mismatches, validates committed-effect envelope requirements, computes the canonical request hash, opens the project Store, reads `project_state`, derives the verified surface context, handles idempotency replay for committed branches, resolves the Task according to the method policy, checks `state_version` freshness where applicable, checks registered access for the method-derived access class, and prepares a validated request context.
 9. The method module performs method-specific validation, policy evaluation, and plan or result construction.
 10. The selected branch returns a read-only result, no-persistence result, dry-run preview, Core mutation commit, or transient artifact staging result.
-11. Core returns a `PipelineResponse`; MCP wraps the exact Harness response JSON as MCP `tools/call` content text.
+11. Core returns a `PipelineResponse`; MCP wraps the exact Volicord response JSON as MCP `tools/call` content text.
 
 This flow is an implementation map. Exact public method contracts, error precedence, response schemas, and storage effects remain with the focused Reference owners.
 
@@ -206,11 +206,11 @@ This flow is an implementation map. Exact public method contracts, error precede
 
 | Effect path | Implementation location | Storage consequence at guide level |
 |---|---|---|
-| Read-only result | `OwnerPipelineBranch::ReadOnly` through `crates/harness-core/src/pipeline.rs` | Builds a result from current Store reads; no Core mutation commit. |
-| Result with no persistence | `OwnerPipelineBranch::NoEffectResult` through `crates/harness-core/src/pipeline.rs` | Returns a method result without a Core state mutation, such as a blocked close result. |
-| Dry-run result | `OwnerPipelineBranch::DryRunPreview` through `crates/harness-core/src/pipeline.rs` | Returns preview data with no persistent storage effect. |
-| Core mutation commit | `OwnerPipelineBranch::CommitMutation` through `crates/harness-core/src/pipeline.rs` and `CoreProjectStore::commit_mutation` | Applies method-provided `CoreStorageMutation` values inside one Store transaction, appends events, stores replay response when idempotent, and advances project state where applicable. |
-| Transient artifact staging | `crates/harness-core/src/methods/stage_artifact.rs` with `CoreProjectStore::create_artifact_staging` in `crates/harness-store/src/artifacts.rs` | Creates a transient staged-handle row and safe staged bytes. It does not follow the normal Core mutation commit path, does not increment `project_state.state_version`, does not append `task_events`, and does not create a replay row. |
+| Read-only result | `OwnerPipelineBranch::ReadOnly` through `crates/volicord-core/src/pipeline.rs` | Builds a result from current Store reads; no Core mutation commit. |
+| Result with no persistence | `OwnerPipelineBranch::NoEffectResult` through `crates/volicord-core/src/pipeline.rs` | Returns a method result without a Core state mutation, such as a blocked close result. |
+| Dry-run result | `OwnerPipelineBranch::DryRunPreview` through `crates/volicord-core/src/pipeline.rs` | Returns preview data with no persistent storage effect. |
+| Core mutation commit | `OwnerPipelineBranch::CommitMutation` through `crates/volicord-core/src/pipeline.rs` and `CoreProjectStore::commit_mutation` | Applies method-provided `CoreStorageMutation` values inside one Store transaction, appends events, stores replay response when idempotent, and advances project state where applicable. |
+| Transient artifact staging | `crates/volicord-core/src/methods/stage_artifact.rs` with `CoreProjectStore::create_artifact_staging` in `crates/volicord-store/src/artifacts.rs` | Creates a transient staged-handle row and safe staged bytes. It does not follow the normal Core mutation commit path, does not increment `project_state.state_version`, does not append `task_events`, and does not create a replay row. |
 
 `CoreProjectStore::commit_mutation` is the Store transaction boundary for normal committed Core mutations. The detailed commit sequence, replay handling, state-version relationship, artifact staging distinction, and failure boundaries are explained in [Storage and Transactions](storage-and-transactions.md). Table layout, DDL, storage record detail, method-specific persistence effects, and artifact lifecycle rules belong to the storage Reference owners.
 
@@ -218,7 +218,7 @@ This flow is an implementation map. Exact public method contracts, error precede
 
 ## Administrative agent setup flow
 
-`harness agent install` is implemented as local administrative orchestration, not as a public Core method. The implementation lives under `crates/harness-cli/src/agent_command.rs` and the host adapters in `crates/harness-cli/src/host_integration/`; exact command, Agent Integration Profile, MCP transport, and runtime-boundary contracts stay with [Administrative CLI](../reference/admin-cli.md), [Agent Integration](../reference/agent-integration.md), [MCP Transport](../reference/mcp-transport.md), and [Runtime Boundaries](../reference/runtime-boundaries.md).
+`volicord agent install` is implemented as local administrative orchestration, not as a public Core method. The implementation lives under `crates/volicord-cli/src/agent_command.rs` and the host adapters in `crates/volicord-cli/src/host_integration/`; exact command, Agent Integration Profile, MCP transport, and runtime-boundary contracts stay with [Administrative CLI](../reference/admin-cli.md), [Agent Integration](../reference/agent-integration.md), [MCP Transport](../reference/mcp-transport.md), and [Runtime Boundaries](../reference/runtime-boundaries.md).
 
 ```mermaid
 flowchart TD
@@ -228,7 +228,7 @@ flowchart TD
   dryout["Return plan only; no Runtime Home or SQLite writes, MCP preflight, host apply, guidance, initialization, or tool discovery"]
   runtime["Initialize or reuse Runtime Home and project state"]
   integration["Create or reuse agent surface, Agent Integration Profile, project membership, and default-project routing"]
-  preflight["Run harness-mcp --check --integration with the resolved Runtime Home"]
+  preflight["Run volicord-mcp --check --integration with the resolved Runtime Home"]
   host["Read host target snapshot and apply the planned host configuration"]
   inventory["Register or update Host Installation inventory before final verification"]
   guidance["Apply optional repository guidance when selected and explicitly authorized"]
@@ -257,9 +257,9 @@ flowchart TD
 
 The setup sequence has a read-only planning phase before persistent setup. The command parses and validates host, scope, repository-write, guidance, Runtime Home, repository, integration, and executable inputs; inspects existing registry and host state; derives stable identifiers; builds the project, integration, host, and optional guidance plans; and rejects host conflicts before creating Runtime Home state or changing registry rows. Host planning therefore happens before Store-facing setup.
 
-When `--dry-run` is selected, the command returns the plan from that planning phase. It does not create Runtime Home directories or SQLite state, run `harness-mcp --check`, apply host configuration, apply repository guidance, initialize MCP stdio, or perform tool discovery.
+When `--dry-run` is selected, the command returns the plan from that planning phase. It does not create Runtime Home directories or SQLite state, run `volicord-mcp --check`, apply host configuration, apply repository guidance, initialize MCP stdio, or perform tool discovery.
 
-Non-dry-run execution then initializes or reuses Runtime Home and project state, creates or reuses the agent surface, Agent Integration Profile, project membership, and default-project routing, and only then runs `harness-mcp --check --integration <integration_id>` with the resolved Runtime Home. That MCP startup preflight happens before host configuration is applied.
+Non-dry-run execution then initializes or reuses Runtime Home and project state, creates or reuses the agent surface, Agent Integration Profile, project membership, and default-project routing, and only then runs `volicord-mcp --check --integration <integration_id>` with the resolved Runtime Home. That MCP startup preflight happens before host configuration is applied.
 
 Host configuration application follows the previously constructed host plan and is guarded by the target snapshot, stale-plan checks, ownership markers, and fingerprint checks. Host Installation inventory is registered or updated only after host configuration application, initially before the final verification state has been recorded. Optional repository guidance is applied after inventory registration and only when selected and explicitly authorized for repository writes.
 
@@ -292,12 +292,12 @@ to choose a test layer for a concrete change.
 | Test area | Verification role |
 |---|---|
 | Colocated unit tests in implementation modules | Check local helpers, parsing, serialization, migration, Store, policy, and edge behavior close to the code under test. |
-| `crates/harness-core/src/methods/tests.rs` | Exercises Core method planning, shared preflight behavior, effect branches, replay behavior, staging distinction, artifact promotion, close-readiness calculations, and method-owned storage mutation outcomes through `CoreService`. |
-| `crates/harness-cli/tests/binary_admin.rs` | Runs the `harness` binary for administrative initialization, registration, `harness agent` install/status/verify/uninstall/guidance behavior, dry-run behavior, host integration preflight handling, host config writes, repository guidance safety, and command-line error paths. |
-| `crates/harness-mcp/tests/binary_transport.rs` | Runs the `harness-mcp` binary for help/version, `--check`, stdio framing, line-delimited JSON-RPC, reconnection behavior, and MCP response wrapping. |
+| `crates/volicord-core/src/methods/tests.rs` | Exercises Core method planning, shared preflight behavior, effect branches, replay behavior, staging distinction, artifact promotion, close-readiness calculations, and method-owned storage mutation outcomes through `CoreService`. |
+| `crates/volicord-cli/tests/binary_admin.rs` | Runs the `volicord` binary for administrative initialization, registration, `volicord agent` install/status/verify/uninstall/guidance behavior, dry-run behavior, host integration preflight handling, host config writes, repository guidance safety, and command-line error paths. |
+| `crates/volicord-mcp/tests/binary_transport.rs` | Runs the `volicord-mcp` binary for help/version, `--check`, stdio framing, line-delimited JSON-RPC, reconnection behavior, and MCP response wrapping. |
 | `tests/integration/mcp_surface.rs` | Verifies MCP surface binding, tool schemas, public method exposure, per-method access derivation, Core/MCP parity, session rejection cases, replay context binding, and cross-layer storage effects. |
 | `tests/conformance/baseline.rs` | Exercises baseline public behavior scenarios through Core-facing APIs using shared fixtures, including replay, no-effect branches, write authorization, artifact lifecycle, judgment boundaries, close readiness, error routing, and corruption handling. |
-| `crates/harness-test-support` | Supplies disposable Runtime Home fixtures, project and surface registration helpers, request builders, Store helpers, and shared assertions for the test packages and crate tests. |
+| `crates/volicord-test-support` | Supplies disposable Runtime Home fixtures, project and surface registration helpers, request builders, Store helpers, and shared assertions for the test packages and crate tests. |
 
 Tests verify behavior that owner documents define. A test fixture, assertion, or scenario name must not become the only source for a product contract.
 
@@ -305,11 +305,11 @@ Tests verify behavior that owner documents define. A test fixture, assertion, or
 
 | Implementation area | First relevant contract owner |
 |---|---|
-| Public method implementation in `crates/harness-core/src/methods/` | [API Methods](../reference/api/methods.md), then the linked method owner. |
+| Public method implementation in `crates/volicord-core/src/methods/` | [API Methods](../reference/api/methods.md), then the linked method owner. |
 | Common Core pipeline, response branches, envelope handling, request hashing, and public error routing | [API Schema Core](../reference/api/schema-core.md), [API Error Family Index](../reference/api/errors.md), and [Storage Effects](../reference/storage-effects.md) where persistence is involved. |
 | Core policies for user-owned judgment, write authorization, evidence, close readiness, and authority boundaries | [Core Model](../reference/core-model.md), method owners, [Agent Integration](../reference/agent-integration.md), and [API Value Sets](../reference/api/schema-value-sets.md) as applicable. |
 | Product Repository path normalization and product/runtime location separation | [Runtime Boundaries](../reference/runtime-boundaries.md). |
-| Shared Rust types and schema-shaped data in `crates/harness-types/src/` | [API Schema Core](../reference/api/schema-core.md), [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), and [API Value Sets](../reference/api/schema-value-sets.md). |
+| Shared Rust types and schema-shaped data in `crates/volicord-types/src/` | [API Schema Core](../reference/api/schema-core.md), [API State Schemas](../reference/api/schema-state.md), [API Artifact Schemas](../reference/api/schema-artifacts.md), [API Judgment Schemas](../reference/api/schema-judgment.md), and [API Value Sets](../reference/api/schema-value-sets.md). |
 | Atomic Store commit, replay rows, locking/versioning, storage records, and DDL | [Storage](../reference/storage.md), [Storage Effects](../reference/storage-effects.md), [Storage Records](../reference/storage-records.md), [Storage DDL](../reference/storage-ddl.md), and [Storage Versioning](../reference/storage-versioning.md). |
 | Artifact staging and persistent artifact body verification | [Artifact Storage](../reference/storage-artifacts.md) and the method owner that references the artifact. |
 | MCP startup, process binding, stdio framing, and `tools/call` wrapping | [MCP Transport](../reference/mcp-transport.md), with [Agent Integration](../reference/agent-integration.md) for verified surface context. |

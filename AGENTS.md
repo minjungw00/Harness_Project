@@ -1,14 +1,14 @@
 # Agent Working Rules
 
 These rules apply across the repository to agents and maintainers who edit,
-review, validate, or report on Harness repository work. They are repository
-working guidance only. They do not define Harness runtime behavior, public API
+review, validate, or report on Volicord repository work. They are repository
+working guidance only. They do not define Volicord runtime behavior, public API
 behavior, storage effects, security guarantees, schemas, Core authority
 semantics, conformance results, QA results, acceptance decisions,
 residual-risk decisions, or implementation output.
 
-Harness is the local work-authority product/system for AI-assisted product
-work. Core is the local authority record for Harness state.
+Volicord is the local work-authority product/system for AI-assisted product
+work. Core is the local authority record for Volicord state.
 For product brand presentation, use the Volicord brand owner in
 `docs/*/maintain/brand-guidelines.md`. That brand owner does not redefine
 runtime behavior, API behavior, storage effects, security guarantees, schemas,
@@ -84,7 +84,7 @@ implementation workflow all matter:
 - If implementation and documentation appear to disagree, treat that as an
   owner-routing or implementation gap to resolve. Do not infer a new contract
   from existing code, examples, logs, generated output, or route metadata.
-- Public Harness API methods are limited to the documented public method list
+- Public Volicord API methods are limited to the documented public method list
   in `docs/*/reference/api/methods.md`. Admin CLI commands are not public API
   methods.
 - Keep user-owned judgment, evidence, verification criteria, ordinary approval,
@@ -126,7 +126,7 @@ implementation workflow all matter:
 ## Runtime Output And Scratch Artifacts
 
 - Maintained documentation under `docs/`, shared metadata, README files, and
-  `AGENTS.md` files are not Harness runtime homes and are not places for
+  `AGENTS.md` files are not Volicord runtime homes and are not places for
   generated runtime state.
 - Do not store runtime data, generated logs, SQLite files, product runtime
   homes, test runtime homes, generated projections, fixture output, QA results,
@@ -175,6 +175,6 @@ files, the summary of changes, validation performed and results, skipped
 validation with reasons, and remaining risks or out-of-scope issues.
 
 Treat validation results as repository maintenance or implementation-check
-results only. Do not describe them as Harness runtime conformance, product
+results only. Do not describe them as Volicord runtime conformance, product
 acceptance, QA completion, close readiness, security proof, or residual-risk
 acceptance.

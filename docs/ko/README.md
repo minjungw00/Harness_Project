@@ -1,12 +1,12 @@
-# 하네스 문서
+# Volicord 문서
 
-하네스 한국어 문서의 진입점입니다. 하려는 일에 맞는 경로에서 시작합니다.
+Volicord(볼리코드) 한국어 문서의 진입점입니다. 하려는 일에 맞는 경로에서 시작합니다.
 
 ## 먼저 볼 곳
 
 - 전체 제품 및 첫 설정 개요: [루트 README](../../README.ko.md)
 - 제품 이해하기: [시작하기 개요](getting-started/overview.md)
-- 이 환경에서 Harness Server를 실행할 수 있는지 확인하기: [시스템 요구사항](reference/system-requirements.md)
+- 이 환경에서 Volicord 실행 파일을 실행할 수 있는지 확인하기: [시스템 요구사항](reference/system-requirements.md)
 - 실행 파일 설치와 검증: [설치](getting-started/installation.md)
 - Codex 또는 Claude Code 설정 경로 고르기: [빠른 시작](getting-started/quickstart.md)
 - 전체 호스트 운영 또는 멈춘 설정 복구: [에이전트 호스트 설정](guides/agent-host-setup.md), 이후 [에이전트 호스트 문제 해결](guides/agent-host-troubleshooting.md)

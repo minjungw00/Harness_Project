@@ -1,6 +1,6 @@
 # Translation policy
 
-Use this policy when editing paired English and Korean Harness documentation. It
+Use this policy when editing paired English and Korean Volicord documentation. It
 owns bilingual semantic-parity guidance, natural Korean technical prose,
 identifier preservation practice, terminology-map usage, and paired-language
 completion expectations.
@@ -40,7 +40,7 @@ identifiers in backticks where needed.
 Translate ordinary English nouns and noun phrases into Korean prose. Keep
 English unchanged only when it is an exact identifier, file path, anchor, code
 literal, schema value, enum value, table or field name, API method, intentional
-Harness product label, or a natural technical borrowing such as API, SDK, MCP,
+Volicord product label, or a natural technical borrowing such as API, SDK, MCP,
 YAML, JSON, QA, or CLI.
 
 Avoid English noun chains with Korean particles when the English is not an
@@ -82,8 +82,8 @@ language, including ordinary dialogue or explanatory sentences inside fenced
 
 Apply the terminology map's distinctions, including:
 
-- Harness is the local work-authority product/system for AI-assisted product
-  work; Core is the local authority record for Harness state.
+- Volicord is the local work-authority product/system for AI-assisted product
+  work; Core is the local authority record for Volicord state.
 - Use "verification criteria" for user-visible criteria used to check work, and
   "검증 기준" in Korean.
 - Use "current scope" or "currently applied scope" in prose context, and

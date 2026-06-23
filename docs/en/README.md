@@ -1,12 +1,12 @@
-# Harness Documentation
+# Volicord Documentation
 
-This is the English entry point for the Harness documentation set. Start with the path that matches what you are trying to do.
+This is the English entry point for the Volicord documentation set. Start with the path that matches what you are trying to do.
 
 ## Start Here
 
 - Comprehensive product and first-setup overview: [Root README](../../README.md)
 - Understand the product: [Getting Started Overview](getting-started/overview.md)
-- Check whether this environment can run Harness Server: [System Requirements](reference/system-requirements.md)
+- Check whether this environment can run the Volicord executables: [System Requirements](reference/system-requirements.md)
 - Install and verify the executables: [Installation](getting-started/installation.md)
 - Choose the Codex or Claude Code setup path: [Quickstart](getting-started/quickstart.md)
 - Complete host operations or recover a stalled setup: [Agent Host Setup](guides/agent-host-setup.md), then [Agent Host Troubleshooting](guides/agent-host-troubleshooting.md)

@@ -97,7 +97,7 @@ Does not imply:
 - Method-specific authorization decisions stay with API method owners.
 
 <a id="runtime-location-server-installation"></a>
-### Volicord implementation source, installation, and processes
+### Volicord source repository, installation, and processes
 
 Volicord implementation names the server implementation set maintained by this repository. Use `Volicord source repository` for the checkout that contains code, documentation, tests, validation tooling, and repository configuration. Use `Volicord installation` for deployed executables and required runtime resources.
 
@@ -168,7 +168,7 @@ Prohibited relationships:
 
 Permitted relationship:
 - Separate resolved paths with no ancestor-descendant relationship are permitted.
-- This rule does not prohibit intentionally selecting the Volicord implementation source repository as a `Product Repository` when that source repository remains separate from `Volicord Runtime Home`.
+- This rule does not prohibit intentionally selecting the Volicord source repository as a `Product Repository` when that source repository remains separate from `Volicord Runtime Home`.
 
 This separation contract is an eligibility rule. New project registration, setup reuse, project-state administrative access, Core execution entry, and MCP project-session startup must require the selected `Volicord Runtime Home` and registered `Product Repository` to satisfy it.
 

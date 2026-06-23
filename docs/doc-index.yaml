@@ -303,6 +303,7 @@ documents:
   - reference.admin-cli
   - reference.mcp-transport
   - reference.agent-integration
+  - maintain.brand-guidelines
 - doc_id: docs.index
   path_en: docs/en/README.md
   path_ko: docs/ko/README.md

@@ -1,6 +1,6 @@
 # Documentation Working Rules
 
-These rules apply to maintained Harness documentation and documentation
+These rules apply to maintained Volicord documentation and documentation
 metadata under `docs/`. They add documentation-specific guidance to the root
 `AGENTS.md`. They do not define product behavior, API behavior, storage effects,
 security guarantees, runtime behavior, schemas, Core authority semantics,
@@ -116,7 +116,7 @@ substantial durable reader-facing content within that scope.
   migration narratives, scratch notes, generated runtime records, archive
   copies, and work logs in maintained documentation.
 - Treat path allowlists and documentation batch boundaries as maintainer
-  editing controls, not Harness runtime override capabilities.
+  editing controls, not Volicord runtime override capabilities.
 - Use durable maintenance wording. Avoid task-specific, PR-specific, or
   short-lived wording in maintained documentation.
 
@@ -132,9 +132,9 @@ substantial durable reader-facing content within that scope.
 - Preserve exact identifiers, file paths, API methods, schema names, field
   names, enum values, status values, product labels, anchors, and code literals
   exactly where the terminology map requires it.
-- Use the terminology map's Harness/Core distinction: Harness is the local
+- Use the terminology map's Volicord/Core distinction: Volicord is the local
   work-authority product/system for AI-assisted product work, and Core is the
-  local authority record for Harness state.
+  local authority record for Volicord state.
 - Use the brand guidelines for Volicord brand presentation. The brand owner
   does not redefine exact product behavior, API behavior, storage effects,
   security guarantees, schemas, or Core authority semantics.

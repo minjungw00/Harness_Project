@@ -39,27 +39,27 @@
 
 ## 관련 구현
 
-- [`crates/harness-core/src/pipeline.rs`](../../../../crates/harness-core/src/pipeline.rs):
+- [`crates/volicord-core/src/pipeline.rs`](../../../../crates/volicord-core/src/pipeline.rs):
   `OwnerPipelineBranch`, `CoreService::execute_prepared_request`, Core 커밋 조율.
-- [`crates/harness-core/src/methods/`](../../../../crates/harness-core/src/methods/):
+- [`crates/volicord-core/src/methods/`](../../../../crates/volicord-core/src/methods/):
   `plan_intake`, `plan_prepare_write` 같은 메서드별 계획 함수.
-- [`crates/harness-store/src/core_pipeline.rs`](../../../../crates/harness-store/src/core_pipeline.rs):
+- [`crates/volicord-store/src/core_pipeline.rs`](../../../../crates/volicord-store/src/core_pipeline.rs):
   `CoreStorageMutation`, `CommitMutationInput`,
   `CoreProjectStore::commit_mutation`, `MutationCommitOutcome`,
   `ProjectMutation`.
-- [`crates/harness-store/src/artifacts.rs`](../../../../crates/harness-store/src/artifacts.rs):
+- [`crates/volicord-store/src/artifacts.rs`](../../../../crates/volicord-store/src/artifacts.rs):
   `CoreProjectStore::create_artifact_staging`.
 
 ## 관련 테스트와 참조 담당 문서
 
-- [`crates/harness-core/src/pipeline.rs`](../../../../crates/harness-core/src/pipeline.rs)의
+- [`crates/volicord-core/src/pipeline.rs`](../../../../crates/volicord-core/src/pipeline.rs)의
   `committed_mutation_increments_state_version_once`,
   `idempotency_replay_returns_stored_response`,
   `stale_expected_state_version_is_rejected_without_effect`.
-- [`crates/harness-store/src/core_pipeline.rs`](../../../../crates/harness-store/src/core_pipeline.rs)의
+- [`crates/volicord-store/src/core_pipeline.rs`](../../../../crates/volicord-store/src/core_pipeline.rs)의
   `transaction_replay_returns_stored_response_before_stale_expected_state`,
   `transaction_replay_hash_conflict_rejects_without_effect`.
-- [`crates/harness-core/src/methods/tests.rs`](../../../../crates/harness-core/src/methods/tests.rs)의
+- [`crates/volicord-core/src/methods/tests.rs`](../../../../crates/volicord-core/src/methods/tests.rs)의
   `stage_artifact_creates_transient_handle_without_core_commit`.
 - [저장 효과](../../reference/storage-effects.md),
   [저장소 버전 관리](../../reference/storage-versioning.md),

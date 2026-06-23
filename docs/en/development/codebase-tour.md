@@ -13,18 +13,18 @@ from this page use relative Markdown targets so they can be opened directly.
 
 Read in this order when you are learning the public method path:
 
-1. `harness-types` for typed request, response, value-set, identifier, and
+1. `volicord-types` for typed request, response, value-set, identifier, and
    canonical-hash shapes.
-2. `harness-store` for Runtime Home, project Store, artifact, migration, and
+2. `volicord-store` for Runtime Home, project Store, artifact, migration, and
    commit boundaries.
-3. `harness-core` for the shared request pipeline, method planners, policies,
+3. `volicord-core` for the shared request pipeline, method planners, policies,
    and Store coordination.
-4. `harness-mcp` for stdio startup, tool registration, typed argument decoding,
+4. `volicord-mcp` for stdio startup, tool registration, typed argument decoding,
    invocation-context derivation, dispatch, and response wrapping.
-5. `harness-test-support`, `tests/integration`, and `tests/conformance` for
+5. `volicord-test-support`, `tests/integration`, and `tests/conformance` for
    disposable fixtures and cross-layer proof points.
 
-For administrative setup behavior, read `harness-cli` after `harness-store`.
+For administrative setup behavior, read `volicord-cli` after `volicord-store`.
 The CLI path is local setup and registration, not public Core method behavior.
 
 For repository documentation validation, read `xtask` after the Maintain
@@ -34,25 +34,25 @@ policies. It is maintenance tooling and not part of the public method path.
 
 Normal internal dependency direction from the current Cargo manifests:
 
-- `harness-types` has no internal dependencies.
-- `harness-store` depends on `harness-types`.
-- `harness-core` depends on `harness-store` and `harness-types`.
-- `harness-cli` depends on `harness-store` and `harness-types`.
-- `harness-mcp` depends on `harness-core`, `harness-store`, and
-  `harness-types`.
-- `harness-test-support` depends on `harness-store` and `harness-types`.
+- `volicord-types` has no internal dependencies.
+- `volicord-store` depends on `volicord-types`.
+- `volicord-core` depends on `volicord-store` and `volicord-types`.
+- `volicord-cli` depends on `volicord-store` and `volicord-types`.
+- `volicord-mcp` depends on `volicord-core`, `volicord-store`, and
+  `volicord-types`.
+- `volicord-test-support` depends on `volicord-store` and `volicord-types`.
 - `xtask` has no internal product-crate dependencies; its documentation-parser
   dependencies stay isolated in the maintenance package.
 
-Test-only composition adds `harness-test-support` to implementation crates and
+Test-only composition adds `volicord-test-support` to implementation crates and
 lets `tests/conformance` and `tests/integration` compose the implementation
 crates they exercise. Core still does not depend on CLI or MCP adapters.
 
-## `crates/harness-types`
+## `crates/volicord-types`
 
 Why it exists:
 
-`harness-types` is the shared Rust type boundary for public API and
+`volicord-types` is the shared Rust type boundary for public API and
 domain-shaped values. It gives adapters, Core, Store, and tests one place to
 use the same serde models, JsonSchema generation, controlled value types,
 opaque identifiers, and canonical request hashing.
@@ -77,21 +77,21 @@ Does not own:
 
 Recommended first file:
 
-- [`crates/harness-types/src/lib.rs`](../../../crates/harness-types/src/lib.rs)
+- [`crates/volicord-types/src/lib.rs`](../../../crates/volicord-types/src/lib.rs)
 
 Important modules:
 
-- [`crates/harness-types/src/methods.rs`](../../../crates/harness-types/src/methods.rs)
+- [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
   for `MethodAccessClass`, method request structs, method result structs, and
   `public_request_schema`.
-- [`crates/harness-types/src/schema.rs`](../../../crates/harness-types/src/schema.rs)
+- [`crates/volicord-types/src/schema.rs`](../../../crates/volicord-types/src/schema.rs)
   for shared envelope, response, state, artifact, judgment, and display shapes.
-- [`crates/harness-types/src/values.rs`](../../../crates/harness-types/src/values.rs)
+- [`crates/volicord-types/src/values.rs`](../../../crates/volicord-types/src/values.rs)
   for controlled enums and constants.
-- [`crates/harness-types/src/ids.rs`](../../../crates/harness-types/src/ids.rs)
+- [`crates/volicord-types/src/ids.rs`](../../../crates/volicord-types/src/ids.rs)
   for ID wrappers, `DurableIdKind`, `DurableIdGenerator`,
   `RandomDurableIdGenerator`, and `SequenceDurableIdGenerator`.
-- [`crates/harness-types/src/canonical.rs`](../../../crates/harness-types/src/canonical.rs)
+- [`crates/volicord-types/src/canonical.rs`](../../../crates/volicord-types/src/canonical.rs)
   for `canonical_json_string`, `canonical_json_sha256`, and
   `canonical_request_hash`.
 
@@ -108,22 +108,22 @@ Important current symbols:
 
 Most relevant tests:
 
-- Unit tests in [`crates/harness-types/src/lib.rs`](../../../crates/harness-types/src/lib.rs),
+- Unit tests in [`crates/volicord-types/src/lib.rs`](../../../crates/volicord-types/src/lib.rs),
   including `typed_requests_derive_documented_access_classes`,
   `unknown_top_level_fields_are_rejected_on_public_requests`, and
   `authority_looking_request_fields_are_rejected`.
 
 Recommended next component:
 
-- Read `harness-core` if you want to see how typed requests become method
-  behavior. Read `harness-mcp` if you want to see how MCP arguments become
+- Read `volicord-core` if you want to see how typed requests become method
+  behavior. Read `volicord-mcp` if you want to see how MCP arguments become
   these typed requests.
 
-## `crates/harness-store`
+## `crates/volicord-store`
 
 Why it exists:
 
-`harness-store` owns SQLite-backed Runtime Home and project Store mechanics:
+`volicord-store` owns SQLite-backed Runtime Home and project Store mechanics:
 opening databases, validating schema, bootstrapping local records, applying
 migrations, inspecting setup state, staging artifacts, classifying storage
 failures, and atomically committing Core mutations.
@@ -148,27 +148,27 @@ Does not own:
 
 Recommended first file:
 
-- [`crates/harness-store/src/lib.rs`](../../../crates/harness-store/src/lib.rs)
+- [`crates/volicord-store/src/lib.rs`](../../../crates/volicord-store/src/lib.rs)
 
 Important modules:
 
-- [`crates/harness-store/src/runtime_home.rs`](../../../crates/harness-store/src/runtime_home.rs)
+- [`crates/volicord-store/src/runtime_home.rs`](../../../crates/volicord-store/src/runtime_home.rs)
   for `resolve_runtime_home` and `RuntimeHomeResolutionError`.
-- [`crates/harness-store/src/bootstrap.rs`](../../../crates/harness-store/src/bootstrap.rs)
+- [`crates/volicord-store/src/bootstrap.rs`](../../../crates/volicord-store/src/bootstrap.rs)
   for `initialize_runtime_home`, `register_project`, `register_surface`,
   `ProjectRecord`, and `SurfaceRecord`.
-- [`crates/harness-store/src/sqlite.rs`](../../../crates/harness-store/src/sqlite.rs)
+- [`crates/volicord-store/src/sqlite.rs`](../../../crates/volicord-store/src/sqlite.rs)
   for database paths, opening, validation, and `begin_immediate_transaction`.
-- [`crates/harness-store/src/migrations.rs`](../../../crates/harness-store/src/migrations.rs)
+- [`crates/volicord-store/src/migrations.rs`](../../../crates/volicord-store/src/migrations.rs)
   for baseline migration constants and migration application.
-- [`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs)
+- [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
   for Core-facing Store reads, `CoreStorageMutation`, and commit outcomes.
-- [`crates/harness-store/src/artifacts.rs`](../../../crates/harness-store/src/artifacts.rs)
+- [`crates/volicord-store/src/artifacts.rs`](../../../crates/volicord-store/src/artifacts.rs)
   for `CoreProjectStore::create_artifact_staging` and
   `verify_persistent_artifact_body`.
-- [`crates/harness-store/src/inspection.rs`](../../../crates/harness-store/src/inspection.rs)
+- [`crates/volicord-store/src/inspection.rs`](../../../crates/volicord-store/src/inspection.rs)
   for read-only Runtime Home and project-state inspection.
-- [`crates/harness-store/src/error.rs`](../../../crates/harness-store/src/error.rs)
+- [`crates/volicord-store/src/error.rs`](../../../crates/volicord-store/src/error.rs)
   for `StoreError` and storage failure routing.
 
 Important current symbols:
@@ -187,7 +187,7 @@ Most relevant tests:
 
 - Colocated unit tests in the Store modules.
 - Core method tests in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
   for Store-visible effects.
 - Cross-layer storage checks in
   [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
@@ -195,15 +195,15 @@ Most relevant tests:
 
 Recommended next component:
 
-- Read `harness-core` to see how method planners choose Store reads and
-  `CoreStorageMutation` values. Read `harness-cli` to see local setup use Store
+- Read `volicord-core` to see how method planners choose Store reads and
+  `CoreStorageMutation` values. Read `volicord-cli` to see local setup use Store
   bootstrap and inspection directly.
 
-## `crates/harness-core`
+## `crates/volicord-core`
 
 Why it exists:
 
-`harness-core` owns Core-facing services for public Harness method behavior. It
+`volicord-core` owns Core-facing services for public Volicord method behavior. It
 keeps adapter-independent method behavior in one crate and coordinates Store
 reads, policy checks, method plans, dry-run previews, committed mutations, and
 common response construction.
@@ -214,8 +214,8 @@ Owns in the implementation:
 - Common preflight for envelope shape, adapter binding, request hashing, Store
   opening, project state, surface verification, replay, Task resolution,
   state-version freshness, and access checks.
-- Method-specific planning in `crates/harness-core/src/methods/`.
-- Reusable policy helpers in `crates/harness-core/src/policy/`.
+- Method-specific planning in `crates/volicord-core/src/methods/`.
+- Reusable policy helpers in `crates/volicord-core/src/policy/`.
 - Core response construction and routing to read-only, no-effect, dry-run, or
   committed mutation branches.
 
@@ -228,26 +228,26 @@ Does not own:
 
 Recommended first file:
 
-- [`crates/harness-core/src/lib.rs`](../../../crates/harness-core/src/lib.rs),
-  then [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
+- [`crates/volicord-core/src/lib.rs`](../../../crates/volicord-core/src/lib.rs),
+  then [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
 
 Important modules:
 
-- [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
+- [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
   for `CoreService`, `InvocationContext`, `MethodPolicy`,
   `OwnerPipelineBranch`, `PreparedRequest`, `PipelineResponse`,
   `CoreService::prepare_request`, and
   `CoreService::execute_prepared_request`.
-- [`crates/harness-core/src/methods/`](../../../crates/harness-core/src/methods/)
+- [`crates/volicord-core/src/methods/`](../../../crates/volicord-core/src/methods/)
   for method-specific entry functions and planners.
-- [`crates/harness-core/src/methods/status.rs`](../../../crates/harness-core/src/methods/status.rs)
+- [`crates/volicord-core/src/methods/status.rs`](../../../crates/volicord-core/src/methods/status.rs)
   for `CoreService::status`, `status_task`, and `status_result_fields`.
-- [`crates/harness-core/src/methods/intake.rs`](../../../crates/harness-core/src/methods/intake.rs)
+- [`crates/volicord-core/src/methods/intake.rs`](../../../crates/volicord-core/src/methods/intake.rs)
   for `CoreService::intake` and `plan_intake`.
-- [`crates/harness-core/src/methods/prepare_write.rs`](../../../crates/harness-core/src/methods/prepare_write.rs)
+- [`crates/volicord-core/src/methods/prepare_write.rs`](../../../crates/volicord-core/src/methods/prepare_write.rs)
   for `CoreService::prepare_write`, `prepare_write_policy`, and
   `plan_prepare_write`.
-- [`crates/harness-core/src/policy/`](../../../crates/harness-core/src/policy/)
+- [`crates/volicord-core/src/policy/`](../../../crates/volicord-core/src/policy/)
   for access, replay, path, write-authorization, evidence, judgment relevance,
   and close-readiness helpers.
 
@@ -267,10 +267,10 @@ Important current symbols:
 
 Most relevant tests:
 
-- [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
+- [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
   has unit tests for replay, freshness, branch shape, no-effect behavior, and
   Store failure routing.
-- [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+- [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
   exercises method plans and effects. Start with
   `status_is_read_only_including_dry_run`,
   `intake_commits_once_and_replays_without_effect`,
@@ -283,22 +283,22 @@ Most relevant tests:
 
 Recommended next component:
 
-- Read `harness-store` for commit mechanics and `harness-mcp` for adapter
+- Read `volicord-store` for commit mechanics and `volicord-mcp` for adapter
   dispatch into `CoreService`.
 
-## `crates/harness-cli`
+## `crates/volicord-cli`
 
 Why it exists:
 
-`harness-cli` implements the local `harness` administrative executable and
+`volicord-cli` implements the local `volicord` administrative executable and
 reusable agent setup modules. It handles Runtime Home initialization, project
 and surface registration, Agent Integration Profile installation, host-specific
 MCP configuration, optional repository guidance, and preflight execution.
 
 Owns in the implementation:
 
-- Process entry and administrative command dispatch for the `harness` binary.
-- `harness agent` option parsing, storage preparation, host plan construction,
+- Process entry and administrative command dispatch for the `volicord` binary.
+- `volicord agent` option parsing, storage preparation, host plan construction,
   preflight invocation, status/verify/project membership/uninstall/guidance
   commands, and output.
 - Codex, Claude Code, and generic export host integration planning.
@@ -308,30 +308,30 @@ Owns in the implementation:
 
 Does not own:
 
-- Public Harness API method behavior.
+- Public Volicord API method behavior.
 - MCP `tools/call` semantics.
 - Core state transitions or method policy.
 - Exact CLI command contracts.
 
 Recommended first file:
 
-- [`crates/harness-cli/src/main.rs`](../../../crates/harness-cli/src/main.rs)
+- [`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs)
 
 Important modules:
 
-- [`crates/harness-cli/src/main.rs`](../../../crates/harness-cli/src/main.rs)
+- [`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs)
   for process dispatch, `run_cli`, `command_init`, `command_project`, and
   `command_surface`.
-- [`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs)
-  for `harness agent` install, project membership, status, verification,
+- [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs)
+  for `volicord agent` install, project membership, status, verification,
   uninstall, and guidance command orchestration.
-- [`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/)
+- [`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/)
   for Codex, Claude Code, and generic host integration adapters.
-- [`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs)
+- [`crates/volicord-cli/src/repository_guidance.rs`](../../../crates/volicord-cli/src/repository_guidance.rs)
   for managed Product Repository guidance discovery, apply, status, and removal.
-- [`crates/harness-cli/src/guidance_template.rs`](../../../crates/harness-cli/src/guidance_template.rs)
+- [`crates/volicord-cli/src/guidance_template.rs`](../../../crates/volicord-cli/src/guidance_template.rs)
   for the Codex and Claude Code guidance body.
-- [`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs)
+- [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs)
   for `capability_profile_json`, `local_access_json`, and access-class helpers.
 
 Important current symbols:
@@ -352,31 +352,31 @@ Important current symbols:
 
 Most relevant tests:
 
-- [`crates/harness-cli/tests/binary_admin.rs`](../../../crates/harness-cli/tests/binary_admin.rs)
-  exercises the `harness` binary for administrative setup, dry-run behavior,
-  `harness agent` host setup, repository guidance, setup-command rejection,
+- [`crates/volicord-cli/tests/binary_admin.rs`](../../../crates/volicord-cli/tests/binary_admin.rs)
+  exercises the `volicord` binary for administrative setup, dry-run behavior,
+  `volicord agent` host setup, repository guidance, setup-command rejection,
   preflight handling, and config-file safety.
 - Colocated unit tests in CLI modules cover parsing, planning, rendering,
   registration metadata, and host/guidance behavior.
 
 Recommended next component:
 
-- Read `harness-store` for bootstrap, inspection, and registry storage calls.
-  Read `harness-mcp` for the `harness-mcp --check --integration` preflight path
+- Read `volicord-store` for bootstrap, inspection, and registry storage calls.
+  Read `volicord-mcp` for the `volicord-mcp --check --integration` preflight path
   that agent setup validates.
 
-## `crates/harness-mcp`
+## `crates/volicord-mcp`
 
 Why it exists:
 
-`harness-mcp` is the local MCP stdio adapter. It registers public Harness method
+`volicord-mcp` is the local MCP stdio adapter. It registers public Volicord method
 tools, validates startup/session binding, decodes `tools/call` arguments into
 typed requests, derives trusted invocation context from the local session, calls
 Core, and wraps Core's JSON response in an MCP `tools/call` result.
 
 Owns in the implementation:
 
-- `harness-mcp` binary command modes: stdio, `--check`, help, and version.
+- `volicord-mcp` binary command modes: stdio, `--check`, help, and version.
 - Runtime Home and session binding validation for MCP startup.
 - Tool metadata returned by `tools/list`.
 - `tools/call` dispatch, typed argument decoding, and invocation-context
@@ -392,16 +392,16 @@ Does not own:
 
 Recommended first file:
 
-- [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
+- [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
 
 Important modules:
 
-- [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
+- [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
   for `PUBLIC_METHOD_TOOL_NAMES`, `McpIntegrationStartupInspection`,
   `McpIntegrationContext`, `McpAdapter`, `McpAdapter::call_tool`,
   `prepare_integration_arguments`, `public_method_tools`, `run_stdio`,
   `handle_json_rpc_request`, and `call_tool_result`.
-- [`crates/harness-mcp/src/main.rs`](../../../crates/harness-mcp/src/main.rs)
+- [`crates/volicord-mcp/src/main.rs`](../../../crates/volicord-mcp/src/main.rs)
   for process-mode dispatch through `dispatch_args`.
 
 Important current symbols:
@@ -418,13 +418,13 @@ Important current symbols:
 
 Most relevant tests:
 
-- Unit tests in [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs),
+- Unit tests in [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs),
   including `stdio_tools_list_exposes_exactly_public_method_tools`,
   `bootstrap_registered_surface_can_call_status_through_adapter`,
   `adapter_and_direct_core_status_have_equivalent_response_meaning`,
   `adapter_and_direct_core_intake_dry_run_have_equivalent_response_meaning`,
   and `adapter_derives_access_class_per_method_call`.
-- [`crates/harness-mcp/tests/binary_transport.rs`](../../../crates/harness-mcp/tests/binary_transport.rs)
+- [`crates/volicord-mcp/tests/binary_transport.rs`](../../../crates/volicord-mcp/tests/binary_transport.rs)
   exercises the binary, `--check`, stdio framing, reconnect behavior, and MCP
   response wrapping.
 - [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
@@ -432,14 +432,14 @@ Most relevant tests:
 
 Recommended next component:
 
-- Read `harness-core` for the method semantics behind each `McpAdapter` branch.
-  Read `harness-store` for startup validation and session-binding reads.
+- Read `volicord-core` for the method semantics behind each `McpAdapter` branch.
+  Read `volicord-store` for startup validation and session-binding reads.
 
-## `crates/harness-test-support`
+## `crates/volicord-test-support`
 
 Why it exists:
 
-`harness-test-support` provides disposable fixture infrastructure shared by
+`volicord-test-support` provides disposable fixture infrastructure shared by
 implementation, integration, and conformance tests. It keeps Runtime Home,
 Product Repository, project registration, surface registration, request
 builders, and direct Store inspection helpers out of production crates.
@@ -461,7 +461,7 @@ Does not own:
 
 Recommended first file:
 
-- [`crates/harness-test-support/src/lib.rs`](../../../crates/harness-test-support/src/lib.rs)
+- [`crates/volicord-test-support/src/lib.rs`](../../../crates/volicord-test-support/src/lib.rs)
 
 Important modules:
 
@@ -485,7 +485,7 @@ Important current symbols:
 Most relevant tests:
 
 - This crate is primarily exercised through
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs),
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs),
   [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs),
   and [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs).
 
@@ -500,7 +500,7 @@ Recommended next component:
 Why it exists:
 
 `tests/conformance` is a Cargo workspace member containing the
-`harness-conformance-tests` package and the `baseline` test target. It exercises
+`volicord-conformance-tests` package and the `baseline` test target. It exercises
 baseline cross-method scenarios through Core-facing APIs and shared fixtures.
 
 Owns in the implementation:
@@ -538,7 +538,7 @@ Most relevant tests:
 
 Recommended next component:
 
-- Read `harness-core` method tests for smaller focused cases, then return to
+- Read `volicord-core` method tests for smaller focused cases, then return to
   Reference owners for exact behavior questions.
 
 ## `tests/integration`
@@ -546,7 +546,7 @@ Recommended next component:
 Why it exists:
 
 `tests/integration` is a Cargo workspace member containing the
-`harness-integration-tests` package and the `mcp_surface` test target. It
+`volicord-integration-tests` package and the `mcp_surface` test target. It
 verifies the cross-layer MCP, Core, Store, surface-binding, and access-path
 composition.
 
@@ -588,8 +588,8 @@ Most relevant tests:
 
 Recommended next component:
 
-- Read `harness-mcp` for the adapter path under test, then `harness-core` and
-  `harness-store` for the behavior behind successful calls.
+- Read `volicord-mcp` for the adapter path under test, then `volicord-core` and
+  `volicord-store` for the behavior behind successful calls.
 
 ## `xtask`
 
@@ -611,7 +611,7 @@ Owns in the implementation:
 
 Does not own:
 
-- Harness runtime behavior.
+- Volicord runtime behavior.
 - Public API, schema, storage, security, or Core authority contracts.
 - Semantic translation review or contract-owner technical review.
 - Automatic file rewriting.

@@ -3,11 +3,11 @@
 <a id="purpose"></a>
 ## Purpose
 
-Use this guide when writing or reviewing agent behavior for a Harness-connected session.
+Use this guide when writing or reviewing agent behavior for a Volicord-connected session.
 
-A good Harness-connected agent turns ordinary user requests into careful work, keeps context small, preserves user-owned judgment, checks before writes, records evidence after meaningful action, reports status for the user's next decision, and closes honestly.
+A good Volicord-connected agent turns ordinary user requests into careful work, keeps context small, preserves user-owned judgment, checks before writes, records evidence after meaningful action, reports status for the user's next decision, and closes honestly.
 
-In this guide, Harness names the local work-authority product/system. Core names the local authority record for Harness state. Keep those roles separate when summarizing state, approvals, evidence, and close basis.
+In this guide, Volicord names the local work-authority product/system. Core names the local authority record for Volicord state. Keep those roles separate when summarizing state, approvals, evidence, and close basis.
 
 This guide is workflow guidance. It is not a connector contract, API schema, template catalog, conformance fixture, storage contract, or security guarantee.
 
@@ -34,11 +34,11 @@ Use this loop unless the user has asked only for simple advice:
 Keep the loop light for tiny changes. Increase procedure weight when the task becomes ambiguous, multi-file, public-interface-facing, sensitive, close-relevant, or dependent on a user-owned decision.
 
 <a id="infer-use"></a>
-## Infer Harness use from task shape
+## Infer Volicord use from task shape
 
-The agent should not require a startup phrase. Users do not need to say "Harness", know internal labels, or name API methods before ordinary work can begin.
+The agent should not require a startup phrase. Users do not need to say "Volicord", know internal labels, or name API methods before ordinary work can begin.
 
-Use the Harness path when the work involves:
+Use the Volicord path when the work involves:
 
 - scope risk
 - product writes
@@ -60,11 +60,11 @@ Choose procedure weight from the work shape:
 Escalate from small change to tracked work when you find scope drift, a new public interface, security or privacy impact, destructive risk, a dependency or migration choice, user-visible verification criteria, an evidence limit, final acceptance need, residual risk, or another user-owned judgment.
 
 <a id="project-selection"></a>
-## Select the Harness project deliberately
+## Select the Volicord project deliberately
 
-In the current MCP path, the `harness-mcp` process is bound to one Agent Integration Profile, not to one fixed `Product Repository`. A user-scope integration may allow multiple projects, while project and local scopes remain single-repository scopes.
+In the current MCP path, the `volicord-mcp` process is bound to one Agent Integration Profile, not to one fixed `Product Repository`. A user-scope integration may allow multiple projects, while project and local scopes remain single-repository scopes.
 
-For public Harness tool calls:
+For public Volicord tool calls:
 
 - Use `ToolEnvelope.project_id` when the target project is known.
 - If the target is unclear, call `volicord.list_projects` and choose one listed `project_id`.
@@ -78,14 +78,14 @@ When multiple projects are available and no explicit project or valid default is
 <a id="instructions-and-guidance"></a>
 ## Treat instructions and guidance as advisory
 
-Harness provides two guidance layers for agents:
+Volicord provides two guidance layers for agents:
 
 - MCP server instructions returned during MCP initialization.
-- Optional `Product Repository` guidance, such as a managed `AGENTS.md` block for Codex or `.claude/rules/harness.md` for Claude Code.
+- Optional `Product Repository` guidance, such as a managed `AGENTS.md` block for Codex or `.claude/rules/volicord.md` for Claude Code.
 
-These instructions can help tool selection, project routing, and workflow consistency. They are not access control, security enforcement, user-owned judgment, `Write Authorization`, evidence, acceptance, close readiness, or proof that a model will choose Harness tools.
+These instructions can help tool selection, project routing, and workflow consistency. They are not access control, security enforcement, user-owned judgment, `Write Authorization`, evidence, acceptance, close readiness, or proof that a model will choose Volicord tools.
 
-Core authority and external filesystem permission remain distinct. A Harness record or `Write Authorization` does not independently grant the host permission to edit product files, and host filesystem permission does not create Harness authority.
+Core authority and external filesystem permission remain distinct. A Volicord record or `Write Authorization` does not independently grant the host permission to edit product files, and host filesystem permission does not create Volicord authority.
 
 <a id="keep-context-small"></a>
 ## Keep context small
@@ -111,7 +111,7 @@ Do not inject full schemas, DDL, template bodies, logs, artifact bodies, paired 
 <a id="clarify-focused"></a>
 ## Clarify with focused questions
 
-Inspect first. Before asking the user, check relevant files, docs, tests, current Harness state, accepted judgments, and artifacts when they are available.
+Inspect first. Before asking the user, check relevant files, docs, tests, current Volicord state, accepted judgments, and artifacts when they are available.
 
 Ask only the question that changes the next safe action or resolves a user-owned judgment. Prefer one blocking question at a time. Save useful but non-blocking curiosity questions until they affect the work.
 
@@ -173,7 +173,7 @@ Keep product judgment, technical judgment, scope judgment, sensitive-action appr
 <a id="check-before-writes"></a>
 ## Check before writes
 
-Before product, code, or file writes in Harness-connected work, use the owner write path only after the intended operation is specific enough to evaluate. Exact prepare-write behavior belongs to [Prepare-write Method](../reference/api/method-prepare-write.md).
+Before product, code, or file writes in Volicord-connected work, use the owner write path only after the intended operation is specific enough to evaluate. Exact prepare-write behavior belongs to [Prepare-write Method](../reference/api/method-prepare-write.md).
 
 Do not claim write compatibility from a plan, stale chat context, broad enthusiasm, stale status, generated summary, or rendered view.
 
@@ -183,7 +183,7 @@ Show the user:
 - scope match or mismatch
 - pending user judgments or sensitive approvals
 - stale state or unavailable authority
-- what Harness can verify, or the capability limit
+- what Volicord can verify, or the capability limit
 - next action that would unblock the write check
 
 If scope changes, update the current scope before asking for a new write check. Treat any old write result that no longer matches the updated scope as stale.
@@ -268,7 +268,7 @@ Use compact user-facing shapes first: status, focused judgment request, what was
 <a id="language-context"></a>
 ## Choose language context deliberately
 
-For ordinary Harness session context, load the language needed for the current user or task. Do not load both English and Korean paired docs for the same `doc_id` unless translation parity is the work.
+For ordinary Volicord session context, load the language needed for the current user or task. Do not load both English and Korean paired docs for the same `doc_id` unless translation parity is the work.
 
 Bilingual documentation maintenance is different: use the documentation and translation policies, compare paired files deliberately, and keep semantic parity.
 

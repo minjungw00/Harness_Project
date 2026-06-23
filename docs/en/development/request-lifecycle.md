@@ -18,10 +18,10 @@ each section.
 ```mermaid
 sequenceDiagram
   participant Host as MCP host
-  participant MCP as harness-mcp
-  participant Core as harness-core
+  participant MCP as volicord-mcp
+  participant Core as volicord-core
   participant Method as method module
-  participant Store as harness-store
+  participant Store as volicord-store
 
   Host->>MCP: JSON-RPC tools/call
   MCP->>MCP: call_tool_result extracts name and arguments
@@ -36,11 +36,11 @@ sequenceDiagram
   Method-->>Core: OwnerPipelineBranch
   Core->>Store: commit only for committed mutation branches
   Core-->>MCP: PipelineResponse
-  MCP-->>Host: tools/call content text containing Harness JSON
+  MCP-->>Host: tools/call content text containing Volicord JSON
 ```
 
 The shared adapter path lives in
-[`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs):
+[`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs):
 
 - `run_stdio` reads line-delimited JSON-RPC.
 - `handle_json_rpc_request` dispatches `initialize`, `ping`, `tools/list`, and
@@ -64,17 +64,17 @@ The shared adapter path lives in
 - `McpDerivedInvocationContext::core_invocation` creates the Core
   `InvocationContext`.
 
-Startup and session validation also live in `harness-mcp`, especially
+Startup and session validation also live in `volicord-mcp`, especially
 `McpIntegrationStartupInspection::resolve`. That startup path reads Store
 directly through Runtime Home, Agent Integration Profile state, surface and
 surface-instance binding, role, membership, metadata, and local registry JSON
 checks. It does not select one project for all calls, and it is not an
 alternate implementation of public method behavior; public method execution
-routes through `harness-core`.
+routes through `volicord-core`.
 
 The shared Core path lives mainly in
-[`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
-and [`crates/harness-core/src/methods/mod.rs`](../../../crates/harness-core/src/methods/mod.rs):
+[`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
+and [`crates/volicord-core/src/methods/mod.rs`](../../../crates/volicord-core/src/methods/mod.rs):
 
 - Method files call `prepare_or_response`, which delegates to
   `CoreService::prepare_request`.
@@ -90,7 +90,7 @@ and [`crates/harness-core/src/methods/mod.rs`](../../../crates/harness-core/src/
   read-only, no-effect, dry-run, or committed mutation response construction.
 
 The Store commit path lives in
-[`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs):
+[`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs):
 
 - Core builds `CommitMutationInput` with `commit_input`.
 - `CoreProjectStore::commit_mutation` performs replay lookup, stale-state
@@ -127,19 +127,19 @@ Reference owner:
 
 Primary source path:
 
-1. [`crates/harness-types/src/methods.rs`](../../../crates/harness-types/src/methods.rs)
+1. [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
    defines `StatusRequest`, `StatusInclude`, `StatusResult`, and the
    `MethodAccessClass` implementation that returns `AccessClass::ReadStatus`.
-2. [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
+2. [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
    routes `"volicord.status"` in `McpAdapter::call_tool`, decodes
    `StatusRequest`, derives `InvocationContext`, and calls
    `CoreService::status`.
-3. [`crates/harness-core/src/methods/status.rs`](../../../crates/harness-core/src/methods/status.rs)
+3. [`crates/volicord-core/src/methods/status.rs`](../../../crates/volicord-core/src/methods/status.rs)
    implements `CoreService::status`, `status_task`, and
    `status_result_fields`.
-4. [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
+4. [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
    runs common preflight and the `OwnerPipelineBranch::ReadOnly` response path.
-5. [`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs)
+5. [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
    supplies `CoreProjectStore` reads such as `project_state`, Task reads, Change
    Unit reads, write-authority reads, evidence reads, and close-readiness input
    reads.
@@ -181,11 +181,11 @@ What does not happen:
 Representative tests:
 
 - `status_is_read_only_including_dry_run` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `status_include_false_omits_optional_sections_without_effect` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `adapter_and_direct_core_status_have_equivalent_response_meaning` in
-  [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
+  [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
 - `mcp_and_direct_status_omit_same_excluded_projection_fields` in
   [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
 - `status_projection_matches_public_close_check_and_stays_read_only` in
@@ -207,22 +207,22 @@ Reference owner:
 
 Primary source path:
 
-1. [`crates/harness-types/src/methods.rs`](../../../crates/harness-types/src/methods.rs)
+1. [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
    defines `IntakeRequest`, `InitialScope`, `IntakeResult`, and the
    `MethodAccessClass` implementation that returns `AccessClass::CoreMutation`.
-2. [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
+2. [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
    routes `"volicord.intake"` in `McpAdapter::call_tool`, decodes
    `IntakeRequest`, derives `InvocationContext`, and calls
    `CoreService::intake`.
-3. [`crates/harness-core/src/methods/intake.rs`](../../../crates/harness-core/src/methods/intake.rs)
+3. [`crates/volicord-core/src/methods/intake.rs`](../../../crates/volicord-core/src/methods/intake.rs)
    implements `CoreService::intake` and `plan_intake`.
-4. [`crates/harness-core/src/methods/mod.rs`](../../../crates/harness-core/src/methods/mod.rs)
+4. [`crates/volicord-core/src/methods/mod.rs`](../../../crates/volicord-core/src/methods/mod.rs)
    supplies `mutation_method_policy`, `prepare_or_response`, common method
    planning helpers, and response helpers.
-5. [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
+5. [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
    executes `OwnerPipelineBranch::DryRunPreview` or
    `OwnerPipelineBranch::CommitMutation`.
-6. [`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs)
+6. [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
    applies `CoreStorageMutation` values and commits the event and replay row.
 
 Lifecycle:
@@ -274,11 +274,11 @@ What changes by branch:
 Representative tests:
 
 - `intake_commits_once_and_replays_without_effect` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `intake_dry_run_has_no_storage_effect` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `adapter_and_direct_core_intake_dry_run_have_equivalent_response_meaning` in
-  [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
+  [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
 - `one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow` in
   [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
 - `no_effect_branches_state_version_and_idempotency_are_stable` in
@@ -302,26 +302,26 @@ Reference owner:
 
 Primary source path:
 
-1. [`crates/harness-types/src/methods.rs`](../../../crates/harness-types/src/methods.rs)
+1. [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
    defines `PrepareWriteRequest`, `PrepareWriteResult`, and the
    `MethodAccessClass` implementation that returns
    `AccessClass::WriteAuthorization`.
-2. [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
+2. [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
    routes `"volicord.prepare_write"` in `McpAdapter::call_tool`, decodes
    `PrepareWriteRequest`, derives `InvocationContext`, and calls
    `CoreService::prepare_write`.
-3. [`crates/harness-core/src/methods/prepare_write.rs`](../../../crates/harness-core/src/methods/prepare_write.rs)
+3. [`crates/volicord-core/src/methods/prepare_write.rs`](../../../crates/volicord-core/src/methods/prepare_write.rs)
    implements `CoreService::prepare_write`, `prepare_write_policy`, and
    `plan_prepare_write`.
-4. [`crates/harness-core/src/policy/write_authorization.rs`](../../../crates/harness-core/src/policy/write_authorization.rs)
+4. [`crates/volicord-core/src/policy/write_authorization.rs`](../../../crates/volicord-core/src/policy/write_authorization.rs)
    supplies `prepare_write_decision`, `prepare_write_dry_run_summary`,
    `surface_supports_prepare_write`, `write_authorization_expires_at`,
    `write_authorization_is_expired`, and `write_decision_reason`.
-5. [`crates/harness-core/src/policy/path.rs`](../../../crates/harness-core/src/policy/path.rs)
+5. [`crates/volicord-core/src/policy/path.rs`](../../../crates/volicord-core/src/policy/path.rs)
    supplies Product Repository path normalization helpers.
-6. [`crates/harness-core/src/policy/judgment_relevance.rs`](../../../crates/harness-core/src/policy/judgment_relevance.rs)
+6. [`crates/volicord-core/src/policy/judgment_relevance.rs`](../../../crates/volicord-core/src/policy/judgment_relevance.rs)
    supplies judgment relevance checks used by the planner.
-7. [`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs)
+7. [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
    applies `CoreStorageMutation::InsertWriteAuthorization` when the committed
    allowed branch creates an authorization.
 
@@ -380,13 +380,13 @@ What changes by branch:
 Representative tests:
 
 - `prepare_write_allowed_creates_one_authorization_with_post_commit_basis` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `prepare_write_blocked_path_creates_no_authorization` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `prepare_write_dry_run_has_no_authorization_effect` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `prepare_write_unregistered_grant_fails_before_method_decision` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs)
+  [`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs)
 - `missing_write_authorization_grant_blocks_prepare_write` in
   [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
 - `committed_non_allow_prepare_write_audit_and_replay_are_exact` and

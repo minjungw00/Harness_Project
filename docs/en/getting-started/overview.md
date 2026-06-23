@@ -1,12 +1,12 @@
 # Getting started overview
 
-This is the first-read overview for Harness. It explains the product thesis in ordinary language and routes exact contract questions to the Reference owners.
+This is the first-read overview for Volicord. It explains the product thesis in ordinary language and routes exact contract questions to the Reference owners.
 
-## What Harness Is
+## What Volicord Is
 
-Harness is the local work-authority product/system for AI-assisted product work. Its thesis is simple: AI-assisted work should keep the user's authority basis visible while the work moves.
+Volicord is the local work-authority product/system for AI-assisted product work. Its thesis is simple: AI-assisted work should keep the user's authority basis visible while the work moves.
 
-Harness itself is not the local authority record. Core is the local authority record for Harness state. Harness is the broader product/system around that record, including its local runtime components, surfaces, documentation, and workflows.
+Volicord itself is not the local authority record. Core is the local authority record for Volicord state. Volicord is the broader product/system around that record, including its local runtime components, surfaces, documentation, and workflows.
 
 ## The Ordinary Problem
 
@@ -18,7 +18,7 @@ A user might ask an agent to change product behavior, investigate a failure, or 
 - A passing test is treated as final acceptance.
 - A user's casual approval is treated as every unresolved judgment being settled.
 
-Harness exists to make those substitutions visible. It gives the agent and user a local place to keep scope, judgment, evidence, verification criteria, acceptance, residual risk, and close readiness distinct.
+Volicord exists to make those substitutions visible. It gives the agent and user a local place to keep scope, judgment, evidence, verification criteria, acceptance, residual risk, and close readiness distinct.
 
 ## Local Pieces
 
@@ -26,16 +26,16 @@ These names are related, but they are not interchangeable.
 
 | Name | First-read meaning | Exact owner |
 |---|---|---|
-| Harness | The local work-authority product/system for AI-assisted product work. | [Scope](../reference/scope.md) |
-| Core | The local authority record for Harness state. | [Core Model](../reference/core-model.md) |
-| `Harness Server` | The server implementation set maintained by this repository, not a synonym for Harness as a whole. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
-| `harness` | The local administrative CLI that builds setup, project, surface, integration, host, and guidance records. | [Administrative CLI](../reference/admin-cli.md) |
-| `harness-mcp` | The stdio MCP adapter process that an MCP host starts as a child process. | [MCP Transport](../reference/mcp-transport.md) |
-| `Harness Runtime Home` | The local runtime data space for Harness operational data as storage/runtime owners define it. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| Volicord | The local work-authority product/system for AI-assisted product work. | [Scope](../reference/scope.md) |
+| Core | The local authority record for Volicord state. | [Core Model](../reference/core-model.md) |
+| Volicord implementation | The server implementation set maintained by this repository, not a synonym for Volicord as a whole. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| `volicord` | The local administrative CLI that builds setup, project, surface, integration, host, and guidance records. | [Administrative CLI](../reference/admin-cli.md) |
+| `volicord-mcp` | The stdio MCP adapter process that an MCP host starts as a child process. | [MCP Transport](../reference/mcp-transport.md) |
+| `Volicord Runtime Home` | The local runtime data space for Volicord operational data as storage/runtime owners define it. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 | `Product Repository` | The user's project workspace and product files. It may contain explicitly selected integration files. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
-| Agent host configuration | Codex, Claude Code, or exported MCP configuration that starts `harness-mcp --integration <integration_id>`. | [Administrative CLI](../reference/admin-cli.md) |
+| Agent host configuration | Codex, Claude Code, or exported MCP configuration that starts `volicord-mcp --integration <integration_id>`. | [Administrative CLI](../reference/admin-cli.md) |
 
-The current baseline agent integration is integration-bound, not fixed-project. One `harness-mcp` process binds to one Agent Integration Profile. Each public tool call then selects and validates one explicitly allowed project.
+The current baseline agent integration is integration-bound, not fixed-project. One `volicord-mcp` process binds to one Agent Integration Profile. Each public tool call then selects and validates one explicitly allowed project.
 
 ## What Setup Does
 
@@ -51,13 +51,13 @@ Agent setup can:
 Agent setup must not:
 
 - grant access to every project in the Runtime Home
-- store Harness runtime databases or runtime records in a `Product Repository`
+- store Volicord runtime databases or runtime records in a `Product Repository`
 - bypass Codex project trust, Claude Code project MCP approval, OAuth, reloads, restarts, or other host-owned actions
-- promise that a model will choose Harness tools automatically
+- promise that a model will choose Volicord tools automatically
 
 ## First-Read Authority Concepts
 
-Harness documentation keeps these concepts separate:
+Volicord documentation keeps these concepts separate:
 
 - User-owned judgment is a decision or assessment the user owns. An agent may explain options, but it must not invent the judgment.
 - Evidence is material support for a specific claim, such as a diff, test output, screenshot, log, source citation, review note, or artifact reference.
@@ -68,11 +68,11 @@ Harness documentation keeps these concepts separate:
 
 For exact authority rules and non-substitution boundaries, use [Core Model](../reference/core-model.md).
 
-## What Harness Is Not
+## What Volicord Is Not
 
-Harness is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Harness Runtime Home`.
+Volicord is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Volicord Runtime Home`.
 
-Harness also does not turn a polished chat answer, generated summary, readable status card, copied identifier, optional repository guidance, or `Projection` into the authority record. Exact display boundaries belong to [Projection and Templates](../reference/projection-and-templates.md), runtime and location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md), and security wording belongs to [Security](../reference/security.md).
+Volicord also does not turn a polished chat answer, generated summary, readable status card, copied identifier, optional repository guidance, or `Projection` into the authority record. Exact display boundaries belong to [Projection and Templates](../reference/projection-and-templates.md), runtime and location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md), and security wording belongs to [Security](../reference/security.md).
 
 ## Next Reader Journeys
 
@@ -87,4 +87,4 @@ Harness also does not turn a polished chat answer, generated summary, readable s
 | Source-code learner | [Implementation Guide](../development/change-guide.md) -> [Architecture](../development/architecture.md) |
 | Reference reader | [Reference Index](../reference/README.md), [Administrative CLI](../reference/admin-cli.md), [API Methods](../reference/api/methods.md) |
 
-New readers should not need API schemas or owner metadata to understand what Harness is. Use the [Reference Index](../reference/README.md) when you need exact contract owners.
+New readers should not need API schemas or owner metadata to understand what Volicord is. Use the [Reference Index](../reference/README.md) when you need exact contract owners.

@@ -1,6 +1,6 @@
 # 접점별 사용 레시피
 
-에이전트가 CLI, IDE/편집기, 채팅, 로컬 MCP 같은 이름 붙은 접점에서 하네스 연결 작업을 분명하게 보여줘야 할 때 이 가이드를 사용합니다.
+에이전트가 CLI, IDE/편집기, 채팅, 로컬 MCP 같은 이름 붙은 접점에서 Volicord 연결 작업을 분명하게 보여줘야 할 때 이 가이드를 사용합니다.
 
 이 레시피는 사용자가 보는 흐름을 설명합니다. 아래 항목을 다룹니다.
 
@@ -93,15 +93,15 @@ IDE/편집기 통합은 에이전트가 절차를 지키도록 도울 수 있습
 - 새로고침하기
 - 가능한 접점으로 옮기기
 - 동작 줄이기
-- 명시적으로 하네스 밖에서 계속 진행하기
+- 명시적으로 Volicord 밖에서 계속 진행하기
 
 ## 로컬 MCP 접점
 
-로컬 MCP 접점은 지원되는 하네스 메서드를 호출하는 실무 경로입니다.
+로컬 MCP 접점은 지원되는 Volicord 메서드를 호출하는 실무 경로입니다.
 
 상태 조회, 범위 업데이트, 쓰기 확인, 실행/증거 기록, 사용자 판단 기록, 아티팩트 스테이징, 닫기 확인에 사용합니다.
 
-실행 가능한 호스트 설정은 [빠른 시작](../getting-started/quickstart.md)에서 시작한 뒤 [에이전트 호스트 설정](agent-host-setup.md)을 봅니다. 현재 Codex, Claude Code, generic export 설정은 `harness agent install`을 사용합니다.
+실행 가능한 호스트 설정은 [빠른 시작](../getting-started/quickstart.md)에서 시작한 뒤 [에이전트 호스트 설정](agent-host-setup.md)을 봅니다. 현재 Codex, Claude Code, generic export 설정은 `volicord agent install`을 사용합니다.
 
 이 레시피는 지원되는 메서드 목록, 접점 등록, 맥락 교환, 저장 효과, 보안 보장을 정의하지 않습니다. 그런 세부사항은 참조 담당 문서를 사용합니다.
 
@@ -165,7 +165,7 @@ IDE/편집기 통합은 에이전트가 절차를 지키도록 도울 수 있습
 - [API 오류 코드](../reference/api/error-codes.md), [API 오류 처리 경로](../reference/api/error-routing.md): 공개 오류 코드와 복구 경로.
 - [아티팩트 저장소](../reference/storage-artifacts.md): 아티팩트 접근, 스테이징, 저장 효과 세부사항.
 - [보안](../reference/security.md): 보장 표현과 비주장.
-- [런타임 경계](../reference/runtime-boundaries.md): `Harness Server` 소스/설치 파일, 실행 파일 프로세스, `Product Repository`, `Harness Runtime Home`, 외부 MCP 호스트 설정의 분리.
+- [런타임 경계](../reference/runtime-boundaries.md): Volicord 소스/설치 파일, 실행 파일 프로세스, `Product Repository`, `Volicord Runtime Home`, 외부 MCP 호스트 설정의 분리.
 - [기준 범위](../reference/scope.md): 기준 범위, 프로필 조건부, 지원 범위 밖 기능 경계.
 
 ## 다음 읽기 경로

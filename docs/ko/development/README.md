@@ -9,8 +9,8 @@
 의미, 제품 계약을 정의하거나 덮어쓰지 않습니다. 정확한 동작은 연결된
 집중 참조 담당 문서를 따릅니다.
 
-하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 시스템입니다.
-Core는 하네스 상태를 위한 로컬 기준 기록입니다.
+Volicord는 AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 시스템입니다.
+Core는 Volicord 상태를 위한 로컬 기준 기록입니다.
 
 ## 읽는 순서
 
@@ -39,9 +39,9 @@ Core는 하네스 상태를 위한 로컬 기준 기록입니다.
    [저장소 버전 관리](../reference/storage-versioning.md)로 보냅니다.
 6. 테스트 전략: [테스트 전략](testing-strategy.md)에서 모듈 단위 테스트,
    Core 메서드 테스트, 바이너리 테스트, MCP 통합 테스트, 적합성 구현 테스트,
-   `harness-test-support` 중 무엇을 사용할지 고릅니다.
+   `volicord-test-support` 중 무엇을 사용할지 고릅니다.
 7. 오래 유지될 결정: [아키텍처 결정](decisions/README.md)에서 Core/어댑터
-   경계, 원자적 변이 커밋 전 계획, `Harness Runtime Home`과
+   경계, 원자적 변이 커밋 전 계획, `Volicord Runtime Home`과
    `Product Repository` 분리를 집중 설명으로 확인합니다.
 8. 변경 작업 흐름: 변경을 분류하고, 담당 문서를 찾고, 구현 경계를 확인하고,
    검증을 고르고, 영향을 받은 개발자 설명을 갱신할 준비가 되면
@@ -68,30 +68,30 @@ Core는 하네스 상태를 위한 로컬 기준 기록입니다.
 
 공개 메서드 작업에서 가장 짧게 유용한 소스 경로는 아래와 같습니다.
 
-1. [`crates/harness-types/src/methods.rs`](../../../crates/harness-types/src/methods.rs)
-2. [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
-3. [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
-4. [`crates/harness-core/src/methods/`](../../../crates/harness-core/src/methods/)
-5. [`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs)
+1. [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
+2. [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
+3. [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
+4. [`crates/volicord-core/src/methods/`](../../../crates/volicord-core/src/methods/)
+5. [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
 6. [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
 7. [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)
 
 에이전트 호스트 설정과 운영자 동작을 읽을 때는
-[`crates/harness-cli/src/main.rs`](../../../crates/harness-cli/src/main.rs)에서
+[`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs)에서
 시작한 뒤
-[`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs),
-[`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/),
-[`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs)를
+[`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs),
+[`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/),
+[`crates/volicord-cli/src/repository_guidance.rs`](../../../crates/volicord-cli/src/repository_guidance.rs)를
 읽습니다. 등록된 접점의 역량과 로컬 접근 메타데이터는 이어서
-[`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs)를
+[`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs)를
 읽습니다.
 
 ## 경계 기억하기
 
 - Core 쪽 코드는 CLI와 MCP 어댑터 크레이트에 의존하지 않습니다.
-- `harness-mcp`는 시작과 세션 검증을 위해 Store를 직접 사용할 수 있습니다.
+- `volicord-mcp`는 시작과 세션 검증을 위해 Store를 직접 사용할 수 있습니다.
   이 직접 Store 사용은 공개 메서드 의미를 구현하는 다른 경로가 아닙니다.
-- `Harness Runtime Home`과 `Product Repository`는 서로 다른 위치입니다.
+- `Volicord Runtime Home`과 `Product Repository`는 서로 다른 위치입니다.
 - 테스트는 담당 문서가 정의한 사실을 검증하지만, 테스트와 픽스처는 제품
   계약 담당 문서가 아닙니다.
 - 학습 문서는 소스 파일과 심볼을 이름으로 가리키며, 불안정한 줄 번호를

@@ -9,8 +9,8 @@ public API behavior, request or response schemas, storage effects, security
 guarantees, runtime boundaries, Core authority semantics, or product contracts.
 For exact behavior, follow the links to the focused Reference owners.
 
-Harness is the local work-authority product/system for AI-assisted product
-work. Core is the local authority record for Harness state.
+Volicord is the local work-authority product/system for AI-assisted product
+work. Core is the local authority record for Volicord state.
 
 ## Reading order
 
@@ -43,10 +43,10 @@ work. Core is the local authority record for Harness state.
    [Storage Versioning](../reference/storage-versioning.md).
 6. Test strategy: use [Testing Strategy](testing-strategy.md) to choose among
    module unit tests, Core method tests, binary tests, MCP integration tests,
-   conformance implementation tests, and `harness-test-support`.
+   conformance implementation tests, and `volicord-test-support`.
 7. Durable decisions: use [Architecture Decisions](decisions/README.md) for
    focused explanations of the Core/adapter boundary, planning before atomic
-   mutation commit, and the separation of `Harness Runtime Home` from
+   mutation commit, and the separation of `Volicord Runtime Home` from
    `Product Repository`.
 8. Change workflow: use the [Implementation Guide](change-guide.md) when you
    are ready to classify a change, locate the owner document, inspect the
@@ -75,30 +75,30 @@ work. Core is the local authority record for Harness state.
 
 For public method work, the shortest useful source path is:
 
-1. [`crates/harness-types/src/methods.rs`](../../../crates/harness-types/src/methods.rs)
-2. [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
-3. [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
-4. [`crates/harness-core/src/methods/`](../../../crates/harness-core/src/methods/)
-5. [`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs)
+1. [`crates/volicord-types/src/methods.rs`](../../../crates/volicord-types/src/methods.rs)
+2. [`crates/volicord-mcp/src/lib.rs`](../../../crates/volicord-mcp/src/lib.rs)
+3. [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
+4. [`crates/volicord-core/src/methods/`](../../../crates/volicord-core/src/methods/)
+5. [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
 6. [`tests/integration/mcp_surface.rs`](../../../tests/integration/mcp_surface.rs)
 7. [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs)
 
 For agent host setup and operator behavior, start instead with
-[`crates/harness-cli/src/main.rs`](../../../crates/harness-cli/src/main.rs),
+[`crates/volicord-cli/src/main.rs`](../../../crates/volicord-cli/src/main.rs),
 then
-[`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs),
-[`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/),
+[`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs),
+[`crates/volicord-cli/src/host_integration/`](../../../crates/volicord-cli/src/host_integration/),
 and
-[`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs).
+[`crates/volicord-cli/src/repository_guidance.rs`](../../../crates/volicord-cli/src/repository_guidance.rs).
 For registered surface capability and local-access metadata, continue with
-[`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs).
+[`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs).
 
 ## Boundary reminders
 
 - Core-facing code is independent of CLI and MCP adapter crates.
-- `harness-mcp` may use Store directly for startup and session validation. That
+- `volicord-mcp` may use Store directly for startup and session validation. That
   direct Store use is not alternate public-method semantics.
-- `Harness Runtime Home` and `Product Repository` are separate locations.
+- `Volicord Runtime Home` and `Product Repository` are separate locations.
 - Tests verify owner-defined facts, but tests and fixtures are not product
   contract owners.
 - Learning pages should name source files and symbols, not unstable line

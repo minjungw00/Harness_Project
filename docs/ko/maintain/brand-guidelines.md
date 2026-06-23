@@ -109,7 +109,7 @@ Volicord가 사용자 소유 판단을 대신한다고 설명하지 않습니다
 | Volicord indigo | `#3F4FD8` |
 | Secondary gray | `#68707D` |
 
-<a id="test-harness-term-boundary"></a>
+<a id="test-volicord-term-boundary"></a>
 ## 테스트 하네스 용어 경계
 
 `Volicord`는 제품 브랜드입니다. 일반 기술 용어 `test harness`는 테스트 기반

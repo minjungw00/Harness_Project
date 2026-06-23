@@ -1,8 +1,8 @@
 # Agent host troubleshooting
 
 Use this guide when a Codex, Claude Code, or generic MCP host integration does
-not reach the state you expected after `harness agent install`, `harness agent
-verify`, `harness agent status`, project membership changes, or uninstall.
+not reach the state you expected after `volicord agent install`, `volicord agent
+verify`, `volicord agent status`, project membership changes, or uninstall.
 
 For the normal setup path, use [Agent host setup](agent-host-setup.md). For one
 user-scope integration serving multiple repositories, use
@@ -22,51 +22,51 @@ routed from [Storage](../reference/storage.md).
 
 Keep the same placeholder values you used during setup:
 
-- `HARNESS_BIN` is the selected directory containing `harness` and
-  `harness-mcp`.
-- `HARNESS_HOME` or `--runtime-home` is the selected `Harness Runtime Home`.
+- `VOLICORD_BIN` is the selected directory containing `volicord` and
+  `volicord-mcp`.
+- `VOLICORD_HOME` or `--runtime-home` is the selected `Volicord Runtime Home`.
 - `<integration_id>`, `<project_id>`, `<repo_root>`, `<installation_id>`, and
   `<server_name>` are the actual values from your setup output.
 
 Start with read-only or non-mutating checks when they are available:
 
 ```sh
-"$HARNESS_BIN/harness" agent status \
+"$VOLICORD_BIN/volicord" agent status \
   --integration-id <integration_id> \
   --runtime-home <runtime_home>
 
-HARNESS_HOME=<runtime_home> \
-"$HARNESS_BIN/harness-mcp" --check --integration <integration_id>
+VOLICORD_HOME=<runtime_home> \
+"$VOLICORD_BIN/volicord-mcp" --check --integration <integration_id>
 ```
 
-`harness agent status` reports registry and Host Installation inventory. It
-does not prove that Codex or Claude Code loaded the MCP server. `harness-mcp
+`volicord agent status` reports registry and Host Installation inventory. It
+does not prove that Codex or Claude Code loaded the MCP server. `volicord-mcp
 --check` validates startup for the MCP process only. Complete host verification
 requires the administrative verification gates defined by
 [Administrative CLI](../reference/admin-cli.md#agent-setup-result-states).
 
 ## Executable And Environment Problems
 
-<a id="missing-harness-mcp"></a>
-### `harness-mcp` is missing, not executable, or cannot be resolved
+<a id="missing-volicord-mcp"></a>
+### `volicord-mcp` is missing, not executable, or cannot be resolved
 
 - **Observable symptom:** Setup, verification, or host startup reports that
-  `harness-mcp` is missing, unavailable, not executable, or not found on
+  `volicord-mcp` is missing, unavailable, not executable, or not found on
   `PATH`.
 - **Most likely causes:** The selected executable directory does not contain
-  both `harness` and `harness-mcp`; the file is not executable by the selected
-  user; project-scoped host configuration stores `harness-mcp`, but the future
+  both `volicord` and `volicord-mcp`; the file is not executable by the selected
+  user; project-scoped host configuration stores `volicord-mcp`, but the future
   host process does not receive a `PATH` that can resolve it.
 - **Diagnostic check:** For an absolute command, run `test -x
-  "$HARNESS_BIN/harness-mcp"` and `"$HARNESS_BIN/harness-mcp" --version`. For a
-  project-scoped portable command, run `command -v harness-mcp` from the same
+  "$VOLICORD_BIN/volicord-mcp"` and `"$VOLICORD_BIN/volicord-mcp" --version`. For a
+  project-scoped portable command, run `command -v volicord-mcp` from the same
   shell, launcher, or service environment that will start the host.
 - **Bounded recovery action:** Select or build one executable directory that
   contains both executables. For user, local, or generic export scope, rerun
   install or verify with an absolute `--mcp-command`. For project scope, keep
   the generated host entry portable and fix the host launch `PATH`.
-- **Verification:** Rerun `harness-mcp --check --integration <integration_id>`
-  with the intended `HARNESS_HOME`, then rerun `harness agent verify` for the
+- **Verification:** Rerun `volicord-mcp --check --integration <integration_id>`
+  with the intended `VOLICORD_HOME`, then rerun `volicord agent verify` for the
   affected integration or installation.
 - **Durable effects that may already exist:** Runtime Home records, project
   membership, Host Installation inventory, host configuration, or guidance may
@@ -86,16 +86,16 @@ requires the administrative verification gates defined by
   later reports that the configured command is missing, changed, unavailable,
   or cannot be launched.
 - **Most likely causes:** The path is not absolute, points at a stale build
-  output, points at `harness` instead of `harness-mcp`, or no longer exists
+  output, points at `volicord` instead of `volicord-mcp`, or no longer exists
   after a rebuild or move.
-- **Diagnostic check:** Run `test -x /absolute/path/to/harness-mcp` and
-  `/absolute/path/to/harness-mcp --help` without changing host configuration.
-- **Bounded recovery action:** Rerun `harness agent install` for the same
+- **Diagnostic check:** Run `test -x /absolute/path/to/volicord-mcp` and
+  `/absolute/path/to/volicord-mcp --help` without changing host configuration.
+- **Bounded recovery action:** Rerun `volicord agent install` for the same
   `integration_id`, host, scope, and server name with the corrected absolute
   `--mcp-command`. If the existing managed entry was changed by the user, use
   replacement only when the managed fingerprint or ownership marker still shows
-  that the content is Harness-managed.
-- **Verification:** Rerun `harness agent verify --integration-id
+  that the content is Volicord-managed.
+- **Verification:** Rerun `volicord agent verify --integration-id
   <integration_id> --runtime-home <runtime_home>`. Inspect `host` and
   `installation_verifications` in JSON output when you need the exact target.
 - **Durable effects that may already exist:** The Host Installation inventory
@@ -111,26 +111,26 @@ requires the administrative verification gates defined by
 ### A portable project-scoped command is not available on host `PATH`
 
 - **Observable symptom:** Project-scoped Codex or Claude Code configuration
-  contains `command = "harness-mcp"` or `"command": "harness-mcp"`, but a later
-  host session cannot start Harness, or verification fails unless you add
-  `PATH="$HARNESS_BIN:$PATH"` to the administrative command.
+  contains `command = "volicord-mcp"` or `"command": "volicord-mcp"`, but a later
+  host session cannot start Volicord, or verification fails unless you add
+  `PATH="$VOLICORD_BIN:$PATH"` to the administrative command.
 - **Most likely causes:** Project-scoped configuration intentionally omits
-  personal build paths and personal `HARNESS_HOME`; the future host process was
-  started from an environment that cannot resolve `harness-mcp`.
+  personal build paths and personal `VOLICORD_HOME`; the future host process was
+  started from an environment that cannot resolve `volicord-mcp`.
 - **Diagnostic check:** From the host launch environment, run `command -v
-  harness-mcp`. If the intended Runtime Home is not the default, confirm the
-  same launch environment supplies `HARNESS_HOME`.
+  volicord-mcp`. If the intended Runtime Home is not the default, confirm the
+  same launch environment supplies `VOLICORD_HOME`.
 - **Bounded recovery action:** Change the host launch environment, shell
   startup, service configuration, or equivalent host-owned path so it can
-  resolve `harness-mcp`. Keep the project-scoped host file portable.
+  resolve `volicord-mcp`. Keep the project-scoped host file portable.
 - **Verification:** Start or reload the host from that environment, then run
-  `harness agent verify` with the selected directory on the administrative
+  `volicord agent verify` with the selected directory on the administrative
   command `PATH`.
 - **Durable effects that may already exist:** Project-scoped `.codex/config.toml`
   or `.mcp.json`, Runtime Home records, and Host Installation inventory may
   already be present and correct.
 - **State or files that should remain untouched:** Do not replace the
-  project-scoped `harness-mcp` command with a personal absolute build path in a
+  project-scoped `volicord-mcp` command with a personal absolute build path in a
   shared Product Repository file.
 - **Owner links:** [Administrative CLI](../reference/admin-cli.md),
   [System Requirements](../reference/system-requirements.md),
@@ -145,19 +145,19 @@ requires the administrative verification gates defined by
   project listing, or public tool routing rejects a project with a path
   separation or registration invariant error, such as a same-path or
   ancestor-descendant relationship.
-- **Most likely causes:** The selected `Harness Runtime Home` is the Product
+- **Most likely causes:** The selected `Volicord Runtime Home` is the Product
   Repository, is inside it, or contains it. A stored registration may also point
   at a project state path that no longer matches the registered project home.
 - **Diagnostic check:** Compare the resolved Runtime Home path and repository
-  root before changing anything. Use `harness agent status` or `harness project
+  root before changing anything. Use `volicord agent status` or `volicord project
   list` to observe the registered state; invalid operational rows are rejected
   instead of being returned as normal projects.
 - **Bounded recovery action:** Choose a separate Runtime Home and Product
   Repository. Register or install against the corrected paths through the
   administrative CLI. If an old invalid row exists, treat it as data to
   diagnose; do not repair it by editing SQLite.
-- **Verification:** Rerun `harness agent install --dry-run` or `harness project
-  list`, then run `harness-mcp --check --integration <integration_id>` after
+- **Verification:** Rerun `volicord agent install --dry-run` or `volicord project
+  list`, then run `volicord-mcp --check --integration <integration_id>` after
   any corrected setup has been applied.
 - **Durable effects that may already exist:** Raw registry content may remain
   inspectable even when operational lookup rejects it. Runtime Home and project
@@ -180,15 +180,15 @@ requires the administrative verification gates defined by
   directory is unavailable, permissions block the selected user, the file
   changed between planning and writing, or the existing host format is
   malformed.
-- **Diagnostic check:** Use `harness agent install --dry-run --output json` or
-  `harness agent uninstall --dry-run --output json` to preview the exact target
+- **Diagnostic check:** Use `volicord agent install --dry-run --output json` or
+  `volicord agent uninstall --dry-run --output json` to preview the exact target
   path. Inspect that path with ordinary filesystem tools without editing it.
 - **Bounded recovery action:** Fix the host-owned file or directory condition,
   then rerun the same administrative command. If the content changed, preserve
-  unrelated entries and replace or remove only Harness-managed content whose
+  unrelated entries and replace or remove only Volicord-managed content whose
   marker or fingerprint still matches.
-- **Verification:** Rerun `harness agent status` to inspect inventory and then
-  `harness agent verify` when the host target is readable again.
+- **Verification:** Rerun `volicord agent status` to inspect inventory and then
+  `volicord agent verify` when the host target is readable again.
 - **Durable effects that may already exist:** Runtime Home state, Host
   Installation inventory, host configuration, or guidance may have been applied
   before the read or write failure. Use `effects` and `residual_effects` to
@@ -206,26 +206,26 @@ requires the administrative verification gates defined by
 - **Observable symptom:** Install, verify, guidance, or uninstall reports a
   changed managed entry, fingerprint mismatch, unrelated entry, or conflict for
   the same server name.
-- **Most likely causes:** A user or host changed a Harness-managed block or
-  MCP entry after Harness last recorded its fingerprint, or the same
+- **Most likely causes:** A user or host changed a Volicord-managed block or
+  MCP entry after Volicord last recorded its fingerprint, or the same
   `<server_name>` is already used by unmanaged host configuration.
-- **Diagnostic check:** Run `harness agent status --output json` and inspect
+- **Diagnostic check:** Run `volicord agent status --output json` and inspect
   the reported host target, `managed_fingerprint`, `fingerprint_state`, or
   warning text. Compare only the named host entry or managed block.
-- **Bounded recovery action:** If the current content is still Harness-managed
+- **Bounded recovery action:** If the current content is still Volicord-managed
   and you intend to replace it, rerun install or guidance apply with
   `--replace-managed`. If you intend to remove managed content, use uninstall
   or guidance remove with `--remove-managed` only when ownership checks permit
   it. Otherwise choose a different `--server-name` or preserve the user-owned
   entry.
-- **Verification:** Rerun `harness agent verify` after replacement, or
-  `harness agent status` after preserving or removing the managed entry.
+- **Verification:** Rerun `volicord agent verify` after replacement, or
+  `volicord agent status` after preserving or removing the managed entry.
 - **Durable effects that may already exist:** Host Installation inventory can
   retain the prior fingerprint, and verification can record `failed` for the
   changed installation.
 - **State or files that should remain untouched:** Do not overwrite or remove
   unrelated host configuration, unmanaged host entries, or user-edited guidance
-  to satisfy a Harness fingerprint.
+  to satisfy a Volicord fingerprint.
 - **Owner links:** [Administrative CLI](../reference/admin-cli.md#noninteractive-approval-behavior),
   [Agent Integration](../reference/agent-integration.md#host-installation), and
   [Runtime Boundaries](../reference/runtime-boundaries.md#explicit-integration-files-in-product-repositories).
@@ -242,17 +242,17 @@ requires the administrative verification gates defined by
   cannot run `codex --version`, or Codex has not trusted the project that owns
   a project-scoped `.codex/config.toml`.
 - **Diagnostic check:** Run `command -v codex` and `codex --version` from the
-  environment used for administrative verification. Use `harness agent status`
+  environment used for administrative verification. Use `volicord agent status`
   to confirm the managed configuration target.
 - **Bounded recovery action:** Install or repair Codex availability for the
   selected user, then complete the Codex project trust step in Codex when
   project scope is used.
-- **Verification:** Rerun `harness agent verify --integration-id
+- **Verification:** Rerun `volicord agent verify --integration-id
   <integration_id> --runtime-home <runtime_home>`.
 - **Durable effects that may already exist:** Runtime Home records and Codex
   configuration may already be installed; `last_verified_status` may be
   `action_required`.
-- **State or files that should remain untouched:** Do not edit Harness storage
+- **State or files that should remain untouched:** Do not edit Volicord storage
   to force `complete`, and do not remove Codex configuration that still matches
   the managed fingerprint.
 - **Owner links:** [System Requirements](../reference/system-requirements.md),
@@ -272,7 +272,7 @@ requires the administrative verification gates defined by
 - **Bounded recovery action:** Approve the project MCP server through Claude
   Code's host-owned approval flow, then reload or restart the host if Claude
   Code requires it.
-- **Verification:** Rerun `harness agent verify`. A pending approval can still
+- **Verification:** Rerun `volicord agent verify`. A pending approval can still
   allow a diagnostic MCP handshake, but the final status remains
   `action_required` until the host approval gate is satisfied.
 - **Durable effects that may already exist:** `.mcp.json`, Runtime Home
@@ -291,11 +291,11 @@ requires the administrative verification gates defined by
 - **Observable symptom:** You changed integration membership, default project,
   host configuration, or server command, but an open Codex or Claude Code
   session behaves as if the old state is still in effect.
-- **Most likely causes:** A running `harness-mcp` process is bound to one
+- **Most likely causes:** A running `volicord-mcp` process is bound to one
   `integration_id` for its lifetime. Registry membership changes can be
   observed by a running process, but a changed integration binding, changed
   command, changed host configuration, reload, or restart is host-owned.
-- **Diagnostic check:** Use `harness agent status` to inspect stored inventory.
+- **Diagnostic check:** Use `volicord agent status` to inspect stored inventory.
   If the existing MCP session can still call tools, call `volicord.list_projects`
   to see which allowed projects that running process observes.
 - **Bounded recovery action:** For membership-only changes, retry the tool call
@@ -303,7 +303,7 @@ requires the administrative verification gates defined by
   list. For changed host configuration, command path, server name, or
   integration binding, reload or restart the host so it starts a new MCP
   process.
-- **Verification:** After restart, run `harness agent verify` and, inside the
+- **Verification:** After restart, run `volicord agent verify` and, inside the
   host, use `volicord.list_projects` before project-routed calls when selection
   is unclear.
 - **Durable effects that may already exist:** Runtime Home registry changes
@@ -320,7 +320,7 @@ requires the administrative verification gates defined by
 <a id="status-action_required"></a>
 ### `status: action_required`
 
-- **Observable symptom:** `harness agent install` or `harness agent verify`
+- **Observable symptom:** `volicord agent install` or `volicord agent verify`
   exits successfully and reports `status: action_required`.
 - **Most likely causes:** Durable integration state and host configuration are
   present, but a host-owned trust, approval, OAuth, reload, restart, or
@@ -330,7 +330,7 @@ requires the administrative verification gates defined by
 - **Bounded recovery action:** Complete only the named host-owned action:
   trust the project, approve the MCP server, reload or restart the host, or
   repair the host executable availability.
-- **Verification:** Rerun `harness agent verify` for the integration or a
+- **Verification:** Rerun `volicord agent verify` for the integration or a
   specific `--installation-id`.
 - **Durable effects that may already exist:** The Runtime Home records, managed
   host configuration, Host Installation inventory, and optional guidance are
@@ -355,7 +355,7 @@ requires the administrative verification gates defined by
 - **Bounded recovery action:** Fix the reported cause, then address only the
   named residual targets. Use uninstall, guidance remove, project default, or
   project membership commands instead of broad file or database deletion.
-- **Verification:** Rerun the command that failed, or run `harness agent verify`
+- **Verification:** Rerun the command that failed, or run `volicord agent verify`
   after a setup or host-state fix. Confirm residual effects are gone or
   intentionally preserved by owner-supported commands.
 - **Durable effects that may already exist:** Host configuration, guidance,
@@ -384,7 +384,7 @@ requires the administrative verification gates defined by
 - **Bounded recovery action:** Fix the reported root cause, run a dry-run when
   the next command could write files, then retry install or verify. If verify
   says no Host Installation exists, run install for the intended host first.
-- **Verification:** Rerun `harness agent status`, then `harness agent verify`
+- **Verification:** Rerun `volicord agent status`, then `volicord agent verify`
   after the root cause is corrected.
 - **Durable effects that may already exist:** Pre-existing Runtime Home,
   project state, or host configuration can remain. New effects from the failed
@@ -402,21 +402,21 @@ requires the administrative verification gates defined by
 ### No explicitly allowed project exists
 
 - **Observable symptom:** Status warns that the integration has no allowed
-  projects, `harness-mcp --check` fails startup validation, verification fails,
+  projects, `volicord-mcp --check` fails startup validation, verification fails,
   or `volicord.list_projects` returns an empty list from a process that started
   before the last project was removed.
 - **Most likely causes:** The final integration project membership was removed,
   or no membership was successfully created for the Agent Integration Profile.
-- **Diagnostic check:** Run `harness agent status --integration-id
+- **Diagnostic check:** Run `volicord agent status --integration-id
   <integration_id> --runtime-home <runtime_home>`. If an MCP process is already
   running, call `volicord.list_projects` to observe whether it now sees an empty
   allowlist.
 - **Bounded recovery action:** Add or restore one explicit project:
-  `harness agent project add --integration-id <integration_id> --project-id
+  `volicord agent project add --integration-id <integration_id> --project-id
   <project_id> --repo-root <repo_root> --runtime-home <runtime_home>`. Set a
   default only if that convenience default should be used.
-- **Verification:** Run `harness-mcp --check --integration <integration_id>`,
-  then `harness agent verify`.
+- **Verification:** Run `volicord-mcp --check --integration <integration_id>`,
+  then `volicord agent verify`.
 - **Durable effects that may already exist:** Agent Integration Profile, Host
   Installation inventory, host configuration, and guidance can remain while no
   project is allowed.
@@ -440,7 +440,7 @@ requires the administrative verification gates defined by
   availability, and default status.
 - **Bounded recovery action:** Retry the public tool call with an explicit
   `envelope.project_id`. If omitted selection is truly desired, set a default
-  with `harness agent project default set --integration-id <integration_id>
+  with `volicord agent project default set --integration-id <integration_id>
   --project-id <project_id>`.
 - **Verification:** Retry the rejected tool call and confirm it reaches the
   intended project.
@@ -461,15 +461,15 @@ requires the administrative verification gates defined by
 - **Most likely causes:** The default still names the project you are trying to
   remove, or the default is stale relative to current membership or project
   availability.
-- **Diagnostic check:** Run `harness agent status --output json` and inspect
+- **Diagnostic check:** Run `volicord agent status --output json` and inspect
   `default_project_id`, `allowed_projects`, and any project availability
   warnings.
 - **Bounded recovery action:** If another allowed project should remain the
-  convenience default, run `harness agent project default set`. If the final
-  project is being removed, run `harness agent project default clear` first,
+  convenience default, run `volicord agent project default set`. If the final
+  project is being removed, run `volicord agent project default clear` first,
   then remove the membership.
-- **Verification:** Rerun `harness agent status`. For new startup eligibility,
-  run `harness-mcp --check --integration <integration_id>` after at least one
+- **Verification:** Rerun `volicord agent status`. For new startup eligibility,
+  run `volicord-mcp --check --integration <integration_id>` after at least one
   project is allowed again.
 - **Durable effects that may already exist:** The membership remains until the
   default is changed or cleared and removal succeeds. Host configuration is not
@@ -488,14 +488,14 @@ requires the administrative verification gates defined by
 - **Most likely causes:** The Runtime Home or project state database was
   created by an unsupported profile, a newer build, a corrupt or partial
   migration, or the exact old `baseline_sqlite` profile.
-- **Diagnostic check:** Prefer `harness agent install --dry-run --output json`
-  or `harness agent status --output json` so no migration or repair is
+- **Diagnostic check:** Prefer `volicord agent install --dry-run --output json`
+  or `volicord agent status --output json` so no migration or repair is
   attempted by the diagnostic command.
 - **Bounded recovery action:** Stop using that Runtime Home with this checkout.
   Reinitialize an explicit new Runtime Home when you want a fresh baseline, or
   restore from a compatible backup if you need existing records.
 - **Verification:** Rerun the same dry-run or status command against the
-  selected compatible Runtime Home. Then run normal setup or `harness-mcp
+  selected compatible Runtime Home. Then run normal setup or `volicord-mcp
   --check`.
 - **Durable effects that may already exist:** Unsupported existing SQLite files
   remain where they are; the baseline path does not convert, delete, rewrite,
@@ -511,22 +511,22 @@ requires the administrative verification gates defined by
 <a id="partial-removal"></a>
 ### Removal completed only partially
 
-- **Observable symptom:** `harness agent uninstall` exits with status `1` and
+- **Observable symptom:** `volicord agent uninstall` exits with status `1` and
   reports `status: partial_failure`, often with warnings such as residual
   guidance preserved.
 - **Most likely causes:** Managed host configuration was removed, but managed
   repository guidance could not be safely removed; a host entry or guidance
   block changed after planning; or a file operation failed during cleanup.
-- **Diagnostic check:** Run `harness agent uninstall --dry-run --output json`
+- **Diagnostic check:** Run `volicord agent uninstall --dry-run --output json`
   with the same `--integration-id`, `--installation-id` if used,
   `--allow-repository-write`, and `--remove-managed` flags to preview the
   exact remaining targets.
 - **Bounded recovery action:** Resolve only the named residual guidance or host
   target. Rerun uninstall or guidance remove with `--remove-managed` when
   ownership markers still match.
-- **Verification:** Run `harness agent status` to confirm remaining Host
+- **Verification:** Run `volicord agent status` to confirm remaining Host
   Installation inventory and guidance status. If host configuration remains,
-  run `harness agent verify` before relying on it.
+  run `volicord agent verify` before relying on it.
 - **Durable effects that may already exist:** Some Host Installation inventory
   may already be removed, the Agent Integration Profile may be disabled when no
   installations remain, and some guidance or host files may remain as reported.
@@ -540,21 +540,21 @@ requires the administrative verification gates defined by
 <a id="host-config-remains-zero-projects"></a>
 ### Host configuration remains while no project is currently allowed
 
-- **Observable symptom:** `harness agent status` lists Host Installation
+- **Observable symptom:** `volicord agent status` lists Host Installation
   inventory or host configuration, but `allowed_project_count: 0` or a warning
   says the integration is not executable until one is added.
 - **Most likely causes:** The last allowed project was intentionally removed.
   Host configuration and inventory can remain, but they are not startup
   eligibility.
-- **Diagnostic check:** Run `harness agent status --integration-id
+- **Diagnostic check:** Run `volicord agent status --integration-id
   <integration_id>` and, if a previous MCP process is still alive, call
   `volicord.list_projects` to see whether it returns an empty list.
 - **Bounded recovery action:** If the integration should be usable again, add a
-  project with `harness agent project add`. If the integration should be fully
-  removed, run `harness agent uninstall --remove-managed` with the required
+  project with `volicord agent project add`. If the integration should be fully
+  removed, run `volicord agent uninstall --remove-managed` with the required
   repository-write flag when guidance may be removed.
-- **Verification:** For reuse, run `harness-mcp --check` and `harness agent
-  verify` after adding a project. For removal, rerun `harness agent status` and
+- **Verification:** For reuse, run `volicord-mcp --check` and `volicord agent
+  verify` after adding a project. For removal, rerun `volicord agent status` and
   inspect remaining installations and guidance.
 - **Durable effects that may already exist:** Agent Integration Profile, Host
   Installation inventory, host configuration, and guidance can remain after

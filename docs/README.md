@@ -1,6 +1,6 @@
-# Harness Documentation Directory
+# Volicord Documentation Directory
 
-This directory contains the maintained English and Korean Harness documentation plus the metadata used by maintainers for owner routing and terminology control.
+This directory contains the maintained English and Korean Volicord documentation plus the metadata used by maintainers for owner routing and terminology control.
 
 Choose a language first:
 

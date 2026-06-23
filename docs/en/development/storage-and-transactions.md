@@ -15,23 +15,23 @@ needed.
 
 ## Storage Shape
 
-`Harness Runtime Home` is the local runtime data location for Harness-owned
+`Volicord Runtime Home` is the local runtime data location for Volicord-owned
 records and artifact data. `Product Repository` is the user's product-file
 workspace. The implementation keeps these locations separate:
 
 - Runtime Home path handling lives in
-  [`crates/harness-store/src/runtime_home.rs`](../../../crates/harness-store/src/runtime_home.rs).
+  [`crates/volicord-store/src/runtime_home.rs`](../../../crates/volicord-store/src/runtime_home.rs).
 - Registry and project bootstrap live in
-  [`crates/harness-store/src/bootstrap.rs`](../../../crates/harness-store/src/bootstrap.rs).
+  [`crates/volicord-store/src/bootstrap.rs`](../../../crates/volicord-store/src/bootstrap.rs).
 - SQLite open, validation, and transaction helpers live in
-  [`crates/harness-store/src/sqlite.rs`](../../../crates/harness-store/src/sqlite.rs).
+  [`crates/volicord-store/src/sqlite.rs`](../../../crates/volicord-store/src/sqlite.rs).
 - Baseline migration application lives in
-  [`crates/harness-store/src/migrations.rs`](../../../crates/harness-store/src/migrations.rs).
+  [`crates/volicord-store/src/migrations.rs`](../../../crates/volicord-store/src/migrations.rs).
 - Project-local Core Store access lives in
-  [`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs)
+  [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
   as `CoreProjectStore`.
 - Artifact staging and persistent artifact body verification live in
-  [`crates/harness-store/src/artifacts.rs`](../../../crates/harness-store/src/artifacts.rs).
+  [`crates/volicord-store/src/artifacts.rs`](../../../crates/volicord-store/src/artifacts.rs).
 
 The registry database tracks Runtime Home-level registration. Project
 databases hold project-local state. This page avoids reproducing table layouts
@@ -42,10 +42,10 @@ or column definitions; use the storage Reference owners for those details.
 Administrative setup uses Store bootstrap and inspection paths before public
 method execution is available:
 
-1. `harness-cli` plans administrative setup through
-   [`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs)
+1. `volicord-cli` plans administrative setup through
+   [`crates/volicord-cli/src/agent_command.rs`](../../../crates/volicord-cli/src/agent_command.rs)
    and registration metadata helpers in
-   [`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs).
+   [`crates/volicord-cli/src/registration.rs`](../../../crates/volicord-cli/src/registration.rs).
 2. Store bootstrap initializes Runtime Home metadata and registers projects and
    surfaces through `initialize_runtime_home`, `register_project`, and
    `register_surface`.
@@ -62,11 +62,11 @@ semantics. Exact CLI behavior is owned by [Administrative CLI](../reference/admi
 Normal public method execution has two implementation phases before persistence:
 
 1. The shared Core preflight in
-   [`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs)
+   [`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs)
    validates the envelope, adapter binding, committed-effect envelope
    requirements, request hash, project state, verified surface context, replay
    eligibility, Task requirement, freshness, and access class.
-2. The method module in [`crates/harness-core/src/methods/`](../../../crates/harness-core/src/methods/)
+2. The method module in [`crates/volicord-core/src/methods/`](../../../crates/volicord-core/src/methods/)
    performs method-specific planning and returns an `OwnerPipelineBranch`.
 
 Read-only methods and dry runs can return without a Core mutation commit.
@@ -112,9 +112,9 @@ The implementation tests that protect this boundary include
 `transaction_replay_returns_stored_response_before_stale_expected_state`,
 `transaction_replay_hash_conflict_rejects_without_effect`, and
 `transaction_replay_context_mismatch_precedes_request_hash_conflict` in
-[`crates/harness-store/src/core_pipeline.rs`](../../../crates/harness-store/src/core_pipeline.rs),
+[`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs),
 plus Core pipeline tests in
-[`crates/harness-core/src/pipeline.rs`](../../../crates/harness-core/src/pipeline.rs).
+[`crates/volicord-core/src/pipeline.rs`](../../../crates/volicord-core/src/pipeline.rs).
 
 ## State Version And Replay
 
@@ -123,7 +123,7 @@ mutation. Replay returns the stored original response for an eligible
 idempotent call instead of applying another mutation.
 
 The request hash used for replay comes from `canonical_request_hash` in
-[`crates/harness-types/src/canonical.rs`](../../../crates/harness-types/src/canonical.rs)
+[`crates/volicord-types/src/canonical.rs`](../../../crates/volicord-types/src/canonical.rs)
 after typed request decoding. This supports stable comparison across JSON
 property ordering and formatting while preserving semantic differences.
 
@@ -151,7 +151,7 @@ Relevant tests include
 `stage_artifact_creates_transient_handle_without_core_commit`,
 `stage_artifact_dry_run_creates_no_handle_or_storage`, and
 `record_run_promotes_staged_artifact_and_updates_evidence` in
-[`crates/harness-core/src/methods/tests.rs`](../../../crates/harness-core/src/methods/tests.rs),
+[`crates/volicord-core/src/methods/tests.rs`](../../../crates/volicord-core/src/methods/tests.rs),
 and `artifact_lifecycle_promotes_valid_handles_and_rolls_back_invalid_ones`
 in [`tests/conformance/baseline.rs`](../../../tests/conformance/baseline.rs).
 
@@ -166,7 +166,7 @@ The implementation separates failure boundaries by effect path:
   mismatch, idempotency conflict, and stale expected-state cases.
 - Errors during the Store transaction roll back the commit attempt.
 - Artifact staging has its own transaction and file cleanup boundary.
-- Direct Product Repository file writes are outside the public Harness API path.
+- Direct Product Repository file writes are outside the public Volicord API path.
 
 These are implementation boundaries, not acceptance, security, or close-readiness
 claims. Route exact method effects to the method owner and

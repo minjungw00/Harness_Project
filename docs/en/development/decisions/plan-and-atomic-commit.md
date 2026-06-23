@@ -38,16 +38,16 @@ not use the normal Core mutation commit.
 
 ## Relevant Implementation
 
-- [`crates/harness-core/src/pipeline.rs`](../../../../crates/harness-core/src/pipeline.rs):
+- [`crates/volicord-core/src/pipeline.rs`](../../../../crates/volicord-core/src/pipeline.rs):
   `OwnerPipelineBranch`, `CoreService::execute_prepared_request`, and Core
   commit orchestration.
-- [`crates/harness-core/src/methods/`](../../../../crates/harness-core/src/methods/):
+- [`crates/volicord-core/src/methods/`](../../../../crates/volicord-core/src/methods/):
   method-specific planners such as `plan_intake` and `plan_prepare_write`.
-- [`crates/harness-store/src/core_pipeline.rs`](../../../../crates/harness-store/src/core_pipeline.rs):
+- [`crates/volicord-store/src/core_pipeline.rs`](../../../../crates/volicord-store/src/core_pipeline.rs):
   `CoreStorageMutation`, `CommitMutationInput`,
   `CoreProjectStore::commit_mutation`, `MutationCommitOutcome`, and
   `ProjectMutation`.
-- [`crates/harness-store/src/artifacts.rs`](../../../../crates/harness-store/src/artifacts.rs):
+- [`crates/volicord-store/src/artifacts.rs`](../../../../crates/volicord-store/src/artifacts.rs):
   `CoreProjectStore::create_artifact_staging`.
 
 ## Related Tests And Reference Owners
@@ -55,12 +55,12 @@ not use the normal Core mutation commit.
 - `committed_mutation_increments_state_version_once`,
   `idempotency_replay_returns_stored_response`, and
   `stale_expected_state_version_is_rejected_without_effect` in
-  [`crates/harness-core/src/pipeline.rs`](../../../../crates/harness-core/src/pipeline.rs).
+  [`crates/volicord-core/src/pipeline.rs`](../../../../crates/volicord-core/src/pipeline.rs).
 - `transaction_replay_returns_stored_response_before_stale_expected_state` and
   `transaction_replay_hash_conflict_rejects_without_effect` in
-  [`crates/harness-store/src/core_pipeline.rs`](../../../../crates/harness-store/src/core_pipeline.rs).
+  [`crates/volicord-store/src/core_pipeline.rs`](../../../../crates/volicord-store/src/core_pipeline.rs).
 - `stage_artifact_creates_transient_handle_without_core_commit` in
-  [`crates/harness-core/src/methods/tests.rs`](../../../../crates/harness-core/src/methods/tests.rs).
+  [`crates/volicord-core/src/methods/tests.rs`](../../../../crates/volicord-core/src/methods/tests.rs).
 - [Storage Effects](../../reference/storage-effects.md),
   [Storage Versioning](../../reference/storage-versioning.md), and the linked
   public method owner from [API Methods](../../reference/api/methods.md).
