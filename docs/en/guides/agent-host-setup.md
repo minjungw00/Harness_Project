@@ -67,7 +67,7 @@ Codex project scope remains `action_required` while Codex project trust cannot b
 
 `harness-mcp --check --integration <integration_id>` is only MCP startup validation. A direct Harness-spawned MCP handshake is not proof that Codex or Claude Code loaded, trusted, approved, or exposed the server. Tool discovery does not guarantee every future model decision will choose Harness tools. Repository guidance improves discoverability, but it is advisory context rather than enforcement.
 
-When a result is not `complete`, use [Agent host troubleshooting](agent-host-troubleshooting.md#status-action_required) for the matching status or observed host state before repeating a write command.
+When a result is not `complete`, use [Agent host troubleshooting](agent-host-troubleshooting.md) for the matching status or observed host state before repeating a write command.
 
 ## Dry-Run Before Writes
 

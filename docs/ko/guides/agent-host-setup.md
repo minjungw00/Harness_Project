@@ -67,7 +67,7 @@ Codex project 범위는 Codex 프로젝트 신뢰를 확인할 수 없는 동안
 
 `harness-mcp --check --integration <integration_id>`는 MCP 시작 검증일 뿐입니다. 하네스가 직접 시작한 MCP handshake는 Codex 또는 Claude Code가 서버를 로드, 신뢰, 승인, 노출했다는 증명이 아닙니다. 도구 발견이 성공해도 이후 모델이 매번 하네스 도구를 선택한다는 보장은 아닙니다. 저장소 지침은 발견 가능성을 높이지만, 강제 장치가 아니라 조언 맥락입니다.
 
-결과가 `complete`가 아니면 쓰기 명령을 반복하기 전에 [에이전트 호스트 문제 해결](agent-host-troubleshooting.md#status-action_required)에서 해당 상태나 관찰된 호스트 상태를 확인합니다.
+결과가 `complete`가 아니면 쓰기 명령을 반복하기 전에 [에이전트 호스트 문제 해결](agent-host-troubleshooting.md)에서 해당 상태나 관찰된 호스트 상태를 확인합니다.
 
 ## 쓰기 전 dry-run
 
