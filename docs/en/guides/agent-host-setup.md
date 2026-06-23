@@ -6,6 +6,26 @@ Start with [Installation](../getting-started/installation.md) to build or locate
 
 Exact command behavior belongs to [Administrative CLI](../reference/admin-cli.md). Exact Agent Integration Profile, Host Installation, project selection, and guidance boundaries belong to [Agent Integration](../reference/agent-integration.md). Exact process behavior belongs to [MCP Transport](../reference/mcp-transport.md). Runtime and Product Repository write boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md).
 
+## Executable Convention
+
+The command examples assume you have selected one absolute directory containing both `harness` and `harness-mcp`, then exported it in the current shell:
+
+```sh
+export HARNESS_BIN="/absolute/path/to/selected/bin"
+```
+
+When building from the Harness Server source repository root, a debug build can use:
+
+```sh
+export HARNESS_BIN="$(pwd)/target/debug"
+```
+
+Replace `/absolute/path/to/selected/bin` with your real selected directory; do not copy it literally. `HARNESS_BIN` is only a shell convenience variable for these examples. Harness does not read it as runtime or host configuration. For release builds and installed-directory choices, see [Installation](../getting-started/installation.md).
+
+Administrative commands use `"$HARNESS_BIN/harness"`. User-scope Codex, local-scope Claude Code, and generic export examples pass `--mcp-command "$HARNESS_BIN/harness-mcp"` so generated configuration stores the resolved absolute executable path. Project-scope examples keep generated project files portable by running with `PATH="$HARNESS_BIN:$PATH"` and `--mcp-command harness-mcp`.
+
+Generated configuration examples below use `/absolute/path/to/selected/bin/harness-mcp` to stand in for the resolved selected path. Actual generated configuration contains the expanded path for user, local, and export scope, or the portable command for project scope, not the literal `HARNESS_BIN` variable.
+
 ## Responsibilities
 
 | Part | Owns | Notes |
@@ -46,7 +66,7 @@ Codex project scope remains `action_required` while Codex project trust cannot b
 Use dry-run when a command might write host configuration or `Product Repository` guidance:
 
 ```sh
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host codex \
   --scope user \
   --server-name harness-main \
@@ -54,7 +74,7 @@ Use dry-run when a command might write host configuration or `Product Repository
   --project-id acme-api \
   --repo-root /work/acme-api \
   --runtime-home /Users/alex/.harness \
-  --mcp-command /opt/harness/bin/harness-mcp \
+  --mcp-command "$HARNESS_BIN/harness-mcp" \
   --dry-run \
   --output json
 ```
@@ -70,7 +90,7 @@ The examples below pin `--server-name harness-main` so the host snippets have a 
 Use user scope when one personal Codex configuration should load the same Harness integration across Codex projects.
 
 ```sh
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host codex \
   --scope user \
   --server-name harness-main \
@@ -79,7 +99,7 @@ Use user scope when one personal Codex configuration should load the same Harnes
   --repo-root /work/acme-api \
   --default-project-id acme-api \
   --runtime-home /Users/alex/.harness \
-  --mcp-command /opt/harness/bin/harness-mcp
+  --mcp-command "$HARNESS_BIN/harness-mcp"
 ```
 
 This may write:
@@ -93,12 +113,14 @@ Expected generated Codex shape:
 
 ```toml
 [mcp_servers.harness-main]
-command = "/opt/harness/bin/harness-mcp"
+command = "/absolute/path/to/selected/bin/harness-mcp"
 args = ["--integration", "int-codex-team"]
 
 [mcp_servers.harness-main.env]
 HARNESS_HOME = "/Users/alex/.harness"
 ```
+
+The actual generated `command` value is the resolved absolute path selected through `HARNESS_BIN`; generated TOML does not contain `HARNESS_BIN`.
 
 Codex project scope is also supported, but it writes `/work/acme-api/.codex/config.toml`, requires `--allow-repository-write` in noninteractive execution, uses `harness-mcp` from `PATH`, and may report `action_required` until Codex trusts the project.
 
@@ -108,8 +130,8 @@ Project scope writes a team-shared `.mcp.json` file in the `Product Repository`.
 
 ```sh
 HARNESS_HOME=/Users/alex/.harness \
-PATH="/opt/harness/bin:$PATH" \
-/opt/harness/bin/harness agent install \
+PATH="$HARNESS_BIN:$PATH" \
+"$HARNESS_BIN/harness" agent install \
   --host claude-code \
   --scope project \
   --server-name harness-main \
@@ -139,14 +161,14 @@ Local scope keeps the MCP server private to the current Claude Code project and 
 
 ```sh
 HARNESS_HOME=/Users/alex/.harness \
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host claude-code \
   --scope local \
   --server-name harness-main \
   --integration-id int-claude-acme-local \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --mcp-command /opt/harness/bin/harness-mcp
+  --mcp-command "$HARNESS_BIN/harness-mcp"
 ```
 
 Local and project scopes are single-repository scopes. Use user scope when one explicitly allowed integration should serve multiple repositories.
@@ -158,7 +180,7 @@ Repository guidance is optional and must be explicitly authorized.
 Codex guidance writes a Harness-managed block in `AGENTS.md`:
 
 ```sh
-/opt/harness/bin/harness agent guidance apply \
+"$HARNESS_BIN/harness" agent guidance apply \
   --integration-id int-codex-team \
   --project-id acme-api \
   --host codex \
@@ -171,7 +193,7 @@ Codex guidance writes a Harness-managed block in `AGENTS.md`:
 Claude Code guidance writes `.claude/rules/harness.md`:
 
 ```sh
-/opt/harness/bin/harness agent guidance apply \
+"$HARNESS_BIN/harness" agent guidance apply \
   --integration-id int-codex-team \
   --project-id acme-api \
   --host claude-code \
@@ -208,15 +230,16 @@ Guidance files are host configuration or advisory context. They are not Harness 
 Inspect registry and host inventory:
 
 ```sh
-/opt/harness/bin/harness agent status \
+"$HARNESS_BIN/harness" agent status \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
 
-Refresh verification:
+Refresh verification. Keep the selected directory on `PATH` when verifying an installation whose host configuration stores the portable `harness-mcp` command:
 
 ```sh
-/opt/harness/bin/harness agent verify \
+PATH="$HARNESS_BIN:$PATH" \
+"$HARNESS_BIN/harness" agent verify \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
@@ -238,7 +261,7 @@ Direct MCP startup inspection:
 
 ```sh
 HARNESS_HOME=/Users/alex/.harness \
-/opt/harness/bin/harness-mcp --check --integration int-codex-team
+"$HARNESS_BIN/harness-mcp" --check --integration int-codex-team
 ```
 
 `--check` should report `configuration: valid`, `transport: stdio`, the `integration_id`, allowed project counts, and `verification_scope: startup_check_only`. It does not prove the host loaded or exposed tools.
@@ -259,7 +282,7 @@ Harness attempts to reverse newly applied managed effects when it can do so safe
 A project that is still `default_project_id` cannot be removed. In a two-project integration, first change the default to the project that should remain:
 
 ```sh
-/opt/harness/bin/harness agent project default set \
+"$HARNESS_BIN/harness" agent project default set \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -275,7 +298,7 @@ resulting_default_project_id: billing-api
 After the default has moved, remove the formerly default project without rewriting host configuration:
 
 ```sh
-/opt/harness/bin/harness agent project remove \
+"$HARNESS_BIN/harness" agent project remove \
   --integration-id int-codex-team \
   --project-id acme-api \
   --runtime-home /Users/alex/.harness
@@ -292,7 +315,7 @@ verification_detail: project membership removed; host configuration was not rewr
 To remove the final allowed project, clear the default first:
 
 ```sh
-/opt/harness/bin/harness agent project default clear \
+"$HARNESS_BIN/harness" agent project default clear \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
@@ -300,7 +323,7 @@ To remove the final allowed project, clear the default first:
 Then remove the final membership:
 
 ```sh
-/opt/harness/bin/harness agent project remove \
+"$HARNESS_BIN/harness" agent project remove \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -316,7 +339,7 @@ not executable until one is added
 The Agent Integration Profile, Host Installation inventory, and host configuration can remain while no projects are allowed. Verification is not executable in that state. Add a project again without reinstalling the host entry:
 
 ```sh
-/opt/harness/bin/harness agent project add \
+"$HARNESS_BIN/harness" agent project add \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -325,7 +348,7 @@ The Agent Integration Profile, Host Installation inventory, and host configurati
 Fully remove managed host configuration and managed guidance:
 
 ```sh
-/opt/harness/bin/harness agent uninstall \
+"$HARNESS_BIN/harness" agent uninstall \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness \
   --allow-repository-write \
@@ -339,7 +362,7 @@ Uninstall removes only Harness-managed host entries, blocks, files, or fingerpri
 Use generic export only for a host that Harness does not install directly:
 
 ```sh
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host generic \
   --scope export \
   --server-name harness-main \
@@ -347,8 +370,24 @@ Use generic export only for a host that Harness does not install directly:
   --project-id acme-api \
   --repo-root /work/acme-api \
   --runtime-home /Users/alex/.harness \
-  --mcp-command /opt/harness/bin/harness-mcp \
+  --mcp-command "$HARNESS_BIN/harness-mcp" \
   --export-dir /tmp/harness-mcp-export
 ```
 
-The exported JSON contains one `mcpServers.harness-main` entry with `command`, `args = ["--integration", "int-generic-acme"]`, and `HARNESS_HOME` when applicable. Generic export does not claim the host loaded the server; install and verify results remain `action_required` until a future host-specific owner defines an observable loadability gate.
+The exported JSON contains one `mcpServers.harness-main` entry with `command`, `args = ["--integration", "int-generic-acme"]`, and `HARNESS_HOME` when applicable:
+
+```json
+{
+  "mcpServers": {
+    "harness-main": {
+      "command": "/absolute/path/to/selected/bin/harness-mcp",
+      "args": ["--integration", "int-generic-acme"],
+      "env": {
+        "HARNESS_HOME": "/Users/alex/.harness"
+      }
+    }
+  }
+}
+```
+
+Generic export does not claim the host loaded the server; install and verify results remain `action_required` until a future host-specific owner defines an observable loadability gate.
