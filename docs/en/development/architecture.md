@@ -214,19 +214,58 @@ This flow is an implementation map. Exact public method contracts, error precede
 
 `CoreProjectStore::commit_mutation` is the Store transaction boundary for normal committed Core mutations. The detailed commit sequence, replay handling, state-version relationship, artifact staging distinction, and failure boundaries are explained in [Storage and Transactions](storage-and-transactions.md). Table layout, DDL, storage record detail, method-specific persistence effects, and artifact lifecycle rules belong to the storage Reference owners.
 
+<a id="administrative-agent-setup-flow"></a>
+
 ## Administrative agent setup flow
 
-`harness agent ...` is implemented as local administrative orchestration, not as a public Core method:
+`harness agent install` is implemented as local administrative orchestration, not as a public Core method. The implementation lives under `crates/harness-cli/src/agent_command.rs` and the host adapters in `crates/harness-cli/src/host_integration/`; exact command, Agent Integration Profile, MCP transport, and runtime-boundary contracts stay with [Administrative CLI](../reference/admin-cli.md), [Agent Integration](../reference/agent-integration.md), [MCP Transport](../reference/mcp-transport.md), and [Runtime Boundaries](../reference/runtime-boundaries.md).
 
-1. `crates/harness-cli/src/main.rs` dispatches `harness agent ...` to `crates/harness-cli/src/agent_command.rs`.
-2. `agent_command.rs` parses host, scope, project, integration, Runtime Home, `harness-mcp` command, guidance, dry-run, and repository-write options.
-3. The command resolves Runtime Home, Product Repository root, integration identifiers, host target paths, and whether the selected host scope may write inside the Product Repository.
-4. Store-facing setup creates or reuses Runtime Home, project records, surface registrations, Agent Integration Profiles, integration project memberships, and Host Installation inventory without going through public Core methods.
-5. `crates/harness-cli/src/host_integration/` builds the host-specific plan for Codex user/project config, Claude Code user/project/local config, or generic export. Project and local scopes stay single-repository scopes; user scope can carry an explicit integration project allowlist.
-6. The CLI runs `harness-mcp --check --integration <integration_id>` with the resolved Runtime Home and validates the startup preflight report.
-7. Non-dry-run execution applies managed host configuration only after target and permission checks. Optional repository guidance goes through `repository_guidance.rs` and `guidance_template.rs` and requires explicit repository-write permission.
-8. Verification may initialize the configured MCP server and request tool discovery. A result can still be `action_required` when the host owns project trust, project MCP approval, reload, restart, OAuth, or a comparable user-controlled action.
-9. `harness agent status`, `verify`, `project add`, `project remove`, `uninstall`, and `guidance` commands read or update only the registry, managed host entries, and managed guidance described by the command.
+```mermaid
+flowchart TD
+  parse["Parse and validate inputs"]
+  plan["Inspect registry and host state; derive IDs; build project, integration, host, and guidance plans; reject conflicts"]
+  dry{"--dry-run?"}
+  dryout["Return plan only; no Runtime Home or SQLite writes, MCP preflight, host apply, guidance, initialization, or tool discovery"]
+  runtime["Initialize or reuse Runtime Home and project state"]
+  integration["Create or reuse agent surface, Agent Integration Profile, project membership, and default-project routing"]
+  preflight["Run harness-mcp --check --integration with the resolved Runtime Home"]
+  host["Read host target snapshot and apply the planned host configuration"]
+  inventory["Register or update Host Installation inventory before final verification"]
+  guidance["Apply optional repository guidance when selected and explicitly authorized"]
+  readiness["Verify host readiness"]
+  gate{"Host gate permits MCP handshake?"}
+  handshake["Initialize MCP stdio and discover tools"]
+  hostonly["Use the host verification result"]
+  final["Derive setup result and update Host Installation verification state"]
+  fail["After durable effects begin, compensate journaled owned effects and report residuals"]
+
+  parse --> plan --> dry
+  dry -- yes --> dryout
+  dry -- no --> runtime --> integration --> preflight --> host --> inventory --> guidance --> readiness --> gate
+  gate -- yes --> handshake --> final
+  gate -- no --> hostonly --> final
+  runtime -. failure after this point .-> fail
+  integration -. failure .-> fail
+  preflight -. failure .-> fail
+  host -. failure .-> fail
+  inventory -. failure .-> fail
+  guidance -. failure .-> fail
+  readiness -. failure .-> fail
+  handshake -. failure .-> fail
+  final -. failure .-> fail
+```
+
+The setup sequence has a read-only planning phase before persistent setup. The command parses and validates host, scope, repository-write, guidance, Runtime Home, repository, integration, and executable inputs; inspects existing registry and host state; derives stable identifiers; builds the project, integration, host, and optional guidance plans; and rejects host conflicts before creating Runtime Home state or changing registry rows. Host planning therefore happens before Store-facing setup.
+
+When `--dry-run` is selected, the command returns the plan from that planning phase. It does not create Runtime Home directories or SQLite state, run `harness-mcp --check`, apply host configuration, apply repository guidance, initialize MCP stdio, or perform tool discovery.
+
+Non-dry-run execution then initializes or reuses Runtime Home and project state, creates or reuses the agent surface, Agent Integration Profile, project membership, and default-project routing, and only then runs `harness-mcp --check --integration <integration_id>` with the resolved Runtime Home. That MCP startup preflight happens before host configuration is applied.
+
+Host configuration application follows the previously constructed host plan and is guarded by the target snapshot, stale-plan checks, ownership markers, and fingerprint checks. Host Installation inventory is registered or updated only after host configuration application, initially before the final verification state has been recorded. Optional repository guidance is applied after inventory registration and only when selected and explicitly authorized for repository writes.
+
+Final verification first checks host readiness. Direct MCP stdio initialization and tool discovery run only when the host gate permits that handshake, so host readiness and direct MCP handshake are separate checks. A result can still be `action_required` when host-owned trust, approval, reload, restart, OAuth, or a comparable user-controlled action remains.
+
+Failure handling is journal-based compensation across Runtime Home, registry, host configuration, and Product Repository guidance boundaries. It attempts to reverse newly applied managed effects only when ownership and safety checks allow that reversal, and it reports residual effects that remain. This compensation is not one atomic Store transaction and does not claim universal rollback across all persistence and host boundaries.
 
 ## Decision Routes
 

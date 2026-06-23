@@ -16,6 +16,18 @@ Codex, Claude Code, 또는 아직 직접 지원하지 않는 호스트를 위한
 | Codex 또는 Claude Code | 호스트 설정, 프로젝트 신뢰, 프로젝트 MCP 승인, 재로드/재시작 동작, 모델의 도구 선택. | 하네스는 호스트가 소유한 결정을 우회할 수 없습니다. |
 | `harness-mcp` 프로세스 | `--integration <integration_id>`로 시작되는 하나의 통합 바인딩 stdio 서버. | 프로젝트 선택은 공개 도구 호출마다 일어납니다. |
 
+## 설정 순서
+
+운영자 관점에서 `harness agent install`은 아래 지속 순서를 따릅니다. 자세한 구현 지도는 [관리 에이전트 설정 흐름](../development/architecture.md#administrative-agent-setup-flow)에 있습니다.
+
+1. 명령은 호스트, 범위, 저장소 쓰기, guidance, Runtime Home, 저장소, integration, 실행 파일 입력을 파싱하고, 기존 registry와 호스트 상태를 읽어 프로젝트, 통합, 호스트, 선택적 guidance 계획을 만듭니다. 충돌은 지속 설정 전에 거부됩니다.
+2. `--dry-run`이면 명령은 계획만 반환합니다. Runtime Home 상태를 만들거나, SQLite에 쓰거나, `harness-mcp --check`를 실행하거나, 호스트 설정을 바꾸거나, guidance를 적용하거나, MCP를 초기화하거나, 도구를 발견하지 않습니다.
+3. `--dry-run`이 아니면 Runtime Home과 프로젝트 상태를 초기화하거나 재사용한 뒤, 에이전트 접점, Agent Integration Profile, 프로젝트 멤버십, 기본 프로젝트 라우팅을 만들거나 재사용합니다.
+4. 명령은 호스트 설정을 적용하기 전에 해석된 Runtime Home으로 `harness-mcp --check --integration <integration_id>`를 실행합니다.
+5. 계획된 호스트 설정을 적용한 뒤, 선택적 저장소 guidance보다 먼저 Host Installation inventory를 등록하거나 갱신합니다.
+6. 선택적 guidance는 선택되어 있고 명시적으로 승인된 경우에만 적용됩니다. 최종 검증은 호스트 준비 상태를 확인하고, 호스트 gate가 허용하면 MCP 초기화와 도구 발견을 수행합니다. 그 결과로 Host Installation 검증 상태를 갱신하며, 호스트가 소유한 행동이 남아 있으면 결과는 여전히 `action_required`일 수 있습니다.
+7. 지속 효과가 시작된 뒤 실패하면 출력은 install journal의 보상된 효과와 잔여 효과를 보고합니다. 이것은 Runtime Home, SQLite, Product Repository, 호스트 경계를 가로지르는 하나의 원자적 롤백이 아닙니다.
+
 ## 설정 상태 의미
 
 | 상태 | 의미 |

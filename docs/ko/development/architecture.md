@@ -214,19 +214,58 @@ sequenceDiagram
 
 `CoreProjectStore::commit_mutation`은 일반 커밋된 Core 변이의 Store 트랜잭션 경계입니다. 자세한 커밋 순서, 재실행 처리, 상태 버전 관계, 아티팩트 스테이징 구분, 실패 경계는 [저장소와 트랜잭션](storage-and-transactions.md)에서 설명합니다. 테이블 레이아웃, DDL, 저장소 기록 세부사항, 메서드별 지속 효과, 아티팩트 생명주기 규칙은 저장소 참조 담당 문서가 담당합니다.
 
+<a id="administrative-agent-setup-flow"></a>
+
 ## 관리 에이전트 설정 흐름
 
-`harness agent ...`는 로컬 관리 오케스트레이션으로 구현되며 공개 Core 메서드가 아닙니다.
+`harness agent install`은 공개 Core 메서드가 아니라 로컬 관리 오케스트레이션으로 구현됩니다. 구현은 `crates/harness-cli/src/agent_command.rs`와 `crates/harness-cli/src/host_integration/`의 호스트 어댑터에 있습니다. 정확한 명령, Agent Integration Profile, MCP 전송, 런타임 경계 계약은 [관리 CLI](../reference/admin-cli.md), [에이전트 통합](../reference/agent-integration.md), [MCP 전송](../reference/mcp-transport.md), [런타임 경계](../reference/runtime-boundaries.md)가 담당합니다.
 
-1. `crates/harness-cli/src/main.rs`는 `harness agent ...`를 `crates/harness-cli/src/agent_command.rs`로 디스패치합니다.
-2. `agent_command.rs`는 host, scope, project, integration, Runtime Home, `harness-mcp` command, guidance, dry-run, repository-write 옵션을 파싱합니다.
-3. 명령은 Runtime Home, Product Repository root, integration identifier, 호스트 대상 경로, 선택한 호스트 범위가 Product Repository 안에 쓸 수 있는지 여부를 해석합니다.
-4. Store 쪽 설정은 공개 Core 메서드를 통하지 않고 Runtime Home, 프로젝트 기록, 접점 등록, Agent Integration Profile, integration project membership, Host Installation inventory를 만들거나 재사용합니다.
-5. `crates/harness-cli/src/host_integration/`은 Codex 사용자/프로젝트 설정, Claude Code 사용자/프로젝트/로컬 설정, generic export를 위한 호스트별 계획을 만듭니다. 프로젝트 범위와 로컬 범위는 단일 저장소 범위로 남고, 사용자 범위는 명시적 integration project allowlist를 가질 수 있습니다.
-6. CLI는 해석된 Runtime Home으로 `harness-mcp --check --integration <integration_id>`를 실행하고 시작 사전 점검 보고서를 검증합니다.
-7. dry-run이 아닌 실행은 대상과 권한을 확인한 뒤에만 관리되는 호스트 설정을 적용합니다. 선택적 저장소 guidance는 `repository_guidance.rs`와 `guidance_template.rs`를 통과하며 명시적 repository-write 권한이 필요합니다.
-8. 검증은 설정된 MCP 서버를 초기화하고 도구 발견을 요청할 수 있습니다. 호스트가 프로젝트 신뢰, 프로젝트 MCP 승인, 재로드, 재시작, OAuth, 또는 비슷한 사용자 제어 행동을 소유하면 결과는 여전히 `action_required`일 수 있습니다.
-9. `harness agent status`, `verify`, `project add`, `project remove`, `uninstall`, `guidance` 명령은 명령이 설명하는 registry, 관리되는 호스트 항목, 관리되는 guidance만 읽거나 갱신합니다.
+```mermaid
+flowchart TD
+  parse["입력 파싱과 검증"]
+  plan["registry와 호스트 상태 검사, ID 도출, 프로젝트/통합/호스트/guidance 계획 작성, 충돌 거부"]
+  dry{"--dry-run?"}
+  dryout["계획만 반환, Runtime Home이나 SQLite 쓰기, MCP 사전 점검, 호스트 적용, guidance, 초기화, 도구 발견 없음"]
+  runtime["Runtime Home과 프로젝트 상태 초기화 또는 재사용"]
+  integration["에이전트 접점, Agent Integration Profile, 프로젝트 멤버십, 기본 프로젝트 라우팅 생성 또는 재사용"]
+  preflight["해석된 Runtime Home으로 harness-mcp --check --integration 실행"]
+  host["호스트 대상 스냅샷을 읽고 계획된 호스트 설정 적용"]
+  inventory["최종 검증 전 Host Installation inventory 등록 또는 갱신"]
+  guidance["선택되고 명시적으로 승인된 경우 저장소 guidance 적용"]
+  readiness["호스트 준비 상태 검증"]
+  gate{"호스트 gate가 MCP handshake를 허용?"}
+  handshake["MCP stdio 초기화와 도구 발견"]
+  hostonly["호스트 검증 결과 사용"]
+  final["설정 결과 도출과 Host Installation 검증 상태 갱신"]
+  fail["지속 효과가 시작된 뒤 실패하면 journal의 소유된 효과를 보상하고 잔여 효과 보고"]
+
+  parse --> plan --> dry
+  dry -- yes --> dryout
+  dry -- no --> runtime --> integration --> preflight --> host --> inventory --> guidance --> readiness --> gate
+  gate -- yes --> handshake --> final
+  gate -- no --> hostonly --> final
+  runtime -. 이후 실패 .-> fail
+  integration -. 실패 .-> fail
+  preflight -. 실패 .-> fail
+  host -. 실패 .-> fail
+  inventory -. 실패 .-> fail
+  guidance -. 실패 .-> fail
+  readiness -. 실패 .-> fail
+  handshake -. 실패 .-> fail
+  final -. 실패 .-> fail
+```
+
+설정 순서는 지속 설정 전에 읽기 전용 계획 단계를 둡니다. 명령은 호스트, 범위, 저장소 쓰기, guidance, Runtime Home, 저장소, integration, 실행 파일 입력을 파싱하고 검증합니다. 그런 다음 기존 registry와 호스트 상태를 검사하고, 안정적인 식별자를 도출하고, 프로젝트, 통합, 호스트, 선택적 guidance 계획을 만들며, Runtime Home 상태를 만들거나 registry 행을 바꾸기 전에 호스트 충돌을 거부합니다. 따라서 호스트 계획은 Store 쪽 설정보다 먼저 일어납니다.
+
+`--dry-run`이 선택되면 명령은 그 계획 단계의 결과만 반환합니다. Runtime Home 디렉터리나 SQLite 상태를 만들지 않고, `harness-mcp --check`를 실행하지 않으며, 호스트 설정이나 저장소 guidance를 적용하지 않고, MCP stdio 초기화나 도구 발견도 수행하지 않습니다.
+
+dry-run이 아닌 실행은 Runtime Home과 프로젝트 상태를 초기화하거나 재사용한 뒤, 에이전트 접점, Agent Integration Profile, 프로젝트 멤버십, 기본 프로젝트 라우팅을 만들거나 재사용합니다. 그 다음에만 해석된 Runtime Home으로 `harness-mcp --check --integration <integration_id>`를 실행합니다. 이 MCP 시작 사전 점검은 호스트 설정 적용보다 먼저 일어납니다.
+
+호스트 설정 적용은 앞서 만든 호스트 계획을 따르며 대상 스냅샷, stale-plan 점검, 소유 마커, 지문 점검으로 보호됩니다. Host Installation inventory는 호스트 설정 적용 뒤에만 등록하거나 갱신하며, 처음에는 최종 검증 상태가 기록되기 전 상태입니다. 선택적 저장소 guidance는 inventory 등록 뒤에 적용되고, 선택되어 있으며 저장소 쓰기가 명시적으로 승인된 경우에만 적용됩니다.
+
+최종 검증은 먼저 호스트 준비 상태를 확인합니다. 직접 MCP stdio 초기화와 도구 발견은 호스트 gate가 그 handshake를 허용할 때만 실행되므로, 호스트 준비 상태와 직접 MCP handshake는 별도 점검입니다. 호스트가 소유한 신뢰, 승인, 재로드, 재시작, OAuth, 또는 비슷한 사용자 제어 행동이 남아 있으면 결과는 여전히 `action_required`일 수 있습니다.
+
+실패 처리는 Runtime Home, registry, 호스트 설정, Product Repository guidance 경계를 가로지르는 journal 기반 보상입니다. 새로 적용한 관리 효과는 소유권과 안전 점검이 허용할 때만 되돌리려고 시도하며, 남는 잔여 효과는 보고합니다. 이 보상은 하나의 원자적 Store 트랜잭션이 아니고, 모든 지속 경계와 호스트 경계에 대한 보편적 롤백을 주장하지 않습니다.
 
 ## 결정 경로
 

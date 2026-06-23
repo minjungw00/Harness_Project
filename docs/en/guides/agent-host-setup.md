@@ -16,6 +16,18 @@ Exact command behavior belongs to [Administrative CLI](../reference/admin-cli.md
 | Codex or Claude Code | Host configuration, project trust, project MCP approval, reload/restart behavior, and model tool choice. | Harness cannot bypass host-owned decisions. |
 | `harness-mcp` process | One integration-bound stdio server started with `--integration <integration_id>`. | Project selection happens per public tool call. |
 
+## Setup Sequence
+
+For operators, `harness agent install` follows this durable order. The detailed implementation map is in [Administrative agent setup flow](../development/architecture.md#administrative-agent-setup-flow).
+
+1. The command parses host, scope, repository-write, guidance, Runtime Home, repository, integration, and executable inputs, then reads existing registry and host state to build project, integration, host, and optional guidance plans. Conflicts are rejected before persistent setup.
+2. With `--dry-run`, the command returns the plan only and does not create Runtime Home state, write SQLite, run `harness-mcp --check`, change host configuration, apply guidance, initialize MCP, or discover tools.
+3. Without `--dry-run`, the command initializes or reuses Runtime Home and project state, then creates or reuses the agent surface, Agent Integration Profile, project membership, and default-project routing.
+4. The command runs `harness-mcp --check --integration <integration_id>` with the resolved Runtime Home before applying host configuration.
+5. It applies the planned host configuration, then registers or updates Host Installation inventory before optional repository guidance.
+6. Optional guidance is applied only when selected and explicitly authorized; final verification checks host readiness and, when the host gate permits it, performs MCP initialization and tool discovery. The Host Installation verification state is updated from that result, which may still be `action_required` when host-owned action remains.
+7. If a failure happens after durable effects begin, output reports compensated effects and residual effects from the install journal. This is not one atomic rollback across Runtime Home, SQLite, Product Repository, and host boundaries.
+
 ## Setup State Semantics
 
 | State | Meaning |
