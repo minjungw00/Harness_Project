@@ -86,10 +86,15 @@ Startup validation requires:
 - the integration role is recognized and is valid for MCP agent integration
 - the integration `surface_id` and `surface_instance_id` are present
 - the integration project membership rows are readable
+- at least one allowed project membership exists
 - `default_project_id`, when present, is also a membership row
 - registry JSON and metadata needed for startup are valid
 
 Startup validation does not select a project for all calls. Project availability, project status, path separation, surface registration, and access-class grants are verified per call as defined by [Agent Integration](agent-integration.md#current-surface-context).
+
+A stored Agent Integration Profile or Host Installation record can remain after the integration reaches zero allowed projects. That persistence is not startup eligibility: a new stdio process and `harness-mcp --check` fail startup validation while there are no allowed projects.
+
+An already running process is different from a new process. A process that passed startup while at least one project was allowed refreshes registry state for `harness.list_projects` and project routing. After the last membership is removed, `harness.list_projects` may return an empty project list, but public tools that require project routing reject because no allowed project remains.
 
 ## Integration-bound process
 
@@ -104,13 +109,13 @@ The integration supplies:
 - an explicit allowlist of project memberships
 - an optional `default_project_id`
 
-The process binding remains fixed for the process lifetime. Changing integration requires another process or host configuration update. Changing project membership or disabling the integration takes effect through registry state without requiring the host configuration to be rewritten.
+The process binding remains fixed for the process lifetime. Changing integration requires another process or host configuration update. Changing project membership or disabling the integration takes effect through registry state without requiring the host configuration to be rewritten, and each new process reruns startup validation against the current registry state.
 
 ## Configuration preflight
 
 `harness-mcp --check --integration <integration_id>` runs the same Runtime Home, integration, membership, and registry-shape startup validation used before entering the stdio loop. `harness-mcp --check --integration <integration_id> --project <project_id>` limits the project detail section to one project and rejects a project that is not granted to the selected integration. Neither form reads stdin.
 
-On success, `--check` writes these stdout lines in this order:
+On success, `--check` writes the fixed summary lines, then one repeated project-detail block for each selected project, in this order:
 
 ```text
 configuration: valid
@@ -125,7 +130,23 @@ allowed_projects: <count>
 available_projects: <count>
 default_project_id: <value or empty>
 verification_scope: startup_check_only
+project[0].project_id: <value>
+project[0].default: true|false
+project[0].available: true|false
+project[0].unavailable_reason: <value or empty>
+project[0].repo_root: <path>
+project[0].baseline_workflow_access: full|partial|unavailable
+project[0].missing_access_classes: <comma-separated values or empty>
 ```
+
+Project-detail rules:
+
+- The detail index begins at zero.
+- Without `--project`, one detail block is emitted for each allowed project in the current stable project ordering, sorted by `project_id`.
+- `--project <project_id>` rejects a project that is not allowed for the integration and limits the detail block selection to that one project.
+- `allowed_projects` and `default_project_id` describe the integration as a whole. With `--project`, `available_projects` describes the emitted detail selection and is therefore `0` or `1`.
+- Unavailable projects still emit every project-detail key. `unavailable_reason` is populated for unavailable projects and empty for available projects; `missing_access_classes` is a comma-separated list or empty.
+- `verification_scope: startup_check_only` is a startup and preflight statement only, not complete host verification.
 
 Startup validation failure:
 

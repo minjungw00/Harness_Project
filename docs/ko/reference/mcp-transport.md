@@ -87,10 +87,15 @@ stdio 프로세스와 `--check`는 시작 검증에 들어가기 전에 `HARNESS
 - 통합 역할을 인식할 수 있고 MCP 에이전트 통합에 유효합니다.
 - 통합 `surface_id`와 `surface_instance_id`가 있습니다.
 - 통합 프로젝트 멤버십 행을 읽을 수 있습니다.
+- 허용 프로젝트 멤버십이 하나 이상 있습니다.
 - `default_project_id`가 있으면 그 값도 멤버십 행입니다.
 - 시작에 필요한 레지스트리 JSON과 메타데이터가 유효합니다.
 
 시작 검증은 모든 호출에 쓸 프로젝트를 선택하지 않습니다. 프로젝트 가용성, 프로젝트 상태, 경로 분리, 접점 등록, 접근 등급 허용은 [에이전트 통합](agent-integration.md#current-surface-context)이 정의한 대로 호출마다 검증합니다.
+
+Agent Integration Profile이나 Host Installation 기록은 통합의 허용 프로젝트가 하나도 없는 상태가 된 뒤에도 저장된 채 남을 수 있습니다. 이 지속 상태는 시작 가능성을 뜻하지 않습니다. 허용 프로젝트가 없으면 새 stdio 프로세스와 `harness-mcp --check`는 시작 검증에 실패합니다.
+
+이미 실행 중인 프로세스는 새 프로세스와 다릅니다. 하나 이상의 프로젝트가 허용된 상태에서 시작 검증을 통과한 프로세스는 `harness.list_projects`와 프로젝트 라우팅 때 레지스트리 상태를 새로 읽습니다. 마지막 멤버십이 제거된 뒤 `harness.list_projects`는 빈 프로젝트 목록을 반환할 수 있지만, 프로젝트 라우팅이 필요한 공개 도구는 허용 프로젝트가 남아 있지 않으므로 거절됩니다.
 
 ## 통합에 묶인 프로세스
 
@@ -105,14 +110,14 @@ stdio 프로세스와 `--check`는 시작 검증에 들어가기 전에 `HARNESS
 - 명시적 프로젝트 멤버십 허용 목록
 - 선택적 `default_project_id`
 
-프로세스 바인딩은 프로세스 수명 동안 고정됩니다. 통합을 바꾸려면 다른 프로세스나 호스트 설정 갱신이 필요합니다. 프로젝트 멤버십 변경이나 통합 비활성화는 호스트 설정을 다시 쓰지 않아도 레지스트리 상태를 통해 효력을 가집니다.
+프로세스 바인딩은 프로세스 수명 동안 고정됩니다. 통합을 바꾸려면 다른 프로세스나 호스트 설정 갱신이 필요합니다. 프로젝트 멤버십 변경이나 통합 비활성화는 호스트 설정을 다시 쓰지 않아도 레지스트리 상태를 통해 효력을 가지며, 새 프로세스는 시작할 때마다 현재 레지스트리 상태로 시작 검증을 다시 실행합니다.
 
 <a id="configuration-preflight"></a>
 ## 설정 사전 점검
 
 `harness-mcp --check --integration <integration_id>`는 stdio 루프에 들어가기 전에 쓰는 것과 같은 Runtime Home, 통합, 멤버십, 레지스트리 형태 시작 검증을 실행합니다. `harness-mcp --check --integration <integration_id> --project <project_id>`는 프로젝트 세부 구간을 프로젝트 하나로 제한하고, 선택된 통합에 허용되지 않은 프로젝트를 거절합니다. 두 형식 모두 stdin을 읽지 않습니다.
 
-성공하면 `--check`는 stdout에 아래 줄들을 이 순서로 씁니다.
+성공하면 `--check`는 고정 요약 줄을 먼저 쓰고, 이어 선택된 각 프로젝트마다 반복되는 프로젝트 세부 블록을 아래 순서로 stdout에 씁니다.
 
 ```text
 configuration: valid
@@ -127,7 +132,23 @@ allowed_projects: <count>
 available_projects: <count>
 default_project_id: <value or empty>
 verification_scope: startup_check_only
+project[0].project_id: <value>
+project[0].default: true|false
+project[0].available: true|false
+project[0].unavailable_reason: <value or empty>
+project[0].repo_root: <path>
+project[0].baseline_workflow_access: full|partial|unavailable
+project[0].missing_access_classes: <comma-separated values or empty>
 ```
+
+프로젝트 세부 규칙:
+
+- 세부 인덱스는 0에서 시작합니다.
+- `--project`가 없으면 현재 안정적인 프로젝트 순서, 즉 `project_id` 정렬 순서대로 허용 프로젝트마다 세부 블록 하나를 냅니다.
+- `--project <project_id>`는 통합에 허용되지 않은 프로젝트를 거절하고 세부 블록 선택을 그 프로젝트 하나로 제한합니다.
+- `allowed_projects`와 `default_project_id`는 통합 전체를 설명합니다. `--project`를 쓰면 `available_projects`는 출력된 세부 선택을 설명하므로 `0` 또는 `1`입니다.
+- 사용할 수 없는 프로젝트도 모든 프로젝트 세부 키를 출력합니다. `unavailable_reason`은 사용할 수 없는 프로젝트에서 채워지고 사용할 수 있는 프로젝트에서는 비어 있습니다. `missing_access_classes`는 쉼표로 구분한 목록이거나 비어 있습니다.
+- `verification_scope: startup_check_only`는 시작과 사전 점검에 대한 문장일 뿐이며 전체 호스트 검증이 아닙니다.
 
 시작 검증 실패:
 

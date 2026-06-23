@@ -71,7 +71,10 @@ Rules:
 - Invalid current project registrations must be rejected by integration project listing and access resolution instead of returned as allowed project records.
 - Inactive or otherwise execution-ineligible valid projects remain unavailable at execution time even if a stale membership row exists.
 - Revoking membership or disabling the integration must take effect without requiring host configuration to be rewritten.
-- An integration with no allowed projects may remain stored, but it is not executable until a project is added again.
+- An Agent Integration Profile with no allowed projects may remain stored, and Host Installation inventory or host configuration may also remain on disk. That stored state does not mean a new `harness-mcp` process can start successfully.
+- New MCP stdio startup and `harness-mcp --check` fail startup validation when the integration has zero allowed projects. Administrative verification that depends on that same startup path cannot succeed in that state.
+- A `harness-mcp` process that already started while at least one project was allowed can observe later membership changes without host configuration being rewritten. After the last membership is removed, `harness.list_projects` may return an empty project list, but project-routed public tools cannot proceed normally because no allowed project remains.
+- The integration is executable again only after an allowed project is added and the startup or per-call project checks can validate the required project state.
 
 ## Host Installation
 
