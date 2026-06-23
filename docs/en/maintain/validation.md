@@ -103,6 +103,64 @@ API example consistency review, or product meaning review. A passing local-link
 parity check only confirms the machine-comparable local reader routes. The
 remaining checks stay manual and owner-routed.
 
+## Onboarding Usability Validation
+
+Use representative-user usability validation when maintained onboarding,
+installation, agent-host setup, troubleshooting, or owner-routing documentation
+is added or materially changed. This is human usability testing with actual
+participants. It is separate from automated `docs-check`, Rust implementation
+tests, conformance checks, human semantic review, and an agent-performed desk
+review. An agent desk review may find documentation-maintenance blockers, but it
+is not evidence that first-time human readers can complete the flow.
+
+The participant set must include at least:
+
+- two technically capable users with no prior Harness experience
+- one MCP host operator with no prior Harness experience
+- one implementer who needs to navigate API or schema Reference material
+
+The tasks must cover whether participants can:
+
+1. Determine whether their environment is documented as suitable.
+2. Build or select the executables.
+3. Verify executable readiness.
+4. Choose and follow one Codex or Claude Code setup path.
+5. Interpret `action_required` and identify the required next action.
+6. Recover from an unavailable or incorrectly selected executable.
+7. Interpret a state with no allowed project or ambiguous project selection.
+8. Explain what remains after safe removal.
+9. Find the detailed schema owner for `StateRecordRef` or `EvidenceSummary`.
+
+Record observations needed to improve the maintained documentation, including
+where participants stop, questions they ask without prompting, incorrect state
+interpretations, unsafe write or deletion attempts, whether success was
+self-verified, whether recovery completed, the number and type of document
+transitions, and search terms that failed.
+
+Passing usability validation requires first-time users to complete executable
+preparation and one host path without author explanation, identify documented
+success independently, avoid treating `action_required` as an unexplained fatal
+failure, recover without deleting unrelated user configuration or product data,
+and find the detailed schema owner without author assistance. Critical blockers
+include any issue that prevents task completion, causes an unsafe write or
+deletion attempt, produces a wrong success interpretation, or breaks an owner
+route. Correct critical blockers in the applicable maintained owner documents,
+keep paired English and Korean meaning aligned when a paired document changes,
+rerun matching automated and manual maintenance checks, and retest the affected
+task with the relevant participant profile before treating the blocker as
+resolved.
+
+Report usability validation results in the conversation or another
+repository-approved durable research location, not as individual test records in
+maintained documentation. Do not commit participant notes, screenshots,
+recordings, session logs, work logs, fabricated completion rates, fabricated
+quotations, or private participant data to maintained docs. Do not claim
+representative-user testing occurred unless actual representative participants
+performed the tasks and their participation is verifiable. Automated validation
+proves only the machine-checkable properties it owns, Rust tests prove only
+implementation checks, and an agent desk review proves only that a maintainer
+reviewed the documents for objective blockers.
+
 ## Rust Implementation Validation
 
 If no Rust source, Cargo manifest, test, fixture, or build configuration is
