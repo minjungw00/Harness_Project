@@ -329,8 +329,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: onboarding
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-23'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   - rust_workspace_1_85
@@ -951,8 +951,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: onboarding
   created_on: '2026-06-23'
-  last_updated_on: '2026-06-23'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   - rust_workspace_1_85
