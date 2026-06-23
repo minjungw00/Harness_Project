@@ -1,43 +1,76 @@
 # 빠른 시작
 
-이 문서는 실제 로컬 에이전트 호스트를 위한 가장 짧은 첫 설정 경로를 담당합니다. `Harness Server` 실행 파일을 빌드했거나 찾을 수 있고, 허용할 `Product Repository`가 있다고 가정합니다.
+이 튜토리얼은 실제 로컬 에이전트 호스트를 위한 가장 짧은 지원 첫 설정 경로입니다.
+[설치](installation.md) 뒤에서 시작하며, 하나의 `Product Repository`를 사용하고,
+개인 Codex 사용자 범위 항목과 프로젝트 범위 Claude Code `.mcp.json` 항목 중 하나를
+고르게 합니다.
 
-빌드 세부사항과 실행 파일 탐색 규칙은 [설치](installation.md)를 봅니다. 전체 호스트 설정 옵션, dry-run 미리보기, 저장소 guidance, 제거, 문제 해결은 [에이전트 호스트 설정](../guides/agent-host-setup.md)을 봅니다.
+전체 호스트 설정 옵션, dry-run 미리보기, 저장소 지침, 제거, 문제 해결은
+[에이전트 호스트 설정](../guides/agent-host-setup.md)을 봅니다.
+
+## 독자, 목표, 완료 상태
+
+독자: 로컬 `harness`와 `harness-mcp` 실행 파일을 이미 확인했고 설정을 확장하기 전에
+에이전트 호스트 경로 하나를 동작시키려는 첫 사용자 또는 운영자입니다.
+
+목표: 지원되는 호스트 설정 하나를 설치하고, 첫 결과가 `complete`인지
+`action_required`인지 알아보며, 선택한 경로에 대해 별도 검증 명령을 실행합니다.
+
+완료 상태: 선택한 경로는 해당 `integration_id`에 대한 `harness agent verify`가
+`status: complete`를 보고하고 선택된 Host Installation이 `final_status: complete`를
+보고할 때 완료됩니다. 명령이 `action_required`를 보고하면 이름 붙은 호스트 소유 신뢰,
+승인, reload, restart 동작을 완료한 뒤 검증을 다시 실행합니다.
+
+## 시작 상태와 예시 값
+
+명령을 실행하기 전에 아래를 준비합니다.
+
+- POSIX 스타일 셸에서 [설치](installation.md)를 완료합니다.
+- `HARNESS_BIN`이 두 실행 파일이 들어 있는 확인된 절대 디렉터리를 계속 가리키게
+  합니다.
+- `Harness Runtime Home`과 같지 않고 그 안이나 위에도 있지 않은 `Product Repository`를
+  선택합니다.
+- 아래의 모든 예시 경로와 ID를 실제 값으로 바꿉니다.
 
 예시는 아래 값을 사용합니다.
 
 | 예시 값 | 의미 |
 |---|---|
-| `HARNESS_BIN="/absolute/path/to/selected/bin"` | `harness`와 `harness-mcp`가 함께 들어 있는 선택한 절대 디렉터리 |
-| `"$HARNESS_BIN/harness"` | `harness` 관리 CLI 호출 |
-| `"$HARNESS_BIN/harness-mcp"` | 사용자/로컬 범위 호스트 설정에 쓰는 절대 `harness-mcp` 명령 |
-| `/Users/alex/.harness` | `Harness Runtime Home` |
-| `/work/acme-api` | Product Repository A |
-| `acme-api` | Product Repository A의 프로젝트 ID |
-| `harness-int-codex-team`, `harness-int-claude-acme` | `integration_id`에서 파생되는 안정적인 호스트 MCP 서버 이름 |
+| `HARNESS_BIN="/absolute/path/to/selected/bin"` | `harness`와 `harness-mcp`가 함께 들어 있는 선택한 절대 디렉터리. |
+| `"$HARNESS_BIN/harness"` | `harness` 관리 CLI 호출. |
+| `"$HARNESS_BIN/harness-mcp"` | 사용자/로컬 범위 호스트 설정에 쓰는 절대 `harness-mcp` 명령. |
+| `/Users/alex/.harness` | `Harness Runtime Home`. |
+| `/work/acme-api` | Product Repository A. |
+| `acme-api` | Product Repository A의 프로젝트 ID. |
+| `int-codex-team`, `int-claude-acme` | 예시 `integration_id` 값. |
+| `harness-int-codex-team`, `harness-int-claude-acme` | `--server-name`을 생략했을 때 `integration_id`에서 파생되는 안정적인 호스트 MCP 서버 이름. |
 
-## 1단계: Harness Server 준비
+`HARNESS_BIN`은 튜토리얼용 셸 변수입니다. Harness는 이를 설정으로 읽지 않습니다.
+`HARNESS_HOME`은 다릅니다. 기본 Runtime Home이 의도한 위치가 아닐 때 관리 명령과 이후
+`harness-mcp` 프로세스 시작에 쓰이는 실제 Runtime Home 선택 입력입니다.
 
-작업 디렉터리: 이 저장소에서 빌드한다면 `Harness Server` 소스 저장소 루트.
+## 호스트 경로 선택
 
-```sh
-cargo build -p harness-cli -p harness-mcp
-export HARNESS_BIN="$(pwd)/target/debug"
+| 경로 | 선택할 때 | 결과 |
+|---|---|---|
+| 경로 A: Codex `user` 범위 | 개인 Codex MCP 항목 하나가 지금 이 저장소를 처리하고, 나중에 명시적으로 허용된 저장소를 더 처리할 수 있어야 할 때. | 호스트 설정은 Codex 사용자 설정에 있고 절대 `harness-mcp` 명령 경로와 `HARNESS_HOME`을 저장합니다. |
+| 경로 B: Claude Code `project` 범위 | Product Repository A가 팀 공유 Claude Code `.mcp.json` 항목을 가져야 할 때. | 프로젝트 파일은 이식 가능한 `harness-mcp`를 사용하고 개인 `HARNESS_HOME`을 생략하며, `--allow-repository-write`가 필요하고, Claude Code 승인이 끝날 때까지 `action_required`로 남을 수 있습니다. |
 
-test -x "$HARNESS_BIN/harness"
-test -x "$HARNESS_BIN/harness-mcp"
-```
-
-`HARNESS_BIN`은 이 튜토리얼이 쓰는 셸 편의 변수입니다. Harness가 설정으로 읽는 값이 아닙니다. 릴리스 빌드나 별도로 설치된 실행 파일을 사용하려면 계속하기 전에 [설치](installation.md)에 설명된 절대 디렉터리를 선택합니다.
+다른 호스트나 범위가 필요하면 [에이전트 호스트 설정](../guides/agent-host-setup.md)을
+사용합니다. 하나의 사용자 범위 통합이 여러 저장소를 처리해야 하면 첫 저장소에 대해
+경로 A를 완료한 뒤 [다중 저장소 에이전트 설정](../guides/multi-repository-agent-setup.md)을
+따릅니다. 저장소마다 이 빠른 시작을 기계적으로 반복하지 않습니다.
 
 ## 경로 A: Codex 사용자 범위 설정
 
-개인 Codex MCP 항목 하나가 명시적으로 허용된 하나 이상의 `Product Repository` 등록을 처리하게 하려면 이 경로를 사용합니다.
+개인 Codex MCP 항목 하나가 명시적으로 허용된 하나 이상의 `Product Repository` 등록을
+처리하게 하려면 이 경로를 사용합니다.
 
 전제 조건:
 
-- Codex가 사용자 `config.toml`을 읽을 수 있습니다.
-- `HARNESS_BIN`이 두 실행 파일이 들어 있는 절대 디렉터리를 가리킵니다.
+- Codex가 `CODEX_HOME` 또는 `HOME`을 통해 사용자 `config.toml`을 읽을 수 있습니다.
+- 호환성 점검을 위해 관리 명령의 `PATH`에서 `codex` 실행 파일을 사용할 수 있습니다.
+- `HARNESS_BIN`이 설치에서 확인한 절대 실행 파일 디렉터리를 가리킵니다.
 - Product Repository A는 `/work/acme-api`에 있습니다.
 - `/Users/alex/.harness`는 `/work/acme-api`와 분리되어 있습니다.
 
@@ -61,11 +94,12 @@ test -x "$HARNESS_BIN/harness-mcp"
 |---|---|
 | `/Users/alex/.harness` | Runtime Home registry, 통합, 프로젝트, 접점, Host Installation, 프로젝트 상태 기록. |
 | 일반적으로 `~/.codex/config.toml` 또는 `CODEX_HOME/config.toml`인 Codex 사용자 설정 | `[mcp_servers.harness-int-codex-team]` 테이블. |
-| `/work/acme-api` | 저장소 guidance를 별도로 선택하지 않는 한 파일 변경 없음. |
+| `/work/acme-api` | 저장소 지침을 별도로 선택하지 않는 한 파일 변경 없음. |
 
-`--server-name`을 생략했으므로 CLI는 `integration_id`에서 안정적인 호스트 MCP 서버 이름을 파생합니다. 특정 호스트 설정 키를 고정해야 할 때만 `--server-name`을 사용합니다.
+`--server-name`을 생략했으므로 CLI는 `integration_id`에서 안정적인 호스트 MCP 서버 이름을
+파생합니다. 특정 호스트 설정 키를 고정해야 할 때만 `--server-name`을 사용합니다.
 
-예상 결과:
+첫 예상 결과:
 
 ```text
 status: complete
@@ -88,39 +122,54 @@ args = ["--integration", "int-codex-team"]
 HARNESS_HOME = "/Users/alex/.harness"
 ```
 
-실제 `command` 값은 `HARNESS_BIN`으로 선택한 경로가 셸에서 해석된 절대 경로입니다. 생성된 TOML에는 `HARNESS_BIN`이 들어가지 않습니다.
+실제 `command` 값은 `HARNESS_BIN`으로 선택한 경로가 셸에서 해석된 절대 경로입니다.
+생성된 TOML에는 `HARNESS_BIN`이 들어가지 않습니다.
 
-나중에 확인:
+독립 완료 점검:
 
 ```sh
-"$HARNESS_BIN/harness" agent status \
-  --integration-id int-codex-team \
-  --runtime-home /Users/alex/.harness
-
 "$HARNESS_BIN/harness" agent verify \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
 
-성공을 알아보는 기준:
-
-- 설치 또는 verify에서 `status: complete`이면 지속 통합 상태가 있고, 호스트 설정이 설치되었고, 호스트 소유 신뢰나 승인 gate가 충족되었거나 해당하지 않으며, MCP 초기화와 도구 발견이 성공했다는 뜻입니다.
-- `harness agent status`는 inventory와 상태 보고입니다. 그 verification 섹션은 호스트 로딩을 증명하지 않는다고 말할 수 있습니다.
+경로 A는 검증이 `status: complete`를 보고할 때 완료됩니다. 검증이 `action_required`를
+보고하면 이름 붙은 동작을 읽습니다. Codex 사용자 범위에서 흔한 원인은 관리 명령의
+`PATH`에 `codex`가 없거나 `codex --version`을 실행할 수 없는 경우입니다.
 
 ## 경로 B: Claude Code 프로젝트 범위 설정
 
-Product Repository A가 팀 공유 Claude Code `.mcp.json` 항목을 갖게 하려면 이 경로를 사용합니다.
+Product Repository A가 팀 공유 Claude Code `.mcp.json` 항목을 갖게 하려면 이 경로를
+사용합니다.
 
 전제 조건:
 
-- `HARNESS_BIN`이 두 실행 파일이 들어 있는 절대 디렉터리를 가리킵니다.
-- Claude Code가 MCP 서버를 시작할 때 사용할 `PATH`에서 `harness-mcp`를 찾을 수 있게 합니다.
-- Claude Code가 자체적으로 `/Users/alex/.harness`를 Runtime Home으로 해석하지 않는 환경이라면, 시작 환경이 `HARNESS_HOME=/Users/alex/.harness`를 제공해야 합니다.
+- `HARNESS_BIN`이 설치에서 확인한 절대 실행 파일 디렉터리를 가리킵니다.
+- Claude Code가 MCP 서버를 시작할 때 사용할 `PATH`에서 `harness-mcp`를 찾을 수 있어야
+  합니다.
+- Claude Code가 자체적으로 `/Users/alex/.harness`를 Runtime Home으로 해석하지 않는다면
+  Claude Code 시작 환경이 `HARNESS_HOME=/Users/alex/.harness`를 제공해야 합니다.
 - Product Repository A는 `/work/acme-api`에 있습니다.
 - `/Users/alex/.harness`는 `/work/acme-api`와 분리되어 있습니다.
-- Product Repository A에 `.mcp.json`을 쓸 의도가 있습니다.
+- 관리 명령이 `/work/acme-api/.mcp.json`을 쓰는 것을 의도적으로 허용합니다.
 
-명령:
+프로젝트 파일을 쓰기 전 선택적 dry-run:
+
+```sh
+HARNESS_HOME=/Users/alex/.harness \
+PATH="$HARNESS_BIN:$PATH" \
+"$HARNESS_BIN/harness" agent install \
+  --host claude-code \
+  --scope project \
+  --integration-id int-claude-acme \
+  --project-id acme-api \
+  --repo-root /work/acme-api \
+  --mcp-command harness-mcp \
+  --dry-run \
+  --output json
+```
+
+설정 적용:
 
 ```sh
 HARNESS_HOME=/Users/alex/.harness \
@@ -143,13 +192,19 @@ PATH="$HARNESS_BIN:$PATH" \
 | `/work/acme-api/.mcp.json` | Claude Code 프로젝트 범위 MCP 서버 항목. |
 | Claude Code 사용자 승인 상태 | 사용자가 Claude Code에서 프로젝트 MCP 서버를 승인한 뒤에만 바뀝니다. |
 
-예상 결과:
+호스트 승인 전 첫 예상 결과:
 
 ```text
 status: action_required
+integration_id: int-claude-acme
+host_kind: claude_code
+host_scope: project
+server_name: harness-int-claude-acme
 verification: action_required
-verification_detail: Claude Code requires user approval before project-scoped .mcp.json servers load
 ```
+
+출력은 Claude Code 프로젝트 MCP 승인 같은 호스트 소유 후속 조치를 이름 붙여야 합니다.
+`action_required`는 성공한 관리 결과이며 명령 실패가 아닙니다.
 
 생성되는 `.mcp.json` 항목은 아래 형태입니다.
 
@@ -164,9 +219,16 @@ verification_detail: Claude Code requires user approval before project-scoped .m
 }
 ```
 
-생성되는 `.mcp.json`은 의도적으로 `HARNESS_HOME`을 생략하고 이식 가능한 `harness-mcp` 명령을 유지합니다. 설치 명령에 붙은 `HARNESS_HOME`과 `PATH` 할당은 그 관리 명령 실행에만 적용됩니다. 나중에 Claude Code가 서버를 시작할 때는 Claude Code 자신의 시작 환경이 `PATH`에서 `harness-mcp`를 찾을 수 있어야 하며, 그 환경이 다른 Runtime Home을 해석하게 된다면 `HARNESS_HOME`을 제공해야 합니다. 일반 기본 해석이 이미 의도한 Runtime Home을 선택하고 Claude Code의 일반 `PATH`에서 이미 `harness-mcp`를 찾을 수 있다면 별도 명시 환경 설정이 필요하지 않을 수 있습니다.
+생성되는 `.mcp.json`은 의도적으로 `HARNESS_HOME`을 생략하고 이식 가능한
+`harness-mcp` 명령을 유지합니다. 설치 명령에 붙은 `HARNESS_HOME`과 `PATH` 할당은 그
+관리 명령 실행에만 적용됩니다. 나중에 Claude Code가 서버를 시작할 때는 Claude Code의
+시작 환경이 `PATH`에서 `harness-mcp`를 찾을 수 있어야 하며, 기본 Runtime Home이
+다르다면 `HARNESS_HOME`을 제공해야 합니다.
 
-`action_required`는 설정 실패가 아닙니다. 그 환경에서 `/work/acme-api`의 Claude Code를 시작하거나 재시작하고 프로젝트 범위 MCP 서버를 검토해 승인한 뒤, 같은 값을 별도의 검증 명령에 제공해 아래를 실행합니다.
+호스트 소유 동작을 완료합니다. 의도한 환경에서 `/work/acme-api`의 Claude Code를
+시작하거나 재시작하고, 프로젝트 MCP 서버를 검토한 뒤 Claude Code 안에서 승인합니다.
+
+승인 뒤 독립 완료 점검:
 
 ```sh
 HARNESS_HOME=/Users/alex/.harness \
@@ -175,42 +237,60 @@ PATH="$HARNESS_BIN:$PATH" \
   --integration-id int-claude-acme
 ```
 
-## 먼저 Dry-run 실행하기
+경로 B는 검증이 `status: complete`를 보고하고 `harness-int-claude-acme` 설치 검증이
+`final_status: complete`를 보고할 때 완료됩니다. 검증이 여전히 `action_required`를
+보고하면 호스트 소유 승인, reload/restart, 또는 시작 환경이 아직 완료되지 않은
+상태입니다.
 
-프로젝트 범위 설정이나 저장소 guidance를 쓰기 전에는 `--dry-run --output json`을 사용합니다.
+## 인벤토리, 검증, 실제 호스트 로딩
+
+레지스트리와 Host Installation inventory를 보려면 `harness agent status`를 사용합니다.
 
 ```sh
-"$HARNESS_BIN/harness" agent install \
-  --host codex \
-  --scope user \
+"$HARNESS_BIN/harness" agent status \
   --integration-id int-codex-team \
-  --project-id acme-api \
-  --repo-root /work/acme-api \
-  --runtime-home /Users/alex/.harness \
-  --mcp-command "$HARNESS_BIN/harness-mcp" \
-  --dry-run \
-  --output json
+  --runtime-home /Users/alex/.harness
 ```
 
-Dry-run 출력은 `status: dry_run`, 계획된 동작, 호스트 대상 경로, 선택한 경우 guidance 대상 경로를 보고합니다. Runtime Home 디렉터리, SQLite 파일이나 행, WAL 또는 SHM 파일, registry 마이그레이션, 호스트 설정, `Product Repository` guidance, generic export 파일을 만들거나 수정하지 않습니다.
+`harness agent status`는 Codex 또는 Claude Code가 MCP 서버를 로드했다는 증명이 아닙니다.
+관리 검증 단계는 `harness agent verify`로 확인하고, 호스트가 로드 상태를 노출한다면
+호스트 자체의 UI, MCP 목록, 승인 흐름에서 확인합니다.
+
+성공한 `harness-mcp --check --integration <integration_id>`는 MCP 프로세스 시작 검증일
+뿐입니다. 그 자체로 완료된 호스트 통합이 아닙니다.
 
 ## 설정 상태 의미
 
 | 상태 | 다음 행동 |
 |---|---|
-| `complete` | 관리 설정, 호스트 소유 gate, MCP 검증 경로가 성공했습니다. 호스트를 열어 서버가 MCP UI나 도구 목록에 보이는지 확인합니다. |
-| `action_required` | 출력이 이름 붙인 호스트 소유 동작을 완료합니다. 예를 들어 Codex 프로젝트 신뢰나 Claude Code 프로젝트 MCP 승인을 마친 뒤 `harness agent verify`를 실행합니다. |
-| `partial_failure` | 나중 단계가 실패하기 전에 일부 지속 동작이 성공했을 수 있습니다. 보고된 문제를 고치고 같은 명령을 다시 실행합니다. |
-| `failed` | 요청한 설정이 사용할 수 있는 지속 통합 상태나 호스트 설정을 만들지 못했습니다. 보고된 오류를 고친 뒤 다시 시도합니다. |
+| `complete` | 관리 설정, 호스트 소유 확인 단계, MCP 초기화, 도구 발견이 성공했습니다. 호스트를 사용하고, 호스트가 MCP 서버나 도구를 보여 주는 위치에서 서버가 보이는지 확인합니다. |
+| `action_required` | 명령은 성공했지만 이름 붙은 호스트 소유 동작이 남았습니다. 그 동작을 완료한 뒤 `harness agent verify`를 실행합니다. |
+| `partial_failure` | 나중 단계가 실패하기 전에 일부 지속 동작이 성공했을 수 있습니다. `effects`와 `residual_effects`를 읽고 이름 붙은 문제만 고친 뒤 같은 명령 또는 verify를 다시 실행합니다. |
+| `failed` | 요청한 설정 또는 검증이 사용할 수 있는 지속 통합 상태나 호스트 설정을 만들지 못했습니다. 보고된 오류를 고친 뒤 다시 시도합니다. |
 
-성공한 `harness-mcp --check --integration <integration_id>`는 MCP 프로세스 시작 검증일 뿐입니다. 그 자체로 완료된 호스트 통합이 아닙니다. 호스트 설정이 있다는 것과 호스트가 로드하거나 도구를 발견했다는 것은 다릅니다. 도구 발견도 이후 모든 모델 판단이 하네스 도구를 선택한다는 보장이 아닙니다.
+## 실패 경로
+
+| 증상 | 안전한 다음 행동 | 경로 |
+|---|---|---|
+| 설정 전에 `harness`, `harness-mcp`, 또는 `HARNESS_BIN`이 실패합니다. | 설치로 돌아가 같은 셸에서 실행 파일 점검을 다시 실행합니다. | [설치](installation.md#verify-the-selected-directory) |
+| 설정 또는 검증이 `harness-mcp`를 해석하지 못합니다. | 사용자/로컬 범위에서는 유효한 절대 `--mcp-command`를 사용합니다. 프로젝트 범위에서는 `harness-mcp`를 이식 가능한 형태로 유지하고 호스트 `PATH`를 고칩니다. | [에이전트 호스트 문제 해결](../guides/agent-host-troubleshooting.md#missing-harness-mcp) |
+| 프로젝트 범위 명령이 `.mcp.json` 또는 `.codex/config.toml` 쓰기를 거부합니다. | 저장소 쓰기가 의도한 동작인지 결정한 뒤 `--allow-repository-write`를 포함해 다시 실행합니다. | [관리 CLI](../reference/admin-cli.md#noninteractive-approval-behavior) |
+| 결과가 `action_required`입니다. | 이름 붙은 호스트 소유 신뢰, 승인, reload, restart, 또는 실행 파일 가용성 동작만 완료한 뒤 `harness agent verify`를 다시 실행합니다. | [에이전트 호스트 문제 해결](../guides/agent-host-troubleshooting.md#status-action_required) |
+| 결과가 `partial_failure` 또는 `failed`입니다. | 보고된 `effects`, `residual_effects`, `warnings`, `verification` 세부사항을 읽습니다. 첫 대응으로 Runtime Home, Product Repository, 관련 없는 호스트 항목을 삭제하지 않습니다. | [에이전트 호스트 문제 해결의 partial_failure](../guides/agent-host-troubleshooting.md#status-partial_failure)와 [failed](../guides/agent-host-troubleshooting.md#status-failed) |
+| 하나의 통합이 여러 저장소를 처리해야 합니다. | 사용자 범위 통합을 사용하고 명시적 프로젝트 멤버십을 추가합니다. 저장소마다 호스트 항목을 하나씩 추가하지 않습니다. | [다중 저장소 에이전트 설정](../guides/multi-repository-agent-setup.md) |
 
 ## 계속 읽기
 
-- 전체 호스트 설정, dry-run 미리보기, 저장소 guidance, generic export, 상태, 검증, 안전한 제거: [에이전트 호스트 설정](../guides/agent-host-setup.md)
-- 하나의 사용자 범위 통합이 여러 저장소를 처리하는 경로: [다중 저장소 에이전트 설정](../guides/multi-repository-agent-setup.md)
+- 전체 호스트 설정, dry-run 미리보기, 저장소 지침, generic export, 상태, 검증, 안전한 제거:
+  [에이전트 호스트 설정](../guides/agent-host-setup.md)
+- 하나의 사용자 범위 통합이 여러 저장소를 처리하는 경로:
+  [다중 저장소 에이전트 설정](../guides/multi-repository-agent-setup.md)
 - 에이전트 작업 흐름: [에이전트 가이드](../guides/agent-workflow.md)
-- 정확한 `harness` agent 명령 동작: [관리 CLI](../reference/admin-cli.md#harness-agent-install)
-- 정확한 프로젝트 선택과 guidance 경계: [에이전트 통합](../reference/agent-integration.md)
-- 정확한 `harness-mcp` 프로세스 동작: [MCP 전송](../reference/mcp-transport.md)
-- 정확한 런타임 위치 경계: [런타임 경계](../reference/runtime-boundaries.md)
+- 정확한 `harness` agent 명령 동작:
+  [관리 CLI](../reference/admin-cli.md#harness-agent-install)
+- 정확한 프로젝트 선택과 지침 경계:
+  [에이전트 통합](../reference/agent-integration.md)
+- 정확한 `harness-mcp` 프로세스 동작:
+  [MCP 전송](../reference/mcp-transport.md)
+- 정확한 런타임 위치 경계:
+  [런타임 경계](../reference/runtime-boundaries.md)
