@@ -91,6 +91,9 @@ scope, conditions, consequences, identifiers, links, and examples. Do not add
 Korean-only labels such as `조건`, `결과`, `비주장`, or `허용되지 않는 것`
 unless the English document has the same meaning unit.
 
+Commands, flags, identifiers, status meanings, negative clauses, limitations,
+warnings, and local reader routes must remain equivalent by meaning.
+
 When examples appear in paired documents, preserve the same scenario meaning
 while writing Korean naturally. Keep refs, paths, method names, schema fields,
 status values, and product labels unchanged.
@@ -103,10 +106,15 @@ English anchor.
 ## Completion
 
 Every maintained paired Markdown document under `docs/en/` and `docs/ko/` must
-have an indexed pair in `doc-index.yaml`. Its version 3 entry carries the
-paired paths plus required maintenance `owner_area`, date, and `applies_to`
-metadata for maintainers; ordinary readers still use the language entry pages
-and reader-facing routes.
+use mirrored language-relative paths and have an indexed pair in
+`doc-index.yaml`. Its version 3 entry carries the paired paths plus required
+maintenance `owner_area`, date, and `applies_to` metadata for maintainers;
+ordinary readers still use the language entry pages and reader-facing routes.
+
+The exact root pair `README.md` and `README.ko.md` is also a maintained
+semantic-parity pair when it is registered in `doc-index.yaml`. This exception
+applies only to that exact root README pair; it does not permit arbitrary
+root-level language-pair names.
 
 For normal lookup, read the language that matches the request or the default
 language in `doc-index.yaml`. For translation review, bilingual parity review,

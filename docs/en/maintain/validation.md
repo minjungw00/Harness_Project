@@ -51,13 +51,21 @@ read-only and verifies the machine-checkable shape:
 - Every `depends_on` value resolves to an indexed `doc_id`.
 - Every maintained paired Markdown file under `docs/en/` and `docs/ko/` is
   represented in the index with matching relative structure.
+- The exact root pair `README.md` and `README.ko.md` is accepted as the only
+  maintained root-level semantic-parity pair.
+- If `README.ko.md` exists, it must be indexed with `README.md` as the root
+  README pair; missing indexed root README paths are reported by the normal
+  path-existence rules.
+- Existing-file and duplicate-path rules apply to the root README pair in the
+  same way they apply to other indexed paths.
 - Relative links resolve to existing files.
 - Fragment links and hidden anchors resolve where they are used.
 - Maintained English/Korean pairs use equivalent local Markdown reader links
   after indexed targets are normalized to `doc_id`, valid non-indexed
   repository targets are normalized to repository-relative paths, and fragments
-  are preserved. External links, images, and fenced-code text are ignored for
-  this parity check.
+  are preserved. The exact root README pair uses this same local semantic-link
+  and fragment parity mechanism. External links, images, and fenced-code text
+  are ignored for this parity check.
 - `docs/terminology-map.yaml` primary-owner and related-reference paths exist
   and are represented in `doc-index.yaml`.
 - README, route-page, Reference, Development, `AGENTS.md`, and terminology

@@ -4,6 +4,7 @@ This is the English entry point for the Harness documentation set. Start with th
 
 ## Start Here
 
+- Comprehensive product and first-setup overview: [Root README](../../README.md)
 - Understand the product: [Getting Started Overview](getting-started/overview.md)
 - Check whether this environment can run Harness Server: [System Requirements](reference/system-requirements.md)
 - Install and verify the executables: [Installation](getting-started/installation.md)

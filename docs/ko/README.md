@@ -4,6 +4,7 @@
 
 ## 먼저 볼 곳
 
+- 전체 제품 및 첫 설정 개요: [루트 README](../../README.ko.md)
 - 제품 이해하기: [시작하기 개요](getting-started/overview.md)
 - 이 환경에서 Harness Server를 실행할 수 있는지 확인하기: [시스템 요구사항](reference/system-requirements.md)
 - 실행 파일 설치와 검증: [설치](getting-started/installation.md)

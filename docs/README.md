@@ -7,6 +7,11 @@ Choose a language first:
 - English: [en/README.md](en/README.md)
 - Korean: [ko/README.md](ko/README.md)
 
+Comprehensive product and first-setup overview:
+
+- English: [../README.md](../README.md)
+- Korean: [../README.ko.md](../README.ko.md)
+
 Fast reader routes:
 
 - Product orientation: [English](en/getting-started/overview.md) / [Korean](ko/getting-started/overview.md)

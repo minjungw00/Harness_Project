@@ -202,12 +202,12 @@ shared_documents:
 - doc_id: docs.root
   path: docs/README.md
   kind: landing
-  summary: Bilingual documentation directory landing page and language selector.
+  summary: Bilingual documentation directory landing page, root README route, and language selector.
   normative_level: guide
   owner_area: onboarding
   created_on: '2026-04-23'
-  last_updated_on: '2026-06-23'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   primary_audience:
@@ -307,13 +307,13 @@ documents:
   path_en: docs/en/README.md
   path_ko: docs/ko/README.md
   kind: landing
-  summary: Language-specific documentation entry point and reader-path router.
+  summary: Language-specific documentation entry point, root README route, and reader-path router.
   normative_level: guide
   translation_policy: semantic_parity
   owner_area: onboarding
   created_on: '2026-04-23'
-  last_updated_on: '2026-06-23'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   primary_audience:
@@ -2071,14 +2071,14 @@ documents:
   path_en: docs/en/maintain/translation-policy.md
   path_ko: docs/ko/maintain/translation-policy.md
   kind: maintenance
-  summary: Maintenance policy for English/Korean semantic parity, Korean prose, identifiers, terminology,
-    and paired updates.
+  summary: Maintenance policy for English/Korean semantic parity, root README pair handling, Korean prose,
+    identifiers, terminology, and paired updates.
   normative_level: maintenance
   translation_policy: semantic_parity
   owner_area: documentation_maintenance
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-23'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   - doc_index_schema_v3
@@ -2091,16 +2091,16 @@ documents:
   - maintain
   canonical_for:
   - Bilingual semantic-parity policy for maintained English and Korean documentation.
-  - Natural Korean technical prose, exact identifier preservation, terminology-map usage, and paired update
-    completion expectations.
+  - Natural Korean technical prose, exact identifier preservation, terminology-map usage, exact root README pair
+    handling, and paired update completion expectations.
   depends_on:
   - terminology.map
 - doc_id: maintain.validation
   path_en: docs/en/maintain/validation.md
   path_ko: docs/ko/maintain/validation.md
   kind: maintenance
-  summary: Maintenance policy for structural checks, human semantic review, onboarding usability validation,
-    Rust validation, and result reporting.
+  summary: Maintenance policy for structural checks including root README pair validation, human semantic review,
+    onboarding usability validation, Rust validation, and result reporting.
   normative_level: maintenance
   translation_policy: semantic_parity
   owner_area: documentation_maintenance
@@ -2118,8 +2118,8 @@ documents:
   journeys:
   - maintain
   canonical_for:
-  - Documentation metadata, path, link, terminology, bilingual, contract-boundary, API example, and reporting
-    validation policy.
+  - Documentation metadata, path, link, terminology, bilingual root README pair, contract-boundary, API example,
+    and reporting validation policy.
   - Representative-user onboarding usability validation policy and reporting boundaries.
   - Rust validation routing for documentation work that also changes implementation files.
   depends_on:
