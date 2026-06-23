@@ -67,13 +67,13 @@ In the current MCP path, the `harness-mcp` process is bound to one Agent Integra
 For public Harness tool calls:
 
 - Use `ToolEnvelope.project_id` when the target project is known.
-- If the target is unclear, call `harness.list_projects` and choose one listed `project_id`.
+- If the target is unclear, call `volicord.list_projects` and choose one listed `project_id`.
 - If a valid default project exists, omitted `project_id` may route to that default, but explicit selection is clearer for multi-repository work.
 - Never guess a project from folder names, current working directory, MCP roots, host labels, or memory.
 
-`harness.list_projects` is a read-only MCP adapter utility. It lists only projects explicitly allowed for the bound integration and is not a public Core API method.
+`volicord.list_projects` is a read-only MCP adapter utility. It lists only projects explicitly allowed for the bound integration and is not a public Core API method.
 
-When multiple projects are available and no explicit project or valid default is supplied, the adapter rejects the call before Core execution and tells the agent to call `harness.list_projects`. Treat that as an agent-resolvable routing issue: list projects, select the intended project, and retry with `envelope.project_id`.
+When multiple projects are available and no explicit project or valid default is supplied, the adapter rejects the call before Core execution and tells the agent to call `volicord.list_projects`. Treat that as an agent-resolvable routing issue: list projects, select the intended project, and retry with `envelope.project_id`.
 
 <a id="instructions-and-guidance"></a>
 ## Treat instructions and guidance as advisory

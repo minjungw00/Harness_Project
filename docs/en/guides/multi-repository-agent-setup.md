@@ -26,7 +26,7 @@ Project and local host scopes remain single-repository scopes. Use user scope fo
 
 Before adding a second repository, complete the user-scope host setup for Product Repository A through [Agent host setup](agent-host-setup.md). The integration can be `complete`, or it can be `action_required` only when the remaining action is host-owned trust, approval, reload, restart, or comparable follow-up documented by [Agent host troubleshooting](agent-host-troubleshooting.md#status-action_required).
 
-This guide is complete when one user-scope host entry points at one `integration_id`, the integration allowlist contains the intended repositories, the agent uses `harness.list_projects` or an explicit `project_id` for multi-repository calls, and removal or re-addition is performed through project membership commands rather than host-file edits.
+This guide is complete when one user-scope host entry points at one `integration_id`, the integration allowlist contains the intended repositories, the agent uses `volicord.list_projects` or an explicit `project_id` for multi-repository calls, and removal or re-addition is performed through project membership commands rather than host-file edits.
 
 ## Executable Convention
 
@@ -113,7 +113,7 @@ Status should list both `acme-api` and `billing-api` under `allowed_projects`.
 When a user asks which repositories are available, the agent calls the adapter utility:
 
 ```json
-{"name":"harness.list_projects","arguments":{}}
+{"name":"volicord.list_projects","arguments":{}}
 ```
 
 The MCP result contains text with a JSON object like:
@@ -143,7 +143,7 @@ For Product Repository A, the agent supplies `project_id: "acme-api"` in the pub
 
 ```json
 {
-  "name": "harness.status",
+  "name": "volicord.status",
   "arguments": {
     "envelope": {
       "project_id": "acme-api",
@@ -171,7 +171,7 @@ For Product Repository B, the later call changes only the explicit project selec
 
 ```json
 {
-  "name": "harness.status",
+  "name": "volicord.status",
   "arguments": {
     "envelope": {
       "project_id": "billing-api",
@@ -198,7 +198,7 @@ For Product Repository B, the later call changes only the explicit project selec
 The agent must not guess a project ID from folder names, current working directory, MCP roots, host labels, or memory. If multiple projects are available and no explicit project or valid default is supplied, the adapter rejects the call before Core execution with actionable text like:
 
 ```text
-project selection is ambiguous; call harness.list_projects and retry with envelope.project_id
+project selection is ambiguous; call volicord.list_projects and retry with envelope.project_id
 ```
 
 ## Defaults And Ambiguity
@@ -224,7 +224,7 @@ prior_default_project_id: acme-api
 resulting_default_project_id: billing-api
 ```
 
-If the default is cleared while multiple projects remain available, omitted `project_id` calls become ambiguous. The agent should call `harness.list_projects` and retry with an explicit `envelope.project_id`.
+If the default is cleared while multiple projects remain available, omitted `project_id` calls become ambiguous. The agent should call `volicord.list_projects` and retry with an explicit `envelope.project_id`.
 
 For recovery from an already ambiguous call, see [More than one allowed project exists without a usable selector or default](agent-host-troubleshooting.md#ambiguous-project-selection).
 
@@ -269,7 +269,7 @@ allowed_project_count: 0
 not executable until one is added
 ```
 
-After removal, Host Installation inventory and host configuration can remain, but that stored state is not proof of new startup eligibility. A `harness-mcp` process that was already running can refresh registry state, so `harness.list_projects` may return an empty list for `int-codex-team`; project-routed public tools cannot proceed because no allowed project remains. A newly started `harness-mcp` process, `harness-mcp --check`, and verification paths that need new MCP startup fail until a project is added again and normal configuration checks pass.
+After removal, Host Installation inventory and host configuration can remain, but that stored state is not proof of new startup eligibility. A `harness-mcp` process that was already running can refresh registry state, so `volicord.list_projects` may return an empty list for `int-codex-team`; project-routed public tools cannot proceed because no allowed project remains. A newly started `harness-mcp` process, `harness-mcp --check`, and verification paths that need new MCP startup fail until a project is added again and normal configuration checks pass.
 
 For troubleshooting this state, see [Host configuration remains while no project is currently allowed](agent-host-troubleshooting.md#host-config-remains-zero-projects).
 
@@ -327,5 +327,5 @@ If uninstall reports `partial_failure`, use [Removal completed only partially](a
 
 - Exact host/scope and command behavior: [Administrative CLI](../reference/admin-cli.md)
 - Exact Agent Integration Profile and project selection behavior: [Agent Integration](../reference/agent-integration.md)
-- Exact `harness.list_projects` transport behavior: [MCP Transport](../reference/mcp-transport.md)
+- Exact `volicord.list_projects` transport behavior: [MCP Transport](../reference/mcp-transport.md)
 - Exact Product Repository write boundaries: [Runtime Boundaries](../reference/runtime-boundaries.md#explicit-integration-files-in-product-repositories)

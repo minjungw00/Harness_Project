@@ -1534,7 +1534,7 @@ fn volicord_binary_agent_guidance_apply_status_and_remove_flow() -> Result<(), B
     let agents_path = repo_root.join("AGENTS.md");
     let agents = fs::read_to_string(&agents_path)?;
     assert!(agents.contains(GUIDANCE_BEGIN_MARKER));
-    assert!(agents.contains("harness.list_projects"));
+    assert!(agents.contains("volicord.list_projects"));
 
     let status = run_with_home(
         runtime_home.path(),
@@ -1797,7 +1797,7 @@ fn volicord_binary_agent_install_compensates_new_guidance_after_verification_fai
     )?;
     assert_eq!(output.status.code(), Some(1));
     assert!(stdout(&output).contains("status: partial_failure"));
-    assert!(stdout(&output).contains("harness.list_projects"));
+    assert!(stdout(&output).contains("volicord.list_projects"));
     assert!(stdout(&output).contains("effects:"));
     assert!(stdout(&output).contains("residual_effects:"));
     assert!(stdout(&output).contains("rollback_state: rolled_back"));
@@ -2951,7 +2951,10 @@ fn volicord_binary_agent_mcp_tool_discovery_failures_are_partial_failure(
             AgentMcpFixture::MissingInstructions,
             "missing server instructions",
         ),
-        (AgentMcpFixture::MissingUtilityTool, "harness.list_projects"),
+        (
+            AgentMcpFixture::MissingUtilityTool,
+            "volicord.list_projects",
+        ),
     ] {
         let runtime_home = TempRuntimeHome::new("cli-bin-agent-mcp-fail")?;
         let repo_root = runtime_home.create_product_repo("product-repo")?;
@@ -3999,18 +4002,18 @@ fn write_fake_claude_mcp_get(dir: &Path, status: &str) -> Result<PathBuf, Box<dy
 #[cfg(unix)]
 fn public_tool_json(include_utility: bool) -> String {
     let mut names = vec![
-        "harness.intake",
-        "harness.update_scope",
-        "harness.status",
-        "harness.prepare_write",
-        "harness.stage_artifact",
-        "harness.record_run",
-        "harness.request_user_judgment",
-        "harness.record_user_judgment",
-        "harness.close_task",
+        "volicord.intake",
+        "volicord.update_scope",
+        "volicord.status",
+        "volicord.prepare_write",
+        "volicord.stage_artifact",
+        "volicord.record_run",
+        "volicord.request_user_judgment",
+        "volicord.record_user_judgment",
+        "volicord.close_task",
     ];
     if include_utility {
-        names.push("harness.list_projects");
+        names.push("volicord.list_projects");
     }
     let tools = names
         .into_iter()

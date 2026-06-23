@@ -296,15 +296,15 @@ requires the administrative verification gates defined by
   observed by a running process, but a changed integration binding, changed
   command, changed host configuration, reload, or restart is host-owned.
 - **Diagnostic check:** Use `harness agent status` to inspect stored inventory.
-  If the existing MCP session can still call tools, call `harness.list_projects`
+  If the existing MCP session can still call tools, call `volicord.list_projects`
   to see which allowed projects that running process observes.
 - **Bounded recovery action:** For membership-only changes, retry the tool call
-  with an explicit `project_id` after `harness.list_projects` reflects the new
+  with an explicit `project_id` after `volicord.list_projects` reflects the new
   list. For changed host configuration, command path, server name, or
   integration binding, reload or restart the host so it starts a new MCP
   process.
 - **Verification:** After restart, run `harness agent verify` and, inside the
-  host, use `harness.list_projects` before project-routed calls when selection
+  host, use `volicord.list_projects` before project-routed calls when selection
   is unclear.
 - **Durable effects that may already exist:** Runtime Home registry changes
   and host configuration can already be committed even while an old process is
@@ -403,13 +403,13 @@ requires the administrative verification gates defined by
 
 - **Observable symptom:** Status warns that the integration has no allowed
   projects, `harness-mcp --check` fails startup validation, verification fails,
-  or `harness.list_projects` returns an empty list from a process that started
+  or `volicord.list_projects` returns an empty list from a process that started
   before the last project was removed.
 - **Most likely causes:** The final integration project membership was removed,
   or no membership was successfully created for the Agent Integration Profile.
 - **Diagnostic check:** Run `harness agent status --integration-id
   <integration_id> --runtime-home <runtime_home>`. If an MCP process is already
-  running, call `harness.list_projects` to observe whether it now sees an empty
+  running, call `volicord.list_projects` to observe whether it now sees an empty
   allowlist.
 - **Bounded recovery action:** Add or restore one explicit project:
   `harness agent project add --integration-id <integration_id> --project-id
@@ -431,12 +431,12 @@ requires the administrative verification gates defined by
 
 - **Observable symptom:** A public MCP tool call is rejected before Core
   execution with actionable text such as `project selection is ambiguous; call
-  harness.list_projects and retry with envelope.project_id`.
+  volicord.list_projects and retry with envelope.project_id`.
 - **Most likely causes:** Multiple projects are available, the call omitted
   `envelope.project_id`, and no valid explicit `default_project_id` can be
   used.
 - **Diagnostic check:** Call the read-only adapter utility
-  `harness.list_projects` and inspect the returned project ids,
+  `volicord.list_projects` and inspect the returned project ids,
   availability, and default status.
 - **Bounded recovery action:** Retry the public tool call with an explicit
   `envelope.project_id`. If omitted selection is truly desired, set a default
@@ -548,7 +548,7 @@ requires the administrative verification gates defined by
   eligibility.
 - **Diagnostic check:** Run `harness agent status --integration-id
   <integration_id>` and, if a previous MCP process is still alive, call
-  `harness.list_projects` to see whether it returns an empty list.
+  `volicord.list_projects` to see whether it returns an empty list.
 - **Bounded recovery action:** If the integration should be usable again, add a
   project with `harness agent project add`. If the integration should be fully
   removed, run `harness agent uninstall --remove-managed` with the required

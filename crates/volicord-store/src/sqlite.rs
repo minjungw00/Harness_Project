@@ -1525,7 +1525,7 @@ mod tests {
                 )
                 VALUES (
                     'project_a',
-                    'harness.intake',
+                    'volicord.intake',
                     'idem_same',
                     'sha256:second',
                     0,
@@ -1567,7 +1567,7 @@ mod tests {
                 )
                 VALUES (
                     'project_a',
-                    'harness.intake',
+                    'volicord.intake',
                     'idem_missing_surface',
                     'sha256:first',
                     0,
@@ -1638,7 +1638,7 @@ mod tests {
                 )
                 VALUES (
                     'project_a',
-                    'harness.intake',
+                    'volicord.intake',
                     'idem_missing_context',
                     'sha256:first',
                     0,
@@ -1836,7 +1836,7 @@ mod tests {
             )
             VALUES (
                 'project_a',
-                'harness.intake',
+                'volicord.intake',
                 ?1,
                 ?2,
                 0,

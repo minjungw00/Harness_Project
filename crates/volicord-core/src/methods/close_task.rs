@@ -1,7 +1,7 @@
 use super::*;
 
 impl CoreService {
-    /// Executes `harness.close_task` through close-readiness and terminal transition rules.
+    /// Executes `volicord.close_task` through close-readiness and terminal transition rules.
     pub fn close_task(
         &self,
         request: CloseTaskRequest,
@@ -1484,7 +1484,7 @@ fn current_close_basis_blocker(
         return Ok(Some(close_blocker(
             CloseReadinessBlockerCategory::Task,
             "missing_current_close_basis",
-            "Completion requires a current close basis recorded by harness.record_run.",
+            "Completion requires a current close basis recorded by volicord.record_run.",
             vec![task_ref.clone()],
             vec![NextActionSummary {
                 action_kind: NextActionKind::RecordRun,

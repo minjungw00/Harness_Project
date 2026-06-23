@@ -480,7 +480,7 @@ pub struct ObservedChanges {
     pub baseline_ref: RequiredNullable<BaselineRef>,
 }
 
-/// Public close assessment input supplied by `harness.record_run`.
+/// Public close assessment input supplied by `volicord.record_run`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CloseAssessmentInput {

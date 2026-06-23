@@ -502,7 +502,7 @@ pub struct WriteAuthorizationRecord {
     pub created_at: String,
 }
 
-/// Stored staged artifact facts needed by `harness.record_run`.
+/// Stored staged artifact facts needed by `volicord.record_run`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StoredArtifactStagingRecord {
     pub project_id: String,
@@ -520,7 +520,7 @@ pub struct StoredArtifactStagingRecord {
     pub expires_at: String,
 }
 
-/// Stored persistent artifact facts needed by `harness.record_run`.
+/// Stored persistent artifact facts needed by `volicord.record_run`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StoredArtifactRecord {
     pub project_id: String,

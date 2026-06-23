@@ -3,9 +3,9 @@
 This guide traces three representative public method calls through the current
 Rust implementation:
 
-- `harness.status` as a read-only path
-- `harness.intake` as a committed state-mutation path
-- `harness.prepare_write` as a policy- and authorization-sensitive path
+- `volicord.status` as a read-only path
+- `volicord.intake` as a committed state-mutation path
+- `volicord.prepare_write` as a policy- and authorization-sensitive path
 
 It names source files and symbols so developers can follow the code. It does
 not define exact public method behavior, request or response schemas, storage
@@ -114,12 +114,12 @@ and method-specific planning:
 | `OwnerPipelineBranch::CommitMutation` | `CoreService::execute_prepared_request`, Core `commit_mutation`, Store `CoreProjectStore::commit_mutation` | Runs the Store commit transaction. A method may provide zero `CoreStorageMutation` values and still commit an event and replay row when the method owner defines that branch. |
 
 Do not treat all blocked-looking outcomes as the same implementation path. For
-example, `harness.prepare_write` can reject before commit with no effect, return
+example, `volicord.prepare_write` can reject before commit with no effect, return
 a dry-run preview with no effect, commit a non-allow decision event without
 creating a `Write Authorization`, or commit an allowed decision that inserts a
 `Write Authorization`.
 
-## `harness.status`: read-only path
+## `volicord.status`: read-only path
 
 Reference owner:
 
@@ -131,7 +131,7 @@ Primary source path:
    defines `StatusRequest`, `StatusInclude`, `StatusResult`, and the
    `MethodAccessClass` implementation that returns `AccessClass::ReadStatus`.
 2. [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
-   routes `"harness.status"` in `McpAdapter::call_tool`, decodes
+   routes `"volicord.status"` in `McpAdapter::call_tool`, decodes
    `StatusRequest`, derives `InvocationContext`, and calls
    `CoreService::status`.
 3. [`crates/harness-core/src/methods/status.rs`](../../../crates/harness-core/src/methods/status.rs)
@@ -146,7 +146,7 @@ Primary source path:
 
 Lifecycle:
 
-1. The MCP host sends `tools/call` with `name="harness.status"`.
+1. The MCP host sends `tools/call` with `name="volicord.status"`.
 2. `call_tool_result` extracts the tool name and arguments.
 3. `McpAdapter::call_tool` routes the call to the status branch.
 4. `prepare_typed_request` derives the status access class, selects an allowed
@@ -199,7 +199,7 @@ Exact behavior questions:
   [API State Schemas](../reference/api/schema-state.md)
 - Storage effects: [Storage Effects](../reference/storage-effects.md)
 
-## `harness.intake`: committed mutation path
+## `volicord.intake`: committed mutation path
 
 Reference owner:
 
@@ -211,7 +211,7 @@ Primary source path:
    defines `IntakeRequest`, `InitialScope`, `IntakeResult`, and the
    `MethodAccessClass` implementation that returns `AccessClass::CoreMutation`.
 2. [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
-   routes `"harness.intake"` in `McpAdapter::call_tool`, decodes
+   routes `"volicord.intake"` in `McpAdapter::call_tool`, decodes
    `IntakeRequest`, derives `InvocationContext`, and calls
    `CoreService::intake`.
 3. [`crates/harness-core/src/methods/intake.rs`](../../../crates/harness-core/src/methods/intake.rs)
@@ -227,7 +227,7 @@ Primary source path:
 
 Lifecycle:
 
-1. The MCP host sends `tools/call` with `name="harness.intake"`.
+1. The MCP host sends `tools/call` with `name="volicord.intake"`.
 2. `McpAdapter::call_tool` decodes `IntakeRequest`, derives
    `InvocationContext`, and calls `CoreService::intake`.
 3. `CoreService::intake` selects `mutation_method_policy` with
@@ -294,7 +294,7 @@ Exact behavior questions:
 - Replay and error behavior: [API Errors](../reference/api/errors.md) and the
   method owner
 
-## `harness.prepare_write`: policy and authorization path
+## `volicord.prepare_write`: policy and authorization path
 
 Reference owner:
 
@@ -307,7 +307,7 @@ Primary source path:
    `MethodAccessClass` implementation that returns
    `AccessClass::WriteAuthorization`.
 2. [`crates/harness-mcp/src/lib.rs`](../../../crates/harness-mcp/src/lib.rs)
-   routes `"harness.prepare_write"` in `McpAdapter::call_tool`, decodes
+   routes `"volicord.prepare_write"` in `McpAdapter::call_tool`, decodes
    `PrepareWriteRequest`, derives `InvocationContext`, and calls
    `CoreService::prepare_write`.
 3. [`crates/harness-core/src/methods/prepare_write.rs`](../../../crates/harness-core/src/methods/prepare_write.rs)
@@ -327,7 +327,7 @@ Primary source path:
 
 Lifecycle:
 
-1. The MCP host sends `tools/call` with `name="harness.prepare_write"`.
+1. The MCP host sends `tools/call` with `name="volicord.prepare_write"`.
 2. `McpAdapter::call_tool` decodes `PrepareWriteRequest`, derives
    `InvocationContext`, and calls `CoreService::prepare_write`.
 3. `CoreService::prepare_write` first checks that `envelope.task_id`, when

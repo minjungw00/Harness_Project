@@ -231,7 +231,7 @@ After Codex guidance, `AGENTS.md` contains a managed block:
 
 After Claude Code guidance, `.claude/rules/harness.md` contains the same managed marker shape with `## Harness MCP guidance for Claude Code`.
 
-The managed content tells the host to use Harness for scope, state, write preparation, run evidence, user judgment, and close-readiness tracking; to call `harness.list_projects` when the target repository is unclear; and not to invent Harness state in prose. The guidance also states that MCP server instructions and repository guidance cannot guarantee model behavior.
+The managed content tells the host to use Harness for scope, state, write preparation, run evidence, user judgment, and close-readiness tracking; to call `volicord.list_projects` when the target repository is unclear; and not to invent Harness state in prose. The guidance also states that MCP server instructions and repository guidance cannot guarantee model behavior.
 
 Guidance files are host configuration or advisory context. They are not Harness runtime state, Core authority, evidence, acceptance, close readiness, residual-risk acceptance, or a security guarantee.
 

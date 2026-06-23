@@ -109,23 +109,23 @@ impl Error for UtcTimestampParseError {}
 /// Supported public Harness method names.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub enum MethodName {
-    #[serde(rename = "harness.intake")]
+    #[serde(rename = "volicord.intake")]
     Intake,
-    #[serde(rename = "harness.update_scope")]
+    #[serde(rename = "volicord.update_scope")]
     UpdateScope,
-    #[serde(rename = "harness.status")]
+    #[serde(rename = "volicord.status")]
     Status,
-    #[serde(rename = "harness.prepare_write")]
+    #[serde(rename = "volicord.prepare_write")]
     PrepareWrite,
-    #[serde(rename = "harness.stage_artifact")]
+    #[serde(rename = "volicord.stage_artifact")]
     StageArtifact,
-    #[serde(rename = "harness.record_run")]
+    #[serde(rename = "volicord.record_run")]
     RecordRun,
-    #[serde(rename = "harness.request_user_judgment")]
+    #[serde(rename = "volicord.request_user_judgment")]
     RequestUserJudgment,
-    #[serde(rename = "harness.record_user_judgment")]
+    #[serde(rename = "volicord.record_user_judgment")]
     RecordUserJudgment,
-    #[serde(rename = "harness.close_task")]
+    #[serde(rename = "volicord.close_task")]
     CloseTask,
 }
 
@@ -133,15 +133,15 @@ impl MethodName {
     /// Returns the public method-name value.
     pub const fn as_str(self) -> &'static str {
         match self {
-            Self::Intake => "harness.intake",
-            Self::UpdateScope => "harness.update_scope",
-            Self::Status => "harness.status",
-            Self::PrepareWrite => "harness.prepare_write",
-            Self::StageArtifact => "harness.stage_artifact",
-            Self::RecordRun => "harness.record_run",
-            Self::RequestUserJudgment => "harness.request_user_judgment",
-            Self::RecordUserJudgment => "harness.record_user_judgment",
-            Self::CloseTask => "harness.close_task",
+            Self::Intake => "volicord.intake",
+            Self::UpdateScope => "volicord.update_scope",
+            Self::Status => "volicord.status",
+            Self::PrepareWrite => "volicord.prepare_write",
+            Self::StageArtifact => "volicord.stage_artifact",
+            Self::RecordRun => "volicord.record_run",
+            Self::RequestUserJudgment => "volicord.request_user_judgment",
+            Self::RecordUserJudgment => "volicord.record_user_judgment",
+            Self::CloseTask => "volicord.close_task",
         }
     }
 }

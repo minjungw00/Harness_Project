@@ -47,22 +47,22 @@ const DEFAULT_INVOCATION_BINDING_BASIS: &str = VERIFICATION_BASIS_MCP_STDIO_SURF
 
 /// The exact public Harness method tools exposed through MCP.
 pub const PUBLIC_METHOD_TOOL_NAMES: [&str; 9] = [
-    "harness.intake",
-    "harness.update_scope",
-    "harness.status",
-    "harness.prepare_write",
-    "harness.stage_artifact",
-    "harness.record_run",
-    "harness.request_user_judgment",
-    "harness.record_user_judgment",
-    "harness.close_task",
+    "volicord.intake",
+    "volicord.update_scope",
+    "volicord.status",
+    "volicord.prepare_write",
+    "volicord.stage_artifact",
+    "volicord.record_run",
+    "volicord.request_user_judgment",
+    "volicord.record_user_judgment",
+    "volicord.close_task",
 ];
 
 /// Adapter-owned MCP utility tools that are not public Harness Core methods.
-pub const ADAPTER_UTILITY_TOOL_NAMES: [&str; 1] = ["harness.list_projects"];
+pub const ADAPTER_UTILITY_TOOL_NAMES: [&str; 1] = ["volicord.list_projects"];
 
-const LIST_PROJECTS_TOOL_NAME: &str = "harness.list_projects";
-const SERVER_INSTRUCTIONS: &str = "Harness records task scope, write readiness, evidence, runs, user-owned judgments, artifacts, and close readiness for explicitly registered Product Repositories. If project selection is unclear, call harness.list_projects and use one listed project_id; do not guess from folders, roots, labels, or memory. Harness state management is separate from permission to edit product files: product-file edits still require the host/user path and any required Write Authorization. These instructions are guidance, not access control or a promise of automatic tool use.";
+const LIST_PROJECTS_TOOL_NAME: &str = "volicord.list_projects";
+const SERVER_INSTRUCTIONS: &str = "Harness records task scope, write readiness, evidence, runs, user-owned judgments, artifacts, and close readiness for explicitly registered Product Repositories. If project selection is unclear, call volicord.list_projects and use one listed project_id; do not guess from folders, roots, labels, or memory. Harness state management is separate from permission to edit product files: product-file edits still require the host/user path and any required Write Authorization. These instructions are guidance, not access control or a promise of automatic tool use.";
 
 /// Minimal MCP adapter marker for validating dependency direction.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -344,7 +344,7 @@ impl McpAdapter {
         params: Value,
     ) -> Result<PipelineResponse, McpAdapterError> {
         match tool_name {
-            "harness.intake" => {
+            "volicord.intake" => {
                 let prepared: PreparedCoreRequest<IntakeRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -357,7 +357,7 @@ impl McpAdapter {
                     .intake(prepared.request, invocation)
                     .map_err(McpAdapterError::Core)
             }
-            "harness.update_scope" => {
+            "volicord.update_scope" => {
                 let prepared: PreparedCoreRequest<UpdateScopeRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -370,7 +370,7 @@ impl McpAdapter {
                     .update_scope(prepared.request, invocation)
                     .map_err(McpAdapterError::Core)
             }
-            "harness.status" => {
+            "volicord.status" => {
                 let prepared: PreparedCoreRequest<StatusRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -383,7 +383,7 @@ impl McpAdapter {
                     .status(prepared.request, invocation)
                     .map_err(McpAdapterError::Core)
             }
-            "harness.prepare_write" => {
+            "volicord.prepare_write" => {
                 let prepared: PreparedCoreRequest<PrepareWriteRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -396,7 +396,7 @@ impl McpAdapter {
                     .prepare_write(prepared.request, invocation)
                     .map_err(McpAdapterError::Core)
             }
-            "harness.stage_artifact" => {
+            "volicord.stage_artifact" => {
                 let prepared: PreparedCoreRequest<StageArtifactRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -409,7 +409,7 @@ impl McpAdapter {
                     .stage_artifact(prepared.request, invocation)
                     .map_err(McpAdapterError::Core)
             }
-            "harness.record_run" => {
+            "volicord.record_run" => {
                 let prepared: PreparedCoreRequest<RecordRunRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -422,7 +422,7 @@ impl McpAdapter {
                     .record_run(prepared.request, invocation)
                     .map_err(McpAdapterError::Core)
             }
-            "harness.request_user_judgment" => {
+            "volicord.request_user_judgment" => {
                 let prepared: PreparedCoreRequest<RequestUserJudgmentRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -435,7 +435,7 @@ impl McpAdapter {
                     .request_user_judgment(prepared.request, invocation)
                     .map_err(McpAdapterError::Core)
             }
-            "harness.record_user_judgment" => {
+            "volicord.record_user_judgment" => {
                 let prepared: PreparedCoreRequest<RecordUserJudgmentRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -448,7 +448,7 @@ impl McpAdapter {
                     .record_user_judgment(prepared.request, invocation)
                     .map_err(McpAdapterError::Core)
             }
-            "harness.close_task" => {
+            "volicord.close_task" => {
                 let prepared: PreparedCoreRequest<CloseTaskRequest> =
                     self.prepare_typed_request(tool_name, params)?;
                 let invocation = match prepared.invocation {
@@ -472,12 +472,12 @@ impl McpAdapter {
                     .as_object()
                     .ok_or_else(|| McpAdapterError::ToolExecution {
                         tool_name: tool_name.to_owned(),
-                        message: "harness.list_projects arguments must be an object".to_owned(),
+                        message: "volicord.list_projects arguments must be an object".to_owned(),
                     })?;
                 if !object.is_empty() {
                     return Err(McpAdapterError::ToolExecution {
                         tool_name: tool_name.to_owned(),
-                        message: "harness.list_projects does not accept arguments".to_owned(),
+                        message: "volicord.list_projects does not accept arguments".to_owned(),
                     });
                 }
                 let result = self.list_projects_result()?;
@@ -663,7 +663,7 @@ impl McpAdapter {
         }
 
         Err(routing_error(
-            "project selection is ambiguous; call harness.list_projects and retry with envelope.project_id",
+            "project selection is ambiguous; call volicord.list_projects and retry with envelope.project_id",
         ))
     }
 
@@ -1612,7 +1612,7 @@ fn tool_execution_error_result(error: &McpAdapterError) -> Value {
             format!("Invalid arguments for {tool_name}: {source}. Check the tool input schema and retry.")
         }
         McpAdapterError::ToolExecution { tool_name, message } if tool_name == "project routing" => {
-            format!("{message}. Use harness.list_projects when project selection is unclear.")
+            format!("{message}. Use volicord.list_projects when project selection is unclear.")
         }
         McpAdapterError::ToolExecution { tool_name, message } => {
             format!("{tool_name} failed before reaching Harness Core: {message}")
@@ -1687,15 +1687,15 @@ fn write_json_line(writer: &mut impl Write, value: Value) -> Result<(), McpAdapt
 
 fn tool_description(name: &str) -> &'static str {
     match name {
-        "harness.intake" => "Start, resume, supersede, or reject an ordinary user work loop.",
-        "harness.update_scope" => "Update current Task scope and Change Unit state.",
-        "harness.status" => "Read the current Core status view.",
-        "harness.prepare_write" => "Check one proposed product-file write against Core state.",
-        "harness.stage_artifact" => "Stage safe artifact bytes or a safe notice.",
-        "harness.record_run" => "Record shaping, direct, or implementation work.",
-        "harness.request_user_judgment" => "Create one pending focused user-owned judgment.",
-        "harness.record_user_judgment" => "Record the user's answer to one pending judgment.",
-        "harness.close_task" => "Check or perform a selected Task close path.",
+        "volicord.intake" => "Start, resume, supersede, or reject an ordinary user work loop.",
+        "volicord.update_scope" => "Update current Task scope and Change Unit state.",
+        "volicord.status" => "Read the current Core status view.",
+        "volicord.prepare_write" => "Check one proposed product-file write against Core state.",
+        "volicord.stage_artifact" => "Stage safe artifact bytes or a safe notice.",
+        "volicord.record_run" => "Record shaping, direct, or implementation work.",
+        "volicord.request_user_judgment" => "Create one pending focused user-owned judgment.",
+        "volicord.record_user_judgment" => "Record the user's answer to one pending judgment.",
+        "volicord.close_task" => "Check or perform a selected Task close path.",
         LIST_PROJECTS_TOOL_NAME => "List projects explicitly allowed for this MCP integration.",
         _ => "Unsupported Harness method.",
     }
@@ -1706,15 +1706,15 @@ fn raw_requested_access_class(
     params: &Value,
 ) -> Result<AccessClass, McpAdapterError> {
     let access_class = match tool_name {
-        "harness.status" => AccessClass::ReadStatus,
-        "harness.intake"
-        | "harness.update_scope"
-        | "harness.request_user_judgment"
-        | "harness.record_user_judgment" => AccessClass::CoreMutation,
-        "harness.prepare_write" => AccessClass::WriteAuthorization,
-        "harness.stage_artifact" => AccessClass::ArtifactRegistration,
-        "harness.record_run" => AccessClass::RunRecording,
-        "harness.close_task" => {
+        "volicord.status" => AccessClass::ReadStatus,
+        "volicord.intake"
+        | "volicord.update_scope"
+        | "volicord.request_user_judgment"
+        | "volicord.record_user_judgment" => AccessClass::CoreMutation,
+        "volicord.prepare_write" => AccessClass::WriteAuthorization,
+        "volicord.stage_artifact" => AccessClass::ArtifactRegistration,
+        "volicord.record_run" => AccessClass::RunRecording,
+        "volicord.close_task" => {
             if params
                 .get("intent")
                 .and_then(Value::as_str)
@@ -2182,7 +2182,7 @@ mod tests {
 
         assert!(instructions.len() < 2048);
         assert!(instructions[..instructions.len().min(512)].contains("Harness records"));
-        assert!(instructions.contains("harness.list_projects"));
+        assert!(instructions.contains("volicord.list_projects"));
         assert!(instructions.contains("do not guess"));
         assert!(instructions.contains("separate from permission to edit product files"));
     }
@@ -2215,7 +2215,7 @@ mod tests {
         }
         let request_judgment = tools
             .iter()
-            .find(|tool| tool.name == "harness.request_user_judgment")
+            .find(|tool| tool.name == "volicord.request_user_judgment")
             .expect("request_user_judgment tool should be registered");
         for forbidden in ["machine_action", "resolution_outcome"] {
             assert!(
@@ -2269,7 +2269,7 @@ mod tests {
         envelope.remove("project_id");
         envelope.remove("surface_id");
 
-        let response = adapter.call_tool("harness.status", params)?;
+        let response = adapter.call_tool("volicord.status", params)?;
 
         assert_eq!(response.response_value["base"]["response_kind"], "result");
         let verified = response
@@ -2303,7 +2303,7 @@ mod tests {
             let before = harness.counts()?;
 
             let error = adapter
-                .call_tool("harness.intake", params)
+                .call_tool("volicord.intake", params)
                 .expect_err("caller-supplied MCP surface_id should be rejected");
 
             assert!(matches!(error, McpAdapterError::ToolExecution { .. }));
@@ -2341,7 +2341,7 @@ mod tests {
             .expect("envelope object")
             .remove("surface_id");
 
-        let response = adapter.call_tool("harness.intake", params)?;
+        let response = adapter.call_tool("volicord.intake", params)?;
 
         assert_eq!(response.response_value["base"]["response_kind"], "result");
         assert_eq!(harness.counts()?, before_bound);
@@ -2377,7 +2377,7 @@ mod tests {
             .expect("envelope object")
             .remove("project_id");
 
-        let response = adapter.call_tool("harness.status", params)?;
+        let response = adapter.call_tool("volicord.status", params)?;
 
         assert_eq!(response.response_value["base"]["response_kind"], "result");
         assert_eq!(
@@ -2416,7 +2416,7 @@ mod tests {
             .remove("project_id");
 
         let error = adapter
-            .call_tool("harness.status", params)
+            .call_tool("volicord.status", params)
             .expect_err("ambiguous routing should be rejected before Core");
 
         assert!(matches!(error, McpAdapterError::ToolExecution { .. }));
@@ -2445,7 +2445,7 @@ mod tests {
             .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING);
         let adapter = McpAdapter::new(&harness.runtime_home_path, context);
         let response = adapter.call_tool(
-            "harness.status",
+            "volicord.status",
             mcp_arguments(status_request("req_integration_before_revoke"))?,
         )?;
         assert_eq!(response.response_value["base"]["response_kind"], "result");
@@ -2454,7 +2454,7 @@ mod tests {
 
         let error = adapter
             .call_tool(
-                "harness.status",
+                "volicord.status",
                 mcp_arguments(status_request("req_integration_after_revoke"))?,
             )
             .expect_err("revoked project should be rejected by running process");
@@ -2513,7 +2513,7 @@ mod tests {
         let mut params = mcp_arguments(status_request("req_inactive_rejected"))?;
         params["envelope"]["project_id"] = json!(inactive_project_id);
         let error = adapter
-            .call_tool("harness.status", params)
+            .call_tool("volicord.status", params)
             .expect_err("inactive project should be rejected before Core");
         assert!(error.to_string().contains("unavailable"));
         Ok(())
@@ -2644,7 +2644,7 @@ mod tests {
                     json!(4),
                     "tools/call",
                     Some(json!({
-                        "name": "harness.status",
+                        "name": "volicord.status",
                         "arguments": status_arguments.clone()
                     })),
                 ),
@@ -2654,7 +2654,7 @@ mod tests {
                     json!(6),
                     "tools/call",
                     Some(json!({
-                        "name": "harness.status",
+                        "name": "volicord.status",
                         "arguments": status_arguments
                     })),
                 ),
@@ -2973,7 +2973,7 @@ mod tests {
                 notification_message(
                     "tools/call",
                     Some(json!({
-                        "name": "harness.intake",
+                        "name": "volicord.intake",
                         "arguments": intake_arguments
                     })),
                 ),
@@ -3010,23 +3010,23 @@ mod tests {
                 request_message(
                     json!(9),
                     "tools/call",
-                    Some(json!({ "name": "harness.not_real" })),
+                    Some(json!({ "name": "volicord.not_real" })),
                 ),
                 request_message(
                     json!(10),
                     "tools/call",
-                    Some(json!({ "name": "harness.status", "arguments": null })),
+                    Some(json!({ "name": "volicord.status", "arguments": null })),
                 ),
                 request_message(
                     json!(11),
                     "tools/call",
-                    Some(json!({ "name": "harness.status", "arguments": [] })),
+                    Some(json!({ "name": "volicord.status", "arguments": [] })),
                 ),
                 request_message(
                     json!(12),
                     "tools/call",
                     Some(json!({
-                        "name": "harness.status",
+                        "name": "volicord.status",
                         "task": {},
                         "arguments": {}
                     })),
@@ -3034,7 +3034,7 @@ mod tests {
                 request_message(
                     json!(13),
                     "tools/call",
-                    Some(json!({ "name": "harness.status" })),
+                    Some(json!({ "name": "volicord.status" })),
                 ),
                 request_message(json!(15), "tools/call", Some(json!([]))),
                 request_message(json!(14), "not/a-method", Some(json!({}))),
@@ -3075,7 +3075,7 @@ mod tests {
         let adapter = harness.adapter();
         let request = status_request("req_status_adapter");
 
-        let response = adapter.call_tool("harness.status", mcp_arguments(request)?)?;
+        let response = adapter.call_tool("volicord.status", mcp_arguments(request)?)?;
 
         assert_eq!(response.response_value["base"]["response_kind"], "result");
         assert_eq!(response.response_value["base"]["effect_kind"], "read_only");
@@ -3110,7 +3110,7 @@ mod tests {
 
         let error = adapter
             .call_tool(
-                "harness.status",
+                "volicord.status",
                 mcp_arguments(status_request("req_status_missing_db_adapter"))?,
             )
             .expect_err("missing project state should fail during integration routing");
@@ -3139,7 +3139,7 @@ mod tests {
         let direct = harness
             .core()
             .status(request.clone(), invocation(AccessClass::ReadStatus))?;
-        let adapted = adapter.call_tool("harness.status", mcp_arguments(request)?)?;
+        let adapted = adapter.call_tool("volicord.status", mcp_arguments(request)?)?;
 
         assert_eq!(adapted.response_value, direct.response_value);
         assert_eq!(adapted.response_json, direct.response_json);
@@ -3168,7 +3168,7 @@ mod tests {
         let direct = harness
             .core()
             .intake(request.clone(), invocation(AccessClass::CoreMutation))?;
-        let adapted = adapter.call_tool("harness.intake", mcp_arguments(request)?)?;
+        let adapted = adapter.call_tool("volicord.intake", mcp_arguments(request)?)?;
 
         assert_eq!(
             normalize_dry_run_required_ref_ids(adapted.response_value),
@@ -3185,7 +3185,7 @@ mod tests {
         }))?;
         let adapter = harness.adapter();
         let response = adapter.call_tool(
-            "harness.status",
+            "volicord.status",
             mcp_arguments(status_request("req_status_derived_read"))?,
         )?;
 
@@ -3210,7 +3210,7 @@ mod tests {
 
         let error = adapter
             .call_tool(
-                "harness.intake",
+                "volicord.intake",
                 mcp_arguments(intake_request("req_env_elevate", true, None))?,
             )
             .expect_err("unauthorized access class should fail before Core");
@@ -3230,7 +3230,7 @@ mod tests {
         let adapter = harness.adapter();
 
         let response = adapter.call_tool(
-            "harness.stage_artifact",
+            "volicord.stage_artifact",
             mcp_arguments(stage_artifact_request(
                 "req_stage_missing_capability",
                 &task_id,
@@ -3259,7 +3259,7 @@ mod tests {
         let before = harness.counts()?;
 
         let error = adapter
-            .call_tool("harness.stage_artifact", params)
+            .call_tool("volicord.stage_artifact", params)
             .expect_err("forged invocation context should be invalid params");
 
         assert!(matches!(error, McpAdapterError::InvalidParams { .. }));
@@ -3291,7 +3291,7 @@ mod tests {
         let before = harness.counts()?;
 
         let error = adapter
-            .call_tool("harness.stage_artifact", params)
+            .call_tool("volicord.stage_artifact", params)
             .expect_err("missing required nullable field should be invalid params");
 
         assert!(matches!(error, McpAdapterError::InvalidParams { .. }));
@@ -3336,9 +3336,9 @@ mod tests {
             }"#,
         )?;
 
-        let first = adapter.call_tool("harness.intake", first)?;
+        let first = adapter.call_tool("volicord.intake", first)?;
         let after_first = harness.counts()?;
-        let second = adapter.call_tool("harness.intake", second)?;
+        let second = adapter.call_tool("volicord.intake", second)?;
 
         assert!(second.replayed);
         assert_eq!(second.response_json, first.response_json);
@@ -3362,7 +3362,7 @@ mod tests {
 
     fn expected_required_fields(tool_name: &str) -> &'static [&'static str] {
         match tool_name {
-            "harness.intake" => &[
+            "volicord.intake" => &[
                 "envelope",
                 "plain_language_request",
                 "requested_mode",
@@ -3370,7 +3370,7 @@ mod tests {
                 "initial_scope",
                 "initial_context_refs",
             ],
-            "harness.update_scope" => &[
+            "volicord.update_scope" => &[
                 "envelope",
                 "task_id",
                 "goal_summary",
@@ -3383,8 +3383,8 @@ mod tests {
                 "change_unit",
                 "related_scope_decision_refs",
             ],
-            "harness.status" => &["envelope", "include"],
-            "harness.prepare_write" => &[
+            "volicord.status" => &["envelope", "include"],
+            "volicord.prepare_write" => &[
                 "envelope",
                 "task_id",
                 "change_unit_id",
@@ -3394,7 +3394,7 @@ mod tests {
                 "sensitive_categories",
                 "baseline_ref",
             ],
-            "harness.stage_artifact" => &[
+            "volicord.stage_artifact" => &[
                 "envelope",
                 "task_id",
                 "display_name",
@@ -3405,7 +3405,7 @@ mod tests {
                 "expected_size_bytes",
                 "relation_hint",
             ],
-            "harness.record_run" => &[
+            "volicord.record_run" => &[
                 "envelope",
                 "task_id",
                 "change_unit_id",
@@ -3419,7 +3419,7 @@ mod tests {
                 "evidence_updates",
                 "close_assessment",
             ],
-            "harness.request_user_judgment" => &[
+            "volicord.request_user_judgment" => &[
                 "envelope",
                 "task_id",
                 "change_unit_id",
@@ -3431,7 +3431,7 @@ mod tests {
                 "required_for",
                 "expires_at",
             ],
-            "harness.record_user_judgment" => &[
+            "volicord.record_user_judgment" => &[
                 "envelope",
                 "user_judgment_id",
                 "judgment_kind",
@@ -3440,7 +3440,7 @@ mod tests {
                 "note",
                 "accepted_risks",
             ],
-            "harness.close_task" => &[
+            "volicord.close_task" => &[
                 "envelope",
                 "task_id",
                 "intent",

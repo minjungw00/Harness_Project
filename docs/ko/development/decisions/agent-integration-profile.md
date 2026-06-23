@@ -25,7 +25,7 @@ Harness는 Agent Integration Profile을 코딩 에이전트 통합 하나의 지
   프로젝트 멤버십, 선택적 기본 프로젝트, 관리되는 Host Installation
   인벤토리를 저장합니다.
 - `harness-mcp`는 시작 때 통합을 검증하고, 프로필에서 묶인 접점 맥락을
-  파생하며, 공개 Harness 도구와 `harness.list_projects` 도우미를 노출하고,
+  파생하며, 공개 Harness 도구와 `volicord.list_projects` 도우미를 노출하고,
   모호한 프로젝트 선택을 거절합니다.
 - 관리 CLI는 지원 호스트의 통합 setup을 생성, 검증, 갱신, 제거합니다.
   명시적 승인이 있으면 프로젝트 범위 설정과 저장소 안내 파일도 관리합니다.

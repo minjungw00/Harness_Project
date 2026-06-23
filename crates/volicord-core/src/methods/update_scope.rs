@@ -1,7 +1,7 @@
 use super::*;
 
 impl CoreService {
-    /// Executes `harness.update_scope` through the shared Core mutation pipeline.
+    /// Executes `volicord.update_scope` through the shared Core mutation pipeline.
     pub fn update_scope(
         &self,
         request: UpdateScopeRequest,

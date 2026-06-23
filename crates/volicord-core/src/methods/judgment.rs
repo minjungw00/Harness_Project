@@ -1,7 +1,7 @@
 use super::*;
 
 impl CoreService {
-    /// Executes `harness.request_user_judgment` through the shared Core mutation pipeline.
+    /// Executes `volicord.request_user_judgment` through the shared Core mutation pipeline.
     pub fn request_user_judgment(
         &self,
         request: volicord_types::RequestUserJudgmentRequest,
@@ -77,7 +77,7 @@ impl CoreService {
         )
     }
 
-    /// Executes `harness.record_user_judgment` through the shared Core mutation pipeline.
+    /// Executes `volicord.record_user_judgment` through the shared Core mutation pipeline.
     pub fn record_user_judgment(
         &self,
         request: RecordUserJudgmentRequest,

@@ -269,14 +269,14 @@ MCP 프로세스 시작만 검증합니다. 전체 호스트 검증에는
   있지만, 바뀐 통합 바인딩, 바뀐 명령, 바뀐 호스트 설정, reload, restart는 호스트가
   소유한 동작입니다.
 - **진단 점검:** 저장된 인벤토리는 `harness agent status`로 확인합니다. 기존 MCP
-  세션에서 도구를 여전히 호출할 수 있다면 `harness.list_projects`를 호출해 그 실행
+  세션에서 도구를 여전히 호출할 수 있다면 `volicord.list_projects`를 호출해 그 실행
   중인 프로세스가 관찰하는 허용 프로젝트를 확인합니다.
-- **제한된 복구 동작:** 멤버십만 바뀐 경우 `harness.list_projects`가 새 목록을
+- **제한된 복구 동작:** 멤버십만 바뀐 경우 `volicord.list_projects`가 새 목록을
   반영한 뒤 명시적 `project_id`로 도구 호출을 다시 시도합니다. 호스트 설정, 명령
   경로, 서버 이름, 통합 바인딩이 바뀐 경우 호스트를 reload 또는 restart하여 새 MCP
   프로세스를 시작하게 합니다.
 - **검증:** 재시작 뒤 `harness agent verify`를 실행하고, 호스트 안에서는 프로젝트
-  선택이 불분명할 때 `harness.list_projects`를 사용한 뒤 프로젝트 라우팅 호출을
+  선택이 불분명할 때 `volicord.list_projects`를 사용한 뒤 프로젝트 라우팅 호출을
   수행합니다.
 - **이미 존재할 수 있는 지속 효과:** 예전 프로세스가 아직 실행 중이어도 Runtime Home
   registry 변경과 호스트 설정은 이미 커밋되어 있을 수 있습니다.
@@ -364,12 +364,12 @@ MCP 프로세스 시작만 검증합니다. 전체 호스트 검증에는
 
 - **관찰 증상:** status가 통합에 허용 프로젝트가 없다고 경고하거나, `harness-mcp
   --check`가 시작 검증에 실패하거나, verify가 실패하거나, 마지막 프로젝트가 제거되기
-  전에 시작된 프로세스에서 `harness.list_projects`가 빈 목록을 반환합니다.
+  전에 시작된 프로세스에서 `volicord.list_projects`가 빈 목록을 반환합니다.
 - **가장 가능성 높은 원인:** 마지막 통합 프로젝트 멤버십이 제거되었거나, Agent
   Integration Profile에 대한 멤버십이 성공적으로 만들어지지 않았습니다.
 - **진단 점검:** `harness agent status --integration-id <integration_id>
   --runtime-home <runtime_home>`를 실행합니다. MCP 프로세스가 이미 실행 중이면
-  `harness.list_projects`를 호출해 지금 빈 허용 목록을 보는지 확인합니다.
+  `volicord.list_projects`를 호출해 지금 빈 허용 목록을 보는지 확인합니다.
 - **제한된 복구 동작:** 명시적 프로젝트 하나를 추가하거나 복구합니다. `harness agent
   project add --integration-id <integration_id> --project-id <project_id> --repo-root
   <repo_root> --runtime-home <runtime_home>`를 사용합니다. 편의 기본값이 필요할 때만
@@ -388,12 +388,12 @@ MCP 프로세스 시작만 검증합니다. 전체 호스트 검증에는
 ### 여러 허용 프로젝트가 있지만 쓸 수 있는 selector나 default가 없음
 
 - **관찰 증상:** 공개 MCP 도구 호출이 Core 실행 전에 거절되고, `project selection is
-  ambiguous; call harness.list_projects and retry with envelope.project_id` 같은 실행
+  ambiguous; call volicord.list_projects and retry with envelope.project_id` 같은 실행
   가능한 텍스트가 반환됩니다.
 - **가장 가능성 높은 원인:** 여러 프로젝트를 사용할 수 있는데 호출이
   `envelope.project_id`를 생략했고 유효한 명시적 `default_project_id`도 사용할 수
   없습니다.
-- **진단 점검:** 읽기 전용 어댑터 유틸리티 `harness.list_projects`를 호출하고 반환된
+- **진단 점검:** 읽기 전용 어댑터 유틸리티 `volicord.list_projects`를 호출하고 반환된
   project id, 가용성, 기본값 상태를 확인합니다.
 - **제한된 복구 동작:** 공개 도구 호출을 명시적 `envelope.project_id`와 함께 다시
   시도합니다. 생략 선택이 정말 필요하다면 `harness agent project default set
@@ -493,7 +493,7 @@ MCP 프로세스 시작만 검증합니다. 전체 호스트 검증에는
 - **가장 가능성 높은 원인:** 마지막 허용 프로젝트가 의도적으로 제거되었습니다. 호스트
   설정과 인벤토리는 남을 수 있지만 시작 자격은 아닙니다.
 - **진단 점검:** `harness agent status --integration-id <integration_id>`를 실행합니다.
-  이전 MCP 프로세스가 아직 살아 있다면 `harness.list_projects`를 호출해 빈 목록을
+  이전 MCP 프로세스가 아직 살아 있다면 `volicord.list_projects`를 호출해 빈 목록을
   반환하는지 확인합니다.
 - **제한된 복구 동작:** 통합을 다시 사용해야 하면 `harness agent project add`로
   프로젝트를 추가합니다. 통합을 완전히 제거해야 하면 지침 제거가 필요할 때 필수

@@ -1,7 +1,7 @@
 use super::*;
 
 impl CoreService {
-    /// Executes `harness.record_run` through the shared Core mutation pipeline.
+    /// Executes `volicord.record_run` through the shared Core mutation pipeline.
     pub fn record_run(
         &self,
         request: RecordRunRequest,
@@ -1508,7 +1508,7 @@ fn plan_staged_artifact_input(
 
     let artifact_id = allocate_artifact_id(service, store).map_err(PlanError::Core)?;
     let uri = format!(
-        "harness-artifact://{}/{}",
+        "volicord-artifact://{}/{}",
         request.envelope.project_id.as_str(),
         artifact_id.as_str()
     );

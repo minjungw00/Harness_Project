@@ -1,7 +1,7 @@
 use super::*;
 
 impl CoreService {
-    /// Executes `harness.intake` through the shared Core mutation pipeline.
+    /// Executes `volicord.intake` through the shared Core mutation pipeline.
     pub fn intake(
         &self,
         request: volicord_types::IntakeRequest,

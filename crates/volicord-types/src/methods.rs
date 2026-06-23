@@ -30,34 +30,34 @@ pub trait MethodAccessClass {
     fn requested_access_class(&self) -> AccessClass;
 }
 
-/// Response branch type for `harness.intake`.
+/// Response branch type for `volicord.intake`.
 pub type IntakeResponse = ToolResponse<IntakeResult>;
 
-/// Response branch type for `harness.update_scope`.
+/// Response branch type for `volicord.update_scope`.
 pub type UpdateScopeResponse = ToolResponse<UpdateScopeResult>;
 
-/// Response branch type for `harness.status`.
+/// Response branch type for `volicord.status`.
 pub type StatusResponse = ToolResponse<StatusResult>;
 
-/// Response branch type for `harness.prepare_write`.
+/// Response branch type for `volicord.prepare_write`.
 pub type PrepareWriteResponse = ToolResponse<PrepareWriteResult>;
 
-/// Response branch type for `harness.stage_artifact`.
+/// Response branch type for `volicord.stage_artifact`.
 pub type StageArtifactResponse = ToolResponse<StageArtifactResult>;
 
-/// Response branch type for `harness.record_run`.
+/// Response branch type for `volicord.record_run`.
 pub type RecordRunResponse = ToolResponse<RecordRunResult>;
 
-/// Response branch type for `harness.request_user_judgment`.
+/// Response branch type for `volicord.request_user_judgment`.
 pub type RequestUserJudgmentResponse = ToolResponse<RequestUserJudgmentResult>;
 
-/// Response branch type for `harness.record_user_judgment`.
+/// Response branch type for `volicord.record_user_judgment`.
 pub type RecordUserJudgmentResponse = ToolResponse<RecordUserJudgmentResult>;
 
-/// Response branch type for `harness.close_task`.
+/// Response branch type for `volicord.close_task`.
 pub type CloseTaskResponse = ToolResponse<CloseTaskResult>;
 
-/// `harness.intake` request params.
+/// `volicord.intake` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct IntakeRequest {
@@ -88,7 +88,7 @@ pub struct InitialScope {
     pub acceptance_criteria: Vec<String>,
 }
 
-/// `harness.intake` method result branch.
+/// `volicord.intake` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct IntakeResult {
     pub base: ToolResultBase,
@@ -98,7 +98,7 @@ pub struct IntakeResult {
     pub next_actions: Vec<NextActionSummary>,
 }
 
-/// `harness.update_scope` request params.
+/// `volicord.update_scope` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct UpdateScopeRequest {
@@ -141,7 +141,7 @@ pub struct ChangeUnitUpdate {
     pub fields: JsonObject,
 }
 
-/// `harness.update_scope` method result branch.
+/// `volicord.update_scope` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct UpdateScopeResult {
     pub base: ToolResultBase,
@@ -154,7 +154,7 @@ pub struct UpdateScopeResult {
     pub next_actions: Vec<NextActionSummary>,
 }
 
-/// `harness.status` request params.
+/// `volicord.status` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct StatusRequest {
@@ -184,7 +184,7 @@ pub struct StatusInclude {
     pub guarantees: bool,
 }
 
-/// `harness.status` method result branch.
+/// `volicord.status` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct StatusResult {
     pub base: ToolResultBase,
@@ -208,7 +208,7 @@ pub struct StatusResult {
     pub guarantee_display: Option<RequiredNullable<GuaranteeDisplay>>,
 }
 
-/// `harness.prepare_write` request params.
+/// `volicord.prepare_write` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PrepareWriteRequest {
@@ -232,7 +232,7 @@ impl MethodAccessClass for PrepareWriteRequest {
     }
 }
 
-/// `harness.prepare_write` method result branch.
+/// `volicord.prepare_write` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct PrepareWriteResult {
     pub base: ToolResultBase,
@@ -247,7 +247,7 @@ pub struct PrepareWriteResult {
     pub guarantee_display: Option<GuaranteeDisplay>,
 }
 
-/// `harness.stage_artifact` request params.
+/// `volicord.stage_artifact` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct StageArtifactRequest {
@@ -272,7 +272,7 @@ impl MethodAccessClass for StageArtifactRequest {
     }
 }
 
-/// `harness.stage_artifact` method result branch.
+/// `volicord.stage_artifact` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct StageArtifactResult {
     pub base: ToolResultBase,
@@ -280,7 +280,7 @@ pub struct StageArtifactResult {
     pub expires_at: UtcTimestamp,
 }
 
-/// `harness.record_run` request params.
+/// `volicord.record_run` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RecordRunRequest {
@@ -308,7 +308,7 @@ impl MethodAccessClass for RecordRunRequest {
     }
 }
 
-/// `harness.record_run` method result branch.
+/// `volicord.record_run` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RecordRunResult {
     pub base: ToolResultBase,
@@ -320,7 +320,7 @@ pub struct RecordRunResult {
     pub state: StateSummary,
 }
 
-/// `harness.request_user_judgment` request params.
+/// `volicord.request_user_judgment` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RequestUserJudgmentRequest {
@@ -350,7 +350,7 @@ impl MethodAccessClass for RequestUserJudgmentRequest {
     }
 }
 
-/// `harness.request_user_judgment` method result branch.
+/// `volicord.request_user_judgment` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RequestUserJudgmentResult {
     pub base: ToolResultBase,
@@ -360,7 +360,7 @@ pub struct RequestUserJudgmentResult {
     pub state: StateSummary,
 }
 
-/// `harness.record_user_judgment` request params.
+/// `volicord.record_user_judgment` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RecordUserJudgmentRequest {
@@ -383,7 +383,7 @@ impl MethodAccessClass for RecordUserJudgmentRequest {
     }
 }
 
-/// `harness.record_user_judgment` method result branch.
+/// `volicord.record_user_judgment` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RecordUserJudgmentResult {
     pub base: ToolResultBase,
@@ -394,7 +394,7 @@ pub struct RecordUserJudgmentResult {
     pub next_actions: Vec<NextActionSummary>,
 }
 
-/// `harness.close_task` request params.
+/// `volicord.close_task` request params.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CloseTaskRequest {
@@ -421,7 +421,7 @@ impl MethodAccessClass for CloseTaskRequest {
     }
 }
 
-/// `harness.close_task` method result branch.
+/// `volicord.close_task` method result branch.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct CloseTaskResult {
     pub base: ToolResultBase,
@@ -437,15 +437,15 @@ pub struct CloseTaskResult {
 /// Returns the generated JSON Schema for one public method request shape.
 pub fn public_request_schema(method_name: &str) -> Option<Value> {
     match method_name {
-        "harness.intake" => Some(request_schema::<IntakeRequest>()),
-        "harness.update_scope" => Some(request_schema::<UpdateScopeRequest>()),
-        "harness.status" => Some(request_schema::<StatusRequest>()),
-        "harness.prepare_write" => Some(request_schema::<PrepareWriteRequest>()),
-        "harness.stage_artifact" => Some(request_schema::<StageArtifactRequest>()),
-        "harness.record_run" => Some(request_schema::<RecordRunRequest>()),
-        "harness.request_user_judgment" => Some(request_schema::<RequestUserJudgmentRequest>()),
-        "harness.record_user_judgment" => Some(request_schema::<RecordUserJudgmentRequest>()),
-        "harness.close_task" => Some(request_schema::<CloseTaskRequest>()),
+        "volicord.intake" => Some(request_schema::<IntakeRequest>()),
+        "volicord.update_scope" => Some(request_schema::<UpdateScopeRequest>()),
+        "volicord.status" => Some(request_schema::<StatusRequest>()),
+        "volicord.prepare_write" => Some(request_schema::<PrepareWriteRequest>()),
+        "volicord.stage_artifact" => Some(request_schema::<StageArtifactRequest>()),
+        "volicord.record_run" => Some(request_schema::<RecordRunRequest>()),
+        "volicord.request_user_judgment" => Some(request_schema::<RequestUserJudgmentRequest>()),
+        "volicord.record_user_judgment" => Some(request_schema::<RecordUserJudgmentRequest>()),
+        "volicord.close_task" => Some(request_schema::<CloseTaskRequest>()),
         _ => None,
     }
 }

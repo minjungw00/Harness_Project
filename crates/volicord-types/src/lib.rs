@@ -506,33 +506,37 @@ mod tests {
         let mut update = update_scope_request_json();
         remove_path(&mut update, &["change_unit", "scope_summary"]);
         remove_path(&mut update, &["change_unit", "affected_paths"]);
-        assert_schema_and_serde("harness.update_scope", update, true);
+        assert_schema_and_serde("volicord.update_scope", update, true);
     }
 
     #[test]
     fn required_nullable_fields_must_be_present_but_accept_null() {
         let mut stage = stage_artifact_request_json();
         stage["expected_sha256"] = Value::Null;
-        assert_schema_and_serde("harness.stage_artifact", stage.clone(), true);
+        assert_schema_and_serde("volicord.stage_artifact", stage.clone(), true);
         stage
             .as_object_mut()
             .expect("stage request should be an object")
             .remove("expected_sha256");
-        assert_schema_and_serde("harness.stage_artifact", stage, false);
+        assert_schema_and_serde("volicord.stage_artifact", stage, false);
 
         let mut envelope_missing_nullable = status_request_json();
         envelope_missing_nullable["envelope"]
             .as_object_mut()
             .expect("envelope should be an object")
             .remove("idempotency_key");
-        assert_schema_and_serde("harness.status", envelope_missing_nullable, false);
+        assert_schema_and_serde("volicord.status", envelope_missing_nullable, false);
 
         let mut answer_missing_branch = record_user_judgment_request_json();
         answer_missing_branch["answer"]
             .as_object_mut()
             .expect("answer should be an object")
             .remove("technical_decision");
-        assert_schema_and_serde("harness.record_user_judgment", answer_missing_branch, false);
+        assert_schema_and_serde(
+            "volicord.record_user_judgment",
+            answer_missing_branch,
+            false,
+        );
 
         let mut selected_option_missing = record_user_judgment_request_json();
         selected_option_missing
@@ -540,7 +544,7 @@ mod tests {
             .expect("record request should be an object")
             .remove("selected_option_id");
         assert_schema_and_serde(
-            "harness.record_user_judgment",
+            "volicord.record_user_judgment",
             selected_option_missing,
             false,
         );
@@ -552,7 +556,7 @@ mod tests {
             let mut request = request_user_judgment_request_json();
             request["expires_at"] = json!(invalid);
             assert!(
-                deserialize_public_request("harness.request_user_judgment", request).is_err(),
+                deserialize_public_request("volicord.request_user_judgment", request).is_err(),
                 "request_user_judgment expires_at should reject {invalid}"
             );
         }
@@ -560,7 +564,7 @@ mod tests {
         let mut request = request_user_judgment_request_json();
         request["sensitive_action_scope"] = sensitive_action_scope_json(json!("zzzz"));
         assert!(
-            deserialize_public_request("harness.request_user_judgment", request).is_err(),
+            deserialize_public_request("volicord.request_user_judgment", request).is_err(),
             "request_user_judgment sensitive_action_scope.expires_at should reject invalid text"
         );
 
@@ -568,14 +572,14 @@ mod tests {
         answer["answer"]["product_decision"] = Value::Null;
         answer["answer"]["sensitive_action_scope"] = sensitive_action_scope_json(json!("tomorrow"));
         assert!(
-            deserialize_public_request("harness.record_user_judgment", answer).is_err(),
+            deserialize_public_request("volicord.record_user_judgment", answer).is_err(),
             "record_user_judgment answer.sensitive_action_scope.expires_at should reject invalid text"
         );
 
         let mut run = record_run_request_json();
         run["artifact_inputs"] = json!([staged_artifact_input_json("9999")]);
         assert!(
-            deserialize_public_request("harness.record_run", run).is_err(),
+            deserialize_public_request("volicord.record_run", run).is_err(),
             "record_run staged_artifact_handle.expires_at should reject invalid text"
         );
     }
@@ -607,8 +611,8 @@ mod tests {
         offset["expires_at"] = json!("2026-06-18T09:00:00+09:00");
 
         assert_eq!(
-            typed_request_hash("harness.request_user_judgment", zulu),
-            typed_request_hash("harness.request_user_judgment", offset.clone())
+            typed_request_hash("volicord.request_user_judgment", zulu),
+            typed_request_hash("volicord.request_user_judgment", offset.clone())
         );
 
         let decoded: RequestUserJudgmentRequest =
@@ -634,7 +638,7 @@ mod tests {
             );
         }
 
-        let stage = public_request_schema("harness.stage_artifact").expect("stage schema");
+        let stage = public_request_schema("volicord.stage_artifact").expect("stage schema");
         assert_required(
             definition(&stage, "ToolEnvelope"),
             &[
@@ -652,12 +656,12 @@ mod tests {
         );
         assert_required(
             &stage,
-            expected_required_fields("harness.stage_artifact"),
+            expected_required_fields("volicord.stage_artifact"),
             "StageArtifactRequest",
         );
         assert_schema_allows_null_property(&stage, "expected_sha256");
 
-        let record = public_request_schema("harness.record_run").expect("record_run schema");
+        let record = public_request_schema("volicord.record_run").expect("record_run schema");
         assert_schema_allows_null_property(&record, "close_assessment");
         assert_required(
             definition(&record, "CloseAssessmentInput"),
@@ -707,7 +711,7 @@ mod tests {
         );
 
         let judgment =
-            public_request_schema("harness.record_user_judgment").expect("judgment schema");
+            public_request_schema("volicord.record_user_judgment").expect("judgment schema");
         assert_required(
             definition(&judgment, "RecordUserJudgmentPayload"),
             &[
@@ -726,7 +730,7 @@ mod tests {
     #[test]
     fn request_user_judgment_option_input_exposes_no_authority_outcome_mapping() {
         let schema =
-            public_request_schema("harness.request_user_judgment").expect("judgment schema");
+            public_request_schema("volicord.request_user_judgment").expect("judgment schema");
         let option_input = definition(&schema, "UserJudgmentOptionInput");
         assert!(
             option_input["properties"].get("machine_action").is_none(),
@@ -742,12 +746,12 @@ mod tests {
         let mut request = request_user_judgment_request_json();
         request["judgment_kind"] = json!("cancellation");
         request["options"][0]["resolution_outcome"] = json!("accepted");
-        assert_schema_and_serde("harness.request_user_judgment", request, false);
+        assert_schema_and_serde("volicord.request_user_judgment", request, false);
 
         let mut request = request_user_judgment_request_json();
         request["judgment_kind"] = json!("cancellation");
         request["options"][0]["machine_action"] = json!("reject");
-        assert_schema_and_serde("harness.request_user_judgment", request, false);
+        assert_schema_and_serde("volicord.request_user_judgment", request, false);
     }
 
     #[test]
@@ -950,7 +954,7 @@ mod tests {
             json!("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
             json!(18)
         ))]);
-        assert_schema_and_serde("harness.record_run", valid.clone(), true);
+        assert_schema_and_serde("volicord.record_run", valid.clone(), true);
 
         let mut missing = valid;
         remove_path(
@@ -962,13 +966,13 @@ mod tests {
                 "integrity_status",
             ],
         );
-        assert_schema_and_serde("harness.record_run", missing, false);
+        assert_schema_and_serde("volicord.record_run", missing, false);
     }
 
     #[test]
     fn timestamp_json_schemas_are_date_time_strings() {
         let judgment =
-            public_request_schema("harness.request_user_judgment").expect("judgment schema");
+            public_request_schema("volicord.request_user_judgment").expect("judgment schema");
         assert_date_time_schema(
             &judgment,
             &judgment["properties"]["expires_at"],
@@ -980,7 +984,7 @@ mod tests {
             "SensitiveActionScope.expires_at",
         );
 
-        let run = public_request_schema("harness.record_run").expect("record_run schema");
+        let run = public_request_schema("volicord.record_run").expect("record_run schema");
         assert_date_time_schema(
             &run,
             &definition(&run, "StagedArtifactHandle")["properties"]["expires_at"],
@@ -998,7 +1002,7 @@ mod tests {
 
     #[test]
     fn exact_request_objects_are_closed_but_open_payload_objects_stay_open() {
-        let record = public_request_schema("harness.record_run").expect("record_run schema");
+        let record = public_request_schema("volicord.record_run").expect("record_run schema");
         for definition_name in [
             "ToolEnvelope",
             "ObservedChanges",
@@ -1017,7 +1021,7 @@ mod tests {
             );
         }
 
-        let update = public_request_schema("harness.update_scope").expect("update schema");
+        let update = public_request_schema("volicord.update_scope").expect("update schema");
         assert_ne!(
             definition(&update, "ChangeUnitUpdate")["additionalProperties"],
             false,
@@ -1025,7 +1029,7 @@ mod tests {
         );
 
         let judgment =
-            public_request_schema("harness.record_user_judgment").expect("judgment schema");
+            public_request_schema("volicord.record_user_judgment").expect("judgment schema");
         let payload = definition(&judgment, "RecordUserJudgmentPayload");
         let product_decision = &payload["properties"]["product_decision"];
         assert!(
@@ -1100,10 +1104,13 @@ mod tests {
             assert_eq!(compact_hash, typed_request_hash(method_name, reordered));
         }
 
-        let null_hash = typed_request_hash("harness.record_run", record_run_request_json());
+        let null_hash = typed_request_hash("volicord.record_run", record_run_request_json());
         let mut changed = record_run_request_json();
         changed["write_authorization_id"] = json!("wa_hash_change");
-        assert_ne!(null_hash, typed_request_hash("harness.record_run", changed));
+        assert_ne!(
+            null_hash,
+            typed_request_hash("volicord.record_run", changed)
+        );
     }
 
     fn envelope_json(actor_kind: &str) -> Value {
@@ -1132,21 +1139,21 @@ mod tests {
 
     fn public_request_json_samples() -> Vec<(&'static str, Value)> {
         vec![
-            ("harness.intake", intake_request_json()),
-            ("harness.update_scope", update_scope_request_json()),
-            ("harness.status", status_request_json()),
-            ("harness.prepare_write", prepare_write_request_json()),
-            ("harness.stage_artifact", stage_artifact_request_json()),
-            ("harness.record_run", record_run_request_json()),
+            ("volicord.intake", intake_request_json()),
+            ("volicord.update_scope", update_scope_request_json()),
+            ("volicord.status", status_request_json()),
+            ("volicord.prepare_write", prepare_write_request_json()),
+            ("volicord.stage_artifact", stage_artifact_request_json()),
+            ("volicord.record_run", record_run_request_json()),
             (
-                "harness.request_user_judgment",
+                "volicord.request_user_judgment",
                 request_user_judgment_request_json(),
             ),
             (
-                "harness.record_user_judgment",
+                "volicord.record_user_judgment",
                 record_user_judgment_request_json(),
             ),
-            ("harness.close_task", close_task_request_json()),
+            ("volicord.close_task", close_task_request_json()),
         ]
     }
 
@@ -1367,25 +1374,25 @@ mod tests {
 
     fn required_nullable_request_paths() -> Vec<(&'static str, &'static [&'static str])> {
         vec![
-            ("harness.update_scope", &["goal_summary"]),
-            ("harness.prepare_write", &["task_id"]),
-            ("harness.prepare_write", &["change_unit_id"]),
-            ("harness.stage_artifact", &["expected_sha256"]),
-            ("harness.stage_artifact", &["relation_hint"]),
-            ("harness.record_run", &["run_id"]),
-            ("harness.record_run", &["write_authorization_id"]),
-            ("harness.record_run", &["observed_changes", "baseline_ref"]),
-            ("harness.record_run", &["close_assessment"]),
-            ("harness.request_user_judgment", &["change_unit_id"]),
-            ("harness.request_user_judgment", &["expires_at"]),
-            ("harness.record_user_judgment", &["note"]),
+            ("volicord.update_scope", &["goal_summary"]),
+            ("volicord.prepare_write", &["task_id"]),
+            ("volicord.prepare_write", &["change_unit_id"]),
+            ("volicord.stage_artifact", &["expected_sha256"]),
+            ("volicord.stage_artifact", &["relation_hint"]),
+            ("volicord.record_run", &["run_id"]),
+            ("volicord.record_run", &["write_authorization_id"]),
+            ("volicord.record_run", &["observed_changes", "baseline_ref"]),
+            ("volicord.record_run", &["close_assessment"]),
+            ("volicord.request_user_judgment", &["change_unit_id"]),
+            ("volicord.request_user_judgment", &["expires_at"]),
+            ("volicord.record_user_judgment", &["note"]),
             (
-                "harness.record_user_judgment",
+                "volicord.record_user_judgment",
                 &["answer", "technical_decision"],
             ),
-            ("harness.close_task", &["close_reason"]),
-            ("harness.close_task", &["superseding_task_id"]),
-            ("harness.close_task", &["user_note"]),
+            ("volicord.close_task", &["close_reason"]),
+            ("volicord.close_task", &["superseding_task_id"]),
+            ("volicord.close_task", &["user_note"]),
         ]
     }
 
@@ -1436,33 +1443,33 @@ mod tests {
 
     fn typed_request_hash(method_name: &str, value: Value) -> RequestHash {
         match method_name {
-            "harness.intake" => canonical_request_hash(
+            "volicord.intake" => canonical_request_hash(
                 &serde_json::from_value::<IntakeRequest>(value).expect("intake request"),
             ),
-            "harness.update_scope" => canonical_request_hash(
+            "volicord.update_scope" => canonical_request_hash(
                 &serde_json::from_value::<UpdateScopeRequest>(value).expect("update request"),
             ),
-            "harness.status" => canonical_request_hash(
+            "volicord.status" => canonical_request_hash(
                 &serde_json::from_value::<StatusRequest>(value).expect("status request"),
             ),
-            "harness.prepare_write" => canonical_request_hash(
+            "volicord.prepare_write" => canonical_request_hash(
                 &serde_json::from_value::<PrepareWriteRequest>(value).expect("prepare request"),
             ),
-            "harness.stage_artifact" => canonical_request_hash(
+            "volicord.stage_artifact" => canonical_request_hash(
                 &serde_json::from_value::<StageArtifactRequest>(value).expect("stage request"),
             ),
-            "harness.record_run" => canonical_request_hash(
+            "volicord.record_run" => canonical_request_hash(
                 &serde_json::from_value::<RecordRunRequest>(value).expect("record run request"),
             ),
-            "harness.request_user_judgment" => canonical_request_hash(
+            "volicord.request_user_judgment" => canonical_request_hash(
                 &serde_json::from_value::<RequestUserJudgmentRequest>(value)
                     .expect("request judgment request"),
             ),
-            "harness.record_user_judgment" => canonical_request_hash(
+            "volicord.record_user_judgment" => canonical_request_hash(
                 &serde_json::from_value::<RecordUserJudgmentRequest>(value)
                     .expect("record judgment request"),
             ),
-            "harness.close_task" => canonical_request_hash(
+            "volicord.close_task" => canonical_request_hash(
                 &serde_json::from_value::<CloseTaskRequest>(value).expect("close request"),
             ),
             other => panic!("unsupported method: {other}"),
@@ -1476,7 +1483,7 @@ mod tests {
 
     fn expected_required_fields(method_name: &str) -> &'static [&'static str] {
         match method_name {
-            "harness.intake" => &[
+            "volicord.intake" => &[
                 "envelope",
                 "plain_language_request",
                 "requested_mode",
@@ -1484,7 +1491,7 @@ mod tests {
                 "initial_scope",
                 "initial_context_refs",
             ],
-            "harness.update_scope" => &[
+            "volicord.update_scope" => &[
                 "envelope",
                 "task_id",
                 "goal_summary",
@@ -1497,8 +1504,8 @@ mod tests {
                 "change_unit",
                 "related_scope_decision_refs",
             ],
-            "harness.status" => &["envelope", "include"],
-            "harness.prepare_write" => &[
+            "volicord.status" => &["envelope", "include"],
+            "volicord.prepare_write" => &[
                 "envelope",
                 "task_id",
                 "change_unit_id",
@@ -1508,7 +1515,7 @@ mod tests {
                 "sensitive_categories",
                 "baseline_ref",
             ],
-            "harness.stage_artifact" => &[
+            "volicord.stage_artifact" => &[
                 "envelope",
                 "task_id",
                 "display_name",
@@ -1519,7 +1526,7 @@ mod tests {
                 "expected_size_bytes",
                 "relation_hint",
             ],
-            "harness.record_run" => &[
+            "volicord.record_run" => &[
                 "envelope",
                 "task_id",
                 "change_unit_id",
@@ -1533,7 +1540,7 @@ mod tests {
                 "evidence_updates",
                 "close_assessment",
             ],
-            "harness.request_user_judgment" => &[
+            "volicord.request_user_judgment" => &[
                 "envelope",
                 "task_id",
                 "change_unit_id",
@@ -1545,7 +1552,7 @@ mod tests {
                 "required_for",
                 "expires_at",
             ],
-            "harness.record_user_judgment" => &[
+            "volicord.record_user_judgment" => &[
                 "envelope",
                 "user_judgment_id",
                 "judgment_kind",
@@ -1554,7 +1561,7 @@ mod tests {
                 "note",
                 "accepted_risks",
             ],
-            "harness.close_task" => &[
+            "volicord.close_task" => &[
                 "envelope",
                 "task_id",
                 "intent",
@@ -1571,23 +1578,25 @@ mod tests {
         value: Value,
     ) -> Result<(), serde_json::Error> {
         match method_name {
-            "harness.intake" => serde_json::from_value::<IntakeRequest>(value).map(drop),
-            "harness.update_scope" => serde_json::from_value::<UpdateScopeRequest>(value).map(drop),
-            "harness.status" => serde_json::from_value::<StatusRequest>(value).map(drop),
-            "harness.prepare_write" => {
+            "volicord.intake" => serde_json::from_value::<IntakeRequest>(value).map(drop),
+            "volicord.update_scope" => {
+                serde_json::from_value::<UpdateScopeRequest>(value).map(drop)
+            }
+            "volicord.status" => serde_json::from_value::<StatusRequest>(value).map(drop),
+            "volicord.prepare_write" => {
                 serde_json::from_value::<PrepareWriteRequest>(value).map(drop)
             }
-            "harness.stage_artifact" => {
+            "volicord.stage_artifact" => {
                 serde_json::from_value::<StageArtifactRequest>(value).map(drop)
             }
-            "harness.record_run" => serde_json::from_value::<RecordRunRequest>(value).map(drop),
-            "harness.request_user_judgment" => {
+            "volicord.record_run" => serde_json::from_value::<RecordRunRequest>(value).map(drop),
+            "volicord.request_user_judgment" => {
                 serde_json::from_value::<RequestUserJudgmentRequest>(value).map(drop)
             }
-            "harness.record_user_judgment" => {
+            "volicord.record_user_judgment" => {
                 serde_json::from_value::<RecordUserJudgmentRequest>(value).map(drop)
             }
-            "harness.close_task" => serde_json::from_value::<CloseTaskRequest>(value).map(drop),
+            "volicord.close_task" => serde_json::from_value::<CloseTaskRequest>(value).map(drop),
             other => panic!("unsupported method sample: {other}"),
         }
     }
@@ -1764,7 +1773,7 @@ mod tests {
             "created_by_run_ref": state_ref_json("run", "run_trace_001", "task_empty_001"),
             "created_by_surface_id": "surface_empty",
             "created_by_surface_instance_id": "surface_instance_empty",
-            "storage_ref": "harness-artifact://proj_empty_001/artifact_trace_001"
+            "storage_ref": "volicord-artifact://proj_empty_001/artifact_trace_001"
         })
     }
 

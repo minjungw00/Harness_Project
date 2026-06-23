@@ -11549,7 +11549,7 @@ fn assert_no_close_next_actions(response_value: &Value) {
         .expect("next_actions should be an array");
     assert!(
         actions.iter().all(|action| {
-            action["owner_method"] != "harness.close_task" && action["action_kind"] != "close_task"
+            action["owner_method"] != "volicord.close_task" && action["action_kind"] != "close_task"
         }),
         "close-only next actions should not be present when close is excluded: {actions:?}"
     );

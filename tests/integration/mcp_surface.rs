@@ -104,7 +104,7 @@ fn stdio_rejected_lifecycle_and_notification_tool_calls_have_no_storage_effect(
             "id": 1,
             "method": "tools/call",
             "params": {
-                "name": "harness.intake",
+                "name": "volicord.intake",
                 "arguments": mutating_arguments.clone()
             }
         }),
@@ -126,7 +126,7 @@ fn stdio_rejected_lifecycle_and_notification_tool_calls_have_no_storage_effect(
             "id": 3,
             "method": "tools/call",
             "params": {
-                "name": "harness.intake",
+                "name": "volicord.intake",
                 "arguments": mutating_arguments.clone()
             }
         }),
@@ -149,7 +149,7 @@ fn stdio_rejected_lifecycle_and_notification_tool_calls_have_no_storage_effect(
             "jsonrpc": "2.0",
             "method": "tools/call",
             "params": {
-                "name": "harness.intake",
+                "name": "volicord.intake",
                 "arguments": mutating_arguments
             }
         }),
@@ -254,7 +254,7 @@ fn adapter_uses_session_surface_context_for_artifact_provenance() -> Result<(), 
         &task_id,
     ))?;
 
-    let response = adapter.call_tool("harness.stage_artifact", params)?;
+    let response = adapter.call_tool("volicord.stage_artifact", params)?;
 
     assert_eq!(response.response_value["base"]["response_kind"], "result");
     assert_eq!(
@@ -287,7 +287,7 @@ fn bound_session_rejects_different_request_project_without_effect() -> Result<()
     let before_other = counts_for_project(&fixture, other_project_id)?;
 
     let error = adapter
-        .call_tool("harness.status", mcp_arguments(request)?)
+        .call_tool("volicord.status", mcp_arguments(request)?)
         .expect_err("ungranted project should fail before Core");
 
     assert_tool_execution_error(&error, "not allowed");
@@ -328,7 +328,7 @@ fn bound_session_rejects_caller_supplied_surface_id_without_effect() -> Result<(
         let before = fixture.counts()?;
 
         let error = adapter
-            .call_tool("harness.status", params)
+            .call_tool("volicord.status", params)
             .expect_err("caller-supplied surface_id should fail before Core");
 
         assert_tool_execution_error(&error, "surface_id");
@@ -355,7 +355,7 @@ fn same_surface_instance_id_in_another_project_does_not_permit_access() -> Resul
     let before_other = counts_for_project(&fixture, other_project_id)?;
 
     let error = adapter
-        .call_tool("harness.status", mcp_arguments(request)?)
+        .call_tool("volicord.status", mcp_arguments(request)?)
         .expect_err("ungranted project should fail before Core");
 
     assert_tool_execution_error(&error, "not allowed");
@@ -384,7 +384,7 @@ fn same_surface_id_in_another_project_does_not_permit_access() -> Result<(), Box
     let before_other = counts_for_project(&fixture, other_project_id)?;
 
     let error = adapter
-        .call_tool("harness.status", mcp_arguments(request)?)
+        .call_tool("volicord.status", mcp_arguments(request)?)
         .expect_err("ungranted project should fail before Core");
 
     assert_tool_execution_error(&error, "not allowed");
@@ -432,7 +432,7 @@ fn deleted_bound_surface_fails_later_calls_closed_without_effect() -> Result<(),
     let request = fixture.status_request("req_deleted_bound_surface", None);
 
     let error = adapter
-        .call_tool("harness.status", mcp_arguments(request)?)
+        .call_tool("volicord.status", mcp_arguments(request)?)
         .expect_err("deleted integration surface should fail before Core");
 
     assert!(matches!(
@@ -492,7 +492,7 @@ fn invalid_integration_project_registration_blocks_core_execution_and_listing(
 
     let error = adapter
         .call_tool(
-            "harness.status",
+            "volicord.status",
             mcp_arguments(fixture.status_request("req_invalid_integration_registration", None))?,
         )
         .expect_err("invalid integration project should fail before Core");
@@ -506,9 +506,9 @@ fn exact_idempotency_replay_succeeds_inside_bound_session() -> Result<(), Box<dy
     let adapter = adapter(&fixture);
     let request = fixture.intake_request("req_bound_replay", "idem_bound_replay", false, Some(0));
 
-    let first = adapter.call_tool("harness.intake", mcp_arguments(request.clone())?)?;
+    let first = adapter.call_tool("volicord.intake", mcp_arguments(request.clone())?)?;
     let after_first = fixture.counts()?;
-    let second = adapter.call_tool("harness.intake", mcp_arguments(request)?)?;
+    let second = adapter.call_tool("volicord.intake", mcp_arguments(request)?)?;
 
     assert!(second.replayed);
     assert_eq!(second.response_json, first.response_json);
@@ -523,7 +523,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
     let adapter = adapter(&fixture);
 
     let status = adapter.call_tool(
-        "harness.status",
+        "volicord.status",
         mcp_arguments(fixture.status_request("req_mcp_full_status", None))?,
     )?;
     assert_eq!(status.response_value["base"]["response_kind"], "result");
@@ -537,7 +537,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
     );
 
     let intake = adapter.call_tool(
-        "harness.intake",
+        "volicord.intake",
         mcp_arguments(fixture.intake_request(
             "req_mcp_full_intake",
             "idem_mcp_full_intake",
@@ -560,7 +560,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         .to_owned();
 
     let scope = adapter.call_tool(
-        "harness.update_scope",
+        "volicord.update_scope",
         mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_mcp_full_scope",
             idempotency_key: "idem_mcp_full_scope",
@@ -578,7 +578,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         .to_owned();
 
     let prepare = adapter.call_tool(
-        "harness.prepare_write",
+        "volicord.prepare_write",
         mcp_arguments(fixture.prepare_write_request(
             "req_mcp_full_prepare",
             "idem_mcp_full_prepare",
@@ -611,7 +611,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
     )?;
 
     let stage = adapter.call_tool(
-        "harness.stage_artifact",
+        "volicord.stage_artifact",
         mcp_arguments(fixture.stage_artifact_request(
             "req_mcp_full_stage",
             None,
@@ -664,7 +664,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
         recovery_constraints: Vec::new(),
     })
     .into();
-    let run = adapter.call_tool("harness.record_run", mcp_arguments(run_request)?)?;
+    let run = adapter.call_tool("volicord.record_run", mcp_arguments(run_request)?)?;
     assert_eq!(run.response_value["base"]["response_kind"], "result");
     let risk_id = run.response_value["current_close_basis"]["residual_risks"][0]["risk_id"]
         .as_str()
@@ -684,7 +684,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
 
     let before_status = fixture.counts()?;
     let status = adapter.call_tool(
-        "harness.status",
+        "volicord.status",
         mcp_arguments(fixture.status_request("req_mcp_full_status_after_run", Some(&task_id)))?,
     )?;
     assert_eq!(status.response_value["base"]["effect_kind"], "read_only");
@@ -711,7 +711,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
     assert_eq!(fixture.counts()?, before_status);
 
     let close_check = adapter.call_tool(
-        "harness.close_task",
+        "volicord.close_task",
         mcp_arguments(fixture.close_task_request(CloseTaskFixture {
             request_id: "req_mcp_full_close_check",
             idempotency_key: None,
@@ -742,7 +742,7 @@ fn one_mcp_session_with_baseline_workflow_surface_runs_full_access_workflow(
     );
 
     let risk_judgment = adapter.call_tool(
-        "harness.request_user_judgment",
+        "volicord.request_user_judgment",
         mcp_arguments(fixture.user_judgment_request(UserJudgmentFixture {
             request_id: "req_mcp_full_risk",
             idempotency_key: "idem_mcp_full_risk",
@@ -780,7 +780,7 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
     let adapter = adapter(&fixture);
 
     let intake = adapter.call_tool(
-        "harness.intake",
+        "volicord.intake",
         mcp_arguments(fixture.intake_request(
             "req_mcp_role_task",
             "idem_mcp_role_task",
@@ -793,7 +793,7 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
         .expect("task id")
         .to_owned();
     let scope = adapter.call_tool(
-        "harness.update_scope",
+        "volicord.update_scope",
         mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_mcp_role_scope",
             idempotency_key: "idem_mcp_role_scope",
@@ -825,10 +825,10 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
         recovery_constraints: Vec::new(),
     })
     .into();
-    let run = adapter.call_tool("harness.record_run", mcp_arguments(run_request)?)?;
+    let run = adapter.call_tool("volicord.record_run", mcp_arguments(run_request)?)?;
     assert_eq!(run.response_value["base"]["response_kind"], "result");
     let final_judgment = adapter.call_tool(
-        "harness.request_user_judgment",
+        "volicord.request_user_judgment",
         mcp_arguments(fixture.user_judgment_request(UserJudgmentFixture {
             request_id: "req_mcp_role_final",
             idempotency_key: "idem_mcp_role_final",
@@ -863,7 +863,7 @@ fn capability_profile_text_cannot_override_registered_agent_role_for_authority(
     let before = fixture.counts()?;
 
     let record = adapter.call_tool(
-        "harness.record_user_judgment",
+        "volicord.record_user_judgment",
         mcp_arguments(fixture.record_judgment_request(RecordJudgmentFixture {
             request_id: "req_mcp_role_final_record",
             idempotency_key: "idem_mcp_role_final_record",
@@ -900,7 +900,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
     let adapter = adapter(&fixture);
 
     let intake = adapter.call_tool(
-        "harness.intake",
+        "volicord.intake",
         mcp_arguments(fixture.intake_request(
             "req_missing_run_intake",
             "idem_missing_run_intake",
@@ -915,7 +915,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
         .to_owned();
 
     let scope = adapter.call_tool(
-        "harness.update_scope",
+        "volicord.update_scope",
         mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_missing_run_scope",
             idempotency_key: "idem_missing_run_scope",
@@ -932,7 +932,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
         .expect("Change Unit should be current");
 
     let prepare = adapter.call_tool(
-        "harness.prepare_write",
+        "volicord.prepare_write",
         mcp_arguments(fixture.prepare_write_request(
             "req_missing_run_prepare",
             "idem_missing_run_prepare",
@@ -944,7 +944,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
     assert_eq!(prepare.response_value["base"]["response_kind"], "result");
 
     let stage = adapter.call_tool(
-        "harness.stage_artifact",
+        "volicord.stage_artifact",
         mcp_arguments(fixture.stage_artifact_request(
             "req_missing_run_stage",
             None,
@@ -958,7 +958,7 @@ fn missing_run_recording_grant_blocks_only_record_run() -> Result<(), Box<dyn Er
     let before_run = fixture.counts()?;
     let error = adapter
         .call_tool(
-            "harness.record_run",
+            "volicord.record_run",
             mcp_arguments(fixture.record_run_request(
                 "req_missing_run_record",
                 "idem_missing_run_record",
@@ -989,7 +989,7 @@ fn missing_write_authorization_grant_blocks_prepare_write() -> Result<(), Box<dy
     let adapter = adapter(&fixture);
 
     let intake = adapter.call_tool(
-        "harness.intake",
+        "volicord.intake",
         mcp_arguments(fixture.intake_request(
             "req_missing_write_intake",
             "idem_missing_write_intake",
@@ -1004,7 +1004,7 @@ fn missing_write_authorization_grant_blocks_prepare_write() -> Result<(), Box<dy
         .to_owned();
 
     let scope = adapter.call_tool(
-        "harness.update_scope",
+        "volicord.update_scope",
         mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_missing_write_scope",
             idempotency_key: "idem_missing_write_scope",
@@ -1023,7 +1023,7 @@ fn missing_write_authorization_grant_blocks_prepare_write() -> Result<(), Box<dy
     let before_prepare = fixture.counts()?;
     let error = adapter
         .call_tool(
-            "harness.prepare_write",
+            "volicord.prepare_write",
             mcp_arguments(fixture.prepare_write_request(
                 "req_missing_write_prepare",
                 "idem_missing_write_prepare",
@@ -1074,14 +1074,14 @@ fn removed_read_status_grant_blocks_read_methods_only() -> Result<(), Box<dyn Er
 
     let status = adapter
         .call_tool(
-            "harness.status",
+            "volicord.status",
             mcp_arguments(fixture.status_request("req_missing_read_status", Some(&task_id)))?,
         )
         .expect_err("missing read_status grant should fail before Core");
     assert_tool_execution_error(&status, "read_status");
     let close_check = adapter
         .call_tool(
-            "harness.close_task",
+            "volicord.close_task",
             mcp_arguments(fixture.close_task_request(CloseTaskFixture {
                 request_id: "req_missing_read_close_check",
                 idempotency_key: None,
@@ -1098,7 +1098,7 @@ fn removed_read_status_grant_blocks_read_methods_only() -> Result<(), Box<dyn Er
     assert_eq!(fixture.counts()?, before_read);
 
     let mutation = adapter.call_tool(
-        "harness.intake",
+        "volicord.intake",
         mcp_arguments(fixture.intake_request(
             "req_missing_read_mutation",
             "idem_missing_read_mutation",
@@ -1156,7 +1156,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
 
     for (tool_name, params) in [
         (
-            "harness.intake",
+            "volicord.intake",
             mcp_arguments(fixture.intake_request(
                 "req_missing_core_intake",
                 "idem_missing_core_intake",
@@ -1165,7 +1165,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
             ))?,
         ),
         (
-            "harness.update_scope",
+            "volicord.update_scope",
             mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
                 request_id: "req_missing_core_update",
                 idempotency_key: "idem_missing_core_update",
@@ -1177,7 +1177,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
             }))?,
         ),
         (
-            "harness.request_user_judgment",
+            "volicord.request_user_judgment",
             mcp_arguments(fixture.user_judgment_request(UserJudgmentFixture {
                 request_id: "req_missing_core_judgment",
                 idempotency_key: "idem_missing_core_judgment",
@@ -1189,7 +1189,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
             }))?,
         ),
         (
-            "harness.close_task",
+            "volicord.close_task",
             mcp_arguments(fixture.close_task_request(CloseTaskFixture {
                 request_id: "req_missing_core_close",
                 idempotency_key: Some("idem_missing_core_close"),
@@ -1216,7 +1216,7 @@ fn removed_core_mutation_grant_blocks_mutating_core_methods_only() -> Result<(),
 
     let before_prepare = fixture.counts()?;
     let prepare = adapter.call_tool(
-        "harness.prepare_write",
+        "volicord.prepare_write",
         mcp_arguments(fixture.prepare_write_request(
             "req_missing_core_prepare",
             "idem_missing_core_prepare",
@@ -1276,7 +1276,7 @@ fn removed_artifact_registration_grant_blocks_stage_only() -> Result<(), Box<dyn
 
     let stage = adapter
         .call_tool(
-            "harness.stage_artifact",
+            "volicord.stage_artifact",
             mcp_arguments(fixture.stage_artifact_request(
                 "req_missing_artifact_stage",
                 None,
@@ -1290,7 +1290,7 @@ fn removed_artifact_registration_grant_blocks_stage_only() -> Result<(), Box<dyn
     assert_eq!(fixture.counts()?, before_stage);
 
     let run = adapter.call_tool(
-        "harness.record_run",
+        "volicord.record_run",
         mcp_arguments(fixture.record_run_request(
             "req_missing_artifact_run",
             "idem_missing_artifact_run",
@@ -1335,7 +1335,7 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
     }))?;
     let adapter = adapter(&fixture);
     let check = adapter.call_tool(
-        "harness.close_task",
+        "volicord.close_task",
         mcp_arguments(fixture.close_task_request(CloseTaskFixture {
             request_id: "req_close_intent_check",
             idempotency_key: None,
@@ -1359,7 +1359,7 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
 
     let mutating_without_core = adapter
         .call_tool(
-            "harness.close_task",
+            "volicord.close_task",
             mcp_arguments(fixture.close_task_request(CloseTaskFixture {
                 request_id: "req_close_intent_complete_no_core",
                 idempotency_key: None,
@@ -1379,7 +1379,7 @@ fn close_task_access_derives_from_typed_intent() -> Result<(), Box<dyn Error>> {
         "verification_basis": VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION
     }))?;
     let mutating_with_core = adapter.call_tool(
-        "harness.close_task",
+        "volicord.close_task",
         mcp_arguments(fixture.close_task_request(CloseTaskFixture {
             request_id: "req_close_intent_complete_core",
             idempotency_key: None,
@@ -1417,7 +1417,7 @@ fn integration_access_class_derives_from_method_not_caller_fields() -> Result<()
     let before = fixture.counts()?;
 
     let response = adapter.call_tool(
-        "harness.status",
+        "volicord.status",
         mcp_arguments(fixture.status_request("req_env_no_elevate", None))?,
     )?;
 
@@ -1442,7 +1442,7 @@ fn integration_binding_basis_is_used_for_newly_stored_trusted_basis() -> Result<
     let adapter = adapter(&fixture);
 
     let intake = adapter.call_tool(
-        "harness.intake",
+        "volicord.intake",
         mcp_arguments(fixture.intake_request(
             "req_env_basis_intake",
             "idem_env_basis_intake",
@@ -1455,7 +1455,7 @@ fn integration_binding_basis_is_used_for_newly_stored_trusted_basis() -> Result<
         .expect("task id")
         .to_owned();
     adapter.call_tool(
-        "harness.update_scope",
+        "volicord.update_scope",
         mcp_arguments(fixture.update_scope_request(UpdateScopeFixture {
             request_id: "req_env_basis_scope",
             idempotency_key: "idem_env_basis_scope",
@@ -1471,7 +1471,7 @@ fn integration_binding_basis_is_used_for_newly_stored_trusted_basis() -> Result<
         .expect("Change Unit should be current");
 
     let prepare = adapter.call_tool(
-        "harness.prepare_write",
+        "volicord.prepare_write",
         mcp_arguments(fixture.prepare_write_request(
             "req_env_basis_prepare",
             "idem_env_basis_prepare",
@@ -1558,7 +1558,7 @@ fn invalid_mcp_authority_fields_are_rejected_before_core() -> Result<(), Box<dyn
         let before = fixture.counts()?;
 
         let error = adapter
-            .call_tool("harness.stage_artifact", params)
+            .call_tool("volicord.stage_artifact", params)
             .expect_err("invalid request params should fail before Core");
 
         assert!(matches!(
@@ -1584,7 +1584,7 @@ fn stdio_invalid_known_tool_arguments_return_tool_error_without_storage_effect(
     let input = Cursor::new(
         br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-integration-test","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
-{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"harness.status","arguments":{"envelope":{"project_id":"project_fixture","task_id":null,"actor_kind":"agent","request_id":"req_stdio_invalid","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":true,"evidence":true,"close":true,"guarantees":true},"access_class":"core_mutation"}}}
+{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"volicord.status","arguments":{"envelope":{"project_id":"project_fixture","task_id":null,"actor_kind":"agent","request_id":"req_stdio_invalid","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":true,"evidence":true,"close":true,"guarantees":true},"access_class":"core_mutation"}}}
 "#
         .to_vec(),
     );
@@ -1600,7 +1600,7 @@ fn stdio_invalid_known_tool_arguments_return_tool_error_without_storage_effect(
     let text = response["result"]["content"][0]["text"]
         .as_str()
         .expect("tool error should include text");
-    assert!(text.contains("Invalid arguments for harness.status"));
+    assert!(text.contains("Invalid arguments for volicord.status"));
     assert!(!text.contains("McpAdapterError"));
     assert!(!text.contains("state.sqlite"));
     assert!(!text.contains(fixture.runtime_home_path().to_string_lossy().as_ref()));
@@ -1613,7 +1613,7 @@ fn mcp_session_derives_access_per_method_call() -> Result<(), Box<dyn Error>> {
     let fixture = CoreFixture::new("mcp_access")?;
     let adapter = adapter(&fixture);
     let response = adapter.call_tool(
-        "harness.status",
+        "volicord.status",
         mcp_arguments(fixture.status_request("req_status_derived", None))?,
     )?;
 
@@ -1663,7 +1663,7 @@ fn mcp_replay_rejects_different_session_access_class_without_stored_response(
     );
 
     let first =
-        adapter(&fixture).call_tool("harness.prepare_write", mcp_arguments(request.clone())?)?;
+        adapter(&fixture).call_tool("volicord.prepare_write", mcp_arguments(request.clone())?)?;
     let after_first = fixture.counts()?;
     let write_authorization_id = first.response_value["write_authorization_ref"]["record_id"]
         .as_str()
@@ -1781,7 +1781,7 @@ fn mcp_and_direct_status_omit_same_excluded_projection_fields() -> Result<(), Bo
         request.clone(),
         invocation(&fixture, AccessClass::ReadStatus),
     )?;
-    let mcp = adapter(&fixture).call_tool("harness.status", mcp_arguments(request)?)?;
+    let mcp = adapter(&fixture).call_tool("volicord.status", mcp_arguments(request)?)?;
 
     assert_eq!(direct.response_value, mcp.response_value);
     for field in [
@@ -1932,7 +1932,7 @@ fn replay_surface_foreign_key_is_physical_restrictive_and_requires_identity(
         )
         VALUES (
             ?1,
-            'harness.status',
+            'volicord.status',
             'idem_verified_replay_fk',
             'sha256:verified-replay-fk',
             0,
@@ -1976,7 +1976,7 @@ fn replay_surface_foreign_key_is_physical_restrictive_and_requires_identity(
         )
         VALUES (
             ?1,
-            'harness.status',
+            'volicord.status',
             'idem_dangling_verified_replay',
             'sha256:dangling-replay',
             0,
@@ -2008,7 +2008,7 @@ fn replay_surface_foreign_key_is_physical_restrictive_and_requires_identity(
         )
         VALUES (
             ?1,
-            'harness.intake',
+            'volicord.intake',
             'idem_missing_identity_replay_fk',
             'sha256:missing-identity-replay-fk',
             0,

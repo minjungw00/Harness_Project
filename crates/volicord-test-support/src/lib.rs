@@ -343,7 +343,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.status` request.
+        /// Builds a default `volicord.status` request.
         pub fn status_request(&self, request_id: &str, task_id: Option<&str>) -> StatusRequest {
             StatusRequest {
                 envelope: self.envelope(request_id, None, false, None, task_id),
@@ -351,7 +351,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.intake` request.
+        /// Builds a default `volicord.intake` request.
         pub fn intake_request(
             &self,
             request_id: &str,
@@ -379,7 +379,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.update_scope` request.
+        /// Builds a default `volicord.update_scope` request.
         pub fn update_scope_request(&self, input: UpdateScopeFixture<'_>) -> UpdateScopeRequest {
             let mut fields = Map::new();
             fields.insert(
@@ -419,7 +419,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.prepare_write` request.
+        /// Builds a default `volicord.prepare_write` request.
         pub fn prepare_write_request(
             &self,
             request_id: &str,
@@ -446,7 +446,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.stage_artifact` request.
+        /// Builds a default `volicord.stage_artifact` request.
         pub fn stage_artifact_request(
             &self,
             request_id: &str,
@@ -474,7 +474,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.record_run` request.
+        /// Builds a default `volicord.record_run` request.
         pub fn record_run_request(
             &self,
             request_id: &str,
@@ -511,7 +511,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.request_user_judgment` request.
+        /// Builds a default `volicord.request_user_judgment` request.
         pub fn user_judgment_request(
             &self,
             input: UserJudgmentFixture<'_>,
@@ -571,7 +571,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.record_user_judgment` request.
+        /// Builds a default `volicord.record_user_judgment` request.
         pub fn record_judgment_request(
             &self,
             input: RecordJudgmentFixture<'_>,
@@ -595,7 +595,7 @@ pub mod core_fixtures {
             }
         }
 
-        /// Builds a default `harness.close_task` request.
+        /// Builds a default `volicord.close_task` request.
         pub fn close_task_request(&self, input: CloseTaskFixture<'_>) -> CloseTaskRequest {
             CloseTaskRequest {
                 envelope: self.envelope(

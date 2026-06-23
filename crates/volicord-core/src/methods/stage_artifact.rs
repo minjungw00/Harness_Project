@@ -1,7 +1,7 @@
 use super::*;
 
 impl CoreService {
-    /// Executes `harness.stage_artifact` as storage-owned transient staging.
+    /// Executes `volicord.stage_artifact` as storage-owned transient staging.
     pub fn stage_artifact(
         &self,
         request: StageArtifactRequest,

@@ -1,7 +1,7 @@
 use super::*;
 
 impl CoreService {
-    /// Executes `harness.prepare_write` through the shared Core mutation pipeline.
+    /// Executes `volicord.prepare_write` through the shared Core mutation pipeline.
     pub fn prepare_write(
         &self,
         request: PrepareWriteRequest,

@@ -18,7 +18,7 @@ Core는 하네스 상태를 위한 로컬 기준 기록입니다.
    시작합니다. 모든 Cargo 워크스페이스 멤버, 처음 열 소스 파일, 중요한
    심볼, 관련 테스트, 다음에 읽을 컴포넌트를 확인합니다.
 2. 대표 요청 흐름: [요청 생명주기](request-lifecycle.md)를 읽습니다.
-   `harness.status`, `harness.intake`, `harness.prepare_write`가 MCP
+   `volicord.status`, `volicord.intake`, `volicord.prepare_write`가 MCP
    `tools/call`에서 Core와 Store 동작을 거쳐 MCP 응답 래퍼로 돌아오는
    경로를 따라갑니다.
 3. 아키텍처와 경계: [구현 아키텍처](architecture.md)에서 오래 유지되는

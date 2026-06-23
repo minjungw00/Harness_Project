@@ -915,7 +915,7 @@ mod tests {
         let agents = repo.join("AGENTS.md");
         let text = fs::read_to_string(&agents)?;
         assert!(text.contains(BEGIN_MARKER));
-        assert!(text.contains("harness.list_projects"));
+        assert!(text.contains("volicord.list_projects"));
         let repeated =
             plan_guidance_apply(&repo, "agent_alpha", "project_alpha", GuidanceTarget::Codex)?;
         assert_eq!(repeated.change, PlannedChange::Noop);

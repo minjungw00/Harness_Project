@@ -19,8 +19,8 @@ work. Core is the local authority record for Harness state.
    the first source file to open, important symbols, relevant tests, and the
    next component to read.
 2. Representative request flow: read the
-   [Request Lifecycle](request-lifecycle.md). It follows `harness.status`,
-   `harness.intake`, and `harness.prepare_write` from MCP `tools/call` through
+   [Request Lifecycle](request-lifecycle.md). It follows `volicord.status`,
+   `volicord.intake`, and `volicord.prepare_write` from MCP `tools/call` through
    Core and Store behavior to the MCP response wrapper.
 3. Architecture and boundaries: use
    [Implementation Architecture](architecture.md) for the durable workspace

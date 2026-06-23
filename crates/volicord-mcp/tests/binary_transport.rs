@@ -143,23 +143,23 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
         initialized_notification(),
         request(2, "ping", json!({})),
         request(3, "tools/list", json!({})),
-        tools_call(30, "harness.list_projects", json!({})),
+        tools_call(30, "volicord.list_projects", json!({})),
         tools_call(
             4,
-            "harness.status",
+            "volicord.status",
             status_arguments(PROJECT_ID, "req_binary_status"),
         ),
         tools_call(
             5,
-            "harness.intake",
+            "volicord.intake",
             intake_arguments(PROJECT_ID, "req_binary_intake", "idem_binary_intake"),
         ),
         tools_call(
             6,
-            "harness.status",
+            "volicord.status",
             status_arguments_with_surface_id(PROJECT_ID, AGENT_SURFACE_ID, "req_binary_rejected"),
         ),
-        tools_call(7, "harness.status", json!({ "unexpected": true })),
+        tools_call(7, "volicord.status", json!({ "unexpected": true })),
     ])?;
 
     let first = run_child(
@@ -197,7 +197,7 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
     );
     assert_eq!(
         tool_names[PUBLIC_METHOD_TOOL_NAMES.len()],
-        "harness.list_projects"
+        "volicord.list_projects"
     );
     assert_eq!(
         tool_names.iter().copied().collect::<BTreeSet<_>>().len(),
@@ -252,7 +252,7 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
         initialized_notification(),
         tools_call(
             12,
-            "harness.status",
+            "volicord.status",
             status_arguments(PROJECT_ID, "req_binary_reconnect_status"),
         ),
     ])?;
@@ -297,7 +297,7 @@ fn volicord_mcp_binary_suppresses_malformed_notification_output_and_effects(
         notification(
             "tools/call",
             json!({
-                "name": "harness.intake",
+                "name": "volicord.intake",
                 "arguments": intake_arguments(
                     PROJECT_ID,
                     "req_binary_notification_intake",
@@ -309,7 +309,7 @@ fn volicord_mcp_binary_suppresses_malformed_notification_output_and_effects(
         request(3, "tools/list", json!({})),
         tools_call(
             4,
-            "harness.status",
+            "volicord.status",
             status_arguments(PROJECT_ID, "req_binary_notification_status"),
         ),
     ])?;

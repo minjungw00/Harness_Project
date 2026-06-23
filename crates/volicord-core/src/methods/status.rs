@@ -1,7 +1,7 @@
 use super::*;
 
 impl CoreService {
-    /// Executes `harness.status` as a read-only Core result.
+    /// Executes `volicord.status` as a read-only Core result.
     pub fn status(
         &self,
         request: StatusRequest,

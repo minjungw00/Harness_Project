@@ -27,7 +27,7 @@ The design keeps these responsibilities separate:
   Host Installation inventory.
 - `harness-mcp` validates the integration at startup, derives the bound surface
   context from the profile, exposes the public Harness tools plus the
-  `harness.list_projects` helper, and rejects ambiguous project selection.
+  `volicord.list_projects` helper, and rejects ambiguous project selection.
 - The administrative CLI creates, verifies, updates, and removes integration
   setup for supported hosts, including project-scoped configuration and
   repository guidance files when explicitly authorized.

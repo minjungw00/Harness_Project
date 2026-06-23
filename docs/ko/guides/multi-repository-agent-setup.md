@@ -26,7 +26,7 @@ flowchart LR
 
 두 번째 저장소를 추가하기 전에 Product Repository A에 대한 사용자 범위 호스트 설정을 [에이전트 호스트 설정](agent-host-setup.md)에 따라 완료합니다. 통합은 `complete`일 수 있습니다. 또는 남은 동작이 [에이전트 호스트 문제 해결](agent-host-troubleshooting.md#status-action_required)이 설명하는 호스트 소유 trust, 승인, reload, restart, 또는 그에 준하는 후속 조치일 때만 `action_required`일 수 있습니다.
 
-이 가이드는 하나의 사용자 범위 호스트 항목이 하나의 `integration_id`를 가리키고, 통합 허용 목록이 의도한 저장소들을 포함하고, 에이전트가 다중 저장소 호출에 `harness.list_projects` 또는 명시적 `project_id`를 사용하고, 제거와 재추가가 호스트 파일 편집이 아니라 프로젝트 멤버십 명령으로 수행될 때 완료됩니다.
+이 가이드는 하나의 사용자 범위 호스트 항목이 하나의 `integration_id`를 가리키고, 통합 허용 목록이 의도한 저장소들을 포함하고, 에이전트가 다중 저장소 호출에 `volicord.list_projects` 또는 명시적 `project_id`를 사용하고, 제거와 재추가가 호스트 파일 편집이 아니라 프로젝트 멤버십 명령으로 수행될 때 완료됩니다.
 
 ## 실행 파일 선택 규칙
 
@@ -113,7 +113,7 @@ Status는 `allowed_projects` 아래에 `acme-api`와 `billing-api`를 모두 보
 사용자가 어떤 저장소를 사용할 수 있는지 묻는다면, 에이전트는 어댑터 유틸리티를 호출합니다.
 
 ```json
-{"name":"harness.list_projects","arguments":{}}
+{"name":"volicord.list_projects","arguments":{}}
 ```
 
 MCP 결과에는 다음과 비슷한 JSON 객체가 텍스트로 들어 있습니다.
@@ -143,7 +143,7 @@ Product Repository A에 대해 에이전트는 공개 메서드 envelope에 `pro
 
 ```json
 {
-  "name": "harness.status",
+  "name": "volicord.status",
   "arguments": {
     "envelope": {
       "project_id": "acme-api",
@@ -171,7 +171,7 @@ Product Repository B에 대한 이후 호출은 명시적 프로젝트 선택자
 
 ```json
 {
-  "name": "harness.status",
+  "name": "volicord.status",
   "arguments": {
     "envelope": {
       "project_id": "billing-api",
@@ -198,7 +198,7 @@ Product Repository B에 대한 이후 호출은 명시적 프로젝트 선택자
 에이전트는 폴더 이름, 현재 작업 디렉터리, MCP roots, 호스트 라벨, 기억에서 project ID를 추측하면 안 됩니다. 여러 프로젝트를 사용할 수 있고 명시적 프로젝트나 유효한 기본값이 없으면, 어댑터는 Core 실행 전에 호출을 거부하고 다음과 같은 실행 가능한 텍스트를 반환합니다.
 
 ```text
-project selection is ambiguous; call harness.list_projects and retry with envelope.project_id
+project selection is ambiguous; call volicord.list_projects and retry with envelope.project_id
 ```
 
 ## 기본값과 모호성
@@ -224,7 +224,7 @@ prior_default_project_id: acme-api
 resulting_default_project_id: billing-api
 ```
 
-여러 프로젝트가 남아 있는 동안 기본값을 지우면 생략된 `project_id` 호출은 모호해집니다. 에이전트는 `harness.list_projects`를 호출한 뒤 명시적 `envelope.project_id`로 다시 시도해야 합니다.
+여러 프로젝트가 남아 있는 동안 기본값을 지우면 생략된 `project_id` 호출은 모호해집니다. 에이전트는 `volicord.list_projects`를 호출한 뒤 명시적 `envelope.project_id`로 다시 시도해야 합니다.
 
 이미 모호한 호출이 발생했다면 [여러 허용 프로젝트가 있지만 쓸 수 있는 selector나 default가 없음](agent-host-troubleshooting.md#ambiguous-project-selection)을 봅니다.
 
@@ -269,7 +269,7 @@ allowed_project_count: 0
 not executable until one is added
 ```
 
-제거 뒤 Host Installation 인벤토리와 호스트 설정은 남을 수 있지만, 이 저장 상태는 새 시작이 가능하다는 증명이 아닙니다. 이미 실행 중이던 `harness-mcp` 프로세스는 registry 상태를 새로 읽을 수 있으므로 `harness.list_projects`가 `int-codex-team`에 대해 빈 목록을 반환할 수 있습니다. 그래도 허용 프로젝트가 없으므로 프로젝트 라우팅이 필요한 공개 도구는 진행할 수 없습니다. 새로 시작하는 `harness-mcp` 프로세스, `harness-mcp --check`, 새 MCP 시작이 필요한 검증 경로는 프로젝트가 다시 추가되고 일반 설정 점검을 통과하기 전까지 실패합니다.
+제거 뒤 Host Installation 인벤토리와 호스트 설정은 남을 수 있지만, 이 저장 상태는 새 시작이 가능하다는 증명이 아닙니다. 이미 실행 중이던 `harness-mcp` 프로세스는 registry 상태를 새로 읽을 수 있으므로 `volicord.list_projects`가 `int-codex-team`에 대해 빈 목록을 반환할 수 있습니다. 그래도 허용 프로젝트가 없으므로 프로젝트 라우팅이 필요한 공개 도구는 진행할 수 없습니다. 새로 시작하는 `harness-mcp` 프로세스, `harness-mcp --check`, 새 MCP 시작이 필요한 검증 경로는 프로젝트가 다시 추가되고 일반 설정 점검을 통과하기 전까지 실패합니다.
 
 이 상태의 문제 해결은 [현재 허용 프로젝트가 없지만 호스트 설정이 남아 있음](agent-host-troubleshooting.md#host-config-remains-zero-projects)을 봅니다.
 
@@ -327,5 +327,5 @@ Uninstall이 `partial_failure`를 보고하면 정리를 다시 시도하기 전
 
 - 정확한 호스트/범위와 명령 동작: [관리 CLI](../reference/admin-cli.md)
 - 정확한 Agent Integration Profile과 프로젝트 선택 동작: [에이전트 통합](../reference/agent-integration.md)
-- 정확한 `harness.list_projects` 전송 동작: [MCP 전송](../reference/mcp-transport.md)
+- 정확한 `volicord.list_projects` 전송 동작: [MCP 전송](../reference/mcp-transport.md)
 - 정확한 Product Repository 쓰기 경계: [런타임 경계](../reference/runtime-boundaries.md#explicit-integration-files-in-product-repositories)

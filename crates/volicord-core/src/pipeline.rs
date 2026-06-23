@@ -2167,7 +2167,7 @@ mod tests {
             )
             VALUES (
                 ?1,
-                'harness.update_scope',
+                'volicord.update_scope',
                 'idem_missing_identity_replay',
                 'sha256:missing-identity-replay',
                 0,

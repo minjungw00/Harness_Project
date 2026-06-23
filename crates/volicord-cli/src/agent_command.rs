@@ -80,17 +80,17 @@ const INSTALL_FAULT_ENV: &str = "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP";
 const INSTALL_ROLLBACK_FAULT_ENV: &str = "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL";
 
 const PUBLIC_METHOD_TOOL_NAMES: [&str; 9] = [
-    "harness.intake",
-    "harness.update_scope",
-    "harness.status",
-    "harness.prepare_write",
-    "harness.stage_artifact",
-    "harness.record_run",
-    "harness.request_user_judgment",
-    "harness.record_user_judgment",
-    "harness.close_task",
+    "volicord.intake",
+    "volicord.update_scope",
+    "volicord.status",
+    "volicord.prepare_write",
+    "volicord.stage_artifact",
+    "volicord.record_run",
+    "volicord.request_user_judgment",
+    "volicord.record_user_judgment",
+    "volicord.close_task",
 ];
-const LIST_PROJECTS_TOOL_NAME: &str = "harness.list_projects";
+const LIST_PROJECTS_TOOL_NAME: &str = "volicord.list_projects";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AgentCommandError {
