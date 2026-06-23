@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-//! Shared Rust type boundary for Harness public API and domain-shaped values.
+//! Shared Rust type boundary for Volicord public API and domain-shaped values.
 //!
 //! This crate contains serde models, controlled API value sets, opaque string
 //! identifier wrappers, and deterministic canonical JSON hashing helpers. It

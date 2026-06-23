@@ -125,7 +125,7 @@ fn parse_operational_options(options: &[String]) -> Result<McpCommand, McpComman
             }
             "-h" | "--help" | "-V" | "--version" => {
                 return Err(McpCommandError(
-                    "cannot combine harness-mcp command-line modes".to_owned(),
+                    "cannot combine volicord-mcp command-line modes".to_owned(),
                 ))
             }
             option if option.starts_with('-') => {
@@ -155,12 +155,12 @@ fn parse_operational_options(options: &[String]) -> Result<McpCommand, McpComman
 }
 
 fn usage() -> String {
-    "Usage:\n  harness-mcp --integration <integration_id>\n  harness-mcp --check --integration <integration_id>\n  harness-mcp --check --integration <integration_id> --project <project_id>\n  harness-mcp --help\n  harness-mcp --version\n\nEnvironment:\n  HARNESS_HOME                 Optional Runtime Home path (default: $HOME/.harness)\n\nThe selected Agent Integration Profile supplies the MCP surface binding. Project selection happens per public Harness tool call.\n"
+    "Usage:\n  volicord-mcp --integration <integration_id>\n  volicord-mcp --check --integration <integration_id>\n  volicord-mcp --check --integration <integration_id> --project <project_id>\n  volicord-mcp --help\n  volicord-mcp --version\n\nEnvironment:\n  VOLICORD_HOME                 Optional Runtime Home path (default: $HOME/.volicord)\n\nThe selected Agent Integration Profile supplies the MCP surface binding. Project selection happens per public Volicord tool call.\n"
         .to_owned()
 }
 
 fn version() -> String {
-    format!("harness-mcp {}\n", env!("CARGO_PKG_VERSION"))
+    format!("volicord-mcp {}\n", env!("CARGO_PKG_VERSION"))
 }
 
 #[cfg(test)]
@@ -169,7 +169,7 @@ mod tests {
 
     #[test]
     fn no_argument_dispatch_is_usage_classified() {
-        let error = dispatch_args(["harness-mcp"]).expect_err("no args should be rejected");
+        let error = dispatch_args(["volicord-mcp"]).expect_err("no args should be rejected");
 
         assert_eq!(
             error.to_string(),
@@ -180,17 +180,17 @@ mod tests {
     #[test]
     fn help_and_version_do_not_require_environment() {
         assert_eq!(
-            dispatch_args(["harness-mcp", "--help"]).expect("help should dispatch"),
+            dispatch_args(["volicord-mcp", "--help"]).expect("help should dispatch"),
             McpCommand::Help
         );
         assert!(usage().contains("--integration <integration_id>"));
-        assert!(!usage().contains("HARNESS_PROJECT_ID"));
+        assert!(!usage().contains("VOLICORD_PROJECT_ID"));
         assert_eq!(
             version(),
-            format!("harness-mcp {}\n", env!("CARGO_PKG_VERSION"))
+            format!("volicord-mcp {}\n", env!("CARGO_PKG_VERSION"))
         );
         assert_eq!(
-            dispatch_args(["harness-mcp", "-V"]).expect("version should dispatch"),
+            dispatch_args(["volicord-mcp", "-V"]).expect("version should dispatch"),
             McpCommand::Version
         );
     }
@@ -198,14 +198,14 @@ mod tests {
     #[test]
     fn integration_startup_forms_dispatch() {
         assert_eq!(
-            dispatch_args(["harness-mcp", "--integration", "agent_main"])
+            dispatch_args(["volicord-mcp", "--integration", "agent_main"])
                 .expect("integration stdio should dispatch"),
             McpCommand::Stdio {
                 integration_id: "agent_main".to_owned()
             }
         );
         assert_eq!(
-            dispatch_args(["harness-mcp", "--check", "--integration", "agent_main"])
+            dispatch_args(["volicord-mcp", "--check", "--integration", "agent_main"])
                 .expect("integration check should dispatch"),
             McpCommand::Check {
                 integration_id: "agent_main".to_owned(),
@@ -214,7 +214,7 @@ mod tests {
         );
         assert_eq!(
             dispatch_args([
-                "harness-mcp",
+                "volicord-mcp",
                 "--check",
                 "--integration",
                 "agent_main",
@@ -231,7 +231,7 @@ mod tests {
 
     #[test]
     fn invalid_option_is_usage_classified() {
-        let error = dispatch_args(["harness-mcp", "--bogus"])
+        let error = dispatch_args(["volicord-mcp", "--bogus"])
             .expect_err("unknown option should be a usage error");
 
         assert_eq!(error.to_string(), "unknown option: --bogus");
@@ -239,23 +239,23 @@ mod tests {
 
     #[test]
     fn combined_modes_are_usage_classified() {
-        let error = dispatch_args(["harness-mcp", "--check", "--version"])
+        let error = dispatch_args(["volicord-mcp", "--check", "--version"])
             .expect_err("combined modes should be rejected");
 
         assert_eq!(
             error.to_string(),
-            "cannot combine harness-mcp command-line modes"
+            "cannot combine volicord-mcp command-line modes"
         );
     }
 
     #[test]
     fn missing_integration_is_usage_classified() {
-        let error = dispatch_args(["harness-mcp", "--project", "project_a"])
+        let error = dispatch_args(["volicord-mcp", "--project", "project_a"])
             .expect_err("project without check should be rejected");
 
         assert_eq!(error.to_string(), "--project is only valid with --check");
 
-        let error = dispatch_args(["harness-mcp", "--check", "--project", "project_a"])
+        let error = dispatch_args(["volicord-mcp", "--check", "--project", "project_a"])
             .expect_err("check without integration should be rejected");
 
         assert_eq!(
@@ -263,7 +263,7 @@ mod tests {
             "--integration is required for integration-bound startup"
         );
 
-        let error = dispatch_args(["harness-mcp", "--check"])
+        let error = dispatch_args(["volicord-mcp", "--check"])
             .expect_err("check without integration should be rejected");
 
         assert_eq!(
@@ -274,7 +274,7 @@ mod tests {
 
     #[test]
     fn positional_arguments_are_usage_classified() {
-        let error = dispatch_args(["harness-mcp", "serve"])
+        let error = dispatch_args(["volicord-mcp", "serve"])
             .expect_err("positional arguments should be rejected");
 
         assert_eq!(error.to_string(), "unexpected argument: serve");

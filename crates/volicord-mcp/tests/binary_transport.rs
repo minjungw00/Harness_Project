@@ -51,11 +51,11 @@ fn volicord_mcp_binary_reports_help_version_and_preflight() -> Result<(), Box<dy
     let help = run_without_binding(["--help"])?;
     assert_success(&help);
     assert!(stdout(&help).contains("--integration <integration_id>"));
-    assert!(!stdout(&help).contains("HARNESS_PROJECT_ID"));
+    assert!(!stdout(&help).contains("VOLICORD_PROJECT_ID"));
 
     let version = run_without_binding(["--version"])?;
     assert_success(&version);
-    assert!(stdout(&version).starts_with("harness-mcp "));
+    assert!(stdout(&version).starts_with("volicord-mcp "));
 
     let no_args = run_without_binding([])?;
     assert_eq!(no_args.status.code(), Some(2));
@@ -178,7 +178,7 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
 
     assert_eq!(
         responses[&1]["result"]["serverInfo"]["name"],
-        json!("harness-mcp")
+        json!("volicord-mcp")
     );
     assert_eq!(
         responses[&1]["result"]["protocolVersion"],
@@ -211,11 +211,11 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
     assert_eq!(project_list["projects"][0]["available"], true);
 
     assert_eq!(responses[&4]["result"]["isError"], json!(false));
-    let status = harness_response(&responses[&4])?;
+    let status = volicord_response(&responses[&4])?;
     assert_eq!(status["base"]["response_kind"], "result");
     assert_eq!(status["base"]["state_version"], 0);
 
-    let intake = harness_response(&responses[&5])?;
+    let intake = volicord_response(&responses[&5])?;
     assert_eq!(intake["base"]["response_kind"], "result");
     assert_eq!(intake["base"]["state_version"], 1);
     let task_id = intake["task_ref"]["record_id"]
@@ -266,13 +266,13 @@ fn volicord_mcp_stdio_uses_line_delimited_json_and_reconnects_state() -> Result<
     let reconnect_responses = responses_by_id(&reconnect.stdout)?;
     assert_eq!(
         reconnect_responses[&11]["result"]["serverInfo"]["name"],
-        "harness-mcp"
+        "volicord-mcp"
     );
     assert_eq!(
         reconnect_responses[&11]["result"]["protocolVersion"],
         "2025-11-25"
     );
-    let reconnect_status = harness_response(&reconnect_responses[&12])?;
+    let reconnect_status = volicord_response(&reconnect_responses[&12])?;
     assert_eq!(reconnect_status["base"]["response_kind"], "result");
     assert_eq!(reconnect_status["base"]["state_version"], 1);
     assert_eq!(
@@ -337,7 +337,7 @@ fn volicord_mcp_binary_suppresses_malformed_notification_output_and_effects(
     );
     assert_eq!(responses[&2]["error"]["code"], -32600);
     assert!(responses[&3]["result"]["tools"].is_array());
-    let status = harness_response(&responses[&4])?;
+    let status = volicord_response(&responses[&4])?;
     assert_eq!(status["base"]["response_kind"], "result");
     assert_eq!(status["base"]["state_version"], 0);
     assert_eq!(fixture.counts()?, before);
@@ -409,17 +409,17 @@ impl McpFixture {
 
     fn integration_command<const N: usize>(&self, args: [&str; N]) -> Command {
         let mut command = base_command();
-        command.env("HARNESS_HOME", &self.runtime_home_path);
+        command.env("VOLICORD_HOME", &self.runtime_home_path);
         command.args(args);
         command
     }
 
     fn fixed_project_env_command<const N: usize>(&self, args: [&str; N]) -> Command {
         let mut command = base_command();
-        command.env("HARNESS_HOME", &self.runtime_home_path);
-        command.env("HARNESS_PROJECT_ID", PROJECT_ID);
-        command.env("HARNESS_SURFACE_ID", AGENT_SURFACE_ID);
-        command.env("HARNESS_SURFACE_INSTANCE_ID", AGENT_INSTANCE_ID);
+        command.env("VOLICORD_HOME", &self.runtime_home_path);
+        command.env("VOLICORD_PROJECT_ID", PROJECT_ID);
+        command.env("VOLICORD_SURFACE_ID", AGENT_SURFACE_ID);
+        command.env("VOLICORD_SURFACE_INSTANCE_ID", AGENT_INSTANCE_ID);
         command.args(args);
         command
     }
@@ -506,7 +506,7 @@ fn initialize_request(id: u64) -> Value {
             "protocolVersion": "2025-11-25",
             "capabilities": {},
             "clientInfo": {
-                "name": "harness-binary-test",
+                "name": "volicord-binary-test",
                 "version": "0.0.0"
             }
         }),
@@ -628,7 +628,7 @@ fn responses_by_id(output: &[u8]) -> Result<BTreeMap<u64, Value>, Box<dyn Error>
     Ok(responses)
 }
 
-fn harness_response(response: &Value) -> Result<Value, Box<dyn Error>> {
+fn volicord_response(response: &Value) -> Result<Value, Box<dyn Error>> {
     assert_eq!(response["result"]["isError"], json!(false));
     let text = response["result"]["content"][0]["text"]
         .as_str()

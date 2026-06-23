@@ -106,7 +106,7 @@ impl fmt::Display for UtcTimestampParseError {
 
 impl Error for UtcTimestampParseError {}
 
-/// Supported public Harness method names.
+/// Supported public Volicord method names.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub enum MethodName {
     #[serde(rename = "volicord.intake")]

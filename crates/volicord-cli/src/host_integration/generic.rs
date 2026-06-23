@@ -28,7 +28,7 @@ impl GenericAdapter {
         if !request.mcp_command.is_absolute() {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidCommand,
-                "generic export requires an absolute harness-mcp command path",
+                "generic export requires an absolute volicord-mcp command path",
             )));
         }
 
@@ -197,7 +197,7 @@ impl HostAdapter for GenericAdapter {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::FingerprintMismatch,
                 format!(
-                    "generic export changed since Harness last managed it: {}",
+                    "generic export changed since Volicord last managed it: {}",
                     request.server_name
                 ),
             )));
@@ -307,34 +307,34 @@ mod tests {
         let dir = temp_dir("generic-file")?;
         let adapter = GenericAdapter;
 
-        let plan = adapter.plan(request(&dir, None, Path::new("/bin/harness-mcp")))?;
+        let plan = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
 
         assert_eq!(
             plan.target,
-            HostTarget::Export(dir.join("harness-int_alpha.mcp.json"))
+            HostTarget::Export(dir.join("volicord-int_alpha.mcp.json"))
         );
-        assert_eq!(plan.entry.command, "/bin/harness-mcp");
+        assert_eq!(plan.entry.command, "/bin/volicord-mcp");
         assert_eq!(plan.entry.args, ["--integration", "int_alpha"]);
         assert_eq!(
-            plan.entry.env.get("HARNESS_HOME"),
+            plan.entry.env.get("VOLICORD_HOME"),
             Some(&"/runtime".to_owned())
         );
-        assert!(!plan.entry.env.contains_key("HARNESS_PROJECT_ID"));
-        assert!(!plan.entry.env.contains_key("HARNESS_SURFACE_ID"));
+        assert!(!plan.entry.env.contains_key("VOLICORD_PROJECT_ID"));
+        assert!(!plan.entry.env.contains_key("VOLICORD_SURFACE_ID"));
         Ok(())
     }
 
     #[test]
     fn unrelated_existing_file_is_a_conflict() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-conflict")?;
-        let target = dir.join("harness-int_alpha.mcp.json");
+        let target = dir.join("volicord-int_alpha.mcp.json");
         fs::write(
             &target,
             "{\"mcpServers\":{\"other\":{\"command\":\"x\"}}}\n",
         )?;
         let adapter = GenericAdapter;
 
-        let plan = adapter.plan(request(&dir, None, Path::new("/bin/harness-mcp")))?;
+        let plan = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
 
         assert_eq!(
             plan.conflicts[0].kind,
@@ -351,12 +351,12 @@ mod tests {
     fn safe_owned_update_and_removal() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-owned")?;
         let mut adapter = GenericAdapter;
-        let first = adapter.plan(request(&dir, None, Path::new("/bin/harness-mcp")))?;
+        let first = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
         adapter.apply(&first)?;
         let second = adapter.plan(GenericPlanRequest {
             expected_fingerprint: Some(&first.fingerprint),
-            mcp_command: Path::new("/usr/local/bin/harness-mcp"),
-            ..request(&dir, None, Path::new("/bin/harness-mcp"))
+            mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+            ..request(&dir, None, Path::new("/bin/volicord-mcp"))
         })?;
         assert_eq!(second.change, PlannedChange::Update);
         adapter.apply(&second)?;
@@ -381,14 +381,14 @@ mod tests {
     fn removal_refuses_fingerprint_mismatch() -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-remove-mismatch")?;
         let mut adapter = GenericAdapter;
-        let plan = adapter.plan(request(&dir, None, Path::new("/bin/harness-mcp")))?;
+        let plan = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
         adapter.apply(&plan)?;
         let HostTarget::Export(target) = plan.target.clone() else {
             unreachable!("generic target");
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("/bin/harness-mcp", "/tmp/manual"),
+            fs::read_to_string(&target)?.replace("/bin/volicord-mcp", "/tmp/manual"),
         )?;
 
         let error = adapter
@@ -410,7 +410,7 @@ mod tests {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let dir = temp_dir("generic-verify")?;
         let mut adapter = GenericAdapter;
-        let plan = adapter.plan(request(&dir, None, Path::new("/bin/harness-mcp")))?;
+        let plan = adapter.plan(request(&dir, None, Path::new("/bin/volicord-mcp")))?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "missing");
         adapter.apply(&plan)?;
         let verification = adapter.verify(&plan)?;
@@ -425,7 +425,7 @@ mod tests {
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("/bin/harness-mcp", "/tmp/manual"),
+            fs::read_to_string(&target)?.replace("/bin/volicord-mcp", "/tmp/manual"),
         )?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "changed");
         fs::write(&target, "{")?;

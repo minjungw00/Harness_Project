@@ -22,7 +22,7 @@ use crate::{
     sqlite::{open_read_only_database, registry_db_path},
 };
 
-/// Read-only inspection result for a selected `Harness Runtime Home`.
+/// Read-only inspection result for a selected `Volicord Runtime Home`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RuntimeHomeInspection {
     pub runtime_home: PathBuf,
@@ -1561,8 +1561,8 @@ mod tests {
                 integration_id: "agent_inspected".to_owned(),
                 host_kind: HOST_KIND_CODEX.to_owned(),
                 host_scope: HOST_SCOPE_USER.to_owned(),
-                server_name: "harness-inspected".to_owned(),
-                config_target: "/tmp/harness-inspected-config.toml".to_owned(),
+                server_name: "volicord-inspected".to_owned(),
+                config_target: "/tmp/volicord-inspected-config.toml".to_owned(),
                 managed_fingerprint: "fingerprint-inspected".to_owned(),
                 last_verified_status: VERIFIED_STATUS_COMPLETE.to_owned(),
                 metadata_json: "{}".to_owned(),

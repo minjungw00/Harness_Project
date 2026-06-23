@@ -16,7 +16,7 @@ pub const DEFAULT_ACCESS_CLASS: AccessClass = AccessClass::ReadStatus;
 pub const BASELINE_WORKFLOW_PROFILE: &str = "baseline-workflow";
 
 /// Metadata used by existing low-level administrative registration commands.
-pub const ADMIN_METADATA_JSON: &str = r#"{"created_by":"harness_cli_admin"}"#;
+pub const ADMIN_METADATA_JSON: &str = r#"{"created_by":"volicord_cli_admin"}"#;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RegistrationMetadataError {

@@ -39,7 +39,9 @@ pub mod golden {
 
 /// Returns a candidate disposable runtime-home path without creating it.
 pub fn disposable_runtime_home(name: &str) -> PathBuf {
-    std::env::temp_dir().join("harness-test-runtime").join(name)
+    std::env::temp_dir()
+        .join("volicord-test-runtime")
+        .join(name)
 }
 
 /// Automatically cleaned disposable Runtime Home for implementation tests.
@@ -53,7 +55,7 @@ impl TempRuntimeHome {
     /// Creates a new empty Runtime Home under the system temporary directory.
     pub fn new(prefix: &str) -> std::io::Result<Self> {
         let dir = Builder::new()
-            .prefix(&format!("harness-runtime-{prefix}-"))
+            .prefix(&format!("volicord-runtime-{prefix}-"))
             .tempdir()?;
         let runtime_home_path = dir.path().join("runtime-home");
         fs::create_dir_all(&runtime_home_path)?;
@@ -138,7 +140,7 @@ pub mod core_fixtures {
     /// Product path allowed by the default Change Unit fixture.
     pub const DEFAULT_PRODUCT_PATH: &str = "src/export.rs";
 
-    /// Automatically cleaned Harness Runtime Home with one registered project and surface.
+    /// Automatically cleaned Volicord Runtime Home with one registered project and surface.
     #[derive(Debug)]
     pub struct CoreFixture {
         _runtime_home: TempRuntimeHome,
@@ -1650,7 +1652,7 @@ mod tests {
     fn disposable_runtime_home_stays_under_system_temp() {
         let path = disposable_runtime_home("workspace-skeleton");
         assert!(path.is_absolute());
-        assert!(path.ends_with("harness-test-runtime/workspace-skeleton"));
+        assert!(path.ends_with("volicord-test-runtime/workspace-skeleton"));
     }
 
     #[test]

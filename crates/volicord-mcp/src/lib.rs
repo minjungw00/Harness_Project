@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-//! Local MCP adapter for public Harness method calls.
+//! Local MCP adapter for public Volicord method calls.
 //!
 //! This crate owns only transport dispatch: it registers the documented tools,
 //! decodes tool arguments into `volicord-types` request structs, derives local
@@ -42,10 +42,10 @@ use volicord_types::{
 };
 
 const SUPPORTED_PROTOCOL_VERSION: &str = "2025-11-25";
-const SERVER_NAME: &str = "harness-mcp";
+const SERVER_NAME: &str = "volicord-mcp";
 const DEFAULT_INVOCATION_BINDING_BASIS: &str = VERIFICATION_BASIS_MCP_STDIO_SURFACE_BINDING;
 
-/// The exact public Harness method tools exposed through MCP.
+/// The exact public Volicord method tools exposed through MCP.
 pub const PUBLIC_METHOD_TOOL_NAMES: [&str; 9] = [
     "volicord.intake",
     "volicord.update_scope",
@@ -58,11 +58,11 @@ pub const PUBLIC_METHOD_TOOL_NAMES: [&str; 9] = [
     "volicord.close_task",
 ];
 
-/// Adapter-owned MCP utility tools that are not public Harness Core methods.
+/// Adapter-owned MCP utility tools that are not public Core methods.
 pub const ADAPTER_UTILITY_TOOL_NAMES: [&str; 1] = ["volicord.list_projects"];
 
 const LIST_PROJECTS_TOOL_NAME: &str = "volicord.list_projects";
-const SERVER_INSTRUCTIONS: &str = "Harness records task scope, write readiness, evidence, runs, user-owned judgments, artifacts, and close readiness for explicitly registered Product Repositories. If project selection is unclear, call volicord.list_projects and use one listed project_id; do not guess from folders, roots, labels, or memory. Harness state management is separate from permission to edit product files: product-file edits still require the host/user path and any required Write Authorization. These instructions are guidance, not access control or a promise of automatic tool use.";
+const SERVER_INSTRUCTIONS: &str = "Volicord records task scope, write readiness, evidence, runs, user-owned judgments, artifacts, and close readiness for explicitly registered Product Repositories. If project selection is unclear, call volicord.list_projects and use one listed project_id; do not guess from folders, roots, labels, or memory. Volicord state management is separate from permission to edit product files: product-file edits still require the host/user path and any required Write Authorization. These instructions are guidance, not access control or a promise of automatic tool use.";
 
 /// Minimal MCP adapter marker for validating dependency direction.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -312,7 +312,7 @@ impl McpAdapter {
         }
     }
 
-    /// Returns the public Harness method tools and adapter utility tools exposed by this adapter.
+    /// Returns the public Volicord method tools and adapter utility tools exposed by this adapter.
     pub fn tools(&self) -> Vec<McpToolDefinition> {
         mcp_tools()
     }
@@ -337,7 +337,7 @@ impl McpAdapter {
         })
     }
 
-    /// Calls one public Harness method tool and returns Core's response.
+    /// Calls one public Volicord method tool and returns Core's response.
     pub fn call_tool(
         &self,
         tool_name: &str,
@@ -548,7 +548,7 @@ impl McpAdapter {
             .and_then(Value::as_object_mut)
             .ok_or_else(|| McpAdapterError::ToolExecution {
                 tool_name: tool_name.to_owned(),
-                message: "public Harness tool arguments require an envelope object".to_owned(),
+                message: "public Volicord tool arguments require an envelope object".to_owned(),
             })?;
         reject_caller_owned_surface_identity(envelope, tool_name)?;
         let requested_project_id = optional_string_field(envelope, "project_id", tool_name)?;
@@ -683,7 +683,7 @@ struct PreparedCoreRequest<T> {
     invocation: Result<McpDerivedInvocationContext, ToolError>,
 }
 
-/// Returns the exact public Harness method tool definitions.
+/// Returns the exact public Volicord method tool definitions.
 pub fn public_method_tools() -> Vec<McpToolDefinition> {
     PUBLIC_METHOD_TOOL_NAMES
         .iter()
@@ -1615,9 +1615,9 @@ fn tool_execution_error_result(error: &McpAdapterError) -> Value {
             format!("{message}. Use volicord.list_projects when project selection is unclear.")
         }
         McpAdapterError::ToolExecution { tool_name, message } => {
-            format!("{tool_name} failed before reaching Harness Core: {message}")
+            format!("{tool_name} failed before reaching Core: {message}")
         }
-        _ => "Tool execution failed before reaching Harness Core.".to_owned(),
+        _ => "Tool execution failed before reaching Core.".to_owned(),
     };
 
     json!({
@@ -1697,7 +1697,7 @@ fn tool_description(name: &str) -> &'static str {
         "volicord.record_user_judgment" => "Record the user's answer to one pending judgment.",
         "volicord.close_task" => "Check or perform a selected Task close path.",
         LIST_PROJECTS_TOOL_NAME => "List projects explicitly allowed for this MCP integration.",
-        _ => "Unsupported Harness method.",
+        _ => "Unsupported Volicord method.",
     }
 }
 
@@ -2181,7 +2181,7 @@ mod tests {
             .expect("initialize result should include instructions");
 
         assert!(instructions.len() < 2048);
-        assert!(instructions[..instructions.len().min(512)].contains("Harness records"));
+        assert!(instructions[..instructions.len().min(512)].contains("Volicord records"));
         assert!(instructions.contains("volicord.list_projects"));
         assert!(instructions.contains("do not guess"));
         assert!(instructions.contains("separate from permission to edit product files"));
@@ -2581,7 +2581,7 @@ mod tests {
         let harness = TestHarness::new(json!({}))?;
         let adapter = harness.adapter();
         let input = Cursor::new(
-            br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-unit-test","version":"0.0.0"}}}
+            br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"volicord-unit-test","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
 {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
 "#
@@ -2756,10 +2756,10 @@ mod tests {
         let harness = TestHarness::new(json!({}))?;
         let adapter = harness.adapter();
         let input = Cursor::new(
-            br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","clientInfo":{"name":"harness-unit-test","version":"0.0.0"}}}
+            br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","clientInfo":{"name":"volicord-unit-test","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
 {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
-{"jsonrpc":"2.0","id":3,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-unit-test","version":"0.0.0"}}}
+{"jsonrpc":"2.0","id":3,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"volicord-unit-test","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
 {"jsonrpc":"2.0","id":4,"method":"tools/list","params":{}}
 "#
@@ -2963,7 +2963,7 @@ mod tests {
                         "protocolVersion": SUPPORTED_PROTOCOL_VERSION,
                         "capabilities": {},
                         "clientInfo": {
-                            "name": "harness-unit-test",
+                            "name": "volicord-unit-test",
                             "version": "0.0.0"
                         }
                     })),
@@ -3058,7 +3058,7 @@ mod tests {
         let text = responses[12]["result"]["content"][0]["text"]
             .as_str()
             .expect("typed validation failure should include text content");
-        assert!(text.contains("before reaching Harness Core"));
+        assert!(text.contains("before reaching Core"));
         assert_error_response(&responses[13], json!(15), -32602);
         assert_error_response(&responses[14], json!(14), -32601);
         assert_eq!(harness.counts()?, before);
@@ -3687,7 +3687,7 @@ mod tests {
                 "protocolVersion": protocol_version,
                 "capabilities": {},
                 "clientInfo": {
-                    "name": "harness-unit-test",
+                    "name": "volicord-unit-test",
                     "version": "0.0.0"
                 }
             })),
@@ -3769,7 +3769,7 @@ mod tests {
         let current_dir = TempRuntimeHome::new("mcp-current-dir")?;
         fn env_var(name: &str) -> Option<OsString> {
             match name {
-                "HARNESS_HOME" => Some(OsString::from("runtime-home")),
+                "VOLICORD_HOME" => Some(OsString::from("runtime-home")),
                 _ => None,
             }
         }
@@ -3799,7 +3799,10 @@ mod tests {
 
         assert_eq!(
             resolved,
-            current_dir.path().join("userprofile-home").join(".harness")
+            current_dir
+                .path()
+                .join("userprofile-home")
+                .join(".volicord")
         );
         Ok(())
     }
@@ -3810,7 +3813,7 @@ mod tests {
 
         let error = resolve_runtime_home(
             |name| {
-                if name == "HARNESS_HOME" {
+                if name == "VOLICORD_HOME" {
                     Some(OsString::new())
                 } else {
                     None
@@ -3818,10 +3821,12 @@ mod tests {
             },
             current_dir.path(),
         )
-        .expect_err("empty HARNESS_HOME should fail");
+        .expect_err("empty VOLICORD_HOME should fail");
 
         assert!(matches!(error, McpAdapterError::Environment(_)));
-        assert!(error.to_string().contains("HARNESS_HOME must not be empty"));
+        assert!(error
+            .to_string()
+            .contains("VOLICORD_HOME must not be empty"));
     }
 
     #[test]
@@ -3831,7 +3836,7 @@ mod tests {
         let explicit = runtime_home.path().join("explicit");
 
         let resolved = resolve_runtime_home_from_env(|name| {
-            if name == "HARNESS_HOME" {
+            if name == "VOLICORD_HOME" {
                 Some(explicit.clone().into_os_string())
             } else {
                 None

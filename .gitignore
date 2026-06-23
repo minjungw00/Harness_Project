@@ -6,10 +6,10 @@
 # Rust build output
 /target/
 
-# Local Harness runtime artifacts
-/.harness/
-/.harness-runtime/
-/harness-runtime/
+# Local Volicord runtime artifacts
+/.volicord/
+/.volicord-runtime/
+/volicord-runtime/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal

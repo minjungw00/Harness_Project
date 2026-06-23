@@ -41,7 +41,7 @@ const AGENT_SURFACE_ID: &str = "surface_binary_agent";
 const AGENT_INSTANCE_ID: &str = "surface_instance_binary_agent";
 const USER_SURFACE_ID: &str = "surface_binary_user";
 const USER_INSTANCE_ID: &str = "surface_instance_binary_user";
-const GUIDANCE_BEGIN_MARKER: &str = "<!-- BEGIN HARNESS MANAGED GUIDANCE v1 -->";
+const GUIDANCE_BEGIN_MARKER: &str = "<!-- BEGIN VOLICORD MANAGED GUIDANCE v1 -->";
 
 #[test]
 fn volicord_binary_runs_administrative_initialization_and_registration(
@@ -52,12 +52,12 @@ fn volicord_binary_runs_administrative_initialization_and_registration(
 
     let help = run_without_home(["--help"])?;
     assert_success(&help);
-    assert!(stdout(&help).contains("harness init"));
-    assert!(!stdout(&help).contains("harness setup"));
+    assert!(stdout(&help).contains("volicord init"));
+    assert!(!stdout(&help).contains("volicord setup"));
 
     let version = run_without_home(["--version"])?;
     assert_success(&version);
-    assert!(stdout(&version).starts_with("harness "));
+    assert!(stdout(&version).starts_with("volicord "));
 
     let init = run_with_home(
         runtime_home.path(),
@@ -202,7 +202,7 @@ fn volicord_binary_setup_command_family_is_unknown() -> Result<(), Box<dyn Error
         assert_eq!(output.status.code(), Some(2));
         assert!(stdout(&output).is_empty());
         assert!(stderr(&output).contains("unknown command: setup"));
-        assert!(!stderr(&output).contains("harness setup local-mcp"));
+        assert!(!stderr(&output).contains("volicord setup local-mcp"));
     }
     Ok(())
 }
@@ -510,7 +510,7 @@ fn volicord_binary_agent_option_alignment_for_server_name_and_mcp_command(
     let omitted_server_json: Value = serde_json::from_str(&stdout(&omitted_server))?;
     assert_eq!(
         omitted_server_json["host"]["server_name"],
-        "harness-agent_server_name_default"
+        "volicord-agent_server_name_default"
     );
 
     let project_absolute = run_with_home(
@@ -535,7 +535,7 @@ fn volicord_binary_agent_option_alignment_for_server_name_and_mcp_command(
     )?;
     assert_eq!(project_absolute.status.code(), Some(2));
     assert!(stderr(&project_absolute).contains("project-scoped host configuration"));
-    assert!(stderr(&project_absolute).contains("harness-mcp"));
+    assert!(stderr(&project_absolute).contains("volicord-mcp"));
 
     let project_portable = run_with_home(
         runtime_home.path(),
@@ -553,7 +553,7 @@ fn volicord_binary_agent_option_alignment_for_server_name_and_mcp_command(
             "--repo-root",
             path_text(&repo_project).as_str(),
             "--mcp-command",
-            "harness-mcp",
+            "volicord-mcp",
             "--dry-run",
             "--output",
             "json",
@@ -615,7 +615,7 @@ fn volicord_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(),
             "--integration-id",
             "agent_codex_user",
             "--server-name",
-            "harness-test",
+            "volicord-test",
             "--project-id",
             "project_agent_codex",
             "--repo-root",
@@ -630,9 +630,9 @@ fn volicord_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(),
     assert!(stdout(&install).contains("verification: complete"));
 
     let config = fs::read_to_string(codex_home.join("config.toml"))?;
-    assert!(config.contains("[mcp_servers.harness-test]"));
+    assert!(config.contains("[mcp_servers.volicord-test]"));
     assert!(config.contains("args = [\"--integration\", \"agent_codex_user\"]"));
-    assert!(!config.contains("HARNESS_PROJECT_ID"));
+    assert!(!config.contains("VOLICORD_PROJECT_ID"));
 
     let integration = agent_integration_record(runtime_home.path(), "agent_codex_user")?
         .expect("integration should be stored");
@@ -669,7 +669,7 @@ fn volicord_binary_agent_codex_user_install_verify_and_uninstall() -> Result<(),
     assert_success(&uninstall);
     assert!(stdout(&uninstall).contains("status: complete"));
     let config_after = fs::read_to_string(codex_home.join("config.toml"))?;
-    assert!(!config_after.contains("[mcp_servers.harness-test]"));
+    assert!(!config_after.contains("[mcp_servers.volicord-test]"));
     assert!(
         list_host_installations_for_integration(runtime_home.path(), "agent_codex_user")?
             .is_empty()
@@ -708,7 +708,7 @@ fn volicord_binary_agent_codex_existing_user_target_survives_environment_changes
             "--integration-id",
             "agent_codex_stored_target",
             "--server-name",
-            "harness-stored-target",
+            "volicord-stored-target",
             "--project-id",
             "project_codex_stored_target",
             "--repo-root",
@@ -728,7 +728,7 @@ fn volicord_binary_agent_codex_existing_user_target_survives_environment_changes
     fs::create_dir_all(&ambient_codex_home)?;
     let ambient_config = ambient_codex_home.join("config.toml");
     let ambient_text =
-        "[mcp_servers.harness-stored-target]\ncommand = \"ambient-codex-home\"\n".to_owned();
+        "[mcp_servers.volicord-stored-target]\ncommand = \"ambient-codex-home\"\n".to_owned();
     fs::write(&ambient_config, &ambient_text)?;
     let ambient_env = codex_env(&ambient_codex_home, &[runtime_home.path()]);
     let status = run_with_home_and_env(
@@ -747,7 +747,7 @@ fn volicord_binary_agent_codex_existing_user_target_survives_environment_changes
     fs::create_dir_all(later_home.join(".codex"))?;
     fs::write(
         later_home.join(".codex").join("config.toml"),
-        "[mcp_servers.harness-stored-target]\ncommand = \"ambient-home\"\n",
+        "[mcp_servers.volicord-stored-target]\ncommand = \"ambient-home\"\n",
     )?;
     let no_codex_home_env = vec![
         ("HOME", path_text(&later_home)),
@@ -785,7 +785,7 @@ fn volicord_binary_agent_codex_existing_user_target_survives_environment_changes
         &ambient_env,
     )?;
     assert_success(&uninstall);
-    assert_no_codex_server(&stored_config, "harness-stored-target")?;
+    assert_no_codex_server(&stored_config, "volicord-stored-target")?;
     assert_eq!(fs::read_to_string(&ambient_config)?, ambient_text);
     Ok(())
 }
@@ -814,7 +814,7 @@ fn volicord_binary_agent_codex_verify_reports_stored_missing_without_ambient_fal
             "--integration-id",
             "agent_codex_stored_missing",
             "--server-name",
-            "harness-stored-missing",
+            "volicord-stored-missing",
             "--project-id",
             "project_codex_stored_missing",
             "--repo-root",
@@ -892,7 +892,7 @@ fn volicord_binary_agent_codex_user_install_requires_codex_executable() -> Resul
             "--integration-id",
             "agent_codex_missing",
             "--server-name",
-            "harness-codex-missing",
+            "volicord-codex-missing",
             "--project-id",
             "project_codex_missing",
             "--repo-root",
@@ -958,7 +958,7 @@ fn volicord_binary_agent_codex_user_verify_requires_codex_executable() -> Result
             "--integration-id",
             "agent_codex_verify_missing",
             "--server-name",
-            "harness-codex-verify-missing",
+            "volicord-codex-verify-missing",
             "--project-id",
             "project_codex_verify_missing",
             "--repo-root",
@@ -1033,7 +1033,7 @@ fn volicord_binary_agent_codex_user_failing_executable_is_action_required(
             "--integration-id",
             "agent_codex_version_fails",
             "--server-name",
-            "harness-codex-version-fails",
+            "volicord-codex-version-fails",
             "--project-id",
             "project_codex_version_fails",
             "--repo-root",
@@ -1070,7 +1070,7 @@ fn volicord_binary_agent_dry_run_writes_nothing_and_rejects_invalid_scope(
     let runtime_home = TempRuntimeHome::new("cli-bin-agent-dry-run")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let codex_home = runtime_home.path().join("codex-home");
-    let mcp_command = runtime_home.path().join("harness-mcp-dry");
+    let mcp_command = runtime_home.path().join("volicord-mcp-dry");
     fs::write(&mcp_command, "not executed")?;
 
     let dry_run = run_with_home_and_env(
@@ -1148,7 +1148,7 @@ fn volicord_binary_agent_dry_run_missing_runtime_home_creates_nothing() -> Resul
     let selected_runtime_home = scratch.path().join("missing-runtime-home");
     let repo_root = scratch.create_product_repo("product-repo")?;
     let codex_home = scratch.path().join("codex-home");
-    let mcp_command = scratch.path().join("harness-mcp-dry-missing");
+    let mcp_command = scratch.path().join("volicord-mcp-dry-missing");
     fs::write(&mcp_command, "not executed")?;
 
     let dry_run = run_without_home_and_env(
@@ -1195,7 +1195,7 @@ fn volicord_binary_agent_generic_export_dry_run_creates_no_export_files(
     let selected_runtime_home = scratch.path().join("missing-runtime-home");
     let repo_root = scratch.create_product_repo("product-repo")?;
     let export_dir = scratch.path().join("missing-export-dir").join("nested");
-    let mcp_command = scratch.path().join("harness-mcp-generic-dry");
+    let mcp_command = scratch.path().join("volicord-mcp-generic-dry");
     fs::write(&mcp_command, "not executed")?;
 
     let dry_run = run_without_home([
@@ -1244,7 +1244,7 @@ fn volicord_binary_agent_dry_run_old_profile_registry_is_read_only_and_rejected(
     )?;
     mark_registry_old_profile(runtime_home.path())?;
     let codex_home = runtime_home.path().join("codex-home");
-    let mcp_command = runtime_home.path().join("harness-mcp-old-profile-dry");
+    let mcp_command = runtime_home.path().join("volicord-mcp-old-profile-dry");
     fs::write(&mcp_command, "not executed")?;
     let registry_path = registry_db_path(runtime_home.path());
     let hash_before = file_hash(&registry_path)?;
@@ -1319,7 +1319,7 @@ fn volicord_binary_agent_dry_run_current_registry_is_byte_identical() -> Result<
             "--integration-id",
             "agent_registry_v2_dry",
             "--server-name",
-            "harness-registry-v2-dry",
+            "volicord-registry-v2-dry",
             "--project-id",
             "project_registry_v2_dry",
             "--repo-root",
@@ -1349,7 +1349,7 @@ fn volicord_binary_agent_dry_run_current_registry_is_byte_identical() -> Result<
             "--integration-id",
             "agent_registry_v2_dry",
             "--server-name",
-            "harness-registry-v2-dry",
+            "volicord-registry-v2-dry",
             "--project-id",
             "project_registry_v2_dry",
             "--repo-root",
@@ -1452,7 +1452,7 @@ fn volicord_binary_agent_guidance_apply_status_and_remove_flow() -> Result<(), B
             "--integration-id",
             "agent_guidance_flow",
             "--server-name",
-            "harness-guidance-flow",
+            "volicord-guidance-flow",
             "--project-id",
             "project_guidance_flow",
             "--repo-root",
@@ -1619,7 +1619,7 @@ fn volicord_binary_agent_install_guidance_both_and_uninstall_managed() -> Result
             "--integration-id",
             "agent_guidance_install",
             "--server-name",
-            "harness-guidance-install",
+            "volicord-guidance-install",
             "--project-id",
             "project_guidance_install",
             "--repo-root",
@@ -1638,7 +1638,7 @@ fn volicord_binary_agent_install_guidance_both_and_uninstall_managed() -> Result
     assert!(stdout(&install).contains("claude_code: present"));
 
     let agents_path = repo_root.join("AGENTS.md");
-    let claude_path = repo_root.join(".claude").join("rules").join("harness.md");
+    let claude_path = repo_root.join(".claude").join("rules").join("volicord.md");
     assert!(fs::read_to_string(&agents_path)?.contains(GUIDANCE_BEGIN_MARKER));
     assert!(fs::read_to_string(&claude_path)?.contains(GUIDANCE_BEGIN_MARKER));
 
@@ -1700,7 +1700,7 @@ fn volicord_binary_agent_uninstall_preserves_changed_guidance() -> Result<(), Bo
             "--integration-id",
             "agent_guidance_conflict",
             "--server-name",
-            "harness-guidance-conflict",
+            "volicord-guidance-conflict",
             "--project-id",
             "project_guidance_conflict",
             "--repo-root",
@@ -1782,7 +1782,7 @@ fn volicord_binary_agent_install_compensates_new_guidance_after_verification_fai
             "--integration-id",
             "agent_guidance_compensate",
             "--server-name",
-            "harness-guidance-compensate",
+            "volicord-guidance-compensate",
             "--project-id",
             "project_guidance_compensate",
             "--repo-root",
@@ -1806,7 +1806,7 @@ fn volicord_binary_agent_install_compensates_new_guidance_after_verification_fai
     assert!(!agents.contains(GUIDANCE_BEGIN_MARKER));
     assert_no_codex_server(
         &codex_home.join("config.toml"),
-        "harness-guidance-compensate",
+        "volicord-guidance-compensate",
     )?;
     Ok(())
 }
@@ -1827,7 +1827,7 @@ fn volicord_binary_agent_install_faults_roll_back_reversible_effects() -> Result
         let integration_id = format!("agent_fault_{step}");
         let surface_id = format!("surface_fault_{step}");
         let surface_instance_id = format!("surface_instance_fault_{step}");
-        let server_name = format!("harness-fault-{}", step.replace('_', "-"));
+        let server_name = format!("volicord-fault-{}", step.replace('_', "-"));
         initialize_agent_install_fixture(
             runtime_home.path(),
             &repo_root,
@@ -1839,7 +1839,7 @@ fn volicord_binary_agent_install_faults_roll_back_reversible_effects() -> Result
         let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
         write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
         let mut env = codex_env(&codex_home, &[runtime_home.path()]);
-        env.push(("HARNESS_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()));
+        env.push(("VOLICORD_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()));
 
         let output = run_with_home_and_env_slice(
             runtime_home.path(),
@@ -1906,7 +1906,7 @@ fn volicord_binary_agent_install_guidance_apply_faults_are_compensated(
         let integration_id = format!("agent_{step}");
         let surface_id = format!("surface_{step}");
         let surface_instance_id = format!("surface_instance_{step}");
-        let server_name = format!("harness-{}", step.replace('_', "-"));
+        let server_name = format!("volicord-{}", step.replace('_', "-"));
         initialize_agent_install_fixture(
             runtime_home.path(),
             &repo_root,
@@ -1918,7 +1918,7 @@ fn volicord_binary_agent_install_guidance_apply_faults_are_compensated(
         let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
         write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
         let mut env = codex_env(&codex_home, &[runtime_home.path()]);
-        env.push(("HARNESS_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()));
+        env.push(("VOLICORD_TEST_AGENT_INSTALL_FAIL_STEP", step.to_owned()));
 
         let output = run_with_home_and_env_slice(
             runtime_home.path(),
@@ -1972,7 +1972,7 @@ fn volicord_binary_agent_install_guidance_apply_faults_are_compensated(
         assert!(!repo_root
             .join(".claude")
             .join("rules")
-            .join("harness.md")
+            .join("volicord.md")
             .exists());
     }
     Ok(())
@@ -1995,11 +1995,11 @@ fn volicord_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<
     write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
     let mut host_env = codex_env(&codex_home, &[runtime_home.path()]);
     host_env.push((
-        "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP",
+        "VOLICORD_TEST_AGENT_INSTALL_FAIL_STEP",
         "inventory_record".to_owned(),
     ));
     host_env.push((
-        "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
+        "VOLICORD_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
         "host".to_owned(),
     ));
     let host_residual = run_with_home_and_env(
@@ -2014,7 +2014,7 @@ fn volicord_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<
             "--integration-id",
             "agent_host_rollback",
             "--server-name",
-            "harness-host-rollback",
+            "volicord-host-rollback",
             "--project-id",
             "project_host_rollback",
             "--repo-root",
@@ -2040,7 +2040,7 @@ fn volicord_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<
         .iter()
         .any(|residual| residual["component"] == "host_config"));
     assert!(fs::read_to_string(codex_home.join("config.toml"))?
-        .contains("[mcp_servers.harness-host-rollback]"));
+        .contains("[mcp_servers.volicord-host-rollback]"));
 
     let runtime_home = TempRuntimeHome::new("cli-bin-agent-guidance-rollback-residual")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
@@ -2056,11 +2056,11 @@ fn volicord_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<
     write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
     let mut guidance_env = codex_env(&codex_home, &[runtime_home.path()]);
     guidance_env.push((
-        "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP",
+        "VOLICORD_TEST_AGENT_INSTALL_FAIL_STEP",
         "final_verification_status_update".to_owned(),
     ));
     guidance_env.push((
-        "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
+        "VOLICORD_TEST_AGENT_INSTALL_ROLLBACK_FAIL",
         "guidance".to_owned(),
     ));
     let guidance_residual = run_with_home_and_env(
@@ -2075,7 +2075,7 @@ fn volicord_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<
             "--integration-id",
             "agent_guidance_rollback",
             "--server-name",
-            "harness-guidance-rollback",
+            "volicord-guidance-rollback",
             "--project-id",
             "project_guidance_rollback",
             "--repo-root",
@@ -2104,7 +2104,10 @@ fn volicord_binary_agent_install_reports_rollback_residuals() -> Result<(), Box<
         .iter()
         .any(|residual| residual["component"] == "guidance"));
     assert!(fs::read_to_string(repo_root.join("AGENTS.md"))?.contains(GUIDANCE_BEGIN_MARKER));
-    assert_no_codex_server(&codex_home.join("config.toml"), "harness-guidance-rollback")?;
+    assert_no_codex_server(
+        &codex_home.join("config.toml"),
+        "volicord-guidance-rollback",
+    )?;
     Ok(())
 }
 
@@ -2133,7 +2136,7 @@ fn volicord_binary_agent_user_scope_project_membership_is_single_host_entry(
             "--integration-id",
             "agent_multi_project",
             "--server-name",
-            "harness-multi",
+            "volicord-multi",
             "--project-id",
             "project_a",
             "--repo-root",
@@ -2576,7 +2579,7 @@ fn volicord_binary_agent_project_and_uninstall_dry_runs_are_read_only() -> Resul
             "--integration-id",
             "agent_project_uninstall_dry",
             "--server-name",
-            "harness-project-uninstall-dry",
+            "volicord-project-uninstall-dry",
             "--project-id",
             "project_dry_a",
             "--repo-root",
@@ -2715,7 +2718,7 @@ fn volicord_binary_agent_claude_project_install_reports_action_required(
     let bin_dir = runtime_home.path().join("bin");
     fs::create_dir_all(&bin_dir)?;
     let mcp = write_agent_mcp(&bin_dir, AgentMcpFixture::Complete)?;
-    fs::rename(&mcp, bin_dir.join("harness-mcp"))?;
+    fs::rename(&mcp, bin_dir.join("volicord-mcp"))?;
     write_fake_claude_mcp_get(&bin_dir, "⏸ Pending approval")?;
 
     let install = run_with_home_and_env(
@@ -2730,7 +2733,7 @@ fn volicord_binary_agent_claude_project_install_reports_action_required(
             "--integration-id",
             "agent_claude_project",
             "--server-name",
-            "harness-claude",
+            "volicord-claude",
             "--project-id",
             "project_claude",
             "--repo-root",
@@ -2744,8 +2747,8 @@ fn volicord_binary_agent_claude_project_install_reports_action_required(
     let project_config: Value =
         serde_json::from_str(&fs::read_to_string(repo_root.join(".mcp.json"))?)?;
     assert_eq!(
-        project_config["mcpServers"]["harness-claude"]["command"],
-        "harness-mcp"
+        project_config["mcpServers"]["volicord-claude"]["command"],
+        "volicord-mcp"
     );
     let installations =
         list_host_installations_for_integration(runtime_home.path(), "agent_claude_project")?;
@@ -2778,10 +2781,10 @@ fn volicord_binary_agent_claude_project_connected_verify_completes() -> Result<(
     let bin_dir = runtime_home.path().join("bin");
     fs::create_dir_all(&bin_dir)?;
     let mcp = write_agent_mcp(&bin_dir, AgentMcpFixture::Complete)?;
-    fs::rename(&mcp, bin_dir.join("harness-mcp"))?;
+    fs::rename(&mcp, bin_dir.join("volicord-mcp"))?;
     write_fake_claude_mcp_get(
         &bin_dir,
-        "Status: ✓ Connected\nScope: project\nCommand: harness-mcp\nArgs: [\"--integration\",\"agent_claude_connected\"]",
+        "Status: ✓ Connected\nScope: project\nCommand: volicord-mcp\nArgs: [\"--integration\",\"agent_claude_connected\"]",
     )?;
 
     let install = run_with_home_and_env(
@@ -2796,7 +2799,7 @@ fn volicord_binary_agent_claude_project_connected_verify_completes() -> Result<(
             "--integration-id",
             "agent_claude_connected",
             "--server-name",
-            "harness-claude-connected",
+            "volicord-claude-connected",
             "--project-id",
             "project_claude_connected",
             "--repo-root",
@@ -2832,7 +2835,7 @@ fn volicord_binary_agent_generic_export_verify_remains_action_required(
     let runtime_home = TempRuntimeHome::new("cli-bin-agent-generic-verify")?;
     let repo_root = runtime_home.create_product_repo("product-repo")?;
     let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
-    let export_path = runtime_home.path().join("harness-generic.mcp.json");
+    let export_path = runtime_home.path().join("volicord-generic.mcp.json");
     let install = run_with_home(
         runtime_home.path(),
         [
@@ -2845,7 +2848,7 @@ fn volicord_binary_agent_generic_export_verify_remains_action_required(
             "--integration-id",
             "agent_generic_verify",
             "--server-name",
-            "harness-generic",
+            "volicord-generic",
             "--project-id",
             "project_generic_verify",
             "--repo-root",
@@ -2905,7 +2908,7 @@ fn volicord_binary_agent_verify_reports_persistence_update_failure() -> Result<(
             "--integration-id",
             "agent_verify_persist",
             "--server-name",
-            "harness-persist",
+            "volicord-persist",
             "--project-id",
             "project_verify_persist",
             "--repo-root",
@@ -2974,7 +2977,7 @@ fn volicord_binary_agent_mcp_tool_discovery_failures_are_partial_failure(
                 "--integration-id",
                 "agent_mcp_failure",
                 "--server-name",
-                "harness-failure",
+                "volicord-failure",
                 "--project-id",
                 "project_failure",
                 "--repo-root",
@@ -2989,7 +2992,7 @@ fn volicord_binary_agent_mcp_tool_discovery_failures_are_partial_failure(
         assert!(stdout(&output).contains(expected));
         assert!(stdout(&output).contains("residual_effects:"));
         assert!(agent_integration_record(runtime_home.path(), "agent_mcp_failure")?.is_none());
-        assert_no_codex_server(&codex_home.join("config.toml"), "harness-failure")?;
+        assert_no_codex_server(&codex_home.join("config.toml"), "volicord-failure")?;
     }
     Ok(())
 }
@@ -3021,8 +3024,8 @@ fn volicord_binary_agent_verify_selected_installation_uses_only_selected_command
     write_fake_codex(&bin_dir, CodexFixture::Ready)?;
 
     for (server_name, command, codex_home) in [
-        ("harness-first", &first_mcp, &first_codex_home),
-        ("harness-second", &second_mcp, &second_codex_home),
+        ("volicord-first", &first_mcp, &first_codex_home),
+        ("volicord-second", &second_mcp, &second_codex_home),
     ] {
         let codex_env = codex_env(codex_home, &[&bin_dir]);
         let install = run_with_home_and_env(
@@ -3055,12 +3058,12 @@ fn volicord_binary_agent_verify_selected_installation_uses_only_selected_command
     assert_eq!(installations.len(), 2);
     let selected = installations
         .iter()
-        .find(|installation| installation.server_name == "harness-first")
+        .find(|installation| installation.server_name == "volicord-first")
         .expect("first installation")
         .clone();
     let unselected = installations
         .iter()
-        .find(|installation| installation.server_name == "harness-second")
+        .find(|installation| installation.server_name == "volicord-second")
         .expect("second installation")
         .clone();
     update_host_installation_verification(
@@ -3074,7 +3077,7 @@ fn volicord_binary_agent_verify_selected_installation_uses_only_selected_command
     fs::create_dir_all(&ambient_codex_home)?;
     fs::write(
         ambient_codex_home.join("config.toml"),
-        "[mcp_servers.harness-first]\ncommand = \"ambient\"\n",
+        "[mcp_servers.volicord-first]\ncommand = \"ambient\"\n",
     )?;
     let ambient_env = codex_env(&ambient_codex_home, &[&bin_dir]);
 
@@ -3139,7 +3142,7 @@ fn volicord_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
     )?;
     let _project_mcp = write_recording_agent_mcp(
         &bin_dir,
-        "harness-mcp",
+        "volicord-mcp",
         AgentMcpFixture::Complete,
         &project_log,
     )?;
@@ -3158,7 +3161,7 @@ fn volicord_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
             "--integration-id",
             "agent_verify_all",
             "--server-name",
-            "harness-user",
+            "volicord-user",
             "--project-id",
             "project_verify_all",
             "--repo-root",
@@ -3181,7 +3184,7 @@ fn volicord_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
             "--integration-id",
             "agent_verify_all",
             "--server-name",
-            "harness-project",
+            "volicord-project",
             "--project-id",
             "project_verify_all",
             "--repo-root",
@@ -3215,10 +3218,10 @@ fn volicord_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
         .expect("installation verification results");
     assert_eq!(results.len(), 2);
     assert!(results.iter().any(|result| {
-        result["server_name"] == "harness-user" && result["final_status"] == "complete"
+        result["server_name"] == "volicord-user" && result["final_status"] == "complete"
     }));
     assert!(results.iter().any(|result| {
-        result["server_name"] == "harness-project"
+        result["server_name"] == "volicord-project"
             && result["final_status"] == "action_required"
             && result["mcp_handshake_result"]["status"] == "complete"
             && result["required_user_action"][0]
@@ -3237,7 +3240,7 @@ fn volicord_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
     assert_eq!(
         after
             .iter()
-            .find(|installation| installation.server_name == "harness-user")
+            .find(|installation| installation.server_name == "volicord-user")
             .expect("user installation")
             .last_verified_status,
         VERIFIED_STATUS_COMPLETE
@@ -3245,7 +3248,7 @@ fn volicord_binary_agent_verify_all_outputs_json_and_aggregates_action_required(
     assert_eq!(
         after
             .iter()
-            .find(|installation| installation.server_name == "harness-project")
+            .find(|installation| installation.server_name == "volicord-project")
             .expect("project installation")
             .last_verified_status,
         VERIFIED_STATUS_ACTION_REQUIRED
@@ -3269,7 +3272,10 @@ fn volicord_binary_agent_verify_failed_installation_is_not_hidden() -> Result<()
     write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
     let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
 
-    for (server_name, command) in [("harness-ok", &first_mcp), ("harness-changed", &second_mcp)] {
+    for (server_name, command) in [
+        ("volicord-ok", &first_mcp),
+        ("volicord-changed", &second_mcp),
+    ] {
         let install = run_with_home_and_env(
             runtime_home.path(),
             [
@@ -3306,9 +3312,9 @@ fn volicord_binary_agent_verify_failed_installation_is_not_hidden() -> Result<()
     )?;
     assert_eq!(verify.status.code(), Some(1));
     assert!(stdout(&verify).contains("status: failed"));
-    assert!(stdout(&verify).contains("harness-ok"));
+    assert!(stdout(&verify).contains("volicord-ok"));
     assert!(stdout(&verify).contains("final_status: complete"));
-    assert!(stdout(&verify).contains("harness-changed"));
+    assert!(stdout(&verify).contains("volicord-changed"));
     assert!(stdout(&verify).contains("fingerprint_state: changed"));
     assert!(stdout(&verify).contains("final_status: failed"));
 
@@ -3317,7 +3323,7 @@ fn volicord_binary_agent_verify_failed_installation_is_not_hidden() -> Result<()
     assert_eq!(
         after
             .iter()
-            .find(|installation| installation.server_name == "harness-changed")
+            .find(|installation| installation.server_name == "volicord-changed")
             .expect("changed installation")
             .last_verified_status,
         VERIFIED_STATUS_FAILED
@@ -3471,7 +3477,7 @@ fn run_with_home<const N: usize>(
     args: [&str; N],
 ) -> Result<Output, Box<dyn Error>> {
     let mut command = base_command();
-    command.env("HARNESS_HOME", runtime_home);
+    command.env("VOLICORD_HOME", runtime_home);
     command.args(args);
     Ok(command.output()?)
 }
@@ -3482,7 +3488,7 @@ fn run_with_home_and_env<const N: usize>(
     envs: &[(&str, String)],
 ) -> Result<Output, Box<dyn Error>> {
     let mut command = base_command();
-    command.env("HARNESS_HOME", runtime_home);
+    command.env("VOLICORD_HOME", runtime_home);
     for (name, value) in envs {
         command.env(name, value);
     }
@@ -3496,7 +3502,7 @@ fn run_with_home_and_env_slice(
     envs: &[(&str, String)],
 ) -> Result<Output, Box<dyn Error>> {
     let mut command = base_command();
-    command.env("HARNESS_HOME", runtime_home);
+    command.env("VOLICORD_HOME", runtime_home);
     for (name, value) in envs {
         command.env(name, value);
     }
@@ -3507,10 +3513,10 @@ fn run_with_home_and_env_slice(
 fn assert_agent_help<const N: usize>(args: [&str; N]) -> Result<(), Box<dyn Error>> {
     let output = run_without_home(args)?;
     assert_success(&output);
-    assert!(stdout(&output).contains("harness agent install"));
-    assert!(stdout(&output).contains("harness agent guidance apply"));
-    assert!(stdout(&output).contains("harness agent project default set"));
-    assert!(stdout(&output).contains("harness agent project default clear"));
+    assert!(stdout(&output).contains("volicord agent install"));
+    assert!(stdout(&output).contains("volicord agent guidance apply"));
+    assert!(stdout(&output).contains("volicord agent project default set"));
+    assert!(stdout(&output).contains("volicord agent project default clear"));
     assert!(stdout(&output).contains("--guidance none|codex"));
     assert!(stdout(&output).contains("--default-project-id ID"));
     assert!(stdout(&output).contains("--surface-id ID"));
@@ -3627,7 +3633,7 @@ fn initialize_agent_install_fixture(
             surface_instance_id: surface_instance_id.to_owned(),
             surface_kind: "mcp".to_owned(),
             interaction_role: SurfaceInteractionRole::Agent,
-            display_name: Some("Harness Agent MCP".to_owned()),
+            display_name: Some("Volicord Agent MCP".to_owned()),
             capability_profile_json: capability_profile_json(&access, None)?,
             local_access_json: local_access_json(&access)?,
             metadata_json: "{}".to_owned(),
@@ -3686,7 +3692,7 @@ fn assert_invalid_project_path_error(output: &Output, relationship: &str) {
     assert!(stdout(output).is_empty());
     assert!(stderr.contains("registered Product Repository conflicts with Runtime Home"));
     assert!(stderr.contains(&format!("relationship {relationship}")));
-    assert!(stderr.contains("Harness Runtime Home"));
+    assert!(stderr.contains("Volicord Runtime Home"));
     assert!(stderr.contains("Product Repository"));
 }
 
@@ -3918,10 +3924,10 @@ fn write_agent_mcp_script(
     let path = dir.join(name);
     let initialize = match fixture {
         AgentMcpFixture::MissingInstructions => {
-            r#"printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"harness-mcp","version":"test"}}}'"#
+            r#"printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"volicord-mcp","version":"test"}}}'"#
         }
         _ => {
-            r#"printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"harness-mcp","version":"test"},"instructions":"Use Harness."}}'"#
+            r#"printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"volicord-mcp","version":"test"},"instructions":"Use Volicord."}}'"#
         }
     };
     let tools = match fixture {
@@ -3945,7 +3951,7 @@ fn write_agent_mcp_script(
              integration=\"$2\"\n\
              printf 'configuration: valid\\n'\n\
              printf 'transport: stdio\\n'\n\
-             printf 'runtime_home: %s\\n' \"$HARNESS_HOME\"\n\
+             printf 'runtime_home: %s\\n' \"$VOLICORD_HOME\"\n\
              printf 'integration_id: %s\\n' \"$integration\"\n\
              printf 'interaction_role: agent\\n'\n\
              printf 'surface_id: surface_test\\n'\n\

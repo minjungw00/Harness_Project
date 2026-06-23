@@ -1718,7 +1718,7 @@ mod tests {
             integration_id: integration_id.to_owned(),
             host_kind: HOST_KIND_CODEX.to_owned(),
             host_scope: HOST_SCOPE_USER.to_owned(),
-            server_name: "harness".to_owned(),
+            server_name: "volicord".to_owned(),
             config_target: "/tmp/codex/config.toml".to_owned(),
             managed_fingerprint: "fingerprint_v1".to_owned(),
             last_verified_status: VERIFIED_STATUS_NOT_VERIFIED.to_owned(),

@@ -64,7 +64,7 @@ impl<R: CommandRunner> CodexAdapter<R> {
         if request.scope == HostScope::Project && request.runtime_home.is_some() {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidCommand,
-                "Codex project-scoped configuration must not embed a personal HARNESS_HOME",
+                "Codex project-scoped configuration must not embed a personal VOLICORD_HOME",
             )));
         }
 
@@ -144,7 +144,7 @@ impl<R: CommandRunner> CodexAdapter<R> {
         if request.scope == HostScope::Project && request.runtime_home.is_some() {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::InvalidCommand,
-                "Codex project-scoped configuration must not embed a personal HARNESS_HOME",
+                "Codex project-scoped configuration must not embed a personal VOLICORD_HOME",
             )));
         }
 
@@ -361,7 +361,7 @@ impl<R: CommandRunner> HostAdapter for CodexAdapter<R> {
             return Err(HostConfigError::Conflict(HostConflict::new(
                 HostConflictKind::FingerprintMismatch,
                 format!(
-                    "Codex MCP server changed since Harness last managed it: {}",
+                    "Codex MCP server changed since Volicord last managed it: {}",
                     request.server_name
                 ),
             )));
@@ -405,12 +405,12 @@ fn add_project_trust_action(scope: HostScope, user_actions: &mut Vec<UserAction>
 
 fn validate_mcp_command(scope: HostScope, command: &Path) -> Result<(), HostConfigError> {
     if scope == HostScope::Project {
-        if command == Path::new("harness-mcp") {
+        if command == Path::new("volicord-mcp") {
             return Ok(());
         }
         return Err(HostConfigError::Conflict(HostConflict::new(
             HostConflictKind::InvalidCommand,
-            "Codex project-scoped configuration must use harness-mcp from PATH",
+            "Codex project-scoped configuration must use volicord-mcp from PATH",
         )));
     }
     if command.is_absolute() {
@@ -418,7 +418,7 @@ fn validate_mcp_command(scope: HostScope, command: &Path) -> Result<(), HostConf
     } else {
         Err(HostConfigError::Conflict(HostConflict::new(
             HostConflictKind::InvalidCommand,
-            "Codex user-scoped configuration requires an absolute harness-mcp command path",
+            "Codex user-scoped configuration requires an absolute volicord-mcp command path",
         )))
     }
 }
@@ -718,7 +718,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
 
         assert_eq!(
@@ -741,7 +741,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
 
         assert_eq!(
@@ -761,7 +761,7 @@ mod tests {
             integration_id: "int-project",
             explicit_server_name: None,
             repo_root: Some(&repo),
-            mcp_command: Path::new("harness-mcp"),
+            mcp_command: Path::new("volicord-mcp"),
             runtime_home: None,
             expected_fingerprint: None,
         })?;
@@ -783,7 +783,7 @@ mod tests {
         fs::create_dir_all(&ambient_codex_home)?;
         fs::write(
             ambient_codex_home.join("config.toml"),
-            "[mcp_servers.harness-existing]\ncommand = \"ambient\"\n",
+            "[mcp_servers.volicord-existing]\ncommand = \"ambient\"\n",
         )?;
         let adapter = CodexAdapter::new(CodexEnvironment {
             home: Some(dir.join("home")),
@@ -794,7 +794,7 @@ mod tests {
         let plan = adapter.plan_existing(existing_request(
             HostScope::User,
             &stored_target,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
             Some(Path::new("/runtime")),
         ))?;
 
@@ -813,7 +813,7 @@ mod tests {
         fs::create_dir_all(&ambient_codex_home)?;
         fs::write(
             ambient_codex_home.join("config.toml"),
-            "[mcp_servers.harness-existing]\ncommand = \"ambient\"\n",
+            "[mcp_servers.volicord-existing]\ncommand = \"ambient\"\n",
         )?;
         let mut adapter = CodexAdapter::new(CodexEnvironment {
             home: None,
@@ -823,7 +823,7 @@ mod tests {
         let plan = adapter.plan_existing(existing_request(
             HostScope::User,
             &stored_target,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
             Some(Path::new("/runtime")),
         ))?;
 
@@ -853,7 +853,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
         adapter.apply(&plan)?;
         let text = fs::read_to_string(target)?;
@@ -861,7 +861,7 @@ mod tests {
         assert!(text.contains("# keep me"));
         assert!(text.contains("model = \"gpt-5.5\""));
         assert!(text.contains("[mcp_servers.other]"));
-        assert!(text.contains("[mcp_servers.harness-int_alpha]"));
+        assert!(text.contains("[mcp_servers.volicord-int_alpha]"));
         assert!(text.contains("args = [\"--integration\", \"int_alpha\"]"));
         Ok(())
     }
@@ -878,21 +878,21 @@ mod tests {
         let first = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
         adapter.apply(&first)?;
 
         let second = adapter.plan(CodexPlanRequest {
             expected_fingerprint: Some(&first.fingerprint),
-            mcp_command: Path::new("/usr/local/bin/harness-mcp"),
-            ..request(HostScope::User, None, Path::new("/bin/harness-mcp"))
+            mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+            ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
         })?;
         assert_eq!(second.change, PlannedChange::Update);
         adapter.apply(&second)?;
 
         let third = adapter.plan(CodexPlanRequest {
-            mcp_command: Path::new("/usr/local/bin/harness-mcp"),
-            ..request(HostScope::User, None, Path::new("/bin/harness-mcp"))
+            mcp_command: Path::new("/usr/local/bin/volicord-mcp"),
+            ..request(HostScope::User, None, Path::new("/bin/volicord-mcp"))
         })?;
         assert_eq!(third.change, PlannedChange::Noop);
         Ok(())
@@ -905,7 +905,7 @@ mod tests {
         fs::create_dir_all(&codex_home)?;
         fs::write(
             codex_home.join("config.toml"),
-            "[mcp_servers.harness-int_alpha]\ncommand = \"other\"\n",
+            "[mcp_servers.volicord-int_alpha]\ncommand = \"other\"\n",
         )?;
         let adapter = CodexAdapter::new(CodexEnvironment {
             home: None,
@@ -916,7 +916,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
 
         assert_eq!(
@@ -943,7 +943,7 @@ mod tests {
             .plan(request(
                 HostScope::User,
                 None,
-                Path::new("/bin/harness-mcp"),
+                Path::new("/bin/volicord-mcp"),
             ))
             .expect_err("malformed TOML should fail");
 
@@ -964,7 +964,7 @@ mod tests {
                 integration_id: "int_alpha",
                 explicit_server_name: None,
                 repo_root: Some(&repo),
-                mcp_command: Path::new("/personal/target/debug/harness-mcp"),
+                mcp_command: Path::new("/personal/target/debug/volicord-mcp"),
                 runtime_home: None,
                 expected_fingerprint: None,
             }),
@@ -976,8 +976,8 @@ mod tests {
                 integration_id: "int_alpha",
                 explicit_server_name: None,
                 repo_root: Some(&repo),
-                mcp_command: Path::new("harness-mcp"),
-                runtime_home: Some(Path::new("/home/me/.harness")),
+                mcp_command: Path::new("volicord-mcp"),
+                runtime_home: Some(Path::new("/home/me/.volicord")),
                 expected_fingerprint: None,
             }),
             Err(HostConfigError::Conflict(_))
@@ -997,7 +997,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
         adapter.apply(&plan)?;
         let HostTarget::File(target) = plan.target.clone() else {
@@ -1005,7 +1005,7 @@ mod tests {
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("/bin/harness-mcp", "/tmp/manual"),
+            fs::read_to_string(&target)?.replace("/bin/volicord-mcp", "/tmp/manual"),
         )?;
 
         let error = adapter
@@ -1075,7 +1075,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
         adapter.apply(&plan)?;
 
@@ -1108,7 +1108,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
         adapter.apply(&plan)?;
 
@@ -1145,7 +1145,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
         adapter.apply(&plan)?;
 
@@ -1173,7 +1173,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
         adapter.apply(&plan)?;
 
@@ -1229,7 +1229,7 @@ mod tests {
         let plan = adapter.plan(request(
             HostScope::User,
             None,
-            Path::new("/bin/harness-mcp"),
+            Path::new("/bin/volicord-mcp"),
         ))?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "missing");
         adapter.apply(&plan)?;
@@ -1242,7 +1242,7 @@ mod tests {
         };
         fs::write(
             &target,
-            fs::read_to_string(&target)?.replace("/bin/harness-mcp", "/tmp/manual"),
+            fs::read_to_string(&target)?.replace("/bin/volicord-mcp", "/tmp/manual"),
         )?;
         assert_eq!(adapter.verify(&plan)?.status.as_str(), "changed");
 
@@ -1252,7 +1252,7 @@ mod tests {
             integration_id: "int_alpha",
             explicit_server_name: None,
             repo_root: Some(&repo),
-            mcp_command: Path::new("harness-mcp"),
+            mcp_command: Path::new("volicord-mcp"),
             runtime_home: None,
             expected_fingerprint: None,
         })?;
@@ -1292,7 +1292,7 @@ mod tests {
         CodexExistingPlanRequest {
             scope,
             integration_id: "int_alpha",
-            server_name: "harness-existing",
+            server_name: "volicord-existing",
             config_target,
             mcp_command,
             runtime_home,

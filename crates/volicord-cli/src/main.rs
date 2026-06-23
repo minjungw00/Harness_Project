@@ -436,7 +436,7 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  harness --help\n  harness --version\n  harness init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  HARNESS_HOME  Override Runtime Home path (default: $HOME/.harness)\n\nThese are local administrative commands, not public Harness API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n  volicord init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nThese are local administrative commands, not public Volicord API methods.\n",
         agent_usage().trim_end(),
         project_usage().trim_end(),
         surface_usage().trim_end()
@@ -444,16 +444,16 @@ fn usage() -> String {
 }
 
 fn version() -> String {
-    format!("harness {}\n", env!("CARGO_PKG_VERSION"))
+    format!("volicord {}\n", env!("CARGO_PKG_VERSION"))
 }
 
 fn project_usage() -> String {
-    "harness project register --project-id ID --repo-root PATH [--status active]\nharness project list\n"
+    "volicord project register --project-id ID --repo-root PATH [--status active]\nvolicord project list\n"
         .to_owned()
 }
 
 fn surface_usage() -> String {
-    "harness surface register --project-id ID --surface-id ID [--surface-instance-id ID] [--kind KIND] [--name NAME] [--interaction-role agent|user_interaction] [--access-class ACCESS_CLASS ...] [--profile baseline-workflow] [--capability-profile JSON]\nharness surface list --project-id ID\n"
+    "volicord surface register --project-id ID --surface-id ID [--surface-instance-id ID] [--kind KIND] [--name NAME] [--interaction-role agent|user_interaction] [--access-class ACCESS_CLASS ...] [--profile baseline-workflow] [--capability-profile JSON]\nvolicord surface list --project-id ID\n"
         .to_owned()
 }
 
@@ -535,19 +535,19 @@ mod tests {
     #[test]
     fn version_does_not_require_runtime_home_environment() {
         let output = run_cli(
-            ["harness", "--version"],
+            ["volicord", "--version"],
             |_| None,
             Path::new(env!("CARGO_MANIFEST_DIR")),
         )
         .expect("version should not need Runtime Home");
 
-        assert_eq!(output, format!("harness {}\n", env!("CARGO_PKG_VERSION")));
+        assert_eq!(output, format!("volicord {}\n", env!("CARGO_PKG_VERSION")));
     }
 
     #[test]
     fn short_version_is_exact_alias() {
         let output = run_cli(
-            ["harness", "-V"],
+            ["volicord", "-V"],
             |_| None,
             Path::new(env!("CARGO_MANIFEST_DIR")),
         )
@@ -559,21 +559,21 @@ mod tests {
     #[test]
     fn help_mentions_version_discovery() {
         let output = run_cli(
-            ["harness", "--help"],
+            ["volicord", "--help"],
             |_| None,
             Path::new(env!("CARGO_MANIFEST_DIR")),
         )
         .expect("help should not need Runtime Home");
 
-        assert!(output.contains("harness --version"));
-        assert!(!output.contains("harness setup"));
+        assert!(output.contains("volicord --version"));
+        assert!(!output.contains("volicord setup"));
     }
 
     #[test]
     fn setup_command_family_is_unknown() {
         for args in [
-            vec!["harness", "setup"],
-            vec!["harness", "setup", "local-mcp"],
+            vec!["volicord", "setup"],
+            vec!["volicord", "setup", "local-mcp"],
         ] {
             let error = run_cli(args, |_| None, Path::new(env!("CARGO_MANIFEST_DIR")))
                 .expect_err("removed setup command should be unknown");
@@ -586,11 +586,11 @@ mod tests {
     }
 
     #[test]
-    fn init_respects_harness_home_override() {
+    fn init_respects_volicord_home_override() {
         let runtime_home = TempRuntimeHome::new("cli-init").expect("temp runtime home");
         let output = run_with_home(
             runtime_home.path(),
-            ["harness", "init", "--runtime-home-id", "runtime_home_test"],
+            ["volicord", "init", "--runtime-home-id", "runtime_home_test"],
         )
         .expect("init should succeed");
 
@@ -604,7 +604,7 @@ mod tests {
         let runtime_home = resolve_runtime_home(
             |name| {
                 if name == "HOME" {
-                    Some(OsString::from("/tmp/harness-cli-home"))
+                    Some(OsString::from("/tmp/volicord-cli-home"))
                 } else {
                     None
                 }
@@ -615,7 +615,7 @@ mod tests {
 
         assert_eq!(
             runtime_home,
-            PathBuf::from("/tmp/harness-cli-home/.harness")
+            PathBuf::from("/tmp/volicord-cli-home/.volicord")
         );
     }
 
@@ -624,7 +624,7 @@ mod tests {
         let current_dir = TempRuntimeHome::new("cli-cwd").expect("temp current dir");
         let runtime_home = resolve_runtime_home(
             |name| {
-                if name == "HARNESS_HOME" {
+                if name == "VOLICORD_HOME" {
                     Some(OsString::from("shared-runtime"))
                 } else {
                     None
@@ -636,13 +636,13 @@ mod tests {
 
         let output = run_cli(
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_shared",
             ],
             |name| {
-                if name == "HARNESS_HOME" {
+                if name == "VOLICORD_HOME" {
                     Some(OsString::from("shared-runtime"))
                 } else {
                     None
@@ -659,9 +659,9 @@ mod tests {
     #[test]
     fn runtime_home_resolution_errors_are_runtime_errors() {
         let error = run_cli(
-            ["harness", "init"],
+            ["volicord", "init"],
             |name| {
-                if name == "HARNESS_HOME" {
+                if name == "VOLICORD_HOME" {
                     Some(OsString::new())
                 } else {
                     None
@@ -669,10 +669,12 @@ mod tests {
             },
             Path::new(env!("CARGO_MANIFEST_DIR")),
         )
-        .expect_err("empty HARNESS_HOME should fail");
+        .expect_err("empty VOLICORD_HOME should fail");
 
         assert!(matches!(error, CliError::Runtime(_)));
-        assert!(error.to_string().contains("HARNESS_HOME must not be empty"));
+        assert!(error
+            .to_string()
+            .contains("VOLICORD_HOME must not be empty"));
     }
 
     #[test]
@@ -681,7 +683,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_project",
@@ -692,7 +694,7 @@ mod tests {
         let output = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -725,7 +727,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_project_boundary",
@@ -738,7 +740,7 @@ mod tests {
         let error = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -752,7 +754,7 @@ mod tests {
         assert!(matches!(error, CliError::Runtime(_)));
         assert!(error
             .to_string()
-            .contains("Product Repository must not be inside Harness Runtime Home"));
+            .contains("Product Repository must not be inside Volicord Runtime Home"));
         assert!(list_projects(runtime_home.path())
             .expect("registry inspection should still work")
             .is_empty());
@@ -765,7 +767,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_project_list",
@@ -777,7 +779,7 @@ mod tests {
             run_with_home(
                 runtime_home.path(),
                 [
-                    "harness",
+                    "volicord",
                     "project",
                     "register",
                     "--project-id",
@@ -789,7 +791,7 @@ mod tests {
             .expect("project register should succeed");
         }
 
-        let output = run_with_home(runtime_home.path(), ["harness", "project", "list"])
+        let output = run_with_home(runtime_home.path(), ["volicord", "project", "list"])
             .expect("project list should succeed");
         let lines = output.lines().collect::<Vec<_>>();
         assert_eq!(lines[0], "project_id\trepo_root\tproject_home\tstatus");
@@ -803,7 +805,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_surface",
@@ -813,7 +815,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -827,7 +829,7 @@ mod tests {
         let output = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "surface",
                 "register",
                 "--project-id",
@@ -856,7 +858,7 @@ mod tests {
         let list_output = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "surface",
                 "list",
                 "--project-id",
@@ -915,7 +917,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_surface_user_role",
@@ -925,7 +927,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -939,7 +941,7 @@ mod tests {
         let output = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "surface",
                 "register",
                 "--project-id",
@@ -985,7 +987,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_surface_user_role_broad",
@@ -995,7 +997,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -1009,7 +1011,7 @@ mod tests {
         let error = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "surface",
                 "register",
                 "--project-id",
@@ -1039,7 +1041,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_surface_repeat",
@@ -1049,7 +1051,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -1063,7 +1065,7 @@ mod tests {
         let output = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "surface",
                 "register",
                 "--project-id",
@@ -1117,7 +1119,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_surface_profile",
@@ -1127,7 +1129,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -1141,7 +1143,7 @@ mod tests {
         let output = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "surface",
                 "register",
                 "--project-id",
@@ -1194,7 +1196,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "init",
                 "--runtime-home-id",
                 "runtime_home_surface_union",
@@ -1204,7 +1206,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -1218,7 +1220,7 @@ mod tests {
         run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "surface",
                 "register",
                 "--project-id",
@@ -1268,7 +1270,7 @@ mod tests {
         let error = run_with_home(
             runtime_home.path(),
             [
-                "harness",
+                "volicord",
                 "project",
                 "register",
                 "--project-id",
@@ -1290,7 +1292,7 @@ mod tests {
         run_cli(
             args,
             |name| {
-                if name == "HARNESS_HOME" {
+                if name == "VOLICORD_HOME" {
                     Some(OsString::from(runtime_home))
                 } else {
                     None

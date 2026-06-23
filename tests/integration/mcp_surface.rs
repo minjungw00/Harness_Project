@@ -55,7 +55,7 @@ fn stdio_tools_list_exposes_exactly_the_public_method_set() -> Result<(), Box<dy
     let fixture = CoreFixture::new("mcp_tools")?;
     let adapter = adapter(&fixture);
     let input = Cursor::new(
-        br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-integration-test","version":"0.0.0"}}}
+        br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"volicord-integration-test","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
 {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
 "#
@@ -116,7 +116,7 @@ fn stdio_rejected_lifecycle_and_notification_tool_calls_have_no_storage_effect(
                 "protocolVersion": "2025-11-25",
                 "capabilities": {},
                 "clientInfo": {
-                    "name": "harness-integration-test",
+                    "name": "volicord-integration-test",
                     "version": "0.0.0"
                 }
             }
@@ -1582,7 +1582,7 @@ fn stdio_invalid_known_tool_arguments_return_tool_error_without_storage_effect(
     let adapter = adapter(&fixture);
     let before = fixture.counts()?;
     let input = Cursor::new(
-        br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"harness-integration-test","version":"0.0.0"}}}
+        br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"volicord-integration-test","version":"0.0.0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
 {"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"volicord.status","arguments":{"envelope":{"project_id":"project_fixture","task_id":null,"actor_kind":"agent","request_id":"req_stdio_invalid","idempotency_key":null,"expected_state_version":null,"dry_run":false,"locale":"en-US"},"include":{"task":true,"pending_user_judgments":true,"write_authority":true,"evidence":true,"close":true,"guarantees":true},"access_class":"core_mutation"}}}
 "#

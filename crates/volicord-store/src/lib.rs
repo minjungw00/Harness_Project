@@ -3,7 +3,7 @@
 //! Storage boundary for SQLite records, artifact plumbing, and migrations.
 //!
 //! This crate implements baseline SQLite schema creation and transaction
-//! utilities only. Public Harness method behavior remains outside this crate.
+//! utilities only. Public Volicord method behavior remains outside this crate.
 
 use volicord_types::TypeBoundary;
 

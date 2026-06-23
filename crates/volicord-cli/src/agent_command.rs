@@ -68,16 +68,16 @@ use crate::{
     },
 };
 
-const HARNESS_HOME: &str = "HARNESS_HOME";
+const VOLICORD_HOME: &str = "VOLICORD_HOME";
 const PATH_ENV: &str = "PATH";
 const AGENT_METADATA_JSON: &str =
-    r#"{"created_by":"harness_cli_agent","setup_profile":"agent_integration_v1"}"#;
+    r#"{"created_by":"volicord_cli_agent","setup_profile":"agent_integration_v1"}"#;
 const AGENT_RUNTIME_HOME_ID: &str = "runtime_home_agent";
 const AGENT_SURFACE_KIND: &str = "mcp";
-const DEFAULT_MCP_COMMAND: &str = "harness-mcp";
+const DEFAULT_MCP_COMMAND: &str = "volicord-mcp";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
-const INSTALL_FAULT_ENV: &str = "HARNESS_TEST_AGENT_INSTALL_FAIL_STEP";
-const INSTALL_ROLLBACK_FAULT_ENV: &str = "HARNESS_TEST_AGENT_INSTALL_ROLLBACK_FAIL";
+const INSTALL_FAULT_ENV: &str = "VOLICORD_TEST_AGENT_INSTALL_FAIL_STEP";
+const INSTALL_ROLLBACK_FAULT_ENV: &str = "VOLICORD_TEST_AGENT_INSTALL_ROLLBACK_FAIL";
 
 const PUBLIC_METHOD_TOOL_NAMES: [&str; 9] = [
     "volicord.intake",
@@ -685,17 +685,17 @@ impl Default for ParsedAgentOptions {
 }
 
 pub fn agent_usage() -> String {
-    "harness agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export --project-id ID [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n\
-     harness agent project add --integration-id ID --project-id ID [--repo-root PATH] [--default] [--runtime-home PATH] [--output text|json] [--dry-run]\n\
-     harness agent project remove --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
-     harness agent project default set --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
-     harness agent project default clear --integration-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
-     harness agent status --integration-id ID [--runtime-home PATH] [--output text|json]\n\
-     harness agent verify --integration-id ID [--installation-id ID] [--runtime-home PATH] [--output text|json]\n\
-     harness agent uninstall --integration-id ID [--installation-id ID] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--remove-managed]\n\
-     harness agent guidance apply --integration-id ID --project-id ID --host codex|claude-code|claude_code [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n\
-     harness agent guidance status --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json]\n\
-     harness agent guidance remove --integration-id ID --project-id ID [--host codex|claude-code|claude_code] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--remove-managed]\n"
+    "volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export --project-id ID [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n\
+     volicord agent project add --integration-id ID --project-id ID [--repo-root PATH] [--default] [--runtime-home PATH] [--output text|json] [--dry-run]\n\
+     volicord agent project remove --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
+     volicord agent project default set --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
+     volicord agent project default clear --integration-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
+     volicord agent status --integration-id ID [--runtime-home PATH] [--output text|json]\n\
+     volicord agent verify --integration-id ID [--installation-id ID] [--runtime-home PATH] [--output text|json]\n\
+     volicord agent uninstall --integration-id ID [--installation-id ID] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--remove-managed]\n\
+     volicord agent guidance apply --integration-id ID --project-id ID --host codex|claude-code|claude_code [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n\
+     volicord agent guidance status --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json]\n\
+     volicord agent guidance remove --integration-id ID --project-id ID [--host codex|claude-code|claude_code] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--remove-managed]\n"
         .to_owned()
 }
 
@@ -2249,7 +2249,7 @@ fn command_verify(
             installations: Vec::new(),
             guidance: Vec::new(),
             verification: McpVerification::failed(
-                "no Host Installation records are registered for this integration; run harness agent install for the target host",
+                "no Host Installation records are registered for this integration; run volicord agent install for the target host",
             ),
             installation_verifications: Vec::new(),
             actions: Vec::new(),
@@ -2257,7 +2257,7 @@ fn command_verify(
             residual_effects: Vec::new(),
             warnings: Vec::new(),
             action_required: vec![
-                "run harness agent install for the target host before verification".to_owned(),
+                "run volicord agent install for the target host before verification".to_owned(),
             ],
             output: parsed.output,
         };
@@ -2287,7 +2287,7 @@ fn command_verify(
                 ),
                 final_status: AgentResultStatus::Failed,
                 required_action: vec![format!(
-                    "add an allowed project with `harness agent project add --integration-id {integration_id} --project-id <project_id>`"
+                    "add an allowed project with `volicord agent project add --integration-id {integration_id} --project-id <project_id>`"
                 )],
                 persistence: VerificationStep::skipped("last_verified_status not updated yet"),
             };
@@ -3439,7 +3439,7 @@ fn resolve_agent_runtime_home(
     }
     let resolved = resolve_runtime_home(
         |name| {
-            if name == HARNESS_HOME {
+            if name == VOLICORD_HOME {
                 parsed
                     .runtime_home
                     .as_ref()
@@ -3944,7 +3944,7 @@ fn resolve_mcp_command(
                 return Ok(command.clone());
             }
             return Err(AgentCommandError::usage(
-                "project-scoped host configuration must use portable `harness-mcp` from PATH; omit --mcp-command or pass --mcp-command harness-mcp",
+                "project-scoped host configuration must use portable `volicord-mcp` from PATH; omit --mcp-command or pass --mcp-command volicord-mcp",
             ));
         }
         return Ok(PathBuf::from(DEFAULT_MCP_COMMAND));
@@ -3972,19 +3972,19 @@ fn discover_mcp_command(
     if let Some(parent) = current_exe.parent() {
         let candidate = parent.join(DEFAULT_MCP_COMMAND);
         if candidate.is_file() {
-            return canonical_file(&candidate, "harness-mcp sibling");
+            return canonical_file(&candidate, "volicord-mcp sibling");
         }
     }
     if let Some(path_env) = process.env_var(PATH_ENV) {
         for directory in std::env::split_paths(&path_env) {
             let candidate = absolute_path(current_dir, directory).join(DEFAULT_MCP_COMMAND);
             if candidate.is_file() {
-                return canonical_file(&candidate, "harness-mcp PATH entry");
+                return canonical_file(&candidate, "volicord-mcp PATH entry");
             }
         }
     }
     Err(AgentCommandError::runtime(
-        "could not discover harness-mcp executable; pass --mcp-command",
+        "could not discover volicord-mcp executable; pass --mcp-command",
     ))
 }
 
@@ -4155,7 +4155,7 @@ fn ensure_agent_surface(
             surface_instance_id: surface_instance_id.to_owned(),
             surface_kind: AGENT_SURFACE_KIND.to_owned(),
             interaction_role: SurfaceInteractionRole::Agent,
-            display_name: Some("Harness Agent MCP".to_owned()),
+            display_name: Some("Volicord Agent MCP".to_owned()),
             capability_profile_json: capability_profile_json(&expected_access, None)?,
             local_access_json: local_access_json(&expected_access)?,
             metadata_json: AGENT_METADATA_JSON.to_owned(),
@@ -4223,7 +4223,7 @@ fn apply_mcp_launch_context(command: &mut Command, launch: &McpLaunch, runtime_h
     if let Some(cwd) = &launch.cwd {
         command.current_dir(cwd);
     }
-    command.env(HARNESS_HOME, runtime_home);
+    command.env(VOLICORD_HOME, runtime_home);
     for (name, value) in &launch.env {
         command.env(name, value);
     }
@@ -4351,7 +4351,7 @@ fn verify_mcp_stdio_process(
                 "protocolVersion": "2025-11-25",
                 "capabilities": {},
                 "clientInfo": {
-                    "name": "harness-agent-verifier",
+                    "name": "volicord-agent-verifier",
                     "version": env!("CARGO_PKG_VERSION")
                 }
             }
@@ -5459,7 +5459,7 @@ fn compensate_guidance_entry(
             format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
             "applied",
             "injected guidance rollback failure",
-            "inspect the managed guidance block and rerun `harness agent guidance remove` when safe",
+            "inspect the managed guidance block and rerun `volicord agent guidance remove` when safe",
         );
         return;
     }
@@ -5472,7 +5472,7 @@ fn compensate_guidance_entry(
                     format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
                     "retained",
                     residual,
-                    "inspect the managed guidance block and remove or restore it only if the Harness markers still match",
+                    "inspect the managed guidance block and remove or restore it only if the Volicord markers still match",
                 );
             } else {
                 journal.set_rollback(effect_index, "rolled_back");
@@ -5485,7 +5485,7 @@ fn compensate_guidance_entry(
                 format!("{} {}", effect.target.as_str(), path_text(&effect.path)),
                 "retained_or_uncertain",
                 format!("safe guidance rollback failed: {error}"),
-                "inspect the file and remove or restore only the Harness-managed block if ownership is intact",
+                "inspect the file and remove or restore only the Volicord-managed block if ownership is intact",
             );
         }
     }
@@ -5514,7 +5514,7 @@ fn compensate_host_config_entry(
             host_target_text(&effect.target),
             "applied",
             "injected host rollback failure",
-            "inspect the host configuration and remove or restore the Harness-managed entry when safe",
+            "inspect the host configuration and remove or restore the Volicord-managed entry when safe",
         );
         return true;
     }
@@ -5550,7 +5550,7 @@ fn compensate_host_config_entry(
                     host_target_text(&effect.target),
                     "applied_or_uncertain",
                     format!("safe host removal failed: {error}"),
-                    "inspect the host configuration and remove only the Harness-managed entry if its fingerprint still matches",
+                    "inspect the host configuration and remove only the Volicord-managed entry if its fingerprint still matches",
                 );
                 true
             }
@@ -5583,7 +5583,7 @@ fn compensate_host_inventory_entry(
             applied.installation_id.clone(),
             "retained",
             "Host Installation inventory was retained because host configuration rollback did not complete",
-            "resolve the host configuration residual, then rerun `harness agent uninstall` if the inventory should be removed",
+            "resolve the host configuration residual, then rerun `volicord agent uninstall` if the inventory should be removed",
         );
         return;
     }
@@ -6004,7 +6004,7 @@ fn verify_one_installation(
                         Ok(mcp) => {
                             mcp_handshake = VerificationStep::complete("MCP initialize succeeded");
                             tool_discovery = VerificationStep::complete(
-                                "tools/list exposed required Harness tools",
+                                "tools/list exposed required Volicord tools",
                             );
                             merge_mcp_verification_with_host(mcp, &host_status)
                         }
@@ -6236,7 +6236,7 @@ fn default_project_storage_effect(dry_run: bool, result: &str) -> &'static str {
 
 fn default_project_blocking_message(integration_id: &str) -> String {
     format!(
-        "cannot remove the integration default project; run `harness agent project default set --integration-id {integration_id} --project-id <project_id>` to choose another default or `harness agent project default clear --integration-id {integration_id}` to clear it first"
+        "cannot remove the integration default project; run `volicord agent project default set --integration-id {integration_id} --project-id <project_id>` to choose another default or `volicord agent project default clear --integration-id {integration_id}` to clear it first"
     )
 }
 
@@ -6369,7 +6369,7 @@ fn installation_metadata_json(
     repo_root: Option<&Path>,
 ) -> Result<String, AgentCommandError> {
     let mut value = json!({
-        "created_by": "harness_cli_agent",
+        "created_by": "volicord_cli_agent",
         "runtime_home": path_text(runtime_home),
         "mcp_command": path_text(mcp_command),
     });

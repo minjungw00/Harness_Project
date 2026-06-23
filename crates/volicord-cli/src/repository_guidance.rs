@@ -15,8 +15,8 @@ use crate::{
     },
 };
 
-const BEGIN_MARKER: &str = "<!-- BEGIN HARNESS MANAGED GUIDANCE v1 -->";
-const END_MARKER: &str = "<!-- END HARNESS MANAGED GUIDANCE v1 -->";
+const BEGIN_MARKER: &str = "<!-- BEGIN VOLICORD MANAGED GUIDANCE v1 -->";
+const END_MARKER: &str = "<!-- END VOLICORD MANAGED GUIDANCE v1 -->";
 const CODEX_TARGET: &str = "codex";
 const CLAUDE_CODE_TARGET: &str = "claude_code";
 
@@ -37,7 +37,7 @@ impl GuidanceTarget {
     pub fn path(self, repo_root: &Path) -> PathBuf {
         match self {
             Self::Codex => repo_root.join("AGENTS.md"),
-            Self::ClaudeCode => repo_root.join(".claude").join("rules").join("harness.md"),
+            Self::ClaudeCode => repo_root.join(".claude").join("rules").join("volicord.md"),
         }
     }
 }
@@ -460,7 +460,7 @@ fn analyze_snapshot(
                 integration_id,
                 project_id,
                 path,
-                "Claude Code guidance file exists but is not Harness-managed",
+                "Claude Code guidance file exists but is not Volicord-managed",
             ));
         }
         Err(message) => {
@@ -482,7 +482,7 @@ fn analyze_snapshot(
                 integration_id,
                 project_id,
                 path,
-                "Claude Code guidance file contains unmanaged content outside the Harness block",
+                "Claude Code guidance file contains unmanaged content outside the Volicord block",
             ));
         }
     }
@@ -546,13 +546,13 @@ fn parse_managed_block(text: &str) -> Result<Option<ParsedBlock>, String> {
     match (begins.len(), ends.len()) {
         (0, 0) => return Ok(None),
         (1, 1) => (),
-        (0, _) | (_, 0) => return Err("malformed Harness guidance markers".to_owned()),
-        _ => return Err("duplicate or nested Harness guidance markers".to_owned()),
+        (0, _) | (_, 0) => return Err("malformed Volicord guidance markers".to_owned()),
+        _ => return Err("duplicate or nested Volicord guidance markers".to_owned()),
     }
     let begin = begins[0].0;
     let end_marker_start = ends[0].0;
     if begin > end_marker_start {
-        return Err("malformed Harness guidance marker order".to_owned());
+        return Err("malformed Volicord guidance marker order".to_owned());
     }
     let end_marker_end = end_marker_start + END_MARKER.len();
     let span_end = if text[end_marker_end..].starts_with("\r\n") {
@@ -576,7 +576,7 @@ fn parse_managed_block(text: &str) -> Result<Option<ParsedBlock>, String> {
         let line_without_newline = line.trim_end_matches('\n').trim_end_matches('\r');
         if let Some((key, value)) = parse_metadata_comment(line_without_newline) {
             if metadata.insert(key.to_owned(), value.to_owned()).is_some() {
-                return Err(format!("duplicate Harness guidance metadata: {key}"));
+                return Err(format!("duplicate Volicord guidance metadata: {key}"));
             }
             body_start += line.len();
         } else {
@@ -635,7 +635,7 @@ fn guidance_fingerprint(
     body: &str,
 ) -> String {
     let payload = json!({
-        "format": "harness-repository-guidance-v1",
+        "format": "volicord-repository-guidance-v1",
         "target": target.as_str(),
         "integration_id": integration_id,
         "project_id": project_id,
@@ -719,7 +719,7 @@ fn reject_unowned_state(status: &GuidanceStatus) -> Result<(), HostConfigError> 
         GuidanceStateKind::Changed => Err(HostConfigError::Conflict(HostConflict::new(
             HostConflictKind::FingerprintMismatch,
             format!(
-                "managed repository guidance changed since Harness last managed it: {}",
+                "managed repository guidance changed since Volicord last managed it: {}",
                 status.path.display()
             ),
         ))),
@@ -1006,7 +1006,7 @@ mod tests {
     fn claude_file_conflicts_with_unmanaged_file_and_cleans_empty_dirs(
     ) -> Result<(), Box<dyn std::error::Error>> {
         let repo = temp_repo("guidance-claude")?;
-        let target = repo.join(".claude").join("rules").join("harness.md");
+        let target = repo.join(".claude").join("rules").join("volicord.md");
         fs::create_dir_all(target.parent().expect("target parent"))?;
         fs::write(&target, "# unmanaged\n")?;
         let status = guidance_status(
@@ -1093,7 +1093,7 @@ mod tests {
             GuidanceTarget::ClaudeCode,
         )?;
         apply_guidance_plan(&plan)?;
-        let target = repo.join(".claude").join("rules").join("harness.md");
+        let target = repo.join(".claude").join("rules").join("volicord.md");
         let before = fs::read_to_string(&target)?;
         fs::write(
             &target,

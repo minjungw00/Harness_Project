@@ -856,7 +856,7 @@ mod tests {
 
         assert!(error
             .to_string()
-            .contains("Product Repository must not be inside Harness Runtime Home"));
+            .contains("Product Repository must not be inside Volicord Runtime Home"));
         assert!(!runtime_home
             .project_state_db_path("project_repo_inside")
             .exists());
@@ -867,7 +867,7 @@ mod tests {
     fn project_registration_rejects_runtime_home_inside_repository() -> Result<(), Box<dyn Error>> {
         let root = TempRuntimeHome::new("store-runtime-inside-repo")?;
         let repo_root = root.create_product_repo("repo")?;
-        let runtime_home = repo_root.join(".harness");
+        let runtime_home = repo_root.join(".volicord");
         initialize_runtime_home(&runtime_home, "runtime_home_inside_repo", "{}")?;
 
         let error = register_project(
@@ -884,7 +884,7 @@ mod tests {
 
         assert!(error
             .to_string()
-            .contains("Harness Runtime Home must not be inside Product Repository"));
+            .contains("Volicord Runtime Home must not be inside Product Repository"));
         assert!(!project_home_path(&runtime_home, "project_runtime_inside").exists());
         Ok(())
     }
@@ -982,7 +982,7 @@ mod tests {
     ) -> Result<(), Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("store-project-home-repo-overlap")?;
         let repo_root = runtime_home.create_product_repo("repo")?;
-        let project_home = repo_root.join(".harness-project");
+        let project_home = repo_root.join(".volicord-project");
         initialize_runtime_home(
             runtime_home.path(),
             "runtime_home_project_home_overlap",

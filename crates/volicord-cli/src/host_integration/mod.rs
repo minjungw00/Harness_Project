@@ -65,7 +65,7 @@ impl ManagedServerEntry {
         let mut env = BTreeMap::new();
         if let Some(runtime_home) = runtime_home {
             env.insert(
-                "HARNESS_HOME".to_owned(),
+                "VOLICORD_HOME".to_owned(),
                 runtime_home.display().to_string(),
             );
         }
@@ -253,9 +253,9 @@ pub fn default_server_name(integration_id: &str) -> String {
     let sanitized = sanitize_identifier(integration_id);
     let suffix = short_hash(integration_id);
     if sanitized.is_empty() {
-        return format!("harness-{suffix}");
+        return format!("volicord-{suffix}");
     }
-    let base = format!("harness-{sanitized}");
+    let base = format!("volicord-{sanitized}");
     if base.len() <= 48 {
         base
     } else {
@@ -277,7 +277,7 @@ pub fn export_file_name(integration_id: &str) -> String {
     } else {
         sanitized
     };
-    format!("harness-{stem}.mcp.json")
+    format!("volicord-{stem}.mcp.json")
 }
 
 pub fn validated_server_name(
@@ -317,7 +317,7 @@ pub fn managed_fingerprint(
     entry: &ManagedServerEntry,
 ) -> String {
     let payload = json!({
-        "format": "harness-host-entry-v1",
+        "format": "volicord-host-entry-v1",
         "host_kind": host_kind.as_str(),
         "host_scope": host_scope.as_str(),
         "server_name": server_name,
@@ -337,7 +337,7 @@ pub(crate) fn unmanaged_fingerprint(
     raw: &str,
 ) -> String {
     let payload = json!({
-        "format": "harness-host-entry-v1",
+        "format": "volicord-host-entry-v1",
         "host_kind": host_kind.as_str(),
         "host_scope": host_scope.as_str(),
         "server_name": server_name,
@@ -452,15 +452,15 @@ mod tests {
 
         assert_eq!(first, second);
         assert_ne!(first, other);
-        assert!(first.starts_with("harness-integration-alpha-one"));
-        assert_ne!(first, "harness-agent");
+        assert!(first.starts_with("volicord-integration-alpha-one"));
+        assert_ne!(first, "volicord-agent");
     }
 
     #[test]
     fn explicit_server_name_is_validated() {
         assert_eq!(
-            validated_server_name("integration", Some("harness_custom-1")).unwrap(),
-            "harness_custom-1"
+            validated_server_name("integration", Some("volicord_custom-1")).unwrap(),
+            "volicord_custom-1"
         );
         assert_eq!(
             validated_server_name("integration", Some("-bad"))
@@ -478,7 +478,7 @@ mod tests {
 
     #[test]
     fn fingerprint_changes_when_entry_changes() {
-        let entry = ManagedServerEntry::new("integration", Path::new("/bin/harness-mcp"), None);
+        let entry = ManagedServerEntry::new("integration", Path::new("/bin/volicord-mcp"), None);
         let mut changed = entry.clone();
         changed.args.push("--extra".to_owned());
 
@@ -486,13 +486,13 @@ mod tests {
             managed_fingerprint(
                 HostKind::Generic,
                 HostScope::Export,
-                "harness-integration",
+                "volicord-integration",
                 &entry
             ),
             managed_fingerprint(
                 HostKind::Generic,
                 HostScope::Export,
-                "harness-integration",
+                "volicord-integration",
                 &changed
             )
         );

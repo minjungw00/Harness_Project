@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-//! Core-facing services for owner-defined Harness behavior.
+//! Core-facing services for owner-defined Volicord behavior.
 //!
 //! Core owns public method behavior and coordinates storage-facing work.
 //! Adapters may depend on this crate; this crate does not depend on adapter
