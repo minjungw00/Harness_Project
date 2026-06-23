@@ -53,6 +53,12 @@ Use [`docs/terminology-map.yaml`](../../terminology-map.yaml) before adding or
 changing product terms, Korean prose terms, identifier explanations, exact
 product labels, or Korean mixed-language controls.
 
+Use [Brand Guidelines](brand-guidelines.md) before adding or changing Volicord
+brand copy, product descriptor wording, component presentation, or broad claim
+wording. Preserve official brand strings exactly where the brand owner marks
+them as official; for the first mention in an independent Korean entry
+document, use `Volicord(볼리코드)`.
+
 Preserve exact identifiers unchanged in English and Korean. Put code-like,
 schema-like, route-like, or search-critical values in backticks when they appear
 in prose. Translation decisions depend on the content's function, not only on

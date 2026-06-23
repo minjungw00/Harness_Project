@@ -94,6 +94,12 @@ For terminology changes, check the terminology map for exact identifiers,
 preferred expressions, avoid expressions, Korean mixed-language controls, and
 owner path integrity.
 
+For brand-presentation or broad-claim changes, check the [Brand Guidelines](brand-guidelines.md)
+for Volicord spelling, official bilingual brand copy, component presentation,
+test-harness term boundaries, visual principles, and claim restrictions. Confirm
+exact product behavior, API behavior, storage effects, schemas, security
+guarantees, and Core authority semantics still route to their Reference owners.
+
 For API and Reference examples, check method-local consistency, request and
 response shape, field names, required fields, nullability, enum-like values,
 `state_version`, refs, artifact refs, run refs, judgment refs, close-readiness

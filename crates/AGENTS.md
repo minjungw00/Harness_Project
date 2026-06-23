@@ -15,6 +15,10 @@ decisions.
 - Use `docs/en/development/architecture.md` or `docs/ko/development/architecture.md` for
   durable workspace shape, crate roles, execution-flow maps, and
   implementation-boundary guidance.
+- Use `docs/en/maintain/brand-guidelines.md` or
+  `docs/ko/maintain/brand-guidelines.md` when implementation-facing text, CLI
+  help, generated guidance, or examples need Volicord brand presentation or
+  claim-boundary guidance.
 - Use `docs/doc-index.yaml` only when exact machine-readable owner routing is
   needed. Use the Reference Index for reader-facing owner navigation.
 - For public API work, use `docs/*/reference/api/methods.md` for the supported

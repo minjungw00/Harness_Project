@@ -129,8 +129,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: repository_guidance
   created_on: '2026-05-07'
-  last_updated_on: '2026-06-23'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   - doc_index_schema_v3
@@ -156,8 +156,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: repository_guidance
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-23'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   - doc_index_schema_v3
@@ -182,8 +182,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: repository_guidance
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-20'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   primary_audience:
@@ -2048,8 +2048,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: documentation_maintenance
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-23'
-  last_verified_on: '2026-06-23'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
   applies_to:
   - harness_server_0_1
   - doc_index_schema_v3
@@ -2067,6 +2067,46 @@ documents:
   - terminology.map
   - reference.index
   - build.architecture
+  - maintain.brand-guidelines
+- doc_id: maintain.brand-guidelines
+  path_en: docs/en/maintain/brand-guidelines.md
+  path_ko: docs/ko/maintain/brand-guidelines.md
+  kind: maintenance
+  summary: Maintenance owner for Volicord brand spelling, bilingual brand copy, presentation rules,
+    claim boundaries, component naming presentation, and project-local visual identity principles.
+  normative_level: maintenance
+  translation_policy: semantic_parity
+  owner_area: documentation_maintenance
+  created_on: '2026-06-24'
+  last_updated_on: '2026-06-24'
+  last_verified_on: '2026-06-24'
+  applies_to:
+  - harness_server_0_1
+  - doc_index_schema_v3
+  - terminology_map_v1
+  primary_audience:
+  - agents
+  - maintainers
+  - translators
+  - implementers
+  journeys:
+  - maintain
+  canonical_for:
+  - Volicord brand spelling and Korean pronunciation guidance.
+  - Official bilingual Volicord brand copy, tagline, descriptor, mnemonic, and core-message presentation.
+  - Volicord voice guidance and claim-boundary discipline for documentation and generated repository guidance.
+  - Volicord product/system, Core, CLI identifier, MCP adapter identifier, Runtime Home label, and domain-concept
+    presentation boundaries.
+  - Project-local visual identity principles and provisional color tokens for Volicord presentation.
+  - Distinction between the Volicord brand and ordinary `test harness` or `테스트 하네스` technical terms.
+  depends_on:
+  - terminology.map
+  - reference.scope
+  - reference.core-model
+  - reference.runtime-boundaries
+  - reference.security
+  - reference.admin-cli
+  - reference.mcp-transport
 - doc_id: maintain.translation-policy
   path_en: docs/en/maintain/translation-policy.md
   path_ko: docs/ko/maintain/translation-policy.md
@@ -2095,6 +2135,7 @@ documents:
     handling, and paired update completion expectations.
   depends_on:
   - terminology.map
+  - maintain.brand-guidelines
 - doc_id: maintain.validation
   path_en: docs/en/maintain/validation.md
   path_ko: docs/ko/maintain/validation.md
@@ -2125,5 +2166,6 @@ documents:
   depends_on:
   - maintain.documentation-policy
   - maintain.translation-policy
+  - maintain.brand-guidelines
   - docs.doc-index
   - terminology.map

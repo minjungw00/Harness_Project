@@ -9,6 +9,10 @@ residual-risk decisions, or implementation output.
 
 Harness is the local work-authority product/system for AI-assisted product
 work. Core is the local authority record for Harness state.
+For product brand presentation, use the Volicord brand owner in
+`docs/*/maintain/brand-guidelines.md`. That brand owner does not redefine
+runtime behavior, API behavior, storage effects, security guarantees, schemas,
+or Core authority semantics.
 
 ## Repository Priorities
 
@@ -50,6 +54,10 @@ implementation workflow all matter:
 
 - Use `docs/terminology-map.yaml` as the terminology and
   identifier-preservation source of truth.
+- For product naming, brand copy, visual-presentation principles, or broad
+  claim wording, use `docs/en/maintain/brand-guidelines.md` or
+  `docs/ko/maintain/brand-guidelines.md` together with the applicable Reference
+  owner.
 - For documentation edits, read `docs/AGENTS.md` and the applicable policy
   guidance under `docs/*/maintain/`.
 - For bilingual edits, translation review, parity review, or
@@ -98,6 +106,9 @@ implementation workflow all matter:
 - Preserve exact identifiers, file paths, API methods, schema names, field
   names, enum values, status values, product labels, anchors, and code literals
   exactly where the terminology map requires it.
+- Use the brand guidelines for Volicord spelling, official bilingual brand
+  copy, and brand claim boundaries. Use Reference owners for exact behavior,
+  guarantees, schemas, and Core authority semantics.
 - Korean documentation must use natural Korean technical prose.
 
 ## Implementation Boundaries

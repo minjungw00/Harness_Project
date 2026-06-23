@@ -23,6 +23,7 @@ Fast reader routes:
 - Surface recipes: [English](en/guides/surface-recipes.md) / [Korean](ko/guides/surface-recipes.md)
 - Exact CLI and API contracts: [English CLI](en/reference/admin-cli.md) / [Korean CLI](ko/reference/admin-cli.md) / [English API](en/reference/api/methods.md) / [Korean API](ko/reference/api/methods.md)
 - Reference navigation: [English](en/reference/README.md) / [Korean](ko/reference/README.md)
+- Brand presentation and claim guidance: [English](en/maintain/brand-guidelines.md) / [Korean](ko/maintain/brand-guidelines.md)
 
 Shared metadata:
 
@@ -31,6 +32,6 @@ Shared metadata:
 
 Those metadata files support maintainers, translators, and agents. Ordinary readers should start from the language entry pages, Getting Started, Guides, Development, or Reference pages.
 
-Maintainers and implementation agents should read [../AGENTS.md](../AGENTS.md), then the relevant documentation, translation, and validation policies under `docs/*/maintain/`.
+Maintainers and implementation agents should read [../AGENTS.md](../AGENTS.md), then the relevant documentation, translation, brand, and validation policies under `docs/*/maintain/`.
 
 This README is an entry route. It does not define API behavior, storage effects, security guarantees, schemas, Core authority semantics, or detailed owner maps.

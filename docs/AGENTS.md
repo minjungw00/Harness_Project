@@ -27,6 +27,10 @@ residual-risk decisions.
   level, primary audience, reader journeys, and translation policy metadata.
 - Use `docs/terminology-map.yaml` as the terminology and
   identifier-preservation source of truth.
+- Use `docs/en/maintain/brand-guidelines.md` and
+  `docs/ko/maintain/brand-guidelines.md` for Volicord spelling, official
+  bilingual brand copy, component presentation, visual-presentation principles,
+  and brand claim boundaries.
 - For English-facing documentation edits, read
   `docs/en/maintain/documentation-policy.md`.
 - For Korean-facing documentation edits, read
@@ -131,6 +135,9 @@ substantial durable reader-facing content within that scope.
 - Use the terminology map's Harness/Core distinction: Harness is the local
   work-authority product/system for AI-assisted product work, and Core is the
   local authority record for Harness state.
+- Use the brand guidelines for Volicord brand presentation. The brand owner
+  does not redefine exact product behavior, API behavior, storage effects,
+  security guarantees, schemas, or Core authority semantics.
 
 ## Validation
 

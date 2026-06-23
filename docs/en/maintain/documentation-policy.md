@@ -50,6 +50,12 @@ Use [`docs/terminology-map.yaml`](../../terminology-map.yaml) as the structured
 terminology and identifier-preservation source of truth. The terminology map
 does not define API, storage, schema, security, projection, or runtime behavior.
 
+Use [Brand Guidelines](brand-guidelines.md) as the maintenance owner for
+Volicord brand spelling, official bilingual brand copy, component presentation,
+project-local visual principles, and brand claim boundaries. The brand
+guidelines do not define product behavior, API behavior, storage effects,
+schemas, security guarantees, or Core authority semantics.
+
 ## Ownership Boundaries
 
 Exact product contracts stay in the focused Reference owners selected from
