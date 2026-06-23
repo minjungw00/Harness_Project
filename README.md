@@ -52,14 +52,22 @@ Working directory: Harness Server source repository root.
 
 ```sh
 cargo build -p harness-cli -p harness-mcp
+
+export HARNESS_BIN="$(pwd)/target/debug"
+
+test -x "$HARNESS_BIN/harness"
+test -x "$HARNESS_BIN/harness-mcp"
 ```
 
-That builds:
+That selects the debug executables built under `target/debug`. For a release
+build, use `cargo build --release -p harness-cli -p harness-mcp` and
+`export HARNESS_BIN="$(pwd)/target/release"`. For separately installed
+executables, use `export HARNESS_BIN="/absolute/path/to/installed/bin"`.
+Choose one absolute directory that contains both `harness` and `harness-mcp`.
+`HARNESS_BIN` is a shell convenience variable for these examples; Harness does
+not read it as configuration.
 
-- `target/debug/harness`
-- `target/debug/harness-mcp`
-
-For release executable paths and build verification, see [Installation](docs/en/getting-started/installation.md).
+For more build verification, see [Installation](docs/en/getting-started/installation.md).
 
 ## First Host Setup
 
@@ -68,7 +76,7 @@ Use [Quickstart](docs/en/getting-started/quickstart.md) for the shortest support
 Codex user-scope example for Product Repository A:
 
 ```sh
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host codex \
   --scope user \
   --integration-id int-codex-team \
@@ -76,7 +84,7 @@ Codex user-scope example for Product Repository A:
   --repo-root /work/acme-api \
   --default-project-id acme-api \
   --runtime-home /Users/alex/.harness \
-  --mcp-command /opt/harness/bin/harness-mcp
+  --mcp-command "$HARNESS_BIN/harness-mcp"
 ```
 
 Expected success includes:
@@ -97,8 +105,8 @@ Claude Code project-scope example for Product Repository A:
 
 ```sh
 HARNESS_HOME=/Users/alex/.harness \
-PATH="/opt/harness/bin:$PATH" \
-/opt/harness/bin/harness agent install \
+PATH="$HARNESS_BIN:$PATH" \
+"$HARNESS_BIN/harness" agent install \
   --host claude-code \
   --scope project \
   --integration-id int-claude-acme \
@@ -115,7 +123,16 @@ status: action_required
 verification_detail: Claude Code requires user approval before project-scoped .mcp.json servers load
 ```
 
-`action_required` is a successful administrative result. Complete the named host action in Codex or Claude Code, then run `harness agent verify`.
+`action_required` is a successful administrative result. Complete the named
+host action in Codex or Claude Code, then verify with the selected directory
+still on `PATH`:
+
+```sh
+HARNESS_HOME=/Users/alex/.harness \
+PATH="$HARNESS_BIN:$PATH" \
+"$HARNESS_BIN/harness" agent verify \
+  --integration-id int-claude-acme
+```
 
 ## Documentation Routes
 
