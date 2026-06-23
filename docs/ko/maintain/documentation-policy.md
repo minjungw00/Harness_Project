@@ -10,9 +10,24 @@
 ## 메타데이터와 문서 종류
 
 유지 문서의 기계 판독 경로는 [`docs/doc-index.yaml`](../../doc-index.yaml)을
-사용합니다. 버전 2 메타데이터는 `doc_id`, 유지 경로, 문서 `kind`, 요약,
+사용합니다. 버전 3 메타데이터는 `doc_id`, 유지 경로, 문서 `kind`, 요약,
 규범 수준, 번역 정책, 주요 독자, 독자 여정, 필요한 경우의 집중
-`canonical_for` 담당 범위, `depends_on` 관계를 기록합니다.
+`canonical_for` 담당 범위, 유지보수 `owner_area`, `created_on`,
+`last_updated_on`, `last_verified_on`, `applies_to`, `depends_on` 관계를
+기록합니다.
+
+`canonical_for`는 문서가 담당하는 정보 또는 계약 영역을 이름 붙입니다.
+`owner_area`는 그 항목을 정확하게 유지하는 오래 유지될 책임 영역을 이름
+붙입니다. 두 필드는 관련되어 있지만 서로 대체할 수 없습니다.
+
+날짜는 `YYYY-MM-DD`를 사용합니다. `created_on`은 유지 파일 또는 한영 대응
+쌍의 검증 가능한 최초 도입일을 기록합니다. `last_updated_on`은 그 파일 또는
+대응 쌍의 검증 가능한 최신 내용 변경일을 기록합니다. `last_verified_on`은
+색인된 경로, 메타데이터, 링크, 대응 관계, 담당 경로를 유지보수 정책에 따라
+확인한 날짜입니다. 이것은 제품 수락, 런타임 적합성, QA 완료, 닫기 준비 상태,
+보안 증명, 잔여 위험 수락이 아닙니다. `applies_to`는 current, latest, all
+versions 같은 모호한 값이 아니라 최상위 적용 가능성 카탈로그의 안정적인
+식별자를 사용합니다.
 
 문서 종류는 독자 목적에 따라 사용합니다.
 

@@ -601,7 +601,8 @@ documentation-tooling dependencies out of product and test-support crates.
 
 Owns in the implementation:
 
-- Version 2 `docs/doc-index.yaml` structural validation.
+- Version 3 `docs/doc-index.yaml` structural validation, including
+  owner-area, date, and applicability metadata.
 - Bilingual maintained Markdown coverage checks for `docs/en/` and `docs/ko/`.
 - Local Markdown link and fragment validation, including hidden anchors.
 - `docs/terminology-map.yaml` repository-document path validation.

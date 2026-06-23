@@ -22,8 +22,9 @@ residual-risk decisions.
 
 - Use `docs/doc-index.yaml` as the machine-readable owner route for maintained
   documentation. It owns `doc_id`, maintained paths, document kind, focused
-  `canonical_for` scope, dependencies, normative level, primary audience,
-  reader journeys, and translation policy metadata.
+  `canonical_for` scope, maintenance `owner_area`, `created_on`,
+  `last_updated_on`, `last_verified_on`, `applies_to`, dependencies, normative
+  level, primary audience, reader journeys, and translation policy metadata.
 - Use `docs/terminology-map.yaml` as the terminology and
   identifier-preservation source of truth.
 - For English-facing documentation edits, read
@@ -58,9 +59,8 @@ broad filename family.
 - Maintenance documents guide authors, translators, reviewers, and agents.
   They may own documentation process, metadata use, and check procedures.
 - Index and route-only documents help readers choose a next document. Route-only
-  behavior is a reader purpose, not a separate version 2 `kind`; limit
-  navigation-only behavior to pages whose purpose and metadata are actually
-  route-only.
+  behavior is a reader purpose, not a separate `kind`; limit navigation-only
+  behavior to pages whose purpose and metadata are actually route-only.
 
 README, Getting Started, Guides, Development, and Maintain pages are not
 automatically navigation-only. If their owner metadata gives them landing,

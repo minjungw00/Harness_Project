@@ -1,6 +1,7 @@
-version: 2
+version: 3
 metadata:
-  purpose: Machine-readable documentation metadata for maintained Harness paths, reader purpose, focused owner routing, and bilingual maintenance.
+  purpose: Machine-readable documentation metadata for maintained Harness paths, reader purpose, maintenance
+    responsibility, version applicability, and bilingual maintenance.
   default_language: en
   documentation_metadata: true
   runtime_config: false
@@ -11,13 +12,58 @@ metadata:
     en: docs/en/reference/glossary.md
     ko: docs/ko/reference/glossary.md
   terminology_metadata: docs/terminology-map.yaml
+  date_format: YYYY-MM-DD
+  maintenance_verification_scope: last_verified_on records the date on which maintained paths, metadata,
+    links, pairing, and owner routing were checked under the documentation maintenance policy.
 language_retrieval:
-  normal_lookup: Use one language version for ordinary lookup, choosing the user's language when clear and `default_language` otherwise.
-  paired_review_rule: Translation review, bilingual parity review, and documentation quality review must read both `path_en` and `path_ko` for each affected `doc_id`.
+  normal_lookup: Use one language version for ordinary lookup, choosing the user's language when clear
+    and `default_language` otherwise.
+  paired_review_rule: Translation review, bilingual parity review, and documentation quality review must
+    read both `path_en` and `path_ko` for each affected `doc_id`.
   read_both_language_versions_for:
   - translation review
   - bilingual parity review
   - documentation quality review
+owner_areas:
+  repository_guidance:
+    description: Repository-wide and scoped working-rule maintenance for agents and maintainers.
+  onboarding:
+    description: First-read, installation, and environment-orientation documentation maintenance.
+  user_workflow:
+    description: User-facing and agent-facing workflow guide maintenance.
+  agent_integration:
+    description: Agent host, MCP adapter, administrative setup, and surface-integration documentation
+      maintenance.
+  developer_documentation:
+    description: Source-learning, implementation workflow, architecture, and test documentation maintenance.
+  core_api:
+    description: Core authority model, public API, schema, projection, template, and value-set documentation
+      maintenance.
+  storage:
+    description: Storage records, DDL, effects, artifact storage, and storage-versioning documentation
+      maintenance.
+  runtime_security:
+    description: Runtime boundary and security guarantee documentation maintenance.
+  quality_conformance:
+    description: Conformance, validation meaning, and design-quality documentation maintenance.
+  documentation_maintenance:
+    description: Documentation metadata, terminology, translation, validation, and route-index maintenance.
+applicability:
+  harness_server_0_1:
+    description: Harness Server workspace package version 0.1.0, as declared by the workspace `Cargo.toml`.
+  rust_workspace_1_85:
+    description: Repository Rust workspace requiring Rust 1.85 or newer, as declared by the workspace
+      `Cargo.toml`.
+  mcp_protocol_2025_11_25:
+    description: MCP protocol version 2025-11-25 supported by the local `harness-mcp` stdio process.
+  storage_baseline_sqlite_v2_schema_v1:
+    description: '`baseline_sqlite_v2` storage profile with registry and project-state schema version
+      1.'
+  doc_index_schema_v3:
+    description: Documentation index metadata schema version 3 used by `docs/doc-index.yaml` and
+      `docs-check`.
+  terminology_map_v1:
+    description: Terminology map metadata schema version 1 used by `docs/terminology-map.yaml`.
 entry_schema:
   shared_required:
   - doc_id
@@ -25,6 +71,11 @@ entry_schema:
   - kind
   - summary
   - normative_level
+  - owner_area
+  - created_on
+  - last_updated_on
+  - last_verified_on
+  - applies_to
   paired_required:
   - doc_id
   - path_en
@@ -33,11 +84,22 @@ entry_schema:
   - summary
   - normative_level
   - translation_policy
+  - owner_area
+  - created_on
+  - last_updated_on
+  - last_verified_on
+  - applies_to
   optional:
   - primary_audience
   - journeys
   - canonical_for
   - depends_on
+  maintenance_fields:
+    owner_area: Scalar identifier selected from the top-level owner_areas catalog.
+    created_on: Earliest verifiable introduction date for the maintained file or bilingual pair.
+    last_updated_on: Latest verifiable content-update date for the maintained file or bilingual pair.
+    last_verified_on: Maintenance verification date for paths, metadata, links, pairing, and owner routing.
+    applies_to: Non-empty list of identifiers selected from the top-level applicability catalog.
   kinds:
   - landing
   - tutorial
@@ -65,6 +127,13 @@ shared_documents:
   kind: maintenance
   summary: Repository-wide working rules for agents and maintainers.
   normative_level: maintenance
+  owner_area: repository_guidance
+  created_on: '2026-05-07'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - doc_index_schema_v3
   primary_audience:
   - agents
   - maintainers
@@ -73,7 +142,8 @@ shared_documents:
   canonical_for:
   - repository-wide agent and maintainer working rules
   - scoped AGENTS.md instruction hierarchy
-  - repository priority order for onboarding, developer learning, reference contracts, and maintenance metadata
+  - repository priority order for onboarding, developer learning, reference contracts, and maintenance
+    metadata
   - global contract-first workflow guidance
   - global Harness/Core terminology distinction
   - global bilingual semantic-parity requirement
@@ -84,6 +154,13 @@ shared_documents:
   kind: maintenance
   summary: Documentation-specific working rules for maintained docs and metadata.
   normative_level: maintenance
+  owner_area: repository_guidance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - doc_index_schema_v3
   primary_audience:
   - agents
   - maintainers
@@ -103,6 +180,12 @@ shared_documents:
   kind: maintenance
   summary: Rust workspace working rules for implementation edits and validation.
   normative_level: maintenance
+  owner_area: repository_guidance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - agents
   - implementers
@@ -121,6 +204,12 @@ shared_documents:
   kind: landing
   summary: Top-level Harness repository landing page and first navigation route.
   normative_level: guide
+  owner_area: onboarding
+  created_on: '2026-04-23'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - all readers
   journeys:
@@ -131,6 +220,12 @@ shared_documents:
   kind: landing
   summary: Bilingual documentation directory landing page and language selector.
   normative_level: guide
+  owner_area: onboarding
+  created_on: '2026-04-23'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - all readers
   journeys:
@@ -139,22 +234,38 @@ shared_documents:
 - doc_id: docs.doc-index
   path: docs/doc-index.yaml
   kind: maintenance
-  summary: Version 2 machine-readable metadata for document paths, kinds, owners, dependencies, and translation policy.
+  summary: Version 3 machine-readable metadata for document paths, maintenance responsibility, dates,
+    applicability, owners, dependencies, and translation policy.
   normative_level: maintenance
+  owner_area: documentation_maintenance
+  created_on: '2026-06-07'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - doc_index_schema_v3
   primary_audience:
   - agents
   - maintainers
   journeys:
   - maintain
   canonical_for:
-  - Version 2 machine-readable documentation metadata model.
+  - Version 3 machine-readable documentation metadata model.
   - Maintained document path inventory and paired-language routing.
-  - Document kind, normative level, reader journey, translation policy, dependency, and focused owner metadata.
+  - Document kind, normative level, reader journey, translation policy, dependency, focused owner, maintenance
+    owner-area, date, and applicability metadata.
 - doc_id: terminology.map
   path: docs/terminology-map.yaml
   kind: maintenance
   summary: Structured terminology metadata and identifier-preservation controls.
   normative_level: maintenance
+  owner_area: documentation_maintenance
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-22'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - terminology_map_v1
   primary_audience:
   - maintainers
   - translators
@@ -167,7 +278,8 @@ shared_documents:
   - identifier preservation rules
   - English and Korean discouraged-expression metadata
   - Harness, Core, Harness Server, Harness Runtime Home, and Product Repository terminology routing
-  - Write Authorization, write approval, sensitive-action approval, final-acceptance, residual-risk acceptance, and verification-criteria terminology distinctions
+  - Write Authorization, write approval, sensitive-action approval, final-acceptance, residual-risk acceptance,
+    and verification-criteria terminology distinctions
   - Korean mixed-language expressions to avoid
 documents:
 - doc_id: docs.index
@@ -177,6 +289,12 @@ documents:
   summary: Language-specific documentation entry point and reader-path router.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: onboarding
+  created_on: '2026-04-23'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - all readers
   journeys:
@@ -189,6 +307,12 @@ documents:
   summary: First-read product orientation for Harness, Core, and the local authority model.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: onboarding
+  created_on: '2026-06-07'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - new users
   - agents
@@ -203,6 +327,13 @@ documents:
   summary: Source build, executable discovery, and installation verification tutorial.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: onboarding
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - new users
   - operators
@@ -220,6 +351,13 @@ documents:
   summary: Shortest real agent host setup tutorial for a first successful run.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: onboarding
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - mcp_protocol_2025_11_25
   primary_audience:
   - new users
   - operators
@@ -239,6 +377,12 @@ documents:
   summary: How-to guidance for user workflow and authority-aware work with Harness.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: user_workflow
+  created_on: '2026-05-22'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - users
   - agents
@@ -251,6 +395,12 @@ documents:
   summary: How-to guidance for agents operating against Harness authority boundaries.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: user_workflow
+  created_on: '2026-05-22'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - agents
   - agent operators
@@ -263,6 +413,12 @@ documents:
   summary: Example-oriented guidance for user judgments and related workflow decisions.
   normative_level: example
   translation_policy: semantic_parity
+  owner_area: user_workflow
+  created_on: '2026-06-07'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - users
   - agents
@@ -276,6 +432,12 @@ documents:
   summary: How-to recipes for using Harness surfaces and connector contexts.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: user_workflow
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - users
   - agents
@@ -286,9 +448,17 @@ documents:
   path_en: docs/en/guides/agent-host-setup.md
   path_ko: docs/ko/guides/agent-host-setup.md
   kind: how_to
-  summary: How-to guidance for installing, verifying, guiding, and removing Codex, Claude Code, and generic agent host integrations.
+  summary: How-to guidance for installing, verifying, guiding, and removing Codex, Claude Code, and generic
+    agent host integrations.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: agent_integration
+  created_on: '2026-06-22'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - mcp_protocol_2025_11_25
   primary_audience:
   - operators
   - agent integrators
@@ -307,9 +477,17 @@ documents:
   path_en: docs/en/guides/agent-host-troubleshooting.md
   path_ko: docs/ko/guides/agent-host-troubleshooting.md
   kind: how_to
-  summary: Symptom-oriented recovery guidance for Codex, Claude Code, and generic agent host integration failures.
+  summary: Symptom-oriented recovery guidance for Codex, Claude Code, and generic agent host integration
+    failures.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: agent_integration
+  created_on: '2026-06-23'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - mcp_protocol_2025_11_25
   primary_audience:
   - operators
   - agent integrators
@@ -329,9 +507,17 @@ documents:
   path_en: docs/en/guides/multi-repository-agent-setup.md
   path_ko: docs/ko/guides/multi-repository-agent-setup.md
   kind: how_to
-  summary: How-to guidance for one user-scope agent integration serving multiple explicitly allowed Product Repositories.
+  summary: How-to guidance for one user-scope agent integration serving multiple explicitly allowed Product
+    Repositories.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: agent_integration
+  created_on: '2026-06-22'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - mcp_protocol_2025_11_25
   primary_audience:
   - operators
   - agent integrators
@@ -352,6 +538,13 @@ documents:
   summary: Developer documentation landing page and implementation-learning route.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -376,6 +569,14 @@ documents:
   summary: Explanation of the repository and crate layout for source-code learners.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
+  - doc_index_schema_v3
   primary_audience:
   - implementers
   - reviewers
@@ -393,6 +594,13 @@ documents:
   summary: Explanation of request flow from adapters through Core-facing behavior.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -416,6 +624,13 @@ documents:
   summary: Explanation of durable implementation patterns and responsibility boundaries.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -438,6 +653,14 @@ documents:
   summary: Explanation of storage and transaction architecture for implementers.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
+  - storage_baseline_sqlite_v2_schema_v1
   primary_audience:
   - implementers
   - reviewers
@@ -464,6 +687,13 @@ documents:
   summary: Explanation of test organization and validation responsibilities.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -484,6 +714,13 @@ documents:
   summary: Architecture-decision record index for implementation rationale.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-22'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -503,6 +740,13 @@ documents:
   summary: Architecture decision explaining the Core and adapter boundary.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -523,6 +767,13 @@ documents:
   summary: Architecture decision explaining plan and atomic commit boundaries.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -543,6 +794,13 @@ documents:
   summary: Architecture decision explaining Runtime Home and Product Repository separation.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -561,9 +819,18 @@ documents:
   path_en: docs/en/development/decisions/agent-integration-profile.md
   path_ko: docs/ko/development/decisions/agent-integration-profile.md
   kind: explanation
-  summary: Architecture decision explaining Agent Integration Profile, host routing, and explicit project membership for coding-agent integrations.
+  summary: Architecture decision explaining Agent Integration Profile, host routing, and explicit project
+    membership for coding-agent integrations.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-22'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
+  - mcp_protocol_2025_11_25
   primary_audience:
   - implementers
   - agent integrators
@@ -589,6 +856,13 @@ documents:
   summary: How-to guidance for making implementation changes in the Rust workspace.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-12'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -612,6 +886,13 @@ documents:
   summary: Durable explanation of workspace architecture, crate roles, and execution flow.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-17'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - implementers
   - reviewers
@@ -642,6 +923,13 @@ documents:
   summary: Human-readable Reference index for finding focused owner documents.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: documentation_maintenance
+  created_on: '2026-06-02'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - doc_index_schema_v3
   primary_audience:
   - agents
   - implementers
@@ -661,6 +949,13 @@ documents:
   summary: Reference contract for pre-installation environment applicability and system prerequisites.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: onboarding
+  created_on: '2026-06-23'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - rust_workspace_1_85
   primary_audience:
   - new users
   - operators
@@ -691,6 +986,12 @@ documents:
   summary: Reference contract for baseline, supported, profile-gated, reserved, and out-of-scope boundaries.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - agents
   - implementers
@@ -712,6 +1013,12 @@ documents:
   summary: Reference contract for Core authority records and state concepts.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-05-07'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - agents
   - implementers
@@ -734,6 +1041,12 @@ documents:
   summary: Reference contract for runtime, repository, and local storage boundaries.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: runtime_security
+  created_on: '2026-06-07'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - agents
   - implementers
@@ -754,6 +1067,14 @@ documents:
   summary: Reference contract for administrative CLI behavior and local bootstrap commands.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: agent_integration
+  created_on: '2026-06-19'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - mcp_protocol_2025_11_25
+  - storage_baseline_sqlite_v2_schema_v1
   primary_audience:
   - implementers
   - agent integrators
@@ -788,6 +1109,13 @@ documents:
   summary: Reference contract for MCP transport startup, framing, and response wrapping.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: agent_integration
+  created_on: '2026-06-19'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - mcp_protocol_2025_11_25
   primary_audience:
   - agent integrators
   - implementers
@@ -821,6 +1149,12 @@ documents:
   summary: Reference contract for security wording, guarantees, and non-guarantees.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: runtime_security
+  created_on: '2026-05-28'
+  last_updated_on: '2026-06-22'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - agents
   - implementers
@@ -841,6 +1175,13 @@ documents:
   summary: Curated reader-facing glossary for selected Harness terms and owner routes.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: documentation_maintenance
+  created_on: '2026-05-06'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - terminology_map_v1
   primary_audience:
   - readers
   - maintainers
@@ -861,6 +1202,12 @@ documents:
   summary: Reference contract for the supported public Harness API method list.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-04'
+  last_updated_on: '2026-06-16'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -878,6 +1225,12 @@ documents:
   summary: Reference contract for `harness.intake` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-11'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -896,6 +1249,12 @@ documents:
   summary: Reference contract for `harness.update_scope` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-11'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -914,6 +1273,12 @@ documents:
   summary: Reference contract for `harness.status` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-11'
+  last_updated_on: '2026-06-19'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -933,6 +1298,12 @@ documents:
   summary: Reference contract for `harness.prepare_write` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-11'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -952,6 +1323,12 @@ documents:
   summary: Reference contract for `harness.stage_artifact` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-11'
+  last_updated_on: '2026-06-18'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -970,6 +1347,12 @@ documents:
   summary: Reference contract for `harness.record_run` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-11'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -989,6 +1372,12 @@ documents:
   summary: Reference contract for `harness.request_user_judgment` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-15'
+  last_updated_on: '2026-06-19'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1007,6 +1396,12 @@ documents:
   summary: Reference contract for `harness.record_user_judgment` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-15'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1025,6 +1420,12 @@ documents:
   summary: Reference contract for `harness.close_task` behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-11'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1048,6 +1449,12 @@ documents:
   summary: Reference contract for core API schema families.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-04'
+  last_updated_on: '2026-06-19'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1067,6 +1474,12 @@ documents:
   summary: Reference contract for state API schema families.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1086,6 +1499,12 @@ documents:
   summary: Reference contract for artifact API schema families.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1104,6 +1523,12 @@ documents:
   summary: Reference contract for judgment API schema families.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1123,6 +1548,12 @@ documents:
   summary: Reference contract for API value sets and value meanings.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1144,6 +1575,12 @@ documents:
   summary: Reference route for API error families and focused error owners.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-04'
+  last_updated_on: '2026-06-16'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1172,6 +1609,12 @@ documents:
   summary: Reference contract for public API error-code meanings.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-13'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1188,6 +1631,12 @@ documents:
   summary: Reference contract for API error precedence.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-13'
+  last_updated_on: '2026-06-18'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1208,6 +1657,12 @@ documents:
   summary: Reference contract for API error response routing.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-13'
+  last_updated_on: '2026-06-15'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1227,6 +1682,12 @@ documents:
   summary: Reference contract for blocker routing in API responses.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-13'
+  last_updated_on: '2026-06-15'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1247,6 +1708,12 @@ documents:
   summary: Reference contract for machine-readable API error details.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-13'
+  last_updated_on: '2026-06-18'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - API implementers
   - agent integrators
@@ -1266,6 +1733,13 @@ documents:
   summary: Reference route for storage contracts and storage owner documents.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: storage
+  created_on: '2026-05-06'
+  last_updated_on: '2026-06-17'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - storage_baseline_sqlite_v2_schema_v1
   primary_audience:
   - implementers
   - maintainers
@@ -1283,6 +1757,13 @@ documents:
   summary: Reference contract for storage record families.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: storage
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - storage_baseline_sqlite_v2_schema_v1
   primary_audience:
   - storage implementers
   - maintainers
@@ -1303,6 +1784,13 @@ documents:
   summary: Reference contract for storage DDL.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: storage
+  created_on: '2026-06-17'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - storage_baseline_sqlite_v2_schema_v1
   primary_audience:
   - storage implementers
   - API implementers
@@ -1316,7 +1804,8 @@ documents:
   - project `state.sqlite` schema shape
   - Agent Integration Profile, integration project membership, and Host Installation registry tables
   - baseline SQLite indexes, foreign keys, migration tables, and constraints
-  - storage constraints for state clock columns, replay rows, current Change Unit uniqueness, Write Authorization basis versions, and staged artifact provenance
+  - storage constraints for state clock columns, replay rows, current Change Unit uniqueness, Write Authorization
+    basis versions, and staged artifact provenance
 - doc_id: reference.storage-effects
   path_en: docs/en/reference/storage-effects.md
   path_ko: docs/ko/reference/storage-effects.md
@@ -1324,6 +1813,13 @@ documents:
   summary: Reference contract for storage effects.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: storage
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - storage_baseline_sqlite_v2_schema_v1
   primary_audience:
   - storage implementers
   - API implementers
@@ -1342,6 +1838,13 @@ documents:
   summary: Reference contract for artifact storage behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: storage
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - storage_baseline_sqlite_v2_schema_v1
   primary_audience:
   - storage implementers
   - API implementers
@@ -1361,6 +1864,13 @@ documents:
   summary: Reference contract for storage versioning.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: storage
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - storage_baseline_sqlite_v2_schema_v1
   primary_audience:
   - storage implementers
   - maintainers
@@ -1381,6 +1891,13 @@ documents:
   summary: Reference contract for agent integration and context boundaries.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: agent_integration
+  created_on: '2026-05-23'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - mcp_protocol_2025_11_25
   primary_audience:
   - agent integrators
   - agents
@@ -1406,6 +1923,12 @@ documents:
   summary: Reference contract for Projection authority and template behavior.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-05-07'
+  last_updated_on: '2026-06-15'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - implementers
   - agent integrators
@@ -1425,6 +1948,12 @@ documents:
   summary: Reference contract for exact template body ownership.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: core_api
+  created_on: '2026-06-10'
+  last_updated_on: '2026-06-15'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - implementers
   - maintainers
@@ -1446,6 +1975,12 @@ documents:
   summary: Reference contract for conformance scenario scope and meaning.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: quality_conformance
+  created_on: '2026-06-07'
+  last_updated_on: '2026-06-15'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - implementers
   - reviewers
@@ -1464,6 +1999,12 @@ documents:
   summary: Reference contract for design-quality boundaries and review concepts.
   normative_level: contract
   translation_policy: semantic_parity
+  owner_area: quality_conformance
+  created_on: '2026-06-07'
+  last_updated_on: '2026-06-21'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   primary_audience:
   - agents
   - reviewers
@@ -1480,9 +2021,17 @@ documents:
   path_en: docs/en/maintain/documentation-policy.md
   path_ko: docs/ko/maintain/documentation-policy.md
   kind: maintenance
-  summary: Maintenance policy for document kinds, owner boundaries, examples, durable content, and scoped working rules.
+  summary: Maintenance policy for document kinds, owner boundaries, examples, durable content, and scoped
+    working rules.
   normative_level: maintenance
   translation_policy: semantic_parity
+  owner_area: documentation_maintenance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - doc_index_schema_v3
   primary_audience:
   - agents
   - maintainers
@@ -1501,9 +2050,18 @@ documents:
   path_en: docs/en/maintain/translation-policy.md
   path_ko: docs/ko/maintain/translation-policy.md
   kind: maintenance
-  summary: Maintenance policy for English/Korean semantic parity, Korean prose, identifiers, terminology, and paired updates.
+  summary: Maintenance policy for English/Korean semantic parity, Korean prose, identifiers, terminology,
+    and paired updates.
   normative_level: maintenance
   translation_policy: semantic_parity
+  owner_area: documentation_maintenance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - doc_index_schema_v3
+  - terminology_map_v1
   primary_audience:
   - maintainers
   - translators
@@ -1512,16 +2070,25 @@ documents:
   - maintain
   canonical_for:
   - Bilingual semantic-parity policy for maintained English and Korean documentation.
-  - Natural Korean technical prose, exact identifier preservation, terminology-map usage, and paired update completion expectations.
+  - Natural Korean technical prose, exact identifier preservation, terminology-map usage, and paired update
+    completion expectations.
   depends_on:
   - terminology.map
 - doc_id: maintain.validation
   path_en: docs/en/maintain/validation.md
   path_ko: docs/ko/maintain/validation.md
   kind: maintenance
-  summary: Maintenance policy for structural checks, human semantic review, Rust validation, and result reporting.
+  summary: Maintenance policy for structural checks, human semantic review, Rust validation, and result
+    reporting.
   normative_level: maintenance
   translation_policy: semantic_parity
+  owner_area: documentation_maintenance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-23'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
+  - doc_index_schema_v3
   primary_audience:
   - agents
   - maintainers
@@ -1530,7 +2097,8 @@ documents:
   journeys:
   - maintain
   canonical_for:
-  - Documentation metadata, path, link, terminology, bilingual, contract-boundary, API example, and reporting validation policy.
+  - Documentation metadata, path, link, terminology, bilingual, contract-boundary, API example, and reporting
+    validation policy.
   - Rust validation routing for documentation work that also changes implementation files.
   depends_on:
   - maintain.documentation-policy

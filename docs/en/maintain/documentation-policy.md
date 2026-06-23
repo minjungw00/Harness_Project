@@ -11,10 +11,25 @@ close-readiness state, or residual-risk decisions.
 ## Metadata And Document Kinds
 
 Use [`docs/doc-index.yaml`](../../doc-index.yaml) as the machine-readable route
-for maintained documentation. Version 2 metadata records `doc_id`, maintained
+for maintained documentation. Version 3 metadata records `doc_id`, maintained
 paths, document `kind`, summary, normative level, translation policy, primary
-audience, reader journeys, focused `canonical_for` ownership where needed, and
-`depends_on` relationships.
+audience, reader journeys, focused `canonical_for` ownership where needed,
+maintenance `owner_area`, `created_on`, `last_updated_on`, `last_verified_on`,
+`applies_to`, and `depends_on` relationships.
+
+`canonical_for` names the information or contract area owned by a document.
+`owner_area` names the durable maintenance responsibility domain for keeping
+that entry accurate. The two fields are related but not interchangeable.
+
+Dates use `YYYY-MM-DD`. `created_on` records the earliest verifiable
+introduction date for the maintained file or bilingual pair. `last_updated_on`
+records the latest verifiable content-update date for that file or pair.
+`last_verified_on` records maintenance verification of the indexed paths,
+metadata, links, pairing, and owner routing; it is not product acceptance,
+runtime conformance, QA completion, close readiness, a security proof, or
+residual-risk acceptance. `applies_to` uses stable identifiers from the
+top-level applicability catalog rather than ambiguous values such as current,
+latest, or all versions.
 
 Use these document kinds by reader purpose:
 

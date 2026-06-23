@@ -52,43 +52,104 @@ fn write(root: &Path, path: &str, contents: &str) {
 }
 
 fn valid_doc_index() -> String {
-    r#"version: 2
+    r#"version: 3
+metadata: {}
+language_retrieval: {}
+owner_areas:
+  repository_guidance:
+    description: Repository guidance.
+  documentation_maintenance:
+    description: Documentation maintenance.
+  onboarding:
+    description: Onboarding.
+  developer_documentation:
+    description: Developer documentation.
+applicability:
+  harness_server_0_1:
+    description: Harness Server 0.1.
+  doc_index_schema_v3:
+    description: Documentation index schema v3.
+  terminology_map_v1:
+    description: Terminology map v1.
+entry_schema: {}
 shared_documents:
 - doc_id: agents.root
   path: AGENTS.md
   kind: maintenance
   summary: Root rules.
   normative_level: maintenance
+  owner_area: repository_guidance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
 - doc_id: agents.docs
   path: docs/AGENTS.md
   kind: maintenance
   summary: Docs rules.
   normative_level: maintenance
+  owner_area: repository_guidance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
 - doc_id: agents.crates
   path: crates/AGENTS.md
   kind: maintenance
   summary: Crates rules.
   normative_level: maintenance
+  owner_area: repository_guidance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
 - doc_id: readme.root
   path: README.md
   kind: landing
   summary: Root README.
   normative_level: guide
+  owner_area: onboarding
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
 - doc_id: docs.root
   path: docs/README.md
   kind: landing
   summary: Docs README.
   normative_level: guide
+  owner_area: onboarding
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
 - doc_id: docs.doc-index
   path: docs/doc-index.yaml
   kind: maintenance
   summary: Documentation metadata.
   normative_level: maintenance
+  owner_area: documentation_maintenance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - doc_index_schema_v3
 - doc_id: terminology.map
   path: docs/terminology-map.yaml
   kind: maintenance
   summary: Terminology metadata.
   normative_level: maintenance
+  owner_area: documentation_maintenance
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - terminology_map_v1
 documents:
 - doc_id: docs.index
   path_en: docs/en/README.md
@@ -97,6 +158,12 @@ documents:
   summary: Language indexes.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: onboarding
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   journeys:
   - learn
 - doc_id: example
@@ -106,6 +173,12 @@ documents:
   summary: Example pair.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
   journeys:
   - learn
 "#
@@ -146,12 +219,151 @@ fn has_category(report: &xtask::CheckReport, category: &str) -> bool {
 }
 
 #[test]
-fn accepts_valid_version_2_metadata() {
+fn accepts_valid_version_3_metadata() {
     let fixture = valid_fixture();
 
     let report = report(fixture.path());
 
     assert!(report.is_ok(), "{:#?}", report.errors());
+}
+
+#[test]
+fn rejects_version_2_metadata() {
+    let fixture = valid_fixture();
+    let index = valid_doc_index().replace("version: 3", "version: 2");
+    write(fixture.path(), "docs/doc-index.yaml", &index);
+
+    let report = report(fixture.path());
+
+    assert!(has_category(&report, "metadata.version"));
+}
+
+#[test]
+fn reports_missing_maintenance_fields() {
+    let fixture = valid_fixture();
+    let index = valid_doc_index().replacen("  owner_area: repository_guidance\n", "", 1);
+    write(fixture.path(), "docs/doc-index.yaml", &index);
+
+    let report = report(fixture.path());
+
+    assert!(has_category(&report, "metadata.missing_field"));
+}
+
+#[test]
+fn reports_unknown_owner_area() {
+    let fixture = valid_fixture();
+    let index = valid_doc_index().replacen(
+        "  owner_area: repository_guidance\n",
+        "  owner_area: missing_area\n",
+        1,
+    );
+    write(fixture.path(), "docs/doc-index.yaml", &index);
+
+    let report = report(fixture.path());
+
+    assert!(has_category(&report, "metadata.invalid_owner_area"));
+}
+
+#[test]
+fn reports_unknown_applicability_identifier() {
+    let fixture = valid_fixture();
+    let index =
+        valid_doc_index().replacen("  - harness_server_0_1\n", "  - unknown_applicability\n", 1);
+    write(fixture.path(), "docs/doc-index.yaml", &index);
+
+    let report = report(fixture.path());
+
+    assert!(has_category(&report, "metadata.invalid_applicability"));
+}
+
+#[test]
+fn reports_empty_or_duplicate_applicability() {
+    let fixture = valid_fixture();
+    let empty = valid_doc_index().replacen(
+        "  applies_to:\n  - harness_server_0_1\n",
+        "  applies_to: []\n",
+        1,
+    );
+    write(fixture.path(), "docs/doc-index.yaml", &empty);
+
+    let empty_report = report(fixture.path());
+
+    assert!(has_category(&empty_report, "metadata.invalid_applies_to"));
+
+    let duplicate = valid_doc_index().replacen(
+        "  applies_to:\n  - harness_server_0_1\n",
+        "  applies_to:\n  - harness_server_0_1\n  - harness_server_0_1\n",
+        1,
+    );
+    write(fixture.path(), "docs/doc-index.yaml", &duplicate);
+
+    let duplicate_report = report(fixture.path());
+
+    assert!(has_category(
+        &duplicate_report,
+        "metadata.duplicate_applicability"
+    ));
+}
+
+#[test]
+fn reports_invalid_date_syntax() {
+    let fixture = valid_fixture();
+    let index = valid_doc_index().replacen(
+        "  created_on: '2026-06-20'\n",
+        "  created_on: '2026/06/20'\n",
+        1,
+    );
+    write(fixture.path(), "docs/doc-index.yaml", &index);
+
+    let report = report(fixture.path());
+
+    assert!(has_category(&report, "metadata.invalid_date_syntax"));
+}
+
+#[test]
+fn reports_invalid_calendar_date() {
+    let fixture = valid_fixture();
+    let index = valid_doc_index().replacen(
+        "  created_on: '2026-06-20'\n",
+        "  created_on: '2026-02-30'\n",
+        1,
+    );
+    write(fixture.path(), "docs/doc-index.yaml", &index);
+
+    let report = report(fixture.path());
+
+    assert!(has_category(&report, "metadata.invalid_date_calendar"));
+}
+
+#[test]
+fn reports_invalid_date_ordering() {
+    let fixture = valid_fixture();
+    let index = valid_doc_index().replacen(
+        "  created_on: '2026-06-20'\n",
+        "  created_on: '2026-06-24'\n",
+        1,
+    );
+    write(fixture.path(), "docs/doc-index.yaml", &index);
+
+    let report = report(fixture.path());
+
+    assert!(has_category(&report, "metadata.invalid_date_order"));
+}
+
+#[test]
+fn reports_unknown_top_level_or_entry_fields() {
+    let fixture = valid_fixture();
+    let mut index = valid_doc_index().replacen(
+        "  normative_level: maintenance\n",
+        "  normative_level: maintenance\n  unexpected_entry_field: true\n",
+        1,
+    );
+    index.push_str("unexpected_top_level: true\n");
+    write(fixture.path(), "docs/doc-index.yaml", &index);
+
+    let report = report(fixture.path());
+
+    assert!(has_category(&report, "metadata.unknown_field"));
 }
 
 #[test]
@@ -172,6 +384,12 @@ fn reports_duplicate_doc_id() {
   summary: Duplicate id.
   normative_level: guide
   translation_policy: semantic_parity
+  owner_area: developer_documentation
+  created_on: '2026-06-20'
+  last_updated_on: '2026-06-20'
+  last_verified_on: '2026-06-23'
+  applies_to:
+  - harness_server_0_1
 "#,
     );
     write(fixture.path(), "docs/doc-index.yaml", &index);

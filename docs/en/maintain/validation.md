@@ -18,14 +18,26 @@ For documentation metadata, route, link, and terminology-path changes, run
 `cargo run -p xtask -- docs-check` from the repository root. The command is
 read-only and verifies the machine-checkable shape:
 
-- `docs/doc-index.yaml` parses as YAML and has `version: 2`.
+- `docs/doc-index.yaml` parses as YAML and has `version: 3`.
+- Required top-level sections are present and unsupported top-level fields are
+  rejected.
+- The `owner_areas` catalog and `applicability` catalog use stable identifiers
+  with string descriptions.
 - Every shared entry uses only `doc_id`, `path`, `kind`, `summary`,
-  `normative_level`, `primary_audience`, `journeys`, `canonical_for`, and
-  `depends_on`.
+  `normative_level`, `owner_area`, `created_on`, `last_updated_on`,
+  `last_verified_on`, `applies_to`, `primary_audience`, `journeys`,
+  `canonical_for`, and `depends_on`.
 - Every paired entry uses only `doc_id`, `path_en`, `path_ko`, `kind`,
-  `summary`, `normative_level`, `translation_policy`, `primary_audience`,
-  `journeys`, `canonical_for`, and `depends_on`.
+  `summary`, `normative_level`, `translation_policy`, `owner_area`,
+  `created_on`, `last_updated_on`, `last_verified_on`, `applies_to`,
+  `primary_audience`, `journeys`, `canonical_for`, and `depends_on`.
 - Required fields are present for each shared or paired entry.
+- `owner_area` resolves to the top-level owner-area catalog.
+- `applies_to` is a non-empty duplicate-free list and every value resolves to
+  the top-level applicability catalog.
+- `created_on`, `last_updated_on`, and `last_verified_on` use valid
+  `YYYY-MM-DD` calendar dates ordered as
+  `created_on <= last_updated_on <= last_verified_on`.
 - `kind` values are only `landing`, `tutorial`, `how_to`, `explanation`,
   `reference`, or `maintenance`.
 - `normative_level` values are only `contract`, `guide`, `example`, or

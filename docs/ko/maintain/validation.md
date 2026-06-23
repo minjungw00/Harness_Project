@@ -17,13 +17,25 @@ cargo run -p xtask -- docs-check
 `cargo run -p xtask -- docs-check`를 실행합니다. 이 명령은 읽기 전용이며
 기계로 확인할 수 있는 형태를 검증합니다.
 
-- `docs/doc-index.yaml`이 YAML로 파싱되고 `version: 2`를 갖습니다.
+- `docs/doc-index.yaml`이 YAML로 파싱되고 `version: 3`을 갖습니다.
+- 필요한 최상위 섹션이 있으며 지원되지 않는 최상위 필드는 거부됩니다.
+- `owner_areas` 카탈로그와 `applicability` 카탈로그는 안정적인 식별자와 문자열
+  설명을 사용합니다.
 - 모든 공유 항목은 `doc_id`, `path`, `kind`, `summary`, `normative_level`,
-  `primary_audience`, `journeys`, `canonical_for`, `depends_on`만 사용합니다.
+  `owner_area`, `created_on`, `last_updated_on`, `last_verified_on`,
+  `applies_to`, `primary_audience`, `journeys`, `canonical_for`,
+  `depends_on`만 사용합니다.
 - 모든 대응 항목은 `doc_id`, `path_en`, `path_ko`, `kind`, `summary`,
-  `normative_level`, `translation_policy`, `primary_audience`, `journeys`,
-  `canonical_for`, `depends_on`만 사용합니다.
+  `normative_level`, `translation_policy`, `owner_area`, `created_on`,
+  `last_updated_on`, `last_verified_on`, `applies_to`, `primary_audience`,
+  `journeys`, `canonical_for`, `depends_on`만 사용합니다.
 - 공유 항목과 대응 항목에 필요한 필드가 있습니다.
+- `owner_area`는 최상위 담당 영역 카탈로그로 해석됩니다.
+- `applies_to`는 비어 있지 않고 중복이 없는 목록이며 모든 값이 최상위 적용
+  가능성 카탈로그로 해석됩니다.
+- `created_on`, `last_updated_on`, `last_verified_on`은 유효한
+  `YYYY-MM-DD` 달력 날짜이며 `created_on <= last_updated_on <= last_verified_on`
+  순서를 지킵니다.
 - `kind` 값은 `landing`, `tutorial`, `how_to`, `explanation`, `reference`,
   `maintenance`만 사용합니다.
 - `normative_level` 값은 `contract`, `guide`, `example`, `maintenance`만

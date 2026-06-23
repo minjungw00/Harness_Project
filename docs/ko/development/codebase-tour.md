@@ -592,7 +592,8 @@ Integration Profile 설치, 호스트별 MCP 설정, 선택적 저장소 지침,
 
 구현에서 담당하는 것:
 
-- 버전 2 `docs/doc-index.yaml` 구조 검증.
+- 버전 3 `docs/doc-index.yaml` 구조 검증. 여기에는 담당 영역, 날짜, 적용
+  가능성 메타데이터가 포함됩니다.
 - `docs/en/`과 `docs/ko/`의 유지 Markdown 대응 범위 점검.
 - 숨김 앵커를 포함한 로컬 Markdown 링크와 조각 검증.
 - `docs/terminology-map.yaml`의 저장소 문서 경로 검증.

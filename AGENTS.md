@@ -31,9 +31,10 @@ implementation workflow all matter:
 - When work crosses documentation and implementation boundaries, apply all
   relevant scoped rule files together. Stop and report if the scoped rules
   cannot be reconciled with this repository-wide file.
-- Treat `docs/doc-index.yaml` as maintenance metadata for owner routing. It is
-  not runtime configuration, not product contract data, and not an ordinary
-  reader's mandatory first read.
+- Treat `docs/doc-index.yaml` as maintenance metadata for owner routing,
+  maintenance responsibility, dates, applicability, and paired-language routing.
+  It is not runtime configuration, not product contract data, and not an
+  ordinary reader's mandatory first read.
 - Stop and report before broad edits if `docs/doc-index.yaml` is missing or
   malformed enough that the applicable shared or paired document entry cannot
   be identified.

@@ -103,7 +103,10 @@ English anchor.
 ## Completion
 
 Every maintained paired Markdown document under `docs/en/` and `docs/ko/` must
-have an indexed pair in `doc-index.yaml`.
+have an indexed pair in `doc-index.yaml`. Its version 3 entry carries the
+paired paths plus required maintenance `owner_area`, date, and `applies_to`
+metadata for maintainers; ordinary readers still use the language entry pages
+and reader-facing routes.
 
 For normal lookup, read the language that matches the request or the default
 language in `doc-index.yaml`. For translation review, bilingual parity review,

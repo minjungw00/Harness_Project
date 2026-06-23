@@ -9,7 +9,30 @@ use std::path::{Component, Path, PathBuf};
 const DOC_INDEX_PATH: &str = "docs/doc-index.yaml";
 const TERMINOLOGY_MAP_PATH: &str = "docs/terminology-map.yaml";
 
-const SHARED_REQUIRED: &[&str] = &["doc_id", "path", "kind", "summary", "normative_level"];
+const TOP_LEVEL_REQUIRED: &[&str] = &[
+    "version",
+    "metadata",
+    "language_retrieval",
+    "owner_areas",
+    "applicability",
+    "entry_schema",
+    "shared_documents",
+    "documents",
+];
+const TOP_LEVEL_ALLOWED: &[&str] = TOP_LEVEL_REQUIRED;
+const CATALOG_ENTRY_ALLOWED: &[&str] = &["description"];
+const SHARED_REQUIRED: &[&str] = &[
+    "doc_id",
+    "path",
+    "kind",
+    "summary",
+    "normative_level",
+    "owner_area",
+    "created_on",
+    "last_updated_on",
+    "last_verified_on",
+    "applies_to",
+];
 const PAIRED_REQUIRED: &[&str] = &[
     "doc_id",
     "path_en",
@@ -18,6 +41,11 @@ const PAIRED_REQUIRED: &[&str] = &[
     "summary",
     "normative_level",
     "translation_policy",
+    "owner_area",
+    "created_on",
+    "last_updated_on",
+    "last_verified_on",
+    "applies_to",
 ];
 const OPTIONAL_FIELDS: &[&str] = &[
     "primary_audience",
@@ -31,6 +59,11 @@ const SHARED_ALLOWED: &[&str] = &[
     "kind",
     "summary",
     "normative_level",
+    "owner_area",
+    "created_on",
+    "last_updated_on",
+    "last_verified_on",
+    "applies_to",
     "primary_audience",
     "journeys",
     "canonical_for",
@@ -44,6 +77,11 @@ const PAIRED_ALLOWED: &[&str] = &[
     "summary",
     "normative_level",
     "translation_policy",
+    "owner_area",
+    "created_on",
+    "last_updated_on",
+    "last_verified_on",
+    "applies_to",
     "primary_audience",
     "journeys",
     "canonical_for",
@@ -163,6 +201,19 @@ struct DocEntry {
     depends_on: Vec<String>,
 }
 
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+struct IsoDate {
+    year: u16,
+    month: u8,
+    day: u8,
+}
+
+#[derive(Debug, Clone)]
+struct DateError {
+    category: &'static str,
+    message: String,
+}
+
 #[derive(Debug, Clone)]
 struct LinkFailure {
     category: &'static str,
@@ -245,19 +296,45 @@ fn validate_doc_index(root: &Path, errors: &mut Vec<ValidationError>) -> Option<
         return None;
     };
 
+    for field in TOP_LEVEL_REQUIRED {
+        if mapping_get(top, field).is_none() {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.missing_field",
+                format!("doc index is missing required top-level field {field}"),
+            ));
+        }
+    }
+
+    for field in top.keys().filter_map(Value::as_str) {
+        if !TOP_LEVEL_ALLOWED.contains(&field) {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.unknown_field",
+                format!("doc index uses unsupported top-level field {field}"),
+            ));
+        }
+    }
+
     match mapping_get(top, "version").and_then(Value::as_i64) {
-        Some(2) => {}
+        Some(3) => {}
         Some(version) => errors.push(ValidationError::new(
             DOC_INDEX_PATH,
             "metadata.version",
-            format!("expected version 2, found {version}"),
+            format!("expected version 3, found {version}"),
         )),
         None => errors.push(ValidationError::new(
             DOC_INDEX_PATH,
             "metadata.version",
-            "missing numeric version 2",
+            "missing numeric version 3",
         )),
     }
+
+    validate_top_level_mapping(top, "metadata", errors);
+    validate_top_level_mapping(top, "language_retrieval", errors);
+    validate_top_level_mapping(top, "entry_schema", errors);
+    let owner_areas = validate_catalog(top, "owner_areas", errors);
+    let applicability = validate_catalog(top, "applicability", errors);
 
     let mut entries = Vec::new();
     let mut doc_ids = BTreeSet::new();
@@ -273,6 +350,8 @@ fn validate_doc_index(root: &Path, errors: &mut Vec<ValidationError>) -> Option<
         &mut doc_ids,
         &mut indexed_paths,
         &mut paired_paths,
+        &owner_areas,
+        &applicability,
         errors,
     );
     validate_entries(
@@ -284,6 +363,8 @@ fn validate_doc_index(root: &Path, errors: &mut Vec<ValidationError>) -> Option<
         &mut doc_ids,
         &mut indexed_paths,
         &mut paired_paths,
+        &owner_areas,
+        &applicability,
         errors,
     );
 
@@ -322,6 +403,104 @@ fn validate_doc_index(root: &Path, errors: &mut Vec<ValidationError>) -> Option<
     })
 }
 
+fn validate_top_level_mapping(top: &Mapping, key: &'static str, errors: &mut Vec<ValidationError>) {
+    if let Some(value) = mapping_get(top, key) {
+        if !value.is_mapping() {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.shape",
+                format!("{key} must be a mapping"),
+            ));
+        }
+    }
+}
+
+fn validate_catalog(
+    top: &Mapping,
+    key: &'static str,
+    errors: &mut Vec<ValidationError>,
+) -> BTreeSet<String> {
+    let mut identifiers = BTreeSet::new();
+    let Some(value) = mapping_get(top, key) else {
+        return identifiers;
+    };
+    let Some(catalog) = value.as_mapping() else {
+        errors.push(ValidationError::new(
+            DOC_INDEX_PATH,
+            "metadata.shape",
+            format!("{key} must be a mapping"),
+        ));
+        return identifiers;
+    };
+
+    if catalog.is_empty() {
+        errors.push(ValidationError::new(
+            DOC_INDEX_PATH,
+            "metadata.catalog",
+            format!("{key} must not be empty"),
+        ));
+    }
+
+    for (identifier, value) in catalog {
+        let Some(identifier) = identifier.as_str() else {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.catalog",
+                format!("{key} identifiers must be strings"),
+            ));
+            continue;
+        };
+        if !is_catalog_identifier(identifier) {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.catalog",
+                format!("{key} identifier {identifier} must use lowercase letters, digits, or underscores"),
+            ));
+        }
+        identifiers.insert(identifier.to_string());
+
+        let Some(entry) = value.as_mapping() else {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.catalog",
+                format!("{key}.{identifier} must be a mapping"),
+            ));
+            continue;
+        };
+        for field in entry.keys().filter_map(Value::as_str) {
+            if !CATALOG_ENTRY_ALLOWED.contains(&field) {
+                errors.push(ValidationError::new(
+                    DOC_INDEX_PATH,
+                    "metadata.unknown_field",
+                    format!("{key}.{identifier} uses unsupported field {field}"),
+                ));
+            }
+        }
+        match mapping_get(entry, "description").and_then(Value::as_str) {
+            Some(description) if !description.trim().is_empty() => {}
+            Some(_) => errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.catalog",
+                format!("{key}.{identifier} description must not be empty"),
+            )),
+            None => errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.catalog",
+                format!("{key}.{identifier} is missing string description"),
+            )),
+        }
+    }
+
+    identifiers
+}
+
+fn is_catalog_identifier(identifier: &str) -> bool {
+    !identifier.is_empty()
+        && identifier.chars().all(|character| {
+            character.is_ascii_lowercase() || character.is_ascii_digit() || character == '_'
+        })
+}
+
 #[derive(Copy, Clone)]
 enum EntryMode {
     Shared,
@@ -338,6 +517,8 @@ fn validate_entries(
     doc_ids: &mut BTreeSet<String>,
     indexed_paths: &mut BTreeSet<String>,
     paired_paths: &mut BTreeMap<String, (String, String)>,
+    owner_areas: &BTreeSet<String>,
+    applicability: &BTreeSet<String>,
     errors: &mut Vec<ValidationError>,
 ) {
     let Some(value) = mapping_get(top, key) else {
@@ -474,6 +655,41 @@ fn validate_entries(
             }
         }
 
+        let owner_area = string_field(entry, "owner_area", &label, errors);
+        if let Some(owner_area) = owner_area.as_deref() {
+            if !owner_areas.contains(owner_area) {
+                errors.push(ValidationError::new(
+                    DOC_INDEX_PATH,
+                    "metadata.invalid_owner_area",
+                    format!("{doc_id} uses unknown owner_area {owner_area}"),
+                ));
+            }
+        }
+
+        let created_on = date_field(entry, "created_on", &label, errors);
+        let last_updated_on = date_field(entry, "last_updated_on", &label, errors);
+        let last_verified_on = date_field(entry, "last_verified_on", &label, errors);
+        if let (Some(created_on), Some(last_updated_on), Some(last_verified_on)) =
+            (created_on, last_updated_on, last_verified_on)
+        {
+            if created_on > last_updated_on {
+                errors.push(ValidationError::new(
+                    DOC_INDEX_PATH,
+                    "metadata.invalid_date_order",
+                    format!("{doc_id} has created_on after last_updated_on"),
+                ));
+            }
+            if last_updated_on > last_verified_on {
+                errors.push(ValidationError::new(
+                    DOC_INDEX_PATH,
+                    "metadata.invalid_date_order",
+                    format!("{doc_id} has last_updated_on after last_verified_on"),
+                ));
+            }
+        }
+
+        validate_applies_to(entry, &doc_id, applicability, errors);
+
         let paths = match mode {
             EntryMode::Shared => string_field(entry, "path", &label, errors)
                 .into_iter()
@@ -499,6 +715,130 @@ fn validate_entries(
             .unwrap_or_default();
 
         entries.push(DocEntry { doc_id, depends_on });
+    }
+}
+
+fn date_field(
+    entry: &Mapping,
+    key: &str,
+    label: &str,
+    errors: &mut Vec<ValidationError>,
+) -> Option<IsoDate> {
+    let value = string_field(entry, key, label, errors)?;
+    match parse_iso_date(&value) {
+        Ok(date) => Some(date),
+        Err(error) => {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                error.category,
+                format!("{label} field {key} {message}", message = error.message),
+            ));
+            None
+        }
+    }
+}
+
+fn parse_iso_date(value: &str) -> std::result::Result<IsoDate, DateError> {
+    if value.len() != 10
+        || value.as_bytes().get(4) != Some(&b'-')
+        || value.as_bytes().get(7) != Some(&b'-')
+        || !value
+            .chars()
+            .enumerate()
+            .all(|(index, character)| matches!(index, 4 | 7) || character.is_ascii_digit())
+    {
+        return Err(DateError {
+            category: "metadata.invalid_date_syntax",
+            message: format!("must use YYYY-MM-DD, found {value}"),
+        });
+    }
+
+    let year = value[0..4].parse::<u16>().map_err(|_| DateError {
+        category: "metadata.invalid_date_syntax",
+        message: format!("must use YYYY-MM-DD, found {value}"),
+    })?;
+    let month = value[5..7].parse::<u8>().map_err(|_| DateError {
+        category: "metadata.invalid_date_syntax",
+        message: format!("must use YYYY-MM-DD, found {value}"),
+    })?;
+    let day = value[8..10].parse::<u8>().map_err(|_| DateError {
+        category: "metadata.invalid_date_syntax",
+        message: format!("must use YYYY-MM-DD, found {value}"),
+    })?;
+
+    if year == 0 || month == 0 || month > 12 {
+        return Err(DateError {
+            category: "metadata.invalid_date_calendar",
+            message: format!("is not a valid calendar date: {value}"),
+        });
+    }
+    let max_day = days_in_month(year, month);
+    if day == 0 || day > max_day {
+        return Err(DateError {
+            category: "metadata.invalid_date_calendar",
+            message: format!("is not a valid calendar date: {value}"),
+        });
+    }
+
+    Ok(IsoDate { year, month, day })
+}
+
+fn days_in_month(year: u16, month: u8) -> u8 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap_year(year) => 29,
+        2 => 28,
+        _ => 0,
+    }
+}
+
+fn is_leap_year(year: u16) -> bool {
+    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+}
+
+fn validate_applies_to(
+    entry: &Mapping,
+    doc_id: &str,
+    applicability: &BTreeSet<String>,
+    errors: &mut Vec<ValidationError>,
+) {
+    let Some(value) = mapping_get(entry, "applies_to") else {
+        return;
+    };
+    let Some(items) = sequence_strings(value) else {
+        errors.push(ValidationError::new(
+            DOC_INDEX_PATH,
+            "metadata.invalid_list",
+            format!("{doc_id} field applies_to must be a list of strings"),
+        ));
+        return;
+    };
+
+    if items.is_empty() {
+        errors.push(ValidationError::new(
+            DOC_INDEX_PATH,
+            "metadata.invalid_applies_to",
+            format!("{doc_id} field applies_to must not be empty"),
+        ));
+    }
+
+    let mut seen = BTreeSet::new();
+    for item in items {
+        if !seen.insert(item.clone()) {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.duplicate_applicability",
+                format!("{doc_id} repeats applies_to value {item}"),
+            ));
+        }
+        if !applicability.contains(&item) {
+            errors.push(ValidationError::new(
+                DOC_INDEX_PATH,
+                "metadata.invalid_applicability",
+                format!("{doc_id} uses unknown applies_to value {item}"),
+            ));
+        }
     }
 }
 
