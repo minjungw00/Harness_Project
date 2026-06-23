@@ -285,16 +285,16 @@ Core 변이 원자 커밋이 여기에 속합니다.
 
 `harness-cli`는 로컬 `harness` 관리 실행 파일과 재사용 가능한 에이전트 설정
 모듈을 구현합니다. Runtime Home 초기화, 프로젝트와 접점 등록, Agent
-Integration Profile 설치, 호스트별 MCP 설정, 선택적 저장소 guidance, 사전 점검
+Integration Profile 설치, 호스트별 MCP 설정, 선택적 저장소 지침, 사전 점검
 실행을 처리합니다.
 
 구현에서 담당하는 것:
 
 - `harness` 바이너리의 프로세스 진입과 관리 명령 디스패치.
 - `harness agent` 옵션 파싱, 저장소 준비, 호스트 계획 구성, 사전 점검
-  호출, status/verify/project membership/uninstall/guidance 명령, 출력.
+  호출, status/verify/project membership/uninstall/`guidance` 명령, 출력.
 - Codex, Claude Code, generic export 호스트 통합 계획.
-- 선택적 Product Repository guidance 렌더링과 관리 블록 갱신.
+- 선택적 Product Repository 지침 렌더링과 관리 블록 갱신.
 - 등록된 접점을 위한 역량 프로필과 로컬 접근 메타데이터 생성.
 
 담당하지 않는 것:
@@ -315,13 +315,13 @@ Integration Profile 설치, 호스트별 MCP 설정, 선택적 저장소 guidanc
   `command_surface`.
 - [`crates/harness-cli/src/agent_command.rs`](../../../crates/harness-cli/src/agent_command.rs):
   `harness agent` install, project membership, status, verification,
-  uninstall, guidance 명령 오케스트레이션.
+  uninstall, `guidance` 명령 오케스트레이션.
 - [`crates/harness-cli/src/host_integration/`](../../../crates/harness-cli/src/host_integration/):
   Codex, Claude Code, generic 호스트 통합 어댑터.
 - [`crates/harness-cli/src/repository_guidance.rs`](../../../crates/harness-cli/src/repository_guidance.rs):
-  관리되는 Product Repository guidance 검색, apply, status, removal.
+  관리되는 Product Repository 지침 검색, apply, status, removal.
 - [`crates/harness-cli/src/guidance_template.rs`](../../../crates/harness-cli/src/guidance_template.rs):
-  Codex와 Claude Code guidance 본문.
+  Codex와 Claude Code 지침 본문.
 - [`crates/harness-cli/src/registration.rs`](../../../crates/harness-cli/src/registration.rs):
   `capability_profile_json`, `local_access_json`, 접근 등급 도우미.
 
@@ -345,10 +345,10 @@ Integration Profile 설치, 호스트별 MCP 설정, 선택적 저장소 guidanc
 
 - [`crates/harness-cli/tests/binary_admin.rs`](../../../crates/harness-cli/tests/binary_admin.rs)는
   `harness` 바이너리의 관리 설정, dry-run 동작, `harness agent` 호스트
-  설정, 저장소 guidance, 설정 명령 거부, 사전 점검 처리, 설정 파일 안전성을
+  설정, 저장소 지침, 설정 명령 거부, 사전 점검 처리, 설정 파일 안전성을
   실행합니다.
 - CLI 모듈 안의 단위 테스트는 파싱, 계획, 렌더링, 등록 메타데이터,
-  호스트/guidance 동작을 다룹니다.
+  호스트/지침 동작을 다룹니다.
 
 다음에 읽을 컴포넌트:
 

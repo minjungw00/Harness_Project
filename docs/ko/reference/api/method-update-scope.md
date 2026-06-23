@@ -65,7 +65,7 @@ UpdateScopeRequest:
 ```
 
 중첩 형태 담당 문서:
-- `related_scope_decision_refs`는 `StateRecordRef[]`를 사용합니다. 중첩 형태는 [API 상태 스키마](schema-state.md)가 담당합니다.
+- `related_scope_decision_refs`는 `StateRecordRef[]`를 사용합니다. 중첩 형태는 [API 상태 스키마](schema-state.md#state-references)가 담당합니다.
 - `change_unit.operation` 값은 [API 값 집합의 메서드 내부 값](schema-value-sets.md#method-local-values)이 담당합니다.
 
 ## 접근 요구사항

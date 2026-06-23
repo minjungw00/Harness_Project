@@ -29,7 +29,7 @@
 | 하네스 | AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 시스템입니다. | [기준 범위](../reference/scope.md) |
 | Core | 하네스 상태를 위한 로컬 기준 기록입니다. | [Core 모델](../reference/core-model.md) |
 | `Harness Server` | 이 저장소가 유지하는 서버 구현 집합이며, 하네스 전체와 같은 말은 아닙니다. | [런타임 경계](../reference/runtime-boundaries.md) |
-| `harness` | 설정, 프로젝트, 접점, 통합, 호스트, guidance 기록을 만드는 로컬 관리 CLI입니다. | [관리 CLI](../reference/admin-cli.md) |
+| `harness` | 설정, 프로젝트, 접점, 통합, 호스트, 지침 기록을 만드는 로컬 관리 CLI입니다. | [관리 CLI](../reference/admin-cli.md) |
 | `harness-mcp` | MCP 호스트가 자식 프로세스로 시작하는 stdio MCP 어댑터 프로세스입니다. | [MCP 전송](../reference/mcp-transport.md) |
 | `Harness Runtime Home` | 저장소/런타임 담당 문서가 정의하는 하네스 운영 데이터의 로컬 런타임 데이터 공간입니다. | [런타임 경계](../reference/runtime-boundaries.md) |
 | `Product Repository` | 사용자의 프로젝트 작업 공간과 제품 파일입니다. 명시적으로 선택한 통합 파일을 담을 수 있습니다. | [런타임 경계](../reference/runtime-boundaries.md) |
@@ -46,7 +46,7 @@
 - Agent Integration Profile과 명시적 프로젝트 허용 목록을 만듭니다.
 - Codex 또는 Claude Code 호스트 설정을 설치하거나 generic 설정을 내보냅니다.
 - 설정 검증을 실행하고 `complete`, `action_required`, `partial_failure`, `failed`를 보고합니다.
-- 명시적으로 선택하고 승인한 경우 저장소 guidance를 쓸 수 있습니다.
+- 명시적으로 선택하고 승인한 경우 저장소 지침을 쓸 수 있습니다.
 
 에이전트 설정은 아래 일을 하면 안 됩니다.
 
@@ -72,18 +72,19 @@
 
 하네스는 프롬프트 묶음, 대화 스크립트, API 래퍼, 워크플로 엔진, 보고서 생성기, 대시보드, 호스팅 에이전트 플랫폼, `Product Repository`, `Harness Runtime Home`이 아닙니다.
 
-또한 하네스는 잘 쓴 대화 답변, 생성된 요약, 읽기 쉬운 상태 카드, 복사한 식별자, 선택적 저장소 guidance, `Projection`을 기준 기록으로 바꾸지 않습니다. 정확한 표시 경계는 [상태 보기와 템플릿](../reference/projection-and-templates.md)이, 런타임과 위치 경계는 [런타임 경계](../reference/runtime-boundaries.md)가, 보안 표현은 [보안](../reference/security.md)이 담당합니다.
+또한 하네스는 잘 쓴 대화 답변, 생성된 요약, 읽기 쉬운 상태 카드, 복사한 식별자, 선택적 저장소 지침, `Projection`을 기준 기록으로 바꾸지 않습니다. 정확한 표시 경계는 [상태 보기와 템플릿](../reference/projection-and-templates.md)이, 런타임과 위치 경계는 [런타임 경계](../reference/runtime-boundaries.md)가, 보안 표현은 [보안](../reference/security.md)이 담당합니다.
 
 ## 다음 읽기 경로
 
 | 독자 | 다음 경로 |
 |---|---|
 | 처음 읽는 제품 독자 | [사용자 가이드](../guides/user-workflow.md) |
+| 환경 확인 | [시스템 요구사항](../reference/system-requirements.md) |
 | 첫 설정 | [설치](installation.md) -> [빠른 시작](quickstart.md) |
-| 에이전트 호스트 운영자 | [빠른 시작](quickstart.md) -> [에이전트 호스트 설정](../guides/agent-host-setup.md) |
+| 에이전트 호스트 운영자 | [빠른 시작](quickstart.md) -> [에이전트 호스트 설정](../guides/agent-host-setup.md) -> [에이전트 호스트 문제 해결](../guides/agent-host-troubleshooting.md) |
 | 여러 저장소 운영자 | [다중 저장소 에이전트 설정](../guides/multi-repository-agent-setup.md) |
 | 에이전트 작성자 | [에이전트 가이드](../guides/agent-workflow.md) -> [에이전트 통합](../reference/agent-integration.md) |
 | 소스 코드 학습자 | [구현 가이드](../development/change-guide.md) -> [아키텍처](../development/architecture.md) |
-| 참조 독자 | [참조 색인](../reference/README.md) |
+| 참조 독자 | [참조 색인](../reference/README.md), [관리 CLI](../reference/admin-cli.md), [API 메서드](../reference/api/methods.md) |
 
 처음 읽는 독자가 하네스를 이해하기 위해 API 스키마나 담당 문서 메타데이터부터 읽을 필요는 없습니다. 정확한 계약 담당 문서가 필요할 때는 [참조 색인](../reference/README.md)을 사용합니다.

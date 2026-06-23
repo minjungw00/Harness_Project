@@ -244,7 +244,7 @@ PATH="$HARNESS_BIN:$PATH" \
 
 ## 인벤토리, 검증, 실제 호스트 로딩
 
-레지스트리와 Host Installation inventory를 보려면 `harness agent status`를 사용합니다.
+레지스트리와 Host Installation 인벤토리를 보려면 `harness agent status`를 사용합니다.
 
 ```sh
 "$HARNESS_BIN/harness" agent status \

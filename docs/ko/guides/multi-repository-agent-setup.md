@@ -8,7 +8,7 @@
 flowchart LR
   host[Codex 사용자 MCP 항목]
   process["harness-mcp --integration int-codex-team"]
-  allowlist[명시적 integration project allowlist]
+  allowlist[명시적 통합 프로젝트 허용 목록]
   a["project_id: acme-api<br/>/work/acme-api"]
   b["project_id: billing-api<br/>/work/billing-api"]
 
@@ -18,7 +18,7 @@ flowchart LR
   allowlist --> b
 ```
 
-호스트 MCP 항목 하나, `harness-mcp --integration <integration_id>` 프로세스 하나, 명시적 allowlist 하나가 있고, 도구 호출마다 여러 저장소 중 하나를 선택합니다. 프로젝트를 추가해도 모든 Runtime Home 프로젝트가 허용되지는 않습니다. 접근 제거는 호스트 항목을 다시 쓰지 않아도 registry 상태를 통해 적용됩니다.
+호스트 MCP 항목 하나, `harness-mcp --integration <integration_id>` 프로세스 하나, 명시적 허용 목록 하나가 있고, 도구 호출마다 여러 저장소 중 하나를 선택합니다. 프로젝트를 추가해도 모든 Runtime Home 프로젝트가 허용되지는 않습니다. 접근 제거는 호스트 항목을 다시 쓰지 않아도 registry 상태를 통해 적용됩니다.
 
 프로젝트 및 로컬 호스트 범위는 단일 저장소 범위로 남습니다. 이 토폴로지에는 사용자 범위를 사용합니다.
 
@@ -26,7 +26,7 @@ flowchart LR
 
 두 번째 저장소를 추가하기 전에 Product Repository A에 대한 사용자 범위 호스트 설정을 [에이전트 호스트 설정](agent-host-setup.md)에 따라 완료합니다. 통합은 `complete`일 수 있습니다. 또는 남은 동작이 [에이전트 호스트 문제 해결](agent-host-troubleshooting.md#status-action_required)이 설명하는 호스트 소유 trust, 승인, reload, restart, 또는 그에 준하는 후속 조치일 때만 `action_required`일 수 있습니다.
 
-이 가이드는 하나의 사용자 범위 호스트 항목이 하나의 `integration_id`를 가리키고, 통합 allowlist가 의도한 저장소들을 포함하고, 에이전트가 다중 저장소 호출에 `harness.list_projects` 또는 명시적 `project_id`를 사용하고, 제거와 재추가가 호스트 파일 편집이 아니라 프로젝트 멤버십 명령으로 수행될 때 완료됩니다.
+이 가이드는 하나의 사용자 범위 호스트 항목이 하나의 `integration_id`를 가리키고, 통합 허용 목록이 의도한 저장소들을 포함하고, 에이전트가 다중 저장소 호출에 `harness.list_projects` 또는 명시적 `project_id`를 사용하고, 제거와 재추가가 호스트 파일 편집이 아니라 프로젝트 멤버십 명령으로 수행될 때 완료됩니다.
 
 ## 실행 파일 선택 규칙
 
@@ -269,7 +269,7 @@ allowed_project_count: 0
 not executable until one is added
 ```
 
-제거 뒤 Host Installation inventory와 호스트 설정은 남을 수 있지만, 이 저장 상태는 새 시작이 가능하다는 증명이 아닙니다. 이미 실행 중이던 `harness-mcp` 프로세스는 registry 상태를 새로 읽을 수 있으므로 `harness.list_projects`가 `int-codex-team`에 대해 빈 목록을 반환할 수 있습니다. 그래도 허용 프로젝트가 없으므로 프로젝트 라우팅이 필요한 공개 도구는 진행할 수 없습니다. 새로 시작하는 `harness-mcp` 프로세스, `harness-mcp --check`, 새 MCP 시작이 필요한 검증 경로는 프로젝트가 다시 추가되고 일반 설정 점검을 통과하기 전까지 실패합니다.
+제거 뒤 Host Installation 인벤토리와 호스트 설정은 남을 수 있지만, 이 저장 상태는 새 시작이 가능하다는 증명이 아닙니다. 이미 실행 중이던 `harness-mcp` 프로세스는 registry 상태를 새로 읽을 수 있으므로 `harness.list_projects`가 `int-codex-team`에 대해 빈 목록을 반환할 수 있습니다. 그래도 허용 프로젝트가 없으므로 프로젝트 라우팅이 필요한 공개 도구는 진행할 수 없습니다. 새로 시작하는 `harness-mcp` 프로세스, `harness-mcp --check`, 새 MCP 시작이 필요한 검증 경로는 프로젝트가 다시 추가되고 일반 설정 점검을 통과하기 전까지 실패합니다.
 
 이 상태의 문제 해결은 [현재 허용 프로젝트가 없지만 호스트 설정이 남아 있음](agent-host-troubleshooting.md#host-config-remains-zero-projects)을 봅니다.
 
@@ -309,7 +309,7 @@ not executable
 
 ## 전체 uninstall
 
-통합에 대해 관리되는 호스트 설정과 관리되는 guidance를 제거합니다.
+통합에 대해 관리되는 호스트 설정과 관리되는 지침을 제거합니다.
 
 ```sh
 "$HARNESS_BIN/harness" agent uninstall \
@@ -319,7 +319,7 @@ not executable
   --remove-managed
 ```
 
-Uninstall은 소유권과 안전 점검이 허용할 때 선택된 하네스 관리 호스트 설정을 제거합니다. `--remove-managed`를 사용하면 선택되어 있고 안전하게 소유된 관리 `Product Repository` guidance도 제거합니다. 성공한 관리 제거는 해당 Host Installation inventory를 제거합니다. Agent Integration Profile에 남은 Host Installation이 없으면 프로필이 비활성화될 수 있으며, 비활성화는 삭제가 아닙니다. `Product Repository` 내용, 프로젝트 등록과 프로젝트 상태, Core의 작업, 증거, 판단, 실행, 아티팩트 관련 기록, 아티팩트 저장소, 관련 없는 호스트 항목은 담당 계약에 따라 보존됩니다.
+Uninstall은 소유권과 안전 점검이 허용할 때 선택된 하네스 관리 호스트 설정을 제거합니다. `--remove-managed`를 사용하면 선택되어 있고 안전하게 소유된 관리 `Product Repository` 지침도 제거합니다. 성공한 관리 제거는 해당 Host Installation 인벤토리를 제거합니다. Agent Integration Profile에 남은 Host Installation이 없으면 프로필이 비활성화될 수 있으며, 비활성화는 삭제가 아닙니다. `Product Repository` 내용, 프로젝트 등록과 프로젝트 상태, Core의 작업, 증거, 판단, 실행, 아티팩트 관련 기록, 아티팩트 저장소, 관련 없는 호스트 항목은 담당 계약에 따라 보존됩니다.
 
 Uninstall이 `partial_failure`를 보고하면 정리를 다시 시도하기 전에 [제거가 일부만 완료됨](agent-host-troubleshooting.md#partial-removal)을 사용합니다.
 

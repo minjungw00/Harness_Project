@@ -10,9 +10,13 @@ Choose a language first:
 Fast reader routes:
 
 - Product orientation: [English](en/getting-started/overview.md) / [Korean](ko/getting-started/overview.md)
-- Installation: [English](en/getting-started/installation.md) / [Korean](ko/getting-started/installation.md)
-- Local MCP quickstart: [English](en/getting-started/quickstart.md) / [Korean](ko/getting-started/quickstart.md)
+- Environment applicability: [English](en/reference/system-requirements.md) / [Korean](ko/reference/system-requirements.md)
+- Install and verify executables: [English](en/getting-started/installation.md) / [Korean](ko/getting-started/installation.md)
+- Choose the Codex or Claude Code setup path: [English](en/getting-started/quickstart.md) / [Korean](ko/getting-started/quickstart.md)
+- Complete host setup and recovery: [English setup](en/guides/agent-host-setup.md) / [Korean setup](ko/guides/agent-host-setup.md) / [English troubleshooting](en/guides/agent-host-troubleshooting.md) / [Korean troubleshooting](ko/guides/agent-host-troubleshooting.md)
+- Multi-repository operation: [English](en/guides/multi-repository-agent-setup.md) / [Korean](ko/guides/multi-repository-agent-setup.md)
 - Surface recipes: [English](en/guides/surface-recipes.md) / [Korean](ko/guides/surface-recipes.md)
+- Exact CLI and API contracts: [English CLI](en/reference/admin-cli.md) / [Korean CLI](ko/reference/admin-cli.md) / [English API](en/reference/api/methods.md) / [Korean API](ko/reference/api/methods.md)
 - Reference navigation: [English](en/reference/README.md) / [Korean](ko/reference/README.md)
 
 Shared metadata:

@@ -106,9 +106,9 @@ Host Installation은 하네스가 관리하는 호스트 설정과 검증 상태
 - user 범위는 명시적으로 추가된 여러 `Product Repository` 등록을 허용할 수 있습니다.
 - 호스트 신뢰, 프로젝트 신뢰, 프로젝트 MCP 승인, OAuth, 또는 그와 비슷한 호스트 통제 승인은 하네스가 우회할 수 없습니다.
 - 호스트 설치는 파일 작업으로 성공했더라도 호스트가 아직 서버를 신뢰, 승인, 로드, 초기화, 노출하지 않았다면 결과 상태가 `action_required`로 남을 수 있습니다.
-- `last_verified_status=complete`는 [관리 CLI](admin-cli.md#agent-setup-result-states)가 담당하는 운영 gate를 만족한 관리 검증 결과에 대해서만 저장할 수 있습니다. 하네스가 직접 시작한 MCP handshake만으로는 충분하지 않습니다.
+- `last_verified_status=complete`는 [관리 CLI](admin-cli.md#agent-setup-result-states)가 담당하는 운영 게이트를 만족한 관리 검증 결과에 대해서만 저장할 수 있습니다. 하네스가 직접 시작한 MCP handshake만으로는 충분하지 않습니다.
 - `last_verified_status=action_required`는 하네스가 설정을 관리하거나 내보낼 수 있지만 호스트가 소유한 신뢰, 승인, OAuth, reload, restart 동작이 남아 있을 때의 예상 상태입니다.
-- `generic` export Host Installation은 사용자가 관리하는 설정 인벤토리로 남습니다. 외부 호스트가 로드했다는 사실을 증명하지 않으며, 나중에 호스트별 담당 문서가 관찰 가능한 loadability gate를 정의하지 않는 한 `complete`가 되면 안 됩니다.
+- `generic` export Host Installation은 사용자가 관리하는 설정 인벤토리로 남습니다. 외부 호스트가 로드했다는 사실을 증명하지 않으며, 나중에 호스트별 담당 문서가 관찰 가능한 로드 가능성 게이트를 정의하지 않는 한 `complete`가 되면 안 됩니다.
 - 거절됨, 없음, 변경됨, 사용할 수 없음, 알 수 없음 호스트 상태는 `complete` Host Installation 상태가 아닙니다.
 - 에이전트 지침은 도구 선택을 개선할 수 있지만 강제 메커니즘이 아니며 모델이 항상 하네스 도구를 선택한다고 보장할 수 없습니다.
 

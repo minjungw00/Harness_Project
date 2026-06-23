@@ -101,9 +101,9 @@ Harness가 등록된 프로젝트를 검증하거나 사용할 때는 읽기 접
 
 - 프로젝트 범위 Codex `.codex/config.toml`
 - 프로젝트 범위 Claude Code `.mcp.json`
-- 선택적인 Harness 관리 guidance 블록 또는 파일
+- 선택적인 Harness 관리 지침 블록 또는 파일
 
-비대화형 프로젝트 범위 호스트 설정 또는 guidance 쓰기에는 [관리 CLI](admin-cli.md)가 정의한 명시적 저장소 쓰기 승인 플래그가 필요합니다. 런타임 기록, SQLite 데이터베이스, 생성 기록, 로그, 상태 보기, QA 결과, 수락 기록, 닫기 준비 상태, 잔여 위험 기록은 `Product Repository`에 속하지 않습니다.
+비대화형 프로젝트 범위 호스트 설정 또는 지침 쓰기에는 [관리 CLI](admin-cli.md)가 정의한 명시적 저장소 쓰기 승인 플래그가 필요합니다. 런타임 기록, SQLite 데이터베이스, 생성 기록, 로그, 상태 보기, QA 결과, 수락 기록, 닫기 준비 상태, 잔여 위험 기록은 `Product Repository`에 속하지 않습니다.
 
 ## 호스트 설정 요구사항
 
@@ -142,7 +142,7 @@ Harness가 등록된 프로젝트를 검증하거나 사용할 때는 읽기 접
 - `harness` 또는 `harness-mcp`가 없거나, 선택한 사용자가 실행할 수 없거나, 도움말과 버전 출력을 낼 수 없습니다.
 - 선택한 Runtime Home을 필요한 프로세스가 만들고, 읽고, 쓸 수 없습니다.
 - Runtime Home과 Product Repository가 같은 경로이거나 한쪽이 다른 한쪽을 포함합니다.
-- Product Repository가 없거나, 디렉터리가 아니거나, 요청한 프로젝트 범위 설정 또는 guidance 쓰기에 필요한 쓰기가 불가능합니다.
+- Product Repository가 없거나, 디렉터리가 아니거나, 요청한 프로젝트 범위 설정 또는 지침 쓰기에 필요한 쓰기가 불가능합니다.
 - 프로젝트 범위 호스트 설정이 미래의 호스트 `PATH`에서 `harness-mcp`를 찾는 방식에 의존할 수 없습니다.
 - 선택한 호스트 경로에 Codex 또는 Claude Code가 필요한데 관리 호환성 점검이 호스트를 시작하거나 해석할 수 없습니다.
 - 필요한 호스트 신뢰, 프로젝트 신뢰, 프로젝트 MCP 승인, OAuth, reload, restart, 또는 비슷한 호스트 소유 동작이 남아 있고 운영자가 이를 완료할 수 없습니다.

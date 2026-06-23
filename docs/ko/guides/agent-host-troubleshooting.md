@@ -37,11 +37,11 @@ HARNESS_HOME=<runtime_home> \
 "$HARNESS_BIN/harness-mcp" --check --integration <integration_id>
 ```
 
-`harness agent status`는 registry와 Host Installation inventory를 보고합니다. Codex
+`harness agent status`는 registry와 Host Installation 인벤토리를 보고합니다. Codex
 또는 Claude Code가 MCP 서버를 로드했다는 증명이 아닙니다. `harness-mcp --check`는
 MCP 프로세스 시작만 검증합니다. 전체 호스트 검증에는
 [관리 CLI](../reference/admin-cli.md#agent-setup-result-states)가 정의한 관리 검증
-gate가 필요합니다.
+게이트가 필요합니다.
 
 ## 실행 파일과 환경 문제
 
@@ -66,7 +66,7 @@ gate가 필요합니다.
   <integration_id>`를 다시 실행한 뒤, 영향받은 통합 또는 설치에 대해 `harness agent
   verify`를 다시 실행합니다.
 - **이미 존재할 수 있는 지속 효과:** 지속 설정이 시작된 뒤 실패했다면 Runtime Home
-  기록, 프로젝트 멤버십, Host Installation inventory, 호스트 설정, guidance가 이미
+  기록, 프로젝트 멤버십, Host Installation 인벤토리, 호스트 설정, 지침이 이미
   있을 수 있습니다. 설치를 반복하기 전에 `effects`와 `residual_effects`를 읽습니다.
 - **건드리지 말아야 할 상태 또는 파일:** 실행 파일을 해석하지 못했다는 이유만으로
   Runtime Home, 프로젝트 상태, Product Repository 파일, 관련 없는 호스트 설정을
@@ -92,7 +92,7 @@ gate가 필요합니다.
   <runtime_home>`를 다시 실행합니다. 정확한 대상을 확인해야 하면 JSON 출력의 `host`와
   `installation_verifications`를 봅니다.
 - **이미 존재할 수 있는 지속 효과:** 교체가 성공하기 전까지 Host Installation
-  inventory가 이전 설정 대상과 관리 지문을 계속 가리킬 수 있습니다.
+  인벤토리가 이전 설정 대상과 관리 지문을 계속 가리킬 수 있습니다.
 - **건드리지 말아야 할 상태 또는 파일:** `registry.sqlite`를 직접 편집하거나 관련
   없는 호스트 항목을 덮어쓰지 않습니다.
 - **담당 문서 링크:** [관리 CLI](../reference/admin-cli.md),
@@ -118,7 +118,7 @@ gate가 필요합니다.
 - **검증:** 그 환경에서 호스트를 시작하거나 다시 로드한 뒤, 관리 검증 명령의 `PATH`에
   선택한 디렉터리를 둔 상태로 `harness agent verify`를 실행합니다.
 - **이미 존재할 수 있는 지속 효과:** 프로젝트 범위 `.codex/config.toml` 또는
-  `.mcp.json`, Runtime Home 기록, Host Installation inventory가 이미 있고 올바를 수
+  `.mcp.json`, Runtime Home 기록, Host Installation 인벤토리가 이미 있고 올바를 수
   있습니다.
 - **건드리지 말아야 할 상태 또는 파일:** 공유 Product Repository 파일 안의 프로젝트
   범위 `harness-mcp` 명령을 개인 절대 빌드 경로로 바꾸지 않습니다.
@@ -159,7 +159,7 @@ gate가 필요합니다.
 <a id="host-config-read-write-failure"></a>
 ### 호스트 설정 파일을 읽거나 쓸 수 없음
 
-- **관찰 증상:** install, verify, guidance, uninstall이 설정 대상이 디렉터리이거나,
+- **관찰 증상:** install, verify, guidance, uninstall 명령이 설정 대상이 디렉터리이거나,
   UTF-8 텍스트가 아니거나, 잘못된 JSON 또는 TOML이거나, 지원하지 않는 파일시스템
   타입이거나, 계획 뒤 바뀌었거나, 읽기, 만들기, 쓰기, 이동, 제거가 불가능하다고
   보고합니다.
@@ -172,13 +172,13 @@ gate가 필요합니다.
 - **제한된 복구 동작:** 호스트 소유 파일 또는 디렉터리 상태를 고친 뒤 같은 관리
   명령을 다시 실행합니다. 내용이 바뀌었다면 관련 없는 항목은 보존하고 marker나
   fingerprint가 맞는 하네스 관리 내용만 교체하거나 제거합니다.
-- **검증:** inventory를 확인하려면 `harness agent status`를 다시 실행하고, 호스트
+- **검증:** 인벤토리를 확인하려면 `harness agent status`를 다시 실행하고, 호스트
   대상이 다시 읽기 가능해지면 `harness agent verify`를 실행합니다.
 - **이미 존재할 수 있는 지속 효과:** 읽기 또는 쓰기 실패 전에 Runtime Home 상태,
-  Host Installation inventory, 호스트 설정, guidance가 적용되었을 수 있습니다.
+  Host Installation 인벤토리, 호스트 설정, 지침이 적용되었을 수 있습니다.
   정확한 대상은 `effects`와 `residual_effects`에서 확인합니다.
 - **건드리지 말아야 할 상태 또는 파일:** 호스트 설정 파일 전체나 Product Repository를
-  삭제하지 않습니다. 관련 없는 호스트 항목, 사용자 편집, 관리되지 않는 guidance를
+  삭제하지 않습니다. 관련 없는 호스트 항목, 사용자 편집, 관리되지 않는 지침을
   보존합니다.
 - **담당 문서 링크:** [관리 CLI](../reference/admin-cli.md#setup-output),
   [런타임 경계](../reference/runtime-boundaries.md),
@@ -187,7 +187,7 @@ gate가 필요합니다.
 <a id="managed-fingerprint-conflict"></a>
 ### 관리 설정 fingerprint 충돌 또는 사용자가 바꾼 관리 내용
 
-- **관찰 증상:** install, verify, guidance, uninstall이 같은 서버 이름에 대해 변경된
+- **관찰 증상:** install, verify, guidance, uninstall 명령이 같은 서버 이름에 대해 변경된
   관리 항목, fingerprint 불일치, 관련 없는 항목, 또는 충돌을 보고합니다.
 - **가장 가능성 높은 원인:** 하네스가 마지막으로 지문을 기록한 뒤 사용자나 호스트가
   하네스 관리 블록 또는 MCP 항목을 바꿨습니다. 또는 같은 `<server_name>`을 관리되지
@@ -196,16 +196,16 @@ gate가 필요합니다.
   `managed_fingerprint`, `fingerprint_state`, 경고 문구를 확인합니다. 이름 붙은 호스트
   항목이나 관리 블록만 비교합니다.
 - **제한된 복구 동작:** 현재 내용이 여전히 하네스 관리 내용이고 교체하려는 의도가
-  분명하면 install 또는 guidance apply를 `--replace-managed`와 함께 다시 실행합니다.
-  관리 내용을 제거하려면 소유권 점검이 허용할 때만 uninstall 또는 guidance remove를
+  분명하면 install 또는 `harness agent guidance apply`를 `--replace-managed`와 함께 다시 실행합니다.
+  관리 내용을 제거하려면 소유권 점검이 허용할 때만 uninstall 또는 `harness agent guidance remove`를
   `--remove-managed`와 함께 사용합니다. 그렇지 않으면 다른 `--server-name`을 고르거나
   사용자 소유 항목을 보존합니다.
 - **검증:** 교체 뒤에는 `harness agent verify`를 다시 실행합니다. 보존 또는 제거 뒤에는
   `harness agent status`를 다시 실행합니다.
-- **이미 존재할 수 있는 지속 효과:** Host Installation inventory가 이전 지문을 유지할
+- **이미 존재할 수 있는 지속 효과:** Host Installation 인벤토리가 이전 지문을 유지할
   수 있고, 검증은 변경된 설치에 대해 `failed`를 기록할 수 있습니다.
 - **건드리지 말아야 할 상태 또는 파일:** 하네스 지문을 맞추기 위해 관련 없는 호스트
-  설정, 관리되지 않는 호스트 항목, 사용자가 편집한 guidance를 덮어쓰거나 제거하지
+  설정, 관리되지 않는 호스트 항목, 사용자가 편집한 지침을 덮어쓰거나 제거하지
   않습니다.
 - **담당 문서 링크:** [관리 CLI](../reference/admin-cli.md#noninteractive-approval-behavior),
   [에이전트 통합](../reference/agent-integration.md#host-installation),
@@ -249,10 +249,10 @@ gate가 필요합니다.
 - **제한된 복구 동작:** Claude Code의 호스트 소유 승인 흐름으로 프로젝트 MCP 서버를
   승인합니다. Claude Code가 요구하면 호스트를 다시 로드하거나 재시작합니다.
 - **검증:** `harness agent verify`를 다시 실행합니다. 승인 대기 중에도 진단 MCP
-  handshake는 가능할 수 있지만, 호스트 승인 gate가 충족되기 전까지 최종 상태는
+  handshake는 가능할 수 있지만, 호스트 승인 게이트가 충족되기 전까지 최종 상태는
   `action_required`로 남습니다.
 - **이미 존재할 수 있는 지속 효과:** `.mcp.json`, Runtime Home 기록, 프로젝트
-  멤버십, Host Installation inventory가 이미 있을 수 있습니다.
+  멤버십, Host Installation 인벤토리가 이미 있을 수 있습니다.
 - **건드리지 말아야 할 상태 또는 파일:** 승인을 우회하려고 `.mcp.json`을 제거하거나
   다시 쓰지 않습니다. 관련 없는 Claude Code MCP 항목은 그대로 둡니다.
 - **담당 문서 링크:** [관리 CLI](../reference/admin-cli.md#agent-setup-result-states),
@@ -268,7 +268,7 @@ gate가 필요합니다.
   `integration_id`에 묶입니다. registry 멤버십 변경은 실행 중인 프로세스가 관찰할 수
   있지만, 바뀐 통합 바인딩, 바뀐 명령, 바뀐 호스트 설정, reload, restart는 호스트가
   소유한 동작입니다.
-- **진단 점검:** 저장된 inventory는 `harness agent status`로 확인합니다. 기존 MCP
+- **진단 점검:** 저장된 인벤토리는 `harness agent status`로 확인합니다. 기존 MCP
   세션에서 도구를 여전히 호출할 수 있다면 `harness.list_projects`를 호출해 그 실행
   중인 프로세스가 관찰하는 허용 프로젝트를 확인합니다.
 - **제한된 복구 동작:** 멤버십만 바뀐 경우 `harness.list_projects`가 새 목록을
@@ -295,14 +295,14 @@ gate가 필요합니다.
 - **가장 가능성 높은 원인:** 지속 통합 상태와 호스트 설정은 있지만 호스트 소유 trust,
   승인, OAuth, reload, restart 또는 비슷한 행동이 남았습니다.
 - **진단 점검:** `--output json`에서 `action_required` 배열, `verification` 세부사항,
-  host gate 필드, Host Installation inventory를 확인합니다.
+  호스트 게이트 필드, Host Installation 인벤토리를 확인합니다.
 - **제한된 복구 동작:** 이름 붙은 호스트 소유 동작만 수행합니다. 프로젝트를 trust하고,
   MCP 서버를 승인하고, 호스트를 reload 또는 restart하거나, 호스트 실행 파일 가용성을
   복구합니다.
 - **검증:** 통합 또는 특정 `--installation-id`에 대해 `harness agent verify`를 다시
   실행합니다.
 - **이미 존재할 수 있는 지속 효과:** Runtime Home 기록, 관리되는 호스트 설정, Host
-  Installation inventory, 선택적 guidance가 존재하는 것이 예상 상태입니다.
+  Installation 인벤토리, 선택적 지침이 존재하는 것이 예상 상태입니다.
 - **건드리지 말아야 할 상태 또는 파일:** `action_required`가 나왔다는 이유만으로
   통합을 롤백하거나 삭제하지 않습니다. 이 상태 자체는 실패 결과가 아닙니다.
 - **담당 문서 링크:** [관리 CLI](../reference/admin-cli.md#agent-setup-result-states),
@@ -319,16 +319,16 @@ gate가 필요합니다.
   `installation_verifications`를 읽습니다. 각 잔여 효과는 component, target, current
   state, reason, recommended action을 이름 붙입니다.
 - **제한된 복구 동작:** 보고된 원인을 고친 뒤, 이름 붙은 잔여 대상만 처리합니다. 광범위한
-  파일 또는 데이터베이스 삭제 대신 uninstall, guidance remove, project default, project
+  파일 또는 데이터베이스 삭제 대신 uninstall, `harness agent guidance remove`, project default, project
   membership 명령을 사용합니다.
 - **검증:** 실패했던 명령을 다시 실행하거나, 설정 또는 호스트 상태를 고친 뒤 `harness
   agent verify`를 실행합니다. 잔여 효과가 사라졌거나 담당 문서가 지원하는 명령으로
   의도적으로 보존되었는지 확인합니다.
 - **이미 존재할 수 있는 지속 효과:** `residual_effects`에 보고되면 호스트 설정,
-  guidance, Host Installation inventory, Runtime Home 생성 또는 마이그레이션, 프로젝트
+  지침, Host Installation 인벤토리, Runtime Home 생성 또는 마이그레이션, 프로젝트
   등록, surface 등록, 통합 기록, 기본 프로젝트, 멤버십 행이 남을 수 있습니다.
 - **건드리지 말아야 할 상태 또는 파일:** Runtime Home 전체, Product Repository,
-  아티팩트 저장소, Core 기록, 관련 없는 호스트 항목, 사용자가 편집한 guidance를
+  아티팩트 저장소, Core 기록, 관련 없는 호스트 항목, 사용자가 편집한 지침을
   삭제하지 않습니다.
 - **담당 문서 링크:** [관리 CLI](../reference/admin-cli.md#setup-output),
   [런타임 경계](../reference/runtime-boundaries.md), [저장소 기록](../reference/storage-records.md).
@@ -369,7 +369,7 @@ gate가 필요합니다.
   Integration Profile에 대한 멤버십이 성공적으로 만들어지지 않았습니다.
 - **진단 점검:** `harness agent status --integration-id <integration_id>
   --runtime-home <runtime_home>`를 실행합니다. MCP 프로세스가 이미 실행 중이면
-  `harness.list_projects`를 호출해 지금 빈 allowlist를 보는지 확인합니다.
+  `harness.list_projects`를 호출해 지금 빈 허용 목록을 보는지 확인합니다.
 - **제한된 복구 동작:** 명시적 프로젝트 하나를 추가하거나 복구합니다. `harness agent
   project add --integration-id <integration_id> --project-id <project_id> --repo-root
   <repo_root> --runtime-home <runtime_home>`를 사용합니다. 편의 기본값이 필요할 때만
@@ -377,8 +377,8 @@ gate가 필요합니다.
 - **검증:** `harness-mcp --check --integration <integration_id>`를 실행한 뒤 `harness
   agent verify`를 실행합니다.
 - **이미 존재할 수 있는 지속 효과:** 허용 프로젝트가 없어도 Agent Integration
-  Profile, Host Installation inventory, 호스트 설정, guidance가 남을 수 있습니다.
-- **건드리지 말아야 할 상태 또는 파일:** allowlist가 비었다는 이유만으로 호스트 항목을
+  Profile, Host Installation 인벤토리, 호스트 설정, 지침이 남을 수 있습니다.
+- **건드리지 말아야 할 상태 또는 파일:** 허용 목록이 비었다는 이유만으로 호스트 항목을
   다시 설치하거나 호스트 설정을 제거하지 않습니다.
 - **담당 문서 링크:** [에이전트 통합](../reference/agent-integration.md),
   [MCP 전송](../reference/mcp-transport.md),
@@ -464,20 +464,20 @@ gate가 필요합니다.
   partial_failure`를 보고합니다. `residual guidance preserved` 같은 경고가 함께 나올
   수 있습니다.
 - **가장 가능성 높은 원인:** 관리되는 호스트 설정은 제거되었지만 관리되는 repository
-  guidance를 안전하게 제거하지 못했습니다. 호스트 항목이나 guidance 블록이 계획 뒤
+  저장소 지침을 안전하게 제거하지 못했습니다. 호스트 항목이나 지침 블록이 계획 뒤
   바뀌었거나 정리 중 파일 작업이 실패했습니다.
 - **진단 점검:** 같은 `--integration-id`, 사용했다면 `--installation-id`, 그리고
   `--allow-repository-write`, `--remove-managed` 플래그로 `harness agent uninstall
   --dry-run --output json`을 실행해 정확한 남은 대상을 미리 봅니다.
-- **제한된 복구 동작:** 이름 붙은 잔여 guidance 또는 호스트 대상만 해결합니다. 소유
-  marker가 여전히 맞을 때 `--remove-managed`와 함께 uninstall 또는 guidance remove를
+- **제한된 복구 동작:** 이름 붙은 잔여 지침 또는 호스트 대상만 해결합니다. 소유
+  marker가 여전히 맞을 때 `--remove-managed`와 함께 uninstall 또는 `harness agent guidance remove`를
   다시 실행합니다.
-- **검증:** 남은 Host Installation inventory와 guidance 상태를 확인하려면 `harness
+- **검증:** 남은 Host Installation 인벤토리와 지침 상태를 확인하려면 `harness
   agent status`를 실행합니다. 호스트 설정이 남아 있으면 그것에 의존하기 전에 `harness
   agent verify`를 실행합니다.
-- **이미 존재할 수 있는 지속 효과:** 일부 Host Installation inventory가 이미 제거되었을
+- **이미 존재할 수 있는 지속 효과:** 일부 Host Installation 인벤토리가 이미 제거되었을
   수 있고, 설치가 남아 있지 않으면 Agent Integration Profile이 비활성화되었을 수
-  있습니다. 일부 guidance 또는 호스트 파일은 보고된 대로 남을 수 있습니다.
+  있습니다. 일부 지침 또는 호스트 파일은 보고된 대로 남을 수 있습니다.
 - **건드리지 말아야 할 상태 또는 파일:** Product Repository, 프로젝트 등록, Core 기록,
   Runtime Home 위치, 아티팩트 저장소, 관련 없는 호스트 항목을 삭제하지 않습니다.
 - **담당 문서 링크:** [관리 CLI](../reference/admin-cli.md),
@@ -487,23 +487,23 @@ gate가 필요합니다.
 <a id="host-config-remains-zero-projects"></a>
 ### 현재 허용 프로젝트가 없지만 호스트 설정이 남아 있음
 
-- **관찰 증상:** `harness agent status`가 Host Installation inventory 또는 호스트 설정을
+- **관찰 증상:** `harness agent status`가 Host Installation 인벤토리 또는 호스트 설정을
   보여 주지만 `allowed_project_count: 0`이거나 통합이 프로젝트를 추가할 때까지 실행
   가능하지 않다는 경고를 보고합니다.
 - **가장 가능성 높은 원인:** 마지막 허용 프로젝트가 의도적으로 제거되었습니다. 호스트
-  설정과 inventory는 남을 수 있지만 시작 자격은 아닙니다.
+  설정과 인벤토리는 남을 수 있지만 시작 자격은 아닙니다.
 - **진단 점검:** `harness agent status --integration-id <integration_id>`를 실행합니다.
   이전 MCP 프로세스가 아직 살아 있다면 `harness.list_projects`를 호출해 빈 목록을
   반환하는지 확인합니다.
 - **제한된 복구 동작:** 통합을 다시 사용해야 하면 `harness agent project add`로
-  프로젝트를 추가합니다. 통합을 완전히 제거해야 하면 guidance 제거가 필요할 때 필수
+  프로젝트를 추가합니다. 통합을 완전히 제거해야 하면 지침 제거가 필요할 때 필수
   repository-write 플래그와 함께 `harness agent uninstall --remove-managed`를
   실행합니다.
 - **검증:** 다시 사용하려면 프로젝트를 추가한 뒤 `harness-mcp --check`와 `harness
   agent verify`를 실행합니다. 제거하려면 `harness agent status`를 다시 실행하고 남은
-  installation과 guidance를 확인합니다.
-- **이미 존재할 수 있는 지속 효과:** allowlist가 비어도 Agent Integration Profile,
-  Host Installation inventory, 호스트 설정, guidance가 남을 수 있습니다.
+  설치와 지침을 확인합니다.
+- **이미 존재할 수 있는 지속 효과:** 허용 목록이 비어도 Agent Integration Profile,
+  Host Installation 인벤토리, 호스트 설정, 지침이 남을 수 있습니다.
 - **건드리지 말아야 할 상태 또는 파일:** 남은 호스트 파일을 새 시작이 성공할 수 있다는
   증거로 취급하지 않고, 관련 없는 호스트 항목을 삭제하지 않습니다.
 - **담당 문서 링크:** [에이전트 통합](../reference/agent-integration.md),

@@ -79,11 +79,12 @@ Harness also does not turn a polished chat answer, generated summary, readable s
 | Reader | Next path |
 |---|---|
 | New product reader | [User Guide](../guides/user-workflow.md) |
+| Environment check | [System Requirements](../reference/system-requirements.md) |
 | First setup | [Installation](installation.md) -> [Quickstart](quickstart.md) |
-| Agent host operator | [Quickstart](quickstart.md) -> [Agent Host Setup](../guides/agent-host-setup.md) |
+| Agent host operator | [Quickstart](quickstart.md) -> [Agent Host Setup](../guides/agent-host-setup.md) -> [Agent Host Troubleshooting](../guides/agent-host-troubleshooting.md) |
 | Multi-repository operator | [Multi-Repository Agent Setup](../guides/multi-repository-agent-setup.md) |
 | Agent author | [Agent Guide](../guides/agent-workflow.md) -> [Agent Integration](../reference/agent-integration.md) |
 | Source-code learner | [Implementation Guide](../development/change-guide.md) -> [Architecture](../development/architecture.md) |
-| Reference reader | [Reference Index](../reference/README.md) |
+| Reference reader | [Reference Index](../reference/README.md), [Administrative CLI](../reference/admin-cli.md), [API Methods](../reference/api/methods.md) |
 
 New readers should not need API schemas or owner metadata to understand what Harness is. Use the [Reference Index](../reference/README.md) when you need exact contract owners.

@@ -57,7 +57,7 @@ IntakeRequest:
 ```
 
 중첩 형태 담당 문서:
-- `initial_context_refs`는 `StateRecordRef[]`를 사용합니다. 중첩 형태는 [API 상태 스키마](schema-state.md)가 담당합니다.
+- `initial_context_refs`는 `StateRecordRef[]`를 사용합니다. 중첩 형태는 [API 상태 스키마](schema-state.md#state-references)가 담당합니다.
 - `requested_mode`와 `resume_policy` 값은 [API 값 집합](schema-value-sets.md#task-lifecycle-values)과 [메서드 내부 값](schema-value-sets.md#method-local-values)이 담당합니다.
 
 ## 접근 요구사항
