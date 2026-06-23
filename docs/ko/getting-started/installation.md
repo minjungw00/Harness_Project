@@ -20,39 +20,40 @@
 
 작업 디렉터리: `Harness Server` 소스 저장소 루트.
 
-빠른 로컬 빌드:
+디버그 소스 빌드:
 
 ```sh
 cargo build -p harness-cli -p harness-mcp
+export HARNESS_BIN="$(pwd)/target/debug"
+
+test -x "$HARNESS_BIN/harness"
+test -x "$HARNESS_BIN/harness-mcp"
 ```
 
-예상되는 디버그 실행 파일:
-
-- `target/debug/harness`
-- `target/debug/harness-mcp`
-
-릴리스 실행 파일:
+릴리스 소스 빌드:
 
 ```sh
 cargo build --release -p harness-cli -p harness-mcp
+export HARNESS_BIN="$(pwd)/target/release"
 ```
 
-예상되는 릴리스 실행 파일:
+별도로 설치된 실행 파일을 사용할 때:
 
-- `target/release/harness`
-- `target/release/harness-mcp`
+```sh
+export HARNESS_BIN="/absolute/path/to/installed/bin"
+```
 
-Cargo 패키지 이름은 `harness-cli`와 `harness-mcp`입니다. 실행 파일 이름은 `harness`와 `harness-mcp`입니다.
+`harness`와 `harness-mcp`가 함께 들어 있는 절대 디렉터리 하나를 선택합니다. `HARNESS_BIN`은 이 예시들이 쓰는 셸 편의 변수입니다. Harness가 설정으로 읽는 값이 아닙니다. Cargo 패키지 이름은 `harness-cli`와 `harness-mcp`입니다. 실행 파일 이름은 `harness`와 `harness-mcp`입니다.
 
 ## 빌드 확인
 
-작업 디렉터리: 빠른 로컬 빌드 뒤의 `Harness Server` 소스 저장소 루트.
+`HARNESS_BIN`을 선택한 뒤 같은 셸에서 실행 파일을 확인합니다.
 
 ```sh
-target/debug/harness --version
-target/debug/harness agent --help
-target/debug/harness-mcp --version
-target/debug/harness-mcp --help
+"$HARNESS_BIN/harness" --version
+"$HARNESS_BIN/harness" agent --help
+"$HARNESS_BIN/harness-mcp" --version
+"$HARNESS_BIN/harness-mcp" --help
 ```
 
 버전 명령은 `harness <version>`과 `harness-mcp <version>`을 출력합니다. 도움말 명령은 `harness agent` 명령군과 `harness-mcp --integration <integration_id>` 기반 프로세스 사용법을 출력해야 합니다.
@@ -61,9 +62,9 @@ target/debug/harness-mcp --help
 
 `harness agent install`은 `harness-mcp --integration <integration_id>`를 시작하는 호스트 설정을 설치하거나 내보냅니다.
 
-사용자 범위 Codex 설정이나 사용자/로컬 범위 Claude Code 설정에서는 `--mcp-command /absolute/path/to/harness-mcp`로 존재하는 절대 실행 파일 경로를 전달합니다. 또는 CLI가 찾을 수 있도록 `harness-mcp`를 `harness` 옆이나 `PATH`에 둡니다.
+사용자 범위 Codex 설정이나 사용자/로컬 범위 Claude Code 설정에서는 선택한 절대 실행 파일 경로를 `--mcp-command "$HARNESS_BIN/harness-mcp"`로 전달합니다. 또는 CLI가 찾을 수 있도록 `harness-mcp`를 `harness` 옆이나 `PATH`에 둡니다. 저장되는 호스트 설정에는 셸 변수가 아니라 해석된 절대 명령 경로가 들어갑니다.
 
-프로젝트 범위 Codex 또는 Claude Code 설정에서는 생성되는 프로젝트 파일이 공유 가능해야 합니다. `--mcp-command harness-mcp`를 사용하거나 `--mcp-command`를 생략하고, 호스트 환경의 `PATH`에서 `harness-mcp`를 찾을 수 있게 합니다.
+프로젝트 범위 Codex 또는 Claude Code 설정에서는 생성되는 프로젝트 파일이 공유 가능해야 합니다. `PATH="$HARNESS_BIN:$PATH"`를 붙여 설정을 실행하고 `--mcp-command harness-mcp`를 사용하거나 `--mcp-command`를 생략합니다. 프로젝트 파일은 이식 가능한 명령 이름을 유지하며, 호스트 환경의 `PATH`에서 `harness-mcp`를 찾을 수 있어야 합니다.
 
 설치 위치는 런타임 상태가 아닙니다. `Harness Server` 소스 또는 설치 파일은 실행 파일을 담고, `Harness Runtime Home`은 하네스 런타임 기록을 담으며, `Product Repository`는 제품 파일과 선택한 프로젝트 범위 통합 파일을 담습니다. 에이전트 호스트는 자기 실제 설정과 신뢰 상태를 소유합니다.
 

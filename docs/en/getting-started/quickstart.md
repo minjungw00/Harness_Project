@@ -8,8 +8,9 @@ The examples use:
 
 | Example value | Meaning |
 |---|---|
-| `/opt/harness/bin/harness` | installed `harness` executable |
-| `/opt/harness/bin/harness-mcp` | installed `harness-mcp` executable |
+| `HARNESS_BIN="/absolute/path/to/selected/bin"` | selected absolute directory containing both `harness` and `harness-mcp` |
+| `"$HARNESS_BIN/harness"` | `harness` administrative CLI invocation |
+| `"$HARNESS_BIN/harness-mcp"` | absolute `harness-mcp` command used for user/local-scope host configuration |
 | `/Users/alex/.harness` | `Harness Runtime Home` |
 | `/work/acme-api` | Product Repository A |
 | `acme-api` | project ID for Product Repository A |
@@ -21,14 +22,13 @@ Working directory: Harness Server source repository root, if building from this 
 
 ```sh
 cargo build -p harness-cli -p harness-mcp
+export HARNESS_BIN="$(pwd)/target/debug"
+
+test -x "$HARNESS_BIN/harness"
+test -x "$HARNESS_BIN/harness-mcp"
 ```
 
-This provides:
-
-- `target/debug/harness`
-- `target/debug/harness-mcp`
-
-Use those files by absolute path, or use installed executables that provide the same `harness` and `harness-mcp` commands.
+`HARNESS_BIN` is a shell convenience variable for this tutorial. Harness does not read it as configuration. For release builds or separately installed executables, select the absolute directory described in [Installation](installation.md) before continuing.
 
 ## Path A: Codex User-Scope Setup
 
@@ -37,14 +37,14 @@ Use this when one personal Codex MCP entry should serve one or more explicitly a
 Prerequisites:
 
 - Codex can read its user `config.toml`.
-- `harness-mcp` is available by absolute path.
+- `HARNESS_BIN` names an absolute directory containing both executables.
 - Product Repository A is at `/work/acme-api`.
 - `/Users/alex/.harness` is separate from `/work/acme-api`.
 
 Command:
 
 ```sh
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host codex \
   --scope user \
   --integration-id int-codex-team \
@@ -52,7 +52,7 @@ Command:
   --repo-root /work/acme-api \
   --default-project-id acme-api \
   --runtime-home /Users/alex/.harness \
-  --mcp-command /opt/harness/bin/harness-mcp
+  --mcp-command "$HARNESS_BIN/harness-mcp"
 ```
 
 Locations that may change:
@@ -81,21 +81,23 @@ The generated Codex entry has this shape:
 
 ```toml
 [mcp_servers.harness-int-codex-team]
-command = "/opt/harness/bin/harness-mcp"
+command = "/absolute/path/to/selected/bin/harness-mcp"
 args = ["--integration", "int-codex-team"]
 
 [mcp_servers.harness-int-codex-team.env]
 HARNESS_HOME = "/Users/alex/.harness"
 ```
 
+The actual `command` value is the shell-expanded absolute path selected through `HARNESS_BIN`; the generated TOML does not contain `HARNESS_BIN`.
+
 Verify later:
 
 ```sh
-/opt/harness/bin/harness agent status \
+"$HARNESS_BIN/harness" agent status \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 
-/opt/harness/bin/harness agent verify \
+"$HARNESS_BIN/harness" agent verify \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
@@ -111,7 +113,8 @@ Use this when Product Repository A should carry a team-shared Claude Code `.mcp.
 
 Prerequisites:
 
-- `harness-mcp` is available on the `PATH` that Claude Code will use.
+- `HARNESS_BIN` names an absolute directory containing both executables.
+- `harness-mcp` will be available on the `PATH` that Claude Code will use.
 - Product Repository A is at `/work/acme-api`.
 - `/Users/alex/.harness` is separate from `/work/acme-api`.
 - You are willing to write `.mcp.json` in Product Repository A.
@@ -120,8 +123,8 @@ Command:
 
 ```sh
 HARNESS_HOME=/Users/alex/.harness \
-PATH="/opt/harness/bin:$PATH" \
-/opt/harness/bin/harness agent install \
+PATH="$HARNESS_BIN:$PATH" \
+"$HARNESS_BIN/harness" agent install \
   --host claude-code \
   --scope project \
   --integration-id int-claude-acme \
@@ -164,7 +167,8 @@ The generated `.mcp.json` entry has this shape:
 
 ```sh
 HARNESS_HOME=/Users/alex/.harness \
-/opt/harness/bin/harness agent verify \
+PATH="$HARNESS_BIN:$PATH" \
+"$HARNESS_BIN/harness" agent verify \
   --integration-id int-claude-acme
 ```
 
@@ -173,14 +177,14 @@ HARNESS_HOME=/Users/alex/.harness \
 Use `--dry-run --output json` before writing project-scoped configuration or repository guidance:
 
 ```sh
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host codex \
   --scope user \
   --integration-id int-codex-team \
   --project-id acme-api \
   --repo-root /work/acme-api \
   --runtime-home /Users/alex/.harness \
-  --mcp-command /opt/harness/bin/harness-mcp \
+  --mcp-command "$HARNESS_BIN/harness-mcp" \
   --dry-run \
   --output json
 ```

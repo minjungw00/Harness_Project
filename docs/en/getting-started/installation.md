@@ -20,39 +20,40 @@ For the next setup stage, you also need:
 
 Working directory: Harness Server source repository root.
 
-For a quick local build:
+For a debug source build:
 
 ```sh
 cargo build -p harness-cli -p harness-mcp
+export HARNESS_BIN="$(pwd)/target/debug"
+
+test -x "$HARNESS_BIN/harness"
+test -x "$HARNESS_BIN/harness-mcp"
 ```
 
-Expected debug executables:
-
-- `target/debug/harness`
-- `target/debug/harness-mcp`
-
-For release executables:
+For a release source build:
 
 ```sh
 cargo build --release -p harness-cli -p harness-mcp
+export HARNESS_BIN="$(pwd)/target/release"
 ```
 
-Expected release executables:
+For separately installed executables:
 
-- `target/release/harness`
-- `target/release/harness-mcp`
+```sh
+export HARNESS_BIN="/absolute/path/to/installed/bin"
+```
 
-The Cargo package names are `harness-cli` and `harness-mcp`. The executable names are `harness` and `harness-mcp`.
+Choose one absolute directory that contains both `harness` and `harness-mcp`. `HARNESS_BIN` is a shell convenience variable for these examples; Harness does not read it as configuration. The Cargo package names are `harness-cli` and `harness-mcp`. The executable names are `harness` and `harness-mcp`.
 
 ## Verify The Build
 
-Working directory: Harness Server source repository root after the quick local build.
+After selecting `HARNESS_BIN`, verify the executables from the same shell:
 
 ```sh
-target/debug/harness --version
-target/debug/harness agent --help
-target/debug/harness-mcp --version
-target/debug/harness-mcp --help
+"$HARNESS_BIN/harness" --version
+"$HARNESS_BIN/harness" agent --help
+"$HARNESS_BIN/harness-mcp" --version
+"$HARNESS_BIN/harness-mcp" --help
 ```
 
 The version commands print `harness <version>` and `harness-mcp <version>`. The help commands should print the `harness agent` command family and the integration-bound `harness-mcp --integration <integration_id>` process usage.
@@ -61,9 +62,9 @@ The version commands print `harness <version>` and `harness-mcp <version>`. The 
 
 `harness agent install` installs or exports host configuration that starts `harness-mcp --integration <integration_id>`.
 
-For user-scope Codex or user/local-scope Claude Code setup, pass an existing absolute executable path with `--mcp-command /absolute/path/to/harness-mcp`, or put `harness-mcp` beside `harness` or on `PATH` so the CLI can discover it.
+For user-scope Codex or user/local-scope Claude Code setup, pass the selected absolute executable path with `--mcp-command "$HARNESS_BIN/harness-mcp"`, or put `harness-mcp` beside `harness` or on `PATH` so the CLI can discover it. The persisted host configuration receives the resolved absolute command path, not the shell variable.
 
-For project-scoped Codex or Claude Code setup, the generated project file must remain shareable. Use `--mcp-command harness-mcp` or omit `--mcp-command`, and make sure the host environment can find `harness-mcp` on `PATH`.
+For project-scoped Codex or Claude Code setup, the generated project file must remain shareable. Run setup with `PATH="$HARNESS_BIN:$PATH"` and use `--mcp-command harness-mcp` or omit `--mcp-command`. The project file keeps the portable command name, and the host environment must be able to find `harness-mcp` on `PATH`.
 
 Installation location is not runtime state. Harness Server source or installation files contain executables, `Harness Runtime Home` contains Harness runtime records, `Product Repository` contains product files and selected project-scoped integration files, and the agent host owns its actual configuration and trust state.
 
