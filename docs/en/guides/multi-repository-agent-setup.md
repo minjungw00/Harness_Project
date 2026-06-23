@@ -22,10 +22,28 @@ There is one host MCP entry, one `harness-mcp --integration <integration_id>` pr
 
 Project and local host scopes remain single-repository scopes. Use user scope for this topology.
 
+## Executable Convention
+
+The command examples assume you have selected one absolute directory containing both `harness` and `harness-mcp`, then exported it in the current shell:
+
+```sh
+export HARNESS_BIN="/absolute/path/to/selected/bin"
+```
+
+When building from the Harness Server source repository root, a debug build can use:
+
+```sh
+export HARNESS_BIN="$(pwd)/target/debug"
+```
+
+Replace `/absolute/path/to/selected/bin` with your real selected directory; do not copy it literally. `HARNESS_BIN` is only a shell convenience variable for these examples. Harness does not read it as runtime or host configuration. For release builds and installed-directory choices, see [Installation](../getting-started/installation.md) and [Agent host setup](agent-host-setup.md).
+
+Administrative commands use `"$HARNESS_BIN/harness"`. The user-scope Codex install passes `--mcp-command "$HARNESS_BIN/harness-mcp"` so generated configuration stores the resolved absolute executable path, not the literal `HARNESS_BIN` variable.
+
 ## Install Product Repository A
 
 ```sh
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host codex \
   --scope user \
   --server-name harness-main \
@@ -34,7 +52,7 @@ Project and local host scopes remain single-repository scopes. Use user scope fo
   --repo-root /work/acme-api \
   --default-project-id acme-api \
   --runtime-home /Users/alex/.harness \
-  --mcp-command /opt/harness/bin/harness-mcp
+  --mcp-command "$HARNESS_BIN/harness-mcp"
 ```
 
 This example pins `--server-name harness-main` so the host entry has a short predictable key. The option is not required; omitting it derives a stable name from `integration_id`.
@@ -43,17 +61,19 @@ The host config has one server entry:
 
 ```toml
 [mcp_servers.harness-main]
-command = "/opt/harness/bin/harness-mcp"
+command = "/absolute/path/to/selected/bin/harness-mcp"
 args = ["--integration", "int-codex-team"]
 
 [mcp_servers.harness-main.env]
 HARNESS_HOME = "/Users/alex/.harness"
 ```
 
+The actual generated `command` value is the resolved absolute path selected through `HARNESS_BIN`; generated TOML does not contain `HARNESS_BIN`.
+
 ## Add Product Repository B
 
 ```sh
-/opt/harness/bin/harness agent project add \
+"$HARNESS_BIN/harness" agent project add \
   --integration-id int-codex-team \
   --project-id billing-api \
   --repo-root /work/billing-api \
@@ -73,7 +93,7 @@ verification_detail: project-specific startup preflight passed
 Confirm the host still has one MCP server entry. The Codex config should still contain only `mcp_servers.harness-main` for this integration; it should not gain one server entry per project.
 
 ```sh
-/opt/harness/bin/harness agent status \
+"$HARNESS_BIN/harness" agent status \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
@@ -182,7 +202,7 @@ When the user's request names a repository, the agent should still use the match
 Set or change the default without rewriting host configuration:
 
 ```sh
-/opt/harness/bin/harness agent project default set \
+"$HARNESS_BIN/harness" agent project default set \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -203,7 +223,7 @@ If the default is cleared while multiple projects remain available, omitted `pro
 After the default has moved to `billing-api`, Product Repository A is only a formerly default project. Remove it while retaining the integration and host MCP entry:
 
 ```sh
-/opt/harness/bin/harness agent project remove \
+"$HARNESS_BIN/harness" agent project remove \
   --integration-id int-codex-team \
   --project-id acme-api \
   --runtime-home /Users/alex/.harness
@@ -221,11 +241,11 @@ verification_detail: project membership removed; host configuration was not rewr
 To remove the final remaining project, clear the default first if it still names that project, then remove the membership:
 
 ```sh
-/opt/harness/bin/harness agent project default clear \
+"$HARNESS_BIN/harness" agent project default clear \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 
-/opt/harness/bin/harness agent project remove \
+"$HARNESS_BIN/harness" agent project remove \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -244,7 +264,7 @@ After removal, `harness.list_projects` exposes no projects for `int-codex-team`.
 Observe the zero-project state:
 
 ```sh
-/opt/harness/bin/harness agent status \
+"$HARNESS_BIN/harness" agent status \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
@@ -259,7 +279,7 @@ not executable
 Add a project again without reinstalling the host entry:
 
 ```sh
-/opt/harness/bin/harness agent project add \
+"$HARNESS_BIN/harness" agent project add \
   --integration-id int-codex-team \
   --project-id billing-api \
   --repo-root /work/billing-api \
@@ -269,7 +289,7 @@ Add a project again without reinstalling the host entry:
 If the re-added project should be the convenience default again, set it after adding it:
 
 ```sh
-/opt/harness/bin/harness agent project default set \
+"$HARNESS_BIN/harness" agent project default set \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -280,7 +300,7 @@ If the re-added project should be the convenience default again, set it after ad
 Remove managed host configuration and managed guidance for the integration:
 
 ```sh
-/opt/harness/bin/harness agent uninstall \
+"$HARNESS_BIN/harness" agent uninstall \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness \
   --allow-repository-write \

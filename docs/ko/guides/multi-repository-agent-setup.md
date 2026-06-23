@@ -22,10 +22,28 @@ flowchart LR
 
 프로젝트 및 로컬 호스트 범위는 단일 저장소 범위로 남습니다. 이 토폴로지에는 사용자 범위를 사용합니다.
 
+## 실행 파일 선택 규칙
+
+아래 명령 예시는 `harness`와 `harness-mcp`가 함께 들어 있는 절대 디렉터리 하나를 선택하고 현재 셸에서 내보냈다고 가정합니다.
+
+```sh
+export HARNESS_BIN="/absolute/path/to/selected/bin"
+```
+
+`Harness Server` 소스 저장소 루트에서 빌드한다면 디버그 빌드는 아래 값을 사용할 수 있습니다.
+
+```sh
+export HARNESS_BIN="$(pwd)/target/debug"
+```
+
+`/absolute/path/to/selected/bin`은 그대로 복사할 경로가 아니라 실제 선택한 디렉터리로 바꿉니다. `HARNESS_BIN`은 이 예시들을 위한 셸 편의 변수일 뿐입니다. Harness는 이를 런타임 설정이나 호스트 설정으로 읽지 않습니다. 릴리스 빌드와 설치 디렉터리 선택지는 [설치](../getting-started/installation.md)와 [에이전트 호스트 설정](agent-host-setup.md)을 봅니다.
+
+관리 명령은 `"$HARNESS_BIN/harness"`를 사용합니다. 사용자 범위 Codex 설치는 `--mcp-command "$HARNESS_BIN/harness-mcp"`를 전달해 생성 설정이 문자 그대로의 `HARNESS_BIN` 변수가 아니라 해석된 절대 실행 파일 경로를 저장하게 합니다.
+
 ## Product Repository A 설치
 
 ```sh
-/opt/harness/bin/harness agent install \
+"$HARNESS_BIN/harness" agent install \
   --host codex \
   --scope user \
   --server-name harness-main \
@@ -34,7 +52,7 @@ flowchart LR
   --repo-root /work/acme-api \
   --default-project-id acme-api \
   --runtime-home /Users/alex/.harness \
-  --mcp-command /opt/harness/bin/harness-mcp
+  --mcp-command "$HARNESS_BIN/harness-mcp"
 ```
 
 이 예시는 호스트 항목이 짧고 예측 가능한 키를 갖도록 `--server-name harness-main`을 고정합니다. 이 옵션은 필수가 아닙니다. 생략하면 `integration_id`에서 안정적인 이름을 파생합니다.
@@ -43,17 +61,19 @@ flowchart LR
 
 ```toml
 [mcp_servers.harness-main]
-command = "/opt/harness/bin/harness-mcp"
+command = "/absolute/path/to/selected/bin/harness-mcp"
 args = ["--integration", "int-codex-team"]
 
 [mcp_servers.harness-main.env]
 HARNESS_HOME = "/Users/alex/.harness"
 ```
 
+실제 생성되는 `command` 값은 `HARNESS_BIN`으로 선택한 경로가 해석된 절대 경로입니다. 생성된 TOML에는 `HARNESS_BIN`이 들어가지 않습니다.
+
 ## Product Repository B 추가
 
 ```sh
-/opt/harness/bin/harness agent project add \
+"$HARNESS_BIN/harness" agent project add \
   --integration-id int-codex-team \
   --project-id billing-api \
   --repo-root /work/billing-api \
@@ -73,7 +93,7 @@ verification_detail: project-specific startup preflight passed
 호스트에 MCP 서버 항목이 여전히 하나인지 확인합니다. Codex 설정에는 이 통합에 대해 `mcp_servers.harness-main`만 있어야 하며, 프로젝트마다 서버 항목이 하나씩 늘어나면 안 됩니다.
 
 ```sh
-/opt/harness/bin/harness agent status \
+"$HARNESS_BIN/harness" agent status \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
@@ -182,7 +202,7 @@ project selection is ambiguous; call harness.list_projects and retry with envelo
 호스트 설정을 다시 쓰지 않고 기본값을 설정하거나 바꿉니다.
 
 ```sh
-/opt/harness/bin/harness agent project default set \
+"$HARNESS_BIN/harness" agent project default set \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -203,7 +223,7 @@ resulting_default_project_id: billing-api
 기본값을 `billing-api`로 옮긴 뒤 Product Repository A는 예전에 기본값이던 프로젝트일 뿐입니다. 통합과 호스트 MCP 항목은 유지하면서 제거합니다.
 
 ```sh
-/opt/harness/bin/harness agent project remove \
+"$HARNESS_BIN/harness" agent project remove \
   --integration-id int-codex-team \
   --project-id acme-api \
   --runtime-home /Users/alex/.harness
@@ -221,11 +241,11 @@ verification_detail: project membership removed; host configuration was not rewr
 마지막으로 남은 프로젝트를 제거하려면, 기본값이 아직 그 프로젝트를 가리킬 때 먼저 기본값을 지운 뒤 멤버십을 제거합니다.
 
 ```sh
-/opt/harness/bin/harness agent project default clear \
+"$HARNESS_BIN/harness" agent project default clear \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 
-/opt/harness/bin/harness agent project remove \
+"$HARNESS_BIN/harness" agent project remove \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -244,7 +264,7 @@ not executable until one is added
 프로젝트가 없는 상태를 확인합니다.
 
 ```sh
-/opt/harness/bin/harness agent status \
+"$HARNESS_BIN/harness" agent status \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness
 ```
@@ -259,7 +279,7 @@ not executable
 호스트 항목을 다시 설치하지 않고 프로젝트를 다시 추가합니다.
 
 ```sh
-/opt/harness/bin/harness agent project add \
+"$HARNESS_BIN/harness" agent project add \
   --integration-id int-codex-team \
   --project-id billing-api \
   --repo-root /work/billing-api \
@@ -269,7 +289,7 @@ not executable
 다시 추가한 프로젝트를 편의 기본값으로 삼아야 한다면, 추가한 뒤 기본값으로 설정합니다.
 
 ```sh
-/opt/harness/bin/harness agent project default set \
+"$HARNESS_BIN/harness" agent project default set \
   --integration-id int-codex-team \
   --project-id billing-api \
   --runtime-home /Users/alex/.harness
@@ -280,7 +300,7 @@ not executable
 통합에 대해 관리되는 호스트 설정과 관리되는 guidance를 제거합니다.
 
 ```sh
-/opt/harness/bin/harness agent uninstall \
+"$HARNESS_BIN/harness" agent uninstall \
   --integration-id int-codex-team \
   --runtime-home /Users/alex/.harness \
   --allow-repository-write \
