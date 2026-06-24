@@ -30,6 +30,7 @@ this page.
 - [Example Values And Paths](#example-values)
 - [Build And Verify Executables](#executable-installation)
 - [Choose A Host Path](#host-selection)
+- [Install Argument Quick Reference](#install-arguments)
 - [Codex User-Scope Setup](#codex)
 - [Claude Code Project-Scope Setup](#claude-code)
 - [Generic Export](#generic-export)
@@ -207,17 +208,30 @@ For the complete requirement contract, use
 The commands below use one consistent example set. Replace every example path
 and ID with your real values.
 
+### Environment And Path Values
+
 | Example value | Meaning |
 |---|---|
 | `VOLICORD_BIN="/absolute/path/to/selected/bin"` | Shell convenience variable for one directory containing both executables. |
 | `"$VOLICORD_BIN/volicord"` | The administrative CLI invocation. |
-| `"$VOLICORD_BIN/volicord-mcp"` | Absolute `volicord-mcp` path for user/local-scope host configuration and generic export. |
-| `/Users/alex/.volicord` | Example `Volicord Runtime Home`. |
-| `/work/acme-api` | Example `Product Repository`. |
-| `acme-api` | Example `project_id`. |
-| `int-codex-team` | Example Codex `integration_id`. |
-| `int-claude-acme` | Example Claude Code `integration_id`. |
-| `int-generic-acme` | Example generic export `integration_id`. |
+| `"$VOLICORD_BIN/volicord-mcp"` | Verified absolute executable path used when an example supplies `--mcp-command`. |
+| `VOLICORD_HOME=/Users/alex/.volicord` | Environment variable assignment used by project-scope administrative commands when they need a non-default Runtime Home. It is not a CLI option. |
+| `PATH="$VOLICORD_BIN:$PATH"` | Environment variable assignment that lets project-scope administrative commands find the selected executables. It is not a CLI option. |
+| `/Users/alex/.volicord` | Example `Volicord Runtime Home` path. |
+| `/work/acme-api` | Example `Product Repository` path. |
+
+### CLI Argument Values Used Below
+
+| Example value | Consuming option | Meaning |
+|---|---|---|
+| `acme-api` | `--project-id` | Stable logical project identifier chosen or reused by the operator. It does not need to equal the repository directory name. |
+| `/work/acme-api` | `--repo-root` | `Product Repository` path for the selected project. |
+| `int-codex-team` | `--integration-id` | Example Codex `integration_id`. |
+| `int-claude-acme` | `--integration-id` | Example Claude Code `integration_id`. |
+| `int-generic-acme` | `--integration-id` | Example generic export `integration_id`. |
+| `/Users/alex/.volicord` | `--runtime-home` | Runtime Home path supplied directly in user-scope and export examples. |
+| `"$VOLICORD_BIN/volicord-mcp"` | `--mcp-command` | Verified absolute `volicord-mcp` path supplied in user-scope and export examples. |
+| `/tmp/volicord-mcp-export` | `--export-dir` | Directory for the generated generic export file. |
 
 `VOLICORD_BIN` is only a shell variable used by these examples. Volicord does not
 read it as configuration. Set it again in each new shell, or use absolute paths
@@ -287,14 +301,16 @@ test -x "$VOLICORD_BIN/volicord-mcp"
 
 "$VOLICORD_BIN/volicord" --version
 "$VOLICORD_BIN/volicord" agent --help
+"$VOLICORD_BIN/volicord" agent install --help
 "$VOLICORD_BIN/volicord-mcp" --version
 "$VOLICORD_BIN/volicord-mcp" --help
 ```
 
 The version commands should print `volicord <version>` and
-`volicord-mcp <version>`. The help commands should show the `volicord agent`
-command family and the integration-bound `volicord-mcp --integration
-<integration_id>` process usage.
+`volicord-mcp <version>`. `volicord agent --help` should list the agent command
+family. `volicord agent install --help` should explain install-specific
+arguments and requiredness. `volicord-mcp --help` should show the
+integration-bound `volicord-mcp --integration <integration_id>` process usage.
 
 Continue only after both executables run from the same selected directory. This
 proves the executables are ready for host setup. It does not create a Runtime
@@ -318,6 +334,28 @@ The examples below intentionally show one Codex path, one Claude Code path, and
 one generic export path. More host and scope combinations are documented in
 [Agent Host Setup](docs/en/guides/agent-host-setup.md).
 
+<a id="install-arguments"></a>
+## Install Argument Quick Reference
+
+This quick reference covers only the `volicord agent install` options shown in
+this README's install examples. Use `volicord agent install --help` and
+[Administrative CLI](docs/en/reference/admin-cli.md#volicord-agent-install) for
+the complete option list, omission rules, and edge cases.
+
+| Option | Category | Meaning in these examples |
+|---|---|---|
+| `--host` | Required | Identifies the host integration: `codex`, `claude-code`, or `generic`. |
+| `--scope` | Required | Identifies the target configuration scope or export mode: `user`, `project`, or `export`. |
+| `--project-id` | Required for this new-project example | Supplies the stable logical project identifier chosen or reused by the operator. These examples introduce `/work/acme-api` as a project registration, so they pass `acme-api`; the ID does not need to equal the directory name. |
+| `--repo-root` | Required for this new-project example | Supplies the selected project's `Product Repository` path. Keep it distinct from the `Volicord Runtime Home`. |
+| `--integration-id` | Optional, pinned for reproducibility | Pins a predictable integration identifier so later administrative commands and generated host configuration use the same ID. If omitted, the CLI derives a stable value. |
+| `--runtime-home` | Optional, pinned for reproducibility | Selects the `Volicord Runtime Home` for the administrative command and, where the host scope permits it, generated host environment. The examples pin `/Users/alex/.volicord` when they should not rely on normal Runtime Home resolution. |
+| `--mcp-command` | Optional, pinned for reproducibility | In `user` and `export` examples, pins the verified absolute `volicord-mcp` executable. The `project` example omits it because omission uses the portable `volicord-mcp` command. |
+| `--dry-run` | Optional preview control | Previews the install plan without performing the real write. It is not required installation input and does not require `--allow-repository-write`. |
+| `--output` | Optional output formatting | Selects output formatting. Text is the default; the dry-run example requests JSON so the preview is easier to inspect. |
+| `--allow-repository-write` | Conditionally required | Explicit write authorization for the real project-scoped write to `/work/acme-api/.mcp.json`. It is not required for the corresponding dry run. |
+| `--export-dir` | Optional, pinned for reproducibility | Selects the directory for the generic exported MCP configuration when `--export-path` is not supplied. The example pins `/tmp/volicord-mcp-export` as the destination. |
+
 <a id="codex"></a>
 ## Codex User-Scope Setup
 
@@ -331,13 +369,6 @@ Before running it:
 - The `codex` executable is available on the administrative command `PATH` for
   the compatibility check.
 - `/Users/alex/.volicord` and `/work/acme-api` are separate paths.
-- This first install introduces `/work/acme-api` as a new project registration,
-  so it provides both `--project-id acme-api` and `--repo-root /work/acme-api`.
-  The project ID is a stable logical identifier you choose.
-- `--integration-id`, `--runtime-home`, and the absolute `--mcp-command` are
-  optional in general, but this example pins them so follow-up commands and
-  generated host configuration use predictable values. For full argument rules,
-  see [Administrative CLI](docs/en/reference/admin-cli.md#volicord-agent-install).
 
 Install:
 
@@ -400,12 +431,9 @@ Before running it:
   Claude Code launch environment must provide `VOLICORD_HOME=/Users/alex/.volicord`.
 - You intentionally allow the administrative command to write
   `/work/acme-api/.mcp.json`.
-- `--integration-id` is optional but pinned so the verify command and generated
-  server name are predictable. Project scope omits `--mcp-command` because the
-  default is the portable `volicord-mcp` command.
-- `--dry-run` is an optional zero-write preview and `--output json` only changes
-  preview formatting. The real apply command keeps `--allow-repository-write`
-  because it authorizes the intended project-file write.
+- The optional dry-run below previews the planned write without
+  repository-write authorization; the apply command is the real write and
+  includes explicit repository-write authorization.
 
 Optional dry-run:
 
@@ -477,13 +505,16 @@ Use generic export only for a host that Volicord does not install directly. This
 path renders configuration for you to apply in the external host's own setup
 flow.
 
-The required choices are the host and scope. This example also supplies both
-`--project-id acme-api` and `--repo-root /work/acme-api` to make project
-selection explicit; the full omission rules stay in
+Every install requires `--host` and `--scope`. This Generic export example also
+introduces `/work/acme-api` as a new project registration, so the shown command
+also requires `--project-id acme-api` and `--repo-root /work/acme-api`. Export
+destination and executable-path choices are separate: `--export-dir` selects
+where the rendered configuration is written, and `--mcp-command` selects the
+command path placed in that export. The optional `--integration-id`,
+`--runtime-home`, explicit `--mcp-command`, and `--export-dir` are kept so the
+exported server name, Runtime Home environment, command path, and destination
+are reproducible. Full omission rules stay in
 [Administrative CLI](docs/en/reference/admin-cli.md#volicord-agent-install).
-The optional `--integration-id`, `--runtime-home`, explicit `--mcp-command`, and
-`--export-dir` are kept so the exported server name, Runtime Home environment,
-command path, and destination are reproducible.
 
 ```sh
 "$VOLICORD_BIN/volicord" agent install \
