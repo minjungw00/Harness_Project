@@ -1060,7 +1060,8 @@ documents:
   path_en: docs/en/reference/runtime-boundaries.md
   path_ko: docs/ko/reference/runtime-boundaries.md
   kind: reference
-  summary: Reference contract for runtime, repository, and local storage boundaries.
+  summary: Reference contract for Volicord implementation, source repository, installation, executable
+    process, runtime-location, and repository boundaries.
   normative_level: contract
   translation_policy: semantic_parity
   owner_area: runtime_security
@@ -1079,8 +1080,10 @@ documents:
   canonical_for:
   - Product Repository boundary
   - Volicord Runtime Home boundary
-  - Volicord source repository, installation, and executable process boundaries
-  - runtime, executable-role, MCP host term, and repository separation
+  - Volicord implementation, source repository, installation, and executable process boundaries
+  - runtime-location separation among source repository, installation files, Runtime Home, Product
+    Repository, and external MCP host configuration
+  - ordinary MCP server term versus Volicord product, implementation, CLI, and adapter labels
   - explicit integration files allowed in Product Repositories
 - doc_id: reference.admin-cli
   path_en: docs/en/reference/admin-cli.md

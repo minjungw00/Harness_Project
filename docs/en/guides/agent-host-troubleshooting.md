@@ -105,7 +105,7 @@ requires the administrative verification gates defined by
   `registry.sqlite` or overwrite unrelated host entries by hand.
 - **Owner links:** [Administrative CLI](../reference/admin-cli.md),
   [Agent Integration](../reference/agent-integration.md#host-installation), and
-  [Runtime Boundaries](../reference/runtime-boundaries.md#runtime-location-server-installation).
+  [Runtime Boundaries](../reference/runtime-boundaries.md#runtime-location-source-installation-processes).
 
 <a id="portable-project-command-not-on-path"></a>
 ### A portable project-scoped command is not available on host `PATH`

@@ -138,7 +138,7 @@ long-running server and is not a public Volicord API method surface.
 |---|---|---|
 | Volicord | The local work-authority product/system for AI-assisted product work. | [Getting Started Overview](docs/en/getting-started/overview.md) |
 | Core | The local authority record for Volicord state. | [Core Model](docs/en/reference/core-model.md) |
-| Volicord implementation | The server implementation set maintained by this repository. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
+| Volicord implementation | The implementation set maintained by this repository, including Core, storage, types, the `volicord` CLI, `volicord-mcp`, tests, documentation, and validation tooling. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
 | `volicord` | The administrative CLI executable from package `volicord-cli`. | [Administrative CLI](docs/en/reference/admin-cli.md) |
 | `volicord-mcp` | The local MCP stdio executable started by an AI host. | [MCP Transport](docs/en/reference/mcp-transport.md) |
 | `Volicord Runtime Home` | Local runtime storage for Volicord records and operational data. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |

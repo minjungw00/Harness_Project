@@ -28,7 +28,7 @@ These names are related, but they are not interchangeable.
 |---|---|---|
 | Volicord | The local work-authority product/system for AI-assisted product work. | [Scope](../reference/scope.md) |
 | Core | The local authority record for Volicord state. | [Core Model](../reference/core-model.md) |
-| Volicord implementation | The server implementation set maintained by this repository, not a synonym for Volicord as a whole. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
+| Volicord implementation | The implementation set maintained by this repository, including Core, storage, types, the `volicord` CLI, `volicord-mcp`, tests, documentation, and validation tooling. It is not a synonym for Volicord as a whole. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 | `volicord` | The local administrative CLI that builds setup, project, surface, integration, host, and guidance records. | [Administrative CLI](../reference/admin-cli.md) |
 | `volicord-mcp` | The stdio MCP adapter process that an MCP host starts as a child process. | [MCP Transport](../reference/mcp-transport.md) |
 | `Volicord Runtime Home` | The local runtime data space for Volicord operational data as storage/runtime owners define it. | [Runtime Boundaries](../reference/runtime-boundaries.md) |

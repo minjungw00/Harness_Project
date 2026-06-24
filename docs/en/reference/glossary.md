@@ -23,7 +23,7 @@ Contract detail stays in the focused owner documents. Translation and style rule
 |---|---|---|---|
 | Volicord | Volicord | The local work-authority product/system for AI-assisted product work. | [Scope](scope.md) |
 | Core | Core | The local authority record for Volicord state. | [Core Model](core-model.md) |
-| Volicord implementation | Volicord implementation | The server implementation set maintained by this repository, including source-level crates, executable roles, tests, documentation, validation tooling, and repository configuration. Not a synonym for Volicord as a whole. | [Runtime Boundaries](runtime-boundaries.md) |
+| Volicord implementation | Volicord implementation | The implementation set maintained by this repository, not a synonym for Volicord as a whole. Runtime and location boundary details belong to Runtime Boundaries. | [Runtime Boundaries](runtime-boundaries.md) |
 | `Product Repository` | 제품 저장소 | The user's project workspace and product files, separate from Volicord runtime state. | [Runtime Boundaries](runtime-boundaries.md) |
 | `Volicord Runtime Home` | 런타임 홈 | The local runtime data space for Volicord operational data, as storage/runtime owners define it. | [Runtime Boundaries](runtime-boundaries.md) |
 | runtime | 런타임 | The operational Volicord execution and data context. | [Runtime Boundaries](runtime-boundaries.md) |

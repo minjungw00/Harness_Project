@@ -136,7 +136,7 @@ volicord
 |---|---|---|
 | Volicord | AI 지원 제품 작업을 위한 로컬 작업 권한 제품이자 시스템입니다. | [시작하기 개요](docs/ko/getting-started/overview.md) |
 | Core | Volicord 상태를 위한 로컬 기준 기록입니다. | [Core 모델](docs/ko/reference/core-model.md) |
-| Volicord 구현 | 이 저장소가 유지하는 서버 구현 집합입니다. | [런타임 경계](docs/ko/reference/runtime-boundaries.md) |
+| Volicord 구현 | 이 저장소가 유지하는 구현 집합입니다. Core, 저장소, 타입, `volicord` CLI, `volicord-mcp`, 테스트, 문서, 검증 도구를 포함합니다. | [런타임 경계](docs/ko/reference/runtime-boundaries.md) |
 | `volicord` | `volicord-cli` 패키지의 관리 CLI 실행 파일입니다. | [관리 CLI](docs/ko/reference/admin-cli.md) |
 | `volicord-mcp` | AI 호스트가 시작하는 로컬 MCP stdio 실행 파일입니다. | [MCP 전송](docs/ko/reference/mcp-transport.md) |
 | `Volicord Runtime Home` | Volicord 기록과 운영 데이터를 위한 로컬 런타임 저장소입니다. | [런타임 경계](docs/ko/reference/runtime-boundaries.md) |

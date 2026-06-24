@@ -97,7 +97,7 @@ MCP 프로세스 시작만 검증합니다. 전체 호스트 검증에는
   없는 호스트 항목을 덮어쓰지 않습니다.
 - **담당 문서 링크:** [관리 CLI](../reference/admin-cli.md),
   [에이전트 통합](../reference/agent-integration.md#host-installation),
-  [런타임 경계](../reference/runtime-boundaries.md#runtime-location-server-installation).
+  [런타임 경계](../reference/runtime-boundaries.md#runtime-location-source-installation-processes).
 
 <a id="portable-project-command-not-on-path"></a>
 ### 프로젝트 범위의 이식 가능한 명령이 호스트 `PATH`에서 보이지 않음

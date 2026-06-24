@@ -97,7 +97,7 @@ Does not imply:
 - These path rules do not provide OS sandboxing, command blocking, network blocking, secret blocking, or baseline detective enforcement.
 - Method-specific authorization decisions stay with API method owners.
 
-<a id="runtime-location-server-installation"></a>
+<a id="runtime-location-source-installation-processes"></a>
 ### Volicord source repository, installation, and processes
 
 Volicord implementation names the implementation set maintained by this repository. Use `Volicord source repository` for the checkout that contains code, documentation, tests, validation tooling, and repository configuration. Use `Volicord installation` for deployed executables and required runtime resources.

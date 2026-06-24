@@ -8,7 +8,7 @@ Volicord is the local work-authority product/system for AI-assisted product work
 
 Code and test paths that are meant to be opened directly are written relative to the repository root.
 
-This checkout is the Volicord source repository: the maintained server implementation set for Volicord. It contains implementation crates, the `volicord` administrative CLI, the `volicord-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration. A Volicord installation is a deployed subset of executables and required runtime resources, so this source map must not be read as an installation manifest.
+This checkout is the Volicord source repository and Rust workspace for the repository-maintained Volicord implementation. It contains implementation crates for Core, storage, shared types, the `volicord` administrative CLI, the `volicord-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration. A Volicord installation is a deployed subset of executables and required runtime resources, so this source map must not be read as an installation manifest.
 
 ## Operational paths
 
