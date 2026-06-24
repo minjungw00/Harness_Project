@@ -24,7 +24,7 @@ export VOLICORD_BIN="$(pwd)/target/debug"
 
 Replace `/absolute/path/to/selected/bin` with your real selected directory; do not copy it literally. `VOLICORD_BIN` is only a shell convenience variable for these examples. Volicord does not read it as runtime or host configuration. For release builds and installed-directory choices, see [Installation](../getting-started/installation.md).
 
-Administrative commands use `"$VOLICORD_BIN/volicord"`. User-scope Codex, local-scope Claude Code, and generic export examples pass `--mcp-command "$VOLICORD_BIN/volicord-mcp"` so generated configuration stores the resolved absolute executable path. Project-scope examples keep generated project files portable by running with `PATH="$VOLICORD_BIN:$PATH"` and `--mcp-command volicord-mcp`.
+Administrative commands use `"$VOLICORD_BIN/volicord"`. User-scope Codex, local-scope Claude Code, and generic export examples pass `--mcp-command "$VOLICORD_BIN/volicord-mcp"` so generated configuration stores the resolved absolute executable path. Project-scope examples keep generated project files portable by running with `PATH="$VOLICORD_BIN:$PATH"` for the administrative preflight and omitting `--mcp-command`; omission selects the portable `volicord-mcp` command for project scope.
 
 Inline `PATH` and `VOLICORD_HOME` values on an administrative `volicord agent install` or `volicord agent verify` command apply to that command invocation and its checks. For project scope, the shared host configuration intentionally does not carry those command-local values forward: it stores `volicord-mcp` and no personal `VOLICORD_HOME`. A future project-scoped Codex or Claude Code process must start from a shell, launcher, service configuration, user environment, or equivalent execution environment whose `PATH` resolves `volicord-mcp`; if that host process would otherwise resolve a different Runtime Home, provide the intended `VOLICORD_HOME` through that same execution environment.
 
@@ -53,6 +53,23 @@ For operators, `volicord agent install` follows this durable order. The detailed
 5. It applies the planned host configuration, then registers or updates Host Installation inventory before optional repository guidance.
 6. Optional guidance is applied only when selected and explicitly authorized; final verification checks host readiness and, when the host gate permits it, performs MCP initialization and tool discovery. The Host Installation verification state is updated from that result, which may still be `action_required` when host-owned action remains.
 7. If a failure happens after durable effects begin, output reports compensated effects and residual effects from the install journal. This is not one atomic rollback across Runtime Home, SQLite, Product Repository, and host boundaries.
+
+## Install Argument Selection
+
+Use this table to decide which install arguments belong in an operator command. Exact requiredness, validation edge cases, and defaults stay in [Administrative CLI](../reference/admin-cli.md#volicord-agent-install).
+
+| Decision | Selection rule |
+|---|---|
+| Host and scope | Always choose `--host` and `--scope` together from the supported matrix: Codex uses `user` or `project`, Claude Code uses `local`, `project`, or `user`, and generic setup uses `export`. |
+| Project selection | For a new project registration, provide both stable `--project-id` and repository path `--repo-root`. For an already registered project, `--project-id` alone can reuse the registered path. `--repo-root` alone can select a project only when it uniquely matches one existing executable registration; if it matches none or more than one, provide `--project-id`. |
+| Integration identity | `--integration-id` is optional. Provide it when later status, verify, uninstall, generated host snippets, scripts, or multi-repository examples need a stable name. Omit it when deterministic generation is sufficient. |
+| Default project | For a new integration, omit `--default-project-id` unless you are intentionally selecting a different already allowed default; the selected project becomes the default. For an existing integration, omission retains its existing default when present. Use `volicord agent project default set` for later default changes. |
+| Runtime Home | Use `--runtime-home` or `VOLICORD_HOME` when selecting a non-default Runtime Home or making an operational example repeatable. Otherwise rely on normal Runtime Home resolution. Project-scoped host files do not persist a personal Runtime Home path. |
+| MCP executable | For user, local, and export scope, either let the CLI discover `volicord-mcp` or provide an explicit absolute `--mcp-command` to pin a verified executable. For project scope, omit `--mcp-command`; the generated shared entry uses portable `volicord-mcp` and relies on the host launch `PATH`. |
+| Repository-write authorization | Include `--allow-repository-write` on real project-scoped installs and on real installs that apply repository guidance. Do not add it to dry-run commands merely for symmetry; dry-run writes nothing. |
+| Export destination | For `generic` `export`, use `--export-path` when you need one exact output file, `--export-dir` when the generated `volicord-<integration>.mcp.json` name is acceptable in a chosen directory, or omit both to use the current working directory. |
+| Host server key | `--server-name` is optional. Keep it explicit when an example needs a short predictable host configuration key; otherwise let the CLI derive `volicord-<integration>`. |
+| Preview and output | `--dry-run` is optional zero-write planning. `--output json` is optional machine-readable administrative output, useful for checking planned paths and actions. |
 
 ## Setup State Semantics
 
@@ -105,7 +122,6 @@ Use user scope when one personal Codex configuration should load the same Volico
   --integration-id int-codex-team \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --default-project-id acme-api \
   --runtime-home /Users/alex/.volicord \
   --mcp-command "$VOLICORD_BIN/volicord-mcp"
 ```
@@ -116,6 +132,8 @@ This may write:
 - a Codex user `config.toml` entry such as `[mcp_servers.volicord-main]`
 
 It does not write `/work/acme-api` unless `--guidance codex`, `--guidance both`, or a separate guidance command is selected with `--allow-repository-write`.
+
+Because this example creates a new integration and omits `--default-project-id`, `acme-api` becomes the default project. Keep `--server-name volicord-main` when you want that predictable host key; omit it when the derived `volicord-<integration>` name is sufficient.
 
 Expected generated Codex shape:
 
@@ -146,7 +164,6 @@ PATH="$VOLICORD_BIN:$PATH" \
   --integration-id int-claude-acme \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --mcp-command volicord-mcp \
   --allow-repository-write
 ```
 
@@ -163,7 +180,7 @@ Expected `.mcp.json` shape:
 }
 ```
 
-The `.mcp.json` entry intentionally stays portable: it stores `volicord-mcp` and no personal `VOLICORD_HOME`. The inline `VOLICORD_HOME` and `PATH` on the install command let that administrative command select `/Users/alex/.volicord` and find a source-built `volicord-mcp` for preflight. Because project scope omits those values from the shared entry, start or restart Claude Code from an environment that can resolve `volicord-mcp`, and provide `VOLICORD_HOME=/Users/alex/.volicord` if that host process would otherwise resolve a different Runtime Home.
+The `.mcp.json` entry intentionally stays portable: it stores `volicord-mcp` and no personal `VOLICORD_HOME`. The command intentionally omits `--mcp-command`; for project scope, omission selects portable `volicord-mcp`. The inline `VOLICORD_HOME` and `PATH` on the install command let that administrative command select `/Users/alex/.volicord` and find `volicord-mcp` for preflight. Because project scope omits those values from the shared entry, start or restart Claude Code from an environment that can resolve `volicord-mcp`, and provide `VOLICORD_HOME=/Users/alex/.volicord` if that host process would otherwise resolve a different Runtime Home.
 
 Claude Code normally requires project MCP approval before it loads a project-scoped `.mcp.json` server. That result is `action_required`.
 

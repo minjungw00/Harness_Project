@@ -24,7 +24,7 @@ export VOLICORD_BIN="$(pwd)/target/debug"
 
 `/absolute/path/to/selected/bin`은 그대로 복사할 경로가 아니라 실제 선택한 디렉터리로 바꿉니다. `VOLICORD_BIN`은 이 예시들을 위한 셸 편의 변수일 뿐입니다. Volicord는 이를 런타임 설정이나 호스트 설정으로 읽지 않습니다. 릴리스 빌드와 설치 디렉터리 선택지는 [설치](../getting-started/installation.md)를 봅니다.
 
-관리 명령은 `"$VOLICORD_BIN/volicord"`를 사용합니다. 사용자 범위 Codex, 로컬 범위 Claude Code, generic export 예시는 `--mcp-command "$VOLICORD_BIN/volicord-mcp"`를 전달해 생성 설정이 해석된 절대 실행 파일 경로를 저장하게 합니다. 프로젝트 범위 예시는 생성되는 프로젝트 파일이 이식 가능하도록 `PATH="$VOLICORD_BIN:$PATH"`와 `--mcp-command volicord-mcp`를 사용합니다.
+관리 명령은 `"$VOLICORD_BIN/volicord"`를 사용합니다. 사용자 범위 Codex, 로컬 범위 Claude Code, generic export 예시는 `--mcp-command "$VOLICORD_BIN/volicord-mcp"`를 전달해 생성 설정이 해석된 절대 실행 파일 경로를 저장하게 합니다. 프로젝트 범위 예시는 생성되는 프로젝트 파일이 이식 가능하도록 관리 사전 점검에 `PATH="$VOLICORD_BIN:$PATH"`를 사용하고 `--mcp-command`는 생략합니다. 프로젝트 범위에서 생략하면 이식 가능한 `volicord-mcp` 명령이 선택됩니다.
 
 관리용 `volicord agent install` 또는 `volicord agent verify` 명령에 붙인 인라인 `PATH`와 `VOLICORD_HOME` 값은 그 명령 실행과 그 명령의 점검에만 적용됩니다. 프로젝트 범위에서는 공유 호스트 설정이 이 명령 한정 값을 의도적으로 이어받지 않습니다. 공유 설정은 `volicord-mcp`를 저장하고 개인 `VOLICORD_HOME`은 저장하지 않습니다. 이후 프로젝트 범위 Codex나 Claude Code 프로세스는 `volicord-mcp`를 `PATH`에서 찾을 수 있는 셸, 실행기, 서비스 설정, 사용자 환경, 또는 그에 준하는 실행 환경에서 시작해야 합니다. 그 호스트 프로세스가 다른 Runtime Home을 해석하게 된다면, 같은 실행 환경에서 의도한 `VOLICORD_HOME`을 제공해야 합니다.
 
@@ -53,6 +53,23 @@ export VOLICORD_BIN="$(pwd)/target/debug"
 5. 계획된 호스트 설정을 적용한 뒤, 선택적 저장소 지침보다 먼저 Host Installation 인벤토리를 등록하거나 갱신합니다.
 6. 선택적 지침은 선택되어 있고 명시적으로 승인된 경우에만 적용됩니다. 최종 검증은 호스트 준비 상태를 확인하고, 호스트 게이트가 허용하면 MCP 초기화와 도구 발견을 수행합니다. 그 결과로 Host Installation 검증 상태를 갱신하며, 호스트가 소유한 행동이 남아 있으면 결과는 여전히 `action_required`일 수 있습니다.
 7. 지속 효과가 시작된 뒤 실패하면 출력은 install journal의 보상된 효과와 잔여 효과를 보고합니다. 이것은 Runtime Home, SQLite, Product Repository, 호스트 경계를 가로지르는 하나의 원자적 롤백이 아닙니다.
+
+## 설치 인자 선택
+
+운영자 명령에 어떤 설치 인자를 넣을지 결정할 때 이 표를 사용합니다. 정확한 필수성, 검증 예외, 기본값은 [관리 CLI](../reference/admin-cli.md#volicord-agent-install)가 담당합니다.
+
+| 결정 | 선택 규칙 |
+|---|---|
+| 호스트와 범위 | `--host`와 `--scope`는 항상 지원되는 조합에서 함께 선택합니다. Codex는 `user` 또는 `project`, Claude Code는 `local`, `project`, `user`, generic 설정은 `export`를 사용합니다. |
+| 프로젝트 선택 | 새 프로젝트 등록에는 안정적인 `--project-id`와 저장소 경로 `--repo-root`를 모두 제공합니다. 이미 등록된 프로젝트는 `--project-id`만으로 등록 경로를 재사용할 수 있습니다. `--repo-root`만으로 선택할 수 있는 경우는 실행 가능한 기존 등록 하나와만 일치할 때뿐입니다. 일치하는 등록이 없거나 둘 이상이면 `--project-id`를 제공합니다. |
+| 통합 식별자 | `--integration-id`는 선택 사항입니다. 이후 상태 확인, 검증, 제거, 생성 호스트 예시, 스크립트, 다중 저장소 예시가 안정적인 이름을 필요로 할 때 제공합니다. 결정적 생성으로 충분하면 생략합니다. |
+| 기본 프로젝트 | 새 통합에서는 다른 이미 허용된 기본 프로젝트를 의도적으로 선택하는 경우가 아니면 `--default-project-id`를 생략합니다. 선택한 프로젝트가 기본 프로젝트가 됩니다. 기존 통합에서는 생략하면 기존 기본값이 있을 때 유지됩니다. 나중에 기본값을 바꿀 때는 `volicord agent project default set`을 사용합니다. |
+| Runtime Home | 기본값이 아닌 Runtime Home을 선택하거나 운영 예시를 반복 가능하게 만들 때 `--runtime-home` 또는 `VOLICORD_HOME`을 사용합니다. 그 외에는 일반 Runtime Home 해석에 맡깁니다. 프로젝트 범위 호스트 파일은 개인 Runtime Home 경로를 저장하지 않습니다. |
+| MCP 실행 파일 | 사용자, 로컬, export 범위에서는 CLI가 `volicord-mcp`를 찾게 하거나, 확인된 실행 파일을 고정하려고 명시적인 절대 `--mcp-command`를 제공합니다. 프로젝트 범위에서는 `--mcp-command`를 생략합니다. 생성되는 공유 항목은 이식 가능한 `volicord-mcp`를 사용하고 호스트 시작 `PATH`에 의존합니다. |
+| 저장소 쓰기 권한 부여 | 실제 프로젝트 범위 설치와 저장소 지침을 적용하는 실제 설치에는 `--allow-repository-write`를 포함합니다. 대칭을 맞추려고 dry-run 명령에 붙이지 않습니다. Dry-run은 아무것도 쓰지 않습니다. |
+| 내보내기 대상 | `generic` `export`에서 정확한 출력 파일이 필요하면 `--export-path`를, 선택한 디렉터리에 생성 이름 `volicord-<integration>.mcp.json`을 써도 되면 `--export-dir`을 사용합니다. 둘 다 생략하면 현재 작업 디렉터리를 사용합니다. |
+| 호스트 서버 키 | `--server-name`은 선택 사항입니다. 예시가 짧고 예측 가능한 호스트 설정 키를 필요로 할 때 명시합니다. 그렇지 않으면 CLI가 `volicord-<integration>`을 파생하게 둡니다. |
+| 미리보기와 출력 | `--dry-run`은 선택적인 zero-write 계획입니다. `--output json`은 선택적인 기계 판독 관리 출력이며 계획된 경로와 동작을 확인할 때 유용합니다. |
 
 ## 설정 상태 의미
 
@@ -91,7 +108,7 @@ Dry-run은 계획된 Runtime Home 동작, 호스트 대상 경로, 지침 대상
 
 현재 저장소 프로필에서 registry 스키마 버전 `1`은 이미 최신 지원 registry 스키마 버전입니다. 기존의 현재 registry에 대해 dry-run을 실행하면 `registry_schema_version: 1`, `registry_latest_supported_schema_version: 1`, `registry_migration_planned: false`를 보고하고 마이그레이션 메타데이터를 쓰지 않습니다.
 
-아래 예시들은 호스트 snippet이 안정적인 사람이 읽기 쉬운 키를 갖도록 `--server-name volicord-main`을 고정합니다. 이 옵션은 필수가 아닙니다. 생략하면 CLI가 `integration_id`에서 안정적인 서버 이름을 파생하고 결과에 보고합니다.
+아래 예시들은 호스트 예시 설정이 안정적이고 사람이 읽기 쉬운 키를 갖도록 `--server-name volicord-main`을 고정합니다. 이 옵션은 필수가 아닙니다. 생략하면 CLI가 `integration_id`에서 안정적인 서버 이름을 파생하고 결과에 보고합니다.
 
 ## Codex 사용자 범위 설치
 
@@ -105,7 +122,6 @@ Dry-run은 계획된 Runtime Home 동작, 호스트 대상 경로, 지침 대상
   --integration-id int-codex-team \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --default-project-id acme-api \
   --runtime-home /Users/alex/.volicord \
   --mcp-command "$VOLICORD_BIN/volicord-mcp"
 ```
@@ -116,6 +132,8 @@ Dry-run은 계획된 Runtime Home 동작, 호스트 대상 경로, 지침 대상
 - `[mcp_servers.volicord-main]` 같은 Codex 사용자 `config.toml` 항목
 
 `--guidance codex`, `--guidance both`, 또는 별도 `volicord agent guidance` 명령을 `--allow-repository-write`와 함께 선택하지 않으면 `/work/acme-api`에는 쓰지 않습니다.
+
+이 예시는 새 통합을 만들고 `--default-project-id`를 생략하므로 `acme-api`가 기본 프로젝트가 됩니다. 예측 가능한 호스트 키가 필요하면 `--server-name volicord-main`을 유지하고, 파생되는 `volicord-<integration>` 이름으로 충분하면 생략합니다.
 
 예상되는 Codex 생성 모양은 다음과 같습니다.
 
@@ -146,7 +164,6 @@ PATH="$VOLICORD_BIN:$PATH" \
   --integration-id int-claude-acme \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --mcp-command volicord-mcp \
   --allow-repository-write
 ```
 
@@ -163,7 +180,7 @@ PATH="$VOLICORD_BIN:$PATH" \
 }
 ```
 
-`.mcp.json` 항목은 의도적으로 이식 가능하게 유지됩니다. `volicord-mcp`를 저장하고 개인 `VOLICORD_HOME`은 저장하지 않습니다. 설치 명령의 인라인 `VOLICORD_HOME`과 `PATH`는 그 관리 명령이 `/Users/alex/.volicord`를 선택하고 사전 점검에서 소스 빌드 `volicord-mcp`를 찾게 해 줍니다. 프로젝트 범위는 이 값을 공유 항목에 넣지 않으므로, Claude Code는 `volicord-mcp`를 찾을 수 있는 환경에서 시작하거나 재시작해야 하며, 그 호스트 프로세스가 다른 Runtime Home을 해석하게 된다면 같은 환경에서 `VOLICORD_HOME=/Users/alex/.volicord`도 제공해야 합니다.
+`.mcp.json` 항목은 의도적으로 이식 가능하게 유지됩니다. `volicord-mcp`를 저장하고 개인 `VOLICORD_HOME`은 저장하지 않습니다. 이 명령은 의도적으로 `--mcp-command`를 생략합니다. 프로젝트 범위에서는 생략하면 이식 가능한 `volicord-mcp`가 선택됩니다. 설치 명령의 인라인 `VOLICORD_HOME`과 `PATH`는 그 관리 명령이 `/Users/alex/.volicord`를 선택하고 사전 점검에서 `volicord-mcp`를 찾게 해 줍니다. 프로젝트 범위는 이 값을 공유 항목에 넣지 않으므로, Claude Code는 `volicord-mcp`를 찾을 수 있는 환경에서 시작하거나 재시작해야 하며, 그 호스트 프로세스가 다른 Runtime Home을 해석하게 된다면 같은 환경에서 `VOLICORD_HOME=/Users/alex/.volicord`도 제공해야 합니다.
 
 Claude Code는 보통 프로젝트 범위 `.mcp.json` 서버를 로드하기 전에 프로젝트 MCP 승인을 요구합니다. 이 결과는 `action_required`입니다.
 

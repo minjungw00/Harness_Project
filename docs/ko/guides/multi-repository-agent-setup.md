@@ -56,12 +56,13 @@ export VOLICORD_BIN="$(pwd)/target/debug"
   --integration-id int-codex-team \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --default-project-id acme-api \
   --runtime-home /Users/alex/.volicord \
   --mcp-command "$VOLICORD_BIN/volicord-mcp"
 ```
 
 이 예시는 호스트 항목이 짧고 예측 가능한 키를 갖도록 `--server-name volicord-main`을 고정합니다. 이 옵션은 필수가 아닙니다. 생략하면 `integration_id`에서 안정적인 이름을 파생합니다.
+
+이 명령은 새 통합을 만들고 `--default-project-id`를 생략하므로 Product Repository A가 기본 프로젝트가 됩니다. 기존 통합에 대해 `--default-project-id` 없이 설치를 다시 실행하면 기존 기본값이 있을 때 그 값을 유지합니다. 나중에 기본값을 바꿀 때는 초기 설치에서 첫 선택 프로젝트를 반복해서 지정하지 말고 `volicord agent project default set`을 사용합니다.
 
 호스트 설정에는 서버 항목 하나가 있습니다.
 

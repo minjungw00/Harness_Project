@@ -56,12 +56,13 @@ Administrative commands use `"$VOLICORD_BIN/volicord"`. The user-scope Codex ins
   --integration-id int-codex-team \
   --project-id acme-api \
   --repo-root /work/acme-api \
-  --default-project-id acme-api \
   --runtime-home /Users/alex/.volicord \
   --mcp-command "$VOLICORD_BIN/volicord-mcp"
 ```
 
 This example pins `--server-name volicord-main` so the host entry has a short predictable key. The option is not required; omitting it derives a stable name from `integration_id`.
+
+Because this command creates a new integration and omits `--default-project-id`, Product Repository A becomes the default project. Re-running install for an existing integration without `--default-project-id` retains its existing default when present. Later default changes should use `volicord agent project default set` rather than restating the first selected project during initial installation.
 
 The host config has one server entry:
 
