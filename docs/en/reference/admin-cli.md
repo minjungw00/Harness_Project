@@ -42,7 +42,7 @@ volicord project register --project-id ID --repo-root PATH [--status active]
 volicord project list
 volicord surface register --project-id ID --surface-id ID [--surface-instance-id ID] [--kind KIND] [--name NAME] [--interaction-role agent|user_interaction] [--access-class ACCESS_CLASS ...] [--profile baseline-workflow] [--capability-profile JSON]
 volicord surface list --project-id ID
-volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export --project-id ID [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]
+volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]
 volicord agent project add --integration-id ID --project-id ID [--repo-root PATH] [--default] [--runtime-home PATH] [--output text|json] [--dry-run]
 volicord agent project remove --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]
 volicord agent project default set --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]
@@ -103,7 +103,7 @@ Supported host and scope values:
 Scope rules:
 
 - `project` and `local` scopes permit exactly the associated `Product Repository`.
-- `user` scope may permit multiple explicitly added projects, but `volicord agent install` still requires at least one explicit `--project-id`.
+- `user` scope may permit multiple explicitly added projects, but each `volicord agent install` invocation still selects exactly one project by the install project-selection rules.
 - `generic export` writes or prints only an explicit configuration export and does not create a Host Installation that claims host loading.
 - Unsupported host/scope combinations are usage errors.
 
@@ -149,24 +149,40 @@ Host-specific state rules:
 
 ## `volicord agent install`
 
-`volicord agent install` creates or reuses an Agent Integration Profile, explicitly allows the requested project, installs or exports host configuration, and verifies the result where the host can be checked.
+`volicord agent install` creates or reuses an Agent Integration Profile, explicitly allows one selected project, installs or exports host configuration, and verifies the result where the host can be checked.
 
-Required options:
+Argument requiredness and omission behavior:
 
-- `--host`
-- `--scope`
-- `--project-id`
+| Argument | Requiredness | Meaning, applicability, and omission behavior |
+|---|---|---|
+| `--host codex|claude-code|claude_code|generic` | Always required | Selects the host adapter. The value must be valid with the selected `--scope`; `claude-code` is accepted as an alias for `claude_code`. |
+| `--scope user|project|local|export` | Always required | Selects the host configuration or export target. The value must be valid with the selected `--host`. |
+| `--project-id ID` | Conditionally required | Names the selected project. It is required for an unregistered project, required when `--repo-root` matches no existing registration, and required when a supplied `--repo-root` is ambiguous. It may be omitted only when `--repo-root` uniquely matches one existing executable project registration. |
+| `--repo-root PATH` | Conditionally required | Identifies the selected project's `Product Repository` for project selection and registration. It is required with `--project-id` when that project is not already registered. When omitted for an already registered `--project-id`, the command reuses the registered repository path. |
+| `--integration-id ID` | Optional | Selects an existing integration or the desired id for a new integration. When omitted, the command derives a stable deterministic integration id from the selected host, scope, and project. |
+| `--default-project-id ID` | Optional | Selects the integration default project and must name an allowed integration project. For a new integration, omission uses the selected project. For an existing integration, omission retains its existing default when present, otherwise uses the selected project. |
+| `--server-name NAME` | Optional | Selects the host MCP server name. When omitted, the command derives a stable server name from the integration id using the `volicord-<integration>` form. |
+| `--surface-id ID` | Optional | Selects the integration surface id. When omitted, the command reuses an existing integration value when available, otherwise generates a stable identifier. |
+| `--surface-instance-id ID` | Optional | Selects the integration surface instance id. When omitted, the command reuses an existing integration value when available, otherwise generates a stable identifier. |
+| `--mcp-command PATH` | Optional | Selects the `volicord-mcp` executable where an explicit command is allowed. Project scope defaults to the portable `volicord-mcp` command and must keep that portable command. User, local, and export scopes discover an executable from the current `volicord` executable's sibling directory and then `PATH` when omitted; an explicit command for those scopes must satisfy the existing absolute executable-path rules. |
+| `--runtime-home PATH` | Optional | Selects the `Volicord Runtime Home` used by the administrative command. When omitted, the command uses the Runtime Home resolution order above. For non-project host scopes, the selected Runtime Home may be persisted in managed host configuration as `VOLICORD_HOME`. For project scope, shared host configuration must not embed a developer-specific Runtime Home path; a project-scoped host process that must use a non-default Runtime Home must receive `VOLICORD_HOME` through its actual execution environment. An environment variable set only for the administrative installation command is not automatically inherited by future host processes. |
+| `--export-path PATH` | Optional | For `generic` `export`, selects an explicit output path for the exported MCP configuration. When omitted, the export path is derived from `--export-dir` or the current working directory. |
+| `--export-dir PATH` | Optional | For `generic` `export`, selects the directory used with the generated `volicord-<integration>.mcp.json` file name when `--export-path` is omitted. When neither export destination is supplied, the command uses the current working directory and derives that file name. |
+| `--guidance none|codex|claude-code|claude_code|both` | Optional | Previews and applies optional `Product Repository` guidance for the selected project. Omitted or `none` writes no guidance. Non-dry-run guidance writes require `--allow-repository-write`. |
+| `--output text|json` | Optional | Selects human-readable text or machine-readable JSON output. When omitted, output is `text`. |
+| `--dry-run` | Optional | Previews the install plan under the zero-write dry-run contract. When omitted, the command performs the real installation. Dry-run does not require `--allow-repository-write`. |
+| `--allow-repository-write` | Conditionally required authorization | Required for a non-dry-run project-scoped install and for a non-dry-run install that applies repository guidance. Omission is accepted only when no applicable non-dry-run repository write requires it. |
+| `--replace-managed` | Optional | Authorizes replacement only where the existing managed-ownership restrictions permit replacement of matching previously managed content. Omission does not authorize replacement. |
 
-Optional behavior:
+Project selection and registration:
 
-- `--integration-id` selects an existing integration or the desired id for a new integration.
-- `--default-project-id` sets the default and must name an allowed project.
-- `--server-name` selects the host MCP server name. When omitted, the default form is `volicord-<integration>`: the CLI derives a stable default from `integration_id`, prefixes it with `volicord-`, sanitizes it to ASCII letters, numbers, hyphen, and underscore, and shortens it with a hash when needed.
-- `--repo-root` validates the associated `Product Repository` for project/local scope when a host target writes there.
-- `--surface-id` and `--surface-instance-id` select the integration surface binding. When omitted, the CLI generates stable opaque ids and reports them.
-- `--mcp-command` selects the `volicord-mcp` executable for scopes that permit an explicit command path. User and local scopes require an existing absolute path when specified. Project scope uses `volicord-mcp` from `PATH`; generic export requires an absolute command path when the command is explicit.
-- `--runtime-home` selects the `Volicord Runtime Home` used by the administrative command. For non-project host scopes, the selected Runtime Home may be persisted in managed host configuration as `VOLICORD_HOME`. For project scope, shared host configuration must not embed a developer-specific Runtime Home path; a project-scoped host process that must use a non-default Runtime Home must receive `VOLICORD_HOME` through its actual execution environment. An environment variable set only for the administrative installation command is not automatically inherited by future host processes.
-- `--guidance none|codex|claude-code|claude_code|both` previews and applies optional `Product Repository` guidance for the selected project. Omitted or `none` writes no guidance, and noninteractive guidance writes still require `--allow-repository-write`.
+- An install must resolve exactly one selected project.
+- For an unregistered project, both `--project-id` and `--repo-root` are required.
+- For an already registered project, `--project-id` alone may reuse its registered repository path.
+- If `--project-id` and `--repo-root` are both supplied for an already registered project, the supplied repository path must match the registration.
+- `--repo-root` alone may select a project only when it uniquely matches one existing executable project registration.
+- If a supplied `--repo-root` matches no existing registration, `--project-id` is required so the project can be registered.
+- If a supplied `--repo-root` matches more than one existing registration, the user must provide `--project-id`.
 
 Installation rules:
 
@@ -178,7 +194,8 @@ Installation rules:
 - Host configuration writes use managed ownership markers or an equivalent managed fingerprint.
 - Managed host-entry fingerprints use the format identifier `volicord-host-entry-v1`.
 - Existing unmanaged configuration for the same host target and server name is a conflict unless `--replace-managed` applies to a previously managed block with a matching ownership marker.
-- Project-scoped host configuration writes require `--allow-repository-write` in noninteractive execution.
+- A non-dry-run project-scoped install requires `--allow-repository-write`; dry-run does not.
+- A non-dry-run install that applies repository guidance requires `--allow-repository-write`; dry-run does not.
 - `--dry-run` previews every storage and file action under the zero-write contract in [Dry run and machine-readable output](#dry-run).
 
 Verification:

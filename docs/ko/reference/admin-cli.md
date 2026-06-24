@@ -42,7 +42,7 @@ volicord project register --project-id ID --repo-root PATH [--status active]
 volicord project list
 volicord surface register --project-id ID --surface-id ID [--surface-instance-id ID] [--kind KIND] [--name NAME] [--interaction-role agent|user_interaction] [--access-class ACCESS_CLASS ...] [--profile baseline-workflow] [--capability-profile JSON]
 volicord surface list --project-id ID
-volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export --project-id ID [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]
+volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]
 volicord agent project add --integration-id ID --project-id ID [--repo-root PATH] [--default] [--runtime-home PATH] [--output text|json] [--dry-run]
 volicord agent project remove --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]
 volicord agent project default set --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]
@@ -104,7 +104,7 @@ volicord agent guidance remove --integration-id ID --project-id ID [--host codex
 범위 규칙:
 
 - `project`와 `local` 범위는 연결된 `Product Repository` 하나만 허용합니다.
-- `user` 범위는 명시적으로 추가된 여러 프로젝트를 허용할 수 있지만, `volicord agent install`에는 그래도 하나 이상의 명시적 `--project-id`가 필요합니다.
+- `user` 범위는 명시적으로 추가된 여러 프로젝트를 허용할 수 있지만, 각 `volicord agent install` 호출은 설치 프로젝트 선택 규칙에 따라 정확히 하나의 프로젝트를 선택합니다.
 - `generic export`는 명시적 설정 내보내기만 쓰거나 출력하며, 호스트 로드를 주장하는 Host Installation을 만들지 않습니다.
 - 지원하지 않는 호스트/범위 조합은 사용법 오류입니다.
 
@@ -151,24 +151,40 @@ volicord agent guidance remove --integration-id ID --project-id ID [--host codex
 
 ## `volicord agent install`
 
-`volicord agent install`은 Agent Integration Profile을 만들거나 재사용하고, 요청한 프로젝트를 명시적으로 허용하며, 호스트 설정을 설치하거나 내보내고, 호스트를 확인할 수 있을 때 결과를 검증합니다.
+`volicord agent install`은 Agent Integration Profile을 만들거나 재사용하고, 선택된 프로젝트 하나를 명시적으로 허용하며, 호스트 설정을 설치하거나 내보내고, 호스트를 확인할 수 있을 때 결과를 검증합니다.
 
-필수 옵션:
+인자의 필수성 및 생략 시 동작:
 
-- `--host`
-- `--scope`
-- `--project-id`
+| 인자 | 필수성 | 의미, 적용 범위, 생략 시 동작 |
+|---|---|---|
+| `--host codex|claude-code|claude_code|generic` | 항상 필수 | 호스트 어댑터를 선택합니다. 값은 선택한 `--scope`와 함께 유효해야 합니다. `claude-code`는 `claude_code`의 별칭으로 허용됩니다. |
+| `--scope user|project|local|export` | 항상 필수 | 호스트 설정 또는 내보내기 대상을 선택합니다. 값은 선택한 `--host`와 함께 유효해야 합니다. |
+| `--project-id ID` | 조건부 필수 | 선택된 프로젝트를 이름으로 가리킵니다. 등록되지 않은 프로젝트에는 필수이고, `--repo-root`가 기존 등록과 일치하지 않을 때도 필수이며, 제공된 `--repo-root`가 모호할 때도 필수입니다. `--repo-root`가 실행 가능한 기존 프로젝트 등록 하나와만 일치할 때만 생략할 수 있습니다. |
+| `--repo-root PATH` | 조건부 필수 | 프로젝트 선택과 등록에 사용할 선택된 프로젝트의 `Product Repository`를 식별합니다. `--project-id`가 가리키는 프로젝트가 아직 등록되어 있지 않으면 함께 필요합니다. 이미 등록된 `--project-id`에 대해 생략하면 명령은 등록된 저장소 경로를 재사용합니다. |
+| `--integration-id ID` | 선택 사항 | 기존 통합 또는 새 통합에 원하는 식별자를 선택합니다. 생략하면 명령은 선택된 호스트, 범위, 프로젝트에서 안정적이고 결정적인 통합 식별자를 파생합니다. |
+| `--default-project-id ID` | 선택 사항 | 통합 기본 프로젝트를 선택하며 허용된 통합 프로젝트를 이름으로 가리켜야 합니다. 새 통합에서는 생략하면 선택된 프로젝트를 사용합니다. 기존 통합에서는 기존 기본값이 있으면 유지하고, 없으면 선택된 프로젝트를 사용합니다. |
+| `--server-name NAME` | 선택 사항 | 호스트 MCP 서버 이름을 선택합니다. 생략하면 명령은 통합 식별자에서 `volicord-<integration>` 형태의 안정적인 서버 이름을 파생합니다. |
+| `--surface-id ID` | 선택 사항 | 통합 접점 식별자를 선택합니다. 생략하면 기존 통합 값이 있을 때 재사용하고, 없으면 안정적인 식별자를 생성합니다. |
+| `--surface-instance-id ID` | 선택 사항 | 통합 접점 인스턴스 식별자를 선택합니다. 생략하면 기존 통합 값이 있을 때 재사용하고, 없으면 안정적인 식별자를 생성합니다. |
+| `--mcp-command PATH` | 선택 사항 | 명시적 명령이 허용되는 곳에서 `volicord-mcp` 실행 파일을 선택합니다. `project` 범위는 생략하면 이식 가능한 `volicord-mcp` 명령을 기본으로 사용하며 그 이식 가능한 명령을 유지해야 합니다. `user`, `local`, `export` 범위는 생략하면 현재 `volicord` 실행 파일의 형제 디렉터리와 `PATH` 순서로 실행 파일을 찾습니다. 이 범위에서 명시적 명령은 기존의 절대 실행 파일 경로 규칙을 만족해야 합니다. |
+| `--runtime-home PATH` | 선택 사항 | 관리 명령이 사용할 `Volicord Runtime Home`을 선택합니다. 생략하면 위 Runtime Home 해석 순서를 사용합니다. `project`가 아닌 호스트 범위에서는 선택된 Runtime Home이 관리 호스트 설정에 `VOLICORD_HOME`으로 저장될 수 있습니다. `project` 범위에서는 공유 호스트 설정에 개발자별 Runtime Home 경로를 넣으면 안 됩니다. 기본값이 아닌 Runtime Home을 사용해야 하는 `project` 범위 호스트 프로세스는 실제 실행 환경을 통해 `VOLICORD_HOME`을 받아야 합니다. 관리 설치 명령에만 설정된 환경 변수는 이후 호스트 프로세스에 자동으로 상속되지 않습니다. |
+| `--export-path PATH` | 선택 사항 | `generic` `export`에서 내보낸 MCP 설정을 쓸 명시적 출력 경로를 선택합니다. 생략하면 내보내기 경로는 `--export-dir` 또는 현재 작업 디렉터리에서 파생됩니다. |
+| `--export-dir PATH` | 선택 사항 | `generic` `export`에서 `--export-path`가 생략됐을 때 생성 파일 이름 `volicord-<integration>.mcp.json`과 함께 사용할 디렉터리를 선택합니다. 두 내보내기 대상이 모두 생략되면 명령은 현재 작업 디렉터리를 사용하고 그 파일 이름을 파생합니다. |
+| `--guidance none|codex|claude-code|claude_code|both` | 선택 사항 | 선택한 프로젝트의 선택적 `Product Repository` 지침을 미리 보여 주고 적용합니다. 생략하거나 `none`이면 지침을 쓰지 않습니다. Dry-run이 아닌 지침 쓰기에는 `--allow-repository-write`가 필요합니다. |
+| `--output text|json` | 선택 사항 | 사람이 읽는 text 출력 또는 기계 판독 JSON 출력을 선택합니다. 생략하면 출력은 `text`입니다. |
+| `--dry-run` | 선택 사항 | zero-write dry-run 계약에 따라 설치 계획을 미리 보여 줍니다. 생략하면 명령은 실제 설치를 수행합니다. Dry-run은 `--allow-repository-write`를 요구하지 않습니다. |
+| `--allow-repository-write` | 조건부 필수 권한 부여 | Dry-run이 아닌 `project` 범위 설치와, dry-run이 아니면서 저장소 지침을 적용하는 설치에 필요합니다. 생략은 적용되는 dry-run 아닌 저장소 쓰기가 없을 때만 허용됩니다. |
+| `--replace-managed` | 선택 사항 | 기존 관리 소유권 제한이 일치하는 이전 관리 내용의 교체를 허용하는 경우에만 교체를 승인합니다. 생략하면 교체를 승인하지 않습니다. |
 
-선택 동작:
+프로젝트 선택과 등록:
 
-- `--integration-id`는 기존 통합 또는 새 통합에 원하는 식별자를 선택합니다.
-- `--default-project-id`는 기본값을 설정하며 허용된 프로젝트를 이름으로 가리켜야 합니다.
-- `--server-name`은 호스트 MCP 서버 이름을 선택합니다. 생략하면 기본 형태는 `volicord-<integration>`입니다. CLI는 `integration_id`에서 안정적인 기본값을 파생하고, `volicord-`를 앞에 붙이며, ASCII 영문자, 숫자, 하이픈, 밑줄에 맞게 정리하고, 필요하면 해시를 붙여 짧게 만듭니다.
-- `--repo-root`는 호스트 대상이 project/local 범위로 그곳에 쓸 때 연결된 `Product Repository`를 검증합니다.
-- `--surface-id`와 `--surface-instance-id`는 통합 접점 바인딩을 선택합니다. 생략하면 CLI가 안정적인 불투명 식별자를 생성하고 보고합니다.
-- `--mcp-command`는 명시적 명령 경로가 허용되는 범위에서 `volicord-mcp` 실행 파일을 선택합니다. user와 local 범위는 이 옵션이 지정되면 존재하는 절대 경로를 요구합니다. project 범위는 `PATH`의 `volicord-mcp`를 사용합니다. generic export는 명시적 명령을 지정할 때 절대 경로를 요구합니다.
-- `--runtime-home`은 관리 명령이 사용할 `Volicord Runtime Home`을 선택합니다. `project`가 아닌 호스트 범위에서는 선택된 Runtime Home이 관리 호스트 설정에 `VOLICORD_HOME`으로 저장될 수 있습니다. `project` 범위에서는 공유 호스트 설정에 개발자별 Runtime Home 경로를 넣으면 안 됩니다. 기본값이 아닌 Runtime Home을 사용해야 하는 `project` 범위 호스트 프로세스는 실제 실행 환경을 통해 `VOLICORD_HOME`을 받아야 합니다. 관리 설치 명령에만 설정된 환경 변수는 이후 호스트 프로세스에 자동으로 상속되지 않습니다.
-- `--guidance none|codex|claude-code|claude_code|both`는 선택한 프로젝트의 선택적 `Product Repository` 지침을 미리 보여 주고 적용합니다. 생략하거나 `none`이면 지침을 쓰지 않으며, 비대화식 지침 쓰기에는 여전히 `--allow-repository-write`가 필요합니다.
+- 설치는 정확히 하나의 선택된 프로젝트를 해석해야 합니다.
+- 등록되지 않은 프로젝트에는 `--project-id`와 `--repo-root`가 모두 필요합니다.
+- 이미 등록된 프로젝트는 `--project-id`만으로 등록된 저장소 경로를 재사용할 수 있습니다.
+- 이미 등록된 프로젝트에 `--project-id`와 `--repo-root`가 모두 제공되면 제공된 저장소 경로는 등록과 일치해야 합니다.
+- `--repo-root`만으로 프로젝트를 선택할 수 있는 경우는 실행 가능한 기존 프로젝트 등록 하나와만 일치할 때뿐입니다.
+- 제공된 `--repo-root`가 기존 등록과 일치하지 않으면 프로젝트를 등록할 수 있도록 `--project-id`가 필요합니다.
+- 제공된 `--repo-root`가 둘 이상의 기존 등록과 일치하면 사용자는 `--project-id`를 제공해야 합니다.
 
 설치 규칙:
 
@@ -180,7 +196,8 @@ volicord agent guidance remove --integration-id ID --project-id ID [--host codex
 - 호스트 설정 쓰기는 관리 소유 마커 또는 동등한 관리 지문을 사용합니다.
 - 관리 호스트 항목 지문은 형식 식별자 `volicord-host-entry-v1`을 사용합니다.
 - 같은 호스트 대상과 서버 이름에 대한 기존 비관리 설정은 충돌입니다. `--replace-managed`는 소유 마커가 맞는 이전 관리 블록에만 적용됩니다.
-- 프로젝트 범위 호스트 설정 쓰기는 비대화식 실행에서 `--allow-repository-write`를 요구합니다.
+- Dry-run이 아닌 `project` 범위 설치에는 `--allow-repository-write`가 필요합니다. Dry-run에는 필요하지 않습니다.
+- Dry-run이 아니면서 저장소 지침을 적용하는 설치에는 `--allow-repository-write`가 필요합니다. Dry-run에는 필요하지 않습니다.
 - `--dry-run`은 [Dry-run과 기계 판독 출력](#dry-run)이 정한 zero-write 계약에 따라 모든 저장소 및 파일 동작을 미리 보여 줍니다.
 
 검증:
