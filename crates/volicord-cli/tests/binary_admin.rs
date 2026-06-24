@@ -458,7 +458,9 @@ fn volicord_binary_project_list_rejects_state_db_path_mismatch_without_creating_
 #[test]
 fn volicord_binary_agent_help_covers_nested_commands() -> Result<(), Box<dyn Error>> {
     assert_agent_help(["agent", "--help"])?;
-    assert_agent_help(["agent", "install", "--help"])?;
+    assert_agent_install_help(["agent", "install", "--help"])?;
+    assert_agent_install_help(["agent", "install", "-h"])?;
+    assert_agent_install_help(["agent", "install", "help"])?;
     assert_agent_help(["agent", "project", "--help"])?;
     assert_agent_help(["agent", "project", "add", "--help"])?;
     assert_agent_help(["agent", "project", "remove", "--help"])?;
@@ -3513,16 +3515,79 @@ fn run_with_home_and_env_slice(
 fn assert_agent_help<const N: usize>(args: [&str; N]) -> Result<(), Box<dyn Error>> {
     let output = run_without_home(args)?;
     assert_success(&output);
-    assert!(stdout(&output).contains("volicord agent install"));
-    assert!(stdout(&output).contains("volicord agent guidance apply"));
-    assert!(stdout(&output).contains("volicord agent project default set"));
-    assert!(stdout(&output).contains("volicord agent project default clear"));
-    assert!(stdout(&output).contains("--guidance none|codex"));
-    assert!(stdout(&output).contains("--default-project-id ID"));
-    assert!(stdout(&output).contains("--surface-id ID"));
-    assert!(stdout(&output).contains("--export-path PATH"));
-    assert!(stdout(&output).contains("--remove-managed"));
-    assert!(!stdout(&output).contains("--yes"));
+    let help = stdout(&output);
+    assert!(help.contains(
+        "volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH]"
+    ));
+    assert!(help.contains("volicord agent guidance apply"));
+    assert!(help.contains("volicord agent project default set"));
+    assert!(help.contains("volicord agent project default clear"));
+    assert!(help.contains("--guidance none|codex"));
+    assert!(help.contains("--default-project-id ID"));
+    assert!(help.contains("--surface-id ID"));
+    assert!(help.contains("--export-path PATH"));
+    assert!(help.contains("--remove-managed"));
+    assert!(!help.contains("--scope user|project|local|export --project-id ID"));
+    assert!(!help.contains("--yes"));
+    Ok(())
+}
+
+fn assert_agent_install_help<const N: usize>(args: [&str; N]) -> Result<(), Box<dyn Error>> {
+    let output = run_without_home(args)?;
+    assert_success(&output);
+    let help = stdout(&output);
+    assert!(help.contains("Usage:\n  volicord agent install"));
+    assert!(help.contains("Required arguments:"));
+    assert!(help.contains("--host codex|claude-code|claude_code|generic"));
+    assert!(help.contains("--scope user|project|local|export"));
+    assert!(help.contains("Project selection:"));
+    assert!(
+        help.contains("For an unregistered project, provide both --project-id and --repo-root.")
+    );
+    assert!(help.contains("A registered project may be selected by --project-id alone."));
+    assert!(help.contains(
+        "--repo-root alone works only when it uniquely identifies an existing project registration."
+    ));
+    assert!(help.contains("Conditional authorization:"));
+    assert!(
+        help.contains("A non-dry-run project-scoped install requires --allow-repository-write.")
+    );
+    assert!(help.contains(
+        "A non-dry-run install that applies repository guidance requires --allow-repository-write."
+    ));
+    assert!(help.contains("Dry-run does not require --allow-repository-write."));
+    assert!(help.contains("Optional values:"));
+    for option in [
+        "--integration-id ID",
+        "--default-project-id ID",
+        "--server-name NAME",
+        "--surface-id ID",
+        "--surface-instance-id ID",
+        "--runtime-home PATH",
+        "--mcp-command PATH",
+        "--export-path PATH",
+        "--export-dir PATH",
+        "--guidance none|codex|claude-code|claude_code|both",
+        "--output text|json",
+        "--dry-run",
+        "--replace-managed",
+    ] {
+        assert!(
+            help.contains(option),
+            "missing install help option {option}"
+        );
+    }
+    assert!(help.contains("Omission defaults:"));
+    assert!(help.contains("Omitted --integration-id generates a stable id"));
+    assert!(
+        help.contains("Omitted --runtime-home follows the Volicord Runtime Home resolution order")
+    );
+    assert!(help.contains("Project scope uses the portable volicord-mcp command"));
+    assert!(help.contains("Omitted --guidance or --guidance none writes no guidance."));
+    assert!(help.contains("Omitted --output uses text."));
+    assert!(!help.contains("volicord agent guidance apply"));
+    assert!(!help.contains("volicord agent project default set"));
+    assert!(!help.contains("--scope user|project|local|export --project-id ID"));
     Ok(())
 }
 

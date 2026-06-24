@@ -685,7 +685,7 @@ impl Default for ParsedAgentOptions {
 }
 
 pub fn agent_usage() -> String {
-    "volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export --project-id ID [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n\
+    "volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n\
      volicord agent project add --integration-id ID --project-id ID [--repo-root PATH] [--default] [--runtime-home PATH] [--output text|json] [--dry-run]\n\
      volicord agent project remove --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
      volicord agent project default set --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]\n\
@@ -697,6 +697,64 @@ pub fn agent_usage() -> String {
      volicord agent guidance status --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json]\n\
      volicord agent guidance remove --integration-id ID --project-id ID [--host codex|claude-code|claude_code] [--runtime-home PATH] [--output text|json] [--dry-run] [--allow-repository-write] [--remove-managed]\n"
         .to_owned()
+}
+
+fn agent_install_usage() -> String {
+    concat!(
+        "Usage:\n",
+        "  volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]\n",
+        "\n",
+        "Required arguments:\n",
+        "  --host codex|claude-code|claude_code|generic\n",
+        "      Always required. Selects the host adapter and must be valid with --scope.\n",
+        "  --scope user|project|local|export\n",
+        "      Always required. Selects the host configuration or export target and must be valid with --host.\n",
+        "\n",
+        "Project selection:\n",
+        "  --project-id ID\n",
+        "      Conditionally required. Names the selected project.\n",
+        "  --repo-root PATH\n",
+        "      Conditionally required. Identifies the selected Product Repository for selection or registration.\n",
+        "  For an unregistered project, provide both --project-id and --repo-root.\n",
+        "  A registered project may be selected by --project-id alone.\n",
+        "  --repo-root alone works only when it uniquely identifies an existing project registration.\n",
+        "  If --repo-root matches no registration or more than one registration, provide --project-id.\n",
+        "\n",
+        "Conditional authorization:\n",
+        "  --allow-repository-write\n",
+        "      Required authorization for repository writes.\n",
+        "  A non-dry-run project-scoped install requires --allow-repository-write.\n",
+        "  A non-dry-run install that applies repository guidance requires --allow-repository-write.\n",
+        "  Dry-run does not require --allow-repository-write.\n",
+        "\n",
+        "Optional values:\n",
+        "  --integration-id ID          Existing integration or desired new integration id.\n",
+        "  --default-project-id ID      Integration default project; must be an allowed project.\n",
+        "  --server-name NAME           Host MCP server name.\n",
+        "  --surface-id ID              Integration surface id.\n",
+        "  --surface-instance-id ID     Integration surface instance id.\n",
+        "  --runtime-home PATH          Volicord Runtime Home for this administrative command.\n",
+        "  --mcp-command PATH           volicord-mcp command where explicit commands are allowed.\n",
+        "  --export-path PATH           Explicit generic export output path.\n",
+        "  --export-dir PATH            Generic export directory used with the generated file name.\n",
+        "  --guidance none|codex|claude-code|claude_code|both\n",
+        "      Optional Product Repository guidance to preview and apply.\n",
+        "  --output text|json           Output format.\n",
+        "  --dry-run                    Preview the zero-write install plan.\n",
+        "  --replace-managed            Authorize replacement only where managed ownership permits it.\n",
+        "\n",
+        "Omission defaults:\n",
+        "  Omitted --integration-id generates a stable id from host, scope, and selected project.\n",
+        "  Omitted --default-project-id uses the selected project for a new integration; for an existing integration, the current default is retained when present, otherwise the selected project is used.\n",
+        "  Omitted --server-name derives volicord-<integration>.\n",
+        "  Omitted surface identifiers reuse existing integration values when available, otherwise stable identifiers are generated.\n",
+        "  Omitted --runtime-home follows the Volicord Runtime Home resolution order; project-scope host configuration does not persist a developer-specific Runtime Home.\n",
+        "  Project scope uses the portable volicord-mcp command; user, local, and export scopes discover volicord-mcp from the current binary directory and then PATH when --mcp-command is omitted.\n",
+        "  Omitted generic export destination uses the current directory and volicord-<integration>.mcp.json.\n",
+        "  Omitted --guidance or --guidance none writes no guidance.\n",
+        "  Omitted --output uses text.\n"
+    )
+    .to_owned()
 }
 
 pub fn run_agent_command(
@@ -746,7 +804,7 @@ fn command_install(
     process: &mut impl AgentProcess,
 ) -> Result<String, AgentCommandError> {
     if is_help_request(args) {
-        return Ok(agent_usage());
+        return Ok(agent_install_usage());
     }
     let parsed = parse_agent_options(args, install_allowed_options())?;
     let host_kind = required_host_kind(&parsed)?;
