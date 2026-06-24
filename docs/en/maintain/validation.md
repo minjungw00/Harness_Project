@@ -96,7 +96,7 @@ owner path integrity.
 
 For brand-presentation or broad-claim changes, check the [Brand Guidelines](brand-guidelines.md)
 for Volicord spelling, official bilingual brand copy, component presentation,
-test-volicord term boundaries, visual principles, and claim restrictions. Confirm
+test harness term boundaries, visual principles, and claim restrictions. Confirm
 exact product behavior, API behavior, storage effects, schemas, security
 guarantees, and Core authority semantics still route to their Reference owners.
 

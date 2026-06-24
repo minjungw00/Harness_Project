@@ -107,7 +107,7 @@ Provisional project tokens:
 | Volicord indigo | `#3F4FD8` |
 | Secondary gray | `#68707D` |
 
-## Test Volicord Term Boundary
+## Test Harness Term Boundary
 
 `Volicord` is the product brand. The ordinary technical term `test harness`
 refers to testing infrastructure and must not be used as a product name or
