@@ -2,13 +2,13 @@
 
 This document owns the component and location boundaries among Volicord implementation, `Product Repository`, `Volicord Runtime Home`, and external MCP host configuration. It defines local access assumptions for those locations and routes storage and security details to their owners.
 
-Volicord implementation is the server implementation set maintained by this repository. It is not Volicord as a whole, not Core, not one running process, and not the local authority record for Volicord state.
+Volicord implementation is the implementation set maintained by this repository. It is not Volicord as a whole, not Core, not one running process, and not the local authority record for Volicord state.
 
 ## Owns / does not own
 
 | This document owns | This document does not own |
 |---|---|
-| The distinction between Volicord as the product/system and Volicord implementation as the repository-maintained server implementation set. | Public API behavior, public schema shapes, or method-specific effects. |
+| The distinction between Volicord as the product/system and Volicord implementation as the repository-maintained implementation set. | Public API behavior, public schema shapes, or method-specific effects. |
 | The distinction among Volicord source repository, Volicord installation, and running executable roles. | Release packaging policy or a mandatory installation-root layout. |
 | The definition of `Product Repository` and Product Repository API path normalization. | Storage record layout, locks, migrations, versioning, or artifact lifecycle details. |
 | The definition of `Volicord Runtime Home`. | API method behavior or public schema shapes. |
@@ -18,29 +18,30 @@ Volicord implementation is the server implementation set maintained by this repo
 
 ## Component and artifact model
 
-Volicord keeps product, server implementation, executable-role, and authority-record concepts distinct.
+Volicord keeps product, implementation, executable-role, MCP host term, and authority-record concepts distinct.
 
 | Term | Definition | Must not infer |
 |---|---|---|
 | Volicord | The broader local work-authority product/system for AI-assisted product work. | It is not Core, not a source repository, and not a single executable process. |
 | Core | The local authority record for Volicord state. | It is not the whole Volicord product/system and not an adapter or CLI executable. |
-| Volicord implementation | The server implementation set maintained by this repository. At source level, it includes implementation crates, the `volicord` administrative CLI, the `volicord-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration. | It is not every possible Volicord product surface, not Core by itself, not `Volicord Runtime Home`, not the `Product Repository`, and not one daemon or network service. |
+| Volicord implementation | The implementation set maintained by this repository. At source level, it includes implementation crates, the `volicord` administrative CLI, the `volicord-mcp` local MCP adapter, tests, documentation, validation tooling, and repository configuration. | It is not every possible Volicord product surface, not Core by itself, not `Volicord Runtime Home`, not the `Product Repository`, and not one daemon, MCP server entry, or network service. |
 | Volicord source repository | The checked-out source artifact for this repository. | It is not the same thing as a deployed installation, running process, Runtime Home, Product Repository, or MCP host configuration. |
 | Volicord installation | The deployed subset of Volicord executables and required runtime resources. | It does not imply that documentation, tests, source files, or repository metadata are present in every installation. |
 | `volicord` administrative process | The administrative CLI executable/process within Volicord implementation. | It is not a synonym for Volicord or for all of Volicord implementation. |
 | `volicord-mcp` MCP adapter process | The local stdio MCP adapter executable/process within Volicord implementation. | It is not separate from Volicord implementation and not the whole Volicord implementation by itself. |
+| MCP server | An ordinary MCP protocol or host-configuration term that may name a server entry or process exposed to an MCP host, including a local stdio adapter process such as `volicord-mcp` when the host uses that label. | It does not make Volicord as a product/system, Volicord implementation, `volicord`, or `volicord-mcp` a TCP or HTTP network server, and it is not a product label for Volicord. |
 
 When a behavior is performed by one executable role, name that role. Bare Volicord implementation should be reserved for the implementation set or for statements that apply to the set as a whole.
 
 ## Filesystem-location model
 
-Volicord keeps server files, product files, runtime data, and external host configuration distinct. There is no single mandatory filesystem root for the whole Volicord implementation set.
+Volicord keeps implementation files, product files, runtime data, and external host configuration distinct. There is no single mandatory filesystem root for the whole Volicord implementation set.
 
 | Location role | Definition | Must not infer |
 |---|---|---|
 | Volicord source repository or installation files | A source checkout, or deployed executable files and required runtime resources for Volicord implementation. | This is not automatically `Volicord Runtime Home`, not the `Product Repository`, not MCP host configuration, not proof of Volicord authority, and not inherently a network listener. |
 | `Product Repository` | The user's product-file boundary: project source, product documentation, tests, configuration, and other project files. | It is not Volicord runtime state, not `Volicord Runtime Home`, and not proof of Volicord authority. |
-| `Volicord Runtime Home` | The runtime storage location for Volicord-owned records, local runtime metadata, and artifact data as storage/runtime owners define them. | It is not the `Product Repository`, not server installation storage by default, not automatically a security boundary, and not isolation by default. |
+| `Volicord Runtime Home` | The runtime storage location for Volicord-owned records, local runtime metadata, and artifact data as storage/runtime owners define them. | It is not the `Product Repository`, not a Volicord installation location by default, not automatically a security boundary, and not isolation by default. |
 | External MCP host configuration | Configuration owned by the external MCP host that may name a `volicord-mcp` command, process environment, or host-specific binding. | It is not Volicord runtime state, not `Volicord Runtime Home`, not the `Product Repository`, and not Volicord source repository or installation files by definition. |
 
 <a id="runtime-location-product-repository"></a>
@@ -99,7 +100,7 @@ Does not imply:
 <a id="runtime-location-server-installation"></a>
 ### Volicord source repository, installation, and processes
 
-Volicord implementation names the server implementation set maintained by this repository. Use `Volicord source repository` for the checkout that contains code, documentation, tests, validation tooling, and repository configuration. Use `Volicord installation` for deployed executables and required runtime resources.
+Volicord implementation names the implementation set maintained by this repository. Use `Volicord source repository` for the checkout that contains code, documentation, tests, validation tooling, and repository configuration. Use `Volicord installation` for deployed executables and required runtime resources.
 
 May claim:
 - `volicord` is the administrative CLI/process within Volicord implementation.
@@ -120,7 +121,7 @@ Must not claim:
 
 ### Baseline local MCP process
 
-The current local Rust MCP adapter is the `volicord-mcp` stdio process, an executable role within Volicord implementation. An MCP host starts it as a child process, passes configuration through process environment, and exchanges line-delimited JSON-RPC through stdin/stdout. The baseline process opens no TCP, HTTP, Unix-domain socket, or other network listener.
+The current local Rust MCP adapter is the `volicord-mcp` stdio process, an executable role within Volicord implementation. An MCP host may label the configured entry an MCP server for protocol or host-configuration purposes. That label does not make Volicord a server product or make Volicord implementation a network server. An MCP host starts `volicord-mcp` as a child process, passes configuration through process environment, and exchanges line-delimited JSON-RPC through stdin/stdout. The baseline process opens no TCP, HTTP, Unix-domain socket, or other network listener.
 
 Exact executable behavior, environment variables, framing, startup validation or preflight behavior, response wrapping, shutdown, and reconnection rules belong to [MCP Transport](mcp-transport.md). This runtime-boundaries owner only keeps the process, location, and non-inference boundaries distinct.
 
@@ -149,7 +150,7 @@ May claim:
 
 Must not claim:
 - `Volicord Runtime Home` is the `Product Repository`.
-- `Volicord Runtime Home` is server installation storage by default.
+- `Volicord Runtime Home` is a Volicord installation location by default.
 - `Volicord Runtime Home` is automatically a security boundary.
 - `Volicord Runtime Home` provides isolation by default.
 

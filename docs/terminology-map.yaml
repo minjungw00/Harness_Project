@@ -238,6 +238,12 @@ avoid:
       use: "local work-authority product/system for Volicord; for implementation context use Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` as applicable."
     - phrase: "Volicord-as-server product label"
       use: "Volicord, Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` according to context."
+    - phrase: "server implementation set"
+      use: "implementation set maintained by this repository."
+    - phrase: "server files"
+      use: "implementation files, source-repository files, installation files, or installation location according to context."
+    - phrase: "server installation storage"
+      use: "Volicord installation location or executable installation according to context; do not use for `Volicord Runtime Home` by default."
     - phrase: "active scope"
       use: "current scope or currently applied scope, except when preserving an exact identifier or status value."
     - phrase: "active Change Unit"
@@ -311,6 +317,12 @@ avoid:
       use: "범위"
     - phrase: "migration = 이전 선택"
       use: "기술 마이그레이션 문맥에서는 마이그레이션"
+    - phrase: "서버 구현 집합"
+      use: "이 저장소가 유지하는 구현 집합"
+    - phrase: "서버 파일"
+      use: "맥락에 따라 구현 파일, 소스 저장소 파일, 설치 파일, 설치 위치"
+    - phrase: "서버 설치 저장소"
+      use: "`Volicord Runtime Home`의 기본 의미가 아니라, 맥락에 따라 Volicord 설치 위치 또는 실행 파일 설치"
 terms:
   volicord:
     category: "product_concept"
@@ -407,7 +419,7 @@ terms:
     related_references: []
     notes:
       - "`Volicord Runtime Home` is the local runtime storage location for Volicord operational data as storage/runtime owners define it."
-      - "Do not treat `Volicord Runtime Home` as `Product Repository`, server installation storage by default, a security boundary, or isolation by default."
+      - "Do not treat `Volicord Runtime Home` as `Product Repository`, a Volicord installation location by default, a security boundary, or isolation by default."
   volicord_implementation:
     category: "product_concept"
     en: "Volicord implementation"

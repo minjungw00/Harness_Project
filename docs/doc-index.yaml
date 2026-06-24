@@ -1080,7 +1080,7 @@ documents:
   - Product Repository boundary
   - Volicord Runtime Home boundary
   - Volicord source repository, installation, and executable process boundaries
-  - runtime, server, and repository separation
+  - runtime, executable-role, MCP host term, and repository separation
   - explicit integration files allowed in Product Repositories
 - doc_id: reference.admin-cli
   path_en: docs/en/reference/admin-cli.md
