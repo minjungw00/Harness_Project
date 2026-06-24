@@ -16,8 +16,9 @@ use volicord_cli::registration::{
 };
 use volicord_store::{
     agent_integrations::{
-        agent_integration_record, list_host_installations_for_integration,
-        list_integration_projects, update_host_installation_verification,
+        add_integration_project, agent_integration_record, list_host_installations_for_integration,
+        list_integration_projects, set_agent_integration_default_project,
+        update_host_installation_verification, IntegrationProjectRegistration,
         VERIFIED_STATUS_ACTION_REQUIRED, VERIFIED_STATUS_COMPLETE, VERIFIED_STATUS_FAILED,
     },
     bootstrap::{
@@ -471,6 +472,444 @@ fn volicord_binary_agent_help_covers_nested_commands() -> Result<(), Box<dyn Err
     assert_agent_help(["agent", "guidance", "apply", "--help"])?;
     assert_agent_help(["agent", "guidance", "status", "--help"])?;
     assert_agent_help(["agent", "guidance", "remove", "--help"])?;
+    Ok(())
+}
+
+#[test]
+fn volicord_binary_agent_install_requires_host_and_scope_as_usage_errors(
+) -> Result<(), Box<dyn Error>> {
+    let missing_host = run_without_home([
+        "agent",
+        "install",
+        "--scope",
+        "user",
+        "--project-id",
+        "project_missing_host",
+        "--dry-run",
+    ])?;
+    assert_eq!(missing_host.status.code(), Some(2));
+    assert!(stdout(&missing_host).is_empty());
+    assert!(stderr(&missing_host).contains("missing required option: --host"));
+
+    let missing_scope = run_without_home([
+        "agent",
+        "install",
+        "--host",
+        "codex",
+        "--project-id",
+        "project_missing_scope",
+        "--dry-run",
+    ])?;
+    assert_eq!(missing_scope.status.code(), Some(2));
+    assert!(stdout(&missing_scope).is_empty());
+    assert!(stderr(&missing_scope).contains("missing required option: --scope"));
+    Ok(())
+}
+
+#[test]
+fn volicord_binary_agent_install_project_selection_requiredness_regressions(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-selection")?;
+    let mcp_command = runtime_home.path().join("volicord-mcp-selection");
+    fs::write(&mcp_command, "not executed")?;
+    let export_dir = runtime_home.path().join("exports");
+    let mcp_command_text = path_text(&mcp_command);
+    let export_dir_text = path_text(&export_dir);
+
+    let missing_repo_root = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "generic",
+            "--scope",
+            "export",
+            "--project-id",
+            "project_new_without_repo",
+            "--mcp-command",
+            mcp_command_text.as_str(),
+            "--export-dir",
+            export_dir_text.as_str(),
+            "--dry-run",
+        ],
+    )?;
+    assert_eq!(missing_repo_root.status.code(), Some(2));
+    assert!(stdout(&missing_repo_root).is_empty());
+    assert!(stderr(&missing_repo_root)
+        .contains("--repo-root is required when --project-id is not already registered"));
+
+    let unregistered_repo = runtime_home.create_product_repo("repo-unregistered")?;
+    let unregistered_repo_text = path_text(&unregistered_repo);
+    let missing_project_id = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "generic",
+            "--scope",
+            "export",
+            "--repo-root",
+            unregistered_repo_text.as_str(),
+            "--mcp-command",
+            mcp_command_text.as_str(),
+            "--export-dir",
+            export_dir_text.as_str(),
+            "--dry-run",
+        ],
+    )?;
+    assert_eq!(missing_project_id.status.code(), Some(2));
+    assert!(stdout(&missing_project_id).is_empty());
+    assert!(stderr(&missing_project_id)
+        .contains("--project-id is required when --repo-root has no existing unique registration"));
+
+    initialize_runtime_home(runtime_home.path(), "runtime_home_agent_selection", "{}")?;
+    let registered_repo = runtime_home.create_product_repo("repo-registered")?;
+    register_project(
+        runtime_home.path(),
+        ProjectRegistration {
+            project_id: "project_selection_registered".to_owned(),
+            repo_root: registered_repo.clone(),
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+
+    let by_project_id = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "generic",
+            "--scope",
+            "export",
+            "--integration-id",
+            "agent_selection_by_project",
+            "--project-id",
+            "project_selection_registered",
+            "--mcp-command",
+            mcp_command_text.as_str(),
+            "--export-dir",
+            export_dir_text.as_str(),
+            "--dry-run",
+            "--output",
+            "json",
+        ],
+    )?;
+    assert_success(&by_project_id);
+    let by_project_id_json: Value = serde_json::from_str(&stdout(&by_project_id))?;
+    assert_eq!(
+        by_project_id_json["project"]["allowed_project_ids"],
+        json!(["project_selection_registered"])
+    );
+
+    let registered_repo_text = path_text(&registered_repo);
+    let by_repo_root = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "generic",
+            "--scope",
+            "export",
+            "--integration-id",
+            "agent_selection_by_repo",
+            "--repo-root",
+            registered_repo_text.as_str(),
+            "--mcp-command",
+            mcp_command_text.as_str(),
+            "--export-dir",
+            export_dir_text.as_str(),
+            "--dry-run",
+            "--output",
+            "json",
+        ],
+    )?;
+    assert_success(&by_repo_root);
+    let by_repo_root_json: Value = serde_json::from_str(&stdout(&by_repo_root))?;
+    assert_eq!(
+        by_repo_root_json["project"]["allowed_project_ids"],
+        json!(["project_selection_registered"])
+    );
+
+    register_project(
+        runtime_home.path(),
+        ProjectRegistration {
+            project_id: "project_selection_ambiguous".to_owned(),
+            repo_root: registered_repo.clone(),
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    let ambiguous_repo_root = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "generic",
+            "--scope",
+            "export",
+            "--repo-root",
+            registered_repo_text.as_str(),
+            "--mcp-command",
+            mcp_command_text.as_str(),
+            "--export-dir",
+            export_dir_text.as_str(),
+            "--dry-run",
+        ],
+    )?;
+    assert_eq!(ambiguous_repo_root.status.code(), Some(1));
+    assert!(stdout(&ambiguous_repo_root).is_empty());
+    assert!(stderr(&ambiguous_repo_root)
+        .contains("multiple projects are registered for repo_root; pass --project-id"));
+    Ok(())
+}
+
+#[test]
+fn volicord_binary_agent_project_dry_run_omits_integration_and_mcp_command_without_write_auth(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-project-dry-defaults")?;
+    let repo_root = runtime_home.create_product_repo("repo-project-dry")?;
+    let repo_root_text = path_text(&repo_root);
+
+    let first = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "project",
+            "--project-id",
+            "project_dry_omissions",
+            "--repo-root",
+            repo_root_text.as_str(),
+            "--dry-run",
+            "--output",
+            "json",
+        ],
+    )?;
+    assert_success(&first);
+    let first_json: Value = serde_json::from_str(&stdout(&first))?;
+    assert_eq!(first_json["status"], "dry_run");
+    assert_eq!(first_json["host"]["host_scope"], "project");
+    assert_eq!(
+        first_json["project"]["allowed_project_ids"],
+        json!(["project_dry_omissions"])
+    );
+
+    let second = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "project",
+            "--project-id",
+            "project_dry_omissions",
+            "--repo-root",
+            repo_root_text.as_str(),
+            "--dry-run",
+            "--output",
+            "json",
+        ],
+    )?;
+    assert_success(&second);
+    let second_json: Value = serde_json::from_str(&stdout(&second))?;
+    let first_integration_id = first_json["integration"]["integration_id"]
+        .as_str()
+        .expect("reported integration id");
+    let second_integration_id = second_json["integration"]["integration_id"]
+        .as_str()
+        .expect("reported integration id");
+    assert!(!first_integration_id.is_empty());
+    assert_eq!(first_integration_id, second_integration_id);
+    assert!(!registry_db_path(runtime_home.path()).exists());
+    assert!(!repo_root.join(".codex").exists());
+    Ok(())
+}
+
+#[test]
+fn volicord_binary_agent_install_rejects_repository_writes_without_authorization(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-write-auth")?;
+    let repo_root = runtime_home.create_product_repo("repo-write-auth")?;
+    let repo_root_text = path_text(&repo_root);
+
+    let project_scope = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "project",
+            "--project-id",
+            "project_write_auth",
+            "--repo-root",
+            repo_root_text.as_str(),
+        ],
+    )?;
+    assert_eq!(project_scope.status.code(), Some(2));
+    assert!(stdout(&project_scope).is_empty());
+    assert!(stderr(&project_scope).contains(
+        "--allow-repository-write is required for project-scoped host configuration writes"
+    ));
+
+    let guidance_write = run_with_home(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--project-id",
+            "project_guidance_write_auth",
+            "--repo-root",
+            repo_root_text.as_str(),
+            "--guidance",
+            "codex",
+        ],
+    )?;
+    assert_eq!(guidance_write.status.code(), Some(2));
+    assert!(stdout(&guidance_write).is_empty());
+    assert!(stderr(&guidance_write)
+        .contains("--allow-repository-write is required for repository guidance writes"));
+    assert!(!registry_db_path(runtime_home.path()).exists());
+    assert!(!repo_root.join("AGENTS.md").exists());
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn volicord_binary_agent_install_default_project_omission_uses_selected_then_retains_existing(
+) -> Result<(), Box<dyn Error>> {
+    let runtime_home = TempRuntimeHome::new("cli-bin-agent-install-defaults")?;
+    let selected_project_id = "project_default_selected";
+    let retained_project_id = "project_default_retained";
+    let integration_id = "agent_default_omission";
+    let repo_selected = runtime_home.create_product_repo("repo-selected")?;
+    let repo_retained = runtime_home.create_product_repo("repo-retained")?;
+    let codex_home = runtime_home.path().join("codex-home");
+    let mcp_command = write_agent_mcp(runtime_home.path(), AgentMcpFixture::Complete)?;
+    let mcp_command_text = path_text(&mcp_command);
+    write_fake_codex(runtime_home.path(), CodexFixture::Ready)?;
+    let codex_env = codex_env(&codex_home, &[runtime_home.path()]);
+
+    let install = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            integration_id,
+            "--server-name",
+            "volicord-default-omission",
+            "--project-id",
+            selected_project_id,
+            "--repo-root",
+            path_text(&repo_selected).as_str(),
+            "--mcp-command",
+            mcp_command_text.as_str(),
+            "--output",
+            "json",
+        ],
+        &codex_env,
+    )?;
+    assert_success(&install);
+    let install_json: Value = serde_json::from_str(&stdout(&install))?;
+    assert_eq!(
+        install_json["integration"]["integration_id"],
+        integration_id
+    );
+    let integration = agent_integration_record(runtime_home.path(), integration_id)?
+        .expect("new integration should be stored");
+    assert_eq!(
+        integration.default_project_id.as_deref(),
+        Some(selected_project_id)
+    );
+
+    register_project(
+        runtime_home.path(),
+        ProjectRegistration {
+            project_id: retained_project_id.to_owned(),
+            repo_root: repo_retained,
+            project_home: None,
+            status: ACTIVE_PROJECT_STATUS.to_owned(),
+            metadata_json: "{}".to_owned(),
+        },
+    )?;
+    add_integration_project(
+        runtime_home.path(),
+        IntegrationProjectRegistration {
+            integration_id: integration_id.to_owned(),
+            project_id: retained_project_id.to_owned(),
+        },
+    )?;
+    set_agent_integration_default_project(
+        runtime_home.path(),
+        integration_id,
+        retained_project_id,
+    )?;
+
+    let reinstall = run_with_home_and_env(
+        runtime_home.path(),
+        [
+            "agent",
+            "install",
+            "--host",
+            "codex",
+            "--scope",
+            "user",
+            "--integration-id",
+            integration_id,
+            "--server-name",
+            "volicord-default-omission",
+            "--project-id",
+            selected_project_id,
+            "--mcp-command",
+            mcp_command_text.as_str(),
+            "--output",
+            "json",
+        ],
+        &codex_env,
+    )?;
+    assert_success(&reinstall);
+    let reinstall_json: Value = serde_json::from_str(&stdout(&reinstall))?;
+    assert_eq!(
+        reinstall_json["project"]["allowed_project_ids"],
+        json!([selected_project_id])
+    );
+    let integration_after = agent_integration_record(runtime_home.path(), integration_id)?
+        .expect("integration should remain stored");
+    assert_eq!(
+        integration_after.default_project_id.as_deref(),
+        Some(retained_project_id)
+    );
+    let allowed_projects = list_integration_projects(runtime_home.path(), integration_id)?;
+    assert_eq!(allowed_projects.len(), 2);
+    assert!(allowed_projects
+        .iter()
+        .any(|project| project.project_id == selected_project_id));
+    assert!(allowed_projects
+        .iter()
+        .any(|project| project.project_id == retained_project_id));
     Ok(())
 }
 
