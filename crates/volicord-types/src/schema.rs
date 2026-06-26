@@ -391,6 +391,8 @@ pub struct WriteAuthoritySummary {
     pub write_authorization_ref: Option<StateRecordRef>,
     pub basis_state_version: Option<u64>,
     pub intended_paths: Vec<String>,
+    pub consumed_by_run_ref: Option<StateRecordRef>,
+    pub observation_refs: Vec<StateRecordRef>,
     pub guarantee_display: Option<GuaranteeDisplay>,
 }
 

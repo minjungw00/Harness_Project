@@ -1739,9 +1739,11 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<volicord_types::St
 }
 
 fn write_authority_summary_for_record(
+    store: Option<&CoreProjectStore>,
     record: &WriteAuthorizationRecord,
     state_version: u64,
     now: Option<DateTime<Utc>>,
+    observation_refs: Option<Vec<StateRecordRef>>,
     guarantee_display: Option<GuaranteeDisplay>,
 ) -> CoreResult<WriteAuthoritySummary> {
     let attempt_scope = decode_required_json::<PersistedAuthorizedAttemptScope>(
@@ -1750,11 +1752,35 @@ fn write_authority_summary_for_record(
         "attempt_scope_json",
         Some(&record.attempt_scope_json),
     )?;
+    let consumed_by_run_ref = record.consumed_by_run_id.as_ref().map(|run_id| {
+        state_ref(
+            StateRecordKind::Run,
+            run_id,
+            &ProjectId::new(record.project_id.clone()),
+            Some(&TaskId::new(record.task_id.clone())),
+            Some(state_version),
+        )
+    });
+    let observation_refs = match (observation_refs, record.consumed_by_run_id.as_ref(), store) {
+        (Some(refs), _, _) => refs,
+        (None, Some(run_id), Some(store)) => stored_refs_to_state_refs(
+            store
+                .evidence_observation_refs_for_run(
+                    &TaskId::new(record.task_id.clone()),
+                    run_id,
+                    state_version,
+                )
+                .map_err(CorePipelineError::from)?,
+        ),
+        _ => Vec::new(),
+    };
     Ok(WriteAuthoritySummary {
         status: effective_write_authorization_status(record, state_version, now)?,
         write_authorization_ref: Some(write_authorization_ref(record, state_version)),
         basis_state_version: Some(record.basis_state_version),
         intended_paths: attempt_scope.intended_paths,
+        consumed_by_run_ref,
+        observation_refs,
         guarantee_display,
     })
 }
@@ -1875,9 +1901,11 @@ fn projected_write_authority_summary(
             .as_ref()
             .map(|record| {
                 write_authority_summary_for_record(
+                    Some(store),
                     record,
                     state_version,
                     Some(now),
+                    None,
                     guarantee_display,
                 )
             })
@@ -2169,6 +2197,7 @@ fn state_ref_from_stored(record: StoredRecordRef) -> StateRecordRef {
         "write_authorization" => StateRecordKind::WriteAuthorization,
         "change_unit" => StateRecordKind::ChangeUnit,
         "task" => StateRecordKind::Task,
+        "evidence_observation" => StateRecordKind::EvidenceObservation,
         _ => StateRecordKind::ProjectState,
     };
     StateRecordRef {

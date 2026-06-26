@@ -4614,15 +4614,49 @@ fn record_run_product_write_consumes_valid_authorization_once() -> Result<(), Bo
     request.observed_changes.changed_paths = vec!["src/export.rs".to_owned()];
     request.write_authorization_id =
         Some(WriteAuthorizationId::new(&write_authorization_id)).into();
+    request.evidence_updates = vec![supported_evidence_update(
+        "Product write was reported with external tool output.",
+    )];
     let response = harness
         .service
         .record_run(request, invocation(AccessClass::RunRecording))?;
     let after = harness.counts()?;
+    let run_id = run_id_from_record_run(&response.response_value);
+    let observation_id = response.response_value["evidence_observations"][0]["observation_id"]
+        .as_str()
+        .expect("observation id should be present")
+        .to_owned();
+    let write_summary = &response.response_value["state"]["write_authority_summary"];
 
     assert_eq!(response.response_value["base"]["state_version"], 4);
     assert_eq!(
         write_authorization_status(&harness, &write_authorization_id)?,
         "consumed"
+    );
+    assert_eq!(write_summary["status"], "consumed");
+    assert_eq!(write_summary["consumed_by_run_ref"]["record_id"], run_id);
+    assert_eq!(
+        write_summary["observation_refs"][0]["record_kind"],
+        "evidence_observation"
+    );
+    assert_eq!(
+        write_summary["observation_refs"][0]["record_id"],
+        observation_id
+    );
+    assert_eq!(
+        write_summary["guarantee_display"]["capability_refs"][0]["record_kind"],
+        "local_surface_registration"
+    );
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope("req_run_write_status", None, false, None, Some(&task_id)),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert_eq!(
+        status.response_value["write_authority_summary"],
+        response.response_value["state"]["write_authority_summary"]
     );
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.runs, before.runs + 1);
@@ -5060,7 +5094,201 @@ fn record_run_path_mismatch_rejects_without_consuming_authorization() -> Result<
         "WRITE_AUTHORIZATION_INVALID"
     );
     assert_eq!(
+        response.response_value["errors"][0]["details"]["authorization_reason"],
+        "path_mismatch"
+    );
+    assert_eq!(
         write_authorization_status(&harness, &write_authorization_id)?,
+        "active"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_authorization_baseline_mismatch_without_consumption(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_baseline_auth")?;
+    let write_authorization_id =
+        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_baseline_auth")?;
+    mutate_write_authorization_scope_json(&harness, &write_authorization_id, |scope| {
+        scope["baseline_ref"] = json!("baseline_other");
+    })?;
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_baseline_auth",
+            "idem_run_baseline_auth",
+            3,
+            &task_id,
+            &change_unit_id,
+            &write_authorization_id,
+            "run_baseline_auth",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_write_authorization_invalid_reason(&response, "baseline_mismatch");
+    assert_eq!(
+        write_authorization_status(&harness, &write_authorization_id)?,
+        "active"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_authorization_task_mismatch_without_consumption() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_task_auth")?;
+    let write_authorization_id =
+        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_task_auth")?;
+    mutate_write_authorization_scope_json(&harness, &write_authorization_id, |scope| {
+        scope["task_id"] = json!("task_other");
+    })?;
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_task_auth",
+            "idem_run_task_auth",
+            3,
+            &task_id,
+            &change_unit_id,
+            &write_authorization_id,
+            "run_task_auth",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_write_authorization_invalid_reason(&response, "task_mismatch");
+    assert_eq!(
+        write_authorization_status(&harness, &write_authorization_id)?,
+        "active"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_authorization_change_unit_mismatch_without_consumption(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_change_unit_auth")?;
+    let write_authorization_id = prepare_write_authorization(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "run_change_unit_auth",
+    )?;
+    mutate_write_authorization_scope_json(&harness, &write_authorization_id, |scope| {
+        scope["change_unit_id"] = json!("cu_other");
+    })?;
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_change_unit_auth",
+            "idem_run_change_unit_auth",
+            3,
+            &task_id,
+            &change_unit_id,
+            &write_authorization_id,
+            "run_change_unit_auth",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_write_authorization_invalid_reason(&response, "change_unit_mismatch");
+    assert_eq!(
+        write_authorization_status(&harness, &write_authorization_id)?,
+        "active"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_authorization_product_write_flag_mismatch_without_consumption(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_flag_auth")?;
+    let write_authorization_id =
+        prepare_write_authorization(&harness, &task_id, &change_unit_id, 2, "run_flag_auth")?;
+    mutate_write_authorization_scope_json(&harness, &write_authorization_id, |scope| {
+        scope["product_file_write_intended"] = json!(false);
+    })?;
+    let before = harness.counts()?;
+
+    let response = harness.service.record_run(
+        product_write_record_run_request(
+            "req_run_flag_auth",
+            "idem_run_flag_auth",
+            3,
+            &task_id,
+            &change_unit_id,
+            &write_authorization_id,
+            "run_flag_auth",
+        ),
+        invocation(AccessClass::RunRecording),
+    )?;
+
+    assert_write_authorization_invalid_reason(&response, "product_write_flag_mismatch");
+    assert_eq!(
+        write_authorization_status(&harness, &write_authorization_id)?,
+        "active"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn record_run_rejects_authorization_sensitive_category_mismatch_without_consumption(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_sensitive_auth")?;
+    insert_active_write_authorization_with_scope(
+        &harness,
+        WriteAuthorizationScopeFixture {
+            task_id: &task_id,
+            change_unit_id: &change_unit_id,
+            write_authorization_id: "wa_sensitive_mismatch",
+            basis_state_version: 2,
+            created_at: "2999-01-01T00:00:00.000Z",
+            expires_at: "2999-01-01T00:15:00.000Z",
+            intended_operation: "local_sensitive_step",
+            intended_paths: &["src/export.rs"],
+            sensitive_categories: &["network"],
+        },
+    )?;
+    enable_record_run_capabilities(&harness)?;
+    let before = harness.counts()?;
+    let mut request = product_write_record_run_request(
+        "req_run_sensitive_auth",
+        "idem_run_sensitive_auth",
+        2,
+        &task_id,
+        &change_unit_id,
+        "wa_sensitive_mismatch",
+        "run_sensitive_auth",
+    );
+    request.observed_changes.sensitive_categories = vec!["credential".to_owned()];
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_write_authorization_invalid_reason(&response, "sensitive_category_mismatch");
+    assert_eq!(
+        write_authorization_status(&harness, "wa_sensitive_mismatch")?,
         "active"
     );
     assert_eq!(harness.counts()?, before);
@@ -5231,6 +5459,87 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
         &artifact_id,
         "evidence_observation"
     )?);
+    Ok(())
+}
+
+#[test]
+fn record_run_observations_preserve_provenance_classification() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "run_observation_classes")?;
+    let classes = [
+        (
+            "Agent cooperative report.",
+            EvidenceSourceKind::AgentReport,
+            EvidenceAssuranceLevel::CooperativeReport,
+            "agent_report",
+            "cooperative_report",
+        ),
+        (
+            "Registered surface observation.",
+            EvidenceSourceKind::SurfaceObservation,
+            EvidenceAssuranceLevel::RegisteredSurfaceObserved,
+            "surface_observation",
+            "registered_surface_observed",
+        ),
+        (
+            "External tool result.",
+            EvidenceSourceKind::ExternalTool,
+            EvidenceAssuranceLevel::ExternalToolResult,
+            "external_tool",
+            "external_tool_result",
+        ),
+        (
+            "User observation.",
+            EvidenceSourceKind::UserObservation,
+            EvidenceAssuranceLevel::UserObserved,
+            "user_observation",
+            "user_observed",
+        ),
+        (
+            "Unverified claim.",
+            EvidenceSourceKind::UnverifiedClaim,
+            EvidenceAssuranceLevel::Unverified,
+            "unverified_claim",
+            "unverified",
+        ),
+    ];
+    let mut request = record_run_request(
+        "req_run_observation_classes",
+        "idem_run_observation_classes",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    request.evidence_updates = classes
+        .iter()
+        .map(|(claim, source_kind, assurance_level, _, _)| {
+            supported_evidence_update_with_provenance(claim, *source_kind, *assurance_level)
+        })
+        .collect();
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+    let observations = response.response_value["evidence_observations"]
+        .as_array()
+        .expect("evidence observations should be present");
+
+    assert_eq!(observations.len(), classes.len());
+    for (observation, (_, _, _, source_value, assurance_value)) in observations.iter().zip(classes)
+    {
+        assert_eq!(observation["source_kind"], source_value);
+        assert_eq!(observation["assurance_level"], assurance_value);
+        assert!(observation.get("guarantee_display").is_none());
+    }
+    assert_ne!(observations[0]["source_kind"], "surface_observation");
+    assert_ne!(observations[0]["source_kind"], "external_tool");
+    assert_ne!(
+        observations[0]["assurance_level"],
+        "registered_surface_observed"
+    );
     Ok(())
 }
 
@@ -11226,6 +11535,18 @@ fn assert_public_response_has_no_internal_leak(
     }
 }
 
+fn assert_write_authorization_invalid_reason(response: &PipelineResponse, reason: &str) {
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "WRITE_AUTHORIZATION_INVALID"
+    );
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["authorization_reason"],
+        reason
+    );
+}
+
 fn corrupt_owner_json() -> &'static str {
     "{not-json /tmp/volicord-redaction-secret"
 }
@@ -12799,6 +13120,32 @@ fn insert_active_write_authorization_with_scope(
             input.expires_at,
             input.created_at
         ],
+    )?;
+    Ok(())
+}
+
+fn mutate_write_authorization_scope_json(
+    harness: &MethodHarness,
+    write_authorization_id: &str,
+    mutate: impl FnOnce(&mut Value),
+) -> Result<(), Box<dyn Error>> {
+    let conn = harness.conn()?;
+    let text: String = conn.query_row(
+        "SELECT attempt_scope_json
+           FROM write_authorizations
+          WHERE project_id = ?1
+            AND write_authorization_id = ?2",
+        rusqlite::params![PROJECT_ID, write_authorization_id],
+        |row| row.get(0),
+    )?;
+    let mut value: Value = serde_json::from_str(&text)?;
+    mutate(&mut value);
+    conn.execute(
+        "UPDATE write_authorizations
+            SET attempt_scope_json = ?3
+          WHERE project_id = ?1
+            AND write_authorization_id = ?2",
+        rusqlite::params![PROJECT_ID, write_authorization_id, value.to_string()],
     )?;
     Ok(())
 }

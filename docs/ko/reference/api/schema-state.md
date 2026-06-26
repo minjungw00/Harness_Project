@@ -163,6 +163,8 @@ WriteAuthoritySummary:
   write_authorization_ref: StateRecordRef | null
   basis_state_version: integer | null
   intended_paths: string[]
+  consumed_by_run_ref: StateRecordRef | null
+  observation_refs: StateRecordRef[]
   guarantee_display: GuaranteeDisplay | null
 
 WriteAuthorizationSummary:
@@ -192,6 +194,8 @@ WriteDecisionReason:
 - `NextActionSummary`는 기준 다음 행동 표시 형태입니다. 유효한 필드는 `action_kind`, `owner_method`, `label`, `blocking_question`, `required_refs`입니다.
 - 오래된 `action` 또는 `reason` 필드를 쓰는 `next_actions` 항목은 유효한 `NextActionSummary`가 아닙니다.
 - `WriteAuthoritySummary.status`와 `WriteAuthorizationSummary.status`는 제어 값 문자열입니다.
+- `WriteAuthoritySummary.consumed_by_run_ref`는 요약된 `Write Authorization`이 기록된 Run에 의해 소비되었을 때만 `null`이 아닙니다.
+- `WriteAuthoritySummary.observation_refs`는 사용할 수 있을 때 그 소비 Run이 만든 증거 관찰 참조를 나열합니다. 권한이 소비되지 않았거나 소비 Run이 관찰을 만들지 않았다면 비어 있습니다.
 - `AuthorizedAttemptScope`는 `Write Authorization`이 포착하는 한 번의 시도 경계입니다.
 - `AuthorizedAttemptScope`는 일반 쓰기 승인, 민감 동작 승인, 최종 수락, 잔여 위험 수락, 포괄적 사용자 승인이 아닙니다.
 - `WriteDecisionReason`은 `PrepareWriteResult.write_decision_reasons`에서 사용합니다.
@@ -443,7 +447,8 @@ GuaranteeDisplay:
 - `GuaranteeDisplay`는 프로젝트 강제 프로필, 확인된 묶인 접점 등록, 활성화된 강제 메커니즘, 지원되는 기준 범위에서 파생됩니다.
 - 역량 선언만으로 보장이 생기지 않으며, 협력형 전용 배포는 `detective`를 주장하면 안 됩니다.
 - `detective`는 이름 붙은 접점과 관찰 범위에 대한 지원되는 강제 또는 관찰 사실을 요구하며, `capability_profile` 안의 텍스트만으로는 부족합니다.
-- 해당 참조를 사용할 수 있으면 `capability_refs`는 실제 프로필이나 접점 사실을 식별해야 합니다.
+- 접점에 대한 보장 표시는 그 표시를 정당화하는 접점 사실을 가리켜야 합니다. 관찰에 대한 보장 표시는 그 표시를 정당화하는 구체적인 `EvidenceObservation` 사실을 가리켜야 합니다. 별도 지원 관찰이 그 표시를 정당화하지 않는 한 협력적 `agent_report` Run이나 관찰을 `detective` 또는 외부 관찰로 표시하지 않습니다.
+- 해당 참조를 사용할 수 있으면 `capability_refs`는 실제 프로필, 접점 또는 관찰 사실을 식별해야 합니다.
 
 담당 문서 링크:
 - 닫기 준비 상태 의미와 대체 금지 규칙: [Core 모델의 닫기 준비 상태](../core-model.md#close_task)

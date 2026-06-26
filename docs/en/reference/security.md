@@ -18,6 +18,8 @@ This document owns Volicord security guarantee wording, local-access assumptions
 <a id="honest-guarantee-display"></a>
 Volicord may describe a guarantee only when [Scope](scope.md) and this security owner both support the guarantee level. Guarantee display is derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope. If the claim depends on a surface capability, the relevant surface capability check must also pass for the named surface and observed scope.
 
+Guarantee display must stay scoped to the surface or evidence observation that justifies it. A cooperative Run report or cooperative `agent_report` observation is not a `detective` or externally observed fact unless a separate supported surface observation or external result is recorded and cited.
+
 The supported guarantee display labels are `cooperative` and `detective`; the value names are owned by [API Value Sets](api/schema-value-sets.md).
 
 ### `cooperative`
@@ -55,6 +57,7 @@ May claim:
 Must not claim:
 - A copied `surface_id`, `access_class`, connector description, `Projection`, generated display, chat message, or agent memory proves capability.
 - Capability declarations alone raise a guarantee above `cooperative`.
+- A cooperative Run report, cooperative `agent_report`, or unverified claim raises a display above `cooperative` without a supporting observed fact.
 - `detective` wording becomes prevention, sandboxing, OS permission enforcement, full monitoring, or tamper-proof storage.
 
 ### Preventive guarantees

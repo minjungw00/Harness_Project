@@ -95,6 +95,7 @@ Rules:
 
 Does not imply:
 - These path rules do not provide OS sandboxing, command blocking, network blocking, secret blocking, or baseline detective enforcement.
+- `Write Authorization` compatibility applies only to a compatible product-file write attempt recorded through the Core-owned method path; it is not global filesystem interception, shell permission, command approval, or proof that a write occurred.
 - Method-specific authorization decisions stay with API method owners.
 
 <a id="runtime-location-source-installation-processes"></a>

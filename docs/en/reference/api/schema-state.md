@@ -163,6 +163,8 @@ WriteAuthoritySummary:
   write_authorization_ref: StateRecordRef | null
   basis_state_version: integer | null
   intended_paths: string[]
+  consumed_by_run_ref: StateRecordRef | null
+  observation_refs: StateRecordRef[]
   guarantee_display: GuaranteeDisplay | null
 
 WriteAuthorizationSummary:
@@ -192,6 +194,8 @@ Meaning:
 - `NextActionSummary` is the canonical next-action display shape. Its valid fields are `action_kind`, `owner_method`, `label`, `blocking_question`, and `required_refs`.
 - A `next_actions` entry that uses stale `action` or `reason` fields is not a valid `NextActionSummary`.
 - `WriteAuthoritySummary.status` and `WriteAuthorizationSummary.status` are controlled value strings.
+- `WriteAuthoritySummary.consumed_by_run_ref` is non-null only when the summarized `Write Authorization` has been consumed by a recorded Run.
+- `WriteAuthoritySummary.observation_refs` lists evidence observation refs created by that consuming Run when those refs are available; it is empty when the authorization is not consumed or the consuming Run created no observations.
 - `AuthorizedAttemptScope` is the one-attempt boundary captured by a `Write Authorization`.
 - `AuthorizedAttemptScope` is not ordinary write approval, sensitive-action approval, final acceptance, residual-risk acceptance, or broad user approval.
 - `WriteDecisionReason` is used by `PrepareWriteResult.write_decision_reasons`.
@@ -442,7 +446,8 @@ Guarantee display rules:
 - `GuaranteeDisplay` is derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope.
 - Capability declarations alone do not create guarantees, and cooperative-only deployments must not claim `detective`.
 - `detective` requires supported enforcement or observation facts for the named surface and observed scope, not only text in a capability profile.
-- `capability_refs` should identify the actual profile or surface facts when such refs are available.
+- A guarantee display for a surface must cite the surface facts that justify it. A guarantee display for an observation must cite the specific `EvidenceObservation` facts that justify it; a cooperative `agent_report` Run or observation is not displayed as `detective` or externally observed unless a separate supporting observation justifies that display.
+- `capability_refs` should identify the actual profile, surface, or observation facts when such refs are available.
 
 Owner links:
 - Close-readiness meaning and non-substitution rules: [Core Model close readiness](../core-model.md#close_task)

@@ -426,10 +426,18 @@ fn plan_record_run(
     let write_authority_summary = if let Some((record, _scope)) = &authorization_scope {
         let mut consumed_record = record.clone();
         consumed_record.status = storage_value(WriteAuthorizationStatus::Consumed)?;
+        consumed_record.consumed_by_run_id = Some(run_id.as_str().to_owned());
+        consumed_record.consumed_at = Some(plan_now.to_string());
+        let observation_refs = observation_plans
+            .iter()
+            .map(|plan| plan.observation_ref.clone())
+            .collect::<Vec<_>>();
         Some(write_authority_summary_for_record(
+            None,
             &consumed_record,
             planned_state_version,
             Some(*plan_now.as_datetime()),
+            Some(observation_refs),
             Some(guarantee_display.clone()),
         )?)
     } else {
@@ -2494,26 +2502,75 @@ fn validate_write_authorization_for_run(
                 ))
             },
         )?;
-    if record.task_id != request.task_id.as_str()
-        || record.change_unit_id.as_deref() != Some(request.change_unit_id.as_str())
-        || scope.task_id != request.task_id
+    if record.task_id != request.task_id.as_str() || scope.task_id != request.task_id {
+        return write_authorization_mismatch(
+            request,
+            project_state,
+            "task_mismatch",
+            "Write Authorization task is not compatible with the recorded run",
+        );
+    }
+    if record.change_unit_id.as_deref() != Some(request.change_unit_id.as_str())
         || scope.change_unit_id != request.change_unit_id
-        || !scope.product_file_write_intended
-        || scope.baseline_ref.as_ref() != Some(&request.baseline_ref)
-        || string_set(&normalized_string_set(&scope.sensitive_categories))
-            != string_set(&observed_changes.sensitive_categories)
-        || !paths_are_authorized(&observed_changes.changed_paths, &scope_paths)
     {
-        return Err(PlanError::Response(Box::new(
-            write_authorization_invalid_response(
-                &request.envelope,
-                Some(project_state.state_version),
-                "incompatible",
-                "Write Authorization is not compatible with the recorded run",
-            ),
-        )));
+        return write_authorization_mismatch(
+            request,
+            project_state,
+            "change_unit_mismatch",
+            "Write Authorization Change Unit is not compatible with the recorded run",
+        );
+    }
+    if !scope.product_file_write_intended {
+        return write_authorization_mismatch(
+            request,
+            project_state,
+            "product_write_flag_mismatch",
+            "Write Authorization did not authorize a product-file write attempt",
+        );
+    }
+    if scope.baseline_ref.as_ref() != Some(&request.baseline_ref) {
+        return write_authorization_mismatch(
+            request,
+            project_state,
+            "baseline_mismatch",
+            "Write Authorization baseline is not compatible with the recorded run",
+        );
+    }
+    if string_set(&normalized_string_set(&scope.sensitive_categories))
+        != string_set(&observed_changes.sensitive_categories)
+    {
+        return write_authorization_mismatch(
+            request,
+            project_state,
+            "sensitive_category_mismatch",
+            "Write Authorization sensitive categories are not compatible with the recorded run",
+        );
+    }
+    if !paths_are_authorized(&observed_changes.changed_paths, &scope_paths) {
+        return write_authorization_mismatch(
+            request,
+            project_state,
+            "path_mismatch",
+            "Write Authorization paths are not compatible with the recorded run",
+        );
     }
     Ok(scope)
+}
+
+fn write_authorization_mismatch(
+    request: &RecordRunRequest,
+    project_state: &ProjectStateHeader,
+    reason: &'static str,
+    message: &'static str,
+) -> Result<AuthorizedAttemptScope, PlanError> {
+    Err(PlanError::Response(Box::new(
+        write_authorization_invalid_response(
+            &request.envelope,
+            Some(project_state.state_version),
+            reason,
+            message,
+        ),
+    )))
 }
 
 fn build_record_run_evidence_summary(

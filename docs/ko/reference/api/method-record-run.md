@@ -95,6 +95,7 @@ ResidualRiskInput:
 증거 갱신 출처 규칙:
 - `coverage_state=supported`는 범위에 대한 주장이지 그 자체로 충분한 출처가 아닙니다.
 - `supported` 항목에 `EvidenceCoverageItem.provenance`가 제공되고 같은 주장에 대한 명시적 관찰 입력이 없으면 Core는 현재 실행 기록에 대한 `EvidenceObservation`을 만들고 그 참조를 커밋된 증거 요약에 연결합니다.
+- 커밋된 증거 관찰은 `source_kind`와 `assurance_level`을 통해 `agent_report`, `surface_observation`, `external_tool`, `user_observation`, `unverified_claim` 같은 명시적 출처 분류를 보존합니다.
 - `unverified_claim`, `unverified`, 협력적 `agent_report` 관찰은 증거 관찰로 기록될 수 있지만, 더 강한 출처가 필요할 때 닫기 준비 상태에서는 약한 출처로 평가됩니다.
 - 증거 관찰은 사용자 소유 판단, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 대신하지 않습니다.
 
@@ -130,8 +131,13 @@ ResidualRiskInput:
 
 제품 쓰기 기록이 `Write Authorization`을 소비하려면 아래 조건을 모두 만족해야 합니다.
 
+- 권한이 `status=active`이고 이미 소비되거나 철회되지 않았습니다.
 - 소비 직전 현재 `project_state.state_version`이 `WriteAuthorization.basis_state_version`과 같습니다.
 - 권한이 유효 만료 규칙, 즉 저장된 `expires_at`과 `created_at + 15 minutes` 중 더 이른 시점에 따라 만료되지 않았습니다.
+- 권한과 그 `AuthorizedAttemptScope`가 기록하려는 Run과 같은 `task_id`와 `change_unit_id`를 식별합니다.
+- 권한 부여된 시도에 `product_file_write_intended=true`가 있습니다.
+- 권한 부여된 시도의 `baseline_ref`가 Run의 `baseline_ref`와 일치합니다.
+- 관찰된 민감 범주가 권한 부여된 시도의 정규화된 `sensitive_categories`와 일치합니다.
 - `Product Repository` 경로 정규화 뒤의 관찰된 변경 경로가 권한 부여된 시도와 호환됩니다.
 
 `volicord.prepare_write`가 만든 `Write Authorization`은 사이에 다른 프로젝트 상태 변경이 없으면 생성 직후 오래되지 않습니다. 예를 들어 `volicord.prepare_write`가 버전 `19`에서 버전 `20`으로 커밋하면 현재 `project_state.state_version`과 `WriteAuthorization.basis_state_version`이 모두 `20`인 동안 `volicord.record_run`이 그 권한을 소비할 수 있습니다.
@@ -139,6 +145,8 @@ ResidualRiskInput:
 오래된 `expected_state_version`과 오래된 `Write Authorization` 근거는 `Write Authorization`을 소비하기 전에 거절됩니다. 오래된 `WriteAuthorization.basis_state_version`은 같은 권한이 함께 만료되었더라도 더 높은 우선순위의 `STATE_VERSION_CONFLICT` 경로를 유지합니다.
 
 만료는 문자열 사전식 비교가 아니라 파싱한 UTC 타임스탬프로 계산합니다. 만료된 권한은 절대 소비되지 않습니다. 만료된 권한 사용은 `ToolError.details.authorization_reason=expired`와 함께 `WRITE_AUTHORIZATION_INVALID`를 반환합니다.
+
+호환성 불일치 거절은 `WRITE_AUTHORIZATION_INVALID`를 사용하고 `ToolError.details.authorization_reason`에 `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, `path_mismatch` 같은 값을 담습니다.
 
 ## 메서드 결과 필드
 
@@ -153,7 +161,7 @@ ResidualRiskInput:
 | `evidence_observations` | 이 실행 결과가 커밋한 관찰 기록의 `EvidenceObservation[]`입니다. 요청이 관찰을 기록하지 않으면 비어 있습니다. 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당하고, 관찰 출처와 보장 수준 값은 [API 값 집합](schema-value-sets.md#evidence-observation-values)이 담당합니다. |
 | `current_close_basis` | 이 실행이 기록된 뒤의 `CurrentCloseBasis | null`입니다. `null`이 아니면 이 실행이 현재 닫기 근거를 만들었다는 뜻입니다. `null`이면 이 실행이 현재 닫기 근거를 만들지 않았다는 뜻입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
 | `blocker_refs` | 이 결과 때문에 커밋되었거나 계속 관련되는 실행 또는 증거 관련 차단 사유의 `StateRecordRef[]`입니다. |
-| `state` | 실행이 기록된 뒤의 현재 `StateSummary`입니다. `Write Authorization` 소비 뒤의 `write_authority_summary`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
+| `state` | 실행이 기록된 뒤의 현재 `StateSummary`입니다. `Write Authorization` 소비 뒤의 `write_authority_summary`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. 제품 쓰기 Run이 권한을 소비하면 이 요약은 `status=consumed`, `consumed_by_run_ref`, 소비 Run이 만든 관찰 참조를 드러낼 수 있습니다. |
 
 중첩된 `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `StateSummary`, `ArtifactRef` 필드 본문은 위에 연결된 스키마 담당 문서에 둡니다. 스테이징 핸들 소비, 아티팩트 승격, 증거 갱신, 증거 관찰 기록, 재실행 행, `Write Authorization` 소비를 포함한 정확한 지속 효과는 [저장 효과](../storage-effects.md)와 [아티팩트 저장소](../storage-artifacts.md)에 둡니다.
 
@@ -189,6 +197,7 @@ ResidualRiskInput:
 - 오래된 `Write Authorization` 기준
 - 제품 쓰기에 필요한 `Write Authorization` 누락 또는 무효
 - 만료된 `Write Authorization`
+- `Write Authorization` 경로, 기준선, 제품 쓰기 플래그, 민감 범주, Task, Change Unit 비호환
 - 유효하지 않은 스테이징 핸들
 - 스테이징 핸들 출처 불일치
 - 필요한 관찰 출처가 없는 `supported` 증거 갱신

@@ -77,7 +77,7 @@ These diagnostics must not include raw stored JSON, secrets, SQL text, or sensit
 
 ### `authorization_reason`
 
-`ToolError.details.authorization_reason` uses `missing`, `expired`, `stale`, `revoked`, `consumed`, or `incompatible`. Expired `Write Authorization` use sets `authorization_reason=expired` with public code `WRITE_AUTHORIZATION_INVALID`. A stale `WriteAuthorization.basis_state_version` uses `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`.
+`ToolError.details.authorization_reason` uses `missing`, `expired`, `stale`, `revoked`, `consumed`, `incompatible`, `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, or `path_mismatch`. The mismatch-specific values identify the incompatible record or scope fact while keeping public code `WRITE_AUTHORIZATION_INVALID`. Expired `Write Authorization` use sets `authorization_reason=expired` with public code `WRITE_AUTHORIZATION_INVALID`. A stale `WriteAuthorization.basis_state_version` uses `STATE_VERSION_CONFLICT`, not `WRITE_AUTHORIZATION_INVALID`.
 
 <a id="artifact-input-error-reason"></a>
 

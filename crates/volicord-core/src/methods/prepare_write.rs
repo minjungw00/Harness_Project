@@ -396,6 +396,8 @@ fn plan_prepare_write(
                 attempt_scope_json: attempt_scope_json.clone(),
                 expires_at: expires_at.clone(),
                 created_at: created_at.clone(),
+                consumed_by_run_id: None,
+                consumed_at: None,
             });
 
     let blocker_refs = store
@@ -451,8 +453,10 @@ fn plan_prepare_write(
             .as_ref()
             .map(|record| {
                 write_authority_summary_for_record(
+                    None,
                     record,
                     planned_state_version,
+                    None,
                     None,
                     guarantee_display.clone(),
                 )

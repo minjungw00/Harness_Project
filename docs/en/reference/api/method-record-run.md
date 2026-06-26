@@ -95,6 +95,7 @@ Close-assessment ref rules:
 Evidence update provenance rules:
 - `coverage_state=supported` is a claim about coverage, not sufficient provenance by itself.
 - When `EvidenceCoverageItem.provenance` is supplied for a supported item and no explicit same-claim observation input is supplied, Core creates an `EvidenceObservation` for the current Run and links its ref into the committed evidence summary.
+- Committed evidence observations keep the explicit provenance class through `source_kind` and `assurance_level`, including `agent_report`, `surface_observation`, `external_tool`, `user_observation`, and `unverified_claim`.
 - `unverified_claim`, `unverified`, and cooperative `agent_report` observations may be recorded as evidence observations, but close readiness evaluates them as weak provenance when stronger provenance is required.
 - Evidence observations do not replace user-owned judgment, final acceptance, residual-risk acceptance, or close readiness.
 
@@ -130,8 +131,13 @@ The Run, current close basis, evidence updates, evidence observations, artifact 
 
 Product-write recording consumes the `Write Authorization` only when:
 
+- the authorization has `status=active` and has not already been consumed or revoked
 - the current `project_state.state_version` equals `WriteAuthorization.basis_state_version` immediately before consumption
 - the authorization is not expired under the effective expiration rule: the earlier of stored `expires_at` and `created_at + 15 minutes`
+- the authorization and its `AuthorizedAttemptScope` identify the same `task_id` and `change_unit_id` as the Run being recorded
+- the authorized attempt has `product_file_write_intended=true`
+- the authorized attempt `baseline_ref` matches the Run `baseline_ref`
+- observed sensitive categories match the authorized attempt's normalized `sensitive_categories`
 - observed changed paths, after Product Repository path normalization, are compatible with the authorized attempt
 
 An authorization created by `volicord.prepare_write` is not stale immediately after creation when no intervening project state change has occurred. If `volicord.prepare_write` commits from version `19` to version `20`, `volicord.record_run` may consume that authorization while the current `project_state.state_version` and `WriteAuthorization.basis_state_version` are both `20`.
@@ -139,6 +145,8 @@ An authorization created by `volicord.prepare_write` is not stale immediately af
 The method rejects stale `expected_state_version` and stale authorization basis before consuming the `Write Authorization`. A stale `WriteAuthorization.basis_state_version` retains higher-priority `STATE_VERSION_CONFLICT` routing even if the same authorization is also expired.
 
 Expiration is calculated using parsed UTC timestamps, not lexical string comparison. An expired authorization is never consumed. Expired authorization use returns `WRITE_AUTHORIZATION_INVALID` with `ToolError.details.authorization_reason=expired`.
+
+Compatibility mismatch rejections use `WRITE_AUTHORIZATION_INVALID` with `ToolError.details.authorization_reason` values such as `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, or `path_mismatch`.
 
 ## Method result fields
 
@@ -153,7 +161,7 @@ Expiration is calculated using parsed UTC timestamps, not lexical string compari
 | `evidence_observations` | `EvidenceObservation[]` for observation records committed by this run result. Empty when the request records no observations. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes); observation source and assurance values are owned by [API Value Sets](schema-value-sets.md#evidence-observation-values). |
 | `current_close_basis` | `CurrentCloseBasis | null` after this run is recorded. Non-null means this Run established the current close basis; `null` means this Run did not establish one. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `blocker_refs` | `StateRecordRef[]` for run- or evidence-related blockers committed or still relevant because of this result. |
-| `state` | Current `StateSummary` after the run is recorded. Nested state fields, including `write_authority_summary` after any `Write Authorization` consumption, are owned by [API State Schemas](schema-state.md). |
+| `state` | Current `StateSummary` after the run is recorded. Nested state fields, including `write_authority_summary` after any `Write Authorization` consumption, are owned by [API State Schemas](schema-state.md). When a product-write Run consumes an authorization, that summary can expose `status=consumed`, `consumed_by_run_ref`, and observation refs created by the consuming Run. |
 
 Nested `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `StateSummary`, and `ArtifactRef` field bodies stay with the schema owners linked above. Exact persistence effects, including staged-handle consumption, artifact promotion, evidence updates, evidence observation records, replay rows, and `Write Authorization` consumption, stay with [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).
 
@@ -189,6 +197,7 @@ Returns `ToolRejectedResponse` for:
 - stale `Write Authorization` basis
 - missing or invalid `Write Authorization` for product writes
 - expired `Write Authorization`
+- incompatible `Write Authorization` path, baseline, product-write flag, sensitivity category, Task, or Change Unit
 - invalid staged handle
 - incompatible staged-handle provenance
 - supported evidence update without required observation provenance

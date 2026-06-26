@@ -555,6 +555,8 @@ pub struct WriteAuthorizationRecord {
     pub attempt_scope_json: String,
     pub expires_at: String,
     pub created_at: String,
+    pub consumed_by_run_id: Option<String>,
+    pub consumed_at: Option<String>,
 }
 
 /// Stored staged artifact facts needed by `volicord.record_run`.
@@ -948,6 +950,22 @@ impl CoreProjectStore {
             &self.conn,
             &self.project.project_id,
             evidence_observation_id,
+        )
+    }
+
+    /// Lists evidence observation refs created by a committed Run.
+    pub fn evidence_observation_refs_for_run(
+        &self,
+        task_id: &TaskId,
+        run_id: &str,
+        state_version: u64,
+    ) -> StoreResult<Vec<StoredRecordRef>> {
+        evidence_observation_refs_for_run(
+            &self.conn,
+            &self.project.project_id,
+            task_id.as_str(),
+            run_id,
+            state_version,
         )
     }
 
@@ -3119,7 +3137,9 @@ fn active_write_authorizations(
             status,
             attempt_scope_json,
             expires_at,
-            created_at
+            created_at,
+            consumed_by_run_id,
+            consumed_at
          FROM write_authorizations
          WHERE project_id = ?1
            AND task_id = ?2
@@ -3152,7 +3172,9 @@ fn write_authorizations_for_task(
             status,
             attempt_scope_json,
             expires_at,
-            created_at
+            created_at,
+            consumed_by_run_id,
+            consumed_at
          FROM write_authorizations
          WHERE project_id = ?1
            AND task_id = ?2
@@ -3184,7 +3206,9 @@ fn write_authorization_record(
             status,
             attempt_scope_json,
             expires_at,
-            created_at
+            created_at,
+            consumed_by_run_id,
+            consumed_at
          FROM write_authorizations
          WHERE project_id = ?1
            AND write_authorization_id = ?2",
@@ -3212,7 +3236,40 @@ fn write_authorization_record_from_row(
         attempt_scope_json: row.get(6)?,
         expires_at: row.get(7)?,
         created_at: row.get(8)?,
+        consumed_by_run_id: row.get(9)?,
+        consumed_at: row.get(10)?,
     })
+}
+
+fn evidence_observation_refs_for_run(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+    run_id: &str,
+    state_version: u64,
+) -> StoreResult<Vec<StoredRecordRef>> {
+    let mut stmt = conn.prepare(
+        "SELECT evidence_observation_id
+           FROM evidence_observations
+          WHERE project_id = ?1
+            AND task_id = ?2
+            AND run_id = ?3
+          ORDER BY evidence_observation_id",
+    )?;
+    let rows = stmt.query_map(params![project_id, task_id, run_id], |row| {
+        Ok(StoredRecordRef {
+            record_kind: "evidence_observation".to_owned(),
+            record_id: row.get(0)?,
+            project_id: project_id.to_owned(),
+            task_id: Some(task_id.to_owned()),
+            state_version: Some(state_version),
+        })
+    })?;
+    let mut refs = Vec::new();
+    for row in rows {
+        refs.push(row?);
+    }
+    Ok(refs)
 }
 
 fn run_record(conn: &Connection, project_id: &str, run_id: &str) -> StoreResult<Option<RunRecord>> {

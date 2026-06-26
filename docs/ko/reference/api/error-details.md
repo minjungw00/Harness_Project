@@ -77,7 +77,7 @@
 
 ### `authorization_reason`
 
-`ToolError.details.authorization_reason`은 `missing`, `expired`, `stale`, `revoked`, `consumed`, `incompatible`만 사용합니다. 만료된 `Write Authorization` 사용은 공개 코드 `WRITE_AUTHORIZATION_INVALID`와 함께 `authorization_reason=expired`를 설정합니다. 오래된 `WriteAuthorization.basis_state_version`은 `WRITE_AUTHORIZATION_INVALID`가 아니라 `STATE_VERSION_CONFLICT`를 사용합니다.
+`ToolError.details.authorization_reason`은 `missing`, `expired`, `stale`, `revoked`, `consumed`, `incompatible`, `task_mismatch`, `change_unit_mismatch`, `product_write_flag_mismatch`, `baseline_mismatch`, `sensitive_category_mismatch`, `path_mismatch`를 사용합니다. 불일치별 값은 공개 코드 `WRITE_AUTHORIZATION_INVALID`를 유지하면서 호환되지 않는 기록 또는 범위 사실을 식별합니다. 만료된 `Write Authorization` 사용은 공개 코드 `WRITE_AUTHORIZATION_INVALID`와 함께 `authorization_reason=expired`를 설정합니다. 오래된 `WriteAuthorization.basis_state_version`은 `WRITE_AUTHORIZATION_INVALID`가 아니라 `STATE_VERSION_CONFLICT`를 사용합니다.
 
 <a id="artifact-input-error-reason"></a>
 
