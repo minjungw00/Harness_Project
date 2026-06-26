@@ -19,6 +19,7 @@ canonical_for:
   - "Terminology boundaries between stable supported documentation contracts and runtime-active or currently applied context."
   - "Terminology boundaries between documentation owner routing and product behavior or storage persistence conditions."
   - "Terminology distinction that Volicord is the local work-authority product/system for AI-assisted product work, while Core is the local authority record for Volicord state."
+  - "Terminology routing that Volicord product identity belongs in Getting Started Overview while supported and unsupported scope belongs in Scope."
   - "Terminology boundaries among Volicord, Core, Volicord implementation, Volicord source repository, Volicord installation, `volicord`, `volicord-mcp`, `Volicord Runtime Home`, `test harness`, and `Product Repository`."
   - "Preferred current-runtime-context wording for current scope, currently applied scope, current Change Unit, and current surface context."
   - "Terminology boundaries among `Write Authorization`, write approval, sensitive-action approval, final acceptance, residual-risk acceptance, and user-owned judgment."
@@ -236,6 +237,8 @@ avoid:
       use: "Volicord is the local work-authority product/system for AI-assisted product work; Core is the local authority record for Volicord state."
     - phrase: "local work-authority server"
       use: "local work-authority product/system for Volicord; for implementation context use Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` as applicable."
+    - phrase: "coding-agent integration"
+      use: "agent-host integration, Agent Integration Profile, Host Installation, or agent integration according to context."
     - phrase: "Volicord-as-server product label"
       use: "Volicord, Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` according to context."
     - phrase: "server implementation set"
@@ -327,23 +330,26 @@ terms:
   volicord:
     category: "product_concept"
     en: "Volicord"
-    en_preferred_prose: "local work-authority product/system"
+    en_preferred_prose: "local work-authority control plane"
     ko_reference: "Volicord"
     ko_user: "Volicord"
     ko_reference_first_reference: "Volicord(볼리코드)"
     preserve_as_label:
       - "Volicord"
     primary_owner:
-      en: "docs/en/reference/scope.md"
-      ko: "docs/ko/reference/scope.md"
+      en: "docs/en/getting-started/overview.md"
+      ko: "docs/ko/getting-started/overview.md"
     related_references:
+      - en: "docs/en/reference/scope.md"
+        ko: "docs/ko/reference/scope.md"
       - en: "docs/en/reference/core-model.md"
         ko: "docs/ko/reference/core-model.md"
       - en: "docs/en/reference/runtime-boundaries.md"
         ko: "docs/ko/reference/runtime-boundaries.md"
     notes:
-      - "Volicord is the local work-authority product/system for AI-assisted product work."
+      - "Volicord is the local work-authority product/system for AI-assisted product work, presented publicly as a local authority control plane."
       - "Do not describe Volicord itself as the authority record; Core is the local authority record for Volicord state."
+      - "Do not describe Volicord as the coding agent, workflow engine, test runner, technical-debt analyzer, security sandbox, or full agent harness."
       - "Do not create or use a product label that combines `Volicord` with `Server`; use Volicord implementation, Volicord source repository, Volicord Rust workspace, Volicord installation, `volicord`, or `volicord-mcp` according to context."
   test_harness:
     category: "technical_concept"
@@ -1443,7 +1449,7 @@ terms:
       - en: "docs/en/reference/storage-records.md"
         ko: "docs/ko/reference/storage-records.md"
     notes:
-      - "Use the exact product label when naming the durable coding-agent integration profile."
+      - "Use the exact product label when naming the durable agent-host integration profile."
       - "Do not use as a synonym for a Product Repository, Host Installation, or MCP session."
   integration_project_membership:
     category: "product_concept"

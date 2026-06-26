@@ -223,8 +223,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: documentation_maintenance
   created_on: '2026-06-07'
-  last_updated_on: '2026-06-25'
-  last_verified_on: '2026-06-25'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   - doc_index_schema_v3
@@ -245,8 +245,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: documentation_maintenance
   created_on: '2026-06-10'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   - terminology_map_v1
@@ -261,6 +261,7 @@ shared_documents:
   - bilingual terminology controls
   - identifier preservation rules
   - English and Korean discouraged-expression metadata
+  - Volicord product identity routing to Getting Started Overview
   - Volicord, Core, Volicord implementation, Volicord source repository, Volicord installation, Volicord Runtime Home, and Product Repository terminology routing
   - Write Authorization, write approval, sensitive-action approval, final-acceptance, residual-risk acceptance,
     and verification-criteria terminology distinctions
@@ -276,8 +277,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: onboarding
   created_on: '2026-04-23'
-  last_updated_on: '2026-06-25'
-  last_verified_on: '2026-06-25'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:
@@ -326,13 +327,13 @@ documents:
   path_en: docs/en/getting-started/overview.md
   path_ko: docs/ko/getting-started/overview.md
   kind: landing
-  summary: First-read product orientation for Volicord, Core, and the local authority model.
+  summary: First-read product identity and orientation for Volicord, Core, and the local authority model.
   normative_level: guide
   translation_policy: semantic_parity
   owner_area: onboarding
   created_on: '2026-06-07'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:
@@ -342,6 +343,10 @@ documents:
   journeys:
   - evaluate
   - learn
+  canonical_for:
+  - Volicord public product identity and first-read positioning
+  - first-read distinction between Volicord as local authority control plane and Core as the local authority record
+  - overview-level routing to Scope, Core Model, Runtime Boundaries, Security, Glossary, and documentation metadata owners
 - doc_id: start.installation
   path_en: docs/en/getting-started/installation.md
   path_ko: docs/ko/getting-started/installation.md
@@ -842,7 +847,7 @@ documents:
   path_ko: docs/ko/development/decisions/agent-integration-profile.md
   kind: explanation
   summary: Architecture decision explaining Agent Integration Profile, host routing, and explicit project
-    membership for coding-agent integrations.
+    membership for agent-host integrations.
   normative_level: guide
   translation_policy: semantic_parity
   owner_area: developer_documentation
@@ -1010,8 +1015,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: core_api
   created_on: '2026-06-10'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:
@@ -1025,6 +1030,7 @@ documents:
   - baseline scope contract
   - supported baseline boundary
   - out-of-scope boundary
+  - unsupported product-role boundary
   - profile-gated boundary
   - reserved behavior boundary
   - scope-level guarantee boundary
@@ -1202,8 +1208,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: documentation_maintenance
   created_on: '2026-05-06'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   - terminology_map_v1

@@ -1,6 +1,6 @@
 # Scope reference
 
-This reference owns the Volicord supported baseline scope boundary. Volicord is the local work-authority product/system for AI-assisted product work. This page defines which capability families are inside the baseline, which remain outside it, and how reserved or profile-gated values affect scope.
+This reference owns the Volicord supported baseline scope boundary. Product identity belongs to [Getting Started Overview](../getting-started/overview.md). This page defines which capability families are inside the baseline, which remain outside it, and how reserved or profile-gated values affect scope.
 
 This page is a stable reference contract rather than project narration or implementation planning.
 
@@ -83,6 +83,20 @@ User-owned judgment owners:
 ## Excluded from baseline scope
 
 The following capability families are outside the supported baseline scope. They become supported only when this Scope reference includes them and the affected existing owner documents define their behavior.
+
+<a id="product-role-exclusions"></a>
+### Product role exclusions
+
+Volicord's supported baseline does not make Volicord any of these product roles:
+
+- coding agent or code-generation agent
+- full workflow engine or workflow orchestrator
+- test runner or independent product correctness verifier
+- technical-debt analyzer or repayment system
+- security sandbox, OS-level isolation layer, global filesystem monitor, or external-file-change prevention system
+- full agent harness, hosted agent platform, dashboard, or report generator
+
+Volicord may record, route, summarize, or display owner-defined state around AI-assisted work. Those supported actions do not promote Volicord into any excluded product role.
 
 Excluded capabilities:
 

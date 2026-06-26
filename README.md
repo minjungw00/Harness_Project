@@ -6,9 +6,10 @@
 
 A local work-authority system for AI-assisted product work.
 
-Volicord helps a user and an agent keep the important parts of the work visible:
-scope, user-owned judgment, evidence, verification criteria, final acceptance,
-residual-risk acceptance, and close readiness.
+Volicord acts as a local authority control plane for a user and an agent. It
+keeps the important parts of the work visible: scope, user-owned judgment,
+evidence, verification criteria, final acceptance, residual-risk acceptance,
+and close readiness.
 
 This README is the first-user route for the current repository. It explains
 what Volicord is, how the local executables and host setup fit together, how to
@@ -43,9 +44,9 @@ this page.
 <a id="overview"></a>
 ## Overview
 
-Volicord is for local product work where an AI agent helps you inspect, plan,
-write, verify, and summarize changes. Its job is not to make every agent action
-automatic. Its job is to keep the authority basis visible while the work moves.
+Volicord is a local authority control plane for AI-assisted product work. It is
+not the coding agent, workflow engine, or test runner; it keeps the authority
+basis visible while the user, host, and agent move the work.
 
 In practical terms, Volicord helps an agent keep asking and answering questions
 like these:
@@ -60,8 +61,8 @@ like these:
 
 Volicord itself is not the local authority record. Core is the local authority
 record for Volicord state. Volicord is the broader product/system around that
-record, including local runtime components, host integration, documentation, and
-workflows.
+record, including local runtime components, host-integration records,
+supported surfaces, and documentation routes.
 
 <a id="why-volicord-exists"></a>
 ## Why Volicord Exists
@@ -86,7 +87,7 @@ Add email login, but keep password reset and account creation out of scope.
 Make a plan first and do not write until I approve the first change.
 ```
 
-A Volicord-assisted workflow should keep these facts distinct:
+A Volicord-assisted interaction should keep these facts distinct:
 
 | Work item | What should stay visible |
 |---|---|
@@ -137,7 +138,7 @@ long-running server and is not a public Volicord API method surface.
 
 | Term | Beginner meaning | More detail |
 |---|---|---|
-| Volicord | The local work-authority product/system for AI-assisted product work. | [Getting Started Overview](docs/en/getting-started/overview.md) |
+| Volicord | The local work-authority product/system and authority control plane for AI-assisted product work. | [Getting Started Overview](docs/en/getting-started/overview.md) |
 | Core | The local authority record for Volicord state. | [Core Model](docs/en/reference/core-model.md) |
 | Volicord implementation | The implementation set maintained by this repository, including Core, storage, types, the `volicord` CLI, `volicord-mcp`, tests, documentation, and validation tooling. | [Runtime Boundaries](docs/en/reference/runtime-boundaries.md) |
 | `volicord` | The administrative CLI executable from package `volicord-cli`. | [Administrative CLI](docs/en/reference/admin-cli.md) |
@@ -159,7 +160,7 @@ This repository currently contains:
 - maintained English and Korean documentation under `docs/`
 - direct setup support for Codex and Claude Code
 - generic MCP configuration export for user-managed hosts
-- implementation, integration, and conformance test paths
+- maintainer-facing implementation, integration, and conformance test paths
 - documentation metadata in `docs/doc-index.yaml`
 
 Current first-setup support is intentionally local:
@@ -313,8 +314,9 @@ arguments and requiredness. `volicord-mcp --help` should show the
 integration-bound `volicord-mcp --integration <integration_id>` process usage.
 
 Continue only after both executables run from the same selected directory. This
-proves the executables are ready for host setup. It does not create a Runtime
-Home, register a Product Repository, or install host configuration.
+confirms the selected executables are available for host setup. It does not
+create a Runtime Home, register a Product Repository, or install host
+configuration.
 
 For the focused tutorial, see
 [Installation](docs/en/getting-started/installation.md).

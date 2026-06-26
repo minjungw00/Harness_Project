@@ -2,11 +2,12 @@
 
 This is the first-read overview for Volicord. It explains the product thesis in ordinary language and routes exact contract questions to the Reference owners.
 
+<a id="what-volicord-is"></a>
 ## What Volicord Is
 
-Volicord is the local work-authority product/system for AI-assisted product work. Its thesis is simple: AI-assisted work should keep the user's authority basis visible while the work moves.
+Volicord is the local work-authority product/system for AI-assisted product work: a local authority control plane for a user, an AI host, and an agent. Its thesis is simple: AI-assisted work should keep the user's authority basis visible while the work moves.
 
-Volicord itself is not the local authority record. Core is the local authority record for Volicord state. Volicord is the broader product/system around that record, including its local runtime components, surfaces, documentation, and workflows.
+Volicord itself is not the local authority record. Core is the local authority record for Volicord state. Volicord is the broader product/system around that record, including its local runtime components, supported surfaces, host-integration records, and documentation routes.
 
 ## The Ordinary Problem
 
@@ -26,7 +27,7 @@ These names are related, but they are not interchangeable.
 
 | Name | First-read meaning | Exact owner |
 |---|---|---|
-| Volicord | The local work-authority product/system for AI-assisted product work. | [Scope](../reference/scope.md) |
+| Volicord | The local work-authority product/system and authority control plane for AI-assisted product work. | [What Volicord Is](#what-volicord-is) |
 | Core | The local authority record for Volicord state. | [Core Model](../reference/core-model.md) |
 | Volicord implementation | The implementation set maintained by this repository, including Core, storage, types, the `volicord` CLI, `volicord-mcp`, tests, documentation, and validation tooling. It is not a synonym for Volicord as a whole. | [Runtime Boundaries](../reference/runtime-boundaries.md) |
 | `volicord` | The local administrative CLI that builds setup, project, surface, integration, host, and guidance records. | [Administrative CLI](../reference/admin-cli.md) |
@@ -57,20 +58,19 @@ Agent setup must not:
 
 ## First-Read Authority Concepts
 
-Volicord documentation keeps these concepts separate:
+At first-read level, Volicord documentation keeps these authority concepts separate and routes their exact meaning to [Core Model](../reference/core-model.md):
 
-- User-owned judgment is a decision or assessment the user owns. An agent may explain options, but it must not invent the judgment.
-- Evidence is material support for a specific claim, such as a diff, test output, screenshot, log, source citation, review note, or artifact reference.
-- Verification criteria are user-visible criteria for checking work. They guide what should be checked; they are not themselves evidence or acceptance.
-- `Write Authorization` is the exact product label for Core authority around one compatible product-file write attempt. It is distinct from ordinary write approval.
-- Final acceptance and residual-risk acceptance are user-owned judgments.
-- Close readiness is the reference concept for whether a task can honestly close from its current state.
+- User-owned judgment remains user-owned; an agent may explain options, but it must not invent the judgment.
+- Evidence supports a specific recorded claim. It is not final acceptance or residual-risk acceptance.
+- Verification criteria guide what should be checked. They are not themselves evidence or acceptance.
+- `Write Authorization` is distinct from ordinary write approval, sensitive-action approval, final acceptance, and residual-risk acceptance.
+- Close readiness is a Core authority concept, not a proof of product correctness.
 
 For exact authority rules and non-substitution boundaries, use [Core Model](../reference/core-model.md).
 
 ## What Volicord Is Not
 
-Volicord is not a prompt pack, chat script, API wrapper, workflow engine, report generator, dashboard, hosted agent platform, `Product Repository`, or `Volicord Runtime Home`.
+Use this overview for first-read product identity. For the exact supported baseline and out-of-scope boundaries, use [Scope](../reference/scope.md#product-role-exclusions).
 
 Volicord also does not turn a polished chat answer, generated summary, readable status card, copied identifier, optional repository guidance, or `Projection` into the authority record. Exact display boundaries belong to [Projection and Templates](../reference/projection-and-templates.md), runtime and location boundaries belong to [Runtime Boundaries](../reference/runtime-boundaries.md), and security wording belongs to [Security](../reference/security.md).
 
