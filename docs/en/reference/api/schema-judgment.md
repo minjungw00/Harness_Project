@@ -13,6 +13,7 @@ This document owns:
 - `UserJudgmentContext`
 - `JudgmentBasis`
 - `UserJudgmentResolution`
+- `JudgmentRationale`
 - `JudgmentResolutionOutcome`
 - `RecordUserJudgmentPayload`
 - `SensitiveActionScope`
@@ -39,6 +40,8 @@ Judgment schemas preserve the field structure of a user-owned choice. They are n
 `UserJudgmentOptionInput` and `UserJudgmentOption` are distinct shapes. `UserJudgmentOptionInput` is caller request input only where a method allows caller-authored options; `UserJudgmentOption` is Core-owned state or output.
 
 A `RecordUserJudgmentPayload` is not the schema for current scope, evidence, `Write Authorization`, a close result, or a broad approval.
+
+`JudgmentRationale` is descriptive metadata. It preserves the user's visible reason and review context, but it is not an authority source and cannot override the selected option, outcome, actor provenance, or basis compatibility.
 
 <a id="userjudgment"></a>
 ## `UserJudgment`
@@ -155,6 +158,7 @@ UserJudgmentResolution:
   machine_action: string
   resolution_outcome: string
   answer: RecordUserJudgmentPayload
+  rationale: JudgmentRationale
   note: string | null
   accepted_risks: AcceptedRiskInput[]
   resolved_by_actor_kind: string
@@ -167,11 +171,27 @@ RecordUserJudgmentPayload:
   final_acceptance: object | null
   residual_risk_acceptance: object | null
   cancellation: object | null
+
+JudgmentRationale:
+  summary: string
+  selected_reason: string | null
+  considered_alternatives: string[]
+  rejected_alternatives: string[]
+  assumptions: string[]
+  tradeoffs: string[]
+  uncertainties: string[]
+  review_triggers: string[]
+  related_refs: StateRecordRef[]
+  artifact_refs: ArtifactRef[]
 ```
 
-`selected_option_id` and `note` are request-level and resolution-level fields. `selected_option_id` is scoped to the judgment option set. `note` is a free-form display string.
+`selected_option_id`, `rationale`, and `note` are request-level and resolution-level fields. `selected_option_id` is scoped to the judgment option set. `note` is a free-form display string.
+
+`JudgmentRationale.summary` is required and must be concise but non-empty. `selected_reason`, alternatives, assumptions, tradeoffs, uncertainties, review triggers, related refs, and artifact refs preserve user-visible intent and review context. For accepted product decisions, technical decisions, scope decisions, final acceptance, cancellation, sensitive approval, and residual-risk acceptance, Core requires a non-empty `selected_reason` plus at least one `tradeoffs` and `review_triggers` entry. Rejected or deferred judgments may use a concise rationale when the method owner does not require more detail.
 
 `machine_action` and `resolution_outcome` are copied from the selected `UserJudgmentOption`. The selected option's stored action and outcome are authoritative and must match the action/outcome mapping. Any outcome, decision, or acceptance field inside `answer` must agree with the selected option; free-form answer text cannot grant authority.
+
+Rationale text cannot grant authority, create write authorization, satisfy evidence requirements, establish final acceptance, accept residual risk, make stale judgments current, or change which option was selected.
 
 `resolved_by_actor_kind` uses the same controlled value set as `ToolEnvelope.actor_kind`; see [actor values](schema-value-sets.md#actor-values). It is attribution, not proof of user authority. Authority-bearing resolution additionally requires compatible internal `VerifiedActorContext` provenance from a bound `user_interaction` surface.
 
@@ -189,7 +209,7 @@ Owner exception:
 String fields inside a decision-specific payload object are local to that payload structure unless the method owner explicitly defines a narrower local code list or value list. They are not global API value sets.
 
 Not allowed:
-- `RecordUserJudgmentPayload` does not contain `selected_option_id` or `note`.
+- `RecordUserJudgmentPayload` does not contain `selected_option_id`, `rationale`, or `note`.
 
 ## `SensitiveActionScope`
 

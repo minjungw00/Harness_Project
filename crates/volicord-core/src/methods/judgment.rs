@@ -1102,6 +1102,19 @@ fn plan_record_user_judgment(
         &request.answer,
         resolution_outcome,
     )?;
+    if let Err(error) = validate_judgment_rationale(
+        &request.rationale,
+        request.judgment_kind,
+        resolution_outcome,
+    ) {
+        return validation_plan_error(
+            request.envelope.dry_run,
+            Some(project_state.state_version),
+            error.field(),
+            error.message(),
+        )
+        .map(|()| unreachable!());
+    }
 
     let task_id = TaskId::new(record.task_id.clone());
     let task = store
@@ -1141,6 +1154,7 @@ fn plan_record_user_judgment(
         machine_action,
         resolution_outcome,
         answer,
+        rationale: request.rationale.clone(),
         note: request.note.clone(),
         accepted_risks: request.accepted_risks.clone(),
         resolved_by_actor_kind: request.envelope.actor_kind,
@@ -1291,7 +1305,10 @@ fn plan_record_user_judgment(
             status: storage_value(UserJudgmentStatus::Resolved)?,
             resolution_outcome,
             resolution_machine_action: machine_action,
-            resolution_json: serde_json::to_string(&resolution)?,
+            resolution_json: serde_json::to_string(&PersistedUserJudgmentResolution::current(
+                resolution.clone(),
+            ))?,
+            resolution_rationale_json: serde_json::to_string(&resolution.rationale)?,
             sensitive_action_scope_json,
             resolved_by_actor_kind: storage_value(request.envelope.actor_kind)?,
             resolved_actor_role: storage_value(verified_actor.role)?,

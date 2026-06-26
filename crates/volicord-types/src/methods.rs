@@ -9,11 +9,11 @@ use crate::ids::{
 use crate::schema::{
     AcceptedRiskInput, ArtifactInput, ArtifactRef, CloseAssessmentInput, CloseReadinessBlocker,
     CurrentCloseBasis, EvidenceCoverageItem, EvidenceSummary, GuaranteeDisplay, JsonObject,
-    NextActionSummary, ObservedChanges, RecordUserJudgmentPayload, RequiredNullable,
-    RiskAcceptanceCoverage, RunSummary, SensitiveActionScope, StagedArtifactHandle, StateRecordRef,
-    StateSummary, ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
-    UserJudgmentContext, UserJudgmentOptionInput, WriteAuthoritySummary, WriteAuthorizationSummary,
-    WriteDecisionReason,
+    JudgmentRationale, NextActionSummary, ObservedChanges, RecordUserJudgmentPayload,
+    RequiredNullable, RiskAcceptanceCoverage, RunSummary, SensitiveActionScope,
+    StagedArtifactHandle, StateRecordRef, StateSummary, ToolEnvelope, ToolResponse, ToolResultBase,
+    UserJudgment, UserJudgmentCandidate, UserJudgmentContext, UserJudgmentOptionInput,
+    WriteAuthoritySummary, WriteAuthorizationSummary, WriteDecisionReason,
 };
 use crate::values::{
     AccessClass, AuthorizationEffect, ChangeUnitOperation, CloseIntent, CloseReason, CloseState,
@@ -369,6 +369,7 @@ pub struct RecordUserJudgmentRequest {
     pub judgment_kind: JudgmentKind,
     pub selected_option_id: UserJudgmentOptionId,
     pub answer: RecordUserJudgmentPayload,
+    pub rationale: JudgmentRationale,
     pub note: RequiredNullable<String>,
     pub accepted_risks: Vec<AcceptedRiskInput>,
 }

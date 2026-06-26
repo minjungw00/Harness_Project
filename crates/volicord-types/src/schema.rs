@@ -897,6 +897,7 @@ pub struct UserJudgmentResolution {
     pub machine_action: UserJudgmentOptionAction,
     pub resolution_outcome: JudgmentResolutionOutcome,
     pub answer: RecordUserJudgmentPayload,
+    pub rationale: JudgmentRationale,
     pub note: RequiredNullable<String>,
     pub accepted_risks: Vec<AcceptedRiskInput>,
     pub resolved_by_actor_kind: ActorKind,
@@ -932,6 +933,7 @@ impl PersistedUserJudgmentResolution {
     pub fn into_current_with_outcome(
         self,
         resolution_outcome: JudgmentResolutionOutcome,
+        rationale: JudgmentRationale,
     ) -> Result<UserJudgmentResolution, PersistedUserJudgmentCompatibilityError> {
         if self.resolution_outcome != resolution_outcome {
             return Err(PersistedUserJudgmentCompatibilityError::MismatchedResolutionOutcome);
@@ -944,6 +946,7 @@ impl PersistedUserJudgmentResolution {
             machine_action: self.machine_action,
             resolution_outcome,
             answer: self.answer,
+            rationale,
             note: self.note.into(),
             accepted_risks: self.accepted_risks,
             resolved_by_actor_kind: self.resolved_by_actor_kind,
@@ -997,6 +1000,22 @@ pub struct RecordUserJudgmentPayload {
     pub final_acceptance: RequiredNullable<JsonObject>,
     pub residual_risk_acceptance: RequiredNullable<JsonObject>,
     pub cancellation: RequiredNullable<JsonObject>,
+}
+
+/// Descriptive, non-authority explanation for a recorded judgment.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct JudgmentRationale {
+    pub summary: String,
+    pub selected_reason: RequiredNullable<String>,
+    pub considered_alternatives: Vec<String>,
+    pub rejected_alternatives: Vec<String>,
+    pub assumptions: Vec<String>,
+    pub tradeoffs: Vec<String>,
+    pub uncertainties: Vec<String>,
+    pub review_triggers: Vec<String>,
+    pub related_refs: Vec<StateRecordRef>,
+    pub artifact_refs: Vec<ArtifactRef>,
 }
 
 /// Sensitive-action approval context shape.

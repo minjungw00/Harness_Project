@@ -285,6 +285,7 @@ CREATE TABLE user_judgments (
   resolution_machine_action TEXT
     CHECK (resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')),
   resolution_json TEXT,
+  resolution_rationale_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
   resolved_by_actor_kind TEXT CHECK (resolved_by_actor_kind IS NULL OR resolved_by_actor_kind IN ('agent', 'user')),
@@ -303,6 +304,7 @@ CREATE TABLE user_judgments (
       AND resolution_outcome IS NULL
       AND resolution_machine_action IS NULL
       AND resolution_json IS NULL
+      AND resolution_rationale_json IS NULL
       AND resolved_by_actor_kind IS NULL
       AND resolved_actor_role IS NULL
       AND resolved_by_surface_id IS NULL
@@ -316,6 +318,7 @@ CREATE TABLE user_judgments (
       AND resolution_outcome IS NOT NULL
       AND resolution_machine_action IS NOT NULL
       AND resolution_json IS NOT NULL
+      AND resolution_rationale_json IS NOT NULL
       AND resolved_by_actor_kind IS NOT NULL
       AND resolved_actor_role IS NOT NULL
       AND resolved_by_surface_id IS NOT NULL
@@ -331,6 +334,7 @@ CREATE TABLE user_judgments (
           resolution_outcome IS NULL
           AND resolution_machine_action IS NULL
           AND resolution_json IS NULL
+          AND resolution_rationale_json IS NULL
           AND resolved_by_actor_kind IS NULL
           AND resolved_actor_role IS NULL
           AND resolved_by_surface_id IS NULL
@@ -343,6 +347,7 @@ CREATE TABLE user_judgments (
           resolution_outcome IS NOT NULL
           AND resolution_machine_action IS NOT NULL
           AND resolution_json IS NOT NULL
+          AND resolution_rationale_json IS NOT NULL
           AND resolved_by_actor_kind IS NOT NULL
           AND resolved_actor_role IS NOT NULL
           AND resolved_by_surface_id IS NOT NULL
@@ -707,10 +712,11 @@ Task 리비전과 닫기 근거:
 - `user_judgments.basis_json`은 필수 API `JudgmentBasis` 스냅샷을 저장합니다.
 - `user_judgments.basis_status`는 판단 근거의 저장소 소유 호환 상태인 `current`, `stale`, `superseded`를 저장합니다.
 - 닫힌 `user_judgments.status` 집합, 필수 `basis_json`, 구조화된 `options_json`, 해결 완전성 제약, 행위자 출처 열, 해결 접점 출처 열, 복합 해결 접점 외래 키는 `baseline_sqlite_v2` 프로젝트 상태 스키마 버전 `1`의 일부입니다.
-- `status='resolved'` 행은 null이 아닌 `resolution_outcome`, `resolution_machine_action`, `resolution_json`, 해결 행위자 출처, 해결 접점 출처, `resolved_at`을 요구합니다.
+- `status='resolved'` 행은 null이 아닌 `resolution_outcome`, `resolution_machine_action`, `resolution_json`, `resolution_rationale_json`, 해결 행위자 출처, 해결 접점 출처, `resolved_at`을 요구합니다.
 - `status='pending'`과 `status='expired'` 행은 모든 해결 열과 해결 출처 열이 null이어야 합니다.
 - `status='stale'`과 `status='superseded'` 행은 완전한 해결 그룹을 갖거나 해결 그룹을 전혀 갖지 않을 수 있습니다.
 - `user_judgments.resolution_outcome`은 선택된 선택지의 기계 판독 가능 결과를 저장합니다. `user_judgments.resolution_machine_action`은 선택된 Core 생성 권한 동작을 저장합니다. SQL 동작/결과 제약은 `accept`와 `accepted`, `reject`와 `rejected`, `defer`와 `deferred`의 짝을 유지합니다. `blocked`는 지속 선택지 동작 결과가 아닙니다.
+- `user_judgments.resolution_rationale_json`은 `JudgmentRationale` 설명 메타데이터를 `resolution_json`과 분리해 저장합니다. 완전한 해결 행에는 필요하지만 권한 열은 아닙니다.
 - `resolved_by_actor_kind`, `resolved_actor_role`, `resolved_by_surface_id`, `resolved_by_surface_instance_id`, `resolved_verification_basis`, `resolved_assurance_level`은 해결 시점에 파생된 `VerifiedActorContext` 출처를 저장합니다. 권한을 지니는 행은 여전히 `resolved_by_actor_kind='user'`, `resolved_actor_role='user_interaction'`, 유효한 해결 접점/인스턴스 참조, null이 아닌 출처 필드가 필요합니다.
 
 접점 로컬 접근 허용:

@@ -553,7 +553,7 @@ Owner links:
 Committed `dry_run=false` may:
 
 - set a `user_judgments` row to `status='resolved'`
-- store the selected option, `resolution_machine_action`, `resolution_outcome`, derived resolution actor provenance, answer payload, and basis status as allowed by the method owner
+- store the selected option, `resolution_machine_action`, `resolution_outcome`, derived resolution actor provenance, answer payload, descriptive rationale metadata, and basis status as allowed by the method owner
 - update dependent blockers or next actions
 - append events
 - create a replay row

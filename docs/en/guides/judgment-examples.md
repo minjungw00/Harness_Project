@@ -6,6 +6,8 @@ The examples are illustrative. They help readers recognize boundary shapes; they
 
 Each example separates the user's decision from what the agent may do and what the agent must not imply. User-owned judgment, sensitive-action approval, final acceptance, residual-risk acceptance, verification criteria, evidence, close readiness, and `Write Authorization` stay distinct.
 
+For recorded important judgments, structured rationale should preserve the selected reason, considered alternatives, trade-offs, assumptions, uncertainties, and review triggers. Rationale preserves intent and context; it does not create authority, evidence, acceptance, close readiness, or residual-risk acceptance.
+
 ## Product choice
 
 Scenario:

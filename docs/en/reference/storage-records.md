@@ -83,7 +83,7 @@ Baseline storage persists only the record families defined by this baseline stor
 | `state.sqlite` | `surfaces` | Surface facts | Registered local surface facts needed for API envelope compatibility, actor-provenance role, capability display, and local-access posture. |
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, and current Change Unit pointer. |
 | `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, Change Unit lifecycle, and owning `Task` relation. |
-| `state.sqlite` | `user_judgments` | User-owned judgment state | Pending, resolved, stale, superseded, and expired user-owned judgments, including required basis snapshot, basis status, selected option, machine action, resolution outcome, resolution actor, verified actor provenance for resolved rows, and sensitive-action approval scope when relevant. |
+| `state.sqlite` | `user_judgments` | User-owned judgment state | Pending, resolved, stale, superseded, and expired user-owned judgments, including required basis snapshot, basis status, selected option, machine action, resolution outcome, resolution rationale metadata, resolution actor, verified actor provenance for resolved rows, and sensitive-action approval scope when relevant. |
 | `state.sqlite` | `write_authorizations` | Cooperative write authority | Single-use `Write Authorization`, basis version, attempt scope, expiration, and consumption state. |
 | `state.sqlite` | `runs` | Execution or observation record | Committed execution or observation record, compatible authorization consumption, and compact evidence updates. |
 | `state.sqlite` plus `artifacts/tmp/` | `artifact_staging` | Transient artifact staging | Staged handle metadata, safe staging facts, and transient bytes or notices. |
@@ -144,9 +144,9 @@ The authoritative current `CurrentCloseBasis` record is `tasks.close_basis_json`
 
 Existing open Tasks do not automatically convert terminal close summary JSON into a current close basis. Absence of a current close basis is represented as absence in `tasks.close_basis_json`, not as an empty generated basis. Change Unit records do not store or satisfy current `CurrentCloseBasis` authority.
 
-Stored judgments require a `JudgmentBasis`. Resolved stored judgments require a complete machine-readable resolution, actor provenance, and verified resolved surface provenance. Rows missing those facts are invalid owner state, not audit-compatible authority records.
+Stored judgments require a `JudgmentBasis`. Resolved stored judgments require a complete machine-readable resolution, structured descriptive rationale metadata, actor provenance, and verified resolved surface provenance. Rows missing those facts are invalid owner state, not audit-compatible authority records.
 
-For stored judgment authority, `user_judgments.status='resolved'` records that an answer exists. It does not mean the user approved. Current authority-bearing judgment use requires the selected option, stored `resolution_machine_action`, stored `resolution_outcome`, applicable actor provenance, and applicable verified resolved surface provenance. Absence of an outcome, machine action, applicable actor provenance, or verified resolved surface provenance is invalid owner state and is never acceptance.
+For stored judgment authority, `user_judgments.status='resolved'` records that an answer exists. It does not mean the user approved. Current authority-bearing judgment use requires the selected option, stored `resolution_machine_action`, stored `resolution_outcome`, applicable actor provenance, and applicable verified resolved surface provenance. Rationale metadata preserves the reason and context for the answer but is not itself authority, evidence, acceptance, close readiness, or residual-risk acceptance. Absence of an outcome, machine action, applicable actor provenance, or verified resolved surface provenance is invalid owner state and is never acceptance.
 
 ## Storage-owned values
 
@@ -192,7 +192,7 @@ Rules:
 | `surfaces` | Surface capability profile data. |
 | `tasks` | Shaping summary, bounded lists, autonomy boundary, current close basis, terminal close summary, lifecycle summary, and `CompletionPolicy`. |
 | `change_units` | Scope summaries, bounded lists, write basis summaries, and lifecycle support data. |
-| `user_judgments` | Judgment request, context, option, affected-ref, artifact-ref, basis snapshot, sensitive-action scope, selected option, machine action, resolution outcome, actor provenance, and resolution data. |
+| `user_judgments` | Judgment request, context, option, affected-ref, artifact-ref, basis snapshot, sensitive-action scope, selected option, machine action, resolution outcome, descriptive rationale metadata, actor provenance, and resolution data. |
 | `write_authorizations` | `Write Authorization` attempt scope. |
 | `runs` | Observation and evidence-update data. |
 | `evidence_summaries` | Evidence coverage and gap references. |

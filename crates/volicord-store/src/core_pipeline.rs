@@ -8,13 +8,13 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use volicord_types::{
     CurrentCloseBasis, EvidenceCoverageItem, IdempotencyKey, JudgmentBasis,
-    JudgmentBasisCompatibilityStatus, JudgmentResolutionOutcome, MethodName, ObservedChanges,
-    PersistedArtifactProducer, PersistedArtifactProvenance, PersistedArtifactProvenanceMetadata,
-    PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentOptions,
-    PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, ProjectEnforcementProfile,
-    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, ProjectId, RequestHash,
-    RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId, UserJudgmentOptionAction,
-    UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
+    JudgmentBasisCompatibilityStatus, JudgmentRationale, JudgmentResolutionOutcome, MethodName,
+    ObservedChanges, PersistedArtifactProducer, PersistedArtifactProvenance,
+    PersistedArtifactProvenanceMetadata, PersistedEvidenceMetadata, PersistedJudgmentBasis,
+    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
+    ProjectEnforcementProfile, ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus,
+    ProjectId, RequestHash, RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId,
+    UserJudgmentOptionAction, UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
 };
 
 use crate::{
@@ -222,6 +222,7 @@ pub struct UserJudgmentResolutionUpdate {
     pub resolution_outcome: JudgmentResolutionOutcome,
     pub resolution_machine_action: UserJudgmentOptionAction,
     pub resolution_json: String,
+    pub resolution_rationale_json: String,
     pub sensitive_action_scope_json: Option<String>,
     pub resolved_by_actor_kind: String,
     pub resolved_actor_role: String,
@@ -579,6 +580,7 @@ pub struct UserJudgmentRecord {
     pub resolution_outcome: Option<String>,
     pub resolution_machine_action: Option<String>,
     pub resolution_json: Option<String>,
+    pub resolution_rationale_json: Option<String>,
     pub resolved_by_actor_kind: Option<String>,
     pub resolved_actor_role: Option<String>,
     pub resolved_by_surface_id: Option<String>,
@@ -2241,7 +2243,9 @@ impl ProjectMutation<'_> {
                 basis_json,
                 basis_status,
                 resolution_outcome,
+                resolution_machine_action,
                 resolution_json,
+                resolution_rationale_json,
                 requested_by_surface_id,
                 requested_by_surface_instance_id,
                 requested_at,
@@ -2263,6 +2267,8 @@ impl ProjectMutation<'_> {
                 ?11,
                 ?12,
                 ?13,
+                NULL,
+                NULL,
                 NULL,
                 NULL,
                 ?14,
@@ -2312,6 +2318,10 @@ impl ProjectMutation<'_> {
             input.resolution_machine_action,
             input.resolution_outcome,
         )?;
+        validate_judgment_rationale_json(
+            "user_judgments.resolution_rationale_json",
+            &input.resolution_rationale_json,
+        )?;
         if let Some(value) = &input.sensitive_action_scope_json {
             validate_json_text("user_judgments.sensitive_action_scope_json", value)?;
         }
@@ -2335,14 +2345,15 @@ impl ProjectMutation<'_> {
                     resolution_outcome = ?4,
                     resolution_machine_action = ?5,
                     resolution_json = ?6,
-                    sensitive_action_scope_json = COALESCE(?7, sensitive_action_scope_json),
-                    resolved_by_actor_kind = ?8,
-                    resolved_actor_role = ?9,
-                    resolved_by_surface_id = ?10,
-                    resolved_by_surface_instance_id = ?11,
-                    resolved_verification_basis = ?12,
-                    resolved_assurance_level = ?13,
-                    resolved_at = ?14
+                    resolution_rationale_json = ?7,
+                    sensitive_action_scope_json = COALESCE(?8, sensitive_action_scope_json),
+                    resolved_by_actor_kind = ?9,
+                    resolved_actor_role = ?10,
+                    resolved_by_surface_id = ?11,
+                    resolved_by_surface_instance_id = ?12,
+                    resolved_verification_basis = ?13,
+                    resolved_assurance_level = ?14,
+                    resolved_at = ?15
               WHERE project_id = ?1
                 AND judgment_id = ?2
                 AND status = 'pending'",
@@ -2353,6 +2364,7 @@ impl ProjectMutation<'_> {
                 resolution_outcome,
                 resolution_machine_action,
                 input.resolution_json,
+                input.resolution_rationale_json,
                 input.sensitive_action_scope_json,
                 input.resolved_by_actor_kind,
                 input.resolved_actor_role,
@@ -3350,6 +3362,7 @@ fn user_judgment_record(
             resolution_outcome,
             resolution_machine_action,
             resolution_json,
+            resolution_rationale_json,
             resolved_by_actor_kind,
             resolved_actor_role,
             resolved_by_surface_id,
@@ -3396,6 +3409,7 @@ fn resolved_user_judgment_records(
             resolution_outcome,
             resolution_machine_action,
             resolution_json,
+            resolution_rationale_json,
             resolved_by_actor_kind,
             resolved_actor_role,
             resolved_by_surface_id,
@@ -3449,6 +3463,7 @@ fn pending_user_judgment_records(
             resolution_outcome,
             resolution_machine_action,
             resolution_json,
+            resolution_rationale_json,
             resolved_by_actor_kind,
             resolved_actor_role,
             resolved_by_surface_id,
@@ -3493,17 +3508,18 @@ fn user_judgment_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Us
         resolution_outcome: row.get(14)?,
         resolution_machine_action: row.get(15)?,
         resolution_json: row.get(16)?,
-        resolved_by_actor_kind: row.get(17)?,
-        resolved_actor_role: row.get(18)?,
-        resolved_by_surface_id: row.get(19)?,
-        resolved_by_surface_instance_id: row.get(20)?,
-        resolved_verification_basis: row.get(21)?,
-        resolved_assurance_level: row.get(22)?,
-        requested_by_surface_id: row.get(23)?,
-        requested_by_surface_instance_id: row.get(24)?,
-        requested_at: row.get(25)?,
-        resolved_at: row.get(26)?,
-        metadata_json: row.get(27)?,
+        resolution_rationale_json: row.get(17)?,
+        resolved_by_actor_kind: row.get(18)?,
+        resolved_actor_role: row.get(19)?,
+        resolved_by_surface_id: row.get(20)?,
+        resolved_by_surface_instance_id: row.get(21)?,
+        resolved_verification_basis: row.get(22)?,
+        resolved_assurance_level: row.get(23)?,
+        requested_by_surface_id: row.get(24)?,
+        requested_by_surface_instance_id: row.get(25)?,
+        requested_at: row.get(26)?,
+        resolved_at: row.get(27)?,
+        metadata_json: row.get(28)?,
     })
 }
 
@@ -4059,6 +4075,13 @@ fn validate_user_judgment_resolution_json(
             detail: format!("{field} machine_action must match resolution_outcome"),
         });
     }
+    Ok(())
+}
+
+fn validate_judgment_rationale_json(field: &'static str, text: &str) -> StoreResult<()> {
+    serde_json::from_str::<JudgmentRationale>(text).map_err(|error| StoreError::InvalidInput {
+        detail: format!("{field} must be JudgmentRationale JSON: {error}"),
+    })?;
     Ok(())
 }
 
@@ -4627,6 +4650,15 @@ mod tests {
             )?["machine_action"],
             "defer"
         );
+        assert_eq!(
+            serde_json::from_str::<Value>(
+                record
+                    .resolution_rationale_json
+                    .as_deref()
+                    .expect("resolution rationale JSON should be stored"),
+            )?["summary"],
+            "The user selected the focused judgment option."
+        );
         Ok(())
     }
 
@@ -4863,6 +4895,81 @@ mod tests {
     }
 
     #[test]
+    fn resolve_user_judgment_rejects_unknown_rationale_field() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_unknown_rationale_json";
+        let judgment_id = "judgment_unknown_rationale_json";
+
+        let insert_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::RequestUserJudgment,
+            Some(&IdempotencyKey::new("idem_store_unknown_rationale_insert")),
+            &RequestHash::new("sha256:unknown-rationale-insert"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("unknown_rationale_insert", task_id)],
+        );
+        let inserted = store.commit_mutation(
+            insert_input,
+            |mutation, facts| {
+                for storage_mutation in [
+                    CoreStorageMutation::InsertTask(task_insert(task_id)),
+                    CoreStorageMutation::InsertUserJudgment(user_judgment_insert(
+                        judgment_id,
+                        task_id,
+                        None,
+                        JudgmentBasisCompatibilityStatus::Current,
+                    )),
+                ] {
+                    storage_mutation.apply(mutation, facts.committed_state_version)?;
+                }
+                Ok(())
+            },
+            response_json,
+        )?;
+        assert!(matches!(inserted, MutationCommitOutcome::Committed { .. }));
+        let before = store.effect_counts()?;
+
+        let resolve_input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::RecordUserJudgment,
+            Some(&IdempotencyKey::new("idem_store_unknown_rationale")),
+            &RequestHash::new("sha256:unknown-rationale"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(1),
+            vec![pending_event_for_task("unknown_rationale", task_id)],
+        );
+        let mut update = user_judgment_resolution_update(
+            judgment_id,
+            UserJudgmentOptionAction::Accept,
+            JudgmentResolutionOutcome::Accepted,
+        );
+        let mut rationale: Value = serde_json::from_str(&update.resolution_rationale_json)?;
+        rationale["unknown_rationale_field"] = json!(true);
+        update.resolution_rationale_json = rationale.to_string();
+
+        let error = store
+            .commit_mutation(
+                resolve_input,
+                |mutation, facts| {
+                    CoreStorageMutation::ResolveUserJudgment(update)
+                        .apply(mutation, facts.committed_state_version)
+                },
+                response_json,
+            )
+            .expect_err("rationale JSON with unknown field should reject");
+        assert!(matches!(error, StoreError::InvalidInput { .. }));
+        assert_eq!(store.effect_counts()?, before);
+        let record = store
+            .user_judgment_record(judgment_id)?
+            .expect("pending judgment should remain readable");
+        assert_eq!(record.status, "pending");
+        assert_eq!(record.resolution_rationale_json, None);
+        Ok(())
+    }
+
+    #[test]
     fn malformed_stored_judgment_basis_json_is_store_data_error() -> Result<(), Box<dyn Error>> {
         let harness = StoreHarness::new()?;
         let mut store = harness.store()?;
@@ -5079,6 +5186,19 @@ mod tests {
                 "note": null,
                 "accepted_risks": [],
                 "resolved_by_actor_kind": "user"
+            })
+            .to_string(),
+            resolution_rationale_json: json!({
+                "summary": "The user selected the focused judgment option.",
+                "selected_reason": "The selected option matches the visible judgment prompt.",
+                "considered_alternatives": ["Use a different judgment option."],
+                "rejected_alternatives": [],
+                "assumptions": [],
+                "tradeoffs": ["The recorded judgment remains limited to its stored option and basis."],
+                "uncertainties": [],
+                "review_triggers": ["Review if the judgment basis becomes stale."],
+                "related_refs": [],
+                "artifact_refs": []
             })
             .to_string(),
             sensitive_action_scope_json: None,

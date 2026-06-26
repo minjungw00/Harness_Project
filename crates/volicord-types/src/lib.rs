@@ -268,6 +268,7 @@ mod tests {
                 "residual_risk_acceptance": null,
                 "cancellation": null
             },
+            "rationale": judgment_rationale_json(),
             "note": null,
             "accepted_risks": []
         }))
@@ -866,6 +867,7 @@ mod tests {
                 "machine_action",
                 "resolution_outcome",
                 "answer",
+                "rationale",
                 "note",
                 "accepted_risks",
                 "resolved_by_actor_kind",
@@ -880,6 +882,13 @@ mod tests {
         let valid = user_judgment_resolution_json(json!("accept"), json!("accepted"));
         assert!(serde_json::from_value::<UserJudgmentResolution>(valid.clone()).is_ok());
         assert!(validate_json_schema(&schema, &valid).is_ok());
+
+        let mut unknown_rationale = valid.clone();
+        unknown_rationale["rationale"]["unknown_rationale_field"] = json!(true);
+        assert!(
+            serde_json::from_value::<UserJudgmentResolution>(unknown_rationale.clone()).is_err()
+        );
+        assert!(validate_json_schema(&schema, &unknown_rationale).is_err());
 
         let blocked = user_judgment_resolution_json(json!("accept"), json!("blocked"));
         assert!(serde_json::from_value::<UserJudgmentResolution>(blocked.clone()).is_err());
@@ -1558,6 +1567,7 @@ mod tests {
                 "judgment_kind",
                 "selected_option_id",
                 "answer",
+                "rationale",
                 "note",
                 "accepted_risks",
             ],
@@ -1808,6 +1818,7 @@ mod tests {
                 "residual_risk_acceptance": null,
                 "cancellation": null
             },
+            "rationale": judgment_rationale_json(),
             "note": null,
             "accepted_risks": [],
             "resolved_by_actor_kind": "user"
@@ -1878,8 +1889,24 @@ mod tests {
                 "residual_risk_acceptance": null,
                 "cancellation": null
             },
+            "rationale": judgment_rationale_json(),
             "note": null,
             "accepted_risks": []
+        })
+    }
+
+    fn judgment_rationale_json() -> Value {
+        json!({
+            "summary": "The user selected the focused option.",
+            "selected_reason": "The selected option matches the visible prompt.",
+            "considered_alternatives": ["Use a different option."],
+            "rejected_alternatives": [],
+            "assumptions": ["The judgment basis remains current."],
+            "tradeoffs": ["The rationale preserves intent without changing authority."],
+            "uncertainties": [],
+            "review_triggers": ["Review if the basis changes."],
+            "related_refs": [],
+            "artifact_refs": []
         })
     }
 

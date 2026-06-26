@@ -28,14 +28,14 @@ use volicord_types::{
     CloseTaskRequest, CloseTaskResult, CompletionPolicy, CurrentCloseBasis, DryRunSummary,
     DurableIdKind, EffectKind, ErrorCode, EvidenceCoverageItem, EvidenceCoverageState,
     EvidenceStatus, EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentBasis,
-    JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentRequiredFor, JudgmentResolutionOutcome,
-    MethodAccessClass, MethodName, NextActionKind, NextActionSummary, ObservedChanges,
-    PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentOptions,
-    PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, PlannedEffect,
-    PrepareWriteRequest, PrepareWriteResult, ProjectEnforcementProfile, ProjectId, RecordId,
-    RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest,
-    RedactionState, RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy,
-    RiskAcceptanceCoverage, RiskId, RunId, RunSummary, SensitiveActionRequirement,
+    JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentRationale, JudgmentRequiredFor,
+    JudgmentResolutionOutcome, MethodAccessClass, MethodName, NextActionKind, NextActionSummary,
+    ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
+    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
+    PlannedEffect, PrepareWriteRequest, PrepareWriteResult, ProjectEnforcementProfile, ProjectId,
+    RecordId, RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload,
+    RecordUserJudgmentRequest, RedactionState, RequestedMode, RequiredNullable, ResidualRisk,
+    ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId, RunSummary, SensitiveActionRequirement,
     StageArtifactRequest, StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId,
     StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef,
     SurfaceId, SurfaceInstanceId, SurfaceInteractionRole, TaskId, TaskLifecyclePhase,
@@ -70,6 +70,7 @@ use crate::policy::{
         JudgmentOperationContext,
     },
     path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
+    rationale::validate_judgment_rationale,
     write_authorization::{
         current_sensitive_approval, normalize_sensitive_action_scope, normalized_string_set,
         prepare_write_decision, prepare_write_dry_run_summary,
@@ -498,24 +499,44 @@ where
     })
 }
 
-fn decode_optional_persisted_resolution(
+struct PersistedResolutionColumns<'a> {
     table: &'static str,
-    record_ref: impl Into<String>,
-    logical_column: &'static str,
-    raw: Option<&str>,
-    stored_resolution_machine_action: Option<UserJudgmentOptionAction>,
-    stored_resolution_outcome: Option<JudgmentResolutionOutcome>,
+    record_ref: String,
+    resolution_column: &'static str,
+    resolution_raw: Option<&'a str>,
+    rationale_column: &'static str,
+    rationale_raw: Option<&'a str>,
+    machine_action: Option<UserJudgmentOptionAction>,
+    outcome: Option<JudgmentResolutionOutcome>,
+}
+
+fn decode_optional_persisted_resolution(
+    input: PersistedResolutionColumns<'_>,
 ) -> CoreResult<Option<UserJudgmentResolution>> {
-    let record_ref = record_ref.into();
-    let Some(raw) = raw else {
-        if stored_resolution_machine_action.is_none() && stored_resolution_outcome.is_none() {
+    let PersistedResolutionColumns {
+        table,
+        record_ref,
+        resolution_column,
+        resolution_raw,
+        rationale_column,
+        rationale_raw,
+        machine_action,
+        outcome,
+    } = input;
+    let Some(raw) = resolution_raw else {
+        if machine_action.is_none() && outcome.is_none() && rationale_raw.is_none() {
             return Ok(None);
         }
         return Err(CorePipelineError::Store(
-            StoreError::corrupt_owner_state_value(table, record_ref, logical_column),
+            StoreError::corrupt_owner_state_value(table, record_ref, resolution_column),
         ));
     };
-    let Some(stored_resolution_machine_action) = stored_resolution_machine_action else {
+    let Some(rationale_raw) = rationale_raw else {
+        return Err(CorePipelineError::Store(
+            StoreError::corrupt_owner_state_value(table, record_ref.clone(), rationale_column),
+        ));
+    };
+    let Some(machine_action) = machine_action else {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(
                 table,
@@ -524,7 +545,7 @@ fn decode_optional_persisted_resolution(
             ),
         ));
     };
-    let Some(stored_resolution_outcome) = stored_resolution_outcome else {
+    let Some(outcome) = outcome else {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(table, record_ref.clone(), "resolution_outcome"),
         ));
@@ -532,10 +553,16 @@ fn decode_optional_persisted_resolution(
     let resolution = decode_required_json::<PersistedUserJudgmentResolution>(
         table,
         record_ref.clone(),
-        logical_column,
+        resolution_column,
         Some(raw),
     )?;
-    if resolution.machine_action != stored_resolution_machine_action {
+    let rationale = decode_required_json::<JudgmentRationale>(
+        table,
+        record_ref.clone(),
+        rationale_column,
+        Some(rationale_raw),
+    )?;
+    if resolution.machine_action != machine_action {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(
                 table,
@@ -544,7 +571,7 @@ fn decode_optional_persisted_resolution(
             ),
         ));
     }
-    if stored_resolution_machine_action.resolution_outcome() != stored_resolution_outcome {
+    if machine_action.resolution_outcome() != outcome {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(
                 table,
@@ -553,24 +580,24 @@ fn decode_optional_persisted_resolution(
             ),
         ));
     }
-    if resolution.resolution_outcome != stored_resolution_outcome {
+    if resolution.resolution_outcome != outcome {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(table, record_ref.clone(), "resolution_outcome"),
         ));
     }
-    if resolution.machine_action.resolution_outcome() != stored_resolution_outcome {
+    if resolution.machine_action.resolution_outcome() != outcome {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(table, record_ref.clone(), "machine_action"),
         ));
     }
     resolution
-        .into_current_with_outcome(stored_resolution_outcome)
+        .into_current_with_outcome(outcome, rationale)
         .map(Some)
         .map_err(|_| {
             CorePipelineError::Store(StoreError::corrupt_owner_state_value(
                 table,
                 record_ref,
-                logical_column,
+                resolution_column,
             ))
         })
 }
@@ -648,14 +675,16 @@ fn user_judgment_authority_from_record(
             )
         })
         .transpose()?;
-    let resolution = decode_optional_persisted_resolution(
-        "user_judgments",
-        record.judgment_id.clone(),
-        "resolution_json",
-        record.resolution_json.as_deref(),
-        resolution_machine_action,
-        resolution_outcome,
-    )?;
+    let resolution = decode_optional_persisted_resolution(PersistedResolutionColumns {
+        table: "user_judgments",
+        record_ref: record.judgment_id.clone(),
+        resolution_column: "resolution_json",
+        resolution_raw: record.resolution_json.as_deref(),
+        rationale_column: "resolution_rationale_json",
+        rationale_raw: record.resolution_rationale_json.as_deref(),
+        machine_action: resolution_machine_action,
+        outcome: resolution_outcome,
+    })?;
     if status == UserJudgmentStatus::Resolved && resolution.is_none() {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_value(

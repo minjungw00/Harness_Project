@@ -16,7 +16,7 @@
 이 문서는 아래 항목을 담당하지 않습니다.
 
 - 공통 요청 래퍼, 응답 분기, `dry_run`, 거절 응답 스키마 본문
-- `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`, 값 집합, 상태 필드 정의
+- `UserJudgment`, `JudgmentRationale`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`, 값 집합, 상태 필드 정의
 - Core의 사용자 소유 판단 의미, 최종 수락 의미, 잔여 위험 의미, 민감 동작 승인 의미, `Write Authorization` 의미
 - 저장 기록 레이아웃, 정확한 저장 효과, 공개 오류 코드 의미, 공개 오류 우선순위, 공통 응답 분기 처리 경로
 
@@ -33,12 +33,14 @@
 - 유효한 `ToolEnvelope`. 커밋되는 `dry_run`이 아닌 요청에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
 - 기존 대기 판단을 가리키는 `user_judgment_id`.
 - 일치하는 `judgment_kind`.
-- `selected_option_id`, `answer`, `note`, `accepted_risks`.
+- `selected_option_id`, `answer`, `rationale`, `note`, `accepted_risks`.
 - 대기 중인 `judgment_kind`에 맞는 판단별 요청 본문 분기만 담은 `answer`.
 
-`selected_option_id`와 `note`는 요청 수준에 남습니다. `RecordUserJudgmentPayload`는 판단별 답변 분기 안에서 이 필드를 반복하면 안 됩니다.
+`selected_option_id`, `rationale`, `note`는 요청 수준에 남습니다. `RecordUserJudgmentPayload`는 판단별 답변 분기 안에서 이 필드를 반복하면 안 됩니다.
 
 선택된 선택지의 저장된 `machine_action`과 `resolution_outcome`이 기준입니다. 답변 본문에 결과, 결정, 수락 필드가 있으면 선택된 선택지와 일치해야 합니다. 자유 형식 답변 텍스트, 라벨, 메모는 권한을 부여할 수 없습니다.
+
+수락된 제품 판단, 기술 판단, 범위 판단, 최종 수락, 취소, 민감 승인, 잔여 위험 수락에는 요약보다 구조화된 근거가 더 필요합니다. 거절되거나 연기된 답변은 요약으로 충분할 때 간결한 근거를 사용할 수 있습니다. 근거는 설명 메타데이터이며, 비호환, 오래됨, 에이전트가 기록한 답변, 잘못된 선택지의 답변을 유효하게 만들 수 없습니다.
 
 ## 요청 스키마
 
@@ -53,12 +55,14 @@ RecordUserJudgmentRequest:
   judgment_kind: string
   selected_option_id: string
   answer: RecordUserJudgmentPayload
+  rationale: JudgmentRationale
   note: string | null
   accepted_risks: AcceptedRiskInput[]
 ```
 
 중첩 형태 담당 문서:
 - `answer`는 `RecordUserJudgmentPayload`를 사용합니다. `SensitiveActionScope`는 그 요청 본문 분기 안에서만 나타날 수 있으며 [API 판단 스키마](schema-judgment.md#resolution-and-answer-payload)가 담당합니다.
+- `rationale`은 `JudgmentRationale`을 사용합니다. 중첩 형태는 [API 판단 스키마](schema-judgment.md#resolution-and-answer-payload)가 담당합니다.
 - `accepted_risks`는 `AcceptedRiskInput[]`을 사용합니다. 중첩 형태는 [API 판단 스키마](schema-judgment.md#acceptedriskinput)가 담당합니다.
 - `judgment_kind` 값은 [API 값 집합의 판단 값](schema-value-sets.md#judgment-values)이 담당합니다.
 
@@ -109,7 +113,7 @@ RecordUserJudgmentRequest:
 - 현재 `state`
 - `next_actions`
 
-답변이 성공적으로 기록되면 이 메서드는 지정된 판단을 `status=resolved`로 커밋합니다. 기록된 `machine_action`과 `resolution_outcome`은 선택된 선택지에서 복사되며 선택지의 동작/결과 매핑과 일치해야 합니다.
+답변이 성공적으로 기록되면 이 메서드는 지정된 판단을 `status=resolved`로 커밋합니다. 기록된 `machine_action`과 `resolution_outcome`은 선택된 선택지에서 복사되며 선택지의 동작/결과 매핑과 일치해야 합니다. 기록된 `rationale`은 설명 메타데이터로 `user_judgment.resolution` 안에 반환됩니다.
 
 결과는 포함된 차단 사유와 판단에 의존하는 요약만 갱신합니다. `accepted`이고 호환되는 권한 판단 자체를 넘어 관련 없는 승인, 증거, 범위 갱신, `Write Authorization`, 닫기 상태, 최종 수락, 잔여 위험 수락, 민감 승인, 취소 권한을 만들지 않습니다.
 
@@ -126,7 +130,7 @@ RecordUserJudgmentRequest:
 | `state` | 판단 답변이 기록된 뒤의 현재 `StateSummary`입니다. 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
 | `next_actions` | 다음에 안전하게 수행할 API 단계를 설명하는 `NextActionSummary[]`입니다. 기준 형태는 [API 상태 스키마](schema-state.md#current-position-display-shapes)가 담당합니다. |
 
-`RecordUserJudgmentPayload`는 `user_judgment.resolution.answer` 안에 남으며, [API 판단 스키마](schema-judgment.md#resolution-and-answer-payload)가 담당하는 형태를 사용합니다. `next_actions` 항목은 `action_kind`, `owner_method`, `label`, `blocking_question`, `required_refs`를 사용합니다. 오래된 `action` 또는 `reason` 필드는 `NextActionSummary`의 일부가 아닙니다.
+`RecordUserJudgmentPayload`는 `user_judgment.resolution.answer` 안에 남으며, [API 판단 스키마](schema-judgment.md#resolution-and-answer-payload)가 담당하는 형태를 사용합니다. `JudgmentRationale`은 `user_judgment.resolution.rationale` 안에 남으며 권한을 바꾸지 않습니다. `next_actions` 항목은 `action_kind`, `owner_method`, `label`, `blocking_question`, `required_refs`를 사용합니다. 오래된 `action` 또는 `reason` 필드는 `NextActionSummary`의 일부가 아닙니다.
 
 ## 차단 결과
 
@@ -188,13 +192,29 @@ params:
     product_decision:
       judgment:
         decision: accepted
-        rationale: "The empty-state illustration is suitable for this Task."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
     final_acceptance: null
     residual_risk_acceptance: null
     cancellation: null
+  rationale:
+    summary: "사용자가 이 Task의 빈 상태 일러스트를 유지하기로 했습니다."
+    selected_reason: "일러스트가 문구를 바꾸지 않으면서 의도한 빈 상태 톤을 보조합니다."
+    considered_alternatives:
+      - "일러스트를 텍스트 전용 상태로 교체합니다."
+    rejected_alternatives:
+      - "모달형 빈 상태를 사용합니다."
+    assumptions:
+      - "이 판단은 빈 상태 일러스트만 다룹니다."
+    tradeoffs:
+      - "일러스트를 유지하면 시각적 연속성을 보존하지만 문구는 그대로 둡니다."
+    uncertainties:
+      - "향후 사용성 피드백은 여전히 텍스트 전용 상태를 선호할 수 있습니다."
+    review_triggers:
+      - "접근성 증거나 제품 톤 지침이 바뀌면 검토합니다."
+    related_refs: []
+    artifact_refs: []
   note: null
   accepted_risks: []
 ```
@@ -276,13 +296,29 @@ user_judgment:
       product_decision:
         judgment:
           decision: accepted
-          rationale: "빈 상태 일러스트가 이 Task에 적합합니다."
       technical_decision: null
       scope_decision: null
       sensitive_action_scope: null
       final_acceptance: null
       residual_risk_acceptance: null
       cancellation: null
+    rationale:
+      summary: "사용자가 이 Task의 빈 상태 일러스트를 유지하기로 했습니다."
+      selected_reason: "일러스트가 문구를 바꾸지 않으면서 의도한 빈 상태 톤을 보조합니다."
+      considered_alternatives:
+        - "일러스트를 텍스트 전용 상태로 교체합니다."
+      rejected_alternatives:
+        - "모달형 빈 상태를 사용합니다."
+      assumptions:
+        - "이 판단은 빈 상태 일러스트만 다룹니다."
+      tradeoffs:
+        - "일러스트를 유지하면 시각적 연속성을 보존하지만 문구는 그대로 둡니다."
+      uncertainties:
+        - "향후 사용성 피드백은 여전히 텍스트 전용 상태를 선호할 수 있습니다."
+      review_triggers:
+        - "접근성 증거나 제품 톤 지침이 바뀌면 검토합니다."
+      related_refs: []
+      artifact_refs: []
     note: null
     accepted_risks: []
     resolved_by_actor_kind: user
@@ -348,7 +384,7 @@ next_actions:
 ## 담당 문서 링크
 
 - 요청 래퍼, 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
-- `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`: [API 판단 스키마](schema-judgment.md).
+- `UserJudgment`, `JudgmentRationale`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`: [API 판단 스키마](schema-judgment.md).
 - 상태 참조와 요약: [API 상태 스키마](schema-state.md).
 - 판단 값과 지원되는 메서드 내부 값: [API 값 집합](schema-value-sets.md).
 - 사용자 소유 판단, 최종 수락, 잔여 위험 수락, 비대체 규칙: [Core 모델](../core-model.md).

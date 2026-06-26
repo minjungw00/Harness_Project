@@ -6264,6 +6264,10 @@ fn record_user_judgment_resolves_pending_record() -> Result<(), Box<dyn Error>> 
         "accepted"
     );
     assert_eq!(
+        response.response_value["user_judgment"]["resolution"]["rationale"]["summary"],
+        "The user selected the focused judgment option."
+    );
+    assert_eq!(
         response.response_value["state"]["pending_user_judgment_refs"]
             .as_array()
             .expect("pending refs should be an array")
@@ -6282,6 +6286,10 @@ fn record_user_judgment_resolves_pending_record() -> Result<(), Box<dyn Error>> 
     assert_eq!(
         resolution_json(&harness, &pending_judgment_id)?["resolution_outcome"],
         "accepted"
+    );
+    assert_eq!(
+        resolution_rationale_json(&harness, &pending_judgment_id)?["summary"],
+        response.response_value["user_judgment"]["resolution"]["rationale"]["summary"]
     );
     assert_eq!(
         user_judgment_resolution_outcome(&harness, &pending_judgment_id)?,
@@ -6367,6 +6375,59 @@ fn record_user_judgment_persists_authority_accept_action() -> Result<(), Box<dyn
 }
 
 #[test]
+fn accepted_authority_judgment_requires_structured_rationale() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "accepted_rationale_required")?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_judgment_rationale_required",
+            "idem_judgment_rationale_required",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::Cancellation,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let mut request = record_judgment_request(
+        "req_record_rationale_required",
+        "idem_record_rationale_required",
+        Some(3),
+        &task_id,
+        &pending_judgment_id,
+        JudgmentKind::Cancellation,
+        answer_payload(JudgmentKind::Cancellation),
+    );
+    request.rationale.selected_reason = None.into();
+    request.rationale.tradeoffs.clear();
+    let before = harness.counts()?;
+
+    let response = harness
+        .service
+        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["field"],
+        "rationale.selected_reason"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(
+        user_judgment_status(&harness, &pending_judgment_id)?,
+        "pending"
+    );
+    Ok(())
+}
+
+#[test]
 fn record_user_judgment_persists_rejected_option_outcome() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "reject_outcome")?;
@@ -6424,6 +6485,68 @@ fn record_user_judgment_persists_rejected_option_outcome() -> Result<(), Box<dyn
     let (event_kind, event_payload, _) = latest_task_event(&harness)?;
     assert_eq!(event_kind, "user_judgment_recorded");
     assert_eq!(event_payload["resolution_outcome"], "rejected");
+    Ok(())
+}
+
+#[test]
+fn rejected_authority_judgment_accepts_concise_rationale() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "rejected_concise_rationale")?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_judgment_concise_rationale",
+            "idem_judgment_concise_rationale",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::Cancellation,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let mut request = record_judgment_request(
+        "req_record_concise_rationale",
+        "idem_record_concise_rationale",
+        Some(3),
+        &task_id,
+        &pending_judgment_id,
+        JudgmentKind::Cancellation,
+        cancellation_payload_with_decision("rejected"),
+    );
+    request.selected_option_id = volicord_types::UserJudgmentOptionId::new("reject");
+    request.rationale = JudgmentRationale {
+        summary: "The user declined cancellation for now.".to_owned(),
+        selected_reason: None.into(),
+        considered_alternatives: Vec::new(),
+        rejected_alternatives: Vec::new(),
+        assumptions: Vec::new(),
+        tradeoffs: Vec::new(),
+        uncertainties: Vec::new(),
+        review_triggers: Vec::new(),
+        related_refs: Vec::new(),
+        artifact_refs: Vec::new(),
+    };
+
+    let response = harness
+        .service
+        .record_user_judgment(request, invocation(AccessClass::CoreMutation))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "result");
+    assert_eq!(
+        response.response_value["user_judgment"]["resolution"]["resolution_outcome"],
+        "rejected"
+    );
+    assert_eq!(
+        response.response_value["user_judgment"]["resolution"]["rationale"]["summary"],
+        "The user declined cancellation for now."
+    );
+    assert_eq!(
+        resolution_rationale_json(&harness, &pending_judgment_id)?["summary"],
+        "The user declined cancellation for now."
+    );
     Ok(())
 }
 
@@ -11970,6 +12093,7 @@ fn record_judgment_request(
         judgment_kind,
         selected_option_id: volicord_types::UserJudgmentOptionId::new("accept"),
         answer,
+        rationale: default_judgment_rationale(),
         note: Some("Recorded by the focused judgment test.".to_owned()).into(),
         accepted_risks: Vec::new(),
     }
@@ -12035,6 +12159,28 @@ fn rejected_final_acceptance_payload() -> RecordUserJudgmentPayload {
     })))
     .into();
     payload
+}
+
+fn default_judgment_rationale() -> JudgmentRationale {
+    JudgmentRationale {
+        summary: "The user selected the focused judgment option.".to_owned(),
+        selected_reason: Some("The selected option matches the visible prompt.".to_owned()).into(),
+        considered_alternatives: vec!["Use another listed option.".to_owned()],
+        rejected_alternatives: Vec::new(),
+        assumptions: vec!["The pending judgment basis is current.".to_owned()],
+        tradeoffs: vec![
+            "The rationale preserves intent without changing the selected option.".to_owned(),
+        ],
+        uncertainties: Vec::new(),
+        review_triggers: vec!["Review if the judgment basis changes.".to_owned()],
+        related_refs: Vec::new(),
+        artifact_refs: Vec::new(),
+    }
+}
+
+fn default_judgment_rationale_json() -> String {
+    serde_json::to_string(&default_judgment_rationale())
+        .expect("default judgment rationale should serialize")
 }
 
 fn answer_payload(judgment_kind: JudgmentKind) -> RecordUserJudgmentPayload {
@@ -12560,6 +12706,22 @@ fn resolution_json(
     Ok(serde_json::from_str(&text)?)
 }
 
+fn resolution_rationale_json(
+    harness: &MethodHarness,
+    user_judgment_id: &str,
+) -> Result<Value, Box<dyn Error>> {
+    let conn = harness.conn()?;
+    let text: String = conn.query_row(
+        "SELECT resolution_rationale_json
+               FROM user_judgments
+              WHERE project_id = ?1
+                AND judgment_id = ?2",
+        rusqlite::params![PROJECT_ID, user_judgment_id],
+        |row| row.get(0),
+    )?;
+    Ok(serde_json::from_str(&text)?)
+}
+
 fn current_change_unit_id(
     harness: &MethodHarness,
     task_id: &str,
@@ -12772,13 +12934,15 @@ fn set_user_judgment_resolution_json(
         None => (None, None),
     };
     let conn = harness.conn()?;
+    let rationale = value.map(|_| default_judgment_rationale_json());
     conn.pragma_update(None, "ignore_check_constraints", true)?;
     conn.execute(
         "UPDATE user_judgments
             SET status = 'resolved',
                 resolution_json = ?3,
-                resolution_machine_action = ?4,
-                resolution_outcome = ?5,
+                resolution_rationale_json = ?4,
+                resolution_machine_action = ?5,
+                resolution_outcome = ?6,
                 resolved_at = 't1'
           WHERE project_id = ?1
             AND judgment_id = ?2",
@@ -12786,6 +12950,7 @@ fn set_user_judgment_resolution_json(
             PROJECT_ID,
             judgment_id,
             value,
+            rationale,
             machine_action,
             resolution_outcome
         ],

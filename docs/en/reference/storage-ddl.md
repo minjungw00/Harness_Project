@@ -285,6 +285,7 @@ CREATE TABLE user_judgments (
   resolution_machine_action TEXT
     CHECK (resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')),
   resolution_json TEXT,
+  resolution_rationale_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
   resolved_by_actor_kind TEXT CHECK (resolved_by_actor_kind IS NULL OR resolved_by_actor_kind IN ('agent', 'user')),
@@ -303,6 +304,7 @@ CREATE TABLE user_judgments (
       AND resolution_outcome IS NULL
       AND resolution_machine_action IS NULL
       AND resolution_json IS NULL
+      AND resolution_rationale_json IS NULL
       AND resolved_by_actor_kind IS NULL
       AND resolved_actor_role IS NULL
       AND resolved_by_surface_id IS NULL
@@ -316,6 +318,7 @@ CREATE TABLE user_judgments (
       AND resolution_outcome IS NOT NULL
       AND resolution_machine_action IS NOT NULL
       AND resolution_json IS NOT NULL
+      AND resolution_rationale_json IS NOT NULL
       AND resolved_by_actor_kind IS NOT NULL
       AND resolved_actor_role IS NOT NULL
       AND resolved_by_surface_id IS NOT NULL
@@ -331,6 +334,7 @@ CREATE TABLE user_judgments (
           resolution_outcome IS NULL
           AND resolution_machine_action IS NULL
           AND resolution_json IS NULL
+          AND resolution_rationale_json IS NULL
           AND resolved_by_actor_kind IS NULL
           AND resolved_actor_role IS NULL
           AND resolved_by_surface_id IS NULL
@@ -343,6 +347,7 @@ CREATE TABLE user_judgments (
           resolution_outcome IS NOT NULL
           AND resolution_machine_action IS NOT NULL
           AND resolution_json IS NOT NULL
+          AND resolution_rationale_json IS NOT NULL
           AND resolved_by_actor_kind IS NOT NULL
           AND resolved_actor_role IS NOT NULL
           AND resolved_by_surface_id IS NOT NULL
@@ -707,10 +712,11 @@ Judgment basis storage:
 - `user_judgments.basis_json` stores the required API `JudgmentBasis` snapshot.
 - `user_judgments.basis_status` stores the storage-owned compatibility state for the judgment basis: `current`, `stale`, or `superseded`.
 - The closed `user_judgments.status` set, required `basis_json`, structured `options_json`, resolution completeness checks, actor provenance columns, resolved-surface provenance columns, and composite resolved-surface foreign key are part of the `baseline_sqlite_v2` project-state schema version `1`.
-- `status='resolved'` rows require non-null `resolution_outcome`, `resolution_machine_action`, `resolution_json`, resolved actor provenance, resolved surface provenance, and `resolved_at`.
+- `status='resolved'` rows require non-null `resolution_outcome`, `resolution_machine_action`, `resolution_json`, `resolution_rationale_json`, resolved actor provenance, resolved surface provenance, and `resolved_at`.
 - `status='pending'` and `status='expired'` rows require all resolution and resolved-provenance columns to be null.
 - `status='stale'` and `status='superseded'` rows may carry either a complete resolution group or no resolution group.
 - `user_judgments.resolution_outcome` stores the selected option's machine-readable outcome. `user_judgments.resolution_machine_action` stores the selected Core-created authority action. The SQL action/outcome check keeps `accept` with `accepted`, `reject` with `rejected`, and `defer` with `deferred`; `blocked` is not a persisted option action outcome.
+- `user_judgments.resolution_rationale_json` stores `JudgmentRationale` descriptive metadata separately from `resolution_json`. It is required for complete resolved rows but is not an authority column.
 - `resolved_by_actor_kind`, `resolved_actor_role`, `resolved_by_surface_id`, `resolved_by_surface_instance_id`, `resolved_verification_basis`, and `resolved_assurance_level` store derived `VerifiedActorContext` provenance for resolution. Authority-bearing rows still require `resolved_by_actor_kind='user'`, `resolved_actor_role='user_interaction'`, a valid resolved surface/instance reference, and non-null provenance fields.
 
 Surface local access grants:

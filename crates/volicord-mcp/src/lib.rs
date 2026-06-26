@@ -3437,6 +3437,7 @@ mod tests {
                 "judgment_kind",
                 "selected_option_id",
                 "answer",
+                "rationale",
                 "note",
                 "accepted_risks",
             ],

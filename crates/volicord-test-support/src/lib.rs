@@ -118,13 +118,13 @@ pub mod core_fixtures {
         BaselineRef, ChangeUnitId, ChangeUnitOperation, ChangeUnitUpdate, CloseIntent, CloseReason,
         CloseTaskRequest, EvidenceCoverageItem, EvidenceCoverageState, IdempotencyKey,
         InitialScope, IntakeRequest, JsonObject, JudgmentKind, JudgmentPresentation,
-        JudgmentRequiredFor, ObservedChanges, PrepareWriteRequest, ProjectId, RecordId,
-        RecordRunRequest, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
-        RequestId, RequestUserJudgmentRequest, RequestedMode, ResumePolicy, RunKind, ScopeUpdate,
-        SensitiveActionScope, StageArtifactRequest, StagedArtifactHandle, StateRecordKind,
-        StateRecordRef, StatusInclude, StatusRequest, SurfaceId, TaskId, ToolEnvelope,
-        UpdateScopeRequest, UserJudgmentId, UserJudgmentOptionId, UserJudgmentOptionInput,
-        WriteAuthorizationId,
+        JudgmentRationale, JudgmentRequiredFor, ObservedChanges, PrepareWriteRequest, ProjectId,
+        RecordId, RecordRunRequest, RecordUserJudgmentPayload, RecordUserJudgmentRequest,
+        RedactionState, RequestId, RequestUserJudgmentRequest, RequestedMode, ResumePolicy,
+        RunKind, ScopeUpdate, SensitiveActionScope, StageArtifactRequest, StagedArtifactHandle,
+        StateRecordKind, StateRecordRef, StatusInclude, StatusRequest, SurfaceId, TaskId,
+        ToolEnvelope, UpdateScopeRequest, UserJudgmentId, UserJudgmentOptionId,
+        UserJudgmentOptionInput, WriteAuthorizationId,
     };
 
     use super::*;
@@ -592,6 +592,7 @@ pub mod core_fixtures {
                 judgment_kind: input.judgment_kind,
                 selected_option_id: UserJudgmentOptionId::new("accept"),
                 answer: input.answer,
+                rationale: default_judgment_rationale(),
                 note: Some("Recorded by a focused conformance fixture.".to_owned()).into(),
                 accepted_risks: Vec::new(),
             }
@@ -1509,6 +1510,26 @@ pub mod core_fixtures {
                 expires_at: None.into(),
             }),
             _ => None,
+        }
+    }
+
+    fn default_judgment_rationale() -> JudgmentRationale {
+        JudgmentRationale {
+            summary: "The user selected the focused fixture judgment option.".to_owned(),
+            selected_reason: Some(
+                "The selected option matches the fixture's visible judgment prompt.".to_owned(),
+            )
+            .into(),
+            considered_alternatives: vec!["Use another listed option.".to_owned()],
+            rejected_alternatives: Vec::new(),
+            assumptions: vec!["The fixture basis is current at record time.".to_owned()],
+            tradeoffs: vec![
+                "The rationale preserves intent without changing option authority.".to_owned(),
+            ],
+            uncertainties: Vec::new(),
+            review_triggers: vec!["Review if the fixture basis becomes stale.".to_owned()],
+            related_refs: Vec::new(),
+            artifact_refs: Vec::new(),
         }
     }
 

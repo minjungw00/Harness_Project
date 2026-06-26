@@ -491,6 +491,7 @@ CREATE TABLE user_judgments (
   resolution_machine_action TEXT
     CHECK (resolution_machine_action IS NULL OR resolution_machine_action IN ('accept', 'reject', 'defer')),
   resolution_json TEXT,
+  resolution_rationale_json TEXT,
   requested_by_surface_id TEXT NOT NULL,
   requested_by_surface_instance_id TEXT NOT NULL,
   resolved_by_actor_kind TEXT CHECK (resolved_by_actor_kind IS NULL OR resolved_by_actor_kind IN ('agent', 'user')),
@@ -509,6 +510,7 @@ CREATE TABLE user_judgments (
       AND resolution_outcome IS NULL
       AND resolution_machine_action IS NULL
       AND resolution_json IS NULL
+      AND resolution_rationale_json IS NULL
       AND resolved_by_actor_kind IS NULL
       AND resolved_actor_role IS NULL
       AND resolved_by_surface_id IS NULL
@@ -522,6 +524,7 @@ CREATE TABLE user_judgments (
       AND resolution_outcome IS NOT NULL
       AND resolution_machine_action IS NOT NULL
       AND resolution_json IS NOT NULL
+      AND resolution_rationale_json IS NOT NULL
       AND resolved_by_actor_kind IS NOT NULL
       AND resolved_actor_role IS NOT NULL
       AND resolved_by_surface_id IS NOT NULL
@@ -537,6 +540,7 @@ CREATE TABLE user_judgments (
           resolution_outcome IS NULL
           AND resolution_machine_action IS NULL
           AND resolution_json IS NULL
+          AND resolution_rationale_json IS NULL
           AND resolved_by_actor_kind IS NULL
           AND resolved_actor_role IS NULL
           AND resolved_by_surface_id IS NULL
@@ -549,6 +553,7 @@ CREATE TABLE user_judgments (
           resolution_outcome IS NOT NULL
           AND resolution_machine_action IS NOT NULL
           AND resolution_json IS NOT NULL
+          AND resolution_rationale_json IS NOT NULL
           AND resolved_by_actor_kind IS NOT NULL
           AND resolved_actor_role IS NOT NULL
           AND resolved_by_surface_id IS NOT NULL

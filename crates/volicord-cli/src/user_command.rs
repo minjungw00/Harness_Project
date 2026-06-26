@@ -16,8 +16,8 @@ use volicord_store::{
     StoreError,
 };
 use volicord_types::{
-    AccessClass, ActorKind, IdempotencyKey, JudgmentKind, PersistedJudgmentBasis,
-    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, ProjectId,
+    AccessClass, ActorKind, IdempotencyKey, JudgmentKind, JudgmentRationale,
+    PersistedJudgmentBasis, PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, ProjectId,
     RecordUserJudgmentPayload, RecordUserJudgmentRequest, RequestId, RequiredNullable, RiskId,
     StatusInclude, StatusRequest, SurfaceId, SurfaceInstanceId, SurfaceInteractionRole, TaskId,
     ToolEnvelope, UserJudgmentOption, UserJudgmentOptionId,
@@ -365,6 +365,7 @@ where
         judgment_kind: display.judgment_kind_value,
         selected_option_id: UserJudgmentOptionId::new(&option_id),
         answer: answer_for_selected_option(&display, &selected)?,
+        rationale: rationale_for_selected_option(&display, &selected),
         note: options.value("note").into(),
         accepted_risks: Vec::new(),
     };
@@ -725,6 +726,35 @@ fn ensure_option_action_matches_outcome(
         Err(UserCommandError::runtime(
             "selected option has inconsistent machine_action and resolution_outcome",
         ))
+    }
+}
+
+fn rationale_for_selected_option(
+    display: &JudgmentDisplay,
+    option: &UserJudgmentOption,
+) -> JudgmentRationale {
+    JudgmentRationale {
+        summary: format!("Selected '{}' for {}.", option.label, display.question),
+        selected_reason: Some("Recorded from the selected Core-generated option.".to_owned())
+            .into(),
+        considered_alternatives: display
+            .options
+            .iter()
+            .filter(|candidate| candidate.option_id != option.option_id)
+            .map(|candidate| candidate.label.clone())
+            .collect(),
+        rejected_alternatives: Vec::new(),
+        assumptions: vec!["The pending judgment basis remains current at record time.".to_owned()],
+        tradeoffs: vec![
+            "The recorded rationale preserves intent but does not override the selected option."
+                .to_owned(),
+        ],
+        uncertainties: Vec::new(),
+        review_triggers: vec![
+            "Review if the Task, scope, close basis, or sensitive-action basis changes.".to_owned(),
+        ],
+        related_refs: Vec::new(),
+        artifact_refs: Vec::new(),
     }
 }
 

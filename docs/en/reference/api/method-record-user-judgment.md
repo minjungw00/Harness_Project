@@ -16,7 +16,7 @@ This document owns baseline method behavior for `volicord.record_user_judgment`:
 This document does not own:
 
 - common request envelope, response branch, dry-run, or rejected-response schema bodies
-- `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`, value-set, or status field definitions
+- `UserJudgment`, `JudgmentRationale`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`, value-set, or status field definitions
 - Core user-owned judgment meaning, final acceptance meaning, residual-risk meaning, sensitive-action approval meaning, or `Write Authorization` meaning
 - storage record layouts, exact storage effects, public error code meaning, public error precedence, or shared response-branch routing
 
@@ -33,12 +33,14 @@ Before recording the answer, Core checks the pending judgment's `JudgmentBasis` 
 - A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
 - `user_judgment_id` for an existing pending judgment.
 - Matching `judgment_kind`.
-- `selected_option_id`, `answer`, `note`, and `accepted_risks`.
+- `selected_option_id`, `answer`, `rationale`, `note`, and `accepted_risks`.
 - An `answer` containing only the decision-specific payload branch for the pending `judgment_kind`.
 
-`selected_option_id` and `note` stay at request level. `RecordUserJudgmentPayload` must not repeat them inside the decision-specific answer branch.
+`selected_option_id`, `rationale`, and `note` stay at request level. `RecordUserJudgmentPayload` must not repeat them inside the decision-specific answer branch.
 
 The selected option's stored `machine_action` and `resolution_outcome` are authoritative. If the answer payload contains an outcome, decision, or acceptance field, it must agree with that selected option. Free-form answer text, labels, or notes cannot grant authority.
+
+Accepted product decisions, technical decisions, scope decisions, final acceptance, cancellation, sensitive approval, and residual-risk acceptance require structured rationale beyond a summary. Rejected or deferred answers may use concise rationale when a summary is sufficient. Rationale is descriptive metadata and cannot make an incompatible, stale, agent-recorded, or wrong-option answer valid.
 
 ## Request schema
 
@@ -53,12 +55,14 @@ RecordUserJudgmentRequest:
   judgment_kind: string
   selected_option_id: string
   answer: RecordUserJudgmentPayload
+  rationale: JudgmentRationale
   note: string | null
   accepted_risks: AcceptedRiskInput[]
 ```
 
 Nested owner links:
 - `answer` uses `RecordUserJudgmentPayload`; `SensitiveActionScope` may appear only inside that payload branch and is owned by [API Judgment Schemas](schema-judgment.md#resolution-and-answer-payload).
+- `rationale` uses `JudgmentRationale`; the nested shape is owned by [API Judgment Schemas](schema-judgment.md#resolution-and-answer-payload).
 - `accepted_risks` uses `AcceptedRiskInput[]`; the nested shape is owned by [API Judgment Schemas](schema-judgment.md#acceptedriskinput).
 - `judgment_kind` values are owned by [API Value Sets judgment values](schema-value-sets.md#judgment-values).
 
@@ -109,7 +113,7 @@ Returns `RecordUserJudgmentResult` with:
 - current `state`
 - `next_actions`
 
-The method commits the addressed judgment as `status=resolved` when an answer is recorded successfully. The recorded `machine_action` and `resolution_outcome` are copied from the selected option and must match the option's action/outcome mapping.
+The method commits the addressed judgment as `status=resolved` when an answer is recorded successfully. The recorded `machine_action` and `resolution_outcome` are copied from the selected option and must match the option's action/outcome mapping. The recorded `rationale` is returned inside `user_judgment.resolution` as descriptive metadata.
 
 The result updates only covered blockers and judgment-dependent summaries. It does not create unrelated approvals, evidence, scope updates, `Write Authorization`, close state, final acceptance, residual-risk acceptance, sensitive approval, or cancellation authority beyond an accepted, compatible authority-bearing judgment itself.
 
@@ -126,7 +130,7 @@ The result updates only covered blockers and judgment-dependent summaries. It do
 | `state` | Current `StateSummary` after the judgment answer is recorded. Nested state fields are owned by [API State Schemas](schema-state.md). |
 | `next_actions` | `NextActionSummary[]` describing next safe API steps. The canonical shape is owned by [API State Schemas](schema-state.md#current-position-display-shapes). |
 
-`RecordUserJudgmentPayload` stays inside `user_judgment.resolution.answer` and uses the shape owned by [API Judgment Schemas](schema-judgment.md#resolution-and-answer-payload). `next_actions` entries use `action_kind`, `owner_method`, `label`, `blocking_question`, and `required_refs`; stale `action` or `reason` fields are not part of `NextActionSummary`.
+`RecordUserJudgmentPayload` stays inside `user_judgment.resolution.answer` and uses the shape owned by [API Judgment Schemas](schema-judgment.md#resolution-and-answer-payload). `JudgmentRationale` stays inside `user_judgment.resolution.rationale` and does not change authority. `next_actions` entries use `action_kind`, `owner_method`, `label`, `blocking_question`, and `required_refs`; stale `action` or `reason` fields are not part of `NextActionSummary`.
 
 ## Blocked result
 
@@ -188,13 +192,29 @@ params:
     product_decision:
       judgment:
         decision: accepted
-        rationale: "The empty-state illustration is suitable for this Task."
     technical_decision: null
     scope_decision: null
     sensitive_action_scope: null
     final_acceptance: null
     residual_risk_acceptance: null
     cancellation: null
+  rationale:
+    summary: "The user kept the empty-state illustration for this Task."
+    selected_reason: "The illustration supports the intended empty-state tone without changing copy."
+    considered_alternatives:
+      - "Replace the illustration with a text-only state."
+    rejected_alternatives:
+      - "Use a modal-style empty state."
+    assumptions:
+      - "The decision covers only the empty-state illustration."
+    tradeoffs:
+      - "Keeping the illustration preserves visual continuity while leaving copy unchanged."
+    uncertainties:
+      - "Future usability feedback may still prefer a text-only state."
+    review_triggers:
+      - "Review if accessibility evidence or product tone guidance changes."
+    related_refs: []
+    artifact_refs: []
   note: null
   accepted_risks: []
 ```
@@ -276,13 +296,29 @@ user_judgment:
       product_decision:
         judgment:
           decision: accepted
-          rationale: "The empty-state illustration is suitable for this Task."
       technical_decision: null
       scope_decision: null
       sensitive_action_scope: null
       final_acceptance: null
       residual_risk_acceptance: null
       cancellation: null
+    rationale:
+      summary: "The user kept the empty-state illustration for this Task."
+      selected_reason: "The illustration supports the intended empty-state tone without changing copy."
+      considered_alternatives:
+        - "Replace the illustration with a text-only state."
+      rejected_alternatives:
+        - "Use a modal-style empty state."
+      assumptions:
+        - "The decision covers only the empty-state illustration."
+      tradeoffs:
+        - "Keeping the illustration preserves visual continuity while leaving copy unchanged."
+      uncertainties:
+        - "Future usability feedback may still prefer a text-only state."
+      review_triggers:
+        - "Review if accessibility evidence or product tone guidance changes."
+      related_refs: []
+      artifact_refs: []
     note: null
     accepted_risks: []
     resolved_by_actor_kind: user
@@ -348,7 +384,7 @@ next_actions:
 ## Owner links
 
 - Request envelope, response branches, and dry-run summaries: [API Schema Core](schema-core.md).
-- `UserJudgment`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, and `AcceptedRiskInput`: [API Judgment Schemas](schema-judgment.md).
+- `UserJudgment`, `JudgmentRationale`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, and `AcceptedRiskInput`: [API Judgment Schemas](schema-judgment.md).
 - State refs and summaries: [API State Schemas](schema-state.md).
 - Judgment values and supported method-local values: [API Value Sets](schema-value-sets.md).
 - User-owned judgment, final acceptance, residual-risk acceptance, and non-substitution rules: [Core Model](../core-model.md).

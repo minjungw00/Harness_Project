@@ -13,6 +13,7 @@
 - `UserJudgmentContext`
 - `JudgmentBasis`
 - `UserJudgmentResolution`
+- `JudgmentRationale`
 - `JudgmentResolutionOutcome`
 - `RecordUserJudgmentPayload`
 - `SensitiveActionScope`
@@ -39,6 +40,8 @@
 `UserJudgmentOptionInput`과 `UserJudgmentOption`은 서로 다른 형태입니다. `UserJudgmentOptionInput`은 메서드가 호출자 작성 선택지를 허용하는 곳에서만 쓰는 호출자 요청 입력입니다. `UserJudgmentOption`은 Core가 소유한 상태 또는 출력입니다.
 
 `RecordUserJudgmentPayload`는 현재 적용 범위, 증거, `Write Authorization`, 닫기 결과, 넓은 승인에 대한 스키마가 아닙니다.
+
+`JudgmentRationale`은 설명 메타데이터입니다. 사용자가 볼 수 있는 이유와 검토 맥락을 보존하지만 권한 출처가 아니며, 선택된 선택지, 결과, 행위자 출처, 근거 호환성을 덮어쓸 수 없습니다.
 
 <a id="userjudgment"></a>
 ## `UserJudgment`
@@ -156,6 +159,7 @@ UserJudgmentResolution:
   machine_action: string
   resolution_outcome: string
   answer: RecordUserJudgmentPayload
+  rationale: JudgmentRationale
   note: string | null
   accepted_risks: AcceptedRiskInput[]
   resolved_by_actor_kind: string
@@ -168,11 +172,27 @@ RecordUserJudgmentPayload:
   final_acceptance: object | null
   residual_risk_acceptance: object | null
   cancellation: object | null
+
+JudgmentRationale:
+  summary: string
+  selected_reason: string | null
+  considered_alternatives: string[]
+  rejected_alternatives: string[]
+  assumptions: string[]
+  tradeoffs: string[]
+  uncertainties: string[]
+  review_triggers: string[]
+  related_refs: StateRecordRef[]
+  artifact_refs: ArtifactRef[]
 ```
 
-`selected_option_id`와 `note`는 요청 수준이자 해결 수준의 필드입니다. `selected_option_id`는 판단 선택지 집합 안에서만 유효합니다. `note`는 자유 형식 표시 문자열입니다.
+`selected_option_id`, `rationale`, `note`는 요청 수준이자 해결 수준의 필드입니다. `selected_option_id`는 판단 선택지 집합 안에서만 유효합니다. `note`는 자유 형식 표시 문자열입니다.
+
+`JudgmentRationale.summary`는 필수이며 간결하지만 비어 있으면 안 됩니다. `selected_reason`, 대안, 가정, 절충, 불확실성, 검토 트리거, 관련 참조, 아티팩트 참조는 사용자에게 보이는 의도와 검토 맥락을 보존합니다. 수락된 제품 판단, 기술 판단, 범위 판단, 최종 수락, 취소, 민감 승인, 잔여 위험 수락에는 비어 있지 않은 `selected_reason`과 `tradeoffs`, `review_triggers` 항목이 각각 하나 이상 필요합니다. 거절되거나 연기된 판단은 메서드 담당 문서가 더 많은 세부사항을 요구하지 않는 한 간결한 근거를 사용할 수 있습니다.
 
 `machine_action`과 `resolution_outcome`은 선택된 `UserJudgmentOption`에서 복사됩니다. 선택된 선택지의 저장 동작과 결과가 기준이며 동작/결과 매핑과 일치해야 합니다. `answer` 안의 결과, 결정, 수락 필드는 선택된 선택지와 일치해야 합니다. 자유 형식 답변 텍스트는 권한을 부여할 수 없습니다.
+
+판단 이유 텍스트는 권한을 부여하거나, `Write Authorization`을 만들거나, 증거 요구사항을 만족하거나, 최종 수락을 성립시키거나, 잔여 위험을 수락하거나, 오래된 판단을 현재 것으로 만들거나, 어떤 선택지가 선택되었는지를 바꿀 수 없습니다.
 
 `resolved_by_actor_kind`는 `ToolEnvelope.actor_kind`와 같은 제어 값 집합을 사용합니다. [행위자 값](schema-value-sets.md#actor-values)을 보세요. 이는 귀속이지 사용자 권한의 증명이 아닙니다. 권한을 지니는 해결은 묶인 `user_interaction` 접점에서 온 호환되는 내부 `VerifiedActorContext` 출처도 요구합니다.
 
@@ -190,7 +210,7 @@ RecordUserJudgmentPayload:
 판단별 요청 본문 객체 안의 문자열 필드는 메서드 담당 문서가 더 좁은 로컬 코드 목록이나 값 목록을 명시적으로 정의하지 않는 한 그 요청 본문 구조 안에서만 유효합니다. 전역 API 값 집합이 아닙니다.
 
 허용되지 않는 것:
-- `RecordUserJudgmentPayload`에는 `selected_option_id`나 `note`가 없습니다.
+- `RecordUserJudgmentPayload`에는 `selected_option_id`, `rationale`, `note`가 없습니다.
 
 ## `SensitiveActionScope`
 
