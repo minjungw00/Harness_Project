@@ -39,7 +39,7 @@ PRAGMA foreign_keys = ON;
 
 ## `registry.sqlite`
 
-`registry.sqlite`는 런타임 홈 식별 정보, 프로젝트 등록, 코딩 에이전트 통합 레지스트리 기록, 호스트 설정 인벤토리를 저장합니다. 프로젝트별 Core 상태는 저장하지 않습니다.
+`registry.sqlite`는 런타임 홈 식별 정보, 프로젝트 등록, `Agent Integration Profile` 레지스트리 기록, 호스트 설정 인벤토리를 저장합니다. 프로젝트별 Core 상태는 저장하지 않습니다.
 
 ```sql
 CREATE TABLE schema_migrations (

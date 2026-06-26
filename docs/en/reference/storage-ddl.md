@@ -39,7 +39,7 @@ SQLite `TEXT` columns ending in `_json` store JSON as a representation choice. J
 
 ## `registry.sqlite`
 
-`registry.sqlite` stores Runtime Home identity, project registration, coding-agent integration registry records, and host setup inventory. It does not store project-local Core state.
+`registry.sqlite` stores Runtime Home identity, project registration, Agent Integration Profile registry records, and host setup inventory. It does not store project-local Core state.
 
 ```sql
 CREATE TABLE schema_migrations (

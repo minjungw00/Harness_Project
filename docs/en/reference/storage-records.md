@@ -76,9 +76,9 @@ Baseline storage persists only the record families defined by this baseline stor
 |---|---|---|---|
 | `registry.sqlite` | Runtime Home identity | Runtime identity | One stored `runtime_home_id`, schema/storage profile, and local registry metadata. |
 | `registry.sqlite` | Project registration | Project mapping | Registered project identity mapped to `repo_root`, location-owning `project_home`, and stored `state_db_path` that must match `project_home/state.sqlite` for execution. |
-| `registry.sqlite` | Agent Integration Profile | Coding-agent integration binding | Durable integration identity, interaction role, bound surface identifiers, enabled state, optional default project, and integration metadata. |
+| `registry.sqlite` | Agent Integration Profile | Agent-host integration binding | Durable integration identity, interaction role, bound surface identifiers, enabled state, optional default project, and integration metadata. |
 | `registry.sqlite` | Integration project membership | Integration project allowlist | Explicit many-to-many membership between an Agent Integration Profile and registered projects. |
-| `registry.sqlite` | Host Installation | Host setup inventory | Host kind, host scope, server name, config target, managed fingerprint, last verification status, and installation metadata for a configured or exported coding-agent host entry. |
+| `registry.sqlite` | Host Installation | Host setup inventory | Host kind, host scope, server name, config target, managed fingerprint, last verification status, and installation metadata for a configured or exported agent-host entry. |
 | `state.sqlite` | `project_state` | Project state header | Storage profile, `state_version`, current `Task` pointer, default surface pointer, and project enforcement profile. |
 | `state.sqlite` | `surfaces` | Surface facts | Registered local surface facts needed for API envelope compatibility, actor-provenance role, capability display, and local-access posture. |
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, and current Change Unit pointer. |
