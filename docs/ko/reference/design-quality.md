@@ -114,7 +114,7 @@
 
 라우팅:
 - Core 증거 권한에 따라 증거를 요청합니다.
-- `CloseReadinessBlocker.category=evidence` 또는 `CloseReadinessBlocker.category=artifact_availability`는 증거 계약과 닫기 준비 상태 계약이 그 범주를 허용할 때만 사용합니다.
+- `CloseReadinessBlocker.category=evidence_claim`, `CloseReadinessBlocker.category=evidence_provenance`, `CloseReadinessBlocker.category=artifact_availability`는 증거 계약과 닫기 준비 상태 계약이 그 범주를 허용할 때만 사용합니다.
 
 닫기 영향:
 - 필요한 증거는 Core 증거 권한과 닫기 준비 상태 계약이 요구할 때만 닫기를 차단할 수 있습니다.
@@ -250,7 +250,7 @@
 - 닫기 관련 주장을 뒷받침하는 자료가 부족합니다.
 
 라우팅:
-- Core 증거 권한에 따라 `CloseReadinessBlocker.category=evidence`, `CloseReadinessBlocker.category=artifact_availability`, 또는 증거 요청을 사용합니다.
+- Core 증거 권한에 따라 `CloseReadinessBlocker.category=evidence_claim`, `CloseReadinessBlocker.category=evidence_provenance`, `CloseReadinessBlocker.category=artifact_availability`, 또는 증거 요청을 사용합니다.
 
 닫기 영향:
 - 필요한 증거는 Core 증거 권한과 닫기 준비 상태 계약이 요구할 때만 닫기를 차단할 수 있습니다.

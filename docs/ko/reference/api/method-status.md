@@ -109,7 +109,7 @@ StatusRequest:
 |---|---|
 | `base` | 공통 결과 메타데이터입니다. `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 읽기 전용 상태 조회 결과는 `events: []`를 사용합니다. 공통 응답 분기에 `EventRef.event_kind`가 있을 때 그 값은 불투명한 예시용 분류 문자열로 남습니다. |
 | `active_task` | 현재 선택된 `Task` 요약의 `StateSummary | null`입니다. |
-| `status_summary` | 현재 상태 조회 보기를 요약하는 자유 형식 표시 문자열입니다. |
+| `status_summary` | 현재 상태 조회 보기를 요약하는 자유 형식 표시 문자열입니다. 닫기 준비 상태 보기가 선택되면 현재 닫기 준비 상태나 첫 번째 닫기 차단 사유 코드를 요약할 수 있습니다. 구조화된 권한 사실은 다른 결과 필드에 남습니다. |
 | `next_actions` | 다음 안전한 API 단계를 설명하는 `NextActionSummary[]`입니다. |
 | `pending_user_judgments` | 상태 조회 보기에 선택된 대기 중 사용자 판단 기록의 `StateRecordRef[]`입니다. |
 | `blocker_refs` | 현재 상태 조회 보기에 보이는 차단 사유 기록의 `StateRecordRef[]`입니다. |
@@ -234,7 +234,7 @@ active_task:
   evidence_summary: null
   close_state: blocked
   close_blockers:
-    - category: user_judgment
+    - category: pending_user_judgment
       code: pending_user_judgment
       message: "User-owned product decision about CSV column order is still pending."
       related_refs:
@@ -258,7 +258,7 @@ active_task:
     level: cooperative
     basis: "No stronger local guarantee is currently applied."
     capability_refs: []
-status_summary: "A user-owned product decision about CSV column order is pending."
+status_summary: "Close readiness is blocked by pending_user_judgment."
 next_actions:
   - action_kind: record_user_judgment
     owner_method: volicord.record_user_judgment
@@ -281,7 +281,7 @@ close_state: blocked
 current_close_basis: null
 risk_acceptance_coverage: []
 close_blockers:
-  - category: user_judgment
+  - category: pending_user_judgment
     code: pending_user_judgment
     message: "User-owned product decision about CSV column order is still pending."
     related_refs:

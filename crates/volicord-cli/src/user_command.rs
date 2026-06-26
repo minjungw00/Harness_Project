@@ -556,7 +556,7 @@ fn status_request(
             evidence: true,
             close: true,
             guarantees: true,
-            continuity: false,
+            continuity: true,
         },
     }
 }
@@ -786,21 +786,84 @@ fn format_status(project_id: &str, value: &Value) -> String {
         .unwrap_or_default();
     let task_id = status_task_id(value).unwrap_or_else(|| "none".to_owned());
     let close_state = value["close_state"].as_str().unwrap_or("none");
+    let active_task = &value["active_task"];
+    let goal = active_task["goal_summary"].as_str().unwrap_or("none");
+    let scope = active_task["scope_summary"].as_str().unwrap_or("none");
+    let non_goals = active_task["non_goals"]
+        .as_array()
+        .map(Vec::len)
+        .unwrap_or_default();
+    let allowed_action_state = active_task["effect_contract"]["allowed_effects"]
+        .as_array()
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(Value::as_str)
+                .collect::<Vec<_>>()
+                .join(",")
+        })
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "unspecified".to_owned());
+    let evidence_state = value["evidence_summary"]["status"]
+        .as_str()
+        .or_else(|| active_task["evidence_summary"]["status"].as_str())
+        .unwrap_or("none");
+    let provenance_state = evidence_provenance_state(
+        value["evidence_summary"]["coverage_items"]
+            .as_array()
+            .or_else(|| active_task["evidence_summary"]["coverage_items"].as_array())
+            .map(Vec::as_slice),
+    );
+    let close_blockers = value["close_blockers"]
+        .as_array()
+        .map(Vec::len)
+        .unwrap_or_default();
+    let residual_risks = value["current_close_basis"]["residual_risks"]
+        .as_array()
+        .map(Vec::len)
+        .unwrap_or_default();
+    let continuity_records = value["continuity_summary"]
+        .as_array()
+        .map(Vec::len)
+        .unwrap_or_default();
     let mut output = format!(
-        "user task status\nproject_id: {}\ntask_id: {}\nstate_version: {}\nstatus_summary: {}\npending_user_judgments: {}\nclose_state: {}\n",
+        "user task status\nproject_id: {}\ntask_id: {}\nstate_version: {}\nstatus_summary: {}\ncurrent_goal: {}\ncurrent_scope: {}\nout_of_scope_items: {}\npending_user_judgments: {}\nallowed_action_state: {}\nevidence_state: {}\nevidence_provenance_state: {}\nclose_state: {}\nclose_blockers: {}\nresidual_risks: {}\ncontinuity_records: {}\n",
         project_id,
         task_id,
         base["state_version"].as_u64().unwrap_or_default(),
         value["status_summary"].as_str().unwrap_or(""),
+        tab_safe(goal),
+        tab_safe(scope),
+        non_goals,
         pending,
-        close_state
+        allowed_action_state,
+        evidence_state,
+        provenance_state,
+        close_state,
+        close_blockers,
+        residual_risks,
+        continuity_records
     );
+    if let Some(blockers) = value["close_blockers"]
+        .as_array()
+        .filter(|blockers| !blockers.is_empty())
+    {
+        output.push_str("close_blockers:\n");
+        for blocker in blockers {
+            output.push_str(&format!(
+                "- {}\t{}\t{}\n",
+                blocker["category"].as_str().unwrap_or(""),
+                blocker["code"].as_str().unwrap_or(""),
+                tab_safe(blocker["message"].as_str().unwrap_or(""))
+            ));
+        }
+    }
     if let Some(actions) = value["next_actions"]
         .as_array()
         .filter(|actions| !actions.is_empty())
     {
-        output.push_str("next_actions:\n");
-        for action in actions {
+        output.push_str("next_safe_actions:\n");
+        for action in actions.iter().take(3) {
             output.push_str(&format!(
                 "- {}\t{}\t{}\n",
                 action["action_kind"].as_str().unwrap_or(""),
@@ -810,6 +873,32 @@ fn format_status(project_id: &str, value: &Value) -> String {
         }
     }
     output
+}
+
+fn evidence_provenance_state(coverage_items: Option<&[Value]>) -> &'static str {
+    let Some(items) = coverage_items else {
+        return "none";
+    };
+    if items.is_empty() {
+        return "none";
+    }
+    if items.iter().any(|item| {
+        item["required_for_close"].as_bool().unwrap_or(false)
+            && item["coverage_state"] == "supported"
+            && item["observation_refs"]
+                .as_array()
+                .map(Vec::is_empty)
+                .unwrap_or(true)
+    }) {
+        return "insufficient";
+    }
+    if items.iter().any(|item| {
+        item["required_for_close"].as_bool().unwrap_or(false)
+            && item["coverage_state"] == "supported"
+    }) {
+        return "present";
+    }
+    "not_supporting_close"
 }
 
 fn format_judgment_show(display: &JudgmentDisplay) -> String {

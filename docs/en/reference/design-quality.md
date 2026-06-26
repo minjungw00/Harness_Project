@@ -114,7 +114,7 @@ Condition:
 
 Route:
 - Request evidence through the Core evidence authority.
-- Use `CloseReadinessBlocker.category=evidence` or `CloseReadinessBlocker.category=artifact_availability` only when the evidence and close-readiness contracts allow that category.
+- Use `CloseReadinessBlocker.category=evidence_claim`, `CloseReadinessBlocker.category=evidence_provenance`, or `CloseReadinessBlocker.category=artifact_availability` only when the evidence and close-readiness contracts allow that category.
 
 Close effect:
 - Required evidence can block close only when the Core evidence authority and close-readiness contracts require it.
@@ -250,7 +250,7 @@ Condition:
 - A close-relevant claim lacks support.
 
 Route:
-- Use `CloseReadinessBlocker.category=evidence`, `CloseReadinessBlocker.category=artifact_availability`, or an evidence request through the Core evidence authority.
+- Use `CloseReadinessBlocker.category=evidence_claim`, `CloseReadinessBlocker.category=evidence_provenance`, `CloseReadinessBlocker.category=artifact_availability`, or an evidence request through the Core evidence authority.
 
 Close effect:
 - Required evidence can block close only when the Core evidence authority and close-readiness contracts require it.

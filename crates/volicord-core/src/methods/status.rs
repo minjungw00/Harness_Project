@@ -211,11 +211,7 @@ fn status_result_fields(
     let result = volicord_types::StatusResult {
         base: placeholder_base(),
         active_task: None,
-        status_summary: if task.is_some() {
-            "Current Task state is available.".to_owned()
-        } else {
-            "No current Task is selected.".to_owned()
-        },
+        status_summary: status_summary_for(task, close_state, close_blockers.as_deref()),
         next_actions,
         pending_user_judgments,
         blocker_refs,
@@ -233,6 +229,30 @@ fn status_result_fields(
         result_fields.insert("active_task".to_owned(), active_task);
     }
     Ok(result_fields)
+}
+
+fn status_summary_for(
+    task: Option<&TaskRecord>,
+    close_state: Option<StatusCloseState>,
+    close_blockers: Option<&[CloseReadinessBlocker]>,
+) -> String {
+    if task.is_none() {
+        return "No current Task is selected.".to_owned();
+    }
+    if let Some(first_blocker) = close_blockers.and_then(|blockers| blockers.first()) {
+        return format!("Close readiness is blocked by {}.", first_blocker.code);
+    }
+    match close_state {
+        Some(StatusCloseState::Ready) => {
+            "Close readiness is ready for the current Task.".to_owned()
+        }
+        Some(StatusCloseState::Closed) => "The selected Task is closed.".to_owned(),
+        Some(StatusCloseState::Cancelled) => "The selected Task is cancelled.".to_owned(),
+        Some(StatusCloseState::Superseded) => "The selected Task is superseded.".to_owned(),
+        Some(StatusCloseState::Blocked) => "Close readiness is blocked.".to_owned(),
+        Some(StatusCloseState::None) => "No close-readiness state is available.".to_owned(),
+        None => "Current Task state is available.".to_owned(),
+    }
 }
 
 fn projected_continuity_summary(

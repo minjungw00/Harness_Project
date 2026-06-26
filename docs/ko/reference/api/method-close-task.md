@@ -197,6 +197,7 @@ CloseTaskRequest:
 | `state` | 확인, 종료 상태 변경, 또는 담당 문서가 허용한 차단 결과 뒤 선택된 Task의 `StateSummary`입니다. `close_blockers`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
 | `current_close_basis` | 결과에 선택된 닫기 준비 상태에 사용한 `CurrentCloseBasis | null`입니다. `null`은 이 결과에 사용할 현재 닫기 근거가 없다는 뜻입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
 | `risk_acceptance_coverage` | 닫기 준비 상태 결과에서 현재 잔여 위험 수락 범위를 나타내는 `RiskAcceptanceCoverage[]`입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
+| `continuity_summary` | 이 닫기 결과로 관련성이 생긴 프로젝트 연속성 기록의 `ProjectContinuitySummary[]`입니다. 성공한 `intent=complete`에서는 잔여 위험 수락이 필요하지 않은 닫기 근거의 알려진 한계를 Core가 이어 가는 연속성 기록이 여기에 포함됩니다. 빈 배열은 이 결과에 대해 계산이 실행됐고 이어 갈 기록이 없었다는 뜻입니다. 형태는 [API 상태 스키마](schema-state.md#project-continuity-shapes)가 담당합니다. |
 | `blockers` | 요청한 경로에 닫기 차단 사유 또는 종료 차단 사유가 있을 때 반환되는 `CloseReadinessBlocker[]`입니다. 형태와 중첩은 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당하며, `category` 값은 [API 값 집합](schema-value-sets.md#state-and-blocker-values)이 담당합니다. |
 | `evidence_summary` | 결과에 선택된 닫기 근거의 `EvidenceSummary | null`입니다. 결과에 증거 요약이 선택되지 않으면 `null`입니다. 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당합니다. |
 | `artifact_refs` | 결과에 선택된 닫기 관련 아티팩트의 `ArtifactRef[]`입니다. `ArtifactRef` 형태는 [API 아티팩트 스키마](schema-artifacts.md#artifactref)가 담당합니다. |
@@ -213,20 +214,22 @@ CloseTaskRequest:
 |---|---|---|
 | `task_not_closeable` | `task` | 선택된 `Task` 생명주기나 종료 경로 상태가 요청한 닫기 의도를 받을 수 없습니다. |
 | `missing_active_change_unit` | `scope` | 닫기 경로에 현재 적용 Change Unit이 필요하지만 사용할 수 없습니다. |
-| `pending_user_judgment` | `user_judgment` | 필요한 사용자 소유 판단이 아직 대기 중이거나 해결되지 않았습니다. |
+| `pending_user_judgment` | `pending_user_judgment` | 필요한 사용자 소유 판단이 아직 대기 중이거나 해결되지 않았습니다. |
 | `missing_sensitive_approval` | `sensitive_approval` | 필요한 별도 민감 동작 승인이 없습니다. |
 | `missing_cancellation_authority` | `user_judgment` | `intent=cancel`에 현재 `Task`, 범위 리비전, Change Unit에 묶이고 확인된 `user_interaction` 행위자 출처를 가진 현재 수락된 사용자 취소 판단이 없습니다. |
 | `write_authorization_stale` | `write_compatibility` | 닫기 관련 `Write Authorization`이 `STATE_VERSION_CONFLICT`로 처리되지 않는 최신성 사유로 사용할 수 없습니다. |
 | `baseline_stale` | `baseline` | 닫기 관련 기준선 근거가 차단 사유 생성 경로에서 오래되었습니다. |
-| `evidence_claim_unsupported` | `evidence` | 필요한 닫기 주장이 지원되는 증거 범위를 갖지 못했습니다. |
-| `evidence_claim_missing` | `evidence` | 필요한 닫기 주장에 대한 현재 증거 범위 기록이 없습니다. |
-| `evidence_provenance_insufficient` | `evidence` | 필요한 닫기 증거는 있지만 충분한 현재 출처와 보장 수준 출처가 없습니다. |
-| `evidence_provenance_stale` | `evidence` | 증거 관찰 출처가 있지만 현재 Task 범위, Change Unit, 출처 실행 기록, 닫기 근거 증거 요약에 대해 오래되었습니다. |
-| `evidence_agent_report_only` | `evidence` | 더 강한 출처가 필요한데 필요한 닫기 증거가 협력적 에이전트 보고만으로 뒷받침됩니다. |
+| `evidence_claim_unsupported` | `evidence_claim` | 필요한 닫기 주장이 지원되는 증거 범위를 갖지 못했습니다. |
+| `evidence_claim_missing` | `evidence_claim` | 필요한 닫기 주장에 대한 현재 증거 범위 기록이 없습니다. |
+| `evidence_provenance_insufficient` | `evidence_provenance` | 필요한 닫기 증거는 있지만 충분한 현재 출처와 보장 수준 출처가 없습니다. |
+| `evidence_provenance_stale` | `evidence_provenance` | 증거 관찰 출처가 있지만 현재 Task 범위, Change Unit, 출처 실행 기록, 닫기 근거 증거 요약에 대해 오래되었습니다. |
+| `evidence_agent_report_only` | `evidence_provenance` | 더 강한 출처가 필요한데 필요한 닫기 증거가 협력적 에이전트 보고만으로 뒷받침됩니다. |
 | `artifact_unavailable` | `artifact_availability` | 닫기 관련 아티팩트가 없거나, 사용할 수 없거나, 사용에 부적합하거나, 무결성에 실패했습니다. |
-| `missing_final_acceptance` | `final_acceptance` | 필요한 최종 수락이 없거나 현재 `Task`, Change Unit, `scope_revision`, `close_basis_revision`, 기준선, 결과 참조와 호환되지 않습니다. |
+| `missing_final_acceptance` | `final_acceptance` | 현재 닫기 근거에 필요한 최종 수락이 없습니다. |
+| `stale_final_acceptance` | `final_acceptance` | 최종 수락은 있지만 현재 `Task`, Change Unit, `scope_revision`, `close_basis_revision`, 기준선, 결과 참조와 호환되지 않거나 오래되었습니다. |
 | `residual_risk_not_visible` | `residual_risk_visibility` | 닫기 관련 잔여 위험이 보이지 않게 남아 있습니다. |
-| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | 필요한 잔여 위험 수락이 없거나 현재 `close_basis_revision`과 정확한 잔여 위험 `risk_id` 값에 일치하지 않습니다. |
+| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | 현재 잔여 위험 요구사항에 필요한 잔여 위험 수락이 없습니다. |
+| `stale_residual_risk_acceptance` | `residual_risk_acceptance` | 잔여 위험 수락은 있지만 현재 `close_basis_revision`과 정확한 잔여 위험 `risk_id` 값에 일치하지 않습니다. |
 | `recovery_required` | `recovery` | 요청한 닫기 경로를 진행하기 전에 복구 작업이 남아 있습니다. |
 
 이 코드는 메서드 로컬 `CloseReadinessBlocker.code` 값입니다. 공개 `ErrorCode` 값, `WriteDecisionReason.code` 값, 전역 값 집합 항목이 아닙니다.
@@ -344,6 +347,7 @@ base:
 close_state: blocked
 current_close_basis: null
 risk_acceptance_coverage: []
+continuity_summary: []
 state:
   project_id: proj_close_001
   state_version: 72
@@ -414,7 +418,7 @@ artifact_refs: []
 ## 담당 문서 링크
 
 - 요청 래퍼, 공통 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
-- `CloseTaskResult.blockers`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, `NextActionSummary` 형태: [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes).
+- `CloseTaskResult.blockers`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ProjectContinuitySummary`, `EvidenceSummary`, `StateSummary`, `NextActionSummary` 형태: [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes).
 - `ArtifactRef` 형태: [API 아티팩트 스키마](schema-artifacts.md#artifactref).
 - `intent` 값: [API 값 집합의 메서드 내부 값](schema-value-sets.md#method-local-values).
 - 닫기 상태, 생명주기, 닫기 이유 값: [API 값 집합의 Task 생명주기 값](schema-value-sets.md#task-lifecycle-values).

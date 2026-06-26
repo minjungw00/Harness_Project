@@ -150,7 +150,9 @@ A close blocker is the close-relevant form: it prevents honest close readiness u
 
 Close readiness is the Core authority concept for whether the current `Task` can close honestly.
 
-It considers the current `Task`, current scope, current Change Unit, required judgments, write and Run compatibility, evidence support, artifact availability, unresolved blockers, final acceptance, residual-risk visibility, residual-risk acceptance, and recovery constraints.
+It is a record-based readiness decision, not proof that the product result is objectively correct.
+
+It considers the current `Task`, current scope, current Change Unit, required judgments, write and Run compatibility, evidence support and provenance, artifact availability, unresolved blockers, final acceptance, residual-risk visibility, residual-risk acceptance, recovery constraints, and project continuity records that remain relevant after close.
 
 ### Current close basis
 

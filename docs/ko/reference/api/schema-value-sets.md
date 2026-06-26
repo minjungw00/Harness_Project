@@ -367,11 +367,14 @@ task
 open_run
 scope
 user_judgment
+pending_user_judgment
 sensitive_approval
 write_compatibility
 baseline
 surface_capability
 evidence
+evidence_claim
+evidence_provenance
 artifact_availability
 final_acceptance
 residual_risk_visibility

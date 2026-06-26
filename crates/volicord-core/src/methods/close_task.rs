@@ -151,6 +151,14 @@ impl CoreService {
             }
         };
         if !continuity_plans.is_empty() {
+            let continuity_summary = continuity_plans
+                .iter()
+                .map(|plan| plan.summary.clone())
+                .collect::<Vec<_>>();
+            plan.result_fields.insert(
+                "continuity_summary".to_owned(),
+                serde_json::to_value(&continuity_summary)?,
+            );
             let continuity_record_ids = continuity_plans
                 .iter()
                 .map(|plan| plan.record_ref.record_id.as_str().to_owned())
@@ -472,6 +480,7 @@ pub(super) fn plan_close_task_with_context(
         close_state,
         current_close_basis: result_current_close_basis.clone(),
         risk_acceptance_coverage: result_risk_acceptance_coverage.clone(),
+        continuity_summary: Vec::new(),
         state: result_state.clone(),
         blockers: blockers.clone(),
         evidence_summary: result_evidence_summary.clone(),
@@ -854,7 +863,7 @@ fn terminal_close_blockers(
             )?;
             if !pending_refs.is_empty() {
                 blockers.push(close_blocker(
-                    CloseReadinessBlockerCategory::UserJudgment,
+                    CloseReadinessBlockerCategory::PendingUserJudgment,
                     "pending_user_judgment",
                     "A user-owned judgment required before superseding this Task is still pending.",
                     pending_refs.clone(),
@@ -1188,7 +1197,7 @@ fn completion_close_blockers(
     )?;
     if !close_complete_pending_refs.is_empty() {
         blockers.push(close_blocker(
-            CloseReadinessBlockerCategory::UserJudgment,
+            CloseReadinessBlockerCategory::PendingUserJudgment,
             "pending_user_judgment",
             "A user-owned judgment required before close is still pending.",
             close_complete_pending_refs.clone(),
@@ -1314,29 +1323,8 @@ fn completion_close_blockers(
         ));
     }
 
-    if !has_current_final_acceptance(store, project_state, request, context)? {
-        let related_refs = refs_with_context(
-            vec![task_ref.clone()],
-            non_current_judgment_refs_for_plan(
-                store,
-                project_state,
-                request,
-                JudgmentKind::FinalAcceptance,
-            )?,
-        );
-        blockers.push(close_blocker(
-            CloseReadinessBlockerCategory::FinalAcceptance,
-            "missing_final_acceptance",
-            "Final acceptance is required before completing the Task.",
-            related_refs,
-            vec![NextActionSummary {
-                action_kind: NextActionKind::RequestUserJudgment,
-                owner_method: Some(MethodName::RequestUserJudgment),
-                label: "Request final acceptance from the user.".to_owned(),
-                blocking_question: None,
-                required_refs: vec![task_ref.clone()],
-            }],
-        ));
+    if let Some(blocker) = final_acceptance_blocker(store, project_state, request, context)? {
+        blockers.push(blocker);
     }
 
     let residual_risk = residual_risk_state(context);
@@ -1361,24 +1349,33 @@ fn completion_close_blockers(
             .iter()
             .any(|coverage| !coverage.accepted)
     {
-        let related_refs = refs_with_context(
-            vec![task_ref.clone()],
-            non_current_judgment_refs_for_plan(
-                store,
-                project_state,
-                request,
-                JudgmentKind::ResidualRiskAcceptance,
-            )?,
-        );
+        let stale_refs = non_current_judgment_refs_for_plan(
+            store,
+            project_state,
+            request,
+            JudgmentKind::ResidualRiskAcceptance,
+        )?;
+        let (code, message) = if stale_refs.is_empty() {
+            (
+                "missing_residual_risk_acceptance",
+                "Visible residual risk requires distinct residual-risk acceptance.",
+            )
+        } else {
+            (
+                "stale_residual_risk_acceptance",
+                "The available residual-risk acceptance is stale or incompatible with the current close basis.",
+            )
+        };
+        let related_refs = refs_with_context(vec![task_ref.clone()], stale_refs);
         blockers.push(close_blocker(
             CloseReadinessBlockerCategory::ResidualRiskAcceptance,
-            "missing_residual_risk_acceptance",
-            "Visible residual risk requires distinct residual-risk acceptance.",
+            code,
+            message,
             related_refs,
             vec![NextActionSummary {
                 action_kind: NextActionKind::RequestUserJudgment,
                 owner_method: Some(MethodName::RequestUserJudgment),
-                label: "Request residual-risk acceptance from the user.".to_owned(),
+                label: "Request current residual-risk acceptance from the user.".to_owned(),
                 blocking_question: None,
                 required_refs: vec![task_ref],
             }],
@@ -1824,6 +1821,16 @@ fn close_evidence_blockers(
         let Some(related_refs) = grouped.remove(&kind) else {
             continue;
         };
+        let category = match kind {
+            CloseEvidenceIssueKind::Missing | CloseEvidenceIssueKind::Unsupported => {
+                CloseReadinessBlockerCategory::EvidenceClaim
+            }
+            CloseEvidenceIssueKind::Stale
+            | CloseEvidenceIssueKind::AgentReportOnly
+            | CloseEvidenceIssueKind::InsufficientProvenance => {
+                CloseReadinessBlockerCategory::EvidenceProvenance
+            }
+        };
         let (code, message) = match kind {
             CloseEvidenceIssueKind::Missing => (
                 "evidence_claim_missing",
@@ -1847,7 +1854,7 @@ fn close_evidence_blockers(
             ),
         };
         blockers.push(close_blocker(
-            CloseReadinessBlockerCategory::Evidence,
+            category,
             code,
             message,
             unique_state_record_refs(related_refs),
@@ -2175,14 +2182,27 @@ fn close_basis_artifact_ref_unavailable(
         .unwrap_or(true))
 }
 
-fn has_current_final_acceptance(
+fn final_acceptance_blocker(
     store: &CoreProjectStore,
     project_state: &ProjectStateHeader,
     request: &CloseTaskRequest,
     context: &CloseTaskContext,
-) -> Result<bool, PlanError> {
+) -> Result<Option<CloseReadinessBlocker>, PlanError> {
+    let task_ref = task_ref_for_close(request, project_state.state_version);
     let Some(close_basis) = context.current_close_basis.as_ref() else {
-        return Ok(false);
+        return Ok(Some(close_blocker(
+            CloseReadinessBlockerCategory::FinalAcceptance,
+            "missing_final_acceptance",
+            "Final acceptance is required before completing the Task.",
+            vec![task_ref.clone()],
+            vec![NextActionSummary {
+                action_kind: NextActionKind::RequestUserJudgment,
+                owner_method: Some(MethodName::RequestUserJudgment),
+                label: "Request final acceptance from the user.".to_owned(),
+                blocking_question: None,
+                required_refs: vec![task_ref],
+            }],
+        )));
     };
     let requirement = final_acceptance_requirement(close_basis);
     let authorities = resolved_judgment_authorities_for_context(
@@ -2192,9 +2212,45 @@ fn has_current_final_acceptance(
         context,
         JudgmentKind::FinalAcceptance,
     )?;
-    Ok(authorities
+    if authorities
         .iter()
-        .any(|authority| current_final_acceptance(authority, &requirement)))
+        .any(|authority| current_final_acceptance(authority, &requirement))
+    {
+        return Ok(None);
+    }
+
+    let stale_refs = non_current_judgment_refs_for_plan(
+        store,
+        project_state,
+        request,
+        JudgmentKind::FinalAcceptance,
+    )?;
+    let (code, message, related_refs) = if stale_refs.is_empty() {
+        (
+            "missing_final_acceptance",
+            "Final acceptance is required before completing the Task.",
+            vec![task_ref.clone()],
+        )
+    } else {
+        (
+            "stale_final_acceptance",
+            "The available final acceptance is stale or incompatible with the current close basis.",
+            refs_with_context(vec![task_ref.clone()], stale_refs),
+        )
+    };
+    Ok(Some(close_blocker(
+        CloseReadinessBlockerCategory::FinalAcceptance,
+        code,
+        message,
+        related_refs,
+        vec![NextActionSummary {
+            action_kind: NextActionKind::RequestUserJudgment,
+            owner_method: Some(MethodName::RequestUserJudgment),
+            label: "Request current final acceptance from the user.".to_owned(),
+            blocking_question: None,
+            required_refs: vec![task_ref],
+        }],
+    )))
 }
 
 fn has_current_sensitive_approval_for_close(
@@ -2258,13 +2314,25 @@ fn risk_acceptance_coverage(
         context,
         JudgmentKind::ResidualRiskAcceptance,
     )?;
-    Ok(current_residual_risk_acceptance_coverage(
+    let mut coverage = current_residual_risk_acceptance_coverage(
         &request.envelope.project_id,
         &request.task_id,
         project_state.state_version,
         basis,
         &authorities,
-    ))
+    );
+    let stale_refs = non_current_judgment_refs_for_plan(
+        store,
+        project_state,
+        request,
+        JudgmentKind::ResidualRiskAcceptance,
+    )?;
+    if !stale_refs.is_empty() {
+        for item in coverage.iter_mut().filter(|item| !item.accepted) {
+            item.missing_reason = Some("stale_acceptance".to_owned()).into();
+        }
+    }
+    Ok(coverage)
 }
 
 fn non_current_judgment_refs_for_plan(

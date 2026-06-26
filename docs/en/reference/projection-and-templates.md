@@ -35,6 +35,7 @@ A rendered label, status badge, Markdown section, projection, template body, cha
 - satisfy verification, QA, evidence, acceptance, or other gates
 - create final acceptance or accept residual risk
 - create close readiness or remove a `CloseReadinessBlocker`
+- create, retire, or re-authorize a project continuity record
 - close a Task
 - mutate Core, storage, artifact, user-judgment, acceptance decisions, residual-risk decisions, or close-readiness state
 
@@ -48,6 +49,7 @@ Display output must:
 
 - show source refs, `state_version`, observation time, or an equivalent source cue when the owner result provides one
 - preserve stale, partial, unavailable, redacted, blocked-artifact, conflicted, or capability-limited source conditions
+- preserve evidence-provenance limits and continuity carry-forward cues when the owner result provides them
 - keep display labels separate from canonical enum values and schema fields
 - link back to the relevant owner when a reader needs the authority record
 - treat hand-edited or stale display as display to discard or recompute, not as Core repair input

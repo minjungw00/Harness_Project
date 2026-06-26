@@ -508,8 +508,8 @@ GuaranteeDisplay:
 - `result_refs`, `source_run_ref`, `source_refs`, `evidence_summary_ref`, `accepted_by_judgment_refs`는 `StateRecordRef`를 사용합니다.
 - `sensitive_categories`는 영향받는 메서드나 프로필 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 불투명 민감 범주 분류 문자열입니다.
 - `sensitive_action_requirements`는 커밋된 실행 기록과 소비된 `Write Authorization` 기록에서 Core가 파생한 닫기 요구사항입니다. 범주만 담은 호출자 입력은 이 요구사항을 만들거나 지울 수 없습니다.
-- `recovery_constraints`와 `RiskAcceptanceCoverage.missing_reason`은 자유 형식 표시 문자열입니다.
-- `RiskAcceptanceCoverage`는 현재 잔여 위험 요구사항이 호환되는 판단으로 덮였는지를 보고합니다.
+- `recovery_constraints`와 `RiskAcceptanceCoverage.missing_reason`은 표시 문자열입니다. 현재 닫기 준비 상태 결과는 필요한 수락이 없으면 `acceptance_required`를 사용하고, 현재 잔여 위험 `risk_id` 값을 덮지 못하는 오래된 잔여 위험 수락이 있으면 `stale_acceptance`를 사용할 수 있습니다.
+- `RiskAcceptanceCoverage`는 현재 잔여 위험 요구사항이 호환되는 판단으로 덮였는지를 보고합니다. 증거 충분성이나 최종 수락을 보고하지 않습니다.
 - `CloseReadinessBlocker`는 닫기 차단 사유를 표현하는 데이터 형태입니다.
 - `CloseReadinessBlocker.category`는 제어 값 문자열입니다.
 - `CloseReadinessBlocker.code`는 담당 문서가 정의하는 차단 사유 코드입니다. 차단 사유 또는 메서드 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 빠짐없는 전역 공개 enum이 아닙니다.

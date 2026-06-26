@@ -437,6 +437,7 @@ pub struct CloseTaskResult {
     pub close_state: CloseState,
     pub current_close_basis: Option<CurrentCloseBasis>,
     pub risk_acceptance_coverage: Vec<RiskAcceptanceCoverage>,
+    pub continuity_summary: Vec<ProjectContinuitySummary>,
     pub state: StateSummary,
     pub blockers: Vec<CloseReadinessBlocker>,
     pub evidence_summary: Option<EvidenceSummary>,

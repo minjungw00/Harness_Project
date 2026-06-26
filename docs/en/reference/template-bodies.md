@@ -294,16 +294,18 @@ Recovery cue:
 ### Input state
 
 - Current read-only state returned by `volicord.status`.
-- Display inputs such as `StateSummary`, blockers, pending `UserJudgment` items, evidence summary, close-readiness observations, guarantee display, and next safe action.
+- Display inputs such as `StateSummary`, blockers, pending `UserJudgment` items, evidence summary and provenance state, close-readiness observations, residual-risk coverage, project continuity summary, guarantee display, and next safe action.
 - Freshness cues such as source refs, `state_version`, observation time, stale markers, unavailable markers, or capability-limited markers when present.
 - Artifact availability only through owner-approved `ArtifactRef` display data or an owner-approved unavailable/redacted note.
 
 ### Must show
 
 - A compact current-position card with separate regions for state and current scope.
+- Current goal, current scope, out-of-scope items, and allowed action state when those fields are present.
 - Separate regions for blockers and pending user judgments.
-- Separate regions for run/evidence summary and gaps.
+- Separate regions for run/evidence summary, evidence provenance limits, and gaps.
 - Separate regions for close-readiness summary, next safe action, source refs, and freshness.
+- Separate regions for residual risks and continuity records carried forward.
 - That the card is read-only derived display.
 - Any stale, partial, unavailable, redacted, or capability-limited source condition.
 - Required blockers, unresolved user judgments, and required evidence gaps.
@@ -324,6 +326,8 @@ Use direct status language:
 - `Status as of {observed_at} from state {state_version}.`
 - `Needs your judgment: {pending_judgment_summary}.`
 - `Close is blocked by: {close_blocker_summary}.`
+- `Evidence provenance: {provenance_summary}.`
+- `Continuity carried forward: {continuity_summary}.`
 - `Next safe action: {next_action}.`
 
 Use wording such as `approved`, `accepted`, `verified`, or `closed` only when the corresponding owner record exists and is linked.
@@ -443,6 +447,7 @@ Otherwise, avoid those words.
 - `CloseTaskResult` or close-readiness observations returned by `volicord.close_task`.
 - `CloseReadinessBlocker[]`, evidence summary, and pending user judgments.
 - Final-acceptance state, residual-risk state, and artifact availability.
+- Project continuity records returned by the close result.
 - Source refs, freshness cues, and the requested close intent.
 - The owner result that distinguishes a read-only close check from a state-changing close attempt.
 
@@ -453,6 +458,7 @@ Otherwise, avoid those words.
 - Every returned close blocker and its responsible blocker category or next action.
 - Remaining evidence, user judgment, final acceptance, residual-risk, or artifact availability gaps.
 - Source state version or equivalent freshness cue when available.
+- Continuity records that remain relevant after a successful close.
 - The next safe action when close is blocked.
 
 ### Must not imply
@@ -471,6 +477,7 @@ Use close-position wording:
 - `Not closed: {blocker_summary}.`
 - `Ready to attempt close, but not closed by this check.`
 - `Closed by owner result: {close_ref}.`
+- `Continuity carried forward: {continuity_summary}.`
 
 Use `Closed by owner result` only when `volicord.close_task` returned an actual state-changing close result.
 

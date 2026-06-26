@@ -1272,12 +1272,12 @@ fn status_close_shows_stale_final_acceptance_blocker_context() -> Result<(), Box
     )?;
 
     assert_eq!(user_judgment_status(&harness, &final_judgment_id)?, "stale");
-    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_close_blocker(&response.response_value, "stale_final_acceptance");
     let final_blocker = response.response_value["close_blockers"]
         .as_array()
         .expect("close blockers")
         .iter()
-        .find(|blocker| blocker["code"] == "missing_final_acceptance")
+        .find(|blocker| blocker["code"] == "stale_final_acceptance")
         .expect("final acceptance blocker");
     assert!(final_blocker["related_refs"]
         .as_array()
@@ -7394,6 +7394,16 @@ fn close_completion_creates_known_limit_continuity_and_preserves_records(
     let after_close = harness.counts()?;
     let rows = harness.continuity_records()?;
     assert_eq!(response.response_value["close_state"], "closed");
+    let response_continuity = response.response_value["continuity_summary"]
+        .as_array()
+        .expect("continuity_summary should be an array");
+    assert_eq!(response_continuity.len(), 1);
+    assert_eq!(response_continuity[0]["kind"], "known_limit");
+    assert_eq!(response_continuity[0]["status"], "active");
+    assert_eq!(
+        response_continuity[0]["source_task_ref"]["record_id"],
+        task_id
+    );
     assert_eq!(
         after_close.project_continuity_records,
         before_close.project_continuity_records + 1
@@ -8523,7 +8533,7 @@ fn final_acceptance_for_old_scope_revision_is_rejected_for_close() -> Result<(),
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
-    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_close_blocker(&response.response_value, "stale_final_acceptance");
     assert_eq!(harness.counts()?, before_close);
     Ok(())
 }
@@ -8577,7 +8587,7 @@ fn final_acceptance_for_old_close_basis_revision_is_rejected_for_close(
     )?;
 
     assert_eq!(response.response_value["close_state"], "blocked");
-    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_close_blocker(&response.response_value, "stale_final_acceptance");
     Ok(())
 }
 
@@ -8723,6 +8733,107 @@ fn partial_residual_risk_acceptance_leaves_current_risk_blocker() -> Result<(), 
 
     assert_eq!(response.response_value["close_state"], "blocked");
     assert_close_blocker(&response.response_value, "missing_residual_risk_acceptance");
+    Ok(())
+}
+
+#[test]
+fn stale_residual_risk_acceptance_is_distinct_from_missing_acceptance() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "risk_stale")?;
+    let (after_old_basis, old_risk_ids) = record_close_basis_with_risks(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "stale_old",
+        vec![residual_risk_input(
+            "Risk accepted against the old close basis.",
+        )],
+    )?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_risk_stale",
+            "idem_risk_stale",
+            false,
+            Some(after_old_basis),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ResidualRiskAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let judgment_id = response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let accepted = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_risk_stale_record",
+            "idem_risk_stale_record",
+            Some(after_old_basis + 1),
+            &task_id,
+            &judgment_id,
+            JudgmentKind::ResidualRiskAcceptance,
+            residual_risk_acceptance_payload(&old_risk_ids),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let after_old_acceptance = accepted.response_value["base"]["state_version"]
+        .as_u64()
+        .expect("state version should be present");
+    let (after_current_basis, current_risk_ids) = record_close_basis_with_risks(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_old_acceptance,
+        "stale_current",
+        vec![residual_risk_input(
+            "Risk accepted against the old close basis.",
+        )],
+    )?;
+    assert_ne!(old_risk_ids[0], current_risk_ids[0]);
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_current_basis,
+        "risk_stale",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_risk_stale_close",
+            idempotency_key: Some("idem_risk_stale_close"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(user_judgment_status(&harness, &judgment_id)?, "stale");
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "stale_residual_risk_acceptance");
+    assert_no_close_blocker(&response.response_value, "missing_residual_risk_acceptance");
+    let coverage = response.response_value["risk_acceptance_coverage"]
+        .as_array()
+        .expect("risk coverage should be an array");
+    assert_eq!(coverage.len(), 1);
+    assert_eq!(coverage[0]["risk_id"], current_risk_ids[0]);
+    assert_eq!(coverage[0]["accepted"], false);
+    assert_eq!(coverage[0]["missing_reason"], "stale_acceptance");
+    let risk_blocker = response.response_value["blockers"]
+        .as_array()
+        .expect("blockers should be an array")
+        .iter()
+        .find(|blocker| blocker["code"] == "stale_residual_risk_acceptance")
+        .expect("stale residual-risk blocker");
+    assert!(risk_blocker["related_refs"]
+        .as_array()
+        .expect("related refs should be an array")
+        .iter()
+        .any(|record_ref| record_ref["record_id"] == judgment_id));
     Ok(())
 }
 
@@ -11288,6 +11399,11 @@ fn close_complete_blocks_only_relevant_pending_judgments() -> Result<(), Box<dyn
 
     assert_eq!(response.response_value["close_state"], "blocked");
     assert_close_blocker(&response.response_value, "pending_user_judgment");
+    assert_close_blocker_category(
+        &response.response_value,
+        "pending_user_judgment",
+        "pending_user_judgment",
+    );
     assert_eq!(harness.counts()?, before);
     Ok(())
 }
@@ -11478,7 +11594,17 @@ fn missing_evidence_and_insufficient_provenance_are_distinct_blockers() -> Resul
 
     assert_eq!(response.response_value["close_state"], "blocked");
     assert_close_blocker(&response.response_value, "evidence_claim_missing");
+    assert_close_blocker_category(
+        &response.response_value,
+        "evidence_claim_missing",
+        "evidence_claim",
+    );
     assert_close_blocker(&response.response_value, "evidence_provenance_insufficient");
+    assert_close_blocker_category(
+        &response.response_value,
+        "evidence_provenance_insufficient",
+        "evidence_provenance",
+    );
     Ok(())
 }
 
@@ -13044,6 +13170,20 @@ fn assert_close_blocker(response_value: &Value, code: &str) {
         codes.iter().any(|candidate| candidate == code),
         "expected close blocker code {code}, got {codes:?}"
     );
+}
+
+fn assert_close_blocker_category(response_value: &Value, code: &str, category: &str) {
+    let blockers = response_value
+        .get("blockers")
+        .or_else(|| response_value.get("close_blockers"))
+        .expect("blockers or close_blockers should be present")
+        .as_array()
+        .expect("blockers should be an array");
+    let blocker = blockers
+        .iter()
+        .find(|blocker| blocker["code"] == code)
+        .unwrap_or_else(|| panic!("expected close blocker code {code}, got {blockers:?}"));
+    assert_eq!(blocker["category"], category);
 }
 
 fn assert_no_close_blocker(response_value: &Value, code: &str) {

@@ -109,7 +109,7 @@ Truthful projection rules:
 |---|---|
 | `base` | Common result metadata. The `ToolResultBase` shape is owned by [API Schema Core](schema-core.md#common-response). Read-only status results use `events: []`; `EventRef.event_kind`, when present in a common response branch, remains an opaque illustrative classification string. |
 | `active_task` | `StateSummary | null` for the currently selected Task summary. |
-| `status_summary` | Free-form display string summarizing the current status view. |
+| `status_summary` | Free-form display string summarizing the current status view. When close-readiness is selected, it may summarize the current close-readiness state or the first close blocker code; the structured authority facts remain in the other result fields. |
 | `next_actions` | `NextActionSummary[]` describing the next safe API steps. |
 | `pending_user_judgments` | `StateRecordRef[]` for pending user-judgment records selected into the status view. |
 | `blocker_refs` | `StateRecordRef[]` for blocker records visible in the current status view. |
@@ -234,7 +234,7 @@ active_task:
   evidence_summary: null
   close_state: blocked
   close_blockers:
-    - category: user_judgment
+    - category: pending_user_judgment
       code: pending_user_judgment
       message: "User-owned product decision about CSV column order is still pending."
       related_refs:
@@ -258,7 +258,7 @@ active_task:
     level: cooperative
     basis: "No stronger local guarantee is currently applied."
     capability_refs: []
-status_summary: "A user-owned product decision about CSV column order is pending."
+status_summary: "Close readiness is blocked by pending_user_judgment."
 next_actions:
   - action_kind: record_user_judgment
     owner_method: volicord.record_user_judgment
@@ -281,7 +281,7 @@ close_state: blocked
 current_close_basis: null
 risk_acceptance_coverage: []
 close_blockers:
-  - category: user_judgment
+  - category: pending_user_judgment
     code: pending_user_judgment
     message: "User-owned product decision about CSV column order is still pending."
     related_refs:

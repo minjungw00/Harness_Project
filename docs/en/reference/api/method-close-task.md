@@ -197,6 +197,7 @@ Returns `CloseTaskResult` with `base.response_kind=result`.
 | `state` | `StateSummary` for the selected Task after the check, terminal mutation, or owner-allowed blocked outcome. Nested state fields, including `close_blockers`, are owned by [API State Schemas](schema-state.md). |
 | `current_close_basis` | `CurrentCloseBasis | null` used for close readiness when selected into the result. `null` means no current close basis is available for this result. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `risk_acceptance_coverage` | `RiskAcceptanceCoverage[]` for current residual-risk acceptance coverage in the close-readiness result. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
+| `continuity_summary` | `ProjectContinuitySummary[]` for project continuity records made relevant by this close result. For successful `intent=complete`, this includes continuity records Core carries forward for close-basis known limits that do not require residual-risk acceptance. Empty means the computation ran and found no carry-forward records for this result. Shape is owned by [API State Schemas](schema-state.md#project-continuity-shapes). |
 | `blockers` | `CloseReadinessBlocker[]` returned when the requested path has close or terminal blockers. Shape and nesting are owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes); `category` values are owned by [API Value Sets](schema-value-sets.md#state-and-blocker-values). |
 | `evidence_summary` | `EvidenceSummary | null` for the close basis visible in the result, or `null` when no evidence summary is selected into the result. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes). |
 | `artifact_refs` | `ArtifactRef[]` for close-relevant artifacts selected into the result. `ArtifactRef` shape is owned by [API Artifact Schemas](schema-artifacts.md#artifactref). |
@@ -213,20 +214,22 @@ The production meanings below apply only after the method reaches close-readines
 |---|---|---|
 | `task_not_closeable` | `task` | The selected Task lifecycle or terminal-path state cannot take the requested close intent. |
 | `missing_active_change_unit` | `scope` | A close path requires a current Change Unit, but none is available. |
-| `pending_user_judgment` | `user_judgment` | A required user-owned judgment remains pending or unresolved. |
+| `pending_user_judgment` | `pending_user_judgment` | A required user-owned judgment remains pending or unresolved. |
 | `missing_sensitive_approval` | `sensitive_approval` | A required separate sensitive-action approval is absent. |
 | `missing_cancellation_authority` | `user_judgment` | `intent=cancel` lacks a current accepted user cancellation judgment with verified `user_interaction` actor provenance, bound to the current Task, scope revision, and Change Unit. |
 | `write_authorization_stale` | `write_compatibility` | A close-relevant `Write Authorization` is unusable for a freshness reason that is not routed as `STATE_VERSION_CONFLICT`. |
 | `baseline_stale` | `baseline` | The close-relevant baseline basis is stale on a blocker-producing path. |
-| `evidence_claim_unsupported` | `evidence` | A required close claim lacks supported evidence coverage. |
-| `evidence_claim_missing` | `evidence` | A required close claim has no current evidence coverage record. |
-| `evidence_provenance_insufficient` | `evidence` | Required close evidence exists but lacks sufficient current source and assurance provenance. |
-| `evidence_provenance_stale` | `evidence` | Evidence observation provenance exists but is stale for the current Task scope, Change Unit, source Run, or close-basis evidence summary. |
-| `evidence_agent_report_only` | `evidence` | Required close evidence is supported only by cooperative agent reports when stronger provenance is required. |
+| `evidence_claim_unsupported` | `evidence_claim` | A required close claim lacks supported evidence coverage. |
+| `evidence_claim_missing` | `evidence_claim` | A required close claim has no current evidence coverage record. |
+| `evidence_provenance_insufficient` | `evidence_provenance` | Required close evidence exists but lacks sufficient current source and assurance provenance. |
+| `evidence_provenance_stale` | `evidence_provenance` | Evidence observation provenance exists but is stale for the current Task scope, Change Unit, source Run, or close-basis evidence summary. |
+| `evidence_agent_report_only` | `evidence_provenance` | Required close evidence is supported only by cooperative agent reports when stronger provenance is required. |
 | `artifact_unavailable` | `artifact_availability` | A close-relevant artifact is missing, unavailable, unusable, or integrity-failed. |
-| `missing_final_acceptance` | `final_acceptance` | Required final acceptance is absent or incompatible with the current Task, Change Unit, `scope_revision`, `close_basis_revision`, baseline, or result refs. |
+| `missing_final_acceptance` | `final_acceptance` | Required final acceptance is absent for the current close basis. |
+| `stale_final_acceptance` | `final_acceptance` | A final acceptance exists but is stale or incompatible with the current Task, Change Unit, `scope_revision`, `close_basis_revision`, baseline, or result refs. |
 | `residual_risk_not_visible` | `residual_risk_visibility` | Close-relevant residual risk has not been made visible. |
-| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | Required residual-risk acceptance is absent or does not match the current `close_basis_revision` and exact residual-risk `risk_id` values. |
+| `missing_residual_risk_acceptance` | `residual_risk_acceptance` | Required residual-risk acceptance is absent for the current residual-risk requirements. |
+| `stale_residual_risk_acceptance` | `residual_risk_acceptance` | Residual-risk acceptance exists but does not match the current `close_basis_revision` and exact residual-risk `risk_id` values. |
 | `recovery_required` | `recovery` | Recovery work remains required before the requested close path can proceed. |
 
 These codes are method-local `CloseReadinessBlocker.code` values. They are not public `ErrorCode` values, not `WriteDecisionReason.code` values, and not global value-set entries.
@@ -344,6 +347,7 @@ base:
 close_state: blocked
 current_close_basis: null
 risk_acceptance_coverage: []
+continuity_summary: []
 state:
   project_id: proj_close_001
   state_version: 72
@@ -414,7 +418,7 @@ artifact_refs: []
 ## Owner links
 
 - Request envelope, common response branches, and `dry_run` summaries: [API Schema Core](schema-core.md).
-- `CloseTaskResult.blockers`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `EvidenceSummary`, `StateSummary`, and `NextActionSummary` shapes: [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
+- `CloseTaskResult.blockers`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ProjectContinuitySummary`, `EvidenceSummary`, `StateSummary`, and `NextActionSummary` shapes: [API State Schemas](schema-state.md#close-readiness-and-validation-shapes).
 - `ArtifactRef` shape: [API Artifact Schemas](schema-artifacts.md#artifactref).
 - `intent` values: [API Value Sets method-local values](schema-value-sets.md#method-local-values).
 - Close state, lifecycle, and close reason values: [API Value Sets task lifecycle values](schema-value-sets.md#task-lifecycle-values).

@@ -63,10 +63,12 @@ A useful status summary says:
 
 - current `Task` or work boundary
 - current scope
+- out-of-scope items and allowed action state when known
 - inspected facts and unknowns
 - primary blocker
 - pending user judgment or approval need
-- evidence gaps and close blockers when relevant
+- evidence state, evidence provenance limits, and close blockers when relevant
+- residual risks and continuity records carried forward when relevant
 - one next safe action
 
 The agent should not mix inspected facts with user-owned judgment, ask you to restate facts it can safely inspect, present stale status as current, or treat passing tests as final acceptance.
@@ -170,7 +172,7 @@ Before larger work is called done, ask in ordinary language:
 Show what changed, what was checked, what residual risk is visible, and what still blocks close.
 ```
 
-For users, close readiness means whether the task can honestly finish now. In reference terms, close readiness meaning belongs to [Core Model](../reference/core-model.md), and close method behavior belongs to [Close-task Method](../reference/api/method-close-task.md).
+For users, close readiness means whether the task can honestly finish now from the current Core records. It is not proof that the product result is objectively correct. In reference terms, close readiness meaning belongs to [Core Model](../reference/core-model.md), and close method behavior belongs to [Close-task Method](../reference/api/method-close-task.md).
 
 You decide:
 
@@ -179,7 +181,7 @@ You decide:
 - whether to accept a named residual risk when the applicable close path requires that judgment
 - whether the task should complete, cancel, or be superseded
 
-The agent should show scope, evidence, checks, pending judgments, final-acceptance needs, residual-risk needs, known blockers, and the next action that would unblock close.
+The agent should show scope, evidence and provenance, checks, pending judgments, final-acceptance needs, residual-risk visibility and acceptance needs, recovery constraints, continuity records carried forward, known blockers, and the next action that would unblock close.
 
 The agent should not call the task done while required scope, evidence, user judgment, final acceptance, residual-risk handling, or close blockers remain unresolved.
 

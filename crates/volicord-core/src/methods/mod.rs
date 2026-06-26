@@ -173,6 +173,7 @@ struct ProjectContinuityPlanContext<'a> {
 
 struct PlannedProjectContinuityRecord {
     record_ref: StateRecordRef,
+    summary: ProjectContinuitySummary,
     mutation: CoreStorageMutation,
 }
 
@@ -355,8 +356,38 @@ fn plan_project_continuity_record(
     let artifact_refs = unique_artifact_refs(draft.artifact_refs);
     let supersedes_refs = unique_state_refs(draft.supersedes_refs);
     let review_triggers = sorted_unique(draft.review_triggers);
+    let source_task_ref = state_ref(
+        StateRecordKind::Task,
+        context.source_task_id.as_str(),
+        context.project_id,
+        Some(context.source_task_id),
+        Some(context.planned_state_version),
+    );
+    let source_change_unit_ref = context
+        .source_change_unit_id
+        .map(|change_unit_id| {
+            state_ref(
+                StateRecordKind::ChangeUnit,
+                change_unit_id.as_str(),
+                context.project_id,
+                Some(context.source_task_id),
+                Some(context.planned_state_version),
+            )
+        })
+        .into();
+    let summary = ProjectContinuitySummary {
+        continuity_record_ref: record_ref.clone(),
+        kind: draft.kind,
+        status: ProjectContinuityStatus::Active,
+        title: draft.title.clone(),
+        summary: draft.summary.clone(),
+        source_task_ref,
+        source_change_unit_ref,
+        review_triggers: review_triggers.clone(),
+    };
     Ok(PlannedProjectContinuityRecord {
         record_ref,
+        summary,
         mutation: CoreStorageMutation::InsertProjectContinuityRecord(
             ProjectContinuityRecordInsert {
                 continuity_record_id: continuity_record_id.as_str().to_owned(),

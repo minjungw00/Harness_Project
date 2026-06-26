@@ -507,8 +507,8 @@ Meaning:
 - `result_refs`, `source_run_ref`, `source_refs`, `evidence_summary_ref`, and `accepted_by_judgment_refs` use `StateRecordRef`.
 - `sensitive_categories` are opaque sensitive-category classification strings unless an affected method or profile owner publishes a narrower local list.
 - `sensitive_action_requirements` are Core-derived close requirements from committed Runs and consumed `Write Authorization` records. Category-only caller input cannot establish or erase these requirements.
-- `recovery_constraints` and `RiskAcceptanceCoverage.missing_reason` are free-form display strings.
-- `RiskAcceptanceCoverage` reports whether the current residual-risk requirements are covered by compatible judgments.
+- `recovery_constraints` and `RiskAcceptanceCoverage.missing_reason` are display strings. Current close-readiness results use `acceptance_required` when required acceptance is absent and may use `stale_acceptance` when a non-current residual-risk acceptance exists but does not cover the current residual-risk `risk_id` values.
+- `RiskAcceptanceCoverage` reports whether the current residual-risk requirements are covered by compatible judgments. It does not report evidence sufficiency or final acceptance.
 - `CloseReadinessBlocker` is a data shape for close-readiness findings.
 - `CloseReadinessBlocker.category` is a controlled value string.
 - `CloseReadinessBlocker.code` is an owner-defined blocker code. It is not an exhaustive global public enum unless the blocker or method owner publishes a narrower local list.
