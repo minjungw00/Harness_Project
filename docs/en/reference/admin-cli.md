@@ -96,6 +96,7 @@ Rules:
 - `volicord init` may create or validate the selected Runtime Home registry.
 - Other administrative commands require the selected Runtime Home to contain the records needed for the requested operation.
 
+<a id="user-interaction-commands"></a>
 ## User interaction commands
 
 `volicord user` commands provide a local CLI path for a human user to inspect task status and answer pending user judgments through a registered `user_interaction` surface. They do not create an Agent Integration Profile, install MCP host configuration, or make an agent surface eligible to act as a user.
@@ -111,6 +112,25 @@ Rules:
 `volicord user judgment record` requires a pending judgment and a `--option-id` that names one of that judgment's stored Core-generated options. It records the selection through `volicord.record_user_judgment` with `actor_kind=user`, the registered `user_interaction` surface role, the CLI direct surface-binding verification basis, and `core_mutation` access. The selected option's `machine_action` and `resolution_outcome` determine the recorded answer; `--note` is stored only as a note. When `--request-id`, `--idempotency-key`, or `--expected-state-version` are omitted, the command supplies a local request id, a local idempotency key, and the current project state version. Agent-role surfaces are not eligible for `volicord user judgment record`.
 
 Recording one judgment records only the addressed judgment. Final acceptance and residual-risk acceptance remain separate judgment kinds and actions; this command must not collapse one into the other.
+
+Stable judgment workflow:
+
+1. Run `volicord user setup --project-id ID` once to create or update the local
+   `user_interaction` surface.
+2. Run `volicord user status --project-id ID [--task-id ID]` to inspect current
+   task status, pending judgment count, close state, and next actions.
+3. Run `volicord user judgment list --project-id ID [--task-id ID]` to see the
+   pending judgments for the active or selected task.
+4. Run `volicord user judgment show --project-id ID --judgment-id ID` to inspect
+   the stored request, context summary, and Core-generated options.
+5. Run `volicord user judgment record --project-id ID --judgment-id ID --option-id ID`
+   to record one selected Core-generated option for that judgment.
+
+Status, list, and show output expose selected owner state for the user's next
+action. They do not create evidence, final acceptance, residual-risk acceptance,
+or close readiness. Only `volicord user judgment record` mutates the addressed
+pending judgment, and it does so only through the selected Core-generated
+option.
 
 ## Host and scope support
 

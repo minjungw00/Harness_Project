@@ -129,8 +129,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: repository_guidance
   created_on: '2026-05-07'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   - doc_index_schema_v3
@@ -156,8 +156,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: repository_guidance
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   - doc_index_schema_v3
@@ -182,8 +182,8 @@ shared_documents:
   normative_level: maintenance
   owner_area: repository_guidance
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:
@@ -380,8 +380,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: onboarding
   created_on: '2026-06-20'
-  last_updated_on: '2026-06-25'
-  last_verified_on: '2026-06-25'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   - mcp_protocol_2025_11_25
@@ -406,8 +406,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: user_workflow
   created_on: '2026-05-22'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:
@@ -424,8 +424,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: user_workflow
   created_on: '2026-05-22'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   primary_audience:
@@ -1116,6 +1116,7 @@ documents:
   canonical_for:
   - local `volicord` administrative and bootstrap CLI command contract
   - '`volicord` command-line arguments, defaults, stdout and stderr routing, and exit codes'
+  - local `volicord user` status and judgment command behavior
   - Runtime Home path selection rules for `volicord` administrative commands
   - administrative project registration command behavior
   - administrative surface registration command behavior
@@ -1924,8 +1925,8 @@ documents:
   translation_policy: semantic_parity
   owner_area: agent_integration
   created_on: '2026-05-23'
-  last_updated_on: '2026-06-24'
-  last_verified_on: '2026-06-24'
+  last_updated_on: '2026-06-26'
+  last_verified_on: '2026-06-26'
   applies_to:
   - volicord_workspace_0_1
   - mcp_protocol_2025_11_25
@@ -1940,6 +1941,7 @@ documents:
   - surface registration
   - current surface context
   - currently applied surface context boundaries
+  - '`user_interaction` versus `agent` surface-role boundaries for authority-bearing judgment resolution'
   - '`VerifiedSurfaceContext` integration boundaries'
   - '`capability_profile` declaration boundaries'
   - agent context transfer boundaries

@@ -284,6 +284,41 @@ PATH="$VOLICORD_BIN:$PATH" \
 성공한 `volicord-mcp --check --integration <integration_id>`는 MCP 프로세스 시작 검증일
 뿐입니다. 그 자체로 완료된 호스트 통합이 아닙니다.
 
+## 로컬 사용자 판단 경로
+
+위의 호스트 설정은 에이전트 통합을 만듭니다. 이것이 에이전트 접점을 사용자 승인
+접점으로 만들지는 않습니다. 로컬 터미널에서 작업 상태를 확인하고 권한을 지니는
+Core 판단에 답하려면 별도의 `user_interaction` CLI 접점을 설정합니다.
+
+```sh
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user setup --project-id acme-api
+```
+
+상태를 확인하거나 판단을 기록할 때도 같은 Runtime Home 선택을 사용합니다. 기본
+Runtime Home이 이미 `/Users/alex/.volicord`라면 `VOLICORD_HOME=...` 접두어는
+생략할 수 있습니다.
+
+```sh
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user status --project-id acme-api
+
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user judgment list --project-id acme-api
+
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user judgment show --project-id acme-api --judgment-id JUDGMENT_ID
+
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user judgment record --project-id acme-api --judgment-id JUDGMENT_ID --option-id OPTION_ID
+```
+
+`OPTION_ID`는 `judgment show`가 보여 준 Core 생성 선택지에서 고릅니다. 선택지 하나를
+기록하면 그 판단 하나만 해결됩니다. 최종 수락, 잔여 위험 수락, 증거, 일반 쓰기
+승인이나 호스트 승인은 서로 다른 개념으로 남습니다. 사용자 작업 흐름은
+[사용자 가이드](../guides/user-workflow.md#record-a-core-user-judgment)를 보고, 정확한
+명령 계약은 [관리 CLI](../reference/admin-cli.md#user-interaction-commands)를 봅니다.
+
 ## 설정 상태 의미
 
 | 상태 | 다음 행동 |

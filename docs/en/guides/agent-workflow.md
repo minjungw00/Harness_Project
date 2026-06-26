@@ -170,6 +170,34 @@ Do not treat "yes", "approved", "looks good", "go ahead", or "continue" as a bun
 
 Keep product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, residual-risk acceptance, and cancellation separate. No judgment substitutes for another.
 
+<a id="route-user-interaction"></a>
+### Route authority-bearing answers to `user_interaction`
+
+When Core needs a user-owned judgment, the agent may request or present the
+focused judgment need and show the owner-returned options. Core-generated
+options define what the user can accept, reject, defer, or otherwise select for
+that judgment. Do not add extra authority outcomes in prose.
+
+If the user's answer must become authority-bearing Core state, route the user to
+a supported `user_interaction` surface. The stable local CLI route is:
+
+```sh
+volicord user judgment show --project-id PROJECT_ID --judgment-id JUDGMENT_ID
+volicord user judgment record --project-id PROJECT_ID --judgment-id JUDGMENT_ID --option-id OPTION_ID
+```
+
+An `agent` role integration must not call `volicord.record_user_judgment` as if
+it were the user, submit `actor_kind=user` to satisfy user authority, or convert
+a chat reply into authority-bearing acceptance without compatible
+`user_interaction` provenance. If the current surface cannot record the answer,
+name the needed user action and continue only with work that does not depend on
+that judgment.
+
+Status summaries, generated Markdown, rendered projections, and chat text can
+display a pending judgment or option list. They are support context only; they
+do not record final acceptance, residual-risk acceptance, or any other
+user-owned judgment.
+
 <a id="check-before-writes"></a>
 ## Check before writes
 

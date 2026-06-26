@@ -71,6 +71,49 @@ A useful status summary says:
 
 The agent should not mix inspected facts with user-owned judgment, ask you to restate facts it can safely inspect, present stale status as current, or treat passing tests as final acceptance.
 
+<a id="record-a-core-user-judgment"></a>
+## Record a Core user judgment
+
+When a choice must become authority-bearing Core state, use a supported
+`user_interaction` surface. The stable local CLI path is `volicord user`. Exact
+command behavior belongs to [Administrative CLI](../reference/admin-cli.md#user-interaction-commands);
+authority meaning belongs to [Core Model](../reference/core-model.md) and
+surface-role boundaries belong to
+[Agent Integration Reference](../reference/agent-integration.md#current-surface-context).
+
+Set up the local user surface once for the project:
+
+```sh
+volicord user setup --project-id acme-api
+```
+
+Then use this sequence when a task has a pending judgment:
+
+```sh
+volicord user status --project-id acme-api
+volicord user judgment list --project-id acme-api
+volicord user judgment show --project-id acme-api --judgment-id JUDGMENT_ID
+volicord user judgment record --project-id acme-api --judgment-id JUDGMENT_ID --option-id OPTION_ID
+```
+
+Use `volicord user status` to check the current task status and pending
+judgment count. Use `volicord user judgment list` to see pending judgments for
+the active or selected task. Use `volicord user judgment show` to inspect the
+stored request, context summary, and Core-generated options. Record only an
+`OPTION_ID` shown by Core for that judgment.
+
+Recording one option resolves only that addressed judgment. Broad natural
+language such as "approved", "looks good", or "go ahead" does not imply every
+pending authority outcome, and an explanatory `--note` does not change the
+selected Core option.
+
+An agent may help route you to this path, show the pending question, and explain
+the options. An agent-role integration must not record your authority-bearing
+decision for you or try to become a user by submitting `actor_kind=user`.
+Generated Markdown, status summaries, chat text, and rendered projections can
+help you read state, but they are not Core authority; for projection boundaries,
+see [Projection and template display boundaries](../reference/projection-and-templates.md).
+
 ## Approve writes and sensitive actions
 
 A user-facing write approval is bounded permission for a named write attempt. In this guide, write approval means ordinary user approval for a write flow; it is separate from the exact product label `Write Authorization`.

@@ -71,6 +71,48 @@ Volicord는 사용자가 평소 말로 일하면서도 판단 경계를 볼 수 
 
 에이전트는 확인한 사실과 사용자 소유 판단을 섞거나, 안전하게 확인할 수 있는 사실을 사용자에게 다시 설명하라고 요구하거나, 오래된 상태를 현재 상태처럼 말하거나, 테스트 통과를 최종 수락처럼 다루면 안 됩니다.
 
+<a id="record-a-core-user-judgment"></a>
+## Core 사용자 판단 기록하기
+
+어떤 선택이 권한을 지니는 Core 상태가 되어야 한다면 지원되는 `user_interaction`
+접점을 사용합니다. 안정적인 로컬 CLI 경로는 `volicord user`입니다. 정확한 명령
+동작은 [관리 CLI](../reference/admin-cli.md#user-interaction-commands)가 담당하고,
+권한 의미는 [Core 모델](../reference/core-model.md)이 담당하며, 접점 역할 경계는
+[에이전트 통합 참조](../reference/agent-integration.md#current-surface-context)가
+담당합니다.
+
+프로젝트에 로컬 사용자 접점을 한 번 설정합니다.
+
+```sh
+volicord user setup --project-id acme-api
+```
+
+작업에 대기 중인 판단이 있으면 아래 순서로 진행합니다.
+
+```sh
+volicord user status --project-id acme-api
+volicord user judgment list --project-id acme-api
+volicord user judgment show --project-id acme-api --judgment-id JUDGMENT_ID
+volicord user judgment record --project-id acme-api --judgment-id JUDGMENT_ID --option-id OPTION_ID
+```
+
+현재 작업 상태와 대기 중인 판단 수는 `volicord user status`로 확인합니다.
+활성 작업 또는 선택된 작업의 대기 판단은 `volicord user judgment list`로 봅니다.
+저장된 판단 요청, 맥락 요약, Core 생성 선택지는
+`volicord user judgment show`로 확인합니다. 기록할 때는 그 판단에 대해 Core가
+보여 준 `OPTION_ID`만 선택합니다.
+
+선택지 하나를 기록하면 그 판단 하나만 해결됩니다. "승인", "좋아 보여",
+"진행해" 같은 넓은 자연어가 모든 대기 권한 결과를 뜻하지는 않습니다. 설명용
+`--note`도 선택된 Core 선택지를 바꾸지 않습니다.
+
+에이전트는 사용자를 이 경로로 안내하고, 대기 중인 질문을 보여 주고, 선택지를
+설명할 수 있습니다. 하지만 `agent` 역할 통합은 사용자의 권한 판단을 대신
+기록하거나 `actor_kind=user`를 제출해 사용자처럼 동작하려 하면 안 됩니다. 생성된
+Markdown, 상태 요약, 채팅 문장, 렌더링된 상태 보기는 상태를 읽는 데 도움을 줄 수
+있지만 Core 권한은 아닙니다. 상태 보기 경계는
+[상태 보기와 템플릿 표시 경계](../reference/projection-and-templates.md)를 봅니다.
+
 ## 쓰기와 민감 동작 승인하기
 
 이 문서에서 쓰기 승인은 사용자에게 보이는 일반 승인 흐름을 말합니다. 참조 문서의 정확한 제품 라벨 `Write Authorization`은 호환되는 제품 파일 쓰기 시도 하나에 대한 Core 권한을 가리키는 별도 용어입니다.

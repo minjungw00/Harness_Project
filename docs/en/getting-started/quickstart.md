@@ -303,6 +303,43 @@ A successful `volicord-mcp --check --integration <integration_id>` is startup
 validation for the MCP process only. It is not by itself complete host
 integration.
 
+## Local User Judgment Path
+
+The host setup above creates an agent integration. It does not make the agent
+surface a user approval surface. To inspect task status and answer
+authority-bearing Core judgments from a local terminal, set up the separate
+`user_interaction` CLI surface:
+
+```sh
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user setup --project-id acme-api
+```
+
+Use the same Runtime Home selection when checking status or recording a
+judgment. If your default Runtime Home is already `/Users/alex/.volicord`, the
+`VOLICORD_HOME=...` prefix is optional.
+
+```sh
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user status --project-id acme-api
+
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user judgment list --project-id acme-api
+
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user judgment show --project-id acme-api --judgment-id JUDGMENT_ID
+
+VOLICORD_HOME=/Users/alex/.volicord \
+"$VOLICORD_BIN/volicord" user judgment record --project-id acme-api --judgment-id JUDGMENT_ID --option-id OPTION_ID
+```
+
+Choose `OPTION_ID` from the Core-generated options shown by `judgment show`.
+Recording one option resolves only that addressed judgment. Final acceptance,
+residual-risk acceptance, evidence, and ordinary write or host approval remain
+separate concepts. For the user workflow, see [User Guide](../guides/user-workflow.md#record-a-core-user-judgment);
+for the exact command contract, see
+[Administrative CLI](../reference/admin-cli.md#user-interaction-commands).
+
 ## Setup State Meanings
 
 | State | What to do next |

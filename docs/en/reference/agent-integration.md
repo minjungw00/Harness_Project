@@ -12,6 +12,7 @@ This document owns:
 - Host Installation inventory meaning and host trust boundary
 - surface registration inputs and selector meaning for agent integration
 - current surface and actor context boundaries, including `surface_id`, `surface_instance_id`, request-level `VerifiedSurfaceContext`, and authority-resolution `VerifiedActorContext`
+- `user_interaction` versus `agent` surface-role boundaries for authority-bearing judgment resolution
 - capability declaration boundaries for `capability_profile`
 - MCP project selection and per-project execution validation boundaries
 - agent context transfer rules between owner results and a surface
@@ -133,6 +134,45 @@ Owner links:
 - [Core Model](core-model.md) owns Core authority, user-owned judgment, close readiness, acceptance, and residual-risk boundaries.
 - [Runtime Boundaries](runtime-boundaries.md) owns `Product Repository`, Volicord source repository/installation, executable-process, `Volicord Runtime Home`, and external MCP host configuration separation.
 - [Projection and template display boundaries](projection-and-templates.md) owns authority versus projected display rules.
+
+## User interaction and agent surfaces
+
+Agent integrations are `agent` role integrations. They are not user approval
+surfaces, even when the model is relaying a user's words.
+
+Condition:
+- `interaction_role=agent` identifies an agent-facing surface for routing,
+  context transfer, and supported agent operations.
+- `interaction_role=user_interaction` identifies a registered surface that
+  method owners may use for authority-bearing user-judgment resolution.
+- The supported local CLI path for a human user to inspect pending judgments and
+  record a selected Core-generated option is the `volicord user` command group
+  owned by [Administrative CLI](admin-cli.md#user-interaction-commands).
+- `ToolEnvelope.actor_kind=user` is attribution only. It cannot turn an
+  `agent` role surface into `user_interaction` provenance.
+
+Agent may:
+- request a missing user-owned judgment when a method owner supports that path
+- display pending judgment state and Core-generated options returned by owners
+- route the human user to a supported `user_interaction` surface
+
+Agent must not:
+- record an authority-bearing user decision from an `agent` role surface
+- treat a natural-language approval, chat reply, generated Markdown status, or
+  rendered projection as `user_interaction` provenance
+- broaden one selected option into final acceptance, residual-risk acceptance,
+  sensitive-action approval, scope acceptance, or another judgment kind
+- create evidence sufficiency, acceptance, residual-risk acceptance, close
+  readiness, or security authority from the displayed judgment text
+
+Owner links:
+- [Core Model](core-model.md) owns the authority meaning of user-owned
+  judgments, final acceptance, residual-risk acceptance, evidence, and close
+  readiness.
+- [Record-user-judgment method](api/method-record-user-judgment.md) owns public
+  method behavior for resolving one pending judgment.
+- [Projection and template display boundaries](projection-and-templates.md)
+  owns generated display and projection authority boundaries.
 
 ## Surface registration
 

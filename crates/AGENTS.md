@@ -66,6 +66,11 @@ decisions.
   write approval, sensitive-action approval, `Write Authorization`, final
   acceptance, close readiness, and residual-risk acceptance distinct in code,
   tests, fixtures, and API examples.
+- Keep `agent` role surfaces and `user_interaction` surfaces distinct when
+  implementation examples, tests, fixtures, or CLI behavior touch
+  authority-bearing user judgments. Do not make an agent-role path record or
+  impersonate a user judgment; route exact behavior to the Core Model,
+  Administrative CLI, Agent Integration, and method owners.
 - Do not collapse evidence collection, verification criteria, QA, acceptance,
   waivers, close readiness, or residual-risk decisions into one broad approval
   path.

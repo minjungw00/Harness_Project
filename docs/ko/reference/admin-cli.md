@@ -97,6 +97,7 @@ volicord agent guidance remove --integration-id ID --project-id ID [--host codex
 - `volicord init`은 선택된 Runtime Home 레지스트리를 만들거나 검증할 수 있습니다.
 - 다른 관리 명령은 선택된 Runtime Home에 요청 작업에 필요한 기록이 있어야 합니다.
 
+<a id="user-interaction-commands"></a>
 ## 사용자 상호작용 명령
 
 `volicord user` 명령은 사람이 로컬 CLI에서 등록된 `user_interaction` 접점을 통해 작업 상태를 확인하고 대기 중인 사용자 판단에 답할 수 있는 경로를 제공합니다. 이 명령은 Agent Integration Profile을 만들거나, MCP 호스트 설정을 설치하거나, 에이전트 접점이 사용자처럼 동작할 수 있게 하지 않습니다.
@@ -112,6 +113,24 @@ volicord agent guidance remove --integration-id ID --project-id ID [--host codex
 `volicord user judgment record`는 대기 중인 판단과 그 판단에 저장된 Core 생성 선택지 중 하나를 가리키는 `--option-id`를 요구합니다. 이 명령은 `actor_kind=user`, 등록된 `user_interaction` 접점 역할, CLI 직접 접점 바인딩 확인 근거, `core_mutation` 접근으로 `volicord.record_user_judgment`를 통해 선택을 기록합니다. 기록되는 답은 선택된 선택지의 `machine_action`과 `resolution_outcome`으로 결정됩니다. `--note`는 메모로만 저장됩니다. `--request-id`, `--idempotency-key`, `--expected-state-version`이 생략되면 명령은 로컬 요청 ID, 로컬 idempotency key, 현재 프로젝트 상태 버전을 제공합니다. 에이전트 역할 접점은 `volicord user judgment record`에 사용할 수 없습니다.
 
 판단 하나를 기록하는 것은 그 판단만 기록합니다. 최종 수락과 잔여 위험 수락은 별개의 판단 종류와 동작으로 남아야 하며, 이 명령이 둘을 하나로 합치면 안 됩니다.
+
+안정적인 판단 작업 흐름:
+
+1. `volicord user setup --project-id ID`를 한 번 실행해 로컬
+   `user_interaction` 접점을 만들거나 갱신합니다.
+2. `volicord user status --project-id ID [--task-id ID]`로 현재 작업 상태, 대기
+   판단 수, 닫기 상태, 다음 행동을 확인합니다.
+3. `volicord user judgment list --project-id ID [--task-id ID]`로 활성 작업 또는
+   선택된 작업의 대기 판단을 봅니다.
+4. `volicord user judgment show --project-id ID --judgment-id ID`로 저장된 요청,
+   맥락 요약, Core 생성 선택지를 확인합니다.
+5. `volicord user judgment record --project-id ID --judgment-id ID --option-id ID`로 그
+   판단에 대해 선택한 Core 생성 선택지 하나를 기록합니다.
+
+`status`, `list`, `show` 출력은 사용자의 다음 행동을 위해 선택된 담당 상태를
+보여 줍니다. 이 출력은 증거, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 만들지
+않습니다. `volicord user judgment record`만 대기 중인 해당 판단을 변경하며, 그것도
+선택된 Core 생성 선택지를 통해서만 변경합니다.
 
 ## 호스트와 범위 지원
 
