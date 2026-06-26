@@ -683,7 +683,12 @@ fn validate_project_state_required_schema(
     require_tables(
         conn,
         PROJECT_STATE_DATABASE_KIND,
-        &["project_state", "surfaces", "evidence_observations"],
+        &[
+            "project_state",
+            "surfaces",
+            "evidence_observations",
+            "project_continuity_records",
+        ],
     )?;
     require_columns(
         conn,
@@ -740,6 +745,31 @@ fn validate_project_state_required_schema(
             "limitations_json",
             "observed_at",
             "recorded_at",
+            "metadata_json",
+        ],
+    )?;
+    require_columns(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "project_continuity_records",
+        &[
+            "project_id",
+            "continuity_record_id",
+            "source_task_id",
+            "source_change_unit_id",
+            "kind",
+            "title",
+            "summary",
+            "rationale",
+            "applies_to_paths_json",
+            "applies_to_refs_json",
+            "source_refs_json",
+            "artifact_refs_json",
+            "status",
+            "supersedes_refs_json",
+            "review_triggers_json",
+            "created_at",
+            "updated_at",
             "metadata_json",
         ],
     )?;

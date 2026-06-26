@@ -142,7 +142,7 @@ Primary source path:
 5. [`crates/volicord-store/src/core_pipeline.rs`](../../../crates/volicord-store/src/core_pipeline.rs)
    supplies `CoreProjectStore` reads such as `project_state`, Task reads, Change
    Unit reads, write-authority reads, evidence reads, and close-readiness input
-   reads.
+   reads, and project-continuity reads.
 
 Lifecycle:
 
@@ -163,7 +163,8 @@ Lifecycle:
 8. `status_result_fields` builds result fields from Store reads and the
    requested `StatusInclude` flags. When `include.close=true`, it reuses
    `close_task::plan_close_task` with `CloseIntent::Check` to compute the
-   read-only close view.
+   read-only close view. When `include.continuity=true`, it reads active
+   project-continuity summaries without mutating storage.
 9. `CoreService::execute_prepared_request` receives
    `OwnerPipelineBranch::ReadOnly`, builds a result with `EffectKind::ReadOnly`,
    and returns `PipelineResponse`.
@@ -177,6 +178,7 @@ What does not happen:
 - No task event.
 - No replay row.
 - No `Write Authorization` change.
+- No project-continuity record creation.
 
 Representative tests:
 

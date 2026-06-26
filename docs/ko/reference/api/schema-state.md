@@ -1,6 +1,6 @@
 # API 상태 스키마
 
-이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ShapingReadiness`, `ChangeUnitEffectContract`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
+이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
 
 ## 담당 경계
 
@@ -98,6 +98,57 @@ StateSummary:
 - `mode`와 `close_state` 값: [`Task` 생명주기 값](schema-value-sets.md#task-lifecycle-values)
 - 커밋 결정 분기: [공통 응답 분기](schema-core.md#common-response)
 - 메서드별 커밋 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
+
+<a id="project-continuity-shapes"></a>
+## 프로젝트 연속성 형태
+
+`ProjectContinuityRecord`는 오래 유지하는 프로젝트 수준 연속성 기록 하나의 전체 API 상태 형태입니다. `ProjectContinuitySummary`는 상태 조회 보기에 쓰는 간결한 형태입니다.
+
+```yaml
+ProjectContinuityRecord:
+  continuity_record_id: string
+  project_id: string
+  source_task_id: string
+  source_change_unit_id: string | null
+  kind: string
+  title: string
+  summary: string
+  rationale: string | null
+  applies_to_paths: string[]
+  applies_to_refs: StateRecordRef[]
+  source_refs: StateRecordRef[]
+  artifact_refs: ArtifactRef[]
+  status: string
+  supersedes_refs: StateRecordRef[]
+  review_triggers: string[]
+  created_at: string
+  updated_at: string
+
+ProjectContinuitySummary:
+  continuity_record_ref: StateRecordRef
+  kind: string
+  status: string
+  title: string
+  summary: string
+  source_task_ref: StateRecordRef
+  source_change_unit_ref: StateRecordRef | null
+  review_triggers: string[]
+```
+
+의미:
+- 프로젝트 연속성 기록은 원천 `Task`가 닫힌 뒤에도 유지해야 하는 결정, 의무, 알려진 한계, 수락된 잔여 위험, 제약 같은 프로젝트 수준 맥락을 보존합니다.
+- `source_task_id`와 `source_change_unit_id`는 기록이 어디에서 비롯되었는지를 식별합니다. 원천 `Task`나 Change Unit을 다시 현재 상태로 만들지는 않습니다.
+- `applies_to_paths`, `applies_to_refs`, `source_refs`, `artifact_refs`, `supersedes_refs`, `review_triggers`는 이후 검토를 위한 제한된 맥락입니다. 빈 배열은 그 필드에 항목이 없다는 뜻입니다.
+- `ProjectContinuitySummary`는 메서드 담당 문서가 선택하는 읽기 보기이며, 전체 지속 기록이 아닙니다.
+
+의미하지 않는 것:
+- 프로젝트 연속성 기록은 현재 `Task` 권한, 증거, `Write Authorization`, 최종 수락, 닫기 준비 상태, 미래 닫기 근거의 잔여 위험 수락, 차단 사유 면제가 아닙니다.
+- `status=active`는 그 연속성 기록이 살아 있는 프로젝트 맥락이라는 뜻입니다. 모든 `Task`에 현재 적용된다거나 원천 결정이 새 권한 확인에 충분하다는 뜻은 아닙니다.
+
+담당 문서 링크:
+- `kind`와 `status` 값: [프로젝트 연속성 값](schema-value-sets.md#project-continuity-values)
+- 저장소 계열과 JSON 배치: [저장소 기록](../storage-records.md)
+- 메서드별 생성 효과: [저장 효과](../storage-effects.md)
 
 ## `ChangeUnitEffectContract`
 

@@ -1449,6 +1449,7 @@ pub mod core_fixtures {
             evidence: true,
             close: true,
             guarantees: true,
+            continuity: true,
         }
     }
 

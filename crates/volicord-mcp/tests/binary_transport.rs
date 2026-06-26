@@ -554,7 +554,8 @@ fn status_arguments(project_id: &str, request_id: &str) -> Value {
             "write_authority": false,
             "evidence": false,
             "close": true,
-            "guarantees": true
+            "guarantees": true,
+            "continuity": false
         }
     })
 }

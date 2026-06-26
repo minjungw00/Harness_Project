@@ -13,9 +13,10 @@ use volicord_types::{
     ObservedChanges, PersistedArtifactProducer, PersistedArtifactProvenance,
     PersistedArtifactProvenanceMetadata, PersistedEvidenceMetadata, PersistedJudgmentBasis,
     PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
-    ProjectEnforcementProfile, ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus,
-    ProjectId, RequestHash, RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId,
-    UserJudgmentOptionAction, UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
+    ProjectContinuityKind, ProjectContinuityStatus, ProjectEnforcementProfile,
+    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, ProjectId, RequestHash,
+    RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId, UserJudgmentOptionAction,
+    UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
 };
 
 use crate::{
@@ -120,6 +121,7 @@ pub enum CoreStorageMutation {
     InsertEvidenceObservation(EvidenceObservationInsert),
     InsertUserJudgment(UserJudgmentInsert),
     ResolveUserJudgment(UserJudgmentResolutionUpdate),
+    InsertProjectContinuityRecord(ProjectContinuityRecordInsert),
     UpdateUserJudgmentBasis(UserJudgmentBasisUpdate),
     MarkUserJudgmentBasesStatus(UserJudgmentBasisStatusMark),
     MarkUserJudgmentsSupersededOrStale(UserJudgmentInvalidation),
@@ -234,6 +236,28 @@ pub struct UserJudgmentResolutionUpdate {
     pub resolved_verification_basis: String,
     pub resolved_assurance_level: String,
     pub resolved_at: String,
+}
+
+/// Storage input for inserting one project-level continuity record.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProjectContinuityRecordInsert {
+    pub continuity_record_id: String,
+    pub source_task_id: String,
+    pub source_change_unit_id: Option<String>,
+    pub kind: String,
+    pub title: String,
+    pub summary: String,
+    pub rationale: Option<String>,
+    pub applies_to_paths_json: String,
+    pub applies_to_refs_json: String,
+    pub source_refs_json: String,
+    pub artifact_refs_json: String,
+    pub status: String,
+    pub supersedes_refs_json: String,
+    pub review_triggers_json: String,
+    pub created_at: String,
+    pub updated_at: String,
+    pub metadata_json: String,
 }
 
 /// Storage input for replacing one judgment basis snapshot and compatibility status.
@@ -494,6 +518,7 @@ pub struct StorageEffectCounts {
     pub evidence_summaries: u64,
     pub evidence_observations: u64,
     pub blockers: u64,
+    pub project_continuity_records: u64,
 }
 
 /// Current Task row data needed by Core method implementations.
@@ -649,6 +674,29 @@ pub struct UserJudgmentRecord {
     pub requested_by_surface_instance_id: String,
     pub requested_at: String,
     pub resolved_at: Option<String>,
+    pub metadata_json: String,
+}
+
+/// Stored project-continuity row data needed by Core method implementations.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProjectContinuityRecordRecord {
+    pub project_id: String,
+    pub continuity_record_id: String,
+    pub source_task_id: String,
+    pub source_change_unit_id: Option<String>,
+    pub kind: String,
+    pub title: String,
+    pub summary: String,
+    pub rationale: Option<String>,
+    pub applies_to_paths_json: String,
+    pub applies_to_refs_json: String,
+    pub source_refs_json: String,
+    pub artifact_refs_json: String,
+    pub status: String,
+    pub supersedes_refs_json: String,
+    pub review_triggers_json: String,
+    pub created_at: String,
+    pub updated_at: String,
     pub metadata_json: String,
 }
 
@@ -1033,6 +1081,36 @@ impl CoreProjectStore {
         user_judgment_record(&self.conn, &self.project.project_id, judgment_id)
     }
 
+    /// Returns whether a project-continuity record id already exists in this project.
+    pub fn project_continuity_record_exists(
+        &self,
+        continuity_record_id: &str,
+    ) -> StoreResult<bool> {
+        row_exists(
+            &self.conn,
+            &self.project.project_id,
+            "project_continuity_records",
+            "continuity_record_id",
+            continuity_record_id,
+        )
+    }
+
+    /// Lists active project-continuity rows for compact status projection.
+    pub fn active_project_continuity_records(
+        &self,
+        limit: usize,
+    ) -> StoreResult<Vec<ProjectContinuityRecordRecord>> {
+        active_project_continuity_records(&self.conn, &self.project.project_id, limit)
+    }
+
+    /// Lists project-continuity rows that originated from one Task.
+    pub fn project_continuity_records_for_task(
+        &self,
+        task_id: &str,
+    ) -> StoreResult<Vec<ProjectContinuityRecordRecord>> {
+        project_continuity_records_for_task(&self.conn, &self.project.project_id, task_id)
+    }
+
     /// Reads one user-owned judgment basis row with strict typed JSON decoding.
     pub fn user_judgment_basis_record(
         &self,
@@ -1153,6 +1231,11 @@ impl CoreProjectStore {
                 &self.project.project_id,
             )?,
             blockers: table_count(&self.conn, "blockers", &self.project.project_id)?,
+            project_continuity_records: table_count(
+                &self.conn,
+                "project_continuity_records",
+                &self.project.project_id,
+            )?,
         })
     }
 
@@ -1459,6 +1542,9 @@ impl CoreStorageMutation {
             Self::InsertEvidenceObservation(input) => mutation.insert_evidence_observation(input),
             Self::InsertUserJudgment(input) => mutation.insert_user_judgment(input),
             Self::ResolveUserJudgment(input) => mutation.resolve_user_judgment(input),
+            Self::InsertProjectContinuityRecord(input) => {
+                mutation.insert_project_continuity_record(input)
+            }
             Self::UpdateUserJudgmentBasis(input) => mutation.update_user_judgment_basis(input),
             Self::MarkUserJudgmentBasesStatus(input) => {
                 mutation.mark_user_judgment_bases_status(input)
@@ -2638,6 +2724,118 @@ impl ProjectMutation<'_> {
         }
     }
 
+    fn insert_project_continuity_record(
+        &mut self,
+        input: &ProjectContinuityRecordInsert,
+    ) -> StoreResult<()> {
+        validate_identifier("continuity_record_id", &input.continuity_record_id)?;
+        validate_identifier("source_task_id", &input.source_task_id)?;
+        if let Some(source_change_unit_id) = &input.source_change_unit_id {
+            validate_identifier("source_change_unit_id", source_change_unit_id)?;
+        }
+        validate_project_continuity_kind("project_continuity_records.kind", &input.kind)?;
+        validate_nonempty_text("project_continuity_records.title", &input.title)?;
+        validate_nonempty_text("project_continuity_records.summary", &input.summary)?;
+        if let Some(rationale) = &input.rationale {
+            validate_nonempty_text("project_continuity_records.rationale", rationale)?;
+        }
+        validate_string_list_json(
+            "project_continuity_records.applies_to_paths_json",
+            &input.applies_to_paths_json,
+        )?;
+        validate_state_refs_json(
+            "project_continuity_records.applies_to_refs_json",
+            &input.applies_to_refs_json,
+        )?;
+        validate_state_refs_json(
+            "project_continuity_records.source_refs_json",
+            &input.source_refs_json,
+        )?;
+        validate_artifact_refs_json(
+            "project_continuity_records.artifact_refs_json",
+            &input.artifact_refs_json,
+        )?;
+        validate_project_continuity_status("project_continuity_records.status", &input.status)?;
+        validate_state_refs_json(
+            "project_continuity_records.supersedes_refs_json",
+            &input.supersedes_refs_json,
+        )?;
+        validate_string_list_json(
+            "project_continuity_records.review_triggers_json",
+            &input.review_triggers_json,
+        )?;
+        validate_timestamp("project_continuity_records.created_at", &input.created_at)?;
+        validate_timestamp("project_continuity_records.updated_at", &input.updated_at)?;
+        validate_json_text(
+            "project_continuity_records.metadata_json",
+            &input.metadata_json,
+        )?;
+
+        self.tx.execute(
+            "INSERT INTO project_continuity_records (
+                project_id,
+                continuity_record_id,
+                source_task_id,
+                source_change_unit_id,
+                kind,
+                title,
+                summary,
+                rationale,
+                applies_to_paths_json,
+                applies_to_refs_json,
+                source_refs_json,
+                artifact_refs_json,
+                status,
+                supersedes_refs_json,
+                review_triggers_json,
+                created_at,
+                updated_at,
+                metadata_json
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                ?4,
+                ?5,
+                ?6,
+                ?7,
+                ?8,
+                ?9,
+                ?10,
+                ?11,
+                ?12,
+                ?13,
+                ?14,
+                ?15,
+                ?16,
+                ?17,
+                ?18
+            )",
+            params![
+                self.project_id,
+                input.continuity_record_id,
+                input.source_task_id,
+                input.source_change_unit_id,
+                input.kind,
+                input.title,
+                input.summary,
+                input.rationale,
+                input.applies_to_paths_json,
+                input.applies_to_refs_json,
+                input.source_refs_json,
+                input.artifact_refs_json,
+                input.status,
+                input.supersedes_refs_json,
+                input.review_triggers_json,
+                input.created_at,
+                input.updated_at,
+                input.metadata_json
+            ],
+        )?;
+        Ok(())
+    }
+
     fn update_user_judgment_basis(&mut self, input: &UserJudgmentBasisUpdate) -> StoreResult<()> {
         validate_identifier("judgment_id", &input.judgment_id)?;
         validate_judgment_basis_json("user_judgments.basis_json", &input.basis_json)?;
@@ -3745,6 +3943,120 @@ fn user_judgment_record(
     .map_err(StoreError::from)
 }
 
+fn active_project_continuity_records(
+    conn: &Connection,
+    project_id: &str,
+    limit: usize,
+) -> StoreResult<Vec<ProjectContinuityRecordRecord>> {
+    if limit == 0 {
+        return Ok(Vec::new());
+    }
+    let limit = i64::try_from(limit).map_err(|_| StoreError::InvalidInput {
+        detail: "project_continuity_records limit is too large".to_owned(),
+    })?;
+    let mut stmt = conn.prepare(
+        "SELECT
+            project_id,
+            continuity_record_id,
+            source_task_id,
+            source_change_unit_id,
+            kind,
+            title,
+            summary,
+            rationale,
+            applies_to_paths_json,
+            applies_to_refs_json,
+            source_refs_json,
+            artifact_refs_json,
+            status,
+            supersedes_refs_json,
+            review_triggers_json,
+            created_at,
+            updated_at,
+            metadata_json
+         FROM project_continuity_records
+         WHERE project_id = ?1
+           AND status = 'active'
+         ORDER BY updated_at DESC, continuity_record_id DESC
+         LIMIT ?2",
+    )?;
+    let rows = stmt.query_map(
+        params![project_id, limit],
+        project_continuity_record_from_row,
+    )?;
+    let mut records = Vec::new();
+    for row in rows {
+        records.push(row?);
+    }
+    Ok(records)
+}
+
+fn project_continuity_records_for_task(
+    conn: &Connection,
+    project_id: &str,
+    task_id: &str,
+) -> StoreResult<Vec<ProjectContinuityRecordRecord>> {
+    let mut stmt = conn.prepare(
+        "SELECT
+            project_id,
+            continuity_record_id,
+            source_task_id,
+            source_change_unit_id,
+            kind,
+            title,
+            summary,
+            rationale,
+            applies_to_paths_json,
+            applies_to_refs_json,
+            source_refs_json,
+            artifact_refs_json,
+            status,
+            supersedes_refs_json,
+            review_triggers_json,
+            created_at,
+            updated_at,
+            metadata_json
+         FROM project_continuity_records
+         WHERE project_id = ?1
+           AND source_task_id = ?2
+         ORDER BY created_at, continuity_record_id",
+    )?;
+    let rows = stmt.query_map(
+        params![project_id, task_id],
+        project_continuity_record_from_row,
+    )?;
+    let mut records = Vec::new();
+    for row in rows {
+        records.push(row?);
+    }
+    Ok(records)
+}
+
+fn project_continuity_record_from_row(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<ProjectContinuityRecordRecord> {
+    Ok(ProjectContinuityRecordRecord {
+        project_id: row.get(0)?,
+        continuity_record_id: row.get(1)?,
+        source_task_id: row.get(2)?,
+        source_change_unit_id: row.get(3)?,
+        kind: row.get(4)?,
+        title: row.get(5)?,
+        summary: row.get(6)?,
+        rationale: row.get(7)?,
+        applies_to_paths_json: row.get(8)?,
+        applies_to_refs_json: row.get(9)?,
+        source_refs_json: row.get(10)?,
+        artifact_refs_json: row.get(11)?,
+        status: row.get(12)?,
+        supersedes_refs_json: row.get(13)?,
+        review_triggers_json: row.get(14)?,
+        created_at: row.get(15)?,
+        updated_at: row.get(16)?,
+        metadata_json: row.get(17)?,
+    })
+}
+
 fn resolved_user_judgment_records(
     conn: &Connection,
     project_id: &str,
@@ -4273,6 +4585,32 @@ fn validate_interaction_role_value(field: &'static str, value: &str) -> StoreRes
         _ => Err(StoreError::InvalidInput {
             detail: format!("{field} must be agent or user_interaction"),
         }),
+    }
+}
+
+fn validate_project_continuity_kind(field: &'static str, value: &str) -> StoreResult<()> {
+    serde_json::from_value::<ProjectContinuityKind>(Value::String(value.to_owned()))
+        .map(|_| ())
+        .map_err(|error| StoreError::InvalidInput {
+            detail: format!("{field} must be a supported project-continuity kind: {error}"),
+        })
+}
+
+fn validate_project_continuity_status(field: &'static str, value: &str) -> StoreResult<()> {
+    serde_json::from_value::<ProjectContinuityStatus>(Value::String(value.to_owned()))
+        .map(|_| ())
+        .map_err(|error| StoreError::InvalidInput {
+            detail: format!("{field} must be a supported project-continuity status: {error}"),
+        })
+}
+
+fn validate_nonempty_text(field: &'static str, value: &str) -> StoreResult<()> {
+    if value.trim().is_empty() {
+        Err(StoreError::InvalidInput {
+            detail: format!("{field} must not be empty"),
+        })
+    } else {
+        Ok(())
     }
 }
 
@@ -5606,6 +5944,60 @@ mod tests {
     }
 
     #[test]
+    fn project_continuity_record_mutation_persists_and_reads_active_rows(
+    ) -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_continuity_store";
+        let change_unit_id = "cu_continuity_store";
+        let input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::RecordUserJudgment,
+            Some(&IdempotencyKey::new("idem_store_continuity")),
+            &RequestHash::new("sha256:store-continuity"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("continuity", task_id)],
+        );
+
+        store.commit_mutation(
+            input,
+            |mutation, facts| {
+                CoreStorageMutation::InsertTask(task_insert(task_id))
+                    .apply(mutation, facts.committed_state_version)?;
+                CoreStorageMutation::InsertCurrentChangeUnit(change_unit_insert(
+                    change_unit_id,
+                    task_id,
+                    "null".to_owned(),
+                ))
+                .apply(mutation, facts.committed_state_version)?;
+                CoreStorageMutation::InsertProjectContinuityRecord(
+                    project_continuity_record_insert(task_id, change_unit_id),
+                )
+                .apply(mutation, facts.committed_state_version)
+            },
+            response_json,
+        )?;
+
+        let active = store.active_project_continuity_records(10)?;
+        assert_eq!(store.effect_counts()?.project_continuity_records, 1);
+        assert_eq!(active.len(), 1);
+        assert_eq!(active[0].continuity_record_id, "continuity_store_001");
+        assert_eq!(active[0].kind, "decision");
+        assert_eq!(active[0].status, "active");
+        assert_eq!(active[0].source_task_id, task_id);
+        assert_eq!(
+            active[0].source_change_unit_id.as_deref(),
+            Some(change_unit_id)
+        );
+
+        let task_records = store.project_continuity_records_for_task(task_id)?;
+        assert_eq!(task_records.len(), 1);
+        assert!(store.project_continuity_record_exists("continuity_store_001")?);
+        Ok(())
+    }
+
+    #[test]
     fn foreign_key_constraint_failure_is_classified() -> Result<(), Box<dyn Error>> {
         let harness = StoreHarness::new()?;
         let mut store = harness.store()?;
@@ -5804,6 +6196,43 @@ mod tests {
             resolved_verification_basis: "store_test_registration".to_owned(),
             resolved_assurance_level: "registered_surface_cooperative".to_owned(),
             resolved_at: "t1".to_owned(),
+        }
+    }
+
+    fn project_continuity_record_insert(
+        task_id: &str,
+        change_unit_id: &str,
+    ) -> ProjectContinuityRecordInsert {
+        ProjectContinuityRecordInsert {
+            continuity_record_id: "continuity_store_001".to_owned(),
+            source_task_id: task_id.to_owned(),
+            source_change_unit_id: Some(change_unit_id.to_owned()),
+            kind: "decision".to_owned(),
+            title: "Store continuity decision".to_owned(),
+            summary: "A durable store-level continuity decision.".to_owned(),
+            rationale: Some("The test records a traceable decision.".to_owned()),
+            applies_to_paths_json: json!(["src/export.rs"]).to_string(),
+            applies_to_refs_json: serde_json::to_string(&vec![state_ref(
+                StateRecordKind::ChangeUnit,
+                change_unit_id,
+                task_id,
+                1,
+            )])
+            .expect("state ref JSON should serialize"),
+            source_refs_json: serde_json::to_string(&vec![state_ref(
+                StateRecordKind::Task,
+                task_id,
+                task_id,
+                1,
+            )])
+            .expect("state ref JSON should serialize"),
+            artifact_refs_json: "[]".to_owned(),
+            status: "active".to_owned(),
+            supersedes_refs_json: "[]".to_owned(),
+            review_triggers_json: json!(["Review if the source Task changes."]).to_string(),
+            created_at: "2026-01-01T00:00:00Z".to_owned(),
+            updated_at: "2026-01-01T00:00:00Z".to_owned(),
+            metadata_json: json!({"source": "store_test"}).to_string(),
         }
     }
 

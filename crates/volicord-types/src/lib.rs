@@ -1701,7 +1701,8 @@ mod tests {
                 "write_authority": false,
                 "evidence": false,
                 "close": true,
-                "guarantees": true
+                "guarantees": true,
+                "continuity": false
             }
         })
     }

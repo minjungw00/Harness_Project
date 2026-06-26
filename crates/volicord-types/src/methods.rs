@@ -10,11 +10,11 @@ use crate::schema::{
     AcceptedRiskInput, ArtifactInput, ArtifactRef, ChangeUnitEffectContract, CloseAssessmentInput,
     CloseReadinessBlocker, CurrentCloseBasis, EvidenceCoverageItem, EvidenceObservation,
     EvidenceObservationInput, EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentRationale,
-    NextActionSummary, ObservedChanges, RecordUserJudgmentPayload, RequiredNullable,
-    RiskAcceptanceCoverage, RunSummary, SensitiveActionScope, StagedArtifactHandle, StateRecordRef,
-    StateSummary, ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
-    UserJudgmentContext, UserJudgmentOptionInput, WriteAuthoritySummary, WriteAuthorizationSummary,
-    WriteDecisionReason,
+    NextActionSummary, ObservedChanges, ProjectContinuitySummary, RecordUserJudgmentPayload,
+    RequiredNullable, RiskAcceptanceCoverage, RunSummary, SensitiveActionScope,
+    StagedArtifactHandle, StateRecordRef, StateSummary, ToolEnvelope, ToolResponse, ToolResultBase,
+    UserJudgment, UserJudgmentCandidate, UserJudgmentContext, UserJudgmentOptionInput,
+    WriteAuthoritySummary, WriteAuthorizationSummary, WriteDecisionReason,
 };
 use crate::values::{
     AccessClass, AuthorizationEffect, ChangeUnitOperation, CloseIntent, CloseReason, CloseState,
@@ -185,6 +185,7 @@ pub struct StatusInclude {
     pub evidence: bool,
     pub close: bool,
     pub guarantees: bool,
+    pub continuity: bool,
 }
 
 /// `volicord.status` method result branch.
@@ -209,6 +210,8 @@ pub struct StatusResult {
     pub close_blockers: Option<Vec<CloseReadinessBlocker>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guarantee_display: Option<RequiredNullable<GuaranteeDisplay>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub continuity_summary: Option<Vec<ProjectContinuitySummary>>,
 }
 
 /// `volicord.prepare_write` request params.

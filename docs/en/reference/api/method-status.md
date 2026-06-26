@@ -21,7 +21,7 @@ This document does not own:
 
 ## Purpose
 
-`volicord.status` returns a read-only current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Authorization` summary, evidence summary, close state, close-readiness findings, guarantee display, and next safe actions.
+`volicord.status` returns a read-only current-position view over Core state. The view can include current Task summary, blockers, pending user judgments, `Write Authorization` summary, evidence summary, close state, close-readiness findings, project continuity summaries, guarantee display, and next safe actions.
 
 ## Required inputs
 
@@ -87,9 +87,11 @@ Include projection contract:
 - `include.evidence` returns current `EvidenceSummary` and coverage when available.
 - `include.close` returns `CurrentCloseBasis | null`, close state, computed blockers, risk acceptance coverage, and relevant next actions. The blockers use the same close-readiness calculation as `volicord.close_task intent=check`.
 - `include.guarantees` returns only guarantees derived from the project enforcement profile, verified bound surface registration, enabled enforcement mechanisms, and supported baseline scope.
+- `include.continuity` returns active `ProjectContinuitySummary[]` entries for durable project-level context.
 - `include.evidence=false` means evidence summaries, coverage, artifact evidence refs, and evidence-only next actions are not computed and not returned.
 - `include.close=false` means close readiness is not computed and `CurrentCloseBasis`, close state, close blockers, residual-risk coverage, and close-only next actions are not returned.
 - `include.guarantees=false` means guarantee display is not derived and not returned.
+- `include.continuity=false` means project continuity summaries are not read or returned.
 
 Truthful projection rules:
 - Uncomputed, unselected, or unavailable data is omitted where the schema permits, or `null` only when the selected projection was computed and unavailable. It is not an empty value that implies "computed and none."
@@ -116,8 +118,9 @@ Truthful projection rules:
 | `risk_acceptance_coverage` | `RiskAcceptanceCoverage[]` for current residual-risk acceptance coverage in the close status view. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `close_blockers` | Read-only `CloseReadinessBlocker[]` observations for the current view. They are not stored close results. |
 | `guarantee_display` | `GuaranteeDisplay | null` for the current status view. |
+| `continuity_summary` | `ProjectContinuitySummary[]` when `include.continuity=true`; omitted when the projection is not selected. Shape is owned by [API State Schemas](schema-state.md#project-continuity-shapes). |
 
-Nested `StateSummary`, `StateRecordRef`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `GuaranteeDisplay`, and `NextActionSummary` shapes are owned by [API State Schemas](schema-state.md).
+Nested `StateSummary`, `StateRecordRef`, `ProjectContinuitySummary`, `CurrentCloseBasis`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `GuaranteeDisplay`, and `NextActionSummary` shapes are owned by [API State Schemas](schema-state.md).
 
 ## Blocked result
 
@@ -176,6 +179,7 @@ params:
     evidence: true
     close: true
     guarantees: true
+    continuity: false
 ```
 
 ## Representative response

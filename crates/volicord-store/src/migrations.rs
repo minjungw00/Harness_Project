@@ -583,6 +583,32 @@ CREATE TABLE user_judgments (
     REFERENCES surfaces (project_id, surface_id, surface_instance_id)
 );
 
+CREATE TABLE project_continuity_records (
+  project_id TEXT NOT NULL,
+  continuity_record_id TEXT NOT NULL,
+  source_task_id TEXT NOT NULL,
+  source_change_unit_id TEXT,
+  kind TEXT NOT NULL CHECK (kind IN ('decision', 'obligation', 'known_limit', 'accepted_risk', 'constraint')),
+  title TEXT NOT NULL CHECK (length(trim(title)) > 0),
+  summary TEXT NOT NULL CHECK (length(trim(summary)) > 0),
+  rationale TEXT CHECK (rationale IS NULL OR length(trim(rationale)) > 0),
+  applies_to_paths_json TEXT NOT NULL DEFAULT '[]',
+  applies_to_refs_json TEXT NOT NULL DEFAULT '[]',
+  source_refs_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL CHECK (status IN ('active', 'superseded', 'closed')),
+  supersedes_refs_json TEXT NOT NULL DEFAULT '[]',
+  review_triggers_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, continuity_record_id),
+  FOREIGN KEY (project_id) REFERENCES project_state (project_id),
+  FOREIGN KEY (project_id, source_task_id) REFERENCES tasks (project_id, task_id),
+  FOREIGN KEY (project_id, source_task_id, source_change_unit_id)
+    REFERENCES change_units (project_id, task_id, change_unit_id)
+);
+
 CREATE TABLE write_authorizations (
   project_id TEXT NOT NULL,
   write_authorization_id TEXT NOT NULL,
@@ -902,6 +928,12 @@ CREATE INDEX idx_change_units_task_status
 CREATE INDEX idx_user_judgments_task_status
   ON user_judgments (project_id, task_id, status);
 
+CREATE INDEX idx_project_continuity_records_status
+  ON project_continuity_records (project_id, status, kind, updated_at);
+
+CREATE INDEX idx_project_continuity_records_source_task
+  ON project_continuity_records (project_id, source_task_id);
+
 CREATE INDEX idx_write_authorizations_task_status
   ON write_authorizations (project_id, task_id, status);
 
@@ -1026,6 +1058,7 @@ mod tests {
             "user_judgments",
             "resolution_machine_action"
         )?);
+        assert!(table_exists(&conn, "project_continuity_records")?);
         assert!(!column_exists(&conn, "tasks", "state_version")?);
         Ok(())
     }

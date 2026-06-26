@@ -1285,11 +1285,35 @@ fn plan_record_user_judgment(
         close_blockers: close_plan.blockers,
         guarantee_display: Some(guarantee_display),
     })?;
+    let continuity_plans = plan_judgment_continuity_records(JudgmentContinuityContext {
+        service,
+        store,
+        project_state,
+        request: &request,
+        record: &record,
+        task: &task,
+        current_change_unit: current_change_unit.as_ref(),
+        resolution: &resolution,
+        user_judgment: &user_judgment,
+        user_judgment_ref: &user_judgment_ref,
+        planned_state_version,
+        now: &now,
+    })?;
+    let continuity_record_refs = continuity_plans
+        .iter()
+        .map(|plan| plan.record_ref.clone())
+        .collect::<Vec<_>>();
+    let continuity_record_ids = continuity_record_refs
+        .iter()
+        .map(|record_ref| record_ref.record_id.as_str().to_owned())
+        .collect::<Vec<_>>();
+    let mut updated_refs = vec![user_judgment_ref.clone()];
+    updated_refs.extend(continuity_record_refs);
     let result = volicord_types::RecordUserJudgmentResult {
         base: placeholder_base(),
         user_judgment_ref: user_judgment_ref.clone(),
         user_judgment,
-        updated_refs: vec![user_judgment_ref],
+        updated_refs,
         state,
         next_actions: next_actions.clone(),
     };
@@ -1299,7 +1323,7 @@ fn plan_record_user_judgment(
         .as_ref()
         .map(serde_json::to_string)
         .transpose()?;
-    let storage_mutations = vec![CoreStorageMutation::ResolveUserJudgment(
+    let mut storage_mutations = vec![CoreStorageMutation::ResolveUserJudgment(
         UserJudgmentResolutionUpdate {
             judgment_id: request.user_judgment_id.as_str().to_owned(),
             status: storage_value(UserJudgmentStatus::Resolved)?,
@@ -1319,6 +1343,7 @@ fn plan_record_user_judgment(
             resolved_at: now.to_string(),
         },
     )];
+    storage_mutations.extend(continuity_plans.into_iter().map(|plan| plan.mutation));
     let event_payload = object_from_value(json!({
         "task_id": task_id,
         "change_unit_id": record.change_unit_id,
@@ -1326,7 +1351,8 @@ fn plan_record_user_judgment(
         "judgment_kind": request.judgment_kind,
         "selected_option_id": request.selected_option_id,
         "machine_action": machine_action,
-        "resolution_outcome": resolution_outcome
+        "resolution_outcome": resolution_outcome,
+        "continuity_record_ids": continuity_record_ids
     }))?;
 
     Ok(MethodPlan {
@@ -1337,6 +1363,273 @@ fn plan_record_user_judgment(
         result_fields: strip_base(serde_json::to_value(result)?)?,
         next_actions,
     })
+}
+
+#[derive(Clone, Copy)]
+struct JudgmentContinuityContext<'a> {
+    service: &'a CoreService,
+    store: &'a CoreProjectStore,
+    project_state: &'a ProjectStateHeader,
+    request: &'a RecordUserJudgmentRequest,
+    record: &'a UserJudgmentRecord,
+    task: &'a TaskRecord,
+    current_change_unit: Option<&'a ChangeUnitRecord>,
+    resolution: &'a UserJudgmentResolution,
+    user_judgment: &'a UserJudgment,
+    user_judgment_ref: &'a StateRecordRef,
+    planned_state_version: u64,
+    now: &'a UtcTimestamp,
+}
+
+fn plan_judgment_continuity_records(
+    context: JudgmentContinuityContext<'_>,
+) -> Result<Vec<PlannedProjectContinuityRecord>, PlanError> {
+    match judgment_continuity_kind(
+        context.request.judgment_kind,
+        context.resolution.resolution_outcome,
+    ) {
+        Some(ProjectContinuityKind::Decision) => {
+            plan_decision_continuity_record(context).map(|record| vec![record])
+        }
+        Some(ProjectContinuityKind::AcceptedRisk) => plan_accepted_risk_continuity_records(context),
+        _ => Ok(Vec::new()),
+    }
+}
+
+fn plan_decision_continuity_record(
+    context: JudgmentContinuityContext<'_>,
+) -> Result<PlannedProjectContinuityRecord, PlanError> {
+    let request = context.request;
+    let user_judgment = context.user_judgment;
+    let summary = continuity_decision_summary(request, user_judgment, context.resolution);
+    let title = format!(
+        "{}: {}",
+        decision_title_prefix(request.judgment_kind),
+        short_continuity_title(&summary)
+    );
+    let source_change_unit_id = context
+        .record
+        .change_unit_id
+        .as_ref()
+        .map(|id| ChangeUnitId::new(id.clone()));
+    let source_refs = refs_with_context(
+        vec![context.user_judgment_ref.clone()],
+        refs_with_context(
+            user_judgment.affected_refs.clone(),
+            refs_with_context(
+                user_judgment.context.related_refs.clone(),
+                request.rationale.related_refs.clone(),
+            ),
+        ),
+    );
+    let applies_to_refs = refs_with_context(
+        user_judgment.affected_refs.clone(),
+        user_judgment.context.related_refs.clone(),
+    );
+    let artifact_refs = user_judgment
+        .context
+        .artifact_refs
+        .iter()
+        .cloned()
+        .chain(request.rationale.artifact_refs.iter().cloned())
+        .collect();
+    let draft = ProjectContinuityDraft {
+        kind: ProjectContinuityKind::Decision,
+        title,
+        summary,
+        rationale: request
+            .rationale
+            .selected_reason
+            .as_ref()
+            .cloned()
+            .or_else(|| Some(request.rationale.summary.clone())),
+        applies_to_paths: bounded_paths_from_change_unit(context.current_change_unit)?,
+        applies_to_refs,
+        source_refs,
+        artifact_refs,
+        supersedes_refs: Vec::new(),
+        review_triggers: request.rationale.review_triggers.clone(),
+        metadata: json!({
+            "source": "record_user_judgment",
+            "judgment_kind": request.judgment_kind,
+            "resolution_outcome": context.resolution.resolution_outcome
+        }),
+    };
+    plan_project_continuity_record(
+        ProjectContinuityPlanContext {
+            service: context.service,
+            store: context.store,
+            project_id: &request.envelope.project_id,
+            source_task_id: &user_judgment.task_id,
+            source_change_unit_id: source_change_unit_id.as_ref(),
+            planned_state_version: context.planned_state_version,
+            now: context.now,
+        },
+        draft,
+    )
+    .map_err(PlanError::Core)
+}
+
+fn plan_accepted_risk_continuity_records(
+    context: JudgmentContinuityContext<'_>,
+) -> Result<Vec<PlannedProjectContinuityRecord>, PlanError> {
+    let request = context.request;
+    let resolution = context.resolution;
+    let user_judgment = context.user_judgment;
+    let accepted_risk_ids =
+        accepted_risk_ids_from_answer(&resolution.answer, &resolution.accepted_risks);
+    if accepted_risk_ids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let close_basis = current_close_basis_for_answer(
+        context.store,
+        context.project_state,
+        request,
+        context.task,
+        context.current_change_unit,
+    )?;
+    let source_change_unit_id = Some(close_basis.change_unit_id.clone());
+    let continuity_context = ProjectContinuityPlanContext {
+        service: context.service,
+        store: context.store,
+        project_id: &request.envelope.project_id,
+        source_task_id: &user_judgment.task_id,
+        source_change_unit_id: source_change_unit_id.as_ref(),
+        planned_state_version: context.planned_state_version,
+        now: context.now,
+    };
+    let mut records = Vec::new();
+    for risk in close_basis
+        .residual_risks
+        .iter()
+        .filter(|risk| accepted_risk_ids.contains(&risk.risk_id))
+    {
+        let source_refs = refs_with_context(
+            vec![context.user_judgment_ref.clone()],
+            refs_with_context(
+                risk.source_refs.clone(),
+                request.rationale.related_refs.clone(),
+            ),
+        );
+        let applies_to_refs =
+            refs_with_context(close_basis.result_refs.clone(), risk.source_refs.clone());
+        let artifact_refs = user_judgment
+            .context
+            .artifact_refs
+            .iter()
+            .cloned()
+            .chain(request.rationale.artifact_refs.iter().cloned())
+            .collect();
+        let draft = ProjectContinuityDraft {
+            kind: ProjectContinuityKind::AcceptedRisk,
+            title: format!(
+                "Accepted residual risk: {}",
+                short_continuity_title(&risk.summary)
+            ),
+            summary: risk.summary.clone(),
+            rationale: Some(format!(
+                "{} Consequence: {}",
+                request.rationale.summary, risk.consequence
+            )),
+            applies_to_paths: bounded_paths_from_change_unit(context.current_change_unit)?,
+            applies_to_refs,
+            source_refs,
+            artifact_refs,
+            supersedes_refs: Vec::new(),
+            review_triggers: request.rationale.review_triggers.clone(),
+            metadata: json!({
+                "source": "record_user_judgment",
+                "judgment_kind": request.judgment_kind,
+                "risk_id": risk.risk_id,
+                "close_basis_revision": close_basis.close_basis_revision
+            }),
+        };
+        records.push(
+            plan_project_continuity_record(continuity_context, draft).map_err(PlanError::Core)?,
+        );
+    }
+    Ok(records)
+}
+
+fn continuity_decision_summary(
+    request: &RecordUserJudgmentRequest,
+    user_judgment: &UserJudgment,
+    resolution: &UserJudgmentResolution,
+) -> String {
+    let payload_summary = match request.judgment_kind {
+        JudgmentKind::ProductDecision => resolution
+            .answer
+            .product_decision
+            .as_ref()
+            .and_then(summary_from_json_object),
+        JudgmentKind::TechnicalDecision => resolution
+            .answer
+            .technical_decision
+            .as_ref()
+            .and_then(summary_from_json_object),
+        JudgmentKind::ScopeDecision => resolution
+            .answer
+            .scope_decision
+            .as_ref()
+            .and_then(summary_from_json_object),
+        _ => None,
+    };
+    payload_summary
+        .or_else(|| nonempty_string(request.rationale.summary.clone()))
+        .or_else(|| nonempty_string(user_judgment.context.summary.clone()))
+        .unwrap_or_else(|| decision_title_prefix(request.judgment_kind).to_owned())
+}
+
+fn summary_from_json_object(object: &JsonObject) -> Option<String> {
+    ["summary", "decision", "selected_option", "selected_reason"]
+        .into_iter()
+        .filter_map(|key| object.get(key).and_then(Value::as_str))
+        .find_map(|value| nonempty_string(value.to_owned()))
+}
+
+fn nonempty_string(value: String) -> Option<String> {
+    if value.trim().is_empty() {
+        None
+    } else {
+        Some(value)
+    }
+}
+
+fn short_continuity_title(value: &str) -> String {
+    const MAX_CHARS: usize = 96;
+    let trimmed = value.trim();
+    let mut chars = trimmed.chars();
+    let short = chars.by_ref().take(MAX_CHARS).collect::<String>();
+    if chars.next().is_some() {
+        format!("{short}...")
+    } else {
+        short
+    }
+}
+
+fn refs_with_context(
+    mut refs: Vec<StateRecordRef>,
+    additional_refs: Vec<StateRecordRef>,
+) -> Vec<StateRecordRef> {
+    refs.extend(additional_refs);
+    refs
+}
+
+fn bounded_paths_from_change_unit(
+    current_change_unit: Option<&ChangeUnitRecord>,
+) -> Result<Vec<String>, PlanError> {
+    current_change_unit
+        .map(|record| {
+            decode_required_json(
+                "change_units",
+                record.change_unit_id.clone(),
+                "bounded_paths_json",
+                Some(&record.bounded_paths_json),
+            )
+            .map_err(PlanError::Core)
+        })
+        .transpose()
+        .map(Option::unwrap_or_default)
 }
 
 fn current_options_for_request(

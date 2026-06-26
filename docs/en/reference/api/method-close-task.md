@@ -158,7 +158,7 @@ Implementations evaluate `volicord.close_task` in this order:
 3. For `dry_run=false` mutating intents, check `idempotency_key`, current `expected_state_version`, idempotency request hash, and close-relevant `WriteAuthorization.basis_state_version`. Stale or conflicting values return `ToolRejectedResponse`.
 4. For `intent=check`, compute current close readiness with the same calculation used by [`volicord.status`](method-status.md) when `include.close=true`, and return read-only `CloseTaskResult`.
 5. For mutating intents with `dry_run=true`, return the common preview branch after valid preflight.
-6. For `intent=complete`, run the close readiness evaluation over the current `CurrentCloseBasis`. If blockers remain, return the blocked branch; otherwise commit `close_state=closed` and the terminal close result.
+6. For `intent=complete`, run the close readiness evaluation over the current `CurrentCloseBasis`. If blockers remain, return the blocked branch; otherwise commit `close_state=closed`, the terminal close result, and any method-selected project continuity records for close-basis known limits that do not require residual-risk acceptance.
 7. For `intent=cancel`, require a current accepted `judgment_kind=cancellation` with `machine_action=accept`, `resolution_outcome=accepted`, verified `user_interaction` actor provenance, and compatibility with the current Task, scope revision, and Change Unit. Missing or incompatible cancellation authority returns the blocked branch.
 8. For `intent=cancel` or `intent=supersede`, evaluate only the requested terminal path. If terminal-path blockers remain, return the blocked branch; otherwise commit `close_state=cancelled` or `close_state=superseded`.
 
@@ -300,7 +300,7 @@ Branch shapes are owned by [API Schema Core](schema-core.md). Response-branch ro
 
 `intent=check` has no storage effect, including when it returns blockers or uses `dry_run=true`.
 
-Committed `dry_run=false` mutating intents may persist terminal or blocked outcomes according to the method result. A successful terminal close may persist a terminal close summary, distinct from the current close basis used for pre-close readiness. Exact storage effects, replay rows, events, state-version increments, and blocker persistence rules are owned by [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).
+Committed `dry_run=false` mutating intents may persist terminal or blocked outcomes according to the method result. A successful terminal close may persist a terminal close summary, distinct from the current close basis used for pre-close readiness. Successful `intent=complete` may also persist project continuity records with `kind=known_limit` for current close-basis residual risks that are visible but do not require residual-risk acceptance. Exact storage effects, replay rows, events, state-version increments, project continuity persistence, and blocker persistence rules are owned by [Storage Effects](../storage-effects.md) and [Storage Versioning](../storage-versioning.md).
 
 Rejected responses and valid `dry_run` previews have no storage effect.
 

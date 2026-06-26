@@ -259,6 +259,7 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             "tasks",
             "change_units",
             "user_judgments",
+            "project_continuity_records",
             "write_authorizations",
             "runs",
             "artifact_staging",
@@ -286,6 +287,8 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
             "idx_tasks_current_change_unit",
             "idx_change_units_task_status",
             "idx_user_judgments_task_status",
+            "idx_project_continuity_records_status",
+            "idx_project_continuity_records_source_task",
             "idx_write_authorizations_task_status",
             "idx_runs_task_created",
             "idx_artifact_staging_task_status",
@@ -484,6 +487,66 @@ pub fn validate_project_state_schema(conn: &Connection) -> StoreResult<()> {
         require_column(conn, PROJECT_STATE_DATABASE_KIND, "user_judgments", column)?;
     }
     validate_user_judgments_resolved_surface_foreign_key(conn)?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "project_continuity_records",
+        ColumnSpec {
+            name: "continuity_record_id",
+            type_name: "TEXT",
+            not_null: true,
+            default_value: None,
+            primary_key_position: 2,
+        },
+    )?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "project_continuity_records",
+        ColumnSpec {
+            name: "kind",
+            type_name: "TEXT",
+            not_null: true,
+            default_value: None,
+            primary_key_position: 0,
+        },
+    )?;
+    require_column_spec(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "project_continuity_records",
+        ColumnSpec {
+            name: "status",
+            type_name: "TEXT",
+            not_null: true,
+            default_value: None,
+            primary_key_position: 0,
+        },
+    )?;
+    for column in [
+        "source_task_id",
+        "source_change_unit_id",
+        "title",
+        "summary",
+        "rationale",
+        "applies_to_paths_json",
+        "applies_to_refs_json",
+        "source_refs_json",
+        "artifact_refs_json",
+        "supersedes_refs_json",
+        "review_triggers_json",
+        "created_at",
+        "updated_at",
+        "metadata_json",
+    ] {
+        require_column(
+            conn,
+            PROJECT_STATE_DATABASE_KIND,
+            "project_continuity_records",
+            column,
+        )?;
+    }
+    validate_project_continuity_records_constraints(conn)?;
     reject_column(conn, PROJECT_STATE_DATABASE_KIND, "tasks", "state_version")?;
     require_column(
         conn,
@@ -993,6 +1056,26 @@ fn validate_surfaces_interaction_role_constraint(conn: &Connection) -> StoreResu
             "surfaces.interaction_role constraint is missing or malformed",
         ))
     }
+}
+
+fn validate_project_continuity_records_constraints(conn: &Connection) -> StoreResult<()> {
+    let table_sql = normalized_table_sql(conn, "project_continuity_records")?;
+    let required_fragments = [
+        "kind in ('decision', 'obligation', 'known_limit', 'accepted_risk', 'constraint')",
+        "length(trim(title)) > 0",
+        "length(trim(summary)) > 0",
+        "rationale is null or length(trim(rationale)) > 0",
+        "status in ('active', 'superseded', 'closed')",
+    ];
+    for fragment in required_fragments {
+        if !table_sql.contains(fragment) {
+            return Err(StoreError::schema_invariant(
+                PROJECT_STATE_DATABASE_KIND,
+                "project_continuity_records constraints are missing or malformed",
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn validate_user_judgments_resolved_actor_role_constraint(conn: &Connection) -> StoreResult<()> {

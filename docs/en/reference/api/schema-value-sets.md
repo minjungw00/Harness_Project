@@ -156,9 +156,33 @@ artifact
 blocker
 task_event
 local_surface_registration
+project_continuity_record
 ```
 
 These values identify API reference kinds. They do not replace storage table names, DDL, Core authority meaning, or method-specific ownership rules.
+
+<a id="project-continuity-values"></a>
+## Project continuity values
+
+`ProjectContinuityRecord.kind` and `ProjectContinuitySummary.kind` use:
+
+```text
+decision
+obligation
+known_limit
+accepted_risk
+constraint
+```
+
+`ProjectContinuityRecord.status` and `ProjectContinuitySummary.status` use:
+
+```text
+active
+superseded
+closed
+```
+
+These values classify durable project-level context. They do not by themselves create current Task authority, satisfy pending user judgments, prove evidence, grant `Write Authorization`, satisfy close readiness, or accept residual risk for a future close basis.
 
 <a id="task-lifecycle-values"></a>
 ## Task lifecycle values

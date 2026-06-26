@@ -9,6 +9,7 @@ This document owns baseline method behavior for `volicord.record_user_judgment`:
 - method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
 - recording the user's answer to one existing pending `UserJudgment`
 - method-specific boundaries for resolving that pending user-owned judgment and rejecting invalid answer attempts
+- method-selected project continuity record creation for accepted decisions and accepted residual risks
 - record-user-judgment examples
 
 ## What this document does not own
@@ -17,6 +18,7 @@ This document does not own:
 
 - common request envelope, response branch, dry-run, or rejected-response schema bodies
 - `UserJudgment`, `JudgmentRationale`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`, value-set, or status field definitions
+- `ProjectContinuityRecord` or `ProjectContinuitySummary` field definitions
 - Core user-owned judgment meaning, final acceptance meaning, residual-risk meaning, sensitive-action approval meaning, or `Write Authorization` meaning
 - storage record layouts, exact storage effects, public error code meaning, public error precedence, or shared response-branch routing
 
@@ -27,6 +29,8 @@ This document does not own:
 The method updates the addressed pending judgment according to the user's answer. It does not broaden the answer into unrelated approval, current scope expansion, final acceptance, residual-risk acceptance, sensitive-action approval, or `Write Authorization`.
 
 Before recording the answer, Core checks the pending judgment's `JudgmentBasis` against current state. A stale, superseded, incompatible, or invalid stored basis cannot be answered successfully.
+
+Accepted product decisions, technical decisions, and scope decisions may create durable project continuity records with `kind=decision`. Accepted residual-risk judgments may create project continuity records with `kind=accepted_risk` for the exact accepted current residual risks. Those continuity records preserve context; they do not create unrelated approval or future close authority.
 
 ## Required inputs
 
@@ -84,11 +88,12 @@ A committed non-dry-run result:
 - increments `project_state.state_version` exactly once
 - updates the addressed `user_judgments` row
 - does not increment `scope_revision` or `close_basis_revision`
+- may create `project_continuity_records` for accepted decisions or accepted residual risks when selected by this method
 - may update dependent blocker or summary state only as allowed by the storage-effect owner
 
 Non-claims:
 
-- Dry run and rejection create no judgment resolution, blocker update, event, replay row, or state-version increment.
+- Dry run and rejection create no judgment resolution, project continuity record, blocker update, event, replay row, or state-version increment.
 - A recorded `scope_decision` does not silently change current scope or currently applied Change Unit records. Those records still require the scope owner-defined transition, such as `volicord.update_scope`.
 
 Compatibility requirements:
@@ -115,7 +120,7 @@ Returns `RecordUserJudgmentResult` with:
 
 The method commits the addressed judgment as `status=resolved` when an answer is recorded successfully. The recorded `machine_action` and `resolution_outcome` are copied from the selected option and must match the option's action/outcome mapping. The recorded `rationale` is returned inside `user_judgment.resolution` as descriptive metadata.
 
-The result updates only covered blockers and judgment-dependent summaries. It does not create unrelated approvals, evidence, scope updates, `Write Authorization`, close state, final acceptance, residual-risk acceptance, sensitive approval, or cancellation authority beyond an accepted, compatible authority-bearing judgment itself.
+The result updates only covered blockers, judgment-dependent summaries, and method-selected project continuity records. It does not create unrelated approvals, evidence, scope updates, `Write Authorization`, close state, final acceptance, residual-risk acceptance, sensitive approval, or cancellation authority beyond an accepted, compatible authority-bearing judgment itself.
 
 ## Method result fields
 
@@ -126,7 +131,7 @@ The result updates only covered blockers and judgment-dependent summaries. It do
 | `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). Committed `RecordUserJudgmentResult` branches use `base.response_kind=result` and `base.effect_kind=core_committed`. `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
 | `user_judgment_ref` | `StateRecordRef` for the addressed `UserJudgment` after the answer is recorded. |
 | `user_judgment` | The updated `UserJudgment` with its `resolution` populated when the focused judgment is resolved by the recorded answer. The nested shape is owned by [API Judgment Schemas](schema-judgment.md#userjudgment). |
-| `updated_refs` | `StateRecordRef[]` for records updated by recording this judgment answer. |
+| `updated_refs` | `StateRecordRef[]` for records updated or created by recording this judgment answer, including project continuity refs when this method creates them. |
 | `state` | Current `StateSummary` after the judgment answer is recorded. Nested state fields are owned by [API State Schemas](schema-state.md). |
 | `next_actions` | `NextActionSummary[]` describing next safe API steps. The canonical shape is owned by [API State Schemas](schema-state.md#current-position-display-shapes). |
 
@@ -162,11 +167,12 @@ For `dry_run=true`, a valid preview:
 
 - returns `ToolDryRunResponse`
 - does not resolve the judgment
+- creates no project continuity records
 - updates no blockers, events, replay rows, or state version
 
 ## Storage effect
 
-On commit, the method may persist judgment resolution and dependent blocker or summary state. Exact storage effects are owned by the storage documents linked below.
+On commit, the method may persist judgment resolution, method-selected project continuity records, and dependent blocker or summary state. Exact storage effects are owned by the storage documents linked below.
 
 ## Minimal valid request
 
@@ -328,6 +334,11 @@ user_judgment:
 updated_refs:
   - record_kind: user_judgment
     record_id: uj_empty_001
+    project_id: proj_empty_001
+    task_id: task_empty_001
+    state_version: 63
+  - record_kind: project_continuity_record
+    record_id: continuity_empty_decision_001
     project_id: proj_empty_001
     task_id: task_empty_001
     state_version: 63

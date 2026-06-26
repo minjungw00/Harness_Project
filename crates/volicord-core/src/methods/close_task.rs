@@ -106,7 +106,7 @@ impl CoreService {
                 )
             }
         };
-        let plan = match plan_close_task(
+        let mut plan = match plan_close_task(
             &prepared.store,
             &prepared.context.project_state,
             Some(&prepared.context.verified_surface),
@@ -131,6 +131,36 @@ impl CoreService {
                     result_fields: plan.result_fields,
                 },
             );
+        }
+
+        let continuity_plans = match plan_close_completion_continuity_records(
+            self,
+            &prepared.store,
+            &request,
+            plan.current_close_basis.as_ref(),
+            prepared.context.project_state.state_version + 1,
+            &plan_now,
+        ) {
+            Ok(records) => records,
+            Err(error) => {
+                return plan_error_response(
+                    &request.envelope,
+                    &prepared.context.project_state,
+                    error,
+                )
+            }
+        };
+        if !continuity_plans.is_empty() {
+            let continuity_record_ids = continuity_plans
+                .iter()
+                .map(|plan| plan.record_ref.record_id.as_str().to_owned())
+                .collect::<Vec<_>>();
+            plan.event_payload.insert(
+                "continuity_record_ids".to_owned(),
+                serde_json::to_value(&continuity_record_ids)?,
+            );
+            plan.storage_mutations
+                .extend(continuity_plans.into_iter().map(|plan| plan.mutation));
         }
 
         self.execute_prepared_request(
@@ -463,6 +493,84 @@ pub(super) fn plan_close_task_with_context(
         risk_acceptance_coverage: result_risk_acceptance_coverage,
         blockers,
     })
+}
+
+fn plan_close_completion_continuity_records(
+    service: &CoreService,
+    store: &CoreProjectStore,
+    request: &CloseTaskRequest,
+    close_basis: Option<&CurrentCloseBasis>,
+    planned_state_version: u64,
+    now: &UtcTimestamp,
+) -> Result<Vec<PlannedProjectContinuityRecord>, PlanError> {
+    if request.intent != CloseIntent::Complete {
+        return Ok(Vec::new());
+    }
+    let Some(close_basis) = close_basis else {
+        return Ok(Vec::new());
+    };
+    let source_change_unit_id = Some(close_basis.change_unit_id.clone());
+    let continuity_context = ProjectContinuityPlanContext {
+        service,
+        store,
+        project_id: &request.envelope.project_id,
+        source_task_id: &request.task_id,
+        source_change_unit_id: source_change_unit_id.as_ref(),
+        planned_state_version,
+        now,
+    };
+    let mut records = Vec::new();
+    for risk in close_basis
+        .residual_risks
+        .iter()
+        .filter(|risk| !risk.acceptance_required)
+    {
+        let draft = ProjectContinuityDraft {
+            kind: ProjectContinuityKind::KnownLimit,
+            title: format!(
+                "Known limit: {}",
+                short_close_continuity_title(&risk.summary)
+            ),
+            summary: risk.summary.clone(),
+            rationale: Some(format!(
+                "{} Consequence: {}",
+                close_basis.result_summary, risk.consequence
+            )),
+            applies_to_paths: Vec::new(),
+            applies_to_refs: refs_with_context(
+                close_basis.result_refs.clone(),
+                risk.source_refs.clone(),
+            ),
+            source_refs: refs_with_context(
+                vec![close_basis.source_run_ref.clone()],
+                risk.source_refs.clone(),
+            ),
+            artifact_refs: Vec::new(),
+            supersedes_refs: Vec::new(),
+            review_triggers: Vec::new(),
+            metadata: json!({
+                "source": "close_task",
+                "risk_id": risk.risk_id,
+                "close_basis_revision": close_basis.close_basis_revision
+            }),
+        };
+        records.push(
+            plan_project_continuity_record(continuity_context, draft).map_err(PlanError::Core)?,
+        );
+    }
+    Ok(records)
+}
+
+fn short_close_continuity_title(value: &str) -> String {
+    const MAX_CHARS: usize = 96;
+    let trimmed = value.trim();
+    let mut chars = trimmed.chars();
+    let short = chars.by_ref().take(MAX_CHARS).collect::<String>();
+    if chars.next().is_some() {
+        format!("{short}...")
+    } else {
+        short
+    }
 }
 
 struct CloseTerminalStorage {

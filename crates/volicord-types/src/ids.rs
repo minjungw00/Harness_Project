@@ -92,6 +92,10 @@ opaque_string_type!(
     "Opaque judgment-local option identifier."
 );
 opaque_string_type!(RiskId, "Opaque residual-risk identifier.");
+opaque_string_type!(
+    ProjectContinuityRecordId,
+    "Opaque project-continuity record identifier."
+);
 opaque_string_type!(StorageRef, "Opaque artifact storage reference.");
 opaque_string_type!(RequestHash, "Deterministic canonical request hash string.");
 
@@ -123,6 +127,8 @@ pub enum DurableIdKind {
     EvidenceObservation,
     /// Core-generated residual-risk ids for current close bases.
     Risk,
+    /// Core-generated project-continuity record ids.
+    ProjectContinuityRecord,
 }
 
 impl DurableIdKind {
@@ -140,6 +146,7 @@ impl DurableIdKind {
             Self::Evidence => "evidence_",
             Self::EvidenceObservation => "evidence_observation_",
             Self::Risk => "risk_",
+            Self::ProjectContinuityRecord => "continuity_",
         }
     }
 }
@@ -158,6 +165,7 @@ impl fmt::Display for DurableIdKind {
             Self::Evidence => "evidence",
             Self::EvidenceObservation => "evidence_observation",
             Self::Risk => "risk",
+            Self::ProjectContinuityRecord => "project_continuity_record",
         })
     }
 }

@@ -13,11 +13,12 @@ use volicord_store::{
         ArtifactLinkInsert, ArtifactPromotion, ChangeUnitInsert, ChangeUnitRecord,
         CoreProjectStore, CoreStorageMutation, EvidenceObservationInsert,
         EvidenceObservationRecord, EvidenceSummaryRecord, EvidenceSummaryUpsert,
-        ProjectStateHeader, RunInsert, RunRecord, StoredArtifactRecord,
-        StoredArtifactStagingRecord, StoredRecordRef, TaskCloseBasisUpdate, TaskCloseUpdate,
-        TaskInsert, TaskRecord, TaskScopeRevisionUpdate, TaskScopeUpdate, UserJudgmentInsert,
-        UserJudgmentInvalidation, UserJudgmentRecord, UserJudgmentResolutionUpdate,
-        WriteAuthorizationConsumption, WriteAuthorizationInsert, WriteAuthorizationRecord,
+        ProjectContinuityRecordInsert, ProjectContinuityRecordRecord, ProjectStateHeader,
+        RunInsert, RunRecord, StoredArtifactRecord, StoredArtifactStagingRecord, StoredRecordRef,
+        TaskCloseBasisUpdate, TaskCloseUpdate, TaskInsert, TaskRecord, TaskScopeRevisionUpdate,
+        TaskScopeUpdate, UserJudgmentInsert, UserJudgmentInvalidation, UserJudgmentRecord,
+        UserJudgmentResolutionUpdate, WriteAuthorizationConsumption, WriteAuthorizationInsert,
+        WriteAuthorizationRecord,
     },
     StoreError,
 };
@@ -35,18 +36,20 @@ use volicord_types::{
     JudgmentResolutionOutcome, MethodAccessClass, MethodName, NextActionKind, NextActionSummary,
     ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
     PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
-    PlannedEffect, PrepareWriteRequest, PrepareWriteResult, ProjectEnforcementProfile, ProjectId,
-    RecordId, RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload,
-    RecordUserJudgmentRequest, RedactionState, RequestedMode, RequiredNullable, ResidualRisk,
-    ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId, RunSummary, SensitiveActionRequirement,
-    StageArtifactRequest, StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId,
-    StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef,
-    SurfaceId, SurfaceInstanceId, SurfaceInteractionRole, TaskId, TaskLifecyclePhase,
-    TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
-    UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentOptionAction,
-    UserJudgmentOptionId, UserJudgmentOptionInput, UserJudgmentResolution, UserJudgmentStatus,
-    UtcTimestamp, WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
-    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
+    PlannedEffect, PrepareWriteRequest, PrepareWriteResult, ProjectContinuityKind,
+    ProjectContinuityRecord, ProjectContinuityRecordId, ProjectContinuityStatus,
+    ProjectContinuitySummary, ProjectEnforcementProfile, ProjectId, RecordId, RecordRunRequest,
+    RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState,
+    RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId,
+    RunId, RunSummary, SensitiveActionRequirement, StageArtifactRequest, StageArtifactResult,
+    StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind, StateRecordRef,
+    StatusCloseState, StatusInclude, StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId,
+    SurfaceInteractionRole, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
+    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
+    UserJudgmentOption, UserJudgmentOptionAction, UserJudgmentOptionId, UserJudgmentOptionInput,
+    UserJudgmentResolution, UserJudgmentStatus, UtcTimestamp, WriteAuthoritySummary,
+    WriteAuthorizationId, WriteAuthorizationStatus, WriteAuthorizationSummary,
+    WriteDecisionCategory, WriteDecisionReason,
 };
 
 use crate::pipeline::{
@@ -58,8 +61,8 @@ use crate::pipeline::{
 };
 use crate::policy::{
     close_readiness::{
-        accepted_current_scope_decision_authority, accepted_risk_ids_within_basis,
-        close_basis_is_current, close_blocker, close_next_action,
+        accepted_current_scope_decision_authority, accepted_risk_ids_from_answer,
+        accepted_risk_ids_within_basis, close_basis_is_current, close_blocker, close_next_action,
         current_acceptance_required_risk_ids, current_cancellation_authority,
         current_final_acceptance, current_residual_risk_acceptance_coverage,
         final_acceptance_basis_matches_current, final_acceptance_requirement,
@@ -67,6 +70,7 @@ use crate::policy::{
         verified_user_interaction_provenance, CancellationAuthorityRequirement, JudgmentAuthority,
         ScopeDecisionAuthorityRequirement,
     },
+    continuity::{decision_title_prefix, judgment_continuity_kind},
     effect_contract::{
         product_write_violations, validate_effect_contract, validate_effect_contract_paths,
         EffectContractValidationError, EffectContractViolation,
@@ -140,6 +144,36 @@ struct CloseTaskContext {
     artifact_refs: Vec<ArtifactRef>,
     pending_judgment_authorities: Option<Vec<JudgmentAuthority>>,
     resolved_judgment_authorities: Option<Vec<JudgmentAuthority>>,
+}
+
+struct ProjectContinuityDraft {
+    kind: ProjectContinuityKind,
+    title: String,
+    summary: String,
+    rationale: Option<String>,
+    applies_to_paths: Vec<String>,
+    applies_to_refs: Vec<StateRecordRef>,
+    source_refs: Vec<StateRecordRef>,
+    artifact_refs: Vec<ArtifactRef>,
+    supersedes_refs: Vec<StateRecordRef>,
+    review_triggers: Vec<String>,
+    metadata: Value,
+}
+
+#[derive(Clone, Copy)]
+struct ProjectContinuityPlanContext<'a> {
+    service: &'a CoreService,
+    store: &'a CoreProjectStore,
+    project_id: &'a ProjectId,
+    source_task_id: &'a TaskId,
+    source_change_unit_id: Option<&'a ChangeUnitId>,
+    planned_state_version: u64,
+    now: &'a UtcTimestamp,
+}
+
+struct PlannedProjectContinuityRecord {
+    record_ref: StateRecordRef,
+    mutation: CoreStorageMutation,
 }
 
 struct ValidatedStageArtifactInput {
@@ -287,6 +321,66 @@ fn allocate_risk_id(
             Ok(allocated_in_basis.contains(candidate))
         })
         .map(RiskId::new)
+}
+
+fn allocate_project_continuity_record_id(
+    service: &CoreService,
+    store: &CoreProjectStore,
+) -> CoreResult<ProjectContinuityRecordId> {
+    service
+        .allocate_generated_id(DurableIdKind::ProjectContinuityRecord, |candidate| {
+            store
+                .project_continuity_record_exists(candidate)
+                .map_err(CorePipelineError::from)
+        })
+        .map(ProjectContinuityRecordId::new)
+}
+
+fn plan_project_continuity_record(
+    context: ProjectContinuityPlanContext<'_>,
+    draft: ProjectContinuityDraft,
+) -> CoreResult<PlannedProjectContinuityRecord> {
+    let continuity_record_id =
+        allocate_project_continuity_record_id(context.service, context.store)?;
+    let record_ref = state_ref(
+        StateRecordKind::ProjectContinuityRecord,
+        continuity_record_id.as_str(),
+        context.project_id,
+        Some(context.source_task_id),
+        Some(context.planned_state_version),
+    );
+    let applies_to_paths = sorted_unique(draft.applies_to_paths);
+    let applies_to_refs = unique_state_refs(draft.applies_to_refs);
+    let source_refs = unique_state_refs(draft.source_refs);
+    let artifact_refs = unique_artifact_refs(draft.artifact_refs);
+    let supersedes_refs = unique_state_refs(draft.supersedes_refs);
+    let review_triggers = sorted_unique(draft.review_triggers);
+    Ok(PlannedProjectContinuityRecord {
+        record_ref,
+        mutation: CoreStorageMutation::InsertProjectContinuityRecord(
+            ProjectContinuityRecordInsert {
+                continuity_record_id: continuity_record_id.as_str().to_owned(),
+                source_task_id: context.source_task_id.as_str().to_owned(),
+                source_change_unit_id: context
+                    .source_change_unit_id
+                    .map(|change_unit_id| change_unit_id.as_str().to_owned()),
+                kind: storage_value(draft.kind)?,
+                title: draft.title,
+                summary: draft.summary,
+                rationale: draft.rationale,
+                applies_to_paths_json: serde_json::to_string(&applies_to_paths)?,
+                applies_to_refs_json: serde_json::to_string(&applies_to_refs)?,
+                source_refs_json: serde_json::to_string(&source_refs)?,
+                artifact_refs_json: serde_json::to_string(&artifact_refs)?,
+                status: storage_value(ProjectContinuityStatus::Active)?,
+                supersedes_refs_json: serde_json::to_string(&supersedes_refs)?,
+                review_triggers_json: serde_json::to_string(&review_triggers)?,
+                created_at: context.now.to_string(),
+                updated_at: context.now.to_string(),
+                metadata_json: serde_json::to_string(&draft.metadata)?,
+            },
+        ),
+    })
 }
 
 fn prepare_or_response(
@@ -1242,6 +1336,18 @@ fn sorted_unique(values: Vec<String>) -> Vec<String> {
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect()
+}
+
+fn unique_state_refs(values: Vec<StateRecordRef>) -> Vec<StateRecordRef> {
+    let mut seen = BTreeSet::new();
+    let mut unique = Vec::new();
+    for value in values {
+        let key = serde_json::to_string(&value).unwrap_or_else(|_| String::new());
+        if seen.insert(key) {
+            unique.push(value);
+        }
+    }
+    unique
 }
 
 fn artifact_input_validation_plan_error<T>(
@@ -2212,6 +2318,136 @@ fn write_authorization_ref(
     )
 }
 
+fn project_continuity_ref(
+    record: &ProjectContinuityRecordRecord,
+    state_version: u64,
+) -> StateRecordRef {
+    state_ref(
+        StateRecordKind::ProjectContinuityRecord,
+        &record.continuity_record_id,
+        &ProjectId::new(record.project_id.clone()),
+        Some(&TaskId::new(record.source_task_id.clone())),
+        Some(state_version),
+    )
+}
+
+fn project_continuity_record_from_storage(
+    record: &ProjectContinuityRecordRecord,
+) -> CoreResult<ProjectContinuityRecord> {
+    let record_id = record.continuity_record_id.clone();
+    Ok(ProjectContinuityRecord {
+        continuity_record_id: ProjectContinuityRecordId::new(record.continuity_record_id.clone()),
+        project_id: ProjectId::new(record.project_id.clone()),
+        source_task_id: TaskId::new(record.source_task_id.clone()),
+        source_change_unit_id: record
+            .source_change_unit_id
+            .clone()
+            .map(ChangeUnitId::new)
+            .into(),
+        kind: parse_owner_storage_value(
+            "project_continuity_records",
+            record_id.clone(),
+            "kind",
+            &record.kind,
+        )?,
+        title: record.title.clone(),
+        summary: record.summary.clone(),
+        rationale: record.rationale.clone().into(),
+        applies_to_paths: decode_required_json(
+            "project_continuity_records",
+            record_id.clone(),
+            "applies_to_paths_json",
+            Some(&record.applies_to_paths_json),
+        )?,
+        applies_to_refs: decode_required_json(
+            "project_continuity_records",
+            record_id.clone(),
+            "applies_to_refs_json",
+            Some(&record.applies_to_refs_json),
+        )?,
+        source_refs: decode_required_json(
+            "project_continuity_records",
+            record_id.clone(),
+            "source_refs_json",
+            Some(&record.source_refs_json),
+        )?,
+        artifact_refs: decode_required_json(
+            "project_continuity_records",
+            record_id.clone(),
+            "artifact_refs_json",
+            Some(&record.artifact_refs_json),
+        )?,
+        status: parse_owner_storage_value(
+            "project_continuity_records",
+            record_id.clone(),
+            "status",
+            &record.status,
+        )?,
+        supersedes_refs: decode_required_json(
+            "project_continuity_records",
+            record_id.clone(),
+            "supersedes_refs_json",
+            Some(&record.supersedes_refs_json),
+        )?,
+        review_triggers: decode_required_json(
+            "project_continuity_records",
+            record_id.clone(),
+            "review_triggers_json",
+            Some(&record.review_triggers_json),
+        )?,
+        created_at: parse_owner_storage_value(
+            "project_continuity_records",
+            record_id.clone(),
+            "created_at",
+            &record.created_at,
+        )?,
+        updated_at: parse_owner_storage_value(
+            "project_continuity_records",
+            record_id,
+            "updated_at",
+            &record.updated_at,
+        )?,
+    })
+}
+
+fn project_continuity_summary_from_record(
+    record: &ProjectContinuityRecordRecord,
+    state_version: u64,
+) -> CoreResult<ProjectContinuitySummary> {
+    let continuity = project_continuity_record_from_storage(record)?;
+    let project_id = continuity.project_id.clone();
+    let source_task_id = continuity.source_task_id.clone();
+    let source_change_unit_ref = continuity
+        .source_change_unit_id
+        .as_ref()
+        .map(|change_unit_id| {
+            state_ref(
+                StateRecordKind::ChangeUnit,
+                change_unit_id.as_str(),
+                &project_id,
+                Some(&source_task_id),
+                Some(state_version),
+            )
+        })
+        .into();
+    Ok(ProjectContinuitySummary {
+        continuity_record_ref: project_continuity_ref(record, state_version),
+        kind: continuity.kind,
+        status: continuity.status,
+        title: continuity.title,
+        summary: continuity.summary,
+        source_task_ref: state_ref(
+            StateRecordKind::Task,
+            source_task_id.as_str(),
+            &project_id,
+            Some(&source_task_id),
+            Some(state_version),
+        ),
+        source_change_unit_ref,
+        review_triggers: continuity.review_triggers,
+    })
+}
+
 fn state_ref_from_stored(record: StoredRecordRef) -> StateRecordRef {
     let kind = match record.record_kind.as_str() {
         "user_judgment" => StateRecordKind::UserJudgment,
@@ -2220,6 +2456,7 @@ fn state_ref_from_stored(record: StoredRecordRef) -> StateRecordRef {
         "change_unit" => StateRecordKind::ChangeUnit,
         "task" => StateRecordKind::Task,
         "evidence_observation" => StateRecordKind::EvidenceObservation,
+        "project_continuity_record" => StateRecordKind::ProjectContinuityRecord,
         _ => StateRecordKind::ProjectState,
     };
     StateRecordRef {

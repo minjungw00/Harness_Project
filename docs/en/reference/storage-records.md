@@ -84,6 +84,7 @@ Baseline storage persists only the record families defined by this baseline stor
 | `state.sqlite` | `tasks` | Work-unit state | User-value work unit, shaping summary, scope and close-basis revisions, nullable current close basis, lifecycle/result/terminal close summary, current `CompletionPolicy`, and current Change Unit pointer. |
 | `state.sqlite` | `change_units` | Scoped work boundary | Scope summaries, write basis, Change Unit lifecycle, and owning `Task` relation. |
 | `state.sqlite` | `user_judgments` | User-owned judgment state | Pending, resolved, stale, superseded, and expired user-owned judgments, including required basis snapshot, basis status, selected option, machine action, resolution outcome, resolution rationale metadata, resolution actor, verified actor provenance for resolved rows, and sensitive-action approval scope when relevant. |
+| `state.sqlite` | `project_continuity_records` | Project continuity context | Durable project-level decisions, obligations, known limits, accepted residual risks, and constraints that remain addressable after the source `Task` closes. |
 | `state.sqlite` | `write_authorizations` | Cooperative write authority | Single-use `Write Authorization`, basis version, attempt scope, expiration, and consumption state. |
 | `state.sqlite` | `runs` | Execution or observation record | Committed execution or observation record, compatible authorization consumption, and compact evidence updates. |
 | `state.sqlite` plus `artifacts/tmp/` | `artifact_staging` | Transient artifact staging | Staged handle metadata, safe staging facts, and transient bytes or notices. |
@@ -135,7 +136,7 @@ Storage must validate stored relationships before commit, including:
 
 Ordinary baseline Core operations preserve authority rows through lifecycle or status transitions. Completing, cancelling, or superseding a `Task` changes the relevant lifecycle/status meaning while keeping committed authority rows addressable for audit and recovery.
 
-This preservation applies to `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, and `tool_invocations`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
+This preservation applies to `tasks`, `change_units`, `user_judgments`, `project_continuity_records`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, and `tool_invocations`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
 
 ### Current close basis
 
@@ -148,6 +149,14 @@ Existing open Tasks do not automatically convert terminal close summary JSON int
 Stored judgments require a `JudgmentBasis`. Resolved stored judgments require a complete machine-readable resolution, structured descriptive rationale metadata, actor provenance, and verified resolved surface provenance. Rows missing those facts are invalid owner state, not audit-compatible authority records.
 
 For stored judgment authority, `user_judgments.status='resolved'` records that an answer exists. It does not mean the user approved. Current authority-bearing judgment use requires the selected option, stored `resolution_machine_action`, stored `resolution_outcome`, applicable actor provenance, and applicable verified resolved surface provenance. Rationale metadata preserves the reason and context for the answer but is not itself authority, evidence, acceptance, close readiness, or residual-risk acceptance. Absence of an outcome, machine action, applicable actor provenance, or verified resolved surface provenance is invalid owner state and is never acceptance.
+
+### Project continuity records
+
+`project_continuity_records` preserve durable project-level context from committed Core effects. Baseline records may represent decisions, obligations, known limits, accepted residual risks, or constraints.
+
+The source `Task` and optional source Change Unit identify where the continuity record came from. They do not make that source path current again. `status='active'` keeps the record visible as live project context, while `superseded` and `closed` keep the record addressable for audit and recovery.
+
+Project continuity records are not current authority for a new operation. A future write, Run, judgment requirement, close readiness check, final acceptance, residual-risk acceptance, or blocker decision must still use the current owner-defined Core state and compatibility rules.
 
 ## Storage-owned values
 
@@ -166,6 +175,8 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | `user_judgments.basis_status` | `current`, `stale`, `superseded` |
 | `user_judgments.resolution_machine_action` | `accept`, `reject`, `defer` in complete resolution groups |
 | `user_judgments.resolution_outcome` | `accepted`, `rejected`, `deferred` in complete resolution groups |
+| `project_continuity_records.kind` | `decision`, `obligation`, `known_limit`, `accepted_risk`, `constraint` |
+| `project_continuity_records.status` | `active`, `superseded`, `closed` |
 | `artifact_staging.status` | `staged`, `consumed`, `expired`, `discarded` |
 | `artifacts.status` | `available`, `missing`, `integrity_failed`, `unavailable` |
 | `artifacts.integrity_status` | `verified`, `corrupt` |
@@ -198,6 +209,7 @@ Rules:
 | `tasks` | Shaping summary, bounded lists, autonomy boundary, current close basis, terminal close summary, lifecycle summary, and `CompletionPolicy`. |
 | `change_units` | Scope summaries, bounded lists, write basis summaries, optional effect contract data, and lifecycle support data. |
 | `user_judgments` | Judgment request, context, option, affected-ref, artifact-ref, basis snapshot, sensitive-action scope, selected option, machine action, resolution outcome, descriptive rationale metadata, actor provenance, and resolution data. |
+| `project_continuity_records` | Applies-to paths, applies-to refs, source refs, artifact refs, superseded refs, review triggers, and non-authority metadata for durable project context. |
 | `write_authorizations` | `Write Authorization` attempt scope. |
 | `runs` | Observation and evidence-update data. |
 | `evidence_summaries` | Evidence coverage and gap references. |

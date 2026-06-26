@@ -115,6 +115,17 @@ struct MethodHarness {
     service: CoreService,
 }
 
+#[derive(Debug, Clone)]
+struct ContinuityRecordRow {
+    source_task_id: String,
+    source_change_unit_id: Option<String>,
+    kind: String,
+    title: String,
+    summary: String,
+    status: String,
+    source_refs_json: String,
+}
+
 impl MethodHarness {
     fn new() -> Result<Self, Box<dyn Error>> {
         let runtime_home = TempRuntimeHome::new("core-methods")?;
@@ -191,6 +202,39 @@ impl MethodHarness {
             [PROJECT_ID],
             |row| row.get(0),
         )?)
+    }
+
+    fn continuity_records(&self) -> Result<Vec<ContinuityRecordRow>, Box<dyn Error>> {
+        let conn = self.conn()?;
+        let mut stmt = conn.prepare(
+            "SELECT
+                source_task_id,
+                source_change_unit_id,
+                kind,
+                title,
+                summary,
+                status,
+                source_refs_json
+             FROM project_continuity_records
+             WHERE project_id = ?1
+             ORDER BY created_at, continuity_record_id",
+        )?;
+        let rows = stmt.query_map([PROJECT_ID], |row| {
+            Ok(ContinuityRecordRow {
+                source_task_id: row.get(0)?,
+                source_change_unit_id: row.get(1)?,
+                kind: row.get(2)?,
+                title: row.get(3)?,
+                summary: row.get(4)?,
+                status: row.get(5)?,
+                source_refs_json: row.get(6)?,
+            })
+        })?;
+        let mut records = Vec::new();
+        for row in rows {
+            records.push(row?);
+        }
+        Ok(records)
     }
 
     fn set_project_enforcement_profile_json(
@@ -585,6 +629,7 @@ fn status_include_evidence_returns_current_coverage() -> Result<(), Box<dyn Erro
                 evidence: true,
                 close: false,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -629,6 +674,7 @@ fn status_close_include_matches_close_task_check_blockers() -> Result<(), Box<dy
                 evidence: true,
                 close: true,
                 guarantees: true,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -728,6 +774,7 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
                 evidence: false,
                 close: false,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -759,6 +806,7 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
                 evidence: true,
                 close: false,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -783,6 +831,7 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
                 evidence: false,
                 close: true,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -808,6 +857,7 @@ fn status_include_false_omits_optional_sections_without_effect() -> Result<(), B
                 evidence: false,
                 close: false,
                 guarantees: true,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -852,6 +902,7 @@ fn status_close_false_does_not_read_corrupt_close_basis() -> Result<(), Box<dyn 
                 evidence: false,
                 close: false,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -882,6 +933,7 @@ fn status_close_false_does_not_read_corrupt_close_basis() -> Result<(), Box<dyn 
                 evidence: false,
                 close: true,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -943,6 +995,7 @@ fn status_guarantee_include_false_does_not_read_corrupt_profile() -> Result<(), 
                 evidence: false,
                 close: true,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -969,6 +1022,7 @@ fn status_guarantee_include_false_does_not_read_corrupt_profile() -> Result<(), 
                 evidence: false,
                 close: false,
                 guarantees: true,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -1010,6 +1064,7 @@ fn status_guarantee_include_true_rejects_unsupported_profile_state() -> Result<(
                 evidence: false,
                 close: false,
                 guarantees: true,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -1050,6 +1105,7 @@ fn status_guarantee_include_true_rejects_missing_profile_fields() -> Result<(), 
                 evidence: false,
                 close: false,
                 guarantees: true,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -1094,6 +1150,7 @@ fn guarantee_display_uses_verified_surface_without_profile_elevation() -> Result
                 evidence: false,
                 close: false,
                 guarantees: true,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -5943,6 +6000,7 @@ fn corrupt_artifact_blocks_evidence_and_close() -> Result<(), Box<dyn Error>> {
                 evidence: true,
                 close: true,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -7025,6 +7083,332 @@ fn record_user_judgment_persists_authority_accept_action() -> Result<(), Box<dyn
     assert_eq!(
         user_judgment_resolution_outcome(&harness, &pending_judgment_id)?,
         Some("accepted".to_owned())
+    );
+    Ok(())
+}
+
+#[test]
+fn accepted_decision_judgments_create_project_continuity_records() -> Result<(), Box<dyn Error>> {
+    for (suffix, judgment_kind, title_prefix) in [
+        (
+            "product_continuity",
+            JudgmentKind::ProductDecision,
+            "Product decision:",
+        ),
+        (
+            "technical_continuity",
+            JudgmentKind::TechnicalDecision,
+            "Technical decision:",
+        ),
+        (
+            "scope_continuity",
+            JudgmentKind::ScopeDecision,
+            "Scope decision:",
+        ),
+    ] {
+        let harness = MethodHarness::new()?;
+        let (task_id, change_unit_id) = create_task_with_change_unit(&harness, suffix)?;
+        let pending_judgment = harness.service.request_user_judgment(
+            user_judgment_request(
+                &format!("req_judgment_{suffix}"),
+                &format!("idem_judgment_{suffix}"),
+                false,
+                Some(2),
+                &task_id,
+                Some(&change_unit_id),
+                judgment_kind,
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+        let pending_judgment_id =
+            response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+        let before = harness.counts()?;
+
+        let response = harness.service.record_user_judgment(
+            record_judgment_request(
+                &format!("req_record_{suffix}"),
+                &format!("idem_record_{suffix}"),
+                Some(3),
+                &task_id,
+                &pending_judgment_id,
+                judgment_kind,
+                answer_payload(judgment_kind),
+            ),
+            invocation(AccessClass::CoreMutation),
+        )?;
+
+        let after = harness.counts()?;
+        let rows = harness.continuity_records()?;
+        assert_eq!(
+            after.project_continuity_records,
+            before.project_continuity_records + 1
+        );
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].kind, "decision");
+        assert_eq!(rows[0].status, "active");
+        assert_eq!(rows[0].source_task_id, task_id);
+        assert_eq!(
+            rows[0].source_change_unit_id.as_deref(),
+            Some(change_unit_id.as_str())
+        );
+        assert!(rows[0].title.starts_with(title_prefix));
+        assert!(rows[0].source_refs_json.contains(&pending_judgment_id));
+        assert!(response.response_value["updated_refs"]
+            .as_array()
+            .expect("updated_refs should be an array")
+            .iter()
+            .any(|record_ref| record_ref["record_kind"] == "project_continuity_record"));
+    }
+    Ok(())
+}
+
+#[test]
+fn accepted_residual_risk_creates_project_continuity_record() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "risk_continuity")?;
+    let (after_basis, risk_ids) = record_close_basis_with_risks(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "continuity",
+        vec![residual_risk_input(
+            "Visible residual risk needing acceptance.",
+        )],
+    )?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_risk_continuity",
+            "idem_risk_continuity",
+            false,
+            Some(after_basis),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ResidualRiskAcceptance,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let before = harness.counts()?;
+
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_risk_continuity_record",
+            "idem_risk_continuity_record",
+            Some(after_basis + 1),
+            &task_id,
+            &pending_judgment_id,
+            JudgmentKind::ResidualRiskAcceptance,
+            residual_risk_acceptance_payload(&risk_ids),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    let after = harness.counts()?;
+    let rows = harness.continuity_records()?;
+    assert_eq!(
+        after.project_continuity_records,
+        before.project_continuity_records + 1
+    );
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].kind, "accepted_risk");
+    assert_eq!(rows[0].summary, "Visible residual risk needing acceptance.");
+    assert!(rows[0].title.starts_with("Accepted residual risk:"));
+    assert!(rows[0].source_refs_json.contains(&pending_judgment_id));
+    assert!(response.response_value["updated_refs"]
+        .as_array()
+        .expect("updated_refs should be an array")
+        .iter()
+        .any(|record_ref| record_ref["record_kind"] == "project_continuity_record"));
+    Ok(())
+}
+
+#[test]
+fn status_continuity_summary_is_include_gated() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_continuity")?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_status_continuity_judgment",
+            "idem_status_continuity_judgment",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::TechnicalDecision,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_status_continuity_record",
+            "idem_status_continuity_record",
+            Some(3),
+            &task_id,
+            &pending_judgment_id,
+            JudgmentKind::TechnicalDecision,
+            answer_payload(JudgmentKind::TechnicalDecision),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    let hidden = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_continuity_hidden",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                continuity: false,
+                ..status_include()
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    assert_field_absent(&hidden.response_value, "continuity_summary");
+
+    let shown = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_status_continuity_shown",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: StatusInclude {
+                continuity: true,
+                ..status_include()
+            },
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    let summary = shown.response_value["continuity_summary"]
+        .as_array()
+        .expect("continuity_summary should be an array");
+    assert_eq!(summary.len(), 1);
+    assert_eq!(summary[0]["kind"], "decision");
+    assert_eq!(summary[0]["status"], "active");
+    assert!(summary[0]["continuity_record_ref"].is_object());
+    Ok(())
+}
+
+#[test]
+fn stale_judgment_does_not_create_project_continuity_record() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "stale_continuity")?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_stale_continuity_judgment",
+            "idem_stale_continuity_judgment",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ProductDecision,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    harness.service.update_scope(
+        update_scope_request(
+            "req_stale_continuity_scope",
+            "idem_stale_continuity_scope",
+            false,
+            Some(3),
+            &task_id,
+            ChangeUnitOperation::ReplaceCurrent,
+            "stale_continuity_scope",
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_stale_continuity_record",
+            "idem_stale_continuity_record",
+            Some(4),
+            &task_id,
+            &pending_judgment_id,
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(harness.counts()?, before);
+    assert!(harness.continuity_records()?.is_empty());
+    Ok(())
+}
+
+#[test]
+fn close_completion_creates_known_limit_continuity_and_preserves_records(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_continuity")?;
+    let (after_basis, _) = record_close_basis_with_risks(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "known_limit",
+        vec![volicord_types::ResidualRiskInput {
+            summary: "Known limitation that does not require acceptance.".to_owned(),
+            consequence: "Future related work should remember this limitation.".to_owned(),
+            acceptance_required: false,
+            source_refs: Vec::new(),
+        }],
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_basis,
+        "known_limit",
+    )?;
+    let before_close = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_continuity_complete",
+            idempotency_key: Some("idem_close_continuity_complete"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    let after_close = harness.counts()?;
+    let rows = harness.continuity_records()?;
+    assert_eq!(response.response_value["close_state"], "closed");
+    assert_eq!(
+        after_close.project_continuity_records,
+        before_close.project_continuity_records + 1
+    );
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].kind, "known_limit");
+    assert_eq!(rows[0].status, "active");
+    assert_eq!(rows[0].source_task_id, task_id);
+    assert_eq!(
+        rows[0].source_change_unit_id.as_deref(),
+        Some(change_unit_id.as_str())
+    );
+    assert_eq!(
+        rows[0].summary,
+        "Known limitation that does not require acceptance."
     );
     Ok(())
 }
@@ -8507,6 +8891,7 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
                 evidence: true,
                 close: true,
                 guarantees: true,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -8606,6 +8991,7 @@ fn public_sensitive_lifecycle_derives_full_requirement_and_closes() -> Result<()
                 evidence: true,
                 close: true,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),
@@ -11806,6 +12192,7 @@ fn status_include() -> StatusInclude {
         evidence: true,
         close: true,
         guarantees: true,
+        continuity: false,
     }
 }
 
@@ -14540,6 +14927,7 @@ fn status_with_evidence_and_close(
                 evidence: true,
                 close: true,
                 guarantees: false,
+                continuity: false,
             },
         },
         invocation(AccessClass::ReadStatus),

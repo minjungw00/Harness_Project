@@ -6,8 +6,9 @@ use serde_json::{Map, Value};
 
 use crate::ids::{
     ArtifactId, ArtifactInputId, BaselineRef, ChangeUnitId, EventId, EvidenceObservationId,
-    IdempotencyKey, ProjectId, RecordId, RequestId, RiskId, RunId, StagedArtifactHandleId,
-    StorageRef, SurfaceId, SurfaceInstanceId, TaskId, UserJudgmentId, UserJudgmentOptionId,
+    IdempotencyKey, ProjectContinuityRecordId, ProjectId, RecordId, RequestId, RiskId, RunId,
+    StagedArtifactHandleId, StorageRef, SurfaceId, SurfaceInstanceId, TaskId, UserJudgmentId,
+    UserJudgmentOptionId,
 };
 use crate::values::{
     ActorKind, ArtifactAvailability, ArtifactInputSourceKind, ArtifactIntegrityStatus,
@@ -15,11 +16,11 @@ use crate::values::{
     EnabledEnforcementMechanism, ErrorCode, EvidenceAssuranceLevel, EvidenceCoverageState,
     EvidenceSourceKind, EvidenceStatus, GuaranteeLevel, JudgmentBasisCompatibilityStatus,
     JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName,
-    NextActionKind, PlannedBlockerSourceKind, ProjectEnforcementProfileSource,
-    ProjectEnforcementProfileStatus, RedactionState, ResponseKind, RunKind, StateRecordKind,
-    SurfaceInteractionRole, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentOptionAction,
-    UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus, WriteAuthorizationStatus,
-    WriteDecisionCategory,
+    NextActionKind, PlannedBlockerSourceKind, ProjectContinuityKind, ProjectContinuityStatus,
+    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, RedactionState, ResponseKind,
+    RunKind, StateRecordKind, SurfaceInteractionRole, TaskLifecyclePhase, TaskMode, TaskResult,
+    UserJudgmentOptionAction, UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus,
+    WriteAuthorizationStatus, WriteDecisionCategory,
 };
 
 /// JSON object used where an owner document defines a field as `object`.
@@ -280,6 +281,43 @@ pub struct StateRecordRef {
     pub project_id: ProjectId,
     pub task_id: RequiredNullable<TaskId>,
     pub state_version: RequiredNullable<u64>,
+}
+
+/// Project-level continuity record that preserves durable context after Task close.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectContinuityRecord {
+    pub continuity_record_id: ProjectContinuityRecordId,
+    pub project_id: ProjectId,
+    pub source_task_id: TaskId,
+    pub source_change_unit_id: RequiredNullable<ChangeUnitId>,
+    pub kind: ProjectContinuityKind,
+    pub title: String,
+    pub summary: String,
+    pub rationale: RequiredNullable<String>,
+    pub applies_to_paths: Vec<String>,
+    pub applies_to_refs: Vec<StateRecordRef>,
+    pub source_refs: Vec<StateRecordRef>,
+    pub artifact_refs: Vec<ArtifactRef>,
+    pub status: ProjectContinuityStatus,
+    pub supersedes_refs: Vec<StateRecordRef>,
+    pub review_triggers: Vec<String>,
+    pub created_at: UtcTimestamp,
+    pub updated_at: UtcTimestamp,
+}
+
+/// Compact project-level continuity view for status responses.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectContinuitySummary {
+    pub continuity_record_ref: StateRecordRef,
+    pub kind: ProjectContinuityKind,
+    pub status: ProjectContinuityStatus,
+    pub title: String,
+    pub summary: String,
+    pub source_task_ref: StateRecordRef,
+    pub source_change_unit_ref: RequiredNullable<StateRecordRef>,
+    pub review_triggers: Vec<String>,
 }
 
 /// Baseline cooperative project enforcement profile identifier.

@@ -3562,6 +3562,7 @@ mod tests {
                 evidence: false,
                 close: true,
                 guarantees: true,
+                continuity: false,
             },
         }
     }

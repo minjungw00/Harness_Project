@@ -156,9 +156,33 @@ artifact
 blocker
 task_event
 local_surface_registration
+project_continuity_record
 ```
 
 이 값들은 API 참조 종류를 식별합니다. 저장소 테이블 이름, DDL, Core 권한 의미, 메서드별 담당 규칙을 대신하지 않습니다.
+
+<a id="project-continuity-values"></a>
+## 프로젝트 연속성 값
+
+`ProjectContinuityRecord.kind`와 `ProjectContinuitySummary.kind`는 아래 값을 사용합니다.
+
+```text
+decision
+obligation
+known_limit
+accepted_risk
+constraint
+```
+
+`ProjectContinuityRecord.status`와 `ProjectContinuitySummary.status`는 아래 값을 사용합니다.
+
+```text
+active
+superseded
+closed
+```
+
+이 값들은 오래 유지하는 프로젝트 수준 맥락을 분류합니다. 그 자체로 현재 `Task` 권한을 만들거나, 대기 중인 사용자 판단을 만족하거나, 증거를 증명하거나, `Write Authorization`을 부여하거나, 닫기 준비 상태를 만족하거나, 미래 닫기 근거의 잔여 위험을 수락하지 않습니다.
 
 <a id="task-lifecycle-values"></a>
 ## `Task` 생명주기 값

@@ -189,7 +189,7 @@ Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker
 
 Read-only results are response-only and not replay rows.
 
-For response computation, `volicord.status` and `volicord.close_task intent=check` may compute `CurrentCloseBasis`, close state, risk acceptance coverage, blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, diagnostics, and next actions for the response when the method owner selects those projections.
+For response computation, `volicord.status` and `volicord.close_task intent=check` may compute `CurrentCloseBasis`, close state, risk acceptance coverage, blockers, `CloseReadinessBlocker[]`, evidence summaries, artifact refs, project continuity summaries, diagnostics, and next actions for the response when the method owner selects those projections.
 
 Storage must not persist those computed values merely because the read occurred.
 
@@ -367,6 +367,7 @@ Read-only calls:
 
 - return response data only
 - do not create replay rows
+- do not create `project_continuity_records`
 - do not mutate storage
 - do not increment `project_state.state_version`
 
@@ -554,6 +555,7 @@ Committed `dry_run=false` may:
 
 - set a `user_judgments` row to `status='resolved'`
 - store the selected option, `resolution_machine_action`, `resolution_outcome`, derived resolution actor provenance, answer payload, descriptive rationale metadata, and basis status as allowed by the method owner
+- create `project_continuity_records` for accepted product, technical, or scope decisions and for accepted current residual risks when selected by the method owner
 - update dependent blockers or next actions
 - append events
 - create a replay row
@@ -567,6 +569,7 @@ No-effect branches:
 Valid dry-run previews do not create:
 
 - judgment resolution
+- project continuity records
 - blocker update
 - event
 - replay row
@@ -612,6 +615,7 @@ Committed `dry_run=false` may:
 
 - persist the method-selected terminal completion effect
 - persist a terminal close summary distinct from `tasks.close_basis_json` when the method-selected completion effect succeeds
+- create `project_continuity_records` with `kind='known_limit'` for current close-basis residual risks that are visible and do not require residual-risk acceptance when the method-selected completion effect succeeds
 - persist an owner-allowed blocked `complete` effect while the Task remains open
 - append events
 - create a replay row

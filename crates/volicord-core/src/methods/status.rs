@@ -1,5 +1,7 @@
 use super::*;
 
+const STATUS_CONTINUITY_RECORD_LIMIT: usize = 8;
+
 impl CoreService {
     /// Executes `volicord.status` as a read-only Core result.
     pub fn status(
@@ -96,6 +98,7 @@ fn status_result_fields(
     let mut current_close_basis = None;
     let mut risk_acceptance_coverage = None;
     let mut close_blockers = None;
+    let mut continuity_summary = None;
     let mut next_actions = Vec::new();
     let guarantee_profile = if include.guarantees {
         Some(
@@ -196,6 +199,13 @@ fn status_result_fields(
             active_task = Some(status_state_summary_value(state, include)?);
         }
     }
+    if include.continuity {
+        continuity_summary = Some(projected_continuity_summary(
+            store,
+            state_version,
+            STATUS_CONTINUITY_RECORD_LIMIT,
+        )?);
+    }
     next_actions = unique_next_actions(next_actions);
 
     let result = volicord_types::StatusResult {
@@ -216,12 +226,28 @@ fn status_result_fields(
         risk_acceptance_coverage,
         close_blockers,
         guarantee_display: guarantee_projection.map(RequiredNullable::some),
+        continuity_summary,
     };
     let mut result_fields = strip_base(serde_json::to_value(result)?)?;
     if let Some(active_task) = active_task {
         result_fields.insert("active_task".to_owned(), active_task);
     }
     Ok(result_fields)
+}
+
+fn projected_continuity_summary(
+    store: &CoreProjectStore,
+    state_version: u64,
+    limit: usize,
+) -> Result<Vec<ProjectContinuitySummary>, PlanError> {
+    store
+        .active_project_continuity_records(limit)
+        .map_err(CorePipelineError::from)?
+        .iter()
+        .map(|record| {
+            project_continuity_summary_from_record(record, state_version).map_err(PlanError::Core)
+        })
+        .collect()
 }
 
 fn status_close_state(close_state: CloseState) -> StatusCloseState {

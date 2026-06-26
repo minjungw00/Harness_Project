@@ -1,6 +1,6 @@
 # API state schemas
 
-This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ShapingReadiness`, `ChangeUnitEffectContract`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
+This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ProjectContinuityRecord`, `ProjectContinuitySummary`, `ShapingReadiness`, `ChangeUnitEffectContract`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
 
 ## Owner boundary
 
@@ -98,6 +98,57 @@ Owner links:
 - `mode` and `close_state` values: [task lifecycle values](schema-value-sets.md#task-lifecycle-values)
 - Commit decision branch: [Common response branches](schema-core.md#common-response)
 - Method-specific commit behavior: method owner documents routed from [API Methods](methods.md)
+
+<a id="project-continuity-shapes"></a>
+## Project continuity shapes
+
+`ProjectContinuityRecord` is the full API state shape for one durable project-level continuity record. `ProjectContinuitySummary` is the compact status-view shape.
+
+```yaml
+ProjectContinuityRecord:
+  continuity_record_id: string
+  project_id: string
+  source_task_id: string
+  source_change_unit_id: string | null
+  kind: string
+  title: string
+  summary: string
+  rationale: string | null
+  applies_to_paths: string[]
+  applies_to_refs: StateRecordRef[]
+  source_refs: StateRecordRef[]
+  artifact_refs: ArtifactRef[]
+  status: string
+  supersedes_refs: StateRecordRef[]
+  review_triggers: string[]
+  created_at: string
+  updated_at: string
+
+ProjectContinuitySummary:
+  continuity_record_ref: StateRecordRef
+  kind: string
+  status: string
+  title: string
+  summary: string
+  source_task_ref: StateRecordRef
+  source_change_unit_ref: StateRecordRef | null
+  review_triggers: string[]
+```
+
+Meaning:
+- Project continuity records preserve durable project-level context such as decisions, obligations, known limits, accepted residual risks, and constraints after the source `Task` closes.
+- `source_task_id` and `source_change_unit_id` identify where the record originated. They do not make the source Task or Change Unit current again.
+- `applies_to_paths`, `applies_to_refs`, `source_refs`, `artifact_refs`, `supersedes_refs`, and `review_triggers` are bounded context for later review. Empty arrays mean the record has no entries for that field.
+- `ProjectContinuitySummary` is selected by method owners as a read view; it is not the full persisted record.
+
+Does not imply:
+- A project continuity record is not current Task authority, evidence, `Write Authorization`, final acceptance, close readiness, residual-risk acceptance for a future close basis, or a blocker waiver.
+- `status=active` means the continuity record is live project context. It does not mean the record is currently applicable to every Task or that its source decision remains sufficient for a new authority check.
+
+Owner links:
+- `kind` and `status` values: [project continuity values](schema-value-sets.md#project-continuity-values)
+- Storage family and JSON placement: [Storage Records](../storage-records.md)
+- Method-specific creation effects: [Storage Effects](../storage-effects.md)
 
 ## `ChangeUnitEffectContract`
 

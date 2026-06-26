@@ -556,6 +556,7 @@ fn status_request(
             evidence: true,
             close: true,
             guarantees: true,
+            continuity: false,
         },
     }
 }

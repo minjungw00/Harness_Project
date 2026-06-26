@@ -270,6 +270,27 @@ pub enum StateRecordKind {
     Blocker,
     TaskEvent,
     LocalSurfaceRegistration,
+    ProjectContinuityRecord,
+}
+
+/// Project-level continuity record family.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ProjectContinuityKind {
+    Decision,
+    Obligation,
+    KnownLimit,
+    AcceptedRisk,
+    Constraint,
+}
+
+/// Lifecycle status for a project-level continuity record.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ProjectContinuityStatus {
+    Active,
+    Superseded,
+    Closed,
 }
 
 /// Concrete output Task modes.

@@ -170,6 +170,14 @@ Residual risk is known remaining uncertainty, an unchecked condition, limitation
 
 Residual-risk acceptance applies only to the named visible risk for the requested close. Each current residual risk has an opaque Core-generated `risk_id`; display text is not authoritative identity. Residual-risk acceptance does not cover all unknowns, replace evidence, replace final acceptance, or make the result risk-free.
 
+### Project continuity record
+
+A project continuity record is durable project-level context that can preserve an important decision, obligation, known limit, accepted residual risk, or constraint after the source `Task` closes.
+
+It helps future work notice prior commitments and limits. It does not make a previous `Task`, Change Unit, close basis, acceptance, residual-risk acceptance, evidence set, or `Write Authorization` current again.
+
+Current authority for a future operation still comes from the current `Task`, current Change Unit, current scope and close-basis revisions, compatible user-owned judgments, current evidence and artifact facts, current blockers, and method-specific owner rules.
+
 ### Derived display
 
 Projection output, template output, status cards, summaries, and reports are derived display. They can help a reader see Core state, but they do not become Core authority, evidence, acceptance, or risk acceptance.
@@ -451,7 +459,7 @@ Use this table for owner routing. Do not copy the linked contracts into this pag
 | API method list and method routing | [API Methods](api/methods.md) |
 | Method behavior | Method owner documents listed by [API Methods](api/methods.md) |
 | Common API envelopes and response branches | [API Schema Core](api/schema-core.md) |
-| State-shaped API data, including `ShapingReadiness`, `CloseReadinessBlocker`, and `WriteDecisionReason` | [API State Schemas](api/schema-state.md) and [API Value Sets](api/schema-value-sets.md) |
+| State-shaped API data, including `ShapingReadiness`, `CloseReadinessBlocker`, `WriteDecisionReason`, and project continuity shapes | [API State Schemas](api/schema-state.md) and [API Value Sets](api/schema-value-sets.md) |
 | User judgment schema shapes, `SensitiveActionScope`, and accepted-risk input shapes | [API Judgment Schemas](api/schema-judgment.md) |
 | Artifact refs, artifact input shapes, staging handles, and artifact schema rules | [API Artifact Schemas](api/schema-artifacts.md) |
 | Public error code meanings, error routing, and error precedence | [API error codes](api/error-codes.md), [API error routing](api/error-routing.md), and [API error precedence](api/error-precedence.md) |

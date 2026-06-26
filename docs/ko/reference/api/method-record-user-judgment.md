@@ -9,6 +9,7 @@
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
 - 기존 대기 중인 `UserJudgment` 하나에 대한 사용자의 답을 기록하는 동작
 - 그 대기 중인 사용자 소유 판단을 해결하고 유효하지 않은 답변 시도를 거절하는 메서드별 경계
+- 수락된 결정과 수락된 잔여 위험에 대해 메서드가 선택하는 프로젝트 연속성 기록 생성
 - 사용자 소유 판단 기록 예시
 
 ## 담당하지 않는 것
@@ -17,6 +18,7 @@
 
 - 공통 요청 래퍼, 응답 분기, `dry_run`, 거절 응답 스키마 본문
 - `UserJudgment`, `JudgmentRationale`, `RecordUserJudgmentPayload`, `SensitiveActionScope`, `AcceptedRiskInput`, 값 집합, 상태 필드 정의
+- `ProjectContinuityRecord` 또는 `ProjectContinuitySummary` 필드 정의
 - Core의 사용자 소유 판단 의미, 최종 수락 의미, 잔여 위험 의미, 민감 동작 승인 의미, `Write Authorization` 의미
 - 저장 기록 레이아웃, 정확한 저장 효과, 공개 오류 코드 의미, 공개 오류 우선순위, 공통 응답 분기 처리 경로
 
@@ -27,6 +29,8 @@
 이 메서드는 사용자의 답에 따라 지정된 대기 판단을 갱신합니다. 답변을 관련 없는 승인, 현재 적용 범위 확장, 최종 수락, 잔여 위험 수락, 민감 동작 승인, `Write Authorization`으로 넓히지 않습니다.
 
 답변을 기록하기 전에 Core는 대기 판단의 `JudgmentBasis`를 현재 상태와 비교합니다. 오래됨, 대체됨, 비호환, 저장 근거가 유효하지 않은 판단에는 성공적으로 답할 수 없습니다.
+
+수락된 제품 결정, 기술 결정, 범위 결정은 `kind=decision`인 오래 유지되는 프로젝트 연속성 기록을 만들 수 있습니다. 수락된 잔여 위험 판단은 정확히 수락된 현재 잔여 위험에 대해 `kind=accepted_risk` 프로젝트 연속성 기록을 만들 수 있습니다. 이런 연속성 기록은 맥락을 보존하지만 관련 없는 승인이나 미래 닫기 권한을 만들지 않습니다.
 
 ## 필수 입력
 
@@ -84,11 +88,12 @@ RecordUserJudgmentRequest:
 - `project_state.state_version`을 정확히 한 번 올립니다.
 - 지정된 `user_judgments` 행을 갱신합니다.
 - `scope_revision`이나 `close_basis_revision`을 증가시키지 않습니다.
+- 이 메서드가 선택할 때 수락된 결정이나 수락된 잔여 위험에 대한 `project_continuity_records`를 만들 수 있습니다.
 - 저장 효과 담당 문서가 허용하는 경우에만 종속 차단 사유 또는 요약 상태를 갱신할 수 있습니다.
 
 비주장:
 
-- `dry_run`과 거절은 판단 해결, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
+- `dry_run`과 거절은 판단 해결, 프로젝트 연속성 기록, 차단 사유 갱신, 이벤트, 재실행 행, 상태 버전 증가를 만들지 않습니다.
 - 기록된 `scope_decision`은 현재 적용 범위나 현재 적용 Change Unit 기록을 조용히 바꾸지 않습니다. 그 기록은 여전히 `volicord.update_scope` 같은 범위 담당 문서가 정의한 전이가 필요합니다.
 
 호환성 요구사항:
@@ -115,7 +120,7 @@ RecordUserJudgmentRequest:
 
 답변이 성공적으로 기록되면 이 메서드는 지정된 판단을 `status=resolved`로 커밋합니다. 기록된 `machine_action`과 `resolution_outcome`은 선택된 선택지에서 복사되며 선택지의 동작/결과 매핑과 일치해야 합니다. 기록된 `rationale`은 설명 메타데이터로 `user_judgment.resolution` 안에 반환됩니다.
 
-결과는 포함된 차단 사유와 판단에 의존하는 요약만 갱신합니다. `accepted`이고 호환되는 권한 판단 자체를 넘어 관련 없는 승인, 증거, 범위 갱신, `Write Authorization`, 닫기 상태, 최종 수락, 잔여 위험 수락, 민감 승인, 취소 권한을 만들지 않습니다.
+결과는 포함된 차단 사유, 판단에 의존하는 요약, 메서드가 선택한 프로젝트 연속성 기록만 갱신합니다. `accepted`이고 호환되는 권한 판단 자체를 넘어 관련 없는 승인, 증거, 범위 갱신, `Write Authorization`, 닫기 상태, 최종 수락, 잔여 위험 수락, 민감 승인, 취소 권한을 만들지 않습니다.
 
 ## 메서드 결과 필드
 
@@ -126,7 +131,7 @@ RecordUserJudgmentRequest:
 | `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. 커밋된 `RecordUserJudgmentResult` 분기는 `base.response_kind=result`와 `base.effect_kind=core_committed`를 사용합니다. `base.events[].event_kind`가 있으면 불투명한 예시 분류 문자열입니다. |
 | `user_judgment_ref` | 답변이 기록된 뒤 지정된 `UserJudgment`의 `StateRecordRef`입니다. |
 | `user_judgment` | 기록된 답변이 초점이 맞는 판단을 해결할 때 `resolution`이 채워진 갱신된 `UserJudgment`입니다. 중첩 형태는 [API 판단 스키마](schema-judgment.md#userjudgment)가 담당합니다. |
-| `updated_refs` | 이 판단 답변 기록으로 갱신된 기록의 `StateRecordRef[]`입니다. |
+| `updated_refs` | 이 판단 답변 기록으로 갱신되거나 생성된 기록의 `StateRecordRef[]`입니다. 이 메서드가 프로젝트 연속성 기록을 만들면 그 참조도 포함합니다. |
 | `state` | 판단 답변이 기록된 뒤의 현재 `StateSummary`입니다. 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
 | `next_actions` | 다음에 안전하게 수행할 API 단계를 설명하는 `NextActionSummary[]`입니다. 기준 형태는 [API 상태 스키마](schema-state.md#current-position-display-shapes)가 담당합니다. |
 
@@ -162,11 +167,12 @@ RecordUserJudgmentRequest:
 
 - `ToolDryRunResponse`를 반환합니다.
 - 판단을 해결하지 않습니다.
+- 프로젝트 연속성 기록을 만들지 않습니다.
 - 차단 사유, 이벤트, 재실행 행, 상태 버전을 갱신하지 않습니다.
 
 ## 저장 효과
 
-커밋 시 판단 해결과 그에 따른 차단 사유 또는 요약 상태를 지속할 수 있습니다. 정확한 저장 효과는 아래 저장 담당 문서가 담당합니다.
+커밋 시 판단 해결, 메서드가 선택한 프로젝트 연속성 기록, 그에 따른 차단 사유 또는 요약 상태를 지속할 수 있습니다. 정확한 저장 효과는 아래 저장 담당 문서가 담당합니다.
 
 ## 최소 유효 요청
 
@@ -328,6 +334,11 @@ user_judgment:
 updated_refs:
   - record_kind: user_judgment
     record_id: uj_empty_001
+    project_id: proj_empty_001
+    task_id: task_empty_001
+    state_version: 63
+  - record_kind: project_continuity_record
+    record_id: continuity_empty_decision_001
     project_id: proj_empty_001
     task_id: task_empty_001
     state_version: 63
