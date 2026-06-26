@@ -802,6 +802,72 @@ mod tests {
     }
 
     #[test]
+    fn docs_facing_schemas_include_authority_boundary_enum_values() {
+        let record_kinds = schema_enum_strings(
+            serde_json::to_value(schemars::schema_for!(StateRecordKind))
+                .expect("StateRecordKind schema should serialize"),
+        );
+        assert_contains_all(
+            "StateRecordKind",
+            &record_kinds,
+            &[
+                "write_authorization",
+                "user_judgment",
+                "evidence_summary",
+                "evidence_observation",
+                "project_continuity_record",
+            ],
+        );
+
+        let blocker_categories = schema_enum_strings(
+            serde_json::to_value(schemars::schema_for!(CloseReadinessBlockerCategory))
+                .expect("CloseReadinessBlockerCategory schema should serialize"),
+        );
+        assert_contains_all(
+            "CloseReadinessBlockerCategory",
+            &blocker_categories,
+            &[
+                "evidence_claim",
+                "evidence_provenance",
+                "final_acceptance",
+                "residual_risk_acceptance",
+                "pending_user_judgment",
+            ],
+        );
+
+        let evidence_sources = schema_enum_strings(
+            serde_json::to_value(schemars::schema_for!(EvidenceSourceKind))
+                .expect("EvidenceSourceKind schema should serialize"),
+        );
+        assert_contains_all(
+            "EvidenceSourceKind",
+            &evidence_sources,
+            &[
+                "agent_report",
+                "external_tool",
+                "user_observation",
+                "unverified_claim",
+            ],
+        );
+
+        let continuity_kinds = schema_enum_strings(
+            serde_json::to_value(schemars::schema_for!(ProjectContinuityKind))
+                .expect("ProjectContinuityKind schema should serialize"),
+        );
+        assert_contains_all(
+            "ProjectContinuityKind",
+            &continuity_kinds,
+            &[
+                "decision",
+                "obligation",
+                "known_limit",
+                "accepted_risk",
+                "constraint",
+            ],
+        );
+    }
+
+    #[test]
     fn persisted_options_reject_bare_array_and_missing_current_fields() {
         let bare_array = serde_json::from_value::<PersistedUserJudgmentOptions>(json!([
             {
@@ -1195,6 +1261,30 @@ mod tests {
             ),
             ("volicord.close_task", close_task_request_json()),
         ]
+    }
+
+    fn schema_enum_strings(schema: Value) -> BTreeSet<String> {
+        schema
+            .get("enum")
+            .and_then(Value::as_array)
+            .expect("schema should expose a direct enum")
+            .iter()
+            .map(|value| {
+                value
+                    .as_str()
+                    .unwrap_or_else(|| panic!("enum value should be a string: {value:?}"))
+                    .to_owned()
+            })
+            .collect()
+    }
+
+    fn assert_contains_all(label: &str, actual: &BTreeSet<String>, expected: &[&str]) {
+        for value in expected {
+            assert!(
+                actual.contains(*value),
+                "{label} should include {value}, got {actual:?}"
+            );
+        }
     }
 
     fn assert_schema_and_serde(method_name: &str, value: Value, should_accept: bool) {

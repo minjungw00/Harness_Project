@@ -826,6 +826,9 @@ fn assert_project_contract_behavior(label: &str, conn: &Connection) -> Result<()
     assert_resolved_surface_foreign_key_is_enforced(label, conn);
     assert_user_judgments_require_basis(label, conn);
     assert_resolved_user_judgments_require_complete_resolution(label, conn);
+    assert_project_continuity_value_sets_are_closed(label, conn);
+    assert_write_authorization_status_is_closed(label, conn);
+    assert_evidence_observation_value_sets_are_closed(label, conn);
     assert_tool_invocation_requires_identity(label, conn);
     assert_one_active_current_change_unit(label, conn);
     assert_artifacts_integrity_status_is_closed(label, conn);
@@ -1131,6 +1134,153 @@ fn assert_resolved_user_judgments_require_complete_resolution(label: &str, conn:
         )
         .unwrap_err();
     assert_constraint_error(label, error);
+}
+
+fn assert_project_continuity_value_sets_are_closed(label: &str, conn: &Connection) {
+    let bad_kind = conn
+        .execute(
+            "INSERT INTO project_continuity_records (
+                project_id,
+                continuity_record_id,
+                source_task_id,
+                kind,
+                title,
+                summary,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                'project_a',
+                'continuity_bad_kind',
+                'task_a',
+                'authority',
+                'Bad continuity kind',
+                'Continuity records must stay inside the documented kind set.',
+                'active',
+                't1',
+                't1'
+            )",
+            [],
+        )
+        .unwrap_err();
+    assert_constraint_error(label, bad_kind);
+
+    let bad_status = conn
+        .execute(
+            "INSERT INTO project_continuity_records (
+                project_id,
+                continuity_record_id,
+                source_task_id,
+                kind,
+                title,
+                summary,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                'project_a',
+                'continuity_bad_status',
+                'task_a',
+                'decision',
+                'Bad continuity status',
+                'Continuity status values must stay closed.',
+                'current_authority',
+                't1',
+                't1'
+            )",
+            [],
+        )
+        .unwrap_err();
+    assert_constraint_error(label, bad_status);
+}
+
+fn assert_write_authorization_status_is_closed(label: &str, conn: &Connection) {
+    let error = conn
+        .execute(
+            "INSERT INTO write_authorizations (
+                project_id,
+                write_authorization_id,
+                task_id,
+                basis_state_version,
+                status,
+                created_by_surface_id,
+                created_by_surface_instance_id,
+                expires_at,
+                created_at
+            )
+            VALUES (
+                'project_a',
+                'write_auth_bad_status',
+                'task_a',
+                1,
+                'accepted',
+                'surface_main',
+                'surface_instance_1',
+                't2',
+                't1'
+            )",
+            [],
+        )
+        .unwrap_err();
+    assert_constraint_error(label, error);
+}
+
+fn assert_evidence_observation_value_sets_are_closed(label: &str, conn: &Connection) {
+    let bad_source = conn
+        .execute(
+            "INSERT INTO evidence_observations (
+                project_id,
+                evidence_observation_id,
+                task_id,
+                claim,
+                source_kind,
+                assurance_level,
+                observed_at,
+                recorded_at
+            )
+            VALUES (
+                'project_a',
+                'evidence_observation_bad_source',
+                'task_a',
+                'Close claim supported.',
+                'final_acceptance',
+                'external_tool_result',
+                't1',
+                't1'
+            )",
+            [],
+        )
+        .unwrap_err();
+    assert_constraint_error(label, bad_source);
+
+    let bad_assurance = conn
+        .execute(
+            "INSERT INTO evidence_observations (
+                project_id,
+                evidence_observation_id,
+                task_id,
+                claim,
+                source_kind,
+                assurance_level,
+                observed_at,
+                recorded_at
+            )
+            VALUES (
+                'project_a',
+                'evidence_observation_bad_assurance',
+                'task_a',
+                'Close claim supported.',
+                'external_tool',
+                'accepted',
+                't1',
+                't1'
+            )",
+            [],
+        )
+        .unwrap_err();
+    assert_constraint_error(label, bad_assurance);
 }
 
 fn assert_tool_invocation_requires_identity(label: &str, conn: &Connection) {

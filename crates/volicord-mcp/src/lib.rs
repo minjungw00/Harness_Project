@@ -2283,6 +2283,50 @@ mod tests {
     }
 
     #[test]
+    fn mcp_agent_integration_cannot_use_user_interaction_surface() -> Result<(), Box<dyn Error>> {
+        let harness = TestHarness::with_role_and_local_access(
+            json!({}),
+            local_access(&BASELINE_WORKFLOW_ACCESS_CLASSES),
+            SurfaceInteractionRole::UserInteraction,
+        )?;
+        let integration_id = next_integration_id();
+        harness.register_integration(&integration_id, SURFACE_ID, SURFACE_INSTANCE_ID)?;
+
+        let inspection = McpIntegrationStartupInspection::resolve(
+            &harness.runtime_home_path,
+            &integration_id,
+            None,
+        )?;
+        assert_eq!(inspection.interaction_role, SurfaceInteractionRole::Agent);
+        assert_eq!(inspection.projects.len(), 1);
+        assert!(!inspection.projects[0].available);
+        assert_eq!(
+            inspection.projects[0].unavailable_reason.as_deref(),
+            Some("integration surface role is not agent")
+        );
+
+        let adapter = McpAdapter::new(
+            &harness.runtime_home_path,
+            inspection
+                .integration_context()
+                .with_invocation_binding_basis(VERIFICATION_BASIS_TEST_FIXTURE_BINDING),
+        );
+        let before = harness.counts()?;
+        let error = adapter
+            .call_tool(
+                "volicord.status",
+                mcp_arguments(status_request("req_mcp_user_interaction_surface"))?,
+            )
+            .expect_err("user_interaction surface should not execute MCP agent calls");
+
+        assert!(error
+            .to_string()
+            .contains("integration surface role is not agent"));
+        assert_eq!(harness.counts()?, before);
+        Ok(())
+    }
+
+    #[test]
     fn integration_adapter_rejects_caller_surface_id_before_core() -> Result<(), Box<dyn Error>> {
         let harness = TestHarness::with_role_and_local_access(
             json!({}),
