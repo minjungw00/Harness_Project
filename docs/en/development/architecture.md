@@ -22,6 +22,7 @@ flowchart LR
   operator[Operator]
   cli["volicord administrative CLI"]
   bootstrap[Bootstrap, registration, and inspection facilities]
+  user[User at local terminal]
   runtime["Volicord Runtime Home"]
   config[Host configuration files]
   product["Product Repository"]
@@ -35,7 +36,9 @@ flowchart LR
   artifacts --> runtime
 
   operator --> cli
+  user --> cli
   cli --> bootstrap
+  cli --> core
   cli --> config
   bootstrap --> runtime
 
@@ -43,10 +46,11 @@ flowchart LR
   host -. product-file tools outside public API .-> product
 ```
 
-The Volicord implementation in this repository has two distinct operational paths:
+The Volicord implementation in this repository has three distinct operational path shapes:
 
 - MCP host -> `volicord-mcp` -> `volicord-core` -> Store and artifact facilities under `Volicord Runtime Home`.
 - Operator -> `volicord` administrative CLI -> bootstrap and registration facilities -> `Volicord Runtime Home` and host configuration files.
+- User at a local terminal -> `volicord user` CLI -> `volicord-core` -> Store under `Volicord Runtime Home`, using a registered `user_interaction` surface.
 
 `volicord-mcp` also uses `volicord-store` directly during startup and request routing. That Store use checks Runtime Home, Agent Integration Profile state, integration project membership, project availability, surface, surface instance, role, and local-access registration before dispatching a public method to Core. It is not an alternate implementation path for public Volicord method semantics, which route through `volicord-core`.
 
@@ -61,7 +65,7 @@ The Cargo workspace contains these members:
 | `crates/volicord-types` | `volicord-types` | Library | Shared Rust request, response, schema-shaped, value-set, identifier, and canonical-hash types. |
 | `crates/volicord-store` | `volicord-store` | Library | SQLite, Runtime Home, bootstrap, project Store, artifact storage, migration, inspection, and storage-error implementation. |
 | `crates/volicord-core` | `volicord-core` | Library | Core service, shared request pipeline, method planning, policy checks, and Store coordination. |
-| `crates/volicord-cli` | `volicord-cli` | Library and `volicord` binary | Local administrative CLI for Runtime Home setup, project and surface registration, Agent Integration Profile installation, host adapters, and repository guidance. |
+| `crates/volicord-cli` | `volicord-cli` | Library and `volicord` binary | Local administrative CLI for Runtime Home setup, project and surface registration, local user interaction commands, Agent Integration Profile installation, host adapters, and repository guidance. |
 | `crates/volicord-mcp` | `volicord-mcp` | Library and `volicord-mcp` binary | MCP stdio adapter, startup validation, tool listing, `tools/call` dispatch, and Core invocation. |
 | `crates/volicord-test-support` | `volicord-test-support` | Library | Disposable Runtime Home, Store, Core, and fixture helpers shared by implementation tests. |
 | `tests/conformance` | `volicord-conformance-tests` | `baseline` test target | Baseline cross-method scenarios that exercise owner-defined behavior through Core-facing APIs. |
@@ -75,7 +79,7 @@ Internal dependency direction from the Cargo manifests:
 | `volicord-types` | None | None |
 | `volicord-store` | `volicord-types` | `volicord-test-support` |
 | `volicord-core` | `volicord-store`, `volicord-types` | `volicord-test-support` |
-| `volicord-cli` | `volicord-store`, `volicord-types` | `volicord-store` with `test-support`, `volicord-test-support` |
+| `volicord-cli` | `volicord-core`, `volicord-store`, `volicord-types` | `volicord-store` with `test-support`, `volicord-test-support` |
 | `volicord-mcp` | `volicord-core`, `volicord-store`, `volicord-types` | `volicord-test-support` |
 | `volicord-test-support` | `volicord-store`, `volicord-types` | None |
 | `tests/conformance` | None; the package contains only test targets | `volicord-core`, `volicord-test-support`, `volicord-types` |
@@ -97,6 +101,7 @@ flowchart TD
   store --> types
   core --> store
   core --> types
+  cli --> core
   cli --> store
   cli --> types
   mcp --> core
@@ -123,7 +128,7 @@ The durable dependency boundaries are:
 
 - Core does not depend on CLI or MCP adapter crates.
 - MCP may depend on Core, Store, and shared types for distinct responsibilities: transport and dispatch, integration startup validation, request-time project routing, and typed request handling.
-- The administrative CLI uses Store and shared types for local setup and registration rather than invoking public Core methods.
+- The administrative CLI uses Store and shared types for local setup and registration. Its `volicord user` command path also depends on Core to invoke selected Core-facing methods as a local `user_interaction` adapter.
 - Store depends on shared types.
 - Test-support and test packages compose implementation crates only for disposable fixtures and cross-layer verification.
 - `xtask` has no internal product-crate dependencies. Documentation-tooling dependencies stay isolated in the maintenance crate.
@@ -135,7 +140,7 @@ The durable dependency boundaries are:
 | `crates/volicord-types` | `crates/volicord-types/src/methods.rs`, `crates/volicord-types/src/schema.rs`, `crates/volicord-types/src/values.rs`, `crates/volicord-types/src/ids.rs`, `crates/volicord-types/src/canonical.rs` | `methods.rs` carries typed public request/result models and method-to-access mapping. `schema.rs` carries shared schema-shaped Rust data, response branches, Core state shapes, artifact and judgment structures, and persisted helper shapes. `values.rs` carries controlled Rust enums and constants for documented value names. `ids.rs` carries opaque identifier wrappers and durable ID generation helpers. `canonical.rs` carries deterministic canonical JSON serialization and request hashing. |
 | `crates/volicord-store` | `crates/volicord-store/src/runtime_home.rs`, `crates/volicord-store/src/bootstrap.rs`, `crates/volicord-store/src/sqlite.rs`, `crates/volicord-store/src/migrations.rs`, `crates/volicord-store/src/core_pipeline.rs`, `crates/volicord-store/src/artifacts.rs`, `crates/volicord-store/src/inspection.rs`, `crates/volicord-store/src/error.rs` | `runtime_home.rs` resolves Runtime Home paths. `bootstrap.rs` initializes Runtime Home metadata and registers projects and surfaces. `sqlite.rs` opens and validates registry/project SQLite databases. `migrations.rs` applies baseline migrations. `core_pipeline.rs` exposes `CoreProjectStore`, read helpers, replay rows, storage mutation types, and the atomic Core mutation commit boundary. `artifacts.rs` handles transient staging and persistent artifact body verification. `inspection.rs` supports read-only setup inspection. `error.rs` classifies storage failures for higher layers. |
 | `crates/volicord-core` | `crates/volicord-core/src/pipeline.rs`, `crates/volicord-core/src/methods/`, `crates/volicord-core/src/policy/` | `pipeline.rs` owns common request preflight, validated request context preparation, effect-path selection, response construction, replay handling, and Core commit orchestration. `methods/` owns method-specific validation, planning, storage mutation lists, event payloads, dry-run summaries, and result fields. `policy/` owns reusable Core policy helpers for access, replay context, product paths, write authorization, close readiness, evidence, and judgment relevance. |
-| `crates/volicord-cli` | `crates/volicord-cli/src/main.rs`, `crates/volicord-cli/src/agent_command.rs`, `crates/volicord-cli/src/host_integration/`, `crates/volicord-cli/src/repository_guidance.rs`, `crates/volicord-cli/src/guidance_template.rs`, `crates/volicord-cli/src/registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `agent_command.rs` parses and orchestrates `volicord agent` install, project membership, status, verification, uninstall, and guidance commands. `host_integration/` owns Codex, Claude Code, and generic host plans and managed host configuration. `repository_guidance.rs` and `guidance_template.rs` manage optional Product Repository guidance. `registration.rs` builds capability-profile and local-access metadata for registered surfaces. |
+| `crates/volicord-cli` | `crates/volicord-cli/src/main.rs`, `crates/volicord-cli/src/agent_command.rs`, `crates/volicord-cli/src/user_command.rs`, `crates/volicord-cli/src/host_integration/`, `crates/volicord-cli/src/repository_guidance.rs`, `crates/volicord-cli/src/guidance_template.rs`, `crates/volicord-cli/src/registration.rs` | `main.rs` dispatches administrative commands and binary exit behavior. `agent_command.rs` parses and orchestrates `volicord agent` install, project membership, status, verification, uninstall, and guidance commands. `user_command.rs` parses and orchestrates `volicord user` setup, status, and judgment commands. `host_integration/` owns Codex, Claude Code, and generic host plans and managed host configuration. `repository_guidance.rs` and `guidance_template.rs` manage optional Product Repository guidance. `registration.rs` builds capability-profile and local-access metadata for registered surfaces. |
 | `crates/volicord-mcp` | `crates/volicord-mcp/src/main.rs`, `crates/volicord-mcp/src/lib.rs` | `main.rs` handles command modes such as stdio, `--check`, help, and version. `lib.rs` owns MCP tool metadata, integration startup inspection, request-time project routing, the adapter-owned `volicord.list_projects` utility, typed public `tools/call` decoding, invocation-context derivation, initialization instructions, JSON-RPC stdio framing, and response wrapping. |
 | `crates/volicord-test-support` | `crates/volicord-test-support/src/lib.rs` | Provides disposable Runtime Home helpers, fixture setup for Core and Store tests, shared request builders, and fixture-only helpers used by conformance and integration tests. |
 

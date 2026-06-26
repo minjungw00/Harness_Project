@@ -1,6 +1,6 @@
 # 관리 CLI 참조
 
-이 문서는 로컬 `volicord` 관리/부트스트랩 CLI 계약을 담당합니다. 이 CLI는 `Volicord Runtime Home`을 초기화하고, 로컬 프로젝트와 접점을 등록하며, Agent Integration Profile을 관리하고, 지원되는 코딩 에이전트 호스트의 호스트 설정을 설치하고, 호스트 통합 상태를 검증합니다. 이 명령들은 공개 Volicord API 메서드가 아닙니다.
+이 문서는 로컬 `volicord` 관리/부트스트랩 CLI 계약을 담당합니다. 이 CLI는 `Volicord Runtime Home`을 초기화하고, 로컬 프로젝트와 접점을 등록하며, 선택된 사용자 대상 Core 동작을 위해 확인된 로컬 `user_interaction` 경로를 제공하고, Agent Integration Profile을 관리하고, 지원되는 코딩 에이전트 호스트의 호스트 설정을 설치하고, 호스트 통합 상태를 검증합니다. 이 명령들은 공개 Volicord API 메서드가 아닙니다.
 
 이 문서는 공개 API 메서드 동작, API 스키마, 접근 등급 값 의미, 저장소 기록 배치, 보안 보장, Core 권한 의미, MCP stdio 전송 동작을 정의하지 않습니다.
 
@@ -11,13 +11,14 @@
 - `volicord` 명령 이름, 명령줄 인자, 기본값, stdout/stderr 처리, 프로세스 종료 코드
 - `volicord` 관리 명령의 Runtime Home 경로 선택
 - 관리용 프로젝트와 접점 등록 기본값
+- 로컬 사용자 상호작용 명령 이름, 등록되는 접점 기본값, 명령 출력
 - Agent Integration Profile 명령 동작
 - 통합 프로젝트 멤버십 명령 동작
 - Codex, Claude Code, generic export를 위한 호스트 설치, 상태, 검증, 제거 명령 동작
 - 설정 결과 상태, dry-run 동작, 기계 판독 출력, 비대화식 승인 동작
 - 선택적 저장소 지침 적용, 상태, 제거 명령 동작
 - `baseline-workflow` 로컬 등록 프로필 확장
-- 관리 명령과 공개 Volicord API 메서드 사이의 경계
+- 관리 명령, 로컬 사용자 상호작용 명령, 공개 Volicord API 메서드 사이의 경계
 
 이 문서는 담당하지 않습니다.
 
@@ -30,7 +31,7 @@
 
 ## 명령 모델
 
-`volicord`는 로컬 관리/부트스트랩 실행 파일입니다. 장기 실행 서버가 아니며 공개 Volicord API를 직접 노출하지 않습니다.
+`volicord`는 로컬 관리/부트스트랩 실행 파일입니다. 장기 실행 서버가 아닙니다. `volicord user` 명령군은 등록된 `user_interaction` 접점을 위한 선택된 Core 메서드 위의 로컬 CLI 어댑터입니다. 이 명령 이름은 공개 Volicord API 메서드가 아니라 관리 CLI 명령으로 남습니다.
 
 지원되는 기준 명령은 아래와 같습니다.
 
@@ -42,6 +43,11 @@ volicord project register --project-id ID --repo-root PATH [--status active]
 volicord project list
 volicord surface register --project-id ID --surface-id ID [--surface-instance-id ID] [--kind KIND] [--name NAME] [--interaction-role agent|user_interaction] [--access-class ACCESS_CLASS ...] [--profile baseline-workflow] [--capability-profile JSON]
 volicord surface list --project-id ID
+volicord user setup --project-id ID [--surface-id ID] [--surface-instance-id ID] [--name NAME]
+volicord user status --project-id ID [--task-id ID] [--surface-id ID] [--surface-instance-id ID]
+volicord user judgment list --project-id ID [--task-id ID] [--surface-id ID] [--surface-instance-id ID]
+volicord user judgment show --project-id ID --judgment-id ID [--surface-id ID] [--surface-instance-id ID]
+volicord user judgment record --project-id ID --judgment-id ID --option-id ID [--surface-id ID] [--surface-instance-id ID] [--note TEXT] [--request-id ID] [--idempotency-key KEY] [--expected-state-version VERSION]
 volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]
 volicord agent project add --integration-id ID --project-id ID [--repo-root PATH] [--default] [--runtime-home PATH] [--output text|json] [--dry-run]
 volicord agent project remove --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]
@@ -90,6 +96,22 @@ volicord agent guidance remove --integration-id ID --project-id ID [--host codex
 - 상대 경로 `VOLICORD_HOME`은 그 경로가 존재하지 않아도 프로세스의 현재 작업 디렉터리를 기준으로 해석합니다.
 - `volicord init`은 선택된 Runtime Home 레지스트리를 만들거나 검증할 수 있습니다.
 - 다른 관리 명령은 선택된 Runtime Home에 요청 작업에 필요한 기록이 있어야 합니다.
+
+## 사용자 상호작용 명령
+
+`volicord user` 명령은 사람이 로컬 CLI에서 등록된 `user_interaction` 접점을 통해 작업 상태를 확인하고 대기 중인 사용자 판단에 답할 수 있는 경로를 제공합니다. 이 명령은 Agent Integration Profile을 만들거나, MCP 호스트 설정을 설치하거나, 에이전트 접점이 사용자처럼 동작할 수 있게 하지 않습니다.
+
+`volicord user setup`은 선택된 프로젝트에 로컬 `user_interaction` 접점 하나를 만들거나 갱신합니다. 생략 시 `--surface-id`는 `surface_user_cli`, `--surface-instance-id`는 `surface_instance_user_cli`, `--name`은 `Local user CLI`가 기본값이며 접점 종류는 `cli`입니다. 이 명령은 등록된 그 접점에 로컬 접근 등급 `read_status`와 `core_mutation`만 부여합니다.
+
+`volicord user status`는 등록된 `user_interaction` 접점을 선택한 뒤 `actor_kind=user`와 CLI 직접 접점 바인딩 확인 근거로 `volicord.status`를 통해 사용자 중심 작업 상태를 보여 줍니다.
+
+`volicord user judgment list`는 등록된 `user_interaction` 접점을 선택하고, 활성 작업 또는 선택된 작업의 상태 읽기 가능성을 확인한 뒤, 대기 중인 사용자 판단을 작업, 판단 종류, 상태, 질문과 함께 나열합니다.
+
+`volicord user judgment show`는 등록된 `user_interaction` 접점을 선택하고, 해당 판단의 작업에 대한 상태 읽기 가능성을 확인한 뒤, 저장된 판단 요청, 맥락 요약, Core가 생성한 선택지를 표시합니다.
+
+`volicord user judgment record`는 대기 중인 판단과 그 판단에 저장된 Core 생성 선택지 중 하나를 가리키는 `--option-id`를 요구합니다. 이 명령은 `actor_kind=user`, 등록된 `user_interaction` 접점 역할, CLI 직접 접점 바인딩 확인 근거, `core_mutation` 접근으로 `volicord.record_user_judgment`를 통해 선택을 기록합니다. 기록되는 답은 선택된 선택지의 `machine_action`과 `resolution_outcome`으로 결정됩니다. `--note`는 메모로만 저장됩니다. `--request-id`, `--idempotency-key`, `--expected-state-version`이 생략되면 명령은 로컬 요청 ID, 로컬 idempotency key, 현재 프로젝트 상태 버전을 제공합니다. 에이전트 역할 접점은 `volicord user judgment record`에 사용할 수 없습니다.
+
+판단 하나를 기록하는 것은 그 판단만 기록합니다. 최종 수락과 잔여 위험 수락은 별개의 판단 종류와 동작으로 남아야 하며, 이 명령이 둘을 하나로 합치면 안 됩니다.
 
 ## 호스트와 범위 지원
 

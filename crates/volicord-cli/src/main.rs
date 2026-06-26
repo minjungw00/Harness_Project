@@ -17,6 +17,7 @@ use volicord_cli::{
         RegistrationMetadataError, ADMIN_METADATA_JSON, BASELINE_WORKFLOW_PROFILE,
         DEFAULT_ACCESS_CLASS, DEFAULT_SURFACE_KIND,
     },
+    user_command::{run_user_command, user_usage, UserCommandError},
 };
 use volicord_store::bootstrap::{
     initialize_runtime_home, list_projects, list_surfaces, register_project, register_surface,
@@ -80,6 +81,7 @@ where
             let mut agent_process = ProductionAgentProcess;
             run_agent_command(&args[2..], current_dir, &mut agent_process).map_err(CliError::from)
         }
+        "user" => run_user_command(&args[2..], env_var, current_dir).map_err(CliError::from),
         "project" => command_project(&args[2..], env_var, current_dir),
         "surface" => command_surface(&args[2..], env_var, current_dir),
         other => Err(CliError::usage(format!(
@@ -436,8 +438,9 @@ fn display_path(path: &Path) -> String {
 
 fn usage() -> String {
     format!(
-        "Usage:\n  volicord --help\n  volicord --version\n  volicord init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nThese are local administrative commands, not public Volicord API methods.\n",
+        "Usage:\n  volicord --help\n  volicord --version\n  volicord init [--runtime-home-id ID]\n  {}\n  {}\n  {}\n  {}\n\nEnvironment:\n  VOLICORD_HOME  Override Runtime Home path (default: $HOME/.volicord)\n\nThese are local administrative commands, not public Volicord API methods.\n",
         agent_usage().trim_end(),
+        user_usage().trim_end(),
         project_usage().trim_end(),
         surface_usage().trim_end()
     )
@@ -513,6 +516,15 @@ impl From<AgentCommandError> for CliError {
             AgentCommandError::Usage(message) => Self::Usage(message),
             AgentCommandError::Runtime(message) => Self::Runtime(message),
             AgentCommandError::FailureOutput(output) => Self::FailureOutput(output),
+        }
+    }
+}
+
+impl From<UserCommandError> for CliError {
+    fn from(error: UserCommandError) -> Self {
+        match error {
+            UserCommandError::Usage(message) => Self::Usage(message),
+            UserCommandError::Runtime(message) => Self::Runtime(message),
         }
     }
 }

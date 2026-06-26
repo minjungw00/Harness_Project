@@ -1,6 +1,6 @@
 # Administrative CLI reference
 
-This document owns the local `volicord` administrative and bootstrap CLI contract. The CLI initializes a `Volicord Runtime Home`, registers local projects and surfaces, manages Agent Integration Profiles, installs host configuration for supported coding-agent hosts, and verifies host integration state. These commands are not public Volicord API methods.
+This document owns the local `volicord` administrative and bootstrap CLI contract. The CLI initializes a `Volicord Runtime Home`, registers local projects and surfaces, provides a verified local `user_interaction` path for selected user-facing Core actions, manages Agent Integration Profiles, installs host configuration for supported coding-agent hosts, and verifies host integration state. These commands are not public Volicord API methods.
 
 It does not define public API method behavior, API schemas, access-class value meanings, storage record layout, security guarantees, Core authority semantics, or MCP stdio transport behavior.
 
@@ -11,13 +11,14 @@ This document owns:
 - `volicord` command names, command-line arguments, defaults, stdout/stderr routing, and process exit codes
 - Runtime Home path selection for `volicord` administrative commands
 - administrative project and surface registration defaults
+- local user interaction command names, registered surface defaults, and command output
 - Agent Integration Profile command behavior
 - integration project membership command behavior
 - host installation, status, verification, and uninstall command behavior for Codex, Claude Code, and generic export
 - setup result states, dry-run behavior, machine-readable output, and noninteractive approval behavior
 - optional repository-guidance apply, status, and remove command behavior
 - `baseline-workflow` local registration profile expansion
-- the boundary between administrative commands and public Volicord API methods
+- the boundary between administrative commands, local user interaction commands, and public Volicord API methods
 
 This document does not own:
 
@@ -30,7 +31,7 @@ This document does not own:
 
 ## Command model
 
-`volicord` is a local administrative/bootstrap executable. It is not a long-running server and does not expose the public Volicord API directly.
+`volicord` is a local administrative/bootstrap executable. It is not a long-running server. The `volicord user` command group is a local CLI adapter over selected Core methods for a registered `user_interaction` surface; its command names remain administrative CLI commands, not public Volicord API methods.
 
 Supported baseline commands:
 
@@ -42,6 +43,11 @@ volicord project register --project-id ID --repo-root PATH [--status active]
 volicord project list
 volicord surface register --project-id ID --surface-id ID [--surface-instance-id ID] [--kind KIND] [--name NAME] [--interaction-role agent|user_interaction] [--access-class ACCESS_CLASS ...] [--profile baseline-workflow] [--capability-profile JSON]
 volicord surface list --project-id ID
+volicord user setup --project-id ID [--surface-id ID] [--surface-instance-id ID] [--name NAME]
+volicord user status --project-id ID [--task-id ID] [--surface-id ID] [--surface-instance-id ID]
+volicord user judgment list --project-id ID [--task-id ID] [--surface-id ID] [--surface-instance-id ID]
+volicord user judgment show --project-id ID --judgment-id ID [--surface-id ID] [--surface-instance-id ID]
+volicord user judgment record --project-id ID --judgment-id ID --option-id ID [--surface-id ID] [--surface-instance-id ID] [--note TEXT] [--request-id ID] [--idempotency-key KEY] [--expected-state-version VERSION]
 volicord agent install --host codex|claude-code|claude_code|generic --scope user|project|local|export [--project-id ID] [--repo-root PATH] [--integration-id ID] [--default-project-id ID] [--server-name NAME] [--surface-id ID] [--surface-instance-id ID] [--mcp-command PATH] [--runtime-home PATH] [--export-path PATH|--export-dir PATH] [--guidance none|codex|claude-code|claude_code|both] [--output text|json] [--dry-run] [--allow-repository-write] [--replace-managed]
 volicord agent project add --integration-id ID --project-id ID [--repo-root PATH] [--default] [--runtime-home PATH] [--output text|json] [--dry-run]
 volicord agent project remove --integration-id ID --project-id ID [--runtime-home PATH] [--output text|json] [--dry-run]
@@ -89,6 +95,22 @@ Rules:
 - A relative `VOLICORD_HOME` is resolved against the process current working directory without requiring the path to exist.
 - `volicord init` may create or validate the selected Runtime Home registry.
 - Other administrative commands require the selected Runtime Home to contain the records needed for the requested operation.
+
+## User interaction commands
+
+`volicord user` commands provide a local CLI path for a human user to inspect task status and answer pending user judgments through a registered `user_interaction` surface. They do not create an Agent Integration Profile, install MCP host configuration, or make an agent surface eligible to act as a user.
+
+`volicord user setup` creates or updates one local `user_interaction` surface for the selected project. When omitted, `--surface-id` defaults to `surface_user_cli`, `--surface-instance-id` defaults to `surface_instance_user_cli`, `--name` defaults to `Local user CLI`, and the surface kind is `cli`. The command grants exactly the local access classes `read_status` and `core_mutation` for that registered surface.
+
+`volicord user status` selects a registered `user_interaction` surface, then shows user-oriented task status through `volicord.status` with `actor_kind=user` and the CLI direct surface-binding verification basis.
+
+`volicord user judgment list` selects a registered `user_interaction` surface, verifies status readability for the active or selected task, and lists pending user judgments with their task, judgment kind, status, and question.
+
+`volicord user judgment show` selects a registered `user_interaction` surface, verifies status readability for the judgment's task, and displays the stored judgment request, context summary, and Core-generated options.
+
+`volicord user judgment record` requires a pending judgment and a `--option-id` that names one of that judgment's stored Core-generated options. It records the selection through `volicord.record_user_judgment` with `actor_kind=user`, the registered `user_interaction` surface role, the CLI direct surface-binding verification basis, and `core_mutation` access. The selected option's `machine_action` and `resolution_outcome` determine the recorded answer; `--note` is stored only as a note. When `--request-id`, `--idempotency-key`, or `--expected-state-version` are omitted, the command supplies a local request id, a local idempotency key, and the current project state version. Agent-role surfaces are not eligible for `volicord user judgment record`.
+
+Recording one judgment records only the addressed judgment. Final acceptance and residual-risk acceptance remain separate judgment kinds and actions; this command must not collapse one into the other.
 
 ## Host and scope support
 

@@ -611,9 +611,11 @@ name = "volicord-cli"
 version = "0.1.0"
 dependencies = [
  "rusqlite",
+ "serde",
  "serde_json",
  "sha2",
  "toml_edit",
+ "volicord-core",
  "volicord-store",
  "volicord-test-support",
  "volicord-types",
