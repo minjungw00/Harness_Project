@@ -84,6 +84,7 @@ Mutation conditions:
 Close condition:
 
 - `intent=complete` can close only after preflight succeeds, the close readiness evaluation over the current `CurrentCloseBasis` is valid, current close-basis refs satisfy their artifact and Run compatibility rules, and no close blocker remains.
+- Required close evidence must be supported by current claim-matching evidence observation provenance. Unverified, provenance-free, stale, or cooperative-agent-only evidence does not satisfy a close requirement when stronger provenance is required.
 - `intent=cancel` requires a current accepted cancellation judgment with `machine_action=accept`, `resolution_outcome=accepted`, verified `user_interaction` actor provenance, and a basis bound to the Task, current scope revision, and current Change Unit. It does not require completion-only evidence, final acceptance, or residual-risk acceptance.
 - `intent=supersede` evaluates the requested terminal path. It is not evidence sufficiency, final acceptance, or residual-risk acceptance.
 
@@ -218,6 +219,10 @@ The production meanings below apply only after the method reaches close-readines
 | `write_authorization_stale` | `write_compatibility` | A close-relevant `Write Authorization` is unusable for a freshness reason that is not routed as `STATE_VERSION_CONFLICT`. |
 | `baseline_stale` | `baseline` | The close-relevant baseline basis is stale on a blocker-producing path. |
 | `evidence_claim_unsupported` | `evidence` | A required close claim lacks supported evidence coverage. |
+| `evidence_claim_missing` | `evidence` | A required close claim has no current evidence coverage record. |
+| `evidence_provenance_insufficient` | `evidence` | Required close evidence exists but lacks sufficient current source and assurance provenance. |
+| `evidence_provenance_stale` | `evidence` | Evidence observation provenance exists but is stale for the current Task scope, Change Unit, source Run, or close-basis evidence summary. |
+| `evidence_agent_report_only` | `evidence` | Required close evidence is supported only by cooperative agent reports when stronger provenance is required. |
 | `artifact_unavailable` | `artifact_availability` | A close-relevant artifact is missing, unavailable, unusable, or integrity-failed. |
 | `missing_final_acceptance` | `final_acceptance` | Required final acceptance is absent or incompatible with the current Task, Change Unit, `scope_revision`, `close_basis_revision`, baseline, or result refs. |
 | `residual_risk_not_visible` | `residual_risk_visibility` | Close-relevant residual risk has not been made visible. |
@@ -255,6 +260,7 @@ Non-claims:
 - `STATE_VERSION_CONFLICT` is never a `CloseReadinessBlocker.code`.
 - `STATE_VERSION_CONFLICT` is a rejected-response `ErrorCode`, not a method-local blocker or decision code.
 - A blocker category does not create the underlying user judgment, approval, evidence, artifact availability, final acceptance, residual-risk acceptance, or recovery state.
+- Unverified claims, provenance-missing evidence, stale observation provenance, and cooperative agent reports may be recorded as evidence history, but they do not satisfy required close evidence when the close path requires stronger provenance.
 - Rejected, deferred, stale, superseded, expired, invalid-basis, agent-recorded, provenance-missing, or outcome-absent cancellation judgments do not permit cancellation.
 
 ## Rejected result

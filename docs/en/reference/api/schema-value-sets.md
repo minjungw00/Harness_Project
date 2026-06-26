@@ -360,7 +360,7 @@ blocked
 <a id="evidence-observation-values"></a>
 ## Evidence observation values
 
-`EvidenceObservation.source_kind` and `EvidenceObservationInput.source_kind` use:
+`EvidenceUpdateProvenance.source_kind`, `EvidenceObservation.source_kind`, and `EvidenceObservationInput.source_kind` use:
 
 ```text
 agent_report
@@ -379,7 +379,7 @@ Source-kind meanings:
 - `reused_evidence` records reuse of prior evidence or artifacts. It is not a new observation by itself.
 - `unverified_claim` preserves a claim without verified observation. It is not sufficient evidence by itself.
 
-`EvidenceObservation.assurance_level` and `EvidenceObservationInput.assurance_level` use:
+`EvidenceUpdateProvenance.assurance_level`, `EvidenceObservation.assurance_level`, and `EvidenceObservationInput.assurance_level` use:
 
 ```text
 cooperative_report

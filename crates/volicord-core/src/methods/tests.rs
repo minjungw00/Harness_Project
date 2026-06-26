@@ -18,10 +18,11 @@ use volicord_store::{
 use volicord_test_support::TempRuntimeHome;
 use volicord_types::{
     prefixed_durable_id, ActorKind, ChangeUnitUpdate, DurableIdError, DurableIdGenerator,
-    DurableIdKind, EvidenceAssuranceLevel, EvidenceSourceKind, IdempotencyKey, InitialScope,
-    RequestId, ScopeUpdate, SequenceDurableIdGenerator, SurfaceId, SurfaceInteractionRole,
-    ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON,
-    VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    DurableIdKind, EvidenceAssuranceLevel, EvidenceSourceKind, EvidenceUpdateProvenance,
+    IdempotencyKey, InitialScope, RequestId, ScopeUpdate, SequenceDurableIdGenerator, SurfaceId,
+    SurfaceInteractionRole, ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE,
+    BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
+    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 
 use super::*;
@@ -5234,6 +5235,42 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
 }
 
 #[test]
+fn record_run_rejects_supported_evidence_without_provenance() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    enable_record_run_capabilities(&harness)?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "run_missing_provenance")?;
+    let mut request = record_run_request(
+        "req_run_missing_provenance",
+        "idem_run_missing_provenance",
+        false,
+        Some(2),
+        &task_id,
+        &change_unit_id,
+    );
+    let mut evidence_update = supported_evidence_update("Claim without provenance.");
+    evidence_update.provenance = None;
+    request.evidence_updates = vec![evidence_update];
+    let before = harness.counts()?;
+
+    let response = harness
+        .service
+        .record_run(request, invocation(AccessClass::RunRecording))?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "VALIDATION_FAILED"
+    );
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["field"],
+        "evidence_updates[].provenance"
+    );
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
 fn record_run_promotes_zero_byte_artifact_with_real_empty_sha256() -> Result<(), Box<dyn Error>> {
     const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -10402,6 +10439,290 @@ fn close_task_complete_blocks_unsupported_evidence_claim() -> Result<(), Box<dyn
 }
 
 #[test]
+fn unverified_claim_alone_cannot_satisfy_close_readiness() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "close_unverified_claim")?;
+    let after_evidence = record_close_evidence_with_updates(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "unverified_claim",
+        vec![supported_evidence_update_with_provenance(
+            "Close claim supported.",
+            EvidenceSourceKind::UnverifiedClaim,
+            EvidenceAssuranceLevel::Unverified,
+        )],
+        "Close claim supported.",
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "unverified_claim",
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_unverified_claim",
+            idempotency_key: Some("idem_close_unverified_claim"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "evidence_provenance_insufficient");
+    assert_eq!(harness.counts()?, before);
+    Ok(())
+}
+
+#[test]
+fn missing_evidence_and_insufficient_provenance_are_distinct_blockers() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "close_missing_and_weak_evidence")?;
+    set_task_owner_json(
+        &harness,
+        &task_id,
+        "completion_policy_json",
+        Some(
+            r#"{"evidence_required":true,"required_claims":["Close claim supported.","Missing close claim."]}"#,
+        ),
+    )?;
+    let after_evidence = record_close_evidence_with_updates(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "missing_and_weak_evidence",
+        vec![supported_evidence_update_with_provenance(
+            "Close claim supported.",
+            EvidenceSourceKind::UnverifiedClaim,
+            EvidenceAssuranceLevel::Unverified,
+        )],
+        "Close claim supported.",
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "missing_and_weak_evidence",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_missing_and_weak_evidence",
+            idempotency_key: Some("idem_close_missing_and_weak_evidence"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "evidence_claim_missing");
+    assert_close_blocker(&response.response_value, "evidence_provenance_insufficient");
+    Ok(())
+}
+
+#[test]
+fn cooperative_agent_report_only_blocks_when_stronger_evidence_is_required(
+) -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "close_agent_report_only")?;
+    let after_evidence = record_close_evidence_with_updates(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "agent_report_only",
+        vec![supported_evidence_update_with_provenance(
+            "Close claim supported.",
+            EvidenceSourceKind::AgentReport,
+            EvidenceAssuranceLevel::CooperativeReport,
+        )],
+        "Close claim supported.",
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "agent_report_only",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_agent_report_only",
+            idempotency_key: Some("idem_close_agent_report_only"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "evidence_agent_report_only");
+    Ok(())
+}
+
+#[test]
+fn external_tool_provenance_supports_the_attached_close_claim() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_external_tool")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "external_tool",
+        true,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "external_tool",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_external_tool",
+            idempotency_key: Some("idem_close_external_tool"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "closed");
+    assert_no_close_blocker(&response.response_value, "evidence_provenance_insufficient");
+    assert_no_close_blocker(&response.response_value, "evidence_agent_report_only");
+    Ok(())
+}
+
+#[test]
+fn user_observation_evidence_does_not_replace_final_acceptance() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "close_user_observation")?;
+    let after_evidence = record_close_evidence_with_updates(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "user_observation",
+        vec![supported_evidence_update_with_provenance(
+            "Close claim supported.",
+            EvidenceSourceKind::UserObservation,
+            EvidenceAssuranceLevel::UserObserved,
+        )],
+        "Close claim supported.",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_user_observation",
+            idempotency_key: Some("idem_close_user_observation"),
+            dry_run: false,
+            expected_state_version: Some(after_evidence),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    assert_no_close_blocker(&response.response_value, "evidence_provenance_insufficient");
+    Ok(())
+}
+
+#[test]
+fn stale_evidence_provenance_is_not_current_close_evidence() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "close_stale_provenance")?;
+    let after_evidence = record_close_evidence(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        2,
+        "stale_provenance",
+        true,
+    )?;
+    let evidence_summary_id = latest_evidence_summary_id(&harness, &task_id)?;
+    let coverage_json: String = harness.conn()?.query_row(
+        "SELECT coverage_json
+           FROM evidence_summaries
+          WHERE project_id = ?1
+            AND evidence_summary_id = ?2",
+        rusqlite::params![PROJECT_ID, evidence_summary_id],
+        |row| row.get(0),
+    )?;
+    let mut coverage: Value = serde_json::from_str(&coverage_json)?;
+    coverage[0]["observation_refs"][0]["state_version"] = json!(after_evidence - 1);
+    set_evidence_summary_owner_json(
+        &harness,
+        &evidence_summary_id,
+        "coverage_json",
+        &serde_json::to_string(&coverage)?,
+    )?;
+    let after_final = record_final_acceptance(
+        &harness,
+        &task_id,
+        &change_unit_id,
+        after_evidence,
+        "stale_provenance",
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_close_stale_provenance",
+            idempotency_key: Some("idem_close_stale_provenance"),
+            dry_run: false,
+            expected_state_version: Some(after_final),
+            task_id: &task_id,
+            intent: CloseIntent::Complete,
+            close_reason: Some(CloseReason::CompletedSelfChecked),
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::CoreMutation),
+    )?;
+
+    assert_eq!(response.response_value["close_state"], "blocked");
+    assert_close_blocker(&response.response_value, "evidence_provenance_stale");
+    Ok(())
+}
+
+#[test]
 fn close_task_complete_success() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "close_success")?;
@@ -11137,6 +11458,30 @@ fn record_close_evidence(
     suffix: &str,
     supported: bool,
 ) -> Result<u64, Box<dyn Error>> {
+    record_close_evidence_with_updates(
+        harness,
+        task_id,
+        change_unit_id,
+        expected_state_version,
+        suffix,
+        vec![if supported {
+            supported_evidence_update("Close claim supported.")
+        } else {
+            unsupported_evidence_update("Close claim supported.")
+        }],
+        "Close claim supported.",
+    )
+}
+
+fn record_close_evidence_with_updates(
+    harness: &MethodHarness,
+    task_id: &str,
+    change_unit_id: &str,
+    expected_state_version: u64,
+    suffix: &str,
+    evidence_updates: Vec<EvidenceCoverageItem>,
+    result_summary: &str,
+) -> Result<u64, Box<dyn Error>> {
     enable_record_run_capabilities(harness)?;
     let request_id = format!("req_close_evidence_{suffix}");
     let idempotency_key = format!("idem_close_evidence_{suffix}");
@@ -11148,13 +11493,9 @@ fn record_close_evidence(
         task_id,
         change_unit_id,
     );
-    request.evidence_updates = vec![if supported {
-        supported_evidence_update("Close claim supported.")
-    } else {
-        unsupported_evidence_update("Close claim supported.")
-    }];
+    request.evidence_updates = evidence_updates;
     request.close_assessment = Some(volicord_types::CloseAssessmentInput {
-        result_summary: "Close claim supported.".to_owned(),
+        result_summary: result_summary.to_owned(),
         result_refs: Vec::new(),
         residual_risks: Vec::new(),
         sensitive_categories: Vec::new(),
@@ -11651,6 +11992,10 @@ fn supported_evidence_update(claim: &str) -> EvidenceCoverageItem {
         claim: claim.to_owned(),
         required_for_close: true,
         coverage_state: EvidenceCoverageState::Supported,
+        provenance: Some(evidence_update_provenance(
+            EvidenceSourceKind::ExternalTool,
+            EvidenceAssuranceLevel::ExternalToolResult,
+        )),
         supporting_refs: Vec::new(),
         observation_refs: Vec::new(),
         supporting_artifact_refs: Vec::new(),
@@ -11663,11 +12008,37 @@ fn unsupported_evidence_update(claim: &str) -> EvidenceCoverageItem {
         claim: claim.to_owned(),
         required_for_close: true,
         coverage_state: EvidenceCoverageState::Unsupported,
+        provenance: None,
         supporting_refs: Vec::new(),
         observation_refs: Vec::new(),
         supporting_artifact_refs: Vec::new(),
         gap_refs: Vec::new(),
     }
+}
+
+fn evidence_update_provenance(
+    source_kind: EvidenceSourceKind,
+    assurance_level: EvidenceAssuranceLevel,
+) -> EvidenceUpdateProvenance {
+    EvidenceUpdateProvenance {
+        source_kind,
+        assurance_level,
+        observed_at: None.into(),
+        tool_name: Some("fixture-evidence-check".to_owned()).into(),
+        tool_invocation_id: None.into(),
+        tool_metadata: JsonObject::new(),
+        limitations: Vec::new(),
+    }
+}
+
+fn supported_evidence_update_with_provenance(
+    claim: &str,
+    source_kind: EvidenceSourceKind,
+    assurance_level: EvidenceAssuranceLevel,
+) -> EvidenceCoverageItem {
+    let mut update = supported_evidence_update(claim);
+    update.provenance = Some(evidence_update_provenance(source_kind, assurance_level));
+    update
 }
 
 fn close_assessment_with_risks(

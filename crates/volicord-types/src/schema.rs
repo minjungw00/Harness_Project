@@ -450,10 +450,25 @@ pub struct EvidenceCoverageItem {
     pub claim: String,
     pub required_for_close: bool,
     pub coverage_state: EvidenceCoverageState,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<EvidenceUpdateProvenance>,
     pub supporting_refs: Vec<StateRecordRef>,
     pub observation_refs: Vec<StateRecordRef>,
     pub supporting_artifact_refs: Vec<ArtifactRef>,
     pub gap_refs: Vec<StateRecordRef>,
+}
+
+/// Request-side provenance used by `volicord.record_run` to create an evidence observation.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct EvidenceUpdateProvenance {
+    pub source_kind: EvidenceSourceKind,
+    pub assurance_level: EvidenceAssuranceLevel,
+    pub observed_at: RequiredNullable<UtcTimestamp>,
+    pub tool_name: RequiredNullable<String>,
+    pub tool_invocation_id: RequiredNullable<String>,
+    pub tool_metadata: JsonObject,
+    pub limitations: Vec<String>,
 }
 
 /// Durable evidence observation record.

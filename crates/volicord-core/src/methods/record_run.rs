@@ -718,6 +718,23 @@ fn plan_record_run_observations(
     for input in &context.request.evidence_observations {
         plans.push(plan_record_run_observation(&context, input)?);
     }
+    let explicit_observation_claims = plans
+        .iter()
+        .map(|plan| plan.observation.claim.clone())
+        .collect::<BTreeSet<_>>();
+    for update in &context.request.evidence_updates {
+        validate_record_run_evidence_update(&context, update, &explicit_observation_claims)?;
+        if update.coverage_state == EvidenceCoverageState::Supported
+            && !explicit_observation_claims.contains(&normalize_display_text(&update.claim))
+        {
+            if let Some(provenance) = update.provenance.as_ref() {
+                plans.push(plan_record_run_observation(
+                    &context,
+                    &observation_input_from_evidence_update(&context, update, provenance),
+                )?);
+            }
+        }
+    }
     Ok(plans)
 }
 
@@ -734,6 +751,13 @@ fn plan_record_run_observation(
         )?;
         unreachable!("validation_plan_error always returns Err");
     }
+    validate_evidence_source_assurance(
+        context.request.envelope.dry_run,
+        Some(context.project_state.state_version),
+        "evidence_observations[]",
+        input.source_kind,
+        input.assurance_level,
+    )?;
     validate_evidence_observation_state_refs(
         context,
         "evidence_observations[].input_refs",
@@ -886,6 +910,146 @@ fn plan_record_run_observation(
     })
 }
 
+fn validate_record_run_evidence_update(
+    context: &RecordRunObservationContext<'_>,
+    update: &EvidenceCoverageItem,
+    explicit_observation_claims: &BTreeSet<String>,
+) -> Result<(), PlanError> {
+    let claim = normalize_display_text(&update.claim);
+    if claim.is_empty() {
+        validation_plan_error(
+            context.request.envelope.dry_run,
+            Some(context.project_state.state_version),
+            "evidence_updates[].claim",
+            "evidence update claim must not be empty",
+        )?;
+        unreachable!("validation_plan_error always returns Err");
+    }
+    validate_evidence_observation_state_refs(
+        context,
+        "evidence_updates[].observation_refs",
+        &update.observation_refs,
+    )?;
+    validate_evidence_observation_artifact_refs(context, &update.supporting_artifact_refs)?;
+    if let Some(provenance) = update.provenance.as_ref() {
+        validate_evidence_source_assurance(
+            context.request.envelope.dry_run,
+            Some(context.project_state.state_version),
+            "evidence_updates[].provenance",
+            provenance.source_kind,
+            provenance.assurance_level,
+        )?;
+        if provenance
+            .tool_name
+            .as_ref()
+            .is_some_and(|value| value.trim().is_empty())
+        {
+            validation_plan_error(
+                context.request.envelope.dry_run,
+                Some(context.project_state.state_version),
+                "evidence_updates[].provenance.tool_name",
+                "tool_name must be null or a non-empty string",
+            )?;
+            unreachable!("validation_plan_error always returns Err");
+        }
+        if provenance
+            .tool_invocation_id
+            .as_ref()
+            .is_some_and(|value| value.trim().is_empty())
+        {
+            validation_plan_error(
+                context.request.envelope.dry_run,
+                Some(context.project_state.state_version),
+                "evidence_updates[].provenance.tool_invocation_id",
+                "tool_invocation_id must be null or a non-empty string",
+            )?;
+            unreachable!("validation_plan_error always returns Err");
+        }
+    }
+    if update.coverage_state == EvidenceCoverageState::Supported
+        && !explicit_observation_claims.contains(&claim)
+        && update.provenance.is_none()
+        && update.observation_refs.is_empty()
+    {
+        validation_plan_error(
+            context.request.envelope.dry_run,
+            Some(context.project_state.state_version),
+            "evidence_updates[].provenance",
+            "supported evidence updates require provenance or an evidence observation for the same claim",
+        )?;
+        unreachable!("validation_plan_error always returns Err");
+    }
+    Ok(())
+}
+
+fn observation_input_from_evidence_update(
+    context: &RecordRunObservationContext<'_>,
+    update: &EvidenceCoverageItem,
+    provenance: &EvidenceUpdateProvenance,
+) -> EvidenceObservationInput {
+    EvidenceObservationInput {
+        claim: normalize_display_text(&update.claim),
+        source_kind: provenance.source_kind,
+        assurance_level: provenance.assurance_level,
+        observed_by_actor_kind: None.into(),
+        observed_actor_role: None.into(),
+        observed_by_surface_id: None.into(),
+        observed_by_surface_instance_id: None.into(),
+        tool_name: provenance.tool_name.clone(),
+        tool_invocation_id: provenance.tool_invocation_id.clone(),
+        tool_metadata: provenance.tool_metadata.clone(),
+        input_refs: update.supporting_refs.clone(),
+        output_artifact_refs: update.supporting_artifact_refs.clone(),
+        limitations: provenance.limitations.clone(),
+        observed_at: provenance
+            .observed_at
+            .clone()
+            .unwrap_or_else(|| context.now.clone()),
+    }
+}
+
+fn validate_evidence_source_assurance(
+    dry_run: bool,
+    state_version: Option<u64>,
+    field: &'static str,
+    source_kind: EvidenceSourceKind,
+    assurance_level: EvidenceAssuranceLevel,
+) -> Result<(), PlanError> {
+    let valid = match source_kind {
+        EvidenceSourceKind::AgentReport => {
+            assurance_level == EvidenceAssuranceLevel::CooperativeReport
+        }
+        EvidenceSourceKind::SurfaceObservation => {
+            assurance_level == EvidenceAssuranceLevel::RegisteredSurfaceObserved
+        }
+        EvidenceSourceKind::ExternalTool => {
+            assurance_level == EvidenceAssuranceLevel::ExternalToolResult
+        }
+        EvidenceSourceKind::UserObservation => {
+            assurance_level == EvidenceAssuranceLevel::UserObserved
+        }
+        EvidenceSourceKind::ReusedEvidence => matches!(
+            assurance_level,
+            EvidenceAssuranceLevel::RegisteredSurfaceObserved
+                | EvidenceAssuranceLevel::ExternalToolResult
+                | EvidenceAssuranceLevel::UserObserved
+        ),
+        EvidenceSourceKind::UnverifiedClaim => {
+            assurance_level == EvidenceAssuranceLevel::Unverified
+        }
+    };
+    if valid {
+        Ok(())
+    } else {
+        validation_plan_error(
+            dry_run,
+            state_version,
+            field,
+            "evidence source_kind and assurance_level must describe the same provenance class",
+        )
+    }
+}
+
 fn validate_evidence_observation_state_refs(
     context: &RecordRunObservationContext<'_>,
     field: &'static str,
@@ -898,6 +1062,17 @@ fn validate_evidence_observation_state_refs(
                 Some(context.project_state.state_version),
                 field,
                 "evidence observation refs must use non-empty record_id values",
+            )?;
+            unreachable!("validation_plan_error always returns Err");
+        }
+        if field == "evidence_updates[].observation_refs"
+            && record_ref.record_kind != StateRecordKind::EvidenceObservation
+        {
+            validation_plan_error(
+                context.request.envelope.dry_run,
+                Some(context.project_state.state_version),
+                field,
+                "evidence update observation_refs must identify evidence_observation records",
             )?;
             unreachable!("validation_plan_error always returns Err");
         }
@@ -959,7 +1134,10 @@ fn output_artifact_refs_for_observation(
             context
                 .artifact_plans
                 .iter()
-                .filter(|plan| plan.claim.as_deref() == Some(input.claim.as_str()))
+                .filter(|plan| {
+                    plan.claim.as_deref().map(normalize_display_text)
+                        == Some(normalize_display_text(&input.claim))
+                })
                 .map(|plan| plan.artifact_ref.clone()),
         )
         .chain(
@@ -2351,6 +2529,8 @@ fn build_record_run_evidence_summary(
     let mut coverage_items = Vec::new();
     for update in &request.evidence_updates {
         let mut item = update.clone();
+        item.claim = normalize_display_text(&item.claim);
+        item.provenance = None;
         if !item.supporting_refs.iter().any(|record_ref| {
             record_ref.record_kind == StateRecordKind::Run
                 && record_ref.record_id == run_ref.record_id
@@ -2358,7 +2538,7 @@ fn build_record_run_evidence_summary(
             item.supporting_refs.push(run_ref.clone());
         }
         for plan in artifact_plans {
-            if plan.claim.as_deref() == Some(update.claim.as_str())
+            if plan.claim.as_deref().map(normalize_display_text) == Some(item.claim.clone())
                 && !item
                     .supporting_artifact_refs
                     .iter()
@@ -2368,7 +2548,7 @@ fn build_record_run_evidence_summary(
                     .push(plan.artifact_ref.clone());
             }
         }
-        if let Some(observation_refs) = observation_refs_by_claim.get(update.claim.as_str()) {
+        if let Some(observation_refs) = observation_refs_by_claim.get(item.claim.as_str()) {
             for observation_ref in observation_refs {
                 if !item.observation_refs.iter().any(|existing| {
                     existing.record_kind == observation_ref.record_kind

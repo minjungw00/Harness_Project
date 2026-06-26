@@ -260,10 +260,20 @@ EvidenceCoverageItem:
   claim: string
   required_for_close: boolean
   coverage_state: string
+  provenance: EvidenceUpdateProvenance | null
   supporting_refs: StateRecordRef[]
   observation_refs: StateRecordRef[]
   supporting_artifact_refs: ArtifactRef[]
   gap_refs: StateRecordRef[]
+
+EvidenceUpdateProvenance:
+  source_kind: string
+  assurance_level: string
+  observed_at: string | null
+  tool_name: string | null
+  tool_invocation_id: string | null
+  tool_metadata: object
+  limitations: string[]
 
 EvidenceObservation:
   observation_id: string
@@ -318,8 +328,9 @@ ObservedChanges:
 ```
 
 의미:
-- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, `EvidenceObservation.source_kind`, `EvidenceObservation.assurance_level`, `EvidenceObservationInput.source_kind`, `EvidenceObservationInput.assurance_level`, `RunSummary.kind`는 제어 값 문자열입니다.
+- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, `EvidenceUpdateProvenance.source_kind`, `EvidenceUpdateProvenance.assurance_level`, `EvidenceObservation.source_kind`, `EvidenceObservation.assurance_level`, `EvidenceObservationInput.source_kind`, `EvidenceObservationInput.assurance_level`, `RunSummary.kind`는 제어 값 문자열입니다.
 - `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, `EvidenceObservation.claim`, `EvidenceObservationInput.claim`, `RunSummary.summary`는 자유 형식 주장 또는 표시 문자열입니다.
+- `EvidenceCoverageItem.provenance`는 요청 입력에서 선택적으로 사용할 수 있으며, Core가 해당 `EvidenceObservation`을 만들거나 연결한 뒤 커밋된 증거 요약에서는 생략됩니다. 닫기와 관련된 주장을 `supported`로 갱신하려면 같은 주장에 대한 관찰 입력, 사용할 수 있는 관찰 참조, 또는 Core가 관찰을 만들 수 있게 하는 이 출처 객체가 필요합니다.
 - `EvidenceSummary.observation_refs`와 `EvidenceCoverageItem.observation_refs`는 Core가 요약이나 주장과 관련지은 커밋된 증거 관찰에 대한 `StateRecordRef` 값을 나열합니다.
 - `EvidenceObservation`은 하나의 보고되었거나 관찰된 증거 주장에 대한 지속 출처 기록입니다. 출처, 보장 수준, 관찰자 메타데이터, 선택적 도구 메타데이터, 입력 참조, 출력 아티팩트 참조, 한계, 관찰 타임스탬프를 기록합니다.
 - `EvidenceObservationInput`은 `volicord.record_run`이 받는 요청 측 형태입니다. Core는 커밋할 때 `observation_id`, 프로젝트와 `Task` 좌표, `run_ref`, `recorded_at`을 채웁니다.

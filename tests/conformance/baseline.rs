@@ -559,12 +559,13 @@ fn artifact_lifecycle_promotes_valid_handles_and_rolls_back_invalid_ones(
     assert_eq!(after_valid.state_version, before_valid.state_version + 1);
     assert_eq!(after_valid.runs, before_valid.runs + 1);
     assert_eq!(after_valid.artifacts, before_valid.artifacts + 1);
-    assert_eq!(after_valid.artifact_links, before_valid.artifact_links + 2);
+    assert_eq!(after_valid.artifact_links, before_valid.artifact_links + 3);
     assert_eq!(
         fixture.artifact_staging_status(handle.handle_id.as_str())?,
         "consumed"
     );
     assert!(fixture.artifact_owner_link_exists(artifact_id, "run")?);
+    assert!(fixture.artifact_owner_link_exists(artifact_id, "evidence_observation")?);
     assert!(fixture.artifact_owner_link_exists(artifact_id, "evidence_summary")?);
     Ok(())
 }

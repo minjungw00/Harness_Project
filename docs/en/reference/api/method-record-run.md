@@ -35,6 +35,7 @@ The method may also update the current close basis, update compact evidence cove
 - `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, `evidence_observations`, and `close_assessment`.
 - Product-write runs require a compatible `status=active` `Write Authorization` from `volicord.prepare_write`.
 - New artifact bytes must already be represented by a valid `StagedArtifactHandle`; `volicord.record_run` does not stage new bytes.
+- A supported evidence update must be backed by a same-claim `EvidenceObservationInput`, a usable same-claim evidence observation ref, or `EvidenceCoverageItem.provenance` from which Core can create an evidence observation with explicit `source_kind` and `assurance_level`.
 
 ## Request schema
 
@@ -90,6 +91,12 @@ Close-assessment ref rules:
 - Historical Run refs are audit records for close-basis purposes unless this new current Run explicitly reuses verified artifacts or evidence from history and records that reuse in its committed evidence or close assessment.
 - Core stores canonical refs in `CurrentCloseBasis` and never preserves caller-supplied `state_version` metadata as authority.
 - Core may add the current Run, current Change Unit, and current EvidenceSummary refs while constructing the canonical close basis.
+
+Evidence update provenance rules:
+- `coverage_state=supported` is a claim about coverage, not sufficient provenance by itself.
+- When `EvidenceCoverageItem.provenance` is supplied for a supported item and no explicit same-claim observation input is supplied, Core creates an `EvidenceObservation` for the current Run and links its ref into the committed evidence summary.
+- `unverified_claim`, `unverified`, and cooperative `agent_report` observations may be recorded as evidence observations, but close readiness evaluates them as weak provenance when stronger provenance is required.
+- Evidence observations do not replace user-owned judgment, final acceptance, residual-risk acceptance, or close readiness.
 
 ## Access requirements
 
@@ -184,6 +191,7 @@ Returns `ToolRejectedResponse` for:
 - expired `Write Authorization`
 - invalid staged handle
 - incompatible staged-handle provenance
+- supported evidence update without required observation provenance
 - missing artifact
 - scope violation
 - baseline staleness

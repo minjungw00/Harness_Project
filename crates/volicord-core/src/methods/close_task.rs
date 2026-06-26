@@ -1180,25 +1180,13 @@ fn completion_close_blockers(
         }
     }
 
-    let unsupported_items = unsupported_close_evidence_items(context.evidence_summary.as_ref());
-    if !unsupported_items.is_empty() {
-        blockers.push(close_blocker(
-            CloseReadinessBlockerCategory::Evidence,
-            "evidence_claim_unsupported",
-            "One or more required close evidence claims are unsupported.",
-            unsupported_items
-                .iter()
-                .flat_map(|item| item.gap_refs.clone())
-                .collect(),
-            vec![NextActionSummary {
-                action_kind: NextActionKind::RecordRun,
-                owner_method: Some(MethodName::RecordRun),
-                label: "Record evidence that supports the required close claims.".to_owned(),
-                blocking_question: None,
-                required_refs: change_unit_ref.clone().into_iter().collect(),
-            }],
-        ));
-    }
+    blockers.extend(close_evidence_blockers(
+        store,
+        project_state,
+        request,
+        context,
+        change_unit_ref.clone(),
+    )?);
 
     let unavailable_artifacts =
         unavailable_close_artifact_refs(store, project_state, request, context)?;
@@ -1364,6 +1352,7 @@ pub(super) fn close_evidence_summary(
                 claim: claim.clone(),
                 required_for_close: true,
                 coverage_state: EvidenceCoverageState::Unsupported,
+                provenance: None,
                 supporting_refs: Vec::new(),
                 observation_refs: Vec::new(),
                 supporting_artifact_refs: Vec::new(),
@@ -1672,24 +1661,273 @@ fn task_completion_policy(task: &TaskRecord) -> CoreResult<CompletionPolicy> {
     })
 }
 
-fn unsupported_close_evidence_items(
-    evidence_summary: Option<&EvidenceSummary>,
-) -> Vec<&EvidenceCoverageItem> {
-    evidence_summary
-        .map(|summary| {
-            summary
-                .coverage_items
-                .iter()
-                .filter(|item| {
-                    item.required_for_close
-                        && !matches!(
-                            item.coverage_state,
-                            EvidenceCoverageState::Supported | EvidenceCoverageState::NotApplicable
-                        )
-                })
-                .collect()
-        })
-        .unwrap_or_default()
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum CloseEvidenceIssueKind {
+    Missing,
+    Unsupported,
+    Stale,
+    AgentReportOnly,
+    InsufficientProvenance,
+}
+
+struct CloseEvidenceIssue {
+    kind: CloseEvidenceIssueKind,
+    related_refs: Vec<StateRecordRef>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ObservationProvenanceClass {
+    Strong,
+    CooperativeAgentReport,
+    Weak,
+}
+
+fn close_evidence_blockers(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &CloseTaskRequest,
+    context: &CloseTaskContext,
+    change_unit_ref: Option<StateRecordRef>,
+) -> Result<Vec<CloseReadinessBlocker>, PlanError> {
+    let Some(summary) = context.evidence_summary.as_ref() else {
+        return Ok(Vec::new());
+    };
+    let mut grouped: BTreeMap<CloseEvidenceIssueKind, Vec<StateRecordRef>> = BTreeMap::new();
+    for item in &summary.coverage_items {
+        if let Some(issue) =
+            close_evidence_issue_for_item(store, project_state, request, context, item)?
+        {
+            grouped
+                .entry(issue.kind)
+                .or_default()
+                .extend(issue.related_refs);
+        }
+    }
+
+    let required_refs = change_unit_ref.into_iter().collect::<Vec<_>>();
+    let mut blockers = Vec::new();
+    for kind in [
+        CloseEvidenceIssueKind::Missing,
+        CloseEvidenceIssueKind::Unsupported,
+        CloseEvidenceIssueKind::Stale,
+        CloseEvidenceIssueKind::AgentReportOnly,
+        CloseEvidenceIssueKind::InsufficientProvenance,
+    ] {
+        let Some(related_refs) = grouped.remove(&kind) else {
+            continue;
+        };
+        let (code, message) = match kind {
+            CloseEvidenceIssueKind::Missing => (
+                "evidence_claim_missing",
+                "One or more required close evidence claims are missing.",
+            ),
+            CloseEvidenceIssueKind::Unsupported => (
+                "evidence_claim_unsupported",
+                "One or more required close evidence claims are unsupported.",
+            ),
+            CloseEvidenceIssueKind::Stale => (
+                "evidence_provenance_stale",
+                "Evidence provenance exists but is stale against the current close basis.",
+            ),
+            CloseEvidenceIssueKind::AgentReportOnly => (
+                "evidence_agent_report_only",
+                "Required close evidence is supported only by cooperative agent reports.",
+            ),
+            CloseEvidenceIssueKind::InsufficientProvenance => (
+                "evidence_provenance_insufficient",
+                "Required close evidence lacks sufficient source provenance.",
+            ),
+        };
+        blockers.push(close_blocker(
+            CloseReadinessBlockerCategory::Evidence,
+            code,
+            message,
+            unique_state_record_refs(related_refs),
+            vec![NextActionSummary {
+                action_kind: NextActionKind::RecordRun,
+                owner_method: Some(MethodName::RecordRun),
+                label: "Record evidence that supports the required close claims.".to_owned(),
+                blocking_question: None,
+                required_refs: required_refs.clone(),
+            }],
+        ));
+    }
+    Ok(blockers)
+}
+
+fn close_evidence_issue_for_item(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &CloseTaskRequest,
+    context: &CloseTaskContext,
+    item: &EvidenceCoverageItem,
+) -> Result<Option<CloseEvidenceIssue>, PlanError> {
+    if !item.required_for_close || item.coverage_state == EvidenceCoverageState::NotApplicable {
+        return Ok(None);
+    }
+    if item.coverage_state != EvidenceCoverageState::Supported {
+        let kind = if item.coverage_state == EvidenceCoverageState::Stale {
+            CloseEvidenceIssueKind::Stale
+        } else if evidence_item_has_no_support(item) {
+            CloseEvidenceIssueKind::Missing
+        } else {
+            CloseEvidenceIssueKind::Unsupported
+        };
+        return Ok(Some(CloseEvidenceIssue {
+            kind,
+            related_refs: evidence_item_related_refs(item),
+        }));
+    }
+
+    let Some(basis) = context.current_close_basis.as_ref() else {
+        return Ok(Some(CloseEvidenceIssue {
+            kind: CloseEvidenceIssueKind::Missing,
+            related_refs: evidence_item_related_refs(item),
+        }));
+    };
+    if item.observation_refs.is_empty() {
+        return Ok(Some(CloseEvidenceIssue {
+            kind: CloseEvidenceIssueKind::InsufficientProvenance,
+            related_refs: evidence_item_related_refs(item),
+        }));
+    }
+
+    let mut has_stale = false;
+    let mut has_current_cooperative_agent_report = false;
+    let mut has_current_weak = false;
+    let evidence_state_version = basis
+        .evidence_summary_ref
+        .as_ref()
+        .and_then(|record_ref| record_ref.state_version.as_ref().copied());
+    for observation_ref in &item.observation_refs {
+        if observation_ref.record_kind != StateRecordKind::EvidenceObservation
+            || observation_ref.project_id != request.envelope.project_id
+            || observation_ref.task_id.as_ref() != Some(&request.task_id)
+        {
+            has_current_weak = true;
+            continue;
+        }
+        if evidence_state_version.is_some_and(|state_version| {
+            observation_ref.state_version.as_ref() != Some(&state_version)
+        }) {
+            has_stale = true;
+            continue;
+        }
+        let record = store
+            .evidence_observation_record(observation_ref.record_id.as_str())
+            .map_err(|error| {
+                PlanError::Response(Box::new(store_error_response(
+                    &request.envelope,
+                    project_state,
+                    error,
+                )))
+            })?;
+        let Some(record) = record else {
+            has_current_weak = true;
+            continue;
+        };
+        if evidence_observation_is_stale_for_close_basis(&record, request, basis, item) {
+            has_stale = true;
+            continue;
+        }
+        match evidence_observation_provenance_class(&record)? {
+            ObservationProvenanceClass::Strong => return Ok(None),
+            ObservationProvenanceClass::CooperativeAgentReport => {
+                has_current_cooperative_agent_report = true;
+            }
+            ObservationProvenanceClass::Weak => {
+                has_current_weak = true;
+            }
+        }
+    }
+
+    let kind = if has_current_cooperative_agent_report && !has_current_weak {
+        CloseEvidenceIssueKind::AgentReportOnly
+    } else if has_stale && !has_current_cooperative_agent_report && !has_current_weak {
+        CloseEvidenceIssueKind::Stale
+    } else {
+        CloseEvidenceIssueKind::InsufficientProvenance
+    };
+    Ok(Some(CloseEvidenceIssue {
+        kind,
+        related_refs: evidence_item_related_refs(item),
+    }))
+}
+
+fn evidence_observation_is_stale_for_close_basis(
+    record: &EvidenceObservationRecord,
+    request: &CloseTaskRequest,
+    basis: &CurrentCloseBasis,
+    item: &EvidenceCoverageItem,
+) -> bool {
+    record.project_id != request.envelope.project_id.as_str()
+        || record.task_id != request.task_id.as_str()
+        || record.change_unit_id.as_deref() != Some(basis.change_unit_id.as_str())
+        || record.run_id.as_deref() != Some(basis.source_run_ref.record_id.as_str())
+        || record.claim.trim() != item.claim
+}
+
+fn evidence_observation_provenance_class(
+    record: &EvidenceObservationRecord,
+) -> CoreResult<ObservationProvenanceClass> {
+    let source_kind: EvidenceSourceKind = parse_owner_storage_value(
+        "evidence_observations",
+        record.evidence_observation_id.clone(),
+        "source_kind",
+        &record.source_kind,
+    )?;
+    let assurance_level: EvidenceAssuranceLevel = parse_owner_storage_value(
+        "evidence_observations",
+        record.evidence_observation_id.clone(),
+        "assurance_level",
+        &record.assurance_level,
+    )?;
+    let class = match (source_kind, assurance_level) {
+        (EvidenceSourceKind::ExternalTool, EvidenceAssuranceLevel::ExternalToolResult)
+        | (
+            EvidenceSourceKind::SurfaceObservation,
+            EvidenceAssuranceLevel::RegisteredSurfaceObserved,
+        )
+        | (EvidenceSourceKind::UserObservation, EvidenceAssuranceLevel::UserObserved)
+        | (
+            EvidenceSourceKind::ReusedEvidence,
+            EvidenceAssuranceLevel::ExternalToolResult
+            | EvidenceAssuranceLevel::RegisteredSurfaceObserved
+            | EvidenceAssuranceLevel::UserObserved,
+        ) => ObservationProvenanceClass::Strong,
+        (EvidenceSourceKind::AgentReport, EvidenceAssuranceLevel::CooperativeReport) => {
+            ObservationProvenanceClass::CooperativeAgentReport
+        }
+        _ => ObservationProvenanceClass::Weak,
+    };
+    Ok(class)
+}
+
+fn evidence_item_has_no_support(item: &EvidenceCoverageItem) -> bool {
+    item.supporting_refs.is_empty()
+        && item.observation_refs.is_empty()
+        && item.supporting_artifact_refs.is_empty()
+        && item.gap_refs.is_empty()
+}
+
+fn evidence_item_related_refs(item: &EvidenceCoverageItem) -> Vec<StateRecordRef> {
+    let mut refs = Vec::new();
+    refs.extend(item.observation_refs.clone());
+    refs.extend(item.supporting_refs.clone());
+    refs.extend(item.gap_refs.clone());
+    refs.extend(item.supporting_artifact_refs.iter().map(|artifact_ref| {
+        state_ref(
+            StateRecordKind::Artifact,
+            artifact_ref.artifact_id.as_str(),
+            &artifact_ref.project_id,
+            Some(&artifact_ref.task_id),
+            artifact_ref
+                .created_by_run_ref
+                .as_ref()
+                .and_then(|record_ref| record_ref.state_version.as_ref().copied()),
+        )
+    }));
+    refs
 }
 
 fn unavailable_close_artifact_refs(

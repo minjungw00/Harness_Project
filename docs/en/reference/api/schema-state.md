@@ -259,10 +259,20 @@ EvidenceCoverageItem:
   claim: string
   required_for_close: boolean
   coverage_state: string
+  provenance: EvidenceUpdateProvenance | null
   supporting_refs: StateRecordRef[]
   observation_refs: StateRecordRef[]
   supporting_artifact_refs: ArtifactRef[]
   gap_refs: StateRecordRef[]
+
+EvidenceUpdateProvenance:
+  source_kind: string
+  assurance_level: string
+  observed_at: string | null
+  tool_name: string | null
+  tool_invocation_id: string | null
+  tool_metadata: object
+  limitations: string[]
 
 EvidenceObservation:
   observation_id: string
@@ -317,8 +327,9 @@ ObservedChanges:
 ```
 
 Meaning:
-- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, `EvidenceObservation.source_kind`, `EvidenceObservation.assurance_level`, `EvidenceObservationInput.source_kind`, `EvidenceObservationInput.assurance_level`, and `RunSummary.kind` are controlled value strings.
+- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, `EvidenceUpdateProvenance.source_kind`, `EvidenceUpdateProvenance.assurance_level`, `EvidenceObservation.source_kind`, `EvidenceObservation.assurance_level`, `EvidenceObservationInput.source_kind`, `EvidenceObservationInput.assurance_level`, and `RunSummary.kind` are controlled value strings.
 - `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, `EvidenceObservation.claim`, `EvidenceObservationInput.claim`, and `RunSummary.summary` are free-form claim or display strings.
+- `EvidenceCoverageItem.provenance` is optional on request input and is omitted from committed evidence summaries after Core creates or links the corresponding `EvidenceObservation`. A supported evidence update for a close-relevant claim must have a matching observation input, a usable observation ref, or this provenance object so Core can create an observation.
 - `EvidenceSummary.observation_refs` and `EvidenceCoverageItem.observation_refs` list `StateRecordRef` values for committed evidence observations that Core relates to the summary or claim.
 - `EvidenceObservation` is a durable provenance record for one reported or observed evidence claim. It records source, assurance, observer metadata, optional tool metadata, input refs, output artifact refs, limitations, and observation timestamps.
 - `EvidenceObservationInput` is the request-side shape accepted by `volicord.record_run`; Core fills `observation_id`, project and Task coordinates, `run_ref`, and `recorded_at` when it commits.

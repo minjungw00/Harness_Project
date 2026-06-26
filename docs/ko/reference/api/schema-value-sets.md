@@ -362,7 +362,7 @@ blocked
 <a id="evidence-observation-values"></a>
 ## 증거 관찰 값
 
-`EvidenceObservation.source_kind`와 `EvidenceObservationInput.source_kind`는 아래 값을 사용합니다.
+`EvidenceUpdateProvenance.source_kind`, `EvidenceObservation.source_kind`, `EvidenceObservationInput.source_kind`는 아래 값을 사용합니다.
 
 ```text
 agent_report
@@ -381,7 +381,7 @@ unverified_claim
 - `reused_evidence`는 이전 증거나 아티팩트 재사용을 기록합니다. 그 자체로 새 관찰이 아닙니다.
 - `unverified_claim`은 확인된 관찰 없는 주장을 보존합니다. 그 자체로 충분한 증거가 아닙니다.
 
-`EvidenceObservation.assurance_level`과 `EvidenceObservationInput.assurance_level`은 아래 값을 사용합니다.
+`EvidenceUpdateProvenance.assurance_level`, `EvidenceObservation.assurance_level`, `EvidenceObservationInput.assurance_level`은 아래 값을 사용합니다.
 
 ```text
 cooperative_report

@@ -331,6 +331,9 @@ Run authority:
 Evidence authority:
 
 - Evidence can establish that recorded support exists for a named claim, gap, reference, or coverage item.
+- Close evidence support requires claim-scoped observation provenance that remains current for the close basis when the close owner requires evidence. Coverage without current observation provenance is not sufficient by itself.
+- `unverified_claim` and cooperative agent reports can be retained as evidence records, but they do not satisfy required close evidence when stronger provenance is required.
+- A user observation is evidence provenance, not final acceptance or another user-owned judgment.
 - Evidence cannot establish unrecorded behavior, broad correctness, final acceptance, residual-risk acceptance, or a no-risk result.
 
 `ArtifactRef` authority:
@@ -355,7 +358,7 @@ Close readiness considers:
 - required user-owned judgments
 - required sensitive-action approval
 - write and Run compatibility
-- evidence sufficiency for the close basis
+- evidence sufficiency and evidence-observation provenance for the close basis
 - close-relevant artifact availability
 - unresolved blockers
 - required final acceptance
@@ -370,6 +373,7 @@ Close-basis authority:
 - Baseline allowed caller-supplied result/evidence kinds are Run, Artifact, EvidenceSummary, and ChangeUnit unless an owner explicitly adds another kind.
 - ProjectState, `Write Authorization`, UserJudgment, Blocker, TaskEvent, LocalSurfaceRegistration, and Task are not caller-supplied result refs unless an owner explicitly adds them.
 - Artifact refs used for close evidence must be linked to the `Task` and have current-byte verified integrity at use time. Evidence refs must identify the current `Task` evidence summary. Run refs must identify a recorded current Run compatible with the current `Task`, current Change Unit, current scope revision, and compatible baseline. Historical Runs are audit records unless a current Run explicitly reuses their verified artifacts or evidence and records that reuse.
+- Evidence observation refs used for close evidence must match the required claim and remain current for the `Task`, Change Unit, source Run, and close-basis evidence summary. Stale, provenance-free, or weak-provenance coverage does not satisfy close readiness by coverage label alone.
 - Core stores canonical refs and never treats caller-supplied state-version metadata as authority. Core may add the current Run, current Change Unit, and current EvidenceSummary refs.
 - Sensitive action requirements in the current close basis are derived by Core from committed Runs and consumed `Write Authorization` records. Category-only caller input cannot establish or erase a requirement.
 

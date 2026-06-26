@@ -35,6 +35,7 @@
 - `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, `evidence_observations`, `close_assessment`.
 - 제품 쓰기 실행은 `volicord.prepare_write`가 만든 호환되는 `status=active` `Write Authorization`이 필요합니다.
 - 새 아티팩트 바이트는 이미 유효한 `StagedArtifactHandle`로 표현되어 있어야 합니다. `volicord.record_run`은 새 바이트를 스테이징하지 않습니다.
+- `supported` 증거 갱신은 같은 주장에 대한 `EvidenceObservationInput`, 사용할 수 있는 같은 주장 증거 관찰 참조, 또는 Core가 명시적인 `source_kind`와 `assurance_level`을 가진 증거 관찰을 만들 수 있는 `EvidenceCoverageItem.provenance`로 뒷받침되어야 합니다.
 
 ## 요청 스키마
 
@@ -90,6 +91,12 @@ ResidualRiskInput:
 - 이력 실행 기록 참조는 이 새 현재 실행 기록이 이력의 `verified` 아티팩트나 증거를 명시적으로 재사용하고 그 재사용을 커밋된 증거나 닫기 평가에 기록하지 않는 한 닫기 근거 용도에서는 감사 기록입니다.
 - Core는 `CurrentCloseBasis`에 기준 참조를 저장하며 호출자가 보낸 `state_version` 메타데이터를 권한으로 보존하지 않습니다.
 - Core는 기준 닫기 근거를 만들면서 현재 실행 기록, 현재 Change Unit, 현재 EvidenceSummary 참조를 추가할 수 있습니다.
+
+증거 갱신 출처 규칙:
+- `coverage_state=supported`는 범위에 대한 주장이지 그 자체로 충분한 출처가 아닙니다.
+- `supported` 항목에 `EvidenceCoverageItem.provenance`가 제공되고 같은 주장에 대한 명시적 관찰 입력이 없으면 Core는 현재 실행 기록에 대한 `EvidenceObservation`을 만들고 그 참조를 커밋된 증거 요약에 연결합니다.
+- `unverified_claim`, `unverified`, 협력적 `agent_report` 관찰은 증거 관찰로 기록될 수 있지만, 더 강한 출처가 필요할 때 닫기 준비 상태에서는 약한 출처로 평가됩니다.
+- 증거 관찰은 사용자 소유 판단, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 대신하지 않습니다.
 
 ## 접근 요구사항
 
@@ -184,6 +191,7 @@ ResidualRiskInput:
 - 만료된 `Write Authorization`
 - 유효하지 않은 스테이징 핸들
 - 스테이징 핸들 출처 불일치
+- 필요한 관찰 출처가 없는 `supported` 증거 갱신
 - 누락된 아티팩트
 - 범위 위반
 - 오래된 기준선
