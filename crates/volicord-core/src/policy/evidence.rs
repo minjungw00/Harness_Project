@@ -1,6 +1,16 @@
 use std::collections::BTreeSet;
 
-use volicord_types::{ArtifactRef, EvidenceCoverageItem, EvidenceCoverageState, EvidenceStatus};
+use volicord_types::{
+    ArtifactRef, EvidenceAssuranceLevel, EvidenceCoverageItem, EvidenceCoverageState,
+    EvidenceSourceKind, EvidenceStatus, RecordId, StateRecordKind, StateRecordRef,
+};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum EvidenceProvenanceClass {
+    Strong,
+    CooperativeAgentReport,
+    Weak,
+}
 
 pub(crate) fn evidence_status_for_items(items: &[EvidenceCoverageItem]) -> EvidenceStatus {
     if items
@@ -37,4 +47,111 @@ pub(crate) fn unique_artifact_refs(artifact_refs: Vec<ArtifactRef>) -> Vec<Artif
         }
     }
     unique
+}
+
+pub(crate) fn unique_state_record_refs(refs: Vec<StateRecordRef>) -> Vec<StateRecordRef> {
+    let mut seen = BTreeSet::new();
+    let mut unique = Vec::new();
+    for record_ref in refs {
+        let key = state_record_ref_identity_key(&record_ref);
+        if seen.insert(key) {
+            unique.push(record_ref);
+        }
+    }
+    unique
+}
+
+pub(crate) fn evidence_assurance_matches_source(
+    source_kind: EvidenceSourceKind,
+    assurance_level: EvidenceAssuranceLevel,
+) -> bool {
+    match source_kind {
+        EvidenceSourceKind::AgentReport => {
+            assurance_level == EvidenceAssuranceLevel::CooperativeReport
+        }
+        EvidenceSourceKind::SurfaceObservation => {
+            assurance_level == EvidenceAssuranceLevel::RegisteredSurfaceObserved
+        }
+        EvidenceSourceKind::ExternalTool => {
+            assurance_level == EvidenceAssuranceLevel::ExternalToolResult
+        }
+        EvidenceSourceKind::UserObservation => {
+            assurance_level == EvidenceAssuranceLevel::UserObserved
+        }
+        EvidenceSourceKind::ReusedEvidence => matches!(
+            assurance_level,
+            EvidenceAssuranceLevel::RegisteredSurfaceObserved
+                | EvidenceAssuranceLevel::ExternalToolResult
+                | EvidenceAssuranceLevel::UserObserved
+        ),
+        EvidenceSourceKind::UnverifiedClaim => {
+            assurance_level == EvidenceAssuranceLevel::Unverified
+        }
+    }
+}
+
+pub(crate) fn evidence_provenance_class(
+    source_kind: EvidenceSourceKind,
+    assurance_level: EvidenceAssuranceLevel,
+) -> EvidenceProvenanceClass {
+    match (source_kind, assurance_level) {
+        (EvidenceSourceKind::ExternalTool, EvidenceAssuranceLevel::ExternalToolResult)
+        | (
+            EvidenceSourceKind::SurfaceObservation,
+            EvidenceAssuranceLevel::RegisteredSurfaceObserved,
+        )
+        | (EvidenceSourceKind::UserObservation, EvidenceAssuranceLevel::UserObserved)
+        | (
+            EvidenceSourceKind::ReusedEvidence,
+            EvidenceAssuranceLevel::ExternalToolResult
+            | EvidenceAssuranceLevel::RegisteredSurfaceObserved
+            | EvidenceAssuranceLevel::UserObserved,
+        ) => EvidenceProvenanceClass::Strong,
+        (EvidenceSourceKind::AgentReport, EvidenceAssuranceLevel::CooperativeReport) => {
+            EvidenceProvenanceClass::CooperativeAgentReport
+        }
+        _ => EvidenceProvenanceClass::Weak,
+    }
+}
+
+pub(crate) fn evidence_item_has_no_support(item: &EvidenceCoverageItem) -> bool {
+    item.supporting_refs.is_empty()
+        && item.observation_refs.is_empty()
+        && item.supporting_artifact_refs.is_empty()
+        && item.gap_refs.is_empty()
+}
+
+pub(crate) fn evidence_item_related_refs(item: &EvidenceCoverageItem) -> Vec<StateRecordRef> {
+    let mut refs = Vec::new();
+    refs.extend(item.observation_refs.clone());
+    refs.extend(item.supporting_refs.clone());
+    refs.extend(item.gap_refs.clone());
+    refs.extend(item.supporting_artifact_refs.iter().map(|artifact_ref| {
+        StateRecordRef {
+            record_kind: StateRecordKind::Artifact,
+            record_id: RecordId::new(artifact_ref.artifact_id.as_str()),
+            project_id: artifact_ref.project_id.clone(),
+            task_id: Some(artifact_ref.task_id.clone()).into(),
+            state_version: artifact_ref
+                .created_by_run_ref
+                .as_ref()
+                .and_then(|record_ref| record_ref.state_version.as_ref().copied())
+                .into(),
+        }
+    }));
+    refs
+}
+
+fn state_record_ref_identity_key(
+    record_ref: &StateRecordRef,
+) -> (String, String, String, Option<String>) {
+    (
+        serde_json::to_string(&record_ref.record_kind).unwrap_or_default(),
+        record_ref.record_id.as_str().to_owned(),
+        record_ref.project_id.as_str().to_owned(),
+        record_ref
+            .task_id
+            .as_ref()
+            .map(|task_id| task_id.as_str().to_owned()),
+    )
 }

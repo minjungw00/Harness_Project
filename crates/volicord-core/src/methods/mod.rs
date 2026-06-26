@@ -62,11 +62,12 @@ use crate::pipeline::{
 use crate::policy::{
     close_readiness::{
         accepted_current_scope_decision_authority, accepted_risk_ids_from_answer,
-        accepted_risk_ids_within_basis, close_basis_is_current, close_blocker, close_next_action,
-        current_acceptance_required_risk_ids, current_cancellation_authority,
-        current_final_acceptance, current_residual_risk_acceptance_coverage,
-        final_acceptance_basis_matches_current, final_acceptance_requirement,
-        is_terminal_lifecycle, judgment_has_current_basis, residual_risk_basis_matches_current,
+        accepted_risk_ids_within_basis, close_basis_is_current, close_basis_run_refs,
+        close_blocker, close_next_action, current_acceptance_required_risk_ids,
+        current_cancellation_authority, current_final_acceptance,
+        current_residual_risk_acceptance_coverage, final_acceptance_basis_matches_current,
+        final_acceptance_requirement, is_terminal_lifecycle, judgment_has_current_basis,
+        residual_risk_basis_matches_current, run_record_matches_close_basis_context,
         verified_user_interaction_provenance, CancellationAuthorityRequirement, JudgmentAuthority,
         ScopeDecisionAuthorityRequirement,
     },
@@ -75,16 +76,24 @@ use crate::policy::{
         product_write_violations, validate_effect_contract, validate_effect_contract_paths,
         EffectContractValidationError, EffectContractViolation,
     },
-    evidence::{evidence_status_for_items, unique_artifact_refs},
+    evidence::{
+        evidence_assurance_matches_source, evidence_item_has_no_support,
+        evidence_item_related_refs, evidence_provenance_class, evidence_status_for_items,
+        unique_artifact_refs, unique_state_record_refs, EvidenceProvenanceClass,
+    },
+    judgment_answer::{
+        answer_branch_matches_kind, answer_outcome_agreement, is_authority_bearing_judgment,
+        populated_answer_branch_count, AnswerOutcomeAgreement,
+    },
     judgment_relevance::{
         judgment_blocks_operation, judgment_required_for, JudgmentOperation,
         JudgmentOperationContext,
     },
-    path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
+    path::{normalize_product_paths, path_is_within, ProductPathError},
     rationale::validate_judgment_rationale,
     write_authorization::{
         current_sensitive_approval, normalize_sensitive_action_scope, normalized_string_set,
-        prepare_write_decision, prepare_write_dry_run_summary,
+        prepare_write_decision, prepare_write_dry_run_summary, run_write_authorization_mismatch,
         sensitive_action_scope_matches_requirement, surface_supports_prepare_write,
         write_authorization_expires_at, write_authorization_is_expired, write_decision_reason,
         SensitiveApprovalRequirement,
@@ -883,9 +892,10 @@ fn user_judgment_authority_from_record(
             ),
         ));
     }
-    if resolution.as_ref().is_some_and(|resolution| {
-        !stored_answer_branch_matches_kind(judgment_kind, &resolution.answer)
-    }) {
+    if resolution
+        .as_ref()
+        .is_some_and(|resolution| !answer_branch_matches_kind(judgment_kind, &resolution.answer))
+    {
         return Err(CorePipelineError::Store(
             StoreError::corrupt_owner_state_json(
                 "user_judgments",
@@ -980,21 +990,6 @@ fn user_judgment_authority_from_state(
         basis: Some(judgment.basis.clone()),
         resolution: judgment.resolution.clone(),
         expires_at: judgment.expires_at.clone(),
-    }
-}
-
-fn stored_answer_branch_matches_kind(
-    judgment_kind: JudgmentKind,
-    answer: &RecordUserJudgmentPayload,
-) -> bool {
-    match judgment_kind {
-        JudgmentKind::ProductDecision => answer.product_decision.is_some(),
-        JudgmentKind::TechnicalDecision => answer.technical_decision.is_some(),
-        JudgmentKind::ScopeDecision => answer.scope_decision.is_some(),
-        JudgmentKind::SensitiveApproval => answer.sensitive_action_scope.is_some(),
-        JudgmentKind::FinalAcceptance => answer.final_acceptance.is_some(),
-        JudgmentKind::ResidualRiskAcceptance => answer.residual_risk_acceptance.is_some(),
-        JudgmentKind::Cancellation => answer.cancellation.is_some(),
     }
 }
 
@@ -1340,10 +1335,6 @@ fn matching_sensitive_approval(
     }
 
     Ok(None)
-}
-
-fn string_set(values: &[String]) -> BTreeSet<&str> {
-    values.iter().map(String::as_str).collect()
 }
 
 fn change_unit_ref(

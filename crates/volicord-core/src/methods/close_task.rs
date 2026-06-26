@@ -1526,23 +1526,6 @@ pub(super) fn close_evidence_summary(
     }))
 }
 
-fn unique_state_record_refs(refs: Vec<StateRecordRef>) -> Vec<StateRecordRef> {
-    let mut unique = BTreeMap::new();
-    for record_ref in refs {
-        let key = (
-            serde_json::to_string(&record_ref.record_kind).unwrap_or_default(),
-            record_ref.record_id.as_str().to_owned(),
-            record_ref.project_id.as_str().to_owned(),
-            record_ref
-                .task_id
-                .as_ref()
-                .map(|task_id| task_id.as_str().to_owned()),
-        );
-        unique.entry(key).or_insert(record_ref);
-    }
-    unique.into_values().collect()
-}
-
 fn sanitize_evidence_artifact_ref(
     store: &CoreProjectStore,
     artifact_ref: &ArtifactRef,
@@ -1687,9 +1670,10 @@ fn incompatible_close_basis_run_refs_blocker(
             )))
         })?;
         if record.as_ref().is_none_or(|record| {
-            stored_run_is_not_current_close_basis_compatible(
+            !run_record_matches_close_basis_context(
                 record,
-                request,
+                &request.envelope.project_id,
+                &request.task_id,
                 current_change_unit_id,
                 context.task.scope_revision,
                 current_baseline,
@@ -1719,40 +1703,6 @@ fn incompatible_close_basis_run_refs_blocker(
     }
 }
 
-fn close_basis_run_refs(basis: &CurrentCloseBasis) -> Vec<&StateRecordRef> {
-    let mut refs = Vec::new();
-    refs.push(&basis.source_run_ref);
-    refs.extend(
-        basis
-            .result_refs
-            .iter()
-            .filter(|record_ref| record_ref.record_kind == StateRecordKind::Run),
-    );
-    refs.extend(
-        basis
-            .residual_risks
-            .iter()
-            .flat_map(|risk| risk.source_refs.iter())
-            .filter(|record_ref| record_ref.record_kind == StateRecordKind::Run),
-    );
-    refs
-}
-
-fn stored_run_is_not_current_close_basis_compatible(
-    record: &RunRecord,
-    request: &CloseTaskRequest,
-    current_change_unit_id: &str,
-    current_scope_revision: u64,
-    current_baseline: Option<&str>,
-) -> bool {
-    record.project_id != request.envelope.project_id.as_str()
-        || record.task_id != request.task_id.as_str()
-        || record.change_unit_id.as_deref() != Some(current_change_unit_id)
-        || record.scope_revision != current_scope_revision
-        || record.baseline_ref.as_deref() != current_baseline
-        || record.status != "recorded"
-}
-
 fn task_completion_policy(task: &TaskRecord) -> CoreResult<CompletionPolicy> {
     let persisted: PersistedCompletionPolicy = decode_required_json(
         "tasks",
@@ -1778,13 +1728,6 @@ enum CloseEvidenceIssueKind {
 struct CloseEvidenceIssue {
     kind: CloseEvidenceIssueKind,
     related_refs: Vec<StateRecordRef>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ObservationProvenanceClass {
-    Strong,
-    CooperativeAgentReport,
-    Weak,
 }
 
 fn close_evidence_blockers(
@@ -1946,11 +1889,11 @@ fn close_evidence_issue_for_item(
             continue;
         }
         match evidence_observation_provenance_class(&record)? {
-            ObservationProvenanceClass::Strong => return Ok(None),
-            ObservationProvenanceClass::CooperativeAgentReport => {
+            EvidenceProvenanceClass::Strong => return Ok(None),
+            EvidenceProvenanceClass::CooperativeAgentReport => {
                 has_current_cooperative_agent_report = true;
             }
-            ObservationProvenanceClass::Weak => {
+            EvidenceProvenanceClass::Weak => {
                 has_current_weak = true;
             }
         }
@@ -1984,7 +1927,7 @@ fn evidence_observation_is_stale_for_close_basis(
 
 fn evidence_observation_provenance_class(
     record: &EvidenceObservationRecord,
-) -> CoreResult<ObservationProvenanceClass> {
+) -> CoreResult<EvidenceProvenanceClass> {
     let source_kind: EvidenceSourceKind = parse_owner_storage_value(
         "evidence_observations",
         record.evidence_observation_id.clone(),
@@ -1997,52 +1940,7 @@ fn evidence_observation_provenance_class(
         "assurance_level",
         &record.assurance_level,
     )?;
-    let class = match (source_kind, assurance_level) {
-        (EvidenceSourceKind::ExternalTool, EvidenceAssuranceLevel::ExternalToolResult)
-        | (
-            EvidenceSourceKind::SurfaceObservation,
-            EvidenceAssuranceLevel::RegisteredSurfaceObserved,
-        )
-        | (EvidenceSourceKind::UserObservation, EvidenceAssuranceLevel::UserObserved)
-        | (
-            EvidenceSourceKind::ReusedEvidence,
-            EvidenceAssuranceLevel::ExternalToolResult
-            | EvidenceAssuranceLevel::RegisteredSurfaceObserved
-            | EvidenceAssuranceLevel::UserObserved,
-        ) => ObservationProvenanceClass::Strong,
-        (EvidenceSourceKind::AgentReport, EvidenceAssuranceLevel::CooperativeReport) => {
-            ObservationProvenanceClass::CooperativeAgentReport
-        }
-        _ => ObservationProvenanceClass::Weak,
-    };
-    Ok(class)
-}
-
-fn evidence_item_has_no_support(item: &EvidenceCoverageItem) -> bool {
-    item.supporting_refs.is_empty()
-        && item.observation_refs.is_empty()
-        && item.supporting_artifact_refs.is_empty()
-        && item.gap_refs.is_empty()
-}
-
-fn evidence_item_related_refs(item: &EvidenceCoverageItem) -> Vec<StateRecordRef> {
-    let mut refs = Vec::new();
-    refs.extend(item.observation_refs.clone());
-    refs.extend(item.supporting_refs.clone());
-    refs.extend(item.gap_refs.clone());
-    refs.extend(item.supporting_artifact_refs.iter().map(|artifact_ref| {
-        state_ref(
-            StateRecordKind::Artifact,
-            artifact_ref.artifact_id.as_str(),
-            &artifact_ref.project_id,
-            Some(&artifact_ref.task_id),
-            artifact_ref
-                .created_by_run_ref
-                .as_ref()
-                .and_then(|record_ref| record_ref.state_version.as_ref().copied()),
-        )
-    }));
-    refs
+    Ok(evidence_provenance_class(source_kind, assurance_level))
 }
 
 fn unavailable_close_artifact_refs(

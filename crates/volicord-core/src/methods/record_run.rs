@@ -1023,30 +1023,7 @@ fn validate_evidence_source_assurance(
     source_kind: EvidenceSourceKind,
     assurance_level: EvidenceAssuranceLevel,
 ) -> Result<(), PlanError> {
-    let valid = match source_kind {
-        EvidenceSourceKind::AgentReport => {
-            assurance_level == EvidenceAssuranceLevel::CooperativeReport
-        }
-        EvidenceSourceKind::SurfaceObservation => {
-            assurance_level == EvidenceAssuranceLevel::RegisteredSurfaceObserved
-        }
-        EvidenceSourceKind::ExternalTool => {
-            assurance_level == EvidenceAssuranceLevel::ExternalToolResult
-        }
-        EvidenceSourceKind::UserObservation => {
-            assurance_level == EvidenceAssuranceLevel::UserObserved
-        }
-        EvidenceSourceKind::ReusedEvidence => matches!(
-            assurance_level,
-            EvidenceAssuranceLevel::RegisteredSurfaceObserved
-                | EvidenceAssuranceLevel::ExternalToolResult
-                | EvidenceAssuranceLevel::UserObserved
-        ),
-        EvidenceSourceKind::UnverifiedClaim => {
-            assurance_level == EvidenceAssuranceLevel::Unverified
-        }
-    };
-    if valid {
+    if evidence_assurance_matches_source(source_kind, assurance_level) {
         Ok(())
     } else {
         validation_plan_error(
@@ -1648,13 +1625,14 @@ fn run_record_is_close_basis_compatible(
     let Some(change_unit_id) = record.change_unit_id.as_deref() else {
         return Ok(false);
     };
-    if record.project_id != context.request.envelope.project_id.as_str()
-        || record.task_id != context.request.task_id.as_str()
-        || change_unit_id != context.request.change_unit_id.as_str()
-        || record.scope_revision != context.current_scope_revision
-        || record.baseline_ref.as_deref() != Some(context.request.baseline_ref.as_str())
-        || record.status != "recorded"
-    {
+    if !run_record_matches_close_basis_context(
+        record,
+        &context.request.envelope.project_id,
+        &context.request.task_id,
+        context.request.change_unit_id.as_str(),
+        context.current_scope_revision,
+        Some(context.request.baseline_ref.as_str()),
+    ) {
         return Ok(false);
     }
     Ok(context
@@ -2502,56 +2480,20 @@ fn validate_write_authorization_for_run(
                 ))
             },
         )?;
-    if record.task_id != request.task_id.as_str() || scope.task_id != request.task_id {
+    if let Some(mismatch) = run_write_authorization_mismatch(
+        record,
+        &scope,
+        &request.task_id,
+        &request.change_unit_id,
+        &request.baseline_ref,
+        observed_changes,
+        &scope_paths,
+    ) {
         return write_authorization_mismatch(
             request,
             project_state,
-            "task_mismatch",
-            "Write Authorization task is not compatible with the recorded run",
-        );
-    }
-    if record.change_unit_id.as_deref() != Some(request.change_unit_id.as_str())
-        || scope.change_unit_id != request.change_unit_id
-    {
-        return write_authorization_mismatch(
-            request,
-            project_state,
-            "change_unit_mismatch",
-            "Write Authorization Change Unit is not compatible with the recorded run",
-        );
-    }
-    if !scope.product_file_write_intended {
-        return write_authorization_mismatch(
-            request,
-            project_state,
-            "product_write_flag_mismatch",
-            "Write Authorization did not authorize a product-file write attempt",
-        );
-    }
-    if scope.baseline_ref.as_ref() != Some(&request.baseline_ref) {
-        return write_authorization_mismatch(
-            request,
-            project_state,
-            "baseline_mismatch",
-            "Write Authorization baseline is not compatible with the recorded run",
-        );
-    }
-    if string_set(&normalized_string_set(&scope.sensitive_categories))
-        != string_set(&observed_changes.sensitive_categories)
-    {
-        return write_authorization_mismatch(
-            request,
-            project_state,
-            "sensitive_category_mismatch",
-            "Write Authorization sensitive categories are not compatible with the recorded run",
-        );
-    }
-    if !paths_are_authorized(&observed_changes.changed_paths, &scope_paths) {
-        return write_authorization_mismatch(
-            request,
-            project_state,
-            "path_mismatch",
-            "Write Authorization paths are not compatible with the recorded run",
+            mismatch.reason,
+            mismatch.message,
         );
     }
     Ok(scope)
@@ -2651,23 +2593,6 @@ fn build_record_run_evidence_summary(
         observation_refs,
         updated_by_run_ref: Some(run_ref.clone()),
     })
-}
-
-fn unique_state_record_refs(refs: Vec<StateRecordRef>) -> Vec<StateRecordRef> {
-    let mut unique = BTreeMap::new();
-    for record_ref in refs {
-        let key = (
-            serde_json::to_string(&record_ref.record_kind).unwrap_or_default(),
-            record_ref.record_id.as_str().to_owned(),
-            record_ref.project_id.as_str().to_owned(),
-            record_ref
-                .task_id
-                .as_ref()
-                .map(|task_id| task_id.as_str().to_owned()),
-        );
-        unique.entry(key).or_insert(record_ref);
-    }
-    unique.into_values().collect()
 }
 
 fn staged_artifact_display_name(record: &StoredArtifactStagingRecord) -> String {

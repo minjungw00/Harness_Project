@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 
 use serde_json::Value;
+use volicord_store::core_pipeline::RunRecord;
 use volicord_types::{
     ActorKind, BaselineRef, ChangeUnitId, CloseReadinessBlocker, CloseReadinessBlockerCategory,
     CurrentCloseBasis, JsonObject, JudgmentBasis, JudgmentBasisCompatibilityStatus, JudgmentKind,
@@ -104,6 +105,41 @@ pub(crate) fn close_basis_is_current(
         && basis.scope_revision == scope_revision
         && basis.close_basis_revision == close_basis_revision
         && basis.baseline_ref.as_ref().map(BaselineRef::as_str) == baseline_ref
+}
+
+pub(crate) fn close_basis_run_refs(basis: &CurrentCloseBasis) -> Vec<&StateRecordRef> {
+    let mut refs = Vec::new();
+    refs.push(&basis.source_run_ref);
+    refs.extend(
+        basis
+            .result_refs
+            .iter()
+            .filter(|record_ref| record_ref.record_kind == StateRecordKind::Run),
+    );
+    refs.extend(
+        basis
+            .residual_risks
+            .iter()
+            .flat_map(|risk| risk.source_refs.iter())
+            .filter(|record_ref| record_ref.record_kind == StateRecordKind::Run),
+    );
+    refs
+}
+
+pub(crate) fn run_record_matches_close_basis_context(
+    record: &RunRecord,
+    project_id: &ProjectId,
+    task_id: &TaskId,
+    change_unit_id: &str,
+    scope_revision: u64,
+    baseline_ref: Option<&str>,
+) -> bool {
+    record.project_id == project_id.as_str()
+        && record.task_id == task_id.as_str()
+        && record.change_unit_id.as_deref() == Some(change_unit_id)
+        && record.scope_revision == scope_revision
+        && record.baseline_ref.as_deref() == baseline_ref
+        && record.status == "recorded"
 }
 
 pub(crate) fn final_acceptance_requirement(

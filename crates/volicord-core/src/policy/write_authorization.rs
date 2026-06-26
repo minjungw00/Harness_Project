@@ -4,15 +4,15 @@ use chrono::{DateTime, Duration, Utc};
 use serde_json::Value;
 use volicord_store::{core_pipeline::WriteAuthorizationRecord, StoreError};
 use volicord_types::{
-    BaselineRef, ChangeUnitId, DryRunSummary, GuaranteeDisplay, JudgmentKind, JudgmentRequiredFor,
-    PlannedBlocker, PlannedBlockerSourceKind, PlannedEffect, PrepareWriteDecision,
-    SensitiveActionScope, StateRecordRef, TaskId, UtcTimestamp, WriteDecisionCategory,
-    WriteDecisionReason,
+    AuthorizedAttemptScope, BaselineRef, ChangeUnitId, DryRunSummary, GuaranteeDisplay,
+    JudgmentKind, JudgmentRequiredFor, ObservedChanges, PlannedBlocker, PlannedBlockerSourceKind,
+    PlannedEffect, PrepareWriteDecision, SensitiveActionScope, StateRecordRef, TaskId,
+    UtcTimestamp, WriteDecisionCategory, WriteDecisionReason,
 };
 
 use crate::policy::{
     close_readiness::{accepted_current_user_authority, JudgmentAuthority},
-    path::{normalize_product_paths, path_is_within, ProductPathError},
+    path::{normalize_product_paths, path_is_within, paths_are_authorized, ProductPathError},
 };
 
 const WRITE_AUTHORIZATION_LIFETIME_MINUTES: i64 = 15;
@@ -144,6 +144,68 @@ pub(crate) fn prepare_write_dry_run_summary(
         next_actions: Vec::new(),
         diagnostics: Vec::new(),
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct RunWriteAuthorizationMismatch {
+    pub(crate) reason: &'static str,
+    pub(crate) message: &'static str,
+}
+
+pub(crate) fn run_write_authorization_mismatch(
+    record: &WriteAuthorizationRecord,
+    scope: &AuthorizedAttemptScope,
+    task_id: &TaskId,
+    change_unit_id: &ChangeUnitId,
+    baseline_ref: &BaselineRef,
+    observed_changes: &ObservedChanges,
+    normalized_scope_paths: &[String],
+) -> Option<RunWriteAuthorizationMismatch> {
+    if record.task_id != task_id.as_str() || scope.task_id != *task_id {
+        return Some(run_mismatch(
+            "task_mismatch",
+            "Write Authorization task is not compatible with the recorded run",
+        ));
+    }
+    if record.change_unit_id.as_deref() != Some(change_unit_id.as_str())
+        || scope.change_unit_id != *change_unit_id
+    {
+        return Some(run_mismatch(
+            "change_unit_mismatch",
+            "Write Authorization Change Unit is not compatible with the recorded run",
+        ));
+    }
+    if !scope.product_file_write_intended {
+        return Some(run_mismatch(
+            "product_write_flag_mismatch",
+            "Write Authorization did not authorize a product-file write attempt",
+        ));
+    }
+    if scope.baseline_ref.as_ref() != Some(baseline_ref) {
+        return Some(run_mismatch(
+            "baseline_mismatch",
+            "Write Authorization baseline is not compatible with the recorded run",
+        ));
+    }
+    if category_set(&normalized_string_set(&scope.sensitive_categories))
+        != category_set(&observed_changes.sensitive_categories)
+    {
+        return Some(run_mismatch(
+            "sensitive_category_mismatch",
+            "Write Authorization sensitive categories are not compatible with the recorded run",
+        ));
+    }
+    if !paths_are_authorized(&observed_changes.changed_paths, normalized_scope_paths) {
+        return Some(run_mismatch(
+            "path_mismatch",
+            "Write Authorization paths are not compatible with the recorded run",
+        ));
+    }
+    None
+}
+
+fn run_mismatch(reason: &'static str, message: &'static str) -> RunWriteAuthorizationMismatch {
+    RunWriteAuthorizationMismatch { reason, message }
 }
 
 pub(crate) fn write_decision_reason(
