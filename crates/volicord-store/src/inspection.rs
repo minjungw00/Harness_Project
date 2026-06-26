@@ -683,7 +683,7 @@ fn validate_project_state_required_schema(
     require_tables(
         conn,
         PROJECT_STATE_DATABASE_KIND,
-        &["project_state", "surfaces"],
+        &["project_state", "surfaces", "evidence_observations"],
     )?;
     require_columns(
         conn,
@@ -712,6 +712,34 @@ fn validate_project_state_required_schema(
             "display_name",
             "capability_profile_json",
             "local_access_json",
+            "metadata_json",
+        ],
+    )?;
+    require_columns(
+        conn,
+        PROJECT_STATE_DATABASE_KIND,
+        "evidence_observations",
+        &[
+            "project_id",
+            "evidence_observation_id",
+            "task_id",
+            "change_unit_id",
+            "run_id",
+            "claim",
+            "source_kind",
+            "assurance_level",
+            "observed_by_actor_kind",
+            "observed_actor_role",
+            "observed_by_surface_id",
+            "observed_by_surface_instance_id",
+            "tool_name",
+            "tool_invocation_id",
+            "tool_metadata_json",
+            "input_refs_json",
+            "output_artifact_refs_json",
+            "limitations_json",
+            "observed_at",
+            "recorded_at",
             "metadata_json",
         ],
     )?;

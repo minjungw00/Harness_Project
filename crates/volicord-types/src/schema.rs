@@ -5,18 +5,19 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value};
 
 use crate::ids::{
-    ArtifactId, ArtifactInputId, BaselineRef, ChangeUnitId, EventId, IdempotencyKey, ProjectId,
-    RecordId, RequestId, RiskId, RunId, StagedArtifactHandleId, StorageRef, SurfaceId,
-    SurfaceInstanceId, TaskId, UserJudgmentId, UserJudgmentOptionId,
+    ArtifactId, ArtifactInputId, BaselineRef, ChangeUnitId, EventId, EvidenceObservationId,
+    IdempotencyKey, ProjectId, RecordId, RequestId, RiskId, RunId, StagedArtifactHandleId,
+    StorageRef, SurfaceId, SurfaceInstanceId, TaskId, UserJudgmentId, UserJudgmentOptionId,
 };
 use crate::values::{
     ActorKind, ArtifactAvailability, ArtifactInputSourceKind, ArtifactIntegrityStatus,
     CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind,
-    EnabledEnforcementMechanism, ErrorCode, EvidenceCoverageState, EvidenceStatus, GuaranteeLevel,
-    JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentPresentation, JudgmentRequiredFor,
-    JudgmentResolutionOutcome, MethodName, NextActionKind, PlannedBlockerSourceKind,
-    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, RedactionState, ResponseKind,
-    RunKind, StateRecordKind, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentOptionAction,
+    EnabledEnforcementMechanism, ErrorCode, EvidenceAssuranceLevel, EvidenceCoverageState,
+    EvidenceSourceKind, EvidenceStatus, GuaranteeLevel, JudgmentBasisCompatibilityStatus,
+    JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName,
+    NextActionKind, PlannedBlockerSourceKind, ProjectEnforcementProfileSource,
+    ProjectEnforcementProfileStatus, RedactionState, ResponseKind, RunKind, StateRecordKind,
+    SurfaceInteractionRole, TaskLifecyclePhase, TaskMode, TaskResult, UserJudgmentOptionAction,
     UserJudgmentStatus, UtcTimestamp, ValidatorSeverity, ValidatorStatus, WriteAuthorizationStatus,
     WriteDecisionCategory,
 };
@@ -431,6 +432,7 @@ pub struct EvidenceSummary {
     pub completion_policy: CompletionPolicy,
     pub coverage_items: Vec<EvidenceCoverageItem>,
     pub artifact_refs: Vec<ArtifactRef>,
+    pub observation_refs: Vec<StateRecordRef>,
     pub updated_by_run_ref: Option<StateRecordRef>,
 }
 
@@ -449,8 +451,55 @@ pub struct EvidenceCoverageItem {
     pub required_for_close: bool,
     pub coverage_state: EvidenceCoverageState,
     pub supporting_refs: Vec<StateRecordRef>,
+    pub observation_refs: Vec<StateRecordRef>,
     pub supporting_artifact_refs: Vec<ArtifactRef>,
     pub gap_refs: Vec<StateRecordRef>,
+}
+
+/// Durable evidence observation record.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct EvidenceObservation {
+    pub observation_id: EvidenceObservationId,
+    pub project_id: ProjectId,
+    pub task_id: TaskId,
+    pub change_unit_id: RequiredNullable<ChangeUnitId>,
+    pub run_ref: RequiredNullable<StateRecordRef>,
+    pub claim: String,
+    pub source_kind: EvidenceSourceKind,
+    pub assurance_level: EvidenceAssuranceLevel,
+    pub observed_by_actor_kind: RequiredNullable<ActorKind>,
+    pub observed_actor_role: RequiredNullable<SurfaceInteractionRole>,
+    pub observed_by_surface_id: RequiredNullable<SurfaceId>,
+    pub observed_by_surface_instance_id: RequiredNullable<SurfaceInstanceId>,
+    pub tool_name: RequiredNullable<String>,
+    pub tool_invocation_id: RequiredNullable<String>,
+    pub tool_metadata: JsonObject,
+    pub input_refs: Vec<StateRecordRef>,
+    pub output_artifact_refs: Vec<ArtifactRef>,
+    pub limitations: Vec<String>,
+    pub observed_at: UtcTimestamp,
+    pub recorded_at: UtcTimestamp,
+}
+
+/// Request-side evidence observation input supplied by `volicord.record_run`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct EvidenceObservationInput {
+    pub claim: String,
+    pub source_kind: EvidenceSourceKind,
+    pub assurance_level: EvidenceAssuranceLevel,
+    pub observed_by_actor_kind: RequiredNullable<ActorKind>,
+    pub observed_actor_role: RequiredNullable<SurfaceInteractionRole>,
+    pub observed_by_surface_id: RequiredNullable<SurfaceId>,
+    pub observed_by_surface_instance_id: RequiredNullable<SurfaceInstanceId>,
+    pub tool_name: RequiredNullable<String>,
+    pub tool_invocation_id: RequiredNullable<String>,
+    pub tool_metadata: JsonObject,
+    pub input_refs: Vec<StateRecordRef>,
+    pub output_artifact_refs: Vec<ArtifactRef>,
+    pub limitations: Vec<String>,
+    pub observed_at: UtcTimestamp,
 }
 
 /// Persisted audit metadata for an evidence summary row.

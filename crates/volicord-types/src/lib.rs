@@ -955,6 +955,36 @@ mod tests {
     }
 
     #[test]
+    fn evidence_observation_round_trips_and_rejects_unknown_fields() {
+        let observation = evidence_observation_json();
+        let decoded: EvidenceObservation =
+            serde_json::from_value(observation.clone()).expect("observation should decode");
+        assert_eq!(decoded.observation_id.as_str(), "evidence_observation_001");
+        assert_eq!(decoded.source_kind, EvidenceSourceKind::ExternalTool);
+        assert_eq!(
+            decoded.assurance_level,
+            EvidenceAssuranceLevel::ExternalToolResult
+        );
+
+        let encoded = serde_json::to_value(&decoded).expect("observation should encode");
+        assert_eq!(encoded["claim"], "Search result count was verified.");
+        assert_eq!(encoded["source_kind"], "external_tool");
+        assert_eq!(encoded["assurance_level"], "external_tool_result");
+
+        let mut with_unknown = observation.clone();
+        with_unknown["verified"] = json!(true);
+        assert_unknown::<EvidenceObservation>(with_unknown, "verified");
+
+        let input = evidence_observation_input_json();
+        let decoded_input: EvidenceObservationInput =
+            serde_json::from_value(input.clone()).expect("observation input should decode");
+        assert_eq!(decoded_input.source_kind, EvidenceSourceKind::ExternalTool);
+        let mut input_with_unknown = input;
+        input_with_unknown["final_acceptance"] = json!(true);
+        assert_unknown::<EvidenceObservationInput>(input_with_unknown, "final_acceptance");
+    }
+
+    #[test]
     fn record_run_schema_and_serde_reject_existing_artifact_ref_missing_integrity_status() {
         let mut valid = record_run_request_json();
         valid["artifact_inputs"] = json!([existing_artifact_input_json(artifact_ref_json(
@@ -1020,6 +1050,7 @@ mod tests {
             "ArtifactRef",
             "StagedArtifactHandle",
             "EvidenceCoverageItem",
+            "EvidenceObservationInput",
             "CloseAssessmentInput",
             "ResidualRiskInput",
         ] {
@@ -1547,6 +1578,7 @@ mod tests {
                 "observed_changes",
                 "artifact_inputs",
                 "evidence_updates",
+                "evidence_observations",
                 "close_assessment",
             ],
             "volicord.request_user_judgment" => &[
@@ -1719,8 +1751,55 @@ mod tests {
             },
             "artifact_inputs": [],
             "evidence_updates": [],
+            "evidence_observations": [],
             "close_assessment": null
         })
+    }
+
+    fn evidence_observation_input_json() -> Value {
+        json!({
+            "claim": "Search result count was verified.",
+            "source_kind": "external_tool",
+            "assurance_level": "external_tool_result",
+            "observed_by_actor_kind": "agent",
+            "observed_actor_role": "agent",
+            "observed_by_surface_id": "surface_empty",
+            "observed_by_surface_instance_id": "surface_instance_empty",
+            "tool_name": "local-test-runner",
+            "tool_invocation_id": "tool_invocation_001",
+            "tool_metadata": {
+                "exit_code": 0
+            },
+            "input_refs": [state_ref_json("run", "run_input_001", "task_empty_001")],
+            "output_artifact_refs": [artifact_ref_json(
+                "verified",
+                json!("text/plain"),
+                json!("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+                json!(18)
+            )],
+            "limitations": ["External tool output is not product correctness proof."],
+            "observed_at": "2026-06-18T00:00:00Z"
+        })
+    }
+
+    fn evidence_observation_json() -> Value {
+        let mut observation = evidence_observation_input_json();
+        let object = observation
+            .as_object_mut()
+            .expect("observation input fixture should be an object");
+        object.insert(
+            "observation_id".to_owned(),
+            json!("evidence_observation_001"),
+        );
+        object.insert("project_id".to_owned(), json!("proj_empty_001"));
+        object.insert("task_id".to_owned(), json!("task_empty_001"));
+        object.insert("change_unit_id".to_owned(), json!("cu_empty_001"));
+        object.insert(
+            "run_ref".to_owned(),
+            state_ref_json("run", "run_observation_001", "task_empty_001"),
+        );
+        object.insert("recorded_at".to_owned(), json!("2026-06-18T00:00:01Z"));
+        observation
     }
 
     fn staged_artifact_input_json(expires_at: &str) -> Value {

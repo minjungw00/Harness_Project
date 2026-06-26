@@ -8,12 +8,13 @@ use crate::ids::{
 };
 use crate::schema::{
     AcceptedRiskInput, ArtifactInput, ArtifactRef, CloseAssessmentInput, CloseReadinessBlocker,
-    CurrentCloseBasis, EvidenceCoverageItem, EvidenceSummary, GuaranteeDisplay, JsonObject,
-    JudgmentRationale, NextActionSummary, ObservedChanges, RecordUserJudgmentPayload,
-    RequiredNullable, RiskAcceptanceCoverage, RunSummary, SensitiveActionScope,
-    StagedArtifactHandle, StateRecordRef, StateSummary, ToolEnvelope, ToolResponse, ToolResultBase,
-    UserJudgment, UserJudgmentCandidate, UserJudgmentContext, UserJudgmentOptionInput,
-    WriteAuthoritySummary, WriteAuthorizationSummary, WriteDecisionReason,
+    CurrentCloseBasis, EvidenceCoverageItem, EvidenceObservation, EvidenceObservationInput,
+    EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentRationale, NextActionSummary,
+    ObservedChanges, RecordUserJudgmentPayload, RequiredNullable, RiskAcceptanceCoverage,
+    RunSummary, SensitiveActionScope, StagedArtifactHandle, StateRecordRef, StateSummary,
+    ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
+    UserJudgmentContext, UserJudgmentOptionInput, WriteAuthoritySummary, WriteAuthorizationSummary,
+    WriteDecisionReason,
 };
 use crate::values::{
     AccessClass, AuthorizationEffect, ChangeUnitOperation, CloseIntent, CloseReason, CloseState,
@@ -295,6 +296,7 @@ pub struct RecordRunRequest {
     pub observed_changes: ObservedChanges,
     pub artifact_inputs: Vec<ArtifactInput>,
     pub evidence_updates: Vec<EvidenceCoverageItem>,
+    pub evidence_observations: Vec<EvidenceObservationInput>,
     pub close_assessment: RequiredNullable<CloseAssessmentInput>,
 }
 
@@ -315,6 +317,7 @@ pub struct RecordRunResult {
     pub run_summary: RunSummary,
     pub registered_artifacts: Vec<ArtifactRef>,
     pub evidence_summary: Option<EvidenceSummary>,
+    pub evidence_observations: Vec<EvidenceObservation>,
     pub current_close_basis: Option<CurrentCloseBasis>,
     pub blocker_refs: Vec<StateRecordRef>,
     pub state: StateSummary,

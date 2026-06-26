@@ -7,14 +7,15 @@ use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use volicord_types::{
-    CurrentCloseBasis, EvidenceCoverageItem, IdempotencyKey, JudgmentBasis,
-    JudgmentBasisCompatibilityStatus, JudgmentRationale, JudgmentResolutionOutcome, MethodName,
-    ObservedChanges, PersistedArtifactProducer, PersistedArtifactProvenance,
-    PersistedArtifactProvenanceMetadata, PersistedEvidenceMetadata, PersistedJudgmentBasis,
-    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
-    ProjectEnforcementProfile, ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus,
-    ProjectId, RequestHash, RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId,
-    UserJudgmentOptionAction, UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
+    ArtifactRef, CurrentCloseBasis, EvidenceAssuranceLevel, EvidenceCoverageItem,
+    EvidenceSourceKind, IdempotencyKey, JudgmentBasis, JudgmentBasisCompatibilityStatus,
+    JudgmentRationale, JudgmentResolutionOutcome, MethodName, ObservedChanges,
+    PersistedArtifactProducer, PersistedArtifactProvenance, PersistedArtifactProvenanceMetadata,
+    PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentOptions,
+    PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, ProjectEnforcementProfile,
+    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, ProjectId, RequestHash,
+    RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId, UserJudgmentOptionAction,
+    UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
 };
 
 use crate::{
@@ -116,6 +117,7 @@ pub enum CoreStorageMutation {
     PromoteStagedArtifact(ArtifactPromotion),
     LinkArtifact(ArtifactLinkInsert),
     UpsertEvidenceSummary(EvidenceSummaryUpsert),
+    InsertEvidenceObservation(EvidenceObservationInsert),
     InsertUserJudgment(UserJudgmentInsert),
     ResolveUserJudgment(UserJudgmentResolutionUpdate),
     UpdateUserJudgmentBasis(UserJudgmentBasisUpdate),
@@ -366,6 +368,57 @@ pub struct EvidenceSummaryRecord {
     pub metadata_json: String,
 }
 
+/// Storage input for inserting one durable evidence observation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EvidenceObservationInsert {
+    pub evidence_observation_id: String,
+    pub task_id: String,
+    pub change_unit_id: Option<String>,
+    pub run_id: Option<String>,
+    pub claim: String,
+    pub source_kind: String,
+    pub assurance_level: String,
+    pub observed_by_actor_kind: Option<String>,
+    pub observed_actor_role: Option<String>,
+    pub observed_by_surface_id: Option<String>,
+    pub observed_by_surface_instance_id: Option<String>,
+    pub tool_name: Option<String>,
+    pub tool_invocation_id: Option<String>,
+    pub tool_metadata_json: String,
+    pub input_refs_json: String,
+    pub output_artifact_refs_json: String,
+    pub limitations_json: String,
+    pub observed_at: String,
+    pub recorded_at: String,
+    pub metadata_json: String,
+}
+
+/// Stored evidence observation facts.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EvidenceObservationRecord {
+    pub project_id: String,
+    pub evidence_observation_id: String,
+    pub task_id: String,
+    pub change_unit_id: Option<String>,
+    pub run_id: Option<String>,
+    pub claim: String,
+    pub source_kind: String,
+    pub assurance_level: String,
+    pub observed_by_actor_kind: Option<String>,
+    pub observed_actor_role: Option<String>,
+    pub observed_by_surface_id: Option<String>,
+    pub observed_by_surface_instance_id: Option<String>,
+    pub tool_name: Option<String>,
+    pub tool_invocation_id: Option<String>,
+    pub tool_metadata_json: String,
+    pub input_refs_json: String,
+    pub output_artifact_refs_json: String,
+    pub limitations_json: String,
+    pub observed_at: String,
+    pub recorded_at: String,
+    pub metadata_json: String,
+}
+
 /// Event reference facts created by an atomic mutation commit.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CommittedEventRef {
@@ -438,6 +491,7 @@ pub struct StorageEffectCounts {
     pub artifacts: u64,
     pub artifact_links: u64,
     pub evidence_summaries: u64,
+    pub evidence_observations: u64,
     pub blockers: u64,
 }
 
@@ -874,6 +928,29 @@ impl CoreProjectStore {
         )
     }
 
+    /// Returns whether an evidence observation id already exists in this project.
+    pub fn evidence_observation_exists(&self, evidence_observation_id: &str) -> StoreResult<bool> {
+        row_exists(
+            &self.conn,
+            &self.project.project_id,
+            "evidence_observations",
+            "evidence_observation_id",
+            evidence_observation_id,
+        )
+    }
+
+    /// Reads one evidence observation row by exact project-local observation identity.
+    pub fn evidence_observation_record(
+        &self,
+        evidence_observation_id: &str,
+    ) -> StoreResult<Option<EvidenceObservationRecord>> {
+        evidence_observation_record(
+            &self.conn,
+            &self.project.project_id,
+            evidence_observation_id,
+        )
+    }
+
     /// Returns whether a persistent artifact already has an owner link for a Task.
     pub fn artifact_has_task_owner_link(
         &self,
@@ -1048,6 +1125,11 @@ impl CoreProjectStore {
             evidence_summaries: table_count(
                 &self.conn,
                 "evidence_summaries",
+                &self.project.project_id,
+            )?,
+            evidence_observations: table_count(
+                &self.conn,
+                "evidence_observations",
                 &self.project.project_id,
             )?,
             blockers: table_count(&self.conn, "blockers", &self.project.project_id)?,
@@ -1354,6 +1436,7 @@ impl CoreStorageMutation {
             Self::PromoteStagedArtifact(input) => mutation.promote_staged_artifact(input),
             Self::LinkArtifact(input) => mutation.link_artifact(input),
             Self::UpsertEvidenceSummary(input) => mutation.upsert_evidence_summary(input),
+            Self::InsertEvidenceObservation(input) => mutation.insert_evidence_observation(input),
             Self::InsertUserJudgment(input) => mutation.insert_user_judgment(input),
             Self::ResolveUserJudgment(input) => mutation.resolve_user_judgment(input),
             Self::UpdateUserJudgmentBasis(input) => mutation.update_user_judgment_basis(input),
@@ -2189,6 +2272,149 @@ impl ProjectMutation<'_> {
                 input.coverage_json,
                 input.supporting_refs_json,
                 input.gap_refs_json,
+                input.metadata_json
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn insert_evidence_observation(
+        &mut self,
+        input: &EvidenceObservationInsert,
+    ) -> StoreResult<()> {
+        validate_identifier("evidence_observation_id", &input.evidence_observation_id)?;
+        validate_identifier("task_id", &input.task_id)?;
+        if let Some(change_unit_id) = &input.change_unit_id {
+            validate_identifier("change_unit_id", change_unit_id)?;
+        }
+        if let Some(run_id) = &input.run_id {
+            validate_identifier("run_id", run_id)?;
+        }
+        validate_identifier("evidence_observations.claim", &input.claim)?;
+        validate_evidence_source_kind("evidence_observations.source_kind", &input.source_kind)?;
+        validate_evidence_assurance_level(
+            "evidence_observations.assurance_level",
+            &input.assurance_level,
+        )?;
+        if let Some(actor_kind) = &input.observed_by_actor_kind {
+            validate_actor_kind_value("observed_by_actor_kind", actor_kind)?;
+        }
+        if let Some(actor_role) = &input.observed_actor_role {
+            validate_interaction_role_value("observed_actor_role", actor_role)?;
+        }
+        match (
+            input.observed_by_surface_id.as_deref(),
+            input.observed_by_surface_instance_id.as_deref(),
+        ) {
+            (Some(surface_id), Some(surface_instance_id)) => {
+                validate_identifier("observed_by_surface_id", surface_id)?;
+                validate_identifier("observed_by_surface_instance_id", surface_instance_id)?;
+            }
+            (None, None) => {}
+            _ => {
+                return Err(StoreError::InvalidInput {
+                    detail: "observed surface id and instance id must be supplied together"
+                        .to_owned(),
+                })
+            }
+        }
+        if let Some(tool_name) = &input.tool_name {
+            validate_identifier("tool_name", tool_name)?;
+        }
+        if let Some(tool_invocation_id) = &input.tool_invocation_id {
+            validate_identifier("tool_invocation_id", tool_invocation_id)?;
+        }
+        validate_evidence_observation_tool_metadata_json(
+            "evidence_observations.tool_metadata_json",
+            &input.tool_metadata_json,
+        )?;
+        validate_state_refs_json(
+            "evidence_observations.input_refs_json",
+            &input.input_refs_json,
+        )?;
+        validate_artifact_refs_json(
+            "evidence_observations.output_artifact_refs_json",
+            &input.output_artifact_refs_json,
+        )?;
+        validate_string_list_json(
+            "evidence_observations.limitations_json",
+            &input.limitations_json,
+        )?;
+        validate_timestamp("observed_at", &input.observed_at)?;
+        validate_timestamp("recorded_at", &input.recorded_at)?;
+        validate_evidence_observation_metadata_json(
+            "evidence_observations.metadata_json",
+            &input.metadata_json,
+        )?;
+
+        self.tx.execute(
+            "INSERT INTO evidence_observations (
+                project_id,
+                evidence_observation_id,
+                task_id,
+                change_unit_id,
+                run_id,
+                claim,
+                source_kind,
+                assurance_level,
+                observed_by_actor_kind,
+                observed_actor_role,
+                observed_by_surface_id,
+                observed_by_surface_instance_id,
+                tool_name,
+                tool_invocation_id,
+                tool_metadata_json,
+                input_refs_json,
+                output_artifact_refs_json,
+                limitations_json,
+                observed_at,
+                recorded_at,
+                metadata_json
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                ?4,
+                ?5,
+                ?6,
+                ?7,
+                ?8,
+                ?9,
+                ?10,
+                ?11,
+                ?12,
+                ?13,
+                ?14,
+                ?15,
+                ?16,
+                ?17,
+                ?18,
+                ?19,
+                ?20,
+                ?21
+            )",
+            params![
+                self.project_id,
+                input.evidence_observation_id,
+                input.task_id,
+                input.change_unit_id,
+                input.run_id,
+                input.claim,
+                input.source_kind,
+                input.assurance_level,
+                input.observed_by_actor_kind,
+                input.observed_actor_role,
+                input.observed_by_surface_id,
+                input.observed_by_surface_instance_id,
+                input.tool_name,
+                input.tool_invocation_id,
+                input.tool_metadata_json,
+                input.input_refs_json,
+                input.output_artifact_refs_json,
+                input.limitations_json,
+                input.observed_at,
+                input.recorded_at,
                 input.metadata_json
             ],
         )?;
@@ -3338,6 +3564,72 @@ fn evidence_summary_record_from_row(
     })
 }
 
+fn evidence_observation_record(
+    conn: &Connection,
+    project_id: &str,
+    evidence_observation_id: &str,
+) -> StoreResult<Option<EvidenceObservationRecord>> {
+    conn.query_row(
+        "SELECT
+            project_id,
+            evidence_observation_id,
+            task_id,
+            change_unit_id,
+            run_id,
+            claim,
+            source_kind,
+            assurance_level,
+            observed_by_actor_kind,
+            observed_actor_role,
+            observed_by_surface_id,
+            observed_by_surface_instance_id,
+            tool_name,
+            tool_invocation_id,
+            tool_metadata_json,
+            input_refs_json,
+            output_artifact_refs_json,
+            limitations_json,
+            observed_at,
+            recorded_at,
+            metadata_json
+         FROM evidence_observations
+         WHERE project_id = ?1
+           AND evidence_observation_id = ?2",
+        params![project_id, evidence_observation_id],
+        evidence_observation_record_from_row,
+    )
+    .optional()
+    .map_err(StoreError::from)
+}
+
+fn evidence_observation_record_from_row(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<EvidenceObservationRecord> {
+    Ok(EvidenceObservationRecord {
+        project_id: row.get(0)?,
+        evidence_observation_id: row.get(1)?,
+        task_id: row.get(2)?,
+        change_unit_id: row.get(3)?,
+        run_id: row.get(4)?,
+        claim: row.get(5)?,
+        source_kind: row.get(6)?,
+        assurance_level: row.get(7)?,
+        observed_by_actor_kind: row.get(8)?,
+        observed_actor_role: row.get(9)?,
+        observed_by_surface_id: row.get(10)?,
+        observed_by_surface_instance_id: row.get(11)?,
+        tool_name: row.get(12)?,
+        tool_invocation_id: row.get(13)?,
+        tool_metadata_json: row.get(14)?,
+        input_refs_json: row.get(15)?,
+        output_artifact_refs_json: row.get(16)?,
+        limitations_json: row.get(17)?,
+        observed_at: row.get(18)?,
+        recorded_at: row.get(19)?,
+        metadata_json: row.get(20)?,
+    })
+}
+
 fn user_judgment_record(
     conn: &Connection,
     project_id: &str,
@@ -4112,6 +4404,22 @@ fn validate_evidence_coverage_json(field: &'static str, text: &str) -> StoreResu
     Ok(())
 }
 
+fn validate_evidence_source_kind(field: &'static str, value: &str) -> StoreResult<()> {
+    serde_json::from_value::<EvidenceSourceKind>(Value::String(value.to_owned()))
+        .map(|_| ())
+        .map_err(|error| StoreError::InvalidInput {
+            detail: format!("{field} must be a supported evidence source kind: {error}"),
+        })
+}
+
+fn validate_evidence_assurance_level(field: &'static str, value: &str) -> StoreResult<()> {
+    serde_json::from_value::<EvidenceAssuranceLevel>(Value::String(value.to_owned()))
+        .map(|_| ())
+        .map_err(|error| StoreError::InvalidInput {
+            detail: format!("{field} must be a supported evidence assurance level: {error}"),
+        })
+}
+
 fn validate_state_refs_json(field: &'static str, text: &str) -> StoreResult<()> {
     serde_json::from_str::<Vec<StateRecordRef>>(text).map_err(|error| {
         StoreError::InvalidInput {
@@ -4121,10 +4429,40 @@ fn validate_state_refs_json(field: &'static str, text: &str) -> StoreResult<()> 
     Ok(())
 }
 
+fn validate_artifact_refs_json(field: &'static str, text: &str) -> StoreResult<()> {
+    serde_json::from_str::<Vec<ArtifactRef>>(text).map_err(|error| StoreError::InvalidInput {
+        detail: format!("{field} must be persisted ArtifactRef array JSON: {error}"),
+    })?;
+    Ok(())
+}
+
+fn validate_string_list_json(field: &'static str, text: &str) -> StoreResult<()> {
+    serde_json::from_str::<Vec<String>>(text).map_err(|error| StoreError::InvalidInput {
+        detail: format!("{field} must be a JSON string array: {error}"),
+    })?;
+    Ok(())
+}
+
 fn validate_evidence_metadata_json(field: &'static str, text: &str) -> StoreResult<()> {
     serde_json::from_str::<PersistedEvidenceMetadata>(text).map_err(|error| {
         StoreError::InvalidInput {
             detail: format!("{field} must be persisted evidence metadata JSON: {error}"),
+        }
+    })?;
+    Ok(())
+}
+
+fn validate_evidence_observation_tool_metadata_json(
+    field: &'static str,
+    text: &str,
+) -> StoreResult<()> {
+    validate_evidence_observation_metadata_json(field, text)
+}
+
+fn validate_evidence_observation_metadata_json(field: &'static str, text: &str) -> StoreResult<()> {
+    serde_json::from_str::<serde_json::Map<String, Value>>(text).map_err(|error| {
+        StoreError::InvalidInput {
+            detail: format!("{field} must be a JSON object: {error}"),
         }
     })?;
     Ok(())
@@ -4574,6 +4912,75 @@ mod tests {
                 .basis_status,
             JudgmentBasisCompatibilityStatus::Superseded
         );
+        Ok(())
+    }
+
+    #[test]
+    fn evidence_observation_store_api_round_trips() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_evidence_observation";
+        let run_id = "run_evidence_observation";
+        let observation_id = "evidence_observation_store";
+
+        let input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::RecordRun,
+            Some(&IdempotencyKey::new("idem_store_evidence_observation")),
+            &RequestHash::new("sha256:evidence-observation"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("evidence_observation", task_id)],
+        );
+        let committed = store.commit_mutation(
+            input,
+            |mutation, facts| {
+                for storage_mutation in [
+                    CoreStorageMutation::InsertTask(task_insert(task_id)),
+                    CoreStorageMutation::InsertRun(run_insert(run_id, task_id)),
+                    CoreStorageMutation::InsertEvidenceObservation(EvidenceObservationInsert {
+                        evidence_observation_id: observation_id.to_owned(),
+                        task_id: task_id.to_owned(),
+                        change_unit_id: None,
+                        run_id: Some(run_id.to_owned()),
+                        claim: "Search result count was verified.".to_owned(),
+                        source_kind: "external_tool".to_owned(),
+                        assurance_level: "external_tool_result".to_owned(),
+                        observed_by_actor_kind: Some("agent".to_owned()),
+                        observed_actor_role: Some("agent".to_owned()),
+                        observed_by_surface_id: Some(SURFACE_ID.to_owned()),
+                        observed_by_surface_instance_id: Some(SURFACE_INSTANCE_ID.to_owned()),
+                        tool_name: Some("local-test-runner".to_owned()),
+                        tool_invocation_id: Some("tool_invocation_001".to_owned()),
+                        tool_metadata_json: json!({"exit_code": 0}).to_string(),
+                        input_refs_json: "[]".to_owned(),
+                        output_artifact_refs_json: "[]".to_owned(),
+                        limitations_json: json!(["External tool result is not a proof."])
+                            .to_string(),
+                        observed_at: "2026-06-18T00:00:00Z".to_owned(),
+                        recorded_at: "2026-06-18T00:00:01Z".to_owned(),
+                        metadata_json: json!({"recorded_by_run_id": run_id}).to_string(),
+                    }),
+                ] {
+                    storage_mutation.apply(mutation, facts.committed_state_version)?;
+                }
+                Ok(())
+            },
+            response_json,
+        )?;
+        assert!(matches!(committed, MutationCommitOutcome::Committed { .. }));
+
+        let record = store
+            .evidence_observation_record(observation_id)?
+            .expect("evidence observation should be readable");
+        assert_eq!(record.run_id.as_deref(), Some(run_id));
+        assert_eq!(record.source_kind, "external_tool");
+        assert_eq!(record.assurance_level, "external_tool_result");
+        assert_eq!(
+            serde_json::from_str::<Vec<String>>(&record.limitations_json)?,
+            vec!["External tool result is not a proof."]
+        );
+        assert_eq!(store.effect_counts()?.evidence_observations, 1);
         Ok(())
     }
 
@@ -5298,6 +5705,25 @@ mod tests {
             write_authorization_id: None,
             kind: "implementation".to_owned(),
             status: "completed".to_owned(),
+            summary_json: "{}".to_owned(),
+            observed_changes_json: "{}".to_owned(),
+            evidence_updates_json: "[]".to_owned(),
+            authorization_effect_json: "{}".to_owned(),
+            created_by_surface_id: SURFACE_ID.to_owned(),
+            created_by_surface_instance_id: SURFACE_INSTANCE_ID.to_owned(),
+            metadata_json: "{}".to_owned(),
+        }
+    }
+
+    fn run_insert(run_id: &str, task_id: &str) -> RunInsert {
+        RunInsert {
+            run_id: run_id.to_owned(),
+            task_id: task_id.to_owned(),
+            change_unit_id: None,
+            scope_revision: 0,
+            write_authorization_id: None,
+            kind: "implementation".to_owned(),
+            status: "recorded".to_owned(),
             summary_json: "{}".to_owned(),
             observed_changes_json: "{}".to_owned(),
             evidence_updates_json: "[]".to_owned(),

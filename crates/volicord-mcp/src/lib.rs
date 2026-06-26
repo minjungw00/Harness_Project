@@ -3417,6 +3417,7 @@ mod tests {
                 "observed_changes",
                 "artifact_inputs",
                 "evidence_updates",
+                "evidence_observations",
                 "close_assessment",
             ],
             "volicord.request_user_judgment" => &[

@@ -509,6 +509,7 @@ pub mod core_fixtures {
                 },
                 artifact_inputs: Vec::new(),
                 evidence_updates: Vec::new(),
+                evidence_observations: Vec::new(),
                 close_assessment: None.into(),
             }
         }
@@ -1476,6 +1477,7 @@ pub mod core_fixtures {
             required_for_close: true,
             coverage_state: EvidenceCoverageState::Supported,
             supporting_refs: Vec::new(),
+            observation_refs: Vec::new(),
             supporting_artifact_refs: Vec::new(),
             gap_refs: Vec::new(),
         }
@@ -1488,6 +1490,7 @@ pub mod core_fixtures {
             required_for_close: true,
             coverage_state: EvidenceCoverageState::Unsupported,
             supporting_refs: Vec::new(),
+            observation_refs: Vec::new(),
             supporting_artifact_refs: Vec::new(),
             gap_refs: Vec::new(),
         }

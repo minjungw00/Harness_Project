@@ -285,7 +285,7 @@ An artifact is evidence-eligible only when storage has:
 - a `redaction_state`
 - producer and retention facts
 - an availability `status`
-- an owner link to an existing owner record such as `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, or `blocker`
+- an owner link to an existing owner record such as `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `evidence_observation`, or `blocker`
 
 Evidence eligibility, artifact availability, and evidence sufficiency remain separate. Artifact owner relation integrity is required even though `artifact_links` is a polymorphic owner table.
 
@@ -296,7 +296,7 @@ Allowed:
 
 Required validation:
 
-- `owner_record_kind` is one of `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, or `blocker`.
+- `owner_record_kind` is one of `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `evidence_observation`, or `blocker`.
 - `owner_record_id` exists in the matching owner table.
 - The owner belongs to the same `project_id` and `task_id`.
 - The relation is compatible with the way the artifact is used.

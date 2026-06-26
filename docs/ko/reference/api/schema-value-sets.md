@@ -12,7 +12,7 @@
 - API `response_kind`와 `effect_kind` 값
 - 지원되는 `access_class` 값
 - 공유 상태 참조에서 쓰는 기록/참조 판별 값
-- 지원되는 생명주기, 닫기 상태, 출처 종류, 쓰기 결정 범주, 판단 종류, 표시 형식, 필요 판단 위치, 판단 해결 결과, 아티팩트 가림 처리, 아티팩트 무결성, 아티팩트 가용성 표시, `ValidatorResult.status`, `ValidatorResult.severity`, 보장 표시 등 API 값 집합
+- 지원되는 생명주기, 닫기 상태, 증거 관찰 출처와 보장 수준, 쓰기 결정 범주, 판단 종류, 표시 형식, 필요 판단 위치, 판단 해결 결과, 아티팩트 가림 처리, 아티팩트 무결성, 아티팩트 가용성 표시, `ValidatorResult.status`, `ValidatorResult.severity`, 보장 표시 등 API 값 집합
 - 지원되는 `change_unit.operation` 값
 - 지원되는 공개 `ValidatorResult.validator_id` 값의 경계
 - 메서드 범위 사유 코드와 불투명 분류 문자열에 대한 값 집합 경계
@@ -151,6 +151,7 @@ write_authorization
 user_judgment
 run
 evidence_summary
+evidence_observation
 artifact
 blocker
 task_event
@@ -357,6 +358,47 @@ not_applicable
 stale
 blocked
 ```
+
+<a id="evidence-observation-values"></a>
+## 증거 관찰 값
+
+`EvidenceObservation.source_kind`와 `EvidenceObservationInput.source_kind`는 아래 값을 사용합니다.
+
+```text
+agent_report
+surface_observation
+external_tool
+user_observation
+reused_evidence
+unverified_claim
+```
+
+출처 종류 의미:
+- `agent_report`는 에이전트 접점이 만든 보고를 기록합니다. 그 자체로 외부 도구 결과가 아닙니다.
+- `surface_observation`은 등록된 접점에 귀속된 관찰을 기록합니다. 그 자체로 증명이 아닙니다.
+- `external_tool`은 외부 도구의 출력이나 상태를 기록합니다. 그 자체로 제품 정확성 증명이 아닙니다.
+- `user_observation`은 사용자 귀속 관찰을 기록합니다. 그 자체로 최종 수락이나 다른 권한을 지니는 판단이 아닙니다.
+- `reused_evidence`는 이전 증거나 아티팩트 재사용을 기록합니다. 그 자체로 새 관찰이 아닙니다.
+- `unverified_claim`은 확인된 관찰 없는 주장을 보존합니다. 그 자체로 충분한 증거가 아닙니다.
+
+`EvidenceObservation.assurance_level`과 `EvidenceObservationInput.assurance_level`은 아래 값을 사용합니다.
+
+```text
+cooperative_report
+registered_surface_observed
+external_tool_result
+user_observed
+unverified
+```
+
+보장 수준 의미:
+- `cooperative_report`는 제출 접점 또는 행위자 맥락의 협력형 보고입니다.
+- `registered_surface_observed`는 등록된 접점이 기록된 접점 맥락 안에서 그 주장을 관찰했음을 기록합니다.
+- `external_tool_result`는 관찰이 외부 도구 결과에 기반함을 기록합니다.
+- `user_observed`는 사용자 귀속 관찰 출처를 기록합니다.
+- `unverified`는 확인된 관찰 보장 수준이 없음을 기록합니다.
+
+이 값들은 증거 관찰 출처를 분류합니다. 사용자 권한을 부여하거나, 최종 수락 또는 잔여 위험 수락을 만족하거나, 제품 정확성을 증명하거나, `GuaranteeDisplay.level`을 바꾸지 않습니다.
 
 `ValidatorResult.status`는 아래 값을 사용합니다.
 

@@ -1365,6 +1365,7 @@ pub(super) fn close_evidence_summary(
                 required_for_close: true,
                 coverage_state: EvidenceCoverageState::Unsupported,
                 supporting_refs: Vec::new(),
+                observation_refs: Vec::new(),
                 supporting_artifact_refs: Vec::new(),
                 gap_refs: Vec::new(),
             });
@@ -1377,6 +1378,12 @@ pub(super) fn close_evidence_summary(
         coverage_items
             .iter()
             .flat_map(|item| item.supporting_artifact_refs.clone())
+            .collect(),
+    );
+    let observation_refs = unique_state_record_refs(
+        coverage_items
+            .iter()
+            .flat_map(|item| item.observation_refs.clone())
             .collect(),
     );
     let status = if coverage_items.is_empty() {
@@ -1420,8 +1427,26 @@ pub(super) fn close_evidence_summary(
         },
         coverage_items,
         artifact_refs,
+        observation_refs,
         updated_by_run_ref,
     }))
+}
+
+fn unique_state_record_refs(refs: Vec<StateRecordRef>) -> Vec<StateRecordRef> {
+    let mut unique = BTreeMap::new();
+    for record_ref in refs {
+        let key = (
+            serde_json::to_string(&record_ref.record_kind).unwrap_or_default(),
+            record_ref.record_id.as_str().to_owned(),
+            record_ref.project_id.as_str().to_owned(),
+            record_ref
+                .task_id
+                .as_ref()
+                .map(|task_id| task_id.as_str().to_owned()),
+        );
+        unique.entry(key).or_insert(record_ref);
+    }
+    unique.into_values().collect()
 }
 
 fn sanitize_evidence_artifact_ref(

@@ -544,7 +544,7 @@ CREATE TABLE artifact_links (
   artifact_id TEXT NOT NULL,
   task_id TEXT NOT NULL,
   owner_record_kind TEXT NOT NULL CHECK (
-    owner_record_kind IN ('task', 'change_unit', 'run', 'user_judgment', 'evidence_summary', 'blocker')
+    owner_record_kind IN ('task', 'change_unit', 'run', 'user_judgment', 'evidence_summary', 'evidence_observation', 'blocker')
   ),
   owner_record_id TEXT NOT NULL,
   created_by_run_id TEXT,
@@ -572,6 +572,51 @@ CREATE TABLE evidence_summaries (
   FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
   FOREIGN KEY (project_id, task_id, change_unit_id)
     REFERENCES change_units (project_id, task_id, change_unit_id)
+);
+
+CREATE TABLE evidence_observations (
+  project_id TEXT NOT NULL,
+  evidence_observation_id TEXT NOT NULL,
+  task_id TEXT NOT NULL,
+  change_unit_id TEXT,
+  run_id TEXT,
+  claim TEXT NOT NULL,
+  source_kind TEXT NOT NULL CHECK (
+    source_kind IN ('agent_report', 'surface_observation', 'external_tool', 'user_observation', 'reused_evidence', 'unverified_claim')
+  ),
+  assurance_level TEXT NOT NULL CHECK (
+    assurance_level IN ('cooperative_report', 'registered_surface_observed', 'external_tool_result', 'user_observed', 'unverified')
+  ),
+  observed_by_actor_kind TEXT CHECK (
+    observed_by_actor_kind IS NULL OR observed_by_actor_kind IN ('agent', 'user')
+  ),
+  observed_actor_role TEXT CHECK (
+    observed_actor_role IS NULL OR observed_actor_role IN ('agent', 'user_interaction')
+  ),
+  observed_by_surface_id TEXT,
+  observed_by_surface_instance_id TEXT,
+  tool_name TEXT,
+  tool_invocation_id TEXT,
+  tool_metadata_json TEXT NOT NULL DEFAULT '{}',
+  input_refs_json TEXT NOT NULL DEFAULT '[]',
+  output_artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  limitations_json TEXT NOT NULL DEFAULT '[]',
+  observed_at TEXT NOT NULL,
+  recorded_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (project_id, evidence_observation_id),
+  CHECK (
+    (observed_by_surface_id IS NULL AND observed_by_surface_instance_id IS NULL)
+    OR (observed_by_surface_id IS NOT NULL AND observed_by_surface_instance_id IS NOT NULL)
+  ),
+  FOREIGN KEY (project_id, task_id) REFERENCES tasks (project_id, task_id),
+  FOREIGN KEY (project_id, task_id, change_unit_id)
+    REFERENCES change_units (project_id, task_id, change_unit_id),
+  FOREIGN KEY (project_id, run_id)
+    REFERENCES runs (project_id, run_id)
+    DEFERRABLE INITIALLY DEFERRED,
+  FOREIGN KEY (project_id, observed_by_surface_id, observed_by_surface_instance_id)
+    REFERENCES surfaces (project_id, surface_id, surface_instance_id)
 );
 
 CREATE TABLE blockers (
@@ -674,6 +719,12 @@ CREATE INDEX idx_artifact_links_owner
 
 CREATE INDEX idx_evidence_summaries_task_status
   ON evidence_summaries (project_id, task_id, status);
+
+CREATE INDEX idx_evidence_observations_task_claim
+  ON evidence_observations (project_id, task_id, claim);
+
+CREATE INDEX idx_evidence_observations_run
+  ON evidence_observations (project_id, run_id);
 
 CREATE INDEX idx_blockers_task_status
   ON blockers (project_id, task_id, status);

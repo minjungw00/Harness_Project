@@ -18,8 +18,8 @@ use volicord_store::{
 use volicord_test_support::TempRuntimeHome;
 use volicord_types::{
     prefixed_durable_id, ActorKind, ChangeUnitUpdate, DurableIdError, DurableIdGenerator,
-    DurableIdKind, IdempotencyKey, InitialScope, RequestId, ScopeUpdate,
-    SequenceDurableIdGenerator, SurfaceId, SurfaceInteractionRole,
+    DurableIdKind, EvidenceAssuranceLevel, EvidenceSourceKind, IdempotencyKey, InitialScope,
+    RequestId, ScopeUpdate, SequenceDurableIdGenerator, SurfaceId, SurfaceInteractionRole,
     ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON,
     VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
@@ -5095,6 +5095,22 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
     request.evidence_updates = vec![supported_evidence_update(
         "Search-result count validation passed.",
     )];
+    request.evidence_observations = vec![EvidenceObservationInput {
+        claim: "Search-result count validation passed.".to_owned(),
+        source_kind: EvidenceSourceKind::ExternalTool,
+        assurance_level: EvidenceAssuranceLevel::ExternalToolResult,
+        observed_by_actor_kind: None.into(),
+        observed_actor_role: None.into(),
+        observed_by_surface_id: None.into(),
+        observed_by_surface_instance_id: None.into(),
+        tool_name: Some("search-count-validator".to_owned()).into(),
+        tool_invocation_id: None.into(),
+        tool_metadata: Map::from_iter([("validator".to_owned(), json!("search-count"))]),
+        input_refs: Vec::new(),
+        output_artifact_refs: Vec::new(),
+        limitations: vec!["External tool output is not product correctness proof.".to_owned()],
+        observed_at: volicord_types::UtcTimestamp::parse("2026-06-18T00:00:00Z")?,
+    }];
     let response = harness
         .service
         .record_run(request, invocation(AccessClass::RunRecording))?;
@@ -5102,6 +5118,11 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
     let artifact_id = response.response_value["registered_artifacts"][0]["artifact_id"]
         .as_str()
         .expect("artifact id should be present")
+        .to_owned();
+    let observation = &response.response_value["evidence_observations"][0];
+    let observation_id = observation["observation_id"]
+        .as_str()
+        .expect("observation id should be present")
         .to_owned();
     let artifact_row = persistent_artifact_row(&harness, &artifact_id)?;
 
@@ -5156,17 +5177,58 @@ fn record_run_promotes_staged_artifact_and_updates_evidence() -> Result<(), Box<
             ["record_kind"],
         "run"
     );
+    assert_eq!(observation["source_kind"], "external_tool");
+    assert_eq!(observation["assurance_level"], "external_tool_result");
+    assert_eq!(observation["observed_by_actor_kind"], "agent");
+    assert_eq!(observation["observed_actor_role"], "user_interaction");
+    assert_eq!(observation["observed_by_surface_id"], SURFACE_ID);
+    assert_eq!(
+        observation["observed_by_surface_instance_id"],
+        SURFACE_INSTANCE_ID
+    );
+    assert_eq!(observation["tool_metadata"]["validator"], "search-count");
+    assert_eq!(
+        observation["output_artifact_refs"][0]["artifact_id"],
+        artifact_id
+    );
+    assert!(
+        observation_id.starts_with("evidence_observation_"),
+        "generated observation id should use the durable prefix: {observation_id}"
+    );
+    assert_eq!(
+        response.response_value["evidence_summary"]["coverage_items"][0]["observation_refs"][0]
+            ["record_kind"],
+        "evidence_observation"
+    );
+    assert_eq!(
+        response.response_value["evidence_summary"]["coverage_items"][0]["observation_refs"][0]
+            ["record_id"],
+        observation_id
+    );
+    assert_eq!(
+        response.response_value["evidence_summary"]["observation_refs"][0]["record_id"],
+        observation_id
+    );
     assert_eq!(after.state_version, before.state_version + 1);
     assert_eq!(after.runs, before.runs + 1);
     assert_eq!(after.artifacts, before.artifacts + 1);
-    assert_eq!(after.artifact_links, before.artifact_links + 2);
+    assert_eq!(after.artifact_links, before.artifact_links + 3);
     assert_eq!(after.evidence_summaries, before.evidence_summaries + 1);
+    assert_eq!(
+        after.evidence_observations,
+        before.evidence_observations + 1
+    );
     assert_eq!(artifact_staging_status(&harness, &handle_id)?, "consumed");
     assert!(artifact_owner_link_exists(&harness, &artifact_id, "run")?);
     assert!(artifact_owner_link_exists(
         &harness,
         &artifact_id,
         "evidence_summary"
+    )?);
+    assert!(artifact_owner_link_exists(
+        &harness,
+        &artifact_id,
+        "evidence_observation"
     )?);
     Ok(())
 }
@@ -11010,6 +11072,7 @@ fn record_run_request(
         },
         artifact_inputs: Vec::new(),
         evidence_updates: Vec::new(),
+        evidence_observations: Vec::new(),
         close_assessment: None.into(),
     }
 }
@@ -11589,6 +11652,7 @@ fn supported_evidence_update(claim: &str) -> EvidenceCoverageItem {
         required_for_close: true,
         coverage_state: EvidenceCoverageState::Supported,
         supporting_refs: Vec::new(),
+        observation_refs: Vec::new(),
         supporting_artifact_refs: Vec::new(),
         gap_refs: Vec::new(),
     }
@@ -11600,6 +11664,7 @@ fn unsupported_evidence_update(claim: &str) -> EvidenceCoverageItem {
         required_for_close: true,
         coverage_state: EvidenceCoverageState::Unsupported,
         supporting_refs: Vec::new(),
+        observation_refs: Vec::new(),
         supporting_artifact_refs: Vec::new(),
         gap_refs: Vec::new(),
     }

@@ -285,7 +285,7 @@ expires_at: "<future-expiration-timestamp>"
 - `redaction_state`.
 - 생산자와 보존 사실.
 - 가용성 `status`.
-- `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` 같은 기존 담당 기록에 대한 담당 연결.
+- `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `evidence_observation`, `blocker` 같은 기존 담당 기록에 대한 담당 연결.
 
 증거 자격, 아티팩트 가용성, 증거 충분성은 서로 분리됩니다. `artifact_links`가 다형 담당 테이블이어도 아티팩트 담당 관계 무결성은 필요합니다.
 
@@ -296,7 +296,7 @@ expires_at: "<future-expiration-timestamp>"
 
 필수 검증:
 
-- `owner_record_kind`가 `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` 중 하나인지 확인합니다.
+- `owner_record_kind`가 `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `evidence_observation`, `blocker` 중 하나인지 확인합니다.
 - `owner_record_id`가 해당 담당 테이블에 존재하는지 확인합니다.
 - 담당 기록이 같은 `project_id`와 `task_id`에 속하는지 확인합니다.
 - 관계가 아티팩트 사용 방식과 호환되는지 확인합니다.

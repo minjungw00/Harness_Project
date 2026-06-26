@@ -11,8 +11,8 @@ use volicord_store::{
     artifacts::{ArtifactStagingInsert, PersistentArtifactVerificationStatus, StagedPayloadKind},
     core_pipeline::{
         ArtifactLinkInsert, ArtifactPromotion, ChangeUnitInsert, ChangeUnitRecord,
-        CoreProjectStore, CoreStorageMutation, EvidenceSummaryRecord, EvidenceSummaryUpsert,
-        ProjectStateHeader, RunInsert, RunRecord, StoredArtifactRecord,
+        CoreProjectStore, CoreStorageMutation, EvidenceObservationInsert, EvidenceSummaryRecord,
+        EvidenceSummaryUpsert, ProjectStateHeader, RunInsert, RunRecord, StoredArtifactRecord,
         StoredArtifactStagingRecord, StoredRecordRef, TaskCloseBasisUpdate, TaskCloseUpdate,
         TaskInsert, TaskRecord, TaskScopeRevisionUpdate, TaskScopeUpdate, UserJudgmentInsert,
         UserJudgmentInvalidation, UserJudgmentRecord, UserJudgmentResolutionUpdate,
@@ -27,15 +27,16 @@ use volicord_types::{
     CloseReadinessBlocker, CloseReadinessBlockerCategory, CloseReason, CloseState,
     CloseTaskRequest, CloseTaskResult, CompletionPolicy, CurrentCloseBasis, DryRunSummary,
     DurableIdKind, EffectKind, ErrorCode, EvidenceCoverageItem, EvidenceCoverageState,
-    EvidenceStatus, EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentBasis,
-    JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentRationale, JudgmentRequiredFor,
-    JudgmentResolutionOutcome, MethodAccessClass, MethodName, NextActionKind, NextActionSummary,
-    ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
-    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
-    PlannedEffect, PrepareWriteRequest, PrepareWriteResult, ProjectEnforcementProfile, ProjectId,
-    RecordId, RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload,
-    RecordUserJudgmentRequest, RedactionState, RequestedMode, RequiredNullable, ResidualRisk,
-    ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId, RunSummary, SensitiveActionRequirement,
+    EvidenceObservation, EvidenceObservationId, EvidenceObservationInput, EvidenceStatus,
+    EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentBasis, JudgmentBasisCompatibilityStatus,
+    JudgmentKind, JudgmentRationale, JudgmentRequiredFor, JudgmentResolutionOutcome,
+    MethodAccessClass, MethodName, NextActionKind, NextActionSummary, ObservedChanges,
+    PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentOptions,
+    PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, PlannedEffect,
+    PrepareWriteRequest, PrepareWriteResult, ProjectEnforcementProfile, ProjectId, RecordId,
+    RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload, RecordUserJudgmentRequest,
+    RedactionState, RequestedMode, RequiredNullable, ResidualRisk, ResumePolicy,
+    RiskAcceptanceCoverage, RiskId, RunId, RunSummary, SensitiveActionRequirement,
     StageArtifactRequest, StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId,
     StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef,
     SurfaceId, SurfaceInstanceId, SurfaceInteractionRole, TaskId, TaskLifecyclePhase,
@@ -256,6 +257,19 @@ fn allocate_evidence_summary_id(
             .evidence_summary_exists(candidate)
             .map_err(CorePipelineError::from)
     })
+}
+
+fn allocate_evidence_observation_id(
+    service: &CoreService,
+    store: &CoreProjectStore,
+) -> CoreResult<EvidenceObservationId> {
+    service
+        .allocate_generated_id(DurableIdKind::EvidenceObservation, |candidate| {
+            store
+                .evidence_observation_exists(candidate)
+                .map_err(CorePipelineError::from)
+        })
+        .map(EvidenceObservationId::new)
 }
 
 fn allocate_risk_id(

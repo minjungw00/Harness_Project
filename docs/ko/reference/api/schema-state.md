@@ -1,6 +1,6 @@
 # API 상태 스키마
 
-이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ShapingReadiness`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
+이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ShapingReadiness`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
 
 ## 담당 경계
 
@@ -249,6 +249,7 @@ EvidenceSummary:
   completion_policy: CompletionPolicy
   coverage_items: EvidenceCoverageItem[]
   artifact_refs: ArtifactRef[]
+  observation_refs: StateRecordRef[]
   updated_by_run_ref: StateRecordRef | null
 
 CompletionPolicy:
@@ -260,8 +261,47 @@ EvidenceCoverageItem:
   required_for_close: boolean
   coverage_state: string
   supporting_refs: StateRecordRef[]
+  observation_refs: StateRecordRef[]
   supporting_artifact_refs: ArtifactRef[]
   gap_refs: StateRecordRef[]
+
+EvidenceObservation:
+  observation_id: string
+  project_id: string
+  task_id: string
+  change_unit_id: string | null
+  run_ref: StateRecordRef | null
+  claim: string
+  source_kind: string
+  assurance_level: string
+  observed_by_actor_kind: string | null
+  observed_actor_role: string | null
+  observed_by_surface_id: string | null
+  observed_by_surface_instance_id: string | null
+  tool_name: string | null
+  tool_invocation_id: string | null
+  tool_metadata: object
+  input_refs: StateRecordRef[]
+  output_artifact_refs: ArtifactRef[]
+  limitations: string[]
+  observed_at: string
+  recorded_at: string
+
+EvidenceObservationInput:
+  claim: string
+  source_kind: string
+  assurance_level: string
+  observed_by_actor_kind: string | null
+  observed_actor_role: string | null
+  observed_by_surface_id: string | null
+  observed_by_surface_instance_id: string | null
+  tool_name: string | null
+  tool_invocation_id: string | null
+  tool_metadata: object
+  input_refs: StateRecordRef[]
+  output_artifact_refs: ArtifactRef[]
+  limitations: string[]
+  observed_at: string
 
 RunSummary:
   run_ref: StateRecordRef
@@ -278,15 +318,25 @@ ObservedChanges:
 ```
 
 의미:
-- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, `RunSummary.kind`는 제어 값 문자열입니다.
-- `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, `RunSummary.summary`는 자유 형식 주장 또는 표시 문자열입니다.
+- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, `EvidenceObservation.source_kind`, `EvidenceObservation.assurance_level`, `EvidenceObservationInput.source_kind`, `EvidenceObservationInput.assurance_level`, `RunSummary.kind`는 제어 값 문자열입니다.
+- `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, `EvidenceObservation.claim`, `EvidenceObservationInput.claim`, `RunSummary.summary`는 자유 형식 주장 또는 표시 문자열입니다.
+- `EvidenceSummary.observation_refs`와 `EvidenceCoverageItem.observation_refs`는 Core가 요약이나 주장과 관련지은 커밋된 증거 관찰에 대한 `StateRecordRef` 값을 나열합니다.
+- `EvidenceObservation`은 하나의 보고되었거나 관찰된 증거 주장에 대한 지속 출처 기록입니다. 출처, 보장 수준, 관찰자 메타데이터, 선택적 도구 메타데이터, 입력 참조, 출력 아티팩트 참조, 한계, 관찰 타임스탬프를 기록합니다.
+- `EvidenceObservationInput`은 `volicord.record_run`이 받는 요청 측 형태입니다. Core는 커밋할 때 `observation_id`, 프로젝트와 `Task` 좌표, `run_ref`, `recorded_at`을 채웁니다.
+- `observed_by_surface_id`와 `observed_by_surface_instance_id`는 둘 다 null이거나 둘 다 null이 아니어야 합니다. 관찰 입력에서 둘 다 null이면 Core가 확인된 요청 접점 맥락에서 값을 채울 수 있습니다.
+- `source_kind`와 `assurance_level`은 출처와 관찰 보장 수준을 설명합니다. 그 자체로 제품 정확성을 증명하거나, 사용자 권한을 부여하거나, 최종 수락을 만족하거나, 잔여 위험 수락을 만족하거나, `GuaranteeDisplay.level`을 높이지 않습니다.
+- `user_observation`은 사용자 귀속 관찰을 기록하지만 최종 수락이나 다른 권한을 지니는 사용자 판단이 아닙니다.
+- `external_tool`과 `external_tool_result`는 외부 도구 결과를 기록합니다. 관련 증거, 아티팩트, 닫기 준비 상태, 보안 담당 문서 없이는 제품 정확성 증명이 아닙니다.
+- `unverified_claim`과 `unverified`는 확인된 관찰 없는 주장을 보존하며 그 자체로 충분한 증거가 아닙니다.
+- `tool_metadata`는 설명용 메타데이터이며 권한, 승인, 저장 효과로 취급하면 안 됩니다.
 - `ObservedChanges.changed_paths`는 경로 문자열입니다.
 - `ObservedChanges.sensitive_categories`는 영향받는 메서드나 프로필 담당 문서가 더 좁은 로컬 목록을 공개하지 않는 한 불투명 민감 범주 분류 문자열입니다.
 - `ObservedChanges.baseline_ref`는 불투명 기준선 식별자입니다.
 
 담당 문서 링크:
 - `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md)
-- 증거, `coverage_state`, 실행 종류 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values), [메서드 내부 값](schema-value-sets.md#method-local-values)
+- 증거, `coverage_state`, 증거 관찰, 실행 종류 값: [상태와 차단 사유 값](schema-value-sets.md#state-and-blocker-values), [증거 관찰 값](schema-value-sets.md#evidence-observation-values), [메서드 내부 값](schema-value-sets.md#method-local-values)
+- 증거 관찰 행위자 값: [행위자 값](schema-value-sets.md#actor-values)
 - 증거 충분성의 의미: [Core 모델의 실행 기록과 증거의 권한](../core-model.md#9-evidence-and-run-authority)
 - 메서드 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
 

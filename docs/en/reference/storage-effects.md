@@ -160,7 +160,7 @@ No-effect branches must not:
 - append `task_events`
 - write `tool_invocations.response_json`
 - create replay rows
-- update evidence summaries
+- update evidence summaries or create evidence observations
 - mutate close state
 - create or consume `Write Authorization`
 - change `artifact_staging.status`
@@ -181,7 +181,7 @@ Valid dry-run previews may include `DryRunSummary.would_blockers: PlannedBlocker
 - `Write Authorization` change
 - staged-handle creation or consumption
 - artifact effect
-- evidence update
+- evidence update or evidence observation
 - `CloseReadinessBlocker` storage
 - `project_state.state_version` increment
 
@@ -205,7 +205,7 @@ Read-time artifact checks may compute an effective missing, unavailable, or inte
 - `Write Authorization` change
 - staged-handle consumption
 - artifact effect
-- evidence update
+- evidence update or evidence observation
 - `project_state.state_version` increment
 
 For `volicord.close_task intent=check`, the response branch is owned by [`volicord.close_task`](api/method-close-task.md). This storage page only asserts that the check remains read-only, including with `dry_run=true` and with `blockers: CloseReadinessBlocker[]`.
@@ -244,7 +244,7 @@ Disallowed effects:
 - changing `close_state`
 - evaluating close readiness
 - storing `CloseReadinessBlocker`
-- updating evidence
+- updating evidence or recording evidence observations
 - changing artifacts
 - consuming staged handles
 - applying `close_task` effects
@@ -297,7 +297,7 @@ This table summarizes persistence effects. Method behavior and response unions r
 | `volicord.status` | read-only response | See [`volicord.status`](#volicordstatus) |
 | `volicord.prepare_write` | records write decision effects | See [`volicord.prepare_write`](#volicordprepare_write) |
 | `volicord.stage_artifact` | creates transient staging only | See [`volicord.stage_artifact`](#volicordstage_artifact) |
-| `volicord.record_run` | records run, current close-basis, and evidence effects | See [`volicord.record_run`](#volicordrecord_run) |
+| `volicord.record_run` | records run, current close-basis, evidence, and evidence-observation effects | See [`volicord.record_run`](#volicordrecord_run) |
 | `volicord.request_user_judgment` | creates pending judgment request | See [`volicord.request_user_judgment`](#volicordrequest_user_judgment) |
 | `volicord.record_user_judgment` | resolves user judgment | See [`volicord.record_user_judgment`](#volicordrecord_user_judgment) |
 | `volicord.close_task intent=check` | read-only close-readiness check | See [`volicord.close_task intent=check`](#volicordclose_task-intentcheck) |
@@ -463,7 +463,7 @@ Committed `dry_run=false` may:
 - consume compatible `write_authorizations`
 - consume eligible `artifact_staging`
 - promote or link `artifacts`
-- update `evidence_summaries` or allowed blockers
+- update `evidence_summaries`, create `evidence_observations`, or update allowed blockers
 - update `tasks.close_basis_revision` and `tasks.close_basis_json` according to `close_assessment`
 - append events
 - create a replay row
@@ -482,7 +482,7 @@ Valid dry-run previews do not create:
 - persistent residual-risk IDs
 - persistent artifact
 - artifact link
-- evidence update
+- evidence update or evidence observation
 - blocker update
 - event
 - replay row
@@ -498,7 +498,7 @@ Rejected attempts do not change:
 Product file write persistence boundary:
 
 - When the method owner allows a committed run that records a product file write, storage may consume a compatible `write_authorizations` row in the same commit.
-- Test evidence persistence can promote staged artifacts and update evidence without implying a product file write observation.
+- Test evidence persistence can promote staged artifacts, update evidence, and record evidence observations without implying a product file write observation.
 - Exact run classification belongs to the [`volicord.record_run` method](api/method-record-run.md).
 
 Current close-basis persistence boundary:
@@ -508,7 +508,7 @@ Current close-basis persistence boundary:
 - Sensitive action requirements stored in that `CurrentCloseBasis` are derived by Core from the committed Run and any consumed `Write Authorization`, preserving operation, normalized paths, sensitive categories, baseline, Change Unit, source Run ref, and source `Write Authorization` ref through close.
 - Category-only caller input cannot establish, satisfy, or erase a sensitive action requirement.
 - `close_assessment=null` records that the committed Run does not establish a current close basis; any existing current basis becomes stale or absent.
-- Run, current close basis, evidence, artifact, authorization, replay, event, and revision effects commit atomically.
+- Run, current close basis, evidence summary, evidence observation, artifact, authorization, replay, event, and revision effects commit atomically.
 
 Owner links:
 

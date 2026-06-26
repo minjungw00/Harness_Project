@@ -7,7 +7,7 @@
 This document owns baseline method behavior for `volicord.record_run`:
 
 - method-specific required inputs, access requirements, state version behavior, result branches, and `dry_run` behavior
-- run recording, current close-basis update, evidence update, blocker update, and artifact promotion method behavior
+- run recording, current close-basis update, evidence update, evidence observation recording, blocker update, and artifact promotion method behavior
 - record-run examples
 
 ## What this document does not own
@@ -27,12 +27,12 @@ This document does not own:
 - a direct answer or result
 - implementation work
 
-The method may also update the current close basis, update compact evidence coverage, consume a compatible `Write Authorization` when recording a product write, link existing artifacts, and promote eligible staged handles to persistent `ArtifactRef` records where allowed.
+The method may also update the current close basis, update compact evidence coverage, record evidence observations for reported or observed claims, consume a compatible `Write Authorization` when recording a product write, link existing artifacts, and promote eligible staged handles to persistent `ArtifactRef` records where allowed.
 
 ## Required inputs
 
 - A valid `ToolEnvelope`; committed non-dry-run requests require non-null `idempotency_key` and current `expected_state_version`.
-- `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, and `close_assessment`.
+- `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, `evidence_observations`, and `close_assessment`.
 - Product-write runs require a compatible `status=active` `Write Authorization` from `volicord.prepare_write`.
 - New artifact bytes must already be represented by a valid `StagedArtifactHandle`; `volicord.record_run` does not stage new bytes.
 
@@ -55,6 +55,7 @@ RecordRunRequest:
   observed_changes: ObservedChanges
   artifact_inputs: ArtifactInput[]
   evidence_updates: EvidenceCoverageItem[]
+  evidence_observations: EvidenceObservationInput[]
   close_assessment: CloseAssessmentInput | null
 
 CloseAssessmentInput:
@@ -72,7 +73,7 @@ ResidualRiskInput:
 ```
 
 Nested owner links:
-- `observed_changes` and `evidence_updates` use `ObservedChanges` and `EvidenceCoverageItem`; those shapes are owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes).
+- `observed_changes`, `evidence_updates`, and `evidence_observations` use `ObservedChanges`, `EvidenceCoverageItem`, and `EvidenceObservationInput`; those shapes are owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes).
 - `close_assessment.result_refs` and `ResidualRiskInput.source_refs` use `StateRecordRef`, owned by [API State Schemas](schema-state.md#state-references).
 - `CurrentCloseBasis` and committed `ResidualRisk` output shapes are owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). `ResidualRiskInput` has no caller-authoritative `risk_id`; Core generates opaque `risk_id` values when committing a new current close basis.
 - `artifact_inputs` uses `ArtifactInput[]`; `ArtifactInput`, `StagedArtifactHandle`, and `ArtifactRef` shapes are owned by [API Artifact Schemas](schema-artifacts.md#artifactinput).
@@ -118,7 +119,7 @@ An empty `close_assessment.residual_risks` list explicitly means the current res
 
 Sensitive action requirements in the resulting `CurrentCloseBasis` are derived by Core from the committed Run and any consumed `Write Authorization`. Category-only caller input in `close_assessment.sensitive_categories` can contribute display context but cannot establish, satisfy, or erase a sensitive approval requirement.
 
-The Run, current close basis, evidence updates, artifact links or promotions, `Write Authorization` consumption, and revision changes are committed atomically when the result commits.
+The Run, current close basis, evidence updates, evidence observations, artifact links or promotions, `Write Authorization` consumption, and revision changes are committed atomically when the result commits.
 
 Product-write recording consumes the `Write Authorization` only when:
 
@@ -142,11 +143,12 @@ Expiration is calculated using parsed UTC timestamps, not lexical string compari
 | `run_summary` | `RunSummary` for the recorded Run. `RunSummary.kind` mirrors the request `kind`; supported run-kind values are owned by [API Value Sets](schema-value-sets.md#method-local-values). |
 | `registered_artifacts` | `ArtifactRef[]` for persistent artifact refs produced or linked for this run result. `ArtifactRef` shape is owned by [API Artifact Schemas](schema-artifacts.md#artifactref); promotion and linking lifecycle details are owned by [Artifact Storage](../storage-artifacts.md). |
 | `evidence_summary` | `EvidenceSummary | null` for evidence coverage updated by this run result, or `null` when the run records no evidence update. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes); evidence authority meaning is owned by [Core Model](../core-model.md#9-evidence-and-run-authority). |
+| `evidence_observations` | `EvidenceObservation[]` for observation records committed by this run result. Empty when the request records no observations. Shape is owned by [API State Schemas](schema-state.md#evidence-and-run-snapshot-shapes); observation source and assurance values are owned by [API Value Sets](schema-value-sets.md#evidence-observation-values). |
 | `current_close_basis` | `CurrentCloseBasis | null` after this run is recorded. Non-null means this Run established the current close basis; `null` means this Run did not establish one. Shape is owned by [API State Schemas](schema-state.md#close-readiness-and-validation-shapes). |
 | `blocker_refs` | `StateRecordRef[]` for run- or evidence-related blockers committed or still relevant because of this result. |
 | `state` | Current `StateSummary` after the run is recorded. Nested state fields, including `write_authority_summary` after any `Write Authorization` consumption, are owned by [API State Schemas](schema-state.md). |
 
-Nested `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, and `ArtifactRef` field bodies stay with the schema owners linked above. Exact persistence effects, including staged-handle consumption, artifact promotion, evidence updates, replay rows, and `Write Authorization` consumption, stay with [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).
+Nested `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `StateSummary`, and `ArtifactRef` field bodies stay with the schema owners linked above. Exact persistence effects, including staged-handle consumption, artifact promotion, evidence updates, evidence observation records, replay rows, and `Write Authorization` consumption, stay with [Storage Effects](../storage-effects.md) and [Artifact Storage](../storage-artifacts.md).
 
 ## Success result
 
@@ -157,6 +159,7 @@ Returns `RecordRunResult` with:
 - `run_summary`
 - any `registered_artifacts`
 - updated `evidence_summary`
+- committed `evidence_observations`
 - `current_close_basis` when established, otherwise `null`
 - `blocker_refs`
 - current `state`
@@ -192,22 +195,22 @@ Non-claim: invalid staged handles are validation failures with artifact-input de
 
 Public error code meaning, precedence, details, and rejected-response routing are owned by the error documents linked below.
 
-For a stale `Write Authorization` basis, rejection happens before consumption and creates no Run, evidence update, artifact link, artifact promotion, event, replay row, or `project_state.state_version` increment.
+For a stale `Write Authorization` basis, rejection happens before consumption and creates no Run, evidence update, evidence observation, artifact link, artifact promotion, event, replay row, or `project_state.state_version` increment.
 
-For an expired `Write Authorization`, rejection happens before consumption and creates no Run, event, replay row, artifact promotion, evidence update, authorization consumption, or `project_state.state_version` increment.
+For an expired `Write Authorization`, rejection happens before consumption and creates no Run, event, replay row, artifact promotion, evidence update, evidence observation, authorization consumption, or `project_state.state_version` increment.
 
 ## Dry-run behavior
 
 For `dry_run=true`, a valid preview:
 
 - returns `ToolDryRunResponse`
-- creates no Run, current close basis, residual-risk IDs, evidence update, blocker update, artifact link, artifact promotion, or `Write Authorization` consumption
+- creates no Run, current close basis, residual-risk IDs, evidence update, evidence observation, blocker update, artifact link, artifact promotion, or `Write Authorization` consumption
 
 ## Storage effect
 
-On commit, the method may persist run, current close-basis, evidence, blocker, authorization-consumption, and artifact-linking results. Exact storage effects and artifact promotion details are owned by the storage documents linked below.
+On commit, the method may persist run, current close-basis, evidence summary, evidence observation, blocker, authorization-consumption, and artifact-linking results. Exact storage effects and artifact promotion details are owned by the storage documents linked below.
 
-The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the committed run, promoted artifact ref, updated evidence summary, blocker refs, state version, and current state snapshot.
+The examples are intentionally compact and method-local. The representative response is abbreviated to the fields needed to show the committed run, promoted artifact ref, updated evidence summary, evidence observation, blocker refs, state version, and current state snapshot.
 
 ## Minimal valid request
 
@@ -264,8 +267,25 @@ params:
       required_for_close: true
       coverage_state: supported
       supporting_refs: []
+      observation_refs: []
       supporting_artifact_refs: []
       gap_refs: []
+  evidence_observations:
+    - claim: "Search-result count validation passed."
+      source_kind: external_tool
+      assurance_level: external_tool_result
+      observed_by_actor_kind: null
+      observed_actor_role: null
+      observed_by_surface_id: null
+      observed_by_surface_instance_id: null
+      tool_name: "search-count-validator"
+      tool_invocation_id: null
+      tool_metadata:
+        validator: "search-count"
+      input_refs: []
+      output_artifact_refs: []
+      limitations: []
+      observed_at: "<example-observed-at>"
   close_assessment:
     result_summary: "Search-result count validation passed."
     result_refs: []
@@ -357,6 +377,12 @@ evidence_summary:
           project_id: proj_runprobe_001
           task_id: task_runprobe_001
           state_version: 32
+      observation_refs:
+        - record_kind: evidence_observation
+          record_id: evidence_observation_runprobe_001
+          project_id: proj_runprobe_001
+          task_id: task_runprobe_001
+          state_version: 32
       supporting_artifact_refs:
         - artifact_id: artifact_runprobe_report_001
           project_id: proj_runprobe_001
@@ -398,12 +424,64 @@ evidence_summary:
       created_by_surface_id: surface_run_probe
       created_by_surface_instance_id: surface_instance_run_probe_01
       storage_ref: "artifact-storage://search-result-count-validation"
+  observation_refs:
+    - record_kind: evidence_observation
+      record_id: evidence_observation_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
   updated_by_run_ref:
     record_kind: run
     record_id: run_runprobe_001
     project_id: proj_runprobe_001
     task_id: task_runprobe_001
     state_version: 32
+evidence_observations:
+  - observation_id: evidence_observation_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
+    change_unit_id: cu_runprobe_001
+    run_ref:
+      record_kind: run
+      record_id: run_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
+    claim: "Search-result count validation passed."
+    source_kind: external_tool
+    assurance_level: external_tool_result
+    observed_by_actor_kind: agent
+    observed_actor_role: agent
+    observed_by_surface_id: surface_run_probe
+    observed_by_surface_instance_id: surface_instance_run_probe_01
+    tool_name: "search-count-validator"
+    tool_invocation_id: null
+    tool_metadata:
+      validator: "search-count"
+    input_refs: []
+    output_artifact_refs:
+      - artifact_id: artifact_runprobe_report_001
+        project_id: proj_runprobe_001
+        task_id: task_runprobe_001
+        display_name: "search-result-count-validation.json"
+        content_type: application/json
+        sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        size_bytes: 96
+        integrity_status: verified
+        redaction_state: none
+        availability: available
+        created_by_run_ref:
+          record_kind: run
+          record_id: run_runprobe_001
+          project_id: proj_runprobe_001
+          task_id: task_runprobe_001
+          state_version: 32
+        created_by_surface_id: surface_run_probe
+        created_by_surface_instance_id: surface_instance_run_probe_01
+        storage_ref: "artifact-storage://search-result-count-validation"
+    limitations: []
+    observed_at: "<example-observed-at>"
+    recorded_at: "<example-recorded-at>"
 current_close_basis:
   close_basis_revision: 4
   scope_revision: 2
@@ -417,7 +495,22 @@ current_close_basis:
       project_id: proj_runprobe_001
       task_id: task_runprobe_001
       state_version: 32
-  evidence_summary_ref: null
+    - record_kind: change_unit
+      record_id: cu_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
+    - record_kind: evidence_summary
+      record_id: evidence_summary_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
+  evidence_summary_ref:
+    record_kind: evidence_summary
+    record_id: evidence_summary_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
+    state_version: 32
   residual_risks: []
   sensitive_categories: []
   sensitive_action_requirements: []
@@ -472,7 +565,7 @@ state:
 ## Owner links
 
 - Request envelope, response branches, and dry-run summaries: [API Schema Core](schema-core.md).
-- `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `CurrentCloseBasis`, `ResidualRisk`, `StateSummary`, and refs: [API State Schemas](schema-state.md).
+- `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `StateSummary`, and refs: [API State Schemas](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, and `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md).
 - `Write Authorization` and close-relevant evidence boundaries: [Core Model](../core-model.md).
 - Product Repository path normalization: [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization).

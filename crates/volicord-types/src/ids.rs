@@ -73,6 +73,10 @@ opaque_string_type!(
     "Opaque Write Authorization identifier."
 );
 opaque_string_type!(RunId, "Opaque Run identifier.");
+opaque_string_type!(
+    EvidenceObservationId,
+    "Opaque evidence-observation identifier."
+);
 opaque_string_type!(ArtifactId, "Opaque artifact identifier.");
 opaque_string_type!(
     ArtifactInputId,
@@ -115,6 +119,8 @@ pub enum DurableIdKind {
     Artifact,
     /// Core-generated evidence summary ids.
     Evidence,
+    /// Core-generated evidence observation ids.
+    EvidenceObservation,
     /// Core-generated residual-risk ids for current close bases.
     Risk,
 }
@@ -132,6 +138,7 @@ impl DurableIdKind {
             Self::StagedArtifact => "staged_",
             Self::Artifact => "artifact_",
             Self::Evidence => "evidence_",
+            Self::EvidenceObservation => "evidence_observation_",
             Self::Risk => "risk_",
         }
     }
@@ -149,6 +156,7 @@ impl fmt::Display for DurableIdKind {
             Self::StagedArtifact => "staged_artifact",
             Self::Artifact => "artifact",
             Self::Evidence => "evidence",
+            Self::EvidenceObservation => "evidence_observation",
             Self::Risk => "risk",
         })
     }

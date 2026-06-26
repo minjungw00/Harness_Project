@@ -90,6 +90,7 @@ Baseline storage persists only the record families defined by this baseline stor
 | `state.sqlite` plus artifact store | `artifacts` | Persistent artifact record | Durable artifact metadata or body location, content type, SHA-256, size, integrity status, redaction, retention, producer, and availability facts. |
 | `state.sqlite` | `artifact_links` | Artifact owner relation | Owner relation between an artifact and a baseline Core/API record family. |
 | `state.sqlite` | `evidence_summaries` | Evidence summary | Compact evidence coverage, supporting references, and gap references. |
+| `state.sqlite` | `evidence_observations` | Evidence observation | Durable provenance record for one reported or observed evidence claim, including source kind, assurance level, observer surface metadata, tool metadata, input refs, output artifact refs, limitations, and timestamps. |
 | `state.sqlite` | `blockers` | Blocker state | Structured blocker state for next action, write compatibility, evidence gaps, close readiness, or recovery. |
 | `state.sqlite` | `task_events` | Event trail | Append-only ordering and audit trail for committed Core mutations. |
 | `state.sqlite` | `tool_invocations` | Replay row | Replay rows for committed non-dry-run Core method results when [Storage Effects](storage-effects.md) says replay is created. |
@@ -134,7 +135,7 @@ Storage must validate stored relationships before commit, including:
 
 Ordinary baseline Core operations preserve authority rows through lifecycle or status transitions. Completing, cancelling, or superseding a `Task` changes the relevant lifecycle/status meaning while keeping committed authority rows addressable for audit and recovery.
 
-This preservation applies to `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers`, `task_events`, and `tool_invocations`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
+This preservation applies to `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `evidence_observations`, `blockers`, `task_events`, and `tool_invocations`. Artifact-specific transient and durable retention rules belong to [Artifact Storage](storage-artifacts.md).
 
 ### Current close basis
 
@@ -168,7 +169,11 @@ Closed storage-owned value sets are persistence constraints. Unknown values must
 | `artifact_staging.status` | `staged`, `consumed`, `expired`, `discarded` |
 | `artifacts.status` | `available`, `missing`, `integrity_failed`, `unavailable` |
 | `artifacts.integrity_status` | `verified`, `corrupt` |
-| `artifact_links.owner_record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` |
+| `artifact_links.owner_record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `evidence_observation`, `blocker` |
+| `evidence_observations.source_kind` | `agent_report`, `surface_observation`, `external_tool`, `user_observation`, `reused_evidence`, `unverified_claim` |
+| `evidence_observations.assurance_level` | `cooperative_report`, `registered_surface_observed`, `external_tool_result`, `user_observed`, `unverified` |
+| `evidence_observations.observed_by_actor_kind` | `agent`, `user` when present |
+| `evidence_observations.observed_actor_role` | `agent`, `user_interaction` when present |
 | `blockers.status` | `active`, `resolved`, `superseded` |
 | `tool_invocations.status` | `committed` |
 
@@ -196,6 +201,7 @@ Rules:
 | `write_authorizations` | `Write Authorization` attempt scope. |
 | `runs` | Observation and evidence-update data. |
 | `evidence_summaries` | Evidence coverage and gap references. |
+| `evidence_observations` | Tool metadata, input refs, output artifact refs, limitations, and non-authority metadata for one evidence observation. |
 | `blockers` | Blocker owner references and related references. |
 | `task_events` | Event payloads for committed Core mutations. |
 | `tool_invocations` | Committed replay responses. |

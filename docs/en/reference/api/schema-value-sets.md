@@ -12,7 +12,7 @@ This document owns:
 - API `response_kind` and `effect_kind` values
 - supported `access_class` values
 - record/reference discriminator values used by shared state references
-- supported lifecycle, close-state, source-kind, write-decision category, judgment-kind, presentation, required-for, judgment resolution outcome, artifact redaction, artifact integrity, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
+- supported lifecycle, close-state, evidence observation source and assurance, write-decision category, judgment-kind, presentation, required-for, judgment resolution outcome, artifact redaction, artifact integrity, artifact availability display, `ValidatorResult.status`, `ValidatorResult.severity`, guarantee-display, and similar API value sets
 - supported `change_unit.operation` values
 - the boundary for supported public `ValidatorResult.validator_id` values
 - the value-set boundary for method-scoped reason codes and opaque classification strings
@@ -151,6 +151,7 @@ write_authorization
 user_judgment
 run
 evidence_summary
+evidence_observation
 artifact
 blocker
 task_event
@@ -355,6 +356,47 @@ not_applicable
 stale
 blocked
 ```
+
+<a id="evidence-observation-values"></a>
+## Evidence observation values
+
+`EvidenceObservation.source_kind` and `EvidenceObservationInput.source_kind` use:
+
+```text
+agent_report
+surface_observation
+external_tool
+user_observation
+reused_evidence
+unverified_claim
+```
+
+Source-kind meanings:
+- `agent_report` records a report made by an agent surface. It is not an external tool result by itself.
+- `surface_observation` records an observation attributed to a registered surface. It is not proof by itself.
+- `external_tool` records output or status from an external tool. It is not a product correctness proof by itself.
+- `user_observation` records a user-attributed observation. It is not final acceptance or any other authority-bearing judgment by itself.
+- `reused_evidence` records reuse of prior evidence or artifacts. It is not a new observation by itself.
+- `unverified_claim` preserves a claim without verified observation. It is not sufficient evidence by itself.
+
+`EvidenceObservation.assurance_level` and `EvidenceObservationInput.assurance_level` use:
+
+```text
+cooperative_report
+registered_surface_observed
+external_tool_result
+user_observed
+unverified
+```
+
+Assurance-level meanings:
+- `cooperative_report` is a cooperative report from the submitting surface or actor context.
+- `registered_surface_observed` records that a registered surface observed the claim within its recorded surface context.
+- `external_tool_result` records that the observation is based on an external tool result.
+- `user_observed` records user-attributed observation provenance.
+- `unverified` records absence of verified observation assurance.
+
+These values classify evidence observation provenance. They do not grant user authority, satisfy final acceptance or residual-risk acceptance, prove product correctness, or change `GuaranteeDisplay.level`.
 
 `ValidatorResult.status` uses:
 

@@ -265,6 +265,7 @@ pub enum StateRecordKind {
     UserJudgment,
     Run,
     EvidenceSummary,
+    EvidenceObservation,
     Artifact,
     Blocker,
     TaskEvent,
@@ -477,6 +478,29 @@ pub enum EvidenceCoverageState {
     NotApplicable,
     Stale,
     Blocked,
+}
+
+/// Evidence observation source-kind values.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum EvidenceSourceKind {
+    AgentReport,
+    SurfaceObservation,
+    ExternalTool,
+    UserObservation,
+    ReusedEvidence,
+    UnverifiedClaim,
+}
+
+/// Evidence observation assurance-level values.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum EvidenceAssuranceLevel {
+    CooperativeReport,
+    RegisteredSurfaceObserved,
+    ExternalToolResult,
+    UserObserved,
+    Unverified,
 }
 
 /// Validator status values.

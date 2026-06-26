@@ -7,7 +7,7 @@
 이 문서는 기준 범위의 `volicord.record_run` 메서드 동작을 담당합니다.
 
 - 메서드별 필수 입력, 접근 요구사항, 상태 버전 동작, 결과 분기, `dry_run` 동작
-- 실행 기록, 현재 닫기 근거 갱신, 증거 갱신, 차단 사유 갱신, 아티팩트 승격 메서드 동작
+- 실행 기록, 현재 닫기 근거 갱신, 증거 갱신, 증거 관찰 기록, 차단 사유 갱신, 아티팩트 승격 메서드 동작
 - 실행 기록 예시
 
 ## 담당하지 않는 것
@@ -27,12 +27,12 @@
 - 직접 응답 또는 결과
 - 구현 작업
 
-이 메서드는 현재 닫기 근거와 간결한 증거 범위를 갱신하고, 제품 쓰기를 기록할 때 호환되는 `Write Authorization`을 소비하며, 기존 아티팩트를 연결하고, 허용되는 경우 적격 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수도 있습니다.
+이 메서드는 현재 닫기 근거와 간결한 증거 범위를 갱신하고, 보고되었거나 관찰된 주장에 대한 증거 관찰을 기록하고, 제품 쓰기를 기록할 때 호환되는 `Write Authorization`을 소비하며, 기존 아티팩트를 연결하고, 허용되는 경우 적격 스테이징 핸들을 지속 `ArtifactRef`로 승격할 수도 있습니다.
 
 ## 필수 입력
 
 - 유효한 `ToolEnvelope`. 커밋되는 `dry_run`이 아닌 요청에는 `null`이 아닌 `idempotency_key`와 현재 `expected_state_version`이 필요합니다.
-- `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, `close_assessment`.
+- `task_id`, `change_unit_id`, `kind`, `run_id`, `baseline_ref`, `write_authorization_id`, `summary`, `observed_changes`, `artifact_inputs`, `evidence_updates`, `evidence_observations`, `close_assessment`.
 - 제품 쓰기 실행은 `volicord.prepare_write`가 만든 호환되는 `status=active` `Write Authorization`이 필요합니다.
 - 새 아티팩트 바이트는 이미 유효한 `StagedArtifactHandle`로 표현되어 있어야 합니다. `volicord.record_run`은 새 바이트를 스테이징하지 않습니다.
 
@@ -55,6 +55,7 @@ RecordRunRequest:
   observed_changes: ObservedChanges
   artifact_inputs: ArtifactInput[]
   evidence_updates: EvidenceCoverageItem[]
+  evidence_observations: EvidenceObservationInput[]
   close_assessment: CloseAssessmentInput | null
 
 CloseAssessmentInput:
@@ -72,7 +73,7 @@ ResidualRiskInput:
 ```
 
 중첩 형태 담당 문서:
-- `observed_changes`와 `evidence_updates`는 `ObservedChanges`와 `EvidenceCoverageItem`을 사용합니다. 이 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당합니다.
+- `observed_changes`, `evidence_updates`, `evidence_observations`는 `ObservedChanges`, `EvidenceCoverageItem`, `EvidenceObservationInput`을 사용합니다. 이 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당합니다.
 - `close_assessment.result_refs`와 `ResidualRiskInput.source_refs`는 [API 상태 스키마](schema-state.md#state-references)가 담당하는 `StateRecordRef`를 사용합니다.
 - `CurrentCloseBasis`와 커밋된 `ResidualRisk` 출력 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. `ResidualRiskInput`에는 호출자 권한의 `risk_id`가 없습니다. Core는 새 현재 닫기 근거를 커밋할 때 불투명 `risk_id` 값을 생성합니다.
 - `artifact_inputs`는 `ArtifactInput[]`을 사용합니다. `ArtifactInput`, `StagedArtifactHandle`, `ArtifactRef` 형태는 [API 아티팩트 스키마](schema-artifacts.md#artifactinput)가 담당합니다.
@@ -118,7 +119,7 @@ ResidualRiskInput:
 
 결과 `CurrentCloseBasis` 안의 민감 동작 요구사항은 커밋된 실행 기록과 소비된 `Write Authorization`에서 Core가 파생합니다. `close_assessment.sensitive_categories` 안의 범주만 담은 호출자 입력은 표시 맥락에는 기여할 수 있지만 민감 승인 요구사항을 만들거나, 만족하거나, 지울 수 없습니다.
 
-실행 기록, 현재 닫기 근거, 증거 갱신, 아티팩트 연결 또는 승격, `Write Authorization` 소비, 리비전 변경은 결과가 커밋될 때 원자적으로 커밋됩니다.
+실행 기록, 현재 닫기 근거, 증거 갱신, 증거 관찰, 아티팩트 연결 또는 승격, `Write Authorization` 소비, 리비전 변경은 결과가 커밋될 때 원자적으로 커밋됩니다.
 
 제품 쓰기 기록이 `Write Authorization`을 소비하려면 아래 조건을 모두 만족해야 합니다.
 
@@ -142,11 +143,12 @@ ResidualRiskInput:
 | `run_summary` | 기록된 Run의 `RunSummary`입니다. `RunSummary.kind`는 요청의 `kind`와 대응하며, 지원되는 실행 종류 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. |
 | `registered_artifacts` | 이 실행 결과가 만들거나 연결한 지속 아티팩트 참조의 `ArtifactRef[]`입니다. `ArtifactRef` 형태는 [API 아티팩트 스키마](schema-artifacts.md#artifactref)가 담당하고, 승격과 연결 생명주기 세부사항은 [아티팩트 저장소](../storage-artifacts.md)가 담당합니다. |
 | `evidence_summary` | 이 실행 결과가 갱신한 증거 범위의 `EvidenceSummary | null`입니다. 실행이 증거 갱신을 기록하지 않으면 `null`입니다. 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당하고, 증거 권한 의미는 [Core 모델](../core-model.md#9-evidence-and-run-authority)이 담당합니다. |
+| `evidence_observations` | 이 실행 결과가 커밋한 관찰 기록의 `EvidenceObservation[]`입니다. 요청이 관찰을 기록하지 않으면 비어 있습니다. 형태는 [API 상태 스키마](schema-state.md#evidence-and-run-snapshot-shapes)가 담당하고, 관찰 출처와 보장 수준 값은 [API 값 집합](schema-value-sets.md#evidence-observation-values)이 담당합니다. |
 | `current_close_basis` | 이 실행이 기록된 뒤의 `CurrentCloseBasis | null`입니다. `null`이 아니면 이 실행이 현재 닫기 근거를 만들었다는 뜻입니다. `null`이면 이 실행이 현재 닫기 근거를 만들지 않았다는 뜻입니다. 형태는 [API 상태 스키마](schema-state.md#close-readiness-and-validation-shapes)가 담당합니다. |
 | `blocker_refs` | 이 결과 때문에 커밋되었거나 계속 관련되는 실행 또는 증거 관련 차단 사유의 `StateRecordRef[]`입니다. |
 | `state` | 실행이 기록된 뒤의 현재 `StateSummary`입니다. `Write Authorization` 소비 뒤의 `write_authority_summary`를 포함한 중첩 상태 필드는 [API 상태 스키마](schema-state.md)가 담당합니다. |
 
-중첩된 `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `StateSummary`, `ArtifactRef` 필드 본문은 위에 연결된 스키마 담당 문서에 둡니다. 스테이징 핸들 소비, 아티팩트 승격, 증거 갱신, 재실행 행, `Write Authorization` 소비를 포함한 정확한 지속 효과는 [저장 효과](../storage-effects.md)와 [아티팩트 저장소](../storage-artifacts.md)에 둡니다.
+중첩된 `StateRecordRef`, `RunSummary`, `ObservedChanges`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `StateSummary`, `ArtifactRef` 필드 본문은 위에 연결된 스키마 담당 문서에 둡니다. 스테이징 핸들 소비, 아티팩트 승격, 증거 갱신, 증거 관찰 기록, 재실행 행, `Write Authorization` 소비를 포함한 정확한 지속 효과는 [저장 효과](../storage-effects.md)와 [아티팩트 저장소](../storage-artifacts.md)에 둡니다.
 
 ## 성공 결과
 
@@ -157,6 +159,7 @@ ResidualRiskInput:
 - `run_summary`
 - 모든 `registered_artifacts`
 - 갱신된 `evidence_summary`
+- 커밋된 `evidence_observations`
 - 만들어진 경우 `current_close_basis`, 아니면 `null`
 - `blocker_refs`
 - 현재 `state`
@@ -192,22 +195,22 @@ ResidualRiskInput:
 
 공개 오류 코드 의미, 우선순위, 세부사항, 거절 응답 처리 경로는 아래 오류 담당 문서가 담당합니다.
 
-오래된 `Write Authorization` 근거에서는 소비 전에 거절되며 Run, 증거 갱신, 아티팩트 연결, 아티팩트 승격, 이벤트, 재실행 행, `project_state.state_version` 증가를 만들지 않습니다.
+오래된 `Write Authorization` 근거에서는 소비 전에 거절되며 Run, 증거 갱신, 증거 관찰, 아티팩트 연결, 아티팩트 승격, 이벤트, 재실행 행, `project_state.state_version` 증가를 만들지 않습니다.
 
-만료된 `Write Authorization`에서는 소비 전에 거절되며 Run, 이벤트, 재실행 행, 아티팩트 승격, 증거 갱신, 권한 소비, `project_state.state_version` 증가를 만들지 않습니다.
+만료된 `Write Authorization`에서는 소비 전에 거절되며 Run, 이벤트, 재실행 행, 아티팩트 승격, 증거 갱신, 증거 관찰, 권한 소비, `project_state.state_version` 증가를 만들지 않습니다.
 
 ## `dry_run` 동작
 
 `dry_run=true`에서 유효한 미리보기:
 
 - `ToolDryRunResponse`를 반환합니다.
-- Run, 현재 닫기 근거, 잔여 위험 ID, 증거 갱신, 차단 사유 갱신, 아티팩트 연결, 아티팩트 승격, `Write Authorization` 소비를 만들지 않습니다.
+- Run, 현재 닫기 근거, 잔여 위험 ID, 증거 갱신, 증거 관찰, 차단 사유 갱신, 아티팩트 연결, 아티팩트 승격, `Write Authorization` 소비를 만들지 않습니다.
 
 ## 저장 효과
 
-커밋 시 실행, 현재 닫기 근거, 증거, 차단 사유, `Write Authorization` 소비, 아티팩트 연결 결과를 지속할 수 있습니다. 정확한 저장 효과와 아티팩트 승격 세부사항은 아래 저장 담당 문서가 담당합니다.
+커밋 시 실행, 현재 닫기 근거, 증거 요약, 증거 관찰, 차단 사유, `Write Authorization` 소비, 아티팩트 연결 결과를 지속할 수 있습니다. 정확한 저장 효과와 아티팩트 승격 세부사항은 아래 저장 담당 문서가 담당합니다.
 
-아래 예시는 메서드 안에서만 성립하도록 짧게 구성했습니다. 대표 응답은 커밋된 실행, 승격된 아티팩트 참조, 갱신된 증거 요약, 차단 사유 참조, 상태 버전, 현재 상태 스냅샷을 보여 주는 데 필요한 필드로 축약했습니다.
+아래 예시는 메서드 안에서만 성립하도록 짧게 구성했습니다. 대표 응답은 커밋된 실행, 승격된 아티팩트 참조, 갱신된 증거 요약, 증거 관찰, 차단 사유 참조, 상태 버전, 현재 상태 스냅샷을 보여 주는 데 필요한 필드로 축약했습니다.
 
 ## 최소 유효 요청
 
@@ -264,8 +267,25 @@ params:
       required_for_close: true
       coverage_state: supported
       supporting_refs: []
+      observation_refs: []
       supporting_artifact_refs: []
       gap_refs: []
+  evidence_observations:
+    - claim: "Search-result count validation passed."
+      source_kind: external_tool
+      assurance_level: external_tool_result
+      observed_by_actor_kind: null
+      observed_actor_role: null
+      observed_by_surface_id: null
+      observed_by_surface_instance_id: null
+      tool_name: "search-count-validator"
+      tool_invocation_id: null
+      tool_metadata:
+        validator: "search-count"
+      input_refs: []
+      output_artifact_refs: []
+      limitations: []
+      observed_at: "<example-observed-at>"
   close_assessment:
     result_summary: "Search-result count validation passed."
     result_refs: []
@@ -357,6 +377,12 @@ evidence_summary:
           project_id: proj_runprobe_001
           task_id: task_runprobe_001
           state_version: 32
+      observation_refs:
+        - record_kind: evidence_observation
+          record_id: evidence_observation_runprobe_001
+          project_id: proj_runprobe_001
+          task_id: task_runprobe_001
+          state_version: 32
       supporting_artifact_refs:
         - artifact_id: artifact_runprobe_report_001
           project_id: proj_runprobe_001
@@ -398,12 +424,64 @@ evidence_summary:
       created_by_surface_id: surface_run_probe
       created_by_surface_instance_id: surface_instance_run_probe_01
       storage_ref: "artifact-storage://search-result-count-validation"
+  observation_refs:
+    - record_kind: evidence_observation
+      record_id: evidence_observation_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
   updated_by_run_ref:
     record_kind: run
     record_id: run_runprobe_001
     project_id: proj_runprobe_001
     task_id: task_runprobe_001
     state_version: 32
+evidence_observations:
+  - observation_id: evidence_observation_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
+    change_unit_id: cu_runprobe_001
+    run_ref:
+      record_kind: run
+      record_id: run_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
+    claim: "Search-result count validation passed."
+    source_kind: external_tool
+    assurance_level: external_tool_result
+    observed_by_actor_kind: agent
+    observed_actor_role: agent
+    observed_by_surface_id: surface_run_probe
+    observed_by_surface_instance_id: surface_instance_run_probe_01
+    tool_name: "search-count-validator"
+    tool_invocation_id: null
+    tool_metadata:
+      validator: "search-count"
+    input_refs: []
+    output_artifact_refs:
+      - artifact_id: artifact_runprobe_report_001
+        project_id: proj_runprobe_001
+        task_id: task_runprobe_001
+        display_name: "search-result-count-validation.json"
+        content_type: application/json
+        sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        size_bytes: 96
+        integrity_status: verified
+        redaction_state: none
+        availability: available
+        created_by_run_ref:
+          record_kind: run
+          record_id: run_runprobe_001
+          project_id: proj_runprobe_001
+          task_id: task_runprobe_001
+          state_version: 32
+        created_by_surface_id: surface_run_probe
+        created_by_surface_instance_id: surface_instance_run_probe_01
+        storage_ref: "artifact-storage://search-result-count-validation"
+    limitations: []
+    observed_at: "<example-observed-at>"
+    recorded_at: "<example-recorded-at>"
 current_close_basis:
   close_basis_revision: 4
   scope_revision: 2
@@ -417,7 +495,22 @@ current_close_basis:
       project_id: proj_runprobe_001
       task_id: task_runprobe_001
       state_version: 32
-  evidence_summary_ref: null
+    - record_kind: change_unit
+      record_id: cu_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
+    - record_kind: evidence_summary
+      record_id: evidence_summary_runprobe_001
+      project_id: proj_runprobe_001
+      task_id: task_runprobe_001
+      state_version: 32
+  evidence_summary_ref:
+    record_kind: evidence_summary
+    record_id: evidence_summary_runprobe_001
+    project_id: proj_runprobe_001
+    task_id: task_runprobe_001
+    state_version: 32
   residual_risks: []
   sensitive_categories: []
   sensitive_action_requirements: []
@@ -472,7 +565,7 @@ state:
 ## 담당 문서 링크
 
 - 요청 래퍼, 응답 분기, `dry_run` 요약: [API 코어 스키마](schema-core.md).
-- `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `CurrentCloseBasis`, `ResidualRisk`, `StateSummary`, 참조: [API 상태 스키마](schema-state.md).
+- `RunSummary`, `EvidenceSummary`, `EvidenceCoverageItem`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `StateSummary`, 참조: [API 상태 스키마](schema-state.md).
 - `ArtifactInput`, `StagedArtifactHandle`, `ArtifactRef`: [API 아티팩트 스키마](schema-artifacts.md).
 - `Write Authorization`과 닫기 관련 증거 경계: [Core 모델](../core-model.md).
 - `Product Repository` 경로 정규화: [런타임 경계](../runtime-boundaries.md#product-repository-api-path-normalization).

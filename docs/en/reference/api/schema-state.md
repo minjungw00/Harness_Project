@@ -1,6 +1,6 @@
 # API state schemas
 
-This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ShapingReadiness`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
+This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ShapingReadiness`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
 
 ## Owner boundary
 
@@ -248,6 +248,7 @@ EvidenceSummary:
   completion_policy: CompletionPolicy
   coverage_items: EvidenceCoverageItem[]
   artifact_refs: ArtifactRef[]
+  observation_refs: StateRecordRef[]
   updated_by_run_ref: StateRecordRef | null
 
 CompletionPolicy:
@@ -259,8 +260,47 @@ EvidenceCoverageItem:
   required_for_close: boolean
   coverage_state: string
   supporting_refs: StateRecordRef[]
+  observation_refs: StateRecordRef[]
   supporting_artifact_refs: ArtifactRef[]
   gap_refs: StateRecordRef[]
+
+EvidenceObservation:
+  observation_id: string
+  project_id: string
+  task_id: string
+  change_unit_id: string | null
+  run_ref: StateRecordRef | null
+  claim: string
+  source_kind: string
+  assurance_level: string
+  observed_by_actor_kind: string | null
+  observed_actor_role: string | null
+  observed_by_surface_id: string | null
+  observed_by_surface_instance_id: string | null
+  tool_name: string | null
+  tool_invocation_id: string | null
+  tool_metadata: object
+  input_refs: StateRecordRef[]
+  output_artifact_refs: ArtifactRef[]
+  limitations: string[]
+  observed_at: string
+  recorded_at: string
+
+EvidenceObservationInput:
+  claim: string
+  source_kind: string
+  assurance_level: string
+  observed_by_actor_kind: string | null
+  observed_actor_role: string | null
+  observed_by_surface_id: string | null
+  observed_by_surface_instance_id: string | null
+  tool_name: string | null
+  tool_invocation_id: string | null
+  tool_metadata: object
+  input_refs: StateRecordRef[]
+  output_artifact_refs: ArtifactRef[]
+  limitations: string[]
+  observed_at: string
 
 RunSummary:
   run_ref: StateRecordRef
@@ -277,15 +317,25 @@ ObservedChanges:
 ```
 
 Meaning:
-- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, and `RunSummary.kind` are controlled value strings.
-- `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, and `RunSummary.summary` are free-form claim or display strings.
+- `EvidenceSummary.status`, `EvidenceCoverageItem.coverage_state`, `EvidenceObservation.source_kind`, `EvidenceObservation.assurance_level`, `EvidenceObservationInput.source_kind`, `EvidenceObservationInput.assurance_level`, and `RunSummary.kind` are controlled value strings.
+- `CompletionPolicy.required_claims`, `EvidenceCoverageItem.claim`, `EvidenceObservation.claim`, `EvidenceObservationInput.claim`, and `RunSummary.summary` are free-form claim or display strings.
+- `EvidenceSummary.observation_refs` and `EvidenceCoverageItem.observation_refs` list `StateRecordRef` values for committed evidence observations that Core relates to the summary or claim.
+- `EvidenceObservation` is a durable provenance record for one reported or observed evidence claim. It records source, assurance, observer metadata, optional tool metadata, input refs, output artifact refs, limitations, and observation timestamps.
+- `EvidenceObservationInput` is the request-side shape accepted by `volicord.record_run`; Core fills `observation_id`, project and Task coordinates, `run_ref`, and `recorded_at` when it commits.
+- `observed_by_surface_id` and `observed_by_surface_instance_id` must be both null or both non-null. When both are null in an observation input, Core may fill them from the verified request surface context.
+- `source_kind` and `assurance_level` describe provenance and observation assurance. They do not by themselves prove product correctness, grant user authority, satisfy final acceptance, satisfy residual-risk acceptance, or raise `GuaranteeDisplay.level`.
+- `user_observation` records a user-attributed observation, not final acceptance or any other authority-bearing user judgment.
+- `external_tool` and `external_tool_result` record an external tool result. They are not a product correctness proof without the applicable evidence, artifact, close-readiness, and security owners.
+- `unverified_claim` and `unverified` preserve an asserted claim without verified observation and are not sufficient evidence by themselves.
+- `tool_metadata` is descriptive metadata and must not be treated as authority, approval, or a storage effect.
 - `ObservedChanges.changed_paths` are path strings.
 - `ObservedChanges.sensitive_categories` are opaque sensitive-category classification strings unless an affected method or profile owner publishes a narrower local list.
 - `ObservedChanges.baseline_ref` is an opaque baseline identifier.
 
 Owner links:
 - `ArtifactRef`: [API Artifact Schemas](schema-artifacts.md)
-- evidence, coverage, and run-kind values: [state and blocker values](schema-value-sets.md#state-and-blocker-values) and [method-local values](schema-value-sets.md#method-local-values)
+- evidence, coverage, evidence observation, and run-kind values: [state and blocker values](schema-value-sets.md#state-and-blocker-values), [evidence observation values](schema-value-sets.md#evidence-observation-values), and [method-local values](schema-value-sets.md#method-local-values)
+- evidence observation actor values: [actor values](schema-value-sets.md#actor-values)
 - Evidence sufficiency meaning: [Core Model evidence and run authority](../core-model.md#9-evidence-and-run-authority)
 - Method behavior: method owner documents routed from [API Methods](methods.md)
 
