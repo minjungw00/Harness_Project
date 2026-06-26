@@ -1,6 +1,6 @@
 # API state schemas
 
-This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ShapingReadiness`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
+This document owns API state-shaped schemas for the baseline scope. It defines public response shapes for `StateSummary`, `StateRecordRef`, lifecycle state as API data, state-related snapshots, `ShapingReadiness`, `ChangeUnitEffectContract`, and display shapes such as `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, and `GuaranteeDisplay`.
 
 ## Owner boundary
 
@@ -70,6 +70,7 @@ StateSummary:
   acceptance_criteria: string[]
   autonomy_boundary: string | null
   active_change_unit_ref: StateRecordRef | null
+  effect_contract: ChangeUnitEffectContract | null
   baseline_ref: string | null
   shaping_readiness: ShapingReadiness | null
   pending_user_judgment_refs: StateRecordRef[]
@@ -86,6 +87,7 @@ Meaning:
 - Method include flags may select only part of this shape. When a method owner says a projection is not selected, include-controlled fields such as `evidence_summary`, `close_state`, `close_blockers`, or `guarantee_display` are omitted instead of being returned as null or empty. A returned empty array means the projection was computed and found empty.
 - `mode` and `close_state` are controlled value strings when present.
 - `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, and `autonomy_boundary` are free-form display strings.
+- `effect_contract` is the current Change Unit's optional extra effect contract. `null` means no extra Change Unit effect contract is recorded; it must not be described as broad safety or unrestricted execution.
 - `baseline_ref` is an opaque baseline identifier.
 - `pending_user_judgment_refs` lists current pending judgments relevant to the response view. A pending judgment is operation-blocking only when its `required_for` target, judgment kind, Task, Change Unit, affected refs, and basis are compatible with that operation.
 
@@ -96,6 +98,37 @@ Owner links:
 - `mode` and `close_state` values: [task lifecycle values](schema-value-sets.md#task-lifecycle-values)
 - Commit decision branch: [Common response branches](schema-core.md#common-response)
 - Method-specific commit behavior: method owner documents routed from [API Methods](methods.md)
+
+## `ChangeUnitEffectContract`
+
+`ChangeUnitEffectContract` is the optional effect-boundary object recorded on a Change Unit.
+
+```yaml
+ChangeUnitEffectContract:
+  allowed_effects: string[]
+  forbidden_effects: string[]
+  allowed_paths: string[]
+  expected_outputs: string[]
+  invariants: string[]
+  evidence_expectations: string[]
+  sensitive_action_expectations: string[]
+```
+
+Meaning:
+- `allowed_effects` and `forbidden_effects` classify effects that the current Change Unit permits or forbids as Core state.
+- `allowed_paths` lists Product Repository relative paths that further narrow product-file writes when present.
+- `expected_outputs`, `invariants`, `evidence_expectations`, and `sensitive_action_expectations` are structured expectation strings. They help users and agents understand the intended output and evidence boundary without creating a workflow engine.
+- An empty array means that part of the contract adds no extra restriction or expectation.
+
+Does not imply:
+- `ChangeUnitEffectContract` is not a runtime sandbox, command interceptor, network blocker, operating-system permission system, or development-methodology state machine.
+- It does not replace user-owned judgment, sensitive-action approval, evidence, `Write Authorization`, final acceptance, close readiness, or residual-risk acceptance.
+
+Owner links:
+- Effect value strings: [method-local values](schema-value-sets.md#method-local-values)
+- Product Repository path normalization: [Runtime Boundaries](../runtime-boundaries.md#product-repository-api-path-normalization)
+- Method behavior that records the contract: [`volicord.update_scope`](method-update-scope.md)
+- Method behavior that applies the product-file write boundary: [`volicord.prepare_write`](method-prepare-write.md)
 
 ## Task lifecycle state
 

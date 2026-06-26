@@ -1,6 +1,6 @@
 # API 상태 스키마
 
-이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ShapingReadiness`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
+이 문서는 기준 범위의 상태 형태 API 스키마를 담당합니다. `StateSummary`, `StateRecordRef`, API 데이터 형태의 생명주기 상태, 상태 관련 스냅샷, `ShapingReadiness`, `ChangeUnitEffectContract`, 그리고 `NextActionSummary`, `WriteAuthoritySummary`, `WriteAuthorizationSummary`, `AuthorizedAttemptScope`, `EvidenceSummary`, `EvidenceObservation`, `CurrentCloseBasis`, `ResidualRisk`, `RiskAcceptanceCoverage`, `CloseReadinessBlocker`, `ValidatorResult`, `GuaranteeDisplay` 같은 표시 형태를 정의합니다.
 
 ## 담당 경계
 
@@ -70,6 +70,7 @@ StateSummary:
   acceptance_criteria: string[]
   autonomy_boundary: string | null
   active_change_unit_ref: StateRecordRef | null
+  effect_contract: ChangeUnitEffectContract | null
   baseline_ref: string | null
   shaping_readiness: ShapingReadiness | null
   pending_user_judgment_refs: StateRecordRef[]
@@ -86,6 +87,7 @@ StateSummary:
 - 메서드 include 플래그는 이 형태의 일부만 선택할 수 있습니다. 메서드 담당 문서가 어떤 상태 보기를 선택하지 않는다고 말하면 `evidence_summary`, `close_state`, `close_blockers`, `guarantee_display` 같은 include 제어 필드는 null이나 빈 값으로 반환하지 않고 생략합니다. 반환된 빈 배열은 그 상태 보기를 계산했고 비어 있음을 뜻합니다.
 - `mode`와 `close_state`는 값이 있을 때 제어 값 문자열입니다.
 - `goal_summary`, `scope_summary`, `non_goals`, `acceptance_criteria`, `autonomy_boundary`는 자유 형식 표시 문자열입니다.
+- `effect_contract`는 현재 적용 Change Unit의 선택적 추가 효과 계약입니다. `null`은 추가 Change Unit 효과 계약이 기록되어 있지 않다는 뜻입니다. 넓은 안전성이나 제한 없는 실행처럼 설명하면 안 됩니다.
 - `baseline_ref`는 불투명 기준선 식별자입니다.
 - `pending_user_judgment_refs`는 응답 보기에 관련된 현재 대기 판단을 나열합니다. 대기 판단은 `required_for` 대상, 판단 종류, `Task`, Change Unit, 영향받는 참조, 근거가 해당 작업과 호환될 때만 작업을 차단합니다.
 
@@ -96,6 +98,37 @@ StateSummary:
 - `mode`와 `close_state` 값: [`Task` 생명주기 값](schema-value-sets.md#task-lifecycle-values)
 - 커밋 결정 분기: [공통 응답 분기](schema-core.md#common-response)
 - 메서드별 커밋 동작: [API 메서드](methods.md)가 안내하는 메서드 담당 문서
+
+## `ChangeUnitEffectContract`
+
+`ChangeUnitEffectContract`는 Change Unit에 기록되는 선택적 효과 경계 객체입니다.
+
+```yaml
+ChangeUnitEffectContract:
+  allowed_effects: string[]
+  forbidden_effects: string[]
+  allowed_paths: string[]
+  expected_outputs: string[]
+  invariants: string[]
+  evidence_expectations: string[]
+  sensitive_action_expectations: string[]
+```
+
+의미:
+- `allowed_effects`와 `forbidden_effects`는 현재 Change Unit이 Core 상태로 허용하거나 금지하는 효과를 분류합니다.
+- `allowed_paths`는 값이 있을 때 제품 파일 쓰기를 더 좁히는 Product Repository 상대 경로 목록입니다.
+- `expected_outputs`, `invariants`, `evidence_expectations`, `sensitive_action_expectations`는 구조화된 기대 문자열입니다. 워크플로 엔진을 만들지 않으면서 의도한 출력과 증거 경계를 사용자와 에이전트가 이해하도록 돕습니다.
+- 빈 배열은 그 계약 부분이 추가 제한이나 기대를 더하지 않는다는 뜻입니다.
+
+의미하지 않는 것:
+- `ChangeUnitEffectContract`는 런타임 샌드박스, 명령 가로채기 장치, 네트워크 차단 장치, 운영체제 권한 체계, 개발 방법론 상태 기계가 아닙니다.
+- 사용자 소유 판단, 민감 동작 승인, 증거, `Write Authorization`, 최종 수락, 닫기 준비 상태, 잔여 위험 수락을 대신하지 않습니다.
+
+담당 문서 링크:
+- 효과 값 문자열: [메서드 내부 값](schema-value-sets.md#method-local-values)
+- Product Repository 경로 정규화: [런타임 경계](../runtime-boundaries.md#product-repository-api-path-normalization)
+- 계약을 기록하는 메서드 동작: [`volicord.update_scope`](method-update-scope.md)
+- 제품 파일 쓰기 경계를 적용하는 메서드 동작: [`volicord.prepare_write`](method-prepare-write.md)
 
 ## `Task` 생명주기 상태
 

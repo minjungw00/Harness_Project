@@ -107,7 +107,7 @@ IntakeRequest:
 | `base` | 공통 결과 메타데이터입니다. `events`를 포함한 `ToolResultBase` 형태는 [API 코어 스키마](schema-core.md#common-response)가 담당합니다. `base.events[].event_kind`가 있을 때 그 값은 불투명한 예시용 분류 문자열입니다. |
 | `task_ref` | 접수 결과가 선택한 `Task`의 `StateRecordRef`입니다. |
 | `change_unit_ref` | 접수 중 선택되거나 만들어진 Change Unit의 `StateRecordRef | null`입니다. 아직 현재 적용 Change Unit이 없으면 `null`입니다. |
-| `state` | 접수 뒤의 현재 `StateSummary`입니다. 현재 적용 범위와 현재 적용 Change Unit 표시 필드를 포함합니다. |
+| `state` | 접수 뒤의 현재 `StateSummary`입니다. 현재 적용 범위, 현재 적용 Change Unit 표시 필드, 현재 Change Unit 효과 계약이 있으면 그 값을 포함합니다. |
 | `next_actions` | 다음 안전한 API 단계를 설명하는 `NextActionSummary[]`입니다. |
 
 지원되는 `resume_policy` 입력 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. 이 메서드는 그 값들이 `task_ref`, `change_unit_ref`, `state`에 표시되는 `Task`와 선택적 Change Unit을 어떻게 선택하는지를 담당합니다.

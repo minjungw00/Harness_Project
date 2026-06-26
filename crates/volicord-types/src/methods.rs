@@ -7,12 +7,12 @@ use crate::ids::{
     WriteAuthorizationId,
 };
 use crate::schema::{
-    AcceptedRiskInput, ArtifactInput, ArtifactRef, CloseAssessmentInput, CloseReadinessBlocker,
-    CurrentCloseBasis, EvidenceCoverageItem, EvidenceObservation, EvidenceObservationInput,
-    EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentRationale, NextActionSummary,
-    ObservedChanges, RecordUserJudgmentPayload, RequiredNullable, RiskAcceptanceCoverage,
-    RunSummary, SensitiveActionScope, StagedArtifactHandle, StateRecordRef, StateSummary,
-    ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
+    AcceptedRiskInput, ArtifactInput, ArtifactRef, ChangeUnitEffectContract, CloseAssessmentInput,
+    CloseReadinessBlocker, CurrentCloseBasis, EvidenceCoverageItem, EvidenceObservation,
+    EvidenceObservationInput, EvidenceSummary, GuaranteeDisplay, JsonObject, JudgmentRationale,
+    NextActionSummary, ObservedChanges, RecordUserJudgmentPayload, RequiredNullable,
+    RiskAcceptanceCoverage, RunSummary, SensitiveActionScope, StagedArtifactHandle, StateRecordRef,
+    StateSummary, ToolEnvelope, ToolResponse, ToolResultBase, UserJudgment, UserJudgmentCandidate,
     UserJudgmentContext, UserJudgmentOptionInput, WriteAuthoritySummary, WriteAuthorizationSummary,
     WriteDecisionReason,
 };
@@ -138,6 +138,8 @@ pub struct ScopeUpdate {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ChangeUnitUpdate {
     pub operation: ChangeUnitOperation,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effect_contract: Option<ChangeUnitEffectContract>,
     #[serde(flatten)]
     pub fields: JsonObject,
 }

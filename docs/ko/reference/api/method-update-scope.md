@@ -39,6 +39,7 @@
 - `task_id`.
 - 바꿀 범위 필드. 포함/제외 방식으로 범위를 갱신할 때는 `scope_update.include`에 범위에 포함할 제품 작업을, `scope_update.exclude`에 범위에서 제외할 제품 동작을 둡니다. `null`은 기존 값을 유지한다는 뜻이고, 빈 배열은 그 목록을 빈 목록으로 교체합니다.
 - `change_unit.operation`과 그 작업에 필요한 필드. 지원되는 작업 값과 그 의미는 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다.
+- 현재 적용 Change Unit을 만들거나 교체할 때 선택적으로 쓰는 `change_unit.effect_contract`. 값이 있으면 `ChangeUnitEffectContract`를 사용합니다. 생략하면 그 Change Unit에는 추가 효과 계약이 없습니다.
 - 해결된 `judgment_kind=scope_decision`을 적용한다면 `related_scope_decision_refs`.
 
 범위 갱신이 `scope_decision`을 적용할 때, 각 참조 판단은 `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, `basis.compatibility_status=current`, scope update를 포함하는 `required_for`, `user_interaction`에 대한 확인된 행위자 출처, 현재 Task, Change Unit, `scope_revision`, 영향받는 참조와 호환되는 근거가 필요합니다. 거절, 연기, 오래됨, 대체됨, 만료됨, 유효하지 않은 근거, 해결 권한 정보 누락, 에이전트가 기록한 범위 결정은 범위 전이를 허가하지 않습니다.
@@ -67,6 +68,7 @@ UpdateScopeRequest:
 중첩 형태 담당 문서:
 - `related_scope_decision_refs`는 `StateRecordRef[]`를 사용합니다. 중첩 형태는 [API 상태 스키마](schema-state.md#state-references)가 담당합니다.
 - `change_unit.operation` 값은 [API 값 집합의 메서드 내부 값](schema-value-sets.md#method-local-values)이 담당합니다.
+- `change_unit.effect_contract`가 있으면 `ChangeUnitEffectContract`를 사용합니다. 중첩 형태는 [API 상태 스키마](schema-state.md#changeuniteffectcontract)가 담당합니다.
 
 ## 접근 요구사항
 
@@ -122,6 +124,8 @@ UpdateScopeRequest:
 | `next_actions` | 다음 안전한 API 단계를 설명하는 `NextActionSummary[]`입니다. |
 
 지원되는 `change_unit.operation` 값은 [API 값 집합](schema-value-sets.md#method-local-values)이 담당합니다. 이 메서드는 각 작업이 `change_unit_ref`, `state.active_change_unit_ref`, 오래된 `Write Authorization` 참조, 차단 사유 참조, `next_actions`에 어떻게 반영되는지를 담당합니다.
+
+`change_unit.operation=create_current` 또는 `change_unit.operation=replace_current`일 때 `change_unit.effect_contract`를 새 현재 적용 Change Unit에 기록할 수 있습니다. 효과 계약은 선택적 Core 상태입니다. 워크플로 엔진을 만들거나 사용자 소유 권한 기록을 대신하지 않으면서 허용 효과, 금지 효과, 허용 Product Repository 경로, 기대 출력, 불변 조건, 증거 기대, 민감 동작 기대를 표현할 수 있습니다.
 
 `linked_scope_decision_refs`에는 위의 호환성과 출처 확인을 통과한 범위 결정만 들어갑니다. 이력 또는 거절된 범위 결정은 주소 지정 가능한 판단 기록으로 남을 수 있지만 적용된 권한으로 연결되지 않습니다.
 

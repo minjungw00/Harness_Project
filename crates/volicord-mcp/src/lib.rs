@@ -3615,6 +3615,7 @@ mod tests {
             baseline_ref: Some(volicord_types::BaselineRef::new("baseline_mcp")).into(),
             change_unit: volicord_types::ChangeUnitUpdate {
                 operation: ChangeUnitOperation::CreateCurrent,
+                effect_contract: None,
                 fields,
             },
             related_scope_decision_refs: Vec::new(),

@@ -196,7 +196,7 @@ Rules:
 | Host Installation | Installation metadata that is not used as authority, host trust proof, or replacement for the external host configuration. |
 | `surfaces` | Surface capability profile data. |
 | `tasks` | Shaping summary, bounded lists, autonomy boundary, current close basis, terminal close summary, lifecycle summary, and `CompletionPolicy`. |
-| `change_units` | Scope summaries, bounded lists, write basis summaries, and lifecycle support data. |
+| `change_units` | Scope summaries, bounded lists, write basis summaries, optional effect contract data, and lifecycle support data. |
 | `user_judgments` | Judgment request, context, option, affected-ref, artifact-ref, basis snapshot, sensitive-action scope, selected option, machine action, resolution outcome, descriptive rationale metadata, actor provenance, and resolution data. |
 | `write_authorizations` | `Write Authorization` attempt scope. |
 | `runs` | Observation and evidence-update data. |

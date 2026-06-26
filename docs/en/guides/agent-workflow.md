@@ -97,6 +97,7 @@ Include only what is currently useful:
 - verified surface status and capability limits
 - current `Task` or work boundary
 - current scope, non-goals, and relevant paths or operation class
+- current Change Unit effect contract when it affects the next action
 - pending user-owned judgment
 - sensitive-action approval or write-approval summary when relevant
 - artifact and evidence summaries when they support a claim
@@ -209,12 +210,15 @@ Show the user:
 
 - intended paths or operation
 - scope match or mismatch
+- effect-contract match or mismatch when current state includes one
 - pending user judgments or sensitive approvals
 - stale state or unavailable authority
 - what Volicord can verify, or the capability limit
 - next action that would unblock the write check
 
 If scope changes, update the current scope before asking for a new write check. Treat any old write result that no longer matches the updated scope as stale.
+
+When current state includes a Change Unit effect contract, include whether the intended product-file effect and paths fit it. Treat that as Core authority context for authorization, not sandboxing, security enforcement, user-owned judgment, sensitive-action approval, or evidence that a write occurred.
 
 <a id="record-evidence"></a>
 ## Record evidence after action

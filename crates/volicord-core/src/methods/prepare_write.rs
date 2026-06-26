@@ -208,6 +208,33 @@ fn plan_prepare_write(
                 )],
             ));
         }
+
+        if let Some(contract) = change_unit_effect_contract(change_unit)? {
+            let contract_violations = product_write_violations(
+                &store.project_record().repo_root,
+                &contract,
+                request.product_file_write_intended,
+                &normalized_paths,
+            )
+            .map_err(|_| {
+                CorePipelineError::Store(StoreError::corrupt_owner_state_json(
+                    "change_units",
+                    change_unit.change_unit_id.clone(),
+                    "effect_contract_json",
+                ))
+            })?;
+            for violation in contract_violations {
+                reasons.push(effect_contract_reason(
+                    violation,
+                    change_unit_ref(
+                        &request.envelope.project_id,
+                        &task_id,
+                        change_unit,
+                        project_state.state_version,
+                    ),
+                ));
+            }
+        }
     }
 
     let current_change_unit_id =
@@ -542,4 +569,30 @@ fn plan_prepare_write(
             guarantee_display,
         ),
     })
+}
+
+fn effect_contract_reason(
+    violation: EffectContractViolation,
+    change_unit_ref: StateRecordRef,
+) -> WriteDecisionReason {
+    match violation {
+        EffectContractViolation::FileWriteForbidden => write_decision_reason(
+            WriteDecisionCategory::EffectContract,
+            "effect_contract_forbids_product_file_write",
+            "The current Change Unit effect contract forbids product-file writes.",
+            vec![change_unit_ref],
+        ),
+        EffectContractViolation::FileWriteNotAllowed => write_decision_reason(
+            WriteDecisionCategory::EffectContract,
+            "effect_contract_effect_not_allowed",
+            "The current Change Unit effect contract does not allow product-file writes.",
+            vec![change_unit_ref],
+        ),
+        EffectContractViolation::PathNotAllowed => write_decision_reason(
+            WriteDecisionCategory::EffectContract,
+            "effect_contract_path_not_allowed",
+            "One or more intended paths are outside the current Change Unit effect contract allowed paths.",
+            vec![change_unit_ref],
+        ),
+    }
 }

@@ -24,29 +24,29 @@ use volicord_store::{
 use volicord_types::{
     AccessClass, ActorKind, ArtifactAvailability, ArtifactId, ArtifactInput,
     ArtifactInputSourceKind, ArtifactIntegrityStatus, ArtifactRef, AuthorizationEffect,
-    AuthorizedAttemptScope, BaselineRef, ChangeUnitId, ChangeUnitOperation, CloseIntent,
-    CloseReadinessBlocker, CloseReadinessBlockerCategory, CloseReason, CloseState,
-    CloseTaskRequest, CloseTaskResult, CompletionPolicy, CurrentCloseBasis, DryRunSummary,
-    DurableIdKind, EffectKind, ErrorCode, EvidenceAssuranceLevel, EvidenceCoverageItem,
-    EvidenceCoverageState, EvidenceObservation, EvidenceObservationId, EvidenceObservationInput,
-    EvidenceSourceKind, EvidenceStatus, EvidenceSummary, EvidenceUpdateProvenance,
-    GuaranteeDisplay, JsonObject, JudgmentBasis, JudgmentBasisCompatibilityStatus, JudgmentKind,
-    JudgmentRationale, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodAccessClass,
-    MethodName, NextActionKind, NextActionSummary, ObservedChanges, PersistedEvidenceMetadata,
-    PersistedJudgmentBasis, PersistedUserJudgmentOptions, PersistedUserJudgmentRequest,
-    PersistedUserJudgmentResolution, PlannedEffect, PrepareWriteRequest, PrepareWriteResult,
-    ProjectEnforcementProfile, ProjectId, RecordId, RecordRunRequest, RecordRunResult,
-    RecordUserJudgmentPayload, RecordUserJudgmentRequest, RedactionState, RequestedMode,
-    RequiredNullable, ResidualRisk, ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId,
-    RunSummary, SensitiveActionRequirement, StageArtifactRequest, StageArtifactResult,
-    StagedArtifactHandle, StagedArtifactHandleId, StateRecordKind, StateRecordRef,
-    StatusCloseState, StatusInclude, StatusRequest, StorageRef, SurfaceId, SurfaceInstanceId,
-    SurfaceInteractionRole, TaskId, TaskLifecyclePhase, TaskLifecycleState, TaskMode, TaskResult,
-    ToolEnvelope, ToolResultBase, UpdateScopeRequest, UserJudgment, UserJudgmentContext,
-    UserJudgmentOption, UserJudgmentOptionAction, UserJudgmentOptionId, UserJudgmentOptionInput,
-    UserJudgmentResolution, UserJudgmentStatus, UtcTimestamp, WriteAuthoritySummary,
-    WriteAuthorizationId, WriteAuthorizationStatus, WriteAuthorizationSummary,
-    WriteDecisionCategory, WriteDecisionReason,
+    AuthorizedAttemptScope, BaselineRef, ChangeUnitEffectContract, ChangeUnitId,
+    ChangeUnitOperation, CloseIntent, CloseReadinessBlocker, CloseReadinessBlockerCategory,
+    CloseReason, CloseState, CloseTaskRequest, CloseTaskResult, CompletionPolicy,
+    CurrentCloseBasis, DryRunSummary, DurableIdKind, EffectKind, ErrorCode, EvidenceAssuranceLevel,
+    EvidenceCoverageItem, EvidenceCoverageState, EvidenceObservation, EvidenceObservationId,
+    EvidenceObservationInput, EvidenceSourceKind, EvidenceStatus, EvidenceSummary,
+    EvidenceUpdateProvenance, GuaranteeDisplay, JsonObject, JudgmentBasis,
+    JudgmentBasisCompatibilityStatus, JudgmentKind, JudgmentRationale, JudgmentRequiredFor,
+    JudgmentResolutionOutcome, MethodAccessClass, MethodName, NextActionKind, NextActionSummary,
+    ObservedChanges, PersistedEvidenceMetadata, PersistedJudgmentBasis,
+    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
+    PlannedEffect, PrepareWriteRequest, PrepareWriteResult, ProjectEnforcementProfile, ProjectId,
+    RecordId, RecordRunRequest, RecordRunResult, RecordUserJudgmentPayload,
+    RecordUserJudgmentRequest, RedactionState, RequestedMode, RequiredNullable, ResidualRisk,
+    ResumePolicy, RiskAcceptanceCoverage, RiskId, RunId, RunSummary, SensitiveActionRequirement,
+    StageArtifactRequest, StageArtifactResult, StagedArtifactHandle, StagedArtifactHandleId,
+    StateRecordKind, StateRecordRef, StatusCloseState, StatusInclude, StatusRequest, StorageRef,
+    SurfaceId, SurfaceInstanceId, SurfaceInteractionRole, TaskId, TaskLifecyclePhase,
+    TaskLifecycleState, TaskMode, TaskResult, ToolEnvelope, ToolResultBase, UpdateScopeRequest,
+    UserJudgment, UserJudgmentContext, UserJudgmentOption, UserJudgmentOptionAction,
+    UserJudgmentOptionId, UserJudgmentOptionInput, UserJudgmentResolution, UserJudgmentStatus,
+    UtcTimestamp, WriteAuthoritySummary, WriteAuthorizationId, WriteAuthorizationStatus,
+    WriteAuthorizationSummary, WriteDecisionCategory, WriteDecisionReason,
 };
 
 use crate::pipeline::{
@@ -66,6 +66,10 @@ use crate::policy::{
         is_terminal_lifecycle, judgment_has_current_basis, residual_risk_basis_matches_current,
         verified_user_interaction_provenance, CancellationAuthorityRequirement, JudgmentAuthority,
         ScopeDecisionAuthorityRequirement,
+    },
+    effect_contract::{
+        product_write_violations, validate_effect_contract, validate_effect_contract_paths,
+        EffectContractValidationError, EffectContractViolation,
     },
     evidence::{evidence_status_for_items, unique_artifact_refs},
     judgment_relevance::{
@@ -1138,6 +1142,17 @@ fn paths_match_current_change_unit(
         }))
 }
 
+fn change_unit_effect_contract(
+    change_unit: &ChangeUnitRecord,
+) -> CoreResult<Option<ChangeUnitEffectContract>> {
+    decode_required_json(
+        "change_units",
+        change_unit.change_unit_id.clone(),
+        "effect_contract_json",
+        Some(&change_unit.effect_contract_json),
+    )
+}
+
 struct SensitiveApprovalSearch<'a> {
     store: &'a CoreProjectStore,
     project_state: &'a ProjectStateHeader,
@@ -1690,6 +1705,10 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<volicord_types::St
             Some(record.basis_state_version.unwrap_or(state_version)),
         )
     });
+    let effect_contract = current_change_unit
+        .map(change_unit_effect_contract)
+        .transpose()?
+        .flatten();
     let scope = StoredScope::from_task(task)?;
     let change_unit_scope = current_change_unit
         .map(|record| {
@@ -1726,6 +1745,7 @@ fn build_state_summary(input: SummaryBuild<'_>) -> CoreResult<volicord_types::St
         acceptance_criteria: scope.acceptance_criteria,
         autonomy_boundary: scope.autonomy_boundary,
         active_change_unit_ref,
+        effect_contract,
         baseline_ref: scope.baseline_ref.map(BaselineRef::new),
         shaping_readiness: None,
         pending_user_judgment_refs,
@@ -2075,6 +2095,7 @@ fn change_unit_insert(
         write_basis_json: serde_json::to_string(&json!({
             "baseline_ref": request.baseline_ref
         }))?,
+        effect_contract_json: serde_json::to_string(&request.change_unit.effect_contract)?,
         lifecycle_json: "{}".to_owned(),
     })
 }
@@ -2095,6 +2116,7 @@ fn synthetic_change_unit_record(
         scope_summary_json: insert.scope_summary_json.clone(),
         bounded_paths_json: insert.bounded_paths_json.clone(),
         write_basis_json: insert.write_basis_json.clone(),
+        effect_contract_json: insert.effect_contract_json.clone(),
         lifecycle_json: insert.lifecycle_json.clone(),
     }
 }

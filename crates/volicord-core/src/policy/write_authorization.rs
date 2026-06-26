@@ -167,6 +167,7 @@ fn write_decision_category_value(category: WriteDecisionCategory) -> &'static st
         WriteDecisionCategory::SensitiveApproval => "sensitive_approval",
         WriteDecisionCategory::WriteCompatibility => "write_compatibility",
         WriteDecisionCategory::Baseline => "baseline",
+        WriteDecisionCategory::EffectContract => "effect_contract",
         WriteDecisionCategory::SurfaceCapability => "surface_capability",
     }
 }

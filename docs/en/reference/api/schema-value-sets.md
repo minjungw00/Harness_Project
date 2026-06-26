@@ -247,6 +247,21 @@ Value meanings:
 
 Method behavior for each operation is owned by [`volicord.update_scope`](method-update-scope.md). The supported value set stays here so API examples and schema readers have one canonical value owner.
 
+`ChangeUnitEffectContract.allowed_effects` and `ChangeUnitEffectContract.forbidden_effects` use:
+
+```text
+product_file_write
+artifact_registration
+run_recording
+user_judgment_request
+evidence_update
+sensitive_action
+external_network
+secret_access
+```
+
+These values classify effects as Core state. They do not by themselves create a runtime sandbox, command interception, network blocking, secret isolation, user judgment, sensitive-action approval, evidence, `Write Authorization`, final acceptance, close readiness, or residual-risk acceptance.
+
 `volicord.close_task.intent` uses:
 
 ```text
@@ -312,6 +327,7 @@ close_readiness
 | `sensitive_approval` | Required separate sensitive-action approval reason. |
 | `write_compatibility` | Write-compatibility reason. |
 | `baseline` | Baseline compatibility reason. |
+| `effect_contract` | Change Unit effect contract compatibility reason. |
 | `surface_capability` | Verified surface capability reason. |
 
 These categories classify `volicord.prepare_write` decision reasons. They are not `CloseReadinessBlocker` objects and do not evaluate close readiness. Method-specific decision behavior and reason production stay with [`volicord.prepare_write`](method-prepare-write.md).

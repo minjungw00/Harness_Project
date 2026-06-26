@@ -336,7 +336,7 @@ Owner links:
 Committed `dry_run=false` may:
 
 - update current-scope Task fields
-- create or replace current `change_units`
+- create or replace current `change_units`, including effect-contract JSON when supplied by the method owner
 - increment `tasks.scope_revision` for material current-scope or current Change Unit changes
 - invalidate `tasks.close_basis_json` and increment `tasks.close_basis_revision` for material scope changes
 - mark incompatible judgment basis rows stale or superseded as owner-defined compatibility requires

@@ -112,6 +112,7 @@ fn plan_update_scope(
                 error,
             )))
         })?;
+    validate_requested_effect_contract(store, project_state, &request)?;
     let linked_scope_decision_refs = validate_related_scope_decisions(
         store,
         project_state,
@@ -420,6 +421,62 @@ fn plan_update_scope(
         result_fields: strip_base(serde_json::to_value(result)?)?,
         next_actions,
     })
+}
+
+fn validate_requested_effect_contract(
+    store: &CoreProjectStore,
+    project_state: &ProjectStateHeader,
+    request: &UpdateScopeRequest,
+) -> Result<(), PlanError> {
+    let Some(contract) = request.change_unit.effect_contract.as_ref() else {
+        return Ok(());
+    };
+    match validate_effect_contract(contract) {
+        Ok(()) => {}
+        Err(EffectContractValidationError::ConflictingEffect(_)) => {
+            validation_plan_error(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                "change_unit.effect_contract",
+                "effect_contract cannot list the same effect as both allowed and forbidden",
+            )?;
+        }
+        Err(EffectContractValidationError::EmptyText(field)) => {
+            validation_plan_error(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                field,
+                "effect_contract string list entries must not be empty",
+            )?;
+        }
+    }
+
+    match validate_effect_contract_paths(&store.project_record().repo_root, contract) {
+        Ok(()) => Ok(()),
+        Err(ProductPathError::Invalid) => {
+            validation_plan_error(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                "change_unit.effect_contract.allowed_paths",
+                "effect_contract.allowed_paths must be relative Product Repository paths that stay inside the repository",
+            )?;
+            unreachable!("validation_plan_error always returns Err")
+        }
+        Err(ProductPathError::LocalAccess) => {
+            let response = rejected_pipeline_response(
+                request.envelope.dry_run,
+                Some(project_state.state_version),
+                vec![tool_error(
+                    ErrorCode::LocalAccessMismatch,
+                    "effect_contract.allowed_paths resolve outside the Product Repository",
+                    false,
+                    None,
+                )],
+            )
+            .map_err(PlanError::Core)?;
+            Err(PlanError::Response(Box::new(response)))
+        }
+    }
 }
 
 fn validate_related_scope_decisions(

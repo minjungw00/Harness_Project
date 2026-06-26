@@ -416,6 +416,7 @@ pub mod core_fixtures {
                 baseline_ref: Some(BaselineRef::new(DEFAULT_BASELINE_REF)).into(),
                 change_unit: ChangeUnitUpdate {
                     operation: input.operation,
+                    effect_contract: None,
                     fields,
                 },
                 related_scope_decision_refs: Vec::new(),

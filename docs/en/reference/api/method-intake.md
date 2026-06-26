@@ -107,7 +107,7 @@ If `requested_mode=auto`, the persisted and displayed mode must be the resolved 
 | `base` | Common result metadata. The `ToolResultBase` shape, including `events`, is owned by [API Schema Core](schema-core.md#common-response). `base.events[].event_kind`, when present, is an opaque illustrative classification string. |
 | `task_ref` | `StateRecordRef` for the Task selected by the intake result. |
 | `change_unit_ref` | `StateRecordRef | null` for a Change Unit selected or created during intake, or `null` when no current Change Unit applies yet. |
-| `state` | Current `StateSummary` after intake, including current scope and currently applied Change Unit display fields. |
+| `state` | Current `StateSummary` after intake, including current scope, currently applied Change Unit display fields, and any current Change Unit effect contract. |
 | `next_actions` | `NextActionSummary[]` describing the next safe API steps. |
 
 The supported `resume_policy` input values are owned by [API Value Sets](schema-value-sets.md#method-local-values). This method owns how those values select the Task and optional Change Unit shown in `task_ref`, `change_unit_ref`, and `state`.

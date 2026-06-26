@@ -1,6 +1,6 @@
 # Core model reference
 
-This reference owns the Core authority model for Volicord state. It defines how Core, a `Task`, a Change Unit, user-owned judgment, evidence, artifact references, `Write Authorization`, close readiness, blockers, acceptance, and residual risk relate to each other.
+This reference owns the Core authority model for Volicord state. It defines how Core, a `Task`, a Change Unit, a Change Unit effect contract, user-owned judgment, evidence, artifact references, `Write Authorization`, close readiness, blockers, acceptance, and residual risk relate to each other.
 
 Core is the local authority record for Volicord state. It is not chat memory, generated Markdown, a status report, a tutorial, a storage layout, or an API response shape.
 
@@ -10,7 +10,7 @@ This document owns:
 
 - authority relationships among Core concepts
 - non-substitution rules for judgment, evidence, acceptance, risk, write authorization, and close
-- the product meaning of `Task`, Change Unit, user-owned judgment, evidence, close readiness, blockers, `Write Authorization`, final acceptance, and residual-risk acceptance
+- the product meaning of `Task`, Change Unit, Change Unit effect contract, user-owned judgment, evidence, close readiness, blockers, `Write Authorization`, final acceptance, and residual-risk acceptance
 - conceptual lifecycle and authority-check boundaries
 
 This document does not own:
@@ -38,6 +38,7 @@ Scope bounds work.
 
 - A `Task` defines the user-value unit. A Change Unit defines the current write-capable work boundary inside that `Task`.
 - Product-file writes, evidence claims, final acceptance, and close claims must stay compatible with the current scope and current Change Unit.
+- A Change Unit effect contract can further constrain compatible effects, paths, expected outputs, invariants, evidence expectations, or sensitive-action expectations for the current Change Unit.
 - A resolved scope judgment does not silently mutate current scope; current scope must be updated through the scope owner-defined transition.
 
 User-owned judgment stays user-owned.
@@ -94,6 +95,12 @@ A `Task` owns the main work path for scope, Change Units, required judgments, ve
 A Change Unit is the currently applied work boundary for write-capable work inside a `Task`.
 
 It defines what the current work may change and what must stay outside the current work. It is not final acceptance, evidence, broad approval, or permission to widen scope silently.
+
+### Change Unit effect contract
+
+A Change Unit effect contract is optional Core state attached to a current Change Unit. It expresses additional allowed effects, forbidden effects, allowed paths, expected outputs, invariants, evidence expectations, and sensitive-action expectations.
+
+For product-file writes, the effect contract can narrow what `prepare_write` may authorize when it restricts product-file effects or paths. It is not a workflow engine, methodology phase, command interceptor, network blocker, OS sandbox, secret guard, user-owned judgment, sensitive-action approval, evidence, `Write Authorization`, final acceptance, close readiness, or residual-risk acceptance.
 
 ### Autonomy Boundary
 
@@ -241,6 +248,10 @@ Sensitive-action approval does not substitute for `Write Authorization`.
 
 - Sensitive-action approval authorizes the named sensitive step the user was asked about. It does not authorize product-file writes, commands, hosts, network, secrets, deployments, destructive operations, or final acceptance.
 
+Change Unit effect contracts do not substitute for authority records.
+
+- An effect contract can constrain compatible Core authorization decisions for the current Change Unit. It does not create user-owned judgment, sensitive-action approval, evidence, `Write Authorization`, final acceptance, close readiness, residual-risk acceptance, command interception, network blocking, OS sandboxing, or secret isolation.
+
 `Write Authorization` does not substitute for acceptance.
 
 - `Write Authorization` makes one product-file write attempt compatible with Volicord state. It does not prove the write occurred, record evidence, accept the result, accept risk, close the `Task`, or grant system access.
@@ -276,6 +287,7 @@ Authority checks summarize whether a Core action or close claim can proceed hone
 | Check area | Authority meaning |
 |---|---|
 | Scope | The requested work, write, evidence claim, or close claim must fit the current `Task` scope and current Change Unit. |
+| Change Unit effect contract | When present, requested product-file write effects and paths must fit the current Change Unit effect contract before a `Write Authorization` can be created. |
 | User-owned judgment | Required product, technical, scope, sensitive-action, final-acceptance, residual-risk, or cancellation judgment must be resolved by the user with the required stored outcome and compatible with the affected object and consequence. |
 | Sensitive action | A named sensitive step must have its own compatible user approval when that approval is required. |
 | Write compatibility | A product-file write attempt must be compatible with current scope and a consumable `Write Authorization`. |
@@ -294,6 +306,7 @@ It has these authority properties:
 
 - Scope-limited: it covers the intended product-file write attempt, not subsequent attempts or a broader project area.
 - State-bound: it is based on current Volicord state and can become stale when relevant state changes.
+- Effect-contract-bound when present: it is created only when the intended product-file write fits the current Change Unit effect contract.
 - Single-use: one compatible product-write Run consumes it once.
 - Cooperative: it tells a connected agent or surface what is compatible with Volicord state; it does not claim OS-level prevention or sandboxing.
 

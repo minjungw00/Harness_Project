@@ -250,6 +250,7 @@ CREATE TABLE change_units (
   scope_summary_json TEXT NOT NULL DEFAULT '{}',
   bounded_paths_json TEXT NOT NULL DEFAULT '[]',
   write_basis_json TEXT NOT NULL DEFAULT '{}',
+  effect_contract_json TEXT NOT NULL DEFAULT 'null',
   lifecycle_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,

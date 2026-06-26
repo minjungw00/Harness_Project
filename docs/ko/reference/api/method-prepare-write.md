@@ -29,6 +29,7 @@
 - 현재 `Task`
 - 현재 적용 Change Unit
 - 현재 적용 범위
+- 기록된 경우 현재 적용 Change Unit 효과 계약
 - 기준선
 - 필요한 별도 민감 동작 승인
 - 확인된 로컬 접점 역량
@@ -71,6 +72,7 @@ PrepareWriteRequest:
 
 - `access_class=write_authorization`인 서버 파생 `VerifiedSurfaceContext`
 - 호환되는 현재 적용 범위
+- 기록된 경우 제품 파일 쓰기에 대해 호환되는 현재 적용 Change Unit 효과 계약
 - 호환되는 기준선
 - 필요한 사용자 소유 판단
 - 필요한 경우 `accepted` 결과의 별도 민감 동작 승인(`sensitive_approval`)
@@ -161,6 +163,9 @@ PrepareWriteRequest:
 | `sensitive_approval_missing` | `sensitive_approval` | 필요한 별도 `sensitive_approval` 사용자 판단이 없습니다. |
 | `user_judgment_unresolved` | `user_judgment` | 쓰기 선행조건에 필요한 사용자 소유 판단이 아직 해결되지 않았습니다. |
 | `baseline_mismatch` | `baseline` | `baseline_ref`가 쓰기 호환성 기준과 맞지 않습니다. |
+| `effect_contract_forbids_product_file_write` | `effect_contract` | 현재 적용 Change Unit 효과 계약이 제품 파일 쓰기를 명시적으로 금지합니다. |
+| `effect_contract_effect_not_allowed` | `effect_contract` | 현재 적용 Change Unit 효과 계약의 비어 있지 않은 허용 효과 목록에 `product_file_write`가 없습니다. |
+| `effect_contract_path_not_allowed` | `effect_contract` | 하나 이상의 `intended_paths`가 현재 적용 Change Unit 효과 계약의 `allowed_paths` 밖에 있습니다. |
 | `surface_access_class_mismatch` | `surface_capability` | 확인된 접점의 `access_class`가 `Write Authorization` 경로와 맞지 않습니다. |
 | `surface_capability_insufficient` | `surface_capability` | 확인된 접점에 의도한 제품 파일 쓰기 확인에 필요한 역량이 없습니다. |
 | `product_write_flag_mismatch` | `write_compatibility` | `product_file_write_intended`가 의도한 동작 또는 경로와 맞지 않습니다. |
@@ -172,6 +177,7 @@ PrepareWriteRequest:
 - `STATE_VERSION_CONFLICT`는 거절 응답 `ErrorCode`입니다. 메서드 로컬 쓰기 결정 이유로 표현하면 안 됩니다.
 - `write_decision_reasons`는 `CloseReadinessBlocker` 값이 아닙니다.
 - 쓰기 결정 이유는 닫기 준비 상태를 평가하지 않습니다.
+- 효과 계약 결정 사유는 민감 동작 승인, 사용자 소유 판단, 증거, 최종 수락, 닫기 준비 상태, 잔여 위험 수락, 또는 이 메서드가 `decision=allowed`일 때만 만드는 별도 `Write Authorization`을 대신하지 않습니다.
 - 소비 가능한 `Write Authorization`은 만들어지지 않습니다.
 
 ## 거절 결과

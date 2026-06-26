@@ -29,6 +29,7 @@ This document does not own:
 - current Task
 - currently applied Change Unit
 - current scope
+- current Change Unit effect contract, when one is recorded
 - baseline
 - required separate sensitive-action approval
 - verified local surface capability
@@ -71,6 +72,7 @@ Requires:
 
 - server-derived `VerifiedSurfaceContext` with `access_class=write_authorization`
 - compatible current scope
+- compatible current Change Unit effect contract for product-file writes, when one is recorded
 - compatible baseline
 - required user-owned judgments
 - any separate accepted sensitive-action approval (`sensitive_approval`)
@@ -161,6 +163,9 @@ The production meanings below apply only when this method reaches a committed no
 | `sensitive_approval_missing` | `sensitive_approval` | A required separate `sensitive_approval` user judgment is absent. |
 | `user_judgment_unresolved` | `user_judgment` | A user-owned judgment required for the write preconditions remains unresolved. |
 | `baseline_mismatch` | `baseline` | `baseline_ref` does not match the write-compatibility basis. |
+| `effect_contract_forbids_product_file_write` | `effect_contract` | The current Change Unit effect contract explicitly forbids product-file writes. |
+| `effect_contract_effect_not_allowed` | `effect_contract` | The current Change Unit effect contract has a non-empty allowed-effect list that does not include `product_file_write`. |
+| `effect_contract_path_not_allowed` | `effect_contract` | One or more `intended_paths` are outside the current Change Unit effect contract `allowed_paths`. |
 | `surface_access_class_mismatch` | `surface_capability` | The verified surface `access_class` is incompatible with the `Write Authorization` path. |
 | `surface_capability_insufficient` | `surface_capability` | The verified surface lacks a required capability for the intended product-file write check. |
 | `product_write_flag_mismatch` | `write_compatibility` | `product_file_write_intended` does not match the intended operation or paths. |
@@ -172,6 +177,7 @@ Non-claims:
 - `STATE_VERSION_CONFLICT` is a rejected-response `ErrorCode`; it must not be represented as a method-local write decision reason.
 - `write_decision_reasons` are not `CloseReadinessBlocker` values.
 - `write_decision_reasons` do not evaluate close readiness.
+- Effect contract decision reasons do not replace sensitive-action approval, user-owned judgment, evidence, final acceptance, close readiness, residual-risk acceptance, or the separate `Write Authorization` that this method creates only on `decision=allowed`.
 - No consumable `Write Authorization` is created.
 
 ## Rejected result

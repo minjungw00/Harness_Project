@@ -247,6 +247,21 @@ replace_current
 
 각 `operation` 값의 메서드 동작은 [`volicord.update_scope`](method-update-scope.md)가 담당합니다. API 예시와 스키마 독자가 하나의 기준 값 담당 문서를 볼 수 있도록 지원 값 집합은 이 문서에 둡니다.
 
+`ChangeUnitEffectContract.allowed_effects`와 `ChangeUnitEffectContract.forbidden_effects`는 아래 값을 사용합니다.
+
+```text
+product_file_write
+artifact_registration
+run_recording
+user_judgment_request
+evidence_update
+sensitive_action
+external_network
+secret_access
+```
+
+이 값들은 효과를 Core 상태로 분류합니다. 값 자체가 런타임 샌드박스, 명령 가로채기, 네트워크 차단, 비밀 격리, 사용자 판단, 민감 동작 승인, 증거, `Write Authorization`, 최종 수락, 닫기 준비 상태, 잔여 위험 수락을 만들지는 않습니다.
+
 `volicord.close_task.intent`는 아래 값을 사용합니다.
 
 ```text
@@ -314,6 +329,7 @@ close_readiness
 | `sensitive_approval` | 필요한 별도 민감 동작 승인 사유. |
 | `write_compatibility` | 쓰기 호환성 사유. |
 | `baseline` | 기준선 호환성 사유. |
+| `effect_contract` | Change Unit 효과 계약 호환성 사유. |
 | `surface_capability` | 확인된 접점 역량 사유. |
 
 이 범주는 `volicord.prepare_write` 결정 사유를 분류합니다. `CloseReadinessBlocker` 객체가 아니며 닫기 준비 상태를 평가하지 않습니다. 메서드별 결정 동작과 사유 생성은 [`volicord.prepare_write`](method-prepare-write.md)에 둡니다.

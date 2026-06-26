@@ -7,15 +7,15 @@ use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use volicord_types::{
-    ArtifactRef, CurrentCloseBasis, EvidenceAssuranceLevel, EvidenceCoverageItem,
-    EvidenceSourceKind, IdempotencyKey, JudgmentBasis, JudgmentBasisCompatibilityStatus,
-    JudgmentRationale, JudgmentResolutionOutcome, MethodName, ObservedChanges,
-    PersistedArtifactProducer, PersistedArtifactProvenance, PersistedArtifactProvenanceMetadata,
-    PersistedEvidenceMetadata, PersistedJudgmentBasis, PersistedUserJudgmentOptions,
-    PersistedUserJudgmentRequest, PersistedUserJudgmentResolution, ProjectEnforcementProfile,
-    ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus, ProjectId, RequestHash,
-    RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId, UserJudgmentOptionAction,
-    UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
+    ArtifactRef, ChangeUnitEffectContract, CurrentCloseBasis, EvidenceAssuranceLevel,
+    EvidenceCoverageItem, EvidenceSourceKind, IdempotencyKey, JudgmentBasis,
+    JudgmentBasisCompatibilityStatus, JudgmentRationale, JudgmentResolutionOutcome, MethodName,
+    ObservedChanges, PersistedArtifactProducer, PersistedArtifactProvenance,
+    PersistedArtifactProvenanceMetadata, PersistedEvidenceMetadata, PersistedJudgmentBasis,
+    PersistedUserJudgmentOptions, PersistedUserJudgmentRequest, PersistedUserJudgmentResolution,
+    ProjectEnforcementProfile, ProjectEnforcementProfileSource, ProjectEnforcementProfileStatus,
+    ProjectId, RequestHash, RunId, StagedArtifactHandleId, StateRecordRef, SurfaceId, TaskId,
+    UserJudgmentOptionAction, UtcTimestamp, BASELINE_COOPERATIVE_ENFORCEMENT_PROFILE_ID,
 };
 
 use crate::{
@@ -192,6 +192,7 @@ pub struct ChangeUnitInsert {
     pub scope_summary_json: String,
     pub bounded_paths_json: String,
     pub write_basis_json: String,
+    pub effect_contract_json: String,
     pub lifecycle_json: String,
 }
 
@@ -540,6 +541,7 @@ pub struct ChangeUnitRecord {
     pub scope_summary_json: String,
     pub bounded_paths_json: String,
     pub write_basis_json: String,
+    pub effect_contract_json: String,
     pub lifecycle_json: String,
 }
 
@@ -1751,6 +1753,10 @@ impl ProjectMutation<'_> {
         validate_json_text("change_units.scope_summary_json", &input.scope_summary_json)?;
         validate_json_text("change_units.bounded_paths_json", &input.bounded_paths_json)?;
         validate_json_text("change_units.write_basis_json", &input.write_basis_json)?;
+        validate_effect_contract_json(
+            "change_units.effect_contract_json",
+            &input.effect_contract_json,
+        )?;
         validate_json_text("change_units.lifecycle_json", &input.lifecycle_json)?;
         let basis_state_version = u64_to_i64("basis_state_version", committed_state_version)?;
 
@@ -1765,6 +1771,7 @@ impl ProjectMutation<'_> {
                 scope_summary_json,
                 bounded_paths_json,
                 write_basis_json,
+                effect_contract_json,
                 lifecycle_json,
                 created_at,
                 updated_at
@@ -1780,6 +1787,7 @@ impl ProjectMutation<'_> {
                 ?6,
                 ?7,
                 ?8,
+                ?9,
                 strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
                 strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
             )",
@@ -1791,6 +1799,7 @@ impl ProjectMutation<'_> {
                 input.scope_summary_json,
                 input.bounded_paths_json,
                 input.write_basis_json,
+                input.effect_contract_json,
                 input.lifecycle_json
             ],
         )?;
@@ -3057,6 +3066,7 @@ fn current_change_unit(
             scope_summary_json,
             bounded_paths_json,
             write_basis_json,
+            effect_contract_json,
             lifecycle_json
          FROM change_units
          WHERE project_id = ?1
@@ -3087,6 +3097,7 @@ fn change_unit_record(
             scope_summary_json,
             bounded_paths_json,
             write_basis_json,
+            effect_contract_json,
             lifecycle_json
          FROM change_units
          WHERE project_id = ?1
@@ -3118,7 +3129,8 @@ fn change_unit_record_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Chan
         scope_summary_json: row.get(6)?,
         bounded_paths_json: row.get(7)?,
         write_basis_json: row.get(8)?,
-        lifecycle_json: row.get(9)?,
+        effect_contract_json: row.get(9)?,
+        lifecycle_json: row.get(10)?,
     })
 }
 
@@ -4349,6 +4361,15 @@ fn validate_json_text(field: &'static str, text: &str) -> StoreResult<()> {
     Ok(())
 }
 
+fn validate_effect_contract_json(field: &'static str, text: &str) -> StoreResult<()> {
+    serde_json::from_str::<Option<ChangeUnitEffectContract>>(text).map_err(|error| {
+        StoreError::InvalidInput {
+            detail: format!("{field} must be ChangeUnitEffectContract JSON or null: {error}"),
+        }
+    })?;
+    Ok(())
+}
+
 fn validate_current_close_basis_json(field: &'static str, text: &str) -> StoreResult<()> {
     serde_json::from_str::<CurrentCloseBasis>(text).map_err(|error| StoreError::InvalidInput {
         detail: format!("{field} must be CurrentCloseBasis JSON: {error}"),
@@ -5042,6 +5063,94 @@ mod tests {
     }
 
     #[test]
+    fn change_unit_effect_contract_json_round_trips() -> Result<(), Box<dyn Error>> {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_effect_contract";
+        let contract = json!({
+            "allowed_effects": ["product_file_write"],
+            "forbidden_effects": ["external_network"],
+            "allowed_paths": ["src/export.rs"],
+            "expected_outputs": ["Updated export behavior."],
+            "invariants": ["Keep unrelated behavior unchanged."],
+            "evidence_expectations": ["Record a focused test run."],
+            "sensitive_action_expectations": ["No secret access is expected."]
+        });
+
+        let input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_effect_contract")),
+            &RequestHash::new("sha256:effect-contract"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("effect_contract", task_id)],
+        );
+        store.commit_mutation(
+            input,
+            |mutation, facts| {
+                CoreStorageMutation::InsertTask(task_insert(task_id))
+                    .apply(mutation, facts.committed_state_version)?;
+                CoreStorageMutation::InsertCurrentChangeUnit(change_unit_insert(
+                    "cu_effect_contract",
+                    task_id,
+                    contract.to_string(),
+                ))
+                .apply(mutation, facts.committed_state_version)
+            },
+            response_json,
+        )?;
+
+        let record = store
+            .current_change_unit(&TaskId::new(task_id))?
+            .expect("current Change Unit should be readable");
+        assert_eq!(
+            serde_json::from_str::<Value>(&record.effect_contract_json)?,
+            contract
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn malformed_effect_contract_json_rejects_commit_without_effect() -> Result<(), Box<dyn Error>>
+    {
+        let harness = StoreHarness::new()?;
+        let mut store = harness.store()?;
+        let task_id = "task_bad_effect_contract";
+        let before = store.effect_counts()?;
+
+        let input = commit_input(
+            &ProjectId::new(PROJECT_ID),
+            MethodName::UpdateScope,
+            Some(&IdempotencyKey::new("idem_store_bad_effect_contract")),
+            &RequestHash::new("sha256:bad-effect-contract"),
+            Some(replay_context(SURFACE_INSTANCE_ID, "core_mutation")),
+            Some(0),
+            vec![pending_event_for_task("bad_effect_contract", task_id)],
+        );
+        let error = store
+            .commit_mutation(
+                input,
+                |mutation, facts| {
+                    CoreStorageMutation::InsertTask(task_insert(task_id))
+                        .apply(mutation, facts.committed_state_version)?;
+                    CoreStorageMutation::InsertCurrentChangeUnit(change_unit_insert(
+                        "cu_bad_effect_contract",
+                        task_id,
+                        r#"{"allowed_effects":["not_an_effect"]}"#.to_owned(),
+                    ))
+                    .apply(mutation, facts.committed_state_version)
+                },
+                response_json,
+            )
+            .expect_err("unsupported effect contract values should reject");
+
+        assert!(matches!(error, StoreError::InvalidInput { .. }));
+        assert_eq!(store.effect_counts()?, before);
+        Ok(())
+    }
+
+    #[test]
     fn resolve_user_judgment_writes_deferred_action_outcome_pair() -> Result<(), Box<dyn Error>> {
         let harness = StoreHarness::new()?;
         let mut store = harness.store()?;
@@ -5569,6 +5678,28 @@ mod tests {
             close_summary_json: "{}".to_owned(),
             completion_policy_json: "{}".to_owned(),
             current_change_unit_id: None,
+        }
+    }
+
+    fn change_unit_insert(
+        change_unit_id: &str,
+        task_id: &str,
+        effect_contract_json: String,
+    ) -> ChangeUnitInsert {
+        ChangeUnitInsert {
+            change_unit_id: change_unit_id.to_owned(),
+            task_id: task_id.to_owned(),
+            scope_summary_json: json!({
+                "scope_summary": "Store effect contract scope."
+            })
+            .to_string(),
+            bounded_paths_json: json!(["src/export.rs"]).to_string(),
+            write_basis_json: json!({
+                "baseline_ref": "baseline_store"
+            })
+            .to_string(),
+            effect_contract_json,
+            lifecycle_json: "{}".to_owned(),
         }
     }
 

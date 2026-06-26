@@ -369,6 +369,20 @@ pub enum ChangeUnitOperation {
     ReplaceCurrent,
 }
 
+/// Change Unit effect contract values.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ChangeUnitEffectKind {
+    ProductFileWrite,
+    ArtifactRegistration,
+    RunRecording,
+    UserJudgmentRequest,
+    EvidenceUpdate,
+    SensitiveAction,
+    ExternalNetwork,
+    SecretAccess,
+}
+
 /// Close-task intent values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -435,6 +449,7 @@ pub enum WriteDecisionCategory {
     SensitiveApproval,
     WriteCompatibility,
     Baseline,
+    EffectContract,
     SurfaceCapability,
 }
 

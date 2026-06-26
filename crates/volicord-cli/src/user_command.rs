@@ -1215,6 +1215,7 @@ mod tests {
                 baseline_ref: Some(BaselineRef::new("baseline_cli")).into(),
                 change_unit: ChangeUnitUpdate {
                     operation: ChangeUnitOperation::CreateCurrent,
+                    effect_contract: None,
                     fields,
                 },
                 related_scope_decision_refs: Vec::new(),

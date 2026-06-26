@@ -11,7 +11,7 @@ use crate::ids::{
 };
 use crate::values::{
     ActorKind, ArtifactAvailability, ArtifactInputSourceKind, ArtifactIntegrityStatus,
-    CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind,
+    ChangeUnitEffectKind, CloseReadinessBlockerCategory, CloseReason, CloseState, EffectKind,
     EnabledEnforcementMechanism, ErrorCode, EvidenceAssuranceLevel, EvidenceCoverageState,
     EvidenceSourceKind, EvidenceStatus, GuaranteeLevel, JudgmentBasisCompatibilityStatus,
     JudgmentKind, JudgmentPresentation, JudgmentRequiredFor, JudgmentResolutionOutcome, MethodName,
@@ -330,6 +330,7 @@ pub struct StateSummary {
     pub acceptance_criteria: Vec<String>,
     pub autonomy_boundary: Option<String>,
     pub active_change_unit_ref: Option<StateRecordRef>,
+    pub effect_contract: Option<ChangeUnitEffectContract>,
     pub baseline_ref: Option<BaselineRef>,
     pub shaping_readiness: Option<ShapingReadiness>,
     pub pending_user_judgment_refs: Vec<StateRecordRef>,
@@ -339,6 +340,26 @@ pub struct StateSummary {
     pub close_state: Option<CloseState>,
     pub close_blockers: Vec<CloseReadinessBlocker>,
     pub guarantee_display: Option<GuaranteeDisplay>,
+}
+
+/// Optional Change Unit effect contract recorded as Core state.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ChangeUnitEffectContract {
+    #[serde(default)]
+    pub allowed_effects: Vec<ChangeUnitEffectKind>,
+    #[serde(default)]
+    pub forbidden_effects: Vec<ChangeUnitEffectKind>,
+    #[serde(default)]
+    pub allowed_paths: Vec<String>,
+    #[serde(default)]
+    pub expected_outputs: Vec<String>,
+    #[serde(default)]
+    pub invariants: Vec<String>,
+    #[serde(default)]
+    pub evidence_expectations: Vec<String>,
+    #[serde(default)]
+    pub sensitive_action_expectations: Vec<String>,
 }
 
 /// Task lifecycle state shape.

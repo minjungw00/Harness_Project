@@ -2445,6 +2445,7 @@ mod tests {
                     scope_summary_json: json!({"goal_summary": marker}).to_string(),
                     bounded_paths_json: "[]".to_owned(),
                     write_basis_json: "{}".to_owned(),
+                    effect_contract_json: "null".to_owned(),
                     lifecycle_json: "{}".to_owned(),
                 },
             )],

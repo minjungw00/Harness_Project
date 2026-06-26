@@ -39,6 +39,7 @@ This method is the supported path that turns shaping into a first safe Change Un
 - `task_id`.
 - Any scope fields to change. For include/exclude updates, `scope_update.include` lists product work to bring into scope and `scope_update.exclude` lists product behavior that remains out of scope. `null` means leave the existing value unchanged; an empty array replaces that list with an empty list.
 - `change_unit.operation` and the fields needed by that operation; supported operation values and their meanings are owned by [API Value Sets](schema-value-sets.md#method-local-values).
+- Optional `change_unit.effect_contract` when creating or replacing the current Change Unit. When present, the object uses `ChangeUnitEffectContract`; when absent, the Change Unit has no extra effect contract.
 - `related_scope_decision_refs` when the update applies a resolved `judgment_kind=scope_decision`.
 
 When a scope update applies a `scope_decision`, each referenced judgment must have `judgment_kind=scope_decision`, `status=resolved`, `machine_action=accept`, `resolution_outcome=accepted`, `basis.compatibility_status=current`, `required_for` that includes scope update, verified actor provenance for `user_interaction`, and a basis compatible with the current Task, Change Unit, `scope_revision`, and affected refs. Rejected, deferred, stale, superseded, expired, invalid-basis, resolution-incomplete, or agent-recorded scope decisions do not authorize a scope transition.
@@ -67,6 +68,7 @@ UpdateScopeRequest:
 Nested owner links:
 - `related_scope_decision_refs` uses `StateRecordRef[]`; the nested shape is owned by [API State Schemas](schema-state.md#state-references).
 - `change_unit.operation` values are owned by [API Value Sets method-local values](schema-value-sets.md#method-local-values).
+- `change_unit.effect_contract`, when present, uses `ChangeUnitEffectContract`; the nested shape is owned by [API State Schemas](schema-state.md#changeuniteffectcontract).
 
 ## Access requirements
 
@@ -122,6 +124,8 @@ Returns `UpdateScopeResult` with:
 | `next_actions` | `NextActionSummary[]` describing the next safe API steps. |
 
 The supported `change_unit.operation` values are owned by [API Value Sets](schema-value-sets.md#method-local-values). This method owns how each operation is reflected in `change_unit_ref`, `state.active_change_unit_ref`, stale `Write Authorization` refs, blocker refs, and `next_actions`.
+
+When `change_unit.operation=create_current` or `change_unit.operation=replace_current`, `change_unit.effect_contract` may be recorded on the new current Change Unit. The effect contract is optional Core state. It can express allowed effects, forbidden effects, allowed Product Repository paths, expected outputs, invariants, evidence expectations, and sensitive-action expectations without creating a workflow engine or replacing user-owned authority records.
 
 `linked_scope_decision_refs` contains only scope decisions that passed the compatibility and provenance checks above. Historical or rejected scope decisions may remain addressable judgment records, but they are not linked as applied authority.
 

@@ -17,12 +17,12 @@ use volicord_store::{
 };
 use volicord_test_support::TempRuntimeHome;
 use volicord_types::{
-    prefixed_durable_id, ActorKind, ChangeUnitUpdate, DurableIdError, DurableIdGenerator,
-    DurableIdKind, EvidenceAssuranceLevel, EvidenceSourceKind, EvidenceUpdateProvenance,
-    IdempotencyKey, InitialScope, RequestId, ScopeUpdate, SequenceDurableIdGenerator, SurfaceId,
-    SurfaceInteractionRole, ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE,
-    BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON, VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION,
-    VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
+    prefixed_durable_id, ActorKind, ChangeUnitEffectContract, ChangeUnitEffectKind,
+    ChangeUnitUpdate, DurableIdError, DurableIdGenerator, DurableIdKind, EvidenceAssuranceLevel,
+    EvidenceSourceKind, EvidenceUpdateProvenance, IdempotencyKey, InitialScope, RequestId,
+    ScopeUpdate, SequenceDurableIdGenerator, SurfaceId, SurfaceInteractionRole,
+    ACTOR_ASSURANCE_REGISTERED_SURFACE_COOPERATIVE, BASELINE_PROJECT_ENFORCEMENT_PROFILE_JSON,
+    VERIFICATION_BASIS_LOCAL_ADMIN_REGISTRATION, VERIFICATION_BASIS_TEST_FIXTURE_BINDING,
 };
 
 use super::*;
@@ -1812,6 +1812,7 @@ fn scope_decision_ref_alone_does_not_change_current_scope() -> Result<(), Box<dy
             baseline_ref: None.into(),
             change_unit: ChangeUnitUpdate {
                 operation: ChangeUnitOperation::KeepCurrent,
+                effect_contract: None,
                 fields: Map::new(),
             },
             related_scope_decision_refs: vec![decision_ref],
@@ -2366,6 +2367,252 @@ fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
         status.response_value["active_task"]
     );
     assert_eq!(id_generator.count(DurableIdKind::WriteAuthorization), 1);
+    Ok(())
+}
+
+#[test]
+fn change_unit_effect_contract_is_stored_and_returned() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let intake = harness.service.intake(
+        intake_request(
+            "req_effect_contract_task",
+            "idem_effect_contract_task",
+            false,
+            Some(0),
+            RequestedMode::Work,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let task_id = response_record_id(&intake.response_value, "task_ref");
+    let contract = ChangeUnitEffectContract {
+        allowed_effects: vec![ChangeUnitEffectKind::ProductFileWrite],
+        forbidden_effects: vec![ChangeUnitEffectKind::ExternalNetwork],
+        allowed_paths: vec!["src/export.rs".to_owned()],
+        expected_outputs: vec!["Updated export behavior.".to_owned()],
+        invariants: vec!["Do not alter unrelated exports.".to_owned()],
+        evidence_expectations: vec!["Record a focused test run.".to_owned()],
+        sensitive_action_expectations: vec!["No secret access is expected.".to_owned()],
+    };
+    let mut request = update_scope_request(
+        "req_effect_contract_scope",
+        "idem_effect_contract_scope",
+        false,
+        Some(1),
+        &task_id,
+        ChangeUnitOperation::CreateCurrent,
+        "Effect-contract current scope.",
+    );
+    request.change_unit.effect_contract = Some(contract.clone());
+
+    let response = harness
+        .service
+        .update_scope(request, invocation(AccessClass::CoreMutation))?;
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_effect_contract_status",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    let expected = serde_json::to_value(contract)?;
+    assert_eq!(
+        response.response_value["state"]["effect_contract"],
+        expected
+    );
+    assert_eq!(
+        status.response_value["active_task"]["effect_contract"],
+        expected
+    );
+    Ok(())
+}
+
+#[test]
+fn state_summary_reports_absent_effect_contract_as_null() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "no_effect_contract")?;
+
+    let status = harness.service.status(
+        StatusRequest {
+            envelope: envelope(
+                "req_no_effect_contract_status",
+                None,
+                false,
+                None,
+                Some(&task_id),
+            ),
+            include: status_include(),
+        },
+        invocation(AccessClass::ReadStatus),
+    )?;
+    let response = harness.service.prepare_write(
+        prepare_write_request(
+            "req_no_effect_contract_prepare",
+            "idem_no_effect_contract_prepare",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+
+    assert!(status.response_value["active_task"]["effect_contract"].is_null());
+    assert_eq!(response.response_value["decision"], "allowed");
+    assert!(response.response_value["state"]["effect_contract"].is_null());
+    Ok(())
+}
+
+#[test]
+fn prepare_write_rejects_product_write_forbidden_by_effect_contract() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_effect_contract(
+        &harness,
+        "contract_forbid_write",
+        ChangeUnitEffectContract {
+            forbidden_effects: vec![ChangeUnitEffectKind::ProductFileWrite],
+            ..ChangeUnitEffectContract::default()
+        },
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.prepare_write(
+        prepare_write_request(
+            "req_contract_forbid_write",
+            "idem_contract_forbid_write",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+
+    assert_eq!(response.response_value["decision"], "blocked");
+    assert_prepare_reason(
+        &response.response_value,
+        "effect_contract_forbids_product_file_write",
+    );
+    assert_eq!(
+        response.response_value["write_decision_reasons"][0]["category"],
+        "effect_contract"
+    );
+    assert!(response.response_value["write_authorization"].is_null());
+    assert_eq!(
+        harness.counts()?.write_authorizations,
+        before.write_authorizations
+    );
+    Ok(())
+}
+
+#[test]
+fn prepare_write_rejects_paths_outside_effect_contract_allowed_paths() -> Result<(), Box<dyn Error>>
+{
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_effect_contract(
+        &harness,
+        "contract_path",
+        ChangeUnitEffectContract {
+            allowed_effects: vec![ChangeUnitEffectKind::ProductFileWrite],
+            allowed_paths: vec!["tests".to_owned()],
+            ..ChangeUnitEffectContract::default()
+        },
+    )?;
+    let before = harness.counts()?;
+
+    let response = harness.service.prepare_write(
+        prepare_write_request(
+            "req_contract_path",
+            "idem_contract_path",
+            Some(2),
+            Some(&task_id),
+            Some(&change_unit_id),
+        ),
+        invocation(AccessClass::WriteAuthorization),
+    )?;
+
+    assert_eq!(response.response_value["decision"], "blocked");
+    assert_prepare_reason(&response.response_value, "effect_contract_path_not_allowed");
+    assert!(response.response_value["write_authorization"].is_null());
+    assert_eq!(
+        harness.counts()?.write_authorizations,
+        before.write_authorizations
+    );
+    Ok(())
+}
+
+#[test]
+fn effect_contract_does_not_create_final_acceptance() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, _) = create_task_with_effect_contract(
+        &harness,
+        "contract_no_final",
+        ChangeUnitEffectContract {
+            expected_outputs: vec!["Implementation output is expected.".to_owned()],
+            evidence_expectations: vec!["Evidence is expected before close.".to_owned()],
+            ..ChangeUnitEffectContract::default()
+        },
+    )?;
+
+    let response = harness.service.close_task(
+        close_task_request(CloseTaskFixture {
+            request_id: "req_contract_no_final_close",
+            idempotency_key: None,
+            dry_run: false,
+            expected_state_version: None,
+            task_id: &task_id,
+            intent: CloseIntent::Check,
+            close_reason: None,
+            superseding_task_id: None,
+        }),
+        invocation(AccessClass::ReadStatus),
+    )?;
+
+    assert_close_blocker(&response.response_value, "missing_final_acceptance");
+    Ok(())
+}
+
+#[test]
+fn effect_contract_does_not_replace_sensitive_approval() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) = create_task_with_effect_contract(
+        &harness,
+        "contract_sensitive",
+        ChangeUnitEffectContract {
+            allowed_effects: vec![
+                ChangeUnitEffectKind::ProductFileWrite,
+                ChangeUnitEffectKind::SensitiveAction,
+            ],
+            sensitive_action_expectations: vec!["Network-sensitive step may be needed.".to_owned()],
+            ..ChangeUnitEffectContract::default()
+        },
+    )?;
+    let before = harness.counts()?;
+
+    let mut request = prepare_write_request(
+        "req_contract_sensitive",
+        "idem_contract_sensitive",
+        Some(2),
+        Some(&task_id),
+        Some(&change_unit_id),
+    );
+    request.sensitive_categories = vec!["network".to_owned()];
+    let response = harness
+        .service
+        .prepare_write(request, invocation(AccessClass::WriteAuthorization))?;
+
+    assert_eq!(response.response_value["decision"], "approval_required");
+    assert_prepare_reason(&response.response_value, "sensitive_approval_missing");
+    assert!(response.response_value["write_authorization"].is_null());
+    assert_eq!(
+        harness.counts()?.write_authorizations,
+        before.write_authorizations
+    );
     Ok(())
 }
 
@@ -11627,7 +11874,11 @@ fn update_scope_request(
         acceptance_criteria: Some(vec!["The scoped behavior is represented.".to_owned()]).into(),
         autonomy_boundary: Some("Stay inside the scoped test behavior.".to_owned()).into(),
         baseline_ref: Some(BaselineRef::new("baseline_test")).into(),
-        change_unit: ChangeUnitUpdate { operation, fields },
+        change_unit: ChangeUnitUpdate {
+            operation,
+            effect_contract: None,
+            fields,
+        },
         related_scope_decision_refs: Vec::new(),
     }
 }
@@ -12502,6 +12753,50 @@ fn create_task_with_change_unit(
         ),
         invocation(AccessClass::CoreMutation),
     )?;
+    let change_unit_id = scope.response_value["change_unit_ref"]["record_id"]
+        .as_str()
+        .expect("change unit ref should be present")
+        .to_owned();
+    Ok((task_id, change_unit_id))
+}
+
+fn create_task_with_effect_contract(
+    harness: &MethodHarness,
+    prefix: &str,
+    contract: ChangeUnitEffectContract,
+) -> Result<(String, String), Box<dyn Error>> {
+    let intake_request_id = format!("req_{prefix}_task");
+    let intake_idempotency_key = format!("idem_{prefix}_task");
+    let intake = harness.service.intake(
+        intake_request(
+            &intake_request_id,
+            &intake_idempotency_key,
+            false,
+            Some(0),
+            RequestedMode::Work,
+        ),
+        invocation(AccessClass::CoreMutation),
+    )?;
+    let task_id = intake.response_value["task_ref"]["record_id"]
+        .as_str()
+        .expect("task ref should be present")
+        .to_owned();
+
+    let scope_request_id = format!("req_{prefix}_scope");
+    let scope_idempotency_key = format!("idem_{prefix}_scope");
+    let mut request = update_scope_request(
+        &scope_request_id,
+        &scope_idempotency_key,
+        false,
+        Some(1),
+        &task_id,
+        ChangeUnitOperation::CreateCurrent,
+        "Initial current scope.",
+    );
+    request.change_unit.effect_contract = Some(contract);
+    let scope = harness
+        .service
+        .update_scope(request, invocation(AccessClass::CoreMutation))?;
     let change_unit_id = scope.response_value["change_unit_ref"]["record_id"]
         .as_str()
         .expect("change unit ref should be present")
