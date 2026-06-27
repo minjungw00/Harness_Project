@@ -307,7 +307,7 @@ pub struct RunInsert {
     pub summary_json: String,
     pub observed_changes_json: String,
     pub evidence_updates_json: String,
-    pub authorization_effect_json: String,
+    pub write_check_effect_json: String,
     pub created_by_actor_source: String,
     pub metadata_json: String,
 }
@@ -1964,8 +1964,8 @@ impl ProjectMutation<'_> {
         validate_json_text("runs.observed_changes_json", &input.observed_changes_json)?;
         validate_json_text("runs.evidence_updates_json", &input.evidence_updates_json)?;
         validate_json_text(
-            "runs.authorization_effect_json",
-            &input.authorization_effect_json,
+            "runs.write_check_effect_json",
+            &input.write_check_effect_json,
         )?;
         validate_identifier("created_by_actor_source", &input.created_by_actor_source)?;
         validate_json_text("runs.metadata_json", &input.metadata_json)?;
@@ -1983,7 +1983,7 @@ impl ProjectMutation<'_> {
                 summary_json,
                 observed_changes_json,
                 evidence_updates_json,
-                authorization_effect_json,
+                write_check_effect_json,
                 created_by_actor_source,
                 started_at,
                 completed_at,
@@ -2021,7 +2021,7 @@ impl ProjectMutation<'_> {
                 input.summary_json,
                 input.observed_changes_json,
                 input.evidence_updates_json,
-                input.authorization_effect_json,
+                input.write_check_effect_json,
                 input.created_by_actor_source,
                 input.metadata_json
             ],
@@ -6036,7 +6036,7 @@ mod tests {
             summary_json: "{}".to_owned(),
             observed_changes_json: "{}".to_owned(),
             evidence_updates_json: "[]".to_owned(),
-            authorization_effect_json: "{}".to_owned(),
+            write_check_effect_json: "{}".to_owned(),
             created_by_actor_source: ACTOR_SOURCE.to_owned(),
             metadata_json: "{}".to_owned(),
         }
@@ -6054,7 +6054,7 @@ mod tests {
             summary_json: "{}".to_owned(),
             observed_changes_json: "{}".to_owned(),
             evidence_updates_json: "[]".to_owned(),
-            authorization_effect_json: "{}".to_owned(),
+            write_check_effect_json: "{}".to_owned(),
             created_by_actor_source: ACTOR_SOURCE.to_owned(),
             metadata_json: "{}".to_owned(),
         }

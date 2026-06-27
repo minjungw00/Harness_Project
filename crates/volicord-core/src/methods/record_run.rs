@@ -313,7 +313,7 @@ fn plan_record_run(
         .collect::<Vec<_>>();
     let observation_refs_by_claim = observation_refs_by_claim(&observation_plans);
 
-    let authorization_scope = if request.observed_changes.product_file_write_observed {
+    let write_check_scope = if request.observed_changes.product_file_write_observed {
         let Some(write_check_id) = request.write_check_id.as_ref() else {
             return Err(PlanError::Response(Box::new(
                 write_check_required_response(&request.envelope, Some(project_state.state_version)),
@@ -386,7 +386,7 @@ fn plan_record_run(
         request: &request,
         task: &task,
         run_ref: &run_ref,
-        authorization_scope: authorization_scope.as_ref(),
+        write_check_scope: write_check_scope.as_ref(),
         evidence_summary_ref: evidence_summary_ref.clone(),
         registered_artifacts: &registered_artifacts,
         close_basis_revision,
@@ -418,7 +418,7 @@ fn plan_record_run(
     )?;
     let guarantee_display =
         guarantee_display_for_invocation(store, verified_invocation, planned_state_version)?;
-    let write_check_summary = if let Some((record, _scope)) = &authorization_scope {
+    let write_check_summary = if let Some((record, _scope)) = &write_check_scope {
         let mut consumed_record = record.clone();
         consumed_record.status = storage_value(WriteCheckStatus::Consumed)?;
         consumed_record.consumed_by_run_id = Some(run_id.as_str().to_owned());
@@ -516,9 +516,9 @@ fn plan_record_run(
         }))?,
         observed_changes_json: serde_json::to_string(&normalized_observed_changes)?,
         evidence_updates_json: serde_json::to_string(&request.evidence_updates)?,
-        authorization_effect_json: serde_json::to_string(&json!({
+        write_check_effect_json: serde_json::to_string(&json!({
             "write_check_id": request.write_check_id,
-            "effect": if authorization_scope.is_some() { "consumed" } else { "none" }
+            "effect": if write_check_scope.is_some() { "consumed" } else { "none" }
         }))?,
         created_by_actor_source: verified_invocation.actor_source.to_canonical_string(),
         metadata_json: serde_json::to_string(&json!({
@@ -541,7 +541,7 @@ fn plan_record_run(
             ],
         },
     ));
-    if let Some((record, _scope)) = &authorization_scope {
+    if let Some((record, _scope)) = &write_check_scope {
         storage_mutations.push(CoreStorageMutation::ConsumeWriteCheck(
             WriteCheckConsumption {
                 write_check_id: record.write_check_id.clone(),
@@ -634,7 +634,7 @@ fn plan_record_run(
         "residual_risk_ids": residual_risk_ids,
         "kind": request.kind,
         "product_file_write_observed": normalized_observed_changes.product_file_write_observed,
-        "write_check_id": authorization_scope
+        "write_check_id": write_check_scope
             .as_ref()
             .map(|(record, _scope)| record.write_check_id.clone()),
         "artifact_ids": registered_artifacts
@@ -1104,7 +1104,7 @@ struct RecordRunCloseBasisContext<'a> {
     request: &'a RecordRunRequest,
     task: &'a TaskRecord,
     run_ref: &'a StateRecordRef,
-    authorization_scope: Option<&'a (WriteCheckRecord, WriteCheckAttemptScope)>,
+    write_check_scope: Option<&'a (WriteCheckRecord, WriteCheckAttemptScope)>,
     evidence_summary_ref: Option<StateRecordRef>,
     registered_artifacts: &'a [ArtifactRef],
     close_basis_revision: u64,
@@ -1134,7 +1134,7 @@ fn build_record_run_close_basis(
         request,
         task,
         run_ref,
-        authorization_scope,
+        write_check_scope,
         evidence_summary_ref,
         registered_artifacts,
         close_basis_revision,
@@ -1233,7 +1233,7 @@ fn build_record_run_close_basis(
         request,
         task,
         run_ref,
-        authorization_scope,
+        write_check_scope,
     )?;
     let derived_sensitive_categories = sensitive_category_summary(&sensitive_action_requirements);
     let caller_sensitive_categories = normalize_string_list(&assessment.sensitive_categories);
@@ -1271,13 +1271,13 @@ fn current_sensitive_action_requirements(
     request: &RecordRunRequest,
     task: &TaskRecord,
     run_ref: &StateRecordRef,
-    authorization_scope: Option<&(WriteCheckRecord, WriteCheckAttemptScope)>,
+    write_check_scope: Option<&(WriteCheckRecord, WriteCheckAttemptScope)>,
 ) -> Result<Vec<SensitiveActionRequirement>, PlanError> {
     let mut requirements =
         previous_current_sensitive_action_requirements(store, project_state, request, task)?;
-    if let Some((record, scope)) = authorization_scope {
+    if let Some((record, scope)) = write_check_scope {
         if let Some(requirement) =
-            sensitive_action_requirement_from_authorization(store, run_ref, record, scope)?
+            sensitive_action_requirement_from_write_check(store, run_ref, record, scope)?
         {
             requirements.push(requirement);
         }
@@ -1315,7 +1315,7 @@ fn previous_current_sensitive_action_requirements(
     }
 }
 
-fn sensitive_action_requirement_from_authorization(
+fn sensitive_action_requirement_from_write_check(
     store: &CoreProjectStore,
     run_ref: &StateRecordRef,
     record: &WriteCheckRecord,

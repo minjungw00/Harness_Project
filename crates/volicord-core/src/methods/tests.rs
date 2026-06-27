@@ -561,7 +561,7 @@ fn status_is_read_only_including_dry_run() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn status_renders_effective_authorization_expiration_without_mutating_row(
+fn status_renders_effective_write_check_expiration_without_mutating_row(
 ) -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "status_auth_expired")?;
@@ -2305,7 +2305,7 @@ fn material_scope_update_invalidates_scope_decisions_atomically() -> Result<(), 
 }
 
 #[test]
-fn prepare_write_allowed_creates_one_authorization_with_post_commit_basis(
+fn prepare_write_allowed_creates_one_write_check_with_post_commit_basis(
 ) -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_allowed")?;
@@ -2647,7 +2647,7 @@ fn effect_contract_does_not_replace_sensitive_approval() -> Result<(), Box<dyn E
 }
 
 #[test]
-fn prepare_write_blocked_path_creates_no_authorization() -> Result<(), Box<dyn Error>> {
+fn prepare_write_blocked_path_creates_no_write_check() -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_path")?;
     let id_generator = CountingDurableIdGenerator::new(["prepare_blocked_event"]);
@@ -3042,7 +3042,7 @@ fn prepare_write_missing_sensitive_approval_requires_approval() -> Result<(), Bo
 }
 
 #[test]
-fn prepare_write_baseline_mismatch_blocks_authorization() -> Result<(), Box<dyn Error>> {
+fn prepare_write_baseline_mismatch_blocks_write_check() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_baseline")?;
     let before = harness.counts()?;
@@ -3146,7 +3146,7 @@ fn prepare_write_uses_agent_workflow_invocation_without_extra_profile() -> Resul
 }
 
 #[test]
-fn prepare_write_product_write_flag_mismatch_blocks_authorization() -> Result<(), Box<dyn Error>> {
+fn prepare_write_product_write_flag_mismatch_blocks_write_check() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_flag")?;
     let before = harness.counts()?;
@@ -3314,7 +3314,7 @@ fn prepare_write_stale_state_rejects_without_effect() -> Result<(), Box<dyn Erro
 }
 
 #[test]
-fn prepare_write_idempotency_replays_without_second_authorization() -> Result<(), Box<dyn Error>> {
+fn prepare_write_idempotency_replays_without_second_write_check() -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "prepare_replay")?;
     let id_generator =
@@ -4846,7 +4846,7 @@ fn record_run_dry_run_allocates_no_residual_risk_ids() -> Result<(), Box<dyn Err
 }
 
 #[test]
-fn record_run_product_write_consumes_valid_authorization_once() -> Result<(), Box<dyn Error>> {
+fn record_run_product_write_consumes_valid_write_check_once() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_write")?;
@@ -4915,7 +4915,7 @@ fn record_run_product_write_consumes_valid_authorization_once() -> Result<(), Bo
 }
 
 #[test]
-fn record_run_consumes_authorization_at_fourteen_minutes_fifty_nine_seconds(
+fn record_run_consumes_write_check_at_fourteen_minutes_fifty_nine_seconds(
 ) -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -4952,7 +4952,7 @@ fn record_run_consumes_authorization_at_fourteen_minutes_fifty_nine_seconds(
 }
 
 #[test]
-fn record_run_rejects_authorization_at_exactly_fifteen_minutes_without_effect(
+fn record_run_rejects_write_check_at_exactly_fifteen_minutes_without_effect(
 ) -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -4984,7 +4984,7 @@ fn record_run_rejects_authorization_at_exactly_fifteen_minutes_without_effect(
         "WRITE_CHECK_INVALID"
     );
     assert_eq!(
-        response.response_value["errors"][0]["details"]["authorization_reason"],
+        response.response_value["errors"][0]["details"]["write_check_reason"],
         "expired"
     );
     assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
@@ -4993,7 +4993,7 @@ fn record_run_rejects_authorization_at_exactly_fifteen_minutes_without_effect(
 }
 
 #[test]
-fn record_run_limits_historical_far_future_authorization_to_fifteen_minutes(
+fn record_run_limits_historical_far_future_write_check_to_fifteen_minutes(
 ) -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -5027,7 +5027,7 @@ fn record_run_limits_historical_far_future_authorization_to_fifteen_minutes(
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
-        response.response_value["errors"][0]["details"]["authorization_reason"],
+        response.response_value["errors"][0]["details"]["write_check_reason"],
         "expired"
     );
     assert_eq!(harness.counts()?, before);
@@ -5069,7 +5069,7 @@ fn record_run_honors_stored_expiration_earlier_than_fifteen_minutes() -> Result<
 
     assert_eq!(response.response_value["base"]["response_kind"], "rejected");
     assert_eq!(
-        response.response_value["errors"][0]["details"]["authorization_reason"],
+        response.response_value["errors"][0]["details"]["write_check_reason"],
         "expired"
     );
     assert_eq!(harness.counts()?, before);
@@ -5077,7 +5077,7 @@ fn record_run_honors_stored_expiration_earlier_than_fifteen_minutes() -> Result<
 }
 
 #[test]
-fn record_run_treats_invalid_authorization_timestamp_as_corrupt_state() -> Result<(), Box<dyn Error>>
+fn record_run_treats_invalid_write_check_timestamp_as_corrupt_state() -> Result<(), Box<dyn Error>>
 {
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -5119,7 +5119,7 @@ fn record_run_treats_invalid_authorization_timestamp_as_corrupt_state() -> Resul
 }
 
 #[test]
-fn record_run_stale_basis_precedes_authorization_expiration() -> Result<(), Box<dyn Error>> {
+fn record_run_stale_basis_precedes_write_check_expiration() -> Result<(), Box<dyn Error>> {
     let mut harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_auth_stale_exp")?;
@@ -5172,7 +5172,7 @@ fn record_run_stale_basis_precedes_authorization_expiration() -> Result<(), Box<
 }
 
 #[test]
-fn record_run_missing_authorization_rejects_product_write_without_effect(
+fn record_run_missing_write_check_rejects_product_write_without_effect(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -5203,7 +5203,7 @@ fn record_run_missing_authorization_rejects_product_write_without_effect(
 }
 
 #[test]
-fn record_run_stale_authorization_basis_rejects_before_consumption() -> Result<(), Box<dyn Error>> {
+fn record_run_stale_write_check_basis_rejects_before_consumption() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_stale_auth")?;
@@ -5249,7 +5249,7 @@ fn record_run_stale_authorization_basis_rejects_before_consumption() -> Result<(
 }
 
 #[test]
-fn record_run_consumed_authorization_reuse_rejects_without_effect() -> Result<(), Box<dyn Error>> {
+fn record_run_consumed_write_check_reuse_rejects_without_effect() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_reuse_auth")?;
@@ -5293,7 +5293,7 @@ fn record_run_consumed_authorization_reuse_rejects_without_effect() -> Result<()
         "WRITE_CHECK_INVALID"
     );
     assert_eq!(
-        response.response_value["errors"][0]["details"]["authorization_reason"],
+        response.response_value["errors"][0]["details"]["write_check_reason"],
         "consumed"
     );
     assert_eq!(harness.counts()?, before);
@@ -5301,8 +5301,7 @@ fn record_run_consumed_authorization_reuse_rejects_without_effect() -> Result<()
 }
 
 #[test]
-fn record_run_path_mismatch_rejects_without_consuming_authorization() -> Result<(), Box<dyn Error>>
-{
+fn record_run_path_mismatch_rejects_without_consuming_write_check() -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_path_auth")?;
@@ -5331,7 +5330,7 @@ fn record_run_path_mismatch_rejects_without_consuming_authorization() -> Result<
         "WRITE_CHECK_INVALID"
     );
     assert_eq!(
-        response.response_value["errors"][0]["details"]["authorization_reason"],
+        response.response_value["errors"][0]["details"]["write_check_reason"],
         "path_mismatch"
     );
     assert_eq!(write_check_status(&harness, &write_check_id)?, "active");
@@ -5340,7 +5339,7 @@ fn record_run_path_mismatch_rejects_without_consuming_authorization() -> Result<
 }
 
 #[test]
-fn record_run_rejects_authorization_baseline_mismatch_without_consumption(
+fn record_run_rejects_write_check_baseline_mismatch_without_consumption(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -5372,7 +5371,7 @@ fn record_run_rejects_authorization_baseline_mismatch_without_consumption(
 }
 
 #[test]
-fn record_run_rejects_authorization_task_mismatch_without_consumption() -> Result<(), Box<dyn Error>>
+fn record_run_rejects_write_check_task_mismatch_without_consumption() -> Result<(), Box<dyn Error>>
 {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -5404,7 +5403,7 @@ fn record_run_rejects_authorization_task_mismatch_without_consumption() -> Resul
 }
 
 #[test]
-fn record_run_rejects_authorization_change_unit_mismatch_without_consumption(
+fn record_run_rejects_write_check_change_unit_mismatch_without_consumption(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -5441,7 +5440,7 @@ fn record_run_rejects_authorization_change_unit_mismatch_without_consumption(
 }
 
 #[test]
-fn record_run_rejects_authorization_product_write_flag_mismatch_without_consumption(
+fn record_run_rejects_write_check_product_write_flag_mismatch_without_consumption(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -5473,7 +5472,7 @@ fn record_run_rejects_authorization_product_write_flag_mismatch_without_consumpt
 }
 
 #[test]
-fn record_run_rejects_authorization_sensitive_category_mismatch_without_consumption(
+fn record_run_rejects_write_check_sensitive_category_mismatch_without_consumption(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     let (task_id, change_unit_id) = create_task_with_change_unit(&harness, "run_sensitive_auth")?;
@@ -6070,7 +6069,7 @@ fn missing_persistent_artifact_body_blocks_evidence_and_close_without_mutation(
 }
 
 #[test]
-fn modified_persistent_artifact_body_blocks_existing_link_before_authorization(
+fn modified_persistent_artifact_body_blocks_existing_link_before_write_check(
 ) -> Result<(), Box<dyn Error>> {
     let harness = MethodHarness::new()?;
     enable_record_run_capabilities(&harness)?;
@@ -7947,6 +7946,60 @@ fn local_user_can_resolve_non_authority_judgment() -> Result<(), Box<dyn Error>>
     assert_eq!(
         user_judgment_resolution_outcome(&harness, &pending_judgment_id)?,
         Some("accepted".to_owned())
+    );
+    Ok(())
+}
+
+#[test]
+fn agent_actor_cannot_resolve_non_authority_judgment() -> Result<(), Box<dyn Error>> {
+    let harness = MethodHarness::new()?;
+    let (task_id, change_unit_id) =
+        create_task_with_change_unit(&harness, "agent_non_authority_reject")?;
+    let pending_judgment = harness.service.request_user_judgment(
+        user_judgment_request(
+            "req_judgment_agent_non_authority_reject",
+            "idem_judgment_agent_non_authority_reject",
+            false,
+            Some(2),
+            &task_id,
+            Some(&change_unit_id),
+            JudgmentKind::ProductDecision,
+        ),
+        invocation(OperationCategory::AgentWorkflow),
+    )?;
+    let pending_judgment_id =
+        response_record_id(&pending_judgment.response_value, "user_judgment_ref");
+    let before = harness.counts()?;
+
+    let response = harness.service.record_user_judgment(
+        record_judgment_request(
+            "req_record_agent_non_authority_reject",
+            "idem_record_agent_non_authority_reject",
+            Some(3),
+            &task_id,
+            &pending_judgment_id,
+            JudgmentKind::ProductDecision,
+            answer_payload(JudgmentKind::ProductDecision),
+        ),
+        invocation_with_actor(
+            ActorSource::agent_connection("connection_agent_user_only"),
+            OperationCategory::UserOnly,
+        ),
+    )?;
+
+    assert_eq!(response.response_value["base"]["response_kind"], "rejected");
+    assert_eq!(
+        response.response_value["errors"][0]["code"],
+        "LOCAL_ACCESS_MISMATCH"
+    );
+    assert_eq!(
+        response.response_value["errors"][0]["details"]["field"],
+        "invocation.actor_source"
+    );
+    assert_eq!(harness.counts()?, before);
+    assert_eq!(
+        user_judgment_status(&harness, &pending_judgment_id)?,
+        "pending"
     );
     Ok(())
 }
@@ -12670,7 +12723,7 @@ fn assert_write_check_invalid_reason(response: &PipelineResponse, reason: &str) 
         "WRITE_CHECK_INVALID"
     );
     assert_eq!(
-        response.response_value["errors"][0]["details"]["authorization_reason"],
+        response.response_value["errors"][0]["details"]["write_check_reason"],
         reason
     );
 }

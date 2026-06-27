@@ -1060,9 +1060,7 @@ fn plan_record_user_judgment(
             ),
         )));
     }
-    if is_authority_bearing_judgment(request.judgment_kind)
-        && verified_actor.actor_source != ActorSource::LocalUser
-    {
+    if verified_actor.actor_source != ActorSource::LocalUser {
         let response = rejected_pipeline_response(
             request.envelope.dry_run,
             Some(project_state.state_version),

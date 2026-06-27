@@ -586,7 +586,7 @@ CREATE TABLE runs (
   summary_json TEXT NOT NULL DEFAULT '{}',
   observed_changes_json TEXT NOT NULL DEFAULT '{}',
   evidence_updates_json TEXT NOT NULL DEFAULT '[]',
-  authorization_effect_json TEXT NOT NULL DEFAULT '{}',
+  write_check_effect_json TEXT NOT NULL DEFAULT '{}',
   scope_revision INTEGER NOT NULL CHECK (scope_revision >= 0),
   created_by_actor_source TEXT NOT NULL,
   started_at TEXT,

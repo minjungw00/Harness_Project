@@ -1393,9 +1393,9 @@ fn write_check_required_response(
     state_version: Option<u64>,
 ) -> PipelineResponse {
     let details = object_from_value(json!({
-        "authorization_reason": "missing"
+        "write_check_reason": "missing"
     }))
-    .expect("authorization details should be an object");
+    .expect("write check details should be an object");
     infallible_rejected_pipeline_response(
         envelope.dry_run,
         state_version,
@@ -1415,9 +1415,9 @@ fn write_check_invalid_response(
     message: &'static str,
 ) -> PipelineResponse {
     let details = object_from_value(json!({
-        "authorization_reason": reason
+        "write_check_reason": reason
     }))
-    .expect("authorization details should be an object");
+    .expect("write check details should be an object");
     infallible_rejected_pipeline_response(
         envelope.dry_run,
         state_version,
