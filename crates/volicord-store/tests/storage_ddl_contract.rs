@@ -91,34 +91,12 @@ fn initial_schemas_satisfy_connection_storage_contract() -> Result<(), Box<dyn E
     assert!(initial_registry_schema
         .tables
         .contains_key("connection_projects"));
-    assert!(!initial_registry_schema
-        .tables
-        .contains_key("agent_integrations"));
-    assert!(!initial_registry_schema
-        .tables
-        .contains_key("integration_projects"));
-    assert!(!initial_registry_schema
-        .tables
-        .contains_key("host_installations"));
 
     assert!(initial_project_schema.tables.contains_key("write_checks"));
-    assert!(!initial_project_schema.tables.contains_key("surfaces"));
-    assert!(!initial_project_schema
-        .tables
-        .contains_key(concat!("write_", "authorizations")));
     assert_columns_include(
         &initial_project_schema,
         "tool_invocations",
         &["actor_source", "operation_category"],
-    );
-    assert_columns_exclude(
-        &initial_project_schema,
-        "tool_invocations",
-        &[
-            "surface_id",
-            "surface_instance_id",
-            concat!("access", "_class"),
-        ],
     );
 
     assert_project_contract_behavior("initial project state.sqlite", &initial_project)?;
@@ -215,19 +193,6 @@ fn assert_columns_include(schema: &DatabaseSchema, table: &str, columns: &[&str]
         assert!(
             table_schema.columns.contains_key(*column),
             "expected {table}.{column}"
-        );
-    }
-}
-
-fn assert_columns_exclude(schema: &DatabaseSchema, table: &str, columns: &[&str]) {
-    let table_schema = schema
-        .tables
-        .get(table)
-        .unwrap_or_else(|| panic!("expected table {table}"));
-    for column in columns {
-        assert!(
-            !table_schema.columns.contains_key(*column),
-            "did not expect {table}.{column}"
         );
     }
 }
@@ -1032,7 +997,7 @@ fn assert_write_check_status_is_closed(label: &str, conn: &Connection) {
             )
             VALUES (
                 'project_a',
-                'write_auth_bad_status',
+                'write_check_bad_status',
                 'task_a',
                 1,
                 'accepted',

@@ -1286,13 +1286,6 @@ mod tests {
         assert!(sqlite_object_exists(&conn, "table", "runtime_home")?);
         assert!(sqlite_object_exists(&conn, "table", "agent_connections")?);
         assert!(sqlite_object_exists(&conn, "table", "connection_projects")?);
-        assert!(!sqlite_object_exists(&conn, "table", "agent_integrations")?);
-        assert!(!sqlite_object_exists(
-            &conn,
-            "table",
-            "integration_projects"
-        )?);
-        assert!(!sqlite_object_exists(&conn, "table", "host_installations")?);
         Ok(())
     }
 

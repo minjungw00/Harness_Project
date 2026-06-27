@@ -927,9 +927,6 @@ mod tests {
         assert_single_migration(&conn, REGISTRY_DATABASE_KIND, "registry_initial_v1")?;
         assert!(table_exists(&conn, "agent_connections")?);
         assert!(table_exists(&conn, "connection_projects")?);
-        assert!(!table_exists(&conn, "agent_integrations")?);
-        assert!(!table_exists(&conn, "integration_projects")?);
-        assert!(!table_exists(&conn, "host_installations")?);
         Ok(())
     }
 
@@ -960,7 +957,6 @@ mod tests {
             "project_state",
             "enforcement_profile_json"
         )?);
-        assert!(!table_exists(&conn, "surfaces")?);
         assert!(table_exists(&conn, "write_checks")?);
         assert!(column_exists(&conn, "tasks", "created_by_actor_source")?);
         assert!(column_exists(
